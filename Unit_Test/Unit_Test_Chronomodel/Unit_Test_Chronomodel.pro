@@ -41,6 +41,16 @@ SOURCES += tst_chronomodeltest.cpp
 
 DEFINES += SRCDIR=\\\"$$PWD/\\\"
 
+
+#########################################
+# C++ 11
+# Config must use C++ 11 for random number generator
+# This works for Windows, Linux & Mac 10.7 and +
+# In the future we'll need to increase to C++17
+# which offered namespace std::experimental::parallel;
+#########################################
+CONFIG += c++11
+
 #########################################
 # DEFINES
 #########################################

@@ -1,3 +1,4 @@
+#ifndef UNIT_TEST
 #define UNIT_TEST
 
 #include <QString>
@@ -50,7 +51,7 @@ public:
     QPair<int, double> gammaQuartile(const QVector<double> &trace, const int quartileType, const double p);
 
 private Q_SLOTS:
-    void testCase1();
+    //void testCase1();
     void mersenneTwister();
     void timeRange();
     void trace();
@@ -64,7 +65,7 @@ ChronomodelTest::ChronomodelTest()
 {
 }
 
-void ChronomodelTest::testCase1()
+/* void ChronomodelTest::testCase1()
 {
     QString str = "Hello";
         QCOMPARE(str.toUpper(), QString("HELLO"));
@@ -73,7 +74,7 @@ void ChronomodelTest::testCase1()
             str.trimmed();
         }
 }
-
+*/
 
 /**
   * @brief Debuggage mersenne twister
@@ -173,6 +174,7 @@ void ChronomodelTest::trace()
 
     MetropolisVariable fullTrace;
     fullTrace.mRawTrace = new QVector<double>();
+    // Adding chain1 in fullTrace
     for (auto i=1; i<21; ++i)
         fullTrace.mRawTrace->append(i);
     //----------chain2
@@ -184,11 +186,11 @@ void ChronomodelTest::trace()
     chain2.mBatchIndex = 2; //used
     chain2.mNumBatchIter = 3; //used
 
-    chain2.mNumRunIter = 32; //used 2 iter more unused
+    chain2.mNumRunIter = 10; //used 2 iter more unused
     chain2.mRunIterIndex = 5;
 
-    chain2.mThinningInterval = 3; //used
-
+    chain2.mThinningInterval = 1; //used
+ // Adding chain2 in fullTrace
     for (auto i=1; i<21; ++i)
         fullTrace.mRawTrace->append(i);
 
@@ -209,35 +211,48 @@ void ChronomodelTest::trace()
 
     chain3.mThinningInterval = 1;
     */
+    chain3 = chain1;
+    // Adding chain3 in fullTrace
     for (auto i=1; i<21; ++i)
         fullTrace.mRawTrace->append(i);
 
-    chain3 = chain1;
 
+    // Create List of chain
     QList<ChainSpecs> chains;
     chains.append(chain1);
-    chains.append(chain2 );
+    chains.append(chain2);
     chains.append(chain3);
 
+    // Using runRawTraceForChain function
     QVector<double> runTrace1 =  fullTrace.runRawTraceForChain(chains, 0);
   //  qDebug()<<"trace1"<<runTrace1;
 
     QVector<double> runTrace2 =  fullTrace.runRawTraceForChain(chains, 1);
  //   qDebug()<<"trace2"<<runTrace2;
 
+    // Controle
     QVERIFY(runTrace1 == runTrace2);
+
+
     QVector<double> runTrace3 =  fullTrace.runRawTraceForChain(chains, 2);
 //    qDebug()<<"trace3"<<runTrace3;
 
+    // Controle
     QVERIFY(runTrace1 == runTrace3);
 
-    //fullTrace.mFormatedTrace
-            std::copy(fullTrace.mRawTrace->cbegin(), fullTrace.mRawTrace->cend(), fullTrace.mFormatedTrace->begin());
+    fullTrace.mFormatedTrace->resize(fullTrace.mRawTrace->size());
+    std::copy(fullTrace.mRawTrace->cbegin(), fullTrace.mRawTrace->cend(), fullTrace.mFormatedTrace->begin());
+
+    // Using fullRunTrace function
     QVector<double> fullRunTrace = fullTrace.fullRunTrace(chains);
 //    qDebug()<<"fullRunTrace"<<fullRunTrace;
+
+    // Create good Answer
     QVector<double> fullRunTraceVerif = runTrace1;
     fullRunTraceVerif.append(runTrace2);
     fullRunTraceVerif.append(runTrace3);
+
+    // Controle
     QVERIFY(fullRunTrace == fullRunTraceVerif);
 }
 
@@ -277,6 +292,7 @@ void ChronomodelTest::fft()
      density1.setName("test unit");
      //density1.mFormatedTrace = &trace1;
 
+     density1.mFormatedTrace->resize(trace1.size());
      std::copy(trace1.cbegin(), trace1.cend(), density1.mFormatedTrace->begin());
 
      QList<ChainSpecs> chain1Spe;
@@ -301,8 +317,11 @@ void ChronomodelTest::fft()
     MetropolisVariable density2;
     density2.mSupport = MetropolisVariable::eR;
     density2.setName("test unit2");
-    //density2.mFormatedTrace = &trace2;
+
+    density2.mFormatedTrace->resize(trace2.size());
     std::copy(trace2.cbegin(), trace2.cend(), density2.mFormatedTrace->begin());
+
+    // Using generateHistos() function which use fft
     density2.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
     //qDebug()<<"histo2"<<density2.mHisto;
 
@@ -642,3 +661,5 @@ qDebug()<<"---------------------------------------";
 QTEST_APPLESS_MAIN(ChronomodelTest)
 
 #include "tst_chronomodeltest.moc"
+
+#endif
