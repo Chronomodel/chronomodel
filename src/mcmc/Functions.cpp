@@ -161,6 +161,10 @@ QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& 
 
 Quartiles quartilesForTrace(const QVector<type_data> &trace)
 {
+    Quartiles quartiles = quartilesType(trace, 8, 0.25);
+    return quartiles;
+
+    /* Old function
     Quartiles quartiles;
     const int n = trace.size();
     if (n<5) {
@@ -189,6 +193,7 @@ Quartiles quartilesForTrace(const QVector<type_data> &trace)
         quartiles.Q2 = sorted.at(q2index);
     }
     return quartiles;
+    */
 }
 
 QVector<double> calculRepartition (const QVector<double>& calib)

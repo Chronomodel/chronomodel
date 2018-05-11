@@ -59,6 +59,7 @@ private Q_SLOTS:
     void hpd();
     void tempo();
     void quantile();
+    void quartileForTrace();
 };
 
 ChronomodelTest::ChronomodelTest()
@@ -476,7 +477,7 @@ Quartiles ChronomodelTest::quartilesTypeTest(const QVector<double>& trace, const
     Quartiles Q;
     QVector<double> traceSorted (trace);
 
-    QPair<int, double> parQ1 = gammaQuartile(trace, quartileType, p); // first is j and secand is gamma
+    QPair<int, double> parQ1 = gammaQuartile(trace, quartileType, p); // first is j and second is gamma
     QPair<int, double> parQ2 = gammaQuartile(trace, quartileType, 0.5);
     QPair<int, double> parQ3 = gammaQuartile(trace, quartileType, 1-p);
 
@@ -535,16 +536,19 @@ QPair<int, double> ChronomodelTest::gammaQuartile(const QVector<double> &trace, 
 
 
     switch (quartileType) {
-    // Case 1 to 3 are discontinuous case
-    case 1: // It is different to R but it is identique to QuantileType1 in the article "Quantile calculations in R"
-        // http://tolstoy.newcastle.edu.au/R/e17/help/att-1067/Quartiles_in_R.pdf
+    /* Case 1 to 3 are discontinuous case */
+
+    /* It is different to R but it is identique to QuantileType1 in the article "Quantile calculations in R"
+     * http://tolstoy.newcastle.edu.au/R/e17/help/att-1067/Quartiles_in_R.pdf
+     */
+    case 1:
         m = 0.;
         jFloor = floor((n * p) + m);
         j = (int)jFloor;
         g = n*p + m - jFloor;
 
         gamma = (g<1e-10 ? 0 : 1.) ;
- //qDebug()<<n<<p<<m<<jFloor<<j<<g<<gamma;
+
         break;
 
     case 2: // same probleme as type 1
@@ -563,7 +567,7 @@ QPair<int, double> ChronomodelTest::gammaQuartile(const QVector<double> &trace, 
         gamma = (g==0. && isEven(j) ? 0. : 1.);
         break;
 
-    // Case 4 to 9 are continuous case
+    /* Case 4 to 9 are continuous case */
     case 4: // OK with R
         m = 0.;
         k = p * n;
@@ -590,8 +594,11 @@ QPair<int, double> ChronomodelTest::gammaQuartile(const QVector<double> &trace, 
         j = (int) floor(k);
         gamma = g ;
         break;
-    case 8: // OK with R, it is the formula with Bos-Levenbach (1953) parameter
-        // http://www.barringer1.com/wa_files/The-plotting-of-observations-on-probability-paper.pdf
+
+    /* OK with R, it is the formula with Bos-Levenbach (1953) parameter
+     *  http://www.barringer1.com/wa_files/The-plotting-of-observations-on-probability-paper.pdf
+     */
+    case 8:
         k = p * (n + 0.4) + 0.3;
         g = k - floor(k);
         j = (int) floor(k);
@@ -612,13 +619,19 @@ QPair<int, double> ChronomodelTest::gammaQuartile(const QVector<double> &trace, 
     return qMakePair(j, gamma);
 }
 
+/**
+ * @brief ChronomodelTest::quantile The comparaison is done with the R function quantile()
+ * It's only a inner test to develop other function
+ * serie <- c(0.1, 3.8, 5.6 ,9.9 ,7.4 ,8.2 ,5.7 ,8.6 ,9.4, 4.2 ,6.1, 4.3, 8.7 ,9.1 ,11.6 ,5.2 ,1.18, 2.4, 6.8, 3.12)
+ * quantile(serie, type = 9)
+ */
 void ChronomodelTest::quantile()
 {
-    QVector<double> trace1;
-    trace1 <<0.1<< 3.8<< 5.6 <<9.9 <<7.4 <<8.2 <<5.7 <<8.6 <<9.4<< 4.2 <<6.1<< 4.3<< 8.7 <<9.1 <<11.6 <<5.2 <<1.18<< 2.4<< 6.8<< 3.12;
-  for (double i(0.); i<=100.; i=i+10.) {
-        Quartiles q = quartilesTypeTest(trace1, 9, i/100. );
-qDebug()<< "trace1 "<<i << q.Q1;
+    QVector<double> serie1;
+    serie1 <<0.1<< 3.8<< 5.6 <<9.9 <<7.4 <<8.2 <<5.7 <<8.6 <<9.4<< 4.2 <<6.1<< 4.3<< 8.7 <<9.1 <<11.6 <<5.2 <<1.18<< 2.4<< 6.8<< 3.12;
+  for (double i(0.); i<=100.; i=i+25.) {
+        Quartiles q = quartilesTypeTest(serie1, 9, i/100. );
+qDebug()<< "serie1 "<<i << q.Q1;
     }
 
 /*     QVector<double> suite;
@@ -629,12 +642,12 @@ qDebug()<< "trace1 "<<i << q.Q1;
 qDebug()<< "suite"<<i << q.Q1;
     }
 */
-    QVector<double> suite20;
-    suite20<< 0<<1<<2<<3<<4<<5<<6<<7<<8<<9<<10<<11<<12<<13<<14<<15<<16<<17<<18<<19<<20;
-      for (double i(0); i<=100.; i=i+10.)
+    QVector<double> serie2;
+    serie2<< 0<<1<<2<<3<<4<<5<<6<<7<<8<<9<<10<<11<<12<<13<<14<<15<<16<<17<<18<<19<<20;
+      for (double i(0); i<=100.; i=i+25.)
     {
-          Quartiles q = quartilesTypeTest(suite20, 9, i/100. );
-    qDebug()<< "suite "<<i << q.Q1;
+          Quartiles q = quartilesTypeTest(serie2, 9, i/100. );
+    qDebug()<< "serie2 "<<i << q.Q1;
      }
 
 qDebug()<<"---------------------------------------";
@@ -652,8 +665,44 @@ qDebug()<<"---------------------------------------";
 }
 
 
+void ChronomodelTest::quartileForTrace()
+{
+    QVector<double> serie1;
+    serie1 <<0.1<< 3.8<< 5.6 <<9.9 <<7.4 <<8.2 <<5.7 <<8.6 <<9.4<< 4.2 <<6.1<< 4.3<< 8.7 <<9.1 <<11.6 <<5.2 <<1.18<< 2.4<< 6.8<< 3.12;
 
+    // used in MetropolisVariable::generateNumericalResults
+    Quartiles Q1 = quartilesForTrace(serie1);
+        qDebug()<< "serie1 0.25"<< Q1.Q1;
+        qDebug()<< "serie1 0.50"<< Q1.Q2;
+        qDebug()<< "serie1 0.75"<< Q1.Q3;
 
+    // used in Model::generateTempo Type=8
+    Quartiles cred = quartilesType(serie1, 8, 0.025);
+    /* Result with R
+     * 2.5%   50% 97.5%
+     * 0.1   5.9  11.6
+    */
+    qDebug()<< "cred 0.025"<< cred.Q1;
+    qDebug()<< "cred 0.50"<< cred.Q2;
+    qDebug()<< "cred 0.975"<< cred.Q3;
+
+    QVERIFY(cred.Q1 == 0.1);
+    QVERIFY(cred.Q2 == 5.9);
+    QVERIFY(cred.Q3 == 11.6);
+
+    cred = quartilesType(serie1, 8, 0.25);
+    /* Result with R
+     * 25%      50%      75%
+     * 3.966667 5.900000 8.658333
+     */
+    qDebug()<< "cred 0.25"<< cred.Q1;
+    qDebug()<< "cred 0.50"<< cred.Q2;
+    qDebug()<< "cred 0.75"<< cred.Q3;
+
+    QVERIFY(cred.Q1 == 3.96);
+    QVERIFY(cred.Q2 == 5.9);
+    QVERIFY(cred.Q3 == 8.66);
+}
 
 
 
