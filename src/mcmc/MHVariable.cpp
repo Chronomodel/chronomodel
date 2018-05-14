@@ -19,9 +19,11 @@ mHistoryAcceptRateMH(nullptr)
 }
 
 /** Copy constructor */
+
 MHVariable::MHVariable( const MHVariable& origin)
 {
    // MetropolisVariable(origin);
+
     mX = origin.mX;
     mRawTrace = new QVector<double>(origin.mRawTrace->size());
     std::copy(origin.mRawTrace->begin(),origin.mRawTrace->end(),mRawTrace->begin());

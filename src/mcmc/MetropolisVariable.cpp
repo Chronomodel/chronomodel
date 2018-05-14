@@ -36,7 +36,7 @@ mtmaxUsed(0.)
 }
 
 /** Copy constructor */
-MetropolisVariable::MetropolisVariable (const MetropolisVariable& origin)
+MetropolisVariable::MetropolisVariable(const MetropolisVariable &origin)
 {
     mX = origin.mX;
     mRawTrace = new QVector<double>(origin.mRawTrace->size());
@@ -169,12 +169,13 @@ void MetropolisVariable::setFormat(const DateUtils::FormatDate fm)
 {
     if (fm != mFormat) {
         mFormat = fm;
-        emit formatChanged();
+       emit formatChanged();
+        //updateFormatedTrace();
     }
 }
 
 /**
- * @brief MetropolisVariable::updateFormatedTrace, it's a slot that transform or create mFormatedTrace
+ * @brief MetropolisVariable::updateFormatedTrace, it's a slot that transforms or creates mFormatedTrace
  * according to mFormat.
  */
 void MetropolisVariable::updateFormatedTrace()
@@ -186,15 +187,14 @@ void MetropolisVariable::updateFormatedTrace()
     if (mRawTrace->size() == 0)
        return;
 
-    mFormatedTrace->reserve(mRawTrace->size());
+    mFormatedTrace->resize(mRawTrace->size());
 
     if (mFormat == DateUtils::eNumeric)
-        mFormatedTrace = mRawTrace;
+        std::copy(mRawTrace->cbegin(),mRawTrace->cend(),mFormatedTrace->begin());
 
-    else {
-        mFormatedTrace->resize(mRawTrace->size());
+    else
         std::transform(mRawTrace->cbegin(),mRawTrace->cend(),mFormatedTrace->begin(),[this](const double i){return DateUtils::convertToFormat(i,this->mFormat);});
-    }
+
 
 }
 
