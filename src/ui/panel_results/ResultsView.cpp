@@ -3660,7 +3660,7 @@ void ResultsView::exportFullImage()
     else if (mStack->currentWidget() == mTempoScrollArea) {
        curWid = mTempoScrollArea->widget();
        curWid->setFont(mByTempoGraphs.at(0)->font());
-       max = mByTempoGraphs.at(0)->getGraph()->maximumX();
+      max = mByTempoGraphs.at(0)->getGraph()->maximumX();
     }
     else
         return;
