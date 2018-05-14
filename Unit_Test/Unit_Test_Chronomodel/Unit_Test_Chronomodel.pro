@@ -52,6 +52,19 @@ DEFINES += SRCDIR=\\\"$$PWD/\\\"
 CONFIG += c++11
 
 #########################################
+# Windows specific settings
+#########################################
+win32{
+        # Resource file (Windows only)
+        message("WIN specific settings")
+       QMAKESPEC = win32-msvc  # for 32-bit and 64-bit
+
+        RC_FILE += ../../Chronomodel.rc
+        #RC_ICONS += $$PRO_PATH/icon/Chronomodel.ico
+        QT_FATAL_WARNING = 1
+
+}
+#########################################
 # DEFINES
 #########################################
 
@@ -110,10 +123,23 @@ macx{
         #QMAKE_POST_LINK += install_name_tool -id @executable_path/../Frameworks/libfftw3f.dylib $$PRO_PATH/deploy/mac/FFTW/libfftw3f.dylib
         #QMAKE_POST_LINK += install_name_tool -change old/path @executable_path/../Frameworks/libfftw3f.3.dylib $$PRO_PATH/Release/Chronomodel.app/Contents/MacOS/Chronomodel;
 }
+
+
 win32{
-        INCLUDEPATH += lib/FFTW
-        #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3-3
-        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win64" -lfftw3-3 # to compile with a x64 machine
+        #INCLUDEPATH += D:/chronomodel-win/chronomodel/lib/FFTW
+        INCLUDEPATH +=  $$_PRO_FILE_PWD_/../../lib/FFTW
+
+        contains(QT_ARCH, i386) {
+            message("32-bit")
+            LIBS += -L"$$_PRO_FILE_PWD_/../../lib/FFTW/win32" -lfftw3-3
+
+        } else { # to compile with a x64 machine
+            message("64-bit")
+
+            LIBS += -L"$$_PRO_FILE_PWD_/../../lib/FFTW/win64" -lfftw3-3
+            #LIBS += -l"D:/chronomodel-win/chronomodel/lib/FFTW/win64" -lfftw3-3
+message("LIBS_ FILE_Directory :  $$LIBS")
+        }
 }
 #linux :
 unix:!macx{
