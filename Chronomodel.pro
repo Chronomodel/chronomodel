@@ -6,7 +6,7 @@
 # ChronoModel
 #
 #-------------------------------------------------
-VERSION = 2.0.8_beta # must match value in src/main.cpp
+VERSION = 2.0.9_beta # must match value in src/main.cpp and Chronomodel.rc (for windows)
 #PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_
 
@@ -99,7 +99,7 @@ win32{
 	# Resource file (Windows only)
         message("WIN specific settings")
        QMAKESPEC = win32-msvc  # for 32-bit and 64-bit
-
+#VERSION = 2.0.9_beta
         RC_FILE += Chronomodel.rc
 	RC_ICONS += $$PRO_PATH/icon/Chronomodel.ico
         QT_FATAL_WARNING = 1

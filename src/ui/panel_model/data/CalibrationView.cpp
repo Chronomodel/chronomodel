@@ -254,6 +254,7 @@ void CalibrationView::updateGraphs()
         mCalibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
         mCalibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
         mCalibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
+
         // ------------------------------------------------------------
         //  Show zones if calibrated data are outside study period
         // ------------------------------------------------------------
@@ -338,7 +339,7 @@ void CalibrationView::updateGraphs()
             mCalibGraph->setRangeY(0., yMax);
 
             mCalibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
-            mCalibGraph->setFormatFunctX(DateUtils::convertFromAppSettingsFormat);
+            mCalibGraph->setFormatFunctX(nullptr);
             mCalibGraph->setFormatFunctY(nullptr);
             
             // ------------------------------------------------------------
