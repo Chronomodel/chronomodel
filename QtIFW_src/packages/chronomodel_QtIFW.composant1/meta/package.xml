@@ -2,8 +2,8 @@
 <Package>
     <DisplayName>ChronoModel</DisplayName>
     <Description>Chronological model software computation</Description>
-    <Version>2.0.3</Version>
-    <ReleaseDate>2018-01-23</ReleaseDate>
+    <Version>2.0.9</Version>
+    <ReleaseDate>2018-05-22</ReleaseDate>
     <Default>true</Default>
     <Script>installscript.qs</Script>
     <Licenses>
