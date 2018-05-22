@@ -367,7 +367,7 @@ void MultiCalibrationView::updateGraphList()
 
             calibGraph->addCurve(calibCurve);
             calibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
-            calibGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormat);
+            calibGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
             calibGraph->setFormatFunctY(nullptr);
 
             calibGraph->setMarginRight(marginRight);
@@ -454,7 +454,7 @@ void MultiCalibrationView::updateGraphList()
                         calibGraph->setRangeY(0., 1. * yMax);
 
                         calibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
-                        calibGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormat);
+                        calibGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
                         calibGraph->setFormatFunctY(nullptr);
 
                         calibGraph->setMarginRight(marginRight);
