@@ -251,6 +251,9 @@ void EventPropertiesView::updateEvent()
             bool hasDates = (dates.size() > 0);
             if (hasDates) {
                 updateCalibRequested(dates[mCurrentDateIdx].toObject());
+                mCalibBut->setEnabled(true);
+                mDeleteBut->setEnabled(true);
+                mRecycleBut->setEnabled(true);
 
             } else {
                 mCalibBut->setEnabled(false);
@@ -638,10 +641,8 @@ void EventPropertiesView::updateLayout()
 }
 
 void EventPropertiesView::updateButton() {
-    // mCombineBut->setEnabled(isCalibChecked());
-    //mSplitBut->setEnabled(isCalibChecked());
-   // mRecycleBut->setEnabled(isCalibChecked());
     mDeleteBut->setEnabled(!isCalibChecked());
+    mDeleteBut->update();
 }
 
 void EventPropertiesView::setCalibChecked(bool checked)
