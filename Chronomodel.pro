@@ -6,8 +6,9 @@
 # ChronoModel
 #
 #-------------------------------------------------
-DEFINES += VERSION_NUMBER=\\\"2.0.10\\\"
-VERSION = USE_PLUGIN_UNIFORM # must match value in src/main.cpp and Chronomodel.rc (for windows)
+# DEFINES += VERSION_NUMBER=\\\"2.0.10\\\"
+VERSION = 2.0.10
+ #VERSION_NUMBER # must match value in src/main.cpp and Chronomodel.rc (for windows)
 #PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_
 
