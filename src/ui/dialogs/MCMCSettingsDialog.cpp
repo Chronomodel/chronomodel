@@ -254,7 +254,7 @@ void MCMCSettingsDialog::inputControl()
 
     settings.mNumBurnIter = mNumBurnEdit->text().toUInt(&ok);
     if (isValided == true && (ok == false || settings.mNumBurnIter < 1) ) {
-        errorMessage = QObject::tr("The number of iteration in the burning must be bigger than 0");
+        errorMessage = QObject::tr("The number of iteration in the burn-in must be bigger than 0");
         isValided = false;
     }
 

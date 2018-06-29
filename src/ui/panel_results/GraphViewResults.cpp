@@ -243,7 +243,7 @@ void GraphViewResults::saveGraphData() const
     if (mCurrentTypeGraph == eTrace || mCurrentTypeGraph == eAccept) {
         QMessageBox messageBox;
         messageBox.setWindowTitle(tr("Save all trace"));
-        messageBox.setText(tr("Do you want the entire trace from the beginning of the process or only the aquisition part"));
+        messageBox.setText(tr("Do you want the entire trace from the beginning of the process or only the acquisition part"));
         QAbstractButton *allTraceButton = messageBox.addButton(tr("All trace"), QMessageBox::YesRole);
         QAbstractButton *acquireTraceButton = messageBox.addButton(tr("Only acquired part"), QMessageBox::NoRole);
         

@@ -17,6 +17,7 @@ mLoop(loop)
     mProgressBar1 = new QProgressBar(this);
     mProgressBar1->setMinimum(0);
     mProgressBar1->setMaximum(0);
+    mProgressBar1->setMinimumWidth(100 * AppSettings::widthUnit());
     
     
     // ----------
@@ -32,7 +33,7 @@ mLoop(loop)
     layout->addWidget(buttonBox);
     setLayout(layout);
     
-    setMinimumWidth(30 * AppSettings::widthUnit());
+    setMinimumWidth(100 * AppSettings::widthUnit());
     
     // -----------
     

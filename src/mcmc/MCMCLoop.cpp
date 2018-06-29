@@ -63,7 +63,7 @@ const QString MCMCLoop::getMCMCSettingsLog() const
             log += "<hr>";
             log += tr("Chain %1").arg(QString::number(i)) +"<br>";
             log += tr("Seed %1").arg(QString::number(chain.mSeed))+"<br>";
-            log += tr("Number of burning iterations : %1").arg(QString::number(chain.mBurnIterIndex)) + "<br>";
+            log += tr("Number of burn-in iterations : %1").arg(QString::number(chain.mBurnIterIndex)) + "<br>";
             log += tr("Number of batches : %1 / %2").arg(QString::number(chain.mBatchIndex), QString::number(chain.mMaxBatchs)) + "<br>";
             log += tr("Number of iterations per batches : %1").arg(QString::number(chain.mNumBatchIter)) + "<br>";
             log += tr("Number of running iterations : %1").arg(QString::number(chain.mRunIterIndex)) + "<br>";
@@ -138,9 +138,9 @@ void MCMCLoop::run()
         
         log += "=> Init done in " + QString::number(timeDiff) + " ms\n";*/
         
-        //----------------------- Burning --------------------------------------
+        //----------------------- Burn-in --------------------------------------
         
-        emit stepChanged(tr("Chain : %1 / %2").arg(QString::number(mChainIndex + 1), QString::number(mChains.size()))  + " : " + tr("Burning"), 0, chain.mNumBurnIter);
+        emit stepChanged(tr("Chain : %1 / %2").arg(QString::number(mChainIndex + 1), QString::number(mChains.size()))  + " : " + tr("Burn-in"), 0, chain.mNumBurnIter);
         mState = eBurning;
         
         //QTime startBurnTime = QTime::currentTime();

@@ -496,7 +496,7 @@ QMap<double, double> &MetropolisVariable::histoForChain(const int index)
  * @brief MetropolisVariable::fullTraceForChain
  * @param chains QList of the ChainSpecs in the Model
  * @param index
- * @return The complet trace (Burning, adaptation, acquire) corresponding to chain n°index
+ * @return The complet trace (Burn-in, adaptation, acquire) corresponding to chain n°index
  */
 QVector<double> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs>& chains, const int index)
 {

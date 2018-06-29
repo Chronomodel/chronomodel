@@ -515,7 +515,7 @@ mMinorCountScale (4)
     mNextSheetBut->setToolTip(tr("Display next data"));
     mNextSheetBut->setIconOnly(false);
 
-    mNbDensityLab = new Label(tr("Nb Densities / Sheet"), mPageWidget);
+    mNbDensityLab = new Label(tr("Nb Densities / Page"), mPageWidget);
     mNbDensityLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mNbDensitySpin = new QSpinBox(mPageWidget);

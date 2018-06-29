@@ -159,7 +159,6 @@ QString MCMCLoopMain::initMCMC()
     int i (0);
     for (auto && phC : phasesConstraints) {
         phC->initGamma();
-        
         if (isInterruptionRequested())
             return ABORTED_BY_USER;
         ++i;
