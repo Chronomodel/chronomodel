@@ -383,7 +383,7 @@ mMinorCountScale (4)
     mFFTLenCombo->addItem("8192");
     mFFTLenCombo->addItem("16384");
     mFFTLenCombo->setCurrentText("1024");
-    mFFTLenCombo->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+   // mFFTLenCombo->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     
     mComboH = fm.height() + 6;
     mTabsH = mComboH + 2*mMargin;
@@ -762,7 +762,7 @@ void ResultsView::applyAppSettings()
     mThreshLab->setFixedSize( fm.width(mThreshLab->text()), lineEditHeight);
     mHPDEdit->setFixedSize(wEdit, lineEditHeight);
     mFFTLenLab->setFixedSize(fm.width(mFFTLenLab->text()), comboBoxHeight);
-    mFFTLenCombo->setFixedSize(wEdit, comboBoxHeight);
+    mFFTLenCombo->setFixedSize(mOptionsW/2 - mMargin, comboBoxHeight);// wEdit, comboBoxHeight);
     mBandwidthLab->setFixedSize(fm.width(mBandwidthLab->text()), lineEditHeight);
     mBandwidthEdit->setFixedSize(wEdit, lineEditHeight);
 
