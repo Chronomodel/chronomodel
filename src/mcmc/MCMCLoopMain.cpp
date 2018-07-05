@@ -420,15 +420,15 @@ QString MCMCLoopMain::initMCMC()
     
     if (phasesConstraints.size() > 0) {
         log += "<hr>";
-        log += textBold(tr("Phases Constraints Initialisation"));
+        log += textBold(textGreen(tr("Phases Constraints Initialisation"))) ;
         log += "<hr>";
         
         int i = 0;
         for (const PhaseConstraint* constraint : phasesConstraints) {
             ++i;
             log += "<br>";
-            log += line(tr("Succession ( %1 / %2) : from %3 to %4").arg(QString::number(i),QString::number(phasesConstraints.size()),constraint->mPhaseFrom->mName, constraint->mPhaseTo->mName));
-            log += line(tr(" - Gamma : %1").arg(stringForLocal(constraint->mGamma)));
+            log += line(textGreen(tr("Succession ( %1 / %2) : from %3 to %4").arg(QString::number(i),QString::number(phasesConstraints.size()),constraint->mPhaseFrom->mName, constraint->mPhaseTo->mName)));
+            log += line(textGreen(tr(" - Gamma : %1").arg(stringForLocal(constraint->mGamma))));
         }
     }
     

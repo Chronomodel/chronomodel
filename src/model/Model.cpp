@@ -401,17 +401,17 @@ void Model::generateModelLog()
    // i = 0;
     for (auto&& pPhaseConst : mPhaseConstraints) {
         log += "<hr>";
-        log += line(textBold(textPurple( QObject::tr("Succession from %1 to %2").arg(pPhaseConst->mPhaseFrom->mName, pPhaseConst->mPhaseTo->mName))));
+        log += line(textBold(textGreen( QObject::tr("Succession from %1 to %2").arg(pPhaseConst->mPhaseFrom->mName, pPhaseConst->mPhaseTo->mName))));
 
         switch(pPhaseConst->mGammaType) {
             case PhaseConstraint::eGammaFixed :
-                log += line(textBold(textPurple( QObject::tr("Min Hiatus fixed = %1").arg(pPhaseConst->mGammaFixed))));
+                log += line(textBold(textGreen( QObject::tr("Min Hiatus fixed = %1").arg(pPhaseConst->mGammaFixed))));
                 break;
             case PhaseConstraint::eGammaUnknown :
-                log += line(textBold(textPurple( QObject::tr("Min Hiatus unknown") )));
+                log += line(textBold(textGreen( QObject::tr("Min Hiatus unknown") )));
                 break;
             case PhaseConstraint::eGammaRange : //no longer used
-                 log += line(textBold(textPurple( QObject::tr("Min Hiatus between %1 and %2").arg(pPhaseConst->mGammaMin, pPhaseConst->mGammaMax))));
+                 log += line(textBold(textGreen( QObject::tr("Min Hiatus between %1 and %2").arg(pPhaseConst->mGammaMin, pPhaseConst->mGammaMax))));
                 break;
             default:
                 log += "Hiatus undefined -> ERROR";

@@ -487,17 +487,17 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p, const bo
     QString text;
     const QString nl = "\r";
         text += nl;
-        text += QObject::tr("Succession : from %1 to %2").arg(p->mPhaseFrom->mName, p->mPhaseTo->mName);
+        text += textGreen(QObject::tr("Succession : from %1 to %2").arg(p->mPhaseFrom->mName, p->mPhaseTo->mName));
 
         switch(p->mGammaType) {
             case PhaseConstraint::eGammaFixed :
-                text += QObject::tr("Min Hiatus fixed = %1").arg(p->mGammaFixed);
+                text += textGreen(QObject::tr("Min Hiatus fixed = %1").arg(p->mGammaFixed));
                 break;
             case PhaseConstraint::eGammaUnknown :
-                text += QObject::tr("Min Hiatus unknown") ;
+                text += textGreen(QObject::tr("Min Hiatus unknown")) ;
                 break;
             case PhaseConstraint::eGammaRange : // no longer used
-                 text += QObject::tr("Min Hiatus between %1 and %2").arg(p->mGammaMin, p->mGammaMax);
+                 text += textGreen(QObject::tr("Min Hiatus between %1 and %2").arg(p->mGammaMin, p->mGammaMax));
                  break;
             default:
 
@@ -508,17 +508,17 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p, const bo
             text += nl;
             // we suppose it's the same mThreshohdUsed than alpha
             if (forCSV) {
-                const QString result = QObject::tr("Transition Range") + QString(" (%1 %) : [ %2 ; %3 ] %4").arg(stringForCSV(p->mPhaseFrom->mAlpha.mThresholdUsed),
+                const QString result = textGreen(QObject::tr("Transition Range") + QString(" (%1 %) : [ %2 ; %3 ] %4").arg(stringForCSV(p->mPhaseFrom->mAlpha.mThresholdUsed),
                                                                                                    stringForCSV(p->getFormatedTransitionRange().first),
                                                                                                    stringForCSV(p->getFormatedTransitionRange().second),
-                                                                                                   DateUtils::getAppSettingsFormatStr());
+                                                                                                   DateUtils::getAppSettingsFormatStr()));
 
                 text += result + nl;
             } else {
-                const QString result = QObject::tr("Transition Range") + QString(" (%1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(p->mPhaseFrom->mAlpha.mThresholdUsed),
+                const QString result = textGreen(QObject::tr("Transition Range") + QString(" (%1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(p->mPhaseFrom->mAlpha.mThresholdUsed),
                                                                                                    stringForLocal(p->getFormatedTransitionRange().first),
                                                                                                    stringForLocal(p->getFormatedTransitionRange().second),
-                                                                                                   DateUtils::getAppSettingsFormatStr());
+                                                                                                   DateUtils::getAppSettingsFormatStr()));
 
                 text += result + nl;
             }
@@ -530,15 +530,15 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p, const bo
             text += nl;
 
             if (forCSV) {
-                const QString result = QObject::tr("Gap Range") + QString(" ( %1 ) : [ %2 ; %3 ]").arg(stringForCSV(p->mPhaseFrom->mAlpha.mThresholdUsed),
+                const QString result = textGreen(QObject::tr("Gap Range") + QString(" ( %1 ) : [ %2 ; %3 ]").arg(stringForCSV(p->mPhaseFrom->mAlpha.mThresholdUsed),
                                                                                          stringForCSV(p->getFormatedGapRange().first),
-                                                                                         stringForCSV(p->getFormatedGapRange().second) );
+                                                                                         stringForCSV(p->getFormatedGapRange().second) ));
 
                 text += result + nl;
             } else {
-                const QString result = QObject::tr("Gap Range") + QString(" ( %1 ) : [ %2 ; %3 ]").arg(stringForLocal(p->mPhaseFrom->mAlpha.mThresholdUsed),
+                const QString result = textGreen(QObject::tr("Gap Range") + QString(" ( %1 ) : [ %2 ; %3 ]").arg(stringForLocal(p->mPhaseFrom->mAlpha.mThresholdUsed),
                                                                                          stringForLocal(p->getFormatedGapRange().first),
-                                                                                         stringForLocal(p->getFormatedGapRange().second) );
+                                                                                         stringForLocal(p->getFormatedGapRange().second) ));
 
                 text += result + nl;
             }
