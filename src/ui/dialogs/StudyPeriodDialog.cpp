@@ -100,6 +100,8 @@ void StudyPeriodDialog::setSettings(const ProjectSettings& s)
     mForcedCheck -> setChecked(s.mStepForced);
     mStepSpin    -> setEnabled(s.mStepForced);
     mStepSpin    -> setValue(s.mStep);
+
+    mAdvancedCheck->setChecked(s.mStepForced);
 }
 
 void StudyPeriodDialog::setStep(double step, bool forced, double suggested)
@@ -115,7 +117,12 @@ ProjectSettings StudyPeriodDialog::getSettings() const
     ProjectSettings s = ProjectSettings();
     s.mTmin = locale().toDouble(mMinEdit->text());
     s.mTmax = locale().toDouble(mMaxEdit->text());
-    s.mStep = mStepSpin->value();
+    if (mForcedCheck->isChecked())
+        s.mStep = mStepSpin->value();
+    else {
+        const double suggested = s.getStep(s.mTmin, s.mTmax);
+        s.mStep = suggested;
+    }
     s.mStepForced = mForcedCheck -> isChecked();
     return s;
 }
