@@ -36,7 +36,7 @@ class ModelView: public QWidget
 {
     Q_OBJECT
 public:
-    ModelView(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
+    ModelView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~ModelView();
     
     void setProject(Project* project);

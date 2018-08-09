@@ -28,7 +28,7 @@ class CalibrationView: public QWidget
 {
     Q_OBJECT
 public:
-    CalibrationView(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
+    CalibrationView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~CalibrationView();
     
     void setDate(const QJsonObject& date);

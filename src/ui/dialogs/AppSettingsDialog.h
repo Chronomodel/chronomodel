@@ -26,7 +26,7 @@ class AppSettingsDialog: public QDialog
 {
     Q_OBJECT
 public:
-    AppSettingsDialog(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
+    AppSettingsDialog(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     virtual ~AppSettingsDialog();
 
     void setSettings();

@@ -34,7 +34,7 @@ class ImportDataView: public QWidget
 {
     Q_OBJECT
 public:
-    ImportDataView(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
+    ImportDataView(QWidget* parent = nullptr, Qt::WindowFlags flags =  Qt::Widget);
     ~ImportDataView();
     
 public slots:

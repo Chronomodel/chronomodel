@@ -14,7 +14,7 @@ class PluginUniformForm: public PluginFormAbstract
 {
     Q_OBJECT
 public:
-    PluginUniformForm(PluginUniform* plugin, QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
+    PluginUniformForm(PluginUniform* plugin, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     virtual ~PluginUniformForm();
     
     void setData(const QJsonObject& data, bool isCombined);

@@ -17,7 +17,7 @@ class PhaseDialog: public QDialog
 {
     Q_OBJECT
 public:
-    PhaseDialog(QWidget* parent = 0, Qt::WindowFlags flags = Qt::Window);
+    PhaseDialog(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Window);
     ~PhaseDialog();
     
     void setPhase(const QJsonObject& phase);

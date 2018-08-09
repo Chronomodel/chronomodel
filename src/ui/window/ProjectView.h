@@ -21,7 +21,7 @@ class ProjectView: public QWidget
 {
     Q_OBJECT
 public:
-    ProjectView(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
+    ProjectView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~ProjectView();
 
     void resizeEvent(QResizeEvent* e);

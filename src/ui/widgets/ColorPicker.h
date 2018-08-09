@@ -10,7 +10,7 @@ class ColorPicker: public QWidget
     Q_OBJECT
     Q_PROPERTY(QColor olor READ getColor WRITE setColor NOTIFY colorChanged)
 public:
-    ColorPicker(const QColor& color = Qt::red, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    ColorPicker(const QColor& color = Qt::red, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~ColorPicker();
     
     void setColor(const QColor& color);

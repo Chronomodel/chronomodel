@@ -1202,7 +1202,7 @@ void Model::generateCredibility(const double thresh)
     QProgressDialog *progress = new QProgressDialog(tr("Time range & credibilities generation"), tr("Wait") , 1, 10);
 
     progress->setWindowModality(Qt::WindowModal);
-    progress->setCancelButton(0);
+    progress->setCancelButton(nullptr);
     progress->setMinimumDuration(5);
     progress->setMinimum(0);
     progress->setMaximum(mPhases.size()*4);
@@ -1233,7 +1233,7 @@ void Model::generateCredibility(const double thresh)
 
     QProgressDialog *progressGap = new QProgressDialog(tr("Gaps and transitions generation"), tr("Wait") , 1, 10);
     progressGap->setWindowModality(Qt::WindowModal);
-    progressGap->setCancelButton(0);
+    progressGap->setCancelButton(nullptr);
     progressGap->setMinimumDuration(5);
     progressGap->setMinimum(0);
     progressGap->setMaximum(mPhases.size()*4);

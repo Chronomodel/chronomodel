@@ -11,7 +11,7 @@ class Marker: public QWidget
     Q_OBJECT
 
 public:
-    Marker(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
+    Marker(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~Marker();
     int thickness() const;
     void hideMarker();

@@ -16,7 +16,7 @@ class PluginMagForm: public PluginFormAbstract
 {
     Q_OBJECT
 public:
-    PluginMagForm(PluginMag* plugin, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    PluginMagForm(PluginMag* plugin, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     virtual ~PluginMagForm();
     
     void setData(const QJsonObject& data, bool isCombined);

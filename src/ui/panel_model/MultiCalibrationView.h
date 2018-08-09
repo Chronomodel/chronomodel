@@ -19,7 +19,7 @@ class MultiCalibrationView: public QWidget
 {
     Q_OBJECT
 public:
-    MultiCalibrationView(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
+    MultiCalibrationView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
 
     ~MultiCalibrationView();
 

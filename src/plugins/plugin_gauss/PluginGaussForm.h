@@ -16,7 +16,7 @@ class PluginGaussForm: public PluginFormAbstract
 {
     Q_OBJECT
 public:
-    PluginGaussForm(PluginGauss* plugin, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    PluginGaussForm(PluginGauss* plugin, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     virtual ~PluginGaussForm();
     
     void setData(const QJsonObject& data, bool isCombined);

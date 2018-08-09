@@ -19,7 +19,7 @@ public:
         ePhase = 1
     };
     
-    ConstraintDialog(QWidget* parent = 0, Type type = eEvent, Qt::WindowFlags flags = 0);
+    ConstraintDialog(QWidget* parent = nullptr, Type type = eEvent, Qt::WindowFlags flags =  Qt::Widget);
     ~ConstraintDialog();
     
     void setConstraint(const QJsonObject& constraint);

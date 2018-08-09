@@ -26,7 +26,7 @@ class EventPropertiesView: public QWidget
 {
     Q_OBJECT
 public:
-    EventPropertiesView(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
+    EventPropertiesView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~EventPropertiesView();
     
     void updateEvent();

@@ -17,7 +17,7 @@ class Ruler: public QWidget
 {
     Q_OBJECT
 public:
-    Ruler(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
+    Ruler(QWidget* parent = nullptr, Qt::WindowFlags flags =  Qt::Widget);
     ~Ruler();
     Ruler& operator=(const Ruler & origin);
 

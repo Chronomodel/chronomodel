@@ -40,7 +40,7 @@ class ResultsView: public QWidget
 {
     Q_OBJECT
 public:
-    ResultsView(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
+    ResultsView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~ResultsView();
     
     double mResultZoomX;
@@ -336,14 +336,14 @@ private:
     int mMinorCountScale;
 
 
-    qreal titleHeight ;
-    qreal labelHeight ;
-    qreal lineEditHeight;
-    qreal checkBoxHeight;
-    qreal comboBoxHeight ;
-    qreal radioButtonHeight;
-    qreal spinBoxHeight;
-    qreal buttonHeight;
+    int titleHeight ;
+    int labelHeight ;
+    int lineEditHeight;
+    int checkBoxHeight;
+    int comboBoxHeight ;
+    int radioButtonHeight;
+    int spinBoxHeight;
+    int buttonHeight;
 
 };
 

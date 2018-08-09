@@ -24,7 +24,7 @@ class DateDialog: public QDialog
 {
     Q_OBJECT
 public:
-    DateDialog(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    DateDialog(QWidget* parent = nullptr, Qt::WindowFlags flags =  Qt::WindowType::Widget);
     ~DateDialog();
     
     void setDate(const QJsonObject& date);

@@ -13,7 +13,7 @@ class PluginRefCurveSettingsView: public QWidget
 {
     Q_OBJECT
 public:
-    PluginRefCurveSettingsView(PluginAbstract* plugin, QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
+    PluginRefCurveSettingsView(PluginAbstract* plugin, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     virtual ~PluginRefCurveSettingsView();
     
     void updateFilesInFolder();

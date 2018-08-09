@@ -48,11 +48,13 @@ BUILD ON UBUNTU (linux)
  sudo apt-get update
 
 1-1 Install Qt5
- sudo apt-get install qtdeclarative5-dev
+# sudo apt-get install qtdeclarative5-dev
 # sudo apt-get install qtbase5-dev
 
 1-2 Install QtCreator
-sudo apt-get install qt-sdk
+#sudo apt-get install qt-sdk
+
+sudo apt-get install build-essential
 
 1-3 Install Git
 sudo apt-get install git-gui

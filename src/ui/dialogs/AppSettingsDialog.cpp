@@ -11,7 +11,7 @@
 AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QDialog(parent, flags)
 {
     setWindowTitle(tr("Application Settings"));
-    filesChanged = false,
+    filesChanged = false;
     // -----------------------------
     //  General View
     // -----------------------------
@@ -30,11 +30,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 //    QList<QLocale> allLocales = QLocale::matchingLocales(QLocale::AnyLanguage, QLocale::AnyScript, QLocale::AnyCountry);
 
     for (int i=0; i<339; i++)
-        mLanguageCombo->addItem(QLocale::languageToString((QLocale::Language)i),QVariant((QLocale::Language)i));
-
-    QFontDialog dialog;
-    dialog.setParent(qApp->activeWindow());
-    dialog.setFont(mFont);
+        mLanguageCombo->addItem(QLocale::languageToString(QLocale::Language (i)),QVariant(QLocale::Language(i)));
 
     mFontLab = new Label(tr("Font Menu"), this);
     mFontBut = new Button(mFont.family() + ", " + QString::number(mFont.pointSizeF()), this);
@@ -91,7 +87,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     mFormatDateLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mFormatDate = new QComboBox(this);
     for (int i=0; i<6; ++i) // until 8 to use Age Ma and ka
-        mFormatDate->addItem(DateUtils::dateFormatToString((DateUtils::FormatDate)i));
+        mFormatDate->addItem(DateUtils::dateFormatToString(DateUtils::FormatDate (i)));
     
     mFormatDate->setCurrentIndex(1);
     mFormatDate->setVisible(true);
@@ -276,14 +272,14 @@ void AppSettingsDialog::setSettings()
     mPixelRatio->setValue(AppSettings::mPixelRatio);
     //mDpm->setCurrentText(QString::number(settings.mDpm));
     mImageQuality->setValue(AppSettings::mImageQuality);
-    mFormatDate->setCurrentIndex((int)AppSettings::mFormatDate);
+    mFormatDate->setCurrentIndex(int (AppSettings::mFormatDate));
     mPrecision->setValue(AppSettings::mPrecision);
    // mNbSheet->setValue(settings.mNbSheet);
 }
 
 void AppSettingsDialog::getSettings()
 {
-    AppSettings::mLanguage = (QLocale::Language)mLanguageCombo->currentData().toInt();
+    AppSettings::mLanguage = QLocale::Language (mLanguageCombo->currentData().toInt());
     AppSettings::mCountry = locale().country();
     AppSettings::setFont(mFont);
 
@@ -295,17 +291,12 @@ void AppSettingsDialog::getSettings()
     AppSettings::mPixelRatio = mPixelRatio->value();
     //settings.mDpm = mDpm->currentText().toShort();
     AppSettings::mImageQuality = mImageQuality->value();
-    AppSettings::mFormatDate = (DateUtils::FormatDate)mFormatDate->currentIndex();
+    AppSettings::mFormatDate = DateUtils::FormatDate (mFormatDate->currentIndex());
     AppSettings::mPrecision = mPrecision->value();
 }
 
 void AppSettingsDialog::changeSettings()
 {
-    //AppSettings s = getSettings();
-    
-    //qApp->setFont(mFont);
-    //mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
-
     QLocale::Language newLanguage = AppSettings::mLanguage;
     QLocale::Country newCountry= AppSettings::mCountry;
     
@@ -319,10 +310,6 @@ void AppSettingsDialog::changeSettings()
 
 void AppSettingsDialog::fontButtonClicked()
 {
-    QFontDialog dialog;
-    dialog.setParent(qApp->activeWindow());
-    dialog.setFont(mFont);
-
     bool ok;
     const QFont font = QFontDialog::getFont(&ok, mFont, this);
     if (ok) {
@@ -363,7 +350,7 @@ void AppSettingsDialog::buttonClicked(QAbstractButton* button)
     mPixelRatio->setValue(APP_SETTINGS_DEFAULT_PIXELRATIO);
     //mDpm->setCurrentText(QString(APP_SETTINGS_DEFAULT_DPM));
     mImageQuality->setValue(APP_SETTINGS_DEFAULT_IMAGE_QUALITY);
-    mFormatDate->setCurrentIndex((int)APP_SETTINGS_DEFAULT_FORMATDATE);
+    mFormatDate->setCurrentIndex(int (APP_SETTINGS_DEFAULT_FORMATDATE));
     mPrecision->setValue(APP_SETTINGS_DEFAULT_PRECISION);
   //  mNbSheet->setValue(APP_SETTINGS_DEFAULT_SHEET);
 

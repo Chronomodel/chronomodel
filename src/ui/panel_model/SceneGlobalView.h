@@ -11,7 +11,7 @@ class SceneGlobalView: public QWidget
 {
     Q_OBJECT
 public:
-    SceneGlobalView(QGraphicsScene* scene, QGraphicsView* view, QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
+    SceneGlobalView(QGraphicsScene* scene, QGraphicsView* view, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~SceneGlobalView();
     
 protected:

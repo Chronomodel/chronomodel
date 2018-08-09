@@ -11,7 +11,7 @@ class CollapsibleHeader: public QWidget
 {
     Q_OBJECT
 public:
-    CollapsibleHeader(Collapsible* collapsible, Qt::WindowFlags flags = 0);
+    CollapsibleHeader(Collapsible* collapsible, Qt::WindowFlags flags = Qt::Widget);
     ~CollapsibleHeader();
     
     void setTitle(const QString& title);
@@ -30,7 +30,7 @@ class Collapsible: public QWidget
 {
     Q_OBJECT
 public:
-    Collapsible(const QString& title, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    Collapsible(const QString& title, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~Collapsible();
 
     void setWidget(QWidget* widget, int height);

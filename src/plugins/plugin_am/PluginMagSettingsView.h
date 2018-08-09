@@ -13,7 +13,7 @@ class PluginMagSettingsView: public PluginSettingsViewAbstract
 {
     Q_OBJECT
 public:
-    PluginMagSettingsView(PluginMag* plugin, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    PluginMagSettingsView(PluginMag* plugin, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     virtual ~PluginMagSettingsView();
     
 private:
