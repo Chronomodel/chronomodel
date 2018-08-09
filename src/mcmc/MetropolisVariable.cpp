@@ -663,15 +663,9 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
             if (!mHPD.isEmpty())
                 result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForCSV(mThresholdUsed), getHPDText(mHPD, mThresholdUsed, unit, conversionFunc, true)) + nl;
 
-
+            // the mCredibility is already in the time scale, we don't need to convert
             if (mCredibility != QPair<double, double>()) {
-                if (conversionFunc)
-                    result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForCSV(mExactCredibilityThreshold * 100.),
-                                                                                     stringForCSV( conversionFunc(mCredibility.first)),
-                                                                                     stringForCSV( conversionFunc(mCredibility.second)),
-                                                                                      unit);
-                else
-                    result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForCSV(mExactCredibilityThreshold * 100.),
+                result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForCSV(mExactCredibilityThreshold * 100.),
                                                                                        stringForCSV(mCredibility.first),
                                                                                        stringForCSV(mCredibility.second),
                                                                                        unit);
@@ -680,19 +674,12 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
             if (!mHPD.isEmpty())
                 result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForLocal(mThresholdUsed), getHPDText(mHPD, mThresholdUsed, unit, conversionFunc, false)) + nl;
 
-
-            if (mCredibility != QPair<double, double>()) {
-                if (conversionFunc)
-                    result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(mExactCredibilityThreshold * 100.),
-                                                                                      stringForLocal(conversionFunc(mCredibility.first)),
-                                                                                      stringForLocal(conversionFunc(mCredibility.second)),
-                                                                                      unit);
-                else
-                    result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(mExactCredibilityThreshold * 100.),
+            // the mCredibility is already in the time scale, we don't need to convert
+            if (mCredibility != QPair<double, double>())
+                result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(mExactCredibilityThreshold * 100.),
                                                                                        stringForLocal(mCredibility.first),
                                                                                        stringForLocal(mCredibility.second),
                                                                                        unit);
-            }
   }
    return result;
 }
