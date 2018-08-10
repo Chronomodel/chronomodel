@@ -51,8 +51,14 @@ mNoResults(true)
     
     mAutoSaveTimer = new QTimer(this);
     connect(mAutoSaveTimer, &QTimer::timeout, this, &Project::save);
-    mAutoSaveTimer->start(3000);
-    //mAutoSaveTimer->stop();
+
+    if (AppSettings::mAutoSave) {
+        mAutoSaveTimer->setInterval(AppSettings::mAutoSaveDelay * 1000);
+        mAutoSaveTimer->start();
+    } else
+        mAutoSaveTimer->stop();
+
+    //
     mModel = new Model();
     mModel->setProject(this);
 
@@ -513,10 +519,10 @@ bool Project::load(const QString& path)
             if (mModel)
                 mModel->clear();
 
-            mState = jsonDoc.object();
+            QJsonObject loadingState = jsonDoc.object();
             
-            if (mState.contains(STATE_APP_VERSION)) {
-                QString projectVersionStr = mState.value(STATE_APP_VERSION).toString();
+            if (loadingState.contains(STATE_APP_VERSION)) {
+                QString projectVersionStr = loadingState.value(STATE_APP_VERSION).toString();
                 QStringList projectVersionList = projectVersionStr.split(".");
                 
                 QString appVersionStr = QApplication::applicationVersion();
@@ -545,11 +551,15 @@ bool Project::load(const QString& path)
                     if (newerProject) {
                         QMessageBox message(QMessageBox::Warning,
                                             tr("Project version doesn't match"),
-                                            "This project has been saved with a newer version of ChronoModel :\r\r- Project version : " + projectVersionStr + "\r- Current version : " + appVersionStr + "\r\rSome incompatible data may be missing and you may encounter problems running the model.\r\rLoading the project will update and overwrite the existing file. Do you really want to continue ?",
+                                            "This project has been saved with a newer version of ChronoModel :\r\r- Project version : " + projectVersionStr
+                                            + "\r- Current version : " + appVersionStr
+                                            + "\r\rSome incompatible data may be missing and you may encounter problems running the model.\r\rLoading the project will update and overwrite the existing file. Do you really want to continue ?",
                                             QMessageBox::Yes | QMessageBox::No,
                                             qApp->activeWindow());
+
                         if (message.exec() == QMessageBox::No)
                             return false;
+
                     }
 
                     if (olderProject) {
@@ -571,7 +581,7 @@ bool Project::load(const QString& path)
             checkDatesCompatibility();
            qDebug() << "in Project::load  end checkDatesCompatibility";
             //  Check if dates are valid on the current study period
-            mState = checkValidDates(mState);
+            mState = checkValidDates(loadingState);
             
             // When openning a project, it is maked as saved : mState == mLastSavedState
             mLastSavedState = mState;
@@ -626,7 +636,7 @@ bool Project::load(const QString& path)
                                 mCalibCurves = QMap<QString, CalibrationCurve>();
                                 quint32 siz;
                                 in >> siz;
-                                for (int i = 0; i < (int)siz; ++i) {
+                                for (int i = 0; i < int(siz); ++i) {
                                     QString descript;
                                     in >> descript;
                                     CalibrationCurve cal;
@@ -643,7 +653,7 @@ bool Project::load(const QString& path)
                             mCalibCurves = QMap<QString, CalibrationCurve>();
                             quint32 siz;
                             in >> siz;
-                            for (int i = 0; i < (int)siz; ++i) {
+                            for (int i = 0; i < int(siz); ++i) {
                                 QString descript;
                                 in >> descript;
                                 CalibrationCurve cal;
@@ -783,7 +793,7 @@ bool Project::askToSave(const QString& saveDialogTitle)
 
 bool Project::saveProjectToFile()
 {
-    if (mLastSavedState != mState) {
+     if (mLastSavedState != mState) {
         QString path = AppSettings::mLastDir + "/" + AppSettings::mLastFile;
         QFile file(path);
         if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
@@ -817,7 +827,7 @@ bool Project::saveProjectToFile()
 
         out << qApp->applicationVersion();
         // save Calibration Curve
-        out << (quint32) mCalibCurves.size();
+        out << quint32 (mCalibCurves.size());
         for (QMap<QString, CalibrationCurve>::const_iterator it = mCalibCurves.cbegin() ; it != mCalibCurves.cend(); ++it) {
             out << it.key();
             out << it.value();
