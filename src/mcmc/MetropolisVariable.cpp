@@ -442,7 +442,7 @@ void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
         const int n = trace.size();
         
         const double s = sum(trace);
-        const double m = s / (double)n;
+        const double m = s / double (n);
         const double s2 = sum2Shifted(trace, -m);
         
         // Correlation pour cette chaine
@@ -509,7 +509,7 @@ QVector<double> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs>& c
     
     for (int i=0; i<chains.size(); ++i) {
         // We add 1 for the init
-        const int traceSize = 1 + chains.at(i).mNumBurnIter + (chains.at(i).mBatchIndex * chains.at(i).mNumBatchIter ) + (int) (chains.at(i).mNumRunIter / chains.at(i).mThinningInterval);
+        const unsigned long traceSize = 1 + chains.at(i).mNumBurnIter + (chains.at(i).mBatchIndex * chains.at(i).mNumBatchIter ) + int (chains.at(i).mNumRunIter / chains.at(i).mThinningInterval);
         trace.resize(traceSize);
         if (i == index) {
             std::copy(mFormatedTrace->begin()+shift, mFormatedTrace->begin()+shift+traceSize, trace.begin());
@@ -532,7 +532,7 @@ QVector<double> MetropolisVariable::fullRunRawTrace(const QList<ChainSpecs>& cha
     int reserveSize (0);
 
     for (const ChainSpecs& chain : chains)
-        reserveSize += (int) ceil(chain.mNumRunIter / chain.mThinningInterval);
+        reserveSize += int (ceil(chain.mNumRunIter / chain.mThinningInterval));
 
     QVector<double> trace(reserveSize);
 
@@ -541,8 +541,8 @@ QVector<double> MetropolisVariable::fullRunRawTrace(const QList<ChainSpecs>& cha
 
     for (const ChainSpecs& chain : chains) {
         // we add 1 for the init
-        const int burnAdaptSize = 1 + chain.mNumBurnIter + (int) (chain.mBatchIndex * chain.mNumBatchIter);
-        const int runTraceSize = (int)(chain.mNumRunIter / chain.mThinningInterval);
+        const int burnAdaptSize = 1 + chain.mNumBurnIter + int (chain.mBatchIndex * chain.mNumBatchIter);
+        const int runTraceSize = int(chain.mNumRunIter / chain.mThinningInterval);
         const int firstRunPosition = shift + burnAdaptSize;
         std::copy(mRawTrace->begin()+ firstRunPosition, mRawTrace->begin() + firstRunPosition + runTraceSize, trace.begin()+ shiftTrace);
 
@@ -558,7 +558,7 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<ChainSpecs>& chains
     int reserveSize (0);
 
     for (const ChainSpecs& chain : chains)
-        reserveSize += (int) ceil(chain.mNumRunIter / chain.mThinningInterval);
+        reserveSize += int (ceil(chain.mNumRunIter / chain.mThinningInterval));
 
     QVector<double> trace(reserveSize);
 
@@ -567,8 +567,8 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<ChainSpecs>& chains
 
     for (const ChainSpecs& chain : chains) {
         // we add 1 for the init
-        const int burnAdaptSize = 1 + chain.mNumBurnIter + (int) (chain.mBatchIndex * chain.mNumBatchIter);
-        const int runTraceSize = (int)(chain.mNumRunIter / chain.mThinningInterval);
+        const int burnAdaptSize = 1 + chain.mNumBurnIter + int (chain.mBatchIndex * chain.mNumBatchIter);
+        const int runTraceSize = int(chain.mNumRunIter / chain.mThinningInterval);
         const int firstRunPosition = shift + burnAdaptSize;
         std::copy(mFormatedTrace->begin()+ firstRunPosition, mFormatedTrace->begin() + firstRunPosition + runTraceSize, trace.begin()+ shiftTrace);
 
@@ -629,8 +629,8 @@ QVector<double> MetropolisVariable::runFormatedTraceForChain(const QList<ChainSp
         for (int i=0; i<chains.size(); ++i)  {
             const ChainSpecs& chain = chains.at(i);
             // We add 1 for the init
-            const int burnAdaptSize = 1 + chain.mNumBurnIter + (int) (chain.mBatchIndex * chain.mNumBatchIter);
-            const int traceSize = (int) (chain.mNumRunIter / chain.mThinningInterval);
+            const int burnAdaptSize = 1 + chain.mNumBurnIter + int (chain.mBatchIndex * chain.mNumBatchIter);
+            const int traceSize = int (chain.mNumRunIter / chain.mThinningInterval);
 
             if (i == index) {
                 trace.resize(traceSize);
@@ -731,43 +731,43 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
 QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
 {
     switch (data.mSupport) {
-       case MetropolisVariable::eR : stream << (quint8)(0); // on R
+       case MetropolisVariable::eR : stream << quint8(0); // on R
         break;
-       case MetropolisVariable::eRp: stream << (quint8)(1); // on R+
+       case MetropolisVariable::eRp: stream << quint8(1); // on R+
           break;
-       case MetropolisVariable::eRm : stream << (quint8)(2); // on R-
+       case MetropolisVariable::eRm : stream << quint8(2); // on R-
           break;
-       case MetropolisVariable::eRpStar : stream << (quint8)(3); // on R+*
+       case MetropolisVariable::eRpStar : stream << quint8(3); // on R+*
           break;
-       case MetropolisVariable::eRmStar : stream << (quint8)(4); // on R-*
+       case MetropolisVariable::eRmStar : stream << quint8(4); // on R-*
           break;
-       case  MetropolisVariable::eBounded : stream << (quint8)(5); // on bounded support
+       case  MetropolisVariable::eBounded : stream << quint8(5); // on bounded support
           break;
     }
 
     switch (data.mFormat) {
 
-       case DateUtils::eUnknown : stream << (qint16)(-2);
+       case DateUtils::eUnknown : stream << qint16(-2);
         break;
-       case DateUtils::eNumeric : stream << (qint16)(-1);
+       case DateUtils::eNumeric : stream << qint16(-1);
           break;
-       case DateUtils::eBCAD : stream << (qint16)(0);
-          break;
-
-       case DateUtils::eCalBP : stream << (qint16)(1);
-          break;
-       case DateUtils::eCalB2K : stream << (qint16)(2);
-          break;
-       case  DateUtils::eDatBP : stream << (qint16)(3);
-          break;
-       case DateUtils::eDatB2K : stream << (qint16)(4);
-          break;
-       case DateUtils::eBCECE : stream << (qint16)(5);
+       case DateUtils::eBCAD : stream << qint16(0);
           break;
 
-       case  DateUtils::eKa : stream << (qint16)(6);
+       case DateUtils::eCalBP : stream << qint16(1);
           break;
-       case DateUtils::eMa : stream << (qint16)(7);
+       case DateUtils::eCalB2K : stream << qint16(2);
+          break;
+       case  DateUtils::eDatBP : stream << qint16(3);
+          break;
+       case DateUtils::eDatB2K : stream << qint16(4);
+          break;
+       case DateUtils::eBCECE : stream << qint16(5);
+          break;
+
+       case  DateUtils::eKa : stream << qint16(6);
+          break;
+       case DateUtils::eMa : stream << qint16(7);
           break;
     }
 
@@ -786,7 +786,7 @@ QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
 {
     quint8 support;
     stream >> support;
-    switch ((int) support) {
+    switch (int (support)) {
       case 0 : data.mSupport = MetropolisVariable::eR; // on R
        break;
       case 1 : data.mSupport = MetropolisVariable::eRp; // on R+

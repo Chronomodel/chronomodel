@@ -21,6 +21,9 @@
 #define M_PI 3.14159265358979323846 //usefull to Windows
 #endif
 
+#ifndef M_PIl
+#define M_PIl 3.14159265358979323846264338327950288419716939937510L //usefull in long double
+#endif
 
 typedef QString (*FormatFunc)(const double, const bool forcePrecision);
 
@@ -36,7 +39,7 @@ void checkFloatingPointException(const QString& infos = QString());
 template <typename T, typename V>
 V interpolate(const T& x, const T& x1, const T& x2, const V& y1, const V& y2)
 {
-    return (y1 + (y2 - y1) * (V)((x - x1) / (x2 - x1)) );
+    return (y1 + (y2 - y1) * V((x - x1) / (x2 - x1)) );
 }
 
 template <typename T, typename U>
@@ -108,7 +111,7 @@ template <class U, class T>
 T map_max_value(const QMap<U, T>& aMap)
 {
     QMapIterator<U, T> iter(aMap);
-    T max = iter.hasNext() ?  iter.next().value()  :  (T) 0 ;
+    T max = iter.hasNext() ?  iter.next().value()  :  T(0) ;
     
     while (iter.hasNext()) {
         iter.next();
@@ -121,7 +124,7 @@ template <class U, class T>
 T map_min_value(const QMap<U, T>& aMap)
 {
     QMapIterator<U, T> iter(aMap);
-    T min = iter.hasNext() ?  iter.next().value()  :   0 ;
+    T min = iter.hasNext() ?  iter.next().value()  :  T(0) ;
    
     while (iter.hasNext()) {
         iter.next();

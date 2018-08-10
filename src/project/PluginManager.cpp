@@ -14,17 +14,14 @@ QList<PluginAbstract*> PluginManager::mPlugins = QList<PluginAbstract*>();
 
 PluginManager::~PluginManager()
 {
-   /* for(int i=0; i<mPlugins.size(); ++i)
-        delete mPlugins[i];
 
-    mPlugins.clear();*/
 }
 
 void PluginManager::clearPlugins()
 {
     for(int i=0; i<mPlugins.size(); ++i) {
         delete mPlugins[i];
-        mPlugins[i] = 0;
+        mPlugins[i] = nullptr;
     }
     mPlugins.clear();
 }
@@ -91,18 +88,18 @@ void PluginManager::loadPlugins()
 
 PluginAbstract* PluginManager::getPluginFromId(const QString& pluginId)
 {
-    for(int i=0; i<mPlugins.size(); ++i)
-        if(mPlugins.at(i)->getId() == pluginId)
-            return mPlugins[i];
-    return 0;
+    for (int i=0; i<mPlugins.size(); ++i)
+        if (mPlugins.at(i)->getId() == pluginId)
+            return mPlugins.at(i);
+    return nullptr;
 }
-PluginAbstract* PluginManager::getPluginFromName(const QString& pluginName)
 
+PluginAbstract* PluginManager::getPluginFromName(const QString& pluginName)
 {
-    for(int i=0; i<mPlugins.size(); ++i)
-        if(mPlugins.at(i)->getName().toLower() == pluginName.toLower())
-            return mPlugins[i];
-    return 0;
+    for (int i=0; i<mPlugins.size(); ++i)
+        if (mPlugins.at(i)->getName().toLower() == pluginName.toLower())
+            return mPlugins.at(i);
+    return nullptr;
 }
 
 const QList<PluginAbstract*>& PluginManager::getPlugins()
@@ -113,7 +110,7 @@ const QList<PluginAbstract*>& PluginManager::getPlugins()
 QStringList PluginManager::getPluginsNames()
 {
     QStringList names;
-    for(int i=0; i<mPlugins.size(); ++i)
+    for (int i=0; i<mPlugins.size(); ++i)
         names << mPlugins.at(i)->getName();
     return names;
 }

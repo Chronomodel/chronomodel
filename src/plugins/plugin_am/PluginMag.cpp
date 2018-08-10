@@ -36,10 +36,10 @@ QPair<long double, long double> PluginMag::getLikelihoodArg(const double& t, con
     const bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
     const bool is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
     const bool is_int = data.value(DATE_AM_IS_INT_STR).toBool();
-    const long double alpha =(long double) data.value(DATE_AM_ERROR_STR).toDouble();
-    const long double inc = (long double) data.value(DATE_AM_INC_STR).toDouble();
-    const long double dec = (long double) data.value(DATE_AM_DEC_STR).toDouble();
-    const long double intensity = (long double) data.value(DATE_AM_INTENSITY_STR).toDouble();
+    const long double alpha = static_cast<long double> (data.value(DATE_AM_ERROR_STR).toDouble());
+    const long double inc = static_cast<long double> (data.value(DATE_AM_INC_STR).toDouble());
+    const long double dec = static_cast<long double> (data.value(DATE_AM_DEC_STR).toDouble());
+    const long double intensity = static_cast<long double> (data.value(DATE_AM_INTENSITY_STR).toDouble());
     //QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
     
     long double mesure (0.l);
@@ -50,7 +50,7 @@ QPair<long double, long double> PluginMag::getLikelihoodArg(const double& t, con
         mesure = inc;
     }
     else if (is_dec) {
-        error = alpha / (2.448l * cosl(inc * M_PI / 180.l));
+        error = alpha / (2.448l * cosl(inc * M_PIl / 180.l));
         mesure = dec;
     }
     else if (is_int) {
@@ -58,8 +58,8 @@ QPair<long double, long double> PluginMag::getLikelihoodArg(const double& t, con
         mesure = intensity;
     }
 
-    long double refValue = (long double)getRefValueAt(data, t);
-    long double refError = (long double)getRefErrorAt(data, t);
+    long double refValue = static_cast<long double> (getRefValueAt(data, t));
+    long double refError = static_cast<long double> (getRefErrorAt(data, t));
     
     long double variance = refError * refError + error * error;
     long double exponent = -0.5l * powl((mesure - refValue), 2.l) / variance;
@@ -110,24 +110,24 @@ QString PluginMag::getDateDesc(const Date* date) const
 
     const QJsonObject data = date->mData;
 
-    double is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
-    double is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
-    double is_int = data.value(DATE_AM_IS_INT_STR).toBool();
-    double alpha = data.value(DATE_AM_ERROR_STR).toDouble();
-    double inc = data.value(DATE_AM_INC_STR).toDouble();
-    double dec = data.value(DATE_AM_DEC_STR).toDouble();
-    double intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
+    const bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
+    const bool is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
+    const bool is_int = data.value(DATE_AM_IS_INT_STR).toBool();
+    const double alpha = data.value(DATE_AM_ERROR_STR).toDouble();
+    const double inc = data.value(DATE_AM_INC_STR).toDouble();
+    const double dec = data.value(DATE_AM_DEC_STR).toDouble();
+    const double intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
     const QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
 
     if (is_inc) {
         result += QObject::tr("Inclination : %1").arg(locale.toString(inc));
         // this is the html form, but not reconized in the DatesListItemDelegate
        // result += "; " + QString("α<SUB>95</SUB>") + " : " + locale.toString(alpha);
-         result += "; " + QObject::tr("α_95 : %1").arg(locale.toString(alpha));
+         result += "; " + QObject::tr("α 95 : %1").arg(locale.toString(alpha));
     } else if (is_dec) {
         result += QObject::tr("Declination : %1").arg(locale.toString(dec));
         result += "; " + QObject::tr("Inclination : %1").arg(locale.toString(inc));
-        result += "; " + QObject::tr("α_95 : %1").arg(locale.toString(alpha));
+        result += "; " + QObject::tr("α 95 : %1").arg(locale.toString(alpha));
     } else if (is_int)  {
         result += QObject::tr("Intensity : %1").arg(locale.toString(intensity));
         result += "; " + QObject::tr("Error : %1").arg(locale.toString(alpha));
@@ -160,7 +160,7 @@ QStringList PluginMag::csvColumns() const
         << "Inclination value"
         << "Declination value"
         << "Intensity value"
-        << "Error (sd) or α_95"
+        << "Error (sd) or α 95"
         << "Ref. curve";
     return cols;
 }
@@ -260,18 +260,19 @@ RefCurve PluginMag::loadRefFile(QFileInfo refFile)
             if (!isComment(line)) {
                 QStringList values = line.split(",");
                 if (values.size() >= 3) {
-                    int t = locale.toInt(values.at(0),&ok);
+                    const int t = locale.toInt(values.at(0),&ok);
 
-                    double g = locale.toDouble(values.at(1), &ok);
+                    const double g = locale.toDouble(values.at(1), &ok);
                     if (!ok)
                         continue;
-                    double e = locale.toDouble(values.at(2), &ok);
+
+                    const double e = locale.toDouble(values.at(2), &ok);
                     if(!ok)
                         continue;
                     
-                    double gSup = g + 1.96 * e;
+                    const double gSup = g + 1.96 * e;
 
-                    double gInf = g - 1.96 * e;
+                    const double gInf = g - 1.96 * e;
 
                     
                     curve.mDataMean[t] = g;
@@ -352,6 +353,7 @@ GraphViewRefAbstract* PluginMag::getGraphViewRef()
    mRefGraph = new PluginMagRefView();
    return mRefGraph;
 }
+
 void PluginMag::deleteGraphViewRef(GraphViewRefAbstract* graph)
 {
     if (graph)
@@ -360,6 +362,7 @@ void PluginMag::deleteGraphViewRef(GraphViewRefAbstract* graph)
     graph = nullptr;
     mRefGraph = nullptr;
 }
+
 PluginSettingsViewAbstract* PluginMag::getSettingsView()
 {
     return new PluginMagSettingsView(this);
@@ -370,9 +373,9 @@ bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& sett
 {
     // check valid curve
     QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
-    double is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
-    double is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
-    double is_int = data.value(DATE_AM_IS_INT_STR).toBool();
+    const bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
+    const bool is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
+    const bool is_int = data.value(DATE_AM_IS_INT_STR).toBool();
     //double alpha = data.value(DATE_AM_ERROR_STR).toDouble();
     double inc = data.value(DATE_AM_INC_STR).toDouble();
     double dec = data.value(DATE_AM_DEC_STR).toDouble();
@@ -398,24 +401,24 @@ bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& sett
     const RefCurve& curve = mRefCurves.value(ref_curve);
     bool valid = false;
 
-    if (mesure>curve.mDataInfMin && mesure < curve.mDataSupMax)
+    if (mesure > curve.mDataInfMin && mesure < curve.mDataSupMax)
         valid = true;
 
     else {
         double t = curve.mTmin;
-        long double repartition (0.);
-        long double v (0.);
-        long double lastV (0.);
-        while (valid==false && t<=curve.mTmax) {
-            v = (double)getLikelihood(t,data);
+        long double repartition (0.l);
+        long double v (0.l);
+        long double lastV (0.l);
+        while (valid == false && t <= curve.mTmax) {
+            v = static_cast<long double> (getLikelihood(t,data));
             // we have to check this calculs
             //because the repartition can be smaller than the calibration
-            if (lastV>0. && v>0.)
-                repartition += (long double) settings.mStep * (lastV + v) / 2.;
+            if (lastV>0.l && v>0.l)
+                repartition += static_cast<long double> (settings.mStep) * (lastV + v) / 2.l;
 
             lastV = v;
 
-            valid = ( (double)repartition > 0.);
+            valid = ( repartition > 0.l);
             t += settings.mStep;
         }
     }
