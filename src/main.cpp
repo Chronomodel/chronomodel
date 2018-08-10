@@ -20,7 +20,7 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
     QString dt = QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss");
     QString txt = QString("[%1] ").arg(dt);
     
-    switch ((int)type) {
+    switch (int(type)) {
         case QtDebugMsg:
             txt += QString("{Debug} \t\t %1").arg(msg);
             break;
