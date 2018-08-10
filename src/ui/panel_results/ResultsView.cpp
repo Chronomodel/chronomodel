@@ -1568,8 +1568,6 @@ void ResultsView::updateLayout()
 
     mTabs->setGeometry(tabsShift, mMargin, width() - mOptionsW - sbe - tabsShift, mTabsH);
 
-    mMarker->setGeometry(mMarker->pos().x(), mTabsH + sbe, mMarker->thickness(), height() - sbe - mTabsH);
-
     setGraphFont(mGraphFont);
 
     mRuler->updateLayout();
@@ -1578,10 +1576,13 @@ void ResultsView::updateLayout()
          mRuler->setGeometry(0, mTabs->y() + mTabs->height(), int ((width() - mOptionsW - sbe)*2./3.), mRulerH);
     else
         mRuler->setGeometry(0, mTabs->y() + mTabs->height(), width() - mOptionsW - sbe, mRulerH );
-    //const int statusHeight = 0;//MainWindow.statusBar()->height();
+
     mStack->setGeometry(0, int (mTabsH + 1.2 * mRulerH + 2), width() - mOptionsW, int (height() - 1.2 * mRulerH - mTabsH));
-    mMarker->setGeometry(mMarker->pos().x(), mTabsH + sbe, mMarker->thickness(), height() - sbe - mTabsH);
-    
+
+    // mMarker is resize in ResultsView::mouseMoveEvent(QMouseEvent* e), the following code is usefull when repainting
+    const int markerXPos (inRange(0, mMarker->pos().x(), mRuler->x() + mRuler->width() ));
+    mMarker->setGeometry(markerXPos, mTabsH + mRuler->height() , mMarker->thickness(), height() - mTabsH - mRuler->height());
+
     /* ----------------------------------------------------------
      *  Display Options layout
      * ----------------------------------------------------------*/
@@ -2742,11 +2743,15 @@ qDebug()<< "ResultsView::updateResultsLog()-> emit resultsLogUpdated(log)";
 
 void ResultsView::mouseMoveEvent(QMouseEvent* e)
 {
-    int shiftX (0);
+  //  int shiftX (0);
     
-    int x = e->pos().x() - shiftX;
-    x = (x <= width() - mOptionsW) ? x : width() - mOptionsW;
-    mMarker->setGeometry(x, mMarker->pos().y(), mMarker->width(), mMarker->height());
+  //  int x = e->pos().x() - shiftX;
+
+        const int markerXPos (inRange(0, e->pos().x(), mRuler->x() + mRuler->width() ));
+        mMarker->setGeometry(markerXPos, mTabsH + mRuler->height() , mMarker->thickness(), height() - mTabsH - mRuler->height());
+
+  //  x = (x <= width() - mOptionsW) ? x : width() - mOptionsW;
+ //   mMarker->setGeometry(x, mMarker->pos().y(), mMarker->width(), mMarker->height());
 }
 
 
