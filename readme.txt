@@ -7,12 +7,17 @@ version 2.0
 CREDITS
 ——————————————————
 Copyright ©2018 CNRS
-used under the terms CeCILL FREE SOFTWARE LICENSE AGREEMENT
+used under the terms:
+CeCILL FREE SOFTWARE LICENSE AGREEMENT
 Version 2.1 dated 2013-06-21
 "http://www.cecill.info"
 
+This software use C subroutine library from the FFTW project
+"http://www.fftw.org/"
+distributed under the terms of the GNU General Public License
+
 ——————————————————
-CONTRIBUTOR
+AUTHORS
 ——————————————————
 Philippe Lanos <philippe.lanos@univ-rennes1.fr>
 Helori Lanos <helori.lanos@gmail.com>
