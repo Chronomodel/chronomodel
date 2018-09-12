@@ -67,7 +67,7 @@ private:
 
     MultiCalibrationDrawing* mDrawing;
     QTextEdit* mTextArea;
-    qreal mButtonWidth;
+    int mButtonWidth;
 
     Button* mImageSaveBut;
     Button* mImageClipBut;
@@ -101,7 +101,7 @@ private:
     double mTminDisplay;
     double mTmaxDisplay;
     double mThreshold;
-    double mGraphHeight;
+    int mGraphHeight;
     QColor mCurveColor;
 
     QString mResultText;

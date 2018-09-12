@@ -114,7 +114,7 @@ void MultiCalibrationDrawing::updateLayout()
     const int panelWidth (15);
 
     const bool axisVisible = (mGraphHeight >= mHeightForVisibleAxis);
-    const qreal marginBottom = (axisVisible ? font().pointSize() * 2.2 : font().pointSize() * 0.5);
+    const int marginBottom = (axisVisible ? int (font().pointSize() * 2.2) : int (font().pointSize() * 0.5));
     int y (0);
     int i (0);
 
@@ -123,14 +123,14 @@ void MultiCalibrationDrawing::updateLayout()
         mListPanel[i]->setVisible(true);
 
         if (!graph->hasCurve()) {
-             graph->showInfos(true);
+            graph->showInfos(true);
             graph->setNothingMessage( graph->getInfo(' ')  + " -> Not computable" );
             graph->setGeometry(panelWidth + 5, y, width() - panelWidth, mGraphHeight );
             graph->setVisible(true);
 
          } else {
             graph->showXAxisValues(axisVisible);
-            graph->showXAxisSubTicks(axisVisible);
+            graph->showXAxisSubTicks(true);
             graph->setMarginBottom(marginBottom);
             graph->setYAxisMode(GraphView::eHidden);
             graph->showYAxisLine(false);
@@ -184,7 +184,8 @@ void MultiCalibrationDrawing::forceRefresh()
     const QFontMetrics fm (font());
 
     const bool axisVisible = (mGraphHeight >= mHeightForVisibleAxis);
-    const qreal marginBottom =(axisVisible ? font().pointSize() * 2.2 : 10.);
+    const int marginBottom =(axisVisible ? int (font().pointSize() * 2.2) : 10);
+
     int y (0);
     int i (0);
 
@@ -195,6 +196,7 @@ void MultiCalibrationDrawing::forceRefresh()
             noCalib.setGeometry(panelWidth +5, y, width() - panelWidth - fm.width(noCalib.text()), mGraphHeight);
 
          } else {
+             graph->showXAxisValues(axisVisible);
              graph->forceRefresh();
          }
          y += mGraphHeight;
