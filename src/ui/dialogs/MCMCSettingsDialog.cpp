@@ -8,73 +8,114 @@
 #include <QtWidgets>
 
 
-MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, Qt::WindowFlags flags):
-QDialog(parent, flags),
-  mTotalWidth(110 * AppSettings::widthUnit()),
-  mMargin(.3 * AppSettings::heigthUnit()), // marge width
-  top(2 * AppSettings::heigthUnit()), // y position of the colored box
-  lineH(1.2*AppSettings::heigthUnit()),
-  editW(13 * AppSettings::widthUnit()),
-  h (10 * AppSettings::heigthUnit()), // size of the colored box
-  butW(15*AppSettings::widthUnit()),
-  butH(2*AppSettings::heigthUnit())
+MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent):QDialog(parent),
+mMargin(int (.3 * AppSettings::heigthUnit())), // marge width
+mTop(int ( 1 * AppSettings::heigthUnit())), // y position of the colored box
+mColoredBoxHeigth (6 * AppSettings::heigthUnit()), // size of the colored box
+mBurnBoxWidth(int( 3 *AppSettings::widthUnit())),
+mAdaptBoxWidth( 7 * AppSettings::widthUnit()),
+mAcquireBoxWidth(int (3.5 * AppSettings::widthUnit())),
+mTotalWidth(mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMargin),
+mBottom (3 * AppSettings::heigthUnit()),
+mLineH(int (0.5 * AppSettings::heigthUnit())), // heigth of the edit box
+mEditW(int (2.5 * AppSettings::widthUnit())),
+mButW(int (2.5 *AppSettings::widthUnit())),
+mButH( int (0.5 * AppSettings::heigthUnit()))
 {
     setWindowTitle(tr("MCMC Settings"));
-    setFont(AppSettings::font());
-    QFont font (AppSettings::font());
-    mSeedsEdit = new LineEdit(this);
 
-    mHelp = new HelpWidget(tr("About seeds : each MCMC chain is different from the others because it uses a different seed. By default, seeds are picked randomly. However, you can force the chains to use specific seeds by entering them below. By doing so, you can replicate exactly the same results using the same seeds."), this);
-    mHelp->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=47"); // chapter 4.2 MCMC settings
-    mHelp->setFont(font);
+    mBurnRect = QRectF(mMargin, mTop, mBurnBoxWidth, mColoredBoxHeigth);
+    mAdaptRect = QRectF(mBurnRect.x() + mMargin + mBurnBoxWidth, mTop, mAdaptBoxWidth, mColoredBoxHeigth);
+    mAquireRect = QRectF(mAdaptRect.x() + mMargin + mAdaptBoxWidth, mTop, mAcquireBoxWidth, mColoredBoxHeigth);
 
-    mNumProcEdit = new LineEdit(this);
-    mNumBurnEdit = new LineEdit(this);
+    mBatch1Rect = QRectF(mAdaptRect.x() + mMargin,
+                         mAdaptRect.y() + mLineH + 4 * mMargin,
+                         (mAdaptRect.width() - 4 * mMargin) / 3,
+                         mAdaptRect.height() - 2 * mLineH - 8 * mMargin);
 
-    mMaxBatchesEdit = new LineEdit(this);
-    mNumIterEdit = new LineEdit(this);
-    mDownSamplingEdit = new LineEdit(this);
-
+    fm =new QFontMetrics(font(), this);
+    
     QIntValidator* positiveValidator = new QIntValidator(this);
     positiveValidator->setBottom(1);
-    
+
     QIntValidator* chainsValidator = new QIntValidator(this);
     chainsValidator->setRange(1, 5);
-    
-    mIterPerBatchEdit = new LineEdit(this);
-    mIterPerBatchEdit->setValidator(positiveValidator);
-    
+
+
+    mNbChainsEdit = new QLabel(tr("Number of chains"), this);
+    mNbChainsEdit->setFixedSize(mButW, mButH);
+   
+    mNumProcEdit = new LineEdit(this);
+    mNumProcEdit->setFixedSize(mButW, mButH);
     mNumProcEdit->setValidator(chainsValidator);
     mNumProcEdit->setPlaceholderText(tr("From 1 to 5"));
-    
-    mNumIterEdit->setValidator(positiveValidator);
+
+    // Inside colored boxes
+    // 1 - BURN
+    mTitleBurnLabel = new QLabel(tr("1 - BURN"), this);
+    mTitleBurnLabel->setFixedSize(fm->width(mTitleBurnLabel->text()), mButH);
+    mIterBurnLabel = new QLabel(tr("Iterations"), this);
+    mIterBurnLabel->setFixedSize(fm->width(mIterBurnLabel->text()), mButH);
+
+    mNumBurnEdit = new LineEdit(this);
+    mNumBurnEdit->setAlignment(Qt::AlignCenter);
+    mNumBurnEdit->setFixedSize(mButW, mButH);
     mNumBurnEdit->setValidator(positiveValidator);
+
+    // 2- ADAPT
+    mIterPerBatchEdit = new LineEdit(this);
+    mIterPerBatchEdit->setFixedSize(int (mBatch1Rect.width() - 2 * mMargin), mButH);
+    mIterPerBatchEdit->setValidator(positiveValidator);
+
+    mMaxBatchesEdit = new LineEdit(this);
+    mMaxBatchesEdit->setFixedSize(mButW, mButH);
     mMaxBatchesEdit->setValidator(positiveValidator);
-    mDownSamplingEdit->setValidator(positiveValidator);
-    
-    mNumBurnEdit->setAlignment(Qt::AlignCenter);
-    mNumIterEdit->setAlignment(Qt::AlignCenter);
-    mNumBurnEdit->setAlignment(Qt::AlignCenter);
     mMaxBatchesEdit->setAlignment(Qt::AlignCenter);
+
+    // 3 - ACQUIRE
+    mNumIterEdit = new LineEdit(this);
+    mNumIterEdit->setFixedSize(mButW, mButH);
+    mNumIterEdit->setValidator(positiveValidator);
+    mNumIterEdit->setAlignment(Qt::AlignCenter);
+    
+    mDownSamplingEdit = new LineEdit(this);
+    mDownSamplingEdit->setFixedSize(mButW, mButH);
+    mDownSamplingEdit->setValidator(positiveValidator);
     mDownSamplingEdit->setAlignment(Qt::AlignCenter);
     
-   // mLabelLevel = new Label(tr("Mixing level"),this);
+    // On the bottom part
+    mHelp = new HelpWidget(tr("About seeds : each MCMC chain is different from the others because it uses a different seed. By default, seeds are picked randomly. However, you can force the chains to use specific seeds by entering them below. By doing so, you can replicate exactly the same results using the same seeds."), this);
+    mHelp->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=47"); // chapter 4.2 MCMC settings
+
+    
+    mSeedsLabel = new QLabel(tr("Seeds (separated by \";\")"),this);
+    mSeedsLabel->setFixedSize(fm->width(mSeedsLabel->text()), mButH);
+    mSeedsEdit = new LineEdit(this);
+    mSeedsEdit->setFixedSize(mButW, mButH);
+    
+    mLevelLabel = new QLabel(tr("Mixing level"),this);
+    mLevelLabel->setFixedSize(fm->width(mLevelLabel->text()), mButH);
     mLevelEdit = new LineEdit(this);
+    mLevelEdit->setFixedSize(mButW, mButH);
 
     mOkBut = new Button(tr("OK"), this);
+    mOkBut->setFixedSize(mButW, mButH);
+    
     mCancelBut = new Button(tr("Cancel"), this);
+    mCancelBut->setFixedSize(mButW, mButH);
     
     mTestBut = new Button(tr("Quick Test"), this);
+    mTestBut->setFixedSize(fm->width(mTestBut->text()) + 2 * mMargin, mButH);
+
 #ifdef DEBUG
+    mTestBut->setFixedSize(fm->width(mTestBut->text()) + 2 * mMargin, mButH);
     mTestBut->setVisible(true);
 #else
     mTestBut->setVisible(false);
 #endif
 
     mResetBut = new Button(tr("Restore Defaults"), this);
-
-    const QFontMetrics fm (mResetBut->font());
-    mResetBut->setFixedSize(fm.width(mResetBut->text()) + 4*mMargin, butH);
+    mResetBut->setFixedSize(fm->width(mResetBut->text()) + 2 * mMargin, mButH);
 
     connect(mOkBut, &Button::clicked, this, &MCMCSettingsDialog::inputControl);
     connect(this, &MCMCSettingsDialog::inputValided, this, &MCMCSettingsDialog::accept);
@@ -84,11 +125,9 @@ QDialog(parent, flags),
     connect(mResetBut, &Button::clicked, this, &MCMCSettingsDialog::reset);
     connect(mTestBut, &Button::clicked, this, &MCMCSettingsDialog::setQuickTest);
 
-    w = mTotalWidth - 2.*mMargin;
-
-    const int fixedHeight = mHelp->heightForWidth(mTotalWidth - 2*mMargin)  + 5*mMargin + butH + lineH + h + top + 20;
-
+    const int fixedHeight = mHelp->heightForWidth(mTotalWidth - 2 * mMargin)  + 6 * mMargin + mButH + 2 * mLineH + mColoredBoxHeigth + mTop;
     setFixedSize(mTotalWidth, fixedHeight);
+    
 }
 
 MCMCSettingsDialog::~MCMCSettingsDialog()
@@ -114,16 +153,16 @@ MCMCSettings MCMCSettingsDialog::getSettings()
 {
     const QLocale mLoc = QLocale();
     MCMCSettings settings;
-    const unsigned int UN = 1;
-    settings.mNumChains = qMax(UN, mNumProcEdit->text().toUInt());
+    const int UN = 1;
+    settings.mNumChains = qMax(UN, mNumProcEdit->text().toInt());
 
-    settings.mNumBurnIter = qMax(UN, mNumBurnEdit->text().toUInt());
+    settings.mNumBurnIter = qMax(UN, mNumBurnEdit->text().toInt());
 
-    settings.mMaxBatches = qMax(UN, mMaxBatchesEdit->text().toUInt());
-    settings.mNumBatchIter = qMax(UN, (unsigned int) mIterPerBatchEdit->text().toUInt());
+    settings.mMaxBatches = qMax(UN, mMaxBatchesEdit->text().toInt());
+    settings.mNumBatchIter = qMax(UN,  mIterPerBatchEdit->text().toInt());
 
-    settings.mNumRunIter = qMax((unsigned int) 10, mNumIterEdit->text().toUInt());
-    settings.mThinningInterval = qBound(UN, mDownSamplingEdit->text().toUInt(), (unsigned int)floor(settings.mNumRunIter/10) );
+    settings.mNumRunIter = qMax(10, mNumIterEdit->text().toInt());
+    settings.mThinningInterval = qBound(UN, mDownSamplingEdit->text().toInt(), int (floor(settings.mNumRunIter/10)) );
     
     settings.mMixingLevel = qBound(0.0001, mLoc.toDouble(mLevelEdit->text()),0.9999);
     
@@ -135,13 +174,12 @@ MCMCSettings MCMCSettingsDialog::getSettings()
 void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
-    
-   // int m  (5);
-    
+
     QPainter p(this);
     p.fillRect(rect(), QColor(220, 220, 220));
     
     p.setPen(Painting::borderDark);
+
     QFont font = p.font();
     font.setWeight(QFont::Bold);
     p.setFont(font);
@@ -149,10 +187,9 @@ void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
     font.setWeight(QFont::Normal);
     p.setFont(font);
 
-    p.drawText(0,  2*mMargin  - AppSettings::fontDescent(), width()/2, lineH, Qt::AlignVCenter | Qt::AlignRight, tr("Number of chains") );
     p.setBrush(QColor(235, 115, 100));
     p.drawRect(mBurnRect);
-    
+   
     p.setBrush(QColor(250, 180, 90));
     p.drawRect(mAdaptRect);
     
@@ -163,27 +200,23 @@ void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
     p.drawRect(mBatch1Rect);
     p.drawRect(mBatchInterRect);
     p.drawRect(mBatchNRect);
-    
-    p.drawText(mBurnRect.adjusted(0, 2*mMargin, 0, -mBurnRect.height() + lineH + 2*mMargin), Qt::AlignCenter, tr("1 - BURN"));
-    p.drawText(mBurnRect.adjusted(0, 2*lineH, 0, -mBurnRect.height() + 5*lineH), Qt::AlignCenter, tr("Iterations") );
 
-    p.drawText(mAdaptRect.adjusted(0, 2*mMargin, 0, -mAdaptRect.height() + lineH + 2*mMargin), Qt::AlignCenter, tr("2 - ADAPT"));
+    p.drawText(mAdaptRect.adjusted(0, 2*mMargin, 0, -mAdaptRect.height() + mLineH + 2 * mMargin), Qt::AlignCenter, tr("2 - ADAPT"));
 
-    p.drawText(mAquireRect.adjusted(0, 2*mMargin, 0, -mAquireRect.height() + lineH + 2*mMargin), Qt::AlignCenter, tr("3 - ACQUIRE"));
-    p.drawText(mAquireRect.adjusted(0, lineH + 4*mMargin, 0, -mAquireRect.height() + 2*lineH + 4*mMargin), Qt::AlignCenter, tr("Iterations") );
-    p.drawText(mAquireRect.adjusted(0, 2*lineH + 5*mMargin, 0, -mAquireRect.height() + 6*lineH + 8*mMargin), Qt::AlignCenter, tr("Thinning interval") );
     
-    p.drawText(mBatch1Rect.adjusted(0, mMargin, 0, -mBatch1Rect.height() + lineH + mMargin), Qt::AlignCenter, tr("BATCH 1"));
-    p.drawText(mBatch1Rect.adjusted(0, lineH + 2*mMargin, 0, -mBatch1Rect.height() + 2*lineH + 2*mMargin), Qt::AlignCenter, tr("Iterations") );
+    p.drawText(mBatch1Rect.adjusted(0, mMargin, 0, -mBatch1Rect.height() + mLineH + mMargin), Qt::AlignCenter, tr("BATCH 1"));
+    p.drawText(mBatch1Rect.adjusted(0, mLineH + 2 * mMargin, 0, -mBatch1Rect.height() + 2 * mLineH + 2 * mMargin), Qt::AlignCenter, tr("Iterations") );
 
     p.drawText(mBatchInterRect, Qt::AlignCenter, "...");
     p.drawText(mBatchNRect, Qt::AlignCenter, tr("BATCH N"));
 
-    p.drawText(mAdaptRect.x(), mAdaptRect.y() + mAdaptRect.height() - 2*mMargin - lineH, mAdaptRect.width()/2, lineH, Qt::AlignVCenter | Qt::AlignRight, tr("Max batches") );
+    p.drawText(int (mAdaptRect.x()), int (mAdaptRect.y() + mAdaptRect.height() - 2 * mMargin - mLineH), int (mAdaptRect.width()/2), mLineH, Qt::AlignVCenter | Qt::AlignRight, tr("Max batches") );
 
-    const qreal posLine =  mSeedsEdit->y() + mSeedsEdit->height() - 0.3* AppSettings::heigthUnit();
-    p.drawText(10 * mMargin, posLine,  tr("Seeds (separated by \";\")"));
-    p.drawText(width()/2 + 10 * mMargin , posLine,  tr("Mixing level"));
+
+    p.drawText(mAquireRect.adjusted(0, 2*mMargin, 0, -mAquireRect.height() + mLineH + 2 * mMargin), Qt::AlignCenter, tr("3 - ACQUIRE"));
+    p.drawText(mAquireRect.adjusted(0, mLineH + 3 * mMargin, 0, -mAquireRect.height() + 2 * mLineH + 4 * mMargin), Qt::AlignCenter, tr("Iterations") );
+    p.drawText(int (mAquireRect.x() + (mAcquireBoxWidth - fm->width(tr("Thinning interval")))/2), int (mAquireRect.y() + 6 * mLineH + 4 * mMargin), fm->width(tr("Thinning interval")), mButH, Qt::AlignCenter, tr("Thinning interval") );
+
 
 }
 
@@ -195,45 +228,46 @@ void MCMCSettingsDialog::resizeEvent(QResizeEvent* e)
 
 void MCMCSettingsDialog::updateLayout()
 {
-    mNumProcEdit->setGeometry(width()/2 + mMargin, 2* mMargin  - AppSettings::fontDescent(), editW, lineH);
-
-    mBurnRect = QRectF(mMargin, top, w * 0.2, h);
-    mAdaptRect = QRectF(mMargin + mBurnRect.width(), top, w * 0.4, h);
-    mAquireRect = QRectF(mMargin + mBurnRect.width() + mAdaptRect.width(), top, w * 0.4, h);
-
-    mBatch1Rect = QRectF(mAdaptRect.x() + mMargin,
-                         mAdaptRect.y() + lineH + 4*mMargin,
-                         (mAdaptRect.width() - 4*mMargin) / 3,
-                         mAdaptRect.height() - 2*lineH - 8*mMargin);
-    mBatchInterRect = mBatch1Rect.adjusted(mBatch1Rect.width() + mMargin, 0, mBatch1Rect.width() + mMargin, 0);
-    mBatchNRect = mBatch1Rect.adjusted(2*mBatch1Rect.width() + 2*mMargin, 0, 2*mBatch1Rect.width() + 2*mMargin, 0);
     
-    mNumBurnEdit->setGeometry(mBurnRect.x() + (mBurnRect.width() - editW)/2, mBurnRect.y() + 3*lineH + 6*mMargin, editW, lineH);
+    mNbChainsEdit->move(width()/2 - mMargin - fm->width(mNbChainsEdit->text()), mMargin - fm->descent());
+    mNumProcEdit->move(width()/2 + mMargin, mMargin  - fm->descent());
+    
+    mBatchInterRect = mBatch1Rect.adjusted(mBatch1Rect.width() + mMargin, 0, mBatch1Rect.width() + mMargin, 0);
+    mBatchNRect = mBatch1Rect.adjusted(2*mBatch1Rect.width() + 2 * mMargin, 0, 2 * mBatch1Rect.width() + 2 * mMargin, 0);
+    
+    // setting Edit boxes
+    // 1 -BURN
+    mTitleBurnLabel->move(int (mBurnRect.x() + (mBurnBoxWidth - fm->width(mTitleBurnLabel->text()))/2), int (mBurnRect.y()) + 2 * mMargin);
+    mIterBurnLabel->move(int (mBurnRect.x() + (mBurnBoxWidth - fm->width(mIterBurnLabel->text()))/2), mTitleBurnLabel->y() + mTitleBurnLabel->height() + 3 * mMargin);
+    mNumBurnEdit->move(int (mBurnRect.x() + (mBurnBoxWidth - mEditW)/2),  mIterBurnLabel->y() + mIterBurnLabel->height() + 1 * mMargin);
 
-    mIterPerBatchEdit->setGeometry(mBatch1Rect.x() + mMargin, mBatch1Rect.y() + 2*lineH + 3* mMargin, mBatch1Rect.width() - 2*mMargin, lineH);
-    mMaxBatchesEdit->setGeometry(mAdaptRect.x() + mAdaptRect.width()/2 + mMargin, mAdaptRect.y() + mAdaptRect.height() - 2*mMargin - lineH, editW, lineH);
+    // 2 - ADAPT
+    mIterPerBatchEdit->move(int (mBatch1Rect.x() + mMargin), int (mBatch1Rect.y() + 2 * mLineH + 3 * mMargin));
+    mMaxBatchesEdit->move(int (mAdaptRect.x() + mAdaptRect.width()/2 + mMargin), int (mAdaptRect.y() + mAdaptRect.height() - 2 * mMargin - mLineH));
 
-    mNumIterEdit->setGeometry(mAquireRect.x() + (mAquireRect.width() - editW)/2, mAquireRect.y() + 3*lineH + mMargin, editW, lineH);
-    mDownSamplingEdit->setGeometry(mAquireRect.x() + (mAquireRect.width() - editW)/2, mAquireRect.y() + 6*lineH + 2*mMargin, editW, lineH);
+    // 3 - ACQUIRE
+    mNumIterEdit->move(int (mAquireRect.x() + (mAcquireBoxWidth - mEditW)/2), int (mAquireRect.y() + 2 * mLineH + 4 * mMargin));
+    mDownSamplingEdit->move(int (mAquireRect.x() + (mAcquireBoxWidth - mEditW)/2), int (mAquireRect.y() + 6 * mLineH + 6 * mMargin));
 
     mHelp->setGeometry(mMargin,
-                       top + h + mMargin,
-                       width() - 2*mMargin,
-                       mHelp->heightForWidth(width() - 2*mMargin ) );
+                       mTop + mColoredBoxHeigth + mMargin,
+                       width() - 2 * mMargin,
+                       mHelp->heightForWidth(width() - 2 * mMargin ) );
 
-    QFontMetrics fm(AppSettings::font());
+   
+    mSeedsLabel->move(AppSettings::widthUnit(), height() - 5 * mMargin - mButH - mLineH);
+    mSeedsEdit->move(mSeedsLabel->x() + mSeedsLabel->width() + mMargin, mSeedsLabel->y());
 
-    mSeedsEdit->setGeometry(15* mMargin + fm.width( tr("Seeds (separated by \";\")")), height() - 5*mMargin - butH -lineH, editW, lineH);
+    mLevelLabel->move(width()/2 + 2 * mMargin, mSeedsLabel->y());
+    mLevelEdit->move(mLevelLabel->x() + mLevelLabel->width() + mMargin,  mLevelLabel->y());
 
-    mLevelEdit->setGeometry(width()/2 + 15* mMargin + fm.width( tr("Mixing level")),  height() - 5*mMargin - butH - lineH, editW/1.8, lineH);
-
-    mResetBut->move(mMargin, height() - 2*mMargin - butH );
+    mResetBut->move(mMargin, height() - 2 * mMargin - mButH );
 #ifdef DEBUG
-    mTestBut->setGeometry(mResetBut->x() + mResetBut->width() + mMargin, mResetBut->y(), butW, butH);
+    mTestBut->move(mResetBut->x() + mResetBut->width() + mMargin, mResetBut->y());
 #endif
 
-    mOkBut->setGeometry(width() - 2*mMargin - 2*butW, mResetBut->y(), butW, butH);
-    mCancelBut->setGeometry(width() - mMargin - butW, mResetBut->y() , butW, butH);
+    mOkBut->move(width()/2 + 2 * mMargin, mResetBut->y());
+    mCancelBut->move(mOkBut->x() + mOkBut->width() + mMargin, mResetBut->y());
 
 }
 
@@ -246,37 +280,37 @@ void MCMCSettingsDialog::inputControl()
 
     MCMCSettings settings;
 
-    settings.mNumChains = mNumProcEdit->text().toUInt(&ok);
+    settings.mNumChains = mNumProcEdit->text().toInt(&ok);
     if (ok == false || settings.mNumChains < 1 ) {
         errorMessage = QObject::tr("The number of chain must be bigger than 0");
         isValided = false;
     }
 
-    settings.mNumBurnIter = mNumBurnEdit->text().toUInt(&ok);
+    settings.mNumBurnIter = mNumBurnEdit->text().toInt(&ok);
     if (isValided == true && (ok == false || settings.mNumBurnIter < 1) ) {
         errorMessage = QObject::tr("The number of iteration in the burn-in must be bigger than 0");
         isValided = false;
     }
 
-    settings.mMaxBatches = mMaxBatchesEdit->text().toUInt(&ok);
+    settings.mMaxBatches = mMaxBatchesEdit->text().toInt(&ok);
     if (isValided == true && (ok == false || settings.mMaxBatches < 1) ) {
         errorMessage = QObject::tr("The number of the maximun batches in the adaptation must be bigger than 0");
         isValided = false;
     }
 
-    settings.mNumBatchIter =  mIterPerBatchEdit->text().toUInt(&ok);
+    settings.mNumBatchIter =  mIterPerBatchEdit->text().toInt(&ok);
     if (isValided == true && settings.mNumBatchIter < 1) {
         errorMessage = QObject::tr("The number of the iteration in one batch of the adaptation must be bigger than 0");
         isValided = false;
     }
 
-    settings.mNumRunIter = mNumIterEdit->text().toUInt(&ok);
+    settings.mNumRunIter = mNumIterEdit->text().toInt(&ok);
     if (isValided == true && (ok == false || settings.mNumRunIter < 50)) {
         errorMessage = QObject::tr("The number of the iteration in one run must be bigger than 50");
         isValided = false;
     }
 
-    settings.mThinningInterval = mDownSamplingEdit->text().toUInt(&ok);
+    settings.mThinningInterval = mDownSamplingEdit->text().toInt(&ok);
     if (isValided == true && (ok == false || settings.mThinningInterval < 1 ) ) {
         errorMessage = QObject::tr("The thinning interval in one run must be bigger than 1");
         isValided = false;
@@ -286,7 +320,7 @@ void MCMCSettingsDialog::inputControl()
             errorMessage = QObject::tr("With %1 the thinning interval in one run must be 1").arg(mLoc.toString(settings.mNumRunIter));
 
         else
-            errorMessage = QObject::tr("The thinning interval in one run must be smaller than %1").arg(mLoc.toString((unsigned int)floor(settings.mNumRunIter/40)));
+            errorMessage = QObject::tr("The thinning interval in one run must be smaller than %1").arg(mLoc.toString(static_cast<unsigned int>(floor(settings.mNumRunIter/40))));
 
         isValided = false;
      }

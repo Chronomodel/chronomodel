@@ -2,6 +2,7 @@
 #define MCMCSETTINGSDIALOG_H
 
 #include <QDialog>
+#include <QLabel>
 #include "MCMCSettings.h"
 
 class Label;
@@ -16,7 +17,7 @@ class MCMCSettingsDialog: public QDialog
 {
     Q_OBJECT
 public:
-    MCMCSettingsDialog(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Window);
+    MCMCSettingsDialog(QWidget* parent = nullptr);
     virtual ~MCMCSettingsDialog();
 
     void setSettings(const MCMCSettings& settings);
@@ -37,18 +38,24 @@ protected:
     void updateLayout();
     
 private:
- //   Label* mSeedsLab;
-    
+    QFontMetrics *fm;
+    QLabel *mNbChainsEdit;
     LineEdit* mNumProcEdit;
+    
+    QLabel *mTitleBurnLabel;
+    QLabel *mIterBurnLabel;
     LineEdit* mNumBurnEdit;
+    
     LineEdit* mNumIterEdit;
     LineEdit* mMaxBatchesEdit;
     LineEdit* mIterPerBatchEdit;
     LineEdit* mDownSamplingEdit;
+    
+    QLabel *mSeedsLabel;
     LineEdit* mSeedsEdit;
     HelpWidget* mHelp;
     
-  //  Label* mLabelLevel;
+    QLabel* mLevelLabel;
     LineEdit* mLevelEdit;
     
     Button* mOkBut;
@@ -56,7 +63,6 @@ private:
 
     Button* mTestBut;
     Button* mResetBut;
-    //QDialogButtonBox * mResetBut;
     
     QRectF mBurnRect;
     QRectF mAdaptRect;
@@ -64,16 +70,26 @@ private:
     QRectF mBatch1Rect;
     QRectF mBatchInterRect;
     QRectF mBatchNRect;
+    
+    
+    
+    
      // dimension
-    qreal mTotalWidth;
+    
     int mMargin;
-    qreal top;
-    qreal lineH;
-    qreal editW;
-    qreal w ;
-    qreal h; // size of the colored box
-    int butW ;
-    int butH ; // size of the button OK and Cancel
+    int mTop;
+    int mColoredBoxHeigth; // heigth of the colored box
+    int mBurnBoxWidth;
+    int mAdaptBoxWidth;// total width of the colored boxes
+    int mAcquireBoxWidth;
+    int mTotalWidth;
+    int mBottom;
+    
+    int mLineH;
+    int mEditW;
+    
+    int mButW ;
+    int mButH ; // size of the button OK and Cancel
 };
 
 #endif
