@@ -65,13 +65,9 @@ private slots:
 
     void updateButton();
     
-//    void updateKnownType();
     void updateKnownFixed(const QString& text);
-//    void updateKnownUnifStart(const QString& text);
-//    void updateKnownUnifEnd(const QString& text);
-    
+
     void updateKnownGraph();
-//    void updateKnownControls();
     
 signals:
     void combineDatesRequested(const int eventId, const QList<int>& dateIds);
@@ -106,26 +102,19 @@ private:
     Button* mCalibBut;
     Button* mCombineBut;
     Button* mSplitBut;
-    
-   // QRadioButton* mKnownFixedRadio;
-   // QRadioButton* mKnownUniformRadio;
-    
+      
     QLineEdit* mKnownFixedEdit;
-   // QLineEdit* mKnownStartEdit;
-   // QLineEdit* mKnownEndEdit;
     
     GraphView* mKnownGraph;
     
     QGroupBox* mFixedGroup;
-//    QGroupBox* mUniformGroup;
     
-    int mToolbarH;
     int mButtonWidth;
-    int mButtonHeight;
+    int mButtonHeigth;
 
     int mLineEditHeight;
 
-     int mComboBoxHeight;
+    int mComboBoxHeight;
 
 
 

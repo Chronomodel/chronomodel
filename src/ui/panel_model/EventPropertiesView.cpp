@@ -20,21 +20,27 @@
 
 
 
-EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
+EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
+    mButtonWidth  (int (1.3 * AppSettings::widthUnit())),
+    mButtonHeigth  (int (1.3 * AppSettings::heigthUnit())),
+    mLineEditHeight  (int (0.5 * AppSettings::heigthUnit())),
+    mComboBoxHeight (int (0.7 * AppSettings::heigthUnit()))
 {
-    setFont(AppSettings::font());
     minimumHeight = 0;
+
     // ------------- commun with defautlt Event and Bound ----------
-    mNameLab = new Label(tr("Name"), this);    
-    mNameEdit = new LineEdit(this);
+    mTopView = new QWidget(this);
 
-    mColorLab = new Label(tr("Color"), this);
-    mColorPicker = new ColorPicker(Qt::black);
+    mNameLab = new QLabel(tr("Name"), mTopView);
+    mNameEdit = new LineEdit(mTopView);
 
-    
-    mMethodLab = new Label(tr("Method"), this);
-    mMethodCombo = new QComboBox();
-    
+    mColorLab = new QLabel(tr("Color"), mTopView);
+    mColorPicker = new ColorPicker(Qt::black, mTopView);
+
+    mMethodLab = new QLabel(tr("Method"), mTopView);
+    mMethodCombo = new QComboBox(mTopView);
+
+
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eDoubleExp));
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eBoxMuller));
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eMHAdaptGauss));
@@ -42,34 +48,12 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     connect(mNameEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventName);
     connect(mColorPicker, &ColorPicker::colorChanged, this, &EventPropertiesView::updateEventColor);
     connect(mMethodCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &EventPropertiesView::updateEventMethod);
-    
-    QGridLayout* grid = new QGridLayout();
-    grid->setSpacing(15);
-    grid->setContentsMargins(0, 0, 0, 0);
-    grid->addWidget(mNameLab, 0, 0);
-    grid->addWidget(mNameEdit, 0, 1);
-    grid->addWidget(mColorLab, 1, 0);
-    grid->addWidget(mColorPicker, 1, 1);
-    grid->addWidget(mMethodLab, 2, 0);
-    grid->addWidget(mMethodCombo, 2, 1);
-
-    QVBoxLayout* topLayout = new QVBoxLayout();
-    topLayout->setContentsMargins(6, 6, 6, 16);
-    topLayout->addLayout(grid);
-    topLayout->addStretch();
-    
-    mTopView = new QWidget(this);
-    mTopView->setLayout(topLayout);
-
-    mTopView->setFixedHeight(mNameEdit->height()+mColorPicker->height()+mMethodCombo->height() + 2*grid->spacing());
       
     // Event default propreties Window mEventView
     mEventView = new QWidget(this);
     
     minimumHeight += mEventView->height();
     // -------------
-    mToolbarH = mNameEdit->height()+mColorPicker->height()+mMethodCombo->height() + 4*grid->spacing();//5 * fm.height();
-    
     mDatesList = new DatesList(mEventView);
     connect(mDatesList, &DatesList::indexChange, this, &EventPropertiesView::updateIndex);
     connect(mDatesList, &DatesList::calibRequested, this, &EventPropertiesView::updateCalibRequested);
@@ -148,8 +132,6 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mKnownGraph = new GraphView(mBoundView);
     mKnownGraph->setMinimumHeight(250);
     
-    //mKnownGraph->setRendering(GraphView::eHD);
-    
     mKnownGraph->showXAxisArrow(true);
     mKnownGraph->showXAxisTicks(true);
     mKnownGraph->showXAxisSubTicks(true);
@@ -223,7 +205,7 @@ void EventPropertiesView::updateEvent()
         mBoundView->setVisible(false);
         
     } else {
-        Event::Type type = (Event::Type)mEvent.value(STATE_EVENT_TYPE).toInt();
+        Event::Type type = Event::Type (mEvent.value(STATE_EVENT_TYPE).toInt());
         QString name = mEvent.value(STATE_NAME).toString();
         QColor color(mEvent.value(STATE_COLOR_RED).toInt(),
                      mEvent.value(STATE_COLOR_GREEN).toInt(),
@@ -238,6 +220,7 @@ void EventPropertiesView::updateEvent()
         mMethodCombo->setVisible(type == Event::eDefault);
         
         mTopView->setVisible(true);
+
         mEventView->setVisible(type == Event::eDefault);
         mBoundView->setVisible(type == Event::eKnown);
         
@@ -332,7 +315,7 @@ void EventPropertiesView::updateKnownGraph()
     mKnownGraph->setCurrentX(tmin,tmax);
 
     double max = map_max_value(event.mValues);
-    max = (max == 0) ? 1 : max;
+    max = (max == 0.) ? 1. : max;
     mKnownGraph->setRangeY(0, max);
     mKnownGraph->showYAxisValues(false);
 
@@ -356,7 +339,7 @@ void EventPropertiesView::updateKnownGraph()
 
     mKnownGraph->setMarginBottom(mKnownGraph->font().pointSizeF() + 10. );
 
-    // Adjust scale :
+    // Adjust scale
     const int xScale = int(log10(tmax-tmin)) -1;
     mKnownGraph->setXScaleDivision(std::pow(10, xScale), 4);
     //---------------------
@@ -527,78 +510,58 @@ void EventPropertiesView::resizeEvent(QResizeEvent* e)
 
 void EventPropertiesView::applyAppSettings()
 {
-    mButtonWidth = AppSettings::mButtonWidth;
-    mLineEditHeight = 1.1*AppSettings::heigthUnit();
-    mComboBoxHeight = 1.2*AppSettings::heigthUnit();
-    mButtonHeight = 1.1*AppSettings::heigthUnit();
-
-    mTopView->setFont(AppSettings::font());
-    mEventView->setFont(AppSettings::font());
-    mBoundView->setFont(AppSettings::font());
-
+    mButtonWidth = int (1.3 * AppSettings::widthUnit());
+    mButtonHeigth = int (1.3 * AppSettings::heigthUnit());
+    mLineEditHeight = int (0.5 * AppSettings::heigthUnit());
+    mComboBoxHeight = int(0.7 * AppSettings::heigthUnit());
     minimumHeight += mEventView->height();
-
-    mNameLab->setFont(AppSettings::font());
-    mNameLab->setFixedHeight(mLineEditHeight);
-    mNameEdit->setFont(AppSettings::font());
-    mNameEdit->setFixedHeight(mLineEditHeight);
-
-    mColorLab->setFont(AppSettings::font());
-    mColorLab->setFixedHeight(mButtonHeight);
-    mColorPicker->setFont(AppSettings::font());
-    mColorPicker->setFixedHeight(mButtonHeight);
-
-    mMethodLab->setFont(AppSettings::font());
-    mMethodLab->setFixedHeight(mComboBoxHeight);
-    mMethodCombo->setFont(AppSettings::font());
-    mMethodCombo->setFixedHeight(mComboBoxHeight);
-
-    // mDateList font is define in the DatesListItemsDelegate.h
 
     minimumHeight = 0;
     for (auto &&but : mPluginButs1) {
-        but->setFont(AppSettings::font());
-        but->resize(mButtonWidth, mButtonWidth);
+        but->resize(mButtonWidth, mButtonHeigth);
         minimumHeight += but->height();
     }
 
     for (auto &&but : mPluginButs2) {
-        but->setFont(AppSettings::font());
-        but->resize(mButtonWidth, mButtonWidth);
+        but->resize(mButtonWidth, mButtonHeigth);
         minimumHeight += but->height();
     }
 
-     mTopView->setFixedHeight(mNameEdit->height()+mColorPicker->height()+mMethodCombo->height() + 2*15);
-     mToolbarH = mNameEdit->height()+mColorPicker->height()+mMethodCombo->height() + 4*15;//5 * fm.height();
-
-    mDeleteBut->setFont(AppSettings::font());
     minimumHeight += mDeleteBut->height();
-
-    mRecycleBut->setFont(AppSettings::font());
-
-    mCalibBut->setFont(AppSettings::font());
-    mCombineBut->setFont(AppSettings::font());
-    mSplitBut->setFont(AppSettings::font());
-
-    mKnownFixedEdit->setFont(AppSettings::font());
-
-    mKnownGraph->setFont(AppSettings::font());
-
-    mFixedGroup->setFont(AppSettings::font());
 
     updateLayout();
 }
 
 void EventPropertiesView::updateLayout()
 {
-
-    mTopView->setGeometry(0, 0, width(), mToolbarH);
+    mButtonWidth = int (1.3 * AppSettings::widthUnit());
+    mButtonHeigth = int (1.3 * AppSettings::heigthUnit());
+    mLineEditHeight = int (0.5 * AppSettings::heigthUnit());
+    mComboBoxHeight = int (0.7*AppSettings::heigthUnit());
 
     if (hasEvent()) {
-        int butPluginHeigth = mButtonWidth;
-
+        int butPluginHeigth = mButtonHeigth;
+        QFontMetrics fm (font());
         // in EventPropertiesView coordinates
         mBoundView->resize(0, 0);
+
+        int marginTop (int (0.2 * AppSettings::widthUnit()));
+
+        int shiftMax (qMax(fm.width(mNameLab->text()), qMax(fm.width(mColorLab->text()), fm.width(mMethodLab->text()) )) );
+        shiftMax = shiftMax + 2*marginTop;
+        int editWidth (width() - shiftMax);
+
+        mNameLab->move(marginTop, marginTop);
+        mNameEdit->setGeometry(shiftMax , mNameLab->y(), editWidth - marginTop, mLineEditHeight);
+
+        mColorLab->move(marginTop, mNameEdit->y() + mNameEdit->height() + marginTop );
+        mColorPicker->setGeometry(shiftMax , mColorLab->y() , editWidth - marginTop, mLineEditHeight);
+
+        mMethodLab->move(marginTop, mColorPicker->y() + mColorPicker->height() + marginTop);
+        mMethodCombo->setGeometry(shiftMax , mMethodLab->y() - mComboBoxHeight/2 + marginTop, editWidth - marginTop, mComboBoxHeight);
+
+        mTopView->resize(width(), 2 *mLineEditHeight + mComboBoxHeight + 4 * marginTop);
+
         mEventView->setGeometry(0, mTopView->height(), width(), height() - mTopView->height());
 
 
@@ -606,8 +569,8 @@ void EventPropertiesView::updateLayout()
         QRect listRect(0, 0, mEventView->width() - mButtonWidth, mEventView->height() - butPluginHeigth);
         mDatesList->setGeometry(listRect);
 
-        int x = listRect.width();
-        int y = 0;
+        int x (listRect.width());
+        int y (0);
 
         // Plugin with calibration,
          for (auto && plugBut : mPluginButs1) {
@@ -623,8 +586,8 @@ void EventPropertiesView::updateLayout()
         }
 
         y = listRect.y() + listRect.height();
-        const int w = mButtonWidth;
-        const int h = mButtonWidth;
+        const int w (mButtonWidth);
+        const int h (mButtonHeigth);
 
         mCalibBut->setGeometry(0, y, w, butPluginHeigth);
         mDeleteBut ->setGeometry(mCalibBut->width(), y, w, h);
@@ -658,7 +621,7 @@ bool EventPropertiesView::isCalibChecked() const
 bool EventPropertiesView::hasEvent() const
 {
     if (!mEvent.isEmpty()) {
-        Event::Type type = (Event::Type)mEvent[STATE_EVENT_TYPE].toInt();
+        Event::Type type = Event::Type (mEvent[STATE_EVENT_TYPE].toInt());
         return (type == Event::eDefault);
     }
     return false;
@@ -667,7 +630,7 @@ bool EventPropertiesView::hasEvent() const
 bool EventPropertiesView::hasBound() const
 {
     if (!mEvent.isEmpty()) {
-        Event::Type type = (Event::Type)mEvent[STATE_EVENT_TYPE].toInt();
+        Event::Type type = Event::Type (mEvent[STATE_EVENT_TYPE].toInt());
         return (type == Event::eKnown);
     }
     return false;
@@ -676,7 +639,7 @@ bool EventPropertiesView::hasBound() const
 bool EventPropertiesView::hasEventWithDates() const
 {
     if (!mEvent.isEmpty()) {
-        Event::Type type = (Event::Type)mEvent[STATE_EVENT_TYPE].toInt();
+        Event::Type type = Event::Type (mEvent[STATE_EVENT_TYPE].toInt());
         if (type == Event::eDefault) {
             const QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
             return (dates.size() > 0);
