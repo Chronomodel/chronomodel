@@ -1,6 +1,4 @@
 #include "MCMCLoopMain.h"
-
-//#include "Model.h"
 #include "EventKnown.h"
 #include "Functions.h"
 #include "Generator.h"
@@ -44,12 +42,12 @@ QString MCMCLoopMain::calibrate()
     if (mModel) {
         QList<Event*>& events = mModel->mEvents;
         events.reserve(mModel->mEvents.size());
-        //----------------- Calibrate measures --------------------------------------
+        //----------------- Calibrate measurements --------------------------------------
         
         QList<Date*> dates;
         // find number of dates, to optimize memory space
         int nbDates (0);
-        for (auto &&e: events)
+        for (auto &&e : events)
             nbDates += e->mDates.size();
 
         dates.reserve(nbDates);
@@ -58,7 +56,6 @@ QString MCMCLoopMain::calibrate()
             for (int j=0; j<num_dates; ++j) {
                 Date* date = &ev->mDates[j];
                 dates.push_back(date);
-                //date = nullptr;
             }
         }
 
@@ -155,7 +152,7 @@ QString MCMCLoopMain::initMCMC()
         ev->mInitialized = false;
 
     // -------------------------- Init gamma ------------------------------
-    emit stepChanged(tr("Initializing Phases Gaps..."), 0, phasesConstraints.size());
+    emit stepChanged(tr("Initializing Phase Gaps..."), 0, phasesConstraints.size());
     int i (0);
     for (auto && phC : phasesConstraints) {
         phC->initGamma();
@@ -166,7 +163,7 @@ QString MCMCLoopMain::initMCMC()
     }
     
     // ----------------------- Init tau -----------------------------------------
-    emit stepChanged(tr("Initializing Phases Durations..."), 0, phases.size());
+    emit stepChanged(tr("Initializing Phase Durations..."), 0, phases.size());
     i = 0;
     for (auto && ph : phases) {
         ph->initTau();
@@ -187,8 +184,7 @@ QString MCMCLoopMain::initMCMC()
     QVector<Event*> eventsByLevel = ModelUtilities::sortEventsByLevel(mModel->mEvents);
     int curLevel (0);
     double curLevelMaxValue = mModel->mSettings.mTmin;
-  //  double prevLevelMaxValue = mModel->mSettings.mTmin;
-    
+
     for (int i=0; i<eventsByLevel.size(); ++i) {
         if (eventsByLevel.at(i)->type() == Event::eKnown) {
             EventKnown* bound = dynamic_cast<EventKnown*>(eventsByLevel[i]);
@@ -196,7 +192,6 @@ QString MCMCLoopMain::initMCMC()
             if (bound) {
                 if (curLevel != bound->mLevel) {
                     curLevel = bound->mLevel;
- //                   prevLevelMaxValue = curLevelMaxValue;
                     curLevelMaxValue = mModel->mSettings.mTmin;
                 }
 
@@ -218,23 +213,43 @@ QString MCMCLoopMain::initMCMC()
     //  Init theta f, ti, ...
     // ----------------------------------------------------------------
 
-    QVector<Event*> unsortedEvents = ModelUtilities::unsortEvents(events);
-   // QVector<QVector<Event*> > eventBranches = ModelUtilities::getAllEventsBranches(events);
-   // QVector<QVector<Phase*> > phaseBranches = ModelUtilities::getAllPhasesBranches(phases, mModel->mSettings.mTmax - mModel->mSettings.mTmin);
-       
+    QVector<Event*> unsortedEvents = ModelUtilities::unsortEvents (events);
 
     emit stepChanged(tr("Initializing Events..."), 0, unsortedEvents.size());
 
-    for (int i=0; i<unsortedEvents.size(); ++i) {
+    for (auto e : unsortedEvents) {
+        mModel->initNodeEvents();
+        QString circularEventName = "";
+        QList< Event*> startEvents = QList<Event*>();
+
+        const bool ok (e->getThetaMaxPossible (e, circularEventName, startEvents));
+         qDebug() << " MCMCLoopMain::InitMCMC check constraint" << e->mName << ok;
+        if (!ok) {
+            mAbortedReason = QString(tr("Warning : Find Circular Constraint Path %1  %2 ")).arg (e->mName, circularEventName);
+            return mAbortedReason;
+        }
+    }
+
+    for (int i (0); i<unsortedEvents.size(); ++i) {
         if (unsortedEvents.at(i)->mType == Event::eDefault) {
 
             qDebug() << "in initMCMC(): ---------------------------------";
             mModel->initNodeEvents();
-            const double min (unsortedEvents.at(i)->getThetaMinRecursive(tmin) );
-            //qDebug() << "in initMCMC(): Event initialized min : " << unsortedEvents[i]->mName << " : "<<" min"<<min<<tmin;
+            QString circularEventName = "";
+            QList< Event*> startEvents = QList<Event*>();
+            const double min (unsortedEvents.at(i)->getThetaMinRecursive (tmin));
+            if (!circularEventName.isEmpty()) {
+                mAbortedReason = QString(tr("Warning : Find Circular constraint with %1  bad path  %2 ")).arg(unsortedEvents.at(i)->mName, circularEventName);
+                return mAbortedReason;
+            }
+
+            //qDebug() << "in initMCMC(): Event initialised min : " << unsortedEvents[i]->mName << " : "<<" min"<<min<<tmin;
             mModel->initNodeEvents();
             const double max ( unsortedEvents.at(i)->getThetaMaxRecursive(tmax) );
-            
+#ifdef DEBUG
+            if (min >= max)
+                qDebug() << tr("-----Error Init for event : %1 : min = %2 : max = %3-------").arg(unsortedEvents.at(i)->mName, QString::number(min), QString::number(max));
+#endif
             unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
             unsortedEvents.at(i)->mInitialized = true;
             
@@ -249,10 +264,10 @@ QString MCMCLoopMain::initMCMC()
                 if (!date.mCalibration->mRepartition.isEmpty()) {
                     const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mCalibration->mRepartition);
                     date.mTheta.mX = date.mCalibration->mTmin + idx *date.mCalibration->mStep;
-                    qDebug()<<"MCMCLoopMain::Init"<<date.mName <<" mThe.mx="<<QString::number(date.mTheta.mX, 'g', 15);
+                  //  qDebug()<<"MCMCLoopMain::Init"<<date.mName <<" mThe.mx="<<QString::number(date.mTheta.mX, 'g', 15);
 
                     FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration->mCurve, tmin, tmax, date.mCalibration->mStep));
-                    sigma = (double) data.stddev;
+                    sigma = double (data.stddev);
                 }
                 else { // in the case of mRepartion curve is null, we must init ti outside the study period
                        // For instance we use a gaussian random sampling
@@ -345,8 +360,8 @@ QString MCMCLoopMain::initMCMC()
         emit stepProgressed(i);
     }
     // --------------------------- Init phases ----------------------
-    emit stepChanged(tr("Initializing Phases..."), 0, phases.size());
- qDebug()<<"MCMCLoopMain::initMCMC() emit stepChanged(tr(Initializing Phases...)";
+    emit stepChanged(tr("Initialzsing Phases..."), 0, phases.size());
+
     i = 0;
     for (Phase* phase : phases ) {
         phase->updateAll(tmin, tmax);
@@ -361,7 +376,7 @@ QString MCMCLoopMain::initMCMC()
     
     // --------------------------- Log Init ---------------------
     log += "<hr>";
-    log += textBold("Events Initialisation (with their data)");
+    log += textBold("Events Initialization (with their data)");
     
     i = 0;
     for (const Event* event : events) {
@@ -404,7 +419,7 @@ QString MCMCLoopMain::initMCMC()
     
     if (phases.size() > 0) {
         log += "<hr>";
-        log += textBold(tr("Phases Initialisation"));
+        log += textBold(tr("Phases Initialization"));
         log += "<hr>";
 
         int i = 0;
@@ -420,7 +435,7 @@ QString MCMCLoopMain::initMCMC()
     
     if (phasesConstraints.size() > 0) {
         log += "<hr>";
-        log += textBold(textGreen(tr("Phases Constraints Initialisation"))) ;
+        log += textBold(textGreen(tr("Phases Constraints Initialization"))) ;
         log += "<hr>";
         
         int i = 0;

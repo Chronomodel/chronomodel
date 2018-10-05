@@ -112,13 +112,13 @@ Event::~Event()
 Event Event::fromJson(const QJsonObject& json)
 {
     Event event;
-    event.mType = (Type)json.value(STATE_EVENT_TYPE).toInt();
+    event.mType = Type (json.value(STATE_EVENT_TYPE).toInt());
     event.mId = json.value(STATE_ID).toInt();
     event.mName = json.value(STATE_NAME).toString();
     event.mColor = QColor(json.value(STATE_COLOR_RED).toInt(),
                           json.value(STATE_COLOR_GREEN).toInt(),
                           json.value(STATE_COLOR_BLUE).toInt());
-    event.mMethod = (Method)(json.value(STATE_EVENT_METHOD).toInt());
+    event.mMethod = Method (json.value(STATE_EVENT_METHOD).toInt());
     event.mItemX = json.value(STATE_ITEM_X).toDouble();
     event.mItemY = json.value(STATE_ITEM_Y).toDouble();
     event.mIsSelected = json.value(STATE_IS_SELECTED).toBool();
@@ -131,10 +131,8 @@ Event Event::fromJson(const QJsonObject& json)
     
     
     const QJsonArray dates = json.value(STATE_EVENT_DATES).toArray();
-    //for (int j=0; j<dates.size(); ++j) {
-    for (auto && date : dates) {
-        //QJsonObject jdate = dates.at(j).toObject();
-        
+
+    for (auto && date : dates) {    
         Date d;
         d.fromJson(date.toObject());
         d.autoSetTiSampler(true);
@@ -196,9 +194,230 @@ void Event::reset()
     mTheta.reset();
     mInitialized = false;
     mNodeInitialized = false;
-    mThetaNode = INFINITY;
+    mThetaNode = HUGE_VAL;//__builtin_inf();//INFINITY;
 }
 
+bool Event::getThetaMinPossible(const Event *originEvent, QString &circularEventName,  QList<Event *> &startEvents, QString & linkStr)
+{
+    QList<Event*> newStartEvents = startEvents;
+    newStartEvents.append(this);
+
+    if (linkStr.isEmpty())
+        linkStr = " ➡︎ ";
+    QString parallelStr  (" | ");
+    QString serieStr  (" ➡︎ ");
+
+    QString startList;
+    for( Event *e : newStartEvents)
+        startList += e->mName + linkStr;
+
+    qDebug() << mName << "startList" << startList;
+
+    if (mNodeInitialized)
+        return true;
+
+    // list of phase under
+    bool noPhaseBwd (true);
+    if (!mPhases.isEmpty())
+        for (auto &&phase : mPhases)
+            noPhaseBwd = noPhaseBwd && (phase->mConstraintsBwd.isEmpty());
+
+    //--
+    // Le fait appartient à une ou plusieurs phases.
+    // Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
+    // Il faut s'assurer d'être au-dessus du plus grand theta de la phase moins la durée
+    // (on utilise la valeur courante de la durée pour cela, puisqu'elle est échantillonnée ou fixée)
+
+
+
+
+    if (noPhaseBwd && mConstraintsBwd.isEmpty()) {
+        mNodeInitialized = true;
+        return true;
+    }
+
+    else {
+        // Check constraints in Events Scene
+        if (!mConstraintsBwd.isEmpty())
+            for (auto &&constBwd : mConstraintsBwd) {
+                if (constBwd->mEventFrom != originEvent ) {
+                     const bool maxThetaOk = (constBwd->mEventFrom)->getThetaMinPossible (originEvent, circularEventName, newStartEvents, serieStr);
+                     if ( !maxThetaOk) {
+                         circularEventName =  serieStr + constBwd->mEventFrom->mName +  circularEventName ;
+                         return false;
+                    }
+
+                } else {
+                    circularEventName = serieStr + constBwd->mEventFrom->mName + " ?";
+                    return false;
+                }
+            }
+
+
+
+        if (!noPhaseBwd) {
+            // Check constraints in Phases Scene
+            for (auto &&phase : mPhases) {
+                if (!phase->mConstraintsBwd.isEmpty()) {
+                    for (auto &&phaseBwd : phase->mConstraintsBwd) {
+                        for (auto &&eventPhaseBwd : phaseBwd->mPhaseFrom->mEvents) {
+                            if (eventPhaseBwd != originEvent ) {
+                                const bool tMinRecOk = eventPhaseBwd->getThetaMinPossible ( originEvent, circularEventName, newStartEvents, serieStr);
+                                if (!tMinRecOk) {
+                                    circularEventName = serieStr + eventPhaseBwd->mName +  circularEventName ;
+                                    return false;
+                                }
+
+
+                            } else {
+                                circularEventName = serieStr + eventPhaseBwd->mName + " !";
+                                //circularEventName = startList + eventPhaseBwd->mName + " ?";
+                                return false;
+                            }
+                        }
+
+                    }
+                 }
+            }
+        }
+
+        // Check parallel constraints with the Events in the same phases
+
+        for (auto &&phase : mPhases) {
+                for (auto &&event : phase->mEvents) {
+                    if (!newStartEvents.contains (event)) {
+                           const bool thetaOk = event->getThetaMinPossible (originEvent, circularEventName, newStartEvents, parallelStr);
+                           if ( !thetaOk) {
+                               circularEventName = parallelStr + event->mName +  circularEventName ;
+                               return false;
+                           }
+
+                    }
+
+                }
+        }
+
+        mNodeInitialized = true;
+        return true;
+    }
+
+
+}
+
+bool Event::getThetaMaxPossible(const Event *originEvent, QString &circularEventName,  QList<Event *> &startEvents)
+{
+#ifdef DEBUG
+    QString startList;
+    for( Event *e : startEvents)
+        startList += e->mName + "->";
+
+  //  qDebug() << mName << "startEvents : " << startList;
+#endif
+
+    QList<Event*> newStartEvents = startEvents;
+    newStartEvents.append(this);
+
+    const QString parallelStr  (" | ");
+    const QString serieStr  (" ➡︎ ");
+
+    if (mNodeInitialized)
+        return true;
+
+    // list of phase under
+    bool noPhaseFwd (true);
+    if (!mPhases.isEmpty())
+        for (auto &&phase : mPhases)
+            noPhaseFwd = noPhaseFwd && (phase->mConstraintsFwd.isEmpty());
+
+    //--
+    // Le fait appartient à une ou plusieurs phases.
+    // Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
+    // Il faut s'assurer d'être au-dessus du plus grand theta de la phase moins la durée
+    // (on utilise la valeur courante de la durée pour cela, puisqu'elle est échantillonnée ou fixée)
+
+
+
+
+    if (noPhaseFwd && mConstraintsFwd.isEmpty()) {
+        mNodeInitialized = true;
+        return true;
+    }
+
+    else {
+        // Check constraints in Events Scene
+        if (!mConstraintsFwd.isEmpty())
+            for (auto &&constFwd : mConstraintsFwd) {
+                if (constFwd->mEventTo != originEvent ) {
+                //if (!newStartEvents.contains (constFwd->mEventTo)) {
+                   // qDebug() << " mConstraintsFwd" << constFwd->mEventTo->mName;
+                     const bool _ok = (constFwd->mEventTo)->getThetaMaxPossible (originEvent, circularEventName, newStartEvents);
+                     if ( !_ok) {
+                         circularEventName =  serieStr + constFwd->mEventTo->mName +  circularEventName ;
+                         return false;
+                    }
+
+                } else {
+                    circularEventName = serieStr + constFwd->mEventTo->mName + " ?";
+                    return false;
+                }
+            }
+
+
+
+        if (!noPhaseFwd) {
+            // Check constraints in Phases Scene
+            for (auto &&phase : mPhases) {
+                if (!phase->mConstraintsFwd.isEmpty()) {
+                    for (auto &&phaseFwd : phase->mConstraintsFwd) {
+                        for (auto &&eventPhaseFwd : phaseFwd->mPhaseTo->mEvents) {
+                            //if (eventPhaseFwd != originEvent ) {
+                            if (!newStartEvents.contains (eventPhaseFwd)) {
+                               // qDebug() << " phase->mConstraintsFwd" << eventPhaseFwd->mName;
+                                const bool _ok = eventPhaseFwd->getThetaMaxPossible ( originEvent, circularEventName, newStartEvents);
+                                if (!_ok) {
+                                    circularEventName = " (" + phase->mName + ")" + serieStr + eventPhaseFwd->mName + " (" + phaseFwd->mPhaseTo->mName + ")" +  circularEventName ;
+                                    return false;
+                                }
+
+
+                            } //else {
+                            if (eventPhaseFwd == originEvent ) {
+                                circularEventName = " (" + phase->mName + ")" + serieStr + eventPhaseFwd->mName + " (" + phaseFwd->mPhaseTo->mName + ") !";
+                                return false;
+                            }
+                        }
+
+                    }
+                 }
+            }
+        }
+
+        // Check parallel constraints with the Events in the same phases -> useless
+        //Il ne faut pas regarder à travers les autres Events de la même phase
+/*
+        for (auto &&phase : mPhases) {
+                for (auto &&event : phase->mEvents) {
+                    if (!newStartEvents.contains (event)) {
+
+                           const bool _ok = event->getThetaMaxPossible (originEvent, circularEventName, newStartEvents);
+                           if ( !_ok) {
+                               circularEventName = " (" + phase->mName + ")" + parallelStr + event->mName +  " (" + phase->mName + ")" + circularEventName ;
+                               return false;
+                           }
+
+                    }
+
+
+                }
+        }
+*/
+        mNodeInitialized = true;
+        return true;
+    }
+}
+
+
+//----
 double Event::getThetaMinRecursive(const double defaultValue, const QList<Event *> startEvents)
 {
     // if the Event is initiated, constraints was controled previously
@@ -286,6 +505,7 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event 
 
 
 }
+
 
 double Event::getThetaMinRecursive_old(const double defaultValue,
                                    const QVector<QVector<Event*> >& eventBranches,
