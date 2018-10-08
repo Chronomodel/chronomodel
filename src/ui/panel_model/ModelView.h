@@ -3,6 +3,7 @@
 
 
 #include <QWidget>
+#include <QLineEdit>
 
 
 class QStackedWidget;
@@ -99,6 +100,9 @@ private slots:
     void setSettingsValid(bool valid);
     
     void searchEvent();
+    void createEventInPlace();
+    void createEventKnownInPlace();
+    void createPhaseInPlace();
     
 private:
     void exportSceneImage(QGraphicsScene* scene);
@@ -116,7 +120,7 @@ private:
     SceneGlobalView* mEventsGlobalView;
     ScrollCompressor* mEventsGlobalZoom;
     
-    LineEdit* mEventsSearchEdit;
+    QLineEdit* mEventsSearchEdit;
     QString mLastSearch;
     QVector<int> mSearchIds;
     int mCurSearchIdx;
@@ -187,6 +191,7 @@ private:
     int mMargin;
     int mToolbarH;
     int mButtonWidth;
+    int mButtonHeigth;
     double mSplitProp;
     int mHandlerW;
     bool mIsSplitting;

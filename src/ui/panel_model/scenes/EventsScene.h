@@ -19,7 +19,7 @@ class EventsScene: public AbstractScene
     Q_OBJECT
 public:
     EventsScene(QGraphicsView* view, QObject* parent = nullptr);
-    ~EventsScene();
+    virtual ~EventsScene();
     
     void sendUpdateProject(const QString& reason, bool notify, bool async);
     

@@ -11,7 +11,7 @@ class PhasesScene: public AbstractScene
     Q_OBJECT
 public:
     PhasesScene(QGraphicsView* view, QObject* parent = nullptr);
-    ~PhasesScene();
+    virtual ~PhasesScene();
     
     void sendUpdateProject(const QString& reason, bool notify, bool async);
     PhaseItem* currentPhase() const;

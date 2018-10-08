@@ -19,15 +19,15 @@ SceneGlobalView::~SceneGlobalView()
 void SceneGlobalView::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
-    
-    QRectF r = rect();
-    r.adjust(0.5, 0.5, -0.5, -0.5);
-    
+
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
+    QRectF r = rect();
     p.setPen(Painting::borderDark);
+    //r.adjust(0.5, 0.5, -0.5, -0.5);
     p.setBrush(QColor(100, 100, 100));
     p.drawRect(r);
+
     
     if (mScene) {
         // --------------------------------------------------
@@ -50,7 +50,7 @@ void SceneGlobalView::paintEvent(QPaintEvent* e)
         //  Visible Rect
         // --------------------------------------------------
         QRectF viewRect = mView->rect();
-        QPointF visiblePos = mView->mapToScene(viewRect.x(), viewRect.y());
+        QPointF visiblePos = mView->mapToScene( int (viewRect.x()), int (viewRect.y()));
         QRectF visibleRect(visiblePos.x(),
                            visiblePos.y(),
                            viewRect.width(),
@@ -87,12 +87,16 @@ void SceneGlobalView::paintEvent(QPaintEvent* e)
         //qDebug() << propX << ", " << propY << ", " << propW << ", " << propH;
         //qDebug() << "-----------";
     }
+
+    p.setPen(Painting::borderDark);
+    p.setBrush(Qt::NoBrush);
+    p.drawRect(r);
 }
 
 QRectF SceneGlobalView::getTargetRect()
 {
-    double w = width();
-    double h = height();
+    const int w (width());
+    const int h (height());
     
     QRectF sceneRect = mScene->sceneRect();
     QMatrix matrix = mView->matrix();
@@ -115,7 +119,7 @@ QRectF SceneGlobalView::getTargetRect()
                       targetSize.width(),
                       targetSize.height());
     
-    return targetRect;//.adjusted(1, 1, -1, -1);
+    return targetRect;
 }
 
 void SceneGlobalView::mousePressEvent(QMouseEvent* e)
@@ -141,8 +145,8 @@ void SceneGlobalView::setPosition(const QPoint& pos)
     QRectF targetRect = getTargetRect();
     
     if (targetRect.contains(pos)) {
-        double propX = (double)(pos.x() - targetRect.x()) / targetRect.width();
-        double propY = (double)(pos.y() - targetRect.y()) / targetRect.height();
+        double propX = double (pos.x() - targetRect.x()) / targetRect.width();
+        double propY = double (pos.y() - targetRect.y()) / targetRect.height();
         
         QRectF sceneRect = mScene->sceneRect();
         QPointF scenePos(sceneRect.x() + sceneRect.width() * propX,
