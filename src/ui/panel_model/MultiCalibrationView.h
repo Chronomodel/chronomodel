@@ -44,7 +44,7 @@ public slots:
 
 private slots:
     void updateHPDGraphs(const QString & thres);
-    void updateGraphsSize(const QString & size);
+    void updateGraphsSize(const QString & sizeStr);
     void updateGraphsZoom();
     void updateScroll();
     void exportImage();
@@ -68,6 +68,11 @@ private:
     MultiCalibrationDrawing* mDrawing;
     QTextEdit* mTextArea;
     int mButtonWidth;
+    int mButtonHeigth;
+
+    // member for graphs
+    int mMarginLeft;
+    int mMarginRight;
 
     Button* mImageSaveBut;
     Button* mImageClipBut;

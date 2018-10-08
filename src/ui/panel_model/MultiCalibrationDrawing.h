@@ -9,22 +9,23 @@
 #include "GraphView.h"
 #include "Marker.h"
 
-class ColoredPanel: public QWidget
+class ColoredBar: public QWidget
 {
     Q_OBJECT
     Q_PROPERTY(QColor color READ color WRITE setColor)
 
 public:
-    ColoredPanel(QWidget *parent = nullptr);
-    ~ColoredPanel();
+    ColoredBar(QWidget *parent = nullptr);
+    ~ColoredBar();
     void setColor(const QColor & color) {mColor = color;}
     QColor color() const {return mColor;}
-
+static int mWidth;
 protected:
     void paintEvent(QPaintEvent* e);
 
 private:
     QColor mColor;
+
 };
 
 class MultiCalibrationDrawing: public QWidget
@@ -53,7 +54,7 @@ private:
 
     QList<GraphView*> mListCalibGraph;
     QList<QColor> mListEventsColor;
-    QList<ColoredPanel*> mListPanel;
+    QList<ColoredBar*> mListBar;
 
     QScrollArea* mScrollArea;
     QWidget* mGraphWidget;
@@ -64,6 +65,8 @@ private:
 
     int mGraphHeight;
     int mHeightForVisibleAxis;
+
+
     QFont mGraphFont;
 
     bool mMouseOverCurve;

@@ -2,17 +2,19 @@
 #include "AppSettings.h"
 #include <QMouseEvent>
 
-ColoredPanel::ColoredPanel(QWidget *parent) : QWidget(parent),
+int ColoredBar::mWidth = 15;
+
+ColoredBar::ColoredBar(QWidget *parent) : QWidget(parent),
 mColor (Qt::green)
 {
 
 }
 
-ColoredPanel::~ColoredPanel()
+ColoredBar::~ColoredBar()
 {
 }
 
-void ColoredPanel::paintEvent(QPaintEvent *)
+void ColoredBar::paintEvent(QPaintEvent *)
 {
     QPainter p (this);
     p.fillRect(rect(), mColor);
@@ -23,7 +25,7 @@ MultiCalibrationDrawing::MultiCalibrationDrawing(QWidget *parent) : QWidget(pare
 mVerticalSpacer (5),
 mGraphHeight (6 * AppSettings::heigthUnit()),
 mHeightForVisibleAxis(5 * AppSettings::heigthUnit()),
-mGraphFont (AppSettings::font()),
+mGraphFont (font()),
 mMouseOverCurve (true)
 {
    setMouseTracking(true);
@@ -68,14 +70,14 @@ void MultiCalibrationDrawing::setGraphList(QList<GraphView*> &list)
 void MultiCalibrationDrawing::setEventsColorList(QList<QColor> &colorList)
 {
     mListEventsColor = colorList;
-    for (auto && panel : mListPanel)
+    for (auto && panel : mListBar)
         delete panel;
 
-    mListPanel.clear();
+    mListBar.clear();
     for (auto && color : mListEventsColor) {
-        ColoredPanel* panel = new ColoredPanel (mGraphWidget);
+        ColoredBar* panel = new ColoredBar (mGraphWidget);
         panel->setColor(color);
-        mListPanel.append(panel);
+        mListBar.append(panel);
     }
 
 }
@@ -111,21 +113,20 @@ void MultiCalibrationDrawing::mouseMoveEvent(QMouseEvent* e)
 
 void MultiCalibrationDrawing::updateLayout()
 {
-    const int panelWidth (15);
-
     const bool axisVisible = (mGraphHeight >= mHeightForVisibleAxis);
     const int marginBottom = (axisVisible ? int (font().pointSize() * 2.2) : int (font().pointSize() * 0.5));
     int y (0);
     int i (0);
+    const int graphShift (5); // the same name and the same value as MultiCalibrationView::exportFullImage()
 
     for (GraphView *graph: mListCalibGraph) {
-        mListPanel[i]->setGeometry(5, y, panelWidth, mGraphHeight - marginBottom);
-        mListPanel[i]->setVisible(true);
+        mListBar[i]->setGeometry(5, y, ColoredBar::mWidth, mGraphHeight - marginBottom);
+        mListBar[i]->setVisible(true);
 
         if (!graph->hasCurve()) {
             graph->showInfos(true);
             graph->setNothingMessage( graph->getInfo(' ')  + " -> Not computable" );
-            graph->setGeometry(panelWidth + 5, y, width() - panelWidth, mGraphHeight );
+            graph->setGeometry(ColoredBar::mWidth + graphShift, y, width() - ColoredBar::mWidth - graphShift, mGraphHeight );
             graph->setVisible(true);
 
          } else {
@@ -142,7 +143,7 @@ void MultiCalibrationDrawing::updateLayout()
 
             graph->setFont(font());
             graph->setTipXLab("t");
-            graph->setGeometry(panelWidth + 5, y, width() - panelWidth, mGraphHeight );
+            graph->setGeometry(ColoredBar::mWidth + graphShift, y, width() - ColoredBar::mWidth - graphShift, mGraphHeight );
             graph->setVisible(true);
          }
          y += mGraphHeight;
@@ -180,7 +181,6 @@ void MultiCalibrationDrawing::setGraphHeight(const int & height)
 
 void MultiCalibrationDrawing::forceRefresh()
 {
-    const int panelWidth (15);
     const QFontMetrics fm (font());
 
     const bool axisVisible = (mGraphHeight >= mHeightForVisibleAxis);
@@ -190,10 +190,11 @@ void MultiCalibrationDrawing::forceRefresh()
     int i (0);
 
     for (GraphView *graph: mListCalibGraph) {
-        mListPanel[i]->setGeometry(5, y, panelWidth, mGraphHeight - marginBottom);
+        mListBar[i]->setGeometry(5, y, ColoredBar::mWidth, mGraphHeight - marginBottom);
+
          if (!graph->hasCurve()) {
             QLabel noCalib (tr("No Calibration"), this);
-            noCalib.setGeometry(panelWidth +5, y, width() - panelWidth - fm.width(noCalib.text()), mGraphHeight);
+            noCalib.setGeometry(ColoredBar::mWidth +5, y, width() - ColoredBar::mWidth - fm.width(noCalib.text()), mGraphHeight);
 
          } else {
              graph->showXAxisValues(axisVisible);

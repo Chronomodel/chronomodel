@@ -5,6 +5,7 @@
 #include "QtUtilities.h"
 #include "MainWindow.h"
 #include "EventKnown.h"
+#include "GraphViewResults.h"
 
 #include <QPainter>
 #include "Project.h"
@@ -13,15 +14,14 @@
 MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mMajorScale (100),
 mMinorScale (4),
-mTminDisplay(-INFINITY),
-mTmaxDisplay(INFINITY),
+mTminDisplay(-HUGE_VAL),
+mTmaxDisplay(HUGE_VAL),
 mThreshold(95),
-mGraphHeight(100),
+mGraphHeight(GraphViewResults::mHeightForVisibleAxis),
 mCurveColor(Painting::mainColorDark)
 {
-    setFont(AppSettings::font());
-
-   mButtonWidth = 3 * AppSettings::widthUnit();
+    mButtonWidth = int (1.3 * AppSettings::widthUnit());
+    mButtonHeigth = int (1.3 * AppSettings::heigthUnit());
     setMouseTracking(true);
     mDrawing = new MultiCalibrationDrawing(this);
     setMouseTracking(true);
@@ -64,7 +64,7 @@ mCurveColor(Painting::mainColorDark)
     mGraphHeightLab->setBackground(Painting::borderDark);
 
     mGraphHeightEdit = new LineEdit(this);
-    mGraphHeightEdit->setText(locale().toString(mGraphHeight));
+    mGraphHeightEdit->setText(locale().toString(100));
 
     QIntValidator* heightValidator = new QIntValidator();
     heightValidator->setRange(50, 500);
@@ -199,8 +199,8 @@ void MultiCalibrationView::setVisible(bool visible)
 
 void MultiCalibrationView::applyAppSettings()
 {
-    mButtonWidth = AppSettings::mButtonWidth;
-    mTextArea->setFont(AppSettings::font());
+    //mButtonWidth = AppSettings::mButtonWidth;
+/*    mTextArea->setFont(AppSettings::font());
     mDrawing->setFont(AppSettings::font());
 
     mGraphHeightLab->setFont(AppSettings::font());
@@ -220,7 +220,7 @@ void MultiCalibrationView::applyAppSettings()
 
     mHPDLab->setFont(AppSettings::font());
     mHPDEdit->setFont(AppSettings::font());
-
+*/
     updateLayout();
 }
 
@@ -230,18 +230,20 @@ void MultiCalibrationView::updateLayout()
     const int margin ( int(0.1 * mButtonWidth));
     const int xm (x0 + margin);
 
-    QFontMetrics fm (AppSettings::font());
-    const int textHeight (AppSettings::heigthUnit() + 3);
-    const int verticalSpacer (AppSettings::heigthUnit());
+    QFontMetrics fm (font());
+    const int textHeight (int (1.2 * (fm.descent() + fm.ascent()) ));
+    const int verticalSpacer (int (0.3 * AppSettings::heigthUnit()));
+    mMarginRight = int (1.5 * floor(fm.width(mEndEdit->text())/2) + 5);
+    mMarginLeft = int (1.5 * floor(fm.width(mStartEdit->text())/2) + 5);
 
     //Position of Widget
     int y (0);
 
-    mImageSaveBut->setGeometry(x0, y, mButtonWidth, mButtonWidth);
+    mImageSaveBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
     y += mImageSaveBut->height();
-    mImageClipBut->setGeometry(x0, y, mButtonWidth, mButtonWidth);
+    mImageClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
     y += mImageClipBut->height();
-    mStatClipBut->setGeometry(x0, y, mButtonWidth, mButtonWidth);
+    mStatClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
     y += mStatClipBut->height() + 5;
 
     mGraphHeightLab->setGeometry(x0, y, mButtonWidth, textHeight);
@@ -249,10 +251,10 @@ void MultiCalibrationView::updateLayout()
     mGraphHeightEdit->setGeometry(xm, y, mButtonWidth - 2 * margin, textHeight);
     y += mGraphHeightEdit->height() + verticalSpacer;
 
-    mColorClipBut->setGeometry(x0, y, mButtonWidth, mButtonWidth);
+    mColorClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
     y += mColorClipBut->height();
 
-    const int separatorHeight (height() - 8*textHeight - 8* verticalSpacer - 6*mButtonWidth);
+    const int separatorHeight (height() - 8*textHeight - 8* verticalSpacer - 6*mButtonHeigth);
     frameSeparator->setGeometry(x0, y, mButtonWidth, separatorHeight);
     y += frameSeparator->height() + verticalSpacer;
 
@@ -317,10 +319,9 @@ void MultiCalibrationView::updateGraphList()
     QList<QColor> colorList;
     const QJsonArray events = state.value(STATE_EVENTS).toArray();
 
-
+    //The same Name and same Value as in MultiCalibrationView::exportFullImage()
     const QFontMetrics fm (font());
-    const int marginRight = int (1.5 * floor(fm.width(mEndEdit->text())/2));
-    const int marginLeft = int (1.5 * floor(fm.width(mStartEdit->text())/2));
+
 
     QList<QJsonObject> selectedEvents;
 
@@ -367,8 +368,8 @@ void MultiCalibrationView::updateGraphList()
             calibGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
             calibGraph->setFormatFunctY(nullptr);
 
-            calibGraph->setMarginRight(marginRight);
-            calibGraph->setMarginLeft(marginLeft);
+            calibGraph->setMarginRight(mMarginRight);
+            calibGraph->setMarginLeft(mMarginLeft);
 
             calibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
             calibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
@@ -453,8 +454,8 @@ void MultiCalibrationView::updateGraphList()
                         calibGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
                         calibGraph->setFormatFunctY(nullptr);
 
-                        calibGraph->setMarginRight(marginRight);
-                        calibGraph->setMarginLeft(marginLeft);
+                        calibGraph->setMarginRight(mMarginRight);
+                        calibGraph->setMarginLeft(mMarginLeft);
 
                         calibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
                         calibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
@@ -475,7 +476,7 @@ void MultiCalibrationView::updateGraphList()
         }
    }
    mDrawing->showMarker();
-   mDrawing->setGraphHeight(mGraphHeight);
+   updateGraphsSize(mGraphHeightEdit->text());
    mDrawing->setEventsColorList(colorList);
    mDrawing->setGraphList(graphList);
 
@@ -523,13 +524,16 @@ void MultiCalibrationView::updateHPDGraphs(const QString &thres)
 
 }
 
-void MultiCalibrationView::updateGraphsSize(const QString &size)
+void MultiCalibrationView::updateGraphsSize(const QString &sizeStr)
 {
     bool ok;
-    double val = locale().toDouble(size, &ok);
-    if (ok)
-        mGraphHeight = int (val);
-    else
+    double val = locale().toDouble(sizeStr, &ok);
+    if (ok) {
+        const double origin (GraphViewResults::mHeightForVisibleAxis);//Same value in ResultsView::applyAppSettings()
+        const double prop (val / 100.);
+        mGraphHeight = int ( prop * origin );
+
+    } else
         return;
 
     mDrawing->setGraphHeight(mGraphHeight);
@@ -616,8 +620,8 @@ void MultiCalibrationView::updateScaleX()
 void MultiCalibrationView::updateGraphsZoom()
 {
     const QFontMetrics fm (font());
-    const int marginRight = int (floor(fm.width(mEndEdit->text())/2) + 5);
-    const int marginLeft = int (floor(fm.width(mStartEdit->text())/2) + 5);
+    mMarginRight = int (1.5 * floor(fm.width(mEndEdit->text())/2) + 5);
+    mMarginLeft = int (1.5 * floor(fm.width(mStartEdit->text())/2) + 5);
 
     QList<GraphView*> *graphList = mDrawing->getGraphList();
 
@@ -643,8 +647,8 @@ void MultiCalibrationView::updateGraphsZoom()
 
             gr->setRangeY(0., 1. * yMax);
 
-            gr->setMarginRight(marginRight);
-            gr->setMarginLeft(marginLeft);
+            gr->setMarginRight(mMarginRight);
+            gr->setMarginLeft(mMarginLeft);
 
             // ------------------------------------------------------------
             //  Show zones if calibrated data are outside study period
@@ -690,10 +694,11 @@ void MultiCalibrationView::exportImage()
 
 void MultiCalibrationView::exportFullImage()
 {
-    bool printAxis = (mGraphHeight < 100.);
+    bool printAxis = (mGraphHeight < GraphViewResults::mHeightForVisibleAxis);
+    QFontMetricsF fmAxe (mDrawing->font());
 
     QWidget* widgetExport = mDrawing->getGraphWidget();
-   // QList<GraphView*> *graphlist = mDrawing->getGraphList();
+
     int minDeltaPix (3); //same value as GraphView::mStepMinWidth
     widgetExport->setFont(mDrawing->font());
 
@@ -702,29 +707,24 @@ void MultiCalibrationView::exportFullImage()
 
     AxisWidget* axisWidget = nullptr;
     QLabel* axisLegend = nullptr;
-    int axeHeight (20);
-    int legendHeight (20);
+    int axeHeight (int (font().pointSize() * 2.2));//20);
+    int legendHeight ( int (1.5 * (fmAxe.descent() + fmAxe.ascent())));
 
     if (printAxis) {
-        widgetExport->resize(widgetExport->width(), widgetExport->height() + axeHeight + legendHeight );
+        widgetExport->resize(widgetExport->width(), widgetExport->height() + axeHeight + legendHeight);
 
         DateConversion f = DateUtils::convertToAppSettingsFormat;
 
-        QFontMetricsF fmAxe (widgetExport->font());
-
-        // 3 const : The same Name and same Value as in MultiCalibrationDrawing::updateLayout()
-        const int marginRight = int (floor(fmAxe.width(mEndEdit->text())/2));
-        const int marginLeft = int (floor(fmAxe.width(mStartEdit->text())/2)) + 5;
-        const int panelWidth (20);
-
+        const int graphShift (5); // the same name and the same value as MultiCalibrationDrawing::updateLayout()
         axisWidget = new AxisWidget(f, widgetExport);
-        axisWidget->setFont(widgetExport->font());
-        axisWidget->mMarginLeft = marginLeft + panelWidth;
-        axisWidget->mMarginRight = marginRight;
+        axisWidget->setFont(mDrawing->font());     
+        axisWidget->mMarginLeft = mMarginLeft;
+        axisWidget->mMarginRight = mMarginRight ;
 
         //qDebug()<<"multiCal Export"<<mMajorScale << mMinorScale;
         axisWidget->setScaleDivision(mMajorScale, mMinorScale);
-        axisWidget->updateValues(int (widgetExport->width() - axisWidget->mMarginLeft - axisWidget->mMarginRight), minDeltaPix, mTminDisplay, mTmaxDisplay);
+        axisWidget->updateValues(int (widgetExport->width() - axisWidget->mMarginLeft - axisWidget->mMarginRight -ColoredBar::mWidth - graphShift), minDeltaPix, mTminDisplay, mTmaxDisplay);
+
 
         //axisWidget->mShowText = true;
         axisWidget->setAutoFillBackground(true);
@@ -732,7 +732,8 @@ void MultiCalibrationView::exportFullImage()
         axisWidget->mShowSubSubs = true;
         axisWidget->mShowArrow = true;
         axisWidget->mShowText = true;
-        axisWidget->setGeometry(0, widgetExport->height() - axeHeight, widgetExport->width(), axeHeight);
+        axisWidget->setGeometry(ColoredBar::mWidth + graphShift, widgetExport->height() - axeHeight, widgetExport->width() - ColoredBar::mWidth - graphShift, axeHeight);
+
         axisWidget->raise();
         axisWidget->setVisible(true);
 
@@ -829,7 +830,7 @@ void MultiCalibrationView::showStat()
    if (mStatClipBut ->isChecked()) {
        mDrawing->setVisible(false);
        mTextArea->setVisible(true);
-       mTextArea->setFont( AppSettings::font());
+       mTextArea->setFont(font());
 
        // update Results from selected Event in JSON
        QJsonObject state = mProject->state();
