@@ -40,7 +40,7 @@ public:
     int getMinorScaleCount() const {return mMinorScaleCount;} // Tip
     void setMajorScale( const double &major) { mMajorScale= major;} //Mark
     void setMinorScaleCount(const int &minorCount) { mMinorScaleCount = minorCount;}
-    void setScaleDivision (const double &major, const double &minorCount);
+    void setScaleDivision (const double &major, const int &minorCount);
     void setScaleDivision (const Scale & sc);
     
 public:
