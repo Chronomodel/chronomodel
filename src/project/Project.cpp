@@ -578,7 +578,8 @@ bool Project::load(const QString& path)
             //  If not, it may be an incompatibility between plugins versions (new parameter added for example...)
             //  This function gives a chance to plugins to modify dates saved with old versions in order to use them with the new version.
            qDebug() << "in Project::load  begin checkDatesCompatibility";
-            checkDatesCompatibility();
+            loadingState = checkDatesCompatibility(loadingState);
+
            qDebug() << "in Project::load  end checkDatesCompatibility";
             //  Check if dates are valid on the current study period
             mState = checkValidDates(loadingState);
@@ -747,6 +748,278 @@ bool Project::save()
     QFileInfo info(AppSettings::mLastDir + "/" + AppSettings::mLastFile);
     return info.exists() ? saveProjectToFile() : saveAs(tr("Save current project as..."));
 }
+
+
+bool Project::insert(const QString& path)
+{
+    bool newerProject = false;
+    bool olderProject = false;
+
+    QFileInfo checkFile(path);
+    if (!checkFile.exists() || !checkFile.isFile()) {
+        QMessageBox message(QMessageBox::Critical,
+                            tr("Error loading project file"),
+                            tr("The project file could not be loaded.") + "\r" +
+                            path  +
+                            tr("Could not be find"),
+                            QMessageBox::Ok,
+                            qApp->activeWindow());
+        message.exec();
+        return false;
+    }
+    QFile file(path);
+
+    qDebug() << "in Project::load Loading project file : " << path;
+
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QFileInfo info(path);
+        MainWindow::getInstance()->setCurrentPath(info.absolutePath());
+
+        //AppSettings::mLastDir = info.absolutePath();
+        //AppSettings::mLastFile = info.fileName();
+        //mName = info.fileName();
+        QByteArray saveData = file.readAll();
+        QJsonParseError error;
+        QJsonDocument jsonDoc (QJsonDocument::fromJson(saveData, &error));
+
+        if (error.error !=  QJsonParseError::NoError) {
+            QMessageBox message(QMessageBox::Critical,
+                                tr("Error loading project file"),
+                                tr("The project file could not be loaded.") + "\r" +
+                                tr("Error message") + " : " + error.errorString(),
+                                QMessageBox::Ok,
+                                qApp->activeWindow());
+            message.exec();
+            return false;
+        } else {
+            if (mModel)
+                mModel->clear();
+
+            QJsonObject loadedState = jsonDoc.object();
+
+            if (loadedState.contains(STATE_APP_VERSION)) {
+                QString projectVersionStr = loadedState.value(STATE_APP_VERSION).toString();
+                QStringList projectVersionList = projectVersionStr.split(".");
+
+                QString appVersionStr = QApplication::applicationVersion();
+                QStringList appVersionList = appVersionStr.split(".");
+
+
+                if (projectVersionList.size() == 3 && appVersionList.size() == 3) {
+
+                    if (projectVersionList[0].toInt() > appVersionList[0].toInt())
+                        newerProject = true;
+
+                    else if (projectVersionList[0].toInt() == appVersionList[0].toInt()) { // version
+                            if (projectVersionList[1].toInt() > appVersionList[1].toInt())
+                                newerProject = true;
+                            else if (projectVersionList[1].toInt() < appVersionList[1].toInt())
+                                olderProject = true;
+
+                    }  else {
+                        olderProject = true;
+                    }
+
+                    if (newerProject) {
+                        QMessageBox message(QMessageBox::Warning,
+                                            tr("Project version doesn't match"),
+                                            "This project has been saved with a newer version of ChronoModel :\r\r- Project version : " + projectVersionStr
+                                            + "\r- Current version : " + appVersionStr
+                                            + "\r\rSome incompatible data may be missing and you may encounter problems running the model.\r\rLoading the project will update and overwrite the existing file. Do you really want to continue ?",
+                                            QMessageBox::Yes | QMessageBox::No,
+                                            qApp->activeWindow());
+
+                        if (message.exec() == QMessageBox::No)
+                            return false;
+
+                    }
+
+                    if (olderProject) {
+                        QMessageBox message(QMessageBox::Warning,
+                                            tr("Project version doesn't match"),
+                                            "This project has been saved with a older version of ChronoModel :\r\r- Project version : " + projectVersionStr + "\r- Current version : " + appVersionStr + "\r\rSome incompatible data may be missing and you may encounter problems running the model.\r\rLoading the project will update and overwrite the existing file. Do you really want to continue ?",
+                                            QMessageBox::Yes | QMessageBox::No,
+                                            qApp->activeWindow());
+                        if (message.exec() == QMessageBox::No)
+                            return false;
+                    }
+                }
+            }
+            file.close();
+            //  Ask all plugins if dates are corrects.
+            //  If not, it may be an incompatibility between plugins versions (new parameter added for example...)
+            //  This function gives a chance to plugins to modify dates saved with old versions in order to use them with the new version.
+           qDebug() << "in Project::load  begin checkDatesCompatibility";
+           loadedState = checkDatesCompatibility(loadedState);
+
+            qDebug() << "in Project::load  end checkDatesCompatibility";
+            //  Check if dates are valid on the current study period
+            loadedState = checkValidDates(loadedState);
+
+
+            // 1 - find min-max position and min max index in the mState yet in memory
+           double minXEvent (HUGE_VAL), maxXEvent(- HUGE_VAL), minYEvent(HUGE_VAL), maxYEvent(- HUGE_VAL);
+           double minXPhase(HUGE_VAL), maxXPhase(- HUGE_VAL), minYPhase(HUGE_VAL), maxYPhase(- HUGE_VAL);
+           int  maxIDEvent(0), maxIDPhase(0), maxIDEventConstraint(0), maxIDPhaseConstraint(0);
+
+           const QJsonArray phases = mState.value(STATE_PHASES).toArray();
+           for (auto phaseJSON : phases) {
+               QJsonObject phase = phaseJSON.toObject();
+               minXPhase =std::min(minXPhase, phase[STATE_ITEM_X].toDouble());
+               maxXPhase =std::max(maxXPhase, phase[STATE_ITEM_X].toDouble());
+
+               minYPhase =std::min(minYPhase, phase[STATE_ITEM_Y].toDouble());
+               maxYPhase =std::max(maxYPhase, phase[STATE_ITEM_Y].toDouble());
+               maxIDPhase =std::max(maxIDPhase, phase[STATE_ID].toInt());
+           }
+
+           const QJsonArray phaseConstraints = mState.value(STATE_PHASES_CONSTRAINTS).toArray();
+           for (auto phaseConsJSON : phaseConstraints) {
+               QJsonObject phaseCons = phaseConsJSON.toObject();
+               maxIDPhaseConstraint =std::max(maxIDPhaseConstraint, phaseCons[STATE_ID].toInt());
+           }
+
+
+           const QJsonArray events = mState.value(STATE_EVENTS).toArray();
+           for (auto eventJSON : events) {
+               QJsonObject event = eventJSON.toObject();
+               minXEvent =std::min(minXEvent, event[STATE_ITEM_X].toDouble());
+               maxXEvent =std::max(maxXEvent, event[STATE_ITEM_X].toDouble());
+
+               minYEvent =std::min(minYEvent, event[STATE_ITEM_Y].toDouble());
+               maxYEvent =std::max(maxYEvent, event[STATE_ITEM_Y].toDouble());
+               maxIDEvent =std::max(maxIDEvent, event[STATE_ID].toInt());
+           }
+
+           const QJsonArray eventConstraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
+           for (auto eventConsJSON : eventConstraints) {
+               QJsonObject eventCons = eventConsJSON.toObject();
+               maxIDEventConstraint =std::max(maxIDEventConstraint, eventCons[STATE_ID].toInt());
+           }
+
+           // 2- find min X and  min -max Y in the imported project
+           double minXEventNew (HUGE_VAL);
+           double minYEventNew (HUGE_VAL), maxYEventNew (-HUGE_VAL);
+           const QJsonArray eventsNew = loadedState.value(STATE_EVENTS).toArray();
+           for (auto eventJSON : eventsNew) {
+               QJsonObject event = eventJSON.toObject();
+               minXEventNew =std::min(minXEventNew, event[STATE_ITEM_X].toDouble());
+
+               minYEventNew =std::min(minYEventNew, event[STATE_ITEM_Y].toDouble());
+               maxYEventNew =std::max(maxYEventNew, event[STATE_ITEM_Y].toDouble());
+           }
+
+           double minXPhaseNew (HUGE_VAL);
+           double minYPhaseNew (HUGE_VAL), maxYPhaseNew (-HUGE_VAL);
+           const QJsonArray phasesNew = loadedState.value(STATE_PHASES).toArray();
+           for (auto phaseJSON : phasesNew) {
+               QJsonObject phase = phaseJSON.toObject();
+               minXPhaseNew =std::min(minXPhaseNew, phase[STATE_ITEM_X].toDouble());
+
+               minYPhaseNew =std::min(minYPhaseNew, phase[STATE_ITEM_Y].toDouble());
+               maxYPhaseNew =std::max(maxYPhaseNew, phase[STATE_ITEM_Y].toDouble());
+
+           }
+
+          // 3 - Shift the new loadedState
+
+           QJsonObject newState = loadedState;
+           QJsonArray newPhases = newState.value(STATE_PHASES).toArray();
+           for (auto phaseJSON : newPhases) {
+               QJsonObject phase = phaseJSON.toObject();
+               // set on the right+ + mItemWidth(150.) in AbstractItem.h
+               phase[STATE_ITEM_X] =  phase[STATE_ITEM_X].toDouble() + maxXPhase - minXPhaseNew + 200;
+               // center on Y
+               phase[STATE_ITEM_Y] = phase[STATE_ITEM_Y].toDouble() - (maxYPhaseNew + minYPhaseNew)/2.;
+               phase[STATE_ID] = phase[STATE_ID].toInt() + maxIDPhase;
+
+               phaseJSON = phase;
+           }
+           newState[STATE_PHASES] = newPhases;
+
+           QJsonArray newPhaseConstraints = newState.value(STATE_PHASES_CONSTRAINTS).toArray();
+           for (auto phaseConsJSON : newPhaseConstraints) {
+               QJsonObject phaseCons = phaseConsJSON.toObject();
+               phaseCons[STATE_ID] = phaseCons[STATE_ID].toInt() + maxIDPhaseConstraint;
+               phaseCons[STATE_CONSTRAINT_FWD_ID] = phaseCons[STATE_CONSTRAINT_FWD_ID].toInt() + maxIDPhase;
+               phaseCons[STATE_CONSTRAINT_BWD_ID] = phaseCons[STATE_CONSTRAINT_BWD_ID].toInt() + maxIDPhase;
+
+               phaseConsJSON = phaseCons;
+
+
+           }
+           newState[STATE_PHASES_CONSTRAINTS] = newPhaseConstraints;
+
+           QJsonArray newEvents = newState.value(STATE_EVENTS).toArray();
+           for (auto eventJSON : newEvents) {
+              QJsonObject event = eventJSON.toObject();
+              // set on the right + mItemWidth(150.) in AbstractItem.h
+              event[STATE_ITEM_X] = event[STATE_ITEM_X].toDouble() + maxXEvent - minXEventNew + 200;
+              // center on Y
+              event[STATE_ITEM_Y] = event[STATE_ITEM_Y].toDouble() - (maxYEventNew + minYEventNew)/2. ;
+              event[STATE_ID] = event[STATE_ID].toInt() + maxIDEvent;
+
+              QList<int> mPhasesIds  = stringListToIntList(event.value(STATE_EVENT_PHASE_IDS).toString(), ",");
+              for ( int i(0); i<mPhasesIds.size(); ++i)
+                  mPhasesIds[i] += maxIDPhase;
+
+              event[STATE_EVENT_PHASE_IDS] = intListToString( mPhasesIds, ",");
+
+              eventJSON = event;
+           }
+           newState[STATE_EVENTS] = newEvents;
+
+           QJsonArray newEventConstraints = newState.value(STATE_EVENTS_CONSTRAINTS).toArray();
+           for (auto eventConsJSON : newEventConstraints) {
+               QJsonObject eventCons = eventConsJSON.toObject();
+               eventCons[STATE_ID] = eventCons[STATE_ID].toInt() + maxIDEventConstraint;
+
+               eventCons[STATE_CONSTRAINT_FWD_ID] = eventCons[STATE_CONSTRAINT_FWD_ID].toInt() + maxIDEvent;
+               eventCons[STATE_CONSTRAINT_BWD_ID] = eventCons[STATE_CONSTRAINT_BWD_ID].toInt() + maxIDEvent;
+
+              eventConsJSON = eventCons;
+           }
+
+           newState[STATE_EVENTS_CONSTRAINTS] = newEventConstraints;
+
+           // 4 - Adding the new loadedState after mState
+           QJsonObject stateNext = mState;
+
+           QJsonArray nextPhases = mState.value(STATE_PHASES).toArray();
+           for (auto phaseJSON : newPhases)
+               nextPhases.append(phaseJSON.toObject());
+           mState[STATE_PHASES] = nextPhases;
+
+           QJsonArray nextPhaseConstraints = mState.value(STATE_PHASES_CONSTRAINTS).toArray();
+           for (auto phaseConsJSON : newPhaseConstraints)
+               nextPhaseConstraints.append(phaseConsJSON.toObject());
+           mState[STATE_PHASES_CONSTRAINTS] = nextPhaseConstraints;
+
+           QJsonArray nextEvents = mState.value(STATE_EVENTS).toArray();
+           for (auto eventJSON : newEvents)
+               nextEvents.append(eventJSON.toObject());
+           mState[STATE_EVENTS] = nextEvents;
+
+           QJsonArray nextEventConstraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
+           for (auto eventConsJSON : newEventConstraints)
+               nextEventConstraints.append(eventConsJSON.toObject());
+           mState[STATE_EVENTS_CONSTRAINTS] = nextEventConstraints;
+
+           clearModel();
+
+
+            // When openning a project, it is maked as saved : mState == mLastSavedState
+            mLastSavedState = mState;
+
+            qDebug() << "in Project::insert  unselectedAllInState";
+            unselectedAllInState(); // modify mState
+
+            return true;
+        }
+    }
+    return false;
+}
+
 
 /**
  * @brief Project::saveAs On native box of MacOS the title is not show
@@ -1444,11 +1717,11 @@ void Project::addDate(int eventId, QJsonObject date)
     }
 }
 
-void Project::checkDatesCompatibility()
+QJsonObject Project::checkDatesCompatibility(QJsonObject state)
 {
-    QJsonObject state = mState;
-    QJsonArray events = mState.value(STATE_EVENTS).toArray();
-    QJsonArray phases = mState.value(STATE_PHASES).toArray();
+    //QJsonObject state = mState;
+    QJsonArray events = state.value(STATE_EVENTS).toArray();
+    QJsonArray phases = state.value(STATE_PHASES).toArray();
     for (int i = 0; i<events.size(); ++i) {
         QJsonObject event = events.at(i).toObject();
         QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
@@ -1510,7 +1783,7 @@ void Project::checkDatesCompatibility()
     if (phaseConversion)
         state[STATE_PHASES] = phases;
 
-    mState = state;
+    return state;
 }
 
 /**

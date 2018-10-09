@@ -70,7 +70,6 @@ public:
     
     // Special events for selection... too bad!
     void sendEventsSelectionChanged();
-    //void sendPhasesSelectionChanged();
     
     static QJsonObject emptyState();
     QJsonObject state() const;
@@ -83,6 +82,8 @@ public:
     bool saveProjectToFile();
 
     bool recenterProject();
+    bool insert(const QString& path);
+
     /**
      * @brief setNoResults : set to disable the saving the file *.res
      * @param noResults
@@ -91,7 +92,6 @@ public:
     bool withResults() {return !mNoResults;}
     
     bool setSettings(const ProjectSettings& settings);    
-    //void setAppSettings(const AppSettings& settings);
     
     bool studyPeriodIsValid();
     void showStudyPeriodWarning();
@@ -115,7 +115,7 @@ public:
     void deleteDates(int eventId, const QList<int>& dateIndexes);
     void recycleDates(int eventId);
     void deleteSelectedTrashedDates(const QList<int>& ids);
-    void checkDatesCompatibility();
+    QJsonObject checkDatesCompatibility(QJsonObject state);
     QJsonObject checkValidDates(const QJsonObject& state);
     
     void unselectedAllInState();

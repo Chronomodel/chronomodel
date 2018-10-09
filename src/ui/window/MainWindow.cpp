@@ -144,6 +144,10 @@ void MainWindow::createActions()
     mOpenProjectAction->setStatusTip(tr("Open an existing project"));
     connect(mOpenProjectAction, &QAction::triggered, this, &MainWindow::openProject);
 
+    mInsertProjectAction = new QAction(QIcon(":open_p.png"), tr("Insert"), this);
+    mInsertProjectAction->setStatusTip(tr("Insert an existing project"));
+    connect(mInsertProjectAction, &QAction::triggered, this, &MainWindow::insertProject);
+
     mCloseProjectAction = new QAction(tr("Close"), this);
     mCloseProjectAction->setShortcuts(QKeySequence::Close);
     mCloseProjectAction->setStatusTip(tr("Open an existing project"));
@@ -160,11 +164,13 @@ void MainWindow::createActions()
     mProjectExportAction->setVisible(false);
     
     mUndoAction = mUndoStack->createUndoAction(this);
+    mUndoAction->setShortcuts(QKeySequence::Undo);
     mUndoAction->setIcon(QIcon(":undo_p.png"));
     mUndoAction->setText(tr("Undo"));
     mUndoAction->setToolTip(tr("Undo"));
     
     mRedoAction = mUndoStack->createRedoAction(this);
+    mRedoAction->setShortcuts(QKeySequence::Redo);
     mRedoAction->setIcon(QIcon(":redo_p.png"));
     mRedoAction->setText(tr("Redo"));
     mRedoAction->setToolTip(tr("Redo"));
@@ -284,6 +290,7 @@ void MainWindow::createMenus()
     mProjectMenu->addAction(mAppSettingsAction);
     mProjectMenu->addAction(mNewProjectAction);
     mProjectMenu->addAction(mOpenProjectAction);
+    mProjectMenu->addAction(mInsertProjectAction);
     mProjectMenu->addAction(mCloseProjectAction);
 
     mProjectMenu->addSeparator();
@@ -488,6 +495,57 @@ void MainWindow::openProject()
             updateWindowTitle();
         // Create mEventsScene and mPhasesScenes
             mProjectView->createProject();
+
+            mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
+           /* if (! mProject->mModel->mChains.isEmpty())
+                emit mProject->mcmcFinished(mProject->mModel);*/
+         }
+
+        mUndoStack->clear();
+        statusBar()->showMessage(tr("Ready"));
+    }
+
+}
+
+
+void MainWindow::insertProject()
+{
+    const QString currentPath = getCurrentPath();
+    QString path = QFileDialog::getOpenFileName(this,
+                                                      tr("Insert File"),
+                                                      currentPath,
+                                                      tr("Chronomodel Project (*.chr)"));
+
+    if (!path.isEmpty()) {
+
+     /*   if (mProject) {
+            //mProject->askToSave(tr("Save current project as..."));
+
+            disconnectProject();
+
+            //resetInterface(): clear mEventsScene and mPhasesScene, set mProject = nullptr
+            resetInterface();
+
+            delete mProject;
+        }
+        */
+        statusBar()->showMessage(tr("Insert project : %1").arg(path));
+        // assign new project
+       // mProject = new Project();
+       // connectProject();
+
+        //setAppSettings(): just update mAutoSaveTimer
+       // mProject->setAppSettings();
+        const QFileInfo info(path);
+        setCurrentPath(info.absolutePath());
+
+
+        // look MainWindows::readSetting()
+        if (mProject->insert(path)) {
+          //  activateInterface(true);
+           // updateWindowTitle();
+        // Create mEventsScene and mPhasesScenes
+            mProjectView->updateProject();
 
             mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
            /* if (! mProject->mModel->mChains.isEmpty())
