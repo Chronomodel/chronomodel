@@ -468,7 +468,7 @@ void Project::sendEventsSelectionChanged()
 #ifdef DEBUG
     //qDebug() << "(+++) Sending events selection : use marked events";
 #endif
-    QEvent* e = new QEvent((QEvent::Type)1001);
+    QEvent* e = new QEvent(QEvent::Type (1001));
     QCoreApplication::postEvent(this, e, Qt::NormalEventPriority);
 }
 
@@ -504,7 +504,7 @@ bool Project::load(const QString& path)
         mName = info.fileName();
         QByteArray saveData = file.readAll();
         QJsonParseError error;
-        QJsonDocument jsonDoc(QJsonDocument::fromJson(saveData, &error));
+        QJsonDocument jsonDoc (QJsonDocument::fromJson(saveData, &error));
 
         if (error.error !=  QJsonParseError::NoError) {
             QMessageBox message(QMessageBox::Critical,
@@ -573,7 +573,7 @@ bool Project::load(const QString& path)
                     }
                 }
             }
-            
+            file.close();
             //  Ask all plugins if dates are corrects.
             //  If not, it may be an incompatibility between plugins versions (new parameter added for example...)
             //  This function gives a chance to plugins to modify dates saved with old versions in order to use them with the new version.
@@ -583,6 +583,7 @@ bool Project::load(const QString& path)
             //  Check if dates are valid on the current study period
             mState = checkValidDates(loadingState);
             
+            recenterProject();
             // When openning a project, it is maked as saved : mState == mLastSavedState
             mLastSavedState = mState;
 
@@ -596,7 +597,7 @@ bool Project::load(const QString& path)
            qDebug() << "in Project::load  Begin pushProjectState";
 //            pushProjectState(state, PROJECT_LOADED_REASON, true, true);
            qDebug() << "in Project::load  End pushProjectState";
-            file.close();
+
 
             // -------------------- look for the calibration file --------------------
             if (newerProject || olderProject)
@@ -620,29 +621,43 @@ bool Project::load(const QString& path)
                         if (in.version()!= QDataStream::Qt_5_5)
                                 return false;
 
-                        QString appliVersion;
-                        in >> appliVersion;
+                        QString caliVersion;
+                        in >> caliVersion;
                         // prepare the future
                          mCalibCurves.clear();
-                        if (appliVersion != qApp->applicationVersion()) {
+                        if (caliVersion != qApp->applicationVersion()) {
                             QFileInfo fileInfo(calFile);
                             QString filename(fileInfo.fileName());
-                            QString strMessage = tr("%1 has been done with a different version = %2").arg(filename, appliVersion) + " \n (" + tr("current") + " =  "
+                            QString strMessage = tr("%1 has been done with a different version = %2").arg(filename, caliVersion) + " \n (" + tr("current") + " =  "
                                     + qApp->applicationVersion() + ") \n"+ tr("Do you really want to load the calibration file: *.chr.cal ?");
                             QString strTitle = tr("Compatibility risk");
                             QMessageBox message(QMessageBox::Question, strTitle, strMessage, QMessageBox::Yes | QMessageBox::No, qApp->activeWindow());
                             if (message.exec() == QMessageBox::Yes) {
                                 // loading cal curve
-                                mCalibCurves = QMap<QString, CalibrationCurve>();
-                                quint32 siz;
-                                in >> siz;
-                                for (int i = 0; i < int(siz); ++i) {
-                                    QString descript;
-                                    in >> descript;
-                                    CalibrationCurve cal;
-                                    in >> cal;
-                                    mCalibCurves.insert(descript,cal);
+                                try {
+                                    mCalibCurves = QMap<QString, CalibrationCurve>();
+                                    quint32 siz;
+                                    in >> siz;
+                                    for (int i = 0; i < int(siz); ++i) {
+                                        QString descript;
+                                        in >> descript;
+                                        CalibrationCurve cal;
+                                        in >> cal;
+                                        mCalibCurves.insert(descript,cal);
+                                    }
+                                 }
+                                catch (QString error) {
+
+                                    QMessageBox message(QMessageBox::Critical,
+                                                        tr("Error loading project "),
+                                                        tr("The Calibration file could not be loaded.") + "\r" +
+                                                        tr("Error : %1").arg(error),
+                                                        QMessageBox::Ok,
+                                                        qApp->activeWindow());
+                                    message.exec();
+                                   return true;
                                 }
+
                             } else {
                                 return true;
                             }
@@ -847,10 +862,59 @@ bool Project::saveProjectToFile()
     return true;
 }
 
-// --------------------------------------------------------------------
-//     Project Settings
-// --------------------------------------------------------------------
-// Settings
+bool Project::recenterProject()
+{
+    double minXEvent (HUGE_VAL), maxXEvent(- HUGE_VAL), minYEvent(HUGE_VAL), maxYEvent(- HUGE_VAL);
+    double minXPhase(HUGE_VAL), maxXPhase(- HUGE_VAL), minYPhase(HUGE_VAL), maxYPhase(- HUGE_VAL);
+
+    const QJsonArray phases = mState.value(STATE_PHASES).toArray();
+    for (auto phaseJSON : phases) {
+        QJsonObject phase = phaseJSON.toObject();
+        minXPhase =std::min(minXPhase, phase[STATE_ITEM_X].toDouble());
+        maxXPhase =std::max(maxXPhase, phase[STATE_ITEM_X].toDouble());
+
+        minYPhase =std::min(minYPhase, phase[STATE_ITEM_Y].toDouble());
+        maxYPhase =std::max(maxYPhase, phase[STATE_ITEM_Y].toDouble());
+    }
+
+    const QJsonArray events = mState.value(STATE_EVENTS).toArray();
+    for (auto eventJSON : events) {
+        QJsonObject event = eventJSON.toObject();
+        minXEvent =std::min(minXEvent, event[STATE_ITEM_X].toDouble());
+        maxXEvent =std::max(maxXEvent, event[STATE_ITEM_X].toDouble());
+
+        minYEvent =std::min(minYEvent, event[STATE_ITEM_Y].toDouble());
+        maxYEvent =std::max(maxYEvent, event[STATE_ITEM_Y].toDouble());
+    }
+
+
+    QJsonObject newState = mState;
+    QJsonArray newPhases = newState.value(STATE_PHASES).toArray();
+    for (auto phaseJSON : newPhases) {
+        QJsonObject phase = phaseJSON.toObject();
+        phase[STATE_ITEM_X] =  phase[STATE_ITEM_X].toDouble() - (maxXPhase + minXPhase)/2.;
+        phase[STATE_ITEM_Y] = phase[STATE_ITEM_Y].toDouble() - (maxYPhase + minYPhase)/2.;
+        phaseJSON = phase;
+    }
+    newState[STATE_PHASES] = newPhases;
+
+    QJsonArray newEvents = newState.value(STATE_EVENTS).toArray();
+    for (auto eventJSON : newEvents) {
+       QJsonObject event = eventJSON.toObject();
+       event[STATE_ITEM_X] = event[STATE_ITEM_X].toDouble() - (maxXEvent + minXEvent)/2. ;
+       event[STATE_ITEM_Y] = event[STATE_ITEM_Y].toDouble() - (maxYEvent + minYEvent)/2. ;
+       eventJSON = event;
+    }
+    newState[STATE_EVENTS] = newEvents;
+    mState = newState;
+
+    return true;
+}
+
+/* --------------------------------------------------------------------
+     Project Settings
+ --------------------------------------------------------------------
+        Settings   */
 bool Project::setSettings(const ProjectSettings& settings)
 {
     if (settings.mTmin >= settings.mTmax) {
@@ -928,7 +992,7 @@ void Project::resetMCMC()
         
         for (int i = 0; i < events.size(); ++i) {
             QJsonObject event = events.at(i).toObject();
-            event[STATE_EVENT_METHOD] = (int)Event::eDoubleExp;
+            event[STATE_EVENT_METHOD] = int (Event::eDoubleExp);
             
             QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
             for (int j = 0; j < dates.size(); ++j) {
@@ -938,7 +1002,7 @@ void Project::resetMCMC()
                     Date d;
                     d.fromJson(date);
                     if (!d.isNull()) {
-                        date[STATE_DATE_METHOD] = (int)d.mPlugin->getDataMethod();
+                        date[STATE_DATE_METHOD] = int (d.mPlugin->getDataMethod());
                         dates[j] = date;
                     }
                 } catch(QString error) {
@@ -1002,7 +1066,7 @@ int Project::getUnusedEventId(const QJsonArray& events)
     return id;
 }
 
-void Project::createEvent()
+void Project::createEvent(qreal x, qreal y)
 {
     if (studyPeriodIsValid()) {
         EventDialog* dialog = new EventDialog(qApp->activeWindow(), tr("New Event"));
@@ -1010,24 +1074,28 @@ void Project::createEvent()
             Event event = Event();
             event.mName = dialog->getName();
             event.mColor= dialog->getColor();
-            
-            addEvent(event.toJson(), tr("Event created"));
+            QJsonObject eventJSON (event.toJson());
+            eventJSON[STATE_ITEM_X] = x;
+            eventJSON[STATE_ITEM_Y] = y;
+            addEvent(eventJSON, tr("Event created"));
 
         }
         delete dialog;
     }
 }
 
-void Project::createEventKnown()
+void Project::createEventKnown(qreal x, qreal y)
 {
     if (studyPeriodIsValid()) {
         EventDialog* dialog = new EventDialog(qApp->activeWindow(), tr("New Bound"));
         if (dialog->exec() == QDialog::Accepted) {
-            EventKnown event = EventKnown();
-            event.mName = dialog->getName();
-            event.mColor= dialog->getColor();
-            
-            addEvent(event.toJson(), tr("Bound created"));
+            EventKnown eventKnown = EventKnown();
+            eventKnown.mName = dialog->getName();
+            eventKnown.mColor= dialog->getColor();
+            QJsonObject eventJSON (eventKnown.toJson());
+            eventJSON[STATE_ITEM_X] = x;
+            eventJSON[STATE_ITEM_Y] = y;
+            addEvent(eventJSON, tr("Bound created"));
         }
         delete dialog;
     }
@@ -1788,7 +1856,7 @@ void Project::updateAllDataInSelectedEvents(const QHash<QString, QVariant>& grou
     pushProjectState(stateNext, "Grouped action applied : " + groupedAction.value("title").toString(), true);
 }
 
-void Project::createPhase()
+void Project::createPhase(qreal x, qreal y)
 {
     if (studyPeriodIsValid()) {
         PhaseDialog* dialog = new PhaseDialog(qApp->activeWindow());
@@ -1799,6 +1867,11 @@ void Project::createPhase()
                 QJsonArray phases = stateNext.value(STATE_PHASES).toArray();
                 
                 phase[STATE_ID] = getUnusedPhaseId(phases);
+
+                //QJsonObject eventJSON (event.toJson());
+                phase[STATE_ITEM_X] = x;
+                phase[STATE_ITEM_Y] = y;
+
                 phases.append(phase);
                 stateNext[STATE_PHASES] = phases;
                 
@@ -2349,7 +2422,7 @@ void Project::run()
     if (invalidDates.size() > 0) {
 
         QMessageBox messageBox;
-        messageBox.setMinimumWidth(30 * AppSettings::widthUnit());
+        messageBox.setMinimumWidth(10 * AppSettings::widthUnit());
         messageBox.setIcon(QMessageBox::Warning);
         //http://doc.qt.io/qt-5/qmessagebox.html#setWindowTitle
         //Sets the title of the message box to title. On OS X, the window title is ignored (as required by the OS X Guidelines).
@@ -2396,20 +2469,20 @@ void Project::run()
         MCMCLoopMain loop(mModel, this);
         MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint);
         
-        // --------------------------------------------------------------------
-        //  The dialog startMCMC() method starts the loop and the dialog.
-        //  When the loop emits "finished", the dialog will be "accepted"
-        //  This "finished" signal can be the results of :
-        //  - MCMC ran all the way to the end => mAbortedReason is empty and "run" returns.
-        //  - User clicked "Cancel" :
-        //      - an interruption request is sent to the loop
-        //      - The loop catches the interruption request with "isInterruptionRequested"
-        //      - the loop "run" function returns after setting mAbortedReason = ABORTED_BY_USER
-        //  - An error occured :
-        //      - The loop sets mAbortedReason to the correct error message
-        //      - The run function returns
-        //  => THE DIALOG IS NEVER REJECTED ! (Escape key also disabled to prevent default behavior)
-        // --------------------------------------------------------------------
+        /* --------------------------------------------------------------------
+          The dialog startMCMC() method starts the loop and the dialog.
+          When the loop emits "finished", the dialog will be "accepted"
+          This "finished" signal can be the results of :
+          - MCMC ran all the way to the end => mAbortedReason is empty and "run" returns.
+          - User clicked "Cancel" :
+              - an interruption request is sent to the loop
+              - The loop catches the interruption request with "isInterruptionRequested"
+              - the loop "run" function returns after setting mAbortedReason = ABORTED_BY_USER
+          - An error occured :
+              - The loop sets mAbortedReason to the correct error message
+              - The run function returns
+          => THE DIALOG IS NEVER REJECTED ! (Escape key also disabled to prevent default behavior)
+         -------------------------------------------------------------------- */
         
         if (dialog.startMCMC() == QDialog::Accepted) {
 
@@ -2440,8 +2513,8 @@ void Project::run()
 
 void Project::clearModel()
 {
-    if (mModel) {
+    if (mModel)
         mModel->clear();
-     }
+
      emit noResult();
 }

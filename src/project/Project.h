@@ -81,6 +81,8 @@ public:
     bool saveAs(const QString& dialogTitle);
     bool askToSave(const QString& saveDialogTitle);
     bool saveProjectToFile();
+
+    bool recenterProject();
     /**
      * @brief setNoResults : set to disable the saving the file *.res
      * @param noResults
@@ -142,7 +144,10 @@ public:
     int getUnusedPhaseConstraintId(const QJsonArray& constraints);
     
     void clearModel();
-    
+    void createEvent(qreal x, qreal y);
+    void createEventKnown(qreal x, qreal y);
+    void createPhase(qreal x, qreal y);
+
 public slots:
     bool save();
     
@@ -153,12 +158,10 @@ public slots:
     
     void setAppSettings();
 
-    void createEvent();
-    void createEventKnown();
     void deleteSelectedEvents();
     void recycleEvents();
     
-    void createPhase();
+
     void deleteSelectedPhases();
     
     void combineDates(const int eventId, const QList<int>& dateIds);
