@@ -182,7 +182,7 @@ QString PluginGauss::csvHelp() const
 QStringList PluginGauss::csvColumns() const
 {
     QStringList cols;
-    cols << "Data Name" << "Measure" << "Error (sd)" << "Ref. Curve" << "a" << "b" << "c";
+    cols << "Data Name" << "Mean" << "Error (sd)" << "Ref. Curve" << "a" << "b" << "c";
     return cols;
 }
 

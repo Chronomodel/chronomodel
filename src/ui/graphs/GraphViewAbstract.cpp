@@ -11,7 +11,7 @@ mGraphWidth(150.), mGraphHeight(50),
 mMarginLeft(50), mMarginRight(10), mMarginTop(5), mMarginBottom(15),
 mMinX(0.), mMaxX(10.),
 mMinY(0.), mMaxY(10.),
-mCurrentMinX(-INFINITY),mCurrentMaxX(INFINITY)
+mCurrentMinX(-HUGE_VAL),mCurrentMaxX(HUGE_VAL)
 {
 //qDebug()<<"contructor GraphViewAbstract::GraphViewAbstrac ";
 }
@@ -58,8 +58,8 @@ void GraphViewAbstract::setRangeY(const type_data &aMinY, const type_data &aMaxY
 {
     if (aMinY != mMinY || aMaxY != mMaxY) {
         if (aMinY == aMaxY) {
-            mMinY = aMinY - (type_data)1.;
-            mMaxY = aMaxY + (type_data)1.;
+            mMinY = aMinY - type_data (1.);
+            mMaxY = aMaxY + type_data (1.);
             //qDebug() << "Warning : setting min == max for graph y scale : " << aMinY;
         }
         else if (mMinY > mMaxY) {
@@ -120,29 +120,29 @@ void GraphViewAbstract::setPrevParameter()
 qreal GraphViewAbstract:: getXForValue(const type_data& aValue, const bool& aConstainResult)
 {
     const qreal rigthBlank (5.); // the same name and the same value as AxisTool::updateValues()
-    return (qreal)(mMarginLeft + valueForProportion(aValue, mCurrentMinX, mCurrentMaxX, (type_data)0., (type_data)(mGraphWidth - rigthBlank), aConstainResult));
+    return qreal (mMarginLeft + valueForProportion(aValue, mCurrentMinX, mCurrentMaxX, type_data (0.), type_data (mGraphWidth - rigthBlank), aConstainResult));
 }
 
 type_data GraphViewAbstract::getValueForX(const qreal& x, const bool& aConstainResult)
 {
     const qreal rigthBlank (5.); // the same name and the same value as AxisTool::updateValues() if AxisTool::mIsHorizontal
     const qreal lXFromSide = x - mMarginLeft;
-    const type_data lValue = valueForProportion((type_data)lXFromSide, (type_data)0., (type_data) (mGraphWidth - rigthBlank), mCurrentMinX, mCurrentMaxX, aConstainResult);
+    const type_data lValue = valueForProportion(type_data(lXFromSide), type_data (0.), type_data (mGraphWidth - rigthBlank), mCurrentMinX, mCurrentMaxX, aConstainResult);
 	return lValue;
 }
 
 #define TOPBLANK 10
 qreal GraphViewAbstract::getYForValue(const type_data& aValue, const bool& aConstainResult)
 {
-    const type_data lYFromBase = valueForProportion(aValue, mMinY, mMaxY, (type_data)(0.), (type_data)(mGraphHeight) -TOPBLANK, aConstainResult);
-    const qreal y = mGraphHeight+ mMarginTop - (qreal)lYFromBase ;
+    const type_data lYFromBase = valueForProportion(aValue, mMinY, mMaxY, type_data (0.), type_data (mGraphHeight) -TOPBLANK, aConstainResult);
+    const qreal y = mGraphHeight+ mMarginTop - qreal(lYFromBase) ;
     return y;
 }
 
 type_data GraphViewAbstract::getValueForY(const qreal& y, const bool& aConstainResult)
 {
     const qreal lYFromBase = mMarginTop + mGraphHeight - y;
-    const type_data lValue = valueForProportion( (type_data)(lYFromBase), (type_data)0., (type_data)(mGraphHeight) -TOPBLANK, mMinY, mMaxY, aConstainResult);
+    const type_data lValue = valueForProportion( type_data (lYFromBase), type_data (0.), type_data (mGraphHeight) -TOPBLANK, mMinY, mMaxY, aConstainResult);
     return lValue;
 }
 

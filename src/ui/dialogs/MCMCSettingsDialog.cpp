@@ -201,21 +201,21 @@ void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
     p.drawRect(mBatchInterRect);
     p.drawRect(mBatchNRect);
 
-    p.drawText(mAdaptRect.adjusted(0, 2*mMargin, 0, -mAdaptRect.height() + mLineH + 2 * mMargin), Qt::AlignCenter, tr("2 - ADAPT"));
+    p.drawText(mAdaptRect.adjusted(0, 1 * mMargin, 0, -mAdaptRect.height() + mLineH + 1 * mMargin), Qt::AlignCenter, tr("2 - ADAPT"));
 
     
     p.drawText(mBatch1Rect.adjusted(0, mMargin, 0, -mBatch1Rect.height() + mLineH + mMargin), Qt::AlignCenter, tr("BATCH 1"));
-    p.drawText(mBatch1Rect.adjusted(0, mLineH + 2 * mMargin, 0, -mBatch1Rect.height() + 2 * mLineH + 2 * mMargin), Qt::AlignCenter, tr("Iterations") );
+    p.drawText(mBatch1Rect.adjusted(0, mLineH + 2 * mMargin, 0, -mBatch1Rect.height() + 2 * mLineH + 1 * mMargin), Qt::AlignCenter, tr("Iterations") );
 
     p.drawText(mBatchInterRect, Qt::AlignCenter, "...");
     p.drawText(mBatchNRect, Qt::AlignCenter, tr("BATCH N"));
 
-    p.drawText(int (mAdaptRect.x()), int (mAdaptRect.y() + mAdaptRect.height() - 2 * mMargin - mLineH), int (mAdaptRect.width()/2), mLineH, Qt::AlignVCenter | Qt::AlignRight, tr("Max batches") );
+    p.drawText(int (mAdaptRect.x()), int (mAdaptRect.y() + mAdaptRect.height() - 1 * mMargin - mLineH), int (mAdaptRect.width()/2), mLineH, Qt::AlignVCenter | Qt::AlignRight, tr("Max batches") );
 
 
-    p.drawText(mAquireRect.adjusted(0, 2*mMargin, 0, -mAquireRect.height() + mLineH + 2 * mMargin), Qt::AlignCenter, tr("3 - ACQUIRE"));
-    p.drawText(mAquireRect.adjusted(0, mLineH + 3 * mMargin, 0, -mAquireRect.height() + 2 * mLineH + 4 * mMargin), Qt::AlignCenter, tr("Iterations") );
-    p.drawText(int (mAquireRect.x() + (mAcquireBoxWidth - fm->width(tr("Thinning interval")))/2), int (mAquireRect.y() + 6 * mLineH + 4 * mMargin), fm->width(tr("Thinning interval")), mButH, Qt::AlignCenter, tr("Thinning interval") );
+    p.drawText(mAquireRect.adjusted(0, mMargin, 0, -mAquireRect.height() + mLineH + 2 * mMargin), Qt::AlignCenter, tr("3 - ACQUIRE"));
+    p.drawText(mAquireRect.adjusted(0, mLineH + 2 * mMargin, 0, -mAquireRect.height() + 2 * mLineH + 2 * mMargin), Qt::AlignCenter, tr("Iterations") );
+    p.drawText(int (mAquireRect.x() + (mAcquireBoxWidth - fm->width(tr("Thinning interval")))/2), int (mAquireRect.y() + 6 * mLineH + 2 * mMargin), fm->width(tr("Thinning interval")), mButH, Qt::AlignCenter, tr("Thinning interval") );
 
 
 }
@@ -233,12 +233,12 @@ void MCMCSettingsDialog::updateLayout()
     mNumProcEdit->move(width()/2 + mMargin, mMargin  - fm->descent());
     
     mBatchInterRect = mBatch1Rect.adjusted(mBatch1Rect.width() + mMargin, 0, mBatch1Rect.width() + mMargin, 0);
-    mBatchNRect = mBatch1Rect.adjusted(2*mBatch1Rect.width() + 2 * mMargin, 0, 2 * mBatch1Rect.width() + 2 * mMargin, 0);
+    mBatchNRect = mBatch1Rect.adjusted(2*mBatch1Rect.width() + 1 * mMargin, 0, 1 * mBatch1Rect.width() + 1 * mMargin, 0);
     
     // setting Edit boxes
     // 1 -BURN
-    mTitleBurnLabel->move(int (mBurnRect.x() + (mBurnBoxWidth - fm->width(mTitleBurnLabel->text()))/2), int (mBurnRect.y()) + 2 * mMargin);
-    mIterBurnLabel->move(int (mBurnRect.x() + (mBurnBoxWidth - fm->width(mIterBurnLabel->text()))/2), mTitleBurnLabel->y() + mTitleBurnLabel->height() + 3 * mMargin);
+    mTitleBurnLabel->move(int (mBurnRect.x() + (mBurnBoxWidth - fm->width(mTitleBurnLabel->text()))/2), int (mBurnRect.y()) + 1 * mMargin);
+    mIterBurnLabel->move(int (mBurnRect.x() + (mBurnBoxWidth - fm->width(mIterBurnLabel->text()))/2), mTitleBurnLabel->y() + mTitleBurnLabel->height() + 1 * mMargin);
     mNumBurnEdit->move(int (mBurnRect.x() + (mBurnBoxWidth - mEditW)/2),  mIterBurnLabel->y() + mIterBurnLabel->height() + 1 * mMargin);
 
     // 2 - ADAPT

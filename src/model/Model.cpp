@@ -23,8 +23,6 @@ mProject(nullptr),
 mNumberOfPhases(0),
 mNumberOfEvents(0),
 mNumberOfDates(0)
-//mNumberOfEventsInAllPhases(0),
-//mNumberOfDatesInAllPhases(0)
 {
     
 }
@@ -36,7 +34,7 @@ Model::~Model()
 
 void Model::clear()
 {
-    this->clearTraces();
+    clearTraces();
     if (!mEvents.isEmpty()) {
         for (Event* ev: mEvents) {
             if (ev) {
@@ -980,7 +978,7 @@ void Model::setFFTLength(const int FFTLength)
 
 void Model::initNodeEvents()
 {
-    std::for_each(mEvents.begin(), mEvents.end(), [](Event* ev) {ev->mNodeInitialized = false; ev->mThetaNode = INFINITY;});
+    std::for_each(mEvents.begin(), mEvents.end(), [](Event* ev) {ev->mNodeInitialized = false; ev->mThetaNode = HUGE_VAL;});
 }
 
 /**
@@ -1206,7 +1204,7 @@ void Model::generateCredibility(const double thresh)
     progress->setMinimumDuration(5);
     progress->setMinimum(0);
     progress->setMaximum(mPhases.size()*4);
-    progress->setMinimumWidth(50 * AppSettings::widthUnit());
+    progress->setMinimumWidth(7 * AppSettings::widthUnit());
 
     int position(0);
 
@@ -1239,7 +1237,7 @@ void Model::generateCredibility(const double thresh)
     progressGap->setMaximum(mPhases.size()*4);
     progressGap->setMinimum(0);
     progressGap->setMaximum(mPhaseConstraints.size()*2);
-    progressGap->setMinimumWidth(50 * AppSettings::widthUnit());
+    progressGap->setMinimumWidth(7 * AppSettings::widthUnit());
 
     position = 0;
     for (auto && phaseConstraint : mPhaseConstraints) {
@@ -1344,7 +1342,7 @@ void Model::generateTempo()
     progress->setMinimumDuration(5);
     progress->setMinimum(0);
     progress->setMaximum(mPhases.size() * 4);
-    progress->setMinimumWidth(20 * AppSettings::widthUnit());
+    progress->setMinimumWidth(7 * AppSettings::widthUnit());
     progress->show();
     int position(0);
 #endif
@@ -2052,7 +2050,7 @@ void Model::restoreFromFile(const QString& fileName)
 
     in >> tmp32;
     mChains.clear();
-    mChains.reserve((int) tmp32);
+    mChains.reserve(int (tmp32));
     for (quint32 i=0 ; i<tmp32; ++i) {
         ChainSpecs ch;
         in >> ch.mBatchIndex;

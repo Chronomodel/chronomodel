@@ -9,6 +9,24 @@
 // Constructor / Destructor / Init
 ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
 {
+    /* find screen definition */
+    int numScreen (QApplication::desktop()->screenNumber(this));
+    QScreen *screen = QApplication::screens().at(numScreen);
+
+    //qreal mm_per_cm = 10;
+    qreal cm_per_in = 2.54;
+
+        qDebug()<<"ProjectView()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< width();
+ qDebug()<<"ProjectView()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< QApplication::desktop()->width();
+            qDebug()<<"ProjectView() screen width"<< width() / screen->physicalDotsPerInchX() * cm_per_in;
+            qDebug()<<"ProjectView() screen height"<< height() / screen->physicalDotsPerInchY() * cm_per_in;
+    int unitX = int(screen->physicalDotsPerInchX() / cm_per_in);
+    AppSettings::setWidthUnit( unitX);
+
+    int unitY = int(screen->physicalDotsPerInchY() / cm_per_in);
+    AppSettings::setHeigthUnit( unitY);
+
+
     mModelView = new ModelView();
     mResultsView = new ResultsView();
 
@@ -36,19 +54,11 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
 
     mLogTabs = new Tabs(this);
     mLogTabs->addTab(mLogModelEdit,   tr("Model Description"));
-    mLogTabs->addTab(mLogMCMCEdit,    tr("MCMC Initialization"));
+    mLogTabs->addTab(mLogMCMCEdit,    tr("MCMC Initialisation"));
     mLogTabs->addTab(mLogResultsEdit, tr("Posterior Distrib. Stats"));
 
-   // mLogTabs->setContentsMargins(15, 15, 15, 15);
     connect(mLogTabs, &Tabs::tabClicked, this, &ProjectView::showLogTab);
-/*
-    const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
 
-    mLogModelEdit->resize( width() -  AppSettings::widthUnit(), logTabHusefull );
-    mLogMCMCEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
-    mLogResultsEdit->resize( width() -AppSettings::widthUnit() , logTabHusefull );
-    mLogTabs->resize(mLogTabs->minimalWidth(), mLogTabs->minimalHeight());
-*/
     mStack = new QStackedWidget();
     mStack->addWidget(mModelView);
     mStack->addWidget(mResultsView);
@@ -62,9 +72,13 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     
     connect(mResultsView, &ResultsView::resultsLogUpdated, this, &ProjectView::updateResultsLog);
 
-    setAppSettingsFont();
+    //setAppSettingsFont();
     mLogTabs->setTab(2, false);
     mLogTabs->showWidget(2);
+
+
+
+
 }
 
 ProjectView::~ProjectView()
@@ -75,12 +89,34 @@ ProjectView::~ProjectView()
 void ProjectView::resizeEvent(QResizeEvent* e)
 {
     (void) e;
+    /* find screen definition */
+    int numScreen (QApplication::desktop()->screenNumber(this));
+    QScreen *screen = QApplication::screens().at(numScreen);
+
+    //qreal mm_per_cm = 10;
+    qreal cm_per_in = 2.54;
+
+        qDebug()<<"ProjectView::resizeEvent()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< width();
+ qDebug()<<"ProjectView::resizeEvent()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< QApplication::desktop()->width();
+            qDebug()<<"ProjectView::resizeEvent() screen setWidthUnit"<< screen->physicalDotsPerInchX() / cm_per_in;
+            qDebug()<<"ProjectView::resizeEvent() screen setHeigthUnit"<< screen->physicalDotsPerInchY() / cm_per_in;
+
+            int unitX = int(screen->physicalDotsPerInchX() / cm_per_in);
+            AppSettings::setWidthUnit( unitX);
+
+            int unitY = int(screen->physicalDotsPerInchY() / cm_per_in);
+            AppSettings::setHeigthUnit( unitY);
+
+
+
    const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
 
     mLogModelEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
     mLogMCMCEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
-    mLogResultsEdit->resize( width() -AppSettings::widthUnit() , logTabHusefull );
-   /*  mLogTabs->resize(width(), mLogTabs->minimalHeight()); */
+    mLogResultsEdit->resize( width() - AppSettings::widthUnit() , logTabHusefull );
+
+
+
 }
 
 void ProjectView::doProjectConnections(Project* project)
@@ -112,18 +148,18 @@ void ProjectView::showModel()
  */
 void ProjectView::changeDesign(bool refresh)
 {
-   (void) refresh;
-  mRefreshResults = true;
+    (void) refresh;
+    mRefreshResults = true;
 }
 
-void ProjectView::setAppSettingsFont()
+void ProjectView::setAppSettings()
 {
-    setFont(AppSettings::font());
+   // setFont(AppSettings::font());
 
     mModelView->applyAppSettings();
     mResultsView->applyAppSettings();
 
-    mLogTabs->setFont(AppSettings::font());
+  /*  mLogTabs->setFont(AppSettings::font());
     mLogModelEdit->setFontFamily(AppSettings::font().family());
     mLogModelEdit->setFontPointSize(AppSettings::font().pointSizeF());
 
@@ -140,18 +176,13 @@ void ProjectView::setAppSettingsFont()
     mLogResultsEdit->setFont(AppSettings::font());
 #endif
 
-  //  mLogTabs->setFont(AppSettings::font());
-  /*  if (mResultsView->mModel && !mResultsView->mModel->mChains.isEmpty())
-        updateResultsLog(mResultsView->mModel->getResultsLog());
-*/
-   const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
+    const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
 
     mLogModelEdit->resize( width() -  AppSettings::widthUnit(), logTabHusefull );
     mLogMCMCEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
     mLogResultsEdit->resize( width() -AppSettings::widthUnit(), logTabHusefull );
-/*
-    mLogTabs->resize(mLogTabs->minimalWidth(), mLogTabs->minimalHeight());
-*/
+  */
+
 }
 
 void ProjectView::showResults()
@@ -205,7 +236,7 @@ void ProjectView:: applyFilesSettings(Model* model)
 
 void ProjectView::applySettings(Model* model)
 {
-    setAppSettingsFont();
+    setAppSettings();
     if (model) {
 
         mResultsView->updateFormatSetting(model);
@@ -250,7 +281,6 @@ void ProjectView::initResults(Model* model)
     qDebug()<<"ProjectView::initResults()";
     if (model) {
         mResultsView->clearResults();
-    //    mResultsView->updateFormatSetting(model);
         
         mResultsView->initResults(model);
         mRefreshResults = true;
@@ -273,7 +303,7 @@ void ProjectView::initResults(Model* model)
 void ProjectView::updateResultsLog(const QString& log)
 {
 #ifdef Q_OS_MAC
-    const QFont font (AppSettings::font());
+    const QFont font (qApp->font());
     QString styleSh = "QLineEdit { border-radius: 5px; font: "+ QString::number(font.pointSize()) + "px ;font-family: "+font.family() + ";}";
     mLogResultsEdit->setStyleSheet(styleSh);
 #endif

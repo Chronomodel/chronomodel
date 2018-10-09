@@ -40,10 +40,6 @@ EventKnown::EventKnown(const QJsonObject& json):Event()
     }
 }
 
-EventKnown::~EventKnown()
-{
-
-}
 
 // JSON
 // static function

@@ -4,7 +4,8 @@
 
 
 Label::Label(QWidget* parent):QLabel(parent),
-mIsTitle(false)
+mIsTitle(false),
+mAdjustText(true)
 {
     init();
 }
@@ -19,12 +20,26 @@ Label::~Label()
 {
 
 }
+void Label::adjustFont()
+{
+    if (!text().isEmpty() && mAdjustText) {
+        const QFontMetrics fm (qApp->font());
+        const QRect textRect = fm.boundingRect(text());
+        const qreal wR = width() - 10;
+        const qreal xfactor (textRect.width()> wR ? textRect.width()/wR : 1);
+        const qreal yfactor (textRect.height()>height() ? textRect.height()/height() : 1) ;
+        const qreal factor  = ( xfactor > yfactor ? xfactor : yfactor);
+        QFont ft = qApp->font();
+        ft.setPointSizeF(ft.pointSizeF()/factor);
+        setFont(ft);
+    }
+}
 
 void Label::init()
 {
     setAlignment(Qt::AlignVCenter | Qt::AlignRight);
-    mPalette = this->parentWidget()->palette();
-    setFont(parentWidget()->font());
+    mPalette = parentWidget()->palette();
+    setFont(qApp->font());
 }
 
 void Label::setPalette(QPalette &palette)
@@ -45,13 +60,24 @@ void Label::setIsTitle(bool isTitle)
         mPalette.setColor(QPalette::Text, Qt::white);
         mPalette.setColor(QPalette::Background, Painting::mainColorGrey);
         setAlignment(Qt::AlignCenter);
-        //setFixedHeight(20);
-    }
+     }
+
+}
+
+void Label::setAdjustText(bool ad)
+{
+    mAdjustText = ad;
+}
+void Label::resizeEvent(QResizeEvent* e)
+{
+    (void) e;
+    adjustFont();
 
 }
 
 void Label::paintEvent(QPaintEvent*)
 {
+   // adjustFont();
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
     p.setFont(font());
@@ -59,6 +85,7 @@ void Label::paintEvent(QPaintEvent*)
 
     p.fillRect(r, mPalette.background().color());
     p.setPen(mPalette.text().color());
+
     p.drawText(r, alignment(), text());
 
 }

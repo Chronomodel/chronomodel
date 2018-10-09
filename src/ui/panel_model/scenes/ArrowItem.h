@@ -17,8 +17,9 @@ public:
         ePhase = 1
     };
     
-    ArrowItem(AbstractScene* scene, Type type, const QJsonObject& constraint, QGraphicsItem* parent = 0);
-    
+    ArrowItem(AbstractScene* scene, Type type, const QJsonObject& constraint, QGraphicsItem* parent = nullptr);
+    virtual ~ArrowItem();
+
     void updatePosition();
     void setFrom(const double x, const double y);
     void setTo(const double x, const double y);

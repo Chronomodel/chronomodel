@@ -13,7 +13,8 @@ class DateItem : public QGraphicsObject
 {
     Q_OBJECT
 public:
-    DateItem(EventsScene* EventsScene, const QJsonObject& date, const QColor& color, const QJsonObject& settings, QGraphicsItem* parent = 0);
+    DateItem(EventsScene* EventsScene, const QJsonObject& date, const QColor& color, const QJsonObject& settings, QGraphicsItem* parent = nullptr);
+    virtual ~DateItem();
 
     const QJsonObject& date() const;
     void setOriginalPos(const QPointF pos);

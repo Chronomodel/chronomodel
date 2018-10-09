@@ -26,15 +26,14 @@
 
 CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
     mRefGraphView(nullptr),
-    mTminDisplay(-INFINITY),
-    mTmaxDisplay(INFINITY),
+    mTminDisplay(-HUGE_VAL),
+    mTmaxDisplay(HUGE_VAL),
     mMajorScale (100),
     mMinorScale (4)
 {
 
-    setFont(AppSettings::font());
-
-    mButtonWidth = 8 * AppSettings::widthUnit();
+    mButtonWidth = int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonHeigth = int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
 
     mDrawing = new CalibrationDrawing(this);
     mDrawing->setMouseTracking(true);
@@ -62,15 +61,15 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     frameSeparator = new QFrame(this);
     frameSeparator->setFrameStyle(QFrame::Panel);
     frameSeparator->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
-  //  frameSeparator->setStyleSheet("QFrame { border: 5px solid rgb(49, 112, 176); }");//same color as Painting::mainColorLight = QColor(49, 112, 176);
-
 
     mHPDLab = new Label(tr("HPD (%)"), this);
     mHPDLab->setAlignment(Qt::AlignHCenter);
+    mHPDLab->setAdjustText();
     mHPDLab->setLight();
     mHPDLab->setBackground(Painting::borderDark);
 
     mHPDEdit = new LineEdit(this);
+    mHPDEdit->setAdjustText();
     mHPDEdit->setText("95");
 
     DoubleValidator* percentValidator = new DoubleValidator();
@@ -80,36 +79,44 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mHPDEdit->setValidator(percentValidator);
 
     mStartLab = new Label(tr("Start"), this);
+    mStartLab->setAdjustText();
     mStartLab->setAlignment(Qt::AlignHCenter);
     mStartLab->setLight();
     mStartLab->setBackground(Painting::borderDark);
 
     mStartEdit = new LineEdit(this);
+    mStartEdit->setAdjustText();
     mStartEdit->setText("-1000");
 
     mEndLab = new Label(tr("End"), this);
+    mEndLab->setAdjustText();
     mEndLab->setAlignment(Qt::AlignHCenter);
     mEndLab->setLight();
     mEndLab->setBackground(Painting::borderDark);
 
     mEndEdit = new LineEdit(this);
+    mEndEdit->setAdjustText();
     mEndEdit->setText("1000");
 
     mMajorScaleLab = new Label(tr("Maj. Int"), this);
+    mMajorScaleLab->setAdjustText();
     mMajorScaleLab->setAlignment(Qt::AlignHCenter);
     mMajorScaleLab->setLight();
     mMajorScaleLab->setBackground(Painting::borderDark);
 
     mMajorScaleEdit = new LineEdit(this);
+    mMajorScaleEdit->setAdjustText();
     mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves, upper than 1"));
     mMajorScaleEdit->setText(locale().toString(mMajorScale));
 
     mMinorScaleLab = new Label(tr("Min. Cnt"), this);
+    mMinorScaleLab->setAdjustText();
     mMinorScaleLab->setAlignment(Qt::AlignHCenter);
     mMinorScaleLab->setLight();
     mMinorScaleLab->setBackground(Painting::borderDark);
 
     mMinorScaleEdit = new LineEdit(this);
+    mMinorScaleEdit->setAdjustText();
     mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves, upper than 1"));
     mMinorScaleEdit->setText(locale().toString(mMinorScale));
 
@@ -155,15 +162,17 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
 CalibrationView::~CalibrationView()
 {
     mRefGraphView = nullptr;
-
 }
 
 void CalibrationView::applyAppSettings()
 {
     // We must force setFont on QLineEdit !!
-    setFont(AppSettings::font());
-    mButtonWidth = AppSettings::mButtonWidth;
+   // setFont(AppSettings::font());
+    //mButtonWidth = AppSettings::mButtonWidth;
 
+    mButtonWidth = int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonHeigth = int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+/*
     mHPDLab->setFont(AppSettings::font());
     mHPDEdit->setFont(AppSettings::font());
 
@@ -181,7 +190,7 @@ void CalibrationView::applyAppSettings()
 
     mDrawing->setFont(AppSettings::font());
     mResultsText->setFont(AppSettings::font());
-
+*/
     repaint();
 }
 
@@ -227,7 +236,7 @@ void CalibrationView::setDate(const QJsonObject& date)
         mEndEdit->setText(stringForGraph(mTmaxDisplay));
 
         if (std::isinf(-mTminDisplay) || std::isinf(mTmaxDisplay))
-            throw(tr("CalibrationView::setDate ")+mDate.mPlugin->getName() + mDate.mCalibration->mName + mDate.mCalibration->mTmin + mDate.mCalibration->mTmax);
+            throw(tr("CalibrationView::setDate ") + mDate.mPlugin->getName() + mDate.mCalibration->mName + mDate.mCalibration->mTmin + mDate.mCalibration->mTmax);
 
         updateScroll();
         //updateGraphs();
@@ -391,8 +400,8 @@ void CalibrationView::updateGraphs()
             ProjectSettings tmpSettings;
             const double maxDisplayInRaw = DateUtils::convertFromAppSettingsFormat(mTmaxDisplay);
             const double minDisplayInRaw = DateUtils::convertFromAppSettingsFormat(mTminDisplay);
-            tmpSettings.mTmax = qMax(minDisplayInRaw, maxDisplayInRaw);//mTmaxDisplay;
-            tmpSettings.mTmin = qMin(minDisplayInRaw, maxDisplayInRaw);// mTminDisplay;
+            tmpSettings.mTmax = qMax(minDisplayInRaw, maxDisplayInRaw);
+            tmpSettings.mTmin = qMin(minDisplayInRaw, maxDisplayInRaw);
             tmpSettings.mStep = 1.;
             mRefGraphView->setDate(mDate, tmpSettings);
 
@@ -401,7 +410,7 @@ void CalibrationView::updateGraphs()
 
         }
         mDrawing->setRefGraph(mRefGraphView);
-        mDrawing->updateLayout();
+
         // ------------------------------------------------------------
         //  Labels
         // ------------------------------------------------------------
@@ -417,6 +426,8 @@ void CalibrationView::updateGraphs()
             mDrawing->setCalibTitle(tr("Typological date"));
             mDrawing->setCalibComment("HPD = " + mHPDEdit->text() + " %");
         }
+        mDrawing->updateLayout();
+
     }
 
     updateLayout();
@@ -442,7 +453,7 @@ void CalibrationView::updateScaleX()
     aNumber = locale().toDouble(&str, &isNumber);
 
     if (isNumber && aNumber>=1) {
-        mMinorScale =  aNumber;
+        mMinorScale =  int (aNumber);
         mCalibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
         mRefGraphView->changeXScaleDivision(mMajorScale, mMinorScale);
     }
@@ -478,7 +489,7 @@ void CalibrationView::updateScroll()
         mStartEdit->setFont(this->font());
 
     adaptedFont = mEndEdit->font();
-   // fm = QFontMetrics(font());
+
     textSize = fm.width(mEndEdit->text());
     if (textSize > (mEndEdit->width() - 2. )) {
         const qreal fontRate = textSize / (mEndEdit->width() - 2. );
@@ -595,20 +606,21 @@ void CalibrationView::updateLayout()
         return;
     }
 
-    QFontMetrics fm (AppSettings::font());
-    const int textHeight (fm.height() + 3);
-    const int verticalSpacer (fm.height());
+    QFontMetrics fm (font());
 
-    const qreal margin = 0.1 * mButtonWidth;
+    // same variable in MultiCalibrationView::updateLayout()
+    const int textHeight (int (1.2 * (fm.descent() + fm.ascent()) ));
+    const int verticalSpacer (int (0.3 * AppSettings::heigthUnit()));
+    const int margin = int (0.1 * mButtonWidth);
 
     //Position of Widget
     int y (0);
 
-    mImageSaveBut->setGeometry(0, y, mButtonWidth, mButtonWidth);
+    mImageSaveBut->setGeometry(0, y, mButtonWidth, mButtonHeigth);
     y += mImageSaveBut->height();
-    mImageClipBut->setGeometry(0, y, mButtonWidth, mButtonWidth);
+    mImageClipBut->setGeometry(0, y, mButtonWidth, mButtonHeigth);
     y += mImageClipBut->height();
-    mResultsClipBut->setGeometry(0, y, mButtonWidth, mButtonWidth);
+    mResultsClipBut->setGeometry(0, y, mButtonWidth, mButtonHeigth);
     y += mResultsClipBut->height();
 
     const int separatorHeight (height()- y - 10*textHeight - 10* verticalSpacer);

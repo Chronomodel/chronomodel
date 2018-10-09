@@ -253,7 +253,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             // ----------------------------------------------
 
             GraphCurve curveMeasure;
-            curveMeasure.mName = "Measure";
+            curveMeasure.mName = "Measurement";
             curveMeasure.mPen.setColor(mMeasureColor);
             QColor curveColor(mMeasureColor);
             curveColor.setAlpha(50);
@@ -261,9 +261,9 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             curveMeasure.mIsVertical = true;
             curveMeasure.mIsHisto = false;
 
-            // 5000 pts are used on vertical measure
+            // 5000 pts are used on vertical measurement
             // because the y scale auto adjusts depending on x zoom.
-            // => the visible part of the measure may be very reduced !
+            // => the visible part of the measurement may be very reduced !
             const double step = (yMax - yMin) / 5000.;
             QMap<double, double> measureCurve;
             for (double t=yMin; t<yMax; t += step) {

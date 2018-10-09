@@ -28,6 +28,7 @@ public:
        setAttribute(Qt::WA_NoSystemBackground, true);
        setAttribute(Qt::WA_TranslucentBackground, true);
     }
+
 protected:
 
     void paintEvent(QPaintEvent *) override {
@@ -61,7 +62,7 @@ public:
         eTempo = 3,
         eActivity = 4
     };
-    
+    static int mHeightForVisibleAxis ;
     // member
 protected:
 
@@ -99,9 +100,9 @@ protected:
     qreal mMargin;
     qreal mLineH;
    // qreal mGraphLeft;
-    qreal mTopShift;
+    int mTopShift;
 
-    qreal mHeightForVisibleAxis;
+
 
     QFont mGraphFont;
     //-----

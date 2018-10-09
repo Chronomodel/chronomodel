@@ -169,6 +169,7 @@ void PluginMagForm::updateOptions()
 {
     mIncEdit->setVisible(mIncRadio->isChecked());
     mIncLab->setVisible(mIncRadio->isChecked());
+
     //if(mIncRadio->isChecked())    mRefCombo->setCurrentIndex(mRefCombo->findText("i.ref",Qt::MatchEndsWith));
     
     mDecEdit->setVisible(mDecRadio->isChecked());

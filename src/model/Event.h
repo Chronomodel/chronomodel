@@ -58,8 +58,10 @@ public:
                                 const QVector<QVector<Event*> >& eventBranches,
                                 const QVector<QVector<Phase*> >& phaseBranches);
 
-    double getThetaMinRecursive(const double defaultValue, const QList<Event *> startEvents = QList<Event*>());
+    bool getThetaMinPossible(const Event *originEvent, QString &circularEventName,  QList<Event *> &startEvents, QString &linkStr);
+    bool getThetaMaxPossible(const Event *originEvent, QString &circularEventName,  QList<Event *> &startEvents);
 
+    double getThetaMinRecursive(const double defaultValue, const QList<Event *> startEvents= QList<Event*>());
     double getThetaMaxRecursive(const double defaultValue, const QList<Event *> startEvents = QList<Event*>());
     
     virtual void updateTheta(const double& min, const double& max);
@@ -70,7 +72,7 @@ public:
     Type mType;
     int mId;
     
-    QString mName; //must be public, to be setting by dialogbox
+    QString mName; //must be public, to be defined by dialogbox
     QColor mColor;
 
     Method mMethod;

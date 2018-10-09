@@ -8,14 +8,13 @@
 
 
 StudyPeriodDialog::StudyPeriodDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags),
-mWidth(600),
 mMargin(5),
 mLineH(20),
 mButW(80),
 mButH(25)
 {
    setWindowTitle(tr("Study Period Settings"));
-   setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
+   //setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
     
     // -----------
    mMinLab = new QLabel(tr("Start"), this);
@@ -82,7 +81,7 @@ mButH(25)
     mLayout->addStretch();
     setLayout(mLayout);
     
-    setFixedWidth(350);
+    //setFixedWidth(350);
     
     updateVisibleControls();
 }

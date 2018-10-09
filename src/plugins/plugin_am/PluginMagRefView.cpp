@@ -183,7 +183,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         // ----------------------------------------------
         
         GraphCurve curveMeasure;
-        curveMeasure.mName = "Measure";
+        curveMeasure.mName = "Measurement";
         
         curveMeasure.mPen.setColor(mMeasureColor);
         QColor curveColor(mMeasureColor);
@@ -193,9 +193,9 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         curveMeasure.mIsVertical = true;
         curveMeasure.mIsHisto = false;
         
-        // 5000 pts are used on vertical measure
+        // 5000 pts are used on vertical measurement
         // because the y scale auto adjusts depending on x zoom.
-        // => the visible part of the measure may be very reduced !
+        // => the visible part of the measurement may be very reduced !
         const double yStep = (yMax - yMin) / 5000.;
         QMap<double,double> measureCurve;
         for (double t=yMin; t<yMax; t+=yStep) {
@@ -218,7 +218,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         
 
         // ----------------------------------------------
-        //  Error on measure
+        //  Error on measurement
         // ----------------------------------------------
         
         GraphCurve curveMeasureAvg;

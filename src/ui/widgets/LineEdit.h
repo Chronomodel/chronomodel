@@ -15,7 +15,16 @@ public slots:
 public:
     explicit LineEdit(QWidget* parent = nullptr);
     void setFont(const QFont& font);
-    ~LineEdit();
+    virtual ~LineEdit();
+     void setAdjustText(bool ad = true);
+
+private:
+    void adjustFont();
+
+    bool mAdjustText;
+
+protected:
+    void resizeEvent(QResizeEvent* e);
 };
 
 #endif

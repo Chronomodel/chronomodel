@@ -20,8 +20,8 @@ mThreshold(95),
 mGraphHeight(GraphViewResults::mHeightForVisibleAxis),
 mCurveColor(Painting::mainColorDark)
 {
-    mButtonWidth = int (1.3 * AppSettings::widthUnit());
-    mButtonHeigth = int (1.3 * AppSettings::heigthUnit());
+    mButtonWidth = int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonHeigth = int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     setMouseTracking(true);
     mDrawing = new MultiCalibrationDrawing(this);
     setMouseTracking(true);
@@ -59,6 +59,7 @@ mCurveColor(Painting::mainColorDark)
     mStatClipBut->setCheckable(true);
 
     mGraphHeightLab = new Label(tr("Y Zoom"), this);
+    mGraphHeightLab->setAdjustText();
     mGraphHeightLab->setAlignment(Qt::AlignHCenter);
     mGraphHeightLab->setLight();
     mGraphHeightLab->setBackground(Painting::borderDark);
@@ -81,45 +82,55 @@ mCurveColor(Painting::mainColorDark)
     frameSeparator->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
 
     mStartLab = new Label(tr("Start"), this);
+    mStartLab->setAdjustText();
     mStartLab->setAlignment(Qt::AlignHCenter);
     mStartLab->setLight();
     mStartLab->setBackground(Painting::borderDark);
 
     mStartEdit = new LineEdit(this);
+    mStartEdit->setAdjustText();
     mStartEdit->setText("-1000");
 
     mEndLab = new Label(tr("End"), this);
+    mEndLab->setAdjustText();
     mEndLab->setAlignment(Qt::AlignHCenter);
     mEndLab->setLight();
     mEndLab->setBackground(Painting::borderDark);
 
     mEndEdit = new LineEdit(this);
+    mEndEdit->setAdjustText();
     mEndEdit->setText("1000");
 
     mMajorScaleLab = new Label(tr("Maj. Int"), this);
+    mMajorScaleLab->setAdjustText();
     mMajorScaleLab->setAlignment(Qt::AlignHCenter);
     mMajorScaleLab->setLight();
     mMajorScaleLab->setBackground(Painting::borderDark);
 
     mMajorScaleEdit = new LineEdit(this);
+    mMajorScaleEdit->setAdjustText();
     mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves"));
     mMajorScaleEdit->setText(locale().toString(mMajorScale));
 
     mMinorScaleLab = new Label(tr("Min. Cnt"), this);
+    mMinorScaleLab->setAdjustText();
     mMinorScaleLab->setAlignment(Qt::AlignHCenter);
     mMinorScaleLab->setLight();
     mMinorScaleLab->setBackground(Painting::borderDark);
 
     mMinorScaleEdit = new LineEdit(this);
+    mMinorScaleEdit->setAdjustText();
     mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves"));
     mMinorScaleEdit->setText(locale().toString(mMinorScale));
 
     mHPDLab = new Label(tr("HPD (%)"), this);
+    mHPDLab->setAdjustText();
     mHPDLab->setAlignment(Qt::AlignHCenter);
     mHPDLab->setLight();
     mHPDLab->setBackground(Painting::borderDark);
 
     mHPDEdit = new LineEdit(this);
+    mHPDEdit->setAdjustText();
     mHPDEdit->setText("95");
     DoubleValidator* percentValidator = new DoubleValidator();
     percentValidator->setBottom(0.);
@@ -199,7 +210,9 @@ void MultiCalibrationView::setVisible(bool visible)
 
 void MultiCalibrationView::applyAppSettings()
 {
-    //mButtonWidth = AppSettings::mButtonWidth;
+
+    mButtonWidth = int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonHeigth = int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
 /*    mTextArea->setFont(AppSettings::font());
     mDrawing->setFont(AppSettings::font());
 
@@ -254,7 +267,7 @@ void MultiCalibrationView::updateLayout()
     mColorClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
     y += mColorClipBut->height();
 
-    const int separatorHeight (height() - 8*textHeight - 8* verticalSpacer - 6*mButtonHeigth);
+    const int separatorHeight (height() - y - 10* textHeight - 10*verticalSpacer);
     frameSeparator->setGeometry(x0, y, mButtonWidth, separatorHeight);
     y += frameSeparator->height() + verticalSpacer;
 

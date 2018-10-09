@@ -44,8 +44,8 @@ void PhaseItem::setPhase(const QJsonObject& phase)
     // ----------------------------------------------------
     //  Calculate item size
     // ----------------------------------------------------
-    const qreal w (mItemWidth);
-    qreal h = mTitleHeight + 2*mBorderWidth + 2*mEltsMargin;
+    const int w (mItemWidth);
+    int h = mTitleHeight + 2*mBorderWidth + 2*mEltsMargin;
     
     const QJsonArray events = getEvents();
     if (events.size() > 0)
@@ -124,8 +124,8 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 
 void PhaseItem::updateItemPosition(const QPointF& pos)
 {
-    mData[STATE_ITEM_X] = (double) pos.x();
-    mData[STATE_ITEM_Y] = (double) pos.y();
+    mData[STATE_ITEM_X] = double (pos.x());
+    mData[STATE_ITEM_Y] = double (pos.y());
 }
 
 QRectF PhaseItem::boundingRect() const
@@ -153,7 +153,10 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
                                mData.value(STATE_COLOR_GREEN).toInt(),
                                mData.value(STATE_COLOR_BLUE).toInt());
     const QColor fontColor = getContrastedColor(phaseColor);
-    QFont font = AppSettings::font();
+    //QFont font = AppSettings::font();
+    //font.setPointSizeF(10.);
+    //QFont font (APP_SETTINGS_DEFAULT_FONT_FAMILY, 10.);
+    QFont font (qApp->font());
     font.setPointSizeF(10.);
     QFontMetrics fm (font);
 
@@ -188,7 +191,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
         painter->setPen(getContrastedColor(eventColor));
 
-        const QString eventName = fm.elidedText(event.value(STATE_NAME).toString(), Qt::ElideRight, r.width());
+        const QString eventName = fm.elidedText(event.value(STATE_NAME).toString(), Qt::ElideRight, int (r.width()));
         // magnify and highlight selected events
         if (isSelected) {
             mAtLeastOneEventSelected = true;
@@ -231,7 +234,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
         const QPixmap inPix2 = inPix->transformed(mx, Qt::SmoothTransformation);
 
-        painter->drawPixmap(inRect.x(), inRect.y(), inPix2);
+        painter->drawPixmap(int (inRect.x()), int (inRect.y()), inPix2);
 
         // extract button
         const QRectF exRect = extractRect();
@@ -259,7 +262,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         painter->setFont(font);
         QFontMetrics fmName (font);
         QString name = mData.value(STATE_NAME).toString();
-        name = fmName.elidedText(name, Qt::ElideRight, tr.width());
+        name = fmName.elidedText(name, Qt::ElideRight, int(tr.width()));
         painter->setPen(fontColor);
         painter->drawText(tr, Qt::AlignCenter, name);
     }
@@ -286,10 +289,10 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     // Border
     painter->setBrush(Qt::NoBrush);
     if (isSelected()) {
-        painter->setPen(QPen(Qt::white, 5.f));
+        painter->setPen(QPen(Qt::white, 5.));
         painter->drawRoundedRect(rect.adjusted(1, 1, -1, -1), rounded, rounded);
         
-        painter->setPen(QPen(Qt::red, 3.f));
+        painter->setPen(QPen(Qt::red, 3.));
         painter->drawRoundedRect(rect.adjusted(1, 1, -1, -1), rounded, rounded);
     }
 }
@@ -313,7 +316,7 @@ QJsonArray PhaseItem::getEvents() const
 QString PhaseItem::getTauString() const
 {
     QString tauStr;
-    Phase::TauType type = (Phase::TauType)mData.value(STATE_PHASE_TAU_TYPE).toInt();
+    Phase::TauType type = Phase::TauType (mData.value(STATE_PHASE_TAU_TYPE).toInt());
     if (type == Phase::eTauFixed)
         tauStr += tr("Duration ≤ %1").arg(QString::number(mData.value(STATE_PHASE_TAU_FIXED).toDouble()));
 

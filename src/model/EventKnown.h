@@ -10,7 +10,6 @@ public:
 
     EventKnown();
     explicit EventKnown(const QJsonObject& json);
-    virtual ~EventKnown();
     
     static EventKnown fromJson(const QJsonObject& json);
     virtual QJsonObject toJson() const;

@@ -73,7 +73,8 @@ private:
     QTextEdit* mResultsText;
    // qreal mResultsHeight;
 
-    qreal mButtonWidth;
+    int mButtonWidth;
+    int mButtonHeigth;
 
     Button* mImageSaveBut;
     Button* mImageClipBut;

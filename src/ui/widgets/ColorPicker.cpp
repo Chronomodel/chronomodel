@@ -26,7 +26,7 @@ QColor ColorPicker::getColor() const
 
 void ColorPicker::openDialog()
 {
-    QColor color = QColorDialog::getColor(mColor, qApp->activeWindow(), tr("Select Color"));
+    QColor color = QColorDialog::getColor(mColor, qApp->activeWindow(), tr("Select Colour"));
     if (color.isValid()) {
         setColor(color);
         emit colorChanged(color);
@@ -39,7 +39,7 @@ void ColorPicker::paintEvent(QPaintEvent* e)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     QPainterPath path;
-    path.addRoundedRect(rect().adjusted(1, 1, -1, -1), 4, 4);
+    path.addRoundedRect(rect().adjusted(1, 1,  -1, - 1), 4, 4);
     painter.fillPath(path, isEnabled() ? mColor : QColor(220, 220, 220));
     painter.strokePath(path, QColor(160, 160, 160));
 }

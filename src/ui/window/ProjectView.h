@@ -54,14 +54,14 @@ public slots:
     void initResults(Model*);
     void updateResults(Model*);
     void updateResultsLog(const QString& log);
-    void setAppSettingsFont();
+    void setAppSettings();
 
     
 private:
     QStackedWidget* mStack;
     ModelView* mModelView;
     ResultsView* mResultsView;
- //   QWidget* mLogView;
+
     Tabs* mLogTabs;
     QTextEdit* mLogModelEdit;
     QTextEdit* mLogMCMCEdit;

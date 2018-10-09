@@ -5,8 +5,8 @@
 
 PhaseConstraint::PhaseConstraint():Constraint(),
 mGamma(0.f),
-mPhaseFrom(0),
-mPhaseTo(0),
+mPhaseFrom(nullptr),
+mPhaseTo(nullptr),
 mGammaType(PhaseConstraint::eGammaUnknown),
 mGammaFixed(1),
 mGammaMin(0),
@@ -30,7 +30,7 @@ void PhaseConstraint::copyFrom(const Constraint& c)
 {
     Constraint::copyFrom(c);
     
-    const PhaseConstraint& pc = ((PhaseConstraint&)c);
+    const PhaseConstraint& pc = (PhaseConstraint&) c;
     
     mGamma = pc.mGamma;
     
@@ -45,8 +45,8 @@ void PhaseConstraint::copyFrom(const Constraint& c)
 
 PhaseConstraint::~PhaseConstraint()
 {
-    mPhaseFrom = 0;
-    mPhaseTo = 0;
+    mPhaseFrom = nullptr;
+    mPhaseTo = nullptr;
 }
 
 PhaseConstraint PhaseConstraint::fromJson(const QJsonObject& json)
@@ -55,7 +55,7 @@ PhaseConstraint PhaseConstraint::fromJson(const QJsonObject& json)
     c.mId = json.value(STATE_ID).toInt();
     c.mFromId = json.value(STATE_CONSTRAINT_BWD_ID).toInt();
     c.mToId = json.value(STATE_CONSTRAINT_FWD_ID).toInt();
-    c.mGammaType = (PhaseConstraint::GammaType)json.value(STATE_CONSTRAINT_GAMMA_TYPE).toInt();
+    c.mGammaType = PhaseConstraint::GammaType (json.value(STATE_CONSTRAINT_GAMMA_TYPE).toInt());
     c.mGammaFixed = json.value(STATE_CONSTRAINT_GAMMA_FIXED).toDouble();
     c.mGammaMin = json.value(STATE_CONSTRAINT_GAMMA_MIN).toDouble();
     c.mGammaMax = json.value(STATE_CONSTRAINT_GAMMA_MAX).toDouble();

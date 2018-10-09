@@ -1015,8 +1015,8 @@ void ModelView::applyAppSettings()
 
     mMargin = int (0.3 * AppSettings::widthUnit());
     mToolbarH = int (2 * AppSettings::heigthUnit());
-    mButtonWidth = int (1.3 * AppSettings::widthUnit());
-    mButtonHeigth = int (1.3 * AppSettings::heigthUnit());
+    mButtonWidth = int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonHeigth = int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mHandlerW = int (0.25 * AppSettings::widthUnit());
 /*
     mTopWrapper->setFont(AppSettings::font());
@@ -1054,7 +1054,7 @@ void ModelView::applyAppSettings()
     mButImport->setFont(AppSettings::font());
 */
     // ------
-
+//mEventsScene->update();
   //  mImportDataView->setFont(AppSettings::font());
     mEventPropertiesView->applyAppSettings();
 
@@ -1063,6 +1063,7 @@ void ModelView::applyAppSettings()
         static_cast<PhaseItem*>(item)->redrawPhase();
         static_cast<PhaseItem*>(item)->update();
     }
+ //   mPhasesView->update();
 /*    mPhasesView->setFont(AppSettings::font());
 
     mPhasesGlobalView->setFont(AppSettings::font());

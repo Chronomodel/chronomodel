@@ -128,7 +128,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
             const QJsonObject date = dates.at(i).toObject();           
             
             try {
-                DateItem* dateItem = new DateItem((EventsScene*)mScene, date, color, settings);
+                DateItem* dateItem = new DateItem((EventsScene*) (mScene), date, color, settings);
                 dateItem->setParentItem(this);
                 dateItem->setGreyedOut(mGreyedOut);
                 
@@ -270,7 +270,7 @@ void EventItem::redrawEvent()
     //  Calculate item size
     // ----------------------------------------------
     const QJsonArray dates = getEvent().value(STATE_EVENT_DATES).toArray();
-    qreal h = mTitleHeight + mPhasesHeight + 2*mBorderWidth + 2*mEltsMargin;
+    int h = mTitleHeight + mPhasesHeight + 2*mBorderWidth + 2*mEltsMargin;
 
     const int count = dates.size();
     if (count > 0)
@@ -303,7 +303,7 @@ void EventItem::redrawEvent()
 
     }
 
-    update();
+  //  update();
 }
 
 void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
@@ -324,7 +324,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     QRectF phasesRect(rect.x(), rect.y() + rect.height() - mPhasesHeight, rect.width(), mPhasesHeight);
     phasesRect.adjust(1, 1, -1, -1);
     
-    const int numPhases = (const int)phases.size();
+    const int numPhases ( phases.size());
     const qreal w = phasesRect.width()/numPhases;
 
     if (mGreyedOut) //setting with setGreyedOut() just above
@@ -333,12 +333,18 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         painter->setOpacity(1.);
 
     painter->setPen(Qt::NoPen);
-    painter->setBrush(eventColor);
+    painter->setBrush(QBrush(eventColor));
     painter->drawRect(rect);
 
+    //QFont font (APP_SETTINGS_DEFAULT_FONT_FAMILY, 10, 50, false); //"Calibri"
+//QFont font ("Calibri", 10, 50, false);
+   QFont font (qApp->font());
+   font.setPointSizeF(12.);
+//   qDebug()<<"EventItem::paint"<<font;
+    font.setStyle(QFont::StyleNormal);
+    font.setBold(false);
+    font.setItalic(false);
     if (numPhases == 0) {
-        QFont font = AppSettings::font();// qApp->font();
-        font.setPointSizeF(10.);
         painter->setFont(font);
         painter->fillRect(phasesRect, QColor(0, 0, 0, 180));
         painter->setPen(QColor(200, 200, 200));
@@ -353,7 +359,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
                      phase.value(STATE_COLOR_BLUE).toInt());
             painter->setPen(c);
             painter->setBrush(c);
-            painter->drawRect(phasesRect.x() + i*w, phasesRect.y(), w, phasesRect.height());
+            painter->drawRect(int (phasesRect.x() + i*w), int (phasesRect.y()), int(w), int (phasesRect.height()));
         }
     }
     
@@ -368,12 +374,16 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
               rect.width() - 2*mBorderWidth - 4*mEltsMargin,
               mTitleHeight);
     
-    QFont font = AppSettings::font();
+    //QFont font = AppSettings::font();
     font.setPointSizeF(12.);
+ //   QFont font ("Calibri", 10, 50, false);
+    font.setStyle(QFont::StyleNormal);
+    font.setBold(false);
+    font.setItalic(false);
     painter->setFont(font);
     QFontMetrics metrics(font);
     QString name = mData.value(STATE_NAME).toString();
-    name = metrics.elidedText(name, Qt::ElideRight, tr.width());
+    name = metrics.elidedText(name, Qt::ElideRight, int (tr.width()));
     
     const QColor frontColor = getContrastedColor(eventColor);
     painter->setPen(frontColor);

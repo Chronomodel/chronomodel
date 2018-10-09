@@ -169,7 +169,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         yMax = qMax(yMax, age + error * 1.96);
         
         GraphCurve curveMeasure;
-        curveMeasure.mName = "Measure";
+        curveMeasure.mName = "Measurement";
         
         QColor penColor(mMeasureColor);
         QColor brushColor(mMeasureColor);
@@ -188,9 +188,9 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         curveMeasure.mIsVertical = true;
         curveMeasure.mIsHisto = false;
         
-        // 5000 pts are used on vertical measure
+        // 5000 pts are used on vertical measurement
         // because the y scale auto adjusts depending on x zoom.
-        // => the visible part of the measure may be very reduced !
+        // => the visible part of the measurement may be very reduced !
         double step = (yMax - yMin) / 5000.;
         QMap<double, double> measureCurve;
         for (double t = yMin; t<yMax; t += step) {
@@ -228,7 +228,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             curveDeltaR.mIsVertical = true;
             curveDeltaR.mIsHisto = false;
             
-            // 5000 pts are used on vertical measure
+            // 5000 pts are used on vertical measurement
             // because the y scale auto adjusts depending on x zoom.
             // => the visible part of the measure may be very reduced !
             step = (yMax - yMin) / 5000.;
@@ -253,7 +253,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             const Date& d = date.mSubDates.at(i);
             
             GraphCurve curveSubMeasure;
-            curveSubMeasure.mName = "Sub-Measure " + QString::number(i);
+            curveSubMeasure.mName = "Sub-Measurement " + QString::number(i);
             
             double sub_age = d.mData.value(DATE_14C_AGE_STR).toDouble();
             double sub_error = d.mData.value(DATE_14C_ERROR_STR).toDouble();
@@ -277,9 +277,9 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             curveSubMeasure.mIsVertical = true;
             curveSubMeasure.mIsHisto = false;
             
-            // 5000 pts are used on vertical measure
+            // 5000 pts are used on vertical measurement
             // because the y scale auto adjusts depending on x zoom.
-            // => the visible part of the measure may be very reduced !
+            // => the visible part of the measurement may be very reduced !
             const double step = (yMax - yMin) / 1000.;
             QMap<double, double> subCurve;
             for (double t = yMin; t<yMax; t += step) {

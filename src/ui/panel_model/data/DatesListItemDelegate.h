@@ -17,9 +17,9 @@ public:
 
     inline QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex&) const
     {
-        QFont font(AppSettings::font());// = option.font;
+        //QFont font(AppSettings::font());// = option.font;
         //font.setPointSizeF(pointSize(11));
-        QFontMetrics metrics(font);
+        QFontMetrics metrics(qApp->font());
 
         const int mm (2);
         int mh = metrics.height();
@@ -29,9 +29,9 @@ public:
    inline  QRectF boundingRect() const
     {
 
-       QFont font(AppSettings::font());
+       //QFont font(AppSettings::font());
        //font.setPointSizeF(pointSize(11));
-       QFontMetrics metrics(font);
+       QFontMetrics metrics(qApp->font());
 
        const int mm (2);
        int mh = metrics.height() *5;
@@ -77,10 +77,10 @@ public:
             int iy = y + im;
             
             painter->save();
-            QFont font =AppSettings::font();
+            QFont font = qApp->font();
 
             if (isCombined) {
-                font.setPointSize(AppSettings::font().pixelSize()* 1.5);
+                font.setPointSize( qApp->font().pixelSize()* 1.5);
                 painter->setFont(font);
                 painter->setBrush(Painting::mainColorDark);
                 painter->setPen(Painting::mainColorDark);
@@ -94,8 +94,8 @@ public:
             QPixmap pixmap = icon.pixmap(iconS, iconS);
             painter->drawPixmap(x + (iconW - iconS)/2, y + (h - iconS)/2, iconS, iconS, pixmap, 0, 0, pixmap.width(), pixmap.height());
 
-            painter->setFont(AppSettings::font());
-            QFontMetrics metrics(AppSettings::font());
+            painter->setFont(qApp->font());
+            QFontMetrics metrics(qApp->font());
             
             int mh = metrics.height();
             

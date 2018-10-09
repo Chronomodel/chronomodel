@@ -12,6 +12,8 @@
 
 //  Constructor / Destructor
 
+int GraphViewResults::mHeightForVisibleAxis = int (5 * AppSettings::heigthUnit());
+
 GraphViewResults::GraphViewResults(QWidget *parent):QWidget(parent),
 mCurrentTypeGraph(ePostDistrib),
 mCurrentVariable(eTheta),
@@ -26,8 +28,7 @@ mMainColor(Painting::borderDark),
 mMargin(5),
 mLineH(20),
 mTopShift(0),
-mHeightForVisibleAxis(7 * AppSettings::heigthUnit()),
-mGraphFont(AppSettings::font())
+mGraphFont(font())
 {
     setGeometry(QRect(0, 0, parentWidget()->width(), 20 * AppSettings::heigthUnit()));
     setMouseTracking(true);
@@ -238,7 +239,7 @@ void GraphViewResults::saveGraphData() const
     QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
     csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
     
-    int offset = 0;
+    int offset (0);
     
     if (mCurrentTypeGraph == eTrace || mCurrentTypeGraph == eAccept) {
         QMessageBox messageBox;
@@ -253,7 +254,7 @@ void GraphViewResults::saveGraphData() const
 
         else if (messageBox.clickedButton() == acquireTraceButton) {
                 int chainIdx = -1;
-                for (int i=0; i<mShowChainList.size(); ++i)
+                for (int i (0); i<mShowChainList.size(); ++i)
                     if (mShowChainList.at(i)) chainIdx = i;
 
                 if (chainIdx != -1) // We add 1 for the init
@@ -265,15 +266,15 @@ void GraphViewResults::saveGraphData() const
     }
     
     else if (mCurrentTypeGraph == eCorrel)
-        mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
+        mGraph->exportCurrentVectorCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
     
     // All visible curves are saved in the same file, the credibility bar is not save
-    else if(mCurrentTypeGraph == ePostDistrib)
-        mGraph->exportCurrentDensityCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
+    else if (mCurrentTypeGraph == ePostDistrib)
+        mGraph->exportCurrentDensityCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
 
 }
 
-void GraphViewResults::setNumericalResults(const QString& resultsHTML, const QString& resultsText)
+void GraphViewResults::setNumericalResults (const QString& resultsHTML, const QString& resultsText)
 {
     mResultsText = resultsText;
     mTextArea->setHtml(resultsHTML);
@@ -333,18 +334,18 @@ void GraphViewResults::updateLayout()
     QFont fontTitle (mGraphFont);
     fontTitle.setPointSizeF(mGraphFont.pointSizeF() * 1.1);
     QFontMetricsF fmTitle (fontTitle);
-    mTopShift = 2 * fmTitle.height() ;
+    mTopShift = int (2 * fmTitle.height()) ;
 
-    QRect graphRect(0, mTopShift, width(), height() - mTopShift);
+    QRect graphRect(0, int (mTopShift), width(), int (height() - mTopShift));
 
     if (mShowNumResults) {
-        mGraph->setGeometry(graphRect.adjusted(0, 0, -width()/3. -1, 0 ));
-        mTextArea->setGeometry(graphRect.adjusted(width()*2./3. + 2., -mTopShift + 2 , -2, -2));
+        mGraph->setGeometry(graphRect.adjusted(0, 0, int (-width()/3. -1), 0 ));
+        mTextArea->setGeometry(graphRect.adjusted(int (width()*2./3. + 2.), int (-mTopShift + 2 ), -2, -2));
 
     } else
         mGraph->setGeometry(graphRect);
-
-    const bool axisVisible = (mGraph->height() > mHeightForVisibleAxis);
+qDebug()<<"GraphViewResults::updateLayout()"<<mGraph->height()<<mHeightForVisibleAxis<<mTopShift;
+    const bool axisVisible = (height() >= mHeightForVisibleAxis);
 
     if ((mGraph->hasCurve())) {
         mGraph->showXAxisValues(axisVisible);
@@ -377,7 +378,7 @@ void GraphViewResults::paintEvent(QPaintEvent* )
 
     p.setPen(Qt::black);
     
-    p.drawText(QRectF( 3 * AppSettings::widthUnit(), 0, fmTitle.width(mTitle), mTopShift), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
+    p.drawText(QRectF( 2 * AppSettings::widthUnit(), 0, fmTitle.width(mTitle), mTopShift), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
     
     p.setFont(QFont(mGraphFont.family(), mGraphFont.pointSize(), -1 , true));
 
@@ -407,7 +408,7 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     p.end();
 
     if (mIsSelected && mShowSelectedRect) {
-        mOverLaySelect->setGeometry(rect());//mGraph->geometry().adjusted(0, -mTopShift, 0, 0));
+        mOverLaySelect->setGeometry(rect());
         mOverLaySelect->show();
 
     } else

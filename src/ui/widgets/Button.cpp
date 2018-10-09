@@ -277,7 +277,7 @@ void Button::paintEvent(QPaintEvent* e)
         grad.setColorAt(1, gradColBot);
         painter.setBrush(grad);
         painter.setPen(QColor(120, 120, 120));
-        const int boxRoundedRadus= ceil(font().pointSize() * 0.3);
+        const int boxRoundedRadus= int (ceil(font().pointSize() * 0.3));
         painter.drawRoundedRect(r, boxRoundedRadus, boxRoundedRadus);
         
         painter.setPen(penCol);

@@ -16,26 +16,20 @@ mDeleteRequested(false)
     
     // -----------
     
-    mTypeLab = new Label(tr("Min hiatus") + " :", this);
-    mFixedLab = new Label(tr("Min value") + " :", this);
-    //mMinLab = new Label(tr("Lower hiatus min") + " :", this);
-    //mMaxLab = new Label(tr("Upper hiatus min") + " :", this);
+    mTypeLab = new Label(tr("Min hiatus"), this);
+    mFixedLab = new Label(tr("Min value"), this);
     
     mTypeCombo = new QComboBox(this);
     mTypeCombo->addItem(tr("Unknown"));
     mTypeCombo->addItem(tr("Known"));
-    //mTypeCombo->addItem(tr("Range"));
     
     mFixedEdit = new LineEdit(this);
-    //mMinEdit = new LineEdit(this);
-    //mMaxEdit = new LineEdit(this);
     
     QIntValidator* positiveValidator = new QIntValidator();
-    //positiveValidator->setBottom(0);
-    //mMinEdit->setValidator(positiveValidator);
+
     positiveValidator->setBottom(1);
     mFixedEdit->setValidator(positiveValidator);
-    //mMaxEdit->setValidator(positiveValidator);
+
     
     mOkBut = new Button(tr("OK"), this);
     mCancelBut = new Button(tr("Cancel"), this);
@@ -46,8 +40,6 @@ mDeleteRequested(false)
     mComboH = mTypeCombo->sizeHint().height();
     
     // ----------
-    
-  //  connect(mTypeCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(showAppropriateOptions()));
 
     connect(mTypeCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ConstraintDialog::showAppropriateOptions);
     
@@ -76,8 +68,6 @@ void ConstraintDialog::setConstraint(const QJsonObject& constraint)
     } else if (mType == ePhase) {
         mTypeCombo->setCurrentIndex(mConstraint[STATE_CONSTRAINT_GAMMA_TYPE].toInt());
         mFixedEdit->setText(QString::number(mConstraint[STATE_CONSTRAINT_GAMMA_FIXED].toDouble()));
-        //mMinEdit->setText(QString::number(mConstraint[STATE_CONSTRAINT_GAMMA_MIN].toDouble()));
-        //mMaxEdit->setText(QString::number(mConstraint[STATE_CONSTRAINT_GAMMA_MAX].toDouble()));
     }
     showAppropriateOptions();
 }
@@ -118,45 +108,19 @@ void ConstraintDialog::showAppropriateOptions()
     if (mTypeCombo->currentIndex() == 0) {
         mFixedLab->setVisible(false);
         mFixedEdit->setVisible(false);
+
         
-        //mMinLab->setVisible(false);
-        //mMaxLab->setVisible(false);
-        
-        //mMinEdit->setVisible(false);
-        //mMaxEdit->setVisible(false);
-        
-        setFixedHeight(mComboH + 3*m + butH);
+        setFixedHeight(int (mComboH + 3*m + butH));
     } else if (mTypeCombo->currentIndex() == 1) {
         mFixedLab->setVisible(true);
         mFixedEdit->setVisible(true);
-        
-        //mMinLab->setVisible(false);
-        //mMaxLab->setVisible(false);
-        
-        //mMinEdit->setVisible(false);
-        //mMaxEdit->setVisible(false);
-        
+
         mFixedEdit->selectAll();
         mFixedEdit->setFocus();
         
-        setFixedHeight(mComboH + 4*m + butH + lineH);
+        setFixedHeight(int (mComboH + 4*m + butH + lineH));
     }
-   /* else if(mTypeCombo->currentIndex() == 2)
-    {
-        mFixedLab->setVisible(false);
-        mFixedEdit->setVisible(false);
-        
-        mMinLab->setVisible(true);
-        mMaxLab->setVisible(true);
-        
-        mMinEdit->setVisible(true);
-        mMaxEdit->setVisible(true);
-        
-        mMinEdit->selectAll();
-        mMinEdit->setFocus();
-        
-        setFixedHeight(mComboH + 5*m + butH + 2*lineH);
-    }*/
+
 }
 
 void ConstraintDialog::resizeEvent(QResizeEvent* e)

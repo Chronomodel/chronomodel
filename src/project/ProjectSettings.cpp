@@ -77,8 +77,8 @@ ProjectSettings ProjectSettings::fromJson(const QJsonObject& json)
 QJsonObject ProjectSettings::toJson() const
 {
     QJsonObject settings;
-    settings[STATE_SETTINGS_TMIN] = (int) floor(mTmin);
-    settings[STATE_SETTINGS_TMAX] = (int) ceil(mTmax);
+    settings[STATE_SETTINGS_TMIN] = int (floor(mTmin));
+    settings[STATE_SETTINGS_TMAX] = int (ceil(mTmax));
     settings[STATE_SETTINGS_STEP] = mStep;
     settings[STATE_SETTINGS_STEP_FORCED] = mStepForced;
 

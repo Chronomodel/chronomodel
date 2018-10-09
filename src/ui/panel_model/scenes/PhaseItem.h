@@ -41,7 +41,7 @@ protected:
     QPixmap* exPix;
 
 public:
-    PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsItem* parent = 0);
+    PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsItem* parent = nullptr);
     virtual ~PhaseItem();
     
     QJsonObject& getPhase();

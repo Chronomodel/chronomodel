@@ -21,8 +21,8 @@
 
 
 EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-    mButtonWidth  (int (1.3 * AppSettings::widthUnit())),
-    mButtonHeigth  (int (1.3 * AppSettings::heigthUnit())),
+    mButtonWidth  (int (1.3 * AppSettings::widthUnit()) * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE),
+    mButtonHeigth  (int (1.3 * AppSettings::heigthUnit()) * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE),
     mLineEditHeight  (int (0.5 * AppSettings::heigthUnit())),
     mComboBoxHeight (int (0.7 * AppSettings::heigthUnit()))
 {
@@ -32,6 +32,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mTopView = new QWidget(this);
 
     mNameLab = new QLabel(tr("Name"), mTopView);
+    mNameLab->setAlignment(Qt::AlignRight);
     mNameEdit = new LineEdit(mTopView);
 
     mColorLab = new QLabel(tr("Color"), mTopView);
@@ -510,8 +511,8 @@ void EventPropertiesView::resizeEvent(QResizeEvent* e)
 
 void EventPropertiesView::applyAppSettings()
 {
-    mButtonWidth = int (1.3 * AppSettings::widthUnit());
-    mButtonHeigth = int (1.3 * AppSettings::heigthUnit());
+    mButtonWidth = int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonHeigth = int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mLineEditHeight = int (0.5 * AppSettings::heigthUnit());
     mComboBoxHeight = int(0.7 * AppSettings::heigthUnit());
     minimumHeight += mEventView->height();
@@ -534,8 +535,8 @@ void EventPropertiesView::applyAppSettings()
 
 void EventPropertiesView::updateLayout()
 {
-    mButtonWidth = int (1.3 * AppSettings::widthUnit());
-    mButtonHeigth = int (1.3 * AppSettings::heigthUnit());
+    mButtonWidth = int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonHeigth = int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mLineEditHeight = int (0.5 * AppSettings::heigthUnit());
     mComboBoxHeight = int (0.7*AppSettings::heigthUnit());
 

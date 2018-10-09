@@ -385,7 +385,7 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
 
         }
         // ------------------------------------------------------------------
-        //  Measure is very far from Ref curve on the whole ref curve preriod!
+        //  Measurement is very far from Ref curve on the whole ref curve preriod!
         //  => Calib values are very small, considered as being 0 even using "double" !
         //  => lastRepVal = 0, and impossible to truncate using it....
         //  => So,

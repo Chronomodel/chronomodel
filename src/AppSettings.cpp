@@ -6,9 +6,9 @@
 
 int AppSettings::mWidthUnit;
 int AppSettings::mHeigthUnit;
-QFont AppSettings::mFont;
-int AppSettings::mFontDescent;
-int AppSettings::mButtonWidth;
+//QFont AppSettings::mFont;
+//int AppSettings::mFontDescent;
+//int AppSettings::mButtonWidth;
 
 QLocale::Language AppSettings::mLanguage;
 QLocale::Country AppSettings::mCountry;
@@ -19,14 +19,15 @@ bool AppSettings::mShowHelp;
 QString AppSettings::mCSVCellSeparator;
 QString AppSettings::mCSVDecSeparator;
 bool AppSettings::mOpenLastProjectAtLaunch;
-short AppSettings::mPixelRatio;
-short AppSettings::mDpm;
-short AppSettings::mImageQuality;
+int AppSettings::mPixelRatio;
+int AppSettings::mIconSize;
+int AppSettings::mDpm;
+int AppSettings::mImageQuality;
 DateUtils::FormatDate AppSettings::mFormatDate;
 int AppSettings::mPrecision;
 int AppSettings::mNbSheet;
-QString AppSettings::mFontFamily;
-int AppSettings::mFontPointSize;
+// QString AppSettings::mFontFamily;
+//int AppSettings::mFontPointSize;
 
 QString AppSettings:: mLastDir;
 QString AppSettings::mLastFile;
@@ -79,16 +80,17 @@ void AppSettings::readSettings()
     AppSettings::mLastSize = settings.value("size", QSize(400, 400)).toSize();
 
     settings.beginGroup("AppSettings");
-    AppSettings::mLanguage = (QLocale::Language) settings.value(APP_SETTINGS_STR_LANGUAGE, QLocale::system().language()).toInt();
-    AppSettings::mCountry = (QLocale::Country) settings.value(APP_SETTINGS_STR_COUNTRY, QLocale::system().language()).toInt();
-    AppSettings::mFontFamily =  settings.value(APP_SETTINGS_STR_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_FAMILY).toString();
-    AppSettings::mFontPointSize = settings.value(APP_SETTINGS_STR_FONT_SIZE, APP_SETTINGS_DEFAULT_FONT_SIZE).toInt();
+    AppSettings::mLanguage = QLocale::Language (settings.value(APP_SETTINGS_STR_LANGUAGE, QLocale::system().language()).toInt());
+    AppSettings::mCountry = QLocale::Country (settings.value(APP_SETTINGS_STR_COUNTRY, QLocale::system().language()).toInt());
+   // AppSettings::mFontFamily =  settings.value(APP_SETTINGS_STR_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_FAMILY).toString();
+    //AppSettings::mFontPointSize = settings.value(APP_SETTINGS_STR_FONT_SIZE, APP_SETTINGS_DEFAULT_FONT_SIZE).toInt();
+    AppSettings::mIconSize = settings.value(APP_SETTINGS_STR_ICON_SIZE, APP_SETTINGS_DEFAULT_ICON_SIZE).toInt();
 
-    if (AppSettings::mFontFamily != "")
+ /*   if (AppSettings::mFontFamily != "")
          AppSettings::setFont(QFont(AppSettings::mFontFamily, AppSettings::mFontPointSize));
     else
         AppSettings::setFont( QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
-
+*/
 
     AppSettings::mAutoSave = settings.value(APP_SETTINGS_STR_AUTO_SAVE, APP_SETTINGS_DEFAULT_AUTO_SAVE).toBool();
     AppSettings::mAutoSaveDelay = settings.value(APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC, APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC).toInt();
@@ -97,9 +99,10 @@ void AppSettings::readSettings()
     AppSettings::mCSVDecSeparator = settings.value(APP_SETTINGS_STR_DEC_SEP, APP_SETTINGS_DEFAULT_DEC_SEP).toString();
     AppSettings::mOpenLastProjectAtLaunch = settings.value(APP_SETTINGS_STR_OPEN_PROJ, APP_SETTINGS_DEFAULT_OPEN_PROJ).toBool();
     AppSettings::mPixelRatio = settings.value(APP_SETTINGS_STR_PIXELRATIO, APP_SETTINGS_DEFAULT_PIXELRATIO).toInt();
+
     AppSettings::mDpm = settings.value(APP_SETTINGS_STR_DPM, APP_SETTINGS_DEFAULT_DPM).toInt();
     AppSettings::mImageQuality = settings.value(APP_SETTINGS_STR_IMAGE_QUALITY, APP_SETTINGS_DEFAULT_IMAGE_QUALITY).toInt();
-    AppSettings::mFormatDate = (DateUtils::FormatDate)settings.value(APP_SETTINGS_STR_FORMATDATE, APP_SETTINGS_DEFAULT_FORMATDATE).toInt();
+    AppSettings::mFormatDate = DateUtils::FormatDate (settings.value(APP_SETTINGS_STR_FORMATDATE, APP_SETTINGS_DEFAULT_FORMATDATE).toInt());
     AppSettings::mPrecision = settings.value(APP_SETTINGS_STR_PRECISION, APP_SETTINGS_DEFAULT_PRECISION).toInt();
     AppSettings::mNbSheet = settings.value(APP_SETTINGS_STR_SHEET, APP_SETTINGS_DEFAULT_SHEET).toInt();
 
@@ -121,8 +124,8 @@ void AppSettings::writeSettings()
     settings.beginGroup("AppSettings");
     settings.setValue(APP_SETTINGS_STR_AUTO_SAVE, AppSettings::mAutoSave);
     settings.setValue(APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC, AppSettings::mAutoSaveDelay);
-    settings.setValue(APP_SETTINGS_STR_FONT_FAMILY, AppSettings::font().family());
-    settings.setValue(APP_SETTINGS_STR_FONT_SIZE, AppSettings::font().pointSize());
+   // settings.setValue(APP_SETTINGS_STR_FONT_FAMILY, AppSettings::font().family());
+    //settings.setValue(APP_SETTINGS_STR_FONT_SIZE, AppSettings::font().pointSize());
 
     settings.setValue(APP_SETTINGS_STR_SHOW_HELP, AppSettings::mShowHelp);
     settings.setValue(APP_SETTINGS_STR_CELL_SEP, AppSettings::mCSVCellSeparator);
@@ -179,31 +182,32 @@ AppSettings::~AppSettings()
      return AppSettings::mHeigthUnit;
  }
 
+ /*
  void AppSettings::setFont(const QFont& font)
  {
-     AppSettings::mFont = font;
-     QFontMetrics fm(font);
+     AppSettings::mFont = QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, font.pixelSize(), 50, false);
+     QFontMetrics fm(AppSettings::mFont);
      const QString txt1 = " HPD (%) ";
      const QString txt2 = " Min. Cnt ";
      const int lgTxt = qMax(fm.width(txt1), fm.width(txt2) );
-     AppSettings::mWidthUnit  =  fm.averageCharWidth();// + fm.minRightBearing());//, 5); // for ResultsView
+   //  AppSettings::mWidthUnit  =  fm.averageCharWidth();// + fm.minRightBearing());//, 5); // for ResultsView
      AppSettings::mButtonWidth = lgTxt;//fm.rightBearing('f') + fm.width(txt) + fm.leftBearing('f');
 
 #ifdef Q_OS_MAC
-     AppSettings::mHeigthUnit = 1.2 * fm.height();
+    // AppSettings::mHeigthUnit = int (1.2 * fm.height());
 #endif
 
 #ifdef Q_OS_WIN
-     AppSettings::mHeigthUnit = fm.height();
+    // AppSettings::mHeigthUnit = fm.height();
 #endif
 
 #ifdef Q_OS_LINUX
-     AppSettings::mHeigthUnit = abs(fm.height());
+    // AppSettings::mHeigthUnit = abs(fm.height());
 #endif
 
 
      AppSettings::mFontDescent = fm.descent();
-     AppSettings::mFontFamily = font.family();
+    // AppSettings::mFontFamily = font.family();
      AppSettings::mFontPointSize = font.pointSize();
  }
 
@@ -216,3 +220,4 @@ AppSettings::~AppSettings()
  {
      return AppSettings::mFont;
  }
+*/

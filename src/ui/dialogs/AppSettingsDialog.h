@@ -38,7 +38,7 @@ private slots:
     void changeSettings();
     void buttonClicked(QAbstractButton*);
     void needCalibration();
-    void fontButtonClicked();
+   // void fontButtonClicked();
     
 signals:
     void settingsChanged();
@@ -55,11 +55,14 @@ private:
     QLabel* mLanguageLab;
     QComboBox* mLanguageCombo;
 
-    Label* mFontLab;
-    Button* mFontBut;
-    QFont mFont;
+    //Label* mFontLab;
+    //Button* mFontBut;
+    //QFont mFont;
+
    // QLabel* mCountryLab;
    // QComboBox* mCountryCombo;
+    Label *mIconSizeLab;
+    QSpinBox *mIconSize;
     
     QLabel* mAutoSaveLab;
     QCheckBox* mAutoSaveCheck;

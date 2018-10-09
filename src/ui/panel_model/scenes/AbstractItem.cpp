@@ -39,7 +39,7 @@ mGreyedOut(false)
 
 AbstractItem::~AbstractItem()
 {
-    
+    mScene = nullptr;
 }
 
 void AbstractItem::setMergeable(bool mergeable, bool shouldRepaint)

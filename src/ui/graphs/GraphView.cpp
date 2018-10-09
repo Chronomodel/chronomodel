@@ -73,11 +73,11 @@ mUnitFunctionY(nullptr)
 
 GraphView::GraphView(const GraphView& graph, QWidget *parent):QWidget(parent),
 mStepMinWidth(graph.mStepMinWidth), // define minorCount scale on axis
-mXAxisLine(graph.mStepMinWidth),
+mXAxisLine(graph.mXAxisLine),
 mXAxisArrow(graph.mXAxisArrow),
-mXAxisTicks(graph.mStepMinWidth),
+mXAxisTicks(graph.mXAxisTicks),
 mXAxisSubTicks(graph.mXAxisSubTicks),
-mXAxisValues(graph.mStepMinWidth),
+mXAxisValues(graph.mXAxisValues),
 mYAxisLine(graph.mYAxisLine),
 mYAxisArrow(graph.mYAxisArrow),
 mYAxisTicks(graph.mYAxisTicks),
@@ -99,8 +99,8 @@ mTipWidth(graph.mTipWidth),
 mTipHeight(graph.mTipHeight),
 mTipVisible(graph.mTipVisible),
 mUseTip(graph.mUseTip),
-  mUnitFunctionX(nullptr),
-  mUnitFunctionY(nullptr)
+mUnitFunctionX(nullptr),
+mUnitFunctionY(nullptr)
 {
     mCurrentMinX = graph.mCurrentMinX;
     mCurrentMaxX = graph.mCurrentMaxX;
@@ -134,11 +134,11 @@ mUseTip(graph.mUseTip),
 void GraphView::copyFrom(const GraphView& graph)
 {
     mStepMinWidth = graph.mStepMinWidth; // define minorCount scale on axis
-    mXAxisLine = graph.mStepMinWidth;
+    mXAxisLine = graph.mXAxisLine;
     mXAxisArrow = graph.mXAxisArrow;
-    mXAxisTicks = graph.mStepMinWidth;
+    mXAxisTicks = graph.mXAxisTicks;
     mXAxisSubTicks = graph.mXAxisSubTicks;
-    mXAxisValues = graph.mStepMinWidth;
+    mXAxisValues = graph.mXAxisValues;
     mYAxisLine = graph.mYAxisLine;
     mYAxisArrow = graph.mYAxisArrow;
     mYAxisTicks = graph.mYAxisTicks;
@@ -205,14 +205,14 @@ void GraphView::zoomX(const type_data min, const type_data max)
 
         mAxisToolX.updateValues(width(), 10., min, max);
         if (mAutoAdjustYScale) {
-            qreal yMax = -INFINITY;
-            qreal yMin =  INFINITY;
+            qreal yMax = -HUGE_VAL;
+            qreal yMin =  HUGE_VAL;
             for (int curveIndex=0; curveIndex<mCurves.size(); ++curveIndex) {
                 const GraphCurve& curve = mCurves.at(curveIndex);
                 if (curve.mVisible && !curve.mIsHorizontalLine && !curve.mIsVertical && !curve.mIsVerticalLine && !curve.mIsHorizontalSections) {
 
                     if (curve.mUseVectorData) {
-                        QVector<qreal> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, (qreal)0., (qreal)curve.mDataVector.size());
+                        QVector<qreal> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, qreal (0.), qreal (curve.mDataVector.size()));
 
                         yMax = qMax(yMax, vector_max_value(subData));
                         yMin = qMin(yMin, vector_min_value(subData));
@@ -651,8 +651,8 @@ void GraphView::resizeEvent(QResizeEvent* event)
     Q_UNUSED(event);
 
     if (!mBufferBack.isNull()) {
-        const qreal sx = (qreal)rect().width() / (qreal)mBufferBack.rect().width() ;
-        const qreal sy = (qreal)rect().height() / (qreal)mBufferBack.rect().height() ;
+        const qreal sx = qreal(rect().width()) / qreal (mBufferBack.rect().width());
+        const qreal sy = qreal (rect().height()) / qreal (mBufferBack.rect().height());
 
         if (sx>.5 || sy>.5) {
             mBufferBack = QPixmap(width(), height());
@@ -686,8 +686,8 @@ void GraphView::updateGraphSize(int w, int h)
 
     mGraphWidth = w - mMarginLeft - mMarginRight;
     mGraphHeight = h - mMarginTop - mMarginBottom - mBottomSpacer;
-    mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
-    mAxisToolY.updateValues(mGraphHeight, 12, mMinY, mMaxY);
+    mAxisToolX.updateValues(int (mGraphWidth), int (mStepMinWidth), mCurrentMinX, mCurrentMaxX);
+    mAxisToolY.updateValues(int (mGraphHeight), 12, mMinY, mMaxY);
 }
 
 void GraphView::repaintGraph(const bool aAlsoPaintBackground)
@@ -789,9 +789,9 @@ void GraphView::paintEvent(QPaintEvent* )
             else
                  p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + stringForLocal(mTipX));
             if (mUnitFunctionY)
-                 p.drawText(mTipRect.adjusted(0, (int)(mTipRect.height()/2), 0, 0), Qt::AlignCenter, mTipYLab + stringForLocal(mUnitFunctionY(mTipY)));
+                 p.drawText(mTipRect.adjusted(0, mTipRect.height()/2., 0, 0), Qt::AlignCenter, mTipYLab + stringForLocal(mUnitFunctionY(mTipY)));
             else
-                p.drawText(mTipRect.adjusted(0, (int)(mTipRect.height()/2), 0, 0), Qt::AlignCenter, mTipYLab + stringForLocal(mTipY));
+                p.drawText(mTipRect.adjusted(0, mTipRect.height()/2., 0, 0), Qt::AlignCenter, mTipYLab + stringForLocal(mTipY));
             
         } else if (!mTipXLab.isEmpty()) {
             if (mUnitFunctionX)
@@ -830,10 +830,10 @@ void GraphView::paintToDevice(QPaintDevice* device)
     /* ---------------------- Zones --------------------------*/
 
     for (auto && zone : mZones) {
-        QRect r(getXForValue(zone.mXStart),
-                mMarginTop,
-                getXForValue(zone.mXEnd) - getXForValue(zone.mXStart),
-                mGraphHeight);
+        QRect r(int (getXForValue(zone.mXStart)),
+                int (mMarginTop),
+                int (getXForValue(zone.mXEnd) - getXForValue(zone.mXStart)),
+                int (mGraphHeight));
 
         if (r.width()>1) {
             p.save();
@@ -861,7 +861,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
 
          if (mOverflowArrowMode == eBothOverflow || mOverflowArrowMode == eUnderMin) {
 
-             type_data maxData = (type_data) (- INFINITY);
+             type_data maxData = type_data (- INFINITY);
              for (auto &&curve : mCurves)
                  if (curve.mVisible && curve.mData.size()>0)
                     maxData = std::max(maxData, curve.mData.lastKey());
@@ -887,7 +887,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
 
          }
          if (mOverflowArrowMode == eBothOverflow || mOverflowArrowMode == eOverMax) {
-             type_data minData = (type_data) (INFINITY);
+             type_data minData = type_data (INFINITY);
 
              for (auto &&curve : mCurves)
                  if (curve.mVisible && curve.mData.size()>0)
@@ -941,8 +941,8 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolX.mShowSubs = mXAxisTicks;
     mAxisToolX.mShowSubSubs = mXAxisSubTicks;
     mAxisToolX.mShowText = mXAxisValues;
-
-    mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
+//qDebug()<<"GraphView::paintotdevice"<< mXAxisValues<< mStepMinWidth << mAxisToolX.getMajorScale()<<mAxisToolX.getMinorScaleCount();
+    mAxisToolX.updateValues(int (mGraphWidth), int (mStepMinWidth), mCurrentMinX, mCurrentMaxX);
     mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight , mGraphWidth , mMarginBottom), -1.,mUnitFunctionX);
 
     /* ----------------------------------------------------
@@ -958,7 +958,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mInfos.clear();
         mInfos.append(minMaxText);
     }
-        mAxisToolY.updateValues(mGraphHeight, mStepMinWidth, mMinY, mMaxY);
+        mAxisToolY.updateValues(int (mGraphHeight), int (mStepMinWidth), mMinY, mMaxY);
         mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), -1., mUnitFunctionY);
 
      }
@@ -972,7 +972,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
         int y (0);
         int lineH (fm.height());
         for (auto && info : mInfos) {
-            p.drawText(1.2 * mMarginLeft, mMarginTop  + y, mGraphWidth - 1.2*mMarginLeft -mMarginRight, lineH, Qt::AlignLeft | Qt::AlignBottom, info);
+            p.drawText(int (1.2 * mMarginLeft), int (mMarginTop  + y), int (mGraphWidth - 1.2*mMarginLeft -mMarginRight), lineH, Qt::AlignLeft | Qt::AlignBottom, info);
             y += lineH;
         }
     }
@@ -986,7 +986,7 @@ void GraphView::drawCurves(QPainter& painter)
     /* -------------------------- Curves ---------------------------*/
     painter.save();
     // Draw curves inside axis only (not in margins!)
-    painter.setClipRect(mMarginLeft, mMarginTop, mGraphWidth, mGraphHeight);
+    painter.setClipRect(int (mMarginLeft), int (mMarginTop), int(mGraphWidth), int (mGraphHeight));
     
     for (auto && curve : mCurves) {
         if (curve.mVisible) {
@@ -1106,10 +1106,10 @@ void GraphView::drawCurves(QPainter& painter)
                     QVector<type_data> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
                     
                     QVector<type_data> lightData;
-                    const type_data dataStep = (type_data)subData.size() / (type_data)(mGraphWidth);
+                    const type_data dataStep = type_data(subData.size()) / type_data(mGraphWidth);
                     if (dataStep > 1) {
                         for (int i = 0; i<mGraphWidth; ++i) {
-                            const int idx = (int)floor(i * dataStep);
+                            const int idx = int (floor(i * dataStep));
                             lightData.append(subData.at(idx));
                         }
                     } else
@@ -1186,7 +1186,7 @@ void GraphView::drawCurves(QPainter& painter)
                     if (iter.hasNext()) {
                         if (valueY == (iter.peekNext()).value()) {
                             if (valueX >= mCurrentMinX && valueX <= mCurrentMaxX) {
-                                path.moveTo( getXForValue(valueX), getYForValue((type_data)0, true) );
+                                path.moveTo( getXForValue(valueX), getYForValue(type_data (0), true) );
                                 path.lineTo( getXForValue(valueX), getYForValue(valueY, true) );
                             }
                         }
@@ -1198,7 +1198,7 @@ void GraphView::drawCurves(QPainter& painter)
                     if (curve.mBrush != Qt::NoBrush) {
                         isFirst=false;
                         last_x = getXForValue(valueX, true);
-                        last_y = getYForValue((type_data)0., false);
+                        last_y = getYForValue(type_data (0.), false);
                     }
                     while (iter.hasNext()) {
                         iter.next();
@@ -1254,7 +1254,7 @@ void GraphView::drawCurves(QPainter& painter)
 
                     if (path.elementCount()  == 1) { //there is only one value
                         last_x = getXForValue(valueX, true);
-                        last_y = getYForValue((type_data)0., false);
+                        last_y = getYForValue(type_data (0.), false);
                         path.lineTo(last_x, last_y);
                     }
 
@@ -1276,7 +1276,7 @@ void GraphView::drawCurves(QPainter& painter)
 
                 if (curve.mIsRectFromZero && (curve.mBrush != Qt::NoBrush) ) {
                     // Close the path on the left side
-                    path.lineTo(last_x, getYForValue((type_data)0., true));
+                    path.lineTo(last_x, getYForValue(type_data (0.), true));
 
                     painter.setPen(curve.mPen);
                     painter.fillPath(path, brush);

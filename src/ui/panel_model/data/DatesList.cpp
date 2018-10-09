@@ -48,7 +48,7 @@ void DatesList::setEvent(const QJsonObject& event)
                 d.fromJson(date);
                 if (!d.isNull()) {
                     QListWidgetItem* item = new QListWidgetItem();
-                    item->setFont(AppSettings::font());
+                    item->setFont(font());
                     item->setFlags(Qt::ItemIsSelectable
                                    | Qt::ItemIsDragEnabled
                                    | Qt::ItemIsUserCheckable

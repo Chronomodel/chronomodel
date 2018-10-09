@@ -63,6 +63,11 @@ mGreyedOut(false)
     
 }
 
+DateItem::~DateItem()
+{
+
+}
+
 const QJsonObject& DateItem::date() const
 {
     return mDate;
@@ -115,14 +120,15 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     const int rHeightMid =  int(r.height() *2/3);
     painter->fillRect(r.adjusted(0, 0, 0, -rHeightMid), Qt::white);
     
-    QFont font = AppSettings::font();
+   // QFont font (APP_SETTINGS_DEFAULT_FONT_FAMILY, 10, 50, false);
+    QFont font (qApp->font());
     font.setPointSizeF(10.);
     painter->setFont(font);
 
     painter->setPen(Qt::black);
     QString name = mDate.value(STATE_NAME).toString();
     QFontMetrics metrics (font);
-    name = metrics.elidedText(name, Qt::ElideRight, r.width() - 5);
+    name = metrics.elidedText(name, Qt::ElideRight, int (r.width() - 5));
 
     painter->drawText(r.adjusted(0, 0, 0, -rHeightMid), Qt::AlignCenter, name);
 
@@ -138,7 +144,7 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
 
         const QPixmap ct2 = mCalibThumb.transformed(mx, Qt::SmoothTransformation);
 
-        painter->drawPixmap(rct.x(), rct.y(), ct2);
+        painter->drawPixmap(int (rct.x()), int (rct.y()), ct2);
 
     } else {
         painter->fillRect(rct, Qt::white);

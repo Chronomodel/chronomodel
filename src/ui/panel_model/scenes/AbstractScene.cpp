@@ -4,8 +4,8 @@
 #include "ArrowTmpItem.h"
 #include "AppSettings.h"
 #include "StateKeys.h"
-#include <QtWidgets>
 
+#include <QtWidgets>
 
 AbstractScene::AbstractScene(QGraphicsView* view, QObject* parent):QGraphicsScene(parent),
 mDrawingArrow(false),
@@ -253,7 +253,6 @@ QRectF AbstractScene::specialItemsBoundingRect(QRectF r) const
 void AbstractScene::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 {
     if (mDrawingArrow) {
-        //qDebug() << e->scenePos().x();
         mTempArrow->setVisible(true);
         mTempArrow->setTo(e->scenePos().x(), e->scenePos().y());
     }

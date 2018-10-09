@@ -31,6 +31,11 @@ mGreyedOut(false)
     setData(constraint);
 }
 
+ArrowItem::~ArrowItem()
+{
+    mScene = nullptr;
+}
+
 QJsonObject& ArrowItem::data()
 {
     return mData;
@@ -162,8 +167,8 @@ QRectF ArrowItem::boundingRect() const
 
         x = std::min(x, xa);
         y = std::min(y, ya);
-        w = std::max(w, (qreal) s.width());
-        h = std::max(h, (qreal) s.height());
+        w = std::max(w, qreal (s.width()));
+        h = std::max(h, qreal (s.height()));
 
     } else { // the arrow size in the shape()
         const qreal xa = (mXStart + mXEnd - 15.)/2.;
@@ -240,13 +245,14 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         color.setAlphaF(0.05);
     
     painter->setPen(QPen(color, penWidth, mEditing ? Qt::DashLine : Qt::SolidLine));
-    painter->drawLine(mXStart, mYStart, mXEnd, mYEnd);
+    painter->drawLine(int(mXStart), int(mYStart), int(mXEnd), int(mYEnd));
     
     // Bubble
     
     const QString bubbleText = getBubbleText();
     bool showMiddleArrow = true;
-    QFont font;
+
+    QFont font (qApp->font().family(), 10, 50, false);
 
     if (mShowDelete) {
         showMiddleArrow = false;
@@ -266,20 +272,18 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     if (!bubbleText.isEmpty()) {
         showMiddleArrow = false;
         const QRectF br = getBubbleRect(bubbleText);
-       // const int as = QFontMetrics(font).descent();
 
         if (bubbleText.count() > 5)
             painter->drawRect(br);
         else
             painter->drawEllipse(br);
 
-        //painter->drawText(br.adjusted(0, -as, 0, 0), Qt::AlignCenter, bubbleText);
         painter->drawText(br, Qt::AlignCenter, bubbleText);
      }
 
     // arrows
     
-    const double angle_rad = atanf(qAbs(mXStart-mXEnd) / qAbs(mYStart-mYEnd));
+    const double angle_rad = atan(qAbs(mXStart-mXEnd) / qAbs(mYStart-mYEnd));
     const double angle_deg = angle_rad * 180. / M_PI;
     
     QPainterPath path;
@@ -413,8 +417,8 @@ QRectF ArrowItem::getBubbleRect(const QString& text) const
     const QSize s (getBubbleSize(text));
     const QRectF rect (boundingRect());
 
-    const int bubble_x = rect.x() + (rect.width() - s.width()) / 2 ;
-    const int bubble_y = rect.y() + (rect.height() - s.height()) / 2 ;
+    const int bubble_x = int (rect.x() + (rect.width() - s.width()) / 2) ;
+    const int bubble_y = int (rect.y() + (rect.height() - s.height()) / 2) ;
     return QRectF(QPoint(bubble_x, bubble_y), s);
 
 }
@@ -429,7 +433,7 @@ QString ArrowItem::getBubbleText() const
             bubbleText = "?";
 
     else if (mType == ePhase) {
-            PhaseConstraint::GammaType gammaType = (PhaseConstraint::GammaType)mData.value(STATE_CONSTRAINT_GAMMA_TYPE).toInt();
+            PhaseConstraint::GammaType gammaType = PhaseConstraint::GammaType (mData.value(STATE_CONSTRAINT_GAMMA_TYPE).toInt());
             if (gammaType == PhaseConstraint::eGammaFixed)
                 bubbleText = "hiatus ≥ " + QString::number(mData.value(STATE_CONSTRAINT_GAMMA_FIXED).toDouble());
             else if (gammaType == PhaseConstraint::eGammaRange)
@@ -446,7 +450,7 @@ EventItem* ArrowItem::findEventItemWithJsonId(const int id)
      foreach (AbstractItem* it, listItems) {
         EventItem* ev = static_cast<EventItem*>(it);
         const QJsonObject evJson = ev->getEvent();
-        if (evJson.value(STATE_ID)== id)
+        if (evJson.value(STATE_ID) == id)
             return ev;
     }
     return nullptr;

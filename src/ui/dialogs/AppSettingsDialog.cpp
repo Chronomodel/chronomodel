@@ -15,13 +15,13 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     // -----------------------------
     //  General View
     // -----------------------------
-    mFont = AppSettings::font();
+    //mFont = qApp->font();//AppSettings::font();
 
     mGeneralView = new QWidget();
     
     mLangHelpLab = new QLabel(tr("Language is used to define how number input should be typed (using comma or dot as decimal separator). This is not related to the application translation which is not available yet!"), this);
 
-    mLangHelpLab->setFont(mFont);
+    //mLangHelpLab->setFont(mFont);
     mLangHelpLab->setAlignment(Qt::AlignCenter);
     mLangHelpLab->setWordWrap(true);
     
@@ -32,8 +32,12 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     for (int i=0; i<339; i++)
         mLanguageCombo->addItem(QLocale::languageToString(QLocale::Language (i)),QVariant(QLocale::Language(i)));
 
-    mFontLab = new Label(tr("Font Menu"), this);
-    mFontBut = new Button(mFont.family() + ", " + QString::number(mFont.pointSizeF()), this);
+    //mFontLab = new Label(tr("Font Menu"), this);
+    //mFontBut = new Button(mFont.family() + ", " + QString::number(mFont.pointSizeF()), this);
+    mIconSizeLab = new Label(tr("Model Icons Size"), this);
+    mIconSize = new QSpinBox(this);
+    mIconSize->setRange(1, 5);
+    mIconSize->setSingleStep(1);
 
     mAutoSaveLab = new QLabel(tr("Auto Save Project"), this);
     mAutoSaveCheck = new QCheckBox(this);
@@ -111,8 +115,10 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
     grid->addWidget(mLangHelpLab, ++row, 0, 1, 2);
 
-    grid->addWidget(mFontLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mFontBut, row, 1);
+    //grid->addWidget(mFontLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    //grid->addWidget(mFontBut, row, 1);
+    grid->addWidget(mIconSizeLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mIconSize, row, 1);
 
     QFrame* line1 = new QFrame();
     line1->setFrameShape(QFrame::HLine);
@@ -167,7 +173,8 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     
     connect(mLanguageCombo,static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &AppSettingsDialog::changeSettings);
     //connect(mCountryCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(changeSettings()));
-    connect(mFontBut, &Button::clicked, this, &AppSettingsDialog::fontButtonClicked);
+    //connect(mFontBut, &Button::clicked, this, &AppSettingsDialog::fontButtonClicked);
+    connect(mIconSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &AppSettingsDialog::changeSettings);
 
     connect(mAutoSaveCheck, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this,  &AppSettingsDialog::changeSettings);
     connect(mAutoSaveDelayEdit, &QLineEdit::editingFinished, this,  &AppSettingsDialog::changeSettings);
@@ -253,8 +260,9 @@ void AppSettingsDialog::setSettings()
 {
     mLanguageCombo->setCurrentText(QLocale::languageToString(AppSettings::mLanguage));
     //mCountryCombo->setCurrentText(QLocale::countryToString(settings.mCountry)); // keep in memory
-    mFont = AppSettings::font();
-    mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
+    //mFont = font();//AppSettings::font();
+    //mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
+    mIconSize->setValue(AppSettings::mIconSize);
 
     mAutoSaveCheck->setChecked(AppSettings::mAutoSave);
     mAutoSaveDelayEdit->setText(QString::number(AppSettings::mAutoSaveDelay / 60));
@@ -281,7 +289,8 @@ void AppSettingsDialog::getSettings()
 {
     AppSettings::mLanguage = QLocale::Language (mLanguageCombo->currentData().toInt());
     AppSettings::mCountry = locale().country();
-    AppSettings::setFont(mFont);
+    //AppSettings::setFont(mFont);
+    AppSettings::mIconSize = mIconSize->value();
 
     AppSettings::mAutoSave = mAutoSaveCheck->isChecked();
     AppSettings::mAutoSaveDelay = mAutoSaveDelayEdit->text().toInt() * 60;
@@ -307,7 +316,7 @@ void AppSettingsDialog::changeSettings()
    // emit settingsChanged(s);
 }
 
-
+/*
 void AppSettingsDialog::fontButtonClicked()
 {
     bool ok;
@@ -318,7 +327,7 @@ void AppSettingsDialog::fontButtonClicked()
        // qApp->setFont(mFont);
    }
 }
-
+*/
 
 /**
  * @brief AppSettingsDialog::buttonClicked Corresponding to the restore Default Button
@@ -327,9 +336,12 @@ void AppSettingsDialog::fontButtonClicked()
 void AppSettingsDialog::buttonClicked(QAbstractButton* button)
 {
      (void) button;
-    mFont = QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE);
+    //mFont = QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE);
+    //mFont = qApp->font();
 
-    mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
+
+    //mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
+    mIconSize->setValue(APP_SETTINGS_DEFAULT_ICON_SIZE);
 
     mLanguageCombo->setCurrentText(QLocale::languageToString(QLocale::system().language()));
     //mCountryCombo->setCurrentText(QLocale::countryToString(QLocale::system().country()));

@@ -14,8 +14,8 @@ class AbstractScene: public QGraphicsScene
     Q_OBJECT
 public:
     AbstractScene(QGraphicsView* view, QObject* parent = nullptr);
-    ~AbstractScene();
-    
+    virtual ~AbstractScene();
+
     QRectF specialItemsBoundingRect(QRectF r = QRectF()) const;
     void adjustSceneRect();
     bool mDrawingArrow;
@@ -50,9 +50,6 @@ public:
     virtual void sendUpdateProject(const QString& reason, bool notify, bool async) = 0;
     
     void updateConstraintsPos(AbstractItem* movedItem, const QPointF& newPos);
-
-    //void setCurrentItem(QGraphicsItem *item);
-    //void setCurrentItem(AbstractItem *item) { mCurrentItem = item;}
     
 protected:
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* e);

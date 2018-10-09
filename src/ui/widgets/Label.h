@@ -20,14 +20,19 @@ public:
     void setBackground(QColor color);
 
     void setIsTitle(bool isTitle);
+    void setAdjustText(bool ad = true);
 
-    virtual void paintEvent(QPaintEvent*);
     
 private:
     void init();
-    
+    void adjustFont();
     bool mIsTitle;
+    bool mAdjustText;
     QPalette mPalette;
+
+protected:
+    void resizeEvent(QResizeEvent* e);
+    virtual void paintEvent(QPaintEvent*);
 };
 
 #endif

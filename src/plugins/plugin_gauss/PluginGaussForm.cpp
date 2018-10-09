@@ -13,11 +13,9 @@
 
 PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("Gaussian measurement"), parent, flags)
 {
-    setFont(AppSettings::font());
-   //const  int  lineHeight = 1.1 * AppSettings::heigthUnit();
-   //const int lineWidth = 5 * AppSettings::widthUnit();
+   // setFont(AppSettings::font());
 
-    mAverageLab = new QLabel(tr("Measure"), this);
+    mAverageLab = new QLabel(tr("Mean"), this);
     mErrorLab = new QLabel(tr("Error (sd)"), this);
     mCalibLab = new QLabel(tr("Calibration"), this);
     

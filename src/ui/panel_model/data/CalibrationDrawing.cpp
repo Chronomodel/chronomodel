@@ -91,8 +91,9 @@ void CalibrationDrawing::updateLayout()
 {
     if (width()<0 || height()<0)
         return;
-
+    mFont = font();
     const QFontMetrics fm (mFont);
+
     if (!mCalibGraph)
         return;
 
@@ -103,21 +104,27 @@ void CalibrationDrawing::updateLayout()
     }
 
     const type_data max = mCalibGraph->maximumX();
-    const int marginRight = (int) floor(fm.width(stringForGraph(max))/2);
+    const int marginRight = int (floor(fm.width(stringForGraph(max))/2));
 
-    mFont = AppSettings::font();
+
     QFont topFont(mFont);
     topFont.setBold(true);
-    topFont.setPointSizeF(16.);
+    topFont.setPointSizeF(mFont.pointSizeF() + 2);
+
     QFontMetrics fmTop(topFont);
     mTitle->setFont(topFont);
 
+    const int titlePosition = ((width() - fmTop.width(mTitle->text()) - 6) /2) + 3;
+    mTitle->setGeometry(titlePosition, mVerticalSpacer, fmTop.width(mTitle->text()) + 3, fmTop.height());
+
     QFont titleFont(mFont);
     titleFont.setBold(true);
-    titleFont.setPointSizeF(12.);
+    //titleFont.setPointSizeF(12.);
     QFontMetrics fmTitle(titleFont);
 
     mRefTitle->setFont(titleFont);
+    mRefTitle->setGeometry(20,  mTitle->y() + mTitle->height() + mVerticalSpacer, fmTitle.width(mRefTitle->text()), fmTitle.height());
+
     mCalibTitle->setFont(titleFont);
 
     mRefComment->setFont(mFont);
@@ -127,11 +134,7 @@ void CalibrationDrawing::updateLayout()
     const int refH = totalGraph * 2/3; // it's a divide by integer, The direction of the operation is important
     const int calibH = totalGraph - refH ;
 
-    const int titlePosition = ((width() - fmTop.width(mTitle->text()) - 6) /2) + 3;
-    mTitle->setGeometry(titlePosition, mVerticalSpacer, fmTop.width(mTitle->text()) + 3, fmTop.height());
-
-    mRefTitle->setGeometry(20,  mTitle->y() + mTitle->height() + mVerticalSpacer, fmTitle.width(mRefTitle->text()), fm.height());
-    mRefComment->setGeometry(30,  mRefTitle->y() + mRefTitle->height() + mVerticalSpacer, fmTitle.width(mRefComment->text()), fm.height());
+    mRefComment->setGeometry(30,  mRefTitle->y() + mRefTitle->height() + mVerticalSpacer, fm.width(mRefComment->text()), fm.height());
 
     if (mRefGraphView) {
         /* must be before setGeometry, because setGeometry is connected to resize.
@@ -144,7 +147,7 @@ void CalibrationDrawing::updateLayout()
             mRefGraphView->mGraph->setFont(mFont);
             mRefGraphView->mGraph->setMouseTracking(true);
             mRefGraphView->mGraph->setTipXLab("t Ref");
-            mRefGraphView->mGraph->setMarginBottom(2.2 * mFont.pointSize());//setMarginBottom(1.5 * fm.height());
+            mRefGraphView->mGraph->setMarginBottom(2.2 * mFont.pointSize());
            // mRefGraphView->mGraph->setYAxisMode(GraphView::eHidden);
         }
 
@@ -153,7 +156,7 @@ void CalibrationDrawing::updateLayout()
     } else
         mCalibTitle->setGeometry(20,  mTitle->y() + mTitle->height() + mVerticalSpacer + refH, fmTitle.width(mCalibTitle->text()), fmTitle.height());
 
-    mCalibComment->setGeometry(30,  mCalibTitle->y() + mCalibTitle->height() + mVerticalSpacer, fmTitle.width(mCalibComment->text()), fm.height());
+    mCalibComment->setGeometry(30,  mCalibTitle->y() + mCalibTitle->height() + mVerticalSpacer, fm.width(mCalibComment->text()), fm.height());
 
     mCalibGraph->setFont(mFont);
     mCalibGraph->setGeometry(0, mCalibComment->y() + mCalibComment->height() + mVerticalSpacer, width(), calibH);

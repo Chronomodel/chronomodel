@@ -179,12 +179,14 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
 
     // Name
 
-    QFont font = AppSettings::font();
-    font.setPointSizeF(11.);
+
+   // QFont font (APP_SETTINGS_DEFAULT_FONT_FAMILY, 12, 50, false);
+    QFont font (qApp->font());
+    font.setPointSizeF(12.);
     painter->setFont(font);
     QFontMetrics metrics(font);
     QString name = mData.value(STATE_NAME).toString();
-    name = metrics.elidedText(name, Qt::ElideRight, nameRect.width() - 5);
+    name = metrics.elidedText(name, Qt::ElideRight, int (nameRect.width() - 5));
 
     QColor frontColor = getContrastedColor(eventColor);
     painter->setPen(frontColor);
@@ -206,7 +208,7 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
 
     if (numPhases == 0) {
      //   QFont font = qApp->font();
-        //font.setPointSizeF(11.);
+        font.setPointSizeF(10.);
         painter->setFont(font);
         painter->fillRect(phasesRect, QColor(0, 0, 0, 180));
         painter->setPen(QColor(200, 200, 200));
@@ -219,7 +221,7 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
                      phase.value(STATE_COLOR_BLUE).toInt());
             painter->setPen(c);
             painter->setBrush(c);
-            painter->drawRect(phasesRect.x() + i*w, phasesRect.y(), w, phasesRect.height());
+            painter->drawRect(int (phasesRect.x() + i*w), int (phasesRect.y()), int(w), int (phasesRect.height()));
         }
     }
 
@@ -236,6 +238,7 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
 
         painter->setPen(QPen(Painting::mainColorLight, 3., Qt::DashLine));
         painter->drawEllipse(rect.adjusted(1, 1, -1, -1));
+
     } else if (isSelected()){
         painter->setPen(QPen(Qt::white, 5.));
         painter->drawEllipse(rect.adjusted(1, 1, -1, -1));

@@ -43,7 +43,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
 mResultMaxVariance(1000.),
 mHasPhases(false),
 mModel(nullptr),
-//mGraphHeight (10 * AppSettings::heigthUnit()), // init in applyAppSettings
+//mGraphHeight (5 * AppSettings::heigthUnit()), // init in applyAppSettings
 mTabEventsIndex(0),
 mTabPhasesIndex(0),
 mEventsScrollArea(nullptr),
@@ -65,20 +65,16 @@ mMinorCountScale (4)
     mResultMinX = mSettings.mTmin;
     mResultMaxX = mSettings.mTmax;
 
-    QFont ft (AppSettings::font());
+    titleHeight = int (1.5 * AppSettings::heigthUnit());
+    labelHeight = AppSettings::heigthUnit();
+    lineEditHeight = AppSettings::heigthUnit();
+    checkBoxHeight  = AppSettings::heigthUnit();
+    comboBoxHeight  = AppSettings::heigthUnit();
+    radioButtonHeight = AppSettings::heigthUnit();
+    spinBoxHeight = int (1.5 * AppSettings::heigthUnit());
+    buttonHeight = int (1.5 * AppSettings::heigthUnit());
 
-    const QFontMetricsF fm(ft);
-    setFont(ft);
-     titleHeight = int (1.5 * AppSettings::heigthUnit());
-     labelHeight = AppSettings::heigthUnit();
-     lineEditHeight = AppSettings::heigthUnit();
-     checkBoxHeight  = AppSettings::heigthUnit();
-     comboBoxHeight  = AppSettings::heigthUnit();
-     radioButtonHeight = AppSettings::heigthUnit();
-     spinBoxHeight = int (1.5 * AppSettings::heigthUnit());
-     buttonHeight = int (1.5 * AppSettings::heigthUnit());
-
-    mGraphFont = ft;
+    mGraphFont = font();
 
     mResultCurrentMinX = mResultMinX ;
     mResultCurrentMaxX = mResultMaxX ;
@@ -101,12 +97,6 @@ mMinorCountScale (4)
     mRuler->mCurrentMax = mSettings.getTmaxFormated();
     mRuler->mCurrentMin = mSettings.getTminFormated();
 
-  //  mRuler->setFont(mGraphFont);
-   // mRulerH = mRuler->height();
-   // mRuler->setMarginLeft(fm.width(stringForGraph(DateUtils::convertToAppSettingsFormat(mSettings.getTminFormated())))/ 2) ;
-  //  mRuler->setMarginRight(fm.width(stringForGraph(DateUtils::convertToAppSettingsFormat(mSettings.getTmaxFormated())))/ 2);
-
-
 
     //------
 
@@ -124,9 +114,6 @@ mMinorCountScale (4)
     
 
     mOptionsWidget = new QWidget(this); // this is the parent of group of widget on the rigth of the panel
-
-    //mOptionsWidget->setFixedWidth(mOptionsW);
-    //mOptionsWidget->setFont(ft);
 
     /* -------------------------------------- mResultsGroup---------------------------------------------------*/
 
@@ -155,15 +142,15 @@ mMinorCountScale (4)
 /*  ------------- TempoGroup  ------------- */
     mTempoGroup = new QWidget(this);
 
-    mDurationRadio = new RadioButton(tr("Phases Duration"), mTempoGroup);
+    mDurationRadio = new RadioButton(tr("Phase Duration"), mTempoGroup);
     mDurationRadio->setChecked(true);
 
-    mTempoRadio = new RadioButton(tr("Phases Tempo"), mTempoGroup);
+    mTempoRadio = new RadioButton(tr("Phase Tempo"), mTempoGroup);
 
     mTempoCredCheck = new CheckBox(tr("Tempo Cred."), mTempoGroup);
     mTempoErrCheck = new CheckBox(tr("Tempo Error"), mTempoGroup);
 
-    mActivityRadio = new RadioButton(tr("Phases Activity"), mTempoGroup);
+    mActivityRadio = new RadioButton(tr("Phase Activity"), mTempoGroup);
 
     mTempoStatCheck = new CheckBox(tr("Show Tempo Stat."), mTempoGroup);
     mTempoStatCheck->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
@@ -218,7 +205,6 @@ mMinorCountScale (4)
 
     // ------ Span Options -----
     mSpanGroup  = new QWidget(mTabDisplay);
-    //mSpanGroup->setFont(ft);
 
     mSpanTitle = new Label(tr("Span Options"), mTabDisplay);
     mSpanTitle->setIsTitle(true);
@@ -232,7 +218,6 @@ mMinorCountScale (4)
     mCurrentXMinEdit->setToolTip(tr("Enter a minimal value to display the curves"));
 
     mCurrentXMaxEdit = new LineEdit(mSpanGroup);
-   // mCurrentXMaxEdit->setFixedSize(wEdit, lineEditHeight);
     mCurrentXMaxEdit->setToolTip(tr("Enter a maximal value to display the curves"));
 
     mXScaleLab = new Label(tr("X"), mSpanGroup);
@@ -285,7 +270,7 @@ mMinorCountScale (4)
     
     mYScaleSpin = new QSpinBox(mGraphicGroup);
     mYScaleSpin->setRange(mYSlider->minimum(), mYSlider->maximum());
-    mYScaleSpin->setSuffix(" %");
+    //mYScaleSpin->setSuffix(" %");
     mYScaleSpin->setValue(mYSlider->value());
     mYScaleSpin->setToolTip(tr("Enter zoom value to magnify the curves on Y scale"));
 
@@ -338,7 +323,7 @@ mMinorCountScale (4)
 
     mChainsGroup = new QWidget(mTabMCMC);
 
-    mAllChainsCheck = new CheckBox(tr("Chains Concatenation"), mChainsGroup);
+    mAllChainsCheck = new CheckBox(tr("Chain Concatenation"), mChainsGroup);
     mAllChainsCheck->setChecked(true);
 
     /*
@@ -385,7 +370,7 @@ mMinorCountScale (4)
     mFFTLenCombo->addItem("16384");
     mFFTLenCombo->setCurrentText("1024");
    // mFFTLenCombo->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
-    
+    const QFontMetricsF fm(font());
     mComboH = int (fm.height() + 6);
     mTabsH = mComboH + 2*mMargin;
     
@@ -540,9 +525,9 @@ mMinorCountScale (4)
     /* Update font and size with the AppSettings
      * Set mTabs, mTabByScene, mTabDisplayMCMC, mTabPageSaving
      */
-    /*
+
     applyAppSettings();
-*/
+
     updateVisibleTabs(0);
 
     updateTabByScene();
@@ -589,33 +574,31 @@ void ResultsView::resizeEvent(QResizeEvent* e)
 }
 void ResultsView::applyAppSettings()
 {
-    const QFont ft (AppSettings::font());
-    const QFontMetricsF fm(ft);
-    setFont(ft);
-    titleHeight = int (1.5 * AppSettings::heigthUnit());
-    labelHeight = AppSettings::heigthUnit();
-    lineEditHeight = AppSettings::heigthUnit();
-    checkBoxHeight  = int (1.1 * AppSettings::heigthUnit());
+    const QFont ft (font());
+    const QFontMetricsF fm (ft);
+     GraphViewResults::mHeightForVisibleAxis = int (5 * AppSettings::heigthUnit());
+    titleHeight = int ( 1.5 * fm.height());// int (0.9 * AppSettings::heigthUnit());
+    labelHeight = int ( fm.height());//int (0.8 * AppSettings::heigthUnit());
+    lineEditHeight = int (1.1 * (fm.ascent() + fm.descent())) ;//int (0.9 *AppSettings::heigthUnit());
+    checkBoxHeight  = int ( fm.height());//int (0.4 * AppSettings::heigthUnit());
 
-    radioButtonHeight = int (1.1 *AppSettings::heigthUnit());
-    spinBoxHeight = int (1.4 * AppSettings::heigthUnit());
-    buttonHeight = int (1.5 * AppSettings::heigthUnit());
+    radioButtonHeight = int ( fm.height());// int (fm.height() + fm.ascent() + fm.descent()) ;//int (0.3 *AppSettings::heigthUnit());
+    spinBoxHeight = mXScaleSpin->height() ;//lineEditHeight;// int (0.3 * AppSettings::heigthUnit());
+    buttonHeight = int (0.5 * AppSettings::heigthUnit());
 
 #ifdef Q_OS_MAC
-    comboBoxHeight  = int (1.3 * AppSettings::heigthUnit());
+    comboBoxHeight  = mThicknessCombo->height();//  labelHeight;//int (0.3 * AppSettings::heigthUnit());
 #else
-    comboBoxHeight  = int (1.1 * AppSettings::heigthUnit());
+    comboBoxHeight  = int (0.3 * AppSettings::heigthUnit());
 #endif
 
-    mMargin = int (.5* AppSettings::heigthUnit());
+    mMargin = int (.2* AppSettings::heigthUnit());
 
-    mTabs->setFont(ft);
-    mRuler->setFont(ft);
     mRuler->setMarginBottom( ft.pointSize() * 2.2);
     mRulerH = mRuler->height();
 
     mTabsH = int (2 * fm.height());
-    mGraphHeight = 10 * AppSettings::heigthUnit(); // same value in ResultsView::updateScaleY(int value)
+    mGraphHeight = GraphViewResults::mHeightForVisibleAxis ;//5 * AppSettings::heigthUnit(); // same value in ResultsView::updateScaleY(int value)
 
     mOptionsW = int ( ( fm.width(tr("Nb Densities / Sheet ")) + 2 * mMargin) *3 / 2);
 
@@ -626,19 +609,8 @@ void ResultsView::applyAppSettings()
 
     mOptionsWidget->setFixedWidth(mOptionsW);
 
-    mOptionsWidget->setFont(ft);
-
     mPageWidget->resize(mOptionsW, mRulerH);
      /* -------------------------------------- mResultsGroup---------------------------------------------------*/
-    mResultsGroup->setFont(ft);
-
-    mEventsfoldCheck->setFont(ft);
-    mDatesfoldCheck->setFont(ft);
-    mDataThetaRadio->setFont(ft);
-    mDataSigmaRadio->setFont(ft);
-    mDataCalibCheck->setFont(ft);
-    mWiggleCheck->setFont(ft);
-    mStatCheck->setFont(ft);
 
     mEventsfoldCheck->setFixedSize(int(mOptionsW - 2*mMargin), int (checkBoxHeight));
     mDatesfoldCheck->setFixedSize(int(mOptionsW - 2*mMargin), int (checkBoxHeight));
@@ -649,12 +621,6 @@ void ResultsView::applyAppSettings()
     mStatCheck->setFixedSize(int(mOptionsW - 2*mMargin), int (checkBoxHeight));
 
      // ______ TempoGroup
-    mDurationRadio->setFont(ft);
-    mTempoRadio->setFont(ft);
-    mActivityRadio->setFont(ft);
-    mTempoStatCheck->setFont(ft);
-    mTempoCredCheck->setFont(ft);
-    mTempoErrCheck->setFont(ft);
 
     mDurationRadio->setFixedSize(int(mOptionsW - 2*mMargin), int (radioButtonHeight));
     mTempoRadio->setFixedSize(int(mOptionsW - 2*mMargin), int (radioButtonHeight));
@@ -664,30 +630,13 @@ void ResultsView::applyAppSettings()
     mTempoErrCheck->setFixedSize(int(mOptionsW - 2*mMargin), int (checkBoxHeight));
 
      // -------------end TempoGroup
-    mTabByScene->setFont(ft);
     mTabByScene->setFixedWidth(mOptionsW);
 
      /* - mTabDisplayMCMC */
-    mTabDisplayMCMC->setFont(ft);
-    mTabDisplay->setFont(ft);
-    mTabMCMC->setFont(ft);
 
      /*  Display Options layout */
-    mSpanGroup->setFont(ft);
-    mSpanTitle->setFont(ft);
-    mDisplayStudyBut->setFont(ft);
-    mSpanLab->setFont(ft);
-    mCurrentXMinEdit->setFont(ft);
-    mCurrentXMaxEdit->setFont(ft);
-    mXScaleLab->setFont(ft);
-    mXScaleSpin->setFont(ft);
 
     mXScaleSpin->setLocale(QLocale(AppSettings::mLanguage, AppSettings::mCountry));
-
-    mMajorScaleLab->setFont(ft);
-    mMajorScaleEdit->setFont(ft);
-    mMinorScaleLab->setFont(ft);
-    mMinorScaleEdit->setFont(ft);
 
     mSpanTitle->setFixedSize(mOptionsW, titleHeight);
     mDisplayStudyBut->setFixedSize(mOptionsW - 2*mMargin, buttonHeight);
@@ -702,39 +651,27 @@ void ResultsView::applyAppSettings()
     mMinorScaleEdit->setFixedSize(wEdit, lineEditHeight);
 
     /* -------------------------------------- Graphic Options (old mDisplayGroup) ---------------------------------------------------*/
-    mGraphicTitle->setFont(ft);
-    mYScaleLab->setFont(ft);
-    mYScaleSpin->setFont(ft);
-    labFont->setFont(ft);
-    mFontBut->setFont(ft);
-    labThickness->setFont(ft);
-    mThicknessCombo->setFont(ft);
-    labOpacity->setFont(ft);
-    mOpacityCombo->setFont(ft);
-
     mGraphicTitle->setFixedSize(mOptionsW, titleHeight);
     mYScaleLab->setFixedSize(int (fm.width(mYScaleLab->text())), labelHeight);
     mYScaleSpin->setFixedSize(mCurrentXMinEdit->width(), spinBoxHeight);
     labFont->setFixedSize(int (fm.width(labFont->text())), labelHeight);
     mFontBut->setFixedSize(mOptionsW/2 - mMargin, buttonHeight);
     labThickness->setFixedSize(int (fm.width(labThickness->text())), comboBoxHeight);
-    mThicknessCombo->setFixedSize(mOptionsW/2 - mMargin, comboBoxHeight);//->setFixedSize(wEdit, comboBoxHeight );
-    labOpacity->setFixedSize(int (fm.width(labOpacity->text())), comboBoxHeight);
-    mOpacityCombo->setFixedSize(mOptionsW/2 - mMargin, comboBoxHeight);//setFixedSize(wEdit, comboBoxHeight);
+    mThicknessCombo->setFixedSize(mOptionsW/2 - mMargin, comboBoxHeight);
+    mOpacityCombo->setFixedSize(mOptionsW/2 - mMargin, comboBoxHeight);
 
      /* -------------------------------------- mChainsGroup---------------------------------------------------*/
-    mChainsTitle->setFont(ft);
-    mAllChainsCheck->setFont(ft);
+
     mAllChainsCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
 
-    if (!mCheckChainChecks.isEmpty())
+/*    if (!mCheckChainChecks.isEmpty())
         for (auto check : mCheckChainChecks)
             check->setFont(ft);
 
     if (!mChainRadios .isEmpty())
         for (auto radio : mChainRadios)
             radio->setFont(ft);
-
+*/
     mChainsTitle->setFixedSize(mOptionsW, titleHeight);
     mAllChainsCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
 
@@ -748,15 +685,6 @@ void ResultsView::applyAppSettings()
 
 
      /* -------------------------------------- mDensityOptsGroup ---------------------------------------------------*/
-    mDensityOptsTitle->setFont(ft);
-    mDensityOptsGroup->setFont(ft);
-    mCredibilityCheck->setFont(ft);
-    mThreshLab->setFont(ft);
-    mHPDEdit->setFont(ft);
-    mFFTLenLab->setFont(ft);
-    mFFTLenCombo->setFont(ft);
-    mBandwidthLab->setFont(ft);
-    mBandwidthEdit->setFont(ft);
 
     mDensityOptsTitle->setFixedSize(mOptionsW, titleHeight);
     mCredibilityCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
@@ -768,13 +696,6 @@ void ResultsView::applyAppSettings()
     mBandwidthEdit->setFixedSize(wEdit, lineEditHeight);
 
      /* --------------------------------------Tools for all graph -------------------------------------- */
-    mToolsWidget->setFont(ft);
-    mExportImgBut->setFont(ft);
-    mExportResults->setFont(ft);
-    mImageSaveBut->setFont(ft);
-    mImageClipBut->setFont(ft);
-    mResultsClipBut->setFont(ft);
-    mDataSaveBut->setFont(ft);
 
     mToolsWidget->resize(mOptionsW, 50);
     mExportImgBut->setFixedSize(allDensitiesButSize);
@@ -785,13 +706,6 @@ void ResultsView::applyAppSettings()
     mDataSaveBut->setFixedSize(singleDensityButSize);
 
     /* -------------------------------------- Page widget -------------------------------------- */
-    mPageWidget->setFont(ft);
-    mSheetNum->setFont(ft);
-    mPreviousSheetBut->setFont(ft);
-    mNextSheetBut->setFont(ft);
-    mNbDensityLab->setFont(ft);
-    mNbDensitySpin->setFont(ft);
-    mTabPageSaving->setFont(ft);
 
     mPageWidget->resize(mOptionsW, mRulerH);
     mSheetNum->setFixedSize(int (fm.width("__ /__")), buttonHeight);
@@ -1071,7 +985,7 @@ void ResultsView::updateTabByTempo()
 
 void ResultsView::updateTabDisplay(const int &i)
 {
-    const QFontMetrics fm(AppSettings::font());
+    const QFontMetrics fm (font());
     /* -------------------------------------------------------
      *  Activate specific controls for post. distrib. (first tab)
      * -------------------------------------------------------*/
@@ -1149,18 +1063,19 @@ void ResultsView::updateTabDisplay(const int &i)
         mCurrentXMaxEdit->move(mOptionsW - mCurrentXMinEdit->width() -  mMargin, ySpan );
 
         const int w = mSpanLab->width();
-        dy = (mXScaleSpin->height() - mSpanLab->height()) /2.;
-        //mSpanLab->setGeometry((mCurrentXMinEdit->x() + mCurrentXMinEdit->width() + mCurrentXMaxEdit->x() )/2. - (w/2.), mCurrentXMinEdit->y() , w, mCurrentXMinEdit->height() );
-        mSpanLab->move(int ((mCurrentXMinEdit->x() + mCurrentXMinEdit->width() + mCurrentXMaxEdit->x() )/2. - (w/2.)), int (mCurrentXMinEdit->y() + dy));
+       // dy = (mXScaleSpin->height() - mSpanLab->height()) /2.;
+        mSpanLab->move(int ((mCurrentXMinEdit->x() + mCurrentXMinEdit->width() + mCurrentXMaxEdit->x() )/2. - (w/2.)), int (mCurrentXMinEdit->y() ));
         ySpan += mMargin + mCurrentXMinEdit->height();
 
-        int heiTemp = mXScaleSpin->height();
-        mXScaleLab->setGeometry(mMargin, ySpan , wBut - 4*mMargin, heiTemp);
 
         mXScaleSpin->move(mOptionsW - mXScaleSpin->width() - mMargin, ySpan);
+        dy = (mXScaleSpin->height() - labelHeight) /2.;
+        mXScaleLab->setGeometry(mMargin, int (ySpan +dy) , wBut - 4*mMargin, labelHeight);
+
+
         const int xSliderWidth = mOptionsW - mXScaleLab->width() - mXScaleSpin->width() - 4*mMargin;
         dy = (mXScaleSpin->height() - mXSlider->height()) /2.;
-        mXSlider->setGeometry(mXScaleLab->x() + mXScaleLab->width() + mMargin , ySpan, xSliderWidth, heiTemp );
+        mXSlider->setGeometry(mXScaleLab->x() + mXScaleLab->width() + mMargin , mXScaleLab->y(), xSliderWidth, mXSlider->height() );
 
         ySpan += mXScaleSpin->height() + mMargin;
 
@@ -1173,13 +1088,9 @@ void ResultsView::updateTabDisplay(const int &i)
 
             mMajorScaleEdit->move(mOptionsW - mMargin - mMajorScaleEdit->width(), ySpan );
             dy = (mMajorScaleEdit->height() - mMajorScaleLab->height())/2.;
-            //mMajorScaleLab->setGeometry(mOptionsW - 2*mMargin - mMajorScaleEdit->width() - fm.width(mMajorScaleLab->text()), ySpan , wBut - 4*mMargin, heiTemp);
             mMajorScaleLab->move(mOptionsW - 2*mMargin - mMajorScaleEdit->width() - fm.width(mMajorScaleLab->text()), int (ySpan + dy));
 
             ySpan += mMajorScaleEdit->height() + mMargin;
-
-           // mMinorScaleLab->setGeometry(mMargin, ySpan , wBut - 4*mMargin, heiTemp);
-            //mMinorScaleLab->setGeometry(mOptionsW - 2*mMargin - mMinorScaleEdit->width() - fm.width(mMinorScaleLab->text()), ySpan , wBut - 4*mMargin, heiTemp);
 
             mMinorScaleEdit->move(mOptionsW - mMargin - mMinorScaleEdit->width(), ySpan );
             dy = (mMinorScaleEdit->height() - mMinorScaleLab->height())/2.;
@@ -1200,7 +1111,7 @@ void ResultsView::updateTabDisplay(const int &i)
         /* ----------------------------------------------------------
            *  Graphic options
            * ----------------------------------------------------------*/
-        int ySpan = mMargin;
+        int ySpan = 0;
         mGraphicTitle->move(0, mSpanGroup->y()+ mSpanGroup->height());
 
         ySpan += mMargin;
@@ -1208,14 +1119,14 @@ void ResultsView::updateTabDisplay(const int &i)
         mYScaleSpin->move(mOptionsW - mYScaleSpin->width() - mMargin, ySpan);
         dy = (mYScaleSpin->height() - mYScaleLab->height()) /2.;
         mYScaleLab->move(mMargin, int (ySpan + dy));
-        const int ySliderWidth = mOptionsW - mYScaleLab->width() - mYScaleSpin->width() - 4*mMargin;
-        dy = (mYScaleSpin->height() - mYSlider->height()) /2.;
-        mYSlider->setGeometry(mYScaleLab->x() + mYScaleLab->width() + mMargin , int (ySpan + dy), ySliderWidth, heiTemp);
+        const int ySliderWidth = mOptionsW - mYScaleLab->width() - mYScaleSpin->width() - 4 * mMargin;
+        dy = (mYScaleSpin->height() -  mYSlider->height()) /2.;
+        mYSlider->setGeometry(mYScaleLab->x() + mYScaleLab->width() + mMargin, mYScaleLab->y(), ySliderWidth, mYSlider->height());
 
         ySpan += mMargin + mYScaleSpin->height();
         mFontBut->move(mOptionsW/2, ySpan );
         dy = (mFontBut->height() - labFont->height()) /2.;
-        labFont->move(mOptionsW/2 - mMargin -fm.width(labFont->text()), int ( ySpan + dy));
+        labFont->move(mOptionsW/2 - mMargin - fm.width(labFont->text()), int ( ySpan + dy));
 
         ySpan += mMargin + mFontBut->height();
         mThicknessCombo->move(mOptionsW/2, ySpan);
@@ -1225,7 +1136,7 @@ void ResultsView::updateTabDisplay(const int &i)
 
         ySpan += mMargin + mThicknessCombo->height();
         mOpacityCombo->move(mOptionsW/2, ySpan);
-        dy = (mOpacityCombo->height() - labOpacity->height()) /2.;
+        dy = (mThicknessCombo->height() - labOpacity->height()) /2.;
         labOpacity->move(mOptionsW/2 - mMargin -fm.width(labOpacity->text()), int (ySpan + dy));
 
         ySpan += mMargin + mOpacityCombo->height();
@@ -1234,7 +1145,7 @@ void ResultsView::updateTabDisplay(const int &i)
 
         // fit the size and the position of the widget of the group in the mTabDisplay coordonnate
        // ySpan += mMargin + mRenderCombo->height();
-        mGraphicGroup->setGeometry(0, mGraphicTitle->y()+ mGraphicTitle->height() , mOptionsW, ySpan);
+        mGraphicGroup->setGeometry(0, mGraphicTitle->y() + mGraphicTitle->height() , mOptionsW, ySpan);
 
         mTabDisplay->resize(mOptionsW,  mGraphicGroup->y() + mGraphicGroup->height() );
 
@@ -1557,7 +1468,7 @@ void ResultsView::updateLayout()
 {
    // Q_ASSERT(mModel);
 
-    //qDebug() << "ResultsView::updateLayout()";
+    //qDebug() << "ResultsView::updateLayout()"<<width();
 
     const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     int tabsShift (AppSettings::widthUnit());
@@ -2841,7 +2752,7 @@ void ResultsView::updateScaleX()
     aNumber = locale().toDouble(&str, &isNumber);
 
     if (isNumber && aNumber>=1) {
-        mMinorCountScale =  aNumber;
+        mMinorCountScale =  int (aNumber);
 
         mRuler->setScaleDivision(mMajorScale, mMinorCountScale);
         QPair<GraphViewResults::Variable, GraphViewResults::TypeGraph> situ (mCurrentVariable, mCurrentTypeGraph);
@@ -3046,8 +2957,8 @@ void ResultsView:: setStudyPeriod()
 void ResultsView::updateZoomEdit()
 {
     QLocale locale = QLocale();
-    QFont adaptedFont (AppSettings::font());
-    QFontMetricsF fm (AppSettings::font());
+    QFont adaptedFont (font());
+    QFontMetricsF fm (font());
     qreal textSize = fm.width(locale.toString(mResultCurrentMinX,'f',0));
     if (textSize > (mCurrentXMinEdit->width() - 2. )) {
         const qreal fontRate = textSize / (mCurrentXMinEdit->width() - 2. );
@@ -3056,7 +2967,7 @@ void ResultsView::updateZoomEdit()
         mCurrentXMinEdit->setFont(adaptedFont);
     }
     else
-        mCurrentXMinEdit->setFont(AppSettings::font());
+        mCurrentXMinEdit->setFont(font());
 
     mCurrentXMinEdit->setText(locale.toString(mResultCurrentMinX,'f',0));
 
@@ -3068,7 +2979,7 @@ void ResultsView::updateZoomEdit()
         mCurrentXMaxEdit->setFont(adaptedFont);
     }
     else
-        mCurrentXMaxEdit->setFont(AppSettings::font());
+        mCurrentXMaxEdit->setFont(font());
 
     mCurrentXMaxEdit->setText(locale.toString(mResultCurrentMaxX,'f',0));
 
@@ -3154,11 +3065,11 @@ void ResultsView::updateScaleY(int value)
     //GraphViewResults::mHeightForVisibleAxis(7 * AppSettings::heigthUnit()),
 
     mYScaleSpin->setValue(value);
-    const double min (3 * AppSettings::heigthUnit());//(70.);
-    const double origin (10 * AppSettings::heigthUnit());// (150.); Same value in ResultsView::applyAppSettings()
+    const double min (2 * AppSettings::heigthUnit());//(70.);
+    const double origin (GraphViewResults::mHeightForVisibleAxis);//(5 * AppSettings::heigthUnit());// (150.); Same value in ResultsView::applyAppSettings()
     const double prop = double(value / 100.);
     mGraphHeight = int (min + prop * (origin - min));
-    
+ qDebug()<<"ResultsView::updateScaleY"<<value << prop <<mGraphHeight;
     updateGraphsLayout();
 }
 
@@ -3677,8 +3588,8 @@ void ResultsView::exportFullImage()
     AxisWidget* axisWidget = nullptr;
     QLabel* axisLegend = nullptr;
     int axeHeight (int (mGraphFont.pointSize() * 2.2)); // equal MarginBottom()
-    int legendHeight (int (2* AppSettings::font().pointSizeF()));// 20);
-    
+    //int legendHeight (int (2* AppSettings::font().pointSizeF()));// 20);
+    int legendHeight (int (2* mGraphFont.pointSizeF()));// 20);
     if (printAxis) {
         curWid->setFixedHeight(curWid->height() + axeHeight + legendHeight );
 
@@ -3720,8 +3631,11 @@ void ResultsView::exportFullImage()
 
 
         axisLegend = new QLabel(legend, curWid);
-        axisLegend->setFont(AppSettings::font());
-        QFontMetrics fm(AppSettings::font());
+        //axisLegend->setFont(AppSettings::font());
+        //QFontMetrics fm(AppSettings::font());
+
+        axisLegend->setFont(mGraphFont);
+        QFontMetrics fm(mGraphFont);
         if (mStatCheck->isChecked())
             axisLegend->setGeometry(fm.width(legend), curWid->height() - axeHeight - legendHeight, int (curWid->width()*2./3. - 10), legendHeight);
         else

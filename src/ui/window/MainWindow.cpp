@@ -23,7 +23,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     tooltipPalette.setColor(QPalette::ToolTipBase, Qt::white);
     tooltipPalette.setColor(QPalette::ToolTipText, Qt::black);
     QToolTip::setPalette(tooltipPalette);
-    QFont tooltipFont(AppSettings::font());
+    QFont tooltipFont(font());
     tooltipFont.setItalic(true);
 
 
@@ -225,7 +225,7 @@ void MainWindow::createActions()
     //-----------------------------------------------------------------
     //  Grouped actions
     //-----------------------------------------------------------------
-    mEventsColorAction = new QAction(tr("Selected Events: Change Color"), this);
+    mEventsColorAction = new QAction(tr("Selected Events: Change Colour"), this);
     connect(mEventsColorAction, &QAction::triggered, this, &MainWindow::changeEventsColor);
     
     mEventsMethodAction = new QAction(tr("Selected Events: Change Method"), this);
@@ -625,8 +625,8 @@ void MainWindow::setAppFilesSettings()
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
     //statusBar()->showMessage(tr("Language") + " : " + QLocale::languageToString(QLocale().language()));
-    setFont(AppSettings::font());
-    qApp->setFont(AppSettings::font());
+    //setFont(AppSettings::font());
+    //qApp->setFont(AppSettings::font());
     QFont tooltipFont(font());
     tooltipFont.setItalic(true);
 
@@ -649,8 +649,13 @@ void MainWindow::setAppSettings()
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
     //statusBar()->showMessage(tr("Language") + " : " + QLocale::languageToString(QLocale().language()));
-    setFont(AppSettings::font());
-    qApp->setFont(AppSettings::font());
+
+
+ //   setFont(AppSettings::font());
+//    qApp->setFont(AppSettings::font());
+
+    setFont(qApp->font());
+
     QFont tooltipFont(font());
     tooltipFont.setItalic(true);
 
@@ -744,7 +749,7 @@ void MainWindow::changeEventsColor()
     if (!mProject)
         return;
 
-    const QColor color = QColorDialog::getColor(Qt::blue, qApp->activeWindow(), tr("Change Selected Events Color"));
+    const QColor color = QColorDialog::getColor(Qt::blue, qApp->activeWindow(), tr("Change Selected Events Colour"));
     if (color.isValid() && mProject)
         mProject->updateSelectedEventsColor(color);
     
@@ -1049,7 +1054,25 @@ void MainWindow::activateInterface(bool activate)
         mViewResultsAction->setEnabled(activate);
         mViewLogAction->setEnabled(activate);
     }
-    
+
+    //  int largeurEcran = QApplication::desktop()->width();
+    //  int hauteurEcran = QApplication::desktop()->height();
+
+    int numScreen (QApplication::desktop()->screenNumber(this));
+    if (numScreen<0)
+        numScreen = 0;
+    QScreen *screen = QApplication::screens().at(numScreen);
+
+    //qreal mm_per_cm = 10;
+    qreal cm_per_in = 2.54;
+
+    qDebug()<<"MainWindow::activateInterface"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< width();
+    qDebug()<<"MainWindow::activateInterface"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< QApplication::desktop()->width();
+    qDebug()<<"MainWindow::activateInterfacescreen width"<< width() / screen->physicalDotsPerInchX() * cm_per_in;
+    qDebug()<<"MainWindow::activateInterface screen height"<< height() / screen->physicalDotsPerInchY() * cm_per_in;
+
+
+
 }
 
 void MainWindow::setRunEnabled(bool enabled)

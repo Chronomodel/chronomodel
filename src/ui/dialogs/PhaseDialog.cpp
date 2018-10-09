@@ -8,7 +8,7 @@
 
 
 PhaseDialog::PhaseDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags),
-mMargin(5),
+mMargin(15),
 mLineH(20),
 mButH(25),
 mButW(80)
@@ -23,12 +23,15 @@ mButW(80)
     setWindowTitle(tr("Create / Modify phase"));
     
     mNameLab = new Label(tr("Phase name"), this);
-    mColorLab = new Label(tr("Phase color"), this);
+    mNameLab->setAlignment(Qt::AlignRight);
+    mColorLab = new Label(tr("Phase colour"), this);
+    mColorLab->setAlignment(Qt::AlignRight);
     mTauTypeLab = new Label(tr("Max duration"), this);
+    mTauTypeLab->setAlignment(Qt::AlignRight);
     mTauFixedLab = new Label(tr("Max duration value") , this);
-    
+    mTauFixedLab->setAlignment(Qt::AlignRight);
+
     mNameEdit = new LineEdit(this);
-   // mNameEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
     
     mColorPicker = new ColorPicker(QColor(), this);
     
@@ -47,9 +50,7 @@ mButW(80)
     connect(mOkBut, &Button::clicked, this, &PhaseDialog::accept);
     connect(mCancelBut, &Button::clicked, this, &PhaseDialog::reject);
     
-    mComboH = mTauTypeCombo->sizeHint().height();
-    
-    setFixedWidth(400);
+    mComboH = mTauTypeCombo->height();
     
     Phase phase;
     setPhase(phase.toJson());
@@ -63,18 +64,12 @@ PhaseDialog::~PhaseDialog()
 void PhaseDialog::showAppropriateTauOptions(int typeIndex)
 {
     Q_UNUSED(typeIndex)
-    Phase::TauType type = (Phase::TauType) mTauTypeCombo->currentIndex();
+    Phase::TauType type = Phase::TauType (mTauTypeCombo->currentIndex());
     switch (type) {
         case Phase::eTauUnknown:
         {
             mTauFixedLab->setVisible(false);
             mTauFixedEdit->setVisible(false);
-            
-            /*mTauMinLab->setVisible(false);
-            mTauMaxLab->setVisible(false);
-            mTauMinEdit->setVisible(false);
-            mTauMaxEdit->setVisible(false);
-            */
             
             setFixedHeight(mComboH + 2*mLineH + 5*mMargin + mButH);
             
@@ -85,29 +80,11 @@ void PhaseDialog::showAppropriateTauOptions(int typeIndex)
             mTauFixedLab->setVisible(true);
             mTauFixedEdit->setVisible(true);
             
-            /*mTauMinLab->setVisible(false);
-            mTauMaxLab->setVisible(false);
-            mTauMinEdit->setVisible(false);
-            mTauMaxEdit->setVisible(false);
-            */
             setFixedHeight(mComboH + 3*mLineH + 6*mMargin + mButH);
             
             break;
         }
-        /*case Phase::eTauRange:
-        {
-            mTauFixedLab->setVisible(false);
-            mTauFixedEdit->setVisible(false);
-            
-            mTauMinLab->setVisible(true);
-            mTauMaxLab->setVisible(true);
-            mTauMinEdit->setVisible(true);
-            mTauMaxEdit->setVisible(true);
-            
-            setFixedHeight(mComboH + 4*mLineH + 7*mMargin + mButH);
-            
-            break;
-        }*/
+
         default:
             break;
     }
@@ -118,6 +95,7 @@ void PhaseDialog::setPhase(const QJsonObject& phase)
     mPhase = phase;
     
     mNameEdit->setText(mPhase.value(STATE_NAME).toString());
+    mNameEdit->selectAll();
     mColorPicker->setColor(QColor(mPhase.value(STATE_COLOR_RED).toInt(),
                                   mPhase.value(STATE_COLOR_GREEN).toInt(),
                                   mPhase.value(STATE_COLOR_BLUE).toInt()));
@@ -133,7 +111,7 @@ QJsonObject PhaseDialog::getPhase()
     mPhase[STATE_COLOR_RED] = mColorPicker->getColor().red();
     mPhase[STATE_COLOR_GREEN] = mColorPicker->getColor().green();
     mPhase[STATE_COLOR_BLUE] = mColorPicker->getColor().blue();
-    mPhase[STATE_PHASE_TAU_TYPE] = (Phase::TauType) mTauTypeCombo->currentIndex();
+    mPhase[STATE_PHASE_TAU_TYPE] = Phase::TauType (mTauTypeCombo->currentIndex());
     mPhase[STATE_PHASE_TAU_FIXED] = mTauFixedEdit->text().toDouble();
     return mPhase;
 }
@@ -154,24 +132,41 @@ bool PhaseDialog::isValid()
 void PhaseDialog::resizeEvent(QResizeEvent* event)
 {
     Q_UNUSED(event);
-    
-    int w1 = 105;
-    int w2 = width() - w1 - 3*mMargin;
-    
+    QFontMetrics fm (font());
+    int w1 (0);
+    Phase::TauType type = Phase::TauType (mTauTypeCombo->currentIndex());
+    switch (type) {
+        case Phase::eTauUnknown:
+        {
+            w1 = qMax(fm.width(mTauTypeLab->text()),qMax(fm.width(mNameLab->text()), fm.width(mColorLab->text())));
+            break;
+        }
+        case Phase::eTauFixed:
+        {
+            w1 =  fm.width(mTauFixedLab->text());
+            break;
+        }
+
+        default:
+            break;
+    }
+
+    int w2 = qMax( 200, fm.width(mNameEdit->text())) + 2 * mMargin;
+
+    setFixedWidth( w1 + w2 + 3*mMargin);
+
     mNameLab->setGeometry(mMargin, mMargin, w1, mLineH);
     mColorLab->setGeometry(mMargin, 2*mMargin + mLineH, w1, mLineH);
-    mTauTypeLab->setGeometry(mMargin, 3*mMargin + 2*mLineH, w1, mComboH);
-    mTauFixedLab->setGeometry(mMargin, 4*mMargin + 2*mLineH + mComboH, w1, mLineH);
-    //mTauMinLab->setGeometry(mMargin, 4*mMargin + 2*mLineH + mComboH, w1, mLineH);
-    //mTauMaxLab->setGeometry(mMargin, 5*mMargin + 3*mLineH + mComboH, w1, mLineH);
+    mTauTypeLab->setGeometry(mMargin, 3*mMargin + 2*mLineH, w1, mLineH);
+    mTauFixedLab->setGeometry(mMargin, 4*mMargin + 2*mLineH + mLineH, w1, mLineH);
     
     mNameEdit->setGeometry(2*mMargin + w1, mMargin, w2, mLineH);
-    mColorPicker->setGeometry(2*mMargin + w1, 2*mMargin + mLineH, w2, mLineH);
-    mTauTypeCombo->setGeometry(2*mMargin + w1, 3*mMargin + 2*mLineH, w2, mComboH);
-    mTauFixedEdit->setGeometry(2*mMargin + w1, 4*mMargin + 2*mLineH + mComboH, w2, mLineH);
-    //mTauMinEdit->setGeometry(2*mMargin + w1, 4*mMargin + 2*mLineH + mComboH, w2, mLineH);
-    //mTauMaxEdit->setGeometry(2*mMargin + w1, 5*mMargin + 3*mLineH + mComboH, w2, mLineH);
-    
+    mColorPicker->setGeometry(2*mMargin + w1, 2*mMargin + mLineH, w2, mLineH +3);
+    //int dy = (mComboH - mTauTypeLab->height())/2;
+    mTauTypeCombo->setGeometry(2*mMargin + w1, 3*mMargin + 2*mLineH  - 5, w2, mComboH);
+    mTauFixedEdit->setGeometry(2*mMargin + w1, 4*mMargin + 2*mLineH + mLineH, w2, mLineH);
+
     mOkBut->setGeometry(width() - 2*mMargin - 2*mButW, height() - mMargin - mButH, mButW, mButH);
     mCancelBut->setGeometry(width() - mMargin - mButW, height() - mMargin - mButH, mButW, mButH);
+
 }

@@ -155,8 +155,8 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
     if (!fileName.isEmpty()) {
         fileInfo = QFileInfo(fileName);
         const QString fileExtension = fileInfo.suffix();
-        const qreal heightText (2 * AppSettings::font().pointSizeF());//10);
-        const qreal bottomSpace (5);
+        const int heightText (int(2 * qApp->font().pointSizeF()));
+        const int bottomSpace (5);
 
         if (fileExtension == "svg") {
             if (mGraph)
@@ -194,7 +194,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             // -------------------------------
             //  Create the image
             // -------------------------------
-            QImage image(r.width() * pr, (r.height() + heightText + bottomSpace) * pr , QImage::Format_ARGB32_Premultiplied);
+            QImage image(r.width() * pr, int( (r.height() + heightText + bottomSpace) * pr) , QImage::Format_ARGB32_Premultiplied);
             if (image.isNull()) {
                 qDebug() << "Cannot export null image!";
                 return fileInfo;
@@ -230,7 +230,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             //  If widget, draw with or without axis
             // -------------------------------
             if (widget) // exportFullImage in ResultsView
-                 widget->render(&p, QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), r.height() + heightText + 20));
+                 widget->render(&p, QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), int(r.height() + heightText + 20) ));
 
             
             // -------------------------------
@@ -255,13 +255,11 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             // -------------------------------
             //  Write application and version
             // -------------------------------
-            QFont ft =  QFont(AppSettings::font()) ;
-            //ft.setPixelSize(heightText);
-            
-            p.setFont(ft);
+
+            p.setFont(qApp->font());
             p.setPen(Qt::black);
             
-            p.drawText(0, r.height() + bottomSpace, r.width(), heightText,
+            p.drawText(0, int( r.height() + bottomSpace), r.width(), heightText,
 
                        Qt::AlignCenter,
                        qApp->applicationName() + " " + qApp->applicationVersion());
@@ -289,7 +287,7 @@ bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName)
 {
     const QFontMetrics fm(widget->font());
     
-    const int heightText= fm.height()+10;
+    const int heightText= fm.descent() + fm.ascent() + 10;
 
     const  QRect viewBox = QRect( 0, 0,r.width(), r.height() + heightText );
     QSvgGenerator svgGenFile;

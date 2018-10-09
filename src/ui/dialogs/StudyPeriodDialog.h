@@ -59,8 +59,6 @@ public:
 
     QDoubleSpinBox* mStepSpin;
 
-    
-    int mWidth;
     int mMargin;
     int mLineH;
     int mButW;

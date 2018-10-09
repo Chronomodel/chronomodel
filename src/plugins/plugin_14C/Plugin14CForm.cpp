@@ -12,7 +12,7 @@ QString Plugin14CForm::mSelectedRefCurve = QString();
 Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("14C Measurements"), parent, flags)
 {
     Plugin14C* plugin14C = (Plugin14C*)mPlugin;
-    setFont(AppSettings::font());
+    //setFont(AppSettings::font());
 
     mAverageLab = new QLabel(tr("Age (BP)"), this);
     mErrorLab = new QLabel(tr("Error (sd)"), this);
