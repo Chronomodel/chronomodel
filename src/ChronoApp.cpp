@@ -28,6 +28,7 @@ bool ChronoApp::event(QEvent* e)
         QString path = static_cast<QFileOpenEvent*>(e)->file();
         
         MainWindow* w = MainWindow::getInstance();
+
         w->readSettings(path);
         
         w = nullptr;

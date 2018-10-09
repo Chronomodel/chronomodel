@@ -34,6 +34,8 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
             txt += QString("{Fatal} \t\t %1").arg(msg);
             abort();
             break;
+        default:
+            return ;
     }
     
     QFile outFile("LogFile.log");
@@ -73,7 +75,7 @@ int main(int argc, char *argv[])
 
     a.setApplicationName("ChronoModel");
     a.setApplicationDisplayName("ChronoModel");
-    a.setApplicationVersion("2.0.12");//VERSION_NUMBER);//"2.0.9-alpha");  // must match value in Chronomodel.pro
+    a.setApplicationVersion("2.0.13");//VERSION_NUMBER);//"2.0.9-alpha");  // must match value in Chronomodel.pro
     a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));
@@ -93,7 +95,9 @@ int main(int argc, char *argv[])
     
     locale.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(locale);
-    
+
+    qApp->setFont(QApplication::font("QMenu"));
+
     /*QTranslator qtTranslator;
     qtTranslator.load("qt_" + QLocale::system().name(), QLibraryInfo::location(QLibraryInfo::TranslationsPath));
     a.installTranslator(&qtTranslator);

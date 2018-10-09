@@ -85,7 +85,7 @@ void MCMCLoop::run()
     QString mDate = QDateTime::currentDateTime().toString("dddd dd MMMM yyyy");
     QTime startTime = QTime::currentTime();
 
-    QString log= "Start " +mDate+" ->>> " +startTime.toString("hh:mm:ss.zzz");
+    QString log= "Start " + mDate+" ->>> " +startTime.toString("hh:mm:ss.zzz");
     
 
     //----------------------- Calibrating --------------------------------------
@@ -117,14 +117,14 @@ void MCMCLoop::run()
         log += line("Seed : " + QString::number(chain.mSeed));
         seeds << QString::number(chain.mSeed);      
         
-        //----------------------- Initializing --------------------------------------
+        //----------------------- Initialising --------------------------------------
         
         if (isInterruptionRequested()) {
             mAbortedReason = ABORTED_BY_USER;
             return;
         }
         
-        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))  + " : " + tr("Initializing MCMC"), 0, 0);
+        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))  + " : " + tr("Initialising MCMC"), 0, 0);
         
         //QTime startInitTime = QTime::currentTime();
         
@@ -158,7 +158,6 @@ void MCMCLoop::run()
                 return;
             }
             
-
             ++chain.mBurnIterIndex;
             ++chain.mTotalIter;
             
@@ -247,7 +246,7 @@ void MCMCLoop::run()
 
     }
     
-    log += line(tr("List of used chains seeds (to be copied for re-use in MCMC Settings) : ") + seeds.join(";"));
+    log += line(tr("List of used chain seeds (to be copied for re-use in MCMC Settings) : ") + seeds.join(";"));
     
     
     //-----------------------------------------------------------------------

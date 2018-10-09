@@ -7,7 +7,7 @@
 #
 #-------------------------------------------------
 # DEFINES += VERSION_NUMBER=\\\"2.0.10\\\"
-VERSION = 2.0.12
+VERSION = 2.0.13
  #VERSION_NUMBER # must match value in src/main.cpp and Chronomodel.rc (for windows)
 #PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_
@@ -82,7 +82,7 @@ macx{
 
 
         QMAKESPEC = macx-clang
-        QMAKE_MAC_SDK = macosx10.13 #macosx10.12
+        QMAKE_MAC_SDK = macosx10.14 #macosx10.12
         message("QMAKE_MAC_SDK = $$QMAKE_MAC_SDK")
 
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
