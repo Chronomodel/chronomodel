@@ -15,9 +15,10 @@
 #include <QJsonObject>
 
 
-#define PROJECT_LOADED_REASON "project loaded"
-#define NEW_PROJECT_REASON "new project"
-#define CLOSE_PROJECT_REASON "close project"
+#define PROJECT_LOADED_REASON "Project Loaded"
+#define NEW_PROJECT_REASON "New Project"
+#define INSERT_PROJECT_REASON "Insert Project"
+#define CLOSE_PROJECT_REASON "Close Project"
 #define PROJECT_SETTINGS_UPDATED_REASON "Settings updated"
 #define MCMC_SETTINGS_UPDATED_REASON "MCMC Settings updated"
 #define MCMC_SETTINGS_RESTORE_DEFAULT_REASON "MCMC Settings restore default"

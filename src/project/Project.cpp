@@ -31,6 +31,7 @@
 #include "StateEvent.h"
 
 #include <iostream>
+//#include <exception>
 #include <QtWidgets>
 #include <QThread>
 #include <QJsonObject>
@@ -62,7 +63,7 @@ mNoResults(true)
     mModel = new Model();
     mModel->setProject(this);
 
-    mReasonChangeStructure<< PROJECT_LOADED_REASON << PROJECT_SETTINGS_UPDATED_REASON;
+    mReasonChangeStructure<< PROJECT_LOADED_REASON << PROJECT_SETTINGS_UPDATED_REASON << INSERT_PROJECT_REASON;
     mReasonChangeStructure<<"Event constraint deleted"<<"Event constraint created"<<"Event(s) deleted";
     mReasonChangeStructure<<"Event created"<<"Bound created"<<"Event method updated" ;
     mReasonChangeStructure<<"Update selected event method";//<<"Event selected";
@@ -578,7 +579,7 @@ bool Project::load(const QString& path)
             //  If not, it may be an incompatibility between plugins versions (new parameter added for example...)
             //  This function gives a chance to plugins to modify dates saved with old versions in order to use them with the new version.
            qDebug() << "in Project::load  begin checkDatesCompatibility";
-            loadingState = checkDatesCompatibility(loadingState);
+           loadingState = checkDatesCompatibility(loadingState);
 
            qDebug() << "in Project::load  end checkDatesCompatibility";
             //  Check if dates are valid on the current study period
@@ -595,14 +596,9 @@ bool Project::load(const QString& path)
             QJsonObject state = mState;
             state[STATE_APP_VERSION] = qApp->applicationVersion();
 
-           qDebug() << "in Project::load  Begin pushProjectState";
-//            pushProjectState(state, PROJECT_LOADED_REASON, true, true);
-           qDebug() << "in Project::load  End pushProjectState";
-
-
             // -------------------- look for the calibration file --------------------
-            if (newerProject || olderProject)
-                return true;
+          //  if (newerProject || olderProject)
+           //     return true;
 
             QString caliPath = path + ".cal";
             QFileInfo calfi(caliPath);
@@ -646,23 +642,23 @@ bool Project::load(const QString& path)
                                         in >> cal;
                                         mCalibCurves.insert(descript,cal);
                                     }
-                                 }
-                                catch (QString error) {
 
-                                    QMessageBox message(QMessageBox::Critical,
+                                 }
+                                catch (const std::exception & e) {
+
+                                    QMessageBox message(QMessageBox::Warning,
                                                         tr("Error loading project "),
                                                         tr("The Calibration file could not be loaded.") + "\r" +
-                                                        tr("Error : %1").arg(error),
+                                                        tr("Error %1").arg(e.what()),
                                                         QMessageBox::Ok,
                                                         qApp->activeWindow());
                                     message.exec();
-                                   return true;
+                                  // return true;
                                 }
 
-                            } else {
-                                return true;
-                            }
-                            qDebug()<<strMessage;
+                            } /*else {
+                               // return true;
+                            }*/
 
                         } else {
                             // loading cal curve
@@ -677,12 +673,15 @@ bool Project::load(const QString& path)
                                 mCalibCurves.insert(descript,cal);
                             }
                         }
-                        //QStringList projectVersionList = appliVersion.split(".");
 
                      }
                  }
                 calFile.close();
-             }
+            } else {
+                setNoResults(true);
+                clearModel();
+                return true;
+            }
 
             clearModel();
 
@@ -703,11 +702,11 @@ bool Project::load(const QString& path)
                     try {
                         mModel->fromJson(mState);
                      }
-                    catch (QString error) {
-                        QMessageBox message(QMessageBox::Critical,
+                    catch (const std::exception & e) {
+                        QMessageBox message(QMessageBox::Warning,
                                             tr("Error loading project"),
                                             tr("The project could not be loaded.") + "\r" +
-                                            tr("Error : %1").arg(error),
+                                            tr("Error : %1").arg(e.what()),
                                             QMessageBox::Ok,
                                             qApp->activeWindow());
                         message.exec();
@@ -722,18 +721,23 @@ bool Project::load(const QString& path)
                         setNoResults(false);
                         emit mcmcFinished(mModel);
 
-                    } catch (QString error) {
+                    } catch (const std::exception & e) {
                         QMessageBox message(QMessageBox::Critical,
                                             tr("Error loading project MCMC results"),
                                             tr("The project MCMC results could not be loaded.") + "\r" +
-                                            tr("Error : %1").arg(error),
+                                            tr("Error : %1").arg(e.what()),
                                             QMessageBox::Ok,
                                             qApp->activeWindow());
                         setNoResults(true);
                         message.exec();
                     }
-                } else
-                  setNoResults(true);
+                } else {
+                    setNoResults(true);
+                    clearModel();
+                }
+            } else {
+                setNoResults(true);
+                clearModel();
             }
             // --------------------
             
@@ -775,9 +779,6 @@ bool Project::insert(const QString& path)
         QFileInfo info(path);
         MainWindow::getInstance()->setCurrentPath(info.absolutePath());
 
-        //AppSettings::mLastDir = info.absolutePath();
-        //AppSettings::mLastFile = info.fileName();
-        //mName = info.fileName();
         QByteArray saveData = file.readAll();
         QJsonParseError error;
         QJsonDocument jsonDoc (QJsonDocument::fromJson(saveData, &error));
@@ -863,64 +864,100 @@ bool Project::insert(const QString& path)
            int  maxIDEvent(0), maxIDPhase(0), maxIDEventConstraint(0), maxIDPhaseConstraint(0);
 
            const QJsonArray phases = mState.value(STATE_PHASES).toArray();
-           for (auto phaseJSON : phases) {
-               QJsonObject phase = phaseJSON.toObject();
-               minXPhase =std::min(minXPhase, phase[STATE_ITEM_X].toDouble());
-               maxXPhase =std::max(maxXPhase, phase[STATE_ITEM_X].toDouble());
 
-               minYPhase =std::min(minYPhase, phase[STATE_ITEM_Y].toDouble());
-               maxYPhase =std::max(maxYPhase, phase[STATE_ITEM_Y].toDouble());
-               maxIDPhase =std::max(maxIDPhase, phase[STATE_ID].toInt());
+           if (phases.isEmpty()) {
+               minXPhase = 0;
+               maxXPhase = 0;
+               minYPhase = 0;
+               maxYPhase = 0;
+
+           } else {
+               for (auto phaseJSON : phases) {
+                   QJsonObject phase = phaseJSON.toObject();
+                   minXPhase =std::min(minXPhase, phase[STATE_ITEM_X].toDouble());
+                   maxXPhase =std::max(maxXPhase, phase[STATE_ITEM_X].toDouble());
+
+                   minYPhase =std::min(minYPhase, phase[STATE_ITEM_Y].toDouble());
+                   maxYPhase =std::max(maxYPhase, phase[STATE_ITEM_Y].toDouble());
+                   maxIDPhase =std::max(maxIDPhase, phase[STATE_ID].toInt());
+               }
+               maxIDPhase += 1;
+
+               const QJsonArray phaseConstraints = mState.value(STATE_PHASES_CONSTRAINTS).toArray();
+               for (auto phaseConsJSON : phaseConstraints) {
+                   QJsonObject phaseCons = phaseConsJSON.toObject();
+                   maxIDPhaseConstraint =std::max(maxIDPhaseConstraint, phaseCons[STATE_ID].toInt());
+               }
+               maxIDPhaseConstraint += 1;
+
            }
-
-           const QJsonArray phaseConstraints = mState.value(STATE_PHASES_CONSTRAINTS).toArray();
-           for (auto phaseConsJSON : phaseConstraints) {
-               QJsonObject phaseCons = phaseConsJSON.toObject();
-               maxIDPhaseConstraint =std::max(maxIDPhaseConstraint, phaseCons[STATE_ID].toInt());
-           }
-
 
            const QJsonArray events = mState.value(STATE_EVENTS).toArray();
-           for (auto eventJSON : events) {
-               QJsonObject event = eventJSON.toObject();
-               minXEvent =std::min(minXEvent, event[STATE_ITEM_X].toDouble());
-               maxXEvent =std::max(maxXEvent, event[STATE_ITEM_X].toDouble());
+           if (events.isEmpty()) {
+               minXEvent = 0;
+               maxXEvent = 0;
+               minYEvent = 0;
+               maxYEvent = 0;
 
-               minYEvent =std::min(minYEvent, event[STATE_ITEM_Y].toDouble());
-               maxYEvent =std::max(maxYEvent, event[STATE_ITEM_Y].toDouble());
-               maxIDEvent =std::max(maxIDEvent, event[STATE_ID].toInt());
-           }
+           } else {
+               for (auto eventJSON : events) {
+                   QJsonObject event = eventJSON.toObject();
+                   minXEvent =std::min(minXEvent, event[STATE_ITEM_X].toDouble());
+                   maxXEvent =std::max(maxXEvent, event[STATE_ITEM_X].toDouble());
 
-           const QJsonArray eventConstraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
-           for (auto eventConsJSON : eventConstraints) {
-               QJsonObject eventCons = eventConsJSON.toObject();
-               maxIDEventConstraint =std::max(maxIDEventConstraint, eventCons[STATE_ID].toInt());
-           }
+                   minYEvent =std::min(minYEvent, event[STATE_ITEM_Y].toDouble());
+                   maxYEvent =std::max(maxYEvent, event[STATE_ITEM_Y].toDouble());
+                   maxIDEvent =std::max(maxIDEvent, event[STATE_ID].toInt());
+               }
+               maxIDEvent += 1;
+
+               const QJsonArray eventConstraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
+               for (auto eventConsJSON : eventConstraints) {
+                   QJsonObject eventCons = eventConsJSON.toObject();
+                   maxIDEventConstraint =std::max(maxIDEventConstraint, eventCons[STATE_ID].toInt());
+               }
+               maxIDEventConstraint += 1;
+            }
 
            // 2- find min X and  min -max Y in the imported project
            double minXEventNew (HUGE_VAL);
            double minYEventNew (HUGE_VAL), maxYEventNew (-HUGE_VAL);
            const QJsonArray eventsNew = loadedState.value(STATE_EVENTS).toArray();
-           for (auto eventJSON : eventsNew) {
-               QJsonObject event = eventJSON.toObject();
-               minXEventNew =std::min(minXEventNew, event[STATE_ITEM_X].toDouble());
+           if (eventsNew.isEmpty()) {
+               minXEventNew = 0;
 
-               minYEventNew =std::min(minYEventNew, event[STATE_ITEM_Y].toDouble());
-               maxYEventNew =std::max(maxYEventNew, event[STATE_ITEM_Y].toDouble());
-           }
+               minYEventNew = 0;
+               maxYEventNew = 0;
+
+           } else {
+               for (auto eventJSON : eventsNew) {
+                   QJsonObject event = eventJSON.toObject();
+                   minXEventNew =std::min(minXEventNew, event[STATE_ITEM_X].toDouble());
+
+                   minYEventNew =std::min(minYEventNew, event[STATE_ITEM_Y].toDouble());
+                   maxYEventNew =std::max(maxYEventNew, event[STATE_ITEM_Y].toDouble());
+               }
+          }
 
            double minXPhaseNew (HUGE_VAL);
            double minYPhaseNew (HUGE_VAL), maxYPhaseNew (-HUGE_VAL);
            const QJsonArray phasesNew = loadedState.value(STATE_PHASES).toArray();
-           for (auto phaseJSON : phasesNew) {
-               QJsonObject phase = phaseJSON.toObject();
-               minXPhaseNew =std::min(minXPhaseNew, phase[STATE_ITEM_X].toDouble());
+           if (phasesNew.isEmpty()) {
+               minXPhaseNew = 0;
 
-               minYPhaseNew =std::min(minYPhaseNew, phase[STATE_ITEM_Y].toDouble());
-               maxYPhaseNew =std::max(maxYPhaseNew, phase[STATE_ITEM_Y].toDouble());
+               minYPhaseNew = 0;
+               maxYPhaseNew = 0;
 
-           }
+           } else {
+               for (auto phaseJSON : phasesNew) {
+                   QJsonObject phase = phaseJSON.toObject();
+                   minXPhaseNew =std::min(minXPhaseNew, phase[STATE_ITEM_X].toDouble());
 
+                   minYPhaseNew =std::min(minYPhaseNew, phase[STATE_ITEM_Y].toDouble());
+                   maxYPhaseNew =std::max(maxYPhaseNew, phase[STATE_ITEM_Y].toDouble());
+
+               }
+            }
           // 3 - Shift the new loadedState
 
            QJsonObject newState = loadedState;
@@ -945,8 +982,6 @@ bool Project::insert(const QString& path)
                phaseCons[STATE_CONSTRAINT_BWD_ID] = phaseCons[STATE_CONSTRAINT_BWD_ID].toInt() + maxIDPhase;
 
                phaseConsJSON = phaseCons;
-
-
            }
            newState[STATE_PHASES_CONSTRAINTS] = newPhaseConstraints;
 
@@ -988,32 +1023,28 @@ bool Project::insert(const QString& path)
            QJsonArray nextPhases = mState.value(STATE_PHASES).toArray();
            for (auto phaseJSON : newPhases)
                nextPhases.append(phaseJSON.toObject());
-           mState[STATE_PHASES] = nextPhases;
+           stateNext[STATE_PHASES] = nextPhases;
 
            QJsonArray nextPhaseConstraints = mState.value(STATE_PHASES_CONSTRAINTS).toArray();
            for (auto phaseConsJSON : newPhaseConstraints)
                nextPhaseConstraints.append(phaseConsJSON.toObject());
-           mState[STATE_PHASES_CONSTRAINTS] = nextPhaseConstraints;
+           stateNext[STATE_PHASES_CONSTRAINTS] = nextPhaseConstraints;
 
            QJsonArray nextEvents = mState.value(STATE_EVENTS).toArray();
            for (auto eventJSON : newEvents)
                nextEvents.append(eventJSON.toObject());
-           mState[STATE_EVENTS] = nextEvents;
+           stateNext[STATE_EVENTS] = nextEvents;
 
            QJsonArray nextEventConstraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
            for (auto eventConsJSON : newEventConstraints)
                nextEventConstraints.append(eventConsJSON.toObject());
-           mState[STATE_EVENTS_CONSTRAINTS] = nextEventConstraints;
+           stateNext[STATE_EVENTS_CONSTRAINTS] = nextEventConstraints;
 
            clearModel();
-
-
-            // When openning a project, it is maked as saved : mState == mLastSavedState
-            mLastSavedState = mState;
+           pushProjectState(stateNext, INSERT_PROJECT_REASON, true, true);
 
             qDebug() << "in Project::insert  unselectedAllInState";
             unselectedAllInState(); // modify mState
-
             return true;
         }
     }
