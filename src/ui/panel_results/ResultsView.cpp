@@ -576,29 +576,29 @@ void ResultsView::applyAppSettings()
 {
     const QFont ft (font());
     const QFontMetricsF fm (ft);
-     GraphViewResults::mHeightForVisibleAxis = int (5 * AppSettings::heigthUnit());
-    titleHeight = int ( 1.5 * fm.height());// int (0.9 * AppSettings::heigthUnit());
-    labelHeight = int ( fm.height());//int (0.8 * AppSettings::heigthUnit());
-    lineEditHeight = int (1.1 * (fm.ascent() + fm.descent())) ;//int (0.9 *AppSettings::heigthUnit());
-    checkBoxHeight  = int ( fm.height());//int (0.4 * AppSettings::heigthUnit());
+    GraphViewResults::mHeightForVisibleAxis = int (5 * AppSettings::heigthUnit());
+    titleHeight = int ( 1.5 * fm.height());
+    labelHeight = int ( fm.height());
+    lineEditHeight = int (1.1 * (fm.ascent() + fm.descent())) ;
+    checkBoxHeight  = int ( fm.height());
 
-    radioButtonHeight = int ( fm.height());// int (fm.height() + fm.ascent() + fm.descent()) ;//int (0.3 *AppSettings::heigthUnit());
-    spinBoxHeight = mXScaleSpin->height() ;//lineEditHeight;// int (0.3 * AppSettings::heigthUnit());
+    radioButtonHeight = int ( fm.height());
+    spinBoxHeight = mXScaleSpin->height();
     buttonHeight = int (0.5 * AppSettings::heigthUnit());
 
 #ifdef Q_OS_MAC
-    comboBoxHeight  = mThicknessCombo->height();//  labelHeight;//int (0.3 * AppSettings::heigthUnit());
+    comboBoxHeight  = mThicknessCombo->height();
 #else
     comboBoxHeight  = int (0.3 * AppSettings::heigthUnit());
 #endif
 
     mMargin = int (.2* AppSettings::heigthUnit());
 
-    mRuler->setMarginBottom( ft.pointSize() * 2.2);
-    mRulerH = mRuler->height();
-
+    mRuler->setMarginBottom(ft.pointSizeF() * 2.0); // space between the axis and the bottom of the text
+    mRulerH =  mRuler->height(); //mScrollBarHeight =
+    mRuler->setFixedHeight(mRulerH);
     mTabsH = int (2 * fm.height());
-    mGraphHeight = GraphViewResults::mHeightForVisibleAxis ;//5 * AppSettings::heigthUnit(); // same value in ResultsView::updateScaleY(int value)
+    mGraphHeight = GraphViewResults::mHeightForVisibleAxis ; // same value in ResultsView::updateScaleY(int value)
 
     mOptionsW = int ( ( fm.width(tr("Nb Densities / Sheet ")) + 2 * mMargin) *3 / 2);
 
@@ -1488,7 +1488,7 @@ void ResultsView::updateLayout()
     else
         mRuler->setGeometry(0, mTabs->y() + mTabs->height(), width() - mOptionsW - sbe, mRulerH );
 
-    mStack->setGeometry(0, int (mTabsH + 1.2 * mRulerH + 2), width() - mOptionsW, int (height() - 1.2 * mRulerH - mTabsH));
+    mStack->setGeometry(0, int (mMargin + mTabsH + mRulerH + 2), width() - mOptionsW, int (height() - (mMargin + mTabsH + mRulerH + 2)));
 
     // mMarker is resize in ResultsView::mouseMoveEvent(QMouseEvent* e), the following code is usefull when repainting
     const int markerXPos (inRange(0, mMarker->pos().x(), mRuler->x() + mRuler->width() ));
@@ -2462,7 +2462,7 @@ void ResultsView::updateScales()
         for (int i = 0; i < mChainRadios.size(); ++i) {
             if (mChainRadios.at(i)->isChecked()) {
                 const ChainSpecs& chain = mChains.at(i);
-                mResultMaxX = 1+ chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter) + chain.mNumRunIter / chain.mThinningInterval;
+                mResultMaxX = 1 + chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter) + chain.mNumRunIter / chain.mThinningInterval;
                 break;
             }
         }

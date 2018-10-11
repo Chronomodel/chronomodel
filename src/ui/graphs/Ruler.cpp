@@ -20,7 +20,7 @@ mStepWidth(100)
     mScrollBarHeight = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     mMarginTop = 5;
     mAxisFont = parentWidget()->font();
-    setMarginBottom( mAxisFont.pointSize() * 1.2 );
+    setMarginBottom( 0);//mAxisFont.pointSize() * 1.0 );
 
     setMouseTracking(true);
     
@@ -78,7 +78,7 @@ Ruler& Ruler::operator=(const Ruler & origin)
 
 void Ruler::setFont(const QFont &font)
 {
-    mMarginTop = 0;
+    mMarginTop = 5;
     mAxisFont = font;
 
     updateLayout();
@@ -121,7 +121,7 @@ void Ruler::setScaleDivision (const Scale &sc)
     update();
 }
 
-void Ruler::setScaleDivision (const double &major, const double &minorCount)
+void Ruler::setScaleDivision (const double &major, const int &minorCount)
 {
     mAxisTool.mShowSubSubs = true;
     mAxisTool.setScaleDivision(major, minorCount);
@@ -160,9 +160,9 @@ void Ruler::setCurrent(const double min, const double max)
         double curMinAtMaxScroll = mMax - (mMax - mMin) * (pageStep / range);
         double value = scrollRange * (mCurrentMin - mMin) / (curMinAtMaxScroll - mMin);
         
-        mScrollBar->setPageStep(pageStep);
+        mScrollBar->setPageStep(int(pageStep));
         mScrollBar->setRange(0, int(scrollRange));
-        mScrollBar->setValue(value);
+        mScrollBar->setValue(int(value));
     }
     
     updateLayout();
@@ -196,22 +196,22 @@ void Ruler::setZoom(double &prop)
     if (mZoomProp != 1.) {
         // Remember old scroll position
         double posProp = 0.;
-        double rangeBefore = (double)mScrollBar->maximum();
+        double rangeBefore = double (mScrollBar->maximum());
         if (rangeBefore > 0)
-            posProp = (double)mScrollBar->value() / rangeBefore;
+            posProp = double (mScrollBar->value()) / rangeBefore;
         
         // Update Scroll Range
         int fullScrollSteps = 1000;
-        int scrollSteps = (1. - mZoomProp) * (double)fullScrollSteps;
+        int scrollSteps = int((1. - mZoomProp) * double (fullScrollSteps));
         mScrollBar->setRange(0, scrollSteps);
         mScrollBar->setPageStep(fullScrollSteps);
         
         // Set scroll to correct position
-        double pos = 0.;
-        double rangeAfter = (double)mScrollBar->maximum();
+        double pos (0.);
+        double rangeAfter = double (mScrollBar->maximum());
         if (rangeAfter > 0.)
             pos = floor(posProp * rangeAfter);
-        mScrollBar->setValue(pos);
+        mScrollBar->setValue(int(pos));
        /* mScrollBar->setTracking(false);
         mScrollBar->setSliderPosition(pos);
         mScrollBar->setTracking(true);*/
@@ -231,7 +231,7 @@ void Ruler::updateScroll()
         double delta = mCurrentMax - mCurrentMin;
         double deltaStart = (mMax - mMin)-delta;
         
-        mCurrentMin = mMin + deltaStart * ((double)mScrollBar->value() / (double)mScrollBar->maximum());
+        mCurrentMin = mMin + deltaStart * (double (mScrollBar->value()) / double (mScrollBar->maximum()));
         mCurrentMin = floor( qBound(mMin, mCurrentMin, mMax) );
         mCurrentMax = mCurrentMin + delta;
         
@@ -242,7 +242,7 @@ void Ruler::updateScroll()
     }
 
     mAxisTool.mShowSubSubs = true; // updateValues can set mShowSubSubs to false;
-    mAxisTool.updateValues(mAxisRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
+    mAxisTool.updateValues(int(mAxisRect.width()), int(mStepMinWidth), mCurrentMin, mCurrentMax);
 
     emit positionChanged(mCurrentMin, mCurrentMax);
     
@@ -264,11 +264,11 @@ void Ruler::updateLayout()
 {
     mAxisRect = QRectF(mMarginLeft + 1, mMarginTop + mScrollBarHeight, width() - mMarginLeft - mMarginRight , mMarginBottom);// + font().pointSizeF());
 
-    mScrollBar->setGeometry(mMarginLeft , 0., mAxisRect.width()  , mScrollBarHeight);
+    mScrollBar->setGeometry( int(mMarginLeft) , 0., int (mAxisRect.width())  , int (mScrollBarHeight));
 
     mAxisTool.mShowSubSubs = true;
-    mAxisTool.updateValues(mAxisRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
-    setFixedHeight(mScrollBarHeight + mAxisRect.height());
+    mAxisTool.updateValues( int (mAxisRect.width()), int(mStepMinWidth), mCurrentMin, mCurrentMax);
+    setFixedHeight(int (mScrollBarHeight + mAxisRect.height() + 5));
     update();
 }
 

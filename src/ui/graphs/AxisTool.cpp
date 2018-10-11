@@ -89,7 +89,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
     QFontMetrics fm (p.font());
 
 #ifdef Q_OS_MAC
-    const int textHeight (int (1.2 * (fm.descent() + fm.ascent()) ));
+    const int textHeight (int (1.1 * (fm.descent() + fm.ascent()) ));
 #else
     const int textHeight = fm.height();
 #endif

@@ -37,7 +37,7 @@ public:
     void setMarginLeft (const qreal &left) {mMarginLeft = left;}
 
      void currentChanged(const double &min, const double &max);
-     void setScaleDivision (const double &major, const double &minorCount);
+     void setScaleDivision (const double &major, const int &minorCount);
      void setScaleDivision (const Scale &sc);
 
      double getZoom();

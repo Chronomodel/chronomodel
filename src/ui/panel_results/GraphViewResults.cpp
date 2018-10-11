@@ -349,7 +349,7 @@ qDebug()<<"GraphViewResults::updateLayout()"<<mGraph->height()<<mHeightForVisibl
 
     if ((mGraph->hasCurve())) {
         mGraph->showXAxisValues(axisVisible);
-        mGraph->setMarginBottom(axisVisible ? mGraphFont.pointSize() * 2.2 : mGraphFont.pointSize());
+        mGraph->setMarginBottom(axisVisible ? mGraphFont.pointSize() * 2.0 : mGraphFont.pointSize());
     }
 
     update();
