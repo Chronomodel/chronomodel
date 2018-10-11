@@ -9,29 +9,30 @@
 
 
 MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent):QDialog(parent),
-mMargin(int (.3 * AppSettings::heigthUnit())), // marge width
-mTop(int ( 1 * AppSettings::heigthUnit())), // y position of the colored box
-mColoredBoxHeigth (6 * AppSettings::heigthUnit()), // size of the colored box
-mBurnBoxWidth(int( 3 *AppSettings::widthUnit())),
-mAdaptBoxWidth( 7 * AppSettings::widthUnit()),
-mAcquireBoxWidth(int (3.5 * AppSettings::widthUnit())),
-mTotalWidth(mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMargin),
+mTop (int ( 1 * AppSettings::heigthUnit())), // y position of the colored box
+mColoredBoxHeigth ( int(5 * AppSettings::heigthUnit())), // size of the colored box 3.5
+mBurnBoxWidth (int( 3 *AppSettings::widthUnit())),
+mAdaptBoxWidth ( 7 * AppSettings::widthUnit()),
+mAcquireBoxWidth (int (3.5 * AppSettings::widthUnit())),
 mBottom (3 * AppSettings::heigthUnit()),
-mLineH(int (0.5 * AppSettings::heigthUnit())), // heigth of the edit box
-mEditW(int (2.5 * AppSettings::widthUnit())),
-mButW(int (2.5 *AppSettings::widthUnit())),
-mButH( int (0.5 * AppSettings::heigthUnit()))
+mLineH (int (0.5 * AppSettings::heigthUnit())), // heigth of the edit box
+mEditW (int (2.5 * AppSettings::widthUnit())),
+mButW (int (2.5 *AppSettings::widthUnit())),
+mButH ( int (0.5 * AppSettings::heigthUnit())),
+mMargin ( (mColoredBoxHeigth - 5*mLineH)/8 ),  // marge width
+mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMargin)
 {
     setWindowTitle(tr("MCMC Settings"));
+    mMargin = (mColoredBoxHeigth - 5*mLineH)/8;
 
     mBurnRect = QRectF(mMargin, mTop, mBurnBoxWidth, mColoredBoxHeigth);
     mAdaptRect = QRectF(mBurnRect.x() + mMargin + mBurnBoxWidth, mTop, mAdaptBoxWidth, mColoredBoxHeigth);
     mAquireRect = QRectF(mAdaptRect.x() + mMargin + mAdaptBoxWidth, mTop, mAcquireBoxWidth, mColoredBoxHeigth);
 
     mBatch1Rect = QRectF(mAdaptRect.x() + mMargin,
-                         mAdaptRect.y() + mLineH + 4 * mMargin,
+                         mAdaptRect.y() + mLineH + 2 * mMargin,
                          (mAdaptRect.width() - 4 * mMargin) / 3,
-                         mAdaptRect.height() - 2 * mLineH - 8 * mMargin);
+                         mAdaptRect.height() - 2 * mLineH - 4 * mMargin);
 
     fm =new QFontMetrics(font(), this);
     
@@ -42,8 +43,8 @@ mButH( int (0.5 * AppSettings::heigthUnit()))
     chainsValidator->setRange(1, 5);
 
 
-    mNbChainsEdit = new QLabel(tr("Number of chains"), this);
-    mNbChainsEdit->setFixedSize(mButW, mButH);
+    mNumProcLabel = new QLabel(tr("Number of chains"), this);
+    mNumProcLabel->setFixedSize(mButW, mButH);
    
     mNumProcEdit = new LineEdit(this);
     mNumProcEdit->setFixedSize(mButW, mButH);
@@ -125,7 +126,7 @@ mButH( int (0.5 * AppSettings::heigthUnit()))
     connect(mResetBut, &Button::clicked, this, &MCMCSettingsDialog::reset);
     connect(mTestBut, &Button::clicked, this, &MCMCSettingsDialog::setQuickTest);
 
-    const int fixedHeight = mHelp->heightForWidth(mTotalWidth - 2 * mMargin)  + 6 * mMargin + mButH + 2 * mLineH + mColoredBoxHeigth + mTop;
+    const int fixedHeight =  mTop  + mColoredBoxHeigth + mHelp->heightForWidth(mTotalWidth - 2 * mMargin)  + 6 * mMargin + mButH + mLineH;
     setFixedSize(mTotalWidth, fixedHeight);
     
 }
@@ -205,7 +206,7 @@ void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
 
     
     p.drawText(mBatch1Rect.adjusted(0, mMargin, 0, -mBatch1Rect.height() + mLineH + mMargin), Qt::AlignCenter, tr("BATCH 1"));
-    p.drawText(mBatch1Rect.adjusted(0, mLineH + 2 * mMargin, 0, -mBatch1Rect.height() + 2 * mLineH + 1 * mMargin), Qt::AlignCenter, tr("Iterations") );
+    p.drawText(mBatch1Rect.adjusted(0, mLineH + 2 * mMargin, 0, -mBatch1Rect.height() + 2 * mLineH + 2 * mMargin), Qt::AlignCenter, tr("Iterations") );
 
     p.drawText(mBatchInterRect, Qt::AlignCenter, "...");
     p.drawText(mBatchNRect, Qt::AlignCenter, tr("BATCH N"));
@@ -213,9 +214,9 @@ void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
     p.drawText(int (mAdaptRect.x()), int (mAdaptRect.y() + mAdaptRect.height() - 1 * mMargin - mLineH), int (mAdaptRect.width()/2), mLineH, Qt::AlignVCenter | Qt::AlignRight, tr("Max batches") );
 
 
-    p.drawText(mAquireRect.adjusted(0, mMargin, 0, -mAquireRect.height() + mLineH + 2 * mMargin), Qt::AlignCenter, tr("3 - ACQUIRE"));
+    p.drawText(mAquireRect.adjusted(0, mMargin, 0, -mAquireRect.height() + mLineH + 1 * mMargin), Qt::AlignCenter, tr("3 - ACQUIRE"));
     p.drawText(mAquireRect.adjusted(0, mLineH + 2 * mMargin, 0, -mAquireRect.height() + 2 * mLineH + 2 * mMargin), Qt::AlignCenter, tr("Iterations") );
-    p.drawText(int (mAquireRect.x() + (mAcquireBoxWidth - fm->width(tr("Thinning interval")))/2), int (mAquireRect.y() + 6 * mLineH + 2 * mMargin), fm->width(tr("Thinning interval")), mButH, Qt::AlignCenter, tr("Thinning interval") );
+    p.drawText(int (mAquireRect.x() + (mAcquireBoxWidth - fm->width(tr("Thinning interval")))/2), int (mAquireRect.y() + 3 * mLineH + 4 * mMargin), fm->width(tr("Thinning interval")), mButH, Qt::AlignCenter, tr("Thinning interval") );
 
 
 }
@@ -229,12 +230,9 @@ void MCMCSettingsDialog::resizeEvent(QResizeEvent* e)
 void MCMCSettingsDialog::updateLayout()
 {
     
-    mNbChainsEdit->move(width()/2 - mMargin - fm->width(mNbChainsEdit->text()), mMargin - fm->descent());
-    mNumProcEdit->move(width()/2 + mMargin, mMargin  - fm->descent());
-    
-    mBatchInterRect = mBatch1Rect.adjusted(mBatch1Rect.width() + mMargin, 0, mBatch1Rect.width() + mMargin, 0);
-    mBatchNRect = mBatch1Rect.adjusted(2*mBatch1Rect.width() + 1 * mMargin, 0, 1 * mBatch1Rect.width() + 1 * mMargin, 0);
-    
+    mNumProcLabel->move(width()/2 - mMargin - fm->width(mNumProcLabel->text()), (mTop - mNumProcLabel->height()) /2 );
+    mNumProcEdit->move(width()/2 + mMargin, (mTop - mNumProcLabel->height()) /2);
+
     // setting Edit boxes
     // 1 -BURN
     mTitleBurnLabel->move(int (mBurnRect.x() + (mBurnBoxWidth - fm->width(mTitleBurnLabel->text()))/2), int (mBurnRect.y()) + 1 * mMargin);
@@ -242,31 +240,36 @@ void MCMCSettingsDialog::updateLayout()
     mNumBurnEdit->move(int (mBurnRect.x() + (mBurnBoxWidth - mEditW)/2),  mIterBurnLabel->y() + mIterBurnLabel->height() + 1 * mMargin);
 
     // 2 - ADAPT
+    // mBatch1Rect is defined in the constructor
+    mBatchInterRect = mBatch1Rect.adjusted(mBatch1Rect.width() + mMargin, 0, mBatch1Rect.width() + mMargin, 0);
+    mBatchNRect = mBatch1Rect.adjusted(2*mBatch1Rect.width() + 2 * mMargin, 0, 2 * mBatch1Rect.width() + 2 * mMargin, 0);
+
     mIterPerBatchEdit->move(int (mBatch1Rect.x() + mMargin), int (mBatch1Rect.y() + 2 * mLineH + 3 * mMargin));
-    mMaxBatchesEdit->move(int (mAdaptRect.x() + mAdaptRect.width()/2 + mMargin), int (mAdaptRect.y() + mAdaptRect.height() - 2 * mMargin - mLineH));
+    mMaxBatchesEdit->move(int (mAdaptRect.x() + mAdaptRect.width()/2 + mMargin), int (mAdaptRect.y() + mAdaptRect.height() - 1 * mMargin - mLineH));
 
     // 3 - ACQUIRE
-    mNumIterEdit->move(int (mAquireRect.x() + (mAcquireBoxWidth - mEditW)/2), int (mAquireRect.y() + 2 * mLineH + 4 * mMargin));
-    mDownSamplingEdit->move(int (mAquireRect.x() + (mAcquireBoxWidth - mEditW)/2), int (mAquireRect.y() + 6 * mLineH + 6 * mMargin));
+    mNumIterEdit->move(int (mAquireRect.x() + (mAcquireBoxWidth - mEditW)/2), int (mAquireRect.y() + 2 * mLineH + 3 * mMargin));
+    mDownSamplingEdit->move(int (mAquireRect.x() + (mAcquireBoxWidth - mEditW)/2), int (mAquireRect.y() + 4 * mLineH + 5 * mMargin));
 
+    // Help box
     mHelp->setGeometry(mMargin,
                        mTop + mColoredBoxHeigth + mMargin,
                        width() - 2 * mMargin,
                        mHelp->heightForWidth(width() - 2 * mMargin ) );
 
-   
-    mSeedsLabel->move(AppSettings::widthUnit(), height() - 5 * mMargin - mButH - mLineH);
+   // Bottom Info
+    mSeedsLabel->move(AppSettings::widthUnit(), height() - 4 * mMargin - mButH - mLineH);
     mSeedsEdit->move(mSeedsLabel->x() + mSeedsLabel->width() + mMargin, mSeedsLabel->y());
 
     mLevelLabel->move(width()/2 + 2 * mMargin, mSeedsLabel->y());
     mLevelEdit->move(mLevelLabel->x() + mLevelLabel->width() + mMargin,  mLevelLabel->y());
 
-    mResetBut->move(mMargin, height() - 2 * mMargin - mButH );
+    mResetBut->move( 2 * mMargin, height() - 2 * mMargin - mButH );
 #ifdef DEBUG
     mTestBut->move(mResetBut->x() + mResetBut->width() + mMargin, mResetBut->y());
 #endif
 
-    mOkBut->move(width()/2 + 2 * mMargin, mResetBut->y());
+    mOkBut->move(width() - 4 * mMargin - mOkBut->width() - mCancelBut->width(), mResetBut->y());
     mCancelBut->move(mOkBut->x() + mOkBut->width() + mMargin, mResetBut->y());
 
 }

@@ -38,32 +38,52 @@ protected:
     void updateLayout();
     
 private:
+    // Dimension
+
+   int mTop;
+   int mColoredBoxHeigth; // heigth of the colored box
+   int mBurnBoxWidth;
+   int mAdaptBoxWidth;// total width of the colored boxes
+   int mAcquireBoxWidth;
+
+   int mBottom;
+
+   int mLineH;
+   int mEditW;
+
+   int mButW ;
+   int mButH ; // size of the button OK and Cancel
+   int mMargin;
+
+   int mTotalWidth;
+   // Object
+
     QFontMetrics *fm;
-    QLabel *mNbChainsEdit;
+    QLabel *mNumProcLabel;
     LineEdit* mNumProcEdit;
-    
+
     QLabel *mTitleBurnLabel;
     QLabel *mIterBurnLabel;
     LineEdit* mNumBurnEdit;
-    
+
     LineEdit* mNumIterEdit;
     LineEdit* mMaxBatchesEdit;
     LineEdit* mIterPerBatchEdit;
     LineEdit* mDownSamplingEdit;
-    
+
     QLabel *mSeedsLabel;
     LineEdit* mSeedsEdit;
     HelpWidget* mHelp;
-    
+
     QLabel* mLevelLabel;
     LineEdit* mLevelEdit;
-    
+
     Button* mOkBut;
     Button* mCancelBut;
 
     Button* mTestBut;
     Button* mResetBut;
-    
+
     QRectF mBurnRect;
     QRectF mAdaptRect;
     QRectF mAquireRect;
@@ -71,25 +91,7 @@ private:
     QRectF mBatchInterRect;
     QRectF mBatchNRect;
     
-    
-    
-    
-     // dimension
-    
-    int mMargin;
-    int mTop;
-    int mColoredBoxHeigth; // heigth of the colored box
-    int mBurnBoxWidth;
-    int mAdaptBoxWidth;// total width of the colored boxes
-    int mAcquireBoxWidth;
-    int mTotalWidth;
-    int mBottom;
-    
-    int mLineH;
-    int mEditW;
-    
-    int mButW ;
-    int mButH ; // size of the button OK and Cancel
+
 };
 
 #endif
