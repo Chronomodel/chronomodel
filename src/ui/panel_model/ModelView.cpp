@@ -451,7 +451,6 @@ void ModelView::createProject()
 
 void ModelView::updateProject()
 {
-   // showCalibration(false);
     
     QJsonObject state = mProject->state();
     const ProjectSettings settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());

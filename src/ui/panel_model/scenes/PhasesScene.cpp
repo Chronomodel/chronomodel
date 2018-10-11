@@ -268,7 +268,7 @@ void PhasesScene::updateSceneFromState()
             addItem(phaseItem);
             hasCreated = true;
 
-            // usefull, changing the selected item force to update the state
+            // usefull, changing the selected item force to update the state ??
             clearSelection();
             phaseItem->setSelected(true);
             
@@ -277,6 +277,7 @@ void PhasesScene::updateSceneFromState()
             QPointF pos = phaseItem->pos();
             if (pos.isNull()) {
                 const int posDelta (100);
+
                 // With the code above the new phase item is created randomly near the center of the view
                 QList<QGraphicsView*> gviews = views();
                 if (gviews.size() > 0) {
