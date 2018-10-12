@@ -10,7 +10,7 @@
 
 MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent):QDialog(parent),
 mTop (int ( 1 * AppSettings::heigthUnit())), // y position of the colored box
-mColoredBoxHeigth ( int(5 * AppSettings::heigthUnit())), // size of the colored box 3.5
+mColoredBoxHeigth ( int(4 * AppSettings::heigthUnit())), // size of the colored box 3.5
 mBurnBoxWidth (int( 3 *AppSettings::widthUnit())),
 mAdaptBoxWidth ( 7 * AppSettings::widthUnit()),
 mAcquireBoxWidth (int (3.5 * AppSettings::widthUnit())),
@@ -52,8 +52,8 @@ mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMargin)
     mNumProcEdit->setPlaceholderText(tr("From 1 to 5"));
 
     // Inside colored boxes
-    // 1 - BURN
-    mTitleBurnLabel = new QLabel(tr("1 - BURN"), this);
+    // 1 - BURN-IN
+    mTitleBurnLabel = new QLabel(tr("1 - BURN-IN"), this);
     mTitleBurnLabel->setFixedSize(fm->width(mTitleBurnLabel->text()), mButH);
     mIterBurnLabel = new QLabel(tr("Iterations"), this);
     mIterBurnLabel->setFixedSize(fm->width(mIterBurnLabel->text()), mButH);
