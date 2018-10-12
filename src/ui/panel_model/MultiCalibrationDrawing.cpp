@@ -1,5 +1,7 @@
 #include "MultiCalibrationDrawing.h"
 #include "AppSettings.h"
+#include "GraphViewResults.h"
+
 #include <QMouseEvent>
 
 int ColoredBar::mWidth = 15;
@@ -23,8 +25,7 @@ void ColoredBar::paintEvent(QPaintEvent *)
 
 MultiCalibrationDrawing::MultiCalibrationDrawing(QWidget *parent) : QWidget(parent),
 mVerticalSpacer (5),
-mGraphHeight (6 * AppSettings::heigthUnit()),
-mHeightForVisibleAxis(5 * AppSettings::heigthUnit()),
+mGraphHeight (GraphViewResults::mHeightForVisibleAxis),
 mGraphFont (font()),
 mMouseOverCurve (true)
 {
@@ -113,7 +114,7 @@ void MultiCalibrationDrawing::mouseMoveEvent(QMouseEvent* e)
 
 void MultiCalibrationDrawing::updateLayout()
 {
-    const bool axisVisible = (mGraphHeight >= mHeightForVisibleAxis);
+    const bool axisVisible = (mGraphHeight >= GraphViewResults::mHeightForVisibleAxis);
     const int marginBottom = (axisVisible ? int (font().pointSize() * 2.2) : int (font().pointSize() * 0.5));
     int y (0);
     int i (0);
@@ -183,7 +184,7 @@ void MultiCalibrationDrawing::forceRefresh()
 {
     const QFontMetrics fm (font());
 
-    const bool axisVisible = (mGraphHeight >= mHeightForVisibleAxis);
+    const bool axisVisible = (mGraphHeight >= GraphViewResults::mHeightForVisibleAxis);
     const int marginBottom =(axisVisible ? int (font().pointSize() * 2.2) : 10);
 
     int y (0);

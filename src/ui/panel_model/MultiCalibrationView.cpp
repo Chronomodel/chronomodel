@@ -32,8 +32,8 @@ mCurveColor(Painting::mainColorDark)
     palette.setColor(QPalette::Base, Qt::white);
     palette.setColor(QPalette::Text, Qt::black);
     mTextArea->setPalette(palette);
-    QFont font = mTextArea->font();
-    mTextArea->setFont(font);
+    //QFont font = mTextArea->font();
+    //mTextArea->setFont(font);
     mTextArea->setText(tr("Nothing to display"));
     mTextArea->setVisible(false);
     mTextArea->setReadOnly(true);
@@ -313,6 +313,7 @@ void MultiCalibrationView::updateLayout()
 
 void MultiCalibrationView::updateGraphList()
 {
+    QFontMetrics fm (font());
     QJsonObject state = mProject->state();
     mSettings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
@@ -323,6 +324,9 @@ void MultiCalibrationView::updateGraphList()
     mStartEdit->setText(locale().toString(mTminDisplay));
     mEndEdit->setText(locale().toString(mTmaxDisplay));
     mHPDEdit->setText(locale().toString(mThreshold));
+  //The same Name and same Value as in MultiCalibrationView::exportFullImage()
+    mMarginRight = int (1.5 * floor(fm.width(mEndEdit->text())/2) + 5);
+    mMarginLeft = int (1.5 * floor(fm.width(mStartEdit->text())/2) + 5);
 
     QColor penColor = mCurveColor;
     QColor brushColor = mCurveColor;
@@ -332,8 +336,7 @@ void MultiCalibrationView::updateGraphList()
     QList<QColor> colorList;
     const QJsonArray events = state.value(STATE_EVENTS).toArray();
 
-    //The same Name and same Value as in MultiCalibrationView::exportFullImage()
-    const QFontMetrics fm (font());
+
 
 
     QList<QJsonObject> selectedEvents;

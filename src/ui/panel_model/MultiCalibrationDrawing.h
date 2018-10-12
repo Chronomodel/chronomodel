@@ -64,8 +64,6 @@ private:
     int mVerticalSpacer;
 
     int mGraphHeight;
-    int mHeightForVisibleAxis;
-
 
     QFont mGraphFont;
 
