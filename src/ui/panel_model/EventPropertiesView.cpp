@@ -180,8 +180,12 @@ EventPropertiesView::~EventPropertiesView()
 // Event Managment
 void EventPropertiesView::setEvent(const QJsonObject& event)
 {
+    // if set Event come becaus we use Project::updateDate(), we are on the same Event
+    // so we are on the EventPropertiesView not on the EventScene
+    if (mEvent[STATE_ID] != event[STATE_ID])
+        mCalibBut->setChecked(false);
+
     mEvent = event;
-    mCalibBut->setChecked(false);
     QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
 
     bool hasDates = (dates.size() > 0);
