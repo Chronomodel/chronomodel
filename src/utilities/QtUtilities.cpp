@@ -414,7 +414,7 @@ QString stringForGraph(const double valueToFormat)
         fmt = 'G';
 
     if (std::abs(valueToFormat) > 1E-6)
-         return removeZeroAtRight(locale.toString( valueToFormat, fmt, precision + 1)); // if appSettings precision is 0, we need a decimal
+         return removeZeroAtRight(locale.toString( valueToFormat, fmt, precision));// + 1)); // if appSettings precision is 0, we need a decimal
     else
         return "0";
 }
