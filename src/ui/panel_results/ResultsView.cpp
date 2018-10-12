@@ -576,7 +576,7 @@ void ResultsView::applyAppSettings()
 {
     const QFont ft (font());
     const QFontMetricsF fm (ft);
-    GraphViewResults::mHeightForVisibleAxis = int (5 * AppSettings::heigthUnit());
+    GraphViewResults::mHeightForVisibleAxis = int (4 * AppSettings::heigthUnit());
     titleHeight = int ( 1.5 * fm.height());
     labelHeight = int ( fm.height());
     lineEditHeight = int (1.1 * (fm.ascent() + fm.descent())) ;

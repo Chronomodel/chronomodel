@@ -12,7 +12,7 @@
 
 //  Constructor / Destructor
 
-int GraphViewResults::mHeightForVisibleAxis = int (5 * AppSettings::heigthUnit());
+int GraphViewResults::mHeightForVisibleAxis = int (4 * AppSettings::heigthUnit()); //look ResultsView::applyAppSettings()
 
 GraphViewResults::GraphViewResults(QWidget *parent):QWidget(parent),
 mCurrentTypeGraph(ePostDistrib),
