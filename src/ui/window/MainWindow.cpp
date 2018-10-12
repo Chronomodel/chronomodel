@@ -518,41 +518,21 @@ void MainWindow::insertProject()
 
     if (!path.isEmpty()) {
 
-     /*   if (mProject) {
-            //mProject->askToSave(tr("Save current project as..."));
-
-            disconnectProject();
-
-            //resetInterface(): clear mEventsScene and mPhasesScene, set mProject = nullptr
-            resetInterface();
-
-            delete mProject;
-        }
-        */
         statusBar()->showMessage(tr("Insert project : %1").arg(path));
-        // assign new project
-       // mProject = new Project();
-       // connectProject();
 
-        //setAppSettings(): just update mAutoSaveTimer
-       // mProject->setAppSettings();
         const QFileInfo info(path);
         setCurrentPath(info.absolutePath());
 
 
         // look MainWindows::readSetting()
         if (mProject->insert(path)) {
-          //  activateInterface(true);
-           // updateWindowTitle();
+
         // Create mEventsScene and mPhasesScenes
             mProjectView->updateProject();
 
-            mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
-           /* if (! mProject->mModel->mChains.isEmpty())
-                emit mProject->mcmcFinished(mProject->mModel);*/
          }
 
-        mUndoStack->clear();
+        //mUndoStack->clear();
         statusBar()->showMessage(tr("Ready"));
     }
 
