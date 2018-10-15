@@ -274,9 +274,9 @@ private:
     QComboBox* mOpacityCombo;
    // QComboBox* mRenderCombo;
     
-    Label* labFont;
-    Label* labThickness;
-    Label* labOpacity;
+    Label* mLabFont;
+    Label* mLabThickness;
+    Label* mLabOpacity;
    // Label* labRendering;
     //------------ MCMC Chains---------
     QWidget* mChainsGroup;
