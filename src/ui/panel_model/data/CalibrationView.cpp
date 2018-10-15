@@ -311,9 +311,9 @@ void CalibrationView::updateGraphs()
             calibCurve.mData = calibMap;
             calibCurve.mIsRectFromZero = isTypo;
             calibCurve.mBrush = isTypo ? QBrush(brushColor) : QBrush(Qt::NoBrush);
-
+            QFontMetrics fm (mCalibGraph->font());
             mCalibGraph->addCurve(calibCurve);
-            mCalibGraph->setMarginBottom(mCalibGraph->font().pointSize() * 2.2);
+            mCalibGraph->setMarginBottom(fm.ascent() * 2.2);
 
          //   mCalibGraph->setTipXLab("t"); // don't work
 

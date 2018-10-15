@@ -11,7 +11,6 @@
 PluginGaussRefView::PluginGaussRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
     mMeasureColor = QColor(56, 120, 50);
-
     mGraph = new GraphView(this);
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eAllTicks);
@@ -19,7 +18,7 @@ PluginGaussRefView::PluginGaussRefView(QWidget* parent):GraphViewRefAbstract(par
     mGraph->autoAdjustYScale(true);
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("x");
-    mGraph->setMarginBottom(mGraph->font().pointSize() * 2.2 );
+
 }
 
 PluginGaussRefView::~PluginGaussRefView()

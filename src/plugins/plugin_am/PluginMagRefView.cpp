@@ -11,7 +11,6 @@
 PluginMagRefView::PluginMagRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
     mMeasureColor = QColor(56, 120, 50);
-
     mGraph = new GraphView(this);
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eAllTicks);

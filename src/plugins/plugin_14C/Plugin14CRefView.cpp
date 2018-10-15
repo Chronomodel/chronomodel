@@ -19,7 +19,6 @@ Plugin14CRefView::Plugin14CRefView(QWidget* parent):GraphViewRefAbstract(parent)
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("age");
     mGraph->autoAdjustYScale(true);
-    mGraph->setMarginBottom(mGraph->font().pointSize() * 2.2 );
     setMouseTracking(true);
     mGraph->setMouseTracking(true);
 

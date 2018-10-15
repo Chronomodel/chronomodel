@@ -337,6 +337,7 @@ void GraphViewResults::updateLayout()
     mTopShift = int (2 * fmTitle.height()) ;
 
     QRect graphRect(0, int (mTopShift), width(), int (height() - mTopShift));
+    QFontMetricsF fm (mGraphFont);
 
     if (mShowNumResults) {
         mGraph->setGeometry(graphRect.adjusted(0, 0, int (-width()/3. -1), 0 ));
@@ -349,7 +350,8 @@ qDebug()<<"GraphViewResults::updateLayout()"<<mGraph->height()<<mHeightForVisibl
 
     if ((mGraph->hasCurve())) {
         mGraph->showXAxisValues(axisVisible);
-        mGraph->setMarginBottom(axisVisible ? mGraphFont.pointSize() * 2.0 : mGraphFont.pointSize());
+        //mGraph->setMarginBottom(axisVisible ? mGraphFont.pointSize() * 2.0 : mGraphFont.pointSize());
+        mGraph->setMarginBottom(axisVisible ? fm.ascent()* 2.0 : fm.ascent());
     }
 
     update();
@@ -372,7 +374,6 @@ void GraphViewResults::paintEvent(QPaintEvent* )
 
     QPainter p;
     p.begin(this);
-   // p.fillRect(mGraph->geometry().adjusted(0, - mTopShift, 0, 0), mGraph->getBackgroundColor());
     p.fillRect(rect(), mGraph->getBackgroundColor());
     p.setFont(fontTitle);
 
@@ -385,7 +386,7 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     /*
      *  Write info at the right of the title line
      */
-   //mGraph->showInfos(true);
+
    QString graphInfo = mGraph->getInfo();
    if (!graphInfo.isEmpty()) {
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 8, 0))

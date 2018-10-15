@@ -341,11 +341,11 @@ void EventPropertiesView::updateKnownGraph()
 
     curve.mSections.append(qMakePair(tLower,tUpper));
     mKnownGraph->addCurve(curve);
-
-    mKnownGraph->setMarginBottom(mKnownGraph->font().pointSizeF() + 10. );
+    QFontMetrics fm (mKnownGraph->font());
+    mKnownGraph->setMarginBottom(fm.ascent() + 10. );
 
     // Adjust scale
-    const int xScale = int(log10(tmax-tmin)) -1;
+    const int xScale = int (log10(tmax-tmin)) -1;
     mKnownGraph->setXScaleDivision(std::pow(10, xScale), 4);
     //---------------------
 

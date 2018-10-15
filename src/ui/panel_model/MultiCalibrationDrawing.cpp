@@ -114,8 +114,9 @@ void MultiCalibrationDrawing::mouseMoveEvent(QMouseEvent* e)
 
 void MultiCalibrationDrawing::updateLayout()
 {
+    QFontMetrics fm (font());
     const bool axisVisible = (mGraphHeight >= GraphViewResults::mHeightForVisibleAxis);
-    const int marginBottom = (axisVisible ? int (font().pointSize() * 2.2) : int (font().pointSize() * 0.5));
+    const int marginBottom = (axisVisible ? int (fm.ascent() * 2.2) : int (fm.ascent() * 0.5));
     int y (0);
     int i (0);
     const int graphShift (5); // the same name and the same value as MultiCalibrationView::exportFullImage()
@@ -185,7 +186,7 @@ void MultiCalibrationDrawing::forceRefresh()
     const QFontMetrics fm (font());
 
     const bool axisVisible = (mGraphHeight >= GraphViewResults::mHeightForVisibleAxis);
-    const int marginBottom =(axisVisible ? int (font().pointSize() * 2.2) : 10);
+    const int marginBottom =(axisVisible ? int (fm.ascent() * 2.2) : int (fm.ascent() * 0.5));
 
     int y (0);
     int i (0);

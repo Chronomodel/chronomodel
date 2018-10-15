@@ -147,7 +147,7 @@ void CalibrationDrawing::updateLayout()
             mRefGraphView->mGraph->setFont(mFont);
             mRefGraphView->mGraph->setMouseTracking(true);
             mRefGraphView->mGraph->setTipXLab("t Ref");
-            mRefGraphView->mGraph->setMarginBottom(2.2 * mFont.pointSize());
+            mRefGraphView->mGraph->setMarginBottom(fm .ascent() * 2.2);
            // mRefGraphView->mGraph->setYAxisMode(GraphView::eHidden);
         }
 
@@ -161,7 +161,7 @@ void CalibrationDrawing::updateLayout()
     mCalibGraph->setFont(mFont);
     mCalibGraph->setGeometry(0, mCalibComment->y() + mCalibComment->height() + mVerticalSpacer, width(), calibH);
     mCalibGraph->setMarginRight(marginRight);
-    mCalibGraph->setMarginBottom(2.2 * mFont.pointSize());
+    mCalibGraph->setMarginBottom(fm.ascent() * 2.2);
     mCalibGraph->setYAxisMode(GraphView::eMinMaxHidden);
     mCalibGraph->autoAdjustYScale(true);
 

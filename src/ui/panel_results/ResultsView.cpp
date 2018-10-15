@@ -597,7 +597,14 @@ void ResultsView::applyAppSettings()
 
     mMargin = int (.2* AppSettings::heigthUnit());
 
+    /*
+#ifdef Q_OS_MAC
     mRuler->setMarginBottom(ft.pointSizeF() * 2.0); // space between the axis and the bottom of the text
+#else
+*/
+    mRuler->setMarginBottom(fm.ascent() * 2.0);
+//#endif
+
     mRulerH =  mRuler->height(); //mScrollBarHeight =
     mRuler->setFixedHeight(mRulerH);
     mTabsH = int (2 * fm.height());
