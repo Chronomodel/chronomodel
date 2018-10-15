@@ -193,3 +193,19 @@ QVariant AbstractItem::itemChange(GraphicsItemChange change, const QVariant& val
     return QGraphicsItem::itemChange(change, value);
 }
 
+QFont AbstractItem::adjustFont(const QFont &ft, const QString &str, const  QRectF &r)
+{
+    if (!str.isEmpty() ) {
+        const QFontMetrics fm (ft);
+        const QRect textRect = fm.boundingRect(str);
+        const qreal w = r.width() - 10;
+        const qreal xfactor (textRect.width()> w ? textRect.width()/w : 1);
+        const qreal h = r.height();
+        const qreal yfactor (textRect.height()>h ? textRect.height()/h : 1) ;
+        const qreal factor  = ( xfactor > yfactor ? xfactor : yfactor);
+        QFont ftBack = ft;
+        ftBack.setPointSizeF(qMax(ft.pointSizeF()/factor, 5.));
+        return ftBack;
+    } else
+        return ft;
+}

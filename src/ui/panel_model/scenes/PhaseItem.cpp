@@ -153,9 +153,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
                                mData.value(STATE_COLOR_GREEN).toInt(),
                                mData.value(STATE_COLOR_BLUE).toInt());
     const QColor fontColor = getContrastedColor(phaseColor);
-    //QFont font = AppSettings::font();
-    //font.setPointSizeF(10.);
-    //QFont font (APP_SETTINGS_DEFAULT_FONT_FAMILY, 10.);
+
     QFont font (qApp->font());
     font.setPointSizeF(10.);
     QFontMetrics fm (font);
@@ -190,8 +188,14 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             r.adjust(0, dy, 0, dy);
 
         painter->setPen(getContrastedColor(eventColor));
+        QString eventName = event.value(STATE_NAME).toString();
 
-        const QString eventName = fm.elidedText(event.value(STATE_NAME).toString(), Qt::ElideRight, int (r.width()));
+        const QFont ftAdapt = AbstractItem::adjustFont(font, eventName, r);
+
+        const QFontMetrics fmAdjust (ftAdapt);
+        eventName = fmAdjust.elidedText(eventName, Qt::ElideRight, int (r.width()));
+        painter->setFont(ftAdapt);
+
         // magnify and highlight selected events
         if (isSelected) {
             mAtLeastOneEventSelected = true;
@@ -260,8 +264,13 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
                   mTitleHeight);
         font.setPointSizeF(12.);
         painter->setFont(font);
-        QFontMetrics fmName (font);
+
         QString name = mData.value(STATE_NAME).toString();
+
+        const QFont ftAdapt = AbstractItem::adjustFont(font, name, tr);
+        painter->setFont(ftAdapt);
+        QFontMetrics fmName (ftAdapt);
+
         name = fmName.elidedText(name, Qt::ElideRight, int(tr.width()));
         painter->setPen(fontColor);
         painter->drawText(tr, Qt::AlignCenter, name);
@@ -282,6 +291,10 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         painter->setPen(Qt::black);
         painter->setBrush(Qt::white);
         painter->drawRect(tpr);
+
+        const QFont ftAdapt = AbstractItem::adjustFont(font, tauStr, tpr);
+        painter->setFont(ftAdapt);
+
         painter->drawText(tpr, Qt::AlignCenter, tauStr);
     }
     

@@ -17,7 +17,9 @@ public:
     virtual void updateItemPosition(const QPointF& pos) = 0;
     void setSelectedInData(const bool selected);
     void setCurrentInData(const bool current);
-    
+
+    static QFont adjustFont(const QFont &ft, const  QString & str, const QRectF &r);
+
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent* e);
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent* e);
@@ -27,6 +29,7 @@ protected:
     virtual void hoverEnterEvent(QGraphicsSceneHoverEvent* e);
     virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent* e);
     virtual QVariant itemChange(GraphicsItemChange change, const QVariant& value);
+
     
 public:
     QJsonObject mData;

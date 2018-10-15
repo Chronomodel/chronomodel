@@ -118,16 +118,20 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     r.adjust(2, 2, -2, -2);
     // box name
     const int rHeightMid =  int(r.height() *2/3);
+    const QRectF rName = r.adjusted(0, 0, 0, -rHeightMid);
     painter->fillRect(r.adjusted(0, 0, 0, -rHeightMid), Qt::white);
     
    // QFont font (APP_SETTINGS_DEFAULT_FONT_FAMILY, 10, 50, false);
     QFont font (qApp->font());
     font.setPointSizeF(10.);
-    painter->setFont(font);
+
+    QString name = mDate.value(STATE_NAME).toString();
+    QFont ftAdapt = AbstractItem::adjustFont(font, name, rName);
+    painter->setFont(ftAdapt);
 
     painter->setPen(Qt::black);
-    QString name = mDate.value(STATE_NAME).toString();
-    QFontMetrics metrics (font);
+
+    QFontMetrics metrics (ftAdapt);
     name = metrics.elidedText(name, Qt::ElideRight, int (r.width() - 5));
 
     painter->drawText(r.adjusted(0, 0, 0, -rHeightMid), Qt::AlignCenter, name);

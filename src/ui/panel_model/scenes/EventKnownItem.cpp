@@ -183,9 +183,13 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
    // QFont font (APP_SETTINGS_DEFAULT_FONT_FAMILY, 12, 50, false);
     QFont font (qApp->font());
     font.setPointSizeF(12.);
-    painter->setFont(font);
-    QFontMetrics metrics(font);
+
     QString name = mData.value(STATE_NAME).toString();
+    const QFont ftAdapt = AbstractItem::adjustFont(font, name,nameRect);
+   painter->setFont(ftAdapt);
+
+   QFontMetrics metrics(ftAdapt);
+
     name = metrics.elidedText(name, Qt::ElideRight, int (nameRect.width() - 5));
 
     QColor frontColor = getContrastedColor(eventColor);
@@ -207,12 +211,13 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     // Phases
 
     if (numPhases == 0) {
-     //   QFont font = qApp->font();
         font.setPointSizeF(10.);
-        painter->setFont(font);
+        QString noPhase = tr("No Phase");
+        QFont ftAdapt = AbstractItem::adjustFont(font, noPhase, phasesRect);
+        painter->setFont(ftAdapt);
         painter->fillRect(phasesRect, QColor(0, 0, 0, 180));
         painter->setPen(QColor(200, 200, 200));
-        painter->drawText(phasesRect, Qt::AlignCenter, tr("No Phase"));
+        painter->drawText(phasesRect, Qt::AlignCenter, noPhase);
     } else {
         for (int i=0; i<numPhases; ++i) {
             QJsonObject phase = phases.at(i).toObject();
