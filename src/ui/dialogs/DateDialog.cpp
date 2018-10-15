@@ -28,7 +28,7 @@ mWiggleEnabled(false)
     
     // -----------
     
-    mNameLab = new Label(tr("Name"), this);
+    mNameLab = new QLabel(tr("Name"), this);
     mNameEdit = new QLineEdit(this);
     mNameEdit->setAlignment(Qt::AlignHCenter);
     mNameEdit->setText("New Data");
@@ -50,7 +50,7 @@ mWiggleEnabled(false)
     mAdvancedWidget->setFlat(true);
     connect(mAdvancedCheck, &QCheckBox::toggled, this, &DateDialog::setAdvancedVisible);
     
-    mMethodLab = new Label(tr("Method"), mAdvancedWidget);
+    mMethodLab = new QLabel(tr("Method"), mAdvancedWidget);
     mMethodCombo = new QComboBox(mAdvancedWidget);
     mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHSymetric));
     mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eInversion));
