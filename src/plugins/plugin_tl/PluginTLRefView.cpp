@@ -11,7 +11,6 @@
 PluginTLRefView::PluginTLRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
     mMeasureColor = QColor(56, 120, 50);
-
     mGraph = new GraphView(this);
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eAllTicks);
@@ -19,7 +18,6 @@ PluginTLRefView::PluginTLRefView(QWidget* parent):GraphViewRefAbstract(parent)
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("age");
     mGraph->autoAdjustYScale(true);
-    mGraph->setMarginBottom(mGraph->font().pointSize() * 2.2 );
 
 }
 
