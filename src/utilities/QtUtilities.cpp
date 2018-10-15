@@ -410,11 +410,15 @@ QString stringForGraph(const double valueToFormat)
     QLocale locale = QLocale();
     const int precision = AppSettings::mPrecision;
 
-    if (std::abs(valueToFormat)>1E+06)
+    if (std::abs(valueToFormat) > 1E+06)
         fmt = 'G';
 
     if (std::abs(valueToFormat) > 1E-6)
-         return removeZeroAtRight(locale.toString( valueToFormat, fmt, precision));// + 1)); // if appSettings precision is 0, we need a decimal
+        if (precision > 0) {
+            return removeZeroAtRight(locale.toString( valueToFormat, fmt, precision));// + 1)); // if appSettings precision is 0, we need a decimal
+        } else {
+            return locale.toString( valueToFormat, fmt, precision);
+        }
     else
         return "0";
 }
