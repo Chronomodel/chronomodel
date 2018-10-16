@@ -44,7 +44,7 @@ mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMargin)
 
 
     mNumProcLabel = new QLabel(tr("Number of chains"), this);
-    mNumProcLabel->setFixedSize(mButW, mButH);
+   // mNumProcLabel->setFixedSize(mButW, mButH);
    
     mNumProcEdit = new LineEdit(this);
     mNumProcEdit->setFixedSize(mButW, mButH);
@@ -258,10 +258,11 @@ void MCMCSettingsDialog::updateLayout()
                        mHelp->heightForWidth(width() - 2 * mMargin ) );
 
    // Bottom Info
-    mSeedsLabel->move(AppSettings::widthUnit(), height() - 4 * mMargin - mButH - mLineH);
+    const int margingLeft = (width()/2 - mSeedsLabel->width() - mSeedsEdit->width() - mMargin)/2;
+    mSeedsLabel->move(margingLeft, height() - 4 * mMargin - mButH - mLineH);
     mSeedsEdit->move(mSeedsLabel->x() + mSeedsLabel->width() + mMargin, mSeedsLabel->y());
-
-    mLevelLabel->move(width()/2 + 2 * mMargin, mSeedsLabel->y());
+    const int margingRight = (width()/2 -mLevelLabel->width() - mLevelEdit->width() - mMargin)/2;
+    mLevelLabel->move(width()/2 + margingRight, mSeedsLabel->y());
     mLevelEdit->move(mLevelLabel->x() + mLevelLabel->width() + mMargin,  mLevelLabel->y());
 
     mResetBut->move( 2 * mMargin, height() - 2 * mMargin - mButH );
