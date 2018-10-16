@@ -1051,7 +1051,7 @@ void ResultsView::updateTabDisplay(const int &i)
          * */
 
         mSpanTitle->move(0, 3);
-        int wBut = mOptionsW/3;
+        //int wBut = mOptionsW/3;
         ySpan =  mMargin;// Reset ySpan inside mSpanGroup
         if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
             if ( mCurrentVariable == GraphViewResults::eTheta
@@ -1092,8 +1092,19 @@ void ResultsView::updateTabDisplay(const int &i)
         mXScaleLab->move(mMargin, int (ySpan +dy));
 
         const int xSliderWidth = mOptionsW - mXScaleLab->width() - mXScaleSpin->width() - 4*mMargin;
-        mXSlider->setGeometry(mXScaleLab->x() + mXScaleLab->width() + mMargin , mXScaleSpin->y(), xSliderWidth, mXSlider->height() );
 
+#ifdef Q_OS_MAC
+        const int dySlider = (mXSlider->height() - labelHeight) /2;
+        mXSlider->setGeometry(mXScaleLab->x() + mXScaleLab->width() + mMargin , mXScaleSpin->y() + dySlider, xSliderWidth, mXSlider->height() );
+#endif
+
+#ifdef Q_OS_WIN
+        mXSlider->setGeometry(mXScaleLab->x() + mXScaleLab->width() + mMargin , mXScaleSpin->y(), xSliderWidth, mXSlider->height() );
+#endif
+
+#ifdef Q_OS_LINUX
+        mXSlider->setGeometry(mXScaleLab->x() + mXScaleLab->width() + mMargin , mXScaleSpin->y(), xSliderWidth, mXSlider->height() );
+#endif
         ySpan += mXScaleSpin->height() + mMargin;
 
         if (mCurrentTypeGraph != GraphViewResults::eCorrel) {
@@ -1137,9 +1148,20 @@ void ResultsView::updateTabDisplay(const int &i)
         dy = (mYScaleSpin->height() - mYScaleLab->height() ) /2.;
         mYScaleLab->move(mMargin, int (ySpan + dy ) );
         const int ySliderWidth = mOptionsW - mYScaleLab->width() - mYScaleSpin->width() - 4 * mMargin;
+#ifdef Q_OS_MAC
+        dy = (spinBoxHeight -  mYSlider->height()) /2.;
+        mYSlider->setGeometry(mYScaleLab->x() + mYScaleLab->width() + mMargin, mYScaleLab->y(), ySliderWidth, mYSlider->height());
+#endif
+
+#ifdef Q_OS_WIN
         dy = (mYScaleSpin->height() -  mYSlider->height()) /2.;
         mYSlider->setGeometry(mYScaleLab->x() + mYScaleLab->width() + mMargin, mYScaleSpin->y(), ySliderWidth, mYSlider->height());
+#endif
 
+#ifdef Q_OS_LINUX
+       // dy = (mYScaleSpin->height() -  mYSlider->height()) /2.;
+        mYSlider->setGeometry(mYScaleLab->x() + mYScaleLab->width() + mMargin, mYScaleSpin->y(), ySliderWidth, mYSlider->height());
+#endif
         int maxTextWidth = qMax(qMax(fm.width(mLabFont->text()), fm.width(mLabThickness->text()) ), fm.width(mLabOpacity->text()));
         maxTextWidth += mMargin;
 
