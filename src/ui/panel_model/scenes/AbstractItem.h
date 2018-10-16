@@ -32,17 +32,15 @@ protected:
 
     
 public:
+    static int mBorderWidth;
+    static int mEltsMargin;
+    static int mItemWidth;
     QJsonObject mData;
 
     AbstractScene* mScene;
-    
-    int mBorderWidth;
+
     int mTitleHeight;
-    int mPhasesHeight;
-    int mEltsMargin;
-    int mEltsWidth;
     int mEltsHeight;
-    int mItemWidth;
     
     bool mMoving; // used in AbstractScene::itemReleased() to merge item like eventItem and phaseItem
     bool mMergeable;

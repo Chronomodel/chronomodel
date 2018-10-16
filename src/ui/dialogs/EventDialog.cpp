@@ -6,17 +6,16 @@
 #include "QtUtilities.h"
 #include <QtWidgets>
 
-
 EventDialog::EventDialog(QWidget* parent, const QString& title, Qt::WindowFlags flags):QDialog(parent, flags)
 {
     setWindowTitle(title);
     
     // -----------
     
-    Label* nameLab = new Label(tr("Name"), this);
+    QLabel* nameLab = new QLabel(tr("Name"), this);
     nameLab->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
     
-    Label* colorLab = new Label(tr("Color"), this);
+    QLabel* colorLab = new QLabel(tr("Color"), this);
     colorLab->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
     
     mNameEdit = new LineEdit(this);
@@ -49,7 +48,7 @@ EventDialog::EventDialog(QWidget* parent, const QString& title, Qt::WindowFlags 
     QFont font;
     font.setWeight(QFont::Bold);
     
-    Label* titleLab = new Label(title, this);
+    QLabel* titleLab = new QLabel(title, this);
     titleLab->setFont(font);
     titleLab->setAlignment(Qt::AlignCenter);
     

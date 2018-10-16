@@ -3,29 +3,24 @@
 #include "StateKeys.h"
 #include <QtWidgets>
 
+ int AbstractItem::mBorderWidth  (2);
+ int AbstractItem::mEltsMargin  (3);
+ int AbstractItem::mItemWidth (150);
 
 AbstractItem::AbstractItem(AbstractScene* scene, QGraphicsItem* parent):QGraphicsObject(parent),
-mScene(scene),
-mBorderWidth(2.),
-mTitleHeight(15.),
-mPhasesHeight(20.),
-mEltsMargin(3.),
-mEltsWidth(15.),
-mEltsHeight(40.),
-mItemWidth(150.),
-//mMoving(false),
-mMergeable(false),
-mGreyedOut(false)
+    mScene(scene),
+    mMergeable(false),
+    mGreyedOut(false)
 {
     setPos(0., 0.);
     setZValue(1.);
     setAcceptHoverEvents(true);
     setAcceptDrops(true);
-    setFlags(QGraphicsItem::ItemIsSelectable |
-             QGraphicsItem::ItemIsMovable |
-             QGraphicsItem::ItemIsFocusable |
-             QGraphicsItem::ItemSendsScenePositionChanges |
-             QGraphicsItem::ItemSendsGeometryChanges);
+    setFlags( QGraphicsItem::ItemIsSelectable |
+                     QGraphicsItem::ItemIsMovable |
+                     QGraphicsItem::ItemIsFocusable |
+                     QGraphicsItem::ItemSendsScenePositionChanges |
+                     QGraphicsItem::ItemSendsGeometryChanges);
     
     // Not yet supported with retina display in Qt 5.3
 #ifndef Q_OS_MAC
@@ -68,12 +63,7 @@ void AbstractItem::setCurrentInData(const bool current)
 void AbstractItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
     qDebug()<<"AbstractItem::mousePressEvent__________??";
-  /*  if (mScene->mShowGrid) {
-        QPointF ptBefore = pos();
-        ptBefore = QPointF(floor(ptBefore.rx()/10.) *10, floor(ptBefore.ry()/10.) *10);
-        setPos(ptBefore);
-        e->setPos(ptBefore);
-    }*/
+
     if (!mScene->itemClicked(this, e)) {
         setZValue(2.);
 
@@ -105,13 +95,10 @@ void AbstractItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
     QGraphicsItem::mouseDoubleClickEvent(e);
 }
 
-
 void AbstractItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 {
     mMoving = true;
-    //qDebug()<<"AbstractItem::mouseMoveEvent() pos()"<<pos();
-    //qDebug()<<"AbstractItem::mouseMoveEvent()1 e->pos"<<e->pos()<<e->scenePos()<<pos();
-    //updateItemPosition(e->scenePos());
+
     qDebug()<<"AbstractItem::mouseMoveEvent() e->pos avant mouseMove2"<<e->pos()<<e->scenePos()<<pos();
     if (mScene->mShowGrid) {
         QPointF ptBefore = pos();
@@ -120,7 +107,6 @@ void AbstractItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
         setPos(ptBefore);
         e->setPos(ptBefore);
     }
-    //setSelected(true);
 
     QGraphicsItem::mouseMoveEvent(e);
 

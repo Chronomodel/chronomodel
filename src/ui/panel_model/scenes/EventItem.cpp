@@ -9,15 +9,19 @@
 #include "MainWindow.h"
 #include "Project.h"
 #include "ArrowTmpItem.h"
-#include <QtWidgets>
 
 
 EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):AbstractItem(scene, parent),
-mWithSelectedPhase(false),
-mShowAllThumbs(true)
+    mWithSelectedPhase(false),
+    mPhasesHeight (20),
+    mShowAllThumbs(true)
 {
+    mTitleHeight = 25;
+    mEltsHeight = 45; // DateItem::mTitleHeight (15) +  mEltsHeight (30)
+
     setEvent(event, settings);
     mScene = static_cast<AbstractScene*>(scene);
+
 }
 
 EventItem::~EventItem()
@@ -31,9 +35,7 @@ EventItem::~EventItem()
  */
 void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-//qDebug()<<"EventItem::mousePressEvent() pos() scenePos() et e.pos()"<<pos()<<scenePos()<<e->pos()<<e->scenePos();
-//qDebug()<<"EventItem::mousePressEvent() mData"<<mData.value(STATE_ITEM_X).toDouble()<<mData.value(STATE_ITEM_Y).toDouble();
-    EventsScene* itemScene = dynamic_cast<EventsScene*>(mScene);
+     EventsScene* itemScene = dynamic_cast<EventsScene*>(mScene);
 
     if ((this != itemScene->currentEvent()) && (!itemScene->mDrawingArrow) && (e->modifiers() != Qt::ControlModifier)) {// && (!itemScene->mSelectKeyIsDown)) {
         itemScene->clearSelection();
@@ -65,9 +67,8 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     const bool isSelected = event.value(STATE_IS_SELECTED).toBool() || event.value(STATE_IS_CURRENT).toBool();
     setSelected(isSelected);
     setPos(event.value(STATE_ITEM_X).toDouble(),
-           event.value(STATE_ITEM_Y).toDouble());
-//qDebug()<<"EventItem::setEvent() mData"<<event.value(STATE_ITEM_X).toDouble()<< event.value(STATE_ITEM_Y).toDouble();
-//qDebug()<<"EventItem::setEvent() setPos"<<pos()<<scenePos();
+                event.value(STATE_ITEM_Y).toDouble());
+
     // ----------------------------------------------
     //  Check if item should be greyed out
     // ----------------------------------------------
@@ -88,24 +89,17 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     // ----------------------------------------------
     //  Calculate item size
     // ----------------------------------------------
-    qreal h = mTitleHeight + mPhasesHeight + 2*mBorderWidth + 2*mEltsMargin;
-    
-    //QString name = event.value(STATE_NAME).toString();
-  //  QFont font = AppSettings::font();
-    //QFontMetrics metrics(font);
- //   qreal w = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin + 2*mTitleHeight;
-    
+    qreal h = mTitleHeight + mPhasesHeight + 2* AbstractItem::mBorderWidth + 2*AbstractItem::mEltsMargin;
+
     const QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
     
     const int count = dates.size();
     if (count > 0)
-        h += count * (mEltsHeight + mEltsMargin);
+        h += count * (mEltsHeight + AbstractItem::mEltsMargin);
     else
-        h += mEltsMargin + mEltsHeight;
+        h += AbstractItem::mEltsMargin + mEltsHeight;
     
-  //  font.setPointSizeF(11.);
-
-     mSize = QSize(mItemWidth, h);
+     mSize = QSize(AbstractItem::mItemWidth, h);
     
     if (event.value(STATE_EVENT_DATES).toArray() != mData.value(STATE_EVENT_DATES).toArray() || mSettings != settings) {
         // ----------------------------------------------
@@ -135,9 +129,9 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
                 QPointF pos(0,
                             boundingRect().y() +
                             mTitleHeight +
-                            mBorderWidth +
-                            2*mEltsMargin +
-                            i * (mEltsHeight + mEltsMargin));
+                            AbstractItem::mBorderWidth +
+                            2*AbstractItem::mEltsMargin +
+                            i * (mEltsHeight + AbstractItem::mEltsMargin));
                 dateItem->setPos(pos);
                 dateItem->setOriginalPos(pos);
                 dateItem = nullptr;
@@ -225,8 +219,8 @@ void EventItem::setDatesVisible(bool visible)
 void EventItem::updateItemPosition(const QPointF& pos)
 {
     qDebug()<<"EventItem::updateItemPosition() pos="<<pos;
-    mData[STATE_ITEM_X] = (double) pos.x();
-    mData[STATE_ITEM_Y] = (double) pos.y();
+    mData[STATE_ITEM_X] = double (pos.x());
+    mData[STATE_ITEM_Y] = double (pos.y());
 }
 
 void EventItem::dropEvent(QGraphicsSceneDragDropEvent* e)
@@ -264,19 +258,21 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
 void EventItem::redrawEvent()
 {
     prepareGeometryChange();
+    mTitleHeight = 25;
+    mEltsHeight = 45;
     // Set DateItems positions
     const QList<QGraphicsItem*> datesItemsList = childItems();
     // ----------------------------------------------
     //  Calculate item size
     // ----------------------------------------------
     const QJsonArray dates = getEvent().value(STATE_EVENT_DATES).toArray();
-    int h = mTitleHeight + mPhasesHeight + 2*mBorderWidth + 2*mEltsMargin;
+    int h = mTitleHeight + mPhasesHeight + 2*AbstractItem::mBorderWidth + 2*AbstractItem::mEltsMargin;
 
     const int count = dates.size();
     if (count > 0)
-        h += count * (mEltsHeight + mEltsMargin);
+        h += count * (mEltsHeight + AbstractItem::mEltsMargin);
     else
-        h += mEltsMargin + mEltsHeight;
+        h +=AbstractItem:: mEltsMargin + mEltsHeight;
 
 #ifdef DEBUG
     if (count != datesItemsList.size())
@@ -292,9 +288,9 @@ void EventItem::redrawEvent()
             dateItem->setGreyedOut(mGreyedOut);
             QPointF pos(0, boundingRect().y() +
                         mTitleHeight +
-                        mBorderWidth +
-                        2*mEltsMargin +
-                        i * (mEltsHeight + mEltsMargin));
+                        AbstractItem:: mBorderWidth +
+                        2*AbstractItem::mEltsMargin +
+                        i * (dateItem->boundingRect().height() + AbstractItem::mEltsMargin));
 
             dateItem->setPos(pos);
             dateItem->setOriginalPos(pos);
@@ -336,11 +332,9 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->setBrush(QBrush(eventColor));
     painter->drawRect(rect);
 
-    //QFont font (APP_SETTINGS_DEFAULT_FONT_FAMILY, 10, 50, false); //"Calibri"
-//QFont font ("Calibri", 10, 50, false);
    QFont font (qApp->font());
    font.setPointSizeF(12.);
-//   qDebug()<<"EventItem::paint"<<font;
+
     font.setStyle(QFont::StyleNormal);
     font.setBold(false);
     font.setItalic(false);
@@ -371,9 +365,9 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->drawRect(phasesRect);
 
     // Name
-   QRectF tr(rect.x() + mBorderWidth + 2*mEltsMargin ,
-              rect.y() + mBorderWidth + mEltsMargin,
-              rect.width() - 2*mBorderWidth - 4*mEltsMargin,
+   QRectF tr(rect.x() +AbstractItem:: mBorderWidth + 2*AbstractItem::mEltsMargin ,
+              rect.y() + AbstractItem::mBorderWidth + AbstractItem::mEltsMargin,
+              rect.width() - 2*AbstractItem::mBorderWidth - 4*AbstractItem::mEltsMargin,
               mTitleHeight);
 
     font.setPointSizeF(12.);
@@ -387,7 +381,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->setFont(ftAdapt);
 
     QFontMetrics metrics(ftAdapt);
-    name = metrics.elidedText(name, Qt::ElideRight, int (tr.width()));
+    name = metrics.elidedText(name, Qt::ElideRight, int (tr.width() - 5 ));
     
     const QColor frontColor = getContrastedColor(eventColor);
     painter->setPen(frontColor);
@@ -437,5 +431,5 @@ QJsonArray EventItem::getPhases() const
 // Geometry
 QRectF EventItem::boundingRect() const
 {
-    return QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
+  return QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
 }

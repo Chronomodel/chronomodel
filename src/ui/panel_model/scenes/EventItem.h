@@ -44,6 +44,9 @@ protected:
     QJsonObject mSettings;
     bool mWithSelectedPhase;
     bool mShowAllThumbs;
+
+   private:
+     int mPhasesHeight;
 };
 
 #endif

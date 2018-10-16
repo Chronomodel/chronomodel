@@ -41,6 +41,8 @@ public:
 private:
     QGraphicsItemAnimation* mDatesAnim;
     QTimeLine* mDatesAnimTimer;
+     int mTitleHeight;
+     int mEltsHeight;
 
 };
 

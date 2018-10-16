@@ -15,11 +15,12 @@ mControlsVisible(false),
 mControlsEnabled(false),
 mAtLeastOneEventSelected(false)
 {
-    mBorderWidth = 5;
-    mEltsHeight = 15;
-    setPhase(phase);
+     setPhase(phase);
     inPix = new QPixmap(":insert_event.png");
     exPix = new QPixmap(":extract_event.png");
+
+     mTitleHeight = 30;
+     mEltsHeight = 25 + 2;
 }
 
 PhaseItem::~PhaseItem()
@@ -156,7 +157,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
     QFont font (qApp->font());
     font.setPointSizeF(10.);
-    QFontMetrics fm (font);
+    //QFontMetrics fm (font);
 
     // Draw then container
     painter->setPen(Qt::NoPen);
@@ -193,7 +194,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         const QFont ftAdapt = AbstractItem::adjustFont(font, eventName, r);
 
         const QFontMetrics fmAdjust (ftAdapt);
-        eventName = fmAdjust.elidedText(eventName, Qt::ElideRight, int (r.width()));
+        eventName = fmAdjust.elidedText(eventName, Qt::ElideRight, int (r.width() - 5));
         painter->setFont(ftAdapt);
 
         // magnify and highlight selected events
@@ -221,8 +222,6 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         }
 
     }
-
-
 
   //
     if (mControlsVisible && mControlsEnabled) {
@@ -271,7 +270,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         painter->setFont(ftAdapt);
         QFontMetrics fmName (ftAdapt);
 
-        name = fmName.elidedText(name, Qt::ElideRight, int(tr.width()));
+        name = fmName.elidedText(name, Qt::ElideRight, int(tr.width() - 5));
         painter->setPen(fontColor);
         painter->drawText(tr, Qt::AlignCenter, name);
     }

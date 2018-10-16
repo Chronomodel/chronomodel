@@ -4,14 +4,16 @@
 #include "EventItem.h"
 #include "Project.h"
 #include "PluginAbstract.h"
-#include <QtWidgets>
 
+//#include <QtWidgets>
 
 DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QColor& color, const QJsonObject& settings, QGraphicsItem* parent):QGraphicsObject(parent),
-mEventsScene(EventsScene),
-mDate(date),
-mColor(color),
-mGreyedOut(false)
+    mEventsScene(EventsScene),
+    mDate(date),
+    mColor(color),
+    mGreyedOut(false),
+    mTitleHeight (15),
+    mEltsHeight (30)
 {
     setZValue(1.);
     setAcceptHoverEvents(true);
@@ -20,7 +22,6 @@ mGreyedOut(false)
 
     // set the selection directly to the parent item, here the EventItem
     setFlag(ItemIsSelectable, false);
-
 
     mDatesAnimTimer = new QTimeLine(100);
     mDatesAnimTimer->setFrameRange(0, 2);
@@ -82,14 +83,13 @@ QRectF DateItem::boundingRect() const
 {
    EventItem* eventItem = dynamic_cast<EventItem*>(parentItem());
    if (eventItem) {
-        QRectF pr = eventItem->boundingRect();
-        QRectF r(-pr.width()/2 + eventItem->mBorderWidth + eventItem->mEltsMargin,
-                 0,
-                 pr.width() - 2*(eventItem->mBorderWidth + eventItem->mEltsMargin),
-                 eventItem->mEltsHeight);
+               QRectF r( -AbstractItem::mItemWidth/2 + AbstractItem::mBorderWidth + AbstractItem::mEltsMargin,
+                         0,
+                        AbstractItem::mItemWidth - 2*(AbstractItem::mBorderWidth + AbstractItem::mEltsMargin),
+                        mTitleHeight +mEltsHeight);
         return r;
     } else
-        return QRectF(0, 0, 100, 30);
+        return QRectF(0, 0, AbstractItem::mItemWidth - 2*(AbstractItem::mBorderWidth + AbstractItem::mEltsMargin) , mTitleHeight +mEltsHeight);
 }
 
 void DateItem::setGreyedOut(bool greyedOut)
@@ -114,14 +114,13 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     // background, it avoids small line between the box name and the thumbnail
     QRectF r = boundingRect();
     painter->fillRect(r, Qt::white);
+
     
-    r.adjust(2, 2, -2, -2);
+    r.adjust(1, 1, -1, -1);
     // box name
-    const int rHeightMid =  int(r.height() *2/3);
-    const QRectF rName = r.adjusted(0, 0, 0, -rHeightMid);
-    painter->fillRect(r.adjusted(0, 0, 0, -rHeightMid), Qt::white);
-    
-   // QFont font (APP_SETTINGS_DEFAULT_FONT_FAMILY, 10, 50, false);
+    const QRectF rName = QRectF(-r.width()/2., 0, r.width(), mTitleHeight);
+
+    painter->fillRect(rName, Qt::white);
     QFont font (qApp->font());
     font.setPointSizeF(10.);
 
@@ -134,10 +133,9 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     QFontMetrics metrics (ftAdapt);
     name = metrics.elidedText(name, Qt::ElideRight, int (r.width() - 5));
 
-    painter->drawText(r.adjusted(0, 0, 0, -rHeightMid), Qt::AlignCenter, name);
-
+    painter->drawText(rName, Qt::AlignCenter, name);
     // thumbnail
-    const QRectF rct = r.adjusted(0, r.height()-rHeightMid, 0, 0);
+    const QRectF rct = QRectF(-r.width()/2., mTitleHeight, r.width(), mEltsHeight);
 
     if (!mCalibThumb.isNull()) {
         // using matrix transformation, because antiAliasing don't work with pixmap

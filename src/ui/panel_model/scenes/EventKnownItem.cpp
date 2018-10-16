@@ -13,11 +13,15 @@
 
 
 EventKnownItem::EventKnownItem(EventsScene* eventsScene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):EventItem(eventsScene, event, settings, parent),
-mThumbH(20),
-mThumbVisible(true)
+    mThumbH(20),
+    mThumbVisible(true),
+   mPhasesHeight (20)
 {
     setEvent(event, settings);
     mScene = static_cast<AbstractScene*>(eventsScene);
+
+    mTitleHeight = 25;
+    mEltsHeight = 60;
 }
 
 EventKnownItem::~EventKnownItem()
@@ -112,20 +116,12 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
 
 QRectF EventKnownItem::boundingRect() const
 {
-    //QFont font = qApp->font();
-    //QFontMetrics metrics(font);
-    //const QString name = mData.value(STATE_NAME).toString();
-    
-    //qreal w = metrics.width(name) + 2 * (mBorderWidth + mEltsMargin);
     // the size is independant of the size name
 
-    qreal h = mTitleHeight + mThumbH + mPhasesHeight + 2*mEltsMargin;
+    qreal h = mTitleHeight + mThumbH + mPhasesHeight + 2*AbstractItem::mEltsMargin;
     h += 40.;
 
-    qreal w = 202;//qMax(w, 150.);
-    //w += 52.;
-
-
+    const  qreal w ( 202);
 
     return QRectF(-w/2, -h/2, w, h);
 }
