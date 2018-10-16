@@ -723,13 +723,14 @@ void MultiCalibrationView::exportFullImage()
 
     AxisWidget* axisWidget = nullptr;
     QLabel* axisLegend = nullptr;
-    int axeHeight (int (font().pointSize() * 2.2));//20);
+   // int axeHeight (int (font().pointSize() * 2.2));
+    int axeHeight (int ( fmAxe.ascent() * 2.2));
     int legendHeight ( int (1.5 * (fmAxe.descent() + fmAxe.ascent())));
 
     if (printAxis) {
         widgetExport->resize(widgetExport->width(), widgetExport->height() + axeHeight + legendHeight);
 
-        DateConversion f = DateUtils::convertToAppSettingsFormat;
+        DateConversion f = nullptr; //DateUtils::convertToAppSettingsFormat;
 
         const int graphShift (5); // the same name and the same value as MultiCalibrationDrawing::updateLayout()
         axisWidget = new AxisWidget(f, widgetExport);

@@ -43,7 +43,6 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
 mResultMaxVariance(1000.),
 mHasPhases(false),
 mModel(nullptr),
-//mGraphHeight (5 * AppSettings::heigthUnit()), // init in applyAppSettings
 mTabEventsIndex(0),
 mTabPhasesIndex(0),
 mEventsScrollArea(nullptr),
@@ -587,13 +586,13 @@ void ResultsView::applyAppSettings()
 
     radioButtonHeight = int ( fm.height());
     spinBoxHeight = mXScaleSpin->height();
-    buttonHeight = int (0.5 * AppSettings::heigthUnit());
-
+    buttonHeight =  int (2 * (fm.ascent() + fm.descent()));//int (0.5 * AppSettings::heigthUnit());
+/*
 #ifdef Q_OS_MAC
     comboBoxHeight  = mThicknessCombo->height();
-#else
+#else */
     comboBoxHeight  = mThicknessCombo->height(); //int (0.3 * AppSettings::heigthUnit());
-#endif
+// #endif
 
     mMargin = int (.2* AppSettings::heigthUnit());
 
@@ -3612,9 +3611,10 @@ void ResultsView::exportFullImage()
     
     AxisWidget* axisWidget = nullptr;
     QLabel* axisLegend = nullptr;
-    int axeHeight (int (mGraphFont.pointSize() * 2.2)); // equal MarginBottom()
+    QFontMetrics fm (mGraphFont);
+    int axeHeight (int (fm.ascent() * 2.2)); // equal MarginBottom()
     //int legendHeight (int (2* AppSettings::font().pointSizeF()));// 20);
-    int legendHeight (int (2* mGraphFont.pointSizeF()));// 20);
+    int legendHeight (int (fm.ascent() *2));
     if (printAxis) {
         curWid->setFixedHeight(curWid->height() + axeHeight + legendHeight );
 
