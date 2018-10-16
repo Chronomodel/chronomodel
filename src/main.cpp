@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
     locale.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(locale);
 
-    qApp->setFont(QApplication::font("QMenu"));
+  //  qApp->setFont(QApplication::font("QMenu"));
 
     /*QTranslator qtTranslator;
     qtTranslator.load("qt_" + QLocale::system().name(), QLibraryInfo::location(QLibraryInfo::TranslationsPath));
