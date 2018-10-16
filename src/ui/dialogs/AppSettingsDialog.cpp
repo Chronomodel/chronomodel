@@ -34,7 +34,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
     //mFontLab = new Label(tr("Font Menu"), this);
     //mFontBut = new Button(mFont.family() + ", " + QString::number(mFont.pointSizeF()), this);
-    mIconSizeLab = new Label(tr("Model Icons Size"), this);
+    mIconSizeLab = new QLabel(tr("Model Icons Size"), this);
     mIconSize = new QSpinBox(this);
     mIconSize->setRange(1, 5);
     mIconSize->setSingleStep(1);

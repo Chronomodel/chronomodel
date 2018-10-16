@@ -61,7 +61,7 @@ private:
 
    // QLabel* mCountryLab;
    // QComboBox* mCountryCombo;
-    Label *mIconSizeLab;
+    QLabel *mIconSizeLab;
     QSpinBox *mIconSize;
     
     QLabel* mAutoSaveLab;
