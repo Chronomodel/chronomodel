@@ -20,7 +20,7 @@ mAtLeastOneEventSelected(false)
     exPix = new QPixmap(":extract_event.png");
 
      mTitleHeight = 30;
-     mEltsHeight = 25 + 2;
+     mEltsHeight = 25;
 }
 
 PhaseItem::~PhaseItem()
@@ -156,8 +156,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     const QColor fontColor = getContrastedColor(phaseColor);
 
     QFont font (qApp->font());
-    font.setPointSizeF(10.);
-    //QFontMetrics fm (font);
+    font.setPointSizeF(12.);
 
     // Draw then container
     painter->setPen(Qt::NoPen);
@@ -261,7 +260,8 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
                   rect.y() + mBorderWidth,
                   rect.width() - 2*(mBorderWidth+ mEltsMargin),
                   mTitleHeight);
-        font.setPointSizeF(12.);
+
+        font.setPointSizeF(14.);
         painter->setFont(font);
 
         QString name = mData.value(STATE_NAME).toString();
