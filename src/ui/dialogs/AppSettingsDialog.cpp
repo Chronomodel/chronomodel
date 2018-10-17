@@ -15,13 +15,10 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     // -----------------------------
     //  General View
     // -----------------------------
-    //mFont = qApp->font();//AppSettings::font();
-
-    mGeneralView = new QWidget();
+     mGeneralView = new QWidget();
     
     mLangHelpLab = new QLabel(tr("Language is used to define how number input should be typed (using comma or dot as decimal separator). This is not related to the application translation which is not available yet!"), this);
 
-    //mLangHelpLab->setFont(mFont);
     mLangHelpLab->setAlignment(Qt::AlignCenter);
     mLangHelpLab->setWordWrap(true);
     
@@ -32,8 +29,6 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     for (int i=0; i<339; i++)
         mLanguageCombo->addItem(QLocale::languageToString(QLocale::Language (i)),QVariant(QLocale::Language(i)));
 
-    //mFontLab = new Label(tr("Font Menu"), this);
-    //mFontBut = new Button(mFont.family() + ", " + QString::number(mFont.pointSizeF()), this);
     mIconSizeLab = new QLabel(tr("Model Icons Size"), this);
     mIconSize = new QSpinBox(this);
     mIconSize->setRange(1, 5);
@@ -115,8 +110,6 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
     grid->addWidget(mLangHelpLab, ++row, 0, 1, 2);
 
-    //grid->addWidget(mFontLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    //grid->addWidget(mFontBut, row, 1);
     grid->addWidget(mIconSizeLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mIconSize, row, 1);
 
@@ -260,8 +253,6 @@ void AppSettingsDialog::setSettings()
 {
     mLanguageCombo->setCurrentText(QLocale::languageToString(AppSettings::mLanguage));
     //mCountryCombo->setCurrentText(QLocale::countryToString(settings.mCountry)); // keep in memory
-    //mFont = font();//AppSettings::font();
-    //mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
     mIconSize->setValue(AppSettings::mIconSize);
 
     mAutoSaveCheck->setChecked(AppSettings::mAutoSave);
@@ -278,12 +269,10 @@ void AppSettingsDialog::setSettings()
     mOpenLastProjectCheck->setChecked(AppSettings::mOpenLastProjectAtLaunch);
     
     mPixelRatio->setValue(AppSettings::mPixelRatio);
-    //mDpm->setCurrentText(QString::number(settings.mDpm));
     mImageQuality->setValue(AppSettings::mImageQuality);
     mFormatDate->setCurrentIndex(int (AppSettings::mFormatDate));
     mPrecision->setValue(AppSettings::mPrecision);
-   // mNbSheet->setValue(settings.mNbSheet);
-}
+ }
 
 void AppSettingsDialog::getSettings()
 {
