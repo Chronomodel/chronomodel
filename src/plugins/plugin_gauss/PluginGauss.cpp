@@ -255,7 +255,10 @@ QString PluginGauss::getRefExt() const
 
 QString PluginGauss::getRefsPath() const
 {
-    QString path = qApp->applicationDirPath();
+    //http://doc.qt.io/qt-5/qstandardpaths.html#details
+    QStringList dataPath = QStandardPaths::standardLocations(QStandardPaths::DataLocation);
+    qDebug() <<"Plugin14C::getRefsPath()"<<dataPath;
+    QString path  =  dataPath[0];//qApp->applicationDirPath();
 #ifdef Q_OS_MAC
     QDir dir(path);
     dir.cdUp();

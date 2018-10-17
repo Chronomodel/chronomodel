@@ -40,7 +40,7 @@ QPair<long double, long double> PluginTL::getLikelihoodArg(const double& t, cons
     const double ref_year = data.value(DATE_TL_REF_YEAR_STR).toDouble();
     
     // gaussian TL
-    result= QPair<long double,long double>(1/(error*error), (-0.5f * powl((long double)(age - (ref_year - t)) / error, 2.l))) ;
+    result = QPair<long double,long double>(1.l/(error*error), (-0.5l * powl((long double)(age - (ref_year - t)) / error, 2.l))) ;
     return result;
 }
 
