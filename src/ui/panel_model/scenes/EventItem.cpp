@@ -10,14 +10,13 @@
 #include "Project.h"
 #include "ArrowTmpItem.h"
 
-
 EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):AbstractItem(scene, parent),
     mWithSelectedPhase(false),
     mPhasesHeight (20),
     mShowAllThumbs(true)
 {
-    mTitleHeight = 25;
-    mEltsHeight = 45; // DateItem::mTitleHeight (15) +  mEltsHeight (30)
+    mTitleHeight = 20;
+    mEltsHeight =  DateItem::mTitleHeight +  DateItem::mEltsHeight ;
 
     setEvent(event, settings);
     mScene = static_cast<AbstractScene*>(scene);
@@ -89,7 +88,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     // ----------------------------------------------
     //  Calculate item size
     // ----------------------------------------------
-    qreal h = mTitleHeight + mPhasesHeight + 2* AbstractItem::mBorderWidth + 2*AbstractItem::mEltsMargin;
+    qreal h = mTitleHeight + mPhasesHeight + 1* AbstractItem::mBorderWidth + 1*AbstractItem::mEltsMargin;
 
     const QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
     
@@ -130,16 +129,16 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
                             boundingRect().y() +
                             mTitleHeight +
                             AbstractItem::mBorderWidth +
-                            2*AbstractItem::mEltsMargin +
+                            1*AbstractItem::mEltsMargin +
                             i * (mEltsHeight + AbstractItem::mEltsMargin));
                 dateItem->setPos(pos);
                 dateItem->setOriginalPos(pos);
                 dateItem = nullptr;
             }
-            catch(QString error){
+            catch(QException &e){
                 QMessageBox message(QMessageBox::Critical,
                                     qApp->applicationName() + " " + qApp->applicationVersion(),
-                                    tr("Error : %1").arg(error),
+                                    QString("EventItem::setEvent() Error : %1").arg(e.what()),
                                     QMessageBox::Ok,
                                     qApp->activeWindow());
                 message.exec();
@@ -153,7 +152,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     // ----------------------------------------------
     //  Repaint based on mEvent
     // ----------------------------------------------
-    //update(); //Done by prepareGeometryChange() at the function start
+    //update(); //Done by prepareGeometryChange() at the beging of the function
 }
 
 /**
@@ -258,15 +257,13 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
 void EventItem::redrawEvent()
 {
     prepareGeometryChange();
-    mTitleHeight = 25;
-    mEltsHeight = 45;
     // Set DateItems positions
     const QList<QGraphicsItem*> datesItemsList = childItems();
     // ----------------------------------------------
     //  Calculate item size
     // ----------------------------------------------
     const QJsonArray dates = getEvent().value(STATE_EVENT_DATES).toArray();
-    int h = mTitleHeight + mPhasesHeight + 2*AbstractItem::mBorderWidth + 2*AbstractItem::mEltsMargin;
+    int h = mTitleHeight + mPhasesHeight +1*AbstractItem::mBorderWidth + 1*AbstractItem::mEltsMargin;
 
     const int count = dates.size();
     if (count > 0)
@@ -286,20 +283,17 @@ void EventItem::redrawEvent()
         DateItem* dateItem = dynamic_cast<DateItem*>(item);
         if (dateItem) {
             dateItem->setGreyedOut(mGreyedOut);
-            QPointF pos(0, boundingRect().y() +
-                        mTitleHeight +
-                        AbstractItem:: mBorderWidth +
-                        2*AbstractItem::mEltsMargin +
-                        i * (dateItem->boundingRect().height() + AbstractItem::mEltsMargin));
-
+            QPointF pos(0,
+                        boundingRect().y() +  mTitleHeight +
+                        1*AbstractItem::mEltsMargin +
+                        i * (mEltsHeight + AbstractItem::mEltsMargin));
             dateItem->setPos(pos);
             dateItem->setOriginalPos(pos);
             ++i;
         }
-
     }
 
-  //  update();
+  //  update(); //Done by prepareGeometryChange() at the beging of the function
 }
 
 void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
@@ -333,15 +327,16 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->drawRect(rect);
 
    QFont font (qApp->font());
-   font.setPointSizeF(12.);
+   //font.setPointSizeF(12.);
+   font.setPixelSize(12);
 
     font.setStyle(QFont::StyleNormal);
     font.setBold(false);
     font.setItalic(false);
     if (numPhases == 0) {
         QString noPhase = tr("No Phase");
-        QFont ftAdapt = AbstractItem::adjustFont(font, noPhase, phasesRect);
-        painter->setFont(ftAdapt);
+       // QFont ftAdapt = AbstractItem::adjustFont(font, noPhase, phasesRect);
+        painter->setFont(font);//ftAdapt);
         painter->fillRect(phasesRect, QColor(0, 0, 0, 180));
         painter->setPen(QColor(200, 200, 200));
         painter->drawText(phasesRect, Qt::AlignCenter, noPhase );
@@ -366,21 +361,21 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
     // Name
    QRectF tr(rect.x() +AbstractItem:: mBorderWidth + 2*AbstractItem::mEltsMargin ,
-              rect.y() + AbstractItem::mBorderWidth + AbstractItem::mEltsMargin,
+              rect.y() + AbstractItem::mBorderWidth, // + AbstractItem::mEltsMargin,
               rect.width() - 2*AbstractItem::mBorderWidth - 4*AbstractItem::mEltsMargin,
               mTitleHeight);
 
-    font.setPointSizeF(12.);
+    font.setPixelSize(14);
     font.setStyle(QFont::StyleNormal);
-    font.setBold(false);
+    font.setBold(true);
     font.setItalic(false);
 
     QString name = mData.value(STATE_NAME).toString();
 
-     QFont ftAdapt = AbstractItem::adjustFont(font, name, tr);
-    painter->setFont(ftAdapt);
+     //QFont ftAdapt = AbstractItem::adjustFont(font, name, tr);
+    painter->setFont(font);//ftAdapt);
 
-    QFontMetrics metrics(ftAdapt);
+    QFontMetrics metrics(font);//ftAdapt);
     name = metrics.elidedText(name, Qt::ElideRight, int (tr.width() - 5 ));
     
     const QColor frontColor = getContrastedColor(eventColor);

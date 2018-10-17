@@ -19,7 +19,7 @@ mAtLeastOneEventSelected(false)
     inPix = new QPixmap(":insert_event.png");
     exPix = new QPixmap(":extract_event.png");
 
-     mTitleHeight = 30;
+     mTitleHeight = 25;
      mEltsHeight = 25;
 }
 
@@ -156,7 +156,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     const QColor fontColor = getContrastedColor(phaseColor);
 
     QFont font (qApp->font());
-    font.setPointSizeF(12.);
+    font.setPixelSize(14);
 
     // Draw then container
     painter->setPen(Qt::NoPen);
@@ -190,11 +190,9 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         painter->setPen(getContrastedColor(eventColor));
         QString eventName = event.value(STATE_NAME).toString();
 
-        const QFont ftAdapt = AbstractItem::adjustFont(font, eventName, r);
-
-        const QFontMetrics fmAdjust (ftAdapt);
+        const QFontMetrics fmAdjust (font);
         eventName = fmAdjust.elidedText(eventName, Qt::ElideRight, int (r.width() - 5));
-        painter->setFont(ftAdapt);
+        painter->setFont(font);
 
         // magnify and highlight selected events
         if (isSelected) {
@@ -261,14 +259,13 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
                   rect.width() - 2*(mBorderWidth+ mEltsMargin),
                   mTitleHeight);
 
-        font.setPointSizeF(14.);
+        font.setPixelSize(16);
+          font.setBold(true);
         painter->setFont(font);
 
         QString name = mData.value(STATE_NAME).toString();
 
-        const QFont ftAdapt = AbstractItem::adjustFont(font, name, tr);
-        painter->setFont(ftAdapt);
-        QFontMetrics fmName (ftAdapt);
+        QFontMetrics fmName (font);
 
         name = fmName.elidedText(name, Qt::ElideRight, int(tr.width() - 5));
         painter->setPen(fontColor);
@@ -276,7 +273,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     }
 
     // Change font
-    font.setPointSizeF(10.);
+    font.setPixelSize(12);
     painter->setFont(font);
     
     // Type (duration tau)
@@ -291,8 +288,8 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         painter->setBrush(Qt::white);
         painter->drawRect(tpr);
 
-        const QFont ftAdapt = AbstractItem::adjustFont(font, tauStr, tpr);
-        painter->setFont(ftAdapt);
+       // const QFont ftAdapt = AbstractItem::adjustFont(font, tauStr, tpr);
+       // painter->setFont(ftAdapt);
 
         painter->drawText(tpr, Qt::AlignCenter, tauStr);
     }

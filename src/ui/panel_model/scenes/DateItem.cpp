@@ -5,15 +5,14 @@
 #include "Project.h"
 #include "PluginAbstract.h"
 
-//#include <QtWidgets>
+int DateItem::mTitleHeight (20);
+int DateItem:: mEltsHeight (40);
 
 DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QColor& color, const QJsonObject& settings, QGraphicsItem* parent):QGraphicsObject(parent),
-    mEventsScene(EventsScene),
-    mDate(date),
-    mColor(color),
-    mGreyedOut(false),
-    mTitleHeight (15),
-    mEltsHeight (30)
+    mEventsScene (EventsScene),
+    mDate (date),
+    mColor (color),
+    mGreyedOut (false)
 {
     setZValue(1.);
     setAcceptHoverEvents(true);
@@ -66,7 +65,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
 
 DateItem::~DateItem()
 {
-
+    mEventsScene= nullptr;
 }
 
 const QJsonObject& DateItem::date() const
@@ -122,17 +121,20 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
 
     painter->fillRect(rName, Qt::white);
     QFont font (qApp->font());
-    font.setPointSizeF(10.);
+    //font.setPointSizeF(10.);
+    font.setPixelSize(12.);
 
     QString name = mDate.value(STATE_NAME).toString();
-    QFont ftAdapt = AbstractItem::adjustFont(font, name, rName);
-    painter->setFont(ftAdapt);
+   // QFont ftAdapt = AbstractItem::adjustFont(font, name, rName);
+    //painter->setFont(ftAdapt);
 
     painter->setPen(Qt::black);
 
-    QFontMetrics metrics (ftAdapt);
+    //QFontMetrics metrics (ftAdapt);
+    QFontMetrics metrics (font);
     name = metrics.elidedText(name, Qt::ElideRight, int (r.width() - 5));
 
+  painter->setFont(font);
     painter->drawText(rName, Qt::AlignCenter, name);
     // thumbnail
     const QRectF rct = QRectF(-r.width()/2., mTitleHeight, r.width(), mEltsHeight);

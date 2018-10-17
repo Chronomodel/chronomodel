@@ -4,8 +4,8 @@
 #include <QtWidgets>
 
  int AbstractItem::mBorderWidth  (2);
- int AbstractItem::mEltsMargin  (3);
- int AbstractItem::mItemWidth (150);
+ int AbstractItem::mEltsMargin  (4);
+ int AbstractItem::mItemWidth (180);
 
 AbstractItem::AbstractItem(AbstractScene* scene, QGraphicsItem* parent):QGraphicsObject(parent),
     mScene(scene),

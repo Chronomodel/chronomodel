@@ -22,7 +22,9 @@ public:
     void setGreyedOut(bool greyedOut);
     
     QRectF boundingRect() const;
-    
+
+    static int mTitleHeight;
+    static  int mEltsHeight;
 protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
     void mousePressEvent(QGraphicsSceneMouseEvent* e);
@@ -38,11 +40,11 @@ public:
     QPixmap mCalibThumb;
     bool mGreyedOut;
 
+
 private:
     QGraphicsItemAnimation* mDatesAnim;
     QTimeLine* mDatesAnimTimer;
-     int mTitleHeight;
-     int mEltsHeight;
+
 
 };
 

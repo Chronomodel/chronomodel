@@ -586,7 +586,7 @@ void ResultsView::applyAppSettings()
 
     radioButtonHeight = int ( fm.height());
     spinBoxHeight = mXScaleSpin->height();
-    buttonHeight =  int (2 * (fm.ascent() + fm.descent()));//int (0.5 * AppSettings::heigthUnit());
+    buttonHeight =  int (1.7 * (fm.ascent() + fm.descent()));//int (0.5 * AppSettings::heigthUnit());
 /*
 #ifdef Q_OS_MAC
     comboBoxHeight  = mThicknessCombo->height();
