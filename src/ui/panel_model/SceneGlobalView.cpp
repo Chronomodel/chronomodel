@@ -35,8 +35,8 @@ void SceneGlobalView::paintEvent(QPaintEvent* e)
         // --------------------------------------------------
         QRectF sceneRect = mScene->sceneRect();
         QMatrix matrix = mView->matrix();
-        sceneRect.setWidth(sceneRect.width() * matrix.m11());
-        sceneRect.setHeight(sceneRect.height() * matrix.m22());
+        sceneRect.setWidth( qMax(sceneRect.width() * matrix.m11(), 1.));
+        sceneRect.setHeight( qMax(sceneRect.height() * matrix.m22(), 1.));
         
         QRectF targetRect = getTargetRect();
         
