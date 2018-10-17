@@ -24,6 +24,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent* e);
     void mouseMoveEvent(QMouseEvent* e);
     void updateProp(QMouseEvent* e);
+    void mouseDoubleClickEvent(QMouseEvent *e);
     
 signals:
     void valueChanged(double value);

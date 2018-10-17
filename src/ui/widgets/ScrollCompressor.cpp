@@ -143,6 +143,13 @@ void ScrollCompressor::mouseMoveEvent(QMouseEvent* e)
 
 }
 
+void ScrollCompressor::mouseDoubleClickEvent(QMouseEvent *e)
+{
+    mProp = 0.5;
+    emit valueChanged(mProp);
+    update();
+}
+
 void ScrollCompressor::updateProp(QMouseEvent* e)
 {
     QRect r = rect();
@@ -150,13 +157,13 @@ void ScrollCompressor::updateProp(QMouseEvent* e)
         int y = r.height() - e->pos().y();
         y = (y < 0) ? 0 : y;
         y = (y > r.height()) ? r.height() : y;
-        mProp = (double)y / (double)r.height();
+        mProp = double(y) / double (r.height());
 
     } else {
         int x = e->pos().x();
         x = (x < 0) ? 0 : x;
         x = (x > r.width()) ? r.width() : x;
-        mProp = (double)x / (double)r.width();
+        mProp = double(x) / double(r.width());
     }
     emit valueChanged(mProp);
     update();
