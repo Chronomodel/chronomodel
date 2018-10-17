@@ -1,13 +1,15 @@
 #ifndef ResultsWrapper_H
 #define ResultsWrapper_H
 
-#include <QWidget>
-#include <QVBoxLayout>
-#include <QTabWidget>
 #include "MCMCLoopMain.h"
 #include "AxisTool.h"
 #include "GraphViewResults.h"
 #include "AppSettings.h"
+
+#include <QVBoxLayout>
+#include <QTabWidget>
+#include <QLabel>
+
 
 class QStackedWidget;
 class QScrollArea;
@@ -272,12 +274,11 @@ private:
     Button* mFontBut;
     QComboBox* mThicknessCombo;
     QComboBox* mOpacityCombo;
-   // QComboBox* mRenderCombo;
     
-    Label* mLabFont;
-    Label* mLabThickness;
-    Label* mLabOpacity;
-   // Label* labRendering;
+    QLabel* mLabFont;
+    QLabel * mLabThickness;
+    QLabel * mLabOpacity;
+
     //------------ MCMC Chains---------
     QWidget* mChainsGroup;
     Label* mChainsTitle;

@@ -276,14 +276,14 @@ mMinorCountScale (4)
     mYScaleSpin->setValue(mYSlider->value());
     mYScaleSpin->setToolTip(tr("Enter zoom value to magnify the curves on Y scale"));
 
-    mLabFont = new Label(tr("Font"), mGraphicGroup);
+    mLabFont = new QLabel(tr("Font"), mGraphicGroup);
     mLabFont->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mFontBut = new Button(mGraphFont.family() + ", " + QString::number(mGraphFont.pointSizeF()), mGraphicGroup);
     mFontBut->setToolTip(tr("Click to change the font on the drawing"));
     connect(mFontBut, &QPushButton::clicked, this, &ResultsView::updateGraphFont);
     
-    mLabThickness = new Label(tr("Thickness"), mGraphicGroup);
+    mLabThickness = new QLabel(tr("Thickness"), mGraphicGroup);
     mLabThickness->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mThicknessCombo = new QComboBox(mGraphicGroup);
@@ -297,7 +297,7 @@ mMinorCountScale (4)
 
     connect(mThicknessCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::updateThickness);
     
-    mLabOpacity = new Label(tr("Opacity"), mGraphicGroup);
+    mLabOpacity = new QLabel(tr("Opacity"), mGraphicGroup);
     mLabOpacity->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mOpacityCombo = new QComboBox(mGraphicGroup);
@@ -667,27 +667,19 @@ void ResultsView::applyAppSettings()
     mYScaleLab->setFixedSize(int (fm.width(mYScaleLab->text())), labelHeight);
     //mYScaleLab->setFixedHeight(labelHeight);
     mYScaleSpin->setFixedSize(mCurrentXMinEdit->width(), spinBoxHeight);
-   // labFont->setFixedSize(int (fm.width(labFont->text())), labelHeight);
-    mLabFont->setFixedSize(mOptionsW/2 - mMargin, labelHeight);
-    mFontBut->setFixedSize(mOptionsW/2 - mMargin, buttonHeight);
-    //labThickness->setFixedSize(int (fm.width(labThickness->text())), comboBoxHeight);
-    mLabThickness->setFixedSize(mOptionsW/2 - mMargin, comboBoxHeight);
-    mThicknessCombo->setFixedSize(mOptionsW/2 - mMargin, comboBoxHeight);
+    mLabFont->setFixedSize(int (fm.width(mLabFont->text())), labelHeight);
+   // mLabFont->setFixedSize(mOptionsW - maxTextWidth - 2*mMargin, labelHeight);
+    mFontBut->setFixedSize(mOptionsW - fm.width(mLabFont->text())  - mMargin, buttonHeight);
+    mLabThickness->setFixedSize(int (fm.width(mLabThickness->text())), comboBoxHeight);
+    //mLabThickness->setFixedSize(mOptionsW/2 - mMargin, comboBoxHeight);
+    mThicknessCombo->setFixedSize( fm.width("99 px") + 2*mMargin, comboBoxHeight);
     mLabOpacity->setFixedSize(mOptionsW/2 - mMargin, labelHeight);
-    mOpacityCombo->setFixedSize(mOptionsW/2 - mMargin, comboBoxHeight);
+    mOpacityCombo->setFixedSize(fm.width("9999 %") + 2*mMargin, comboBoxHeight);
 
      /* -------------------------------------- mChainsGroup---------------------------------------------------*/
 
     mAllChainsCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
 
-/*    if (!mCheckChainChecks.isEmpty())
-        for (auto check : mCheckChainChecks)
-            check->setFont(ft);
-
-    if (!mChainRadios .isEmpty())
-        for (auto radio : mChainRadios)
-            radio->setFont(ft);
-*/
     mChainsTitle->setFixedSize(mOptionsW, titleHeight);
     mAllChainsCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
 
@@ -1051,7 +1043,7 @@ void ResultsView::updateTabDisplay(const int &i)
          * */
 
         mSpanTitle->move(0, 3);
-        //int wBut = mOptionsW/3;
+
         ySpan =  mMargin;// Reset ySpan inside mSpanGroup
         if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
             if ( mCurrentVariable == GraphViewResults::eTheta
@@ -1162,35 +1154,33 @@ void ResultsView::updateTabDisplay(const int &i)
        // dy = (mYScaleSpin->height() -  mYSlider->height()) /2.;
         mYSlider->setGeometry(mYScaleLab->x() + mYScaleLab->width() + mMargin, mYScaleSpin->y(), ySliderWidth, mYSlider->height());
 #endif
-        int maxTextWidth = qMax(qMax(fm.width(mLabFont->text()), fm.width(mLabThickness->text()) ), fm.width(mLabOpacity->text()));
-        maxTextWidth += mMargin;
-
-        const int buttonWidth (mOptionsW - maxTextWidth - 2*mMargin);
+        int maxTextWidth = fm.width(mLabFont->text()) + mMargin;
+        int buttonWidth (mOptionsW - maxTextWidth - 2*mMargin);
         ySpan += mMargin + mYScaleSpin->height();
         mFontBut->move(maxTextWidth + mMargin, ySpan );
         mFontBut->setFixedWidth(buttonWidth);
         dy = (mFontBut->height() - mLabFont->height()) /2.;
         mLabFont->move(maxTextWidth - fm.width(mLabFont->text()), int ( ySpan + dy));
 
+        maxTextWidth = fm.width(mLabThickness->text()) + mMargin;
+        buttonWidth = fm.width("99 px") + 2*mMargin;
         ySpan += mMargin + mFontBut->height();
         mThicknessCombo->setFixedWidth(buttonWidth);
-        mThicknessCombo->move(maxTextWidth + mMargin,  ySpan);
+        mThicknessCombo->move(mOptionsW - buttonWidth -mMargin,  ySpan);
         dy = (mThicknessCombo->height() - mLabThickness->height()) /2.;
-        mLabThickness->move(maxTextWidth - fm.width(mLabThickness->text()), int (ySpan + dy));
+        mLabThickness->move(mThicknessCombo->x() - fm.width(mLabThickness->text()) -mMargin, int (ySpan + dy));
 
+        maxTextWidth = fm.width(mLabOpacity->text()) + mMargin;
+        buttonWidth = buttonWidth = fm.width("9999 %") + 2*mMargin;
         ySpan += mMargin + mThicknessCombo->height();
         mOpacityCombo->setFixedWidth(buttonWidth);
-        mOpacityCombo->move(maxTextWidth + mMargin, ySpan);
-
-        dy = (mThicknessCombo->height() - mLabOpacity->height()) /2.;
-        mLabOpacity->move(maxTextWidth -fm.width(mLabOpacity->text()), int (ySpan + dy));
+        mOpacityCombo->move(mOptionsW - buttonWidth -mMargin, ySpan);
+        dy = (mOpacityCombo->height() - mLabOpacity->height()) /2.;
+        mLabOpacity->move(mOpacityCombo->x() -fm.width(mLabOpacity->text()) -mMargin, int (ySpan + dy));
 
         ySpan += mMargin + mOpacityCombo->height();
-        //labRendering->move(mMargin, ySpan);
-        //mRenderCombo->move(mOptionsW/2, ySpan);
 
-        // fit the size and the position of the widget of the group in the mTabDisplay coordonnate
-       // ySpan += mMargin + mRenderCombo->height();
+        // Fit the size and the position of the widget of the group in the mTabDisplay coordonnate
         mGraphicGroup->setGeometry(0, mGraphicTitle->y() + mGraphicTitle->height() , mOptionsW, ySpan);
 
         mTabDisplay->resize(mOptionsW,  mGraphicGroup->y() + mGraphicGroup->height() );
