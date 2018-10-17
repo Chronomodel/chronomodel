@@ -182,7 +182,6 @@ QString Plugin14C::getRefsPath() const
 {
     //http://doc.qt.io/qt-5/qstandardpaths.html#details
     QStringList dataPath = QStandardPaths::standardLocations(QStandardPaths::DataLocation);
-    qDebug() <<"Plugin14C::getRefsPath()"<<dataPath;
     QString path  =  dataPath[0];//qApp->applicationDirPath();
 
 #ifdef Q_OS_MAC
