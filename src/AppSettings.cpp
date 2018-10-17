@@ -82,15 +82,7 @@ void AppSettings::readSettings()
     settings.beginGroup("AppSettings");
     AppSettings::mLanguage = QLocale::Language (settings.value(APP_SETTINGS_STR_LANGUAGE, QLocale::system().language()).toInt());
     AppSettings::mCountry = QLocale::Country (settings.value(APP_SETTINGS_STR_COUNTRY, QLocale::system().language()).toInt());
-   // AppSettings::mFontFamily =  settings.value(APP_SETTINGS_STR_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_FAMILY).toString();
-    //AppSettings::mFontPointSize = settings.value(APP_SETTINGS_STR_FONT_SIZE, APP_SETTINGS_DEFAULT_FONT_SIZE).toInt();
     AppSettings::mIconSize = settings.value(APP_SETTINGS_STR_ICON_SIZE, APP_SETTINGS_DEFAULT_ICON_SIZE).toInt();
-
- /*   if (AppSettings::mFontFamily != "")
-         AppSettings::setFont(QFont(AppSettings::mFontFamily, AppSettings::mFontPointSize));
-    else
-        AppSettings::setFont( QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
-*/
 
     AppSettings::mAutoSave = settings.value(APP_SETTINGS_STR_AUTO_SAVE, APP_SETTINGS_DEFAULT_AUTO_SAVE).toBool();
     AppSettings::mAutoSaveDelay = settings.value(APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC, APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC).toInt();

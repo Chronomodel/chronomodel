@@ -177,7 +177,6 @@ void MainWindow::createActions()
     
     mUndoViewAction = mUndoDock->toggleViewAction();
     mUndoViewAction->setText(tr("Show Undo Stack"));
-
     
     //-----------------------------------------------------------------
     // MCMC Actions

@@ -101,13 +101,10 @@ win32{
 	# Resource file (Windows only)
         message("WIN specific settings")
        QMAKESPEC = win32-msvc  # for 32-bit and 64-bit
-#VERSION = 2.0.9_beta
         RC_FILE += Chronomodel.rc
-	RC_ICONS += $$PRO_PATH/icon/Chronomodel.ico
+        RC_ICONS += $$PRO_PATH/icon/Chronomodel.ico
         QT_FATAL_WARNING = 1
-
 }
-
 
 
 #########################################
@@ -503,3 +500,7 @@ SOURCES += src/utilities/StdUtilities.cpp
 SOURCES += src/utilities/QtUtilities.cpp
 SOURCES += src/utilities/DoubleValidator.cpp
 SOURCES += src/utilities/DateUtils.cpp
+
+DISTFILES += \
+    Chronomodel.rc \
+    icon/Chronomodel.ico
