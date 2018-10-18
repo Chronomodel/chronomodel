@@ -181,7 +181,7 @@ void AbstractScene::itemMoved(AbstractItem* item, QPointF newPos, bool merging)
     if (merging) {
         AbstractItem* colliding = collidingItem(item);
         for (int i=0; i<mItems.size(); ++i)
-            mItems[i]->setMergeable( (colliding != 0) && ( (mItems.at(i) == item) || (mItems.at(i) == colliding) ) );
+            mItems[i]->setMergeable( (colliding != nullptr) && ( (mItems.at(i) == item) || (mItems.at(i) == colliding) ) );
         
     }
 
@@ -277,9 +277,7 @@ void AbstractScene::keyPressEvent(QKeyEvent* keyEvent)
 
     //key "Alt" detection
    else if (keyEvent->modifiers() == Qt::AltModifier && selectedItems().count()==1) {
-        qDebug() << "AbstractScene::keyPressEvent You Press: "<< "Qt::Key_Alt";
         mAltIsDown = true;
-     //   QList<QGraphicsItem*> items = selectedItems();
         
         AbstractItem* curItem = currentItem();
         // Check if an item is already selected
