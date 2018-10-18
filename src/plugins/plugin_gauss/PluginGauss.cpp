@@ -255,15 +255,17 @@ QString PluginGauss::getRefExt() const
 
 QString PluginGauss::getRefsPath() const
 {
-    //http://doc.qt.io/qt-5/qstandardpaths.html#details
-    QStringList dataPath = QStandardPaths::standardLocations(QStandardPaths::DataLocation);
-    QString path  =  dataPath[0];//qApp->applicationDirPath();
-
 #ifdef Q_OS_MAC
+    QString path  =  qApp->applicationDirPath();
     QDir dir(path);
     dir.cdUp();
     path = dir.absolutePath() + "/Resources";
+#else
+    //http://doc.qt.io/qt-5/qstandardpaths.html#details
+    QStringList dataPath = QStandardPaths::standardLocations(QStandardPaths::DataLocation);
+    QString path  =  dataPath[0];
 #endif
+
     QString calibPath = path + "/Calib/Gauss";
     return calibPath;
 }
