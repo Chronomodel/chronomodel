@@ -327,6 +327,7 @@ void CalibrationView::updateGraphs()
             QMap<type_data, type_data> subData = calibCurve.mData;
             subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
+
             QMap<type_data, type_data> hpd = create_HPD(subData, thresh);
 
 

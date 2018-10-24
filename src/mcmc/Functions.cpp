@@ -776,21 +776,29 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
             inInterval = true;
             curInterval.first = it.key();
             lastKeyInInter = it.key();
+            lastValueInInter = it.value();
             areaCur = 0.; // start, not inside
+
         } else if (inInterval) {
             if ((it.value() == 0.) ) {
                 inInterval = false;
                 curInterval.second = lastKeyInInter;
-                
-                QPair<double, QPair<double, double> > inter;
-                inter.first = thresh * areaCur / areaTot;
+                 QPair<double, QPair<double, double> > inter;
+                if (curInterval.second != curInterval.first) {
+
+                    inter.first = thresh * areaCur / areaTot;
+
+                 } else {
+                    inter.first = thresh * lastValueInInter / areaTot;
+
+                 }
                 inter.second = curInterval;
-                intervals.append(inter);
-                
-                areaCur = 0.;
+                  intervals.append(inter);
+                  areaCur = 0.;
+
 
             } else {
-                areaCur += (lastValueInInter+it.value())/2 * (it.key()-lastKeyInInter);
+                 areaCur += (lastValueInInter+it.value())/2 * (it.key()-lastKeyInInter);
              
                 lastKeyInInter = it.key();
                 lastValueInInter = it.value();
@@ -802,7 +810,7 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
     if (inInterval) { // Correction to close unclosed interval
        
         curInterval.second = lastKeyInInter;
-        areaCur += (lastValueInInter+it.value())/2 * (it.key()-lastKeyInInter);
+        //areaCur += (lastValueInInter+it.value())/2 * (it.key()-lastKeyInInter);
         QPair<double, QPair<double, double> > inter;
         inter.first = thresh * areaCur / areaTot;
         inter.second = curInterval;

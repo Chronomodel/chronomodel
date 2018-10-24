@@ -359,10 +359,8 @@ QVector<double> equal_areas(const QVector<double>& data, const double step, cons
     long double srcArea (0.);
     long double lastV = data.at(0);
 
-    //for (int i=1; i<data.size(); ++i) {
-    for (auto&& value : data) {
-        const long double v = value;//data.at(i);
-        
+    for (int i=1; i<data.size(); ++i) {
+        const long double v = data.at(i);
         if (lastV>0 && v>0)
             srcArea += (lastV+v)/2. * (long double)step;
 
@@ -371,8 +369,6 @@ QVector<double> equal_areas(const QVector<double>& data, const double step, cons
 
     const long double invProp =srcArea / area;
     QVector<double> result;
-    //for(int i=0; i<data.size(); ++i)
-    //    result.append(data.at(i) / invProp);
 
     QVector<double>::const_iterator cIter = data.cbegin();
     while (cIter != data.cend() ) {
@@ -615,6 +611,9 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, const do
                         if (vPrev>=v) {
                             const double tPrev = (iterMap-1).key();
                             area += (v + vPrev)/2*(t - tPrev);
+                            // we need to save a surface, so we need to save 4 values
+                            result[t] = v;
+                            result[tPrev] = vPrev;
                         }
                     }
 
@@ -623,21 +622,23 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, const do
                         if (vNext>v) {
                             const double tNext = (iterMap+1).key();
                             area += (v + vNext)/2*(tNext - t);
+                            // we need to save a surface, so we need to save 4 values
+                            result[t] = v;
+                            result[tNext] = vNext;
                         }
                     }
 
                 }
 
                 if (iterInverted.hasPrevious() &&  (iterInverted.peekPrevious().key()==v) )
-                    result[t] = v;
-                else {
-                    
-                    if (area < areaSearched)
                         result[t] = v;
+                    else {
+                        if (area < areaSearched)
+                            result[t] = v;
 
-                    else if (area > areaSearched)
-                        return result;
-                    
+                        else if (area >= areaSearched)
+                            return result;
+
                 }
             }
 
@@ -662,7 +663,7 @@ double map_area(const QMap<double, double>& map)
 
     double lastV = cIter.value();
     double lastT = cIter.key();
-    
+    ++cIter;
     while (cIter != map.cend())  {
         const double v = cIter.value();
         const double t = cIter.key();
