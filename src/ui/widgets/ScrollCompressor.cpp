@@ -145,6 +145,7 @@ void ScrollCompressor::mouseMoveEvent(QMouseEvent* e)
 
 void ScrollCompressor::mouseDoubleClickEvent(QMouseEvent *e)
 {
+    (void) e;
     mProp = 0.5;
     emit valueChanged(mProp);
     update();
