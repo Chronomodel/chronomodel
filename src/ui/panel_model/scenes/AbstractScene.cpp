@@ -17,7 +17,7 @@ mUpdatingItems(false),
 mAltIsDown(false),
 mShowAllThumbs(true),
 mZoom(1.),
-mDeltaGrid ( 150. /4.) // 150 is the width of the Event and phase Item
+mDeltaGrid ( AbstractItem::mItemWidth /4.) // 150 is the width of the Event and phase Item
 {
     mTempArrow = new ArrowTmpItem();
     addItem(mTempArrow);
