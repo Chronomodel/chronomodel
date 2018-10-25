@@ -672,7 +672,20 @@ void ResultsView::applyAppSettings()
     mFontBut->setFixedSize(mOptionsW - fm.width(mLabFont->text())  - mMargin, buttonHeight);
     mLabThickness->setFixedSize(int (fm.width(mLabThickness->text())), comboBoxHeight);
     //mLabThickness->setFixedSize(mOptionsW/2 - mMargin, comboBoxHeight);
-    mThicknessCombo->setFixedSize( fm.width("99 px") + 2*mMargin, comboBoxHeight);
+
+#ifdef Q_OS_MAC
+    const int arrowWidth = 12;
+#endif
+
+#ifdef Q_OS_WIN
+    const int arrowWidth = 0;
+#endif
+
+#ifdef Q_OS_LINUX
+    const int arrowWidth = 0;
+#endif
+
+    mThicknessCombo->setFixedSize( fm.width("99 px") + 2*mMargin + arrowWidth, comboBoxHeight);
     mLabOpacity->setFixedSize(mOptionsW/2 - mMargin, labelHeight);
     mOpacityCombo->setFixedSize(fm.width("9999 %") + 2*mMargin, comboBoxHeight);
 
@@ -1163,7 +1176,20 @@ void ResultsView::updateTabDisplay(const int &i)
         mLabFont->move(maxTextWidth - fm.width(mLabFont->text()), int ( ySpan + dy));
 
         maxTextWidth = fm.width(mLabThickness->text()) + mMargin;
-        buttonWidth = fm.width("99 px") + 2*mMargin;
+
+#ifdef Q_OS_MAC
+    const int arrowWidth = 12;
+#endif
+
+#ifdef Q_OS_WIN
+    const int arrowWidth = 0;
+#endif
+
+#ifdef Q_OS_LINUX
+    const int arrowWidth = 0;
+#endif
+
+        buttonWidth = fm.width("99 px") + 2*mMargin + arrowWidth;
         ySpan += mMargin + mFontBut->height();
         mThicknessCombo->setFixedWidth(buttonWidth);
         mThicknessCombo->move(mOptionsW - buttonWidth -mMargin,  ySpan);
@@ -1171,7 +1197,7 @@ void ResultsView::updateTabDisplay(const int &i)
         mLabThickness->move(mThicknessCombo->x() - fm.width(mLabThickness->text()) -mMargin, int (ySpan + dy));
 
         maxTextWidth = fm.width(mLabOpacity->text()) + mMargin;
-        buttonWidth = buttonWidth = fm.width("9999 %") + 2*mMargin;
+        buttonWidth = buttonWidth = fm.width("9999 %") + 2*mMargin + arrowWidth;
         ySpan += mMargin + mThicknessCombo->height();
         mOpacityCombo->setFixedWidth(buttonWidth);
         mOpacityCombo->move(mOptionsW - buttonWidth -mMargin, ySpan);
