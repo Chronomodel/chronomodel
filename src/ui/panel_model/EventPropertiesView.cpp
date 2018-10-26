@@ -544,13 +544,14 @@ void EventPropertiesView::updateLayout()
     mLineEditHeight = int (0.5 * AppSettings::heigthUnit());
     mComboBoxHeight = int (0.7*AppSettings::heigthUnit());
 
+    QFontMetrics fm (font());
+    int marginTop (int (0.2 * AppSettings::widthUnit()));
+
     if (hasEvent()) {
         int butPluginHeigth = mButtonHeigth;
-        QFontMetrics fm (font());
+
         // in EventPropertiesView coordinates
         mBoundView->resize(0, 0);
-
-        int marginTop (int (0.2 * AppSettings::widthUnit()));
 
         int shiftMax (qMax(fm.width(mNameLab->text()), qMax(fm.width(mColorLab->text()), fm.width(mMethodLab->text()) )) );
         shiftMax = shiftMax + 2*marginTop;
@@ -568,7 +569,6 @@ void EventPropertiesView::updateLayout()
         mTopView->resize(width(), 2 *mLineEditHeight + mComboBoxHeight + 4 * marginTop);
 
         mEventView->setGeometry(0, mTopView->height(), width(), height() - mTopView->height());
-
 
          //in mEventView coordinates
         QRect listRect(0, 0, mEventView->width() - mButtonWidth, mEventView->height() - butPluginHeigth);
@@ -602,6 +602,19 @@ void EventPropertiesView::updateLayout()
     }
     else {
         if (hasBound()) {
+
+            int shiftMax (qMax(fm.width(mNameLab->text()), fm.width(mColorLab->text()) ));
+            shiftMax = shiftMax + 2*marginTop;
+            int editWidth (width() - shiftMax);
+
+            mNameLab->move(marginTop, marginTop);
+            mNameEdit->setGeometry(shiftMax , mNameLab->y(), editWidth - marginTop, mLineEditHeight);
+
+            mColorLab->move(marginTop, mNameEdit->y() + mNameEdit->height() + marginTop );
+            mColorPicker->setGeometry(shiftMax , mColorLab->y() , editWidth - marginTop, mLineEditHeight);
+
+            mTopView->resize(width(), 2 *mLineEditHeight + 3 * marginTop);
+
             mEventView->resize(0, 0);
             mBoundView->setGeometry(0, mTopView->height(), width() - mButtonWidth, height() - mTopView->height());
         }
