@@ -1115,7 +1115,7 @@ void ModelView::updateLayout()
         leftTitle = tr("Calibrated Data View");
 
     mLeftPanelTitle->setText(leftTitle);
-    mLeftPanelTitle->setGeometry(textSpacer, mButModifyPeriod->y(), fm.tightBoundingRect(mLeftPanelTitle->text()).width(), topButtonHeight );
+    mLeftPanelTitle->setGeometry(textSpacer, mButModifyPeriod->y(), fm.width(mLeftPanelTitle->text()), topButtonHeight );
 
     QString rightTitle (tr("Phases Scene"));
     if (mButProperties->isChecked() )
