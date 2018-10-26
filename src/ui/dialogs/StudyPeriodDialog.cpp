@@ -80,8 +80,8 @@ mButH(25)
     mLayout->addWidget(mButtonBox);
     mLayout->addStretch();
     setLayout(mLayout);
-    
-    //setFixedWidth(350);
+
+    setMinimumWidth(300);
     
     updateVisibleControls();
 }
