@@ -172,25 +172,7 @@ void CalibrationView::applyAppSettings()
 
     mButtonWidth = int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
-/*
-    mHPDLab->setFont(AppSettings::font());
-    mHPDEdit->setFont(AppSettings::font());
 
-    mStartLab->setFont(AppSettings::font());
-    mStartEdit->setFont(AppSettings::font());
-
-    mEndLab->setFont(AppSettings::font());
-    mEndEdit->setFont(AppSettings::font());
-
-    mMajorScaleLab->setFont(AppSettings::font());
-    mMajorScaleEdit->setFont(AppSettings::font());
-
-    mMinorScaleLab->setFont(AppSettings::font());
-    mMinorScaleEdit -> setFont(AppSettings::font());
-
-    mDrawing->setFont(AppSettings::font());
-    mResultsText->setFont(AppSettings::font());
-*/
     repaint();
 }
 
@@ -260,9 +242,9 @@ void CalibrationView::updateGraphs()
     mCalibGraph->removeAllZones();
     
      if (!mDate.isNull() ) {
-        mCalibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
-        mCalibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
-        mCalibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
+        mCalibGraph->setRangeX (mTminDisplay, mTmaxDisplay);
+        mCalibGraph->setCurrentX (mTminDisplay, mTmaxDisplay);
+        mCalibGraph->changeXScaleDivision (mMajorScale, mMinorScale);
 
         // ------------------------------------------------------------
         //  Show zones if calibrated data are outside study period
@@ -442,7 +424,7 @@ void CalibrationView::updateZoom()
 void CalibrationView::updateScaleX()
 {
     QString str = mMajorScaleEdit->text();
-    bool isNumber(true);
+    bool isNumber (true);
     double aNumber = locale().toDouble(&str, &isNumber);
 
     if (!isNumber || aNumber<1)
@@ -456,7 +438,8 @@ void CalibrationView::updateScaleX()
     if (isNumber && aNumber>=1) {
         mMinorScale =  int (aNumber);
         mCalibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
-        mRefGraphView->changeXScaleDivision(mMajorScale, mMinorScale);
+        if (mRefGraphView)
+            mRefGraphView->changeXScaleDivision(mMajorScale, mMinorScale);
     }
 
 }
@@ -465,13 +448,13 @@ void CalibrationView::updateScroll()
 {
     bool ok;
     QLocale locale = QLocale();
-    double val = locale.toDouble(mStartEdit->text(),&ok);
+    double val = locale.toDouble(mStartEdit->text(), &ok);
     if (ok)
         mTminDisplay = val;
     else
         return;
 
-    val = locale.toDouble(mEndEdit->text(),&ok);
+    val = locale.toDouble(mEndEdit->text(), &ok);
     if (ok)
         mTmaxDisplay = val;
     else
@@ -479,7 +462,7 @@ void CalibrationView::updateScroll()
 
     QFont adaptedFont (mStartEdit->font());
     const QFontMetricsF fm (mStartEdit->font());
-    qreal textSize = fm.width(mStartEdit->text());
+    qreal textSize = fm.width (mStartEdit->text());
     if (textSize > (mStartEdit->width() - 2. )) {
         const qreal fontRate = textSize / (mStartEdit->width() - 2. );
         const qreal ptSiz = adaptedFont.pointSizeF() / fontRate;
@@ -542,7 +525,7 @@ void CalibrationView::copyText()
     doc.setHtml( mResultsLab->text() );
     p_Clipboard->setText(doc.toPlainText());
      */
-    QString text = mDate.mName + " (" + mDate.mPlugin->getName() + ")" +"<br>" + mDate.getDesc() + "<br>" + mResultsText->toPlainText();// ->text();
+    QString text = mDate.mName + " (" + mDate.mPlugin->getName() + ")" +"<br>" + mDate.getDesc() + "<br>" + mResultsText->toPlainText();
     QApplication::clipboard()->setText(text.replace("<br>", "\r"));
    
 }
@@ -657,7 +640,7 @@ void CalibrationView::updateLayout()
     const int resTextH = 5 * fm.height();
     mDrawing->setGeometry(graphLeft, 0, graphWidth, height() - resTextH);
     mResultsText->setGeometry(graphLeft + 20, mDrawing->y() + mDrawing->height(), graphWidth - 40 , resTextH);
-    mResultsText->setAutoFillBackground(true);
+    mResultsText->setAutoFillBackground (true);
 
 }
 
