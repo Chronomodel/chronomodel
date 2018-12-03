@@ -23,7 +23,7 @@ long double PluginUniform::getLikelihood(const double& t, const QJsonObject& dat
     double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
     double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
     
-    return (t >= min && t <= max) ? (long double)(1. / (max-min)) : 0.;
+    return (t >= min && t <= max) ? (long double)(1.l / (max-min)) : 0.l;
 }
 
 QString PluginUniform::getName() const

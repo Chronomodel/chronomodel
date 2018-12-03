@@ -299,9 +299,8 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
     const QStringList refsNames = mPlugin->getRefsNames();
     const QString dateRefName = mPlugin->getDateRefCurveName(this);
 
-    if (!dateRefName.isEmpty() && !refsNames.contains(dateRefName) ) {
+    if (!dateRefName.isEmpty() && !refsNames.contains(dateRefName) )
         return;
-    }
 
     // add the calibration
     mSettings = settings;
@@ -333,7 +332,7 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
         QVector<double> calibrationTemp;
         QVector<double> repartitionTemp;
 
-        const double nbRefPts = 1. + round((mTmaxRefCurve - mTminRefCurve) / (double)settings.mStep);
+        const double nbRefPts = 1. + round((mTmaxRefCurve - mTminRefCurve) / double(settings.mStep));
         long double v = getLikelihood(mTminRefCurve);
         calibrationTemp.append(v);
         repartitionTemp.append(0.);
@@ -341,17 +340,17 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
         
         // We use long double type because
         // after several sums, the repartion can be in the double type range
-        for(int i = 1; i < nbRefPts; ++i) {
-            const double t = mTminRefCurve + (double)i * mSettings.mStep;
+        for(int i = 1; i <= nbRefPts; ++i) {
+            const double t = mTminRefCurve + double (i) * settings.mStep;
             long double lastV = v;
             v = getLikelihood(t);
             
-            calibrationTemp.append(v);
+            calibrationTemp.append(double(v));
             long double rep = lastRepVal;
-            if(v != 0. && lastV != 0.)
-                rep = lastRepVal + (long double) mSettings.mStep * (lastV + v) / 2.;
+            if(v != 0.l && lastV != 0.l)
+                rep = lastRepVal + (long double) (settings.mStep) * (lastV + v) / 2.l;
 
-            repartitionTemp.append((double)rep);
+            repartitionTemp.append(double (rep));
             lastRepVal = rep;
         }
         
@@ -360,12 +359,12 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
         // ------------------------------------------------------------------
 
         if (repartitionTemp.last() > 0.) {
-            const double threshold = 0.00005;
-            const int minIdx = (int)floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp));
-            const int maxIdx = (int)ceil(vector_interpolate_idx_for_value((1 - threshold) * lastRepVal, repartitionTemp));
+            const double threshold (0.00005);
+            const int minIdx = int (floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp)));
+            const int maxIdx = int (ceil(vector_interpolate_idx_for_value((1. - threshold) * lastRepVal, repartitionTemp)));
             
-            tminCal = mTminRefCurve + minIdx * mSettings.mStep;
-            tmaxCal = mTminRefCurve + maxIdx * mSettings.mStep;
+            tminCal = mTminRefCurve + minIdx * settings.mStep;
+            tmaxCal = mTminRefCurve + maxIdx * settings.mStep;
             
             // Truncate both functions where data live
             mCalibration->mCurve = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
@@ -381,7 +380,7 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
             mCalibration->mRepartition = stretch_vector(mCalibration->mRepartition, 0., 1.);
             
             // Approximation : even if the calib has been truncated, we consider its area to be = 1
-            mCalibration->mCurve = equal_areas(mCalibration->mCurve, mSettings.mStep, 1.);
+            mCalibration->mCurve = equal_areas(mCalibration->mCurve, settings.mStep, 1.);
 
         }
         // ------------------------------------------------------------------

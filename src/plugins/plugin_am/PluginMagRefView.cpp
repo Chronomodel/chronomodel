@@ -52,7 +52,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
     mGraph->removeAllZones();
     mGraph->clearInfos();
     mGraph->showInfos(true);
-    mGraph->setFormatFunctX(0);
+    mGraph->setFormatFunctX(nullptr);
     
     if (!date.isNull()) {
         bool is_inc = date.mData.value(DATE_AM_IS_INC_STR).toBool();
@@ -72,7 +72,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         double tminRef = date.getFormatedTminRefCurve();
         double tmaxRef = date.getFormatedTmaxRefCurve();
         
-        PluginMag* plugin = (PluginMag*)date.mPlugin;
+        PluginMag* plugin = static_cast<PluginMag*>(date.mPlugin);
         const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
         
         if (curve.mDataMean.isEmpty()) {
@@ -165,7 +165,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
 
         } else if (is_dec) {
             avg = dec;
-            error = alpha / (2.448 * cosf(inc * M_PI / 180.));
+            error = alpha / (2.448 * cos(inc * M_PI / 180.));
 
         } else if (is_int) {
             avg = intensity;
@@ -245,7 +245,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         mGraph->addCurve(curveMeasureAvg);
         mGraph->addCurve(curveMeasureSup);
         mGraph->addCurve(curveMeasureInf);
-        mGraph->setFormatFunctY(0);
+        mGraph->setFormatFunctY(nullptr);
 
         // Y scale and RangeY are define in graphView::zommX()
 
