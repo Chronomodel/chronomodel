@@ -356,15 +356,20 @@ QVector<double> equal_areas(const QVector<double>& data, const double step, cons
     if(data.isEmpty())
         return QVector<double>();
     
-    long double srcArea (0.);
+    long double srcArea (0.l);
     long double lastV = data.at(0);
 
-    for (int i=1; i<data.size(); ++i) {
-        const long double v = data.at(i);
-        if (lastV>0 && v>0)
-            srcArea += (lastV+v)/2. * (long double)step;
+    if (data.size()>3) {
+        for (int i=1; i<data.size(); ++i) {
+            const long double v = data.at(i);
+            if (lastV>0 && v>0)
+                srcArea += (lastV+v)/2.l * (long double)step;
 
-       lastV = v;
+           lastV = v;
+        }
+    } else { // append when the function is just defined in one step of the study period
+        for (auto d: data)
+                srcArea += d;
     }
 
     const long double invProp =srcArea / area;
@@ -384,7 +389,7 @@ QVector<float> equal_areas(const QVector<float>& data, const float step, const f
     if (data.isEmpty())
         return QVector<float>();
 
-    long double srcArea (0.);
+    long double srcArea (0.l);
     long double lastV = data.at(0);
 
     //for (int i=1; i<data.size(); ++i) {
@@ -392,8 +397,8 @@ QVector<float> equal_areas(const QVector<float>& data, const float step, const f
     for (auto&& value : data) {
         const long double v = value;
 
-        if (lastV>0. && v>0.)
-            srcArea += (lastV+v)/2. * (long double)step;
+        if (lastV>0.l && v>0.l)
+            srcArea += (lastV+v)/2.l * (long double)step;
 
        lastV = v;
     }
@@ -405,7 +410,7 @@ QVector<float> equal_areas(const QVector<float>& data, const float step, const f
 
     QVector<float>::const_iterator cIter = data.cbegin();
     while (cIter != data.cend() ) {
-        result.append((float)(*cIter / invProp));
+        result.append(float (*cIter / invProp));
         ++cIter;
     }
 
@@ -421,7 +426,7 @@ QMap<double, double> vector_to_map(const QVector<double>& data, const double min
         map.insert(min, data.at(0));
 
     else {
-        const int nbPts = 1 + (int)round((max - min) / step); // step is not usefull, it's must be data.size/(max-min+1)
+        const int nbPts = 1 + int (round((max - min) / step)); // step is not usefull, it's must be data.size/(max-min+1)
 
         for (int i=0; i<nbPts; ++i) {
             double t = min + i * step;
@@ -448,7 +453,7 @@ QMap<double, double> vector_to_map(const QVector<int>& data, const double min, c
             double t = min + i * step;
 
             if (i < data.size())
-                map.insert(t,  (double) data.at(i));
+                map.insert(t,  double (data.at(i)));
 
         }
     }
@@ -463,7 +468,7 @@ QMap<float, float> vector_to_map(const QVector<float>& data, const float min, co
         map.insert(min, data.at(0));
 
     else {
-        const int nbPts = 1 + (int)round((max - min) / step); // step is not usefull, it's must be data.size/(max-min+1)
+        const int nbPts = 1 + int (round((max - min) / step)); // step is not usefull, it's must be data.size/(max-min+1)
         for (int i=0; i<nbPts; ++i) {
             float t = min + i * step;
             if (i < data.size())
@@ -482,17 +487,17 @@ double vector_interpolate_idx_for_value(const double value, const QVector<double
     int idxSup = vector.size() - 1;
 
     if (value<vector.first())
-        return (double)idxInf;
+        return double (idxInf);
 
     if (value>vector.last())
-        return (double)idxSup;
+        return double (idxSup);
 
     // Dichotomie, we can't use indexOf because we don't know the step between each value in the Qvector
     
     if (idxSup > idxInf) {
         do
         {
-            const int idxMid = idxInf + floor((idxSup - idxInf) / 2.);
+            const int idxMid = idxInf + int (floor((idxSup - idxInf) / 2.));
             const double valueMid = vector.at(idxMid);
             
             if (value < valueMid)
@@ -510,7 +515,7 @@ double vector_interpolate_idx_for_value(const double value, const QVector<double
         if (valueSup>valueInf)
             prop = (value - valueInf) / (valueSup - valueInf);
 
-        const double idx = (double)idxInf + prop;
+        const double idx = double (idxInf) + prop;
         
         return idx;
     }
@@ -523,16 +528,16 @@ float vector_interpolate_idx_for_value(const float value, const QVector<float>& 
     int idxSup = vector.size() - 1;
 
     if (value<vector.first())
-        return (float)idxInf;
+        return float (idxInf);
 
     if  (value>vector.last())
-        return (float)idxSup;
+        return  float (idxSup);
 
     // Dichotomie, we can't use indexOf because we don't know the step between each value in the Qvector
 
     if (idxSup > idxInf) {
         do {
-            const int idxMid = idxInf + floor((idxSup - idxInf) / 2.f);
+            const int idxMid = idxInf + int (floor((idxSup - idxInf) / 2.));
             const float valueMid = vector.at(idxMid);
 
             if (value < valueMid)
@@ -547,10 +552,10 @@ float vector_interpolate_idx_for_value(const float value, const QVector<float>& 
 
         float prop = 0.f;
         // prevent valueSup=valueInf because in this case prop = NaN
-        if(valueSup>valueInf)
+        if (valueSup>valueInf)
             prop = (value - valueInf) / (valueSup - valueInf);
 
-        const float idx = (float)idxInf + prop;
+        const float idx = float (idxInf) + prop;
 
         return idx;
     }
@@ -730,10 +735,10 @@ QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmi
 
 
         if (idx_under < nbPts)
-            histo[(int)idx_under] += contrib_under;
+            histo[int (idx_under)] += contrib_under;
 
         if (idx_upper < nbPts) // This is to handle the case when matching the last point index !
-            histo[(int)idx_upper] += contrib_upper;
+            histo[int (idx_upper)] += contrib_upper;
     }
 
     bool bEmpty = true;
