@@ -40,7 +40,7 @@ mTmin(0.),
 mTmax(2000.),
 mProject(nullptr),
 mSplitProp(0.6),
-mHandlerW ( int (0.5 *AppSettings::widthUnit())),
+mHandlerW ( int (0.25 *AppSettings::widthUnit())),
 mIsSplitting(false),
 mCalibVisible(false)
 {
