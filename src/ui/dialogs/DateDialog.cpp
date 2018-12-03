@@ -15,7 +15,7 @@
 DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags),
 mWiggleIsValid(false),
 mPluginDataAreValid(false),
-mForm(0),
+mForm(nullptr),
 mWidth(600),
 mMargin(5),
 mLineH(20),
@@ -75,11 +75,11 @@ mWiggleEnabled(false)
     mDeltaHelp->setFixedHeight(50);
     mDeltaHelp->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=11");
     
-    mDeltaFixedLab   = new Label(tr("Value"), mAdvancedWidget);
-    mDeltaMinLab     = new Label(tr("Min"), mAdvancedWidget);
-    mDeltaMaxLab     = new Label(tr("Max"), mAdvancedWidget);
-    mDeltaAverageLab = new Label(tr("Mean"), mAdvancedWidget);
-    mDeltaErrorLab   = new Label(tr("Error (sd)"), mAdvancedWidget);
+    mDeltaFixedLab   = new QLabel(tr("Value"), mAdvancedWidget);
+    mDeltaMinLab     = new QLabel(tr("Min"), mAdvancedWidget);
+    mDeltaMaxLab     = new QLabel(tr("Max"), mAdvancedWidget);
+    mDeltaAverageLab = new QLabel(tr("Mean"), mAdvancedWidget);
+    mDeltaErrorLab   = new QLabel(tr("Error (sd)"), mAdvancedWidget);
     
     mDeltaFixedEdit   = new QLineEdit(mAdvancedWidget);
     mDeltaFixedEdit->setAlignment(Qt::AlignHCenter);
@@ -199,7 +199,7 @@ void DateDialog::setForm(PluginFormAbstract* form)
         const QStandardItemModel* model = qobject_cast<const QStandardItemModel*>(mMethodCombo->model());
         for (int i=0; i<mMethodCombo->count(); ++i) {
             QStandardItem* item = model->item(i);
-            bool allowed = plugin->allowedDataMethods().contains((Date::DataMethod)i);
+            bool allowed = plugin->allowedDataMethods().contains(Date::DataMethod (i));
             
             item->setFlags(!allowed ? item->flags() & ~(Qt::ItemIsSelectable|Qt::ItemIsEnabled)
                            : Qt::ItemIsSelectable|Qt::ItemIsEnabled);
@@ -236,7 +236,7 @@ void DateDialog::checkWiggle()
         bool ok2 = true;
         const double a = mDeltaAverageEdit->text().toDouble(&ok1);
         const double e = mDeltaErrorEdit->text().toDouble(&ok2);
-        mWiggleIsValid = ( ok1 && ok2 && ( (e>0) || ( (a == 0) && (e == 0) ) ) );
+        mWiggleIsValid = ( ok1 && ok2 && ( (e>0) || ( (a == 0.) && (e == 0.) ) ) );
     } else
         mWiggleIsValid = true;
 
@@ -303,7 +303,7 @@ void DateDialog::setAdvancedVisible(bool visible)
 
 void DateDialog::setDataMethod(Date::DataMethod method)
 {
-    mMethodCombo->setCurrentIndex((int)method);
+    mMethodCombo->setCurrentIndex(int(method));
 }
 
 void DateDialog::setDate(const QJsonObject& date)
@@ -311,7 +311,7 @@ void DateDialog::setDate(const QJsonObject& date)
     mNameEdit->setText(date.value(STATE_NAME).toString());
     mMethodCombo->setCurrentIndex(date.value(STATE_DATE_METHOD).toInt());
     
-    Date::DeltaType deltaType = (Date::DeltaType)date.value(STATE_DATE_DELTA_TYPE).toInt();
+    Date::DeltaType deltaType = Date::DeltaType (date.value(STATE_DATE_DELTA_TYPE).toInt());
     
     mDeltaFixedRadio->setChecked(deltaType == Date::eDeltaFixed);
     mDeltaRangeRadio->setChecked(deltaType == Date::eDeltaRange);
@@ -334,8 +334,8 @@ void DateDialog::setDate(const QJsonObject& date)
     mWiggleIsValid = true;
     setOkEnabled();
     // open the display panel if there is wiggle parameter
-    if ( (mDeltaFixedRadio->isChecked() && mDeltaFixedEdit->text().toDouble() != 0) ||
-        (mDeltaRangeRadio->isChecked() && (mDeltaMinEdit->text().toDouble() != 0 || mDeltaMaxEdit->text().toDouble() != 0) ) ||
+    if ( (mDeltaFixedRadio->isChecked() && mDeltaFixedEdit->text().toDouble() != 0.) ||
+        (mDeltaRangeRadio->isChecked() && (mDeltaMinEdit->text().toDouble() != 0. || mDeltaMaxEdit->text().toDouble() != 0.) ) ||
         (mDeltaGaussRadio->isChecked() && mDeltaErrorEdit->text().toDouble()>0) ) {
 
         mAdvancedCheck->setChecked(true);
