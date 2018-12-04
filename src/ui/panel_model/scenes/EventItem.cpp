@@ -12,8 +12,8 @@
 
 EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):AbstractItem(scene, parent),
     mWithSelectedPhase(false),
-    mPhasesHeight (20),
-    mShowAllThumbs(true)
+    mShowAllThumbs(true),
+    mPhasesHeight (20)
 {
     mTitleHeight = 20;
     mEltsHeight =  DateItem::mTitleHeight +  DateItem::mEltsHeight ;

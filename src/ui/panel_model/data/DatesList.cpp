@@ -103,15 +103,20 @@ void DatesList::handleItemClicked(QListWidgetItem* item)
 void DatesList::handleItemIsChanged()
 {
     QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+ //   bool oneSelection (false);
     for (int i (0); i <dates.size(); ++i ) {
         if (item(i)->isSelected() ) {
+ //           oneSelection = true;
             QJsonObject date = dates[i].toObject();
             emit indexChange(i);
             emit calibRequested(date);
             break;
         }
-
     }
+ /*   if (oneSelection == false) {
+        emit indexChange(-1);
+        emit calibRequested(QJsonObject ());
+    }*/
 }
 
 void DatesList::handleItemDoubleClicked(QListWidgetItem* item)

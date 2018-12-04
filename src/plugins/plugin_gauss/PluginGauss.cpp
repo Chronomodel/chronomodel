@@ -40,8 +40,8 @@ QPair<long double, long double> PluginGauss::getLikelihoodArg(const double& t, c
 
     //long double exponent;
 
-    double refError = getRefErrorAt(data, t, mode);
-    long double variance = refError * refError + error * error;
+    const double refError = getRefErrorAt(data, t, mode);
+    const long double variance = static_cast<long double>(refError * refError + error * error);
 
     double refValue;
 
@@ -52,7 +52,7 @@ QPair<long double, long double> PluginGauss::getLikelihoodArg(const double& t, c
     else
         refValue = getRefValueAt(data, t);
 
-    const long double exponent = -0.5l * powl((long double)(age - refValue), 2.l) / variance;
+    const long double exponent = -0.5l * powl(static_cast<long double>(age - refValue), 2.l) / variance;
 
     return qMakePair(variance, exponent);
 }
@@ -196,7 +196,7 @@ QJsonObject PluginGauss::fromCSV(const QStringList& list, const QLocale& csvLoca
     if (list.size() >= csvMinColumns()) {
         json.insert(DATE_GAUSS_AGE_STR, csvLocale.toDouble(list.at(1)));
         double error = csvLocale.toDouble(list.at(2));
-        if (error == 0)
+        if (error == 0.)
             return QJsonObject();
         json.insert(DATE_GAUSS_ERROR_STR, error);
         
@@ -205,7 +205,7 @@ QJsonObject PluginGauss::fromCSV(const QStringList& list, const QLocale& csvLoca
             double a = csvLocale.toDouble(list.at(4));
             double b = csvLocale.toDouble(list.at(5));
             double c = csvLocale.toDouble(list.at(6));
-            if ( (a==0) && (b== 0))  // this solution is forbiden
+            if ( (a==0.) && (b== 0.))  // this solution is forbiden
                 return QJsonObject();
 
             else {
@@ -525,8 +525,8 @@ bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& se
 {
     QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
     bool valid = true;
-    long double v (0.);
-    long double lastV (0.);
+    long double v (0.l);
+    long double lastV (0.l);
     if (mode == DATE_GAUSS_MODE_CURVE) {
          // controle valid solution (double)likelihood>0
         // remember likelihood type is long double
@@ -539,18 +539,18 @@ bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& se
 
         else {
             double t = curve.mTmin;
-            long double repartition (0.);
+            long double repartition (0.l);
             while (valid==false && t<=curve.mTmax) {
-                v = (double)getLikelihood(t,data);
+                v = static_cast<long double> (getLikelihood(t, data));
                 // we have to check this calculs
                 //because the repartition can be smaller than the calibration
-                if (lastV>0. && v>0.)
-                    repartition += (long double) settings.mStep * (lastV + v) / 2.;
+                if (lastV>0.l && v>0.l)
+                    repartition += static_cast<long double>(settings.mStep) * (lastV + v) / 2.l;
 
                 lastV = v;
 
-                valid = ( (double)repartition > 0.);
-                t +=settings.mStep;
+                valid = ( double (repartition) > 0.);
+                t += settings.mStep;
             }
         }
     }
