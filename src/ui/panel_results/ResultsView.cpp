@@ -3817,6 +3817,10 @@ void ResultsView::updateModel()
     
     std::sort(mModel->mEvents.begin(), mModel->mEvents.end(), sortEvents);
     std::sort(mModel->mPhases.begin(), mModel->mPhases.end(), sortPhases);
+
+    for ( auto &&p : mModel->mPhases ) {
+        std::sort(p->mEvents.begin(), p->mEvents.end(), sortEvents);
+    }
     
     updateResults(mModel);
 }
