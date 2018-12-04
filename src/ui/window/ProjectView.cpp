@@ -155,34 +155,8 @@ void ProjectView::changeDesign(bool refresh)
 
 void ProjectView::setAppSettings()
 {
-   // setFont(AppSettings::font());
-
     mModelView->applyAppSettings();
     mResultsView->applyAppSettings();
-
-  /*  mLogTabs->setFont(AppSettings::font());
-    mLogModelEdit->setFontFamily(AppSettings::font().family());
-    mLogModelEdit->setFontPointSize(AppSettings::font().pointSizeF());
-
-    mLogMCMCEdit->setFontFamily(AppSettings::font().family());
-    mLogMCMCEdit->setFontPointSize(AppSettings::font().pointSizeF());
-
-   // mLogResultsEdit->setFontFamily(AppSettings::font().family());
-    mLogResultsEdit->setFontPointSize(AppSettings::font().pointSizeF()*2);
-#ifdef Q_OS_MAC
-    const QFont font (AppSettings::font());
-    QString styleSh = "QLineEdit { border-radius: 5px; font: "+ QString::number(font.pointSize()) + "px ;font-family: "+font.family() + ";}";
-    mLogResultsEdit->setStyleSheet(styleSh);
-#else
-    mLogResultsEdit->setFont(AppSettings::font());
-#endif
-
-    const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
-
-    mLogModelEdit->resize( width() -  AppSettings::widthUnit(), logTabHusefull );
-    mLogMCMCEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
-    mLogResultsEdit->resize( width() -AppSettings::widthUnit(), logTabHusefull );
-  */
 
 }
 

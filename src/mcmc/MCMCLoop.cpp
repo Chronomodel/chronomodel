@@ -85,7 +85,7 @@ void MCMCLoop::run()
     QString mDate = QDateTime::currentDateTime().toString("dddd dd MMMM yyyy");
     QTime startTime = QTime::currentTime();
 
-    QString log= "Start " + mDate+" ->>> " +startTime.toString("hh:mm:ss.zzz");
+    QString log= "Start " + mDate+" -> " +startTime.toString("hh:mm:ss.zzz");
     
 
     //----------------------- Calibrating --------------------------------------

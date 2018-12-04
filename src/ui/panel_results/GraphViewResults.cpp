@@ -345,12 +345,11 @@ void GraphViewResults::updateLayout()
 
     } else
         mGraph->setGeometry(graphRect);
-qDebug()<<"GraphViewResults::updateLayout()"<<mGraph->height()<<mHeightForVisibleAxis<<mTopShift;
+
     const bool axisVisible = (height() >= mHeightForVisibleAxis);
 
     if ((mGraph->hasCurve())) {
         mGraph->showXAxisValues(axisVisible);
-        //mGraph->setMarginBottom(axisVisible ? mGraphFont.pointSize() * 2.0 : mGraphFont.pointSize());
         mGraph->setMarginBottom(axisVisible ? fm.ascent()* 2.0 : fm.ascent());
     }
 
