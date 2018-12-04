@@ -10,7 +10,6 @@ mLoop(loop)
     setWindowTitle(tr("MCMC in progress..."));
     
     // -----------
-    //setFont(AppSettings::font());
     mLabel1 = new QLabel(this);
     mLabel2 = new QLabel(this);
     
@@ -18,7 +17,6 @@ mLoop(loop)
     mProgressBar1->setMinimum(0);
     mProgressBar1->setMaximum(0);
     mProgressBar1->setMinimumWidth(10 * AppSettings::widthUnit());
-    
     
     // ----------
     
@@ -33,7 +31,7 @@ mLoop(loop)
     layout->addWidget(buttonBox);
     setLayout(layout);
     
-    setMinimumWidth(10 * AppSettings::widthUnit());
+   // setMinimumWidth(10 * AppSettings::widthUnit());
     
     // -----------
     
@@ -64,6 +62,8 @@ void MCMCProgressDialog::cancelMCMC()
 void MCMCProgressDialog::setTitle1(const QString& message, int minProgress, int maxProgress)
 {
     mLabel1->setText(message);
+    setMinimumWidth(int (fontMetrics().width(message) * 1.5));
+
     mProgressBar1->setMinimum(minProgress);
     mProgressBar1->setMaximum(maxProgress);
 }

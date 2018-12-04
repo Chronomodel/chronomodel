@@ -257,7 +257,8 @@ void EventsScene::createSceneFromState()
     QProgressDialog* progress = new QProgressDialog("Create event items","Wait" , 1, eventsInState.size());//,qApp->activeWindow(), Qt::Window);
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(nullptr);
-    progress->setMinimumWidth(5 * AppSettings::widthUnit());
+    //progress->setMinimumWidth(5 * AppSettings::widthUnit());
+    progress->setMinimumWidth(int (progress->fontMetrics().width(progress->labelText()) * 1.5));
 
     mSettings = ProjectSettings::fromJson(settings);
 
@@ -357,7 +358,8 @@ void EventsScene::updateSceneFromState()
         progress = new QProgressDialog("Create / Update event items","Wait" , 1, eventsInNewState.size());//,qApp->activeWindow(), Qt::Window);
         progress->setWindowModality(Qt::WindowModal);
         progress->setCancelButton(nullptr);
-        progress->setMinimumWidth(5 * AppSettings::widthUnit());
+        //progress->setMinimumWidth(5 * AppSettings::widthUnit());
+        progress->setMinimumWidth(int (progress->fontMetrics().width(progress->labelText())  * 1.5));
     }
 
     QList<int> events_ids_inNewState;

@@ -512,7 +512,8 @@ bool ModelView::findCalibrateMissing()
         progress->setCancelButton(nullptr);
         progress->setMinimumDuration(4);
         progress->setMinimum(0);
-        progress->setMinimumWidth(7 * AppSettings::widthUnit());
+        //progress->setMinimumWidth(7 * AppSettings::widthUnit());
+        progress->setMinimumWidth(int (progress->fontMetrics().width(progress->labelText()) * 1.5));
 
         int position(0);
         for (auto && ev : events)
@@ -580,7 +581,8 @@ void ModelView::calibrateAll(ProjectSettings newS)
         progress->setCancelButton(nullptr);
         progress->setMinimumDuration(4);
         progress->setMinimum(0);
-        progress->setMinimumWidth(7 * AppSettings::widthUnit());
+        //progress->setMinimumWidth(7 * AppSettings::widthUnit());
+        progress->setMinimumWidth(int (progress->fontMetrics().width(progress->labelText()) * 1.5));
 
         int position(0);
         for (auto && ev : events)

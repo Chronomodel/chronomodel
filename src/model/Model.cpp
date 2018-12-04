@@ -1198,13 +1198,14 @@ void Model::generateCredibility(const double thresh)
     // Diplay a progressBar if "long" set with setMinimumDuration()
 
     QProgressDialog *progress = new QProgressDialog(tr("Time range & credibilities generation"), tr("Wait") , 1, 10);
-
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(nullptr);
     progress->setMinimumDuration(5);
     progress->setMinimum(0);
     progress->setMaximum(mPhases.size()*4);
-    progress->setMinimumWidth(7 * AppSettings::widthUnit());
+    //progress->setMinimumWidth(7 * AppSettings::widthUnit());
+    progress->setMinimumWidth(int (progress->fontMetrics().width(progress->labelText()) * 1.5));
+
 
     int position(0);
 
@@ -1237,7 +1238,8 @@ void Model::generateCredibility(const double thresh)
     progressGap->setMaximum(mPhases.size()*4);
     progressGap->setMinimum(0);
     progressGap->setMaximum(mPhaseConstraints.size()*2);
-    progressGap->setMinimumWidth(7 * AppSettings::widthUnit());
+    //progressGap->setMinimumWidth(7 * AppSettings::widthUnit());
+    progressGap->setMinimumWidth(int (progressGap->fontMetrics().width(progressGap->labelText()) *1.5));
 
     position = 0;
     for (auto && phaseConstraint : mPhaseConstraints) {
@@ -1338,11 +1340,12 @@ void Model::generateTempo()
     // Display a progressBar if "long" set with setMinimumDuration()
     QProgressDialog *progress = new QProgressDialog(tr("Tempo Plot generation"), tr("Wait") , 1, 10);//, qApp->activeWindow(), Qt::Window);
     progress->setWindowModality(Qt::WindowModal);
-    progress->setCancelButton(0);
+    progress->setCancelButton(nullptr);
     progress->setMinimumDuration(5);
     progress->setMinimum(0);
     progress->setMaximum(mPhases.size() * 4);
-    progress->setMinimumWidth(7 * AppSettings::widthUnit());
+    //progress->setMinimumWidth(7 * AppSettings::widthUnit());
+    progress->setMinimumWidth(int (progress->fontMetrics().width(progress->labelText()) * 1.5));
     progress->show();
     int position(0);
 #endif
