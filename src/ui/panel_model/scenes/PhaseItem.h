@@ -5,6 +5,7 @@
 #include "PhasesScene.h"
 #include "Phase.h"
 
+bool sortEvents(QPair<int, int> e1, QPair<int, int> e2);
 
 class PhaseItem : public AbstractItem
 {

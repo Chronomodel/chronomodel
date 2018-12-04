@@ -139,6 +139,14 @@ void PhaseItem::redrawPhase()
     update();
 }
 
+
+
+bool sortEvents(QPair<int, int> e1, QPair<int, int> e2)
+{
+    return (e1.second < e2.second);
+}
+
+
 void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
     Q_UNUSED(option);
@@ -176,15 +184,23 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     const bool showAlldata = mScene->showAllThumbs();
     mAtLeastOneEventSelected = false;
     painter->setFont(font);
-    for (int i=0; i<events.size(); ++i) {
 
+    QList< QPair<int, double>> sortedEvents;
+    for (int i=0; i<events.size(); ++i){
+        sortedEvents.append(qMakePair(i, events.at(i).toObject().value(STATE_ITEM_Y).toDouble()));
+    }
+    std::sort(sortedEvents.begin(), sortedEvents.end(), sortEvents);
+
+
+   for (int j=0; j<sortedEvents.size(); ++j) {
+      int i = sortedEvents[j].first;
         const QJsonObject event = events.at(i).toObject();
         const QColor eventColor(event.value(STATE_COLOR_RED).toInt(),
                           event.value(STATE_COLOR_GREEN).toInt(),
                           event.value(STATE_COLOR_BLUE).toInt());
         const bool isSelected = ( event.value(STATE_IS_SELECTED).toBool() || event.value(STATE_IS_CURRENT).toBool() );
 
-        if (i > 0)
+        if (j > 0)
             r.adjust(0, dy, 0, dy);
 
         painter->setPen(getContrastedColor(eventColor));
