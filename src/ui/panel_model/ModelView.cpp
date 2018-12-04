@@ -53,13 +53,13 @@ mCalibVisible(false)
 
     mHandlerRect = QRect(int((width()-mHandlerW)*mSplitProp), mTopRect.height(), mHandlerW, height() - mTopRect.height());
 
-    mLeftRect = QRect(0, mTopRect.height(), width() - mHandlerRect.x(), height() - mTopRect.height());
+    mLeftRect = QRect(0, mTopRect.height(), width() - mHandlerRect.x() + 1, height() - mTopRect.height());
     mLeftHiddenRect = mLeftRect.adjusted(0, 0, mLeftRect.width(), 0);
 
     mLeftWrapper = new QWidget(this);
     mLeftWrapper->setGeometry(mLeftRect);
     
-    mRightRect = QRect(mLeftRect.width() + mHandlerRect.width(), mTopRect.height(), width() - mLeftRect.width() - mHandlerRect.width(), height() - mTopRect.height());
+    mRightRect = QRect(mLeftRect.width() + mHandlerRect.width(), mTopRect.height(), width() - mLeftRect.width() - mHandlerRect.width() +1, height() - mTopRect.height());
     mRightHiddenRect = mRightRect.adjusted(mRightRect.width(), 0, 0, 0);
 
     mRightWrapper = new QWidget(this);
@@ -1132,9 +1132,9 @@ void ModelView::updateLayout()
     // coordinates in ModelView
 
     mHandlerRect = QRect(int((width()-mHandlerW)*mSplitProp), mTopRect.height(), mHandlerW, height() - mTopRect.height());
-    mLeftWrapper->setGeometry(QRect(0, mTopRect.height(), mHandlerRect.x(), height() - mTopRect.height()));
+    mLeftWrapper->setGeometry(QRect(0, mTopRect.height(), mHandlerRect.x() , height() - mTopRect.height()));
 
-    mRightWrapper->setGeometry(QRect(mHandlerRect.x() + mHandlerRect.width(), mTopRect.height(), width() - mHandlerRect.x() - mHandlerRect.width(), height() - mTopRect.height()));
+    mRightWrapper->setGeometry(QRect(mHandlerRect.x() + mHandlerW, mTopRect.height(), width() - mHandlerRect.x() - mHandlerW +1, height() - mTopRect.height()));
 
     // coordinates in mLeftWrapper
     mLeftRect = QRect(0, 0, mLeftWrapper->width(), mLeftWrapper->height());
@@ -1158,7 +1158,7 @@ void ModelView::updateLayout()
     if (mButProperties->isChecked() && mEventPropertiesView->isCalibChecked())
         mEventsView      ->setGeometry(0, 0, 0, 0);
     else
-        mEventsView      ->setGeometry(mLeftRect.adjusted(mButtonWidth, 0, 0, 0));
+        mEventsView      ->setGeometry(mLeftRect.adjusted(mButtonWidth -1, -1, +1, +1));
 
     mEventsSearchEdit->setGeometry(mEventsView->x() + 5, 5, int(radarW), int (searchH));
     mEventsGlobalView->setGeometry(mEventsView->x() + 5, mEventsSearchEdit->y() + mEventsSearchEdit->height(), int(radarW), int(radarH));
@@ -1200,16 +1200,16 @@ void ModelView::updateLayout()
         mButPhasesGrid->resize(0, 0);
         mPhasesGlobalZoom->resize(0, 0);
      }  else {
-        mPhasesView->setGeometry(mRightRect.adjusted(0, 0, -mButtonWidth, 0));
+        mPhasesView->setGeometry(mRightRect.adjusted(-1, -1, -mButtonWidth, 1));
 
         mPhasesGlobalView->setGeometry(5, 5, int(radarW), int(radarH));
 
-        mButNewPhase      ->setGeometry(mPhasesView->width(), 0, mButtonWidth, mButtonHeigth);
-        mButDeletePhase   ->setGeometry(mPhasesView->width(), mButtonHeigth, mButtonWidth, mButtonHeigth);
-        mButExportPhases  ->setGeometry(mPhasesView->width(), 2*mButtonHeigth, mButtonWidth, mButtonHeigth);
-        mButPhasesOverview->setGeometry(mPhasesView->width(), 3*mButtonHeigth, mButtonWidth, mButtonHeigth);
-        mButPhasesGrid    ->setGeometry(mPhasesView->width(), 4*mButtonHeigth, mButtonWidth, mButtonHeigth);
-        mPhasesGlobalZoom ->setGeometry(mPhasesView->width(), 5*mButtonHeigth, mButtonWidth, mRightRect.height() - 5*mButtonHeigth);
+        mButNewPhase      ->setGeometry(mPhasesView->width() -2, 0, mButtonWidth, mButtonHeigth);
+        mButDeletePhase   ->setGeometry(mPhasesView->width() -2, mButtonHeigth, mButtonWidth, mButtonHeigth);
+        mButExportPhases  ->setGeometry(mPhasesView->width() -2, 2*mButtonHeigth, mButtonWidth, mButtonHeigth);
+        mButPhasesOverview->setGeometry(mPhasesView->width() -2, 3*mButtonHeigth, mButtonWidth, mButtonHeigth);
+        mButPhasesGrid    ->setGeometry(mPhasesView->width() -2, 4*mButtonHeigth, mButtonWidth, mButtonHeigth);
+        mPhasesGlobalZoom ->setGeometry(mPhasesView->width() -2, 5*mButtonHeigth, mButtonWidth, mRightRect.height() - 5*mButtonHeigth);
      }
     update();
 }

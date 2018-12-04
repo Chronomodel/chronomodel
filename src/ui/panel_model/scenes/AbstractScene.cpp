@@ -239,10 +239,11 @@ void AbstractScene::itemReleased(AbstractItem* item, QGraphicsSceneMouseEvent* e
 QRectF AbstractScene::specialItemsBoundingRect(QRectF r) const
 {
     QRectF rect = r;
-    for (int i=0; i<mItems.size(); ++i) {
-        const QRectF bRect = mItems.at(i)->boundingRect();
-        QRectF r(mItems.at(i)->scenePos().x() - bRect.width()/2,
-                 mItems.at(i)->scenePos().y() - bRect.height()/2,
+    //for (int i(0); i<mItems.size(); ++i) {
+    for (auto item : mItems) {
+        const QRectF bRect = item->boundingRect();
+        QRectF r(item->scenePos().x() - bRect.width()/2,
+                 item->scenePos().y() - bRect.height()/2,
                  bRect.size().width(), bRect.size().height());
         rect = rect.united(r);
     }
@@ -323,8 +324,6 @@ void AbstractScene::keyReleaseEvent(QKeyEvent* keyEvent)
 void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
 {
     painter->fillRect(rect, QColor(230, 230, 230));
-    
-    //QBrush backBrush;
 
     painter->setBrush(Qt::white);
     painter->setPen(Qt::NoPen);
@@ -332,19 +331,19 @@ void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
 
     if (mShowGrid) {
         painter->setPen(QColor(220, 220, 220));
-        const  int x = sceneRect().x();
-        const int y = sceneRect().y();
-        const int w = sceneRect().width();
-        const int h = sceneRect().height();
-        const  int delta (4 * mDeltaGrid );
+        const  int x = int (sceneRect().x());
+        const int y = int (sceneRect().y());
+        const int w = int (sceneRect().width());
+        const int h = int (sceneRect().height());
+        const  int delta (4 * int(mDeltaGrid) );
 
-        int xi = ceil(x/delta) * delta;
+        int xi = int (ceil(x/delta) * delta);
         while (xi< x + w) {
             painter->drawLine(xi , y, xi, y + h);
             xi += delta;
         }
 
-        int yi = floor(y/delta) * delta;
+        int yi = int (floor(y/delta) * delta);
         while (yi< y + h) {
             painter->drawLine(x , yi, x + w, yi);
             yi += delta;
