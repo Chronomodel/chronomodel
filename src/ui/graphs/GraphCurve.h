@@ -21,7 +21,7 @@ public:
     QPen mPen;
     QBrush mBrush;
     bool mIsHisto;
-    bool mIsRectFromZero; // draw a vertical line when graph value leaves 0 : usefull for HPD and Typo!
+    bool mIsRectFromZero; // draw a vertical line when graph value leaves 0 : usefull for HPD and Unif, Typo!
     
     bool mUseVectorData; // Used for traces, correlations and acceptations.
     QVector<type_data> mDataVector;
@@ -32,7 +32,7 @@ public:
     bool mIsVerticalLine; // Used for bounds (in results view)
     type_data mVerticalValue;
     
-    bool mIsHorizontalSections; // Used for bounds (in scene and property views) and typo (scene view)
+    bool mIsHorizontalSections; // Used for bounds (in scene and property views) and Unif, typo (scene view)
     bool mIsTopLineSections; // Used for credibilities (and "one day" for phases alpha/beta interval??)
     QList<QPair<type_data, type_data> > mSections;
     

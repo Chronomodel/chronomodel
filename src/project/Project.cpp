@@ -345,18 +345,6 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
                             datesNew.at(j).toObject().value(STATE_DATE_DELTA_ERROR).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_ERROR).toDouble() ||
                             datesNew.at(j).toObject().value(STATE_DATE_SUB_DATES) != datesOld.at(j).toObject().value(STATE_DATE_SUB_DATES) ) {
 
-                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_DATA) != datesOld.at(j).toObject().value(STATE_DATE_DATA) );
-                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_PLUGIN_ID) != datesOld.at(j).toObject().value(STATE_DATE_PLUGIN_ID));
-                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_VALID) != datesOld.at(j).toObject().value(STATE_DATE_VALID) );
-                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_DELTA_TYPE).toInt() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_TYPE).toInt());
-                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_DELTA_FIXED).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_FIXED).toDouble());
-                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_DELTA_MIN).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_MIN).toDouble() );
-                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_DELTA_MAX).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_MAX).toDouble());
-                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_DELTA_AVERAGE).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_AVERAGE).toDouble());
-                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_DELTA_ERROR).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_ERROR).toDouble());
-                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_SUB_DATES) != datesOld.at(j).toObject().value(STATE_DATE_SUB_DATES) );
-
-
                             mStructureIsChanged = true;
                             return;
                         }
@@ -579,7 +567,8 @@ bool Project::load(const QString& path)
             //  If not, it may be an incompatibility between plugins versions (new parameter added for example...)
             //  This function gives a chance to plugins to modify dates saved with old versions in order to use them with the new version.
            qDebug() << "in Project::load  begin checkDatesCompatibility";
-           loadingState = checkDatesCompatibility(loadingState);
+           bool isCorrected;
+           loadingState = checkDatesCompatibility(loadingState, isCorrected);
 
            qDebug() << "in Project::load  end checkDatesCompatibility";
             //  Check if dates are valid on the current study period
@@ -603,7 +592,7 @@ bool Project::load(const QString& path)
             QString caliPath = path + ".cal";
             QFileInfo calfi(caliPath);
 
-            if (calfi.isFile()) {
+            if (calfi.isFile() && !isCorrected) {
                 // load Calibration Curve
                 QFile calFile(caliPath);
                 if (calFile.open(QIODevice::ReadOnly)) {
@@ -851,7 +840,8 @@ bool Project::insert(const QString& path)
             //  If not, it may be an incompatibility between plugins versions (new parameter added for example...)
             //  This function gives a chance to plugins to modify dates saved with old versions in order to use them with the new version.
            qDebug() << "in Project::load  begin checkDatesCompatibility";
-           loadedState = checkDatesCompatibility(loadedState);
+           bool isCorrected;
+           loadedState = checkDatesCompatibility(loadedState, isCorrected);
 
             qDebug() << "in Project::load  end checkDatesCompatibility";
             //  Check if dates are valid on the current study period
@@ -1043,9 +1033,9 @@ bool Project::insert(const QString& path)
            clearModel();
            pushProjectState(stateNext, INSERT_PROJECT_REASON, true, true);
 
-            qDebug() << "in Project::insert  unselectedAllInState";
-            unselectedAllInState(); // modify mState
-            return true;
+           qDebug() << "in Project::insert  unselectedAllInState";
+           unselectedAllInState(); // modify mState
+           return true;
         }
     }
     return false;
@@ -1748,9 +1738,9 @@ void Project::addDate(int eventId, QJsonObject date)
     }
 }
 
-QJsonObject Project::checkDatesCompatibility(QJsonObject state)
+QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrected)
 {
-    //QJsonObject state = mState;
+    isCorrected = false;
     QJsonArray events = state.value(STATE_EVENTS).toArray();
     QJsonArray phases = state.value(STATE_PHASES).toArray();
     for (int i = 0; i<events.size(); ++i) {
@@ -1763,14 +1753,20 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state)
             //  Check the date compatibility with the plugin version.
             //  Here, we can control if all date fields are present, and add them if not.
             // -----------------------------------------------------------
-            if (date.find(STATE_DATE_SUB_DATES) == date.end())
+            if (date.find(STATE_DATE_SUB_DATES) == date.end()) {
                 date[STATE_DATE_SUB_DATES] = QJsonArray();
+                isCorrected = true;
+            }
             
-            if (date.find(STATE_DATE_VALID) == date.end())
+            if (date.find(STATE_DATE_VALID) == date.end()) {
                 date[STATE_DATE_VALID] = true;
+                isCorrected = true;
+            }
             
-            if (date[STATE_DATE_PLUGIN_ID].toString() == "typo_ref.")
-                date[STATE_DATE_PLUGIN_ID] = QString("typo");
+            if (date[STATE_DATE_PLUGIN_ID].toString() == "typo_ref." || date[STATE_DATE_PLUGIN_ID].toString() == "typo") {
+                date[STATE_DATE_PLUGIN_ID] = QString("unif"); // since version 2.0.14
+                isCorrected = true;
+            }
             
             // etc...
             
@@ -1809,6 +1805,7 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state)
            phase[STATE_PHASE_TAU_FIXED] = phase[STATE_PHASE_TAU_MAX];
            phases[i] = phase;
            phaseConversion = true;
+           isCorrected = true;
        }
     }
     if (phaseConversion)

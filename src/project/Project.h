@@ -116,7 +116,7 @@ public:
     void deleteDates(int eventId, const QList<int>& dateIndexes);
     void recycleDates(int eventId);
     void deleteSelectedTrashedDates(const QList<int>& ids);
-    QJsonObject checkDatesCompatibility(QJsonObject state);
+    QJsonObject checkDatesCompatibility(QJsonObject state, bool &isCorrected);
     QJsonObject checkValidDates(const QJsonObject& state);
     
     void unselectedAllInState();

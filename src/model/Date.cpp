@@ -478,7 +478,7 @@ void Date::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, con
 
 }
 
-QPixmap Date::generateTypoThumb()
+QPixmap Date::generateUnifThumb()
 {
     if (mIsValid){
         //  No need to draw the graph on a large size
@@ -580,7 +580,7 @@ QPixmap Date::generateCalibThumb()
         curve.mPen = QPen(color, 2.f);
         curve.mBrush = color;
         curve.mIsHisto = false;
-        curve.mIsRectFromZero = true; // For Typo !!
+        curve.mIsRectFromZero = true; // For Unif, Typo !!
 
         GraphView graph;
 

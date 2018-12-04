@@ -200,8 +200,7 @@ void MultiCalibrationView::setVisible(bool visible)
     mStartEdit->setVisible(visible);
     mEndLab->setVisible(visible);
     mEndEdit->setVisible(visible);
-    // Fill under distrib. of calibrated date only if typo :
-   // const bool isTypo (mDate.mPlugin && (mDate.mPlugin->getName() == "Typo"));
+
     mHPDLab->setVisible(visible);
     mHPDEdit->setVisible(visible);
 
@@ -422,8 +421,8 @@ void MultiCalibrationView::updateGraphList()
 
                     calibCurve.mData = d.getFormatedCalibMap();
 
-                    const bool isTypo (d.mPlugin->getName() == "Typo");
-                    calibCurve.mIsRectFromZero = isTypo;
+                    const bool isUnif (d.mPlugin->getName() == "Unif");
+                    calibCurve.mIsRectFromZero = isUnif;
                     calibCurve.mBrush = QBrush(Qt::NoBrush);
 
                     calibGraph->addCurve(calibCurve);
@@ -895,10 +894,10 @@ void MultiCalibrationView::showStat()
                  if (d.mIsValid && !d.mCalibration->mCurve.isEmpty()) {
 
 
-                       const bool isTypo (d.mPlugin->getName() == "Typo");
+                       const bool isUnif (d.mPlugin->getName() == "Unif");
 
 
-                       if (!isTypo) {
+                       if (!isUnif) {
                            d.autoSetTiSampler(true); // needed if calibration is not done
 
                            QMap<double, double> calibMap = d.getFormatedCalibMap();

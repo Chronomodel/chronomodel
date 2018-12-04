@@ -45,8 +45,8 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
             if (d.mCalibration == nullptr)
                 d.calibrate(s, EventsScene->getProject());
 
-            if (d.mPlugin->getName() == "Typo")
-                mCalibThumb = d.generateTypoThumb();
+            if (d.mPlugin->getName() == "Unif")
+                mCalibThumb = d.generateUnifThumb();
 
              /* Can happen when there is trouble with the ref curve, for example with un Undo after
               * removing a refCurve

@@ -20,15 +20,15 @@ PluginUniform::~PluginUniform()
 
 long double PluginUniform::getLikelihood(const double& t, const QJsonObject& data)
 {
-    double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
-    double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
+    const double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
+    const double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
     
-    return (t >= min && t <= max) ? (long double)(1.l / (max-min)) : 0.l;
+    return (t >= min && t <= max) ? static_cast<long double>(1. / (max-min)) : 0.l;
 }
 
 QString PluginUniform::getName() const
 {
-    return QString("Typo");
+    return QString("Unif");
 }
 
 QIcon PluginUniform::getIcon() const
@@ -88,8 +88,8 @@ QJsonObject PluginUniform::fromCSV(const QStringList& list, const QLocale& csvLo
 {
     QJsonObject json;
     if (list.size() >= csvMinColumns()) {
-        double tmin = csvLocale.toDouble(list.at(1));
-        double tmax = csvLocale.toDouble(list.at(2));
+        const double tmin = csvLocale.toDouble(list.at(1));
+        const double tmax = csvLocale.toDouble(list.at(2));
         if (tmin >= tmax)
             return QJsonObject();
 
@@ -124,10 +124,7 @@ bool PluginUniform::isDateValid(const QJsonObject& data, const ProjectSettings& 
 {
     (void) data;
     (void) settings;
-    /*double bmin = data[DATE_UNIFORM_MIN_STR].toDouble();
-    double bmax = data[DATE_UNIFORM_MAX_STR].toDouble();
-    return (bmax > settings.mTmin && bmin < settings.mTmax) ? true : false;*/
-    
+
     return true;
  }
 // ------------------------------------------------------------------

@@ -11,7 +11,7 @@ PluginUniformForm::PluginUniformForm(PluginUniform* plugin, QWidget* parent, Qt:
     //PluginUniform* pluginUnif = (PluginUniform*)mPlugin;
     
     mMinLab = new QLabel(tr("Lower date (BC/AD)"), this);
-    mMaxLab = new QLabel(tr("Upper date (BC/AD"), this);
+    mMaxLab = new QLabel(tr("Upper date (BC/AD)"), this);
     
     mMinEdit = new QLineEdit(this);
     mMinEdit->setAlignment(Qt::AlignHCenter);
@@ -45,8 +45,8 @@ void PluginUniformForm::setData(const QJsonObject& data, bool isCombined)
 {
     (void) isCombined;
     QLocale locale=QLocale();
-    double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
-    double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
+    const double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
+    const double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
     
     mMinEdit->setText(locale.toString(min));
     mMaxEdit->setText(locale.toString(max));
@@ -58,8 +58,8 @@ QJsonObject PluginUniformForm::getData()
     QJsonObject data;
     QLocale locale = QLocale();
     
-    double min = round(locale.toDouble(mMinEdit->text()));
-    double max = round(locale.toDouble(mMaxEdit->text()));
+    const double min = round(locale.toDouble(mMinEdit->text()));
+    const double max = round(locale.toDouble(mMaxEdit->text()));
     
     data.insert(DATE_UNIFORM_MIN_STR, min);
     data.insert(DATE_UNIFORM_MAX_STR, max);
@@ -72,17 +72,17 @@ void PluginUniformForm::errorIsValid(QString str)
     (void) str;
     bool oka, okb;
     QLocale locale;
-    double a = locale.toDouble(mMinEdit->text(), &oka);
-    double b = locale.toDouble(mMaxEdit->text(), &okb);
+    const double a = locale.toDouble(mMinEdit->text(), &oka);
+    const double b = locale.toDouble(mMaxEdit->text(), &okb);
 
     emit PluginFormAbstract::OkEnabled(oka && okb && (a<b) );
 }
 
 bool PluginUniformForm::isValid()
 {
-    QLocale locale=QLocale();
-    double min = round(locale.toDouble(mMinEdit->text()));
-    double max = round(locale.toDouble(mMaxEdit->text()));
+    QLocale locale = QLocale();
+    const double min = round(locale.toDouble(mMinEdit->text()));
+    const double max = round(locale.toDouble(mMaxEdit->text()));
     if (min >= max)
         mError = tr("Forbidden : lower date must be > upper date");
     return min < max;

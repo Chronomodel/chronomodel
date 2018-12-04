@@ -81,7 +81,7 @@ public:
     QVector<double> getFormatedRepartition() const;
 
     QPixmap generateCalibThumb();
-    QPixmap generateTypoThumb();
+    QPixmap generateUnifThumb();
     
     void initDelta(Event* event);
     

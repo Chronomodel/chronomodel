@@ -232,18 +232,20 @@ void EventPropertiesView::updateEvent()
         if (type == Event::eDefault) {
             mMethodCombo->setCurrentIndex(mEvent.value(STATE_EVENT_METHOD).toInt());
             mDatesList->setEvent(mEvent);
-            mDatesList->setCurrentRow(mCurrentDateIdx);
+            if (mCurrentDateIdx>=0)
+                mDatesList->setCurrentRow(mCurrentDateIdx);
 
             QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
 
             bool hasDates = (dates.size() > 0);
-            if (hasDates) {
+            if (hasDates && mCurrentDateIdx>=0) {
                 updateCalibRequested(dates[mCurrentDateIdx].toObject());
                 mCalibBut->setEnabled(true);
                 mDeleteBut->setEnabled(true);
                 mRecycleBut->setEnabled(true);
 
             } else {
+               // mCalibBut->click();
                 mCalibBut->setEnabled(false);
                 mDeleteBut->setEnabled(false);
                 mRecycleBut->setEnabled(true);

@@ -441,7 +441,7 @@ GraphCurve GraphViewResults::generateDensityCurve(const QMap<double, double>& da
         curve.mPen = QPen(lineColor, 1, penStyle);
         curve.mBrush = brush;
         curve.mIsHisto = false;
-        curve.mIsRectFromZero = true; // for typo. calibs., invisible for others!
+        curve.mIsRectFromZero = true; // for Unif-typo. calibs., invisible for others!
    }
      return curve;
 }

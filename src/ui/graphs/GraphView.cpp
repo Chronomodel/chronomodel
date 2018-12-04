@@ -1020,7 +1020,7 @@ void GraphView::drawCurves(QPainter& painter)
                 
                 painter.strokePath(path, pen);
                 
-            } else if (curve.mIsHorizontalSections) { // used for Bound and Typo
+            } else if (curve.mIsHorizontalSections) { // used for Bound and Unif-Typo
                 const qreal y1 = getYForValue(mMaxY);
                 const qreal y0 = getYForValue(mMinY);
                 path.moveTo(mMarginLeft, y0);
@@ -1182,7 +1182,7 @@ void GraphView::drawCurves(QPainter& painter)
                     last_valueY = 0.;
 
                     // Detect square signal front-end without null value at the begin of the QMap
-                    // e.g calibration of typo-ref
+                    // e.g calibration of Unif-typo-ref
                     if (iter.hasNext()) {
                         if (valueY == (iter.peekNext()).value()) {
                             if (valueX >= mCurrentMinX && valueX <= mCurrentMaxX) {
@@ -1259,7 +1259,7 @@ void GraphView::drawCurves(QPainter& painter)
                     }
 
                     // Detect square signal back-end without null value at the end of the QMap
-                    // e.i calibration of typo-ref
+                    // e.i calibration of Unif-typo-ref
 
                        if (curve.mIsRectFromZero && lightMap.size()>1) {
                             QMapIterator<type_data, type_data> lastIter(lightMap);

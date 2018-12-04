@@ -275,10 +275,10 @@ void CalibrationView::updateGraphs()
         QColor brushColor = Painting::mainColorLight;
         brushColor.setAlpha(100);
 
-        // Fill under distrib. of calibrated date only if typo :
-        const bool isTypo (mDate.mPlugin->getName() == "Typo");
+        // Fill under distrib. of calibrated date only if Unif-typo :
+        const bool isUnif (mDate.mPlugin->getName() == "Unif");
 
-        // Fill HPD only if not typo :
+        // Fill HPD only if not Unif :
         mResultsText->clear();
         QMap<double, double> calibMap;
         if (mDate.mIsValid)
@@ -291,8 +291,8 @@ void CalibrationView::updateGraphs()
             calibCurve.mPen.setColor(penColor);
             calibCurve.mIsHisto = false;
             calibCurve.mData = calibMap;
-            calibCurve.mIsRectFromZero = isTypo;
-            calibCurve.mBrush = isTypo ? QBrush(brushColor) : QBrush(Qt::NoBrush);
+            calibCurve.mIsRectFromZero = isUnif;
+            calibCurve.mBrush = isUnif ? QBrush(brushColor) : QBrush(Qt::NoBrush);
             QFontMetrics fm (mCalibGraph->font());
             mCalibGraph->addCurve(calibCurve);
             mCalibGraph->setMarginBottom(fm.ascent() * 2.2);
@@ -406,7 +406,7 @@ void CalibrationView::updateGraphs()
         } else {
             mDrawing->setRefTitle(tr("No calibration process to display"));
             mDrawing->setRefComment(mDate.mPlugin->getDateDesc(&mDate));
-            mDrawing->setCalibTitle(tr("Typological date"));
+            mDrawing->setCalibTitle(tr("Uniforme date"));
             mDrawing->setCalibComment("HPD = " + mHPDEdit->text() + " %");
         }
         mDrawing->updateLayout();
@@ -541,10 +541,10 @@ void CalibrationView::setVisible(bool visible)
     mStartEdit->setVisible(visible);
     mEndLab->setVisible(visible);
     mEndEdit->setVisible(visible);
-    // Fill under distrib. of calibrated date only if typo :
-    const bool isTypo (mDate.mPlugin && (mDate.mPlugin->getName() == "Typo"));
-    mHPDLab->setVisible(!isTypo && visible);
-    mHPDEdit->setVisible(!isTypo && visible);
+    // Fill under distrib. of calibrated date only if Unif typo :
+    const bool isUnif (mDate.mPlugin && (mDate.mPlugin->getName() == "Unif"));
+    mHPDLab->setVisible(!isUnif && visible);
+    mHPDEdit->setVisible(!isUnif && visible);
 
     mDrawing->setVisible(visible);
     mResultsText->setVisible(visible);
