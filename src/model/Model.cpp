@@ -466,12 +466,12 @@ QList<QStringList> Model::getStats(const QLocale locale, const int precision, co
     for (auto &&pPhase : mPhases) {
         QStringList l = pPhase->mAlpha.getResultsList(locale, precision);
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
-        l.prepend(pPhase->mName + " alpha");
+        l.prepend(pPhase->mName + " Begin");
         rows << l;
         
         l = pPhase->mBeta.getResultsList(locale, precision);
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
-        l.prepend(pPhase->mName + " beta");
+        l.prepend(pPhase->mName + " End");
         rows << l;
     }
     
@@ -523,7 +523,7 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
     headers << "iter";
 
     for (auto &&pPhase : mPhases)
-        headers << pPhase->mName + " alpha" << pPhase->mName + " beta";
+        headers << pPhase->mName + " Begin" << pPhase->mName + " End";
 
     rows << headers;
     
@@ -575,7 +575,7 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
         runSize += chain.mNumRunIter / chain.mThinningInterval;
     
     QStringList headers;
-    headers << "iter" << phase->mName + " alpha" << phase->mName + " beta";
+    headers << "iter" << phase->mName + " Begin" << phase->mName + " End";
     for (Event* event : phase->mEvents)
         headers << event->mName;
 

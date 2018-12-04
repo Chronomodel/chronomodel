@@ -427,8 +427,8 @@ QString MCMCLoopMain::initMCMC()
             ++i;
             log += "<br>";
             log += line(textPurple(tr("Phase ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(phases.size()), phase->mName)));
-            log += line(textPurple(tr(" - Alpha : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mX), DateUtils::getAppSettingsFormatStr())));
-            log += line(textPurple(tr(" - Beta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mX), DateUtils::getAppSettingsFormatStr())));
+            log += line(textPurple(tr(" - Begin : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mX), DateUtils::getAppSettingsFormatStr())));
+            log += line(textPurple(tr(" - End : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mX), DateUtils::getAppSettingsFormatStr())));
             log += line(textPurple(tr(" - Tau : %1").arg(stringForLocal(phase->mTau))));
         }
     }
