@@ -155,12 +155,13 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
     if (!fileName.isEmpty()) {
         fileInfo = QFileInfo(fileName);
         const QString fileExtension = fileInfo.suffix();
-        const int heightText (int(2 * qApp->font().pointSizeF()));
+        const int heightText (2 * qApp->fontMetrics().height());
         const int bottomSpace (5);
+        const QString versionStr = qApp->applicationName() + " " + qApp->applicationVersion();
 
         if (fileExtension == "svg") {
             if (mGraph)
-                mGraph->saveAsSVG(fileName, "Title", "Description",true);
+                mGraph->saveAsSVG(fileName, versionStr, "GraphView",true);
 
             else if (scene) {
                 const  QRect viewBox = QRect( r.x(), r.y(), r.width(), r.height() );
@@ -168,12 +169,21 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 QSvgGenerator svgGen;
                 svgGen.setFileName(fileName);
 
-                svgGen.setViewBox(viewBox);
-                svgGen.setDescription(QObject::tr("SVG scene drawing "));
+                svgGen.setViewBox(viewBox.adjusted(0, 0, 0, 10* heightText));
+                svgGen.setTitle(versionStr);
+                svgGen.setDescription(QObject::tr("Scene drawing"));
 
                 QPainter p;
                 p.begin(&svgGen);
                 scene->render(&p, r, r);
+                p.setFont(qApp->font());
+                p.setPen(Qt::black);
+                const int wStr= p.fontMetrics().width(versionStr);
+                const int hStr = p.fontMetrics().height();
+
+                p.drawText(0, int( r.height()/2 ), wStr, hStr,
+                           Qt::AlignCenter,
+                           versionStr);
                 p.end();
             }
             else if (widget)  // export all resultView
@@ -262,7 +272,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             p.drawText(0, int( r.height() + bottomSpace), r.width(), heightText,
 
                        Qt::AlignCenter,
-                       qApp->applicationName() + " " + qApp->applicationVersion());
+                       versionStr);
 
             p.end();
             

@@ -3303,18 +3303,22 @@ void ResultsView::saveAsImage()
                                                     MainWindow::getInstance()->getCurrentPath(),
                                                     filter);
 
+
     if (!fileName.isEmpty()) {
+        const int heightText (2 * qApp->fontMetrics().height());
+        const QString versionStr = qApp->applicationName() + " " + qApp->applicationVersion();
+
         QFileInfo fileInfo;
         fileInfo = QFileInfo(fileName);
         QString fileExtension = fileInfo.suffix();
         bool asSvg = fileName.endsWith(".svg");
         // --- if png
-        const int versionHeight (20);
+        //const int versionHeight (20);
         if (!asSvg) {
 
             const short pr = AppSettings::mPixelRatio;
 
-            QImage image (selectedGraph.at(0)->width() * pr, (selectedGraph.size() * selectedGraph.at(0)->height() + versionHeight) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
+            QImage image (selectedGraph.first()->width() * pr, (selectedGraph.size() * selectedGraph.first()->height() + heightText) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
 
             if (image.isNull() )
                 qDebug()<< " image width = 0";
@@ -3325,6 +3329,7 @@ void ResultsView::saveAsImage()
             QPainter p;
             p.begin(&image);
             p.setRenderHint(QPainter::Antialiasing);
+            p.setFont(qApp->font());
 
             QPoint ptStart (0, 0);
             for (auto &&graph : selectedGraph) {
@@ -3338,10 +3343,10 @@ void ResultsView::saveAsImage()
             }
             p.setPen(Qt::black);
             p.setBrush(Qt::white);
-            p.fillRect(0, ptStart.y(), selectedGraph.at(0)->width(), versionHeight, Qt::white);
-            p.drawText(0, ptStart.y(), selectedGraph.at(0)->width(), versionHeight,
+            p.fillRect(0, ptStart.y(), selectedGraph.first()->width(), heightText, Qt::white);
+            p.drawText(0, ptStart.y(), selectedGraph.first()->width(), heightText,
                        Qt::AlignCenter,
-                       qApp->applicationName() + " " + qApp->applicationVersion());
+                       versionStr);
             p.end();
 
             if (fileExtension=="png") {
@@ -3359,20 +3364,22 @@ void ResultsView::saveAsImage()
         // if svg type
         else {
             //Rendering memoRendering= mRendering;
-            QRect rTotal( QRect(0, 0, width(), height() + versionHeight) );
+            const int wGraph = selectedGraph.first()->width();
+            const int hGraph = selectedGraph.size() * selectedGraph.first()->height();
+            QRect rTotal ( 0, 0, wGraph, hGraph + heightText );
             // Set SVG Generator
             QSvgGenerator svgGen;
             svgGen.setFileName(fileName);
-            svgGen.setSize(rTotal.size());
+            //svgGen.setSize(rTotal.size());
             svgGen.setViewBox(rTotal);
-            svgGen.setTitle(fileName);
+            svgGen.setTitle(versionStr);
             svgGen.setDescription(fileName);
 
             QPainter painter;
             painter.begin(&svgGen);
-            font().wordSpacing();
+            //font().wordSpacing();
 
-            QPoint ptStart (0, versionHeight);
+            QPoint ptStart (0, 0);
             for (auto &&graph : selectedGraph) {
                 graph->showSelectedRect(false);
                  /* We can not have a svg graph in eSD Rendering Mode */
@@ -3384,9 +3391,9 @@ void ResultsView::saveAsImage()
                 //graph->setRendering(memoRendering);
             }
             painter.setPen(Qt::black);
-            painter.drawText(0, ptStart.y(), selectedGraph.at(0)->width(), versionHeight,
+            painter.drawText(0, ptStart.y(), wGraph, heightText,
                              Qt::AlignCenter,
-                             qApp->applicationName() + " " + qApp->applicationVersion());
+                             versionStr);
 
             painter.end();
 
@@ -3616,7 +3623,7 @@ void ResultsView::exportFullImage()
     };
     
     //ScrollArrea witchScroll;
-    bool printAxis = true;
+    bool printAxis = (mGraphHeight < GraphViewResults::mHeightForVisibleAxis);
     
     QWidget* curWid (nullptr);
     
