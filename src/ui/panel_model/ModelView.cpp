@@ -1249,7 +1249,7 @@ void ModelView::exportPhasesScene()
 void ModelView::exportSceneImage(QGraphicsScene* scene)
 {
     //scene->clearSelection();
-    scene->setSceneRect(scene->itemsBoundingRect().adjusted(-30, -30, 30, 30)); //specialItemsBoundingRect().adjusted(-30, -30, 30, 30)
+    scene->setSceneRect(scene->itemsBoundingRect().adjusted(-30, -30, 30, 30));
     QRect r = scene->sceneRect().toRect();
     QFileInfo fileInfo = saveWidgetAsImage(scene, r,
                                            tr("Save model image as..."),
