@@ -498,6 +498,7 @@ void MultiCalibrationView::updateGraphList()
    if (mStatClipBut->isChecked())
        showStat();
 
+   updateScroll();
    update();
 }
 
@@ -562,31 +563,33 @@ void MultiCalibrationView::updateScroll()
     if (ok)
         mTminDisplay = val;
     else
-        return;
+        mTminDisplay = mSettings.getTminFormated();
+
 
     val = locale().toDouble(mEndEdit->text(),&ok);
     if (ok)
         mTmaxDisplay = val;
     else
-        return;
+        mTmaxDisplay = mSettings.getTmaxFormated();
 
     QFont adaptedFont (font());
-    QFontMetricsF fm (font());
-    qreal textSize = fm.width(mStartEdit->text());
-    if (textSize > (mStartEdit->width() - 2. )) {
-        const qreal fontRate = textSize / (mStartEdit->width() - 2. );
-        const qreal ptSiz = adaptedFont.pointSizeF() / fontRate;
+
+    qreal textSize = fontMetrics().width (mStartEdit->text())  + fontMetrics().width("0");
+    if (textSize > mStartEdit->width()) {
+        const qreal fontRate = textSize / mStartEdit->width();
+        const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
         adaptedFont.setPointSizeF(ptSiz);
         mStartEdit->setFont(adaptedFont);
+
     } else
         mStartEdit->setFont(font());
 
     adaptedFont = font();
-    fm = QFontMetrics(font());
-    textSize = fm.width(mEndEdit->text());
-    if (textSize > (mEndEdit->width() - 2. )) {
-        const qreal fontRate = textSize / (mEndEdit->width() - 2. );
-        const qreal ptSiz = adaptedFont.pointSizeF() / fontRate;
+
+    textSize = fontMetrics().width(mEndEdit->text()) + fontMetrics().width("0");
+    if (textSize > mEndEdit->width() ) {
+        const qreal fontRate = textSize / mEndEdit->width();
+        const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
         adaptedFont.setPointSizeF(ptSiz);
         mEndEdit->setFont(adaptedFont);
     }
@@ -610,11 +613,39 @@ void MultiCalibrationView::updateScaleX()
     bool isNumber(true);
     double aNumber = locale().toDouble(&str, &isNumber);
 
+    QFont adaptedFont (font());
+
+    qreal textSize = fontMetrics().width (str)  + fontMetrics().width("0");
+    if (textSize > mMajorScaleEdit->width()) {
+        const qreal fontRate = textSize / mMajorScaleEdit->width();
+        const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
+        adaptedFont.setPointSizeF(ptSiz);
+        mMajorScaleEdit->setFont(adaptedFont);
+
+    } else
+        mMajorScaleEdit->setFont(font());
+
+
     if (!isNumber || aNumber<1)
         return;
     mMajorScale = aNumber;
 
+//----------------------------------------
+
     str = mMinorScaleEdit->text();
+
+    adaptedFont = font();
+
+    textSize = fontMetrics().width (str)  + fontMetrics().width("0");
+    if (textSize > mMinorScaleEdit->width()) {
+        const qreal fontRate = textSize / mMinorScaleEdit->width();
+        const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
+        adaptedFont.setPointSizeF(ptSiz);
+        mMinorScaleEdit->setFont(adaptedFont);
+
+    } else
+        mMinorScaleEdit->setFont(font());
+
     aNumber = locale().toDouble(&str, &isNumber);
 
     if (isNumber && aNumber>=1) {
@@ -657,7 +688,7 @@ void MultiCalibrationView::updateGraphsZoom()
             subDisplay = getMapDataInRange(subDisplay, mTminDisplay, mTmaxDisplay);
 
             type_data yMax = map_max_value(subDisplay);
-            if (yMax == 0)
+            if (yMax == 0.)
                 yMax = 1;
 
             gr->setRangeY(0., 1. * yMax);
@@ -678,7 +709,7 @@ void MultiCalibrationView::updateGraphsZoom()
                 zone.mText = tr("Outside study period");
                 gr->addZone(zone);
             }
-            if (mTmaxDisplay > mSettings.getTmaxFormated()) {
+           if (mTmaxDisplay > mSettings.getTmaxFormated()) {
                 GraphZone zone;
                 zone.mXStart = mSettings.getTmaxFormated();
                 zone.mXEnd = mTmaxDisplay;
@@ -689,7 +720,7 @@ void MultiCalibrationView::updateGraphsZoom()
             }
 
             gr->forceRefresh();
-    }
+        }
     }
 
 }
@@ -885,11 +916,10 @@ void MultiCalibrationView::showStat()
                 for (auto &&date : dates) {
                    const QJsonObject jdate = date.toObject();
 
-                    Date d;
-                    d.fromJson(jdate);
+                   Date d;
+                   d.fromJson(jdate);
 
-
-                    resultsStr += " <br> <strong>"+ d.mName + "</strong> (" + d.mPlugin->getName() + ")" +"<br> <i>" + d.getDesc() + "</i><br> ";
+                   resultsStr += " <br> <strong>"+ d.mName + "</strong> (" + d.mPlugin->getName() + ")" +"<br> <i>" + d.getDesc() + "</i><br> ";
 
                  if (d.mIsValid && !d.mCalibration->mCurve.isEmpty()) {
 

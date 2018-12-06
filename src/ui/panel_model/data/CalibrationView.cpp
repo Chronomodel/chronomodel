@@ -166,10 +166,6 @@ CalibrationView::~CalibrationView()
 
 void CalibrationView::applyAppSettings()
 {
-    // We must force setFont on QLineEdit !!
-   // setFont(AppSettings::font());
-    //mButtonWidth = AppSettings::mButtonWidth;
-
     mButtonWidth = int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
 
@@ -218,7 +214,7 @@ void CalibrationView::setDate(const QJsonObject& date)
         mEndEdit->setText(stringForGraph(mTmaxDisplay));
 
         if (std::isinf(-mTminDisplay) || std::isinf(mTmaxDisplay))
-            throw(tr("CalibrationView::setDate ") + mDate.mPlugin->getName() + mDate.mCalibration->mName + mDate.mCalibration->mTmin + mDate.mCalibration->mTmax);
+            throw(tr("CalibrationView::setDate ") + mDate.mPlugin->getName() + mDate.mCalibration->mName + locale().toString(mDate.mCalibration->mTmin) + locale().toString(mDate.mCalibration->mTmax));
 
         updateScroll();
         //updateGraphs();
@@ -427,15 +423,43 @@ void CalibrationView::updateScaleX()
     bool isNumber (true);
     double aNumber = locale().toDouble(&str, &isNumber);
 
-    if (!isNumber || aNumber<1)
+    QFont adaptedFont (font());
+
+    qreal textSize = fontMetrics().width (str)  + fontMetrics().width("0");
+    if (textSize > mMajorScaleEdit->width()) {
+        const qreal fontRate = textSize / mMajorScaleEdit->width();
+        const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
+        adaptedFont.setPointSizeF(ptSiz);
+        mMajorScaleEdit->setFont(adaptedFont);
+
+    } else
+        mMajorScaleEdit->setFont(font());
+
+
+    if (!isNumber || aNumber < 1)
         return;
 
     mMajorScale = aNumber;
 
+    //---------------------------------
+
     str = mMinorScaleEdit->text();
+
+    adaptedFont = font();
+
+    textSize = fontMetrics().width (str)  + fontMetrics().width("0");
+    if (textSize > mMinorScaleEdit->width()) {
+        const qreal fontRate = textSize / mMinorScaleEdit->width();
+        const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
+        adaptedFont.setPointSizeF(ptSiz);
+        mMinorScaleEdit->setFont(adaptedFont);
+
+    } else
+        mMinorScaleEdit->setFont(font());
+
     aNumber = locale().toDouble(&str, &isNumber);
 
-    if (isNumber && aNumber>=1) {
+    if (isNumber && aNumber >= 1) {
         mMinorScale =  int (aNumber);
         mCalibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
         if (mRefGraphView)
@@ -447,52 +471,49 @@ void CalibrationView::updateScaleX()
 void CalibrationView::updateScroll()
 {
     bool ok;
-    QLocale locale = QLocale();
-    double val = locale.toDouble(mStartEdit->text(), &ok);
+
+    double val = locale().toDouble(mStartEdit->text(), &ok);
     if (ok)
         mTminDisplay = val;
     else
-        return;
+        mTminDisplay = mSettings.getTminFormated();
 
-    val = locale.toDouble(mEndEdit->text(), &ok);
+
+    val = locale().toDouble(mEndEdit->text(), &ok);
     if (ok)
         mTmaxDisplay = val;
     else
-        return;
+        mTmaxDisplay = mSettings.getTmaxFormated();
 
-    QFont adaptedFont (mStartEdit->font());
-    const QFontMetricsF fm (mStartEdit->font());
-    qreal textSize = fm.width (mStartEdit->text());
-    if (textSize > (mStartEdit->width() - 2. )) {
-        const qreal fontRate = textSize / (mStartEdit->width() - 2. );
-        const qreal ptSiz = adaptedFont.pointSizeF() / fontRate;
+    qDebug()<<"CalibrationView::updateScroll()"<<mTminDisplay<<mTmaxDisplay;
+        // usefull when we set mStartEdit and mEndEdit at the begin of the display,
+        // after a call to setDate
+        if (std::isinf(-mTminDisplay) || std::isinf(mTmaxDisplay) || mTminDisplay>mTmaxDisplay )
+            return;
+
+    QFont adaptedFont (font());
+    qreal textSize = fontMetrics().width (mStartEdit->text())  + fontMetrics().width("0");;
+    if (textSize > mStartEdit->width() ) {
+        const qreal fontRate = textSize / mStartEdit->width() ;
+        const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
         adaptedFont.setPointSizeF(ptSiz);
         mStartEdit->setFont(adaptedFont);
     }
     else
-        mStartEdit->setFont(this->font());
+        mStartEdit->setFont(font());
 
-    adaptedFont = mEndEdit->font();
-
-    textSize = fm.width(mEndEdit->text());
-    if (textSize > (mEndEdit->width() - 2. )) {
-        const qreal fontRate = textSize / (mEndEdit->width() - 2. );
-        const qreal ptSiz = adaptedFont.pointSizeF() / fontRate;
+    adaptedFont = font();
+    textSize = fontMetrics().width(mEndEdit->text()) + fontMetrics().width("0");
+    if (textSize > mEndEdit->width() ) {
+        const qreal fontRate = textSize / mEndEdit->width();
+        const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
         adaptedFont.setPointSizeF(ptSiz);
         mEndEdit->setFont(adaptedFont);
     }
     else
-        mEndEdit->setFont(this->font());
+        mEndEdit->setFont(font());
 
-qDebug()<<"CalibrationView::updateScroll()"<<mTminDisplay<<mTmaxDisplay;
-    // usefull when we set mStartEdit and mEndEdit at the begin of the display,
-    // after a call to setDate
-    if (std::isinf(-mTminDisplay) || std::isinf(mTmaxDisplay))
-        return;
-    else if (mTminDisplay<mTmaxDisplay)
-            updateGraphs();
-    else
-        return;
+updateGraphs();
 
 }
 
