@@ -268,8 +268,6 @@ void AbstractScene::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
  */
 void AbstractScene::keyPressEvent(QKeyEvent* keyEvent)
 {
-    QGraphicsScene::keyPressEvent(keyEvent);
-
     if (keyEvent->isAutoRepeat())
         keyEvent->ignore();
 
@@ -300,7 +298,8 @@ void AbstractScene::keyPressEvent(QKeyEvent* keyEvent)
     }*/
     else
         keyEvent->ignore();
-    
+
+    QGraphicsScene::keyPressEvent(keyEvent);
 }
 
 void AbstractScene::keyReleaseEvent(QKeyEvent* keyEvent)
@@ -331,29 +330,30 @@ void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
 
     if (mShowGrid) {
         painter->setPen(QColor(220, 220, 220));
-        const  int x = int (sceneRect().x());
-        const int y = int (sceneRect().y());
-        const int w = int (sceneRect().width());
-        const int h = int (sceneRect().height());
-        const  int delta (4 * int(mDeltaGrid) );
+        const  qreal x (sceneRect().x());
+        const qreal y (sceneRect().y());
+        const qreal w (sceneRect().width());
+        const qreal h (sceneRect().height());
+        const qreal delta (4 * mDeltaGrid );
 
-        int xi = int (ceil(x/delta) * delta);
+        qreal xi (ceil(x/delta) * delta);
         while (xi< x + w) {
-            painter->drawLine(xi , y, xi, y + h);
+            painter->drawLine(QLineF(xi , y, xi, y + h));
             xi += delta;
         }
 
-        int yi = int (floor(y/delta) * delta);
+        qreal yi (floor(y/delta) * delta);
         while (yi< y + h) {
-            painter->drawLine(x , yi, x + w, yi);
+            painter->drawLine(QLineF(x , yi, x + w, yi));
             yi += delta;
         }
 
     }
 
     // Cross for origin :
-    painter->setPen(QColor(100, 100, 100));
+   /* painter->setPen(QColor(100, 100, 100));
     painter->drawLine(-10, 0, 10, 0);
     painter->drawLine(0, -10, 0, 10);
+    */
 }
 
