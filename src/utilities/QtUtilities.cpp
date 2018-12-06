@@ -196,10 +196,10 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
              *  Get preferences
              * -------------------------------*/
             //For the scene exportation pixel Ration is forced to 1
-            const short pr = AppSettings::mPixelRatio;
+            const short pr = short (AppSettings::mPixelRatio);
 
             //const short dpm = appSetting.mDpm;
-            const short quality = AppSettings::mImageQuality;
+            const short quality = short (AppSettings::mImageQuality);
             
             // -------------------------------
             //  Create the image
