@@ -53,12 +53,12 @@ private:
 
    int mButW ;
    int mButH ; // size of the button OK and Cancel
-   int mMargin;
+   int mMarginW;
+   int mMarginH;
 
    int mTotalWidth;
    // Object
 
-    QFontMetrics *fm;
     QLabel *mNumProcLabel;
     LineEdit* mNumProcEdit;
 
