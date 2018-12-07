@@ -51,7 +51,6 @@ void ProjectSettings::copyFrom(const ProjectSettings& s)
     mTmax = s.mTmax;
     mStep = s.mStep;
     mStepForced = s.mStepForced;
-
 }
 
 ProjectSettings::~ProjectSettings()
@@ -87,8 +86,8 @@ QJsonObject ProjectSettings::toJson() const
 
 double ProjectSettings::getStep(const double tmin, const double tmax)
 {
-    const double diff = tmax - tmin;
-    const double linearUntil (10000.);
+    const double diff (tmax - tmin);
+    const double linearUntil (52000.);
     
     if (diff <= linearUntil)
         return 1.;
@@ -97,7 +96,7 @@ double ProjectSettings::getStep(const double tmin, const double tmax)
         const double maxPts (50000.);
         const double lambda = - log((maxPts - linearUntil)/maxPts) / linearUntil;
         const double nbPts = maxPts * (1. - exp(-lambda * diff));
-        double step = diff / nbPts;
+        const double step = diff / nbPts;
         return step;
     }
 }
