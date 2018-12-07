@@ -562,10 +562,9 @@ void CalibrationView::setVisible(bool visible)
     mStartEdit->setVisible(visible);
     mEndLab->setVisible(visible);
     mEndEdit->setVisible(visible);
-    // Fill under distrib. of calibrated date only if Unif typo :
-    const bool isUnif (mDate.mPlugin && (mDate.mPlugin->getName() == "Unif"));
-    mHPDLab->setVisible(!isUnif && visible);
-    mHPDEdit->setVisible(!isUnif && visible);
+
+    mHPDLab->setVisible(visible);
+    mHPDEdit->setVisible(visible);
 
     mDrawing->setVisible(visible);
     mResultsText->setVisible(visible);
