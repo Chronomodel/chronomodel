@@ -378,7 +378,7 @@ void GraphViewResults::paintEvent(QPaintEvent* )
 
     p.setPen(Qt::black);
     
-    p.drawText(QRectF( 2 * AppSettings::widthUnit(), 0, fmTitle.width(mTitle), mTopShift), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
+    p.drawText(QRectF( 2 * AppSettings::widthUnit(), 0, fmTitle.boundingRect(mTitle).width(), mTopShift), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
     
     p.setFont(QFont(mGraphFont.family(), mGraphFont.pointSize(), -1 , true));
 
@@ -390,9 +390,9 @@ void GraphViewResults::paintEvent(QPaintEvent* )
    if (!graphInfo.isEmpty()) {
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 8, 0))
         if (mShowNumResults)
-             p.drawText(QRectF(width()*2/3. - fmTitle.width(graphInfo) - 3 * AppSettings::widthUnit(),  mTopShift - fmTitle.capHeight()-fmTitle.descent(), fmTitle.width(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
+             p.drawText(QRectF(width()*2/3. - fmTitle.boundingRect(graphInfo).width() - 3 * AppSettings::widthUnit(),  mTopShift - fmTitle.capHeight()-fmTitle.descent(), fmTitle.boundingRect(graphInfo).width(), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
          else
-            p.drawText(QRectF(width() - fmTitle.width(graphInfo)  - 3 * AppSettings::widthUnit(), mTopShift - fmTitle.capHeight()-fmTitle.descent() , fmTitle.width(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
+            p.drawText(QRectF(width() - fmTitle.boundingRect(graphInfo).width() - 3 * AppSettings::widthUnit(), mTopShift - fmTitle.capHeight()-fmTitle.descent() , fmTitle.boundingRect(graphInfo).width(), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
 #else
        if (mShowNumResults)
             p.drawText(QRectF(width()*2/3. - fmTitle.width(graphInfo) - 3 * AppSettings::widthUnit(),  mTopShift - fmTitle.ascent()-fmTitle.descent(), fmTitle.width(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);

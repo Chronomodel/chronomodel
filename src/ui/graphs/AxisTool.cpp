@@ -132,10 +132,10 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
 
                 // look for the text increment
                 const QString textMin =(valueFormatFunc ? stringForGraph(valueFormatFunc(mStartVal)) : stringForGraph(mStartVal) );
-                const int textMinWidth =  fm.width(textMin) ;
+                const int textMinWidth =  fm.boundingRect(textMin).width() ;
 
                 const QString textMax =(valueFormatFunc ?stringForGraph(valueFormatFunc(mEndVal)) : stringForGraph(mEndVal) );
-                const int textMaxWidth =  fm.width(textMax) ;
+                const int textMaxWidth =  fm.boundingRect(textMax).width() ;
 
                 const double nbPossibleText = std::abs(getXForValue(mStartVal) -getXForValue(mEndVal)) / (std::max(textMinWidth, textMaxWidth) + 5.);
 
@@ -229,7 +229,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
                  const QString textStarVal = (valueFormatFunc ? stringForLocal(valueFormatFunc(mStartVal)) : stringForGraph(mStartVal) );
                  const QString textEndVal = (valueFormatFunc ? stringForLocal(valueFormatFunc(mEndVal)) : stringForGraph(mEndVal) );
                 // const int textHeight =  fm.height() ;
-                 w = qMax( fm.width(textStarVal), fm.width(textEndVal) );
+                 w = qMax( fm.boundingRect(textStarVal).width(), fm.boundingRect(textEndVal).width() );
                  const int xText = int ((xov - graduationSize -w) *2.  / 3.);
                  qreal y = yov - getYForValue(mStartVal) - textHeight/2. ;
                   p.drawText(xText, y, w, textHeight, Qt::AlignRight | Qt::AlignBottom, textStarVal);
@@ -273,7 +273,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
                     if ( textInc == mTextInc) {
                         const QString text =(valueFormatFunc ?stringForGraph(valueFormatFunc(v)) : stringForGraph(v) );
                         const int textHeight =  fm.height() ;
-                        w =  fm.width(text);
+                        w =  fm.boundingRect(text).width();
                         const int xText = int ((xov - graduationSize -w) *2. / 3.);
                         const int yText = int (y - textHeight/2.) ;
                         p.drawText(xText, yText, w, textHeight, Qt::AlignRight | Qt::AlignBottom, text);

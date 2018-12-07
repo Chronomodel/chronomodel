@@ -242,11 +242,10 @@ void MultiCalibrationView::updateLayout()
     const int margin ( int(0.1 * mButtonWidth));
     const int xm (x0 + margin);
 
-    QFontMetrics fm (font());
-    const int textHeight (int (1.2 * (fm.descent() + fm.ascent()) ));
+    const int textHeight (int (1.2 * (fontMetrics().descent() + fontMetrics().ascent()) ));
     const int verticalSpacer (int (0.3 * AppSettings::heigthUnit()));
-    mMarginRight = int (1.5 * floor(fm.width(mEndEdit->text())/2) + 5);
-    mMarginLeft = int (1.5 * floor(fm.width(mStartEdit->text())/2) + 5);
+    mMarginRight = int (1.5 * floor(fontMetrics().boundingRect(mEndEdit->text()).width()/2) + 5);
+    mMarginLeft = int (1.5 * floor(fontMetrics().boundingRect(mStartEdit->text()).width()/2) + 5);
 
     //Position of Widget
     int y (0);
@@ -312,7 +311,6 @@ void MultiCalibrationView::updateLayout()
 
 void MultiCalibrationView::updateGraphList()
 {
-    QFontMetrics fm (font());
     QJsonObject state = mProject->state();
     mSettings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
@@ -324,8 +322,8 @@ void MultiCalibrationView::updateGraphList()
     mEndEdit->setText(locale().toString(mTmaxDisplay));
     mHPDEdit->setText(locale().toString(mThreshold));
   //The same Name and same Value as in MultiCalibrationView::exportFullImage()
-    mMarginRight = int (1.5 * floor(fm.width(mEndEdit->text())/2) + 5);
-    mMarginLeft = int (1.5 * floor(fm.width(mStartEdit->text())/2) + 5);
+    mMarginRight = int (1.5 * floor(fontMetrics().boundingRect(mEndEdit->text()).width()/2) + 5);
+    mMarginLeft = int (1.5 * floor(fontMetrics().boundingRect(mStartEdit->text()).width()/2) + 5);
 
     QColor penColor = mCurveColor;
     QColor brushColor = mCurveColor;
@@ -574,7 +572,7 @@ void MultiCalibrationView::updateScroll()
 
     QFont adaptedFont (font());
 
-    qreal textSize = fontMetrics().width (mStartEdit->text())  + fontMetrics().width("0");
+    qreal textSize = fontMetrics().boundingRect(mStartEdit->text()).width()  + fontMetrics().boundingRect("0").width();
     if (textSize > mStartEdit->width()) {
         const qreal fontRate = textSize / mStartEdit->width();
         const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
@@ -586,7 +584,7 @@ void MultiCalibrationView::updateScroll()
 
     adaptedFont = font();
 
-    textSize = fontMetrics().width(mEndEdit->text()) + fontMetrics().width("0");
+    textSize = fontMetrics().boundingRect(mEndEdit->text()).width() + fontMetrics().boundingRect("0").width();
     if (textSize > mEndEdit->width() ) {
         const qreal fontRate = textSize / mEndEdit->width();
         const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
@@ -615,7 +613,7 @@ void MultiCalibrationView::updateScaleX()
 
     QFont adaptedFont (font());
 
-    qreal textSize = fontMetrics().width (str)  + fontMetrics().width("0");
+    qreal textSize = fontMetrics().boundingRect(str).width()  + fontMetrics().boundingRect("0").width();
     if (textSize > mMajorScaleEdit->width()) {
         const qreal fontRate = textSize / mMajorScaleEdit->width();
         const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
@@ -636,7 +634,7 @@ void MultiCalibrationView::updateScaleX()
 
     adaptedFont = font();
 
-    textSize = fontMetrics().width (str)  + fontMetrics().width("0");
+    textSize = fontMetrics().boundingRect(str).width()  + fontMetrics().boundingRect("0").width();
     if (textSize > mMinorScaleEdit->width()) {
         const qreal fontRate = textSize / mMinorScaleEdit->width();
         const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
@@ -665,9 +663,9 @@ void MultiCalibrationView::updateScaleX()
 
 void MultiCalibrationView::updateGraphsZoom()
 {
-    const QFontMetrics fm (font());
-    mMarginRight = int (1.5 * floor(fm.width(mEndEdit->text())/2) + 5);
-    mMarginLeft = int (1.5 * floor(fm.width(mStartEdit->text())/2) + 5);
+
+    mMarginRight = int (1.5 * floor(fontMetrics().boundingRect(mEndEdit->text()).width()/2) + 5);
+    mMarginLeft = int (1.5 * floor(fontMetrics().boundingRect(mStartEdit->text()).width()/2) + 5);
 
     QList<GraphView*> *graphList = mDrawing->getGraphList();
 

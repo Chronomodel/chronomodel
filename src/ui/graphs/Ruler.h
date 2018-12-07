@@ -8,8 +8,8 @@
 class QScrollBar;
 
 struct RulerArea{
-    double mStart;
-    double mStop;
+    int mStart;
+    int mStop;
     QColor mColor;
 };
 
@@ -44,7 +44,7 @@ public:
      double getRealValue();
 
      void clearAreas();
-     void addArea(double start, double end, const QColor& color);
+     void addArea(int start, int end, const QColor& color);
      // Set value formatting functions
      void setFormatFunctX(DateConversion f);
     void updateLayout();

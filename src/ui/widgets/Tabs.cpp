@@ -194,8 +194,8 @@ void Tabs::updateLayout()
     int i (0);
     for (auto &&name : mTabNames) {
         if (mTabVisible[i]) {
-            const qreal w = fm.width(name);
-            const qreal m = 1.5 * fm.width(QString("H"));
+            const qreal w = fm.boundingRect(name).width();
+            const qreal m = 1.5 * fm.boundingRect(QString("H")).width();
             mTabRects.append(QRectF(x, 1,  2*m + w, h));
             x += 2*m + w;
         } else

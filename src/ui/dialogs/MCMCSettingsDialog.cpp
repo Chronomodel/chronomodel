@@ -11,13 +11,13 @@
 MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent):QDialog(parent),
 mTop ( int(3.5 * fontMetrics().height())), // y position of the colored box
 mColoredBoxHeigth ( 10 * fontMetrics().height()), // size of the colored box 3.5
-mBurnBoxWidth (fontMetrics().width("0000000000")),
-mAdaptBoxWidth ( fontMetrics().width("0000000000")),
-mAcquireBoxWidth (int (3.5 * fontMetrics().width("0000000000"))),
+mBurnBoxWidth (fontMetrics().boundingRect("0000000000").width()),
+mAdaptBoxWidth ( fontMetrics().boundingRect("0000000000").width()),
+mAcquireBoxWidth (int (3.5 * fontMetrics().boundingRect("0000000000").width())),
 mBottom (3 * fontMetrics().height()),
 mLineH (int (1.1* fontMetrics().height())), // heigth of the edit box
-mEditW (fontMetrics().width("0000000000")),
-mButW (fontMetrics().width("0000000000")),
+mEditW (fontMetrics().boundingRect("0000000000").width()),
+mButW (fontMetrics().boundingRect("0000000000").width()),
 mButH ( int (1.2 * fontMetrics().height())),
 mMarginW ( int( 0.5 * fontMetrics().height() )),  // marge width
 mMarginH ( (mColoredBoxHeigth - 5*mLineH)/8 ),  // marge Heigth
@@ -55,9 +55,9 @@ mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
     // Inside colored boxes
     // 1 - BURN-IN
     mTitleBurnLabel = new QLabel(tr("1 - BURN-IN"), this);
-    mTitleBurnLabel->setFixedSize(fontMetrics().width(mTitleBurnLabel->text()), mButH);
+    mTitleBurnLabel->setFixedSize(fontMetrics().boundingRect(mTitleBurnLabel->text()).width(), mButH);
     mIterBurnLabel = new QLabel(tr("Iterations"), this);
-    mIterBurnLabel->setFixedSize(fontMetrics().width(mIterBurnLabel->text()), mButH);
+    mIterBurnLabel->setFixedSize(fontMetrics().boundingRect(mIterBurnLabel->text()).width(), mButH);
 
     mNumBurnEdit = new LineEdit(this);
     mNumBurnEdit->setAlignment(Qt::AlignCenter);
@@ -90,12 +90,12 @@ mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
     mHelp->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=47"); // chapter 4.2 MCMC settings
     
     mSeedsLabel = new QLabel(tr("Seeds (separated by \";\")"),this);
-    mSeedsLabel->setFixedSize(fontMetrics().width(mSeedsLabel->text()), mButH);
+    mSeedsLabel->setFixedSize(fontMetrics().boundingRect(mSeedsLabel->text()).width(), mButH);
     mSeedsEdit = new LineEdit(this);
     mSeedsEdit->setFixedSize(mEditW, mButH);
     
     mLevelLabel = new QLabel(tr("Mixing level"),this);
-    mLevelLabel->setFixedSize(fontMetrics().width(mLevelLabel->text()), mButH);
+    mLevelLabel->setFixedSize(fontMetrics().boundingRect(mLevelLabel->text()).width(), mButH);
     mLevelEdit = new LineEdit(this);
     mLevelEdit->setFixedSize(mButW, mButH);
 
@@ -103,10 +103,10 @@ mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
     mOkBut->setFixedSize(mButW, mButH);
     
     mCancelBut = new Button(tr("Cancel"), this);
-    mCancelBut->setFixedSize(fontMetrics().width(mCancelBut->text())+ 2 * mMarginW, mButH);
+    mCancelBut->setFixedSize(fontMetrics().boundingRect(mCancelBut->text()).width() + 2 * mMarginW, mButH);
     
     mTestBut = new Button(tr("Quick Test"), this);
-    mTestBut->setFixedSize(fontMetrics().width(mTestBut->text()) + 2 * mMarginW, mButH);
+    mTestBut->setFixedSize(fontMetrics().boundingRect(mTestBut->text()).width() + 2 * mMarginW, mButH);
 
 #ifdef DEBUG
     mTestBut->setFixedSize(fontMetrics().width(mTestBut->text()) + 2 * mMarginW, mButH);
@@ -116,7 +116,7 @@ mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
 #endif
 
     mResetBut = new Button(tr("Restore Defaults"), this);
-    mResetBut->setFixedSize(fontMetrics().width(mResetBut->text()) + 2 * mMarginW, mButH);
+    mResetBut->setFixedSize(fontMetrics().boundingRect(mResetBut->text()).width() + 2 * mMarginW, mButH);
 
     connect(mOkBut, &Button::clicked, this, &MCMCSettingsDialog::inputControl);
     connect(this, &MCMCSettingsDialog::inputValided, this, &MCMCSettingsDialog::accept);
@@ -216,7 +216,7 @@ void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
 
     p.drawText(mAquireRect.adjusted(0, mMarginH, 0, -mAquireRect.height() + mLineH + 1 * mMarginH), Qt::AlignCenter, tr("3 - ACQUIRE"));
     p.drawText(mAquireRect.adjusted(0, mLineH + 2 * mMarginH, 0, -mAquireRect.height() + 2 * mLineH + 2 * mMarginH), Qt::AlignCenter, tr("Iterations") );
-    p.drawText(int (mAquireRect.x() + (mAcquireBoxWidth - fontMetrics().width(tr("Thinning")))/2), int (mAquireRect.y() + 3 * mLineH + 4 * mMarginH), fontMetrics().width(tr("Thinning")), mButH, Qt::AlignCenter, tr("Thinning") );
+    p.drawText(int (mAquireRect.x() + (mAcquireBoxWidth - fontMetrics().boundingRect(tr("Thinning")).width())/2), int (mAquireRect.y() + 3 * mLineH + 4 * mMarginH), fontMetrics().boundingRect(tr("Thinning")).width(), mButH, Qt::AlignCenter, tr("Thinning") );
 
 
 }
@@ -230,13 +230,13 @@ void MCMCSettingsDialog::resizeEvent(QResizeEvent* e)
 void MCMCSettingsDialog::updateLayout()
 {
     
-    mNumProcLabel->move(width()/2 - mMarginW - fontMetrics().width(mNumProcLabel->text()), (mTop - mNumProcLabel->height()) /2 );
+    mNumProcLabel->move(width()/2 - mMarginW - fontMetrics().boundingRect(mNumProcLabel->text()).width(), (mTop - mNumProcLabel->height()) /2 );
     mNumProcEdit->move(width()/2 + mMarginW, (mTop - mNumProcLabel->height()) /2);
 
     // Setting Edit boxes
     // 1 -BURN
-    mTitleBurnLabel->move(int (mBurnRect.x() + (mBurnBoxWidth - fontMetrics().width(mTitleBurnLabel->text()))/2), int (mBurnRect.y()) + 1 * mMarginH);
-    mIterBurnLabel->move(int (mBurnRect.x() + (mBurnBoxWidth - fontMetrics().width(mIterBurnLabel->text()))/2), mTitleBurnLabel->y() + mTitleBurnLabel->height() + 1 * mMarginH);
+    mTitleBurnLabel->move(int (mBurnRect.x() + (mBurnBoxWidth - fontMetrics().boundingRect(mTitleBurnLabel->text()).width())/2), int (mBurnRect.y()) + 1 * mMarginH);
+    mIterBurnLabel->move(int (mBurnRect.x() + (mBurnBoxWidth - fontMetrics().boundingRect(mIterBurnLabel->text()).width())/2), mTitleBurnLabel->y() + mTitleBurnLabel->height() + 1 * mMarginH);
     mNumBurnEdit->move(int (mBurnRect.x() + (mBurnBoxWidth - mEditW)/2),  mIterBurnLabel->y() + mIterBurnLabel->height() + 1 * mMarginH);
 
     // 2 - ADAPT

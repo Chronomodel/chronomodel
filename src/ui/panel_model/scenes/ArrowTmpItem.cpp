@@ -104,9 +104,7 @@ void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
         case eForbidden:
             color = Qt::red;
             break;
-        default:
-            break;
-    }
+     }
     painter->setPen(QPen(color, penWidth, Qt::DashLine));
     painter->drawLine(mXFrom, mYFrom, mXTo, mYTo);
     
@@ -165,7 +163,7 @@ void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
     painter->setFont(font);
     painter->setRenderHint(QPainter::Antialiasing);
 
-    QRectF rTex(centrum.x() - fm.width(getBubbleText())/2., centrum.y() - fm.ascent()/2., fm.width(getBubbleText()), fm.height());
+    QRectF rTex(centrum.x() - fm.boundingRect(getBubbleText()).width()/2., centrum.y() - fm.ascent()/2., fm.boundingRect(getBubbleText()).width(), fm.height());
 
     switch (mState) {
 
@@ -186,8 +184,6 @@ void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
 
             painter->drawText(rTex,  getBubbleText());//, QTextOption(Qt::AlignCenter));
 
-        default:
-            break;
     }
 }
 

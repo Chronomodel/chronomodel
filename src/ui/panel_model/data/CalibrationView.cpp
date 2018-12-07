@@ -425,7 +425,7 @@ void CalibrationView::updateScaleX()
 
     QFont adaptedFont (font());
 
-    qreal textSize = fontMetrics().width (str)  + fontMetrics().width("0");
+    qreal textSize = fontMetrics().boundingRect(str).width()  + fontMetrics().boundingRect("0").width();
     if (textSize > mMajorScaleEdit->width()) {
         const qreal fontRate = textSize / mMajorScaleEdit->width();
         const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
@@ -447,7 +447,7 @@ void CalibrationView::updateScaleX()
 
     adaptedFont = font();
 
-    textSize = fontMetrics().width (str)  + fontMetrics().width("0");
+    textSize = fontMetrics().boundingRect(str).width()  + fontMetrics().boundingRect("0").width();
     if (textSize > mMinorScaleEdit->width()) {
         const qreal fontRate = textSize / mMinorScaleEdit->width();
         const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
@@ -492,7 +492,7 @@ void CalibrationView::updateScroll()
             return;
 
     QFont adaptedFont (font());
-    qreal textSize = fontMetrics().width (mStartEdit->text())  + fontMetrics().width("0");;
+    qreal textSize = fontMetrics().boundingRect(mStartEdit->text()).width()  + fontMetrics().boundingRect("0").width();
     if (textSize > mStartEdit->width() ) {
         const qreal fontRate = textSize / mStartEdit->width() ;
         const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
@@ -503,7 +503,7 @@ void CalibrationView::updateScroll()
         mStartEdit->setFont(font());
 
     adaptedFont = font();
-    textSize = fontMetrics().width(mEndEdit->text()) + fontMetrics().width("0");
+    textSize = fontMetrics().boundingRect(mEndEdit->text()).width() + fontMetrics().boundingRect("0").width();
     if (textSize > mEndEdit->width() ) {
         const qreal fontRate = textSize / mEndEdit->width();
         const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
@@ -513,7 +513,7 @@ void CalibrationView::updateScroll()
     else
         mEndEdit->setFont(font());
 
-updateGraphs();
+    updateGraphs();
 
 }
 

@@ -409,16 +409,13 @@ void ModelView::resetInterface()
 
 void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
 {
-    QFontMetrics fm(font());
-
-
-      /* Addapt mButModifyPeriod size and position */
+        /* Addapt mButModifyPeriod size and position */
     // same variable in updateLayout()
-    const int topButtonHeight =  int ( 1.3 * fm.height());//  1 * AppSettings::heigthUnit());
+    const int topButtonHeight =  int ( 1.3 * fontMetrics().height());//  1 * AppSettings::heigthUnit());
     const QString studyStr = tr("STUDY PERIOD") + QString(" [ %1 ; %2 ] BC/AD").arg(locale().toString(min), locale().toString(max));;
     mButModifyPeriod->setText(studyStr);
     mButModifyPeriod->setIconOnly(false);
-    mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text())) /2 - 2*mMargin, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 4*mMargin, topButtonHeight );
+    mButModifyPeriod ->setGeometry((mTopWrapper->width() - fontMetrics().boundingRect(mButModifyPeriod->text()).width()) /2 - 2*mMargin, (mTopWrapper->height() - topButtonHeight)/2, fontMetrics().boundingRect(mButModifyPeriod->text()).width() + 4*mMargin, topButtonHeight );
 
 }
 
@@ -513,7 +510,7 @@ bool ModelView::findCalibrateMissing()
         progress->setMinimumDuration(4);
         progress->setMinimum(0);
         //progress->setMinimumWidth(7 * AppSettings::widthUnit());
-        progress->setMinimumWidth(int (progress->fontMetrics().width(progress->labelText()) * 1.5));
+        progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
 
         int position(0);
         for (auto && ev : events)
@@ -582,7 +579,7 @@ void ModelView::calibrateAll(ProjectSettings newS)
         progress->setMinimumDuration(4);
         progress->setMinimum(0);
         //progress->setMinimumWidth(7 * AppSettings::widthUnit());
-        progress->setMinimumWidth(int (progress->fontMetrics().width(progress->labelText()) * 1.5));
+        progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
 
         int position(0);
         for (auto && ev : events)
@@ -1109,7 +1106,7 @@ void ModelView::updateLayout()
     //-------------- Top Flag
     //------- Study Period
 
-     mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text())) /2 - 2*mMargin, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 4*mMargin, topButtonHeight );
+     mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.boundingRect(mButModifyPeriod->text()).width()) /2 - 2*mMargin, (mTopWrapper->height() - topButtonHeight)/2, fm.boundingRect(mButModifyPeriod->text()).width() + 4*mMargin, topButtonHeight );
 
     // ---------- Panel Title
     QString leftTitle (tr("Events Scene"));
@@ -1117,7 +1114,7 @@ void ModelView::updateLayout()
         leftTitle = tr("Calibrated Data View");
 
     mLeftPanelTitle->setText(leftTitle);
-    mLeftPanelTitle->setGeometry(textSpacer, mButModifyPeriod->y(), fm.width(mLeftPanelTitle->text()), topButtonHeight );
+    mLeftPanelTitle->setGeometry(textSpacer, mButModifyPeriod->y(), fm.boundingRect(mLeftPanelTitle->text()).width(), topButtonHeight );
 
     QString rightTitle (tr("Phases Scene"));
     if (mButProperties->isChecked() )
@@ -1128,7 +1125,7 @@ void ModelView::updateLayout()
             rightTitle = tr("Multi-Calibration View");
 
     mRightPanelTitle->setText(rightTitle);
-    mRightPanelTitle->setGeometry( width() - (fm.width(mRightPanelTitle->text()) + textSpacer), mButModifyPeriod->y(), fm.width(mRightPanelTitle->text()), topButtonHeight );
+    mRightPanelTitle->setGeometry( width() - (fm.boundingRect(mRightPanelTitle->text()).width() + textSpacer), mButModifyPeriod->y(), fm.boundingRect(mRightPanelTitle->text()).width(), topButtonHeight );
 
 
     // coordinates in ModelView

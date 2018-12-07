@@ -183,10 +183,8 @@ void MultiCalibrationDrawing::setGraphHeight(const int & height)
 
 void MultiCalibrationDrawing::forceRefresh()
 {
-    const QFontMetrics fm (font());
-
     const bool axisVisible = (mGraphHeight >= GraphViewResults::mHeightForVisibleAxis);
-    const int marginBottom =(axisVisible ? int (fm.ascent() * 2.2) : int (fm.ascent() * 0.5));
+    const int marginBottom =(axisVisible ? int (fontMetrics().ascent() * 2.2) : int (fontMetrics().ascent() * 0.5));
 
     int y (0);
     int i (0);
@@ -196,7 +194,7 @@ void MultiCalibrationDrawing::forceRefresh()
 
          if (!graph->hasCurve()) {
             QLabel noCalib (tr("No Calibration"), this);
-            noCalib.setGeometry(ColoredBar::mWidth +5, y, width() - ColoredBar::mWidth - fm.width(noCalib.text()), mGraphHeight);
+            noCalib.setGeometry(ColoredBar::mWidth +5, y, width() - ColoredBar::mWidth - fontMetrics().boundingRect(noCalib.text()).width(), mGraphHeight);
 
          } else {
              graph->showXAxisValues(axisVisible);

@@ -174,42 +174,4 @@ AppSettings::~AppSettings()
      return AppSettings::mHeigthUnit;
  }
 
- /*
- void AppSettings::setFont(const QFont& font)
- {
-     AppSettings::mFont = QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, font.pixelSize(), 50, false);
-     QFontMetrics fm(AppSettings::mFont);
-     const QString txt1 = " HPD (%) ";
-     const QString txt2 = " Min. Cnt ";
-     const int lgTxt = qMax(fm.width(txt1), fm.width(txt2) );
-   //  AppSettings::mWidthUnit  =  fm.averageCharWidth();// + fm.minRightBearing());//, 5); // for ResultsView
-     AppSettings::mButtonWidth = lgTxt;//fm.rightBearing('f') + fm.width(txt) + fm.leftBearing('f');
 
-#ifdef Q_OS_MAC
-    // AppSettings::mHeigthUnit = int (1.2 * fm.height());
-#endif
-
-#ifdef Q_OS_WIN
-    // AppSettings::mHeigthUnit = fm.height();
-#endif
-
-#ifdef Q_OS_LINUX
-    // AppSettings::mHeigthUnit = abs(fm.height());
-#endif
-
-
-     AppSettings::mFontDescent = fm.descent();
-    // AppSettings::mFontFamily = font.family();
-     AppSettings::mFontPointSize = font.pointSize();
- }
-
- int  AppSettings::fontDescent()
- {
-     return AppSettings::mFontDescent;
- }
-
- QFont AppSettings::font()
- {
-     return AppSettings::mFont;
- }
-*/

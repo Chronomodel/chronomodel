@@ -555,7 +555,7 @@ void EventPropertiesView::updateLayout()
         // in EventPropertiesView coordinates
         mBoundView->resize(0, 0);
 
-        int shiftMax (qMax(fm.width(mNameLab->text()), qMax(fm.width(mColorLab->text()), fm.width(mMethodLab->text()) )) );
+        int shiftMax (qMax(fm.boundingRect(mNameLab->text()).width(), qMax(fm.boundingRect(mColorLab->text()).width(), fm.boundingRect(mMethodLab->text()).width() )) );
         shiftMax = shiftMax + 2*marginTop;
         int editWidth (width() - shiftMax);
 
@@ -605,7 +605,7 @@ void EventPropertiesView::updateLayout()
     else {
         if (hasBound()) {
 
-            int shiftMax (qMax(fm.width(mNameLab->text()), fm.width(mColorLab->text()) ));
+            int shiftMax (qMax(fm.boundingRect(mNameLab->text()).width(), fm.boundingRect(mColorLab->text()).width() ));
             shiftMax = shiftMax + 2*marginTop;
             int editWidth (width() - shiftMax);
 

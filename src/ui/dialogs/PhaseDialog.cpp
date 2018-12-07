@@ -138,12 +138,12 @@ void PhaseDialog::resizeEvent(QResizeEvent* event)
     switch (type) {
         case Phase::eTauUnknown:
         {
-            w1 = qMax(fm.width(mTauTypeLab->text()),qMax(fm.width(mNameLab->text()), fm.width(mColorLab->text())));
+            w1 = qMax(fm.boundingRect(mTauTypeLab->text()).width(),qMax(fm.boundingRect(mNameLab->text()).width(), fm.boundingRect(mColorLab->text()).width()));
             break;
         }
         case Phase::eTauFixed:
         {
-            w1 =  fm.width(mTauFixedLab->text());
+            w1 =  fm.boundingRect(mTauFixedLab->text()).width();
             break;
         }
 
@@ -151,7 +151,7 @@ void PhaseDialog::resizeEvent(QResizeEvent* event)
             break;
     }
 
-    int w2 = qMax( 200, fm.width(mNameEdit->text())) + 2 * mMargin;
+    int w2 = qMax( 200, fm.boundingRect(mNameEdit->text()).width()) + 2 * mMargin;
 
     setFixedWidth( w1 + w2 + 3*mMargin);
 
@@ -162,7 +162,7 @@ void PhaseDialog::resizeEvent(QResizeEvent* event)
     
     mNameEdit->setGeometry(2*mMargin + w1, mMargin, w2, mLineH);
     mColorPicker->setGeometry(2*mMargin + w1, 2*mMargin + mLineH, w2, mLineH +3);
-    //int dy = (mComboH - mTauTypeLab->height())/2;
+
     mTauTypeCombo->setGeometry(2*mMargin + w1, 3*mMargin + 2*mLineH  - 5, w2, mComboH);
     mTauFixedEdit->setGeometry(2*mMargin + w1, 4*mMargin + 2*mLineH + mLineH, w2, mLineH);
 

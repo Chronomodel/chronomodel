@@ -1204,7 +1204,7 @@ void Model::generateCredibility(const double thresh)
     progress->setMinimum(0);
     progress->setMaximum(mPhases.size()*4);
     //progress->setMinimumWidth(7 * AppSettings::widthUnit());
-    progress->setMinimumWidth(int (progress->fontMetrics().width(progress->labelText()) * 1.5));
+    progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
 
 
     int position(0);
@@ -1238,8 +1238,8 @@ void Model::generateCredibility(const double thresh)
     progressGap->setMaximum(mPhases.size()*4);
     progressGap->setMinimum(0);
     progressGap->setMaximum(mPhaseConstraints.size()*2);
-    //progressGap->setMinimumWidth(7 * AppSettings::widthUnit());
-    progressGap->setMinimumWidth(int (progressGap->fontMetrics().width(progressGap->labelText()) *1.5));
+
+    progressGap->setMinimumWidth(int (progressGap->fontMetrics().boundingRect(progressGap->labelText()).width() *1.5));
 
     position = 0;
     for (auto && phaseConstraint : mPhaseConstraints) {
@@ -1344,8 +1344,8 @@ void Model::generateTempo()
     progress->setMinimumDuration(5);
     progress->setMinimum(0);
     progress->setMaximum(mPhases.size() * 4);
-    //progress->setMinimumWidth(7 * AppSettings::widthUnit());
-    progress->setMinimumWidth(int (progress->fontMetrics().width(progress->labelText()) * 1.5));
+
+    progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
     progress->show();
     int position(0);
 #endif

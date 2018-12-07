@@ -92,7 +92,7 @@ void Ruler::clearAreas()
     update();
 }
 
-void Ruler::addArea(double start, double end, const QColor& color)
+void Ruler::addArea(int start, int end, const QColor& color)
 {
     RulerArea area;
     area.mStart = start;

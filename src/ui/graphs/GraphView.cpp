@@ -1492,7 +1492,7 @@ bool GraphView::saveAsSVG(const QString& fileName, const QString& graphTitle, co
         render(&painter, QPoint(), QRegion(rGraph, QRegion::Rectangle));
         
         QFontMetrics fm(painter.font());
-        painter.drawText( graphRigthShift,0, graphRigthShift+fm.width(graphTitle), versionHeight,
+        painter.drawText( graphRigthShift,0, graphRigthShift+fm.boundingRect(graphTitle).width(), versionHeight,
                          Qt::AlignCenter,
                          svgGen.title());
         

@@ -178,7 +178,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 scene->render(&p, r, r);
                 p.setFont(qApp->font());
                 p.setPen(Qt::black);
-                const int wStr= p.fontMetrics().width(versionStr);
+                const int wStr= p.fontMetrics().boundingRect(versionStr).width();
                 const int hStr = p.fontMetrics().height();
 
                 p.drawText(0, int( r.height()/2 ), wStr, hStr,

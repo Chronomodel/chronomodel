@@ -400,7 +400,7 @@ QSize ArrowItem::getBubbleSize(const QString& text) const
             font.setPointSizeF(12.);
 
         QFontMetrics metrics(font);
-        w = metrics.width(text) + 10 ;
+        w = metrics.boundingRect(text).width() + 10 ;
         h = metrics.height() + 10;
     }
 

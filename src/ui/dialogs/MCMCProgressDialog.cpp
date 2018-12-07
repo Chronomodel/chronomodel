@@ -62,7 +62,7 @@ void MCMCProgressDialog::cancelMCMC()
 void MCMCProgressDialog::setTitle1(const QString& message, int minProgress, int maxProgress)
 {
     mLabel1->setText(message);
-    setMinimumWidth(int (fontMetrics().width(message) * 1.5));
+    setMinimumWidth(int (fontMetrics().boundingRect(message).width() * 1.5));
 
     mProgressBar1->setMinimum(minProgress);
     mProgressBar1->setMaximum(maxProgress);
