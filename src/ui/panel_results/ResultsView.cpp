@@ -1189,20 +1189,20 @@ void ResultsView::updateTabDisplay(const int &i)
     const int arrowWidth = 0;
 #endif
 
-        buttonWidth = fm.width("99 px") + 2*mMargin + arrowWidth;
+        buttonWidth = mThicknessCombo->fontMetrics().width("99 px") + 2*mMargin + arrowWidth;
         ySpan += mMargin + mFontBut->height();
         mThicknessCombo->setFixedWidth(buttonWidth);
         mThicknessCombo->move(mOptionsW - buttonWidth -mMargin,  ySpan);
         dy = (mThicknessCombo->height() - mLabThickness->height()) /2.;
-        mLabThickness->move(mThicknessCombo->x() - fm.width(mLabThickness->text()) -mMargin, int (ySpan + dy));
+        mLabThickness->move(mThicknessCombo->x() - fm.width(mLabThickness->text()) - mMargin, int (ySpan + dy));
 
         maxTextWidth = fm.width(mLabOpacity->text()) + mMargin;
-        buttonWidth = buttonWidth = fm.width("9999 %") + 2*mMargin + arrowWidth;
+        buttonWidth = mOpacityCombo->fontMetrics().width("9999 %") + 2*mMargin + arrowWidth;
         ySpan += mMargin + mThicknessCombo->height();
         mOpacityCombo->setFixedWidth(buttonWidth);
         mOpacityCombo->move(mOptionsW - buttonWidth -mMargin, ySpan);
         dy = (mOpacityCombo->height() - mLabOpacity->height()) /2.;
-        mLabOpacity->move(mOpacityCombo->x() -fm.width(mLabOpacity->text()) -mMargin, int (ySpan + dy));
+        mLabOpacity->move(mOpacityCombo->x() - fm.width(mLabOpacity->text()) - mMargin, int (ySpan + dy));
 
         ySpan += mMargin + mOpacityCombo->height();
 
