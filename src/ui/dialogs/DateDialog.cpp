@@ -73,7 +73,7 @@ mWiggleEnabled(false)
     
     mDeltaHelp = new HelpWidget(tr("Wiggle Sign : \"+\" if data ≤ event, \"-\" if data ≥ event"), mAdvancedWidget);
     mDeltaHelp->setFixedHeight(50);
-    mDeltaHelp->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=11");
+    mDeltaHelp->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=22");
     
     mDeltaFixedLab   = new QLabel(tr("Value"), mAdvancedWidget);
     mDeltaMinLab     = new QLabel(tr("Min"), mAdvancedWidget);

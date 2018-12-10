@@ -120,27 +120,27 @@ void EventsScene::updateHelp()
     
     if (mItems.size() == 0) {
         text = tr("Define a study period on the right panel, apply it, and start creating your model by clicking on \"New Event...\".");
-        mHelpView->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=24"); // chapter
+        mHelpView->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=18"); // chapter
     }
     else if (selected.count() == 0) {
         text = tr("Select an event or a bound by clicking on it.");
         if (mConstraintItems.size() != 0)
             text += tr("\nYou can also edit constraints by double clicking on the arrow");
-        mHelpView->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=24"); // Chapter
+        mHelpView->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=38"); // Chapter
     } else if (selected.count() == 1) {
-        const bool isBound = (dynamic_cast<EventKnownItem*>(selected[0]) != 0);
+        const bool isBound = (dynamic_cast<EventKnownItem*>(selected[0]) != nullptr);
         
         if (mAltIsDown) {
             text = tr("Mouve your mouse and click on another element to create a constraint.");
-                mHelpView->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=24");
+                mHelpView->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=38");
         } else if (mSelectKeyIsDown && !isBound) {
-            text = tr("Drag the event onto another one to merge them together.");
-                mHelpView->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=24");
+            text = tr("Drag the Data onto another Event to shift it.");
+                mHelpView->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=30");
         } else {
             text = tr("You have selected an element. You can now:\r- Edit its properties from the right panel.\r- Create a constraint by holding the \"Alt\" key down and clicking on another element.");
-                mHelpView->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=24");
+                mHelpView->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=19");
             if (!isBound)
-                text += tr("\r- Merge it with another element by holding the \"Shift\" key down and dragging the selected element onto another one.\r- Delete it with the button on the left.");
+                text += tr("\r- Move its Data in another element by holding the \"Shift\" key down and dragging the selected element onto another one.\r- Delete it with the button on the left.");
         }
     } else {
         text = tr("You have selected multiple elements. You can move them together or delete them (all constraints linked to them will also be deleted).");
