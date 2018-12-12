@@ -126,7 +126,7 @@ mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
     connect(mResetBut, &Button::clicked, this, &MCMCSettingsDialog::reset);
     connect(mTestBut, &Button::clicked, this, &MCMCSettingsDialog::setQuickTest);
 
-    const int fixedHeight =  mTop  + mColoredBoxHeigth + mHelp->heightForWidth(mTotalWidth - 2 * mMarginW)  + 6 * mMarginH + mButH + mLineH;
+    const int fixedHeight =  mTop  + mColoredBoxHeigth + mHelp->heightForWidth(mTotalWidth - 2 * mMarginW)  + 6 * mMarginH +  mButH + 2*mLineH;
     setFixedSize(mTotalWidth, fixedHeight);
     
 }
@@ -265,7 +265,7 @@ void MCMCSettingsDialog::updateLayout()
     mLevelLabel->move(width()/2 + margingRight, mSeedsLabel->y());
     mLevelEdit->move(mLevelLabel->x() + mLevelLabel->width() + mMarginW,  mLevelLabel->y());
 
-    mResetBut->move( 2 * mMarginW, height() - 2 * mMarginH - mButH );
+    mResetBut->move( 2 * mMarginW, height() - 2 * mMarginH - mResetBut->height() );
 #ifdef DEBUG
     mTestBut->move(mResetBut->x() + mResetBut->width() + mMarginW, mResetBut->y());
 #endif

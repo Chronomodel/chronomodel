@@ -803,7 +803,7 @@ void ModelView::hideProperties()
  */
 void ModelView::showMultiCalib()
 {
-    updateLayout();
+    //updateLayout();
     if (mButMultiCalib->isChecked() && mButMultiCalib->isEnabled()) {
         if (mButProperties->isChecked()) {
             // hide mEventPropertiesView
@@ -832,7 +832,7 @@ void ModelView::showMultiCalib()
              mAnimationHide->setTargetObject(mMultiCalibrationView);
              mAnimationHide->start();
       }
-
+    updateLayout();
 }
 
 void ModelView::updateMultiCalibration()
@@ -1114,7 +1114,7 @@ void ModelView::updateLayout()
         leftTitle = tr("Calibrated Data View");
 
     mLeftPanelTitle->setText(leftTitle);
-    mLeftPanelTitle->setGeometry(textSpacer, mButModifyPeriod->y(), fm.boundingRect(mLeftPanelTitle->text()).width(), topButtonHeight );
+    mLeftPanelTitle->setGeometry(textSpacer, mButModifyPeriod->y(), mLeftPanelTitle->fontMetrics().boundingRect(leftTitle).width()+10, topButtonHeight );
 
     QString rightTitle (tr("Phases Scene"));
     if (mButProperties->isChecked() )
@@ -1125,7 +1125,7 @@ void ModelView::updateLayout()
             rightTitle = tr("Multi-Calibration View");
 
     mRightPanelTitle->setText(rightTitle);
-    mRightPanelTitle->setGeometry( width() - (fm.boundingRect(mRightPanelTitle->text()).width() + textSpacer), mButModifyPeriod->y(), fm.boundingRect(mRightPanelTitle->text()).width(), topButtonHeight );
+    mRightPanelTitle->setGeometry( width() - (fm.boundingRect(mRightPanelTitle->text()).width() + textSpacer), mButModifyPeriod->y(), fm.boundingRect(mRightPanelTitle->text()).width() + 10, topButtonHeight );
 
 
     // coordinates in ModelView

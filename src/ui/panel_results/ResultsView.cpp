@@ -669,7 +669,7 @@ void ResultsView::applyAppSettings()
     mYScaleSpin->setFixedSize(mCurrentXMinEdit->width(), spinBoxHeight);
     mLabFont->setFixedSize(fm.boundingRect(mLabFont->text()).width(), labelHeight);
 
-    mFontBut->setFixedSize(mOptionsW - fm.width(mLabFont->text())  - mMargin, buttonHeight);
+    mFontBut->setFixedSize(mOptionsW - fm.boundingRect(mLabFont->text()).width()  - mMargin, buttonHeight);
     mLabThickness->setFixedSize(fm.boundingRect(mLabThickness->text()).width(), comboBoxHeight);
 
 
@@ -685,7 +685,7 @@ void ResultsView::applyAppSettings()
     const int arrowWidth = 0;
 #endif
 
-    mThicknessCombo->setFixedSize( fm.width("99 px") + 2*mMargin + arrowWidth, comboBoxHeight);
+    mThicknessCombo->setFixedSize( fm.boundingRect("999 px").width() + 2*mMargin + arrowWidth, comboBoxHeight);
     mLabOpacity->setFixedSize(mOptionsW/2 - mMargin, labelHeight);
     mOpacityCombo->setFixedSize(fm.boundingRect("9999 %").width() + 2*mMargin, comboBoxHeight);
 
@@ -1192,7 +1192,7 @@ void ResultsView::updateTabDisplay(const int &i)
     const int arrowWidth = 0;
 #endif
 
-        buttonWidth = mThicknessCombo->fontMetrics().boundingRect("99 px").width() + 2*mMargin + arrowWidth;
+        buttonWidth = mThicknessCombo->fontMetrics().boundingRect("999 px").width() + 2*mMargin + arrowWidth;
         ySpan += mMargin + mFontBut->height();
         mThicknessCombo->setFixedWidth(buttonWidth);
         mThicknessCombo->move(mOptionsW - buttonWidth -mMargin,  ySpan);
