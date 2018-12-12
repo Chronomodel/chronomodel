@@ -6,6 +6,7 @@
 RadioButton::RadioButton(QWidget* parent):QRadioButton(parent)
 {
     setCursor(Qt::PointingHandCursor);
+    setPalette(qApp->palette());
 }
 
 RadioButton::RadioButton(const QString& text, QWidget* parent):QRadioButton(text, parent)

@@ -305,7 +305,7 @@ void Ruler::paintEvent(QPaintEvent* e)
         }
     }
 
-    painter.setPen(Qt::black);
+    painter.setPen(qApp->palette().text().color());
     
     /* ----------------------------------------------
      *    Axis, the values inside the ruler are set in layout

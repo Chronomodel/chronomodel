@@ -116,7 +116,7 @@ mMinorCountScale (4)
 
     /* -------------------------------------- mResultsGroup---------------------------------------------------*/
 
-    mResultsGroup = new QWidget(this);
+    mResultsGroup = new QWidget(this);mResultsGroup->setPalette(QLabel().palette());
 
     mEventsfoldCheck = new CheckBox(tr("Unfold Events"), mResultsGroup);
     mEventsfoldCheck->setToolTip(tr("Display phases' events"));
@@ -1086,7 +1086,7 @@ void ResultsView::updateTabDisplay(const int &i)
 
         mCurrentXMaxEdit->move(mOptionsW - mCurrentXMinEdit->width() -  mMargin, ySpan );
 
-        const int w =  mSpanLab->width();
+        const int w (mSpanLab->width());
        // dy = (mXScaleSpin->height() - mSpanLab->height()) /2.;
        // mSpanLab->move(int ((mCurrentXMinEdit->x() + mCurrentXMinEdit->width() + mCurrentXMaxEdit->x() )/2. - (w/2.)), int (mCurrentXMinEdit->y() ));
         mSpanLab->move(int (mOptionsW/2. - (w/2.)), int (mCurrentXMinEdit->y() ));
@@ -1102,8 +1102,8 @@ void ResultsView::updateTabDisplay(const int &i)
         const int xSliderWidth = mOptionsW - mXScaleLab->width() - mXScaleSpin->width() - 4*mMargin;
 
 #ifdef Q_OS_MAC
-        const int dySlider = (mXSlider->height() - labelHeight) /2;
-        mXSlider->setGeometry(mXScaleLab->x() + mXScaleLab->width() + mMargin , mXScaleSpin->y() + dySlider, xSliderWidth, mXSlider->height() );
+        //const int dySlider = (mXSlider->height() - labelHeight) /2;
+        mXSlider->setGeometry(mXScaleLab->x() + mXScaleLab->width() + mMargin , mXScaleSpin->y(), xSliderWidth, mXSlider->height() );
 #endif
 
 #ifdef Q_OS_WIN
@@ -1147,7 +1147,7 @@ void ResultsView::updateTabDisplay(const int &i)
         /* ----------------------------------------------------------
            *  Graphic options
            * ----------------------------------------------------------*/
-        int ySpan = 0;
+        int ySpan (0);
         mGraphicTitle->move(0, mSpanGroup->y()+ mSpanGroup->height());
 
         ySpan += mMargin;
@@ -1157,8 +1157,8 @@ void ResultsView::updateTabDisplay(const int &i)
         mYScaleLab->move(mMargin, int (ySpan + dy ) );
         const int ySliderWidth = mOptionsW - mYScaleLab->width() - mYScaleSpin->width() - 4 * mMargin;
 #ifdef Q_OS_MAC
-        dy = (spinBoxHeight -  mYSlider->height()) /2.;
-        mYSlider->setGeometry(mYScaleLab->x() + mYScaleLab->width() + mMargin, mYScaleLab->y(), ySliderWidth, mYSlider->height());
+        dy = (mYSlider->height() - labelHeight) /2;
+        mYSlider->setGeometry(mYScaleLab->x() + mYScaleLab->width() + mMargin, mYScaleLab->y() -dy, ySliderWidth, mYSlider->height());
 #endif
 
 #ifdef Q_OS_WIN
@@ -1170,7 +1170,7 @@ void ResultsView::updateTabDisplay(const int &i)
        // dy = (mYScaleSpin->height() -  mYSlider->height()) /2.;
         mYSlider->setGeometry(mYScaleLab->x() + mYScaleLab->width() + mMargin, mYScaleSpin->y(), ySliderWidth, mYSlider->height());
 #endif
-        int maxTextWidth = fm.boundingRect(mLabFont->text()).width() + mMargin;
+        int maxTextWidth (fm.boundingRect(mLabFont->text()).width() + mMargin);
         int buttonWidth (mOptionsW - maxTextWidth - 2*mMargin);
         ySpan += mMargin + mYScaleSpin->height();
         mFontBut->move(maxTextWidth + mMargin, ySpan );
@@ -1181,15 +1181,15 @@ void ResultsView::updateTabDisplay(const int &i)
         maxTextWidth = fm.boundingRect(mLabThickness->text()).width() + mMargin;
 
 #ifdef Q_OS_MAC
-    const int arrowWidth = 12;
+    const int arrowWidth (12);
 #endif
 
 #ifdef Q_OS_WIN
-    const int arrowWidth = 0;
+    const int arrowWidth (0);
 #endif
 
 #ifdef Q_OS_LINUX
-    const int arrowWidth = 0;
+    const int arrowWidth (0);
 #endif
 
         buttonWidth = mThicknessCombo->fontMetrics().boundingRect("999 px").width() + 2*mMargin + arrowWidth;
@@ -1533,7 +1533,8 @@ void ResultsView::updateLayout()
 {
    // Q_ASSERT(mModel);
 
-    //qDebug() << "ResultsView::updateLayout()"<<width();
+    //qDebug() << "ResultsView::updateLayout()"<<width()
+
 
     const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     int tabsShift (AppSettings::widthUnit());

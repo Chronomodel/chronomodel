@@ -201,10 +201,7 @@ void drawRadio(QPainter& painter, const QRectF& rect, const QString& text, bool 
                                        -subM - insideM));
     }
     
-    QFont font = painter.font();
-    painter.setFont(font);
-    
-    painter.setPen(Qt::black);
+    painter.setPen(qApp->palette().text().color());
     painter.drawText(r.adjusted(r.height() - 2*subM + 5, 0, 0, 0), Qt::AlignLeft | Qt::AlignVCenter, text);
 }
 
@@ -216,11 +213,8 @@ void drawCheckbox(QPainter& painter, const QRectF& r, const QString& text, Qt::C
 
     QRectF boxRect = r.adjusted(0, subM, r.height() - r.width() - 2*subM, -subM);
     drawCheckBoxBox(painter, boxRect, state, QColor(230, 230, 230), QColor(120, 120, 120));
-    
-    QFont font = painter.font();
-    painter.setFont(font);
-    
-    painter.setPen(Qt::black);
+
+    painter.setPen( qApp->palette().text().color());
 
     painter.drawText(r.adjusted(r.height() - 2*subM + 5, 0, 0, 0), Qt::AlignLeft | Qt::AlignVCenter, text);
 }

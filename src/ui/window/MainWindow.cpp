@@ -346,7 +346,7 @@ void MainWindow::createMenus()
     mActionsMenu->addAction(mEventsMethodAction);
     mActionsMenu->addAction(mDatesMethodAction);
     mActionsMenu->addSeparator();
-    
+
     for (int i=0; i<mDatesActions.size(); ++i)
         mActionsMenu->addAction(mDatesActions[i]);
     
@@ -361,9 +361,11 @@ void MainWindow::createToolBars()
     // Main ToolBar
     //-----------------------------------------------------------------
 
-    mToolBar = addToolBar("Main Tool Bar");
+    QString sty = palette().text().color().name(); // find the color defined by the system/theme
 
-   // toolBar->setIconSize(QSize(15,15)) ;
+   mToolBar = addToolBar("Main Tool Bar"); /* all types of tool button */
+   mToolBar->setStyleSheet("QToolButton { color :"+ sty +";}");
+   mToolBar->setFont(menuBar()->font());
 
     mToolBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);//ToolButtonTextUnderIcon); // offer to write the text under the icon
     mToolBar->setMovable(false);
@@ -397,6 +399,7 @@ void MainWindow::createToolBars()
     /* toolBar->addAction(mAboutAct);
     toolBar->addAction(mAboutQtAct); */
     //toolBar->setFont(qApp->font()); // must be after all addAction
+
 }
 
 

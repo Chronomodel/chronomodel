@@ -80,6 +80,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
     QVector<qreal> linesPos;
 
     QPen pen(p.pen());//Qt::SolidLine);
+    mAxisColor = p.pen().color();
     pen.setColor(mAxisColor);
     pen.setCapStyle(Qt::SquareCap);
 

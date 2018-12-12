@@ -38,7 +38,7 @@ void Label::adjustFont()
 void Label::init()
 {
     setAlignment(Qt::AlignVCenter | Qt::AlignRight);
-    mPalette = parentWidget()->palette();
+    mPalette = qApp->palette();//parentWidget()->palette();
     setFont(qApp->font());
 }
 
@@ -61,7 +61,9 @@ void Label::setIsTitle(bool isTitle)
         mPalette.setColor(QPalette::Background, Painting::mainColorGrey);
         setAlignment(Qt::AlignCenter);
      }
-
+    else {
+        mPalette = qApp->palette();
+    }
 }
 
 void Label::setAdjustText(bool ad)
