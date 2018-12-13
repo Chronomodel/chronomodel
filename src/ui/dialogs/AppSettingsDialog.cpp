@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "AppSettingsDialog.h"
 #include "AppSettingsDialogItemDelegate.h"
 #include "PluginSettingsViewAbstract.h"
@@ -16,12 +55,12 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     //  General View
     // -----------------------------
      mGeneralView = new QWidget();
-    
+
     mLangHelpLab = new QLabel(tr("Language is used to define how number input should be typed (using comma or dot as decimal separator). This is not related to the application translation which is not available yet!"), this);
 
     mLangHelpLab->setAlignment(Qt::AlignCenter);
     mLangHelpLab->setWordWrap(true);
-    
+
     mLanguageLab = new QLabel(tr("Language"), this);
     mLanguageCombo = new QComboBox(this);
 //    QList<QLocale> allLocales = QLocale::matchingLocales(QLocale::AnyLanguage, QLocale::AnyScript, QLocale::AnyCountry);
@@ -42,10 +81,10 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     QIntValidator* positiveValidator = new QIntValidator();
     positiveValidator->setBottom(1);
     mAutoSaveDelayEdit->setValidator(positiveValidator);
-    
+
     mCSVCellSepLab = new QLabel(tr("CSV Cell Separator"), this);
     mCSVCellSepEdit = new QLineEdit(this);
-    
+
     mCSVDecSepLab = new QLabel(tr("CSV Decimal Separator"), this);
     mCSVDecSepCombo = new QComboBox(this);
     mCSVDecSepCombo->addItem(", (comma)", QVariant(","));
@@ -62,46 +101,46 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
     mOpenLastProjectLab = new QLabel(tr("Open Last Project at Launch"), this);
     mOpenLastProjectCheck = new QCheckBox(this);
-    
+
     mPixelRatioLab = new QLabel(tr("Images Export Pixel Ratio"), this);
     mPixelRatio = new QSpinBox(this);
     mPixelRatio->setRange(1, 5);
     mPixelRatio->setSingleStep(1);
-    
+
     // Not use because modify the size of the text in the scene, disable since version: v 1.6.4_alpha
     /*
     mDpmLab = new QLabel(tr("Image Export DPM"), this);
     mDpm = new QComboBox(this);
     mDpm->addItems(QStringList() << "72" << "96" << "100" << "150" << "200" << "300");
     */
-    
+
     //Specify 0 to obtain small compressed files, 100 for large uncompressed files
     mImageQualityLab = new QLabel(tr("Image Export Quality (0 to 100)"), this);
     mImageQuality = new QSpinBox(this);
     mImageQuality->setRange(1, 100);
     mImageQuality->setSingleStep(1);
     mImageQuality->setToolTip(tr("0 for small compressed files, 100 for large uncompressed files"));
-    
+
     mFormatDateLab = new QLabel(tr("Time Scale"), this);
     mFormatDateLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mFormatDate = new QComboBox(this);
     for (int i=0; i<6; ++i) // until 8 to use Age Ma and ka
         mFormatDate->addItem(DateUtils::dateFormatToString(DateUtils::FormatDate (i)));
-    
+
     mFormatDate->setCurrentIndex(1);
     mFormatDate->setVisible(true);
-    
+
     mPrecisionLab = new QLabel(tr("Decimal Precision"), this);
     mPrecision = new QSpinBox(this);
     mPrecision->setRange(0, 6);
     mPrecision->setSingleStep(1);
 
-    
+
     connect(mAutoSaveCheck, &QCheckBox::toggled, mAutoSaveDelayEdit, &QLineEdit::setEnabled);
-    
+
     mRestoreBox = new QDialogButtonBox(QDialogButtonBox::RestoreDefaults);
     connect(mRestoreBox, &QDialogButtonBox::clicked, this, &AppSettingsDialog::buttonClicked);
-    
+
     QGridLayout* grid = new QGridLayout();
     grid->setContentsMargins(0, 0, 0, 0);
     int row = -1;
@@ -117,35 +156,35 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     line1->setFrameShape(QFrame::HLine);
     line1->setFrameShadow(QFrame::Sunken);
     grid->addWidget(line1, ++row, 0, 1, 2);
-    
+
     grid->addWidget(mAutoSaveLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mAutoSaveCheck, row, 1);
     grid->addWidget(mAutoSaveDelayLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mAutoSaveDelayEdit, row, 1);
     grid->addWidget(mOpenLastProjectLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mOpenLastProjectCheck, row, 1);
-    
+
     QFrame* line2 = new QFrame();
     line2->setFrameShape(QFrame::HLine);
     line2->setFrameShadow(QFrame::Sunken);
     grid->addWidget(line2, ++row, 0, 1, 2);
-    
+
     grid->addWidget(mCSVCellSepLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mCSVCellSepEdit, row, 1);
     grid->addWidget(mCSVDecSepLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mCSVDecSepCombo, row, 1);
-    
+
     QFrame* line3 = new QFrame();
     line3->setFrameShape(QFrame::HLine);
     line3->setFrameShadow(QFrame::Sunken);
     grid->addWidget(line3, ++row, 0, 1, 2);
-    
+
     grid->addWidget(mPixelRatioLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mPixelRatio, row, 1);
 
     grid->addWidget(mImageQualityLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mImageQuality, row, 1);
-    
+
     QFrame* line4 = new QFrame();
     line4->setFrameShape(QFrame::HLine);
     line4->setFrameShadow(QFrame::Sunken);
@@ -155,7 +194,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     grid->addWidget(mFormatDate, row, 1);
     grid->addWidget(mPrecisionLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mPrecision, row, 1);
-    
+
     QVBoxLayout* mainLayout = new QVBoxLayout();
 
     mainLayout->addWidget(mRestoreBox);
@@ -163,7 +202,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     mainLayout->addSpacing(20);
 
     mGeneralView->setLayout(mainLayout);
-    
+
     connect(mLanguageCombo,static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &AppSettingsDialog::changeSettings);
     //connect(mCountryCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(changeSettings()));
     //connect(mFontBut, &Button::clicked, this, &AppSettingsDialog::fontButtonClicked);
@@ -189,9 +228,9 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     AppSettingsDialogItemDelegate* delegate = new AppSettingsDialogItemDelegate();
     mList->setItemDelegate(delegate);
     mList->setFixedWidth(180);
-    
+
     mStack = new QStackedWidget();
-    
+
     // General settings
     QListWidgetItem* item = new QListWidgetItem();
     item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemNeverHasChildren);
@@ -199,7 +238,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     item->setData(0x0101, tr("General"));
     mList->addItem(item);
     mStack->addWidget(mGeneralView);
-    
+
     // Plugins specific settings
     const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
     for (auto && plug : plugins) {
@@ -215,19 +254,19 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
             connect(view, &PluginSettingsViewAbstract::calibrationNeeded, this, &AppSettingsDialog::needCalibration);
         }
     }
-    
+
     QHBoxLayout* layout = new QHBoxLayout();
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
     layout->addWidget(mList);
     layout->addWidget(mStack);
     setLayout(layout);
-    
+
     connect(mList, &QListWidget::currentRowChanged, mStack, &QStackedWidget::setCurrentIndex);
-    
+
     mList->setCurrentRow(0);
     mStack->setCurrentIndex(0);
-    
+
 //    setFixedWidth(30 * AppSettings::heigthUnit());
 }
 
@@ -258,16 +297,16 @@ void AppSettingsDialog::setSettings()
     mAutoSaveCheck->setChecked(AppSettings::mAutoSave);
     mAutoSaveDelayEdit->setText(QString::number(AppSettings::mAutoSaveDelay / 60));
     mAutoSaveDelayEdit->setEnabled(AppSettings::mAutoSave);
-    
+
     mCSVCellSepEdit->setText(AppSettings::mCSVCellSeparator);
 
     if (AppSettings::mCSVDecSeparator==",")
         mCSVDecSepCombo->setCurrentIndex(0);
-    
+
     else mCSVDecSepCombo->setCurrentIndex(1);
 
     mOpenLastProjectCheck->setChecked(AppSettings::mOpenLastProjectAtLaunch);
-    
+
     mPixelRatio->setValue(AppSettings::mPixelRatio);
     mImageQuality->setValue(AppSettings::mImageQuality);
     mFormatDate->setCurrentIndex(int (AppSettings::mFormatDate));
@@ -297,11 +336,11 @@ void AppSettingsDialog::changeSettings()
 {
     QLocale::Language newLanguage = AppSettings::mLanguage;
     QLocale::Country newCountry= AppSettings::mCountry;
-    
+
     QLocale newLoc = QLocale(newLanguage, newCountry);
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
-    
+
    // emit settingsChanged(s);
 }
 

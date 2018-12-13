@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #ifndef PLUGINABSTRACT_H
 #define PLUGINABSTRACT_H
 
@@ -6,7 +45,6 @@
 #include "ProjectSettings.h"
 #include "RefCurve.h"
 
-//#include <QtPlugin>
 #include <QObject>
 #include <QJsonObject>
 #include <QDir>
@@ -15,7 +53,6 @@
 #include <QList>
 #include <QTextStream>
 #include <QPair>
-
 #include <QLocale>
 
 class ParamMCMC;
@@ -29,9 +66,9 @@ struct GroupedAction{
     QString pluginId;
     QString title;
     QString label;
-    
+
     QString inputType;
-    
+
     // For combobox called with QInputDialog::getItem
     QStringList items;
     int current;
@@ -65,7 +102,7 @@ public:
     virtual int csvOptionalColumns() const {return 0;}
     virtual QJsonObject fromCSV(const QStringList& list,const QLocale& csvLocale) = 0;
     virtual QStringList toCSV(const QJsonObject& data,const QLocale& csvLocale) const = 0;
-    
+
     /**
      * @brief getDateDesc is the description of the Data showing in the properties of Event, in the list of data
      */
@@ -79,7 +116,7 @@ public:
         ret["error"] = tr("Cannot combine dates of type %1").arg(getName());
         return ret;
     }
-    
+
     QColor getColor() const {return mColor;}
 
     QString getId() const{
@@ -87,7 +124,7 @@ public:
         name = name.replace(" ", "_");
         return name;
     }
-    
+
     // Function to check if data values are ok : depending on the application version, plugin data values may change.
     // eg. : a new parameter may be added to 14C plugin, ...
     virtual QJsonObject checkValuesCompatibility(const QJsonObject& values){return values;}
@@ -97,18 +134,18 @@ public:
         (void) settings;
         return true;
     }
-    
+
     virtual PluginFormAbstract* getForm() = 0;
     virtual GraphViewRefAbstract* getGraphViewRef() = 0;
     virtual void deleteGraphViewRef(GraphViewRefAbstract* graph ) {(void) graph ;}
     virtual PluginSettingsViewAbstract* getSettingsView() = 0;
     virtual QList<QHash<QString, QVariant>> getGroupedActions() {return QList<QHash<QString, QVariant>>();}
-    
+
     // -------------------------------
     // The following is for plugins using ref curves :
     // -------------------------------
     virtual QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const = 0;
-    
+
     virtual QString getRefExt() const {return "";}
     virtual QString getRefsPath() const {return "";}
     virtual RefCurve loadRefFile(QFileInfo refFile)
@@ -123,7 +160,7 @@ public:
         const QString calibPath = getRefsPath();
         mRefCurves.clear();
         QDir calibDir(calibPath);
-        
+
         const QFileInfoList files = calibDir.entryInfoList(QStringList(), QDir::Files);
         for (int i=0; i<files.size(); ++i) {
             if (files.at(i).suffix().toLower() == getRefExt()) {
@@ -133,7 +170,7 @@ public:
             }
         }
     }
-    
+
     QStringList getRefsNames() const
     {
         QStringList refNames;
@@ -147,14 +184,14 @@ public:
         }
         return refNames;
     }
-    
+
     // curveName must be in lower Case
     double getRefCurveValueAt(const QString& curveName, const double& t)
     {
         long double value = 0.;
         if (mRefCurves.constFind(curveName) != mRefCurves.constEnd()) {
             const RefCurve& curve = mRefCurves.value(curveName);
-            
+
             if (t >= curve.mTmin && t <= curve.mTmax) {
                // This actually return the iterator with the nearest greater key !!!
                 QMap<double, double>::const_iterator iter = curve.mDataMean.lowerBound(t);
@@ -180,13 +217,13 @@ public:
         }
         return value;
     }
-    
+
     double getRefCurveErrorAt(const QString& curveName, const double& t)
     {
         double error (0.);
         if (mRefCurves.constFind(curveName) != mRefCurves.constEnd()) {
             const RefCurve& curve = mRefCurves.value(curveName);
-            
+
             if (t >= curve.mTmin && t <= curve.mTmax) {
                // This actually return the iterator with the nearest greater key !!!
                 QMap<double, double>::const_iterator iter = curve.mDataError.lowerBound(t);
@@ -211,12 +248,12 @@ public:
         }
         return error;
     }
-    
+
     const RefCurve& getRefCurve(const QString& name)
     {
         return mRefCurves[name.toLower()];
     }
-    
+
     PluginAbstract &operator=(const PluginAbstract& other)
     {
         mRefCurves = other.mRefCurves;
@@ -250,4 +287,3 @@ Q_DECLARE_INTERFACE(PluginAbstract, PluginAbstract_iid)
 
 
 #endif
-

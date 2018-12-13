@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "MCMCLoopMain.h"
 #include "EventKnown.h"
 #include "Functions.h"
@@ -43,7 +82,7 @@ QString MCMCLoopMain::calibrate()
         QList<Event*>& events = mModel->mEvents;
         events.reserve(mModel->mEvents.size());
         //----------------- Calibrate measurements --------------------------------------
-        
+
         QList<Date*> dates;
         // find number of dates, to optimize memory space
         int nbDates (0);
@@ -62,9 +101,9 @@ QString MCMCLoopMain::calibrate()
 
         if (isInterruptionRequested())
             return ABORTED_BY_USER;
-        
+
         emit stepChanged(tr("Calibrating..."), 0, dates.size());
-        
+
         int i (0);
         for (auto &&date : dates) {
               if (date->mCalibration) {
@@ -73,17 +112,17 @@ QString MCMCLoopMain::calibrate()
                 } else
                     return (tr("Invalid Model -> No Calibration on Data %1").arg(date->mName));
 
-         
+
             if (isInterruptionRequested())
                 return ABORTED_BY_USER;
-            
+
             emit stepProgressed(i);
             ++i;
 
         }
         dates.clear();
         return QString();
-        
+
     }
     return tr("Invalid model");
 }
@@ -140,10 +179,10 @@ QString MCMCLoopMain::initMCMC()
     QList<Event*>& events (mModel->mEvents);
     QList<Phase*>& phases (mModel->mPhases);
     QList<PhaseConstraint*>& phasesConstraints (mModel->mPhaseConstraints);
-    
+
     const double tmin = mModel->mSettings.mTmin;
     const double tmax = mModel->mSettings.mTmax;
-    
+
     if (isInterruptionRequested())
         return ABORTED_BY_USER;
 
@@ -161,19 +200,19 @@ QString MCMCLoopMain::initMCMC()
         ++i;
         emit stepProgressed(i);
     }
-    
+
     // ----------------------- Init tau -----------------------------------------
     emit stepChanged(tr("Initializing Phase Durations..."), 0, phases.size());
     i = 0;
     for (auto && ph : phases) {
         ph->initTau();
-        
+
         if (isInterruptionRequested())
             return ABORTED_BY_USER;
         ++i;
         emit stepProgressed(i);
     }
-    
+
     /* -------------- Init Bounds --------------
     * - Définir des niveaux pour les faits
     * - Initialiser les bornes (uniquement, pas les faits) par niveaux croissants
@@ -198,7 +237,7 @@ QString MCMCLoopMain::initMCMC()
                 bound->mTheta.mX = bound->mFixed;
 
                 curLevelMaxValue = qMax(curLevelMaxValue, bound->mTheta.mX);
-                
+
                 bound->mTheta.memo();
                 bound->mTheta.mLastAccepts.clear();
                 bound->mTheta.mLastAccepts.push_back(1.);
@@ -208,7 +247,7 @@ QString MCMCLoopMain::initMCMC()
             bound = nullptr;
         }
     }
-    
+
     // ----------------------------------------------------------------
     //  Init theta f, ti, ...
     // ----------------------------------------------------------------
@@ -252,13 +291,13 @@ QString MCMCLoopMain::initMCMC()
 #endif
             unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
             unsortedEvents.at(i)->mInitialized = true;
-            
+
             //qDebug() << "in initMCMC(): Event initialized : " << unsortedEvents[i]->mName << " : " << unsortedEvents[i]->mTheta.mX<<" between"<<min<<max;
 
             double s02_sum (0.);
             for (int j=0; j<unsortedEvents.at(i)->mDates.size(); ++j) {
                 Date& date = unsortedEvents.at(i)->mDates[j];
-                
+
                 // 1 - Init ti
                 double sigma;
                 if (!date.mCalibration->mRepartition.isEmpty()) {
@@ -321,26 +360,26 @@ QString MCMCLoopMain::initMCMC()
             unsortedEvents.at(i)->mTheta.memo();
             unsortedEvents.at(i)->mTheta.saveCurrentAcceptRate();
         }
-        
+
         if (isInterruptionRequested())
             return ABORTED_BY_USER;
-        
+
         emit stepProgressed(i);
     }
-    
+
     // ----------------------------------------------------------------
     //  Init sigma i and its sigma MH
     // ----------------------------------------------------------------
     QString log;
     emit stepChanged(tr("Initializing Variances..."), 0, events.size());
-    
+
     for (int i=0; i<events.size(); ++i) {
         for (int j=0; j<events.at(i)->mDates.size(); ++j) {
             Date& date = events.at(i)->mDates[j];
-            
+
             // date.mSigma.mX = sqrt(shrinkageUniform(events[i]->mS02)); // modif the 2015/05/19 with PhL
             date.mSigma.mX = std::abs(date.mTheta.mX - (events.at(i)->mTheta.mX - date.mDelta));
-           
+
             if (date.mSigma.mX<=1E-6) {
                date.mSigma.mX = 1E-6; // Add control the 2015/06/15 with PhL
                log += line(date.mName + textBold("Sigma indiv. <=1E-6 set to 1E-6"));
@@ -356,7 +395,7 @@ QString MCMCLoopMain::initMCMC()
         }
         if (isInterruptionRequested())
             return ABORTED_BY_USER;
-        
+
         emit stepProgressed(i);
     }
     // --------------------------- Init phases ----------------------
@@ -373,16 +412,16 @@ QString MCMCLoopMain::initMCMC()
 
         emit stepProgressed(i);
     }
-    
+
     // --------------------------- Log Init ---------------------
     log += "<hr>";
     log += textBold("Events Initialization (with their data)");
-    
+
     i = 0;
     for (const Event* event : events) {
         ++i;
         log += "<hr><br>";
-        
+
         if (event->type() == Event::eKnown) {
              const EventKnown* bound = dynamic_cast<const EventKnown*>(event);
             if (bound) {
@@ -397,8 +436,8 @@ QString MCMCLoopMain::initMCMC()
             log += line(textBlue(tr(" - Sigma_MH on Theta : %1").arg(stringForLocal(event->mTheta.mSigmaMH))));
             log += line(textBlue(tr(" - S02 : %1").arg(stringForLocal(event->mS02))));
         }
-        
-        
+
+
         int j (0);
         for (const Date & date : event->mDates) {
             ++j;
@@ -416,7 +455,7 @@ QString MCMCLoopMain::initMCMC()
 
         }
     }
-    
+
     if (phases.size() > 0) {
         log += "<hr>";
         log += textBold(tr("Phases Initialization"));
@@ -432,12 +471,12 @@ QString MCMCLoopMain::initMCMC()
             log += line(textPurple(tr(" - Tau : %1").arg(stringForLocal(phase->mTau))));
         }
     }
-    
+
     if (phasesConstraints.size() > 0) {
         log += "<hr>";
         log += textBold(textGreen(tr("Phases Constraints Initialization"))) ;
         log += "<hr>";
-        
+
         int i = 0;
         for (const PhaseConstraint* constraint : phasesConstraints) {
             ++i;
@@ -446,12 +485,12 @@ QString MCMCLoopMain::initMCMC()
             log += line(textGreen(tr(" - Gamma : %1").arg(stringForLocal(constraint->mGamma))));
         }
     }
-    
+
     mInitLog += "<hr>";
     mInitLog += textBold(tr("INIT CHAIN %1").arg(QString::number(mChainIndex+1)));
     mInitLog += "<hr>";
     mInitLog += log;
- 
+
     return QString();
 }
 
@@ -462,9 +501,9 @@ void MCMCLoopMain::update()
     const double t_min (mModel->mSettings.mTmin);
 
     ChainSpecs& chain = mChains[mChainIndex];
-    
+
     const bool doMemo = (mState == eBurning) || (mState == eAdapting) || (chain.mTotalIter % chain.mThinningInterval == 0);
-    
+
 
     //--------------------- Update Event -----------------------------------------
 
@@ -519,22 +558,22 @@ void MCMCLoopMain::update()
 bool MCMCLoopMain::adapt()
 {
     ChainSpecs& chain = mChains[mChainIndex];
-    
+
     const double taux_min = 41.;           // taux_min minimal rate of acceptation=42
     const double taux_max = 47.;           // taux_max maximal rate of acceptation=46
 
     bool allOK = true;
-    
+
     //--------------------- Adapt -----------------------------------------
-    
+
     double delta = (chain.mBatchIndex < 10000) ? 0.01 : (1. / sqrt(chain.mBatchIndex));
-    
+
     for (auto && event : mModel->mEvents ) {
-        
+
        for (auto && date : event->mDates) {
-            
+
             //--------------------- Adapt Sigma MH de Theta i -----------------------------------------
-            
+
             if (date.mMethod == Date::eMHSymGaussAdapt) {
                 const double taux = 100. * date.mTheta.getCurrentAcceptRate();
                 if (taux <= taux_min || taux >= taux_max) {
@@ -543,9 +582,9 @@ bool MCMCLoopMain::adapt()
                     date.mTheta.mSigmaMH *= pow(10., sign * delta);
                 }
             }
-            
+
             //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
-            
+
             const double taux = 100. * date.mSigma.getCurrentAcceptRate();
             if (taux <= taux_min || taux >= taux_max) {
                 allOK = false;
@@ -553,9 +592,9 @@ bool MCMCLoopMain::adapt()
                 date.mSigma.mSigmaMH *= pow(10., sign * delta);
             }
         }
-        
+
         //--------------------- Adapt Sigma MH de Theta f -----------------------------------------
-        
+
         if ((event->mType != Event::eKnown) && ( event->mMethod == Event::eMHAdaptGauss) ) {
             const double taux = 100. * event->mTheta.getCurrentAcceptRate();
             if (taux <= taux_min || taux >= taux_max) {
@@ -574,7 +613,7 @@ void MCMCLoopMain::finalize()
     // Chains only contain description of what happened in the chain (numIter, numBatch adapt, ...)
     // Real data are inside mModel members (mEvents, mPhases, ...)
     mModel->mChains = mChains;
-    
+
     // This is called here because it is calculated only once and will never change afterwards
     // This is very slow : it is for this reason that the results display may be long to appear at the end of MCMC calculation.
     /** @todo Find a way to make it faster !
@@ -583,12 +622,10 @@ void MCMCLoopMain::finalize()
     // This should not be done here because it uses resultsView parameters
     // ResultView will trigger it again when loading the model
     //mModel->generatePosteriorDensities(mChains, 1024, 1);
-    
+
     // Generate numerical results of :
     // - MHVariables (global acceptation)
     // - MetropolisVariable : analysis of Posterior densities and quartiles from traces.
     // This also should be done in results view...
     //mModel->generateNumericalResults(mChains);
 }
-
-

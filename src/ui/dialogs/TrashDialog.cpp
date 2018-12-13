@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "TrashDialog.h"
 #include "DatesListItemDelegate.h"
 #include "EventsListItemDelegate.h"
@@ -13,13 +52,13 @@ TrashDialog::TrashDialog(Type type, QWidget* parent, Qt::WindowFlags flags):QDia
 mType(type)
 {
     setWindowTitle(tr("Restore From Trash"));
-    
+
     // -----------
-    
+
     mList = new QListWidget(this);
     mList->setSelectionMode(QAbstractItemView::ExtendedSelection);
     mList->setMinimumHeight(400);
-    
+
     QItemDelegate* delegate = nullptr;
     if (mType == eDate)
         delegate = new DatesListItemDelegate();
@@ -27,19 +66,19 @@ mType(type)
         delegate = new EventsListItemDelegate();
     if (delegate)
         mList->setItemDelegate(delegate);
-    
+
     connect(mList, &QListWidget::itemSelectionChanged, this, &TrashDialog::updateFromSelection);
-    
+
     // ----------
-    
+
     mDeleteBut = new Button(tr("Delete"), this);
     mOkBut = new Button(tr("OK"), this);
     mCancelBut = new Button(tr("Cancel"), this);
-    
+
     connect(mDeleteBut, &Button::clicked, this, &TrashDialog::deleteItems);
     connect(mOkBut,static_cast<void (Button::*)(bool)> (&Button::clicked), this, &TrashDialog::accept);
     connect(mCancelBut, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &TrashDialog::reject);
-    
+
     QHBoxLayout* butLayout = new QHBoxLayout();
     butLayout->setContentsMargins(0, 0, 0, 0);
     butLayout->setSpacing(25);
@@ -47,34 +86,34 @@ mType(type)
     butLayout->addWidget(mDeleteBut);
     butLayout->addWidget(mOkBut);
     butLayout->addWidget(mCancelBut);
-    
+
     // ----------
-    
+
     QFont font;
     font.setWeight(QFont::Bold);
 
     QLabel* titleLab = new QLabel(tr("Select the item to be restored") + " :");
     titleLab->setFont(font);
     titleLab->setAlignment(Qt::AlignCenter);
-    
+
     // ----------
-    
+
     QVBoxLayout* layout = new QVBoxLayout();
     layout->addWidget(titleLab);
     layout->addWidget(mList);
     layout->addLayout(butLayout);
     setLayout(layout);
-    
+
     // ----------
-    
+
     Project* project = MainWindow::getInstance()->getProject();
-    
+
     if (mType == eDate) {
         const QJsonObject state = project->state();
         const ProjectSettings settings = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
 
         QJsonArray dates = state[STATE_DATES_TRASH].toArray();
-        
+
         for (int i=0; i<dates.size(); ++i) {
             try {
                 QJsonObject date = dates[i].toObject();
@@ -116,7 +155,7 @@ mType(type)
     } else if (mType == eEvent) {
         QJsonObject state = project->state();
         QJsonArray events = state[STATE_EVENTS_TRASH].toArray();
-        
+
         for (int i=0; i<events.size(); ++i) {
             QJsonObject event = events[i].toObject();
             QListWidgetItem* item = new QListWidgetItem(event[STATE_NAME].toString());
@@ -133,7 +172,7 @@ mType(type)
 
 TrashDialog::~TrashDialog()
 {
-    
+
 }
 
 QList<int> TrashDialog::getSelectedIndexes()
@@ -157,7 +196,7 @@ void TrashDialog::deleteItems(bool checked)
     Project* project = MainWindow::getInstance()->getProject();
     QList<QListWidgetItem*> items = mList->selectedItems();
     QList<int> ids;
-    
+
     if (mType == eEvent) {
         for (auto &&item : items)
             ids.append(item->data(0x0107).toInt());
@@ -169,7 +208,7 @@ void TrashDialog::deleteItems(bool checked)
 
         project->deleteSelectedTrashedDates(ids);
     }
-    
+
     /* Delete items now!
     *  An event has been sent to the app to destroy these items, but our dialog cannot listen to the notification that will be sent after (at least not for now...)
     *  Deleting items now is thus a bit anticipated but works well!
@@ -178,5 +217,3 @@ void TrashDialog::deleteItems(bool checked)
         mList->takeItem(mList->row(item));
     mList->update();
 }
-
-

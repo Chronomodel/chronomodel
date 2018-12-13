@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "EventItem.h"
 #include "Event.h"
 #include "Phase.h"
@@ -59,7 +98,7 @@ QJsonObject& EventItem::getEvent()
 void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
 {
     prepareGeometryChange();
-    
+
     // ----------------------------------------------
     //  Update item position and selection
     // ----------------------------------------------
@@ -91,15 +130,15 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     qreal h = mTitleHeight + mPhasesHeight + 1* AbstractItem::mBorderWidth + 1*AbstractItem::mEltsMargin;
 
     const QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
-    
+
     const int count = dates.size();
     if (count > 0)
         h += count * (mEltsHeight + AbstractItem::mEltsMargin);
     else
         h += AbstractItem::mEltsMargin + mEltsHeight;
-    
+
      mSize = QSize(AbstractItem::mItemWidth, h);
-    
+
     if (event.value(STATE_EVENT_DATES).toArray() != mData.value(STATE_EVENT_DATES).toArray() || mSettings != settings) {
         // ----------------------------------------------
         //  Delete Date Items
@@ -118,13 +157,13 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
                      event.value(STATE_COLOR_BLUE).toInt());
 
         for (int i=0; i<dates.size(); ++i) {
-            const QJsonObject date = dates.at(i).toObject();           
-            
+            const QJsonObject date = dates.at(i).toObject();
+
             try {
                 DateItem* dateItem = new DateItem((EventsScene*) (mScene), date, color, settings);
                 dateItem->setParentItem(this);
                 dateItem->setGreyedOut(mGreyedOut);
-                
+
                 QPointF pos(0,
                             boundingRect().y() +
                             mTitleHeight +
@@ -145,7 +184,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
             }
         }
     }
-    
+
     mData = event;
     mSettings = settings;
 
@@ -183,7 +222,7 @@ void EventItem::updateGreyedOut()
     const QJsonObject state = mScene->getProject()->state();
     const QJsonArray phases = state.value(STATE_PHASES).toArray();
     QStringList selectedPhasesIds;
-    
+
     for (int i=0; i<phases.size(); ++i) {
         QJsonObject phase = phases.at(i).toObject();
         const bool isSelected = phase.value(STATE_IS_SELECTED).toBool();
@@ -192,7 +231,7 @@ void EventItem::updateGreyedOut()
     }
     if (selectedPhasesIds.size() == 0)
         mGreyedOut = false;
-    
+
     else {
         const QString eventPhasesIdsStr = mData.value(STATE_EVENT_PHASE_IDS).toString();
         const QStringList eventPhasesIds = eventPhasesIdsStr.split(",");
@@ -211,7 +250,7 @@ void EventItem::setDatesVisible(bool visible)
     QList<QGraphicsItem*> dateItems = childItems();
     for (auto &&item : dateItems)
         item->setVisible(visible);
-    
+
 }
 
 // Events
@@ -248,7 +287,7 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
         dates.append(date);
     }
     event[STATE_EVENT_DATES] = dates;
-    
+
     project->updateEvent(event, QObject::tr("Dates added to event (CSV drag)"));
     scene->updateStateSelectionFromItem();
     scene->sendUpdateProject("Item selected", true, false); //  bool notify = true, bool storeUndoCommand = false
@@ -300,20 +339,20 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 {
     Q_UNUSED(option);
     Q_UNUSED(widget);
-    
+
     painter->save();
     painter->setRenderHint(QPainter::Antialiasing);
-    
+
     QRectF rect = boundingRect();
-    
+
     QColor eventColor = QColor(mData.value(STATE_COLOR_RED).toInt(),
                                mData.value(STATE_COLOR_GREEN).toInt(),
-                               mData.value(STATE_COLOR_BLUE).toInt()); 
+                               mData.value(STATE_COLOR_BLUE).toInt());
     // Phases
     const QJsonArray phases = getPhases();
     QRectF phasesRect(rect.x(), rect.y() + rect.height() - mPhasesHeight, rect.width(), mPhasesHeight);
     phasesRect.adjust(1, 1, -1, -1);
-    
+
     const int numPhases ( phases.size());
     const qreal w = phasesRect.width()/numPhases;
 
@@ -353,7 +392,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->drawRect(int (phasesRect.x() + i*w), int (phasesRect.y()), int(w), int (phasesRect.height()));
         }
     }
-    
+
     //item box
     painter->setPen(QColor(0, 0, 0));
     painter->setBrush(Qt::NoBrush);
@@ -377,7 +416,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
     QFontMetrics metrics(font);//ftAdapt);
     name = metrics.elidedText(name, Qt::ElideRight, int (tr.width() - 5 ));
-    
+
     const QColor frontColor = getContrastedColor(eventColor);
     painter->setPen(frontColor);
     painter->drawText(tr, Qt::AlignCenter, name);
@@ -390,18 +429,18 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     if (mMergeable) {
         painter->setPen(QPen(Qt::white, 5.));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
-        
+
         painter->setPen(QPen(Painting::mainColorLight, 3., Qt::DashLine));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
 
     } else if (isSelected() || withSelectedDate()) {
         painter->setPen(QPen(Qt::white, 5.));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
-        
+
         painter->setPen(QPen(Qt::red, 3.));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
     }
-    
+
     painter->restore();
 }
 

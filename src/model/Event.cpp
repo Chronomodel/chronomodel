@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "Event.h"
 #include "Phase.h"
 #include "EventConstraint.h"
@@ -7,6 +46,7 @@
 #include "EventKnown.h"
 #include "ModelUtilities.h"
 #include "QtUtilities.h"
+
 #include <QString>
 #include <QJsonArray>
 #include <QObject>
@@ -31,7 +71,7 @@ mLevel(0)
     //int posDelta = 100;
     mItemX = 0.;//rand() % posDelta - posDelta/2;
     mItemY = 0.;//rand() % posDelta - posDelta/2;
-    
+
     // Note : setting an event in (0, 0) tells the scene that this item is new!
     // Thus the scene will move it randomly around the currently viewed center point.
 }
@@ -56,34 +96,34 @@ void Event::copyFrom(const Event& event)
     mName = event.mName;
     mMethod = event.mMethod;
     mColor = event.mColor;
-    
+
     mDates = event.mDates;
     mPhases = event.mPhases;
     mConstraintsFwd = event.mConstraintsFwd;
     mConstraintsBwd = event.mConstraintsBwd;
-    
+
     mTheta = event.mTheta;
     mTheta.mSupport = event.mTheta.mSupport;
 
     mS02 = event.mS02;
     mAShrinkage = event.mAShrinkage;
-    
+
     mItemX = event.mItemX;
     mItemY = event.mItemY;
-    
+
     mIsCurrent = event.mIsCurrent;
     mIsSelected = event.mIsSelected;
-    
+
     mDates = event.mDates;
-    
+
     mPhasesIds = event.mPhasesIds;
     mConstraintsFwdIds = event.mConstraintsFwdIds;
     mConstraintsBwdIds = event.mConstraintsBwdIds;
-    
+
     mPhases = event.mPhases;
     mConstraintsFwd = event.mConstraintsFwd;
     mConstraintsBwd = event.mConstraintsBwd;
-    
+
     mMixingLevel = event.mMixingLevel;
 }
 
@@ -123,21 +163,21 @@ Event Event::fromJson(const QJsonObject& json)
     event.mItemY = json.value(STATE_ITEM_Y).toDouble();
     event.mIsSelected = json.value(STATE_IS_SELECTED).toBool();
     event.mIsCurrent = json.value(STATE_IS_CURRENT).toBool();
-    
+
     event.mTheta.mProposal = ModelUtilities::getEventMethodText(event.mMethod);
     event.mTheta.setName("Theta of Event : "+event.mName);
-    
+
     event.mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
-    
-    
+
+
     const QJsonArray dates = json.value(STATE_EVENT_DATES).toArray();
 
-    for (auto && date : dates) {    
+    for (auto && date : dates) {
         Date d;
         d.fromJson(date.toObject());
         d.autoSetTiSampler(true);
         d.mMixingLevel=event.mMixingLevel;
-        
+
         if (!d.isNull())
             event.mDates.append(d);
         else
@@ -150,7 +190,7 @@ Event Event::fromJson(const QJsonObject& json)
 QJsonObject Event::toJson() const
 {
     QJsonObject event;
-    
+
     event[STATE_EVENT_TYPE] = mType;
     event[STATE_ID] = mId;
     event[STATE_NAME] = mName;
@@ -162,7 +202,7 @@ QJsonObject Event::toJson() const
     event[STATE_ITEM_Y] = mItemY;
     event[STATE_IS_SELECTED] = mIsSelected;
     event[STATE_IS_CURRENT] = mIsCurrent;
-    
+
     QString eventIdsStr;
     if (mPhasesIds.size() > 0) {
         QStringList eventIds;
@@ -171,14 +211,14 @@ QJsonObject Event::toJson() const
         eventIdsStr = eventIds.join(",");
     }
     event[STATE_EVENT_PHASE_IDS] = eventIdsStr;
-    
+
     QJsonArray dates;
     for (int i=0; i<mDates.size(); ++i) {
         QJsonObject date = mDates.at(i).toJson();
         dates.append(date);
     }
     event[STATE_EVENT_DATES] = dates;
-    
+
     return event;
 }
 
@@ -515,7 +555,7 @@ double Event::getThetaMinRecursive_old(const double defaultValue,
     //  Déterminer la borne min courante pour le tirage de theta
     // ------------------------------------------------------------------
     double min1 (defaultValue);
-    
+
     // Max des thetas des faits en contrainte directe antérieure
     double minBranchesInf (defaultValue);
     for (auto && branch : eventBranches) {
@@ -530,7 +570,7 @@ double Event::getThetaMinRecursive_old(const double defaultValue,
                 branchMin = qMax(branchMin, event->mTheta.mX);
         }
     }
-    
+
     // Le fait appartient à une ou plusieurs phases.
     // Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
     // Il faut s'assurer d'être au-dessus du plus grand theta de la phase moins la durée
@@ -547,7 +587,7 @@ double Event::getThetaMinRecursive_old(const double defaultValue,
             minPhases = qMax(minPhases, thetaMax - phases->mTau);
         }
     }
-    
+
     // Contraintes des phases précédentes
     double min4 (defaultValue);
     for (auto && branch : phaseBranches) {
@@ -579,12 +619,12 @@ double Event::getThetaMinRecursive_old(const double defaultValue,
                 branchMin = std::max(branchMin, theta);
         }
     }
-        
+
     // Synthesize all
     const double min_tmp1 = qMax(min1, minBranchesInf);
     const double min_tmp2 = qMax(minPhases, min4);
     const double min = qMax(min_tmp1, min_tmp2);
-    
+
     return min;
 }
 
@@ -679,9 +719,9 @@ double Event::getThetaMaxRecursive_old(const double defaultValue,
     // ------------------------------------------------------------------
     //  Déterminer la borne max courante pour le tirage de theta
     // ------------------------------------------------------------------
-    
+
     double max1 (defaultValue);
-    
+
     // Max des thetas des faits en contrainte directe antérieure
     double max2 (defaultValue);
     for (auto &&branch : eventBranches) {
@@ -696,7 +736,7 @@ double Event::getThetaMaxRecursive_old(const double defaultValue,
                 branchMax = qMin(branchMax, event->mTheta.mX);
         }
     }
-    
+
     // Le fait appartient à une ou plusieurs phases.
     // Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
     // Il faut s'assurer d'être en-dessous du plus petit theta de la phase plus la durée
@@ -713,7 +753,7 @@ double Event::getThetaMaxRecursive_old(const double defaultValue,
             max3 = qMin(max3, thetaMin + phase->mTau);
         }
     }
-    
+
     // Contraintes des phases précédentes
     double max4 (defaultValue);
     for (auto &&branch : phaseBranches) {
@@ -744,12 +784,12 @@ double Event::getThetaMaxRecursive_old(const double defaultValue,
                 branchMax = std::min(branchMax, theta);
         }
     }
-    
+
     // Synthesize all
     double max_tmp1 = qMin(max1, max2);
     double max_tmp2 = qMin(max3, max4);
     double max = qMin(max_tmp1, max_tmp2);
-    
+
     return max;
 }
 
@@ -758,7 +798,7 @@ double Event::getThetaMin(double defaultValue)
     // ------------------------------------------------------------------
     //  Déterminer la borne min courante pour le tirage de theta
     // ------------------------------------------------------------------
-      
+
     // Max des thetas des faits en contrainte directe antérieure
     double maxThetaBwd (defaultValue);
     for (auto &&constBwd : mConstraintsBwd) {
@@ -767,7 +807,7 @@ double Event::getThetaMin(double defaultValue)
             maxThetaBwd = std::max(maxThetaBwd, thetaf);
        // }
     }
-    
+
     // Le fait appartient à une ou plusieurs phases.
     // Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
     // Il faut s'assurer d'être au-dessus du plus grand theta de la phase moins la durée
@@ -784,18 +824,18 @@ double Event::getThetaMin(double defaultValue)
             min3 = std::max(min3, thetaMax - phase->mTau);
         }
     }
-    
+
     // Contraintes des phases précédentes
     double maxPhasePrev (defaultValue);
     for (auto &&phase : mPhases) {
         const double thetaMax = phase->getMaxThetaPrevPhases(defaultValue);
         maxPhasePrev = std::max(maxPhasePrev, thetaMax);
     }
-    
+
     double min_tmp1 = std::max(defaultValue, maxThetaBwd);
     double min_tmp2 = std::max(min3, maxPhasePrev);
     double min = std::max(min_tmp1, min_tmp2);
-    
+
     return min;
 }
 
@@ -804,9 +844,9 @@ double Event::getThetaMax(double defaultValue)
     // ------------------------------------------------------------------
     //  Déterminer la borne max
     // ------------------------------------------------------------------
-    
+
     double max1 = defaultValue;
-    
+
     // Min des thetas des faits en contrainte directe et qui nous suivent
     double maxThetaFwd (defaultValue);
     for (int i=0; i<mConstraintsFwd.size(); ++i) {
@@ -815,7 +855,7 @@ double Event::getThetaMax(double defaultValue)
             maxThetaFwd = std::min(maxThetaFwd, thetaf);
        // }
     }
-    
+
     // Le fait appartient à une ou plusieurs phases.
     // Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
     // Il faut s'assurer d'être en-dessous du plus petit theta de la phase plus la durée
@@ -831,18 +871,18 @@ double Event::getThetaMax(double defaultValue)
             max3 = std::min(max3, thetaMin + phase->mTau);
         }
     }
-    
+
     // Contraintes des phases suivantes
     double maxPhaseNext (defaultValue);
     for (auto &&phase : mPhases) {
         double thetaMin = phase->getMinThetaNextPhases(defaultValue);
         maxPhaseNext = std::min(maxPhaseNext, thetaMin);
     }
-    
+
     double max_tmp1 = std::min(max1, maxThetaFwd);
     double max_tmp2 = std::min(max3, maxPhaseNext);
     double max = std::min(max_tmp1, max_tmp2);
-    
+
     return max;
 }
 
@@ -850,7 +890,7 @@ void Event::updateTheta(const double &tmin, const double &tmax)
 {
     const double min ( getThetaMin(tmin) );
     const double max ( getThetaMax(tmax) );
-    
+
     if (min >= max)
         throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(mName, QString::number(min), QString::number(max));
 
@@ -861,13 +901,13 @@ void Event::updateTheta(const double &tmin, const double &tmax)
 */
 
     //qDebug() << "[" << min << ", " << max << "]";
-    
+
     // -------------------------------------------------------------------------------------------------
     //  Evaluer theta.
     //  Le cas Wiggle est inclus ici car on utilise une formule générale.
     //  On est en "wiggle" si au moins une des mesures a un delta > 0.
     // -------------------------------------------------------------------------------------------------
-    
+
     double sum_p (0.);
     double sum_t (0.);
 
@@ -878,7 +918,7 @@ void Event::updateTheta(const double &tmin, const double &tmax)
     }
     const double theta_avg (sum_t / sum_p);
     const double sigma (1. / sqrt(sum_p));
-    
+
     switch(mMethod)
     {
         case eDoubleExp:

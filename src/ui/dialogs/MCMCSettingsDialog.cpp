@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "MCMCSettingsDialog.h"
 #include "Button.h"
 #include "Label.h"
@@ -46,7 +85,7 @@ mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
     chainsValidator->setRange(1, 5);
 
     mNumProcLabel = new QLabel(tr("Number of chains"), this);
-   
+
     mNumProcEdit = new LineEdit(this);
     mNumProcEdit->setFixedSize(mEditW, mButH);
     mNumProcEdit->setValidator(chainsValidator);
@@ -79,21 +118,21 @@ mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
     mNumIterEdit->setFixedSize(mEditW, mButH);
     mNumIterEdit->setValidator(positiveValidator);
     mNumIterEdit->setAlignment(Qt::AlignCenter);
-    
+
     mDownSamplingEdit = new LineEdit(this);
     mDownSamplingEdit->setFixedSize(mEditW, mButH);
     mDownSamplingEdit->setValidator(positiveValidator);
     mDownSamplingEdit->setAlignment(Qt::AlignCenter);
-    
+
     // On the bottom part
     mHelp = new HelpWidget(tr("About seeds : each MCMC chain is different from the others because it uses a different seed. By default, seeds are picked randomly. However, you can force the chains to use specific seeds by entering them below. By doing so, you can replicate exactly the same results using the same seeds."), this);
     mHelp->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=52"); // chapter 4.2 MCMC settings
-    
+
     mSeedsLabel = new QLabel(tr("Seeds (separated by \";\")"),this);
     mSeedsLabel->setFixedSize(fontMetrics().boundingRect(mSeedsLabel->text()).width(), mButH);
     mSeedsEdit = new LineEdit(this);
     mSeedsEdit->setFixedSize(mEditW, mButH);
-    
+
     mLevelLabel = new QLabel(tr("Mixing level"),this);
     mLevelLabel->setFixedSize(fontMetrics().boundingRect(mLevelLabel->text()).width(), mButH);
     mLevelEdit = new LineEdit(this);
@@ -101,10 +140,10 @@ mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
 
     mOkBut = new Button(tr("OK"), this);
     mOkBut->setFixedSize(mButW, mButH);
-    
+
     mCancelBut = new Button(tr("Cancel"), this);
     mCancelBut->setFixedSize(fontMetrics().boundingRect(mCancelBut->text()).width() + 2 * mMarginW, mButH);
-    
+
     mTestBut = new Button(tr("Quick Test"), this);
     mTestBut->setFixedSize(fontMetrics().boundingRect(mTestBut->text()).width() + 2 * mMarginW, mButH);
 
@@ -122,13 +161,13 @@ mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
     connect(this, &MCMCSettingsDialog::inputValided, this, &MCMCSettingsDialog::accept);
 
     connect(mCancelBut, &Button::clicked, this, &MCMCSettingsDialog::reject);
-    
+
     connect(mResetBut, &Button::clicked, this, &MCMCSettingsDialog::reset);
     connect(mTestBut, &Button::clicked, this, &MCMCSettingsDialog::setQuickTest);
 
     const int fixedHeight =  mTop  + mColoredBoxHeigth + mHelp->heightForWidth(mTotalWidth - 2 * mMarginW)  + 6 * mMarginH +  mButH + 2*mLineH;
     setFixedSize(mTotalWidth, fixedHeight);
-    
+
 }
 
 MCMCSettingsDialog::~MCMCSettingsDialog()
@@ -146,7 +185,7 @@ void MCMCSettingsDialog::setSettings(const MCMCSettings& settings)
     mIterPerBatchEdit->setText(mLoc.toString(settings.mNumBatchIter));
     mDownSamplingEdit->setText(mLoc.toString(settings.mThinningInterval));
     mSeedsEdit->setText(intListToString(settings.mSeeds, ";"));
-    
+
     mLevelEdit->setText(mLoc.toString(settings.mMixingLevel));
 }
 
@@ -164,11 +203,11 @@ MCMCSettings MCMCSettingsDialog::getSettings()
 
     settings.mNumRunIter = qMax(10, mNumIterEdit->text().toInt());
     settings.mThinningInterval = qBound(UN, mDownSamplingEdit->text().toInt(), int (floor(settings.mNumRunIter/10)) );
-    
+
     settings.mMixingLevel = qBound(0.0001, mLoc.toDouble(mLevelEdit->text()),0.9999);
-    
+
     settings.mSeeds = stringListToIntList(mSeedsEdit->text(), ";");
-    
+
     return settings;
 }
 
@@ -178,25 +217,25 @@ void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
 
     QPainter p(this);
     p.fillRect(rect(), QColor(220, 220, 220));
-    
+
     p.setPen(Painting::borderDark);
 
     QFont font = p.font();
     font.setWeight(QFont::Bold);
     p.setFont(font);
-    
+
     font.setWeight(QFont::Normal);
     p.setFont(font);
 
     p.setBrush(QColor(235, 115, 100));
     p.drawRect(mBurnRect);
-   
+
     p.setBrush(QColor(250, 180, 90));
     p.drawRect(mAdaptRect);
-    
+
     p.setBrush(QColor(130, 205, 110));
     p.drawRect(mAquireRect);
-    
+
     p.setBrush(QColor(255, 255, 255, 100));
     p.drawRect(mBatch1Rect);
     p.drawRect(mBatchInterRect);
@@ -204,7 +243,7 @@ void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
 
     p.drawText(mAdaptRect.adjusted(0, 1 * mMarginH, 0, -mAdaptRect.height() + mLineH + 1 * mMarginH), Qt::AlignCenter, tr("2 - ADAPT"));
 
-    
+
     p.drawText(mBatch1Rect.adjusted(0, mMarginH, 0, -mBatch1Rect.height() + mLineH + mMarginH), Qt::AlignCenter, tr("BATCH 1"));
     p.drawText(mBatch1Rect.adjusted(0, mLineH + 2 * mMarginH, 0, -mBatch1Rect.height() + 2 * mLineH + 2 * mMarginH), Qt::AlignCenter, tr("Iterations") );
 
@@ -229,7 +268,7 @@ void MCMCSettingsDialog::resizeEvent(QResizeEvent* e)
 
 void MCMCSettingsDialog::updateLayout()
 {
-    
+
     mNumProcLabel->move(width()/2 - mMarginW - fontMetrics().boundingRect(mNumProcLabel->text()).width(), (mTop - mNumProcLabel->height()) /2 );
     mNumProcEdit->move(width()/2 + mMarginW, (mTop - mNumProcLabel->height()) /2);
 

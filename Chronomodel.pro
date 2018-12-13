@@ -1,11 +1,42 @@
-#-------------------------------------------------
-#
-# Created by Helori LANOS
-# March 14th, 2014
-# and Philippe Dufresne
-# ChronoModel
-#
-#-------------------------------------------------
+# ---------------------------------------------------------------------
+
+#Copyright or © or Copr. CNRS	2014 - 2018
+
+#Authors :
+#	Philippe LANOS
+#	Helori LANOS
+# 	Philippe DUFRESNE
+
+#This software is a computer program whose purpose is to
+#create chronological models of archeological data using Bayesian statistics.
+
+# This software is governed by the CeCILL V2.1 license under French law and
+# abiding by the rules of distribution of free software.  You can  use,
+# modify and/ or redistribute the software under the terms of the CeCILL
+# license as circulated by CEA, CNRS and INRIA at the following URL
+# "http://www.cecill.info".
+
+# As a counterpart to the access to the source code and  rights to copy,
+# modify and redistribute granted by the license, users are provided only
+# with a limited warranty  and the software's author,  the holder of the
+# economic rights,  and the successive licensors  have only  limited
+# liability.
+
+# In this respect, the user's attention is drawn to the risks associated
+# with loading,  using,  modifying and/or developing or reproducing the
+# software by the user in light of its specific status of free software,
+# that may mean  that it is complicated to manipulate,  and  that  also
+# therefore means  that it is reserved for developers  and  experienced
+# professionals having in-depth computer knowledge. Users are therefore
+# encouraged to load and test the software's suitability as regards their
+# requirements in conditions enabling the security of their systems and/or
+# data to be ensured and,  more generally, to use and operate it in the
+# same conditions as regards security.
+
+# The fact that you are presently reading this means that you have had
+# knowledge of the CeCILL V2.1 license and that you accept its terms.
+# --------------------------------------------------------------------- */
+
 # DEFINES += VERSION_NUMBER=\\\"2.0.10\\\"
 VERSION = 2.0.18
  #VERSION_NUMBER # must match value in src/main.cpp and Chronomodel.rc (for windows)
@@ -75,7 +106,7 @@ macx{
     message("MacOSX specific settings")
 	# Icon file
         ICON = $$PRO_PATH/icon/Chronomodel.icns
-    
+
 	# This is the SDK used to compile : change it to whatever latest version of mac you are using.
 	# to determine which version of the macOS SDK is installed with xcode? type on a terminal
 	# xcodebuild -showsdks
@@ -142,22 +173,22 @@ macx{
 	# (Using FFTW 3.3.4 is available for mac 10.9+)
 	# We provide FFTW.3.2.2.dmg if you want to install it on your system, but this is not necessary!
 	# The generated XCode project will locate FFTW files in the project directory and statically link against it.
-	
+
 	# this is to include fftw.h in the code :
 	INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac
-	
-	
+
+
 	# Link the application with FFTW library
 	# If no dylib are present, static libs (.a) are used => that's why we moved .dylib files in a "dylib" folder.
         #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
         LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3
-	
+
 	# If we were deploying FFTW as a dynamic library, we should :
 	# - Move all files from "lib/FFTW/mac/dylib" to "lib/FFTW/mac"
 	# - Uncomment the lines below to copy dylib files to the bundle
 	# - We may also need to call install_name_tool on both dylib and chronomodel executable.
 	#	This has not been tested, so use otool -L path/to/dylib/files to check dependencies
-	
+
 	#FFTW_FILES.path = Contents/Frameworks
 	#FFTW_FILES.files += $$PRO_PATH/deploy/mac/FFTW/libfftw3f.dylib
 	#QMAKE_BUNDLE_DATA += FFTW_FILES
@@ -177,7 +208,7 @@ win32{
         }
 }
 #linux :
-unix:!macx{ 
+unix:!macx{
 	INCLUDEPATH += lib/FFTW
         LIBS += -lfftw3
 }
@@ -187,7 +218,7 @@ unix:!macx{
 #########################################
 TRANSLATIONS = translations/Chronomodel_fr.ts \
 				translations/Chronomodel_en.ts
-				
+
 # For Microsoft Visual Studio only
 CODECFORSRC = UTF-8
 
@@ -289,7 +320,7 @@ HEADERS += src/project/Project.h
 HEADERS += src/project/ProjectSettings.h
 HEADERS += src/project/SetProjectState.h
 HEADERS += src/project/StateEvent.h
-    
+
 HEADERS += src/ui/dialogs/AboutDialog.h
 HEADERS += src/ui/dialogs/AppSettingsDialog.h
 HEADERS += src/ui/dialogs/AppSettingsDialogItemDelegate.h
@@ -431,7 +462,7 @@ SOURCES += src/project/Project.cpp
 SOURCES += src/project/ProjectSettings.cpp
 SOURCES += src/project/SetProjectState.cpp
 SOURCES += src/project/StateEvent.cpp
-    
+
 SOURCES += src/ui/dialogs/AboutDialog.cpp
 SOURCES += src/ui/dialogs/AppSettingsDialog.cpp
 SOURCES += src/ui/dialogs/ConstraintDialog.cpp

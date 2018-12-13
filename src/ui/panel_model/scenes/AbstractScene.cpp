@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "AbstractScene.h"
 #include "AbstractItem.h"
 #include "ArrowItem.h"
@@ -27,7 +66,7 @@ mDeltaGrid ( AbstractItem::mItemWidth /4.) // 150 is the width of the Event and 
 // Setter & Getter
 void AbstractScene::setProject(Project* project)
 {
-    mProject = project;        
+    mProject = project;
 }
 
 Project* AbstractScene::getProject() const
@@ -37,7 +76,7 @@ Project* AbstractScene::getProject() const
 
 AbstractScene::~AbstractScene()
 {
-    
+
 }
 
 void AbstractScene::showGrid(bool show)
@@ -49,11 +88,11 @@ void AbstractScene::showGrid(bool show)
 void AbstractScene::updateConstraintsPos(AbstractItem* movedItem, const QPointF& newPos)
 {
     Q_UNUSED(newPos);
-    
+
     AbstractItem* curItem = currentItem();
     if (curItem)
         mTempArrow->setFrom(curItem->pos().x(), curItem->pos().y());
-    
+
     if (movedItem) {
         int itemId = movedItem->mData[STATE_ID].toInt();
         double itemX = movedItem->mData[STATE_ITEM_X].toDouble();
@@ -61,14 +100,14 @@ void AbstractScene::updateConstraintsPos(AbstractItem* movedItem, const QPointF&
 
         //qDebug() << "---------";
         //qDebug() << "Moving event id : " << itemId;
-        
+
         for (int i(0); i<mConstraintItems.size(); ++i) {
             QJsonObject cData = mConstraintItems[i]->data();
-            
+
             //int cId = cData[STATE_ID].toInt();
             int bwdId = cData[STATE_CONSTRAINT_BWD_ID].toInt();
             int fwdId = cData[STATE_CONSTRAINT_FWD_ID].toInt();
-            
+
             if (bwdId == itemId) {
                 //qDebug() << "Backward const. id : " << cId << " (link: "<<bwdId<<" -> "<< fwdId <<", setFrom: " << itemX << ", " << itemY << ")";
                 mConstraintItems[i]->setFrom(itemX, itemY);
@@ -98,10 +137,10 @@ bool AbstractScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
     Q_UNUSED(e);
 
     AbstractItem* current = currentItem();
-   
+
     // if mDrawingArrow is true, an Event is already selected and we can create a Constraint.
     if (mDrawingArrow && current && item && (item != current)) {
-        
+
         if (constraintAllowed(current, item)) {
             createConstraint(current, item);
             mTempArrow->setVisible(false);
@@ -111,7 +150,7 @@ bool AbstractScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
         } else
             return false;
 
-        
+
     } else
             return false;
 
@@ -141,11 +180,11 @@ void AbstractScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
         mTempArrow->setTo(item->pos().x(), item->pos().y());
 
         if (constraintAllowed(current, item)) {
-            mTempArrow->setState(ArrowTmpItem::eAllowed);           
+            mTempArrow->setState(ArrowTmpItem::eAllowed);
             mTempArrow->setLocked(true);
             qDebug() << "AbstractScene::itemEntered constraintAllowed==true";
         } else {
-            mTempArrow->setState(ArrowTmpItem::eForbidden);            
+            mTempArrow->setState(ArrowTmpItem::eForbidden);
             mTempArrow->setLocked(true);
             qDebug() << "AbstractScene::itemEntered constraintAllowed==false";
         }
@@ -175,14 +214,14 @@ void AbstractScene::itemMoved(AbstractItem* item, QPointF newPos, bool merging)
     // Could be used to adjust the scene rect and to follow the moving item
     // But at the moment a bug occurs sometimes when moving an event out from the scene:
     // Its bounding rect seems to be not correct...
-    
+
     Q_UNUSED(newPos);
-    
+
     if (merging) {
         AbstractItem* colliding = collidingItem(item);
         for (int i=0; i<mItems.size(); ++i)
             mItems[i]->setMergeable( (colliding != nullptr) && ( (mItems.at(i) == item) || (mItems.at(i) == colliding) ) );
-        
+
     }
 
     // Bug moving multiple items out from the scene...
@@ -192,7 +231,7 @@ void AbstractScene::itemMoved(AbstractItem* item, QPointF newPos, bool merging)
              newPos.y() - item->boundingRect().height()/2,
              item->boundingRect().size().width(),
              item->boundingRect().size().height());
-    
+
     // Follow the moving item
      QList<QGraphicsView*> graphicsViews = views();
    for (int i=0; i<graphicsViews.size(); ++i)
@@ -215,23 +254,23 @@ void AbstractScene::itemReleased(AbstractItem* item, QGraphicsSceneMouseEvent* e
     if (item->mMoving) {
         for (int i=0; i<mItems.size(); ++i)
             mItems[i]->setMergeable(false);
-        
+
         if (e->modifiers() == Qt::ShiftModifier) {
             AbstractItem* colliding = collidingItem(item);
             if (colliding)
                 mergeItems(item, colliding);
         } else
             sendUpdateProject(tr("Item moved"), true, true);//  bool notify = true, bool storeUndoCommand = true
-        
+
         // Ajust Scene rect to minimal (and also fix the scene rect)
         // After doing this, the scene no longer stetches when moving items!
         // It is possible to reset it by calling setSceneRect(QRectF()),
         // but the scene rect is reverted to the largest size it has had!
-        
+
         //setSceneRect(specialItemsBoundingRect().adjusted(-30, -30, 30, 30));
-        
+
         adjustSceneRect();
-        
+
         update();
     }
 }
@@ -277,7 +316,7 @@ void AbstractScene::keyPressEvent(QKeyEvent* keyEvent)
     //key "Alt" detection
    else if (keyEvent->modifiers() == Qt::AltModifier && selectedItems().count()==1) {
         mAltIsDown = true;
-        
+
         AbstractItem* curItem = currentItem();
         // Check if an item is already selected
         if (curItem) {
@@ -356,4 +395,3 @@ void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
     painter->drawLine(0, -10, 0, 10);
     */
 }
-

@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "GraphViewResults.h"
 #include "Button.h"
 #include "Painting.h"
@@ -45,15 +84,15 @@ mGraphFont(font())
     mGraph->showXAxisTicks(true);
     mGraph->showXAxisSubTicks(true);
     mGraph->showXAxisValues(true);
-    
+
     mGraph->showYAxisArrow(true);
     mGraph->showYAxisTicks(true);
     mGraph->showYAxisSubTicks(true);
     mGraph->showYAxisValues(true);
-    
+
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eMinMax);
-    
+
     mGraph->setMargins(50, 10, 5, mGraphFont.pointSize() * 2.2); // make setMarginRight seMarginLeft ...
     mGraph->setRangeY(0, 1);
 
@@ -74,7 +113,7 @@ mGraphFont(font())
       */
      mOverLaySelect = new Overlay (this);
     setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
-        
+
 }
 
 GraphViewResults::~GraphViewResults()
@@ -145,10 +184,10 @@ void GraphViewResults::saveAsImage()
 /*    QRect r(0, 0, mGraph->width(), mGraph->height());
     QFileInfo fileInfo = saveWidgetAsImage(mGraph, r, tr("Save graph image as..."),
                                            MainWindow::getInstance()->getCurrentPath());
-    
- 
-    
-    
+
+
+
+
     if(fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
  */
@@ -170,7 +209,7 @@ void GraphViewResults::saveAsImage()
 
         }
         else {
-        
+
             //---
             //GraphView::Rendering memoRendering= mGraph->getRendering();
             //setRendering(GraphView::eHD);
@@ -180,23 +219,23 @@ void GraphViewResults::saveAsImage()
             QImage image(mGraph->width() * pr, (mGraph->height() + versionHeight) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
 
             if (image.isNull() )
-                qDebug()<< " image width = 0";            
+                qDebug()<< " image width = 0";
 
-            
+
             image.setDevicePixelRatio(pr);
             image.fill(Qt::transparent);
-            
+
             QPainter p;
             p.begin(&image);
             p.setRenderHint(QPainter::Antialiasing);
-            
+
             mGraph->render(&p, QPoint(0, 0), QRegion(0, 0, mGraph->width(), mGraph->height()));
-        
+
             p.setPen(Qt::black);
             p.drawText(0, mGraph->height(), mGraph->width(), versionHeight,
                        Qt::AlignCenter,
                        qApp->applicationName() + " " + qApp->applicationVersion());
-            
+
             p.end();
 
             if (fileExtension=="png") {
@@ -206,10 +245,10 @@ void GraphViewResults::saveAsImage()
                 int imageQuality = AppSettings::mImageQuality;
                 image.save(fileName, "jpg",imageQuality);
             }
-            else if (fileExtension == "bmp") {              
+            else if (fileExtension == "bmp") {
                 image.save(fileName, "bmp");
             }
-            
+
             //mGraph->setRendering(memoRendering);
         }
 
@@ -230,7 +269,7 @@ void GraphViewResults::resultsToClipboard()
 /**
  * @brief Export data from the visible curves, there is two kinds of data in a graphView: mData, QMap type and mDataVector, QVector type
  * @brief So there is two export functon exportCurrentVectorCurves and exportCurrentDensityCurves.
- * @brief In the Posterior Density tab, the Credibility bar is not save 
+ * @brief In the Posterior Density tab, the Credibility bar is not save
  */
 void GraphViewResults::saveGraphData() const
 {
@@ -238,16 +277,16 @@ void GraphViewResults::saveGraphData() const
 
     QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
     csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
-    
+
     int offset (0);
-    
+
     if (mCurrentTypeGraph == eTrace || mCurrentTypeGraph == eAccept) {
         QMessageBox messageBox;
         messageBox.setWindowTitle(tr("Save all trace"));
         messageBox.setText(tr("Do you want the entire trace from the beginning of the process or only the acquisition part"));
         QAbstractButton *allTraceButton = messageBox.addButton(tr("All trace"), QMessageBox::YesRole);
         QAbstractButton *acquireTraceButton = messageBox.addButton(tr("Only acquired part"), QMessageBox::NoRole);
-        
+
         messageBox.exec();
         if (messageBox.clickedButton() == allTraceButton)
             mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
@@ -264,10 +303,10 @@ void GraphViewResults::saveGraphData() const
         }
         else return;
     }
-    
+
     else if (mCurrentTypeGraph == eCorrel)
         mGraph->exportCurrentVectorCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
-    
+
     // All visible curves are saved in the same file, the credibility bar is not save
     else if (mCurrentTypeGraph == ePostDistrib)
         mGraph->exportCurrentDensityCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
@@ -377,9 +416,9 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     p.setFont(fontTitle);
 
     p.setPen(Qt::black);
-    
+
     p.drawText(QRectF( 2 * AppSettings::widthUnit(), 0, fmTitle.boundingRect(mTitle).width(), mTopShift), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
-    
+
     p.setFont(QFont(mGraphFont.family(), mGraphFont.pointSize(), -1 , true));
 
     /*
@@ -455,7 +494,7 @@ GraphCurve GraphViewResults::generateHPDCurve(QMap<double, double> &data,
     curve.mBrush = QBrush(color);
     curve.mIsHisto = false;
     curve.mIsRectFromZero = true;
-    
+
     return curve;
 }
 
@@ -469,7 +508,7 @@ GraphCurve GraphViewResults::generateSectionCurve(const QPair<double, double> &s
     curve.mPen.setWidth(3);
     curve.mPen.setStyle(Qt::SolidLine);
     curve.mIsTopLineSections = true;
-    
+
     return curve;
 }
 
@@ -492,7 +531,7 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
                                            const QString& name)
 {
     QString prefix = name.isEmpty() ? name : name + " ";
-    
+
     for (int i=0; i<chains.size(); ++i) {
 
         GraphCurve curve;
@@ -502,19 +541,19 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
         curve.mPen.setColor(Painting::chainColors.at(i));
         curve.mIsHisto = false;
         mGraph->addCurve(curve);
-        
+
         const double min ( vector_min_value(curve.mDataVector) );
         const double max ( vector_max_value(curve.mDataVector) );
         mGraph->setRangeY(floor(min), ceil(max));
-        
+
         const Quartiles& quartiles = variable->mChainsResults.at(i).quartiles;
-        
+
         GraphCurve curveQ1 = generateHorizontalLine(quartiles.Q1, prefix + "Q1 " + QString::number(i), Qt::green);
         mGraph->addCurve(curveQ1);
-        
+
         GraphCurve curveQ2 = generateHorizontalLine(quartiles.Q2, prefix + "Q2 " + QString::number(i), Qt::red);
         mGraph->addCurve(curveQ2);
-        
+
         GraphCurve curveQ3 = generateHorizontalLine(quartiles.Q3, prefix + "Q3 " + QString::number(i), Qt::green);
         mGraph->addCurve(curveQ3);
     }
@@ -549,11 +588,11 @@ void GraphViewResults::generateCorrelCurves(const QList<ChainSpecs> &chains,
         curve.mPen.setColor(Painting::chainColors.at(i));
         curve.mIsHisto = false;
         mGraph->addCurve(curve);
-        
+
         //to do, we only need the totalIter number?
         const double n = variable->runRawTraceForChain(mChains, i).size();
         const double limit = 1.96 / sqrt(n);
-        
+
         GraphCurve curveLimitLower = generateHorizontalLine(-limit,
                                                             "Correl Limit Lower " + QString::number(i),
                                                             Qt::red,

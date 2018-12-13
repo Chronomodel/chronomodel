@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "ModelView.h"
 #include "EventsScene.h"
 #include "PhasesScene.h"
@@ -58,7 +97,7 @@ mCalibVisible(false)
 
     mLeftWrapper = new QWidget(this);
     mLeftWrapper->setGeometry(mLeftRect);
-    
+
     mRightRect = QRect(mLeftRect.width() + mHandlerRect.width(), mTopRect.height(), width() - mLeftRect.width() - mHandlerRect.width() +1, height() - mTopRect.height());
     mRightHiddenRect = mRightRect.adjusted(mRightRect.width(), 0, 0, 0);
 
@@ -80,7 +119,7 @@ mCalibVisible(false)
     mRightPanelTitle = new Label(tr("Phases Scene"), mTopWrapper);
     mRightPanelTitle->setLight();
     mRightPanelTitle->setBackground(Painting::borderDark);
-    
+
    // ---- Windows on the left hand Event scene --------------
     mEventsView = new QGraphicsView(mLeftWrapper);
     mEventsScene = new EventsScene(mEventsView);
@@ -88,58 +127,58 @@ mCalibVisible(false)
     mEventsView->setAcceptDrops(true);
     mEventsView->setInteractive(true);
     mEventsView->setDragMode(QGraphicsView::RubberBandDrag);
-    
+
     mEventsGlobalView = new SceneGlobalView(mEventsScene, mEventsView, mLeftWrapper);
     mEventsGlobalView->setVisible(false);
-    
+
     mEventsSearchEdit = new QLineEdit(mLeftWrapper);
     //mEventsSearchEdit->setPlaceholderText(tr("Search Event or Data..."));
     mEventsSearchEdit->setVisible(false);
     mEventsSearchEdit->setStyleSheet("QLineEdit {background-color: rgb(100, 100, 100); color: white;}");
     mEventsSearchEdit->setPlaceholderText(tr("Search Event or Data..."));
-    
+
     mButNewEvent = new Button(tr("New Event"), mLeftWrapper);
     mButNewEvent->setToolTip(tr("Create a new Event"));
     mButNewEvent->setIcon(QIcon(":new_event.png"));
     mButNewEvent->setFlatVertical();
-    
+
     mButNewEventKnown = new Button(tr("New Bound"), mLeftWrapper);
     mButNewEventKnown->setToolTip(tr("Create a new Bound"));
     mButNewEventKnown->setIcon(QIcon(":new_bound.png"));
     mButNewEventKnown->setFlatVertical();
-    
+
     mButDeleteEvent = new Button(tr("Delete"), mLeftWrapper);
     mButDeleteEvent->setToolTip(tr("Delete selected Event(s) or Bound(s)"));
     mButDeleteEvent->setIcon(QIcon(":delete.png"));
     mButDeleteEvent->setFlatVertical();
-    
+
     mButRecycleEvent = new Button(tr("Restore"), mLeftWrapper);
     mButRecycleEvent->setToolTip(tr("Restore deleted item (Event or Bound)"));
     mButRecycleEvent->setIcon(QIcon(":restore.png"));
     mButRecycleEvent->setFlatVertical();
-    
+
     mButExportEvents = new Button(tr("Save Image"), mLeftWrapper);
     mButExportEvents->setToolTip(tr("Save image of the Events scene as a file"));
     mButExportEvents->setIcon(QIcon(":picture_save.png"));
     mButExportEvents->setFlatVertical();
-    
+
     mButEventsOverview = new Button(tr("Overview"), mLeftWrapper);
     mButEventsOverview->setToolTip(tr("Overview on the global Events scene"));
     mButEventsOverview->setIcon(QIcon(":eye_w.png"));
     mButEventsOverview->setCheckable(true);
     mButEventsOverview->setFlatVertical();
-    
+
     mButEventsGrid = new Button(tr("Grid"), mLeftWrapper);
     mButEventsGrid->setToolTip(tr("Drawing a grid under the events scene to organize"));
     mButEventsGrid->setIcon(QIcon(":grid2.png"));
     mButEventsGrid->setCheckable(true);
     mButEventsGrid->setFlatVertical();
-    
+
     mEventsGlobalZoom = new ScrollCompressor(mLeftWrapper);
     mEventsGlobalZoom->setProp(0.5);
     mEventsGlobalZoom->showText(tr("Zoom"), true);
     mEventsGlobalZoom->setVertical(true);
-    
+
     connect(mButEventsGrid, &Button::toggled, mEventsScene, &EventsScene::showGrid);
 
     mButProperties = new Button(tr("Properties"), mLeftWrapper);
@@ -167,15 +206,15 @@ mCalibVisible(false)
     connect(mButImport, static_cast<void (Button::*)(bool)>(&Button::toggled), this, &ModelView::showImport);
 
     // -------- Windows Data Importation --------------------
-    
+
     mImportDataView = new ImportDataView(mRightWrapper);
     connect(mEventsScene, &EventsScene::csvDataLineDropAccepted, mImportDataView, &ImportDataView::removeCsvRows);
     connect(mEventsScene, &EventsScene::csvDataLineDropRejected, mImportDataView, &ImportDataView::errorCsvRows);
-    
-    
-    
+
+
+
     // -------- Windows Phase scene ---------------------------
-    
+
     mPhasesView = new QGraphicsView(mRightWrapper);
     mPhasesScene = new PhasesScene(mPhasesView);
     mPhasesView->setScene(mPhasesScene);
@@ -186,7 +225,7 @@ mCalibVisible(false)
     // Thus, the following connection can make use in updateCheckedPhases of these marks.
     // -> no more used, changed when set inser and extract button in the PhaseItem
     //connect(mEventsScene, &EventsScene::selectionChanged, mPhasesScene, &PhasesScene::updateCheckedPhases);
-    
+
     mPhasesGlobalView = new SceneGlobalView(mPhasesScene, mPhasesView, mRightWrapper);
     mPhasesGlobalView->setVisible(false);
 
@@ -194,60 +233,60 @@ mCalibVisible(false)
     mButNewPhase->setToolTip(tr("Create a new Phase"));
     mButNewPhase->setIcon(QIcon(":new_event.png"));
     mButNewPhase->setFlatVertical();
-    
+
     mButDeletePhase = new Button(tr("Delete Phase"), mRightWrapper);
     mButDeletePhase->setToolTip(tr("Delete selected Phase(s)"));
     mButDeletePhase->setIcon(QIcon(":delete.png"));
     mButDeletePhase->setFlatVertical();
-    
+
     mButExportPhases = new Button(tr("Save Image"), mRightWrapper);
     mButExportPhases->setToolTip(tr("Save image of the Phases scene as a file"));
     mButExportPhases->setIcon(QIcon(":picture_save.png"));
     mButExportPhases->setFlatVertical();
-    
+
     mButPhasesOverview = new Button(tr("Overview"), mRightWrapper);
     mButPhasesOverview->setToolTip(tr("Overview on the global Phases scene"));
     mButPhasesOverview->setIcon(QIcon(":eye_w.png"));
     mButPhasesOverview->setCheckable(true);
     mButPhasesOverview->setFlatVertical();
-    
+
     mButPhasesGrid = new Button(tr("Grid"), mRightWrapper);
     mButEventsGrid->setToolTip(tr("Drawing a grid under the Phases scene to organize"));
     mButPhasesGrid->setIcon(QIcon(":grid2.png"));
     mButPhasesGrid->setCheckable(true);
     mButPhasesGrid->setFlatVertical();
-    
+
     mPhasesGlobalZoom = new ScrollCompressor(mRightWrapper);
     mPhasesGlobalZoom->setProp(0.5);
     mPhasesGlobalZoom->showText(tr("Zoom"), true);
-    
+
     connect(mPhasesGlobalZoom, &ScrollCompressor::valueChanged, this, &ModelView::updatePhasesZoom);
     connect(mButExportPhases, &Button::clicked, this, &ModelView::exportPhasesScene);
-    
+
     connect(mButPhasesOverview, &Button::toggled, mPhasesGlobalView, &SceneGlobalView::setVisible);
     connect(mButPhasesGrid, &Button::toggled, mPhasesScene, &PhasesScene::showGrid);
 
     // -------- Windows Event propreties -----------------------
-    
+
     mEventPropertiesView = new EventPropertiesView(mRightWrapper);
     mEventPropertiesView->hide();
 
     // ------------- Windows calibration ---------------------
-    
+
     mCalibrationView = new CalibrationView(mLeftWrapper);
 
-    
+
      // ------------- Windows Multi-calibration ---------------------
      mMultiCalibrationView = new MultiCalibrationView(mRightWrapper);
      mMultiCalibrationView->hide();
     // -------- Animation -------------------------------
-    
+
     mAnimationHide = new QPropertyAnimation();
     mAnimationHide->setPropertyName("geometry");
     mAnimationHide->setDuration(300);
     mAnimationHide->setTargetObject(mEventPropertiesView);
     mAnimationHide->setEasingCurve(QEasingCurve::OutCubic);//(QEasingCurve::Linear);
-    
+
     mAnimationShow = new QPropertyAnimation();
     mAnimationShow->setPropertyName("geometry");
     mAnimationShow->setDuration(300);
@@ -259,13 +298,13 @@ mCalibVisible(false)
     mAnimationCalib->setEasingCurve(QEasingCurve::OutCubic);
 
     // ---- update and paint with the appSettingsFont
-    
+
     applyAppSettings();
 }
 
 ModelView::~ModelView()
 {
-    
+
 }
 
 void ModelView::setProject(Project* project)
@@ -366,7 +405,7 @@ void ModelView::disconnectScenes()
     disconnect(mProject, &Project::currentEventChanged, mEventPropertiesView, &EventPropertiesView::setEvent);
     // Properties View
     disconnect(mEventPropertiesView, &EventPropertiesView::combineDatesRequested, mProject, &Project::combineDates);
-    disconnect(mEventPropertiesView, &EventPropertiesView::splitDateRequested, mProject, &Project::splitDate);   
+    disconnect(mEventPropertiesView, &EventPropertiesView::splitDateRequested, mProject, &Project::splitDate);
     disconnect(mEventPropertiesView, &EventPropertiesView::updateCalibRequested, this, &ModelView::updateCalibration);
     disconnect(mEventPropertiesView, &EventPropertiesView::showCalibRequested, this, &ModelView::showCalibration);
 
@@ -449,10 +488,10 @@ void ModelView::createProject()
 
 void ModelView::updateProject()
 {
-    
+
     QJsonObject state = mProject->state();
     const ProjectSettings settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
-   
+
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
 
@@ -465,17 +504,17 @@ void ModelView::updateProject()
     mProject->mState[STATE_SETTINGS_STEP_FORCED] = settings.mStepForced;
 
     setSettingsValid(settings.mTmin < settings.mTmax);
-    
+
     mEventsScene->updateSceneFromState();
 
     mPhasesScene->updateSceneFromState();
-    
+
     // Les sélections dans les scènes doivent être mises à jour après que
     // LES 2 SCENES aient été updatées
     // false : ne pas envoyer de notification pour updater l'état du projet,
     // puisque c'est justement ce que l'on fait ici!
      // DONE BY UPDATEPROJECT ????
-    
+
     const QJsonObject& event = mEventPropertiesView->getEvent();
     if (!event.isEmpty()) {
         const QJsonArray events = state.value(STATE_EVENTS).toArray();
@@ -614,7 +653,7 @@ void ModelView::modifyPeriod()
 
     StudyPeriodDialog dialog(qApp->activeWindow());
     dialog.setSettings(s);
-    
+
     if (dialog.exec() == QDialog::Accepted) {
         ProjectSettings newS = dialog.getSettings();
         if (s != newS) {
@@ -643,7 +682,7 @@ void ModelView::modifyPeriod()
  * @todo controle management with project->pushProjectState()
  */
 void ModelView::setSettingsValid(bool valid)
-{ 
+{
     if (!valid) {
         MainWindow::getInstance()->setRunEnabled(false);
         MainWindow::getInstance()->setResultsEnabled(false);
@@ -659,23 +698,23 @@ void ModelView::showHelp(bool show)
 void ModelView::searchEvent()
 {
     QString search = mEventsSearchEdit->text();
-    
+
     if (search.isEmpty())
         return;
-        
+
     // Search text has changed : regenerate corresponding events list
     if (search != mLastSearch){
         mLastSearch = search;
         mSearchIds.clear();
-        
+
         QJsonObject state = mProject->state();
         QJsonArray events = state.value(STATE_EVENTS).toArray();
-        
+
         for (auto evJSON : events) {
             const QJsonObject event = evJSON.toObject();
             const int eventId = event.value(STATE_ID).toInt();
             const QString name = event.value(STATE_NAME).toString();
-            
+
             if (name.contains(search, Qt::CaseInsensitive))
                 mSearchIds.push_back(eventId);
 
@@ -702,10 +741,10 @@ void ModelView::searchEvent()
         if (mCurSearchIdx >= mSearchIds.size())
             mCurSearchIdx = 0;
     }
-    
+
     if (mCurSearchIdx < mSearchIds.size())
         mEventsScene->centerOnEvent(mSearchIds[mCurSearchIdx]);
-    
+
 
 }
 
@@ -963,17 +1002,17 @@ void ModelView::slideRightPanel()
 {
     mAnimationShow->setStartValue(mRightHiddenRect);
     mAnimationShow->setEndValue(mRightRect);
-    
+
     mAnimationHide->setStartValue(mRightRect);
     mAnimationHide->setEndValue(mRightHiddenRect);
-    
+
     QWidget* target = nullptr;
     if (mButImport->isChecked())
         target = mImportDataView;
 
     else if (mButProperties->isChecked())
         target = mEventPropertiesView;
-    
+
     if ( target && mCurrentRightWidget && (target != mCurrentRightWidget) ) {
         mCurrentRightWidget = target;
         target->raise();
@@ -991,7 +1030,7 @@ void ModelView::prepareNextSlide()
 
     else if (mButProperties->isChecked())
         target = mEventPropertiesView;
-    
+
     if (target)
         mAnimationHide->setTargetObject(target);
 
@@ -1161,7 +1200,7 @@ void ModelView::updateLayout()
 
     mEventsSearchEdit->setGeometry(mEventsView->x() + 5, 5, int(radarW), int (searchH));
     mEventsGlobalView->setGeometry(mEventsView->x() + 5, mEventsSearchEdit->y() + mEventsSearchEdit->height(), int(radarW), int(radarH));
-    
+
     mButNewEvent      ->setGeometry(0, 0, mButtonWidth, mButtonHeigth);
     mButNewEventKnown ->setGeometry(0, mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButDeleteEvent   ->setGeometry(0, 2*mButtonHeigth, mButtonWidth, mButtonHeigth);
@@ -1320,17 +1359,17 @@ void ModelView::writeSettings()
 {
     QSettings settings;
     settings.beginGroup("ModelView");
-    
+
     int panelIndex = 0;
     if (mButProperties->isChecked())
         panelIndex = 1;
     else if (mButImport->isChecked())
         panelIndex = 2;
-    
-    settings.setValue("right_panel", panelIndex); 
+
+    settings.setValue("right_panel", panelIndex);
     settings.setValue("events_zoom", mEventsGlobalZoom->getProp());
     settings.setValue("phases_zoom", mPhasesGlobalZoom->getProp());
-    
+
     settings.endGroup();
 }
 
@@ -1338,19 +1377,18 @@ void ModelView::readSettings()
 {
     QSettings settings;
     settings.beginGroup("ModelView");
-    
+
     int panelIndex = settings.value("right_panel", 0).toInt();
-    
+
     if (panelIndex == 1)
         mButProperties->setChecked(true);
     else if (panelIndex == 2)
         mButImport->setChecked(true);
-    
+
     mEventsGlobalZoom->setProp(settings.value("events_zoom", 1.).toDouble(), true);
     mPhasesGlobalZoom->setProp(settings.value("phases_zoom", 1.).toDouble(), true);
-    
+
     updateLayout();
-    
+
     settings.endGroup();
 }
-

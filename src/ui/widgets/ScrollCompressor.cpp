@@ -1,7 +1,44 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "ScrollCompressor.h"
 #include "Painting.h"
-#include <QtWidgets>
-
 
 ScrollCompressor::ScrollCompressor(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mProp(0.5),
@@ -14,7 +51,7 @@ mIsVertical(true)
 
 ScrollCompressor::~ScrollCompressor()
 {
-    
+
 }
 
 QSize ScrollCompressor::sizeHint() const
@@ -58,9 +95,9 @@ void ScrollCompressor::showText(const QString& text, bool show)
 void ScrollCompressor::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
-    
+
     QRectF r = rect();//.adjusted(1, 1, -1, -1);
-    
+
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
 
@@ -78,23 +115,23 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
         QLinearGradient grad1(0, 0, width(), 0);
         grad1.setColorAt(0, QColor(60, 60, 60));
         grad1.setColorAt(1, QColor(80, 80, 80));
-        
+
         p.setPen(Qt::NoPen);
         p.setBrush(grad1);
         p.drawRect(r);
-        
+
         QLinearGradient grad2(0, 0, width(), 0);
         grad2.setColorAt(0, Painting::mainColorLight);
         grad2.setColorAt(1, Painting::mainColorDark);
-        
+
         qreal h = r.height() * mProp;
         QRectF r2 = r.adjusted(0, r.height() - h, 0, 0);
         p.fillRect(r2, grad2);
-        
+
         p.setPen(Painting::borderDark);
         p.setBrush(Qt::NoBrush);
         p.drawRect(r);
-        
+
         if (mShowText) {
            // QString text = mText;// + "\r" + QString::number(qRound(mProp * 100)) + " %";
             p.setPen(QColor(200, 200, 200));
@@ -107,15 +144,15 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
     } else {
         const qreal w = r.width() * mProp;
         const QRectF r2 = r.adjusted(0, 0, -r.width() + w, 0);
-        
+
         p.setPen(QColor(150, 150, 150));
         p.setBrush(QColor(150, 150, 150));
         p.drawRect(r);
-        
+
         p.setPen(Painting::mainGreen);
         p.setBrush(Painting::mainGreen);
         p.drawRect(r2);
-        
+
         if (mShowText) {
             QString text = mText + " : " + QString::number(qRound(mProp * 100)) + " %";
             p.setPen(Qt::white);

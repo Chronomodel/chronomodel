@@ -1,7 +1,49 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "PluginRefCurveSettingsView.h"
-#include "PluginAbstract.h"
 #include "ColorPicker.h"
-#include <QtWidgets>
+
+#include <QApplication>
+#include <QGridLayout>
+#include <QMessageBox>
+#include <QFileDialog>
 
 
 PluginRefCurveSettingsView::PluginRefCurveSettingsView(PluginAbstract* plugin, QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
@@ -13,25 +55,25 @@ mPlugin(plugin)
     mRefCurvesList->setSelectionBehavior(QAbstractItemView::SelectRows);
     mRefCurvesList->setSelectionMode(QAbstractItemView::ExtendedSelection);
     mRefCurvesList->setAlternatingRowColors(true);
-    
+
     mAddRefCurveBut = new QPushButton(tr("Add"), this);
     mDeleteRefCurveBut = new QPushButton(tr("Delete"), this);
     mOpenBut = new QPushButton(tr("Open"), this);
     mOpenBut->setVisible(false);
-    
+
     connect(mAddRefCurveBut, &QPushButton::clicked, this, &PluginRefCurveSettingsView::addRefCurve);
     connect(mDeleteRefCurveBut, &QPushButton::clicked, this, &PluginRefCurveSettingsView::deleteRefCurve);
   //  connect(mOpenBut, &QPushButton::clicked, this, &PluginRefCurveSettingsView::openSelectedFile);
     connect(mRefCurvesList, &QListWidget::itemSelectionChanged, this, &PluginRefCurveSettingsView::updateSelection);
-    
+
     QGridLayout* layout = new QGridLayout();
     layout->addWidget(mRefCurvesLab, 0, 0, 1, 2);
     layout->addWidget(mRefCurvesList, 1, 0, 1, 2);
     layout->addWidget(mAddRefCurveBut, 2, 0);
     layout->addWidget(mDeleteRefCurveBut, 2, 1);
     //layout->addWidget(mOpenBut, 2, 2);
-    setLayout(layout);    
-    
+    setLayout(layout);
+
     // Store the list of existing files
     QString calibPath = mPlugin->getRefsPath();
     QDir calibDir(calibPath);
@@ -59,7 +101,7 @@ void PluginRefCurveSettingsView::updateRefsList()
         const RefCurve& curve = mPlugin->mRefCurves[iter.key().toLower()];
         if(curve.mDataMean.isEmpty())
             item->setForeground(Qt::red);
-        
+
         mRefCurvesList->addItem(item);
     }
 }
@@ -78,11 +120,11 @@ void PluginRefCurveSettingsView::updateFilesInFolder()
                QString filepath = calibPath + "/" + iter.key();
                if (QFile::remove(filepath))
                    mFilesOrg.remove(iter.key());
-                
+
             }
         }
     }
-    
+
     iter = QMapIterator<QString, QString>(mFilesNew);
     while (iter.hasNext()) {
         iter.next();
@@ -98,10 +140,10 @@ void PluginRefCurveSettingsView::updateFilesInFolder()
             QString filepath = calibPath + "/" + iter.key();
             if (QFile::copy(iter.value(), filepath))
                 mFilesOrg.insert(iter.key(),iter.value());
-            
+
         }
     }
-    
+
     mPlugin->loadRefDatas();
 }
 
@@ -110,7 +152,7 @@ void PluginRefCurveSettingsView::addRefCurve(){
                                                 tr("Open File"),
                                                 "",
                                                 tr("Reference curve (*.%1)").arg(mPlugin->getRefExt() ));
-    
+
     if (!path.isEmpty()) {
         QFileInfo fileInfo(path);
         mFilesNew.insert(fileInfo.fileName(), fileInfo.absoluteFilePath());

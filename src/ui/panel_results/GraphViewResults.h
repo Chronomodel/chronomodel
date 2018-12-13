@@ -1,5 +1,44 @@
-#ifndef GraphViewResults_H
-#define GraphViewResults_H
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
+#ifndef GRAPHVIEWRESULTS_H
+#define GRAPHVIEWRESULTS_H
 
 #include "ProjectSettings.h"
 #include "MCMCSettings.h"
@@ -111,26 +150,26 @@ public:
 
     explicit GraphViewResults(QWidget *parent = nullptr);
     virtual ~GraphViewResults();
-    
+
     virtual void mousePressEvent(QMouseEvent *event);
 
     void setSettings(const ProjectSettings& settings);
     void setMCMCSettings(const MCMCSettings& mcmc, const QList<ChainSpecs>& chains);
-    
+
     void setMainColor(const QColor& color);
    // void toggle(const QRect& geometry); //useless
 
     void setMarginLeft (qreal &m);
     void setMarginRight (qreal &m);
-    
+
    // void setRendering(GraphView::Rendering render);
     virtual void setGraphFont(const QFont& font);
     void setGraphsThickness(int value);
     void setGraphsOpacity(int value);
-    
+
     void setItemColor(const QColor& itemColor);
     void setItemTitle(const QString& itemTitle);
-     
+
     bool isSelected() const  { return mIsSelected;}
     void setSelected( const bool&  selected) {
             mIsSelected = selected;
@@ -154,27 +193,27 @@ public:
                                     const QColor& lineColor,
                                     const Qt::PenStyle penStyle = Qt::SolidLine,
                                     const QBrush& brush = Qt::NoBrush) const;
-    
+
     GraphCurve generateHPDCurve(QMap<double, double>& data,
                                 const QString& name,
                                 const QColor& color) const;
-    
+
     GraphCurve generateSectionCurve(const QPair<double, double>& section,
                                         const QString& name,
                                         const QColor& color) const;
-    
+
     GraphCurve generateHorizontalLine(const double yValue,
                                       const QString& name,
                                       const QColor& color,
                                       const Qt::PenStyle penStyle = Qt::SolidLine) const;
-    
+
     void generateTraceCurves(const QList<ChainSpecs>& chains,
                              MetropolisVariable* variable,
                              const QString& name = QString());
-    
+
     void generateAcceptCurves(const QList<ChainSpecs>& chains,
                               MHVariable* variable);
-    
+
     void generateCorrelCurves(const QList<ChainSpecs>& chains,
                               MHVariable* variable);
 
@@ -189,7 +228,7 @@ public:
 public slots:
     void setRange(type_data min, type_data max);
     void setCurrentX(type_data min, type_data max);
-    
+
     void zoom(type_data min, type_data max);
     void showNumericalResults(const bool show);
     void setNumericalResults(const QString& resultsHTML, const QString& resultsText);
@@ -200,17 +239,17 @@ public slots:
     void saveGraphData() const; // must be accessible by ResultsView
     void changeXScaleDivision(const Scale &sc) {mGraph->changeXScaleDivision(sc); update();}
     void changeXScaleDivision(const double &major, const int &minor) {mGraph->changeXScaleDivision(major, minor); update();}
-    
+
 protected:
-    
+
     // These methods are from QWidget and we want to modify their behavior
     virtual void paintEvent(QPaintEvent* e);
     virtual void resizeEvent(QResizeEvent* e);
-    
+
     // This is not from QWidget : we create this function to update the layout from different places (eg: in resizeEvent()).
     // It is vitual because we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
     virtual void updateLayout();
-    
+
 signals:
     void unfoldToggled(bool toggled);
     void visibilityChanged(bool visible);

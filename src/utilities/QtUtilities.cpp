@@ -1,6 +1,41 @@
-#include <QtWidgets>
-#include <QtSvg>
-#include <algorithm>
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
 
 #include "QtUtilities.h"
 #include "StdUtilities.h"
@@ -9,7 +44,9 @@
 #include "GraphView.h"
 #include "AppSettings.h"
 
-
+#include <QtWidgets>
+#include <QtSvg>
+#include <algorithm>
 
 bool colorIsDark(const QColor& color)
 {
@@ -34,7 +71,7 @@ QList<QStringList> readCSV(const QString& filePath, const QString& separator)
     QFile file(filePath);
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QList<QStringList> data;
-        
+
         QTextStream stream(&file);
         while (!stream.atEnd()) {
             QString line = stream.readLine();
@@ -81,7 +118,7 @@ bool isComment(const QString& str)
     QStringList commentsMarkers;
     commentsMarkers << "//" << "#" << "/*";
     QString strClean = str.trimmed();
-    
+
     for (auto &&str : commentsMarkers) {
         if (strClean.startsWith(str))
             return true;
@@ -136,17 +173,17 @@ QString intListToString(const QList<int>& intList, const QString& separator)
 QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogTitle, const QString& defaultPath)
 {
     QFileInfo fileInfo;
-    
+
     QGraphicsScene* scene = nullptr;
     QWidget* widget = dynamic_cast<QWidget*>(wid);
     GraphView* mGraph = dynamic_cast<GraphView*>(wid);
-    
+
     if (!mGraph && !widget) {
         scene = dynamic_cast<QGraphicsScene*>(wid);
         if (!scene)
             return fileInfo;
     }
-    
+
     const QString filter = QObject::tr("Image (*.png);;Photo (*.jpg);; Windows Bitmap (*.bmp);;Scalable Vector Graphics (*.svg)");
     const QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                     dialogTitle,
@@ -200,7 +237,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
 
             //const short dpm = appSetting.mDpm;
             const short quality = short (AppSettings::mImageQuality);
-            
+
             // -------------------------------
             //  Create the image
             // -------------------------------
@@ -209,7 +246,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 qDebug() << "Cannot export null image!";
                 return fileInfo;
             }
-            
+
             // -------------------------------
             //  Set image properties
             // -------------------------------
@@ -218,7 +255,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
            //  image.setDotsPerMeterX(dpm * 11811.024 / 300.);
            //  image.setDotsPerMeterY(dpm * 11811.024 / 300.);
             image.setDevicePixelRatio(pr);
-            
+
             // -------------------------------
             //  Fill background
             // -------------------------------
@@ -228,7 +265,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             else
                 image.fill(Qt::transparent);
 
-            
+
             // -------------------------------
             //  Create painter
             // -------------------------------
@@ -242,7 +279,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             if (widget) // exportFullImage in ResultsView
                  widget->render(&p, QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), int(r.height() + heightText + 20) ));
 
-            
+
             // -------------------------------
             //  If scene...
             // -------------------------------
@@ -252,30 +289,30 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 srcRect.setY(r.y());
                 srcRect.setWidth(r.width() * pr);
                 srcRect.setHeight(r.height() * pr);
-                
+
                 QRectF tgtRect = image.rect();
                 tgtRect.adjust(0, 0, 0, -heightText * pr);
-                
+
                 scene->render(&p, tgtRect, srcRect);
 
             } else
                 return fileInfo;
 
-            
+
             // -------------------------------
             //  Write application and version
             // -------------------------------
 
             p.setFont(qApp->font());
             p.setPen(Qt::black);
-            
+
             p.drawText(0, int( r.height() + bottomSpace), r.width(), heightText,
 
                        Qt::AlignCenter,
                        versionStr);
 
             p.end();
-            
+
             /* -------------------------------
              *  Save file
              * ------------------------------- */
@@ -289,14 +326,14 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
              writer.write(image);*/
         }
     }
-    
+
     return fileInfo;
 }
 
 bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName)
 {
     const QFontMetrics fm(widget->font());
-    
+
     const int heightText= fm.descent() + fm.ascent() + 10;
 
     const  QRect viewBox = QRect( 0, 0,r.width(), r.height() + heightText );
@@ -305,19 +342,19 @@ bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName)
     svgGenFile.setViewBox(viewBox);
 
     svgGenFile.setDescription(QObject::tr("SVG widget drawing "));
-    
+
     QPainter p;
     p.begin(&svgGenFile);
     p.setFont(widget->font());
     widget->render(&p);
-  
+
     p.setPen(Qt::black);
-   
+
     p.drawText(0, r.height() + 10, r.width(), heightText,
                Qt::AlignCenter,
                qApp->applicationName() + " " + qApp->applicationVersion());
     p.end();
-    
+
     return true;
 }
 
@@ -392,10 +429,10 @@ QColor randomColor()
 }
 
 bool constraintIsCircular(QJsonArray constraints, const int fromId, const int toId)
-{    
+{
     for (int i=0; i<constraints.size(); ++i) {
         QJsonObject constraint = constraints.at(i).toObject();
-        
+
         // Detect circularity
         if (constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == toId && constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == fromId)
             return true;
@@ -495,7 +532,7 @@ bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QS
 bool saveAsCsv(const QList<QStringList>& data, const QString& title)
 {
     const QString csvSep = AppSettings::mCSVCellSeparator;
-    
+
     const QString currentPath = MainWindow::getInstance()->getCurrentPath();
     const QString filter = "CSV (*.csv)";
     QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),

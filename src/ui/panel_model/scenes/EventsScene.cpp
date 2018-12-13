@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "EventsScene.h"
 #include "Event.h"
 #include "EventKnown.h"
@@ -20,17 +59,17 @@ EventsScene::EventsScene(QGraphicsView* view, QObject* parent):AbstractScene(vie
     mHelpView = new HelpWidget(view);
     mHelpView->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=9");
     mHelpTimer = new QTimer(this);
-    
+
     connect(this, &QGraphicsScene::selectionChanged, this, &EventsScene::updateStateSelectionFromItem);
     connect(mHelpTimer, SIGNAL(timeout()), this, SLOT(updateHelp()));
     connect(this, &EventsScene::eventsAreModified, this, &EventsScene::sendUpdateProject);
-    
+
     mHelpTimer->start(200);
 }
 
 EventsScene::~EventsScene()
 {
-    
+
 }
 
 EventItem* EventsScene::findEventItemWithJsonId(const int id)
@@ -62,12 +101,12 @@ bool EventsScene::constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo
     const QJsonArray constraints = mProject->mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
     const QJsonObject eventFrom = dynamic_cast<EventItem*>(itemFrom)->getEvent();
     const QJsonObject eventTo = dynamic_cast<EventItem*>(itemTo)->getEvent();
-    
+
     const int eventFromId = eventFrom.value(STATE_ID).toInt();
     const int eventToId = eventTo.value(STATE_ID).toInt();
-    
+
     bool constraintAllowed = true;
-    
+
     for (int i=0; i<constraints.size(); ++i) {
         QJsonObject constraint = constraints.at(i).toObject();
         // If the constraint already exist, impossible to create another identical one.
@@ -80,7 +119,7 @@ bool EventsScene::constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo
             constraintAllowed = false;
             qDebug() << "EventsScene::constraintAllowed: not Allowed Inversion" ;
         }
-        
+
     }
     if (constraintAllowed && constraintIsCircular(constraints, eventFromId, eventToId)) {
         constraintAllowed = false;
@@ -104,7 +143,7 @@ void EventsScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
 {
     QJsonObject& eventFrom = dynamic_cast<EventItem*>(itemFrom)->getEvent();
     QJsonObject& eventTo = dynamic_cast<EventItem*>(itemTo)->getEvent();
-    
+
     mProject->mergeEvents(eventFrom.value(STATE_ID).toInt(),
                                               eventTo.value(STATE_ID).toInt());
 }
@@ -117,7 +156,7 @@ void EventsScene::updateHelp()
 {
     QString text;
     QList<QGraphicsItem*> selected = selectedItems();
-    
+
     if (mItems.size() == 0) {
         text = tr("Define a study period on the right panel, apply it, and start creating your model by clicking on \"New Event...\".");
         mHelpView->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=18"); // chapter
@@ -129,7 +168,7 @@ void EventsScene::updateHelp()
         mHelpView->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=38"); // Chapter
     } else if (selected.count() == 1) {
         const bool isBound = (dynamic_cast<EventKnownItem*>(selected[0]) != nullptr);
-        
+
         if (mAltIsDown) {
             text = tr("Mouve your mouse and click on another element to create a constraint.");
                 mHelpView->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=38");
@@ -145,7 +184,7 @@ void EventsScene::updateHelp()
     } else {
         text = tr("You have selected multiple elements. You can move them together or delete them (all constraints linked to them will also be deleted).");
     }
-    
+
     mHelpView->setText(text);
     mHelpView->setGeometry(mHelpView->x(),
                            mHelpView->y(),
@@ -170,7 +209,7 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
 
     QJsonObject statePrev = mProject->state();
     QJsonObject stateNext = statePrev;
-    
+
     //mData in the mItems are copies of the Model(State) while doing setEvent(), so we have to rebuild the
     // State with correct value of the selection
     QJsonArray events = QJsonArray();
@@ -365,11 +404,11 @@ void EventsScene::updateSceneFromState()
     QList<int> events_ids_inNewState;
     for (int i=0; i<eventsInNewState.size(); ++i)
         events_ids_inNewState << eventsInNewState.at(i).toObject().value(STATE_ID).toInt();
-    
+
     QList<int> constraints_ids;
     for (int i=0; i<constraints.size(); ++i)
         constraints_ids << constraints.at(i).toObject().value(STATE_ID).toInt();
-    
+
     // ------------------------------------------------------
     //  Update settings
     // ------------------------------------------------------
@@ -379,7 +418,7 @@ void EventsScene::updateSceneFromState()
         settingsChanged = true;
         mSettings = s;
     }
-    
+
     mUpdatingItems = true;
 
     // ------------------------------------------------------
@@ -389,7 +428,7 @@ void EventsScene::updateSceneFromState()
     for (int i=mItems.size()-1; i>=0; --i) {
         EventItem* eventItem = (EventItem*)mItems[i];
         QJsonObject& event = eventItem->getEvent();
-        
+
         if (!events_ids_inNewState.contains(event.value(STATE_ID).toInt())) {
             if (event.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
                 QList<QGraphicsItem*> dateItems = eventItem->childItems();
@@ -402,14 +441,14 @@ void EventsScene::updateSceneFromState()
 
             mItems.removeAt(i);
             hasDeleted = true;
-            
+
             // This does not break the code but is commented to match PhasesScene implementation
             //removeItem(eventItem);
-            
+
             eventItem->deleteLater();
         }
     }
-    
+
     bool hasCreated = false;
    // ------------------------------------------------------
     //  Create / Update event items
@@ -417,7 +456,7 @@ void EventsScene::updateSceneFromState()
     int i (0);
     if (displayProgress)
         progress->setLabelText(tr("Create / Update event items"));
-    
+
    for (auto && citer : eventsInNewState) {
         const QJsonObject event = citer.toObject();
         ++i;
@@ -465,7 +504,7 @@ void EventsScene::updateSceneFromState()
                     newItem->setSelected(true);
 
                     QList<QGraphicsView*> gviews = views();
-                    
+
                     if (gviews.size() > 0) {
                         QGraphicsView* gview = gviews[0];
                         QPointF pt = gview->mapToScene(gview->width()/2, gview->height()/2);
@@ -490,7 +529,7 @@ void EventsScene::updateSceneFromState()
     for (int i=mConstraintItems.size()-1; i>=0; --i) {
         ArrowItem* constraintItem = mConstraintItems[i];
         QJsonObject& constraint = constraintItem->data();
-        
+
         if (!constraints_ids.contains(constraint.value(STATE_ID).toInt())) {
 #ifdef DEBUG
             qDebug() << "EventsScene::updateScene Event Constraint deleted : " << constraint.value(STATE_ID).toInt();
@@ -500,7 +539,7 @@ void EventsScene::updateSceneFromState()
             delete constraintItem;
         }
     }
-    
+
     // ------------------------------------------------------
     //  Create / Update constraint items
     // ------------------------------------------------------
@@ -549,7 +588,7 @@ void EventsScene::updateSceneFromState()
 #endif
         }
     }
-    
+
     mUpdatingItems = false;
 
     EventItem* lastCurItem = currentEvent();
@@ -591,7 +630,7 @@ void EventsScene::clean()
         EventItem* eventItem = (EventItem*)mItems[i];
 
         QJsonObject& event = eventItem->getEvent();
-        
+
         if (event.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
             QList<QGraphicsItem*> dateItems = eventItem->childItems();
             for (int j=0; j<dateItems.size(); ++j) {
@@ -603,13 +642,13 @@ void EventsScene::clean()
         //qDebug() << "Event deleted : " << event[STATE_ID].toInt();
 #endif
         mItems.removeAt(i);
-        
+
         // This does not break the code but is commented to match PhasesScene implementation
         //removeItem(eventItem);
         eventItem->setVisible(false); // The item disappears and after it's deleted later
         eventItem->deleteLater();
     }
-    
+
     // ------------------------------------------------------
     //  Delete all constraints
     // ------------------------------------------------------
@@ -619,7 +658,7 @@ void EventsScene::clean()
         mConstraintItems.removeOne(constraintItem);
         delete constraintItem;
     }
-    
+
     mProject = nullptr;
     // ------------------------------------------------------
     //  Reset scene rect
@@ -644,7 +683,7 @@ void EventsScene::updateStateSelectionFromItem()
 
         for (auto &&pItem : mItems) {
             EventItem* item = static_cast<EventItem*>(pItem);
-            
+
             // without selected update
             const QJsonObject prevEvent = item->getEvent();
 
@@ -703,16 +742,16 @@ void EventsScene::updateSelectedEventsFromPhases()
 
     QJsonObject state = mProject->state();
     QJsonArray phases = state.value(STATE_PHASES).toArray();
-    
+
     for (int i=0; i<mItems.size(); ++i) {
         EventItem* item = static_cast<EventItem*>(mItems.at(i));
         bool mustBeSelected = false;
         QList<int> eventPhasesIds = stringListToIntList(item->mData.value(STATE_EVENT_PHASE_IDS).toString());
-        
+
         for (int i=0; i<phases.size(); ++i) {
             const QJsonObject phase = phases.at(i).toObject();
             const int phaseId = phase.value(STATE_ID).toInt();
-            
+
             if (eventPhasesIds.contains(phaseId) && phase.value(STATE_IS_CURRENT).toBool())
                mustBeSelected = true;
 
@@ -832,7 +871,7 @@ EventItem* EventsScene::currentEvent() const
 
             return nullptr;
     }
-    
+
 }
 
 
@@ -930,7 +969,7 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
                             isRemove=true;
                             break;
                         }
-                    }                   
+                    }
                     event[STATE_EVENT_DATES] = dates;
                     // new code
                     prevEventItem->mData = event;
@@ -989,7 +1028,7 @@ void EventsScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
     EventItem* current = currentEvent();
 
     EventItem* eventClicked = dynamic_cast< EventItem*>(item);
-    
+
     if (mDrawingArrow && current && eventClicked && (eventClicked != current)) {
         mTempArrow->setTo(item->pos().x(), item->pos().y());
 
@@ -1002,7 +1041,7 @@ void EventsScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
             mTempArrow->setLocked(false);
         }
     }
-    
+
 }
 
 /**
@@ -1045,7 +1084,7 @@ bool EventsScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
     }
     //updateStateSelectionFromItem(); // emit sendUpdateProject
     sendUpdateProject("Item selected", true, false);//  bool notify = true, bool storeUndoCommand = false
-    
+
     return true;
 }
 
@@ -1066,7 +1105,7 @@ void EventsScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e
 {
     Q_UNUSED(e);
     Q_UNUSED(item);
-    
+
     QMessageBox message(QMessageBox::Question, tr("Delete constraint"), tr("Do you really want to delete this constraint?"), QMessageBox::Yes | QMessageBox::No, qApp->activeWindow());
     if (message.exec() == QMessageBox::Yes)
         mProject->deleteEventConstraint(item->data().value(STATE_ID).toInt());
@@ -1082,7 +1121,7 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
 
     if (keyEvent->isAutoRepeat())
         keyEvent->ignore();
-    
+
    if (selectedItems().count() == 0) {
         qDebug() << "EventsScene::keyPressEvent No item selected";
         emit noSelection();
@@ -1103,7 +1142,7 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
 
         // Control if an Event is still selected
         EventItem* curItem = currentEvent();
-        
+
         if (curItem) {
             mDrawingArrow = true;
             mTempArrow->setVisible(true);
@@ -1151,11 +1190,11 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
      //   keyEvent->ignore();
 
 
-    
+
 }
 
 void EventsScene::keyReleaseEvent(QKeyEvent* keyEvent)
-{   
+{
     if (keyEvent->key() == Qt::Key_Alt) {
         qDebug() << "EventsScene::keyReleaseEvent You Released: "<<"Qt::Key_Alt";
         mDrawingArrow = false;
@@ -1225,7 +1264,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
             return;
         }
     }
-    
+
     /* ------------------------------------------------------------------
      *  The data have been dropped on the scene background,
      *  so create one event per data!
@@ -1236,7 +1275,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
     QList<QPair<QString, Date>> listDates = decodeDataDrop(e);
 
     Project* project = MainWindow::getInstance()->getProject();
-    
+
 
     // Create one event per data
     const int deltaX (152);
@@ -1315,17 +1354,17 @@ QList<Date> EventsScene::decodeDataDrop_old(QGraphicsSceneDragDropEvent* e)
 
         const QString csvSep = AppSettings::mCSVCellSeparator;
         QStringList dataStr = itemStr.split(csvSep);
-        
+
         // Remove first column corresponding to csvRow
         const int csvRow = dataStr.takeFirst().toInt();
-        
+
         const QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
         Date date = Date::fromCSV(dataStr, csvLocal);
 
         if (!date.isNull()) {
             dates << date;
             acceptedRows.append(csvRow);
-            
+
         } else
             rejectedRows.append(csvRow);
 

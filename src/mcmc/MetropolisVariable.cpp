@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "MetropolisVariable.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
@@ -151,11 +190,11 @@ void MetropolisVariable::reset()
     }
     mHisto.clear();
     mChainsHistos.clear();
-    
+
     mCorrelations.clear();
-    
+
     mHPD.clear();
-    
+
     mChainsResults.clear();
 }
 
@@ -206,28 +245,28 @@ void MetropolisVariable::generateBufferForHisto(double *input, const QVector<dou
 {
     // Work with "double" precision here !
     // Otherwise, "denum" can be very large and lead to infinity contribs!
-    
+
     const double delta = (b - a) / (numPts - 1);
 
     const double denum = dataSrc.size();
-    
+
     //float* input = (float*) fftwf_malloc(numPts * sizeof(float));
-    
+
     //memset(input, 0.f, numPts);
     for (int i=0; i<numPts; ++i)
         input[i]= 0.;
-    
+
     QVector<double>::const_iterator iter = dataSrc.cbegin();
     for (; iter != dataSrc.cend(); ++iter) {
         const double t = *iter;
-        
+
         const double idx = (t - a) / delta;
         const double idx_under = floor(idx);
         const double idx_upper = idx_under + 1.;
-        
+
         const double contrib_under = (idx_upper - idx) / denum;
         const double contrib_upper = (idx - idx_under) / denum;
-        
+
         if (std::isinf(contrib_under) || std::isinf(contrib_upper))
             qDebug() << "FFT input : infinity contrib!";
 
@@ -289,7 +328,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
      generateBufferForHisto(input, dataSrc, fftLen, a, b);
 
      double* output = (double*) fftw_malloc(outputSize * sizeof(double));
-    
+
     if (input != nullptr) {
         // ----- FFT -----
         // http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data
@@ -397,7 +436,7 @@ void MetropolisVariable::generateHPD(const double threshold)
             return;
         }
         mHPD = create_HPD(mHisto, thresh);
-        
+
         // No need to have HPD for all chains !
         //mChainsHPD.clear();
         //for(int i=0; i<mChainsHistos.size(); ++i)
@@ -440,11 +479,11 @@ void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
         results.reserve(hmax);
 
         const int n = trace.size();
-        
+
         const double s = sum(trace);
         const double m = s / double (n);
         const double s2 = sum2Shifted(trace, -m);
-        
+
         // Correlation pour cette chaine
 
         for (int h=0; h<=hmax; ++h) {
@@ -452,7 +491,7 @@ void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
             for (QVector<double>::const_iterator iter = trace.cbegin(); iter != trace.cbegin() + (n-h); ++iter)
                 sH += (*iter - m) * (*(iter + h) - m);
 
-            
+
             const double result = sH / s2;
             results.append(result);
         }
@@ -468,7 +507,7 @@ void MetropolisVariable::generateNumericalResults(const QList<ChainSpecs> &chain
     // Results for chain concatenation
     mResults.analysis = analyseFunction(mHisto);
     mResults.quartiles = quartilesForTrace(fullRunTrace(chains));
-    
+
     // Results for individual chains
     mChainsResults.clear();
     for (int i = 0; i<mChainsHistos.size(); ++i) {
@@ -488,7 +527,7 @@ QMap<double, double> &MetropolisVariable::fullHisto()
 QMap<double, double> &MetropolisVariable::histoForChain(const int index)
 {
 
-    Q_ASSERT(index < mChainsHistos.size());    
+    Q_ASSERT(index < mChainsHistos.size());
     return mChainsHistos[index];
 }
 
@@ -506,7 +545,7 @@ QVector<double> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs>& c
     //QVector<float> trace(reserveSize);
     std::vector<double> trace;
     int shift = 0;
-    
+
     for (int i=0; i<chains.size(); ++i) {
         // We add 1 for the init
         const unsigned long traceSize = 1 + chains.at(i).mNumBurnIter + (chains.at(i).mBatchIndex * chains.at(i).mNumBatchIter ) + int (chains.at(i).mNumRunIter / chains.at(i).mThinningInterval);
@@ -589,7 +628,7 @@ QVector<double> MetropolisVariable::runRawTraceForChain(const QList<ChainSpecs> 
     if (mRawTrace->isEmpty()) {
         //qDebug() << "in MetropolisVariable::runRawTraceForChain -> mRawTrace empty";
         return QVector<double>() ;
-        
+
     } else {
 
         int shift (0);
@@ -658,7 +697,7 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
         return noResultMessage;
 
     QString result = densityAnalysisToString(mResults, nl, forCSV) + nl;
-    
+
     if (forCSV) {
             if (!mHPD.isEmpty())
                 result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForCSV(mThresholdUsed), getHPDText(mHPD, mThresholdUsed, unit, conversionFunc, true)) + nl;
@@ -850,4 +889,3 @@ QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
     return stream;
 
 }
-

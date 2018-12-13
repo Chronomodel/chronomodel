@@ -1,9 +1,46 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
 
 #include "Functions.h"
 #include "Generator.h"
-#include "StdUtilities.h"
-#include "DateUtils.h"
 #include "QtUtilities.h"
+
 #include <QDebug>
 #include <QApplication>
 #include <set>
@@ -89,12 +126,12 @@ FunctionAnalysis analyseFunction(const QMap<type_data, type_data> &aFunction)
 type_data dataStd(const QVector<type_data> &data)
 {
     // Work with double precision here because sum2 might be big !
-    
+
     const type_data s = sum<type_data>(data);
     const type_data s2 = sum2<type_data>(data);
     const type_data mean = s / data.size();
     const type_data variance = s2 / data.size() - mean * mean;
-    
+
     if (variance < 0) {
         qDebug() << "WARNING : in dataStd() negative variance found : " << variance<<" return 0";
         return (type_data)0.;
@@ -176,17 +213,17 @@ Quartiles quartilesForTrace(const QVector<type_data> &trace)
 
     QVector<type_data> sorted (trace);
     std::sort(sorted.begin(),sorted.end());
-    
+
     const int q1index = (int) ceil(n * 0.25);
     const int q3index = (int) ceil(n * 0.75);
-    
+
     quartiles.Q1 = sorted.at(q1index);
     quartiles.Q3 = sorted.at(q3index);
-    
+
     if (n % 2 == 0) {
         const int q2indexLow = n / 2;
         const int q2indexUp = q2indexLow + 1;
-        
+
         quartiles.Q2 = sorted.at(q2indexLow) + (sorted.at(q2indexUp) - sorted.at(q2indexLow)) / 2.;
     } else {
         const int q2index = (int)ceil(n * 0.5);
@@ -259,11 +296,11 @@ Quartiles quartilesForRepartition(const QVector<double>& repartition, const doub
     const double q1index = vector_interpolate_idx_for_value(0.25, repartition);
     const double q2index = vector_interpolate_idx_for_value(0.5, repartition);
     const double q3index = vector_interpolate_idx_for_value(0.75, repartition);
-    
+
     quartiles.Q1 = tmin + q1index * step;
     quartiles.Q2 = tmin + q2index * step;
     quartiles.Q3 = tmin + q3index * step;
-    
+
     return quartiles;
 }
 /**
@@ -284,10 +321,10 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, double t
         double threshold = inRange(0.0, thresh, 100.0);
         QVector<double> sorted (trace);
         std::sort(sorted.begin(),sorted.end());
-        
+
         const int numToRemove = (int)floor(n * (1. - threshold / 100.));
         exactThresholdResult = ((double)n - (double)numToRemove) / (double)n;
-        
+
         double lmin = 0.;
         int foundJ = 0;
 
@@ -763,15 +800,15 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
     bool inInterval = false;
     double lastKeyInInter (0.);
     QPair<double, double> curInterval;
-    
+
     double areaTot= map_area(hpd);
     double lastValueInInter (0.);
-    
+
     double areaCur (0.);
     it.toFront();
     while (it.hasNext()) {
         it.next();
-        
+
         if (it.value() != 0. && !inInterval) {
             inInterval = true;
             curInterval.first = it.key();
@@ -799,16 +836,16 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
 
             } else {
                  areaCur += (lastValueInInter+it.value())/2 * (it.key()-lastKeyInInter);
-             
+
                 lastKeyInInter = it.key();
                 lastValueInInter = it.value();
-                
+
             }
         }
     }
-    
+
     if (inInterval) { // Correction to close unclosed interval
-       
+
         curInterval.second = lastKeyInInter;
         //areaCur += (lastValueInInter+it.value())/2 * (it.key()-lastKeyInInter);
         QPair<double, QPair<double, double> > inter;
@@ -817,6 +854,6 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
 
         intervals.append(inter);
     }
-    
+
     return intervals;
 }

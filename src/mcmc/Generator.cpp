@@ -1,4 +1,45 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "Generator.h"
+#include "StdUtilities.h"
+
 #include <cmath>
 #include <errno.h>
 #include <fenv.h>
@@ -10,7 +51,7 @@
 #include <chrono>
 #include <iostream>
 #include <QDebug>
-#include "StdUtilities.h"
+
 
 //int matherr(struct exception *e);
 
@@ -32,12 +73,12 @@ int Generator::createSeed()
 {
     // obtain a seed from the system clock:
     // unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-    
+
     // http://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
-    
+
     //std::random_device rd;
     //return rd();
-    
+
     return rand() % 1000;
 }
 
@@ -80,12 +121,12 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
 
     const long double x_min = (min - mean) / sigma;
     const long double x_max = (max - mean) / sigma;
-    
+
     long double x = (x_max + x_min) / 2.0;// initialisation arbitraire, valeur écrasée ensuite
     //const long double sqrt_e = sqrtl(expl(1.0));
     const long double sqrt_e = 1.64872127070012814689;
     feclearexcept(FE_ALL_EXCEPT);
-    
+
     long double exp_x_min = 0.0;
     long double exp_x_max = 0.0;
     long double exp_minus_x_min = 0.0;
@@ -121,13 +162,13 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     }
     double ur = 1.0;
     long double rap = 0.0;
-    
+
     int trials = 0.;
     const int limit = 100000;
-    
+
     while (rap < ur && trials < limit) {
         const long double u = (long double)randomUniform();
-        
+
         if (x_min < 0. && x_max > 0.) {
 
             if (u <= f0)
@@ -147,7 +188,7 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
             throw "DoubleExp could not find a solution after " + QString::number(limit) + " trials! This may be due to Taylor unsufficients developpement orders. Please try to run the calculations again!";
         }
         ur = randomUniform();
-        
+
         if (x_min >= 1.)
             rap = expl(0.5 * (x_min * x_min - x * x) + x - x_min);
 
@@ -156,7 +197,7 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
 
         else
             rap = expl(-0.5 * x * x + std::fabs(x)) / sqrt_e;
-        
+
         ++trials;
     }
 
@@ -167,7 +208,7 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
         qDebug() << "DOUBLE EXP DoubleExp : x = "<<(double)(x);
         qDebug() << "DOUBLE EXP DoubleExp : (mean + (x * sigma)) = "<<(double)(mean + (x * sigma));
         qDebug() <<" min="<< min<<" max=" <<(double)(x_max);
-        
+
     }
 #endif
     return (double)(mean + (x * sigma));

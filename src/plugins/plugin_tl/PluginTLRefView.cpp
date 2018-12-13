@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "PluginTLRefView.h"
 #if USE_PLUGIN_TL
 
@@ -5,8 +44,8 @@
 #include "GraphView.h"
 #include "Painting.h"
 #include "StdUtilities.h"
-#include <QtWidgets>
 
+#include <QtWidgets>
 
 PluginTLRefView::PluginTLRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
@@ -23,7 +62,7 @@ PluginTLRefView::PluginTLRefView(QWidget* parent):GraphViewRefAbstract(parent)
 
 PluginTLRefView::~PluginTLRefView()
 {
-    
+
 }
 
 void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
@@ -55,12 +94,12 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
     mGraph->clearInfos();
     mGraph->showInfos(true);
     mGraph->setFormatFunctX(0);
-    
+
     if (!date.isNull()) {
         double age = date.mData.value(DATE_TL_AGE_STR).toDouble();
         double error = date.mData.value(DATE_TL_ERROR_STR).toDouble();
         double ref_year = date.mData.value(DATE_TL_REF_YEAR_STR).toDouble();
-        
+
         // ----------------------------------------------
         //  Reference curve
         // ----------------------------------------------
@@ -74,33 +113,33 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         refCurve[tmaxDisplay] = ref_year - DateUtils::convertFromAppSettingsFormat(tmaxDisplay);
         curve.mData =refCurve;
         mGraph->addCurve(curve);
-        
+
         // ----------------------------------------------
-        
+
         double yMin ( map_min_value(curve.mData) );
         double yMax ( map_max_value(curve.mData) );
 
         yMin = qMin(yMin, age - error * 1.96);
         yMax = qMax(yMax, age + error * 1.96);
-        
+
          // Y scale and RangeY are define in graphView::zommX()
 
-        
+
         // ----------------------------------------------
         //  Measure curve
         // ----------------------------------------------
-        
+
         GraphCurve curveMeasure;
         curveMeasure.mName = "Measurement";
-        
+
         curveMeasure.mPen.setColor(mMeasureColor);
         QColor curveColor(mMeasureColor);
         curveColor.setAlpha(50);
         curveMeasure.mBrush = curveColor;
-        
+
         curveMeasure.mIsVertical = true;
         curveMeasure.mIsHisto = false;
-        
+
         // 5000 pts are used on vertical measurement
         // because the y scale auto adjusts depending on x zoom.
         // => the visible part of the measurement may be very reduced !
@@ -115,33 +154,33 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         //curveMeasure.mData = normalize_map(curveMeasure.mData);
         curveMeasure.mData = measureCurve;
         mGraph->addCurve(curveMeasure);
-        
+
         // ----------------------------------------------
         //  Error on measure
         // ----------------------------------------------
-        
+
         GraphCurve curveMeasureAvg;
         curveMeasureAvg.mName = "MeasureAvg";
         curveMeasureAvg.mPen.setColor(mMeasureColor);
         curveMeasureAvg.mPen.setStyle(Qt::SolidLine);
         curveMeasureAvg.mIsHorizontalLine = true;
-        
+
         GraphCurve curveMeasureSup;
         curveMeasureSup.mName = "MeasureSup";
         curveMeasureSup.mPen.setColor(mMeasureColor);
         curveMeasureSup.mPen.setStyle(Qt::DashLine);
         curveMeasureSup.mIsHorizontalLine = true;
-        
+
         GraphCurve curveMeasureInf;
         curveMeasureInf.mName = "MeasureInf";
         curveMeasureInf.mPen.setColor(mMeasureColor);
         curveMeasureInf.mPen.setStyle(Qt::DashLine);
         curveMeasureInf.mIsHorizontalLine = true;
-        
+
         curveMeasureAvg.mHorizontalValue = age;
         curveMeasureSup.mHorizontalValue = age + error;
         curveMeasureInf.mHorizontalValue = age - error;
-        
+
         mGraph->addCurve(curveMeasureAvg);
         mGraph->addCurve(curveMeasureSup);
         mGraph->addCurve(curveMeasureInf);
@@ -166,4 +205,3 @@ void PluginTLRefView::resizeEvent(QResizeEvent* e)
 }
 
 #endif
-

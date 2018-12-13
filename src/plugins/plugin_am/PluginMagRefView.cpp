@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "PluginMagRefView.h"
 #if USE_PLUGIN_AM
 
@@ -22,7 +61,7 @@ PluginMagRefView::PluginMagRefView(QWidget* parent):GraphViewRefAbstract(parent)
 
 PluginMagRefView::~PluginMagRefView()
 {
-    
+
 }
 
 void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings)
@@ -53,28 +92,28 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
     mGraph->clearInfos();
     mGraph->showInfos(true);
     mGraph->setFormatFunctX(nullptr);
-    
+
     if (!date.isNull()) {
         bool is_inc = date.mData.value(DATE_AM_IS_INC_STR).toBool();
         bool is_dec = date.mData.value(DATE_AM_IS_DEC_STR).toBool();
         bool is_int = date.mData.value(DATE_AM_IS_INT_STR).toBool();
-        
+
         double inc = date.mData.value(DATE_AM_INC_STR).toDouble();
         double dec = date.mData.value(DATE_AM_DEC_STR).toDouble();
         double intensity = date.mData.value(DATE_AM_INTENSITY_STR).toDouble();
         double alpha = date.mData.value(DATE_AM_ERROR_STR).toDouble();
         QString ref_curve = date.mData.value(DATE_AM_REF_CURVE_STR).toString().toLower();
-        
+
         // ----------------------------------------------
         //  Reference curve
         // ----------------------------------------------
 
         double tminRef = date.getFormatedTminRefCurve();
         double tmaxRef = date.getFormatedTmaxRefCurve();
-        
+
         PluginMag* plugin = static_cast<PluginMag*>(date.mPlugin);
         const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
-        
+
         if (curve.mDataMean.isEmpty()) {
             GraphZone zone;
             zone.mColor = Qt::gray;
@@ -138,14 +177,14 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         graphCurveG.mPen.setColor(Painting::mainColorDark);
         graphCurveG.mIsHisto = false;
         mGraph->addCurve(graphCurveG);
-        
+
         GraphCurve graphCurveG95Sup;
         graphCurveG95Sup.mName = "G95Sup";
         graphCurveG95Sup.mData = curveG95Sup;
         graphCurveG95Sup.mPen.setColor(QColor(180, 180, 180));
         graphCurveG95Sup.mIsHisto = false;
         mGraph->addCurve(graphCurveG95Sup);
-        
+
         GraphCurve graphCurveG95Inf;
         graphCurveG95Inf.mName = "G95Inf";
         graphCurveG95Inf.mData = curveG95Inf;
@@ -171,7 +210,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
             avg = intensity;
             error = alpha;
         }
-        
+
         yMin = qMin(yMin, avg - error);
         yMax = qMax(yMax, avg + error);
         yMin = yMin - 0.05 * (yMax - yMin);
@@ -180,18 +219,18 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         // ----------------------------------------------
         //  Measure curve
         // ----------------------------------------------
-        
+
         GraphCurve curveMeasure;
         curveMeasure.mName = "Measurement";
-        
+
         curveMeasure.mPen.setColor(mMeasureColor);
         QColor curveColor(mMeasureColor);
         curveColor.setAlpha(50);
         curveMeasure.mBrush = curveColor;
-        
+
         curveMeasure.mIsVertical = true;
         curveMeasure.mIsHisto = false;
-        
+
         // 5000 pts are used on vertical measurement
         // because the y scale auto adjusts depending on x zoom.
         // => the visible part of the measurement may be very reduced !
@@ -214,24 +253,24 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         curveMeasure.mData = measureCurve;
         //curveMeasure.mData = normalize_map(curveMeasure.mData);
         mGraph->addCurve(curveMeasure);
-        
+
 
         // ----------------------------------------------
         //  Error on measurement
         // ----------------------------------------------
-        
+
         GraphCurve curveMeasureAvg;
         curveMeasureAvg.mName = "MeasureAvg";
         curveMeasureAvg.mPen.setColor(mMeasureColor);
         curveMeasureAvg.mPen.setStyle(Qt::SolidLine);
         curveMeasureAvg.mIsHorizontalLine = true;
-        
+
         GraphCurve curveMeasureSup;
         curveMeasureSup.mName = "MeasureSup";
         curveMeasureSup.mPen.setColor(mMeasureColor);
         curveMeasureSup.mPen.setStyle(Qt::DashLine);
         curveMeasureSup.mIsHorizontalLine = true;
-        
+
         GraphCurve curveMeasureInf;
         curveMeasureInf.mName = "MeasureInf";
         curveMeasureInf.mPen.setColor(mMeasureColor);

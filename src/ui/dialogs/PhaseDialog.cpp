@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "PhaseDialog.h"
 #include "Phase.h"
 #include "ColorPicker.h"
@@ -14,14 +53,14 @@ mButH(25),
 mButW(80)
 {
     QPalette Pal(palette());
-    
+
     // set black background
     Pal.setColor(QPalette::Background, Qt::gray);
     this->setAutoFillBackground(true);
     this->setPalette(Pal);
-    
+
     setWindowTitle(tr("Create / Modify phase"));
-    
+
     mNameLab = new Label(tr("Phase name"), this);
     mNameLab->setAlignment(Qt::AlignRight);
     mColorLab = new Label(tr("Phase colour"), this);
@@ -32,9 +71,9 @@ mButW(80)
     mTauFixedLab->setAlignment(Qt::AlignRight);
 
     mNameEdit = new LineEdit(this);
-    
+
     mColorPicker = new ColorPicker(QColor(), this);
-    
+
     mTauTypeCombo = new QComboBox(this);
     mTauTypeCombo->addItem(tr("Unknown"));
     mTauTypeCombo->addItem(tr("Known"));
@@ -43,22 +82,22 @@ mButW(80)
 
     mOkBut = new Button(tr("OK"), this);
     mCancelBut = new Button(tr("Cancel"), this);
-    
+
     mOkBut->setAutoDefault(true);
-    
+
     connect(mTauTypeCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &PhaseDialog::showAppropriateTauOptions);
     connect(mOkBut, &Button::clicked, this, &PhaseDialog::accept);
     connect(mCancelBut, &Button::clicked, this, &PhaseDialog::reject);
-    
+
     mComboH = mTauTypeCombo->height();
-    
+
     Phase phase;
     setPhase(phase.toJson());
 }
 
 PhaseDialog::~PhaseDialog()
 {
-    
+
 }
 
 void PhaseDialog::showAppropriateTauOptions(int typeIndex)
@@ -70,18 +109,18 @@ void PhaseDialog::showAppropriateTauOptions(int typeIndex)
         {
             mTauFixedLab->setVisible(false);
             mTauFixedEdit->setVisible(false);
-            
+
             setFixedHeight(mComboH + 2*mLineH + 5*mMargin + mButH);
-            
+
             break;
         }
         case Phase::eTauFixed:
         {
             mTauFixedLab->setVisible(true);
             mTauFixedEdit->setVisible(true);
-            
+
             setFixedHeight(mComboH + 3*mLineH + 6*mMargin + mButH);
-            
+
             break;
         }
 
@@ -93,7 +132,7 @@ void PhaseDialog::showAppropriateTauOptions(int typeIndex)
 void PhaseDialog::setPhase(const QJsonObject& phase)
 {
     mPhase = phase;
-    
+
     mNameEdit->setText(mPhase.value(STATE_NAME).toString());
     mNameEdit->selectAll();
     mColorPicker->setColor(QColor(mPhase.value(STATE_COLOR_RED).toInt(),
@@ -101,7 +140,7 @@ void PhaseDialog::setPhase(const QJsonObject& phase)
                                   mPhase.value(STATE_COLOR_BLUE).toInt()));
     mTauTypeCombo->setCurrentIndex(mPhase.value(STATE_PHASE_TAU_TYPE).toInt());
     mTauFixedEdit->setText(QString::number(mPhase.value(STATE_PHASE_TAU_FIXED).toDouble()));
-    
+
     showAppropriateTauOptions(mTauTypeCombo->currentIndex());
 }
 
@@ -159,7 +198,7 @@ void PhaseDialog::resizeEvent(QResizeEvent* event)
     mColorLab->setGeometry(mMargin, 2*mMargin + mLineH, w1, mLineH);
     mTauTypeLab->setGeometry(mMargin, 3*mMargin + 2*mLineH, w1, mLineH);
     mTauFixedLab->setGeometry(mMargin, 4*mMargin + 2*mLineH + mLineH, w1, mLineH);
-    
+
     mNameEdit->setGeometry(2*mMargin + w1, mMargin, w2, mLineH);
     mColorPicker->setGeometry(2*mMargin + w1, 2*mMargin + mLineH, w2, mLineH +3);
 

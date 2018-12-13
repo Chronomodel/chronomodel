@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "ResultsView.h"
 #include "GraphView.h"
 #include "GraphViewDate.h"
@@ -78,7 +117,7 @@ mMinorCountScale (4)
     mResultCurrentMinX = mResultMinX ;
     mResultCurrentMaxX = mResultMaxX ;
     mResultZoomX = 1.;
-    
+
     mTabs = new Tabs(this);
     mTabs->addTab(tr("Posterior Distrib."));
     mTabs->addTab(tr("History Plot"));
@@ -99,18 +138,18 @@ mMinorCountScale (4)
 
     //------
 
-    
+
     mStack = new QStackedWidget(this);
-    
+
     /* mEventsScrollArea and mPhasesScrollArea are made when we need it,
      *  within createEventsScrollArea and within createPhasesScrollArea
      */
-    
+
     mMarker = new Marker(this);
-    
+
     setMouseTracking(true);
     mStack->setMouseTracking(true);
-    
+
 
     mOptionsWidget = new QWidget(this); // this is the parent of group of widget on the rigth of the panel
 
@@ -255,7 +294,7 @@ mMinorCountScale (4)
 
 
     /* -------------------------------------- Graphic Options (old mDisplayGroup) ---------------------------------------------------*/
-    
+
     mGraphicTitle = new Label(tr("Graphic Options"), mTabDisplay);
     mGraphicTitle->setIsTitle(true);
 
@@ -269,7 +308,7 @@ mMinorCountScale (4)
     mYSlider->setRange(10, 300);
     mYSlider->setTickInterval(1);
     mYSlider->setValue(100);
-    
+
     mYScaleSpin = new QSpinBox(mGraphicGroup);
     mYScaleSpin->setRange(mYSlider->minimum(), mYSlider->maximum());
     //mYScaleSpin->setSuffix(" %");
@@ -282,7 +321,7 @@ mMinorCountScale (4)
     mFontBut = new Button(mGraphFont.family() + ", " + QString::number(mGraphFont.pointSizeF()), mGraphicGroup);
     mFontBut->setToolTip(tr("Click to change the font on the drawing"));
     connect(mFontBut, &QPushButton::clicked, this, &ResultsView::updateGraphFont);
-    
+
     mLabThickness = new QLabel(tr("Thickness"), mGraphicGroup);
     mLabThickness->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
@@ -296,7 +335,7 @@ mMinorCountScale (4)
     mThicknessCombo->setToolTip(tr("Select to change the thickness of the drawing"));
 
     connect(mThicknessCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::updateThickness);
-    
+
     mLabOpacity = new QLabel(tr("Opacity"), mGraphicGroup);
     mLabOpacity->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
@@ -319,7 +358,7 @@ mMinorCountScale (4)
     connect(mOpacityCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::updateOpacity);
 
    /* -------------------------------------- mChainsGroup---------------------------------------------------*/
-    
+
     mChainsTitle = new Label(tr("MCMC Chains"), mTabMCMC);
     mChainsTitle->setIsTitle(true);
 
@@ -335,27 +374,27 @@ mMinorCountScale (4)
     */
 
     /* -------------------------------------- mDensityOptsGroup ---------------------------------------------------*/
-    
+
     mDensityOptsTitle = new Label(tr("Density Options"), mTabMCMC);
     mDensityOptsTitle->setIsTitle(true);
 
     mDensityOptsGroup = new QWidget(mTabMCMC);
-    
+
     mCredibilityCheck = new CheckBox(tr("Show Confidence Bar"), mDensityOptsGroup);
     mCredibilityCheck->setChecked(true);
 
     mThreshLab = new Label(tr("Confidence Level (%)"), mDensityOptsGroup);
     mThreshLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    
+
     mHPDEdit = new LineEdit(mDensityOptsGroup);
     mHPDEdit->setText("95");
-    
+
     DoubleValidator* percentValidator = new DoubleValidator();
     percentValidator->setBottom(0.0);
     percentValidator->setTop(100.0);
     percentValidator->setDecimals(1);
     mHPDEdit->setValidator(percentValidator);
-    
+
     mFFTLenLab = new Label(tr("Grid Length"), mDensityOptsGroup);
     mFFTLenLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
@@ -375,7 +414,7 @@ mMinorCountScale (4)
     const QFontMetricsF fm(font());
     mComboH = int (fm.height() + 6);
     mTabsH = mComboH + 2*mMargin;
-    
+
     mBandwidthLab = new Label(tr("Bandwidth Const."), mDensityOptsGroup);
     mBandwidthLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
@@ -388,16 +427,16 @@ mMinorCountScale (4)
     connect(this, &ResultsView::controlsUpdated, this, &ResultsView::updateLayout);
     connect(this, &ResultsView::scalesUpdated, this, &ResultsView::updateControls);
 
-    
+
     // -------------------------
     connect(mFFTLenCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::setFFTLength);
     connect(mBandwidthEdit, &LineEdit::editingFinished, this, &ResultsView::setBandwidth);
-    
+
     connect(mHPDEdit, &LineEdit::editingFinished, this, &ResultsView::setThreshold);
 
     connect(mAllChainsCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     connect(mCredibilityCheck, &CheckBox::clicked, this, &ResultsView::generateCurvesRequested);
-    
+
     // -------------------------
     connect(mEventsfoldCheck,&CheckBox::clicked, this, &ResultsView::unfoldToggle);
     connect(mDatesfoldCheck, &CheckBox::clicked, this, &ResultsView::unfoldToggle);
@@ -426,7 +465,7 @@ mMinorCountScale (4)
 
 
     connect(mRuler, &Ruler::positionChanged, this, &ResultsView::updateScroll);
-    
+
     connect(mYSlider, &QSlider::valueChanged, this, &ResultsView::updateScaleY);
     connect(mYScaleSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::updateScaleY);
     connect(mYScaleSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), mYSlider, &QSlider::setValue);
@@ -798,7 +837,7 @@ void ResultsView::updateControls()
 
 
 
-    
+
     /* -------------------------------------------------------
      *  Display by phases or by events
      * -------------------------------------------------------*/
@@ -1317,7 +1356,7 @@ void ResultsView::updateTabPageSaving()
     const bool byPhases (mTabByScene->currentIndex() == 1);
     const bool byTempo (mTabByScene->currentIndex() == 2);
 
-    
+
     switch (mTabPageSaving->currentIndex()) {
     case 0:
         {
@@ -1626,7 +1665,7 @@ void ResultsView::updateGraphsLayout()
     /* ----------------------------------------------------------
      *  Graphs by events layout
      * ----------------------------------------------------------*/
-   
+
     else if (byEvents){
          int y (0);
          if (mEventsScrollArea) {
@@ -1641,7 +1680,7 @@ void ResultsView::updateGraphsLayout()
                 wid->setFixedSize(width() - sbe - mOptionsW, y);
             mEventsScrollArea->repaint();
          }
-        
+
     }
     else if (byTempo){
          int y (0);
@@ -1660,7 +1699,7 @@ void ResultsView::updateGraphsLayout()
 
     }
     update();
-    
+
 }
 
 
@@ -1994,7 +2033,7 @@ void ResultsView::createEventsScrollArea(const int idx)
         }
         ++iterEvent;
     }
-    
+
     mEventsScrollArea->setWidget(eventsWidget);
 
     mEventsScrollArea->update();
@@ -2111,7 +2150,7 @@ void ResultsView::createPhasesScrollArea(const int idx)
 void ResultsView::createTempoScrollArea(const int idx)
 {
     qDebug()<<"ResultsView::createTempoScrollArea()";
-    
+
     if (!mTempoScrollArea) {
         mTempoScrollArea = new QScrollArea(this);
         mTempoScrollArea->setMouseTracking(true);
@@ -2128,7 +2167,7 @@ void ResultsView::createTempoScrollArea(const int idx)
 
     QWidget* tempoWidget = new QWidget(this);
     tempoWidget->setMouseTracking(true);
-    
+
     // In a Phases at least, we have one Event with one Date
     //mByPhasesGraphs.reserve( (int)(3*mModel->mPhases.size()) );
 
@@ -2197,7 +2236,7 @@ void ResultsView::setBandwidth()
     const double bandwidth = locale().toDouble(mBandwidthEdit->text(), &ok);
     if (!(bandwidth > 0 && bandwidth <= 100) || !ok)
         mBandwidthEdit->setText(locale().toString(bandwidth));
-    
+
     if (bandwidth != getBandwidth()) {
         mBandwidthUsed = bandwidth;
         mModel->setBandwidth(bandwidth);
@@ -2213,7 +2252,7 @@ double ResultsView::getThreshold() const
 void ResultsView::graphTypeChange()
 {
    const int tabIdx = mTabs->currentIndex();
-    
+
    if (tabIdx == 0)
         mCurrentTypeGraph = GraphViewResults::ePostDistrib;
 
@@ -2250,16 +2289,16 @@ void ResultsView::unfoldToggle()
 
     if (mStack->currentWidget() == mEventsScrollArea) {
          mTabEventsIndex = 0;
-        
+
     } else if (mStack->currentWidget() == mPhasesScrollArea) {
        mTabPhasesIndex = 0;
     }
-    
+
     emit updateScrollAreaRequested();
 }
 
 void ResultsView::nextSheet()
-{    
+{
     int* currentIndex (nullptr);
 
     if (mStack->currentWidget() == mEventsScrollArea)
@@ -2270,16 +2309,16 @@ void ResultsView::nextSheet()
 
     else if (mStack->currentWidget() == mTempoScrollArea)
         currentIndex = &mTabTempoIndex;
-    
+
     else
         return;
-  
+
     if ( ( ((*currentIndex) + 1)*mNumberOfGraph) < mMaximunNumberOfVisibleGraph )
         ++(*currentIndex);
-    
+
     emit updateScrollAreaRequested();
-    
-    
+
+
 }
 
 void ResultsView::previousSheet()
@@ -2292,10 +2331,10 @@ void ResultsView::previousSheet()
 
     else if ((mTabByScene->currentIndex() == 2) && (mTabTempoIndex>0))
         --mTabTempoIndex;
-    
+
     else
         return;
-    
+
     emit updateScrollAreaRequested();
 }
 
@@ -2308,7 +2347,7 @@ void ResultsView::updateCurvesToShow()
     qDebug() << "ResultsView::updateCurvesToShow";
     const bool showAllChains = mAllChainsCheck->isChecked();
     QList<bool> showChainList;
-    
+
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib)
         for (CheckBox* cbButton : mCheckChainChecks)
             showChainList.append(cbButton->isChecked());
@@ -2458,10 +2497,10 @@ void ResultsView::updateCurves()
 void ResultsView::updateScales()
 {
     //qDebug() << "ResultsView::updateScales()";
-    
+
     int tabIdx = mTabs->currentIndex();
     ProjectSettings s = mSettings;
-    
+
     /* ------------------------------------------
      *  Get X Range based on current options used to calculate zoom
      * ------------------------------------------*/
@@ -2563,7 +2602,7 @@ void ResultsView::updateScales()
         mXScaleSpin->setDecimals(0);
 
     }
-   
+
 
     /* ------------------------------------------
      *  Restore last zoom values; must be stored in unformated value
@@ -2588,7 +2627,7 @@ void ResultsView::updateScales()
     } else {
         mResultCurrentMinX = mResultMinX;
         mResultCurrentMaxX = mResultMaxX;
-    }    
+    }
 
     if (mScales.find(situ) != mScales.end()) {
         mMajorScale = mScales.value(situ).first;
@@ -2678,7 +2717,7 @@ void ResultsView::updateScales()
 
     updateZoomEdit();
     updateScaleEdit();
-    
+
     // Already done when setting graphs new range (above)
     //updateGraphsZoomX();
 
@@ -2725,7 +2764,7 @@ qDebug()<< "ResultsView::updateResultsLog()-> emit resultsLogUpdated(log)";
 void ResultsView::mouseMoveEvent(QMouseEvent* e)
 {
   //  int shiftX (0);
-    
+
   //  int x = e->pos().x() - shiftX;
 
         const int markerXPos (inRange(0, e->pos().x(), mRuler->x() + mRuler->width() ));
@@ -2879,7 +2918,7 @@ void ResultsView::updateZoomX()
 
     mResultCurrentMinX = curMin;
     mResultCurrentMaxX = curMax;
-    
+
     /* --------------------------------------------------
      *  Update other elements
      * --------------------------------------------------*/
@@ -2901,7 +2940,7 @@ void ResultsView::updateScroll(const double min, const double max)
      * --------------------------------------------------*/
     mResultCurrentMinX = min;
     mResultCurrentMaxX = max;
-    
+
     /* --------------------------------------------------
      *  Update other elements
      * --------------------------------------------------*/
@@ -2926,7 +2965,7 @@ void ResultsView::editCurrentMinX()
         mResultCurrentMinX = current;
 
         mResultZoomX = (mResultMaxX - mResultMinX)/ (mResultCurrentMaxX - mResultCurrentMinX);
-        
+
         /* --------------------------------------------------
          *  Update other elements
          * --------------------------------------------------*/
@@ -2961,7 +3000,7 @@ void ResultsView::editCurrentMaxX()
         mResultCurrentMaxX = current;
 
         mResultZoomX =  (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX) ;
-        
+
         /* --------------------------------------------------
          *  Update other elements
          * --------------------------------------------------*/
@@ -3227,7 +3266,7 @@ void ResultsView::updateGraphFont()
 
     if (ok) {
         setGraphFont(font);
-        mFontBut->setText(mGraphFont.family() + ", " + QString::number(mGraphFont.pointSizeF()));        
+        mFontBut->setText(mGraphFont.family() + ", " + QString::number(mGraphFont.pointSizeF()));
     }
 }
 
@@ -3252,10 +3291,10 @@ void ResultsView::updateOpacity(int value)
 
     for (GraphViewResults* allKindGraph : mByPhasesGraphs)
        allKindGraph->setGraphsOpacity(opValue);
-    
+
     for (GraphViewResults* allKindGraph : mByTempoGraphs)
         allKindGraph->setGraphsOpacity(opValue);
-    
+
 }
 
 
@@ -3549,13 +3588,13 @@ void ResultsView::exportResults()
         QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
 
         csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
-        
+
         const QString currentPath = MainWindow::getInstance()->getCurrentPath();
         const QString dirPath = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                         tr("Export to directory..."),
                                                         currentPath,
                                                        tr("Directory"));
-        
+
         if (!dirPath.isEmpty()) {
             QDir dir(dirPath);
             if (dir.exists()){
@@ -3581,7 +3620,7 @@ void ResultsView::exportResults()
             file.close();
 
             file.setFileName(dirPath + "/Log_MCMC_Initialization.html");
-            
+
             if (file.open(QFile::WriteOnly | QFile::Truncate)) {
                 QTextStream output(&file);
                 output<<version+"<br>";
@@ -3592,7 +3631,7 @@ void ResultsView::exportResults()
             file.close();
 
             file.setFileName(dirPath + "/Log_Posterior_Distrib_Stats.html");
-            
+
             if (file.open(QFile::WriteOnly | QFile::Truncate)) {
                 QTextStream output(&file);
                 output<<version+"<br>";
@@ -3604,11 +3643,11 @@ void ResultsView::exportResults()
 
             const QList<QStringList> stats = mModel->getStats(csvLocal, precision, true);
             saveCsvTo(stats, dirPath + "/Synthetic_Stats_Table.csv", csvSep, true);
-            
+
             if (mModel->mPhases.size() > 0) {
                 const QList<QStringList> phasesTraces = mModel->getPhasesTraces(csvLocal, false);
                 saveCsvTo(phasesTraces, dirPath + "/Chain_all_Phases.csv", csvSep, false);
-                
+
                 for (int i=0; i<mModel->mPhases.size(); ++i) {
                     const QList<QStringList> phaseTrace = mModel->getPhaseTrace(i,csvLocal, false);
                     const QString name = mModel->mPhases.at(i)->mName.toLower().simplified().replace(" ", "_");
@@ -3629,12 +3668,12 @@ void ResultsView::exportFullImage()
         eScrollEvents = 1,
         eScrollTempo = 2
     };
-    
+
     //ScrollArrea witchScroll;
     bool printAxis = (mGraphHeight < GraphViewResults::mHeightForVisibleAxis);
-    
+
     QWidget* curWid (nullptr);
-    
+
     type_data max;
 
     if (mStack->currentWidget() == mEventsScrollArea) {
@@ -3661,7 +3700,7 @@ void ResultsView::exportFullImage()
     // Force rendering to HD for export
     //int rendering = mRenderCombo->currentIndex();
   //  updateRendering(1);
-    
+
     AxisWidget* axisWidget = nullptr;
     QLabel* axisLegend = nullptr;
     QFontMetrics fm (mGraphFont);
@@ -3694,7 +3733,7 @@ void ResultsView::exportFullImage()
 
         axisWidget->raise();
         axisWidget->setVisible(true);
-        
+
         QString legend = "";
         if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && ( mCurrentVariable == GraphViewResults::eTheta
                                                                      || mCurrentVariable == GraphViewResults::eTempo
@@ -3721,12 +3760,12 @@ void ResultsView::exportFullImage()
         axisLegend->raise();
         axisLegend->setVisible(true);
     }
-    
+
     QFileInfo fileInfo = saveWidgetAsImage(curWid,
                                            QRect(0, 0, curWid->width() , curWid->height()),
                                            tr("Save graph image as..."),
                                            MainWindow::getInstance()->getCurrentPath());
-    
+
     // Delete additional widgets if necessary :
     if (printAxis) {
         if (axisWidget) {
@@ -3739,16 +3778,16 @@ void ResultsView::exportFullImage()
         }
         curWid->setFixedHeight(curWid->height() - axeHeight - legendHeight);
     }
-    
-    
+
+
     // Revert to default display :
-    
+
     if (fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
-    
+
     // Reset rendering back to its current value
    // updateRendering(rendering);
-    
+
 }
 
 /**
@@ -3758,18 +3797,18 @@ void ResultsView::updateModel()
 {
     if (!mModel)
         return;
-    
+
     const QJsonObject state = MainWindow::getInstance()->getProject()->state();
-    
+
     const QJsonArray events = state.value(STATE_EVENTS).toArray();
     const QJsonArray phases = state.value(STATE_PHASES).toArray();
-    
+
     QJsonArray::const_iterator iterJSONEvent = events.constBegin();
     while (iterJSONEvent != events.constEnd()) {
         const QJsonObject eventJSON = (*iterJSONEvent).toObject();
         const int eventId = eventJSON.value(STATE_ID).toInt();
         const QJsonArray dates = eventJSON.value(STATE_EVENT_DATES).toArray();
-        
+
         QList<Event *>::iterator iterEvent = mModel->mEvents.begin();
         /*
          * (*iterEvent)->mIsSelected is already Ok--> false
@@ -3787,12 +3826,12 @@ void ResultsView::updateModel()
 
                 for (int k=0; k<(*iterEvent)->mDates.size(); ++k) {
                     Date& d = (*iterEvent)->mDates[k];
-                    
+
                     for (auto &&dateVal : dates) {
 
                         const QJsonObject date = dateVal.toObject();
                         const int dateId = date.value(STATE_ID).toInt();
-                        
+
                         if (dateId == d.mId) {
                             d.mName = date.value(STATE_NAME).toString();
                             d.mColor = (*iterEvent)->mColor;
@@ -3812,7 +3851,7 @@ void ResultsView::updateModel()
 
         const QJsonObject phaseJSON = (*iterJSONPhase).toObject();
         const int phaseId = phaseJSON.value(STATE_ID).toInt();
-        
+
         for ( auto &&p : mModel->mPhases ) {
             if (p->mId == phaseId) {
                 p->mName = phaseJSON.value(STATE_NAME).toString();
@@ -3827,14 +3866,13 @@ void ResultsView::updateModel()
         }
         ++iterJSONPhase;
     }
-    
+
     std::sort(mModel->mEvents.begin(), mModel->mEvents.end(), sortEvents);
     std::sort(mModel->mPhases.begin(), mModel->mPhases.end(), sortPhases);
 
     for ( auto &&p : mModel->mPhases ) {
         std::sort(p->mEvents.begin(), p->mEvents.end(), sortEvents);
     }
-    
+
     updateResults(mModel);
 }
-

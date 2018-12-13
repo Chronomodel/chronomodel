@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "PluginGauss.h"
 #if USE_PLUGIN_GAUSS
 
@@ -199,7 +238,7 @@ QJsonObject PluginGauss::fromCSV(const QStringList& list, const QLocale& csvLoca
         if (error == 0.)
             return QJsonObject();
         json.insert(DATE_GAUSS_ERROR_STR, error);
-        
+
         if ( (list.at(3) == "equation") && (list.size() >= csvMinColumns() + 3) ) {
             json.insert(DATE_GAUSS_MODE_STR, QString(DATE_GAUSS_MODE_EQ));
             double a = csvLocale.toDouble(list.at(4));
@@ -230,7 +269,7 @@ QStringList PluginGauss::toCSV(const QJsonObject& data, const QLocale& csvLocale
     QStringList list;
     list << csvLocale.toString(data.value(DATE_GAUSS_AGE_STR).toDouble());
     list << csvLocale.toString(data.value(DATE_GAUSS_ERROR_STR).toDouble());
-    
+
     if (data.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_NONE){
         list << "none";
 
@@ -286,7 +325,7 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
 {
     RefCurve curve;
     curve.mName = refFile.fileName().toLower();
-    
+
     QFile file(refFile.absoluteFilePath());
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QLocale locale = QLocale(QLocale::English);
@@ -308,41 +347,41 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
                     double e = locale.toDouble(values.at(2),&ok);
                     if(!ok)
                         continue;
-                    
+
                     double gSup = g + 1.96 * e;
                     if(!ok)
                         continue;
                     double gInf = g - 1.96 * e;
                     if(!ok)
                         continue;
-                    
+
                     curve.mDataMean[t] = g;
                     curve.mDataError[t] = e;
                     curve.mDataSup[t] = gSup;
                     curve.mDataInf[t] = gInf;
-                    
+
                     if (firstLine) {
                         curve.mDataMeanMin = g;
                         curve.mDataMeanMax = g;
-                        
+
                         curve.mDataErrorMin = e;
                         curve.mDataErrorMax = e;
-                        
+
                         curve.mDataSupMin = gSup;
                         curve.mDataSupMax = gSup;
-                        
+
                         curve.mDataInfMin = gInf;
                         curve.mDataInfMax = gInf;
                     } else {
                         curve.mDataMeanMin = qMin(curve.mDataMeanMin, g);
                         curve.mDataMeanMax = qMax(curve.mDataMeanMax, g);
-                        
+
                         curve.mDataErrorMin = qMin(curve.mDataErrorMin, e);
                         curve.mDataErrorMax = qMax(curve.mDataErrorMax, e);
-                        
+
                         curve.mDataSupMin = qMin(curve.mDataSupMin, gSup);
                         curve.mDataSupMax = qMax(curve.mDataSupMax, gSup);
-                        
+
                         curve.mDataInfMin = qMin(curve.mDataInfMin, gInf);
                         curve.mDataInfMax = qMax(curve.mDataInfMax, gInf);
                     }
@@ -351,7 +390,7 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
             }
         }
         file.close();
-        
+
         // invalid file ?
         if (!curve.mDataMean.isEmpty()) {
             curve.mTmin = curve.mDataMean.firstKey();
@@ -366,14 +405,14 @@ double PluginGauss::getRefValueAt(const QJsonObject& data, const double& t)
 {
     const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
     double v = 0;
-    
+
     if (mode == DATE_GAUSS_MODE_NONE)
         v = t;
     else if (mode == DATE_GAUSS_MODE_EQ) {
         const double a = data.value(DATE_GAUSS_A_STR).toDouble();
         const double b = data.value(DATE_GAUSS_B_STR).toDouble();
         const double c = data.value(DATE_GAUSS_C_STR).toDouble();
-        
+
         v = a * t * t + b * t + c;
     } else if (mode == DATE_GAUSS_MODE_CURVE) {
         const QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
@@ -386,7 +425,7 @@ double PluginGauss::getRefErrorAt(const QJsonObject& data, const double& t, cons
 {
     //QString mode = data[DATE_GAUSS_MODE_STR].toString();
     double e (0.);
-    
+
     if (mode == DATE_GAUSS_MODE_CURVE) {
         QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
         e = getRefCurveErrorAt(ref_curve, t);
@@ -399,7 +438,7 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
     double tmin (0.);
     double tmax (0.);
     const double k (5.);
-    
+
     if (data.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_CURVE) {
         QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
 
@@ -414,18 +453,18 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
     else if (data.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_NONE) {
         double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
         double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
-        
+
         tmin = age - k * error;
         tmax = age + k * error;
     }
     else if (data[DATE_GAUSS_MODE_STR].toString() == DATE_GAUSS_MODE_EQ) {
         double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
         double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
-        
+
         double a = data.value(DATE_GAUSS_A_STR).toDouble();
         double b = data.value(DATE_GAUSS_B_STR).toDouble();
         double c = data.value(DATE_GAUSS_C_STR).toDouble();
-        
+
         double v1 = age - k * error;
         double v2 = age + k * error;
 
@@ -442,22 +481,22 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
         else {
             double delta1 = b*b - 4*a*(c - v1);
             double delta2 = b*b - 4*a*(c - v2);
-            
+
             bool hasDelta1 = false;
-            
+
             if (delta1 > 0) {
                 hasDelta1 = true;
-                
+
                 const double t11 = (- b - sqrt(delta1)) / (2 * a);
                 const double t12 = (- b + sqrt(delta1)) / (2 * a);
-                
+
                 tmin = qMin(t11, t12);
                 tmax = qMax(t11, t12);
             }
             if (delta2 > 0) {
                 const double t21 = (- b - sqrt(delta2)) / (2 * a);
                 const double t22 = (- b + sqrt(delta2)) / (2 * a);
-                
+
                 if (hasDelta1) {
                     tmin = qMin(qMin(t21, t22), tmin);
                     tmax = qMax(qMax(t21, t22), tmax);
@@ -478,7 +517,7 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
 GraphViewRefAbstract* PluginGauss::getGraphViewRef()
 {
    mRefGraph = new PluginGaussRefView();
-    
+
    return mRefGraph;
 }
 void PluginGauss::deleteGraphViewRef(GraphViewRefAbstract* graph)

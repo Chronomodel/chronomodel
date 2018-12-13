@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "ModelUtilities.h"
 #include "Date.h"
 #include "EventConstraint.h"
@@ -5,8 +44,8 @@
 #include "../PluginAbstract.h"
 #include "QtUtilities.h"
 #include "Generator.h"
+
 #include <QObject>
-#include <QString>
 #include <utility>
 
 #define MHAdaptGaussStr QObject::tr("MH : proposal = adapt. Gaussian random walk")
@@ -134,10 +173,10 @@ QVector<QVector<Event*> > ModelUtilities::getNextBranches(const QVector<Event*>&
         for (int i=0; i<cts.size(); ++i) {
             QVector<Event*> branch = curBranch;
             Event* newNode = cts.at(i)->mEventTo;
-            
+
             if (newNode->mLevel <= lastNode->mLevel)
                 newNode->mLevel = lastNode->mLevel + 1;
-            
+
             if (!branch.contains(newNode)) {
                 branch.append(newNode);
                 QVector<QVector<Event*> > nextBranches = getNextBranches(branch, cts[i]->mEventTo);
@@ -153,7 +192,7 @@ QVector<QVector<Event*> > ModelUtilities::getNextBranches(const QVector<Event*>&
 
 
                 evtNames << newNode->mName;
-                
+
                 throw QObject::tr("Circularity found in events model !\rPlease correct this branch :\r") + evtNames.join(" -> ");
             }
         }
@@ -168,14 +207,14 @@ QVector<QVector<Event*> > ModelUtilities::getBranchesFromEvent(Event* start)
     QVector<Event*> startBranch;
     start->mLevel = 0;
     startBranch.append(start);
-    
+
     QVector<QVector<Event*> > nextBranches;
     try {
         nextBranches = getNextBranches(startBranch, start);
     } catch(QString error){
         throw error;
     }
-    
+
     return nextBranches;
 }
 
@@ -183,7 +222,7 @@ QVector<QVector<Event*> > ModelUtilities::getBranchesFromEvent(Event* start)
 QVector<QVector<Event*> > ModelUtilities::getAllEventsBranches(const QList<Event*>& events)
 {
     QVector<QVector<Event*> > branches;
-    
+
     // ----------------------------------------
     //  Put all events level to 0 and
     //  store events at start of branches (= not having constraint backward)
@@ -225,18 +264,18 @@ QVector<QVector<Phase*> > ModelUtilities::getNextBranches(const QVector<Phase*>&
         for (int i=0; i<cts.size(); ++i) {
             QVector<Phase*> branch = curBranch;
             Phase* newNode = cts[i]->mPhaseTo;
-            
+
             double gamma = gammaSum;
             if (cts[i]->mGammaType == PhaseConstraint::eGammaFixed)
                 gamma += cts[i]->mGammaFixed;
 
             else if (cts[i]->mGammaType == PhaseConstraint::eGammaRange)
                 gamma += cts[i]->mGammaMin;
-            
+
             if (gamma < maxLength) {
                 if (newNode->mLevel <= lastNode->mLevel)
                     newNode->mLevel = lastNode->mLevel + 1;
-                
+
                 if (!branch.contains(newNode)) {
                     branch.append(newNode);
                     QVector<QVector<Phase*> > nextBranches = getNextBranches(branch, cts[i]->mPhaseTo, gamma, maxLength);
@@ -248,7 +287,7 @@ QVector<QVector<Phase*> > ModelUtilities::getNextBranches(const QVector<Phase*>&
                     for (int j=0; j<branch.size(); ++j)
                         names << branch[j]->mName;
                     names << newNode->mName;
-                    
+
                     throw QObject::tr("Circularity found in phases model !\rPlease correct this branch :\r") + names.join(" -> ");
                 }
             }
@@ -273,14 +312,14 @@ QVector<QVector<Phase*> > ModelUtilities::getBranchesFromPhase(Phase* start, con
     QVector<Phase*> startBranch;
     start->mLevel = 0;
     startBranch.append(start);
-    
+
     QVector<QVector<Phase*> > nextBranches;
     try {
         nextBranches = getNextBranches(startBranch, start, 0, maxLength);
     } catch(QString error) {
         throw error;
     }
-    
+
     return nextBranches;
 }
 
@@ -288,7 +327,7 @@ QVector<QVector<Phase*> > ModelUtilities::getBranchesFromPhase(Phase* start, con
 QVector<QVector<Phase*> > ModelUtilities::getAllPhasesBranches(const QList<Phase*>& phases, const double maxLength)
 {
     QVector<QVector<Phase*> > branches;
-    
+
     QVector<Phase*> starts;
     for (int i=0; i<phases.size(); ++i) {
         phases[i]->mLevel = 0;
@@ -318,7 +357,7 @@ QVector<Event*> ModelUtilities::sortEventsByLevel(const QList<Event*>& events)
     int numSorted = 0;
     int curLevel = 0;
     QVector<Event*> results;
-    
+
     while (numSorted < events.size()) {
         for (int i=0; i<events.size(); ++i) {
             if (events[i]->mLevel == curLevel) {
@@ -336,7 +375,7 @@ QVector<Phase*> ModelUtilities::sortPhasesByLevel(const QList<Phase*>& phases)
     int numSorted = 0;
     int curLevel = 0;
     QVector<Phase*> results;
-    
+
     while (numSorted < phases.size()) {
         for (int i=0; i<phases.size(); ++i) {
             if (phases[i]->mLevel == curLevel) {
@@ -713,4 +752,3 @@ short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double>& hpd, cons
     }
     return answer;
 }
-

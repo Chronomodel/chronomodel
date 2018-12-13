@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "Plugin14C.h"
 #if USE_PLUGIN_14C
 
@@ -33,14 +72,14 @@ QPair<long double, long double> Plugin14C::getLikelihoodArg(const double& t, con
     double error = data.value(DATE_14C_ERROR_STR).toDouble();
     double delta_r = data.value(DATE_14C_DELTA_R_STR).toDouble();
     double delta_r_error = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
-    
+
     // Apply reservoir effect
     age = (age - delta_r);
     error = sqrt(error * error + delta_r_error * delta_r_error);
-    
+
     long double refValue = (long double) getRefValueAt(data, t);
     long double refError = (long double) getRefErrorAt(data, t);
-    
+
     long double variance = refError * refError + error * error;
     long double exponent = -0.5l * powl((long double)(age - refValue), 2.l) / variance;
     return qMakePair(variance, exponent);
@@ -95,7 +134,7 @@ QString Plugin14C::getDateDesc(const Date* date) const
     QString result;
 
     const QJsonObject data = date->mData;
-        
+
     const double age = data.value(DATE_14C_AGE_STR).toDouble();
     const double error = data.value(DATE_14C_ERROR_STR).toDouble();
     const double delta_r = data.value(DATE_14C_DELTA_R_STR).toDouble();
@@ -113,7 +152,7 @@ QString Plugin14C::getDateDesc(const Date* date) const
         result += "; " + tr("Ref. curve : %1").arg(ref_curve);
     else
         result += "; " + tr("ERROR -> Ref. curve : %1").arg(ref_curve);
-        
+
 
     return result;
 }
@@ -150,7 +189,7 @@ QJsonObject Plugin14C::fromCSV(const QStringList& list, const QLocale &csvLocale
         json.insert(DATE_14C_AGE_STR, csvLocale.toDouble(list.at(1)));
         json.insert(DATE_14C_ERROR_STR, error);
         json.insert(DATE_14C_REF_CURVE_STR, list.at(3).toLower());
-        
+
         // These columns are nor mandatory in the CSV file so check if they exist :
         json.insert(DATE_14C_DELTA_R_STR, (list.size() > 4) ? csvLocale.toDouble(list.at(4)) : 0.f);
         json.insert(DATE_14C_DELTA_R_ERROR_STR, (list.size() > 5) ? csvLocale.toDouble(list.at(5)) : 0.f);
@@ -199,20 +238,20 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
 {
     RefCurve curve;
     curve.mName = refFile.fileName().toLower();
-    
+
     QFile file(refFile.absoluteFilePath());
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         const QLocale locale = QLocale(QLocale::English);
         QTextStream stream(&file);
         bool firstLine = true;
-        
+
         while (!stream.atEnd()) {
             QString line = stream.readLine();
             if (!isComment(line)) {
                 QStringList values = line.split(",");
                 if (values.size() >= 3) {
                     bool ok = true;
-                    
+
                     int t = 1950 - locale.toInt(values.at(0),&ok);
                     if(!ok)
                         continue;
@@ -221,42 +260,42 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
                     double e = locale.toDouble(values.at(2),&ok);
                     if(!ok)
                         continue;
-                    
+
                     double gSup = g + 1.96 * e;
                     if(!ok)
                         continue;
                     double gInf = g - 1.96 * e;
                     if(!ok)
                         continue;
-                    
+
                     curve.mDataMean[t] = g;
                     curve.mDataError[t] = e;
                     curve.mDataSup[t] = gSup;
                     curve.mDataInf[t] = gInf;
-                    
+
                     if (firstLine) {
                         curve.mDataMeanMin = g;
                         curve.mDataMeanMax = g;
-                        
+
                         curve.mDataErrorMin = e;
                         curve.mDataErrorMax = e;
-                        
+
                         curve.mDataSupMin = gSup;
                         curve.mDataSupMax = gSup;
-                        
+
                         curve.mDataInfMin = gInf;
                         curve.mDataInfMax = gInf;
-                        
+
                     } else {
                         curve.mDataMeanMin = qMin(curve.mDataMeanMin, g);
                         curve.mDataMeanMax = qMax(curve.mDataMeanMax, g);
-                        
+
                         curve.mDataErrorMin = qMin(curve.mDataErrorMin, e);
                         curve.mDataErrorMax = qMax(curve.mDataErrorMax, e);
-                        
+
                         curve.mDataSupMin = qMin(curve.mDataSupMin, gSup);
                         curve.mDataSupMax = qMax(curve.mDataSupMax, gSup);
-                        
+
                         curve.mDataInfMin = qMin(curve.mDataInfMin, gInf);
                         curve.mDataInfMax = qMax(curve.mDataInfMax, gInf);
                     }
@@ -265,7 +304,7 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
             }
         }
         file.close();
-        
+
         // invalid file ?
         if (!curve.mDataMean.isEmpty()) {
             curve.mTmin = curve.mDataMean.firstKey();
@@ -333,7 +372,7 @@ QJsonObject Plugin14C::checkValuesCompatibility(const QJsonObject& values)
 
     if (result.find(DATE_14C_DELTA_R_STR) == result.end())
         result[DATE_14C_DELTA_R_STR] = 0.0;
-    
+
     if (result.find(DATE_14C_DELTA_R_ERROR_STR) == result.end())
         result[DATE_14C_DELTA_R_ERROR_STR] = 0.0;
 
@@ -343,7 +382,7 @@ QJsonObject Plugin14C::checkValuesCompatibility(const QJsonObject& values)
 
     // Force curve name to lower case :
     result[DATE_14C_REF_CURVE_STR] = result.value(DATE_14C_REF_CURVE_STR).toString().toLower();
-    
+
     return result;
 }
 
@@ -362,13 +401,13 @@ bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& sett
         valid = false;
         double age = data.value(DATE_14C_AGE_STR).toDouble();
         const double delta_r = data.value(DATE_14C_DELTA_R_STR).toDouble();
-        
+
         // Apply reservoir effect
         age = (age - delta_r);
 
         if (age>curve.mDataInfMin && age < curve.mDataSupMax)
             valid = true;
-        
+
         else {
             double t = curve.mTmin;
             long double repartition (0.);
@@ -380,7 +419,7 @@ bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& sett
                 //because the repartition can be smaller than the calibration
                 if (lastV>0 && v>0)
                     repartition += (long double) settings.mStep * (lastV + v) / 2.;
-                
+
                 lastV = v;
 
                 valid = ( (double)repartition > 0);
@@ -395,7 +434,7 @@ bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& sett
 QList<QHash<QString, QVariant>> Plugin14C::getGroupedActions()
 {
     QList<QHash<QString, QVariant>> result;
-    
+
     QHash<QString, QVariant> groupedAction;
     groupedAction.insert("pluginId", getId());
     groupedAction.insert("title", tr("Selected Events with 14C: Change Ref. Curves"));
@@ -403,7 +442,7 @@ QList<QHash<QString, QVariant>> Plugin14C::getGroupedActions()
     groupedAction.insert("inputType", "combo");
     groupedAction.insert("items", getRefsNames());
     groupedAction.insert("valueKey", DATE_14C_REF_CURVE_STR);
-    
+
     result.append(groupedAction);
     return result;
 }
@@ -416,7 +455,7 @@ bool Plugin14C::areDatesMergeable(const QJsonArray& dates)
         QJsonObject date = dates.at(i).toObject();
         QJsonObject data = date.value(STATE_DATE_DATA).toObject();
         QString curve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
-        
+
         if (refCurve.isEmpty())
             refCurve = curve;
 
@@ -437,61 +476,61 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
         const QJsonObject firstDate = dates.at(0).toObject();
         const  QJsonObject firstDateData = firstDate.value(STATE_DATE_DATA).toObject();
         QString firstCurve = firstDateData.value(DATE_14C_REF_CURVE_STR).toString().toLower();
-        
+
         for (int i=1; i<dates.size(); ++i) {
             QJsonObject date = dates.at(i).toObject();
             const QJsonObject dateData = date.value(STATE_DATE_DATA).toObject();
             const QString curve = dateData.value(DATE_14C_REF_CURVE_STR).toString().toLower();
-            
+
             if (firstCurve != curve) {
                 result["error"] = tr("All combined data must use the same reference curve !");
                 return result;
             }
         }
-        
+
         double sum_vi = 0.;
         double sum_mi_vi = 0.;
         double sum_1_vi = 0.;
 
         QStringList names;
-        
+
         for (int i=0; i<dates.size(); ++i) {
             const QJsonObject date = dates.at(i).toObject();
             const QJsonObject data = date.value(STATE_DATE_DATA).toObject();
-            
+
             names.append(date.value(STATE_NAME).toString());
             const double a = data.value(DATE_14C_AGE_STR).toDouble();
             const double e = data.value(DATE_14C_ERROR_STR).toDouble();
             const double r = data.value(DATE_14C_DELTA_R_STR).toDouble();
             const double re = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
-            
+
             // Reservoir effet
             const double m = a - r;
             const double v = e * e + re * re;
-            
+
             sum_vi += v;
             sum_mi_vi += m/v;
             sum_1_vi += 1/v;
         }
-        
+
         QJsonObject mergedData;
         mergedData[DATE_14C_AGE_STR] = sum_mi_vi / sum_1_vi;
         mergedData[DATE_14C_ERROR_STR] = sqrt(1 / sum_1_vi);
         mergedData[DATE_14C_DELTA_R_STR] = 0.;
         mergedData[DATE_14C_DELTA_R_ERROR_STR] = 0.;
         mergedData[DATE_14C_REF_CURVE_STR] = firstCurve ;
-        
+
         // inherits the first data propeties as plug-in and method...
         result = dates.at(0).toObject();
         result[STATE_NAME] = "Combined (" + names.join(" | ") + ")";
         result[STATE_DATE_DATA] = mergedData;
         result[STATE_DATE_SUB_DATES] = dates;
-        
+
     } else
         result["error"] = tr("Combine needs at least 2 data !");
-    
+
     return result;
-    
+
 }
 
 #endif

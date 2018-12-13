@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "GraphView.h"
 #include "Ruler.h"
 #include "StdUtilities.h"
@@ -55,20 +94,20 @@ mUnitFunctionY(nullptr)
     mAxisToolY.mIsHorizontal = false;
     mAxisToolX.mShowArrow = true;
     mAxisToolY.mShowSubs = false;
-    
+
     mTipRect.setTop(0);
     mTipRect.setLeft(0);
     mTipRect.setWidth(mTipWidth);
     mTipRect.setHeight(mTipHeight);
-    
+
     setMouseTracking(true);
     setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
-    
+
     setRangeY(0., 1.);
     resetNothingMessage();
 
     connect(this, &GraphView::signalCurvesThickness, this, &GraphView::updateCurvesThickness);
-  
+
 }
 
 GraphView::GraphView(const GraphView& graph, QWidget *parent):QWidget(parent),
@@ -240,7 +279,7 @@ void GraphView::zoomX(const type_data min, const type_data max)
     }
 
     update();
-    
+
 }
 
 void GraphView::changeXScaleDivision (const Scale &sc)
@@ -408,7 +447,7 @@ void GraphView::adjustYToMaxValue(const qreal& marginProp)
 
                 else if (c.mUseVectorData)
                     yMax = qMax(yMax, vector_max_value(c.mDataVector));
-            
+
         }
     }
     setRangeY(0, yMax * (1. + marginProp));
@@ -426,7 +465,7 @@ void GraphView::adjustYToMinMaxValue()
             if (iter->mUseVectorData) {
                 yMin = firstFound ? qMin(yMin, vector_min_value(iter->mDataVector)) : vector_min_value(iter->mDataVector);
                 yMax = firstFound ? qMax(yMax, vector_max_value(iter->mDataVector)) : vector_max_value(iter->mDataVector);
-                
+
             } else if (!iter->mUseVectorData &&
                     !iter->mIsHorizontalLine &&
                     !iter->mIsHorizontalSections &&
@@ -505,7 +544,7 @@ void GraphView::removeCurve(const QString& name)
             mCurves.removeAt(i);
             break;
         }
-    
+
     repaintGraph(false);
 }
 
@@ -528,10 +567,10 @@ void GraphView::setCurveVisible(const QString& name, const bool visible)
             modified = true;
             break;
         }
-    
+
     if (modified)
         repaintGraph(false);
-    
+
 }
 
 GraphCurve* GraphView::getCurve(const QString& name)
@@ -585,42 +624,42 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
     //mRendering = eHD;
     qreal x = e->pos().x();
     qreal y = e->pos().y();
-    
+
     if (mUseTip && x >= mMarginLeft && x <= (mMarginLeft + mGraphWidth) && y >= mMarginTop && y <= (mMarginTop + mGraphHeight))  {
         mTipVisible = true;
         QRectF old_rect = mTipRect;
-        
+
         int cursorW = 15;
         int cursorH = 15;
-        
+
         if (mMarginLeft + mGraphWidth - x <= (mTipWidth + cursorW))
             x -= mTipWidth;
         else
             x += cursorW;
-        
+
         if (mMarginTop + mGraphHeight - y <= (mTipHeight + cursorH))
             y -= mTipHeight;
         else
             y += cursorH;
-        
+
         mTipRect.setLeft(x - 0.5);
         mTipRect.setTop(y - 0.5);
-        
+
         mTipRect.setWidth(mTipWidth);
         mTipRect.setHeight(mTipHeight);
-        
+
         mTipX = getValueForX(e->x() );//+ 1.);
-        
+
         mTipY = getValueForY(e->y());//+0.5);
-        
+
         update(old_rect.adjusted(-20, -20, 20, 20).toRect());
 
-        
+
     } else
         mTipVisible = false;
-    
+
     update(mTipRect.adjusted(-20, -20, 20, 20).toRect());
-    
+
     // forward to parent to move a marker for example
     e->ignore();
 }
@@ -697,7 +736,7 @@ void GraphView::repaintGraph(const bool aAlsoPaintBackground)
 
     update();
 }
-    
+
 void GraphView::paintEvent(QPaintEvent* )
 {
 
@@ -726,7 +765,7 @@ void GraphView::paintEvent(QPaintEvent* )
     updateGraphSize(width(), height());
     if ((mGraphWidth<=0) || (mGraphHeight<=0))
         return;
-    
+
     /* ----------------------------------------------------
      *  SD : draw on a buffer only if it has been reset
      * ----------------------------------------------------*/
@@ -753,7 +792,7 @@ void GraphView::paintEvent(QPaintEvent* )
         p.setRenderHints(QPainter::Antialiasing);
         p.drawPixmap(mBufferBack.rect(), mBufferBack, rect());
 //    }
-    
+
     /* ----------------------------------------------------
      *  Tool Tip (above all) Draw horizontal and vertical red line
      * ----------------------------------------------------*/
@@ -762,27 +801,27 @@ void GraphView::paintEvent(QPaintEvent* )
         if (mTipRect.width()<2) {
             mTipRect.setLeft(20);
             mTipRect.setTop(20);
-            
+
             mTipRect.setWidth(20);
             mTipRect.setHeight(20);
         }
-      
-        
+
+
         tipPath.addRoundedRect(mTipRect, 5, 5);
-        
-        
+
+
         QFont font;
         font.setPointSizeF(pointSize(10));
-        
+
         QPainter p(this);
         p.setRenderHints(QPainter::Antialiasing);
         p.setFont(font);
-        
+
         p.fillPath(tipPath, QColor(0, 0, 0, 180));
         p.setPen(Qt::black);
         p.drawPath(tipPath);
         p.setPen(Qt::white);
-        
+
         if (!mTipXLab.isEmpty() && !mTipYLab.isEmpty()) {
             if (mUnitFunctionX)
                  p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + stringForLocal(mUnitFunctionX(mTipX)));
@@ -792,13 +831,13 @@ void GraphView::paintEvent(QPaintEvent* )
                  p.drawText(mTipRect.adjusted(0, mTipRect.height()/2., 0, 0), Qt::AlignCenter, mTipYLab + stringForLocal(mUnitFunctionY(mTipY)));
             else
                 p.drawText(mTipRect.adjusted(0, mTipRect.height()/2., 0, 0), Qt::AlignCenter, mTipYLab + stringForLocal(mTipY));
-            
+
         } else if (!mTipXLab.isEmpty()) {
             if (mUnitFunctionX)
                 p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + stringForLocal(mUnitFunctionX(mTipX)));
            else
                 p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + stringForLocal(mTipX));
-        
+
         } else if (!mTipYLab.isEmpty()) {
             if (mUnitFunctionY)
                 p.drawText(mTipRect, Qt::AlignCenter, mTipYLab + stringForLocal(mUnitFunctionY(mTipY)));
@@ -814,19 +853,19 @@ void GraphView::paintEvent(QPaintEvent* )
  */
 void GraphView::paintToDevice(QPaintDevice* device)
 {
-    QPainter p(device);    
+    QPainter p(device);
     p.setFont(this->font());
-    
+
     p.setRenderHints(QPainter::Antialiasing);
-    
+
     /* ----------------------- Background ----------------------*/
 
     p.fillRect(rect(), mBackgroundColor);
-    
+
     QFont font = p.font();
    // font.setPointSizeF(font.pointSizeF());// - 2.);
  //   p.setFont(font);
-    
+
     /* ---------------------- Zones --------------------------*/
 
     for (auto && zone : mZones) {
@@ -849,7 +888,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
             p.restore();
         }
     }
-    
+
     /* mOverflowArrowMode, draw a arrow on the rigth or on the left
      * if the data are over the window (current min, current max)  */
 
@@ -936,7 +975,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
           p.setPen(Qt::black);
           p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, mLegendX);
      }
-    
+
     mAxisToolX.mShowArrow = mXAxisArrow;
     mAxisToolX.mShowSubs = mXAxisTicks;
     mAxisToolX.mShowSubSubs = mXAxisSubTicks;
@@ -987,15 +1026,15 @@ void GraphView::drawCurves(QPainter& painter)
     painter.save();
     // Draw curves inside axis only (not in margins!)
     painter.setClipRect(int (mMarginLeft), int (mMarginTop), int(mGraphWidth), int (mGraphHeight));
-    
+
     for (auto && curve : mCurves) {
         if (curve.mVisible) {
             QPainterPath path;
-            
+
             QPen pen = curve.mPen;
             pen.setWidth(pen.width() * mThickness);
             painter.setPen(pen);
-            
+
             QBrush brush = curve.mBrush;
 
             if (mCanControlOpacity) {
@@ -1005,45 +1044,45 @@ void GraphView::drawCurves(QPainter& painter)
             }
 
             painter.setBrush(brush);
-            
+
             if (curve.mIsHorizontalLine) {
                 const qreal y = getYForValue(curve.mHorizontalValue);
                 path.moveTo(mMarginLeft, y);
                 path.lineTo(mMarginLeft + mGraphWidth, y);
-                
+
                 painter.strokePath(path, curve.mPen);
-                
+
             } else if (curve.mIsVerticalLine) {
                 const qreal x = getXForValue(curve.mVerticalValue, false);
                 path.moveTo(x, mMarginTop + mGraphHeight);
                 path.lineTo(x, mMarginTop);
-                
+
                 painter.strokePath(path, pen);
-                
+
             } else if (curve.mIsHorizontalSections) { // used for Bound and Unif-Typo
                 const qreal y1 = getYForValue(mMaxY);
                 const qreal y0 = getYForValue(mMinY);
                 path.moveTo(mMarginLeft, y0);
-                
+
                 for (const auto & section : curve.mSections ) {
                     const qreal x1 = getXForValue(section.first, false);
                     const qreal x2 = getXForValue(section.second, false);
-                    
+
                     path.lineTo(x1, y0);
                     path.lineTo(x1, y1);
                     path.lineTo(x2, y1);
                     path.lineTo(x2, y0);
                 }
                 path.lineTo(mMarginLeft + mGraphWidth, y0);
-                
+
                 painter.setClipRect(mMarginLeft, mMarginTop, mGraphWidth, mGraphHeight);
                 painter.fillPath(path, brush);
                 painter.strokePath(path, curve.mPen);
-                
+
             } else if (curve.mIsTopLineSections) {
                 const qreal y1 = mMarginTop + curve.mPen.width();
                 painter.setPen(curve.mPen);
-                
+
                 for (const auto & section : curve.mSections ) {
                     const type_data s1 = section.first;
                     const type_data s2 = section.second;
@@ -1055,19 +1094,19 @@ void GraphView::drawCurves(QPainter& painter)
                         painter.drawLine(QPointF(x1, y1),QPointF(x2, y1));
                     }
                 }
-                
+
             } else if (curve.mIsVertical) {
                 path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
-                
+
                 int index (0);
                 qreal last_y (0.);
 
                 QMap<type_data, type_data>::const_iterator iter = curve.mData.cbegin();
-                
+
                 while (iter != curve.mData.cend()) {
                     type_data valueX = iter.value();
                     type_data valueY = iter.key();
-                    
+
                     // vertical curves must be normalized (values from 0 to 1)
                     // They are drawn using a 100px width
                     qreal x = mMarginLeft + valueX * 100.;
@@ -1077,7 +1116,7 @@ void GraphView::drawCurves(QPainter& painter)
 
                     if (index == 0) {
                         path.lineTo(x, y);
-                        
+
                     } else {
                         if (curve.mIsHisto)
                             path.lineTo(x, last_y);
@@ -1089,22 +1128,22 @@ void GraphView::drawCurves(QPainter& painter)
                 }
                 path.lineTo(mMarginLeft, mMarginTop);
                 painter.drawPath(path);
-                
+
             } else { // it's horizontal curve
-            
+
                 path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
-                
+
                 qreal last_x (0.);
                 qreal last_y (0.);
                 qreal last_valueY (0.);
-                
+
                 if (curve.mUseVectorData) {
                     // Down sample vector
                     if (curve.mDataVector.isEmpty())
                         return;
 
                     QVector<type_data> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
-                    
+
                     QVector<type_data> lightData;
                     const type_data dataStep = type_data(subData.size()) / type_data(mGraphWidth);
                     if (dataStep > 1) {
@@ -1114,22 +1153,22 @@ void GraphView::drawCurves(QPainter& painter)
                         }
                     } else
                         lightData = subData;
-                    
+
                     bool isFirst = true;
-                    
+
                     for (int i = 0; i<lightData.size(); ++i) {
                         // Use "dataStep" only if lightData is different of subData !
                         const type_data valueX = mCurrentMinX + ((dataStep > 1) ? i * dataStep : i);
                         const type_data valueY = lightData.at(i);
-                        
+
                         if (valueX >= mCurrentMinX && valueX <= mCurrentMaxX) {
                             qreal x = getXForValue(valueX, false);
                             qreal y = getYForValue(valueY, false);
-                            
+
                              if (isFirst) {
                                 path.moveTo(x, y);
                                 isFirst=false;
-                                 
+
                             } else {
                                 if (curve.mIsHisto)
                                     path.lineTo(x, last_y);
@@ -1138,9 +1177,9 @@ void GraphView::drawCurves(QPainter& painter)
                             last_x = x;
                             last_y = y;
 
-                        }   
+                        }
                     }
-                    
+
                 } else {
                     // Down sample curve for better performances
                     if (curve.mData.isEmpty())
@@ -1159,7 +1198,7 @@ void GraphView::drawCurves(QPainter& painter)
                             valuesPerPixel = 1;
                         QMap<type_data, type_data>::const_iterator iter = subData.cbegin();
                         int index (0);
-                        
+
                         while (iter != subData.cend()) {
                             if ((index % valuesPerPixel) == 0)
                                 lightMap[iter.key()] = iter.value();
@@ -1168,14 +1207,14 @@ void GraphView::drawCurves(QPainter& painter)
                         }
                     } else
                         lightMap = subData;
-                    
+
                     // Draw
-                    
+
                     QMapIterator<type_data, type_data> iter(lightMap);
                     iter.toFront();
                     if (!iter.hasNext())
                         continue;
-                    
+
                     iter.next();
                     type_data valueX = iter.key();
                     type_data valueY = iter.value();
@@ -1191,10 +1230,10 @@ void GraphView::drawCurves(QPainter& painter)
                             }
                         }
                     }
-                    
+
                     iter.toFront();
                     bool isFirst=true;
-                    
+
                     if (curve.mBrush != Qt::NoBrush) {
                         isFirst=false;
                         last_x = getXForValue(valueX, true);
@@ -1208,24 +1247,24 @@ void GraphView::drawCurves(QPainter& painter)
                         if (valueX >= mCurrentMinX && valueX <= mCurrentMaxX) {
                            qreal x = getXForValue(valueX, true);
                            qreal y = getYForValue(valueY, false);
-                            
+
                             if (isFirst) {
                                 path.moveTo(x, y);
                                 isFirst=false;
-                                
+
                             } else {
-                                
+
                                 if (curve.mIsHisto) {
                                     // histo bars must be centered around x value :
                                     const qreal dx2 = (x - last_x)/2.;
                                     path.lineTo(x - dx2, last_y);
                                     path.lineTo(x - dx2, y);
-                                    
+
                                 } else if (curve.mIsRectFromZero) {
-                                    
+
                                     if (last_valueY != 0 && valueY != 0) {
                                         path.lineTo(x, y);
-                                        
+
                                     } else if (last_valueY == 0 && valueY != 0) {
                                         // Draw a front end of a square signal some 0 at the begin and at the end
                                         // e.i plot the HPD surface
@@ -1238,12 +1277,12 @@ void GraphView::drawCurves(QPainter& painter)
                                         path.lineTo(last_x, last_y);
                                         path.lineTo(last_x, y);
                                     }
-                                
-                                    
+
+
                                 } else
                                     path.lineTo(x, y);
-                                
-                                
+
+
                             }
                             last_x = x;
                             last_y = y;
@@ -1280,10 +1319,10 @@ void GraphView::drawCurves(QPainter& painter)
 
                     painter.setPen(curve.mPen);
                     painter.fillPath(path, brush);
-                    
+
                 } else
                     painter.drawPath(path);
-                
+
             }
 
         }
@@ -1303,7 +1342,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
 {
     if (step<=0)
         step=1;
-    
+
     QString filter = tr("CSV (*.csv)");
     QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                     tr("Save graph data as..."),
@@ -1315,11 +1354,11 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
 
         QList<QStringList> rows;
         QStringList list;
-        
+
         list << " X Axis";
         type_data xMin = INFINITY;
         type_data xMax = INFINITY;
-        
+
         for (const auto &curve : mCurves) {
             if (!curve.mData.empty() &&
                 !curve.mIsHorizontalLine &&
@@ -1328,7 +1367,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
                 !curve.mIsHorizontalSections &&
                 !curve.mUseVectorData &&
                 curve.mVisible) {
-                
+
                 // 1 -Create the header
                 list << curve.mName;
                 // 2 - Find x Min and x Max period, on all curve, we suppose Qmap is order
@@ -1346,7 +1385,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
 
         rows<<list;
         rows.reserve(ceil( (xMax - xMin)/step) );
-        
+
         // 3 - Create Row, with each curve
         //  Create data in row
         for (type_data x= xMin; x <= xMax; x += step) {
@@ -1361,16 +1400,16 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
                     !curve.mIsHorizontalSections &&
                     !curve.mUseVectorData &&
                     curve.mVisible) {
-                    
+
                     const type_data xi = interpolateValueInQMap(x, curve.mData);
                     list<<locale.toString(xi, 'g', 15);
-                    
+
                 } else continue;
-                
+
             }
             rows<<list;
         }
-        
+
         // 4 - Save Qlist
         QTextStream output(&file);
         const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
@@ -1379,14 +1418,14 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         output << "# "+ version + "\r";
         output << "# "+ projectName + "\r";
         output << "# "+ DateUtils::getAppSettingsFormatStr() + "\r";
-        
+
         for (auto row : rows) {
             output << row.join(csvSep);
             output << "\r";
         }
         file.close();
     }
-    
+
 }
 
 
@@ -1406,54 +1445,54 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
 
         rows.append(QStringList("# X Axis"));
         QMap<type_data, QVector<type_data> > rowsData;
-        
+
         int rowsCount = rows.count();
         QStringList emptyColumn;
-        
+
         qDebug()<<"GraphView::exportCurrentVectorCurves"<<" nbCurve to export"<<mCurves.size();
         for (int idCurve=0; idCurve<mCurves.size(); ++idCurve) {
             if ( !mCurves[idCurve].mVisible || mCurves[idCurve].mDataVector.empty() ) continue;
-            
+
             const QVector<type_data>& data = mCurves[idCurve].mDataVector;
             // the new DataVector is longer than the last, we need to expand the size of rows
             if (data.size()>rowsCount-2) {
                 abscissesWritten=false;
                 rowsCount = rows.count();
             }
-            
+
             if (!abscissesWritten) {
                 for (int i=offset+rowsCount; i<data.size()+1; ++i) {
                     // we add 1 to the line number, because the index of vector start to 0-> false now 0 is the init
                     rows.append(QStringList(locale.toString(i-rowsCount+1))+emptyColumn);
-                   
+
                 }
                 abscissesWritten = true;
-                
+
             }
             //prepare adding row
             emptyColumn<<"";
-            
+
             if (abscissesWritten) {
                     rows[0] << mCurves[idCurve].mName;
                     for (int i=offset; i<data.size(); ++i)
                         rows[i-offset+1]<< locale.toString(data[i],'g', 15);
 
             }
-            
+
         }
-        
+
         QMapIterator<type_data, QVector<type_data> > iter2(rowsData);
         while(iter2.hasNext()) {
             iter2.next();
             QStringList list;
 
             list << locale.toString(iter2.key(),'g', 15);
-            
+
             for (int i=0; i<iter2.value().size(); ++i)
                 list << locale.toString(iter2.value().at(i),'g', 15);
             rows.append(list);
         }
-        
+
         QTextStream output(&file);
         for (int i=0; i<rows.size(); ++i)  {
             output << rows.at(i).join(csvSep);
@@ -1467,11 +1506,11 @@ bool GraphView::saveAsSVG(const QString& fileName, const QString& graphTitle, co
 {
     if (fileName.isEmpty()) {
         return false;
-        
+
     } else {
         //Rendering memoRendering= mRendering;
         QRect rTotal(withVersion ? QRect(0, 0, width(), height()+versionHeight) : QRect(0, 0, width(), height()));
-        
+
         const int graphRigthShift = 40;
 
         QRect rGraph(0, 0, width(), height());
@@ -1484,18 +1523,18 @@ bool GraphView::saveAsSVG(const QString& fileName, const QString& graphTitle, co
         svgGen.setViewBox(rTotal);
         svgGen.setTitle(graphTitle);
         svgGen.setDescription(svgDescrition);
-        
+
         QPainter painter;
         painter.begin(&svgGen);
         font().wordSpacing();
-        
+
         render(&painter, QPoint(), QRegion(rGraph, QRegion::Rectangle));
-        
+
         QFontMetrics fm(painter.font());
         painter.drawText( graphRigthShift,0, graphRigthShift+fm.boundingRect(graphTitle).width(), versionHeight,
                          Qt::AlignCenter,
                          svgGen.title());
-        
+
         if (withVersion) {
             painter.setPen(Qt::black);
             painter.drawText(0, rGraph.y()+rGraph.height(), rGraph.width(),versionHeight,
@@ -1503,16 +1542,16 @@ bool GraphView::saveAsSVG(const QString& fileName, const QString& graphTitle, co
                              qApp->applicationName() + " " + qApp->applicationVersion());
         }
         painter.end();
-        
+
         //setRendering(memoRendering);
-        
+
         return true;
-        
+
     }
-    
+
 }
 QString GraphView::getInfo(char sep)
-{ 
+{
     return mInfos.join(sep);// ( isShow() ? mInfos.join(sep) : "");
 }
 
@@ -1520,4 +1559,3 @@ bool GraphView::isShow()
 {
     return mShowInfos;
 }
-

@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #ifndef GRAPHVIEW_H
 #define GRAPHVIEW_H
 
@@ -54,18 +93,18 @@ public:
     void setParent(QWidget *parent) {this->QWidget::setParent(parent);}
     void copyFrom(const GraphView &graph);
     virtual ~GraphView();
-    
+
     // Options
-    
+
     void setBackgroundColor(const QColor &color);
     QColor getBackgroundColor() const;
-    
+
     void addInfo(const QString& info);
     QString getInfo(char sep = '|');
     void clearInfos();
     void showInfos(bool show);
     bool isShow();
-    
+
     void setNothingMessage(const QString& message);
     void resetNothingMessage();
 
@@ -74,22 +113,22 @@ public:
     void showXAxisTicks(bool show);
     void showXAxisSubTicks(bool show);
     void showXAxisValues(bool show);
-    
+
     void showYAxisLine(bool show);
     void showYAxisArrow(bool show);
     void showYAxisTicks(bool show);
     void showYAxisSubTicks(bool show);
     void showYAxisValues(bool show);
-    
+
     void setXAxisMode(AxisMode mode);
     void setYAxisMode(AxisMode mode);
 
     void setOverArrow(OverflowDataArrowMode mode) { mOverflowArrowMode = mode;}
-    
+
     void autoAdjustYScale(bool active);
     void adjustYToMaxValue(const qreal& marginProp = 0.);
     void adjustYToMinMaxValue();
-    
+
    // void setRendering(Rendering render);
    // Rendering getRendering();
     void setGraphFont(const QFont& font);
@@ -97,9 +136,9 @@ public:
     void setGraphsThickness(int value);
     void setCurvesOpacity(int value);
     void setCanControlOpacity(bool can);
-    
+
     // Manage Curves
-    
+
     void addCurve(const GraphCurve& curve);
     bool hasCurve() {return ((mCurves.size() != 0) || (mZones.size() != 0)) ;}
     void removeCurve(const QString& name);
@@ -109,12 +148,12 @@ public:
     GraphCurve* getCurve(const QString& name);
     const QList<GraphCurve>& getCurves() const;
     int numCurves() const;
-    
+
 
 
     void addZone(const GraphZone& zone);
     void removeAllZones();
-    
+
     // Set value formatting functions
     void setFormatFunctX(DateConversion f);
     void setFormatFunctY(DateConversion f);
@@ -124,17 +163,17 @@ public:
 
     void setYScaleDivision(const Scale &sc) { mAxisToolY.setScaleDivision(sc);}
     void setYScaleDivision(const double &major, const int &minorCount) { mAxisToolY.setScaleDivision(major, minorCount);}
-    
+
     // Paint
-    
+
     void paintToDevice(QPaintDevice* device);
     void forceRefresh() {repaintGraph(true);}
     // Save
-    
+
     bool saveAsSVG(const QString& fileName, const QString& svgTitle, const QString& svgDescrition, const bool withVersion, const int versionHeight=20);
-    
+
     // ToolTips
-    
+
     void setTipXLab(const QString& lab);
     void setTipYLab(const QString& lab);
 
@@ -153,7 +192,7 @@ public slots:
 
 protected:
     void adaptMarginBottom();
-    
+
     void updateGraphSize(int w, int h);
 
     void drawCurves(QPainter& painter);
@@ -164,50 +203,50 @@ protected:
 #else
     void resizeEvent(QResizeEvent* event);
 #endif
-    
+
     void paintEvent(QPaintEvent*);
     void repaintGraph(const bool aAlsoPaintBackground);
     void enterEvent(QEvent* e);
     void leaveEvent(QEvent* e);
     void mouseMoveEvent(QMouseEvent* e);
-    
+
 protected:
     QPixmap	mBufferBack;
-    
+
     AxisTool mAxisToolX;
     AxisTool mAxisToolY;
     qreal mStepMinWidth;
-    
+
     bool mXAxisLine;
     bool mXAxisArrow;
     bool mXAxisTicks;
     bool mXAxisSubTicks;
     bool mXAxisValues;
-    
+
     bool mYAxisLine;
     bool mYAxisArrow;
     bool mYAxisTicks;
     bool mYAxisSubTicks;
     bool mYAxisValues;
-    
+
     AxisMode mXAxisMode;
     AxisMode mYAxisMode;
     OverflowDataArrowMode mOverflowArrowMode;
 
    // Rendering mRendering;
-    
-    bool mAutoAdjustYScale; 
-       
+
+    bool mAutoAdjustYScale;
+
     bool mShowInfos;
     QStringList mInfos;
-    
+
     QString mNothingMessage;
-    
+
     QColor	mBackgroundColor;
     int mThickness;
     int mOpacity;
     bool mCanControlOpacity;
-    
+
     QRectF  mTipRect;
     qreal  mTipX;
     qreal  mTipY;
@@ -217,7 +256,7 @@ protected:
     qreal  mTipHeight;
     bool  mTipVisible;
     bool  mUseTip;
-    
+
     int mCurveMaxResolution;
     QList<GraphCurve> mCurves;
     QList<GraphZone> mZones;
@@ -225,7 +264,7 @@ protected:
     QPainter mPrevPainter;
 
     qreal mBottomSpacer;
-    
+
 public:
     QString mLegendX;
     QString mLegendY;
@@ -237,4 +276,3 @@ private:
 };
 
 #endif
-

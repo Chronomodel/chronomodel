@@ -1,10 +1,49 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "Phase.h"
 #include "Event.h"
 #include "PhaseConstraint.h"
 #include "Generator.h"
 #include "QtUtilities.h"
-#include <QtWidgets>
 
+#include <QtWidgets>
 
 Phase::Phase():
 mId(0),
@@ -48,24 +87,24 @@ void Phase::copyFrom(const Phase& phase)
     mId = phase.mId;
     mName = phase.mName;
     mColor = phase.mColor;
-    
+
     mAlpha = phase.mAlpha;
     mBeta = phase.mBeta;
     mDuration = phase.mDuration;
 
     mTau = phase.mTau;
-    
+
     mTauType = phase.mTauType;
     mTauFixed = phase.mTauFixed;
     mTauMin = phase.mTauMin;
     mTauMax = phase.mTauMax;
-    
+
     mItemX = phase.mItemX;
     mItemY = phase.mItemY;
-    
+
     mIsSelected = phase.mIsSelected;
     mIsCurrent = phase.mIsCurrent;
-    
+
     mEvents = phase.mEvents;
     mConstraintsFwd = phase.mConstraintsFwd;
     mConstraintsBwd = phase.mConstraintsBwd;
@@ -103,7 +142,7 @@ Phase Phase::fromJson(const QJsonObject& json)
     p.mId = json.value(STATE_ID).toInt();
     p.mName = json.value(STATE_NAME).toString();
     p.mColor = QColor(json.value(STATE_COLOR_RED).toInt(), json.value(STATE_COLOR_GREEN).toInt(), json.value(STATE_COLOR_BLUE).toInt());
-    
+
     p.mItemX = json.value(STATE_ITEM_X).toDouble();
     p.mItemY = json.value(STATE_ITEM_Y).toDouble();
     p.mTauType = (Phase::TauType)json.value(STATE_PHASE_TAU_TYPE).toInt();
@@ -116,14 +155,14 @@ Phase Phase::fromJson(const QJsonObject& json)
     p.mAlpha.setName("Begin of Phase : "+p.mName);
     p.mBeta.setName("End of Phase : "+p.mName);
     p.mDuration.setName("Duration of Phase : "+p.mName);
-    
+
     return p;
 }
 
 QJsonObject Phase::toJson() const
 {
     QJsonObject phase;
-    
+
     phase[STATE_ID] = mId;
     phase[STATE_NAME] = mName;
     phase[STATE_COLOR_RED] = mColor.red();
@@ -137,7 +176,7 @@ QJsonObject Phase::toJson() const
     phase[STATE_PHASE_TAU_MAX] = mTauMax;
     phase[STATE_IS_SELECTED] = mIsSelected;
     phase[STATE_IS_CURRENT] = mIsCurrent;
-    
+
     return phase;
 }
 
@@ -230,7 +269,7 @@ double Phase::getMinThetaNextPhases(const double tmax)
         // we can juste look alpha and beta set in member mAlpha and mBeta
         //double theta= mConstraintsFwd[i]->mPhaseTo->getMinThetaEvents(tmax);
         double theta (constFwd->mPhaseTo->mAlpha.mX);
-        
+
         if (constFwd->mGammaType != PhaseConstraint::eGammaUnknown)
             minTheta = std::min(minTheta, theta - constFwd->mGamma);
         else
@@ -245,7 +284,7 @@ double Phase::getMaxThetaPrevPhases(const double tmin)
 
     for (auto &&constBwd : mConstraintsBwd) {
         const double theta (constBwd->mPhaseFrom->mBeta.mX);
-        
+
         if (constBwd->mGammaType != PhaseConstraint::eGammaUnknown)
             maxTheta = std::max(maxTheta, theta + constBwd->mGamma);
         else
@@ -259,11 +298,11 @@ double Phase::getMaxThetaPrevPhases(const double tmin)
 void Phase::updateAll(const double tmin, const double tmax)
 {
     //static bool initalized = false; // What is it??
-    
+
     mAlpha.mX = getMinThetaEvents(tmin);
     mBeta.mX = getMaxThetaEvents(tmax);
     mDuration.mX = mBeta.mX - mAlpha.mX;
-    
+
    /*   if (initalized) {
             double oldAlpha = mAlpha.mX;
             double oldBeta = mBeta.mX;
@@ -274,9 +313,9 @@ void Phase::updateAll(const double tmin, const double tmax)
                 mIsAlphaFixed = false;
         }
     */
-    
+
     updateTau();
-    
+
     //initalized = true;
 }
 
@@ -343,4 +382,3 @@ void Phase::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, co
     mBeta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
     mDuration.generateHistos(chains, fftLen, bandwidth);
 }
-

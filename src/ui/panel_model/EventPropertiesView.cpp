@@ -1,4 +1,43 @@
- #include "EventPropertiesView.h"
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
+#include "EventPropertiesView.h"
 #include "Label.h"
 #include "LineEdit.h"
 #include "ColorPicker.h"
@@ -45,14 +84,14 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eDoubleExp));
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eBoxMuller));
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eMHAdaptGauss));
-    
+
     connect(mNameEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventName);
     connect(mColorPicker, &ColorPicker::colorChanged, this, &EventPropertiesView::updateEventColor);
     connect(mMethodCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &EventPropertiesView::updateEventMethod);
-      
+
     // Event default propreties Window mEventView
     mEventView = new QWidget(this);
-    
+
     minimumHeight += mEventView->height();
     // -------------
     mDatesList = new DatesList(mEventView);
@@ -64,7 +103,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
 
     for (int i=0; i<plugins.size(); ++i) {
-        
+
         Button* button = new Button(plugins.at(i)->getName(), mEventView);
         button->setIcon(plugins.at(i)->getIcon());
         button->setFlatVertical();
@@ -72,15 +111,15 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
         button->setToolTip(tr("Insert %1 Data").arg(plugins.at(i)->getName()) );
         //button->resize(mButtonWidth, mButtonWidth);
         connect(button, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &EventPropertiesView::createDate);
-        
+
         minimumHeight += button->height();
-        
+
         if (plugins.at(i)->doesCalibration())
             mPluginButs1.append(button);
         else
             mPluginButs2.append(button);
     }
-    
+
     mDeleteBut = new Button(tr("Delete"), mEventView);
     mDeleteBut->setIcon(QIcon(":delete.png"));
     mDeleteBut->setFlatVertical();
@@ -88,7 +127,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 
     connect(mDeleteBut, static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &EventPropertiesView::deleteSelectedDates);
     minimumHeight += mDeleteBut->height();
-    
+
     mRecycleBut = new Button(tr("Restore"), mEventView);
     mRecycleBut->setIcon(QIcon(":restore.png"));
     mRecycleBut->setFlatVertical();
@@ -97,13 +136,13 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     connect(mRecycleBut, static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &EventPropertiesView::recycleDates);
 
     // ---------------
-    
+
     mCalibBut = new Button(tr("Calibrate"), mEventView);
     mCalibBut->setIcon(QIcon(":results_w.png"));
     mCalibBut->setFlatVertical();
     mCalibBut->setCheckable(true);
     mCalibBut->setToolTip(tr("Calibrate"));
-    
+
     mCombineBut = new Button(tr("Combine"), mEventView);
     mCombineBut->setFlatVertical();
     mCombineBut->setIconOnly(false);
@@ -122,30 +161,30 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     connect(mSplitBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &EventPropertiesView::sendSplitDate);
 
     // --------------- Case of Event is a Bound -> Bound properties windows---------------------------
-    
+
     mBoundView = new QWidget(this);
-    
+
     mKnownFixedEdit = new QLineEdit(mBoundView);
-    
+
     QDoubleValidator* doubleValidator = new QDoubleValidator(this);
     doubleValidator->setDecimals(2);
-    
+
     mKnownGraph = new GraphView(mBoundView);
     mKnownGraph->setMinimumHeight(250);
-    
+
     mKnownGraph->showXAxisArrow(true);
     mKnownGraph->showXAxisTicks(true);
     mKnownGraph->showXAxisSubTicks(true);
     mKnownGraph->showXAxisValues(true);
-    
+
     mKnownGraph->showYAxisArrow(true);
     mKnownGraph->showYAxisTicks(false);
     mKnownGraph->showYAxisSubTicks(false);
     mKnownGraph->showYAxisValues(false);
-    
+
     mKnownGraph->setXAxisMode(GraphView::eMinMax);
     mKnownGraph->setYAxisMode(GraphView::eMinMax);
-    
+
     connect(mDatesList, &DatesList::itemSelectionChanged, this, &EventPropertiesView::updateCombineAvailability);
     connect(mKnownFixedEdit, &QLineEdit::textEdited, this, &EventPropertiesView::updateKnownFixed);
 
@@ -153,7 +192,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     fixedLayout->addRow(QString(tr("Value") + " " + "(BC/AD)"), mKnownFixedEdit);
     mFixedGroup = new QGroupBox();
     mFixedGroup->setLayout(fixedLayout);
-    
+
 
     QVBoxLayout* boundLayout = new QVBoxLayout();
     boundLayout->setContentsMargins(10, 6, 15, 6);
@@ -163,7 +202,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     boundLayout->addWidget(mKnownGraph);
     boundLayout->addStretch();
     mBoundView->setLayout(boundLayout);
-    
+
     mEvent = QJsonObject();
     mTopView->setVisible(false);
     mEventView->setVisible(false);
@@ -174,7 +213,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 
 EventPropertiesView::~EventPropertiesView()
 {
-    
+
 }
 
 // Event Managment
@@ -208,27 +247,27 @@ void EventPropertiesView::updateEvent()
         mTopView->setVisible(false);
         mEventView->setVisible(false);
         mBoundView->setVisible(false);
-        
+
     } else {
         Event::Type type = Event::Type (mEvent.value(STATE_EVENT_TYPE).toInt());
         QString name = mEvent.value(STATE_NAME).toString();
         QColor color(mEvent.value(STATE_COLOR_RED).toInt(),
                      mEvent.value(STATE_COLOR_GREEN).toInt(),
                      mEvent.value(STATE_COLOR_BLUE).toInt());
-        
+
         if (name != mNameEdit->text())
             mNameEdit->setText(name);
 
         mColorPicker->setColor(color);
-        
+
         mMethodLab->setVisible(type == Event::eDefault);
         mMethodCombo->setVisible(type == Event::eDefault);
-        
+
         mTopView->setVisible(true);
 
         mEventView->setVisible(type == Event::eDefault);
         mBoundView->setVisible(type == Event::eKnown);
-        
+
         if (type == Event::eDefault) {
             mMethodCombo->setCurrentIndex(mEvent.value(STATE_EVENT_METHOD).toInt());
             mDatesList->setEvent(mEvent);
@@ -251,7 +290,7 @@ void EventPropertiesView::updateEvent()
                 mRecycleBut->setEnabled(true);
             }
 
-            
+
         } else if (type == Event::eKnown) {
             mKnownFixedEdit -> setText(QString::number(mEvent.value(STATE_EVENT_KNOWN_FIXED).toDouble()));
             updateKnownGraph();
@@ -303,7 +342,7 @@ void EventPropertiesView::updateKnownFixed(const QString& text)
 void EventPropertiesView::updateKnownGraph()
 {
     mKnownGraph->removeAllCurves();
-    
+
     Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
     QJsonObject settings = state.value(STATE_SETTINGS).toObject();
@@ -361,7 +400,7 @@ void EventPropertiesView::createDate()
         if (but) {
             Project* project = MainWindow::getInstance()->getProject();
             const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
-            
+
             for (int i=0; i<plugins.size(); ++i) {
                 if (plugins.at(i)->getName() == but->text()) {
                     Date date = project->createDateFromPlugin(plugins.at(i));
@@ -379,7 +418,7 @@ void EventPropertiesView::deleteSelectedDates()
     QList<int> indexes;
     for (int i=0; i<items.size(); ++i)
         indexes.push_back(mDatesList->row(items[i]));
-    
+
     MainWindow::getInstance()->getProject()->deleteDates(mEvent.value(STATE_ID).toInt(), indexes);
 }
 
@@ -393,10 +432,10 @@ void EventPropertiesView::updateCombineAvailability()
 {
     bool mergeable (false);
     bool splittable (false);
-    
+
     QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
     QList<QListWidgetItem*> items = mDatesList->selectedItems();
-    
+
     if (items.size() == 1) {
         // Split?
         int idx = mDatesList->row(items[0]);
@@ -404,13 +443,13 @@ void EventPropertiesView::updateCombineAvailability()
             QJsonObject date = dates.at(idx).toObject();
             if (date.value(STATE_DATE_SUB_DATES).toArray().size() > 0)
                 splittable = true;
-            
+
          }
     } else if (items.size() > 1 && dates.size() > 1) {
         // Combine?
         mergeable = true;
         PluginAbstract* plugin = nullptr;
-        
+
         for (int i(0); i<items.size(); ++i) {
             int idx = mDatesList->row(items.at(i));
             if (idx < dates.size()) {
@@ -437,7 +476,7 @@ void EventPropertiesView::updateCombineAvailability()
             // We prefer letting the user combine them and get an error message explaining why they cannot be combined!
             // Check Plugin14C::mergeDates as example
             //mergeable = plugin->areDatesMergeable(dates);
-            
+
             mergeable = true;
         }
     }
@@ -450,7 +489,7 @@ void EventPropertiesView::sendCombineSelectedDates()
     QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
     QList<QListWidgetItem*> items = mDatesList->selectedItems();
     QList<int> dateIds;
-    
+
     for (int i=0; i<items.size(); ++i) {
         const int idx = mDatesList->row(items.at(i));
         if (idx < dates.size()) {
@@ -497,7 +536,7 @@ void EventPropertiesView::paintEvent(QPaintEvent* e)
     QWidget::paintEvent(e);
     QPainter p(this);
     p.fillRect(rect(), palette().color(QPalette::Background));
-    
+
     if (mEvent.isEmpty()) {
         QFont font = p.font();
         font.setBold(true);

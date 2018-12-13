@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "Ruler.h"
 #include "Painting.h"
 #include "AxisTool.h"
@@ -23,13 +62,13 @@ mStepWidth(100)
     setMarginBottom( 0);//mAxisFont.pointSize() * 1.0 );
 
     setMouseTracking(true);
-    
+
     mScrollBar = new QScrollBar(Qt::Horizontal, this);
     mScrollBar->setRange(0, 0);
     mScrollBar->setSingleStep(1);
     mScrollBar->setPageStep(10000);
     //mScrollBar->setTracking(true);
-    
+
     connect(mScrollBar, static_cast<void (QScrollBar::*)(int)>(&QScrollBar::sliderMoved), this, &Ruler::updateScroll);
 
     mAxisTool.mIsHorizontal = true;
@@ -41,7 +80,7 @@ mStepWidth(100)
 
 Ruler::~Ruler()
 {
-    
+
 }
 
 /** Copy assignment operator */
@@ -137,10 +176,10 @@ void Ruler::setRange(const double min, const double max)
 }
 
 void Ruler::setCurrent(const double min, const double max)
-{ 
+{
     mCurrentMin = min;
     mCurrentMax = max;
-    
+
     // ---------------------------------------------------
     //  No zoom ! scrollbar range is max => no scrollbar shown
     // ---------------------------------------------------
@@ -156,26 +195,26 @@ void Ruler::setCurrent(const double min, const double max)
         const double range (1000.);
         double pageStep = range * (mCurrentMax - mCurrentMin) / (mMax - mMin);
         double scrollRange = range - pageStep;
-        
+
         double curMinAtMaxScroll = mMax - (mMax - mMin) * (pageStep / range);
         double value = scrollRange * (mCurrentMin - mMin) / (curMinAtMaxScroll - mMin);
-        
+
         mScrollBar->setPageStep(int(pageStep));
         mScrollBar->setRange(0, int(scrollRange));
         mScrollBar->setValue(int(value));
     }
-    
+
     updateLayout();
     update();
 }
 
 void Ruler::currentChanged(const double &min, const double &max)
-{    
+{
     setCurrent(min, max);
-    
+
     emit positionChanged(mCurrentMin, mCurrentMax);
     update();
-    
+
 }
 double Ruler::getZoom()
 {
@@ -187,25 +226,25 @@ void Ruler::setZoom(double &prop)
 {
     // Ici, 10 correspond à la différence minimale de valeur (quand le zoom est le plus fort)
     double minProp = 1. / (mMax - mMin);   //10. / (mMax - mMin);
-    
+
   //  mZoomProp = (100. - prop) / 100.;
     mZoomProp = prop /100.;
     if (mZoomProp < minProp)
         mZoomProp = minProp;
-    
+
     if (mZoomProp != 1.) {
         // Remember old scroll position
         double posProp = 0.;
         double rangeBefore = double (mScrollBar->maximum());
         if (rangeBefore > 0)
             posProp = double (mScrollBar->value()) / rangeBefore;
-        
+
         // Update Scroll Range
         int fullScrollSteps = 1000;
         int scrollSteps = int((1. - mZoomProp) * double (fullScrollSteps));
         mScrollBar->setRange(0, scrollSteps);
         mScrollBar->setPageStep(fullScrollSteps);
-        
+
         // Set scroll to correct position
         double pos (0.);
         double rangeAfter = double (mScrollBar->maximum());
@@ -220,7 +259,7 @@ void Ruler::setZoom(double &prop)
         mScrollBar->setRange(0, 0);
 
     update();
-    
+
 }
 
 void Ruler::updateScroll()
@@ -230,11 +269,11 @@ void Ruler::updateScroll()
     if ( (mCurrentMax - mCurrentMin) != (mMax - mMin)) {
         double delta = mCurrentMax - mCurrentMin;
         double deltaStart = (mMax - mMin)-delta;
-        
+
         mCurrentMin = mMin + deltaStart * (double (mScrollBar->value()) / double (mScrollBar->maximum()));
         mCurrentMin = floor( qBound(mMin, mCurrentMin, mMax) );
         mCurrentMax = mCurrentMin + delta;
-        
+
     }
     else {
         mCurrentMin = mMin;
@@ -245,9 +284,9 @@ void Ruler::updateScroll()
     mAxisTool.updateValues(int(mAxisRect.width()), int(mStepMinWidth), mCurrentMin, mCurrentMax);
 
     emit positionChanged(mCurrentMin, mCurrentMax);
-    
+
     update();
-    
+
  }
 
 // Layout & Paint
@@ -282,11 +321,11 @@ void Ruler::paintEvent(QPaintEvent* e)
 {
     QWidget::paintEvent(e);
     const double w = mAxisRect.width();
-    
+
     QPainter painter(this);
     painter.setFont(mAxisFont);
     painter.setRenderHint(QPainter::Antialiasing);
-      
+
     /* ----------------------------------------------
      *  Areas (used to display green, orange, and red areas)
      * ----------------------------------------------
@@ -298,7 +337,7 @@ void Ruler::paintEvent(QPaintEvent* e)
             double x2 = w;
             if (area.mStop < mCurrentMax)
                 x2 = w * (area.mStop - mCurrentMin) / (mCurrentMax - mCurrentMin);
-            
+
             painter.setPen(area.mColor);
             painter.setBrush(area.mColor);
             painter.drawRect(mAxisRect.x() + x1, mAxisRect.y(), x2 - x1, mAxisRect.height());
@@ -306,7 +345,7 @@ void Ruler::paintEvent(QPaintEvent* e)
     }
 
     painter.setPen(qApp->palette().text().color());
-    
+
     /* ----------------------------------------------
      *    Axis, the values inside the ruler are set in layout
      *  and the size of mRulerRect are calucate in layout too.
@@ -316,4 +355,3 @@ void Ruler::paintEvent(QPaintEvent* e)
     mAxisTool.paint(painter, mAxisRect , -1, mFormatFuncX);
 
 }
-

@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "CalibrationView.h"
 
 #include <QtWidgets>
@@ -126,7 +165,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     //-------- DrawingView
 
     mCalibGraph = new GraphView(mDrawing);
-    
+
     //mCalibGraph->setRendering(GraphView::eHD);
     mCalibGraph->setYAxisMode(GraphView::eHidden);
     mCalibGraph->setXAxisMode(GraphView::eAllTicks);
@@ -141,7 +180,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mResultsText->setPalette(palette);
     mResultsText->setText(tr("No Result to display"));
     mResultsText->setReadOnly(true);
-    
+
 
     // Connection
     // setText doesn't emit signal textEdited, when the text is changed programmatically
@@ -236,7 +275,7 @@ void CalibrationView::updateGraphs()
 {
     mCalibGraph->removeAllCurves();
     mCalibGraph->removeAllZones();
-    
+
      if (!mDate.isNull() ) {
         mCalibGraph->setRangeX (mTminDisplay, mTmaxDisplay);
         mCalibGraph->setCurrentX (mTminDisplay, mTmaxDisplay);
@@ -263,7 +302,7 @@ void CalibrationView::updateGraphs()
             zone.mText = tr("Outside study period");
             mCalibGraph->addZone(zone);
         }
-        
+
         // ------------------------------------------------------------
         //  Calibration curve
         // ------------------------------------------------------------
@@ -317,7 +356,7 @@ void CalibrationView::updateGraphs()
             hpdCurve.mIsRectFromZero = true;
             hpdCurve.mData = hpd;
             mCalibGraph->addCurve(hpdCurve);
-            
+
             // update max inside the display period
             QMap<type_data, type_data> subDisplay = calibCurve.mData;
             subDisplay = getMapDataInRange(subDisplay, mTminDisplay, mTmaxDisplay);
@@ -329,7 +368,7 @@ void CalibrationView::updateGraphs()
             mCalibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             mCalibGraph->setFormatFunctX(nullptr);
             mCalibGraph->setFormatFunctY(nullptr);
-            
+
             // ------------------------------------------------------------
             //  Display numerical results
             // ------------------------------------------------------------
@@ -364,7 +403,7 @@ void CalibrationView::updateGraphs()
         // ------------------------------------------------------------
         //  Reference curve from plugin
         // ------------------------------------------------------------
-        
+
 
         // Get the ref graph for this plugin and this date
         if (!mRefGraphView) {
@@ -525,7 +564,7 @@ void CalibrationView::exportImage()
                                            MainWindow::getInstance()->getCurrentPath());
     if (fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
-    
+
     mDrawing->showMarker();
 
 }
@@ -548,7 +587,7 @@ void CalibrationView::copyText()
      */
     QString text = mDate.mName + " (" + mDate.mPlugin->getName() + ")" +"<br>" + mDate.getDesc() + "<br>" + mResultsText->toPlainText();
     QApplication::clipboard()->setText(text.replace("<br>", "\r"));
-   
+
 }
 
 void CalibrationView::setVisible(bool visible)
@@ -587,7 +626,7 @@ void CalibrationView::resizeEvent(QResizeEvent* e)
 void CalibrationView::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
-    
+
     const int graphLeft (mButtonWidth);
     const int graphWidth (width() - graphLeft);
 
@@ -663,6 +702,3 @@ void CalibrationView::updateLayout()
     mResultsText->setAutoFillBackground (true);
 
 }
-
-
-

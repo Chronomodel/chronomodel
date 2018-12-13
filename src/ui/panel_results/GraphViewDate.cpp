@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "GraphViewDate.h"
 #include "GraphView.h"
 #include "Date.h"
@@ -59,7 +98,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
     Q_ASSERT(mDate);
     //qDebug()<<"GraphViewDate::generateCurves()";
     GraphViewResults::generateCurves(typeGraph, variable);
-   
+
     /* ------------------------------------------------
      *  Reset the graph object settings
      * ------------------------------------------------
@@ -304,7 +343,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
 void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle)
 {
     GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
-    
+
     /* --------------------First Tab : Posterior distrib.------------*/
 
     if (mCurrentTypeGraph == ePostDistrib) {
@@ -320,7 +359,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
          * ------------------------------------------------
          */
         if (mCurrentVariable == eTheta) {
-            
+
             mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
             mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
             mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowCredibility);
@@ -328,7 +367,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
             mGraph->setCurveVisible("Wiggle", mShowWiggle);
             for (int i=0; i<mShowChainList.size(); ++i)
                 mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
-            
+
             mGraph->setTipXLab("t");
             mGraph->setYAxisMode(GraphView::eHidden);
             mGraph->showInfos(false);
@@ -386,7 +425,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
         mGraph->setCurveVisible("Accept Target", true);
         for (int i=0; i<mShowChainList.size(); ++i)
             mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList.at(i));
-        
+
         mGraph->setTipXLab(tr("Iteration"));
         mGraph->setTipYLab(tr("Rate"));
 
@@ -396,7 +435,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
         mGraph->autoAdjustYScale(false); // do  repaintGraph()
         mGraph->setRangeY(0, 100); // do repaintGraph() !!
     }
-    
+
     /* -------------------- fourth tab : Autocorrelation----------------------------
      *  Possible curves (could be for theta or sigma):
      *  - Correl i

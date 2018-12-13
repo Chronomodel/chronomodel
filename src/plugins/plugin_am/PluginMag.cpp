@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "PluginMag.h"
 #if USE_PLUGIN_AM
 
@@ -41,10 +80,10 @@ QPair<long double, long double> PluginMag::getLikelihoodArg(const double& t, con
     const long double dec = static_cast<long double> (data.value(DATE_AM_DEC_STR).toDouble());
     const long double intensity = static_cast<long double> (data.value(DATE_AM_INTENSITY_STR).toDouble());
     //QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
-    
+
     long double mesure (0.l);
     long double error (0.l);
-    
+
     if (is_inc) {
         error = alpha / 2.448l;
         mesure = inc;
@@ -60,10 +99,10 @@ QPair<long double, long double> PluginMag::getLikelihoodArg(const double& t, con
 
     long double refValue = static_cast<long double> (getRefValueAt(data, t));
     long double refError = static_cast<long double> (getRefErrorAt(data, t));
-    
+
     long double variance = refError * refError + error * error;
     long double exponent = -0.5l * powl((mesure - refValue), 2.l) / variance;
-    
+
     return qMakePair(variance, exponent);
 }
 
@@ -246,14 +285,14 @@ RefCurve PluginMag::loadRefFile(QFileInfo refFile)
 {
     RefCurve curve;
     curve.mName = refFile.fileName().toLower();
-    
+
     QFile file(refFile.absoluteFilePath());
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
 
         QLocale locale = QLocale(QLocale::English);
         QTextStream stream(&file);
         bool firstLine = true;
-        
+
         while (!stream.atEnd()) {
             QString line = stream.readLine();
 
@@ -274,40 +313,40 @@ RefCurve PluginMag::loadRefFile(QFileInfo refFile)
                     const double e = locale.toDouble(values.at(2), &ok);
                     if(!ok)
                         continue;
-                    
+
                     const double gSup = g + 1.96 * e;
 
                     const double gInf = g - 1.96 * e;
 
-                    
+
                     curve.mDataMean[t] = g;
                     curve.mDataError[t] = e;
                     curve.mDataSup[t] = gSup;
                     curve.mDataInf[t] = gInf;
-                    
+
                     if (firstLine) {
                         curve.mDataMeanMin = g;
                         curve.mDataMeanMax = g;
-                        
+
                         curve.mDataErrorMin = e;
                         curve.mDataErrorMax = e;
-                        
+
                         curve.mDataSupMin = gSup;
                         curve.mDataSupMax = gSup;
-                        
+
                         curve.mDataInfMin = gInf;
                         curve.mDataInfMax = gInf;
 
                     } else {
                         curve.mDataMeanMin = qMin(curve.mDataMeanMin, g);
                         curve.mDataMeanMax = qMax(curve.mDataMeanMax, g);
-                        
+
                         curve.mDataErrorMin = qMin(curve.mDataErrorMin, e);
                         curve.mDataErrorMax = qMax(curve.mDataErrorMax, e);
-                        
+
                         curve.mDataSupMin = qMin(curve.mDataSupMin, gSup);
                         curve.mDataSupMax = qMax(curve.mDataSupMax, gSup);
-                        
+
                         curve.mDataInfMin = qMin(curve.mDataInfMin, gInf);
                         curve.mDataInfMax = qMax(curve.mDataInfMax, gInf);
                     }
@@ -316,7 +355,7 @@ RefCurve PluginMag::loadRefFile(QFileInfo refFile)
             }
         }
         file.close();
-        
+
         // invalid file ?
         if (!curve.mDataMean.isEmpty()) {
             curve.mTmin = curve.mDataMean.firstKey();
@@ -344,7 +383,7 @@ QPair<double,double> PluginMag::getTminTmaxRefsCurve(const QJsonObject& data) co
     double tmin (0.);
     double tmax (0.);
     QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
-    
+
     if (mRefCurves.contains(ref_curve)  && !mRefCurves.value(ref_curve).mDataMean.isEmpty()) {
         tmin = mRefCurves.value(ref_curve).mTmin;
         tmax = mRefCurves.value(ref_curve).mTmax;
@@ -385,10 +424,10 @@ bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& sett
     double inc = data.value(DATE_AM_INC_STR).toDouble();
     double dec = data.value(DATE_AM_DEC_STR).toDouble();
     double intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
-    
+
     double mesure (0.);
     //double error = 0;
-    
+
     if (is_inc) {
         //error = alpha / 2.448f;
         mesure = inc;

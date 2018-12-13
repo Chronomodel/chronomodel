@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "PhasesScene.h"
 #include "PhaseItem.h"
 #include "ArrowItem.h"
@@ -15,7 +54,7 @@ PhasesScene::PhasesScene(QGraphicsView* view, QObject* parent):AbstractScene(vie
 
 PhasesScene::~PhasesScene()
 {
-    
+
 }
 
 /*
@@ -33,41 +72,41 @@ void PhasesScene::deleteSelectedItems()
 bool PhasesScene::constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo)
 {
     QJsonArray constraints = mProject->mState.value(STATE_PHASES_CONSTRAINTS).toArray();
-    
+
     QJsonObject phaseFrom = ((PhaseItem*)itemFrom)->getPhase();
     QJsonObject phaseTo   = ((PhaseItem*)itemTo)->getPhase();
-    
+
     const int phaseFromId = phaseFrom.value(STATE_ID).toInt();
     const int phaseToId   = phaseTo.value(STATE_ID).toInt();
-    
+
     bool ConstraintAllowed = true;
-    
+
     for (int i = 0; i < constraints.size(); ++i) {
         QJsonObject constraint = constraints.at(i).toObject();
         // Prevent the double
         if ((constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == phaseFromId) && (constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == phaseToId)) {
-            
+
             ConstraintAllowed = false;
             //qDebug() << "PhasesScene::constraintAllowed: not Allowed " ;
         }
         //Prevent inversion
         else if (constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == phaseToId && constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == phaseFromId) {
-            
+
             ConstraintAllowed = false;
             //qDebug() << "PhasesScene::constraintAllowed: not Allowed Inversion" ;
         }
     }
     if ( ConstraintAllowed && constraintIsCircular(constraints, phaseFromId, phaseToId) ) {
-        
+
         ConstraintAllowed = false;
-        
+
 #ifdef DEBUG
         qDebug() << "PhasesScene::constraintAllowed: not Allowed Circular" ;
 #endif
     }
     return ConstraintAllowed;
-    
-    
+
+
 }
 
 
@@ -75,7 +114,7 @@ void PhasesScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
 {
     const QJsonObject phaseFrom = dynamic_cast<PhaseItem*>(itemFrom)->getPhase();
     const QJsonObject phaseTo = dynamic_cast<PhaseItem*>(itemTo)->getPhase();
-    
+
     mProject->createPhaseConstraint(phaseFrom.value(STATE_ID).toInt(),
                                                         phaseTo.value(STATE_ID).toInt());
 }
@@ -84,7 +123,7 @@ void PhasesScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
 {
     QJsonObject phaseFrom = ((PhaseItem*)itemFrom)->getPhase();
     QJsonObject phaseTo = ((PhaseItem*)itemTo)->getPhase();
-    
+
     mProject->mergePhases(phaseFrom.value(STATE_ID).toInt(),
                                               phaseTo.value(STATE_ID).toInt());
 }
@@ -120,7 +159,7 @@ void PhasesScene::sendUpdateProject(const QString& reason, bool notify, bool sto
     qDebug()<<"PhasesScene::sendUpdateProject "<<reason<<notify<<storeUndoCommand;
     QJsonObject statePrev = mProject->state();
     QJsonObject stateNext = statePrev;
-    
+
     QJsonArray phases = QJsonArray();
     for (int i=0; i<mItems.size(); ++i)
         phases.append(((PhaseItem*)mItems.at(i))->getPhase());
@@ -200,17 +239,17 @@ void PhasesScene::updateSceneFromState()
     const QJsonObject state = mProject->state();
     QJsonArray phases = state.value(STATE_PHASES).toArray();
     QJsonArray constraints = state.value(STATE_PHASES_CONSTRAINTS).toArray();
-    
+
     QList<int> phases_ids;
     for (int i=0; i<phases.size(); ++i)
         phases_ids << phases.at(i).toObject().value(STATE_ID).toInt();
-    
+
     QList<int> constraints_ids;
     for (int i=0; i<constraints.size(); ++i)
         constraints_ids << constraints.at(i).toObject().value(STATE_ID).toInt();
-    
+
     mUpdatingItems = true;
-    
+
     // ------------------------------------------------------
     //  Delete items not in current state
     // ------------------------------------------------------
@@ -218,36 +257,36 @@ void PhasesScene::updateSceneFromState()
     for (int i=mItems.size()-1; i>=0; --i) {
         PhaseItem* item = (PhaseItem*)mItems[i];
         QJsonObject& phase = item->getPhase();
-        
+
         if (!phases_ids.contains(phase.value(STATE_ID).toInt())) {
 #ifdef DEBUG
             //qDebug() << "=> Phase item deleted : " << phase[STATE_ID].toInt();
 #endif
             mItems.removeAt(i);
             hasDeleted = true;
-            
+
             // ????? This breaks the program!!! Delete abose does the jobs but is it safe?
             //removeItem(item);
-            
+
             // This is a QObject : call deleteLater instead of delete
             item->deleteLater();
         }
     }
-    
+
     // ------------------------------------------------------
     //  Create / Update phase items
     // ------------------------------------------------------
     bool hasCreated = false;
     for (int i=0; i<phases.size(); ++i) {
         QJsonObject phase = phases.at(i).toObject();
-        
+
         bool itemExists = false;
         for (int j=0; j<mItems.size(); ++j) {
             PhaseItem* item = (PhaseItem*)mItems[j];
             QJsonObject itemPhase = item->getPhase();
             if (itemPhase.value(STATE_ID).toInt() == phase.value(STATE_ID).toInt()) {
                 itemExists = true;
-                
+
                 // When assigning events to a phase by clicking on the checkbox of the phase item,
                 // the information is saved in the event, not in the phase!
                 // So apparently, the phase hasn't changed, but we need to redraw its item to show the modified events inside it.
@@ -271,7 +310,7 @@ void PhasesScene::updateSceneFromState()
             // usefull, changing the selected item force to update the state ??
             clearSelection();
             phaseItem->setSelected(true);
-            
+
             // Note : setting an event in (0, 0) tells the scene that this item is new!
             // Thus the scene will move it randomly around currently viewed center point).
             QPointF pos = phaseItem->pos();
@@ -301,14 +340,14 @@ void PhasesScene::updateSceneFromState()
 
         }
     }
-    
+
     // ------------------------------------------------------
     //  Delete constraints not in current state
     // ------------------------------------------------------
     for (int i=mConstraintItems.size()-1; i>=0; --i) {
         ArrowItem* constraintItem = mConstraintItems[i];
         QJsonObject& constraint = constraintItem->data();
-        
+
         if (!constraints_ids.contains(constraint.value(STATE_ID).toInt())) {
 #ifdef DEBUG
             //qDebug() << "Phase Constraint deleted : " << constraint[STATE_ID].toInt();
@@ -318,13 +357,13 @@ void PhasesScene::updateSceneFromState()
             delete constraintItem;
         }
     }
-    
+
     // ------------------------------------------------------
     //  Create / Update constraint items
     // ------------------------------------------------------
     for (int i=0; i<constraints.size(); ++i) {
         QJsonObject constraint = constraints.at(i).toObject();
-        
+
         bool itemExists = false;
         for (int j=0; j<mConstraintItems.size(); ++j) {
             QJsonObject constraintItem = mConstraintItems.at(j)->data();
@@ -349,15 +388,15 @@ void PhasesScene::updateSceneFromState()
 #endif
         }
     }
-    
+
     mUpdatingItems = false;
-    
+
     // Deleting an item that was selected involves changing the selection (and updating properties view)
     // Nothing has been triggered so far because of the mUpdatingItems flag, so we need to trigger it now!
     // As well, creating an item changes the selection because we want the newly created item to be selected.
     if (hasDeleted || hasCreated)
         updateStateSelectionFromItem();
-    
+
     adjustSceneRect();
     adaptItemsForZoom(mZoom);
 
@@ -372,15 +411,15 @@ void PhasesScene::clean()
     for (int i=mItems.size()-1; i>=0; --i) {
         PhaseItem* item = (PhaseItem*)mItems[i];
         mItems.removeAt(i);
-        
+
         // ????? This breaks the program!!! Delete abose does the jobs but is it safe?
         //removeItem(item);
-        
+
         // This is a QObject : call deleteLater instead of delete
         item->setVisible(false); // The item disappears and after it's deleted
         item->deleteLater();
     }
-    
+
     // ------------------------------------------------------
     //  Delete all constraints
     // ------------------------------------------------------
@@ -410,7 +449,7 @@ void PhasesScene::updateStateSelectionFromItem()
         bool oneSelection = false;
         PhaseItem* curItem = dynamic_cast<PhaseItem*>(currentItem());
 
-        for (int i=0; i<mItems.size(); ++i) {           
+        for (int i=0; i<mItems.size(); ++i) {
             PhaseItem* item = static_cast<PhaseItem*>(mItems.at(i));
 
             // without selected update
@@ -589,14 +628,14 @@ void PhasesScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e
 {
     QJsonObject state = mProject->state();
     QJsonArray events = state.value(STATE_EVENTS).toArray();
-    
+
     // tableau contenant les id des phases associés à leur nombre d'apparition dans les events
     QHash<int, int> phases;
     // nombre d'évènements sélectionnés
     int selectedEventsCount = 0;
     for (int i=0; i<events.size(); ++i) {
         QJsonObject event = events.at(i).toObject();
-        
+
         if (event.value(STATE_IS_SELECTED).toBool()) {
             QString phaseIdsStr = event.value(STATE_EVENT_PHASE_IDS).toString();
             if (!phaseIdsStr.isEmpty()) {
@@ -612,19 +651,19 @@ void PhasesScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e
             ++selectedEventsCount;
         }
     }
-    
+
     for (int i=0; i<mItems.size(); ++i) {
         PhaseItem* item = static_cast<PhaseItem*>(mItems.at(i));
         QJsonObject phase = item->getPhase();
         int id = phase.value(STATE_ID).toInt();
-        
+
         if (phases.find(id) == phases.end())
             //item->setState(Qt::Unchecked);
             item->mAtLeastOneEventSelected = false;
         else
             item->mAtLeastOneEventSelected = true;
             //item->setState((phases[id] == selectedEventsCount) ? Qt::Checked : Qt::PartiallyChecked);
-    
+
     }
 }
 */

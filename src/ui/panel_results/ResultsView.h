@@ -1,5 +1,44 @@
-#ifndef ResultsWrapper_H
-#define ResultsWrapper_H
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
+#ifndef RESULTSWRAPPER_H
+#define RESULTSWRAPPER_H
 
 #include "MCMCLoopMain.h"
 #include "AxisTool.h"
@@ -9,7 +48,6 @@
 #include <QVBoxLayout>
 #include <QTabWidget>
 #include <QLabel>
-
 
 class QStackedWidget;
 class QScrollArea;
@@ -37,14 +75,13 @@ class CheckBox;
 class RadioButton;
 class Marker;
 
-
 class ResultsView: public QWidget
 {
     Q_OBJECT
 public:
     ResultsView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~ResultsView();
-    
+
     double mResultZoomX;
     double mResultCurrentMinX;
     double mResultCurrentMaxX;
@@ -59,7 +96,7 @@ public:
     double mResultMaxDuration;
 
     bool mHasPhases;
-    
+
     Model* mModel;
 
     void doProjectConnections(Project* project);
@@ -94,15 +131,15 @@ public slots:
     void changeScrollArea();
     void updateLayout();
     void updateGraphsLayout();
-    
+
     void clearResults();
     void updateCurves();
-    
-    
+
+
     void updateControls();
     void applyAppSettings();
     void updateScales();
-    
+
     void updateModel();
     void updateResultsLog();
 
@@ -110,7 +147,7 @@ private slots:
     void updateVisibleTabs(const int &index);
     void graphTypeChange();
     void updateCurvesToShow();
-    
+
     void settingChange();
     void updateZoomX(); // Connected to slider signals
     void updateScroll(const double min, const double max); // Connected to ruler signals
@@ -119,7 +156,7 @@ private slots:
     void setStudyPeriod(); // connected to study button
     void updateZoomEdit();
     void updateGraphsZoomX();
-    
+
     void setXScaleSpin(const double value); // connected to mXScaleSpin
     void XScaleSpinChanged(double value);
     void setXScaleSlide(const int value);
@@ -154,21 +191,21 @@ private slots:
     void setThreshold();
 
 signals:
-   
+
     void curvesGenerated();
-    
+
     void controlsUpdated();
     void resultsLogUpdated(const QString &log);
-    
+
     void scalesUpdated();
-    
+
     void updateScrollAreaRequested();
     void generateCurvesRequested();
 
     void xSpinUpdate(const int value);
     void xSlideUpdate(const int value);
 
-    
+
 private:
     void clearHisto();
     void clearChainHistos();
@@ -179,7 +216,7 @@ private:
     ProjectSettings mSettings;
     MCMCSettings mMCMCSettings;
     QList<ChainSpecs> mChains;
-    
+
     // used for options side
     int mMargin;
     int mOptionsW;
@@ -190,7 +227,7 @@ private:
     int mRulerH;
     int mTabsH;
     int mGraphHeight;
-    
+
     Tabs* mTabs;
     int mTabEventsIndex;
     int mTabPhasesIndex;
@@ -274,7 +311,7 @@ private:
     Button* mFontBut;
     QComboBox* mThicknessCombo;
     QComboBox* mOpacityCombo;
-    
+
     QLabel* mLabFont;
     QLabel * mLabThickness;
     QLabel * mLabOpacity;
@@ -287,7 +324,7 @@ private:
     QList<CheckBox*> mCheckChainChecks;
     QList<RadioButton*> mChainRadios;
 
-    
+
     //--------- Density Options
     QWidget* mDensityOptsGroup;
     Label* mDensityOptsTitle;
@@ -323,7 +360,7 @@ private:
 
 
     int mComboH;
-    
+
     QMap<QPair<GraphViewResults::Variable, GraphViewResults::TypeGraph>, QPair<double, double>> mZooms;
     QMap<QPair<GraphViewResults::Variable, GraphViewResults::TypeGraph>, QPair<double, int>> mScales;
     //propreties
