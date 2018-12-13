@@ -1,3 +1,42 @@
+/* ---------------------------------------------------------------------
+
+Copyright or © or Copr. CNRS	2014 - 2018
+
+Authors :
+	Philippe LANOS
+	Helori LANOS
+ 	Philippe DUFRESNE
+
+This software is a computer program whose purpose is to
+create chronological models of archeological data using Bayesian statistics.
+
+This software is governed by the CeCILL V2.1 license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL V2.1 license and that you accept its terms.
+--------------------------------------------------------------------- */
+
 #include "ArrowItem.h"
 #include "EventItem.h"
 #include "EventConstraint.h"
@@ -27,7 +66,7 @@ mGreyedOut(false)
             QGraphicsItem::ItemIsFocusable |
             QGraphicsItem::ItemSendsScenePositionChanges |
             QGraphicsItem::ItemSendsGeometryChanges);
-    
+
     setData(constraint);
 }
 
@@ -70,16 +109,16 @@ void ArrowItem::setGreyedOut(bool greyedOut)
 void ArrowItem::updatePosition()
 {
     prepareGeometryChange();
-    
+
     Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
-    
+
     const int fromId = mData.value(STATE_CONSTRAINT_BWD_ID).toInt();
     const int toId = mData.value(STATE_CONSTRAINT_FWD_ID).toInt();
-    
+
     QJsonObject from;
     QJsonObject to;
-    
+
     if (mType == eEvent) {
         const QJsonArray events = state.value(STATE_EVENTS).toArray();
         for (int i=0; i<events.size(); ++i) {
@@ -102,7 +141,7 @@ void ArrowItem::updatePosition()
 
     mXStart = from.value(STATE_ITEM_X).toDouble();
     mYStart = from.value(STATE_ITEM_Y).toDouble();
-    
+
     mXEnd = to.value(STATE_ITEM_X).toDouble();
     mYEnd = to.value(STATE_ITEM_Y).toDouble();
 }
@@ -190,7 +229,7 @@ QPainterPath ArrowItem::shape() const
     QPainterPath path;
     QRectF rect = boundingRect();
     const qreal shift (15.);
-    
+
     if (mXStart < mXEnd && mYStart >= mYEnd) {
         path.moveTo(mXStart + shift, mYStart);
         path.lineTo(mXStart, mYStart - shift);
@@ -231,7 +270,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     Q_UNUSED(widget);
 
     painter->setRenderHint(QPainter::Antialiasing);
-    
+
     const int penWidth (2);
     QColor color = mEditing ? QColor(77, 180, 62) : QColor(0, 0, 0);
     //set the Arrow under the Event
@@ -243,12 +282,12 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         setZValue(1);
     } else if (mGreyedOut)
         color.setAlphaF(0.05);
-    
+
     painter->setPen(QPen(color, penWidth, mEditing ? Qt::DashLine : Qt::SolidLine));
-    painter->drawLine(int(mXStart), int(mYStart), int(mXEnd), int(mYEnd));
-    
+    painter->drawLine(QPointF(qreal(mXStart), qreal(mYStart)), QPointF(qreal(mXEnd), qreal(mYEnd)));
+
     // Bubble
-    
+
     const QString bubbleText = getBubbleText();
     bool showMiddleArrow = true;
 
@@ -282,27 +321,28 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
      }
 
     // arrows
-    
-    const double angle_rad = atan(qAbs(mXStart-mXEnd) / qAbs(mYStart-mYEnd));
-    const double angle_deg = angle_rad * 180. / M_PI;
-    
-    QPainterPath path;
-    const int arrow_w (10);
-    const int arrow_l (15);
-    path.moveTo(-arrow_w/2, arrow_l/2);
-    path.lineTo(arrow_w/2, arrow_l/2);
-    path.lineTo(0, -arrow_l/2);
-    path.closeSubpath();
-    
-    const QRectF axeBox = QRectF(qMin(mXStart, mXEnd), qMin(mYStart, mYEnd), qAbs(mXEnd-mXStart), qAbs(mYEnd-mYStart));
 
-    const qreal posX = axeBox.width()/2;
-    const qreal posY = axeBox.height()/2;
-    const qreal posX1 = axeBox.width()/3;
-    const qreal posX2 = 2*axeBox.width()/3;
-    const qreal posY1 = axeBox.height()/3;
-    const qreal posY2 = 2*axeBox.height()/3;
-    
+    const double angle_rad = atan( double(qAbs(mXStart-mXEnd)) / double(qAbs(mYStart-mYEnd)) );
+    const double angle_deg = angle_rad * 180. / M_PI;
+
+    QPainterPath path;
+    const qreal arrow_w (15.);
+    const qreal arrow_l (25.);
+    path.moveTo(-arrow_w/2., arrow_l/2.);
+    path.lineTo(arrow_w/2., arrow_l/2.);
+    path.lineTo(0., -arrow_l/2.);
+    path.closeSubpath();
+
+    const QRectF axeBox = QRectF( qMin(mXStart, mXEnd), qMin(mYStart, mYEnd), qAbs(mXEnd-mXStart), qAbs(mYEnd-mYStart) );
+
+    const qreal posX = axeBox.width()/2.;
+    const qreal posY = axeBox.height()/2.;
+
+    const qreal posX1 = axeBox.width()/3.;
+    const qreal posX2 = axeBox.width()*0.6666;
+    const qreal posY1 = axeBox.height()/3.;
+    const qreal posY2 = axeBox.height()*0.6666;
+
     if (mXStart < mXEnd && mYStart >= mYEnd) {
         if (showMiddleArrow) {
             painter->save();
@@ -316,7 +356,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->rotate(angle_deg);
             painter->fillPath(path, color);
             painter->restore();
-            
+
             painter->save();
             painter->translate(axeBox.x() + posX2, axeBox.y() + posY1);
             painter->rotate(angle_deg);
@@ -327,19 +367,19 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         if (showMiddleArrow) {
             painter->save();
             painter->translate(axeBox.x() + posX, axeBox.y() + posY);
-            painter->rotate(180 - angle_deg);
+            painter->rotate(180. - angle_deg);
             painter->fillPath(path, color);
             painter->restore();
         } else {
             painter->save();
             painter->translate(axeBox.x() + posX1, axeBox.y() + posY1);
-            painter->rotate(180 - angle_deg);
+            painter->rotate(180. - angle_deg);
             painter->fillPath(path, color);
             painter->restore();
-            
+
             painter->save();
             painter->translate(axeBox.x() + posX2, axeBox.y() + posY2);
-            painter->rotate(180 - angle_deg);
+            painter->rotate(180. - angle_deg);
             painter->fillPath(path, color);
             painter->restore();
         }
@@ -347,44 +387,44 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         if (showMiddleArrow) {
             painter->save();
             painter->translate(axeBox.x() + posX, axeBox.y() + posY);
-            painter->rotate(180 + angle_deg);
+            painter->rotate(180. + angle_deg);
             painter->fillPath(path, color);
             painter->restore();
         } else {
             painter->save();
             painter->translate(axeBox.x() + posX2, axeBox.y() + posY1);
-            painter->rotate(180 + angle_deg);
+            painter->rotate(180. + angle_deg);
             painter->fillPath(path, color);
             painter->restore();
-            
+
             painter->save();
             painter->translate(axeBox.x() + posX1, axeBox.y() + posY2);
-            painter->rotate(180 + angle_deg);
+            painter->rotate(180. + angle_deg);
             painter->fillPath(path, color);
             painter->restore();
         }
     } else if (mXStart >= mXEnd && mYStart >= mYEnd) {
         if (showMiddleArrow) {
             painter->save();
-            painter->translate(axeBox.x() + axeBox.width()/2, axeBox.y() + axeBox.height()/2);
+            painter->translate(axeBox.x() + posX, axeBox.y() + posY);
             painter->rotate(-angle_deg);
             painter->fillPath(path, color);
             painter->restore();
         } else {
             painter->save();
-            painter->translate(axeBox.x() + 2*axeBox.width()/3, axeBox.y() + 2*axeBox.height()/3);
+            painter->translate(axeBox.x() + posX2, axeBox.y() + posY2);
             painter->rotate(-angle_deg);
             painter->fillPath(path, color);
             painter->restore();
-            
+
             painter->save();
-            painter->translate(axeBox.x() + axeBox.width()/3, axeBox.y() + axeBox.height()/3);
+            painter->translate(axeBox.x() + posX1, axeBox.y() + posY1);
             painter->rotate(-angle_deg);
             painter->fillPath(path, color);
             painter->restore();
         }
     }
-    
+
 
 }
 
