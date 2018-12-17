@@ -44,37 +44,37 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 AboutDialog::AboutDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags)
 {
-    setWindowTitle(tr("About Chronomodel"));
 
-    // -----------
+    const QString text = "About " + qApp->applicationName() + " Version: " + qApp->applicationVersion();
+    setWindowTitle(text);
 
-    mLabel = new QLabel();
-    mLabel->setTextFormat(Qt::RichText);
-    mLabel->setOpenExternalLinks(true);
-    mLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
-    mLabel->setWordWrap(true);
+#ifdef Q_OS_MAC
+    QString path  =  qApp->applicationDirPath();
+    QDir dir(path);
+    dir.cdUp();
+    path = dir.absolutePath() + "/Resources";
+#else
+    //http://doc.qt.io/qt-5/qstandardpaths.html#details
+    QStringList dataPath = QStandardPaths::standardLocations(QStandardPaths::DataLocation);
+    QString path  =  dataPath[0];
+#endif
 
-    QString text = "<b>" + qApp->applicationName() + " " + qApp->applicationVersion() + "</b><br><br>";
-    text += "<a href=\"http://www.chronomodel.com\">http://www.chronomodel.com</a><br><br>";
-    text += "Copyright © CNRS 2014 - 2018<br> ";
 
-    text += "<b>Project director</b> : Philippe LANOS<br>";
 
-    text += "<b>Contributors</b> : Helori LANOS, Philippe DUFRESNE<br><br>";
+    QFile htmlFile(path+ "/ABOUT.html");
+    htmlFile.open(QIODevice::ReadOnly);
 
-    text += "<b>Contact</b> :<br>";
-    text += "<a href=\"mailto:support@chronomodel.com \">support@chronomodel.com </a><br><br>";
-
-    text += "<b>License</b> :<br>";
-    text += "Chronomodel is released under the <a href=\"http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html\">CeCILL License V2.1</a><br><br>";
-
-    mLabel->setText(text);
+    mText = new QTextEdit();
+    mText->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    mText->setHtml(htmlFile.readAll());
+    mText->setTextBackgroundColor(qApp->palette().background().color());
 
     QVBoxLayout* layout = new QVBoxLayout();
-    layout->addWidget(mLabel);
+    layout->addWidget(mText);
     setLayout(layout);
+    layout->setMargin(2);
 
-    setMinimumWidth(600);
+    setMinimumSize(600, 600);
 }
 
 AboutDialog::~AboutDialog()
@@ -82,15 +82,3 @@ AboutDialog::~AboutDialog()
 
 }
 
-void AboutDialog::paintEvent(QPaintEvent* e)
-{
-    Q_UNUSED(e);
-    QPainter p(this);
-    p.setRenderHint(QPainter::Antialiasing);
-
-    QPixmap icon(":chronomodel.png");
-    int s = 200;
-    int m = 50;
-    p.drawPixmap(QRect(width() - m - s, m, s, s), icon, icon.rect());
-
-}

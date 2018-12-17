@@ -41,6 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define ABOUTDIALOG_H
 
 #include <QDialog>
+#include <QTextEdit>
 
 class QLabel;
 
@@ -52,11 +53,8 @@ public:
     AboutDialog(QWidget* parent = nullptr, Qt::WindowFlags flags =  Qt::Widget);
     ~AboutDialog();
 
-protected:
-    void paintEvent(QPaintEvent* e);
-
 public:
-    QLabel* mLabel;
+    QTextEdit* mText;
 };
 
 #endif

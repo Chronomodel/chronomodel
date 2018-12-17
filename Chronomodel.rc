@@ -14,12 +14,12 @@ BLOCK "040904b0"
 BEGIN
 VALUE "CompanyName", "CNRS\0"
 VALUE "FileDescription", "File Description\0"
-VALUE "FileVersion", "2.0.13\0"
+VALUE "FileVersion", "2.0.18\0"
 VALUE "InternalName", "Chronomodel\0"
 VALUE "LegalCopyright", "Copyright 2018 by CNRS\0"
 VALUE "OriginalFilename", "chronomodel.exe\0"
 VALUE "ProductName", "ChronoModel\0"
-VALUE "ProductVersion", "2.0.13\0"
+VALUE "ProductVersion", "2.0.18\0"
 END
 END
 END

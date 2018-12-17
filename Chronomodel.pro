@@ -113,7 +113,7 @@ macx{
 
 
         QMAKESPEC = macx-clang
-        QMAKE_MAC_SDK = macosx10.14 #macosx10.12
+        QMAKE_MAC_SDK = macosx10.14
         message("QMAKE_MAC_SDK = $$QMAKE_MAC_SDK")
 
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
@@ -121,6 +121,8 @@ macx{
 	# Define a set of resources to deploy inside the bundle :
 	RESOURCES_FILES.path = Contents/Resources
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
+        RESOURCES_FILES.files += $$PRO_PATH/deploy/ABOUT.html
+        RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel.png
         #RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
 	QMAKE_BUNDLE_DATA += RESOURCES_FILES
 
@@ -131,7 +133,7 @@ macx{
 win32{
 	# Resource file (Windows only)
         message("WIN specific settings")
-       QMAKESPEC = win32-msvc  # for 32-bit and 64-bit
+        QMAKESPEC = win32-msvc  # for 32-bit and 64-bit
         RC_FILE += Chronomodel.rc
         RC_ICONS += $$PRO_PATH/icon/Chronomodel.ico
         QT_FATAL_WARNING = 1
