@@ -48,6 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QtWidgets>
 #include <QLocale>
+#include <QFont>
 
 // Constructor / Destructor
 MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
@@ -325,7 +326,6 @@ void MainWindow::createMenus()
     //-----------------------------------------------------------------
     const  QFont ft (font());
     mProjectMenu = menuBar()->addMenu(tr("File"));
-
     mProjectMenu->addAction(mAppSettingsAction);
     mProjectMenu->addAction(mNewProjectAction);
     mProjectMenu->addAction(mOpenProjectAction);
@@ -401,11 +401,10 @@ void MainWindow::createToolBars()
     // Main ToolBar
     //-----------------------------------------------------------------
 
-    QString sty = palette().text().color().name(); // find the color defined by the system/theme
 
     mToolBar = addToolBar("Main Tool Bar"); /* all types of tool button */
-    mToolBar->setStyleSheet("QToolButton { color :"+ sty +";}");
-    mToolBar->setFont(menuBar()->font());
+    //QString sty = palette().text().color().name(); // find the color defined by the system/theme
+   // mToolBar->setStyleSheet("QToolButton { color :"+ sty +" ;}");
 
     mToolBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);//ToolButtonTextUnderIcon); // offer to write the text under the icon
     mToolBar->setMovable(false);
@@ -438,7 +437,7 @@ void MainWindow::createToolBars()
     mToolBar->addAction(mWebsiteAction);
     /* toolBar->addAction(mAboutAct);
     toolBar->addAction(mAboutQtAct); */
-    //toolBar->setFont(qApp->font()); // must be after all addAction
+    mToolBar->setFont(qApp->font()); // must be after all addAction
 
 }
 
@@ -705,8 +704,7 @@ void MainWindow::setAppFilesSettings()
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
     //statusBar()->showMessage(tr("Language") + " : " + QLocale::languageToString(QLocale().language()));
-    //setFont(AppSettings::font());
-    //qApp->setFont(AppSettings::font());
+
     QFont tooltipFont(font());
     tooltipFont.setItalic(true);
 
@@ -729,10 +727,6 @@ void MainWindow::setAppSettings()
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
     //statusBar()->showMessage(tr("Language") + " : " + QLocale::languageToString(QLocale().language()));
-
-
- //   setFont(AppSettings::font());
-//    qApp->setFont(AppSettings::font());
 
     setFont(qApp->font());
 
@@ -792,11 +786,6 @@ void MainWindow::setFont(const QFont &font)
     //mUndoStack->setFont(font);
     mUndoView->setFont(font);
     mUndoDock->setFont(font);
-
-    //AppSettings mAppSettings
-    //QString mLastPath;
-
-
 }
 
 // Language
@@ -1150,8 +1139,6 @@ void MainWindow::activateInterface(bool activate)
     qDebug()<<"MainWindow::activateInterface"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< QApplication::desktop()->width();
     qDebug()<<"MainWindow::activateInterfacescreen width"<< width() / screen->physicalDotsPerInchX() * cm_per_in;
     qDebug()<<"MainWindow::activateInterface screen height"<< height() / screen->physicalDotsPerInchY() * cm_per_in;
-
-
 
 }
 
