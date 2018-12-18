@@ -266,8 +266,6 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
     mList->setCurrentRow(0);
     mStack->setCurrentIndex(0);
-
-//    setFixedWidth(30 * AppSettings::heigthUnit());
 }
 
 AppSettingsDialog::~AppSettingsDialog()
