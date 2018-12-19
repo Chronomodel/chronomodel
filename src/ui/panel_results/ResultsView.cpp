@@ -1087,7 +1087,7 @@ void ResultsView::updateTabDisplay(const int &i)
     qreal dy(0); // shift between Y position of the Edit and the y position of the label
 
     switch (i) {
-    case 0: //Display tab
+        case 0: //Display tab
         {
         /*
          * Span Options
@@ -1118,7 +1118,7 @@ void ResultsView::updateTabDisplay(const int &i)
         } else
             mDisplayStudyBut->setVisible(false);
 
-        if (mCurrentTypeGraph != GraphViewResults::eTrace)
+        if ((mCurrentTypeGraph != GraphViewResults::eTrace) && (mCurrentTypeGraph != GraphViewResults::eAccept))
             mRuler->clearAreas();
 
         mCurrentXMinEdit->move(mMargin, ySpan);
@@ -1126,8 +1126,6 @@ void ResultsView::updateTabDisplay(const int &i)
         mCurrentXMaxEdit->move(mOptionsW - mCurrentXMinEdit->width() -  mMargin, ySpan );
 
         const int w (mSpanLab->width());
-       // dy = (mXScaleSpin->height() - mSpanLab->height()) /2.;
-       // mSpanLab->move(int ((mCurrentXMinEdit->x() + mCurrentXMinEdit->width() + mCurrentXMaxEdit->x() )/2. - (w/2.)), int (mCurrentXMinEdit->y() ));
         mSpanLab->move(int (mOptionsW/2. - (w/2.)), int (mCurrentXMinEdit->y() ));
 
         ySpan += mMargin + mCurrentXMinEdit->height();
@@ -1141,7 +1139,6 @@ void ResultsView::updateTabDisplay(const int &i)
         const int xSliderWidth = mOptionsW - mXScaleLab->width() - mXScaleSpin->width() - 4*mMargin;
 
 #ifdef Q_OS_MAC
-        //const int dySlider = (mXSlider->height() - labelHeight) /2;
         mXSlider->setGeometry(mXScaleLab->x() + mXScaleLab->width() + mMargin , mXScaleSpin->y(), xSliderWidth, mXSlider->height() );
 #endif
 
@@ -1197,7 +1194,7 @@ void ResultsView::updateTabDisplay(const int &i)
         const int ySliderWidth = mOptionsW - mYScaleLab->width() - mYScaleSpin->width() - 4 * mMargin;
 #ifdef Q_OS_MAC
         dy = (mYSlider->height() - labelHeight) /2;
-        mYSlider->setGeometry(mYScaleLab->x() + mYScaleLab->width() + mMargin, mYScaleLab->y() -dy, ySliderWidth, mYSlider->height());
+        mYSlider->setGeometry(mYScaleLab->x() + mYScaleLab->width() + mMargin, int (mYScaleLab->y() - dy), ySliderWidth, mYSlider->height());
 #endif
 
 #ifdef Q_OS_WIN
@@ -1256,94 +1253,92 @@ void ResultsView::updateTabDisplay(const int &i)
         }
         break;
 
-    default: //Distrib. Options tab
-       {
-        /* ----------------------------------------------------------
-           *  MCMC Chains options layout
-           * ----------------------------------------------------------*/
+        default: //Distrib. Options tab
+           {
+            /* ----------------------------------------------------------
+               *  MCMC Chains options layout
+               * ----------------------------------------------------------*/
 
-          mChainsTitle->move(0, 3 );
+              mChainsTitle->move(0, 3 );
 
-          ySpan = mMargin ;
+              ySpan = mMargin ;
 
-          // posterior distribution : chains are selectable with checkboxes
-          const int tabIdx = mTabs->currentIndex();
-          if (tabIdx == 0) {
-              // inside mChainsGroup Coordonnate
-              mAllChainsCheck->move(mMargin, ySpan);
-              ySpan += mAllChainsCheck->height() + mMargin;
+              // posterior distribution : chains are selectable with checkboxes
+              const int tabIdx = mTabs->currentIndex();
+              if (tabIdx == 0) {
+                  // inside mChainsGroup Coordonnate
+                  mAllChainsCheck->move(mMargin, ySpan);
+                  ySpan += mAllChainsCheck->height() + mMargin;
 
 
-              if (mCurrentVariable != GraphViewResults::eTempo && mCurrentVariable != GraphViewResults::eActivity ) {
-                  for (auto && check: mCheckChainChecks) {
-                      check->move(mMargin, ySpan);
-                      ySpan += check->height() + mMargin;
+                  if (mCurrentVariable != GraphViewResults::eTempo && mCurrentVariable != GraphViewResults::eActivity ) {
+                      for (auto && check: mCheckChainChecks) {
+                          check->move(mMargin, ySpan);
+                          ySpan += check->height() + mMargin;
+                      }
+                  }
+
+              } else {      // trace, accept or correl : chains are selectable with radio-buttons
+                  for (auto && radio : mChainRadios) {
+                      radio->move(mMargin, ySpan);
+                      ySpan += radio->height() + mMargin;
                   }
               }
 
-          } else {      // trace, accept or correl : chains are selectable with radio-buttons
-              for (auto && radio : mChainRadios) {
-                  radio->move(mMargin, ySpan);
-                  ySpan += radio->height() + mMargin;
-              }
-          }
 
+              mChainsGroup->setGeometry(0, mChainsTitle->y() + mChainsTitle->height(), mOptionsW, ySpan);
 
-          mChainsGroup->setGeometry(0, mChainsTitle->y() + mChainsTitle->height(), mOptionsW, ySpan);
+              /* ----------------------------------------------------------
+               *  Density Options layout
+               * ----------------------------------------------------------*/
+              if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
+                  mDensityOptsTitle->move(0, mChainsGroup->y() + mChainsGroup->height());
 
-          /* ----------------------------------------------------------
-           *  Density Options layout
-           * ----------------------------------------------------------*/
-          if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
-              mDensityOptsTitle->move(0, mChainsGroup->y() + mChainsGroup->height());
+                  ySpan = mMargin;
 
-              ySpan = mMargin;
+                  if (mCurrentVariable == GraphViewResults::eTheta || mCurrentVariable == GraphViewResults::eDuration) {
+                      mCredibilityCheck->setVisible(true);
+                      mCredibilityCheck->move(mMargin, ySpan);
+                      ySpan += mCredibilityCheck->height() + mMargin;
 
-              if (mCurrentVariable == GraphViewResults::eTheta || mCurrentVariable == GraphViewResults::eDuration) {
-                  mCredibilityCheck->setVisible(true);
-                  mCredibilityCheck->move(mMargin, ySpan);
-                  ySpan += mCredibilityCheck->height() + mMargin;
+                  } else
+                      mCredibilityCheck->setVisible(false);
+
+                  if (mCurrentVariable == GraphViewResults::eTempo || mCurrentVariable == GraphViewResults::eActivity ) {
+                      mDensityOptsTitle->setVisible(false);
+                      mThreshLab->setVisible(false);
+                      mHPDEdit->setVisible(false);
+                      mDensityOptsGroup->setGeometry(0, 0, mOptionsW, 0);
+
+                  } else {
+                      mDensityOptsTitle->setVisible(true);
+                      mThreshLab->setVisible(true);
+                      mHPDEdit->setVisible(true);
+
+                      mHPDEdit->move(mOptionsW - mMargin - mHPDEdit->width(), ySpan);
+                      dy = (mHPDEdit->height() - mThreshLab->height())/2.;
+                      mThreshLab->move(mHPDEdit->x() - fm.boundingRect(mThreshLab->text()).width() - mMargin, int (ySpan + dy));
+                      ySpan += mHPDEdit->height() + mMargin;
+
+                      mFFTLenCombo->move(mOptionsW - mMargin - mFFTLenCombo->width(), ySpan);
+                      dy = (mFFTLenCombo->height() - mFFTLenLab->height())/2.;
+                      mFFTLenLab->move(mFFTLenCombo->x() - fm.boundingRect(mFFTLenLab->text()).width() - mMargin, int( ySpan + dy));
+                      ySpan += mFFTLenCombo->height() + mMargin;
+
+                      mBandwidthEdit->move(mOptionsW - mMargin - mBandwidthEdit->width(), ySpan);
+                      dy = (mBandwidthEdit->height() - mBandwidthLab->height())/2.;
+                      mBandwidthLab->move(mBandwidthEdit->x() - fm.boundingRect(mBandwidthLab->text()).width() - mMargin, ySpan);
+                      ySpan += mBandwidthEdit->height() + mMargin;
+
+                      mDensityOptsGroup->setGeometry(0, mDensityOptsTitle->y() + mDensityOptsTitle->height(), mOptionsW, ySpan);
+                  }
+
+                  mTabMCMC->resize(mOptionsW, mDensityOptsGroup->y() + mDensityOptsGroup->height() + 5) ;
 
               } else
-                  mCredibilityCheck->setVisible(false);
+                  mTabMCMC->resize(mOptionsW, mChainsGroup->y() + mChainsGroup->height() + 5) ;
 
-              if (mCurrentVariable == GraphViewResults::eTempo || mCurrentVariable == GraphViewResults::eActivity ) {
-                  mDensityOptsTitle->setVisible(false);
-                  mThreshLab->setVisible(false);
-                  mHPDEdit->setVisible(false);
-                  mDensityOptsGroup->setGeometry(0, 0, mOptionsW, 0);
-
-              } else {
-                  mDensityOptsTitle->setVisible(true);
-                  mThreshLab->setVisible(true);
-                  mHPDEdit->setVisible(true);
-
-                  mHPDEdit->move(mOptionsW - mMargin - mHPDEdit->width(), ySpan);
-                  dy = (mHPDEdit->height() - mThreshLab->height())/2.;
-                  mThreshLab->move(mHPDEdit->x() - fm.boundingRect(mThreshLab->text()).width() - mMargin, int (ySpan + dy));
-                  ySpan += mHPDEdit->height() + mMargin;
-
-                  mFFTLenCombo->move(mOptionsW - mMargin - mFFTLenCombo->width(), ySpan);
-                  dy = (mFFTLenCombo->height() - mFFTLenLab->height())/2.;
-                  mFFTLenLab->move(mFFTLenCombo->x() - fm.boundingRect(mFFTLenLab->text()).width() - mMargin, int( ySpan + dy));
-                  ySpan += mFFTLenCombo->height() + mMargin;
-
-                  mBandwidthEdit->move(mOptionsW - mMargin - mBandwidthEdit->width(), ySpan);
-                  dy = (mBandwidthEdit->height() - mBandwidthLab->height())/2.;
-                  mBandwidthLab->move(mBandwidthEdit->x() - fm.boundingRect(mBandwidthLab->text()).width() - mMargin, ySpan);
-                  ySpan += mBandwidthEdit->height() + mMargin;
-
-                  mDensityOptsGroup->setGeometry(0, mDensityOptsTitle->y() + mDensityOptsTitle->height(), mOptionsW, ySpan);
-              }
-
-
-              mTabMCMC->resize(mOptionsW, mDensityOptsGroup->y() + mDensityOptsGroup->height() + 5) ;
-
-          } else
-              mTabMCMC->resize(mOptionsW, mChainsGroup->y() + mChainsGroup->height() + 5) ;
-
-
-        }
+            }
         break;
     }
     mTabDisplayMCMC->resize(mOptionsW, mTabDisplayMCMC->minimalHeight());
@@ -1355,7 +1350,6 @@ void ResultsView::updateTabPageSaving()
     const bool byEvents (mTabByScene->currentIndex() == 0);
     const bool byPhases (mTabByScene->currentIndex() == 1);
     const bool byTempo (mTabByScene->currentIndex() == 2);
-
 
     switch (mTabPageSaving->currentIndex()) {
     case 0:
@@ -1384,7 +1378,7 @@ void ResultsView::updateTabPageSaving()
             mPageWidget->resize(mOptionsW, ySpan);
 
         }
-        break;
+    break;
     case 1:
         {
             /* ----------------------------------------------------------
@@ -1450,11 +1444,10 @@ void ResultsView::updateTabPageSaving()
 
 
         }
-        break;
-
+    break;
 
     default:
-        break;
+    break;
     }
 
     mTabPageSaving->resize(mOptionsW, mTabPageSaving->minimalHeight());
@@ -1676,7 +1669,7 @@ void ResultsView::updateGraphsLayout()
                 graph->update();
                 y += graph->height();
             }
-            if (y>0)
+            if ( y > 0 )
                 wid->setFixedSize(width() - sbe - mOptionsW, y);
             mEventsScrollArea->repaint();
          }
@@ -1692,7 +1685,7 @@ void ResultsView::updateGraphsLayout()
                 graph->update();
                 y += graph->height();
             }
-            if (y>0)
+            if ( y > 0 )
                 wid->setFixedSize(width() - sbe - mOptionsW, y);
             mTempoScrollArea->repaint();
          }
@@ -1757,8 +1750,10 @@ void ResultsView::updateFormatSetting(Model* model)
 {
     if (!mModel && !model)
         return;
+
     if (model)
         mModel = model;
+
     mModel->updateFormatSettings();
     applyAppSettings();
     updateControls();
@@ -1856,7 +1851,7 @@ void ResultsView::initResults(Model* model)
     setStudyPeriod();
 
     showInfos(false);
- //   applyAppSettings();
+
     //mCurrentTypeGraph = GraphViewResults::ePostDistrib;
     mCurrentVariable = GraphViewResults::eTheta;
     mTabs->tabClicked(-1); // It is connect to ResultsView::graphTypeChange() and to ResultsView::updateLayout(), the parameter is not used
@@ -1969,7 +1964,7 @@ void ResultsView::createEventsScrollArea(const int idx)
     eventsWidget->setMouseTracking(true);
 
     QList<Event*>::const_iterator iterEvent = mModel->mEvents.cbegin();
-    int counter = 1;
+    int counter (1);
 
     /*
      * Looking for at least one event selected,
