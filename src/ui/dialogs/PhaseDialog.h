@@ -43,9 +43,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QDialog>
 #include <QJsonObject>
 #include <QString>
+#include <QLabel>
 
 class Phase;
-class Label;
 class Button;
 class LineEdit;
 class QComboBox;
@@ -73,10 +73,10 @@ protected:
 public:
     QJsonObject mPhase;
 
-    Label* mNameLab;
-    Label* mColorLab;
-    Label* mTauTypeLab;
-    Label* mTauFixedLab;
+    QLabel* mNameLab;
+    QLabel* mColorLab;
+    QLabel* mTauTypeLab;
+    QLabel* mTauFixedLab;
     //Label* mTauMinLab;
     //Label* mTauMaxLab;
 

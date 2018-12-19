@@ -61,13 +61,13 @@ mButW(80)
 
     setWindowTitle(tr("Create / Modify phase"));
 
-    mNameLab = new Label(tr("Phase name"), this);
+    mNameLab = new QLabel(tr("Phase name"), this);
     mNameLab->setAlignment(Qt::AlignRight);
-    mColorLab = new Label(tr("Phase colour"), this);
+    mColorLab = new QLabel(tr("Phase colour"), this);
     mColorLab->setAlignment(Qt::AlignRight);
-    mTauTypeLab = new Label(tr("Max duration"), this);
+    mTauTypeLab = new QLabel(tr("Max duration"), this);
     mTauTypeLab->setAlignment(Qt::AlignRight);
-    mTauFixedLab = new Label(tr("Max duration value") , this);
+    mTauFixedLab = new QLabel(tr("Max duration value") , this);
     mTauFixedLab->setAlignment(Qt::AlignRight);
 
     mNameEdit = new LineEdit(this);
