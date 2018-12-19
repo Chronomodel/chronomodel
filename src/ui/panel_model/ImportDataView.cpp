@@ -134,8 +134,8 @@ void ImportDataView::browse()
             */
             //QTextCodec* codec = stream.codec();
 
-            int rows = 0;
-            int cols = 0;
+            int rows (0);
+            int cols (0);
 
             QStringList headers;
             const QStringList pluginNames = PluginManager::getPluginsNames();
@@ -239,6 +239,14 @@ void ImportDataView::browse()
                             cols = (values.size() > cols) ? values.size() : cols;
                             ++rows;
                         }
+                        else if (pluginName.contains("bound", Qt::CaseInsensitive)) {
+                            headers << values.at(0);
+                            data << values;
+
+                            // Adapt max columns count if necessary
+                            cols = (values.size() > cols) ? values.size() : cols;
+                            ++rows;
+                        }
                     }
                 } else {
                     file.close();
@@ -304,15 +312,15 @@ void ImportDataView::exportDates()
 
             Project* project = MainWindow::getInstance()->getProject();
             QJsonArray events = project->mState[STATE_EVENTS].toArray();
-            stream << "Title"<< sep << AppSettings::mLastFile<< "\n\r";
-            for (int i=0; i<events.size(); ++i) {
+            stream << "Title"<< sep << AppSettings::mLastFile<< endl;
+            for (int i(0); i<events.size(); ++i) {
                 QJsonObject event = events[i].toObject();
                 QJsonArray dates = event[STATE_EVENT_DATES].toArray();
 
                 int type = event[STATE_EVENT_TYPE].toInt();
                 const QString eventName = event[STATE_NAME].toString();
                 if (type == Event::eKnown) {
-                    stream << "Structure"<< sep << tr("Bound") << sep << eventName<<  sep << event.value(STATE_EVENT_KNOWN_FIXED).toDouble();
+                    stream << eventName << sep << "Bound" <<  sep << event.value(STATE_EVENT_KNOWN_FIXED).toDouble() << endl;
                 } else {
                    for (int j=0; j<dates.size(); ++j) {
                         QJsonObject date = dates.at(j).toObject();
@@ -323,7 +331,7 @@ void ImportDataView::exportDates()
                             if (!d.isNull()) {
                                 QStringList dateCsv = d.toCSV(csvLocal);
                                 stream <<eventName<<sep;
-                                stream << dateCsv.join(sep) << "\n\r";
+                                stream << dateCsv.join(sep) << endl;
                             }
                         }
                         catch(QString error){
@@ -336,7 +344,7 @@ void ImportDataView::exportDates()
                     }
                     }
                 }
-                stream << "\n\r";
+
             }
             file.close();
         }
@@ -350,7 +358,7 @@ void ImportDataView::removeCsvRows(QList<int> rows)
         //qDebug() << "Removing row : " << rows[i];
         //mTable->removeRow(rows[i]);
 
-        for (int c=0; c<mTable->columnCount(); ++c) {
+        for (int c(0); c<mTable->columnCount(); ++c) {
             QTableWidgetItem* item = mTable->item(rows.at(i), c);
             if (item)
                 item->setBackgroundColor(QColor(100, 200, 100));
@@ -363,7 +371,7 @@ void ImportDataView::errorCsvRows(QList<int> rows)
 {
     sortIntList(rows);
     for (int i=rows.size()-1; i>=0; --i) {
-        for (int c=0; c<mTable->columnCount(); ++c) {
+        for (int c(0); c<mTable->columnCount(); ++c) {
             QTableWidgetItem* item = mTable->item(rows.at(i), c);
             if (item)
                 item->setBackgroundColor(QColor(220, 110, 94));
@@ -382,8 +390,8 @@ void ImportDataView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
 
-    int m = 5;
-    int butH = 25;
+    int m (5);
+    int butH (25);
     int helpH = mHelp->heightForWidth(width() - 2*m);
 
     mBrowseBut->setGeometry(m, m, (width() - 3*m)/2, butH);
@@ -457,7 +465,7 @@ void ImportDataTable::updateTableHeaders()
     QList<QTableWidgetItem*> items = selectedItems();
     QString pluginName;
     QString verticalHeader;
-    for (int i=0; i<items.size(); ++i) {
+    for (int i(0); i<items.size(); ++i) {
         QString curPluginName = item(items[i]->row(), 0)->text();
         if (pluginName.isEmpty()) {
             pluginName = curPluginName;
@@ -473,7 +481,7 @@ void ImportDataTable::updateTableHeaders()
 
     int numCols = columnCount();
 
-    if (!pluginName.isEmpty() && (verticalHeader!="TITLE")  && (verticalHeader!="STRUCTURE")) {
+    if (!pluginName.isEmpty() && (verticalHeader!="TITLE")  && (verticalHeader!="STRUCTURE") && (pluginName.toLower()!="bound")) {
         PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
         headers << "Method";
         headers << plugin->csvColumns();
@@ -485,10 +493,18 @@ void ImportDataTable::updateTableHeaders()
         while (headers.size() < numCols)
             headers << "Comment";
 
+    } else if (pluginName.toLower()=="bound") {
+        QStringList cols;
+        headers << "Bound";
+        headers << "Value";
+        for (int i(1); i<numCols; i++)
+            cols<<"";
+        headers << cols;
+
     } else if ((verticalHeader!="TITLE")  || (verticalHeader!="STRUCTURE")) {
         QStringList cols;
         cols << "Info";
-        for (int i=1; i<numCols; i++)
+        for (int i(1); i<numCols; i++)
             cols<<"";
         headers = cols;
 

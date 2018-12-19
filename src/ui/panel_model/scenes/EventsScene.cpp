@@ -328,7 +328,7 @@ void EventsScene::createSceneFromState()
         progress->setValue(i);
 
        // CREATE ITEM
-        Event::Type type = (Event::Type)event.value(STATE_EVENT_TYPE).toInt();
+        Event::Type type = Event::Type (event.value(STATE_EVENT_TYPE).toInt());
         EventItem* newItem = nullptr;
         if (type == Event::eDefault)
             newItem = new EventItem(this, event, settings);
@@ -1292,48 +1292,64 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
 
         int eventIdx (-1);
         int j (0);
+        if (eventName.toLower() != "bound") {
+                QJsonObject eventFinded;
+                for (auto ev : events) {
+                    if (ev.toObject().value(STATE_NAME).toString() == eventName) {
+                        eventIdx = j;
+                        eventFinded = ev.toObject();
+                        break;
+                    }
+                    ++j;
+                }
 
-        QJsonObject eventFinded;
-        for (auto &&ev : events) {
-            if (ev.toObject().value(STATE_NAME).toString() == eventName) {
-                eventIdx = j;
-                eventFinded = ev.toObject();
-                break;
-            }
-            ++j;
-        }
+                if (eventIdx > -1) {
+                    QJsonObject dateJson = date.toJson();
+                    QJsonArray datesEvent = eventFinded.value(STATE_EVENT_DATES).toArray();
+                    dateJson[STATE_ID] = project->getUnusedDateId(datesEvent);
+                    if (dateJson[STATE_NAME].toString() == "")
+                        dateJson[STATE_NAME] = "No Name " + QString::number(dateJson[STATE_ID].toInt());
+                    datesEvent.append(dateJson);
+                    eventFinded[STATE_EVENT_DATES] = datesEvent;
+                    // updateEvent() do pushProjectState(stateNext, reason, true);
+                    project->updateEvent(eventFinded, QObject::tr("Dates added to event by CSV drag"));
 
-        if (eventIdx > -1) {
-            QJsonObject dateJson = date.toJson();
-            QJsonArray datesEvent = eventFinded.value(STATE_EVENT_DATES).toArray();
-            dateJson[STATE_ID] = project->getUnusedDateId(datesEvent);
-            if (dateJson[STATE_NAME].toString() == "")
-                dateJson[STATE_NAME] = "No Name " + QString::number(dateJson[STATE_ID].toInt());
-            datesEvent.append(dateJson);
-            eventFinded[STATE_EVENT_DATES] = datesEvent;
-            // updateEvent() do pushProjectState(stateNext, reason, true);
-            project->updateEvent(eventFinded, QObject::tr("Dates added to event by CSV drag"));
+                } else {
+                    Event event;
+                    // eventName=="" must never happen because we set "No Name" in ImportDataView::browse()
+                    event.mName = (eventName=="" ? date.mName : eventName);
+                    event.mId = project->getUnusedEventId(events);
+                    date.mId = 0;
+                    if (date.mName == "")
+                        date.mName = "No Name";
+                    event.mDates.append(date);
+                    event.mItemX = e->scenePos().x() + EventCount * deltaX;
+                    event.mItemY = e->scenePos().y() + EventCount * deltaY;
+                    event.mColor = randomColor();
+                    events.append(event.toJson());
+                    state[STATE_EVENTS] = events;
+                    project->pushProjectState(state, NEW_EVEN_BY_CSV_DRAG_REASON, true);
+                    ++EventCount;
+                }
 
         } else {
-            Event event;
+            EventKnown bound;
+            bound.mType = Event::eKnown;
+            bound.mMethod = Event::eFixe;
+            bound.mFixed= date.mData[STATE_EVENT_KNOWN_FIXED].toDouble();
             // eventName=="" must never happen because we set "No Name" in ImportDataView::browse()
-            event.mName = (eventName=="" ? date.mName : eventName);
-            event.mId = project->getUnusedEventId(events);
-            date.mId = 0;
-            if (date.mName == "")
-                date.mName = "No Name";
-            event.mDates.append(date);
-            event.mItemX = e->scenePos().x() + EventCount * deltaX;
-            event.mItemY = e->scenePos().y() + EventCount * deltaY;
-            event.mColor = randomColor();
-            events.append(event.toJson());
+            bound.mName = ( !date.mName.isEmpty() ? date.mName : "No Name");
+            bound.mId = project->getUnusedEventId(events);
+
+            bound.mItemX = e->scenePos().x() + EventCount * deltaX;
+            bound.mItemY = e->scenePos().y() + EventCount * deltaY;
+            bound.mColor = randomColor();
+            events.append(bound.toJson());
             state[STATE_EVENTS] = events;
             project->pushProjectState(state, NEW_EVEN_BY_CSV_DRAG_REASON, true);
             ++EventCount;
         }
-
-
-    }
+    } // for()
 
 }
 
@@ -1398,14 +1414,36 @@ QList<Date> EventsScene::decodeDataDrop_old(QGraphicsSceneDragDropEvent* e)
         const QString eventName = dataStr.takeFirst();
 
         const QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
-        Date date = Date::fromCSV(dataStr, csvLocal);
+       // _____________
 
-        if (!date.isNull()) {
-            dates << qMakePair(eventName, date);
+        const QString pluginName = dataStr.first();
+        Date date = Date();
+
+        if (pluginName.contains("bound", Qt::CaseInsensitive)) {
+            QStringList dataTmp = dataStr.mid(1,dataStr.size()-1);
+            date.mName = eventName;
+            date.mPlugin = nullptr;
+            date.mMethod = Date::eMHSymetric; //set but not used
+            QJsonObject json;
+            json.insert(STATE_EVENT_KNOWN_FIXED, csvLocal.toDouble(dataTmp.at(0)));
+            date.mData = json;
+            date.mIsValid = true ;
+
+            dates << qMakePair(pluginName, date);
             acceptedRows.append(csvRow);
 
-        } else
-            rejectedRows.append(csvRow);
+
+        } else {
+           date = Date::fromCSV(dataStr, csvLocal);
+           if (!date.isNull()) {
+               dates << qMakePair(eventName, date);
+               acceptedRows.append(csvRow);
+
+           } else
+               rejectedRows.append(csvRow);
+
+        }
+
 
     }
     emit csvDataLineDropAccepted(acceptedRows); //connected to slot ImportDataView::removeCsvRows

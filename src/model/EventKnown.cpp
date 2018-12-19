@@ -54,7 +54,7 @@ mFixed(0.)
 
 EventKnown::EventKnown(const QJsonObject& json):Event()
 {
-    mType = (Type)json[STATE_EVENT_TYPE].toInt();
+    mType = Type (json[STATE_EVENT_TYPE].toInt());
     mId = json[STATE_ID].toInt();
     mName =  json[STATE_NAME].toString();
     mColor = QColor(json[STATE_COLOR_RED].toInt(),
@@ -86,7 +86,7 @@ EventKnown EventKnown::fromJson(const QJsonObject& json)
 {
     EventKnown event;
 
-    event.mType = (Type)json[STATE_EVENT_TYPE].toInt();
+    event.mType = Type (json[STATE_EVENT_TYPE].toInt());
     event.mId = json[STATE_ID].toInt();
     event.mName =  json[STATE_NAME].toString();
     event.mColor = QColor(json[STATE_COLOR_RED].toInt(),
