@@ -134,7 +134,7 @@ mCalibVisible(false)
     mEventsSearchEdit = new QLineEdit(mLeftWrapper);
     //mEventsSearchEdit->setPlaceholderText(tr("Search Event or Data..."));
     mEventsSearchEdit->setVisible(false);
-    mEventsSearchEdit->setStyleSheet("QLineEdit {background-color: rgb(100, 100, 100); color: white;}");
+   // mEventsSearchEdit->setStyleSheet("QLineEdit {background-color: rgb(100, 100, 100); color: white;}");
     mEventsSearchEdit->setPlaceholderText(tr("Search Event or Data..."));
 
     mButNewEvent = new Button(tr("New Event"), mLeftWrapper);
