@@ -291,7 +291,7 @@ double Date::getLikelihood(const double& t) const
 {
     double result (0.);
     if (mPlugin)
-        result = (double)mPlugin->getLikelihood(t, mData);
+        result = double (mPlugin->getLikelihood(t, mData));
     return result;
 }
 
@@ -313,11 +313,13 @@ QString Date::getDesc() const
         QJsonObject::const_iterator iter;
         for (iter = mData.begin(); iter!=mData.end(); ++iter) {
             QString val;
-            if(iter.value().isString())
+            if (iter.value().isString())
                 val = iter.value().toString();
-            else if(iter.value().isDouble())
+
+            else if (iter.value().isDouble())
                 val = QString::number(iter.value().toDouble());
-            else if(iter.value().isBool())
+
+            else if (iter.value().isBool())
                 val = iter.value().toBool() ? QObject::tr("yes") : QObject::tr("no");
             params << iter.key() + " = " + val;
         }
