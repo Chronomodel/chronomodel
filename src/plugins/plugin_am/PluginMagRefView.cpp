@@ -44,8 +44,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphView.h"
 #include "StdUtilities.h"
 #include "Painting.h"
-#include <QtWidgets>
 
+#include <QtWidgets>
 
 PluginMagRefView::PluginMagRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
@@ -104,9 +104,9 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         double alpha = date.mData.value(DATE_AM_ERROR_STR).toDouble();
         QString ref_curve = date.mData.value(DATE_AM_REF_CURVE_STR).toString().toLower();
 
-        // ----------------------------------------------
-        //  Reference curve
-        // ----------------------------------------------
+        /* ----------------------------------------------
+         *  Reference curve
+         * ---------------------------------------------- */
 
         double tminRef = date.getFormatedTminRefCurve();
         double tmaxRef = date.getFormatedTmaxRefCurve();
@@ -193,9 +193,9 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         mGraph->addCurve(graphCurveG95Inf);
 
 
-        // ----------------------------------------------
-        //  Measure curve
-        // ----------------------------------------------
+        /* ----------------------------------------------
+         *  Measure curve
+         * ---------------------------------------------- */
         double error (0.);
         double avg (0.);
         if (is_inc)  {
@@ -216,9 +216,9 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         yMin = yMin - 0.05 * (yMax - yMin);
         yMax = yMax + 0.05 * (yMax - yMin);
 
-        // ----------------------------------------------
-        //  Measure curve
-        // ----------------------------------------------
+        /* ----------------------------------------------
+         *  Measure curve
+         * ---------------------------------------------- */
 
         GraphCurve curveMeasure;
         curveMeasure.mName = "Measurement";
@@ -231,9 +231,9 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         curveMeasure.mIsVertical = true;
         curveMeasure.mIsHisto = false;
 
-        // 5000 pts are used on vertical measurement
-        // because the y scale auto adjusts depending on x zoom.
-        // => the visible part of the measurement may be very reduced !
+        /* 5000 pts are used on vertical measurement
+         * because the y scale auto adjusts depending on x zoom.
+         * => the visible part of the measurement may be very reduced ! */
         const double yStep = (yMax - yMin) / 5000.;
         QMap<double,double> measureCurve;
         for (double t=yMin; t<yMax; t+=yStep) {

@@ -232,7 +232,7 @@ GraphView::~GraphView()
    mZones.clear();
 }
 
-/* ------------------------------------------------------
+/* ------------------------------------------------------ && !curve.mIsVertical
  *  Zoom X
  * ------------------------------------------------------*/
 
@@ -248,7 +248,13 @@ void GraphView::zoomX(const type_data min, const type_data max)
             qreal yMin =  HUGE_VAL;
             for (int curveIndex=0; curveIndex<mCurves.size(); ++curveIndex) {
                 const GraphCurve& curve = mCurves.at(curveIndex);
-                if (curve.mVisible && !curve.mIsHorizontalLine && !curve.mIsVertical && !curve.mIsVerticalLine && !curve.mIsHorizontalSections) {
+
+                if (curve.mVisible && curve.mIsVertical) { // used for the measurement in the calibration process
+                    yMax = qMax(yMax, curve.mData.lastKey());
+                    yMin = qMin(yMin, curve.mData.firstKey());
+                }
+
+                if (curve.mVisible && !curve.mIsVertical && !curve.mIsHorizontalLine  && !curve.mIsVerticalLine && !curve.mIsHorizontalSections) {
 
                     if (curve.mUseVectorData) {
                         QVector<qreal> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, qreal (0.), qreal (curve.mDataVector.size()));
@@ -440,7 +446,8 @@ void GraphView::adjustYToMaxValue(const qreal& marginProp)
             !c.mIsHorizontalSections &&
             !c.mIsVerticalLine &&
             !c.mIsTopLineSections &&
-            !c.mIsVertical) {
+            !c.mIsVertical
+                ) {
 
                 if (!c.mUseVectorData)
                     yMax = qMax(yMax, map_max_value(c.mData));

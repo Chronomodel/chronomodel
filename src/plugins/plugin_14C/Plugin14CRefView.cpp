@@ -44,9 +44,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphView.h"
 #include "StdUtilities.h"
 #include "Painting.h"
+
 #include <QtWidgets>
-
-
 
 Plugin14CRefView::Plugin14CRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
@@ -60,7 +59,6 @@ Plugin14CRefView::Plugin14CRefView(QWidget* parent):GraphViewRefAbstract(parent)
     mGraph->autoAdjustYScale(true);
     setMouseTracking(true);
     mGraph->setMouseTracking(true);
-
 }
 
 Plugin14CRefView::~Plugin14CRefView()
@@ -97,7 +95,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
     mGraph->removeAllZones();
     mGraph->clearInfos();
     mGraph->showInfos(true);
-    mGraph->setFormatFunctX(0);
+    mGraph->setFormatFunctX(nullptr);
 
     if (!date.isNull())  {
         double age = date.mData.value(DATE_14C_AGE_STR).toDouble();
@@ -106,14 +104,14 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         const double delta_r_error = date.mData.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
         const QString ref_curve = date.mData.value(DATE_14C_REF_CURVE_STR).toString().toLower();
 
-        // ----------------------------------------------
-        //  Reference curve
-        // ----------------------------------------------
+        /* ----------------------------------------------
+         *  Reference curve
+         * ---------------------------------------------- */
 
         const double tminRef = date.getFormatedTminRefCurve();
         const double tmaxRef = date.getFormatedTmaxRefCurve();
 
-        Plugin14C* plugin = (Plugin14C*)date.mPlugin;
+        Plugin14C* plugin = static_cast<Plugin14C* >(date.mPlugin);
         const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
 
         if (curve.mDataMean.isEmpty()) {
@@ -200,11 +198,11 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         // Display reference curve name
        // mGraph->addInfo(tr("Ref")+" : " + ref_curve);
 
-        // ----------------------------------------------
-        //  Measure curve
-        // ----------------------------------------------
-        yMin = qMin(yMin, age - error * 1.96);
-        yMax = qMax(yMax, age + error * 1.96);
+        /* ----------------------------------------------
+         *  Measure curve
+         * ---------------------------------------------- */
+        yMin = qMin(yMin, age - error * 3);
+        yMax = qMax(yMax, age + error * 3);
 
         GraphCurve curveMeasure;
         curveMeasure.mName = "Measurement";
@@ -226,12 +224,12 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         curveMeasure.mIsVertical = true;
         curveMeasure.mIsHisto = false;
 
-        // 5000 pts are used on vertical measurement
-        // because the y scale auto adjusts depending on x zoom.
-        // => the visible part of the measurement may be very reduced !
+        /* 5000 pts are used on vertical measurement
+         * because the y scale auto adjusts depending on x zoom.
+         * => the visible part of the measurement may be very reduced ! */
         double step = (yMax - yMin) / 5000.;
         QMap<double, double> measureCurve;
-        for (double t = yMin; t<yMax; t += step) {
+        for (double t (yMin); t<yMax; t += step) {
             const double v = exp(-0.5 * pow((age - t) / error, 2.));
             measureCurve[t] = v;
         }
@@ -242,16 +240,16 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         // Infos to write :
         QString info = tr("Age BP : %1  ± %2").arg(locale().toString(age), locale().toString(error));
 
-        // ----------------------------------------------
-        //  Delta R curve
-        // ----------------------------------------------
+        /* ----------------------------------------------
+         *  Delta R curve
+         * ---------------------------------------------- */
         if (delta_r != 0. && delta_r_error != 0.) {
             // Apply reservoir effect
             age = (age - delta_r);
             error = sqrt(error * error + delta_r_error * delta_r_error);
 
-            yMin = qMin(yMin, age - error * 1.96);
-            yMax = qMax(yMax, age + error * 1.96);
+            yMin = qMin(yMin, age - error * 3);
+            yMax = qMax(yMax, age + error * 3);
 
             GraphCurve curveDeltaR;
             curveDeltaR.mName = "Delta R";
@@ -266,9 +264,9 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             curveDeltaR.mIsVertical = true;
             curveDeltaR.mIsHisto = false;
 
-            // 5000 pts are used on vertical measurement
-            // because the y scale auto adjusts depending on x zoom.
-            // => the visible part of the measure may be very reduced !
+            /* 5000 pts are used on vertical measurement
+             * because the y scale auto adjusts depending on x zoom.
+             * => the visible part of the measure may be very reduced ! */
             step = (yMax - yMin) / 5000.;
             QMap<double, double> deltaRCurve;
             for (double t = yMin; t<yMax; t += step) {
@@ -283,9 +281,9 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             info += tr(", ΔR : %1  ± %2").arg(locale().toString(delta_r), locale().toString(delta_r_error));
         }
 
-        // ----------------------------------------------
-        //  Sub-dates curves (combination)
-        // ----------------------------------------------
+        /* ----------------------------------------------
+         *  Sub-dates curves (combination)
+         * ---------------------------------------------- */
 
         for (int i=0; i<date.mSubDates.size(); ++i) {
             const Date& d = date.mSubDates.at(i);
@@ -302,8 +300,8 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             sub_age = (sub_age - sub_delta_r);
             sub_error = sqrt(sub_error * sub_error + sub_delta_r_error * sub_delta_r_error);
 
-            yMin = qMin(yMin, sub_age - sub_error * 1.96);
-            yMax = qMax(yMax, sub_age + sub_error * 1.96);
+            yMin = qMin(yMin, sub_age - sub_error * 3);
+            yMax = qMax(yMax, sub_age + sub_error * 3);
 
             QColor penColor = QColor(167, 126, 73);
             QColor brushColor = QColor(167, 126, 73);
@@ -315,31 +313,29 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             curveSubMeasure.mIsVertical = true;
             curveSubMeasure.mIsHisto = false;
 
-            // 5000 pts are used on vertical measurement
-            // because the y scale auto adjusts depending on x zoom.
-            // => the visible part of the measurement may be very reduced !
+            /* 5000 pts are used on vertical measurement
+             * because the y scale auto adjusts depending on x zoom.
+             * => the visible part of the measurement may be very reduced ! */
             const double step = (yMax - yMin) / 1000.;
             QMap<double, double> subCurve;
             for (double t = yMin; t<yMax; t += step) {
                 const double v = exp(-0.5 * pow((sub_age - t) / sub_error, 2.));
                 subCurve.insert(t, v);
             }
-            //subDatesCurve[i] = normalize_map(subDatesCurve.at(i));
             subCurve = normalize_map(subCurve);
-            //curveSubMeasure.mData = subDatesCurve.at(i);
             curveSubMeasure.mData = subCurve;
             mGraph->addCurve(curveSubMeasure);
         }
 
-        // ----------------------------------------------
-        //  Textual info
-        // ----------------------------------------------
+        /* ----------------------------------------------
+         *  Textual info
+         * ---------------------------------------------- */
 
        // mGraph->addInfo(info);
 
-        // ----------------------------------------------
-        //  Error on measure (horizontal lines)
-        // ----------------------------------------------
+        /* ----------------------------------------------
+         *  Error on measure (horizontal lines)
+         * ---------------------------------------------- */
 
         GraphCurve curveMeasureAvg;
         curveMeasureAvg.mName = "MeasureAvg";

@@ -44,8 +44,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphView.h"
 #include "StdUtilities.h"
 #include "Painting.h"
-#include <QtWidgets>
 
+#include <QtWidgets>
 
 PluginGaussRefView::PluginGaussRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
@@ -94,7 +94,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
     mGraph->removeAllZones();
     mGraph->clearInfos();
     mGraph->showInfos(true);
-    mGraph->setFormatFunctX(0);
+    mGraph->setFormatFunctX(nullptr);
 
     if (!date.isNull()) {
         const double age = date.mData.value(DATE_GAUSS_AGE_STR).toDouble();
@@ -105,9 +105,9 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
         const QString mode = date.mData.value(DATE_GAUSS_MODE_STR).toString();
         const QString ref_curve = date.mData.value(DATE_GAUSS_CURVE_STR).toString();
 
-        // ----------------------------------------------
-        //  Reference curve
-        // ----------------------------------------------
+        /* ----------------------------------------------
+         *  Reference curve
+         * ---------------------------------------------- */
 
         const double tminRef = date.getFormatedTminRefCurve();
         const double tmaxRef = date.getFormatedTmaxRefCurve();
@@ -143,7 +143,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
 
 
         } else if (mode == DATE_GAUSS_MODE_CURVE) {
-            PluginGauss* plugin = (PluginGauss*)date.mPlugin;
+            PluginGauss* plugin = static_cast<PluginGauss*> (date.mPlugin);
 
             const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
 
@@ -255,8 +255,6 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                  yMax = qMax(yMax, curveG95Sup.value(tmaxDisplay));
             }
 
-
-            //---
             GraphCurve graphCurveG95Sup;
             graphCurveG95Sup.mName = "G95Sup";
             graphCurveG95Sup.mData = curveG95Sup;
@@ -281,14 +279,14 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
         }
 
         if (mode != DATE_GAUSS_MODE_NONE) {
-            yMin = qMin(yMin, age - error * 1.96);
-            yMax = qMax(yMax, age + error * 1.96);
+            yMin = qMin(yMin, age - error * 3);
+            yMax = qMax(yMax, age + error * 3);
 
             //mGraph->setRangeY(yMin, yMax);
 
-            // ----------------------------------------------
-            //  Measure curve
-            // ----------------------------------------------
+            /* ----------------------------------------------
+             *  Measure curve
+             * ---------------------------------------------- */
 
             GraphCurve curveMeasure;
             curveMeasure.mName = "Measurement";
@@ -299,13 +297,13 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             curveMeasure.mIsVertical = true;
             curveMeasure.mIsHisto = false;
 
-            // 5000 pts are used on vertical measurement
-            // because the y scale auto adjusts depending on x zoom.
-            // => the visible part of the measurement may be very reduced !
+            /* 5000 pts are used on vertical measurement
+             * because the y scale auto adjusts depending on x zoom.
+             * => the visible part of the measurement may be very reduced ! */
             const double step = (yMax - yMin) / 5000.;
             QMap<double, double> measureCurve;
-            for (double t=yMin; t<yMax; t += step) {
-                double v = exp(-0.5 * pow((t - age) / error, 2.));
+            for (double t(yMin); t<yMax; t += step) {
+                const double v = exp(-0.5 * pow((t - age) / error, 2.));
                 measureCurve[t] = v;
             }
             measureCurve = normalize_map(measureCurve);
@@ -314,9 +312,9 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             mGraph->addCurve(curveMeasure);
 
 
-            // ----------------------------------------------
-            //  Error on measure
-            // ----------------------------------------------
+            /* ----------------------------------------------
+             *  Error on measure
+             * ---------------------------------------------- */
 
             GraphCurve curveMeasureAvg;
             curveMeasureAvg.mName = "MeasureAvg";
@@ -351,10 +349,12 @@ void PluginGaussRefView::zoomX(const double min, const double max)
 {
     mGraph->zoomX(min, max);
 }
+
 void PluginGaussRefView::setMarginRight(const int margin)
 {
     mGraph->setMarginRight(margin);
 }
+
 void PluginGaussRefView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);

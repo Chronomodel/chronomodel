@@ -187,7 +187,6 @@ void CalibrationDrawing::updateLayout()
             mRefGraphView->mGraph->setMouseTracking(true);
             mRefGraphView->mGraph->setTipXLab("t Ref");
             mRefGraphView->mGraph->setMarginBottom(fm .ascent() * 2.2);
-           // mRefGraphView->mGraph->setYAxisMode(GraphView::eHidden);
         }
 
         mCalibTitle->setGeometry(20,  mRefGraphView->y() + mRefGraphView->height() + mVerticalSpacer, fmTitle.boundingRect(mCalibTitle->text()).width(), fmTitle.height());

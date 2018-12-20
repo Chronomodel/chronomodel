@@ -93,16 +93,16 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
     mGraph->removeAllZones();
     mGraph->clearInfos();
     mGraph->showInfos(true);
-    mGraph->setFormatFunctX(0);
+    mGraph->setFormatFunctX(nullptr);
 
     if (!date.isNull()) {
         double age = date.mData.value(DATE_TL_AGE_STR).toDouble();
         double error = date.mData.value(DATE_TL_ERROR_STR).toDouble();
         double ref_year = date.mData.value(DATE_TL_REF_YEAR_STR).toDouble();
 
-        // ----------------------------------------------
-        //  Reference curve
-        // ----------------------------------------------
+        /* ----------------------------------------------
+         *  Reference curve
+         * ---------------------------------------------- */
         GraphCurve curve;
         curve.mName = "Reference";
         curve.mPen.setColor(Painting::mainColorDark);
@@ -119,15 +119,15 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         double yMin ( map_min_value(curve.mData) );
         double yMax ( map_max_value(curve.mData) );
 
-        yMin = qMin(yMin, age - error * 1.96);
-        yMax = qMax(yMax, age + error * 1.96);
+        yMin = qMin(yMin, age - error * 3);
+        yMax = qMax(yMax, age + error * 3);
 
          // Y scale and RangeY are define in graphView::zommX()
 
 
-        // ----------------------------------------------
-        //  Measure curve
-        // ----------------------------------------------
+        /* ----------------------------------------------
+         *  Measure curve
+         * ---------------------------------------------- */
 
         GraphCurve curveMeasure;
         curveMeasure.mName = "Measurement";
@@ -140,9 +140,9 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         curveMeasure.mIsVertical = true;
         curveMeasure.mIsHisto = false;
 
-        // 5000 pts are used on vertical measurement
-        // because the y scale auto adjusts depending on x zoom.
-        // => the visible part of the measurement may be very reduced !
+        /* 5000 pts are used on vertical measurement
+         * because the y scale auto adjusts depending on x zoom.
+         * => the visible part of the measurement may be very reduced ! */
         QMap<double, double> measureCurve;
         const double step = (yMax - yMin) / 5000.;
 
@@ -151,13 +151,12 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
             measureCurve[t] = v;
         }
         measureCurve = normalize_map(measureCurve);
-        //curveMeasure.mData = normalize_map(curveMeasure.mData);
         curveMeasure.mData = measureCurve;
         mGraph->addCurve(curveMeasure);
 
-        // ----------------------------------------------
-        //  Error on measure
-        // ----------------------------------------------
+        /* ----------------------------------------------
+         *  Error on measure
+         * ---------------------------------------------- */
 
         GraphCurve curveMeasureAvg;
         curveMeasureAvg.mName = "MeasureAvg";
