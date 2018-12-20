@@ -1520,10 +1520,27 @@ void Project::recycleEvents()
         QJsonArray events = mState.value(STATE_EVENTS).toArray();
         QJsonArray events_trash = mState.value(STATE_EVENTS_TRASH).toArray();
 
+        QJsonObject settingsJson = stateNext[STATE_SETTINGS].toObject();
+        ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
+
         for (int i = indexes.size()-1; i >= 0; --i) {
             QJsonObject event = events_trash.takeAt(indexes[i]).toObject();
             event[STATE_ID] = getUnusedEventId(events);
+
+            QJsonArray dates= event[STATE_EVENT_DATES].toArray();
+            for (int j = dates.size()-1; j >= 0; --j) {
+                QJsonObject date = dates.takeAt(j).toObject();
+                // Validate the date before adding it to the correct event and pushing the state
+                PluginAbstract* plugin = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
+                bool valid = plugin->isDateValid(date[STATE_DATE_DATA].toObject(), settings);
+                date[STATE_DATE_VALID] = valid;
+
+                date[STATE_ID] = getUnusedDateId(dates);
+                dates.append(date);
+            }
+            event[STATE_EVENT_DATES] = dates;
             events.append(event);
+
         }
         stateNext[STATE_EVENTS] = events;
         stateNext[STATE_EVENTS_TRASH] = events_trash;

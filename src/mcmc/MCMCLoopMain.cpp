@@ -347,7 +347,7 @@ QString MCMCLoopMain::initMCMC()
             }
 
             // 4 - Init S02 of each Event
-            unsortedEvents.at(i)->mS02 = unsortedEvents.at(i)->mDates.size() / s02_sum;
+            unsortedEvents.at(i)->mS02 = unsortedEvents.at(i)->mDates.size() / s02_sum;// /100;
 
             // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
             unsortedEvents.at(i)->mTheta.mSigmaMH = sqrt(unsortedEvents.at(i)->mS02);
