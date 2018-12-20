@@ -3607,10 +3607,17 @@ void ResultsView::exportResults()
             QFile file(dirPath + "/Log_Model_Description.html");
             if (file.open(QFile::WriteOnly | QFile::Truncate)) {
                 QTextStream output(&file);
-                output<<version+"<br>";
-                output<<projectName+ "<br>";
+                output<<"<!DOCTYPE html>"<< endl;
+                output<<"<html>"<< endl;
+                output<<"<body>"<< endl;
+
+                output<<"<h2>"<< version << "</h2>" << endl;
+                output<<"<h2>"<< projectName+ "</h2>" << endl;
                 output<<"<hr>";
                 output<<mModel->getModelLog();
+
+                output<<"</body>"<< endl;
+                output<<"</html>"<< endl;
             }
             file.close();
 
@@ -3618,10 +3625,17 @@ void ResultsView::exportResults()
 
             if (file.open(QFile::WriteOnly | QFile::Truncate)) {
                 QTextStream output(&file);
-                output<<version+"<br>";
-                output<<projectName+ "<br>";
+                output<<"<!DOCTYPE html>"<< endl;
+                output<<"<html>"<< endl;
+                output<<"<body>"<< endl;
+
+                output<<"<h2>"<< version << "</h2>" << endl;
+                output<<"<h2>"<< projectName+ "</h2>" << endl;
                 output<<"<hr>";
                 output<<mModel->getMCMCLog();
+
+                output<<"</body>"<< endl;
+                output<<"</html>"<< endl;
             }
             file.close();
 
@@ -3629,10 +3643,17 @@ void ResultsView::exportResults()
 
             if (file.open(QFile::WriteOnly | QFile::Truncate)) {
                 QTextStream output(&file);
-                output<<version+"<br>";
-                output<<projectName+ "<br>";
+                output<<"<!DOCTYPE html>"<< endl;
+                output<<"<html>"<< endl;
+                output<<"<body>"<< endl;
+
+                output<<"<h2>"<< version << "</h2>" << endl;
+                output<<"<h2>"<< projectName+ "</h2>" << endl;
                 output<<"<hr>";
                 output<<mModel->getResultsLog();
+
+                output<<"</body>"<< endl;
+                output<<"</html>"<< endl;
             }
             file.close();
 
