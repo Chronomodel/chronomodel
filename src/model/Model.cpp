@@ -537,7 +537,7 @@ QList<QStringList> Model::getStats(const QLocale locale, const int precision, co
 
     // Headers
     QStringList list;
-    list << "" << "MAP" << "Mean" << "Std dev" << "Q1" << "Q2" << "Q3" << "Credibility %" << "Credibility start" << "Credibility end";
+    list << "Item" << "MAP" << "Mean" << "Std dev" << "Q1" << "Q2" << "Q3" << "Credibility %" << "Credibility start" << "Credibility end";
     for (int i = 0; i < maxHpd; ++i) {
         list << "HPD" + QString::number(i + 1) + " %";
         list << "HPD" + QString::number(i + 1) + " start";
@@ -763,8 +763,8 @@ bool Model::isValid()
 
                 // On vérifie toutes les bornes avant et on prend le max
                 // de leurs valeurs fixes ou du début de leur intervalle :
-                double lower = (double) mSettings.mTmin;
-                for (int k=0; k<j; ++k) {
+                double lower = double (mSettings.mTmin);
+                for (int k(0); k<j; ++k) {
                     Event* evt = eventBranches[i][k];
                     if (evt->mType == Event::eKnown) {
                         EventKnown* bd = dynamic_cast<EventKnown*>(evt);
@@ -823,7 +823,7 @@ bool Model::isValid()
                 lower = qMax(lower, bound->mFixed);
 
         }
-        double upper = (double) mSettings.mTmax;
+        double upper = double (mSettings.mTmax);
         Phase* phaseTo = mPhaseConstraints.at(i)->mPhaseTo;
         for (int j=0; j<phaseTo->mEvents.size(); ++j) {
             EventKnown* bound = dynamic_cast<EventKnown*>(phaseTo->mEvents[j]);
@@ -1400,7 +1400,7 @@ void Model::generateTempo()
     /// We want an interval bigger than the maximun finded value, we need a point on tmin, tmax and tmax+deltat
     const int nbPts (nbStep + 1);
 
-    const int totalIter = (int) std::ceil(mChains[0].mNumRunIter / mChains[0].mThinningInterval);
+    const int totalIter = int (std::ceil(mChains[0].mNumRunIter / mChains[0].mThinningInterval));
 
     // create Empty containers
     QVector<int> N ;  // Tempo
@@ -1492,7 +1492,7 @@ void Model::generateTempo()
 #endif
 
         /// \f$ \delta_t = (t_max - t_min)/(nbStep) \f$
-        const double deltat = (tmax-tmin)/ (double)(nbStep);
+        const double deltat = (tmax-tmin)/ double(nbStep);
 
 
         /// Erase containers
@@ -1916,7 +1916,7 @@ void Model::saveToFile(const QString& fileName)
        // QDataStream out(&uncompressedData, QIODevice::WriteOnly);
 
 
-        out << quint32(out.version());// we could add software version here << quint16(out.version());
+        out << quint32 (out.version());// we could add software version here << quint16(out.version());
         out << qApp->applicationVersion();
         // -----------------------------------------------------
         //  Write info
@@ -1925,20 +1925,20 @@ void Model::saveToFile(const QString& fileName)
         out << quint32 (mEvents.size());
         out << quint32 (numDates);
 
-        out << (quint32) mChains.size();
+        out << quint32 (mChains.size());
         for (ChainSpecs& ch : mChains) {
-            out << (quint32) ch.mBatchIndex;
-            out << (quint32) ch.mBatchIterIndex;
-            out << (quint32)ch.mBurnIterIndex;
-            out << (quint32) ch.mMaxBatchs;
+            out << quint32 (ch.mBatchIndex);
+            out << quint32 (ch.mBatchIterIndex);
+            out << quint32 (ch.mBurnIterIndex);
+            out << quint32 (ch.mMaxBatchs);
             out << ch.mMixingLevel;
-            out << (quint32) ch.mNumBatchIter;
-            out << (quint32) ch.mNumBurnIter;
-            out << (quint32) ch.mNumRunIter;
-            out << (quint32)ch.mRunIterIndex;
-            out << (qint32) ch.mSeed;
-            out << (quint32)ch.mThinningInterval;
-            out << (quint32) ch.mTotalIter;
+            out << quint32 (ch.mNumBatchIter);
+            out << quint32 (ch.mNumBurnIter);
+            out << quint32 (ch.mNumRunIter);
+            out << quint32 (ch.mRunIterIndex);
+            out << qint32 (ch.mSeed);
+            out << quint32 (ch.mThinningInterval);
+            out << quint32 (ch.mTotalIter);
         }
         // -----------------------------------------------------
         //  Write phases data
@@ -1972,10 +1972,10 @@ void Model::saveToFile(const QString& fileName)
                       out << d.mDeltaAverage;
                       out << d.mDeltaError;
 
-                      out << (qint32) d.mSettings.mTmin;
-                      out << (qint32) d.mSettings.mTmax;
+                      out << qint32 (d.mSettings.mTmin);
+                      out << qint32 (d.mSettings.mTmax);
                       out <<  d.mSettings.mStep;
-                      out << (quint8)(d.mSettings.mStepForced==true? 1: 0);
+                      out << quint8 (d.mSettings.mStepForced==true? 1: 0);
 
 
                       out << d.getTminRefCurve();
@@ -1983,7 +1983,7 @@ void Model::saveToFile(const QString& fileName)
 
                       //out << *d.mCalibration;
 
-                      out << (quint32)d.mCalibHPD.size();
+                      out << quint32 (d.mCalibHPD.size());
                       for (QMap<double, double>::const_iterator it = d.mCalibHPD.cbegin(); it!=d.mCalibHPD.cend();++it) {
                           out << it.key();
                           out << it.value();
@@ -2144,9 +2144,9 @@ void Model::restoreFromFile(const QString& fileName)
                     in >> d.mDeltaError;
                     qint32 tmpInt32;
                     in >> tmpInt32;
-                    d.mSettings.mTmin = (int)tmpInt32;
+                    d.mSettings.mTmin = int (tmpInt32);
                     in >> tmpInt32;
-                    d.mSettings.mTmax = (int)tmpInt32;
+                    d.mSettings.mTmax = int (tmpInt32);
                     in >> d.mSettings.mStep;
                     quint8 btmp;
                     in >> btmp;
