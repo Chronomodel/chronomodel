@@ -125,7 +125,7 @@ mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
     mDownSamplingEdit->setAlignment(Qt::AlignCenter);
 
     // On the bottom part
-    mHelp = new HelpWidget(tr("About seeds : each MCMC chain is different from the others because it uses a different seed. By default, seeds are picked randomly. However, you can force the chains to use specific seeds by entering them below. By doing so, you can replicate exactly the same results using the same seeds."), this);
+    mHelp = new HelpWidget(tr("About seeds : Each MCMC chain is different from the others because it uses a different seed. By default, seeds are picked randomly. However, you can force the chains to use specific seeds by entering them below. By doing so, you can replicate exactly the same results using the same seeds."), this);
     mHelp->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=52"); // chapter 4.2 MCMC settings
 
     mSeedsLabel = new QLabel(tr("Seeds (separated by \";\")"),this);
@@ -134,9 +134,18 @@ mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
     mSeedsEdit->setFixedSize(mEditW, mButH);
 
     mLevelLabel = new QLabel(tr("Mixing level"),this);
-    mLevelLabel->setFixedSize(fontMetrics().boundingRect(mLevelLabel->text()).width(), mButH);
     mLevelEdit = new LineEdit(this);
+
+#ifdef DEBUG
+    mLevelLabel->setFixedSize(fontMetrics().boundingRect(mLevelLabel->text()).width(), mButH);
     mLevelEdit->setFixedSize(mButW, mButH);
+
+    mLevelLabel->setVisible(true);
+    mLevelEdit->setVisible(true);
+#else
+    mLevelLabel->setVisible(false);
+    mLevelEdit->setVisible(false);
+#endif
 
     mOkBut = new Button(tr("OK"), this);
     mOkBut->setFixedSize(mButW, mButH);
