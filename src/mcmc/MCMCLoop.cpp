@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QDebug>
 #include <QTime>
+#include <QElapsedTimer>
 
 MCMCLoop::MCMCLoop():
 mChainIndex(0),
@@ -122,9 +123,10 @@ const QString MCMCLoop::getInitLog() const
 void MCMCLoop::run()
 {
     QString mDate = QDateTime::currentDateTime().toString("dddd dd MMMM yyyy");
-    QTime startTime = QTime::currentTime();
+    QElapsedTimer startClock;
+    startClock.start();
 
-    QString log= "Start " + mDate+" -> " +startTime.toString("hh:mm:ss.zzz");
+    QString log= "Start " + mDate+" -> " +QTime::currentTime().toString("hh:mm:ss.zzz");
 
 
     //----------------------- Calibrating --------------------------------------
@@ -301,9 +303,8 @@ void MCMCLoop::run()
 
     QTime endTime = QTime::currentTime();
 
-    QTime timeDiff(0,0,0,1);
-    timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
-
+    QTime timeDiff(0,0,0, int(startClock.elapsed()) );
+   
     log += line(tr("Model computed") );
     log += line(tr("finish at %1").arg(endTime.toString("hh:mm:ss.zzz")) );
     log += line(tr("time elapsed %1 h %2 m %3 s %4 ms").arg(QString::number(timeDiff.hour()),

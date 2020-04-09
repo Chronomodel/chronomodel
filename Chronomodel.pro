@@ -38,7 +38,7 @@
 # --------------------------------------------------------------------- */
 
 # DEFINES += VERSION_NUMBER=\\\"2.0.10\\\"
-VERSION = 2.0.18
+VERSION = 2.0.21
  #VERSION_NUMBER # must match value in src/main.cpp and Chronomodel.rc (for windows)
 #PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_
@@ -79,7 +79,7 @@ message("RCC_DIR : $$RCC_DIR")
 
 
 # Qt modules (must be deployed along with the application)
-QT += core gui widgets svg
+greaterThan(QT_MAJOR_VERSION, 4): QT += core gui widgets svg
 
 # Resource file (for images)
 RESOURCES = $$PRO_PATH/Chronomodel.qrc
@@ -97,7 +97,7 @@ RESOURCES = $$PRO_PATH/Chronomodel.qrc
 # In the future we'll need to increase to C++17
 # which offered namespace std::experimental::parallel;
 #########################################
-CONFIG += c++11
+CONFIG += c++1z
 
 #########################################
 # MacOS specific settings
@@ -113,11 +113,11 @@ macx{
 
 
         QMAKESPEC = macx-clang
-        QMAKE_MAC_SDK = macosx10.14
+        QMAKE_MAC_SDK = macosx10.15
         message("QMAKE_MAC_SDK = $$QMAKE_MAC_SDK")
 
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
-        QMAKE_MACOSX_DEPLOYMENT_TARGET=10.7
+        QMAKE_MACOSX_DEPLOYMENT_TARGET=10.13
 	# Define a set of resources to deploy inside the bundle :
 	RESOURCES_FILES.path = Contents/Resources
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib

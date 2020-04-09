@@ -180,27 +180,35 @@ void checkFloatingPointException(const QString& infos)
  **/
 QVector<double> normalize_vector(const QVector<double>& aVector)
 {
-    QVector<double> histo;
-
+    //QVector<double> histo;
+    QVector<double> histo (aVector);
     QVector<double>::const_iterator it = max_element(aVector.begin(), aVector.end());
+    
     if (it != aVector.end()) {
         double max_value = *it;
 
         for (auto&& value : aVector)
             histo.push_back(value/max_value);
+        
+       
+       //std::transform(histo.begin(), histo.end(), histo.begin(), [max_value] (double a){return a / max_value;});
+        
     }
     return histo;
+    
+    
 }
 QVector<float> normalize_vector(const QVector<float>& aVector)
 {
-    QVector<float> histo;
+    QVector<float> histo (aVector);
 
     QVector<float>::const_iterator it = max_element(aVector.begin(), aVector.end());
     if (it != aVector.end()){
         float max_value = *it;
         for (QVector<float>::const_iterator it = aVector.begin(); it != aVector.end(); ++it)
             histo.push_back((*it)/max_value);
-
+        
+       // std::transform(histo.begin(), histo.end(), histo.begin(), [max_value] (double a){return a / max_value;});
     }
     return histo;
 }
@@ -217,9 +225,10 @@ QVector<double> stretch_vector(const QVector<double>& aVector, const double from
         const double max = *(max_element(aVector.constBegin(), aVector.constEnd()));
 
         if (min < max) {
-            for (QVector<double>::const_iterator it = aVector.constBegin(); it != aVector.constEnd(); ++it)
+             for (QVector<double>::const_iterator it = aVector.constBegin(); it != aVector.constEnd(); ++it)
                 histo.push_back(from + (to - from) * (*it - min) / (max - min));
-
+             
+           // std::transform(histo.begin(), histo.end(), histo.begin(), [from, to, min, max] (double a){return from + (to - from) * (a - min) / (max - min);});
         } else // Just 1 value... set it to "from" (setting it to "to" could also be done though...)
             histo.push_back(to);
 
@@ -235,9 +244,10 @@ QVector<float> stretch_vector(const QVector<float>& aVector, const float from, c
         const float max = *(max_element(aVector.constBegin(), aVector.constEnd()));
 
         if (min < max) {
-            for (QVector<float>::const_iterator it = aVector.constBegin(); it != aVector.constEnd(); ++it)
+            /* for (QVector<float>::const_iterator it = aVector.constBegin(); it != aVector.constEnd(); ++it)
                 histo.push_back(from + (to - from) * (*it - min) / (max - min));
-
+             */
+            std::transform(histo.begin(), histo.end(), histo.begin(), [from, to, min, max] (float a){return from + (to - from) * (a - min) / (max - min);});
         } else {
             // Just 1 value... set it to "from" (setting it to "to" could also be done though...)
             histo.push_back(to);
@@ -341,12 +351,14 @@ QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const 
     }
     double prop = targetArea / srcArea;
 
-    QMap<double, double>::iterator iter = result.begin();
+    /*
+     QMap<double, double>::iterator iter = result.begin();
     while (iter!=result.cend() ) {
         iter.value() *= prop;
         ++iter;
     }
-
+     */
+    std::transform(result.begin(), result.end(), result.begin(), [&prop] (double& x){return x*prop;});
     return result;
 }
 QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const float targetArea)
@@ -376,12 +388,13 @@ QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const floa
     }
     float prop = targetArea / srcArea;
 
-    QMap<float, float>::iterator iter = result.begin();
+   /* QMap<float, float>::iterator iter = result.begin();
     while (iter!=result.cend() ) {
         iter.value() *= prop;
         ++iter;
     }
-
+    */
+    std::transform(result.begin(), result.end(), result.begin(), [&prop] (float& x){return x*prop;});
     return result;
 }
 
@@ -409,12 +422,13 @@ QVector<double> equal_areas(const QVector<double>& data, const double step, cons
     const long double invProp =srcArea / area;
     QVector<double> result;
 
-    QVector<double>::const_iterator cIter = data.cbegin();
+    /*QVector<double>::const_iterator cIter = data.cbegin();
     while (cIter != data.cend() ) {
         result.append(*cIter / invProp);
         ++cIter;
-    }
-
+    }*/
+    std::transform(data.begin(), data.end(), std::back_inserter(result),  [invProp](double c)  { return double(c/invProp); });
+    
     return result;
 }
 
@@ -430,7 +444,6 @@ QVector<float> equal_areas(const QVector<float>& data, const float step, const f
     //    const long double v = data.at(i);
     for (auto&& value : data) {
         const long double v = value;
-
         if (lastV>0.l && v>0.l)
             srcArea += (lastV+v)/2.l * (long double)step;
 
@@ -442,12 +455,13 @@ QVector<float> equal_areas(const QVector<float>& data, const float step, const f
     //for(int i=0; i<data.size(); ++i)
     //    result.append(data.at(i) / invProp);
 
-    QVector<float>::const_iterator cIter = data.cbegin();
+    /* QVector<float>::const_iterator cIter = data.cbegin();
     while (cIter != data.cend() ) {
         result.append(float (*cIter / invProp));
         ++cIter;
     }
-
+     */
+    std::transform(data.begin(), data.end(), std::back_inserter(result),  [invProp](float c)  { return float(c/invProp); });
     return result;
 }
 
@@ -460,13 +474,16 @@ QMap<double, double> vector_to_map(const QVector<double>& data, const double min
         map.insert(min, data.at(0));
 
     else {
-        const int nbPts = 1 + int (round((max - min) / step)); // step is not usefull, it's must be data.size/(max-min+1)
+        const int nbPts = std::min(data.size() -1, 1 + int (round((max - min) / step)) ); // step is not usefull, it's must be data.size/(max-min+1)
+        QVector<double>::const_iterator iData (data.cbegin());
+        for (int i(0); i<nbPts; ++i) {
+          /*  double t = min + i * step;
 
-        for (int i=0; i<nbPts; ++i) {
-            double t = min + i * step;
-
-            if (i < data.size())
-                map.insert(t, data.at(i));
+           // if (i < data.size())
+           //     map.insert(t, data.at(i));
+        */
+            map.insert(min + i * step, *iData);
+            ++iData;
         }
     }
 
@@ -481,13 +498,16 @@ QMap<double, double> vector_to_map(const QVector<int>& data, const double min, c
         map.insert(min, data.at(0));
 
     else {
-        const int nbPts = 1 + (int)round((max - min) / step); // step is not usefull, it's must be data.size/(max-min+1)
-
+        //const int nbPts = 1 + (int)round((max - min) / step); // step is not usefull, it's must be data.size/(max-min+1)
+        const int nbPts = std::min(data.size() -1, 1 + int (round((max - min) / step)) );
+        QVector<int>::const_iterator iData (data.cbegin());
+        double t;
         for (int i=0; i<nbPts; ++i) {
-            double t = min + i * step;
+            t = min + i * step;
 
-            if (i < data.size())
-                map.insert(t,  double (data.at(i)));
+            //if (i < data.size())
+                map.insert(t,  double (*iData));
+            ++iData;
 
         }
     }
@@ -502,11 +522,15 @@ QMap<float, float> vector_to_map(const QVector<float>& data, const float min, co
         map.insert(min, data.at(0));
 
     else {
-        const int nbPts = 1 + int (round((max - min) / step)); // step is not usefull, it's must be data.size/(max-min+1)
-        for (int i=0; i<nbPts; ++i) {
-            float t = min + i * step;
-            if (i < data.size())
-                map.insert(t, data.at(i));
+        //const int nbPts = 1 + int (round((max - min) / step)); // step is not usefull, it's must be data.size/(max-min+1)
+        const int nbPts = std::min(data.size() -1, 1 + int (round((max - min) / step)) );
+        QVector<float>::const_iterator iData (data.cbegin());
+        float t;
+        for (int i(0); i<nbPts; ++i) {
+            t = min + i * step;
+            //if (i < data.size())
+                map.insert(t, *iData);
+            ++iData;
         }
     }
     return map;
@@ -702,15 +726,17 @@ double map_area(const QMap<double, double>& map)
 
     double lastV = cIter.value();
     double lastT = cIter.key();
+    double v ;
+    double t ;
     ++cIter;
     while (cIter != map.cend())  {
-        const double v = cIter.value();
-        const double t = cIter.key();
+        v = cIter.value();
+        t = cIter.key();
         if (lastV>0 && v>0)
             srcArea += (lastV+v)/2 * (t-lastT);
 
-        lastV = v;
-        lastT = t;
+        lastV = std::move(v);
+        lastT = std::move(t);
         ++cIter;
     }
 
@@ -726,31 +752,32 @@ float map_area(const QMap<float, float>& map)
 
     float lastV = cIter.value();
     float lastT = cIter.key();
-
+    float v ;
+    float t ;
     while (cIter != map.cend()) {
-        const float v = cIter.value();
-        const float t = cIter.key();
+        v = cIter.value();
+        t = cIter.key();
         if (lastV>0 && v>0)
             srcArea += (lastV+v)/2 * (t-lastT);
 
-        lastV = v;
-        lastT = t;
+        lastV = std::move(v);
+        lastT = std::move(t);
         ++cIter;
     }
 
     return srcArea;
 }
 
+/* NOT USED */
 QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmin, const double tmax, const int nbPts)
 {
-
     QVector<double> histo;
     histo.reserve(nbPts);
     histo.fill(0.,nbPts);
     const double delta = (tmax - tmin) / (nbPts - 1);
 
     const double denum = dataScr.size();
-
+/*
     for (QVector<double>::const_iterator iter = dataScr.cbegin(); iter != dataScr.cend(); ++iter) {
         const double t = *iter;
 
@@ -774,10 +801,38 @@ QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmi
         if (idx_upper < nbPts) // This is to handle the case when matching the last point index !
             histo[int (idx_upper)] += contrib_upper;
     }
+*/
+    //---- using for_each() becaus, it can be parallele processus
+    for_each(dataScr.begin(), dataScr.end(),
+             [& histo, tmin, delta, denum, nbPts] (double t) {
+                //const double t = *iter;
 
+                const double idx = (t - tmin) / delta;
+                const double idx_under = floor(idx);
+                const double idx_upper = idx_under + 1.;
+
+                const double contrib_under = (idx_upper - idx) / denum;
+                const double contrib_upper = (idx - idx_under) / denum;
+
+                if (std::isinf(contrib_under) || std::isinf(contrib_upper))
+                    qDebug() << "StdUtilities::vector_to_histo() : infinity contrib!";
+
+                if (idx_under < 0 || idx_under >= nbPts || idx_upper < 0 || idx_upper > nbPts)
+                    qDebug() << "StdUtilities::vector_to_histo() : Wrong index";
+
+
+                if (idx_under < nbPts)
+                    histo[int (idx_under)] += contrib_under;
+
+                if (idx_upper < nbPts) // This is to handle the case when matching the last point index !
+                    histo[int (idx_upper)] += contrib_upper;
+            }
+             );
+    
+    
     bool bEmpty = true;
     for (QVector<double>::const_iterator iter = histo.cbegin();( iter != histo.cend())&& bEmpty; ++iter) {
-         if (*iter> 0)
+         if (*iter> 0.)
              bEmpty= false;
     }
     if (bEmpty)

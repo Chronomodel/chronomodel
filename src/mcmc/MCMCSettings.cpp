@@ -52,7 +52,8 @@ mMaxBatches(MCMC_MAX_ADAPT_BATCHES_DEFAULT),
 mNumBatchIter(MCMC_ITER_PER_BATCH_DEFAULT),
 mThinningInterval(MCMC_THINNING_INTERVAL_DEFAULT),
 mFinalBatchIndex(0),
-mMixingLevel(MCMC_MIXING_DEFAULT)
+mMixingLevel(MCMC_MIXING_DEFAULT),
+mLambdaLevel(1.)
 {
 
 }
@@ -111,6 +112,7 @@ MCMCSettings MCMCSettings::fromJson(const QJsonObject& json)
     settings.mNumBatchIter = json.contains(STATE_MCMC_ITER_PER_BATCH) ? json.value(STATE_MCMC_ITER_PER_BATCH).toInt() : MCMC_ITER_PER_BATCH_DEFAULT;
     settings.mThinningInterval = json.contains(STATE_MCMC_THINNING_INTERVAL) ? json.value(STATE_MCMC_THINNING_INTERVAL).toInt() : MCMC_THINNING_INTERVAL_DEFAULT;
     settings.mMixingLevel = json.contains(STATE_MCMC_MIXING) ? json.value(STATE_MCMC_MIXING).toDouble() : MCMC_MIXING_DEFAULT;
+    settings.mLambdaLevel = 1.;
     QJsonArray seeds = json.value(STATE_MCMC_SEEDS).toArray();
     for (int i=0; i<seeds.size(); ++i)
         settings.mSeeds.append(seeds.at(i).toInt());
@@ -142,7 +144,7 @@ QList<ChainSpecs> MCMCSettings::getChains() const
 {
     QList<ChainSpecs> chains;
 
-    for (int i=0; i<(int)mNumChains; ++i) {
+    for (int i(0); i<int(mNumChains); ++i) {
         ChainSpecs chain;
 
         if (i < mSeeds.size())

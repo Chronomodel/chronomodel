@@ -130,8 +130,9 @@ QDataStream &operator>>( QDataStream &stream, CalibrationCurve &data )
     stream >> data.mPluginId;
 
     data.mPlugin = PluginManager::getPluginFromId(data.mPluginId);
-    if (data.mPlugin == nullptr)
-        throw QObject::tr("Calibration plugin could not be loaded : invalid plugin : %1").arg(data.mPluginId);
+    //if (data.mPlugin == nullptr)
+      //  return nullptr;
+  //      throw QObject::tr("Calibration plugin could not be loaded : invalid plugin : %1").arg(data.mPluginId);
 
     return stream;
 

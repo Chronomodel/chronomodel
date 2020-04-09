@@ -86,13 +86,6 @@ public:
 
 
     ///  Functions used within the init MCMC process
-    double getThetaMinRecursive_old(const double defaultValue,
-                                const QVector<QVector<Event*> >& eventBranches,
-                                const QVector<QVector<Phase*> >& phaseBranches);
-
-    double getThetaMaxRecursive_old(const double defaultValue,
-                                const QVector<QVector<Event*> >& eventBranches,
-                                const QVector<QVector<Phase*> >& phaseBranches);
 
     bool getThetaMinPossible(const Event *originEvent, QString &circularEventName,  QList<Event *> &startEvents, QString &linkStr);
     bool getThetaMaxPossible(const Event *originEvent, QString &circularEventName,  QList<Event *> &startEvents);

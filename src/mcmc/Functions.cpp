@@ -46,6 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <set>
 #include <map>
 #include <QTime>
+#include <QElapsedTimer>
 
 // -----------------------------------------------------------------
 //  sumP = Sum (pi)
@@ -61,10 +62,10 @@ FunctionAnalysis analyseFunction(const QMap<type_data, type_data> &aFunction)
 {
     FunctionAnalysis result;
     if (aFunction.isEmpty()) {
-        result.max = (type_data)0.;
-        result.mode = (type_data)0.;
-        result.mean = (type_data)0.;
-        result.stddev = (type_data)(-1.);
+        result.max = type_data(0.);
+        result.mode = type_data(0.);
+        result.mean = type_data(0.);
+        result.stddev = type_data(-1.);
         qDebug() << "WARNING : in analyseFunction() aFunction isEmpty !! ";
         return result;
     }
@@ -134,7 +135,7 @@ type_data dataStd(const QVector<type_data> &data)
 
     if (variance < 0) {
         qDebug() << "WARNING : in dataStd() negative variance found : " << variance<<" return 0";
-        return (type_data)0.;
+        return type_data(0.);
     }
     return sqrt(variance);
 }
@@ -325,10 +326,10 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, double t
         const int numToRemove = (int)floor(n * (1. - threshold / 100.));
         exactThresholdResult = ((double)n - (double)numToRemove) / (double)n;
 
-        double lmin = 0.;
-        int foundJ = 0;
+        double lmin (0.);
+        int foundJ (0);
 
-        for (int j=0; j<=numToRemove; ++j) {
+        for (int j(0); j<=numToRemove; ++j) {
             const double l = sorted.at((n - 1) - numToRemove + j) - sorted.at(j);
             if ((lmin == 0.f) || (l < lmin)) {
                 foundJ = j;
@@ -358,8 +359,8 @@ QPair<double, double> credibilityForTrace(const QVector<int>& trace, double thre
         QVector<int> sorted (trace);
         std::sort(sorted.begin(),sorted.end());
 
-        const int numToRemove = (int)floor(n * (1. - threshold / 100.));
-        exactThresholdResult = ((double)n - (double)numToRemove) / (double)n;
+        const int numToRemove = int(floor(n * (1. - threshold / 100.)));
+        exactThresholdResult = (double(n) - double(numToRemove)) / double(n);
 
         double lmin (0.);
         int foundJ (0);
@@ -371,8 +372,8 @@ QPair<double, double> credibilityForTrace(const QVector<int>& trace, double thre
                 lmin = l;
             }
         }
-        credibility.first = (double)sorted.at(foundJ);
-        credibility.second = (double)sorted.at((n - 1) - numToRemove + foundJ);
+        credibility.first = double(sorted.at(foundJ));
+        credibility.second = double(sorted.at((n - 1) - numToRemove + foundJ));
     }
 
     if (credibility.first == credibility.second) {
@@ -394,9 +395,10 @@ QPair<double, double> credibilityForTrace(const QVector<int>& trace, double thre
 QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh, const QString description)
 {
     (void) description;
-    QPair<double, double> range(- INFINITY, +INFINITY);
+    QPair<double, double> range(- HUGE_VAL, +HUGE_VAL);
 #ifdef DEBUG
-    QTime startTime (QTime::currentTime());
+    QElapsedTimer startClock ;
+    startClock.start();
 #endif
     // limit of precision, to accelerate the calculus
     const double epsilonStep = 0.1/100.;
@@ -405,13 +407,13 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
 
     const int n = trace1.size();
 
-    if ( (thresh > 0) && (n > 0) && ((int)trace2.size() == n) ) {
+    if ( (thresh > 0) && (n > 0) && (trace2.size() == n) ) {
 
         const double gamma = 1. - thresh/100.;
 
-        double dMin = INFINITY;
+        double dMin = HUGE_VAL;
 
-        std::vector<double> traceAlpha (trace1.toStdVector());
+        std::vector<double> traceAlpha (trace1.begin(), trace1.end());
         std::vector<double> traceBeta (trace2.size());
 
         // 1 - map with relation Beta to Alpha
@@ -449,7 +451,7 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
             // traceBeta is sorted with the value alpha join
             auto it = std::copy( traceBeta.begin()+ alphaIdx, traceBeta.end(), betaUpper.begin() );
 
-            const int betaUpperSize = (const int) std::distance(betaUpper.begin(), it);
+            const int betaUpperSize = (const int) (std::distance(betaUpper.begin(), it));
 
             betaUpper.resize(betaUpperSize);  // shrink container to new size
 
@@ -492,8 +494,8 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
 
 #ifdef DEBUG
     qDebug()<<description;
-    QTime timeDiff(0,0,0,1);
-    timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
+    QTime timeDiff(0,0,0, int(startClock.elapsed()) );
+   // timeDiff = timeDiff.addMSecs(startTimer.elapsed()).addMSecs(-1);
     qDebug()<<"timeRangeFromTraces ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
 #endif
 
@@ -527,7 +529,8 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const 
 {
     (void) description;
 #ifdef DEBUG
-    QTime startTime = QTime::currentTime();
+    QElapsedTimer startTimer;
+    startTimer.start();
 #endif
 
     QPair<double, double> range = QPair<double, double>(- INFINITY, + INFINITY);
@@ -636,8 +639,8 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const 
 
 #ifdef DEBUG
     qDebug()<<description;
-    QTime timeDiff(0,0,0,1);
-    timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
+    QTime timeDiff(0,0,0, int(startTimer.elapsed()) );
+    // timeDiff = timeDiff.addMSecs(startTimer.elapsed()).addMSecs(-1);
     qDebug()<<"gapRangeFromTraces ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
 #endif
 
@@ -656,7 +659,8 @@ QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, cons
 {
     (void) description;
 #ifdef DEBUG
-    QTime startTime = QTime::currentTime();
+    QElapsedTimer startTimer;
+    startTimer.start();
 #endif
 
     QPair<float, float> range = QPair<float, float>(- INFINITY, + INFINITY);
@@ -728,8 +732,8 @@ QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, cons
 
 #ifdef DEBUG
     qDebug()<<description;
-    QTime timeDiff(0,0,0,1);
-    timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
+    QTime timeDiff(0,0,0, int(startTimer.elapsed()));
+// timeDiff = timeDiff.addMSecs(startTimer.elapsed()).addMSecs(-1);
     qDebug()<<"gapRangeFromTraces_old ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
 #endif
 
@@ -857,3 +861,164 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
 
     return intervals;
 }
+
+#if USE_FFT
+#include "fftw3.h"
+#endif
+
+ 
+/**
+ @param[in] dataSrc is the trace, with for example one million data
+ @remarks Produce a density with the area equal to 1. The smoothing is done with Hsilvermann method.
+ **/
+void _generateBufferForHisto(double *input, const QVector<double> &dataSrc, const int numPts, const double a, const double b)
+{
+    // Work with "double" precision here !
+    // Otherwise, "denum" can be very large and lead to infinity contribs!
+
+    const double delta = (b - a) / (numPts - 1);
+
+    const double denum = dataSrc.size();
+
+    //float* input = (float*) fftwf_malloc(numPts * sizeof(float));
+
+    //memset(input, 0.f, numPts);
+    for (int i(0); i<numPts; ++i)
+        input[i]= 0.;
+
+  /*  QVector<double>::const_iterator iter = dataSrc.cbegin();
+    for (; iter != dataSrc.cend(); ++iter) {
+        const double t = *iter;
+
+        const double idx = (t - a) / delta;
+        const double idx_under = floor(idx);
+        const double idx_upper = idx_under + 1.;
+
+        const double contrib_under = (idx_upper - idx) / denum;
+        const double contrib_upper = (idx - idx_under) / denum;
+
+        if (std::isinf(contrib_under) || std::isinf(contrib_upper))
+            qDebug() << "FFT input : infinity contrib!";
+
+        if (idx_under < 0 || idx_under >= numPts || idx_upper < 0 || idx_upper > numPts)
+            qDebug() << "FFT input : Wrong index";
+
+        if (idx_under < numPts)
+            input[int(idx_under)] += contrib_under;
+
+        if (idx_upper < numPts) // This is to handle the case when matching the last point index !
+            input[int(idx_upper)] += contrib_upper;
+    }
+    */
+    std::for_each(dataSrc.begin(), dataSrc.end(),
+                [& input, a, delta, denum, numPts] (double t) {
+               
+                   const double idx = (t - a) / delta;
+                   const double idx_under = floor(idx);
+                   const double idx_upper = idx_under + 1.;
+
+                   const double contrib_under = (idx_upper - idx) / denum;
+                   const double contrib_upper = (idx - idx_under) / denum;
+
+                   if (std::isinf(contrib_under) || std::isinf(contrib_upper))
+                       qDebug() << "FFT input : infinity contrib!";
+
+                   if (idx_under < 0 || idx_under >= numPts || idx_upper < 0 || idx_upper > numPts)
+                       qDebug() << "FFT input : Wrong index";
+
+
+                   if (idx_under < numPts)
+                       input[int (idx_under)] += contrib_under;
+
+                   if (idx_upper < numPts) // This is to handle the case when matching the last point index !
+                       input[int (idx_upper)] += contrib_upper;
+               }
+                );
+    
+   
+}
+
+/* NOT USED */
+/*
+QMap<double, double> _generateHisto(const QVector<double>& dataSrc, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+{
+  //  mfftLenUsed = fftLen;
+  //  mBandwidthUsed = bandwidth;
+  //  mtmaxUsed = tmax;
+  //  mtminUsed = tmin;
+
+    const int inputSize (fftLen);
+    const int outputSize = 2 * (inputSize / 2 + 1);
+
+    const double sigma = dataStd(dataSrc);
+    QMap<double, double> result;
+
+
+
+    if (sigma == 0) {
+     //   qDebug()<<"MetropolisVariable::generateHisto sigma == 0"<<mName;
+        if (dataSrc.size()>0) {
+            // if sigma is null and there are several values, it means: this is the same
+            // value. It can appear with a bound fixed
+            result.insert(dataSrc.at(0), 1.) ;
+   //         qDebug()<<"MetropolisVariable::generateHisto result = "<< (dataSrc.at(0))<<mName;
+        }
+        return result;
+    }
+   
+     const double h = bandwidth * sigma * pow(dataSrc.size(), -1./5.);
+     const double a = vector_min_value(dataSrc) - 4. * h;
+     const double b = vector_max_value(dataSrc) + 4. * h;
+
+     double* input = (double*) fftw_malloc(fftLen * sizeof(double));
+     _generateBufferForHisto(input, dataSrc, fftLen, a, b);
+
+     double* output = (double*) fftw_malloc(outputSize * sizeof(double));
+
+    if (input != nullptr) {
+        // ----- FFT -----
+        // http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data
+        //https://jperalta.wordpress.com/2006/12/12/using-fftw3/
+        fftw_plan plan_forward = fftw_plan_dft_r2c_1d(inputSize, input, (fftw_complex*)output, FFTW_ESTIMATE);
+        fftw_execute(plan_forward);
+
+        for (int i=0; i<outputSize/2; ++i) {
+            const double s = 2. * M_PI * i / (b-a);
+            const double factor = exp(-0.5 * s * s * h * h);
+
+            output[2*i] *= factor;
+            output[2*i + 1] *= factor;
+        }
+
+        fftw_plan plan_backward = fftw_plan_dft_c2r_1d(inputSize, (fftw_complex*)output, input, FFTW_ESTIMATE);
+        fftw_execute(plan_backward);
+
+        // ----- FFT Buffer to result map -----
+
+        double tBegin = a;
+        double tEnd = b;
+  
+        tBegin = tmin;
+        tEnd = tmax;
+
+        const double delta = (b - a) / fftLen;
+
+        for (int i=0; i<inputSize; ++i) {
+             const double t = a + (double)i * delta;
+             result[t] = input[i];
+        }
+
+        result = getMapDataInRange(result,tBegin,tEnd);
+
+        fftw_free(input);
+        fftw_free(output);
+        input = nullptr;
+        output = nullptr;
+        fftw_destroy_plan(plan_forward);
+        fftw_destroy_plan(plan_backward);
+
+        result = equal_areas(result, 1.); // normalize the output area du to the fftw and the case (t >= tmin && t<= tmax)
+    }
+    return result; // return a map between a and b with a step delta = (b - a) / fftLen;
+}
+*/

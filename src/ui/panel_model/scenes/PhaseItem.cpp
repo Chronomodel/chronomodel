@@ -381,8 +381,12 @@ QString PhaseItem::getTauString() const
 {
     QString tauStr;
     Phase::TauType type = Phase::TauType (mData.value(STATE_PHASE_TAU_TYPE).toInt());
+    
     if (type == Phase::eTauFixed)
         tauStr += tr("Duration ≤ %1").arg(QString::number(mData.value(STATE_PHASE_TAU_FIXED).toDouble()));
+    
+    if (type == Phase::eTauOnly)
+           tauStr += tr("Tau only");
 
     return tauStr;
 }

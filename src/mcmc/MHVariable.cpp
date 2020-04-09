@@ -123,7 +123,7 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
     }
 
     if (accepted)
-        mX = x;
+        mX = std::move(x);
 
     mLastAccepts.append(accepted);
     mAllAccepts->append(accepted);

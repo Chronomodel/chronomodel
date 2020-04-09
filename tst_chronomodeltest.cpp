@@ -60,6 +60,7 @@ private Q_SLOTS:
     void tempo();
     void quantile();
     void quartileForTrace();
+    void activity();
 };
 
 ChronomodelTest::ChronomodelTest()
@@ -462,6 +463,83 @@ void ChronomodelTest::tempo()
         qDebug()<<val.first<<" "<<val.second*chain1.mNumRunIter;
     }
 
+    // controle Tempo
+    int expected = chain1.mNumRunIter * phase.mEvents.size();
+    int total = model.mPhases[0]->mTempo.last()*chain1.mNumRunIter;
+qDebug()<<" Total = "<<total<<" Total expected"<<expected;
+    QVERIFY(total == expected);
+*/
+}
+
+void ChronomodelTest::activity()
+{
+#define UNIT_TEST
+    Event ev1;
+    QVector<double> trace1;
+    // i had <<0.0 for the init plot, not used in the RawTrace
+    trace1<<0.0  <<0.1<<3.8<<5.6<<9.9<<7.4<<8.2<<5.7<<8.6<<9.4<<4.2<<6.1<<4.3<<8.7<<9.1<<11.6<<5.2<<1.18<<2.4<<6.8<<3.12;
+    //trace1<<0.0 <<6.6<<7.7<<8.8<<9.9<<9.9 <<1.1<<2.2<<3.3<<4.4<<5.5;//mNumRunIter=10
+
+    ev1.mTheta.mRawTrace = new QVector<double>(trace1.size());
+    std::copy(trace1.begin(), trace1.end(), ev1.mTheta.mRawTrace->begin());
+
+
+    Event ev2;
+    QVector<double> trace2;
+    trace2<<0.0  <<0.1<<3.8<<5.6<<9.9<<7.4<<8.2<<5.7<<8.6<<9.4<<4.2<<6.1<<4.3<<8.7<<9.1<<11.6<<5.2<<1.18<<2.4<<6.8 <<3.12;
+    //trace2<<0.0<<1.1<<2.2<<3.3<<4.4<<5.5<<6.6<<7.7<<8.8<<9.9<<9.9; //mNumRunIter=10
+
+    ev2.mTheta.mRawTrace = new QVector<double>(trace2.size());
+    std::copy(trace2.begin(), trace2.end(), ev2.mTheta.mRawTrace->begin() );
+
+    Event ev3;
+    QVector<double> trace3;
+    trace3 <<0.0 <<4.2<<6.1<<4.3<<8.7<<9.1<<11.6<<5.2<<1.18<<2.4<<6.8<<3.12  <<0.1<<3.8<<5.6<<9.9<<7.4<<8.2<<5.7<<8.6<<9.4; // here mNumRunIter=21
+   // trace3<<0.0  <<0.1<<3.8<<5.6<<9.9<<7.4<<8.2<<5.7<<8.6<<9.4<<4.2<<6.1<<4.3<<8.7<<9.1<<11.6<<5.2<<1.18<<2.4<<6.8 <<3.12;
+
+    ev3.mTheta.mRawTrace = new QVector<double>(trace3.size());
+    std::copy(trace3.begin(), trace3.end(), ev3.mTheta.mRawTrace->begin() );
+
+    Event ev4;
+    QVector<double> trace4;
+    trace4<<0.0  <<0.1<<3.8<<5.6<<9.9<<7.4<<8.2<<5.7<<8.6<<9.4<<4.2<<6.1<<4.3<<8.7<<9.1<<11.6<<5.2<<1.18<<2.4<<6.8 <<3.12;
+    //trace2<<0.0<<1.1<<2.2<<3.3<<4.4<<5.5<<6.6<<7.7<<8.8<<9.9<<9.9; //mNumRunIter=10
+
+    ev4.mTheta.mRawTrace = new QVector<double>(trace4.size());
+    std::copy(trace4.begin(), trace4.end(), ev4.mTheta.mRawTrace->begin() );
+
+    Phase phase;
+    phase.mEvents.append(&ev1);
+    phase.mEvents.append(&ev2);
+    phase.mEvents.append(&ev3);
+    phase.mEvents.append(&ev4);
+
+
+    ChainSpecs chain1;
+    chain1.mNumBurnIter = 0; //not used
+    chain1.mBurnIterIndex = 0;
+
+    chain1.mBatchIterIndex = 0;
+    chain1.mBatchIndex = 0; //not used
+    chain1.mNumBatchIter = 0; //not used
+
+    chain1.mNumRunIter = 20; //used
+    chain1.mRunIterIndex = 5;
+
+    chain1.mThinningInterval = 1; //used
+
+    Model model;
+    model.mSettings.mTmin = 0.;
+    model.mSettings.mTmax = 20.;
+    model.mPhases.append(&phase);
+    model.mChains.append(chain1);
+
+    model.generateTempo();
+
+    for (auto val : model.mPhases[0]->mActivity.toStdMap()) {
+        qDebug()<<"Activity " << val.first<<" "<<val.second*chain1.mNumRunIter;
+    }
+/*
     // controle Tempo
     int expected = chain1.mNumRunIter * phase.mEvents.size();
     int total = model.mPhases[0]->mTempo.last()*chain1.mNumRunIter;

@@ -180,9 +180,11 @@ mMinorCountScale (4)
 /*  ------------- TempoGroup  ------------- */
     mTempoGroup = new QWidget(this);
 
+    mTauRadio = new RadioButton(tr("Phase Tau"), mTempoGroup);
+    
     mDurationRadio = new RadioButton(tr("Phase Duration"), mTempoGroup);
     mDurationRadio->setChecked(true);
-
+    
     mTempoRadio = new RadioButton(tr("Phase Tempo"), mTempoGroup);
 
     mTempoCredCheck = new CheckBox(tr("Tempo Cred."), mTempoGroup);
@@ -217,6 +219,7 @@ mMinorCountScale (4)
     connect(mTempoErrCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
 
     connect(mDurationRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
+    connect(mTauRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
     connect(mTempoRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
     connect(mActivityRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
     connect(mTempoStatCheck, &CheckBox::clicked, this, &ResultsView::showInfos);
@@ -671,6 +674,7 @@ void ResultsView::applyAppSettings()
      // ______ TempoGroup
 
     mDurationRadio->setFixedSize(mOptionsW - 2*mMargin, radioButtonHeight);
+    mTauRadio->setFixedSize(mOptionsW - 2*mMargin, radioButtonHeight);
     mTempoRadio->setFixedSize(mOptionsW - 2*mMargin, radioButtonHeight);
     mActivityRadio->setFixedSize(mOptionsW - 2*mMargin, radioButtonHeight);
     mTempoStatCheck->setFixedSize(mOptionsW - 2*mMargin, checkBoxHeight);
@@ -692,7 +696,7 @@ void ResultsView::applyAppSettings()
 
     mCurrentXMinEdit->setFixedSize(wEdit, lineEditHeight);
     mCurrentXMaxEdit->setFixedSize(wEdit, lineEditHeight);
-    mXScaleLab->setFixedWidth( int (fm.width(mXScaleLab->text())));
+    mXScaleLab->setFixedWidth( int (fm.horizontalAdvance(mXScaleLab->text())));
     mXScaleSpin->setFixedSize(wEdit, spinBoxHeight);
 
     mMajorScaleLab->setFixedSize(mOptionsW - wEdit - 2* mMargin, labelHeight);
@@ -1015,6 +1019,9 @@ void ResultsView::updateTabByTempo()
 
     mDurationRadio -> move(mMargin, ySpan);
     ySpan += mDurationRadio->height() + mMargin;
+    
+    mTauRadio -> move(mMargin, ySpan);
+    ySpan += mTauRadio->height() + mMargin;
 
     mTempoRadio -> move(mMargin, ySpan);
     ySpan += mTempoRadio->height() + mMargin;
@@ -1107,7 +1114,10 @@ void ResultsView::updateTabDisplay(const int &i)
                 mDisplayStudyBut->move(mMargin, ySpan);
                 ySpan += mDisplayStudyBut->height() + mMargin;
             }
-            else if (mCurrentVariable == GraphViewResults::eSigma || (mCurrentVariable == GraphViewResults::eDuration)) {
+            else if (  mCurrentVariable == GraphViewResults::eSigma
+                      || mCurrentVariable == GraphViewResults::eDuration
+                      || mCurrentVariable == GraphViewResults::eTau) {
+                
                 mDisplayStudyBut->setText(tr("Fit Display"));
                 mDisplayStudyBut->setVisible(true);
                 mDisplayStudyBut->move(mMargin, ySpan);
@@ -1165,7 +1175,7 @@ void ResultsView::updateTabDisplay(const int &i)
             ySpan += mMajorScaleEdit->height() + mMargin;
 
             mMinorScaleEdit->move(mOptionsW - mMargin - mMinorScaleEdit->width(), ySpan );
-            dy = (mMinorScaleEdit->height() - mMinorScaleLab->height())/2.;
+            // dy = (mMinorScaleEdit->height() - mMinorScaleLab->height())/2.;
             mMinorScaleLab->move(mOptionsW - 2*mMargin - mMinorScaleEdit->width() - fm.boundingRect(mMinorScaleLab->text()).width(), ySpan);
             ySpan += mMinorScaleEdit->height() + mMargin;
 
@@ -1235,7 +1245,7 @@ void ResultsView::updateTabDisplay(const int &i)
         dy = (mThicknessCombo->height() - mLabThickness->height()) /2.;
         mLabThickness->move(mThicknessCombo->x() - fm.boundingRect(mLabThickness->text()).width() - mMargin, int (ySpan + dy));
 
-        maxTextWidth = fm.boundingRect(mLabOpacity->text()).width() + mMargin;
+        //maxTextWidth = fm.boundingRect(mLabOpacity->text()).width() + mMargin;
         buttonWidth = mOpacityCombo->fontMetrics().boundingRect("9999 %").width() + 2*mMargin + arrowWidth;
         ySpan += mMargin + mThicknessCombo->height();
         mOpacityCombo->setFixedWidth(buttonWidth);
@@ -1326,7 +1336,7 @@ void ResultsView::updateTabDisplay(const int &i)
                       ySpan += mFFTLenCombo->height() + mMargin;
 
                       mBandwidthEdit->move(mOptionsW - mMargin - mBandwidthEdit->width(), ySpan);
-                      dy = (mBandwidthEdit->height() - mBandwidthLab->height())/2.;
+                      //dy = (mBandwidthEdit->height() - mBandwidthLab->height())/2.;
                       mBandwidthLab->move(mBandwidthEdit->x() - fm.boundingRect(mBandwidthLab->text()).width() - mMargin, ySpan);
                       ySpan += mBandwidthEdit->height() + mMargin;
 
@@ -1498,6 +1508,9 @@ void ResultsView::changeScrollArea()
 
     else if (mDurationRadio->isChecked())
             mCurrentVariable = GraphViewResults::eDuration;
+    
+    else if (mTauRadio->isChecked())
+            mCurrentVariable = GraphViewResults::eTau;
 
     else if (mTempoRadio->isChecked())
             mCurrentVariable = GraphViewResults::eTempo;
@@ -1846,6 +1859,7 @@ void ResultsView::initResults(Model* model)
 
     mResultMaxDuration = 0.;
     mResultMaxVariance = 0.;
+    mModel->generatePostVariable();
     mModel->initDensities(getFFTLength(), getBandwidth(), getThreshold());
 
     setStudyPeriod();
@@ -2402,6 +2416,9 @@ void ResultsView::generateCurves(const QList<GraphViewResults*> &listGraphs)
         if (mDurationRadio->isChecked())
             mCurrentVariable = GraphViewResults::eDuration;
 
+        else if (mTauRadio->isChecked())
+            mCurrentVariable = GraphViewResults::eTau;
+        
         else if (mTempoRadio->isChecked())
             mCurrentVariable = GraphViewResults::eTempo;
 
@@ -2415,7 +2432,7 @@ void ResultsView::generateCurves(const QList<GraphViewResults*> &listGraphs)
         graph->generateCurves(GraphViewResults::TypeGraph(mCurrentTypeGraph), mCurrentVariable);
 
     // With variable eDuration, we look for mResultMaxDuration in the curve named "Post Distrib All Chains"
-    if (mCurrentVariable == GraphViewResults::eDuration) {
+    if (mCurrentVariable == GraphViewResults::eDuration || mCurrentVariable == GraphViewResults::eTau) {
         mResultMaxDuration = 0.;
 
         QList<GraphViewResults*>::const_iterator constIter;
@@ -2425,14 +2442,16 @@ void ResultsView::generateCurves(const QList<GraphViewResults*> &listGraphs)
             const GraphViewTempo* graphPhase = dynamic_cast<const GraphViewTempo*>(*constIter);
 
             if (graphPhase) {
-                const GraphCurve* graphDurationAll = graphPhase->getGraph()->getCurve("Post Distrib Duration All Chains");
+                QString curveName = mCurrentVariable == GraphViewResults::eDuration ? "Post Distrib Duration All Chains" : "Post Distrib Tau All Chains";
+                const GraphCurve* graphDurationAll = graphPhase->getGraph()->getCurve(curveName);
                 if (graphDurationAll)
                     mResultMaxDuration = ceil(qMax(mResultMaxDuration, graphDurationAll->mData.lastKey()));
 
                 const int nbCurves = graphPhase->getGraph()->numCurves();
                 // if we have Curves there are only Variance curves
                 for (int i=0; i <nbCurves; ++i) {
-                   const GraphCurve* graphDuration = graphPhase->getGraph()->getCurve("Post Distrib Duration " + QString::number(i));
+                    curveName = mCurrentVariable == GraphViewResults::eDuration ? "Post Distrib Duration " : "Post Distrib Tau ";
+                   const GraphCurve* graphDuration = graphPhase->getGraph()->getCurve( curveName + QString::number(i));
 
                     if (graphDuration) {
                         mResultMaxDuration = ceil(qMax(mResultMaxDuration, graphDuration->mData.lastKey()));
@@ -3031,7 +3050,7 @@ void ResultsView:: setStudyPeriod()
         mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
      }
 
-    else if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && mCurrentVariable == GraphViewResults::eDuration) {
+    else if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && (mCurrentVariable == GraphViewResults::eDuration || mCurrentVariable == GraphViewResults::eTau) ) {
         mResultCurrentMinX = 0.;
         mResultCurrentMaxX = mResultMaxDuration;
         mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
@@ -3185,8 +3204,7 @@ void ResultsView::setGraphFont(const QFont &font)
     const QFontMetrics gfm (mGraphFont);
 
     /* Variable identic in AxisTool */
-    qDebug()<< " ResultsView::setGraphFont "<< font;
-        qDebug()<< mGraphFont;
+
 #ifdef Q_OS_MAC
     int heightText = int (1.5 * gfm.height());
 #else
@@ -3217,7 +3235,7 @@ void ResultsView::setGraphFont(const QFont &font)
                     {
                        const int marg = qMax(gfm.boundingRect(stringForLocal(40)).width()/ 2, gfm.boundingRect(stringForGraph(100)).width());
                        mMarginLeft = marg + 2*graduationSize ;
-                       mMarginRight = 4 * gfm.width(stringForLocal(40))/ 2.;
+                       mMarginRight = 4 * gfm.horizontalAdvance(stringForLocal(40))/ 2.;
                 }
         break;
 
@@ -3690,24 +3708,24 @@ void ResultsView::exportFullImage()
 
     QWidget* curWid (nullptr);
 
-    type_data max;
+    //type_data max;
 
     if (mStack->currentWidget() == mEventsScrollArea) {
         curWid = mEventsScrollArea->widget();
         curWid->setFont(mByEventsGraphs.at(0)->font());
-        max = mByEventsGraphs.at(0)->getGraph()->maximumX();
+        //max = mByEventsGraphs.at(0)->getGraph()->maximumX();
     }
 
     else if (mStack->currentWidget() == mPhasesScrollArea) {
         curWid = mPhasesScrollArea->widget();
         curWid->setFont(mByPhasesGraphs.at(0)->font());
-        max = mByPhasesGraphs.at(0)->getGraph()->maximumX();
+        //max = mByPhasesGraphs.at(0)->getGraph()->maximumX();
     }
 
     else if (mStack->currentWidget() == mTempoScrollArea) {
        curWid = mTempoScrollArea->widget();
        curWid->setFont(mByTempoGraphs.at(0)->font());
-      max = mByTempoGraphs.at(0)->getGraph()->maximumX();
+      //max = mByTempoGraphs.at(0)->getGraph()->maximumX();
     }
     else
         return;

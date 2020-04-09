@@ -151,10 +151,10 @@ QString ModelUtilities::getDeltaText(const Date& date)
                 result = date.mDeltaFixed != 0. ?  str + " : " + QString::number(date.mDeltaFixed) : "";
                 break;
             case Date::eDeltaRange:
-                result = (date.mDeltaMin !=0. && date.mDeltaMax != 0.) ? str + " : [" + QString::number(date.mDeltaMin) + ", " + QString::number(date.mDeltaMax) + "]" : "";
+                result = (date.mDeltaMin != 0. && date.mDeltaMax != 0.) ? str + " : [" + QString::number(date.mDeltaMin) + ", " + QString::number(date.mDeltaMax) + "]" : "";
                 break;
             case Date::eDeltaGaussian:
-                result = (date.mDeltaError>0.) ? str + " : " + QString::number(date.mDeltaAverage) + " ± " + QString::number(date.mDeltaError) : "";
+                result = (date.mDeltaError > 0.) ? str + " : " + QString::number(date.mDeltaAverage) + " ± " + QString::number(date.mDeltaError) : "";
                 break;
             case Date::eDeltaNone:
             default:
@@ -212,7 +212,7 @@ QVector<QVector<Event*> > ModelUtilities::getBranchesFromEvent(Event* start)
     try {
         nextBranches = getNextBranches(startBranch, start);
     } catch(QString error){
-        throw error;
+        throw std::move(error);
     }
 
     return nextBranches;
@@ -243,7 +243,7 @@ QVector<QVector<Event*> > ModelUtilities::getAllEventsBranches(const QList<Event
             try {
                 eventBranches = getBranchesFromEvent(starts[i]);
             } catch(QString error) {
-                throw error;
+                throw std::move(error);
             }
             for (int j=0; j<eventBranches.size(); ++j)
                 branches.append(eventBranches[j]);
@@ -317,7 +317,7 @@ QVector<QVector<Phase*> > ModelUtilities::getBranchesFromPhase(Phase* start, con
     try {
         nextBranches = getNextBranches(startBranch, start, 0, maxLength);
     } catch(QString error) {
-        throw error;
+        throw std::move(error);
     }
 
     return nextBranches;
@@ -342,7 +342,7 @@ QVector<QVector<Phase*> > ModelUtilities::getAllPhasesBranches(const QList<Phase
         try {
             phaseBranches = getBranchesFromPhase(starts[i], maxLength);
         } catch (QString error){
-            throw error;
+            throw std::move(error);
         }
         for (int j=0; j<phaseBranches.size(); ++j)
             branches.append(phaseBranches[j]);
@@ -483,6 +483,15 @@ QString ModelUtilities::phaseResultsText(const Phase* p, const bool forCSV)
     text += QObject::tr("End (posterior distrib.)") + nl;
     text += p->mBeta.resultsString(nl, "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, forCSV);
 
+    text += nl + nl;
+    text += QObject::tr("Tau Begin (posterior distrib.)") + nl;
+    text += p->mAlphaTau.resultsString(nl, "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, forCSV);
+
+
+    text += nl + nl;
+    text += QObject::tr("Tau End (posterior distrib.)") + nl;
+    text += p->mBetaTau.resultsString(nl, "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, forCSV);
+
     if (p->mTimeRange != QPair<double,double>()) {
         text += nl + nl;
         // we suppose it's the same mThreshohdUsed than alpha
@@ -514,9 +523,13 @@ QString ModelUtilities::tempoResultsText(const Phase* p, const bool forCSV)
 
     text += QObject::tr("Phase : %1").arg(p->mName) + nl + nl;
 
+    text += QObject::tr("Tau") + nl;
+    text += p->mTau.resultsString(nl, QObject::tr("No Tau estimated !"), QObject::tr("Years"), nullptr , forCSV);
+
     text += QObject::tr("Duration") + nl;
     text += p->mDuration.resultsString(nl, QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr , forCSV);
-
+    
+    
     return text;
 }
 
@@ -545,7 +558,7 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p, const bo
 
         if (p->mTransitionRange != QPair<double,double>()) {
             text += nl;
-            // we suppose it's the same mThreshohdUsed than alpha
+            // we suppose it's the same mThreshohdUsed than mAlpha
             if (forCSV) {
                 const QString result = textGreen(QObject::tr("Transition Range") + QString(" (%1 %) : [ %2 ; %3 ] %4").arg(stringForCSV(p->mPhaseFrom->mAlpha.mThresholdUsed),
                                                                                                    stringForCSV(p->getFormatedTransitionRange().first),
@@ -659,6 +672,14 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
     text += line(textBold(textPurple(QObject::tr("End (posterior distrib.)"))));
     text += line(textPurple(p->mBeta.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false)));
 
+    text += "<br>";
+    text += line(textBold(textPurple(QObject::tr("Tau Begin (posterior distrib.)"))));
+    text += line(textPurple(p->mAlphaTau.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false)));
+
+    text += "<br>";
+    text += line(textBold(textPurple(QObject::tr("Tau End (posterior distrib.)"))));
+    text += line(textPurple(p->mBetaTau.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false)));
+
     if (p->mTimeRange != QPair<double,double>()) {
         text += "<br>";
         // we suppose it's the same mThreshohdUsed than alpha
@@ -678,9 +699,13 @@ QString ModelUtilities::tempoResultsHTML(const Phase* p)
     text += line(textBold(textPurple(QObject::tr("Phase : %1").arg(p->mName))));
 
     text += "<br>";
+    text += line(textBold(textPurple(QObject::tr("Tau (posterior distrib.)"))));
+    text += line(textPurple(p->mTau.resultsString("<br>", QObject::tr("No Tau estimated ! "), QObject::tr("Years"), nullptr, false)));
+    
+    text += "<br>";
     text += line(textBold(textPurple(QObject::tr("Duration (posterior distrib.)"))));
     text += line(textPurple(p->mDuration.resultsString("<br>", QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr, false)));
-
+    
     return text;
 }
 

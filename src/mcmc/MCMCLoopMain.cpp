@@ -166,10 +166,16 @@ void MCMCLoopMain::initVariablesForChain()
     for (Phase* phase : mModel->mPhases) {
         phase->mAlpha.reset();
         phase->mBeta.reset();
+         phase->mTau.reset();
+        phase->mAlphaTau.reset();
+        phase->mBetaTau.reset();
         phase->mDuration.reset();
 
         phase->mAlpha.mRawTrace->reserve(initReserve);
         phase->mBeta.mRawTrace->reserve(initReserve);
+        phase->mTau.mRawTrace->reserve(initReserve);
+        phase->mAlphaTau.mRawTrace->reserve(initReserve);
+        phase->mBetaTau.mRawTrace->reserve(initReserve);
         phase->mDuration.mRawTrace->reserve(initReserve);
    }
 }
@@ -292,10 +298,10 @@ QString MCMCLoopMain::initMCMC()
             unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
             unsortedEvents.at(i)->mInitialized = true;
 
-            //qDebug() << "in initMCMC(): Event initialized : " << unsortedEvents[i]->mName << " : " << unsortedEvents[i]->mTheta.mX<<" between"<<min<<max;
+            qDebug() << "in initMCMC(): Event initialized : " << unsortedEvents[i]->mName << " : " << unsortedEvents[i]->mTheta.mX<<" between"<<min<<max;
 
             double s02_sum (0.);
-            for (int j=0; j<unsortedEvents.at(i)->mDates.size(); ++j) {
+            for (int j(0); j<unsortedEvents.at(i)->mDates.size(); ++j) {
                 Date& date = unsortedEvents.at(i)->mDates[j];
 
                 // 1 - Init ti
@@ -399,7 +405,7 @@ QString MCMCLoopMain::initMCMC()
         emit stepProgressed(i);
     }
     // --------------------------- Init phases ----------------------
-    emit stepChanged(tr("Initialzsing Phases..."), 0, phases.size());
+    emit stepChanged(tr("Initializing Phases..."), 0, phases.size());
 
     i = 0;
     for (Phase* phase : phases ) {
@@ -468,7 +474,11 @@ QString MCMCLoopMain::initMCMC()
             log += line(textPurple(tr("Phase ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(phases.size()), phase->mName)));
             log += line(textPurple(tr(" - Begin : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mX), DateUtils::getAppSettingsFormatStr())));
             log += line(textPurple(tr(" - End : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mX), DateUtils::getAppSettingsFormatStr())));
-            log += line(textPurple(tr(" - Tau : %1").arg(stringForLocal(phase->mTau))));
+                       
+            log += line(textPurple(tr(" - Tau : %1").arg(stringForLocal(phase->mTau.mX))));
+            log += line(textPurple(tr(" - Tau Begin : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mAlphaTau.mX), DateUtils::getAppSettingsFormatStr())));
+            log += line(textPurple(tr(" - Tau End : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mBetaTau.mX), DateUtils::getAppSettingsFormatStr())));
+            
         }
     }
 
@@ -537,16 +547,17 @@ void MCMCLoopMain::update()
 
         //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
 
-
        for (auto&& phInEv : event->mPhases)
-            phInEv->updateAll(t_min, t_max);
+            phInEv->updateAlphaBeta(t_min, t_max);
     }
 
 
     //--------------------- Memo Phases -----------------------------------------
     if (doMemo) {
-        for (auto && ph : mModel->mPhases)
+        for (auto && ph : mModel->mPhases) {
+            ph->updateAll(t_min, t_max);
             ph->memoAll();
+        }
     }
 
     //--------------------- Update Phases constraints -----------------------------------------

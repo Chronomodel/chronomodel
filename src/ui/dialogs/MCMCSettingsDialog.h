@@ -117,6 +117,9 @@ private:
     QLabel* mLevelLabel;
     LineEdit* mLevelEdit;
 
+    QLabel* mLambdaLabel;
+    LineEdit* mLambdaEdit;
+
     Button* mOkBut;
     Button* mCancelBut;
 

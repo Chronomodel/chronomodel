@@ -55,7 +55,7 @@ mButW(80)
     QPalette Pal(palette());
 
     // set black background
-    Pal.setColor(QPalette::Background, Qt::gray);
+    Pal.setColor(QPalette::Window, Qt::gray);
     this->setAutoFillBackground(true);
     this->setPalette(Pal);
 
@@ -77,6 +77,7 @@ mButW(80)
     mTauTypeCombo = new QComboBox(this);
     mTauTypeCombo->addItem(tr("Unknown"));
     mTauTypeCombo->addItem(tr("Known"));
+    mTauTypeCombo->addItem(tr("Z-only"));
 
     mTauFixedEdit = new LineEdit(this);
 
@@ -123,7 +124,15 @@ void PhaseDialog::showAppropriateTauOptions(int typeIndex)
 
             break;
         }
+        case Phase::eTauOnly:
+        {
+            mTauFixedLab->setVisible(false);
+            mTauFixedEdit->setVisible(false);
 
+            setFixedHeight(mComboH + 2*mLineH + 5*mMargin + mButH);
+
+            break;
+        }
         default:
             break;
     }
@@ -138,7 +147,23 @@ void PhaseDialog::setPhase(const QJsonObject& phase)
     mColorPicker->setColor(QColor(mPhase.value(STATE_COLOR_RED).toInt(),
                                   mPhase.value(STATE_COLOR_GREEN).toInt(),
                                   mPhase.value(STATE_COLOR_BLUE).toInt()));
-    mTauTypeCombo->setCurrentIndex(mPhase.value(STATE_PHASE_TAU_TYPE).toInt());
+    int tauIndex;
+    switch (mPhase.value(STATE_PHASE_TAU_TYPE).toInt()) {
+        case 0: //unknown
+            tauIndex = 0;
+            break;
+         case 1: //known
+            tauIndex = 1;
+            break;
+         case 3: // Z-only
+            tauIndex = 2;
+            break;
+            
+        default:
+            tauIndex = 0;
+            break;
+    }
+    mTauTypeCombo->setCurrentIndex(tauIndex);
     mTauFixedEdit->setText(QString::number(mPhase.value(STATE_PHASE_TAU_FIXED).toDouble()));
 
     showAppropriateTauOptions(mTauTypeCombo->currentIndex());
@@ -150,7 +175,24 @@ QJsonObject PhaseDialog::getPhase()
     mPhase[STATE_COLOR_RED] = mColorPicker->getColor().red();
     mPhase[STATE_COLOR_GREEN] = mColorPicker->getColor().green();
     mPhase[STATE_COLOR_BLUE] = mColorPicker->getColor().blue();
-    mPhase[STATE_PHASE_TAU_TYPE] = Phase::TauType (mTauTypeCombo->currentIndex());
+    Phase::TauType tauType;
+    switch (mTauTypeCombo->currentIndex()) {
+        case 0: //unknown
+            tauType = Phase::eTauUnknown;
+            break;
+         case 1: //known
+            tauType = Phase::eTauFixed;
+            break;
+         case 2: // Z-only
+            tauType = Phase::eTauOnly;
+            break;
+            
+        default:
+            tauType = Phase::eTauUnknown;
+            break;
+    }
+    
+    mPhase[STATE_PHASE_TAU_TYPE] = Phase::TauType (tauType);
     mPhase[STATE_PHASE_TAU_FIXED] = mTauFixedEdit->text().toDouble();
     return mPhase;
 }
@@ -185,7 +227,11 @@ void PhaseDialog::resizeEvent(QResizeEvent* event)
             w1 =  fm.boundingRect(mTauFixedLab->text()).width();
             break;
         }
-
+        case Phase::eTauOnly:
+        {
+            w1 =  fm.boundingRect(mTauFixedLab->text()).width();
+            break;
+        }
         default:
             break;
     }

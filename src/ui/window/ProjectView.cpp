@@ -129,6 +129,8 @@ void ProjectView::resizeEvent(QResizeEvent* e)
     (void) e;
     /* find screen definition */
     int numScreen (QApplication::desktop()->screenNumber(this));
+    if (numScreen <0)
+        numScreen = 0;
     QScreen *screen = QApplication::screens().at(numScreen);
 
     //qreal mm_per_cm = 10;

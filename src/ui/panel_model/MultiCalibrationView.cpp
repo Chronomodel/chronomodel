@@ -403,8 +403,8 @@ void MultiCalibrationView::updateGraphList()
             calibCurve.mPen = QPen(Painting::mainColorLight, 2.);
             calibCurve.mIsHorizontalSections = true;
 
-            double tFixedFormated =  bound->fixedValue();
-            tFixedFormated = DateUtils::convertToAppSettingsFormat( bound->fixedValue());
+            //double tFixedFormated =  bound->fixedValue();
+            double tFixedFormated = DateUtils::convertToAppSettingsFormat( bound->fixedValue());
             calibCurve.mSections.append(qMakePair(tFixedFormated, tFixedFormated));
 
             GraphView* calibGraph = new GraphView(this);

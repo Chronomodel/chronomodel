@@ -532,7 +532,7 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
 {
     QString prefix = name.isEmpty() ? name : name + " ";
 
-    for (int i=0; i<chains.size(); ++i) {
+    for (int i(0); i<chains.size(); ++i) {
 
         GraphCurve curve;
         curve.mUseVectorData = true;
@@ -548,13 +548,14 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
 
         const Quartiles& quartiles = variable->mChainsResults.at(i).quartiles;
 
-        GraphCurve curveQ1 = generateHorizontalLine(quartiles.Q1, prefix + "Q1 " + QString::number(i), Qt::green);
+        QColor colorQ1 = Painting::chainColors.at(i).lighter(150);
+        GraphCurve curveQ1 = generateHorizontalLine(quartiles.Q1, prefix + "Q1 " + QString::number(i), colorQ1, Qt::DashLine);//Qt::green);
         mGraph->addCurve(curveQ1);
 
-        GraphCurve curveQ2 = generateHorizontalLine(quartiles.Q2, prefix + "Q2 " + QString::number(i), Qt::red);
+        GraphCurve curveQ2 = generateHorizontalLine(quartiles.Q2, prefix + "Q2 " + QString::number(i), Painting::chainColors.at(i).lighter(120));//Qt::red);
         mGraph->addCurve(curveQ2);
 
-        GraphCurve curveQ3 = generateHorizontalLine(quartiles.Q3, prefix + "Q3 " + QString::number(i), Qt::green);
+        GraphCurve curveQ3 = generateHorizontalLine(quartiles.Q3, prefix + "Q3 " + QString::number(i), colorQ1, Qt::DashLine);//Qt::green);
         mGraph->addCurve(curveQ3);
     }
 }
@@ -562,7 +563,7 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
 
 void GraphViewResults::generateAcceptCurves(const QList<ChainSpecs> &chains,
                                             MHVariable* variable){
-    for (int i=0; i<chains.size(); ++i) {
+    for (int i (0); i<chains.size(); ++i) {
         GraphCurve curve;
         curve.mName = "Accept " + QString::number(i);
         curve.mDataVector = variable->acceptationForChain(chains, i);
@@ -575,7 +576,7 @@ void GraphViewResults::generateAcceptCurves(const QList<ChainSpecs> &chains,
 
 void GraphViewResults::generateCorrelCurves(const QList<ChainSpecs> &chains,
                                             MHVariable* variable){
-    for (int i=0; i<chains.size(); ++i) {
+    for (int i(0); i<chains.size(); ++i) {
         GraphCurve curve;
         curve.mName = "Correl " + QString::number(i);
         curve.mDataVector = variable->correlationForChain(i);

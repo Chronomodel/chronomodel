@@ -86,15 +86,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define STATE_EVENT_DATES "dates"
 #define STATE_EVENT_PHASE_IDS "phase_ids"
 
-//#define STATE_EVENT_KNOWN_TYPE "known_type"
+//  #define STATE_EVENT_KNOWN_TYPE "known_type" ->OBSOLETE
 #define STATE_EVENT_KNOWN_FIXED "known_fixed"
-//#define STATE_EVENT_KNOWN_START "known_unif_start"
-//#define STATE_EVENT_KNOWN_END "known_unif_end"
+//  #define STATE_EVENT_KNOWN_START "known_unif_start"  ->OBSOLETE
+//  #define STATE_EVENT_KNOWN_END "known_unif_end"  ->OBSOLETE
 
 #define STATE_PHASE_TAU_TYPE "tau_type"
 #define STATE_PHASE_TAU_FIXED "tau_fixed"
-#define STATE_PHASE_TAU_MIN "tau_min"
-#define STATE_PHASE_TAU_MAX "tau_max"
+//  #define STATE_PHASE_TAU_MIN "tau_min"   ->OBSOLETE
+//  #define STATE_PHASE_TAU_MAX "tau_max"   ->OBSOLETE
 
 #define STATE_CONSTRAINT_BWD_ID "bwd_id"
 #define STATE_CONSTRAINT_FWD_ID "fwd_id"

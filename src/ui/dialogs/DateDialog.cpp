@@ -245,7 +245,7 @@ void DateDialog::setForm(PluginFormAbstract* form)
             // visually disable by greying out - works only if combobox has been painted already and palette returns the wanted color
             item->setData(!allowed ? mMethodCombo->palette().color(QPalette::Disabled, QPalette::Text)
                           : QVariant(), // clear item data in order to use default color
-                          Qt::TextColorRole);
+                          Qt::ForegroundRole);
 
         }
     }

@@ -201,7 +201,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
                         p.drawLine(QLineF(x, yo, x, yo + graduationSize));
                         if (mShowText) {
                             const QString text =(valueFormatFunc ? stringForGraph(valueFormatFunc(v)) : stringForGraph(v) );
-                            const int textWidth =  fm.width(text) ;
+                            const int textWidth =  fm.horizontalAdvance(text) ;
                             const qreal tx = x - textWidth/2.;
                             const QRectF textRect(tx, yo + h - textHeight, textWidth, textHeight);
                             p.drawText(textRect,Qt::AlignCenter ,text);

@@ -136,15 +136,27 @@ mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
     mLevelLabel = new QLabel(tr("Mixing level"),this);
     mLevelEdit = new LineEdit(this);
 
+    mLambdaLabel = new QLabel(tr("Lambda level"),this);
+    mLambdaEdit = new LineEdit(this);
+
+    mLambdaLabel->setFixedSize(fontMetrics().boundingRect(mLambdaLabel->text()).width(), mButH);
+    mLambdaEdit->setFixedSize(mButW, mButH);
+
+    mLambdaLabel->setVisible(true);
+    mLambdaEdit->setVisible(true);
+
 #ifdef DEBUG
     mLevelLabel->setFixedSize(fontMetrics().boundingRect(mLevelLabel->text()).width(), mButH);
     mLevelEdit->setFixedSize(mButW, mButH);
 
     mLevelLabel->setVisible(true);
     mLevelEdit->setVisible(true);
+
+
 #else
     mLevelLabel->setVisible(false);
     mLevelEdit->setVisible(false);
+
 #endif
 
     mOkBut = new Button(tr("OK"), this);
@@ -157,7 +169,7 @@ mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
     mTestBut->setFixedSize(fontMetrics().boundingRect(mTestBut->text()).width() + 2 * mMarginW, mButH);
 
 #ifdef DEBUG
-    mTestBut->setFixedSize(fontMetrics().width(mTestBut->text()) + 2 * mMarginW, mButH);
+    mTestBut->setFixedSize(fontMetrics().horizontalAdvance(mTestBut->text()) + 2 * mMarginW, mButH);
     mTestBut->setVisible(true);
 #else
     mTestBut->setVisible(false);
@@ -196,6 +208,8 @@ void MCMCSettingsDialog::setSettings(const MCMCSettings& settings)
     mSeedsEdit->setText(intListToString(settings.mSeeds, ";"));
 
     mLevelEdit->setText(mLoc.toString(settings.mMixingLevel));
+
+    mLambdaEdit->setText(mLoc.toString(ro));
 }
 
 MCMCSettings MCMCSettingsDialog::getSettings()
@@ -214,6 +228,9 @@ MCMCSettings MCMCSettingsDialog::getSettings()
     settings.mThinningInterval = qBound(UN, mDownSamplingEdit->text().toInt(), int (floor(settings.mNumRunIter/10)) );
 
     settings.mMixingLevel = qBound(0.0001, mLoc.toDouble(mLevelEdit->text()),0.9999);
+
+    ro = qBound(0.000001, mLoc.toDouble(mLambdaEdit->text()),10.);
+    settings.mLambdaLevel = qBound(0.000001, mLoc.toDouble(mLambdaEdit->text()),10.);
 
     settings.mSeeds = stringListToIntList(mSeedsEdit->text(), ";");
 
@@ -310,8 +327,12 @@ void MCMCSettingsDialog::updateLayout()
     mSeedsLabel->move(margingLeft, height() - 4 * mMarginH - mButH - mLineH);
     mSeedsEdit->move(mSeedsLabel->x() + mSeedsLabel->width() + mMarginW, mSeedsLabel->y());
     const int margingRight = (width()/2 -mLevelLabel->width() - mLevelEdit->width() - mMarginW)/2;
-    mLevelLabel->move(width()/2 + margingRight, mSeedsLabel->y());
+ #ifdef DEBUG
+    mLevelLabel->move(width()/2 + margingRight, mSeedsLabel->y() -fontMetrics().height() + 5);
     mLevelEdit->move(mLevelLabel->x() + mLevelLabel->width() + mMarginW,  mLevelLabel->y());
+#endif
+    mLambdaLabel->move(width()/2 + margingRight, mSeedsLabel->y());
+    mLambdaEdit->move(mLambdaLabel->x() + mLambdaLabel->width() + mMarginW,  mLambdaLabel->y());
 
     mResetBut->move( 2 * mMarginW, height() - 2 * mMarginH - mResetBut->height() );
 #ifdef DEBUG
@@ -377,6 +398,12 @@ void MCMCSettingsDialog::inputControl()
         isValided = false;
      }
 
+    settings.mLambdaLevel = mLoc.toDouble(mLambdaEdit->text(), &ok);
+    if (isValided == true && (ok == false) ) {
+            errorMessage = QObject::tr("The number ro must be a number");
+            isValided = false;
+     }
+
     settings.mMixingLevel = mLoc.toDouble(mLevelEdit->text(), &ok);
     if (isValided == true && (ok == false || settings.mMixingLevel < 0.0001 || settings.mMixingLevel > 0.9999) ) {
             errorMessage = QObject::tr("The number of the iteration in one run must be bigger than %1  and smaller than %2").arg(mLoc.toString(0.0001), mLoc.toString(0.9999));
@@ -415,6 +442,8 @@ void MCMCSettingsDialog::reset()
     mSeedsEdit->setText("");
 
     mLevelEdit->setText(locale().toString(MCMC_MIXING_DEFAULT));
+    ro = 1.;
+    mLambdaEdit->setText(locale().toString(ro));
 }
 
 void MCMCSettingsDialog::setQuickTest()
@@ -429,4 +458,6 @@ void MCMCSettingsDialog::setQuickTest()
     mSeedsEdit->setText("");
 
     mLevelEdit->setText(locale().toString(0.99));
+    ro = 1.;
+    mLambdaEdit->setText(locale().toString(ro));
 }

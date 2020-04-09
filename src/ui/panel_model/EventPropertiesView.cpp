@@ -535,7 +535,7 @@ void EventPropertiesView::paintEvent(QPaintEvent* e)
     Q_UNUSED(e);
     QWidget::paintEvent(e);
     QPainter p(this);
-    p.fillRect(rect(), palette().color(QPalette::Background));
+    p.fillRect(rect(), palette().color(QPalette::Window));
 
     if (mEvent.isEmpty()) {
         QFont font = p.font();

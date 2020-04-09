@@ -49,16 +49,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 typedef double type_data;
 
 struct FunctionAnalysis{
-    type_data max = (type_data)0.;
-    type_data mode = (type_data)0.;
-    type_data mean = (type_data)0.;
-    type_data stddev = (type_data)0.;
+    type_data max = type_data(0.);
+    type_data mode = type_data(0.);
+    type_data mean = type_data(0.);
+    type_data stddev = type_data(0.);
 };
 
 struct Quartiles{
-    type_data Q1 = (type_data)0.;
-    type_data Q2 = (type_data)0.;
-    type_data Q3 = (type_data)0.;
+    type_data Q1 = type_data(0.);
+    type_data Q2 = type_data(0.);
+    type_data Q3 = type_data(0.);
 };
 
 struct DensityAnalysis
@@ -96,16 +96,18 @@ QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString
 
 QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double, double> &hpd, double thresh);
 
+void _generateBufferForHisto(double *input, const QVector<double> &dataSrc, const int numPts, const double a, const double b);
+// QMap<double, double>_generateHisto(const QVector<double>& dataSrc, const int fftLen, const double bandwidth, const double tmin, const double tmax);
+
 inline double rounddouble(const double f,const int prec)
 {
-    double result;
     if (prec > 0){
-        const double factor = pow(10., (double)prec);
-        result = round(f * factor) / factor;
+        const double factor = pow(10., double(prec));
+        return round(f * factor) / factor;
     } else {
-        result = round(f);
+        return round(f);
     }
-    return result;
+  
 }
 
 template <typename T>
@@ -150,17 +152,17 @@ QPair<int, double> gammaQuartile(const QVector<T> &trace, const int quartileType
         // http://tolstoy.newcastle.edu.au/R/e17/help/att-1067/Quartiles_in_R.pdf
         m = 0.;
         jFloor = floor((n * p) + m);
-        j = (int)jFloor;
+        j = int(jFloor);
         g = n*p + m - jFloor;
 
         gamma = (g<1e-10 ? 0 : 1.) ;
- //qDebug()<<n<<p<<m<<jFloor<<j<<g<<gamma;
+
         break;
 
     case 2: // same probleme as type 1
         m = 0.;
         jFloor = floor((n * p) + m);
-        j = (int)jFloor;
+        j = int(jFloor);
         g = n*p + m - jFloor;
         gamma = (g==0. ? 0.5 : 1.) ;
         break;
@@ -168,7 +170,7 @@ QPair<int, double> gammaQuartile(const QVector<T> &trace, const int quartileType
     case 3: // OK with R
         m = -0.5;
         jFloor = floor((n * p) + m);
-        j = (int)jFloor;
+        j = int(jFloor);
         g = n*p + m - jFloor;
         gamma = (g==0. && isEven(j) ? 0. : 1.);
         break;
@@ -178,39 +180,39 @@ QPair<int, double> gammaQuartile(const QVector<T> &trace, const int quartileType
         m = 0.;
         k = p * n;
         g = k - floor(k);
-        j = (int) floor(k);
+        j = int(floor(k));
         gamma = g ;
         break;
     case 5: // OK with R
         m = 0.;
         k = (p * n) + 0.5;
         g = k - floor(k);
-        j = (int) floor(k);
+        j = int(floor(k));
         gamma = g ;
         break;
     case 6:
         k = p * (n+1);
         g = k - floor(k);
-        j = (int) floor(k);
+        j = int (floor(k));
         gamma = g;
         break;
     case 7: // OK with R, this is the default type in R software
         k = (p*(n-1) + 1);
         g = k - floor(k);
-        j = (int) floor(k);
+        j = int (floor(k));
         gamma = g ;
         break;
     case 8: // OK with R, it is the formula with Bos-Levenbach (1953) parameter
         // http://www.barringer1.com/wa_files/The-plotting-of-observations-on-probability-paper.pdf
         k = p * (n + 0.4) + 0.3;
         g = k - floor(k);
-        j = (int) floor(k);
+        j = int (floor(k));
         gamma = g ;
         break;
     case 9:
         k = p * (n + 2./8.) + 3./8.;
         g = k - floor(k);
-        j = (int) floor(k);
+        j = int (floor(k));
         gamma = g;
         break;
 
@@ -243,30 +245,30 @@ Quartiles quartilesType(const QVector<T>& trace, const int quartileType, const d
 
     // Q1 determination
     if (parQ1.first<=0)
-       Q.Q1 = (double)traceSorted.first();
+       Q.Q1 = double(traceSorted.first());
 
     else if (parQ1.first < traceSorted.size())
-            Q.Q1 = (1.- parQ1.second)*(double)traceSorted.at(parQ1.first-1) + parQ1.second*(double)traceSorted.at(parQ1.first);
+            Q.Q1 = (1.- parQ1.second)*double(traceSorted.at(parQ1.first-1)) + parQ1.second*double(traceSorted.at(parQ1.first));
     else
-        Q.Q1 = (double)traceSorted.last();
+        Q.Q1 = double(traceSorted.last());
 
     // Q2 determination
     if (parQ2.first<=0)
-       Q.Q2 = (double)traceSorted.first();
+       Q.Q2 = double(traceSorted.first());
 
     else if (parQ2.first < traceSorted.size())
-            Q.Q2 = (1.- parQ2.second)*(double)traceSorted.at(parQ2.first-1) + parQ2.second*(double)traceSorted.at(parQ2.first);
+            Q.Q2 = (1.- parQ2.second) * double(traceSorted.at(parQ2.first-1)) + parQ2.second * double(traceSorted.at(parQ2.first));
     else
-        Q.Q2 = (double)traceSorted.last();
+        Q.Q2 = double(traceSorted.last());
 
     // Q3 determination
     if (parQ3.first<=0)
-       Q.Q3 = (double)traceSorted.first();
+       Q.Q3 = double(traceSorted.first());
 
     else if (parQ3.first < traceSorted.size())
-            Q.Q3 = (1.- parQ3.second)*(double)traceSorted.at(parQ3.first-1) + parQ3.second*(double)traceSorted.at(parQ3.first);
+            Q.Q3 = (1.- parQ3.second)*double(traceSorted.at(parQ3.first-1)) + parQ3.second*double(traceSorted.at(parQ3.first));
     else
-        Q.Q3 = (double)traceSorted.last();
+        Q.Q3 = double(traceSorted.last());
 
     return Q;
 }

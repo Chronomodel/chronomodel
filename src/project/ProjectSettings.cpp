@@ -132,7 +132,7 @@ double ProjectSettings::getStep(const double tmin, const double tmax)
         return 1.;
 
     else {
-        const double maxPts (50000.);
+        const double maxPts (54000.); // must be upper than linearUntil
         const double lambda = - log((maxPts - linearUntil)/maxPts) / linearUntil;
         const double nbPts = maxPts * (1. - exp(-lambda * diff));
         const double step = diff / nbPts;

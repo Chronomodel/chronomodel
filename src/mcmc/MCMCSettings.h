@@ -98,6 +98,7 @@ public:
 
     int mFinalBatchIndex;
     double mMixingLevel;
+    double mLambdaLevel;
 };
 
 QDataStream &operator<<( QDataStream &stream, const MCMCSettings &data );

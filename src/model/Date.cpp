@@ -376,6 +376,7 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
 
         const double nbRefPts = 1. + round((mTmaxRefCurve - mTminRefCurve) / double(settings.mStep));
         long double v = getLikelihood(mTminRefCurve);
+        
         calibrationTemp.append(v);
         repartitionTemp.append(0.);
         long double lastRepVal = v;
@@ -386,13 +387,14 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
             const double t = mTminRefCurve + double (i) * settings.mStep;
             long double lastV = v;
             v = getLikelihood(t);
-
+qDebug()<<"Date:calibrate"<< float(v);
             calibrationTemp.append(double(v));
             long double rep = lastRepVal;
             if(v != 0.l && lastV != 0.l)
                 rep = lastRepVal + (long double) (settings.mStep) * (lastV + v) / 2.l;
 
             repartitionTemp.append(double (rep));
+            qDebug()<<"Date:calibrate rep="<< float(rep);
             lastRepVal = rep;
         }
 
@@ -608,7 +610,7 @@ QPixmap Date::generateCalibThumb()
         const double tmax = mSettings.mTmax;
 
         GraphCurve curve;
-        QMap<double, double> calib = normalize_map(getMapDataInRange(getRawCalibMap(),tmin,tmax));
+        QMap<double, double> calib = normalize_map(getMapDataInRange(getRawCalibMap(), tmin, tmax));
         qDebug()<<"generateThumb mName"<<mCalibration->mName<<mCalibration->mCurve.size()<<calib.size();
         curve.mData = calib;
 
@@ -778,19 +780,19 @@ void Date::updateSigma(Event* event)
     // ------------------------------------------------------------------------------------------
     //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
     // ------------------------------------------------------------------------------------------
-    const double lambda = pow(mTheta.mX - (event->mTheta.mX - mDelta), 2) / 2.;
+    const double lambda = pow(mTheta.mX - (event->mTheta.mX - mDelta), 2.) / 2.;
 
     const int logVMin (-6);
     const int logVMax (100);
 
     const double V1 = mSigma.mX * mSigma.mX;
     const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigma.mSigmaMH);
-    const double V2 = pow(10, logV2);
-
+    const double V2 = pow(10., logV2);
     double rapport (0.);
     if (logV2 >= logVMin && logV2 <= logVMax) {
         const double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
-        const double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1.);
+        const double x2 = pow((ro * event->mS02 + V1) / (ro*event->mS02 + V2), event->mAShrinkage + 1.); // Modif PhD
+        //const double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1.);
         rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1; // (V2 / V1) est le jacobien!
     }
 
@@ -984,7 +986,7 @@ void fMHSymetricWithArg(Date* date,Event* event)
 
     const long double rapport=sqrt(argOld.first/argNew.first)*exp(argNew.second-argOld.second);
 
-    date->mTheta.tryUpdate(tiNew, (double)rapport);
+    date->mTheta.tryUpdate(tiNew, (double)std::move(rapport) );
 
 }
 
@@ -1006,7 +1008,7 @@ double fProposalDensity(const double t, const double t0, Date* date)
     if (t > tminCalib && t < tmaxCalib){
         //double prop = (t - tmin) / (tmax - tmin);
         const double prop = (t - tminCalib) / (tmaxCalib - tminCalib);
-        const double idx = prop * (date->mCalibration->mRepartition.size() - 1);
+        const double idx = prop * (date->mCalibration->mRepartition.size() - 1.);
         const int idxUnder = (int)floor(idx);
 
         //double step =(tmax-tmin+1)/date->mRepartition.size();
@@ -1022,8 +1024,8 @@ double fProposalDensity(const double t, const double t0, Date* date)
 
     // ----q2 gaussian-----------
     //double t0 = (tmax+tmin)/2;
-    const double sigma = qMax(tmax - tmin, tmaxCalib - tminCalib) / 2;
-    const double q2 = exp(-0.5* pow((t-t0)/ sigma, 2)) / (sigma*sqrt(2*M_PI));
+    const double sigma = qMax(tmax - tmin, tmaxCalib - tminCalib) / 2.;
+    const double q2 = exp(-0.5 * pow((t-t0)/ sigma, 2.)) / (sigma*sqrt(2.*M_PI));
 
     return (level * q1 + (1 - level) * q2);
 }
@@ -1072,15 +1074,15 @@ void fInversion(Date* date, Event* event)
     const double rapport1 = date->getLikelihood(tiNew) / date->getLikelihood(date->mTheta.mX);
 
     const double rapport2 = exp((-0.5 / (date->mSigma.mX * date->mSigma.mX)) *
-                          (pow(tiNew - (event->mTheta.mX - date->mDelta), 2) -
-                           pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2))
+                          (pow(tiNew - (event->mTheta.mX - date->mDelta), 2.) -
+                           pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2.))
                           );
 
     const double rapport3 = fProposalDensity(date->mTheta.mX, tiNew, date) /
                         fProposalDensity(tiNew, date->mTheta.mX, date);
 
 
-    date->mTheta.tryUpdate(tiNew, rapport1 * rapport2 * rapport3);
+    date->mTheta.tryUpdate(std::move(tiNew), rapport1 * rapport2 * rapport3);
 }
 
 void fInversionWithArg(Date* date, Event* event)
@@ -1091,12 +1093,11 @@ void fInversionWithArg(Date* date, Event* event)
     const double tmin (date->mSettings.mTmin);
     const double tmax (date->mSettings.mTmax);
 
-    const double tminCalib = date->mCalibration->mTmin;
-
     if (u1<level) { // tiNew always in the study period
+        const double tminCalib = date->mCalibration->mTmin;
         const double u2 = Generator::randomUniform();
         const double idx = vector_interpolate_idx_for_value(u2, date->mCalibration->mRepartition);
-        tiNew = tminCalib + idx *date->mCalibration->mStep;
+        tiNew = std::move(tminCalib) + idx *date->mCalibration->mStep;
 
 
     } else {
@@ -1139,7 +1140,7 @@ void fInversionWithArg(Date* date, Event* event)
     const long double rapportPD = fProposalDensity(date->mTheta.mX, tiNew, date) / fProposalDensity(tiNew, date->mTheta.mX, date);
 
 
-    date->mTheta.tryUpdate(tiNew, (double)(rapport * rapportPD));
+    date->mTheta.tryUpdate(std::move(tiNew), (double)(rapport * rapportPD));
 
 
 }
@@ -1153,8 +1154,8 @@ void fMHSymGaussAdapt(Date* date, Event* event)
 
     const double tiNew = Generator::gaussByBoxMuller(date->mTheta.mX, date->mTheta.mSigmaMH);
     double rapport = date->getLikelihood(tiNew) / date->getLikelihood(date->mTheta.mX);
-    rapport *= exp((-0.5/(date->mSigma.mX * date->mSigma.mX)) * (   pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
-                                                                  - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
+    rapport *= exp((-0.5/pow(date->mSigma.mX, 2.)) * (   pow(tiNew - (event->mTheta.mX - date->mDelta), 2.)
+                                                                  - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2.)
                                                                  ));
 
     date->mTheta.tryUpdate(tiNew, rapport);
@@ -1175,12 +1176,11 @@ void fMHSymGaussAdaptWithArg(Date* date, Event* event)
     argOld = date->getLikelihoodArg(date->mTheta.mX);
     argNew = date->getLikelihoodArg(tiNew);
 
-    const long double logGRapport = argNew.second-argOld.second;
-    const long double logHRapport = (-0.5/(date->mSigma.mX * date->mSigma.mX)) * (  pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
-                                                                      - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
-                                                                      );
+    const long double logGRapport = argNew.second - argOld.second;
+    const long double logHRapport = (-0.5/pow(date->mSigma.mX, 2.)) * (  pow(tiNew - (event->mTheta.mX - date->mDelta), 2.)
+                                                                                        - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2.) );
 
-    const long double rapport = sqrt(argOld.first/argNew.first)*exp(logGRapport+logHRapport);
+    const long double rapport = sqrt(argOld.first/argNew.first) * exp(logGRapport+logHRapport);
 
     date->mTheta.tryUpdate(tiNew, (double) rapport);
 

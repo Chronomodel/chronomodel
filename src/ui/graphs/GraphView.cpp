@@ -1082,7 +1082,7 @@ void GraphView::drawCurves(QPainter& painter)
                 }
                 path.lineTo(mMarginLeft + mGraphWidth, y0);
 
-                painter.setClipRect(mMarginLeft, mMarginTop, mGraphWidth, mGraphHeight);
+                painter.setClipRect(int (mMarginLeft), int (mMarginTop), int(mGraphWidth), int (mGraphHeight));
                 painter.fillPath(path, brush);
                 painter.strokePath(path, curve.mPen);
 
@@ -1269,16 +1269,16 @@ void GraphView::drawCurves(QPainter& painter)
 
                                 } else if (curve.mIsRectFromZero) {
 
-                                    if (last_valueY != 0 && valueY != 0) {
+                                    if ((last_valueY != 0.) && (valueY != 0.)) {
                                         path.lineTo(x, y);
 
-                                    } else if (last_valueY == 0 && valueY != 0) {
+                                    } else if ((last_valueY == 0.) && (valueY != 0.)) {
                                         // Draw a front end of a square signal some 0 at the begin and at the end
                                         // e.i plot the HPD surface
                                         path.lineTo(x, last_y);
                                         path.lineTo(x, y);
 
-                                    } else if (last_valueY != 0 && valueY == 0) {
+                                    } else if ((last_valueY != 0.) && (valueY == 0.)) {
                                         // Draw a back end of a square signal some 0 at the begin and at the end
                                         // e.i plot the HPD surface
                                         path.lineTo(last_x, last_y);
@@ -1307,17 +1307,17 @@ void GraphView::drawCurves(QPainter& painter)
                     // Detect square signal back-end without null value at the end of the QMap
                     // e.i calibration of Unif-typo-ref
 
-                       if (curve.mIsRectFromZero && lightMap.size()>1) {
-                            QMapIterator<type_data, type_data> lastIter(lightMap);
-                            lastIter.toBack();
-                            lastIter.previous();
-                            if ( lastIter.value() == lastIter.peekPrevious().value() ) {
-                                type_data x = lastIter.key();
-                                if ( x > mCurrentMinX && x < mCurrentMaxX)
-                                    path.lineTo(getXForValue(x, true), getYForValue(0, true) );
-                            }
+                   if (curve.mIsRectFromZero && lightMap.size()>1) {
+                        QMapIterator<type_data, type_data> lastIter(lightMap);
+                        lastIter.toBack();
+                        lastIter.previous();
+                        if ( lastIter.value() == lastIter.peekPrevious().value() ) {
+                            type_data x = lastIter.key();
+                            if ( x > mCurrentMinX && x < mCurrentMaxX)
+                                path.lineTo(getXForValue(x, true), getYForValue(0, true) );
                         }
                     }
+                }
 
 
                 if (curve.mIsRectFromZero && (curve.mBrush != Qt::NoBrush) ) {
@@ -1363,8 +1363,8 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         QStringList list;
 
         list << " X Axis";
-        type_data xMin = INFINITY;
-        type_data xMax = INFINITY;
+        type_data xMin = HUGE_VAL;
+        type_data xMax = HUGE_VAL;
 
         for (const auto &curve : mCurves) {
             if (!curve.mData.empty() &&
@@ -1391,7 +1391,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
             return;
 
         rows<<list;
-        rows.reserve(ceil( (xMax - xMin)/step) );
+        rows.reserve( int(ceil( (xMax - xMin)/step)) );
 
         // 3 - Create Row, with each curve
         //  Create data in row

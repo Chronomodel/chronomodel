@@ -98,8 +98,9 @@ public:
         eTheta = 0,
         eSigma = 1,
         eDuration = 2,
-        eTempo = 3,
-        eActivity = 4
+        eTau = 3,
+        eTempo = 4,
+        eActivity = 5
     };
     static int mHeightForVisibleAxis ;
     // member

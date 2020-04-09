@@ -232,7 +232,9 @@ double Generator::boxMuller()
 
 double Generator::gaussByBoxMuller(const double& mean, const double& sigma)
 {
-    return mean + boxMuller() * sigma;
+    //return mean + boxMuller() * sigma;
+    std::normal_distribution<> d{mean, sigma};
+    return d(sEngine);
 }
 
 /** https://en.wikipedia.org/wiki/Xorshift

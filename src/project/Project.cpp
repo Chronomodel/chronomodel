@@ -228,11 +228,12 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
 
     if (mState != state || force)  {
 
-        SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
+        //SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
         //command->setText("pushProjectState " + command->actionText());
-        if (reason != NEW_PROJECT_REASON && reason != PROJECT_LOADED_REASON)
+        if (reason != NEW_PROJECT_REASON && reason != PROJECT_LOADED_REASON) {
+            SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
             MainWindow::getInstance()->getUndoStack()->push(command);
-
+        }
         updateState(state, reason, notify);
         return true;
     }
@@ -302,9 +303,10 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
                // Check STRUCTURE
                // Check tau parameter
                if ( phaseNew.at(i).toObject().value(STATE_PHASE_TAU_TYPE) != phaseOld.at(i).toObject().value(STATE_PHASE_TAU_TYPE) ||
-                   phaseNew.at(i).toObject().value(STATE_PHASE_TAU_FIXED) != phaseOld.at(i).toObject().value(STATE_PHASE_TAU_FIXED) ||
-                   phaseNew.at(i).toObject().value(STATE_PHASE_TAU_MIN) != phaseOld.at(i).toObject().value(STATE_PHASE_TAU_MIN) ||
-                   phaseNew.at(i).toObject().value(STATE_PHASE_TAU_MAX) != phaseOld.at(i).toObject().value(STATE_PHASE_TAU_MAX) ) {
+                   phaseNew.at(i).toObject().value(STATE_PHASE_TAU_FIXED) != phaseOld.at(i).toObject().value(STATE_PHASE_TAU_FIXED) )
+                   /* || phaseNew.at(i).toObject().value(STATE_PHASE_TAU_MIN) != phaseOld.at(i).toObject().value(STATE_PHASE_TAU_MIN) ||
+                   phaseNew.at(i).toObject().value(STATE_PHASE_TAU_MAX) != phaseOld.at(i).toObject().value(STATE_PHASE_TAU_MAX) ) -> OBSOLETE*/
+               {
                    mStructureIsChanged = true;
                }
             }
@@ -696,9 +698,14 @@ bool Project::load(const QString& path)
                             for (int i = 0; i < int(siz); ++i) {
                                 QString descript;
                                 in >> descript;
-                                CalibrationCurve cal;
-                                in >> cal;
-                                mCalibCurves.insert(descript,cal);
+                                if (descript.isEmpty())
+                                    continue;
+                                else {
+                                    CalibrationCurve cal;
+                                    in >> cal;
+                                    if (cal.mPlugin != nullptr)
+                                        mCalibCurves.insert(descript,cal);
+                                }
                             }
                         }
 
@@ -888,26 +895,28 @@ bool Project::insert(const QString& path)
 
 
             // 1 - find min-max position and min max index in the mState yet in memory
-           double minXEvent (HUGE_VAL), maxXEvent(- HUGE_VAL), minYEvent(HUGE_VAL), maxYEvent(- HUGE_VAL);
-           double minXPhase(HUGE_VAL), maxXPhase(- HUGE_VAL), minYPhase(HUGE_VAL), maxYPhase(- HUGE_VAL);
+           //double minXEvent (HUGE_VAL),, minYEvent(HUGE_VAL), maxYEvent(- HUGE_VAL);
+           double maxXEvent(- HUGE_VAL);
+           //double minXPhase(HUGE_VAL), minYPhase(HUGE_VAL), maxYPhase(- HUGE_VAL);
+           double maxXPhase(- HUGE_VAL);
            int  maxIDEvent(0), maxIDPhase(0), maxIDEventConstraint(0), maxIDPhaseConstraint(0);
 
            const QJsonArray phases = mState.value(STATE_PHASES).toArray();
 
            if (phases.isEmpty()) {
-               minXPhase = 0;
+           //    minXPhase = 0;
                maxXPhase = 0;
-               minYPhase = 0;
-               maxYPhase = 0;
+           //    minYPhase = 0;
+            //   maxYPhase = 0;
 
            } else {
                for (auto phaseJSON : phases) {
                    QJsonObject phase = phaseJSON.toObject();
-                   minXPhase =std::min(minXPhase, phase[STATE_ITEM_X].toDouble());
+               //    minXPhase =std::min(minXPhase, phase[STATE_ITEM_X].toDouble());
                    maxXPhase =std::max(maxXPhase, phase[STATE_ITEM_X].toDouble());
 
-                   minYPhase =std::min(minYPhase, phase[STATE_ITEM_Y].toDouble());
-                   maxYPhase =std::max(maxYPhase, phase[STATE_ITEM_Y].toDouble());
+                 //  minYPhase =std::min(minYPhase, phase[STATE_ITEM_Y].toDouble());
+                //   maxYPhase =std::max(maxYPhase, phase[STATE_ITEM_Y].toDouble());
                    maxIDPhase =std::max(maxIDPhase, phase[STATE_ID].toInt());
                }
                maxIDPhase += 1;
@@ -923,19 +932,19 @@ bool Project::insert(const QString& path)
 
            const QJsonArray events = mState.value(STATE_EVENTS).toArray();
            if (events.isEmpty()) {
-               minXEvent = 0;
+              // minXEvent = 0;
                maxXEvent = 0;
-               minYEvent = 0;
-               maxYEvent = 0;
+               //minYEvent = 0;
+              // maxYEvent = 0;
 
            } else {
                for (auto eventJSON : events) {
                    QJsonObject event = eventJSON.toObject();
-                   minXEvent =std::min(minXEvent, event[STATE_ITEM_X].toDouble());
+                   //minXEvent =std::min(minXEvent, event[STATE_ITEM_X].toDouble());
                    maxXEvent =std::max(maxXEvent, event[STATE_ITEM_X].toDouble());
 
-                   minYEvent =std::min(minYEvent, event[STATE_ITEM_Y].toDouble());
-                   maxYEvent =std::max(maxYEvent, event[STATE_ITEM_Y].toDouble());
+                   //minYEvent =std::min(minYEvent, event[STATE_ITEM_Y].toDouble());
+                   //maxYEvent =std::max(maxYEvent, event[STATE_ITEM_Y].toDouble());
                    maxIDEvent =std::max(maxIDEvent, event[STATE_ID].toInt());
                }
                maxIDEvent += 1;
@@ -978,6 +987,7 @@ bool Project::insert(const QString& path)
                maxYPhaseNew = 0;
 
            } else {
+            
                for (auto phaseJSON : phasesNew) {
                    QJsonObject phase = phaseJSON.toObject();
                    minXPhaseNew =std::min(minXPhaseNew, phase[STATE_ITEM_X].toDouble());
@@ -1854,11 +1864,11 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
     }
     // conversion since version 1.4 test
     bool phaseConversion = false;
-    for (int i = 0; i < phases.size(); i++) {
+    for (int i (0); i < phases.size(); i++) {
        QJsonObject phase = phases.at(i).toObject();
        if ( phase[STATE_PHASE_TAU_TYPE].toInt() == Phase::eTauRange) {
            phase[STATE_PHASE_TAU_TYPE] = Phase::eTauFixed;
-           phase[STATE_PHASE_TAU_FIXED] = phase[STATE_PHASE_TAU_MAX];
+           phase[STATE_PHASE_TAU_FIXED] = phase["tau_max"];//  phase[STATE_PHASE_TAU_MAX]; 
            phases[i] = phase;
            phaseConversion = true;
            isCorrected = true;
@@ -2786,7 +2796,7 @@ void Project::run()
         messageBox.setWindowTitle(tr("Risk on computation"));
         messageBox.setText(tr("The model contains at least one date whose calibration is not digitally computable. \r\rDo you really want to continue ?"));
         QAbstractButton *IStop = messageBox.addButton(tr("Stop, check the data"), QMessageBox::NoRole);
-       // messageBox.addButton(tr("I agree to continue"), QMessageBox::YesRole);
+    
 
         messageBox.exec();
         if (messageBox.clickedButton() == IStop)

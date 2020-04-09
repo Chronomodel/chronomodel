@@ -57,7 +57,8 @@ public:
     enum TauType{
         eTauUnknown = 0,
         eTauFixed = 1,
-        eTauRange = 2
+        eTauRange = 2, // usefull to convert old file in Project::checkDatesCompatibility()
+        eTauOnly = 3
     };
 
     Phase();
@@ -79,13 +80,15 @@ public:
 
     void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
 
+    void updateAlphaBeta(const double tmin, const double tmax);
     void updateAll(const double tmin, const double tmax);
     void memoAll();
 
     QString getTauTypeText() const;
     void initTau();
     void updateTau();
-
+    QPair<double, double> eventSpan (Event *ev);
+    
 public:
     int mId;
 
@@ -98,7 +101,15 @@ public:
 
     MetropolisVariable mAlpha;
     MetropolisVariable mBeta;
-    double mTau;
+    
+    TauType mTauType;
+    double mTauFixed;
+    
+    MetropolisVariable mTau;
+    MetropolisVariable mAlphaTau;
+    MetropolisVariable mBetaTau;
+    
+    
     QPair<double,double> mTimeRange;
 
     // Used to display correctly if alpha or beta is a fixed bound
@@ -116,6 +127,8 @@ public:
     QMap<double, double> mTempoCredibilitySup;
 
     QMap<double, double> mActivity;
+    QMap<double, double> mActivityInf;
+    QMap<double, double> mActivitySup;
 
     // Raw curve without date format
 
@@ -127,11 +140,8 @@ public:
     QMap<double, double> mRawTempoCredibilitySup;
 
     QMap<double, double> mRawActivity;
-
-    TauType mTauType;
-    double mTauFixed;
-    double mTauMin;
-    double mTauMax;
+    QMap<double, double> mRawActivityInf;
+    QMap<double, double> mRawActivitySup;    
 
     double mItemX;
     double mItemY;
@@ -140,7 +150,15 @@ public:
     bool mIsCurrent;
 
     int mLevel;
+    
+    // Variable used within z-only
+    double mStudyMin;
+    double mStudyMax;
 
 };
+
+double somKn (double x, int n, double Rp, double s);
+double intFx (double x, int n, double Rp, double s);
+double Px (double x, int n, double Rp);
 
 #endif

@@ -133,7 +133,11 @@ public slots:
       void updateFormatedTrace();
 
 private:
-    void generateBufferForHisto(double* input, const QVector<double> &dataSrc, const int numPts, const double a, const double b);
+    /**
+    @param[in] dataSrc is the trace, with for example one million data
+    @remarks Produce a density with the area equal to 1. The smoothing is done with Hsilvermann method.
+    **/
+    void generateBufferForHisto(double* input, const QVector<double> &dataSrc, const int numPts, const double a, const double b) { _generateBufferForHisto(input, dataSrc, numPts, a, b);} 
     QMap<double, double> bufferToMap(const double* buffer);
 
 

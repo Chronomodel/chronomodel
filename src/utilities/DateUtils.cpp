@@ -42,6 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 
 #include <cmath>
+#include <algorithm>
 #include <QLocale>
 
 double DateUtils::convertToFormat(const double &valueToFormat, const FormatDate &format)
@@ -173,11 +174,75 @@ double DateUtils::convertFromAppSettingsFormat(const double &formattedValue)
     return DateUtils::convertFromFormat(formattedValue, getAppSettingsFormat());
 }
 
-QMap<double, double> DateUtils::convertMapToAppSettingsFormat(const QMap<double, double> &mapToFormat)
+double  toCalBP(double toConvert)   /* Définit une fonction. */
 {
-   QMap<double, double> mapResult;
-   for (QMap<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
-       mapResult.insert(convertToAppSettingsFormat(value.key()), value.value());
+    return (1950. -toConvert);
+}
+
+double  toCalB2K(double toConvert)
+{
+    return (2000. -toConvert);
+}
+double  toDatBP(double toConvert)
+{
+    return (toConvert - 1950.);
+}
+double  toDatB2K(double toConvert)
+{
+    return (toConvert -2000.);
+}
+double  toKa(double toConvert)
+{
+    return (2. - toConvert/1e+03);
+}
+double  toMa(double toConvert)
+{
+    return (- toConvert/1e+06);
+}
+QMap<double, double> DateUtils::convertMapToAppSettingsFormat( QMap<double, double> &mapToFormat)
+{
+    
+
+    double (*pf)( double );  /* Déclare un pointeur de fonction. */
+
+    DateUtils::FormatDate FrmDate = getAppSettingsFormat();
+    switch (FrmDate) {
+        case eCalBP:
+            //return 1950. - valueToFormat;
+            pf = &toCalBP;
+            break;
+        case eCalB2K:
+            //return 2000. - valueToFormat;
+            pf= &toCalB2K;
+            break;
+        case eDatBP:
+            //return valueToFormat - 1950.;
+            pf = &toDatBP;
+            break;
+        case eDatB2K:
+            //return valueToFormat - 2000.;
+            pf = &toDatB2K;
+            break;
+        case eKa:
+            //return (2. - valueToFormat/1e+03);
+            pf =&toKa;
+        break;
+        case eMa:
+            //return (- valueToFormat/1e+06);
+            pf = &toMa;
+        break;
+
+        case eBCAD:
+        case eBCECE:
+        case eNumeric:
+        default:
+            return QMap<double, double> ( mapToFormat);
+            break;
+    }
+    
+    QMap<double, double> mapResult;
+    for (QMap<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+       mapResult.insert((*pf)(value.key()), value.value());
 
    return mapResult;
 }

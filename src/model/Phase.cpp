@@ -45,17 +45,19 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QtWidgets>
 
+/**
+ @todo Supprimer mTauMin  et mTauMax correspondant à l'ancien eTauRange
+ */
 Phase::Phase():
 mId(0),
 mName("no Phase Name"),
-mTau(0.),
 mTauType(Phase::eTauUnknown),
 mTauFixed(0.),
-mTauMin(0.),
-mTauMax(0.),
 mIsSelected(false),
 mIsCurrent(false),
-mLevel(0)
+mLevel(0),
+mStudyMin(0.),
+mStudyMax(0.)
 {
     mColor = randomColor();
     mAlpha.mSupport = MetropolisVariable::eBounded;
@@ -64,6 +66,15 @@ mLevel(0)
     mBeta.mSupport = MetropolisVariable::eBounded;
     mBeta.mFormat = DateUtils::eUnknown;
 
+    mTau.mSupport = MetropolisVariable::eRp;
+    mTau.mFormat = DateUtils::eUnknown;
+    
+    mAlphaTau.mSupport = MetropolisVariable::eBounded;
+    mAlphaTau.mFormat = DateUtils::eUnknown;
+
+    mBetaTau.mSupport = MetropolisVariable::eBounded;
+    mBetaTau.mFormat = DateUtils::eUnknown;
+    
     mDuration.mSupport = MetropolisVariable::eRp;
     mDuration.mFormat = DateUtils::eUnknown;
     // Item initial position :
@@ -92,12 +103,14 @@ void Phase::copyFrom(const Phase& phase)
     mBeta = phase.mBeta;
     mDuration = phase.mDuration;
 
-    mTau = phase.mTau;
-
     mTauType = phase.mTauType;
     mTauFixed = phase.mTauFixed;
-    mTauMin = phase.mTauMin;
-    mTauMax = phase.mTauMax;
+    mTau = phase.mTau;
+    mAlphaTau = phase.mAlphaTau;
+    mBetaTau = phase.mBetaTau;
+    
+    mStudyMin = phase.mStudyMin;
+    mStudyMax = phase.mStudyMax;
 
     mItemX = phase.mItemX;
     mItemY = phase.mItemY;
@@ -147,14 +160,17 @@ Phase Phase::fromJson(const QJsonObject& json)
     p.mItemY = json.value(STATE_ITEM_Y).toDouble();
     p.mTauType = (Phase::TauType)json.value(STATE_PHASE_TAU_TYPE).toInt();
     p.mTauFixed = json.value(STATE_PHASE_TAU_FIXED).toDouble();
-    p.mTauMin = json.value(STATE_PHASE_TAU_MIN).toDouble();
-    p.mTauMax = json.value(STATE_PHASE_TAU_MAX).toDouble();
+    //  p.mTauMin = json.value(STATE_PHASE_TAU_MIN).toDouble(); ->OBSOLETE
+    //  p.mTauMax = json.value(STATE_PHASE_TAU_MAX).toDouble(); ->OBSOLETE
     p.mIsSelected = json.value(STATE_IS_SELECTED).toBool();
     p.mIsCurrent = json.value(STATE_IS_CURRENT).toBool();
 
-    p.mAlpha.setName("Begin of Phase : "+p.mName);
-    p.mBeta.setName("End of Phase : "+p.mName);
-    p.mDuration.setName("Duration of Phase : "+p.mName);
+    p.mAlpha.setName("Begin of Phase : " + p.mName);
+    p.mBeta.setName("End of Phase : " + p.mName);
+    p.mTau.setName("Tau of Phase : " + p.mName);
+    p.mAlphaTau.setName("Tau Begin of Phase : " + p.mName);
+    p.mBetaTau.setName("Tau End of Phase : " + p.mName);
+    p.mDuration.setName("Duration of Phase : " + p.mName);
 
     return p;
 }
@@ -172,8 +188,8 @@ QJsonObject Phase::toJson() const
     phase[STATE_ITEM_Y] = mItemY;
     phase[STATE_PHASE_TAU_TYPE] = mTauType;
     phase[STATE_PHASE_TAU_FIXED] = mTauFixed;
-    phase[STATE_PHASE_TAU_MIN] = mTauMin;
-    phase[STATE_PHASE_TAU_MAX] = mTauMax;
+    //  phase[STATE_PHASE_TAU_MIN] = mTauMin;   ->OBSOLETE
+    //  phase[STATE_PHASE_TAU_MAX] = mTauMax;   ->OBSOLETE
     phase[STATE_IS_SELECTED] = mIsSelected;
     phase[STATE_IS_CURRENT] = mIsCurrent;
 
@@ -188,10 +204,10 @@ QPair<double,double> Phase::getFormatedTimeRange() const
     const double t2 = DateUtils::convertToAppSettingsFormat(mTimeRange.second);
 
     if (t1<t2)
-        return QPair<double,double>(t1,t2);
+        return QPair<double,double>(t1, t2);
 
     else
-        return QPair<double,double>(t2,t1);
+        return QPair<double,double>(t2, t1);
 
 }
 
@@ -297,26 +313,24 @@ double Phase::getMaxThetaPrevPhases(const double tmin)
 
 void Phase::updateAll(const double tmin, const double tmax)
 {
-    //static bool initalized = false; // What is it??
-
     mAlpha.mX = getMinThetaEvents(tmin);
     mBeta.mX = getMaxThetaEvents(tmax);
     mDuration.mX = mBeta.mX - mAlpha.mX;
 
-   /*   if (initalized) {
-            double oldAlpha = mAlpha.mX;
-            double oldBeta = mBeta.mX;
-            if (mAlpha.mX != oldAlpha)
-                mIsAlphaFixed = false;
-
-            if (mBeta.mX != oldBeta)
-                mIsAlphaFixed = false;
-        }
-    */
-
     updateTau();
+    if (mTau.mX<5)
+        qDebug()<<QObject::tr("updateTau(): in phase %1 , Tau = %2 < 1.5").arg(mName, QString::number(mTau.mX));
+    if (mTau.mX<0.01)
+               //throw
+        qDebug()<<QObject::tr("updateTau(): in phase %1 , Tau = %2 < 1").arg(mName, QString::number(mTau.mX));
 
-    //initalized = true;
+ 
+}
+
+void Phase::updateAlphaBeta(const double tmin, const double tmax)
+{
+    mAlpha.mX = getMinThetaEvents(tmin);
+    mBeta.mX = getMaxThetaEvents(tmax);
 }
 
 QString Phase::getTauTypeText() const
@@ -328,10 +342,12 @@ QString Phase::getTauTypeText() const
         case eTauUnknown:
                 return QObject::tr("Max duration unknown");
             break;
-
-        case eTauRange: // no longer used
+        case eTauOnly:
+                return QObject::tr("Z-only");
+            break;
+     /*   case eTauRange: // no longer used ->OBSOLETE
             return QObject::tr("Tau Range") + QString(" [ %1 ; %2 ]").arg(QString::number(mTauMin), QString::number(mTauMax));
-        break;
+        break;  */
         default:
                 return QObject::tr("Tau Undefined->Error");
             break;
@@ -342,37 +358,239 @@ QString Phase::getTauTypeText() const
 void Phase::initTau()
 {
     if (mTauType == eTauFixed && mTauFixed != 0.)
-        mTau = mTauFixed;
+        mTau.mX = mTauFixed;
 
-    else if (mTauType == eTauRange && mTauMax > mTauMin) // no longer used
+    /* else if (mTauType == eTauRange && mTauMax > mTauMin) // no longer used ->OBSOLETE
         mTau = mTauMax;
-
-    else if (mTauType == eTauUnknown) {
+     */
+    else if (mTauType == eTauUnknown || mTauType==eTauOnly) {
+        // Modif PhD ; initialisation arbitraire
+        mTau.mX = mStudyMax - mStudyMin;
+        // nothing to do
+    } else {
         // nothing to do
     }
+}
+// Formule du 12 mars 2020
+/*
+double somKn (double x, int n, double Rp, double s) {
+  double som (0.);
+  double un_kn;
+  if (n >= 3) {
+    for (int k(1); k <=(n-2); ++k ) {
+      un_kn = 1. + k - n;
+      som +=  pow(Rp, double(-k)) * (1/un_kn) * (pow(x, un_kn) - pow(s, un_kn) ); //pow() must be like pow(double, double)
+    }
+  }
+  return(som);
+}
+double intFx (double x, int n, double Rp, double s) {
+  
+  if (n < 2) {
+    return(0.);
+  }
+  else if (n < 3) {
+    return( pow(Rp, double(1-n))* log( x/(Rp-x) * (Rp-s)/s ) ); //pow() must be like pow(double, double)
+  }
+  else {
+    return( pow(Rp, double(1-n))* log( x/(Rp-x) * (Rp-s)/s ) + somKn(x, n, Rp, s) );
+  }
+    
+}
+*/
+// recherche etendue d'un event sans une phase courante
+QPair<double, double> Phase::eventSpan (Event *ev)
+{
+    //qDebug()<<"phase"<<mName;
+    double thetaMin (ev->mTheta.mX);
+    double thetaMax (mBeta.mX - mAlpha.mX);
+    for (auto phase : ev->mPhases) {
+       if (phase->mTauType != Phase::eTauUnknown && phase!= this) {
+         //  qDebug()<<"phase dedans"<<phase->mName;
+           thetaMin = std::min(phase->mBeta.mX - phase->mTau.mX, thetaMin);
+           thetaMax = std::max( phase->mTau.mX, thetaMax);
+           //thetaMin = std::min(ev->mTheta.mX - phase->mTau.mX/2., thetaMin);
+           //thetaMax = std::max(ev->mTheta.mX + phase->mTau.mX/2., thetaMax);
+        }    // modif PhD
+    }
+    return (qMakePair(thetaMin, thetaMax));
+}
+
+// Formule du 25 mars 2020
+
+double somKn (double x, int n, double Rp, double s) {
+  double som (0.);
+  
+  if (n >= 3) {
+ 
+   for (double np1(1.); np1 <= double(n-2); ++np1 ) { // memory np1 = n - p - 1.;
+       som +=  (pow(Rp/x, np1) - pow(Rp/s, np1) )/np1;
+     }
+
+  }
+  return(std::move(som));
+}
+double intFx (double x, int n, double Rp, double s) {
+  
+  if (n < 2) {
+    return(0.);
+  }
+  else if (n < 3) {
+    return( log( x/(Rp-x) * (Rp-s)/s ) );
+  }
+  else {
+      
+    return( log( x/(Rp-x) * (Rp-s)/s )- somKn(x, n, Rp, s) );
+  }
+   
+}
+double Px (double x, int n, double Rp) {
+  
+    const double P2 ( 1./(Rp-x) + (1./x)) ;
+    
+    double som (0.);
+    for (int p(1); p <=(n-2); ++p ) {
+      som +=  (pow(Rp, n - p -1.) / pow(x, double(n-p)) );
+    }
+    //P2 += som;
+  
+
+    return(std::move(P2+som) );
+
 }
 
 void Phase::updateTau()
 {
     if (mTauType == eTauFixed && mTauFixed != 0.)
-        mTau = mTauFixed;
-
-    else if (mTauType == eTauRange && mTauMax > mTauMin)
-        mTau = Generator::randomUniform(qMax(mTauMin, mBeta.mX - mAlpha.mX), mTauMax);
+        mTau.mX = mTauFixed; // maybe it's not usefull, because it never changes and yet it is initiated
 
     else if (mTauType == eTauUnknown) {
-        // Nothing to do!
+        mTau.mX = mBeta.mX - mAlpha.mX;
     }
+    else  {
+        // Modif PhD
+        /* définition du modèle  */
+  
+        const int n (mEvents.length());
+         double s (mBeta.mX - mAlpha.mX);
+        qDebug()<<"s initial"<<s <<"tau"<<mTau.mX;
+        double evMin, evMax;
+        for (auto ev : mEvents) {
+            auto minMax = eventSpan(ev);
+            evMax = std::max( evMax, minMax.second);
+            evMin = std::min( evMin, minMax.first);
+        }
+
+        qDebug()<<"s corrigé"<<s;
+        const double precision (.0001);
+        const double R (mStudyMax - mStudyMin);
+        const double Rp ( R/(n-1)*n );
+        /* variable à échantillonner */
+        
+        const double u ( Generator::randomUniform(0.0, 1.0) );
+       
+          /* Recherche solution équation F(x)-u=0 */
+        const double FbMax = intFx(R, n, Rp, s);
+        //double Fb = 1.0 - u;  // pour mémoire
+        
+             
+        // Dichotomie
+/*
+        //    counter = 0;
+         double Fa = intFx(s, n, Rp, s)/FbMax - u;
+         double c(s), a1 (s), b1 (R);
+         double Fc, xd;
+              while ( abs((b1 - a1)/b1) >= precision/100.) {
+          //        ++counter;
+                  c = (a1 + b1)/2.;
+
+                  Fc = intFx(c, n, Rp, s)/FbMax - u;
+                  if ( signbit(Fa) == signbit(Fc) ) {
+                      a1 = c;
+                      Fa = intFx(a1, n, Rp, s)/FbMax - u;
+                  } else {
+                      b1 = c;
+                      
+                  }
+              }
+           
+              //xd = std::move((a1 + b1)/2.);
+ */
+            // Newton
+        
+        double xn (s);
+        double  b1;
+        double itF, p;
+        if ( !isinf(FbMax)) {
+            double Epsilon (R);
+                        
+            while ( Epsilon >= precision/100.) {
+
+                itF = intFx(xn, n, Rp, s);
+
+                itF = itF - u*FbMax;
+                p = Px(xn, n, Rp);
+             
+                //b1 = itF != 0. ? (x - (itF / p )): x;
+                b1 = xn - (itF / p );
+                Epsilon = abs((xn - b1)/b1);
+                xn = std::move(b1);
+                
+            }
+             xn = std::max(s, std::min(xn, R));
+            
+        }
+     
+/*
+        if (abs((xn-xd)/xn)> precision/100.) {
+         qDebug()<<"-----------------> U = "<< u << " R = "<< R <<  "xd = "<<xd <<  "xn = "<< xn <<" s = "<< s;
+            
+            double Fa = intFx(s, n, Rp, s)/FbMax - u;
+            double c(s), a1 (s), b1 (R);
+            double Fc, xControle;
+                 while ( abs((b1 - a1)/b1) >= precision/100) {
+             //        ++counter;
+                     c = (a1 + b1)/2.;
+
+                     Fc = intFx(c, n, Rp, s)/FbMax - u;
+                     if ( signbit(Fa) == signbit(Fc) ) {
+                         a1 = c;
+                         Fa = intFx(a1, n, Rp, s)/FbMax - u;
+                     } else {
+                         b1 = c;
+                         
+                     }
+                 }
+              
+                 //xd = std::move((a1 + b1)/2.);
+               xControle = std::move(c);
+            qDebug()<<"-----------------> xControle = "<< xControle;
+        }
+ 
+       mTau.mX = std::move(xd);
+ */
+        // Nothing to do!
+/*
+        if (abs(xn-mTau.mX)> 1.*precision) {
+           qDebug()<<"-----------precision------> U = "<< u << " R = "<< R <<  "xd = "<<xd <<  "xn = "<< xn <<" s = "<< s;
+        } else
+ */
+       
+        mTau.mX = std::move(xn);
+        
+    }
+    qDebug() << mName<<  "mTau.mX="<<mTau.mX;
 }
 
 void Phase::memoAll()
 {
     mAlpha.memo();
     mBeta.memo();
+    mTau.memo();
     mDuration.memo();
 #ifdef DEBUG
-    if (mBeta.mX - mAlpha.mX < 0.)
-        qDebug()<<"in Phase::memoAll : "<<mName<<" Warning mBeta.mX - mAlpha.mX<0";
+    if (mBeta.mX < mAlpha.mX)
+        qDebug() << "in Phase::memoAll : " << mName << " Warning mBeta.mX - mAlpha.mX<0";
 #endif
 }
 
@@ -380,5 +598,9 @@ void Phase::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, co
 {
     mAlpha.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
     mBeta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+    mTau.generateHistos(chains, fftLen, bandwidth);
+    mAlphaTau.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+    mBetaTau.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
     mDuration.generateHistos(chains, fftLen, bandwidth);
+    
 }

@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
 
     a.setApplicationName("ChronoModel");
     a.setApplicationDisplayName("ChronoModel");
-    a.setApplicationVersion("2.0.18");//VERSION_NUMBER);//"2.0.9-alpha");  // must match value in Chronomodel.pro
+    a.setApplicationVersion("2.0.21");//VERSION_NUMBER);//"2.0.9-alpha");  // must match value in Chronomodel.pro
     a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
     qApp->setAttribute(Qt::AA_UseHighDpiPixmaps);
 
     QString filePath = "";
-    for (int i=0; i<argc; ++i) {
+    for (int i(0); i<argc; ++i) {
         QString arg(argv[i]);
         if (arg.contains(".chr", Qt::CaseInsensitive))
             filePath = arg;
@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
 
     MainController* c = new MainController(filePath);
     (void) c;
-
+    c = nullptr;
     return  a.exec();
 
 }

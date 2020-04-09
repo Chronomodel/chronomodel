@@ -538,8 +538,7 @@ void MainWindow::openProject()
             mProjectView->createProject();
 
             mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
-           /* if (! mProject->mModel->mChains.isEmpty())
-                emit mProject->mcmcFinished(mProject->mModel);*/
+           
          }
 
         mUndoStack->clear();
@@ -1133,10 +1132,11 @@ void MainWindow::activateInterface(bool activate)
     QScreen *screen = QApplication::screens().at(numScreen);
 
     //qreal mm_per_cm = 10;
-    qreal cm_per_in = 2.54;
+    const qreal cm_per_in (2.54);
 
-    qDebug()<<"MainWindow::activateInterface"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< width();
-    qDebug()<<"MainWindow::activateInterface"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< QApplication::desktop()->width();
+    
+    qDebug()<<"MainWindow::activateInterface::QGUI"<< numScreen <<  QGuiApplication::screens()[numScreen]->geometry() << QGuiApplication::screens()[numScreen]->availableGeometry()<< width()<< QApplication::desktop()->width();
+    
     qDebug()<<"MainWindow::activateInterfacescreen width"<< width() / screen->physicalDotsPerInchX() * cm_per_in;
     qDebug()<<"MainWindow::activateInterface screen height"<< height() / screen->physicalDotsPerInchY() * cm_per_in;
 
@@ -1167,6 +1167,7 @@ void MainWindow::mcmcFinished(Model* model)
     mProject->setNoResults(false); // set to be able to save the file *.res
 
     model->updateFormatSettings();
+    model->generatePostVariable();
 
     mProjectView->initResults(model);
 

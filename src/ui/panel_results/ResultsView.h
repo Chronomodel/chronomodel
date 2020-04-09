@@ -262,6 +262,7 @@ private:
 
     QWidget* mTempoGroup;
     RadioButton* mDurationRadio;
+    RadioButton* mTauRadio;
     RadioButton* mTempoRadio;
     CheckBox* mTempoCredCheck;
     CheckBox* mTempoErrCheck;

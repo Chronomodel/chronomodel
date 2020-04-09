@@ -48,6 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtSvg>
 #include <algorithm>
 
+double ro = 1.;
 bool colorIsDark(const QColor& color)
 {
     int sum = (color.red() + color.green() + color.blue()) / 3;

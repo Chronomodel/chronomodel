@@ -97,7 +97,9 @@ public:
     double getThreshold() const ;
     void initDensities(const int fftLength, const double bandwidth, const double threshold);
     void updateDensities(const int fftLength, const double bandwidth, const double threshold);
-
+    // Compute Post metropolis variable as mAlphaTau
+    void generatePostVariable();
+    
     // Computed from trace using FFT :
     void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double bandwidth);
     // Trace and Posterior density needed for this :
