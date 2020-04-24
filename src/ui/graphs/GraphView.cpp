@@ -53,11 +53,7 @@ class ProjectSettings;
 
 // Constructor / Destructor
 
-#if GRAPH_OPENGL
-GraphView::GraphView(QWidget *parent):QOpenGLWidget(parent),
-#else
 GraphView::GraphView(QWidget *parent):QWidget(parent),
-#endif
 mStepMinWidth(3), // define when the minor scale on axis can appear
 mXAxisLine(true),
 mXAxisArrow(true),
@@ -72,7 +68,6 @@ mYAxisValues(true),
 mXAxisMode(eAllTicks),
 mYAxisMode(eAllTicks),
 mOverflowArrowMode(eNone),
-//mRendering(eSD),
 mAutoAdjustYScale(false),
 mShowInfos(false),
 mBackgroundColor(Qt::white),
@@ -232,7 +227,7 @@ GraphView::~GraphView()
    mZones.clear();
 }
 
-/* ------------------------------------------------------ && !curve.mIsVertical
+/* ------------------------------------------------------
  *  Zoom X
  * ------------------------------------------------------*/
 
@@ -346,18 +341,7 @@ void GraphView::resetNothingMessage()
     mNothingMessage = tr("Nothing to display");
     repaintGraph(true);
 }
-/*
-void GraphView::setRendering(GraphView::Rendering render)
-{
-    mRendering = render;
-    repaintGraph(true);
-}
 
-GraphView::Rendering GraphView::getRendering()
-{
-    return mRendering;
-}
-*/
 void GraphView::showXAxisLine(bool show)     {if(mXAxisLine != show){mXAxisLine = show; repaintGraph(true);} }
 void GraphView::showXAxisArrow(bool show)    {if(mXAxisArrow != show){mXAxisArrow = show; repaintGraph(true);} }
 void GraphView::showXAxisTicks(bool show)    {if(mXAxisTicks != show){mXAxisTicks = show; repaintGraph(true);} }
@@ -384,10 +368,7 @@ void GraphView::setYAxisMode(AxisMode mode)
 {
     if (mYAxisMode != mode) {
         mYAxisMode = mode;
-      /*  showYAxisValues(true);
-        showYAxisTicks(true);
-        showYAxisSubTicks(true);
-        */
+  
         mAxisToolY.mMinMaxOnly = (mYAxisMode == eMinMax);
 
         if (mYAxisMode==eMinMax) {
@@ -428,8 +409,6 @@ void GraphView::setYAxisMode(AxisMode mode)
 void GraphView::autoAdjustYScale(bool active)
 {
     mAutoAdjustYScale = active;
-  //  if (active)
- //       mAxisToolY.mShowText = false;
 
     repaintGraph(true);
 }
@@ -681,17 +660,6 @@ void GraphView::setTipYLab(const QString& lab)
     mTipYLab = lab =="" ? "":  lab + " = ";
 }
 
-#if GRAPH_OPENGL
-void GraphView::initializeGL()
-{
-    //QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
-    //f->glEnable(GL_MULTISAMPLE_ARB);
-}
-void GraphView::resizeGL(int w, int h)
-{
-    repaintGraph(true);
-}
-#else
 void GraphView::resizeEvent(QResizeEvent* event)
 {
     Q_UNUSED(event);
@@ -720,7 +688,7 @@ void GraphView::resizeEvent(QResizeEvent* event)
 
     repaintGraph(true);
 }
-#endif
+
 
 void GraphView::updateGraphSize(int w, int h)
 {
