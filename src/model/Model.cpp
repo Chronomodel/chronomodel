@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -41,6 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Date.h"
 #include "Project.h"
 #include "EventKnown.h"
+#include "Generator.h"
 #include "MCMCLoopMain.h"
 #include "MCMCProgressDialog.h"
 #include "ModelUtilities.h"
@@ -1452,7 +1453,9 @@ void Model::generateHPD(const double thresh)
  */
 void Model::generateTempo()
 {
-
+    qDebug()<<"Model::generateTempo() disable";
+    return;
+    
 #ifdef DEBUG
     qDebug()<<"Model::generateTempo()"<<mSettings.mTmin<<mSettings.mTmax;
     QElapsedTimer startTimer;
@@ -1649,14 +1652,14 @@ void Model::generateTempo()
         double t;
         int memoScenarioIdx;
         int scenarioIdx;
-qDebug()<<"totalIter"<< startTimer.elapsed() << "ms" ;
+// qDebug()<<"totalIter"<< startTimer.elapsed() << "ms" ;
         for (int i(0); i < totalIter; ++i) {
             /// Create one scenario per iteration
             QVector<double> scenario;
 
             for (auto &&t : listTrace)
                 scenario.append(t.at(i));
-           qDebug()<<"scenario"<< startTimer.elapsed() << "ms" ;
+//           qDebug()<<"scenario"<< startTimer.elapsed() << "ms" ;
             /// Sort scenario trace
             std::sort(scenario.begin(),scenario.end());
 
@@ -1672,7 +1675,7 @@ qDebug()<<"totalIter"<< startTimer.elapsed() << "ms" ;
             t = tmin;
             memoScenarioIdx = 0;
             scenarioIdx = 1;
-  qDebug()<<"avant restart"<< startTimer.restart() << "ms" ;
+  // qDebug()<<"avant restart"<< startTimer.restart() << "ms" ;
         
             while (itScenario != scenario.cend()) {
 
@@ -1716,7 +1719,7 @@ qDebug()<<"totalIter"<< startTimer.elapsed() << "ms" ;
                     }
                 }
             }
-  qDebug()<<"aprés"<< startTimer.nsecsElapsed() << "ns" ;
+  // qDebug()<<"aprés"<< startTimer.nsecsElapsed() << "ns" ;
             while (index < nbPts) {
                 if (itN != N.end()) {
                     // (*itN) = (*itPrevN) + memoScenarioIdx;
@@ -1736,14 +1739,14 @@ qDebug()<<"totalIter"<< startTimer.elapsed() << "ms" ;
                 t = tmin + index*deltat;
 
             }
-    qDebug()<<"aprés2"<< startTimer.nsecsElapsed() << "ns" ;
+//    qDebug()<<"aprés2"<< startTimer.nsecsElapsed() << "ns" ;
            // std::copy(N2.begin(), N2.end(), previousN2.begin());
  
             //std::copy(N.begin(), N.end(), previousN.begin());
 
         }
         /// Tempo Loop End
-qDebug()<<"N-N2"<< startTimer.elapsed() << "ms" ;
+// qDebug()<<"N-N2"<< startTimer.elapsed() << "ms" ;
 
     ///# Calculation of the variance
         QVector<double> inf;
@@ -1816,7 +1819,7 @@ qDebug()<<"N-N2"<< startTimer.elapsed() << "ms" ;
         phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
         phase->mTempoInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoInf);
         phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
-qDebug()<<"mTempo"<< startTimer.elapsed() << "ms" ;
+// qDebug()<<"mTempo"<< startTimer.elapsed() << "ms" ;
 #ifndef UNIT_TEST
         ++position;
         progress->setValue(position);
@@ -1876,7 +1879,7 @@ qDebug()<<"mTempo"<< startTimer.elapsed() << "ms" ;
         previousN2.clear();
 
         Ni.clear();
-qDebug()<<"TempoCredibility"<< startTimer.elapsed() << "ms" ;
+//  qDebug()<<"TempoCredibility"<< startTimer.elapsed() << "ms" ;
 #ifndef UNIT_TEST
         ++position;
         progress->setValue(position);
@@ -2280,8 +2283,6 @@ void Model::generatePostVariable()
 {
     /*               Compute mAlphaTau and mBetaTau
     */
-    //const double tmin (mSettings.mTmin);
-    //const double tmax (mSettings.mTmax);
     for (auto &&p : mPhases ) {
         const QVector<double>*  tauTrace = p->mTau.mRawTrace;
         const QVector<double>*  alphaTrace = p->mAlpha.mRawTrace;
@@ -2291,11 +2292,21 @@ void Model::generatePostVariable()
             QVector<double>::const_iterator iAlpha (alphaTrace->cbegin());
             QVector<double>::const_iterator iBeta (betaTrace->cbegin());
             //It's the same processus as memo()
+            double u;
+            double s;
+            double alphaTau;
             while (iTau != tauTrace->cend()) { // The values outside the study period will be cut in the fftw smoothing
-               // p->mAlphaTau.mRawTrace->push_back(std::max(tmin, (*iAlpha) - (*iTau)) );
-               // p->mBetaTau.mRawTrace->push_back(std::min(tmax, (*iBeta) + (*iTau)) );
-                p->mAlphaTau.mRawTrace->push_back((*iAlpha) - (*iTau));
-                p->mBetaTau.mRawTrace->push_back((*iBeta) + (*iTau));
+                u = Generator::randomUniform(0.0, 1.0) ;
+                s = (*iBeta) - (*iAlpha);
+               // p->mAlphaTau.mRawTrace->push_back(std::max(tmin, (*iBeta) - (*iTau)) );
+               // p->mBetaTau.mRawTrace->push_back(std::min(tmax, (*iAlpha) + (*iTau)) );
+               // p->mAlphaTau.mRawTrace->push_back((*iBeta) - (*iTau));
+               // p->mBetaTau.mRawTrace->push_back((*iAlpha) + (*iTau));
+                // alpha_tau = max(theta_j) - tau  +  unif(0,1) * (tau - s)      (1)
+                alphaTau = (*iBeta) - (*iTau) + u*(*iTau-s);
+                p->mAlphaTau.mRawTrace->push_back(alphaTau);
+                p->mBetaTau.mRawTrace->push_back( alphaTau + (*iTau));
+                
                 ++iTau;
                 ++iAlpha;
                 ++iBeta;
@@ -2455,7 +2466,6 @@ void Model::saveToFile(const QString& fileName)
 
             QList<Date>& dates = event->mDates;
             numDates += event->mDates.size();
-            //for (int j(0); j<dates.size(); ++j) {
             for ( const Date & date : dates) {
                 reserveInit += date.mTheta.mRawTrace->size();
                 reserveInit += date.mTheta.mAllAccepts->size();
@@ -2756,7 +2766,7 @@ void Model::restoreFromFile(const QString& fileName)
                     }
 #ifdef DEBUG
                      if (d.mCalibration->mCurve.isEmpty())
-                         qDebug()<<"Model::restoreFromFile vide";
+                         qDebug()<<"Model::restoreFromFile empty";
 #endif
                 }
          }

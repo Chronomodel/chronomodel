@@ -50,6 +50,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QDebug>
 #include <algorithm>
 #include <assert.h>
+//#include <execution>
 
 /** Default constructor */
 MetropolisVariable::MetropolisVariable(QObject *parent):QObject(parent),
@@ -232,7 +233,7 @@ void MetropolisVariable::updateFormatedTrace()
         std::copy(mRawTrace->cbegin(),mRawTrace->cend(),mFormatedTrace->begin());
 
     else
-        std::transform(mRawTrace->cbegin(),mRawTrace->cend(),mFormatedTrace->begin(),[this](const double i){return DateUtils::convertToFormat(i,this->mFormat);});
+        std::transform( mRawTrace->cbegin(),mRawTrace->cend(),mFormatedTrace->begin(),[this](const double i){return DateUtils::convertToFormat(i,this->mFormat);});
 
 
 }

@@ -83,7 +83,7 @@ public:
     /// Functions used within the MCMC process ( not in the init part!) :
     double getThetaMin(double defaultValue);
     double getThetaMax(double defaultValue);
-
+   // void upDateTau(double& tmin, double& tmax);
 
     ///  Functions used within the init MCMC process
 

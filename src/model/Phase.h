@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -81,13 +81,13 @@ public:
     void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
 
     void updateAlphaBeta(const double tmin, const double tmax);
-    void updateAll(const double tmin, const double tmax);
+    void updateDuration();
+    // void updateAll(const double tmin, const double tmax); // OBSOLETE broken in updateAlphaBeta(), updateDuration() and updateTau()
     void memoAll();
 
     QString getTauTypeText() const;
     void initTau();
     void updateTau();
-    QPair<double, double> eventSpan (Event *ev);
     
 public:
     int mId;

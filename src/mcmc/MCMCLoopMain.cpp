@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -220,12 +220,21 @@ QString MCMCLoopMain::initMCMC()
     }
 
     /* -------------- Init Bounds --------------
-    * - Définir des niveaux pour les faits
-    * - Initialiser les bornes (uniquement, pas les faits) par niveaux croissants
-    * => Init borne :
-    *  - si valeur fixe, facile!
-    *  - si intervalle : random uniform sur l'intervalle (vérifier si min < max pour l'intervalle qui a été modifié par la validation du modèle)
-    * ---------------------------------------------------------------- */
+     - Définir des niveaux pour les faits
+     - Initialiser les bornes (uniquement, pas les faits) par niveaux croissants
+     => Init borne :
+     - si valeur fixe, facile!
+     - si intervalle : random uniform sur l'intervalle (vérifier si min < max pour l'intervalle qui a été modifié par la validation du modèle)
+     */
+    
+    /*
+     -------------- Init Bounds --------------
+     - Define levels for facts
+     - Initialize the bounds (only, not the Events) by increasing levels
+     => Init Bounds:
+     - if fixed value, easy!
+     - if interval: random uniform over the interval (check if min <max for the interval which has been modified by the validation of the model)
+     */
     QVector<Event*> eventsByLevel = ModelUtilities::sortEventsByLevel(mModel->mEvents);
     int curLevel (0);
     double curLevelMaxValue = mModel->mSettings.mTmin;
@@ -409,7 +418,10 @@ QString MCMCLoopMain::initMCMC()
 
     i = 0;
     for (Phase* phase : phases ) {
-        phase->updateAll(tmin, tmax);
+        phase->updateAlphaBeta(tmin, tmax);
+        phase->updateDuration();
+        // Tau is init at the begining with initTau()
+        //phase->updateAll(tmin, tmax);// OBSOLETE
         phase->memoAll();
 
         if (isInterruptionRequested())
@@ -515,7 +527,7 @@ void MCMCLoopMain::update()
     const bool doMemo = (mState == eBurning) || (mState == eAdapting) || (chain.mTotalIter % chain.mThinningInterval == 0);
 
 
-    //--------------------- Update Event -----------------------------------------
+    //--------------------- Update Dates in Event -----------------------------------------
 
     for (auto&& event : mModel->mEvents) {
         for ( auto&& date : event->mDates )   {
@@ -547,22 +559,26 @@ void MCMCLoopMain::update()
 
         //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
 
-       for (auto&& phInEv : event->mPhases)
+        for (auto&& phInEv : event->mPhases) {
             phInEv->updateAlphaBeta(t_min, t_max);
+           // phInEv->updateTau();
+        }
     }
 
 
     //--------------------- Memo Phases -----------------------------------------
-    if (doMemo) {
-        for (auto && ph : mModel->mPhases) {
-            ph->updateAll(t_min, t_max);
-            ph->memoAll();
-        }
+    //if (doMemo) {
+    for (auto && ph : mModel->mPhases) {
+            ph->updateTau();
+            if (doMemo) { // si updateTau()
+                ph->updateDuration();
+                ph->memoAll();
+            }
     }
 
     //--------------------- Update Phases constraints -----------------------------------------
-        for (auto && phConst : mModel->mPhaseConstraints )
-           phConst->updateGamma();
+    for (auto && phConst : mModel->mPhaseConstraints )
+       phConst->updateGamma();
 
 }
 

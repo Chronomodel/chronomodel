@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -221,32 +221,11 @@ double Phase::getMaxThetaEvents(double tmax)
     std::for_each(mEvents.begin(), mEvents.end(), [&theta] (Event* ev) {theta= std::max(ev->mTheta.mX, theta);});
     return theta;
 
-    // if we need to use this function with event not initalized we have to use the next code
- /*
-
-    double theta;
-    bool found = false;
-    QList<Event*>::const_iterator iterEvent = mEvents.constBegin();
-    while (iterEvent != mEvents.constEnd()) {
-        if ((*iterEvent)->mInitialized)  {
-            if (!found) {
-                theta = (*iterEvent)->mTheta.mX;
-                found = true;
-            }
-            else
-                theta = qMax(theta, (*iterEvent)->mTheta.mX);
-
-        }
-        ++iterEvent;
-    }
-
-    return found ? theta : tmax;
-*/
 }
 /**
  * @brief Phase::getMinThetaEvents
  * @param tmin
- * @return the min of Event inside the phase, used in Phase::updateAll() to set alpha and beta
+ * @return the min of Event inside the phase, used in Phase::updateAll() and  in Phase::updateAlphaBeta   to set alpha and beta
  */
 double Phase::getMinThetaEvents(double tmin)
 {
@@ -258,23 +237,6 @@ double Phase::getMinThetaEvents(double tmin)
     std::for_each(mEvents.begin(), mEvents.end(), [&theta] (Event* ev){theta= std::min(ev->mTheta.mX, theta);});
     return theta;
 
-    // if we need to use this function with event not initalized we have to use the next code
- /*
-    bool found = false;
-    QList<Event*>::const_iterator iterEvent = mEvents.constBegin();
-    while(iterEvent != mEvents.constEnd()) {
-        if ((*iterEvent)->mInitialized)  {
-            if (!found) {
-                theta = (*iterEvent)->mTheta.mX;
-                found = true;
-            } else
-                theta = qMin(theta, (*iterEvent)->mTheta.mX);
-
-        }
-        ++iterEvent;
-    }
-    return found ? theta : tmin;
-*/
 }
 
 
@@ -310,11 +272,12 @@ double Phase::getMaxThetaPrevPhases(const double tmin)
 }
 
 // --------------------------------------------------------------------------------
-
+/*  OBSOLETE
 void Phase::updateAll(const double tmin, const double tmax)
 {
-    mAlpha.mX = getMinThetaEvents(tmin);
-    mBeta.mX = getMaxThetaEvents(tmax);
+    // inutile fait juste avant dans MCMCLoopMain avec updateAlphaBeta()
+    // mAlpha.mX = getMinThetaEvents(tmin);
+    // mBeta.mX = getMaxThetaEvents(tmax);
     mDuration.mX = mBeta.mX - mAlpha.mX;
 
     updateTau();
@@ -326,11 +289,23 @@ void Phase::updateAll(const double tmin, const double tmax)
 
  
 }
+*/
 
 void Phase::updateAlphaBeta(const double tmin, const double tmax)
 {
     mAlpha.mX = getMinThetaEvents(tmin);
     mBeta.mX = getMaxThetaEvents(tmax);
+    
+    /* // autre code possible
+    auto ePhase = std::minmax_element(this->mEvents.cbegin(), this->mEvents.cend(), [](Event* e1, Event* e2) { return (e1->mTheta.mX < e2->mTheta.mX); });
+    
+    mAlpha.mX = (*ePhase.first)[0].mTheta.mX ;
+    mBeta.mX = (*ePhase.second)[0].mTheta.mX ;
+   */
+}
+void Phase::updateDuration()
+{
+    mDuration.mX = mBeta.mX - mAlpha.mX;
 }
 
 QString Phase::getTauTypeText() const
@@ -398,23 +373,7 @@ double intFx (double x, int n, double Rp, double s) {
     
 }
 */
-// recherche etendue d'un event sans une phase courante
-QPair<double, double> Phase::eventSpan (Event *ev)
-{
-    //qDebug()<<"phase"<<mName;
-    double thetaMin (ev->mTheta.mX);
-    double thetaMax (mBeta.mX - mAlpha.mX);
-    for (auto phase : ev->mPhases) {
-       if (phase->mTauType != Phase::eTauUnknown && phase!= this) {
-         //  qDebug()<<"phase dedans"<<phase->mName;
-           thetaMin = std::min(phase->mBeta.mX - phase->mTau.mX, thetaMin);
-           thetaMax = std::max( phase->mTau.mX, thetaMax);
-           //thetaMin = std::min(ev->mTheta.mX - phase->mTau.mX/2., thetaMin);
-           //thetaMax = std::max(ev->mTheta.mX + phase->mTau.mX/2., thetaMax);
-        }    // modif PhD
-    }
-    return (qMakePair(thetaMin, thetaMax));
-}
+
 
 // Formule du 25 mars 2020
 
@@ -461,61 +420,38 @@ double Px (double x, int n, double Rp) {
 
 void Phase::updateTau()
 {
-    if (mTauType == eTauFixed && mTauFixed != 0.)
+    if (mTauType == eTauFixed && mTauFixed != 0.) {
         mTau.mX = mTauFixed; // maybe it's not usefull, because it never changes and yet it is initiated
-
+    }
+  //  else {
+      //  mTau.mX = mBeta.mX - mAlpha.mX;
+   // }
+    
+    // Modif du 10 avril 2018
+    
     else if (mTauType == eTauUnknown) {
         mTau.mX = mBeta.mX - mAlpha.mX;
     }
     else  {
+        
         // Modif PhD
-        /* définition du modèle  */
+        // model definition
   
         const int n (mEvents.length());
-         double s (mBeta.mX - mAlpha.mX);
-        qDebug()<<"s initial"<<s <<"tau"<<mTau.mX;
-        double evMin, evMax;
-        for (auto ev : mEvents) {
-            auto minMax = eventSpan(ev);
-            evMax = std::max( evMax, minMax.second);
-            evMin = std::min( evMin, minMax.first);
-        }
-
-        qDebug()<<"s corrigé"<<s;
+        double s (mBeta.mX - mAlpha.mX);
         const double precision (.0001);
         const double R (mStudyMax - mStudyMin);
         const double Rp ( R/(n-1)*n );
-        /* variable à échantillonner */
+       
         
         const double u ( Generator::randomUniform(0.0, 1.0) );
        
-          /* Recherche solution équation F(x)-u=0 */
+        // solve equation F(x)-u=0
         const double FbMax = intFx(R, n, Rp, s);
         //double Fb = 1.0 - u;  // pour mémoire
         
              
-        // Dichotomie
-/*
-        //    counter = 0;
-         double Fa = intFx(s, n, Rp, s)/FbMax - u;
-         double c(s), a1 (s), b1 (R);
-         double Fc, xd;
-              while ( abs((b1 - a1)/b1) >= precision/100.) {
-          //        ++counter;
-                  c = (a1 + b1)/2.;
 
-                  Fc = intFx(c, n, Rp, s)/FbMax - u;
-                  if ( signbit(Fa) == signbit(Fc) ) {
-                      a1 = c;
-                      Fa = intFx(a1, n, Rp, s)/FbMax - u;
-                  } else {
-                      b1 = c;
-                      
-                  }
-              }
-           
-              //xd = std::move((a1 + b1)/2.);
- */
             // Newton
         
         double xn (s);
@@ -541,45 +477,20 @@ void Phase::updateTau()
             
         }
      
-/*
-        if (abs((xn-xd)/xn)> precision/100.) {
-         qDebug()<<"-----------------> U = "<< u << " R = "<< R <<  "xd = "<<xd <<  "xn = "<< xn <<" s = "<< s;
-            
-            double Fa = intFx(s, n, Rp, s)/FbMax - u;
-            double c(s), a1 (s), b1 (R);
-            double Fc, xControle;
-                 while ( abs((b1 - a1)/b1) >= precision/100) {
-             //        ++counter;
-                     c = (a1 + b1)/2.;
 
-                     Fc = intFx(c, n, Rp, s)/FbMax - u;
-                     if ( signbit(Fa) == signbit(Fc) ) {
-                         a1 = c;
-                         Fa = intFx(a1, n, Rp, s)/FbMax - u;
-                     } else {
-                         b1 = c;
-                         
-                     }
-                 }
-              
-                 //xd = std::move((a1 + b1)/2.);
-               xControle = std::move(c);
-            qDebug()<<"-----------------> xControle = "<< xControle;
-        }
  
-       mTau.mX = std::move(xd);
- */
-        // Nothing to do!
-/*
-        if (abs(xn-mTau.mX)> 1.*precision) {
-           qDebug()<<"-----------precision------> U = "<< u << " R = "<< R <<  "xd = "<<xd <<  "xn = "<< xn <<" s = "<< s;
-        } else
- */
+     //  mTau.mX = std::move(xd);
+
+        //if (abs(xn-mTau.mX)> 1.*precision) {
+         //  qDebug()<<"-----------precision------> U = "<< u << " R = "<< R <<  "xd = "<<xd <<  "xn = "<< xn <<" s = "<< s;
+       // } else
+ 
        
         mTau.mX = std::move(xn);
         
     }
-    qDebug() << mName<<  "mTau.mX="<<mTau.mX;
+
+   // qDebug() << mName<<  "mTau.mX ="<<mTau.mX;
 }
 
 void Phase::memoAll()

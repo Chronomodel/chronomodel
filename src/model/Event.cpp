@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -69,8 +69,8 @@ mLevel(0)
 
     // Item initial position :
     //int posDelta = 100;
-    mItemX = 0.;//rand() % posDelta - posDelta/2;
-    mItemY = 0.;//rand() % posDelta - posDelta/2;
+    mItemX = 0.;
+    mItemY = 0.;
 
     // Note : setting an event in (0, 0) tells the scene that this item is new!
     // Thus the scene will move it randomly around the currently viewed center point.
@@ -206,7 +206,7 @@ QJsonObject Event::toJson() const
     QString eventIdsStr;
     if (mPhasesIds.size() > 0) {
         QStringList eventIds;
-        for (int i=0; i<mPhasesIds.size(); ++i)
+        for (int i(0); i<mPhasesIds.size(); ++i)
             eventIds.append(QString::number(mPhasesIds.at(i)));
         eventIdsStr = eventIds.join(",");
     }
@@ -262,11 +262,18 @@ bool Event::getThetaMinPossible(const Event *originEvent, QString &circularEvent
         for (auto &&phase : mPhases)
             noPhaseBwd = noPhaseBwd && (phase->mConstraintsBwd.isEmpty());
 
-    /*  Le fait appartient à une ou plusieurs phases.
-        Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
-        Il faut s'assurer d'être au-dessus du plus grand theta de la phase moins la durée
-        (on utilise la valeur courante de la durée pour cela, puisqu'elle est échantillonnée ou fixée)
-    */
+    /*
+     Le fait appartient à une ou plusieurs phases.
+     Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
+     Il faut s'assurer d'être au-dessus du plus grand theta de la phase moins la durée
+     (on utilise la valeur courante de la durée pour cela, puisqu'elle est échantillonnée ou fixée)
+     */
+    /*
+     The fact belongs to one or more phases.
+     If the phase has a duration constraint (! = Phase :: eTauUnknown),
+     Make sure you are above the largest theta of the phase minus the duration
+     (we use the current duration value for this, since it is sampled or fixed)
+     */
 
 
 
@@ -310,7 +317,6 @@ bool Event::getThetaMinPossible(const Event *originEvent, QString &circularEvent
 
                             } else {
                                 circularEventName = serieStr + eventPhaseBwd->mName + " !";
-                                //circularEventName = startList + eventPhaseBwd->mName + " ?";
                                 return false;
                             }
                         }
@@ -350,7 +356,6 @@ bool Event::getThetaMaxPossible(const Event *originEvent, QString &circularEvent
     for( Event *e : startEvents)
         startList += e->mName + "->";
 
-  //  qDebug() << mName << "startEvents : " << startList;
 #endif
 
     QList<Event*> newStartEvents = startEvents;
@@ -368,13 +373,19 @@ bool Event::getThetaMaxPossible(const Event *originEvent, QString &circularEvent
         for (auto &&phase : mPhases)
             noPhaseFwd = noPhaseFwd && (phase->mConstraintsFwd.isEmpty());
 
-    /* --
+    /*
      Le fait appartient à une ou plusieurs phases.
      Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
      Il faut s'assurer d'être au-dessus du plus grand theta de la phase moins la durée
      (on utilise la valeur courante de la durée pour cela, puisqu'elle est échantillonnée ou fixée)
      */
-
+    
+    /*
+     The fact belongs to one or more phases.
+     If the phase has a duration constraint (! = Phase :: eTauUnknown),
+     Make sure you are above the largest theta of the phase minus the duration
+     (we use the current duration value for this, since it is sampled or fixed)
+     */
 
 
     if (noPhaseFwd && mConstraintsFwd.isEmpty()) {
@@ -387,8 +398,6 @@ bool Event::getThetaMaxPossible(const Event *originEvent, QString &circularEvent
         if (!mConstraintsFwd.isEmpty())
             for (auto &&constFwd : mConstraintsFwd) {
                 if (constFwd->mEventTo != originEvent ) {
-                //if (!newStartEvents.contains (constFwd->mEventTo)) {
-                   // qDebug() << " mConstraintsFwd" << constFwd->mEventTo->mName;
                      const bool _ok = (constFwd->mEventTo)->getThetaMaxPossible (originEvent, circularEventName, newStartEvents);
                      if ( !_ok) {
                          circularEventName =  serieStr + constFwd->mEventTo->mName +  circularEventName ;
@@ -411,7 +420,7 @@ bool Event::getThetaMaxPossible(const Event *originEvent, QString &circularEvent
                         for (auto &&eventPhaseFwd : phaseFwd->mPhaseTo->mEvents) {
                             //if (eventPhaseFwd != originEvent ) {
                             if (!newStartEvents.contains (eventPhaseFwd)) {
-                               // qDebug() << " phase->mConstraintsFwd" << eventPhaseFwd->mName;
+                               
                                 const bool _ok = eventPhaseFwd->getThetaMaxPossible ( originEvent, circularEventName, newStartEvents);
                                 if (!_ok) {
                                     circularEventName = " (" + phase->mName + ")" + serieStr + eventPhaseFwd->mName + " (" + phaseFwd->mPhaseTo->mName + ")" +  circularEventName ;
@@ -419,7 +428,7 @@ bool Event::getThetaMaxPossible(const Event *originEvent, QString &circularEvent
                                 }
 
 
-                            } //else {
+                            }
                             if (eventPhaseFwd == originEvent ) {
                                 circularEventName = " (" + phase->mName + ")" + serieStr + eventPhaseFwd->mName + " (" + phaseFwd->mPhaseTo->mName + ") !";
                                 return false;
@@ -431,25 +440,7 @@ bool Event::getThetaMaxPossible(const Event *originEvent, QString &circularEvent
             }
         }
 
-        // Check parallel constraints with the Events in the same phases -> useless
-        //Il ne faut pas regarder à travers les autres Events de la même phase
-/*
-        for (auto &&phase : mPhases) {
-                for (auto &&event : phase->mEvents) {
-                    if (!newStartEvents.contains (event)) {
 
-                           const bool _ok = event->getThetaMaxPossible (originEvent, circularEventName, newStartEvents);
-                           if ( !_ok) {
-                               circularEventName = " (" + phase->mName + ")" + parallelStr + event->mName +  " (" + phase->mName + ")" + circularEventName ;
-                               return false;
-                           }
-
-                    }
-
-
-                }
-        }
-*/
         mNodeInitialized = true;
         return true;
     }
@@ -477,11 +468,18 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event 
             noPhaseBwd = noPhaseBwd && (phase->mConstraintsBwd.isEmpty());
         }
 
-    /*  Le fait appartient à une ou plusieurs phases.
+    /*
+     Le fait appartient à une ou plusieurs phases.
         Si la phase a une contrainte de durée (== Phase::eTauFixed),
         Il faut s'assurer d'être au-dessus du plus grand theta de la phase moins la durée
         (on utilise la valeur courante de la durée pour cela puisqu'elle est échantillonnée)
-    */
+     */
+    /*
+     The fact belongs to one or more phases.
+     If the phase has a duration constraint (== Phase :: eTauFixed),
+     Make sure you are above the largest theta of the phase minus the duration
+     (we use the current duration value for this since it is sampled)
+     */
     QList<Event*> newStartEvents = startEvents;
     newStartEvents.append(this);
 
@@ -492,12 +490,12 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event 
             for (auto &&event : phase->mEvents) {
                 if (!newStartEvents.contains(event)) // to find the higher theta in the phase
                    thetaMax = std::max(thetaMax, event->getThetaMinRecursive(defaultValue, newStartEvents));
-               // qDebug()<<"phase"<<phase->mName<<phase->mTau.mX<<"event" << event->mName<<"thetaMax"<<thetaMax;
+               
             }
             minInPhases = std::max(minInPhases, thetaMax - phase->mTau.mX);
- //qDebug()<<" getThetaMinRecursive"<<this->mName<<minInPhases;
+ 
         } //!= Phase::eTauUnknown // modif PhD
-        //qDebug()<<"getThetaMin fin mTau maxPhases="<<maxPhases;
+        
     }
 
 
@@ -513,7 +511,6 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event 
             for (auto &&constBwd : mConstraintsBwd) {
                 if (!newStartEvents.contains(constBwd->mEventFrom)) {
                      maxThetaBwd = std::max(maxThetaBwd, (constBwd->mEventFrom)->getThetaMinRecursive(defaultValue, startEvents));
-                    //qDebug()<<" thetaMin "<< mName<<"in constBwd"<<constBwd->mEventFrom->mName;
                 }
             }
 
@@ -528,7 +525,6 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event 
                         for (auto &&eventPhaseBwd : phaseBwd->mPhaseFrom->mEvents) {
                             if (!newStartEvents.contains(eventPhaseBwd)) {
                                 maxThetaBwd = std::max(maxThetaBwd, eventPhaseBwd->getThetaMinRecursive(defaultValue, startEvents));
-                                //qDebug()<<" thetaMin "<< phase->mName<<"in phaseBwd->mPhaseFrom"<<phaseBwd->mPhaseFrom->mName<<eventPhaseBwd->mName;
                             }
                         }
                         if (phaseBwd->mGammaType != PhaseConstraint::eGammaUnknown)
@@ -583,10 +579,8 @@ double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event 
                 if (!newStartEvents.contains(event) && event->mInitialized==true)
                     thetaMin = std::min(thetaMin, event->getThetaMaxRecursive(defaultValue, newStartEvents));
             }
-          //  qDebug()<<"phase"<<phase->mName<<phase->mTau.mX<<"thetamin"<<thetaMin;
             minPhases = std::min(minPhases, thetaMin + phase->mTau.mX);
         } // modif PhD
-       //  qDebug()<<" getThetaMaxRecursive"<<this->mName<<minPhases;
     }
 
     if (noPhaseFwd && mConstraintsFwd.isEmpty()) {
@@ -635,20 +629,15 @@ double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event 
 
 
 }
-
+/** ------------------------------------------------------------------
+       Déterminer la borne min courante pour le tirage de theta
+    ------------------------------------------------------------------ */
 double Event::getThetaMin(double defaultValue)
 {
-    /* ------------------------------------------------------------------
-        Déterminer la borne min courante pour le tirage de theta
-     ------------------------------------------------------------------ */
-
     // Max des thetas des faits en contrainte directe antérieure
     double maxThetaBwd (defaultValue);
     for (auto &&constBwd : mConstraintsBwd) {
-       // if (constBwd->mEventFrom->mInitialized) { // les Events sont tous initialisés ici
-            double thetaf (constBwd->mEventFrom->mTheta.mX);
-            maxThetaBwd = std::max(maxThetaBwd, thetaf);
-       // }
+            maxThetaBwd = std::max(maxThetaBwd, constBwd->mEventFrom->mTheta.mX);
     }
 
     /*  Le fait appartient à une ou plusieurs phases.
@@ -659,10 +648,11 @@ double Event::getThetaMin(double defaultValue)
     double min3 (defaultValue);
 
     for (auto &&phase : mPhases) {
-        if (phase->mTauType != Phase::eTauUnknown) {
+       if (phase->mTauType != Phase::eTauUnknown) {    // à utliser dans le cas d'un tirage de tau par Phase
+        //if (phase->mTauType == Phase::eTauFixed) {    // à utliser dans le cas d'un tirage de tau par Event
             double thetaMax (defaultValue);
             for (auto &&event : phase->mEvents) {
-                if (event != this) // && event->mInitialized)
+                if (event != this)
                     thetaMax = std::max(event->mTheta.mX, thetaMax);
             }
             min3 = std::max(min3, thetaMax - phase->mTau.mX);
@@ -672,45 +662,50 @@ double Event::getThetaMin(double defaultValue)
     // Contraintes des phases précédentes
     double maxPhasePrev (defaultValue);
     for (auto &&phase : mPhases) {
-        const double thetaMax = phase->getMaxThetaPrevPhases(defaultValue);
-        maxPhasePrev = std::max(maxPhasePrev, thetaMax);
+        //const double thetaMax = phase->getMaxThetaPrevPhases(defaultValue);
+        //maxPhasePrev = std::max(maxPhasePrev, thetaMax);
+        maxPhasePrev = std::max(maxPhasePrev, phase->getMaxThetaPrevPhases(defaultValue));
     }
 
-    double min_tmp1 = std::max(defaultValue, maxThetaBwd);
-    double min_tmp2 = std::max(min3, maxPhasePrev);
-    double min = std::max(min_tmp1, min_tmp2);
+    const double min_tmp1 = std::max(defaultValue, maxThetaBwd);
+    const double min_tmp2 = std::max(min3, maxPhasePrev);
+    const double min = std::max(min_tmp1, min_tmp2);
 
     return min;
 }
+/**  ------------------------------------------------------------------
+      Déterminer la borne max
+     ------------------------------------------------------------------
+ */
 
 double Event::getThetaMax(double defaultValue)
 {
-    // ------------------------------------------------------------------
-    //  Déterminer la borne max
-    // ------------------------------------------------------------------
-
     double max1 = defaultValue;
 
     // Min des thetas des faits en contrainte directe et qui nous suivent
     double maxThetaFwd (defaultValue);
-    for (int i=0; i<mConstraintsFwd.size(); ++i) {
-       // if (mConstraintsFwd.at(i)->mEventTo->mInitialized) {
-            double thetaf = mConstraintsFwd.at(i)->mEventTo->mTheta.mX;
-            maxThetaFwd = std::min(maxThetaFwd, thetaf);
-       // }
+    for (auto &&constFwd : mConstraintsFwd) {
+            maxThetaFwd = std::min(maxThetaFwd, constFwd->mEventTo->mTheta.mX);
     }
 
     /*  Le fait appartient à une ou plusieurs phases.
-        Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
+        Si la phase a une contrainte de durée (!= Phase::eTauUnknown),
         Il faut s'assurer d'être en-dessous du plus petit theta de la phase plus la durée
         (on utilise la valeur courante de la durée pour cela, puisqu'elle est échantillonnée)
      */
+    /*
+     The fact belongs to one or more phases.
+     If the phase has a duration constraint (!= Phase::eTauUnknown),
+     Make sure you are below the smallest theta of the phase plus the duration
+     (the current value of the duration is used for this, since it is sampled)
+     */
     double max3 (defaultValue);
     for (auto &&phase : mPhases) {
-        if (phase->mTauType != Phase::eTauUnknown) {
+       if (phase->mTauType != Phase::eTauUnknown) { // à utiliser dans le cas d'un tirage de tau par Phase
+       // if (phase->mTauType == Phase::eTauFixed) { // à utiliser dans le cas d'un tirage de tau par Event
             double thetaMin (defaultValue);
              for (auto &&event : phase->mEvents) {
-                if (event != this) // && event->mInitialized)
+                if (event != this)
                     thetaMin = std::min(event->mTheta.mX, thetaMin);
             }
             max3 = std::min(max3, thetaMin + phase->mTau.mX);
@@ -718,40 +713,151 @@ double Event::getThetaMax(double defaultValue)
     }
 
     // Contraintes des phases suivantes
+    // Constraints of the following phases
     double maxPhaseNext (defaultValue);
     for (auto &&phase : mPhases) {
-        double thetaMin = phase->getMinThetaNextPhases(defaultValue);
-        maxPhaseNext = std::min(maxPhaseNext, thetaMin);
+        // double thetaMin = phase->getMinThetaNextPhases(defaultValue);
+        // maxPhaseNext = std::min(maxPhaseNext, thetaMin);
+        maxPhaseNext = std::min(maxPhaseNext, phase->getMinThetaNextPhases(defaultValue));
     }
 
-    double max_tmp1 = std::min(max1, maxThetaFwd);
-    double max_tmp2 = std::min(max3, maxPhaseNext);
-    double max = std::min(max_tmp1, max_tmp2);
+    const double max_tmp1 = std::min(max1, maxThetaFwd);
+    const double max_tmp2 = std::min(max3, maxPhaseNext);
+    const double max = std::min(max_tmp1, max_tmp2);
 
     return max;
 }
+/*
+void Event::upDateTau(double& tmin, double& tmax)
+{
+    // définition du modèle  /
+    double tau (0.);
+    int n(1) ; // lui même
+    bool inTauOnly (false);
+    bool inTauFixed (false);
+    double studyPeriod;
+   
+     double eAlpha(HUGE_VAL), eBeta(-HUGE_VAL);
+    // union phase
+    Phase unionPhase ;
+    unionPhase.mTauFixed = HUGE_VAL;
+    unionPhase.mTauType = Phase::eTauOnly;
 
+    for (auto p : mPhases) {
+        if (p->mTauType == Phase::eTauFixed || p->mTauType == Phase::eTauOnly) {
+            for (auto ev: p->mEvents) {
+                if (!unionPhase.mEvents.contains(ev)) {//ev!=this && on met quand même l'event concerné
+                    unionPhase.mEvents.push_back(ev);
+                }
+            }
+            studyPeriod = p->mStudyMax - p->mStudyMin;
+            
+        }
+        if (p->mTauType ==  Phase::eTauFixed) {
+            inTauFixed = true;
+            //unionPhase.mTauType = Phase::eTauFixed;
+            //ici on peut utiliser alpha et beta des phases, qui sont mis à jour aprés chaque échantillonnage d'un event dans MCMCLoopMain
+            //auto ePhase = std::minmax_element(p->mEvents.cbegin(), p->mEvents.cend(), [](Event* e1, Event* e2) { return (e1->mTheta.mX < e2->mTheta.mX); });
+            
+            eAlpha = std::min(eAlpha, p->mBeta.mX - p->mTauFixed);
+            eBeta = std::min(eBeta, p->mAlpha.mX + p->mTauFixed);
+            
+        } else if (p->mTauType == Phase::eTauOnly) {
+            inTauOnly = true;
+           // unionPhase.mTauFixed = std::min(unionPhase.mTauFixed, p->mTau.mX); // tau est dejà initialisé, ou echantillonné
+        }
+        
+    }
+    n = unionPhase.mEvents.length();
+    
+    if (n<1 || inTauOnly==false) //pas dans une phase eTauOnly
+        return;
+    
+    auto sUnionPhase = std::minmax_element(unionPhase.mEvents.cbegin(), unionPhase.mEvents.cend(), [](Event* e1, Event* e2) { return (e1->mTheta.mX < e2->mTheta.mX); });
+    
+    //qDebug()<<"phase union pour event" << (*sUnionPhase.second)[0].mName << (*sUnionPhase.first)[0].mName << n;
+    
+ 
+    if (inTauFixed) {
+        eAlpha = std::min(eAlpha, (*sUnionPhase.first)[0].mTheta.mX);
+        eBeta = std::min(eBeta, (*sUnionPhase.second)[0].mTheta.mX );
+    } else {
+        eAlpha = (*sUnionPhase.first)[0].mTheta.mX;
+        eBeta = (*sUnionPhase.second)[0].mTheta.mX;
+    }
+    
+    if ( n>1 && inTauOnly) {
+        double s = eBeta - eAlpha;
+        
+
+       // qDebug()<<"s trouvé"<<s <<"n trouvé"<<n <<" stuperiod"<<studyPeriod;
+        const double precision (.0001);
+        const double R (studyPeriod);
+        const double Rp ( R/(n-1)*n );
+           // variable à échantillonner
+           
+           const double u ( Generator::randomUniform(0.0, 1.0) );
+          
+             // Recherche solution équation F(x)-u=0
+           const double FbMax = intFx(R, n, Rp, s);
+           //double Fb = 1.0 - u;  // pour mémoire
+           
+                
+
+               // Newton
+           
+           double xn (s);
+           double  b1;
+           double itF, p;
+           if ( !isinf(FbMax)) {
+               double Epsilon (R);
+                           
+               while ( Epsilon >= precision/100.) {
+
+                   itF = intFx(xn, n, Rp, s);
+
+                   itF = itF - u*FbMax;
+                   p = Px(xn, n, Rp);
+                
+                   //b1 = itF != 0. ? (x - (itF / p )): x;
+                   b1 = xn - (itF / p );
+                   Epsilon = abs((xn - b1)/b1);
+                   xn = std::move(b1);
+                   
+               }
+                xn = std::max(s, std::min(xn, R));
+               
+           }
+        tau = std::move(xn);
+        qDebug()<< mName  <<"tau trouvé"<<tau;
+    }
+    tmax = std::min(tmax, eAlpha + tau);
+    tmin = std::max(tmin, eBeta - tau);
+    
+           
+         
+}
+*/
 void Event::updateTheta(const double &tmin, const double &tmax)
 {
-    const double min ( getThetaMin(tmin) );
-    const double max ( getThetaMax(tmax) );
-
+    // check constraints
+    double min ( getThetaMin(tmin) );
+    double max ( getThetaMax(tmax) );
+    
     if (min >= max)
         throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(mName, QString::number(min), QString::number(max));
 
-    // test no Event emboxed
-  /*  const double theta = mDates[0].mTheta.mX;
-    mTheta.tryUpdate(theta, 1.);
-    return;
-*/
 
-    //qDebug() << "[" << min << ", " << max << "]";
-
-    /* -------------------------------------------------------------------------------------------------
+    /*
       Evaluer theta.
       Le cas Wiggle est inclus ici car on utilise une formule générale.
       On est en "wiggle" si au moins une des mesures a un delta > 0.
-    ------------------------------------------------------------------------------------------------- */
+     */
+    /*
+     Evaluate theta.
+     The Wiggle case is included here because we are using a general formula.
+     We are in "wiggle" if at least one of the measures has a delta> 0.
+     */
 
     double sum_p (0.);
     double sum_t (0.);
@@ -795,7 +901,13 @@ void Event::updateTheta(const double &tmin, const double &tmax)
         }
         case eMHAdaptGauss:
         {
-            // MH : Seul cas où le taux d'acceptation a du sens car on utilise sigma MH :
+            /*
+             MH : Seul cas où le taux d'acceptation a du sens car on utilise sigma MH
+            */
+            /*
+             MH: Only case where the acceptance rate makes sense because we use sigma MH
+            */
+    
             const double theta = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
             double rapport (0.);
             if (theta >= min && theta <= max)
@@ -822,7 +934,7 @@ void Event::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, co
             ek->mTheta.mHisto.clear();
             ek->mTheta.mChainsHistos.clear();
 
-            ek->mTheta.mHisto.insert(ek->mFixed,1);
+            ek->mTheta.mHisto.insert(ek->mFixed, 1);
             //generate fictifious chains
             for (int i =0 ;i<chains.size(); ++i)
                 ek->mTheta.mChainsHistos.append(ek->mTheta.mHisto);

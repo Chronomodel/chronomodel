@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------
 
-#Copyright or © or Copr. CNRS	2014 - 2018
+#Copyright or © or Copr. CNRS	2014 - 2020
 
 #Authors :
 #	Philippe LANOS
@@ -404,8 +404,9 @@ HEADERS += src/utilities/StdUtilities.h
 SOURCES += src/AppSettings.cpp \
     src/ui/panel_model/MultiCalibrationView.cpp \
     src/ui/panel_model/MultiCalibrationDrawing.cpp
-SOURCES += src/ChronoApp.cpp
 SOURCES += src/main.cpp
+SOURCES += src/ChronoApp.cpp
+
 SOURCES += src/MainController.cpp
 
 SOURCES += src/mcmc/Functions.cpp
