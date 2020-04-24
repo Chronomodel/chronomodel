@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -367,9 +367,10 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
     double tminCal;
     double tmaxCal;
 
-    // --------------------------------------------------
-    //  Calibrate on the whole calibration period (= ref curve definition domain)
-    // --------------------------------------------------
+    /*
+     Calibrate on the whole calibration period (= ref curve definition domain)
+     */
+    
     if (mTmaxRefCurve > mTminRefCurve) {
         QVector<double> calibrationTemp;
         QVector<double> repartitionTemp;
@@ -387,21 +388,20 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
             const double t = mTminRefCurve + double (i) * settings.mStep;
             long double lastV = v;
             v = getLikelihood(t);
-qDebug()<<"Date:calibrate"<< float(v);
+
             calibrationTemp.append(double(v));
             long double rep = lastRepVal;
             if(v != 0.l && lastV != 0.l)
                 rep = lastRepVal + (long double) (settings.mStep) * (lastV + v) / 2.l;
 
             repartitionTemp.append(double (rep));
-            qDebug()<<"Date:calibrate rep="<< float(rep);
+
             lastRepVal = rep;
         }
 
-        // ------------------------------------------------------------------
-        //  Restrict the calib and repartition vectors to where data are
-        // ------------------------------------------------------------------
-
+        /*
+        Restrict the calib and repartition vectors to where data are
+        */
         if (repartitionTemp.last() > 0.) {
             const double threshold (0.00005);
             const int minIdx = int (floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp)));
@@ -414,12 +414,12 @@ qDebug()<<"Date:calibrate"<< float(v);
             mCalibration->mCurve = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
             mCalibration->mRepartition = repartitionTemp.mid(minIdx, (maxIdx - minIdx) + 1);
 
-            // NOTE ABOUT THIS APPROMIATION :
-            // By truncating the calib and repartition, the calib density's area is not 1 anymore!
-            // It is now 1 - 2*threshold = 0,99999... We consider it to be 1 anyway!
-            // By doing this, calib and repartition are stored on a restricted number of data
-            // instead of storing them on the whole reference curve's period (as done for calibrationTemp & repartitionTemp above).
-
+            /* NOTE ABOUT THIS APPROMIATION :
+            By truncating the calib and repartition, the calib density's area is not 1 anymore!
+            It is now 1 - 2*threshold = 0,99999... We consider it to be 1 anyway!
+            By doing this, calib and repartition are stored on a restricted number of data
+            instead of storing them on the whole reference curve's period (as done for calibrationTemp & repartitionTemp above).
+            */
             // Stretch repartition curve so it goes from 0 to 1
             mCalibration->mRepartition = stretch_vector(mCalibration->mRepartition, 0., 1.);
 
@@ -427,12 +427,12 @@ qDebug()<<"Date:calibrate"<< float(v);
             mCalibration->mCurve = equal_areas(mCalibration->mCurve, settings.mStep, 1.);
 
         }
-        // ------------------------------------------------------------------
-        //  Measurement is very far from Ref curve on the whole ref curve preriod!
-        //  => Calib values are very small, considered as being 0 even using "double" !
-        //  => lastRepVal = 0, and impossible to truncate using it....
-        //  => So,
-        // ------------------------------------------------------------------
+        /*
+        Measurement is very far from Ref curve on the whole ref curve preriod!
+        => Calib values are very small, considered as being 0 even using "double" !
+        => lastRepVal = 0, and impossible to truncate using it....
+        => So,
+        */
         else  {
             tminCal = mTminRefCurve;
             tmaxCal = mTmaxRefCurve;
@@ -443,11 +443,12 @@ qDebug()<<"Date:calibrate"<< float(v);
 
     }
     else {
-        // Impossible to calibrate because the plugin could not return any calib curve definition period.
-        // This may be due to invalid ref curve files or to polynomial equations with only imaginary solutions (See Gauss Plugin...)
+        /* Impossible to calibrate because the plugin could not return any calib curve definition period.
+         This may be due to invalid ref curve files or to polynomial equations with only imaginary solutions (See Gauss Plugin...)
+         */
     }
 
-    qDebug()<<"Date::calibrate in project"<<project->mCalibCurves[toFind].mName;
+   // qDebug()<<"Date::calibrate in project"<<project->mCalibCurves[toFind].mName;
 }
 
 
@@ -494,22 +495,22 @@ QVector<double> Date::getFormatedRepartition() const
 
 double Date::getFormatedTminRefCurve() const
 {
-    return qMin(DateUtils::convertToAppSettingsFormat(getTminRefCurve()),DateUtils::convertToAppSettingsFormat(getTmaxRefCurve()));
+    return qMin(DateUtils::convertToAppSettingsFormat(getTminRefCurve()), DateUtils::convertToAppSettingsFormat(getTmaxRefCurve()));
 }
 
 double Date::getFormatedTmaxRefCurve() const
 {
-    return qMax(DateUtils::convertToAppSettingsFormat(getTminRefCurve()),DateUtils::convertToAppSettingsFormat(getTmaxRefCurve()));
+    return qMax(DateUtils::convertToAppSettingsFormat(getTminRefCurve()), DateUtils::convertToAppSettingsFormat(getTmaxRefCurve()));
 }
 
 double Date::getFormatedTminCalib() const
 {
-    return qMin(DateUtils::convertToAppSettingsFormat(mCalibration->mTmin),DateUtils::convertToAppSettingsFormat(mCalibration->mTmax));
+    return qMin(DateUtils::convertToAppSettingsFormat(mCalibration->mTmin), DateUtils::convertToAppSettingsFormat(mCalibration->mTmax));
 }
 
 double Date::getFormatedTmaxCalib()const
 {
-    return qMax(DateUtils::convertToAppSettingsFormat(mCalibration->mTmin),DateUtils::convertToAppSettingsFormat(mCalibration->mTmax));
+    return qMax(DateUtils::convertToAppSettingsFormat(mCalibration->mTmin), DateUtils::convertToAppSettingsFormat(mCalibration->mTmax));
 }
 
 void Date::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
@@ -652,24 +653,14 @@ QPixmap Date::generateCalibThumb()
 
 
         QPixmap thumb(size);
-        if (graph.inherits("QOpenGLWidget")) {
-            // Does not work if the graph has not been rendered before
-            // (calling repaint() has no direct effect on QOpenGLWidget...)
-            //graph.repaint();
-            //QImage image = graph.grabFramebuffer();
-            //thumb = QPixmap::fromImage(image);
 
-            // This works but there are some drawing region issues...
-            //graph.setRendering(GraphView::eHD);
-            graph.paintToDevice(&thumb);
-        } else {
-            QPainter p;
-            p.begin(&thumb);
-            //p.setRenderHint(QPainter::SmoothPixmapTransform);//don't work on pixmap
-            graph.repaint();
-            graph.render(&p);
-            p.end();
-        }
+        QPainter p;
+        p.begin(&thumb);
+        //p.setRenderHint(QPainter::SmoothPixmapTransform);//don't work on pixmap
+        graph.repaint();
+        graph.render(&p);
+        p.end();
+     
         return thumb;
     } else {
         // If date is invalid, return a null pixmap!
@@ -695,6 +686,7 @@ double Date::getLikelihoodFromCalib(const double t)
     int idxUpper = idxUnder + 1;
 
     // Important pour le créneau : pas d'interpolation autour des créneaux!
+    // Important for the square: no interpolation around the square!
     double v = 0.;
     if (mCalibration->mCurve[idxUnder] != 0. && mCalibration->mCurve[idxUpper] != 0.)
         v = interpolate((double) idx, (double)idxUnder, (double)idxUpper, mCalibration->mCurve[idxUnder], mCalibration->mCurve[idxUpper]);
@@ -824,6 +816,7 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
                 QString deltaType = dataTmp.at(firstColNum);
                 QString delta1 = dataTmp.at(firstColNum + 1);
                 QString delta2 = "0";
+                
                 if (dataTmp.size() >= firstColNum + 3) {
                     delta2 = dataTmp.at(firstColNum + 2);
                 }
@@ -831,10 +824,12 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
                     if (deltaType == "fixed") {
                         date.mDeltaType = Date::eDeltaFixed;
                         date.mDeltaFixed = csvLocale.toDouble(delta1);
+                        
                     } else if (deltaType == "range") {
                         date.mDeltaType = Date::eDeltaRange;
                         date.mDeltaMin = csvLocale.toDouble(delta1);
                         date.mDeltaMax = csvLocale.toDouble(delta2);
+                        
                     } else if (deltaType == "gaussian") {
                         date.mDeltaType = Date::eDeltaGaussian;
                         date.mDeltaAverage = csvLocale.toDouble(delta1);
@@ -900,7 +895,7 @@ void Date::autoSetTiSampler(const bool bSet)
 
                 break;
             }
-                // Seul cas où le taux d'acceptation a du sens car on utilise sigmaMH :
+            // Only case where the acceptance rate makes sense because we use sigmaMH:
             case eMHSymGaussAdapt:
             {
                 updateti = fMHSymGaussAdaptWithArg;
@@ -912,7 +907,7 @@ void Date::autoSetTiSampler(const bool bSet)
                 break;
             }
         }
-       // qDebug()<<"Date::autoSetTiSampler()"<<this->mName<<"with getLikelyhoodArg";
+ 
     } else {
         switch (mMethod) {
             case eMHSymetric:
@@ -951,21 +946,11 @@ void Date::autoSetTiSampler(const bool bSet)
  */
 void fMHSymetric(Date* date,Event* event)
 {
-//eMHSymetric:
 
-        // Ici, le marcheur est forcément gaussien avec H(theta i) : double_exp (gaussien tronqué)
-      /*   double tmin = date->mSettings.mTmin;
-        double tmax = date->mSettings.mTmax;
-         double theta = Generator::gaussByDoubleExp(event->mTheta.mX - date->mDelta, date->mSigma.mX, tmin, tmax);
-         //rapport = G(theta_new) / G(theta_old)
-         double rapport = date->getLikelyhoodFromCalib(theta) / date->getLikelyhoodFromCalib(date->mTheta.mX);
-         date->mTheta.tryUpdate(theta, rapport);
-    */
+    const double tiNew = Generator::gaussByBoxMuller(event->mTheta.mX - date->mDelta, date->mSigma.mX);
+    const double rapport = date->getLikelihood(tiNew) / date->getLikelihood(date->mTheta.mX);
 
-        const double tiNew = Generator::gaussByBoxMuller(event->mTheta.mX - date->mDelta, date->mSigma.mX);
-        const double rapport = date->getLikelihood(tiNew) / date->getLikelihood(date->mTheta.mX);
-
-        date->mTheta.tryUpdate(tiNew, rapport);
+    date->mTheta.tryUpdate(tiNew, rapport);
 
 
 }
@@ -1006,24 +991,18 @@ double fProposalDensity(const double t, const double t0, Date* date)
 
     // ----q1------Defined only on Calibration range-----
     if (t > tminCalib && t < tmaxCalib){
-        //double prop = (t - tmin) / (tmax - tmin);
+       
         const double prop = (t - tminCalib) / (tmaxCalib - tminCalib);
         const double idx = prop * (date->mCalibration->mRepartition.size() - 1.);
         const int idxUnder = (int)floor(idx);
 
-        //double step =(tmax-tmin+1)/date->mRepartition.size();
         const double step (date->mCalibration->mStep);
 
         q1 = (date->mCalibration->mRepartition[idxUnder+1] - date->mCalibration->mRepartition[idxUnder])/step;
     }
-    // ----q2 shrinkage-----------
-    /*double t0 =(tmax+tmin)/2;
-    double s = (tmax-tmin)/2;
-    double q2= s / ( 2* pow((s+fabs(t-t0)), 2) );
-     */
+    
 
     // ----q2 gaussian-----------
-    //double t0 = (tmax+tmin)/2;
     const double sigma = qMax(tmax - tmin, tmaxCalib - tminCalib) / 2.;
     const double q2 = exp(-0.5 * pow((t-t0)/ sigma, 2.)) / (sigma*sqrt(2.*M_PI));
 
@@ -1053,22 +1032,7 @@ void fInversion(Date* date, Event* event)
         const double s = (tmax-tmin)/2.;
 
         tiNew = Generator::gaussByBoxMuller(t0, s);
-        /*
-        // -- double shrinkage
-        double u2 = Generator::randomUniform();
-        double t0 =(tmax+tmin)/2;
-        double s = (tmax-tmin)/2;
-
-        double tPrim= s* ( (1-u2)/u2 ); // simulation according to uniform shrinkage with s parameter
-
-        double u3 = Generator::randomUniform();
-        if (u3<0.5f) {
-            tiNew= t0 + tPrim;
-        }
-        else {
-            tiNew= t0 - tPrim;
-        }
-        */
+       
     }
 
     const double rapport1 = date->getLikelihood(tiNew) / date->getLikelihood(date->mTheta.mX);
