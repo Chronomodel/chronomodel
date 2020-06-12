@@ -129,6 +129,8 @@ void Event::copyFrom(const Event& event)
 
 Event::~Event()
 {
+    mTheta.reset();
+    
     for (auto &&date : mDates) {
         date.mTheta.reset();
         date.mSigma.reset();

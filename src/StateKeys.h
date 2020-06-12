@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define STATE_APP_VERSION "app_version"
 #define STATE_SETTINGS "settings"
 #define STATE_MCMC "mcmc"
+#define STATE_CHRONOCURVE "chronocurve"
 #define STATE_EVENTS "events"
 #define STATE_PHASES "phases"
 #define STATE_EVENTS_CONSTRAINTS "events_constraints"
@@ -115,5 +116,20 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define STATE_MCMC_SEEDS "seeds"
 
 #define STATE_MCMC_MIXING "mixing_level"
+
+#define STATE_CHRONOCURVE_PROCESS_TYPE "process_type"
+#define STATE_CHRONOCURVE_VARIABLE_TYPE "variable_type"
+#define STATE_CHRONOCURVE_SELECT_OUV "select_ouv"
+#define STATE_CHRONOCURVE_OUV_MAX "ouv_max"
+#define STATE_CHRONOCURVE_USE_CORR_LAT "use_corr_lat"
+#define STATE_CHRONOCURVE_USE_ERR_MESURE "use_err_mesure"
+#define STATE_CHRONOCURVE_LAT "lat"
+#define STATE_CHRONOCURVE_LNG "lng"
+#define STATE_CHRONOCURVE_TIME_TYPE "time_type"
+#define STATE_CHRONOCURVE_VARIANCE_TYPE "variance_type"
+#define STATE_CHRONOCURVE_USE_VARIANCE_INDIVIDUAL "variance_individual"
+#define STATE_CHRONOCURVE_VARIANCE_FIXED "variance_fixed"
+#define STATE_CHRONOCURVE_COEFF_LISSAGE_TYPE "coeff_lissage_type"
+#define STATE_CHRONOCURVE_ALPHA "alpha"
 
 #endif

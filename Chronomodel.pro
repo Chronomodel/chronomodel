@@ -238,6 +238,7 @@ INCLUDEPATH += src/plugins/plugin_gauss/
 INCLUDEPATH += src/plugins/plugin_tl/
 INCLUDEPATH += src/plugins/plugin_uniform/
 INCLUDEPATH += src/project/
+INCLUDEPATH += src/chronocurve/
 INCLUDEPATH += src/ui/
 INCLUDEPATH += src/ui/dialogs/
 INCLUDEPATH += src/ui/graphs/
@@ -322,6 +323,13 @@ HEADERS += src/project/Project.h
 HEADERS += src/project/ProjectSettings.h
 HEADERS += src/project/SetProjectState.h
 HEADERS += src/project/StateEvent.h
+
+HEADERS += src/chronocurve/ChronocurveSettings.h
+HEADERS += src/chronocurve/ChronocurveSettingsView.h
+HEADERS += src/chronocurve/MCMCLoopChronocurve.h
+HEADERS += src/chronocurve/EventChronocurve.h
+HEADERS += src/chronocurve/ModelChronocurve.h
+HEADERS += src/chronocurve/ChronocurveUtilities.h
 
 HEADERS += src/ui/dialogs/AboutDialog.h
 HEADERS += src/ui/dialogs/AppSettingsDialog.h
@@ -464,6 +472,13 @@ SOURCES += src/project/Project.cpp
 SOURCES += src/project/ProjectSettings.cpp
 SOURCES += src/project/SetProjectState.cpp
 SOURCES += src/project/StateEvent.cpp
+
+SOURCES += src/chronocurve/ChronocurveSettings.cpp
+SOURCES += src/chronocurve/ChronocurveSettingsView.cpp
+SOURCES += src/chronocurve/MCMCLoopChronocurve.cpp
+SOURCES += src/chronocurve/EventChronocurve.cpp
+SOURCES += src/chronocurve/ModelChronocurve.cpp
+SOURCES += src/chronocurve/ChronocurveUtilities.cpp
 
 SOURCES += src/ui/dialogs/AboutDialog.cpp
 SOURCES += src/ui/dialogs/AppSettingsDialog.cpp

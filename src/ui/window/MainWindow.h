@@ -164,6 +164,8 @@ private:
     QAction* mMCMCSettingsAction;
     QAction* mRunAction;
     QAction* mResetMCMCAction;
+    
+    QAction* mChronocurveAction;
 
     QActionGroup* mViewGroup;
     QAction* mViewModelAction;

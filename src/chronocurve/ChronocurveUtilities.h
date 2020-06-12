@@ -36,76 +36,17 @@ same conditions as regards security.
 The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
+#ifndef CHRONOCURVEUTILITIES_H
+#define CHRONOCURVEUTILITIES_H
 
-#ifndef PROJECTVIEW_H
-#define PROJECTVIEW_H
+#include <vector>
 
-#include "MCMCLoopMain.h"
-#include "AppSettings.h"
-#include "Project.h"
-#include "Tabs.h"
 
-#include <QWidget>
-
-class QStackedWidget;
-class QTextEdit;
-class QTabWidget;
-
-class ModelView;
-class ResultsView;
-class Event;
-
-class ProjectView: public QWidget
+class ChronocurveUtilities
 {
-    Q_OBJECT
 public:
-    ProjectView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
-    ~ProjectView();
-
-    void resizeEvent(QResizeEvent* e);
-
-    bool mRefreshResults;
-
-    void doProjectConnections(Project* project);
-    void resetInterface();
-
-    void readSettings();
-    void writeSettings();
-    void createProject();
-   // void setFont(const QFont &font);
-    void newPeriod();
-
-    void updateMultiCalibration();
-
-public slots:
-    void updateProject();
-    void showModel();
-    void showResults();
-    void showLogTab(const int &i);
-
-    void changeDesign(bool refresh);
-    void showLog();
-    void showHelp(bool show);
-
-    void applySettings(Model* model);
-    void applyFilesSettings(Model* model);
-    void initResults(Model*);
-    void updateResults(Model*);
-    void updateResultsLog(const QString& log);
-    void setAppSettings();
-    
-    void toggleChronocurve(bool toggle);
-
-
-private:
-    QStackedWidget* mStack;
-    ModelView* mModelView;
-    ResultsView* mResultsView;
-
-    Tabs* mLogTabs;
-    QTextEdit* mLogModelEdit;
-    QTextEdit* mLogMCMCEdit;
-    QTextEdit* mLogResultsEdit;
+    static std::vector<double> calculVecH(const std::vector<double>& vec);
+    static std::vector<double> definitionNoeuds(const std::vector<double>& tabPts, const double minStep);
 };
 
 #endif

@@ -331,7 +331,6 @@ void Date::reset()
 {
     mTheta.reset();
     mSigma.reset();
-
     mWiggle.reset();
 }
 

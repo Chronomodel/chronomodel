@@ -63,13 +63,12 @@ public:
         eDoubleExp = 0, /**<  The default method */
         eBoxMuller = 1,
         eMHAdaptGauss = 2,
-
     };
 
     Event();
     Event(const Event& event);
     Event& operator=(const Event& event);
-    void copyFrom(const Event& event);
+    virtual void copyFrom(const Event& event);
     virtual ~Event();
 
     static Event fromJson(const QJsonObject& json);
@@ -137,7 +136,7 @@ public:
     bool mNodeInitialized;
     double mThetaNode;
     int mLevel; // used to init mcmc
-
+    
     double mMixingLevel;
 };
 

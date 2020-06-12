@@ -72,16 +72,24 @@ Model::~Model()
 
 void Model::clear()
 {
-    clearTraces();
-    if (!mEvents.isEmpty()) {
-        for (Event* ev: mEvents) {
-            if (ev) {
-                ev->~Event();
-                ev = nullptr;
-            }
-        }
-        mEvents.clear();
-     }
+    // Deleting an event executes these main following actions :
+    // - The Event MH variables are reset (freeing trace memory)
+    // - The Dates MH variables are reset (freeing trace memory)
+    // - The Dates are cleared
+    for (Event* ev: mEvents) {
+        // Event can be an Event or an EventChronocurve.
+        // => do not delete it using ~Event(), because the appropriate destructor could be ~EventChronocurve().
+        delete ev;
+        ev = nullptr;
+    }
+    
+    for (EventConstraint* ec : mEventConstraints) {
+        delete ec;
+        ec = nullptr;
+    }
+    
+    mEvents.clear();
+    mEventConstraints.clear();
 
     if (!mPhases.isEmpty()) {
         for (Phase* ph: mPhases) {
@@ -100,14 +108,6 @@ void Model::clear()
 
         }
         mPhaseConstraints.clear();
-    }
-
-    if (!mEventConstraints.isEmpty()) {
-        for (EventConstraint* ec : mEventConstraints) {
-            if (ec)
-                ec->~EventConstraint();
-        }
-        mEventConstraints.clear();
     }
 
     mChains.clear();

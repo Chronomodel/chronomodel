@@ -232,6 +232,13 @@ void MainWindow::createActions()
     mRunAction->setToolTip(tr("Run Model"));
 
     mResetMCMCAction = new QAction(tr("Reset Events and Data methods"), this);
+    
+    mChronocurveAction = new QAction(QIcon(":run_p.png"), tr("Chronocurve"), this);
+    mChronocurveAction->setIconText(tr("Chronocurve"));
+    mChronocurveAction->setIconVisibleInMenu(true);
+    mChronocurveAction->setToolTip(tr("Chronocurve"));
+    mChronocurveAction->setCheckable(true);
+    mChronocurveAction->setChecked(false);
 
     //-----------------------------------------------------------------
     // View Actions
@@ -422,6 +429,7 @@ void MainWindow::createToolBars()
     separator3->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     mToolBar->addWidget(separator3);
 
+    mToolBar->addAction(mChronocurveAction);
     mToolBar->addAction(mViewModelAction);
     mToolBar->addAction(mMCMCSettingsAction);
     mToolBar->addAction(mRunAction);
@@ -587,6 +595,7 @@ void MainWindow::connectProject()
     connect(mProject, &Project::projectStructureChanged, this, &MainWindow::noResult);
     connect(mProject, &Project::projectDesignChanged, mProjectView, &ProjectView::changeDesign);
 
+    connect(mChronocurveAction, &QAction::toggled, mProjectView, &ProjectView::toggleChronocurve);
     connect(mMCMCSettingsAction, &QAction::triggered, mProject, &Project::mcmcSettings);
     connect(mResetMCMCAction, &QAction::triggered, mProject, &Project::resetMCMC);
     connect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
@@ -609,6 +618,7 @@ void MainWindow::disconnectProject()
     disconnect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
     disconnect(mRunAction, &QAction::triggered, mProject, &Project::run);
 
+    connect(mChronocurveAction, &QAction::triggered, mProjectView, &ProjectView::toggleChronocurve);
 }
 
 void MainWindow::closeProject()
@@ -674,6 +684,8 @@ void MainWindow::updateProject()
 
     mRunAction->setEnabled(true);
     mProjectView->updateProject();
+    
+    mChronocurveAction->setEnabled(true);
 }
 
 // Settings & About
@@ -1118,6 +1130,7 @@ void MainWindow::activateInterface(bool activate)
     // Les actions suivantes doivent être désactivées si on ferme le projet.
     // Par contre, elles ne doivent pas être ré-activée dès l'ouverture d'un projet
     mRunAction->setEnabled(activate);
+    mChronocurveAction->setEnabled(activate);
 
     if (!activate) {
         mViewResultsAction->setEnabled(activate);
@@ -1145,6 +1158,7 @@ void MainWindow::activateInterface(bool activate)
 void MainWindow::setRunEnabled(bool enabled)
 {
     mRunAction->setEnabled(enabled);
+    mChronocurveAction->setEnabled(enabled);
 }
 
 void MainWindow::setResultsEnabled(bool enabled)
@@ -1181,3 +1195,4 @@ void MainWindow::noResult()
      mProject->setNoResults(true); // set to disable the saving the file *.res
 
 }
+

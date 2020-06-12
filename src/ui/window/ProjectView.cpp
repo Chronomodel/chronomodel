@@ -337,3 +337,8 @@ void ProjectView::readSettings()
 {
     mModelView->readSettings();
 }
+
+void ProjectView::toggleChronocurve(bool toggle)
+{
+    mModelView->toggleChronocurve(toggle);
+}
