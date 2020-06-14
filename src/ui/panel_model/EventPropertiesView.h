@@ -76,6 +76,8 @@ public:
     bool hasEvent() const;
     bool hasBound() const;
     bool hasEventWithDates() const;
+    
+    void setChronocurveSettings(bool enabled, char processType);
 
 public slots:
     void setEvent(const QJsonObject& event);
@@ -93,6 +95,11 @@ private slots:
     void updateEventColor(const QColor& color);
     void updateEventMethod(int index);
     void updateIndex(int index);
+    
+    // Chronocurve
+    void updateEventY1();
+    void updateEventY2();
+    void updateEventY3();
 
     void createDate();
     void deleteSelectedDates();
@@ -143,7 +150,7 @@ private:
     Button* mSplitBut;
 
     QLineEdit* mKnownFixedEdit;
-
+    
     GraphView* mKnownGraph;
 
     QGroupBox* mFixedGroup;
@@ -154,10 +161,20 @@ private:
     int mLineEditHeight;
 
     int mComboBoxHeight;
-
-
-
-
+    
+  
+    // Chronocurve
+    QLabel* mChronocurveLab;
+    QLabel* mY1Lab;
+    QLabel* mY2Lab;
+    QLabel* mY3Lab;
+    QLineEdit* mY1Edit;
+    QLineEdit* mY2Edit;
+    QLineEdit* mY3Edit;
+    QWidget* mYWidget;
+    
+    bool mChronocurveEnabled;
+    char mChronocurveProcessType;
 };
 
 #endif

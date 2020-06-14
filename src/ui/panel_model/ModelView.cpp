@@ -277,8 +277,7 @@ mIsChronocurve(false)
     // ------------- Windows calibration ---------------------
 
     mCalibrationView = new CalibrationView(mLeftWrapper);
-
-
+    
      // ------------- Windows Multi-calibration ---------------------
      mMultiCalibrationView = new MultiCalibrationView(mRightWrapper);
      mMultiCalibrationView->hide();
@@ -493,7 +492,6 @@ void ModelView::createProject()
 
 void ModelView::updateProject()
 {
-
     QJsonObject state = mProject->state();
     const ProjectSettings settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
@@ -783,9 +781,10 @@ void ModelView::createPhaseInPlace()
  */
 void ModelView::showProperties()
 {
+    // Why now ?!
     updateLayout();
-
-   if (mButProperties->isChecked() && mButProperties->isEnabled()) {
+    
+    if (mButProperties->isChecked() && mButProperties->isEnabled()) {
        if (mButMultiCalib->isChecked()) {
            // hide mMultiCalibrationView
            mAnimationHide->setStartValue(mRightRect);
@@ -797,11 +796,11 @@ void ModelView::showProperties()
        }
         mButImport-> setChecked(false);
 
-        // show Properties View
-        mEventPropertiesView->updateEvent();
+       // show Properties View
+       mEventPropertiesView->updateEvent();
+       mEventPropertiesView->show();
 
         mCalibrationView->repaint();
-        mEventPropertiesView->show();
 
         mAnimationCalib->setTargetObject(mCalibrationView);
 
@@ -822,6 +821,7 @@ void ModelView::showProperties()
 
      }
 
+    //updateLayout();
 }
 
 void ModelView::hideProperties()
@@ -1414,9 +1414,20 @@ void ModelView::toggleChronocurve(bool toggle)
     
     mChronocurveSettingsView->setVisible(toggle);
     
-    if(mProject && toggle){
-        ChronocurveSettings settings = ChronocurveSettings::fromJson(mProject->mState.value(STATE_CHRONOCURVE).toObject());
+    if(mProject){
+        
+        // Save the "enabled" state of chronocurve in project settings
+        QJsonObject state = mProject->mState;
+        ChronocurveSettings settings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
+        settings.mEnabled = toggle;
+        state[STATE_CHRONOCURVE] = settings.toJson();
+        mProject->pushProjectState(state, CHRONOCURVE_SETTINGS_UPDATED_REASON, true);
+        
+        // Update the chronocurve settings view with the project's values
         mChronocurveSettingsView->setSettings(settings);
+        
+        // Tell the event properties view if it should display chronocurve parameters
+        mEventPropertiesView->setChronocurveSettings(settings.mEnabled, settings.mProcessType);
     }
     
     updateLayout();

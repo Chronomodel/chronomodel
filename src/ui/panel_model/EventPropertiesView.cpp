@@ -55,6 +55,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "ModelUtilities.h"
 #include "PluginOptionsDialog.h"
+#include "ChronocurveSettings.h"
 #include <QtWidgets>
 
 
@@ -63,7 +64,9 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mButtonWidth  (int (1.3 * AppSettings::widthUnit()) * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE),
     mButtonHeigth  (int (1.3 * AppSettings::heigthUnit()) * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE),
     mLineEditHeight  (int (0.5 * AppSettings::heigthUnit())),
-    mComboBoxHeight (int (0.7 * AppSettings::heigthUnit()))
+    mComboBoxHeight (int (0.7 * AppSettings::heigthUnit())),
+    mChronocurveEnabled(false),
+    mChronocurveProcessType(ChronocurveSettings::eProcessTypeUnivarie)
 {
     minimumHeight = 0;
 
@@ -80,14 +83,27 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mMethodLab = new QLabel(tr("Method"), mTopView);
     mMethodCombo = new QComboBox(mTopView);
 
-
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eDoubleExp));
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eBoxMuller));
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eMHAdaptGauss));
-
+    
     connect(mNameEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventName);
     connect(mColorPicker, &ColorPicker::colorChanged, this, &EventPropertiesView::updateEventColor);
     connect(mMethodCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &EventPropertiesView::updateEventMethod);
+    
+    mChronocurveLab = new QLabel(tr("Chronocurve"), mTopView);
+    
+    mY1Lab = new QLabel(tr("Y1") + " :", mTopView);
+    mY2Lab = new QLabel(tr("Y2") + " :", mTopView);
+    mY3Lab = new QLabel(tr("Y3") + " :", mTopView);
+    
+    mY1Edit = new LineEdit(mTopView);
+    mY2Edit = new LineEdit(mTopView);
+    mY3Edit = new LineEdit(mTopView);
+    
+    connect(mY1Edit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventY1);
+    connect(mY2Edit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventY2);
+    connect(mY3Edit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventY3);
 
     // Event default propreties Window mEventView
     mEventView = new QWidget(this);
@@ -221,19 +237,27 @@ void EventPropertiesView::setEvent(const QJsonObject& event)
 {
     // if set Event come becaus we use Project::updateDate(), we are on the same Event
     // so we are on the EventPropertiesView not on the EventScene
-    if (mEvent[STATE_ID] != event[STATE_ID])
+    if (mEvent[STATE_ID] != event[STATE_ID]){
         mCalibBut->setChecked(false);
-
+    }
+    
+    // Assign the local event
     mEvent = event;
+    
+    // Select the first date if the list is not empty
     QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
-
     bool hasDates = (dates.size() > 0);
-    if (hasDates)
+    if (hasDates){
         mCurrentDateIdx = 0;
-
+    }
+    
+    Project* project = MainWindow::getInstance()->getProject();
+    
+    
     if (rect().width() > 0)
         updateEvent();
 }
+
 void EventPropertiesView::updateIndex(int index)
 {
     mCurrentDateIdx = index;
@@ -263,6 +287,25 @@ void EventPropertiesView::updateEvent()
         mMethodLab->setVisible(type == Event::eDefault);
         mMethodCombo->setVisible(type == Event::eDefault);
 
+        // Chronocurve
+        
+        // The chronocurve settings may have changed since the last time the event property view has been opened
+        QJsonObject state = MainWindow::getInstance()->getProject()->mState;
+        ChronocurveSettings settings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
+        //mChronocurveEnabled = settings.mEnabled;
+        mChronocurveProcessType = settings.mProcessType;
+        
+        mChronocurveLab->setVisible(mChronocurveEnabled);
+        mY1Lab->setVisible(mChronocurveEnabled);
+        mY1Edit->setVisible(mChronocurveEnabled);
+        mY2Lab->setVisible(mChronocurveEnabled && (mChronocurveProcessType != ChronocurveSettings::eProcessTypeUnivarie));
+        mY2Edit->setVisible(mChronocurveEnabled && (mChronocurveProcessType != ChronocurveSettings::eProcessTypeUnivarie));
+        mY3Lab->setVisible(mChronocurveEnabled && (mChronocurveProcessType == ChronocurveSettings::eProcessTypeVectoriel));
+        mY3Edit->setVisible(mChronocurveEnabled && (mChronocurveProcessType == ChronocurveSettings::eProcessTypeVectoriel));
+        
+        qDebug() << "Chronocurve enabled in event view : " << mChronocurveEnabled;
+        qDebug() << "Chronocurve process type in event view : " << mChronocurveProcessType;
+        
         mTopView->setVisible(true);
 
         mEventView->setVisible(type == Event::eDefault);
@@ -296,6 +339,7 @@ void EventPropertiesView::updateEvent()
             updateKnownGraph();
         }
     }
+    
     updateLayout();
     update();
 }
@@ -338,6 +382,37 @@ void EventPropertiesView::updateKnownFixed(const QString& text)
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound fixed value updated"));
 }
 
+// Chronocurve
+void EventPropertiesView::setChronocurveSettings(bool enabled, char processType)
+{
+    mChronocurveEnabled = enabled;
+    mChronocurveProcessType = processType;
+    updateEvent();
+}
+
+// Chronocurve
+void EventPropertiesView::updateEventY1()
+{
+    QJsonObject event = mEvent;
+    event[STATE_EVENT_Y1] = mY1Edit->text().toDouble();
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y1 updated"));
+}
+
+// Chronocurve
+void EventPropertiesView::updateEventY2()
+{
+    QJsonObject event = mEvent;
+    event[STATE_EVENT_Y2] = mY2Edit->text().toDouble();
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y2 updated"));
+}
+
+// Chronocurve
+void EventPropertiesView::updateEventY3()
+{
+    QJsonObject event = mEvent;
+    event[STATE_EVENT_Y3] = mY3Edit->text().toDouble();
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y3 updated"));
+}
 
 void EventPropertiesView::updateKnownGraph()
 {
@@ -583,18 +658,22 @@ void EventPropertiesView::updateLayout()
     mButtonWidth = int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mLineEditHeight = int (0.5 * AppSettings::heigthUnit());
-    mComboBoxHeight = int (0.7*AppSettings::heigthUnit());
+    mComboBoxHeight = int (0.7 * AppSettings::heigthUnit());
 
     QFontMetrics fm (font());
     int marginTop (int (0.2 * AppSettings::widthUnit()));
 
-    if (hasEvent()) {
+    if (hasEvent())
+    {
         int butPluginHeigth = mButtonHeigth;
 
         // in EventPropertiesView coordinates
         mBoundView->resize(0, 0);
 
         int shiftMax (qMax(fm.boundingRect(mNameLab->text()).width(), qMax(fm.boundingRect(mColorLab->text()).width(), fm.boundingRect(mMethodLab->text()).width() )) );
+        if(mChronocurveEnabled){
+            shiftMax = qMax(shiftMax, fm.boundingRect(mChronocurveLab->text()).width());
+        }
         shiftMax = shiftMax + 2*marginTop;
         int editWidth (width() - shiftMax);
 
@@ -602,12 +681,30 @@ void EventPropertiesView::updateLayout()
         mNameEdit->setGeometry(shiftMax , mNameLab->y(), editWidth - marginTop, mLineEditHeight);
 
         mColorLab->move(marginTop, mNameEdit->y() + mNameEdit->height() + marginTop );
-        mColorPicker->setGeometry(shiftMax , mColorLab->y() , editWidth - marginTop, mLineEditHeight);
+        mColorPicker->setGeometry(shiftMax, mColorLab->y(), editWidth - marginTop, mLineEditHeight);
 
         mMethodLab->move(marginTop, mColorPicker->y() + mColorPicker->height() + marginTop);
         mMethodCombo->setGeometry(shiftMax , mMethodLab->y() - mComboBoxHeight/2 + marginTop, editWidth - marginTop, mComboBoxHeight);
+        
+        // Chronocurve
+        int dx = marginTop;
+        int dy = mMethodLab->y() + mMethodLab->height() + marginTop;
+        int labW = 30;
+        int editW = (width() - 8*marginTop - shiftMax - 3*labW) / 3;
+        
+        mChronocurveLab->setGeometry(dx, dy, shiftMax, mLineEditHeight);
+        mY1Lab->setGeometry(dx += shiftMax + marginTop, dy, labW, mLineEditHeight);
+        mY1Edit->setGeometry(dx += labW + marginTop, dy, editW, mLineEditHeight);
+        mY2Lab->setGeometry(dx += editW + marginTop, dy, labW, mLineEditHeight);
+        mY2Edit->setGeometry(dx += labW + marginTop, dy, editW, mLineEditHeight);
+        mY3Lab->setGeometry(dx += editW + marginTop, dy, labW, mLineEditHeight);
+        mY3Edit->setGeometry(dx += labW + marginTop, dy, editW, mLineEditHeight);
 
-        mTopView->resize(width(), 2 *mLineEditHeight + mComboBoxHeight + 4 * marginTop);
+        int topViewHeight = 2 * mLineEditHeight + mComboBoxHeight + 4 * marginTop;
+        if(mChronocurveEnabled){
+            topViewHeight += marginTop + mLineEditHeight;
+        }
+        mTopView->resize(width(), topViewHeight);
 
         mEventView->setGeometry(0, mTopView->height(), width(), height() - mTopView->height());
 

@@ -248,7 +248,6 @@ private :
     QSet<QString> mReasonChangePosition;
 
     bool mNoResults;
-
 };
 
 #endif

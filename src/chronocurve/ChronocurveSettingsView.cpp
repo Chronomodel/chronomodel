@@ -176,6 +176,12 @@ ChronocurveSettingsView::ChronocurveSettingsView(QWidget* parent):QWidget(parent
     connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::updateVisibilities);
     
     connect(mCoeffLissageTypeInput, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::updateVisibilities);
+    
+    
+    
+    connect(mProcessTypeInput, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::save);
+    
+    // TODO : connect all inputs to save
 }
 
 ChronocurveSettingsView::~ChronocurveSettingsView()

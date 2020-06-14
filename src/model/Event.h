@@ -138,6 +138,10 @@ public:
     int mLevel; // used to init mcmc
     
     double mMixingLevel;
+    
+    double mY1;
+    double mY2;
+    double mY3;
 };
 
 #endif

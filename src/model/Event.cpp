@@ -63,7 +63,6 @@ mIsSelected(false),
 mInitialized(false),
 mLevel(0)
 {
-
     mTheta.mSupport = MetropolisVariable::eBounded;
     mTheta.mFormat = DateUtils::eUnknown;;
 
@@ -125,6 +124,10 @@ void Event::copyFrom(const Event& event)
     mConstraintsBwd = event.mConstraintsBwd;
 
     mMixingLevel = event.mMixingLevel;
+    
+    mY1 = event.mY1;
+    mY2 = event.mY2;
+    mY3 = event.mY3;
 }
 
 Event::~Event()
@@ -171,6 +174,9 @@ Event Event::fromJson(const QJsonObject& json)
 
     event.mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
 
+    event.mY1 = json.value(STATE_EVENT_Y1).toDouble();
+    event.mY2 = json.value(STATE_EVENT_Y2).toDouble();
+    event.mY3 = json.value(STATE_EVENT_Y3).toDouble();
 
     const QJsonArray dates = json.value(STATE_EVENT_DATES).toArray();
 
@@ -204,6 +210,9 @@ QJsonObject Event::toJson() const
     event[STATE_ITEM_Y] = mItemY;
     event[STATE_IS_SELECTED] = mIsSelected;
     event[STATE_IS_CURRENT] = mIsCurrent;
+    event[STATE_EVENT_Y1] = mY1;
+    event[STATE_EVENT_Y2] = mY2;
+    event[STATE_EVENT_Y3] = mY3;
 
     QString eventIdsStr;
     if (mPhasesIds.size() > 0) {
@@ -983,7 +992,5 @@ void Event::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, co
             //generate fictifious chains
             for (int i =0 ;i<chains.size(); ++i)
                 ek->mTheta.mChainsHistos.append(ek->mTheta.mHisto);
-
     }
-
 }
