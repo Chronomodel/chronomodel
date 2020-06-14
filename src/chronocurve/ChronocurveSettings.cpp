@@ -44,6 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 ChronocurveSettings::ChronocurveSettings():
+mEnabled(false),
 mProcessType(CHRONOCURVE_PROCESS_TYPE_DEFAULT),
 mVariableType(CHRONOCURVE_VARIABLE_TYPE_DEFAULT),
 mSelectOuv(CHRONOCURVE_SELECT_OUV_DEFAULT),
@@ -75,6 +76,7 @@ ChronocurveSettings& ChronocurveSettings::operator=(const ChronocurveSettings& s
 
 void ChronocurveSettings::copyFrom(const ChronocurveSettings& s)
 {
+    mEnabled = s.mEnabled;
     mProcessType = s.mProcessType;
     mVariableType = s.mVariableType;
     mSelectOuv = s.mSelectOuv;
@@ -100,6 +102,7 @@ ChronocurveSettings ChronocurveSettings::getDefault()
 {
     ChronocurveSettings settings;
     
+    settings.mEnabled = CHRONOCURVE_ENABLED_DEFAULT;
     settings.mProcessType = CHRONOCURVE_PROCESS_TYPE_DEFAULT;
     settings.mVariableType = CHRONOCURVE_VARIABLE_TYPE_DEFAULT;
     settings.mSelectOuv = CHRONOCURVE_SELECT_OUV_DEFAULT;
@@ -120,6 +123,7 @@ ChronocurveSettings ChronocurveSettings::getDefault()
 
 void ChronocurveSettings::restoreDefault()
 {
+    mEnabled = CHRONOCURVE_ENABLED_DEFAULT;
     mProcessType = CHRONOCURVE_PROCESS_TYPE_DEFAULT;
     mVariableType = CHRONOCURVE_VARIABLE_TYPE_DEFAULT;
     mSelectOuv = CHRONOCURVE_SELECT_OUV_DEFAULT;
@@ -136,10 +140,11 @@ void ChronocurveSettings::restoreDefault()
     mAlpha = CHRONOCURVE_ALPHA_DEFAULT;
 }
 
-
 ChronocurveSettings ChronocurveSettings::fromJson(const QJsonObject& json)
 {
     ChronocurveSettings settings;
+    
+    settings.mEnabled = json.contains(STATE_CHRONOCURVE_ENABLED) ?  json.value(STATE_CHRONOCURVE_ENABLED).toBool() : CHRONOCURVE_ENABLED_DEFAULT;
     
     settings.mProcessType = json.contains(STATE_CHRONOCURVE_PROCESS_TYPE) ? ChronocurveSettings::ProcessType (json.value(STATE_CHRONOCURVE_PROCESS_TYPE).toInt()) : CHRONOCURVE_PROCESS_TYPE_DEFAULT;
     
@@ -176,6 +181,7 @@ QJsonObject ChronocurveSettings::toJson() const
 {
     QJsonObject mcmc;
     
+    mcmc[STATE_CHRONOCURVE_ENABLED] = QJsonValue::fromVariant((int)mEnabled);
     mcmc[STATE_CHRONOCURVE_PROCESS_TYPE] = QJsonValue::fromVariant((int)mProcessType);
     mcmc[STATE_CHRONOCURVE_VARIABLE_TYPE] = QJsonValue::fromVariant((int)mVariableType);
     mcmc[STATE_CHRONOCURVE_SELECT_OUV] = QJsonValue::fromVariant(mSelectOuv);

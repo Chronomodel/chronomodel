@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "StateKeys.h"
 #include <QJsonObject>
 
+#define CHRONOCURVE_ENABLED_DEFAULT false
 #define CHRONOCURVE_PROCESS_TYPE_DEFAULT ChronocurveSettings::eProcessTypeUnivarie
 #define CHRONOCURVE_VARIABLE_TYPE_DEFAULT ChronocurveSettings::eVariableTypeInclinaison
 #define CHRONOCURVE_SELECT_OUV_DEFAULT false
@@ -96,6 +97,8 @@ public:
     
     
 public:
+    bool mEnabled;
+    
     ProcessType mProcessType; // Type de traitement
     VariableType mVariableType; // Type de variable étudiée
     
