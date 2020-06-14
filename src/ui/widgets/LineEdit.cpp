@@ -48,7 +48,9 @@ LineEdit::LineEdit(QWidget* parent):QLineEdit(parent),
 {
     setParent(parent);
     setAlignment(Qt::AlignHCenter);
-    setFont(parentWidget()->font());
+    if(parentWidget()){
+        setFont(parentWidget()->font());
+    }
 }
 
 void LineEdit::setVisible(bool visible)
