@@ -37,58 +37,62 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef EVENTITEM_H
-#define EVENTITEM_H
+#include "SwitchAction.h"
+#include <QtWidgets>
 
-#include "AbstractItem.h"
-
-class EventsScene;
-
-class EventItem : public AbstractItem
+SwitchWidget::SwitchWidget(QWidget* parent, QWidgetAction* action):QWidget(parent),
+mAction(action)
 {
-public:
-    EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent = nullptr);
-    virtual ~EventItem();
+    setFixedSize(90, 40);
+}
 
-    virtual void setGreyedOut(const bool greyedOut);
+void SwitchWidget::mousePressEvent(QMouseEvent* event)
+{
+    QWidget::mousePressEvent(event);
+    mAction->toggle();
+    update();
+}
 
-    void setWithSelectedPhase(const bool selected) {mWithSelectedPhase = selected;}
-    bool withSelectedPhase() { return mWithSelectedPhase;}
-
-    QJsonObject& getEvent();
-    virtual void setEvent(const QJsonObject& event, const QJsonObject& settings);
-
-    virtual QRectF boundingRect() const;
-    void handleDrop(QGraphicsSceneDragDropEvent* e);
-    QJsonArray getPhases() const;
-    QJsonObject getSettings() const {return mSettings;}
-
-    virtual void updateItemPosition(const QPointF& pos);
-
-    virtual void setDatesVisible(bool visible);
-    void redrawEvent();
-
-    bool withSelectedDate() const;
-
-    void mousePressEvent(QGraphicsSceneMouseEvent* e);
-
-protected:
-    virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
-    virtual void dropEvent(QGraphicsSceneDragDropEvent* e);
-
-    void updateGreyedOut();
-    int getChronocurveLines() const;
-    void resizeEventItem();
-    void repositionDateItems();
+void SwitchWidget::paintEvent(QPaintEvent* e)
+{
+    Q_UNUSED(e);
     
-protected:
-    QSize mSize;
-    QJsonObject mSettings;
-    bool mWithSelectedPhase;
-    bool mShowAllThumbs;
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    
+    QRectF r = rect();
+    r.adjust(1, 1, -1, -1);
+    
+    QColor color1 = mAction->isChecked() ? QColor(44, 122, 123) : QColor(43, 108, 176);
+    QColor color2 = mAction->isChecked() ? QColor(230, 255, 250) : QColor(235, 248, 255);
+    
+    QPen pen = painter.pen();
+    pen.setColor(color1);
+    pen.setWidth(2);
+    
+    painter.setPen(pen);
+    painter.setBrush(color2);
+    painter.drawRoundedRect(r, 4, 4);
+    
+    QFont f(font());
+    f.setPointSizeF(8);
+    painter.setFont(f);
+    painter.drawText(r.adjusted(0, 0, 0, -r.height()/2), Qt::AlignHCenter | Qt::AlignVCenter, tr("Building mode"));
+    
+    f.setPointSizeF(14);
+    f.setWeight(QFont::Bold);
+    painter.setFont(f);
+    QString text = mAction->isChecked() ? "CURVE" : "PHASES";
+    painter.drawText(r.adjusted(0, r.height()/3, 0, 0), Qt::AlignHCenter | Qt::AlignVCenter, text);
+}
 
-   private:
-     int mPhasesHeight;
-};
+SwitchAction::SwitchAction(QObject* parent):QWidgetAction(parent)
+{
+    
+}
 
-#endif
+QWidget* SwitchAction::createWidget(QWidget* parent)
+{
+    return new SwitchWidget(parent, this);
+    //return QWidgetAction::createWidget(parent);
+}

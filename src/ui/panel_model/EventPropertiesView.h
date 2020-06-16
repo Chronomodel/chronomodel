@@ -60,6 +60,8 @@ class Button;
 class RadioButton;
 class GraphView;
 
+class ChronocurveWidget;
+
 
 class EventPropertiesView: public QWidget
 {
@@ -100,6 +102,10 @@ private slots:
     void updateEventY1();
     void updateEventY2();
     void updateEventY3();
+    
+    void updateEventS1();
+    void updateEventS2();
+    void updateEventS3();
 
     void createDate();
     void deleteSelectedDates();
@@ -162,16 +168,23 @@ private:
 
     int mComboBoxHeight;
     
+    ChronocurveWidget* mChronocurveWidget;
   
-    // Chronocurve
-    QLabel* mChronocurveLab;
     QLabel* mY1Lab;
     QLabel* mY2Lab;
     QLabel* mY3Lab;
+    
     QLineEdit* mY1Edit;
     QLineEdit* mY2Edit;
     QLineEdit* mY3Edit;
-    QWidget* mYWidget;
+    
+    QLabel* mS1Lab;
+    QLabel* mS2Lab;
+    QLabel* mS3Lab;
+    
+    QLineEdit* mS1Edit;
+    QLineEdit* mS2Edit;
+    QLineEdit* mS3Edit;
     
     bool mChronocurveEnabled;
     char mChronocurveProcessType;

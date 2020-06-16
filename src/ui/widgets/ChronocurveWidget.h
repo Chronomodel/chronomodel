@@ -37,88 +37,19 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef CHRONOCURVESETTINGSVIEW_H
-#define CHRONOCURVESETTINGSVIEW_H
+#ifndef CHRONOCURVEWIDGET_H
+#define CHRONOCURVEWIDGET_H
 
 #include <QWidget>
-#include "ChronocurveSettings.h"
 
-class QLabel;
-class QComboBox;
-class QCheckBox;
-class QLineEdit;
-class Project;
-
-
-class ChronocurveSettingsView: public QWidget
+class ChronocurveWidget: public QWidget
 {
     Q_OBJECT
 public:
-    ChronocurveSettingsView(QWidget* parent = nullptr);
-    virtual ~ChronocurveSettingsView();
+    ChronocurveWidget(QWidget* parent);
 
-    void setSettings(const ChronocurveSettings& settings);
-    ChronocurveSettings getSettings();
-    
-    void setProject(Project *project);
-    
-protected slots:
-    void updateVisibilities();
-    void reset();
-    void save();
-
-private:
-    Project* mProject;
-    
-    bool mEnabled;
-    
-    QLabel* mProcessTypeLabel;
-    QComboBox* mProcessTypeInput;
-    
-    QLabel* mVariableTypeLabel;
-    QComboBox* mVariableTypeInput;
-    
-    QLabel* mSelectOuvLabel;
-    QCheckBox* mSelectOuvInput;
-    
-    QLabel* mOuvMaxLabel;
-    QLineEdit* mOuvMaxInput;
-    
-    QLabel* mUseCorrLatLabel;
-    QCheckBox* mUseCorrLatInput;
-    
-    QLabel* mLatLabel;
-    QLineEdit* mLatInput;
-    
-    QLabel* mLngLabel;
-    QLineEdit* mLngInput;
-    
-    QLabel* mUseErrMesureLabel;
-    QCheckBox* mUseErrMesureInput;
-    
-    QLabel* mTimeTypeLabel;
-    QComboBox* mTimeTypeInput;
-    
-    /*QLabel* mUseTimeBayesianEventLabel;
-    QCheckBox* mUseTimeBayesianEventInput;
-    
-    QLabel* mUseTimeBayesianConstraintLabel;
-    QCheckBox* mUseTimeBayesianConstraintInput;*/
-    
-    QLabel* mVarianceTypeLabel;
-    QComboBox* mVarianceTypeInput;
-    
-    QLabel* mUseVarianceIndividualLabel;
-    QCheckBox* mUseVarianceIndividualInput;
-    
-    QLabel* mVarianceFixedLabel;
-    QLineEdit* mVarianceFixedInput;
-    
-    QLabel* mCoeffLissageTypeLabel;
-    QComboBox* mCoeffLissageTypeInput;
-    
-    QLabel* mAlphaLabel;
-    QLineEdit* mAlphaInput;
+protected:
+    void paintEvent(QPaintEvent* event);
 };
 
 #endif

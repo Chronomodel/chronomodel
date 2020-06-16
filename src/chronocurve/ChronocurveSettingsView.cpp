@@ -193,6 +193,8 @@ void ChronocurveSettingsView::setSettings(const ChronocurveSettings& settings)
 {
     const QLocale mLoc = QLocale();
     
+    mEnabled = settings.mEnabled;
+    
     if(settings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie){
         mProcessTypeInput->setCurrentIndex(0);
     }else if(settings.mProcessType == ChronocurveSettings::eProcessTypeSpherique){
@@ -249,6 +251,8 @@ ChronocurveSettings ChronocurveSettingsView::getSettings()
 {
     const QLocale mLoc = QLocale();
     ChronocurveSettings settings;
+    
+    settings.mEnabled = mEnabled;
     
     if(mProcessTypeInput->currentIndex() == 0){
         settings.mProcessType = ChronocurveSettings::eProcessTypeUnivarie;

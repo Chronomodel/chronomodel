@@ -188,6 +188,8 @@ public:
     void createEvent(qreal x, qreal y);
     void createEventKnown(qreal x, qreal y);
     void createPhase(qreal x, qreal y);
+    
+    bool isChronocurve() const;
 
 public slots:
     bool save();

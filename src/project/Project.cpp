@@ -2878,6 +2878,12 @@ void Project::clearModel()
      emit noResult();
 }
 
+bool Project::isChronocurve() const
+{
+    QJsonObject state = this->state();
+    QJsonObject chronocurveSettings = state[STATE_CHRONOCURVE].toObject();
+    return chronocurveSettings.value(STATE_CHRONOCURVE_ENABLED).toBool();
+}
 
 void Project::runChronocurve()
 {

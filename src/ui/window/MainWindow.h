@@ -48,6 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class QMenu;
 class QAction;
 class QActionGroup;
+class SwitchAction;
 class QStackedWidget;
 class QUndoStack;
 class QUndoView;
@@ -116,6 +117,7 @@ public slots:
     void mcmcFinished(Model*);
     void noResult();
     void updateProject();
+    void toggleChronocurve(bool checked);
 
     void changeEventsColor();
     void changeEventsMethod();
@@ -165,7 +167,7 @@ private:
     QAction* mRunAction;
     QAction* mResetMCMCAction;
     
-    QAction* mChronocurveAction;
+    SwitchAction* mChronocurveAction;
 
     QActionGroup* mViewGroup;
     QAction* mViewModelAction;

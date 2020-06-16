@@ -128,6 +128,10 @@ void Event::copyFrom(const Event& event)
     mY1 = event.mY1;
     mY2 = event.mY2;
     mY3 = event.mY3;
+    
+    mS1 = event.mS1;
+    mS2 = event.mS2;
+    mS3 = event.mS3;
 }
 
 Event::~Event()
@@ -177,6 +181,10 @@ Event Event::fromJson(const QJsonObject& json)
     event.mY1 = json.value(STATE_EVENT_Y1).toDouble();
     event.mY2 = json.value(STATE_EVENT_Y2).toDouble();
     event.mY3 = json.value(STATE_EVENT_Y3).toDouble();
+    
+    event.mS1 = json.value(STATE_EVENT_S1).toDouble();
+    event.mS2 = json.value(STATE_EVENT_S2).toDouble();
+    event.mS3 = json.value(STATE_EVENT_S3).toDouble();
 
     const QJsonArray dates = json.value(STATE_EVENT_DATES).toArray();
 
@@ -213,6 +221,9 @@ QJsonObject Event::toJson() const
     event[STATE_EVENT_Y1] = mY1;
     event[STATE_EVENT_Y2] = mY2;
     event[STATE_EVENT_Y3] = mY3;
+    event[STATE_EVENT_Y1] = mS1;
+    event[STATE_EVENT_Y2] = mS2;
+    event[STATE_EVENT_Y3] = mS3;
 
     QString eventIdsStr;
     if (mPhasesIds.size() > 0) {
@@ -231,6 +242,34 @@ QJsonObject Event::toJson() const
     event[STATE_EVENT_DATES] = dates;
 
     return event;
+}
+
+void Event::setChronocurveCsvDataToJsonEvent(QJsonObject& event, const QMap<QString, double>& chronocurveData)
+{
+    QMap<QString, double>::const_iterator i = chronocurveData.find("Y1");
+    if(i != chronocurveData.end()){
+        event[STATE_EVENT_Y1] = i.value();
+    }
+    i = chronocurveData.find("S1");
+    if(i != chronocurveData.end()){
+        event[STATE_EVENT_S1] = i.value();
+    }
+    i = chronocurveData.find("Y2");
+    if(i != chronocurveData.end()){
+        event[STATE_EVENT_Y2] = i.value();
+    }
+    i = chronocurveData.find("S2");
+    if(i != chronocurveData.end()){
+        event[STATE_EVENT_S2] = i.value();
+    }
+    i = chronocurveData.find("Y3");
+    if(i != chronocurveData.end()){
+        event[STATE_EVENT_Y3] = i.value();
+    }
+    i = chronocurveData.find("S3");
+    if(i != chronocurveData.end()){
+        event[STATE_EVENT_S3] = i.value();
+    }
 }
 
 // Properties

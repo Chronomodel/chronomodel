@@ -77,6 +77,8 @@ public:
     Type type() const;
 
     void reset();
+    
+    static void setChronocurveCsvDataToJsonEvent(QJsonObject& event, const QMap<QString, double>& chronocurveData);
 
 
     /// Functions used within the MCMC process ( not in the init part!) :
@@ -142,6 +144,10 @@ public:
     double mY1;
     double mY2;
     double mY3;
+    
+    double mS1;
+    double mS2;
+    double mS3;
 };
 
 #endif

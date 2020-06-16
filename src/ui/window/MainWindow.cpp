@@ -45,6 +45,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AppSettingsDialog.h"
 #include "PluginManager.h"
 #include "ModelUtilities.h"
+#include "SwitchAction.h"
 
 #include <QtWidgets>
 #include <QLocale>
@@ -232,20 +233,16 @@ void MainWindow::createActions()
     mRunAction->setToolTip(tr("Run Model"));
 
     mResetMCMCAction = new QAction(tr("Reset Events and Data methods"), this);
-    
-    mChronocurveAction = new QAction(QIcon(":run_p.png"), tr("Chronocurve"), this);
-    mChronocurveAction->setIconText(tr("Chronocurve"));
-    mChronocurveAction->setIconVisibleInMenu(true);
-    mChronocurveAction->setToolTip(tr("Chronocurve"));
-    mChronocurveAction->setCheckable(true);
-    mChronocurveAction->setChecked(false);
 
     //-----------------------------------------------------------------
     // View Actions
     //-----------------------------------------------------------------
+    mChronocurveAction = new SwitchAction(this);
+    mChronocurveAction->setCheckable(true);
+    mChronocurveAction->setChecked(false);
+    
     mViewModelAction = new QAction(QIcon(":model_p.png"), tr("Model"), this);
     mViewModelAction->setCheckable(true);
-
 
     mViewResultsAction = new QAction(QIcon(":results_p.png"), tr("Results"), this);
     mViewResultsAction->setCheckable(true);
@@ -289,6 +286,7 @@ void MainWindow::createActions()
 
     mSelectEventsAction = new QAction(tr("Select All Events of the Selected Phases"), this);
     connect(mSelectEventsAction, &QAction::triggered, this, &MainWindow::selectedEventInSelectedPhases);
+    
     //-----------------------------------------------------------------
     // Help/About Menu
     //-----------------------------------------------------------------
@@ -595,7 +593,7 @@ void MainWindow::connectProject()
     connect(mProject, &Project::projectStructureChanged, this, &MainWindow::noResult);
     connect(mProject, &Project::projectDesignChanged, mProjectView, &ProjectView::changeDesign);
 
-    connect(mChronocurveAction, &QAction::toggled, mProjectView, &ProjectView::toggleChronocurve);
+    connect(mChronocurveAction, &QAction::toggled, this, &MainWindow::toggleChronocurve);
     connect(mMCMCSettingsAction, &QAction::triggered, mProject, &Project::mcmcSettings);
     connect(mResetMCMCAction, &QAction::triggered, mProject, &Project::resetMCMC);
     connect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
@@ -618,7 +616,7 @@ void MainWindow::disconnectProject()
     disconnect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
     disconnect(mRunAction, &QAction::triggered, mProject, &Project::run);
 
-    connect(mChronocurveAction, &QAction::triggered, mProjectView, &ProjectView::toggleChronocurve);
+    connect(mChronocurveAction, &QAction::triggered, this, &MainWindow::toggleChronocurve);
 }
 
 void MainWindow::closeProject()
@@ -686,6 +684,13 @@ void MainWindow::updateProject()
     mProjectView->updateProject();
     
     mChronocurveAction->setEnabled(true);
+    mChronocurveAction->setChecked(mProject->isChronocurve());
+}
+
+void MainWindow::toggleChronocurve(bool checked)
+{
+    mProjectView->toggleChronocurve(checked);
+    mChronocurveAction->setText(checked ? "Chronocurve" : "Chronomodel");
 }
 
 // Settings & About
@@ -1116,6 +1121,7 @@ void MainWindow::activateInterface(bool activate)
     mProjectSaveAsAction->setEnabled(activate);
     mProjectExportAction->setEnabled(activate);
 
+    mChronocurveAction->setEnabled(activate);
     mViewModelAction->setEnabled(activate);
     mMCMCSettingsAction->setEnabled(activate);
     mResetMCMCAction->setEnabled(activate);
@@ -1130,7 +1136,6 @@ void MainWindow::activateInterface(bool activate)
     // Les actions suivantes doivent être désactivées si on ferme le projet.
     // Par contre, elles ne doivent pas être ré-activée dès l'ouverture d'un projet
     mRunAction->setEnabled(activate);
-    mChronocurveAction->setEnabled(activate);
 
     if (!activate) {
         mViewResultsAction->setEnabled(activate);
@@ -1158,7 +1163,6 @@ void MainWindow::activateInterface(bool activate)
 void MainWindow::setRunEnabled(bool enabled)
 {
     mRunAction->setEnabled(enabled);
-    mChronocurveAction->setEnabled(enabled);
 }
 
 void MainWindow::setResultsEnabled(bool enabled)

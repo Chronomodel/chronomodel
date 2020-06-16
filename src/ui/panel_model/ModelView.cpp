@@ -1049,13 +1049,11 @@ void ModelView::paintEvent(QPaintEvent* e)
     QPainter p(this);
     p.fillRect(mTopRect, Painting::borderDark);
     p.fillRect(mHandlerRect, Painting::borderDark);
-
 }
 
 // Layout
 void ModelView::applyAppSettings()
 {
-
     mMargin = int (0.3 * AppSettings::widthUnit());
     mToolbarH = int (2 * AppSettings::heigthUnit());
     mButtonWidth = int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
@@ -1428,6 +1426,9 @@ void ModelView::toggleChronocurve(bool toggle)
         
         // Tell the event properties view if it should display chronocurve parameters
         mEventPropertiesView->setChronocurveSettings(settings.mEnabled, settings.mProcessType);
+        
+        //
+        mEventsScene->updateSceneFromState();
     }
     
     updateLayout();

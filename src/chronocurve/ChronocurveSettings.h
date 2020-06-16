@@ -87,7 +87,10 @@ public:
     ChronocurveSettings();
     ChronocurveSettings(const ChronocurveSettings& s);
     ChronocurveSettings& operator=(const ChronocurveSettings& s);
+    bool operator!=(const ChronocurveSettings& s);
+    bool operator==(const ChronocurveSettings& s);
     void copyFrom(const ChronocurveSettings& s);
+    bool isEqual(const ChronocurveSettings& s);
     ~ChronocurveSettings();
 
     static ChronocurveSettings fromJson(const QJsonObject& json);

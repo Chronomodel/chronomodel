@@ -96,6 +96,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define STATE_EVENT_Y2 "Y2"
 #define STATE_EVENT_Y3 "Y3"
 
+#define STATE_EVENT_S1 "S1"
+#define STATE_EVENT_S2 "S2"
+#define STATE_EVENT_S3 "S3"
+
 #define STATE_PHASE_TAU_TYPE "tau_type"
 #define STATE_PHASE_TAU_FIXED "tau_fixed"
 #define STATE_PHASE_TAU_MIN "tau_min"

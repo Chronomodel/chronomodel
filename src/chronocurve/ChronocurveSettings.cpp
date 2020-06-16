@@ -41,10 +41,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "StateKeys.h"
 #include <QDataStream>
 #include <QVariant>
+#include <QDebug>
 
 
 ChronocurveSettings::ChronocurveSettings():
-mEnabled(false),
+mEnabled(CHRONOCURVE_ENABLED_DEFAULT),
 mProcessType(CHRONOCURVE_PROCESS_TYPE_DEFAULT),
 mVariableType(CHRONOCURVE_VARIABLE_TYPE_DEFAULT),
 mSelectOuv(CHRONOCURVE_SELECT_OUV_DEFAULT),
@@ -73,6 +74,39 @@ ChronocurveSettings& ChronocurveSettings::operator=(const ChronocurveSettings& s
     copyFrom(s);
     return *this;
 }
+
+bool ChronocurveSettings::operator!=(const ChronocurveSettings& s)
+{
+    return !isEqual(s);
+}
+
+bool ChronocurveSettings::operator==(const ChronocurveSettings& s)
+{
+    return isEqual(s);
+}
+
+bool ChronocurveSettings::isEqual(const ChronocurveSettings& s)
+{
+    if (s.mEnabled != mEnabled ||
+        s.mProcessType != mProcessType ||
+        s.mVariableType != mVariableType ||
+        s.mSelectOuv != mSelectOuv ||
+        s.mOuvMax != mOuvMax ||
+        s.mUseCorrLat != mUseCorrLat ||
+        s.mLat != mLat ||
+        s.mLng != mLng ||
+        s.mUseErrMesure != mUseErrMesure ||
+        s.mTimeType != mTimeType ||
+        s.mVarianceType != mVarianceType ||
+        s.mUseVarianceIndividual != mUseVarianceIndividual ||
+        s.mVarianceFixed != mVarianceFixed ||
+        s.mCoeffLissageType != mCoeffLissageType ||
+        s.mAlpha != mAlpha){
+        return false;
+    }
+    return true;
+}
+
 
 void ChronocurveSettings::copyFrom(const ChronocurveSettings& s)
 {
@@ -181,7 +215,7 @@ QJsonObject ChronocurveSettings::toJson() const
 {
     QJsonObject mcmc;
     
-    mcmc[STATE_CHRONOCURVE_ENABLED] = QJsonValue::fromVariant((int)mEnabled);
+    mcmc[STATE_CHRONOCURVE_ENABLED] = QJsonValue::fromVariant(mEnabled);
     mcmc[STATE_CHRONOCURVE_PROCESS_TYPE] = QJsonValue::fromVariant((int)mProcessType);
     mcmc[STATE_CHRONOCURVE_VARIABLE_TYPE] = QJsonValue::fromVariant((int)mVariableType);
     mcmc[STATE_CHRONOCURVE_SELECT_OUV] = QJsonValue::fromVariant(mSelectOuv);

@@ -37,88 +37,32 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef CHRONOCURVESETTINGSVIEW_H
-#define CHRONOCURVESETTINGSVIEW_H
+#include "ChronocurveWidget.h"
+#include <QtWidgets>
 
-#include <QWidget>
-#include "ChronocurveSettings.h"
-
-class QLabel;
-class QComboBox;
-class QCheckBox;
-class QLineEdit;
-class Project;
-
-
-class ChronocurveSettingsView: public QWidget
+ChronocurveWidget::ChronocurveWidget(QWidget* parent):QWidget(parent)
 {
-    Q_OBJECT
-public:
-    ChronocurveSettingsView(QWidget* parent = nullptr);
-    virtual ~ChronocurveSettingsView();
+    
+}
 
-    void setSettings(const ChronocurveSettings& settings);
-    ChronocurveSettings getSettings();
+void ChronocurveWidget::paintEvent(QPaintEvent* e)
+{
+    Q_UNUSED(e);
     
-    void setProject(Project *project);
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
     
-protected slots:
-    void updateVisibilities();
-    void reset();
-    void save();
-
-private:
-    Project* mProject;
+    QRectF r = rect();
+    r.adjust(1, 1, -1, -1);
     
-    bool mEnabled;
+    QColor color1 = QColor(44, 122, 123);
+    QColor color2 = QColor(230, 255, 250);
     
-    QLabel* mProcessTypeLabel;
-    QComboBox* mProcessTypeInput;
+    QPen pen = painter.pen();
+    pen.setColor(color1);
+    pen.setWidth(2);
     
-    QLabel* mVariableTypeLabel;
-    QComboBox* mVariableTypeInput;
-    
-    QLabel* mSelectOuvLabel;
-    QCheckBox* mSelectOuvInput;
-    
-    QLabel* mOuvMaxLabel;
-    QLineEdit* mOuvMaxInput;
-    
-    QLabel* mUseCorrLatLabel;
-    QCheckBox* mUseCorrLatInput;
-    
-    QLabel* mLatLabel;
-    QLineEdit* mLatInput;
-    
-    QLabel* mLngLabel;
-    QLineEdit* mLngInput;
-    
-    QLabel* mUseErrMesureLabel;
-    QCheckBox* mUseErrMesureInput;
-    
-    QLabel* mTimeTypeLabel;
-    QComboBox* mTimeTypeInput;
-    
-    /*QLabel* mUseTimeBayesianEventLabel;
-    QCheckBox* mUseTimeBayesianEventInput;
-    
-    QLabel* mUseTimeBayesianConstraintLabel;
-    QCheckBox* mUseTimeBayesianConstraintInput;*/
-    
-    QLabel* mVarianceTypeLabel;
-    QComboBox* mVarianceTypeInput;
-    
-    QLabel* mUseVarianceIndividualLabel;
-    QCheckBox* mUseVarianceIndividualInput;
-    
-    QLabel* mVarianceFixedLabel;
-    QLineEdit* mVarianceFixedInput;
-    
-    QLabel* mCoeffLissageTypeLabel;
-    QComboBox* mCoeffLissageTypeInput;
-    
-    QLabel* mAlphaLabel;
-    QLineEdit* mAlphaInput;
-};
-
-#endif
+    painter.setPen(pen);
+    painter.setBrush(color2);
+    painter.drawRoundedRect(r, 4, 4);
+}

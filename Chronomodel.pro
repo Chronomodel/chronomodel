@@ -394,6 +394,8 @@ HEADERS += src/ui/widgets/Marker.h
 HEADERS += src/ui/widgets/RadioButton.h
 HEADERS += src/ui/widgets/ScrollCompressor.h
 HEADERS += src/ui/widgets/Tabs.h
+HEADERS += src/ui/widgets/SwitchAction.h
+HEADERS += src/ui/widgets/ChronocurveWidget.h
 
 HEADERS += src/ui/window/MainWindow.h
 HEADERS += src/ui/window/ProjectView.h
@@ -540,6 +542,8 @@ SOURCES += src/ui/widgets/GroupBox.cpp
 SOURCES += src/ui/widgets/HelpWidget.cpp
 SOURCES += src/ui/widgets/Tabs.cpp
 SOURCES += src/ui/widgets/Marker.cpp
+SOURCES += src/ui/widgets/SwitchAction.cpp
+SOURCES += src/ui/widgets/ChronocurveWidget.cpp
 
 SOURCES += src/ui/window/MainWindow.cpp
 SOURCES += src/ui/window/ProjectView.cpp
