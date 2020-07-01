@@ -1556,9 +1556,10 @@ void Model::generateTempo()
 #endif
 
         if ( !(tmin < tmax) ) { //equal to (tmin==tmax)
-
-           qDebug()<<"Model::generateTempo() tmin == tmax : " << phase->mName << startTimer.elapsed() << "ms" ;;
-
+            
+#ifdef DEBUG
+           qDebug()<<"Model::generateTempo() tmin == tmax : " << phase->mName << startTimer.elapsed() << "ms" ;
+#endif
             phase->mRawTempoCredibilityInf[tmax] = 1;
 
             phase->mRawTempo[tmax] = 1;
@@ -1579,7 +1580,6 @@ void Model::generateTempo()
             phase->mTempoCredibilityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilityInf);
             phase->mTempoCredibilitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilitySup);
 
-            qDebug()<<"Conversion in the good Date format"<< startTimer.elapsed() << "ms" ;
 
 
 #ifndef UNIT_TEST
@@ -1652,14 +1652,14 @@ void Model::generateTempo()
         double t;
         int memoScenarioIdx;
         int scenarioIdx;
-// qDebug()<<"totalIter"<< startTimer.elapsed() << "ms" ;
+
         for (int i(0); i < totalIter; ++i) {
             /// Create one scenario per iteration
             QVector<double> scenario;
 
             for (auto &&t : listTrace)
                 scenario.append(t.at(i));
-//           qDebug()<<"scenario"<< startTimer.elapsed() << "ms" ;
+
             /// Sort scenario trace
             std::sort(scenario.begin(),scenario.end());
 
@@ -1746,7 +1746,6 @@ void Model::generateTempo()
 
         }
         /// Tempo Loop End
-// qDebug()<<"N-N2"<< startTimer.elapsed() << "ms" ;
 
     ///# Calculation of the variance
         QVector<double> inf;
@@ -2017,7 +2016,6 @@ void Model::generateTempo()
             }
 #endif
         }
-        qDebug()<<"ici"<< startTimer.elapsed() << "ms" ;
         /// Loop End
 #ifndef TEST_CREDI
         ///# Calculation of the variance
@@ -2287,7 +2285,7 @@ void Model::generatePostVariable()
         const QVector<double>*  tauTrace = p->mTau.mRawTrace;
         const QVector<double>*  alphaTrace = p->mAlpha.mRawTrace;
         const QVector<double>*  betaTrace = p->mBeta.mRawTrace;
-        if (p->mTauType == Phase::eTauOnly) {
+        if (p->mTauType == Phase::eZOnly) {
             QVector<double>::const_iterator iTau (tauTrace->cbegin());
             QVector<double>::const_iterator iAlpha (alphaTrace->cbegin());
             QVector<double>::const_iterator iBeta (betaTrace->cbegin());

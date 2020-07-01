@@ -831,6 +831,7 @@ void MainWindow::changeEventsMethod()
     opts.append(ModelUtilities::getEventMethodText(Event::eMHAdaptGauss));
     opts.append(ModelUtilities::getEventMethodText(Event::eBoxMuller));
     opts.append(ModelUtilities::getEventMethodText(Event::eDoubleExp));
+    opts.append(ModelUtilities::getEventMethodText(Event::eMHThetaSqueeze));
 
     bool ok;
     QString methodStr = QInputDialog::getItem(qApp->activeWindow(),

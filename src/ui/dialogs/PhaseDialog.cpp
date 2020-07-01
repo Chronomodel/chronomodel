@@ -78,6 +78,7 @@ mButW(80)
     mTauTypeCombo->addItem(tr("Unknown"));
     mTauTypeCombo->addItem(tr("Known"));
     mTauTypeCombo->addItem(tr("Z-only"));
+    mTauTypeCombo->addItem(tr("Theta Squeeze"));
 
     mTauFixedEdit = new LineEdit(this);
 
@@ -107,6 +108,8 @@ void PhaseDialog::showAppropriateTauOptions(int typeIndex)
     Phase::TauType type = Phase::TauType (mTauTypeCombo->currentIndex());
     switch (type) {
         case Phase::eTauUnknown:
+        case Phase::eZOnly:
+        case Phase::eThetaSqueeze:
         {
             mTauFixedLab->setVisible(false);
             mTauFixedEdit->setVisible(false);
@@ -115,6 +118,7 @@ void PhaseDialog::showAppropriateTauOptions(int typeIndex)
 
             break;
         }
+
         case Phase::eTauFixed:
         {
             mTauFixedLab->setVisible(true);
@@ -124,15 +128,8 @@ void PhaseDialog::showAppropriateTauOptions(int typeIndex)
 
             break;
         }
-        case Phase::eTauOnly:
-        {
-            mTauFixedLab->setVisible(false);
-            mTauFixedEdit->setVisible(false);
 
-            setFixedHeight(mComboH + 2*mLineH + 5*mMargin + mButH);
 
-            break;
-        }
         default:
             break;
     }
@@ -158,6 +155,9 @@ void PhaseDialog::setPhase(const QJsonObject& phase)
          case 3: // Z-only
             tauIndex = 2;
             break;
+         case 4: // Theta Squeeze
+            tauIndex = 3;
+            break;
             
         default:
             tauIndex = 0;
@@ -180,11 +180,17 @@ QJsonObject PhaseDialog::getPhase()
         case 0: //unknown
             tauType = Phase::eTauUnknown;
             break;
+
          case 1: //known
             tauType = Phase::eTauFixed;
             break;
+
          case 2: // Z-only
-            tauType = Phase::eTauOnly;
+            tauType = Phase::eZOnly;
+            break;
+
+         case 3: // Theta Squeeze
+            tauType = Phase::eThetaSqueeze;
             break;
             
         default:
@@ -218,25 +224,24 @@ void PhaseDialog::resizeEvent(QResizeEvent* event)
     Phase::TauType type = Phase::TauType (mTauTypeCombo->currentIndex());
     switch (type) {
         case Phase::eTauUnknown:
+        case Phase::eZOnly:
+        case Phase::eThetaSqueeze:
         {
-            w1 = qMax(fm.boundingRect(mTauTypeLab->text()).width(),qMax(fm.boundingRect(mNameLab->text()).width(), fm.boundingRect(mColorLab->text()).width()));
+            w1 = qMax(fm.boundingRect(mTauTypeLab->text()).width(), qMax(fm.boundingRect(mNameLab->text()).width(), fm.boundingRect(mColorLab->text()).width()));
             break;
         }
+
         case Phase::eTauFixed:
         {
             w1 =  fm.boundingRect(mTauFixedLab->text()).width();
             break;
         }
-        case Phase::eTauOnly:
-        {
-            w1 =  fm.boundingRect(mTauFixedLab->text()).width();
-            break;
-        }
+
         default:
             break;
     }
 
-    int w2 = qMax( 200, fm.boundingRect(mNameEdit->text()).width()) + 2 * mMargin;
+    const int w2 = qMax( 200, fm.boundingRect(mNameEdit->text()).width()) + 2 * mMargin;
 
     setFixedWidth( w1 + w2 + 3*mMargin);
 

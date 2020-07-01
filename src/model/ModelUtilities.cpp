@@ -51,6 +51,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define MHAdaptGaussStr QObject::tr("MH : proposal = adapt. Gaussian random walk")
 #define BoxMullerStr QObject::tr("AR : proposal = Gaussian")
 #define DoubleExpStr QObject::tr("AR : proposal = Double-Exponential")
+#define MHThetaSqueezeStr QObject::tr("MH : Theta Squeeze : proposal = adapt. Gaussian random walk")
 
 #define MHIndependantStr QObject::tr("MH : proposal = prior distribution")
 #define InversionStr QObject::tr("MH : proposal = distribution of calibrated date")
@@ -70,6 +71,9 @@ Event::Method ModelUtilities::getEventMethodFromText(const QString& text)
 
     else if (text == DoubleExpStr)
         return Event::eDoubleExp;
+
+    else if (text == MHThetaSqueezeStr)
+        return Event::eMHThetaSqueeze;
 
     else  {
         // ouch... what to do ???
@@ -93,6 +97,10 @@ QString ModelUtilities::getEventMethodText(const Event::Method method)
         {
             return DoubleExpStr;
         }
+       case Event::eMHThetaSqueeze:
+       {
+        return MHThetaSqueezeStr;
+       }
         default:
         {
             return QObject::tr("Unknown");

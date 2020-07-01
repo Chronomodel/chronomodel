@@ -58,7 +58,8 @@ public:
         eTauUnknown = 0,
         eTauFixed = 1,
         eTauRange = 2, // usefull to convert old file in Project::checkDatesCompatibility()
-        eTauOnly = 3
+        eZOnly = 3,
+        eThetaSqueeze = 4
     };
 
     Phase();

@@ -485,7 +485,7 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event 
 
     double minInPhases (defaultValue);
     for (auto &&phase : mPhases) {
-        if (phase->mTauType == Phase::eTauFixed || phase->mTauType == Phase::eTauOnly) {
+        if (phase->mTauType == Phase::eTauFixed || phase->mTauType == Phase::eZOnly) {
             double thetaMax (defaultValue);
             for (auto &&event : phase->mEvents) {
                 if (!newStartEvents.contains(event)) // to find the higher theta in the phase
@@ -544,7 +544,7 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event 
 
 }
 /**
- @brief Only used in the init process
+  Only used in the init process
  */
 double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event *> startEvents)
 {
@@ -573,7 +573,7 @@ double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event 
 
     double minPhases (defaultValue);
     for (auto &&phase :mPhases) {
-        if (phase->mTauType == Phase::eTauFixed || phase->mTauType == Phase::eTauOnly) {
+        if (phase->mTauType == Phase::eTauFixed || phase->mTauType == Phase::eZOnly) {
             double thetaMin (defaultValue);
             for (auto &&event : phase->mEvents) {
                 if (!newStartEvents.contains(event) && event->mInitialized==true)
@@ -629,9 +629,10 @@ double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event 
 
 
 }
-/** ------------------------------------------------------------------
-       Déterminer la borne min courante pour le tirage de theta
-    ------------------------------------------------------------------ */
+
+/**
+  @brief     Déterminer la borne min courante pour le tirage de theta
+ */
 double Event::getThetaMin(double defaultValue)
 {
     // Max des thetas des faits en contrainte directe antérieure
@@ -648,8 +649,8 @@ double Event::getThetaMin(double defaultValue)
     double min3 (defaultValue);
 
     for (auto &&phase : mPhases) {
-       if (phase->mTauType != Phase::eTauUnknown) {    // à utliser dans le cas d'un tirage de tau par Phase
-        //if (phase->mTauType == Phase::eTauFixed) {    // à utliser dans le cas d'un tirage de tau par Event
+      // if (phase->mTauType != Phase::eTauUnknown) {    // à utliser dans le cas d'un tirage de tau par Phase
+        if (phase->mTauType == Phase::eTauFixed || phase->mTauType == Phase::eZOnly) {    // à utliser dans le cas d'un tirage de tau par Event
             double thetaMax (defaultValue);
             for (auto &&event : phase->mEvents) {
                 if (event != this)
@@ -662,8 +663,6 @@ double Event::getThetaMin(double defaultValue)
     // Contraintes des phases précédentes
     double maxPhasePrev (defaultValue);
     for (auto &&phase : mPhases) {
-        //const double thetaMax = phase->getMaxThetaPrevPhases(defaultValue);
-        //maxPhasePrev = std::max(maxPhasePrev, thetaMax);
         maxPhasePrev = std::max(maxPhasePrev, phase->getMaxThetaPrevPhases(defaultValue));
     }
 
@@ -701,8 +700,9 @@ double Event::getThetaMax(double defaultValue)
      */
     double max3 (defaultValue);
     for (auto &&phase : mPhases) {
-       if (phase->mTauType != Phase::eTauUnknown) { // à utiliser dans le cas d'un tirage de tau par Phase
-       // if (phase->mTauType == Phase::eTauFixed) { // à utiliser dans le cas d'un tirage de tau par Event
+       // if (phase->mTauType != Phase::eTauUnknown) { // à utiliser dans le cas d'un tirage de tau par Phase
+        // pour le type tauOnly Tau est tiré avant dans la maj des phases
+        if (phase->mTauType == Phase::eTauFixed  || phase->mTauType == Phase::eZOnly) { // à utiliser dans le cas d'un tirage de tau par Event
             double thetaMin (defaultValue);
              for (auto &&event : phase->mEvents) {
                 if (event != this)
@@ -716,8 +716,6 @@ double Event::getThetaMax(double defaultValue)
     // Constraints of the following phases
     double maxPhaseNext (defaultValue);
     for (auto &&phase : mPhases) {
-        // double thetaMin = phase->getMinThetaNextPhases(defaultValue);
-        // maxPhaseNext = std::min(maxPhaseNext, thetaMin);
         maxPhaseNext = std::min(maxPhaseNext, phase->getMinThetaNextPhases(defaultValue));
     }
 
@@ -741,10 +739,10 @@ void Event::upDateTau(double& tmin, double& tmax)
     // union phase
     Phase unionPhase ;
     unionPhase.mTauFixed = HUGE_VAL;
-    unionPhase.mTauType = Phase::eTauOnly;
+    unionPhase.mTauType = Phase::eZOnly;
 
     for (auto p : mPhases) {
-        if (p->mTauType == Phase::eTauFixed || p->mTauType == Phase::eTauOnly) {
+        if (p->mTauType == Phase::eTauFixed || p->mTauType == Phase::eZOnly) {
             for (auto ev: p->mEvents) {
                 if (!unionPhase.mEvents.contains(ev)) {//ev!=this && on met quand même l'event concerné
                     unionPhase.mEvents.push_back(ev);
@@ -762,7 +760,7 @@ void Event::upDateTau(double& tmin, double& tmax)
             eAlpha = std::min(eAlpha, p->mBeta.mX - p->mTauFixed);
             eBeta = std::min(eBeta, p->mAlpha.mX + p->mTauFixed);
             
-        } else if (p->mTauType == Phase::eTauOnly) {
+        } else if (p->mTauType == Phase::eZOnly) {
             inTauOnly = true;
            // unionPhase.mTauFixed = std::min(unionPhase.mTauFixed, p->mTau.mX); // tau est dejà initialisé, ou echantillonné
         }
@@ -770,7 +768,7 @@ void Event::upDateTau(double& tmin, double& tmax)
     }
     n = unionPhase.mEvents.length();
     
-    if (n<1 || inTauOnly==false) //pas dans une phase eTauOnly
+    if (n<1 || inTauOnly==false) //pas dans une phase eZOnly
         return;
     
     auto sUnionPhase = std::minmax_element(unionPhase.mEvents.cbegin(), unionPhase.mEvents.cend(), [](Event* e1, Event* e2) { return (e1->mTheta.mX < e2->mTheta.mX); });
@@ -913,10 +911,88 @@ void Event::updateTheta(const double &tmin, const double &tmax)
             if (theta >= min && theta <= max)
                 rapport = exp((-0.5/(sigma*sigma)) * (pow(theta - theta_avg, 2.) - pow(mTheta.mX - theta_avg, 2.)));
 
-            //qDebug() << "Event::updateTheta() case eMHAdaptGauss rapport="<<rapport;
             mTheta.tryUpdate(theta, rapport);
             break;
         }
+    case eMHThetaSqueeze:
+    {
+        /*
+         MH : Seul cas où le taux d'acceptation a du sens car on utilise sigma MH
+        */
+        /*
+         MH: Only case where the acceptance rate makes sense because we use sigma MH
+        */
+        const double theta = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
+        double rapport (0.);
+        double rapportPhase (0.);
+
+       if ( !mPhases.isEmpty()) {
+
+            if (theta >= min && theta <= max) {
+
+                rapport = exp((-0.5/(sigma*sigma)) * (pow(theta - theta_avg, 2.) - pow(mTheta.mX - theta_avg, 2.)));
+
+
+
+                double R, r, difTheta, difThetaStar;
+               // double Pmin, Pmax;
+                bool accepted (true);
+
+                for (auto p :mPhases) {
+                   // Pmin = std::max(p->mAlpha.mX, Pmin);
+                   // Pmax = std::min(p->mBeta.mX, Pmax);
+
+                    if (theta < p->mAlpha.mX || p->mBeta.mX < theta) {
+                        R = p->mStudyMax - p-> mStudyMin;
+                        r = p->mEvents.size();
+                        difTheta = p->mBeta.mX - p->mAlpha.mX;
+
+                        if ( theta < p->mAlpha.mX) {
+                            difThetaStar = p->mBeta.mX - theta;
+
+                        } else if( p->mBeta.mX < theta) {
+                            difThetaStar = theta - p->mAlpha.mX;
+
+                        }
+                        rapportPhase = rapport * ( (R - difTheta) * pow(difTheta, r-2) ) / ((R - difThetaStar) * pow(difThetaStar, r-2) );
+
+                        if (rapportPhase >= 1.)
+                            accepted = true;
+
+                        else {
+                            const double uniform = Generator::randomUniform();
+                            accepted =  (rapportPhase >= uniform);
+                        }
+                         rapport = accepted ? rapport: 0;
+
+                    } else {
+                        if (rapport >= 1.)
+                            accepted = accepted && true;
+
+                        else {
+                            const double uniform = Generator::randomUniform();
+                            accepted =  (rapport >= uniform);
+                        }
+                         rapport = accepted ? rapport: 0;
+                    }
+
+
+
+
+
+                }
+                rapport = rapport>0 ? 1: 0; //Le test est fait avant, on accepte forcément
+
+       }
+
+
+
+
+     }
+
+        mTheta.tryUpdate(theta, rapport);
+        break;
+    }
         default:
             break;
     }

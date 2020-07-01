@@ -418,6 +418,13 @@ QString MCMCLoopMain::initMCMC()
 
     i = 0;
     for (Phase* phase : phases ) {
+        // Check and change event method if phase is eThetaSqueeze
+        if (phase->mTauType == Phase::TauType::eThetaSqueeze) {
+            for (auto ev: phase->mEvents) {
+                ev->mMethod = Event::Method::eMHThetaSqueeze;
+            }
+        }
+
         phase->updateAlphaBeta(tmin, tmax);
         phase->updateDuration();
         // Tau is init at the begining with initTau()
@@ -622,7 +629,8 @@ bool MCMCLoopMain::adapt()
 
         //--------------------- Adapt Sigma MH de Theta f -----------------------------------------
 
-        if ((event->mType != Event::eKnown) && ( event->mMethod == Event::eMHAdaptGauss) ) {
+        if ((event->mType != Event::eKnown) && ( event->mMethod == Event::eMHAdaptGauss)
+                 && ( event->mMethod == Event::eMHThetaSqueeze)) {
             const double taux = 100. * event->mTheta.getCurrentAcceptRate();
             if (taux <= taux_min || taux >= taux_max) {
                 allOK = false;

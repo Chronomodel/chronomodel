@@ -300,7 +300,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
      *  - Accept Target
      * ------------------------------------------------  */
     else if (typeGraph == eAccept && variable == eTheta
-                && (mEvent->mMethod == Event::eMHAdaptGauss || mEvent->mMethod == Event::eFixe)) {
+                && (mEvent->mMethod == Event::eMHAdaptGauss || mEvent->mMethod == Event::eMHThetaSqueeze || mEvent->mMethod == Event::eFixe)) {
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);
@@ -428,7 +428,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      *  - Accept i
      *  - Accept Target
      * ------------------------------------------------  */
-    else if ((mCurrentTypeGraph == eAccept) && (mCurrentVariable == eTheta) && ((mEvent->mMethod == Event::eMHAdaptGauss) || (mEvent->mMethod == Event::eFixe))) {
+    else if ((mCurrentTypeGraph == eAccept) && (mCurrentVariable == eTheta) && ((mEvent->mMethod == Event::eMHAdaptGauss) || (mEvent->mMethod == Event::eMHThetaSqueeze) || (mEvent->mMethod == Event::eFixe))) {
         mGraph->setCurveVisible("Accept Target", true);
         for (int i=0; i<mShowChainList.size(); ++i)
             mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList.at(i));

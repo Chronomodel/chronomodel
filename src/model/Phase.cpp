@@ -317,7 +317,7 @@ QString Phase::getTauTypeText() const
         case eTauUnknown:
                 return QObject::tr("Max duration unknown");
             break;
-        case eTauOnly:
+        case eZOnly:
                 return QObject::tr("Z-only");
             break;
      /*   case eTauRange: // no longer used ->OBSOLETE
@@ -338,7 +338,7 @@ void Phase::initTau()
     /* else if (mTauType == eTauRange && mTauMax > mTauMin) // no longer used ->OBSOLETE
         mTau = mTauMax;
      */
-    else if (mTauType == eTauUnknown || mTauType==eTauOnly) {
+    else if (mTauType == eTauUnknown || mTauType==eZOnly || mTauType==eThetaSqueeze) {
         // Modif PhD ; initialisation arbitraire
         mTau.mX = mStudyMax - mStudyMin;
         // nothing to do
@@ -429,12 +429,12 @@ void Phase::updateTau()
     
     // Modif du 10 avril 2018
     
-    else if (mTauType == eTauUnknown) {
+    else if (mTauType == eTauUnknown || mTauType == eThetaSqueeze) {
         mTau.mX = mBeta.mX - mAlpha.mX;
     }
-    else  {
-        
-        // Modif PhD
+    else  { //mTauType == eZOnly
+
+        // Modif PhD 2020
         // model definition
   
         const int n (mEvents.length());

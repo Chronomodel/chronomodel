@@ -63,6 +63,7 @@ public:
         eDoubleExp = 0, /**<  The default method */
         eBoxMuller = 1,
         eMHAdaptGauss = 2,
+        eMHThetaSqueeze = 3
 
     };
 
