@@ -92,13 +92,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 //#define STATE_EVENT_KNOWN_START "known_unif_start"
 //#define STATE_EVENT_KNOWN_END "known_unif_end"
 
-#define STATE_EVENT_Y1 "Y1"
-#define STATE_EVENT_Y2 "Y2"
-#define STATE_EVENT_Y3 "Y3"
+#define STATE_EVENT_Y_INC "YInc"
+#define STATE_EVENT_Y_DEC "YDec"
+#define STATE_EVENT_Y_INT "YInt"
 
-#define STATE_EVENT_S1 "S1"
-#define STATE_EVENT_S2 "S2"
-#define STATE_EVENT_S3 "S3"
+#define STATE_EVENT_S_INC "SInc"
+#define STATE_EVENT_S_INT "SInt"
 
 #define STATE_PHASE_TAU_TYPE "tau_type"
 #define STATE_PHASE_TAU_FIXED "tau_fixed"
@@ -139,6 +138,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define STATE_CHRONOCURVE_USE_VARIANCE_INDIVIDUAL "variance_individual"
 #define STATE_CHRONOCURVE_VARIANCE_FIXED "variance_fixed"
 #define STATE_CHRONOCURVE_COEFF_LISSAGE_TYPE "coeff_lissage_type"
-#define STATE_CHRONOCURVE_ALPHA "alpha"
+#define STATE_CHRONOCURVE_ALPHA_LISSAGE "alpha"
 
 #endif

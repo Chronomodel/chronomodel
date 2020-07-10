@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define CHRONOCURVEUTILITIES_H
 
 #include <vector>
+#include <string>
 
 
 class ChronocurveUtilities

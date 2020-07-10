@@ -280,9 +280,6 @@ void MCMCLoop::run()
        /* QTime endChainTime = QTime::currentTime();
         timeDiff = startChainTime.msecsTo(endChainTime);
         log += "=> Chain done in " + QString::number(timeDiff) + " ms\n";*/
-
-
-
     }
 
     log += line(tr("List of used chain seeds (to be copied for re-use in MCMC Settings) : ") + seeds.join(";"));

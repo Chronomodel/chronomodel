@@ -41,9 +41,21 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define MCMCLOOPCHRONOCURVE_H
 
 #include "MCMCLoop.h"
+#include "ChronocurveSettings.h"
+#include <vector>
 
 class Project;
 class ModelChronocurve;
+class Event;
+
+struct Record
+{
+    double ti;
+    double yi;
+    double wi;
+    double mi;
+    double si2;
+};
 
 class MCMCLoopChronocurve: public MCMCLoop
 {
@@ -59,9 +71,33 @@ protected:
     virtual void update();
     virtual bool adapt();
     virtual void finalize();
+    
+private:
+    double h_YWI_AY();
+    double h_YWI_AY_composante();
+    double h_alpha();
+    double h_theta();
+    double h_VG();
+    
+    void prepareEventsY();
+    void prepareEventY(Event* event);
+    
+    // Fonctions anciennement liées à do_cravate :
+    std::vector<double> createDiagW1();
+    
+    void orderEventsByTheta();
+    void spreadEventsTheta(double minStep = 1e-6);
+    void saveEventsTheta();
+    void restoreEventsTheta();
+    std::map<int, double> mThetasMemo;
+    
+    // Fonctions anciennement liées à calcul_spline :
+    void calcul_spline(bool newTime);
+    std::vector<double> calculVecH(const std::vector<Record>& records);
 
 public:
     ModelChronocurve* mModel;
+    ChronocurveSettings mChronocurveSettings;
 };
 
 #endif

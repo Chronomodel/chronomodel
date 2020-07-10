@@ -346,12 +346,11 @@ void ImportDataView::exportDates()
                                     while(dateCsv.count() < chronocurveStartColumn){
                                         dateCsv.append("");
                                     }
-                                    dateCsv.append(QString::number(event[STATE_EVENT_Y1].toDouble()));
-                                    dateCsv.append(QString::number(event[STATE_EVENT_S1].toDouble()));
-                                    dateCsv.append(QString::number(event[STATE_EVENT_Y2].toDouble()));
-                                    dateCsv.append(QString::number(event[STATE_EVENT_S2].toDouble()));
-                                    dateCsv.append(QString::number(event[STATE_EVENT_Y3].toDouble()));
-                                    dateCsv.append(QString::number(event[STATE_EVENT_S3].toDouble()));
+                                    dateCsv.append(QString::number(event[STATE_EVENT_Y_INC].toDouble()));
+                                    dateCsv.append(QString::number(event[STATE_EVENT_Y_DEC].toDouble()));
+                                    dateCsv.append(QString::number(event[STATE_EVENT_S_INC].toDouble()));
+                                    dateCsv.append(QString::number(event[STATE_EVENT_Y_INT].toDouble()));
+                                    dateCsv.append(QString::number(event[STATE_EVENT_S_INT].toDouble()));
                                 }
                                 
                                 stream << eventName << sep;

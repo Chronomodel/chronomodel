@@ -72,38 +72,20 @@ private:
     
     bool mEnabled;
     
+    QLabel* mTitleLabel;
+    QLabel* mDescriptionLabel;
+    
     QLabel* mProcessTypeLabel;
     QComboBox* mProcessTypeInput;
     
     QLabel* mVariableTypeLabel;
     QComboBox* mVariableTypeInput;
     
-    QLabel* mSelectOuvLabel;
-    QCheckBox* mSelectOuvInput;
-    
-    QLabel* mOuvMaxLabel;
-    QLineEdit* mOuvMaxInput;
-    
-    QLabel* mUseCorrLatLabel;
-    QCheckBox* mUseCorrLatInput;
-    
-    QLabel* mLatLabel;
-    QLineEdit* mLatInput;
-    
-    QLabel* mLngLabel;
-    QLineEdit* mLngInput;
-    
     QLabel* mUseErrMesureLabel;
     QCheckBox* mUseErrMesureInput;
     
     QLabel* mTimeTypeLabel;
     QComboBox* mTimeTypeInput;
-    
-    /*QLabel* mUseTimeBayesianEventLabel;
-    QCheckBox* mUseTimeBayesianEventInput;
-    
-    QLabel* mUseTimeBayesianConstraintLabel;
-    QCheckBox* mUseTimeBayesianConstraintInput;*/
     
     QLabel* mVarianceTypeLabel;
     QComboBox* mVarianceTypeInput;
@@ -117,8 +99,8 @@ private:
     QLabel* mCoeffLissageTypeLabel;
     QComboBox* mCoeffLissageTypeInput;
     
-    QLabel* mAlphaLabel;
-    QLineEdit* mAlphaInput;
+    QLabel* mAlphaLissageLabel;
+    QLineEdit* mAlphaLissageInput;
 };
 
 #endif

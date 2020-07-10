@@ -99,13 +99,12 @@ private slots:
     void updateIndex(int index);
     
     // Chronocurve
-    void updateEventY1();
-    void updateEventY2();
-    void updateEventY3();
+    void updateEventYInc();
+    void updateEventYDec();
+    void updateEventYInt();
     
-    void updateEventS1();
-    void updateEventS2();
-    void updateEventS3();
+    void updateEventSInc();
+    void updateEventSInt();
 
     void createDate();
     void deleteSelectedDates();
@@ -170,21 +169,20 @@ private:
     
     ChronocurveWidget* mChronocurveWidget;
   
-    QLabel* mY1Lab;
-    QLabel* mY2Lab;
-    QLabel* mY3Lab;
+    QLabel* mYIncLab;
+    QLineEdit* mYIncEdit;
     
-    QLineEdit* mY1Edit;
-    QLineEdit* mY2Edit;
-    QLineEdit* mY3Edit;
+    QLabel* mYDecLab;
+    QLineEdit* mYDecEdit;
     
-    QLabel* mS1Lab;
-    QLabel* mS2Lab;
-    QLabel* mS3Lab;
+    QLabel* mSIncLab;
+    QLineEdit* mSIncEdit;
     
-    QLineEdit* mS1Edit;
-    QLineEdit* mS2Edit;
-    QLineEdit* mS3Edit;
+    QLabel* mYIntLab;
+    QLineEdit* mYIntEdit;
+    
+    QLabel* mSIntLab;
+    QLineEdit* mSIntEdit;
     
     bool mChronocurveEnabled;
     char mChronocurveProcessType;

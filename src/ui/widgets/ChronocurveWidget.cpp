@@ -38,7 +38,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "ChronocurveWidget.h"
+#include "Painting.h"
 #include <QtWidgets>
+
 
 ChronocurveWidget::ChronocurveWidget(QWidget* parent):QWidget(parent)
 {
@@ -55,14 +57,11 @@ void ChronocurveWidget::paintEvent(QPaintEvent* e)
     QRectF r = rect();
     r.adjust(1, 1, -1, -1);
     
-    QColor color1 = QColor(44, 122, 123);
-    QColor color2 = QColor(230, 255, 250);
-    
     QPen pen = painter.pen();
-    pen.setColor(color1);
+    pen.setColor(CHRONOCURVE_COLOR_BORDER);
     pen.setWidth(2);
     
     painter.setPen(pen);
-    painter.setBrush(color2);
+    painter.setBrush(CHRONOCURVE_COLOR_BACK);
     painter.drawRoundedRect(r, 4, 4);
 }

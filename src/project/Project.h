@@ -196,8 +196,10 @@ public slots:
 
     void mcmcSettings();
     void resetMCMC();
-    void run();
     void exportAsText();
+    
+    void run();
+    void runChronomodel();
     void runChronocurve();
 
     void setAppSettings();
@@ -224,8 +226,6 @@ signals:
     void projectStructureChanged(bool structureChanged);
     void projectDesignChanged(bool designIsChanged);
     void projectItemsIsMoved(bool itemsIsMoved);
-
-
 
 public:
     QJsonObject mState;

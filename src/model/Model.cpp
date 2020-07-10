@@ -1016,7 +1016,10 @@ void Model::setFFTLength(const int FFTLength)
 
 void Model::initNodeEvents()
 {
-    std::for_each(mEvents.begin(), mEvents.end(), [](Event* ev) {ev->mNodeInitialized = false; ev->mThetaNode = HUGE_VAL;});
+    std::for_each(mEvents.begin(), mEvents.end(), [](Event* ev) {
+        ev->mNodeInitialized = false;
+        ev->mThetaNode = HUGE_VAL;
+    });
 }
 
 /**

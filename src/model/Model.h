@@ -54,7 +54,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class Project;
 
 
-class Model:public QObject
+class Model: public QObject
 {
     Q_OBJECT
 public:
@@ -125,6 +125,9 @@ public:
     QList<PhaseConstraint*> mPhaseConstraints;
 
     QList<ChainSpecs> mChains;
+    
+    // Chronocurve
+    MHVariable mAlphaLissage;
 
     QString mLogModel;
     QString mLogMCMC;

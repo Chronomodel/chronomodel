@@ -48,8 +48,6 @@ class ModelChronocurve: public Model
 public:
     ModelChronocurve();
     virtual ~ModelChronocurve();
-    
-    
 };
 
 #endif

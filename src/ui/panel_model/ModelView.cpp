@@ -1439,7 +1439,7 @@ void ModelView::updateRightPanelTitle()
     QString rightTitle(tr("Phases Scene"));
     
     if(mIsChronocurve){
-        rightTitle = tr("Chronocurve");
+        rightTitle = tr("Curve");
     }else if(mButProperties->isChecked()){
         rightTitle = tr("Event Properties");
     }else if (mButImport->isChecked()){

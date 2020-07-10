@@ -327,7 +327,6 @@ HEADERS += src/project/StateEvent.h
 HEADERS += src/chronocurve/ChronocurveSettings.h
 HEADERS += src/chronocurve/ChronocurveSettingsView.h
 HEADERS += src/chronocurve/MCMCLoopChronocurve.h
-HEADERS += src/chronocurve/EventChronocurve.h
 HEADERS += src/chronocurve/ModelChronocurve.h
 HEADERS += src/chronocurve/ChronocurveUtilities.h
 
@@ -478,7 +477,6 @@ SOURCES += src/project/StateEvent.cpp
 SOURCES += src/chronocurve/ChronocurveSettings.cpp
 SOURCES += src/chronocurve/ChronocurveSettingsView.cpp
 SOURCES += src/chronocurve/MCMCLoopChronocurve.cpp
-SOURCES += src/chronocurve/EventChronocurve.cpp
 SOURCES += src/chronocurve/ModelChronocurve.cpp
 SOURCES += src/chronocurve/ChronocurveUtilities.cpp
 

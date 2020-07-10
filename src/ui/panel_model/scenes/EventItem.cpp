@@ -53,7 +53,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):AbstractItem(scene, parent),
     mWithSelectedPhase(false),
     mShowAllThumbs(true),
-    mPhasesHeight (20)
+    mPhasesHeight(24)
 {
     mTitleHeight = 20;
     mEltsHeight =  DateItem::mTitleHeight +  DateItem::mEltsHeight ;
@@ -355,22 +355,20 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     font.setItalic(false);
     
     QJsonObject state = mScene->getProject()->mState;
-    int lines = getChronocurveLines();
+    ChronocurveSettings chronocurveSettings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
     
-    if(lines > 0) // means chronocurve is enabled
+    if(chronocurveSettings.mEnabled)
     {
+        int lines = getChronocurveLines();
+        
         QRectF bottomRect(rect.x(), rect.y() + rect.height() - lines * mPhasesHeight, rect.width(), lines * mPhasesHeight);
         bottomRect.adjust(4, 0, -4, -4);
         
-        QColor color1 = QColor(44, 122, 123);
-        QColor color2 = QColor(230, 255, 250);
-        
         QPen pen = QPen();
-        pen.setColor(color1);
+        pen.setColor(CHRONOCURVE_COLOR_BORDER);
         pen.setWidth(2);
-        
         painter->setPen(pen);
-        painter->setBrush(color2);
+        painter->setBrush(CHRONOCURVE_COLOR_BACK);
         painter->drawRoundedRect(bottomRect, 4, 4);
         
         int m = 3;
@@ -381,25 +379,27 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         int lineW = bottomRect.width();
         
         painter->setFont(font);
-        painter->setPen(color1);
+        painter->setPen(CHRONOCURVE_COLOR_TEXT);
         
-        QString text1 = "Y1 = ";
-        text1 += QString::number(mData.value(STATE_EVENT_Y1).toDouble());
-        text1 += " ± " + QString::number(mData.value(STATE_EVENT_S1).toDouble());
-        painter->drawText(QRectF(lineX, lineY, lineW, lineH), Qt::AlignCenter, text1);
-        
-        if(lines >= 2){
-            QString text2 = "Y2 = ";
-            text2 += QString::number(mData.value(STATE_EVENT_Y2).toDouble());
-            text2 += " ± " + QString::number(mData.value(STATE_EVENT_S2).toDouble());
-            painter->drawText(QRectF(lineX, lineY + lineH, lineW, lineH), Qt::AlignCenter, text2);
+        if(chronocurveSettings.showInclinaison()){
+            QString text1;
+            text1 += "Inc. = ";
+            text1 += QString::number(mData.value(STATE_EVENT_Y_INC).toDouble());
+            text1 += " ± " + QString::number(mData.value(STATE_EVENT_S_INC).toDouble());
+            
+            if(chronocurveSettings.showDeclinaison()){
+                text1 += " Dec. = ";
+                text1 += QString::number(mData.value(STATE_EVENT_Y_DEC).toDouble());
+            }
+            painter->drawText(QRectF(lineX, lineY, lineW, lineH), Qt::AlignCenter, text1);
         }
         
-        if(lines == 3){
-            QString text3 = "Y3 = ";
-            text3 += QString::number(mData.value(STATE_EVENT_Y3).toDouble());
-            text3 += " ± " + QString::number(mData.value(STATE_EVENT_S3).toDouble());
-            painter->drawText(QRectF(lineX, lineY + 2*lineH, lineW, lineH), Qt::AlignCenter, text3);
+        if(chronocurveSettings.showIntensite()){
+            QString text2 = chronocurveSettings.intensiteLabel();
+            text2 += " = ";
+            text2 += QString::number(mData.value(STATE_EVENT_Y_INT).toDouble());
+            text2 += " ± " + QString::number(mData.value(STATE_EVENT_S_INT).toDouble());
+            painter->drawText(QRectF(lineX, lineY + (chronocurveSettings.showInclinaison() ? 1 : 0) * lineH, lineW, lineH), Qt::AlignCenter, text2);
         }
     }
     else
@@ -520,10 +520,8 @@ int EventItem::getChronocurveLines() const
     if(chronocurveSettings.mEnabled)
     {
         lines = 1;
-        if(chronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique){
+        if(chronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel){
             lines = 2;
-        }else if(chronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel){
-            lines = 3;
         }
     }
     return lines;

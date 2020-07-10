@@ -125,13 +125,12 @@ void Event::copyFrom(const Event& event)
 
     mMixingLevel = event.mMixingLevel;
     
-    mY1 = event.mY1;
-    mY2 = event.mY2;
-    mY3 = event.mY3;
+    mYInc = event.mYInc;
+    mYDec = event.mYDec;
+    mYInt = event.mYInt;
     
-    mS1 = event.mS1;
-    mS2 = event.mS2;
-    mS3 = event.mS3;
+    mSInc = event.mSInc;
+    mSInt = event.mSInt;
 }
 
 Event::~Event()
@@ -178,13 +177,12 @@ Event Event::fromJson(const QJsonObject& json)
 
     event.mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
 
-    event.mY1 = json.value(STATE_EVENT_Y1).toDouble();
-    event.mY2 = json.value(STATE_EVENT_Y2).toDouble();
-    event.mY3 = json.value(STATE_EVENT_Y3).toDouble();
+    event.mYInc = json.value(STATE_EVENT_Y_INC).toDouble();
+    event.mYDec = json.value(STATE_EVENT_Y_DEC).toDouble();
+    event.mYInt = json.value(STATE_EVENT_Y_INT).toDouble();
     
-    event.mS1 = json.value(STATE_EVENT_S1).toDouble();
-    event.mS2 = json.value(STATE_EVENT_S2).toDouble();
-    event.mS3 = json.value(STATE_EVENT_S3).toDouble();
+    event.mSInc = json.value(STATE_EVENT_S_INC).toDouble();
+    event.mSInt = json.value(STATE_EVENT_S_INT).toDouble();
 
     const QJsonArray dates = json.value(STATE_EVENT_DATES).toArray();
 
@@ -218,12 +216,11 @@ QJsonObject Event::toJson() const
     event[STATE_ITEM_Y] = mItemY;
     event[STATE_IS_SELECTED] = mIsSelected;
     event[STATE_IS_CURRENT] = mIsCurrent;
-    event[STATE_EVENT_Y1] = mY1;
-    event[STATE_EVENT_Y2] = mY2;
-    event[STATE_EVENT_Y3] = mY3;
-    event[STATE_EVENT_Y1] = mS1;
-    event[STATE_EVENT_Y2] = mS2;
-    event[STATE_EVENT_Y3] = mS3;
+    event[STATE_EVENT_Y_INC] = mYInc;
+    event[STATE_EVENT_Y_DEC] = mYDec;
+    event[STATE_EVENT_Y_INT] = mYInt;
+    event[STATE_EVENT_S_INC] = mSInc;
+    event[STATE_EVENT_S_INT] = mSInt;
 
     QString eventIdsStr;
     if (mPhasesIds.size() > 0) {
@@ -246,29 +243,27 @@ QJsonObject Event::toJson() const
 
 void Event::setChronocurveCsvDataToJsonEvent(QJsonObject& event, const QMap<QString, double>& chronocurveData)
 {
-    QMap<QString, double>::const_iterator i = chronocurveData.find("Y1");
+    QMap<QString, double>::const_iterator i;
+    
+    i = chronocurveData.find("YInc");
     if(i != chronocurveData.end()){
-        event[STATE_EVENT_Y1] = i.value();
+        event[STATE_EVENT_Y_INC] = i.value();
     }
-    i = chronocurveData.find("S1");
+    i = chronocurveData.find("SInc");
     if(i != chronocurveData.end()){
-        event[STATE_EVENT_S1] = i.value();
+        event[STATE_EVENT_S_INC] = i.value();
     }
-    i = chronocurveData.find("Y2");
+    i = chronocurveData.find("YDec");
     if(i != chronocurveData.end()){
-        event[STATE_EVENT_Y2] = i.value();
+        event[STATE_EVENT_Y_DEC] = i.value();
     }
-    i = chronocurveData.find("S2");
+    i = chronocurveData.find("YInt");
     if(i != chronocurveData.end()){
-        event[STATE_EVENT_S2] = i.value();
+        event[STATE_EVENT_Y_INT] = i.value();
     }
-    i = chronocurveData.find("Y3");
+    i = chronocurveData.find("SInt");
     if(i != chronocurveData.end()){
-        event[STATE_EVENT_Y3] = i.value();
-    }
-    i = chronocurveData.find("S3");
-    if(i != chronocurveData.end()){
-        event[STATE_EVENT_S3] = i.value();
+        event[STATE_EVENT_S_INT] = i.value();
     }
 }
 
@@ -1032,4 +1027,10 @@ void Event::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, co
             for (int i =0 ;i<chains.size(); ++i)
                 ek->mTheta.mChainsHistos.append(ek->mTheta.mHisto);
     }
+}
+
+void Event::updateW()
+{
+    mW = mVG.mX + mSy * mSy;
+    mW1 = 1 / mW;
 }

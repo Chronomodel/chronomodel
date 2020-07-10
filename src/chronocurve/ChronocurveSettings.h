@@ -42,22 +42,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "StateKeys.h"
 #include <QJsonObject>
+#include <QString>
 
 #define CHRONOCURVE_ENABLED_DEFAULT false
 #define CHRONOCURVE_PROCESS_TYPE_DEFAULT ChronocurveSettings::eProcessTypeUnivarie
 #define CHRONOCURVE_VARIABLE_TYPE_DEFAULT ChronocurveSettings::eVariableTypeInclinaison
-#define CHRONOCURVE_SELECT_OUV_DEFAULT false
-#define CHRONOCURVE_OUV_MAX_DEFAULT 0
-#define CHRONOCURVE_USE_CORR_LAT_DEFAULT true
-#define CHRONOCURVE_LAT_DEFAULT 0
-#define CHRONOCURVE_LNG_DEFAULT 0
 #define CHRONOCURVE_USE_ERR_MESURE_DEFAULT true
 #define CHRONOCURVE_TIME_TYPE_DEFAULT ChronocurveSettings::eModeBayesian
 #define CHRONOCURVE_VARIANCE_TYPE_DEFAULT ChronocurveSettings::eModeBayesian
 #define CHRONOCURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT true
 #define CHRONOCURVE_VARIANCE_FIXED_DEFAULT 1
 #define CHRONOCURVE_COEFF_LISSAGE_TYPE_DEFAULT ChronocurveSettings::eModeBayesian
-#define CHRONOCURVE_ALPHA_DEFAULT 0
+#define CHRONOCURVE_ALPHA_LISSAGE_DEFAULT 0
 
 
 class ChronocurveSettings
@@ -76,6 +72,7 @@ public:
         eVariableTypeDeclinaison = 'D',
         eVariableTypeIntensite = 'F',
         eVariableTypeProfondeur = 'P',
+        eVariableTypeAutre = 'A',
     };
 
     enum ProcessMode
@@ -98,18 +95,16 @@ public:
     void restoreDefault();
     QJsonObject toJson() const;
     
+    bool showInclinaison() const;
+    bool showDeclinaison() const;
+    bool showIntensite() const;
+    QString intensiteLabel() const;
     
 public:
     bool mEnabled;
     
     ProcessType mProcessType; // Type de traitement
     VariableType mVariableType; // Type de variable étudiée
-    
-    bool mSelectOuv; // bool_select_Ouv
-    double mOuvMax;
-    bool mUseCorrLat;
-    double mLat;
-    double mLng;
     
     bool mUseErrMesure; // bool_err_mes
     
@@ -120,7 +115,7 @@ public:
     double mVarianceFixed; // Var_G
 
     ProcessMode mCoeffLissageType; // bool_Alpha_fixe
-    double mAlpha;
+    double mAlphaLissage;
 };
 
 QDataStream &operator<<( QDataStream &stream, const ChronocurveSettings &data );

@@ -141,13 +141,32 @@ public:
     
     double mMixingLevel;
     
-    double mY1;
-    double mY2;
-    double mY3;
+    // --------------------------------------------------------
+    //  Chronocurve
+    // --------------------------------------------------------
     
-    double mS1;
-    double mS2;
-    double mS3;
+    // Valeurs entrées par l'utilisateur
+    double mYInc;
+    double mYDec;
+    double mYInt;
+    double mSInc;
+    double mSInt;
+    
+    // Valeurs préparées (projetées)
+    double mYx;
+    double mYy;
+    double mYz;
+    
+    // Valeurs utilisée pour les calculs
+    double mY;
+    double mSy;
+    double mW;
+    double mW1;
+    
+    MHVariable mVG; // sigma g de l'event (par rapport à g qu'on cherche à estimer)
+    
+    // A chaque mise à jour de VG, on doit aussi mettre w à jour :
+    void updateW();
 };
 
 #endif

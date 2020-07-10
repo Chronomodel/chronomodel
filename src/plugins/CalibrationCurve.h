@@ -75,8 +75,7 @@ public:
         other.mRepartition.clear();
         other.mCurve.clear();
         other.mPluginId = nullptr;
-        other.mPlugin =nullptr;
-
+        other.mPlugin = nullptr;
     }
 
     /** Destructor */
@@ -104,6 +103,7 @@ public:
         std::copy(other.mRepartition.begin(), other.mRepartition.end(), mRepartition.begin());
         mCurve .resize(other.mCurve.size());
         std::copy(other.mCurve.begin(),other.mCurve.end(), mCurve.begin());
+        
         mTmin = other.mTmin;
         mTmax = other.mTmax;
         mStep = other.mStep;
@@ -116,6 +116,7 @@ public:
 
         other.mPluginId = nullptr;
         other.mPlugin = nullptr;
+        
         return *this;
     }
 
@@ -141,7 +142,6 @@ public:
     double mTmin;
     double mTmax;
     double mStep;
-
 };
 
 QDataStream &operator<<( QDataStream &stream, const CalibrationCurve &data );

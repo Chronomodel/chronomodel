@@ -48,18 +48,13 @@ ChronocurveSettings::ChronocurveSettings():
 mEnabled(CHRONOCURVE_ENABLED_DEFAULT),
 mProcessType(CHRONOCURVE_PROCESS_TYPE_DEFAULT),
 mVariableType(CHRONOCURVE_VARIABLE_TYPE_DEFAULT),
-mSelectOuv(CHRONOCURVE_SELECT_OUV_DEFAULT),
-mOuvMax(CHRONOCURVE_OUV_MAX_DEFAULT),
-mUseCorrLat(CHRONOCURVE_USE_CORR_LAT_DEFAULT),
 mUseErrMesure(CHRONOCURVE_USE_ERR_MESURE_DEFAULT),
-mLat(CHRONOCURVE_LAT_DEFAULT),
-mLng(CHRONOCURVE_LNG_DEFAULT),
 mTimeType(CHRONOCURVE_TIME_TYPE_DEFAULT),
 mVarianceType(CHRONOCURVE_VARIANCE_TYPE_DEFAULT),
 mUseVarianceIndividual(CHRONOCURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT),
 mVarianceFixed(CHRONOCURVE_VARIANCE_FIXED_DEFAULT),
 mCoeffLissageType(CHRONOCURVE_COEFF_LISSAGE_TYPE_DEFAULT),
-mAlpha(CHRONOCURVE_ALPHA_DEFAULT)
+mAlphaLissage(CHRONOCURVE_ALPHA_LISSAGE_DEFAULT)
 {
     
 }
@@ -90,18 +85,13 @@ bool ChronocurveSettings::isEqual(const ChronocurveSettings& s)
     if (s.mEnabled != mEnabled ||
         s.mProcessType != mProcessType ||
         s.mVariableType != mVariableType ||
-        s.mSelectOuv != mSelectOuv ||
-        s.mOuvMax != mOuvMax ||
-        s.mUseCorrLat != mUseCorrLat ||
-        s.mLat != mLat ||
-        s.mLng != mLng ||
         s.mUseErrMesure != mUseErrMesure ||
         s.mTimeType != mTimeType ||
         s.mVarianceType != mVarianceType ||
         s.mUseVarianceIndividual != mUseVarianceIndividual ||
         s.mVarianceFixed != mVarianceFixed ||
         s.mCoeffLissageType != mCoeffLissageType ||
-        s.mAlpha != mAlpha){
+        s.mAlphaLissage != mAlphaLissage){
         return false;
     }
     return true;
@@ -113,18 +103,13 @@ void ChronocurveSettings::copyFrom(const ChronocurveSettings& s)
     mEnabled = s.mEnabled;
     mProcessType = s.mProcessType;
     mVariableType = s.mVariableType;
-    mSelectOuv = s.mSelectOuv;
-    mOuvMax = s.mOuvMax;
-    mUseCorrLat = s.mUseCorrLat;
     mUseErrMesure = s.mUseErrMesure;
-    mLat = s.mLat;
-    mLng = s.mLng;
     mTimeType = s.mTimeType;
     mVarianceType = s.mVarianceType;
     mUseVarianceIndividual = s.mUseVarianceIndividual;
     mVarianceFixed = s.mVarianceFixed;
     mCoeffLissageType = s.mCoeffLissageType;
-    mAlpha = s.mAlpha;
+    mAlphaLissage = s.mAlphaLissage;
 }
 
 ChronocurveSettings::~ChronocurveSettings()
@@ -139,18 +124,13 @@ ChronocurveSettings ChronocurveSettings::getDefault()
     settings.mEnabled = CHRONOCURVE_ENABLED_DEFAULT;
     settings.mProcessType = CHRONOCURVE_PROCESS_TYPE_DEFAULT;
     settings.mVariableType = CHRONOCURVE_VARIABLE_TYPE_DEFAULT;
-    settings.mSelectOuv = CHRONOCURVE_SELECT_OUV_DEFAULT;
-    settings.mOuvMax = CHRONOCURVE_OUV_MAX_DEFAULT;
-    settings.mUseCorrLat = CHRONOCURVE_USE_CORR_LAT_DEFAULT;
     settings.mUseErrMesure = CHRONOCURVE_USE_ERR_MESURE_DEFAULT;
-    settings.mLat = CHRONOCURVE_LAT_DEFAULT;
-    settings.mLng = CHRONOCURVE_LNG_DEFAULT;
     settings.mTimeType = CHRONOCURVE_TIME_TYPE_DEFAULT;
     settings.mVarianceType = CHRONOCURVE_VARIANCE_TYPE_DEFAULT;
     settings.mUseVarianceIndividual = CHRONOCURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT;
     settings.mVarianceFixed = CHRONOCURVE_VARIANCE_FIXED_DEFAULT;
     settings.mCoeffLissageType = CHRONOCURVE_COEFF_LISSAGE_TYPE_DEFAULT;
-    settings.mAlpha = CHRONOCURVE_ALPHA_DEFAULT;
+    settings.mAlphaLissage = CHRONOCURVE_ALPHA_LISSAGE_DEFAULT;
     
     return settings;
 }
@@ -160,18 +140,13 @@ void ChronocurveSettings::restoreDefault()
     mEnabled = CHRONOCURVE_ENABLED_DEFAULT;
     mProcessType = CHRONOCURVE_PROCESS_TYPE_DEFAULT;
     mVariableType = CHRONOCURVE_VARIABLE_TYPE_DEFAULT;
-    mSelectOuv = CHRONOCURVE_SELECT_OUV_DEFAULT;
-    mOuvMax = CHRONOCURVE_OUV_MAX_DEFAULT;
-    mUseCorrLat = CHRONOCURVE_USE_CORR_LAT_DEFAULT;
     mUseErrMesure = CHRONOCURVE_USE_ERR_MESURE_DEFAULT;
-    mLat = CHRONOCURVE_LAT_DEFAULT;
-    mLng = CHRONOCURVE_LNG_DEFAULT;
     mTimeType = CHRONOCURVE_TIME_TYPE_DEFAULT;
     mVarianceType = CHRONOCURVE_VARIANCE_TYPE_DEFAULT;
     mUseVarianceIndividual = CHRONOCURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT;
     mVarianceFixed = CHRONOCURVE_VARIANCE_FIXED_DEFAULT;
     mCoeffLissageType = CHRONOCURVE_COEFF_LISSAGE_TYPE_DEFAULT;
-    mAlpha = CHRONOCURVE_ALPHA_DEFAULT;
+    mAlphaLissage = CHRONOCURVE_ALPHA_LISSAGE_DEFAULT;
 }
 
 ChronocurveSettings ChronocurveSettings::fromJson(const QJsonObject& json)
@@ -183,16 +158,6 @@ ChronocurveSettings ChronocurveSettings::fromJson(const QJsonObject& json)
     settings.mProcessType = json.contains(STATE_CHRONOCURVE_PROCESS_TYPE) ? ChronocurveSettings::ProcessType (json.value(STATE_CHRONOCURVE_PROCESS_TYPE).toInt()) : CHRONOCURVE_PROCESS_TYPE_DEFAULT;
     
     settings.mVariableType = json.contains(STATE_CHRONOCURVE_VARIABLE_TYPE) ? ChronocurveSettings::VariableType (json.value(STATE_CHRONOCURVE_VARIABLE_TYPE).toInt()) : CHRONOCURVE_VARIABLE_TYPE_DEFAULT;
-    
-    settings.mSelectOuv = json.contains(STATE_CHRONOCURVE_SELECT_OUV) ? json.value(STATE_CHRONOCURVE_SELECT_OUV).toBool() : CHRONOCURVE_SELECT_OUV_DEFAULT;
-    
-    settings.mOuvMax = json.contains(STATE_CHRONOCURVE_OUV_MAX) ? json.value(STATE_CHRONOCURVE_OUV_MAX).toDouble() : CHRONOCURVE_OUV_MAX_DEFAULT;
-    
-    settings.mUseCorrLat = json.contains(STATE_CHRONOCURVE_USE_CORR_LAT) ? json.value(STATE_CHRONOCURVE_USE_CORR_LAT).toBool() : CHRONOCURVE_USE_CORR_LAT_DEFAULT;
-    
-    settings.mLat = json.contains(STATE_CHRONOCURVE_LAT) ? json.value(STATE_CHRONOCURVE_LAT).toDouble() : CHRONOCURVE_LAT_DEFAULT;
-    
-    settings.mLng = json.contains(STATE_CHRONOCURVE_LNG) ? json.value(STATE_CHRONOCURVE_LNG).toDouble() : CHRONOCURVE_LNG_DEFAULT;
     
     settings.mUseErrMesure = json.contains(STATE_CHRONOCURVE_USE_ERR_MESURE) ? json.value(STATE_CHRONOCURVE_USE_ERR_MESURE).toBool() : CHRONOCURVE_USE_ERR_MESURE_DEFAULT;
     
@@ -206,7 +171,7 @@ ChronocurveSettings ChronocurveSettings::fromJson(const QJsonObject& json)
     
     settings.mCoeffLissageType = json.contains(STATE_CHRONOCURVE_COEFF_LISSAGE_TYPE) ? ChronocurveSettings::ProcessMode (json.value(STATE_CHRONOCURVE_COEFF_LISSAGE_TYPE).toInt()) : CHRONOCURVE_COEFF_LISSAGE_TYPE_DEFAULT;
     
-    settings.mAlpha = json.contains(STATE_CHRONOCURVE_ALPHA) ? json.value(STATE_CHRONOCURVE_ALPHA).toDouble() : CHRONOCURVE_ALPHA_DEFAULT;
+    settings.mAlphaLissage = json.contains(STATE_CHRONOCURVE_ALPHA_LISSAGE) ? json.value(STATE_CHRONOCURVE_ALPHA_LISSAGE).toDouble() : CHRONOCURVE_ALPHA_LISSAGE_DEFAULT;
     
     return settings;
 }
@@ -218,18 +183,13 @@ QJsonObject ChronocurveSettings::toJson() const
     mcmc[STATE_CHRONOCURVE_ENABLED] = QJsonValue::fromVariant(mEnabled);
     mcmc[STATE_CHRONOCURVE_PROCESS_TYPE] = QJsonValue::fromVariant((int)mProcessType);
     mcmc[STATE_CHRONOCURVE_VARIABLE_TYPE] = QJsonValue::fromVariant((int)mVariableType);
-    mcmc[STATE_CHRONOCURVE_SELECT_OUV] = QJsonValue::fromVariant(mSelectOuv);
-    mcmc[STATE_CHRONOCURVE_OUV_MAX] = QJsonValue::fromVariant(mOuvMax);
-    mcmc[STATE_CHRONOCURVE_USE_CORR_LAT] = QJsonValue::fromVariant(mUseCorrLat);
     mcmc[STATE_CHRONOCURVE_USE_ERR_MESURE] = QJsonValue::fromVariant(mUseErrMesure);
-    mcmc[STATE_CHRONOCURVE_LAT] = QJsonValue::fromVariant(mLat);
-    mcmc[STATE_CHRONOCURVE_LNG] = QJsonValue::fromVariant(mLng);
     mcmc[STATE_CHRONOCURVE_TIME_TYPE] = QJsonValue::fromVariant((int)mTimeType);
     mcmc[STATE_CHRONOCURVE_VARIANCE_TYPE] = QJsonValue::fromVariant((int)mVarianceType);
     mcmc[STATE_CHRONOCURVE_USE_VARIANCE_INDIVIDUAL] = QJsonValue::fromVariant(mUseVarianceIndividual);
     mcmc[STATE_CHRONOCURVE_VARIANCE_FIXED] = QJsonValue::fromVariant(mVarianceFixed);
     mcmc[STATE_CHRONOCURVE_COEFF_LISSAGE_TYPE] = QJsonValue::fromVariant((int)mCoeffLissageType);
-    mcmc[STATE_CHRONOCURVE_ALPHA] = QJsonValue::fromVariant(mAlpha);
+    mcmc[STATE_CHRONOCURVE_ALPHA_LISSAGE] = QJsonValue::fromVariant(mAlphaLissage);
     
     return mcmc;
 }
@@ -248,4 +208,52 @@ QDataStream &operator>>( QDataStream &stream, ChronocurveSettings &data )
     //data.mNumChains = tmp8;
 
     return stream;
+}
+
+bool ChronocurveSettings::showInclinaison() const
+{
+    // Elle est toujours nécessaire en sphérique et vectoriel.
+    // En univarié, elle n'est nécessaire que pour les variables d'étude : inclinaison ou déclinaison.
+    return (mProcessType == ChronocurveSettings::eProcessTypeSpherique) ||
+        (mProcessType == ChronocurveSettings::eProcessTypeVectoriel) ||
+        ((mProcessType == ChronocurveSettings::eProcessTypeUnivarie) &&
+         ((mVariableType == ChronocurveSettings::eVariableTypeInclinaison) ||
+          (mVariableType == ChronocurveSettings::eVariableTypeDeclinaison)));
+}
+
+bool ChronocurveSettings::showDeclinaison() const
+{
+    // Elle est toujours nécessaire en sphérique et vectoriel.
+    // En univarié, elle n'est nécessaire que pour la variable d'étude : déclinaison.
+    return ((mProcessType == ChronocurveSettings::eProcessTypeSpherique) ||
+        (mProcessType == ChronocurveSettings::eProcessTypeVectoriel) ||
+        ((mProcessType == ChronocurveSettings::eProcessTypeUnivarie) &&
+         (mVariableType == ChronocurveSettings::eVariableTypeDeclinaison)));
+}
+
+bool ChronocurveSettings::showIntensite() const
+{
+    // Elle est toujours nécessaire en vectoriel, mais jamais en sphérique.
+    // En univarié, elle n'est nécessaire que pour les variables d'étude autres que inclinaison et déclinaison.
+    return ((mProcessType == ChronocurveSettings::eProcessTypeVectoriel) ||
+        ((mProcessType == ChronocurveSettings::eProcessTypeUnivarie) &&
+         (mVariableType != ChronocurveSettings::eVariableTypeInclinaison) &&
+         (mVariableType != ChronocurveSettings::eVariableTypeDeclinaison)));
+}
+
+QString ChronocurveSettings::intensiteLabel() const
+{
+    QString label;
+    if(mProcessType == ChronocurveSettings::eProcessTypeVectoriel){
+        label = QObject::tr("Intensity");
+    }else if(mProcessType == ChronocurveSettings::eProcessTypeUnivarie){
+        if(mVariableType == ChronocurveSettings::eVariableTypeIntensite){
+            label = QObject::tr("Intensity");
+        }else if(mVariableType == ChronocurveSettings::eVariableTypeProfondeur){
+            label = QObject::tr("Deep");
+        }else if(mVariableType == ChronocurveSettings::eVariableTypeAutre){
+            label = QObject::tr("Mesure");
+        }
+    }
+    return label;
 }

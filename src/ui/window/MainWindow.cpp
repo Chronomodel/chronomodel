@@ -592,7 +592,7 @@ void MainWindow::connectProject()
     connect(mProject, &Project::projectStateChanged, this, &MainWindow::updateProject);
     connect(mProject, &Project::projectStructureChanged, this, &MainWindow::noResult);
     connect(mProject, &Project::projectDesignChanged, mProjectView, &ProjectView::changeDesign);
-
+    
     connect(mChronocurveAction, &QAction::toggled, this, &MainWindow::toggleChronocurve);
     connect(mMCMCSettingsAction, &QAction::triggered, mProject, &Project::mcmcSettings);
     connect(mResetMCMCAction, &QAction::triggered, mProject, &Project::resetMCMC);
@@ -600,7 +600,6 @@ void MainWindow::connectProject()
     connect(mRunAction, &QAction::triggered, mProject, &Project::run);
 
     mProjectView->doProjectConnections(mProject);
-
 }
 
 void MainWindow::disconnectProject()
@@ -683,14 +682,12 @@ void MainWindow::updateProject()
     mRunAction->setEnabled(true);
     mProjectView->updateProject();
     
-    mChronocurveAction->setEnabled(true);
     mChronocurveAction->setChecked(mProject->isChronocurve());
 }
 
 void MainWindow::toggleChronocurve(bool checked)
 {
     mProjectView->toggleChronocurve(checked);
-    mChronocurveAction->setText(checked ? "Chronocurve" : "Chronomodel");
 }
 
 // Settings & About

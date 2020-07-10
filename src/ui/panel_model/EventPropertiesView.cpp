@@ -94,29 +94,26 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     
     mChronocurveWidget = new ChronocurveWidget(mTopView);
     
-    mY1Lab = new QLabel(tr("Y1") + " :", mChronocurveWidget);
-    mY2Lab = new QLabel(tr("Y2") + " :", mChronocurveWidget);
-    mY3Lab = new QLabel(tr("Y3") + " :", mChronocurveWidget);
+    mYIncLab = new QLabel(tr("Inc.") + " :", mChronocurveWidget);
+    mYDecLab = new QLabel(tr("Dec.") + " :", mChronocurveWidget);
+    mYIntLab = new QLabel(tr("Int.") + " :", mChronocurveWidget);
     
-    mY1Edit = new LineEdit(mChronocurveWidget);
-    mY2Edit = new LineEdit(mChronocurveWidget);
-    mY3Edit = new LineEdit(mChronocurveWidget);
+    mYIncEdit = new LineEdit(mChronocurveWidget);
+    mYDecEdit = new LineEdit(mChronocurveWidget);
+    mYIntEdit = new LineEdit(mChronocurveWidget);
     
-    connect(mY1Edit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventY1);
-    connect(mY2Edit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventY2);
-    connect(mY3Edit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventY3);
+    connect(mYIncEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYInc);
+    connect(mYDecEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYDec);
+    connect(mYIntEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYInt);
     
-    mS1Lab = new QLabel(tr("S1") + " :", mChronocurveWidget);
-    mS2Lab = new QLabel(tr("S2") + " :", mChronocurveWidget);
-    mS3Lab = new QLabel(tr("S3") + " :", mChronocurveWidget);
+    mSIncLab = new QLabel(tr("Error") + " :", mChronocurveWidget);
+    mSIntLab = new QLabel(tr("Error") + " :", mChronocurveWidget);
     
-    mS1Edit = new LineEdit(mChronocurveWidget);
-    mS2Edit = new LineEdit(mChronocurveWidget);
-    mS3Edit = new LineEdit(mChronocurveWidget);
+    mSIncEdit = new LineEdit(mChronocurveWidget);
+    mSIntEdit = new LineEdit(mChronocurveWidget);
     
-    connect(mS1Edit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventS1);
-    connect(mS2Edit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventS2);
-    connect(mS3Edit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventS3);
+    connect(mSIncEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSInc);
+    connect(mSIntEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSInt);
 
     // Event default propreties Window mEventView
     mEventView = new QWidget(this);
@@ -264,9 +261,6 @@ void EventPropertiesView::setEvent(const QJsonObject& event)
         mCurrentDateIdx = 0;
     }
     
-    Project* project = MainWindow::getInstance()->getProject();
-    
-    
     if (rect().width() > 0)
         updateEvent();
 }
@@ -308,33 +302,37 @@ void EventPropertiesView::updateEvent()
         //mChronocurveEnabled = settings.mEnabled;
         mChronocurveProcessType = settings.mProcessType;
         
+        // Y1 contient l'inclinaison. Elle est toujours nécessaire en sphérique et vectoriel.
+        // En univarié, elle n'est nécessaire que pour les variables d'étude : inclinaison ou déclinaison.
+        bool showInc = mChronocurveEnabled && settings.showInclinaison();
+        bool showDec = mChronocurveEnabled && settings.showDeclinaison();
+        bool showInt = mChronocurveEnabled && settings.showIntensite();
         
-        bool showY1 = mChronocurveEnabled;
-        bool showY2 = mChronocurveEnabled && (mChronocurveProcessType != ChronocurveSettings::eProcessTypeUnivarie);
-        bool showY3 = mChronocurveEnabled && (mChronocurveProcessType == ChronocurveSettings::eProcessTypeVectoriel);
+        mYIncLab->setVisible(showInc);
+        mYIncEdit->setVisible(showInc);
         
-        mY1Lab->setVisible(showY1);
-        mY1Edit->setVisible(showY1);
-        mS1Lab->setVisible(showY1);
-        mS1Edit->setVisible(showY1);
+        mYDecLab->setVisible(showDec);
+        mYDecEdit->setVisible(showDec);
         
-        mY2Lab->setVisible(showY2);
-        mY2Edit->setVisible(showY2);
-        mS2Lab->setVisible(showY2);
-        mS2Edit->setVisible(showY2);
+        mSIncLab->setVisible(showInc);
+        mSIncEdit->setVisible(showInc);
         
-        mY3Lab->setVisible(showY3);
-        mY3Edit->setVisible(showY3);
-        mS3Lab->setVisible(showY3);
-        mS3Edit->setVisible(showY3);
+        mYIntLab->setVisible(showInt);
+        mYIntEdit->setVisible(showInt);
         
-        mY1Edit->setText(QString::number(mEvent.value(STATE_EVENT_Y1).toDouble()));
-        mY2Edit->setText(QString::number(mEvent.value(STATE_EVENT_Y2).toDouble()));
-        mY3Edit->setText(QString::number(mEvent.value(STATE_EVENT_Y3).toDouble()));
+        mSIntLab->setVisible(showInt);
+        mSIntEdit->setVisible(showInt);
         
-        mS1Edit->setText(QString::number(mEvent.value(STATE_EVENT_S1).toDouble()));
-        mS2Edit->setText(QString::number(mEvent.value(STATE_EVENT_S2).toDouble()));
-        mS3Edit->setText(QString::number(mEvent.value(STATE_EVENT_S3).toDouble()));
+        if(showInt){
+            mYIntLab->setText(settings.intensiteLabel() + " :");
+        }
+        
+        mYIncEdit->setText(QString::number(mEvent.value(STATE_EVENT_Y_INC).toDouble()));
+        mYDecEdit->setText(QString::number(mEvent.value(STATE_EVENT_Y_DEC).toDouble()));
+        mYIntEdit->setText(QString::number(mEvent.value(STATE_EVENT_Y_INT).toDouble()));
+        
+        mSIncEdit->setText(QString::number(mEvent.value(STATE_EVENT_S_INC).toDouble()));
+        mSIntEdit->setText(QString::number(mEvent.value(STATE_EVENT_S_INT).toDouble()));
         
         mTopView->setVisible(true);
 
@@ -421,51 +419,43 @@ void EventPropertiesView::setChronocurveSettings(bool enabled, char processType)
 }
 
 // Chronocurve
-void EventPropertiesView::updateEventY1()
+void EventPropertiesView::updateEventYInc()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_Y1] = mY1Edit->text().toDouble();
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y1 updated"));
+    event[STATE_EVENT_Y_INC] = mYIncEdit->text().toDouble();
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y Inc updated"));
 }
 
 // Chronocurve
-void EventPropertiesView::updateEventY2()
+void EventPropertiesView::updateEventYDec()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_Y2] = mY2Edit->text().toDouble();
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y2 updated"));
+    event[STATE_EVENT_Y_DEC] = mYDecEdit->text().toDouble();
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y Dec updated"));
 }
 
 // Chronocurve
-void EventPropertiesView::updateEventY3()
+void EventPropertiesView::updateEventYInt()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_Y3] = mY3Edit->text().toDouble();
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y3 updated"));
+    event[STATE_EVENT_Y_INT] = mYIntEdit->text().toDouble();
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y Int updated"));
 }
 
 // Chronocurve
-void EventPropertiesView::updateEventS1()
+void EventPropertiesView::updateEventSInc()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_S1] = mS1Edit->text().toDouble();
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S1 updated"));
+    event[STATE_EVENT_S_INC] = mSIncEdit->text().toDouble();
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S Inc updated"));
 }
 
 // Chronocurve
-void EventPropertiesView::updateEventS2()
+void EventPropertiesView::updateEventSInt()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_S2] = mS2Edit->text().toDouble();
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S2 updated"));
-}
-
-// Chronocurve
-void EventPropertiesView::updateEventS3()
-{
-    QJsonObject event = mEvent;
-    event[STATE_EVENT_S3] = mS3Edit->text().toDouble();
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S3 updated"));
+    event[STATE_EVENT_S_INT] = mSIntEdit->text().toDouble();
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S Int updated"));
 }
 
 void EventPropertiesView::updateKnownGraph()
@@ -743,10 +733,12 @@ void EventPropertiesView::updateLayout()
         int topViewHeight = 2 * mLineEditHeight + mComboBoxHeight + 3 * marginTop;
         int chronocurveHeight = 0;
         
-        if(mChronocurveEnabled){
-            bool showY2 = mChronocurveEnabled && (mChronocurveProcessType != ChronocurveSettings::eProcessTypeUnivarie);
-            bool showY3 = mChronocurveEnabled && (mChronocurveProcessType == ChronocurveSettings::eProcessTypeVectoriel);
-            chronocurveHeight = marginTop + (marginTop + mLineEditHeight) * (showY3 ? 3 : (showY2 ? 2 : 1));
+        QJsonObject state = MainWindow::getInstance()->getProject()->mState;
+        ChronocurveSettings settings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
+        
+        if(settings.mEnabled){
+            int lines = (settings.showInclinaison() && settings.showIntensite()) ? 2 : 1;
+            chronocurveHeight = marginTop + (marginTop + mLineEditHeight) * lines;
         }
         mTopView->resize(width(), topViewHeight + ((chronocurveHeight > 0) ? chronocurveHeight + marginTop : 0));
         
@@ -758,29 +750,37 @@ void EventPropertiesView::updateLayout()
         int dx = marginTop;
         int dy = marginTop;
         int labW = 50;
-        int editW = (mChronocurveWidget->width() - 5*marginTop - 2*labW) / 2;
         
-        mY1Lab->setGeometry(dx, dy, labW, mLineEditHeight);
-        mY1Edit->setGeometry(dx += labW + marginTop, dy, editW, mLineEditHeight);
-        mS1Lab->setGeometry(dx += editW + marginTop, dy, labW, mLineEditHeight);
-        mS1Edit->setGeometry(dx += labW + marginTop, dy, editW, mLineEditHeight);
-        
-        dx = marginTop;
-        dy += marginTop + mLineEditHeight;
-        
-        mY2Lab->setGeometry(dx, dy, labW, mLineEditHeight);
-        mY2Edit->setGeometry(dx += labW + marginTop, dy, editW, mLineEditHeight);
-        mS2Lab->setGeometry(dx += editW + marginTop, dy, labW, mLineEditHeight);
-        mS2Edit->setGeometry(dx += labW + marginTop, dy, editW, mLineEditHeight);
-        
-        dx = marginTop;
-        dy += marginTop + mLineEditHeight;
-        
-        mY3Lab->setGeometry(dx, dy, labW, mLineEditHeight);
-        mY3Edit->setGeometry(dx += labW + marginTop, dy, editW, mLineEditHeight);
-        mS3Lab->setGeometry(dx += editW + marginTop, dy, labW, mLineEditHeight);
-        mS3Edit->setGeometry(dx += labW + marginTop, dy, editW, mLineEditHeight);
+        if(settings.showInclinaison()){
+            
+            int editW = (mChronocurveWidget->width() - 5*marginTop - 2*labW) / 2;
+            if(settings.showDeclinaison()){
+                editW = (mChronocurveWidget->width() - 7*marginTop - 3*labW) / 3;
+            }
+            
+            mYIncLab->setGeometry(dx, dy, labW, mLineEditHeight);
+            mYIncEdit->setGeometry(dx += labW + marginTop, dy, editW, mLineEditHeight);
+            mSIncLab->setGeometry(dx += editW + marginTop, dy, labW, mLineEditHeight);
+            mSIncEdit->setGeometry(dx += labW + marginTop, dy, editW, mLineEditHeight);
+            if(settings.showDeclinaison()){
+                mYDecLab->setGeometry(dx += editW + marginTop, dy, labW, mLineEditHeight);
+                mYDecEdit->setGeometry(dx += labW + marginTop, dy, editW, mLineEditHeight);
+            }
+            
+            dy += mLineEditHeight + marginTop;
+        }
 
+        if(settings.showIntensite()){
+            
+            dx = marginTop;
+            int editW = (mChronocurveWidget->width() - 5*marginTop - 2*labW) / 2;
+            
+            mYIntLab->setGeometry(dx, dy, labW, mLineEditHeight);
+            mYIntEdit->setGeometry(dx += labW + marginTop, dy, editW, mLineEditHeight);
+            mSIntLab->setGeometry(dx += editW + marginTop, dy, labW, mLineEditHeight);
+            mSIntEdit->setGeometry(dx += labW + marginTop, dy, editW, mLineEditHeight);
+        }
+        
         mEventView->setGeometry(0, mTopView->height(), width(), height() - mTopView->height());
 
          //in mEventView coordinates

@@ -1710,7 +1710,6 @@ void Project::updateSelectedEventsDataMethod(Date::DataMethod method, const QStr
     pushProjectState(stateNext, "Update selected data method", true);
 }
 
-
 // --------------------------------------------------------------------
 //     Dates
 // --------------------------------------------------------------------
@@ -2776,6 +2775,15 @@ void Project::exportAsText()
 // --------------------------------------------------------------------
 void Project::run()
 {
+    if(isChronocurve()){
+        runChronocurve();
+    }else{
+        runChronomodel();
+    }
+}
+
+void Project::runChronomodel()
+{
     // Check if project contains invalid dates, e.g. with no computable calibration curve
     const QJsonArray invalidDates = getInvalidDates();
     if (invalidDates.size() > 0) {
@@ -2793,8 +2801,6 @@ void Project::run()
         messageBox.exec();
         if (messageBox.clickedButton() == IStop)
           return;
-
-
     }
 
     // Save the project before running MCMC :
@@ -2878,8 +2884,7 @@ void Project::clearModel()
      emit noResult();
 }
 
-bool Project::isChronocurve() const
-{
+bool Project::isChronocurve() const{
     QJsonObject state = this->state();
     QJsonObject chronocurveSettings = state[STATE_CHRONOCURVE].toObject();
     return chronocurveSettings.value(STATE_CHRONOCURVE_ENABLED).toBool();

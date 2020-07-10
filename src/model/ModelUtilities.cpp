@@ -397,10 +397,9 @@ QVector<Phase*> ModelUtilities::sortPhasesByLevel(const QList<Phase*>& phases)
 QVector<Event*> ModelUtilities::unsortEvents(const QList<Event*>& events)
 {
     QVector<Event*> results(events.toVector());
-
-    for (int i=results.size()-1; i>0; --i)
-        std::swap (results[i], results[Generator::randomUniformInt(0, i)]);
-
+    for(int i=results.size()-1; i>0; --i){
+        std::swap(results[i], results[Generator::randomUniformInt(0, i)]);
+    }
     return results;
 }
 

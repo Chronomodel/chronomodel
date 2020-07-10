@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "SwitchAction.h"
+#include "Painting.h"
 #include <QtWidgets>
 
 SwitchWidget::SwitchWidget(QWidget* parent, QWidgetAction* action):QWidget(parent),
@@ -63,16 +64,19 @@ void SwitchWidget::paintEvent(QPaintEvent* e)
     QRectF r = rect();
     r.adjust(1, 1, -1, -1);
     
-    QColor color1 = mAction->isChecked() ? QColor(44, 122, 123) : QColor(43, 108, 176);
-    QColor color2 = mAction->isChecked() ? QColor(230, 255, 250) : QColor(235, 248, 255);
+    QColor colorBorder = mAction->isChecked() ? CHRONOCURVE_COLOR_BORDER : CHRONOMODEL_COLOR_BORDER;
+    QColor colorBack = mAction->isChecked() ? CHRONOCURVE_COLOR_BACK : CHRONOMODEL_COLOR_BACK;
+    QColor colorText = mAction->isChecked() ? CHRONOCURVE_COLOR_TEXT : CHRONOMODEL_COLOR_TEXT;
     
     QPen pen = painter.pen();
-    pen.setColor(color1);
+    pen.setColor(colorBorder);
     pen.setWidth(2);
-    
     painter.setPen(pen);
-    painter.setBrush(color2);
+    painter.setBrush(colorBack);
     painter.drawRoundedRect(r, 4, 4);
+    
+    pen.setColor(colorText);
+    painter.setPen(pen);
     
     QFont f(font());
     f.setPointSizeF(8);

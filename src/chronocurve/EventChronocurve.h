@@ -51,9 +51,6 @@ public:
 
     virtual void reset();
     virtual void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
-    
-public:
-    MHVariable mY; // Which name to give ??
 };
 
 #endif
