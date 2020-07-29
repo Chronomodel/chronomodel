@@ -161,7 +161,7 @@ public:
     double mY;
     double mSy;
     double mW;
-    double mW1;
+    double mWInv;
     
     MHVariable mVG; // sigma g de l'event (par rapport à g qu'on cherche à estimer)
     

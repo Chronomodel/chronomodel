@@ -48,14 +48,25 @@ class Project;
 class ModelChronocurve;
 class Event;
 
-struct Record
+typedef struct SplineMatrices
 {
-    double ti;
-    double yi;
-    double wi;
-    double mi;
-    double si2;
-};
+    std::vector<std::vector<double>> matR;
+    std::vector<std::vector<double>> matQ;
+    std::vector<std::vector<double>> matQT;
+    std::vector<std::vector<double>> matQTW_1Q;
+    std::vector<std::vector<double>> matQTQ;
+} SplineMatrices;
+
+typedef struct SplineResults
+{
+    std::vector<std::vector<double>> matB;
+    std::vector<std::vector<double>> matL;
+    std::vector<std::vector<double>> matD;
+    
+    std::vector<double> vecG;
+    std::vector<double> vecGamma;
+    
+} SplineResults;
 
 class MCMCLoopChronocurve: public MCMCLoop
 {
@@ -73,9 +84,9 @@ protected:
     virtual void finalize();
     
 private:
-    double h_YWI_AY();
-    double h_YWI_AY_composante();
-    double h_alpha();
+    double h_YWI_AY(SplineMatrices& matrices);
+    double h_YWI_AY_composante(SplineMatrices& matrices);
+    double h_alpha(SplineMatrices& matrices);
     double h_theta();
     double h_VG();
     
@@ -83,7 +94,7 @@ private:
     void prepareEventY(Event* event);
     
     // Fonctions anciennement liées à do_cravate :
-    std::vector<double> createDiagW1();
+    std::vector<double> createDiagWInv();
     
     void orderEventsByTheta();
     void spreadEventsTheta(double minStep = 1e-6);
@@ -91,9 +102,32 @@ private:
     void restoreEventsTheta();
     std::map<int, double> mThetasMemo;
     
-    // Fonctions anciennement liées à calcul_spline :
-    void calcul_spline(bool newTime);
-    std::vector<double> calculVecH(const std::vector<Record>& records);
+    
+    
+    std::vector<double> calculVecH();
+    
+    std::vector<double> initVecteur(const int dim);
+    std::vector<std::vector<double>> initMatrice(const int rows, const int cols);
+    
+    std::vector<std::vector<double>> calculMatR();
+    std::vector<std::vector<double>> calculMatQ();
+    
+    std::vector<std::vector<double>> transpose(const std::vector<std::vector<double>>& matrix, const int nbDiag);
+    std::vector<std::vector<double>> multiMatParDiag(const std::vector<std::vector<double>>& matrix, const std::vector<double>& diag, const int nbBandes);
+    std::vector<std::vector<double>> multiDiagParMat(const std::vector<double>& diag, const std::vector<std::vector<double>>& matrix, const int nbBandes);
+    std::vector<double> multiMatParVec(const std::vector<std::vector<double>>& matrix, const std::vector<double>& vec, const int nbBandes);
+    std::vector<std::vector<double>> addMatEtMat(const std::vector<std::vector<double>>& matrix1, const std::vector<std::vector<double>>& matrix2, const int nbBandes);
+    std::vector<std::vector<double>> addIdentityToMat(const std::vector<std::vector<double>>& matrix);
+    std::vector<std::vector<double>> multiConstParMat(const std::vector<std::vector<double>>& matrix, const double c, const int nbBandes);
+    std::vector<std::vector<double>> multiMatParMat(const std::vector<std::vector<double>>& matrix1, const std::vector<std::vector<double>>& matrix2, const int nbBandes1, const int nbBandes2);
+    std::vector<std::vector<double>> inverseMatSym(const std::vector<std::vector<double>>& matrix1, const std::vector<std::vector<double>>& matrix2, const int nbBandes, const int shift);
+    
+    std::pair<std::vector<std::vector<double>>, std::vector<std::vector<double>>> decompositionCholesky(const std::vector<std::vector<double>>& matrix, const int nbBandes, const int shift);
+    
+    std::vector<double> resolutionSystemeLineaireCholesky(std::vector<std::vector<double>> matL, std::vector<std::vector<double>> matD, std::vector<double> vecQtY, const int nbBandes, const int shift);
+    
+    SplineMatrices prepareCalculSpline();
+    SplineResults calculSpline(SplineMatrices& matrices);
 
 public:
     ModelChronocurve* mModel;

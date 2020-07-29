@@ -1032,5 +1032,5 @@ void Event::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, co
 void Event::updateW()
 {
     mW = mVG.mX + mSy * mSy;
-    mW1 = 1 / mW;
+    mWInv = 1 / mW;
 }
