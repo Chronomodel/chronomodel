@@ -50,6 +50,7 @@ class Event;
 
 typedef struct SplineMatrices
 {
+    std::vector<double> diagWInv;
     std::vector<std::vector<double>> matR;
     std::vector<std::vector<double>> matQ;
     std::vector<std::vector<double>> matQT;
@@ -98,6 +99,7 @@ private:
     
     void orderEventsByTheta();
     void spreadEventsTheta(double minStep = 1e-6);
+    void reduceEventsTheta();
     void saveEventsTheta();
     void restoreEventsTheta();
     std::map<int, double> mThetasMemo;
@@ -108,6 +110,9 @@ private:
     
     std::vector<double> initVecteur(const int dim);
     std::vector<std::vector<double>> initMatrice(const int rows, const int cols);
+    
+    std::vector<double> getThetaEventVector();
+    std::vector<double> getYEventVector();
     
     std::vector<std::vector<double>> calculMatR();
     std::vector<std::vector<double>> calculMatQ();
@@ -121,6 +126,8 @@ private:
     std::vector<std::vector<double>> multiConstParMat(const std::vector<std::vector<double>>& matrix, const double c, const int nbBandes);
     std::vector<std::vector<double>> multiMatParMat(const std::vector<std::vector<double>>& matrix1, const std::vector<std::vector<double>>& matrix2, const int nbBandes1, const int nbBandes2);
     std::vector<std::vector<double>> inverseMatSym(const std::vector<std::vector<double>>& matrix1, const std::vector<std::vector<double>>& matrix2, const int nbBandes, const int shift);
+    double sumAllMatrix(const std::vector<std::vector<double>>& matrix);
+    double sumAllVector(const std::vector<double>& matrix);
     
     std::pair<std::vector<std::vector<double>>, std::vector<std::vector<double>>> decompositionCholesky(const std::vector<std::vector<double>>& matrix, const int nbBandes, const int shift);
     

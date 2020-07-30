@@ -508,18 +508,13 @@ void MCMCLoopChronocurve::update()
     }
     
     // --------------------------------------------------------------
-    //  Pour les calculs qui suivent, on travaille en temps réduit.
-    //  (nécessaire pour les calculs spline)
-    // --------------------------------------------------------------
-    // TODO : convertir tous les theta event entre 0 et 1
-    
-    // --------------------------------------------------------------
     //  Update theta Events
     // --------------------------------------------------------------
     if(mChronocurveSettings.mTimeType == ChronocurveSettings::eModeBayesian)
     {
         orderEventsByTheta();
         saveEventsTheta();
+        reduceEventsTheta(); // On passe en temps réduit entre 0 et 1
         spreadEventsTheta();
         
         SplineMatrices matrices = prepareCalculSpline();
@@ -558,6 +553,7 @@ void MCMCLoopChronocurve::update()
                 
                 orderEventsByTheta(); // on réordonne les thetas
                 saveEventsTheta(); // On les sauvegarde
+                reduceEventsTheta(); // On passe en temps réduit entre 0 et 1
                 spreadEventsTheta(); // On les espace si nécessaire
                 
                 SplineMatrices matrices = prepareCalculSpline();
@@ -608,6 +604,7 @@ void MCMCLoopChronocurve::update()
     // --------------------------------------------------------------
     orderEventsByTheta();
     saveEventsTheta();
+    reduceEventsTheta();
     spreadEventsTheta();
     
     // --------------------------------------------------------------
@@ -741,12 +738,6 @@ void MCMCLoopChronocurve::update()
     restoreEventsTheta();
     
     // --------------------------------------------------------------
-    //  Les calculs spline sont terminés
-    //  On repasse les theta event en temps année
-    // --------------------------------------------------------------
-    // TODO : convertir tous les theta event entre tmin et tmax
-    
-    // --------------------------------------------------------------
     //  Calcul de la spline g, g' et gerr à l'année sur plage d'étude
     // --------------------------------------------------------------
     
@@ -826,7 +817,47 @@ bool MCMCLoopChronocurve::adapt()
 
 void MCMCLoopChronocurve::finalize()
 {
+    std::vector<double> ti = getThetaEventVector();
+    
+    for(Event* event : mModel->mEvents){
+        event->mY = event->mYx;
+    }
+    
+    orderEventsByTheta();
+    saveEventsTheta();
+    reduceEventsTheta(); // On passe en temps réduit entre 0 et 1
+    spreadEventsTheta();
+    
+    std::vector<double> tis = getThetaEventVector();
+    
     // Calculer la moyenne des g(t) à partir de toutes les chaines
+    SplineMatrices matrices = prepareCalculSpline();
+    SplineResults spline = calculSpline(matrices);
+    
+    restoreEventsTheta();
+    
+    std::vector<double> tif = getThetaEventVector();
+    std::vector<double> yi = getYEventVector();
+    
+    std::vector<double> vecG = spline.vecG;
+    std::vector<double> vecGamma = spline.vecGamma;
+    std::vector<double> diagWInv = matrices.diagWInv;
+    std::vector<std::vector<double>> matR = matrices.matR;
+    std::vector<std::vector<double>> matQ = matrices.matQ;
+    std::vector<std::vector<double>> matQT = matrices.matQT;
+    std::vector<std::vector<double>> matQTW_1Q = matrices.matQTW_1Q;
+    std::vector<std::vector<double>> matQTQ = matrices.matQTQ;
+    std::vector<std::vector<double>> matL = spline.matL;
+    std::vector<std::vector<double>> matD = spline.matD;
+    
+    double sumDiagWInv = sumAllVector(diagWInv);
+    double sumMatR = sumAllMatrix(matR);
+    double sumMatQ = sumAllMatrix(matQ);
+    double sumMatQT = sumAllMatrix(matQT);
+    double sumMatQTW_1Q = sumAllMatrix(matQTW_1Q);
+    double sumMatQTQ = sumAllMatrix(matQTQ);
+    double sumMatL = sumAllMatrix(matL);
+    double sumMatD = sumAllMatrix(matD);
 }
 
 #pragma mark Related to : calibrate
@@ -969,6 +1000,7 @@ double MCMCLoopChronocurve::h_YWI_AY_composante(SplineMatrices& matrices)
 
 double MCMCLoopChronocurve::h_alpha(SplineMatrices& matrices)
 {
+    const std::vector<double>& diagWInv = matrices.diagWInv;
     const std::vector<std::vector<double>>& matR = matrices.matR;
     const std::vector<std::vector<double>>& matQ = matrices.matQ;
     const std::vector<std::vector<double>>& matQT = matrices.matQT;
@@ -982,7 +1014,7 @@ double MCMCLoopChronocurve::h_alpha(SplineMatrices& matrices)
     
     double W_1m = 0;
     for(int i=0; i<nb_noeuds; ++i){
-        W_1m += diag_W_1m[i];
+        W_1m += diagWInv[i];
     }
     W_1m /= nb_noeuds;
     for(int i=0; i<nb_noeuds; ++i){
@@ -995,7 +1027,6 @@ double MCMCLoopChronocurve::h_alpha(SplineMatrices& matrices)
     std::vector<std::vector<double>> matDc = decomp.second;
     
     std::vector<std::vector<double>> matRInv = inverseMatSym(matLc, matDc, 5, 1);
-    //inverse_Mat_sym(Mat_Lc,Mat_Dc,nb_noeuds,1,Mat_R_1,5);
     
     std::vector<std::vector<double>> tmp = multiMatParMat(matQ, matRInv, 3, 3);
     std::vector<std::vector<double>> matK = multiMatParMat(tmp, matQT, 3, 3);
@@ -1085,23 +1116,7 @@ double MCMCLoopChronocurve::h_theta()
     return exp(-0.5 * sum);
 }
 
-#pragma mark Related to : do_cravate
-
-/**
- * La création de la matrice diagonale des erreurs est nécessaire à chaque mise à jour de :
- * - Theta event : qui peut engendrer un nouvel ordonnancement des events (definitionNoeuds)
- * - VG event : qui intervient directement dans le calcul de W
- */
-std::vector<double> MCMCLoopChronocurve::createDiagWInv()
-{
-    std::vector<double> diagWInv;
-    
-    for(Event* event : mModel->mEvents){
-        diagWInv.push_back(event->mWInv);
-    }
-    
-    return diagWInv;
-}
+#pragma mark Manipulation des theta event pour le calcul spline (equivalent "Do Cravate")
 
 /**
  * Cette fonction est l'ancien do_cravate() qui portait mal son nom car nous ne faisons pas de cravates !
@@ -1250,7 +1265,150 @@ void MCMCLoopChronocurve::spreadEventsTheta(double minStep)
     }
 }
 
-#pragma mark Related to : calcul_spline
+void MCMCLoopChronocurve::reduceEventsTheta()
+{
+    double tmin = mModel->mSettings.mTmin;
+    double tmax = mModel->mSettings.mTmax;
+    
+    for(int i=0; i<mModel->mEvents.size(); i++)
+    {
+        double t = mModel->mEvents[i]->mTheta.mX;
+        mModel->mEvents[i]->mTheta.mX = (t - tmin) / (tmax - tmin);
+    }
+}
+
+#pragma mark Init vecteurs et matrices
+
+std::vector<double> MCMCLoopChronocurve::initVecteur(const int dim)
+{
+    std::vector<double> vec;
+    for(int i=0; i<dim; ++i){
+        vec.push_back(0);
+    }
+    return vec;
+}
+
+std::vector<std::vector<double>> MCMCLoopChronocurve::initMatrice(const int rows, const int cols)
+{
+    std::vector<std::vector<double>> matrix;
+    for(int r=0; r<rows; ++r){
+        std::vector<double> row;
+        for(int c=0; c<cols; ++c){
+            row.push_back(0);
+        }
+        matrix.push_back(row);
+    }
+    return matrix;
+}
+
+#pragma mark Pratique pour debug
+
+std::vector<double> MCMCLoopChronocurve::getThetaEventVector()
+{
+    std::vector<double> vecT;
+    for(int i=0; i<mModel->mEvents.size(); ++i)
+    {
+        vecT.push_back(mModel->mEvents[i]->mTheta.mX);
+    }
+    return vecT;
+}
+
+std::vector<double> MCMCLoopChronocurve::getYEventVector()
+{
+    std::vector<double> vecY;
+    for(int i=0; i<mModel->mEvents.size(); ++i)
+    {
+        vecY.push_back(mModel->mEvents[i]->mY);
+    }
+    return vecY;
+}
+
+#pragma mark Calcul Spline
+
+std::vector<std::vector<double>> MCMCLoopChronocurve::calculMatR()
+{
+    // Calcul de la matrice R, de dimension (n-2) x (n-2) contenue dans une matrice n x n
+    // Par exemple pour n = 5 :
+    // 0 0 0 0 0
+    // 0 X X X 0
+    // 0 X X X 0
+    // 0 X X X 0
+    // 0 0 0 0 0
+    
+    // vecH est de dimension n-1
+    std::vector<double> vecH = calculVecH();
+    unsigned int n = mModel->mEvents.size();
+    
+    // matR est de dimension n-2 x n-2, mais contenue dans une matrice nxn
+    std::vector<std::vector<double>> matR = initMatrice(n, n);
+    // On parcourt n-2 valeurs :
+    for(unsigned int i=1; i<n-1; ++i)
+    {
+        matR[i][i] = (vecH[i-1] + vecH[i]) / 3.;
+        // Si on est en n-2 (dernière itération), on ne calcule pas les valeurs de part et d'autre de la diagonale (termes symétriques)
+        if(i < n-2)
+        {
+            matR[i][i+1] = vecH[i] / 6.;
+            matR[i+1][i] = vecH[i] / 6.;
+        }
+    }
+    return matR;
+}
+
+std::vector<std::vector<double>> MCMCLoopChronocurve::calculMatQ()
+{
+    // Calcul de la matrice Q, de dimension n x (n-2) contenue dans une matrice n x n
+    // Les 1ère et dernière colonnes sont nulles
+    // Par exemple pour n = 5 :
+    // 0 X 0 0 0
+    // 0 X X X 0
+    // 0 X X X 0
+    // 0 X X X 0
+    // 0 0 0 X 0
+    
+    // vecH est de dimension n-1
+    std::vector<double> vecH = calculVecH();
+    int n = mModel->mEvents.size();
+    
+    // matQ est de dimension n x n-2, mais contenue dans une matrice nxn
+    std::vector<std::vector<double>> matQ = initMatrice(n, n);
+    // On parcourt n-2 valeurs :
+    for(unsigned int i=1; i<vecH.size(); ++i)
+    {
+        matQ[i-1][i] = 1. / vecH[i-1];
+        matQ[i][i] = -((1./vecH[i-1]) + (1./vecH[i]));
+        matQ[i+1][i] = 1. / vecH[i];
+    }
+    return matQ;
+}
+
+std::vector<double> MCMCLoopChronocurve::calculVecH()
+{
+    std::vector<double> result;
+    for(int i=0; i<mModel->mEvents.size()-1; ++i)
+    {
+        double tiPlusUn = mModel->mEvents[i + 1]->mTheta.mX;
+        double ti = mModel->mEvents[i]->mTheta.mX;
+        result.push_back(tiPlusUn - ti);
+    }
+    return result;
+}
+
+/**
+ * La création de la matrice diagonale des erreurs est nécessaire à chaque mise à jour de :
+ * - Theta event : qui peut engendrer un nouvel ordonnancement des events (definitionNoeuds)
+ * - VG event : qui intervient directement dans le calcul de W
+ */
+std::vector<double> MCMCLoopChronocurve::createDiagWInv()
+{
+    std::vector<double> diagWInv;
+    
+    for(Event* event : mModel->mEvents){
+        diagWInv.push_back(event->mWInv);
+    }
+    
+    return diagWInv;
+}
 
 SplineMatrices MCMCLoopChronocurve::prepareCalculSpline()
 {
@@ -1271,10 +1429,11 @@ SplineMatrices MCMCLoopChronocurve::prepareCalculSpline()
     std::vector<std::vector<double>> matQTQ = multiMatParMat(matQT, matQ, 3, 3);
     
     SplineMatrices matrices;
+    matrices.diagWInv = diagWInv;
     matrices.matR = matR;
     matrices.matQ = matQ;
     matrices.matQT = matQT;
-    matrices.matQTW_1Q = matQTW_1Q;
+    matrices.matQTW_1Q = matQTW_1Q; // Seule affectée par changement de VG
     matrices.matQTQ = matQTQ;
     
     return matrices;
@@ -1367,96 +1526,7 @@ SplineResults MCMCLoopChronocurve::calculSpline(SplineMatrices& matrices)
 #endif
 }
 
-std::vector<double> MCMCLoopChronocurve::calculVecH()
-{
-    std::vector<double> result;
-    for(int i=0; i<mModel->mEvents.size()-1; ++i)
-    {
-        double tiPlusUn = mModel->mEvents[i + 1]->mTheta.mX;
-        double ti = mModel->mEvents[i]->mTheta.mX;
-        result.push_back(tiPlusUn - ti);
-    }
-    return result;
-}
-
-std::vector<double> MCMCLoopChronocurve::initVecteur(const int dim)
-{
-    std::vector<double> vec;
-    for(int i=0; i<dim; ++i){
-        vec.push_back(0);
-    }
-    return vec;
-}
-
-std::vector<std::vector<double>> MCMCLoopChronocurve::initMatrice(const int rows, const int cols)
-{
-    std::vector<std::vector<double>> matrix;
-    for(int r=0; r<rows; ++r){
-        std::vector<double> row;
-        for(int c=0; c<cols; ++c){
-            row.push_back(0);
-        }
-        matrix.push_back(row);
-    }
-    return matrix;
-}
-
-std::vector<std::vector<double>> MCMCLoopChronocurve::calculMatR()
-{
-    // Calcul de la matrice R, de dimension (n-2) x (n-2) contenue dans une matrice n x n
-    // Par exemple pour n = 5 :
-    // 0 0 0 0 0
-    // 0 X X X 0
-    // 0 X X X 0
-    // 0 X X X 0
-    // 0 0 0 0 0
-    
-    // vecH est de dimension n-1
-    std::vector<double> vecH = calculVecH();
-    unsigned int n = mModel->mEvents.size();
-    
-    // matR est de dimension n-2 x n-2, mais contenue dans une matrice nxn
-    std::vector<std::vector<double>> matR = initMatrice(n, n);
-    // On parcourt n-2 valeurs :
-    for(unsigned int i=1; i<vecH.size(); ++i)
-    {
-        matR[i][i] = (vecH[i-1] + vecH[i]) / 3.;
-        // Si on est en n-2 (dernière itération), on ne calcule pas les valeurs de part et d'autre de la diagonale (termes symétriques)
-        if(i < n-2)
-        {
-            matR[i][i+1] = vecH[i] / 6.;
-            matR[i+1][i] = vecH[i] / 6.;
-        }
-    }
-    return matR;
-}
-
-std::vector<std::vector<double>> MCMCLoopChronocurve::calculMatQ()
-{
-    // Calcul de la matrice Q, de dimension n x (n-2) contenue dans une matrice n x n
-    // Les 1ère et dernière colonnes sont nulles
-    // Par exemple pour n = 5 :
-    // 0 X 0 0 0
-    // 0 X X X 0
-    // 0 X X X 0
-    // 0 X X X 0
-    // 0 0 0 X 0
-    
-    // vecH est de dimension n-1
-    std::vector<double> vecH = calculVecH();
-    int n = mModel->mEvents.size();
-    
-    // matQ est de dimension n x n-2, mais contenue dans une matrice nxn
-    std::vector<std::vector<double>> matQ = initMatrice(n, n);
-    // On parcourt n-2 valeurs :
-    for(unsigned int i=1; i<vecH.size(); ++i)
-    {
-        matQ[i-1][i] = 1. / vecH[i-1];
-        matQ[i][i] = -((1./vecH[i-1]) + (1./vecH[i]));
-        matQ[i+1][i] = 1. / vecH[i];
-    }
-    return matQ;
-}
+#pragma mark Calcul Matriciel
 
 std::vector<std::vector<double>> MCMCLoopChronocurve::transpose(const std::vector<std::vector<double>>& matrix, const int nbBandes)
 {
@@ -1660,55 +1730,51 @@ std::vector<std::vector<double>> MCMCLoopChronocurve::multiMatParMat(const std::
 std::vector<std::vector<double>> MCMCLoopChronocurve::inverseMatSym(const std::vector<std::vector<double>>& matrixLE, const std::vector<std::vector<double>>& matrixDE, const int nbBandes, const int shift)
 {
     int dim = matrixLE.size();
-    std::vector<std::vector<double>> mat1 = initMatrice(dim, dim);
+    std::vector<std::vector<double>> matInv = initMatrice(dim, dim);
     int bande = floor((nbBandes-1)/2);
     
-    mat1[dim-1-shift][dim-1-shift] = 1. / matrixDE[dim-1-shift][dim-1-shift];
-    mat1[dim-2-shift][dim-1-shift] = -matrixLE[dim-1-shift][dim-2-shift] * mat1[dim-1-shift][dim-1-shift];
-    mat1[dim-2-shift][dim-2-shift] = (1. / matrixDE[dim-2-shift][dim-2-shift]) - matrixLE[dim-1-shift][dim-2-shift] * mat1[dim-2-shift][dim-1-shift];
-    
+    matInv[dim-1-shift][dim-1-shift] = 1. / matrixDE[dim-1-shift][dim-1-shift];
+    matInv[dim-2-shift][dim-1-shift] = -matrixLE[dim-1-shift][dim-2-shift] * matInv[dim-1-shift][dim-1-shift];
+    matInv[dim-2-shift][dim-2-shift] = (1. / matrixDE[dim-2-shift][dim-2-shift]) - matrixLE[dim-1-shift][dim-2-shift] * matInv[dim-2-shift][dim-1-shift];
     
     // shift : décalage qui permet d'éliminer les premières et dernières lignes et colonnes
     for(int i=dim-3-shift; i>=shift; --i)
     {
-        mat1[i][i+2] = -matrixLE[i+1][i] * mat1[i+1][i+2] - matrixLE[i+2][i] * mat1[i+2][i+2];
-        mat1[i][i+1] = -matrixLE[i+1][i] * mat1[i+1][i+1] - matrixLE[i+2][i] * mat1[i+1][i+2];
-        mat1[i][i] = (1. / matrixDE[i][i]) - matrixLE[i+1][i] * mat1[i][i+1] - matrixLE[i+2][i] * mat1[i][i+2];
+        matInv[i][i+2] = -matrixLE[i+1][i] * matInv[i+1][i+2] - matrixLE[i+2][i] * matInv[i+2][i+2];
+        matInv[i][i+1] = -matrixLE[i+1][i] * matInv[i+1][i+1] - matrixLE[i+2][i] * matInv[i+1][i+2];
+        matInv[i][i] = (1. / matrixDE[i][i]) - matrixLE[i+1][i] * matInv[i][i+1] - matrixLE[i+2][i] * matInv[i][i+2];
         
         if(bande >= 3)
         {
-            for(int k=2; k<bande; ++k)
+            for(int k=3; k<=bande; ++k)
             {
-                if(i+k <= (dim - shift))
+                if(i+k < (dim - shift))
+                {
+                    matInv[i][i+k] = -matrixLE[i+1][i] * matInv[i+1][i+k] - matrixLE[i+2][i] * matInv[i+2][i+k];
+                }
             }
         }
     }
-
-
-    for i:=(dim-2-dc) downto 1+dc do begin
-      
-      if (bande>=3) then begin
-        for k:=3 to bande do begin
-          if (i+k<=(dim-dc)) then begin
-            Mat_1[i,i+k]:= -Mat_L_E[i+1,i]*Mat_1[i+1,i+k] - Mat_L_E[i+2,i]*Mat_1[i+2,i+k];
-          end;
-        end;
-      end;
-    end;
-
-    {On symétrise la matrice Mat_1, même si cela n'est pas nécessaire lorsque bande=2}
-    for i:=1+dc to dim-dc do begin
-      for j:=i+1 to (i+bande) do begin
-        if (j<=(dim-dc)) then Mat_1[j,i]:= Mat_1[i,j];
-      end;
-    end;
+    
+    for(int i=shift; i<dim-shift; ++i)
+    {
+        for(int j=i+1; j<=i+bande; ++j)
+        {
+            if(j < (dim-shift))
+            {
+                matInv[j][i] = matInv[i][j];
+            }
+        }
+    }
+    
+    return matInv;
 }
 
 std::pair<std::vector<std::vector<double>>, std::vector<std::vector<double>>> MCMCLoopChronocurve::decompositionCholesky(const std::vector<std::vector<double>>& matrix, const int nbBandes, const int shift)
 {
     int dim = matrix.size();
-    std::vector<std::vector<double>> matL = initMatrice(dim + 2, dim + 2);
-    std::vector<std::vector<double>> matD = initMatrice(dim + 2, dim + 2);
+    std::vector<std::vector<double>> matL = initMatrice(dim, dim);
+    std::vector<std::vector<double>> matD = initMatrice(dim, dim);
 
     int bande = floor((nbBandes-1)/2);
     
@@ -1724,12 +1790,12 @@ std::pair<std::vector<std::vector<double>>, std::vector<std::vector<double>>> MC
     {
         matL[i][shift] = matrix[i][shift] / matD[shift][shift];
         
-        for(int j=shift+1; j<i-1; ++j)
+        for(int j=shift+1; j<=i-1; ++j)
         {
             if(abs(i - j) <= bande)
             {
                 double sum = 0;
-                for(int k=shift; k<j-1; ++k)
+                for(int k=shift; k<=j-1; ++k)
                 {
                     if(abs(i - k) <= bande)
                     {
@@ -1741,7 +1807,7 @@ std::pair<std::vector<std::vector<double>>, std::vector<std::vector<double>>> MC
         }
         
         double sum = 0;
-        for(int k=shift; k<i-1; ++k)
+        for(int k=shift; k<=i-1; ++k)
         {
             if(abs(i - k) <= bande)
             {
@@ -1787,4 +1853,27 @@ std::vector<double> MCMCLoopChronocurve::resolutionSystemeLineaireCholesky(std::
         vecGamma[i] = vecNu[i] - matL[i+1][i] * vecGamma[i+1] - matL[i+2][i] * vecGamma[i+2];
     }
     return vecGamma;
+}
+
+double MCMCLoopChronocurve::sumAllMatrix(const std::vector<std::vector<double>>& matrix)
+{
+    double sum = 0;
+    for(int i=0; i<matrix.size(); ++i)
+    {
+        for(int j=0; j<matrix[i].size(); ++j)
+        {
+            sum += matrix[i][j];
+        }
+    }
+    return sum;
+}
+
+double MCMCLoopChronocurve::sumAllVector(const std::vector<double>& vector)
+{
+    double sum = 0;
+    for(int i=0; i<vector.size(); ++i)
+    {
+        sum += vector[i];
+    }
+    return sum;
 }
