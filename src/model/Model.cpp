@@ -722,8 +722,8 @@ bool Model::isValid()
     QVector<QVector<Event*> > eventBranches;
     try {
         eventBranches = ModelUtilities::getAllEventsBranches(mEvents);
-    } catch(QString error){
-        throw error;
+    } catch(QString &error){
+        throw &error;
     }
 
     // 5 - Pas de circularité sur les contraintes de phases
@@ -731,8 +731,8 @@ bool Model::isValid()
     QVector<QVector<Phase*> > phaseBranches;
     try {
         phaseBranches = ModelUtilities::getAllPhasesBranches(mPhases, mSettings.mTmax - mSettings.mTmin);
-    } catch(QString error){
-        throw error;
+    } catch(QString &error){
+        throw &error;
     }
 
     // 7 - Un fait ne paut pas appartenir à 2 phases en contrainte

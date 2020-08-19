@@ -153,28 +153,33 @@ PluginGaussForm::~PluginGaussForm()
 
 void PluginGaussForm::setData(const QJsonObject& data, bool isCombined)
 {
-    (void) isCombined;
-    const QLocale locale=QLocale();
-    const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
-    const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
-    const double a = data.value(DATE_GAUSS_A_STR).toDouble();
-    const double b = data.value(DATE_GAUSS_B_STR).toDouble();
-    const double c = data.value(DATE_GAUSS_C_STR).toDouble();
-    const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
-    const QString curve = data.value(DATE_GAUSS_CURVE_STR).toString();
+    if ( isCombined) {
+        mAverageEdit->setText("Combined data");
+        mErrorEdit->setText("Combined data");
+        
+    } else {
+        const QLocale locale=QLocale();
+        const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
+        const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
+        const double a = data.value(DATE_GAUSS_A_STR).toDouble();
+        const double b = data.value(DATE_GAUSS_B_STR).toDouble();
+        const double c = data.value(DATE_GAUSS_C_STR).toDouble();
+        const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
+        const QString curve = data.value(DATE_GAUSS_CURVE_STR).toString();
 
-    mAverageEdit->setText(locale.toString(age));
-    mErrorEdit->setText(locale.toString(error));
-    mAEdit->setText(locale.toString(a));
-    mBEdit->setText(locale.toString(b));
-    mCEdit->setText(locale.toString(c));
+        mAverageEdit->setText(locale.toString(age));
+        mErrorEdit->setText(locale.toString(error));
+        mAEdit->setText(locale.toString(a));
+        mBEdit->setText(locale.toString(b));
+        mCEdit->setText(locale.toString(c));
 
-    mCurveRadio->setChecked(mode == DATE_GAUSS_MODE_CURVE);
-    mEquationRadio->setChecked(mode == DATE_GAUSS_MODE_EQ);
-    mNoneRadio->setChecked(mode == DATE_GAUSS_MODE_NONE);
+        mCurveRadio->setChecked(mode == DATE_GAUSS_MODE_CURVE);
+        mEquationRadio->setChecked(mode == DATE_GAUSS_MODE_EQ);
+        mNoneRadio->setChecked(mode == DATE_GAUSS_MODE_NONE);
 
-    mCurveCombo->setCurrentText(curve);
-    updateVisibleElements();
+        mCurveCombo->setCurrentText(curve);
+        updateVisibleElements();
+    }
 }
 
 void PluginGaussForm::updateVisibleElements()

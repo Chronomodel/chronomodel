@@ -81,6 +81,7 @@ public:
     PluginAbstract():mRefGraph(nullptr){}
     virtual ~PluginAbstract(){}
 
+    virtual bool withLikelihoodArg() {return false;}
     virtual long double getLikelihood(const double& t, const QJsonObject& data) = 0;
     virtual QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data)
     {
@@ -88,7 +89,20 @@ public:
         (void) data;
         return QPair<long double, long double>();
     }
-    virtual bool withLikelihoodArg() {return false;}
+    
+    long double getLikelihoodCombine  (const double& t, const QJsonArray& subData)
+    {
+        long double produit (1.l);
+        for (int i(0); i<subData.size(); ++i) {
+            const QJsonObject subDate = subData.at(i).toObject();
+            auto data = subDate.value(STATE_DATE_DATA).toObject();
+            
+            produit *= getLikelihood(t, data );
+
+        }
+      
+        return produit;
+    }
 
     virtual QString getName() const = 0;
     virtual QIcon getIcon() const = 0;
@@ -134,7 +148,23 @@ public:
         (void) settings;
         return true;
     }
-
+    virtual bool isCombineValid(const QJsonObject& data, const ProjectSettings& settings)
+   {
+       Q_ASSERT(&data);
+       Q_ASSERT(&settings);
+       
+       QJsonArray subData = data.value(STATE_DATE_SUB_DATES).toArray();
+      
+       bool valid (true);
+       
+       for (int i (0); i<subData.size(); ++i) {
+           qDebug()<<subData.at(i).toObject().value(STATE_NAME).toString();
+           const bool isVal = isDateValid(subData.at(i).toObject().value(STATE_DATE_DATA).toObject(), settings);
+           valid = valid & isVal;
+       }
+       return valid;
+   }
+    
     virtual PluginFormAbstract* getForm() = 0;
     virtual GraphViewRefAbstract* getGraphViewRef() = 0;
     virtual void deleteGraphViewRef(GraphViewRefAbstract* graph ) {(void) graph ;}
@@ -145,6 +175,21 @@ public:
     // The following is for plugins using ref curves :
     // -------------------------------
     virtual QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const = 0;
+
+    virtual QPair<double,double> getTminTmaxRefsCurveCombine(const QJsonArray& subData)
+    {
+        double tmin (INFINITY);
+        double tmax (-INFINITY);
+
+        for (int i(0); i<subData.size(); ++i) {
+           
+            const QPair<double, double> tminTmax = getTminTmaxRefsCurve( subData.at(i).toObject().value(STATE_DATE_DATA).toObject() );
+            tmin = std::min(tmin, tminTmax.first);
+            tmax = std::max(tmax, tminTmax.second);
+            
+        }
+        return qMakePair(tmin, tmax);
+    }
 
     virtual QString getRefExt() const {return "";}
     virtual QString getRefsPath() const {return "";}

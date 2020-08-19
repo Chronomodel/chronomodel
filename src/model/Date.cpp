@@ -57,6 +57,7 @@ mName("No Named Date")
 {
    // init();
     mColor = Qt::blue;
+    mOrigin = eSingleDate;
     mPlugin = nullptr;
     mTheta.mSupport = MetropolisVariable::eR;
     mSigma.mSupport = MetropolisVariable::eRp;
@@ -80,7 +81,7 @@ mName("No Named Date")
     mDeltaError = 0.;
     mIsCurrent = false;
     mIsSelected = false;
-    mSubDates.clear();
+   // mSubDates.clear();
 
     mTminRefCurve = -INFINITY;
     mTmaxRefCurve = INFINITY;
@@ -98,6 +99,7 @@ mName("No Named Date")
 void Date::init()
 {
     mColor = Qt::blue;
+    mOrigin = eSingleDate;
     mPlugin = nullptr;
     mTheta.mSupport = MetropolisVariable::eR;
     mSigma.mSupport = MetropolisVariable::eRp;
@@ -121,7 +123,7 @@ void Date::init()
     mDeltaError = 0.;
     mIsCurrent = false;
     mIsSelected = false;
-    mSubDates.clear();
+   // mSubDates.clear();
 
     mTminRefCurve = -INFINITY;
     mTmaxRefCurve = INFINITY;
@@ -153,6 +155,7 @@ void Date::copyFrom(const Date& date)
     mColor = date.mColor;
 
     mData = date.mData;
+    mOrigin = date.mOrigin;
     mPlugin = date.mPlugin;
     mMethod = date.mMethod;
     mIsValid = date.mIsValid;
@@ -211,11 +214,12 @@ void Date::fromJson(const QJsonObject& json)
 
     // Copy plugin specific values for this data :
     mData = json.value(STATE_DATE_DATA).toObject();
+    mOrigin = (OriginType)json.value(STATE_DATE_ORIGIN).toInt();
 
     mMethod = (DataMethod)json.value(STATE_DATE_METHOD).toInt();
     mIsValid = json.value(STATE_DATE_VALID).toBool();
 
-    mDeltaType = (Date::DeltaType)json.value(STATE_DATE_DELTA_TYPE).toInt();
+    mDeltaType = (DeltaType)json.value(STATE_DATE_DELTA_TYPE).toInt();
     mDeltaFixed = json.value(STATE_DATE_DELTA_FIXED).toDouble();
     mDeltaMin = json.value(STATE_DATE_DELTA_MIN).toDouble();
     mDeltaMax = json.value(STATE_DATE_DELTA_MAX).toDouble();
@@ -224,15 +228,26 @@ void Date::fromJson(const QJsonObject& json)
 
     QString pluginId = json.value(STATE_DATE_PLUGIN_ID).toString();
     mPlugin = PluginManager::getPluginFromId(pluginId);
+    
+    
+    mSubDates = json.value(STATE_DATE_SUB_DATES).toArray();
+    
     if (mPlugin == nullptr)
         throw QObject::tr("Data could not be loaded : invalid plugin : %1").arg(pluginId);
     else  {
-        QPair<double, double> tminTmax = mPlugin->getTminTmaxRefsCurve(mData);
-        mTminRefCurve = tminTmax.first;
-        mTmaxRefCurve = tminTmax.second;
+        if (mOrigin == eSingleDate) {
+            QPair<double, double> tminTmax = mPlugin->getTminTmaxRefsCurve(mData);
+            mTminRefCurve = tminTmax.first;
+            mTmaxRefCurve = tminTmax.second;
+            
+        } else if (mOrigin == eCombination) {
+            QPair<double, double> tminTmax = mPlugin->getTminTmaxRefsCurveCombine(mSubDates);
+            mTminRefCurve = tminTmax.first;
+            mTmaxRefCurve = tminTmax.second;
+        }
     }
 
-    mSubDates.clear();
+  /*  mSubDates.clear();
     QJsonArray subdates = json.value(STATE_DATE_SUB_DATES).toArray();
     for (int i(0); i<subdates.size(); ++i) {
         const QJsonObject d = subdates.at(i).toObject();
@@ -240,7 +255,7 @@ void Date::fromJson(const QJsonObject& json)
         subDate.fromJson(d);
         mSubDates.push_back(subDate);
     }
-
+*/
     mTheta.mProposal = ModelUtilities::getDataMethodText(mMethod);
     mTheta.setName("Theta of date : "+ mName);
     mSigma.mProposal = ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt);
@@ -248,8 +263,9 @@ void Date::fromJson(const QJsonObject& json)
 
     Project* project = MainWindow::getInstance()->getProject();
     mSettings = project->mModel->mSettings;
-
+    
     QString toFind = mName + getDesc();
+    qDebug()<<"mName"<<mName<<toFind;
     QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
     if ( it!=project->mCalibCurves.end())
         mCalibration = & it.value();
@@ -262,6 +278,7 @@ QJsonObject Date::toJson() const
     date[STATE_ID] = mId;
     date[STATE_NAME] = mName;
     date[STATE_DATE_DATA] = mData;
+    date[STATE_DATE_ORIGIN] = mOrigin;
     date[STATE_DATE_PLUGIN_ID] = mPlugin->getId();
     date[STATE_DATE_METHOD] = mMethod;
     date[STATE_DATE_VALID] = mIsValid;
@@ -277,28 +294,43 @@ QJsonObject Date::toJson() const
     date[STATE_COLOR_GREEN] = mColor.green();
     date[STATE_COLOR_BLUE] = mColor.blue();
 
-    QJsonArray subdates;
-    for (int i=0; i<mSubDates.size(); ++i) {
-        QJsonObject d = mSubDates.at(i).toJson();
-        subdates.push_back(d);
-    }
-    date[STATE_DATE_SUB_DATES] = subdates;
-
+    date[STATE_DATE_SUB_DATES] = mSubDates;
     return date;
 }
 
-double Date::getLikelihood(const double& t) const
+long double Date::getLikelihood(const double& t) const
 {
-    double result (0.);
-    if (mPlugin)
-        result = double (mPlugin->getLikelihood(t, mData));
-    return result;
+    //double result (0.);
+    if (mPlugin) {
+        if (mOrigin == eSingleDate) {
+            return mPlugin->getLikelihood(t, mData);
+            
+        } else if (mOrigin == eCombination) {
+            return mPlugin->getLikelihoodCombine(t, mSubDates);
+            
+        } else {
+            
+            return 0.l;
+        }
+    
+    } else
+         return 0.l;
+
 }
 
 QPair<long double, long double> Date::getLikelihoodArg(const double& t) const
 {
     if (mPlugin)
-        return mPlugin->getLikelihoodArg(t,mData);
+        if (mOrigin == eSingleDate) {
+            return mPlugin->getLikelihoodArg(t, mData);
+            
+        }  else if (mOrigin == eCombination) {
+            return QPair<long double, long double>(log(mPlugin->getLikelihoodCombine(t, mSubDates)), 1.l);
+                   
+       } else {
+           return QPair<long double, long double>();
+       }
+        
     else
         return QPair<double, double>();
 }
@@ -338,20 +370,27 @@ void Date::reset()
 void Date::calibrate(const ProjectSettings& settings, Project *project)
 {
   // Check if the ref curve is in the plugin list
-    const QStringList refsNames = mPlugin->getRefsNames();
-    const QString dateRefName = mPlugin->getDateRefCurveName(this);
-
-    if (!dateRefName.isEmpty() && !refsNames.contains(dateRefName) )
-        return;
+    qDebug()<<"Date::calibrate";
+// in mOrigin == eCombination, there is no ref. Curve avalable
+    if (mOrigin == eSingleDate) {
+        const QStringList refsNames = mPlugin->getRefsNames();
+        const QString dateRefName = mPlugin->getDateRefCurveName(this);
+            
+        if (!dateRefName.isEmpty() && !refsNames.contains(dateRefName) )
+            return;
+    }
 
     // add the calibration
     mSettings = settings;
 
     const QString toFind (mName+getDesc());
+    qDebug()<<"Courbe toFind"<<toFind;
     QMap<QString, CalibrationCurve>::const_iterator it = project->mCalibCurves.find (toFind);
 
-    if ( it==project->mCalibCurves.end())
+    if ( it==project->mCalibCurves.end()) {
+        qDebug()<<"Courbe toFind"<<toFind<< "non trouvée";
         project->mCalibCurves.insert(toFind, CalibrationCurve());
+    }
 
     mCalibration = & (project->mCalibCurves[toFind]);
     mCalibration->mDescription = toFind;
@@ -370,6 +409,7 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
     // --------------------------------------------------
     //  Calibrate on the whole calibration period (= ref curve definition domain)
     // --------------------------------------------------
+   
     if (mTmaxRefCurve > mTminRefCurve) {
         QVector<double> calibrationTemp;
         QVector<double> repartitionTemp;

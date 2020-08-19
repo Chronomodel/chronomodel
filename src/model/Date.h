@@ -47,6 +47,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QMap>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QString>
 #include <QPixmap>
 #include <QObject>
@@ -76,6 +77,10 @@ class Date
 {
 
 public:
+    enum OriginType{
+        eSingleDate = 0,
+        eCombination = 1
+    };
     enum DataMethod{
         eMHSymetric = 0,
         eInversion = 1,
@@ -105,7 +110,7 @@ public:
     static Date fromCSV(const QStringList &dataStr, const QLocale& csvLocale);
     QStringList toCSV(const QLocale& csvLocale) const;
 
-    double getLikelihood(const double& t) const;
+    long double getLikelihood(const double& t) const;
     QPair<long double, long double> getLikelihoodArg(const double& t) const;
     QString getDesc() const;
     PluginAbstract* getPlugin() const {return mPlugin;}
@@ -163,6 +168,7 @@ public:
     QColor mColor;
 
     QJsonObject mData;
+    OriginType mOrigin;
     PluginAbstract* mPlugin;
     DataMethod mMethod;
     bool mIsValid;
@@ -182,7 +188,8 @@ public:
     QMap<double, double> mCalibHPD;
     ProjectSettings mSettings;
 
-    QList<Date> mSubDates;
+    //QList<Date> mSubDates;
+    QJsonArray mSubDates;
     double mMixingLevel;
 
 protected:

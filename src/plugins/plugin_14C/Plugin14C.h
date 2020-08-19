@@ -63,7 +63,11 @@ public:
     long double getLikelihood(const double& t, const QJsonObject& data);
     bool withLikelihoodArg() {return true; }
     QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);
+    long double getLikelihoodCombine(const double& t, const QJsonArray& data);
+       QPair<long double, long double > getLikelihoodArgCombine(const double& t, const QJsonArray& data);
+       
 
+    
     // virtual function
     QString getName() const;
     QIcon getIcon() const;

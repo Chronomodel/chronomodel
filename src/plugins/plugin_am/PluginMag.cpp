@@ -67,6 +67,7 @@ PluginMag::~PluginMag()
 long double PluginMag::getLikelihood(const double& t, const QJsonObject& data)
 {
     QPair<long double, long double > result = getLikelihoodArg(t, data);
+    qDebug()<<"in plugmag = t"<< t << double(expl(result.second) / sqrtl(result.first));
     return expl(result.second) / sqrtl(result.first);
 }
 
@@ -144,39 +145,51 @@ QList<Date::DataMethod> PluginMag::allowedDataMethods() const
 QString PluginMag::getDateDesc(const Date* date) const
 {
     Q_ASSERT(date);
-    QLocale locale=QLocale();
+    QLocale locale = QLocale();
     QString result;
+    
+    if (date->mOrigin == Date::eSingleDate) {
 
-    const QJsonObject data = date->mData;
+        const QJsonObject data = date->mData;
 
-    const bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
-    const bool is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
-    const bool is_int = data.value(DATE_AM_IS_INT_STR).toBool();
-    const double alpha = data.value(DATE_AM_ERROR_STR).toDouble();
-    const double inc = data.value(DATE_AM_INC_STR).toDouble();
-    const double dec = data.value(DATE_AM_DEC_STR).toDouble();
-    const double intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
-    const QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
+        const bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
+        const bool is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
+        const bool is_int = data.value(DATE_AM_IS_INT_STR).toBool();
+        const double alpha = data.value(DATE_AM_ERROR_STR).toDouble();
+        const double inc = data.value(DATE_AM_INC_STR).toDouble();
+        const double dec = data.value(DATE_AM_DEC_STR).toDouble();
+        const double intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
+        const QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
 
-    if (is_inc) {
-        result += QObject::tr("Inclination : %1").arg(locale.toString(inc));
-        // this is the html form, but not reconized in the DatesListItemDelegate
-       // result += "; " + QString("α<SUB>95</SUB>") + " : " + locale.toString(alpha);
-         result += "; " + QObject::tr("α 95 : %1").arg(locale.toString(alpha));
-    } else if (is_dec) {
-        result += QObject::tr("Declination : %1").arg(locale.toString(dec));
-        result += "; " + QObject::tr("Inclination : %1").arg(locale.toString(inc));
-        result += "; " + QObject::tr("α 95 : %1").arg(locale.toString(alpha));
-    } else if (is_int)  {
-        result += QObject::tr("Intensity : %1").arg(locale.toString(intensity));
-        result += "; " + QObject::tr("Error : %1").arg(locale.toString(alpha));
+        if (is_inc) {
+            result += QObject::tr("Inclination : %1").arg(locale.toString(inc));
+            // this is the html form, but not reconized in the DatesListItemDelegate
+           // result += "; " + QString("α<SUB>95</SUB>") + " : " + locale.toString(alpha);
+             result += "; " + QObject::tr("α 95 : %1").arg(locale.toString(alpha));
+        } else if (is_dec) {
+            result += QObject::tr("Declination : %1").arg(locale.toString(dec));
+            result += "; " + QObject::tr("Inclination : %1").arg(locale.toString(inc));
+            result += "; " + QObject::tr("α 95 : %1").arg(locale.toString(alpha));
+        } else if (is_int)  {
+            result += QObject::tr("Intensity : %1").arg(locale.toString(intensity));
+            result += "; " + QObject::tr("Error : %1").arg(locale.toString(alpha));
+        }
+
+        if (mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty())
+            result += "; " + tr("Ref. curve : %1").arg(ref_curve);
+        else
+            result += "; " + tr("ERROR -> Ref. curve : %1").arg(ref_curve);
+        
+    } else {
+            result = "Combine ";
+            for (int i (0); i< date->mSubDates.size(); i++) {
+                const QJsonObject d = date->mSubDates.at(i).toObject();
+                Date subDate;
+                subDate.fromJson(d);
+                result += "|" + getDateDesc(&subDate);
+            }
+            
     }
-
-    if (mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty())
-        result += "; " + tr("Ref. curve : %1").arg(ref_curve);
-    else
-        result += "; " + tr("ERROR -> Ref. curve : %1").arg(ref_curve);
-
 
     return result;
 }
@@ -415,6 +428,7 @@ PluginSettingsViewAbstract* PluginMag::getSettingsView()
 //Date validity
 bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
 {
+    qDebug() <<"PluginMag::isDateValid for="<< data.value(STATE_NAME).toString();
     // check valid curve
     QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
     const bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
@@ -444,6 +458,7 @@ bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& sett
     // remember likelihood type is long double
     const RefCurve& curve = mRefCurves.value(ref_curve);
     bool valid = false;
+   // qDebug()<<"in plugmag refcurve"<<ref_curve<< curve.mDataInf<<curve.mTmin;
 
     if (mesure > curve.mDataInfMin && mesure < curve.mDataSupMax)
         valid = true;
@@ -470,6 +485,71 @@ bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& sett
 return valid;
 
 }
+// Combine / Split
+bool PluginMag::areDatesMergeable(const QJsonArray& )
+{
+    return true;
+}
+/**
+ * @brief Combine several Mag datation
+ **/
+QJsonObject PluginMag::mergeDates(const QJsonArray& dates)
+{
+    QJsonObject result;
+    if (dates.size() > 1) {
+       
+        QJsonObject mergedData;
+        
+        mergedData[DATE_AM_REF_CURVE_STR] = "titi.ref";
+        mergedData[DATE_AM_IS_INC_STR] = false;
+        mergedData[DATE_AM_IS_DEC_STR] = false;
+        mergedData[DATE_AM_IS_INT_STR] = true;
+        
+        QStringList names;
 
+        bool subDatIsValid (true);
+        for (int i=0; i<dates.size(); ++i) {
+            const QJsonObject date = dates.at(i).toObject();
+          
+            names.append(date.value(STATE_NAME).toString());
+            // Validate the date before merge
+            Date d;
+            d.fromJson(date);
+            subDatIsValid = d.mIsValid & subDatIsValid;
+        
+        }
+        if (subDatIsValid) {
+            // inherits the first data propeties as plug-in and method...
+            result = dates.at(0).toObject();
+            result[STATE_NAME] = "Combined (" + names.join(" | ") + ")";
+            result[STATE_DATE_DATA] = mergedData;
+            result[STATE_DATE_ORIGIN] = Date::eCombination;
+            result[STATE_DATE_SUB_DATES] = dates;
+            
+        } else {
+            result["error"] = tr("Combine needs valid dates !");
+        }
 
+        
+    } else  {
+               result["error"] = tr("Combine needs at least 2 dates !");
+           }
+        return result;
+
+}
+//QPair<double,double> PluginMag::getTminTmaxRefsCurveCombine(const QJsonArray& subData)
+//{
+//    double tmin (INFINITY);
+//    double tmax (-INFINITY);
+//
+//    for (int i(0); i<subData.size(); ++i) {
+//
+//        const QPair<double, double> tminTmax = getTminTmaxRefsCurve( subData.at(i).toObject().value(STATE_DATE_DATA).toObject() );
+//        tmin = std::min(tmin, tminTmax.first);
+//        tmax = std::max(tmax, tminTmax.second);
+//
+//
+//    }
+//    return qMakePair(tmin, tmax);
+//}
 #endif

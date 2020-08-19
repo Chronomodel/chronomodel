@@ -270,14 +270,16 @@ void EventPropertiesView::updateEvent()
 
         if (type == Event::eDefault) {
             mMethodCombo->setCurrentIndex(mEvent.value(STATE_EVENT_METHOD).toInt());
-            mDatesList->setEvent(mEvent);
+            
+               qDebug() << "in EventPropertiesView::updateEvent mEvent mOrigin"  << mEvent.value(STATE_EVENT_DATES).toArray().at(0).toObject().value(STATE_DATE_ORIGIN).toInt();
+           mDatesList->setEvent(mEvent);
             if (mCurrentDateIdx>=0)
                 mDatesList->setCurrentRow(mCurrentDateIdx);
 
             QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
-
+           
             bool hasDates = (dates.size() > 0);
-            if (hasDates && mCurrentDateIdx>=0) {
+            if (hasDates && mCurrentDateIdx>= 0) {
                 updateCalibRequested(dates[mCurrentDateIdx].toObject());
                 mCalibBut->setEnabled(true);
                 mDeleteBut->setEnabled(true);
@@ -535,7 +537,7 @@ void EventPropertiesView::paintEvent(QPaintEvent* e)
     Q_UNUSED(e);
     QWidget::paintEvent(e);
     QPainter p(this);
-    p.fillRect(rect(), palette().color(QPalette::Background));
+    p.fillRect(rect(), palette().color(QPalette::Window));
 
     if (mEvent.isEmpty()) {
         QFont font = p.font();

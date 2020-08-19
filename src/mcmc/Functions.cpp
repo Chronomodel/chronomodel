@@ -411,7 +411,7 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
 
         double dMin = INFINITY;
 
-        std::vector<double> traceAlpha (trace1.toStdVector());
+        std::vector<double> traceAlpha (std::vector<double>(trace1.cbegin(), trace1.cend()) );
         std::vector<double> traceBeta (trace2.size());
 
         // 1 - map with relation Beta to Alpha

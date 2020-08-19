@@ -67,7 +67,7 @@ AboutDialog::AboutDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
     mText = new QTextEdit();
     mText->setTextInteractionFlags(Qt::TextBrowserInteraction);
     mText->setHtml(htmlFile.readAll());
-    mText->setTextBackgroundColor(qApp->palette().background().color());
+    mText->setTextBackgroundColor(qApp->palette().window().color());
 
     QVBoxLayout* layout = new QVBoxLayout();
     layout->addWidget(mText);

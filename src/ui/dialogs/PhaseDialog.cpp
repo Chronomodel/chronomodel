@@ -55,7 +55,7 @@ mButW(80)
     QPalette Pal(palette());
 
     // set black background
-    Pal.setColor(QPalette::Background, Qt::gray);
+    Pal.setColor(QPalette::Window, Qt::gray);
     this->setAutoFillBackground(true);
     this->setPalette(Pal);
 

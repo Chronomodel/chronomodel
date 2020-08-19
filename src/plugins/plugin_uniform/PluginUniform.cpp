@@ -186,4 +186,82 @@ QPair<double,double> PluginUniform::getTminTmaxRefsCurve(const QJsonObject& data
     return QPair<double, double>(min, max);
 }
 
+long double PluginUniform::getLikelihoodCombine(const double& t, const QJsonArray& subData)
+{
+    double min (-INFINITY);
+    double max (INFINITY);
+           //QJsonArray subDates = data.value(STATE_DATE_SUB_DATES).toArray();
+      
+   for (int i(0); i<subData.size(); ++i) {
+       const QJsonObject subDate = subData.at(i).toObject();
+       const QJsonObject data = subDate.value(STATE_DATE_DATA).toObject();
+
+       min = std::max(min, data.value(DATE_UNIFORM_MIN_STR).toDouble() );
+       max = std::min(max, data.value(DATE_UNIFORM_MAX_STR).toDouble() );
+       
+       
+       
+   }
+
+    return (t >= min && t <= max) ? static_cast<long double>(1. / (max-min)) : 0.l;
+    
+    
+}
+
+bool PluginUniform::areDatesMergeable(const QJsonArray& dates)
+{
+    int pluginID = dates.at(0).toObject().value(STATE_DATE_DATA).toObject().value(STATE_DATE_PLUGIN_ID).toInt();
+    for (int i=1; i<dates.size(); ++i) {
+        QJsonObject date = dates.at(i).toObject();
+        QJsonObject data = date.value(STATE_DATE_DATA).toObject();
+
+        if (pluginID != data.value(STATE_DATE_PLUGIN_ID).toInt())
+            return false;
+    }
+    return true;
+}
+
+/**
+ * @brief Combine several Uniform Interval
+ **/
+QJsonObject PluginUniform::mergeDates(const QJsonArray& dates)
+{
+    QJsonObject result;
+    if (dates.size() > 1) {
+       
+        
+        QStringList names;
+        
+        double min (-INFINITY);
+        double max (INFINITY);
+        for (int i=0; i<dates.size(); ++i) {
+            const QJsonObject date = dates.at(i).toObject();
+          
+            names.append(date.value(STATE_NAME).toString());
+            
+            min = std::max(min, date.value(STATE_DATE_DATA).toObject().value(DATE_UNIFORM_MIN_STR).toDouble() );
+            max = std::min(max, date.value(STATE_DATE_DATA).toObject().value(DATE_UNIFORM_MAX_STR).toDouble() );
+        
+        }
+             
+        
+        QJsonObject mergedData;
+        
+        mergedData[DATE_UNIFORM_MIN_STR] = min;
+        mergedData[DATE_UNIFORM_MAX_STR] = max;
+        
+        // inherits the first data propeties as plug-in and method...
+        result = dates.at(0).toObject();
+        result[STATE_NAME] = "Combined (" + names.join(" | ") + ")";
+        
+        result[STATE_DATE_DATA] = mergedData;
+        result[STATE_DATE_ORIGIN] = Date::eSingleDate;
+        result[STATE_DATE_SUB_DATES] = dates;
+
+    } else
+        result["error"] = tr("Combine needs at least 2 data !");
+
+    return result;
+
+}
 #endif

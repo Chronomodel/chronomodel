@@ -108,7 +108,7 @@ mNoResults(true)
     mReasonChangeStructure<<"Update selected event method";//<<"Event selected";
 
     mReasonChangeStructure<<"Date created"<<"Date moved to event"<<"Date updated"<<"Phase created"<<"Phase(s) deleted";
-    mReasonChangeStructure<<"Update selected data method";
+    mReasonChangeStructure<<"Dates splitted"<< "Dates combined"<<"Update selected data method";
     mReasonChangeStructure<<"Phase updated"<<"Phase constraint created"<<"Phase constraint updated"<<"Phase's events updated";
     mReasonChangeStructure<<"Phase selected";
     mReasonChangeStructure.squeeze();
@@ -2126,18 +2126,33 @@ void Project::combineDates(const int eventId, const QList<int>& dateIds)
                         }
 
                         // Validate the date before adding it to the correct event and pushing the state
-                        const bool valid = plugin->isDateValid(mergedDate.value(STATE_DATE_DATA).toObject(), settings);
+                        //const bool valid = plugin->isDateValid(mergedDate.value(STATE_DATE_DATA).toObject(), settings);
+                        const bool valid = plugin->isCombineValid(mergedDate, settings);
                         mergedDate[STATE_DATE_VALID] = valid;
+                       // mergedDate[STATE_DATE_ORIGIN] = Date::eCombination; // done by plugin->mergeDate
 
                         dates.push_back(mergedDate);
+                        
                     }
                 }
             }
 
             event[STATE_EVENT_DATES] = dates;
-            events[i] = event;
-            stateNext[STATE_EVENTS] = events;
+            
+            for (int j=0; j<dates.size(); ++j) {
+                QJsonObject date = dates[j].toObject();
+                qDebug()<<"OK dans project"<< date.value(STATE_DATE_ORIGIN).toInt() << date.value(STATE_NAME).toString();
+                
 
+            }
+            
+            
+            events[i] = event;
+            emit currentEventChanged(event);
+            stateNext[STATE_EVENTS] = events;
+//MainWindow::getInstance()->getProject()->
+            //updateEvent(event, "Dates combined"));
+            
             pushProjectState(stateNext, "Dates combined", true);
 
             break;
@@ -2160,7 +2175,7 @@ void Project::splitDate(const int eventId, const int dateId)
             for (int j=0; j<dates.size(); ++j) {
                 QJsonObject date = dates.at(j).toObject();
                 if (date.value(STATE_ID).toInt() == dateId) {
-
+                    
                     // We have found the date to split !
                     QJsonArray subdates = date.value(STATE_DATE_SUB_DATES).toArray();
                     PluginAbstract* plugin = PluginManager::getPluginFromId(date.value(STATE_DATE_PLUGIN_ID).toString());
@@ -2169,6 +2184,7 @@ void Project::splitDate(const int eventId, const int dateId)
                         QJsonObject sd = subdates.at(k).toObject();
                         bool valid = plugin->isDateValid(sd[STATE_DATE_DATA].toObject(), settings);
                         sd[STATE_DATE_VALID] = valid;
+                        sd[STATE_DATE_ORIGIN] = Date::eSingleDate;
                         dates.push_back(sd);
                     }
                     dates.removeAt(j);

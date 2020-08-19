@@ -57,8 +57,14 @@ public:
     PluginUniform();
     virtual ~PluginUniform();
 
+    bool areDatesMergeable(const QJsonArray& dates);
+    QJsonObject mergeDates(const QJsonArray& dates);
+
     long double getLikelihood(const double& t, const QJsonObject& data);
     bool withLikelihoodArg() {return false; }
+    long double getLikelihoodCombine(const double& t, const QJsonArray& data);
+    
+       
 
     QString getName() const;
     QIcon getIcon() const;

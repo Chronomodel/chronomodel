@@ -56,8 +56,6 @@ public:
 
     inline QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex&) const
     {
-        //QFont font(AppSettings::font());// = option.font;
-        //font.setPointSizeF(pointSize(11));
         QFontMetrics metrics(qApp->font());
 
         const int mm (2);
@@ -67,9 +65,6 @@ public:
 
    inline  QRectF boundingRect() const
     {
-
-       //QFont font(AppSettings::font());
-       //font.setPointSizeF(pointSize(11));
        QFontMetrics metrics(qApp->font());
 
        const int mm (2);
@@ -105,6 +100,7 @@ public:
         QString dateMethodStr = index.model()->data(index, 0x0106).toString();
         bool isValid = index.model()->data(index, 0x0107).toBool();
         bool isCombined = index.model()->data(index, 0x0108).toBool();
+        bool dateOrigin = index.model()->data(index, 0x0109).toInt();
 
 
         PluginAbstract* plugin = PluginManager::getPluginFromId(pluginId);
@@ -142,12 +138,16 @@ public:
             painter->drawText(x + iconW, y + mm, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, dateName);
 
             painter->setPen(QColor(120, 120, 120));
-            painter->drawText(x + iconW, y + 2*mm + mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, tr("Type : %1 | Method : %2").arg(plugin->getName(), dateMethodStr));
-            painter->drawText(x + iconW, y + 3*mm + 2*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, dateDesc);
+            
+            if (dateOrigin == Date::eSingleDate) {
+                painter->drawText(x + iconW, y + 2*mm + mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, tr("Type : %1 | Method : %2").arg(plugin->getName(), dateMethodStr));
+                painter->drawText(x + iconW, y + 3*mm + 2*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, dateDesc);
 
-            painter->setPen(Painting::mainColorLight);
-            painter->drawText(x + iconW, y + 4*mm + 3*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, deltaText);
-
+                painter->setPen(Painting::mainColorLight);
+                painter->drawText(x + iconW, y + 4*mm + 3*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, deltaText);
+            } else {
+                painter->drawText(x + iconW, y + 3*mm + 2*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, "Combine Calcul");
+            }
             if (!isValid) {
                 painter->setPen(Qt::black);
                 QString str = tr("Individual calibration not digitally computable ...");

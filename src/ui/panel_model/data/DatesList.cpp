@@ -84,7 +84,9 @@ void DatesList::setEvent(const QJsonObject& event)
 
             try {
                 Date d;
+                qDebug() << "in DatesList::setEvent mOrigin date" <<  date.value(STATE_DATE_ORIGIN).toString();
                 d.fromJson(date);
+                qDebug() << "in DatesList::setEvent mOrigin" << d.mOrigin;
                 if (!d.isNull()) {
                     QListWidgetItem* item = new QListWidgetItem();
                     item->setFont(font());
@@ -103,6 +105,7 @@ void DatesList::setEvent(const QJsonObject& event)
                     item->setData(0x0106, ModelUtilities::getDataMethodText(d.mMethod));
                     item->setData(0x0107, d.mIsValid);
                     item->setData(0x0108, date.value(STATE_DATE_SUB_DATES).toArray().size() > 0);
+                    item->setData(0x0109, d.mOrigin);
 
                     addItem(item);
                 }

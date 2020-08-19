@@ -286,15 +286,15 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
          * ---------------------------------------------- */
 
         for (int i=0; i<date.mSubDates.size(); ++i) {
-            const Date& d = date.mSubDates.at(i);
+            QJsonObject d = date.mSubDates.at(i).toObject();
 
             GraphCurve curveSubMeasure;
             curveSubMeasure.mName = "Sub-Measurement " + QString::number(i);
 
-            double sub_age = d.mData.value(DATE_14C_AGE_STR).toDouble();
-            double sub_error = d.mData.value(DATE_14C_ERROR_STR).toDouble();
-            double sub_delta_r = d.mData.value(DATE_14C_DELTA_R_STR).toDouble();
-            double sub_delta_r_error = d.mData.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
+            double sub_age = d.value(STATE_DATE_DATA).toObject().value(DATE_14C_AGE_STR).toDouble();
+            double sub_error = d.value(STATE_DATE_DATA).toObject().value(DATE_14C_ERROR_STR).toDouble();
+            double sub_delta_r = d.value(STATE_DATE_DATA).toObject().value(DATE_14C_DELTA_R_STR).toDouble();
+            double sub_delta_r_error = d.value(STATE_DATE_DATA).toObject().value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
 
             // Apply reservoir effect
             sub_age = (sub_age - sub_delta_r);

@@ -167,13 +167,28 @@ QStringList PluginTL::toCSV(const QJsonObject& data, const QLocale& csvLocale) c
 
 QString PluginTL::getDateDesc(const Date* date) const
 {
-    const QLocale locale = QLocale();
+    Q_ASSERT(date);
     QString result;
-    if (date) {
+    
+    const QLocale locale = QLocale();
+    
+    if (date->mOrigin == Date::eSingleDate) {
         QJsonObject data = date->mData;
         result += QObject::tr("Age : %1  ± %2").arg(locale.toString(data.value(DATE_TL_AGE_STR).toDouble()), locale.toString(data.value(DATE_TL_ERROR_STR).toDouble()));
         result += "; " + QObject::tr("Ref. year : %1").arg(locale.toString(data.value(DATE_TL_REF_YEAR_STR).toDouble()));
+
+    } else {
+        result = "Combine ";
+        for (int i (0); i< date->mSubDates.size(); i++) {
+            const QJsonObject d = date->mSubDates.at(i).toObject();
+            Date subDate;
+            subDate.fromJson(d);
+            result += "|" + getDateDesc(&subDate);
+
+        }
+        
     }
+    
     return result;
 }
 
@@ -213,5 +228,75 @@ PluginSettingsViewAbstract* PluginTL::getSettingsView()
 {
     return nullptr;
 }
+//long double PluginTL::getLikelihoodCombine(const double& t, const QJsonArray& subData)
+//{
+//    // detection of combination with date.mSubDates.size() not empty
+//    QPair<long double, long double > result = getLikelihoodArgCombine(t, subData);
+//
+//    return expl(result.second) / sqrt(result.first);
+//}
+
+
+
+// Combine / Split
+bool PluginTL::areDatesMergeable(const QJsonArray& )
+{
+    return true;
+}
+/**
+ * @brief Combine several Gauss Age
+ **/
+QJsonObject PluginTL::mergeDates(const QJsonArray& dates)
+{
+    QJsonObject result;
+    if (dates.size() > 1) {
+       
+        QJsonObject mergedData;
+        
+        
+        mergedData[DATE_TL_AGE_STR] = 100;
+        mergedData[DATE_TL_ERROR_STR] = 100;
+        mergedData[DATE_TL_REF_YEAR_STR] = 0;
+        
+        
+        QStringList names;
+
+        for (int i=0; i<dates.size(); ++i) {
+            const QJsonObject date = dates.at(i).toObject();
+          
+            names.append(date.value(STATE_NAME).toString());
+        
+        }
+
+        // inherits the first data propeties as plug-in and method...
+        result = dates.at(0).toObject();
+        result[STATE_NAME] = "Combined (" + names.join(" | ") + ")";
+        result[STATE_DATE_DATA] = mergedData;
+        result[STATE_DATE_ORIGIN] = Date::eCombination;
+        result[STATE_DATE_SUB_DATES] = dates;
+        
+
+    } else
+        result["error"] = tr("Combine needs at least 2 data !");
+
+    return result;
+
+}
+QPair<double,double> PluginTL::getTminTmaxRefsCurveCombine(const QJsonArray& subData)
+{
+    double tmin (INFINITY);
+    double tmax (-INFINITY);
+
+    for (int i(0); i<subData.size(); ++i) {
+       
+        const QPair<double, double> tminTmax = getTminTmaxRefsCurve( subData.at(i).toObject().value(STATE_DATE_DATA).toObject() );
+        tmin = std::min(tmin, tminTmax.first);
+        tmax = std::max(tmax, tminTmax.second);
+        
+
+    }
+    return qMakePair(tmin, tmax);
+}
+
 
 #endif

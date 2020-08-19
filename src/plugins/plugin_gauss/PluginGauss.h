@@ -70,7 +70,12 @@ public:
     long double getLikelihood(const double& t, const QJsonObject& data);
     bool withLikelihoodArg() {return true; }
     QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);
+    
+    QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
 
+    //QPair<double,double> getTminTmaxRefsCurveCombine(const QJsonArray& subData);
+   // long double getLikelihoodCombine  (const double& t, const QJsonArray& subData);
+    
     QString getName() const;
     QIcon getIcon() const;
     bool doesCalibration() const;
@@ -93,6 +98,8 @@ public:
     QJsonObject checkValuesCompatibility(const QJsonObject& values);
     bool isDateValid(const QJsonObject& data, const ProjectSettings& settings);
 
+    bool areDatesMergeable(const QJsonArray& dates);
+    QJsonObject mergeDates(const QJsonArray& dates);
     // ---------------------
 
     QString getRefExt() const;
@@ -101,8 +108,6 @@ public:
 
     double getRefValueAt(const QJsonObject& data, const double& t);
     double getRefErrorAt(const QJsonObject& data, const double& t, const QString mode);
-
-    QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
 
 
 };

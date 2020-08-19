@@ -73,6 +73,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define STATE_DATE_PLUGIN_ID "plugin_id"
 #define STATE_DATE_METHOD "method"
 #define STATE_DATE_VALID "valid"
+#define STATE_DATE_ORIGIN "origin"
 #define STATE_DATE_DELTA_TYPE "delta_type"
 #define STATE_DATE_DELTA_FIXED "delta_fixed"
 #define STATE_DATE_DELTA_MIN "delta_min"

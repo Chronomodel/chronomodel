@@ -65,6 +65,7 @@ PluginGauss::~PluginGauss()
 // Likelihood
 long double PluginGauss::getLikelihood(const double& t, const QJsonObject& data)
 {
+    // detection of combination with date.mSubDates.size() not empty
     QPair<long double, long double > result = getLikelihoodArg(t, data);
 
     return expl(result.second) / sqrt(result.first);
@@ -72,29 +73,68 @@ long double PluginGauss::getLikelihood(const double& t, const QJsonObject& data)
 
 QPair<long double, long double> PluginGauss::getLikelihoodArg(const double& t, const QJsonObject& data)
 {
+    
+    // inherits the first data propeties as plug-in and method...
+   
+        const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
+        const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
+        const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
 
-    const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
-    const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
-    const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
+        //long double exponent;
 
-    //long double exponent;
+        const double refError = getRefErrorAt(data, t, mode);
+        const long double variance = static_cast<long double>(refError * refError + error * error);
 
-    const double refError = getRefErrorAt(data, t, mode);
-    const long double variance = static_cast<long double>(refError * refError + error * error);
+        double refValue;
 
-    double refValue;
+        if (mode == DATE_GAUSS_MODE_CURVE) {
+            const QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
+            refValue = getRefCurveValueAt(ref_curve, t);
+        }
+        else
+            refValue = getRefValueAt(data, t);
 
-    if (mode == DATE_GAUSS_MODE_CURVE) {
-        const QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
-        refValue = getRefCurveValueAt(ref_curve, t);
+        const long double exponent = -0.5l * powl(static_cast<long double>(age - refValue), 2.l) / variance;
+
+        return qMakePair(variance, exponent);
     }
-    else
-        refValue = getRefValueAt(data, t);
+    
 
-    const long double exponent = -0.5l * powl(static_cast<long double>(age - refValue), 2.l) / variance;
+// ------- Combination functions
+//long double PluginGauss::getLikelihoodCombine  (const double& t, const QJsonArray& subData)
+//   {
+//       long double produit (0.l);
+//       for (int i(0); i<subData.size(); ++i) {
+//           const QJsonObject subDate = subData.at(i).toObject();
+//           auto data = subDate.value(STATE_DATE_DATA).toObject();
+//
+//           produit += getLikelihood(t, data );
+//
+//       }
+//
+//       return produit;
+//   }
+//QPair<double,double> PluginGauss::getTminTmaxRefsCurveCombine(const QJsonArray& subData)
+//{
+//    double tmin (INFINITY);
+//    double tmax (-INFINITY);
+//   // const double k (5.);
+//
+//    for (int i(0); i<subData.size(); ++i) {
+//        //const QJsonObject subDate = subData.at(i).toObject();
+//        //const QJsonObject data = subDate.value(STATE_DATE_DATA).toObject();
+//
+//        const QPair<double, double> tminTmax = getTminTmaxRefsCurve( subData.at(i).toObject().value(STATE_DATE_DATA).toObject() );
+//        tmin = std::min(tmin, tminTmax.first);
+//        tmax = std::max(tmax, tminTmax.second);
+//
+//
+//    }
+//    return qMakePair(tmin, tmax);
+//}
 
-    return qMakePair(variance, exponent);
-}
+
+
 
 // Properties
 QString PluginGauss::getName() const
@@ -135,65 +175,77 @@ QString PluginGauss::getDateDesc(const Date* date) const
 {
     Q_ASSERT(date);
     QString result;
+    
+    if (date->mOrigin == Date::eSingleDate) {
 
-    const QJsonObject &data = date->mData;
+        const QJsonObject &data = date->mData;
 
-    const QString mode = data[DATE_GAUSS_MODE_STR].toString();
+        const QString mode = data[DATE_GAUSS_MODE_STR].toString();
 
 
-    result += QObject::tr("Age : %1  ±  %2").arg(QLocale().toString(data[DATE_GAUSS_AGE_STR].toDouble()), QLocale().toString(data[DATE_GAUSS_ERROR_STR].toDouble()));
+        result += QObject::tr("Age : %1  ±  %2").arg(QLocale().toString(data[DATE_GAUSS_AGE_STR].toDouble()), QLocale().toString(data[DATE_GAUSS_ERROR_STR].toDouble()));
 
-    if (mode == DATE_GAUSS_MODE_NONE)
-        result += " (No calibration)";
+        if (mode == DATE_GAUSS_MODE_NONE)
+            result += " (No calibration)";
 
-    else if (mode == DATE_GAUSS_MODE_EQ) {
-        const double a = data[DATE_GAUSS_A_STR].toDouble();
-        const double b = data[DATE_GAUSS_B_STR].toDouble();
-        const double c = data[DATE_GAUSS_C_STR].toDouble();
+        else if (mode == DATE_GAUSS_MODE_EQ) {
+            const double a = data[DATE_GAUSS_A_STR].toDouble();
+            const double b = data[DATE_GAUSS_B_STR].toDouble();
+            const double c = data[DATE_GAUSS_C_STR].toDouble();
 
-        QString aStr;
-        if (a != 0.) {
-            if (a == -1.)
-                aStr += "-";
-            else if (a != 1.)
-                aStr += QLocale().toString(a);
+            QString aStr;
+            if (a != 0.) {
+                if (a == -1.)
+                    aStr += "-";
+                else if (a != 1.)
+                    aStr += QLocale().toString(a);
 
-            aStr += "t²";
+                aStr += "t²";
+            }
+            QString bStr;
+            if (b != 0.) {
+                if (b == -1.)
+                    bStr += "-";
+                else if (b != 1.)
+                    bStr += QLocale().toString(b);
+
+                bStr += "t";
+            }
+            QString cStr;
+            if (c != 0.)
+                cStr += QLocale().toString(c);
+
+            QString eq = aStr;
+            if (!eq.isEmpty() && !bStr.isEmpty())
+                eq += " + ";
+
+            eq += bStr;
+            if (!eq.isEmpty() && !cStr.isEmpty())
+                eq += " + ";
+
+            eq += cStr;
+
+            result += "; " + QObject::tr("Ref. curve") + " : g(t) = " + eq;
         }
-        QString bStr;
-        if (b != 0.) {
-            if (b == -1.)
-                bStr += "-";
-            else if (b != 1.)
-                bStr += QLocale().toString(b);
+        else if (mode == DATE_GAUSS_MODE_CURVE) {
+            const QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
+            if (mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty())
+                result += "; " + tr("Ref. curve : %1").arg(ref_curve);
+            else
+                result += ", " + tr("ERROR ->  Ref. curve : %1").arg(ref_curve);
 
-            bStr += "t";
         }
-        QString cStr;
-        if (c != 0.)
-            cStr += QLocale().toString(c);
+    } else {
+        result = "Combine ";
+        for (int i (0); i< date->mSubDates.size(); i++) {
+            const QJsonObject d = date->mSubDates.at(i).toObject();
+            Date subDate;
+            subDate.fromJson(d);
+            result += "|" + getDateDesc(&subDate);
 
-        QString eq = aStr;
-        if (!eq.isEmpty() && !bStr.isEmpty())
-            eq += " + ";
-
-        eq += bStr;
-        if (!eq.isEmpty() && !cStr.isEmpty())
-            eq += " + ";
-
-        eq += cStr;
-
-        result += "; " + QObject::tr("Ref. curve") + " : g(t) = " + eq;
+        }
+        
     }
-    else if (mode == DATE_GAUSS_MODE_CURVE) {
-        const QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
-        if (mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty())
-            result += "; " + tr("Ref. curve : %1").arg(ref_curve);
-        else
-            result += ", " + tr("ERROR ->  Ref. curve : %1").arg(ref_curve);
-
-    }
-
     return result;
 }
 
@@ -596,4 +648,47 @@ bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& se
     return valid;
 }
 
+// Combine / Split
+bool PluginGauss::areDatesMergeable(const QJsonArray& )
+{
+    return true;
+}
+/**
+ * @brief Combine several Gauss Age
+ **/
+QJsonObject PluginGauss::mergeDates(const QJsonArray& dates)
+{
+    QJsonObject result;
+    if (dates.size() > 1) {
+       
+        QJsonObject mergedData;
+        
+        mergedData[DATE_GAUSS_AGE_STR] = 1000;
+        mergedData[DATE_GAUSS_ERROR_STR] = 100;
+        mergedData[DATE_GAUSS_MODE_STR] = DATE_GAUSS_MODE_NONE;
+        
+        
+        QStringList names;
+
+        for (int i=0; i<dates.size(); ++i) {
+            const QJsonObject date = dates.at(i).toObject();
+          
+            names.append(date.value(STATE_NAME).toString());
+        
+        }
+
+        // inherits the first data propeties as plug-in and method...
+        result = dates.at(0).toObject();
+        result[STATE_NAME] = "Combined (" + names.join(" | ") + ")";
+        result[STATE_DATE_DATA] = mergedData;
+        result[STATE_DATE_ORIGIN] = Date::eCombination;
+        result[STATE_DATE_SUB_DATES] = dates;
+        
+
+    } else
+        result["error"] = tr("Combine needs at least 2 data !");
+
+    return result;
+
+}
 #endif

@@ -243,7 +243,7 @@ QVector<QVector<Event*> > ModelUtilities::getAllEventsBranches(const QList<Event
             try {
                 eventBranches = getBranchesFromEvent(starts[i]);
             } catch(QString error) {
-                throw error;
+                throw std::move(error);
             }
             for (int j=0; j<eventBranches.size(); ++j)
                 branches.append(eventBranches[j]);
@@ -317,7 +317,7 @@ QVector<QVector<Phase*> > ModelUtilities::getBranchesFromPhase(Phase* start, con
     try {
         nextBranches = getNextBranches(startBranch, start, 0, maxLength);
     } catch(QString error) {
-        throw error;
+        throw std::move(error);
     }
 
     return nextBranches;
@@ -342,7 +342,7 @@ QVector<QVector<Phase*> > ModelUtilities::getAllPhasesBranches(const QList<Phase
         try {
             phaseBranches = getBranchesFromPhase(starts[i], maxLength);
         } catch (QString error){
-            throw error;
+            throw std::move(error);
         }
         for (int j=0; j<phaseBranches.size(); ++j)
             branches.append(phaseBranches[j]);
