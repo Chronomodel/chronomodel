@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -42,8 +42,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ProjectSettings.h"
 #include "StdUtilities.h"
+#include "QtUtilities.h"
 #include "Date.h"
 #include "CalibrationCurve.h"
+#include "MainWindow.h"
+#include "Project.h"
 
 #include <QWidget>
 
@@ -117,7 +120,53 @@ public:
         mTminRef = date.getTminRefCurve();
         mTmaxRef = date.getTmaxRefCurve();
     }
+    
+    void drawSubDates(const QJsonArray& subDates, const ProjectSettings& settings, const double tminDisplay, const double tmaxDisplay)
+    {
+        mSettings = settings;
 
+        
+        for (int i(0); i< subDates.size(); ++i) {
+            QJsonObject subDate = subDates.at(i).toObject();
+            Date sd;
+            sd.fromJson(subDate);
+            QString toFind = sd.mName + sd.getDesc();
+            qDebug()<<"mName"<<sd.mName<<toFind;
+            
+            Project* project = MainWindow::getInstance()->getProject();
+            QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
+            if ( it != project->mCalibCurves.end())
+                sd.mCalibration = & it.value();
+            
+            GraphCurve gCurve;
+            gCurve.mName = sd.mName;
+
+            
+            QColor curveColor(randomColor());
+            gCurve.mPen.setColor(curveColor);
+            
+            curveColor.setAlpha(50);
+            gCurve.mBrush = curveColor;
+
+            gCurve.mIsVertical = false;
+            gCurve.mIsHisto = false;
+            gCurve.mIsRectFromZero = true;
+            
+            
+            QMap<double, double> calib = normalize_map(getMapDataInRange(sd.getRawCalibMap(), tminDisplay, tmaxDisplay));
+       
+            gCurve.mData = calib;
+            
+            
+            mGraph->addCurve(gCurve);
+            mGraph->setRangeX(tminDisplay, tmaxDisplay);
+                   mGraph->setCurrentX(tminDisplay, tmaxDisplay);
+        }
+    
+
+       
+        
+    }
     void setFormatFunctX(DateConversion f)
     {
         mFormatFuncX = f;

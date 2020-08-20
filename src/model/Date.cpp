@@ -247,15 +247,6 @@ void Date::fromJson(const QJsonObject& json)
         }
     }
 
-  /*  mSubDates.clear();
-    QJsonArray subdates = json.value(STATE_DATE_SUB_DATES).toArray();
-    for (int i(0); i<subdates.size(); ++i) {
-        const QJsonObject d = subdates.at(i).toObject();
-        Date subDate;
-        subDate.fromJson(d);
-        mSubDates.push_back(subDate);
-    }
-*/
     mTheta.mProposal = ModelUtilities::getDataMethodText(mMethod);
     mTheta.setName("Theta of date : "+ mName);
     mSigma.mProposal = ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt);
@@ -265,7 +256,7 @@ void Date::fromJson(const QJsonObject& json)
     mSettings = project->mModel->mSettings;
     
     QString toFind = mName + getDesc();
-    qDebug()<<"mName"<<mName<<toFind;
+
     QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
     if ( it!=project->mCalibCurves.end())
         mCalibration = & it.value();
@@ -384,7 +375,6 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
     mSettings = settings;
 
     const QString toFind (mName+getDesc());
-    qDebug()<<"Courbe toFind"<<toFind;
     QMap<QString, CalibrationCurve>::const_iterator it = project->mCalibCurves.find (toFind);
 
     if ( it==project->mCalibCurves.end()) {
@@ -485,7 +475,7 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
         // This may be due to invalid ref curve files or to polynomial equations with only imaginary solutions (See Gauss Plugin...)
     }
 
-    qDebug()<<"Date::calibrate in project"<<project->mCalibCurves[toFind].mName;
+   // qDebug()<<"Date::calibrate in project"<<project->mCalibCurves[toFind].mName;
 }
 
 

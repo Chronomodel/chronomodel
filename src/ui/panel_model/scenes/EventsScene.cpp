@@ -291,6 +291,13 @@ void EventsScene::createSceneFromState()
     const QJsonArray constraints = state.value(STATE_EVENTS_CONSTRAINTS).toArray();
     const QJsonObject settings = state.value(STATE_SETTINGS).toObject();
 
+    
+    //
+    
+    QJsonObject date0 =eventsInState.at(0).toObject() .value(STATE_EVENT_DATES).toArray().at(0).toObject();
+    qDebug()<<"date0"<<date0.value(STATE_NAME).toString()<<date0.value(STATE_DATE_VALID).toBool();
+
+    
      //http://doc.qt.io/qt-5/qprogressdialog.html#minimumDuration-prop
 
     QProgressDialog* progress = new QProgressDialog("Create event items","Wait" , 1, eventsInState.size());//,qApp->activeWindow(), Qt::Window);
@@ -324,6 +331,10 @@ void EventsScene::createSceneFromState()
     for (QJsonArray::const_iterator citer = eventsInState.constBegin(); citer != eventsInState.constEnd(); ++citer) {
         const QJsonObject event = (*citer).toObject();
         ++i;
+        
+        
+        QJsonObject date =event.value(STATE_EVENT_DATES).toArray().at(0).toObject();
+qDebug()<<date.value(STATE_NAME).toString()<<date.value(STATE_DATE_VALID).toBool();
 
         progress->setValue(i);
 

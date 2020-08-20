@@ -178,15 +178,16 @@ QString PluginTL::getDateDesc(const Date* date) const
         result += "; " + QObject::tr("Ref. year : %1").arg(locale.toString(data.value(DATE_TL_REF_YEAR_STR).toDouble()));
 
     } else {
-        result = "Combine ";
+        result = "Combine (";
+        QStringList datesDesc;
         for (int i (0); i< date->mSubDates.size(); i++) {
             const QJsonObject d = date->mSubDates.at(i).toObject();
             Date subDate;
             subDate.fromJson(d);
-            result += "|" + getDateDesc(&subDate);
+            datesDesc.append(getDateDesc(&subDate));
 
         }
-        
+        result += "Combined ( " + datesDesc.join(" | ") + " )";
     }
     
     return result;
@@ -270,10 +271,11 @@ QJsonObject PluginTL::mergeDates(const QJsonArray& dates)
 
         // inherits the first data propeties as plug-in and method...
         result = dates.at(0).toObject();
-        result[STATE_NAME] = "Combined (" + names.join(" | ") + ")";
+        result[STATE_NAME] = "Combined ( " + names.join(" | ") + " )";
         result[STATE_DATE_DATA] = mergedData;
         result[STATE_DATE_ORIGIN] = Date::eCombination;
         result[STATE_DATE_SUB_DATES] = dates;
+         result[STATE_DATE_VALID] = true;
         
 
     } else

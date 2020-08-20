@@ -236,14 +236,16 @@ QString PluginGauss::getDateDesc(const Date* date) const
 
         }
     } else {
-        result = "Combine ";
+        result = "Combine (";
+        QStringList datesDesc;
         for (int i (0); i< date->mSubDates.size(); i++) {
             const QJsonObject d = date->mSubDates.at(i).toObject();
             Date subDate;
             subDate.fromJson(d);
-            result += "|" + getDateDesc(&subDate);
+            datesDesc.append(getDateDesc(&subDate));
 
         }
+        result += "Combined ( " + datesDesc.join(" | ") + " )";
         
     }
     return result;
@@ -493,14 +495,16 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
 
     if (data.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_CURVE) {
         QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
-
+#ifdef DEBUG
         if (mRefCurves.contains(ref_curve) && !mRefCurves.value(ref_curve).mDataMean.isEmpty()) {
+#endif
            tmin = mRefCurves.value(ref_curve).mTmin;
            tmax = mRefCurves.value(ref_curve).mTmax;
+#ifdef DEBUG
         }
         else
             qDebug() << "PluginGauss::getTminTmaxRefsCurve no ref curve";
-
+#endif
     }
     else if (data.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_NONE) {
         double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
@@ -672,17 +676,16 @@ QJsonObject PluginGauss::mergeDates(const QJsonArray& dates)
 
         for (int i=0; i<dates.size(); ++i) {
             const QJsonObject date = dates.at(i).toObject();
-          
             names.append(date.value(STATE_NAME).toString());
-        
         }
 
         // inherits the first data propeties as plug-in and method...
         result = dates.at(0).toObject();
-        result[STATE_NAME] = "Combined (" + names.join(" | ") + ")";
+        result[STATE_NAME] = "Combined ( " + names.join(" | ") + " )";
         result[STATE_DATE_DATA] = mergedData;
         result[STATE_DATE_ORIGIN] = Date::eCombination;
         result[STATE_DATE_SUB_DATES] = dates;
+        result[STATE_DATE_VALID] = true;
         
 
     } else

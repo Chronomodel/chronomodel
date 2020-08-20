@@ -650,7 +650,7 @@ QVector<double> MetropolisVariable::runRawTraceForChain(const QList<ChainSpecs> 
             shift += burnAdaptSize + traceSize;
         }
         //return trace;
-        return QVector<double>::fromStdVector(trace);
+        return QVector<double>(trace.begin(), trace.end());
     }
 }
 

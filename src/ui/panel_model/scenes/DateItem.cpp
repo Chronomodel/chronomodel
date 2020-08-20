@@ -69,6 +69,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
 
     // Date::fromJson doesn't create mCalibration
     Date d;
+    qDebug()<<date.value(STATE_NAME).toString()<<date.value(STATE_DATE_VALID).toBool();
     d.fromJson(date);
     ProjectSettings s = ProjectSettings::fromJson(settings);
 

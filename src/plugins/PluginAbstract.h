@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -44,6 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphView.h"
 #include "ProjectSettings.h"
 #include "RefCurve.h"
+//#include "PluginCombineViewAbstract.h"
 
 #include <QObject>
 #include <QJsonObject>
@@ -168,6 +169,8 @@ public:
     virtual PluginFormAbstract* getForm() = 0;
     virtual GraphViewRefAbstract* getGraphViewRef() = 0;
     virtual void deleteGraphViewRef(GraphViewRefAbstract* graph ) {(void) graph ;}
+   
+      
     virtual PluginSettingsViewAbstract* getSettingsView() = 0;
     virtual QList<QHash<QString, QVariant>> getGroupedActions() {return QList<QHash<QString, QVariant>>();}
 

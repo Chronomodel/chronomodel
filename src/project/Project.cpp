@@ -2051,8 +2051,14 @@ QJsonObject Project::checkValidDates(const QJsonObject& stateToCheck)
             QJsonObject date = dates.at(j).toObject();
 
             PluginAbstract* plugin = PluginManager::getPluginFromId(date.value(STATE_DATE_PLUGIN_ID).toString());
-            bool valid = plugin->isDateValid(date.value(STATE_DATE_DATA).toObject(), settings);
-            date[STATE_DATE_VALID] = valid;
+            if (date.value(STATE_DATE_ORIGIN).toInt() == Date::eSingleDate) {
+                date[STATE_DATE_VALID] = plugin->isDateValid(date.value(STATE_DATE_DATA).toObject(), settings);
+                
+            } else if (date.value(STATE_DATE_ORIGIN).toInt() == Date::eCombination) {
+                 date[STATE_DATE_VALID] = plugin->isCombineValid(date.value(STATE_DATE_DATA).toObject(), settings);
+                
+            } else
+                date[STATE_DATE_VALID] = false;
 
             dates[j] = date;
         }
@@ -2141,8 +2147,7 @@ void Project::combineDates(const int eventId, const QList<int>& dateIds)
             
             for (int j=0; j<dates.size(); ++j) {
                 QJsonObject date = dates[j].toObject();
-                qDebug()<<"OK dans project"<< date.value(STATE_DATE_ORIGIN).toInt() << date.value(STATE_NAME).toString();
-                
+            
 
             }
             

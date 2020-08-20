@@ -463,6 +463,16 @@ void ModelView::createProject()
     showCalibration(false);
 
     QJsonObject state = mProject->state();
+    
+    // debug
+    
+    const QJsonArray eventsInState = state.value(STATE_EVENTS).toArray();
+    QJsonObject date0 =eventsInState.at(0).toObject() .value(STATE_EVENT_DATES).toArray().at(0).toObject();
+       qDebug()<<"ModelView::createProject date0"<<date0.value(STATE_NAME).toString()<<date0.value(STATE_DATE_VALID).toBool();
+
+    
+    
+    //
     const ProjectSettings settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
     mTmin = settings.mTmin;

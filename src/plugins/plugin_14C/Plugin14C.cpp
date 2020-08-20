@@ -522,7 +522,7 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
 
         // inherits the first data propeties as plug-in and method...
         result = dates.at(0).toObject();
-        result[STATE_NAME] = "Combined (" + names.join(" | ") + ")";
+        result[STATE_NAME] = "Combined ( " + names.join(" | ") + " )";
         result[STATE_DATE_ORIGIN] = Date::eSingleDate;
         result[STATE_DATE_DATA] = mergedData;
         result[STATE_DATE_SUB_DATES] = dates;
@@ -534,44 +534,31 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
 
 }
 
-long double Plugin14C::getLikelihoodCombine(const double& t, const QJsonArray& subData)
-{
-    // detection of combination with date.mSubDates.size() not empty
-    QPair<long double, long double > result = getLikelihoodArgCombine(t, subData);
-    qDebug()<< "Plugin14C::getLikelihoodCombine return : " << double(expl(result.second) / sqrt(result.first));
-    return expl(result.second) / sqrt(result.first);
-}
-
-QPair<long double, long double> Plugin14C::getLikelihoodArgCombine(const double& t, const QJsonArray& subData)
-{
-    
-    // inherits the first data propeties as plug-in and method...
-   
-// detection of combination with date.mSubDates.size() not empty
-   
-    
-    // qDebug()<<"apres combined"<<data.value(STATE_NAME).toString();
-
-    
-        qDebug()<< QString("rentrer dans subDates");
-        //QJsonArray subDates = data.value(STATE_DATE_SUB_DATES).toArray();
-        double sumExponent (0);
-        double sumVariance (0);
-        for (int i(0); i<subData.size(); ++i) {
-            const QJsonObject subDate = subData.at(i).toObject();
-            const QJsonObject data = subDate.value(STATE_DATE_DATA).toObject();
-            
-            const QPair<long double, long double> localRes = getLikelihoodArg(t, data );
-            sumExponent += localRes.first;
-            sumVariance *= localRes.second;
-            
-            //const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
-            //const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
-            //const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
-            
-        }
-        return qMakePair(sumVariance, sumExponent);
-
-  
-}
+// useless because 14C Combine produce a eSingleDate
+//long double Plugin14C::getLikelihoodCombine(const double& t, const QJsonArray& subData)
+//{
+//    // detection of combination with date.mSubDates.size() not empty
+//    QPair<long double, long double > result = getLikelihoodArgCombine(t, subData);
+//    qDebug()<< "Plugin14C::getLikelihoodCombine return : " << double(expl(result.second) / sqrt(result.first));
+//    return expl(result.second) / sqrt(result.first);
+//}
+//
+//QPair<long double, long double> Plugin14C::getLikelihoodArgCombine(const double& t, const QJsonArray& subData)
+//{
+//
+//    double sumExponent (0);
+//    double sumVariance (0);
+//    for (int i(0); i<subData.size(); ++i) {
+//        const QJsonObject subDate = subData.at(i).toObject();
+//        const QJsonObject data = subDate.value(STATE_DATE_DATA).toObject();
+//
+//        const QPair<long double, long double> localRes = getLikelihoodArg(t, data );
+//        sumExponent += localRes.first;
+//        sumVariance *= localRes.second;
+//
+//    }
+//    return qMakePair(sumVariance, sumExponent);
+//
+//
+//}
 #endif

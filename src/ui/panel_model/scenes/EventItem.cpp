@@ -160,6 +160,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
             const QJsonObject date = dates.at(i).toObject();
 
             try {
+                 qDebug()<<date.value(STATE_NAME).toString()<<date.value(STATE_DATE_VALID).toBool();
                 DateItem* dateItem = new DateItem((EventsScene*) (mScene), date, color, settings);
                 dateItem->setParentItem(this);
                 dateItem->setGreyedOut(mGreyedOut);

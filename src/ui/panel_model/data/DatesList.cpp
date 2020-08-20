@@ -84,9 +84,8 @@ void DatesList::setEvent(const QJsonObject& event)
 
             try {
                 Date d;
-                qDebug() << "in DatesList::setEvent mOrigin date" <<  date.value(STATE_DATE_ORIGIN).toString();
                 d.fromJson(date);
-                qDebug() << "in DatesList::setEvent mOrigin" << d.mOrigin;
+                //qDebug() << "in DatesList::setEvent mOrigin" << d.mOrigin;
                 if (!d.isNull()) {
                     QListWidgetItem* item = new QListWidgetItem();
                     item->setFont(font());

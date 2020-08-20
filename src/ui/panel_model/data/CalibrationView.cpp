@@ -406,9 +406,9 @@ void CalibrationView::updateGraphs()
 
 
         // Get the ref graph for this plugin and this date
-        if (!mRefGraphView) {
-            mRefGraphView = mDate.mPlugin->getGraphViewRef();
-        }
+        if (!mRefGraphView)
+                mRefGraphView = mDate.mPlugin->getGraphViewRef();
+            
 
         if (mRefGraphView) {
             mRefGraphView->setParent(mDrawing);

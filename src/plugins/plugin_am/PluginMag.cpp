@@ -181,14 +181,16 @@ QString PluginMag::getDateDesc(const Date* date) const
             result += "; " + tr("ERROR -> Ref. curve : %1").arg(ref_curve);
         
     } else {
-            result = "Combine ";
+            result = "Combine (";
+            QStringList datesDesc;
             for (int i (0); i< date->mSubDates.size(); i++) {
                 const QJsonObject d = date->mSubDates.at(i).toObject();
                 Date subDate;
                 subDate.fromJson(d);
-                result += "|" + getDateDesc(&subDate);
+                datesDesc.append(getDateDesc(&subDate));
+
             }
-            
+            result += "Combined ( " + datesDesc.join(" | ") + " )";
     }
 
     return result;
@@ -500,7 +502,7 @@ QJsonObject PluginMag::mergeDates(const QJsonArray& dates)
        
         QJsonObject mergedData;
         
-        mergedData[DATE_AM_REF_CURVE_STR] = "titi.ref";
+        mergedData[DATE_AM_REF_CURVE_STR] = "|mag|.ref";
         mergedData[DATE_AM_IS_INC_STR] = false;
         mergedData[DATE_AM_IS_DEC_STR] = false;
         mergedData[DATE_AM_IS_INT_STR] = true;
@@ -521,10 +523,11 @@ QJsonObject PluginMag::mergeDates(const QJsonArray& dates)
         if (subDatIsValid) {
             // inherits the first data propeties as plug-in and method...
             result = dates.at(0).toObject();
-            result[STATE_NAME] = "Combined (" + names.join(" | ") + ")";
+            result[STATE_NAME] = "Combined ( " + names.join(" | ") + " )";
             result[STATE_DATE_DATA] = mergedData;
             result[STATE_DATE_ORIGIN] = Date::eCombination;
             result[STATE_DATE_SUB_DATES] = dates;
+            result[STATE_DATE_VALID] = true;
             
         } else {
             result["error"] = tr("Combine needs valid dates !");
