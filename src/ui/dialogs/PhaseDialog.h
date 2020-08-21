@@ -67,8 +67,8 @@ public:
 protected slots:
     void showAppropriateTauOptions(int typeIndex);
 
-protected:
-    void resizeEvent(QResizeEvent* event);
+//protected:
+//    void resizeEvent(QResizeEvent* event);
 
 public:
     QJsonObject mPhase;
@@ -87,14 +87,16 @@ public:
     //LineEdit* mTauMinEdit;
     //LineEdit* mTauMaxEdit;
 
-    Button* mOkBut;
-    Button* mCancelBut;
+//    Button* mOkBut;
+//    Button* mCancelBut;
+//    QDialogButtonBox* mOkBut;
+//    QDialogButtonBox* mCancelBut;
 
-    int mMargin;
-    int mLineH;
-    int mComboH;
-    int mButH;
-    int mButW;
+//    int mMargin;
+//    int mLineH;
+//    int mComboH;
+//    int mButH;
+//    int mButW;
 
     QString mError;
 };

@@ -42,33 +42,33 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ColorPicker.h"
 #include "LineEdit.h"
 #include "Label.h"
-#include "Button.h"
+//#include "Button.h"
 #include <QtWidgets>
 
 
-PhaseDialog::PhaseDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags),
-mMargin(15),
-mLineH(20),
-mButH(25),
-mButW(80)
+PhaseDialog::PhaseDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags)
+//mMargin(15),
+//mLineH(20),
+//mButH(25),
+//mButW(80)
 {
-    QPalette Pal(palette());
+    //QPalette Pal(palette());
 
     // set black background
-    Pal.setColor(QPalette::Window, Qt::gray);
-    this->setAutoFillBackground(true);
-    this->setPalette(Pal);
-
-    setWindowTitle(tr("Create / Modify phase"));
+    //Pal.setColor(QPalette::Window, Qt::gray);
+//    this->setAutoFillBackground(true);
+//    this->setPalette(Pal);
+    QString title (tr("Create / Modify phase"));
+    setWindowTitle(title);
 
     mNameLab = new QLabel(tr("Phase name"), this);
-    mNameLab->setAlignment(Qt::AlignRight);
+    mNameLab->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
     mColorLab = new QLabel(tr("Phase colour"), this);
-    mColorLab->setAlignment(Qt::AlignRight);
+    mColorLab->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
     mTauTypeLab = new QLabel(tr("Max duration"), this);
-    mTauTypeLab->setAlignment(Qt::AlignRight);
+    mTauTypeLab->setAlignment(Qt::AlignVCenter |Qt::AlignRight);
     mTauFixedLab = new QLabel(tr("Max duration value") , this);
-    mTauFixedLab->setAlignment(Qt::AlignRight);
+    mTauFixedLab->setAlignment(Qt::AlignVCenter |Qt::AlignRight);
 
     mNameEdit = new LineEdit(this);
 
@@ -80,17 +80,44 @@ mButW(80)
 
     mTauFixedEdit = new LineEdit(this);
 
-    mOkBut = new Button(tr("OK"), this);
-    mCancelBut = new Button(tr("Cancel"), this);
-
-    mOkBut->setAutoDefault(true);
+    
+    QDialogButtonBox* buttonBox = new QDialogButtonBox();
+    buttonBox->addButton(tr("OK"), QDialogButtonBox::AcceptRole);
+    buttonBox->addButton(tr("Cancel"), QDialogButtonBox::RejectRole);
+    
 
     connect(mTauTypeCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &PhaseDialog::showAppropriateTauOptions);
-    connect(mOkBut, &Button::clicked, this, &PhaseDialog::accept);
-    connect(mCancelBut, &Button::clicked, this, &PhaseDialog::reject);
+    
+    connect(buttonBox, &QDialogButtonBox::accepted, this, &PhaseDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, this, &PhaseDialog::reject);
 
-    mComboH = mTauTypeCombo->height();
 
+   // mComboH = mTauTypeCombo->height();
+    QGridLayout* gridLayout = new QGridLayout();
+    gridLayout->setContentsMargins(0, 0, 0, 0);
+    gridLayout->addWidget(mNameLab, 0, 0);
+    gridLayout->addWidget(mNameEdit, 0, 1);
+    gridLayout->addWidget(mColorLab, 1, 0);
+    gridLayout->addWidget(mColorPicker, 1, 1);
+    gridLayout->addWidget(mTauTypeLab, 2, 0);
+    gridLayout->addWidget(mTauTypeCombo, 2, 1);
+    gridLayout->addWidget(mTauFixedLab, 3, 0);
+    gridLayout->addWidget(mTauFixedEdit, 3, 1);
+
+    QLabel* titleLab = new QLabel(title, this);
+    titleLab->setAlignment(Qt::AlignCenter);
+    
+   QFrame* separator = new QFrame();
+      separator->setFrameShape(QFrame::HLine);
+      separator->setFrameShadow(QFrame::Sunken);
+   
+   QVBoxLayout* layout = new QVBoxLayout();
+      layout->addWidget(titleLab);
+      layout->addWidget(separator);
+      layout->addLayout(gridLayout);
+      layout->addWidget(buttonBox);
+      setLayout(layout);
+    
     Phase phase;
     setPhase(phase.toJson());
 }
@@ -109,18 +136,12 @@ void PhaseDialog::showAppropriateTauOptions(int typeIndex)
         {
             mTauFixedLab->setVisible(false);
             mTauFixedEdit->setVisible(false);
-
-            setFixedHeight(mComboH + 2*mLineH + 5*mMargin + mButH);
-
             break;
         }
         case Phase::eTauFixed:
         {
             mTauFixedLab->setVisible(true);
             mTauFixedEdit->setVisible(true);
-
-            setFixedHeight(mComboH + 3*mLineH + 6*mMargin + mButH);
-
             break;
         }
 
@@ -168,44 +189,47 @@ bool PhaseDialog::isValid()
     return true;
 }
 
-void PhaseDialog::resizeEvent(QResizeEvent* event)
-{
-    Q_UNUSED(event);
-    QFontMetrics fm (font());
-    int w1 (0);
-    Phase::TauType type = Phase::TauType (mTauTypeCombo->currentIndex());
-    switch (type) {
-        case Phase::eTauUnknown:
-        {
-            w1 = qMax(fm.boundingRect(mTauTypeLab->text()).width(),qMax(fm.boundingRect(mNameLab->text()).width(), fm.boundingRect(mColorLab->text()).width()));
-            break;
-        }
-        case Phase::eTauFixed:
-        {
-            w1 =  fm.boundingRect(mTauFixedLab->text()).width();
-            break;
-        }
+//void PhaseDialog::resizeEvent(QResizeEvent* event)
+//{
+//    Q_UNUSED(event);
+//    QFontMetrics fm (font());
+//    int w1 (0);
+//    Phase::TauType type = Phase::TauType (mTauTypeCombo->currentIndex());
+//    switch (type) {
+//        case Phase::eTauUnknown:
+//        {
+//            w1 = qMax(fm.boundingRect(mTauTypeLab->text()).width(),qMax(fm.boundingRect(mNameLab->text()).width(), fm.boundingRect(mColorLab->text()).width()));
+//            break;
+//        }
+//        case Phase::eTauFixed:
+//        {
+//            w1 =  fm.boundingRect(mTauFixedLab->text()).width();
+//            break;
+//        }
+//
+//        default:
+//            break;
+//    }
+//
+//    int w2 = qMax( 200, fm.boundingRect(mNameEdit->text()).width()) + 2 * mMargin;
+//
+//    setFixedWidth( w1 + w2 + 3*mMargin);
+//
+//    mNameLab->setGeometry(mMargin, mMargin, w1, mLineH);
+//    mColorLab->setGeometry(mMargin, 2*mMargin + mLineH, w1, mLineH);
+//    mTauTypeLab->setGeometry(mMargin, 3*mMargin + 2*mLineH, w1, mLineH);
+//    mTauFixedLab->setGeometry(mMargin, 4*mMargin + 2*mLineH + mLineH, w1, mLineH);
+//
+//    mNameEdit->setGeometry(2*mMargin + w1, mMargin, w2, mLineH);
+//    mColorPicker->setGeometry(2*mMargin + w1, 2*mMargin + mLineH, w2, mLineH +3);
+//
+//    mTauTypeCombo->setGeometry(2*mMargin + w1, 3*mMargin + 2*mLineH  - 5, w2, mComboH);
+//    mTauFixedEdit->setGeometry(2*mMargin + w1, 4*mMargin + 2*mLineH + mLineH, w2, mLineH);
+    
+    
+//
+//    mOkBut->setGeometry(width() - 2*mMargin - 2*mButW, height() - mMargin - mButH, mButW, mButH);
+//    mCancelBut->setGeometry(width() - mMargin - mButW, height() - mMargin - mButH, mButW, mButH);
 
-        default:
-            break;
-    }
-
-    int w2 = qMax( 200, fm.boundingRect(mNameEdit->text()).width()) + 2 * mMargin;
-
-    setFixedWidth( w1 + w2 + 3*mMargin);
-
-    mNameLab->setGeometry(mMargin, mMargin, w1, mLineH);
-    mColorLab->setGeometry(mMargin, 2*mMargin + mLineH, w1, mLineH);
-    mTauTypeLab->setGeometry(mMargin, 3*mMargin + 2*mLineH, w1, mLineH);
-    mTauFixedLab->setGeometry(mMargin, 4*mMargin + 2*mLineH + mLineH, w1, mLineH);
-
-    mNameEdit->setGeometry(2*mMargin + w1, mMargin, w2, mLineH);
-    mColorPicker->setGeometry(2*mMargin + w1, 2*mMargin + mLineH, w2, mLineH +3);
-
-    mTauTypeCombo->setGeometry(2*mMargin + w1, 3*mMargin + 2*mLineH  - 5, w2, mComboH);
-    mTauFixedEdit->setGeometry(2*mMargin + w1, 4*mMargin + 2*mLineH + mLineH, w2, mLineH);
-
-    mOkBut->setGeometry(width() - 2*mMargin - 2*mButW, height() - mMargin - mButH, mButW, mButH);
-    mCancelBut->setGeometry(width() - mMargin - mButW, height() - mMargin - mButH, mButW, mButH);
-
-}
+   
+//}
