@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -41,6 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #if USE_PLUGIN_UNIFORM
 
 #include "PluginUniformForm.h"
+#include "PluginUniformRefView.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -168,16 +169,24 @@ bool PluginUniform::isDateValid(const QJsonObject& data, const ProjectSettings& 
  }
 // ------------------------------------------------------------------
 
+
 GraphViewRefAbstract* PluginUniform::getGraphViewRef()
 {
-    return nullptr;
+    mRefGraph = new PluginUniformRefView();
+    return mRefGraph;
 }
+void PluginUniform::deleteGraphViewRef(GraphViewRefAbstract* graph)
+{
+    if (graph)
+        delete static_cast<PluginUniformRefView*>(graph);
 
+    graph = nullptr;
+    mRefGraph = nullptr;
+}
 PluginSettingsViewAbstract* PluginUniform::getSettingsView()
 {
     return nullptr;
 }
-
 
 QPair<double,double> PluginUniform::getTminTmaxRefsCurve(const QJsonObject& data) const
 {
@@ -266,3 +275,4 @@ QJsonObject PluginUniform::mergeDates(const QJsonArray& dates)
 
 }
 #endif
+

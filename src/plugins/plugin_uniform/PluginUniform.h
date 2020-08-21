@@ -85,6 +85,8 @@ public:
     PluginSettingsViewAbstract* getSettingsView();
 
     QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
+    
+    void deleteGraphViewRef(GraphViewRefAbstract* graph);
 
 
 
