@@ -113,7 +113,7 @@ macx{
 
 
         QMAKESPEC = macx-clang
-        QMAKE_MAC_SDK = macosx10.14
+        QMAKE_MAC_SDK = macosx10.15
         message("QMAKE_MAC_SDK = $$QMAKE_MAC_SDK")
 
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
@@ -298,23 +298,25 @@ equals(USE_PLUGIN_14C, 1){
 	HEADERS += src/plugins/plugin_14C/Plugin14C.h
 	HEADERS += src/plugins/plugin_14C/Plugin14CForm.h
 	HEADERS += src/plugins/plugin_14C/Plugin14CRefView.h
-        HEADERS += src/plugins/plugin_14C/Plugin14CSettingsView.h
+    HEADERS += src/plugins/plugin_14C/Plugin14CSettingsView.h
 }
 equals(USE_PLUGIN_GAUSS, 1){
 	HEADERS += src/plugins/plugin_gauss/PluginGauss.h
 	HEADERS += src/plugins/plugin_gauss/PluginGaussForm.h
 	HEADERS += src/plugins/plugin_gauss/PluginGaussRefView.h
-        HEADERS += src/plugins/plugin_gauss/PluginGaussSettingsView.h
+    HEADERS += src/plugins/plugin_gauss/PluginGaussSettingsView.h
 }
 equals(USE_PLUGIN_AM, 1){
 	HEADERS += src/plugins/plugin_am/PluginMag.h
 	HEADERS += src/plugins/plugin_am/PluginMagForm.h
 	HEADERS += src/plugins/plugin_am/PluginMagRefView.h
-        HEADERS += src/plugins/plugin_am/PluginMagSettingsView.h
+    HEADERS += src/plugins/plugin_am/PluginMagSettingsView.h
 }
 equals(USE_PLUGIN_UNIFORM, 1){
 	HEADERS += src/plugins/plugin_uniform/PluginUniform.h
 	HEADERS += src/plugins/plugin_uniform/PluginUniformForm.h
+	HEADERS += src/plugins/plugin_uniform/PluginUniformRefView.h
+	HEADERS += src/plugins/plugin_uniform/PluginUniformSettingsView.h
 }
 
 HEADERS += src/project/PluginManager.h
@@ -440,23 +442,25 @@ equals(USE_PLUGIN_14C, 1){
 	SOURCES += src/plugins/plugin_14C/Plugin14C.cpp
 	SOURCES += src/plugins/plugin_14C/Plugin14CForm.cpp
 	SOURCES += src/plugins/plugin_14C/Plugin14CRefView.cpp
-        SOURCES += src/plugins/plugin_14C/Plugin14CSettingsView.cpp
+    SOURCES += src/plugins/plugin_14C/Plugin14CSettingsView.cpp
 }
 equals(USE_PLUGIN_GAUSS, 1){
 	SOURCES += src/plugins/plugin_gauss/PluginGauss.cpp
 	SOURCES += src/plugins/plugin_gauss/PluginGaussForm.cpp
 	SOURCES += src/plugins/plugin_gauss/PluginGaussRefView.cpp
-        SOURCES += src/plugins/plugin_gauss/PluginGaussSettingsView.cpp
+    SOURCES += src/plugins/plugin_gauss/PluginGaussSettingsView.cpp
 }
 equals(USE_PLUGIN_AM, 1){
 	SOURCES += src/plugins/plugin_am/PluginMag.cpp
 	SOURCES += src/plugins/plugin_am/PluginMagForm.cpp
 	SOURCES += src/plugins/plugin_am/PluginMagRefView.cpp
-        SOURCES += src/plugins/plugin_am/PluginMagSettingsView.cpp
+    SOURCES += src/plugins/plugin_am/PluginMagSettingsView.cpp
 }
 equals(USE_PLUGIN_UNIFORM, 1){
 	SOURCES += src/plugins/plugin_uniform/PluginUniform.cpp
 	SOURCES += src/plugins/plugin_uniform/PluginUniformForm.cpp
+    SOURCES += src/plugins/plugin_uniform/PluginUniformRefView.cpp
+    SOURCES += src/plugins/plugin_uniform/PluginUniformSettingsView.cpp
 }
 
 SOURCES += src/project/PluginManager.cpp
