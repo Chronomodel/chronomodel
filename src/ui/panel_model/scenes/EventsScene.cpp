@@ -331,10 +331,7 @@ void EventsScene::createSceneFromState()
     for (QJsonArray::const_iterator citer = eventsInState.constBegin(); citer != eventsInState.constEnd(); ++citer) {
         const QJsonObject event = (*citer).toObject();
         ++i;
-        
-        
-        QJsonObject date =event.value(STATE_EVENT_DATES).toArray().at(0).toObject();
-qDebug()<<date.value(STATE_NAME).toString()<<date.value(STATE_DATE_VALID).toBool();
+
 
         progress->setValue(i);
 

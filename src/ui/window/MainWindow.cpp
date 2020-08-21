@@ -1064,9 +1064,9 @@ void MainWindow::readSettings(const QString& defaultFilePath)
                 mProject->setAppSettings();
  // debug
     
-                const QJsonArray eventsInState = mProject->mState.value(STATE_EVENTS).toArray();
-    QJsonObject date0 =eventsInState.at(0).toObject() .value(STATE_EVENT_DATES).toArray().at(0).toObject();
-       qDebug()<<"MainWindow::readSettings date0"<<date0.value(STATE_NAME).toString()<<date0.value(STATE_DATE_VALID).toBool();
+  //              const QJsonArray eventsInState = mProject->mState.value(STATE_EVENTS).toArray();
+  //  QJsonObject date0 =eventsInState.at(0).toObject() .value(STATE_EVENT_DATES).toArray().at(0).toObject();
+  //     qDebug()<<"MainWindow::readSettings date0"<<date0.value(STATE_NAME).toString()<<date0.value(STATE_DATE_VALID).toBool();
 
     
     

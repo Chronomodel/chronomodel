@@ -131,7 +131,6 @@ public:
             Date sd;
             sd.fromJson(subDate);
             QString toFind = sd.mName + sd.getDesc();
-            qDebug()<<"mName"<<sd.mName<<toFind;
             
             Project* project = MainWindow::getInstance()->getProject();
             QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);

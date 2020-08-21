@@ -2132,11 +2132,10 @@ void Project::combineDates(const int eventId, const QList<int>& dateIds)
                         }
 
                         // Validate the date before adding it to the correct event and pushing the state
-                        //const bool valid = plugin->isDateValid(mergedDate.value(STATE_DATE_DATA).toObject(), settings);
                         const bool valid = plugin->isCombineValid(mergedDate, settings);
                         mergedDate[STATE_DATE_VALID] = valid;
                        // mergedDate[STATE_DATE_ORIGIN] = Date::eCombination; // done by plugin->mergeDate
-
+                        mergedDate[STATE_ID] = getUnusedDateId(dates);
                         dates.push_back(mergedDate);
                         
                     }
@@ -2145,11 +2144,9 @@ void Project::combineDates(const int eventId, const QList<int>& dateIds)
 
             event[STATE_EVENT_DATES] = dates;
             
-            for (int j=0; j<dates.size(); ++j) {
+            for (int j(0); j<dates.size(); ++j)
                 QJsonObject date = dates[j].toObject();
             
-
-            }
             
             
             events[i] = event;
@@ -2190,6 +2187,7 @@ void Project::splitDate(const int eventId, const int dateId)
                         bool valid = plugin->isDateValid(sd[STATE_DATE_DATA].toObject(), settings);
                         sd[STATE_DATE_VALID] = valid;
                         sd[STATE_DATE_ORIGIN] = Date::eSingleDate;
+                        sd[STATE_ID] =getUnusedDateId(dates);
                         dates.push_back(sd);
                     }
                     dates.removeAt(j);
@@ -2238,7 +2236,8 @@ void Project::createPhase(qreal x, qreal y)
 {
     if (studyPeriodIsValid()) {
         PhaseDialog* dialog = new PhaseDialog(qApp->activeWindow());
-        if (dialog->exec() == QDialog::Accepted) {
+        int r (dialog->exec());
+        if (r == int(QDialog::Accepted) ) {
             if (dialog->isValid()) {
                 QJsonObject phase = dialog->getPhase();
                 QJsonObject stateNext = mState;

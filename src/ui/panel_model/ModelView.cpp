@@ -1266,18 +1266,18 @@ void ModelView::updateLayout()
 void ModelView::updateEventsZoom(const double prop)
 {
     const qreal scale = 2. * prop;
-    QMatrix matrix;
-    matrix.scale(scale, scale);
-    mEventsView->setMatrix(matrix);
+//    QMatrix matrix;
+//    matrix.scale(scale, scale);
+    mEventsView->setTransform(QTransform::fromScale(scale, scale));
     mEventsScene->adaptItemsForZoom(scale);
 }
 
 void ModelView::updatePhasesZoom(const double prop)
 {
     const qreal scale = 2. * prop;
-    QMatrix matrix;
-    matrix.scale(scale, scale);
-    mPhasesView->setMatrix(matrix);
+//    QMatrix matrix;
+//    matrix.scale(scale, scale);
+    mPhasesView->setTransform(QTransform::fromScale(scale, scale));
     mPhasesScene->adaptItemsForZoom(scale);
 }
 

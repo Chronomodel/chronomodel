@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Collapsible.h"
 
 #include <QPainter>
+#include <QPainterPath>
 
 CollapsibleHeader::CollapsibleHeader(Collapsible* collapsible, Qt::WindowFlags flags):QWidget(collapsible, flags),
 mCollapsible(collapsible)

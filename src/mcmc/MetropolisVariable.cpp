@@ -557,7 +557,7 @@ QVector<double> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs>& c
         }
         shift += traceSize;
     }
-    return QVector<double>::fromStdVector(trace);
+    return QVector<double>(trace.begin(), trace.end());
 }
 
 /**

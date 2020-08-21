@@ -312,7 +312,7 @@ void ImportDataView::exportDates()
 
             Project* project = MainWindow::getInstance()->getProject();
             QJsonArray events = project->mState[STATE_EVENTS].toArray();
-            stream << "Title"<< sep << AppSettings::mLastFile<< endl;
+            stream << "Title"<< sep << AppSettings::mLastFile<< Qt::endl;
             for (int i(0); i<events.size(); ++i) {
                 QJsonObject event = events[i].toObject();
                 QJsonArray dates = event[STATE_EVENT_DATES].toArray();
@@ -320,7 +320,7 @@ void ImportDataView::exportDates()
                 int type = event[STATE_EVENT_TYPE].toInt();
                 const QString eventName = event[STATE_NAME].toString();
                 if (type == Event::eKnown) {
-                    stream << eventName << sep << "Bound" <<  sep << event.value(STATE_EVENT_KNOWN_FIXED).toDouble() << endl;
+                    stream << eventName << sep << "Bound" <<  sep << event.value(STATE_EVENT_KNOWN_FIXED).toDouble() << Qt::endl;
                 } else {
                    for (int j=0; j<dates.size(); ++j) {
                         QJsonObject date = dates.at(j).toObject();
@@ -331,7 +331,7 @@ void ImportDataView::exportDates()
                             if (!d.isNull()) {
                                 QStringList dateCsv = d.toCSV(csvLocal);
                                 stream <<eventName<<sep;
-                                stream << dateCsv.join(sep) << endl;
+                                stream << dateCsv.join(sep) << Qt::endl;
                             }
                         }
                         catch(QString error){

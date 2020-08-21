@@ -212,7 +212,7 @@ QVector<QVector<Event*> > ModelUtilities::getBranchesFromEvent(Event* start)
     try {
         nextBranches = getNextBranches(startBranch, start);
     } catch(QString error){
-        throw error;
+        throw std::move(error);
     }
 
     return nextBranches;

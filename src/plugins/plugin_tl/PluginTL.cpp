@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -229,14 +229,6 @@ PluginSettingsViewAbstract* PluginTL::getSettingsView()
 {
     return nullptr;
 }
-//long double PluginTL::getLikelihoodCombine(const double& t, const QJsonArray& subData)
-//{
-//    // detection of combination with date.mSubDates.size() not empty
-//    QPair<long double, long double > result = getLikelihoodArgCombine(t, subData);
-//
-//    return expl(result.second) / sqrt(result.first);
-//}
-
 
 
 // Combine / Split

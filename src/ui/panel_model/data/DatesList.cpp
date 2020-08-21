@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -85,7 +85,7 @@ void DatesList::setEvent(const QJsonObject& event)
             try {
                 Date d;
                 d.fromJson(date);
-                //qDebug() << "in DatesList::setEvent mOrigin" << d.mOrigin;
+                
                 if (!d.isNull()) {
                     QListWidgetItem* item = new QListWidgetItem();
                     item->setFont(font());
@@ -105,7 +105,7 @@ void DatesList::setEvent(const QJsonObject& event)
                     item->setData(0x0107, d.mIsValid);
                     item->setData(0x0108, date.value(STATE_DATE_SUB_DATES).toArray().size() > 0);
                     item->setData(0x0109, d.mOrigin);
-
+                    
                     addItem(item);
                 }
             }
@@ -171,11 +171,12 @@ void DatesList::dropEvent(QDropEvent* e)
     QListWidget::dropEvent(e);
 
     QList<int> ids;
-    for (int i=0; i<count(); ++i) {
+    for (int i(0); i<count(); ++i) {
         QListWidgetItem* it = item(i);
         int id = it->data(0x0104).toInt();
         ids << id;
     }
+    
     QJsonObject event = mEvent;
     QJsonArray dates = event[STATE_EVENT_DATES].toArray();
     QJsonArray datesOrdered;

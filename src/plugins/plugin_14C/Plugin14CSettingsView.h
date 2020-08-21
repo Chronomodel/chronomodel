@@ -43,7 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #if USE_PLUGIN_14C
 
 #include "../PluginSettingsViewAbstract.h"
-#include <QMap>
+//#include <QMap>
 
 class Plugin14C;
 class PluginRefCurveSettingsView;

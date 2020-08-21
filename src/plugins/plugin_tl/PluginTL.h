@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -86,7 +86,7 @@ public:
 
     PluginFormAbstract* getForm();
     GraphViewRefAbstract* getGraphViewRef();
-    virtual void deleteGraphViewRef(GraphViewRefAbstract* graph);
+    void deleteGraphViewRef(GraphViewRefAbstract* graph);
     PluginSettingsViewAbstract* getSettingsView();
 };
 
