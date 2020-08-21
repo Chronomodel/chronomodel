@@ -52,7 +52,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 PhaseItem::PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsItem* parent):AbstractItem(scene, parent),
 mControlsVisible(false),
 mControlsEnabled(false),
-mAtLeastOneEventSelected(false)
+mAtLeastOneEventSelected(false),
+mOneEventSelectedOnScene(false)
 {
      setPhase(phase);
     inPix = new QPixmap(":insert_event.png");
@@ -222,6 +223,17 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
     const bool showAlldata = mScene->showAllThumbs();
     mAtLeastOneEventSelected = false;
+    mOneEventSelectedOnScene = false;
+    
+    const QJsonObject state = MainWindow::getInstance()->getProject()->state();
+    const QJsonArray allEvents = state.value(STATE_EVENTS).toArray();
+
+    for (int i=0; i<allEvents.size(); ++i) {
+       const QJsonObject event = allEvents.at(i).toObject();
+       const bool isSelected = ( event.value(STATE_IS_SELECTED).toBool() || event.value(STATE_IS_CURRENT).toBool() );
+       mOneEventSelectedOnScene = (mOneEventSelectedOnScene || isSelected);
+    }
+    
     painter->setFont(font);
 
     QList< QPair<int, double>> sortedEvents;
@@ -238,7 +250,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
                           event.value(STATE_COLOR_GREEN).toInt(),
                           event.value(STATE_COLOR_BLUE).toInt());
         const bool isSelected = ( event.value(STATE_IS_SELECTED).toBool() || event.value(STATE_IS_CURRENT).toBool() );
-
+       
         if (j > 0)
             r.adjust(0, dy, 0, dy);
 
@@ -279,33 +291,48 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     if (mControlsVisible && mControlsEnabled) {
         // insert button
         const QRectF inRect = insertRect();
-        painter->drawRect(inRect);
-        painter->fillRect(inRect, Qt::black);
-
-        qreal sx = inRect.width()/inPix->width();
-        qreal sy =  inRect.height()/inPix->height();
-        QMatrix mx = QMatrix();
-        mx.scale(sx, sy);
-
-        const QPixmap inPix2 = inPix->transformed(mx, Qt::SmoothTransformation);
-
-        painter->drawPixmap(int (inRect.x()), int (inRect.y()), inPix2);
-
         // extract button
         const QRectF exRect = extractRect();
+
+        qreal sx = inRect.width()/inPix->width();
+        qreal sy = inRect.height()/inPix->height();
+        
+        const QTransform mx;
+        mx.fromScale(sx, sy);
+
+        const QPixmap inPix2 = inPix->transformed(mx, Qt::SmoothTransformation);
         // we suppose, it is the same matrix
         const QPixmap exPix2 = exPix->transformed(mx, Qt::SmoothTransformation);
-        painter->drawRect(exRect);
+        painter->setOpacity(1);
+        painter->fillRect(inRect, Qt::black);
         painter->fillRect(exRect, Qt::black);
-
-        if (mAtLeastOneEventSelected) {
-            painter->drawPixmap(exRect, exPix2, exPix2.rect());
-
+        
+        painter->drawRect(inRect);
+        painter->drawRect(exRect);
+        
+        if (mOneEventSelectedOnScene) {
+            painter->setOpacity(1);
+            painter->fillRect(inRect, Qt::black);
+            painter->drawPixmap(inRect, inPix2, inPix2.rect());
         } else {
             painter->setOpacity(0.5);
-            painter->drawPixmap(exRect, exPix2, exPix2.rect());
-            painter->setOpacity(1);
+            painter->fillRect(inRect, Qt::black);
+            painter->drawPixmap(inRect, inPix2, inPix2.rect());
         }
+     
+        
+        if (mAtLeastOneEventSelected){
+            painter->setOpacity(1);
+            painter->fillRect(exRect, Qt::black);
+            painter->drawPixmap(exRect, exPix2, exPix2.rect());
+          
+        } else {
+            painter->setOpacity(0.5);
+            painter->fillRect(exRect, Qt::black);
+            painter->drawPixmap(exRect, exPix2, exPix2.rect());
+        
+        }
+      
 
     } else {
         // Phase Name
@@ -342,9 +369,6 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         painter->setPen(Qt::black);
         painter->setBrush(Qt::white);
         painter->drawRect(tpr);
-
-       // const QFont ftAdapt = AbstractItem::adjustFont(font, tauStr, tpr);
-       // painter->setFont(ftAdapt);
 
         painter->drawText(tpr, Qt::AlignCenter, tauStr);
     }

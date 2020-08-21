@@ -56,6 +56,7 @@ public:
     bool mControlsVisible;
     bool mControlsEnabled;
     bool mAtLeastOneEventSelected;
+    bool mOneEventSelectedOnScene;
     QSize mSize;
  void redrawPhase();
 
