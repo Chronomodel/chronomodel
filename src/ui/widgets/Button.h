@@ -64,13 +64,14 @@ public:
     void setIconOnly(bool iconOnly) { mIconOnly = iconOnly; }
 
     void setColorState(ColorState state);
-    virtual void isCheckable(const bool checkable);
+    virtual void setCheckable(const bool checkable);
 
 protected:
     void paintEvent(QPaintEvent* e);
 
     virtual void enterEvent(QEvent * e);
     virtual void leaveEvent(QEvent *e);
+    virtual void keyPressEvent(QKeyEvent* event);
 
     bool mFlatVertical;
     bool mFlatHorizontal;

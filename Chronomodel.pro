@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------
 
-#Copyright or © or Copr. CNRS	2014 - 2018
+#Copyright or © or Copr. CNRS	2014 - 2020
 
 #Authors :
 #	Philippe LANOS
@@ -38,7 +38,7 @@
 # --------------------------------------------------------------------- */
 
 # DEFINES += VERSION_NUMBER=\\\"2.0.10\\\"
-VERSION = 2.1.1
+VERSION = 2.1.2
  #VERSION_NUMBER # must match value in src/main.cpp and Chronomodel.rc (for windows)
 #PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_
@@ -121,8 +121,8 @@ macx{
 	# Define a set of resources to deploy inside the bundle :
 	RESOURCES_FILES.path = Contents/Resources
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
-        RESOURCES_FILES.files += $$PRO_PATH/deploy/ABOUT.html
-        RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel.png
+    RESOURCES_FILES.files += $$PRO_PATH/deploy/ABOUT.html
+    RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel.png
         #RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
 	QMAKE_BUNDLE_DATA += RESOURCES_FILES
 
@@ -158,12 +158,14 @@ USE_PLUGIN_GAUSS = 1
 USE_PLUGIN_14C = 1
 USE_PLUGIN_TL = 1
 USE_PLUGIN_AM = 1
+USE_PLUGIN_F14C = 1
 
 DEFINES += "USE_PLUGIN_UNIFORM=$${USE_PLUGIN_UNIFORM}"
 DEFINES += "USE_PLUGIN_GAUSS=$${USE_PLUGIN_GAUSS}"
 DEFINES += "USE_PLUGIN_14C=$${USE_PLUGIN_14C}"
 DEFINES += "USE_PLUGIN_TL=$${USE_PLUGIN_TL}"
 DEFINES += "USE_PLUGIN_AM=$${USE_PLUGIN_AM}"
+DEFINES += "USE_PLUGIN_F14C=$${USE_PLUGIN_F14C}"
 
 #########################################
 # FFTW
@@ -237,6 +239,7 @@ INCLUDEPATH += src/plugins/plugin_am/
 INCLUDEPATH += src/plugins/plugin_gauss/
 INCLUDEPATH += src/plugins/plugin_tl/
 INCLUDEPATH += src/plugins/plugin_uniform/
+INCLUDEPATH += src/plugins/plugin_F14C/
 INCLUDEPATH += src/project/
 INCLUDEPATH += src/ui/
 INCLUDEPATH += src/ui/dialogs/
@@ -317,6 +320,12 @@ equals(USE_PLUGIN_UNIFORM, 1){
 	HEADERS += src/plugins/plugin_uniform/PluginUniformForm.h
 	HEADERS += src/plugins/plugin_uniform/PluginUniformRefView.h
 	HEADERS += src/plugins/plugin_uniform/PluginUniformSettingsView.h
+}
+equals(USE_PLUGIN_F14C, 1){
+    HEADERS += src/plugins/plugin_F14C/PluginF14C.h
+    HEADERS += src/plugins/plugin_F14C/PluginF14CForm.h
+    HEADERS += src/plugins/plugin_F14C/PluginF14CRefView.h
+    HEADERS += src/plugins/plugin_F14C/PluginF14CSettingsView.h
 }
 
 HEADERS += src/project/PluginManager.h
@@ -461,6 +470,12 @@ equals(USE_PLUGIN_UNIFORM, 1){
 	SOURCES += src/plugins/plugin_uniform/PluginUniformForm.cpp
     SOURCES += src/plugins/plugin_uniform/PluginUniformRefView.cpp
     SOURCES += src/plugins/plugin_uniform/PluginUniformSettingsView.cpp
+}
+equals(USE_PLUGIN_F14C, 1){
+    SOURCES += src/plugins/plugin_F14C/PluginF14C.cpp
+    SOURCES += src/plugins/plugin_F14C/PluginF14CForm.cpp
+    SOURCES += src/plugins/plugin_F14C/PluginF14CRefView.cpp
+    SOURCES += src/plugins/plugin_F14C/PluginF14CSettingsView.cpp
 }
 
 SOURCES += src/project/PluginManager.cpp

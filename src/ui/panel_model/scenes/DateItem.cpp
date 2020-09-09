@@ -183,10 +183,10 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
         // using matrix transformation, because antiAliasing don't work with pixmap
         qreal sx = rct.width()/mCalibThumb.width();
         qreal sy =  rct.height()/mCalibThumb.height();
-        QMatrix mx = QMatrix();
-        mx.scale(sx, sy);
+//        QTransform mx;
+//        mx.scale(sx, sy);
 
-        const QPixmap ct2 = mCalibThumb.transformed(mx, Qt::SmoothTransformation);
+        const QPixmap ct2 = mCalibThumb.transformed(QTransform::fromScale(sx, sy), Qt::SmoothTransformation);
 
         painter->drawPixmap(int (rct.x()), int (rct.y()), ct2);
 

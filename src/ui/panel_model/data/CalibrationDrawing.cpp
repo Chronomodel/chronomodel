@@ -95,8 +95,9 @@ void CalibrationDrawing::showMarker()
 
 void CalibrationDrawing::setRefGraph(GraphViewRefAbstract* refGraph)
 {
+    Q_ASSERT(refGraph);
       mRefGraphView = refGraph;
-      if (mRefGraphView) {
+   //   if (mRefGraphView) {
         mRefGraphView->setParent(this);
         mRefGraphView->setMouseTracking(true);
         if (mRefGraphView->mGraph) {
@@ -104,7 +105,7 @@ void CalibrationDrawing::setRefGraph(GraphViewRefAbstract* refGraph)
             mRefGraphView->mGraph->setTipXLab("t Ref");
             mRefGraphView->update();
         }
-      }
+//      }
   setMouseTracking(true);
 }
 

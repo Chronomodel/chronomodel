@@ -68,11 +68,16 @@ void Button::init()
 
     mUseMargin = false;
     mIconOnly = true;
+  
 }
 
 Button::~Button()
 {
 
+}
+void Button::keyPressEvent(QKeyEvent* event)
+{
+    QPushButton::keyPressEvent(event);
 }
 
 void Button::setFlatVertical()
@@ -102,9 +107,10 @@ void Button::setColorState(ColorState state)
 void Button::enterEvent(QEvent *e)
 {
     mMouseOver = true;
-    update();
+    //update();
     if (QPushButton::isCheckable())
         QPushButton::QWidget::enterEvent(e);
+    update();
 }
 void Button::leaveEvent(QEvent * e)
 {
@@ -113,7 +119,7 @@ void Button::leaveEvent(QEvent * e)
     QPushButton::QWidget::leaveEvent(e);
 }
 
-void Button::isCheckable(const bool checkable)
+void Button::setCheckable(const bool checkable)
 {
     if (!checkable)
         mColorState = eWarning;
@@ -132,6 +138,7 @@ void Button::paintEvent(QPaintEvent* e)
     painter.setRenderHint(QPainter::Antialiasing);
 
     QRectF r = rect();
+
     if (mUseMargin) {
 #ifdef Q_OS_MAC
         const int m = style()->pixelMetric(QStyle::PM_ButtonMargin);

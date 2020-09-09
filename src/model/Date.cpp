@@ -71,7 +71,7 @@ mName("No Named Date")
     mMethod = eMHSymetric;
     updateti = fMHSymetric;
 
-    mIsValid = true;
+    mIsValid = false;
     mDelta = 0.;
     mDeltaType = eDeltaNone;
     mDeltaFixed = 0.;
@@ -680,24 +680,24 @@ QPixmap Date::generateCalibThumb()
 
 
         QPixmap thumb(size);
-        if (graph.inherits("QOpenGLWidget")) {
-            // Does not work if the graph has not been rendered before
-            // (calling repaint() has no direct effect on QOpenGLWidget...)
-            //graph.repaint();
-            //QImage image = graph.grabFramebuffer();
-            //thumb = QPixmap::fromImage(image);
-
-            // This works but there are some drawing region issues...
-            //graph.setRendering(GraphView::eHD);
-            graph.paintToDevice(&thumb);
-        } else {
+//        if (graph.inherits("QOpenGLWidget")) {
+//            // Does not work if the graph has not been rendered before
+//            // (calling repaint() has no direct effect on QOpenGLWidget...)
+//            //graph.repaint();
+//            //QImage image = graph.grabFramebuffer();
+//            //thumb = QPixmap::fromImage(image);
+//
+//            // This works but there are some drawing region issues...
+//            //graph.setRendering(GraphView::eHD);
+//            graph.paintToDevice(&thumb);
+//        } else {
             QPainter p;
             p.begin(&thumb);
             //p.setRenderHint(QPainter::SmoothPixmapTransform);//don't work on pixmap
             graph.repaint();
             graph.render(&p);
             p.end();
-        }
+//        }
         return thumb;
     } else {
         // If date is invalid, return a null pixmap!

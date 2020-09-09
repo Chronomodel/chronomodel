@@ -122,7 +122,7 @@ void Label::paintEvent(QPaintEvent*)
     p.setFont(font());
     const QRectF r = rect();
 
-    p.fillRect(r, mPalette.background().color());
+    p.fillRect(r, mPalette.window().color());
     p.setPen(mPalette.text().color());
 
     p.drawText(r, alignment(), text());

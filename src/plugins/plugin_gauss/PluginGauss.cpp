@@ -245,7 +245,7 @@ QString PluginGauss::getDateDesc(const Date* date) const
             datesDesc.append(getDateDesc(&subDate));
 
         }
-        result += "Combined ( " + datesDesc.join(" | ") + " )";
+        result += datesDesc.join(" | ") + " )" ;
         
     }
     return result;
@@ -681,7 +681,7 @@ QJsonObject PluginGauss::mergeDates(const QJsonArray& dates)
 
         // inherits the first data propeties as plug-in and method...
         result = dates.at(0).toObject();
-        result[STATE_NAME] = "Combined ( " + names.join(" | ") + " )";
+        result[STATE_NAME] = names.join(" | ");
         result[STATE_DATE_DATA] = mergedData;
         result[STATE_DATE_ORIGIN] = Date::eCombination;
         result[STATE_DATE_SUB_DATES] = dates;

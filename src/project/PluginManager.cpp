@@ -46,6 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Plugin14C.h"
 #include "PluginUniform.h"
 #include "PluginGauss.h"
+#include "PluginF14C.h"
 
 
 QList<PluginAbstract*> PluginManager::mPlugins = QList<PluginAbstract*>();
@@ -121,6 +122,12 @@ void PluginManager::loadPlugins()
     PluginAbstract* pluginGauss = new PluginGauss();
     mPlugins.append(pluginGauss);
 #endif
+    
+#if USE_PLUGIN_F14C
+    PluginAbstract* pluginF14C = new PluginF14C();
+    mPlugins.append(pluginF14C);
+#endif
+    
 }
 
 

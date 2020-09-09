@@ -60,8 +60,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class DATATION_SHARED_EXPORT PluginGauss : public PluginAbstract
 {
     Q_OBJECT
-    //Q_PLUGIN_METADATA(IID "chronomodel.PluginAbstract.PluginGauss")
-    //Q_INTERFACES(PluginAbstract)
 public:
     PluginGauss();
     virtual ~PluginGauss();

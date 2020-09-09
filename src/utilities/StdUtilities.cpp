@@ -622,7 +622,8 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, const do
                  const double t = cIter.key();
                  const double v = cIter.value();
                  result[t] = 0.; // important to init all the possible value
-                 inverted.insertMulti(v, t);
+                 //inverted.insertMulti(v, t);
+                inverted.insert(v, t);
                  ++cIter;
             }
 

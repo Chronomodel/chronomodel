@@ -706,9 +706,10 @@ void GraphView::resizeEvent(QResizeEvent* event)
             paintToDevice(&mBufferBack);
 
         } else {
-            QMatrix mx = QMatrix();
-            mx.scale(sx, sy);
-            mBufferBack = mBufferBack.transformed(mx, Qt::SmoothTransformation);
+//            QTransform mx;
+//            mx.scale(sx, sy);
+
+            mBufferBack = mBufferBack.transformed(QTransform::fromScale(sx, sy), Qt::SmoothTransformation);
         }
 
     }

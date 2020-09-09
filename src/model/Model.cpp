@@ -923,7 +923,8 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 
 #ifdef DEBUG
     qDebug()<<"Model::generateCorrelations()";
-    QTime t = QTime::currentTime();
+    QElapsedTimer t;
+    t.start();
 #endif
 
 #ifndef UNIT_TEST
@@ -974,8 +975,8 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 
 #ifdef DEBUG
     //QTime t2 = QTime::currentTime();
-    QTime timeDiff(0,0,0,1);
-    timeDiff = timeDiff.addMSecs(t.elapsed()).addMSecs(-1);
+    QTime timeDiff(0,0,0, (int)t.elapsed());
+   // timeDiff = timeDiff.addMSecs(t.elapsed()).addMSecs(-1);
 //    qint64 timeDiff = t.msecsTo(t2);
 
     qDebug() <<  QString("=> Model::generateCorrelations done in  %1 h %2 m %3 s %4 ms").arg(QString::number(timeDiff.hour()),
@@ -1310,7 +1311,8 @@ void Model::generateCredibility(const double thresh)
 void Model::generateHPD(const double thresh)
 {
 #ifdef DEBUG
-    QTime t = QTime::currentTime();
+    QElapsedTimer t;
+    t.start();
 #endif
 
     QList<Event*>::iterator iterEvent = mEvents.begin();
@@ -1343,8 +1345,8 @@ void Model::generateHPD(const double thresh)
         ++iterPhase;
     }
 #ifdef DEBUG
-    QTime t2 = QTime::currentTime();
-    qint64 timeDiff = t.msecsTo(t2);
+    //QTime t2 = QTime::currentTime();
+    qint64 timeDiff = t.elapsed();
     qDebug() <<  "=> Model::generateHPD done in " + QString::number(timeDiff) + " ms";
 #endif
 
@@ -1360,7 +1362,8 @@ void Model::generateTempo()
 {
 #ifdef DEBUG
     qDebug()<<"Model::generateTempo()"<<mSettings.mTmin<<mSettings.mTmax;
-    QTime t = QTime::currentTime();
+    QElapsedTimer t;
+    t.start();
 #endif
 
 // Avoid to redo calculation, when mTempo exist, it happen when the control is changed
@@ -1750,8 +1753,8 @@ void Model::generateTempo()
     //QTime t2 = QTime::currentTime();
     //qint64 timeDiff = t.msecsTo(t2);
 
-    QTime timeDiff(0,0,0,1);
-    timeDiff = timeDiff.addMSecs(t.elapsed()).addMSecs(-1);
+    QTime timeDiff(0, 0, 0, (int) t.elapsed());
+    //timeDiff = timeDiff.addMSecs(t.elapsed()).addMSecs(-1);
 
     qDebug() <<  QString("=> Model::generateTempo() done in  %1 h %2 m %3 s %4 ms").arg(QString::number(timeDiff.hour()),
                                                                 QString::number(timeDiff.minute()),

@@ -282,20 +282,19 @@ void EventsScene::createSceneFromState()
 {
 
 #ifdef DEBUG
-   qDebug()<<"EventsScene::createSceneFromState()";
-   QTime startTime = QTime::currentTime();
+    qDebug()<<"EventsScene::createSceneFromState()";
+    QElapsedTimer startTime;
+    startTime.start();
 #endif
 
     const QJsonObject state = mProject->state();
     const QJsonArray eventsInState = state.value(STATE_EVENTS).toArray();
     const QJsonArray constraints = state.value(STATE_EVENTS_CONSTRAINTS).toArray();
     const QJsonObject settings = state.value(STATE_SETTINGS).toObject();
-
     
     //
     
-    QJsonObject date0 =eventsInState.at(0).toObject() .value(STATE_EVENT_DATES).toArray().at(0).toObject();
-    qDebug()<<"date0"<<date0.value(STATE_NAME).toString()<<date0.value(STATE_DATE_VALID).toBool();
+    //QJsonObject date0 =eventsInState.at(0).toObject() .value(STATE_EVENT_DATES).toArray().at(0).toObject();
 
     
      //http://doc.qt.io/qt-5/qprogressdialog.html#minimumDuration-prop
@@ -303,8 +302,8 @@ void EventsScene::createSceneFromState()
     QProgressDialog* progress = new QProgressDialog("Create event items","Wait" , 1, eventsInState.size());//,qApp->activeWindow(), Qt::Window);
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(nullptr);
-    //progress->setMinimumWidth(5 * AppSettings::widthUnit());
-    progress->setMinimumWidth(int (progress->fontMetrics().width(progress->labelText()) * 1.5));
+  
+    progress->setMinimumWidth(int (progress->fontMetrics().horizontalAdvance(progress->labelText()) * 1.5));
 
     mSettings = ProjectSettings::fromJson(settings);
 
@@ -368,8 +367,8 @@ void EventsScene::createSceneFromState()
 
     delete progress;
  #ifdef DEBUG
-     QTime timeDiff(0,0,0,1);
-     timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
+     QTime timeDiff(0,0,0, (int)startTime.elapsed() );
+     //timeDiff = timeDiff.addMSecs().addMSecs(-1);
 
     qDebug()<<"EventsScene::createScene() finish at " + timeDiff.toString("hh:mm:ss.zzz");
  #endif
@@ -384,7 +383,8 @@ void EventsScene::updateSceneFromState()
 
 #ifdef DEBUG
    //qDebug()<<"EventsScene::updateSceneFromState()";
-   QTime startTime = QTime::currentTime();
+    QElapsedTimer startTime;
+    startTime.start();
 #endif
     QJsonObject state = mProject->state();
     const QJsonArray eventsInNewState = state.value(STATE_EVENTS).toArray();
@@ -621,9 +621,7 @@ void EventsScene::updateSceneFromState()
 
 
  #ifdef DEBUG
-     QTime timeDiff(0,0,0,1);
-     timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
-
+    QTime timeDiff(0, 0, 0, (int)startTime.elapsed());
     qDebug()<<"EventsScene::updateScene() finish at " + timeDiff.toString("hh:mm:ss.zzz");
  #endif
 }

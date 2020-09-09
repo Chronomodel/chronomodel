@@ -59,8 +59,8 @@ mThreshold(95),
 mGraphHeight(GraphViewResults::mHeightForVisibleAxis),
 mCurveColor(Painting::mainColorDark)
 {
-    mButtonWidth = int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
-    mButtonHeigth = int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     setMouseTracking(true);
     mDrawing = new MultiCalibrationDrawing(this);
     setMouseTracking(true);
@@ -249,29 +249,9 @@ void MultiCalibrationView::setVisible(bool visible)
 void MultiCalibrationView::applyAppSettings()
 {
 
-    mButtonWidth = int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
-    mButtonHeigth = int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
-/*    mTextArea->setFont(AppSettings::font());
-    mDrawing->setFont(AppSettings::font());
+    mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
 
-    mGraphHeightLab->setFont(AppSettings::font());
-    mGraphHeightEdit->setFont(AppSettings::font());
-
-    mStartLab->setFont(AppSettings::font());
-    mStartEdit->setFont(AppSettings::font());
-
-    mEndLab->setFont(AppSettings::font());
-    mEndEdit->setFont(AppSettings::font());
-
-    mMajorScaleLab->setFont(AppSettings::font());
-    mMajorScaleEdit->setFont(AppSettings::font());
-
-    mMinorScaleLab->setFont(AppSettings::font());
-    mMinorScaleEdit->setFont(AppSettings::font());
-
-    mHPDLab->setFont(AppSettings::font());
-    mHPDEdit->setFont(AppSettings::font());
-*/
     updateLayout();
 }
 

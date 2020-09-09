@@ -692,7 +692,7 @@ void ResultsView::applyAppSettings()
 
     mCurrentXMinEdit->setFixedSize(wEdit, lineEditHeight);
     mCurrentXMaxEdit->setFixedSize(wEdit, lineEditHeight);
-    mXScaleLab->setFixedWidth( int (fm.width(mXScaleLab->text())));
+    mXScaleLab->setFixedWidth( int (fm.horizontalAdvance(mXScaleLab->text())));
     mXScaleSpin->setFixedSize(wEdit, spinBoxHeight);
 
     mMajorScaleLab->setFixedSize(mOptionsW - wEdit - 2* mMargin, labelHeight);
@@ -3217,7 +3217,7 @@ void ResultsView::setGraphFont(const QFont &font)
                     {
                        const int marg = qMax(gfm.boundingRect(stringForLocal(40)).width()/ 2, gfm.boundingRect(stringForGraph(100)).width());
                        mMarginLeft = marg + 2*graduationSize ;
-                       mMarginRight = 4 * gfm.width(stringForLocal(40))/ 2.;
+                       mMarginRight = 4 * gfm.horizontalAdvance(stringForLocal(40))/ 2.;
                 }
         break;
 

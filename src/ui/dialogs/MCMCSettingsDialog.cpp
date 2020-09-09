@@ -157,7 +157,7 @@ mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
     mTestBut->setFixedSize(fontMetrics().boundingRect(mTestBut->text()).width() + 2 * mMarginW, mButH);
 
 #ifdef DEBUG
-    mTestBut->setFixedSize(fontMetrics().width(mTestBut->text()) + 2 * mMarginW, mButH);
+    mTestBut->setFixedSize(fontMetrics().horizontalAdvance(mTestBut->text()) + 2 * mMarginW, mButH);
     mTestBut->setVisible(true);
 #else
     mTestBut->setVisible(false);

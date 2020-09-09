@@ -67,7 +67,6 @@ PluginMag::~PluginMag()
 long double PluginMag::getLikelihood(const double& t, const QJsonObject& data)
 {
     QPair<long double, long double > result = getLikelihoodArg(t, data);
-    qDebug()<<"in plugmag = t"<< t << double(expl(result.second) / sqrtl(result.first));
     return expl(result.second) / sqrtl(result.first);
 }
 
@@ -190,7 +189,7 @@ QString PluginMag::getDateDesc(const Date* date) const
                 datesDesc.append(getDateDesc(&subDate));
 
             }
-            result += "Combined ( " + datesDesc.join(" | ") + " )";
+            result += datesDesc.join(" | ") + " )";
     }
 
     return result;
@@ -523,7 +522,7 @@ QJsonObject PluginMag::mergeDates(const QJsonArray& dates)
         if (subDatIsValid) {
             // inherits the first data propeties as plug-in and method...
             result = dates.at(0).toObject();
-            result[STATE_NAME] = "Combined ( " + names.join(" | ") + " )";
+            result[STATE_NAME] =  names.join(" | ") ;
             result[STATE_DATE_DATA] = mergedData;
             result[STATE_DATE_ORIGIN] = Date::eCombination;
             result[STATE_DATE_SUB_DATES] = dates;

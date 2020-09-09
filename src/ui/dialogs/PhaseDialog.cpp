@@ -47,10 +47,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 PhaseDialog::PhaseDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags)
-//mMargin(15),
-//mLineH(20),
-//mButH(25),
-//mButW(80)
 {
     //QPalette Pal(palette());
 

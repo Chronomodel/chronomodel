@@ -73,7 +73,7 @@ void SceneGlobalView::paintEvent(QPaintEvent* e)
         //  Target Rect
         // --------------------------------------------------
         QRectF sceneRect = mScene->sceneRect();
-        QMatrix matrix = mView->matrix();
+        QTransform matrix = mView->transform();
         sceneRect.setWidth( qMax(sceneRect.width() * matrix.m11(), 1.));
         sceneRect.setHeight( qMax(sceneRect.height() * matrix.m22(), 1.));
 
@@ -106,7 +106,7 @@ void SceneGlobalView::paintEvent(QPaintEvent* e)
         propW = (propW > 1) ? 1 : propW;
         propH = (propH > 1) ? 1 : propH;
 
-        const QMatrix m = mView->matrix();
+        const QTransform m = mView->transform();
         QRectF targetVisibleRect(targetRect.x() + targetRect.width() * propX * m.m11(),
                                  targetRect.y() + targetRect.height() * propY * m.m22(),
                                  targetRect.width() * propW,
@@ -138,7 +138,7 @@ QRectF SceneGlobalView::getTargetRect()
     const int h (height());
 
     QRectF sceneRect = mScene->sceneRect();
-    QMatrix matrix = mView->matrix();
+    QTransform matrix = mView->transform();
     sceneRect.setWidth(sceneRect.width() * matrix.m11());
     sceneRect.setHeight(sceneRect.height() * matrix.m22());
 

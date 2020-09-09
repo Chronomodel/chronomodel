@@ -558,7 +558,7 @@ bool ModelView::findCalibrateMissing()
         progress->setCancelButton(nullptr);
         progress->setMinimumDuration(4);
         progress->setMinimum(0);
-        //progress->setMinimumWidth(7 * AppSettings::widthUnit());
+       
         progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
 
         int position(0);
@@ -1063,71 +1063,29 @@ void ModelView::applyAppSettings()
 
     mMargin = int (0.3 * AppSettings::widthUnit());
     mToolbarH = int (2 * AppSettings::heigthUnit());
-    mButtonWidth = int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
-    mButtonHeigth = int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mHandlerW = int (0.25 * AppSettings::widthUnit());
-/*
-    mTopWrapper->setFont(AppSettings::font());
-    mLeftWrapper->setFont(AppSettings::font());
-    mRightWrapper->setFont(AppSettings::font());
 
-    mRightPanelTitle->setFont(AppSettings::font());
-    mLeftPanelTitle->setFont(AppSettings::font());
-
- */
     // ------
 
- //   mEventsScene->setFont(AppSettings::font());
    for (auto && item : mEventsScene->getItemsList()) {
         static_cast<EventItem*>(item)->redrawEvent();
         static_cast<EventItem*>(item)->update();
     }
-/*    mEventsView->setFont(AppSettings::font());
 
-
-    mEventsGlobalView->setFont(AppSettings::font());
-    mEventsGlobalZoom->setFont(AppSettings::font());
-
-    mEventsSearchEdit->setFont(AppSettings::font());
-
-    mButNewEvent->setFont(AppSettings::font());
-    mButNewEventKnown->setFont(AppSettings::font());
-    mButDeleteEvent->setFont(AppSettings::font());
-    mButRecycleEvent->setFont(AppSettings::font());
-    mButExportEvents->setFont(AppSettings::font());
-    mButEventsOverview->setFont(AppSettings::font());
-    mButEventsGrid->setFont(AppSettings::font());
-    mButProperties->setFont(AppSettings::font());
-    mButMultiCalib->setFont(AppSettings::font());
-    mButImport->setFont(AppSettings::font());
-*/
     // ------
-//mEventsScene->update();
-  //  mImportDataView->setFont(AppSettings::font());
     mEventPropertiesView->applyAppSettings();
 
- //   mPhasesScene->setFont(AppSettings::font());
     for (AbstractItem* item : mPhasesScene->getItemsList()) {
         static_cast<PhaseItem*>(item)->redrawPhase();
         static_cast<PhaseItem*>(item)->update();
     }
- //   mPhasesView->update();
-/*    mPhasesView->setFont(AppSettings::font());
 
-    mPhasesGlobalView->setFont(AppSettings::font());
-    mPhasesGlobalZoom->setFont(AppSettings::font());
-
-    mButNewPhase->setFont(AppSettings::font());
-    mButDeletePhase->setFont(AppSettings::font());
-    mButExportPhases->setFont(AppSettings::font());
-    mButPhasesOverview->setFont(AppSettings::font());
-    mButPhasesGrid->setFont(AppSettings::font());
-*/
     // ------
     mCalibrationView->applyAppSettings();
     mMultiCalibrationView->applyAppSettings();
 
-  //  mButModifyPeriod->setFont(AppSettings::font());
     adaptStudyPeriodButton(mTmin, mTmax);
 
 
@@ -1200,27 +1158,27 @@ void ModelView::updateLayout()
 
     // ----------
 
-    const qreal radarW (4 * AppSettings::widthUnit());
-    const qreal radarH (4. * AppSettings::heigthUnit());
+    const qreal radarW (5. * AppSettings::widthUnit());
+    const qreal radarH (5. * AppSettings::heigthUnit());
     const qreal searchH (1.3 * fm.height());
     if (mButProperties->isChecked() && mEventPropertiesView->isCalibChecked())
-        mEventsView      ->setGeometry(0, 0, 0, 0);
+        mEventsView ->setGeometry(0, 0, 0, 0);
     else
-        mEventsView      ->setGeometry(mLeftRect.adjusted(mButtonWidth -1, -1, +1, +1));
+        mEventsView ->setGeometry(mLeftRect.adjusted(mButtonWidth -1, -1, +1, +1));
 
     mEventsSearchEdit->setGeometry(mEventsView->x() + 5, 5, int(radarW), int (searchH));
     mEventsGlobalView->setGeometry(mEventsView->x() + 5, mEventsSearchEdit->y() + mEventsSearchEdit->height(), int(radarW), int(radarH));
 
-    mButNewEvent      ->setGeometry(0, 0, mButtonWidth, mButtonHeigth);
+    mButNewEvent       ->setGeometry(0, 0, mButtonWidth, mButtonHeigth);
     mButNewEventKnown ->setGeometry(0, mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButDeleteEvent   ->setGeometry(0, 2*mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButRecycleEvent  ->setGeometry(0, 3*mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButExportEvents  ->setGeometry(0, 4*mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButEventsOverview->setGeometry(0, 5*mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButEventsGrid    ->setGeometry(0, 6*mButtonHeigth, mButtonWidth, mButtonHeigth);
-    mButProperties ->setGeometry(0, 7*mButtonHeigth, mButtonWidth, mButtonHeigth);
-    mButMultiCalib->setGeometry(0, 8*mButtonHeigth, mButtonWidth, mButtonHeigth);
-    mButImport     ->setGeometry(0, 9*mButtonHeigth, mButtonWidth, mButtonHeigth);
+    mButProperties    ->setGeometry(0, 7*mButtonHeigth, mButtonWidth, mButtonHeigth);
+    mButMultiCalib    ->setGeometry(0, 8*mButtonHeigth, mButtonWidth, mButtonHeigth);
+    mButImport         ->setGeometry(0, 9*mButtonHeigth, mButtonWidth, mButtonHeigth);
 
     mEventsGlobalZoom ->setGeometry(0, 10*mButtonHeigth, mButtonWidth, mLeftRect.height() - 10*mButtonHeigth);
 
@@ -1252,11 +1210,11 @@ void ModelView::updateLayout()
 
         mPhasesGlobalView->setGeometry(5, 5, int(radarW), int(radarH));
 
-        mButNewPhase      ->setGeometry(mPhasesView->width() -2, 0, mButtonWidth, mButtonHeigth);
-        mButDeletePhase   ->setGeometry(mPhasesView->width() -2, mButtonHeigth, mButtonWidth, mButtonHeigth);
+        mButNewPhase       ->setGeometry(mPhasesView->width() -2, 0                 , mButtonWidth, mButtonHeigth);
+        mButDeletePhase   ->setGeometry(mPhasesView->width() -2, mButtonHeigth  , mButtonWidth, mButtonHeigth);
         mButExportPhases  ->setGeometry(mPhasesView->width() -2, 2*mButtonHeigth, mButtonWidth, mButtonHeigth);
         mButPhasesOverview->setGeometry(mPhasesView->width() -2, 3*mButtonHeigth, mButtonWidth, mButtonHeigth);
-        mButPhasesGrid    ->setGeometry(mPhasesView->width() -2, 4*mButtonHeigth, mButtonWidth, mButtonHeigth);
+        mButPhasesGrid     ->setGeometry(mPhasesView->width() -2, 4*mButtonHeigth, mButtonWidth, mButtonHeigth);
         mPhasesGlobalZoom ->setGeometry(mPhasesView->width() -2, 5*mButtonHeigth, mButtonWidth, mRightRect.height() - 5*mButtonHeigth);
      }
     update();
@@ -1266,8 +1224,6 @@ void ModelView::updateLayout()
 void ModelView::updateEventsZoom(const double prop)
 {
     const qreal scale = 2. * prop;
-//    QMatrix matrix;
-//    matrix.scale(scale, scale);
     mEventsView->setTransform(QTransform::fromScale(scale, scale));
     mEventsScene->adaptItemsForZoom(scale);
 }
@@ -1275,8 +1231,6 @@ void ModelView::updateEventsZoom(const double prop)
 void ModelView::updatePhasesZoom(const double prop)
 {
     const qreal scale = 2. * prop;
-//    QMatrix matrix;
-//    matrix.scale(scale, scale);
     mPhasesView->setTransform(QTransform::fromScale(scale, scale));
     mPhasesScene->adaptItemsForZoom(scale);
 }

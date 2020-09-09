@@ -261,7 +261,7 @@ QJsonObject PluginUniform::mergeDates(const QJsonArray& dates)
         
         // inherits the first data propeties as plug-in and method...
         result = dates.at(0).toObject();
-        result[STATE_NAME] = "Combined ( " + names.join(" | ") + " )";
+        result[STATE_NAME] = names.join(" | ");
         
         result[STATE_DATE_DATA] = mergedData;
         result[STATE_DATE_ORIGIN] = Date::eSingleDate;

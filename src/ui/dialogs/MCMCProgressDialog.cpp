@@ -70,8 +70,6 @@ mLoop(loop)
     layout->addWidget(buttonBox);
     setLayout(layout);
 
-   // setMinimumWidth(10 * AppSettings::widthUnit());
-
     // -----------
 
     connect(mCancelBut, &QPushButton::clicked, this, &MCMCProgressDialog::cancelMCMC);

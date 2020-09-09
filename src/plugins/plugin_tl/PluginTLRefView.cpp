@@ -192,15 +192,14 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         }
     } else {
         
-        
         double tminDisplay;
         double tmaxDisplay;
 
         const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
         const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
 
-        for (int i(0); i< date.mSubDates.size(); ++i) {
-            QJsonObject subDate = date.mSubDates.at(i).toObject();
+        for ( auto &&d : date.mSubDates ) {
+            QJsonObject subDate = d.toObject();
             Date sd;
             sd.fromJson(subDate);
             QString toFind = sd.mName + sd.getDesc();

@@ -52,16 +52,17 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
 
     //qreal mm_per_cm = 10;
     const qreal cm_per_in = 2.54;
-    /*
-    qDebug()<<"ProjectView()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< width();
-    qDebug()<<"ProjectView()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< QApplication::desktop()->width();
-    qDebug()<<"ProjectView() screen width"<< width() / screen->physicalDotsPerInchX() * cm_per_in;
-    qDebug()<<"ProjectView() screen height"<< height() / screen->physicalDotsPerInchY() * cm_per_in;
-    */
-    int unitX = int(screen->physicalDotsPerInchX() / cm_per_in);
+    
+//    qDebug()<<"ProjectView()"<< screen->name() <<" number="<< numScreen<<"logical Dots="<<screen->logicalDotsPerInch() <<"devicePixelRatio="<<screen->devicePixelRatio()<<"availableVirtualGeometry()="<<screen->availableVirtualGeometry()<<" unitX ="<<screen->logicalDotsPerInch() / cm_per_in;
+//;
+//    qDebug()<<"ProjectView()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< QApplication::desktop()->width();
+//    qDebug()<<"ProjectView() screen width"<< width() / screen->physicalDotsPerInchX() / cm_per_in;
+//    qDebug()<<"ProjectView() screen height"<< height() / screen->physicalDotsPerInchY() / cm_per_in;
+    
+    int unitX = int(screen->logicalDotsPerInch() / cm_per_in);
     AppSettings::setWidthUnit( unitX);
 
-    int unitY = int(screen->physicalDotsPerInchY() / cm_per_in);
+    int unitY = int(screen->logicalDotsPerInch() / cm_per_in);
     AppSettings::setHeigthUnit( unitY);
 
 
@@ -133,16 +134,16 @@ void ProjectView::resizeEvent(QResizeEvent* e)
 
     //qreal mm_per_cm = 10;
     qreal cm_per_in = 2.54;
-/* // look for screen definition
-        qDebug()<<"ProjectView::resizeEvent()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< width();
-        qDebug()<<"ProjectView::resizeEvent()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< QApplication::desktop()->width();
-        qDebug()<<"ProjectView::resizeEvent() screen setWidthUnit"<< screen->physicalDotsPerInchX() / cm_per_in;
-        qDebug()<<"ProjectView::resizeEvent() screen setHeigthUnit"<< screen->physicalDotsPerInchY() / cm_per_in;
-*/
-            int unitX = int(screen->physicalDotsPerInchX() / cm_per_in);
+ // look for screen definition
+//        qDebug()<<"ProjectView::resizeEvent()"<< screen->name() <<" number="<<numScreen <<"logical Dots="<<screen->logicalDotsPerInch()<<"devicePixelRatio="<<screen->devicePixelRatio()<<"availableVirtualGeometry()="<<screen->availableVirtualGeometry()<<" unitX ="<<screen->logicalDotsPerInch() / cm_per_in;
+//        qDebug()<<"ProjectView::resizeEvent()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< QApplication::desktop()->width();
+//        qDebug()<<"ProjectView::resizeEvent() screen setWidthUnit"<< screen->physicalDotsPerInchX() / cm_per_in;
+//        qDebug()<<"ProjectView::resizeEvent() screen setHeigthUnit"<< screen->physicalDotsPerInchY() / cm_per_in;
+
+            int unitX = int(screen->logicalDotsPerInch() / cm_per_in);
             AppSettings::setWidthUnit( unitX);
 
-            int unitY = int(screen->physicalDotsPerInchY() / cm_per_in);
+            int unitY = int(screen->logicalDotsPerInch() / cm_per_in);
             AppSettings::setHeigthUnit( unitY);
 
 

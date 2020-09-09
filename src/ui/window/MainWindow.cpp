@@ -97,7 +97,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     statusBar()->showMessage(tr("Ready"));
     //setUnifiedTitleAndToolBarOnMac(true);
     setWindowIcon(QIcon(":chronomodel.png"));
-    //setMinimumSize(50 * AppSettings::widthUnit(), 50 * AppSettings::heigthUnit());
+ 
     resize(AppSettings::mLastSize);
 
     connect(mProjectSaveAction, static_cast<void (QAction::*)(bool)> (&QAction::triggered), this, &MainWindow::saveProject);
@@ -1143,9 +1143,9 @@ void MainWindow::activateInterface(bool activate)
     //qreal mm_per_cm = 10;
     qreal cm_per_in = 2.54;
 
-    qDebug()<<"MainWindow::activateInterface"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< width();
-    qDebug()<<"MainWindow::activateInterface"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< QApplication::desktop()->width();
-    qDebug()<<"MainWindow::activateInterfacescreen width"<< width() / screen->physicalDotsPerInchX() * cm_per_in;
+    qDebug()<<"MainWindow::activateInterface numScreen = "<< numScreen <<  QGuiApplication::screens().at(numScreen);
+    qDebug()<<"MainWindow::activateInterface this >>screenGeometry"<< numScreen << QApplication::desktop()->screenGeometry(this) << QApplication::desktop()->availableGeometry(this)<< QApplication::desktop()->width();
+    qDebug()<<"MainWindow::activateInterface screen width"<< width() / screen->physicalDotsPerInchX() * cm_per_in;
     qDebug()<<"MainWindow::activateInterface screen height"<< height() / screen->physicalDotsPerInchY() * cm_per_in;
 
 }
