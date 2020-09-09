@@ -46,6 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <set>
 #include <map>
 #include <QTime>
+#include <QElapsedTimer>
 
 // -----------------------------------------------------------------
 //  sumP = Sum (pi)
@@ -396,7 +397,8 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
     (void) description;
     QPair<double, double> range(- INFINITY, +INFINITY);
 #ifdef DEBUG
-    QTime startTime (QTime::currentTime());
+    QElapsedTimer startTime;
+    startTime.start();
 #endif
     // limit of precision, to accelerate the calculus
     const double epsilonStep = 0.1/100.;
@@ -492,8 +494,8 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
 
 #ifdef DEBUG
     qDebug()<<description;
-    QTime timeDiff(0,0,0,1);
-    timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
+    QTime timeDiff(0,0,0, int(startTime.elapsed()));
+    //timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
     qDebug()<<"timeRangeFromTraces ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
 #endif
 
@@ -527,7 +529,8 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const 
 {
     (void) description;
 #ifdef DEBUG
-    QTime startTime = QTime::currentTime();
+    QElapsedTimer startTime ;
+    startTime.start();
 #endif
 
     QPair<double, double> range = QPair<double, double>(- INFINITY, + INFINITY);
@@ -636,8 +639,8 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const 
 
 #ifdef DEBUG
     qDebug()<<description;
-    QTime timeDiff(0,0,0,1);
-    timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
+    QTime timeDiff(0, 0, 0, (int) startTime.elapsed());
+    //timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
     qDebug()<<"gapRangeFromTraces ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
 #endif
 
@@ -656,7 +659,8 @@ QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, cons
 {
     (void) description;
 #ifdef DEBUG
-    QTime startTime = QTime::currentTime();
+    QElapsedTimer startTime ;
+    startTime.start();
 #endif
 
     QPair<float, float> range = QPair<float, float>(- INFINITY, + INFINITY);
@@ -728,8 +732,8 @@ QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, cons
 
 #ifdef DEBUG
     qDebug()<<description;
-    QTime timeDiff(0,0,0,1);
-    timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
+    QTime timeDiff(0, 0, 0, (int)startTime.elapsed() );
+    //timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
     qDebug()<<"gapRangeFromTraces_old ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
 #endif
 

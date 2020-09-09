@@ -122,9 +122,10 @@ const QString MCMCLoop::getInitLog() const
 void MCMCLoop::run()
 {
     QString mDate = QDateTime::currentDateTime().toString("dddd dd MMMM yyyy");
-    QTime startTime = QTime::currentTime();
+    QElapsedTimer startTime;
+    startTime.start();
 
-    QString log= "Start " + mDate+" -> " +startTime.toString("hh:mm:ss.zzz");
+    QString log= "Start " + mDate + " -> " + QTime::currentTime().toString("hh:mm:ss.zzz");
 
 
     //----------------------- Calibrating --------------------------------------
@@ -301,8 +302,8 @@ void MCMCLoop::run()
 
     QTime endTime = QTime::currentTime();
 
-    QTime timeDiff(0,0,0,1);
-    timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
+    QTime timeDiff(0,0,0, (int)startTime.elapsed());
+    //timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
 
     log += line(tr("Model computed") );
     log += line(tr("finish at %1").arg(endTime.toString("hh:mm:ss.zzz")) );
