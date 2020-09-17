@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -107,10 +107,16 @@ mCalibVisible(false)
     // ---- Header Top Bar with Study period --------------
     // ----------- on mTopWrapper ------------------
 
-    mButModifyPeriod = new Button(tr("STUDY PERIOD") , mTopWrapper);
+    //mButModifyPeriod = new Button(tr("STUDY PERIOD") , mTopWrapper);
+    mButModifyPeriod = new QPushButton(tr("STUDY PERIOD") , mTopWrapper);
+    
+  // mButModifyPeriod->setStyleSheet("QPushButton:active {background-color: rgb(230, 230, 230); border: none;}  "); // bug QT 5.15
+    
 
     adaptStudyPeriodButton(mTmin, mTmax);
-    connect(mButModifyPeriod,  static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &ModelView::modifyPeriod);
+    //connect(mButModifyPeriod,  static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &ModelView::modifyPeriod);
+   // connect(mButModifyPeriod,  &Button::clicked, this, &ModelView::modifyPeriod);
+     connect(mButModifyPeriod,  &QPushButton::clicked, this, &ModelView::modifyPeriod);
 
     mLeftPanelTitle = new Label(tr("Events Scene"), mTopWrapper);
     mLeftPanelTitle->setLight();
@@ -450,10 +456,11 @@ void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
 {
         /* Addapt mButModifyPeriod size and position */
     // same variable in updateLayout()
-    const int topButtonHeight =  int ( 1.3 * fontMetrics().height());//  1 * AppSettings::heigthUnit());
-    const QString studyStr = tr("STUDY PERIOD") + QString(" [ %1 ; %2 ] BC/AD").arg(locale().toString(min), locale().toString(max));;
+    
+    const QString studyStr = tr("STUDY PERIOD") + QString(" [ %1 ; %2 ] BC/AD").arg(locale().toString(min), locale().toString(max));
+    const int topButtonHeight =  mButModifyPeriod->height();  //int ( 1 * fontMetrics().tightBoundingRect(mButModifyPeriod->text()).height());//  1 * AppSettings::heigthUnit());
     mButModifyPeriod->setText(studyStr);
-    mButModifyPeriod->setIconOnly(false);
+   // mButModifyPeriod->setIconOnly(false); // old used with the class Button
     mButModifyPeriod ->setGeometry((mTopWrapper->width() - fontMetrics().boundingRect(mButModifyPeriod->text()).width()) /2 - 2*mMargin, (mTopWrapper->height() - topButtonHeight)/2, fontMetrics().boundingRect(mButModifyPeriod->text()).width() + 4*mMargin, topButtonHeight );
 
 }
@@ -1103,11 +1110,12 @@ void ModelView::updateLayout()
    const  QFontMetrics fm (font());
 
     const int textSpacer(1 * AppSettings::widthUnit()); // marge of title
-    mTopRect = QRect(0, 0, width(),  int ( 2 * fm.height()) );// int (1.5 * AppSettings::heigthUnit()) );
+   // mTopRect = QRect(0, 0, width(),  int ( 2 * fm.height()) );
 
     // same variable in adaptStudyPeriodButton()
-    const int topButtonHeight = int ( 1.3 * fm.height()); //int (1 * AppSettings::heigthUnit());
+    const int topButtonHeight =  mButModifyPeriod->height();// int ( 1.3 * fontMetrics().boundingRect(mButModifyPeriod->text()).height());
 
+    mTopRect = QRect(0, 0, width(),  int ( 1.2 * topButtonHeight) );
     mTopWrapper->setGeometry(mTopRect);
 
     //-------------- Top Flag

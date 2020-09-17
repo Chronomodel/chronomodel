@@ -2,6 +2,8 @@
 # doi: 10.2458/azu_js_rc.v55i2.16177
 #Prefix from SHCal20
 # doi: 10.1017/RDC.2020.59
+# CAL BP, 14C age,Error,Delta 14C,Sigma
+#       , YR BP  ,YR BP,per mil  ,per mil
 5000,4475,30,48.9,3.9
 4995,4476,30,48.1,3.9
 4990,4475,30,47.7,3.9

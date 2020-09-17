@@ -205,7 +205,8 @@ private:
     double mTmin;
     double mTmax;
 
-    Button* mButModifyPeriod;
+    //Button* mButModifyPeriod;
+    QPushButton* mButModifyPeriod;
 
     Label* mLeftPanelTitle;
     Label* mRightPanelTitle;

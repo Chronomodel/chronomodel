@@ -37,56 +37,27 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef BUTTON_H
-#define BUTTON_H
+#ifndef PLUGIN14CSETTINGSVIEW_H
+#define PLUGIN14CSETTINGSVIEW_H
 
-#include <QPushButton>
+#if USE_PLUGIN_14C
 
-class Button: public QPushButton
+#include "../PluginSettingsViewAbstract.h"
+//#include <QMap>
+
+class Plugin14C;
+class PluginRefCurveSettingsView;
+
+class Plugin14CSettingsView: public PluginSettingsViewAbstract
 {
     Q_OBJECT
 public:
-    enum    ColorState
-    {
-        eDefault = 0,
-        eReady = 1,
-        eWarning = 2
-    };
+    Plugin14CSettingsView(Plugin14C* plugin, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
+    virtual ~Plugin14CSettingsView();
 
-    Button(QWidget* parent = nullptr);
-    Button(const QString& text, QWidget* parent = nullptr);
-    ~Button();
-    void init();
-
-    void setFlatVertical();
-    void setFlatHorizontal();
-    void setIsClose(bool isClose);
-    void setIconOnly(bool iconOnly) { mIconOnly = iconOnly; }
-
-    void setColorState(ColorState state);
-    virtual void setCheckable(const bool checkable);
-
-protected:
-    void paintEvent(QPaintEvent* e);
-
-    virtual void enterEvent(QEvent * e);
-    virtual void leaveEvent(QEvent *e);
-    virtual void keyPressEvent(QKeyEvent* event);
-
-    bool mFlatVertical;
-    bool mFlatHorizontal;
-    bool mIsClose;
-
-    bool mIconOnly;
-    bool mMouseOver;
-
-    ColorState mColorState;
-
-public:
-    bool mUseMargin;
-
-signals:
-      void click();
+private:
+    PluginRefCurveSettingsView* mRefView;
 };
 
+#endif
 #endif

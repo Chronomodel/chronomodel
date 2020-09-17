@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -37,56 +37,52 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef BUTTON_H
-#define BUTTON_H
+#ifndef PLUGINF14CFORM_H
+#define PLUGINF14CFORM_H
 
-#include <QPushButton>
+#if USE_PLUGIN_F14C
 
-class Button: public QPushButton
+#include "../PluginFormAbstract.h"
+
+class PluginF14C;
+class QLineEdit;
+class QComboBox;
+class QLabel;
+
+
+class PluginF14CForm: public PluginFormAbstract
 {
     Q_OBJECT
 public:
-    enum    ColorState
-    {
-        eDefault = 0,
-        eReady = 1,
-        eWarning = 2
-    };
+    PluginF14CForm(PluginF14C* plugin, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
+    virtual ~PluginF14CForm();
 
-    Button(QWidget* parent = nullptr);
-    Button(const QString& text, QWidget* parent = nullptr);
-    ~Button();
-    void init();
+    void setData(const QJsonObject& data, bool isCombined);
+    QJsonObject getData();
 
-    void setFlatVertical();
-    void setFlatHorizontal();
-    void setIsClose(bool isClose);
-    void setIconOnly(bool iconOnly) { mIconOnly = iconOnly; }
-
-    void setColorState(ColorState state);
-    virtual void setCheckable(const bool checkable);
-
-protected:
-    void paintEvent(QPaintEvent* e);
-
-    virtual void enterEvent(QEvent * e);
-    virtual void leaveEvent(QEvent *e);
-    virtual void keyPressEvent(QKeyEvent* event);
-
-    bool mFlatVertical;
-    bool mFlatHorizontal;
-    bool mIsClose;
-
-    bool mIconOnly;
-    bool mMouseOver;
-
-    ColorState mColorState;
-
-public:
-    bool mUseMargin;
-
+    bool isValid();
 signals:
-      void click();
+    void OkEnabled(bool enabled) ;
+
+protected slots:
+    void errorIsValid(QString str);
+
+private:
+    QLabel* mAverageLab;
+    QLabel* mErrorLab;
+    QLabel* mRLab;
+    QLabel* mRErrorLab;
+    QLabel* mRefLab;
+
+    QLineEdit* mAverageEdit;
+    QLineEdit* mErrorEdit;
+    QLineEdit* mREdit;
+    QLineEdit* mRErrorEdit;
+    QComboBox* mRefCombo;
+
+    static QString mSelectedRefCurve;
 };
+
+#endif
 
 #endif

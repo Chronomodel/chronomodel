@@ -116,7 +116,7 @@ qreal dpiScaled(qreal value)
 bool isComment(const QString& str)
 {
     QStringList commentsMarkers;
-    commentsMarkers << "//" << "#" << "/*";
+    commentsMarkers << "//" << "#" << "/*"<<"!"<<QString(char(148));
     QString strClean = str.trimmed();
 
     for (auto &&str : commentsMarkers) {

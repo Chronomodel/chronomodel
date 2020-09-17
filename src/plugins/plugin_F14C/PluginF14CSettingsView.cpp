@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -37,56 +37,27 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef BUTTON_H
-#define BUTTON_H
+#include "PluginF14CSettingsView.h"
+#if USE_PLUGIN_F14C
 
-#include <QPushButton>
+#include "PluginF14C.h"
+#include "PluginRefCurveSettingsView.h"
+#include <QtWidgets>
 
-class Button: public QPushButton
-{
-    Q_OBJECT
-public:
-    enum    ColorState
-    {
-        eDefault = 0,
-        eReady = 1,
-        eWarning = 2
-    };
 
-    Button(QWidget* parent = nullptr);
-    Button(const QString& text, QWidget* parent = nullptr);
-    ~Button();
-    void init();
+PluginF14CSettingsView::PluginF14CSettingsView(PluginF14C* plugin, QWidget* parent, Qt::WindowFlags flags):PluginSettingsViewAbstract(plugin, parent, flags){
 
-    void setFlatVertical();
-    void setFlatHorizontal();
-    void setIsClose(bool isClose);
-    void setIconOnly(bool iconOnly) { mIconOnly = iconOnly; }
+    mRefView = new PluginRefCurveSettingsView(plugin);
+    connect(mRefView, &PluginRefCurveSettingsView::listRefCurveChanged, this, &PluginF14CSettingsView::calibrationNeeded);
 
-    void setColorState(ColorState state);
-    virtual void setCheckable(const bool checkable);
+    QVBoxLayout* layout = new QVBoxLayout();
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->addWidget(mRefView);
+    setLayout(layout);
+}
 
-protected:
-    void paintEvent(QPaintEvent* e);
+PluginF14CSettingsView::~PluginF14CSettingsView(){
 
-    virtual void enterEvent(QEvent * e);
-    virtual void leaveEvent(QEvent *e);
-    virtual void keyPressEvent(QKeyEvent* event);
-
-    bool mFlatVertical;
-    bool mFlatHorizontal;
-    bool mIsClose;
-
-    bool mIconOnly;
-    bool mMouseOver;
-
-    ColorState mColorState;
-
-public:
-    bool mUseMargin;
-
-signals:
-      void click();
-};
+}
 
 #endif

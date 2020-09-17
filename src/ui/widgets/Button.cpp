@@ -78,6 +78,7 @@ Button::~Button()
 void Button::keyPressEvent(QKeyEvent* event)
 {
     QPushButton::keyPressEvent(event);
+    emit click();
 }
 
 void Button::setFlatVertical()
@@ -108,7 +109,7 @@ void Button::enterEvent(QEvent *e)
 {
     mMouseOver = true;
     //update();
-    if (QPushButton::isCheckable())
+ //   if (QPushButton::isCheckable())
         QPushButton::QWidget::enterEvent(e);
     update();
 }
