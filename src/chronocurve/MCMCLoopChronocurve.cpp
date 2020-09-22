@@ -833,6 +833,7 @@ void MCMCLoopChronocurve::finalize()
     // Calculer la moyenne des g(t) à partir de toutes les chaines
     SplineMatrices matrices = prepareCalculSpline();
     SplineResults spline = calculSpline(matrices);
+    std::vector<double> errG = calculSplineError(matrices, spline);
     
     restoreEventsTheta();
     
@@ -850,14 +851,16 @@ void MCMCLoopChronocurve::finalize()
     std::vector<std::vector<double>> matL = spline.matL;
     std::vector<std::vector<double>> matD = spline.matD;
     
-    double sumDiagWInv = sumAllVector(diagWInv);
+    /*double sumDiagWInv = sumAllVector(diagWInv);
     double sumMatR = sumAllMatrix(matR);
     double sumMatQ = sumAllMatrix(matQ);
     double sumMatQT = sumAllMatrix(matQT);
     double sumMatQTW_1Q = sumAllMatrix(matQTW_1Q);
     double sumMatQTQ = sumAllMatrix(matQTQ);
     double sumMatL = sumAllMatrix(matL);
-    double sumMatD = sumAllMatrix(matD);
+    double sumMatD = sumAllMatrix(matD);*/
+    
+    
 }
 
 #pragma mark Related to : calibrate
@@ -1046,7 +1049,8 @@ double MCMCLoopChronocurve::h_alpha(SplineMatrices& matrices)
     double mu = 2.;
     
     // prior "shrinkage"
-    return (mu/c) * pow(c/(c + mModel->mAlphaLissage.mX),(mu+1));
+    double r = (mu/c) * pow(c/(c + mModel->mAlphaLissage.mX),(mu+1));
+    return r;
 }
 
 double MCMCLoopChronocurve::h_VG()
@@ -1078,7 +1082,7 @@ double MCMCLoopChronocurve::h_VG()
             
             for(int i=0; i<nb_noeuds; ++i){
                 Event* e = mModel->mEvents[i];
-                som_inv_S02 += ( 1 / (e->mSInc * e->mSInc));
+                som_inv_S02 += ( 1 / (e->mSy * e->mSy));
             }
             double S02 = nb_noeuds/som_inv_S02;
             // Shrinkage avec a = 1
@@ -1113,7 +1117,8 @@ double MCMCLoopChronocurve::h_theta()
         sum += pi * pow(e->mTheta.mX - ti_moy, 2);
     }
     
-    return exp(-0.5 * sum);
+    double h = exp(-0.5 * sum);
+    return h;
 }
 
 #pragma mark Manipulation des theta event pour le calcul spline (equivalent "Do Cravate")
@@ -1506,24 +1511,82 @@ SplineResults MCMCLoopChronocurve::calculSpline(SplineMatrices& matrices)
     spline.matD = matD;
     
     return spline;
-    
-    
-#if 0
-    // Calcul_splines_Enveloppe : calcul d'erreur sur G
-    
-    // calcul termes diagonaux de Mat_A
-    Calcul_Mat_Influence(Diag_W_1,alphac,Mat_L,Mat_D,Mat_Q,Mat_QT,nb_noeuds,Mat_A,1);
+}
 
-    // erreur sur Vec_G
-    setlength(Vec_splineP.Err_g,nb_noeuds+1);
-    for i:=1 to nb_noeuds do begin
-      Aii:=Mat_A[i,i];
-      // si Aii négatif ou nul, cela veut dire que la variance sur le point est anormalement trop grande,
-      // d'où une imprécision dans les calculs de Mat_B (Cf. calcul spline) et de mat_A
-      if (Aii<=0) then showmessage('i= '+inttostr(i)+'  -> Aii= '+floattostr(Aii)+'   ti= '+floattostr(temps_annee(tab_cravP[i].ti))+'   Wi= '+floattostr(tab_cravP[i].Wi));
-      Vec_splineP.Err_g[i]:= sqrt( Aii * (1/tab_cravP[i].Wi) );
-    end;
-#endif
+/**
+ Cette procedure calcule la matrice inverse de B:
+ B = R + alpha * Qt * W-1 * Q
+ puis calcule la matrice d'influence A(alpha)
+ Bande : nombre de diagonales non nulles
+ */
+std::vector<std::vector<double>> MCMCLoopChronocurve::calculMatInfluence(const SplineMatrices& matrices, const SplineResults& splines, const int nbBandes)
+{
+    unsigned int n = mModel->mEvents.size();
+    std::vector<std::vector<double>> matA = initMatrice(n, n);
+    
+    if(mModel->mAlphaLissage.mX != 0)
+    {
+        std::vector<std::vector<double>> matB1 = inverseMatSym(splines.matL, splines.matD, nbBandes + 4, 1);
+        std::vector<std::vector<double>> matQB_1QT = initMatrice(n, n);
+        
+        double term = pow(matrices.matQ[0][0], 2) * matB1[0][0];
+        term += pow(matrices.matQ[0][1], 2) * matB1[1][1];
+        term += 2 * matrices.matQ[0][0] * matrices.matQ[0][1] * matB1[0][1];
+        matQB_1QT[0][0] = term;
+        
+        for(unsigned int i=1; i<(n-1); ++i)
+        {
+            term = pow(matrices.matQ[i][i-1], 2) * matB1[i-1][i-1];
+            term += pow(matrices.matQ[i][i], 2) * matB1[i][i];
+            term += pow(matrices.matQ[i][i+1], 2) * matB1[i+1][i+1];
+            term += 2 * matrices.matQ[i][i-1] * matrices.matQ[i][i] * matB1[i-1][i];
+            term += 2 * matrices.matQ[i][i-1] * matrices.matQ[i][i+1] * matB1[i-1][i+1];
+            term += 2 * matrices.matQ[i][i] * matrices.matQ[i][i+1] * matB1[i][i+1];
+            matQB_1QT[i][i] = term;
+        }
+        
+        term = pow(matrices.matQ[n-1][n-2], 2) * matB1[n-2][n-2];
+        term += pow(matrices.matQ[n-1][n-1], 2) * matB1[n-1][n-1];
+        term += 2 * matrices.matQ[n-1][n-2] * matrices.matQ[n-1][n-1] * matB1[n-2][n-1];
+        matQB_1QT[n-1][n-1] = term;
+        
+        // Multi_diag_par_Mat(Diag_W_1c,Mat_QB_1QT,Nb_noeudsc,1,tmp1);
+        // Multi_const_par_Mat(-alphac,tmp1,Nb_noeudsc,1,Mat_Ac);
+        // Addit_I_et_Mat(Mat_Ac,Nb_noeudsc);
+        // remplacé par:
+        for(unsigned int i=0; i<n; ++i)
+        {
+            matA[i][i] = 1 - mModel->mAlphaLissage.mX * matrices.diagWInv[i] * matQB_1QT[i][i];
+        }
+    }
+    else
+    {
+        for(unsigned int i=0; i<n; ++i)
+        {
+            matA[i][i] = 1;
+        }
+    }
+    return matA;
+}
+
+std::vector<double> MCMCLoopChronocurve::calculSplineError(const SplineMatrices& matrices, const SplineResults& splines)
+{
+    unsigned int n = mModel->mEvents.size();
+    std::vector<std::vector<double>> matA = calculMatInfluence(matrices, splines, 1);
+    std::vector<double> errG = initVecteur(n);
+    
+    for(unsigned int i=0; i<n; ++i)
+    {
+        double aii = matA[i][i];
+        // si Aii négatif ou nul, cela veut dire que la variance sur le point est anormalement trop grande,
+        // d'où une imprécision dans les calculs de Mat_B (Cf. calcul spline) et de mat_A
+        if(aii <= 0){
+            throw "Oups";
+        }
+        errG[i] = sqrt(aii * (1 / mModel->mEvents[i]->mW));
+    }
+    
+    return errG;
 }
 
 #pragma mark Calcul Matriciel

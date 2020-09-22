@@ -135,6 +135,9 @@ private:
     
     SplineMatrices prepareCalculSpline();
     SplineResults calculSpline(SplineMatrices& matrices);
+    
+    std::vector<std::vector<double>> calculMatInfluence(const SplineMatrices& matrices, const SplineResults& splines, const int nbBandes);
+    std::vector<double> calculSplineError(const SplineMatrices& matrices, const SplineResults& splines);
 
 public:
     ModelChronocurve* mModel;
