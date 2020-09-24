@@ -41,6 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define MODELCHRONOCURVE_H
 
 #include "Model.h"
+#include "ChronocurveUtilities.h"
 
 
 class ModelChronocurve: public Model
@@ -48,6 +49,12 @@ class ModelChronocurve: public Model
 public:
     ModelChronocurve();
     virtual ~ModelChronocurve();
+    
+    MHVariable mAlphaLissage;
+    
+    std::vector<MCMCSplineParametrique> mMCMCSplinesParametrique;
+    
+    PosteriorMeanGParametrique mPosteriorMeanGParametrique;
 };
 
 #endif

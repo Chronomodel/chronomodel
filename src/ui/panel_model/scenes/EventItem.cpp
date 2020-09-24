@@ -98,7 +98,6 @@ QJsonObject& EventItem::getEvent()
 
 void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
 {
-    qDebug() << "EventItem::setEvent";
     prepareGeometryChange();
 
     // ----------------------------------------------
@@ -296,7 +295,7 @@ void EventItem::resizeEventItem()
     
     const QJsonArray dates = mData.value(STATE_EVENT_DATES).toArray();
     float eventHeight = y + (dates.count() * h);
-    qDebug() << "resizeEventItem dates count : " << dates.count();
+    //qDebug() << "resizeEventItem dates count : " << dates.count();
     
     int bottomLines = getChronocurveLines();
     eventHeight += (bottomLines > 0) ? bottomLines * mPhasesHeight : mPhasesHeight;

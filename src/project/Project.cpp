@@ -207,7 +207,7 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
     mStructureIsChanged = false;
     mDesignIsChanged = false;
     mItemsIsMoved = false;
-    qDebug()<<"Project::pushProjectState "<<reason<<notify<<force;
+    //qDebug()<<"Project::pushProjectState "<<reason<<notify<<force;
     if (mReasonChangeStructure.contains(reason))
         mStructureIsChanged = true;
 
@@ -482,7 +482,7 @@ bool Project::event(QEvent* e)
 
 void Project::updateState(const QJsonObject& state, const QString& reason, bool notify)
 {
-    qDebug() << " ---  Receiving : " << reason;
+    //qDebug() << " ---  Receiving : " << reason;
     mState = state;
     if (notify) {
 

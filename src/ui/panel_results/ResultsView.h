@@ -61,6 +61,7 @@ class QPushButton;
 
 class Project;
 class Model;
+class ModelChronocurve;
 class Tabs;
 class Ruler;
 class GraphView;
@@ -116,6 +117,7 @@ protected:
     void createEventsScrollArea(const int idx = 0);
     void createPhasesScrollArea(const int idx = 0);
     void createTempoScrollArea(const int idx = 0);
+    void createCurveScrollArea(const int idx = 0);
     void generateCurves(const QList<GraphViewResults*>& listGraphs);
 
     void updateTabDisplay(const int &i);
@@ -123,6 +125,9 @@ protected:
     void updateTabByTempo();
     void updateTabPageSaving();
     void updateNbDensity(int i);
+    
+    ModelChronocurve* modelChronocurve() const;
+    bool isChronocurve() const;
 
 public slots:
     void updateResults(Model* model = nullptr);
@@ -239,10 +244,12 @@ private:
     QScrollArea* mEventsScrollArea;
     QScrollArea* mPhasesScrollArea;
     QScrollArea* mTempoScrollArea;
+    QScrollArea* mCurveScrollArea;
 
     QList<GraphViewResults*> mByEventsGraphs;
     QList<GraphViewResults*> mByPhasesGraphs;
     QList<GraphViewResults*> mByTempoGraphs;
+    QList<GraphViewResults*> mCurveGraphs;
 
     QWidget* mOptionsWidget;
 
@@ -374,8 +381,8 @@ private:
     int mMinorCountScale;
 
 
-    int titleHeight ;
-    int labelHeight ;
+    int titleHeight;
+    int labelHeight;
     int lineEditHeight;
     int checkBoxHeight;
     int comboBoxHeight ;

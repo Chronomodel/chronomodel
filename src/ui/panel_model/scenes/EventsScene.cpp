@@ -447,7 +447,7 @@ void EventsScene::updateSceneFromState()
                     delete dateItems[j];
                 }
             }
-            qDebug() << "EventsScene::updateScene Event deleted : " << event.value(STATE_ID).toInt();
+            //qDebug() << "EventsScene::updateScene Event deleted : " << event.value(STATE_ID).toInt();
 
             mItems.removeAt(i);
             hasDeleted = true;
@@ -487,7 +487,7 @@ void EventsScene::updateSceneFromState()
                 itemUnkown = false;
                 if ((event != OldItemEvent) || settingsChanged) {
                     // UPDATE ITEM
-                    qDebug() << "EventsScene::updateScene Event updated : id = " << event.value(STATE_ID).toInt()<< event.value(STATE_NAME).toString();
+                    //qDebug() << "EventsScene::updateScene Event updated : id = " << event.value(STATE_ID).toInt()<< event.value(STATE_NAME).toString();
                     
                     oldItem->setEvent(event, settings);
                 }
@@ -529,7 +529,7 @@ void EventsScene::updateSceneFromState()
 
                 newItem = nullptr;
 
-                qDebug() << "EventsScene::updateScene Event created : id = " << event.value(STATE_ID).toInt() <<event[STATE_ITEM_X].toDouble()<<event[STATE_ITEM_Y].toDouble();//<< event.value(STATE_NAME).toString()<<", type : " << type;
+                //qDebug() << "EventsScene::updateScene Event created : id = " << event.value(STATE_ID).toInt() <<event[STATE_ITEM_X].toDouble()<<event[STATE_ITEM_Y].toDouble();//<< event.value(STATE_NAME).toString()<<", type : " << type;
 
             }
 
@@ -546,7 +546,7 @@ void EventsScene::updateSceneFromState()
 
         if (!constraints_ids.contains(constraint.value(STATE_ID).toInt())) {
 #ifdef DEBUG
-            qDebug() << "EventsScene::updateScene Event Constraint deleted : " << constraint.value(STATE_ID).toInt();
+            //qDebug() << "EventsScene::updateScene Event Constraint deleted : " << constraint.value(STATE_ID).toInt();
 #endif
             removeItem(constraintItem);
             mConstraintItems.removeOne(constraintItem);
@@ -586,7 +586,7 @@ void EventsScene::updateSceneFromState()
                 if (constraint != constraintItem) {
                     // UPDATE ITEM
 #ifdef DEBUG
-                    qDebug() << "EventsScene::updateScene Constraint updated : id = " << constraint.value(STATE_ID).toInt();
+                    //qDebug() << "EventsScene::updateScene Constraint updated : id = " << constraint.value(STATE_ID).toInt();
 #endif
                     mConstraintItems[j]->setData(constraint);
                 }
@@ -598,7 +598,7 @@ void EventsScene::updateSceneFromState()
             mConstraintItems.append(constraintItem);
             addItem(constraintItem);
 #ifdef DEBUG
-            qDebug() << "EventsScene::updateScene Constraint created : id = " << constraint.value(STATE_ID).toInt();
+            //qDebug() << "EventsScene::updateScene Constraint created : id = " << constraint.value(STATE_ID).toInt();
 #endif
         }
     }
@@ -630,7 +630,7 @@ void EventsScene::updateSceneFromState()
      QTime timeDiff(0,0,0,1);
      timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
 
-    qDebug()<<"EventsScene::updateScene() finish at " + timeDiff.toString("hh:mm:ss.zzz");
+    //qDebug()<<"EventsScene::updateScene() finish at " + timeDiff.toString("hh:mm:ss.zzz");
  #endif
 }
 
@@ -1037,7 +1037,7 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
 void EventsScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 {
     Q_UNUSED(e);
-    qDebug() << "EventsScene::itemEntered";
+    
     // the difference with the AbstractScene is here we need the curentEvent, which can be a date selected
     EventItem* current = currentEvent();
 

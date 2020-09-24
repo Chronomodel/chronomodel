@@ -43,6 +43,61 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <string>
 
 
+typedef struct SplineMatrices
+{
+    std::vector<double> diagWInv;
+    std::vector<std::vector<double>> matR;
+    std::vector<std::vector<double>> matQ;
+    std::vector<std::vector<double>> matQT;
+    std::vector<std::vector<double>> matQTW_1Q;
+    std::vector<std::vector<double>> matQTQ;
+} SplineMatrices;
+
+typedef struct SplineResults
+{
+    std::vector<std::vector<double>> matB;
+    std::vector<std::vector<double>> matL;
+    std::vector<std::vector<double>> matD;
+    
+    std::vector<double> vecG;
+    std::vector<double> vecGamma;
+    
+} SplineResults;
+
+typedef struct MCMCSplineComposante
+{
+    std::vector<double> vecThetaEvents; // le noeud ti
+    std::vector<double> vecG;
+    std::vector<double> vecGamma;
+    std::vector<double> vecErrG;
+    
+} MCMCSplineComposante;
+
+typedef struct MCMCSplineParametrique
+{
+    MCMCSplineComposante splineX;
+    MCMCSplineComposante splineY;
+    MCMCSplineComposante splineZ;
+    
+} MCMCSplines;
+
+typedef struct PosteriorMeanGComposante
+{
+    std::vector<double> vecG;
+    std::vector<double> vecGP;
+    std::vector<double> vecGS;
+    std::vector<double> vecGErr;
+    
+} PosteriorMeanGComposante;
+
+typedef struct PosteriorMeanGParametrique
+{
+    PosteriorMeanGComposante gx;
+    PosteriorMeanGComposante gy;
+    PosteriorMeanGComposante gz;
+    
+} PosteriorMeanGParametrique;
+
 class ChronocurveUtilities
 {
 public:

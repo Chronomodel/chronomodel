@@ -125,9 +125,6 @@ public:
     QList<PhaseConstraint*> mPhaseConstraints;
 
     QList<ChainSpecs> mChains;
-    
-    // Chronocurve
-    MHVariable mAlphaLissage;
 
     QString mLogModel;
     QString mLogMCMC;

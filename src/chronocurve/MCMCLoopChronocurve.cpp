@@ -190,7 +190,8 @@ void MCMCLoopChronocurve::initVariablesForChain()
     mModel->mAlphaLissage.mLastAccepts.reserve(acceptBufferLen);
     mModel->mAlphaLissage.mLastAcceptsLength = acceptBufferLen;
     
-    // TODO : init container for g(t) => spectrogram
+    // Ré-initialisation du stockage des splines
+    mModel->mMCMCSplinesParametrique.clear();
 }
 
 /**
@@ -224,7 +225,6 @@ QString MCMCLoopChronocurve::initMCMC()
         QList<Event*> startEvents = QList<Event*>();
 
         const bool ok (e->getThetaMaxPossible (e, circularEventName, startEvents));
-        qDebug() << " MCMCLoopMain::InitMCMC check constraint" << e->mName << ok;
         if (!ok) {
             mAbortedReason = QString(tr("Warning : Find Circular Constraint Path %1  %2 ")).arg (e->mName, circularEventName);
             return mAbortedReason;
@@ -234,7 +234,6 @@ QString MCMCLoopChronocurve::initMCMC()
     for (int i (0); i<unsortedEvents.size(); ++i) {
         if (unsortedEvents.at(i)->mType == Event::eDefault) {
 
-            qDebug() << "in initMCMC(): ---------------------------------";
             mModel->initNodeEvents(); // ?? FAIT AU-DESSUS ?
             QString circularEventName = "";
             QList< Event*> startEvents = QList<Event*>();
@@ -245,8 +244,7 @@ QString MCMCLoopChronocurve::initMCMC()
                 mAbortedReason = QString(tr("Warning : Find Circular constraint with %1  bad path  %2 ")).arg(unsortedEvents.at(i)->mName, circularEventName);
                 return mAbortedReason;
             }
-
-            //qDebug() << "in initMCMC(): Event initialised min : " << unsortedEvents[i]->mName << " : "<<" min"<<min<<tmin;
+            
             mModel->initNodeEvents();
             const double max ( unsortedEvents.at(i)->getThetaMaxRecursive(tmax) );
 #ifdef DEBUG
@@ -733,17 +731,70 @@ void MCMCLoopChronocurve::update()
     }
     
     // --------------------------------------------------------------
+    //  Calcul de la spline g, g" pour chaque composante + stockage
+    // --------------------------------------------------------------
+    MCMCSplineParametrique splineParametrique;
+    
+    // prepareCalculSpline : ne fait pas intervenir les valeurs Y(x,y,z) des events :
+    // => On le fait une seule fois pour les 3 composantes
+    SplineMatrices matrices = prepareCalculSpline();
+    
+    // calculSpline utilise les Y des events
+    // => On le calcule ici pour la première composante (x)
+    for(Event* event : mModel->mEvents){
+        event->mY = event->mYx;
+    }
+    SplineResults spline = calculSpline(matrices);
+    
+    MCMCSplineComposante splineX;
+    splineX.vecThetaEvents = getThetaEventVector();
+    splineX.vecG = spline.vecG;
+    splineX.vecGamma = spline.vecGamma;
+    splineX.vecErrG = calculSplineError(matrices, spline);
+    
+    splineParametrique.splineX = splineX;
+    
+    if(mChronocurveSettings.mProcessType != ChronocurveSettings::eProcessTypeUnivarie)
+    {
+        // calculSpline utilise les Y des events
+        // => On le calcule ici pour la seconde composante (y)
+        for(Event* event : mModel->mEvents){
+            event->mY = event->mYy;
+        }
+        SplineResults spline = calculSpline(matrices);
+        
+        MCMCSplineComposante splineY;
+        splineY.vecThetaEvents = getThetaEventVector();
+        splineY.vecG = spline.vecG;
+        splineY.vecGamma = spline.vecGamma;
+        splineY.vecErrG = calculSplineError(matrices, spline);
+        
+        splineParametrique.splineY = splineY;
+    }
+    if(mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel)
+    {
+        // calculSpline utilise les Y des events
+        // => On le calcule ici pour la troisième composante (z)
+        for(Event* event : mModel->mEvents){
+            event->mY = event->mYz;
+        }
+        SplineResults spline = calculSpline(matrices);
+        
+        MCMCSplineComposante splineZ;
+        splineZ.vecThetaEvents = getThetaEventVector();
+        splineZ.vecG = spline.vecG;
+        splineZ.vecGamma = spline.vecGamma;
+        splineZ.vecErrG = calculSplineError(matrices, spline);
+        
+        splineParametrique.splineZ = splineZ;
+    }
+    
+    mModel->mMCMCSplinesParametrique.push_back(splineParametrique);
+    
+    // --------------------------------------------------------------
     //  Restauration des valeurs des theta (non espacés pour le calcul)
     // --------------------------------------------------------------
     restoreEventsTheta();
-    
-    // --------------------------------------------------------------
-    //  Calcul de la spline g, g' et gerr à l'année sur plage d'étude
-    // --------------------------------------------------------------
-    
-    /*Do_cravate(tab_crav,nb_noeuds);
-    Calcul_spline(tab_crav,alpha,true,Vec_spline);
-    Calcul_splines_Enveloppe(Tab_crav,alpha,Vec_spline,Vec_spline_inf,Vec_spline_sup);*/
 }
 
 bool MCMCLoopChronocurve::adapt()
@@ -817,6 +868,271 @@ bool MCMCLoopChronocurve::adapt()
 
 void MCMCLoopChronocurve::finalize()
 {
+    int nbIter = mModel->mMCMCSplinesParametrique.size();
+    
+    int tmin = mModel->mSettings.mTmin;
+    int tmax = mModel->mSettings.mTmax;
+    
+    std::vector<double> vecCumulGx = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecCumulGPx = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecCumulGSx = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecCumulG2x = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecCumulErrG2x = initVecteur(tmax - tmin + 1);
+    
+    std::vector<double> vecGx = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecGPx = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecGSx = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecErrGx = initVecteur(tmax - tmin + 1);
+    
+    std::vector<double> vecCumulGy = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecCumulGPy = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecCumulGSy = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecCumulG2y = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecCumulErrG2y = initVecteur(tmax - tmin + 1);
+    
+    std::vector<double> vecGy = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecGPy = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecGSy = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecErrGy = initVecteur(tmax - tmin + 1);
+    
+    std::vector<double> vecCumulGz = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecCumulGPz = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecCumulGSz = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecCumulG2z = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecCumulErrG2z = initVecteur(tmax - tmin + 1);
+
+    std::vector<double> vecGz = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecGPz = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecGSz = initVecteur(tmax - tmin + 1);
+    std::vector<double> vecErrGz = initVecteur(tmax - tmin + 1);
+    
+    
+    for(int i=0; i<nbIter; ++i)
+    {
+        MCMCSplineParametrique splineParametrique = mModel->mMCMCSplinesParametrique[i];
+        
+        for(int tIdx=0; tIdx<=(tmax - tmin); ++tIdx)
+        {
+            double t = (double)tIdx / (double)(tmax - tmin);
+            
+            vecCumulGx[tIdx] += valeurG(t, splineParametrique.splineX);
+            vecCumulGPx[tIdx] += valeurGPrime(t, splineParametrique.splineX) / (tmax - tmin);
+            vecCumulGSx[tIdx] += valeurGSeconde(t, splineParametrique.splineX) / pow(tmax - tmin, 2);
+            vecCumulG2x[tIdx] += pow(vecCumulGx[tIdx], 2);
+            vecCumulErrG2x[tIdx] += pow(valeurErrG(t, splineParametrique.splineX), 2);
+            
+            if(mChronocurveSettings.mProcessType != ChronocurveSettings::eProcessTypeUnivarie)
+            {
+                vecCumulGy[tIdx] += valeurG(t, splineParametrique.splineY);
+                vecCumulGPy[tIdx] += valeurGPrime(t, splineParametrique.splineY) / (tmax - tmin);
+                vecCumulGSy[tIdx] += valeurGSeconde(t, splineParametrique.splineY) / pow(tmax - tmin, 2);
+                vecCumulG2y[tIdx] += pow(vecCumulGy[tIdx], 2);
+                vecCumulErrG2y[tIdx] += pow(valeurErrG(t, splineParametrique.splineY), 2);
+            }
+            
+            if(mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel)
+            {
+                vecCumulGz[tIdx] += valeurG(t, splineParametrique.splineZ);
+                vecCumulGPz[tIdx] += valeurGPrime(t, splineParametrique.splineZ) / (tmax - tmin);
+                vecCumulGSz[tIdx] += valeurGSeconde(t, splineParametrique.splineZ) / pow(tmax - tmin, 2);
+                vecCumulG2z[tIdx] += pow(vecCumulGz[tIdx], 2);
+                vecCumulErrG2z[tIdx] += pow(valeurErrG(t, splineParametrique.splineZ), 2);
+            }
+        }
+    }
+    
+    for(int tIdx=0; tIdx<=(tmax-tmin); ++tIdx)
+    {
+        vecGx[tIdx] = vecCumulGx[tIdx] / nbIter;
+        vecGPx[tIdx] = vecCumulGPx[tIdx] / nbIter;
+        vecGSx[tIdx] = vecCumulGSx[tIdx] / nbIter;
+        vecErrGx[tIdx] = sqrt((vecCumulG2x[tIdx] / nbIter) - pow(vecGx[tIdx], 2) + (vecCumulErrG2x[tIdx] / nbIter));
+        
+        if(mChronocurveSettings.mProcessType != ChronocurveSettings::eProcessTypeUnivarie)
+        {
+            vecGy[tIdx] = vecCumulGy[tIdx] / nbIter;
+            vecGPy[tIdx] = vecCumulGPy[tIdx] / nbIter;
+            vecGSy[tIdx] = vecCumulGSy[tIdx] / nbIter;
+            vecErrGy[tIdx] = sqrt((vecCumulG2y[tIdx] / nbIter) - pow(vecGy[tIdx], 2) + (vecCumulErrG2y[tIdx] / nbIter));
+        }
+        
+        if(mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel)
+        {
+            vecGz[tIdx] = vecCumulGz[tIdx] / nbIter;
+            vecGPz[tIdx] = vecCumulGPz[tIdx] / nbIter;
+            vecGSz[tIdx] = vecCumulGSz[tIdx] / nbIter;
+            vecErrGz[tIdx] = sqrt((vecCumulG2z[tIdx] / nbIter) - pow(vecGz[tIdx], 2) + (vecCumulErrG2z[tIdx] / nbIter));
+        }
+    }
+    
+    mModel->mPosteriorMeanGParametrique.gx.vecG = vecGx;
+    mModel->mPosteriorMeanGParametrique.gy.vecG = vecGy;
+    mModel->mPosteriorMeanGParametrique.gz.vecG = vecGz;
+    
+    mModel->mPosteriorMeanGParametrique.gx.vecGP = vecGPx;
+    mModel->mPosteriorMeanGParametrique.gy.vecGP = vecGPy;
+    mModel->mPosteriorMeanGParametrique.gz.vecGP = vecGPz;
+    
+    mModel->mPosteriorMeanGParametrique.gx.vecGS = vecGSx;
+    mModel->mPosteriorMeanGParametrique.gy.vecGS = vecGSy;
+    mModel->mPosteriorMeanGParametrique.gz.vecGS = vecGSz;
+    
+    mModel->mPosteriorMeanGParametrique.gx.vecGErr = vecErrGx;
+    mModel->mPosteriorMeanGParametrique.gy.vecGErr = vecErrGy;
+    mModel->mPosteriorMeanGParametrique.gz.vecGErr = vecErrGz;
+}
+
+double MCMCLoopChronocurve::valeurG(const double t, const MCMCSplineComposante& spline)
+{
+    int n = mModel->mEvents.size();
+    
+    double t1 = spline.vecThetaEvents[0];
+    double tn = spline.vecThetaEvents[n-1];
+    double g = 0;
+    
+    if(t < t1)
+    {
+        double t2 = spline.vecThetaEvents[1];
+        double gp1 = (spline.vecG[1] - spline.vecG[0]) / (t2 - t1);
+        gp1 += -(t2 - t1) * spline.vecGamma[1] / 6;
+        g = spline.vecG[0] - (t1 - t) * gp1;
+    }
+    else if(t >= tn)
+    {
+        double tn1 = spline.vecThetaEvents[n-2];
+        double gpn = (spline.vecG[n-1] - spline.vecG[n-2]) / (tn - tn1);
+        gpn += (tn - tn1) * spline.vecGamma[n-2] / 6;
+        g = spline.vecG[n-1] + (t - tn) * gpn;
+    }
+    else
+    {
+        for(int i=0; i<n-1; ++i)
+        {
+            double ti1 = spline.vecThetaEvents[i];
+            double ti2 = spline.vecThetaEvents[i+1];
+            if((t >= ti1) && (t < ti2))
+            {
+                double h = ti2 - ti1;
+                double gi1 = spline.vecG[i];
+                double gi2 = spline.vecG[i+1];
+                double gamma1 = spline.vecGamma[i];
+                double gamma2 = spline.vecGamma[i+1];
+                g = ( (t-ti1) * gi2 + (ti2-t) * gi1 ) / h;
+                g += - (1/6) * (t-ti1) * (ti2-t) * ( (1+(t-ti1)/h) * gamma2 + (1+(ti2-t)/h) * gamma1 );
+            }
+        }
+    }
+
+    return g;
+}
+
+// ------------------------------------------------------------------
+//  Valeur de Err_G en t à partir de Vec_Err_G
+//  par interpolation linéaire des erreurs entre les noeuds
+// ------------------------------------------------------------------
+double MCMCLoopChronocurve::valeurErrG(const double t, const MCMCSplineComposante& spline)
+{
+    int n = mModel->mEvents.size();
+    
+    double t1 = spline.vecThetaEvents[0];
+    double tn = spline.vecThetaEvents[n-1];
+    double errG = 0;
+    
+    if(t < t1)
+    {
+        errG = spline.vecErrG[0];
+    }
+    else if(t >= tn)
+    {
+        errG = spline.vecErrG[n-1];
+    }
+    else
+    {
+        for(int i=0; i<n-1; ++i)
+        {
+            double ti1 = spline.vecThetaEvents[i];
+            double ti2 = spline.vecThetaEvents[i+1];
+            if((t >= ti1) && (t < ti2))
+            {
+                double err1 = spline.vecErrG[i];
+                double err2 = spline.vecErrG[i+1];
+                errG = err1 + ((t-ti1) / (ti2-ti1)) * (err2 - err1);
+            }
+        }
+    }
+
+    return errG;
+}
+
+double MCMCLoopChronocurve::valeurGPrime(const double t, const MCMCSplineComposante& spline)
+{
+    int n = mModel->mEvents.size();
+    
+    double t1 = spline.vecThetaEvents[0];
+    double tn = spline.vecThetaEvents[n-1];
+    double gPrime = 0;
+    
+    // la dérivée première est toujours constante en dehors de l'intervalle [t1,tn]
+    if(t < t1)
+    {
+        double t2 = spline.vecThetaEvents[1];
+        double gp1 = (spline.vecG[1] - spline.vecG[0]) / (t2 - t1);
+        gPrime = gp1 - (t2 - t1) * spline.vecGamma[1] / 6;
+    }
+    else if(t >= tn)
+    {
+        double tn1 = spline.vecThetaEvents[n-2];
+        double gpn = (spline.vecG[n-1] - spline.vecG[n-2]) / (tn - tn1);
+        gPrime = gpn + (tn - tn1) * spline.vecGamma[n-2] / 6;
+    }
+    else
+    {
+        for(int i=0; i<n-1; ++i)
+        {
+            double ti1 = spline.vecThetaEvents[i];
+            double ti2 = spline.vecThetaEvents[i+1];
+            if((t >= ti1) && (t < ti2))
+            {
+                double h = ti2 - ti1;
+                double gi1 = spline.vecG[i];
+                double gi2 = spline.vecG[i+1];
+                double gamma1 = spline.vecGamma[i];
+                double gamma2 = spline.vecGamma[i+1];
+                gPrime = ((gi2-gi1)/h) - (1/6) * (t-ti1) * (ti2-t) * ((gamma2-gamma1)/h);
+                gPrime += (1/6) * ((t-ti1) - (ti2-t)) * ( (1+(t-ti1)/h) * gamma2 + (1+(ti2-t)/h) * gamma1 );
+            }
+        }
+    }
+
+    return gPrime;
+}
+
+double MCMCLoopChronocurve::valeurGSeconde(const double t, const MCMCSplineComposante& spline)
+{
+    int n = mModel->mEvents.size();
+    
+    // la dérivée seconde est toujours nulle en dehors de l'intervalle [t1,tn]
+    double gSeconde = 0;
+    
+    for(int i=0; i<n-1; ++i)
+    {
+        double ti1 = spline.vecThetaEvents[i];
+        double ti2 = spline.vecThetaEvents[i+1];
+        if((t >= ti1) && (t < ti2))
+        {
+            double h = ti2 - ti1;
+            double gamma1 = spline.vecGamma[i];
+            double gamma2 = spline.vecGamma[i+1];
+            gSeconde = ((t-ti1) * gamma2 + (ti2-t) * gamma1) / h;
+        }
+    }
+    
+    return gSeconde;
+}
+
+
+/*void testResults()
+{
     std::vector<double> ti = getThetaEventVector();
     
     for(Event* event : mModel->mEvents){
@@ -831,6 +1147,7 @@ void MCMCLoopChronocurve::finalize()
     std::vector<double> tis = getThetaEventVector();
     
     // Calculer la moyenne des g(t) à partir de toutes les chaines
+    
     SplineMatrices matrices = prepareCalculSpline();
     SplineResults spline = calculSpline(matrices);
     std::vector<double> errG = calculSplineError(matrices, spline);
@@ -839,29 +1156,7 @@ void MCMCLoopChronocurve::finalize()
     
     std::vector<double> tif = getThetaEventVector();
     std::vector<double> yi = getYEventVector();
-    
-    std::vector<double> vecG = spline.vecG;
-    std::vector<double> vecGamma = spline.vecGamma;
-    std::vector<double> diagWInv = matrices.diagWInv;
-    std::vector<std::vector<double>> matR = matrices.matR;
-    std::vector<std::vector<double>> matQ = matrices.matQ;
-    std::vector<std::vector<double>> matQT = matrices.matQT;
-    std::vector<std::vector<double>> matQTW_1Q = matrices.matQTW_1Q;
-    std::vector<std::vector<double>> matQTQ = matrices.matQTQ;
-    std::vector<std::vector<double>> matL = spline.matL;
-    std::vector<std::vector<double>> matD = spline.matD;
-    
-    /*double sumDiagWInv = sumAllVector(diagWInv);
-    double sumMatR = sumAllMatrix(matR);
-    double sumMatQ = sumAllMatrix(matQ);
-    double sumMatQT = sumAllMatrix(matQT);
-    double sumMatQTW_1Q = sumAllMatrix(matQTW_1Q);
-    double sumMatQTQ = sumAllMatrix(matQTQ);
-    double sumMatL = sumAllMatrix(matL);
-    double sumMatD = sumAllMatrix(matD);*/
-    
-    
-}
+}*/
 
 #pragma mark Related to : calibrate
 

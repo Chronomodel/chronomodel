@@ -42,32 +42,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "MCMCLoop.h"
 #include "ChronocurveSettings.h"
+#include "ChronocurveUtilities.h"
 #include <vector>
 
 class Project;
 class ModelChronocurve;
 class Event;
 
-typedef struct SplineMatrices
-{
-    std::vector<double> diagWInv;
-    std::vector<std::vector<double>> matR;
-    std::vector<std::vector<double>> matQ;
-    std::vector<std::vector<double>> matQT;
-    std::vector<std::vector<double>> matQTW_1Q;
-    std::vector<std::vector<double>> matQTQ;
-} SplineMatrices;
-
-typedef struct SplineResults
-{
-    std::vector<std::vector<double>> matB;
-    std::vector<std::vector<double>> matL;
-    std::vector<std::vector<double>> matD;
-    
-    std::vector<double> vecG;
-    std::vector<double> vecGamma;
-    
-} SplineResults;
 
 class MCMCLoopChronocurve: public MCMCLoop
 {
@@ -138,6 +119,11 @@ private:
     
     std::vector<std::vector<double>> calculMatInfluence(const SplineMatrices& matrices, const SplineResults& splines, const int nbBandes);
     std::vector<double> calculSplineError(const SplineMatrices& matrices, const SplineResults& splines);
+    
+    double valeurG(const double t, const MCMCSplineComposante& spline);
+    double valeurErrG(const double t, const MCMCSplineComposante& spline);
+    double valeurGPrime(const double t, const MCMCSplineComposante& spline);
+    double valeurGSeconde(const double t, const MCMCSplineComposante& spline);
 
 public:
     ModelChronocurve* mModel;

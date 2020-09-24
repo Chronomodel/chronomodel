@@ -272,7 +272,6 @@ QString MCMCLoopMain::initMCMC()
     for (int i (0); i<unsortedEvents.size(); ++i) {
         if (unsortedEvents.at(i)->mType == Event::eDefault) {
 
-            qDebug() << "in initMCMC(): ---------------------------------";
             mModel->initNodeEvents();
             QString circularEventName = "";
             QList< Event*> startEvents = QList<Event*>();
@@ -286,8 +285,9 @@ QString MCMCLoopMain::initMCMC()
             mModel->initNodeEvents();
             const double max ( unsortedEvents.at(i)->getThetaMaxRecursive(tmax) );
 #ifdef DEBUG
-            if (min >= max)
+            if (min >= max){
                 qDebug() << tr("-----Error Init for event : %1 : min = %2 : max = %3-------").arg(unsortedEvents.at(i)->mName, QString::number(min), QString::number(max));
+            }
 #endif
             unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
             unsortedEvents.at(i)->mInitialized = true;

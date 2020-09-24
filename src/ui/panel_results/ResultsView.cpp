@@ -71,6 +71,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "AppSettings.h"
 
+#include "ModelChronocurve.h"
+
 #include <QtWidgets>
 #include <iostream>
 #include <QtSvg>
@@ -201,6 +203,7 @@ mMinorCountScale (4)
     // we set the same widget
     mTabByScene->addTab(mResultsGroup, tr("Events"));
     mTabByScene->addTab(mResultsGroup, tr("Phases"));
+    mTabByScene->addTab(mResultsGroup, tr("Posterior Mean G"));
     mTabByScene->addTab(mTempoGroup, tr("Tempo"));
 
 
@@ -780,7 +783,7 @@ void ResultsView::applyAppSettings()
     // set the variable and the graphic type
     mCurrentTypeGraph = GraphViewResults::ePostDistrib;
     mCurrentVariable = GraphViewResults::eTheta;
-
+    
     if (mHasPhases) {
         mTabByScene->setTab(1, false);
         mTabByScene->setTabVisible(1, true);
@@ -803,7 +806,7 @@ void ResultsView::applyAppSettings()
 */
 void ResultsView::updateControls()
 {
-   qDebug() << "ResultsView::updateControls()";
+   //qDebug() << "ResultsView::updateControls()";
    Q_ASSERT(mModel);
     bool byEvents (mTabByScene->currentIndex() == 0);
     bool byPhases (mTabByScene->currentIndex() == 1);
@@ -2207,6 +2210,35 @@ void ResultsView::createTempoScrollArea(const int idx)
     emit generateCurvesRequested();
 }
 
+void ResultsView::createCurveScrollArea(const int idx)
+{
+    if(!mCurveScrollArea)
+    {
+        mCurveScrollArea = new QScrollArea(this);
+        mCurveScrollArea->setMouseTracking(true);
+        mStack->addWidget(mCurveScrollArea);
+        mStack->setMouseTracking(true);
+    }
+    
+    mCurveGraphs.clear();
+
+    QWidget* widget = new QWidget(this);
+    widget->setMouseTracking(true);
+
+    GraphViewTempo* graphAlpha = new GraphViewTempo(widget);
+    graphAlpha->setSettings(mModel->mSettings);
+    graphAlpha->setMCMCSettings(mModel->mMCMCSettings, mChains);
+    graphAlpha->setGraphFont(mGraphFont);
+    graphAlpha->setGraphsThickness(mThicknessCombo->currentIndex());
+    graphAlpha->changeXScaleDivision(mMajorScale, mMinorCountScale);
+    mCurveGraphs.append(graphAlpha);
+
+    mCurveScrollArea->setWidget(widget);
+    mCurveScrollArea->update();
+    
+    emit generateCurvesRequested();
+}
+
 int ResultsView::getFFTLength() const
 {
     return mFFTLenCombo->currentText().toInt();
@@ -2339,7 +2371,7 @@ void ResultsView::previousSheet()
  */
 void ResultsView::updateCurvesToShow()
 {
-    qDebug() << "ResultsView::updateCurvesToShow";
+    //qDebug() << "ResultsView::updateCurvesToShow";
     const bool showAllChains = mAllChainsCheck->isChecked();
     QList<bool> showChainList;
 
@@ -2389,7 +2421,7 @@ void ResultsView::updateCurvesToShow()
  */
 void ResultsView::generateCurves(const QList<GraphViewResults*> &listGraphs)
 {
-    qDebug() << "ResultsView::generateCurves()";
+    //qDebug() << "ResultsView::generateCurves()";
 
     if (mTabByScene->currentIndex() == 0 || mTabByScene->currentIndex() ==1) {
         if (mDataThetaRadio->isChecked())
@@ -2412,16 +2444,20 @@ void ResultsView::generateCurves(const QList<GraphViewResults*> &listGraphs)
         return;
 
     for (auto &&graph : listGraphs)
+    {
         graph->generateCurves(GraphViewResults::TypeGraph(mCurrentTypeGraph), mCurrentVariable);
-
+    }
+    
     // With variable eDuration, we look for mResultMaxDuration in the curve named "Post Distrib All Chains"
-    if (mCurrentVariable == GraphViewResults::eDuration) {
+    if (mCurrentVariable == GraphViewResults::eDuration)
+    {
         mResultMaxDuration = 0.;
 
         QList<GraphViewResults*>::const_iterator constIter;
         constIter = listGraphs.cbegin();
         QList<GraphViewResults*>::const_iterator iterEnd = listGraphs.cend();
-        while (constIter != iterEnd) {
+        while (constIter != iterEnd)
+        {
             const GraphViewTempo* graphPhase = dynamic_cast<const GraphViewTempo*>(*constIter);
 
             if (graphPhase) {
@@ -2446,7 +2482,8 @@ void ResultsView::generateCurves(const QList<GraphViewResults*> &listGraphs)
     }
 
     // With variable eSigma, we look for mResultMaxVariance in the curve named "Post Distrib All Chains"
-    if (mCurrentVariable == GraphViewResults::eSigma) {
+    if (mCurrentVariable == GraphViewResults::eSigma)
+    {
        mResultMaxVariance = 0.;
 
         QList<GraphViewResults*>::const_iterator constIter;
@@ -2716,7 +2753,7 @@ void ResultsView::updateScales()
     // Already done when setting graphs new range (above)
     //updateGraphsZoomX();
 
-    qDebug()<< "ResultsView::updateScales emit scalesUpdated()";
+    //qDebug()<< "ResultsView::updateScales emit scalesUpdated()";
     emit scalesUpdated();
 }
 
@@ -3185,7 +3222,7 @@ void ResultsView::setGraphFont(const QFont &font)
     const QFontMetrics gfm (mGraphFont);
 
     /* Variable identic in AxisTool */
-    qDebug()<< " ResultsView::setGraphFont "<< font;
+    //qDebug()<< " ResultsView::setGraphFont "<< font;
         qDebug()<< mGraphFont;
 #ifdef Q_OS_MAC
     int heightText = int (1.5 * gfm.height());
@@ -3891,4 +3928,15 @@ void ResultsView::updateModel()
     }
 
     updateResults(mModel);
+}
+
+
+bool ResultsView::isChronocurve() const
+{
+    return (this->modelChronocurve() != nullptr);
+}
+
+ModelChronocurve* ResultsView::modelChronocurve() const
+{
+    return dynamic_cast<ModelChronocurve*>(mModel);
 }
