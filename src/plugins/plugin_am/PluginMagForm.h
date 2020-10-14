@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -69,6 +69,8 @@ signals:
 protected slots:
     void updateOptions();
     void errorIsValid(QString str);
+    void incIsValid(QString str);
+    void decIsValid(QString str);
 
 private:
     QRadioButton* mIncRadio;

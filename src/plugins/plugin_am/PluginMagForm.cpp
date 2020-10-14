@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -65,14 +65,28 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
 
     mIncEdit = new QLineEdit(this);
     mIncEdit->setAlignment(Qt::AlignHCenter);
+    mIncEdit->setToolTip(tr("inclination is >=-90 and <=90"));
+    connect(mIncEdit, &QLineEdit::textChanged, this, &PluginMagForm::incIsValid);
+    
     mDecEdit = new QLineEdit(this);
     mDecEdit->setAlignment(Qt::AlignHCenter);
+    mDecEdit->setToolTip(tr("declination is >=-90 and <=270"));
+    connect(mDecEdit, &QLineEdit::textChanged, this, &PluginMagForm::decIsValid);
+    
     mDecIncEdit = new QLineEdit(this);
     mDecIncEdit->setAlignment(Qt::AlignHCenter);
+    mDecIncEdit->setToolTip(tr("declination is >=-90 and <=270"));
+    connect(mDecIncEdit, &QLineEdit::textChanged, this, &PluginMagForm::decIsValid);
+    
     mIntensityEdit = new QLineEdit(this);
     mIntensityEdit->setAlignment(Qt::AlignHCenter);
+    mIntensityEdit->->setToolTip(tr("intensity is >0"));
+    connect(mIntensityEdit, &QLineEdit::textChanged, this, &PluginMagForm::errorIsValid);
+    
+    
     mAlpha95Edit = new QLineEdit(this);
     mAlpha95Edit->setAlignment(Qt::AlignHCenter);
+    mAlpha95Edit->->setToolTip(tr("Alpha95 is >0"));
     connect(mAlpha95Edit, &QLineEdit::textChanged, this, &PluginMagForm::errorIsValid);
 
     mRefCombo = new QComboBox(this);
@@ -129,29 +143,42 @@ PluginMagForm::~PluginMagForm()
 
 void PluginMagForm::setData(const QJsonObject& data, bool isCombined)
 {
-    (void) isCombined;
-    QLocale locale=QLocale();
-    const bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
-    const bool is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
-    const bool is_int = data.value(DATE_AM_IS_INT_STR).toBool();
+    mIncRadio->setEnabled(!isCombined);
+    mDecRadio->setEnabled(!isCombined);
+    mIntensityRadio->setEnabled(!isCombined);
+    mIncEdit->setEnabled(!isCombined);
+    mDecEdit->setEnabled(!isCombined);
+    
+    mDecIncEdit->setEnabled(!isCombined);
+    mIntensityEdit->setEnabled(!isCombined);
+    mAlpha95Edit->setEnabled(!isCombined);
+   
+    
+    
+    if (!isCombined) {
+        QLocale locale=QLocale();
+        const bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
+        const bool is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
+        const bool is_int = data.value(DATE_AM_IS_INT_STR).toBool();
 
-    const double inc = data.value(DATE_AM_INC_STR).toDouble();
-    const double dec = data.value(DATE_AM_DEC_STR).toDouble();
-    const double intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
-    const double error = data.value(DATE_AM_ERROR_STR).toDouble();
-    const QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
+        const double inc = data.value(DATE_AM_INC_STR).toDouble();
+        const double dec = data.value(DATE_AM_DEC_STR).toDouble();
+        const double intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
+        const double error = data.value(DATE_AM_ERROR_STR).toDouble();
+        const QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
 
-    mIncRadio->setChecked(is_inc);
-    mDecRadio->setChecked(is_dec);
-    mIntensityRadio->setChecked(is_int);
+        mIncRadio->setChecked(is_inc);
+        mDecRadio->setChecked(is_dec);
+        mIntensityRadio->setChecked(is_int);
 
-    mIncEdit->setText(locale.toString(inc));
-    mDecEdit->setText(locale.toString(dec));
-    mDecIncEdit->setText(locale.toString(inc));
-    mIntensityEdit->setText(locale.toString(intensity));
-    mAlpha95Edit->setText(locale.toString(error));
+        mIncEdit->setText(locale.toString(inc));
+        mDecEdit->setText(locale.toString(dec));
+        mDecIncEdit->setText(locale.toString(inc));
+        mIntensityEdit->setText(locale.toString(intensity));
+        mAlpha95Edit->setText(locale.toString(error));
 
-    mRefCombo->setCurrentText(ref_curve);
+        mRefCombo->setCurrentText(ref_curve);
+    } 
 
     updateOptions();
 }
@@ -191,10 +218,29 @@ void PluginMagForm::errorIsValid(QString str)
 {
     bool ok;
     QLocale locale;
-    double value = locale.toDouble(str,&ok);
+    double value = locale.toDouble(str, &ok);
 
     emit PluginFormAbstract::OkEnabled(ok && (value>0) );
 }
+
+void PluginMagForm::incIsValid(QString str)
+{
+    bool ok;
+    QLocale locale;
+    double value = locale.toDouble(str, &ok);
+
+    emit PluginFormAbstract::OkEnabled(ok && (value>=-90) && (value<=90) );
+}
+
+void PluginMagForm::decIsValid(QString str)
+{
+    bool ok;
+    QLocale locale;
+    double value = locale.toDouble(str, &ok);
+
+    emit PluginFormAbstract::OkEnabled(ok && (value>=-90) && (value<=270) );
+}
+
 
 bool PluginMagForm::isValid()
 {
@@ -206,26 +252,24 @@ bool PluginMagForm::isValid()
 
 void PluginMagForm::updateOptions()
 {
+    
     mIncEdit->setVisible(mIncRadio->isChecked());
     mIncLab->setVisible(mIncRadio->isChecked());
 
-    //if(mIncRadio->isChecked())    mRefCombo->setCurrentIndex(mRefCombo->findText("i.ref",Qt::MatchEndsWith));
-
     mDecEdit->setVisible(mDecRadio->isChecked());
     mDecLab->setVisible(mDecRadio->isChecked());
-    //if(mDecRadio->isChecked())    mRefCombo->setCurrentIndex(mRefCombo->findText("d.ref",Qt::MatchEndsWith));
 
     mDecIncEdit->setVisible(mDecRadio->isChecked());
     mDecIncLab->setVisible(mDecRadio->isChecked());
 
     mIntensityEdit->setVisible(mIntensityRadio->isChecked());
     mIntensityLab->setVisible(mIntensityRadio->isChecked());
-    //if(mIntensityRadio->isChecked())    mRefCombo->setCurrentIndex(mRefCombo->findText("f.ref",Qt::MatchEndsWith));
-
+   
     if (mIntensityRadio->isChecked())
         mAlpha95Lab->setText(tr("Error (sd)"));
     else
         mAlpha95Lab->setText(tr("Alpha 95"));
+    
 
 }
 
