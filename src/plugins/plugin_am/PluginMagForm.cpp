@@ -80,13 +80,13 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     
     mIntensityEdit = new QLineEdit(this);
     mIntensityEdit->setAlignment(Qt::AlignHCenter);
-    mIntensityEdit->->setToolTip(tr("intensity is >0"));
+    mIntensityEdit->setToolTip(tr("intensity is >0"));
     connect(mIntensityEdit, &QLineEdit::textChanged, this, &PluginMagForm::errorIsValid);
     
     
     mAlpha95Edit = new QLineEdit(this);
     mAlpha95Edit->setAlignment(Qt::AlignHCenter);
-    mAlpha95Edit->->setToolTip(tr("Alpha95 is >0"));
+    mAlpha95Edit->setToolTip(tr("Alpha95 is >0"));
     connect(mAlpha95Edit, &QLineEdit::textChanged, this, &PluginMagForm::errorIsValid);
 
     mRefCombo = new QComboBox(this);

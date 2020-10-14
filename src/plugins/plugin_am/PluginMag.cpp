@@ -49,6 +49,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <iostream>
 #include <QJsonObject>
 #include <QtWidgets>
+#include <QMessageBox>
 
 
 PluginMag::PluginMag()
@@ -243,19 +244,46 @@ QJsonObject PluginMag::fromCSV(const QStringList& list,const QLocale &csvLocale)
 {
     QJsonObject json;
     if (list.size() >= csvMinColumns()) {
-        double error = csvLocale.toDouble(list.at(5));
-        if (error == 0.)
+        
+// checks the validity interval
+        const QString name = list.at(0);
+        const double valInc (csvLocale.toDouble(list.at(2)));
+        const double valDec (csvLocale.toDouble(list.at(3)));
+        const double valIntensity (csvLocale.toDouble(list.at(4)));
+        const double valError = csvLocale.toDouble(list.at(5));
+         
+        if ((list.at(1) == "inclination" || list.at(1) == "declination") && (valInc>90 || valInc < -90)) {
+            QMessageBox message(QMessageBox::Warning, tr("Invalide value for inclination"), tr(" %1 : Inclination must be >=-90 and <=90").arg(name) ,  QMessageBox::Ok, qApp->activeWindow());
+            message.exec();
             return json;
-
+        } else  if (list.at(1) == "declination" && (valDec>270 || valDec < -90) ) {
+            QMessageBox message(QMessageBox::Warning, tr("Invalide value for declination"), tr(" %1 : Declination must be >=-90 and <=270").arg(name) ,  QMessageBox::Ok, qApp->activeWindow());
+            message.exec();
+            return json;
+        } else if (list.at(1) == "intensity" && valIntensity <=0 ) {
+            QMessageBox message(QMessageBox::Warning, tr("Invalide value for intensity"), tr(" %1 : Intensity must be >0").arg(name) ,  QMessageBox::Ok, qApp->activeWindow());
+            message.exec();
+            return json;
+        } else if ( valError <=0 ) {
+            QMessageBox message(QMessageBox::Warning, tr("Invalide value for error"), tr(" %1 : Alpha95 must be >0").arg(name) ,  QMessageBox::Ok, qApp->activeWindow());
+            message.exec();
+            return json;
+        }
+        
         json.insert(DATE_AM_IS_INC_STR, list.at(1) == "inclination");
         json.insert(DATE_AM_IS_DEC_STR, list.at(1) == "declination");
         json.insert(DATE_AM_IS_INT_STR, list.at(1) == "intensity");
-        json.insert(DATE_AM_INC_STR, csvLocale.toDouble(list.at(2)));
-        json.insert(DATE_AM_DEC_STR, csvLocale.toDouble(list.at(3)));
-        json.insert(DATE_AM_INTENSITY_STR, csvLocale.toDouble(list.at(4)));
+        
+                                   
+        json.insert(DATE_AM_INC_STR, valInc);
+        json.insert(DATE_AM_DEC_STR, valDec);
+        json.insert(DATE_AM_INTENSITY_STR, valIntensity);
 
-        json.insert(DATE_AM_ERROR_STR, error);
+        json.insert(DATE_AM_ERROR_STR, valError);
         json.insert(DATE_AM_REF_CURVE_STR, list.at(6).toLower());
+        
+                                   
+        
     }
     return json;
 }
