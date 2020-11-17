@@ -51,9 +51,7 @@ public:
     virtual ~ModelChronocurve();
     
     MHVariable mAlphaLissage;
-    
     std::vector<MCMCSplineParametrique> mMCMCSplinesParametrique;
-    
     PosteriorMeanGParametrique mPosteriorMeanGParametrique;
 };
 

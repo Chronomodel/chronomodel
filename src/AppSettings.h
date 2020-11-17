@@ -47,25 +47,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QFont>
 #include <QLocale>
 
-//#define APP_SETTINGS_DEFAULT_LANGUAGE QLocale::English
-//#define APP_SETTINGS_DEFAULT_COUNTRY QLocale::UnitedKingdom
-/*
-#ifdef Q_OS_MAC
-   #define APP_SETTINGS_DEFAULT_FONT_FAMILY "Calibri" // "Helvetica" //"Zapfino"
-   #define APP_SETTINGS_DEFAULT_FONT_SIZE 12.
-#endif
-
-#ifdef Q_OS_WIN
-    #define APP_SETTINGS_DEFAULT_FONT_FAMILY "Calibri"// "Caladea" //"Calibri""Helvetica"
-    #define APP_SETTINGS_DEFAULT_FONT_SIZE  12
-#endif
-
-#ifdef Q_OS_LINUX
-    #define APP_SETTINGS_DEFAULT_FONT_FAMILY "Sans Serif"
-    #define APP_SETTINGS_DEFAULT_FONT_SIZE  10
-#endif
-*/
-
 #define APP_SETTINGS_DEFAULT_ICON_SIZE 3
 
 #define APP_SETTINGS_DEFAULT_AUTO_SAVE false
@@ -83,8 +64,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #define APP_SETTINGS_STR_LANGUAGE "language"
 #define APP_SETTINGS_STR_COUNTRY "country"
-// #define APP_SETTINGS_STR_FONT_FAMILY "font_family"
-//#define APP_SETTINGS_STR_FONT_SIZE "font_size"
 #define APP_SETTINGS_STR_ICON_SIZE "icon_size"
 
 #define APP_SETTINGS_STR_AUTO_SAVE "auto_save_enabled"
@@ -113,18 +92,13 @@ public:
     static void readSettings();
     static void writeSettings();
 
- //   static QFont font();
- //   static void setFont(const QFont &font);
     static int widthUnit();
     static int heigthUnit();
- //   static int fontDescent();
 
     static void setWidthUnit(int &width) {mWidthUnit = width;}
     static void setHeigthUnit(int &heigth) {mHeigthUnit = heigth;}
 
 public:
-   // static int mButtonWidth; // must be define with mWidthUnit and mHeigthUnit, according to the def screen
-
     static QLocale::Language mLanguage;
     static QLocale::Country mCountry;
 
@@ -141,8 +115,6 @@ public:
     static  DateUtils::FormatDate mFormatDate;
     static int mPrecision;
     static int mNbSheet;
- //   static QString mFontFamily;
-//    static  int  mFontPointSize;
 
     static QString mLastDir;
     static QString mLastFile;
@@ -151,12 +123,8 @@ public:
     static QPoint mLastPosition;
 
 private:
-//  static  QFont mFont;
-  static int mWidthUnit;
-  static int mHeigthUnit;
-//  static int mFontDescent;
-
-
+    static int mWidthUnit;
+    static int mHeigthUnit;
 };
 
 #endif

@@ -41,10 +41,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Painting.h"
 
 Tabs::Tabs(QWidget* parent):QWidget(parent),
+mTabHeight(40),
 mCurrentIndex(-1)
 {
-    setFont(parentWidget()->font());
- }
+    setFixedHeight(mTabHeight);
+}
 
 Tabs::~Tabs()
 {
@@ -168,7 +169,7 @@ void Tabs::setTab(const int &i, bool notify)
      mFont = font;
      QWidget::setFont(mFont);
      QFontMetrics fm (mFont);
-     mTabHeight = 2 * fm.height();
+     //mTabHeight = 2 * fm.height();
   //  setMinimumSize(minimalWidth(), minimalHeight());
     updateLayout();
 }
@@ -182,29 +183,18 @@ void Tabs::paintEvent(QPaintEvent* e)
     p.setFont(mFont);
 
     for (int i=0; i<mTabNames.size(); ++i)
-        if (i != mCurrentIndex) {
-            const QRectF r = mTabRects[i];
-            p.fillRect(r, Qt::black);
-            p.setPen(QColor(200, 200, 200));
-            p.drawText(r, Qt::AlignCenter, mTabNames[i]);
-        }
-
-    if (mCurrentIndex != -1) {
-        p.fillRect(mTabRects[mCurrentIndex], Painting::mainColorDark);
-        p.setPen(Qt::white);
-        p.drawText(mTabRects[mCurrentIndex], Qt::AlignCenter, mTabNames[mCurrentIndex]);
+    {
+        QColor backColor = (i == mCurrentIndex) ? Painting::mainColorDark : Qt::black;
+        QColor frontColor = (i == mCurrentIndex) ? Qt::white : QColor(200, 200, 200);
+        
+        const QRectF r = mTabRects[i];
+        p.fillRect(r, backColor);
+        p.setPen(frontColor);
+        p.drawText(r, Qt::AlignCenter, mTabNames[i]);
     }
 
     p.setPen(Painting::mainColorDark);
-    if (mTabWidgets[mCurrentIndex]) {
-        const int x0 = (width() - mTabWidgets[mCurrentIndex]->width() )/2;
-        mTabWidgets[mCurrentIndex]->move(x0, mTabHeight);
-
-    }
-
-    p.drawLine(0, mTabHeight - p.pen().width(), mTabRects[mCurrentIndex].x(), mTabHeight - p.pen().width());
-    p.drawLine(mTabRects[mCurrentIndex].x() + mTabRects[mCurrentIndex].width(), mTabHeight - p.pen().width(),width() , mTabHeight - p.pen().width());
-
+    p.drawLine(0, mTabHeight, width(), mTabHeight);
 }
 
 void Tabs::resizeEvent(QResizeEvent* e)
@@ -222,7 +212,6 @@ void Tabs::mousePressEvent(QMouseEvent* e)
 
 void Tabs::updateLayout()
 {
-
     mTabRects.clear();
     qreal x  (1.);
     const qreal h (mTabHeight - 1.);

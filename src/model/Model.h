@@ -93,10 +93,13 @@ public:
     // Only trace needed for this :
     void generateCorrelations(const QList<ChainSpecs>& chains);
 
-    void initThreshold(const double threshold);
-    double getThreshold() const ;
-    void initDensities(const int fftLength, const double bandwidth, const double threshold);
-    void updateDensities(const int fftLength, const double bandwidth, const double threshold);
+    double getThreshold() const;
+    double getBandwidth() const;
+    int getFFTLength() const;
+    
+    void setThresholdToAllModel();
+    void initDensities();
+    void updateDensities();
 
     // Computed from trace using FFT :
     void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double bandwidth);
@@ -113,6 +116,9 @@ public:
     void clearPosteriorDensities();
     void clearCredibilityAndHPD();
     void clearThreshold();
+    
+    bool hasSelectedEvents();
+    bool hasSelectedPhases();
 
 public:
     ProjectSettings mSettings;

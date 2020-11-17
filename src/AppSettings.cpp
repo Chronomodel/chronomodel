@@ -46,9 +46,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 int AppSettings::mWidthUnit;
 int AppSettings::mHeigthUnit;
-//QFont AppSettings::mFont;
-//int AppSettings::mFontDescent;
-//int AppSettings::mButtonWidth;
 
 QLocale::Language AppSettings::mLanguage;
 QLocale::Country AppSettings::mCountry;
@@ -66,8 +63,6 @@ int AppSettings::mImageQuality;
 DateUtils::FormatDate AppSettings::mFormatDate;
 int AppSettings::mPrecision;
 int AppSettings::mNbSheet;
-// QString AppSettings::mFontFamily;
-//int AppSettings::mFontPointSize;
 
 QString AppSettings:: mLastDir;
 QString AppSettings::mLastFile;
@@ -156,8 +151,6 @@ void AppSettings::writeSettings()
     settings.beginGroup("AppSettings");
     settings.setValue(APP_SETTINGS_STR_AUTO_SAVE, AppSettings::mAutoSave);
     settings.setValue(APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC, AppSettings::mAutoSaveDelay);
-   // settings.setValue(APP_SETTINGS_STR_FONT_FAMILY, AppSettings::font().family());
-    //settings.setValue(APP_SETTINGS_STR_FONT_SIZE, AppSettings::font().pointSize());
 
     settings.setValue(APP_SETTINGS_STR_SHOW_HELP, AppSettings::mShowHelp);
     settings.setValue(APP_SETTINGS_STR_CELL_SEP, AppSettings::mCSVCellSeparator);
@@ -173,7 +166,7 @@ void AppSettings::writeSettings()
     settings.setValue("last_project_dir", AppSettings::mLastDir);
     settings.setValue("last_project_filename", AppSettings::mLastFile);
 
-   // settings.endGroup(); // Group AppSettings
+    settings.endGroup(); // Group AppSettings
 
     settings.endGroup();// Group MainWindows
 }

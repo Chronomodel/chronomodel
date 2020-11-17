@@ -75,6 +75,8 @@ mStepWidth(100)
     mAxisTool.mShowArrow = false;
     mAxisTool.mShowSubSubs = true;
 
+    setFixedHeight(50);
+    
     updateLayout();
 }
 
@@ -303,11 +305,11 @@ void Ruler::updateLayout()
 {
     mAxisRect = QRectF(mMarginLeft + 1, mMarginTop + mScrollBarHeight, width() - mMarginLeft - mMarginRight , mMarginBottom);// + font().pointSizeF());
 
-    mScrollBar->setGeometry( int(mMarginLeft) , 0., int (mAxisRect.width())  , int (mScrollBarHeight));
+    mScrollBar->setGeometry(mMarginLeft , 0, mAxisRect.width(), mScrollBarHeight);
 
     mAxisTool.mShowSubSubs = true;
     mAxisTool.updateValues( int (mAxisRect.width()), int(mStepMinWidth), mCurrentMin, mCurrentMax);
-    setFixedHeight(int (mScrollBarHeight + mAxisRect.height() + 5));
+    
     update();
 }
 

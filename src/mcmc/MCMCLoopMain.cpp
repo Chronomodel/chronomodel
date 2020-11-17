@@ -609,7 +609,7 @@ bool MCMCLoopMain::adapt()
 
 void MCMCLoopMain::finalize()
 {
-    // This is not a copy od data!
+    // This is not a copy of all data!
     // Chains only contain description of what happened in the chain (numIter, numBatch adapt, ...)
     // Real data are inside mModel members (mEvents, mPhases, ...)
     mModel->mChains = mChains;
@@ -619,6 +619,7 @@ void MCMCLoopMain::finalize()
     /** @todo Find a way to make it faster !
      */
     mModel->generateCorrelations(mChains);
+    
     // This should not be done here because it uses resultsView parameters
     // ResultView will trigger it again when loading the model
     //mModel->generatePosteriorDensities(mChains, 1024, 1);

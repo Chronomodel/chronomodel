@@ -46,25 +46,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 // Constructor / Destructor / Init
 ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
 {
-    /* find screen definition */
-    int numScreen (QApplication::desktop()->screenNumber(this));
-    QScreen *screen = QApplication::screens().at(numScreen);
-
-    //qreal mm_per_cm = 10;
-    const qreal cm_per_in = 2.54;
-    /*
-    qDebug()<<"ProjectView()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< width();
-    qDebug()<<"ProjectView()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< QApplication::desktop()->width();
-    qDebug()<<"ProjectView() screen width"<< width() / screen->physicalDotsPerInchX() * cm_per_in;
-    qDebug()<<"ProjectView() screen height"<< height() / screen->physicalDotsPerInchY() * cm_per_in;
-    */
-    int unitX = int(screen->physicalDotsPerInchX() / cm_per_in);
-    AppSettings::setWidthUnit( unitX);
-
-    int unitY = int(screen->physicalDotsPerInchY() / cm_per_in);
-    AppSettings::setHeigthUnit( unitY);
-
-
+    setScreenDefinition();
+    
     mModelView = new ModelView();
     mResultsView = new ResultsView();
 
@@ -113,10 +96,6 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     //setAppSettingsFont();
     mLogTabs->setTab(2, false);
     mLogTabs->showWidget(2);
-
-
-
-
 }
 
 ProjectView::~ProjectView()
@@ -124,43 +103,39 @@ ProjectView::~ProjectView()
 
 }
 
-void ProjectView::resizeEvent(QResizeEvent* e)
+void ProjectView::setScreenDefinition()
 {
-    (void) e;
     /* find screen definition */
     int numScreen (QApplication::desktop()->screenNumber(this));
     QScreen *screen = QApplication::screens().at(numScreen);
 
     //qreal mm_per_cm = 10;
-    qreal cm_per_in = 2.54;
-/* // look for screen definition
-        qDebug()<<"ProjectView::resizeEvent()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< width();
-        qDebug()<<"ProjectView::resizeEvent()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< QApplication::desktop()->width();
-        qDebug()<<"ProjectView::resizeEvent() screen setWidthUnit"<< screen->physicalDotsPerInchX() / cm_per_in;
-        qDebug()<<"ProjectView::resizeEvent() screen setHeigthUnit"<< screen->physicalDotsPerInchY() / cm_per_in;
-*/
-            int unitX = int(screen->physicalDotsPerInchX() / cm_per_in);
-            AppSettings::setWidthUnit( unitX);
+    const qreal cm_per_in = 2.54;
+    
+    int unitX = int(screen->physicalDotsPerInchX() / cm_per_in);
+    AppSettings::setWidthUnit(unitX);
 
-            int unitY = int(screen->physicalDotsPerInchY() / cm_per_in);
-            AppSettings::setHeigthUnit( unitY);
-
-
-
-   const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
-
-    mLogModelEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
-    mLogMCMCEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
-    mLogResultsEdit->resize( width() - AppSettings::widthUnit() , logTabHusefull );
-
-
-
+    int unitY = int(screen->physicalDotsPerInchY() / cm_per_in);
+    AppSettings::setHeigthUnit(unitY);
+}
+                              
+void ProjectView::resizeEvent(QResizeEvent* e)
+{
+    Q_UNUSED(e);
+    
+    setScreenDefinition();
+    
+    const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
+    
+    mLogModelEdit->resize(width() - AppSettings::widthUnit(), logTabHusefull);
+    mLogMCMCEdit->resize(width() - AppSettings::widthUnit(), logTabHusefull);
+    mLogResultsEdit->resize(width() - AppSettings::widthUnit() , logTabHusefull);
 }
 
 void ProjectView::doProjectConnections(Project* project)
 {
-    mModelView   -> setProject(project);
-    mResultsView -> doProjectConnections(project);
+    mModelView->setProject(project);
+    mResultsView->doProjectConnections(project);
 }
 
 void ProjectView::resetInterface()
@@ -194,7 +169,6 @@ void ProjectView::setAppSettings()
 {
     mModelView->applyAppSettings();
     mResultsView->applyAppSettings();
-
 }
 
 void ProjectView::showResults()
@@ -249,9 +223,14 @@ void ProjectView:: applyFilesSettings(Model* model)
 void ProjectView::applySettings(Model* model)
 {
     setAppSettings();
-    if (model) {
-
-        mResultsView->updateFormatSetting(model);
+    
+    if (model)
+    {
+        model->updateFormatSettings();
+        
+        mResultsView->setModel(model); // nécessaire ??
+        mResultsView->applyAppSettings();
+        mResultsView->updateControls();
 
         // force to regenerate the densities
         mResultsView->initResults(model);

@@ -402,7 +402,6 @@ QString MCMCLoopChronocurve::initMCMC()
 
             date.mSigma.memo();
             date.mSigma.saveCurrentAcceptRate();
-
         }
         if (isInterruptionRequested())
             return ABORTED_BY_USER;
@@ -2032,10 +2031,12 @@ std::vector<std::vector<double>> MCMCLoopChronocurve::multiConstParMat(const std
     {
         int j1 = i - bande;
         int j2 = i + bande;
-        if(j1 < 0){
+        if(j1 < 0)
+        {
             j1 = 0;
         }
-        if(j2 >= dim){
+        if(j2 >= dim)
+        {
             j2 = dim-1;
         }
         for(int j=j1; j<=j2; ++j)

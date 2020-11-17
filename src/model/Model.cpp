@@ -60,9 +60,12 @@ Model::Model():
 mProject(nullptr),
 mNumberOfPhases(0),
 mNumberOfEvents(0),
-mNumberOfDates(0)
+mNumberOfDates(0),
+mFFTLength(1024),
+mBandwidth(1.06),
+mThreshold(95.0)
 {
-
+    
 }
 
 Model::~Model()
@@ -985,10 +988,12 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 #endif
 }
 
+#pragma mark FFTLength, Threshold, bandwidth
+
 void Model::setBandwidth(const double bandwidth)
 {
-    qDebug()<<"Model::setBandwidth";
-    if (mBandwidth != bandwidth) {
+    if (mBandwidth != bandwidth)
+    {
         mBandwidth = bandwidth;
 
         clearPosteriorDensities();
@@ -1001,8 +1006,8 @@ void Model::setBandwidth(const double bandwidth)
 
 void Model::setFFTLength(const int FFTLength)
 {
-    qDebug()<<"Model::setFTLength";
-    if (mFFTLength != FFTLength) {
+    if (mFFTLength != FFTLength)
+    {
         mFFTLength = FFTLength;
 
         clearPosteriorDensities();
@@ -1014,6 +1019,62 @@ void Model::setFFTLength(const int FFTLength)
     }
 }
 
+/**
+ * @brief Model::setThreshold this is a slot
+ * @param threshold
+ */
+void Model::setThreshold(const double threshold)
+{
+    if(threshold != mThreshold)
+    {
+        mThreshold = threshold;
+        
+        generateCredibility(mThreshold);
+        generateHPD(mThreshold);
+
+        setThresholdToAllModel();
+        
+        emit newCalculus();
+    }
+}
+
+void Model::setThresholdToAllModel()
+{
+    for(auto && pEvent : mEvents)
+    {
+        if(pEvent->type() != Event::eKnown){
+          pEvent->mTheta.mThresholdUsed = mThreshold;
+
+          for (auto && date : pEvent->mDates )  {
+                date.mTheta.mThresholdUsed = mThreshold;
+                date.mSigma.mThresholdUsed = mThreshold;
+            }
+        }
+    }
+    for (auto && pPhase :mPhases) {
+       pPhase->mAlpha.mThresholdUsed = mThreshold;
+       pPhase->mBeta.mThresholdUsed = mThreshold;
+       pPhase->mDuration.mThresholdUsed = mThreshold;
+    }
+}
+
+double Model::getThreshold() const
+{
+    return mThreshold;
+}
+
+double Model::getBandwidth() const
+{
+    return mBandwidth;
+}
+
+int Model::getFFTLength() const
+{
+    return mFFTLength;
+}
+
+#pragma mark Densities
+
 void Model::initNodeEvents()
 {
     std::for_each(mEvents.begin(), mEvents.end(), [](Event* ev) {
@@ -1023,59 +1084,37 @@ void Model::initNodeEvents()
 }
 
 /**
- * @brief Make all densities, credibilities and time range and set mFFTLength, mBandwidth and mThreshold
- * @param[in] fftLength
- * @param[in] bandwidth
+ * @brief Make all densities, credibilities and time range
  * @param[in] threshold
  */
-void Model::initDensities(const int fftLength, const double bandwidth, const double threshold)
+void Model::initDensities()
 {
-    qDebug()<<"Model::initDensities"<<fftLength<<bandwidth<<threshold;
-    mFFTLength = fftLength;
-    mBandwidth = bandwidth;
     // memo the new value of the Threshold inside all the part of the model: phases, events and dates
-    initThreshold(threshold);
     clearPosteriorDensities();
     generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
     generateHPD(mThreshold);
 
     generateCredibility(mThreshold);
     generateNumericalResults(mChains);
+    
     if (!mPhases.isEmpty()) {
         generateTempo();
     }
-
- //   emit newCalculus();
 }
 
-void Model::updateDensities(const int fftLength, const double bandwidth, const double threshold)
+void Model::updateDensities()
 {
-    qDebug()<<"Model::updateDensities"<<fftLength<<bandwidth<<threshold;
-    bool newPosteriorDensities = false;
-    if ((mFFTLength != fftLength) || (mBandwidth != bandwidth)) {
-        mFFTLength = fftLength;
-        mBandwidth = bandwidth;
-
-        clearPosteriorDensities();
-        generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
-        newPosteriorDensities = true;
-    }
-    // memo the new value of the Threshold inside all the part of the model: phases, events and dates
-
-    if (mThreshold != threshold) {
-        initThreshold(threshold);
-        generateCredibility(mThreshold);
-    }
-
-    if (newPosteriorDensities)
-        generateHPD(mThreshold);
+    clearPosteriorDensities();
+    generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
+    setThresholdToAllModel();
+    generateCredibility(mThreshold);
+    generateHPD(mThreshold);
 
     if (!mPhases.isEmpty()) {
         generateTempo();
 
     }
     generateNumericalResults(mChains);
-
 }
 
 void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth)
@@ -1149,69 +1188,6 @@ void Model::clearThreshold()
         phase->mBeta.mThresholdUsed = -1.;
         phase->mDuration.mThresholdUsed = -1.;
     }
-}
-
-void Model::initThreshold(const double threshold)
-{
-   // memo threshold used  value
-    mThreshold = threshold;
-
-    for (auto && event : mEvents) {
-        if (event->type() != Event::eKnown) {
-          event->mTheta.mThresholdUsed = threshold;
-
-          for (auto && date : event->mDates) {
-                date.mTheta.mThresholdUsed = threshold;
-                date.mSigma.mThresholdUsed = threshold;
-            }
-
-        }
-    }
-
-    for (auto && phase : mPhases) {
-       phase->mAlpha.mThresholdUsed = threshold;
-       phase->mBeta.mThresholdUsed = threshold;
-       phase->mDuration.mThresholdUsed = threshold;
-    }
-}
-
-/**
- * @brief Model::setThreshold this is a slot
- * @param threshold
- */
-void Model::setThreshold(const double threshold)
-{
-    qDebug()<<"Model::setThreshold"<<threshold<<" mThreshold"<<mThreshold;
-    if ( mThreshold != threshold) {
-        mThreshold = threshold;
-        generateCredibility(threshold);
-        generateHPD(threshold);
-
-        // memo threshold used  value
-
-        for (auto && pEvent : mEvents) {
-            if (pEvent->type() != Event::eKnown) {
-              pEvent->mTheta.mThresholdUsed = threshold;
-
-              for (auto && date : pEvent->mDates )  {
-                    date.mTheta.mThresholdUsed = threshold;
-                    date.mSigma.mThresholdUsed = threshold;
-                }
-            }
-        }
-        for (auto && pPhase :mPhases) {
-           pPhase->mAlpha.mThresholdUsed = threshold;
-           pPhase->mBeta.mThresholdUsed = threshold;
-           pPhase->mDuration.mThresholdUsed = threshold;
-        }
-
-        emit newCalculus();
-   }
-}
-
-double Model::getThreshold() const
-{
-    return mThreshold;
 }
 
 void Model::generateCredibility(const double thresh)
@@ -2205,3 +2181,24 @@ void Model::restoreFromFile(const QString& fileName)
     }
 
 }
+
+bool Model::hasSelectedEvents()
+{
+    for(auto && event : mEvents) {
+        if (event->mIsSelected) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Model::hasSelectedPhases()
+{
+    for(auto && phase : mPhases) {
+        if (phase->mIsSelected) {
+            return true;
+        }
+    }
+    return false;
+}
+

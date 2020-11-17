@@ -58,7 +58,7 @@ public:
         eAdapting = 1,
         eRunning = 2
     };
-
+    
     MCMCLoop();
     virtual ~MCMCLoop();
 

@@ -62,6 +62,7 @@ public:
     ProjectView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~ProjectView();
 
+    void setScreenDefinition();
     void resizeEvent(QResizeEvent* e);
 
     bool mRefreshResults;

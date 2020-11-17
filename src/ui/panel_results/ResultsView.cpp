@@ -81,83 +81,89 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-mResultMaxVariance(1000.),
-mHasPhases(false),
 mModel(nullptr),
-mTabEventsIndex(0),
-mTabPhasesIndex(0),
-mEventsScrollArea(nullptr),
-mPhasesScrollArea(nullptr),
+mResultZoomX(1.),
+mResultMinX(0.),
+mResultMaxX(0.),
+mResultCurrentMinX(0.),
+mResultCurrentMaxX(0.),
+mResultMaxVariance(1000.),
+mResultMaxDuration(0.),
+mHasPhases(false),
+
+mMargin(5),
+mOptionsW(250),
+mCurrentPage(0),
+
 mTempoScrollArea(nullptr),
 forceXSpinSetValue(false),
 forceXSlideSetValue(false),
-mCurrentTypeGraph(GraphViewResults::ePostDistrib), //mTabs=0
+mCurrentTypeGraph(GraphViewResults::ePostDistrib), //mGraphTypeTabs=0
 mCurrentVariable(GraphViewResults::eTheta),
-mBandwidthUsed(1.06),
-mThresholdUsed(95.0),
-mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET),
+mGraphsPerPage(APP_SETTINGS_DEFAULT_SHEET),
 mMaximunNumberOfVisibleGraph(0),
-mMajorScale (100),
+mMajorScale(100),
 mMinorCountScale (4)
 {
-    mSettings = ProjectSettings();
-
-    mResultMinX = mSettings.mTmin;
-    mResultMaxX = mSettings.mTmax;
-
-    titleHeight = int (1.5 * AppSettings::heigthUnit());
-    labelHeight = AppSettings::heigthUnit();
-    lineEditHeight = AppSettings::heigthUnit();
-    checkBoxHeight  = AppSettings::heigthUnit();
-    comboBoxHeight  = AppSettings::heigthUnit();
-    radioButtonHeight = AppSettings::heigthUnit();
-    spinBoxHeight = int (1.5 * AppSettings::heigthUnit());
-    buttonHeight = int (1.5 * AppSettings::heigthUnit());
-
-    mGraphFont = font();
-
-    mResultCurrentMinX = mResultMinX ;
-    mResultCurrentMaxX = mResultMaxX ;
-    mResultZoomX = 1.;
-
-    mTabs = new Tabs(this);
-    mTabs->addTab(tr("Posterior Distrib."));
-    mTabs->addTab(tr("History Plot"));
-    mTabs->addTab(tr("Acceptance Rate"));
-    mTabs->addTab(tr("Autocorrelation"));
-    mTabs->setTab(0, false);
-
-    connect(mTabs, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::graphTypeChange);
-    connect(mTabs, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::updateLayout);
-    // -------------
-
-    mRuler = new Ruler(this);
-    mRuler->mMax = mSettings.getTmaxFormated();
-    mRuler->mMin = mSettings.getTminFormated();
-    mRuler->mCurrentMax = mSettings.getTmaxFormated();
-    mRuler->mCurrentMin = mSettings.getTminFormated();
-
-
-    //------
-
-
-    mStack = new QStackedWidget(this);
-
-    /* mEventsScrollArea and mPhasesScrollArea are made when we need it,
-     *  within createEventsScrollArea and within createPhasesScrollArea
-     */
-
-    mMarker = new Marker(this);
-
     setMouseTracking(true);
-    mStack->setMouseTracking(true);
+    
+    // -----------------------------------------------------------------
+    //  Left part : Tabs, Ruler, Stack
+    // -----------------------------------------------------------------
+    mGraphTypeTabs = new Tabs(this);
+    mGraphTypeTabs->addTab(tr("Posterior Distrib."));
+    mGraphTypeTabs->addTab(tr("History Plot"));
+    mGraphTypeTabs->addTab(tr("Acceptance Rate"));
+    mGraphTypeTabs->addTab(tr("Autocorrelation"));
+    mGraphTypeTabs->setTab(0, false);
+    
+    mRuler = new Ruler(this);
+    mMarker = new Marker(this);
+    
+    mEventsScrollArea = new QScrollArea();
+    mEventsScrollArea->setMouseTracking(true);
+    QWidget* eventsWidget = new QWidget();
+    eventsWidget->setMouseTracking(true);
+    mEventsScrollArea->setWidget(eventsWidget);
+    
+    mPhasesScrollArea = new QScrollArea(this);
+    mPhasesScrollArea->setMouseTracking(true);
+    QWidget* phasesWidget = new QWidget();
+    phasesWidget->setMouseTracking(true);
+    mPhasesScrollArea->setWidget(phasesWidget);
+    
+    mTempoScrollArea = new QScrollArea(this);
+    mTempoScrollArea->setMouseTracking(true);
+    QWidget* tempoWidget = new QWidget();
+    tempoWidget->setMouseTracking(true);
+    mTempoScrollArea->setWidget(tempoWidget);
+    
+    mCurveScrollArea = new QScrollArea(this);
+    mCurveScrollArea->setMouseTracking(true);
+    QWidget* curveWidget = new QWidget();
+    curveWidget->setMouseTracking(true);
+    mCurveScrollArea->setWidget(curveWidget);
+    
+    mGraphListStack = new QStackedWidget(this);
+    mGraphListStack->setMouseTracking(true);
+    mGraphListStack->addWidget(mEventsScrollArea);
+    mGraphListStack->addWidget(mPhasesScrollArea);
+    mGraphListStack->addWidget(mTempoScrollArea);
+    mGraphListStack->addWidget(mCurveScrollArea);
+    
+    connect(mGraphTypeTabs, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::graphTypeChange);
+    
+    
+    // -----------------------------------------------------------------
+    //  Right part
+    // -----------------------------------------------------------------
+    mOptionsWidget = new QWidget(this);
 
-
-    mOptionsWidget = new QWidget(this); // this is the parent of group of widget on the rigth of the panel
-
-    /* -------------------------------------- mResultsGroup---------------------------------------------------*/
-
-    mResultsGroup = new QWidget(this);mResultsGroup->setPalette(QLabel().palette());
+    // -----------------------------------------------------------------
+    //  Results Group (if graph list tab = events or phases)
+    // -----------------------------------------------------------------
+    mResultsGroup = new QWidget();
+    mResultsGroup->setPalette(QLabel().palette());
 
     mEventsfoldCheck = new CheckBox(tr("Unfold Events"), mResultsGroup);
     mEventsfoldCheck->setToolTip(tr("Display phases' events"));
@@ -177,10 +183,29 @@ mMinorCountScale (4)
 
     mStatCheck = new CheckBox(tr("Show Stat."), mResultsGroup);
     mStatCheck->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
+    
+    QVBoxLayout* resultsGroupLayout = new QVBoxLayout();
+    resultsGroupLayout->setContentsMargins(0, 0, 0, 0);
+    resultsGroupLayout->setSpacing(0);
+    resultsGroupLayout->addWidget(mDataThetaRadio);
+    resultsGroupLayout->addWidget(mDataSigmaRadio);
+    resultsGroupLayout->addWidget(mEventsfoldCheck);
+    resultsGroupLayout->addWidget(mDatesfoldCheck);
+    resultsGroupLayout->addWidget(mDataCalibCheck);
+    resultsGroupLayout->addWidget(mWiggleCheck);
+    resultsGroupLayout->addWidget(mStatCheck);
+    mResultsGroup->setLayout(resultsGroupLayout);
+    
+    connect(mDataThetaRadio, &RadioButton::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mDataSigmaRadio, &RadioButton::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mDataCalibCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mWiggleCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mStatCheck, &CheckBox::clicked, this, &ResultsView::showInfos);
 
-
-/*  ------------- TempoGroup  ------------- */
-    mTempoGroup = new QWidget(this);
+    // -----------------------------------------------------------------
+    //  Tempo Group (if graph list tab = duration)
+    // -----------------------------------------------------------------
+    mTempoGroup = new QWidget();
 
     mDurationRadio = new RadioButton(tr("Phase Duration"), mTempoGroup);
     mDurationRadio->setChecked(true);
@@ -194,63 +219,60 @@ mMinorCountScale (4)
 
     mTempoStatCheck = new CheckBox(tr("Show Tempo Stat."), mTempoGroup);
     mTempoStatCheck->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
-
-/* -------------end TempoGroup */
-
-
-    mTabByScene = new Tabs(mOptionsWidget);
-    mTabByScene->setFixedWidth(mOptionsW);
-    // we set the same widget
-    mTabByScene->addTab(mResultsGroup, tr("Events"));
-    mTabByScene->addTab(mResultsGroup, tr("Phases"));
-    mTabByScene->addTab(mResultsGroup, tr("Posterior Mean G"));
-    mTabByScene->addTab(mTempoGroup, tr("Tempo"));
-
-
-    connect(mTabByScene, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::changeScrollArea);
-    connect(mTabByScene, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::updateVisibleTabs);
-
-    connect(mDataThetaRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
-    connect(mDataSigmaRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
-    connect(mDataCalibCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
-    connect(mWiggleCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
-    connect(mStatCheck, &CheckBox::clicked, this, &ResultsView::showInfos);
-
+    
+    QVBoxLayout* tempoGroupLayout = new QVBoxLayout();
+    tempoGroupLayout->setContentsMargins(0, 0, 0, 0);
+    tempoGroupLayout->setSpacing(0);
+    resultsGroupLayout->addWidget(mDurationRadio);
+    resultsGroupLayout->addWidget(mTempoRadio);
+    resultsGroupLayout->addWidget(mTempoCredCheck);
+    resultsGroupLayout->addWidget(mTempoErrCheck);
+    resultsGroupLayout->addWidget(mActivityRadio);
+    resultsGroupLayout->addWidget(mTempoStatCheck);
+    mTempoGroup->setLayout(tempoGroupLayout);
+    
+    connect(mDurationRadio, &RadioButton::clicked, this, &ResultsView::setCurrentVariable);
+    connect(mTempoRadio, &RadioButton::clicked, this, &ResultsView::setCurrentVariable);
+    connect(mActivityRadio, &RadioButton::clicked, this, &ResultsView::setCurrentVariable);
+    
+    connect(mTempoStatCheck, &CheckBox::clicked, this, &ResultsView::showInfos);
     connect(mTempoCredCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     connect(mTempoErrCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
 
-    connect(mDurationRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
-    connect(mTempoRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
-    connect(mActivityRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
-    connect(mTempoStatCheck, &CheckBox::clicked, this, &ResultsView::showInfos);
+    // -----------------------------------------------------------------
+    //  Graph List tab (has to be created after mResultsGroup and mTempoGroup)
+    // -----------------------------------------------------------------
+    mGraphListTab = new Tabs();
+    mGraphListTab->addTab(tr("Events"));
+    mGraphListTab->addTab(tr("Phases"));
+    mGraphListTab->addTab(tr("Tempo"));
+    mGraphListTab->addTab(tr("Curve"));
+    mGraphListTab->setTab(0, false);
 
-    // -------------------------
+    connect(mGraphListTab, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::setGraphListTab);
+    connect(mGraphListTab, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), mGraphListStack, &QStackedWidget::setCurrentIndex);
 
-    /* - mTabDisplayMCMC
-     *  show Display (mSpanGroup, mGraphicGroup) and MCMC
-     */
-    mTabDisplayMCMC = new Tabs(mOptionsWidget);
-
-    mTabDisplay = new QWidget(this);
-
-    mTabMCMC = new QWidget(this);
-
-    mTabDisplayMCMC->addTab(mTabDisplay, tr("Display"));
-    mTabDisplayMCMC->addTab(mTabMCMC, tr("Distrib. Options"));
-
-    connect(mTabDisplayMCMC,static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::updateLayout);
+    // -----------------------------------------------------------------
+    //  Tabs : Display / Distrib. Options
+    // -----------------------------------------------------------------
+    mTabDisplayMCMC = new Tabs();
+    
+    mTabDisplayMCMC->addTab(tr("Display"));
+    mTabDisplayMCMC->addTab(tr("Distrib. Options"));
+    mTabDisplayMCMC->setTab(0, false);
+    
+    // Necessary to reposition all elements inside the selected tab :
+    connect(mTabDisplayMCMC, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::setDisplayTab);
 
     /* ----------------------------------------------------------
      *  Display Options layout
      * ----------------------------------------------------------*/
-
-    // ------ Span Options -----
-    mSpanGroup  = new QWidget(mTabDisplay);
-
+    mTabDisplay = new QWidget();
+    mSpanGroup  = new QWidget();
+    
     mSpanTitle = new Label(tr("Span Options"), mTabDisplay);
     mSpanTitle->setIsTitle(true);
-
-
+    
     mDisplayStudyBut = new Button(tr("Study Period Display"), mSpanGroup);
     mDisplayStudyBut->setToolTip(tr("Restore view with the study period span"));
     mSpanLab = new Label(tr("Span"), mSpanGroup);
@@ -296,8 +318,9 @@ mMinorCountScale (4)
     mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves, upper than 1"));
 
 
-    /* -------------------------------------- Graphic Options (old mDisplayGroup) ---------------------------------------------------*/
-
+    // ------------------------------------
+    //  Graphic Options
+    // ------------------------------------
     mGraphicTitle = new Label(tr("Graphic Options"), mTabDisplay);
     mGraphicTitle->setIsTitle(true);
 
@@ -314,16 +337,14 @@ mMinorCountScale (4)
 
     mYScaleSpin = new QSpinBox(mGraphicGroup);
     mYScaleSpin->setRange(mYSlider->minimum(), mYSlider->maximum());
-    //mYScaleSpin->setSuffix(" %");
     mYScaleSpin->setValue(mYSlider->value());
     mYScaleSpin->setToolTip(tr("Enter zoom value to magnify the curves on Y scale"));
 
     mLabFont = new QLabel(tr("Font"), mGraphicGroup);
     mLabFont->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
-    mFontBut = new Button(mGraphFont.family() + ", " + QString::number(mGraphFont.pointSizeF()), mGraphicGroup);
+    mFontBut = new Button(font().family() + ", " + QString::number(font().pointSizeF()), mGraphicGroup);
     mFontBut->setToolTip(tr("Click to change the font on the drawing"));
-    connect(mFontBut, &QPushButton::clicked, this, &ResultsView::updateGraphFont);
 
     mLabThickness = new QLabel(tr("Thickness"), mGraphicGroup);
     mLabThickness->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
@@ -334,10 +355,7 @@ mMinorCountScale (4)
     mThicknessCombo->addItem("3 px");
     mThicknessCombo->addItem("4 px");
     mThicknessCombo->addItem("5 px");
-
     mThicknessCombo->setToolTip(tr("Select to change the thickness of the drawing"));
-
-    connect(mThicknessCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::updateThickness);
 
     mLabOpacity = new QLabel(tr("Opacity"), mGraphicGroup);
     mLabOpacity->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
@@ -356,48 +374,51 @@ mMinorCountScale (4)
     mOpacityCombo->addItem("100 %");
     mOpacityCombo->setToolTip(tr("Select to change the opacity of the drawing"));
     mOpacityCombo->setCurrentIndex(5);
-    //mOpacitySpin->setStyleSheet("QLineEdit { border-radius: 5px; }"); // not supported
 
+    connect(mYSlider, &QSlider::valueChanged, this, &ResultsView::updateScaleY);
+    connect(mYScaleSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::updateScaleY);
+    connect(mYScaleSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), mYSlider, &QSlider::setValue);
+    connect(mFontBut, &QPushButton::clicked, this, &ResultsView::updateFont);
+    connect(mThicknessCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::updateThickness);
     connect(mOpacityCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::updateOpacity);
 
-   /* -------------------------------------- mChainsGroup---------------------------------------------------*/
-
+    // ------------------------------------
+    //  MCMC Chains
+    //  Note : mCheckChainChecks and mChainRadios are populated by initResults()
+    // ------------------------------------
+    mTabMCMC = new QWidget();
+    
     mChainsTitle = new Label(tr("MCMC Chains"), mTabMCMC);
     mChainsTitle->setIsTitle(true);
-
+    
     mChainsGroup = new QWidget(mTabMCMC);
 
     mAllChainsCheck = new CheckBox(tr("Chain Concatenation"), mChainsGroup);
     mAllChainsCheck->setChecked(true);
+    
+    connect(mAllChainsCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
 
-    /*
-     * QList<CheckBox*> mCheckChainChecks;
-     * QList<RadioButton*> mChainRadios;
-     * mCheckChainChecks and mChainRadios are created in  initResults() they are children of mChainsGroup
-    */
-
-    /* -------------------------------------- mDensityOptsGroup ---------------------------------------------------*/
-
+    // ------------------------------------
+    //  Density Options
+    // ------------------------------------
     mDensityOptsTitle = new Label(tr("Density Options"), mTabMCMC);
     mDensityOptsTitle->setIsTitle(true);
 
     mDensityOptsGroup = new QWidget(mTabMCMC);
-
+    
     mCredibilityCheck = new CheckBox(tr("Show Confidence Bar"), mDensityOptsGroup);
     mCredibilityCheck->setChecked(true);
-
+    
     mThreshLab = new Label(tr("Confidence Level (%)"), mDensityOptsGroup);
     mThreshLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
-    mHPDEdit = new LineEdit(mDensityOptsGroup);
-    mHPDEdit->setText("95");
-
+    mThresholdEdit = new LineEdit(mDensityOptsGroup);
     DoubleValidator* percentValidator = new DoubleValidator();
     percentValidator->setBottom(0.0);
     percentValidator->setTop(100.0);
     percentValidator->setDecimals(1);
-    mHPDEdit->setValidator(percentValidator);
-
+    mThresholdEdit->setValidator(percentValidator);
+    
     mFFTLenLab = new Label(tr("Grid Length"), mDensityOptsGroup);
     mFFTLenLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
@@ -412,76 +433,72 @@ mMinorCountScale (4)
     mFFTLenCombo->addItem("4096");
     mFFTLenCombo->addItem("8192");
     mFFTLenCombo->addItem("16384");
-    mFFTLenCombo->setCurrentText("1024");
-   // mFFTLenCombo->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
-    const QFontMetricsF fm(font());
-    mComboH = int (fm.height() + 6);
-    mTabsH = mComboH + 2*mMargin;
 
     mBandwidthLab = new Label(tr("Bandwidth Const."), mDensityOptsGroup);
     mBandwidthLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mBandwidthEdit = new LineEdit(mDensityOptsGroup);
-    mBandwidthEdit->setText(locale().toString(1.06));
-
-
-    // ------------------------- CONNECTIONS
-
-    connect(this, &ResultsView::controlsUpdated, this, &ResultsView::updateLayout);
-    connect(this, &ResultsView::scalesUpdated, this, &ResultsView::updateControls);
-
-
-    // -------------------------
+    DoubleValidator* bandwidthValidator = new DoubleValidator();
+    bandwidthValidator->setBottom(1);
+    bandwidthValidator->setTop(100);
+    bandwidthValidator->setDecimals(0);
+    mBandwidthEdit->setValidator(bandwidthValidator);
+    
+    connect(mCredibilityCheck, &CheckBox::clicked, this, &ResultsView::generateCurvesRequested);
     connect(mFFTLenCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::setFFTLength);
     connect(mBandwidthEdit, &LineEdit::editingFinished, this, &ResultsView::setBandwidth);
+    connect(mThresholdEdit, &LineEdit::editingFinished, this, &ResultsView::setThreshold);
 
-    connect(mHPDEdit, &LineEdit::editingFinished, this, &ResultsView::setThreshold);
+    
+    // ------------------------------------
+    //  Pagination / Saving
+    // ------------------------------------
+    mPageWidget = new QWidget();
+    mToolsWidget = new QWidget();
+    
+    mTabPageSaving = new Tabs();
+    mTabPageSaving->addTab(tr("Page"));
+    mTabPageSaving->addTab(tr("Saving"));
+    mTabPageSaving->setTab(0, false);
 
-    connect(mAllChainsCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
-    connect(mCredibilityCheck, &CheckBox::clicked, this, &ResultsView::generateCurvesRequested);
+    connect(mTabPageSaving, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::setPageSavingTab);
+    
+    // ------------------------------------
+    //  Pagination
+    // ------------------------------------
+    mPageEdit = new LineEdit(mPageWidget);
+    mPageEdit->setEnabled(false);
+    mPageEdit->setReadOnly(true);
+    mPageEdit->setAlignment(Qt::AlignCenter);
+    mPageEdit->setText(QString::number(mMaximunNumberOfVisibleGraph));
 
-    // -------------------------
-    connect(mEventsfoldCheck,&CheckBox::clicked, this, &ResultsView::unfoldToggle);
-    connect(mDatesfoldCheck, &CheckBox::clicked, this, &ResultsView::unfoldToggle);
+    mPreviousPageBut = new Button(tr("Prev."), mPageWidget);
+    mPreviousPageBut->setCheckable(false);
+    mPreviousPageBut->setFlatHorizontal();
+    mPreviousPageBut->setToolTip(tr("Display previous data"));
+    mPreviousPageBut->setIconOnly(false);
 
-    connect(this, &ResultsView::curvesGenerated, this, &ResultsView::updateCurvesToShow);
+    mNextPageBut  = new Button(tr("Next"), mPageWidget);
+    mNextPageBut->setCheckable(false);
+    mNextPageBut->setFlatHorizontal();
+    mNextPageBut->setToolTip(tr("Display next data"));
+    mNextPageBut->setIconOnly(false);
 
-    connect(this, &ResultsView::updateScrollAreaRequested, this, &ResultsView::changeScrollArea);
-    connect(this, &ResultsView::generateCurvesRequested, this, &ResultsView::updateCurves);
-    // -------------------------
+    mGraphsPerPageLab = new Label(tr("Nb Densities / Page"), mPageWidget);
+    mGraphsPerPageLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
-    connect(mXSlider, &QSlider::valueChanged, this, &ResultsView::XScaleSliderChanged);
+    mGraphsPerPageSpin = new QSpinBox(mPageWidget);
+    mGraphsPerPageSpin->setRange(1, 100);
+    mGraphsPerPageSpin->setValue(mGraphsPerPage);
+    mGraphsPerPageSpin->setToolTip(tr("Enter the maximum densities to display on a sheet"));
 
-    connect(mXScaleSpin, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &ResultsView::XScaleSpinChanged);
-
-    connect(this, &ResultsView::xSpinUpdate, this, &ResultsView::setXScaleSlide);
-    connect(this, static_cast<void (ResultsView::*)(int)>(&ResultsView::xSpinUpdate), this, &ResultsView::updateZoomX);
-
-    connect(mCurrentXMinEdit, &LineEdit::editingFinished, this, &ResultsView::editCurrentMinX);
-    connect(mCurrentXMaxEdit, &LineEdit::editingFinished, this, &ResultsView::editCurrentMaxX);
-    connect(mDisplayStudyBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::setStudyPeriod);
-
-    // Connection
-    // QLineEdit::setText() doesn't emit signal textEdited, when the text is changed programmatically
-    connect(mMajorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this,  &ResultsView::updateScaleX);
-    connect(mMinorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this,  &ResultsView::updateScaleX);
-
-
-    connect(mRuler, &Ruler::positionChanged, this, &ResultsView::updateScroll);
-
-    connect(mYSlider, &QSlider::valueChanged, this, &ResultsView::updateScaleY);
-    connect(mYScaleSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::updateScaleY);
-    connect(mYScaleSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), mYSlider, &QSlider::setValue);
-    // -------------------------
-
-
-    /*-------------
-     * ------Tools for all graph
-     * ------------- */
-    mToolsWidget = new QWidget(this);
-
-    //const QSize allDensitiesButSize (int(ceil(mOptionsW/2.)), checkBoxHeight);
-
+    connect(mPreviousPageBut, &Button::pressed, this, &ResultsView::previousPage);
+    connect(mNextPageBut, &Button::pressed, this, &ResultsView::nextPage);
+    connect(mGraphsPerPageSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::updateGraphsPerPage);
+    
+    // ------------------------------------
+    //  Tools Buttons (multiple graphs)
+    // ------------------------------------
     mExportImgBut = new Button(tr("Capture"), mToolsWidget);
     mExportImgBut->setFlatHorizontal();
     mExportImgBut->setIcon(QIcon(":picture_save.png"));
@@ -495,9 +512,9 @@ mMinorCountScale (4)
     connect(mExportImgBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::exportFullImage);
     connect(mExportResults, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::exportResults);
 
-    /* --------------------------------------Tools for single graph -------------------------------------- */
-
-    //const QSize singleDensityButSize (mOptionsW/4, 50);
+    // ------------------------------------
+    //  Tools Buttons (single graph)
+    // ------------------------------------
     mImageSaveBut = new Button(tr("Save"), mToolsWidget);
     mImageSaveBut->setIcon(QIcon(":picture_save.png"));
     mImageSaveBut->setFlatVertical();
@@ -523,72 +540,61 @@ mMinorCountScale (4)
     connect(mResultsClipBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::resultsToClipboard);
     connect(mDataSaveBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::saveGraphData);
 
-    /* -------------------------------------- Page widget -------------------------------------- */
-    mPageWidget = new QWidget (this);
-    mPageWidget->resize(mOptionsW, mRulerH);
 
-    mSheetNum = new LineEdit(mPageWidget);
-    mSheetNum->setEnabled(false);
-    mSheetNum->setReadOnly(true);
-    mSheetNum->setAlignment(Qt::AlignCenter);
-    mSheetNum->setText(QString::number(mMaximunNumberOfVisibleGraph));
 
-    mPreviousSheetBut  = new Button(tr("Prev."), mPageWidget);
-    mPreviousSheetBut->setCheckable(false);
-    mPreviousSheetBut->setFlatHorizontal();
-    mPreviousSheetBut->setToolTip(tr("Display previous data"));
-    mPreviousSheetBut->setIconOnly(false);
+    // -------------------------
+    connect(mEventsfoldCheck, &CheckBox::clicked, this, &ResultsView::updateScrollAreaRequested);
+    connect(mDatesfoldCheck, &CheckBox::clicked, this, &ResultsView::updateScrollAreaRequested);
 
-    mNextSheetBut  = new Button(tr("Next"), mPageWidget);
-    mNextSheetBut->setCheckable(false);
-    mNextSheetBut->setFlatHorizontal();
-    mNextSheetBut->setToolTip(tr("Display next data"));
-    mNextSheetBut->setIconOnly(false);
+    connect(this, &ResultsView::updateScrollAreaRequested, this, &ResultsView::setCurrentVariable);
+    connect(this, &ResultsView::generateCurvesRequested, this, &ResultsView::generateCurves);
+    
+    // ---------------------------------------------------------------------------
+    //  X Axis Scale
+    // ---------------------------------------------------------------------------
+    connect(mDisplayStudyBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::setStudyPeriod);
+    connect(mCurrentXMinEdit, &LineEdit::editingFinished, this, &ResultsView::editCurrentMinX);
+    connect(mCurrentXMaxEdit, &LineEdit::editingFinished, this, &ResultsView::editCurrentMaxX);
+    connect(mXSlider, &QSlider::valueChanged, this, &ResultsView::scaleXSliderChanged);
+    connect(mXScaleSpin, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &ResultsView::scaleXSpinChanged);
+    connect(mMajorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this,  &ResultsView::updateScaleX);
+    connect(mMinorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this,  &ResultsView::updateScaleX);
+    
+    connect(this, &ResultsView::xSpinUpdate, this, &ResultsView::setScaleXSlide);
+    connect(this, static_cast<void (ResultsView::*)(int)>(&ResultsView::xSpinUpdate), this, &ResultsView::updateZoomX);
+    
+    connect(mRuler, &Ruler::positionChanged, this, &ResultsView::updateScroll);
 
-    mNbDensityLab = new Label(tr("Nb Densities / Page"), mPageWidget);
-    mNbDensityLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
-    mNbDensitySpin = new QSpinBox(mPageWidget);
-    mNbDensitySpin->setRange(1, 100);
-    mNbDensitySpin->setValue(mNumberOfGraph);
-    mNbDensitySpin->setToolTip(tr("Enter the maximum densities to display on a sheet"));
+    
+    // -----
+    
+    QVBoxLayout* optionsLayout = new QVBoxLayout();
+    optionsLayout->setContentsMargins(0, 0, 0, 0);
+    optionsLayout->setSpacing(0);
+    optionsLayout->addWidget(mGraphListTab);
+    optionsLayout->addWidget(mResultsGroup);
+    optionsLayout->addWidget(mTempoGroup);
+    optionsLayout->addWidget(mTabDisplayMCMC);
+    optionsLayout->addWidget(mTabDisplay);
+    optionsLayout->addWidget(mTabMCMC);
+    optionsLayout->addWidget(mTabPageSaving);
+    optionsLayout->addWidget(mPageWidget);
+    optionsLayout->addWidget(mToolsWidget);
+    mOptionsWidget->setLayout(optionsLayout);
+    
+    
+    setGraphListTab(0);
+    setDisplayTab(0);
+    setPageSavingTab(0);
 
-    connect(mPreviousSheetBut, &Button::pressed, this, &ResultsView::previousSheet);
-    connect(mNextSheetBut, &Button::pressed, this, &ResultsView::nextSheet);
-    connect(mNbDensitySpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::updateNbDensity);
-
-    mTabPageSaving = new Tabs(mOptionsWidget);
-    mTabPageSaving->addTab(mPageWidget, tr("Page"));
-    mTabPageSaving->addTab(mToolsWidget, tr("Saving"));
-
-   // connect(mTabPageSaving, &Tabs::tabClicked, mTabPageSaving, &Tabs::showWidget);
-    connect(mTabPageSaving,static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::updateLayout);
-
-    //connect(mTabDisplayMCMC, &Tabs::tabClicked, this, &ResultsView::updateTabDisplay);
-
-    /* Update font and size with the AppSettings
-     * Set mTabs, mTabByScene, mTabDisplayMCMC, mTabPageSaving
-     */
-
+    updateControls();
+    
     applyAppSettings();
 
-    updateVisibleTabs(0);
-
-    updateTabByScene();
-    updateTabByTempo();
-    mTabByScene->setTab(0, false);
-    mTabByScene->showWidget(0);
-
     mMarker->raise();
-
-    mTabDisplayMCMC->setTab(0, false);
-    mTabDisplayMCMC->showWidget(0);
-    updateTabDisplay(0);//mTabDisplayMCMC->currentIndex());
-
-    mTabPageSaving->setTab(0, false);
-    mTabPageSaving->showWidget(0);
-    updateTabPageSaving();
-
+    
+    updateGraphTypeOptions();
 }
 
 ResultsView::~ResultsView()
@@ -596,500 +602,123 @@ ResultsView::~ResultsView()
     mModel = nullptr;
 }
 
+#pragma mark Project & Model
+
 void ResultsView::doProjectConnections(Project* project)
 {
     /* Starting MCMC calculation does a mModel.clear() at first, and recreate it.
-     * Then, it fills its eleme,nts (events, ...) with calculated data (trace, ...)
+     * Then, it fills its elements (events, ...) with calculated data (trace, ...)
      * If the process is canceled, we only have unfinished data in storage.
      * => The previous nor the new results can be displayed so we must start by clearing the results view! */
-
+    
+    setModel(project->mModel);
     connect(project, &Project::mcmcStarted, this, &ResultsView::clearResults);
-    mModel = project->mModel;
-    connect(mModel, &Model::newCalculus, this, &ResultsView::generateCurvesRequested);
-
 }
+
+void ResultsView::setModel(Model* model)
+{
+    mModel = model;
+    
+    mFFTLenCombo->setCurrentText(QString::number(mModel->getFFTLength()));
+    mBandwidthEdit->setText(QString::number(mModel->getBandwidth()));
+    mThresholdEdit->setText(QString::number(mModel->getThreshold()));
+    
+    connect(mModel, &Model::newCalculus, this, &ResultsView::generateCurvesRequested);
+}
+
+#pragma mark Layout
 
 void ResultsView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
-    if (mModel->mProject->withResults() )
+    if (mModel->mProject->withResults()){
          updateControls(); // emit controleUpdated which is connected to updateLayout
-
+    }
 }
-void ResultsView::applyAppSettings()
+
+
+void ResultsView::updateLayout()
 {
-    const QFont ft (font());
-    const QFontMetrics fm (ft);
-    GraphViewResults::mHeightForVisibleAxis = int (4 * AppSettings::heigthUnit());
-    titleHeight = int ( 1.5 * fm.height());
-    labelHeight = int ( fm.height());
-    lineEditHeight = int (1.1 * (fm.ascent() + fm.descent())) ;
-    checkBoxHeight  = int ( fm.height());
-
-    radioButtonHeight = int ( fm.height());
-    spinBoxHeight = mXScaleSpin->height();
-    buttonHeight =  int (1.7 * (fm.ascent() + fm.descent()));//int (0.5 * AppSettings::heigthUnit());
-/*
-#ifdef Q_OS_MAC
-    comboBoxHeight  = mThicknessCombo->height();
-#else */
-    comboBoxHeight  = mThicknessCombo->height(); //int (0.3 * AppSettings::heigthUnit());
-// #endif
-
-    mMargin = int (.2* AppSettings::heigthUnit());
-
-    /*
-#ifdef Q_OS_MAC
-    mRuler->setMarginBottom(ft.pointSizeF() * 2.0); // space between the axis and the bottom of the text
-#else
-*/
-    mRuler->setMarginBottom(fm.ascent() * 2.0);
-//#endif
-
-    mRulerH =  mRuler->height(); //mScrollBarHeight =
-    mRuler->setFixedHeight(mRulerH);
-    mTabsH = int (2 * fm.height());
-    mGraphHeight = GraphViewResults::mHeightForVisibleAxis ; // same value in ResultsView::updateScaleY(int value)
-
-    mOptionsW = int ( ( fm.boundingRect(tr("Nb Densities / Sheet ")).width() + 2 * mMargin) *3 / 2);
-
-    const int wEdit = int (ceil((mOptionsW - 4 * mMargin)/3.));
-    const QSize allDensitiesButSize (mOptionsW/2, mOptionsW/4);
-    const QSize singleDensityButSize (mOptionsW/4, mOptionsW/4);
-
-
-    mOptionsWidget->setFixedWidth(mOptionsW);
-
-    mPageWidget->resize(mOptionsW, mRulerH);
-     /* -------------------------------------- mResultsGroup---------------------------------------------------*/
-
-    mEventsfoldCheck->setFixedSize(mOptionsW - 2*mMargin, checkBoxHeight);
-    mDatesfoldCheck->setFixedSize(mOptionsW - 2*mMargin, checkBoxHeight);
-    mDataThetaRadio->setFixedSize(mOptionsW - 2*mMargin, radioButtonHeight);
-    mDataSigmaRadio->setFixedSize(mOptionsW - 2*mMargin, radioButtonHeight);
-    mDataCalibCheck->setFixedSize(mOptionsW - 2*mMargin, checkBoxHeight);
-    mWiggleCheck->setFixedSize(mOptionsW - 2*mMargin, checkBoxHeight);
-    mStatCheck->setFixedSize(mOptionsW - 2*mMargin, checkBoxHeight);
-
-     // ______ TempoGroup
-
-    mDurationRadio->setFixedSize(mOptionsW - 2*mMargin, radioButtonHeight);
-    mTempoRadio->setFixedSize(mOptionsW - 2*mMargin, radioButtonHeight);
-    mActivityRadio->setFixedSize(mOptionsW - 2*mMargin, radioButtonHeight);
-    mTempoStatCheck->setFixedSize(mOptionsW - 2*mMargin, checkBoxHeight);
-    mTempoCredCheck->setFixedSize(mOptionsW - 2*mMargin, checkBoxHeight);
-    mTempoErrCheck->setFixedSize(mOptionsW - 2*mMargin, checkBoxHeight);
-
-     // -------------end TempoGroup
-    mTabByScene->setFixedWidth(mOptionsW);
-
-     /* - mTabDisplayMCMC */
-
-     /*  Display Options layout */
-
-    mXScaleSpin->setLocale(QLocale(AppSettings::mLanguage, AppSettings::mCountry));
-
-    mSpanTitle->setFixedSize(mOptionsW, titleHeight);
-    mDisplayStudyBut->setFixedSize(mOptionsW - 2*mMargin, buttonHeight);
-    mSpanLab->setFixedSize( fm.boundingRect(mSpanLab->text()).width(), labelHeight);
-
-    mCurrentXMinEdit->setFixedSize(wEdit, lineEditHeight);
-    mCurrentXMaxEdit->setFixedSize(wEdit, lineEditHeight);
-    mXScaleLab->setFixedWidth( int (fm.width(mXScaleLab->text())));
-    mXScaleSpin->setFixedSize(wEdit, spinBoxHeight);
-
-    mMajorScaleLab->setFixedSize(mOptionsW - wEdit - 2* mMargin, labelHeight);
-    mMajorScaleEdit->setFixedSize(wEdit, lineEditHeight);
-
-    mMinorScaleLab->setFixedSize(mOptionsW - wEdit - 2* mMargin, labelHeight);
-    mMinorScaleEdit->setFixedSize(wEdit, lineEditHeight);
-
-    /* -------------------------------------- Graphic Options (old mDisplayGroup) ---------------------------------------------------*/
-    mGraphicTitle->setFixedSize(mOptionsW, titleHeight);
-    mYScaleLab->setFixedSize(fm.boundingRect(mYScaleLab->text()).width(), labelHeight);
-
-    mYScaleSpin->setFixedSize(mCurrentXMinEdit->width(), spinBoxHeight);
-    mLabFont->setFixedSize(fm.boundingRect(mLabFont->text()).width(), labelHeight);
-
-    mFontBut->setFixedSize(mOptionsW - fm.boundingRect(mLabFont->text()).width()  - mMargin, buttonHeight);
-    mLabThickness->setFixedSize(fm.boundingRect(mLabThickness->text()).width(), comboBoxHeight);
-
-
-#ifdef Q_OS_MAC
-    const int arrowWidth = 12;
-#endif
-
-#ifdef Q_OS_WIN
-    const int arrowWidth = 0;
-#endif
-
-#ifdef Q_OS_LINUX
-    const int arrowWidth = 0;
-#endif
-
-    mThicknessCombo->setFixedSize( fm.boundingRect("999 px").width() + 2*mMargin + arrowWidth, comboBoxHeight);
-    mLabOpacity->setFixedSize(mOptionsW/2 - mMargin, labelHeight);
-    mOpacityCombo->setFixedSize(fm.boundingRect("9999 %").width() + 2*mMargin, comboBoxHeight);
-
-     /* -------------------------------------- mChainsGroup---------------------------------------------------*/
-
-    mAllChainsCheck->setFixedSize(mOptionsW - 2*mMargin, checkBoxHeight);
-
-    mChainsTitle->setFixedSize(mOptionsW, titleHeight);
-    mAllChainsCheck->setFixedSize(mOptionsW - 2*mMargin, checkBoxHeight);
-
-    if (mCheckChainChecks.isEmpty())
-           for (auto check : mCheckChainChecks)
-                check->setFixedSize(mOptionsW - 2*mMargin, checkBoxHeight);
-
-    if (mChainRadios.isEmpty())
-           for (auto radio : mChainRadios)
-                radio->setFixedSize(mOptionsW - 2*mMargin, radioButtonHeight);
-
-
-     /* -------------------------------------- mDensityOptsGroup ---------------------------------------------------*/
-
-    mDensityOptsTitle->setFixedSize(mOptionsW, titleHeight);
-    mCredibilityCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
-    mThreshLab->setFixedSize(fm.boundingRect(mThreshLab->text()).width(), lineEditHeight);
-    mHPDEdit->setFixedSize(wEdit, lineEditHeight);
-    mFFTLenLab->setFixedSize(fm.boundingRect(mFFTLenLab->text()).width(), comboBoxHeight);
-    mFFTLenCombo->setFixedSize(mOptionsW/2 - mMargin, comboBoxHeight);
-    mBandwidthLab->setFixedSize(fm.boundingRect(mBandwidthLab->text()).width(), lineEditHeight);
-    mBandwidthEdit->setFixedSize(wEdit, lineEditHeight);
-
-     /* --------------------------------------Tools for all graph -------------------------------------- */
-
-    mToolsWidget->resize(mOptionsW, 50);
-    mExportImgBut->setFixedSize(allDensitiesButSize);
-    mExportResults->setFixedSize(allDensitiesButSize);
-    mImageSaveBut->setFixedSize(singleDensityButSize);
-    mImageClipBut->setFixedSize(singleDensityButSize);
-    mResultsClipBut->setFixedSize(singleDensityButSize);
-    mDataSaveBut->setFixedSize(singleDensityButSize);
-
-    /* -------------------------------------- Page widget -------------------------------------- */
-
-    mPageWidget->resize(mOptionsW, mRulerH);
-    mSheetNum->setFixedSize(fm.boundingRect("__ /__").width(), buttonHeight);
-    mPreviousSheetBut->setFixedSize((mOptionsW- mSheetNum->width())/2, buttonHeight);
-    mNextSheetBut->setFixedSize((mOptionsW - mSheetNum->width())/2, buttonHeight);
-    mNbDensityLab->setFixedSize(fm.boundingRect(mNbDensityLab->text()).width(), spinBoxHeight);
-    mNbDensitySpin->setFixedSize(mCurrentXMinEdit->width(), spinBoxHeight);
-    mTabPageSaving->setFixedWidth(mOptionsW);
-
-
-
-    // set the variable and the graphic type
-    mCurrentTypeGraph = GraphViewResults::ePostDistrib;
-    mCurrentVariable = GraphViewResults::eTheta;
+    // The scroll bar extent (width or height depending on the orientation)
+    // depends on the native platform, and must be taken into account.
+    const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     
-    if (mHasPhases) {
-        mTabByScene->setTab(1, false);
-        mTabByScene->setTabVisible(1, true);
-        mTabByScene->setTabVisible(2, true);
-        updateVisibleTabs(1);
-        mTabs->setTab(0, false);
-
-     } else {
-        mTabByScene->setTabVisible(2, false);
-        mTabByScene->setTabVisible(1, false);
-        mTabByScene->setTab(0, false);
-        updateVisibleTabs(0);
-        mTabs->setTab(0, false);
-     }
-
-}
-
-/**
- * @brief ResultsView::updateControls set controls according to the differents tabs positions.  emit controlsUpdated()
-*/
-void ResultsView::updateControls()
-{
-   //qDebug() << "ResultsView::updateControls()";
-   Q_ASSERT(mModel);
-    bool byEvents (mTabByScene->currentIndex() == 0);
-    bool byPhases (mTabByScene->currentIndex() == 1);
-    bool byTempo  (mTabByScene->currentIndex() == 2);
-
-
-    /* -------------------------------------------------------
-     *  Activate specific controls for post. distrib. (first tab)
-     * -------------------------------------------------------*/
-    if (byEvents) {
-        mDataCalibCheck -> setVisible((mCurrentTypeGraph == GraphViewResults::ePostDistrib)
-                                                                        && mDatesfoldCheck->isChecked()
-                                                                        && mDataThetaRadio->isChecked());
-        mWiggleCheck-> setVisible((mCurrentTypeGraph == GraphViewResults::ePostDistrib)
-                                                                 && mDatesfoldCheck->isChecked()
-                                                                 && mDataThetaRadio->isChecked());
-
-    } else if (byPhases) {
-        mDataCalibCheck -> setVisible((mCurrentTypeGraph == GraphViewResults::ePostDistrib)
-                                                                         && mEventsfoldCheck->isChecked()
-                                                                         && mDatesfoldCheck->isChecked()
-                                                                         && mDataThetaRadio->isChecked());
-        mWiggleCheck-> setVisible((mCurrentTypeGraph == GraphViewResults::ePostDistrib)
-                                                                && mEventsfoldCheck->isChecked()
-                                                                && mDatesfoldCheck->isChecked()
-                                                                && mDataThetaRadio->isChecked());
-    } else {
-        mDataCalibCheck -> setVisible(false);
-        mWiggleCheck-> setVisible(false);
+    const QFontMetrics fm(font());
+    
+    int leftWidth = width() - mOptionsW - sbe;
+    int graphWidth = leftWidth;
+    int tabsH = 40;
+    int rulerH = mRuler->height();
+    int stackH = height() - tabsH - rulerH;
+    
+    if (mStatCheck->isChecked() || mTempoStatCheck->isChecked()){
+        graphWidth = (2/3) * leftWidth;
     }
 
+    // ----------------------------------------------------------
+    //  Left layout
+    // ----------------------------------------------------------
+    mGraphTypeTabs->setGeometry(0, 0, leftWidth, tabsH);
+    mRuler->setGeometry(0, tabsH, graphWidth, rulerH);
+    mGraphListStack->setGeometry(0, tabsH + rulerH, leftWidth + sbe, stackH);
+    
+    mEventsScrollArea->setGeometry(0, 0, leftWidth + sbe, stackH);
+    mPhasesScrollArea->setGeometry(0, 0, leftWidth + sbe, stackH);
+    mTempoScrollArea->setGeometry(0, 0, leftWidth + sbe, stackH);
+    mCurveScrollArea->setGeometry(0, 0, leftWidth + sbe, stackH);
+    
+    // Update layout of all current graph list
+    updateGraphsLayout();
 
+    updateMarkerGeometry(mMarker->pos().x());
+    //updateGraphsFont(); // to be moved elsewhere ?
+    
+    // --------------------------------------------------------
+    //  Right layout
+    // --------------------------------------------------------
+    mOptionsWidget->setGeometry(leftWidth, 0, mOptionsW, height());
 
+    // --------------------------------------------------------
+    //  Pagination / Saving Tabs
+    // --------------------------------------------------------
+    int buttonHeight = 30;
+    int paginationLabWidth = 50;
+    int paginationButWidth = (mOptionsW - paginationLabWidth) / 2;
+    int graphPerPageLabWidth = fm.boundingRect(mGraphsPerPageLab->text()).width();
+    int graphPerPageSpinWidth = mOptionsW - 2*mMargin - graphPerPageLabWidth;
+    int buttonSide = mOptionsW / 4;
+    
+    mTabPageSaving->resize(mOptionsW, tabsH);
+    mPageWidget->resize(mOptionsW, 2*buttonHeight + mMargin);
+    mToolsWidget->resize(mOptionsW, buttonSide);
+    
+    // --------------------------------------------------------
+    //  Pagination layout
+    // --------------------------------------------------------
+    mPreviousPageBut->setGeometry(0, 0, paginationButWidth, buttonHeight);
+    mPageEdit->setGeometry(paginationButWidth, 0, paginationLabWidth, buttonHeight);
+    mNextPageBut->setGeometry(paginationButWidth + paginationLabWidth, 0, paginationButWidth, buttonHeight);
+    mGraphsPerPageLab->setGeometry(mMargin, buttonHeight + mMargin, graphPerPageLabWidth, buttonHeight);
+    mGraphsPerPageSpin->setGeometry(mMargin + graphPerPageLabWidth, buttonHeight + mMargin, graphPerPageSpinWidth, buttonHeight);
+    
+    // --------------------------------------------------------
+    //  Tools layout
+    // --------------------------------------------------------
+    mImageSaveBut->setGeometry(0, 0, buttonSide, buttonSide);
+    mImageClipBut->setGeometry(buttonSide, 0, buttonSide, buttonSide);
+    mResultsClipBut->setGeometry(2 * buttonSide, 0, buttonSide, buttonSide);
+    mDataSaveBut->setGeometry(3 * buttonSide, 0, buttonSide, buttonSide);
+    
+    mExportImgBut->setGeometry(0, 0, 2*buttonSide, buttonSide);
+    mExportResults->setGeometry(2*buttonSide, 0, 2*buttonSide, buttonSide);
+    
+    
+    
 
-    /* -------------------------------------------------------
-     *  Display by phases or by events
-     * -------------------------------------------------------*/
-    if (byEvents) {
-            if (!mEventsScrollArea)
-                createEventsScrollArea(mTabEventsIndex);
-            mStack->setCurrentWidget(mEventsScrollArea);
-
-    } else if (byPhases) {
-        if (!mPhasesScrollArea)
-            createPhasesScrollArea(mTabPhasesIndex);
-        mStack->setCurrentWidget(mPhasesScrollArea);
-
-    } else if (byTempo) {
-        if (!mTempoScrollArea)
-            createTempoScrollArea(mTabTempoIndex);
-        mStack->setCurrentWidget(mTempoScrollArea);
-    }
-
-
-    /* -------------------------------------------------------
-     *  Enable or disable previous and next sheet
-     * -------------------------------------------------------*/
-    int currentIndex (0);
-    int selectedGraph (0);
-    int unselectedGraph (0);
-    bool showAllGraph (true);
-
-    if (byEvents) {
-        for (auto &&ev : mModel->mEvents) {
-            if (ev->mIsSelected) {
-                selectedGraph += 1;
-                if (mDatesfoldCheck->isChecked())
-                    selectedGraph += ev->mDates.size();
-                showAllGraph = false;
-            } else {
-                unselectedGraph += 1;
-                if (mDatesfoldCheck->isChecked())
-                    unselectedGraph += ev->mDates.size();
-            }
-        }
-        currentIndex = mTabEventsIndex;
-    }
-
-    else if (byPhases) {
-         for (auto &&ph : mModel->mPhases) {
-            if (ph->mIsSelected) {
-                showAllGraph = false;
-                selectedGraph += 1;
-                if (mEventsfoldCheck->isChecked())
-                    selectedGraph += ph->mEvents.size();
-
-                if (mDatesfoldCheck->isVisible() && mDatesfoldCheck->isChecked()) {
-                    for (auto && ev : ph->mEvents)
-                        selectedGraph += ev->mDates.size();
-                }
-            } else {
-                    unselectedGraph += 1;
-                    if (mEventsfoldCheck->isChecked())
-                        unselectedGraph += ph->mEvents.size();
-
-                    if (mDatesfoldCheck->isVisible() && mDatesfoldCheck->isChecked()) {
-                        for (auto && ev : ph->mEvents)
-                            unselectedGraph += ev->mDates.size();
-                    }
-                }
-         }
-        currentIndex = mTabPhasesIndex;
-    }
-
-    else if (byTempo) {
-         for (auto && ph : mModel->mPhases) {
-            if (ph->mIsSelected) {
-                showAllGraph = false;
-                selectedGraph += 1;
-
-            } else
-                    unselectedGraph += 1;
-
-         }
-        currentIndex = mTabTempoIndex;
-    }
-
-    if (showAllGraph)
-        mMaximunNumberOfVisibleGraph = unselectedGraph;
-    else
-        mMaximunNumberOfVisibleGraph = selectedGraph;
-
-    if (currentIndex == 0)
-        mPreviousSheetBut->setEnabled(false);
-    else
-        mPreviousSheetBut->setEnabled(true);
-
-    if ( ((currentIndex+1)*mNumberOfGraph) < mMaximunNumberOfVisibleGraph)
-        mNextSheetBut->setEnabled(true);
-    else
-        mNextSheetBut->setEnabled(false);
-
-    emit controlsUpdated();
-}
-
-void ResultsView:: updateTabByScene()
-{
-    bool byEvents (mTabByScene->currentIndex() == 0);
-    bool byPhases (mTabByScene->currentIndex() == 1);
-    if (!byEvents && !byPhases)
-        return;
-
-    /* ----------------------------------------------------------
-     *  Results options layout, member within  mTabByScene
-     * ----------------------------------------------------------*/
-    int ySpan (mMargin);
-
-    // RadioButton
-
-
-    mDataThetaRadio->move(mMargin, ySpan);
-    ySpan += mDataThetaRadio->height() + mMargin;
-
-    mDataSigmaRadio -> move(mMargin, ySpan);
-    ySpan += mDataSigmaRadio->height() + mMargin;
-
-
-    // CheckBox
-
-    if (byPhases) {
-        mEventsfoldCheck->setVisible(true);
-        mEventsfoldCheck->move(mMargin , ySpan);
-        ySpan += mEventsfoldCheck->height() + mMargin;
-
-        mDatesfoldCheck->setVisible(mEventsfoldCheck->isChecked());
-        if (mEventsfoldCheck->isChecked()) {
-            mDatesfoldCheck->move(mMargin , ySpan);
-            ySpan += mDatesfoldCheck->height() + mMargin;
-        }
-
-    } else if (byEvents) {
-        mEventsfoldCheck->setVisible(false);
-        mDatesfoldCheck->setVisible(true);
-        mDatesfoldCheck->move(mMargin , ySpan);
-        ySpan += mDatesfoldCheck->height() + mMargin;
-
-    }
-
-    int dx (2 * mMargin);
-
-    if ((mCurrentTypeGraph == GraphViewResults::ePostDistrib)  && mDataThetaRadio->isChecked() ) {
-        if (( byEvents || (byPhases && mEventsfoldCheck->isChecked()) )   && mDatesfoldCheck->isChecked()) {
-            mDataCalibCheck -> move(mMargin + dx, ySpan);
-            ySpan += mDataCalibCheck->height() + mMargin;
-
-            mWiggleCheck -> move(mMargin + dx, ySpan);
-            ySpan += mWiggleCheck->height() + mMargin;
-        }
-    }
-
-    mStatCheck->move(mMargin , ySpan);
-    ySpan += mStatCheck->height() + mMargin;
-
-    mResultsGroup->resize(mOptionsW, ySpan);
-    mTabByScene->resize(mOptionsW, mTabByScene->minimalHeight());
-    update();
-}
-
-
-void ResultsView::updateTabByTempo()
-{
-    if (mTabByScene->currentIndex() != 2)
-        return;
-
-    /* ----------------------------------------------------------
-     *  Results options layout, member within  mTempoGroup
-     * ----------------------------------------------------------*/
-    int ySpan (mMargin);
-
-    mDurationRadio -> move(mMargin, ySpan);
-    ySpan += mDurationRadio->height() + mMargin;
-
-    mTempoRadio -> move(mMargin, ySpan);
-    ySpan += mTempoRadio->height() + mMargin;
-    int dx (20 + mMargin);
-
-    if (mTempoRadio->isChecked()) {
-        mTempoCredCheck->setVisible(true);
-        mTempoErrCheck->setVisible(true);
-        mTempoCredCheck -> move(mMargin + dx, ySpan);
-        ySpan += mTempoCredCheck->height() + mMargin;
-        mTempoErrCheck -> move(mMargin + dx, ySpan);
-        ySpan += mTempoErrCheck->height() + mMargin;
-
-    } else {
-        mTempoCredCheck->setVisible(false);
-        mTempoErrCheck->setVisible(false);
-    }
-
-    mActivityRadio -> move(mMargin, ySpan);
-    ySpan += mActivityRadio->height() + mMargin;
-
-    mTempoStatCheck->move(mMargin , ySpan);
-    ySpan += mTempoStatCheck->height() + mMargin;
-
-    mTempoGroup->resize(mOptionsW, ySpan);
-    mTabByScene->resize(mOptionsW, mTabByScene->minimalHeight());
-}
-
-void ResultsView::updateTabDisplay(const int &i)
-{
-    const QFontMetrics fm (font());
-    /* -------------------------------------------------------
-     *  Activate specific controls for post. distrib. (first tab)
-     * -------------------------------------------------------*/
-
-    mAllChainsCheck    -> setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-
-    mDensityOptsTitle -> setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-    if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && ( mCurrentVariable != GraphViewResults::eTempo
-                                                                 && mCurrentVariable != GraphViewResults::eActivity) ) {
-        mDensityOptsGroup -> setVisible(true);
-
-    } else
-        mDensityOptsGroup -> setVisible(false);
-
-
-    mCredibilityCheck->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-    mThreshLab->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-    mFFTLenLab->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-    mBandwidthLab->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-    /* -------------------------------------------------------
-     *  Switch between checkBoxes or Radio-buttons for chains
-     * -------------------------------------------------------*/
-    if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
-        for (auto &&checkChain : mCheckChainChecks)
-            checkChain->setVisible(true);
-
-        for (auto &&chainRadio : mChainRadios)
-            chainRadio->setVisible(false);
-
-    } else {
-        for (auto &&checkChain : mCheckChainChecks)
-            checkChain->setVisible(false);
-
-        for (auto &&chainRadio : mChainRadios)
-            chainRadio->setVisible(true);
-    }
-
-    int ySpan(0);
+    int ySpan = 0;
     qreal dy(0); // shift between Y position of the Edit and the y position of the label
 
-    switch (i) {
+    switch (mTabDisplayMCMC->currentIndex()) {
         case 0: //Display tab
         {
         /*
@@ -1267,7 +896,7 @@ void ResultsView::updateTabDisplay(const int &i)
               ySpan = mMargin ;
 
               // posterior distribution : chains are selectable with checkboxes
-              const int tabIdx = mTabs->currentIndex();
+              const int tabIdx = mGraphTypeTabs->currentIndex();
               if (tabIdx == 0) {
                   // inside mChainsGroup Coordonnate
                   mAllChainsCheck->move(mMargin, ySpan);
@@ -1310,18 +939,18 @@ void ResultsView::updateTabDisplay(const int &i)
                   if (mCurrentVariable == GraphViewResults::eTempo || mCurrentVariable == GraphViewResults::eActivity ) {
                       mDensityOptsTitle->setVisible(false);
                       mThreshLab->setVisible(false);
-                      mHPDEdit->setVisible(false);
+                      mThresholdEdit->setVisible(false);
                       mDensityOptsGroup->setGeometry(0, 0, mOptionsW, 0);
 
                   } else {
                       mDensityOptsTitle->setVisible(true);
                       mThreshLab->setVisible(true);
-                      mHPDEdit->setVisible(true);
+                      mThresholdEdit->setVisible(true);
 
-                      mHPDEdit->move(mOptionsW - mMargin - mHPDEdit->width(), ySpan);
-                      dy = (mHPDEdit->height() - mThreshLab->height())/2.;
-                      mThreshLab->move(mHPDEdit->x() - fm.boundingRect(mThreshLab->text()).width() - mMargin, int (ySpan + dy));
-                      ySpan += mHPDEdit->height() + mMargin;
+                      mThresholdEdit->move(mOptionsW - mMargin - mThresholdEdit->width(), ySpan);
+                      dy = (mThresholdEdit->height() - mThreshLab->height())/2.;
+                      mThreshLab->move(mThresholdEdit->x() - fm.boundingRect(mThreshLab->text()).width() - mMargin, int (ySpan + dy));
+                      ySpan += mThresholdEdit->height() + mMargin;
 
                       mFFTLenCombo->move(mOptionsW - mMargin - mFFTLenCombo->width(), ySpan);
                       dy = (mFFTLenCombo->height() - mFFTLenLab->height())/2.;
@@ -1345,365 +974,402 @@ void ResultsView::updateTabDisplay(const int &i)
         break;
     }
     mTabDisplayMCMC->resize(mOptionsW, mTabDisplayMCMC->minimalHeight());
-
-}
-
-void ResultsView::updateTabPageSaving()
-{
-    const bool byEvents (mTabByScene->currentIndex() == 0);
-    const bool byPhases (mTabByScene->currentIndex() == 1);
-    const bool byTempo (mTabByScene->currentIndex() == 2);
-
-    switch (mTabPageSaving->currentIndex()) {
-    case 0:
-        {
-            /*
-             *  Page Navigator
-             */
-            int ySpan (mMargin);
-            qreal dy (0);
-            mPreviousSheetBut->move(0 , ySpan);
-
-            mSheetNum->move(mPreviousSheetBut->width(), ySpan);
-
-            mSheetNum->setText(locale().toString(byPhases ? mTabPhasesIndex+1 : mTabEventsIndex+1 ) + "/" +
-                               locale().toString(ceil(double (mMaximunNumberOfVisibleGraph)/double(mNumberOfGraph)) ));
-
-            mNextSheetBut->move(mOptionsW - mPreviousSheetBut->width(),  ySpan);
-
-            ySpan += mNextSheetBut->height() + mMargin;
-
-            mNbDensitySpin->move(mOptionsW - mNbDensitySpin->width() - mMargin, ySpan);
-            dy = (mNbDensitySpin->height() - mNbDensityLab->height())/2.;
-            mNbDensityLab->move(mMargin, int (ySpan + dy));
-            ySpan += mNbDensitySpin->height() + mMargin;
-
-            mPageWidget->resize(mOptionsW, ySpan);
-
-        }
-    break;
-    case 1:
-        {
-            /* ----------------------------------------------------------
-             *  lookfor selection in the graphView
-             * ----------------------------------------------------------*/
-            bool singleGraph (false);
-            if (byPhases) {
-                if (mPhasesScrollArea)
-                    for (auto &&graph : mByPhasesGraphs)
-                        if (graph->isSelected()) {
-                            singleGraph = true;
-                            continue;
-                        }
-
-            }
-            else if (byTempo) {
-                if (mTempoScrollArea)
-                    for (auto &&graph : mByTempoGraphs)
-                        if (graph->isSelected()) {
-                            singleGraph = true;
-                            continue;
-                        }
-
-            }
-            else  if (byEvents) {
-                if (mEventsScrollArea)
-                    for (auto &&graph : mByEventsGraphs)
-                        if (graph->isSelected()) {
-                            singleGraph = true;
-                            continue;
-                        }
-             }
-
-
-            if (singleGraph) {
-                mImageSaveBut->setVisible(true);
-                mImageClipBut->setVisible(true);
-                mResultsClipBut->setVisible(true);
-                mDataSaveBut->setVisible(true);
-                mImageSaveBut->move(0, mMargin);
-                mImageClipBut->move(mImageSaveBut->x() + mImageSaveBut->width(), mMargin);
-                mResultsClipBut->move(mImageClipBut->x() + mImageClipBut->width(), mMargin);
-                mDataSaveBut->move(mResultsClipBut->x() + mResultsClipBut->width(), mMargin);
-
-                mExportImgBut->setVisible(false);
-                mExportResults->setVisible(false);
-
-                mToolsWidget->resize(mOptionsW, mDataSaveBut->height() + 2*mMargin);
-
-            } else {
-                mImageSaveBut->setVisible(false);
-                mImageClipBut->setVisible(false);
-                mResultsClipBut->setVisible(false);
-                mDataSaveBut->setVisible(false);
-
-                mExportImgBut->setVisible(true);
-                mExportResults->setVisible(true);
-                mExportImgBut->move(0, mMargin);
-                mExportResults->move(mExportImgBut->x() + mExportImgBut->width(), mMargin);
-
-                mToolsWidget->resize(mOptionsW, mExportImgBut->height() + 2*mMargin);
-            }
-
-
-        }
-    break;
-
-    default:
-    break;
-    }
-
-    mTabPageSaving->resize(mOptionsW, mTabPageSaving->minimalHeight());
-
-}
-
-void ResultsView::updateNbDensity(int i)
-{
-   mNumberOfGraph = i;
-
-   //the same code that unfoldToggle()
-   if (mStack->currentWidget() == mEventsScrollArea)
-        mTabEventsIndex = 0;
-
-   else if (mStack->currentWidget() == mPhasesScrollArea)
-      mTabPhasesIndex = 0;
-
-   else if (mStack->currentWidget() == mTempoScrollArea)
-      mTabTempoIndex = 0;
-
-   updateControls();
-
-   emit updateScrollAreaRequested();
-
-}
-
-
-void ResultsView::changeScrollArea()
-{
-    const bool byTempo (mTabByScene->currentIndex() == 2);
-    const bool byPhases (mTabByScene->currentIndex() == 1);
-    const bool byEvents (mTabByScene->currentIndex() == 0);
-
-    if (byPhases && !mEventsfoldCheck->isChecked() ) {
-        mDatesfoldCheck->setChecked(false);
-        mDatesfoldCheck->setEnabled(false);
-    } else
-        mDatesfoldCheck->setEnabled(true);
-
-    // Append when we toggle mByPhasesBut to mByEventsBut and mDurationRadio is checked
-
-
-    if (mDataThetaRadio->isChecked())
-        mCurrentVariable = GraphViewResults::eTheta;
-
-    else if (mDataSigmaRadio->isChecked())
-        mCurrentVariable = GraphViewResults::eSigma;
-
-    else if (mDurationRadio->isChecked())
-            mCurrentVariable = GraphViewResults::eDuration;
-
-    else if (mTempoRadio->isChecked())
-            mCurrentVariable = GraphViewResults::eTempo;
-
-    else if (mActivityRadio->isChecked())
-            mCurrentVariable = GraphViewResults::eActivity;
-
-    if (byEvents)
-            createEventsScrollArea(mTabEventsIndex);
-
-    else if (byPhases)
-            createPhasesScrollArea(mTabPhasesIndex);
-
-    else if (byTempo) {
-            mCurrentTypeGraph = GraphViewResults::ePostDistrib;
-            createTempoScrollArea(mTabTempoIndex);
-    }
-
-}
-
-/**
- * @brief ResultsView::updateVisibleTabs Update mTabs according to mTabByScene index
- * @param index
- */
-void ResultsView::updateVisibleTabs(const int &index)
-{
-
-    switch (index) {
-        case 0: //mTabByScene on Events
-            {
-            mTabs->setTabVisible(0, true); // Posterior Distrib.
-            mTabs->setTabVisible(1, true); // History Plot
-            mTabs->setTabVisible(2, true); // Acceptance Rate
-            mTabs->setTabVisible(3, true); // Autocorrelation
-        }
-        break;
-
-        case 1: //mTabByScene on Phases
-            {
-            mTabs->setTabVisible(0, true); // Posterior Distrib.
-            mTabs->setTabVisible(1, true); // History Plot
-            mTabs->setTabVisible(2, true); // Acceptance Rate
-            mTabs->setTabVisible(3, true); // Autocorrelation
-        }
-        break;
-        case 2: //mTabByScene on Tempo
-            {
-            mTabs->setTabVisible(0, true); // Posterior Distrib.
-            mTabs->setTabVisible(1, false); // History Plot
-            mTabs->setTabVisible(2, false); // Acceptance Rate
-            mTabs->setTabVisible(3, false); // Autocorrelation
-            mTabs->setTab(0, true);
-        }
-        break;
-
-
-        default:
-        break;
-    }
-
-
-}
-
-void ResultsView::updateLayout()
-{
-   // Q_ASSERT(mModel);
-
-    //qDebug() << "ResultsView::updateLayout()"<<width()
-
-
-    const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
-    int tabsShift (AppSettings::widthUnit());
-
-    /* ----------------------------------------------------------
-     *  Main layout
-     * ----------------------------------------------------------*/
-
-    mTabs->setGeometry(tabsShift, mMargin, width() - mOptionsW - sbe - tabsShift, mTabsH);
-
-    setGraphFont(mGraphFont);
-
-    mRuler->updateLayout();
-
-    if (mStatCheck->isChecked() || mTempoStatCheck->isChecked())
-         mRuler->setGeometry(0, mTabs->y() + mTabs->height(), int ((width() - mOptionsW - sbe)*2./3.), mRulerH);
-    else
-        mRuler->setGeometry(0, mTabs->y() + mTabs->height(), width() - mOptionsW - sbe, mRulerH );
-
-    mStack->setGeometry(0, int (mMargin + mTabsH + mRulerH + 2), width() - mOptionsW, int (height() - (mMargin + mTabsH + mRulerH + 2)));
-
-    // mMarker is resize in ResultsView::mouseMoveEvent(QMouseEvent* e), the following code is usefull when repainting
-    const int markerXPos (inRange(0, mMarker->pos().x(), mRuler->x() + mRuler->width() ));
-    mMarker->setGeometry(markerXPos, mTabsH + mRuler->height() , mMarker->thickness(), height() - mTabsH - mRuler->height());
-
-    /* ----------------------------------------------------------
-     *  Display Options layout
-     * ----------------------------------------------------------*/
-    int ySpan(mMargin);
-
-    mTabByScene->move(0, ySpan);
-    updateTabByScene();
-    updateTabByTempo();
-
-    if (mCurrentVariable == GraphViewResults::eTempo || mCurrentVariable == GraphViewResults::eActivity) {
-        mTabDisplayMCMC->setTabVisible(1, false);
-        mTabDisplayMCMC->setTab(0, false);
-     } else
-        mTabDisplayMCMC->setTabVisible(1, true);
-
-    /*
-     *  mTabDisplayMCMC
-     */
-
-    ySpan = mTabByScene->y() + mTabByScene->height() + 5;
-
-    updateTabDisplay(mTabDisplayMCMC->currentIndex());
-    mTabDisplayMCMC->move(0, ySpan);
-    mTabDisplayMCMC->resize(mOptionsW, mTabDisplayMCMC->minimalHeight());
-
-    ySpan = mTabDisplayMCMC->y() + mTabDisplayMCMC->height() + 5;
-    updateTabPageSaving();
-    mTabPageSaving->move(0, ySpan);
-
-    mOptionsWidget->move(width() - mOptionsW, 0);
-    mOptionsWidget->resize(mOptionsW, mTabPageSaving->y() + mTabPageSaving->height() + 10 );
-    mOptionsWidget->repaint();
-    updateGraphsLayout();
 }
 
 
 void ResultsView::updateGraphsLayout()
 {
-  //qDebug() << "ResultsView::updateGraphsLayout()";
+    if(mGraphListTab->currentIndex() == 0)
+    {
+        updateGraphsLayout(mEventsScrollArea, mByEventsGraphs);
+    }
+    else if(mGraphListTab->currentIndex() == 1)
+    {
+        updateGraphsLayout(mPhasesScrollArea, mByPhasesGraphs);
+    }
+    else if(mGraphListTab->currentIndex() == 2)
+    {
+        updateGraphsLayout(mTempoScrollArea, mByTempoGraphs);
+    }
+    else if(mGraphListTab->currentIndex() == 3)
+    {
+        updateGraphsLayout(mCurveScrollArea, mByCurveGraphs);
+    }
+}
+
+void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewResults*> graphs)
+{
     const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
-    const bool byEvents (mTabByScene->currentIndex() == 0);
-    const bool byPhases (mTabByScene->currentIndex() == 1);
-    const bool byTempo  (mTabByScene->currentIndex() == 2);
-    //
-
-    /* ----------------------------------------------------------
-     *  Graphs by phases layout
-     *    mRuler  -> setGeometry(mGraphLeft, mTabsH, width() - mGraphLeft - mOptionsW - sbe, mRulerH);
-     * ----------------------------------------------------------*/
-    if (byPhases) {
-        int y (0);
-        if (mPhasesScrollArea) {
-            QWidget* wid = mPhasesScrollArea->widget();
-            for (auto &&graph : mByPhasesGraphs) {
-                graph->setGeometry(0, y, width() - mOptionsW - sbe, mGraphHeight);
-                graph->update();
-                y += graph->height();
-            }
-            if (y>0)
-                wid->setFixedSize(width() - sbe - mOptionsW, y);
-            mPhasesScrollArea->repaint();
-       }
+    QWidget* widget = scrollArea->widget();
+    if(widget)
+    {
+        for (int i=0; i<graphs.size(); ++i)
+        {
+            graphs[i]->setGeometry(0, i * mGraphHeight, width() - mOptionsW - sbe, mGraphHeight);
+            graphs[i]->update();
+        }
+        widget->setFixedSize(scrollArea->width(), graphs.size() * mGraphHeight);
     }
-    /* ----------------------------------------------------------
-     *  Graphs by events layout
-     * ----------------------------------------------------------*/
+}
 
-    else if (byEvents){
-         int y (0);
-         if (mEventsScrollArea) {
-            QWidget* wid = mEventsScrollArea->widget();
+void ResultsView::applyAppSettings()
+{
+    // ------------------------------------------------------------------------
+    //  First, define some variables used in all the layout :
+    // ------------------------------------------------------------------------
+    const QFont ft (font());
+    const QFontMetrics fm (ft);
+    
+    titleHeight = int ( 1.5 * fm.height());
+    labelHeight = int ( fm.height());
+    lineEditHeight = int (1.1 * (fm.ascent() + fm.descent())) ;
+    checkBoxHeight  = int ( fm.height());
+    comboBoxHeight  = mThicknessCombo->height(); //int (0.3 * AppSettings::heigthUnit());
+    radioButtonHeight = int ( fm.height());
+    spinBoxHeight = mXScaleSpin->height();
+    buttonHeight =  int (1.7 * (fm.ascent() + fm.descent()));//int (0.5 * AppSettings::heigthUnit());
+    GraphViewResults::mHeightForVisibleAxis = int (4 * AppSettings::heigthUnit());
 
-            for (auto &&graph : mByEventsGraphs) {
-                graph->setGeometry(0, y, width() - mOptionsW - sbe, mGraphHeight);
-                graph->update();
-                y += graph->height();
-            }
-            if ( y > 0 )
-                wid->setFixedSize(width() - sbe - mOptionsW, y);
-            mEventsScrollArea->repaint();
-         }
+    // ------------------------------------------------------------------------
+    //  Left part of the view : tabs, ruler and graphs
+    // ------------------------------------------------------------------------
+    mRuler->setMarginBottom(fm.ascent() * 2.0);
+    
+    mGraphHeight = GraphViewResults::mHeightForVisibleAxis ; // same value in ResultsView::updateScaleY(int value)
 
-    }
-    else if (byTempo){
-         int y (0);
-         if (mTempoScrollArea) {
-            QWidget* wid = mTempoScrollArea->widget();
+    const int wEdit = int (ceil((mOptionsW - 4 * mMargin)/3.));
+    const QSize allDensitiesButSize (mOptionsW/2, mOptionsW/4);
+    const QSize singleDensityButSize (mOptionsW/4, mOptionsW/4);
 
-            for (auto &&graph : mByTempoGraphs) {
-                graph->setGeometry(0, y, width() - mOptionsW - sbe, mGraphHeight);
-                graph->update();
-                y += graph->height();
-            }
-            if ( y > 0 )
-                wid->setFixedSize(width() - sbe - mOptionsW, y);
-            mTempoScrollArea->repaint();
-         }
 
-    }
-    update();
+    mOptionsWidget->setFixedWidth(mOptionsW);
+
+    mPageWidget->resize(mOptionsW, mRuler->height());
+     /* -------------------------------------- mResultsGroup---------------------------------------------------*/
+
+     /* - mTabDisplayMCMC */
+
+     /*  Display Options layout */
+
+    mXScaleSpin->setLocale(QLocale(AppSettings::mLanguage, AppSettings::mCountry));
+
+    mSpanTitle->setFixedSize(mOptionsW, titleHeight);
+    mDisplayStudyBut->setFixedSize(mOptionsW - 2*mMargin, buttonHeight);
+    mSpanLab->setFixedSize( fm.boundingRect(mSpanLab->text()).width(), labelHeight);
+
+    mCurrentXMinEdit->setFixedSize(wEdit, lineEditHeight);
+    mCurrentXMaxEdit->setFixedSize(wEdit, lineEditHeight);
+    mXScaleLab->setFixedWidth( int (fm.width(mXScaleLab->text())));
+    mXScaleSpin->setFixedSize(wEdit, spinBoxHeight);
+
+    mMajorScaleLab->setFixedSize(mOptionsW - wEdit - 2* mMargin, labelHeight);
+    mMajorScaleEdit->setFixedSize(wEdit, lineEditHeight);
+
+    mMinorScaleLab->setFixedSize(mOptionsW - wEdit - 2* mMargin, labelHeight);
+    mMinorScaleEdit->setFixedSize(wEdit, lineEditHeight);
+
+    /* -------------------------------------- Graphic Options (old mDisplayGroup) ---------------------------------------------------*/
+    mGraphicTitle->setFixedSize(mOptionsW, titleHeight);
+    mYScaleLab->setFixedSize(fm.boundingRect(mYScaleLab->text()).width(), labelHeight);
+
+    mYScaleSpin->setFixedSize(mCurrentXMinEdit->width(), spinBoxHeight);
+    mLabFont->setFixedSize(fm.boundingRect(mLabFont->text()).width(), labelHeight);
+
+    mFontBut->setFixedSize(mOptionsW - fm.boundingRect(mLabFont->text()).width()  - mMargin, buttonHeight);
+    mLabThickness->setFixedSize(fm.boundingRect(mLabThickness->text()).width(), comboBoxHeight);
+
+
+#ifdef Q_OS_MAC
+    const int arrowWidth = 12;
+#endif
+
+#ifdef Q_OS_WIN
+    const int arrowWidth = 0;
+#endif
+
+#ifdef Q_OS_LINUX
+    const int arrowWidth = 0;
+#endif
+
+    mThicknessCombo->setFixedSize( fm.boundingRect("999 px").width() + 2*mMargin + arrowWidth, comboBoxHeight);
+    mLabOpacity->setFixedSize(mOptionsW/2 - mMargin, labelHeight);
+    mOpacityCombo->setFixedSize(fm.boundingRect("9999 %").width() + 2*mMargin, comboBoxHeight);
+
+     /* -------------------------------------- mChainsGroup---------------------------------------------------*/
+
+    mAllChainsCheck->setFixedSize(mOptionsW - 2*mMargin, checkBoxHeight);
+
+    mChainsTitle->setFixedSize(mOptionsW, titleHeight);
+    mAllChainsCheck->setFixedSize(mOptionsW - 2*mMargin, checkBoxHeight);
+
+    if (mCheckChainChecks.isEmpty())
+           for (auto check : mCheckChainChecks)
+                check->setFixedSize(mOptionsW - 2*mMargin, checkBoxHeight);
+
+    if (mChainRadios.isEmpty())
+           for (auto radio : mChainRadios)
+                radio->setFixedSize(mOptionsW - 2*mMargin, radioButtonHeight);
+
+
+    // ------------------------------------
+    //  Density Options
+    // ------------------------------------
+    mDensityOptsTitle->setFixedSize(mOptionsW, titleHeight);
+    mCredibilityCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
+    mThreshLab->setFixedSize(fm.boundingRect(mThreshLab->text()).width(), lineEditHeight);
+    mThresholdEdit->setFixedSize(wEdit, lineEditHeight);
+    mFFTLenLab->setFixedSize(fm.boundingRect(mFFTLenLab->text()).width(), comboBoxHeight);
+    mFFTLenCombo->setFixedSize(mOptionsW/2 - mMargin, comboBoxHeight);
+    mBandwidthLab->setFixedSize(fm.boundingRect(mBandwidthLab->text()).width(), lineEditHeight);
+    mBandwidthEdit->setFixedSize(wEdit, lineEditHeight);
+
+    // set the variable and the graphic type
+    mCurrentTypeGraph = GraphViewResults::ePostDistrib;
+    mCurrentVariable = GraphViewResults::eTheta;
+    
+    if (mHasPhases) {
+        mGraphListTab->setTab(1, false);
+        mGraphListTab->setTabVisible(1, true);
+        mGraphListTab->setTabVisible(2, true);
+        mGraphTypeTabs->setTab(0, false);
+
+     } else {
+        mGraphListTab->setTabVisible(2, false);
+        mGraphListTab->setTabVisible(1, false);
+        mGraphListTab->setTab(0, false);
+        mGraphTypeTabs->setTab(0, false);
+     }
 
 }
 
+/**
+ * @brief ResultsView::updateControls set controls according to the differents tabs positions, and calls updateLayout
+*/
+void ResultsView::updateControls()
+{
+    bool isPostDistrib = (mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+    
+    // -------------------------------------------------------------------------------------
+    //  Update controls depending on current graph list
+    // -------------------------------------------------------------------------------------
+    if(mGraphListTab->currentIndex() == 0)
+    {
+        mGraphTypeTabs->setTabVisible(1, true); // History Plot
+        mGraphTypeTabs->setTabVisible(2, true); // Acceptance Rate
+        mGraphTypeTabs->setTabVisible(3, true); // Autocorrelation
+        
+        mResultsGroup->setVisible(true);
+        mTempoGroup->setVisible(false);
+        
+        mEventsfoldCheck->setVisible(false);
+        
+        bool showCalibControl = isPostDistrib && mDataThetaRadio->isChecked() && mDatesfoldCheck->isChecked();
+        
+        mDataCalibCheck->setVisible(showCalibControl);
+        mWiggleCheck->setVisible(showCalibControl);
+    }
+    else if(mGraphListTab->currentIndex() == 1)
+    {
+        mGraphTypeTabs->setTabVisible(1, true); // History Plot
+        mGraphTypeTabs->setTabVisible(2, true); // Acceptance Rate
+        mGraphTypeTabs->setTabVisible(3, true); // Autocorrelation
+        
+        mResultsGroup->setVisible(true);
+        mTempoGroup->setVisible(false);
+        
+        mEventsfoldCheck->setVisible(true);
+        mDatesfoldCheck->setEnabled(mEventsfoldCheck->isChecked());
+        
+        if(!mEventsfoldCheck->isChecked())
+        {
+            mDatesfoldCheck->setChecked(false);
+        }
+        
+        bool showCalibControl = isPostDistrib && mEventsfoldCheck->isChecked() && mDatesfoldCheck->isChecked() && mDataThetaRadio->isChecked();
+        
+        mDataCalibCheck->setVisible(showCalibControl);
+        mWiggleCheck->setVisible(showCalibControl);
+    }
+    else if(mGraphListTab->currentIndex() == 2)
+    {
+        mGraphTypeTabs->setTabVisible(1, false); // History Plot
+        mGraphTypeTabs->setTabVisible(2, false); // Acceptance Rate
+        mGraphTypeTabs->setTabVisible(3, false); // Autocorrelation
+        mGraphTypeTabs->setTab(0, true);
+        
+        mResultsGroup->setVisible(false);
+        mTempoGroup->setVisible(true);
+        
+        mTempoCredCheck->setVisible(mTempoRadio->isChecked());
+        mTempoErrCheck->setVisible(mTempoRadio->isChecked());
+    }
+    
+    // -------------------------------------------------------------------------------------
+    //  Update controls depending on current display tab
+    // -------------------------------------------------------------------------------------
+    mTabDisplay->setVisible(mTabDisplayMCMC->currentIndex() == 0);
+    mTabMCMC->setVisible(mTabDisplayMCMC->currentIndex() == 1);
+    
+    if (mCurrentVariable == GraphViewResults::eTheta
+        || mCurrentVariable == GraphViewResults::eTempo
+        || mCurrentVariable == GraphViewResults::eActivity)
+    {
+        mDisplayStudyBut->setText(tr("Study Period Display"));
+        mDisplayStudyBut->setVisible(true);
+    }
+    else if (mCurrentVariable == GraphViewResults::eSigma || (mCurrentVariable == GraphViewResults::eDuration))
+    {
+        mDisplayStudyBut->setText(tr("Fit Display"));
+        mDisplayStudyBut->setVisible(true);
+    }
+    else{
+        mDisplayStudyBut->setVisible(false);
+    }
+    
+    // -------------------------------------------------------------------------------------
+    //  MCMC Display options are not visible for mCurrentVariable = Tempo or Activity
+    // -------------------------------------------------------------------------------------
+    if(mCurrentVariable == GraphViewResults::eTempo || mCurrentVariable == GraphViewResults::eActivity)
+    {
+        mTabDisplayMCMC->setTabVisible(1, false);
+        mTabDisplayMCMC->setTab(0, false);
+    }
+    else
+    {
+        mTabDisplayMCMC->setTabVisible(1, true);
+    }
+    
+    // -------------------------------------------------------------------------------------
+    //  Pagination options
+    // -------------------------------------------------------------------------------------
+    bool showPagination = (mTabPageSaving->currentIndex() == 0);
+    
+    mPageWidget->setVisible(showPagination);
+    mToolsWidget->setVisible(!showPagination);
+    
+    QList<GraphViewResults*> graphsSelected = currentGraphs(true);
+    bool hasSelection = (graphsSelected.size() > 0);
+    
+    mImageSaveBut->setVisible(hasSelection);
+    mImageClipBut->setVisible(hasSelection);
+    mResultsClipBut->setVisible(hasSelection);
+    mDataSaveBut->setVisible(hasSelection);
+    
+    mExportImgBut->setVisible(!hasSelection);
+    mExportResults->setVisible(!hasSelection);
+    
+
+    // -------------------------------------------------------------------------------------
+    //  To be moved ??
+    // -------------------------------------------------------------------------------------
+    QList<GraphViewResults*> graphs = currentGraphs(hasSelection);
+    
+    mCurrentPage = 0;
+    mMaximunNumberOfVisibleGraph = graphs.size();
+    
+    updateLayout();
+}
+
+void ResultsView::updateGraphTypeOptions()
+{
+    // ------------------------------------
+    //  MCMC Chains
+    //  Switch between checkBoxes or Radio-buttons for chains
+    // ------------------------------------
+    bool isPostDistrib = (mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+    
+    mAllChainsCheck->setVisible(isPostDistrib);
+    
+    for(auto &&checkChain : mCheckChainChecks){
+        checkChain->setVisible(isPostDistrib);
+    }
+    
+    for(auto &&chainRadio : mChainRadios){
+        chainRadio->setVisible(!isPostDistrib);
+    }
+
+    // ------------------------------------
+    //  Density Options
+    // ------------------------------------
+    mDensityOptsGroup->setVisible(isPostDistrib && (mCurrentVariable != GraphViewResults::eTempo && mCurrentVariable != GraphViewResults::eActivity));
+    
+    mCredibilityCheck->setVisible(isPostDistrib);
+    mThreshLab->setVisible(isPostDistrib);
+    mFFTLenLab->setVisible(isPostDistrib);
+    mBandwidthLab->setVisible(isPostDistrib);
+    
+    // ------------------------------------
+    //  Display Options
+    // ------------------------------------
+    if(isPostDistrib)
+    {
+        QString fitText = tr("Fit Display");
+        if(mCurrentVariable == GraphViewResults::eTheta || mCurrentVariable == GraphViewResults::eTempo || mCurrentVariable == GraphViewResults::eActivity) {
+            fitText = tr("Study Period Display");
+        }
+        mDisplayStudyBut->setText(fitText);
+    }
+}
+
+#pragma mark Tabs changes listeners
+
+/**
+ * This is called when mGraphListTab is clicked.
+ * MCMC display options are only available for mCurrentVariable in : eTheta, eSigma, eDuration
+ * so mTabDisplayMCMC must be displayed accordingly
+ */
+void ResultsView::setGraphListTab(int tabIndex)
+{
+    if (tabIndex == 2 || tabIndex == 3)
+    {
+        mCurrentTypeGraph = GraphViewResults::ePostDistrib;
+    }
+    
+    createGraphs();
+}
+
+void ResultsView::setCurrentVariable()
+{
+    if (mDataThetaRadio->isChecked())
+    {
+        mCurrentVariable = GraphViewResults::eTheta;
+    }
+    else if (mDataSigmaRadio->isChecked())
+    {
+        mCurrentVariable = GraphViewResults::eSigma;
+    }
+    else if (mDurationRadio->isChecked())
+    {
+        mCurrentVariable = GraphViewResults::eDuration;
+    }
+    else if (mTempoRadio->isChecked())
+    {
+        mCurrentVariable = GraphViewResults::eTempo;
+    }
+    else if (mActivityRadio->isChecked())
+    {
+        mCurrentVariable = GraphViewResults::eActivity;
+    }
+    
+    createGraphs();
+}
+
+void ResultsView::setDisplayTab(int tabIndex)
+{
+    updateControls();
+}
+
+void ResultsView::setPageSavingTab(int tabIndex)
+{
+    updateControls();
+}
+
+#pragma mark Controls listener
 
 void ResultsView::clearResults()
 {
-
-     if (mChains.size() != mCheckChainChecks.size() ) {
-
+     if (mModel->mChains.size() != mCheckChainChecks.size() )
+     {
         for (auto &&check : mCheckChainChecks )
             delete check;
 
@@ -1715,52 +1381,10 @@ void ResultsView::clearResults()
         mChainRadios.clear();
      }
 
-    for (auto &&graph : mByEventsGraphs)
-        delete graph;
-
-    mByEventsGraphs.clear();
-    mByPhasesGraphs.clear();
-    mByTempoGraphs.clear();
-
-    if (mEventsScrollArea) {
-        mStack->removeWidget(mEventsScrollArea);
-        delete mEventsScrollArea;
-    }
-    if (mPhasesScrollArea) {
-        mStack->removeWidget(mPhasesScrollArea);
-        delete mPhasesScrollArea;
-    }
-
-    if (mTempoScrollArea) {
-        mStack->removeWidget(mTempoScrollArea);
-        delete mTempoScrollArea;
-    }
-    mEventsScrollArea = nullptr;
-    mPhasesScrollArea = nullptr;
-    mTempoScrollArea = nullptr;
-
-    mTabEventsIndex = 0;
-    mTabPhasesIndex = 0;
-    mTabTempoIndex = 0;
-
-}
-
-/**
- * @brief ResultsView::updateFormatSetting come from AppSettingsDialog
- * @param model
- */
-void ResultsView::updateFormatSetting(Model* model)
-{
-    if (!mModel && !model)
-        return;
-
-    if (model)
-        mModel = model;
-
-    mModel->updateFormatSettings();
-    applyAppSettings();
-    updateControls();
-
+    deleteAllGraphsInList(mByEventsGraphs);
+    deleteAllGraphsInList(mByPhasesGraphs);
+    deleteAllGraphsInList(mByTempoGraphs);
+    deleteAllGraphsInList(mByCurveGraphs);
 }
 
 /**
@@ -1775,25 +1399,19 @@ void ResultsView::initResults(Model* model)
     if (model)
         mModel = model;
 
-    mChains = mModel->mChains;
-    mSettings = mModel->mSettings;
-    mMCMCSettings = mModel->mMCMCSettings;
-
     clearResults();
 
-    QFontMetricsF gfm(mGraphFont);
+    QFontMetricsF gfm(font());
     QLocale locale = QLocale();
-    mMarginLeft = 0;//gfm.width(stringForGraph(mModel->mSettings.getTminFormated()));
-     //       std::max(gfm.width(locale.toString(DateUtils::convertToAppSettingsFormat(mModel->mSettings.mTmin))),
-         //                                            gfm.width(locale.toString(DateUtils::convertToAppSettingsFormat(mModel->mSettings.mTmin)))) + 5;
+    mMarginLeft = 0;
     Scale xScale;
     xScale.findOptimal(mModel->mSettings.mTmin, mModel->mSettings.mTmax, 7);
 
     mMajorScale = xScale.mark;
     mMinorCountScale = 4;
 
-    mRuler->setRange(mSettings.getTminFormated(), mSettings.getTmaxFormated());
-    mRuler->setCurrent(mSettings.getTminFormated(), mSettings.getTmaxFormated());
+    mRuler->setRange(mModel->mSettings.getTminFormated(), mModel->mSettings.getTmaxFormated());
+    mRuler->setCurrent(mModel->mSettings.getTminFormated(), mModel->mSettings.getTmaxFormated());
     mRuler->setScaleDivision(mMajorScale, mMinorCountScale);
 
     mMajorScaleEdit->setText(locale.toString(mMajorScale));
@@ -1804,16 +1422,14 @@ void ResultsView::initResults(Model* model)
     // set the variable and the graphic type
 
     if (mHasPhases) {
-        mTabByScene->setTabVisible(1, true); // Phases
-        mTabByScene->setTabVisible(2, true); // Tempo
-        mTabByScene->setTab(1, false);        // Phases
-        updateVisibleTabs(1);
+        mGraphListTab->setTabVisible(1, true); // Phases
+        mGraphListTab->setTabVisible(2, true); // Tempo
+        mGraphListTab->setTab(1, false);        // Phases
 
      } else {
-        mTabByScene->setTabVisible(1, false); // Phases
-        mTabByScene->setTabVisible(2, false); // Tempo
-        mTabByScene->setTab(0, false);        // Events
-        updateVisibleTabs(0);
+        mGraphListTab->setTabVisible(1, false); // Phases
+        mGraphListTab->setTabVisible(2, false); // Tempo
+        mGraphListTab->setTab(0, false);        // Events
      }
 
 
@@ -1822,7 +1438,7 @@ void ResultsView::initResults(Model* model)
      *  Create Chains option controls (radio and checkboxes under "MCMC Chains")
      * ---------------------------------------------------- */
     if (mCheckChainChecks.isEmpty()) {
-        for (int i=0; i<mChains.size(); ++i) {
+        for (int i=0; i<mModel->mChains.size(); ++i) {
             CheckBox* check = new CheckBox(tr("Chain %1").arg(QString::number(i+1)), mChainsGroup);
             connect(check, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
             check->setVisible(true);
@@ -1849,19 +1465,17 @@ void ResultsView::initResults(Model* model)
 
     mResultMaxDuration = 0.;
     mResultMaxVariance = 0.;
-    mModel->initDensities(getFFTLength(), getBandwidth(), getThreshold());
-
+    
+    mModel->initDensities();
     setStudyPeriod();
 
     showInfos(false);
 
     //mCurrentTypeGraph = GraphViewResults::ePostDistrib;
     mCurrentVariable = GraphViewResults::eTheta;
-    mTabs->tabClicked(-1); // It is connect to ResultsView::graphTypeChange() and to ResultsView::updateLayout(), the parameter is not used
-    // updateLayout();
+    mGraphTypeTabs->tabClicked(-1);
+    
     updateControls();
-
-
 }
 
 /**
@@ -1877,16 +1491,12 @@ void ResultsView::updateResults(Model* model)
 
     mModel = model;
 
-    mChains = mModel->mChains;
-    mSettings = mModel->mSettings;
-    mMCMCSettings = mModel->mMCMCSettings;
-
     /* ----------------------------------------------------
     *  Update Chains option controls (radio and checkboxes under "MCMC Chains")
     * ---------------------------------------------------- */
 
     if (mCheckChainChecks.isEmpty()) {
-        for (int i = 0; i<mChains.size(); ++i) {
+        for (int i = 0; i<mModel->mChains.size(); ++i) {
             CheckBox* check = new CheckBox(tr("Chain %1").arg(QString::number(i+1)), mChainsGroup);
             connect(check, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
             check->setVisible(true);
@@ -1903,7 +1513,7 @@ void ResultsView::updateResults(Model* model)
         }
     } else {
 
-        for (int i = 0; i<mChains.size(); ++i) {
+        for (int i = 0; i<mModel->mChains.size(); ++i) {
            mCheckChainChecks[i]->setVisible(true);
            mChainRadios[i]->setVisible(true);
         }
@@ -1920,535 +1530,435 @@ void ResultsView::updateResults(Model* model)
     * before calculation
     * ------------------------------------------------------------*/
 
-    mModel->updateDensities(getFFTLength(), getBandwidth(), getThreshold());
-    /* ----------------------------------------------------
-    *  Events Views : generate all phases graph
-    *  No posterior density has been computed yet!
-    *  Graphs are empty at this moment
-    * ----------------------------------------------------*/
-//    if (mHasPhases)
-//        mTabByScene->setTab(1, false);
-        //createPhasesScrollArea(mTabPhasesIndex);
-//    else
- //       mTabByScene->setTab(0, false);
-        //createEventsScrollArea(mTabEventsIndex);
-
-    // ------------------------------------------------------------
-   // showInfos(false);
-    updateControls();
-
-    updateTabByScene();
-
-
+    mModel->updateDensities();
+    
+    createGraphs();
 }
 
+#pragma mark Re-create graphs
 
-void ResultsView::createEventsScrollArea(const int idx)
+void ResultsView::createGraphs()
 {
-
-    qDebug()<<"ResultsView::createEventsScrollArea()";
-    if (!mEventsScrollArea) {
-        mEventsScrollArea = new QScrollArea();
-        mEventsScrollArea->setMouseTracking(true);
-        mStack->addWidget(mEventsScrollArea);
-        mStack->setMouseTracking(true);
+    if(!mModel){
+        return;
     }
-
-    if (!mByEventsGraphs.isEmpty())
-        for (auto && g : mByEventsGraphs) {
-            disconnect(g, &GraphViewResults::selected, this, &ResultsView::updateLayout);
-            delete g;
-        }
-    mByEventsGraphs.clear();
-
-
-    // eventsWidget Creation in the idx limit
-    QWidget* eventsWidget = new QWidget(mEventsScrollArea);
-    eventsWidget->setMouseTracking(true);
-
-    QList<Event*>::const_iterator iterEvent = mModel->mEvents.cbegin();
-    int counter (1);
-
-    /*
-     * Looking for at least one event selected,
-     * if not we show all events
-     */
-    bool showAllEvents (true);
-    for (auto && ev : mModel->mEvents) {
-        if (ev->mIsSelected) {
-            showAllEvents = false;
-            break;
-        }
+    
+    if (mGraphListTab->currentIndex() == 0)
+    {
+        createByEventsGraphs();
     }
+    else if (mGraphListTab->currentIndex() == 1)
+    {
+        createByPhasesGraphs();
+    }
+    else if (mGraphListTab->currentIndex() == 2)
+    {
+        createByTempoGraphs();
+    }
+    else if (mGraphListTab->currentIndex() == 3)
+    {
+        createByCurveGraph();
+    }
+}
 
+/**
+ * this method (re-)creates all the events graphs
+ */
+void ResultsView::createByEventsGraphs()
+{
+    Q_ASSERT(mModel);
+    
+    // ----------------------------------------------------------------------
+    //  Disconnect and delete existing graphs
+    // ----------------------------------------------------------------------
+    deleteAllGraphsInList(mByEventsGraphs);
+    
+    // ----------------------------------------------------------------------
+    // Show all events unless at least one is selected
+    // ----------------------------------------------------------------------
+    bool showAllEvents = ! mModel->hasSelectedEvents();
 
-    while (iterEvent!=mModel->mEvents.cend()) {
-        if ((*iterEvent)->mIsSelected || showAllEvents) {
-            if ( (idx*mNumberOfGraph)<counter && counter <= ((idx+1)*mNumberOfGraph) ) {
+    // ----------------------------------------------------------------------
+    //  Iterate through all events and create corresponding graphs
+    // ----------------------------------------------------------------------
+    QWidget* eventsWidget = mEventsScrollArea->widget();
+    int graphIndex = 0;
+    
+    for(int i=0; i<mModel->mEvents.size(); ++i)
+    {
+        Event* event = mModel->mEvents[i];
+        if(event->mIsSelected || showAllEvents)
+        {
+            if(graphIndexIsInCurrentPage(graphIndex))
+            {
                 GraphViewEvent* graphEvent = new GraphViewEvent(eventsWidget);
-                connect(graphEvent, &GraphViewResults::selected, this, &ResultsView::updateLayout);
                 graphEvent->setSettings(mModel->mSettings);
-                graphEvent->setMCMCSettings(mModel->mMCMCSettings, mChains);
-                graphEvent->setEvent((*iterEvent));
-                graphEvent->setGraphFont(mGraphFont);
+                graphEvent->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+                graphEvent->setEvent(event);
+                graphEvent->setGraphFont(font());
                 graphEvent->setGraphsThickness(mThicknessCombo->currentIndex());
                 graphEvent->changeXScaleDivision(mMajorScale, mMinorCountScale);
-
+                
                 mByEventsGraphs.append(graphEvent);
-              }
-            ++counter; //count one event graph
-            if (mDatesfoldCheck->isChecked()) {
-                    if ((*iterEvent)->mType != Event::eKnown) {
-                        for (int j=0; j<(*iterEvent)->mDates.size(); ++j) {
-                            if ( (idx*mNumberOfGraph)<counter && counter <= (idx+1)*mNumberOfGraph) {
-                                Date& date = (*iterEvent)->mDates[j];
-                                /* ----------------------------------------------------
-                                *  This just creates the view for the date.
-                                *  It sets the Date which triggers an update() to repaint the view.
-                                *  The refresh() function which actually creates the graph curves will be called later.
-                                * ---------------------------------------------------- */
+                connect(graphEvent, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+                ++graphIndex;
+                
+                if(mDatesfoldCheck->isChecked())
+                {
+                    for (int j=0; j<event->mDates.size(); ++j)
+                    {
+                        if(graphIndexIsInCurrentPage(graphIndex))
+                        {
+                            Date& date = event->mDates[j];
+                            
+                            GraphViewDate* graphDate = new GraphViewDate(eventsWidget);
+                            graphDate->setSettings(mModel->mSettings);
+                            graphDate->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+                            graphDate->setDate(&date);
+                            graphDate->setGraphFont(font());
+                            graphDate->setGraphsThickness(mThicknessCombo->currentIndex());
+                            graphDate->changeXScaleDivision(mMajorScale, mMinorCountScale);
+                            graphDate->setColor(event->mColor);
+                            graphDate->setGraphsOpacity(mOpacityCombo->currentIndex()*10);
 
-                                GraphViewDate* graphDate = new GraphViewDate(eventsWidget);
-                                graphDate->setSettings(mModel->mSettings);
-                                graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
-                                graphDate->setDate(&date);
-                                graphDate->setColor((*iterEvent)->mColor);
-
-                                graphDate->setGraphFont(mGraphFont);
-                                graphDate->setGraphsThickness(mThicknessCombo->currentIndex());
-                                graphDate->setGraphsOpacity(mOpacityCombo->currentIndex()*10);
-                                graphDate->changeXScaleDivision(mMajorScale, mMinorCountScale);
-
-                                connect(graphDate, &GraphViewResults::selected, this, &ResultsView::updateLayout);
-                                mByEventsGraphs.append(graphDate);
-
-                            }
-                            ++counter;
+                            mByEventsGraphs.append(graphDate);
+                            connect(graphDate, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+                            ++graphIndex;
                         }
                     }
-
-            }
-        }
-        ++iterEvent;
-    }
-
-    mEventsScrollArea->setWidget(eventsWidget);
-
-    mEventsScrollArea->update();
-    qDebug()<<"ResultsView::createEventsScrollArea()"<<counter<<" items";
-    mStack->setMouseTracking(true);
-    emit generateCurvesRequested();
-
-}
-
-void ResultsView::createPhasesScrollArea(const int idx)
-{
-    qDebug()<<"ResultsView::createPhasesScrollArea()";
-
-    if (!mPhasesScrollArea) {
-        mPhasesScrollArea = new QScrollArea(this);
-        mPhasesScrollArea->setMouseTracking(true);
-        mStack->addWidget(mPhasesScrollArea);
-        mStack->setMouseTracking(true);
-    }
-    if ( !mByPhasesGraphs.isEmpty())
-        for (auto&& g : mByPhasesGraphs) {
-          disconnect(g, &GraphViewResults::selected, this, &ResultsView::updateLayout);
-          delete g;
-         }
-    mByPhasesGraphs.clear();
-
-
-    QWidget* phasesWidget = new QWidget(this);
-    phasesWidget->setMouseTracking(true);
-
-    // In a Phases at least, we have one Event with one Date
-    //mByPhasesGraphs.reserve( (int)(3*mModel->mPhases.size()) );
-
-    QList<Phase*>::const_iterator iterPhase = mModel->mPhases.cbegin();
-    int counter (1);
-
-    /*
-     * Looking for at least one phase selected,
-     * if not we show all phases
-     */
-    bool showAllPhases (true);
-    for (auto && ph : mModel->mPhases) {
-        if (ph->mIsSelected) {
-            showAllPhases = false;
-            break;
-        }
-    }
-
-    while (iterPhase!=mModel->mPhases.cend()) {
-        if ((*iterPhase)->mIsSelected || showAllPhases) {
-            if ( (idx*mNumberOfGraph)<counter && counter <= ((idx+1)*mNumberOfGraph) ) {
-                GraphViewPhase* graphPhase = new GraphViewPhase(phasesWidget);
-                graphPhase->setSettings(mModel->mSettings);
-                graphPhase->setMCMCSettings(mModel->mMCMCSettings, mChains);
-                graphPhase->setPhase((*iterPhase));
-                graphPhase->setGraphFont(mGraphFont);
-                graphPhase->setGraphsThickness(mThicknessCombo->currentIndex());
-                graphPhase->changeXScaleDivision(mMajorScale, mMinorCountScale);
-                connect(graphPhase, &GraphViewResults::selected, this, &ResultsView::updateLayout);
-                mByPhasesGraphs.append(graphPhase);
-             }
-            ++ counter;//count one phase graph
-            if (mEventsfoldCheck->isChecked()) {
-
-                QList<Event*>::const_iterator iterEvent = (*iterPhase)->mEvents.cbegin();
-                while (iterEvent!=(*iterPhase)->mEvents.cend()) {
-                    if ( (idx*mNumberOfGraph)<counter && counter <= (idx+1)*mNumberOfGraph) {
-                        GraphViewEvent* graphEvent = new GraphViewEvent(phasesWidget);
-                        graphEvent->setSettings(mModel->mSettings);
-                        graphEvent->setMCMCSettings(mModel->mMCMCSettings, mChains);
-                        graphEvent->setEvent((*iterEvent));
-                        graphEvent->setGraphFont(mGraphFont);
-                        graphEvent->setGraphsThickness(mThicknessCombo->currentIndex());
-                        graphEvent->changeXScaleDivision(mMajorScale, mMinorCountScale);
-                        connect(graphEvent, &GraphViewResults::selected, this, &ResultsView::updateLayout);
-                        mByPhasesGraphs.append(graphEvent);
-                    }
-                    ++ counter; // count one Event
-                    // --------------------------------------------------
-                    //  This just creates the GraphView for the date (no curve yet)
-                    // --------------------------------------------------
-                    if (mDatesfoldCheck->isChecked()) {
-                        for (int j=0; j<(*iterEvent)->mDates.size(); ++j) {
-                            if ( (idx*mNumberOfGraph)<counter && counter <= (idx+1)*mNumberOfGraph) {
-                                Date& date = (*iterEvent)->mDates[j];
-                                GraphViewDate* graphDate = new GraphViewDate(phasesWidget);
-                                graphDate->setSettings(mModel->mSettings);
-                                graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
-                                graphDate->setDate(&date);
-                                graphDate->setColor((*iterEvent)->mColor);
-                                graphDate->setGraphFont(mGraphFont);
-                                graphDate->setGraphsThickness(mThicknessCombo->currentIndex());
-                                graphDate->changeXScaleDivision(mMajorScale, mMinorCountScale);
-                                connect(graphDate, &GraphViewResults::selected, this, &ResultsView::updateLayout);
-                                mByPhasesGraphs.append(graphDate);
-                            }
-                            ++ counter; //count one Date
-                        }
-                    }
-                    ++iterEvent;
                 }
             }
         }
-        ++iterPhase;
-
     }
 
-    mPhasesScrollArea->setWidget(phasesWidget);
-    mPhasesScrollArea->update();
-
+    mEventsScrollArea->update();
     emit generateCurvesRequested();
 }
 
-void ResultsView::createTempoScrollArea(const int idx)
+void ResultsView::createByPhasesGraphs()
 {
-    qDebug()<<"ResultsView::createTempoScrollArea()";
-
-    if (!mTempoScrollArea) {
-        mTempoScrollArea = new QScrollArea(this);
-        mTempoScrollArea->setMouseTracking(true);
-        mStack->addWidget(mTempoScrollArea);
-        mStack->setMouseTracking(true);
-    }
-    if ( !mByTempoGraphs.isEmpty())
-        for (auto&& g : mByTempoGraphs) {
-          disconnect(g, &GraphViewTempo::selected, this, &ResultsView::updateLayout);
-          delete g;
-         }
-    mByTempoGraphs.clear();
-
-
-    QWidget* tempoWidget = new QWidget(this);
-    tempoWidget->setMouseTracking(true);
-
-    // In a Phases at least, we have one Event with one Date
-    //mByPhasesGraphs.reserve( (int)(3*mModel->mPhases.size()) );
-
-    QList<Phase*>::const_iterator iterPhase = mModel->mPhases.cbegin();
-    int counter (1);
-
-    /*
-     * Looking for at least one phase selected,
-     * if not we show all phases
-     */
-    bool showAllPhases (true);
-    for (auto && ph : mModel->mPhases) {
-        if (ph->mIsSelected) {
-            showAllPhases = false;
-            break;
-        }
-    }
-
-    while (iterPhase!=mModel->mPhases.cend()) {
-        if ((*iterPhase)->mIsSelected || showAllPhases) {
-            if ( (idx*mNumberOfGraph)<counter && counter <= ((idx+1)*mNumberOfGraph) ) {
-                GraphViewTempo* graphTempo = new GraphViewTempo(tempoWidget);
-                graphTempo->setSettings(mModel->mSettings);
-                graphTempo->setMCMCSettings(mModel->mMCMCSettings, mChains);
-                graphTempo->setPhase((*iterPhase));
-                graphTempo->setGraphFont(mGraphFont);
-                graphTempo->setGraphsThickness(mThicknessCombo->currentIndex());
-                graphTempo->changeXScaleDivision(mMajorScale, mMinorCountScale);
-                connect(graphTempo, &GraphViewTempo::selected, this, &ResultsView::updateLayout);
-                mByTempoGraphs.append(graphTempo);
-             }
-            ++ counter;//count one phase graph
-
-        }
-        ++iterPhase;
-
-    }
-
-    mTempoScrollArea->setWidget(tempoWidget);
-    mTempoScrollArea->update();
-    //qDebug()<<"ResultsView::createTempoScrollArea()"<<counter<<" items";
-    emit generateCurvesRequested();
-}
-
-void ResultsView::createCurveScrollArea(const int idx)
-{
-    if(!mCurveScrollArea)
-    {
-        mCurveScrollArea = new QScrollArea(this);
-        mCurveScrollArea->setMouseTracking(true);
-        mStack->addWidget(mCurveScrollArea);
-        mStack->setMouseTracking(true);
-    }
+    Q_ASSERT(mModel);
     
-    mCurveGraphs.clear();
+    // ----------------------------------------------------------------------
+    //  Disconnect and delete existing graphs
+    // ----------------------------------------------------------------------
+    deleteAllGraphsInList(mByPhasesGraphs);
+    
+    // ----------------------------------------------------------------------
+    // Show all, unless at least one is selected
+    // ----------------------------------------------------------------------
+    bool showAllPhases = ! mModel->hasSelectedPhases();
 
-    QWidget* widget = new QWidget(this);
-    widget->setMouseTracking(true);
+    // ----------------------------------------------------------------------
+    //  Iterate through all, and create corresponding graphs
+    // ----------------------------------------------------------------------
+    QWidget* phasesWidget = mPhasesScrollArea->widget();
+    int graphIndex = 0;
+    
+    for(int i=0; i<mModel->mPhases.size(); ++i)
+    {
+        Phase* phase = mModel->mPhases[i];
+        if(phase->mIsSelected || showAllPhases)
+        {
+            if(graphIndexIsInCurrentPage(graphIndex))
+            {
+                GraphViewPhase* graph = new GraphViewPhase(phasesWidget);
+                graph->setSettings(mModel->mSettings);
+                graph->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+                graph->setPhase(phase);
+                graph->setGraphFont(font());
+                graph->setGraphsThickness(mThicknessCombo->currentIndex());
+                graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
+                
+                mByPhasesGraphs.append(graph);
+                connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+                ++graphIndex;
+            }
+            
+            if(mEventsfoldCheck->isChecked())
+            {
+                for(int j=0; j<phase->mEvents.size(); ++j)
+                {
+                    Event* event = phase->mEvents[j];
+                    
+                    if(graphIndexIsInCurrentPage(graphIndex))
+                    {
+                        GraphViewEvent* graph = new GraphViewEvent(phasesWidget);
+                        graph->setSettings(mModel->mSettings);
+                        graph->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+                        graph->setEvent(event);
+                        graph->setGraphFont(font());
+                        graph->setGraphsThickness(mThicknessCombo->currentIndex());
+                        graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
+                        
+                        mByPhasesGraphs.append(graph);
+                        connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+                        ++graphIndex;
+                    }
+                        
+                    if(mDatesfoldCheck->isChecked())
+                    {
+                        for (int k=0; k<event->mDates.size(); ++k)
+                        {
+                            if(graphIndexIsInCurrentPage(graphIndex))
+                            {
+                                Date& date = event->mDates[k];
+                                
+                                GraphViewDate* graph = new GraphViewDate(phasesWidget);
+                                graph->setSettings(mModel->mSettings);
+                                graph->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+                                graph->setDate(&date);
+                                graph->setGraphFont(font());
+                                graph->setGraphsThickness(mThicknessCombo->currentIndex());
+                                graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
+                                graph->setColor(event->mColor);
+                                graph->setGraphsOpacity(mOpacityCombo->currentIndex()*10);
+
+                                mByPhasesGraphs.append(graph);
+                                connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+                                ++graphIndex;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    mPhasesScrollArea->update();
+    emit generateCurvesRequested();
+}
+
+void ResultsView::createByTempoGraphs()
+{
+    Q_ASSERT(mModel);
+    
+    // ----------------------------------------------------------------------
+    //  Disconnect and delete existing graphs
+    // ----------------------------------------------------------------------
+    deleteAllGraphsInList(mByTempoGraphs);
+    
+    // ----------------------------------------------------------------------
+    // Show all, unless at least one is selected
+    // ----------------------------------------------------------------------
+    bool showAllPhases = ! mModel->hasSelectedPhases();
+
+    // ----------------------------------------------------------------------
+    //  Iterate through all, and create corresponding graphs
+    // ----------------------------------------------------------------------
+    QWidget* tempoWidget = mTempoScrollArea->widget();
+    int graphIndex = 0;
+    
+    for(int i=0; i<mModel->mPhases.size(); ++i)
+    {
+        Phase* phase = mModel->mPhases[i];
+        if(phase->mIsSelected || showAllPhases)
+        {
+            if(graphIndexIsInCurrentPage(graphIndex))
+            {
+                GraphViewTempo* graph = new GraphViewTempo(tempoWidget);
+                graph->setSettings(mModel->mSettings);
+                graph->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+                graph->setPhase(phase);
+                graph->setGraphFont(font());
+                graph->setGraphsThickness(mThicknessCombo->currentIndex());
+                graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
+                
+                mByTempoGraphs.append(graph);
+                connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+                ++graphIndex;
+            }
+        }
+    }
+
+    mTempoScrollArea->update();
+    emit generateCurvesRequested();
+}
+
+void ResultsView::createByCurveGraph()
+{
+    Q_ASSERT(mModel);
+    
+    // ----------------------------------------------------------------------
+    //  Disconnect and delete existing graphs
+    // ----------------------------------------------------------------------
+    deleteAllGraphsInList(mByCurveGraphs);
+    
+    QWidget* widget = mCurveScrollArea->widget();
 
     GraphViewTempo* graphAlpha = new GraphViewTempo(widget);
     graphAlpha->setSettings(mModel->mSettings);
-    graphAlpha->setMCMCSettings(mModel->mMCMCSettings, mChains);
-    graphAlpha->setGraphFont(mGraphFont);
+    graphAlpha->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+    graphAlpha->setGraphFont(font());
     graphAlpha->setGraphsThickness(mThicknessCombo->currentIndex());
     graphAlpha->changeXScaleDivision(mMajorScale, mMinorCountScale);
-    mCurveGraphs.append(graphAlpha);
+    mByCurveGraphs.append(graphAlpha);
 
-    mCurveScrollArea->setWidget(widget);
     mCurveScrollArea->update();
-    
     emit generateCurvesRequested();
 }
 
-int ResultsView::getFFTLength() const
+
+
+#pragma mark Utilities to re-create Graphs
+
+void ResultsView::deleteAllGraphsInList(QList<GraphViewResults*>& list)
 {
-    return mFFTLenCombo->currentText().toInt();
+    for(auto && graph : list){
+        disconnect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+        delete graph;
+    }
+    list.clear();
 }
+
+#pragma mark FFTLength, Threshold, Bandwidth
 
 void ResultsView::setFFTLength()
 {
-    qDebug() << "ResultsView::setFFTLength()";
     const int len = mFFTLenCombo->currentText().toInt();
     mModel->setFFTLength(len);
 }
 
-double ResultsView::getBandwidth() const
-{
-    return mBandwidthUsed;
-}
-
+/**
+* @brief ResultsView::setBandwidth The control of the value is done with a QValidator set in the constructor
+*/
 void ResultsView::setBandwidth()
 {
-    qDebug() << "ResultsView::setBandwidth()";
-    bool ok;
-    const double bandwidth = locale().toDouble(mBandwidthEdit->text(), &ok);
-    if (!(bandwidth > 0 && bandwidth <= 100) || !ok)
-        mBandwidthEdit->setText(locale().toString(bandwidth));
-
-    if (bandwidth != getBandwidth()) {
-        mBandwidthUsed = bandwidth;
-        mModel->setBandwidth(bandwidth);
-    }
-
-}
-
-double ResultsView::getThreshold() const
-{
-    return mThresholdUsed;
-}
-
-void ResultsView::graphTypeChange()
-{
-   const int tabIdx = mTabs->currentIndex();
-
-   if (tabIdx == 0)
-        mCurrentTypeGraph = GraphViewResults::ePostDistrib;
-
-   else if (tabIdx == 1)
-        mCurrentTypeGraph = GraphViewResults::eTrace;
-
-   else if (tabIdx == 2)
-        mCurrentTypeGraph = GraphViewResults::eAccept;
-
-   else if (tabIdx == 3)
-        mCurrentTypeGraph = GraphViewResults::eCorrel;
-
-   updateTabDisplay(mTabDisplayMCMC->currentIndex());
-   emit generateCurvesRequested();
+    const double bandwidth = locale().toDouble(mBandwidthEdit->text());
+    mModel->setBandwidth(bandwidth);
 }
 
 /**
- * @brief ResultsView::setThreshold The controle of the value is done with a QValidator set in the constructor
+ * @brief ResultsView::setThreshold The control of the value is done with a QValidator set in the constructor
  */
 void ResultsView::setThreshold()
 {
-    qDebug() << "ResultsView::setThreshold()";
-    const QLocale locale;
-    const double hpd = locale.toDouble(mHPDEdit->text());
-    if (hpd != getThreshold()) {
-        mThresholdUsed = hpd;
-        mModel->setThreshold(hpd);
+    const double hpd = locale().toDouble(mThresholdEdit->text());
+    mModel->setThreshold(hpd);
+}
+
+#pragma mark Pagination
+
+void ResultsView::nextPage()
+{
+    if((mCurrentPage + 1) * mGraphsPerPage < mMaximunNumberOfVisibleGraph)
+    {
+        ++mCurrentPage;
+        mPageEdit->setText(locale().toString(mCurrentPage + 1) + "/" + locale().toString(ceil(mMaximunNumberOfVisibleGraph/mGraphsPerPage)));
+        emit updateScrollAreaRequested();
     }
-
 }
 
-void ResultsView::unfoldToggle()
+void ResultsView::previousPage()
 {
-
-    if (mStack->currentWidget() == mEventsScrollArea) {
-         mTabEventsIndex = 0;
-
-    } else if (mStack->currentWidget() == mPhasesScrollArea) {
-       mTabPhasesIndex = 0;
+    if(mCurrentPage > 0)
+    {
+        --mCurrentPage;
+        mPageEdit->setText(locale().toString(mCurrentPage + 1) + "/" + locale().toString(ceil(mMaximunNumberOfVisibleGraph/mGraphsPerPage)));
+        emit updateScrollAreaRequested();
     }
-
-    emit updateScrollAreaRequested();
 }
 
-void ResultsView::nextSheet()
+void ResultsView::updateGraphsPerPage(int graphsPerPage)
 {
-    int* currentIndex (nullptr);
-
-    if (mStack->currentWidget() == mEventsScrollArea)
-        currentIndex = &mTabEventsIndex;
-
-    else if (mStack->currentWidget() == mPhasesScrollArea)
-        currentIndex = &mTabPhasesIndex;
-
-    else if (mStack->currentWidget() == mTempoScrollArea)
-        currentIndex = &mTabTempoIndex;
-
-    else
-        return;
-
-    if ( ( ((*currentIndex) + 1)*mNumberOfGraph) < mMaximunNumberOfVisibleGraph )
-        ++(*currentIndex);
-
-    emit updateScrollAreaRequested();
-
-
+   mGraphsPerPage = graphsPerPage;
+   updateControls();
+   emit updateScrollAreaRequested();
 }
 
-void ResultsView::previousSheet()
+
+bool ResultsView::graphIndexIsInCurrentPage(int graphIndex)
 {
-    if ((mTabByScene->currentIndex() == 0) && (mTabEventsIndex>0))
-        --mTabEventsIndex;
-
-    else if ((mTabByScene->currentIndex() == 1) && (mTabPhasesIndex>0))
-        --mTabPhasesIndex;
-
-    else if ((mTabByScene->currentIndex() == 2) && (mTabTempoIndex>0))
-        --mTabTempoIndex;
-
-    else
-        return;
-
-    emit updateScrollAreaRequested();
+    int firstIndexToShow = mCurrentPage * mGraphsPerPage;
+    return (graphIndex >= firstIndexToShow) && (graphIndex < (firstIndexToShow + mGraphsPerPage));
 }
+
+
+#pragma mark Tabs navigation
+
+void ResultsView::graphTypeChange()
+{
+    mCurrentTypeGraph = (GraphViewResults::TypeGraph) mGraphTypeTabs->currentIndex();
+    updateGraphTypeOptions();
+    emit generateCurvesRequested();
+}
+
+#pragma mark Curves generation
 
 /**
- *  @brief Decide which curve graphs must be show, based on currently selected options.
- *  @brief This function does NOT remove or create any curve in graphs! It only checks if existing curves should be visible or not.
- */
-void ResultsView::updateCurvesToShow()
+*  @brief re-generate all curves in graph views form model data.
+*  @brief Each curve is given a name. This name will be used by updateCurvesToShow() to decide whether the curve is visible or not.
+*  @param listGraphs is the list of existings graph for which we want to generate curves. It may be mByEventsGraphs, mByPhasesGraphs, etc...
+*  Depending on the selected tab, options may differ. For example, we don't have the same display options for events and durations !
+*  We thus have to check which tab is selected, to gather the corresponding options, and generate the curves.
+*/
+void ResultsView::generateCurves()
 {
-    //qDebug() << "ResultsView::updateCurvesToShow";
-    const bool showAllChains = mAllChainsCheck->isChecked();
-    QList<bool> showChainList;
-
-    if (mCurrentTypeGraph == GraphViewResults::ePostDistrib)
-        for (CheckBox* cbButton : mCheckChainChecks)
-            showChainList.append(cbButton->isChecked());
-
-    else
-        for (RadioButton* rButton : mChainRadios)
-            showChainList.append(rButton->isChecked());
-
-    const bool showCalib = mDataCalibCheck->isChecked();
-    const bool showWiggle = mWiggleCheck->isChecked();
-    const bool showCredibility = mCredibilityCheck->isChecked();
-    const bool showStat = mStatCheck->isChecked();
-
-    if (mTabByScene->currentIndex() == 0 )
-            for (GraphViewResults* eventGraph : mByEventsGraphs) {
-                eventGraph->setShowNumericalResults(showStat);
-                eventGraph->updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
-            }
-
-    else if (mTabByScene->currentIndex() == 1 )
-        for (GraphViewResults* phaseGraph : mByPhasesGraphs) {
-            phaseGraph->setShowNumericalResults(showStat);
-            phaseGraph->updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
-        }
-
-    else if (mTabByScene->currentIndex() == 2 )
-        for (GraphViewResults* tempoGraph : mByTempoGraphs) {
-            tempoGraph->setShowNumericalResults(showStat);
-            if (mCurrentVariable == GraphViewResults::eTempo)
-                tempoGraph->updateCurvesToShow(showAllChains, showChainList, mTempoCredCheck->isChecked(), mTempoErrCheck->isChecked(), showWiggle);
-
-            else // (mCurrentVariable == GraphViewResults::eDuration) || (mCurrentVariable == GraphViewResults::eActivity)
-             tempoGraph->updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
-        }
-
-    updateScales();
-}
-
-
-
-/**
- *  @brief re-generate all curves in graph views form model data.
- *  @brief Each curve is given a name. This name will be used by updateCurvesToShow() to decide whether the curve is visible or not.
- */
-void ResultsView::generateCurves(const QList<GraphViewResults*> &listGraphs)
-{
-    //qDebug() << "ResultsView::generateCurves()";
-
-    if (mTabByScene->currentIndex() == 0 || mTabByScene->currentIndex() ==1) {
-        if (mDataThetaRadio->isChecked())
+    QList<GraphViewResults*> listGraphs;
+    
+    // -----------------------------------------------------------------
+    //  The "Events" tab is selected
+    // -----------------------------------------------------------------
+    if(mGraphListTab->currentIndex() == 0)
+    {
+        listGraphs = mByEventsGraphs;
+        
+        if(mDataThetaRadio->isChecked()){
             mCurrentVariable = GraphViewResults::eTheta;
-
-        else if (mDataSigmaRadio->isChecked())
+        }else if (mDataSigmaRadio->isChecked()){
             mCurrentVariable = GraphViewResults::eSigma;
-
-    } else if (mTabByScene->currentIndex() == 2) {
-        if (mDurationRadio->isChecked())
+        }
+    }
+    // -----------------------------------------------------------------
+    //  The "Phases" tab is selected
+    // -----------------------------------------------------------------
+    else if (mGraphListTab->currentIndex() == 1)
+    {
+        listGraphs = mByPhasesGraphs;
+        
+        if(mDataThetaRadio->isChecked()){
+            mCurrentVariable = GraphViewResults::eTheta;
+        }else if (mDataSigmaRadio->isChecked()){
+            mCurrentVariable = GraphViewResults::eSigma;
+        }
+    }
+    // -----------------------------------------------------------------
+    //  The "Duration" tab is selected
+    // -----------------------------------------------------------------
+    else if (mGraphListTab->currentIndex() == 2)
+    {
+        listGraphs = mByTempoGraphs;
+        
+        if (mDurationRadio->isChecked()){
             mCurrentVariable = GraphViewResults::eDuration;
-
-        else if (mTempoRadio->isChecked())
+        }
+        else if (mTempoRadio->isChecked()){
             mCurrentVariable = GraphViewResults::eTempo;
-
-        else if (mActivityRadio->isChecked())
+        }
+        else if (mActivityRadio->isChecked()){
             mCurrentVariable = GraphViewResults::eActivity;
+        }
+    }
+    // -----------------------------------------------------------------
+    //  The "Curves" tab is selected
+    // -----------------------------------------------------------------
+    else if (mGraphListTab->currentIndex() == 3)
+    {
+        listGraphs = mByCurveGraphs;
+    }
 
-    } else
-        return;
-
-    for (auto &&graph : listGraphs)
+    // -----------------------------------------------------------------
+    //  Generate all graphs curves in the current list
+    // -----------------------------------------------------------------
+    for(auto &&graph : listGraphs)
     {
         graph->generateCurves(GraphViewResults::TypeGraph(mCurrentTypeGraph), mCurrentVariable);
     }
     
+    // -----------------------------------------------------------------
     // With variable eDuration, we look for mResultMaxDuration in the curve named "Post Distrib All Chains"
+    // A simplifier / factoriser ?
+    // -----------------------------------------------------------------
     if (mCurrentVariable == GraphViewResults::eDuration)
     {
         mResultMaxDuration = 0.;
@@ -2481,10 +1991,13 @@ void ResultsView::generateCurves(const QList<GraphViewResults*> &listGraphs)
 
     }
 
+    // -----------------------------------------------------------------
     // With variable eSigma, we look for mResultMaxVariance in the curve named "Post Distrib All Chains"
+    // A simplifier / factoriser ?
+    // -----------------------------------------------------------------
     if (mCurrentVariable == GraphViewResults::eSigma)
     {
-       mResultMaxVariance = 0.;
+        mResultMaxVariance = 0.;
 
         QList<GraphViewResults*>::const_iterator constIter;
         constIter = listGraphs.cbegin();
@@ -2499,39 +2012,93 @@ void ResultsView::generateCurves(const QList<GraphViewResults*> &listGraphs)
             }
             ++constIter;
         }
-         mResultMaxVariance = std::max(100., mResultMaxVariance);
-
+        mResultMaxVariance = std::max(100., mResultMaxVariance);
     }
-    //qDebug() << "ResultsView::generateCurves()-> emit curvesGenerated()";
-
-    emit curvesGenerated();
-}
-
-void ResultsView::updateCurves()
-{
-    if (mTabByScene->currentIndex() == 0)
-        generateCurves(mByEventsGraphs);
-
-    else if (mTabByScene->currentIndex() == 1)
-        generateCurves(mByPhasesGraphs);
-
-    else if (mTabByScene->currentIndex() == 2)
-        generateCurves(mByTempoGraphs);
-
-    //qDebug() << "ResultsView::updateCurves()-> emit curvesGenerated()";
-    emit curvesGenerated();
+    
+    updateCurvesToShow();
 }
 
 /**
- *   @brief Restore with mZooms and mScales according to mTabs
+ *  @brief Decide which curve graphs must be show, based on currently selected options.
+ *  @brief This function does NOT remove or create any curve in graphs! It only checks if existing curves should be visible or not.
+ */
+void ResultsView::updateCurvesToShow()
+{
+    // --------------------------------------------------------
+    //  Gather selected options
+    // --------------------------------------------------------
+    bool showAllChains = mAllChainsCheck->isChecked();
+    bool showCalib = mDataCalibCheck->isChecked();
+    bool showWiggle = mWiggleCheck->isChecked();
+    bool showCredibility = mCredibilityCheck->isChecked();
+    bool showStat = mStatCheck->isChecked();
+    
+    if(mCurrentVariable == GraphViewResults::eTempo){
+        showCalib = mTempoErrCheck->isChecked();
+        showCredibility = mTempoCredCheck->isChecked();
+    }
+    
+    // --------------------------------------------------------
+    //  showChainList is a list of booleans describing which chains are visible or not.
+    //  For Post distribs, multiple chains can be visible at once (checkboxes)
+    //  In other cases, only one chain can be displayed (radios)
+    // --------------------------------------------------------
+    QList<bool> showChainList;
+    if (mCurrentTypeGraph == GraphViewResults::ePostDistrib)
+    {
+        for (CheckBox* cbButton : mCheckChainChecks){
+            showChainList.append(cbButton->isChecked());
+        }
+    }
+    else
+    {
+        for (RadioButton* rButton : mChainRadios){
+            showChainList.append(rButton->isChecked());
+        }
+    }
+    
+    // --------------------------------------------------------
+    //  Find the currently selected list of graphs
+    // --------------------------------------------------------
+    QList<GraphViewResults*> listGraphs;
+
+    if(mGraphListTab->currentIndex() == 0)
+    {
+        listGraphs = mByEventsGraphs;
+    }
+    else if(mGraphListTab->currentIndex() == 1)
+    {
+        listGraphs = mByPhasesGraphs;
+    }
+    else if(mGraphListTab->currentIndex() == 2)
+    {
+        listGraphs = mByTempoGraphs;
+    }
+    else if(mGraphListTab->currentIndex() == 3)
+    {
+        listGraphs = mByCurveGraphs;
+    }
+    
+    // --------------------------------------------------------
+    //  Update Graphs with selected options
+    // --------------------------------------------------------
+    for (GraphViewResults* graph : listGraphs)
+    {
+        graph->setShowNumericalResults(showStat);
+        graph->updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
+    }
+
+    updateScales();
+}
+
+/**
+ *  @brief Restore with mZooms and mScales according to mGraphTypeTabs
  *  which are store in updateGraphsZoomX()
  */
 void ResultsView::updateScales()
 {
-    //qDebug() << "ResultsView::updateScales()";
-
-    int tabIdx = mTabs->currentIndex();
-    ProjectSettings s = mSettings;
+    int tabIdx = mGraphTypeTabs->currentIndex();
+    ProjectSettings s = mModel->mSettings;
 
     /* ------------------------------------------
      *  Get X Range based on current options used to calculate zoom
@@ -2602,7 +2169,7 @@ void ResultsView::updateScales()
         mResultMinX = 0.;
         for (int i = 0; i < mChainRadios.size(); ++i) {
             if (mChainRadios.at(i)->isChecked()) {
-                const ChainSpecs& chain = mChains.at(i);
+                const ChainSpecs& chain = mModel->mChains.at(i);
                 mResultMaxX = 1 + chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter) + chain.mNumRunIter / chain.mThinningInterval;
                 break;
             }
@@ -2694,7 +2261,7 @@ void ResultsView::updateScales()
     if (tabIdx == 1 || tabIdx == 2) {
         for (int i=0; i<mChainRadios.size(); ++i) {
             if (mChainRadios.at(i)->isChecked()){
-                const ChainSpecs& chain = mChains.at(i);
+                const ChainSpecs& chain = mModel->mChains.at(i);
                 int adaptSize = chain.mBatchIndex * chain.mNumBatchIter;
                 int runSize = int (chain.mNumRunIter / chain.mThinningInterval);
 
@@ -2711,7 +2278,7 @@ void ResultsView::updateScales()
      *  Set All Graphs Ranges (This is not done by generateCurves !)
      * -----------------------------------------------*/
 
-    if (mTabByScene->currentIndex() == 0) {
+    if (mGraphListTab->currentIndex() == 0) {
         for (GraphViewResults* allGraph : mByEventsGraphs) {
             allGraph->setRange(mRuler->mMin, mRuler->mMax);
             allGraph->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
@@ -2719,7 +2286,7 @@ void ResultsView::updateScales()
             allGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
         }
 
-    } else if (mTabByScene->currentIndex() == 1) {
+    } else if (mGraphListTab->currentIndex() == 1) {
         for (GraphViewResults* allGraph : mByPhasesGraphs) {
             allGraph->setRange(mRuler->mMin, mRuler->mMax);
             allGraph->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
@@ -2727,7 +2294,7 @@ void ResultsView::updateScales()
             allGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
         }
 
-    } else if (mTabByScene->currentIndex() == 2) {
+    } else if (mGraphListTab->currentIndex() == 2) {
         for (GraphViewResults* allGraph : mByTempoGraphs) {
             allGraph->setRange(mRuler->mMin, mRuler->mMax);
             allGraph->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
@@ -2742,10 +2309,10 @@ void ResultsView::updateScales()
      * ------------------------------------------*/
 
     forceXSlideSetValue = true;
-    setXScaleSlide( zoomToSlider(mResultZoomX));
+    setScaleXSlide( zoomToSlider(mResultZoomX));
 
     forceXSpinSetValue = true;
-    setXScaleSpin(mResultZoomX);
+    setScaleXSpin(mResultZoomX);
 
     updateZoomEdit();
     updateScaleEdit();
@@ -2753,8 +2320,7 @@ void ResultsView::updateScales()
     // Already done when setting graphs new range (above)
     //updateGraphsZoomX();
 
-    //qDebug()<< "ResultsView::updateScales emit scalesUpdated()";
-    emit scalesUpdated();
+    updateControls();
 }
 
 void ResultsView::settingChange()
@@ -2795,51 +2361,50 @@ qDebug()<< "ResultsView::updateResultsLog()-> emit resultsLogUpdated(log)";
 
 void ResultsView::mouseMoveEvent(QMouseEvent* e)
 {
-  //  int shiftX (0);
+    updateMarkerGeometry(e->pos().x());
+}
 
-  //  int x = e->pos().x() - shiftX;
-
-        const int markerXPos (inRange(0, e->pos().x(), mRuler->x() + mRuler->width() ));
-        mMarker->setGeometry(markerXPos, mTabsH + mRuler->height() , mMarker->thickness(), height() - mTabsH - mRuler->height());
-
-  //  x = (x <= width() - mOptionsW) ? x : width() - mOptionsW;
- //   mMarker->setGeometry(x, mMarker->pos().y(), mMarker->width(), mMarker->height());
+void ResultsView::updateMarkerGeometry(const int x)
+{
+    const int markerXPos = inRange(0, x, mRuler->x() + mRuler->width());
+    mMarker->setGeometry(markerXPos, mGraphTypeTabs->height() + mRuler->height(), mMarker->thickness(), height() - mGraphTypeTabs->height() - mRuler->height());
 }
 
 
+
 /**
- * @brief ResultsView::XScaleSliderChanged
+ * @brief ResultsView::scaleXSliderChanged
  * @param value
  * connected to mXSlider, &QSlider::valueChanged(value)
  */
-void ResultsView::XScaleSliderChanged(int value)
+void ResultsView::scaleXSliderChanged(int value)
 {
     if (!forceXSlideSetValue) {
         forceXSpinSetValue = true;
-        setXScaleSpin(sliderToZoom(value));
+        setScaleXSpin(sliderToZoom(value));
         updateZoomX();
     }
 }
 
 /**
- * @brief ResultsView::XScaleSpinChanged slot connected to mXScaleSpin->setValue()
+ * @brief ResultsView::scaleXSpinChanged slot connected to mXScaleSpin->setValue()
  * @param value
  */
-void ResultsView::XScaleSpinChanged(double value)
+void ResultsView::scaleXSpinChanged(double value)
 {
     if (!forceXSpinSetValue) {
         forceXSlideSetValue = true;
-        setXScaleSlide(zoomToSlider(value));
+        setScaleXSlide(zoomToSlider(value));
         updateZoomX();
     }
 }
 
 /**
- * @brief ResultsView::setXScaleSpin
+ * @brief ResultsView::setScaleXSpin
  * Slot to control, if we want to force just set the value, or if we want to propagate the signal throw xSinUpdate
  * @param value
  */
-void ResultsView::setXScaleSpin(const double value)
+void ResultsView::setScaleXSpin(const double value)
 {
     mXScaleSpin->setValue(value);
     if (!forceXSpinSetValue)
@@ -2849,11 +2414,11 @@ void ResultsView::setXScaleSpin(const double value)
 }
 
 /**
- * @brief ResultsView::setXScaleSlide
+ * @brief ResultsView::setScaleXSlide
  * Slot to control, if we want to force the just set the value, or if we want to propagate the signal throw xSlideUpdate
  * @param value
  */
-void ResultsView::setXScaleSlide(const int value)
+void ResultsView::setScaleXSlide(const int value)
 {
     mXSlider->setValue(value);
     if (!forceXSlideSetValue)
@@ -2900,17 +2465,17 @@ void ResultsView::updateScaleX()
 
         mScales[situ] = QPair<double, int>(mMajorScale, mMinorCountScale);
 
-        if (mTabByScene->currentIndex() == 0) {
+        if (mGraphListTab->currentIndex() == 0) {
             for (GraphViewResults* eventGraph : mByEventsGraphs)
                 if (eventGraph)
                     eventGraph->changeXScaleDivision(mMajorScale, mMinorCountScale);
 
-        } else if (mTabByScene->currentIndex() == 1) {
+        } else if (mGraphListTab->currentIndex() == 1) {
             for (GraphViewResults* phaseGraph : mByPhasesGraphs)
                 if (phaseGraph)
                     phaseGraph->changeXScaleDivision(mMajorScale, mMinorCountScale);
 
-        } else if (mTabByScene->currentIndex() == 2) {
+        } else if (mGraphListTab->currentIndex() == 2) {
             for (GraphViewResults* tempoGraph : mByTempoGraphs)
                 if (tempoGraph)
                     tempoGraph->changeXScaleDivision(mMajorScale, mMinorCountScale);
@@ -2980,6 +2545,8 @@ void ResultsView::updateScroll(const double min, const double max)
     updateGraphsZoomX();
 }
 
+#pragma mark X axis scale
+
 void ResultsView::editCurrentMinX()
 {
     /* --------------------------------------------------
@@ -3003,10 +2570,10 @@ void ResultsView::editCurrentMinX()
          * --------------------------------------------------*/
 
         forceXSlideSetValue = true;
-        setXScaleSlide(zoomToSlider(mResultZoomX));
+        setScaleXSlide(zoomToSlider(mResultZoomX));
 
         forceXSpinSetValue = true;
-        setXScaleSpin(mResultZoomX);
+        setScaleXSpin(mResultZoomX);
 
         mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
 
@@ -3038,10 +2605,10 @@ void ResultsView::editCurrentMaxX()
          * --------------------------------------------------*/
 
         forceXSlideSetValue = true;
-        setXScaleSlide(zoomToSlider(mResultZoomX));// the signal valueChange() must be not connected with a slot
+        setScaleXSlide(zoomToSlider(mResultZoomX));// the signal valueChange() must be not connected with a slot
 
         forceXSpinSetValue = true;
-        setXScaleSpin(mResultZoomX);
+        setScaleXSpin(mResultZoomX);
 
         mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
 
@@ -3051,14 +2618,13 @@ void ResultsView::editCurrentMaxX()
     }
 }
 
-void ResultsView:: setStudyPeriod()
+void ResultsView::setStudyPeriod()
 {
-    qDebug()<<"ResultsView::setStudyPeriod()";
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && (mCurrentVariable == GraphViewResults::eTheta
                                                                 || mCurrentVariable == GraphViewResults::eTempo
                                                                 || mCurrentVariable == GraphViewResults::eActivity)) {
-        mResultCurrentMinX = mSettings.getTminFormated();
-        mResultCurrentMaxX = mSettings.getTmaxFormated();
+        mResultCurrentMinX = mModel->mSettings.getTminFormated();
+        mResultCurrentMaxX = mModel->mSettings.getTmaxFormated();
         mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
      }
 
@@ -3084,13 +2650,14 @@ void ResultsView:: setStudyPeriod()
     updateScaleEdit();
 
     forceXSlideSetValue = true;
-    setXScaleSlide(zoomToSlider(mResultZoomX));
+    setScaleXSlide(zoomToSlider(mResultZoomX));
 
     forceXSpinSetValue = true;
-    setXScaleSpin(mResultZoomX);
+    setScaleXSpin(mResultZoomX);
 
     mRuler->setScaleDivision(Xscale);
     mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
+    
     updateZoomEdit();
     updateGraphsZoomX();
 }
@@ -3123,12 +2690,11 @@ void ResultsView::updateZoomEdit()
         mCurrentXMaxEdit->setFont(font());
 
     mCurrentXMaxEdit->setText(locale.toString(mResultCurrentMaxX,'f',0));
-
 }
 
 void ResultsView::updateScaleEdit()
 {
-     QLocale locale = QLocale();
+    QLocale locale = QLocale();
     mMinorScaleEdit->setText(locale.toString(mMinorCountScale));
     mMajorScaleEdit->setText(locale.toString(mMajorScale));
 }
@@ -3140,32 +2706,25 @@ void ResultsView::updateScaleEdit()
  */
 void ResultsView::updateGraphsZoomX()
 {
-   // qDebug()<<"ResultsView::updateGraphsZoomX()";
-
-    /* --------------------------------------------------
-     *   Resize the ruler and the marges inside the graphs
-     * --------------------------------------------------*/
-  //  setGraphFont(mGraphFont);
-
     /* --------------------------------------------------
      *  Redraw the graphs
      * --------------------------------------------------*/
 
-    if (mTabByScene->currentIndex() == 0) {
+    if (mGraphListTab->currentIndex() == 0) {
         for (GraphViewResults* eventGraph : mByEventsGraphs)
             if (eventGraph) {
                 eventGraph->changeXScaleDivision(mMajorScale, mMinorCountScale);
                 eventGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
             }
     }
-    else if (mTabByScene->currentIndex() == 1) {
+    else if (mGraphListTab->currentIndex() == 1) {
         for (GraphViewResults* phaseGraph : mByPhasesGraphs)
             if (phaseGraph) {
                 phaseGraph->changeXScaleDivision(mMajorScale, mMinorCountScale);
                 phaseGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
             }
    }
-    else if (mTabByScene->currentIndex() == 2) {
+    else if (mGraphListTab->currentIndex() == 2) {
         for (GraphViewResults* tempoGraph : mByTempoGraphs)
             if (tempoGraph) {
                 tempoGraph->changeXScaleDivision(mMajorScale, mMinorCountScale);
@@ -3203,27 +2762,20 @@ void ResultsView::updateGraphsZoomX()
  */
 void ResultsView::updateScaleY(int value)
 {
-    //GraphViewResults::mHeightForVisibleAxis(7 * AppSettings::heigthUnit()),
-
     mYScaleSpin->setValue(value);
     const double min (2 * AppSettings::heigthUnit());//(70.);
-    const double origin (GraphViewResults::mHeightForVisibleAxis);//(5 * AppSettings::heigthUnit());// (150.); Same value in ResultsView::applyAppSettings()
+    const double origin (GraphViewResults::mHeightForVisibleAxis);
     const double prop = double(value / 100.);
     mGraphHeight = int (min + prop * (origin - min));
- qDebug()<<"ResultsView::updateScaleY"<<value << prop <<mGraphHeight;
     updateGraphsLayout();
 }
 
 
 // Display options
-void ResultsView::setGraphFont(const QFont &font)
+void ResultsView::updateGraphsFont()
 {
-    mGraphFont = font;
-    const QFontMetrics gfm (mGraphFont);
+    const QFontMetrics gfm (font());
 
-    /* Variable identic in AxisTool */
-    //qDebug()<< " ResultsView::setGraphFont "<< font;
-        qDebug()<< mGraphFont;
 #ifdef Q_OS_MAC
     int heightText = int (1.5 * gfm.height());
 #else
@@ -3231,19 +2783,19 @@ void ResultsView::setGraphFont(const QFont &font)
 #endif
     qreal graduationSize = heightText /3;
 
-    switch(mTabs->currentIndex()) {
+    switch(mGraphTypeTabs->currentIndex()) {
         case 0: // Posterior Distrib.
                 {
                   //  const int marg = qMax(gfm.width(stringForLocal(mResultCurrentMinX))/ 2., gfm.width(stringForLocal(mResultCurrentMaxX))/ 2.);
-                    mMarginLeft =  1.5 * gfm.boundingRect(stringForLocal( 5 * mSettings.getTminFormated())).width()/ 2. +  2*graduationSize;
-                    mMarginRight = 1.5 * gfm.boundingRect(stringForLocal(5 * mSettings.getTmaxFormated())).width()/ 2.;
+                    mMarginLeft =  1.5 * gfm.boundingRect(stringForLocal( 5 * mModel->mSettings.getTminFormated())).width()/ 2. +  2*graduationSize;
+                    mMarginRight = 1.5 * gfm.boundingRect(stringForLocal(5 * mModel->mSettings.getTmaxFormated())).width()/ 2.;
                   }
          break;
 
         case 1: // History Plot
         case 2:// Acceptance Rate
                  {
-                        const int maxIter = 1+ mChains.at(0).mNumBurnIter + (mChains.at(0).mBatchIndex * mChains.at(0).mNumBatchIter) + mChains.at(0).mNumRunIter / mChains.at(0).mThinningInterval;
+                        const int maxIter = 1+ mModel->mChains.at(0).mNumBurnIter + (mModel->mChains.at(0).mBatchIndex * mModel->mChains.at(0).mNumBatchIter) + mModel->mChains.at(0).mNumRunIter / mModel->mChains.at(0).mThinningInterval;
                         const int marg = gfm.boundingRect(stringForLocal(maxIter)).width();
                         mMarginLeft =  marg + 2*graduationSize ;
                         mMarginRight = marg;
@@ -3264,26 +2816,24 @@ void ResultsView::setGraphFont(const QFont &font)
 
     mRuler->setMarginLeft(mMarginLeft);
     mRuler->setMarginRight(mMarginRight);
-
     mRuler->updateLayout();
-    mRulerH = mRuler->height();
 
     for (GraphViewResults* phaseGraph : mByPhasesGraphs) {
         phaseGraph->setMarginLeft(mMarginLeft);
         phaseGraph->setMarginRight(mMarginRight);
-        phaseGraph->setGraphFont(mGraphFont);
+        phaseGraph->setGraphFont(font());
     }
 
     for (GraphViewResults* eventGraph : mByEventsGraphs) {
         eventGraph->setMarginLeft(mMarginLeft);
         eventGraph->setMarginRight(mMarginRight);
-        eventGraph->setGraphFont(mGraphFont);
+        eventGraph->setGraphFont(font());
     }
 
     for (GraphViewResults* tempoGraph : mByTempoGraphs) {
         tempoGraph->setMarginLeft(mMarginLeft);
         tempoGraph->setMarginRight(mMarginRight);
-        tempoGraph->setGraphFont(mGraphFont);
+        tempoGraph->setGraphFont(font());
     }
 }
 
@@ -3291,14 +2841,15 @@ void ResultsView::setGraphFont(const QFont &font)
 /**
  * @brief ResultsView::updateFont only on graph
  */
-void ResultsView::updateGraphFont()
+void ResultsView::updateFont()
 {
-    bool ok;
-    QFont font (QFontDialog::getFont(&ok, mGraphFont, this));
-
+    bool ok = false;
+    const QFont& currentFont = font();
+    QFont font(QFontDialog::getFont(&ok, currentFont, this));
     if (ok) {
-        setGraphFont(font);
-        mFontBut->setText(mGraphFont.family() + ", " + QString::number(mGraphFont.pointSizeF()));
+        setFont(font);
+        updateGraphsFont();
+        mFontBut->setText(font.family() + ", " + QString::number(font.pointSizeF()));
     }
 }
 
@@ -3346,58 +2897,107 @@ void ResultsView::showInfos(bool show)
     updateLayout();
 }
 
+#pragma mark Graph selection and export
+
+void ResultsView::saveGraphData()
+{
+    QList<GraphViewResults*> graphs = currentGraphs(true);
+    for (auto && graph : graphs){
+        graph->saveGraphData();
+    }
+}
+
+void ResultsView::resultsToClipboard()
+{
+    QString resultText;
+    QList<GraphViewResults*> graphs = currentGraphs(true);
+    for (auto && graph : graphs){
+        resultText += graph->getTextAreaToPlainText();
+    }
+    QClipboard* clipboard = QApplication::clipboard();
+    clipboard->setText(resultText);
+}
+
+void ResultsView::imageToClipboard()
+{
+    QList<GraphViewResults*> graphs = currentGraphs(true);
+    
+    if(!graphs.isEmpty())
+    {
+        GraphViewResults* firstGraph = graphs.at(0);
+        
+        const int versionHeight = 20;
+        short pr = short(AppSettings::mPixelRatio);
+
+        QImage image(firstGraph->width() * pr, (graphs.size() * firstGraph->height() + versionHeight) * pr , QImage::Format_ARGB32_Premultiplied);
+
+        image.setDevicePixelRatio(pr);
+        image.fill(Qt::transparent);
+
+        QPainter p;
+        p.begin(&image);
+        p.setRenderHint(QPainter::Antialiasing);
+
+        QPoint ptStart (0, 0);
+        for (auto &&graph : graphs)
+        {
+            graph->showSelectedRect(false);
+            graph->render(&p, ptStart, QRegion(0, 0, graph->width(), graph->height()));
+            ptStart = QPoint(0, ptStart.y() + graph->height());
+            graph->showSelectedRect(true);
+        }
+        
+        p.setPen(Qt::black);
+        p.setBrush(Qt::white);
+        p.fillRect(0, ptStart.y(), firstGraph->width(), versionHeight, Qt::white);
+        p.drawText(0, ptStart.y(), firstGraph->width(), versionHeight,
+                   Qt::AlignCenter,
+                   qApp->applicationName() + " " + qApp->applicationVersion());
+
+
+        p.end();
+
+        QClipboard* clipboard = QApplication::clipboard();
+        clipboard->setImage(image);
+    }
+}
+
 void ResultsView::saveAsImage()
 {
-    QList<GraphViewResults*> selectedGraph;
-
-    if (mTabByScene->currentIndex() == 0) {
-        if (mEventsScrollArea)
-            for (auto && graph : mByEventsGraphs)
-                if (graph->isSelected())
-                   selectedGraph.append(graph);
-    }
-
-    else if (mTabByScene->currentIndex() == 1) {
-        if (mPhasesScrollArea)
-            for (auto && graph : mByPhasesGraphs)
-                if (graph->isSelected())
-                   selectedGraph.append(graph);
-    }
-
-    else if (mTabByScene->currentIndex() == 2) {
-        if (mTempoScrollArea)
-            for (auto && graph : mByTempoGraphs)
-                if (graph->isSelected())
-                   selectedGraph.append(graph);
-    }
-
-
-//----
-    if (selectedGraph.isEmpty())
+    QList<GraphViewResults*> graphs = currentGraphs(true);
+    if (graphs.isEmpty()){
         return;
-    // ---- Ask for file name and type (SVG or png)
-    QString filter = QObject::tr("Image (*.png);;Photo (*.jpg);;Scalable Vector Graphics (*.svg)");
+    }
+        
+    // --------------------------------------------------
+    //  Ask for a file name and type (SVG or Image)
+    // --------------------------------------------------
     QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
-                                                    tr("Save graph image as..."),
-                                                    MainWindow::getInstance()->getCurrentPath(),
-                                                    filter);
+        tr("Save graph image as..."),
+        MainWindow::getInstance()->getCurrentPath(),
+        QObject::tr("Image (*.png);;Photo (*.jpg);;Scalable Vector Graphics (*.svg)"));
 
-
-    if (!fileName.isEmpty()) {
-        const int heightText (2 * qApp->fontMetrics().height());
-        const QString versionStr = qApp->applicationName() + " " + qApp->applicationVersion();
-
+    if (!fileName.isEmpty())
+    {
+        // --------------------------------------------------
+        //  Get the file extension
+        // --------------------------------------------------
         QFileInfo fileInfo;
         fileInfo = QFileInfo(fileName);
         QString fileExtension = fileInfo.suffix();
         bool asSvg = fileName.endsWith(".svg");
+        
+        
+        const int heightText (2 * qApp->fontMetrics().height());
+        const QString versionStr = qApp->applicationName() + " " + qApp->applicationVersion();
+        
         // --- if png
         //const int versionHeight (20);
         if (!asSvg) {
 
             const short pr = short (AppSettings::mPixelRatio);
 
-            QImage image (selectedGraph.first()->width() * pr, (selectedGraph.size() * selectedGraph.first()->height() + heightText) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
+            QImage image (graphs.first()->width() * pr, (graphs.size() * graphs.first()->height() + heightText) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
 
             if (image.isNull() )
                 qDebug()<< " image width = 0";
@@ -3411,7 +3011,7 @@ void ResultsView::saveAsImage()
             p.setFont(qApp->font());
 
             QPoint ptStart (0, 0);
-            for (auto &&graph : selectedGraph) {
+            for (auto &&graph : graphs) {
                 graph->showSelectedRect(false);
                 //GraphView::Rendering memoRendering= graph->getRendering();
                 //graph->setRendering(GraphView::eHD);
@@ -3422,8 +3022,8 @@ void ResultsView::saveAsImage()
             }
             p.setPen(Qt::black);
             p.setBrush(Qt::white);
-            p.fillRect(0, ptStart.y(), selectedGraph.first()->width(), heightText, Qt::white);
-            p.drawText(0, ptStart.y(), selectedGraph.first()->width(), heightText,
+            p.fillRect(0, ptStart.y(), graphs.first()->width(), heightText, Qt::white);
+            p.drawText(0, ptStart.y(), graphs.first()->width(), heightText,
                        Qt::AlignCenter,
                        versionStr);
             p.end();
@@ -3443,10 +3043,11 @@ void ResultsView::saveAsImage()
         // if svg type
         else {
             //Rendering memoRendering= mRendering;
-            const int wGraph = selectedGraph.first()->width();
-            const int hGraph = selectedGraph.size() * selectedGraph.first()->height();
+            const int wGraph = graphs.first()->width();
+            const int hGraph = graphs.size() * graphs.first()->height();
             QRect rTotal ( 0, 0, wGraph, hGraph + heightText );
             // Set SVG Generator
+            
             QSvgGenerator svgGen;
             svgGen.setFileName(fileName);
             //svgGen.setSize(rTotal.size());
@@ -3459,7 +3060,7 @@ void ResultsView::saveAsImage()
             //font().wordSpacing();
 
             QPoint ptStart (0, 0);
-            for (auto &&graph : selectedGraph) {
+            for (auto &&graph : graphs) {
                 graph->showSelectedRect(false);
                  /* We can not have a svg graph in eSD Rendering Mode */
                 //GraphView::Rendering memoRendering= graph->getRendering();
@@ -3481,131 +3082,58 @@ void ResultsView::saveAsImage()
     }
 }
 
-void ResultsView::imageToClipboard()
+bool ResultsView::hasSelectedGraphs()
 {
-    QList<GraphViewResults*> selectedGraph;
-
-    if (mTabByScene->currentIndex() == 0) {
-        if (mEventsScrollArea)
-            for (auto &&graph : mByEventsGraphs)
-                if (graph->isSelected())
-                   selectedGraph.append(graph);
-    }
-
-    else if (mTabByScene->currentIndex() == 1) {
-        if (mPhasesScrollArea)
-            for (auto &&graph : mByPhasesGraphs)
-                if (graph->isSelected())
-                   selectedGraph.append(graph);
-    }
-
-    else if (mTabByScene->currentIndex() == 2) {
-        if (mTempoScrollArea)
-            for (auto &&graph : mByTempoGraphs)
-                if (graph->isSelected())
-                   selectedGraph.append(graph);
-    }
-
-
-    QClipboard* clipboard = QApplication::clipboard();
-
-    if (selectedGraph.isEmpty())
-        return;
-    const int versionHeight (20);
-    short pr = short(AppSettings::mPixelRatio);
-
-    QImage image (selectedGraph.at(0)->width() * pr, (selectedGraph.size() * selectedGraph.at(0)->height() + versionHeight) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
-
-    if (image.isNull() )
-        qDebug()<< " image width = 0";
-
-    image.setDevicePixelRatio(pr);
-    image.fill(Qt::transparent);
-
-    QPainter p;
-    p.begin(&image);
-    p.setRenderHint(QPainter::Antialiasing);
-
-    QPoint ptStart (0, 0);
-    for (auto &&graph : selectedGraph) {
-        graph->showSelectedRect(false);
-        //GraphView::Rendering memoRendering= graph->getRendering();
-       // graph->setRendering(GraphView::eHD);
-        graph->render(&p, ptStart, QRegion(0, 0, graph->width(), graph->height()));
-        ptStart = QPoint(0, ptStart.y() + graph->height());
-        graph->showSelectedRect(true);
-       // graph->setRendering(memoRendering);
-    }
-    p.setPen(Qt::black);
-    p.setBrush(Qt::white);
-    p.fillRect(0, ptStart.y(), selectedGraph.at(0)->width(), versionHeight, Qt::white);
-    p.drawText(0, ptStart.y(), selectedGraph.at(0)->width(), versionHeight,
-               Qt::AlignCenter,
-               qApp->applicationName() + " " + qApp->applicationVersion());
-
-
-    p.end();
-
-    clipboard->setImage(image);
-
+    return (currentGraphs(true).size() > 0);
 }
 
-void ResultsView::resultsToClipboard()
+QList<GraphViewResults*> ResultsView::currentGraphs(bool onlySelected)
 {
-    QString resultText;
-
-    if (mTabByScene->currentIndex() == 0) {
-        if (mEventsScrollArea) {
-                    for (auto && graph : mByEventsGraphs)
-                        if (graph->isSelected())
-                            resultText += graph->getTextAreaToPlainText();
+    QList<GraphViewResults*> graphs;
+    
+    if(mGraphListTab->currentIndex() == 0)
+    {
+        for(auto &&graph : mByEventsGraphs)
+        {
+            if (onlySelected || graph->isSelected())
+            {
+                graphs.append(graph);
             }
-    }
-   else if (mTabByScene->currentIndex() == 1) {
-        if (mPhasesScrollArea)
-            for (auto && graph : mByPhasesGraphs)
-                if (graph->isSelected())
-                   resultText += graph->getTextAreaToPlainText();
-    }
-    else if (mTabByScene->currentIndex() == 2) {
-         if (mTempoScrollArea)
-             for (auto && graph : mByTempoGraphs)
-                 if (graph->isSelected())
-                    resultText += graph->getTextAreaToPlainText();
-     }
-
-    QClipboard* clipboard = QApplication::clipboard();
-    clipboard->setText(resultText);
-}
-void ResultsView::saveGraphData()
-{
-    QList<GraphViewResults*> selectedGraph;
-
-    if (mTabByScene->currentIndex() == 0) {
-        if (mEventsScrollArea) {
-            for (auto &&graph : mByEventsGraphs)
-                if (graph->isSelected())
-                    selectedGraph.append(graph);
         }
-
-    } else if (mTabByScene->currentIndex() == 1) {
-        if (mPhasesScrollArea)
-            for (auto &&graph : mByPhasesGraphs)
-                if (graph->isSelected())
-                   selectedGraph.append(graph);
-
-    } else if (mTabByScene->currentIndex() == 2) {
-        if (mTempoScrollArea)
-            for (auto &&graph : mByTempoGraphs)
-                if (graph->isSelected())
-                   selectedGraph.append(graph);
     }
-
-    for (auto &&graph : selectedGraph)
-        graph->saveGraphData();
+    else if (mGraphListTab->currentIndex() == 1)
+    {
+        for(auto &&graph : mByPhasesGraphs)
+        {
+            if (onlySelected || graph->isSelected())
+            {
+                graphs.append(graph);
+            }
+        }
+    }
+    else if (mGraphListTab->currentIndex() == 2)
+    {
+        for(auto &&graph : mByTempoGraphs)
+        {
+            if (onlySelected || graph->isSelected())
+            {
+                graphs.append(graph);
+            }
+        }
+    }
+    else if (mGraphListTab->currentIndex() == 3)
+    {
+        for(auto &&graph : mByCurveGraphs)
+        {
+            if (onlySelected || graph->isSelected())
+            {
+                graphs.append(graph);
+            }
+        }
+    }
+    
+    return graphs;
 }
-
-
 
 /**
  * @brief ResultsView::exportResults export result into several files
@@ -3729,19 +3257,19 @@ void ResultsView::exportFullImage()
 
     type_data max;
 
-    if (mStack->currentWidget() == mEventsScrollArea) {
+    if (mGraphListStack->currentWidget() == mEventsScrollArea) {
         curWid = mEventsScrollArea->widget();
         curWid->setFont(mByEventsGraphs.at(0)->font());
         max = mByEventsGraphs.at(0)->getGraph()->maximumX();
     }
 
-    else if (mStack->currentWidget() == mPhasesScrollArea) {
+    else if (mGraphListStack->currentWidget() == mPhasesScrollArea) {
         curWid = mPhasesScrollArea->widget();
         curWid->setFont(mByPhasesGraphs.at(0)->font());
         max = mByPhasesGraphs.at(0)->getGraph()->maximumX();
     }
 
-    else if (mStack->currentWidget() == mTempoScrollArea) {
+    else if (mGraphListStack->currentWidget() == mTempoScrollArea) {
        curWid = mTempoScrollArea->widget();
        curWid->setFont(mByTempoGraphs.at(0)->font());
       max = mByTempoGraphs.at(0)->getGraph()->maximumX();
@@ -3756,7 +3284,7 @@ void ResultsView::exportFullImage()
 
     AxisWidget* axisWidget = nullptr;
     QLabel* axisLegend = nullptr;
-    QFontMetrics fm (mGraphFont);
+    QFontMetrics fm (font());
     int axeHeight (int (fm.ascent() * 2.2)); // equal MarginBottom()
 
     int legendHeight (int (fm.ascent() *2));
@@ -3802,8 +3330,8 @@ void ResultsView::exportFullImage()
 
         axisLegend = new QLabel(legend, curWid);
 
-        axisLegend->setFont(mGraphFont);
-        QFontMetrics fm(mGraphFont);
+        axisLegend->setFont(font());
+        QFontMetrics fm(font());
         if (mStatCheck->isChecked())
             axisLegend->setGeometry(fm.boundingRect(legend).width(), curWid->height() - axeHeight - legendHeight, int (curWid->width()*2./3. - 10), legendHeight);
         else
