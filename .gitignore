@@ -1,6 +1,7 @@
 build/
 doxygen/
 DerivedData/
+_local_/
 
 # propre a chaque systeme, sur windows correspond a QtCreator
 Chronomodel.pro.user*
