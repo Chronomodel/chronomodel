@@ -198,7 +198,6 @@ signals:
     void resultsLogUpdated(const QString &log);
 
     void updateScrollAreaRequested();
-    void generateCurvesRequested();
 
     void xSpinUpdate(const int value);
     void xSlideUpdate(const int value);

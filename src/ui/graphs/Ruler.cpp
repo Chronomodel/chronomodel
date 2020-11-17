@@ -54,15 +54,12 @@ mMin(0.),
 mMax(1000.),
 mZoomProp(1.),
 mStepMinWidth(3.),//define when minor scale can appear
-mStepWidth(100)
+mStepWidth(100),
+mMarginLeft(0),
+mMarginRight(0),
+mMarginTop(5),
+mMarginBottom(0)
 {
-    mScrollBarHeight = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
-    mMarginTop = 5;
-    mAxisFont = parentWidget()->font();
-    setMarginBottom( 0);//mAxisFont.pointSize() * 1.0 );
-
-    setMouseTracking(true);
-
     mScrollBar = new QScrollBar(Qt::Horizontal, this);
     mScrollBar->setRange(0, 0);
     mScrollBar->setSingleStep(1);
@@ -74,9 +71,11 @@ mStepWidth(100)
     mAxisTool.mIsHorizontal = true;
     mAxisTool.mShowArrow = false;
     mAxisTool.mShowSubSubs = true;
+    
+    mAxisFont = font();
 
     setFixedHeight(50);
-    
+    setMouseTracking(true);
     updateLayout();
 }
 
@@ -99,7 +98,6 @@ Ruler& Ruler::operator=(const Ruler & origin)
 
     //mScrollBar = origin.mScrollBar;
 
-    mScrollBarHeight = origin.mScrollBarHeight;
     mAxisFont = origin.mAxisFont;
     mAxisRect = origin.mAxisRect;
 
@@ -303,9 +301,11 @@ void Ruler::setFormatFunctX(DateConversion f)
 
 void Ruler::updateLayout()
 {
-    mAxisRect = QRectF(mMarginLeft + 1, mMarginTop + mScrollBarHeight, width() - mMarginLeft - mMarginRight , mMarginBottom);// + font().pointSizeF());
+    int scrollBarHeight = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
+    
+    mAxisRect = QRectF(mMarginLeft + 1, mMarginTop + scrollBarHeight, width() - mMarginLeft - mMarginRight, mMarginBottom);// + font().pointSizeF());
 
-    mScrollBar->setGeometry(mMarginLeft , 0, mAxisRect.width(), mScrollBarHeight);
+    mScrollBar->setGeometry(mMarginLeft , 0, mAxisRect.width(), scrollBarHeight);
 
     mAxisTool.mShowSubSubs = true;
     mAxisTool.updateValues( int (mAxisRect.width()), int(mStepMinWidth), mCurrentMin, mCurrentMax);

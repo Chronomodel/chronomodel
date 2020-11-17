@@ -95,6 +95,9 @@ mMargin(5),
 mOptionsW(250),
 mCurrentPage(0),
 
+mMarginLeft(40),
+mMarginRight(40),
+
 mTempoScrollArea(nullptr),
 forceXSpinSetValue(false),
 forceXSlideSetValue(false),
@@ -118,6 +121,9 @@ mMinorCountScale (4)
     mGraphTypeTabs->setTab(0, false);
     
     mRuler = new Ruler(this);
+    mRuler->setMarginLeft(mMarginLeft);
+    mRuler->setMarginRight(mMarginRight);
+    
     mMarker = new Marker(this);
     
     mEventsScrollArea = new QScrollArea();
@@ -158,35 +164,42 @@ mMinorCountScale (4)
     //  Right part
     // -----------------------------------------------------------------
     mOptionsWidget = new QWidget(this);
+    int h = 16;
 
     // -----------------------------------------------------------------
     //  Results Group (if graph list tab = events or phases)
     // -----------------------------------------------------------------
     mResultsGroup = new QWidget();
-    mResultsGroup->setPalette(QLabel().palette());
-
+    
     mEventsfoldCheck = new CheckBox(tr("Unfold Events"), mResultsGroup);
+    mEventsfoldCheck->setFixedHeight(h);
     mEventsfoldCheck->setToolTip(tr("Display phases' events"));
 
     mDatesfoldCheck = new CheckBox(tr("Unfold Data"), mResultsGroup);
+    mDatesfoldCheck->setFixedHeight(h);
     mDatesfoldCheck->setToolTip(tr("Display Events' data"));
 
     mDataThetaRadio = new RadioButton(tr("Calendar Dates"), mResultsGroup);
+    mDataThetaRadio->setFixedHeight(h);
     mDataThetaRadio->setChecked(true);
 
     mDataSigmaRadio = new RadioButton(tr("Ind. Std. Deviations"), mResultsGroup);
+    mDataSigmaRadio->setFixedHeight(h);
 
     mDataCalibCheck = new CheckBox(tr("Individual Calib. Dates"), mResultsGroup);
+    mDataCalibCheck->setFixedHeight(h);
     mDataCalibCheck->setChecked(true);
 
     mWiggleCheck = new CheckBox(tr("Wiggle shifted"), mResultsGroup);
+    mWiggleCheck->setFixedHeight(h);
 
     mStatCheck = new CheckBox(tr("Show Stat."), mResultsGroup);
+    mStatCheck->setFixedHeight(h);
     mStatCheck->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
     
     QVBoxLayout* resultsGroupLayout = new QVBoxLayout();
-    resultsGroupLayout->setContentsMargins(0, 0, 0, 0);
-    resultsGroupLayout->setSpacing(0);
+    resultsGroupLayout->setContentsMargins(10, 10, 10, 10);
+    resultsGroupLayout->setSpacing(15);
     resultsGroupLayout->addWidget(mDataThetaRadio);
     resultsGroupLayout->addWidget(mDataSigmaRadio);
     resultsGroupLayout->addWidget(mEventsfoldCheck);
@@ -207,7 +220,7 @@ mMinorCountScale (4)
     // -----------------------------------------------------------------
     mTempoGroup = new QWidget();
 
-    mDurationRadio = new RadioButton(tr("Phase Duration"), mTempoGroup);
+    mDurationRadio = new RadioButton(tr("Phase Duration"));
     mDurationRadio->setChecked(true);
 
     mTempoRadio = new RadioButton(tr("Phase Tempo"), mTempoGroup);
@@ -221,14 +234,14 @@ mMinorCountScale (4)
     mTempoStatCheck->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
     
     QVBoxLayout* tempoGroupLayout = new QVBoxLayout();
-    tempoGroupLayout->setContentsMargins(0, 0, 0, 0);
-    tempoGroupLayout->setSpacing(0);
-    resultsGroupLayout->addWidget(mDurationRadio);
-    resultsGroupLayout->addWidget(mTempoRadio);
-    resultsGroupLayout->addWidget(mTempoCredCheck);
-    resultsGroupLayout->addWidget(mTempoErrCheck);
-    resultsGroupLayout->addWidget(mActivityRadio);
-    resultsGroupLayout->addWidget(mTempoStatCheck);
+    tempoGroupLayout->setContentsMargins(mMargin, mMargin, mMargin, mMargin);
+    tempoGroupLayout->setSpacing(mMargin);
+    tempoGroupLayout->addWidget(mDurationRadio);
+    tempoGroupLayout->addWidget(mTempoRadio);
+    tempoGroupLayout->addWidget(mTempoCredCheck);
+    tempoGroupLayout->addWidget(mTempoErrCheck);
+    tempoGroupLayout->addWidget(mActivityRadio);
+    tempoGroupLayout->addWidget(mTempoStatCheck);
     mTempoGroup->setLayout(tempoGroupLayout);
     
     connect(mDurationRadio, &RadioButton::clicked, this, &ResultsView::setCurrentVariable);
@@ -269,32 +282,42 @@ mMinorCountScale (4)
      * ----------------------------------------------------------*/
     mTabDisplay = new QWidget();
     mSpanGroup  = new QWidget();
+    h = 20;
     
     mSpanTitle = new Label(tr("Span Options"), mTabDisplay);
+    mSpanTitle->setFixedHeight(25);
     mSpanTitle->setIsTitle(true);
     
     mDisplayStudyBut = new Button(tr("Study Period Display"), mSpanGroup);
+    mDisplayStudyBut->setFixedHeight(25);
     mDisplayStudyBut->setToolTip(tr("Restore view with the study period span"));
+    
     mSpanLab = new Label(tr("Span"), mSpanGroup);
+    mSpanLab->setFixedHeight(h);
     mSpanLab->setAdjustText(false);
 
     mCurrentXMinEdit = new LineEdit(mSpanGroup);
+    mCurrentXMinEdit->setFixedHeight(h);
     mCurrentXMinEdit->setToolTip(tr("Enter a minimal value to display the curves"));
 
     mCurrentXMaxEdit = new LineEdit(mSpanGroup);
+    mCurrentXMaxEdit->setFixedHeight(h);
     mCurrentXMaxEdit->setToolTip(tr("Enter a maximal value to display the curves"));
 
     mXScaleLab = new Label(tr("X"), mSpanGroup);
+    mXScaleLab->setFixedHeight(h);
     mXScaleLab->setAlignment(Qt::AlignCenter);
     mXScaleLab->setAdjustText(false);
 
     mXSlider = new QSlider(Qt::Horizontal, mSpanGroup);
+    mXSlider->setFixedHeight(h);
     mXSlider->setRange(-100, 100);
     mXSlider->setTickInterval(1);
     forceXSlideSetValue = true;
     mXSlider->setValue(0);
 
     mXScaleSpin = new QDoubleSpinBox(mSpanGroup);
+    mXScaleSpin->setFixedHeight(h);
     mXScaleSpin->setRange(pow(10., double (mXSlider->minimum()/100.)),pow(10., double (mXSlider->maximum()/100.)));
     mXScaleSpin->setSingleStep(.01);
     mXScaleSpin->setDecimals(3);
@@ -303,28 +326,73 @@ mMinorCountScale (4)
     mXScaleSpin->setToolTip(tr("Enter zoom value to magnify the curves on X span"));
 
     mMajorScaleLab = new Label(tr("Major Interval"), mSpanGroup);
+    mMajorScaleLab->setFixedHeight(h);
     mMajorScaleLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mMajorScaleEdit = new LineEdit(mSpanGroup);
+    mMajorScaleEdit->setFixedHeight(h);
     mMajorScaleEdit->setText(QString::number(mMajorScale));
     mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves, upper than 1"));
 
-
     mMinorScaleLab = new Label(tr("Minor Interval Count"), mSpanGroup);
+    mMinorScaleLab->setFixedHeight(h);
     mMinorScaleLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mMinorScaleEdit = new LineEdit(mSpanGroup);
+    mMinorScaleEdit->setFixedHeight(h);
     mMinorScaleEdit->setText(QString::number(mMinorCountScale));
     mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves, upper than 1"));
-
+    
+    
+    QHBoxLayout* spanLayout0 = new QHBoxLayout();
+    spanLayout0->setContentsMargins(0, 0, 0, 0);
+    spanLayout0->addWidget(mDisplayStudyBut);
+    
+    QHBoxLayout* spanLayout1 = new QHBoxLayout();
+    spanLayout1->setContentsMargins(0, 0, 0, 0);
+    //spanLayout1->setSpacing(mMargin);
+    spanLayout1->addWidget(mCurrentXMinEdit);
+    spanLayout1->addWidget(mSpanLab);
+    spanLayout1->addWidget(mCurrentXMaxEdit);
+    
+    QHBoxLayout* spanLayout2 = new QHBoxLayout();
+    spanLayout2->setContentsMargins(0, 0, 0, 0);
+    //spanLayout2->setSpacing(mMargin);
+    spanLayout2->addWidget(mXScaleLab);
+    spanLayout2->addWidget(mXSlider);
+    spanLayout2->addWidget(mXScaleSpin);
+    
+    QHBoxLayout* spanLayout3 = new QHBoxLayout();
+    spanLayout3->setContentsMargins(0, 0, 0, 0);
+    //spanLayout3->setSpacing(mMargin);
+    spanLayout3->addWidget(mMajorScaleLab);
+    spanLayout3->addWidget(mMajorScaleEdit);
+    
+    QHBoxLayout* spanLayout4 = new QHBoxLayout();
+    spanLayout4->setContentsMargins(0, 0, 0, 0);
+    //spanLayout4->setSpacing(mMargin);
+    spanLayout4->addWidget(mMinorScaleLab);
+    spanLayout4->addWidget(mMinorScaleEdit);
+    
+    QVBoxLayout* spanLayout = new QVBoxLayout();
+    spanLayout->setContentsMargins(10, 10, 10, 10);
+    spanLayout->setSpacing(5);
+    spanLayout->addLayout(spanLayout0);
+    spanLayout->addLayout(spanLayout1);
+    spanLayout->addLayout(spanLayout2);
+    spanLayout->addLayout(spanLayout3);
+    spanLayout->addLayout(spanLayout4);
+    
+    mSpanGroup->setLayout(spanLayout);
 
     // ------------------------------------
     //  Graphic Options
     // ------------------------------------
     mGraphicTitle = new Label(tr("Graphic Options"), mTabDisplay);
+    mGraphicTitle->setFixedHeight(20);
     mGraphicTitle->setIsTitle(true);
 
-    mGraphicGroup = new QWidget(mTabDisplay);
+    mGraphicGroup = new QWidget();
 
     mYScaleLab = new Label(tr("Y"), mGraphicGroup);
     mYScaleLab->setAlignment(Qt::AlignCenter);
@@ -381,6 +449,50 @@ mMinorCountScale (4)
     connect(mFontBut, &QPushButton::clicked, this, &ResultsView::updateFont);
     connect(mThicknessCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::updateThickness);
     connect(mOpacityCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::updateOpacity);
+    
+    QHBoxLayout* graphicLayout1 = new QHBoxLayout();
+    graphicLayout1->setContentsMargins(0, 0, 0, 0);
+    graphicLayout1->setSpacing(mMargin);
+    graphicLayout1->addWidget(mYScaleLab);
+    graphicLayout1->addWidget(mYSlider);
+    graphicLayout1->addWidget(mYScaleSpin);
+    
+    QHBoxLayout* graphicLayout2 = new QHBoxLayout();
+    graphicLayout2->setContentsMargins(0, 0, 0, 0);
+    graphicLayout2->setSpacing(mMargin);
+    graphicLayout2->addWidget(mLabFont);
+    graphicLayout2->addWidget(mFontBut);
+    
+    QHBoxLayout* graphicLayout3 = new QHBoxLayout();
+    graphicLayout3->setContentsMargins(0, 0, 0, 0);
+    graphicLayout3->setSpacing(mMargin);
+    graphicLayout3->addWidget(mLabThickness);
+    graphicLayout3->addWidget(mThicknessCombo);
+    
+    QHBoxLayout* graphicLayout4 = new QHBoxLayout();
+    graphicLayout4->setContentsMargins(0, 0, 0, 0);
+    graphicLayout4->setSpacing(mMargin);
+    graphicLayout4->addWidget(mLabOpacity);
+    graphicLayout4->addWidget(mOpacityCombo);
+    
+    QVBoxLayout* graphicLayout = new QVBoxLayout();
+    graphicLayout->setContentsMargins(0, mMargin, 0, mMargin);
+    graphicLayout->setSpacing(mMargin);
+    graphicLayout->addLayout(graphicLayout1);
+    graphicLayout->addLayout(graphicLayout2);
+    graphicLayout->addLayout(graphicLayout3);
+    graphicLayout->addLayout(graphicLayout4);
+    
+    mGraphicGroup->setLayout(graphicLayout);
+    
+    QVBoxLayout* displayLayout = new QVBoxLayout();
+    displayLayout->setContentsMargins(0, 0, 0, 0);
+    displayLayout->setSpacing(0);
+    displayLayout->addWidget(mSpanTitle);
+    displayLayout->addWidget(mSpanGroup);
+    displayLayout->addWidget(mGraphicTitle);
+    displayLayout->addWidget(mGraphicGroup);
+    mTabDisplay->setLayout(displayLayout);
 
     // ------------------------------------
     //  MCMC Chains
@@ -444,7 +556,7 @@ mMinorCountScale (4)
     bandwidthValidator->setDecimals(0);
     mBandwidthEdit->setValidator(bandwidthValidator);
     
-    connect(mCredibilityCheck, &CheckBox::clicked, this, &ResultsView::generateCurvesRequested);
+    connect(mCredibilityCheck, &CheckBox::clicked, this, &ResultsView::generateCurves);
     connect(mFFTLenCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::setFFTLength);
     connect(mBandwidthEdit, &LineEdit::editingFinished, this, &ResultsView::setBandwidth);
     connect(mThresholdEdit, &LineEdit::editingFinished, this, &ResultsView::setThreshold);
@@ -542,12 +654,13 @@ mMinorCountScale (4)
 
 
 
-    // -------------------------
-    connect(mEventsfoldCheck, &CheckBox::clicked, this, &ResultsView::updateScrollAreaRequested);
-    connect(mDatesfoldCheck, &CheckBox::clicked, this, &ResultsView::updateScrollAreaRequested);
+    // ---------------------------------------------------------------------------
+    //  The graph list must change
+    // ---------------------------------------------------------------------------
+    connect(mEventsfoldCheck, &CheckBox::clicked, this, &ResultsView::createGraphs);
+    connect(mDatesfoldCheck, &CheckBox::clicked, this, &ResultsView::createGraphs);
 
     connect(this, &ResultsView::updateScrollAreaRequested, this, &ResultsView::setCurrentVariable);
-    connect(this, &ResultsView::generateCurvesRequested, this, &ResultsView::generateCurves);
     
     // ---------------------------------------------------------------------------
     //  X Axis Scale
@@ -570,7 +683,7 @@ mMinorCountScale (4)
     // -----
     
     QVBoxLayout* optionsLayout = new QVBoxLayout();
-    optionsLayout->setContentsMargins(0, 0, 0, 0);
+    optionsLayout->setContentsMargins(mMargin, mMargin, 0, 0);
     optionsLayout->setSpacing(0);
     optionsLayout->addWidget(mGraphListTab);
     optionsLayout->addWidget(mResultsGroup);
@@ -581,6 +694,7 @@ mMinorCountScale (4)
     optionsLayout->addWidget(mTabPageSaving);
     optionsLayout->addWidget(mPageWidget);
     optionsLayout->addWidget(mToolsWidget);
+    optionsLayout->addStretch();
     mOptionsWidget->setLayout(optionsLayout);
     
     
@@ -623,7 +737,7 @@ void ResultsView::setModel(Model* model)
     mBandwidthEdit->setText(QString::number(mModel->getBandwidth()));
     mThresholdEdit->setText(QString::number(mModel->getThreshold()));
     
-    connect(mModel, &Model::newCalculus, this, &ResultsView::generateCurvesRequested);
+    connect(mModel, &Model::newCalculus, this, &ResultsView::generateCurves);
 }
 
 #pragma mark Layout
@@ -649,7 +763,7 @@ void ResultsView::updateLayout()
     int graphWidth = leftWidth;
     int tabsH = 40;
     int rulerH = mRuler->height();
-    int stackH = height() - tabsH - rulerH;
+    int stackH = height() - mMargin - tabsH - rulerH;
     
     if (mStatCheck->isChecked() || mTempoStatCheck->isChecked()){
         graphWidth = (2/3) * leftWidth;
@@ -658,9 +772,9 @@ void ResultsView::updateLayout()
     // ----------------------------------------------------------
     //  Left layout
     // ----------------------------------------------------------
-    mGraphTypeTabs->setGeometry(0, 0, leftWidth, tabsH);
-    mRuler->setGeometry(0, tabsH, graphWidth, rulerH);
-    mGraphListStack->setGeometry(0, tabsH + rulerH, leftWidth + sbe, stackH);
+    mGraphTypeTabs->setGeometry(mMargin, mMargin, leftWidth, tabsH);
+    mRuler->setGeometry(0, mMargin + tabsH, graphWidth, rulerH);
+    mGraphListStack->setGeometry(0, mMargin + tabsH + rulerH, leftWidth, stackH);
     
     mEventsScrollArea->setGeometry(0, 0, leftWidth + sbe, stackH);
     mPhasesScrollArea->setGeometry(0, 0, leftWidth + sbe, stackH);
@@ -711,269 +825,6 @@ void ResultsView::updateLayout()
     
     mExportImgBut->setGeometry(0, 0, 2*buttonSide, buttonSide);
     mExportResults->setGeometry(2*buttonSide, 0, 2*buttonSide, buttonSide);
-    
-    
-    
-
-    int ySpan = 0;
-    qreal dy(0); // shift between Y position of the Edit and the y position of the label
-
-    switch (mTabDisplayMCMC->currentIndex()) {
-        case 0: //Display tab
-        {
-        /*
-         * Span Options
-         *
-         * */
-
-        mSpanTitle->move(0, 3);
-
-        ySpan =  mMargin;// Reset ySpan inside mSpanGroup
-        if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
-            if ( mCurrentVariable == GraphViewResults::eTheta
-                || mCurrentVariable == GraphViewResults::eTempo
-                || mCurrentVariable == GraphViewResults::eActivity ) {
-
-                mDisplayStudyBut->setText(tr("Study Period Display"));
-                mDisplayStudyBut->setVisible(true);
-                mDisplayStudyBut->move(mMargin, ySpan);
-                ySpan += mDisplayStudyBut->height() + mMargin;
-            }
-            else if (mCurrentVariable == GraphViewResults::eSigma || (mCurrentVariable == GraphViewResults::eDuration)) {
-                mDisplayStudyBut->setText(tr("Fit Display"));
-                mDisplayStudyBut->setVisible(true);
-                mDisplayStudyBut->move(mMargin, ySpan);
-                ySpan += mDisplayStudyBut->height() + mMargin;
-            }
-            else
-                mDisplayStudyBut->setVisible(false);
-        } else
-            mDisplayStudyBut->setVisible(false);
-
-        if ((mCurrentTypeGraph != GraphViewResults::eTrace) && (mCurrentTypeGraph != GraphViewResults::eAccept))
-            mRuler->clearAreas();
-
-        mCurrentXMinEdit->move(mMargin, ySpan);
-
-        mCurrentXMaxEdit->move(mOptionsW - mCurrentXMinEdit->width() -  mMargin, ySpan );
-
-        const int w (mSpanLab->width());
-        mSpanLab->move(int (mOptionsW/2. - (w/2.)), int (mCurrentXMinEdit->y() ));
-
-        ySpan += mMargin + mCurrentXMinEdit->height();
-
-
-        mXScaleSpin->move(mOptionsW - mXScaleSpin->width() - mMargin, ySpan);
-
-        dy = (mXScaleSpin->height() - labelHeight) /2.;
-        mXScaleLab->move(mMargin, int (ySpan +dy));
-
-        const int xSliderWidth = mOptionsW - mXScaleLab->width() - mXScaleSpin->width() - 4*mMargin;
-
-#ifdef Q_OS_MAC
-        mXSlider->setGeometry(mXScaleLab->x() + mXScaleLab->width() + mMargin , mXScaleSpin->y(), xSliderWidth, mXSlider->height() );
-#endif
-
-#ifdef Q_OS_WIN
-        mXSlider->setGeometry(mXScaleLab->x() + mXScaleLab->width() + mMargin , mXScaleSpin->y(), xSliderWidth, mXSlider->height() );
-#endif
-
-#ifdef Q_OS_LINUX
-        mXSlider->setGeometry(mXScaleLab->x() + mXScaleLab->width() + mMargin , mXScaleSpin->y(), xSliderWidth, mXSlider->height() );
-#endif
-        ySpan += mXScaleSpin->height() + mMargin;
-
-        if (mCurrentTypeGraph != GraphViewResults::eCorrel) {
-            mMajorScaleLab->setVisible(true);
-            mMajorScaleEdit->setVisible(true);
-            mMinorScaleLab->setVisible(true);
-            mMinorScaleEdit->setVisible(true);
-
-
-            mMajorScaleEdit->move(mOptionsW - mMargin - mMajorScaleEdit->width(), ySpan );
-            dy = (mMajorScaleEdit->height() - mMajorScaleLab->height())/2.;
-            mMajorScaleLab->move(mOptionsW - 2*mMargin - mMajorScaleEdit->width() - fm.boundingRect(mMajorScaleLab->text()).width(), int (ySpan + dy));
-
-            ySpan += mMajorScaleEdit->height() + mMargin;
-
-            mMinorScaleEdit->move(mOptionsW - mMargin - mMinorScaleEdit->width(), ySpan );
-            dy = (mMinorScaleEdit->height() - mMinorScaleLab->height())/2.;
-            mMinorScaleLab->move(mOptionsW - 2*mMargin - mMinorScaleEdit->width() - fm.boundingRect(mMinorScaleLab->text()).width(), ySpan);
-            ySpan += mMinorScaleEdit->height() + mMargin;
-
-        } else {
-            mMajorScaleLab->setVisible(false);
-            mMajorScaleEdit->setVisible(false);
-            mMinorScaleLab->setVisible(false);
-            mMinorScaleEdit->setVisible(false);
-        }
-
-
-        // Fit the size and the position of the widget of the group in the mOptionsWidget coordonnate
-        mSpanGroup->setGeometry(0, mSpanTitle->y() + mSpanTitle->height() , mOptionsW, ySpan);
-
-        /* ----------------------------------------------------------
-           *  Graphic options
-           * ----------------------------------------------------------*/
-        int ySpan (0);
-        mGraphicTitle->move(0, mSpanGroup->y()+ mSpanGroup->height());
-
-        ySpan += mMargin;
-
-        mYScaleSpin->move(mOptionsW - mYScaleSpin->width() - mMargin, ySpan);
-        dy = (mYScaleSpin->height() - mYScaleLab->height() ) /2.;
-        mYScaleLab->move(mMargin, int (ySpan + dy ) );
-        const int ySliderWidth = mOptionsW - mYScaleLab->width() - mYScaleSpin->width() - 4 * mMargin;
-#ifdef Q_OS_MAC
-        dy = (mYSlider->height() - labelHeight) /2;
-        mYSlider->setGeometry(mYScaleLab->x() + mYScaleLab->width() + mMargin, int (mYScaleLab->y() - dy), ySliderWidth, mYSlider->height());
-#endif
-
-#ifdef Q_OS_WIN
-        dy = (mYScaleSpin->height() -  mYSlider->height()) /2.;
-        mYSlider->setGeometry(mYScaleLab->x() + mYScaleLab->width() + mMargin, mYScaleSpin->y(), ySliderWidth, mYSlider->height());
-#endif
-
-#ifdef Q_OS_LINUX
-       // dy = (mYScaleSpin->height() -  mYSlider->height()) /2.;
-        mYSlider->setGeometry(mYScaleLab->x() + mYScaleLab->width() + mMargin, mYScaleSpin->y(), ySliderWidth, mYSlider->height());
-#endif
-        int maxTextWidth (fm.boundingRect(mLabFont->text()).width() + mMargin);
-        int buttonWidth (mOptionsW - maxTextWidth - 2*mMargin);
-        ySpan += mMargin + mYScaleSpin->height();
-        mFontBut->move(maxTextWidth + mMargin, ySpan );
-        mFontBut->setFixedWidth(buttonWidth);
-        dy = (mFontBut->height() - mLabFont->height()) /2.;
-        mLabFont->move(maxTextWidth - fm.boundingRect(mLabFont->text()).width(), int ( ySpan + dy));
-
-        maxTextWidth = fm.boundingRect(mLabThickness->text()).width() + mMargin;
-
-#ifdef Q_OS_MAC
-    const int arrowWidth (12);
-#endif
-
-#ifdef Q_OS_WIN
-    const int arrowWidth (0);
-#endif
-
-#ifdef Q_OS_LINUX
-    const int arrowWidth (0);
-#endif
-
-        buttonWidth = mThicknessCombo->fontMetrics().boundingRect("999 px").width() + 2*mMargin + arrowWidth;
-        ySpan += mMargin + mFontBut->height();
-        mThicknessCombo->setFixedWidth(buttonWidth);
-        mThicknessCombo->move(mOptionsW - buttonWidth -mMargin,  ySpan);
-        dy = (mThicknessCombo->height() - mLabThickness->height()) /2.;
-        mLabThickness->move(mThicknessCombo->x() - fm.boundingRect(mLabThickness->text()).width() - mMargin, int (ySpan + dy));
-
-        maxTextWidth = fm.boundingRect(mLabOpacity->text()).width() + mMargin;
-        buttonWidth = mOpacityCombo->fontMetrics().boundingRect("9999 %").width() + 2*mMargin + arrowWidth;
-        ySpan += mMargin + mThicknessCombo->height();
-        mOpacityCombo->setFixedWidth(buttonWidth);
-        mOpacityCombo->move(mOptionsW - buttonWidth -mMargin, ySpan);
-        dy = (mOpacityCombo->height() - mLabOpacity->height()) /2.;
-        mLabOpacity->move(mOpacityCombo->x() - fm.boundingRect(mLabOpacity->text()).width() - mMargin, int (ySpan + dy));
-
-        ySpan += mMargin + mOpacityCombo->height();
-
-        // Fit the size and the position of the widget of the group in the mTabDisplay coordonnate
-        mGraphicGroup->setGeometry(0, mGraphicTitle->y() + mGraphicTitle->height() , mOptionsW, ySpan);
-
-        mTabDisplay->resize(mOptionsW,  mGraphicGroup->y() + mGraphicGroup->height() );
-
-        }
-        break;
-
-        default: //Distrib. Options tab
-           {
-            /* ----------------------------------------------------------
-               *  MCMC Chains options layout
-               * ----------------------------------------------------------*/
-
-              mChainsTitle->move(0, 3 );
-
-              ySpan = mMargin ;
-
-              // posterior distribution : chains are selectable with checkboxes
-              const int tabIdx = mGraphTypeTabs->currentIndex();
-              if (tabIdx == 0) {
-                  // inside mChainsGroup Coordonnate
-                  mAllChainsCheck->move(mMargin, ySpan);
-                  ySpan += mAllChainsCheck->height() + mMargin;
-
-
-                  if (mCurrentVariable != GraphViewResults::eTempo && mCurrentVariable != GraphViewResults::eActivity ) {
-                      for (auto && check: mCheckChainChecks) {
-                          check->move(mMargin, ySpan);
-                          ySpan += check->height() + mMargin;
-                      }
-                  }
-
-              } else {      // trace, accept or correl : chains are selectable with radio-buttons
-                  for (auto && radio : mChainRadios) {
-                      radio->move(mMargin, ySpan);
-                      ySpan += radio->height() + mMargin;
-                  }
-              }
-
-
-              mChainsGroup->setGeometry(0, mChainsTitle->y() + mChainsTitle->height(), mOptionsW, ySpan);
-
-              /* ----------------------------------------------------------
-               *  Density Options layout
-               * ----------------------------------------------------------*/
-              if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
-                  mDensityOptsTitle->move(0, mChainsGroup->y() + mChainsGroup->height());
-
-                  ySpan = mMargin;
-
-                  if (mCurrentVariable == GraphViewResults::eTheta || mCurrentVariable == GraphViewResults::eDuration) {
-                      mCredibilityCheck->setVisible(true);
-                      mCredibilityCheck->move(mMargin, ySpan);
-                      ySpan += mCredibilityCheck->height() + mMargin;
-
-                  } else
-                      mCredibilityCheck->setVisible(false);
-
-                  if (mCurrentVariable == GraphViewResults::eTempo || mCurrentVariable == GraphViewResults::eActivity ) {
-                      mDensityOptsTitle->setVisible(false);
-                      mThreshLab->setVisible(false);
-                      mThresholdEdit->setVisible(false);
-                      mDensityOptsGroup->setGeometry(0, 0, mOptionsW, 0);
-
-                  } else {
-                      mDensityOptsTitle->setVisible(true);
-                      mThreshLab->setVisible(true);
-                      mThresholdEdit->setVisible(true);
-
-                      mThresholdEdit->move(mOptionsW - mMargin - mThresholdEdit->width(), ySpan);
-                      dy = (mThresholdEdit->height() - mThreshLab->height())/2.;
-                      mThreshLab->move(mThresholdEdit->x() - fm.boundingRect(mThreshLab->text()).width() - mMargin, int (ySpan + dy));
-                      ySpan += mThresholdEdit->height() + mMargin;
-
-                      mFFTLenCombo->move(mOptionsW - mMargin - mFFTLenCombo->width(), ySpan);
-                      dy = (mFFTLenCombo->height() - mFFTLenLab->height())/2.;
-                      mFFTLenLab->move(mFFTLenCombo->x() - fm.boundingRect(mFFTLenLab->text()).width() - mMargin, int( ySpan + dy));
-                      ySpan += mFFTLenCombo->height() + mMargin;
-
-                      mBandwidthEdit->move(mOptionsW - mMargin - mBandwidthEdit->width(), ySpan);
-                      dy = (mBandwidthEdit->height() - mBandwidthLab->height())/2.;
-                      mBandwidthLab->move(mBandwidthEdit->x() - fm.boundingRect(mBandwidthLab->text()).width() - mMargin, ySpan);
-                      ySpan += mBandwidthEdit->height() + mMargin;
-
-                      mDensityOptsGroup->setGeometry(0, mDensityOptsTitle->y() + mDensityOptsTitle->height(), mOptionsW, ySpan);
-                  }
-
-                  mTabMCMC->resize(mOptionsW, mDensityOptsGroup->y() + mDensityOptsGroup->height() + 5) ;
-
-              } else
-                  mTabMCMC->resize(mOptionsW, mChainsGroup->y() + mChainsGroup->height() + 5) ;
-
-            }
-        break;
-    }
-    mTabDisplayMCMC->resize(mOptionsW, mTabDisplayMCMC->minimalHeight());
 }
 
 
@@ -1033,67 +884,21 @@ void ResultsView::applyAppSettings()
     // ------------------------------------------------------------------------
     //  Left part of the view : tabs, ruler and graphs
     // ------------------------------------------------------------------------
-    mRuler->setMarginBottom(fm.ascent() * 2.0);
+    //mRuler->setMarginBottom(fm.ascent() * 2.0);
     
     mGraphHeight = GraphViewResults::mHeightForVisibleAxis ; // same value in ResultsView::updateScaleY(int value)
 
     const int wEdit = int (ceil((mOptionsW - 4 * mMargin)/3.));
-    const QSize allDensitiesButSize (mOptionsW/2, mOptionsW/4);
-    const QSize singleDensityButSize (mOptionsW/4, mOptionsW/4);
 
 
-    mOptionsWidget->setFixedWidth(mOptionsW);
+    //mOptionsWidget->setFixedWidth(mOptionsW);
 
-    mPageWidget->resize(mOptionsW, mRuler->height());
+    //mPageWidget->resize(mOptionsW, mRuler->height());
      /* -------------------------------------- mResultsGroup---------------------------------------------------*/
 
      /* - mTabDisplayMCMC */
 
      /*  Display Options layout */
-
-    mXScaleSpin->setLocale(QLocale(AppSettings::mLanguage, AppSettings::mCountry));
-
-    mSpanTitle->setFixedSize(mOptionsW, titleHeight);
-    mDisplayStudyBut->setFixedSize(mOptionsW - 2*mMargin, buttonHeight);
-    mSpanLab->setFixedSize( fm.boundingRect(mSpanLab->text()).width(), labelHeight);
-
-    mCurrentXMinEdit->setFixedSize(wEdit, lineEditHeight);
-    mCurrentXMaxEdit->setFixedSize(wEdit, lineEditHeight);
-    mXScaleLab->setFixedWidth( int (fm.width(mXScaleLab->text())));
-    mXScaleSpin->setFixedSize(wEdit, spinBoxHeight);
-
-    mMajorScaleLab->setFixedSize(mOptionsW - wEdit - 2* mMargin, labelHeight);
-    mMajorScaleEdit->setFixedSize(wEdit, lineEditHeight);
-
-    mMinorScaleLab->setFixedSize(mOptionsW - wEdit - 2* mMargin, labelHeight);
-    mMinorScaleEdit->setFixedSize(wEdit, lineEditHeight);
-
-    /* -------------------------------------- Graphic Options (old mDisplayGroup) ---------------------------------------------------*/
-    mGraphicTitle->setFixedSize(mOptionsW, titleHeight);
-    mYScaleLab->setFixedSize(fm.boundingRect(mYScaleLab->text()).width(), labelHeight);
-
-    mYScaleSpin->setFixedSize(mCurrentXMinEdit->width(), spinBoxHeight);
-    mLabFont->setFixedSize(fm.boundingRect(mLabFont->text()).width(), labelHeight);
-
-    mFontBut->setFixedSize(mOptionsW - fm.boundingRect(mLabFont->text()).width()  - mMargin, buttonHeight);
-    mLabThickness->setFixedSize(fm.boundingRect(mLabThickness->text()).width(), comboBoxHeight);
-
-
-#ifdef Q_OS_MAC
-    const int arrowWidth = 12;
-#endif
-
-#ifdef Q_OS_WIN
-    const int arrowWidth = 0;
-#endif
-
-#ifdef Q_OS_LINUX
-    const int arrowWidth = 0;
-#endif
-
-    mThicknessCombo->setFixedSize( fm.boundingRect("999 px").width() + 2*mMargin + arrowWidth, comboBoxHeight);
-    mLabOpacity->setFixedSize(mOptionsW/2 - mMargin, labelHeight);
-    mOpacityCombo->setFixedSize(fm.boundingRect("9999 %").width() + 2*mMargin, comboBoxHeight);
 
      /* -------------------------------------- mChainsGroup---------------------------------------------------*/
 
@@ -1324,7 +1129,6 @@ void ResultsView::setGraphListTab(int tabIndex)
     {
         mCurrentTypeGraph = GraphViewResults::ePostDistrib;
     }
-    
     createGraphs();
 }
 
@@ -1350,7 +1154,6 @@ void ResultsView::setCurrentVariable()
     {
         mCurrentVariable = GraphViewResults::eActivity;
     }
-    
     createGraphs();
 }
 
@@ -1403,7 +1206,7 @@ void ResultsView::initResults(Model* model)
 
     QFontMetricsF gfm(font());
     QLocale locale = QLocale();
-    mMarginLeft = 0;
+    //mMarginLeft = 0;
     Scale xScale;
     xScale.findOptimal(mModel->mSettings.mTmin, mModel->mSettings.mTmax, 7);
 
@@ -1591,40 +1394,44 @@ void ResultsView::createByEventsGraphs()
         {
             if(graphIndexIsInCurrentPage(graphIndex))
             {
-                GraphViewEvent* graphEvent = new GraphViewEvent(eventsWidget);
-                graphEvent->setSettings(mModel->mSettings);
-                graphEvent->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
-                graphEvent->setEvent(event);
-                graphEvent->setGraphFont(font());
-                graphEvent->setGraphsThickness(mThicknessCombo->currentIndex());
-                graphEvent->changeXScaleDivision(mMajorScale, mMinorCountScale);
+                GraphViewEvent* graph = new GraphViewEvent(eventsWidget);
+                graph->setSettings(mModel->mSettings);
+                graph->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+                graph->setEvent(event);
+                graph->setGraphFont(font());
+                graph->setGraphsThickness(mThicknessCombo->currentIndex());
+                graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
+                graph->setMarginLeft(mMarginLeft);
+                graph->setMarginRight(mMarginRight);
                 
-                mByEventsGraphs.append(graphEvent);
-                connect(graphEvent, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+                mByEventsGraphs.append(graph);
+                connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
                 ++graphIndex;
+            }
                 
-                if(mDatesfoldCheck->isChecked())
+            if(mDatesfoldCheck->isChecked())
+            {
+                for (int j=0; j<event->mDates.size(); ++j)
                 {
-                    for (int j=0; j<event->mDates.size(); ++j)
+                    if(graphIndexIsInCurrentPage(graphIndex))
                     {
-                        if(graphIndexIsInCurrentPage(graphIndex))
-                        {
-                            Date& date = event->mDates[j];
-                            
-                            GraphViewDate* graphDate = new GraphViewDate(eventsWidget);
-                            graphDate->setSettings(mModel->mSettings);
-                            graphDate->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
-                            graphDate->setDate(&date);
-                            graphDate->setGraphFont(font());
-                            graphDate->setGraphsThickness(mThicknessCombo->currentIndex());
-                            graphDate->changeXScaleDivision(mMajorScale, mMinorCountScale);
-                            graphDate->setColor(event->mColor);
-                            graphDate->setGraphsOpacity(mOpacityCombo->currentIndex()*10);
+                        Date& date = event->mDates[j];
+                        
+                        GraphViewDate* graph = new GraphViewDate(eventsWidget);
+                        graph->setSettings(mModel->mSettings);
+                        graph->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+                        graph->setDate(&date);
+                        graph->setGraphFont(font());
+                        graph->setGraphsThickness(mThicknessCombo->currentIndex());
+                        graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
+                        graph->setColor(event->mColor);
+                        graph->setGraphsOpacity(mOpacityCombo->currentIndex()*10);
+                        graph->setMarginLeft(mMarginLeft);
+                        graph->setMarginRight(mMarginRight);
 
-                            mByEventsGraphs.append(graphDate);
-                            connect(graphDate, &GraphViewResults::selected, this, &ResultsView::updateLayout);
-                            ++graphIndex;
-                        }
+                        mByEventsGraphs.append(graph);
+                        connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+                        ++graphIndex;
                     }
                 }
             }
@@ -1632,7 +1439,7 @@ void ResultsView::createByEventsGraphs()
     }
 
     mEventsScrollArea->update();
-    emit generateCurvesRequested();
+    generateCurves();
 }
 
 void ResultsView::createByPhasesGraphs()
@@ -1669,6 +1476,8 @@ void ResultsView::createByPhasesGraphs()
                 graph->setGraphFont(font());
                 graph->setGraphsThickness(mThicknessCombo->currentIndex());
                 graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
+                graph->setMarginLeft(mMarginLeft);
+                graph->setMarginRight(mMarginRight);
                 
                 mByPhasesGraphs.append(graph);
                 connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
@@ -1690,6 +1499,8 @@ void ResultsView::createByPhasesGraphs()
                         graph->setGraphFont(font());
                         graph->setGraphsThickness(mThicknessCombo->currentIndex());
                         graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
+                        graph->setMarginLeft(mMarginLeft);
+                        graph->setMarginRight(mMarginRight);
                         
                         mByPhasesGraphs.append(graph);
                         connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
@@ -1713,6 +1524,8 @@ void ResultsView::createByPhasesGraphs()
                                 graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
                                 graph->setColor(event->mColor);
                                 graph->setGraphsOpacity(mOpacityCombo->currentIndex()*10);
+                                graph->setMarginLeft(mMarginLeft);
+                                graph->setMarginRight(mMarginRight);
 
                                 mByPhasesGraphs.append(graph);
                                 connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
@@ -1726,7 +1539,7 @@ void ResultsView::createByPhasesGraphs()
     }
 
     mPhasesScrollArea->update();
-    emit generateCurvesRequested();
+    generateCurves();
 }
 
 void ResultsView::createByTempoGraphs()
@@ -1763,6 +1576,8 @@ void ResultsView::createByTempoGraphs()
                 graph->setGraphFont(font());
                 graph->setGraphsThickness(mThicknessCombo->currentIndex());
                 graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
+                graph->setMarginLeft(mMarginLeft);
+                graph->setMarginRight(mMarginRight);
                 
                 mByTempoGraphs.append(graph);
                 connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
@@ -1772,7 +1587,7 @@ void ResultsView::createByTempoGraphs()
     }
 
     mTempoScrollArea->update();
-    emit generateCurvesRequested();
+    generateCurves();
 }
 
 void ResultsView::createByCurveGraph()
@@ -1795,7 +1610,7 @@ void ResultsView::createByCurveGraph()
     mByCurveGraphs.append(graphAlpha);
 
     mCurveScrollArea->update();
-    emit generateCurvesRequested();
+    generateCurves();
 }
 
 
@@ -1880,7 +1695,7 @@ void ResultsView::graphTypeChange()
 {
     mCurrentTypeGraph = (GraphViewResults::TypeGraph) mGraphTypeTabs->currentIndex();
     updateGraphTypeOptions();
-    emit generateCurvesRequested();
+    generateCurves();
 }
 
 #pragma mark Curves generation
@@ -2813,10 +2628,6 @@ void ResultsView::updateGraphsFont()
         default:
                 break;
       }
-
-    mRuler->setMarginLeft(mMarginLeft);
-    mRuler->setMarginRight(mMarginRight);
-    mRuler->updateLayout();
 
     for (GraphViewResults* phaseGraph : mByPhasesGraphs) {
         phaseGraph->setMarginLeft(mMarginLeft);

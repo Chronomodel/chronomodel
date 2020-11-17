@@ -106,21 +106,19 @@ signals:
 
 private:
     QScrollBar* mScrollBar;
-    qreal mScrollBarHeight;
+    AxisTool mAxisTool;
+    QVector<RulerArea> mAreas;
+    
     QFont mAxisFont;
     QRectF mAxisRect;
 
     qreal mStepMinWidth;
     qreal mStepWidth;
+    
     qreal mMarginLeft;
     qreal mMarginRight;
     qreal mMarginTop;
     qreal mMarginBottom;
-
-    AxisTool mAxisTool;
-
-
-    QVector<RulerArea> mAreas;
 };
 
 #endif
