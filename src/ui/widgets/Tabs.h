@@ -51,9 +51,10 @@ public:
 
     // setter
     void addTab(const QString& name);
+    void addTab(const QString& name, int identifier);
     void addTab(QWidget* wid, const QString& name);
-    int currentIndex() const;
     void setTab(const int &index, bool notify);
+    void setTabId(const int identifier, bool notify);
     void setFont(const QFont &font);
     void setTabHeight(const int &h) {mTabHeight = h;}
 
@@ -61,6 +62,9 @@ public:
         mTabVisible[i] = visible;
         updateLayout();
     }
+    
+    int currentIndex() const;
+    int currentId() const;
 
     // getter
     QWidget* getWidget(const int &i);
@@ -88,9 +92,9 @@ private:
     QStringList mTabNames;
     QList<QRectF> mTabRects;
     QList<QWidget*> mTabWidgets;
+    QList<int> mTabIds;
     QList<bool> mTabVisible;
     int mCurrentIndex;
-    QFont mFont;
 };
 
 #endif

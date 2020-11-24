@@ -83,20 +83,23 @@ public:
     ResultsView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~ResultsView();
     
-    void doProjectConnections(Project* project);
-    void setModel(Model* model);
+    void setProject(Project* project);
+    void updateModel(Model* model);
 
 protected:
+    // ------------------------------------------------
+    //  Events & Layout
+    // ------------------------------------------------
     void mouseMoveEvent(QMouseEvent* e);
     void resizeEvent(QResizeEvent* e);
     
+    void updateMarkerGeometry(const int x);
     void updateGraphsLayout();
     void updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewResults*> graphs);
-    
-    void updateGraphTypeOptions();
-    void updateGraphsFont();
 
-    // Create graphs in each scroll area
+    // ------------------------------------------------
+    //  Graphs UI
+    // ------------------------------------------------
     void createGraphs();
     void createByEventsGraphs();
     void createByPhasesGraphs();
@@ -104,84 +107,119 @@ protected:
     void createByCurveGraph();
     
     void deleteAllGraphsInList(QList<GraphViewResults*>& list);
-    bool graphIndexIsInCurrentPage(int graphIndex);
-    
-    ModelChronocurve* modelChronocurve() const;
-    bool isChronocurve() const;
-    
-    void clearHisto();
-    void clearChainHistos();
-    double sliderToZoom(const int &coef);
-    int zoomToSlider(const double &zoom);
-
+    QList<GraphViewResults*> allGraphs();
     QList<GraphViewResults*> currentGraphs(bool onlySelected);
     bool hasSelectedGraphs();
     
+    // ------------------------------------
+    //  Pagination
+    // ------------------------------------
+    bool graphIndexIsInCurrentPage(int graphIndex);
+    
+    // ------------------------------------------------
+    //  Chains controls
+    // ------------------------------------------------
+    void createChainsControls();
+    void deleteChainsControls();
+    
+    // ------------------------------------------------
+    //  Set controls UI values
+    // ------------------------------------------------
+    void setXRange();
+    void setXSlider(const int value);
+    void setXSpin(const double value);
+    void setXIntervals();
+    
+    // ------------------------------------------------
+    //  Utilities
+    // ------------------------------------------------
+    bool isPostDistribGraph();
+    double sliderToZoom(const int &coef);
+    int zoomToSlider(const double &zoom);
+    
+    // ------------------------------------------------
+    //  Controls actions helpers
+    // ------------------------------------------------
+    void updateZoomX();
+    void updateGraphsZoomX();
+    void updateGraphsHeight();
+    
+    // ------------------------------------------------
+    //  Chronocurve
+    // ------------------------------------------------
+    ModelChronocurve* modelChronocurve() const;
+    bool isChronocurve() const;
+    
 public slots:
-    void updateResults(Model* model = nullptr);
-    void initResults(Model* model = nullptr);
-
-    void setCurrentVariable();
-    void updateLayout();
-    void updateMarkerGeometry(const int x);
-
-    void clearResults();
-    void generateCurves();
+    
+    // ------------------------------------------------
+    //  Results
+    // ------------------------------------------------
+    void clearResults(); // connected to Project::mcmcStarted
+    void initResults();
+    
+    
 
     void updateControls();
     void applyAppSettings();
     void updateScales();
-
-    void updateModel();
+    
     void updateResultsLog();
 
 private slots:
+    
+    // ------------------------------------------------
+    //  Layout
+    // ------------------------------------------------
+    void updateLayout();
+    
+    // ------------------------------------------------
+    //  Graphs / Curves / Updates
+    // ------------------------------------------------
+    void generateCurves();
+    
+    // ------------------------------------
+    //  Tabs changed
+    // ------------------------------------
+    void setGraphTypeTab(int tabIndex);
     void setGraphListTab(int tabIndex);
     void setDisplayTab(int tabIndex);
     void setPageSavingTab(int tabIndex);
-    void updateGraphsPerPage(int i);
     
-    void graphTypeChange();
+    // ------------------------------------
+    //  Controls actions
+    // ------------------------------------
+    void applyRuler(const double min, const double max);
+    
+    void applyCurrentVariable();
+    
+    void applyStudyPeriod();
+    void applyXRange();
+    void applyXSlider(int value);
+    void applyXSpin(double value);
+    void applyXIntervals();
+    
+    void applyYSlider(int value);
+    void applyYSpin(int value);
+    void applyFont();
+    void applyThickness(const int value);
+    void applyOpacity(const int value);
+    
+    void applyFFTLength();
+    void applyBandwidth();
+    void applyThreshold();
+    
+    void applyGraphsPerPage(int i);
+    void applyPreviousPage();
+    void applyNextPage();
+    
+    
+
+    
     void updateCurvesToShow();
-
-    void settingChange();
-    void updateZoomX(); // Connected to slider signals
-    void updateScroll(const double min, const double max); // Connected to ruler signals
-    void editCurrentMinX(); // Connected to min edit signals
-    void editCurrentMaxX(); // Connected to max edit signals
-    void setStudyPeriod(); // connected to study button
-    void updateZoomEdit();
-    void updateGraphsZoomX();
-
-    // X Axis scale
-    void setScaleXSpin(const double value);
-    void scaleXSpinChanged(double value);
-    void setScaleXSlide(const int value);
-    void scaleXSliderChanged( int value);
-
-    void updateScaleY(int value);
-    // connected to mMajorScaleEdit and mMinorScaleEdit
-    void updateScaleX();
-    void updateScaleEdit();
-    
-    void updateFont();
-    void updateThickness(const int value);
-    void updateOpacity(const int value);
-   // void updateRendering(int index);
     void showInfos(bool);
     
-    // ------------------------------------
-    //  Density Options
-    // ------------------------------------
-    void setFFTLength();
-    void setBandwidth();
-    void setThreshold();
 
-    // ------------------------------------
-    //  Pagination
-    // ------------------------------------
-    void previousPage();
-    void nextPage();
     
     // ------------------------------------
     //  Saving / Export
@@ -196,8 +234,6 @@ private slots:
 signals:
 
     void resultsLogUpdated(const QString &log);
-
-    void updateScrollAreaRequested();
 
     void xSpinUpdate(const int value);
     void xSlideUpdate(const int value);
@@ -252,6 +288,7 @@ private:
     // ---------------------------------------------------------------------
     // Right UI part components
     // ---------------------------------------------------------------------
+    QScrollArea* mOptionsScroll;
     QWidget* mOptionsWidget;
     Tabs* mGraphListTab;
     
@@ -342,7 +379,7 @@ private:
     Label* mChainsTitle;
 
     CheckBox* mAllChainsCheck;
-    QList<CheckBox*> mCheckChainChecks;
+    QList<CheckBox*> mChainChecks;
     QList<RadioButton*> mChainRadios;
 
     // ------------------------------------

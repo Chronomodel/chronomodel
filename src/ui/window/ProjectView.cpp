@@ -93,7 +93,6 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
 
     connect(mResultsView, &ResultsView::resultsLogUpdated, this, &ProjectView::updateResultsLog);
 
-    //setAppSettingsFont();
     mLogTabs->setTab(2, false);
     mLogTabs->showWidget(2);
 }
@@ -132,10 +131,10 @@ void ProjectView::resizeEvent(QResizeEvent* e)
     mLogResultsEdit->resize(width() - AppSettings::widthUnit() , logTabHusefull);
 }
 
-void ProjectView::doProjectConnections(Project* project)
+void ProjectView::setProject(Project* project)
 {
     mModelView->setProject(project);
-    mResultsView->doProjectConnections(project);
+    mResultsView->setProject(project);
 }
 
 void ProjectView::resetInterface()
@@ -155,30 +154,10 @@ void ProjectView::showModel()
     mStack->setCurrentIndex(0);
 }
 
-/**
- * @brief ProjectView::changeDesign slot connected to Project::projectDesignChange() in MainWindows
- * @param refresh
- */
-void ProjectView::changeDesign(bool refresh)
-{
-    (void) refresh;
-    mRefreshResults = true;
-}
-
-void ProjectView::setAppSettings()
-{
-    mModelView->applyAppSettings();
-    mResultsView->applyAppSettings();
-}
-
 void ProjectView::showResults()
 {
     mResultsView->clearResults();
-    mResultsView->updateModel(); // update Design e.g. Name and color //updateResults() is call inside
-    mRefreshResults = false;
-
     mStack->setCurrentIndex(1);
-    // come from mViewResultsAction and  updateResults send repaint on mStack
 }
 
 
@@ -197,17 +176,12 @@ void ProjectView::updateProject()
     mModelView->updateProject();
 }
 
-void ProjectView::createProject()
-{
-    mModelView->createProject();
-}
-
 void ProjectView::newPeriod()
 {
     mModelView->modifyPeriod();
 }
 
-void ProjectView:: applyFilesSettings(Model* model)
+void ProjectView::applyFilesSettings(Model* model)
 {
     // Rebuild all calibration curve
 
@@ -222,18 +196,19 @@ void ProjectView:: applyFilesSettings(Model* model)
 
 void ProjectView::applySettings(Model* model)
 {
-    setAppSettings();
+    mModelView->applyAppSettings();
+    mResultsView->applyAppSettings();
     
     if (model)
     {
         model->updateFormatSettings();
         
-        mResultsView->setModel(model); // nécessaire ??
-        mResultsView->applyAppSettings();
-        mResultsView->updateControls();
+        //mResultsView->setModel(model); // nécessaire ??
+        //mResultsView->applyAppSettings(); // déjà fait !
+        //mResultsView->updateControls();  // nécessaire ??
 
         // force to regenerate the densities
-        mResultsView->initResults(model);
+        //mResultsView->initResults();
 
         model->generateModelLog();
         mLogModelEdit->setText(model->getModelLog());
@@ -250,45 +225,29 @@ void ProjectView::updateMultiCalibration()
     mModelView->updateMultiCalibration();
 }
 
-void ProjectView::updateResults(Model* model)
-{
-    if (model) {
-        mResultsView->updateResults(model);
-
-        model->generateModelLog();
-        mLogModelEdit->setText(model->getModelLog());
-
-        mLogMCMCEdit->setText(model->getMCMCLog());
-
-        model->generateResultsLog();
-        mLogResultsEdit->setText(model->getResultsLog());
-
-        mStack->setCurrentIndex(1);
-    }
-}
-
+/**
+ * This function is called when  MCMC has finished
+ * We want to show the results :
+ *  - The Model may have changed since the last display : update it in results
+ *  - The Model densities have to be computed
+ *  - The Model Logs have to be generated
+ */
 void ProjectView::initResults(Model* model)
 {
-    qDebug()<<"ProjectView::initResults()";
-    if (model) {
-        mResultsView->clearResults();
-
-        mResultsView->initResults(model);
-        mRefreshResults = true;
-        mResultsView->update();
-
-        model->generateModelLog();
-        mLogModelEdit->setText(model->getModelLog());
-
-        mLogMCMCEdit->setText(model->getMCMCLog());
-
-        model->generateResultsLog();
-        mLogResultsEdit->setText(model->getResultsLog());
-
-       // showResults();
-       mStack->setCurrentIndex(1);
-    }
-
+    model->updateDesignFromJson();
+    model->initDensities();
+    model->generateModelLog();
+    model->generateResultsLog();
+    
+    mResultsView->updateModel(model);
+    
+    // Update log view
+    mLogModelEdit->setText(model->getModelLog());
+    mLogMCMCEdit->setText(model->getMCMCLog());
+    mLogResultsEdit->setText(model->getResultsLog());
+    
+    // Show results :
+    mStack->setCurrentIndex(1);
 }
 
 void ProjectView::updateResultsLog(const QString& log)

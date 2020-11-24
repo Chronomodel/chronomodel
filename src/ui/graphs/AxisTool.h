@@ -60,7 +60,6 @@ struct Scale
     explicit Scale(double n, double x, double m, int t ) : min(n), max(x), mark(m), tip (t) {}
 
     void findOptimal(const double &a, const double &b, const int &nOptimal);
-
 };
 
 /**

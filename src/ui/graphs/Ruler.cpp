@@ -47,6 +47,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <iostream>
 
 
+int Ruler::sHeight = 50;
+
 Ruler::Ruler(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mCurrentMin(0.),
 mCurrentMax(1000.),
@@ -58,7 +60,7 @@ mStepWidth(100),
 mMarginLeft(0),
 mMarginRight(0),
 mMarginTop(5),
-mMarginBottom(0)
+mMarginBottom(3)
 {
     mScrollBar = new QScrollBar(Qt::Horizontal, this);
     mScrollBar->setRange(0, 0);
@@ -74,7 +76,7 @@ mMarginBottom(0)
     
     mAxisFont = font();
 
-    setFixedHeight(50);
+    setFixedHeight(sHeight);
     setMouseTracking(true);
     updateLayout();
 }
@@ -117,12 +119,9 @@ Ruler& Ruler::operator=(const Ruler & origin)
 
 void Ruler::setFont(const QFont &font)
 {
-    mMarginTop = 5;
     mAxisFont = font;
-
     updateLayout();
 }
-
 
 // Areas
 void Ruler::clearAreas()
@@ -303,7 +302,7 @@ void Ruler::updateLayout()
 {
     int scrollBarHeight = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     
-    mAxisRect = QRectF(mMarginLeft + 1, mMarginTop + scrollBarHeight, width() - mMarginLeft - mMarginRight, mMarginBottom);// + font().pointSizeF());
+    mAxisRect = QRectF(mMarginLeft + 1, mMarginTop + scrollBarHeight, width() - mMarginLeft - mMarginRight, sHeight - (mMarginTop + scrollBarHeight));
 
     mScrollBar->setGeometry(mMarginLeft , 0, mAxisRect.width(), scrollBarHeight);
 
@@ -328,12 +327,13 @@ void Ruler::paintEvent(QPaintEvent* e)
     painter.setFont(mAxisFont);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    /* ----------------------------------------------
-     *  Areas (used to display green, orange, and red areas)
-     * ----------------------------------------------
-     */
-    for ( auto && area : mAreas) {
-        if (area.mStart < mCurrentMax && area.mStop > mCurrentMin) {
+    // ----------------------------------------------
+    //  Areas (to display green, orange, and red areas)
+    // ----------------------------------------------
+    for(auto && area : mAreas)
+    {
+        if (area.mStart < mCurrentMax && area.mStop > mCurrentMin)
+        {
             double x1 = w * (area.mStart - mCurrentMin) / (mCurrentMax - mCurrentMin);
             x1 = (x1 < 0.) ? 0. : x1;
             double x2 = w;
@@ -354,6 +354,5 @@ void Ruler::paintEvent(QPaintEvent* e)
      * ----------------------------------------------
      */
 
-    mAxisTool.paint(painter, mAxisRect , -1, mFormatFuncX);
-
+    mAxisTool.paint(painter, mAxisRect.adjusted(0, 0, 0, -mMarginBottom), -1, mFormatFuncX);
 }

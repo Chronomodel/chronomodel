@@ -119,6 +119,9 @@ private:
     qreal mMarginRight;
     qreal mMarginTop;
     qreal mMarginBottom;
+    
+public:
+    static int sHeight;
 };
 
 #endif

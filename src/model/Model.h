@@ -75,12 +75,11 @@ public:
     QList<QStringList> getEventsTraces(const QLocale locale, const bool withDateFormat = false);
 
     void updateFormatSettings();
+    void updateDesignFromJson();
 
     QJsonObject toJson() const;
     void fromJson( const QJsonObject& json);
     void setProject(Project *project);
-
-    void updateDesignFromJson( const QJsonObject& json);
 
     bool isValid();
     void clear();

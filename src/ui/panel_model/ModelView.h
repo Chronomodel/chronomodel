@@ -79,6 +79,7 @@ public:
 
     void setProject(Project* project);
     Project* getProject() const;
+    
     void calibrateAll(ProjectSettings newS);
     bool findCalibrateMissing();
 
@@ -87,7 +88,6 @@ public:
 
     void readSettings();
     void writeSettings();
-    void createProject();
 
 
 public slots:

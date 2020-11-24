@@ -248,7 +248,7 @@ private :
     QSet<QString> mReasonChangeStructure;
     QSet<QString> mReasonChangeDesign;
     QSet<QString> mReasonChangePosition;
-
+    
     bool mNoResults;
 };
 

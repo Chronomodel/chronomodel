@@ -37,71 +37,32 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef PROJECTVIEW_H
-#define PROJECTVIEW_H
+#ifndef GRAPHVIEWALPHA_H
+#define GRAPHVIEWALPHA_H
 
-#include "MCMCLoopMain.h"
-#include "AppSettings.h"
-#include "Project.h"
-#include "Tabs.h"
+#include "GraphViewResults.h"
 
-#include <QWidget>
+class ModelChronocurve;
 
-class QStackedWidget;
-class QTextEdit;
-class QTabWidget;
-
-class ModelView;
-class ResultsView;
-class Event;
-
-class ProjectView: public QWidget
+class GraphViewAlpha: public GraphViewResults
 {
     Q_OBJECT
 public:
-    ProjectView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
-    ~ProjectView();
+    explicit GraphViewAlpha(QWidget *parent = nullptr);
+    virtual ~GraphViewAlpha();
 
-    void setScreenDefinition();
-    void resizeEvent(QResizeEvent* e);
+    void setModel(ModelChronocurve* model);
 
-    void setProject(Project* project);
-    void initResults(Model*);
-    
-    void resetInterface();
+    void generateCurves(TypeGraph typeGraph, Variable variable);
+    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
 
-    void readSettings();
-    void writeSettings();
-   // void setFont(const QFont &font);
-    void newPeriod();
-
-    void updateMultiCalibration();
-
-public slots:
-    void updateProject();
-    void showModel();
-    void showResults();
-    void showLogTab(const int &i);
-    
-    void showLog();
-    void showHelp(bool show);
-
-    void applySettings(Model* model);
-    void applyFilesSettings(Model* model);
-    void updateResultsLog(const QString& log);
-    
-    void toggleChronocurve(bool toggle);
-
+protected:
+    void paintEvent(QPaintEvent* e);
+    void resizeEvent(QResizeEvent* );
 
 private:
-    QStackedWidget* mStack;
-    ModelView* mModelView;
-    ResultsView* mResultsView;
+    ModelChronocurve* mModel;
 
-    Tabs* mLogTabs;
-    QTextEdit* mLogModelEdit;
-    QTextEdit* mLogMCMCEdit;
-    QTextEdit* mLogResultsEdit;
 };
 
 #endif

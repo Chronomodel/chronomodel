@@ -312,7 +312,8 @@ ModelView::~ModelView()
 
 void ModelView::setProject(Project* project)
 {
-    assert(project!= nullptr);
+    assert(project != nullptr);
+    
     const bool projectExist = (mProject ? true : false);
     mProject = project;
     mPhasesScene->setProject(mProject);
@@ -320,16 +321,42 @@ void ModelView::setProject(Project* project)
     mChronocurveSettingsView->setProject(mProject);
 
     if (mProject && !projectExist)
+    {
         connectScenes();
-
+    }
     else if (projectExist && !mProject)
-            disconnectScenes();
-
+    {
+        disconnectScenes();
+    }
+    
     // if there is no phase, we must show all events
     const QJsonArray phases = mProject->state().value(STATE_PHASES).toArray();
     if (phases.size() == 0 )
         mEventsScene->setShowAllThumbs(true);
+    
+    showCalibration(false);
 
+    QJsonObject state = mProject->state();
+    const ProjectSettings settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+
+    mTmin = settings.mTmin;
+    mTmax = settings.mTmax;
+
+    adaptStudyPeriodButton(settings.mTmin, settings.mTmax);
+
+    mProject->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
+    mProject->mState[STATE_SETTINGS_TMAX] = settings.mTmax;
+    mProject->mState[STATE_SETTINGS_STEP] = settings.mStep;
+
+    mProject->mState[STATE_SETTINGS_STEP_FORCED] = settings.mStepForced;
+
+    setSettingsValid(settings.mTmin < settings.mTmax);
+
+    //Unselect all Item in all scene
+    mProject->unselectedAllInState();
+
+    mEventsScene->createSceneFromState();
+    mPhasesScene->createSceneFromState();
 }
 
 void ModelView::connectScenes()
@@ -459,34 +486,6 @@ void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
     mButModifyPeriod->setText(studyStr);
     mButModifyPeriod->setIconOnly(false);
     mButModifyPeriod ->setGeometry((mTopWrapper->width() - fontMetrics().boundingRect(mButModifyPeriod->text()).width()) /2 - 2*mMargin, (mTopWrapper->height() - topButtonHeight)/2, fontMetrics().boundingRect(mButModifyPeriod->text()).width() + 4*mMargin, topButtonHeight );
-
-}
-
-void ModelView::createProject()
-{
-    showCalibration(false);
-
-    QJsonObject state = mProject->state();
-    const ProjectSettings settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
-
-    mTmin = settings.mTmin;
-    mTmax = settings.mTmax;
-
-    adaptStudyPeriodButton(settings.mTmin, settings.mTmax);
-
-    mProject->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
-    mProject->mState[STATE_SETTINGS_TMAX] = settings.mTmax;
-    mProject->mState[STATE_SETTINGS_STEP] = settings.mStep;
-
-    mProject->mState[STATE_SETTINGS_STEP_FORCED] = settings.mStepForced;
-
-    setSettingsValid(settings.mTmin < settings.mTmax);
-
-    //Unselect all Item in all scene
-    mProject->unselectedAllInState();
-
-    mEventsScene->createSceneFromState();
-    mPhasesScene->createSceneFromState();
 
 }
 

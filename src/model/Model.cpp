@@ -298,39 +298,89 @@ void Model::setProject( Project * project)
     mProject = project;
 }
 
-void Model::updateDesignFromJson(const QJsonObject& json)
+
+/**
+ * @brief ResultsView::updateModel Update Design
+ */
+void Model::updateDesignFromJson()
 {
-    const QJsonArray phasesJSON = json.value(STATE_PHASES).toArray();
-    if (mPhases.size() != phasesJSON.size())
+    if (!mProject)
         return;
 
-    for (int i = 0; i < phasesJSON.size(); ++i) {
-        const QJsonObject phaseJS = phasesJSON.at(i).toObject();
-        Phase * p = mPhases[i];
-        p->mName = phaseJS.value(STATE_NAME).toString();
-        p->mColor = QColor(phaseJS.value(STATE_COLOR_RED).toInt(),phaseJS.value(STATE_COLOR_GREEN).toInt(),phaseJS.value(STATE_COLOR_BLUE ).toInt()) ;
-        p->mItemY = phaseJS.value(STATE_ITEM_Y).toDouble();
+    const QJsonObject state = mProject->state();
+    const QJsonArray events = state.value(STATE_EVENTS).toArray();
+    const QJsonArray phases = state.value(STATE_PHASES).toArray();
+
+    QJsonArray::const_iterator iterJSONEvent = events.constBegin();
+    while (iterJSONEvent != events.constEnd())
+    {
+        const QJsonObject eventJSON = (*iterJSONEvent).toObject();
+        const int eventId = eventJSON.value(STATE_ID).toInt();
+        const QJsonArray dates = eventJSON.value(STATE_EVENT_DATES).toArray();
+
+        QList<Event *>::iterator iterEvent = mEvents.begin();
+        while (iterEvent != mEvents.cend())
+        {
+            if ((*iterEvent)->mId == eventId)
+            {
+                (*iterEvent)->mName  = eventJSON.value(STATE_NAME).toString();
+                (*iterEvent)->mItemX = eventJSON.value(STATE_ITEM_X).toDouble();
+                (*iterEvent)->mItemY = eventJSON.value(STATE_ITEM_Y).toDouble();
+                (*iterEvent)->mIsSelected = eventJSON.value(STATE_IS_SELECTED).toBool();
+                (*iterEvent)->mColor = QColor(eventJSON.value(STATE_COLOR_RED).toInt(),
+                                              eventJSON.value(STATE_COLOR_GREEN).toInt(),
+                                              eventJSON.value(STATE_COLOR_BLUE).toInt());
+                
+                for (int k=0; k<(*iterEvent)->mDates.size(); ++k)
+                {
+                    Date& d = (*iterEvent)->mDates[k];
+                    for (auto &&dateVal : dates)
+                    {
+                        const QJsonObject date = dateVal.toObject();
+                        const int dateId = date.value(STATE_ID).toInt();
+
+                        if (dateId == d.mId)
+                        {
+                            d.mName = date.value(STATE_NAME).toString();
+                            d.mColor = (*iterEvent)->mColor;
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            ++iterEvent;
+        }
+        ++iterJSONEvent;
     }
 
-    const QJsonArray eventsJSON = json.value(STATE_EVENTS).toArray();
-    if (mEvents.size() != eventsJSON.size())
-        return;
+    QJsonArray::const_iterator iterJSONPhase = phases.constBegin();
+    while(iterJSONPhase != phases.constEnd())
+    {
+        const QJsonObject phaseJSON = (*iterJSONPhase).toObject();
+        const int phaseId = phaseJSON.value(STATE_ID).toInt();
 
-    for (int i = 0; i < eventsJSON.size(); ++i) {
-        const QJsonObject eventJS = eventsJSON.at(i).toObject();
-        Event * e = mEvents[i];
-        e->mName = eventJS.value(STATE_NAME).toString();
-        e->mItemY = eventJS.value(STATE_ITEM_Y).toDouble();
-        e->mColor = QColor(eventJS.value(STATE_COLOR_RED).toInt(),eventJS.value(STATE_COLOR_GREEN).toInt(),eventJS.value(STATE_COLOR_BLUE ).toInt()) ;
-
-        QJsonArray datesJS = eventJS.value(STATE_EVENT_DATES).toArray();
-        if (e->mDates.size() != datesJS.size())
-            return;
-
-        for (int j = 0; j < datesJS.size(); ++j) {
-            QJsonObject dateJS = datesJS.at(j).toObject();
-            e->mDates[j].mName = dateJS.value(STATE_NAME).toString();
+        for(auto &&p : mPhases)
+        {
+            if (p->mId == phaseId) {
+                p->mName = phaseJSON.value(STATE_NAME).toString();
+                p->mItemX = phaseJSON.value(STATE_ITEM_X).toDouble();
+                p->mItemY = phaseJSON.value(STATE_ITEM_Y).toDouble();
+                p->mColor = QColor(phaseJSON.value(STATE_COLOR_RED).toInt(),
+                                   phaseJSON.value(STATE_COLOR_GREEN).toInt(),
+                                   phaseJSON.value(STATE_COLOR_BLUE).toInt());
+                p->mIsSelected = phaseJSON.value(STATE_IS_SELECTED).toBool();
+                break;
+            }
         }
+        ++iterJSONPhase;
+    }
+
+    std::sort(mEvents.begin(), mEvents.end(), sortEvents);
+    std::sort(mPhases.begin(), mPhases.end(), sortPhases);
+
+    for ( auto &&p : mPhases ) {
+        std::sort(p->mEvents.begin(), p->mEvents.end(), sortEvents);
     }
 }
 
@@ -1085,7 +1135,6 @@ void Model::initNodeEvents()
 
 /**
  * @brief Make all densities, credibilities and time range
- * @param[in] threshold
  */
 void Model::initDensities()
 {
