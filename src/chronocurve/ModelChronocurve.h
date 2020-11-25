@@ -50,6 +50,8 @@ public:
     ModelChronocurve();
     virtual ~ModelChronocurve();
     
+    void generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth);
+    
     MHVariable mAlphaLissage;
     std::vector<MCMCSplineParametrique> mMCMCSplinesParametrique;
     PosteriorMeanGParametrique mPosteriorMeanGParametrique;

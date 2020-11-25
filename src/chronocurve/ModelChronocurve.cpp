@@ -49,3 +49,13 @@ ModelChronocurve::~ModelChronocurve()
 {
 
 }
+
+void ModelChronocurve::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth)
+{
+    Model::generatePosteriorDensities(chains, fftLen, bandwidth);
+    
+    const double tmin = mSettings.getTminFormated();
+    const double tmax = mSettings.getTmaxFormated();
+    
+    mAlphaLissage.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+}

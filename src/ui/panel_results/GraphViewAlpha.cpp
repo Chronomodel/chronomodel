@@ -85,12 +85,248 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
 {
     Q_ASSERT(mModel);
 
-    // TODO
+    GraphViewResults::generateCurves(typeGraph, variable);
+    
+    mGraph->removeAllCurves();
+    mGraph->removeAllZones();
+    mGraph->clearInfos();
+    mGraph->resetNothingMessage();
+    mGraph->setOverArrow(GraphView::eNone);
+    mGraph->reserveCurves(6);
+
+    QPen defaultPen;
+    defaultPen.setWidthF(1);
+    defaultPen.setStyle(Qt::SolidLine);
+
+    QColor color = Qt::blue;
+    //QString resultsText = ModelUtilities::eventResultsText(mEvent, false);
+    //QString resultsHTML = ModelUtilities::eventResultsHTML(mEvent, false);
+    //setNumericalResults(resultsHTML, resultsText);
+    
+    // ------------------------------------------------
+    //  First tab : Posterior distrib
+    // ------------------------------------------------
+    if(typeGraph == ePostDistrib)
+    {
+        mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+        mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
+        mGraph->setFormatFunctY(nullptr);
+        mGraph->setBackgroundColor(QColor(230, 230, 230));
+        
+        mTitle = tr("Alpha Lissage");
+
+        /* ------------------------------------------------
+         *  Possible curves :
+         *  - Post Distrib All Chains
+         *  - HPD All Chains
+         *  - Credibility All Chains
+         *  - Post Distrib Chain i
+         * ------------------------------------------------
+         */
+        if(variable == eTheta)
+        {
+            mGraph->setOverArrow(GraphView::eBothOverflow);
+            
+            // ------------------------------------
+            //  Post distrib All Chains
+            // ------------------------------------
+            GraphCurve curvePostDistrib = generateDensityCurve(mModel->mAlphaLissage.fullHisto(), "Post Distrib All Chains", color);
+            mGraph->addCurve(curvePostDistrib);
+
+            // ------------------------------------
+            //  HPD All Chains
+            // ------------------------------------
+            GraphCurve curveHPD = generateHPDCurve(mModel->mAlphaLissage.mHPD, "HPD All Chains", color);
+            mGraph->addCurve(curveHPD);
+
+            // ------------------------------------
+            //  Post Distrib Chain i
+            // ------------------------------------
+            if(!mModel->mAlphaLissage.mChainsHistos.isEmpty())
+            {
+                for (int i=0; i<mChains.size(); ++i)
+                {
+                    GraphCurve curvePostDistribChain = generateDensityCurve(mModel->mAlphaLissage.histoForChain(i),
+                                                                            "Post Distrib Chain " + QString::number(i),
+                                                                            Painting::chainColors.at(i),
+                                                                            Qt::SolidLine,
+                                                                            Qt::NoBrush);
+                    mGraph->addCurve(curvePostDistribChain);
+                }
+            }
+            
+            // ------------------------------------
+            //  Theta Credibility
+            // ------------------------------------
+            GraphCurve curveCred = generateSectionCurve(mModel->mAlphaLissage.mCredibility,
+                                                        "Credibility All Chains",
+                                                        color);
+            mGraph->addCurve(curveCred);
+        }
+
+
+        /* ------------------------------------------------
+         *  Events don't have std dev BUT we can visualize
+         *  an overlay of all dates std dev instead.
+         *  Possible curves, FOR ALL DATES :
+         *  - Sigma Date i All Chains
+         *  - Sigma Date i Chain j
+         * ------------------------------------------------
+         */
+        else if (variable == eSigma)
+        {
+            mGraph->setOverArrow(GraphView::eNone);
+            mGraph->mLegendX = "";
+            mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
+            mGraph->setFormatFunctY(nullptr);
+            mGraph->setBackgroundColor(QColor(230, 230, 230));
+            mTitle = tr("Std Compilation : Alpha lissage");
+        }
+    }
+    // -------------------------------------------------
+    //  History plots
+    // -------------------------------------------------
+    else if (typeGraph == eTrace && variable == eTheta)
+    {
+        mGraph->mLegendX = "Iterations";
+        mGraph->setFormatFunctX(nullptr);
+        mTitle = tr("Alpha lissage");
+
+        generateTraceCurves(mChains, &(mModel->mAlphaLissage));
+    }
+    // -------------------------------------------------
+    //  Acceptance rate
+    // -------------------------------------------------
+    /*else if (typeGraph == eAccept && variable == eTheta
+                && (mEvent->mMethod == Event::eMHAdaptGauss || mEvent->mMethod == Event::eFixe))
+    {
+        mGraph->mLegendX = "Iterations";
+        mGraph->setFormatFunctX(nullptr);
+        mTitle = tr("Alpha lissage");
+
+        mGraph->addCurve(generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
+
+        generateAcceptCurves(mChains, &(mEvent->mTheta));
+        mGraph->repaint();
+    }*/
+
+    // -------------------------------------------------
+    //  Autocorrelation
+    // -------------------------------------------------
+    else if ((typeGraph == eCorrel) && (variable == eTheta))
+    {
+        mGraph->mLegendX = "";
+        mGraph->setFormatFunctX(nullptr);
+        mTitle = tr("Alpha lissage");
+
+        generateCorrelCurves(mChains, &(mModel->mAlphaLissage));
+        mGraph->setXScaleDivision(10, 10);
+    }
+    else
+    {
+        mTitle = tr("Alpha lissage");
+        mGraph->resetNothingMessage();
+    }
 }
 
 void GraphViewAlpha::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showError, bool showWiggle)
 {
     Q_ASSERT(mModel);
 
-    // TODO
+    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showCredibility, showError, showWiggle);
+
+    if (mCurrentTypeGraph == ePostDistrib)
+    {
+        mGraph->setTipYLab("");
+        /* ------------------------------------------------
+        *  Possible curves :
+        *  - Post Distrib All Chains
+        *  - HPD All Chains
+        *  - Credibility All Chains
+        *  - Post Distrib Chain i
+        * ------------------------------------------------
+        */
+        if (mCurrentVariable == eTheta)
+        {
+            mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
+            mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
+            mGraph->setCurveVisible("Credibility All Chains", mShowCredibility && mShowAllChains);
+
+            for (int i=0; i<mShowChainList.size(); ++i){
+                mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList.at(i));
+            }
+            
+            mGraph->setTipXLab("t");
+            mGraph->setYAxisMode(GraphView::eHidden);
+            mGraph->showInfos(false);
+            mGraph->clearInfos();
+        }
+    }
+      /* -------------------- Second tab : History plots----------------------------
+       *  Possible curves :
+       *  - Trace i
+       *  - Q1 i
+       *  - Q2 i
+       *  - Q3 i
+       * ------------------------------------------------  */
+      else if (mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta) {
+          // We visualize only one chain (radio button)
+          for (int i=0; i<mShowChainList.size(); ++i) {
+              mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList.at(i));
+              mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList.at(i));
+              mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList.at(i));
+              mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList.at(i));
+          }
+
+          mGraph->setTipXLab(tr("Iteration"));
+          mGraph->setTipYLab("t");
+
+          mGraph->setYAxisMode(GraphView::eMinMaxHidden);
+          mGraph->showInfos(true);
+          mGraph->autoAdjustYScale(true);
+
+
+      }
+
+      /* ----------------------Third tab : Acceptance rate--------------------------
+       *  Possible curves :
+       *  - Accept i
+       *  - Accept Target
+       * ------------------------------------------------  */
+      /*else if ((mCurrentTypeGraph == eAccept) && (mCurrentVariable == eTheta) && ((mEvent->mMethod == Event::eMHAdaptGauss) || (mEvent->mMethod == Event::eFixe))) {
+          mGraph->setCurveVisible("Accept Target", true);
+          for (int i=0; i<mShowChainList.size(); ++i)
+              mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList.at(i));
+
+          mGraph->setTipXLab(tr("Iteration"));
+          mGraph->setTipYLab(tr("Rate"));
+
+          mGraph->setYAxisMode(GraphView::eMinMax);
+          mGraph->showInfos(false);
+          mGraph->clearInfos();
+          mGraph->autoAdjustYScale(false); // do  repaintGraph()
+          mGraph->setRangeY(0, 100);
+      }*/
+      /* ----------------------fourth tab : Autocorrelation--------------------------
+       *  Possible curves :
+       *  - Correl i
+       *  - Correl Limit Lower i
+       *  - Correl Limit Upper i
+       * ------------------------------------------------   */
+      else if (mCurrentTypeGraph == eCorrel && mCurrentVariable == eTheta) {
+          for (int i=0; i<mShowChainList.size(); ++i) {
+              mGraph->setCurveVisible("Correl " + QString::number(i), mShowChainList.at(i));
+              mGraph->setCurveVisible("Correl Limit Lower " + QString::number(i), mShowChainList.at(i));
+              mGraph->setCurveVisible("Correl Limit Upper " + QString::number(i), mShowChainList.at(i));
+          }
+          mGraph->setTipXLab("h");
+          mGraph->setTipYLab(tr("Value"));
+          mGraph->setYAxisMode(GraphView::eMinMax);
+          mGraph->showInfos(false);
+          mGraph->clearInfos();
+          mGraph->autoAdjustYScale(false); // do  repaintGraph()
+          mGraph->setRangeY(-1, 1);
+      }
+
+      update();
 }

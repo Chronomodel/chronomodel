@@ -197,25 +197,15 @@ void ProjectView::applyFilesSettings(Model* model)
 void ProjectView::applySettings(Model* model)
 {
     mModelView->applyAppSettings();
-    mResultsView->applyAppSettings();
     
-    if (model)
+    if(model)
     {
         model->updateFormatSettings();
-        
-        //mResultsView->setModel(model); // nécessaire ??
-        //mResultsView->applyAppSettings(); // déjà fait !
-        //mResultsView->updateControls();  // nécessaire ??
-
-        // force to regenerate the densities
-        //mResultsView->initResults();
-
         model->generateModelLog();
-        mLogModelEdit->setText(model->getModelLog());
-
-        mLogMCMCEdit->setText(model->getMCMCLog());
-
         model->generateResultsLog();
+        
+        mLogModelEdit->setText(model->getModelLog());
+        mLogMCMCEdit->setText(model->getMCMCLog());
         updateResultsLog(model->getResultsLog());
     }
 }
@@ -236,6 +226,7 @@ void ProjectView::initResults(Model* model)
 {
     model->updateDesignFromJson();
     model->initDensities();
+    
     model->generateModelLog();
     model->generateResultsLog();
     

@@ -163,23 +163,24 @@ void Tabs::showWidget(const int &i)
 
 void Tabs::setTab(const int &i, bool notify)
 {
-    Q_ASSERT (i<mTabNames.size());
+    Q_ASSERT (i < mTabNames.size());
+    if(i != mCurrentIndex)
+    {
+        mCurrentIndex = i;
+        // we start to hide all widget and after we show the current widget, because if there is the same widget used in the several
+        for (auto wid : mTabWidgets)
+            if (wid)
+                wid->setVisible(false);
 
-    mCurrentIndex = i;
-// we start to hide all widget and after we show the current widget, because if there is the same widget used in the several
-    for (auto wid : mTabWidgets)
-        if (wid)
-            wid->setVisible(false);
+        // tabs we have to show again
+        if (mTabWidgets[mCurrentIndex])
+            mTabWidgets[mCurrentIndex]->setVisible(true);
 
-    // tabs we have to show again
-    if (mTabWidgets[mCurrentIndex])
-        mTabWidgets[mCurrentIndex]->setVisible(true);
+        if (notify)
+            emit tabClicked(i);
 
-
-    if (notify)
-        emit tabClicked(i);
-
-    updateLayout();
+        updateLayout();
+    }
 }
 
 void Tabs::setTabId(const int identifier, bool notify)

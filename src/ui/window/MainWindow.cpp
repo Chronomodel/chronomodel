@@ -717,7 +717,6 @@ void MainWindow::appSettings()
 
 void MainWindow::setAppFilesSettings()
 {
-
     QLocale::Language newLanguage = AppSettings::mLanguage;
     QLocale::Country newCountry= AppSettings::mCountry;
 

@@ -101,7 +101,7 @@ public:
     void updateDensities();
 
     // Computed from trace using FFT :
-    void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double bandwidth);
+    virtual void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double bandwidth);
     // Trace and Posterior density needed for this :
 
     void generateCredibility(const double threshold);

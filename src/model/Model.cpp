@@ -1050,6 +1050,7 @@ void Model::setBandwidth(const double bandwidth)
         generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
         generateHPD(mThreshold);
         generateNumericalResults(mChains);
+        
         emit newCalculus();
     }
 }
@@ -1081,7 +1082,6 @@ void Model::setThreshold(const double threshold)
         
         generateCredibility(mThreshold);
         generateHPD(mThreshold);
-
         setThresholdToAllModel();
         
         emit newCalculus();

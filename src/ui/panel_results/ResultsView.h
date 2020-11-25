@@ -134,6 +134,7 @@ protected:
     //  Utilities
     // ------------------------------------------------
     bool isPostDistribGraph();
+    bool xScaleRepresentsTime();
     double sliderToZoom(const int &coef);
     int zoomToSlider(const double &zoom);
     
@@ -156,14 +157,6 @@ public slots:
     //  Results
     // ------------------------------------------------
     void clearResults(); // connected to Project::mcmcStarted
-    void initResults();
-    
-    
-
-    void updateControls();
-    void applyAppSettings();
-    void updateScales();
-    
     void updateResultsLog();
 
 private slots:
@@ -174,9 +167,12 @@ private slots:
     void updateLayout();
     
     // ------------------------------------------------
-    //  Graphs / Curves / Updates
+    //  Graphs / Curves / Controls
     // ------------------------------------------------
     void generateCurves();
+    void updateCurvesToShow();
+    void updateScales();
+    void updateControls();
     
     // ------------------------------------
     //  Tabs changed
@@ -192,6 +188,8 @@ private slots:
     void applyRuler(const double min, const double max);
     
     void applyCurrentVariable();
+    void applyUnfoldEvents();
+    void applyUnfoldDates();
     
     void applyStudyPeriod();
     void applyXRange();
@@ -214,12 +212,7 @@ private slots:
     void applyNextPage();
     
     
-
-    
-    void updateCurvesToShow();
     void showInfos(bool);
-    
-
     
     // ------------------------------------
     //  Saving / Export
@@ -245,17 +238,6 @@ public:
     // - mModel->mChains (QList<ChainSpecs>)
     Model* mModel;
     
-    double mResultZoomX;
-    double mResultMinX;
-    double mResultMaxX;
-    double mResultCurrentMinX;
-    double mResultCurrentMaxX;
-    double mResultMaxVariance;
-    double mResultMaxDuration;
-
-    bool mHasPhases;
-    
-    
 private:
     
     // ---------------------------------------------------------------------
@@ -273,7 +255,6 @@ private:
     Tabs* mGraphTypeTabs;
     Ruler* mRuler;
     Marker* mMarker;
-    QStackedWidget* mGraphListStack;
     
     QScrollArea* mEventsScrollArea;
     QScrollArea* mPhasesScrollArea;
@@ -334,9 +315,9 @@ private:
 
     // On the X Axis scale : choose to see the whole graph at once,
     // or zoom on it adjusting the "XScale"
-    Label* mXScaleLab;
+    Label* mXLab;
     QSlider* mXSlider;
-    QDoubleSpinBox* mXScaleSpin;
+    QDoubleSpinBox* mXSpin;
 
     // On the X Axis scale : choose the major interval between 2 displayed values
     Label* mMajorScaleLab;
@@ -346,23 +327,15 @@ private:
     Label* mMinorScaleLab;
     LineEdit* mMinorScaleEdit;
     
-    /* used to controle the signal XScaleSpin::valueChanged () when we need to change the value
-     * xScaleChanged(int value)
-     * emit xScaleUpdate(value);
-     */
-    bool forceXSpinSetValue;
-    bool forceXSlideSetValue;
-    
     // ------------------------------------
     //  Graphic Options
     // ------------------------------------
     QWidget* mGraphicGroup;
     Label* mGraphicTitle;
 
-    Label* mYScaleLab;
-    
+    Label* mYLab;
     QSlider* mYSlider;
-    QSpinBox* mYScaleSpin;
+    QSpinBox* mYSpin;
     
     Button* mFontBut;
     QComboBox* mThicknessCombo;
@@ -408,8 +381,6 @@ private:
     LineEdit* mPageEdit;
     Label* mGraphsPerPageLab;
     QSpinBox* mGraphsPerPageSpin;
-    
-    int mCurrentPage;
 
     Button* mExportImgBut;
     Button* mExportResults;
@@ -419,26 +390,42 @@ private:
     Button* mResultsClipBut;
     Button* mDataSaveBut;
     
+    // ----------------------------------------
+    //  Useful Variables
+    // ----------------------------------------
+    GraphViewResults::TypeGraph mCurrentTypeGraph;
+    GraphViewResults::Variable mCurrentVariable;
+    bool mHasPhases;
+    
+    // ----------------------------------------
+    //  X Span / Zoom Variables
+    // ----------------------------------------
+    double mResultZoomX;
+    double mResultMinX;
+    double mResultMaxX;
+    double mResultCurrentMinX;
+    double mResultCurrentMaxX;
+    double mResultMaxVariance;
+    double mResultMaxDuration;
+    
+    // ----------------------------------------
+    //  X Scale ticks intervals
+    // ----------------------------------------
+    double mMajorScale;
+    int mMinorCountScale;
+    
+    // ----------------------------------------
+    //  Pagination variables
+    // ----------------------------------------
+    int mCurrentPage;
+    int mGraphsPerPage;
+    int mMaximunNumberOfVisibleGraph;
+
+    
+    
     // ------------------------------------
     QMap<QPair<GraphViewResults::Variable, GraphViewResults::TypeGraph>, QPair<double, double>> mZooms;
     QMap<QPair<GraphViewResults::Variable, GraphViewResults::TypeGraph>, QPair<double, int>> mScales;
-    //propreties
-    GraphViewResults::TypeGraph mCurrentTypeGraph;
-    GraphViewResults::Variable mCurrentVariable;
-    
-    int mGraphsPerPage;
-    int mMaximunNumberOfVisibleGraph;
-    double mMajorScale;
-    int mMinorCountScale;
-
-    int titleHeight;
-    int labelHeight;
-    int lineEditHeight;
-    int checkBoxHeight;
-    int comboBoxHeight ;
-    int radioButtonHeight;
-    int spinBoxHeight;
-    int buttonHeight;
 };
 
 #endif
