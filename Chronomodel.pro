@@ -38,7 +38,7 @@
 # --------------------------------------------------------------------- */
 
 # DEFINES += VERSION_NUMBER=\\\"2.0.10\\\"
-VERSION = 2.1.2
+VERSION = 2.1.3
  #VERSION_NUMBER # must match value in src/main.cpp and Chronomodel.rc (for windows)
 #PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_
@@ -117,7 +117,7 @@ macx{
         message("QMAKE_MAC_SDK = $$QMAKE_MAC_SDK")
 
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
-        QMAKE_MACOSX_DEPLOYMENT_TARGET=10.7
+        QMAKE_MACOSX_DEPLOYMENT_TARGET=10.9
 	# Define a set of resources to deploy inside the bundle :
 	RESOURCES_FILES.path = Contents/Resources
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
