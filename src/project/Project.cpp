@@ -374,6 +374,7 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
                         // No color in date JSON
                         // Check DATES STRUCTURE
                         if ( datesNew.at(j).toObject().value(STATE_DATE_DATA) != datesOld.at(j).toObject().value(STATE_DATE_DATA) ||
+                            datesNew.at(j).toObject().value(STATE_DATE_UUID) != datesOld.at(j).toObject().value(STATE_DATE_UUID) ||
                             datesNew.at(j).toObject().value(STATE_DATE_PLUGIN_ID) != datesOld.at(j).toObject().value(STATE_DATE_PLUGIN_ID) ||
                             datesNew.at(j).toObject().value(STATE_DATE_VALID) != datesOld.at(j).toObject().value(STATE_DATE_VALID) ||
                             datesNew.at(j).toObject().value(STATE_DATE_DELTA_TYPE).toInt() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_TYPE).toInt() ||
@@ -1818,6 +1819,10 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
                 date[STATE_DATE_VALID] = true;
                 isCorrected = true;
             }
+            // Add UUID since version 2.1.3
+            if (date.find(STATE_DATE_UUID) == date.end()) {
+                date[STATE_DATE_UUID] = QString::fromStdString(Generator::UUID());
+            }
 
             if (date[STATE_DATE_PLUGIN_ID].toString() == "typo_ref." || date[STATE_DATE_PLUGIN_ID].toString() == "typo") {
                 date[STATE_DATE_PLUGIN_ID] = QString("unif"); // since version 2.0.14
@@ -1841,6 +1846,11 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
             for (int k = 0; k < subdates.size(); ++k) {
                 QJsonObject subdate = subdates[k].toObject();
                 subdate[STATE_DATE_DATA] = plugin->checkValuesCompatibility(subdate[STATE_DATE_DATA].toObject());
+                // Add UUID since version 2.1.3
+                if (subdate.find(STATE_DATE_UUID) == subdate.end()) {
+                    subdate[STATE_DATE_UUID] = QString::fromStdString(Generator::UUID());
+                }
+                
                 subdates[k] = subdate;
             }
             date[STATE_DATE_SUB_DATES] = subdates;
@@ -2144,8 +2154,8 @@ void Project::combineDates(const int eventId, const QList<int>& dateIds)
 
             event[STATE_EVENT_DATES] = dates;
             
-            for (int j(0); j<dates.size(); ++j)
-                QJsonObject date = dates[j].toObject();
+           /* for (int j(0); j<dates.size(); ++j)
+                QJsonObject date = dates[j].toObject();*/
            
             events[i] = event;
             emit currentEventChanged(event);

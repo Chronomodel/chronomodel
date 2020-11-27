@@ -53,35 +53,35 @@ PluginF14CForm::PluginF14CForm(PluginF14C* plugin, QWidget* parent, Qt::WindowFl
     PluginF14C* PluginF14C = static_cast<class PluginF14C*> (mPlugin);
 
 
-    mAverageLab = new QLabel(tr("Age (BP)"), this);
+    mAverageLab = new QLabel(tr("F14C"), this);
     mErrorLab = new QLabel(tr("Error (sd)"), this);
-    mRLab = new QLabel(tr("Reservoir Effect (ΔR)"), this);
-    mRErrorLab = new QLabel(tr("ΔR Error"), this);
+  //  mRLab = new QLabel(tr("Reservoir Effect (ΔR)"), this);
+  //  mRErrorLab = new QLabel(tr("ΔR Error"), this);
     mRefLab = new QLabel(tr("Reference curve"), this);
 
     mAverageEdit = new QLineEdit(this);
-    mAverageEdit->setText("0");
+    mAverageEdit->setText("1");
     mAverageEdit->setAlignment(Qt::AlignHCenter);
 
     mErrorEdit = new QLineEdit(this);
-    mErrorEdit->setText("50");
+    mErrorEdit->setText("1");
     mErrorEdit->setAlignment(Qt::AlignHCenter);
     connect(mErrorEdit, &QLineEdit::textChanged, this, &PluginF14CForm::errorIsValid);
 
-    mREdit = new QLineEdit(this);
+ /*   mREdit = new QLineEdit(this);
     mREdit->setText("0");
     mREdit->setAlignment(Qt::AlignHCenter);
 
     mRErrorEdit = new QLineEdit(this);
     mRErrorEdit->setText("0");
     mRErrorEdit->setAlignment(Qt::AlignHCenter);
-
+*/
     mRefCombo = new QComboBox(this);
     QStringList refCurves = PluginF14C->getRefsNames();
     for (int i = 0; i<refCurves.size(); ++i)
         mRefCombo->addItem(refCurves.at(i));
 
-    QString defCurve = QString("intcal13.14c").toLower();
+    QString defCurve = QString("bomb13nh1.14c").toLower();
     if (mSelectedRefCurve.isEmpty() && refCurves.contains(defCurve, Qt::CaseInsensitive))
        mSelectedRefCurve = defCurve;
 
@@ -97,12 +97,12 @@ PluginF14CForm::PluginF14CForm(PluginF14C* plugin, QWidget* parent, Qt::WindowFl
     grid->addWidget(mErrorLab, 1, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mErrorEdit, 1, 1);
 
-    grid->addWidget(mRLab, 2, 0, Qt::AlignRight | Qt::AlignVCenter);
+ /*   grid->addWidget(mRLab, 2, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mREdit, 2, 1);
 
     grid->addWidget(mRErrorLab, 3, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mRErrorEdit, 3, 1);
-
+*/
     grid->addWidget(mRefLab, 4, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mRefCombo, 4, 1);
 
@@ -119,20 +119,20 @@ void PluginF14CForm::setData(const QJsonObject& data, bool isCombined)
     const QLocale locale=QLocale();
     const double a = data.value(DATE_F14C_FRACTION_STR).toDouble();
     const double e = data.value(DATE_F14C_ERROR_STR).toDouble();
-    const double r = data.value(DATE_F14C_DELTA_R_STR).toDouble();
-    const double re = data.value(DATE_F14C_DELTA_R_ERROR_STR).toDouble();
+//    const double r = data.value(DATE_F14C_DELTA_R_STR).toDouble();
+//    const double re = data.value(DATE_F14C_DELTA_R_ERROR_STR).toDouble();
     const QString c = data.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
 
     mAverageEdit->setText(locale.toString(a));
     mErrorEdit->setText(locale.toString(e));
-    mREdit->setText(locale.toString(r));
-    mRErrorEdit->setText(locale.toString(re));
+//    mREdit->setText(locale.toString(r));
+//    mRErrorEdit->setText(locale.toString(re));
     mRefCombo->setCurrentText(c);
 
     mAverageEdit->setEnabled(!isCombined);
     mErrorEdit->setEnabled(!isCombined);
-    mREdit->setEnabled(!isCombined);
-    mRErrorEdit->setEnabled(!isCombined);
+ //   mREdit->setEnabled(!isCombined);
+//    mRErrorEdit->setEnabled(!isCombined);
     mRefCombo->setEnabled(!isCombined);
 }
 
@@ -142,14 +142,14 @@ QJsonObject PluginF14CForm::getData()
     const QLocale locale=QLocale();
     const double a = locale.toDouble(mAverageEdit->text());
     const double e = locale.toDouble(mErrorEdit->text());
-    const double r = locale.toDouble(mREdit->text());
-    const double re = locale.toDouble(mRErrorEdit->text());
+//    const double r = locale.toDouble(mREdit->text());
+//    const double re = locale.toDouble(mRErrorEdit->text());
     const QString c = mRefCombo->currentText();
 
     data.insert(DATE_F14C_FRACTION_STR, a);
     data.insert(DATE_F14C_ERROR_STR, e);
-    data.insert(DATE_F14C_DELTA_R_STR, r);
-    data.insert(DATE_F14C_DELTA_R_ERROR_STR, re);
+//    data.insert(DATE_F14C_DELTA_R_STR, r);
+//    data.insert(DATE_F14C_DELTA_R_ERROR_STR, re);
     data.insert(DATE_F14C_REF_CURVE_STR, c);
 
     mSelectedRefCurve = c;

@@ -158,7 +158,7 @@ void PluginUniformRefView::setDate(const Date& date, const ProjectSettings& sett
             QJsonObject subDate = d.toObject();
             Date sd;
             sd.fromJson(subDate);
-            QString toFind = sd.mName + sd.getDesc();
+            QString toFind = sd.mUUID;
             
             Project* project = MainWindow::getInstance()->getProject();
             QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);

@@ -239,6 +239,15 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
     RefCurve curve;
     curve.mName = refFile.fileName().toLower();
 
+// Default time in BP, data in 14C age, data column is 1
+    bool timeInBP (true);
+    bool timeInBC (false);
+    bool dataInF14C (false);
+    bool dataInAge (true);
+    int ageColumn (1);
+    int F14Column (0);
+    char dataSep (',');
+    
     QFile file(refFile.absoluteFilePath());
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         const QLocale locale = QLocale(QLocale::English);
@@ -247,25 +256,94 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
 
         while (!stream.atEnd()) {
             QString line = stream.readLine();
+            qDebug()<<line;
+            if (isComment(line)) {
+                
+                
+                if (line.contains("BC", Qt::CaseInsensitive) || line.contains("BP", Qt::CaseInsensitive) || line.contains("Year", Qt::CaseInsensitive) ||  line.contains("age", Qt::CaseInsensitive) || line.contains("F14", Qt::CaseInsensitive) ) {
+                    if (line.contains(',')) {
+                        dataSep = ',';
+                    } else {
+                       dataSep = char(9);
+                    }
+                }
+                QStringList values = line.split(dataSep);
+                
+                if (values.at(0).contains("BP", Qt::CaseInsensitive) ) {
+                    timeInBC = false;
+                    timeInBP = true;
+                    
+                } else if (values.at(0).contains("BC", Qt::CaseInsensitive)  || values.at(0).contains("year", Qt::CaseInsensitive)) {
+                    timeInBC = true;
+                    timeInBP = false;
+                }
+                
+                if (line.contains("F14", Qt::CaseInsensitive)) {
+                    dataInF14C = true;
+                    dataInAge = false;
+         
+                    for (int i = 0; i < values.size(); ++i) {
+                        if ( values[i].contains("F14", Qt::CaseInsensitive)) {
+                            F14Column = i;
+                            continue;
+                        }
+                    }
+                } else if (line.contains("age", Qt::CaseInsensitive)) {
+                    dataInF14C = false;
+                    dataInAge = true;
+  
+                    for (int i = 0; i < values.size(); ++i) {
+                        if ( values[i].contains("age", Qt::CaseInsensitive)) {
+                            ageColumn = i;
+                            continue;
+                        }
+                    }
+               }
+             
+                
+               
+            }
+            
+            int dataColumn(1);
+            if (dataInF14C)
+                dataColumn = F14Column;
+            else if (dataInAge)
+                dataColumn = ageColumn;
+       
+            
             if (!isComment(line)) {
-                QStringList values = line.split(",");
+                
+//                qDebug()<<" datasep "<< dataSep<<dataInF14C<<"dataColumn"<< dataColumn;
+                QStringList values = line.split(dataSep);
+                
+                qDebug()<<values;
                 if (values.size() >= 3) {
                     bool ok = true;
 
-                    int t = 1950 - locale.toInt(values.at(0),&ok);
+                    double t = locale.toDouble(values.at(0), &ok);
+                    if (!ok)
+                        continue;
+                    if (timeInBP)
+                        t = 1950 - t;
+                    
+// must convert all in 14C
+                    double g = locale.toDouble(values.at(dataColumn), &ok);
                     if(!ok)
                         continue;
-                    double g = locale.toDouble(values.at(1),&ok);
-                    if(!ok) continue;
-                    double e = locale.toDouble(values.at(2),&ok);
-                    if(!ok)
+                    
+                    double e = locale.toDouble(values.at(dataColumn+1), &ok);
+                    if (!ok)
                         continue;
+                    if (dataInF14C) {// data is BP Age
+                        e = errF14CtoErrCRA(e, g);
+                        g = F14CtoCRA(g);
+                    }
 
                     double gSup = g + 1.96 * e;
                     if(!ok)
                         continue;
                     double gInf = g - 1.96 * e;
-                    if(!ok)
+                    if (!ok)
                         continue;
 
                     curve.mDataMean[t] = g;
@@ -313,6 +391,86 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
     }
     return curve;
 }
+
+//RefCurve Plugin14C::loadRefFile_old(QFileInfo refFile)
+//{
+//    RefCurve curve;
+//    curve.mName = refFile.fileName().toLower();
+//
+//    QFile file(refFile.absoluteFilePath());
+//    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+//        const QLocale locale = QLocale(QLocale::English);
+//        QTextStream stream(&file);
+//        bool firstLine = true;
+//
+//        while (!stream.atEnd()) {
+//            QString line = stream.readLine();
+//            if (!isComment(line)) {
+//                QStringList values = line.split(",");
+//                if (values.size() >= 3) {
+//                    bool ok = true;
+//
+//                    int t = 1950 - locale.toInt(values.at(0),&ok);
+//                    if(!ok)
+//                        continue;
+//                    double g = locale.toDouble(values.at(1),&ok);
+//                    if(!ok) continue;
+//                    double e = locale.toDouble(values.at(2),&ok);
+//                    if(!ok)
+//                        continue;
+//
+//                    double gSup = g + 1.96 * e;
+//                    if(!ok)
+//                        continue;
+//                    double gInf = g - 1.96 * e;
+//                    if(!ok)
+//                        continue;
+//
+//                    curve.mDataMean[t] = g;
+//                    curve.mDataError[t] = e;
+//                    curve.mDataSup[t] = gSup;
+//                    curve.mDataInf[t] = gInf;
+//
+//                    if (firstLine) {
+//                        curve.mDataMeanMin = g;
+//                        curve.mDataMeanMax = g;
+//
+//                        curve.mDataErrorMin = e;
+//                        curve.mDataErrorMax = e;
+//
+//                        curve.mDataSupMin = gSup;
+//                        curve.mDataSupMax = gSup;
+//
+//                        curve.mDataInfMin = gInf;
+//                        curve.mDataInfMax = gInf;
+//
+//                    } else {
+//                        curve.mDataMeanMin = qMin(curve.mDataMeanMin, g);
+//                        curve.mDataMeanMax = qMax(curve.mDataMeanMax, g);
+//
+//                        curve.mDataErrorMin = qMin(curve.mDataErrorMin, e);
+//                        curve.mDataErrorMax = qMax(curve.mDataErrorMax, e);
+//
+//                        curve.mDataSupMin = qMin(curve.mDataSupMin, gSup);
+//                        curve.mDataSupMax = qMax(curve.mDataSupMax, gSup);
+//
+//                        curve.mDataInfMin = qMin(curve.mDataInfMin, gInf);
+//                        curve.mDataInfMax = qMax(curve.mDataInfMax, gInf);
+//                    }
+//                    firstLine = false;
+//                }
+//            }
+//        }
+//        file.close();
+//
+//        // invalid file ?
+//        if (!curve.mDataMean.isEmpty()) {
+//            curve.mTmin = curve.mDataMean.firstKey();
+//            curve.mTmax = curve.mDataMean.lastKey();
+//        }
+//    }
+//    return curve;
+//}
 
 // References Values & Errors
 double Plugin14C::getRefValueAt(const QJsonObject& data, const double& t)

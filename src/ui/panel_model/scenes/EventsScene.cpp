@@ -1315,6 +1315,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
                     dateJson[STATE_ID] = project->getUnusedDateId(datesEvent);
                     if (dateJson[STATE_NAME].toString() == "")
                         dateJson[STATE_NAME] = "No Name " + QString::number(dateJson[STATE_ID].toInt());
+                    dateJson[STATE_DATE_UUID] = QString::fromStdString(Generator::UUID());
                     datesEvent.append(dateJson);
                     eventFinded[STATE_EVENT_DATES] = datesEvent;
                     // updateEvent() do pushProjectState(stateNext, reason, true);

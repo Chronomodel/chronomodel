@@ -100,8 +100,8 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
     if (!date.isNull())  {
         double age = date.mData.value(DATE_F14C_FRACTION_STR).toDouble();
         double error = date.mData.value(DATE_F14C_ERROR_STR).toDouble();
-        const double delta_r = date.mData.value(DATE_F14C_DELTA_R_STR).toDouble();
-        const double delta_r_error = date.mData.value(DATE_F14C_DELTA_R_ERROR_STR).toDouble();
+ //       const double delta_r = date.mData.value(DATE_F14C_DELTA_R_STR).toDouble();
+ //       const double delta_r_error = date.mData.value(DATE_F14C_DELTA_R_ERROR_STR).toDouble();
         const QString ref_curve = date.mData.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
 
         /* ----------------------------------------------
@@ -211,14 +211,14 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
         QColor brushColor(mMeasureColor);
 
         // Lower opacity in case of delta r not null
-        if (delta_r != 0. && delta_r_error != 0.) {
+    /*    if (delta_r != 0. && delta_r_error != 0.) {
             penColor.setAlpha(100);
             brushColor.setAlpha(15);
 
         } else {
-            penColor.setAlpha(255);
+ */           penColor.setAlpha(255);
             brushColor.setAlpha(50);
-        }
+ //       }
         curveMeasure.mPen = penColor;
         curveMeasure.mBrush = brushColor;
         curveMeasure.mIsVertical = true;
@@ -243,7 +243,7 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
         /* ----------------------------------------------
          *  Delta R curve
          * ---------------------------------------------- */
-        if (delta_r != 0. && delta_r_error != 0.) {
+  /*      if (delta_r != 0. && delta_r_error != 0.) {
             // Apply reservoir effect
             age = (age - delta_r);
             error = sqrt(error * error + delta_r_error * delta_r_error);
@@ -264,9 +264,7 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
             curveDeltaR.mIsVertical = true;
             curveDeltaR.mIsHisto = false;
 
-            /* 5000 pts are used on vertical measurement
-             * because the y scale auto adjusts depending on x zoom.
-             * => the visible part of the measure may be very reduced ! */
+           
             step = (yMax - yMin) / 5000.;
             QMap<double, double> deltaRCurve;
             for (double t = yMin; t<yMax; t += step) {
@@ -280,7 +278,7 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
 
             info += tr(", ΔR : %1  ± %2").arg(locale().toString(delta_r), locale().toString(delta_r_error));
         }
-
+*/
         /* ----------------------------------------------
          *  Sub-dates curves (combination)
          * ---------------------------------------------- */
@@ -293,13 +291,13 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
 
             double sub_age = d.value(STATE_DATE_DATA).toObject().value(DATE_F14C_FRACTION_STR).toDouble();
             double sub_error = d.value(STATE_DATE_DATA).toObject().value(DATE_F14C_ERROR_STR).toDouble();
-            double sub_delta_r = d.value(STATE_DATE_DATA).toObject().value(DATE_F14C_DELTA_R_STR).toDouble();
-            double sub_delta_r_error = d.value(STATE_DATE_DATA).toObject().value(DATE_F14C_DELTA_R_ERROR_STR).toDouble();
+ //           double sub_delta_r = d.value(STATE_DATE_DATA).toObject().value(DATE_F14C_DELTA_R_STR).toDouble();
+ //           double sub_delta_r_error = d.value(STATE_DATE_DATA).toObject().value(DATE_F14C_DELTA_R_ERROR_STR).toDouble();
 
             // Apply reservoir effect
-            sub_age = (sub_age - sub_delta_r);
+ /*           sub_age = (sub_age - sub_delta_r);
             sub_error = sqrt(sub_error * sub_error + sub_delta_r_error * sub_delta_r_error);
-
+*/
             yMin = qMin(yMin, sub_age - sub_error * 3);
             yMax = qMax(yMax, sub_age + sub_error * 3);
 
@@ -313,9 +311,7 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
             curveSubMeasure.mIsVertical = true;
             curveSubMeasure.mIsHisto = false;
 
-            /* 5000 pts are used on vertical measurement
-             * because the y scale auto adjusts depending on x zoom.
-             * => the visible part of the measurement may be very reduced ! */
+          
             const double step = (yMax - yMin) / 1000.;
             QMap<double, double> subCurve;
             for (double t = yMin; t<yMax; t += step) {

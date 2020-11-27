@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -68,6 +68,8 @@ mName("No Named Date")
     mWiggle.mFormat = DateUtils::eUnknown;
 
     mId = -1;
+    mUUID = QString("NONE");
+
     mMethod = eMHSymetric;
     updateti = fMHSymetric;
 
@@ -87,6 +89,7 @@ mName("No Named Date")
     mTmaxRefCurve = INFINITY;
 
     mCalibration = nullptr;
+    mWiggleCalibration = nullptr;
 }
 
 Date::Date(PluginAbstract* plugin):
@@ -110,6 +113,7 @@ void Date::init()
     mWiggle.mFormat = DateUtils::eUnknown;
 
     mId = -1;
+    mUUID = QString("NONE");
     mMethod = eMHSymetric;
     updateti = fMHSymetric;
 
@@ -129,6 +133,7 @@ void Date::init()
     mTmaxRefCurve = INFINITY;
 
     mCalibration = nullptr;
+    mWiggleCalibration = nullptr;
 
 }
 
@@ -151,6 +156,8 @@ void Date::copyFrom(const Date& date)
     mWiggle = date.mWiggle;
 
     mId = date.mId;
+    mUUID = date.mUUID;
+
     mName = date.mName;
     mColor = date.mColor;
 
@@ -171,6 +178,7 @@ void Date::copyFrom(const Date& date)
     mIsSelected = date.mIsSelected;
 
     mCalibration = date.mCalibration;
+    mWiggleCalibration = date.mWiggleCalibration;
 
     mCalibHPD = date.mCalibHPD;
 
@@ -190,6 +198,7 @@ Date::~Date()
 {
     mPlugin = nullptr;
     mCalibration = nullptr;
+    mWiggleCalibration = nullptr;
 
 }
 
@@ -212,6 +221,12 @@ void Date::fromJson(const QJsonObject& json)
     mId = json.value(STATE_ID).toInt();
     mName = json.value(STATE_NAME).toString();
 
+    mUUID = json.value(STATE_DATE_UUID).toString();
+    qDebug() << mName << mId << " Date::fromJson STATE_DATE_UUID mUUID" << mUUID;
+    if (mUUID.isEmpty())
+        mUUID = QString::fromStdString( Generator::UUID());
+    qDebug() << " Date::fromJson mUUID2" << mUUID;
+    
     // Copy plugin specific values for this data :
     mData = json.value(STATE_DATE_DATA).toObject();
     mOrigin = (OriginType)json.value(STATE_DATE_ORIGIN).toInt();
@@ -255,11 +270,16 @@ void Date::fromJson(const QJsonObject& json)
     Project* project = MainWindow::getInstance()->getProject();
     mSettings = project->mModel->mSettings;
     
-    QString toFind = mName + getDesc();
+    QString toFind = mUUID;
 
     QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
     if ( it!=project->mCalibCurves.end())
         mCalibration = & it.value();
+    
+    toFind = "WID::" + mUUID;
+    it = project->mCalibCurves.find (toFind);
+    if ( it!=project->mCalibCurves.end())
+        mWiggleCalibration = & it.value();
 
 }
 
@@ -267,6 +287,8 @@ QJsonObject Date::toJson() const
 {
     QJsonObject date;
     date[STATE_ID] = mId;
+    date[STATE_DATE_UUID] = mUUID;
+    qDebug() << mName << mId << "Date::toJson  mUUID "<< date.value(STATE_DATE_UUID).toString();
     date[STATE_NAME] = mName;
     date[STATE_DATE_DATA] = mData;
     date[STATE_DATE_ORIGIN] = mOrigin;
@@ -328,8 +350,9 @@ QPair<long double, long double> Date::getLikelihoodArg(const double& t) const
 
 QString Date::getDesc() const
 {
+    QString res;
     if (mPlugin)
-        return mPlugin->getDateDesc(this);
+        res = mPlugin->getDateDesc(this);
 
     else {
         QStringList params;
@@ -346,8 +369,34 @@ QString Date::getDesc() const
                 val = iter.value().toBool() ? QObject::tr("yes") : QObject::tr("no");
             params << iter.key() + " = " + val;
         }
-        return params.join(", ");
+        res = params.join(", ");
     }
+  
+    return res;
+}
+
+QString Date::getWiggleDesc() const
+{
+    QString res;
+      
+    switch (mDeltaType) {
+        case Date::eDeltaFixed:
+            res = res+ "Wiggle = " + QString::number(mDeltaFixed);
+            break;
+        case Date::eDeltaRange:
+            res = res+ "Wiggle = U[" + QString::number(mDeltaMin) + " ; " + QString::number(mDeltaMax) + " ] ";
+            break;
+        case Date::eDeltaGaussian:
+            res = res+ "Wiggle = N(" + QString::number(mDeltaAverage) + " ; " + QString::number(mDeltaError) + " ) ";
+            break;
+            
+        default:
+            res = "No Wiggle";
+            break;
+    }
+    
+
+    return res;
 }
 
 void Date::reset()
@@ -362,30 +411,41 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
 {
   // Check if the ref curve is in the plugin list
     qDebug()<<"Date::calibrate";
-// in mOrigin == eCombination, there is no ref. Curve avalable
+
     if (mOrigin == eSingleDate) {
         const QStringList refsNames = mPlugin->getRefsNames();
         const QString dateRefName = mPlugin->getDateRefCurveName(this);
             
         if (!dateRefName.isEmpty() && !refsNames.contains(dateRefName) )
             return;
+        
     }
 
     // add the calibration
     mSettings = settings;
 
-    const QString toFind (mName+getDesc());
-    QMap<QString, CalibrationCurve>::const_iterator it = project->mCalibCurves.find (toFind);
+    //const QString toFind (mUUID);
+    QMap<QString, CalibrationCurve>::const_iterator it = project->mCalibCurves.find (mUUID);
 
-    if ( it==project->mCalibCurves.end()) {
-        qDebug()<<"Courbe toFind"<<toFind<< "non trouvée";
-        project->mCalibCurves.insert(toFind, CalibrationCurve());
+    if ( it == project->mCalibCurves.end()) {
+        qDebug()<<"Curve to create mUUID: "<< mUUID ;
+        project->mCalibCurves.insert(mUUID, CalibrationCurve());
+        
+    } else if ( it->mDescription == getDesc() ) {
+        // Controls whether the curve has already been calculated using the description
+        qDebug() << "The curve already exists mUUID:" << mUUID;
+        /* WIGGLE CALIBRATION CURVE */
+        
+        calibrateWiggle(settings, project);
+        
+        return;
     }
+        
+  // Update of the new calibration curve
 
-    mCalibration = & (project->mCalibCurves[toFind]);
-    mCalibration->mDescription = toFind;
-    //mCalibration->mMethod = CalibrationCurve::eFromRef;
-
+    mCalibration = & (project->mCalibCurves[mUUID]);
+    mCalibration -> mDescription = getDesc();
+ 
     mCalibration->mStep = mSettings.mStep;
     mCalibration->mPluginId = mPlugin->getId();
     mCalibration->mPlugin = mPlugin;
@@ -411,15 +471,15 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
         long double lastRepVal = v;
 
         // We use long double type because
-        // after several sums, the repartion can be in the double type range
-        for(int i = 1; i <= nbRefPts; ++i) {
+        // after several sums, the repartition can be in the double type range
+        for (int i = 1; i <= nbRefPts; ++i) {
             const double t = mTminRefCurve + double (i) * settings.mStep;
             long double lastV = v;
             v = getLikelihood(t);
 
             calibrationTemp.append(double(v));
             long double rep = lastRepVal;
-            if(v != 0.l && lastV != 0.l)
+            if (v != 0.l && lastV != 0.l)
                 rep = lastRepVal + (long double) (settings.mStep) * (lastV + v) / 2.l;
 
             repartitionTemp.append(double (rep));
@@ -442,11 +502,12 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
             mCalibration->mCurve = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
             mCalibration->mRepartition = repartitionTemp.mid(minIdx, (maxIdx - minIdx) + 1);
 
-            // NOTE ABOUT THIS APPROMIATION :
-            // By truncating the calib and repartition, the calib density's area is not 1 anymore!
-            // It is now 1 - 2*threshold = 0,99999... We consider it to be 1 anyway!
-            // By doing this, calib and repartition are stored on a restricted number of data
-            // instead of storing them on the whole reference curve's period (as done for calibrationTemp & repartitionTemp above).
+            /* NOTE ABOUT THIS APPROMIATION :
+           By truncating the calib and repartition, the calib density's area is not 1 anymore!
+           It is now 1 - 2*threshold = 0,99999... We consider it to be 1 anyway!
+           By doing this, calib and repartition are stored on a restricted number of data
+           instead of storing them on the whole reference curve's period (as done for calibrationTemp & repartitionTemp above).
+             */
 
             // Stretch repartition curve so it goes from 0 to 1
             mCalibration->mRepartition = stretch_vector(mCalibration->mRepartition, 0., 1.);
@@ -475,9 +536,147 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
         // This may be due to invalid ref curve files or to polynomial equations with only imaginary solutions (See Gauss Plugin...)
     }
 
+    
+    /* WIGGLE CALIBRATION CURVE */
+    if (mDeltaType != Date::eDeltaNone) {
+        calibrateWiggle(settings, project);
+    }
+    
+    
    // qDebug()<<"Date::calibrate in project"<<project->mCalibCurves[toFind].mName;
 }
 
+void Date::calibrateWiggle(const ProjectSettings& settings, Project *project)
+{
+  // Check if the ref curve is in the plugin list
+    qDebug()<<"Date::calibrate Wiggle";
+    if (mDeltaType == Date::eDeltaNone) {
+        mWiggleCalibration = nullptr;
+        return;
+    }
+    // add the calibration
+    mSettings = settings;
+ 
+    const QString toFind ("WID::" + mUUID);
+    QMap<QString, CalibrationCurve>::const_iterator it = project->mCalibCurves.find (toFind);
+
+    
+    if ( it == project->mCalibCurves.end()) {
+        qDebug()<<"Curve to create Wiggle: "<< toFind ;
+        project->mCalibCurves.insert(toFind, CalibrationCurve());
+        
+        
+    } else if ( it->mDescription == getWiggleDesc() ) {
+        // Controls whether the curve has already been calculated using the description
+        qDebug() << "The curve already exists Wiggle:" << toFind;
+        return;
+    }
+        
+    
+    
+  // Update of the new calibration curve
+
+    mWiggleCalibration = & (project->mCalibCurves[toFind]);
+    mWiggleCalibration->mDescription = getWiggleDesc();
+
+    mWiggleCalibration->mStep = mSettings.mStep;
+    mWiggleCalibration->mPluginId = mPlugin->getId();
+    mWiggleCalibration->mPlugin = mPlugin;
+    mWiggleCalibration->mName = mName;
+
+   // mCalibHPD.clear();
+
+    double tminCal ( -INFINITY);
+    double tmaxCal ( INFINITY);
+
+    // --------------------------------------------------
+    //  Calibrate on the whole calibration period (= ref curve definition domain)
+    // --------------------------------------------------
+    switch (mDeltaType) {
+        case Date::eDeltaFixed:
+               
+           /* if (mTmaxRefCurve > mTminRefCurve) {
+                QVector<double> calibrationTemp;
+                QVector<double> repartitionTemp;
+
+                const double nbRefPts = 1. + round((mTmaxRefCurve - mTminRefCurve) / double(mSettings.mStep));
+                long double v = getLikelihood(mTminRefCurve - mDeltaFixed);
+                calibrationTemp.append(v);
+                repartitionTemp.append(0.);
+                long double lastRepVal = v;
+
+                // We use long double type because
+                // after several sums, the repartition can be in the double type range
+                for (int i = 1; i <= nbRefPts; ++i) {
+                    const double t = mTminRefCurve + double (i) * mSettings.mStep - mDeltaFixed;
+                    long double lastV = v;
+                    v = getLikelihood(t - mDeltaFixed);
+
+                    calibrationTemp.append(double(v));
+                    long double rep = lastRepVal;
+                    if (v != 0.l && lastV != 0.l)
+                        rep = lastRepVal + (long double) (mSettings.mStep) * (lastV + v) / 2.l;
+
+                    repartitionTemp.append(double (rep));
+                    lastRepVal = rep;
+                }
+             
+
+                if (repartitionTemp.last() > 0.) {
+                    const double threshold (0.00005);
+                    const int minIdx = int (floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp)));
+                    const int maxIdx = int (ceil(vector_interpolate_idx_for_value((1. - threshold) * lastRepVal, repartitionTemp)));
+
+                    tminCal = mTminRefCurve + minIdx * settings.mStep;
+                    tmaxCal = mTminRefCurve + maxIdx * settings.mStep;
+
+                    // Truncate both functions where data live
+                    mWiggleCalibration->mCurve = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
+                    mWiggleCalibration->mRepartition = repartitionTemp.mid(minIdx, (maxIdx - minIdx) + 1);
+                }
+              */
+                mWiggleCalibration->mCurve = mCalibration->mCurve;
+                mWiggleCalibration->mRepartition = mCalibration->mRepartition;
+                
+                
+                mWiggleCalibration->mTmin = mCalibration->mTmin + mDeltaFixed;
+                mWiggleCalibration->mTmax = mCalibration->mTmax + mDeltaFixed;
+         //   }
+            break;
+                
+                
+        case Date::eDeltaRange:
+            mWiggleCalibration->mCurve = mCalibration->mCurve;
+            mWiggleCalibration->mRepartition = mCalibration->mRepartition;
+            
+            mWiggleCalibration->mTmin = mCalibration->mTmin + mDeltaFixed;
+            mWiggleCalibration->mTmax = mCalibration->mTmax + mDeltaFixed;
+          
+            break;
+            
+        case Date::eDeltaGaussian:
+            mWiggleCalibration->mCurve = mCalibration->mCurve;
+            mWiggleCalibration->mRepartition = mCalibration->mRepartition;
+            
+            mWiggleCalibration->mTmin = mCalibration->mTmin + mDeltaFixed;
+            mWiggleCalibration->mTmax = mCalibration->mTmax + mDeltaFixed;
+          
+            break;
+            
+        default:
+            mWiggleCalibration->mCurve = mCalibration->mCurve;
+            mWiggleCalibration->mRepartition = mCalibration->mRepartition;
+            mWiggleCalibration->mTmin = mCalibration->mTmin ;
+            mWiggleCalibration->mTmax = mCalibration->mTmax ;
+            break;
+    }
+    
+    
+
+        
+
+   // qDebug()<<"Date::calibrate in project"<<project->mCalibCurves[toFind].mName;
+}
 
 const QMap<double, double> Date::getRawCalibMap() const
 {
@@ -498,6 +697,28 @@ const QMap<double, double> Date::getFormatedCalibMap() const
         ++iter;
     }
     return formatedCalib;
+
+}
+
+const QMap<double, double> Date::getRawWiggleCalibMap() const
+{
+    return vector_to_map(mWiggleCalibration->mCurve, mWiggleCalibration->mTmin, mWiggleCalibration->mTmax, mWiggleCalibration->mStep);
+}
+
+const QMap<double, double> Date::getFormatedWiggleCalibMap() const
+{
+    if (mWiggleCalibration == nullptr || mWiggleCalibration->mCurve.isEmpty())
+        return QMap<double, double>();
+
+    QMap<double, double> calib = vector_to_map(mWiggleCalibration->mCurve, mWiggleCalibration->mTmin, mWiggleCalibration->mTmax, mWiggleCalibration->mStep);
+
+    QMap<double, double> formatedWiggleCalib;
+    QMap<double, double>::const_iterator iter = calib.cbegin();
+    while (iter!= calib.constEnd()) {
+        formatedWiggleCalib.insert(DateUtils::convertToAppSettingsFormat(iter.key()), iter.value());
+        ++iter;
+    }
+    return formatedWiggleCalib;
 
 }
 
@@ -601,10 +822,10 @@ QPixmap Date::generateUnifThumb()
             curve.mPen = QPen(color, 2.);
             curve.mIsHorizontalSections = true;
 
-            const double tminDisplay = qBound(tmin,tLower,tmax);
-            const double tmaxDisplay = qBound(tmin,tUpper,tmax);
+            const double tminDisplay = qBound(tmin, tLower, tmax);
+            const double tmaxDisplay = qBound(tmin, tUpper, tmax);
 
-            curve.mSections.append(qMakePair(tminDisplay,tmaxDisplay));
+            curve.mSections.append(qMakePair(tminDisplay, tmaxDisplay));
             graph.addCurve(curve);
 
             curve.mName = "Calibration";
@@ -638,7 +859,7 @@ QPixmap Date::generateCalibThumb()
         const double tmax = mSettings.mTmax;
 
         GraphCurve curve;
-        QMap<double, double> calib = normalize_map(getMapDataInRange(getRawCalibMap(),tmin,tmax));
+        QMap<double, double> calib = normalize_map(getMapDataInRange(getRawCalibMap(), tmin, tmax));
         qDebug()<<"generateThumb mName"<<mCalibration->mName<<mCalibration->mCurve.size()<<calib.size();
         curve.mData = calib;
 
@@ -657,6 +878,22 @@ QPixmap Date::generateCalibThumb()
         GraphView graph;
 
         graph.addCurve(curve);
+        
+        // Drawing the wiggle
+        if (mDeltaType != eDeltaNone) {
+            GraphCurve curveWiggle;
+            QMap<double, double> calibWiggle = normalize_map(getMapDataInRange(getRawWiggleCalibMap(), tmin, tmax));
+            curveWiggle.mData = calibWiggle;
+
+            curveWiggle.mName = "Wiggle";
+            curveWiggle.mPen = QPen(QColor(150, 150, 150), 2.f);
+            curveWiggle.mBrush = QColor(150, 150, 150);//color;
+            curveWiggle.mIsHisto = false;
+            curveWiggle.mIsRectFromZero = true; 
+            graph.addCurve(curveWiggle);
+        }
+        
+        
         graph.setFixedSize(size);
         graph.setMargins(0, 0, 0, 0);
 
@@ -680,24 +917,13 @@ QPixmap Date::generateCalibThumb()
 
 
         QPixmap thumb(size);
-//        if (graph.inherits("QOpenGLWidget")) {
-//            // Does not work if the graph has not been rendered before
-//            // (calling repaint() has no direct effect on QOpenGLWidget...)
-//            //graph.repaint();
-//            //QImage image = graph.grabFramebuffer();
-//            //thumb = QPixmap::fromImage(image);
-//
-//            // This works but there are some drawing region issues...
-//            //graph.setRendering(GraphView::eHD);
-//            graph.paintToDevice(&thumb);
-//        } else {
-            QPainter p;
-            p.begin(&thumb);
-            //p.setRenderHint(QPainter::SmoothPixmapTransform);//don't work on pixmap
-            graph.repaint();
-            graph.render(&p);
-            p.end();
-//        }
+        QPainter p;
+        p.begin(&thumb);
+        //p.setRenderHint(QPainter::SmoothPixmapTransform);//don't work on pixmap
+        graph.repaint();
+        graph.render(&p);
+        p.end();
+
         return thumb;
     } else {
         // If date is invalid, return a null pixmap!
@@ -706,12 +932,10 @@ QPixmap Date::generateCalibThumb()
 
 }
 
-
-
 double Date::getLikelihoodFromCalib(const double t)
 {
-    double tmin = mCalibration->mTmin;// mSettings.mTmin;
-    double tmax = mCalibration->mTmax;//mSettings.mTmax;
+    const double tmin (mCalibration->mTmin);
+    const double tmax (mCalibration->mTmax);
 
     // We need at least two points to interpolate
     if (mCalibration->mCurve.size() < 2 || t < tmin || t > tmax)
@@ -723,9 +947,10 @@ double Date::getLikelihoodFromCalib(const double t)
     int idxUpper = idxUnder + 1;
 
     // Important pour le créneau : pas d'interpolation autour des créneaux!
-    double v = 0.;
+    double v (0.);
     if (mCalibration->mCurve[idxUnder] != 0. && mCalibration->mCurve[idxUpper] != 0.)
         v = interpolate((double) idx, (double)idxUnder, (double)idxUpper, mCalibration->mCurve[idxUnder], mCalibration->mCurve[idxUpper]);
+    
     return v;
 }
 
@@ -741,29 +966,25 @@ void Date::initDelta(Event*)
 {
     switch (mDeltaType) {
         case eDeltaNone:
-        {
             break;
-        }
+        
         case eDeltaRange:
-        {
             mDelta = Generator::randomUniform(mDeltaMin, mDeltaMax);
             break;
-        }
-        case eDeltaGaussian:
-        {
+        
+        case eDeltaGaussian: {
             // change init of Delta in case of gaussian function since 2015/06 with PhL
             //mDelta = event->mTheta.mX - mTheta.mX;
             const double tmin = mSettings.mTmin;
             const double tmax = mSettings.mTmax;
-            mDelta = Generator::gaussByDoubleExp(mDeltaAverage,mDeltaError,tmin, tmax);
+            mDelta = Generator::gaussByDoubleExp(mDeltaAverage,mDeltaError, tmin, tmax);
+            }
             break;
-        }
+        
         case eDeltaFixed:
-        default:
-        {
             mDelta = mDeltaFixed;
             break;
-        }
+        
     }
 
     mWiggle.mLastAccepts.clear();
@@ -771,39 +992,64 @@ void Date::initDelta(Event*)
 
 void Date::updateDelta(Event* event)
 {
+    const double lambdai = event->mTheta.mX - mTheta.mX;
+    
     switch (mDeltaType) {
         case eDeltaNone:
-        {
             break;
-        }
+        
         case eDeltaRange:
-        {
-            const double lambdai = event->mTheta.mX - mTheta.mX;
-
-            mDelta = Generator::gaussByDoubleExp(lambdai,mSigma.mX,mDeltaMin, mDeltaMax);
+            mDelta = Generator::gaussByDoubleExp(lambdai, mSigma.mX, mDeltaMin, mDeltaMax);
             break;
-        }
-        case eDeltaGaussian:
-        {
-            const double lambdai = event->mTheta.mX - mTheta.mX;
-            const double w = (1/(mSigma.mX * mSigma.mX)) + (1/(mDeltaError * mDeltaError));
+        
+        case eDeltaGaussian: {
+           // const double lambdai = event->mTheta.mX - mTheta.mX;
+            const double w = ( 1/(mSigma.mX * mSigma.mX) ) + ( 1/(mDeltaError * mDeltaError) );
             const double deltaAvg = (lambdai / (mSigma.mX * mSigma.mX) + mDeltaAverage / (mDeltaError * mDeltaError)) / w;
             const double x = Generator::gaussByBoxMuller(0, 1);
             const double delta = deltaAvg + x / sqrt(w);
 
             mDelta = delta;
-            break;
         }
+            break;
+        
         case eDeltaFixed:
-        default:
-        {
             mDelta = mDeltaFixed;
             break;
-        }
+        
     }
 }
 
-void Date::updateSigma(Event* event)
+void Date::updateSigmaJeffreys(Event* event)
+{
+    // ------------------------------------------------------------------------------------------
+    //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
+    // ------------------------------------------------------------------------------------------
+    const double lambda = pow(mTheta.mX - (event->mTheta.mX - mDelta), 2) / 2.;
+
+   
+    const double a (.0001); //precision
+    const double b (pow(mSettings.mTmax - mSettings.mTmin, 2.));
+
+    const double V1 = mSigma.mX * mSigma.mX;
+
+    double V2 (0.);
+    do {
+        const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigma.mSigmaMH);
+        V2 = pow(10, logV2);
+    } while ((V2<a) || (V2>b));
+    
+    
+    const double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
+    const double x2 = V1/V2;
+    const double rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1; // (V2 / V1) est le jacobien!
+    //qDebug() <<"Date:: updateSigmaJeffreys"<<V2<< rapport;
+    
+    mSigma.tryUpdate(sqrt(V2), rapport);
+}
+
+
+void Date::updateSigmaShrinkage(Event* event)
 {
     // ------------------------------------------------------------------------------------------
     //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
@@ -822,8 +1068,40 @@ void Date::updateSigma(Event* event)
         const double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
         const double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1.);
         rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1; // (V2 / V1) est le jacobien!
+ 
+    } else {
+        qDebug()<<"Date::updateSigma x1 x2 rapport rejet";
     }
+    
+    mSigma.tryUpdate(sqrt(V2), rapport);
+}
 
+void Date::updateSigmaReParam(Event* event)
+{
+    // ------------------------------------------------------------------------------------------
+    //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
+    // ------------------------------------------------------------------------------------------
+    const double lambda = pow(mTheta.mX - (event->mTheta.mX - mDelta), 2) / 2.;
+
+    const int VMin (0);
+
+    const double V1 = mSigma.mX * mSigma.mX;
+  
+    const double r1 = pow( (mTheta.mX - (event->mTheta.mX - mDelta))/mSigma.mX, 2);
+    const double r2 = Generator::gaussByBoxMuller(r1, mSigma.mSigmaMH);
+    const double V2 = pow( (mTheta.mX - (event->mTheta.mX - mDelta)), 2)/ r2;
+
+    double rapport (0.);
+    if (V2 > VMin ) {
+        const double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
+        const double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1.);
+        
+        rapport = x1 * sqrt(V1/V2) * x2 * pow(V2 / V1, 2.); // (V2 / V1) est le jacobien!
+ 
+    } else {
+        qDebug()<<"Date::updateSigmaReParam x1 x2 rapport rejet";
+    }
+    
     mSigma.tryUpdate(sqrt(V2), rapport);
 }
 
@@ -859,10 +1137,12 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
                     if (deltaType == "fixed") {
                         date.mDeltaType = Date::eDeltaFixed;
                         date.mDeltaFixed = csvLocale.toDouble(delta1);
+                        
                     } else if (deltaType == "range") {
                         date.mDeltaType = Date::eDeltaRange;
                         date.mDeltaMin = csvLocale.toDouble(delta1);
                         date.mDeltaMax = csvLocale.toDouble(delta2);
+                        
                     } else if (deltaType == "gaussian") {
                         date.mDeltaType = Date::eDeltaGaussian;
                         date.mDeltaAverage = csvLocale.toDouble(delta1);
@@ -913,57 +1193,43 @@ void Date::autoSetTiSampler(const bool bSet)
     // define sampling function
     // select if using getLikelyhooArg is possible, it's a faster way
 
-    if (bSet && mPlugin!= 0 && mPlugin->withLikelihoodArg()) {
+    if (bSet && mPlugin!= 0 && mPlugin->withLikelihoodArg() && mOrigin==Date::eSingleDate) {
          //   if (false) {
         switch (mMethod) {
             case eMHSymetric:
-            {
                 updateti = fMHSymetricWithArg;
-
                 break;
-            }
+            
             case eInversion:
-            {
                 updateti = fInversionWithArg;
-
                 break;
-            }
+            
                 // Seul cas où le taux d'acceptation a du sens car on utilise sigmaMH :
             case eMHSymGaussAdapt:
-            {
                 updateti = fMHSymGaussAdaptWithArg;
-
                 break;
-            }
+            
             default:
-            {
                 break;
-            }
+            
         }
        // qDebug()<<"Date::autoSetTiSampler()"<<this->mName<<"with getLikelyhoodArg";
     } else {
         switch (mMethod) {
             case eMHSymetric:
-            {
                 updateti = fMHSymetric;
-
                 break;
-            }
+            
             case eInversion:
-            {
                 updateti = fInversion;
-
                 break;
-            }
+            
                 // only case with acceptation rate, because we use sigmaMH :
             case eMHSymGaussAdapt:
-            {
                 updateti = fMHSymGaussAdapt;
-
                 break;
-            }
+            
             default:
-            {
                 break;
             }
         }
@@ -971,7 +1237,7 @@ void Date::autoSetTiSampler(const bool bSet)
 
     }
 
-}
+
 
 /**
  * @brief MH proposal = prior distribution
@@ -1024,6 +1290,7 @@ void fMHSymetricWithArg(Date* date,Event* event)
  */
 double fProposalDensity(const double t, const double t0, Date* date)
 {
+    (void) t0;
     const double tmin (date->mSettings.mTmin);
     const double tmax (date->mSettings.mTmax);
     const double level (date->mMixingLevel);
@@ -1039,10 +1306,11 @@ double fProposalDensity(const double t, const double t0, Date* date)
         const double idx = prop * (date->mCalibration->mRepartition.size() - 1);
         const int idxUnder = (int)floor(idx);
 
-        //double step =(tmax-tmin+1)/date->mRepartition.size();
-        const double step (date->mCalibration->mStep);
+       const double step (date->mCalibration->mStep);
 
         q1 = (date->mCalibration->mRepartition[idxUnder+1] - date->mCalibration->mRepartition[idxUnder])/step;
+        
+      //  q1 = interpolate(idx, double(idxUnder), double(idxUnder+1), date->mCalibration->mCurve[idxUnder], date->mCalibration->mCurve[idxUnder+1]);
     }
     // ----q2 shrinkage-----------
     /*double t0 =(tmax+tmin)/2;
@@ -1052,6 +1320,13 @@ double fProposalDensity(const double t, const double t0, Date* date)
 
     // ----q2 gaussian-----------
     //double t0 = (tmax+tmin)/2;
+    
+    //modif 2020-09-28
+//    const double sigma = (qMax(tmax, tmaxCalib)  - qMin(tminCalib, tmin)) / 2.;
+//    const double mean = (qMax(tmax, tmaxCalib)  + qMin(tminCalib, tmin)) / 2.;
+//    const double q2 = Generator::gaussByBoxMuller(mean,  pow(sigma, 2.));
+//    
+    // origin
     const double sigma = qMax(tmax - tmin, tmaxCalib - tminCalib) / 2;
     const double q2 = exp(-0.5* pow((t-t0)/ sigma, 2)) / (sigma*sqrt(2*M_PI));
 
@@ -1160,16 +1435,15 @@ void fInversionWithArg(Date* date, Event* event)
     argNew = date->getLikelihoodArg(tiNew);
 
     const long double logGRapport = argNew.second-argOld.second;
-    const long double logHRapport = (-0.5l/(date->mSigma.mX * date->mSigma.mX)) * (powl(tiNew - (event->mTheta.mX - date->mDelta), 2.)
-                                                                      - powl(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2.)
-                                                                      );
+    const long double logHRapport = (-0.5l/powl(date->mSigma.mX, 2.)) * (  powl(tiNew - (event->mTheta.mX - date->mDelta), 2.) - powl(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2.) ); // modif 2020-09-28
 
     const long double rapport = sqrt(argOld.first/argNew.first) * exp(logGRapport+logHRapport);
 
     const long double rapportPD = fProposalDensity(date->mTheta.mX, tiNew, date) / fProposalDensity(tiNew, date->mTheta.mX, date);
-
-
+    qDebug()<<"fInversionWithArg "<<   double(argOld.first)<< double(argNew.first) <<double(logGRapport)<< double(logHRapport)<<double(rapport) << date->mSigma.mX<< date->mTheta.mX<< tiNew;
     date->mTheta.tryUpdate(tiNew, (double)(rapport * rapportPD));
+    
+    qDebug()<<"fInversionWithArg "<< (tiNew==date->mTheta.mX?true:false);
 
 
 }
@@ -1180,7 +1454,6 @@ void fInversionWithArg(Date* date, Event* event)
  */
 void fMHSymGaussAdapt(Date* date, Event* event)
 {
-
     const double tiNew = Generator::gaussByBoxMuller(date->mTheta.mX, date->mTheta.mSigmaMH);
     double rapport = date->getLikelihood(tiNew) / date->getLikelihood(date->mTheta.mX);
     rapport *= exp((-0.5/(date->mSigma.mX * date->mSigma.mX)) * (   pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
@@ -1205,12 +1478,12 @@ void fMHSymGaussAdaptWithArg(Date* date, Event* event)
     argOld = date->getLikelihoodArg(date->mTheta.mX);
     argNew = date->getLikelihoodArg(tiNew);
 
-    const long double logGRapport = argNew.second-argOld.second;
-    const long double logHRapport = (-0.5/(date->mSigma.mX * date->mSigma.mX)) * (  pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
+    const long double logGRapport = argNew.second - argOld.second;
+    const long double logHRapport = (-0.5 / (date->mSigma.mX * date->mSigma.mX)) * (  pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
                                                                       - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
                                                                       );
 
-    const long double rapport = sqrt(argOld.first/argNew.first)*exp(logGRapport+logHRapport);
+    const long double rapport = sqrt(argOld.first / argNew.first) * exp(logGRapport+logHRapport);
 
     date->mTheta.tryUpdate(tiNew, (double) rapport);
 

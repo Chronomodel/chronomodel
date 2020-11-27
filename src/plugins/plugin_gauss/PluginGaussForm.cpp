@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -153,6 +153,17 @@ PluginGaussForm::~PluginGaussForm()
 
 void PluginGaussForm::setData(const QJsonObject& data, bool isCombined)
 {
+    mAverageEdit->setEnabled(!isCombined);
+    mErrorEdit->setEnabled(!isCombined);
+    mAEdit->setEnabled(!isCombined);
+    mBEdit->setEnabled(!isCombined);
+    mCEdit->setEnabled(!isCombined);
+    
+    mCurveRadio->setEnabled(!isCombined);
+    mEquationRadio->setEnabled(!isCombined);
+    mNoneRadio->setEnabled(!isCombined);
+   
+    
     if ( isCombined) {
         mAverageEdit->setText("Combined data");
         mErrorEdit->setText("Combined data");

@@ -70,14 +70,14 @@ protected slots:
 private:
     QLabel* mAverageLab;
     QLabel* mErrorLab;
-    QLabel* mRLab;
-    QLabel* mRErrorLab;
+//    QLabel* mRLab;
+//    QLabel* mRErrorLab;
     QLabel* mRefLab;
 
     QLineEdit* mAverageEdit;
     QLineEdit* mErrorEdit;
-    QLineEdit* mREdit;
-    QLineEdit* mRErrorEdit;
+//    QLineEdit* mREdit;
+//    QLineEdit* mRErrorEdit;
     QComboBox* mRefCombo;
 
     static QString mSelectedRefCurve;

@@ -1269,6 +1269,7 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
 //Calibration come from EventPropertiesView::updateCalibRequested
 void ModelView::updateCalibration(const QJsonObject& date)
 {
+    qDebug() <<" ModelView::updateCalibration mUUID" << date.value(STATE_DATE_UUID).toString();
     // A date has been double-clicked => update CalibrationView only if the date is not null
      if (!date.isEmpty() && mEventPropertiesView->isVisible() && mEventPropertiesView->isCalibChecked())
         mCalibrationView->setDate(date);

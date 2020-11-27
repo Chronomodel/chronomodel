@@ -302,11 +302,24 @@ QString MCMCLoopMain::initMCMC()
                 double sigma;
                 if (!date.mCalibration->mRepartition.isEmpty()) {
                     const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mCalibration->mRepartition);
-                    date.mTheta.mX = date.mCalibration->mTmin + idx *date.mCalibration->mStep;
-                  //  qDebug()<<"MCMCLoopMain::Init"<<date.mName <<" mThe.mx="<<QString::number(date.mTheta.mX, 'g', 15);
+                    date.mTheta.mX = date.mCalibration->mTmin + idx * date.mCalibration->mStep;
+                    qDebug()<<"MCMCLoopMain::Init"<<date.mName <<" mThe.mx="<<QString::number(date.mTheta.mX, 'g', 15)<<date.mCalibration->mTmin<<date.mCalibration->mStep;
 
-                    FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration->mCurve, tmin, tmax, date.mCalibration->mStep));
+                    FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration->mCurve, date.mCalibration->mTmin, date.mCalibration->mTmax, date.mCalibration->mStep));
+                    
+                    
+                    
+//                    const int nbPts = 1 + int (round((date.mCalibration->mTmax - date.mCalibration->mTmin) /  date.mCalibration->mStep)); // step is not usefull, it's must be data.size/(max-min+1)
+//                    qDebug()<<"MCMCLoopMain::Init mCalibration";
+//                    for (int i=0; i<nbPts; ++i) {
+//                        double t = date.mCalibration->mTmin + i *  date.mCalibration->mStep;
+//                        if (i < date.mCalibration->mCurve.size())
+//                        qDebug()<< t<<";"<<date.mCalibration->mCurve.at(i);
+//                    }
+                    
+                    
                     sigma = double (data.stddev);
+                    qDebug()<<"MCMCLoopMain::Init"<<date.mName <<" sigma="<<sigma;
                 }
                 else { // in the case of mRepartion curve is null, we must init ti outside the study period
                        // For instance we use a gaussian random sampling
@@ -344,11 +357,13 @@ QString MCMCLoopMain::initMCMC()
 
                 // intermediary calculus for the harmonic average
                 s02_sum += 1. / (sigma * sigma);
+                
             }
 
             // 4 - Init S02 of each Event
-            unsortedEvents.at(i)->mS02 = unsortedEvents.at(i)->mDates.size() / s02_sum;// /100;
-
+            unsortedEvents.at(i)->mS02 = (unsortedEvents.at(i)->mDates.size() / s02_sum); //unsortedEvents.at(i)->mDates.size() / s02_sum;// /100;
+            qDebug()<<"MCMCLoopMain::Init"<<unsortedEvents.at(i)->mName <<" mS02="<<unsortedEvents.at(i)->mS02;
+            
             // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
             unsortedEvents.at(i)->mTheta.mSigmaMH = sqrt(unsortedEvents.at(i)->mS02);
             unsortedEvents.at(i)->mAShrinkage = 1.;
@@ -399,7 +414,7 @@ QString MCMCLoopMain::initMCMC()
         emit stepProgressed(i);
     }
     // --------------------------- Init phases ----------------------
-    emit stepChanged(tr("Initialzsing Phases..."), 0, phases.size());
+    emit stepChanged(tr("Initializing Phases..."), 0, phases.size());
 
     i = 0;
     for (Phase* phase : phases ) {
@@ -511,7 +526,9 @@ void MCMCLoopMain::update()
         for ( auto&& date : event->mDates )   {
             date.updateDelta(event);
             date.updateTheta(event);
-            date.updateSigma(event);
+            //date.updateSigmaJeffreys(event);
+            date.updateSigmaShrinkage(event);
+            //date.updateSigmaReParam(event);
             date.updateWiggle();
 
             if (doMemo) {

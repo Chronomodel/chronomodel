@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -507,22 +507,22 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
 #endif
     }
     else if (data.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_NONE) {
-        double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
-        double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
+        const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
+        const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
 
         tmin = age - k * error;
         tmax = age + k * error;
     }
     else if (data[DATE_GAUSS_MODE_STR].toString() == DATE_GAUSS_MODE_EQ) {
-        double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
-        double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
+        const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
+        const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
 
-        double a = data.value(DATE_GAUSS_A_STR).toDouble();
-        double b = data.value(DATE_GAUSS_B_STR).toDouble();
-        double c = data.value(DATE_GAUSS_C_STR).toDouble();
+        const double a = data.value(DATE_GAUSS_A_STR).toDouble();
+        const double b = data.value(DATE_GAUSS_B_STR).toDouble();
+        const double c = data.value(DATE_GAUSS_C_STR).toDouble();
 
-        double v1 = age - k * error;
-        double v2 = age + k * error;
+        const double v1 = age - k * error;
+        const double v2 = age + k * error;
 
         if (a == 0.) {
             if (b == 0.) {
@@ -535,8 +535,8 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
             }
         }
         else {
-            double delta1 = b*b - 4*a*(c - v1);
-            double delta2 = b*b - 4*a*(c - v2);
+            const double delta1 = b*b - 4*a*(c - v1);
+            const double delta2 = b*b - 4*a*(c - v2);
 
             bool hasDelta1 = false;
 

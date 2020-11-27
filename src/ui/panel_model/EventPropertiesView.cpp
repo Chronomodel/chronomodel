@@ -406,6 +406,7 @@ void EventPropertiesView::createDate()
             for (int i=0; i<plugins.size(); ++i) {
                 if (plugins.at(i)->getName() == but->text()) {
                     Date date = project->createDateFromPlugin(plugins.at(i));
+                    date.mUUID =QString::fromStdString(Generator::UUID()); // Add UUID since version 2.1.3
                     if (!date.isNull())
                         project->addDate(mEvent.value(STATE_ID).toInt(), date.toJson());
                 }

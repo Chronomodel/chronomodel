@@ -113,14 +113,19 @@ public:
     long double getLikelihood(const double& t) const;
     QPair<long double, long double> getLikelihoodArg(const double& t) const;
     QString getDesc() const;
+    QString getWiggleDesc() const;
     PluginAbstract* getPlugin() const {return mPlugin;}
 
     void reset();
     void calibrate(const ProjectSettings & settings, Project *project);
+    void calibrateWiggle(const ProjectSettings & settings, Project *project);
     double getLikelihoodFromCalib(const double t);
 
     const QMap<double, double> getFormatedCalibMap() const;
+    const QMap<double, double> getFormatedWiggleCalibMap() const;
+    
     const QMap<double, double> getRawCalibMap() const;
+    const QMap<double, double> getRawWiggleCalibMap() const;
 
     QVector<double> getFormatedRepartition() const;
 
@@ -133,7 +138,9 @@ public:
     void autoSetTiSampler(const bool bSet);
 
     void updateDelta(Event* event);
-    void updateSigma(Event* event);
+    void updateSigmaShrinkage(Event* event);
+    void updateSigmaJeffreys(Event* event);
+    void updateSigmaReParam(Event* event);
     void updateWiggle();
 
     QColor getEventColor() const;
@@ -143,11 +150,6 @@ public:
     void setTminRefCurve(const double tmin) { mTminRefCurve = tmin;}
     void setTmaxRefCurve(const double tmax) { mTmaxRefCurve = tmax;}
 
-/*    double getTminCalib() const {return mCalibration->mTmin;}
-    double getTmaxCalib() const {return mCalibration->mTmax;}
-    void setTminCalib(const double tmin) { mCalibration->mTmin = tmin;}
-    void setTmaxCalib(const double tmax) { mCalibration->mTmax = tmax;}
-*/
     double getFormatedTminRefCurve() const;
     double getFormatedTmaxRefCurve() const;
 
@@ -163,6 +165,7 @@ public:
     double mDelta;
 
     int mId;
+    QString mUUID;
 
     QString mName; // must be public, to be setting by dialogbox
     QColor mColor;
@@ -184,6 +187,7 @@ public:
     bool mIsSelected;
 
     CalibrationCurve* mCalibration;
+    CalibrationCurve* mWiggleCalibration;
 
     QMap<double, double> mCalibHPD;
     ProjectSettings mSettings;

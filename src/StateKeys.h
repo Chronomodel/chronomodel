@@ -69,6 +69,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define STATE_IS_SELECTED "is_selected"
 #define STATE_IS_CURRENT "is_current"
 
+#define STATE_DATE_UUID "UUID"
 #define STATE_DATE_DATA "data"
 #define STATE_DATE_PLUGIN_ID "plugin_id"
 #define STATE_DATE_METHOD "method"

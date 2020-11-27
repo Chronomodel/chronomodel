@@ -234,7 +234,7 @@ void CalibrationView::setDate(const QJsonObject& date)
         mDate.autoSetTiSampler(false);
 
         mDrawing->setTitle(mDate.mName + " (" + mDate.mPlugin->getName() + ")");
-
+        qDebug() << "CalibrationView::setDate mUUID "<<mDate.mName << mDate.mUUID;
         const double t1 ( mSettings.getTminFormated() );
         const double t2 ( mSettings.getTmaxFormated() );
         if (mDate.mIsValid) {
@@ -318,6 +318,12 @@ void CalibrationView::updateGraphs()
         QMap<double, double> calibMap;
         if (mDate.mIsValid)
             calibMap = mDate.getFormatedCalibMap();
+         
+        QMap<double, double> wiggleCalibMap;
+         if (mDate.mDeltaType != Date::eDeltaNone) {
+           // wiggleCalibMap =  normalize_map( mDate.getFormatedWiggleCalibMap() );
+             wiggleCalibMap =  mDate.getFormatedWiggleCalibMap();
+         }
 
         if (!calibMap.isEmpty()) {
 
@@ -332,6 +338,18 @@ void CalibrationView::updateGraphs()
             mCalibGraph->addCurve(calibCurve);
             mCalibGraph->setMarginBottom(fm.ascent() * 2.2);
 
+            if (!wiggleCalibMap.isEmpty()) {
+                GraphCurve calibWiggleCurve;
+                calibWiggleCurve.mName = "Wiggle";
+                calibWiggleCurve.mPen.setColor(Qt::red);
+                calibWiggleCurve.mIsHisto = false;
+                calibWiggleCurve.mData = wiggleCalibMap;
+                calibWiggleCurve.mIsRectFromZero = isUnif;
+                calibWiggleCurve.mBrush = isUnif ? QBrush(brushColor) : QBrush(Qt::NoBrush);
+                 mCalibGraph->addCurve(calibWiggleCurve);
+            }
+            
+            
          //   mCalibGraph->setTipXLab("t"); // don't work
 
             QString input = mHPDEdit->text();

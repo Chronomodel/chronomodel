@@ -107,13 +107,16 @@ public:
     QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
 };
 
-template <typename T>
-T F14CtoCRA ( const T F14C) { return( -8033*log(F14C) );}
+// define in Plugin14C.h
+//template <typename T>
+//T F14CtoCRA ( const T F14C) { return( -8033*log(F14C) );}
+
+//template <typename T>
+//T errF14CtoErrCRA (const T errF14C, const T F14C) {return( -8033*log(F14C-errF14C) + 8033*log(F14C)); }
+//
+
 template <typename T>
 T CRAtoF14C (const T CRA) { return(exp(-CRA/8033)); }
-template <typename T>
-T errF14CtoErrCRA (const T errF14C, const T F14C) {return( -8033*log(F14C-errF14C) + 8033*log(F14C)); }
-
 template <typename T>
 T errCRAtoErrF14C (const T errCRA, const T CRA) { return( exp(-CRA/8033) -exp(-(CRA+ errCRA)/8033)); }
 

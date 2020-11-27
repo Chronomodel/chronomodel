@@ -44,6 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphView.h"
 #include "ProjectSettings.h"
 #include "RefCurve.h"
+#include "Generator.h"
 //#include "PluginCombineViewAbstract.h"
 
 #include <QObject>
@@ -91,15 +92,38 @@ public:
         return QPair<long double, long double>();
     }
     
-    long double getLikelihoodCombine  (const double& t, const QJsonArray& subData)
+    long double getLikelihoodCombine  (const double& t, const QJsonArray& subDateArray)
     {
         long double produit (1.l);
-        for (int i(0); i<subData.size(); ++i) {
-            const QJsonObject subDate = subData.at(i).toObject();
+        
+        for ( auto && sDA : subDateArray ) {
+            QJsonObject subDate = sDA.toObject();
             auto data = subDate.value(STATE_DATE_DATA).toObject();
-            
-            produit *= getLikelihood(t, data );
-
+            Date date;
+            date.fromJson(subDate);
+            if ( wiggleAllowed()==true ) {
+                double dt;
+                switch (date.mDeltaType) {
+                    case Date::eDeltaNone:
+                        produit *= getLikelihood(t, data );
+                        break;
+                    case Date::eDeltaFixed:
+                        dt = date.mDeltaFixed;
+                        produit *= getLikelihood( t - dt, data );
+                        break;
+                    case Date::eDeltaGaussian:
+                        dt = Generator::randomUniform(date.mDeltaAverage, date.mDeltaError);
+                        produit *= getLikelihood( t - dt, data );
+                        break;
+                    case Date::eDeltaRange:
+                        dt = Generator::gaussByBoxMuller( date.mDeltaMin, date.mDeltaMax);
+                        produit *= getLikelihood( t - dt, data );
+                        break;
+                }
+            }
+            else {
+                produit *= getLikelihood(t, data );
+            }
         }
       
         return produit;
@@ -108,7 +132,7 @@ public:
     virtual QString getName() const = 0;
     virtual QIcon getIcon() const = 0;
     virtual bool doesCalibration() const = 0;
-    virtual bool wiggleAllowed() const {return true;}
+    virtual bool wiggleAllowed() const = 0;
     virtual Date::DataMethod getDataMethod() const = 0;
     virtual QList<Date::DataMethod> allowedDataMethods() const = 0;
     virtual QString csvHelp() const{return QString();}
@@ -159,7 +183,6 @@ public:
        bool valid (true);
        
        for (int i (0); i<subData.size(); ++i) {
-           qDebug()<<subData.at(i).toObject().value(STATE_NAME).toString();
            const bool isVal = isDateValid(subData.at(i).toObject().value(STATE_DATE_DATA).toObject(), settings);
            valid = valid & isVal;
        }
@@ -179,17 +202,44 @@ public:
     // -------------------------------
     virtual QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const = 0;
 
-    virtual QPair<double,double> getTminTmaxRefsCurveCombine(const QJsonArray& subData)
+    virtual QPair<double,double> getTminTmaxRefsCurveCombine(const QJsonArray& subDateArray)
     {
         double tmin (INFINITY);
         double tmax (-INFINITY);
+        for ( auto && sDA : subDateArray ) {
+            QJsonObject subDate = sDA.toObject();
+            auto data = subDate.value(STATE_DATE_DATA).toObject();
 
-        for (int i(0); i<subData.size(); ++i) {
-           
-            const QPair<double, double> tminTmax = getTminTmaxRefsCurve( subData.at(i).toObject().value(STATE_DATE_DATA).toObject() );
+            QPair<double, double> tminTmax = getTminTmaxRefsCurve( data);
+            
+            if ( wiggleAllowed()==true ) {
+                Date date;
+                date.fromJson(subDate);
+                double dt;
+                switch (date.mDeltaType) {
+                    case Date::eDeltaFixed:
+                        dt = date.mDeltaFixed;
+                        tminTmax.first = tminTmax.first + dt;
+                        tminTmax.second = tminTmax.second + dt;
+                        break;
+                    case Date::eDeltaGaussian:
+                        dt = Generator::randomUniform(date.mDeltaAverage, date.mDeltaError);
+                        tminTmax.first = tminTmax.first + date.mDeltaAverage + date.mDeltaError ;
+                        tminTmax.second = tminTmax.second + date.mDeltaAverage + date.mDeltaError ;
+                        break;
+                    case Date::eDeltaRange:
+                        dt = Generator::gaussByBoxMuller( date.mDeltaMin, date.mDeltaMax);
+                        tminTmax.first = tminTmax.first + date.mDeltaMin;
+                        tminTmax.second = tminTmax.second + date.mDeltaMax;
+                        break;
+                    default:
+                        break;
+                }
+                
+            }
             tmin = std::min(tmin, tminTmax.first);
             tmax = std::max(tmax, tminTmax.second);
-            
+                                        
         }
         return qMakePair(tmin, tmax);
     }

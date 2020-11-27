@@ -358,13 +358,15 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
 
             Date sd;
             sd.fromJson(subDate);
-            QString toFind = sd.mName + sd.getDesc();
+            QString toFind = sd.mUUID;
             
             Project* project = MainWindow::getInstance()->getProject();
             QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
             if ( it != project->mCalibCurves.end())
                 sd.mCalibration = & it.value();
-            
+            else {
+                sd.calibrate(settings, project);
+            }
             
             if (!date.isNull() && date.mIsValid) {
                 const double t3 = sd.getFormatedTminCalib();

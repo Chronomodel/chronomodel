@@ -307,7 +307,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
            QJsonObject subDate = d.toObject();
             Date sd;
             sd.fromJson(subDate);
-            const QString toFind = sd.mName + sd.getDesc();
+            const QString toFind = sd.mUUID;
             
             Project* project = MainWindow::getInstance()->getProject();
             QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);

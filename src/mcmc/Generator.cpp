@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -46,7 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <ctgmath>
 #include <cstdlib>
 #include <iostream>
-#include <random>
+
 #include <algorithm>
 #include <chrono>
 #include <iostream>
@@ -57,6 +57,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 std::mt19937 Generator::sEngine(0);
 std::uniform_real_distribution<double> Generator::sDoubleDistribution(0.0, 1.0);
+
+c_UUID Generator::UUID;
 
 //http://xoroshiro.di.unimi.it/
 std::uint64_t Generator::xorshift64starSeed(35); /**< used with Generator::xorshift64star(void) */
@@ -251,3 +253,6 @@ double Generator::xorshift64star(void) {
 
        return to_double(Generator::xorshift64starSeed * UINT64_C(2685821657736338717));
 }
+
+
+
