@@ -77,8 +77,9 @@ public:
     void updateFormatSettings();
     void updateDesignFromJson();
 
-    QJsonObject toJson() const;
-    void fromJson( const QJsonObject& json);
+    virtual QJsonObject toJson() const;
+    virtual void fromJson( const QJsonObject& json);
+    
     void setProject(Project *project);
 
     bool isValid();

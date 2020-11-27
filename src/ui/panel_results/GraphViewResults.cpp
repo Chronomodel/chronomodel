@@ -175,6 +175,11 @@ void GraphViewResults::setMainColor(const QColor& color)
 }
 //Export Image & Data
 
+void GraphViewResults::setTitle(const QString& title)
+{
+    mTitle = title;
+    update();
+}
 
 void GraphViewResults::saveAsImage()
 {

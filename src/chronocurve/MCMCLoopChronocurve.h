@@ -124,6 +124,8 @@ private:
     double valeurErrG(const double t, const MCMCSplineComposante& spline);
     double valeurGPrime(const double t, const MCMCSplineComposante& spline);
     double valeurGSeconde(const double t, const MCMCSplineComposante& spline);
+    
+    PosteriorMeanGComposante computePosteriorMeanGComposante(const std::vector<MCMCSplineComposante>& trace);
 
 public:
     ModelChronocurve* mModel;

@@ -50,6 +50,26 @@ ModelChronocurve::~ModelChronocurve()
 
 }
 
+QJsonObject ModelChronocurve::toJson() const
+{
+    QJsonObject json = Model::toJson();
+    
+    json[STATE_CHRONOCURVE] = mChronocurveSettings.toJson();
+    
+    return json;
+}
+
+void ModelChronocurve::fromJson(const QJsonObject& json)
+{
+    Model::fromJson(json);
+    
+    if(json.contains(STATE_CHRONOCURVE))
+    {
+        const QJsonObject settings = json.value(STATE_CHRONOCURVE).toObject();
+        mChronocurveSettings = ChronocurveSettings::fromJson(settings);
+    }
+}
+
 void ModelChronocurve::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth)
 {
     Model::generatePosteriorDensities(chains, fftLen, bandwidth);
@@ -58,4 +78,37 @@ void ModelChronocurve::generatePosteriorDensities(const QList<ChainSpecs> &chain
     const double tmax = mSettings.getTmaxFormated();
     
     mAlphaLissage.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+}
+
+QList<PosteriorMeanGComposante> ModelChronocurve::getChainsMeanGComposanteX()
+{
+    QList<PosteriorMeanGComposante> composantes;
+    
+    for(unsigned int i=0; i<mPosteriorMeanGParametriqueByChain.size(); ++i)
+    {
+        composantes.append(mPosteriorMeanGParametriqueByChain[i].gx);
+    }
+    return composantes;
+}
+
+QList<PosteriorMeanGComposante> ModelChronocurve::getChainsMeanGComposanteY()
+{
+    QList<PosteriorMeanGComposante> composantes;
+    
+    for(unsigned int i=0; i<mPosteriorMeanGParametriqueByChain.size(); ++i)
+    {
+        composantes.append(mPosteriorMeanGParametriqueByChain[i].gy);
+    }
+    return composantes;
+}
+
+QList<PosteriorMeanGComposante> ModelChronocurve::getChainsMeanGComposanteZ()
+{
+    QList<PosteriorMeanGComposante> composantes;
+    
+    for(unsigned int i=0; i<mPosteriorMeanGParametriqueByChain.size(); ++i)
+    {
+        composantes.append(mPosteriorMeanGParametriqueByChain[i].gz);
+    }
+    return composantes;
 }

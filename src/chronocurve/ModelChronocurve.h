@@ -42,6 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "Model.h"
 #include "ChronocurveUtilities.h"
+#include "ChronocurveSettings.h"
 
 
 class ModelChronocurve: public Model
@@ -50,11 +51,23 @@ public:
     ModelChronocurve();
     virtual ~ModelChronocurve();
     
+    virtual QJsonObject toJson() const;
+    virtual void fromJson( const QJsonObject& json);
+    
     void generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth);
     
+    QList<PosteriorMeanGComposante> getChainsMeanGComposanteX();
+    QList<PosteriorMeanGComposante> getChainsMeanGComposanteY();
+    QList<PosteriorMeanGComposante> getChainsMeanGComposanteZ();
+    
+public:
+    ChronocurveSettings mChronocurveSettings;
+    
     MHVariable mAlphaLissage;
-    std::vector<MCMCSplineParametrique> mMCMCSplinesParametrique;
-    PosteriorMeanGParametrique mPosteriorMeanGParametrique;
+    std::vector<MCMCSplineParametrique> mMCMCSplinesParametrique; // valeurs aux noeuds
+    
+    PosteriorMeanGParametrique mPosteriorMeanGParametrique; // valeurs en tout t
+    std::vector<PosteriorMeanGParametrique> mPosteriorMeanGParametriqueByChain; // valeurs en tout t par chaine
 };
 
 #endif

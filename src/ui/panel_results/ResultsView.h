@@ -85,7 +85,7 @@ public:
     
     void setProject(Project* project);
     void updateModel(Model* model);
-
+    
 protected:
     // ------------------------------------------------
     //  Events & Layout
@@ -123,7 +123,7 @@ protected:
     void deleteChainsControls();
     
     // ------------------------------------------------
-    //  Set controls UI values
+    //  Span options
     // ------------------------------------------------
     void setXRange();
     void setXSlider(const int value);
@@ -153,11 +153,8 @@ protected:
     
 public slots:
     
-    // ------------------------------------------------
-    //  Results
-    // ------------------------------------------------
     void clearResults(); // connected to Project::mcmcStarted
-    void updateResultsLog();
+    //void updateResultsLog();
 
 private slots:
     
@@ -165,6 +162,7 @@ private slots:
     //  Layout
     // ------------------------------------------------
     void updateLayout();
+    void showInfos(bool);
     
     // ------------------------------------------------
     //  Graphs / Curves / Controls
@@ -175,44 +173,43 @@ private slots:
     void updateControls();
     
     // ------------------------------------
-    //  Tabs changed
-    // ------------------------------------
-    void setGraphTypeTab(int tabIndex);
-    void setGraphListTab(int tabIndex);
-    void setDisplayTab(int tabIndex);
-    void setPageSavingTab(int tabIndex);
-    
-    // ------------------------------------
     //  Controls actions
     // ------------------------------------
     void applyRuler(const double min, const double max);
+    
+    // Tabs
+    void applyGraphTypeTab(int tabIndex);
+    void applyGraphListTab(int tabIndex);
+    void applyDisplayTab(int tabIndex);
+    void applyPageSavingTab(int tabIndex);
     
     void applyCurrentVariable();
     void applyUnfoldEvents();
     void applyUnfoldDates();
     
+    // Span options
     void applyStudyPeriod();
     void applyXRange();
     void applyXSlider(int value);
     void applyXSpin(double value);
     void applyXIntervals();
     
+    // Graphic options
     void applyYSlider(int value);
     void applyYSpin(int value);
     void applyFont();
     void applyThickness(const int value);
     void applyOpacity(const int value);
     
+    // Density options
     void applyFFTLength();
     void applyBandwidth();
     void applyThreshold();
     
+    // Pagination options
     void applyGraphsPerPage(int i);
     void applyPreviousPage();
     void applyNextPage();
-    
-    
-    void showInfos(bool);
     
     // ------------------------------------
     //  Saving / Export
@@ -291,6 +288,12 @@ private:
     CheckBox* mTempoErrCheck;
     RadioButton* mActivityRadio;
     CheckBox* mTempoStatCheck;
+    
+    QWidget* mCurvesGroup;
+    CheckBox* mCurveGCheck;
+    CheckBox* mCurveGPCheck;
+    CheckBox* mCurveGSCheck;
+    CheckBox* mCurveErrorCheck;
 
     // ---------------------------------------------------------------------
     // Tabs : Display / Distrib. Options

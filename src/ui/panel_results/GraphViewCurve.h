@@ -37,70 +37,38 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef PROJECTVIEW_H
-#define PROJECTVIEW_H
+#ifndef GRAPHVIEWCURVE_H
+#define GRAPHVIEWCURVE_H
 
-#include "MCMCLoopMain.h"
-#include "AppSettings.h"
-#include "Project.h"
-#include "Tabs.h"
+#include "GraphViewResults.h"
+#include "ModelChronocurve.h"
 
-#include <QWidget>
 
-class QStackedWidget;
-class QTextEdit;
-class QTabWidget;
-
-class ModelView;
-class ResultsView;
-class Event;
-
-class ProjectView: public QWidget
+class GraphViewCurve: public GraphViewResults
 {
     Q_OBJECT
 public:
-    ProjectView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
-    ~ProjectView();
+    explicit GraphViewCurve(QWidget *parent = nullptr);
+    virtual ~GraphViewCurve();
 
-    void setScreenDefinition();
-    void resizeEvent(QResizeEvent* e);
+    void setComposanteG(const PosteriorMeanGComposante& composante);
+    void setComposanteGChains(const QList<PosteriorMeanGComposante>& composanteChains);
 
-    void setProject(Project* project);
-    void initResults(Model*);
-    
-    void resetInterface();
+    void generateCurves(TypeGraph typeGraph, Variable variable);
+    void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, bool showG, bool showGError, bool showGP, bool showGS);
 
-    void readSettings();
-    void writeSettings();
-   // void setFont(const QFont &font);
-    void newPeriod();
-
-    void updateMultiCalibration();
-
-public slots:
-    void updateProject();
-    void showModel();
-    void showResults();
-    void showLogTab(const int &i);
-    
-    void showLog();
-    void showHelp(bool show);
-
-    void applySettings(Model* model);
-    void applyFilesSettings(Model* model);
-    void updateResultsLog(const QString& log);
-    
-    void toggleChronocurve(bool toggle);
+protected:
+    void paintEvent(QPaintEvent* e);
+    void resizeEvent(QResizeEvent* );
 
 private:
-    QStackedWidget* mStack;
-    ModelView* mModelView;
-    ResultsView* mResultsView;
-
-    Tabs* mLogTabs;
-    QTextEdit* mLogModelEdit;
-    QTextEdit* mLogMCMCEdit;
-    QTextEdit* mLogResultsEdit;
+    PosteriorMeanGComposante mComposanteG;
+    QList<PosteriorMeanGComposante> mComposanteGChains;
+    
+    bool mShowG;
+    bool mShowGError;
+    bool mShowGP;
+    bool mShowGS;
 };
 
 #endif

@@ -158,6 +158,7 @@ public:
 
     void setMainColor(const QColor& color);
    // void toggle(const QRect& geometry); //useless
+    void setTitle(const QString& title);
 
     void setMarginLeft (qreal &m);
     void setMarginRight (qreal &m);
