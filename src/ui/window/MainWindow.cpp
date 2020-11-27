@@ -1136,9 +1136,13 @@ void MainWindow::activateInterface(bool activate)
     //  int hauteurEcran = QApplication::desktop()->height();
 
     int numScreen (QApplication::desktop()->screenNumber(this));
-    if (numScreen<0)
+    QScreen *screen;
+    if (numScreen>0) {
+        screen = QApplication::screens().at(numScreen);
+    } else {
+        screen =  QGuiApplication::primaryScreen();
         numScreen = 0;
-    QScreen *screen = QApplication::screens().at(numScreen);
+    }
 
     //qreal mm_per_cm = 10;
     qreal cm_per_in = 2.54;

@@ -47,9 +47,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
 {
     /* find screen definition */
+    
     int numScreen (QApplication::desktop()->screenNumber(this));
-    QScreen *screen = QApplication::screens().at(numScreen);
-
+    QScreen *screen;
+    if (numScreen>0) {
+        screen = QApplication::screens().at(numScreen);
+    } else {
+        screen =  QGuiApplication::primaryScreen();
+        numScreen = 0;
+    }
+    
     //qreal mm_per_cm = 10;
     const qreal cm_per_in = 2.54;
     
@@ -129,9 +136,15 @@ void ProjectView::resizeEvent(QResizeEvent* e)
 {
     (void) e;
     /* find screen definition */
+    
     int numScreen (QApplication::desktop()->screenNumber(this));
-    QScreen *screen = QApplication::screens().at(numScreen);
-
+    QScreen *screen;
+    if (numScreen>0) {
+        screen = QApplication::screens().at(numScreen);
+    } else {
+        screen =  QGuiApplication::primaryScreen();
+        numScreen = 0;
+    }
     //qreal mm_per_cm = 10;
     qreal cm_per_in = 2.54;
  // look for screen definition
