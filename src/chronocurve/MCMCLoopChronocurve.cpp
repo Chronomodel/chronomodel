@@ -925,121 +925,6 @@ void MCMCLoopChronocurve::finalize()
     }
     
     mModel->mPosteriorMeanGParametrique = allChainsPosteriorMeanG;
-
-    
-    
-    /*int nbIter = mModel->mMCMCSplinesParametrique.size();
-    
-    int tmin = mModel->mSettings.mTmin;
-    int tmax = mModel->mSettings.mTmax;
-    
-    std::vector<double> vecCumulGx = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulGPx = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulGSx = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulG2x = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulErrG2x = initVecteur(tmax - tmin + 1);
-    
-    std::vector<double> vecGx = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecGPx = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecGSx = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecErrGx = initVecteur(tmax - tmin + 1);
-    
-    std::vector<double> vecCumulGy = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulGPy = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulGSy = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulG2y = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulErrG2y = initVecteur(tmax - tmin + 1);
-    
-    std::vector<double> vecGy = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecGPy = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecGSy = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecErrGy = initVecteur(tmax - tmin + 1);
-    
-    std::vector<double> vecCumulGz = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulGPz = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulGSz = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulG2z = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulErrG2z = initVecteur(tmax - tmin + 1);
-
-    std::vector<double> vecGz = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecGPz = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecGSz = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecErrGz = initVecteur(tmax - tmin + 1);
-    
-    
-    for(int i=0; i<nbIter; ++i)
-    {
-        MCMCSplineParametrique splineParametrique = mModel->mMCMCSplinesParametrique[i];
-        
-        for(int tIdx=0; tIdx<=(tmax - tmin); ++tIdx)
-        {
-            double t = (double)tIdx / (double)(tmax - tmin);
-            
-            vecCumulGx[tIdx] += valeurG(t, splineParametrique.splineX);
-            vecCumulGPx[tIdx] += valeurGPrime(t, splineParametrique.splineX) / (tmax - tmin);
-            vecCumulGSx[tIdx] += valeurGSeconde(t, splineParametrique.splineX) / pow(tmax - tmin, 2);
-            vecCumulG2x[tIdx] += pow(vecCumulGx[tIdx], 2);
-            vecCumulErrG2x[tIdx] += pow(valeurErrG(t, splineParametrique.splineX), 2);
-            
-            if(mChronocurveSettings.mProcessType != ChronocurveSettings::eProcessTypeUnivarie)
-            {
-                vecCumulGy[tIdx] += valeurG(t, splineParametrique.splineY);
-                vecCumulGPy[tIdx] += valeurGPrime(t, splineParametrique.splineY) / (tmax - tmin);
-                vecCumulGSy[tIdx] += valeurGSeconde(t, splineParametrique.splineY) / pow(tmax - tmin, 2);
-                vecCumulG2y[tIdx] += pow(vecCumulGy[tIdx], 2);
-                vecCumulErrG2y[tIdx] += pow(valeurErrG(t, splineParametrique.splineY), 2);
-            }
-            
-            if(mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel)
-            {
-                vecCumulGz[tIdx] += valeurG(t, splineParametrique.splineZ);
-                vecCumulGPz[tIdx] += valeurGPrime(t, splineParametrique.splineZ) / (tmax - tmin);
-                vecCumulGSz[tIdx] += valeurGSeconde(t, splineParametrique.splineZ) / pow(tmax - tmin, 2);
-                vecCumulG2z[tIdx] += pow(vecCumulGz[tIdx], 2);
-                vecCumulErrG2z[tIdx] += pow(valeurErrG(t, splineParametrique.splineZ), 2);
-            }
-        }
-    }
-    
-    for(int tIdx=0; tIdx<=(tmax-tmin); ++tIdx)
-    {
-        vecGx[tIdx] = vecCumulGx[tIdx] / nbIter;
-        vecGPx[tIdx] = vecCumulGPx[tIdx] / nbIter;
-        vecGSx[tIdx] = vecCumulGSx[tIdx] / nbIter;
-        vecErrGx[tIdx] = sqrt((vecCumulG2x[tIdx] / nbIter) - pow(vecGx[tIdx], 2) + (vecCumulErrG2x[tIdx] / nbIter));
-        
-        if(mChronocurveSettings.mProcessType != ChronocurveSettings::eProcessTypeUnivarie)
-        {
-            vecGy[tIdx] = vecCumulGy[tIdx] / nbIter;
-            vecGPy[tIdx] = vecCumulGPy[tIdx] / nbIter;
-            vecGSy[tIdx] = vecCumulGSy[tIdx] / nbIter;
-            vecErrGy[tIdx] = sqrt((vecCumulG2y[tIdx] / nbIter) - pow(vecGy[tIdx], 2) + (vecCumulErrG2y[tIdx] / nbIter));
-        }
-        
-        if(mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel)
-        {
-            vecGz[tIdx] = vecCumulGz[tIdx] / nbIter;
-            vecGPz[tIdx] = vecCumulGPz[tIdx] / nbIter;
-            vecGSz[tIdx] = vecCumulGSz[tIdx] / nbIter;
-            vecErrGz[tIdx] = sqrt((vecCumulG2z[tIdx] / nbIter) - pow(vecGz[tIdx], 2) + (vecCumulErrG2z[tIdx] / nbIter));
-        }
-    }
-    
-    mModel->mPosteriorMeanGParametrique.gx.vecG = vecGx;
-    mModel->mPosteriorMeanGParametrique.gy.vecG = vecGy;
-    mModel->mPosteriorMeanGParametrique.gz.vecG = vecGz;
-    
-    mModel->mPosteriorMeanGParametrique.gx.vecGP = vecGPx;
-    mModel->mPosteriorMeanGParametrique.gy.vecGP = vecGPy;
-    mModel->mPosteriorMeanGParametrique.gz.vecGP = vecGPz;
-    
-    mModel->mPosteriorMeanGParametrique.gx.vecGS = vecGSx;
-    mModel->mPosteriorMeanGParametrique.gy.vecGS = vecGSy;
-    mModel->mPosteriorMeanGParametrique.gz.vecGS = vecGSz;
-    
-    mModel->mPosteriorMeanGParametrique.gx.vecGErr = vecErrGx;
-    mModel->mPosteriorMeanGParametrique.gy.vecGErr = vecErrGy;
-    mModel->mPosteriorMeanGParametrique.gz.vecGErr = vecErrGz;*/
 }
 
 PosteriorMeanGComposante MCMCLoopChronocurve::computePosteriorMeanGComposante(const std::vector<MCMCSplineComposante>& trace)
@@ -1064,15 +949,18 @@ PosteriorMeanGComposante MCMCLoopChronocurve::computePosteriorMeanGComposante(co
     {
         MCMCSplineComposante splineComposante = trace[i];
         
+        //qDebug() << splineComposante.vecErrG;
+        
         for(int tIdx=0; tIdx<=(tmax - tmin); ++tIdx)
         {
             double t = (double)tIdx / (double)(tmax - tmin);
+            double g = valeurG(t, splineComposante);
             
-            vecCumulG[tIdx] += valeurG(t, splineComposante);
+            vecCumulG[tIdx] += g;
             vecCumulGP[tIdx] += valeurGPrime(t, splineComposante) / (tmax - tmin);
-            vecCumulGS[tIdx] += valeurGSeconde(t, splineComposante) / pow(tmax - tmin, 2);
-            vecCumulG2[tIdx] += pow(vecCumulG[tIdx], 2);
-            vecCumulErrG2[tIdx] += pow(valeurErrG(t, splineComposante), 2);
+            vecCumulGS[tIdx] += valeurGSeconde(t, splineComposante) / pow(tmax - tmin, 2.);
+            vecCumulG2[tIdx] += pow(g, 2.);
+            vecCumulErrG2[tIdx] += pow(valeurErrG(t, splineComposante), 2.);
         }
     }
     
@@ -1081,11 +969,10 @@ PosteriorMeanGComposante MCMCLoopChronocurve::computePosteriorMeanGComposante(co
         vecG[tIdx] = vecCumulG[tIdx] / nbIter;
         vecGP[tIdx] = vecCumulGP[tIdx] / nbIter;
         vecGS[tIdx] = vecCumulGS[tIdx] / nbIter;
-        vecErrG[tIdx] = sqrt((vecCumulG2[tIdx] / nbIter) - pow(vecG[tIdx], 2) + (vecCumulErrG2[tIdx] / nbIter));
+        vecErrG[tIdx] = sqrt((vecCumulG2[tIdx] / nbIter) - pow(vecG[tIdx], 2.) + (vecCumulErrG2[tIdx] / nbIter));
     }
     
     PosteriorMeanGComposante result;
-    
     result.vecG = vecG;
     result.vecGP = vecGP;
     result.vecGS = vecGS;
@@ -1106,14 +993,14 @@ double MCMCLoopChronocurve::valeurG(const double t, const MCMCSplineComposante& 
     {
         double t2 = spline.vecThetaEvents[1];
         double gp1 = (spline.vecG[1] - spline.vecG[0]) / (t2 - t1);
-        gp1 += -(t2 - t1) * spline.vecGamma[1] / 6;
+        gp1 += -(t2 - t1) * spline.vecGamma[1] / 6.;
         g = spline.vecG[0] - (t1 - t) * gp1;
     }
     else if(t >= tn)
     {
         double tn1 = spline.vecThetaEvents[n-2];
         double gpn = (spline.vecG[n-1] - spline.vecG[n-2]) / (tn - tn1);
-        gpn += (tn - tn1) * spline.vecGamma[n-2] / 6;
+        gpn += (tn - tn1) * spline.vecGamma[n-2] / 6.;
         g = spline.vecG[n-1] + (t - tn) * gpn;
     }
     else
@@ -1129,8 +1016,11 @@ double MCMCLoopChronocurve::valeurG(const double t, const MCMCSplineComposante& 
                 double gi2 = spline.vecG[i+1];
                 double gamma1 = spline.vecGamma[i];
                 double gamma2 = spline.vecGamma[i+1];
+                // Linear part :
                 g = ( (t-ti1) * gi2 + (ti2-t) * gi1 ) / h;
-                g += - (1/6) * (t-ti1) * (ti2-t) * ( (1+(t-ti1)/h) * gamma2 + (1+(ti2-t)/h) * gamma1 );
+                // Smoothing part :
+                double p = (1./6.) * (t-ti1) * (ti2-t) * ((1.+(t-ti1)/h) * gamma2 + (1.+(ti2-t)/h) * gamma1);
+                g -= p;
             }
         }
     }
@@ -1189,13 +1079,13 @@ double MCMCLoopChronocurve::valeurGPrime(const double t, const MCMCSplineComposa
     {
         double t2 = spline.vecThetaEvents[1];
         double gp1 = (spline.vecG[1] - spline.vecG[0]) / (t2 - t1);
-        gPrime = gp1 - (t2 - t1) * spline.vecGamma[1] / 6;
+        gPrime = gp1 - (t2 - t1) * spline.vecGamma[1] / 6.;
     }
     else if(t >= tn)
     {
         double tn1 = spline.vecThetaEvents[n-2];
         double gpn = (spline.vecG[n-1] - spline.vecG[n-2]) / (tn - tn1);
-        gPrime = gpn + (tn - tn1) * spline.vecGamma[n-2] / 6;
+        gPrime = gpn + (tn - tn1) * spline.vecGamma[n-2] / 6.;
     }
     else
     {
@@ -1210,8 +1100,8 @@ double MCMCLoopChronocurve::valeurGPrime(const double t, const MCMCSplineComposa
                 double gi2 = spline.vecG[i+1];
                 double gamma1 = spline.vecGamma[i];
                 double gamma2 = spline.vecGamma[i+1];
-                gPrime = ((gi2-gi1)/h) - (1/6) * (t-ti1) * (ti2-t) * ((gamma2-gamma1)/h);
-                gPrime += (1/6) * ((t-ti1) - (ti2-t)) * ( (1+(t-ti1)/h) * gamma2 + (1+(ti2-t)/h) * gamma1 );
+                gPrime = ((gi2-gi1)/h) - (1./.6) * (t-ti1) * (ti2-t) * ((gamma2-gamma1)/h);
+                gPrime += (1./6.) * ((t-ti1) - (ti2-t)) * ( (1.+(t-ti1)/h) * gamma2 + (1+(ti2-t)/h) * gamma1 );
             }
         }
     }
@@ -1485,11 +1375,11 @@ double MCMCLoopChronocurve::h_VG()
         }else{
             
             // S02 : moyenne harmonique des erreurs sur Y
-            double som_inv_S02 = 0;
+            double som_inv_S02 = 0.;
             
             for(int i=0; i<nb_noeuds; ++i){
                 Event* e = mModel->mEvents[i];
-                som_inv_S02 += ( 1 / (e->mSy * e->mSy));
+                som_inv_S02 += ( 1. / (e->mSy * e->mSy));
             }
             double S02 = nb_noeuds/som_inv_S02;
             // Shrinkage avec a = 1

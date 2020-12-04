@@ -1423,6 +1423,7 @@ void ResultsView::createByCurveGraph()
     
     graphX->setComposanteG(modelChronocurve()->mPosteriorMeanGParametrique.gx);
     graphX->setComposanteGChains(modelChronocurve()->getChainsMeanGComposanteX());
+    graphX->setEvents(modelChronocurve()->mEvents);
     mByCurveGraphs.append(graphX);
     
     connect(graphX, &GraphViewResults::selected, this, &ResultsView::updateLayout);

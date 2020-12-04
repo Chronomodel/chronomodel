@@ -160,8 +160,8 @@ public:
    // void toggle(const QRect& geometry); //useless
     void setTitle(const QString& title);
 
-    void setMarginLeft (qreal &m);
-    void setMarginRight (qreal &m);
+    void setMarginLeft(qreal &m);
+    void setMarginRight(qreal &m);
 
    // void setRendering(GraphView::Rendering render);
     virtual void setGraphFont(const QFont& font);
@@ -173,7 +173,7 @@ public:
 
     bool isSelected() const  { return mIsSelected;}
     void setSelected( const bool&  selected) {
-            mIsSelected = selected;
+        mIsSelected = selected;
     }
 
     void showSelectedRect(const bool & show) {

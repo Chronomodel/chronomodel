@@ -787,7 +787,7 @@ QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString
 }
 
 /**
- * @brief Extract intervals (QPair of date) and calcul the area corresponding, from a HPD QMap maded before
+ * @brief Extract intervals (QPair of date) and calcul the area corresponding, from a HPD QMap made before
  */
 QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double, double>& hpd, double thresh)
 {

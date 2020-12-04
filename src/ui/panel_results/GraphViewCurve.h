@@ -53,7 +53,8 @@ public:
 
     void setComposanteG(const PosteriorMeanGComposante& composante);
     void setComposanteGChains(const QList<PosteriorMeanGComposante>& composanteChains);
-
+    void setEvents(const QList<Event*>& events);
+    
     void generateCurves(TypeGraph typeGraph, Variable variable);
     void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, bool showG, bool showGError, bool showGP, bool showGS);
 
@@ -64,6 +65,7 @@ protected:
 private:
     PosteriorMeanGComposante mComposanteG;
     QList<PosteriorMeanGComposante> mComposanteGChains;
+    QList<Event*> mEvents;
     
     bool mShowG;
     bool mShowGError;

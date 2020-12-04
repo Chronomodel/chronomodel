@@ -314,7 +314,9 @@ void ImportDataView::exportDates()
 
             Project* project = MainWindow::getInstance()->getProject();
             QJsonArray events = project->mState[STATE_EVENTS].toArray();
+            
             stream << "Title" << sep << AppSettings::mLastFile << endl;
+            
             bool isChronocurve = project->mState[STATE_CHRONOCURVE].toObject().value(STATE_CHRONOCURVE_ENABLED).toBool();
             int chronocurveStartColumn = 15;
             

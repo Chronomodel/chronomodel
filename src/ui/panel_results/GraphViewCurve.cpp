@@ -71,6 +71,11 @@ void GraphViewCurve::setComposanteGChains(const QList<PosteriorMeanGComposante>&
     mComposanteGChains = composanteChains;
 }
 
+void GraphViewCurve::setEvents(const QList<Event*>& events)
+{
+    mEvents = events;
+}
+
 void GraphViewCurve::paintEvent(QPaintEvent* e)
 {
     GraphViewResults::paintEvent(e);
@@ -97,6 +102,52 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
     mGraph->setFormatFunctX(nullptr);
     mGraph->setBackgroundColor(QColor(230, 230, 230));
     //mGraph->reserveCurves(5);
+    
+    GraphCurve curveRefPoints;
+    curveRefPoints.mName = tr("Ref points Y");
+    curveRefPoints.mPen = QPen(QColor(0, 0, 0), 1, Qt::SolidLine);
+    curveRefPoints.mBrush = Qt::NoBrush;
+    curveRefPoints.mIsHisto = false;
+    curveRefPoints.mIsRectFromZero = false;
+    
+    for(int i=0; i<mEvents.size(); ++i)
+    {
+        Event* event = mEvents[i];
+        double tmin = HUGE_VAL;
+        double tmax = -HUGE_VAL;
+        
+        for(int j=0; j<event->mDates.size(); ++j)
+        {
+            Date& date = event->mDates[j];
+            QMap<double, double> calibMap = date.getFormatedCalibMap();
+            const double thresh = 99;
+            QMap<double, double> subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+            QMap<double, double> hpd = create_HPD(subData, thresh);
+            
+            QMapIterator<double, double> it(hpd);
+            bool inInterval = false;
+            it.toFront();
+            while(it.hasNext()){
+                it.next();
+                if(it.value() != 0){
+                    tmin = std::min(tmin, it.key());
+                    break;
+                }
+            }
+            it.toBack();
+            while(it.hasPrevious()){
+                it.previous();
+                if(it.value() != 0){
+                    tmax = std::max(tmax, it.key());
+                    break;
+                }
+            }
+        }
+        double tmoy = (tmax + tmin) / 2;
+        
+        curveRefPoints.mData.insert(tmoy, event->mYx);
+    }
+    
     
     GraphCurve curveG;
     curveG.mName = tr("G");
@@ -150,8 +201,8 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
         int idx = t - mSettings.mTmin;
         
         curveG.mData.insert(t, mComposanteG.vecG[idx]);
-        curveGSup.mData.insert(t, mComposanteG.vecG[idx] + mComposanteG.vecGErr[idx]);
-        curveGInf.mData.insert(t, mComposanteG.vecG[idx] - mComposanteG.vecGErr[idx]);
+        curveGSup.mData.insert(t, mComposanteG.vecG[idx] + 1.96 * mComposanteG.vecGErr[idx]);
+        curveGInf.mData.insert(t, mComposanteG.vecG[idx] - 1.96 * mComposanteG.vecGErr[idx]);
         curveGP.mData.insert(t, mComposanteG.vecGP[idx]);
         curveGS.mData.insert(t, mComposanteG.vecGS[idx]);
         
@@ -166,6 +217,7 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
     mGraph->addCurve(curveGInf);
     mGraph->addCurve(curveGP);
     mGraph->addCurve(curveGS);
+    mGraph->addCurve(curveRefPoints);
     
     for(int i=0; i<curveGChains.size(); ++i)
     {
@@ -184,6 +236,7 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
     mShowGP = showGP;
     mShowGS = showGS;
     
+    mGraph->setCurveVisible("Ref points Y", mShowAllChains && mShowG);
     mGraph->setCurveVisible("G", mShowAllChains && mShowG);
     mGraph->setCurveVisible("G Sup", mShowAllChains && mShowGError);
     mGraph->setCurveVisible("G Inf", mShowAllChains && mShowGError);

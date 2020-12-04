@@ -92,10 +92,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 //#define STATE_EVENT_KNOWN_START "known_unif_start"
 //#define STATE_EVENT_KNOWN_END "known_unif_end"
 
+// Chronocurve
 #define STATE_EVENT_Y_INC "YInc"
 #define STATE_EVENT_Y_DEC "YDec"
 #define STATE_EVENT_Y_INT "YInt"
-
 #define STATE_EVENT_S_INC "SInc"
 #define STATE_EVENT_S_INT "SInt"
 
