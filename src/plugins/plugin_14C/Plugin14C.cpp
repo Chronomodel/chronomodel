@@ -256,7 +256,7 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
 
         while (!stream.atEnd()) {
             QString line = stream.readLine();
-            qDebug()<<line;
+
             if (isComment(line)) {
                 
                 
@@ -312,11 +312,8 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
        
             
             if (!isComment(line)) {
-                
-//                qDebug()<<" datasep "<< dataSep<<dataInF14C<<"dataColumn"<< dataColumn;
                 QStringList values = line.split(dataSep);
-                
-                qDebug()<<values;
+
                 if (values.size() >= 3) {
                     bool ok = true;
 

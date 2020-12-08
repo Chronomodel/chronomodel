@@ -303,9 +303,9 @@ void CalibrationView::updateGraphs()
             mCalibGraph->addZone(zone);
         }
 
-        // ------------------------------------------------------------
-        //  Calibration curve
-        // ------------------------------------------------------------
+        /* ------------------------------------------------------------
+          Calibration curve
+          ------------------------------------------------------------ */
         QColor penColor = Painting::mainColorDark;
         QColor brushColor = Painting::mainColorLight;
         brushColor.setAlpha(100);
@@ -315,15 +315,15 @@ void CalibrationView::updateGraphs()
 
         // Fill HPD only if not Unif :
         mResultsText->clear();
+
         QMap<double, double> calibMap;
         if (mDate.mIsValid)
             calibMap = mDate.getFormatedCalibMap();
          
         QMap<double, double> wiggleCalibMap;
-         if (mDate.mDeltaType != Date::eDeltaNone) {
-           // wiggleCalibMap =  normalize_map( mDate.getFormatedWiggleCalibMap() );
+        if (mDate.mDeltaType != Date::eDeltaNone)
              wiggleCalibMap =  mDate.getFormatedWiggleCalibMap();
-         }
+
 
         if (!calibMap.isEmpty()) {
 
@@ -338,15 +338,15 @@ void CalibrationView::updateGraphs()
             mCalibGraph->addCurve(calibCurve);
             mCalibGraph->setMarginBottom(fm.ascent() * 2.2);
 
-            if (!wiggleCalibMap.isEmpty()) {
-                GraphCurve calibWiggleCurve;
+            GraphCurve calibWiggleCurve;
+            if (!wiggleCalibMap.isEmpty()) { 
                 calibWiggleCurve.mName = "Wiggle";
                 calibWiggleCurve.mPen.setColor(Qt::red);
                 calibWiggleCurve.mIsHisto = false;
-                calibWiggleCurve.mData = wiggleCalibMap;
-                calibWiggleCurve.mIsRectFromZero = isUnif;
-                calibWiggleCurve.mBrush = isUnif ? QBrush(brushColor) : QBrush(Qt::NoBrush);
-                 mCalibGraph->addCurve(calibWiggleCurve);
+                calibWiggleCurve.mData = normalize_map(wiggleCalibMap, map_max_value(calibMap));;
+                calibWiggleCurve.mIsRectFromZero = false;
+                calibWiggleCurve.mBrush = QBrush(Qt::NoBrush);
+                mCalibGraph->addCurve(calibWiggleCurve);
             }
             
             
@@ -376,10 +376,15 @@ void CalibrationView::updateGraphs()
             mCalibGraph->addCurve(hpdCurve);
 
             // update max inside the display period
-            QMap<type_data, type_data> subDisplay = calibCurve.mData;
-            subDisplay = getMapDataInRange(subDisplay, mTminDisplay, mTmaxDisplay);
+            QMap<type_data, type_data> subDisplayCalib = calibCurve.mData;
+            subDisplayCalib = getMapDataInRange(subDisplayCalib, mTminDisplay, mTmaxDisplay);
+            type_data yMax = map_max_value(subDisplayCalib);
 
-            const type_data yMax = map_max_value(subDisplay);
+            if (!wiggleCalibMap.isEmpty()) {
+                QMap<type_data, type_data> subDisplayWiggle = getMapDataInRange(calibWiggleCurve.mData, mTminDisplay, mTmaxDisplay);
+                yMax = std::max( yMax, map_max_value(subDisplayWiggle));
+            }
+
 
             mCalibGraph->setRangeY(0., yMax);
 

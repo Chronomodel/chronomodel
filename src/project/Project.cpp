@@ -219,8 +219,14 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
         this->checkStateModification(state, mState);
 
 
-    if (mStructureIsChanged && (reason != PROJECT_LOADED_REASON) )
+    if (mStructureIsChanged && (reason != PROJECT_LOADED_REASON) ) {
+        SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
+        MainWindow::getInstance()->getUndoStack()->push(command);
+        updateState(state, reason, notify);
+
         emit projectStructureChanged(true); // connected to MainWindows::noResults
+        return true;
+    }
 
     else if (mDesignIsChanged)
         emit projectDesignChanged(true);
@@ -1515,7 +1521,7 @@ void Project::recycleEvents()
     TrashDialog dialog(TrashDialog::eEvent, qApp->activeWindow());
     if (dialog.exec() == QDialog::Accepted) {
         QList<int> indexes = dialog.getSelectedIndexes();
-        qDebug() << indexes;
+        //qDebug() << indexes;
 
         QJsonObject stateNext = mState;
         QJsonArray events = mState.value(STATE_EVENTS).toArray();
@@ -1881,7 +1887,7 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
 }
 
 /**
- * @brief Project::updateDate : Function to change the date parameter inside an Event
+ * @brief Project::updateDate : Updates the data of a date included in mState event in json.
  * Open the dialogBox
  * @param eventId
  * @param dateIndex
@@ -1895,7 +1901,7 @@ void Project::updateDate(int eventId, int dateIndex)
 
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
 
-    for (int i = 0; i < events.size(); ++i) {
+    for (int i (0); i < events.size(); ++i) {
         QJsonObject event = events.at(i).toObject();
         if (event.value(STATE_ID).toInt() == eventId) {
             QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
@@ -1936,6 +1942,15 @@ void Project::updateDate(int eventId, int dateIndex)
                         event[STATE_EVENT_DATES] = dates;
                         events[i] = event;
                         state[STATE_EVENTS] = events;
+
+                        /* QJsonObject stateNext = mState;
+                        QJsonObject settingsJson = stateNext.value(STATE_SETTINGS).toObject();
+                        ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
+
+                         Date d (date);
+                        d.calibrate(settings, this);
+                        */
+
 
                         pushProjectState(state, "Date from dialog", true);
 
@@ -2010,7 +2025,7 @@ void Project::recycleDates(int eventId)
     TrashDialog dialog(TrashDialog::eDate, qApp->activeWindow());
     if (dialog.exec() == QDialog::Accepted) {
         QList<int> indexes = dialog.getSelectedIndexes();
-        qDebug() << indexes;
+        //qDebug() << indexes;
 
         QJsonObject stateNext = mState;
         QJsonArray events = mState.value(STATE_EVENTS).toArray();
@@ -2667,7 +2682,7 @@ void Project::updatePhaseConstraint(const int constraintId)
                 constraints.removeAt(index);
             else {
                 constraint = dialog.constraint();
-                qDebug() << constraint;
+                //qDebug() << constraint;
                 if (constraint.value(STATE_CONSTRAINT_GAMMA_TYPE).toInt() == PhaseConstraint::eGammaFixed &&
                    constraint.value(STATE_CONSTRAINT_GAMMA_FIXED).toDouble() == 0.)
                 {

@@ -113,7 +113,7 @@ void PluginUniformRefView::setDate(const Date& date, const ProjectSettings& sett
 
 
                 QString toFind = date.mName + date.getDesc();
-                            qDebug()<<"mName"<<date.mName<<toFind;
+                            qDebug()<<"PluginUniformRefView::setDate mName"<< date.mName<<toFind;
                             
                             //Project* project = MainWindow::getInstance()->getProject();
                             //QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);

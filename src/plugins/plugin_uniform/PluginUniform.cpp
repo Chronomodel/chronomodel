@@ -83,7 +83,7 @@ bool PluginUniform::doesCalibration() const
 
 bool PluginUniform::wiggleAllowed() const
 {
-    return false;
+    return true;
 }
 
 Date::DataMethod PluginUniform::getDataMethod() const

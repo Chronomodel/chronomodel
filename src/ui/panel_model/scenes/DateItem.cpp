@@ -68,21 +68,27 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
     mDatesAnim->setTimeLine(mDatesAnimTimer);
 
     // Date::fromJson doesn't create mCalibration
-    Date d;
-    qDebug()<<date.value(STATE_NAME).toString()<<date.value(STATE_DATE_VALID).toBool();
-    d.fromJson(date);
+    Date d (date);
+    qDebug()<<"DateItem::DateItem " << date.value(STATE_NAME).toString()<<date.value(STATE_DATE_VALID).toBool();
+   // d.fromJson(date);
     ProjectSettings s = ProjectSettings::fromJson(settings);
 
     d.mSettings.mTmin = s.mTmin;
     d.mSettings.mTmax = s.mTmax;
     d.mSettings.mStep = s.mStep;
-
+    
+    if (d.mCalibration != nullptr)
+        qDebug()<<"DateItem::DateItem d description" << d.mCalibration->mDescription << d.mSettings.mTmin;
+    
     if (d.mPlugin!= nullptr) {
         if (!d.mIsValid)
             mCalibThumb = QPixmap();
 
         else {
-            if (d.mCalibration == nullptr)
+            // if (d.mCalibration == nullptr || d.getDesc() != d.mCalibration->mDescription)
+                //d.calibrate(EventsScene->getProject());
+
+            // Date::calibrate() Controls the validity of the calibration and wiggle curves
                 d.calibrate(s, EventsScene->getProject());
 
             if (d.mPlugin->getName() == "Unif")
@@ -92,8 +98,10 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
               * removing a refCurve
               */
 
-            else if (d.mCalibration && !d.mCalibration->mCurve.isEmpty())
+            else if (d.mCalibration && !d.mCalibration->mCurve.isEmpty()) {
+                qDebug() << "DateItem::DateItem d.mDescription " << d.mCalibration->mDescription;// << d.mWiggleCalibration->mDescription;
                 mCalibThumb = d.generateCalibThumb();
+            }
 
             else
                 mCalibThumb = QPixmap();

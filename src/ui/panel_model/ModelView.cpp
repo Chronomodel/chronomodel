@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PhaseItem.h"
 #include "Event.h"
 #include "EventKnown.h"
+#include "Date.h"
 #include "Painting.h"
 #include "Button.h"
 #include "Label.h"
@@ -474,7 +475,7 @@ void ModelView::createProject()
     // debug
     
     const QJsonArray eventsInState = state.value(STATE_EVENTS).toArray();
-    QJsonObject date0 =eventsInState.at(0).toObject() .value(STATE_EVENT_DATES).toArray().at(0).toObject();
+    QJsonObject date0 = eventsInState.at(0).toObject() .value(STATE_EVENT_DATES).toArray().at(0).toObject();
        qDebug()<<"ModelView::createProject date0"<<date0.value(STATE_NAME).toString()<<date0.value(STATE_DATE_VALID).toBool();
 
     
@@ -594,7 +595,7 @@ bool ModelView::findCalibrateMissing()
                 }
                 // look inside mProject->mCalibCurves, if there is a missing calibration
                 // to try to rebuild it after
-                const QString toFind (date.mName+date.getDesc());
+                const QString toFind (date.mUUID);
                 QMap<QString, CalibrationCurve>::const_iterator it = mProject->mCalibCurves.find(toFind);
                 if ( it == mProject->mCalibCurves.end()) {
                     calibMissing = true;
@@ -653,6 +654,7 @@ void ModelView::calibrateAll(ProjectSettings newS)
                     d.autoSetTiSampler(true);
                     // date.mCalibration->mCurve.clear();
                     d.calibrate(newS, mProject);
+                    //d.calibrate(mProject);
                     ++position;
                     progress->setValue(position);
                 }
@@ -682,7 +684,7 @@ void ModelView::modifyPeriod()
           mMultiCalibrationView->initScale(xScale);
           mCalibrationView->initScale(xScale);
 
-          mProject -> setSettings(newS); //do pushProjectState
+          mProject -> setSettings(newS); //do pushProjectState //done in ModelView::calibrateAll(newS);??
           MainWindow::getInstance() -> setResultsEnabled(false);
           MainWindow::getInstance() -> setLogEnabled(false);
         }
@@ -1266,10 +1268,22 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
 }
 
-//Calibration come from EventPropertiesView::updateCalibRequested
+
+/**
+ * @brief ModelView::updateCalibration
+ * Calibration come from EventPropertiesView::updateCalibRequested
+ * @param date
+ */
 void ModelView::updateCalibration(const QJsonObject& date)
 {
     qDebug() <<" ModelView::updateCalibration mUUID" << date.value(STATE_DATE_UUID).toString();
+  /*  if (!date.isEmpty() ) {
+        Date d (date);
+        //d.fromJson(date);
+        ProjectSettings ps = d.mSettings;
+        d.calibrate(ps, mProject);
+    }
+   */
     // A date has been double-clicked => update CalibrationView only if the date is not null
      if (!date.isEmpty() && mEventPropertiesView->isVisible() && mEventPropertiesView->isCalibChecked())
         mCalibrationView->setDate(date);

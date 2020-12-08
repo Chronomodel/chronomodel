@@ -225,6 +225,20 @@ T sum2Shifted(const QVector<T>& vector, const T& shift)
 
     return sum;
 }
+
+
+/**
+ * @brief normalized sinc function
+ * @param L the length of the gate
+ */
+template <typename T>
+T sinc(const T x, const T L=1)
+{
+    if (x == T(0))
+        return T(L);
+    else
+        return (sin( x * L) / x );
+}
 // --------------------------------
 template<typename T>
 QMap<T, T> normalize_map(const QMap<T, T>& aMap, const T max = 1)

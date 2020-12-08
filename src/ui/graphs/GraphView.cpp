@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -774,32 +774,12 @@ void GraphView::paintEvent(QPaintEvent* )
     if ((mGraphWidth<=0) || (mGraphHeight<=0))
         return;
 
-    /* ----------------------------------------------------
-     *  SD : draw on a buffer only if it has been reset
-     * ----------------------------------------------------*/
-/*    if (mBufferBack.isNull()  && mRendering == eSD) {
-        mBufferBack = QPixmap(width(), height());
-        paintToDevice(&mBufferBack);
-#ifdef DEBUG
-        if (mBufferBack.isNull() )
-            qDebug()<< "mBufferBack.isNull()";
-#endif
-    }*/
-    /* ----------------------------------------------------
-     *  HD : draw directly on widget
-     * ----------------------------------------------------*/
-//    else if (mRendering == eHD) {
-        mBufferBack = QPixmap();
-        paintToDevice(this);
- //   }
-    /* ----------------------------------------------------
-     *  SD rendering : draw buffer on widget !
-     * ----------------------------------------------------*/
-//    if (mRendering == eSD) {
-        QPainter p(this);
-        p.setRenderHints(QPainter::Antialiasing);
-        p.drawPixmap(mBufferBack.rect(), mBufferBack, rect());
-//    }
+    mBufferBack = QPixmap();
+    paintToDevice(this);
+
+    QPainter p(this);
+    p.setRenderHints(QPainter::Antialiasing);
+    p.drawPixmap(mBufferBack.rect(), mBufferBack, rect());
 
     /* ----------------------------------------------------
      *  Tool Tip (above all) Draw horizontal and vertical red line

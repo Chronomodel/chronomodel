@@ -94,14 +94,18 @@ public:
             painter->drawLine(x, y + h -1, x + w, y + h -1);
         }
         QString dateName = index.model()->data(index, 0x0101).toString();
-        QString dateDesc = index.model()->data(index, 0x0103).toString();
         QString pluginId = index.model()->data(index, 0x0102).toString();
-        QString deltaText = index.model()->data(index, 0x0105).toString();
+        QString dateDesc = index.model()->data(index, 0x0103).toString();
+        // item->setData(0x0104, d.mId););
+        QString deltaDesc = index.model()->data(index, 0x0105).toString();
         QString dateMethodStr = index.model()->data(index, 0x0106).toString();
         bool isValid = index.model()->data(index, 0x0107).toBool();
         bool isCombined = index.model()->data(index, 0x0108).toBool();
         bool dateOrigin = index.model()->data(index, 0x0109).toInt();
-
+        /*
+         item->setData(0x0110, d.mUUID);
+         item->setData(0x0111, d.getWiggleDesc());
+         */
 
         PluginAbstract* plugin = PluginManager::getPluginFromId(pluginId);
 
@@ -144,7 +148,7 @@ public:
                 painter->drawText(x + iconW, y + 3*mm + 2*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, dateDesc);
 
                 painter->setPen(Painting::mainColorLight);
-                painter->drawText(x + iconW, y + 4*mm + 3*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, deltaText);
+                painter->drawText(x + iconW, y + 4*mm + 3*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, deltaDesc);
             } else {
                 painter->drawText(x + iconW, y + 2*mm + mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, tr("Type : %1 | Method : %2").arg(plugin->getName(), dateMethodStr));
                 

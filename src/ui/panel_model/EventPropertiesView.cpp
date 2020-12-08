@@ -271,7 +271,7 @@ void EventPropertiesView::updateEvent()
         if (type == Event::eDefault) {
             mMethodCombo->setCurrentIndex(mEvent.value(STATE_EVENT_METHOD).toInt());
             
-               qDebug() << "in EventPropertiesView::updateEvent mEvent mOrigin"  << mEvent.value(STATE_EVENT_DATES).toArray().at(0).toObject().value(STATE_DATE_ORIGIN).toInt();
+               qDebug() << "EventPropertiesView::updateEvent mEvent mOrigin"  << mEvent.value(STATE_EVENT_DATES).toArray().at(0).toObject().value(STATE_DATE_ORIGIN).toInt();
            mDatesList->setEvent(mEvent);
             if (mCurrentDateIdx>=0)
                 mDatesList->setCurrentRow(mCurrentDateIdx);
@@ -280,7 +280,7 @@ void EventPropertiesView::updateEvent()
            
             bool hasDates = (dates.size() > 0);
             if (hasDates && mCurrentDateIdx>= 0) {
-                updateCalibRequested(dates[mCurrentDateIdx].toObject());
+                //emit updateCalibRequested(dates[mCurrentDateIdx].toObject());
                 mCalibBut->setEnabled(true);
                 mDeleteBut->setEnabled(true);
                 mRecycleBut->setEnabled(true);

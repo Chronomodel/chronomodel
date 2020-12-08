@@ -54,7 +54,7 @@ class ModelUtilities
 public:
     static QString getEventMethodText(const Event::Method method);
     static QString getDataMethodText(const Date::DataMethod method);
-    static QString getDeltaText(const Date& date);
+    static QString getDeltaText(const Date& date); // Obsolete , is replaced by the Date::getWiggleDesc()
 
     static Event::Method getEventMethodFromText(const QString& text);
     static Date::DataMethod getDataMethodFromText(const QString& text);

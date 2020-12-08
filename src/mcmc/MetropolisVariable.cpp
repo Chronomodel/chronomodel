@@ -338,7 +338,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
 
         for (int i=0; i<outputSize/2; ++i) {
             const double s = 2. * M_PI * i / (b-a);
-            const double factor = expf(-0.5 * s * s * h * h);
+            const double factor = exp(-0.5 * s * s * h * h);
 
             output[2*i] *= factor;
             output[2*i + 1] *= factor;

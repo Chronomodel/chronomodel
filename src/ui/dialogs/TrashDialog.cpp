@@ -114,18 +114,15 @@ mType(type)
 
         QJsonArray dates = state[STATE_DATES_TRASH].toArray();
 
-        for (int i=0; i<dates.size(); ++i) {
+        for (int i(0); i<dates.size(); ++i) {
             try {
                 QJsonObject date = dates[i].toObject();
 
-//                // Validate the date before adding it to the correct event and pushing the state
-//                QJsonObject settingsJson = stateNext[STATE_SETTINGS].toObject();
-//                ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
+                // Validate the date before adding it to the correct event and pushing the state
                 PluginAbstract* plugin = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
                 bool valid = plugin->isDateValid(date[STATE_DATE_DATA].toObject(), settings);
                 date[STATE_DATE_VALID] = valid;
-                Date d;
-                d.fromJson(date);
+                Date d(date);
 
                 if (!d.isNull()) {
                     QListWidgetItem* item = new QListWidgetItem(d.mName);
@@ -135,10 +132,12 @@ mType(type)
                     item->setData(0x0102, d.mPlugin->getId());
                     item->setData(0x0103, d.getDesc());
                     item->setData(0x0104, d.mId);
-                    item->setData(0x0105, ModelUtilities::getDeltaText(d));
+                    item->setData(0x0105, d.getWiggleDesc());//ModelUtilities::getDeltaText(d));
                     item->setData(0x0106, ModelUtilities::getDataMethodText(d.mMethod));
                     item->setData(0x0107, d.mIsValid);
                     item->setData(0x0108, date.value(STATE_DATE_SUB_DATES).toArray().size() > 0);
+                    item->setData(0x0109, d.mOrigin);
+                    item->setData(0x0110, d.mUUID);
 
                     mList->addItem(item);
                 }

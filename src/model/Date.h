@@ -95,6 +95,7 @@ public:
     };
 
     Date();
+    Date(const QJsonObject& json);
     Date(PluginAbstract* plugin);
     Date(const Date& date);
     Date& operator=(const Date& date);
@@ -118,7 +119,9 @@ public:
 
     void reset();
     void calibrate(const ProjectSettings & settings, Project *project);
+    //void calibrate( Project *project);
     void calibrateWiggle(const ProjectSettings & settings, Project *project);
+    //void calibrateWiggle( Project *project);
     double getLikelihoodFromCalib(const double t);
 
     const QMap<double, double> getFormatedCalibMap() const;

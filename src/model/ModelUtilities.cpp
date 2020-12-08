@@ -140,6 +140,7 @@ QString ModelUtilities::getDataMethodText(const Date::DataMethod method)
     }
 }
 
+// Obsolete , is replaced by the Date::getWiggleDesc()
 QString ModelUtilities::getDeltaText(const Date& date)
 {
     QString result;

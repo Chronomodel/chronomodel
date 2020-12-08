@@ -113,16 +113,16 @@ macx{
 
 
         QMAKESPEC = macx-clang
-        QMAKE_MAC_SDK = macosx10.15
+        QMAKE_MAC_SDK = macosx
         message("QMAKE_MAC_SDK = $$QMAKE_MAC_SDK")
 
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
-        QMAKE_MACOSX_DEPLOYMENT_TARGET=10.9
+        QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
 	# Define a set of resources to deploy inside the bundle :
 	RESOURCES_FILES.path = Contents/Resources
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
-    RESOURCES_FILES.files += $$PRO_PATH/deploy/ABOUT.html
-    RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel.png
+        RESOURCES_FILES.files += $$PRO_PATH/deploy/ABOUT.html
+        RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel.png
         #RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
 	QMAKE_BUNDLE_DATA += RESOURCES_FILES
 

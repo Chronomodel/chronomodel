@@ -638,7 +638,7 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const 
     }
 
 #ifdef DEBUG
-    qDebug()<<description;
+    //qDebug()<<description;
     QTime timeDiff(0, 0, 0, (int) startTime.elapsed());
     //timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
     qDebug()<<"gapRangeFromTraces ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
@@ -731,7 +731,7 @@ QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, cons
     }
 
 #ifdef DEBUG
-    qDebug()<<description;
+    //qDebug()<<description;
     QTime timeDiff(0, 0, 0, (int)startTime.elapsed() );
     //timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
     qDebug()<<"gapRangeFromTraces_old ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;

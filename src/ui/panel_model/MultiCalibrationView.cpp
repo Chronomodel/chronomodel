@@ -628,7 +628,7 @@ void MultiCalibrationView::updateScaleX()
 {
     QString str = mMajorScaleEdit->text();
     bool isNumber(true);
-    double aNumber = locale().toDouble(&str, &isNumber);
+    double aNumber = locale().toDouble(str, &isNumber);
 
     QFont adaptedFont (font());
 
@@ -663,7 +663,7 @@ void MultiCalibrationView::updateScaleX()
     } else
         mMinorScaleEdit->setFont(font());
 
-    aNumber = locale().toDouble(&str, &isNumber);
+    aNumber = locale().toDouble(str, &isNumber);
 
     if (isNumber && aNumber>=1) {
         mMinorScale =  int (aNumber);

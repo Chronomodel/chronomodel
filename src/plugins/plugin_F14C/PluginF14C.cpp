@@ -313,8 +313,7 @@ RefCurve PluginF14C::loadRefFile(QFileInfo refFile)
        
             
             if (!isComment(line)) {
-                
-//                qDebug()<<" datasep "<< dataSep<<dataInF14C<<"dataColumn"<< dataColumn;
+
                 QStringList values = line.split(dataSep);
                 
                 if (values.size() >= 3) {

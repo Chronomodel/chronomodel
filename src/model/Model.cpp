@@ -1984,7 +1984,7 @@ void Model::saveToFile(const QString& fileName)
                       out << d.getTminRefCurve();
                       out << d.getTmaxRefCurve();
 
-                      //out << *d.mCalibration;
+                      //mCalibration and mWiggleCalibration are saved in to *.cal file
 
                       out << quint32 (d.mCalibHPD.size());
                       for (QMap<double, double>::const_iterator it = d.mCalibHPD.cbegin(); it!=d.mCalibHPD.cend();++it) {
@@ -2163,7 +2163,7 @@ void Model::restoreFromFile(const QString& fileName)
                     d.setTmaxRefCurve(tmp);
 
                     /* Check if the Calibration Curve exist*/
-                    const QString toFind (d.mName+d.mPlugin->getDateDesc(&d));
+
          //           QMap<QString, CalibrationCurve>::const_iterator it = mProject->mCalibCurves.find (toFind);
 
                     // if no curve Create a new instance in mProject->mCalibration
@@ -2173,7 +2173,7 @@ void Model::restoreFromFile(const QString& fileName)
                     //mProject->mCalibCurves.insert(toFind, CalibrationCurve());
        //     qDebug()<<"Model:restoreFromFile insert a new mCalibration "<<toFind;
 
-                    d.mCalibration = & (mProject->mCalibCurves[toFind]);
+                    d.mCalibration = & (mProject->mCalibCurves[d.mUUID]);
 
 
                     quint32 tmpUint32;
@@ -2187,8 +2187,16 @@ void Model::restoreFromFile(const QString& fileName)
                         d.mCalibHPD[tmpKey]= tmpValue;
                     }
 #ifdef DEBUG
-                     if (d.mCalibration->mCurve.isEmpty())
+
+                     const QString toFind ("WI : "+ d.mUUID);
+
+                     if (d.mWiggleCalibration->mCurve.isEmpty())
                          qDebug()<<"Model::restoreFromFile vide";
+                     else {
+                         d.mWiggleCalibration = & (mProject->mCalibCurves[toFind]);
+
+
+                     }
 #endif
                 }
          }

@@ -109,6 +109,7 @@ QString MCMCLoopMain::calibrate()
               if (date->mCalibration) {
                 if (date->mCalibration->mCurve.isEmpty())
                     date->calibrate(mModel->mSettings, mProject);
+                  //date->calibrate(mProject);
                 } else
                     return (tr("Invalid Model -> No Calibration on Data %1").arg(date->mName));
 

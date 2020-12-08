@@ -46,16 +46,20 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "../PluginAbstract.h"
 #include "Painting.h"
 #include "QtUtilities.h"
+#include "ProjectSettings.h"
 #include "ModelUtilities.h"
 #include "Project.h"
 #include "MainWindow.h"
+
+#if USE_FFT
+#include "fftw3.h"
+#endif
 
 #include <QDebug>
 
 Date::Date():
 mName("No Named Date")
 {
-   // init();
     mColor = Qt::blue;
     mOrigin = eSingleDate;
     mPlugin = nullptr;
@@ -90,6 +94,11 @@ mName("No Named Date")
 
     mCalibration = nullptr;
     mWiggleCalibration = nullptr;
+}
+
+Date::Date(const QJsonObject& json)
+{
+    fromJson(json);
 }
 
 Date::Date(PluginAbstract* plugin):
@@ -222,11 +231,10 @@ void Date::fromJson(const QJsonObject& json)
     mName = json.value(STATE_NAME).toString();
 
     mUUID = json.value(STATE_DATE_UUID).toString();
-    qDebug() << mName << mId << " Date::fromJson STATE_DATE_UUID mUUID" << mUUID;
+
     if (mUUID.isEmpty())
         mUUID = QString::fromStdString( Generator::UUID());
-    qDebug() << " Date::fromJson mUUID2" << mUUID;
-    
+
     // Copy plugin specific values for this data :
     mData = json.value(STATE_DATE_DATA).toObject();
     mOrigin = (OriginType)json.value(STATE_DATE_ORIGIN).toInt();
@@ -268,18 +276,24 @@ void Date::fromJson(const QJsonObject& json)
     mSigma.setName("Sigma of date : "+ mName);
 
     Project* project = MainWindow::getInstance()->getProject();
-    mSettings = project->mModel->mSettings;
-    
-    QString toFind = mUUID;
-
-    QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
-    if ( it!=project->mCalibCurves.end())
+    mSettings = ProjectSettings::fromJson(project->mState.value(STATE_SETTINGS).toObject()); // ProjectSettings::fromJson is static
+ 
+    QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (mUUID);
+    if ( it!=project->mCalibCurves.end()) {
         mCalibration = & it.value();
-    
-    toFind = "WID::" + mUUID;
+
+     } else {
+        mCalibration = nullptr;
+     }
+
+    QString toFind = "WID::" + mUUID;
     it = project->mCalibCurves.find (toFind);
-    if ( it!=project->mCalibCurves.end())
+    if ( it!=project->mCalibCurves.end()) {
         mWiggleCalibration = & it.value();
+
+    } else {
+        mWiggleCalibration = nullptr;
+    }
 
 }
 
@@ -288,7 +302,6 @@ QJsonObject Date::toJson() const
     QJsonObject date;
     date[STATE_ID] = mId;
     date[STATE_DATE_UUID] = mUUID;
-    qDebug() << mName << mId << "Date::toJson  mUUID "<< date.value(STATE_DATE_UUID).toString();
     date[STATE_NAME] = mName;
     date[STATE_DATE_DATA] = mData;
     date[STATE_DATE_ORIGIN] = mOrigin;
@@ -313,8 +326,7 @@ QJsonObject Date::toJson() const
 
 long double Date::getLikelihood(const double& t) const
 {
-    //double result (0.);
-    if (mPlugin) {
+     if (mPlugin) {
         if (mOrigin == eSingleDate) {
             return mPlugin->getLikelihood(t, mData);
             
@@ -375,6 +387,8 @@ QString Date::getDesc() const
     return res;
 }
 
+
+// replaces the function ModelUtilities::getDeltaText(d))
 QString Date::getWiggleDesc() const
 {
     QString res;
@@ -389,9 +403,9 @@ QString Date::getWiggleDesc() const
         case Date::eDeltaGaussian:
             res = res+ "Wiggle = N(" + QString::number(mDeltaAverage) + " ; " + QString::number(mDeltaError) + " ) ";
             break;
-            
+        case Date::eDeltaNone:
         default:
-            res = "No Wiggle";
+            res = "";
             break;
     }
     
@@ -420,11 +434,8 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
             return;
         
     }
-
+    
     // add the calibration
-    mSettings = settings;
-
-    //const QString toFind (mUUID);
     QMap<QString, CalibrationCurve>::const_iterator it = project->mCalibCurves.find (mUUID);
 
     if ( it == project->mCalibCurves.end()) {
@@ -433,9 +444,6 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
         
     } else if ( it->mDescription == getDesc() ) {
         // Controls whether the curve has already been calculated using the description
-        qDebug() << "The curve already exists mUUID:" << mUUID;
-        /* WIGGLE CALIBRATION CURVE */
-        
         calibrateWiggle(settings, project);
         
         return;
@@ -445,8 +453,8 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
 
     mCalibration = & (project->mCalibCurves[mUUID]);
     mCalibration -> mDescription = getDesc();
- 
-    mCalibration->mStep = mSettings.mStep;
+
+    mCalibration->mStep = settings.mStep;
     mCalibration->mPluginId = mPlugin->getId();
     mCalibration->mPlugin = mPlugin;
     mCalibration->mName = mName;
@@ -470,8 +478,9 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
         repartitionTemp.append(0.);
         long double lastRepVal = v;
 
-        // We use long double type because
-        // after several sums, the repartition can be in the double type range
+        /* We use long double type because
+         after several sums, the repartition can be in the double type range
+        */
         for (int i = 1; i <= nbRefPts; ++i) {
             const double t = mTminRefCurve + double (i) * settings.mStep;
             long double lastV = v;
@@ -516,12 +525,12 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
             mCalibration->mCurve = equal_areas(mCalibration->mCurve, settings.mStep, 1.);
 
         }
-        // ------------------------------------------------------------------
-        //  Measurement is very far from Ref curve on the whole ref curve preriod!
-        //  => Calib values are very small, considered as being 0 even using "double" !
-        //  => lastRepVal = 0, and impossible to truncate using it....
-        //  => So,
-        // ------------------------------------------------------------------
+        /* ------------------------------------------------------------------
+         *  Measurement is very far from Ref curve on the whole ref curve preriod!
+         *  => Calib values are very small, considered as being 0 even using "double" !
+         *  => lastRepVal = 0, and impossible to truncate using it....
+         *  => So,
+         * ------------------------------------------------------------------ */
         else  {
             tminCal = mTminRefCurve;
             tmaxCal = mTmaxRefCurve;
@@ -529,7 +538,12 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
 
         mCalibration->mTmin = tminCal;
         mCalibration->mTmax = tmaxCal;
-
+        // If the calibration curve changes, the wiggle curve must be recalculated.
+        if (mWiggleCalibration != nullptr)  {
+            const QString toFind ("WID::" + mUUID);
+            QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
+            project->mCalibCurves.erase(it);
+        }
     }
     else {
         // Impossible to calibrate because the plugin could not return any calib curve definition period.
@@ -542,11 +556,9 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
         calibrateWiggle(settings, project);
     }
     
-    
-   // qDebug()<<"Date::calibrate in project"<<project->mCalibCurves[toFind].mName;
 }
 
-void Date::calibrateWiggle(const ProjectSettings& settings, Project *project)
+void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
 {
   // Check if the ref curve is in the plugin list
     qDebug()<<"Date::calibrate Wiggle";
@@ -555,21 +567,23 @@ void Date::calibrateWiggle(const ProjectSettings& settings, Project *project)
         return;
     }
     // add the calibration
-    mSettings = settings;
  
     const QString toFind ("WID::" + mUUID);
     QMap<QString, CalibrationCurve>::const_iterator it = project->mCalibCurves.find (toFind);
 
     
     if ( it == project->mCalibCurves.end()) {
-        qDebug()<<"Curve to create Wiggle: "<< toFind ;
+        qDebug()<<" Curve to create Wiggle: "<< toFind ;
+        qDebug() << "create Wiggle descript: " << getWiggleDesc() ;
         project->mCalibCurves.insert(toFind, CalibrationCurve());
         
         
     } else if ( it->mDescription == getWiggleDesc() ) {
         // Controls whether the curve has already been calculated using the description
-        qDebug() << "The curve already exists Wiggle:" << toFind;
+        qDebug() << "The curve already exists Wiggle:" << toFind ;
+        qDebug() << "Wiggle descript: " << getWiggleDesc() ;
         return;
+        
     }
         
     
@@ -577,105 +591,292 @@ void Date::calibrateWiggle(const ProjectSettings& settings, Project *project)
   // Update of the new calibration curve
 
     mWiggleCalibration = & (project->mCalibCurves[toFind]);
+
     mWiggleCalibration->mDescription = getWiggleDesc();
 
-    mWiggleCalibration->mStep = mSettings.mStep;
+    mWiggleCalibration->mStep = settings.mStep;
     mWiggleCalibration->mPluginId = mPlugin->getId();
     mWiggleCalibration->mPlugin = mPlugin;
     mWiggleCalibration->mName = mName;
 
-   // mCalibHPD.clear();
 
-    double tminCal ( -INFINITY);
-    double tmaxCal ( INFINITY);
-
-    // --------------------------------------------------
-    //  Calibrate on the whole calibration period (= ref curve definition domain)
-    // --------------------------------------------------
+    /* --------------------------------------------------
+     *  Calibrate on the whole calibration period (= ref curve definition domain)
+     * -------------------------------------------------- */
     switch (mDeltaType) {
         case Date::eDeltaFixed:
-               
-           /* if (mTmaxRefCurve > mTminRefCurve) {
-                QVector<double> calibrationTemp;
-                QVector<double> repartitionTemp;
-
-                const double nbRefPts = 1. + round((mTmaxRefCurve - mTminRefCurve) / double(mSettings.mStep));
-                long double v = getLikelihood(mTminRefCurve - mDeltaFixed);
-                calibrationTemp.append(v);
-                repartitionTemp.append(0.);
-                long double lastRepVal = v;
-
-                // We use long double type because
-                // after several sums, the repartition can be in the double type range
-                for (int i = 1; i <= nbRefPts; ++i) {
-                    const double t = mTminRefCurve + double (i) * mSettings.mStep - mDeltaFixed;
-                    long double lastV = v;
-                    v = getLikelihood(t - mDeltaFixed);
-
-                    calibrationTemp.append(double(v));
-                    long double rep = lastRepVal;
-                    if (v != 0.l && lastV != 0.l)
-                        rep = lastRepVal + (long double) (mSettings.mStep) * (lastV + v) / 2.l;
-
-                    repartitionTemp.append(double (rep));
-                    lastRepVal = rep;
-                }
-             
-
-                if (repartitionTemp.last() > 0.) {
-                    const double threshold (0.00005);
-                    const int minIdx = int (floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp)));
-                    const int maxIdx = int (ceil(vector_interpolate_idx_for_value((1. - threshold) * lastRepVal, repartitionTemp)));
-
-                    tminCal = mTminRefCurve + minIdx * settings.mStep;
-                    tmaxCal = mTminRefCurve + maxIdx * settings.mStep;
-
-                    // Truncate both functions where data live
-                    mWiggleCalibration->mCurve = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
-                    mWiggleCalibration->mRepartition = repartitionTemp.mid(minIdx, (maxIdx - minIdx) + 1);
-                }
-              */
+        {
                 mWiggleCalibration->mCurve = mCalibration->mCurve;
-                mWiggleCalibration->mRepartition = mCalibration->mRepartition;
-                
-                
                 mWiggleCalibration->mTmin = mCalibration->mTmin + mDeltaFixed;
                 mWiggleCalibration->mTmax = mCalibration->mTmax + mDeltaFixed;
-         //   }
+            }
             break;
                 
                 
         case Date::eDeltaRange:
-            mWiggleCalibration->mCurve = mCalibration->mCurve;
-            mWiggleCalibration->mRepartition = mCalibration->mRepartition;
-            
-            mWiggleCalibration->mTmin = mCalibration->mTmin + mDeltaFixed;
-            mWiggleCalibration->mTmax = mCalibration->mTmax + mDeltaFixed;
-          
+        {
+        /* ----- FFT -----
+         http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data
+        https://jperalta.wordpress.com/2006/12/12/using-fftw3/
+        https://dsp.stackexchange.com/questions/22145/perform-convolution-in-frequency-domain-using-fftw
+         */
+
+        const int inputSize (mCalibration->mCurve.size());
+
+        const double L ((mDeltaMax-mDeltaMin+1) / mSettings.mStep);
+
+        const int gateSize (std::max(inputSize, int(L)) );
+        const int paddingSize (3*gateSize);
+
+        const int N ( inputSize + 4*paddingSize);
+        const int NComplex (2* (N/2)+1);
+
+        double *inputReal;
+        inputReal = new double [N];
+
+        fftw_complex *inputComplex;
+        inputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
+
+        for (int i (0); i< paddingSize; i++) {
+            inputReal[i] = 0.;
+        }
+        for (int i (0); i< inputSize; i++) {
+            inputReal[i+paddingSize] = mCalibration->mCurve[i];
+        }
+        for (int i ( inputSize+paddingSize); i< N; i++) {
+            inputReal[i] = 0.;
+        }
+       fftw_plan plan_input = fftw_plan_dft_r2c_1d(N, inputReal, inputComplex, FFTW_ESTIMATE);
+       fftw_execute(plan_input);
+
+
+       // ---- gate
+       double *gateReal;
+       gateReal = new double [N];
+
+       fftw_complex *gateComplex;
+       gateComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
+
+
+       for (int i (0); i< (N-L)/2; i++) {
+           gateReal[i] = 0.;
+       }
+       for (int i ((N-L)/2); i< ((N+L)/2); i++) {
+           gateReal[i] = 1.;
+       }
+       for (int i ((N+L)/2); i< N; i++) {
+           gateReal[i] = 0.;
+       }
+
+      fftw_plan plan_gate = fftw_plan_dft_r2c_1d(N, gateReal, gateComplex, FFTW_ESTIMATE);
+      fftw_execute(plan_gate);
+
+
+       /*
+        * The value of inputComplex[i=0] is a constant of the offset of the signal
+        */
+
+        double *outputReal;
+        outputReal = new double [N];
+
+        fftw_complex *outputComplex;
+        outputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
+
+
+        for (int i(0); i<NComplex; ++i) {
+            outputComplex[i][0] = gateComplex[i][0] * inputComplex[i][0] - gateComplex[i][1] * inputComplex[i][1];
+            outputComplex[i][1] = gateComplex[i][0] * inputComplex[i][1] + gateComplex[i][1] * inputComplex[i][0];
+        }
+
+        fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, outputComplex, outputReal, FFTW_ESTIMATE);
+        fftw_execute(plan_output);
+
+/*
+ * This code corresponds to the theoretical formula in Fourier space.
+ * But it does not work with uniform densities, because it does not handle the padding correctly.
+ * The problem also exists for densities with a very small support .
+
+   double factor;
+        for (int i(0); i<NComplex; ++i) {
+
+            factor = sinc((double)i, L/(double)inputSize );
+
+            outputComplex[i][0] = inputComplex[i][0]* factor;
+            outputComplex[i][1] = inputComplex[i][1]* factor;
+        }
+
+        fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, outputComplex, outputReal, FFTW_ESTIMATE);
+        fftw_execute(plan_output);
+*/
+
+
+        QVector<double> curve;
+
+        for ( int i(0); i<N ; i++) {
+            curve.append(outputReal[i]);
+        }
+
+
+
+        mWiggleCalibration->mCurve = equal_areas(curve, mSettings.mStep, 1.);
+
+        mWiggleCalibration->mTmin = mCalibration->mTmin - (double)(3*paddingSize +inputSize/2)*mSettings.mStep + (mDeltaMin+mDeltaMax)/2.;
+        mWiggleCalibration->mTmax = mWiggleCalibration->mTmin + curve.size()*mSettings.mStep;
+
+        fftw_destroy_plan(plan_input);
+        fftw_destroy_plan(plan_output);
+        fftw_free(inputComplex);
+        free(inputReal);
+        free(outputReal);
+        fftw_cleanup();
+    }
             break;
             
         case Date::eDeltaGaussian:
-            mWiggleCalibration->mCurve = mCalibration->mCurve;
-            mWiggleCalibration->mRepartition = mCalibration->mRepartition;
+        {
+            /* ----- FFT -----
+             http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data
+            https://jperalta.wordpress.com/2006/12/12/using-fftw3/
+             */
+            qDebug() <<"wiggle eDeltaGaussian";
+            // Les data
+            const int inputSize (mCalibration->mCurve.size());
+
+            const double sigma = mDeltaError/mSettings.mStep;
+            const int gaussSize (std::max(inputSize, int(3*sigma)) );
+            const int paddingSize (2*gaussSize);
+
+            const int N ( gaussSize + 2*paddingSize);
+            const int NComplex (2* (N/2)+1);
+
+            double *inputReal;
+            inputReal = new double [N];
+
+            fftw_complex *inputComplex;
+            inputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
             
-            mWiggleCalibration->mTmin = mCalibration->mTmin + mDeltaFixed;
-            mWiggleCalibration->mTmax = mCalibration->mTmax + mDeltaFixed;
-          
+
+            // on peut utiliser std::copy
+            for (int i (0); i< paddingSize; i++) {
+                inputReal[i] = 0;
+            }
+            for (int i (0); i< inputSize; i++) {
+                inputReal[i+paddingSize] = mCalibration->mCurve[i];
+            }
+            for (int i ( inputSize+paddingSize); i< N; i++) {
+                inputReal[i] = 0;
+            }
+           fftw_plan plan_input = fftw_plan_dft_r2c_1d(N, inputReal, inputComplex, FFTW_ESTIMATE);
+           fftw_execute(plan_input);
+
+           for (int i(0); i<NComplex; ++i) {
+               const double s = 2. * (double)M_PI * (double)i / (double)N;
+               const double factor = exp(-0.5 * pow(s, 2.) * pow(sigma, 2.));
+
+               inputComplex[i][0] *= factor;
+               inputComplex[i][1] *= factor;
+           }
+            
+
+            double *outputReal;
+            outputReal = new double [N];
+
+
+            fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, inputComplex, outputReal, FFTW_ESTIMATE);
+            fftw_execute(plan_output);
+            
+            QVector<double> curve;
+
+            for ( int i(0); i<N ; i++) {
+                curve.append(outputReal[i]);
+            }
+
+
+
+            mWiggleCalibration->mCurve = equal_areas(curve, mSettings.mStep, 1.);
+
+            mWiggleCalibration->mTmin = mCalibration->mTmin - paddingSize*mSettings.mStep + mDeltaAverage;
+            mWiggleCalibration->mTmax = mCalibration->mTmin + curve.size()*mSettings.mStep+ mDeltaAverage;
+
+            fftw_destroy_plan(plan_input);
+            fftw_destroy_plan(plan_output);
+            fftw_free(inputComplex);
+            free(inputReal);
+            free(outputReal);
+            fftw_cleanup();
+        }
             break;
             
         default:
             mWiggleCalibration->mCurve = mCalibration->mCurve;
-            mWiggleCalibration->mRepartition = mCalibration->mRepartition;
             mWiggleCalibration->mTmin = mCalibration->mTmin ;
             mWiggleCalibration->mTmax = mCalibration->mTmax ;
             break;
     }
     
-    
 
-        
+    mWiggleCalibration->mRepartition = mWiggleCalibration->mCurve;
+    /* We use long double type because
+     after several sums, the repartition can be in the double type range
+    */
+    long double v(0.l);
+    long double lastV (0.l);
+    long double rep;
+    long double lastRep (0.l);
+    QVector<double>::iterator itR = mWiggleCalibration->mRepartition.begin();
 
-   // qDebug()<<"Date::calibrate in project"<<project->mCalibCurves[toFind].mName;
+    for (QVector<double>::iterator itt (itR); itt != mWiggleCalibration->mRepartition.end(); ++itt) {
+        lastV = v;
+        v = (long double) (*itt );
+
+        rep = lastRep;
+        if (v != 0.l && lastV != 0.l)
+            rep = lastRep + (long double) (mSettings.mStep) * (lastV + v) / 2.l;
+
+        *itt = rep;
+
+        lastRep = rep;
+    }
+
+
+    /* ------------------------------------------------------------------
+     * Restrict the calib and repartition vectors to where data are
+     * ------------------------------------------------------------------ */
+
+    if (mWiggleCalibration->mRepartition.last() > 0.) {
+
+        const double threshold (0.00005);
+        const int minIdx = int (floor(vector_interpolate_idx_for_value(threshold * lastRep, mWiggleCalibration->mRepartition)));
+        const int maxIdx = int (ceil(vector_interpolate_idx_for_value((1. - threshold) * lastRep, mWiggleCalibration->mRepartition)));
+
+        const double tminCal = mWiggleCalibration->mTmin + minIdx * mSettings.mStep;
+        const double tmaxCal = mWiggleCalibration->mTmin + maxIdx * mSettings.mStep;
+
+        // Truncate both functions where data live
+        mWiggleCalibration->mCurve = mWiggleCalibration->mCurve.mid(minIdx, (maxIdx - minIdx) + 1);
+        mWiggleCalibration->mRepartition = mWiggleCalibration->mRepartition.mid(minIdx, (maxIdx - minIdx) + 1);
+
+        /* NOTE ABOUT THIS APPROMIATION :
+       By truncating the calib and repartition, the calib density's area is not 1 anymore!
+       It is now 1 - 2*threshold = 0,99999... We consider it to be 1 anyway!
+       By doing this, calib and repartition are stored on a restricted number of data
+       instead of storing them on the whole reference curve's period (as done for calibrationTemp & repartitionTemp above).
+         */
+
+        // Stretch repartition curve so it goes from 0 to 1
+        mWiggleCalibration->mRepartition = stretch_vector(mWiggleCalibration->mRepartition, 0., 1.);
+
+        // Approximation : even if the calib has been truncated, we consider its area to be = 1
+        mWiggleCalibration->mCurve = equal_areas(mWiggleCalibration->mCurve, settings.mStep, 1.);
+
+        mWiggleCalibration->mTmin = tminCal;
+        mWiggleCalibration->mTmax = tmaxCal;
+
+
+    }
+
+
+     qDebug()<<"Date::mWiggleCalibration in project "<<project->mCalibCurves[toFind].mDescription;
 }
 
 const QMap<double, double> Date::getRawCalibMap() const
@@ -819,7 +1020,7 @@ QPixmap Date::generateUnifThumb()
 
             GraphCurve curve;
             curve.mBrush = color;
-            curve.mPen = QPen(color, 2.);
+            curve.mPen.setColor(Qt::red);
             curve.mIsHorizontalSections = true;
 
             const double tminDisplay = qBound(tmin, tLower, tmax);
@@ -830,6 +1031,20 @@ QPixmap Date::generateUnifThumb()
 
             curve.mName = "Calibration";
 
+            // Drawing the wiggle
+            if (mDeltaType != eDeltaNone) {
+                GraphCurve curveWiggle;
+                QMap<double, double> calibWiggle = normalize_map(getMapDataInRange(getRawWiggleCalibMap(), tmin, tmax));
+                curveWiggle.mData = calibWiggle;
+
+                curveWiggle.mName = "Wiggle";
+                curveWiggle.mPen.setColor(Qt::red);
+                curveWiggle.mPen.setWidth(4);
+                curveWiggle.mBrush = QBrush(Qt::NoBrush);
+                curveWiggle.mIsHisto = false;
+                curveWiggle.mIsRectFromZero = true;
+                graph.addCurve(curveWiggle);
+            }
             graph.repaint();
 
             graph.render(&p);
@@ -846,7 +1061,10 @@ QPixmap Date::generateUnifThumb()
 }
 
 
-
+/**
+ * @brief Date::generateCalibThumb Uses the calibration curve already calculated to update the thumbnail.
+ * @return
+ */
 
 QPixmap Date::generateCalibThumb()
 {
@@ -860,7 +1078,7 @@ QPixmap Date::generateCalibThumb()
 
         GraphCurve curve;
         QMap<double, double> calib = normalize_map(getMapDataInRange(getRawCalibMap(), tmin, tmax));
-        qDebug()<<"generateThumb mName"<<mCalibration->mName<<mCalibration->mCurve.size()<<calib.size();
+        qDebug()<<"generateCalibThumb mName "<<mCalibration->mName<<mCalibration->mCurve.size()<<calib.size();
         curve.mData = calib;
 
         if (curve.mData.isEmpty())
@@ -886,8 +1104,9 @@ QPixmap Date::generateCalibThumb()
             curveWiggle.mData = calibWiggle;
 
             curveWiggle.mName = "Wiggle";
-            curveWiggle.mPen = QPen(QColor(150, 150, 150), 2.f);
-            curveWiggle.mBrush = QColor(150, 150, 150);//color;
+            curveWiggle.mPen.setColor(Qt::red);
+            curveWiggle.mPen.setWidth(4);
+            curveWiggle.mBrush = QBrush(Qt::NoBrush);
             curveWiggle.mIsHisto = false;
             curveWiggle.mIsRectFromZero = true; 
             graph.addCurve(curveWiggle);
@@ -975,8 +1194,8 @@ void Date::initDelta(Event*)
         case eDeltaGaussian: {
             // change init of Delta in case of gaussian function since 2015/06 with PhL
             //mDelta = event->mTheta.mX - mTheta.mX;
-            const double tmin = mSettings.mTmin;
-            const double tmax = mSettings.mTmax;
+            const double tmin = mDeltaAverage - 5*mDeltaError;
+            const double tmax = mDeltaAverage + 5*mDeltaError;
             mDelta = Generator::gaussByDoubleExp(mDeltaAverage,mDeltaError, tmin, tmax);
             }
             break;
