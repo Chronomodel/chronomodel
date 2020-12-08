@@ -396,6 +396,8 @@ void MultiCalibrationView::updateGraphList()
             calibGraph->setRangeY(0., 1.);
 
             calibGraph->addCurve(calibCurve);
+
+
             calibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             calibGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
             calibGraph->setFormatFunctY(nullptr);
@@ -433,7 +435,7 @@ void MultiCalibrationView::updateGraphList()
                  if (d.mIsValid && !d.mCalibration->mCurve.isEmpty()) {
                     calibCurve.mName = "Calibration";
                     calibCurve.mPen.setColor(penColor);
-                    calibCurve.mPen.setWidth(2);
+                    calibCurve.mPen.setWidth(1);
                     calibCurve.mIsHisto = false;
 
                     calibCurve.mData = d.getFormatedCalibMap();
@@ -443,6 +445,25 @@ void MultiCalibrationView::updateGraphList()
                     calibCurve.mBrush = QBrush(Qt::NoBrush);
 
                     calibGraph->addCurve(calibCurve);
+
+                    // Drawing the wiggle
+                    if (d.mDeltaType !=  Date::eDeltaNone) {
+                        GraphCurve curveWiggle;
+                        QMap<double, double> calibWiggle = normalize_map(d.getFormatedWiggleCalibMap(),map_max_value(calibCurve.mData));
+                        curveWiggle.mData = calibWiggle;
+
+                        curveWiggle.mName = "Wiggle";
+                        curveWiggle.mPen.setColor(Qt::red);
+                        curveWiggle.mPen.setWidth(1);
+                        curveWiggle.mBrush = QBrush(Qt::NoBrush);
+                        curveWiggle.mIsHisto = false;
+                        curveWiggle.mIsRectFromZero = true;
+                        calibGraph->addCurve(curveWiggle);
+                    }
+
+
+
+
                 }
 
                 // Insert the Event Name only if different to the previous Event's name
