@@ -537,20 +537,21 @@ QJsonObject PluginMag::mergeDates(const QJsonArray& dates)
         QStringList names;
 
         bool subDatIsValid (true);
-        for (int i=0; i<dates.size(); ++i) {
+        for (int i(0); i<dates.size(); ++i) {
             const QJsonObject date = dates.at(i).toObject();
           
             names.append(date.value(STATE_NAME).toString());
             // Validate the date before merge
-            Date d;
-            d.fromJson(date);
-            subDatIsValid = d.mIsValid & subDatIsValid;
+//            Date d (date);
+//            subDatIsValid = d.mIsValid & subDatIsValid;
+            subDatIsValid = date.value(STATE_DATE_VALID).toBool() & subDatIsValid;
         
         }
         if (subDatIsValid) {
             // inherits the first data propeties as plug-in and method...
             result = dates.at(0).toObject();
             result[STATE_NAME] =  names.join(" | ") ;
+            result[STATE_DATE_UUID] = QString::fromStdString( Generator::UUID());
             result[STATE_DATE_DATA] = mergedData;
             result[STATE_DATE_ORIGIN] = Date::eCombination;
             result[STATE_DATE_SUB_DATES] = dates;

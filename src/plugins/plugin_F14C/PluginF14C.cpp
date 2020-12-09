@@ -546,65 +546,100 @@ QJsonObject PluginF14C::mergeDates(const QJsonArray& dates)
 {
     QJsonObject result;
     if (dates.size() > 1) {
-        // Verify all dates have the same ref curve :
-        const QJsonObject firstDate = dates.at(0).toObject();
-        const  QJsonObject firstDateData = firstDate.value(STATE_DATE_DATA).toObject();
-        QString firstCurve = firstDateData.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
 
-        for (int i=1; i<dates.size(); ++i) {
+        // test existence de wiggle
+        bool withWiggle (false);
+        for (int i(0); i<dates.size(); ++i) {
             QJsonObject date = dates.at(i).toObject();
             const QJsonObject dateData = date.value(STATE_DATE_DATA).toObject();
-            const QString curve = dateData.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
+             withWiggle = withWiggle || (dateData.value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);
+        }
 
-            if (firstCurve != curve) {
-                result["error"] = tr("All combined data must use the same reference curve !");
-                return result;
+        if (withWiggle) {
+            QJsonObject mergedData;
+
+            mergedData[DATE_F14C_FRACTION_STR] = 1.;
+            mergedData[DATE_F14C_ERROR_STR] = 0.;
+            mergedData[DATE_F14C_REF_CURVE_STR] = "";
+
+            QStringList names;
+
+            for (int i(0); i<dates.size(); ++i) {
+                names.append(dates.at(i).toObject().value(STATE_NAME).toString());
             }
-        }
 
-        double sum_vi = 0.;
-        double sum_mi_vi = 0.;
-        double sum_1_vi = 0.;
+            // inherits the first data propeties as plug-in and method...
+            result = dates.at(0).toObject();
+            result[STATE_NAME] = names.join(" | ");
+            result[STATE_DATE_UUID] = QString::fromStdString( Generator::UUID());
+            result[STATE_DATE_DATA] = mergedData;
+            result[STATE_DATE_ORIGIN] = Date::eCombination;
+            result[STATE_DATE_SUB_DATES] = dates;
+            result[STATE_DATE_VALID] = true;
+            result[STATE_DATE_DELTA_TYPE] = Date::eDeltaNone;
 
-        QStringList names;
+        } else {
+            // Verify all dates have the same ref curve :
+            const QJsonObject firstDate = dates.at(0).toObject();
+            const  QJsonObject firstDateData = firstDate.value(STATE_DATE_DATA).toObject();
+            QString firstCurve = firstDateData.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
 
-        for (int i=0; i<dates.size(); ++i) {
-            const QJsonObject date = dates.at(i).toObject();
-            const QJsonObject data = date.value(STATE_DATE_DATA).toObject();
+            for (int i(1); i<dates.size(); ++i) {
+                QJsonObject date = dates.at(i).toObject();
+                const QJsonObject dateData = date.value(STATE_DATE_DATA).toObject();
+                const QString curve = dateData.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
 
-            names.append(date.value(STATE_NAME).toString());
-            const double a = data.value(DATE_F14C_FRACTION_STR).toDouble();
-            const double e = data.value(DATE_F14C_ERROR_STR).toDouble();
-   //         const double r = data.value(DATE_F14C_DELTA_R_STR).toDouble();
-   //         const double re = data.value(DATE_F14C_DELTA_R_ERROR_STR).toDouble();
+                if (firstCurve != curve) {
+                    result["error"] = tr("All combined data must use the same reference curve !");
+                    return result;
+                }
+            }
 
-            // Reservoir effet
-          /*  const double m = a - r;
-            const double v = e * e + re * re;
+            double sum_vi (0.);
+            double sum_mi_vi (0.);
+            double sum_1_vi (0.);
 
-            sum_vi += v;
-            sum_mi_vi += m/v;
-            sum_1_vi += 1/v;
-           */
-            sum_vi += e;
-            sum_mi_vi += a/e;
-            sum_1_vi += 1/e;
-        }
+            QStringList names;
 
-        QJsonObject mergedData;
-        mergedData[DATE_F14C_FRACTION_STR] = sum_mi_vi / sum_1_vi;
-        mergedData[DATE_F14C_ERROR_STR] = sqrt(1 / sum_1_vi);
-//        mergedData[DATE_F14C_DELTA_R_STR] = 0.;
-//        mergedData[DATE_F14C_DELTA_R_ERROR_STR] = 0.;
-        mergedData[DATE_F14C_REF_CURVE_STR] = firstCurve ;
+            for (int i(0); i<dates.size(); ++i) {
+                const QJsonObject date = dates.at(i).toObject();
+                const QJsonObject data = date.value(STATE_DATE_DATA).toObject();
 
-        // inherits the first data propeties as plug-in and method...
-        result = dates.at(0).toObject();
-        result[STATE_NAME] = names.join(" | ");
-        result[STATE_DATE_ORIGIN] = Date::eSingleDate;
-        result[STATE_DATE_DATA] = mergedData;
-        result[STATE_DATE_SUB_DATES] = dates;
-       
+                names.append(date.value(STATE_NAME).toString());
+                const double a = data.value(DATE_F14C_FRACTION_STR).toDouble();
+                const double e = data.value(DATE_F14C_ERROR_STR).toDouble();
+                //         const double r = data.value(DATE_F14C_DELTA_R_STR).toDouble();
+                //         const double re = data.value(DATE_F14C_DELTA_R_ERROR_STR).toDouble();
+
+                /* Reservoir effet
+                 * Theoretical problem with the applicability of the reservoir effect
+                 */
+                /*  const double m = a - r;
+                    const double v = e * e + re * re;
+
+                    sum_vi += v;
+                    sum_mi_vi += m/v;
+                    sum_1_vi += 1/v;
+               */
+                sum_vi += e;
+                sum_mi_vi += a/e;
+                sum_1_vi += 1/e;
+            }
+
+            QJsonObject mergedData;
+            mergedData[DATE_F14C_FRACTION_STR] = sum_mi_vi / sum_1_vi;
+            mergedData[DATE_F14C_ERROR_STR] = sqrt(1 / sum_1_vi);
+            //        mergedData[DATE_F14C_DELTA_R_STR] = 0.;
+            //        mergedData[DATE_F14C_DELTA_R_ERROR_STR] = 0.;
+            mergedData[DATE_F14C_REF_CURVE_STR] = firstCurve ;
+
+            // inherits the first data propeties as plug-in and method...
+            result = dates.at(0).toObject();
+            result[STATE_NAME] = names.join(" | ");
+            result[STATE_DATE_ORIGIN] = Date::eSingleDate;
+            result[STATE_DATE_DATA] = mergedData;
+            result[STATE_DATE_SUB_DATES] = dates;
+       }
     } else
         result["error"] = tr("Combine needs at least 2 data !");
 

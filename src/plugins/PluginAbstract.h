@@ -46,6 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "RefCurve.h"
 #include "Generator.h"
 //#include "PluginCombineViewAbstract.h"
+//#include "CalibrationCurve.h"
 
 #include <QObject>
 #include <QJsonObject>
@@ -62,6 +63,7 @@ class GraphView;
 class PluginFormAbstract;
 class GraphViewRefAbstract;
 class PluginSettingsViewAbstract;
+//class CalibibrationCurve;
 
 
 struct GroupedAction{
@@ -99,8 +101,7 @@ public:
         for ( auto && sDA : subDateArray ) {
             QJsonObject subDate = sDA.toObject();
             auto data = subDate.value(STATE_DATE_DATA).toObject();
-            Date date;
-            date.fromJson(subDate);
+            Date date(subDate);
             if ( wiggleAllowed()==true ) {
                 double dt;
                 switch (date.mDeltaType) {
@@ -112,12 +113,8 @@ public:
                         produit *= getLikelihood( t - dt, data );
                         break;
                     case Date::eDeltaGaussian:
-                        dt = Generator::randomUniform(date.mDeltaAverage, date.mDeltaError);
-                        produit *= getLikelihood( t - dt, data );
-                        break;
                     case Date::eDeltaRange:
-                        dt = Generator::gaussByBoxMuller( date.mDeltaMin, date.mDeltaMax);
-                        produit *= getLikelihood( t - dt, data );
+                        produit *= date.getLikelihoodFromWiggleCalib(t);
                         break;
                 }
             }
@@ -211,32 +208,7 @@ public:
             auto data = subDate.value(STATE_DATE_DATA).toObject();
 
             QPair<double, double> tminTmax = getTminTmaxRefsCurve( data);
-            
-            if ( wiggleAllowed()==true ) {
-                Date date;
-                date.fromJson(subDate);
-                double dt;
-                switch (date.mDeltaType) {
-                    case Date::eDeltaFixed:
-                        dt = date.mDeltaFixed;
-                        tminTmax.first = tminTmax.first + dt;
-                        tminTmax.second = tminTmax.second + dt;
-                        break;
-                    case Date::eDeltaGaussian:
-                        dt = Generator::randomUniform(date.mDeltaAverage, date.mDeltaError);
-                        tminTmax.first = tminTmax.first + date.mDeltaAverage + date.mDeltaError ;
-                        tminTmax.second = tminTmax.second + date.mDeltaAverage + date.mDeltaError ;
-                        break;
-                    case Date::eDeltaRange:
-                        dt = Generator::gaussByBoxMuller( date.mDeltaMin, date.mDeltaMax);
-                        tminTmax.first = tminTmax.first + date.mDeltaMin;
-                        tminTmax.second = tminTmax.second + date.mDeltaMax;
-                        break;
-                    default:
-                        break;
-                }
-                
-            }
+
             tmin = std::min(tmin, tminTmax.first);
             tmax = std::max(tmax, tminTmax.second);
                                         

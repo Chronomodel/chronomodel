@@ -147,13 +147,13 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mCombineBut->setFlatVertical();
     mCombineBut->setIconOnly(false);
     mCombineBut->setEnabled(false);
-    mCombineBut->setToolTip(tr("Combine 14C ages"));
+    mCombineBut->setToolTip(tr("Combine Data"));
 
     mSplitBut = new Button(tr("Split"), mEventView);
     mSplitBut->setFlatVertical();
     mSplitBut->setIconOnly(false);
     mSplitBut->setEnabled(false);
-    mSplitBut->setToolTip(tr("Split combined 14C ages"));
+    mSplitBut->setToolTip(tr("Split combined Data"));
 
     connect(mCalibBut, &Button::clicked, this, &EventPropertiesView::showCalibRequested);
     connect(mCalibBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &EventPropertiesView::updateButton);

@@ -219,12 +219,10 @@ long double PluginUniform::getLikelihoodCombine(const double& t, const QJsonArra
 
 bool PluginUniform::areDatesMergeable(const QJsonArray& dates)
 {
-    int pluginID = dates.at(0).toObject().value(STATE_DATE_DATA).toObject().value(STATE_DATE_PLUGIN_ID).toInt();
-    for (int i=1; i<dates.size(); ++i) {
-        QJsonObject date = dates.at(i).toObject();
-        QJsonObject data = date.value(STATE_DATE_DATA).toObject();
+    const int pluginID = dates.at(0).toObject().value(STATE_DATE_DATA).toObject().value(STATE_DATE_PLUGIN_ID).toInt();
 
-        if (pluginID != data.value(STATE_DATE_PLUGIN_ID).toInt())
+    for (int i(1); i<dates.size(); ++i) {
+        if (pluginID != dates.at(i).toObject().value(STATE_DATE_DATA).toObject().value(STATE_DATE_PLUGIN_ID).toInt())
             return false;
     }
     return true;
@@ -237,37 +235,43 @@ QJsonObject PluginUniform::mergeDates(const QJsonArray& dates)
 {
     QJsonObject result;
     if (dates.size() > 1) {
-       
-        
+
+        bool withWiggle (false);
+
+        QJsonObject mergedData;
         QStringList names;
-        
         double min (-INFINITY);
         double max (INFINITY);
-        for (int i=0; i<dates.size(); ++i) {
-            const QJsonObject date = dates.at(i).toObject();
-          
-            names.append(date.value(STATE_NAME).toString());
-            
-            min = std::max(min, date.value(STATE_DATE_DATA).toObject().value(DATE_UNIFORM_MIN_STR).toDouble() );
-            max = std::min(max, date.value(STATE_DATE_DATA).toObject().value(DATE_UNIFORM_MAX_STR).toDouble() );
-        
+
+        for (int i(0); i<dates.size(); ++i) {
+            names.append(dates.at(i).toObject().value(STATE_NAME).toString());
+
+            const QJsonObject data = dates.at(i).toObject().value(STATE_DATE_DATA).toObject();
+            min = std::max(min, data.value(DATE_UNIFORM_MIN_STR).toDouble() );
+            max = std::min(max, data.value(DATE_UNIFORM_MAX_STR).toDouble() );
+            // test existence de wiggle
+            withWiggle = withWiggle || (data.value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);
+
         }
-             
-        
-        QJsonObject mergedData;
-        
         mergedData[DATE_UNIFORM_MIN_STR] = min;
         mergedData[DATE_UNIFORM_MAX_STR] = max;
-        
         // inherits the first data propeties as plug-in and method...
         result = dates.at(0).toObject();
         result[STATE_NAME] = names.join(" | ");
-        
+        result[STATE_DATE_UUID] = QString::fromStdString( Generator::UUID());
         result[STATE_DATE_DATA] = mergedData;
-        result[STATE_DATE_ORIGIN] = Date::eSingleDate;
         result[STATE_DATE_SUB_DATES] = dates;
-        result[STATE_DATE_VALID] = (max>min ? true : false);
 
+        if (withWiggle) {
+            result[STATE_DATE_ORIGIN] = Date::eCombination;
+
+            result[STATE_DATE_VALID] = true;
+            result[STATE_DATE_DELTA_TYPE] = Date::eDeltaNone;
+
+        } else {
+            result[STATE_DATE_ORIGIN] = Date::eSingleDate;
+            result[STATE_DATE_VALID] = (max>min ? true : false);
+        }
     } else
         result["error"] = tr("Combine needs at least 2 data !");
 

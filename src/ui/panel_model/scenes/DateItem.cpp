@@ -91,7 +91,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
             // Date::calibrate() Controls the validity of the calibration and wiggle curves
                 d.calibrate(s, EventsScene->getProject());
 
-            if (d.mPlugin->getName() == "Unif")
+            if (d.mPlugin->getName() == "Unif" && d.mOrigin==Date::eSingleDate)
                 mCalibThumb = d.generateUnifThumb();
 
              /* Can happen when there is trouble with the ref curve, for example with un Undo after

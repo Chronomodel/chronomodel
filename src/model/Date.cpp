@@ -96,7 +96,7 @@ mName("No Named Date")
     mWiggleCalibration = nullptr;
 }
 
-Date::Date(const QJsonObject& json)
+Date::Date(const QJsonObject &json)
 {
     fromJson(json);
 }
@@ -330,8 +330,14 @@ long double Date::getLikelihood(const double& t) const
         if (mOrigin == eSingleDate) {
             return mPlugin->getLikelihood(t, mData);
             
-        } else if (mOrigin == eCombination) {
-            return mPlugin->getLikelihoodCombine(t, mSubDates);
+        } else if (mOrigin == eCombination) { 
+            // If needed run the wiggle calculation
+            if (mCalibration->mCurve.isEmpty()) {
+                return mPlugin->getLikelihoodCombine(t, mSubDates);
+
+            } else {
+                return getLikelihoodFromCalib(t);
+            }
             
         } else {
             
@@ -395,13 +401,13 @@ QString Date::getWiggleDesc() const
       
     switch (mDeltaType) {
         case Date::eDeltaFixed:
-            res = res+ "Wiggle = " + QString::number(mDeltaFixed);
+            res = mDeltaFixed != 0. ? res+ "Wiggle = " + QString::number(mDeltaFixed) : "";
             break;
         case Date::eDeltaRange:
-            res = res+ "Wiggle = U[" + QString::number(mDeltaMin) + " ; " + QString::number(mDeltaMax) + " ] ";
+            res = (mDeltaMin !=0. && mDeltaMax != 0.) ? res+ "Wiggle = U[" + QString::number(mDeltaMin) + " ; " + QString::number(mDeltaMax) + " ] " : "";
             break;
         case Date::eDeltaGaussian:
-            res = res+ "Wiggle = N(" + QString::number(mDeltaAverage) + " ; " + QString::number(mDeltaError) + " ) ";
+            res = (mDeltaError>0.) ? res+ "Wiggle = N(" + QString::number(mDeltaAverage) + " ; " + QString::number(mDeltaError) + " ) ": "";
             break;
         case Date::eDeltaNone:
         default:
@@ -479,7 +485,7 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
         long double lastRepVal = v;
 
         /* We use long double type because
-         after several sums, the repartition can be in the double type range
+         * after several sums, the repartition can be in the double type range
         */
         for (int i = 1; i <= nbRefPts; ++i) {
             const double t = mTminRefCurve + double (i) * settings.mStep;
@@ -1151,7 +1157,7 @@ QPixmap Date::generateCalibThumb()
 
 }
 
-double Date::getLikelihoodFromCalib(const double t)
+double Date::getLikelihoodFromCalib(const double &t) const
 {
     const double tmin (mCalibration->mTmin);
     const double tmax (mCalibration->mTmax);
@@ -1160,19 +1166,48 @@ double Date::getLikelihoodFromCalib(const double t)
     if (mCalibration->mCurve.size() < 2 || t < tmin || t > tmax)
         return 0.;
 
-    double prop = (t - tmin) / (tmax - tmin);
-    double idx = prop * (mCalibration->mCurve.size() - 1); // tricky : if (tmax - tmin) = 2000, then calib size is 2001 !
-    int idxUnder = (int)floor(idx);
-    int idxUpper = idxUnder + 1;
+    const double prop = (t - tmin) / (tmax - tmin);
+    const double idx = prop * (mCalibration->mCurve.size() - 1); // tricky : if (tmax - tmin) = 2000, then calib size is 2001 !
+    const int idxUnder = (int)floor(idx);
+    const int idxUpper = (int)ceil(idx);//idxUnder + 1;
 
-    // Important pour le créneau : pas d'interpolation autour des créneaux!
-    double v (0.);
-    if (mCalibration->mCurve[idxUnder] != 0. && mCalibration->mCurve[idxUpper] != 0.)
-        v = interpolate((double) idx, (double)idxUnder, (double)idxUpper, mCalibration->mCurve[idxUnder], mCalibration->mCurve[idxUpper]);
-    
-    return v;
+    if (idxUnder == idxUpper) {
+        return mCalibration->mCurve[idxUnder];
+
+    } else if (mCalibration->mCurve[idxUnder] != 0. && mCalibration->mCurve[idxUpper] != 0.) {
+        // Important for gate: no interpolation around gates
+        return interpolate((double) idx, (double)idxUnder, (double)idxUpper, mCalibration->mCurve[idxUnder], mCalibration->mCurve[idxUpper]);
+
+    } else {
+        return 0.;
+    }
+
 }
 
+double Date::getLikelihoodFromWiggleCalib(const double &t) const
+{
+    const double tmin (mWiggleCalibration->mTmin);
+    const double tmax (mWiggleCalibration->mTmax);
+
+    // We need at least two points to interpolate
+    if (mWiggleCalibration->mCurve.size() < 2 || t < tmin || t > tmax)
+        return 0.;
+
+    const double prop = (t - tmin) / (tmax - tmin);
+    const double idx = prop * (mWiggleCalibration->mCurve.size() - 1); // tricky : if (tmax - tmin) = 2000, then calib size is 2001 !
+    const int idxUnder = (int)floor(idx);
+    const int idxUpper = (int)ceil(idx);//idxUnder + 1;
+
+    if (idxUnder == idxUpper) {
+        return mWiggleCalibration->mCurve[idxUnder];
+
+    } else if (mWiggleCalibration->mCurve[idxUnder] != 0. && mWiggleCalibration->mCurve[idxUpper] != 0.) {
+        // Important for gate: no interpolation around gates
+        return interpolate((double) idx, (double)idxUnder, (double)idxUpper, mWiggleCalibration->mCurve[idxUnder], mWiggleCalibration->mCurve[idxUpper]);
+    } else {
+        return 0. ;
+    }
+}
 
 void Date::updateTheta(Event* event)
 {
@@ -1423,7 +1458,7 @@ void Date::autoSetTiSampler(const bool bSet)
                 updateti = fInversionWithArg;
                 break;
             
-                // Seul cas où le taux d'acceptation a du sens car on utilise sigmaMH :
+                // only case with acceptation rate, because we use sigmaMH :
             case eMHSymGaussAdapt:
                 updateti = fMHSymGaussAdaptWithArg;
                 break;

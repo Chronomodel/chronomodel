@@ -111,6 +111,7 @@ public:
 
 
     QLabel* mWiggleLab;
+    QRadioButton* mDeltaNoneRadio;
     QRadioButton* mDeltaFixedRadio;
     QRadioButton* mDeltaRangeRadio;
     QRadioButton* mDeltaGaussRadio;

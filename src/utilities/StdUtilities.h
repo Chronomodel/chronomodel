@@ -78,6 +78,7 @@ void checkFloatingPointException(const QString& infos = QString());
 template <typename T, typename V>
 V interpolate(const T& x, const T& x1, const T& x2, const V& y1, const V& y2)
 {
+    Q_ASSERT(x1!=x2);
     return (y1 + (y2 - y1) * V((x - x1) / (x2 - x1)) );
 }
 

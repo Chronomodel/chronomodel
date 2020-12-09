@@ -663,29 +663,55 @@ bool PluginGauss::areDatesMergeable(const QJsonArray& )
 QJsonObject PluginGauss::mergeDates(const QJsonArray& dates)
 {
     QJsonObject result;
-    if (dates.size() > 1) {
-       
-        QJsonObject mergedData;
-        
-        mergedData[DATE_GAUSS_AGE_STR] = 1000;
-        mergedData[DATE_GAUSS_ERROR_STR] = 100;
-        mergedData[DATE_GAUSS_MODE_STR] = DATE_GAUSS_MODE_NONE;
-        
-        
-        QStringList names;
 
-        for (int i=0; i<dates.size(); ++i) {
-            const QJsonObject date = dates.at(i).toObject();
-            names.append(date.value(STATE_NAME).toString());
+    if (dates.size() > 1) {
+
+        QStringList names;
+        // wiggle existence test
+        bool withWiggle (false);
+        for (int i(0); i<dates.size(); ++i) {
+            QJsonObject date = dates.at(i).toObject();
+            const QJsonObject dateData = date.value(STATE_DATE_DATA).toObject();
+             withWiggle = withWiggle || (dateData.value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);
+             names.append(dates.at(i).toObject().value(STATE_NAME).toString());
         }
+
 
         // inherits the first data propeties as plug-in and method...
         result = dates.at(0).toObject();
         result[STATE_NAME] = names.join(" | ");
-        result[STATE_DATE_DATA] = mergedData;
-        result[STATE_DATE_ORIGIN] = Date::eCombination;
+        result[STATE_DATE_UUID] = QString::fromStdString( Generator::UUID());
         result[STATE_DATE_SUB_DATES] = dates;
-        result[STATE_DATE_VALID] = true;
+
+        if (withWiggle) {
+            QJsonObject mergedData;
+
+            mergedData[DATE_GAUSS_AGE_STR] = 1000.;
+            mergedData[DATE_GAUSS_ERROR_STR] = 100.;
+            mergedData[DATE_GAUSS_MODE_STR] = DATE_GAUSS_MODE_NONE;
+
+
+            result[STATE_DATE_DATA] = mergedData;
+            result[STATE_DATE_ORIGIN] = Date::eCombination;
+
+            result[STATE_DATE_VALID] = true;
+            result[STATE_DATE_DELTA_TYPE] = Date::eDeltaNone;
+
+
+        } else {
+
+            QJsonObject mergedData;
+
+            mergedData[DATE_GAUSS_AGE_STR] = 1000;
+            mergedData[DATE_GAUSS_ERROR_STR] = 100;
+            mergedData[DATE_GAUSS_MODE_STR] = DATE_GAUSS_MODE_NONE;
+
+
+            result[STATE_DATE_DATA] = mergedData;
+            result[STATE_DATE_ORIGIN] = Date::eCombination;
+
+            result[STATE_DATE_VALID] = true;
+        }
         
 
     } else

@@ -625,63 +625,96 @@ bool Plugin14C::areDatesMergeable(const QJsonArray& dates)
  **/
 QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
 {
+
     QJsonObject result;
     if (dates.size() > 1) {
-        // Verify all dates have the same ref curve :
-        const QJsonObject firstDate = dates.at(0).toObject();
-        const  QJsonObject firstDateData = firstDate.value(STATE_DATE_DATA).toObject();
-        QString firstCurve = firstDateData.value(DATE_14C_REF_CURVE_STR).toString().toLower();
 
-        for (int i=1; i<dates.size(); ++i) {
-            QJsonObject date = dates.at(i).toObject();
-            const QJsonObject dateData = date.value(STATE_DATE_DATA).toObject();
-            const QString curve = dateData.value(DATE_14C_REF_CURVE_STR).toString().toLower();
-
-            if (firstCurve != curve) {
-                result["error"] = tr("All combined data must use the same reference curve !");
-                return result;
-            }
-        }
-
-        double sum_vi = 0.;
-        double sum_mi_vi = 0.;
-        double sum_1_vi = 0.;
 
         QStringList names;
-
-        for (int i=0; i<dates.size(); ++i) {
-            const QJsonObject date = dates.at(i).toObject();
-            const QJsonObject data = date.value(STATE_DATE_DATA).toObject();
-
-            names.append(date.value(STATE_NAME).toString());
-            const double a = data.value(DATE_14C_AGE_STR).toDouble();
-            const double e = data.value(DATE_14C_ERROR_STR).toDouble();
-            const double r = data.value(DATE_14C_DELTA_R_STR).toDouble();
-            const double re = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
-
-            // Reservoir effet
-            const double m = a - r;
-            const double v = e * e + re * re;
-
-            sum_vi += v;
-            sum_mi_vi += m/v;
-            sum_1_vi += 1/v;
-        }
-
         QJsonObject mergedData;
-        mergedData[DATE_14C_AGE_STR] = sum_mi_vi / sum_1_vi;
-        mergedData[DATE_14C_ERROR_STR] = sqrt(1 / sum_1_vi);
-        mergedData[DATE_14C_DELTA_R_STR] = 0.;
-        mergedData[DATE_14C_DELTA_R_ERROR_STR] = 0.;
-        mergedData[DATE_14C_REF_CURVE_STR] = firstCurve ;
 
         // inherits the first data propeties as plug-in and method...
         result = dates.at(0).toObject();
         result[STATE_NAME] = names.join(" | ");
-        result[STATE_DATE_ORIGIN] = Date::eSingleDate;
-        result[STATE_DATE_DATA] = mergedData;
+        result[STATE_DATE_UUID] = QString::fromStdString( Generator::UUID());
         result[STATE_DATE_SUB_DATES] = dates;
-       
+
+        // test existence de wiggle
+        bool withWiggle (false);
+        for (int i(0); i<dates.size(); ++i) {
+            QJsonObject date = dates.at(i).toObject();
+            const QJsonObject dateData = date.value(STATE_DATE_DATA).toObject();
+            withWiggle = withWiggle || (dateData.value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);
+
+            names.append(dates.at(i).toObject().value(STATE_NAME).toString());
+        }
+
+
+
+        if (withWiggle) {
+
+            mergedData[DATE_14C_AGE_STR] = 1000.;
+            mergedData[DATE_14C_ERROR_STR] = 100.;
+            mergedData[DATE_14C_DELTA_R_STR] = 0.;
+            mergedData[DATE_14C_DELTA_R_ERROR_STR] = 0.;
+            mergedData[DATE_14C_REF_CURVE_STR] = "" ;
+
+            result[STATE_DATE_DATA] = mergedData;
+            result[STATE_DATE_ORIGIN] = Date::eCombination;
+
+            result[STATE_DATE_VALID] = true;
+            result[STATE_DATE_DELTA_TYPE] = Date::eDeltaNone;
+
+
+        } else {
+            // Verify all dates have the same ref curve :
+            const QJsonObject firstDate = dates.at(0).toObject();
+            const  QJsonObject firstDateData = firstDate.value(STATE_DATE_DATA).toObject();
+            QString firstCurve = firstDateData.value(DATE_14C_REF_CURVE_STR).toString().toLower();
+
+            for (int i(1); i<dates.size(); ++i) {
+                QJsonObject date = dates.at(i).toObject();
+                const QJsonObject dateData = date.value(STATE_DATE_DATA).toObject();
+                const QString curve = dateData.value(DATE_14C_REF_CURVE_STR).toString().toLower();
+
+                if (firstCurve != curve) {
+                    result["error"] = tr("All combined data must use the same reference curve !");
+                    return result;
+                }
+            }
+
+            double sum_vi = 0.;
+            double sum_mi_vi = 0.;
+            double sum_1_vi = 0.;
+
+            for (int i (0); i<dates.size(); ++i) {
+                const QJsonObject date = dates.at(i).toObject();
+                const QJsonObject data = date.value(STATE_DATE_DATA).toObject();
+
+                const double a = data.value(DATE_14C_AGE_STR).toDouble();
+                const double e = data.value(DATE_14C_ERROR_STR).toDouble();
+                const double r = data.value(DATE_14C_DELTA_R_STR).toDouble();
+                const double re = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
+
+                // Reservoir effet
+                const double m = a - r;
+                const double v = e * e + re * re;
+
+                sum_vi += v;
+                sum_mi_vi += m/v;
+                sum_1_vi += 1/v;
+            }
+
+            mergedData[DATE_14C_AGE_STR] = sum_mi_vi / sum_1_vi;
+            mergedData[DATE_14C_ERROR_STR] = sqrt(1 / sum_1_vi);
+            mergedData[DATE_14C_DELTA_R_STR] = 0.;
+            mergedData[DATE_14C_DELTA_R_ERROR_STR] = 0.;
+            mergedData[DATE_14C_REF_CURVE_STR] = firstCurve ;
+
+            result[STATE_DATE_ORIGIN] = Date::eSingleDate;
+            result[STATE_DATE_DATA] = mergedData;
+
+      }
     } else
         result["error"] = tr("Combine needs at least 2 data !");
 
@@ -689,31 +722,5 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
 
 }
 
-// useless because 14C Combine produce a eSingleDate
-//long double Plugin14C::getLikelihoodCombine(const double& t, const QJsonArray& subData)
-//{
-//    // detection of combination with date.mSubDates.size() not empty
-//    QPair<long double, long double > result = getLikelihoodArgCombine(t, subData);
-//    qDebug()<< "Plugin14C::getLikelihoodCombine return : " << double(expl(result.second) / sqrt(result.first));
-//    return expl(result.second) / sqrt(result.first);
-//}
-//
-//QPair<long double, long double> Plugin14C::getLikelihoodArgCombine(const double& t, const QJsonArray& subData)
-//{
-//
-//    double sumExponent (0);
-//    double sumVariance (0);
-//    for (int i(0); i<subData.size(); ++i) {
-//        const QJsonObject subDate = subData.at(i).toObject();
-//        const QJsonObject data = subDate.value(STATE_DATE_DATA).toObject();
-//
-//        const QPair<long double, long double> localRes = getLikelihoodArg(t, data );
-//        sumExponent += localRes.first;
-//        sumVariance *= localRes.second;
-//
-//    }
-//    return qMakePair(sumVariance, sumExponent);
-//
-//
-//}
+
 #endif

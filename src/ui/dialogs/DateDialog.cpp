@@ -97,11 +97,13 @@ mWiggleEnabled(false)
 
     mWiggleLab = new Label(tr("Wiggle Matching"), mAdvancedWidget);
 
+    mDeltaNoneRadio = new QRadioButton(tr("None"), mAdvancedWidget);
     mDeltaFixedRadio = new QRadioButton(tr("Fixed"), mAdvancedWidget);
     mDeltaRangeRadio = new QRadioButton(tr("Range"), mAdvancedWidget);
     mDeltaGaussRadio = new QRadioButton(tr("Gaussian"), mAdvancedWidget);
     mDeltaFixedRadio->setChecked(true);
 
+    connect(mDeltaNoneRadio, &QRadioButton::toggled, this, &DateDialog::updateVisibleControls);
     connect(mDeltaFixedRadio, &QRadioButton::toggled, this, &DateDialog::updateVisibleControls);
     connect(mDeltaRangeRadio, &QRadioButton::toggled, this,  &DateDialog::updateVisibleControls);
     connect(mDeltaGaussRadio, &QRadioButton::toggled, this,  &DateDialog::updateVisibleControls);
@@ -148,23 +150,24 @@ mWiggleEnabled(false)
     advGrid->addWidget(mMethodLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
     advGrid->addWidget(mMethodCombo, 0, 1);
     advGrid->addWidget(mWiggleLab, 1, 0, Qt::AlignRight | Qt::AlignVCenter);
-    advGrid->addWidget(mDeltaFixedRadio, 1, 1);
-    advGrid->addWidget(mDeltaRangeRadio, 2, 1);
-    advGrid->addWidget(mDeltaGaussRadio, 3, 1);
-    advGrid->addWidget(mDeltaHelp, 4, 1);
+    advGrid->addWidget(mDeltaNoneRadio, 1, 1);
+    advGrid->addWidget(mDeltaFixedRadio, 2, 1);
+    advGrid->addWidget(mDeltaRangeRadio, 3, 1);
+    advGrid->addWidget(mDeltaGaussRadio, 4, 1);
+    advGrid->addWidget(mDeltaHelp, 5, 1);
 
-    advGrid->addWidget(mDeltaFixedLab, 5, 0, Qt::AlignRight | Qt::AlignVCenter);
-    advGrid->addWidget(mDeltaFixedEdit, 5, 1);
+    advGrid->addWidget(mDeltaFixedLab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
+    advGrid->addWidget(mDeltaFixedEdit, 6, 1);
 
-    advGrid->addWidget(mDeltaMinLab, 5, 0, Qt::AlignRight | Qt::AlignVCenter);
-    advGrid->addWidget(mDeltaMinEdit, 5, 1);
-    advGrid->addWidget(mDeltaMaxLab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
-    advGrid->addWidget(mDeltaMaxEdit, 6, 1);
+    advGrid->addWidget(mDeltaMinLab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
+    advGrid->addWidget(mDeltaMinEdit, 6, 1);
+    advGrid->addWidget(mDeltaMaxLab, 7, 0, Qt::AlignRight | Qt::AlignVCenter);
+    advGrid->addWidget(mDeltaMaxEdit, 7, 1);
 
-    advGrid->addWidget(mDeltaAverageLab, 5, 0, Qt::AlignRight | Qt::AlignVCenter);
-    advGrid->addWidget(mDeltaAverageEdit, 5, 1);
-    advGrid->addWidget(mDeltaErrorLab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
-    advGrid->addWidget(mDeltaErrorEdit, 6, 1);
+    advGrid->addWidget(mDeltaAverageLab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
+    advGrid->addWidget(mDeltaAverageEdit, 6, 1);
+    advGrid->addWidget(mDeltaErrorLab, 7, 0, Qt::AlignRight | Qt::AlignVCenter);
+    advGrid->addWidget(mDeltaErrorEdit, 7, 1);
 
     mAdvancedWidget->setLayout(advGrid);
 
@@ -263,6 +266,7 @@ void DateDialog::checkWiggle()
         bool ok1 = true;
         mDeltaFixedEdit->text().toInt(&ok1);
         mWiggleIsValid = ok1;
+
     } else if (mDeltaRangeRadio->isChecked()) {
         bool ok1 = true;
         bool ok2 = true;
@@ -276,6 +280,7 @@ void DateDialog::checkWiggle()
         const double a = mDeltaAverageEdit->text().toDouble(&ok1);
         const double e = mDeltaErrorEdit->text().toDouble(&ok2);
         mWiggleIsValid = ( ok1 && ok2 && ( (e>0) || ( (a == 0.) && (e == 0.) ) ) );
+
     } else
         mWiggleIsValid = true;
 
@@ -294,6 +299,7 @@ void DateDialog::setWiggleEnabled(bool enabled)
     mWiggleLab->setVisible(enabled);
     mDeltaHelp->setVisible(enabled);
 
+    mDeltaNoneRadio->setVisible(enabled);
     mDeltaFixedRadio->setVisible(enabled);
     mDeltaRangeRadio->setVisible(enabled);
     mDeltaGaussRadio->setVisible(enabled);
@@ -352,6 +358,7 @@ void DateDialog::setDate(const QJsonObject& date)
 
     Date::DeltaType deltaType = Date::DeltaType (date.value(STATE_DATE_DELTA_TYPE).toInt());
 
+    mDeltaNoneRadio->setChecked(deltaType == Date::eDeltaNone);
     mDeltaFixedRadio->setChecked(deltaType == Date::eDeltaFixed);
     mDeltaRangeRadio->setChecked(deltaType == Date::eDeltaRange);
     mDeltaGaussRadio->setChecked(deltaType == Date::eDeltaGaussian);
@@ -364,10 +371,10 @@ void DateDialog::setDate(const QJsonObject& date)
     mDeltaAverageEdit->setText(QString::number(date.value(STATE_DATE_DELTA_AVERAGE).toDouble()));
     mDeltaErrorEdit->setText(QString::number(date.value(STATE_DATE_DELTA_ERROR).toDouble()));
 
-    if (deltaType == Date::eDeltaNone) {
-        mDeltaFixedRadio->setChecked(deltaType == Date::eDeltaFixed);
-        mDeltaFixedEdit->setText(QString::number(0));
-    }
+//    if (deltaType == Date::eDeltaNone) {
+//        mDeltaFixedRadio->setChecked(deltaType == Date::eDeltaFixed);
+//        mDeltaFixedEdit->setText(QString::number(0));
+//    }
     // if data are in the JSON they must be valid
     mPluginDataAreValid = true;
     mWiggleIsValid = true;
@@ -400,8 +407,10 @@ Date::DataMethod DateDialog::getMethod() const
     Date::DataMethod method = Date::eMHSymetric;
     if (mMethodCombo->currentIndex() == 1)
         method = Date::eInversion;
+
     else if (mMethodCombo->currentIndex() == 2)
         method = Date::eMHSymGaussAdapt;
+
     return method;
 }
 
@@ -413,10 +422,10 @@ Date::DeltaType DateDialog::getDeltaType() const
     else if (mDeltaFixedRadio->isChecked() && mDeltaFixedEdit->text().toDouble() != 0. )
         return Date::eDeltaFixed;
 
-    else if (mDeltaRangeRadio->isChecked())
+    else if (mDeltaRangeRadio->isChecked() && (mDeltaMaxEdit->text().toDouble()-mDeltaMinEdit->text().toDouble()) > 0. )
         return Date::eDeltaRange;
 
-    else if (mDeltaGaussRadio->isChecked())
+    else if (mDeltaGaussRadio->isChecked() && mDeltaErrorEdit->text().toDouble() > 0. )
         return Date::eDeltaGaussian;
 
     else
