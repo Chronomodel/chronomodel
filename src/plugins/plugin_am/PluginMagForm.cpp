@@ -153,7 +153,7 @@ void PluginMagForm::setData(const QJsonObject& data, bool isCombined)
     mIntensityEdit->setEnabled(!isCombined);
     mAlpha95Edit->setEnabled(!isCombined);
    
-    
+    mRefCombo->setEnabled(!isCombined);
     
     if (!isCombined) {
         QLocale locale=QLocale();
@@ -245,7 +245,7 @@ void PluginMagForm::decIsValid(QString str)
 bool PluginMagForm::isValid()
 {
     QString refCurve = mRefCombo->currentText();
-    if(refCurve.isEmpty())
+    if (refCurve.isEmpty())
         mError = tr("Ref. curve is empty!");
     return !refCurve.isEmpty();
 }

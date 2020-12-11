@@ -217,6 +217,14 @@ void CalibrationView::setDate(const QJsonObject& date)
     if (date.isEmpty())
         return;
 
+    Date d (date);
+    setDate(d);
+}
+
+void CalibrationView::setDate(const Date& d)
+{
+    Q_ASSERT(&d);
+
     Project* project = MainWindow::getInstance()->getProject();
     const QJsonObject state = project->state();
     const QJsonObject settings = state.value(STATE_SETTINGS).toObject();
@@ -229,9 +237,7 @@ void CalibrationView::setDate(const QJsonObject& date)
     }
 
     try {
-        mDate.init();
-        mDate.fromJson(date);
-        mDate.autoSetTiSampler(false);
+        mDate = d;
 
         mDrawing->setTitle(mDate.mName + " (" + mDate.mPlugin->getName() + ")");
         qDebug() << "CalibrationView::setDate mUUID "<<mDate.mName << mDate.mUUID;
@@ -368,7 +374,7 @@ void CalibrationView::updateGraphs()
 
             GraphCurve hpdCurve;
             hpdCurve.mName = "Calibration HPD";
-            hpdCurve.mPen = penColor;
+            hpdCurve.mPen = brushColor;
             hpdCurve.mBrush = brushColor;
             hpdCurve.mIsHisto = false;
             hpdCurve.mIsRectFromZero = true;

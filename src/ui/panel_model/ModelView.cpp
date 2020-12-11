@@ -1277,16 +1277,20 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
 void ModelView::updateCalibration(const QJsonObject& date)
 {
     qDebug() <<" ModelView::updateCalibration mUUID" << date.value(STATE_DATE_UUID).toString();
-  /*  if (!date.isEmpty() ) {
+    // Control and calibration if necessary
+    if (!date.isEmpty() ) {
         Date d (date);
-        //d.fromJson(date);
-        ProjectSettings ps = d.mSettings;
-        d.calibrate(ps, mProject);
+        if (d.mCalibration == nullptr)
+            d.calibrate(d.mSettings, mProject);
+
+        // A date has been double-clicked => update CalibrationView only if the date is not null
+        if (mEventPropertiesView->isVisible() && mEventPropertiesView->isCalibChecked())
+           mCalibrationView->setDate(d);
+
     }
-   */
-    // A date has been double-clicked => update CalibrationView only if the date is not null
-     if (!date.isEmpty() && mEventPropertiesView->isVisible() && mEventPropertiesView->isCalibChecked())
-        mCalibrationView->setDate(date);
+
+
+
 
 }
 

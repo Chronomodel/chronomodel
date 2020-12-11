@@ -47,6 +47,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CalibrationCurve.h"
 #include "MainWindow.h"
 #include "Project.h"
+#include "Painting.h"
 
 #include <QWidget>
 
@@ -113,7 +114,7 @@ public:
             mTminCalib = - HUGE_VAL;
             mTmaxCalib = + HUGE_VAL;
 
-            mTminDisplay =  double (mSettings.mTmin);
+            mTminDisplay = double (mSettings.mTmin);
             mTmaxDisplay = double (mSettings.mTmax);
         }
 
@@ -124,45 +125,55 @@ public:
     void drawSubDates(const QJsonArray& subDates, const ProjectSettings& settings, const double tminDisplay, const double tmaxDisplay)
     {
         mSettings = settings;
-
         
         for (int i(0); i< subDates.size(); ++i) {
             QJsonObject subDate = subDates.at(i).toObject();
-            Date sd;
-            sd.fromJson(subDate);
-            QString toFind = sd.mName + sd.getDesc();
-            
-            Project* project = MainWindow::getInstance()->getProject();
-            QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
-            if ( it != project->mCalibCurves.end())
-                sd.mCalibration = & it.value();
-            
+            Date sd (subDate);
+
             GraphCurve gCurve;
             gCurve.mName = sd.mName;
 
+            QColor curveColor( i<210 ? Painting::chainColors[i] : randomColor());
+
+            gCurve.mPen.setColor(Painting::mainColorDark);
             
-            QColor curveColor(randomColor());
-            gCurve.mPen.setColor(curveColor);
-            
-            curveColor.setAlpha(50);
-            gCurve.mBrush = curveColor;
+            curveColor.setAlpha(100);
+            gCurve.mBrush = QBrush(curveColor);
 
             gCurve.mIsVertical = false;
             gCurve.mIsHisto = false;
             gCurve.mIsRectFromZero = true;
             
-            
-            QMap<double, double> calib = normalize_map(getMapDataInRange(sd.getRawCalibMap(), tminDisplay, tmaxDisplay));
-       
+            Project* project = MainWindow::getInstance()->getProject();
+
+            QString toFind;
+            if (sd.mDeltaType != Date::eDeltaNone) {
+                toFind = sd.mUUID;
+
+            } else {
+                toFind = "WID::" + sd.mUUID;
+            }
+
+            QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
+
+            if ( it != project->mCalibCurves.end())
+                sd.mCalibration = & it.value();
+
+            QMap<double, double> calib;
+            if (sd.mDeltaType != Date::eDeltaNone) {
+                calib = normalize_map(getMapDataInRange(sd.getFormatedWiggleCalibMap(), tminDisplay, tmaxDisplay));
+
+            } else {
+                calib = normalize_map(getMapDataInRange(sd.getFormatedCalibMap(), tminDisplay, tmaxDisplay));
+            }
+
             gCurve.mData = calib;
-            
             
             mGraph->addCurve(gCurve);
             mGraph->setRangeX(tminDisplay, tmaxDisplay);
-                   mGraph->setCurrentX(tminDisplay, tmaxDisplay);
+            mGraph->setCurrentX(tminDisplay, tmaxDisplay);
         }
     
-
        
         
     }

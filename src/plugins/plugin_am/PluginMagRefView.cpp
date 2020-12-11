@@ -257,7 +257,6 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
             }
             measureCurve = normalize_map(measureCurve);
             curveMeasure.mData = measureCurve;
-            //curveMeasure.mData = normalize_map(curveMeasure.mData);
             mGraph->addCurve(curveMeasure);
 
 

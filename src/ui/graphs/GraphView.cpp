@@ -1307,6 +1307,7 @@ void GraphView::drawCurves(QPainter& painter)
 
                     painter.setPen(curve.mPen);
                     painter.fillPath(path, brush);
+                    painter.strokePath(path, curve.mPen);
 
                 } else
                     painter.drawPath(path);

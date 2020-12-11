@@ -71,6 +71,7 @@ public:
     ~CalibrationView();
 
     void setDate(const QJsonObject& date);
+    void setDate(const Date& date);
    // void setFont(const QFont& font);
     void initScale (const double &majorScale, const int &minorScale) { mMajorScale= majorScale; mMinorScale = minorScale;}
     void initScale (const Scale &s) { mMajorScale = s.mark; mMinorScale = s.tip;}

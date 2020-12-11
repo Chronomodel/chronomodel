@@ -490,7 +490,7 @@ GraphCurve GraphViewResults::generateHPDCurve(QMap<double, double> &data,
     GraphCurve curve;
     curve.mName = name;
     curve.mData = data;
-    curve.mPen = color;
+    curve.mPen = Qt::NoPen;// color;
     curve.mBrush = QBrush(color);
     curve.mIsHisto = false;
     curve.mIsRectFromZero = true;

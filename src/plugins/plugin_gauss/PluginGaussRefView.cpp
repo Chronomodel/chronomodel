@@ -356,8 +356,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
         for ( auto &&d : date.mSubDates ) {
             QJsonObject subDate = d.toObject();
 
-            Date sd;
-            sd.fromJson(subDate);
+            Date sd (subDate);
             QString toFind = sd.mUUID;
             
             Project* project = MainWindow::getInstance()->getProject();

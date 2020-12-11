@@ -72,7 +72,7 @@ void PluginUniformRefView::setDate(const Date& date, const ProjectSettings& sett
     GraphViewRefAbstract::setDate(date, settings);
     
     
-    if (date.mSubDates.isEmpty()) { // not a combination
+    if (date.mOrigin == Date::eSingleDate) { // not a combination
 
         double tminDisplay;
         double tmaxDisplay;
@@ -134,7 +134,7 @@ void PluginUniformRefView::setDate(const Date& date, const ProjectSettings& sett
                             gCurve.mIsHisto = false;
                             gCurve.mIsRectFromZero = true;
                             
-                            QMap<double, double> calib = normalize_map(getMapDataInRange(date.getRawCalibMap(), tminDisplay, tmaxDisplay));
+                            QMap<double, double> calib = normalize_map(getMapDataInRange(date.getFormatedCalibMap(), tminDisplay, tmaxDisplay));
                        
                             gCurve.mData = calib;
                             

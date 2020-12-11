@@ -52,12 +52,23 @@ QColor Painting::borderDark = QColor(50, 50, 50);
 
 void Painting::init()
 {
-    chainColors.append(Qt::blue);
-    chainColors.append(Qt::green);
-    chainColors.append(Qt::red);
-    chainColors.append(Qt::yellow);
+    chainColors.append(QColor(179, 70, 50)); // marron
+    chainColors.append(QColor(74, 92, 164)); // bleu
+    chainColors.append(QColor(101, 154, 89)); // vert
+    chainColors.append(QColor(238, 50, 70)); // rouge
+    chainColors.append(QColor(183, 158, 120)); // marron-claire
+    chainColors.append(QColor(241, 36, 52)); // rouge
+    chainColors.append(QColor(125, 144, 192)); // bleu-gris
+    chainColors.append(QColor(174, 32, 53)); // marron-bordeau
+    chainColors.append(QColor(26, 93, 75)); // vert-fonce
+    chainColors.append(QColor(40, 33, 133)); // bleu-fonce
 
-    for (int i=0; i<200; ++i)
+//    chainColors.append(Qt::blue);
+//    chainColors.append(Qt::green);
+//    chainColors.append(Qt::red);
+//    chainColors.append(Qt::yellow);
+
+    for (int i(0); i<200; ++i)
         chainColors.append(randomColor());
 }
 

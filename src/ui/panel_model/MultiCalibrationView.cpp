@@ -449,7 +449,7 @@ void MultiCalibrationView::updateGraphList()
                     // Drawing the wiggle
                     if (d.mDeltaType !=  Date::eDeltaNone) {
                         GraphCurve curveWiggle;
-                        QMap<double, double> calibWiggle = normalize_map(d.getFormatedWiggleCalibMap(),map_max_value(calibCurve.mData));
+                        QMap<double, double> calibWiggle = normalize_map(d.getFormatedWiggleCalibMap(), map_max_value(calibCurve.mData));
                         curveWiggle.mData = calibWiggle;
 
                         curveWiggle.mName = "Wiggle";
@@ -488,7 +488,7 @@ void MultiCalibrationView::updateGraphList()
 
                         GraphCurve hpdCurve;
                         hpdCurve.mName = "Calibration HPD";
-                        hpdCurve.mPen = penColor;
+                        hpdCurve.mPen = brushColor;
                         hpdCurve.mBrush = brushColor;
                         hpdCurve.mIsHisto = false;
                         hpdCurve.mIsRectFromZero = true;
