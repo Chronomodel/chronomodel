@@ -105,11 +105,15 @@ protected:
     void createByPhasesGraphs();
     void createByTempoGraphs();
     void createByCurveGraph();
+    void createByAlphaGraph();
     
     void deleteAllGraphsInList(QList<GraphViewResults*>& list);
     QList<GraphViewResults*> allGraphs();
     QList<GraphViewResults*> currentGraphs(bool onlySelected);
     bool hasSelectedGraphs();
+    
+    void updateGraphsMax();
+    double getGraphsMax(const QList<GraphViewResults*>& graphs, const QString& title, double maxCeil);
     
     // ------------------------------------
     //  Pagination
@@ -187,6 +191,8 @@ private slots:
     void applyUnfoldEvents();
     void applyUnfoldDates();
     
+    void applyCurveOptions();
+    
     // Span options
     void applyStudyPeriod();
     void applyXRange();
@@ -257,11 +263,13 @@ private:
     QScrollArea* mPhasesScrollArea;
     QScrollArea* mTempoScrollArea;
     QScrollArea* mCurveScrollArea;
+    QScrollArea* mAlphaScrollArea;
     
     QList<GraphViewResults*> mByEventsGraphs;
     QList<GraphViewResults*> mByPhasesGraphs;
     QList<GraphViewResults*> mByTempoGraphs;
     QList<GraphViewResults*> mByCurveGraphs;
+    QList<GraphViewResults*> mByAlphaGraphs;
 
     // ---------------------------------------------------------------------
     // Right UI part components
@@ -275,10 +283,10 @@ private:
     CheckBox* mEventsfoldCheck;
     CheckBox* mDatesfoldCheck;
     RadioButton* mDataThetaRadio;
-
     CheckBox* mDataCalibCheck;
     CheckBox* mWiggleCheck;
     RadioButton* mDataSigmaRadio;
+    RadioButton* mDataVGRadio;
     CheckBox* mStatCheck;
 
     QWidget* mTempoGroup;
@@ -290,10 +298,11 @@ private:
     CheckBox* mTempoStatCheck;
     
     QWidget* mCurvesGroup;
-    CheckBox* mCurveGCheck;
-    CheckBox* mCurveGPCheck;
-    CheckBox* mCurveGSCheck;
+    RadioButton* mCurveGRadio;
+    RadioButton* mCurveGPRadio;
+    RadioButton* mCurveGSRadio;
     CheckBox* mCurveErrorCheck;
+    CheckBox* mCurvePointsCheck;
 
     // ---------------------------------------------------------------------
     // Tabs : Display / Distrib. Options
@@ -408,8 +417,8 @@ private:
     double mResultMaxX;
     double mResultCurrentMinX;
     double mResultCurrentMaxX;
-    double mResultMaxVariance;
-    double mResultMaxDuration;
+    
+    double mCurrentVariableMaxX;
     
     // ----------------------------------------
     //  X Scale ticks intervals
@@ -423,8 +432,6 @@ private:
     int mCurrentPage;
     int mGraphsPerPage;
     int mMaximunNumberOfVisibleGraph;
-
-    
     
     // ------------------------------------
     QMap<QPair<GraphViewResults::Variable, GraphViewResults::TypeGraph>, QPair<double, double>> mZooms;

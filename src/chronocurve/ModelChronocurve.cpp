@@ -80,13 +80,20 @@ void ModelChronocurve::generatePosteriorDensities(const QList<ChainSpecs> &chain
     mAlphaLissage.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 }
 
+// Generate model data
+void ModelChronocurve::generateCorrelations(const QList<ChainSpecs> &chains)
+{
+    Model::generateCorrelations(chains);
+    mAlphaLissage.generateCorrelations(chains);
+}
+
 QList<PosteriorMeanGComposante> ModelChronocurve::getChainsMeanGComposanteX()
 {
     QList<PosteriorMeanGComposante> composantes;
     
-    for(unsigned int i=0; i<mPosteriorMeanGParametriqueByChain.size(); ++i)
+    for(unsigned int i=0; i<mPosteriorMeanGByChain.size(); ++i)
     {
-        composantes.append(mPosteriorMeanGParametriqueByChain[i].gx);
+        composantes.append(mPosteriorMeanGByChain[i].gx);
     }
     return composantes;
 }
@@ -95,9 +102,9 @@ QList<PosteriorMeanGComposante> ModelChronocurve::getChainsMeanGComposanteY()
 {
     QList<PosteriorMeanGComposante> composantes;
     
-    for(unsigned int i=0; i<mPosteriorMeanGParametriqueByChain.size(); ++i)
+    for(unsigned int i=0; i<mPosteriorMeanGByChain.size(); ++i)
     {
-        composantes.append(mPosteriorMeanGParametriqueByChain[i].gy);
+        composantes.append(mPosteriorMeanGByChain[i].gy);
     }
     return composantes;
 }
@@ -106,9 +113,9 @@ QList<PosteriorMeanGComposante> ModelChronocurve::getChainsMeanGComposanteZ()
 {
     QList<PosteriorMeanGComposante> composantes;
     
-    for(unsigned int i=0; i<mPosteriorMeanGParametriqueByChain.size(); ++i)
+    for(unsigned int i=0; i<mPosteriorMeanGByChain.size(); ++i)
     {
-        composantes.append(mPosteriorMeanGParametriqueByChain[i].gz);
+        composantes.append(mPosteriorMeanGByChain[i].gz);
     }
     return composantes;
 }

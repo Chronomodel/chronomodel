@@ -689,7 +689,7 @@ void MainWindow::updateProject()
     mRunAction->setEnabled(true);
     mProjectView->updateProject();
     
-    mChronocurveAction->setChecked(mProject->isChronocurve());
+    //mChronocurveAction->setChecked(mProject->isChronocurve());
 }
 
 void MainWindow::toggleChronocurve(bool checked)

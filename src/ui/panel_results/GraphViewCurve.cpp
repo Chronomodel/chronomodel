@@ -105,10 +105,11 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
     
     GraphCurve curveRefPoints;
     curveRefPoints.mName = tr("Ref points Y");
-    curveRefPoints.mPen = QPen(QColor(0, 0, 0), 1, Qt::SolidLine);
-    curveRefPoints.mBrush = Qt::NoBrush;
+    curveRefPoints.mPen = QPen(Qt::black, 1, Qt::SolidLine);
+    curveRefPoints.mBrush = Qt::black;
     curveRefPoints.mIsHisto = false;
     curveRefPoints.mIsRectFromZero = false;
+    curveRefPoints.mIsRefPoints = true;
     
     for(int i=0; i<mEvents.size(); ++i)
     {
@@ -120,12 +121,11 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
         {
             Date& date = event->mDates[j];
             QMap<double, double> calibMap = date.getFormatedCalibMap();
-            const double thresh = 99;
+            const double thresh = 80;
             QMap<double, double> subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
             QMap<double, double> hpd = create_HPD(subData, thresh);
             
             QMapIterator<double, double> it(hpd);
-            bool inInterval = false;
             it.toFront();
             while(it.hasNext()){
                 it.next();
@@ -146,6 +146,8 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
         double tmoy = (tmax + tmin) / 2;
         
         curveRefPoints.mData.insert(tmoy, event->mYx);
+        curveRefPoints.mDataErrorX.insert(tmoy, tmax - tmin);
+        curveRefPoints.mDataErrorY.insert(tmoy, event->mSy);
     }
     
     
@@ -225,7 +227,7 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
     }
 }
 
-void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, bool showG, bool showGError, bool showGP, bool showGS)
+void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, bool showG, bool showGError, bool showGPoints, bool showGP, bool showGS)
 {
     // From GraphViewResults::updateCurvesToShow
     mShowAllChains = showAllChains;
@@ -233,13 +235,14 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
     
     mShowG = showG;
     mShowGError = showGError;
+    mShowGPoints = showGPoints;
     mShowGP = showGP;
     mShowGS = showGS;
     
-    mGraph->setCurveVisible("Ref points Y", mShowAllChains && mShowG);
     mGraph->setCurveVisible("G", mShowAllChains && mShowG);
     mGraph->setCurveVisible("G Sup", mShowAllChains && mShowGError);
     mGraph->setCurveVisible("G Inf", mShowAllChains && mShowGError);
+    mGraph->setCurveVisible("Ref points Y", mShowAllChains && mShowGPoints);
     mGraph->setCurveVisible("G Prime", mShowAllChains && mShowGP);
     mGraph->setCurveVisible("G Second", mShowAllChains && mShowGS);
     

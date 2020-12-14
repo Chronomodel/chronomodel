@@ -69,6 +69,7 @@ class CalibrationView;
 class MultiCalibrationView;
 class Label;
 class LineEdit;
+class SwitchWidget;
 
 class ModelView: public QWidget
 {
@@ -212,6 +213,7 @@ private:
     double mTmax;
 
     Button* mButModifyPeriod;
+    SwitchWidget* mChronocurveWidget;
 
     Label* mLeftPanelTitle;
     Label* mRightPanelTitle;

@@ -1150,6 +1150,45 @@ void GraphView::drawCurves(QPainter& painter)
                 path.lineTo(mMarginLeft, mMarginTop);
                 painter.drawPath(path);
 
+            }else if(curve.mIsRefPoints){
+                
+                QMap<type_data, type_data> subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
+                QMap<type_data, type_data> subDataErrorX = getMapDataInRange(curve.mDataErrorX, mCurrentMinX, mCurrentMaxX);
+                QMap<type_data, type_data> subDataErrorY = getMapDataInRange(curve.mDataErrorY, mCurrentMinX, mCurrentMaxX);
+                
+                QMapIterator<type_data, type_data> iter(subData);
+                QMapIterator<type_data, type_data> iterErrorX(subDataErrorX);
+                QMapIterator<type_data, type_data> iterErrorY(subDataErrorY);
+                
+                while(iter.hasNext())
+                {
+                    iter.next();
+                    iterErrorX.next();
+                    iterErrorY.next();
+                    
+                    double valueX = iter.key();
+                    double valueY = iter.value();
+                    
+                    double valueErrorX = iterErrorX.value();
+                    double valueErrorY = iterErrorY.value();
+
+                    double x = getXForValue(valueX, true);
+                    double y = getYForValue(valueY, false);
+                    
+                    double xmin = getXForValue(valueX - valueErrorX / 2, true);
+                    double xmax = getXForValue(valueX + valueErrorX / 2, true);
+                    
+                    double ymin = getYForValue(valueY - valueErrorY / 2, true);
+                    double ymax = getYForValue(valueY + valueErrorY / 2, true);
+                    
+                    /*painter.setPen(curve.mPen);
+                    painter.setBrush(curve.mBrush);
+                    painter.drawEllipse(QPointF(x, y), 2, 2);*/
+                    
+                    painter.drawLine(QLineF(xmin, y, xmax, y));
+                    painter.drawLine(QLineF(x, ymin, x, ymax));
+                }
+                
             } else { // it's horizontal curve
 
                 path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);

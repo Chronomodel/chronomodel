@@ -41,7 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Painting.h"
 
 Tabs::Tabs(QWidget* parent):QWidget(parent),
-mTabHeight(40),
+mTabHeight(30),
 mCurrentIndex(-1)
 {
     setFont(QFont());
@@ -233,8 +233,9 @@ void Tabs::mousePressEvent(QMouseEvent* e)
 void Tabs::updateLayout()
 {
     mTabRects.clear();
-    qreal x = 1.;
-    const qreal h = mTabHeight - 1.;
+    qreal x = 0;
+    const qreal h = mTabHeight;
+    const qreal m = 10;
     QFontMetrics fm(font());
 
     int i = 0;
@@ -242,16 +243,14 @@ void Tabs::updateLayout()
     {
         if (mTabVisible[i])
         {
-            const qreal w = fm.boundingRect(name).width();
-            const qreal m = 1.5 * fm.boundingRect(QString("H")).width();
-            mTabRects.append(QRectF(x, 1,  2*m + w, h));
-            x += 2*m + w;
+            const qreal w = 2*m + fm.boundingRect(name).width();
+            mTabRects.append(QRectF(x, 0, w, h));
+            x += w;
         }
         else
         {
-            mTabRects.append(QRectF(x, 1, 0, h));
+            mTabRects.append(QRectF(x, 0, 0, h));
         }
-
         ++i;
     }
     update();

@@ -567,7 +567,8 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
 
 void GraphViewResults::generateAcceptCurves(const QList<ChainSpecs> &chains,
                                             MHVariable* variable){
-    for (int i=0; i<chains.size(); ++i) {
+    for (int i=0; i<chains.size(); ++i)
+    {
         GraphCurve curve;
         curve.mName = "Accept " + QString::number(i);
         curve.mDataVector = variable->acceptationForChain(chains, i);

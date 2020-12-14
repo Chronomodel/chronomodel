@@ -56,7 +56,7 @@ public:
     void setEvents(const QList<Event*>& events);
     
     void generateCurves(TypeGraph typeGraph, Variable variable);
-    void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, bool showG, bool showGError, bool showGP, bool showGS);
+    void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, bool showG, bool showGError, bool showGPoints, bool showGP, bool showGS);
 
 protected:
     void paintEvent(QPaintEvent* e);
@@ -69,6 +69,7 @@ private:
     
     bool mShowG;
     bool mShowGError;
+    bool mShowGPoints;
     bool mShowGP;
     bool mShowGS;
 };

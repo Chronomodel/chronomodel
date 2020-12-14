@@ -91,8 +91,7 @@ mResultMinX(0.),
 mResultMaxX(0.),
 mResultCurrentMinX(0.),
 mResultCurrentMaxX(0.),
-mResultMaxVariance(1000.),
-mResultMaxDuration(0.),
+mCurrentVariableMaxX(0.),
 mHasPhases(false),
 
 mMargin(5),
@@ -151,6 +150,12 @@ mMinorCountScale(4)
     curveWidget->setMouseTracking(true);
     mCurveScrollArea->setWidget(curveWidget);
     
+    mAlphaScrollArea = new QScrollArea(this);
+    mAlphaScrollArea->setMouseTracking(true);
+    QWidget* alphaWidget = new QWidget();
+    alphaWidget->setMouseTracking(true);
+    mAlphaScrollArea->setWidget(alphaWidget);
+    
     connect(mGraphTypeTabs, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::applyGraphTypeTab);
     connect(mRuler, &Ruler::positionChanged, this, &ResultsView::applyRuler);
     
@@ -182,6 +187,9 @@ mMinorCountScale(4)
 
     mDataSigmaRadio = new RadioButton(tr("Ind. Std. Deviations"), mResultsGroup);
     mDataSigmaRadio->setFixedHeight(h);
+    
+    mDataVGRadio = new RadioButton(tr("Variance G"), mResultsGroup);
+    mDataVGRadio->setFixedHeight(h);
 
     mDataCalibCheck = new CheckBox(tr("Individual Calib. Dates"), mResultsGroup);
     mDataCalibCheck->setFixedHeight(h);
@@ -199,6 +207,7 @@ mMinorCountScale(4)
     resultsGroupLayout->setSpacing(15);
     resultsGroupLayout->addWidget(mDataThetaRadio);
     resultsGroupLayout->addWidget(mDataSigmaRadio);
+    resultsGroupLayout->addWidget(mDataVGRadio);
     resultsGroupLayout->addWidget(mEventsfoldCheck);
     resultsGroupLayout->addWidget(mDatesfoldCheck);
     resultsGroupLayout->addWidget(mDataCalibCheck);
@@ -248,27 +257,32 @@ mMinorCountScale(4)
     // -----------------------------------------------------------------
     mCurvesGroup = new QWidget();
     
-    mCurveGCheck = new CheckBox(tr("G"));
-    mCurveGCheck->setFixedHeight(h);
-    mCurveGCheck->setChecked(true);
+    mCurveGRadio = new RadioButton(tr("G"));
+    mCurveGRadio->setFixedHeight(h);
+    mCurveGRadio->setChecked(true);
     
     mCurveErrorCheck = new CheckBox(tr("Error envelope"));
     mCurveErrorCheck->setFixedHeight(h);
     mCurveErrorCheck->setChecked(false);
-
-    mCurveGPCheck = new CheckBox(tr("G Prime"));
-    mCurveGPCheck->setFixedHeight(h);
     
-    mCurveGSCheck = new CheckBox(tr("G Second"));
-    mCurveGSCheck->setFixedHeight(h);
+    mCurvePointsCheck = new CheckBox(tr("Ref points"));
+    mCurvePointsCheck->setFixedHeight(h);
+    mCurvePointsCheck->setChecked(false);
+
+    mCurveGPRadio = new RadioButton(tr("G Prime"));
+    mCurveGPRadio->setFixedHeight(h);
+    
+    mCurveGSRadio = new RadioButton(tr("G Second"));
+    mCurveGSRadio->setFixedHeight(h);
     
     QVBoxLayout* curveGroupLayout = new QVBoxLayout();
     curveGroupLayout->setContentsMargins(10, 10, 10, 10);
     curveGroupLayout->setSpacing(15);
-    curveGroupLayout->addWidget(mCurveGCheck);
-    curveGroupLayout->addWidget(mCurveGPCheck);
-    curveGroupLayout->addWidget(mCurveGSCheck);
+    curveGroupLayout->addWidget(mCurveGRadio);
     curveGroupLayout->addWidget(mCurveErrorCheck);
+    curveGroupLayout->addWidget(mCurvePointsCheck);
+    curveGroupLayout->addWidget(mCurveGPRadio);
+    curveGroupLayout->addWidget(mCurveGSRadio);
     mCurvesGroup->setLayout(curveGroupLayout);
     
     // -----------------------------------------------------------------
@@ -276,6 +290,7 @@ mMinorCountScale(4)
     // -----------------------------------------------------------------
     connect(mDataThetaRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
     connect(mDataSigmaRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
+    connect(mDataVGRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
     connect(mDurationRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
     connect(mTempoRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
     connect(mActivityRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
@@ -292,10 +307,11 @@ mMinorCountScale(4)
     connect(mTempoCredCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     connect(mTempoErrCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     
-    connect(mCurveGCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
-    connect(mCurveGPCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
-    connect(mCurveGSCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
-    connect(mCurveErrorCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mCurveGRadio, &CheckBox::clicked, this, &ResultsView::applyCurveOptions);
+    connect(mCurveGPRadio, &CheckBox::clicked, this, &ResultsView::applyCurveOptions);
+    connect(mCurveGSRadio, &CheckBox::clicked, this, &ResultsView::applyCurveOptions);
+    connect(mCurveErrorCheck, &CheckBox::clicked, this, &ResultsView::applyCurveOptions);
+    connect(mCurvePointsCheck, &CheckBox::clicked, this, &ResultsView::applyCurveOptions);
 
     // -----------------------------------------------------------------
     //  Graph List tab (has to be created after mResultsGroup and mTempoGroup)
@@ -305,6 +321,7 @@ mMinorCountScale(4)
     mGraphListTab->addTab(tr("Phases"));
     mGraphListTab->addTab(tr("Tempo"));
     mGraphListTab->addTab(tr("Curve"));
+    mGraphListTab->addTab(tr("Alpha"));
 
     connect(mGraphListTab, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::applyGraphListTab);
 
@@ -782,6 +799,7 @@ mMinorCountScale(4)
     mPhasesScrollArea->setVisible(false);
     mTempoScrollArea->setVisible(false);
     mCurveScrollArea->setVisible(false);
+    mAlphaScrollArea->setVisible(false);
     
     GraphViewResults::mHeightForVisibleAxis = 4 * AppSettings::heigthUnit();
     mGraphHeight = GraphViewResults::mHeightForVisibleAxis;
@@ -817,6 +835,7 @@ void ResultsView::clearResults()
     deleteAllGraphsInList(mByPhasesGraphs);
     deleteAllGraphsInList(mByTempoGraphs);
     deleteAllGraphsInList(mByCurveGraphs);
+    deleteAllGraphsInList(mByAlphaGraphs);
 }
 
 void ResultsView::updateModel(Model* model)
@@ -848,9 +867,8 @@ void ResultsView::updateModel(Model* model)
     // ----------------------------------------------------
     createChainsControls();
     
-    mResultMaxDuration = 0.;
-    mResultMaxVariance = 0.;
-
+    mCurrentVariableMaxX = 0.;
+    
     mCurrentTypeGraph = GraphViewResults::ePostDistrib;
     mCurrentVariable = GraphViewResults::eTheta;
     
@@ -859,8 +877,8 @@ void ResultsView::updateModel(Model* model)
     mThresholdEdit->setText(QString::number(mModel->getThreshold()));
     
     applyStudyPeriod();
-    updateControls();
     createGraphs();
+    updateControls();
     showInfos(false);
 }
 
@@ -893,7 +911,7 @@ void ResultsView::updateLayout()
     
     int leftWidth = width() - mOptionsW - sbe;
     int graphWidth = leftWidth;
-    int tabsH = 40;
+    int tabsH = 30;
     int rulerH = Ruler::sHeight;
     int stackH = height() - mMargin - tabsH - rulerH;
     
@@ -913,20 +931,15 @@ void ResultsView::updateLayout()
     mPhasesScrollArea->setGeometry(graphScrollGeometry);
     mTempoScrollArea->setGeometry(graphScrollGeometry);
     mCurveScrollArea->setGeometry(graphScrollGeometry);
+    mAlphaScrollArea->setGeometry(graphScrollGeometry);
     
     updateGraphsLayout();
     updateMarkerGeometry(mMarker->pos().x());
-    
-    // --------------------------------------------------------
-    //  Right layout
-    // --------------------------------------------------------
-    mOptionsScroll->setGeometry(leftWidth, 0, mOptionsW, height());
-    mOptionsWidget->setGeometry(0, 0, mOptionsW, 800);
 
     // --------------------------------------------------------
     //  Pagination / Saving Tabs
     // --------------------------------------------------------
-    int buttonHeight = 30;
+    int buttonHeight = 40;
     int paginationLabWidth = 50;
     int paginationButWidth = (mOptionsW - paginationLabWidth) / 2;
     int graphPerPageLabWidth = fm.boundingRect(mGraphsPerPageLab->text()).width();
@@ -935,7 +948,7 @@ void ResultsView::updateLayout()
     
     mTabPageSaving->resize(mOptionsW, tabsH);
     mPageWidget->resize(mOptionsW, 2*buttonHeight + mMargin);
-    mToolsWidget->resize(mOptionsW, buttonSide);
+    mToolsWidget->resize(mOptionsW, buttonHeight);
     
     // --------------------------------------------------------
     //  Pagination layout
@@ -949,13 +962,19 @@ void ResultsView::updateLayout()
     // --------------------------------------------------------
     //  Tools layout
     // --------------------------------------------------------
-    mImageSaveBut->setGeometry(0, 0, buttonSide, buttonSide);
-    mImageClipBut->setGeometry(buttonSide, 0, buttonSide, buttonSide);
-    mResultsClipBut->setGeometry(2 * buttonSide, 0, buttonSide, buttonSide);
-    mDataSaveBut->setGeometry(3 * buttonSide, 0, buttonSide, buttonSide);
+    mImageSaveBut->setGeometry(0, 0, buttonSide, buttonHeight);
+    mImageClipBut->setGeometry(buttonSide, 0, buttonSide, buttonHeight);
+    mResultsClipBut->setGeometry(2 * buttonSide, 0, buttonSide, buttonHeight);
+    mDataSaveBut->setGeometry(3 * buttonSide, 0, buttonSide, buttonHeight);
     
-    mExportImgBut->setGeometry(0, 0, 2*buttonSide, buttonSide);
-    mExportResults->setGeometry(2*buttonSide, 0, 2*buttonSide, buttonSide);
+    mExportImgBut->setGeometry(0, 0, 2*buttonSide, buttonHeight);
+    mExportResults->setGeometry(2*buttonSide, 0, 2*buttonSide, buttonHeight);
+    
+    // --------------------------------------------------------
+    //  Right layout
+    // --------------------------------------------------------
+    mOptionsScroll->setGeometry(leftWidth, 0, mOptionsW, height());
+    mOptionsWidget->setGeometry(0, 0, mOptionsW, 800);
 }
 
 
@@ -976,6 +995,10 @@ void ResultsView::updateGraphsLayout()
     else if(mGraphListTab->currentIndex() == 3)
     {
         updateGraphsLayout(mCurveScrollArea, mByCurveGraphs);
+    }
+    else if(mGraphListTab->currentIndex() == 4)
+    {
+        updateGraphsLayout(mAlphaScrollArea, mByAlphaGraphs);
     }
 }
 
@@ -1028,9 +1051,10 @@ void ResultsView::applyGraphListTab(int tabIndex)
     mPhasesScrollArea->setVisible(currentIndex == 1);
     mTempoScrollArea->setVisible(currentIndex == 2);
     mCurveScrollArea->setVisible(currentIndex == 3);
+    mAlphaScrollArea->setVisible(currentIndex == 4);
     
     // For duration
-    if (currentIndex == 2 || currentIndex == 3)
+    if (currentIndex == 2 || currentIndex == 3 || currentIndex == 4)
     {
         mCurrentTypeGraph = GraphViewResults::ePostDistrib;
     }
@@ -1051,6 +1075,10 @@ void ResultsView::applyCurrentVariable()
     {
         mCurrentVariable = GraphViewResults::eSigma;
     }
+    else if (mDataVGRadio->isChecked())
+    {
+        mCurrentVariable = GraphViewResults::eVG;
+    }
     else if (mDurationRadio->isChecked())
     {
         mCurrentVariable = GraphViewResults::eDuration;
@@ -1064,20 +1092,26 @@ void ResultsView::applyCurrentVariable()
         mCurrentVariable = GraphViewResults::eActivity;
     }
     
-    updateControls();
     createGraphs();
+    updateControls();
 }
 
 void ResultsView::applyUnfoldEvents()
 {
-    updateControls();
     createGraphs();
+    updateControls();
 }
 
 void ResultsView::applyUnfoldDates()
 {
-    updateControls();
     createGraphs();
+    updateControls();
+}
+
+void ResultsView::applyCurveOptions()
+{
+    updateCurvesToShow();
+    updateControls();
 }
 
 void ResultsView::applyDisplayTab(int tabIndex)
@@ -1162,6 +1196,10 @@ void ResultsView::createGraphs()
     else if (mGraphListTab->currentIndex() == 3)
     {
         createByCurveGraph();
+    }
+    else if (mGraphListTab->currentIndex() == 4)
+    {
+        createByAlphaGraph();
     }
     
     generateCurves();
@@ -1421,7 +1459,7 @@ void ResultsView::createByCurveGraph()
     graphX->setMarginRight(mMarginRight);
     graphX->setTitle(tr("Mean G (composante x)"));
     
-    graphX->setComposanteG(modelChronocurve()->mPosteriorMeanGParametrique.gx);
+    graphX->setComposanteG(modelChronocurve()->mPosteriorMeanG.gx);
     graphX->setComposanteGChains(modelChronocurve()->getChainsMeanGComposanteX());
     graphX->setEvents(modelChronocurve()->mEvents);
     mByCurveGraphs.append(graphX);
@@ -1440,7 +1478,7 @@ void ResultsView::createByCurveGraph()
         graphY->setMarginRight(mMarginRight);
         graphY->setTitle(tr("Mean G (composante y)"));
         
-        graphY->setComposanteG(modelChronocurve()->mPosteriorMeanGParametrique.gy);
+        graphY->setComposanteG(modelChronocurve()->mPosteriorMeanG.gy);
         graphY->setComposanteGChains(modelChronocurve()->getChainsMeanGComposanteY());
         mByCurveGraphs.append(graphY);
         
@@ -1459,12 +1497,41 @@ void ResultsView::createByCurveGraph()
         graphZ->setMarginRight(mMarginRight);
         graphZ->setTitle(tr("Mean G (composante z)"));
         
-        graphZ->setComposanteG(modelChronocurve()->mPosteriorMeanGParametrique.gz);
+        graphZ->setComposanteG(modelChronocurve()->mPosteriorMeanG.gz);
         graphZ->setComposanteGChains(modelChronocurve()->getChainsMeanGComposanteZ());
         mByCurveGraphs.append(graphZ);
         
         connect(graphZ, &GraphViewResults::selected, this, &ResultsView::updateLayout);
     }
+}
+
+void ResultsView::createByAlphaGraph()
+{
+    Q_ASSERT(isChronocurve());
+    
+    ModelChronocurve* model = modelChronocurve();
+    
+    // ----------------------------------------------------------------------
+    //  Disconnect and delete existing graphs
+    // ----------------------------------------------------------------------
+    deleteAllGraphsInList(mByAlphaGraphs);
+    
+    QWidget* widget = mAlphaScrollArea->widget();
+
+    GraphViewAlpha* graph = new GraphViewAlpha(widget);
+    graph->setSettings(mModel->mSettings);
+    graph->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+    graph->setGraphFont(font());
+    graph->setGraphsThickness(mThicknessCombo->currentIndex());
+    graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
+    graph->setMarginLeft(mMarginLeft);
+    graph->setMarginRight(mMarginRight);
+    graph->setModel(modelChronocurve());
+    graph->setTitle(tr("Alpha smoothing"));
+    graph->setModel(modelChronocurve());
+    
+    mByAlphaGraphs.append(graph);
+    connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
 }
 
 void ResultsView::deleteAllGraphsInList(QList<GraphViewResults*>& list)
@@ -1483,6 +1550,7 @@ QList<GraphViewResults*> ResultsView::allGraphs()
     graphs.append(mByPhasesGraphs);
     graphs.append(mByTempoGraphs);
     graphs.append(mByCurveGraphs);
+    graphs.append(mByAlphaGraphs);
     return graphs;
 }
 
@@ -1535,6 +1603,16 @@ QList<GraphViewResults*> ResultsView::currentGraphs(bool onlySelected)
             }
         }
     }
+    else if (mGraphListTab->currentIndex() == 4)
+    {
+        for(auto &&graph : mByAlphaGraphs)
+        {
+            if (!onlySelected || graph->isSelected())
+            {
+                graphs.append(graph);
+            }
+        }
+    }
     return graphs;
 }
 
@@ -1573,6 +1651,8 @@ void ResultsView::generateCurves()
             mCurrentVariable = GraphViewResults::eTheta;
         }else if (mDataSigmaRadio->isChecked()){
             mCurrentVariable = GraphViewResults::eSigma;
+        }else if (mDataVGRadio->isChecked()){
+            mCurrentVariable = GraphViewResults::eVG;
         }
     }
     // -----------------------------------------------------------------
@@ -1612,6 +1692,14 @@ void ResultsView::generateCurves()
     {
         listGraphs = mByCurveGraphs;
     }
+    // -----------------------------------------------------------------
+    //  The "Alpha" tab is selected
+    // -----------------------------------------------------------------
+    else if (mGraphListTab->currentIndex() == 4)
+    {
+        mCurrentVariable = GraphViewResults::eAlpha;
+        listGraphs = mByAlphaGraphs;
+    }
 
     // -----------------------------------------------------------------
     //  Generate all graphs curves in the current list
@@ -1621,68 +1709,56 @@ void ResultsView::generateCurves()
         graph->generateCurves(GraphViewResults::TypeGraph(mCurrentTypeGraph), mCurrentVariable);
     }
     
-    // -----------------------------------------------------------------
-    // With variable eDuration, we look for mResultMaxDuration in the curve named "Post Distrib All Chains"
-    // A simplifier / factoriser ?
-    // -----------------------------------------------------------------
-    if (mCurrentVariable == GraphViewResults::eDuration)
-    {
-        mResultMaxDuration = 0.;
-
-        QList<GraphViewResults*>::const_iterator constIter;
-        constIter = listGraphs.cbegin();
-        QList<GraphViewResults*>::const_iterator iterEnd = listGraphs.cend();
-        while (constIter != iterEnd)
-        {
-            const GraphViewTempo* graphPhase = dynamic_cast<const GraphViewTempo*>(*constIter);
-
-            if (graphPhase) {
-                const GraphCurve* graphDurationAll = graphPhase->getGraph()->getCurve("Post Distrib Duration All Chains");
-                if (graphDurationAll)
-                    mResultMaxDuration = ceil(qMax(mResultMaxDuration, graphDurationAll->mData.lastKey()));
-
-                const int nbCurves = graphPhase->getGraph()->numCurves();
-                // if we have Curves there are only Variance curves
-                for (int i=0; i <nbCurves; ++i) {
-                   const GraphCurve* graphDuration = graphPhase->getGraph()->getCurve("Post Distrib Duration " + QString::number(i));
-
-                    if (graphDuration) {
-                        mResultMaxDuration = ceil(qMax(mResultMaxDuration, graphDuration->mData.lastKey()));
-                        mResultMaxDuration = std::max(100., mResultMaxDuration);
-                    }
-                }
-            }
-            ++constIter;
-        }
-
-    }
-
-    // -----------------------------------------------------------------
-    // With variable eSigma, we look for mResultMaxVariance in the curve named "Post Distrib All Chains"
-    // A simplifier / factoriser ?
-    // -----------------------------------------------------------------
-    if (mCurrentVariable == GraphViewResults::eSigma)
-    {
-        mResultMaxVariance = 0.;
-
-        QList<GraphViewResults*>::const_iterator constIter;
-        constIter = listGraphs.cbegin();
-        QList<GraphViewResults*>::const_iterator iterEnd = listGraphs.cend();
-
-        while (constIter != iterEnd) {
-            QList<GraphCurve> curves = (*constIter)->getGraph()->getCurves();
-
-            for (auto &&curve : curves) {
-                 if (curve.mName.contains("Sigma") && (curve.mVisible == true))
-                     mResultMaxVariance = ceil(qMax(mResultMaxVariance, curve.mData.lastKey()));
-            }
-            ++constIter;
-        }
-        mResultMaxVariance = std::max(100., mResultMaxVariance);
-    }
-    
     updateCurvesToShow();
+    updateGraphsMax();
     updateScales();
+}
+
+void ResultsView::updateGraphsMax()
+{
+    QList<GraphViewResults*> listGraphs = currentGraphs(false);
+    
+    if(mCurrentVariable == GraphViewResults::eSigma)
+    {
+        mCurrentVariableMaxX = getGraphsMax(listGraphs, "Sigma", 100.);
+    }
+    else if (mCurrentVariable == GraphViewResults::eDuration)
+    {
+        mCurrentVariableMaxX = getGraphsMax(listGraphs, "Post Distrib Duration", 100.);
+    }
+    else if (mCurrentVariable == GraphViewResults::eVG)
+    {
+        mCurrentVariableMaxX = getGraphsMax(listGraphs, "VG", 100.);
+    }
+    else if (mCurrentVariable == GraphViewResults::eAlpha)
+    {
+        mCurrentVariableMaxX = getGraphsMax(listGraphs, "Alpha", 100.);
+    }
+}
+
+double ResultsView::getGraphsMax(const QList<GraphViewResults*>& graphs, const QString& title, double maxCeil)
+{
+    double max = 0.;
+
+    QList<GraphViewResults*>::const_iterator it = graphs.cbegin();
+    QList<GraphViewResults*>::const_iterator itEnd = graphs.cend();
+
+    while(it != itEnd)
+    {
+        GraphViewResults* graphWrapper = (*it);
+        QList<GraphCurve> curves = graphWrapper->getGraph()->getCurves();
+        for (auto &&curve : curves)
+        {
+            //if(graphWrapper->getCurrentVariable() == variable)
+            if(curve.mName.contains(title) && (curve.mVisible == true))
+            {
+                max = ceil(qMax(max, curve.mData.lastKey()));
+            }
+        }
+        ++it;
+    }
+    max = std::max(maxCeil, max);
+    return max;
 }
 
 /**
@@ -1725,10 +1801,11 @@ void ResultsView::updateCurvesToShow()
     // --------------------------------------------------------
     if(mGraphListTab->currentIndex() == 3)
     {
-        bool showG = mCurveGCheck->isChecked();
+        bool showG = mCurveGRadio->isChecked();
         bool showGError = mCurveErrorCheck->isChecked();
-        bool showGP = mCurveGPCheck->isChecked();
-        bool showGS = mCurveGSCheck->isChecked();
+        bool showGPoints = mCurvePointsCheck->isChecked();
+        bool showGP = mCurveGPRadio->isChecked();
+        bool showGS = mCurveGSRadio->isChecked();
         
         // --------------------------------------------------------
         //  Update Graphs with selected options
@@ -1737,7 +1814,7 @@ void ResultsView::updateCurvesToShow()
         {
             GraphViewCurve* graphCurve = static_cast<GraphViewCurve*>(graph);
             graphCurve->setShowNumericalResults(false);
-            graphCurve->updateCurvesToShowForG(showAllChains, showChainList, showG, showGError, showGP, showGS);
+            graphCurve->updateCurvesToShowForG(showAllChains, showChainList, showG, showGError, showGPoints, showGP, showGS);
         }
     }
     // --------------------------------------------------------
@@ -1753,6 +1830,10 @@ void ResultsView::updateCurvesToShow()
         if(mCurrentVariable == GraphViewResults::eTempo){
             showCalib = mTempoErrCheck->isChecked();
             showCredibility = mTempoCredCheck->isChecked();
+        }
+        else if(mCurrentVariable == GraphViewResults::eAlpha){
+            //showCalib = mTempoErrCheck->isChecked();
+            //showCredibility = mTempoCredCheck->isChecked();
         }
         
         // --------------------------------------------------------
@@ -1841,11 +1922,14 @@ void ResultsView::updateScales()
         // ------------------------------------------------------------------
         // These graphs use the variance in the X axis
         // ------------------------------------------------------------------
-        else if (mCurrentVariable == GraphViewResults::eSigma)
+        else if ((mCurrentVariable == GraphViewResults::eSigma) ||
+                 (mCurrentVariable == GraphViewResults::eDuration) ||
+                 (mCurrentVariable == GraphViewResults::eVG) ||
+                 (mCurrentVariable == GraphViewResults::eAlpha))
         {
             // Variance min and max
             mResultMinX = 0.;
-            mResultMaxX = mResultMaxVariance;
+            mResultMaxX = mCurrentVariableMaxX;
             
             // The X zoom uses a log scale on the spin box and can be controlled by the linear slider
             mXSlider->setRange(-100, 100);
@@ -1854,29 +1938,8 @@ void ResultsView::updateScales()
             mXSpin->setDecimals(3);
 
             // The Ruler range is much wider based on the minimal zoom
-            const double tRangeMax = mResultMaxVariance / sliderToZoom(mXSlider->minimum());
+            const double tRangeMax = mResultMaxX / sliderToZoom(mXSlider->minimum());
             
-            mRuler->setRange(0, tRangeMax);
-            mRuler->setFormatFunctX(nullptr);
-        }
-        // ------------------------------------------------------------------
-        // These graphs use the duration in the X axis
-        // ------------------------------------------------------------------
-        else if (mCurrentVariable == GraphViewResults::eDuration)
-        {
-            // Duration min and max
-            mResultMinX = 0.;
-            mResultMaxX = mResultMaxDuration;
-
-            // The X zoom uses a log scale on the spin box and can be controlled by the linear slider
-            mXSlider->setRange(-100, 100);
-            mXSpin->setRange(sliderToZoom(-100), sliderToZoom(100));
-            mXSpin->setSingleStep(.01);
-            mXSpin->setDecimals(3);
-            
-            // The Ruler range is much wider based on the minimal zoom
-            const double tRangeMax = mResultMaxDuration / sliderToZoom(mXSlider->minimum());
-
             mRuler->setRange(0, tRangeMax);
             mRuler->setFormatFunctX(nullptr);
         }
@@ -2057,6 +2120,7 @@ void ResultsView::updateControls()
         mGraphListTab->setTabVisible(1, false); // Phases
         mGraphListTab->setTabVisible(2, false); // Tempo
         mGraphListTab->setTabVisible(3, true); // Curve
+        mGraphListTab->setTabVisible(4, true); // Alpha
         
         if(mGraphListTab->currentIndex() == 1 || mGraphListTab->currentIndex() == 2)
         {
@@ -2068,6 +2132,8 @@ void ResultsView::updateControls()
         mGraphListTab->setTabVisible(1, true); // Phases
         mGraphListTab->setTabVisible(2, true); // Tempo
         mGraphListTab->setTabVisible(3, false); // Curve
+        mGraphListTab->setTabVisible(4, false); // Alpha
+        
         mGraphListTab->setTab(1, false);       // Phases
         
         if(mGraphListTab->currentIndex() == 3)
@@ -2080,6 +2146,8 @@ void ResultsView::updateControls()
         mGraphListTab->setTabVisible(1, false); // Phases
         mGraphListTab->setTabVisible(2, false); // Tempo
         mGraphListTab->setTabVisible(3, false); // Curve
+        mGraphListTab->setTabVisible(4, false); // Alpha
+        
         mGraphListTab->setTab(0, false);        // Events
         
         if(mGraphListTab->currentIndex() != 0)
@@ -2102,12 +2170,24 @@ void ResultsView::updateControls()
         mCurvesGroup->setVisible(false);
         
         mEventsfoldCheck->setVisible(false);
-        mDatesfoldCheck->setVisible(true);
         
-        bool showCalibControl = isPostDistrib && mDataThetaRadio->isChecked() && mDatesfoldCheck->isChecked();
-        
-        mDataCalibCheck->setVisible(showCalibControl);
-        mWiggleCheck->setVisible(showCalibControl);
+        if(mCurrentVariable == GraphViewResults::eVG)
+        {
+            mDatesfoldCheck->setChecked(false);
+            mDatesfoldCheck->setVisible(false);
+            mDataCalibCheck->setVisible(false);
+            mWiggleCheck->setVisible(false);
+        }
+        else
+        {
+            mDatesfoldCheck->setVisible(true);
+            
+            bool showCalibControl = isPostDistrib && mDataThetaRadio->isChecked() && mDatesfoldCheck->isChecked();
+            
+            mDataCalibCheck->setVisible(showCalibControl);
+            mWiggleCheck->setVisible(showCalibControl);
+        }
+            
     }
     else if(mGraphListTab->currentIndex() == 1)
     {
@@ -2156,6 +2236,26 @@ void ResultsView::updateControls()
         mResultsGroup->setVisible(false);
         mTempoGroup->setVisible(false);
         mCurvesGroup->setVisible(true);
+        
+        bool showGOptions = mCurveGRadio->isChecked();
+        mCurveErrorCheck->setVisible(showGOptions);
+        mCurvePointsCheck->setVisible(showGOptions);
+        if(!showGOptions)
+        {
+            mCurveErrorCheck->setChecked(false);
+            mCurvePointsCheck->setChecked(false);
+        }
+    }
+    else if(mGraphListTab->currentIndex() == 4)
+    {
+        mGraphTypeTabs->setTabVisible(1, true); // History Plot
+        mGraphTypeTabs->setTabVisible(2, true); // Acceptance Rate
+        mGraphTypeTabs->setTabVisible(3, true); // Autocorrelation
+        mGraphTypeTabs->setTab(0, true);
+        
+        mResultsGroup->setVisible(false);
+        mTempoGroup->setVisible(false);
+        mCurvesGroup->setVisible(false);
     }
     
     // -------------------------------------------------------------------------------------
@@ -2166,17 +2266,16 @@ void ResultsView::updateControls()
     
     if (mCurrentVariable == GraphViewResults::eTheta
         || mCurrentVariable == GraphViewResults::eTempo
-        || mCurrentVariable == GraphViewResults::eActivity)
+        || mCurrentVariable == GraphViewResults::eActivity
+        || mCurrentVariable == GraphViewResults::eDuration
+        || mCurrentVariable == GraphViewResults::eSigma
+        || mCurrentVariable == GraphViewResults::eVG
+        || mCurrentVariable == GraphViewResults::eAlpha)
     {
-        mDisplayStudyBut->setText(tr("Study Period Display"));
         mDisplayStudyBut->setVisible(true);
     }
-    else if (mCurrentVariable == GraphViewResults::eSigma || (mCurrentVariable == GraphViewResults::eDuration))
+    else
     {
-        mDisplayStudyBut->setText(tr("Fit Display"));
-        mDisplayStudyBut->setVisible(true);
-    }
-    else{
         mDisplayStudyBut->setVisible(false);
     }
     
@@ -2238,7 +2337,6 @@ void ResultsView::updateControls()
     
     mExportImgBut->setVisible(!hasSelection);
     mExportResults->setVisible(!hasSelection);
-    
 
     // -------------------------------------------------------------------------------------
     //  To be moved ??
@@ -2444,16 +2542,13 @@ void ResultsView::applyStudyPeriod()
             mResultCurrentMaxX = mModel->mSettings.getTmaxFormated();
             mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
         }
-        else if(mCurrentVariable == GraphViewResults::eSigma)
+        else if((mCurrentVariable == GraphViewResults::eSigma) ||
+                (mCurrentVariable == GraphViewResults::eDuration) ||
+                (mCurrentVariable == GraphViewResults::eVG) ||
+                (mCurrentVariable == GraphViewResults::eAlpha))
         {
             mResultCurrentMinX = 0.;
-            mResultCurrentMaxX = mResultMaxVariance;
-            mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
-        }
-        else if(mCurrentVariable == GraphViewResults::eDuration)
-        {
-            mResultCurrentMinX = 0.;
-            mResultCurrentMaxX = mResultMaxDuration;
+            mResultCurrentMaxX = mCurrentVariableMaxX;
             mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
         }
         
@@ -2648,15 +2743,11 @@ void ResultsView::showInfos(bool show)
     mTempoStatCheck->setChecked(show);
     mStatCheck->setChecked(show);
     
-    for (GraphViewResults* allKindGraph : mByEventsGraphs)
-        allKindGraph->showNumericalResults(show);
-
-    for (GraphViewResults* allKindGraph : mByPhasesGraphs)
-        allKindGraph->showNumericalResults(show);
-
-    for (GraphViewResults* allKindGraph : mByTempoGraphs)
-        allKindGraph->showNumericalResults(show);
-
+    QList<GraphViewResults*> graphs = allGraphs();
+    for (GraphViewResults* graph : graphs)
+    {
+        graph->showNumericalResults(show);
+    }
     updateLayout();
 }
 

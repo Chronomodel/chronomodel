@@ -76,6 +76,10 @@ public:
     QList<QPair<type_data, type_data> > mSections;
 
     bool mIsVertical;
+    
+    bool mIsRefPoints;
+    QMap<double, double> mDataErrorX;
+    QMap<double, double> mDataErrorY;
 
     bool mVisible;
 };

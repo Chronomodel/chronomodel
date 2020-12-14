@@ -191,7 +191,7 @@ void MCMCLoopChronocurve::initVariablesForChain()
     mModel->mAlphaLissage.mLastAcceptsLength = acceptBufferLen;
     
     // Ré-initialisation du stockage des splines
-    mModel->mMCMCSplinesParametrique.clear();
+    mModel->mMCMCSplines.clear();
 }
 
 /**
@@ -734,7 +734,7 @@ void MCMCLoopChronocurve::update()
     // --------------------------------------------------------------
     if(doMemo)
     {
-        MCMCSplineParametrique splineParametrique;
+        MCMCSpline spline;
         
         // prepareCalculSpline : ne fait pas intervenir les valeurs Y(x,y,z) des events :
         // => On le fait une seule fois pour les 3 composantes
@@ -745,15 +745,15 @@ void MCMCLoopChronocurve::update()
         for(Event* event : mModel->mEvents){
             event->mY = event->mYx;
         }
-        SplineResults spline = calculSpline(matrices);
+        SplineResults s = calculSpline(matrices);
         
         MCMCSplineComposante splineX;
         splineX.vecThetaEvents = getThetaEventVector();
-        splineX.vecG = spline.vecG;
-        splineX.vecGamma = spline.vecGamma;
-        splineX.vecErrG = calculSplineError(matrices, spline);
+        splineX.vecG = s.vecG;
+        splineX.vecGamma = s.vecGamma;
+        splineX.vecErrG = calculSplineError(matrices, s);
         
-        splineParametrique.splineX = splineX;
+        spline.splineX = splineX;
         
         if(mChronocurveSettings.mProcessType != ChronocurveSettings::eProcessTypeUnivarie)
         {
@@ -762,15 +762,15 @@ void MCMCLoopChronocurve::update()
             for(Event* event : mModel->mEvents){
                 event->mY = event->mYy;
             }
-            SplineResults spline = calculSpline(matrices);
+            SplineResults s = calculSpline(matrices);
             
             MCMCSplineComposante splineY;
             splineY.vecThetaEvents = getThetaEventVector();
-            splineY.vecG = spline.vecG;
-            splineY.vecGamma = spline.vecGamma;
-            splineY.vecErrG = calculSplineError(matrices, spline);
+            splineY.vecG = s.vecG;
+            splineY.vecGamma = s.vecGamma;
+            splineY.vecErrG = calculSplineError(matrices, s);
             
-            splineParametrique.splineY = splineY;
+            spline.splineY = splineY;
         }
         if(mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel)
         {
@@ -779,18 +779,18 @@ void MCMCLoopChronocurve::update()
             for(Event* event : mModel->mEvents){
                 event->mY = event->mYz;
             }
-            SplineResults spline = calculSpline(matrices);
+            SplineResults s = calculSpline(matrices);
             
             MCMCSplineComposante splineZ;
             splineZ.vecThetaEvents = getThetaEventVector();
-            splineZ.vecG = spline.vecG;
-            splineZ.vecGamma = spline.vecGamma;
-            splineZ.vecErrG = calculSplineError(matrices, spline);
+            splineZ.vecG = s.vecG;
+            splineZ.vecGamma = s.vecGamma;
+            splineZ.vecErrG = calculSplineError(matrices, s);
             
-            splineParametrique.splineZ = splineZ;
+            spline.splineZ = splineZ;
         }
         
-        mModel->mMCMCSplinesParametrique.push_back(splineParametrique);
+        mModel->mMCMCSplines.push_back(spline);
     }
     
     // --------------------------------------------------------------
@@ -870,6 +870,30 @@ bool MCMCLoopChronocurve::adapt()
 
 void MCMCLoopChronocurve::finalize()
 {
+    // This is not a copy of all data!
+    // Chains only contain description of what happened in the chain (numIter, numBatch adapt, ...)
+    // Real data are inside mModel members (mEvents, mPhases, ...)
+    mModel->mChains = mChains;
+
+    // This is called here because it is calculated only once and will never change afterwards
+    // This is very slow : it is for this reason that the results display may be long to appear at the end of MCMC calculation.
+    /** @todo Find a way to make it faster !
+     */
+    mModel->generateCorrelations(mChains);
+    
+    // This should not be done here because it uses resultsView parameters
+    // ResultView will trigger it again when loading the model
+    //mModel->generatePosteriorDensities(mChains, 1024, 1);
+
+    // Generate numerical results of :
+    // - MHVariables (global acceptation)
+    // - MetropolisVariable : analysis of Posterior densities and quartiles from traces.
+    // This also should be done in results view...
+    //mModel->generateNumericalResults(mChains);
+    
+    // ----------------------------------------
+    // Chronocurve specific :
+    // ----------------------------------------
     std::vector<MCMCSplineComposante> allChainsTraceX;
     std::vector<MCMCSplineComposante> allChainsTraceY;
     std::vector<MCMCSplineComposante> allChainsTraceZ;
@@ -882,9 +906,9 @@ void MCMCLoopChronocurve::finalize()
     {
         int numIter = mChains[i].mNumRunIter / mChains[i].mThinningInterval;
         
-        std::vector<MCMCSplineParametrique>::const_iterator first = mModel->mMCMCSplinesParametrique.begin() + chainIterOffset;
-        std::vector<MCMCSplineParametrique>::const_iterator last = mModel->mMCMCSplinesParametrique.begin() + chainIterOffset + numIter;
-        std::vector<MCMCSplineParametrique> chainTrace(first, last);
+        std::vector<MCMCSpline>::const_iterator first = mModel->mMCMCSplines.begin() + chainIterOffset;
+        std::vector<MCMCSpline>::const_iterator last = mModel->mMCMCSplines.begin() + chainIterOffset + numIter;
+        std::vector<MCMCSpline> chainTrace(first, last);
         
         std::vector<MCMCSplineComposante> chainTraceX;
         std::vector<MCMCSplineComposante> chainTraceY;
@@ -901,7 +925,7 @@ void MCMCLoopChronocurve::finalize()
             allChainsTraceZ.push_back(chainTrace[j].splineZ);
         }
         
-        PosteriorMeanGParametrique chainPosteriorMeanG;
+        PosteriorMeanG chainPosteriorMeanG;
         chainPosteriorMeanG.gx = computePosteriorMeanGComposante(chainTraceX);
         if(hasY){
             chainPosteriorMeanG.gy = computePosteriorMeanGComposante(chainTraceY);
@@ -910,12 +934,12 @@ void MCMCLoopChronocurve::finalize()
             chainPosteriorMeanG.gz = computePosteriorMeanGComposante(chainTraceZ);
         }
         
-        mModel->mPosteriorMeanGParametriqueByChain.push_back(chainPosteriorMeanG);
+        mModel->mPosteriorMeanGByChain.push_back(chainPosteriorMeanG);
         
         chainIterOffset += numIter;
     }
     
-    PosteriorMeanGParametrique allChainsPosteriorMeanG;
+    PosteriorMeanG allChainsPosteriorMeanG;
     allChainsPosteriorMeanG.gx = computePosteriorMeanGComposante(allChainsTraceX);
     if(hasY){
         allChainsPosteriorMeanG.gy = computePosteriorMeanGComposante(allChainsTraceY);
@@ -924,7 +948,7 @@ void MCMCLoopChronocurve::finalize()
         allChainsPosteriorMeanG.gz = computePosteriorMeanGComposante(allChainsTraceZ);
     }
     
-    mModel->mPosteriorMeanGParametrique = allChainsPosteriorMeanG;
+    mModel->mPosteriorMeanG = allChainsPosteriorMeanG;
 }
 
 PosteriorMeanGComposante MCMCLoopChronocurve::computePosteriorMeanGComposante(const std::vector<MCMCSplineComposante>& trace)

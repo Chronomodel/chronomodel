@@ -54,6 +54,7 @@ mVerticalValue(type_data(0)),
 mIsHorizontalSections(false),
 mIsTopLineSections(false),
 mIsVertical(false),
+mIsRefPoints(false),
 mVisible(true)
 {
 

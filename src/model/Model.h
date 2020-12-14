@@ -91,7 +91,7 @@ public:
     void restoreFromFile(const QString& fileName);
 
     // Only trace needed for this :
-    void generateCorrelations(const QList<ChainSpecs>& chains);
+    virtual void generateCorrelations(const QList<ChainSpecs>& chains);
 
     double getThreshold() const;
     double getBandwidth() const;
