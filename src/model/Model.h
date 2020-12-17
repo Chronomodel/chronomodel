@@ -90,32 +90,30 @@ public:
     void saveToFile(const QString& fileName);
     void restoreFromFile(const QString& fileName);
 
-    // Only trace needed for this :
-    virtual void generateCorrelations(const QList<ChainSpecs>& chains);
-
     double getThreshold() const;
     double getBandwidth() const;
     int getFFTLength() const;
     
-    void setThresholdToAllModel();
+    virtual void setThresholdToAllModel();
     void initDensities();
     void updateDensities();
 
     // Computed from trace using FFT :
     virtual void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double bandwidth);
+    // Only trace needed for this :
+    virtual void generateCorrelations(const QList<ChainSpecs>& chains);
     // Trace and Posterior density needed for this :
-
-    void generateCredibility(const double threshold);
-    void generateHPD(const double threshold);
+    virtual void generateCredibility(const double threshold);
+    virtual void generateHPD(const double threshold);
     // Trace and Posterior density needed for this :
-    void generateNumericalResults(const QList<ChainSpecs>& chains);
+    virtual void generateNumericalResults(const QList<ChainSpecs>& chains);
 
     void generateTempo();
 
-    void clearTraces();
-    void clearPosteriorDensities();
-    void clearCredibilityAndHPD();
-    void clearThreshold();
+    virtual void clearTraces();
+    virtual void clearPosteriorDensities();
+    virtual void clearCredibilityAndHPD();
+    virtual void clearThreshold();
     
     bool hasSelectedEvents();
     bool hasSelectedPhases();
@@ -155,7 +153,7 @@ public slots:
 signals:
     void newCalculus();
 
-private:
+protected:
      int mFFTLength;
      double mBandwidth;
      double mThreshold;

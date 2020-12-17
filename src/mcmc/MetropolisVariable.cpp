@@ -398,6 +398,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
 void MetropolisVariable::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
     const QVector<double> subFullTrace (fullRunTrace(chains));
+    qDebug() << subFullTrace;
     mHisto = generateHisto(subFullTrace, fftLen, bandwidth, tmin, tmax);
 
     mChainsHistos.clear();

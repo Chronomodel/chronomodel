@@ -256,11 +256,12 @@ QString MCMCLoopMain::initMCMC()
 
     emit stepChanged(tr("Initializing Events..."), 0, unsortedEvents.size());
 
-    for (auto e : unsortedEvents) {
+    for (auto e : unsortedEvents)
+    {
         mModel->initNodeEvents();
         QString circularEventName = "";
         QList< Event*> startEvents = QList<Event*>();
-
+        
         const bool ok (e->getThetaMaxPossible (e, circularEventName, startEvents));
          qDebug() << " MCMCLoopMain::InitMCMC check constraint" << e->mName << ok;
         if (!ok) {

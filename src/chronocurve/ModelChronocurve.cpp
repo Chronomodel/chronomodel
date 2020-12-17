@@ -77,15 +77,128 @@ void ModelChronocurve::generatePosteriorDensities(const QList<ChainSpecs> &chain
     const double tmin = mSettings.getTminFormated();
     const double tmax = mSettings.getTmaxFormated();
     
+    for(Event* event : mEvents)
+    {
+        event->mVG.generateHistos(chains, fftLen, bandwidth);
+    }
+    
     mAlphaLissage.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 }
 
-// Generate model data
 void ModelChronocurve::generateCorrelations(const QList<ChainSpecs> &chains)
 {
     Model::generateCorrelations(chains);
     mAlphaLissage.generateCorrelations(chains);
 }
+
+void ModelChronocurve::generateNumericalResults(const QList<ChainSpecs> &chains)
+{
+    Model::generateNumericalResults(chains);
+
+    for(Event* event : mEvents)
+    {
+        event->mVG.generateNumericalResults(chains);
+    }
+    mAlphaLissage.generateNumericalResults(chains);
+}
+
+void ModelChronocurve::clearThreshold()
+{
+    Model::clearThreshold();
+    mThreshold = -1.;
+    for(Event* event : mEvents)
+    {
+        event->mVG.mThresholdUsed = -1.;
+    }
+    mAlphaLissage.mThresholdUsed = -1.;
+}
+
+void ModelChronocurve::generateCredibility(const double thresh)
+{
+    Model::generateCredibility(thresh);
+    
+    for(Event* event : mEvents)
+    {
+        if(event->type() != Event::eKnown)
+        {
+            event->mVG.generateCredibility(mChains, thresh);
+        }
+    }
+    mAlphaLissage.generateCredibility(mChains, thresh);
+}
+
+void ModelChronocurve::generateHPD(const double thresh)
+{
+    Model::generateHPD(thresh);
+    
+    for(Event* event : mEvents)
+    {
+        if(event->type() != Event::eKnown)
+        {
+            event->mVG.generateHPD(thresh);
+        }
+    }
+    
+    mAlphaLissage.generateHPD(thresh);
+}
+
+void ModelChronocurve::clearPosteriorDensities()
+{
+    Model::clearPosteriorDensities();
+    
+    for(Event* event : mEvents)
+    {
+        if(event->type() != Event::eKnown)
+        {
+            event->mVG.mHisto.clear();
+            event->mVG.mChainsHistos.clear();
+        }
+    }
+    
+    mAlphaLissage.mHisto.clear();
+    mAlphaLissage.mChainsHistos.clear();
+}
+
+void ModelChronocurve::clearCredibilityAndHPD()
+{
+    Model::clearCredibilityAndHPD();
+    
+    for(Event* event : mEvents)
+    {
+        if(event->type() != Event::eKnown)
+        {
+            event->mVG.mHPD.clear();
+            event->mVG.mCredibility = QPair<double, double>();
+        }
+    }
+    
+    mAlphaLissage.mHPD.clear();
+    mAlphaLissage.mCredibility = QPair<double, double>();
+}
+
+void ModelChronocurve::clearTraces()
+{
+    Model::clearTraces();
+    // event->reset() already resets mVG
+    mAlphaLissage.reset();
+}
+
+void ModelChronocurve::setThresholdToAllModel()
+{
+    Model::setThresholdToAllModel();
+    
+    for(Event* event : mEvents)
+    {
+        event->mVG.mThresholdUsed = mThreshold;
+    }
+    
+    mAlphaLissage.mThresholdUsed = mThreshold;
+}
+
+
+
+
+
 
 QList<PosteriorMeanGComposante> ModelChronocurve::getChainsMeanGComposanteX()
 {

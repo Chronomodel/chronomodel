@@ -94,7 +94,10 @@ MHVariable::MHVariable( const MHVariable& origin)
     mtmaxUsed = origin.mtmaxUsed;
 
     mAllAccepts = new QVector<bool>(origin.mAllAccepts->size());
+    std::copy(origin.mAllAccepts->begin(),origin.mAllAccepts->end(), mAllAccepts->begin());
+    
     mHistoryAcceptRateMH = new QVector<double>(origin.mHistoryAcceptRateMH->size());
+    std::copy(origin.mHistoryAcceptRateMH->begin(),origin.mHistoryAcceptRateMH->end(), mHistoryAcceptRateMH->begin());
 }
 
 MHVariable::~MHVariable()
@@ -103,8 +106,8 @@ MHVariable::~MHVariable()
     mHistoryAcceptRateMH->~QVector();
 
     // mRawTrace and mFormatedTrace are destroye by the MetropolisVariable destructor
-   // mRawTrace->~QVector();// = nullptr;;
-   // mFormatedTrace->~QVector();// = nullptr;;
+    // mRawTrace->~QVector();// = nullptr;;
+    // mFormatedTrace->~QVector();// = nullptr;;
 }
 
 bool MHVariable::tryUpdate(const double x, const double rapport)
@@ -127,8 +130,8 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
 
     mLastAccepts.append(accepted);
     mAllAccepts->append(accepted);
+    
     return accepted;
-
 }
 
 void MHVariable::reset()

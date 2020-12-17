@@ -56,6 +56,16 @@ public:
     
     void generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth);
     void generateCorrelations(const QList<ChainSpecs> &chains);
+    void generateNumericalResults(const QList<ChainSpecs> &chains);
+    void generateCredibility(const double thresh);
+    void generateHPD(const double thresh);
+    
+    void clearThreshold();
+    void clearPosteriorDensities();
+    void clearCredibilityAndHPD();
+    void clearTraces();
+    
+    void setThresholdToAllModel();
     
     QList<PosteriorMeanGComposante> getChainsMeanGComposanteX();
     QList<PosteriorMeanGComposante> getChainsMeanGComposanteY();

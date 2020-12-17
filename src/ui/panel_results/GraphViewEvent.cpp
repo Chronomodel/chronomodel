@@ -280,6 +280,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->setBackgroundColor(QColor(230, 230, 230));
 
             GraphCurve curve = generateDensityCurve(mEvent->mVG.fullHisto(), "Variance G All Chains", color);
+            qDebug() << curve.mData;
             mGraph->addCurve(curve);
             
             if(!mEvent->mVG.mChainsHistos.isEmpty())

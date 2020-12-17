@@ -81,6 +81,7 @@ private:
     void orderEventsByTheta();
     void spreadEventsTheta(double minStep = 1e-6);
     void reduceEventsTheta();
+    double reduceTime(double t);
     void saveEventsTheta();
     void restoreEventsTheta();
     std::map<int, double> mThetasMemo;

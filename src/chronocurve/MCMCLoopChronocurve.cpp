@@ -254,8 +254,9 @@ QString MCMCLoopChronocurve::initMCMC()
             
             // ----------------------------------------------------------------
             // Chronocurve init Theta event :
+            // On initialise les theta près des dates ti
             // ----------------------------------------------------------------
-            if(mChronocurveSettings.mTimeType == ChronocurveSettings::eModeFixed)
+            if(true)//mChronocurveSettings.mTimeType == ChronocurveSettings::eModeFixed)
             {
                 // Dans le cas theta fixe (pas de Bayésien),
                 // On initialise les theta event à la valeur médiane de la calibration de leur première date.
@@ -273,6 +274,7 @@ QString MCMCLoopChronocurve::initMCMC()
             }
             else
             {
+                // Idem Chronomodel, mais jamais utilisé ici :
                 unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
             }
             
@@ -338,7 +340,7 @@ QString MCMCLoopChronocurve::initMCMC()
             // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
             unsortedEvents.at(i)->mTheta.mSigmaMH = sqrt(unsortedEvents.at(i)->mS02);
             unsortedEvents.at(i)->mAShrinkage = 1.;
-
+            
             // 6- Clear mLastAccepts array
             unsortedEvents.at(i)->mTheta.mLastAccepts.clear();
             unsortedEvents.at(i)->mTheta.mLastAccepts.push_back(true);
@@ -519,15 +521,14 @@ void MCMCLoopChronocurve::update()
         
         restoreEventsTheta();
         
+        // ----------------------------------------------------------------------
+        //  Dans Chronomodel, on appelle simplement : event->updateTheta(t_min,t_max); sur tous les events.
+        //  Pour mettre à jour un theta d'event dans Chronocurve, on doit accéder aux thetas des autres events.
+        //  => on effectue donc la mise à jour directement ici, sans passer par une fonction
+        //  de la classe event (qui n'a pas accès aux autres events)
+        // ----------------------------------------------------------------------
         for(Event* event : mModel->mEvents)
         {
-            // ----------------------------------------------------------------------
-            //  Dans Chronomodel, on appelle simplement : event->updateTheta(t_min,t_max);
-            //  Dans Chronocurve, on la formule de mise à jour a une composante supplémentaire.
-            //  Pour mettre theta à jour, on doit accéder aux thetas des autres events.
-            //  => on effectue donc la mise à jour directement ici, sans passer par une fonction
-            //  de la classe event (qui n'a pas accès aux autres events)
-            // ----------------------------------------------------------------------
             const double min = event->getThetaMin(t_min);
             const double max = event->getThetaMax(t_max);
 
@@ -541,7 +542,7 @@ void MCMCLoopChronocurve::update()
             // On tire une nouvelle valeur :
             const double value_new = Generator::gaussByBoxMuller(event->mTheta.mX, event->mTheta.mSigmaMH);
             
-            double rapport = 0;
+            double rapport = 0.;
             
             if (value_new >= min && value_new <= max)
             {
@@ -559,7 +560,7 @@ void MCMCLoopChronocurve::update()
                 restoreEventsTheta(); // On supprime les décalages introduits pour les calculs de h_new
                 
                 // Calcul du rapport :
-                rapport = (h_current == 0) ? 1 : (h_new / h_current);
+                rapport = (h_current == 0.) ? 1. : (h_new / h_current);
                 
                 // On reprend l'ancienne valeur, qui sera éventuellement mise à jour dans ce qui suit (Metropolis Hastings)
                 event->mTheta.mX = value_current;
@@ -612,15 +613,12 @@ void MCMCLoopChronocurve::update()
         SplineMatrices matrices = prepareCalculSpline();
         double h_current = h_YWI_AY(matrices) * h_alpha(matrices) * h_VG();
         
+        const double min = log10(1e-10);
+        const double max = log10(1e+20);
+        int idx = 0;
+        
         for(Event* event : mModel->mEvents)
         {
-            const double min = log10(1e-10);
-            const double max = log10(1e+20);
-            
-            if (min >= max){
-                throw QObject::tr("Error for event VG : %1 : min = %2 : max = %3").arg(event->mName, QString::number(min), QString::number(max));
-            }
-            
             // On stocke l'ancienne valeur :
             double value_current = event->mVG.mX;
             // On tire une nouvelle valeur :
@@ -636,6 +634,17 @@ void MCMCLoopChronocurve::update()
                 event->mVG.mX = value_new;
                 event->updateW();
                 
+                // Variance globale : on recopie la valeur tirée dans tous les events
+                // (nécessaire pour le calcul de h_new)
+                if(idx == 0 && !mChronocurveSettings.mUseVarianceIndividual)
+                {
+                    for(int j=1; j<mModel->mEvents.size(); ++j)
+                    {
+                        mModel->mEvents[j]->mVG = event->mVG;
+                        mModel->mEvents[j]->updateW();
+                    }
+                }
+                
                 // Calcul du rapport :
                 SplineMatrices matrices = prepareCalculSpline();
                 double h_new = h_YWI_AY(matrices) * h_alpha(matrices) * h_VG();
@@ -650,15 +659,30 @@ void MCMCLoopChronocurve::update()
                 h_current = h_new;
             }
             
-            event->mVG.tryUpdate(value_new, rapport);
-            
+            // Mise à jour Metropolis Hastings
             // A chaque fois qu'on modifie VG, W change !
+            event->mVG.tryUpdate(value_new, rapport);
             event->updateW();
             
             if(doMemo){
                event->mVG.memo();
                event->mVG.saveCurrentAcceptRate();
             }
+            
+            // Variance globale : on recopie mVG du 1er event dans tous les events,
+            // puis on sort de la boucle !
+            // Ceci copie aussi toutes les propriétés de MHVariable (accepts, etc...)
+            if(idx == 0 && !mChronocurveSettings.mUseVarianceIndividual)
+            {
+                for(int j=1; j<mModel->mEvents.size(); ++j)
+                {
+                    mModel->mEvents[j]->mVG = event->mVG;
+                    mModel->mEvents[j]->updateW();
+                }
+                break;
+            }
+            
+            ++idx;
         }
     }
     // Pas bayésien : on sauvegarde la valeur constante dans la trace
@@ -730,7 +754,7 @@ void MCMCLoopChronocurve::update()
     }
     
     // --------------------------------------------------------------
-    //  Calcul de la spline g, g" pour chaque composante + stockage
+    //  Calcul de la spline g, g" pour chaque composante x y z + stockage
     // --------------------------------------------------------------
     if(doMemo)
     {
@@ -870,6 +894,9 @@ bool MCMCLoopChronocurve::adapt()
 
 void MCMCLoopChronocurve::finalize()
 {
+    
+    qDebug() << *(mModel->mAlphaLissage.mRawTrace);
+    
     // This is not a copy of all data!
     // Chains only contain description of what happened in the chain (numIter, numBatch adapt, ...)
     // Real data are inside mModel members (mEvents, mPhases, ...)
@@ -884,12 +911,12 @@ void MCMCLoopChronocurve::finalize()
     // This should not be done here because it uses resultsView parameters
     // ResultView will trigger it again when loading the model
     //mModel->generatePosteriorDensities(mChains, 1024, 1);
-
+    
     // Generate numerical results of :
     // - MHVariables (global acceptation)
     // - MetropolisVariable : analysis of Posterior densities and quartiles from traces.
     // This also should be done in results view...
-    //mModel->generateNumericalResults(mChains);
+    // mModel->generateNumericalResults(mChains);
     
     // ----------------------------------------
     // Chronocurve specific :
@@ -1389,11 +1416,11 @@ double MCMCLoopChronocurve::h_VG()
         
         if(mChronocurveSettings.mUseVarianceIndividual){
             
-            shrink_VG = 1;
+            shrink_VG = 1.;
             for(int i=0; i<nb_noeuds; ++i){
                 Event* e = mModel->mEvents[i];
-                double S02 = e->mSInc * e->mSInc;
-                shrink_VG *= (S02 / pow(S02 + e->mVG.mX,2));
+                double S02 = e->mSy * e->mSy;
+                shrink_VG *= (S02 / pow(S02 + e->mVG.mX, 2.));
             }
             
         }else{
@@ -1403,12 +1430,12 @@ double MCMCLoopChronocurve::h_VG()
             
             for(int i=0; i<nb_noeuds; ++i){
                 Event* e = mModel->mEvents[i];
-                som_inv_S02 += ( 1. / (e->mSy * e->mSy));
+                som_inv_S02 += (1. / (e->mSy * e->mSy));
             }
             double S02 = nb_noeuds/som_inv_S02;
             // Shrinkage avec a = 1
             
-            shrink_VG = S02 / pow(S02 + mModel->mEvents[0]->mVG.mX, 2);
+            shrink_VG = S02 / pow(S02 + mModel->mEvents[0]->mVG.mX, 2.);
         }
     }
     
@@ -1417,28 +1444,32 @@ double MCMCLoopChronocurve::h_VG()
 
 double MCMCLoopChronocurve::h_theta()
 {
-    double sum = 0;
-    int nb_noeuds = mModel->mEvents.size();
+    double tmin = mModel->mSettings.mTmin;
+    double tmax = mModel->mSettings.mTmax;
     
-    for(int i=0; i<nb_noeuds; ++i)
+    double h = 1.;
+    
+    for(Event* e : mModel->mEvents)
     {
-        Event* e = mModel->mEvents[i];
+        double p = 0.;
+        double p_red = 0.;
+        double t_moy = 0.;
         
-        double pi = 0;
-        double ti_moy = 0;
-        
-        for(int j=0; j<e->mDates.size(); ++j)
+        for(Date& date : e->mDates)
         {
-            Date& date = e->mDates[j];
-            pi += 1 / pow(date.mSigma.mX, 2);
-            ti_moy += (date.mTheta.mX + date.mDelta) / pow(date.mSigma.mX, 2);
+            double pi = 1. / pow(date.mSigma.mX, 2.);
+            p += pi;
+            t_moy += (date.mTheta.mX + date.mDelta) * pi;
+            
+            p_red += 1. / pow(date.mSigma.mX / (tmax - tmin), 2.);
         }
-        ti_moy /= pi;
+        t_moy /= p;
+
+        double t_moy_red = (t_moy - tmin) / (tmax - tmin);
         
-        sum += pi * pow(e->mTheta.mX - ti_moy, 2);
+        h *= exp(-0.5 * p_red * pow(e->mTheta.mX - t_moy_red, 2.));
     }
     
-    double h = exp(-0.5 * sum);
     return h;
 }
 
@@ -1593,14 +1624,18 @@ void MCMCLoopChronocurve::spreadEventsTheta(double minStep)
 
 void MCMCLoopChronocurve::reduceEventsTheta()
 {
-    double tmin = mModel->mSettings.mTmin;
-    double tmax = mModel->mSettings.mTmax;
-    
     for(int i=0; i<mModel->mEvents.size(); i++)
     {
         double t = mModel->mEvents[i]->mTheta.mX;
-        mModel->mEvents[i]->mTheta.mX = (t - tmin) / (tmax - tmin);
+        mModel->mEvents[i]->mTheta.mX = reduceTime(t);
     }
+}
+
+double MCMCLoopChronocurve::reduceTime(double t)
+{
+    double tmin = mModel->mSettings.mTmin;
+    double tmax = mModel->mSettings.mTmax;
+    return (t - tmin) / (tmax - tmin);
 }
 
 #pragma mark Init vecteurs et matrices

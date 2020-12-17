@@ -160,6 +160,7 @@ public:
     // Valeurs utilisée pour les calculs
     double mY;
     double mSy;
+    
     double mW;
     double mWInv;
     
