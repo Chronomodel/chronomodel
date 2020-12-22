@@ -1442,6 +1442,11 @@ double MCMCLoopChronocurve::h_VG()
     return shrink_VG;
 }
 
+/**
+ * Les calculs sont faits avec les dates (theta event, ti dates, delta, sigma) exprimées en années.
+ * Lors de l'appel de cette fonction, theta event a été réduit (voir les appels plus haut).
+ * Il faut donc soit réduire les autres variables (plus coûteux en calculs), soit repasser theta event en années.
+*/
 double MCMCLoopChronocurve::h_theta()
 {
     double tmin = mModel->mSettings.mTmin;
@@ -1452,7 +1457,6 @@ double MCMCLoopChronocurve::h_theta()
     for(Event* e : mModel->mEvents)
     {
         double p = 0.;
-        double p_red = 0.;
         double t_moy = 0.;
         
         for(Date& date : e->mDates)
@@ -1460,16 +1464,11 @@ double MCMCLoopChronocurve::h_theta()
             double pi = 1. / pow(date.mSigma.mX, 2.);
             p += pi;
             t_moy += (date.mTheta.mX + date.mDelta) * pi;
-            
-            p_red += 1. / pow(date.mSigma.mX / (tmax - tmin), 2.);
         }
         t_moy /= p;
-
-        double t_moy_red = (t_moy - tmin) / (tmax - tmin);
         
-        h *= exp(-0.5 * p_red * pow(e->mTheta.mX - t_moy_red, 2.));
+        h *= exp(-0.5 * p * pow((tmin + e->mTheta.mX * (tmax - tmin)) - t_moy, 2.));
     }
-    
     return h;
 }
 
