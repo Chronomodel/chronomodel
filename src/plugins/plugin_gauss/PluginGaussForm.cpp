@@ -52,8 +52,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("Gaussian measurement"), parent, flags)
 {
-   // setFont(AppSettings::font());
-
     mAverageLab = new QLabel(tr("Mean"), this);
     mErrorLab = new QLabel(tr("Error (sd)"), this);
     mCalibLab = new QLabel(tr("Calibration"), this);
@@ -167,6 +165,7 @@ void PluginGaussForm::setData(const QJsonObject& data, bool isCombined)
     if ( isCombined) {
         mAverageEdit->setText("Combined data");
         mErrorEdit->setText("Combined data");
+        emit PluginFormAbstract::OkEnabled(true );
         
     } else {
         const QLocale locale=QLocale();

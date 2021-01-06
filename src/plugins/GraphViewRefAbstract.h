@@ -96,7 +96,10 @@ public:
 
     }
 
-    virtual ~GraphViewRefAbstract() {}
+    virtual ~GraphViewRefAbstract() {
+        mGraph->removeAllCurves();
+        mGraph=nullptr;
+    }
 
 
     virtual void setDate(const Date& date, const ProjectSettings& settings)
@@ -125,6 +128,7 @@ public:
     void drawSubDates(const QJsonArray& subDates, const ProjectSettings& settings, const double tminDisplay, const double tmaxDisplay)
     {
         mSettings = settings;
+        mGraph->removeAllCurves();
         
         for (int i(0); i< subDates.size(); ++i) {
             QJsonObject subDate = subDates.at(i).toObject();

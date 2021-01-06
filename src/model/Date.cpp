@@ -356,7 +356,11 @@ QPair<long double, long double> Date::getLikelihoodArg(const double& t) const
             return mPlugin->getLikelihoodArg(t, mData);
             
         }  else if (mOrigin == eCombination) {
-            return QPair<long double, long double>(log(mPlugin->getLikelihoodCombine(t, mSubDates)), 1.l);
+                     if (mCalibration->mCurve.isEmpty()) {
+                         return QPair<long double, long double>(log(mPlugin->getLikelihoodCombine(t, mSubDates)), 1.l);
+                     } else {
+                         return QPair<long double, long double>(log(getLikelihoodFromCalib(t)), 1.l);
+                     }
                    
        } else {
            return QPair<long double, long double>();
@@ -427,7 +431,14 @@ void Date::reset()
     mWiggle.reset();
 }
 
-void Date::calibrate(const ProjectSettings& settings, Project *project)
+/**
+ * @brief Date::calibrate
+ * Function that calculates the calibrated density and updates the wiggle density if necessary
+ * @param settings
+ * @param project
+ * @param truncate Restrict the calib and repartition vectors to where data are
+ */
+void Date::calibrate(const ProjectSettings& settings, Project *project, bool truncate)
 {
   // Check if the ref curve is in the plugin list
     qDebug()<<"Date::calibrate";
@@ -442,7 +453,7 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
     }
     
     // add the calibration
-    QMap<QString, CalibrationCurve>::const_iterator it = project->mCalibCurves.find (mUUID);
+    QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (mUUID);
 
     if ( it == project->mCalibCurves.end()) {
         qDebug()<<"Curve to create mUUID: "<< mUUID ;
@@ -487,7 +498,7 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
         /* We use long double type because
          * after several sums, the repartition can be in the double type range
         */
-        for (int i = 1; i <= nbRefPts; ++i) {
+        for (int i (1); i <= nbRefPts; ++i) {
             const double t = mTminRefCurve + double (i) * settings.mStep;
             long double lastV = v;
             v = getLikelihood(t);
@@ -506,24 +517,29 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
         // ------------------------------------------------------------------
 
         if (repartitionTemp.last() > 0.) {
-            const double threshold (0.00005);
-            const int minIdx = int (floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp)));
-            const int maxIdx = int (ceil(vector_interpolate_idx_for_value((1. - threshold) * lastRepVal, repartitionTemp)));
+            if (truncate) {
+                const double threshold (0.00001);
+                const int minIdx = int (floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp)));
+                const int maxIdx = int (ceil(vector_interpolate_idx_for_value((1. - threshold) * lastRepVal, repartitionTemp)));
 
-            tminCal = mTminRefCurve + minIdx * settings.mStep;
-            tmaxCal = mTminRefCurve + maxIdx * settings.mStep;
+                tminCal = mTminRefCurve + minIdx * settings.mStep;
+                tmaxCal = mTminRefCurve + maxIdx * settings.mStep;
 
-            // Truncate both functions where data live
-            mCalibration->mCurve = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
-            mCalibration->mRepartition = repartitionTemp.mid(minIdx, (maxIdx - minIdx) + 1);
+                // Truncate both functions where data live
+                mCalibration->mCurve = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
+                mCalibration->mRepartition = repartitionTemp.mid(minIdx, (maxIdx - minIdx) + 1);
 
-            /* NOTE ABOUT THIS APPROMIATION :
-           By truncating the calib and repartition, the calib density's area is not 1 anymore!
-           It is now 1 - 2*threshold = 0,99999... We consider it to be 1 anyway!
-           By doing this, calib and repartition are stored on a restricted number of data
-           instead of storing them on the whole reference curve's period (as done for calibrationTemp & repartitionTemp above).
-             */
+                /* NOTE ABOUT THIS APPROMIATION :
+                  By truncating the calib and repartition, the calib density's area is not 1 anymore!
+                  It is now 1 - 2*threshold = 0,99999... We consider it to be 1 anyway!
+                  By doing this, calib and repartition are stored on a restricted number of data
+                  instead of storing them on the whole reference curve's period (as done for calibrationTemp & repartitionTemp above).
+                 */
+              } else {
+                tminCal = mTminRefCurve;
+                tmaxCal = mTminRefCurve;
 
+            }
             // Stretch repartition curve so it goes from 0 to 1
             mCalibration->mRepartition = stretch_vector(mCalibration->mRepartition, 0., 1.);
 
@@ -564,6 +580,12 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
     
 }
 
+
+/**
+ * @brief Date::calibrateWiggle Function that calculates the wiggle density according to the defined wiggle type
+ * @param settings
+ * @param project
+ */
 void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
 {
   // Check if the ref curve is in the plugin list
@@ -573,9 +595,15 @@ void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
         return;
     }
     // add the calibration
- 
+
+    // We need to keep the calibration curve and then the whole wiggle on the whole support,
+    // to allow a more accurate combination when the densities are far away.
+
+
+
+
     const QString toFind ("WID::" + mUUID);
-    QMap<QString, CalibrationCurve>::const_iterator it = project->mCalibCurves.find (toFind);
+    QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
 
     
     if ( it == project->mCalibCurves.end()) {
@@ -594,7 +622,24 @@ void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
         
     
     
-  // Update of the new calibration curve
+  // Update of the new calibration curve, on the whole reference curve
+    QVector<double> calibrationTemp;
+    QPair<double, double> tminTmax = mPlugin->getTminTmaxRefsCurve(mData);
+    const double minRefCurve = tminTmax.first;
+    const double maxRefCurve = tminTmax.second;
+
+    const double nbRefPts = 1. + round((maxRefCurve - minRefCurve) / double(settings.mStep));
+    calibrationTemp.append(getLikelihood(minRefCurve));
+
+    /* We use long double type because
+     * after several sums, the repartition can be in the double type range
+    */
+    double t;
+    for (int i (1); i <= nbRefPts; ++i) {
+        t = minRefCurve + double (i) * settings.mStep;
+        calibrationTemp.append(double(getLikelihood(t)));
+    }
+
 
     mWiggleCalibration = & (project->mCalibCurves[toFind]);
 
@@ -612,9 +657,9 @@ void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
     switch (mDeltaType) {
         case Date::eDeltaFixed:
         {
-                mWiggleCalibration->mCurve = mCalibration->mCurve;
-                mWiggleCalibration->mTmin = mCalibration->mTmin + mDeltaFixed;
-                mWiggleCalibration->mTmax = mCalibration->mTmax + mDeltaFixed;
+                mWiggleCalibration->mCurve = calibrationTemp;
+                mWiggleCalibration->mTmin = minRefCurve + mDeltaFixed;
+                mWiggleCalibration->mTmax = maxRefCurve + mDeltaFixed;
             }
             break;
                 
@@ -627,7 +672,7 @@ void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
         https://dsp.stackexchange.com/questions/22145/perform-convolution-in-frequency-domain-using-fftw
          */
 
-        const int inputSize (mCalibration->mCurve.size());
+        const int inputSize (calibrationTemp.size());
 
         const double L ((mDeltaMax-mDeltaMin+1) / mSettings.mStep);
 
@@ -647,7 +692,7 @@ void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
             inputReal[i] = 0.;
         }
         for (int i (0); i< inputSize; i++) {
-            inputReal[i+paddingSize] = mCalibration->mCurve[i];
+            inputReal[i+paddingSize] = calibrationTemp[i];
         }
         for (int i ( inputSize+paddingSize); i< N; i++) {
             inputReal[i] = 0.;
@@ -726,14 +771,14 @@ void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
 
         mWiggleCalibration->mCurve = equal_areas(curve, mSettings.mStep, 1.);
 
-        mWiggleCalibration->mTmin = mCalibration->mTmin - (double)(3*paddingSize +inputSize/2)*mSettings.mStep + (mDeltaMin+mDeltaMax)/2.;
+        mWiggleCalibration->mTmin = minRefCurve - (double)(3*paddingSize +inputSize/2)*mSettings.mStep + (mDeltaMin+mDeltaMax)/2.;
         mWiggleCalibration->mTmax = mWiggleCalibration->mTmin + curve.size()*mSettings.mStep;
 
         fftw_destroy_plan(plan_input);
         fftw_destroy_plan(plan_output);
         fftw_free(inputComplex);
-        free(inputReal);
-        free(outputReal);
+        delete [] inputReal;
+        delete [] outputReal;
         fftw_cleanup();
     }
             break;
@@ -746,7 +791,7 @@ void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
              */
             qDebug() <<"wiggle eDeltaGaussian";
             // Les data
-            const int inputSize (mCalibration->mCurve.size());
+            const int inputSize (calibrationTemp.size());
 
             const double sigma = mDeltaError/mSettings.mStep;
             const int gaussSize (std::max(inputSize, int(3*sigma)) );
@@ -767,7 +812,7 @@ void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
                 inputReal[i] = 0;
             }
             for (int i (0); i< inputSize; i++) {
-                inputReal[i+paddingSize] = mCalibration->mCurve[i];
+                inputReal[i+paddingSize] = calibrationTemp[i];
             }
             for (int i ( inputSize+paddingSize); i< N; i++) {
                 inputReal[i] = 0;
@@ -801,25 +846,26 @@ void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
 
             mWiggleCalibration->mCurve = equal_areas(curve, mSettings.mStep, 1.);
 
-            mWiggleCalibration->mTmin = mCalibration->mTmin - paddingSize*mSettings.mStep + mDeltaAverage;
-            mWiggleCalibration->mTmax = mCalibration->mTmin + curve.size()*mSettings.mStep+ mDeltaAverage;
+            mWiggleCalibration->mTmin = minRefCurve - paddingSize*mSettings.mStep + mDeltaAverage;
+            mWiggleCalibration->mTmax = minRefCurve + curve.size()*mSettings.mStep+ mDeltaAverage;
 
             fftw_destroy_plan(plan_input);
             fftw_destroy_plan(plan_output);
             fftw_free(inputComplex);
-            free(inputReal);
-            free(outputReal);
+            delete [] inputReal;
+            delete [] outputReal;
             fftw_cleanup();
         }
             break;
             
         default:
-            mWiggleCalibration->mCurve = mCalibration->mCurve;
-            mWiggleCalibration->mTmin = mCalibration->mTmin ;
-            mWiggleCalibration->mTmax = mCalibration->mTmax ;
+            mWiggleCalibration->mCurve = calibrationTemp;
+            mWiggleCalibration->mTmin = minRefCurve ;
+            mWiggleCalibration->mTmax = maxRefCurve ;
             break;
     }
     
+   // mWiggleCalibration->mCurve = equal_areas(mWiggleCalibration->mCurve, settings.mStep, 1.);
 
     mWiggleCalibration->mRepartition = mWiggleCalibration->mCurve;
     /* We use long double type because
@@ -844,14 +890,14 @@ void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
         lastRep = rep;
     }
 
+     mWiggleCalibration->mRepartition = stretch_vector(mWiggleCalibration->mRepartition, 0., 1.);
 
     /* ------------------------------------------------------------------
      * Restrict the calib and repartition vectors to where data are
      * ------------------------------------------------------------------ */
-
     if (mWiggleCalibration->mRepartition.last() > 0.) {
 
-        const double threshold (0.00005);
+        const double threshold (0.00001);
         const int minIdx = int (floor(vector_interpolate_idx_for_value(threshold * lastRep, mWiggleCalibration->mRepartition)));
         const int maxIdx = int (ceil(vector_interpolate_idx_for_value((1. - threshold) * lastRep, mWiggleCalibration->mRepartition)));
 
@@ -861,13 +907,6 @@ void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
         // Truncate both functions where data live
         mWiggleCalibration->mCurve = mWiggleCalibration->mCurve.mid(minIdx, (maxIdx - minIdx) + 1);
         mWiggleCalibration->mRepartition = mWiggleCalibration->mRepartition.mid(minIdx, (maxIdx - minIdx) + 1);
-
-        /* NOTE ABOUT THIS APPROMIATION :
-       By truncating the calib and repartition, the calib density's area is not 1 anymore!
-       It is now 1 - 2*threshold = 0,99999... We consider it to be 1 anyway!
-       By doing this, calib and repartition are stored on a restricted number of data
-       instead of storing them on the whole reference curve's period (as done for calibrationTemp & repartitionTemp above).
-         */
 
         // Stretch repartition curve so it goes from 0 to 1
         mWiggleCalibration->mRepartition = stretch_vector(mWiggleCalibration->mRepartition, 0., 1.);
@@ -881,8 +920,7 @@ void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
 
     }
 
-
-     qDebug()<<"Date::mWiggleCalibration in project "<<project->mCalibCurves[toFind].mDescription;
+     //  qDebug()<<"Date::mWiggleCalibration in project "<<project->mCalibCurves[toFind].mDescription;
 }
 
 const QMap<double, double> Date::getRawCalibMap() const

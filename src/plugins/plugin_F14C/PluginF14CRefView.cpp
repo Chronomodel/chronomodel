@@ -103,13 +103,11 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
          if (!date.isNull())  {
              double age = date.mData.value(DATE_F14C_FRACTION_STR).toDouble();
              double error = date.mData.value(DATE_F14C_ERROR_STR).toDouble();
-             //       const double delta_r = date.mData.value(DATE_F14C_DELTA_R_STR).toDouble();
-             //       const double delta_r_error = date.mData.value(DATE_F14C_DELTA_R_ERROR_STR).toDouble();
              const QString ref_curve = date.mData.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
 
              /* ----------------------------------------------
-         *  Reference curve
-         * ---------------------------------------------- */
+              *  Reference curve
+              * ---------------------------------------------- */
 
              const double tminRef = date.getFormatedTminRefCurve();
              const double tmaxRef = date.getFormatedTmaxRefCurve();
@@ -286,21 +284,14 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
          *  Sub-dates curves (combination)
          * ---------------------------------------------- */
 
-             for (int i=0; i<date.mSubDates.size(); ++i) {
-                 QJsonObject d = date.mSubDates.at(i).toObject();
-
+             for (auto && subDate: date.mSubDates) {
+                 QJsonObject d = subDate.toObject();
                  GraphCurve curveSubMeasure;
-                 curveSubMeasure.mName = "Sub-Measurement " + QString::number(i);
+                 curveSubMeasure.mName = "Sub-Measurement : " + d.value(STATE_NAME).toString();// QString::number(i);
 
                  double sub_age = d.value(STATE_DATE_DATA).toObject().value(DATE_F14C_FRACTION_STR).toDouble();
                  double sub_error = d.value(STATE_DATE_DATA).toObject().value(DATE_F14C_ERROR_STR).toDouble();
-                 //           double sub_delta_r = d.value(STATE_DATE_DATA).toObject().value(DATE_F14C_DELTA_R_STR).toDouble();
-                 //           double sub_delta_r_error = d.value(STATE_DATE_DATA).toObject().value(DATE_F14C_DELTA_R_ERROR_STR).toDouble();
 
-                 // Apply reservoir effect
-                 /*           sub_age = (sub_age - sub_delta_r);
-            sub_error = sqrt(sub_error * sub_error + sub_delta_r_error * sub_delta_r_error);
-*/
                  yMin = qMin(yMin, sub_age - sub_error * 3);
                  yMax = qMax(yMax, sub_age + sub_error * 3);
 
@@ -313,7 +304,6 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
                  curveSubMeasure.mBrush = brushColor;
                  curveSubMeasure.mIsVertical = true;
                  curveSubMeasure.mIsHisto = false;
-
 
                  const double step = (yMax - yMin) / 1000.;
                  QMap<double, double> subCurve;

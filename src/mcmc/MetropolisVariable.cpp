@@ -678,7 +678,7 @@ QVector<double> MetropolisVariable::runFormatedTraceForChain(const QList<ChainSp
             }
             shift += traceSize + burnAdaptSize ;
         }
-        return QVector<double>(trace.begin(),trace.end());
+        return QVector<double>(trace.begin(), trace.end());
     }
 }
 

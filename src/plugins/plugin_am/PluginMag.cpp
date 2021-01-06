@@ -183,12 +183,10 @@ QString PluginMag::getDateDesc(const Date* date) const
     } else {
             result = "Combine (";
             QStringList datesDesc;
-            for (int i (0); i< date->mSubDates.size(); i++) {
-                const QJsonObject d = date->mSubDates.at(i).toObject();
-                Date subDate;
-                subDate.fromJson(d);
-                datesDesc.append(getDateDesc(&subDate));
 
+            for (auto && d: date->mSubDates) {
+                Date subDate (d.toObject() );
+                datesDesc.append(getDateDesc(&subDate));
             }
             result += datesDesc.join(" | ") + " )";
     }

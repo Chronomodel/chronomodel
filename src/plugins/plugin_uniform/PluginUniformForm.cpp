@@ -47,8 +47,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 PluginUniformForm::PluginUniformForm(PluginUniform* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("Uniform Prior"), parent, flags)
 {
-    //PluginUniform* pluginUnif = (PluginUniform*)mPlugin;
-
     mMinLab = new QLabel(tr("Lower date (BC/AD)"), this);
     mMaxLab = new QLabel(tr("Upper date (BC/AD)"), this);
 

@@ -118,7 +118,7 @@ public:
     PluginAbstract* getPlugin() const {return mPlugin;}
 
     void reset();
-    void calibrate(const ProjectSettings & settings, Project *project);
+    void calibrate(const ProjectSettings & settings, Project *project, bool truncate=true);
     void calibrateWiggle(const ProjectSettings & settings, Project *project);
 
     double getLikelihoodFromCalib(const double &t) const;

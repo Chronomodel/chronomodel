@@ -192,16 +192,14 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         }
     } else {
         
-        double tminDisplay;
-        double tmaxDisplay;
+        double tminDisplay (mTminDisplay);
+        double tmaxDisplay (mTmaxDisplay);
 
         const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
         const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
 
-        for ( auto &&d : date.mSubDates ) {
-            QJsonObject subDate = d.toObject();
-            Date sd;
-            sd.fromJson(subDate);
+        for ( auto && d : date.mSubDates ) {
+            Date sd (d.toObject());
             QString toFind = sd.mUUID;
             
             Project* project = MainWindow::getInstance()->getProject();

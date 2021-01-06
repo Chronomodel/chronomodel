@@ -634,12 +634,9 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
         QJsonObject mergedData;
 
         // inherits the first data propeties as plug-in and method...
-        result = dates.at(0).toObject();
-        result[STATE_NAME] = names.join(" | ");
-        result[STATE_DATE_UUID] = QString::fromStdString( Generator::UUID());
-        result[STATE_DATE_SUB_DATES] = dates;
 
-        // test existence de wiggle
+
+        // test wiggle existence and create the name
         bool withWiggle (false);
         for (int i(0); i<dates.size(); ++i) {
             QJsonObject date = dates.at(i).toObject();
@@ -649,6 +646,10 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
             names.append(dates.at(i).toObject().value(STATE_NAME).toString());
         }
 
+        result = dates.at(0).toObject();
+        result[STATE_NAME] = names.join(" | ");
+        result[STATE_DATE_UUID] = QString::fromStdString( Generator::UUID());
+        result[STATE_DATE_SUB_DATES] = dates;
 
 
         if (withWiggle) {

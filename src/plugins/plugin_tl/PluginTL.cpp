@@ -180,12 +180,9 @@ QString PluginTL::getDateDesc(const Date* date) const
     } else {
          result = "Combine (";
         QStringList datesDesc;
-        for (int i (0); i< date->mSubDates.size(); i++) {
-            const QJsonObject d = date->mSubDates.at(i).toObject();
-            Date subDate;
-            subDate.fromJson(d);
+        for (auto && d: date->mSubDates) {
+            Date subDate (d.toObject() );
             datesDesc.append(getDateDesc(&subDate));
-
         }
         result +=  datesDesc.join(" | ") + " )" ;
     }
@@ -245,8 +242,7 @@ QJsonObject PluginTL::mergeDates(const QJsonArray& dates)
     if (dates.size() > 1) {
        
         QJsonObject mergedData;
-        
-        
+
         mergedData[DATE_TL_AGE_STR] = 100;
         mergedData[DATE_TL_ERROR_STR] = 100;
         mergedData[DATE_TL_REF_YEAR_STR] = 0;
@@ -254,12 +250,8 @@ QJsonObject PluginTL::mergeDates(const QJsonArray& dates)
         
         QStringList names;
 
-        for (int i=0; i<dates.size(); ++i) {
-            const QJsonObject date = dates.at(i).toObject();
-          
-            names.append(date.value(STATE_NAME).toString());
-        
-        }
+        for (auto && d: dates)
+            names.append(d.toObject().value(STATE_NAME).toString());
 
         // inherits the first data propeties as plug-in and method...
         result = dates.at(0).toObject();
@@ -267,7 +259,7 @@ QJsonObject PluginTL::mergeDates(const QJsonArray& dates)
         result[STATE_DATE_DATA] = mergedData;
         result[STATE_DATE_ORIGIN] = Date::eCombination;
         result[STATE_DATE_SUB_DATES] = dates;
-         result[STATE_DATE_VALID] = true;
+        result[STATE_DATE_VALID] = true;
         
 
     } else
@@ -280,14 +272,13 @@ QPair<double,double> PluginTL::getTminTmaxRefsCurveCombine(const QJsonArray& sub
 {
     double tmin (INFINITY);
     double tmax (-INFINITY);
+    QPair<double, double> tminTmax (tmin,tmax);
 
-    for (int i(0); i<subData.size(); ++i) {
-       
-        const QPair<double, double> tminTmax = getTminTmaxRefsCurve( subData.at(i).toObject().value(STATE_DATE_DATA).toObject() );
+    for (auto && d: subData)   {
+        tminTmax = getTminTmaxRefsCurve( d.toObject().value(STATE_DATE_DATA).toObject() );
         tmin = std::min(tmin, tminTmax.first);
         tmax = std::max(tmax, tminTmax.second);
         
-
     }
     return qMakePair(tmin, tmax);
 }

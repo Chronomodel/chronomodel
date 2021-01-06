@@ -179,7 +179,12 @@ void PluginMagForm::setData(const QJsonObject& data, bool isCombined)
 
         mRefCombo->setCurrentText(ref_curve);
     } 
+    else {
+        mIncEdit->setText("Combined data");
+        mAlpha95Edit->setText("Combined data");
+        emit PluginFormAbstract::OkEnabled(true );
 
+    }
     updateOptions();
 }
 

@@ -264,22 +264,23 @@ void DateDialog::checkWiggle()
 {
     if (mDeltaFixedRadio->isChecked()) {
         bool ok1 = true;
-        mDeltaFixedEdit->text().toInt(&ok1);
-        mWiggleIsValid = ok1;
+        const int f = mDeltaFixedEdit->text().toInt(&ok1);
+        mWiggleIsValid = ( ok1 && f>0 );
 
     } else if (mDeltaRangeRadio->isChecked()) {
         bool ok1 = true;
         bool ok2 = true;
         const int dmin = mDeltaMinEdit->text().toInt(&ok1);
         const int dmax = mDeltaMaxEdit->text().toInt(&ok2);
-        mWiggleIsValid = ( ok1 && ok2 && ( (dmax>dmin) || ( (dmin == 0) && (dmax == 0) ) ) );
+        mWiggleIsValid = ( ok1 && ok2 && ( (dmax>dmin) ) );
 
     } else if(mDeltaGaussRadio->isChecked()) {
         bool ok1 = true;
         bool ok2 = true;
-        const double a = mDeltaAverageEdit->text().toDouble(&ok1);
+        //const double a =
+        mDeltaAverageEdit->text().toDouble(&ok1);
         const double e = mDeltaErrorEdit->text().toDouble(&ok2);
-        mWiggleIsValid = ( ok1 && ok2 && ( (e>0) || ( (a == 0.) && (e == 0.) ) ) );
+        mWiggleIsValid = ( ok1 && ok2 &&  (e>0) );
 
     } else
         mWiggleIsValid = true;

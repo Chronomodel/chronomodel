@@ -241,37 +241,54 @@ QJsonObject PluginUniform::mergeDates(const QJsonArray& dates)
         QJsonObject mergedData;
         QStringList names;
         double min (-INFINITY);
-        double max (INFINITY);
+        double max (+INFINITY);
 
-        for (int i(0); i<dates.size(); ++i) {
-            names.append(dates.at(i).toObject().value(STATE_NAME).toString());
+        double Wmin (+INFINITY);
+        double Wmax (-INFINITY);
 
-            const QJsonObject data = dates.at(i).toObject().value(STATE_DATE_DATA).toObject();
+        for (auto&& d : dates) {
+            names.append(d.toObject().value(STATE_NAME).toString());
+
+            const QJsonObject data = d.toObject().value(STATE_DATE_DATA).toObject();
             min = std::max(min, data.value(DATE_UNIFORM_MIN_STR).toDouble() );
             max = std::min(max, data.value(DATE_UNIFORM_MAX_STR).toDouble() );
+
+            Wmin = std::min(Wmin, data.value(DATE_UNIFORM_MIN_STR).toDouble() );
+            Wmax = std::max(Wmax, data.value(DATE_UNIFORM_MAX_STR).toDouble() );
             // test existence de wiggle
             withWiggle = withWiggle || (data.value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);
 
         }
-        mergedData[DATE_UNIFORM_MIN_STR] = min;
-        mergedData[DATE_UNIFORM_MAX_STR] = max;
+
+        if (min >= max) {
+            result["error"] = tr("Combine is not possible");
+            return result;
+        }
+
         // inherits the first data propeties as plug-in and method...
         result = dates.at(0).toObject();
         result[STATE_NAME] = names.join(" | ");
         result[STATE_DATE_UUID] = QString::fromStdString( Generator::UUID());
-        result[STATE_DATE_DATA] = mergedData;
-        result[STATE_DATE_SUB_DATES] = dates;
+
 
         if (withWiggle) {
             result[STATE_DATE_ORIGIN] = Date::eCombination;
 
-            result[STATE_DATE_VALID] = true;
+            result[STATE_DATE_VALID] = (max>min ? true : false);
             result[STATE_DATE_DELTA_TYPE] = Date::eDeltaNone;
+
+            mergedData[DATE_UNIFORM_MIN_STR] = Wmin;
+            mergedData[DATE_UNIFORM_MAX_STR] = Wmax;
 
         } else {
             result[STATE_DATE_ORIGIN] = Date::eSingleDate;
             result[STATE_DATE_VALID] = (max>min ? true : false);
+            mergedData[DATE_UNIFORM_MIN_STR] = min;
+            mergedData[DATE_UNIFORM_MAX_STR] = max;
         }
+        result[STATE_DATE_DATA] = mergedData;
+        result[STATE_DATE_SUB_DATES] = dates;
+
     } else
         result["error"] = tr("Combine needs at least 2 data !");
 

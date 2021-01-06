@@ -68,14 +68,6 @@ PluginF14CForm::PluginF14CForm(PluginF14C* plugin, QWidget* parent, Qt::WindowFl
     mErrorEdit->setAlignment(Qt::AlignHCenter);
     connect(mErrorEdit, &QLineEdit::textChanged, this, &PluginF14CForm::errorIsValid);
 
- /*   mREdit = new QLineEdit(this);
-    mREdit->setText("0");
-    mREdit->setAlignment(Qt::AlignHCenter);
-
-    mRErrorEdit = new QLineEdit(this);
-    mRErrorEdit->setText("0");
-    mRErrorEdit->setAlignment(Qt::AlignHCenter);
-*/
     mRefCombo = new QComboBox(this);
     QStringList refCurves = PluginF14C->getRefsNames();
     for (int i = 0; i<refCurves.size(); ++i)
@@ -97,12 +89,6 @@ PluginF14CForm::PluginF14CForm(PluginF14C* plugin, QWidget* parent, Qt::WindowFl
     grid->addWidget(mErrorLab, 1, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mErrorEdit, 1, 1);
 
- /*   grid->addWidget(mRLab, 2, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mREdit, 2, 1);
-
-    grid->addWidget(mRErrorLab, 3, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mRErrorEdit, 3, 1);
-*/
     grid->addWidget(mRefLab, 4, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mRefCombo, 4, 1);
 
@@ -116,24 +102,25 @@ PluginF14CForm::~PluginF14CForm()
 
 void PluginF14CForm::setData(const QJsonObject& data, bool isCombined)
 {
-    const QLocale locale=QLocale();
-    const double a = data.value(DATE_F14C_FRACTION_STR).toDouble();
-    const double e = data.value(DATE_F14C_ERROR_STR).toDouble();
-//    const double r = data.value(DATE_F14C_DELTA_R_STR).toDouble();
-//    const double re = data.value(DATE_F14C_DELTA_R_ERROR_STR).toDouble();
-    const QString c = data.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
+    if ( isCombined) {
+        mAverageEdit->setText("Combined data");
+        mErrorEdit->setText("Combined data");
+        emit PluginFormAbstract::OkEnabled(true );
 
-    mAverageEdit->setText(locale.toString(a));
-    mErrorEdit->setText(locale.toString(e));
-//    mREdit->setText(locale.toString(r));
-//    mRErrorEdit->setText(locale.toString(re));
-    mRefCombo->setCurrentText(c);
+    } else {
+        const QLocale locale=QLocale();
+        const double a = data.value(DATE_F14C_FRACTION_STR).toDouble();
+        const double e = data.value(DATE_F14C_ERROR_STR).toDouble();
+        const QString c = data.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
 
-    mAverageEdit->setEnabled(!isCombined);
-    mErrorEdit->setEnabled(!isCombined);
- //   mREdit->setEnabled(!isCombined);
-//    mRErrorEdit->setEnabled(!isCombined);
-    mRefCombo->setEnabled(!isCombined);
+        mAverageEdit->setText(locale.toString(a));
+        mErrorEdit->setText(locale.toString(e));
+        mRefCombo->setCurrentText(c);
+
+        mAverageEdit->setEnabled(!isCombined);
+        mErrorEdit->setEnabled(!isCombined);
+        mRefCombo->setEnabled(!isCombined);
+    }
 }
 
 QJsonObject PluginF14CForm::getData()
@@ -142,14 +129,11 @@ QJsonObject PluginF14CForm::getData()
     const QLocale locale=QLocale();
     const double a = locale.toDouble(mAverageEdit->text());
     const double e = locale.toDouble(mErrorEdit->text());
-//    const double r = locale.toDouble(mREdit->text());
-//    const double re = locale.toDouble(mRErrorEdit->text());
+
     const QString c = mRefCombo->currentText();
 
     data.insert(DATE_F14C_FRACTION_STR, a);
     data.insert(DATE_F14C_ERROR_STR, e);
-//    data.insert(DATE_F14C_DELTA_R_STR, r);
-//    data.insert(DATE_F14C_DELTA_R_ERROR_STR, re);
     data.insert(DATE_F14C_REF_CURVE_STR, c);
 
     mSelectedRefCurve = c;

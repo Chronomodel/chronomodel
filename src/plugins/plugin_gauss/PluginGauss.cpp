@@ -99,43 +99,6 @@ QPair<long double, long double> PluginGauss::getLikelihoodArg(const double& t, c
         return qMakePair(variance, exponent);
     }
     
-
-// ------- Combination functions
-//long double PluginGauss::getLikelihoodCombine  (const double& t, const QJsonArray& subData)
-//   {
-//       long double produit (0.l);
-//       for (int i(0); i<subData.size(); ++i) {
-//           const QJsonObject subDate = subData.at(i).toObject();
-//           auto data = subDate.value(STATE_DATE_DATA).toObject();
-//
-//           produit += getLikelihood(t, data );
-//
-//       }
-//
-//       return produit;
-//   }
-//QPair<double,double> PluginGauss::getTminTmaxRefsCurveCombine(const QJsonArray& subData)
-//{
-//    double tmin (INFINITY);
-//    double tmax (-INFINITY);
-//   // const double k (5.);
-//
-//    for (int i(0); i<subData.size(); ++i) {
-//        //const QJsonObject subDate = subData.at(i).toObject();
-//        //const QJsonObject data = subDate.value(STATE_DATE_DATA).toObject();
-//
-//        const QPair<double, double> tminTmax = getTminTmaxRefsCurve( subData.at(i).toObject().value(STATE_DATE_DATA).toObject() );
-//        tmin = std::min(tmin, tminTmax.first);
-//        tmax = std::max(tmax, tminTmax.second);
-//
-//
-//    }
-//    return qMakePair(tmin, tmax);
-//}
-
-
-
-
 // Properties
 QString PluginGauss::getName() const
 {
@@ -238,12 +201,9 @@ QString PluginGauss::getDateDesc(const Date* date) const
     } else {
         result = "Combine (";
         QStringList datesDesc;
-        for (int i (0); i< date->mSubDates.size(); i++) {
-            const QJsonObject d = date->mSubDates.at(i).toObject();
-            Date subDate;
-            subDate.fromJson(d);
+        for (auto && d: date->mSubDates) {
+            Date subDate (d.toObject() );
             datesDesc.append(getDateDesc(&subDate));
-
         }
         result += datesDesc.join(" | ") + " )" ;
         
@@ -477,7 +437,6 @@ double PluginGauss::getRefValueAt(const QJsonObject& data, const double& t)
 
 double PluginGauss::getRefErrorAt(const QJsonObject& data, const double& t, const QString mode)
 {
-    //QString mode = data[DATE_GAUSS_MODE_STR].toString();
     double e (0.);
 
     if (mode == DATE_GAUSS_MODE_CURVE) {
@@ -669,11 +628,10 @@ QJsonObject PluginGauss::mergeDates(const QJsonArray& dates)
         QStringList names;
         // wiggle existence test
         bool withWiggle (false);
-        for (int i(0); i<dates.size(); ++i) {
-            QJsonObject date = dates.at(i).toObject();
-            const QJsonObject dateData = date.value(STATE_DATE_DATA).toObject();
+        for (auto && d : dates) {
+             const QJsonObject dateData = d.toObject().value(STATE_DATE_DATA).toObject();
              withWiggle = withWiggle || (dateData.value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);
-             names.append(dates.at(i).toObject().value(STATE_NAME).toString());
+             names.append(d.toObject().value(STATE_NAME).toString());
         }
 
 

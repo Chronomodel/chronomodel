@@ -462,8 +462,18 @@ void CalibrationView::updateGraphs()
         //  Labels
         // ------------------------------------------------------------
         if (mRefGraphView) {
-            mDrawing->setRefTitle(tr("Calibration process"));
-            mDrawing->setRefComment(mDate.mPlugin->getDateDesc(&mDate));
+            if (mDate.mOrigin == Date::eSingleDate) {
+                mDrawing->setRefTitle(tr("Calibration process"));
+                mDrawing->setRefComment(mDate.mPlugin->getDateDesc(&mDate));
+            } else {
+                mDrawing->setRefTitle(tr("Overlay densities"));
+                QList<QString> subDatesName;
+                for(auto && d : mDate.mSubDates)
+                    subDatesName.append(d.toObject().value(STATE_NAME).toString());
+
+                mDrawing->setRefComment(subDatesName.join(" ; "));
+            }
+
             mDrawing->setCalibTitle(tr("Distribution of calibrated date"));
             mDrawing->setCalibComment("HPD = " + mHPDEdit->text() + " %");
 

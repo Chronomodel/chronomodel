@@ -70,13 +70,7 @@ QPair<long double, long double> PluginF14C::getLikelihoodArg(const double& t, co
 {
     double age = data.value(DATE_F14C_FRACTION_STR).toDouble();
     double error = data.value(DATE_F14C_ERROR_STR).toDouble();
-//    double delta_r = data.value(DATE_F14C_DELTA_R_STR).toDouble();
-//    double delta_r_error = data.value(DATE_F14C_DELTA_R_ERROR_STR).toDouble();
 
-    // Apply reservoir effect
-/*    age = (age - delta_r);
-    error = sqrt(error * error + delta_r_error * delta_r_error);
-*/
     long double refValue = (long double) getRefValueAt(data, t);
     long double refError = (long double) getRefErrorAt(data, t);
 
@@ -137,16 +131,10 @@ QString PluginF14C::getDateDesc(const Date* date) const
 
     const double age = data.value(DATE_F14C_FRACTION_STR).toDouble();
     const double error = data.value(DATE_F14C_ERROR_STR).toDouble();
-//    const double delta_r = data.value(DATE_F14C_DELTA_R_STR).toDouble();
-//    const double delta_r_error = data.value(DATE_F14C_DELTA_R_ERROR_STR).toDouble();
     const QString ref_curve = data.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
 
     result += QObject::tr("Age : %1").arg(locale.toString(age));
     result += " ± " + locale.toString(error);
-
-//    if (delta_r != 0. || delta_r_error != 0.)
-//        result += ", " + QObject::tr("ΔR : %1 ± %2").arg(locale.toString(delta_r), locale.toString(delta_r_error));
-
 
     if (mRefCurves.contains(ref_curve) && !mRefCurves.value(ref_curve).mDataMean.isEmpty())
         result += "; " + tr("Ref. curve : %1").arg(ref_curve);
@@ -190,10 +178,6 @@ QJsonObject PluginF14C::fromCSV(const QStringList& list, const QLocale &csvLocal
         json.insert(DATE_F14C_ERROR_STR, error);
         json.insert(DATE_F14C_REF_CURVE_STR, list.at(3).toLower());
 
-        // These columns are nor mandatory in the CSV file so check if they exist :
- //       json.insert(DATE_F14C_DELTA_R_STR, (list.size() > 4) ? csvLocale.toDouble(list.at(4)) : 0.f);
- //       json.insert(DATE_F14C_DELTA_R_ERROR_STR, (list.size() > 5) ? csvLocale.toDouble(list.at(5)) : 0.f);
-
     }
     return json;
 }
@@ -204,8 +188,6 @@ QStringList PluginF14C::toCSV(const QJsonObject& data, const QLocale& csvLocale)
     list << csvLocale.toString(data.value(DATE_F14C_FRACTION_STR).toDouble());
     list << csvLocale.toString(data.value(DATE_F14C_ERROR_STR).toDouble());
     list << data.value(DATE_F14C_REF_CURVE_STR).toString();
-//    list << csvLocale.toString(data.value(DATE_F14C_DELTA_R_STR).toDouble());
-//    list << csvLocale.toString(data.value(DATE_F14C_DELTA_R_ERROR_STR).toDouble());
     return list;
 }
 
@@ -233,6 +215,7 @@ QString PluginF14C::getRefsPath() const
     QString calibPath = path + "/Calib/F14C";
     return calibPath;
 }
+
 /** Convention; the last comment before data must show the data format. So we must find the cells separator (coma or space) and the year Unit (BC/AD or BP)
  */
 RefCurve PluginF14C::loadRefFile(QFileInfo refFile)
@@ -447,13 +430,6 @@ QJsonObject PluginF14C::checkValuesCompatibility(const QJsonObject& values)
 {
     QJsonObject result = values;
 
- //   if (result.find(DATE_F14C_DELTA_R_ERROR_STR) == result.end())
-  //      result[DATE_F14C_DELTA_R_ERROR_STR] = 0.0;
-
-    // must be a double
-//    result[DATE_F14C_DELTA_R_STR] = result.value(DATE_F14C_DELTA_R_STR).toDouble() ;
- //   result[DATE_F14C_DELTA_R_ERROR_STR] = result.value(DATE_F14C_DELTA_R_ERROR_STR).toDouble() ;
-
     // Force curve name to lower case :
     result[DATE_F14C_REF_CURVE_STR] = result.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
 
@@ -474,10 +450,6 @@ bool PluginF14C::isDateValid(const QJsonObject& data, const ProjectSettings& set
         const RefCurve& curve = mRefCurves.value(ref_curve);
         valid = false;
         double age = data.value(DATE_F14C_FRACTION_STR).toDouble();
-  //      const double delta_r = data.value(DATE_F14C_DELTA_R_STR).toDouble();
-
-        // Apply reservoir effect
-  //      age = (age - delta_r);
 
         if (age>curve.mDataInfMin && age < curve.mDataSupMax)
             valid = true;
@@ -540,18 +512,17 @@ bool PluginF14C::areDatesMergeable(const QJsonArray& dates)
 }
 
 /**
- * @brief Combine several 14C Age
+ * @brief Combine several F14C Age
  **/
 QJsonObject PluginF14C::mergeDates(const QJsonArray& dates)
 {
     QJsonObject result;
     if (dates.size() > 1) {
 
-        // test existence de wiggle
+        // wiggle existence test
         bool withWiggle (false);
-        for (int i(0); i<dates.size(); ++i) {
-            QJsonObject date = dates.at(i).toObject();
-            const QJsonObject dateData = date.value(STATE_DATE_DATA).toObject();
+        for (auto && d :dates) {
+             const QJsonObject dateData = d.toObject().value(STATE_DATE_DATA).toObject();
              withWiggle = withWiggle || (dateData.value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);
         }
 
@@ -564,8 +535,8 @@ QJsonObject PluginF14C::mergeDates(const QJsonArray& dates)
 
             QStringList names;
 
-            for (int i(0); i<dates.size(); ++i) {
-                names.append(dates.at(i).toObject().value(STATE_NAME).toString());
+            for (auto && d :dates) {
+                names.append(d.toObject().value(STATE_NAME).toString());
             }
 
             // inherits the first data propeties as plug-in and method...
@@ -608,19 +579,7 @@ QJsonObject PluginF14C::mergeDates(const QJsonArray& dates)
                 names.append(date.value(STATE_NAME).toString());
                 const double a = data.value(DATE_F14C_FRACTION_STR).toDouble();
                 const double e = data.value(DATE_F14C_ERROR_STR).toDouble();
-                //         const double r = data.value(DATE_F14C_DELTA_R_STR).toDouble();
-                //         const double re = data.value(DATE_F14C_DELTA_R_ERROR_STR).toDouble();
 
-                /* Reservoir effet
-                 * Theoretical problem with the applicability of the reservoir effect
-                 */
-                /*  const double m = a - r;
-                    const double v = e * e + re * re;
-
-                    sum_vi += v;
-                    sum_mi_vi += m/v;
-                    sum_1_vi += 1/v;
-               */
                 sum_vi += e;
                 sum_mi_vi += a/e;
                 sum_1_vi += 1/e;
@@ -629,8 +588,6 @@ QJsonObject PluginF14C::mergeDates(const QJsonArray& dates)
             QJsonObject mergedData;
             mergedData[DATE_F14C_FRACTION_STR] = sum_mi_vi / sum_1_vi;
             mergedData[DATE_F14C_ERROR_STR] = sqrt(1 / sum_1_vi);
-            //        mergedData[DATE_F14C_DELTA_R_STR] = 0.;
-            //        mergedData[DATE_F14C_DELTA_R_ERROR_STR] = 0.;
             mergedData[DATE_F14C_REF_CURVE_STR] = firstCurve ;
 
             // inherits the first data propeties as plug-in and method...
@@ -647,31 +604,4 @@ QJsonObject PluginF14C::mergeDates(const QJsonArray& dates)
 
 }
 
-// useless because 14C Combine produce a eSingleDate
-//long double PluginF14C::getLikelihoodCombine(const double& t, const QJsonArray& subData)
-//{
-//    // detection of combination with date.mSubDates.size() not empty
-//    QPair<long double, long double > result = getLikelihoodArgCombine(t, subData);
-//    qDebug()<< "PluginF14C::getLikelihoodCombine return : " << double(expl(result.second) / sqrt(result.first));
-//    return expl(result.second) / sqrt(result.first);
-//}
-//
-//QPair<long double, long double> PluginF14C::getLikelihoodArgCombine(const double& t, const QJsonArray& subData)
-//{
-//
-//    double sumExponent (0);
-//    double sumVariance (0);
-//    for (int i(0); i<subData.size(); ++i) {
-//        const QJsonObject subDate = subData.at(i).toObject();
-//        const QJsonObject data = subDate.value(STATE_DATE_DATA).toObject();
-//
-//        const QPair<long double, long double> localRes = getLikelihoodArg(t, data );
-//        sumExponent += localRes.first;
-//        sumVariance *= localRes.second;
-//
-//    }
-//    return qMakePair(sumVariance, sumExponent);
-//
-//
-//}
 #endif
