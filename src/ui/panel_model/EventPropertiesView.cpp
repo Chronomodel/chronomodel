@@ -83,6 +83,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 
     mMethodLab = new QLabel(tr("Method"), mTopView);
     mMethodCombo = new QComboBox(mTopView);
+    mMethodInfo = new QLabel(tr("MH : proposal = adapt. Gaussian random walk"), mTopView);
 
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eDoubleExp));
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eBoxMuller));
@@ -272,14 +273,14 @@ void EventPropertiesView::updateIndex(int index)
 
 void EventPropertiesView::updateEvent()
 {
-    qDebug()<<"EventPropertiesView::updateEvent";
-
-    if (mEvent.isEmpty()) {
+    if (mEvent.isEmpty())
+    {
         mTopView->setVisible(false);
         mEventView->setVisible(false);
         mBoundView->setVisible(false);
-
-    } else {
+    }
+    else
+    {
         Event::Type type = Event::Type (mEvent.value(STATE_EVENT_TYPE).toInt());
         QString name = mEvent.value(STATE_NAME).toString();
         QColor color(mEvent.value(STATE_COLOR_RED).toInt(),
@@ -291,9 +292,6 @@ void EventPropertiesView::updateEvent()
 
         mColorPicker->setColor(color);
 
-        mMethodLab->setVisible(type == Event::eDefault);
-        mMethodCombo->setVisible(type == Event::eDefault);
-
         // Chronocurve
         
         // The chronocurve settings may have changed since the last time the event property view has been opened
@@ -301,6 +299,10 @@ void EventPropertiesView::updateEvent()
         ChronocurveSettings settings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
         //mChronocurveEnabled = settings.mEnabled;
         mChronocurveProcessType = settings.mProcessType;
+        
+        mMethodLab->setVisible(type == Event::eDefault);
+        mMethodCombo->setVisible(!settings.mEnabled && (type == Event::eDefault));
+        mMethodInfo->setVisible(settings.mEnabled && (type == Event::eDefault));
         
         // Y1 contient l'inclinaison. Elle est toujours nécessaire en sphérique et vectoriel.
         // En univarié, elle n'est nécessaire que pour les variables d'étude : inclinaison ou déclinaison.
@@ -339,7 +341,8 @@ void EventPropertiesView::updateEvent()
         mEventView->setVisible(type == Event::eDefault);
         mBoundView->setVisible(type == Event::eKnown);
 
-        if (type == Event::eDefault) {
+        if (type == Event::eDefault)
+        {
             mMethodCombo->setCurrentIndex(mEvent.value(STATE_EVENT_METHOD).toInt());
             mDatesList->setEvent(mEvent);
             if (mCurrentDateIdx>=0)
@@ -726,6 +729,7 @@ void EventPropertiesView::updateLayout()
 
         mMethodLab->move(marginTop, mColorPicker->y() + mColorPicker->height() + marginTop);
         mMethodCombo->setGeometry(shiftMax , mMethodLab->y() - mComboBoxHeight/2 + marginTop, editWidth - marginTop, mComboBoxHeight);
+        mMethodInfo->setGeometry(shiftMax , mMethodLab->y() - mComboBoxHeight/2 + marginTop, editWidth - marginTop, mComboBoxHeight);
         
         // ----------------------------------
         //  Top View Height

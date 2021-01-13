@@ -143,6 +143,7 @@ private:
     QLineEdit* mNameEdit;
     ColorPicker* mColorPicker;
     QComboBox* mMethodCombo;
+    QLabel* mMethodInfo;
 
     DatesList* mDatesList;
     QList<Button*> mPluginButs1;

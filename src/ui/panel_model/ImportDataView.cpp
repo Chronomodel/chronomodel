@@ -125,7 +125,8 @@ void ImportDataView::browse()
             mTable->removeRow(0);
 
         QFile file(path);
-        if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
             QTextStream stream(&file);
             QList<QStringList> data;
 
@@ -134,76 +135,39 @@ void ImportDataView::browse()
             */
             //QTextCodec* codec = stream.codec();
 
-            int rows (0);
-            int cols (0);
+            int rows = 0;
+            int cols = 0;
 
             QStringList headers;
             const QStringList pluginNames = PluginManager::getPluginsNames();
 
             const QString csvSep = AppSettings::mCSVCellSeparator;
 
-            // endline detection, we want to find which system, OsX, Mac, Windows made this file
-           // QString line = stream.readLine();
-           /* char * pText;
-
-            stream.reset();
-
-             //FILE * pFile ;
-
-            char delim ;
-            char* c;
-            do {
-                  stream.device()->getChar(c);
-                  if(*c == 0x0A) {// LF (Line feed, '\n', 0x0A, 10 in decimal) - Linux, OS X
-                      delim = 0x0A;
-                      qDebug()<<"ENDLINE Delim LF Line feed";
-                  }
-                  if(*c == 0x0A) { //CR followed by LF (CR+LF, '\r\n', 0x0D0A) - Microsoft Windows
-                      delim = 0x0D0A;
-                      qDebug()<<"ENDLINE Delim CR+LF CR followed by LF";
-                  }
-                  if(*c == 0x0A) {// CR (Carriage return, '\r', 0x0D, 13 in decimal) - Mac OS up to version 9, and OS-9
-                      delim = 0x0D;
-                      qDebug()<<"ENDLINE Delim CR Carriage return";
-                  }
-             } while (*c != EOF);
-           // fclose (pFile);
-
-
-             * if(line.contains("\n")) {// LF (Line feed, '\n', 0x0A, 10 in decimal) - Linux, OS X
-                delim = 0x0A;
-                qDebug()<<"ENDLINE Delim LF Line feed";
-            }
-            if(line.contains("\r\n")) { //CR followed by LF (CR+LF, '\r\n', 0x0D0A) - Microsoft Windows
-                delim = 0x0D0A;
-                qDebug()<<"ENDLINE Delim CR+LF CR followed by LF";
-            }
-            if(line.contains("\r")) {// CR (Carriage return, '\r', 0x0D, 13 in decimal) - Mac OS up to version 9, and OS-9
-                delim = 0x0D;
-                qDebug()<<"ENDLINE Delim CR Carriage return";
-            }
-            std::string stdLine;
-            std::ifstream input(file.fileName().toStdString());
-
-            //http://en.cppreference.com/w/cpp/string/basic_string/getline
-            while(std::getline(input, stdLine, delim))
-
-            */
-
             // Read every lines of the file
-            int noNameCount (1);
-            while (!stream.atEnd()) {
+            int noNameCount = 1;
+            while(!stream.atEnd())
+            {
                 const QString line = stream.readLine();
                 QStringList values = line.split(csvSep);
-                if (values.size() > 0) {
-                    qDebug()<<"ImportDataView::browse() "<<values.at(0).toUpper();
-                    if (values.size() > 2 && values.at(0) == "") {
-                        values[0]="No Name "+ QString::number(noNameCount);
+                
+                if(values.size() > 0)
+                {
+                    // Skip the line if it is a comment
+                    if(isComment(values.at(0)))
+                    {
+                        continue;
+                    }
+                    // If there are at least 3 values in the line, then it is a data.
+                    // The first cell may contain an event name to be used whend dropping the data on the events scene.
+                    // If this cell is empty, then we give a value to it (No name x)
+                    else if(values.size() > 2 && values.at(0) == "")
+                    {
+                        values[0] = "No name " + QString::number(noNameCount);
                         ++noNameCount;
                     }
-                    if (isComment(values.at(0))) {
-                        continue;
-                    } else if (values.at(0).contains("title", Qt::CaseInsensitive) && !values.at(0).contains("ntitle", Qt::CaseInsensitive)) {
+                    // ???
+                    else if (values.at(0).contains("title", Qt::CaseInsensitive) && !values.at(0).contains("ntitle", Qt::CaseInsensitive))
+                    {
                         headers << "TITLE";
 
                         QStringList titleText;
@@ -215,7 +179,11 @@ void ImportDataView::browse()
                         data << titleText;
                         cols = (values.size() > cols) ? values.size() : cols;
                         ++rows;
-                    } else if (values.at(0).contains("structure", Qt::CaseInsensitive)) {
+                        
+                    }
+                    // ???
+                    else if (values.at(0).contains("structure", Qt::CaseInsensitive))
+                    {
                         headers << "STRUCTURE";
                         QStringList titleText;
                         values.push_front("");
@@ -223,11 +191,13 @@ void ImportDataView::browse()
                             if (val.toUpper() != "STRUCTURE")
                                 titleText.append(val);
                         }
-
+                        
                         data << titleText;
                         cols = (values.size() > cols) ? values.size() : cols;
                         ++rows;
-                    } else if (values.size() > 2) {
+                    }
+                    else if (values.size() > 2)
+                    {
                         // Display the line only if we have a plugin to import it !
                         const QString EventName = values.at(0);
                         const QString pluginName = values.at(1);
@@ -283,7 +253,7 @@ void ImportDataView::browse()
                 }
 
                 mTable->setCurrentCell(0, 0);
-         }
+            }
         }
     }
 }
@@ -318,7 +288,6 @@ void ImportDataView::exportDates()
             stream << "Title" << sep << AppSettings::mLastFile << endl;
             
             bool isChronocurve = project->mState[STATE_CHRONOCURVE].toObject().value(STATE_CHRONOCURVE_ENABLED).toBool();
-            int chronocurveStartColumn = 15;
             
             for(int i=0; i<events.size(); ++i)
             {
@@ -334,7 +303,6 @@ void ImportDataView::exportDates()
                 }
                 else
                 {
-                    
                     for(int j=0; j<dates.size(); ++j)
                     {
                         QJsonObject date = dates.at(j).toObject();
@@ -344,19 +312,23 @@ void ImportDataView::exportDates()
                             if (!d.isNull()) {
                                 QStringList dateCsv = d.toCSV(csvLocal);
                                 
-                                if(isChronocurve){
-                                    while(dateCsv.count() < chronocurveStartColumn){
+                                if(isChronocurve)
+                                {
+                                    // Chronocurve values start at column 15.
+                                    // They must be put from column 14 in dateCsv,
+                                    // because the row is shifted by one column at inserting eventName (see below)
+                                    int chronocurveStartColumn = 15;
+                                    while(dateCsv.count() < (chronocurveStartColumn-2)){
                                         dateCsv.append("");
                                     }
+                                    dateCsv.append(QString::number(event[STATE_EVENT_Y_INT].toDouble()));
+                                    dateCsv.append(QString::number(event[STATE_EVENT_S_INT].toDouble()));
                                     dateCsv.append(QString::number(event[STATE_EVENT_Y_INC].toDouble()));
                                     dateCsv.append(QString::number(event[STATE_EVENT_Y_DEC].toDouble()));
                                     dateCsv.append(QString::number(event[STATE_EVENT_S_INC].toDouble()));
-                                    dateCsv.append(QString::number(event[STATE_EVENT_Y_INT].toDouble()));
-                                    dateCsv.append(QString::number(event[STATE_EVENT_S_INT].toDouble()));
                                 }
-                                
-                                stream << eventName << sep;
-                                stream << dateCsv.join(sep) << endl;
+                                // Event name is inserted   
+                                stream << eventName << sep << dateCsv.join(sep) << endl;
                             }
                         }
                         catch(QString error){
@@ -517,20 +489,19 @@ void ImportDataTable::updateTableHeaders()
             headers << "Wiggle value 2 (Upper date | Error)";
         }
         
-        int chronocurveStartIndex = 15;
-        while (headers.size() < numCols){
+        int chronocurveStartIndex = 14;
+        while (headers.size() < numCols)
+        {
             if(headers.size() == chronocurveStartIndex){
-                headers << "Y1";
+                headers << "Y";
             }else if(headers.size() == (chronocurveStartIndex + 1)){
-                headers << "S1";
+                headers << "Error (Y)";
             }else if(headers.size() == (chronocurveStartIndex + 2)){
-                headers << "Y2";
+                headers << "Inc";
             }else if(headers.size() == (chronocurveStartIndex + 3)){
-                headers << "S2";
+                headers << "Dec";
             }else if(headers.size() == (chronocurveStartIndex + 4)){
-                headers << "Y3";
-            }else if(headers.size() == (chronocurveStartIndex + 5)){
-                headers << "S3";
+                headers << "Error (inc)";
             }else if(headers.size() > chronocurveStartIndex){
                 headers << "Comment";
             }else{

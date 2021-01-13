@@ -1390,7 +1390,8 @@ QList<Date> EventsScene::decodeDataDrop_old(QGraphicsSceneDragDropEvent* e)
     QList<int> rejectedRows;
     QList<Date> dates;
 
-    while (!stream.atEnd()) {
+    while (!stream.atEnd())
+    {
         QString itemStr;
         stream >> itemStr;
 
@@ -1471,22 +1472,19 @@ QPair<QList<QPair<QString, Date>>, QMap<QString, double>> EventsScene::decodeDat
                 acceptedRows.append(csvRow);
                 
                 if(dataStr.size() >= 15){
-                    chronocurveEventValues.insert("Y1", dataStr.at(15).toDouble());
+                    chronocurveEventValues.insert("YInt", dataStr.at(14).toDouble());
                 }
                 if(dataStr.size() >= 16){
-                    chronocurveEventValues.insert("S1", dataStr.at(16).toDouble());
+                    chronocurveEventValues.insert("SInt", dataStr.at(15).toDouble());
                 }
                 if(dataStr.size() >= 17){
-                    chronocurveEventValues.insert("Y2", dataStr.at(17).toDouble());
+                    chronocurveEventValues.insert("YInc", dataStr.at(16).toDouble());
                 }
                 if(dataStr.size() >= 18){
-                    chronocurveEventValues.insert("S2", dataStr.at(18).toDouble());
+                    chronocurveEventValues.insert("YDec", dataStr.at(17).toDouble());
                 }
                 if(dataStr.size() >= 19){
-                    chronocurveEventValues.insert("Y3", dataStr.at(19).toDouble());
-                }
-                if(dataStr.size() >= 20){
-                    chronocurveEventValues.insert("S3", dataStr.at(20).toDouble());
+                    chronocurveEventValues.insert("SInc", dataStr.at(18).toDouble());
                 }
             }
             else
@@ -1499,5 +1497,8 @@ QPair<QList<QPair<QString, Date>>, QMap<QString, double>> EventsScene::decodeDat
     emit csvDataLineDropAccepted(acceptedRows); //connected to slot ImportDataView::removeCsvRows
     emit csvDataLineDropRejected(rejectedRows);
 
+    // On retourne 2 éléments (sous forme d'une paire) :
+    // - La liste des dates associées au nom de leur plugin
+    // - Les valeurs chronocurve à utiliser pour créer un event associé à la date (si nécessaire)
     return QPair<QList<QPair<QString, Date>>, QMap<QString, double>>(dates, chronocurveEventValues);
 }

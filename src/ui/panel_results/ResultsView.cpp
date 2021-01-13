@@ -150,13 +150,7 @@ mMinorCountScale(4)
     curveWidget->setMouseTracking(true);
     mCurveScrollArea->setWidget(curveWidget);
     
-    mAlphaScrollArea = new QScrollArea(this);
-    mAlphaScrollArea->setMouseTracking(true);
-    QWidget* alphaWidget = new QWidget();
-    alphaWidget->setMouseTracking(true);
-    mAlphaScrollArea->setWidget(alphaWidget);
-    
-    connect(mGraphTypeTabs, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::applyGraphTypeTab);
+    connect(mGraphTypeTabs, &Tabs::tabClicked, this, &ResultsView::applyGraphTypeTab);
     connect(mRuler, &Ruler::positionChanged, this, &ResultsView::applyRuler);
     
     
@@ -275,6 +269,9 @@ mMinorCountScale(4)
     mCurveGSRadio = new RadioButton(tr("G Second"));
     mCurveGSRadio->setFixedHeight(h);
     
+    mAlphaRadio = new RadioButton(tr("Alpha"));
+    mAlphaRadio->setFixedHeight(h);
+    
     QVBoxLayout* curveGroupLayout = new QVBoxLayout();
     curveGroupLayout->setContentsMargins(10, 10, 10, 10);
     curveGroupLayout->setSpacing(15);
@@ -283,6 +280,7 @@ mMinorCountScale(4)
     curveGroupLayout->addWidget(mCurvePointsCheck);
     curveGroupLayout->addWidget(mCurveGPRadio);
     curveGroupLayout->addWidget(mCurveGSRadio);
+    curveGroupLayout->addWidget(mAlphaRadio);
     mCurvesGroup->setLayout(curveGroupLayout);
     
     // -----------------------------------------------------------------
@@ -307,9 +305,10 @@ mMinorCountScale(4)
     connect(mTempoCredCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     connect(mTempoErrCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     
-    connect(mCurveGRadio, &CheckBox::clicked, this, &ResultsView::applyCurveOptions);
-    connect(mCurveGPRadio, &CheckBox::clicked, this, &ResultsView::applyCurveOptions);
-    connect(mCurveGSRadio, &CheckBox::clicked, this, &ResultsView::applyCurveOptions);
+    connect(mCurveGRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
+    connect(mCurveGPRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
+    connect(mCurveGSRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
+    connect(mAlphaRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
     connect(mCurveErrorCheck, &CheckBox::clicked, this, &ResultsView::applyCurveOptions);
     connect(mCurvePointsCheck, &CheckBox::clicked, this, &ResultsView::applyCurveOptions);
 
@@ -321,9 +320,8 @@ mMinorCountScale(4)
     mGraphListTab->addTab(tr("Phases"));
     mGraphListTab->addTab(tr("Tempo"));
     mGraphListTab->addTab(tr("Curve"));
-    mGraphListTab->addTab(tr("Alpha"));
 
-    connect(mGraphListTab, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::applyGraphListTab);
+    connect(mGraphListTab, &Tabs::tabClicked, this, &ResultsView::applyGraphListTab);
 
     // -----------------------------------------------------------------
     //  Tabs : Display / Distrib. Options
@@ -334,7 +332,7 @@ mMinorCountScale(4)
     mTabDisplayMCMC->addTab(tr("Distrib. Options"));
     
     // Necessary to reposition all elements inside the selected tab :
-    connect(mTabDisplayMCMC, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::applyDisplayTab);
+    connect(mTabDisplayMCMC, &Tabs::tabClicked, this, &ResultsView::applyDisplayTab);
 
     // -----------------------------------------------------------------
     //  Display Options layout
@@ -453,7 +451,7 @@ mMinorCountScale(4)
     //  Graphic Options
     // ------------------------------------
     mGraphicTitle = new Label(tr("Graphic Options"), mTabDisplay);
-    mGraphicTitle->setFixedHeight(20);
+    mGraphicTitle->setFixedHeight(25);
     mGraphicTitle->setIsTitle(true);
 
     mGraphicGroup = new QWidget();
@@ -621,16 +619,12 @@ mMinorCountScale(4)
     mBandwidthLab = new Label(tr("Bandwidth Const."), mDensityOptsGroup);
     mBandwidthLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
-    mBandwidthEdit = new LineEdit(mDensityOptsGroup);
-    DoubleValidator* bandwidthValidator = new DoubleValidator();
-    bandwidthValidator->setBottom(1);
-    bandwidthValidator->setTop(100);
-    bandwidthValidator->setDecimals(0);
-    mBandwidthEdit->setValidator(bandwidthValidator);
+    mBandwidthSpin = new QDoubleSpinBox(mDensityOptsGroup);
+    mBandwidthSpin->setDecimals(2);
     
     connect(mCredibilityCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     connect(mFFTLenCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::applyFFTLength);
-    connect(mBandwidthEdit, &LineEdit::editingFinished, this, &ResultsView::applyBandwidth);
+    connect(mBandwidthSpin, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &ResultsView::applyBandwidth);
     connect(mThresholdEdit, &LineEdit::editingFinished, this, &ResultsView::applyThreshold);
     
     QHBoxLayout* densityLayout0 = new QHBoxLayout();
@@ -654,7 +648,7 @@ mMinorCountScale(4)
     densityLayout3->setContentsMargins(0, 0, 0, 0);
     //densityLayout3->setSpacing(mMargin);
     densityLayout3->addWidget(mBandwidthLab);
-    densityLayout3->addWidget(mBandwidthEdit);
+    densityLayout3->addWidget(mBandwidthSpin);
     
     QVBoxLayout* densityLayout = new QVBoxLayout();
     densityLayout->setContentsMargins(10, 10, 10, 10);
@@ -688,8 +682,8 @@ mMinorCountScale(4)
     mTabPageSaving = new Tabs();
     mTabPageSaving->addTab(tr("Page"));
     mTabPageSaving->addTab(tr("Saving"));
-
-    connect(mTabPageSaving, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::applyPageSavingTab);
+    
+    connect(mTabPageSaving, &Tabs::tabClicked, this, &ResultsView::applyPageSavingTab);
     
     // ------------------------------------
     //  Pagination
@@ -699,7 +693,7 @@ mMinorCountScale(4)
     mPageEdit->setReadOnly(true);
     mPageEdit->setAlignment(Qt::AlignCenter);
     mPageEdit->setText(QString::number(mMaximunNumberOfVisibleGraph));
-
+    
     mPreviousPageBut = new Button(tr("Prev."), mPageWidget);
     mPreviousPageBut->setCheckable(false);
     mPreviousPageBut->setFlatHorizontal();
@@ -799,7 +793,6 @@ mMinorCountScale(4)
     mPhasesScrollArea->setVisible(false);
     mTempoScrollArea->setVisible(false);
     mCurveScrollArea->setVisible(false);
-    mAlphaScrollArea->setVisible(false);
     
     GraphViewResults::mHeightForVisibleAxis = 4 * AppSettings::heigthUnit();
     mGraphHeight = GraphViewResults::mHeightForVisibleAxis;
@@ -807,6 +800,7 @@ mMinorCountScale(4)
     mMarker->raise();
     
     updateControls();
+    updateLayout();
 }
 
 ResultsView::~ResultsView()
@@ -835,7 +829,6 @@ void ResultsView::clearResults()
     deleteAllGraphsInList(mByPhasesGraphs);
     deleteAllGraphsInList(mByTempoGraphs);
     deleteAllGraphsInList(mByCurveGraphs);
-    deleteAllGraphsInList(mByAlphaGraphs);
 }
 
 void ResultsView::updateModel(Model* model)
@@ -873,12 +866,15 @@ void ResultsView::updateModel(Model* model)
     mCurrentVariable = GraphViewResults::eTheta;
     
     mFFTLenCombo->setCurrentText(QString::number(mModel->getFFTLength()));
-    mBandwidthEdit->setText(QString::number(mModel->getBandwidth()));
+    mBandwidthSpin->setValue(mModel->getBandwidth());
     mThresholdEdit->setText(QString::number(mModel->getThreshold()));
     
     applyStudyPeriod();
-    createGraphs();
+    
     updateControls();
+    createGraphs();
+    updateLayout();
+    
     showInfos(false);
 }
 
@@ -931,7 +927,6 @@ void ResultsView::updateLayout()
     mPhasesScrollArea->setGeometry(graphScrollGeometry);
     mTempoScrollArea->setGeometry(graphScrollGeometry);
     mCurveScrollArea->setGeometry(graphScrollGeometry);
-    mAlphaScrollArea->setGeometry(graphScrollGeometry);
     
     updateGraphsLayout();
     updateMarkerGeometry(mMarker->pos().x());
@@ -996,10 +991,6 @@ void ResultsView::updateGraphsLayout()
     {
         updateGraphsLayout(mCurveScrollArea, mByCurveGraphs);
     }
-    else if(mGraphListTab->currentIndex() == 4)
-    {
-        updateGraphsLayout(mAlphaScrollArea, mByAlphaGraphs);
-    }
 }
 
 void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewResults*> graphs)
@@ -1026,14 +1017,23 @@ void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewRes
 
 #pragma mark Tabs changes listeners
 
-void ResultsView::applyGraphTypeTab(int tabIndex)
+/**
+ * This is called when mGraphTypeTabs is clicked.
+ * Changing the "graph type" means switching between "Posterior distrib", "History Plot", "Acceptance Rate" and "Autocorrelation".
+ * It only makes sense when working on MH variable.
+ *
+ * Changing it requires the following steps :
+ * 1) updateControls : the available options have to be modified according to the graph type
+ * 2) generateCurves : no need to call createGraphs because we are only changing the curves displayed in the current graphs list.
+ * 3) updateLayout : always needed at the end to refresh the display
+*/
+void ResultsView::applyGraphTypeTab()
 {
-    Q_UNUSED(tabIndex);
-    
     mCurrentTypeGraph = (GraphViewResults::TypeGraph) mGraphTypeTabs->currentIndex();
     
     updateControls();
     generateCurves();
+    updateLayout();
 }
 
 /**
@@ -1041,28 +1041,29 @@ void ResultsView::applyGraphTypeTab(int tabIndex)
  * MCMC display options are only available for mCurrentVariable in : eTheta, eSigma, eDuration
  * so mTabDisplayMCMC must be displayed accordingly
  */
-void ResultsView::applyGraphListTab(int tabIndex)
+void ResultsView::applyGraphListTab()
 {
-    Q_UNUSED(tabIndex);
-    
     int currentIndex = mGraphListTab->currentIndex();
     
+    // Display the scroll area corresponding to the selected tab :
     mEventsScrollArea->setVisible(currentIndex == 0);
     mPhasesScrollArea->setVisible(currentIndex == 1);
     mTempoScrollArea->setVisible(currentIndex == 2);
     mCurveScrollArea->setVisible(currentIndex == 3);
-    mAlphaScrollArea->setVisible(currentIndex == 4);
     
-    // For duration
-    if (currentIndex == 2 || currentIndex == 3 || currentIndex == 4)
+    // Adjust the current graph type if necessary :
+    // - If graph list is "Tempo" (2) => ePostDistrib
+    
+    if(currentIndex == 2)
     {
-        mCurrentTypeGraph = GraphViewResults::ePostDistrib;
+        mGraphTypeTabs->setTab(0, false);
     }
+
+    mCurrentTypeGraph = (GraphViewResults::TypeGraph) mGraphTypeTabs->currentIndex();
     
-    // Create the UI graphs before updating controls
-    // which triggers updateLayout and resizes the graphs
-    createGraphs();
     updateControls();
+    createGraphs();
+    updateLayout();
 }
 
 void ResultsView::applyCurrentVariable()
@@ -1091,39 +1092,47 @@ void ResultsView::applyCurrentVariable()
     {
         mCurrentVariable = GraphViewResults::eActivity;
     }
+    else if (mAlphaRadio->isChecked())
+    {
+        mCurrentVariable = GraphViewResults::eAlpha;
+    }
     
-    createGraphs();
     updateControls();
+    createGraphs();
+    updateLayout();
 }
 
 void ResultsView::applyUnfoldEvents()
 {
-    createGraphs();
     updateControls();
+    createGraphs();
+    updateLayout();
 }
 
 void ResultsView::applyUnfoldDates()
 {
-    createGraphs();
     updateControls();
+    createGraphs();
+    updateLayout();
 }
 
 void ResultsView::applyCurveOptions()
 {
+    updateControls();
     updateCurvesToShow();
-    updateControls();
+    updateLayout();
 }
 
-void ResultsView::applyDisplayTab(int tabIndex)
+void ResultsView::applyDisplayTab()
 {
-    Q_UNUSED(tabIndex);
     updateControls();
+    updateLayout();
 }
 
-void ResultsView::applyPageSavingTab(int tabIndex)
+void ResultsView::applyPageSavingTab()
 {
-    Q_UNUSED(tabIndex);
     updateControls();
+    updateLayout();
 }
 
 #pragma mark Chains controls
@@ -1197,13 +1206,8 @@ void ResultsView::createGraphs()
     {
         createByCurveGraph();
     }
-    else if (mGraphListTab->currentIndex() == 4)
-    {
-        createByAlphaGraph();
-    }
     
     generateCurves();
-    updateCurvesToShow();
 }
 
 /**
@@ -1429,9 +1433,6 @@ void ResultsView::createByCurveGraph()
     
     ModelChronocurve* model = modelChronocurve();
     
-    bool hasY = (model->mChronocurveSettings.mProcessType != ChronocurveSettings::eProcessTypeUnivarie);
-    bool hasZ = (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel);
-    
     // ----------------------------------------------------------------------
     //  Disconnect and delete existing graphs
     // ----------------------------------------------------------------------
@@ -1439,99 +1440,83 @@ void ResultsView::createByCurveGraph()
     
     QWidget* widget = mCurveScrollArea->widget();
 
-    /*GraphViewAlpha* graph = new GraphViewAlpha(widget);
-    graph->setSettings(mModel->mSettings);
-    graph->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
-    graph->setGraphFont(font());
-    graph->setGraphsThickness(mThicknessCombo->currentIndex());
-    graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
-    graph->setMarginLeft(mMarginLeft);
-    graph->setMarginRight(mMarginRight);
-    graph->setModel(modelChronocurve());*/
-    
-    GraphViewCurve* graphX = new GraphViewCurve(widget);
-    graphX->setSettings(mModel->mSettings);
-    graphX->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
-    graphX->setGraphFont(font());
-    graphX->setGraphsThickness(mThicknessCombo->currentIndex());
-    graphX->changeXScaleDivision(mMajorScale, mMinorCountScale);
-    graphX->setMarginLeft(mMarginLeft);
-    graphX->setMarginRight(mMarginRight);
-    graphX->setTitle(tr("Mean G (composante x)"));
-    
-    graphX->setComposanteG(modelChronocurve()->mPosteriorMeanG.gx);
-    graphX->setComposanteGChains(modelChronocurve()->getChainsMeanGComposanteX());
-    graphX->setEvents(modelChronocurve()->mEvents);
-    mByCurveGraphs.append(graphX);
-    
-    connect(graphX, &GraphViewResults::selected, this, &ResultsView::updateLayout);
-    
-    if(hasY)
+    if(mAlphaRadio->isChecked())
     {
-        GraphViewCurve* graphY = new GraphViewCurve(widget);
-        graphY->setSettings(mModel->mSettings);
-        graphY->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
-        graphY->setGraphFont(font());
-        graphY->setGraphsThickness(mThicknessCombo->currentIndex());
-        graphY->changeXScaleDivision(mMajorScale, mMinorCountScale);
-        graphY->setMarginLeft(mMarginLeft);
-        graphY->setMarginRight(mMarginRight);
-        graphY->setTitle(tr("Mean G (composante y)"));
+        GraphViewAlpha* graphAlpha = new GraphViewAlpha(widget);
+        graphAlpha->setSettings(mModel->mSettings);
+        graphAlpha->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+        graphAlpha->setGraphFont(font());
+        graphAlpha->setGraphsThickness(mThicknessCombo->currentIndex());
+        graphAlpha->changeXScaleDivision(mMajorScale, mMinorCountScale);
+        graphAlpha->setMarginLeft(mMarginLeft);
+        graphAlpha->setMarginRight(mMarginRight);
+        graphAlpha->setModel(model);
+        graphAlpha->setTitle(tr("Alpha smoothing"));
+        graphAlpha->setModel(model);
         
-        graphY->setComposanteG(modelChronocurve()->mPosteriorMeanG.gy);
-        graphY->setComposanteGChains(modelChronocurve()->getChainsMeanGComposanteY());
-        mByCurveGraphs.append(graphY);
-        
-        connect(graphY, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+        mByCurveGraphs.append(graphAlpha);
+        connect(graphAlpha, &GraphViewResults::selected, this, &ResultsView::updateLayout);
     }
-    
-    if(hasZ)
+    else
     {
-        GraphViewCurve* graphZ = new GraphViewCurve(widget);
-        graphZ->setSettings(mModel->mSettings);
-        graphZ->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
-        graphZ->setGraphFont(font());
-        graphZ->setGraphsThickness(mThicknessCombo->currentIndex());
-        graphZ->changeXScaleDivision(mMajorScale, mMinorCountScale);
-        graphZ->setMarginLeft(mMarginLeft);
-        graphZ->setMarginRight(mMarginRight);
-        graphZ->setTitle(tr("Mean G (composante z)"));
+        bool hasY = (model->mChronocurveSettings.mProcessType != ChronocurveSettings::eProcessTypeUnivarie);
+        bool hasZ = (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel);
         
-        graphZ->setComposanteG(modelChronocurve()->mPosteriorMeanG.gz);
-        graphZ->setComposanteGChains(modelChronocurve()->getChainsMeanGComposanteZ());
-        mByCurveGraphs.append(graphZ);
+        GraphViewCurve* graphX = new GraphViewCurve(widget);
+        graphX->setSettings(mModel->mSettings);
+        graphX->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+        graphX->setGraphFont(font());
+        graphX->setGraphsThickness(mThicknessCombo->currentIndex());
+        graphX->changeXScaleDivision(mMajorScale, mMinorCountScale);
+        graphX->setMarginLeft(mMarginLeft);
+        graphX->setMarginRight(mMarginRight);
+        graphX->setTitle(tr("Mean G (composante x)"));
         
-        connect(graphZ, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+        graphX->setComposanteG(modelChronocurve()->mPosteriorMeanG.gx);
+        graphX->setComposanteGChains(modelChronocurve()->getChainsMeanGComposanteX());
+        graphX->setEvents(modelChronocurve()->mEvents);
+        mByCurveGraphs.append(graphX);
+        
+        connect(graphX, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+        
+        if(hasY)
+        {
+            GraphViewCurve* graphY = new GraphViewCurve(widget);
+            graphY->setSettings(mModel->mSettings);
+            graphY->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+            graphY->setGraphFont(font());
+            graphY->setGraphsThickness(mThicknessCombo->currentIndex());
+            graphY->changeXScaleDivision(mMajorScale, mMinorCountScale);
+            graphY->setMarginLeft(mMarginLeft);
+            graphY->setMarginRight(mMarginRight);
+            graphY->setTitle(tr("Mean G (composante y)"));
+            
+            graphY->setComposanteG(modelChronocurve()->mPosteriorMeanG.gy);
+            graphY->setComposanteGChains(modelChronocurve()->getChainsMeanGComposanteY());
+            mByCurveGraphs.append(graphY);
+            
+            connect(graphY, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+        }
+        
+        if(hasZ)
+        {
+            GraphViewCurve* graphZ = new GraphViewCurve(widget);
+            graphZ->setSettings(mModel->mSettings);
+            graphZ->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+            graphZ->setGraphFont(font());
+            graphZ->setGraphsThickness(mThicknessCombo->currentIndex());
+            graphZ->changeXScaleDivision(mMajorScale, mMinorCountScale);
+            graphZ->setMarginLeft(mMarginLeft);
+            graphZ->setMarginRight(mMarginRight);
+            graphZ->setTitle(tr("Mean G (composante z)"));
+            
+            graphZ->setComposanteG(modelChronocurve()->mPosteriorMeanG.gz);
+            graphZ->setComposanteGChains(modelChronocurve()->getChainsMeanGComposanteZ());
+            mByCurveGraphs.append(graphZ);
+            
+            connect(graphZ, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+        }
     }
-}
-
-void ResultsView::createByAlphaGraph()
-{
-    Q_ASSERT(isChronocurve());
-    
-    ModelChronocurve* model = modelChronocurve();
-    
-    // ----------------------------------------------------------------------
-    //  Disconnect and delete existing graphs
-    // ----------------------------------------------------------------------
-    deleteAllGraphsInList(mByAlphaGraphs);
-    
-    QWidget* widget = mAlphaScrollArea->widget();
-
-    GraphViewAlpha* graph = new GraphViewAlpha(widget);
-    graph->setSettings(mModel->mSettings);
-    graph->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
-    graph->setGraphFont(font());
-    graph->setGraphsThickness(mThicknessCombo->currentIndex());
-    graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
-    graph->setMarginLeft(mMarginLeft);
-    graph->setMarginRight(mMarginRight);
-    graph->setModel(modelChronocurve());
-    graph->setTitle(tr("Alpha smoothing"));
-    graph->setModel(modelChronocurve());
-    
-    mByAlphaGraphs.append(graph);
-    connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
 }
 
 void ResultsView::deleteAllGraphsInList(QList<GraphViewResults*>& list)
@@ -1550,7 +1535,6 @@ QList<GraphViewResults*> ResultsView::allGraphs()
     graphs.append(mByPhasesGraphs);
     graphs.append(mByTempoGraphs);
     graphs.append(mByCurveGraphs);
-    graphs.append(mByAlphaGraphs);
     return graphs;
 }
 
@@ -1603,16 +1587,6 @@ QList<GraphViewResults*> ResultsView::currentGraphs(bool onlySelected)
             }
         }
     }
-    else if (mGraphListTab->currentIndex() == 4)
-    {
-        for(auto &&graph : mByAlphaGraphs)
-        {
-            if (!onlySelected || graph->isSelected())
-            {
-                graphs.append(graph);
-            }
-        }
-    }
     return graphs;
 }
 
@@ -1638,73 +1612,11 @@ bool ResultsView::graphIndexIsInCurrentPage(int graphIndex)
 */
 void ResultsView::generateCurves()
 {
-    QList<GraphViewResults*> listGraphs;
-    
-    // -----------------------------------------------------------------
-    //  The "Events" tab is selected
-    // -----------------------------------------------------------------
-    if(mGraphListTab->currentIndex() == 0)
-    {
-        listGraphs = mByEventsGraphs;
-        
-        if(mDataThetaRadio->isChecked()){
-            mCurrentVariable = GraphViewResults::eTheta;
-        }else if (mDataSigmaRadio->isChecked()){
-            mCurrentVariable = GraphViewResults::eSigma;
-        }else if (mDataVGRadio->isChecked()){
-            mCurrentVariable = GraphViewResults::eVG;
-        }
-    }
-    // -----------------------------------------------------------------
-    //  The "Phases" tab is selected
-    // -----------------------------------------------------------------
-    else if (mGraphListTab->currentIndex() == 1)
-    {
-        listGraphs = mByPhasesGraphs;
-        
-        if(mDataThetaRadio->isChecked()){
-            mCurrentVariable = GraphViewResults::eTheta;
-        }else if (mDataSigmaRadio->isChecked()){
-            mCurrentVariable = GraphViewResults::eSigma;
-        }
-    }
-    // -----------------------------------------------------------------
-    //  The "Duration" tab is selected
-    // -----------------------------------------------------------------
-    else if (mGraphListTab->currentIndex() == 2)
-    {
-        listGraphs = mByTempoGraphs;
-        
-        if (mDurationRadio->isChecked()){
-            mCurrentVariable = GraphViewResults::eDuration;
-        }
-        else if (mTempoRadio->isChecked()){
-            mCurrentVariable = GraphViewResults::eTempo;
-        }
-        else if (mActivityRadio->isChecked()){
-            mCurrentVariable = GraphViewResults::eActivity;
-        }
-    }
-    // -----------------------------------------------------------------
-    //  The "Curves" tab is selected
-    // -----------------------------------------------------------------
-    else if (mGraphListTab->currentIndex() == 3)
-    {
-        listGraphs = mByCurveGraphs;
-    }
-    // -----------------------------------------------------------------
-    //  The "Alpha" tab is selected
-    // -----------------------------------------------------------------
-    else if (mGraphListTab->currentIndex() == 4)
-    {
-        mCurrentVariable = GraphViewResults::eAlpha;
-        listGraphs = mByAlphaGraphs;
-    }
-
     // -----------------------------------------------------------------
     //  Generate all graphs curves in the current list
     // -----------------------------------------------------------------
-    for(auto &&graph : listGraphs)
+    QList<GraphViewResults*> listGraphs = currentGraphs(false);
+    for(GraphViewResults* graph : listGraphs)
     {
         graph->generateCurves(GraphViewResults::TypeGraph(mCurrentTypeGraph), mCurrentVariable);
     }
@@ -1736,10 +1648,10 @@ void ResultsView::updateGraphsMax()
     }
 }
 
-double ResultsView::getGraphsMax(const QList<GraphViewResults*>& graphs, const QString& title, double maxCeil)
+double ResultsView::getGraphsMax(const QList<GraphViewResults*>& graphs, const QString& title, double maxFloor)
 {
     double max = 0.;
-
+    
     QList<GraphViewResults*>::const_iterator it = graphs.cbegin();
     QList<GraphViewResults*>::const_iterator itEnd = graphs.cend();
 
@@ -1757,7 +1669,7 @@ double ResultsView::getGraphsMax(const QList<GraphViewResults*>& graphs, const Q
         }
         ++it;
     }
-    max = std::max(maxCeil, max);
+    max = std::max(maxFloor, max);
     return max;
 }
 
@@ -1799,7 +1711,7 @@ void ResultsView::updateCurvesToShow()
     // --------------------------------------------------------
     //  Options for "Curve"
     // --------------------------------------------------------
-    if(mGraphListTab->currentIndex() == 3)
+    if((mGraphListTab->currentIndex() == 3) && !mAlphaRadio->isChecked())
     {
         bool showG = mCurveGRadio->isChecked();
         bool showGError = mCurveErrorCheck->isChecked();
@@ -1816,6 +1728,7 @@ void ResultsView::updateCurvesToShow()
             graphCurve->setShowNumericalResults(false);
             graphCurve->updateCurvesToShowForG(showAllChains, showChainList, showG, showGError, showGPoints, showGP, showGS);
         }
+
     }
     // --------------------------------------------------------
     //  All others
@@ -1872,7 +1785,7 @@ void ResultsView::updateScales()
     // ------------------------------------------------------------------
     //  Chronocurve results graphs ("Curve" tab)
     // ------------------------------------------------------------------
-    if(mGraphListTab->currentIndex() == 3)
+    if((mGraphListTab->currentIndex() == 3) && !mAlphaRadio->isChecked())
     {
         // Study period min and max
         mResultMinX = s.getTminFormated();
@@ -1888,6 +1801,7 @@ void ResultsView::updateScales()
         mRuler->setRange(mResultMinX, mResultMaxX);
         mRuler->setFormatFunctX(nullptr);
     }
+    
     // ------------------------------------------------------------------
     //  All other modes
     // ------------------------------------------------------------------
@@ -2028,6 +1942,11 @@ void ResultsView::updateScales()
             mResultCurrentMaxX = tMax;
         }
     }
+    else
+    {
+        mResultCurrentMinX = mResultMinX;
+        mResultCurrentMaxX = mResultMaxX;
+    }
     
     // Now, let's check if we have a saved scale (ticks interval) value for this key :
     if(mScales.find(key) != mScales.end())
@@ -2042,7 +1961,7 @@ void ResultsView::updateScales()
             mMajorScale = 10.;
             mMinorCountScale = 10;
         }
-        // All other cases (default behavior)
+        // All other cases (default behavior) :
         else
         {
             Scale xScale;
@@ -2120,39 +2039,31 @@ void ResultsView::updateControls()
         mGraphListTab->setTabVisible(1, false); // Phases
         mGraphListTab->setTabVisible(2, false); // Tempo
         mGraphListTab->setTabVisible(3, true); // Curve
-        mGraphListTab->setTabVisible(4, true); // Alpha
         
+        // If the current tab index is "Phases" or "Tempo",
+        // then go to "Events" tab which is a good default choice in "Curve" mode
         if(mGraphListTab->currentIndex() == 1 || mGraphListTab->currentIndex() == 2)
-        {
-            mGraphListTab->setTab(0, false);
-        }
-    }
-    else if(mHasPhases)
-    {
-        mGraphListTab->setTabVisible(1, true); // Phases
-        mGraphListTab->setTabVisible(2, true); // Tempo
-        mGraphListTab->setTabVisible(3, false); // Curve
-        mGraphListTab->setTabVisible(4, false); // Alpha
-        
-        mGraphListTab->setTab(1, false);       // Phases
-        
-        if(mGraphListTab->currentIndex() == 3)
         {
             mGraphListTab->setTab(0, false);
         }
     }
     else
     {
-        mGraphListTab->setTabVisible(1, false); // Phases
-        mGraphListTab->setTabVisible(2, false); // Tempo
+        mGraphListTab->setTabVisible(1, mHasPhases); // Phases
+        mGraphListTab->setTabVisible(2, mHasPhases); // Tempo
         mGraphListTab->setTabVisible(3, false); // Curve
-        mGraphListTab->setTabVisible(4, false); // Alpha
         
-        mGraphListTab->setTab(0, false);        // Events
+        // If the current tab is not currently visible :
+        // - Show the "Phases" tab (1) which is a good default choice if the model has phases.
+        // - Show the "Events" tab (0) which is a good default choice if the model doesn't have phases.
         
-        if(mGraphListTab->currentIndex() != 0)
+        if(mHasPhases && mGraphListTab->currentIndex() >= 3)
         {
-            mGraphListTab->setTab(0, false);
+            mGraphListTab->setTab(1, false);
+        }
+        else if(!mHasPhases && mGraphListTab->currentIndex() >= 1)
+        {
+            mGraphListTab->setTab(1, false);
         }
     }
     
@@ -2217,7 +2128,6 @@ void ResultsView::updateControls()
         mGraphTypeTabs->setTabVisible(1, false); // History Plot
         mGraphTypeTabs->setTabVisible(2, false); // Acceptance Rate
         mGraphTypeTabs->setTabVisible(3, false); // Autocorrelation
-        mGraphTypeTabs->setTab(0, true);
         
         mResultsGroup->setVisible(false);
         mTempoGroup->setVisible(true);
@@ -2228,10 +2138,11 @@ void ResultsView::updateControls()
     }
     else if(mGraphListTab->currentIndex() == 3)
     {
-        mGraphTypeTabs->setTabVisible(1, false); // History Plot
-        mGraphTypeTabs->setTabVisible(2, false); // Acceptance Rate
-        mGraphTypeTabs->setTabVisible(3, false); // Autocorrelation
-        mGraphTypeTabs->setTab(0, true);
+        bool isAlpha = mAlphaRadio->isChecked();
+        
+        mGraphTypeTabs->setTabVisible(1, isAlpha); // History Plot
+        mGraphTypeTabs->setTabVisible(2, isAlpha); // Acceptance Rate
+        mGraphTypeTabs->setTabVisible(3, isAlpha); // Autocorrelation
         
         mResultsGroup->setVisible(false);
         mTempoGroup->setVisible(false);
@@ -2245,17 +2156,6 @@ void ResultsView::updateControls()
             mCurveErrorCheck->setChecked(false);
             mCurvePointsCheck->setChecked(false);
         }
-    }
-    else if(mGraphListTab->currentIndex() == 4)
-    {
-        mGraphTypeTabs->setTabVisible(1, true); // History Plot
-        mGraphTypeTabs->setTabVisible(2, true); // Acceptance Rate
-        mGraphTypeTabs->setTabVisible(3, true); // Autocorrelation
-        mGraphTypeTabs->setTab(0, true);
-        
-        mResultsGroup->setVisible(false);
-        mTempoGroup->setVisible(false);
-        mCurvesGroup->setVisible(false);
     }
     
     // -------------------------------------------------------------------------------------
@@ -2345,8 +2245,6 @@ void ResultsView::updateControls()
     
     mCurrentPage = 0;
     mMaximunNumberOfVisibleGraph = graphs.size();
-    
-    updateLayout();
 }
 
 /*void ResultsView::updateResultsLog()
@@ -2699,7 +2597,7 @@ void ResultsView::applyFFTLength()
 
 void ResultsView::applyBandwidth()
 {
-    const double bandwidth = locale().toDouble(mBandwidthEdit->text());
+    const double bandwidth = mBandwidthSpin->value();
     mModel->setBandwidth(bandwidth);
 }
 
@@ -2715,8 +2613,10 @@ void ResultsView::applyNextPage()
     {
         ++mCurrentPage;
         mPageEdit->setText(locale().toString(mCurrentPage + 1) + "/" + locale().toString(ceil(mMaximunNumberOfVisibleGraph/mGraphsPerPage)));
-        createGraphs();
+        
         updateControls();
+        createGraphs();
+        updateLayout();
     }
 }
 
@@ -2726,16 +2626,20 @@ void ResultsView::applyPreviousPage()
     {
         --mCurrentPage;
         mPageEdit->setText(locale().toString(mCurrentPage + 1) + "/" + locale().toString(ceil(mMaximunNumberOfVisibleGraph/mGraphsPerPage)));
-        createGraphs();
+        
         updateControls();
+        createGraphs();
+        updateLayout();
     }
 }
 
 void ResultsView::applyGraphsPerPage(int graphsPerPage)
 {
     mGraphsPerPage = graphsPerPage;
-    createGraphs();
+    
     updateControls();
+    createGraphs();
+    updateLayout();
 }
 
 void ResultsView::showInfos(bool show)

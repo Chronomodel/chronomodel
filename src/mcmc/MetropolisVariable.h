@@ -194,6 +194,6 @@ private:
 };
 
 QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data );
-
 QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data );
+
 #endif

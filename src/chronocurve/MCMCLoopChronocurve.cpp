@@ -86,7 +86,7 @@ MCMCLoopChronocurve::~MCMCLoopChronocurve()
  */
 QString MCMCLoopChronocurve::calibrate()
 {
-    if (mModel)
+    if(mModel)
     {
         QList<Event*>& events = mModel->mEvents;
         events.reserve(mModel->mEvents.size());
@@ -288,10 +288,10 @@ QString MCMCLoopChronocurve::initMCMC()
 
                 // 1 - Init ti
                 double sigma;
-                if (!date.mCalibration->mRepartition.isEmpty()) {
+                if (!date.mCalibration->mRepartition.isEmpty())
+                {
                     const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mCalibration->mRepartition);
-                    date.mTheta.mX = date.mCalibration->mTmin + idx *date.mCalibration->mStep;
-                  //  qDebug()<<"MCMCLoopMain::Init"<<date.mName <<" mThe.mx="<<QString::number(date.mTheta.mX, 'g', 15);
+                    date.mTheta.mX = date.mCalibration->mTmin + idx * date.mCalibration->mStep;
 
                     FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration->mCurve, tmin, tmax, date.mCalibration->mStep));
                     sigma = double (data.stddev);
@@ -312,6 +312,7 @@ QString MCMCLoopChronocurve::initMCMC()
                     }
 
                 }
+                
                 // 2 - Init Delta Wiggle matching and Clear mLastAccepts array
                 date.initDelta(unsortedEvents.at(i));
                 date.mWiggle.memo();
@@ -386,8 +387,10 @@ QString MCMCLoopChronocurve::initMCMC()
     QString log;
     emit stepChanged(tr("Initializing Variances..."), 0, events.size());
 
-    for (int i=0; i<events.size(); ++i) {
-        for (int j=0; j<events.at(i)->mDates.size(); ++j) {
+    for (int i=0; i<events.size(); ++i)
+    {
+        for (int j=0; j<events.at(i)->mDates.size(); ++j)
+        {
             Date& date = events.at(i)->mDates[j];
 
             // date.mSigma.mX = sqrt(shrinkageUniform(events[i]->mS02)); // modif the 2015/05/19 with PhL
@@ -564,6 +567,7 @@ void MCMCLoopChronocurve::update()
                 
                 // On reprend l'ancienne valeur, qui sera éventuellement mise à jour dans ce qui suit (Metropolis Hastings)
                 event->mTheta.mX = value_current;
+                
                 orderEventsByTheta();
                 
                 // Pour l'itération suivante :
@@ -738,8 +742,12 @@ void MCMCLoopChronocurve::update()
         mModel->mAlphaLissage.tryUpdate(value_new, rapport);
         
         if(doMemo){
-           mModel->mAlphaLissage.memo();
-           mModel->mAlphaLissage.saveCurrentAcceptRate();
+            // On stocke le log10 de alpha pour afficher les résultats a posteriori
+            mModel->mAlphaLissage.mX = -log10(mModel->mAlphaLissage.mX);
+            mModel->mAlphaLissage.memo();
+            mModel->mAlphaLissage.mX = pow(10., -mModel->mAlphaLissage.mX);
+            
+            mModel->mAlphaLissage.saveCurrentAcceptRate();
         }
     }
     // Pas bayésien : on sauvegarde la valeur constante dans la trace
@@ -818,7 +826,7 @@ void MCMCLoopChronocurve::update()
     }
     
     // --------------------------------------------------------------
-    //  Restauration des valeurs des theta (non espacés pour le calcul)
+    //  Restauration des valeurs des theta en années (non espacés pour le calcul)
     // --------------------------------------------------------------
     restoreEventsTheta();
 }
@@ -894,8 +902,7 @@ bool MCMCLoopChronocurve::adapt()
 
 void MCMCLoopChronocurve::finalize()
 {
-    
-    qDebug() << *(mModel->mAlphaLissage.mRawTrace);
+    //qDebug() << *(mModel->mAlphaLissage.mRawTrace);
     
     // This is not a copy of all data!
     // Chains only contain description of what happened in the chain (numIter, numBatch adapt, ...)
@@ -996,31 +1003,58 @@ PosteriorMeanGComposante MCMCLoopChronocurve::computePosteriorMeanGComposante(co
     
     int nbIter = trace.size();
     
+    // Dans le cas de la profondeur, on ne conserve pour les calculs
+    // que les valeurs correspondant à une dérivée première positive.
+    // Le nombre d'itérations retenues est donc modifié dans ce cas particulier.
+    int nbIterRetained = 0;
+    bool isProfondeur = (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeProfondeur);
+    
     for(int i=0; i<nbIter; ++i)
     {
         MCMCSplineComposante splineComposante = trace[i];
         
-        //qDebug() << splineComposante.vecErrG;
-        
-        for(int tIdx=0; tIdx<=(tmax - tmin); ++tIdx)
+        bool isRetainable = true;
+        // If, in case of profondeur, for this iteration, GP has at least one negative value,
+        // then the whole iteration is ignored.
+        if(isProfondeur)
         {
-            double t = (double)tIdx / (double)(tmax - tmin);
-            double g = valeurG(t, splineComposante);
+            for(int tIdx=0; tIdx<=(tmax - tmin); ++tIdx)
+            {
+                double t = (double)tIdx / (double)(tmax - tmin);
+                double gp = valeurGPrime(t, splineComposante);
+                if(gp < 0){
+                    isRetainable = false;
+                    break;
+                }
+            }
+        }
+        
+        if(isRetainable)
+        {
+            ++nbIterRetained;
             
-            vecCumulG[tIdx] += g;
-            vecCumulGP[tIdx] += valeurGPrime(t, splineComposante) / (tmax - tmin);
-            vecCumulGS[tIdx] += valeurGSeconde(t, splineComposante) / pow(tmax - tmin, 2.);
-            vecCumulG2[tIdx] += pow(g, 2.);
-            vecCumulErrG2[tIdx] += pow(valeurErrG(t, splineComposante), 2.);
+            for(int tIdx=0; tIdx<=(tmax - tmin); ++tIdx)
+            {
+                double t = (double)tIdx / (double)(tmax - tmin);
+                double g = valeurG(t, splineComposante);
+                double gp = valeurGPrime(t, splineComposante);
+                double gs = valeurGSeconde(t, splineComposante);
+                
+                vecCumulG[tIdx] += g;
+                vecCumulGP[tIdx] += gp / (tmax - tmin);
+                vecCumulGS[tIdx] += gs / pow(tmax - tmin, 2.);
+                vecCumulG2[tIdx] += pow(g, 2.);
+                vecCumulErrG2[tIdx] += pow(valeurErrG(t, splineComposante), 2.);
+            }
         }
     }
     
     for(int tIdx=0; tIdx<=(tmax-tmin); ++tIdx)
     {
-        vecG[tIdx] = vecCumulG[tIdx] / nbIter;
-        vecGP[tIdx] = vecCumulGP[tIdx] / nbIter;
-        vecGS[tIdx] = vecCumulGS[tIdx] / nbIter;
-        vecErrG[tIdx] = sqrt((vecCumulG2[tIdx] / nbIter) - pow(vecG[tIdx], 2.) + (vecCumulErrG2[tIdx] / nbIter));
+        vecG[tIdx] = vecCumulG[tIdx] / nbIterRetained;
+        vecGP[tIdx] = vecCumulGP[tIdx] / nbIterRetained;
+        vecGS[tIdx] = vecCumulGS[tIdx] / nbIterRetained;
+        vecErrG[tIdx] = sqrt((vecCumulG2[tIdx] / nbIterRetained) - pow(vecG[tIdx], 2.) + (vecCumulErrG2[tIdx] / nbIterRetained));
     }
     
     PosteriorMeanGComposante result;
@@ -1183,34 +1217,6 @@ double MCMCLoopChronocurve::valeurGSeconde(const double t, const MCMCSplineCompo
     return gSeconde;
 }
 
-
-/*void testResults()
-{
-    std::vector<double> ti = getThetaEventVector();
-    
-    for(Event* event : mModel->mEvents){
-        event->mY = event->mYx;
-    }
-    
-    orderEventsByTheta();
-    saveEventsTheta();
-    reduceEventsTheta(); // On passe en temps réduit entre 0 et 1
-    spreadEventsTheta();
-    
-    std::vector<double> tis = getThetaEventVector();
-    
-    // Calculer la moyenne des g(t) à partir de toutes les chaines
-    
-    SplineMatrices matrices = prepareCalculSpline();
-    SplineResults spline = calculSpline(matrices);
-    std::vector<double> errG = calculSplineError(matrices, spline);
-    
-    restoreEventsTheta();
-    
-    std::vector<double> tif = getThetaEventVector();
-    std::vector<double> yi = getYEventVector();
-}*/
-
 #pragma mark Related to : calibrate
 
 void MCMCLoopChronocurve::prepareEventsY()
@@ -1220,44 +1226,52 @@ void MCMCLoopChronocurve::prepareEventsY()
     }
 }
 
+/**
+ * Preparation des valeurs Yx, Yy, Yz et Sy à partir des valeurs saisies dans l'interface : Yinc, Ydec, Sinc, Yint, Sint
+ */
 void MCMCLoopChronocurve::prepareEventY(Event* event)
 {
-    double y1 = event->mYInc;
-    double y2 = event->mYDec;
-    double y3 = event->mYInt;
-    double s1 = event->mSInc;
-    double s3 = event->mSInt;
-    
     if(mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie)
     {
         if(mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeInclinaison)
         {
-            event->mYx = y1;
-            event->mSy = s1;
+            event->mYx = event->mYInc;
+            event->mSy = event->mSInc;
         }
         else if(mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDeclinaison)
         {
-            event->mYx = y2;
-            event->mSy = s1 / cos(y1 * M_PI / 180.);
+            event->mYx = event->mYDec;
+            event->mSy = event->mSInc / cos(event->mYInc * M_PI / 180.);
         }
         else
         {
-            event->mYx = y3;
-            event->mSy = s3;
+            event->mYx = event->mYInt;
+            event->mSy = event->mSInt;
         }
+        
+        // Non utilisé en univarié, mais mis à zéro notamment pour les exports CSV :
+        event->mYy = 0;
+        event->mYz = 0;
     }
     else if(mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique)
     {
-        event->mYx = y1;
-        event->mYy = y2;
-        event->mSy = s1;
+        event->mYx = event->mYInc;
+        event->mYy = event->mYDec;
+        event->mSy = event->mSInc;
+        
+        // Non utilisé en univarié, mais mis à zéro notamment pour les exports CSV :
+        event->mYz = 0;
     }
     else if(mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel)
     {
-        event->mYx = y3 * cos(y1 * M_PI / 180.) * cos(y2 * M_PI / 180.);
-        event->mYy = y3 * cos(y1 * M_PI / 180.) * sin(y2 * M_PI / 180.);
-        event->mYz = y3 * sin(y1 * M_PI / 180.);
-        event->mSy = pow((1/3) * (s3 * s3 + 2 * y3 * y3 / (s1 * s1)), 0.5);
+        event->mYx = event->mYInt * cos(event->mYInc * M_PI / 180.) * cos(event->mYDec * M_PI / 180.);
+        event->mYy = event->mYInt * cos(event->mYInc * M_PI / 180.) * sin(event->mYDec * M_PI / 180.);
+        event->mYz = event->mYInt * sin(event->mYInc * M_PI / 180.);
+        event->mSy = pow((1./3.) * (event->mSInt * event->mSInt + 2. * event->mYInt * event->mYInt / (event->mSInc * event->mSInc)), 0.5);
+    }
+    
+    if(!mChronocurveSettings.mUseErrMesure){
+        event->mSy = 0.;
     }
 }
 
@@ -1485,7 +1499,6 @@ void MCMCLoopChronocurve::orderEventsByTheta()
     // On manipule directement la liste des évènements
     QList<Event*>& result = mModel->mEvents;
     
-    //std::sort(result.begin(), result.end(), sortEventsByTheta);
     std::sort(result.begin(), result.end(), [](const Event* a, const Event* b) {
         return (a->mTheta.mX < b->mTheta.mX);
     });

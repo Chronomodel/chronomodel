@@ -975,7 +975,7 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 {
 
 #ifdef DEBUG
-    qDebug()<<"Model::generateCorrelations()";
+    //qDebug()<<"Model::generateCorrelations()";
     QTime t = QTime::currentTime();
 #endif
 
@@ -1031,10 +1031,10 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
     timeDiff = timeDiff.addMSecs(t.elapsed()).addMSecs(-1);
 //    qint64 timeDiff = t.msecsTo(t2);
 
-    qDebug() <<  QString("=> Model::generateCorrelations done in  %1 h %2 m %3 s %4 ms").arg(QString::number(timeDiff.hour()),
+    /*qDebug() <<  QString("=> Model::generateCorrelations done in  %1 h %2 m %3 s %4 ms").arg(QString::number(timeDiff.hour()),
                                                                 QString::number(timeDiff.minute()),
                                                                 QString::number(timeDiff.second()),
-                                                                QString::number(timeDiff.msec()) );
+                                                                QString::number(timeDiff.msec()) );*/
 #endif
 }
 

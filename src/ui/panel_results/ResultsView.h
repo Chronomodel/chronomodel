@@ -113,7 +113,7 @@ protected:
     bool hasSelectedGraphs();
     
     void updateGraphsMax();
-    double getGraphsMax(const QList<GraphViewResults*>& graphs, const QString& title, double maxCeil);
+    double getGraphsMax(const QList<GraphViewResults*>& graphs, const QString& title, double maxFloor);
     
     // ------------------------------------
     //  Pagination
@@ -182,10 +182,10 @@ private slots:
     void applyRuler(const double min, const double max);
     
     // Tabs
-    void applyGraphTypeTab(int tabIndex);
-    void applyGraphListTab(int tabIndex);
-    void applyDisplayTab(int tabIndex);
-    void applyPageSavingTab(int tabIndex);
+    void applyGraphTypeTab();
+    void applyGraphListTab();
+    void applyDisplayTab();
+    void applyPageSavingTab();
     
     void applyCurrentVariable();
     void applyUnfoldEvents();
@@ -263,13 +263,11 @@ private:
     QScrollArea* mPhasesScrollArea;
     QScrollArea* mTempoScrollArea;
     QScrollArea* mCurveScrollArea;
-    QScrollArea* mAlphaScrollArea;
     
     QList<GraphViewResults*> mByEventsGraphs;
     QList<GraphViewResults*> mByPhasesGraphs;
     QList<GraphViewResults*> mByTempoGraphs;
     QList<GraphViewResults*> mByCurveGraphs;
-    QList<GraphViewResults*> mByAlphaGraphs;
 
     // ---------------------------------------------------------------------
     // Right UI part components
@@ -301,6 +299,7 @@ private:
     RadioButton* mCurveGRadio;
     RadioButton* mCurveGPRadio;
     RadioButton* mCurveGSRadio;
+    RadioButton* mAlphaRadio;
     CheckBox* mCurveErrorCheck;
     CheckBox* mCurvePointsCheck;
 
@@ -378,7 +377,7 @@ private:
     Label* mFFTLenLab;
     QComboBox* mFFTLenCombo;
     Label* mBandwidthLab;
-    LineEdit* mBandwidthEdit;
+    QDoubleSpinBox* mBandwidthSpin;
     Button* mUpdateDisplay;
 
     // ------------------------------------

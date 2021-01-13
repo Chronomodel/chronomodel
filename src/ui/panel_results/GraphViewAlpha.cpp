@@ -119,11 +119,20 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
         // ------------------------------------
         //  Post distrib All Chains
         // ------------------------------------
-        GraphCurve curvePostDistrib = generateDensityCurve(mModel->mAlphaLissage.fullHisto(), "Post Distrib All Chains", color);
+        //GraphCurve curvePostDistrib = generateDensityCurve(mModel->mAlphaLissage.fullHisto(), "Post Distrib All Chains", color);
+        
+        GraphCurve curvePostDistrib;
+        curvePostDistrib.mName = "Post Distrib All Chains";
+        curvePostDistrib.mData = mModel->mAlphaLissage.fullHisto();
+        curvePostDistrib.mPen = QPen(color, 1, Qt::SolidLine);
+        curvePostDistrib.mBrush = Qt::NoBrush;
+        curvePostDistrib.mIsHisto = false;
+        //curvePostDistrib.mIsRectFromZero = true; // for Unif-typo. calibs., invisible for others!
+        
         mGraph->addCurve(curvePostDistrib);
         
-        qDebug() << mModel->mAlphaLissage.fullHisto();
-        qDebug() << curvePostDistrib.mData;
+        //qDebug() << mModel->mAlphaLissage.fullHisto();
+        //qDebug() << curvePostDistrib.mData;
 
         // ------------------------------------
         //  HPD All Chains

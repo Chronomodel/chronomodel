@@ -63,6 +63,11 @@ void ModelChronocurve::fromJson(const QJsonObject& json)
 {
     Model::fromJson(json);
     
+    for(Event* event: mEvents)
+    {
+        event->mMethod = Event::eMHAdaptGauss;
+    }
+    
     if(json.contains(STATE_CHRONOCURVE))
     {
         const QJsonObject settings = json.value(STATE_CHRONOCURVE).toObject();
@@ -79,10 +84,13 @@ void ModelChronocurve::generatePosteriorDensities(const QList<ChainSpecs> &chain
     
     for(Event* event : mEvents)
     {
+        event->mVG.updateFormatedTrace();
         event->mVG.generateHistos(chains, fftLen, bandwidth);
     }
     
-    mAlphaLissage.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+    //qDebug() << *(mAlphaLissage.mRawTrace);
+    mAlphaLissage.updateFormatedTrace();
+    mAlphaLissage.generateHistos(chains, fftLen, bandwidth);
 }
 
 void ModelChronocurve::generateCorrelations(const QList<ChainSpecs> &chains)

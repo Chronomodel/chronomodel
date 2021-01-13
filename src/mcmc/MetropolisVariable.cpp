@@ -107,12 +107,8 @@ MetropolisVariable::MetropolisVariable(const MetropolisVariable &origin)
     mtminUsed = origin.mtminUsed;
     mtmaxUsed = origin.mtmaxUsed;
 
-     QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
-
+    QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
 }
-
-
-
 
 /** Destructor */
 MetropolisVariable::~MetropolisVariable()
@@ -121,7 +117,6 @@ MetropolisVariable::~MetropolisVariable()
     mFormatedTrace->clear();
     mHPD.clear();
     QObject::disconnect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
-
 }
 
 /** Copy assignment operator */
@@ -229,12 +224,10 @@ void MetropolisVariable::updateFormatedTrace()
     mFormatedTrace->resize(mRawTrace->size());
 
     if (mFormat == DateUtils::eNumeric)
-        std::copy(mRawTrace->cbegin(),mRawTrace->cend(),mFormatedTrace->begin());
+        std::copy(mRawTrace->cbegin(), mRawTrace->cend(), mFormatedTrace->begin());
 
     else
-        std::transform(mRawTrace->cbegin(),mRawTrace->cend(),mFormatedTrace->begin(),[this](const double i){return DateUtils::convertToFormat(i,this->mFormat);});
-
-
+        std::transform(mRawTrace->cbegin(),mRawTrace->cend(), mFormatedTrace->begin(), [this](const double i){return DateUtils::convertToFormat(i, this->mFormat);});
 }
 
 /**
@@ -300,8 +293,6 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
 
     const double sigma = dataStd(dataSrc);
     QMap<double, double> result;
-
-
 
     if (sigma == 0) {
         qDebug()<<"MetropolisVariable::generateHisto sigma == 0"<<mName;
@@ -397,7 +388,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
 
 void MetropolisVariable::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
-    const QVector<double> subFullTrace (fullRunTrace(chains));
+    const QVector<double> subFullTrace(fullRunTrace(chains));
     qDebug() << subFullTrace;
     mHisto = generateHisto(subFullTrace, fftLen, bandwidth, tmin, tmax);
 
@@ -420,7 +411,7 @@ void MetropolisVariable::memoHistoParameter(const int fftLen, const double bandw
 
 bool MetropolisVariable::HistoWithParameter(const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
-   return ((mfftLenUsed == fftLen) &&  (mBandwidthUsed == bandwidth) &&   (mtminUsed == tmin) &&  (mtmaxUsed == tmax) ? true: false);
+   return ((mfftLenUsed == fftLen) &&  (mBandwidthUsed == bandwidth) && (mtminUsed == tmin) &&  (mtmaxUsed == tmax) ? true: false);
 }
 
 void MetropolisVariable::generateHPD(const double threshold)
@@ -599,13 +590,14 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<ChainSpecs>& chains
 
     for (const ChainSpecs& chain : chains)
         reserveSize += int (ceil(chain.mNumRunIter / chain.mThinningInterval));
-
+    
     QVector<double> trace(reserveSize);
 
     int shift (0);
     int shiftTrace (0);
 
-    for (const ChainSpecs& chain : chains) {
+    for (const ChainSpecs& chain : chains)
+    {
         // we add 1 for the init
         const int burnAdaptSize = 1 + chain.mNumBurnIter + int (chain.mBatchIndex * chain.mNumBatchIter);
         const int runTraceSize = int(chain.mNumRunIter / chain.mThinningInterval);
@@ -615,6 +607,7 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<ChainSpecs>& chains
         shiftTrace += runTraceSize;
         shift = firstRunPosition +runTraceSize;
     }
+    
     return trace;
 }
 /**
@@ -888,5 +881,4 @@ QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
     data.updateFormatedTrace();
 
     return stream;
-
 }
