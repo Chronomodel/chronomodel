@@ -518,20 +518,35 @@ QJsonObject PluginF14C::mergeDates(const QJsonArray& dates)
 {
     QJsonObject result;
     if (dates.size() > 1) {
+        // Verify all dates have the same ref curve :
+        const QJsonObject firstDate = dates.at(0).toObject();
+        const  QJsonObject firstDateData = firstDate.value(STATE_DATE_DATA).toObject();
+        QString firstCurve = firstDateData.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
 
         // wiggle existence test
         bool withWiggle (false);
         for (auto && d :dates) {
              const QJsonObject dateData = d.toObject().value(STATE_DATE_DATA).toObject();
              withWiggle = withWiggle || (dateData.value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);
+
+             const QString curve = dateData.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
+
+             if (firstCurve != curve) {
+                 result["error"] = tr("All combined data must use the same reference curve !");
+                 return result;
+             }
+
         }
+
+
+
 
         if (withWiggle) {
             QJsonObject mergedData;
 
             mergedData[DATE_F14C_FRACTION_STR] = 1.;
             mergedData[DATE_F14C_ERROR_STR] = 0.;
-            mergedData[DATE_F14C_REF_CURVE_STR] = "";
+            mergedData[DATE_F14C_REF_CURVE_STR] = firstCurve;
 
             QStringList names;
 
@@ -551,7 +566,7 @@ QJsonObject PluginF14C::mergeDates(const QJsonArray& dates)
 
         } else {
             // Verify all dates have the same ref curve :
-            const QJsonObject firstDate = dates.at(0).toObject();
+           /* const QJsonObject firstDate = dates.at(0).toObject();
             const  QJsonObject firstDateData = firstDate.value(STATE_DATE_DATA).toObject();
             QString firstCurve = firstDateData.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
 
@@ -565,7 +580,7 @@ QJsonObject PluginF14C::mergeDates(const QJsonArray& dates)
                     return result;
                 }
             }
-
+*/
             double sum_vi (0.);
             double sum_mi_vi (0.);
             double sum_1_vi (0.);

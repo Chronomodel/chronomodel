@@ -383,7 +383,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
                QJsonObject subDate = d.toObject();
 
                Date sd (subDate);
-               QString toFind = sd.mUUID;
+            /*   QString toFind = sd.mUUID;
 
                Project* project = MainWindow::getInstance()->getProject();
                QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
@@ -392,8 +392,8 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
                else {
                    sd.calibrate(settings, project);
                }
-
-               if (!date.isNull() && date.mIsValid) {
+*/
+               if (!sd.isNull() && sd.mIsValid) {
                    const double t3 = sd.getFormatedTminCalib();
                    const double t4 = sd.getFormatedTmaxCalib();
 

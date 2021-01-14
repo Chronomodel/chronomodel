@@ -115,6 +115,7 @@ public:
     QPair<long double, long double> getLikelihoodArg(const double& t) const;
     QString getDesc() const;
     QString getWiggleDesc() const;
+    static QString getWiggleDesc(const QJsonObject& json); // used in CalibrationView
     PluginAbstract* getPlugin() const {return mPlugin;}
 
     void reset();

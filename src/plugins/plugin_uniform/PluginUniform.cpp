@@ -195,21 +195,17 @@ QPair<double,double> PluginUniform::getTminTmaxRefsCurve(const QJsonObject& data
     return QPair<double, double>(min, max);
 }
 
+
 long double PluginUniform::getLikelihoodCombine(const double& t, const QJsonArray& subData)
 {
     double min (-INFINITY);
     double max (INFINITY);
-           //QJsonArray subDates = data.value(STATE_DATE_SUB_DATES).toArray();
-      
-   for (int i(0); i<subData.size(); ++i) {
-       const QJsonObject subDate = subData.at(i).toObject();
-       const QJsonObject data = subDate.value(STATE_DATE_DATA).toObject();
+
+   for (auto && d : subData) {
+       const QJsonObject data = d.toObject().value(STATE_DATE_DATA).toObject();
 
        min = std::max(min, data.value(DATE_UNIFORM_MIN_STR).toDouble() );
        max = std::min(max, data.value(DATE_UNIFORM_MAX_STR).toDouble() );
-       
-       
-       
    }
 
     return (t >= min && t <= max) ? static_cast<long double>(1. / (max-min)) : 0.l;
@@ -221,8 +217,8 @@ bool PluginUniform::areDatesMergeable(const QJsonArray& dates)
 {
     const int pluginID = dates.at(0).toObject().value(STATE_DATE_DATA).toObject().value(STATE_DATE_PLUGIN_ID).toInt();
 
-    for (int i(1); i<dates.size(); ++i) {
-        if (pluginID != dates.at(i).toObject().value(STATE_DATE_DATA).toObject().value(STATE_DATE_PLUGIN_ID).toInt())
+    for (auto && d:dates) {
+        if (pluginID != d.toObject().value(STATE_DATE_DATA).toObject().value(STATE_DATE_PLUGIN_ID).toInt())
             return false;
     }
     return true;
@@ -246,22 +242,47 @@ QJsonObject PluginUniform::mergeDates(const QJsonArray& dates)
         double Wmin (+INFINITY);
         double Wmax (-INFINITY);
 
-        for (auto&& d : dates) {
+        Project* project = MainWindow::getInstance()->getProject();
+
+        for ( auto && d : dates ) {
             names.append(d.toObject().value(STATE_NAME).toString());
 
-            const QJsonObject data = d.toObject().value(STATE_DATE_DATA).toObject();
-            min = std::max(min, data.value(DATE_UNIFORM_MIN_STR).toDouble() );
-            max = std::min(max, data.value(DATE_UNIFORM_MAX_STR).toDouble() );
+            const bool hasWiggle (d.toObject().value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);
 
-            Wmin = std::min(Wmin, data.value(DATE_UNIFORM_MIN_STR).toDouble() );
-            Wmax = std::max(Wmax, data.value(DATE_UNIFORM_MAX_STR).toDouble() );
-            // test existence de wiggle
-            withWiggle = withWiggle || (data.value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);
+            // wiggle existence test
+            withWiggle = withWiggle || hasWiggle;
+
+            if (hasWiggle) {
+                QString toFind = "WID::" + d.toObject().value(STATE_DATE_UUID).toString();
+                QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
+
+                if ( it!=project->mCalibCurves.end()) {
+                    CalibrationCurve* d_mCalibration = & it.value();
+                    min = std::max(d_mCalibration->mTmin, min);
+                    max = std::min(d_mCalibration->mTmax, max);
+
+                } else {
+                    min = +INFINITY;
+                    max = -INFINITY;
+                }
+
+
+            } else {
+
+                const QJsonObject data = d.toObject().value(STATE_DATE_DATA).toObject();
+                min = std::max(min, data.value(DATE_UNIFORM_MIN_STR).toDouble() );
+                max = std::min(max, data.value(DATE_UNIFORM_MAX_STR).toDouble() );
+
+                Wmin = std::min(Wmin, data.value(DATE_UNIFORM_MIN_STR).toDouble() );
+                Wmax = std::max(Wmax, data.value(DATE_UNIFORM_MAX_STR).toDouble() );
+            }
+
 
         }
 
+
         if (min >= max) {
-            result["error"] = tr("Combine is not possible");
+            result["error"] = tr("Combine is not possible, not enough coincident densities");
             return result;
         }
 

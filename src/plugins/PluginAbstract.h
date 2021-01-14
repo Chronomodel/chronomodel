@@ -94,31 +94,58 @@ public:
         return QPair<long double, long double>();
     }
     
-    long double getLikelihoodCombine  (const double& t, const QJsonArray& subDateArray)
+    long double getLikelihoodCombine  (const double& t, const QJsonArray& subDateArray, const double step)
     {
         long double produit (1.l);
-        
+        Date date;
+        QJsonObject subDateJSon;
+        QJsonObject data;
         for ( auto && sDA : subDateArray ) {
-            QJsonObject subDate = sDA.toObject();
-            auto data = subDate.value(STATE_DATE_DATA).toObject();
-            Date date(subDate);
+            subDateJSon = sDA.toObject();
+            data = subDateJSon.value(STATE_DATE_DATA).toObject();
+
+            int deltaType = subDateJSon.value(STATE_DATE_DELTA_TYPE).toInt();
+
             if ( wiggleAllowed()==true ) {
-                double dt;
-                switch (date.mDeltaType) {
+                 switch (deltaType) {
                     case Date::eDeltaNone:
                         produit *= getLikelihood(t, data );
                         break;
-                    case Date::eDeltaFixed:
-                        dt = date.mDeltaFixed;
-                        produit *= getLikelihood( t - dt, data );
+                    case Date::eDeltaFixed: {
+                        double deltaFixed = subDateJSon.value(STATE_DATE_DELTA_FIXED).toDouble();
+                        produit *= getLikelihood( t - deltaFixed, data );
+                    }
                         break;
-                    case Date::eDeltaGaussian:
-                    case Date::eDeltaRange:
-                        produit *= date.getLikelihoodFromWiggleCalib(t);
+                    case Date::eDeltaGaussian: {
+                         long double d = getLikelihood(t, data);
+
+                         double deltaAverage = subDateJSon.value(STATE_DATE_DELTA_AVERAGE).toDouble();
+                         double deltaError = subDateJSon.value(STATE_DATE_DELTA_ERROR).toDouble();
+                         long double r (-5* deltaError);
+                         while (r < (5* deltaError)) {
+                              d += getLikelihood(t - deltaAverage + r, data) * expl((-0.5l) * powl(r, 2.l) / powl(deltaError, 2.l)) /sqrt(deltaError);
+                              r += step;
+                         }
+                         produit *= d;
+                    }
+                     break;
+
+                    case Date::eDeltaRange: {
+                        //produit *= date.getLikelihoodFromWiggleCalib(t);
+
+                        double deltaMin = subDateJSon.value(STATE_DATE_DELTA_MIN).toDouble();
+                        double deltaMax = subDateJSon.value(STATE_DATE_DELTA_MAX).toDouble();
+                        long double d = getLikelihood(t, data);
+                        long double r (deltaMin);
+                        while (r <= deltaMax) {
+                            d += getLikelihood(t - r, data);
+                            r += step;
+                        }
+                        produit *= d;
+                    }
                         break;
                 }
-            }
-            else {
+            } else {
                 produit *= getLikelihood(t, data );
             }
         }
@@ -194,24 +221,32 @@ public:
     virtual PluginSettingsViewAbstract* getSettingsView() = 0;
     virtual QList<QHash<QString, QVariant>> getGroupedActions() {return QList<QHash<QString, QVariant>>();}
 
-    // -------------------------------
-    // The following is for plugins using ref curves :
-    // -------------------------------
+    /* -------------------------------
+     * The following is for plugins using ref curves :
+     * ------------------------------- */
     virtual QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const = 0;
 
+    /*
+     * For the majority of the plugins, i.e. having a calibration curve,
+     * the wiggles densities are on the same support as the calibrated densities,
+     * which is the range of the calibration curve.
+     * Except for the Uniform plugin
+     */
+ /*   virtual QPair<double,double> getTminTmaxRefsCurveWiggle(const QJsonObject& data)
+    {
+        return getTminTmaxRefsCurve(data);
+    }
+*/
+    /* Obsolete */
     virtual QPair<double,double> getTminTmaxRefsCurveCombine(const QJsonArray& subDateArray)
     {
         double tmin (INFINITY);
         double tmax (-INFINITY);
-        for ( auto && sDA : subDateArray ) {
-            QJsonObject subDate = sDA.toObject();
-            auto data = subDate.value(STATE_DATE_DATA).toObject();
+        for ( auto && sD : subDateArray ) {
+                QPair<double, double> tminTmax = getTminTmaxRefsCurve( sD.toObject());
 
-            QPair<double, double> tminTmax = getTminTmaxRefsCurve( data);
-
-            tmin = std::min(tmin, tminTmax.first);
-            tmax = std::max(tmax, tminTmax.second);
-                                        
+                tmin = std::min(tmin, tminTmax.first);
+                tmax = std::max(tmax, tminTmax.second);
         }
         return qMakePair(tmin, tmax);
     }

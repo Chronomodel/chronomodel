@@ -255,8 +255,12 @@ void Date::fromJson(const QJsonObject& json)
     
     mSubDates = json.value(STATE_DATE_SUB_DATES).toArray();
     
+    Project* project = MainWindow::getInstance()->getProject();
+    mSettings = ProjectSettings::fromJson(project->mState.value(STATE_SETTINGS).toObject()); // ProjectSettings::fromJson is static
+
     if (mPlugin == nullptr)
         throw QObject::tr("Data could not be loaded : invalid plugin : %1").arg(pluginId);
+
     else  {
         if (mOrigin == eSingleDate) {
             QPair<double, double> tminTmax = mPlugin->getTminTmaxRefsCurve(mData);
@@ -264,9 +268,51 @@ void Date::fromJson(const QJsonObject& json)
             mTmaxRefCurve = tminTmax.second;
             
         } else if (mOrigin == eCombination) {
-            QPair<double, double> tminTmax = mPlugin->getTminTmaxRefsCurveCombine(mSubDates);
-            mTminRefCurve = tminTmax.first;
-            mTmaxRefCurve = tminTmax.second;
+            double tmin (+INFINITY);
+            double tmax (-INFINITY);
+            for ( auto && d : mSubDates ) {
+
+                const bool hasWiggle (d.toObject().value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);
+                QString toFind;
+                if (hasWiggle) {
+                    toFind = "WID::" + d.toObject().value(STATE_DATE_UUID).toString();
+                } else {
+                     toFind = d.toObject().value(STATE_DATE_UUID).toString();
+                }
+
+                QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
+
+                if ( it!=project->mCalibCurves.end()) {
+                    CalibrationCurve* d_mCalibration = & it.value();
+                    tmin = std::min(d_mCalibration->mTmin, tmin);
+                    tmax = std::max(d_mCalibration->mTmax, tmax);
+
+                } else {
+                    /* When reading the .chr file without the presence of the .cal file, there is no calibration for the subdates
+                     *  and the display of the curves in CalibrationView crashes.
+                     */
+                    Date sd(d.toObject());
+                    sd.calibrate(mSettings, project);
+                    tmin = std::min(sd.mCalibration->mTmin, tmin);
+                    tmax = std::max(sd.mCalibration->mTmax, tmax);
+                }
+
+
+            /*    } else {
+                     //toFind = d.toObject().value(STATE_DATE_UUID).toString();
+               }
+            */
+             /*   auto djson = d.toObject();
+                    QPair<double, double> tminTmax = mPlugin->getTminTmaxRefsCurve( djson.value(STATE_DATE_DATA).toObject());// d.toObject());
+                    tmin = std::max(tminTmax.first, tmin);
+                    tmax = std::min(tminTmax.second, tmax);
+              */
+
+
+
+            }
+            mTminRefCurve = tmin;
+            mTmaxRefCurve = tmax;
         }
     }
 
@@ -275,9 +321,8 @@ void Date::fromJson(const QJsonObject& json)
     mSigma.mProposal = ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt);
     mSigma.setName("Sigma of date : "+ mName);
 
-    Project* project = MainWindow::getInstance()->getProject();
-    mSettings = ProjectSettings::fromJson(project->mState.value(STATE_SETTINGS).toObject()); // ProjectSettings::fromJson is static
- 
+
+
     QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (mUUID);
     if ( it!=project->mCalibCurves.end()) {
         mCalibration = & it.value();
@@ -324,6 +369,13 @@ QJsonObject Date::toJson() const
     return date;
 }
 
+
+/**
+ * @brief Date::getLikelihood is called by Date::calibrate. When creating the calibration curve mCalibrate does not exist.
+ * Then the calibration curve is used to determine the likelihood.
+ * @param t
+ * @return
+ */
 long double Date::getLikelihood(const double& t) const
 {
      if (mPlugin) {
@@ -332,8 +384,8 @@ long double Date::getLikelihood(const double& t) const
             
         } else if (mOrigin == eCombination) { 
             // If needed run the wiggle calculation
-            if (mCalibration->mCurve.isEmpty()) {
-                return mPlugin->getLikelihoodCombine(t, mSubDates);
+            if (mCalibration==nullptr || mCalibration->mCurve.isEmpty()) {
+                return mPlugin->getLikelihoodCombine(t, mSubDates, mSettings.mStep);
 
             } else {
                 return getLikelihoodFromCalib(t);
@@ -357,7 +409,7 @@ QPair<long double, long double> Date::getLikelihoodArg(const double& t) const
             
         }  else if (mOrigin == eCombination) {
                      if (mCalibration->mCurve.isEmpty()) {
-                         return QPair<long double, long double>(log(mPlugin->getLikelihoodCombine(t, mSubDates)), 1.l);
+                         return QPair<long double, long double>(log(mPlugin->getLikelihoodCombine(t, mSubDates, mSettings.mStep)), 1.l);
                      } else {
                          return QPair<long double, long double>(log(getLikelihoodFromCalib(t)), 1.l);
                      }
@@ -398,36 +450,62 @@ QString Date::getDesc() const
 }
 
 
-// replaces the function ModelUtilities::getDeltaText(d))
+// Replaces the function ModelUtilities::getDeltaText(d))
 QString Date::getWiggleDesc() const
 {
     QString res;
       
     switch (mDeltaType) {
         case Date::eDeltaFixed:
-            res = mDeltaFixed != 0. ? res+ "Wiggle = " + QString::number(mDeltaFixed) : "";
-            break;
+            res = "Wiggle = " + QString::number(mDeltaFixed);
+        break;
         case Date::eDeltaRange:
-            res = (mDeltaMin !=0. && mDeltaMax != 0.) ? res+ "Wiggle = U[" + QString::number(mDeltaMin) + " ; " + QString::number(mDeltaMax) + " ] " : "";
-            break;
+            res = "Wiggle = U[" + QString::number(mDeltaMin) + " ; " + QString::number(mDeltaMax) + " ] " ;
+        break;
         case Date::eDeltaGaussian:
-            res = (mDeltaError>0.) ? res+ "Wiggle = N(" + QString::number(mDeltaAverage) + " ; " + QString::number(mDeltaError) + " ) ": "";
-            break;
+            res = "Wiggle = N(" + QString::number(mDeltaAverage) + " ; " + QString::number(mDeltaError) + " ) ";
+        break;
         case Date::eDeltaNone:
         default:
             res = "";
-            break;
+        break;
     }
     
 
     return res;
 }
 
+QString Date::getWiggleDesc(const QJsonObject& json)
+{
+    QString res;
+
+    switch (json.value(STATE_DATE_DELTA_TYPE).toInt()) {
+        case Date::eDeltaFixed:
+            res = "Wiggle = " + QString::number(json.value(STATE_DATE_DELTA_FIXED).toDouble());
+        break;
+        case Date::eDeltaRange:
+            res = "Wiggle = U[" + QString::number(json.value(STATE_DATE_DELTA_MIN).toDouble()) + " ; " + QString::number(json.value(STATE_DATE_DELTA_MAX).toDouble()) + " ] " ;
+        break;
+        case Date::eDeltaGaussian:
+            res = "Wiggle = N(" + QString::number(json.value(STATE_DATE_DELTA_AVERAGE).toDouble()) + " ; " + QString::number(json.value(STATE_DATE_DELTA_ERROR).toDouble()) + " ) ";
+        break;
+        case Date::eDeltaNone:
+        default:
+            res = "";
+        break;
+    }
+
+
+    return res;
+}
+
+
+
+
 void Date::reset()
 {
     mTheta.reset();
     mSigma.reset();
-
     mWiggle.reset();
 }
 
@@ -481,15 +559,15 @@ void Date::calibrate(const ProjectSettings& settings, Project *project, bool tru
     double tminCal;
     double tmaxCal;
 
-    // --------------------------------------------------
-    //  Calibrate on the whole calibration period (= ref curve definition domain)
-    // --------------------------------------------------
+    /* --------------------------------------------------
+     *  Calibrate on the whole calibration period (= ref curve definition domain)
+     * -------------------------------------------------- */
    
     if (mTmaxRefCurve > mTminRefCurve) {
         QVector<double> calibrationTemp;
         QVector<double> repartitionTemp;
 
-        const double nbRefPts = 1. + round((mTmaxRefCurve - mTminRefCurve) / double(settings.mStep));
+        const double nbRefPts = 1. + round((mTmaxRefCurve - mTminRefCurve) / settings.mStep);
         long double v = getLikelihood(mTminRefCurve);
         calibrationTemp.append(v);
         repartitionTemp.append(0.);
@@ -512,9 +590,9 @@ void Date::calibrate(const ProjectSettings& settings, Project *project, bool tru
             lastRepVal = rep;
         }
 
-        // ------------------------------------------------------------------
-        //  Restrict the calib and repartition vectors to where data are
-        // ------------------------------------------------------------------
+        /* ------------------------------------------------------------------
+         *  Restrict the calib and repartition vectors to where data are
+         * ------------------------------------------------------------------ */
 
         if (repartitionTemp.last() > 0.) {
             if (truncate) {
@@ -530,10 +608,10 @@ void Date::calibrate(const ProjectSettings& settings, Project *project, bool tru
                 mCalibration->mRepartition = repartitionTemp.mid(minIdx, (maxIdx - minIdx) + 1);
 
                 /* NOTE ABOUT THIS APPROMIATION :
-                  By truncating the calib and repartition, the calib density's area is not 1 anymore!
-                  It is now 1 - 2*threshold = 0,99999... We consider it to be 1 anyway!
-                  By doing this, calib and repartition are stored on a restricted number of data
-                  instead of storing them on the whole reference curve's period (as done for calibrationTemp & repartitionTemp above).
+                 * By truncating the calib and repartition, the calib density's area is not 1 anymore!
+                 * It is now 1 - 2*threshold = 0,99999... We consider it to be 1 anyway!
+                 * By doing this, calib and repartition are stored on a restricted number of data
+                 * instead of storing them on the whole reference curve's period (as done for calibrationTemp & repartitionTemp above).
                  */
               } else {
                 tminCal = mTminRefCurve;
@@ -790,7 +868,7 @@ void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
             https://jperalta.wordpress.com/2006/12/12/using-fftw3/
              */
             qDebug() <<"wiggle eDeltaGaussian";
-            // Les data
+            //  data
             const int inputSize (calibrationTemp.size());
 
             const double sigma = mDeltaError/mSettings.mStep;
@@ -1224,6 +1302,37 @@ double Date::getLikelihoodFromCalib(const double &t) const
 
 double Date::getLikelihoodFromWiggleCalib(const double &t) const
 {
+    // test si mWiggleCalibration existe, sinon calcul de la valeur
+    if (mWiggleCalibration== nullptr || mWiggleCalibration->mCurve.isEmpty()) {
+;
+        if (mDeltaType == Date::eDeltaRange) {
+            long double d = mPlugin->getLikelihood(t, mData);
+            long double r (mDeltaMin);
+            while (r < mDeltaMax) {
+                d += mPlugin->getLikelihood(t + r, mData);
+                r += mSettings.mStep;
+            }
+            return d;
+
+        } else if (mDeltaType == Date::eDeltaGaussian) {
+            long double d = mPlugin->getLikelihood(t, mData);
+            long double r (-5*mDeltaError);
+            while (r < (5*mDeltaError)) {
+                d += mPlugin->getLikelihood(t + mDeltaAverage + r, mData) * expl((-0.5l) * powl(r, 2.l) / powl(mDeltaError, 2.l)) /sqrt(mDeltaError);
+                r += mSettings.mStep;
+            }
+            return d;
+
+        } else if (mDeltaType == Date::eDeltaFixed) {
+            return mPlugin->getLikelihood(t + mDeltaFixed, mData);
+
+        } else {
+            return mPlugin->getLikelihood(t, mData);
+        }
+
+    }
+
+
     const double tmin (mWiggleCalibration->mTmin);
     const double tmax (mWiggleCalibration->mTmax);
 

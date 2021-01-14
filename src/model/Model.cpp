@@ -2188,14 +2188,12 @@ void Model::restoreFromFile(const QString& fileName)
                     }
 #ifdef DEBUG
 
-                     const QString toFind ("WI : "+ d.mUUID);
+                     const QString toFind ("WID::"+ d.mUUID);
 
                      if (d.mWiggleCalibration->mCurve.isEmpty())
                          qDebug()<<"Model::restoreFromFile vide";
                      else {
                          d.mWiggleCalibration = & (mProject->mCalibCurves[toFind]);
-
-
                      }
 #endif
                 }

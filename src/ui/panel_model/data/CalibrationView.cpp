@@ -465,11 +465,16 @@ void CalibrationView::updateGraphs()
             if (mDate.mOrigin == Date::eSingleDate) {
                 mDrawing->setRefTitle(tr("Calibration process"));
                 mDrawing->setRefComment(mDate.mPlugin->getDateDesc(&mDate));
+
             } else {
                 mDrawing->setRefTitle(tr("Overlay densities"));
                 QList<QString> subDatesName;
-                for(auto && d : mDate.mSubDates)
-                    subDatesName.append(d.toObject().value(STATE_NAME).toString());
+                for (auto && d : mDate.mSubDates) {
+                    if (d.toObject().value(STATE_DATE_DELTA_TYPE).toInt() == Date::eDeltaNone)
+                        subDatesName.append(d.toObject().value(STATE_NAME).toString());
+                    else
+                        subDatesName.append(d.toObject().value(STATE_NAME).toString() + " " +Date::getWiggleDesc(d.toObject()));
+                }
 
                 mDrawing->setRefComment(subDatesName.join(" ; "));
             }

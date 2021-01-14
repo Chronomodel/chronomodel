@@ -535,16 +535,12 @@ QJsonObject PluginMag::mergeDates(const QJsonArray& dates)
         QStringList names;
 
         bool subDatIsValid (true);
-        for (int i(0); i<dates.size(); ++i) {
-            const QJsonObject date = dates.at(i).toObject();
-          
-            names.append(date.value(STATE_NAME).toString());
+        for (auto && d : dates) {
+            names.append(d.toObject().value(STATE_NAME).toString());
             // Validate the date before merge
-//            Date d (date);
-//            subDatIsValid = d.mIsValid & subDatIsValid;
-            subDatIsValid = date.value(STATE_DATE_VALID).toBool() & subDatIsValid;
-        
+            subDatIsValid = d.toObject().value(STATE_DATE_VALID).toBool() & subDatIsValid;
         }
+
         if (subDatIsValid) {
             // inherits the first data propeties as plug-in and method...
             result = dates.at(0).toObject();
@@ -560,25 +556,11 @@ QJsonObject PluginMag::mergeDates(const QJsonArray& dates)
         }
 
         
-    } else  {
+    } else {
                result["error"] = tr("Combine needs at least 2 dates !");
            }
         return result;
 
 }
-//QPair<double,double> PluginMag::getTminTmaxRefsCurveCombine(const QJsonArray& subData)
-//{
-//    double tmin (INFINITY);
-//    double tmax (-INFINITY);
-//
-//    for (int i(0); i<subData.size(); ++i) {
-//
-//        const QPair<double, double> tminTmax = getTminTmaxRefsCurve( subData.at(i).toObject().value(STATE_DATE_DATA).toObject() );
-//        tmin = std::min(tmin, tminTmax.first);
-//        tmax = std::max(tmax, tminTmax.second);
-//
-//
-//    }
-//    return qMakePair(tmin, tmax);
-//}
+
 #endif

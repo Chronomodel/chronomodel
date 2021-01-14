@@ -304,15 +304,15 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
 
        for ( auto && d : date.mSubDates ) {
             Date sd (d.toObject());
-            const QString toFind = sd.mUUID;
+           /* const QString toFind = sd.mUUID;
             
             Project* project = MainWindow::getInstance()->getProject();
             QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
             if ( it != project->mCalibCurves.end())
                 sd.mCalibration = & it.value();
+           */
             
-            
-            if (!date.isNull() && date.mIsValid) {
+            if (!sd.isNull() && sd.mIsValid) {
                 const double t3 = sd.getFormatedTminCalib();
                 const double t4 = sd.getFormatedTmaxCalib();
     

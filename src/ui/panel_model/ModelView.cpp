@@ -596,7 +596,7 @@ bool ModelView::findCalibrateMissing()
                 // look inside mProject->mCalibCurves, if there is a missing calibration
                 // to try to rebuild it after
                 const QString toFind (date.mUUID);
-                QMap<QString, CalibrationCurve>::const_iterator it = mProject->mCalibCurves.find(toFind);
+                QMap<QString, CalibrationCurve>::iterator it = mProject->mCalibCurves.find(toFind);
                 if ( it == mProject->mCalibCurves.end()) {
                     calibMissing = true;
                     continue;

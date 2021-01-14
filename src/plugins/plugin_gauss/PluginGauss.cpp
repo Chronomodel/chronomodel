@@ -65,10 +65,9 @@ PluginGauss::~PluginGauss()
 // Likelihood
 long double PluginGauss::getLikelihood(const double& t, const QJsonObject& data)
 {
-    // detection of combination with date.mSubDates.size() not empty
-    QPair<long double, long double > result = getLikelihoodArg(t, data);
+  QPair<long double, long double > result = getLikelihoodArg(t, data);
 
-    return expl(result.second) / sqrt(result.first);
+   return expl(result.second) / sqrt(result.first);
 }
 
 QPair<long double, long double> PluginGauss::getLikelihoodArg(const double& t, const QJsonObject& data)
@@ -90,9 +89,10 @@ QPair<long double, long double> PluginGauss::getLikelihoodArg(const double& t, c
         if (mode == DATE_GAUSS_MODE_CURVE) {
             const QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
             refValue = getRefCurveValueAt(ref_curve, t);
-        }
-        else
+
+        } else {
             refValue = getRefValueAt(data, t);
+        }
 
         const long double exponent = -0.5l * powl(static_cast<long double>(age - refValue), 2.l) / variance;
 
@@ -148,10 +148,10 @@ QString PluginGauss::getDateDesc(const Date* date) const
 
         result += QObject::tr("Age : %1  ±  %2").arg(QLocale().toString(data[DATE_GAUSS_AGE_STR].toDouble()), QLocale().toString(data[DATE_GAUSS_ERROR_STR].toDouble()));
 
-        if (mode == DATE_GAUSS_MODE_NONE)
+        if (mode == DATE_GAUSS_MODE_NONE) {
             result += " (No calibration)";
 
-        else if (mode == DATE_GAUSS_MODE_EQ) {
+        } else if (mode == DATE_GAUSS_MODE_EQ) {
             const double a = data[DATE_GAUSS_A_STR].toDouble();
             const double b = data[DATE_GAUSS_B_STR].toDouble();
             const double c = data[DATE_GAUSS_C_STR].toDouble();
@@ -258,19 +258,19 @@ QJsonObject PluginGauss::fromCSV(const QStringList& list, const QLocale& csvLoca
             double a = csvLocale.toDouble(list.at(4));
             double b = csvLocale.toDouble(list.at(5));
             double c = csvLocale.toDouble(list.at(6));
-            if ( (a==0.) && (b== 0.))  // this solution is forbiden
+            if ( (a==0.) && (b== 0.))  {// this solution is forbiden
                 return QJsonObject();
 
-            else {
+            } else {
                 json.insert(DATE_GAUSS_A_STR, a);
                 json.insert(DATE_GAUSS_B_STR, b);
                 json.insert(DATE_GAUSS_C_STR, c);
             }
 
-        } else if (list.at(3) == "none" || list.at(3) == "")
+        } else if (list.at(3) == "none" || list.at(3) == "") {
             json.insert(DATE_GAUSS_MODE_STR, QString(DATE_GAUSS_MODE_NONE));
 
-        else {
+        } else {
             json.insert(DATE_GAUSS_MODE_STR, QString(DATE_GAUSS_MODE_CURVE));
             json.insert(DATE_GAUSS_CURVE_STR, list.at(3));
         }
@@ -420,9 +420,9 @@ double PluginGauss::getRefValueAt(const QJsonObject& data, const double& t)
     const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
     double v = 0;
 
-    if (mode == DATE_GAUSS_MODE_NONE)
+    if (mode == DATE_GAUSS_MODE_NONE) {
         v = t;
-    else if (mode == DATE_GAUSS_MODE_EQ) {
+    } else if (mode == DATE_GAUSS_MODE_EQ) {
         const double a = data.value(DATE_GAUSS_A_STR).toDouble();
         const double b = data.value(DATE_GAUSS_B_STR).toDouble();
         const double c = data.value(DATE_GAUSS_C_STR).toDouble();
@@ -450,7 +450,7 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
 {
     double tmin (0.);
     double tmax (0.);
-    const double k (5.);
+    const double k (10.);
 
     if (data.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_CURVE) {
         QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
@@ -460,8 +460,8 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
            tmin = mRefCurves.value(ref_curve).mTmin;
            tmax = mRefCurves.value(ref_curve).mTmax;
 #ifdef DEBUG
-        }
-        else
+
+        } else
             qDebug() << "PluginGauss::getTminTmaxRefsCurve no ref curve";
 #endif
     }
@@ -471,8 +471,8 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
 
         tmin = age - k * error;
         tmax = age + k * error;
-    }
-    else if (data[DATE_GAUSS_MODE_STR].toString() == DATE_GAUSS_MODE_EQ) {
+
+    } else if (data[DATE_GAUSS_MODE_STR].toString() == DATE_GAUSS_MODE_EQ) {
         const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
         const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
 
@@ -492,8 +492,8 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
                 tmin = qMin(t1, t2);
                 tmax = qMax(t1, t2);
             }
-        }
-        else {
+
+        } else {
             const double delta1 = b*b - 4*a*(c - v1);
             const double delta2 = b*b - 4*a*(c - v2);
 
@@ -622,17 +622,87 @@ bool PluginGauss::areDatesMergeable(const QJsonArray& )
 QJsonObject PluginGauss::mergeDates(const QJsonArray& dates)
 {
     QJsonObject result;
-
+    const double k (10.);
     if (dates.size() > 1) {
 
         QStringList names;
         // wiggle existence test
-        bool withWiggle (false);
+    /*    bool withWiggle (false);
         for (auto && d : dates) {
              const QJsonObject dateData = d.toObject().value(STATE_DATE_DATA).toObject();
              withWiggle = withWiggle || (dateData.value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);
-             names.append(d.toObject().value(STATE_NAME).toString());
         }
+*/
+        // ----------
+        double min (-INFINITY);
+        double max (+INFINITY);
+     /*   Project* project = MainWindow::getInstance()->getProject();
+        QString toFind;
+*/
+        // il faut ajouter le décallage induit par le wiggle si il existe dWiggleMin, dWiggleMax
+        double dWiggleMin(0.);
+        double dWiggleMax(0.);
+        for ( auto && d : dates ) {
+            names.append(d.toObject().value(STATE_NAME).toString());
+            QPair<double, double> tminTmax = getTminTmaxRefsCurve(d.toObject().value(STATE_DATE_DATA).toObject());
+            switch (d.toObject().value(STATE_DATE_DELTA_TYPE).toInt()) {
+            case Date::eDeltaNone:
+                dWiggleMin = 0.;
+                dWiggleMax = 0.;
+                break;
+            case Date::eDeltaFixed:
+                dWiggleMin = d.toObject().value(STATE_DATE_DELTA_FIXED).toDouble();
+                dWiggleMax = d.toObject().value(STATE_DATE_DELTA_FIXED).toDouble();
+                break;
+            case Date::eDeltaRange:
+                dWiggleMin = d.toObject().value(STATE_DATE_DELTA_MIN).toDouble();
+                dWiggleMax = d.toObject().value(STATE_DATE_DELTA_MAX).toDouble();
+                break;
+            case Date::eDeltaGaussian:
+                dWiggleMin = d.toObject().value(STATE_DATE_DELTA_AVERAGE).toDouble() - d.toObject().value(STATE_DATE_DELTA_ERROR).toDouble()*k;
+                dWiggleMax = d.toObject().value(STATE_DATE_DELTA_AVERAGE).toDouble() + d.toObject().value(STATE_DATE_DELTA_ERROR).toDouble()*k;
+                break;
+
+            }
+
+            min = std::max(tminTmax.first + dWiggleMin, min);
+            max = std::min(tminTmax.second + dWiggleMax, max);
+        }
+          /*  const bool hasWiggle (d.toObject().value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);
+
+            // wiggle existence test
+            withWiggle = withWiggle || hasWiggle;
+
+            if (hasWiggle) {
+                toFind = "WID::" + d.toObject().value(STATE_DATE_UUID).toString();
+
+            } else {
+                toFind = d.toObject().value(STATE_DATE_UUID).toString();
+
+            }
+
+            QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
+
+            if ( it!=project->mCalibCurves.end()) {
+                CalibrationCurve* d_mCalibration = & it.value();
+                min = std::max(d_mCalibration->mTmin, min);
+                max = std::min(d_mCalibration->mTmax, max);
+
+            } else {
+                min = +INFINITY;
+                max = -INFINITY;
+            }
+
+
+        }
+
+*/
+        if ((max - min) <= 100.) {
+            result["error"] = tr("Combine is not possible, not enough coincident densities; numeric issue");
+            return result;
+        }
+
+
 
 
         // inherits the first data propeties as plug-in and method...
@@ -641,7 +711,7 @@ QJsonObject PluginGauss::mergeDates(const QJsonArray& dates)
         result[STATE_DATE_UUID] = QString::fromStdString( Generator::UUID());
         result[STATE_DATE_SUB_DATES] = dates;
 
-        if (withWiggle) {
+    //    if (withWiggle) {
             QJsonObject mergedData;
 
             mergedData[DATE_GAUSS_AGE_STR] = 1000.;
@@ -656,21 +726,21 @@ QJsonObject PluginGauss::mergeDates(const QJsonArray& dates)
             result[STATE_DATE_DELTA_TYPE] = Date::eDeltaNone;
 
 
-        } else {
+      /*  } else {
 
             QJsonObject mergedData;
-
+// Calcul les valeurs théoriques impossible pour le produit de plusieurs gaussienne
             mergedData[DATE_GAUSS_AGE_STR] = 1000;
             mergedData[DATE_GAUSS_ERROR_STR] = 100;
             mergedData[DATE_GAUSS_MODE_STR] = DATE_GAUSS_MODE_NONE;
 
 
             result[STATE_DATE_DATA] = mergedData;
-            result[STATE_DATE_ORIGIN] = Date::eCombination;
+            result[STATE_DATE_ORIGIN] = Date::eSingleDate;
 
             result[STATE_DATE_VALID] = true;
         }
-        
+        */
 
     } else
         result["error"] = tr("Combine needs at least 2 data !");

@@ -86,6 +86,7 @@ void PluginUniformRefView::setDate(const Date& date, const ProjectSettings& sett
 
             tminDisplay = qMin(t1,qMin(t2,t3));
             tmaxDisplay = qMax(t1,qMax(t2,t4));
+
         } else {
             tminDisplay = qMin(t1, t2);
             tmaxDisplay = qMax(t1, t2);
@@ -102,43 +103,38 @@ void PluginUniformRefView::setDate(const Date& date, const ProjectSettings& sett
 
        
              
-                /* ----------------------------------------------
-                 *  Reference curve
-                 * ---------------------------------------------- */
-                GraphCurve curve;
-                curve.mName = "Reference";
-                curve.mPen.setColor(Painting::mainColorDark);
-                curve.mIsHisto = false;
-                //QMap<double, double> refCurve;
+        /* ----------------------------------------------
+         *  Reference curve
+         * ---------------------------------------------- */
+        GraphCurve curve;
+        curve.mName = "Reference";
+        curve.mPen.setColor(Painting::mainColorDark);
+        curve.mIsHisto = false;
+
+        GraphCurve gCurve;
+        gCurve.mName = date.mName;
 
 
-                QString toFind = date.mName + date.getDesc();
-                qDebug()<<"PluginUniformRefView::setDate mName"<< date.mName<<toFind;
+        QColor curveColor(QColor(100, 50, 140) );
+        gCurve.mPen.setColor(curveColor);
 
-                GraphCurve gCurve;
-                gCurve.mName = date.mName;
-                
+        curveColor.setAlpha(50);
+        gCurve.mBrush = curveColor;
 
-                QColor curveColor(QColor(100, 50, 140) );
-                gCurve.mPen.setColor(curveColor);
+        gCurve.mIsVertical = false;
+        gCurve.mIsHisto = false;
+        gCurve.mIsRectFromZero = true;
 
-                curveColor.setAlpha(50);
-                gCurve.mBrush = curveColor;
-                
-                gCurve.mIsVertical = false;
-                gCurve.mIsHisto = false;
-                gCurve.mIsRectFromZero = true;
+        QMap<double, double> calib = normalize_map(getMapDataInRange(date.getFormatedCalibMap(), tminDisplay, tmaxDisplay));
 
-                QMap<double, double> calib = normalize_map(getMapDataInRange(date.getFormatedCalibMap(), tminDisplay, tmaxDisplay));
+        gCurve.mData = calib;
 
-                gCurve.mData = calib;
-
-                mGraph->addCurve(gCurve);
-                mGraph->setRangeX(tminDisplay, tmaxDisplay);
-                mGraph->setCurrentX(tminDisplay, tmaxDisplay);
+        mGraph->addCurve(gCurve);
+        mGraph->setRangeX(tminDisplay, tmaxDisplay);
+        mGraph->setCurrentX(tminDisplay, tmaxDisplay);
 
 
-            // Y scale and RangeY are define in graphView::zommX()
+        // Y scale and RangeY are define in graphView::zommX()
 
     } else {
         
@@ -151,15 +147,15 @@ void PluginUniformRefView::setDate(const Date& date, const ProjectSettings& sett
 
         for ( auto && d : date.mSubDates ) {
             Date sd (d.toObject());
-            QString toFind = sd.mUUID;
+         /*   QString toFind = sd.mUUID;
             
             Project* project = MainWindow::getInstance()->getProject();
             QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
             if ( it != project->mCalibCurves.end())
                 sd.mCalibration = & it.value();
+           */
             
-            
-            if (!date.isNull() && date.mIsValid) {
+            if (!sd.isNull() && sd.mIsValid) {
                 const double t3 = sd.getFormatedTminCalib();
                 const double t4 = sd.getFormatedTmaxCalib();
     
