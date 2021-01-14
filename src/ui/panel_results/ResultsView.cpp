@@ -713,6 +713,26 @@ mMinorCountScale(4)
     mGraphsPerPageSpin->setRange(1, 100);
     mGraphsPerPageSpin->setValue(mGraphsPerPage);
     mGraphsPerPageSpin->setToolTip(tr("Enter the maximum densities to display on a sheet"));
+    
+    QHBoxLayout* pageNavigationLayout = new QHBoxLayout();
+    pageNavigationLayout->setContentsMargins(0, 0, 0, 0);
+    pageNavigationLayout->setSpacing(0);
+    pageNavigationLayout->addWidget(mPreviousPageBut);
+    pageNavigationLayout->addWidget(mPageEdit);
+    pageNavigationLayout->addWidget(mNextPageBut);
+    
+    QHBoxLayout* pageCountLayout = new QHBoxLayout();
+    pageCountLayout->setContentsMargins(0, 0, 0, 0);
+    pageCountLayout->setSpacing(0);
+    pageCountLayout->addWidget(mGraphsPerPageLab);
+    pageCountLayout->addWidget(mGraphsPerPageSpin);
+    
+    QVBoxLayout* pageLayout = new QVBoxLayout();
+    pageLayout->setContentsMargins(0, 0, 0, 0);
+    pageLayout->setSpacing(0);
+    pageLayout->addLayout(pageNavigationLayout);
+    pageLayout->addLayout(pageCountLayout);
+    mPageWidget->setLayout(pageLayout);
 
     connect(mPreviousPageBut, &Button::pressed, this, &ResultsView::applyPreviousPage);
     connect(mNextPageBut, &Button::pressed, this, &ResultsView::applyNextPage);
@@ -935,25 +955,21 @@ void ResultsView::updateLayout()
     //  Pagination / Saving Tabs
     // --------------------------------------------------------
     int buttonHeight = 40;
-    int paginationLabWidth = 50;
-    int paginationButWidth = (mOptionsW - paginationLabWidth) / 2;
-    int graphPerPageLabWidth = fm.boundingRect(mGraphsPerPageLab->text()).width();
-    int graphPerPageSpinWidth = mOptionsW - 2*mMargin - graphPerPageLabWidth;
     int buttonSide = mOptionsW / 4;
     
-    mTabPageSaving->resize(mOptionsW, tabsH);
-    mPageWidget->resize(mOptionsW, 2*buttonHeight + mMargin);
+    //mTabPageSaving->resize(mOptionsW, tabsH);
+    //mPageWidget->resize(mOptionsW, 2*buttonHeight + mMargin);
     mToolsWidget->resize(mOptionsW, buttonHeight);
     
     // --------------------------------------------------------
     //  Pagination layout
     // --------------------------------------------------------
-    mPreviousPageBut->setGeometry(0, 0, paginationButWidth, buttonHeight);
+    /*mPreviousPageBut->setGeometry(0, 0, paginationButWidth, buttonHeight);
     mPageEdit->setGeometry(paginationButWidth, 0, paginationLabWidth, buttonHeight);
     mNextPageBut->setGeometry(paginationButWidth + paginationLabWidth, 0, paginationButWidth, buttonHeight);
     mGraphsPerPageLab->setGeometry(mMargin, buttonHeight + mMargin, graphPerPageLabWidth, buttonHeight);
     mGraphsPerPageSpin->setGeometry(mMargin + graphPerPageLabWidth, buttonHeight + mMargin, graphPerPageSpinWidth, buttonHeight);
-    
+    */
     // --------------------------------------------------------
     //  Tools layout
     // --------------------------------------------------------
@@ -1060,6 +1076,9 @@ void ResultsView::applyGraphListTab()
     }
 
     mCurrentTypeGraph = (GraphViewResults::TypeGraph) mGraphTypeTabs->currentIndex();
+    
+    // Changing the graphs list implies to go back to page 1 :
+    mCurrentPage = 0;
     
     updateControls();
     createGraphs();
@@ -1210,6 +1229,99 @@ void ResultsView::createGraphs()
     generateCurves();
 }
 
+void ResultsView::updateTotalGraphs()
+{
+    if(!mModel){
+        mMaximunNumberOfVisibleGraph = 0;
+        return;
+    }
+    
+    int totalGraphs = 0;
+    
+    if (mGraphListTab->currentIndex() == 0)
+    {
+        bool showAllEvents = ! mModel->hasSelectedEvents();
+        for(int i=0; i<mModel->mEvents.size(); ++i)
+        {
+            Event* event = mModel->mEvents[i];
+            if(event->mIsSelected || showAllEvents)
+            {
+                ++totalGraphs;
+                
+                if(mDatesfoldCheck->isChecked())
+                {
+                    for (int j=0; j<event->mDates.size(); ++j)
+                    {
+                        ++totalGraphs;
+                    }
+                }
+            }
+        }
+    }
+    else if (mGraphListTab->currentIndex() == 1)
+    {
+        bool showAllPhases = ! mModel->hasSelectedPhases();
+
+        for(int i=0; i<mModel->mPhases.size(); ++i)
+        {
+            Phase* phase = mModel->mPhases[i];
+            if(phase->mIsSelected || showAllPhases)
+            {
+                ++totalGraphs;
+                
+                if(mEventsfoldCheck->isChecked())
+                {
+                    for(int j=0; j<phase->mEvents.size(); ++j)
+                    {
+                        ++totalGraphs;
+                        
+                        Event* event = phase->mEvents[j];
+                        if(mDatesfoldCheck->isChecked())
+                        {
+                            for (int k=0; k<event->mDates.size(); ++k)
+                            {
+                                ++totalGraphs;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else if (mGraphListTab->currentIndex() == 2)
+    {
+        bool showAllPhases = ! mModel->hasSelectedPhases();
+        
+        for(int i=0; i<mModel->mPhases.size(); ++i)
+        {
+            Phase* phase = mModel->mPhases[i];
+            if(phase->mIsSelected || showAllPhases)
+            {
+                ++totalGraphs;
+            }
+        }
+    }
+    else if (mGraphListTab->currentIndex() == 3)
+    {
+        if(mAlphaRadio->isChecked())
+        {
+            ++totalGraphs;
+        }
+        else
+        {
+            ModelChronocurve* model = modelChronocurve();
+            bool hasY = (model->mChronocurveSettings.mProcessType != ChronocurveSettings::eProcessTypeUnivarie);
+            bool hasZ = (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel);
+            
+            ++totalGraphs;
+            if(hasY) ++totalGraphs;
+            if(hasZ) ++totalGraphs;
+        }
+    }
+    
+    mMaximunNumberOfVisibleGraph = totalGraphs;
+}
+
 /**
  * this method (re-)creates all the events graphs
  */
@@ -1252,8 +1364,8 @@ void ResultsView::createByEventsGraphs()
                 
                 mByEventsGraphs.append(graph);
                 connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
-                ++graphIndex;
             }
+            ++graphIndex;
                 
             if(mDatesfoldCheck->isChecked())
             {
@@ -1277,8 +1389,8 @@ void ResultsView::createByEventsGraphs()
 
                         mByEventsGraphs.append(graph);
                         connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
-                        ++graphIndex;
                     }
+                    ++graphIndex;
                 }
             }
         }
@@ -1324,8 +1436,8 @@ void ResultsView::createByPhasesGraphs()
                 
                 mByPhasesGraphs.append(graph);
                 connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
-                ++graphIndex;
             }
+            ++graphIndex;
             
             if(mEventsfoldCheck->isChecked())
             {
@@ -1347,8 +1459,8 @@ void ResultsView::createByPhasesGraphs()
                         
                         mByPhasesGraphs.append(graph);
                         connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
-                        ++graphIndex;
                     }
+                    ++graphIndex;
                         
                     if(mDatesfoldCheck->isChecked())
                     {
@@ -1372,8 +1484,8 @@ void ResultsView::createByPhasesGraphs()
 
                                 mByPhasesGraphs.append(graph);
                                 connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
-                                ++graphIndex;
                             }
+                            ++graphIndex;
                         }
                     }
                 }
@@ -1421,8 +1533,8 @@ void ResultsView::createByTempoGraphs()
                 
                 mByTempoGraphs.append(graph);
                 connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
-                ++graphIndex;
             }
+            ++graphIndex;
         }
     }
 }
@@ -2237,14 +2349,21 @@ void ResultsView::updateControls()
     
     mExportImgBut->setVisible(!hasSelection);
     mExportResults->setVisible(!hasSelection);
-
-    // -------------------------------------------------------------------------------------
-    //  To be moved ??
-    // -------------------------------------------------------------------------------------
-    QList<GraphViewResults*> graphs = currentGraphs(hasSelection);
     
-    mCurrentPage = 0;
-    mMaximunNumberOfVisibleGraph = graphs.size();
+    // -------------------------------------------------------------------------------------
+    //  - Update the total number of graphs for all pages
+    //  - Check if the current page is still lower than the number of pages
+    //  - Update the pagination display
+    //  => All this must be done BEFORE calling createGraphs, which uses theses params to build the graphs
+    // -------------------------------------------------------------------------------------
+    updateTotalGraphs();
+    
+    int numPages = ceil((double)mMaximunNumberOfVisibleGraph / (double)mGraphsPerPage);
+    if(mCurrentPage >= numPages){
+        mCurrentPage = 0;
+    }
+    
+    mPageEdit->setText(locale().toString(mCurrentPage + 1) + "/" + locale().toString(numPages));
 }
 
 /*void ResultsView::updateResultsLog()
@@ -2612,8 +2731,6 @@ void ResultsView::applyNextPage()
     if((mCurrentPage + 1) * mGraphsPerPage < mMaximunNumberOfVisibleGraph)
     {
         ++mCurrentPage;
-        mPageEdit->setText(locale().toString(mCurrentPage + 1) + "/" + locale().toString(ceil(mMaximunNumberOfVisibleGraph/mGraphsPerPage)));
-        
         updateControls();
         createGraphs();
         updateLayout();
@@ -2625,8 +2742,6 @@ void ResultsView::applyPreviousPage()
     if(mCurrentPage > 0)
     {
         --mCurrentPage;
-        mPageEdit->setText(locale().toString(mCurrentPage + 1) + "/" + locale().toString(ceil(mMaximunNumberOfVisibleGraph/mGraphsPerPage)));
-        
         updateControls();
         createGraphs();
         updateLayout();
@@ -2636,7 +2751,7 @@ void ResultsView::applyPreviousPage()
 void ResultsView::applyGraphsPerPage(int graphsPerPage)
 {
     mGraphsPerPage = graphsPerPage;
-    
+    mCurrentPage = 0;
     updateControls();
     createGraphs();
     updateLayout();

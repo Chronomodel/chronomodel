@@ -175,6 +175,7 @@ private slots:
     void updateCurvesToShow();
     void updateScales();
     void updateControls();
+    void updateTotalGraphs();
     
     // ------------------------------------
     //  Controls actions
