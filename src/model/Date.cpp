@@ -573,23 +573,39 @@ void Date::calibrate(const ProjectSettings& settings, Project *project, bool tru
         repartitionTemp.append(0.);
         long double lastRepVal = v;
 
+           QProgressDialog *progress = new QProgressDialog(QTranslator::tr("Calibration generation") + " : "+ mName, QTranslator::tr("Wait") , 1, 10);
+           progress->setWindowModality(Qt::WindowModal);
+           progress->setCancelButton(nullptr);
+           progress->setMinimumDuration(5);
+           progress->setMinimum(0);
+           progress->setMaximum(nbRefPts);
+           progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
+
+
         /* We use long double type because
          * after several sums, the repartition can be in the double type range
         */
+        double t;
+        long double lastV;
+        long double rep;
+
         for (int i (1); i <= nbRefPts; ++i) {
-            const double t = mTminRefCurve + double (i) * settings.mStep;
-            long double lastV = v;
+            progress->setValue(i);
+
+            t = mTminRefCurve + double (i) * settings.mStep;
+            lastV = v;
             v = getLikelihood(t);
 
             calibrationTemp.append(double(v));
-            long double rep = lastRepVal;
+            rep = lastRepVal;
             if (v != 0.l && lastV != 0.l)
                 rep = lastRepVal + (long double) (settings.mStep) * (lastV + v) / 2.l;
 
             repartitionTemp.append(double (rep));
             lastRepVal = rep;
         }
-
+        progress->close();
+        delete progress;
         /* ------------------------------------------------------------------
          *  Restrict the calib and repartition vectors to where data are
          * ------------------------------------------------------------------ */
