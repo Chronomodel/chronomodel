@@ -379,6 +379,8 @@ void DateDialog::setDate(const QJsonObject& date)
     // if data are in the JSON they must be valid
     mPluginDataAreValid = true;
     mWiggleIsValid = true;
+    mAdvancedCheck->setEnabled(date.value(STATE_DATE_ORIGIN).toInt() != Date::eCombination);
+
     setOkEnabled();
     // open the display panel if there is wiggle parameter
     if ( (mDeltaFixedRadio->isChecked() && mDeltaFixedEdit->text().toDouble() != 0.) ||
