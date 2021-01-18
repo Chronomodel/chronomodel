@@ -174,6 +174,7 @@ T map_min_value(const QMap<U, T>& aMap)
 }
 
 // --------------------------------
+// can replace with std::accumulate(vector.begin(), vector.end(), T(0))
 template<typename T>
 T sum(const QVector<T>& vector)
 {
@@ -207,7 +208,7 @@ T sumShifted(const QVector<T>& vector, const T& shift)
     /*std::for_each(vector.cbegin(), vector.cend(), [&sum, &shift](T& v){
         sum += v + shift;
     });*/
-    foreach (const T v, vector) {
+     for (auto&& v : vector) {
         sum += v + shift;
     }
     return sum;
@@ -220,13 +221,18 @@ T sum2Shifted(const QVector<T>& vector, const T& shift)
     /*std::for_each(vector.cbegin(), vector.cend(), [&sum, &shift](T& v){
         sum += (v + shift) * (v + shift);
     });*/
-    foreach (const T v, vector)
+     for (auto&& v : vector)
         sum += (v + shift) * (v + shift);
 
 
     return sum;
 }
 
+template <typename T>
+T mean(const QVector<T>& vector)
+{
+    return sum(vector)/vector.size();
+}
 
 /**
  * @brief normalized sinc function
