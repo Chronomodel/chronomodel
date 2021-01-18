@@ -506,7 +506,10 @@ void MetropolisVariable::generateNumericalResults(const QList<ChainSpecs> &chain
 {
     // Results for chain concatenation
     mResults.analysis = analyseFunction(mHisto);
-    mResults.quartiles = quartilesForTrace(fullRunTrace(chains));
+    mResults.quartiles = quartilesForTrace(fullRunTrace(chains)); // fullRunTrace is the formated Traces
+    // fix the calcul of the mean and the std with the trace, not with the smoothed density
+    mResults.analysis.mean = mean(fullRunTrace(chains));
+    mResults.analysis.stddev = dataStd(fullRunTrace(chains));
 
     // Results for individual chains
     mChainsResults.clear();
@@ -514,6 +517,8 @@ void MetropolisVariable::generateNumericalResults(const QList<ChainSpecs> &chain
         DensityAnalysis result;
         result.analysis = analyseFunction(mChainsHistos.at(i));
         result.quartiles = quartilesForTrace(runFormatedTraceForChain(chains, i));
+        result.analysis.mean = mean(fullRunTrace(chains));
+        result.analysis.stddev = dataStd(fullRunTrace(chains));
         mChainsResults.append(result);
     }
 }
