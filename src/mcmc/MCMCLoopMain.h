@@ -58,10 +58,12 @@ protected:
     virtual QString initMCMC();
     virtual void update();
     virtual bool adapt();
+    virtual bool adapt_V2();
     virtual void finalize();
 
 public:
     Model* mModel;
+
 };
 
 #endif

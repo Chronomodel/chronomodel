@@ -1291,7 +1291,9 @@ QPixmap Date::generateCalibThumb()
 
 double Date::getLikelihoodFromCalib(const double &t) const
 {
-    const double tmin (mCalibration->mTmin);
+    return interpolate_value_from_curve(t, mCalibration->mCurve, mCalibration->mTmin, mCalibration->mTmax);
+
+   /* const double tmin (mCalibration->mTmin);
     const double tmax (mCalibration->mTmax);
 
     // We need at least two points to interpolate
@@ -1313,14 +1315,15 @@ double Date::getLikelihoodFromCalib(const double &t) const
     } else {
         return 0.;
     }
+    */
 
 }
 
 double Date::getLikelihoodFromWiggleCalib(const double &t) const
 {
     // test si mWiggleCalibration existe, sinon calcul de la valeur
-    if (mWiggleCalibration== nullptr || mWiggleCalibration->mCurve.isEmpty()) {
-;
+    if (mWiggleCalibration == nullptr || mWiggleCalibration->mCurve.isEmpty()) {
+
         if (mDeltaType == Date::eDeltaRange) {
             long double d = mPlugin->getLikelihood(t, mData);
             long double r (mDeltaMin);
@@ -1346,9 +1349,11 @@ double Date::getLikelihoodFromWiggleCalib(const double &t) const
             return mPlugin->getLikelihood(t, mData);
         }
 
+    } else {
+        return interpolate_value_from_curve(t, mWiggleCalibration->mCurve, mWiggleCalibration->mTmin, mWiggleCalibration->mTmax);
     }
 
-
+/*
     const double tmin (mWiggleCalibration->mTmin);
     const double tmax (mWiggleCalibration->mTmax);
 
@@ -1370,6 +1375,7 @@ double Date::getLikelihoodFromWiggleCalib(const double &t) const
     } else {
         return 0. ;
     }
+    */
 }
 
 void Date::updateTheta(Event* event)
@@ -1857,11 +1863,8 @@ void fInversionWithArg(Date* date, Event* event)
     const long double rapport = sqrt(argOld.first/argNew.first) * exp(logGRapport+logHRapport);
 
     const long double rapportPD = fProposalDensity(date->mTheta.mX, tiNew, date) / fProposalDensity(tiNew, date->mTheta.mX, date);
-    qDebug()<<"fInversionWithArg "<<   double(argOld.first)<< double(argNew.first) <<double(logGRapport)<< double(logHRapport)<<double(rapport) << date->mSigma.mX<< date->mTheta.mX<< tiNew;
-    date->mTheta.tryUpdate(tiNew, (double)(rapport * rapportPD));
-    
-    qDebug()<<"fInversionWithArg "<< (tiNew==date->mTheta.mX?true:false);
 
+    date->mTheta.tryUpdate(tiNew, (double)(rapport * rapportPD));
 
 }
 

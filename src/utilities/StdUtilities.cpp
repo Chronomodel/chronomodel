@@ -513,7 +513,7 @@ QMap<float, float> vector_to_map(const QVector<float>& data, const float min, co
 }
 /**
  * @brief This works only for strictly increasing functions!
- * @return interpolated index for a the given value. If value is lower than all vestor values, then 0 is returned. If value is upper than all vector values, then (vector.size() - 1) is returned.
+ * @return interpolated index for a the given value. If value is lower than all vector values, then 0 is returned. If value is upper than all vector values, then (vector.size() - 1) is returned.
  */
 double vector_interpolate_idx_for_value(const double value, const QVector<double>& vector)
 {
@@ -596,6 +596,39 @@ float vector_interpolate_idx_for_value(const float value, const QVector<float>& 
 
     return 0.f;
 }
+
+/**
+ * @brief interpolate_value_from_curve Allows you to find the value associated with a time in a curve.
+ * @param t Time for which we are looking for value
+ * @param curve
+ * @param curveTmin Time corresponding to index 0
+ * @param curveTmax Time corresponding to index curve.size()-1
+ * @return
+ */
+double interpolate_value_from_curve(const double t, const QVector<double> & curve,const double curveTmin, const double curveTmax)
+{
+     // We need at least two points to interpolate
+    if (curve.size() < 2 || t < curveTmin || t > curveTmax)
+        return 0.;
+
+    const double prop = (t - curveTmin) / (curveTmax - curveTmin);
+    const double idx = prop * (curve.size() - 1); // tricky : if (tmax - tmin) = 2000, then calib size is 2001 !
+    const int idxUnder = (int)floor(idx);
+    const int idxUpper = (int)ceil(idx);//idxUnder + 1;
+
+    if (idxUnder == idxUpper) {
+        return curve[idxUnder];
+
+    } else if (curve[idxUnder] != 0. && curve[idxUpper] != 0.) {
+        // Important for gate: no interpolation around gates
+        return interpolate((double) idx, (double)idxUnder, (double)idxUpper, curve[idxUnder], curve[idxUpper]);
+
+    } else {
+        return 0.;
+    }
+
+}
+
 /**
     @brief  This function make a QMap which are a copy of the QMap aMap to obtain an percent of area
     @brief  to define a area we need at least 2 value in the map

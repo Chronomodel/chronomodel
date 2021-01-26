@@ -488,7 +488,7 @@ void Model::generateResultsLog()
         log += "<hr>";
     }
 
-    mLogResults = log;
+    mLogResults += log;
 }
 
 // Results CSV
@@ -2190,7 +2190,7 @@ void Model::restoreFromFile(const QString& fileName)
 
                      const QString toFind ("WID::"+ d.mUUID);
 
-                     if (d.mWiggleCalibration->mCurve.isEmpty())
+                     if (d.mWiggleCalibration==nullptr || d.mWiggleCalibration->mCurve.isEmpty())
                          qDebug()<<"Model::restoreFromFile vide";
                      else {
                          d.mWiggleCalibration = & (mProject->mCalibCurves[toFind]);

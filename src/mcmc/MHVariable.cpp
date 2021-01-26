@@ -107,6 +107,12 @@ MHVariable::~MHVariable()
    // mFormatedTrace->~QVector();// = nullptr;;
 }
 
+/**
+ * @brief MHVariable::tryUpdate It's a puch function where mLastAcceptsLength = mChains[0].mNumBatchIter;
+ * @param x
+ * @param rapport
+ * @return
+ */
 bool MHVariable::tryUpdate(const double x, const double rapport)
 {
     if (mLastAccepts.length() >= mLastAcceptsLength)
@@ -204,7 +210,7 @@ MHVariable& MHVariable::operator=( MHVariable const& origin)
     return *this;
 }
 
-double MHVariable::getCurrentAcceptRate()
+double MHVariable::getCurrentAcceptRate() const
 {
     Q_ASSERT(!mLastAccepts.isEmpty());
 

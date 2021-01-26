@@ -115,7 +115,7 @@ const QString MCMCLoop::getMCMCSettingsLog() const
 }
 const QString MCMCLoop::getInitLog() const
 {
-    const QString log = getMCMCSettingsLog() + mInitLog;
+    const QString log = getMCMCSettingsLog() + mInitLog + mAdaptLog;
     return log;
 }
 
@@ -169,14 +169,9 @@ void MCMCLoop::run()
         //QTime startInitTime = QTime::currentTime();
 
         mAbortedReason = this->initMCMC();
-        if(!mAbortedReason.isEmpty())
+        if (!mAbortedReason.isEmpty())
             return;
 
-
-        /*QTime endInitTime = QTime::currentTime();
-        timeDiff = startInitTime.msecsTo(endInitTime);
-
-        log += "=> Init done in " + QString::number(timeDiff) + " ms\n";*/
 
         //----------------------- Burn-in --------------------------------------
 
@@ -225,6 +220,7 @@ void MCMCLoop::run()
 
                 try {
                     this->update();
+
                 } catch (QString error) {
                     mAbortedReason = error;
                     return;
@@ -237,11 +233,20 @@ void MCMCLoop::run()
             }
             ++chain.mBatchIndex;
 
-            if(adapt())
-                break;
+            if (adapt()) {
+                     break;
+            }
 
         }
-        //log += line("Adapt OK at batch : " + QString::number(chain.mBatchIndex) + "/" + QString::number(chain.mMaxBatchs));
+        if (chain.mBatchIndex * chain.mNumBatchIter < chain.mMaxBatchs * chain.mNumBatchIter) {
+            mAdaptLog += line("Adapt OK at batch : " + QString::number(chain.mBatchIndex) + "/" + QString::number(chain.mMaxBatchs));
+
+        } else {
+            mAdaptLog += line("Not adapted after : " + QString::number(chain.mBatchIndex) + " batches");
+        }
+
+
+
 
        /* QTime endAdaptTime = QTime::currentTime();
         timeDiff = startAdaptTime.msecsTo(endAdaptTime);

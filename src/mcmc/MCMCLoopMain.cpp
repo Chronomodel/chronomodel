@@ -68,6 +68,7 @@ mModel(model)
     MCMCLoop::mProject = project;
     if (mModel)
         setMCMCSettings(mModel->mMCMCSettings);
+
 }
 
 MCMCLoopMain::~MCMCLoopMain()
@@ -90,7 +91,7 @@ QString MCMCLoopMain::calibrate()
             nbDates += e->mDates.size();
 
         dates.reserve(nbDates);
-        for (auto &&ev : events) {
+        for (Event* ev : events) {
             int num_dates = ev->mDates.size();
             for (int j=0; j<num_dates; ++j) {
                 Date* date = &ev->mDates[j];
@@ -105,7 +106,7 @@ QString MCMCLoopMain::calibrate()
         emit stepChanged(tr("Calibrating..."), 0, dates.size());
 
         int i (0);
-        for (auto &&date : dates) {
+        for (auto&& date : dates) {
               if (date->mCalibration) {
                 if (date->mCalibration->mCurve.isEmpty())
                     date->calibrate(mModel->mSettings, mProject);
@@ -134,10 +135,10 @@ void MCMCLoopMain::initVariablesForChain()
     const int acceptBufferLen =  mChains[0].mNumBatchIter;
     int initReserve (0);
 
-    for (const ChainSpecs c: mChains)
+    for (auto&& c: mChains)
        initReserve += ( 1 + (c.mMaxBatchs*c.mNumBatchIter) + c.mNumBurnIter + (c.mNumRunIter/c.mThinningInterval) );
 
-    for (Event* event : mModel->mEvents) {
+    for (auto&& event : mModel->mEvents) {
         event->mTheta.reset();
         event->mTheta.reserve(initReserve);
 
@@ -146,7 +147,7 @@ void MCMCLoopMain::initVariablesForChain()
 
         // event->mTheta.mAllAccepts.clear(); //don't clean, avalable for cumulate chain
 
-        for (Date& date : event->mDates) {
+        for (auto&& date : event->mDates) {
             date.mTheta.reset();
             date.mTheta.reserve(initReserve);
             date.mTheta.mLastAccepts.reserve(acceptBufferLen);
@@ -164,7 +165,7 @@ void MCMCLoopMain::initVariablesForChain()
         }
     }
 
-    for (Phase* phase : mModel->mPhases) {
+    for (auto&& phase : mModel->mPhases) {
         phase->mAlpha.reset();
         phase->mBeta.reset();
         phase->mDuration.reset();
@@ -188,13 +189,13 @@ QString MCMCLoopMain::initMCMC()
         return ABORTED_BY_USER;
 
     // ---------------------- Reset Events ---------------------------
-    for (Event* ev : events)
+    for (auto&& ev : events)
         ev->mInitialized = false;
 
     // -------------------------- Init gamma ------------------------------
     emit stepChanged(tr("Initializing Phase Gaps..."), 0, phasesConstraints.size());
     int i (0);
-    for (auto && phC : phasesConstraints) {
+    for (auto&& phC : phasesConstraints) {
         phC->initGamma();
         if (isInterruptionRequested())
             return ABORTED_BY_USER;
@@ -205,7 +206,7 @@ QString MCMCLoopMain::initMCMC()
     // ----------------------- Init tau -----------------------------------------
     emit stepChanged(tr("Initializing Phase Durations..."), 0, phases.size());
     i = 0;
-    for (auto && ph : phases) {
+    for (auto&& ph : phases) {
         ph->initTau();
 
         if (isInterruptionRequested())
@@ -257,7 +258,7 @@ QString MCMCLoopMain::initMCMC()
 
     emit stepChanged(tr("Initializing Events..."), 0, unsortedEvents.size());
 
-    for (auto e : unsortedEvents) {
+    for (auto&& e : unsortedEvents) {
         mModel->initNodeEvents();
         QString circularEventName = "";
         QList< Event*> startEvents = QList<Event*>();
@@ -276,7 +277,7 @@ QString MCMCLoopMain::initMCMC()
             qDebug() << "in initMCMC(): ---------------------------------";
             mModel->initNodeEvents();
             QString circularEventName = "";
-            QList< Event*> startEvents = QList<Event*>();
+
             const double min (unsortedEvents.at(i)->getThetaMinRecursive (tmin));
             if (!circularEventName.isEmpty()) {
                 mAbortedReason = QString(tr("Warning : Find Circular constraint with %1  bad path  %2 ")).arg(unsortedEvents.at(i)->mName, circularEventName);
@@ -290,13 +291,90 @@ QString MCMCLoopMain::initMCMC()
             if (min >= max)
                 qDebug() << tr("-----Error Init for event : %1 : min = %2 : max = %3-------").arg(unsortedEvents.at(i)->mName, QString::number(min), QString::number(max));
 #endif
-            unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
+
+
+
+            // Création de la cumulé de répartition de date
+            // 1 - Recherrche des tmin et tmax, des courbes de répartition, identique au calibration
+            double unionTmin (+INFINITY);
+            double unionTmax (-INFINITY);
+            double unionStep (mModel->mSettings.mStep);
+            for (auto&& d : unsortedEvents.at(i)->mDates) {
+                if (d.mCalibration != nullptr && !d.mCalibration->mCurve.isEmpty() ) {
+                    unionTmin = std::min(unionTmin, d.mCalibration->mTmin);
+                    unionTmax = std::max(unionTmax, d.mCalibration->mTmax);
+                    unionStep = std::min(unionStep, d.mCalibration->mStep);
+
+                } else {
+                    unionTmin = mModel->mSettings.mTmin;
+                    unionTmax = mModel->mSettings.mTmax;
+                }
+
+            }
+            // 2- Recherche de l'intervalle commun entre les contraintes et les calibrations
+
+            /* In ChronoModel 2.0, we initialize the theta uniformly between tmin and tmax possible.
+             * Now, we use the cumulative date density distribution function.
+             */
+
+            // Calibrés en dehors des contraintes
+            // CE cas doit être dissocié en deux, la densité est à droite ou la densité est à gauche donc favoriser un des cotés
+
+            if (unionTmax< min) {
+                unsortedEvents.at(i)->mTheta.mX = Generator::gaussByDoubleExp(min, (max-min)/3.4, min, max);
+
+            } else if (max<unionTmin){
+
+                //unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
+
+                unsortedEvents.at(i)->mTheta.mX = Generator::gaussByDoubleExp(max, (max-min)/3.4, min, max);
+
+
+            } else {
+                unionTmin = std::max(unionTmin, min);
+                unionTmax = std::min(unionTmax, max);
+
+
+                // 3 - Création de la cumulé des courbe de répartition dans l'intervalle
+                QVector<double> unionRepartition (0);
+                double tWhile (unionTmin);
+                double sumWhile (0.);
+
+                while (tWhile<= unionTmax) {
+                    sumWhile= 0.;
+                    for (auto&& d : unsortedEvents.at(i)->mDates) {
+                        sumWhile += interpolate_value_from_curve(tWhile, d.mCalibration->mRepartition, d.mCalibration->mTmin, d.mCalibration->mTmax);
+
+                    }
+                    unionRepartition.append(sumWhile);
+                    tWhile += unionStep;
+
+                }
+
+                /* Given the stratigraphic constraints and the possibility of having dates outside the study period.
+                 * The maximum of the distribution curve can be different from the number of dates
+                 * and the minimum can be different from 0.
+                 */
+
+
+                const double maxRepartition (unionRepartition.last());
+                const double minRepartition (unionRepartition.first());
+                if (minRepartition!=0. || maxRepartition!= 0.) {
+                    const double idx = vector_interpolate_idx_for_value(Generator::randomUniform()*(maxRepartition-minRepartition) + minRepartition, unionRepartition);
+                    unsortedEvents.at(i)->mTheta.mX = unionTmin + idx * unionStep;
+
+                } else {
+
+                    unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
+                }
+            }
+
             unsortedEvents.at(i)->mInitialized = true;
 
             //qDebug() << "in initMCMC(): Event initialized : " << unsortedEvents[i]->mName << " : " << unsortedEvents[i]->mTheta.mX<<" between"<<min<<max;
 
             double s02_sum (0.);
-            for (int j=0; j<unsortedEvents.at(i)->mDates.size(); ++j) {
+            for (int j(0); j<unsortedEvents.at(i)->mDates.size(); ++j) {
                 Date& date = unsortedEvents.at(i)->mDates[j];
 
                 // 1 - Init ti
@@ -307,18 +385,7 @@ QString MCMCLoopMain::initMCMC()
                     qDebug()<<"MCMCLoopMain::Init"<<date.mName <<" mThe.mx="<<QString::number(date.mTheta.mX, 'g', 15)<<date.mCalibration->mTmin<<date.mCalibration->mStep;
 
                     FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration->mCurve, date.mCalibration->mTmin, date.mCalibration->mTmax, date.mCalibration->mStep));
-                    
-                    
-                    
-//                    const int nbPts = 1 + int (round((date.mCalibration->mTmax - date.mCalibration->mTmin) /  date.mCalibration->mStep)); // step is not usefull, it's must be data.size/(max-min+1)
-//                    qDebug()<<"MCMCLoopMain::Init mCalibration";
-//                    for (int i=0; i<nbPts; ++i) {
-//                        double t = date.mCalibration->mTmin + i *  date.mCalibration->mStep;
-//                        if (i < date.mCalibration->mCurve.size())
-//                        qDebug()<< t<<";"<<date.mCalibration->mCurve.at(i);
-//                    }
-                    
-                    
+
                     sigma = double (data.stddev);
                     qDebug()<<"MCMCLoopMain::Init"<<date.mName <<" sigma="<<sigma;
                 }
@@ -345,7 +412,7 @@ QString MCMCLoopMain::initMCMC()
                 date.mWiggle.saveCurrentAcceptRate();
 
                 // 3 - Init sigma MH adaptatif of each Data ti
-                date.mTheta.mSigmaMH = sigma;
+                date.mTheta.mSigmaMH = sigma * 1.44; // modif pHd 2021/01/21 -------------------0,56=1-0,44 ??
 
                 // 4 - Clear mLastAccepts array and set this init at 100%
                 date.mTheta.mLastAccepts.clear();
@@ -389,18 +456,18 @@ QString MCMCLoopMain::initMCMC()
     QString log;
     emit stepChanged(tr("Initializing Variances..."), 0, events.size());
 
-    for (int i=0; i<events.size(); ++i) {
-        for (int j=0; j<events.at(i)->mDates.size(); ++j) {
-            Date& date = events.at(i)->mDates[j];
-
+    for (int i(0); i<events.size(); ++i) {
+     //   for (int j=0; j<events.at(i)->mDates.size(); ++j) {
+       //     Date& date = events.at(i)->mDates[j];
+        for (auto&& date : events.at(i)->mDates) {
             // date.mSigma.mX = sqrt(shrinkageUniform(events[i]->mS02)); // modif the 2015/05/19 with PhL
-            date.mSigma.mX = std::abs(date.mTheta.mX - (events.at(i)->mTheta.mX - date.mDelta));
+            date.mSigma.mX = std::abs(date.mTheta.mX - (events.at(i)->mTheta.mX - date.mDelta)) ;
 
             if (date.mSigma.mX<=1E-6) {
                date.mSigma.mX = 1E-6; // Add control the 2015/06/15 with PhL
                log += line(date.mName + textBold("Sigma indiv. <=1E-6 set to 1E-6"));
             }
-            date.mSigma.mSigmaMH = 1.;
+            date.mSigma.mSigmaMH = 1.27;  //1.; // modif pHd 2021-01-20 : Empiric formula Here mTheta.mSigmaMH is equal to the standard deviation on the date density
 
             date.mSigma.mLastAccepts.clear();
             date.mSigma.mLastAccepts.push_back(1.);
@@ -418,7 +485,7 @@ QString MCMCLoopMain::initMCMC()
     emit stepChanged(tr("Initializing Phases..."), 0, phases.size());
 
     i = 0;
-    for (Phase* phase : phases ) {
+    for (auto&& phase : phases ) {
         phase->updateAll(tmin, tmax);
         phase->memoAll();
 
@@ -434,7 +501,7 @@ QString MCMCLoopMain::initMCMC()
     log += textBold("Events Initialization (with their data)");
 
     i = 0;
-    for (const Event* event : events) {
+    for (auto&& event : events) {
         ++i;
         log += "<hr><br>";
 
@@ -455,17 +522,17 @@ QString MCMCLoopMain::initMCMC()
 
 
         int j (0);
-        for (const Date & date : event->mDates) {
+        for (auto&& date : event->mDates) {
             ++j;
             log += "<br>";
 
             log += line(textBlack(tr("Data ( %1 / %2 ) : %3").arg(QString::number(j), QString::number(event->mDates.size()), date.mName)));
             log += line(textBlack(tr(" - ti : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(date.mTheta.mX), DateUtils::getAppSettingsFormatStr())));
             if (date.mMethod == Date::eMHSymGaussAdapt)
-                log += line(textBlack(tr(" - Sigma_MH on ti : %1").arg(stringForLocal(date.mTheta.mSigmaMH))));
+                log += line(textBlack(tr(" - Sigma_MH on ti : %1").arg(QString::number(date.mTheta.mSigmaMH))));
 
-            log += line(textBlack(tr(" - Sigma_i : %1").arg(stringForLocal(date.mSigma.mX))));
-            log += line(textBlack(tr(" - Sigma_MH on Sigma_i : %1").arg(stringForLocal(date.mSigma.mSigmaMH))));
+            log += line(textBlack(tr(" - Sigma_i : %1").arg(QString::number(date.mSigma.mX))));
+            log += line(textBlack(tr(" - Sigma_MH on Sigma_i : %1").arg(QString::number(date.mSigma.mSigmaMH))));
             if (date.mDeltaType != Date::eDeltaNone)
                 log += line(textBlack(tr(" - Delta_i : %1").arg(stringForLocal(date.mDelta))));
 
@@ -478,7 +545,7 @@ QString MCMCLoopMain::initMCMC()
         log += "<hr>";
 
         int i = 0;
-        for (const Phase * phase : phases) {
+        for (const auto& phase : phases) {
             ++i;
             log += "<br>";
             log += line(textPurple(tr("Phase ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(phases.size()), phase->mName)));
@@ -494,10 +561,10 @@ QString MCMCLoopMain::initMCMC()
         log += "<hr>";
 
         int i = 0;
-        for (const PhaseConstraint* constraint : phasesConstraints) {
+        for (const auto& constraint : phasesConstraints) {
             ++i;
             log += "<br>";
-            log += line(textGreen(tr("Succession ( %1 / %2) : from %3 to %4").arg(QString::number(i),QString::number(phasesConstraints.size()),constraint->mPhaseFrom->mName, constraint->mPhaseTo->mName)));
+            log += line(textGreen(tr("Succession ( %1 / %2) : from %3 to %4").arg(QString::number(i), QString::number(phasesConstraints.size()),constraint->mPhaseFrom->mName, constraint->mPhaseTo->mName)));
             log += line(textGreen(tr(" - Gamma : %1").arg(stringForLocal(constraint->mGamma))));
         }
     }
@@ -518,13 +585,39 @@ void MCMCLoopMain::update()
 
     ChainSpecs& chain = mChains[mChainIndex];
 
+    //--------------------- Memo adaptation before first run-----------------------------------------
+       if (mState == eRunning && chain.mRunIterIndex==0) {
+           mAdaptLog += "<hr>";
+           mAdaptLog += line(textBold(tr("Event adaptation for chain %1").arg(QString::number(mChainIndex+1))) );
+           for (auto&& event : mModel->mEvents) {
+               mAdaptLog += "<hr>";
+               mAdaptLog += line(textBold(tr("Event : %1 ").arg(event->mName)) );
+               mAdaptLog += line( textBold(tr("- Acceptance rate : %1 percent").arg( QString::number(100. * event->mTheta.getCurrentAcceptRate()))) );
+              // mAdaptLog += line(textBold(tr("- Theta : %1").arg( QString::number(event->mTheta.mX))) );
+               mAdaptLog += line(textBold(tr("- Sigma_MH on Theta : %1 at %2 ").arg( QString::number(event->mTheta.mSigmaMH), QString::number(100. * event->mTheta.getCurrentAcceptRate()))) );
+
+               for (auto&& date : event->mDates )   {
+                   mAdaptLog += line( textBold(tr("Data : %1").arg(date.mName)) );
+                   mAdaptLog += line( textBold(tr("- Acceptance rate : %1 percent").arg( QString::number(100. * date.mTheta.getCurrentAcceptRate()))) );
+                   mAdaptLog += line( textBold(tr("- Sigma_MH on ti : %1").arg(QString::number(date.mTheta.mSigmaMH) )));
+                   mAdaptLog += line( textBold(tr("- Sigma_i : %1 ").arg(QString::number(date.mSigma.mX) )) );
+                   mAdaptLog += line( textBold(tr("- Sigma_i acceptance rate : %1 percent").arg( QString::number(100. * date.mSigma.getCurrentAcceptRate()))) );
+                   mAdaptLog += line( textBold(tr("- Sigma_MH on Sigma_i : %1").arg(QString::number(date.mSigma.mSigmaMH, 'f'))) );
+               }
+
+           }
+
+       }
+
     const bool doMemo = (mState == eBurning) || (mState == eAdapting) || (chain.mTotalIter % chain.mThinningInterval == 0);
+
+
 
 
     //--------------------- Update Event -----------------------------------------
 
     for (auto&& event : mModel->mEvents) {
-        for ( auto&& date : event->mDates )   {
+        for (auto&& date : event->mDates )   {
             date.updateDelta(event);
             date.updateTheta(event);
             //date.updateSigmaJeffreys(event);
@@ -563,35 +656,136 @@ void MCMCLoopMain::update()
 
     //--------------------- Memo Phases -----------------------------------------
     if (doMemo) {
-        for (auto && ph : mModel->mPhases)
+        for (auto&& ph : mModel->mPhases)
             ph->memoAll();
     }
 
     //--------------------- Update Phases constraints -----------------------------------------
-        for (auto && phConst : mModel->mPhaseConstraints )
-           phConst->updateGamma();
+    for (auto&& phConst : mModel->mPhaseConstraints )
+        phConst->updateGamma();
+
+
+        //--------------------- Memo adaptation after all run-----------------------------------------
+    if ((mState == eRunning) && (chain.mRunIterIndex == chain.mNumRunIter-1)) {
+        mModel->mLogResults += "<hr>";
+        mModel->mLogResults += line(textBold(tr("Event adaptation for chain %1").arg(QString::number(mChainIndex+1))) );
+        for (auto&& event : mModel->mEvents) {
+            mModel->mLogResults += "<hr>";
+            mModel->mLogResults += line(textBold(tr("Event : %1 ").arg(event->mName)) );
+            mModel->mLogResults += line( textBold(tr("- Acceptance rate : %1 percent").arg( QString::number(100. * event->mTheta.getCurrentAcceptRate()))) );
+            // mAdaptLog += line(textBold(tr("- Theta : %1").arg( QString::number(event->mTheta.mX))) );
+            mModel->mLogResults += line(textBold(tr("- Sigma_MH on Theta : %1 at %2 ").arg( QString::number(event->mTheta.mSigmaMH), QString::number(100. * event->mTheta.getCurrentAcceptRate()))) );
+
+            for (auto&& date : event->mDates )   {
+                mModel->mLogResults += line( textBold(tr("Data : %1").arg(date.mName)) );
+                mModel->mLogResults += line( textBold(tr("- Acceptance rate : %1 percent").arg( QString::number(100. * date.mTheta.getCurrentAcceptRate()))) );
+                mModel->mLogResults += line( textBold(tr("- Sigma_MH on ti : %1").arg(QString::number(date.mTheta.mSigmaMH) )));
+                mModel->mLogResults += line( textBold(tr("- Sigma_i : %1 ").arg(QString::number(date.mSigma.mX) )) );
+                mModel->mLogResults += line( textBold(tr("- Sigma_i acceptance rate : %1 percent").arg( QString::number(100. * date.mSigma.getCurrentAcceptRate()))) );
+                mModel->mLogResults += line( textBold(tr("- Sigma_MH on Sigma_i : %1").arg(QString::number(date.mSigma.mSigmaMH, 'f'))) );
+            }
+
+        }
+
+    }
 
 }
 
-bool MCMCLoopMain::adapt()
+bool MCMCLoopMain::adapt_V2()
 {
     ChainSpecs& chain = mChains[mChainIndex];
 
-    const double taux_min = 41.;           // taux_min minimal rate of acceptation=42
+    const double taux_min = 41.;//43.99;//41.;           // taux_min minimal rate of acceptation=42
+    const double taux_max = 47.;//44.01;//47.;           // taux_max maximal rate of acceptation=46
+
+  /*  const double taux_min = 43.999999;//41.;           // taux_min minimal rate of acceptation=42
+    const double taux_max = 44.000001;//47.;
+*/
+    bool allOK = true;
+
+
+    //--------------------- Adapt -----------------------------------------
+
+    double delta = (chain.mBatchIndex < 10000) ? 0.01 : (1. / sqrt(chain.mBatchIndex));
+    const double deltaSigma = (chain.mBatchIndex < 10000) ? 0.0001 : (1. / sqrt(chain.mBatchIndex));
+
+
+    for (auto&& event : mModel->mEvents ) {
+       for (auto&& date : event->mDates) {
+
+            //--------------------- Adapt Sigma MH de Theta i -----------------------------------------
+
+            if (date.mMethod == Date::eMHSymGaussAdapt) {
+                 const double taux = 100. * date.mTheta.getCurrentAcceptRate();
+                    if (taux <= taux_min || taux >= taux_max) {
+                        allOK = false;
+                        const double sign = (taux <= taux_min) ? -1. : 1.;
+                        date.mTheta.mSigmaMH *= pow(10., sign * delta);
+                      //  qDebug()<<"MCMCLoopMain::adapt Date sigmaMH : "<<date.mName <<date.mTheta.mSigmaMH<<"="<< mEventHold[eventIdx].mDate_sigmaMH[dateIdx]<<taux<<date.mTheta.mLastAccepts.size();
+
+                    }
+
+
+            }
+
+            //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
+            // Si Sigma n'est pas hold, on regarde le test et on corrige si besoin
+
+                const double taux = 100. * date.mSigma.getCurrentAcceptRate();
+                if (taux <= taux_min || taux >= taux_max) {
+                    allOK = false;
+                    const double sign = (taux <= taux_min) ? -1. : 1.;
+                     qDebug() << "MCMCLoopMain::adapt date.mSigma.mSigmaMH avant :" <<date.mName <<date.mSigma.mSigmaMH<<taux ;
+                    date.mSigma.mSigmaMH *= pow(10., sign * deltaSigma);
+                    qDebug() << "MCMCLoopMain::adapt date.mSigma.mSigmaMH apres :" <<date.mName <<date.mSigma.mSigmaMH;
+
+                }
+
+        }
+
+        //--------------------- Adapt Sigma MH de Theta f -----------------------------------------
+
+        if ((event->mType != Event::eKnown) && ( event->mMethod == Event::eMHAdaptGauss) ) {
+
+             const double taux = 100. * event->mTheta.getCurrentAcceptRate();
+             if (taux <= taux_min || taux >= taux_max) {
+                 allOK = false;
+                 const double sign = (taux <= taux_min) ? -1. : 1.;
+                 event->mTheta.mSigmaMH *= pow(10., sign * delta);
+
+             }
+            }
+
+        }
+
+
+
+    if (allOK ) {
+          qDebug() << "MCMCLoopMain::adapt allOk" ;
+    }
+
+    return (allOK );
+}
+
+bool MCMCLoopMain::adapt() //original code
+{
+    ChainSpecs& chain = mChains[mChainIndex];
+
+    const double taux_min = 41.;          // taux_min minimal rate of acceptation=42
     const double taux_max = 47.;           // taux_max maximal rate of acceptation=46
 
     bool allOK = true;
+
 
     //--------------------- Adapt -----------------------------------------
 
     double delta = (chain.mBatchIndex < 10000) ? 0.01 : (1. / sqrt(chain.mBatchIndex));
 
-    for (auto && event : mModel->mEvents ) {
+    for (auto&& event : mModel->mEvents ) {
 
-       for (auto && date : event->mDates) {
+       for (auto&& date : event->mDates) {
 
             //--------------------- Adapt Sigma MH de Theta i -----------------------------------------
-
             if (date.mMethod == Date::eMHSymGaussAdapt) {
                 const double taux = 100. * date.mTheta.getCurrentAcceptRate();
                 if (taux <= taux_min || taux >= taux_max) {
@@ -608,6 +802,7 @@ bool MCMCLoopMain::adapt()
                 allOK = false;
                 const double sign = (taux <= taux_min) ? -1. : 1.;
                 date.mSigma.mSigmaMH *= pow(10., sign * delta);
+
             }
         }
 
@@ -622,6 +817,7 @@ bool MCMCLoopMain::adapt()
             }
         }
     }
+
     return allOK;
 }
 

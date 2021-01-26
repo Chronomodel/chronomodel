@@ -285,6 +285,8 @@ QMap<double, double> vector_to_map(const QVector<int> &data, const double min, c
 double vector_interpolate_idx_for_value(const double value, const QVector<double> &vector);
 float vector_interpolate_idx_for_value(const float value, const QVector<float> &vector);
 
+double interpolate_value_from_curve(const double t, const QVector<double> & curve,const double curveTmin, const double curveTmax);
+
 double map_area(const QMap<double, double>& map);
 float map_area(const QMap<float, float>& map);
 const QMap<double, double> create_HPD(const QMap<double, double> &aMap, const double threshold);

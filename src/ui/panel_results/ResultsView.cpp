@@ -3115,21 +3115,21 @@ void ResultsView::updateGraphsZoomX()
      * --------------------------------------------------*/
 
     if (mTabByScene->currentIndex() == 0) {
-        for (GraphViewResults* eventGraph : mByEventsGraphs)
+        for (auto&& eventGraph : mByEventsGraphs)
             if (eventGraph) {
                 eventGraph->changeXScaleDivision(mMajorScale, mMinorCountScale);
                 eventGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
             }
     }
     else if (mTabByScene->currentIndex() == 1) {
-        for (GraphViewResults* phaseGraph : mByPhasesGraphs)
+        for (auto&& phaseGraph : mByPhasesGraphs)
             if (phaseGraph) {
                 phaseGraph->changeXScaleDivision(mMajorScale, mMinorCountScale);
                 phaseGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
             }
    }
     else if (mTabByScene->currentIndex() == 2) {
-        for (GraphViewResults* tempoGraph : mByTempoGraphs)
+        for (auto&& tempoGraph : mByTempoGraphs)
             if (tempoGraph) {
                 tempoGraph->changeXScaleDivision(mMajorScale, mMinorCountScale);
                 tempoGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
@@ -3297,13 +3297,13 @@ void ResultsView::showInfos(bool show)
 {
     mTempoStatCheck->setChecked(show);
     mStatCheck->setChecked(show);
-    for (GraphViewResults* allKindGraph : mByEventsGraphs)
+    for (auto&& allKindGraph : mByEventsGraphs)
         allKindGraph->showNumericalResults(show);
 
-    for (GraphViewResults* allKindGraph : mByPhasesGraphs)
+    for (auto&& allKindGraph : mByPhasesGraphs)
         allKindGraph->showNumericalResults(show);
 
-    for (GraphViewResults* allKindGraph : mByTempoGraphs)
+    for (auto&& allKindGraph  : mByTempoGraphs)
         allKindGraph->showNumericalResults(show);
 
     updateLayout();

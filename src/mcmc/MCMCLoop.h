@@ -89,6 +89,7 @@ protected:
 
     QString mChainsLog;
     QString mInitLog;
+    QString mAdaptLog;
 
 public:
     QString mAbortedReason;

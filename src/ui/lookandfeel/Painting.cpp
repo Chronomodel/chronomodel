@@ -63,10 +63,6 @@ void Painting::init()
     chainColors.append(QColor(26, 93, 75)); // vert-fonce
     chainColors.append(QColor(40, 33, 133)); // bleu-fonce
 
-//    chainColors.append(Qt::blue);
-//    chainColors.append(Qt::green);
-//    chainColors.append(Qt::red);
-//    chainColors.append(Qt::yellow);
 
     for (int i(0); i<200; ++i)
         chainColors.append(randomColor());

@@ -56,7 +56,7 @@ public:
     MHVariable& copy(MHVariable const& origin);
     MHVariable& operator=(MHVariable const& origin);
 
-    double getCurrentAcceptRate();
+    double getCurrentAcceptRate() const;
     void saveCurrentAcceptRate();
 
     bool tryUpdate(const double x, const double rapportToTry);
