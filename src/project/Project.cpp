@@ -225,7 +225,7 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
         emit projectStructureChanged(true); // connected to MainWindows::noResults
 
     else if (mDesignIsChanged)
-        emit projectDesignChanged(true);
+        emit projectDesignChanged(mModel);
 
 
     if (mState != state || force)  {

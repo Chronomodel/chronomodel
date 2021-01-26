@@ -678,10 +678,10 @@ void EventPropertiesView::resizeEvent(QResizeEvent* e)
 
 void EventPropertiesView::applyAppSettings()
 {
-    mButtonWidth = int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
-    mButtonHeigth = int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
-    mLineEditHeight = int (0.5 * AppSettings::heigthUnit());
-    mComboBoxHeight = int(0.7 * AppSettings::heigthUnit());
+    mButtonWidth = 50; //int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonHeigth = 50; //int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mLineEditHeight = 25; //int (0.5 * AppSettings::heigthUnit());
+    mComboBoxHeight = 25; //int(0.7 * AppSettings::heigthUnit());
     minimumHeight += mEventView->height();
 
     minimumHeight = 0;
@@ -702,13 +702,13 @@ void EventPropertiesView::applyAppSettings()
 
 void EventPropertiesView::updateLayout()
 {
-    mButtonWidth = int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
-    mButtonHeigth = int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
-    mLineEditHeight = int (0.5 * AppSettings::heigthUnit());
-    mComboBoxHeight = int (0.7 * AppSettings::heigthUnit());
+    mButtonWidth = 50; //int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonHeigth = 50; //int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mLineEditHeight = 25; //int (0.5 * AppSettings::heigthUnit());
+    mComboBoxHeight = 25; //int (0.7 * AppSettings::heigthUnit());
 
     QFontMetrics fm (font());
-    int marginTop (int (0.2 * AppSettings::widthUnit()));
+    int marginTop = 10; //(int (0.2 * AppSettings::widthUnit()));
 
     if (hasEvent())
     {

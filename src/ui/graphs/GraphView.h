@@ -271,9 +271,8 @@ public:
     QString mLegendY;
 
 private:
-     DateConversion mUnitFunctionX;
-     DateConversion mUnitFunctionY;
-
+    DateConversion mUnitFunctionX;
+    DateConversion mUnitFunctionY;
 };
 
 #endif

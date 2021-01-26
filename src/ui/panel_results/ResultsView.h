@@ -171,6 +171,7 @@ private slots:
     // ------------------------------------------------
     //  Graphs / Curves / Controls
     // ------------------------------------------------
+    void updateCurrentVariable();
     void generateCurves();
     void updateCurvesToShow();
     void updateScales();
@@ -191,8 +192,6 @@ private slots:
     void applyCurrentVariable();
     void applyUnfoldEvents();
     void applyUnfoldDates();
-    
-    void applyCurveOptions();
     
     // Span options
     void applyStudyPeriod();

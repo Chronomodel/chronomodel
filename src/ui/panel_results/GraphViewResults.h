@@ -101,7 +101,8 @@ public:
         eTempo = 3,
         eActivity = 4,
         eVG = 5,
-        eAlpha = 6
+        eG = 6,
+        eAlpha = 7
     };
     static int mHeightForVisibleAxis ;
     // member
@@ -143,10 +144,7 @@ protected:
    // qreal mGraphLeft;
     int mTopShift;
 
-
-
     QFont mGraphFont;
-    //-----
 
 public:
 
@@ -224,13 +222,13 @@ public:
                               MHVariable* variable);
 
     // This method is used to recreate all curves in mGraph.
-    // It is vitual because we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
+    // It is vitual because we want a different behavior in sub-classes (GraphViewDate, GraphViewEvent and GraphViewPhase)
     virtual void generateCurves(TypeGraph typeGraph, Variable variable);
-
+    
     // This method is used to update visible existing curves in mGraph.
     // It is vitual because we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
     virtual void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
-
+    
 public slots:
     void setRange(type_data min, type_data max);
     void setCurrentX(type_data min, type_data max);
@@ -260,11 +258,7 @@ signals:
     void unfoldToggled(bool toggled);
     void visibilityChanged(bool visible);
     void selected();
-
 };
-
-
-
 
 class Filter : public QObject {
     QPointer<Overlay> m_overlay;

@@ -37,6 +37,7 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
+#include "MainWindow.h"
 #include "ProjectView.h"
 #include "ModelView.h"
 #include "ResultsView.h"
@@ -158,6 +159,8 @@ void ProjectView::showResults()
 {
     mResultsView->clearResults();
     mStack->setCurrentIndex(1);
+    
+    this->updateResults();
 }
 
 
@@ -239,6 +242,17 @@ void ProjectView::initResults(Model* model)
     
     // Show results :
     mStack->setCurrentIndex(1);
+}
+
+void ProjectView::updateResults()
+{
+    Project* project = MainWindow::getInstance()->getProject();
+    
+    if(project->mModel)
+    {
+        project->mModel->updateDesignFromJson();
+        mResultsView->updateModel(project->mModel);
+    }
 }
 
 void ProjectView::updateResultsLog(const QString& log)

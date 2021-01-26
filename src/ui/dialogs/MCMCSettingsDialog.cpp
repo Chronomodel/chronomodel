@@ -170,7 +170,7 @@ mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
     connect(this, &MCMCSettingsDialog::inputValided, this, &MCMCSettingsDialog::accept);
 
     connect(mCancelBut, &Button::clicked, this, &MCMCSettingsDialog::reject);
-
+    
     connect(mResetBut, &Button::clicked, this, &MCMCSettingsDialog::reset);
     connect(mTestBut, &Button::clicked, this, &MCMCSettingsDialog::setQuickTest);
 

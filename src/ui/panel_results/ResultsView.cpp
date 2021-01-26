@@ -104,8 +104,8 @@ mMarginRight(40),
 mCurrentTypeGraph(GraphViewResults::ePostDistrib),
 mCurrentVariable(GraphViewResults::eTheta),
 mGraphsPerPage(APP_SETTINGS_DEFAULT_SHEET),
-mMaximunNumberOfVisibleGraph(0),
 mMajorScale(100),
+mMaximunNumberOfVisibleGraph(0),
 mMinorCountScale(4)
 {
     setMouseTracking(true);
@@ -309,8 +309,8 @@ mMinorCountScale(4)
     connect(mCurveGPRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
     connect(mCurveGSRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
     connect(mAlphaRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
-    connect(mCurveErrorCheck, &CheckBox::clicked, this, &ResultsView::applyCurveOptions);
-    connect(mCurvePointsCheck, &CheckBox::clicked, this, &ResultsView::applyCurveOptions);
+    connect(mCurveErrorCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mCurvePointsCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
 
     // -----------------------------------------------------------------
     //  Graph List tab (has to be created after mResultsGroup and mTempoGroup)
@@ -962,15 +962,6 @@ void ResultsView::updateLayout()
     mToolsWidget->resize(mOptionsW, buttonHeight);
     
     // --------------------------------------------------------
-    //  Pagination layout
-    // --------------------------------------------------------
-    /*mPreviousPageBut->setGeometry(0, 0, paginationButWidth, buttonHeight);
-    mPageEdit->setGeometry(paginationButWidth, 0, paginationLabWidth, buttonHeight);
-    mNextPageBut->setGeometry(paginationButWidth + paginationLabWidth, 0, paginationButWidth, buttonHeight);
-    mGraphsPerPageLab->setGeometry(mMargin, buttonHeight + mMargin, graphPerPageLabWidth, buttonHeight);
-    mGraphsPerPageSpin->setGeometry(mMargin + graphPerPageLabWidth, buttonHeight + mMargin, graphPerPageSpinWidth, buttonHeight);
-    */
-    // --------------------------------------------------------
     //  Tools layout
     // --------------------------------------------------------
     mImageSaveBut->setGeometry(0, 0, buttonSide, buttonHeight);
@@ -985,7 +976,7 @@ void ResultsView::updateLayout()
     //  Right layout
     // --------------------------------------------------------
     mOptionsScroll->setGeometry(leftWidth, 0, mOptionsW, height());
-    mOptionsWidget->setGeometry(0, 0, mOptionsW, 800);
+    mOptionsWidget->setGeometry(0, 0, mOptionsW - sbe, 800);
 }
 
 
@@ -1067,14 +1058,20 @@ void ResultsView::applyGraphListTab()
     mTempoScrollArea->setVisible(currentIndex == 2);
     mCurveScrollArea->setVisible(currentIndex == 3);
     
-    // Adjust the current graph type if necessary :
-    // - If graph list is "Tempo" (2) => ePostDistrib
-    
-    if(currentIndex == 2)
-    {
-        mGraphTypeTabs->setTab(0, false);
+    // Update the current variable to the most appropriate for this list :
+    if(currentIndex == 0){
+        mDataThetaRadio->setChecked(true);
+    }else if(currentIndex == 1){
+        mDataThetaRadio->setChecked(true);
+    }else if(currentIndex == 2){
+        mDurationRadio->setChecked(true);
+    }else if(currentIndex == 3){
+        mCurveGRadio->setChecked(true);
     }
-
+    updateCurrentVariable();
+    
+    // Set the current graph type to Posterior distrib :
+    mGraphTypeTabs->setTab(0, false);
     mCurrentTypeGraph = (GraphViewResults::TypeGraph) mGraphTypeTabs->currentIndex();
     
     // Changing the graphs list implies to go back to page 1 :
@@ -1085,36 +1082,65 @@ void ResultsView::applyGraphListTab()
     updateLayout();
 }
 
+void ResultsView::updateCurrentVariable()
+{
+    if(mGraphListTab->currentIndex() == 0)
+    {
+        if(mDataThetaRadio->isChecked())
+        {
+            mCurrentVariable = GraphViewResults::eTheta;
+        }
+        else if (mDataSigmaRadio->isChecked())
+        {
+            mCurrentVariable = GraphViewResults::eSigma;
+        }
+        else if (mDataVGRadio->isChecked())
+        {
+            mCurrentVariable = GraphViewResults::eVG;
+        }
+    }
+    else if(mGraphListTab->currentIndex() == 1)
+    {
+        if(mDataThetaRadio->isChecked())
+        {
+            mCurrentVariable = GraphViewResults::eTheta;
+        }
+        else if (mDataSigmaRadio->isChecked())
+        {
+            mCurrentVariable = GraphViewResults::eSigma;
+        }
+    }
+    else if(mGraphListTab->currentIndex() == 2)
+    {
+        if (mDurationRadio->isChecked())
+        {
+            mCurrentVariable = GraphViewResults::eDuration;
+        }
+        else if (mTempoRadio->isChecked())
+        {
+            mCurrentVariable = GraphViewResults::eTempo;
+        }
+        if (mActivityRadio->isChecked())
+        {
+            mCurrentVariable = GraphViewResults::eActivity;
+        }
+    }
+    else if(mGraphListTab->currentIndex() == 3)
+    {
+        if (mAlphaRadio->isChecked())
+        {
+            mCurrentVariable = GraphViewResults::eAlpha;
+        }
+        else
+        {
+            mCurrentVariable = GraphViewResults::eG;
+        }
+    }
+}
+
 void ResultsView::applyCurrentVariable()
 {
-    if (mDataThetaRadio->isChecked())
-    {
-        mCurrentVariable = GraphViewResults::eTheta;
-    }
-    else if (mDataSigmaRadio->isChecked())
-    {
-        mCurrentVariable = GraphViewResults::eSigma;
-    }
-    else if (mDataVGRadio->isChecked())
-    {
-        mCurrentVariable = GraphViewResults::eVG;
-    }
-    else if (mDurationRadio->isChecked())
-    {
-        mCurrentVariable = GraphViewResults::eDuration;
-    }
-    else if (mTempoRadio->isChecked())
-    {
-        mCurrentVariable = GraphViewResults::eTempo;
-    }
-    else if (mActivityRadio->isChecked())
-    {
-        mCurrentVariable = GraphViewResults::eActivity;
-    }
-    else if (mAlphaRadio->isChecked())
-    {
-        mCurrentVariable = GraphViewResults::eAlpha;
-    }
+    updateCurrentVariable();
     
     updateControls();
     createGraphs();
@@ -1132,13 +1158,6 @@ void ResultsView::applyUnfoldDates()
 {
     updateControls();
     createGraphs();
-    updateLayout();
-}
-
-void ResultsView::applyCurveOptions()
-{
-    updateControls();
-    updateCurvesToShow();
     updateLayout();
 }
 
@@ -2317,7 +2336,7 @@ void ResultsView::updateControls()
     for(auto &&chainRadio : mChainRadios){
         chainRadio->setVisible(!isPostDistrib);
     }
-
+    
     // ------------------------------------
     //  Density Options
     // ------------------------------------
@@ -3205,3 +3224,6 @@ ModelChronocurve* ResultsView::modelChronocurve() const
 {
     return dynamic_cast<ModelChronocurve*>(mModel);
 }
+
+
+

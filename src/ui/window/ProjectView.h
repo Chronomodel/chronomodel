@@ -66,7 +66,6 @@ public:
     void resizeEvent(QResizeEvent* e);
 
     void setProject(Project* project);
-    void initResults(Model*);
     
     void resetInterface();
 
@@ -78,6 +77,8 @@ public:
     void updateMultiCalibration();
 
 public slots:
+    void initResults(Model*);
+    void updateResults();
     void updateProject();
     void showModel();
     void showResults();

@@ -928,7 +928,7 @@ double Event::getThetaMax(double defaultValue)
     double max_tmp1 = std::min(max1, maxThetaFwd);
     double max_tmp2 = std::min(max3, maxPhaseNext);
     double max = std::min(max_tmp1, max_tmp2);
-
+    
     return max;
 }
 
