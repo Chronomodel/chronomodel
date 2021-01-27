@@ -238,13 +238,14 @@ void MCMCLoop::run()
             }
 
         }
+        mAdaptLog += "<hr>";
         if (chain.mBatchIndex * chain.mNumBatchIter < chain.mMaxBatchs * chain.mNumBatchIter) {
             mAdaptLog += line("Adapt OK at batch : " + QString::number(chain.mBatchIndex) + "/" + QString::number(chain.mMaxBatchs));
 
         } else {
             mAdaptLog += line("Not adapted after : " + QString::number(chain.mBatchIndex) + " batches");
         }
-
+        mAdaptLog += "<hr>";
 
 
 

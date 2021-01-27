@@ -3118,6 +3118,7 @@ void ResultsView::updateGraphsZoomX()
         for (auto&& eventGraph : mByEventsGraphs)
             if (eventGraph) {
                 eventGraph->changeXScaleDivision(mMajorScale, mMinorCountScale);
+
                 eventGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
             }
     }

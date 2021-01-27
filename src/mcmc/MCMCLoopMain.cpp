@@ -295,7 +295,7 @@ QString MCMCLoopMain::initMCMC()
 
 
             // Création de la cumulé de répartition de date
-            // 1 - Recherrche des tmin et tmax, des courbes de répartition, identique au calibration
+            // 1 - Search for tmin and tmax, distribution curves, identical to the calibration.
             double unionTmin (+INFINITY);
             double unionTmax (-INFINITY);
             double unionStep (mModel->mSettings.mStep);
@@ -311,7 +311,7 @@ QString MCMCLoopMain::initMCMC()
                 }
 
             }
-            // 2- Recherche de l'intervalle commun entre les contraintes et les calibrations
+            // 2- Search for the common interval between constraints and calibrations
 
             /* In ChronoModel 2.0, we initialize the theta uniformly between tmin and tmax possible.
              * Now, we use the cumulative date density distribution function.
@@ -591,13 +591,15 @@ void MCMCLoopMain::update()
            mAdaptLog += line(textBold(tr("Event adaptation for chain %1").arg(QString::number(mChainIndex+1))) );
            for (auto&& event : mModel->mEvents) {
                mAdaptLog += "<hr>";
-               mAdaptLog += line(textBold(tr("Event : %1 ").arg(event->mName)) );
+               mAdaptLog += line( textBold(tr("Event : %1 ").arg(event->mName)) );
+               mAdaptLog += line( textBold(tr("- Theta : %1 ").arg(event->mTheta.mX)) );
                mAdaptLog += line( textBold(tr("- Acceptance rate : %1 percent").arg( QString::number(100. * event->mTheta.getCurrentAcceptRate()))) );
               // mAdaptLog += line(textBold(tr("- Theta : %1").arg( QString::number(event->mTheta.mX))) );
-               mAdaptLog += line(textBold(tr("- Sigma_MH on Theta : %1 at %2 ").arg( QString::number(event->mTheta.mSigmaMH), QString::number(100. * event->mTheta.getCurrentAcceptRate()))) );
+               mAdaptLog += line( textBold(tr("- Sigma_MH on Theta : %1 at %2 ").arg( QString::number(event->mTheta.mSigmaMH), QString::number(100. * event->mTheta.getCurrentAcceptRate()))) );
 
                for (auto&& date : event->mDates )   {
                    mAdaptLog += line( textBold(tr("Data : %1").arg(date.mName)) );
+                   mAdaptLog += line( textBold(tr("- ti : %1 ").arg(date.mTheta.mX)) );
                    mAdaptLog += line( textBold(tr("- Acceptance rate : %1 percent").arg( QString::number(100. * date.mTheta.getCurrentAcceptRate()))) );
                    mAdaptLog += line( textBold(tr("- Sigma_MH on ti : %1").arg(QString::number(date.mTheta.mSigmaMH) )));
                    mAdaptLog += line( textBold(tr("- Sigma_i : %1 ").arg(QString::number(date.mSigma.mX) )) );
@@ -771,15 +773,18 @@ bool MCMCLoopMain::adapt() //original code
 {
     ChainSpecs& chain = mChains[mChainIndex];
 
-    const double taux_min = 41.;          // taux_min minimal rate of acceptation=42
+    /*const double taux_min = 41.;          // taux_min minimal rate of acceptation=42
     const double taux_max = 47.;           // taux_max maximal rate of acceptation=46
-
+*/
+    const double taux_min = 42.;          // taux_min minimal rate of acceptation=42
+    const double taux_max = 46;
     bool allOK = true;
 
 
     //--------------------- Adapt -----------------------------------------
 
     double delta = (chain.mBatchIndex < 10000) ? 0.01 : (1. / sqrt(chain.mBatchIndex));
+   // const double deltaSigma = (chain.mBatchIndex < 10000) ? 0.0001 : (1. / sqrt(chain.mBatchIndex));
 
     for (auto&& event : mModel->mEvents ) {
 
@@ -802,6 +807,7 @@ bool MCMCLoopMain::adapt() //original code
                 allOK = false;
                 const double sign = (taux <= taux_min) ? -1. : 1.;
                 date.mSigma.mSigmaMH *= pow(10., sign * delta);
+                //date.mSigma.mSigmaMH *= pow(10., sign * deltaSigma);
 
             }
         }
