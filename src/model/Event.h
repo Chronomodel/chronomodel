@@ -63,13 +63,12 @@ public:
         eDoubleExp = 0, /**<  The default method */
         eBoxMuller = 1,
         eMHAdaptGauss = 2,
-
     };
 
     Event();
     Event(const Event& event);
     Event& operator=(const Event& event);
-    void copyFrom(const Event& event);
+    virtual void copyFrom(const Event& event);
     virtual ~Event();
 
     static Event fromJson(const QJsonObject& json);
@@ -78,6 +77,8 @@ public:
     Type type() const;
 
     void reset();
+    
+    static void setChronocurveCsvDataToJsonEvent(QJsonObject& event, const QMap<QString, double>& chronocurveData);
 
 
     /// Functions used within the MCMC process ( not in the init part!) :
@@ -137,8 +138,35 @@ public:
     bool mNodeInitialized;
     double mThetaNode;
     int mLevel; // used to init mcmc
-
+    
     double mMixingLevel;
+    
+    // --------------------------------------------------------
+    //  Chronocurve
+    // --------------------------------------------------------
+    
+    // Valeurs entrées par l'utilisateur
+    double mYInc;
+    double mYDec;
+    double mYInt;
+    double mSInc;
+    double mSInt;
+    
+    // Valeurs préparées (projetées)
+    double mYx;
+    double mYy;
+    double mYz;
+    
+    // Valeurs utilisée pour les calculs
+    double mY;
+    double mSy;
+    double mW;
+    double mWInv;
+    
+    MHVariable mVG; // sigma g de l'event (par rapport à g qu'on cherche à estimer)
+    
+    // A chaque mise à jour de VG, on doit aussi mettre w à jour :
+    void updateW();
 };
 
 #endif

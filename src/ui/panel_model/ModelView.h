@@ -57,6 +57,7 @@ class ProjectSettings;
 class ModelToolsView;
 class EventsScene;
 class PhasesScene;
+class ChronocurveSettingsView;
 class Event;
 class PhasesList;
 class ImportDataView;
@@ -78,6 +79,7 @@ public:
 
     void setProject(Project* project);
     Project* getProject() const;
+
     void calibrateAll(ProjectSettings newS);
     bool findCalibrateMissing();
 
@@ -86,7 +88,6 @@ public:
 
     void readSettings();
     void writeSettings();
-    void createProject();
 
 
 public slots:
@@ -99,6 +100,9 @@ public slots:
     //void phasesAreSelected();
     void noEventSelected();
     void applyAppSettings();
+
+    void toggleChronocurve(bool toggle);
+    void updateRightPanelTitle();
 
 protected:
     void paintEvent(QPaintEvent* e);
@@ -177,6 +181,8 @@ private:
     ImportDataView* mImportDataView;
     EventPropertiesView* mEventPropertiesView;
 
+    ChronocurveSettingsView* mChronocurveSettingsView;
+
     PhasesScene* mPhasesScene;
     QGraphicsView* mPhasesView;
 
@@ -233,6 +239,7 @@ private:
     int mHandlerW;
     bool mIsSplitting;
     bool mCalibVisible;
+    bool mIsChronocurve;
 };
 
 #endif

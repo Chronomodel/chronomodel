@@ -55,6 +55,7 @@ mDescription(QString("undefined"))
     mTmax = +INFINITY;
     mStep = 1.;
 }
+
 CalibrationCurve::CalibrationCurve(const CalibrationCurve& other)
 {
     mName = other.mName;

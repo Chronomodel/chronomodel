@@ -59,7 +59,6 @@ public:
 protected:
     void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent* );
-//    void updateLayout();
 
 private:
     Event* mEvent;

@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Project.h"
 #include "MainWindow.h"
 #include "Model.h"
+#include "ModelChronocurve.h"
 #include "PluginManager.h"
 #include "MCMCSettingsDialog.h"
 
@@ -64,6 +65,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 
 #include "MCMCLoopMain.h"
+#include "MCMCLoopChronocurve.h"
 #include "MCMCProgressDialog.h"
 
 #include "SetProjectState.h"
@@ -205,7 +207,7 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
     mStructureIsChanged = false;
     mDesignIsChanged = false;
     mItemsIsMoved = false;
-    qDebug()<<"Project::pushProjectState "<<reason<<notify<<force;
+    //qDebug()<<"Project::pushProjectState "<<reason<<notify<<force;
     if (mReasonChangeStructure.contains(reason))
         mStructureIsChanged = true;
 
@@ -487,7 +489,7 @@ bool Project::event(QEvent* e)
 
 void Project::updateState(const QJsonObject& state, const QString& reason, bool notify)
 {
-    qDebug() << " ---  Receiving : " << reason;
+    //qDebug() << " ---  Receiving : " << reason;
     mState = state;
     if (notify) {
 
@@ -1316,6 +1318,7 @@ void Project::mcmcSettings()
         pushProjectState(stateNext, MCMC_SETTINGS_UPDATED_REASON, true);
     }
 }
+
 /**
  * @brief Project::resetMCMC Restore default samplinf methods on each ti and theta
  */
@@ -1713,7 +1716,6 @@ void Project::updateSelectedEventsDataMethod(Date::DataMethod method, const QStr
     stateNext[STATE_EVENTS] = events;
     pushProjectState(stateNext, "Update selected data method", true);
 }
-
 
 // --------------------------------------------------------------------
 //     Dates
@@ -2812,8 +2814,16 @@ void Project::exportAsText()
 // --------------------------------------------------------------------
 //     Project Run
 // --------------------------------------------------------------------
-
 void Project::run()
+{
+    if(isChronocurve()){
+        runChronocurve();
+    }else{
+        runChronomodel();
+    }
+}
+
+void Project::runChronomodel()
 {
     // Check if project contains invalid dates, e.g. with no computable calibration curve
     const QJsonArray invalidDates = getInvalidDates();
@@ -2832,8 +2842,6 @@ void Project::run()
         messageBox.exec();
         if (messageBox.clickedButton() == IStop)
           return;
-
-
     }
 
     // Save the project before running MCMC :
@@ -2915,4 +2923,117 @@ void Project::clearModel()
         mModel->clear();
 
      emit noResult();
+}
+
+bool Project::isChronocurve() const{
+    QJsonObject state = this->state();
+    QJsonObject chronocurveSettings = state[STATE_CHRONOCURVE].toObject();
+    return chronocurveSettings.value(STATE_CHRONOCURVE_ENABLED).toBool();
+}
+
+void Project::runChronocurve()
+{
+    // ------------------------------------------------------------------------------------------
+    //  Check if project contains invalid dates, e.g. with no computable calibration curve
+    // ------------------------------------------------------------------------------------------
+    const QJsonArray invalidDates = getInvalidDates();
+    if (invalidDates.size() > 0)
+    {
+        QMessageBox messageBox;
+        messageBox.setMinimumWidth(10 * AppSettings::widthUnit());
+        messageBox.setIcon(QMessageBox::Warning);
+        messageBox.setWindowTitle(tr("Your data seems to be invalid"));
+        messageBox.setText(tr("The model contains at least one date whose calibration is not digitally computable. \r\rDo you really want to continue ?"));
+        QAbstractButton *stopButton = messageBox.addButton(tr("Cancel"), QMessageBox::NoRole);
+        messageBox.exec();
+        
+        if (messageBox.clickedButton() == stopButton){
+            return;
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------
+    // Save the project before running MCMC :
+    // ------------------------------------------------------------------------------------------
+    if (AppSettings::mAutoSave)
+        save();
+    else
+       askToSave(tr("Save current project as..."));
+
+
+    // ------------------------------------------------------------------------------------------
+    //  This signal can be used to clean the previous calculations (result view, ...)
+    // ------------------------------------------------------------------------------------------
+    emit mcmcStarted();
+
+    // ------------------------------------------------------------------------------------------
+    //  Clear current model and recreate et Chronocurve Model
+    //  using the project state
+    // ------------------------------------------------------------------------------------------
+    clearModel();
+    mModel = new ModelChronocurve();
+    mModel->setProject(this);
+    mModel->fromJson(mState);
+    
+    // ------------------------------------------------------------------------------------------
+    //  Check if the model is valid
+    // ------------------------------------------------------------------------------------------
+    bool modelOk = false;
+    try {
+        modelOk = mModel->isValid();
+    } catch(QString error) {
+        QMessageBox message(QMessageBox::Warning,
+            tr("Your model is not valid"),
+            error,
+            QMessageBox::Ok,
+            qApp->activeWindow());
+        message.exec();
+    }
+    if (!modelOk) {
+        return;
+    }
+    
+    // ------------------------------------------------------------------------------------------
+    //  Start MCMC for Chronocurve
+    // ------------------------------------------------------------------------------------------
+    MCMCLoopChronocurve loop((ModelChronocurve*)mModel, this);
+    MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint);
+
+    /* --------------------------------------------------------------------
+      The dialog startMCMC() method starts the loop and the dialog.
+      When the loop emits "finished", the dialog will be "accepted"
+      This "finished" signal can be the results of :
+      - MCMC ran all the way to the end => mAbortedReason is empty and "run" returns.
+      - User clicked "Cancel" :
+          - an interruption request is sent to the loop
+          - The loop catches the interruption request with "isInterruptionRequested"
+          - the loop "run" function returns after setting mAbortedReason = ABORTED_BY_USER
+      - An error occured :
+          - The loop sets mAbortedReason to the correct error message
+          - The run function returns
+      => THE DIALOG IS NEVER REJECTED ! (Escape key also disabled to prevent default behavior)
+     -------------------------------------------------------------------- */
+    if (dialog.startMCMC() == QDialog::Accepted)
+    {
+        if (loop.mAbortedReason.isEmpty()) {
+            //Memo of the init variable state to show in Log view
+            mModel->mLogMCMC = loop.getChainsLog() + loop.getInitLog();
+            emit mcmcFinished(mModel);
+        } else {
+            if (loop.mAbortedReason != ABORTED_BY_USER) {
+                QMessageBox message(QMessageBox::Warning,
+                    tr("Error"),
+                    loop.mAbortedReason,
+                    QMessageBox::Ok,
+                    qApp->activeWindow());
+                message.exec();
+            }
+            clearModel();
+        }
+    }
+    // Dialog is never "rejected", so this should never happen :
+    else {
+        qDebug() << "ERROR : MCMCProgressDialog::rejected : Should NEVER happen !";
+        clearModel();
+    }
 }

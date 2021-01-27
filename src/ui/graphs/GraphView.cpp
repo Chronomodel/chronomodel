@@ -232,60 +232,65 @@ GraphView::~GraphView()
    mZones.clear();
 }
 
-/* ------------------------------------------------------ && !curve.mIsVertical
- *  Zoom X
- * ------------------------------------------------------*/
+void GraphView::adjustYScale()
+{
+    if(mAutoAdjustYScale)
+    {
+        qreal yMax = -HUGE_VAL;
+        qreal yMin =  HUGE_VAL;
+        
+        for (int curveIndex=0; curveIndex<mCurves.size(); ++curveIndex)
+        {
+            const GraphCurve& curve = mCurves.at(curveIndex);
+            
+            if (curve.mVisible && curve.mIsVertical) { // used for the measurement in the calibration process
+                yMax = qMax(yMax, curve.mData.lastKey());
+                yMin = qMin(yMin, curve.mData.firstKey());
+            }
+
+            if (curve.mVisible && !curve.mIsVertical && !curve.mIsHorizontalLine  && !curve.mIsVerticalLine && !curve.mIsHorizontalSections) {
+
+                if (curve.mUseVectorData) {
+                    QVector<qreal> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, qreal (0.), qreal (curve.mDataVector.size()));
+
+                    yMax = qMax(yMax, vector_max_value(subData));
+                    yMin = qMin(yMin, vector_min_value(subData));
+
+                } else  {
+                    QMap<qreal, qreal> subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
+                    yMax = qMax(yMax, map_max_value(subData));
+                    yMin = qMin(yMin, map_min_value(subData));
+                }
+             }
+        }
+        if (yMax > yMin) {
+            if (mAxisToolY.mMinMaxOnly || !mYAxisTicks)
+                setRangeY(yMin, yMax);
+
+            else {
+                Scale yScale;
+                yScale.findOptimal(yMin, yMax, 7);
+                setRangeY(yScale.min, yScale.max);
+                setYScaleDivision(yScale);
+            }
+        }
+    }
+}
 
 void GraphView::zoomX(const type_data min, const type_data max)
 {
-    if (mCurrentMinX != min || mCurrentMaxX != max || mMinY>=mMaxY || mAutoAdjustYScale) {
+    if (mCurrentMinX != min || mCurrentMaxX != max || mMinY>=mMaxY || mAutoAdjustYScale)
+    {
         mCurrentMinX = min;
         mCurrentMaxX = max;
 
         mAxisToolX.updateValues(width(), 10., min, max);
-        if (mAutoAdjustYScale) {
-            qreal yMax = -HUGE_VAL;
-            qreal yMin =  HUGE_VAL;
-            for (int curveIndex=0; curveIndex<mCurves.size(); ++curveIndex) {
-                const GraphCurve& curve = mCurves.at(curveIndex);
-
-                if (curve.mVisible && curve.mIsVertical) { // used for the measurement in the calibration process
-                    yMax = qMax(yMax, curve.mData.lastKey());
-                    yMin = qMin(yMin, curve.mData.firstKey());
-                }
-
-                if (curve.mVisible && !curve.mIsVertical && !curve.mIsHorizontalLine  && !curve.mIsVerticalLine && !curve.mIsHorizontalSections) {
-
-                    if (curve.mUseVectorData) {
-                        QVector<qreal> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, qreal (0.), qreal (curve.mDataVector.size()));
-
-                        yMax = qMax(yMax, vector_max_value(subData));
-                        yMin = qMin(yMin, vector_min_value(subData));
-
-                    } else  {
-                        QMap<qreal, qreal> subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
-                        yMax = qMax(yMax, map_max_value(subData));
-                        yMin = qMin(yMin, map_min_value(subData));
-                    }
-                 }
-            }
-            if (yMax > yMin) {
-                if (mAxisToolY.mMinMaxOnly || !mYAxisTicks)
-                    setRangeY(yMin, yMax);
-
-                else {
-                    Scale yScale;
-                    yScale.findOptimal(yMin, yMax, 7);
-                    setRangeY(yScale.min, yScale.max);
-                    setYScaleDivision(yScale);
-                }
-            }
-        }
-            repaintGraph(true);
+        
+        adjustYScale();
+        
+        repaintGraph(true);
     }
-
     update();
-
 }
 
 void GraphView::changeXScaleDivision (const Scale &sc)
@@ -436,7 +441,7 @@ void GraphView::autoAdjustYScale(bool active)
 /**
  * @brief Adjust the Y axis with 0 for the minimun and find the Maximum value in the visible curve
  */
-void GraphView::adjustYToMaxValue(const qreal& marginProp)
+/*void GraphView::adjustYToMaxValue(const qreal& marginProp)
 {
     type_data yMax(0.);
 
@@ -487,7 +492,7 @@ void GraphView::adjustYToMinMaxValue()
     }
     setRangeY(yMin, yMax);
 
-}
+}*/
 
 void GraphView::setGraphFont(const QFont& font)
 {
@@ -541,23 +546,28 @@ void GraphView::setFormatFunctY(DateConversion f)
 void GraphView::addCurve(const GraphCurve& curve)
 {
     mCurves.append(curve);
+    adjustYScale();
     repaintGraph(false);
 }
 
 void GraphView::removeCurve(const QString& name)
 {
-    for (int i=0; i<mCurves.size(); ++i)
+    for(int i=0; i<mCurves.size(); ++i)
+    {
         if (mCurves.at(i).mName == name) {
             mCurves.removeAt(i);
             break;
         }
-
+    }
+    adjustYScale();
     repaintGraph(false);
 }
 
 void GraphView::removeAllCurves()
 {
-  mCurves.clear();
+    mCurves.clear();
+    adjustYScale();
+    repaintGraph(false);
 }
 
 void GraphView::reserveCurves(const int size)
@@ -568,16 +578,20 @@ void GraphView::reserveCurves(const int size)
 void GraphView::setCurveVisible(const QString& name, const bool visible)
 {
     bool modified = false;
-    for (auto && curve : mCurves)
-        if (curve.mName == name && curve.mVisible != visible) {
+    for(auto && curve : mCurves)
+    {
+        if(curve.mName == name && curve.mVisible != visible)
+        {
             curve.mVisible = visible;
             modified = true;
             break;
         }
-
-    if (modified)
+    }
+    if(modified)
+    {
+        adjustYScale();
         repaintGraph(false);
-
+    }
 }
 
 GraphCurve* GraphView::getCurve(const QString& name)
@@ -739,9 +753,9 @@ void GraphView::updateGraphSize(int w, int h)
 
 void GraphView::repaintGraph(const bool aAlsoPaintBackground)
 {
-    if (aAlsoPaintBackground)
+    if (aAlsoPaintBackground){
         mBufferBack = QPixmap();
-
+    }
     update();
 }
 

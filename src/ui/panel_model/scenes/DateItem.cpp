@@ -128,15 +128,18 @@ void DateItem::setOriginalPos(const QPointF pos)
 
 QRectF DateItem::boundingRect() const
 {
-   EventItem* eventItem = dynamic_cast<EventItem*>(parentItem());
-   if (eventItem) {
-               QRectF r( -AbstractItem::mItemWidth/2 + AbstractItem::mBorderWidth + AbstractItem::mEltsMargin,
-                         0,
-                        AbstractItem::mItemWidth - 2*(AbstractItem::mBorderWidth + AbstractItem::mEltsMargin),
-                        mTitleHeight +mEltsHeight);
-        return r;
-    } else
-        return QRectF(0, 0, AbstractItem::mItemWidth - 2*(AbstractItem::mBorderWidth + AbstractItem::mEltsMargin) , mTitleHeight +mEltsHeight);
+    float x = 0;
+    float y = 0;
+    float w = AbstractItem::mItemWidth - 2*(AbstractItem::mBorderWidth + AbstractItem::mEltsMargin);
+    float h = mTitleHeight + mEltsHeight;
+    
+    EventItem* eventItem = dynamic_cast<EventItem*>(parentItem());
+    if(eventItem)
+    {
+       x = -AbstractItem::mItemWidth/2 + AbstractItem::mBorderWidth + AbstractItem::mEltsMargin;
+    }
+    
+    return QRectF(x, y, w, h);
 }
 
 void DateItem::setGreyedOut(bool greyedOut)

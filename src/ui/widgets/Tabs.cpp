@@ -41,10 +41,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Painting.h"
 
 Tabs::Tabs(QWidget* parent):QWidget(parent),
+mTabHeight(40),
 mCurrentIndex(-1)
 {
-    setFont(parentWidget()->font());
- }
+    setFont(QFont());
+    setFixedHeight(mTabHeight);
+}
 
 Tabs::~Tabs()
 {
@@ -59,6 +61,18 @@ void Tabs::addTab(const QString& name)
 
     mTabWidgets.append(nullptr);
     mTabVisible.append(true);
+    mTabIds.append(mTabIds.size());
+}
+
+void Tabs::addTab(const QString& name, int identifier)
+{
+    mTabNames.append(name);
+    if (mTabNames.size() == 1)
+        mCurrentIndex = 0;
+
+    mTabWidgets.append(nullptr);
+    mTabVisible.append(true);
+    mTabIds.append(identifier);
 }
 
 void Tabs::addTab(QWidget* wid, const QString& name)
@@ -71,6 +85,7 @@ void Tabs::addTab(QWidget* wid, const QString& name)
     wid->setParent(this);
 
     mTabVisible.append(true);
+    mTabIds.append(mTabIds.size());
 }
 
 QWidget* Tabs::getWidget(const int &i)
@@ -125,6 +140,11 @@ int Tabs::currentIndex() const
     return mCurrentIndex;
 }
 
+int Tabs::currentId() const
+{
+    return mTabIds[mCurrentIndex];
+}
+
 void Tabs::showWidget(const int &i)
 {
     Q_ASSERT(i<mTabWidgets.size());
@@ -143,33 +163,35 @@ void Tabs::showWidget(const int &i)
 
 void Tabs::setTab(const int &i, bool notify)
 {
-    Q_ASSERT (i<mTabNames.size());
+    Q_ASSERT (i < mTabNames.size());
+    if(i != mCurrentIndex)
+    {
+        mCurrentIndex = i;
+        // we start to hide all widget and after we show the current widget, because if there is the same widget used in the several
+        for (auto wid : mTabWidgets)
+            if (wid)
+                wid->setVisible(false);
 
-    mCurrentIndex = i;
-// we start to hide all widget and after we show the current widget, because if there is the same widget used in the several
-    for (auto wid : mTabWidgets)
-        if (wid)
-            wid->setVisible(false);
+        // tabs we have to show again
+        if (mTabWidgets[mCurrentIndex])
+            mTabWidgets[mCurrentIndex]->setVisible(true);
 
-    // tabs we have to show again
-    if (mTabWidgets[mCurrentIndex])
-        mTabWidgets[mCurrentIndex]->setVisible(true);
+        if (notify)
+            emit tabClicked(i);
 
-
-    if (notify)
-        emit tabClicked(i);
-
-    updateLayout();
-
+        updateLayout();
+    }
 }
 
-  void Tabs::setFont(const QFont &font)
+void Tabs::setTabId(const int identifier, bool notify)
 {
-     mFont = font;
-     QWidget::setFont(mFont);
-     QFontMetrics fm (mFont);
-     mTabHeight = 2 * fm.height();
-  //  setMinimumSize(minimalWidth(), minimalHeight());
+    int idx = mTabIds.indexOf(identifier);
+    setTab(idx, notify);
+}
+
+void Tabs::setFont(const QFont &font)
+{
+    QWidget::setFont(font);
     updateLayout();
 }
 
@@ -179,32 +201,20 @@ void Tabs::paintEvent(QPaintEvent* e)
 
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
-    p.setFont(mFont);
 
     for (int i=0; i<mTabNames.size(); ++i)
-        if (i != mCurrentIndex) {
-            const QRectF r = mTabRects[i];
-            p.fillRect(r, Qt::black);
-            p.setPen(QColor(200, 200, 200));
-            p.drawText(r, Qt::AlignCenter, mTabNames[i]);
-        }
-
-    if (mCurrentIndex != -1) {
-        p.fillRect(mTabRects[mCurrentIndex], Painting::mainColorDark);
-        p.setPen(Qt::white);
-        p.drawText(mTabRects[mCurrentIndex], Qt::AlignCenter, mTabNames[mCurrentIndex]);
+    {
+        QColor backColor = (i == mCurrentIndex) ? Painting::mainColorDark : Qt::black;
+        QColor frontColor = (i == mCurrentIndex) ? Qt::white : QColor(200, 200, 200);
+        
+        const QRectF r = mTabRects[i];
+        p.fillRect(r, backColor);
+        p.setPen(frontColor);
+        p.drawText(r, Qt::AlignCenter, mTabNames[i]);
     }
 
     p.setPen(Painting::mainColorDark);
-    if (mTabWidgets[mCurrentIndex]) {
-        const int x0 = (width() - mTabWidgets[mCurrentIndex]->width() )/2;
-        mTabWidgets[mCurrentIndex]->move(x0, mTabHeight);
-
-    }
-
-    p.drawLine(0, mTabHeight - p.pen().width(), mTabRects[mCurrentIndex].x(), mTabHeight - p.pen().width());
-    p.drawLine(mTabRects[mCurrentIndex].x() + mTabRects[mCurrentIndex].width(), mTabHeight - p.pen().width(),width() , mTabHeight - p.pen().width());
-
+    p.drawLine(0, mTabHeight, width(), mTabHeight);
 }
 
 void Tabs::resizeEvent(QResizeEvent* e)
@@ -222,21 +232,25 @@ void Tabs::mousePressEvent(QMouseEvent* e)
 
 void Tabs::updateLayout()
 {
-
     mTabRects.clear();
-    qreal x  (1.);
-    const qreal h (mTabHeight - 1.);
-    QFontMetrics fm(mFont);
+    qreal x = 1.;
+    const qreal h = mTabHeight - 1.;
+    QFontMetrics fm(font());
 
-    int i (0);
-    for (auto &&name : mTabNames) {
-        if (mTabVisible[i]) {
+    int i = 0;
+    for (QString& name : mTabNames)
+    {
+        if (mTabVisible[i])
+        {
             const qreal w = fm.boundingRect(name).width();
             const qreal m = 1.5 * fm.boundingRect(QString("H")).width();
             mTabRects.append(QRectF(x, 1,  2*m + w, h));
             x += 2*m + w;
-        } else
+        }
+        else
+        {
             mTabRects.append(QRectF(x, 1, 0, h));
+        }
 
         ++i;
     }

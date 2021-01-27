@@ -291,21 +291,21 @@ void EventsScene::createSceneFromState()
     const QJsonArray eventsInState = state.value(STATE_EVENTS).toArray();
     const QJsonArray constraints = state.value(STATE_EVENTS_CONSTRAINTS).toArray();
     const QJsonObject settings = state.value(STATE_SETTINGS).toObject();
-    
-    //
-    
-    //QJsonObject date0 =eventsInState.at(0).toObject() .value(STATE_EVENT_DATES).toArray().at(0).toObject();
 
-    
+    const QJsonObject chronocurveSettings = state.value(STATE_CHRONOCURVE).toObject();
+
+
+
      //http://doc.qt.io/qt-5/qprogressdialog.html#minimumDuration-prop
 
     QProgressDialog* progress = new QProgressDialog("Create event items","Wait" , 1, eventsInState.size());//,qApp->activeWindow(), Qt::Window);
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(nullptr);
-  
+
     progress->setMinimumWidth(int (progress->fontMetrics().horizontalAdvance(progress->labelText()) * 1.5));
 
     mSettings = ProjectSettings::fromJson(settings);
+    mChronocurveSettings = ChronocurveSettings::fromJson(chronocurveSettings);
 
     mUpdatingItems = true;
 
@@ -390,6 +390,7 @@ void EventsScene::updateSceneFromState()
     const QJsonArray eventsInNewState = state.value(STATE_EVENTS).toArray();
     const QJsonArray constraints = state.value(STATE_EVENTS_CONSTRAINTS).toArray();
     QJsonObject settings = state.value(STATE_SETTINGS).toObject();
+    QJsonObject chronocurveSettings = state.value(STATE_CHRONOCURVE).toObject();
 
     QProgressDialog* progress = nullptr;
     bool displayProgress = false;
@@ -421,10 +422,17 @@ void EventsScene::updateSceneFromState()
     //  Update settings
     // ------------------------------------------------------
     bool settingsChanged = false;
+
     ProjectSettings s = ProjectSettings::fromJson(settings);
     if (mSettings != s) {
         settingsChanged = true;
         mSettings = s;
+    }
+
+    ChronocurveSettings cs = ChronocurveSettings::fromJson(chronocurveSettings);
+    if (mChronocurveSettings != cs) {
+        settingsChanged = true;
+        mChronocurveSettings = cs;
     }
 
     mUpdatingItems = true;
@@ -445,7 +453,7 @@ void EventsScene::updateSceneFromState()
                     delete dateItems[j];
                 }
             }
-            qDebug() << "EventsScene::updateScene Event deleted : " << event.value(STATE_ID).toInt();
+            //qDebug() << "EventsScene::updateScene Event deleted : " << event.value(STATE_ID).toInt();
 
             mItems.removeAt(i);
             hasDeleted = true;
@@ -458,20 +466,24 @@ void EventsScene::updateSceneFromState()
     }
 
     bool hasCreated = false;
-   // ------------------------------------------------------
+
+    // ------------------------------------------------------
     //  Create / Update event items
     // ------------------------------------------------------
     int i (0);
-    if (displayProgress)
+    if (displayProgress){
         progress->setLabelText(tr("Create / Update event items"));
+    }
 
-   for (auto && citer : eventsInNewState) {
+    for (auto && citer : eventsInNewState)
+    {
         const QJsonObject event = citer.toObject();
         ++i;
         if (displayProgress)
             progress->setValue(i);
 
         bool itemUnkown = true;
+
         for (auto && cIterOld : mItems) {
             EventItem* oldItem = (EventItem*) cIterOld;
             const QJsonObject OldItemEvent = oldItem->getEvent();
@@ -479,9 +491,9 @@ void EventsScene::updateSceneFromState()
             if ( OldItemEvent.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
 
                 itemUnkown = false;
-                if (event != OldItemEvent || settingsChanged) {
+                if ((event != OldItemEvent) || settingsChanged) {
                     // UPDATE ITEM
-                    qDebug() << "EventsScene::updateScene Event updated : id = " << event.value(STATE_ID).toInt()<< event.value(STATE_NAME).toString();
+                    //qDebug() << "EventsScene::updateScene Event updated : id = " << event.value(STATE_ID).toInt()<< event.value(STATE_NAME).toString();
 
                     oldItem->setEvent(event, settings);
                 }
@@ -523,7 +535,7 @@ void EventsScene::updateSceneFromState()
 
                 newItem = nullptr;
 
-                qDebug() << "EventsScene::updateScene Event created : id = " << event.value(STATE_ID).toInt() <<event[STATE_ITEM_X].toDouble()<<event[STATE_ITEM_Y].toDouble();//<< event.value(STATE_NAME).toString()<<", type : " << type;
+                //qDebug() << "EventsScene::updateScene Event created : id = " << event.value(STATE_ID).toInt() <<event[STATE_ITEM_X].toDouble()<<event[STATE_ITEM_Y].toDouble();//<< event.value(STATE_NAME).toString()<<", type : " << type;
 
             }
 
@@ -540,7 +552,7 @@ void EventsScene::updateSceneFromState()
 
         if (!constraints_ids.contains(constraint.value(STATE_ID).toInt())) {
 #ifdef DEBUG
-            qDebug() << "EventsScene::updateScene Event Constraint deleted : " << constraint.value(STATE_ID).toInt();
+            //qDebug() << "EventsScene::updateScene Event Constraint deleted : " << constraint.value(STATE_ID).toInt();
 #endif
             removeItem(constraintItem);
             mConstraintItems.removeOne(constraintItem);
@@ -580,7 +592,7 @@ void EventsScene::updateSceneFromState()
                 if (constraint != constraintItem) {
                     // UPDATE ITEM
 #ifdef DEBUG
-                    qDebug() << "EventsScene::updateScene Constraint updated : id = " << constraint.value(STATE_ID).toInt();
+                    //qDebug() << "EventsScene::updateScene Constraint updated : id = " << constraint.value(STATE_ID).toInt();
 #endif
                     mConstraintItems[j]->setData(constraint);
                 }
@@ -592,7 +604,7 @@ void EventsScene::updateSceneFromState()
             mConstraintItems.append(constraintItem);
             addItem(constraintItem);
 #ifdef DEBUG
-            qDebug() << "EventsScene::updateScene Constraint created : id = " << constraint.value(STATE_ID).toInt();
+            //qDebug() << "EventsScene::updateScene Constraint created : id = " << constraint.value(STATE_ID).toInt();
 #endif
         }
     }
@@ -621,8 +633,12 @@ void EventsScene::updateSceneFromState()
 
 
  #ifdef DEBUG
-    QTime timeDiff(0, 0, 0, (int)startTime.elapsed());
-    qDebug()<<"EventsScene::updateScene() finish at " + timeDiff.toString("hh:mm:ss.zzz");
+/*
+     QTime timeDiff(0,0,0,1);
+     timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
+
+    //qDebug()<<"EventsScene::updateScene() finish at " + timeDiff.toString("hh:mm:ss.zzz");
+*/
  #endif
 }
 
@@ -1029,7 +1045,7 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
 void EventsScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 {
     Q_UNUSED(e);
-    qDebug() << "EventsScene::itemEntered";
+
     // the difference with the AbstractScene is here we need the curentEvent, which can be a date selected
     EventItem* current = currentEvent();
 
@@ -1278,16 +1294,19 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
     e->accept();
 
 
-    QList<QPair<QString, Date>> listDates = decodeDataDrop(e);
+    QPair<QList<QPair<QString, Date>>, QMap<QString, double>> droppedData = decodeDataDrop(e);
+    QList<QPair<QString, Date>> listDates = droppedData.first;
+    QMap<QString, double> chronocurveData = droppedData.second;
 
     Project* project = MainWindow::getInstance()->getProject();
-
 
     // Create one event per data
     const int deltaX (152);
     const int deltaY (100);
     int EventCount (0);
-    for (int i=0; i<listDates.size(); ++i) {
+
+    for (int i=0; i<listDates.size(); ++i)
+    {
         // We must regenerate the variables "state" and "events" after event or data inclusion
         QJsonObject state = project->state();
         QJsonArray events = state.value(STATE_EVENTS).toArray();
@@ -1298,46 +1317,55 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
 
         int eventIdx (-1);
         int j (0);
-        if (eventName.toLower() != "bound") {
-                QJsonObject eventFinded;
-                for (auto ev : events) {
-                    if (ev.toObject().value(STATE_NAME).toString() == eventName) {
-                        eventIdx = j;
-                        eventFinded = ev.toObject();
-                        break;
-                    }
-                    ++j;
+        if (eventName.toLower() != "bound")
+        {
+            QJsonObject eventFinded;
+            for (auto ev : events) {
+                if (ev.toObject().value(STATE_NAME).toString() == eventName) {
+                    eventIdx = j;
+                    eventFinded = ev.toObject();
+                    break;
                 }
+                ++j;
+            }
 
-                if (eventIdx > -1) {
-                    QJsonObject dateJson = date.toJson();
-                    QJsonArray datesEvent = eventFinded.value(STATE_EVENT_DATES).toArray();
-                    dateJson[STATE_ID] = project->getUnusedDateId(datesEvent);
-                    if (dateJson[STATE_NAME].toString() == "")
-                        dateJson[STATE_NAME] = "No Name " + QString::number(dateJson[STATE_ID].toInt());
-                    dateJson[STATE_DATE_UUID] = QString::fromStdString(Generator::UUID());
-                    datesEvent.append(dateJson);
-                    eventFinded[STATE_EVENT_DATES] = datesEvent;
-                    // updateEvent() do pushProjectState(stateNext, reason, true);
-                    project->updateEvent(eventFinded, QObject::tr("Dates added to event by CSV drag"));
 
-                } else {
-                    Event event;
-                    // eventName=="" must never happen because we set "No Name" in ImportDataView::browse()
-                    event.mName = (eventName=="" ? date.mName : eventName);
-                    event.mId = project->getUnusedEventId(events);
-                    date.mId = 0;
-                    if (date.mName == "")
-                        date.mName = "No Name";
-                    event.mDates.append(date);
-                    event.mItemX = e->scenePos().x() + EventCount * deltaX;
-                    event.mItemY = e->scenePos().y() + EventCount * deltaY;
-                    event.mColor = randomColor();
-                    events.append(event.toJson());
-                    state[STATE_EVENTS] = events;
-                    project->pushProjectState(state, NEW_EVEN_BY_CSV_DRAG_REASON, true);
-                    ++EventCount;
-                }
+            if (eventIdx > -1) {
+                QJsonObject dateJson = date.toJson();
+                QJsonArray datesEvent = eventFinded.value(STATE_EVENT_DATES).toArray();
+                dateJson[STATE_ID] = project->getUnusedDateId(datesEvent);
+                if (dateJson[STATE_NAME].toString() == "")
+                    dateJson[STATE_NAME] = "No Name " + QString::number(dateJson[STATE_ID].toInt());
+                datesEvent.append(dateJson);
+                eventFinded[STATE_EVENT_DATES] = datesEvent;
+                // updateEvent() do pushProjectState(stateNext, reason, true);
+
+                Event::setChronocurveCsvDataToJsonEvent(eventFinded, chronocurveData);
+
+                project->updateEvent(eventFinded, QObject::tr("Dates added to event by CSV drag"));
+
+            } else {
+                Event event;
+                // eventName=="" must never happen because we set "No Name" in ImportDataView::browse()
+                event.mName = (eventName=="" ? date.mName : eventName);
+                event.mId = project->getUnusedEventId(events);
+                date.mId = 0;
+                if (date.mName == "")
+                    date.mName = "No Name";
+                event.mDates.append(date);
+                event.mItemX = e->scenePos().x() + EventCount * deltaX;
+                event.mItemY = e->scenePos().y() + EventCount * deltaY;
+                event.mColor = randomColor();
+
+                QJsonObject eventJson = event.toJson();
+                Event::setChronocurveCsvDataToJsonEvent(eventJson, chronocurveData);
+
+                events.append(eventJson);
+                state[STATE_EVENTS] = events;
+
+                project->pushProjectState(state, NEW_EVEN_BY_CSV_DRAG_REASON, true);
+                ++EventCount;
+            }
 
         } else {
             EventKnown bound;
@@ -1398,7 +1426,7 @@ QList<Date> EventsScene::decodeDataDrop_old(QGraphicsSceneDragDropEvent* e)
     return dates;
 }
 
- QList<QPair<QString, Date>> EventsScene::decodeDataDrop(QGraphicsSceneDragDropEvent* e)
+QPair<QList<QPair<QString, Date>>, QMap<QString, double>> EventsScene::decodeDataDrop(QGraphicsSceneDragDropEvent* e)
 {
     const QMimeData* mimeData = e->mimeData();
 
@@ -1407,9 +1435,12 @@ QList<Date> EventsScene::decodeDataDrop_old(QGraphicsSceneDragDropEvent* e)
 
     QList<int> acceptedRows;
     QList<int> rejectedRows;
-    QList<QPair<QString, Date>> dates;
 
-    while (!stream.atEnd()) {
+    QList<QPair<QString, Date>> dates;
+    QMap<QString, double> chronocurveEventValues;
+
+    while (!stream.atEnd())
+    {
         QString itemStr;
         stream >> itemStr;
 
@@ -1426,7 +1457,8 @@ QList<Date> EventsScene::decodeDataDrop_old(QGraphicsSceneDragDropEvent* e)
         const QString pluginName = dataStr.first();
         Date date = Date();
 
-        if (pluginName.contains("bound", Qt::CaseInsensitive)) {
+        if(pluginName.contains("bound", Qt::CaseInsensitive))
+        {
             QStringList dataTmp = dataStr.mid(1,dataStr.size()-1);
             date.mName = eventName;
             date.mPlugin = nullptr;
@@ -1438,23 +1470,43 @@ QList<Date> EventsScene::decodeDataDrop_old(QGraphicsSceneDragDropEvent* e)
 
             dates << qMakePair(pluginName, date);
             acceptedRows.append(csvRow);
-
-
-        } else {
-           date = Date::fromCSV(dataStr, csvLocal);
-           if (!date.isNull()) {
-               dates << qMakePair(eventName, date);
-               acceptedRows.append(csvRow);
-
-           } else
-               rejectedRows.append(csvRow);
-
         }
+        else
+        {
+            date = Date::fromCSV(dataStr, csvLocal);
+            if (!date.isNull())
+            {
+                dates << qMakePair(eventName, date);
+                acceptedRows.append(csvRow);
 
-
+                if(dataStr.size() >= 15){
+                    chronocurveEventValues.insert("Y1", dataStr.at(15).toDouble());
+                }
+                if(dataStr.size() >= 16){
+                    chronocurveEventValues.insert("S1", dataStr.at(16).toDouble());
+                }
+                if(dataStr.size() >= 17){
+                    chronocurveEventValues.insert("Y2", dataStr.at(17).toDouble());
+                }
+                if(dataStr.size() >= 18){
+                    chronocurveEventValues.insert("S2", dataStr.at(18).toDouble());
+                }
+                if(dataStr.size() >= 19){
+                    chronocurveEventValues.insert("Y3", dataStr.at(19).toDouble());
+                }
+                if(dataStr.size() >= 20){
+                    chronocurveEventValues.insert("S3", dataStr.at(20).toDouble());
+                }
+            }
+            else
+            {
+               rejectedRows.append(csvRow);
+            }
+        }
     }
+
     emit csvDataLineDropAccepted(acceptedRows); //connected to slot ImportDataView::removeCsvRows
     emit csvDataLineDropRejected(rejectedRows);
 
-    return dates;
+    return QPair<QList<QPair<QString, Date>>, QMap<QString, double>>(dates, chronocurveEventValues);
 }

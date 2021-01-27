@@ -45,6 +45,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AppSettingsDialog.h"
 #include "PluginManager.h"
 #include "ModelUtilities.h"
+#include "SwitchAction.h"
 
 #include <QtWidgets>
 #include <QLocale>
@@ -97,7 +98,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     statusBar()->showMessage(tr("Ready"));
     //setUnifiedTitleAndToolBarOnMac(true);
     setWindowIcon(QIcon(":chronomodel.png"));
- 
+
     resize(AppSettings::mLastSize);
 
     connect(mProjectSaveAction, static_cast<void (QAction::*)(bool)> (&QAction::triggered), this, &MainWindow::saveProject);
@@ -236,9 +237,12 @@ void MainWindow::createActions()
     //-----------------------------------------------------------------
     // View Actions
     //-----------------------------------------------------------------
+    mChronocurveAction = new SwitchAction(this);
+    mChronocurveAction->setCheckable(true);
+    mChronocurveAction->setChecked(false);
+
     mViewModelAction = new QAction(QIcon(":model_p.png"), tr("Model"), this);
     mViewModelAction->setCheckable(true);
-
 
     mViewResultsAction = new QAction(QIcon(":results_p.png"), tr("Results"), this);
     mViewResultsAction->setCheckable(true);
@@ -282,6 +286,7 @@ void MainWindow::createActions()
 
     mSelectEventsAction = new QAction(tr("Select All Events of the Selected Phases"), this);
     connect(mSelectEventsAction, &QAction::triggered, this, &MainWindow::selectedEventInSelectedPhases);
+
     //-----------------------------------------------------------------
     // Help/About Menu
     //-----------------------------------------------------------------
@@ -422,6 +427,7 @@ void MainWindow::createToolBars()
     separator3->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     mToolBar->addWidget(separator3);
 
+    mToolBar->addAction(mChronocurveAction);
     mToolBar->addAction(mViewModelAction);
     mToolBar->addAction(mMCMCSettingsAction);
     mToolBar->addAction(mRunAction);
@@ -455,7 +461,8 @@ void MainWindow::newProject()
     if ((mProject == nullptr) || (mProject->askToSave(tr("Save current project as...") )))
         yesCreate= true;
 
-    if (yesCreate) {
+    if (yesCreate)
+    {
         Project* newProject = new Project();
          // just update mAutoSaveTimer to avoid open the save() dialog box
         newProject-> mAutoSaveTimer->stop();
@@ -479,23 +486,32 @@ void MainWindow::newProject()
             delete mProject;
 
             mProject = newProject;
+
+            // Create project connections
             connectProject();
+
+            // Apply app settings to the project
             mProject->setAppSettings();
 
-            mProjectView->createProject();
-            // Ask for the new Study Period
+            // Send the project to the views
+            mProjectView->setProject(mProject);
+
+            // Ask for the a Study Period (open dialog)
             mProjectView->newPeriod();
+
+            // Open the Model View
             mViewModelAction->trigger();
 
+            // Disable the Result View
             mViewResultsAction->setEnabled(false);
 
             updateWindowTitle();
 
             mUndoStack->clear();
-        } else
+
+        } else {
             delete newProject;
-
-
+        }
     }
 }
 
@@ -535,7 +551,8 @@ void MainWindow::openProject()
             activateInterface(true);
             updateWindowTitle();
         // Create mEventsScene and mPhasesScenes
-            mProjectView->createProject();
+
+            mProjectView->setProject(mProject);
 
             mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
            /* if (! mProject->mModel->mChains.isEmpty())
@@ -585,15 +602,12 @@ void MainWindow::connectProject()
     connect(mProject, &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
     connect(mProject, &Project::projectStateChanged, this, &MainWindow::updateProject);
     connect(mProject, &Project::projectStructureChanged, this, &MainWindow::noResult);
-    connect(mProject, &Project::projectDesignChanged, mProjectView, &ProjectView::changeDesign);
 
+    connect(mChronocurveAction, &QAction::toggled, this, &MainWindow::toggleChronocurve);
     connect(mMCMCSettingsAction, &QAction::triggered, mProject, &Project::mcmcSettings);
     connect(mResetMCMCAction, &QAction::triggered, mProject, &Project::resetMCMC);
     connect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
     connect(mRunAction, &QAction::triggered, mProject, &Project::run);
-
-    mProjectView->doProjectConnections(mProject);
-
 }
 
 void MainWindow::disconnectProject()
@@ -602,13 +616,13 @@ void MainWindow::disconnectProject()
     disconnect(mProject, &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
     disconnect(mProject, &Project::projectStateChanged, this, &MainWindow::updateProject);
     disconnect(mProject, &Project::projectStructureChanged, this, &MainWindow::noResult);
-    disconnect(mProject, &Project::projectDesignChanged, mProjectView, &ProjectView::changeDesign);
 
     disconnect(mMCMCSettingsAction, &QAction::triggered, mProject, &Project::mcmcSettings);
     disconnect(mResetMCMCAction, &QAction::triggered, mProject, &Project::resetMCMC);
     disconnect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
     disconnect(mRunAction, &QAction::triggered, mProject, &Project::run);
 
+    connect(mChronocurveAction, &QAction::triggered, this, &MainWindow::toggleChronocurve);
 }
 
 void MainWindow::closeProject()
@@ -674,6 +688,13 @@ void MainWindow::updateProject()
 
     mRunAction->setEnabled(true);
     mProjectView->updateProject();
+
+    mChronocurveAction->setChecked(mProject->isChronocurve());
+}
+
+void MainWindow::toggleChronocurve(bool checked)
+{
+    mProjectView->toggleChronocurve(checked);
 }
 
 // Settings & About
@@ -696,7 +717,6 @@ void MainWindow::appSettings()
 
 void MainWindow::setAppFilesSettings()
 {
-
     QLocale::Language newLanguage = AppSettings::mLanguage;
     QLocale::Country newCountry= AppSettings::mCountry;
 
@@ -719,14 +739,12 @@ void MainWindow::setAppFilesSettings()
 
 void MainWindow::setAppSettings()
 {
-
     QLocale::Language newLanguage = AppSettings::mLanguage;
     QLocale::Country newCountry= AppSettings::mCountry;
 
     QLocale newLoc = QLocale(newLanguage, newCountry);
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
-    //statusBar()->showMessage(tr("Language") + " : " + QLocale::languageToString(QLocale().language()));
 
     setFont(qApp->font());
 
@@ -737,9 +755,7 @@ void MainWindow::setAppSettings()
 
     if (mProject) {
         mProject->setAppSettings();
-
-    mProjectView->updateMultiCalibration();
- //   if (mViewResultsAction->isEnabled())
+        mProjectView->updateMultiCalibration();
         mProjectView->applySettings(mProject->mModel);
 
     }
@@ -1030,7 +1046,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
 
                 mProject->setAppSettings();
 
-                mProjectView->createProject();
+                mProjectView->setProject(mProject);
 
                 mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
                 // to do, it'is done in project load
@@ -1062,16 +1078,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
                 connectProject();
 
                 mProject->setAppSettings();
- // debug
-    
-  //              const QJsonArray eventsInState = mProject->mState.value(STATE_EVENTS).toArray();
-  //  QJsonObject date0 =eventsInState.at(0).toObject() .value(STATE_EVENT_DATES).toArray().at(0).toObject();
-  //     qDebug()<<"MainWindow::readSettings date0"<<date0.value(STATE_NAME).toString()<<date0.value(STATE_DATE_VALID).toBool();
-
-    
-    
-    //
-                mProjectView->createProject();
+                mProjectView->setProject(mProject);
 
                 mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
                 // to do, it'is done in project load
@@ -1089,12 +1096,12 @@ void MainWindow::readSettings(const QString& defaultFilePath)
         }
     }
 
-  //  settings.endGroup();
-
     setAppSettings();
     mProjectView->readSettings();
-    if ( (mProject) && (! mProject->mModel->mChains.isEmpty()) ) {
-        mProjectView->mRefreshResults = true;
+
+    if (mProject && (! mProject->mModel->mChains.isEmpty()) )
+    {
+        mProject->mModel->updateDesignFromJson();
         mProjectView->showResults();
    }
 }
@@ -1112,6 +1119,7 @@ void MainWindow::activateInterface(bool activate)
     mProjectSaveAsAction->setEnabled(activate);
     mProjectExportAction->setEnabled(activate);
 
+    mChronocurveAction->setEnabled(activate);
     mViewModelAction->setEnabled(activate);
     mMCMCSettingsAction->setEnabled(activate);
     mResetMCMCAction->setEnabled(activate);
@@ -1173,16 +1181,21 @@ void MainWindow::mcmcFinished(Model* model)
 {
     Q_ASSERT(model);
 
-    mViewLogAction -> setEnabled(true);
-    mViewResultsAction -> setEnabled(true);
-    mViewResultsAction -> setChecked(true); // Just check the Result Button after computation and mResultsView is show after
-    mProject->setNoResults(false); // set to be able to save the file *.res
+    // Set Results and Log tabs enabled
+    mViewLogAction->setEnabled(true);
+    mViewResultsAction->setEnabled(true);
 
+    // Should be elsewhere ?
+    mProject->setNoResults(false); // set to be able to save the file *.res
     model->updateFormatSettings();
 
-    mProjectView->initResults(model);
+    // Just check the Result Button (the view will be shown by ProjectView::initResults below)
+    mViewResultsAction->setChecked(true);
 
+    // Tell the views to update
+    mProjectView->initResults(model);
 }
+
 void MainWindow::noResult()
 {
      mViewLogAction -> setEnabled(false);
@@ -1191,5 +1204,4 @@ void MainWindow::noResult()
 
      mViewModelAction->trigger();
      mProject->setNoResults(true); // set to disable the saving the file *.res
-
 }

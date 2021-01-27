@@ -46,32 +46,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 // Constructor / Destructor / Init
 ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
 {
-    /* find screen definition */
-    
-    int numScreen (QApplication::desktop()->screenNumber(this));
-    QScreen *screen;
-    if (numScreen>0) {
-        screen = QApplication::screens().at(numScreen);
-    } else {
-        screen =  QGuiApplication::primaryScreen();
-        numScreen = 0;
-    }
-    
-    //qreal mm_per_cm = 10;
-    const qreal cm_per_in = 2.54;
-    
-//    qDebug()<<"ProjectView()"<< screen->name() <<" number="<< numScreen<<"logical Dots="<<screen->logicalDotsPerInch() <<"devicePixelRatio="<<screen->devicePixelRatio()<<"availableVirtualGeometry()="<<screen->availableVirtualGeometry()<<" unitX ="<<screen->logicalDotsPerInch() / cm_per_in;
-//;
-//    qDebug()<<"ProjectView()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< QApplication::desktop()->width();
-//    qDebug()<<"ProjectView() screen width"<< width() / screen->physicalDotsPerInchX() / cm_per_in;
-//    qDebug()<<"ProjectView() screen height"<< height() / screen->physicalDotsPerInchY() / cm_per_in;
-    
-    int unitX = int(screen->logicalDotsPerInch() / cm_per_in);
-    AppSettings::setWidthUnit( unitX);
 
-    int unitY = int(screen->logicalDotsPerInch() / cm_per_in);
-    AppSettings::setHeigthUnit( unitY);
-
+    setScreenDefinition();
 
     mModelView = new ModelView();
     mResultsView = new ResultsView();
@@ -118,13 +94,8 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
 
     connect(mResultsView, &ResultsView::resultsLogUpdated, this, &ProjectView::updateResultsLog);
 
-    //setAppSettingsFont();
     mLogTabs->setTab(2, false);
     mLogTabs->showWidget(2);
-
-
-
-
 }
 
 ProjectView::~ProjectView()
@@ -132,11 +103,10 @@ ProjectView::~ProjectView()
 
 }
 
-void ProjectView::resizeEvent(QResizeEvent* e)
+void ProjectView::setScreenDefinition()
 {
-    (void) e;
     /* find screen definition */
-    
+
     int numScreen (QApplication::desktop()->screenNumber(this));
     QScreen *screen;
     if (numScreen>0) {
@@ -146,6 +116,7 @@ void ProjectView::resizeEvent(QResizeEvent* e)
         numScreen = 0;
     }
     //qreal mm_per_cm = 10;
+
     qreal cm_per_in = 2.54;
  // look for screen definition
 //        qDebug()<<"ProjectView::resizeEvent()"<< screen->name() <<" number="<<numScreen <<"logical Dots="<<screen->logicalDotsPerInch()<<"devicePixelRatio="<<screen->devicePixelRatio()<<"availableVirtualGeometry()="<<screen->availableVirtualGeometry()<<" unitX ="<<screen->logicalDotsPerInch() / cm_per_in;
@@ -169,12 +140,27 @@ void ProjectView::resizeEvent(QResizeEvent* e)
 
 
 
+    int unitY = int(screen->physicalDotsPerInchY() / cm_per_in);
+    AppSettings::setHeigthUnit(unitY);
 }
 
-void ProjectView::doProjectConnections(Project* project)
+void ProjectView::resizeEvent(QResizeEvent* e)
 {
-    mModelView   -> setProject(project);
-    mResultsView -> doProjectConnections(project);
+    Q_UNUSED(e);
+
+    setScreenDefinition();
+
+    const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
+
+    mLogModelEdit->resize(width() - AppSettings::widthUnit(), logTabHusefull);
+    mLogMCMCEdit->resize(width() - AppSettings::widthUnit(), logTabHusefull);
+    mLogResultsEdit->resize(width() - AppSettings::widthUnit() , logTabHusefull);
+}
+
+void ProjectView::setProject(Project* project)
+{
+    mModelView->setProject(project);
+    mResultsView->setProject(project);
 }
 
 void ProjectView::resetInterface()
@@ -194,31 +180,10 @@ void ProjectView::showModel()
     mStack->setCurrentIndex(0);
 }
 
-/**
- * @brief ProjectView::changeDesign slot connected to Project::projectDesignChange() in MainWindows
- * @param refresh
- */
-void ProjectView::changeDesign(bool refresh)
-{
-    (void) refresh;
-    mRefreshResults = true;
-}
-
-void ProjectView::setAppSettings()
-{
-    mModelView->applyAppSettings();
-    mResultsView->applyAppSettings();
-
-}
-
 void ProjectView::showResults()
 {
     mResultsView->clearResults();
-    mResultsView->updateModel(); // update Design e.g. Name and color //updateResults() is call inside
-    mRefreshResults = false;
-
     mStack->setCurrentIndex(1);
-    // come from mViewResultsAction and  updateResults send repaint on mStack
 }
 
 
@@ -237,17 +202,12 @@ void ProjectView::updateProject()
     mModelView->updateProject();
 }
 
-void ProjectView::createProject()
-{
-    mModelView->createProject();
-}
-
 void ProjectView::newPeriod()
 {
     mModelView->modifyPeriod();
 }
 
-void ProjectView:: applyFilesSettings(Model* model)
+void ProjectView::applyFilesSettings(Model* model)
 {
     // Rebuild all calibration curve
 
@@ -262,20 +222,16 @@ void ProjectView:: applyFilesSettings(Model* model)
 
 void ProjectView::applySettings(Model* model)
 {
-    setAppSettings();
-    if (model) {
+    mModelView->applyAppSettings();
 
-        mResultsView->updateFormatSetting(model);
-
-        // force to regenerate the densities
-        mResultsView->initResults(model);
-
+    if(model)
+    {
+        model->updateFormatSettings();
         model->generateModelLog();
-        mLogModelEdit->setText(model->getModelLog());
-
-        mLogMCMCEdit->setText(model->getMCMCLog());
-
         model->generateResultsLog();
+
+        mLogModelEdit->setText(model->getModelLog());
+        mLogMCMCEdit->setText(model->getMCMCLog());
         updateResultsLog(model->getResultsLog());
     }
 }
@@ -285,45 +241,30 @@ void ProjectView::updateMultiCalibration()
     mModelView->updateMultiCalibration();
 }
 
-void ProjectView::updateResults(Model* model)
-{
-    if (model) {
-        mResultsView->updateResults(model);
-
-        model->generateModelLog();
-        mLogModelEdit->setText(model->getModelLog());
-
-        mLogMCMCEdit->setText(model->getMCMCLog());
-
-        model->generateResultsLog();
-        mLogResultsEdit->setText(model->getResultsLog());
-
-        mStack->setCurrentIndex(1);
-    }
-}
-
+/**
+ * This function is called when  MCMC has finished
+ * We want to show the results :
+ *  - The Model may have changed since the last display : update it in results
+ *  - The Model densities have to be computed
+ *  - The Model Logs have to be generated
+ */
 void ProjectView::initResults(Model* model)
 {
-    qDebug()<<"ProjectView::initResults()";
-    if (model) {
-        mResultsView->clearResults();
+    model->updateDesignFromJson();
+    model->initDensities();
 
-        mResultsView->initResults(model);
-        mRefreshResults = true;
-        mResultsView->update();
+    model->generateModelLog();
+    model->generateResultsLog();
 
-        model->generateModelLog();
-        mLogModelEdit->setText(model->getModelLog());
+    mResultsView->updateModel(model);
 
-        mLogMCMCEdit->setText(model->getMCMCLog());
+    // Update log view
+    mLogModelEdit->setText(model->getModelLog());
+    mLogMCMCEdit->setText(model->getMCMCLog());
+    mLogResultsEdit->setText(model->getResultsLog());
 
-        model->generateResultsLog();
-        mLogResultsEdit->setText(model->getResultsLog());
-
-       // showResults();
-       mStack->setCurrentIndex(1);
-    }
-
+    // Show results :
+    mStack->setCurrentIndex(1);
 }
 
 void ProjectView::updateResultsLog(const QString& log)
@@ -350,4 +291,9 @@ void ProjectView::writeSettings()
 void ProjectView::readSettings()
 {
     mModelView->readSettings();
+}
+
+void ProjectView::toggleChronocurve(bool toggle)
+{
+    mModelView->toggleChronocurve(toggle);
 }

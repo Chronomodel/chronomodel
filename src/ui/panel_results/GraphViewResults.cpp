@@ -175,6 +175,11 @@ void GraphViewResults::setMainColor(const QColor& color)
 }
 //Export Image & Data
 
+void GraphViewResults::setTitle(const QString& title)
+{
+    mTitle = title;
+    update();
+}
 
 void GraphViewResults::saveAsImage()
 {
@@ -481,7 +486,7 @@ GraphCurve GraphViewResults::generateDensityCurve(const QMap<double, double>& da
         curve.mIsHisto = false;
         curve.mIsRectFromZero = true; // for Unif-typo. calibs., invisible for others!
    }
-     return curve;
+    return curve;
 }
 
 GraphCurve GraphViewResults::generateHPDCurve(QMap<double, double> &data,
@@ -532,8 +537,8 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
 {
     QString prefix = name.isEmpty() ? name : name + " ";
 
-    for (int i=0; i<chains.size(); ++i) {
-
+    for (int i=0; i<chains.size(); ++i)
+    {
         GraphCurve curve;
         curve.mUseVectorData = true;
         curve.mName = prefix + "Trace " + QString::number(i);
@@ -547,10 +552,10 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
         mGraph->setRangeY(floor(min), ceil(max));
 
         const Quartiles& quartiles = variable->mChainsResults.at(i).quartiles;
-
+        
         GraphCurve curveQ1 = generateHorizontalLine(quartiles.Q1, prefix + "Q1 " + QString::number(i), Qt::green);
         mGraph->addCurve(curveQ1);
-
+        
         GraphCurve curveQ2 = generateHorizontalLine(quartiles.Q2, prefix + "Q2 " + QString::number(i), Qt::red);
         mGraph->addCurve(curveQ2);
 

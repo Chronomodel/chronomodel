@@ -38,12 +38,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "MCMCProgressDialog.h"
-#include "MCMCLoopMain.h"
+#include "MCMCLoop.h"
 #include "AppSettings.h"
 #include <QtWidgets>
 
 
-MCMCProgressDialog::MCMCProgressDialog(MCMCLoopMain* loop, QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags),
+MCMCProgressDialog::MCMCProgressDialog(MCMCLoop* loop, QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags),
 mLoop(loop)
 {
     setWindowTitle(tr("MCMC in progress..."));
@@ -74,10 +74,9 @@ mLoop(loop)
 
     connect(mCancelBut, &QPushButton::clicked, this, &MCMCProgressDialog::cancelMCMC);
 
-    connect(mLoop, &MCMCLoopMain::finished, this, &MCMCProgressDialog::setFinishedState);
-
-    connect(mLoop, &MCMCLoopMain::stepChanged, this, &MCMCProgressDialog::setTitle1);
-    connect(mLoop, &MCMCLoopMain::stepProgressed, this, &MCMCProgressDialog::setProgress1);
+    connect(mLoop, &MCMCLoop::finished, this, &MCMCProgressDialog::setFinishedState);
+    connect(mLoop, &MCMCLoop::stepChanged, this, &MCMCProgressDialog::setTitle1);
+    connect(mLoop, &MCMCLoop::stepProgressed, this, &MCMCProgressDialog::setProgress1);
 }
 
 MCMCProgressDialog::~MCMCProgressDialog()

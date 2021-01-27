@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AbstractScene.h"
 #include "EventItem.h"
 #include "ProjectSettings.h"
+#include "ChronocurveSettings.h"
 
 #include <QWheelEvent>
 
@@ -94,7 +95,7 @@ public:
     EventItem *dateReleased(DateItem *dateItem);
 
     QList<Date> decodeDataDrop_old(QGraphicsSceneDragDropEvent* e);
-    QList<QPair<QString, Date>> decodeDataDrop(QGraphicsSceneDragDropEvent* e); // = Qlist<QPair<Event'name, data>>
+    QPair<QList<QPair<QString, Date>>, QMap<QString, double>> decodeDataDrop(QGraphicsSceneDragDropEvent* e); // = Qlist<QPair<Event'name, data>>
 
     void adaptItemsForZoom(const double prop);
 
@@ -132,7 +133,9 @@ signals:
 private:
     HelpWidget* mHelpView;
     QTimer* mHelpTimer;
+    
     ProjectSettings mSettings;
+    ChronocurveSettings mChronocurveSettings;
 
 //    QGraphicsItemAnimation* mDatesAnim;
 //    QTimeLine* mDatesAnimTimer;

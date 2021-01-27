@@ -62,6 +62,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define MCMC_SETTINGS_UPDATED_REASON "MCMC Settings updated"
 #define MCMC_SETTINGS_RESTORE_DEFAULT_REASON "MCMC Settings restore default"
 #define MCMC_METHODE_RESET_REASON "MCMC methods reset"
+#define CHRONOCURVE_SETTINGS_UPDATED_REASON "Chronocurve Settings updated"
 #define DATE_MOVE_TO_EVENT_REASON "Date moved to event"
 #define NEW_EVEN_BY_CSV_DRAG_REASON "New Event by CSV drag"
 
@@ -187,14 +188,19 @@ public:
     void createEvent(qreal x, qreal y);
     void createEventKnown(qreal x, qreal y);
     void createPhase(qreal x, qreal y);
+    
+    bool isChronocurve() const;
 
 public slots:
     bool save();
 
     void mcmcSettings();
     void resetMCMC();
-    void run();
     void exportAsText();
+    
+    void run();
+    void runChronomodel();
+    void runChronocurve();
 
     void setAppSettings();
 
@@ -221,8 +227,6 @@ signals:
     void projectDesignChanged(bool designIsChanged);
     void projectItemsIsMoved(bool itemsIsMoved);
 
-
-
 public:
     QJsonObject mState;
     QJsonObject mLastSavedState;
@@ -244,9 +248,8 @@ private :
     QSet<QString> mReasonChangeStructure;
     QSet<QString> mReasonChangeDesign;
     QSet<QString> mReasonChangePosition;
-
+    
     bool mNoResults;
-
 };
 
 #endif

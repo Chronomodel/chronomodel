@@ -234,8 +234,6 @@ void PhasesScene::sendUpdateProject(const QString& reason, bool notify, bool sto
 
 void PhasesScene::updateSceneFromState()
 {
-    qDebug()<<"PhasesScene::updateSceneFromState()";
-
     const QJsonObject state = mProject->state();
     QJsonArray phases = state.value(STATE_PHASES).toArray();
     QJsonArray constraints = state.value(STATE_PHASES_CONSTRAINTS).toArray();

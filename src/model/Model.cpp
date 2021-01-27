@@ -60,9 +60,12 @@ Model::Model():
 mProject(nullptr),
 mNumberOfPhases(0),
 mNumberOfEvents(0),
-mNumberOfDates(0)
+mNumberOfDates(0),
+mFFTLength(1024),
+mBandwidth(1.06),
+mThreshold(95.0)
 {
-
+    
 }
 
 Model::~Model()
@@ -72,16 +75,24 @@ Model::~Model()
 
 void Model::clear()
 {
-    clearTraces();
-    if (!mEvents.isEmpty()) {
-        for (Event* ev: mEvents) {
-            if (ev) {
-                ev->~Event();
-                ev = nullptr;
-            }
-        }
-        mEvents.clear();
-     }
+    // Deleting an event executes these main following actions :
+    // - The Event MH variables are reset (freeing trace memory)
+    // - The Dates MH variables are reset (freeing trace memory)
+    // - The Dates are cleared
+    for (Event* ev: mEvents) {
+        // Event can be an Event or an EventChronocurve.
+        // => do not delete it using ~Event(), because the appropriate destructor could be ~EventChronocurve().
+        delete ev;
+        ev = nullptr;
+    }
+    
+    for (EventConstraint* ec : mEventConstraints) {
+        delete ec;
+        ec = nullptr;
+    }
+    
+    mEvents.clear();
+    mEventConstraints.clear();
 
     if (!mPhases.isEmpty()) {
         for (Phase* ph: mPhases) {
@@ -100,14 +111,6 @@ void Model::clear()
 
         }
         mPhaseConstraints.clear();
-    }
-
-    if (!mEventConstraints.isEmpty()) {
-        for (EventConstraint* ec : mEventConstraints) {
-            if (ec)
-                ec->~EventConstraint();
-        }
-        mEventConstraints.clear();
     }
 
     mChains.clear();
@@ -295,39 +298,89 @@ void Model::setProject( Project * project)
     mProject = project;
 }
 
-void Model::updateDesignFromJson(const QJsonObject& json)
+
+/**
+ * @brief ResultsView::updateModel Update Design
+ */
+void Model::updateDesignFromJson()
 {
-    const QJsonArray phasesJSON = json.value(STATE_PHASES).toArray();
-    if (mPhases.size() != phasesJSON.size())
+    if (!mProject)
         return;
 
-    for (int i = 0; i < phasesJSON.size(); ++i) {
-        const QJsonObject phaseJS = phasesJSON.at(i).toObject();
-        Phase * p = mPhases[i];
-        p->mName = phaseJS.value(STATE_NAME).toString();
-        p->mColor = QColor(phaseJS.value(STATE_COLOR_RED).toInt(),phaseJS.value(STATE_COLOR_GREEN).toInt(),phaseJS.value(STATE_COLOR_BLUE ).toInt()) ;
-        p->mItemY = phaseJS.value(STATE_ITEM_Y).toDouble();
+    const QJsonObject state = mProject->state();
+    const QJsonArray events = state.value(STATE_EVENTS).toArray();
+    const QJsonArray phases = state.value(STATE_PHASES).toArray();
+
+    QJsonArray::const_iterator iterJSONEvent = events.constBegin();
+    while (iterJSONEvent != events.constEnd())
+    {
+        const QJsonObject eventJSON = (*iterJSONEvent).toObject();
+        const int eventId = eventJSON.value(STATE_ID).toInt();
+        const QJsonArray dates = eventJSON.value(STATE_EVENT_DATES).toArray();
+
+        QList<Event *>::iterator iterEvent = mEvents.begin();
+        while (iterEvent != mEvents.cend())
+        {
+            if ((*iterEvent)->mId == eventId)
+            {
+                (*iterEvent)->mName  = eventJSON.value(STATE_NAME).toString();
+                (*iterEvent)->mItemX = eventJSON.value(STATE_ITEM_X).toDouble();
+                (*iterEvent)->mItemY = eventJSON.value(STATE_ITEM_Y).toDouble();
+                (*iterEvent)->mIsSelected = eventJSON.value(STATE_IS_SELECTED).toBool();
+                (*iterEvent)->mColor = QColor(eventJSON.value(STATE_COLOR_RED).toInt(),
+                                              eventJSON.value(STATE_COLOR_GREEN).toInt(),
+                                              eventJSON.value(STATE_COLOR_BLUE).toInt());
+                
+                for (int k=0; k<(*iterEvent)->mDates.size(); ++k)
+                {
+                    Date& d = (*iterEvent)->mDates[k];
+                    for (auto &&dateVal : dates)
+                    {
+                        const QJsonObject date = dateVal.toObject();
+                        const int dateId = date.value(STATE_ID).toInt();
+
+                        if (dateId == d.mId)
+                        {
+                            d.mName = date.value(STATE_NAME).toString();
+                            d.mColor = (*iterEvent)->mColor;
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            ++iterEvent;
+        }
+        ++iterJSONEvent;
     }
 
-    const QJsonArray eventsJSON = json.value(STATE_EVENTS).toArray();
-    if (mEvents.size() != eventsJSON.size())
-        return;
+    QJsonArray::const_iterator iterJSONPhase = phases.constBegin();
+    while(iterJSONPhase != phases.constEnd())
+    {
+        const QJsonObject phaseJSON = (*iterJSONPhase).toObject();
+        const int phaseId = phaseJSON.value(STATE_ID).toInt();
 
-    for (int i = 0; i < eventsJSON.size(); ++i) {
-        const QJsonObject eventJS = eventsJSON.at(i).toObject();
-        Event * e = mEvents[i];
-        e->mName = eventJS.value(STATE_NAME).toString();
-        e->mItemY = eventJS.value(STATE_ITEM_Y).toDouble();
-        e->mColor = QColor(eventJS.value(STATE_COLOR_RED).toInt(),eventJS.value(STATE_COLOR_GREEN).toInt(),eventJS.value(STATE_COLOR_BLUE ).toInt()) ;
-
-        QJsonArray datesJS = eventJS.value(STATE_EVENT_DATES).toArray();
-        if (e->mDates.size() != datesJS.size())
-            return;
-
-        for (int j = 0; j < datesJS.size(); ++j) {
-            QJsonObject dateJS = datesJS.at(j).toObject();
-            e->mDates[j].mName = dateJS.value(STATE_NAME).toString();
+        for(auto &&p : mPhases)
+        {
+            if (p->mId == phaseId) {
+                p->mName = phaseJSON.value(STATE_NAME).toString();
+                p->mItemX = phaseJSON.value(STATE_ITEM_X).toDouble();
+                p->mItemY = phaseJSON.value(STATE_ITEM_Y).toDouble();
+                p->mColor = QColor(phaseJSON.value(STATE_COLOR_RED).toInt(),
+                                   phaseJSON.value(STATE_COLOR_GREEN).toInt(),
+                                   phaseJSON.value(STATE_COLOR_BLUE).toInt());
+                p->mIsSelected = phaseJSON.value(STATE_IS_SELECTED).toBool();
+                break;
+            }
         }
+        ++iterJSONPhase;
+    }
+
+    std::sort(mEvents.begin(), mEvents.end(), sortEvents);
+    std::sort(mPhases.begin(), mPhases.end(), sortPhases);
+
+    for ( auto &&p : mPhases ) {
+        std::sort(p->mEvents.begin(), p->mEvents.end(), sortEvents);
     }
 }
 
@@ -986,24 +1039,27 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 #endif
 }
 
+#pragma mark FFTLength, Threshold, bandwidth
+
 void Model::setBandwidth(const double bandwidth)
 {
-    qDebug()<<"Model::setBandwidth";
-    if (mBandwidth != bandwidth) {
+    if (mBandwidth != bandwidth)
+    {
         mBandwidth = bandwidth;
 
         clearPosteriorDensities();
         generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
         generateHPD(mThreshold);
         generateNumericalResults(mChains);
+        
         emit newCalculus();
     }
 }
 
 void Model::setFFTLength(const int FFTLength)
 {
-    qDebug()<<"Model::setFTLength";
-    if (mFFTLength != FFTLength) {
+    if (mFFTLength != FFTLength)
+    {
         mFFTLength = FFTLength;
 
         clearPosteriorDensities();
@@ -1015,65 +1071,100 @@ void Model::setFFTLength(const int FFTLength)
     }
 }
 
+/**
+ * @brief Model::setThreshold this is a slot
+ * @param threshold
+ */
+void Model::setThreshold(const double threshold)
+{
+    if(threshold != mThreshold)
+    {
+        mThreshold = threshold;
+        
+        generateCredibility(mThreshold);
+        generateHPD(mThreshold);
+        setThresholdToAllModel();
+        
+        emit newCalculus();
+    }
+}
+
+void Model::setThresholdToAllModel()
+{
+    for(auto && pEvent : mEvents)
+    {
+        if(pEvent->type() != Event::eKnown){
+          pEvent->mTheta.mThresholdUsed = mThreshold;
+
+          for (auto && date : pEvent->mDates )  {
+                date.mTheta.mThresholdUsed = mThreshold;
+                date.mSigma.mThresholdUsed = mThreshold;
+            }
+        }
+    }
+    for (auto && pPhase :mPhases) {
+       pPhase->mAlpha.mThresholdUsed = mThreshold;
+       pPhase->mBeta.mThresholdUsed = mThreshold;
+       pPhase->mDuration.mThresholdUsed = mThreshold;
+    }
+}
+
+double Model::getThreshold() const
+{
+    return mThreshold;
+}
+
+double Model::getBandwidth() const
+{
+    return mBandwidth;
+}
+
+int Model::getFFTLength() const
+{
+    return mFFTLength;
+}
+
+#pragma mark Densities
+
 void Model::initNodeEvents()
 {
-    std::for_each(mEvents.begin(), mEvents.end(), [](Event* ev) {ev->mNodeInitialized = false; ev->mThetaNode = HUGE_VAL;});
+    std::for_each(mEvents.begin(), mEvents.end(), [](Event* ev) {
+        ev->mNodeInitialized = false;
+        ev->mThetaNode = HUGE_VAL;
+    });
 }
 
 /**
- * @brief Make all densities, credibilities and time range and set mFFTLength, mBandwidth and mThreshold
- * @param[in] fftLength
- * @param[in] bandwidth
- * @param[in] threshold
+ * @brief Make all densities, credibilities and time range
  */
-void Model::initDensities(const int fftLength, const double bandwidth, const double threshold)
+void Model::initDensities()
 {
-    qDebug()<<"Model::initDensities"<<fftLength<<bandwidth<<threshold;
-    mFFTLength = fftLength;
-    mBandwidth = bandwidth;
     // memo the new value of the Threshold inside all the part of the model: phases, events and dates
-    initThreshold(threshold);
     clearPosteriorDensities();
     generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
     generateHPD(mThreshold);
 
     generateCredibility(mThreshold);
     generateNumericalResults(mChains);
+    
     if (!mPhases.isEmpty()) {
         generateTempo();
     }
-
- //   emit newCalculus();
 }
 
-void Model::updateDensities(const int fftLength, const double bandwidth, const double threshold)
+void Model::updateDensities()
 {
-    qDebug()<<"Model::updateDensities"<<fftLength<<bandwidth<<threshold;
-    bool newPosteriorDensities = false;
-    if ((mFFTLength != fftLength) || (mBandwidth != bandwidth)) {
-        mFFTLength = fftLength;
-        mBandwidth = bandwidth;
-
-        clearPosteriorDensities();
-        generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
-        newPosteriorDensities = true;
-    }
-    // memo the new value of the Threshold inside all the part of the model: phases, events and dates
-
-    if (mThreshold != threshold) {
-        initThreshold(threshold);
-        generateCredibility(mThreshold);
-    }
-
-    if (newPosteriorDensities)
-        generateHPD(mThreshold);
+    clearPosteriorDensities();
+    generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
+    setThresholdToAllModel();
+    generateCredibility(mThreshold);
+    generateHPD(mThreshold);
 
     if (!mPhases.isEmpty()) {
         generateTempo();
 
     }
     generateNumericalResults(mChains);
-
 }
 
 void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth)
@@ -1147,69 +1238,6 @@ void Model::clearThreshold()
         phase->mBeta.mThresholdUsed = -1.;
         phase->mDuration.mThresholdUsed = -1.;
     }
-}
-
-void Model::initThreshold(const double threshold)
-{
-   // memo threshold used  value
-    mThreshold = threshold;
-
-    for (auto && event : mEvents) {
-        if (event->type() != Event::eKnown) {
-          event->mTheta.mThresholdUsed = threshold;
-
-          for (auto && date : event->mDates) {
-                date.mTheta.mThresholdUsed = threshold;
-                date.mSigma.mThresholdUsed = threshold;
-            }
-
-        }
-    }
-
-    for (auto && phase : mPhases) {
-       phase->mAlpha.mThresholdUsed = threshold;
-       phase->mBeta.mThresholdUsed = threshold;
-       phase->mDuration.mThresholdUsed = threshold;
-    }
-}
-
-/**
- * @brief Model::setThreshold this is a slot
- * @param threshold
- */
-void Model::setThreshold(const double threshold)
-{
-    qDebug()<<"Model::setThreshold"<<threshold<<" mThreshold"<<mThreshold;
-    if ( mThreshold != threshold) {
-        mThreshold = threshold;
-        generateCredibility(threshold);
-        generateHPD(threshold);
-
-        // memo threshold used  value
-
-        for (auto && pEvent : mEvents) {
-            if (pEvent->type() != Event::eKnown) {
-              pEvent->mTheta.mThresholdUsed = threshold;
-
-              for (auto && date : pEvent->mDates )  {
-                    date.mTheta.mThresholdUsed = threshold;
-                    date.mSigma.mThresholdUsed = threshold;
-                }
-            }
-        }
-        for (auto && pPhase :mPhases) {
-           pPhase->mAlpha.mThresholdUsed = threshold;
-           pPhase->mBeta.mThresholdUsed = threshold;
-           pPhase->mDuration.mThresholdUsed = threshold;
-        }
-
-        emit newCalculus();
-   }
-}
-
-double Model::getThreshold() const
-{
-    return mThreshold;
 }
 
 void Model::generateCredibility(const double thresh)
@@ -2211,3 +2239,24 @@ void Model::restoreFromFile(const QString& fileName)
     }
 
 }
+
+bool Model::hasSelectedEvents()
+{
+    for(auto && event : mEvents) {
+        if (event->mIsSelected) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Model::hasSelectedPhases()
+{
+    for(auto && phase : mPhases) {
+        if (phase->mIsSelected) {
+            return true;
+        }
+    }
+    return false;
+}
+

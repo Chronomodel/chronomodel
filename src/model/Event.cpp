@@ -63,7 +63,6 @@ mIsSelected(false),
 mInitialized(false),
 mLevel(0)
 {
-
     mTheta.mSupport = MetropolisVariable::eBounded;
     mTheta.mFormat = DateUtils::eUnknown;;
 
@@ -125,10 +124,19 @@ void Event::copyFrom(const Event& event)
     mConstraintsBwd = event.mConstraintsBwd;
 
     mMixingLevel = event.mMixingLevel;
+    
+    mYInc = event.mYInc;
+    mYDec = event.mYDec;
+    mYInt = event.mYInt;
+    
+    mSInc = event.mSInc;
+    mSInt = event.mSInt;
 }
 
 Event::~Event()
 {
+    mTheta.reset();
+    
     for (auto &&date : mDates) {
         date.mTheta.reset();
         date.mSigma.reset();
@@ -169,6 +177,12 @@ Event Event::fromJson(const QJsonObject& json)
 
     event.mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
 
+    event.mYInc = json.value(STATE_EVENT_Y_INC).toDouble();
+    event.mYDec = json.value(STATE_EVENT_Y_DEC).toDouble();
+    event.mYInt = json.value(STATE_EVENT_Y_INT).toDouble();
+    
+    event.mSInc = json.value(STATE_EVENT_S_INC).toDouble();
+    event.mSInt = json.value(STATE_EVENT_S_INT).toDouble();
 
     const QJsonArray dates = json.value(STATE_EVENT_DATES).toArray();
 
@@ -202,6 +216,11 @@ QJsonObject Event::toJson() const
     event[STATE_ITEM_Y] = mItemY;
     event[STATE_IS_SELECTED] = mIsSelected;
     event[STATE_IS_CURRENT] = mIsCurrent;
+    event[STATE_EVENT_Y_INC] = mYInc;
+    event[STATE_EVENT_Y_DEC] = mYDec;
+    event[STATE_EVENT_Y_INT] = mYInt;
+    event[STATE_EVENT_S_INC] = mSInc;
+    event[STATE_EVENT_S_INT] = mSInt;
 
     QString eventIdsStr;
     if (mPhasesIds.size() > 0) {
@@ -220,6 +239,32 @@ QJsonObject Event::toJson() const
     event[STATE_EVENT_DATES] = dates;
 
     return event;
+}
+
+void Event::setChronocurveCsvDataToJsonEvent(QJsonObject& event, const QMap<QString, double>& chronocurveData)
+{
+    QMap<QString, double>::const_iterator i;
+    
+    i = chronocurveData.find("YInc");
+    if(i != chronocurveData.end()){
+        event[STATE_EVENT_Y_INC] = i.value();
+    }
+    i = chronocurveData.find("SInc");
+    if(i != chronocurveData.end()){
+        event[STATE_EVENT_S_INC] = i.value();
+    }
+    i = chronocurveData.find("YDec");
+    if(i != chronocurveData.end()){
+        event[STATE_EVENT_Y_DEC] = i.value();
+    }
+    i = chronocurveData.find("YInt");
+    if(i != chronocurveData.end()){
+        event[STATE_EVENT_Y_INT] = i.value();
+    }
+    i = chronocurveData.find("SInt");
+    if(i != chronocurveData.end()){
+        event[STATE_EVENT_S_INT] = i.value();
+    }
 }
 
 // Properties
@@ -981,7 +1026,11 @@ void Event::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, co
             //generate fictifious chains
             for (int i =0 ;i<chains.size(); ++i)
                 ek->mTheta.mChainsHistos.append(ek->mTheta.mHisto);
-
     }
+}
 
+void Event::updateW()
+{
+    mWInv = mVG.mX + mSy * mSy;
+    mW = 1. / mWInv;
 }

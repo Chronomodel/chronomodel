@@ -125,7 +125,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
 
     p.setPen(pen);
     p.setRenderHints(QPainter::Antialiasing);
-
+    
     QFontMetrics fm (p.font());
 
 #ifdef Q_OS_MAC
@@ -370,7 +370,7 @@ void Scale::findOptimal(const double & a, const double & b, const int & nOptimal
     double fract[4] = { 1. , 2. , 5. , 10. };
 
     double diff (std::max(u, e));
-    mark =  diff;
+    mark = diff;
 
     for (int i (0); i<5; ++i) {
         const double stp = u/fract[i];

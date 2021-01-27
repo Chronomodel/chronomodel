@@ -1588,7 +1588,7 @@ QStringList Date::toCSV(const QLocale &csvLocale) const
 
     csv << mPlugin->getName();
     csv << mName;
-    csv << mPlugin->toCSV(mData,csvLocale );
+    csv << mPlugin->toCSV(mData, csvLocale);
 
     if (mDeltaType == Date::eDeltaNone) {
         csv << "none";

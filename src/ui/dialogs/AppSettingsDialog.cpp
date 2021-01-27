@@ -199,7 +199,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
     mainLayout->addWidget(mRestoreBox);
     mainLayout->addLayout(grid);
-    mainLayout->addSpacing(20);
+    
 
     mGeneralView->setLayout(mainLayout);
 

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -60,6 +60,8 @@ class Button;
 class RadioButton;
 class GraphView;
 
+class ChronocurveWidget;
+
 
 class EventPropertiesView: public QWidget
 {
@@ -77,6 +79,8 @@ public:
     bool hasBound() const;
     bool hasEventWithDates() const;
 
+    void setChronocurveSettings(bool enabled, char processType);
+
 public slots:
     void setEvent(const QJsonObject& event);
     void applyAppSettings();
@@ -93,6 +97,14 @@ private slots:
     void updateEventColor(const QColor& color);
     void updateEventMethod(int index);
     void updateIndex(int index);
+
+    // Chronocurve
+    void updateEventYInc();
+    void updateEventYDec();
+    void updateEventYInt();
+
+    void updateEventSInc();
+    void updateEventSInt();
 
     void createDate();
     void deleteSelectedDates();
@@ -155,9 +167,25 @@ private:
 
     int mComboBoxHeight;
 
+    ChronocurveWidget* mChronocurveWidget;
 
+    QLabel* mYIncLab;
+    QLineEdit* mYIncEdit;
 
+    QLabel* mYDecLab;
+    QLineEdit* mYDecEdit;
 
+    QLabel* mSIncLab;
+    QLineEdit* mSIncEdit;
+
+    QLabel* mYIntLab;
+    QLineEdit* mYIntEdit;
+
+    QLabel* mSIntLab;
+    QLineEdit* mSIntEdit;
+
+    bool mChronocurveEnabled;
+    char mChronocurveProcessType;
 };
 
 #endif

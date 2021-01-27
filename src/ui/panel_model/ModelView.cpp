@@ -41,6 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "EventsScene.h"
 #include "PhasesScene.h"
 #include "PhaseItem.h"
+#include "ChronocurveSettingsView.h"
 #include "Event.h"
 #include "EventKnown.h"
 #include "Date.h"
@@ -82,7 +83,8 @@ mProject(nullptr),
 mSplitProp(0.6),
 mHandlerW ( int (0.25 *AppSettings::widthUnit())),
 mIsSplitting(false),
-mCalibVisible(false)
+mCalibVisible(false),
+mIsChronocurve(false)
 {
     setMouseTracking(true);
     //setFont(AppSettings::font());
@@ -110,9 +112,9 @@ mCalibVisible(false)
 
     //mButModifyPeriod = new Button(tr("STUDY PERIOD") , mTopWrapper);
     mButModifyPeriod = new QPushButton(tr("STUDY PERIOD") , mTopWrapper);
-    
+
   // mButModifyPeriod->setStyleSheet("QPushButton:active {background-color: rgb(230, 230, 230); border: none;}  "); // bug QT 5.15
-    
+
 
     adaptStudyPeriodButton(mTmin, mTmax);
     //connect(mButModifyPeriod,  static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &ModelView::modifyPeriod);
@@ -218,7 +220,8 @@ mCalibVisible(false)
     connect(mEventsScene, &EventsScene::csvDataLineDropAccepted, mImportDataView, &ImportDataView::removeCsvRows);
     connect(mEventsScene, &EventsScene::csvDataLineDropRejected, mImportDataView, &ImportDataView::errorCsvRows);
 
-
+    // -------- Chronocurve settings ---------------------------
+    mChronocurveSettingsView = new ChronocurveSettingsView(mRightWrapper);
 
     // -------- Windows Phase scene ---------------------------
 
@@ -282,7 +285,6 @@ mCalibVisible(false)
 
     mCalibrationView = new CalibrationView(mLeftWrapper);
 
-
      // ------------- Windows Multi-calibration ---------------------
      mMultiCalibrationView = new MultiCalibrationView(mRightWrapper);
      mMultiCalibrationView->hide();
@@ -306,6 +308,7 @@ mCalibVisible(false)
 
     // ---- update and paint with the appSettingsFont
 
+    toggleChronocurve(false);
     applyAppSettings();
 }
 
@@ -316,23 +319,51 @@ ModelView::~ModelView()
 
 void ModelView::setProject(Project* project)
 {
-    assert(project!= nullptr);
+    assert(project != nullptr);
+
     const bool projectExist = (mProject ? true : false);
     mProject = project;
     mPhasesScene->setProject(mProject);
     mEventsScene->setProject(mProject);
+    mChronocurveSettingsView->setProject(mProject);
 
     if (mProject && !projectExist)
+    {
         connectScenes();
-
+    }
     else if (projectExist && !mProject)
-            disconnectScenes();
+    {
+        disconnectScenes();
+    }
 
     // if there is no phase, we must show all events
     const QJsonArray phases = mProject->state().value(STATE_PHASES).toArray();
     if (phases.size() == 0 )
         mEventsScene->setShowAllThumbs(true);
 
+    showCalibration(false);
+
+    QJsonObject state = mProject->state();
+    const ProjectSettings settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+
+    mTmin = settings.mTmin;
+    mTmax = settings.mTmax;
+
+    adaptStudyPeriodButton(settings.mTmin, settings.mTmax);
+
+    mProject->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
+    mProject->mState[STATE_SETTINGS_TMAX] = settings.mTmax;
+    mProject->mState[STATE_SETTINGS_STEP] = settings.mStep;
+
+    mProject->mState[STATE_SETTINGS_STEP_FORCED] = settings.mStepForced;
+
+    setSettingsValid(settings.mTmin < settings.mTmax);
+
+    //Unselect all Item in all scene
+    mProject->unselectedAllInState();
+
+    mEventsScene->createSceneFromState();
+    mPhasesScene->createSceneFromState();
 }
 
 void ModelView::connectScenes()
@@ -457,7 +488,7 @@ void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
 {
         /* Addapt mButModifyPeriod size and position */
     // same variable in updateLayout()
-    
+
     const QString studyStr = tr("STUDY PERIOD") + QString(" [ %1 ; %2 ] BC/AD").arg(locale().toString(min), locale().toString(max));
     const int topButtonHeight =  mButModifyPeriod->height();  //int ( 1 * fontMetrics().tightBoundingRect(mButModifyPeriod->text()).height());//  1 * AppSettings::heigthUnit());
     mButModifyPeriod->setText(studyStr);
@@ -471,15 +502,15 @@ void ModelView::createProject()
     showCalibration(false);
 
     QJsonObject state = mProject->state();
-    
+
     // debug
-    
+
     const QJsonArray eventsInState = state.value(STATE_EVENTS).toArray();
     QJsonObject date0 = eventsInState.at(0).toObject() .value(STATE_EVENT_DATES).toArray().at(0).toObject();
        qDebug()<<"ModelView::createProject date0"<<date0.value(STATE_NAME).toString()<<date0.value(STATE_DATE_VALID).toBool();
 
-    
-    
+
+
     //
     const ProjectSettings settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
@@ -506,7 +537,6 @@ void ModelView::createProject()
 
 void ModelView::updateProject()
 {
-
     QJsonObject state = mProject->state();
     const ProjectSettings settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
@@ -566,7 +596,7 @@ bool ModelView::findCalibrateMissing()
         progress->setCancelButton(nullptr);
         progress->setMinimumDuration(4);
         progress->setMinimum(0);
-       
+
         progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
 
         int position(0);
@@ -797,9 +827,10 @@ void ModelView::createPhaseInPlace()
  */
 void ModelView::showProperties()
 {
-   updateLayout();
+    // Why now ?!
+    updateLayout();
 
-   if (mButProperties->isChecked() && mButProperties->isEnabled()) {
+    if (mButProperties->isChecked() && mButProperties->isEnabled()) {
        if (mButMultiCalib->isChecked()) {
            // hide mMultiCalibrationView
            mAnimationHide->setStartValue(mRightRect);
@@ -811,11 +842,11 @@ void ModelView::showProperties()
        }
         mButImport-> setChecked(false);
 
-        // show Properties View
-        mEventPropertiesView->updateEvent();
+       // show Properties View
+       mEventPropertiesView->updateEvent();
+       mEventPropertiesView->show();
 
         mCalibrationView->repaint();
-        mEventPropertiesView->show();
 
         mAnimationCalib->setTargetObject(mCalibrationView);
 
@@ -836,6 +867,7 @@ void ModelView::showProperties()
 
      }
 
+    //updateLayout();
 }
 
 void ModelView::hideProperties()
@@ -889,7 +921,7 @@ void ModelView::showMultiCalib()
              mAnimationHide->setEndValue(mRightHiddenRect);
              mAnimationHide->setTargetObject(mMultiCalibrationView);
              mAnimationHide->start();
-      }
+    }
     updateLayout();
 }
 
@@ -1063,13 +1095,11 @@ void ModelView::paintEvent(QPaintEvent* e)
     QPainter p(this);
     p.fillRect(mTopRect, Painting::borderDark);
     p.fillRect(mHandlerRect, Painting::borderDark);
-
 }
 
 // Layout
 void ModelView::applyAppSettings()
 {
-
     mMargin = int (0.3 * AppSettings::widthUnit());
     mToolbarH = int (2 * AppSettings::heigthUnit());
     mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
@@ -1133,15 +1163,9 @@ void ModelView::updateLayout()
     mLeftPanelTitle->setText(leftTitle);
     mLeftPanelTitle->setGeometry(textSpacer, mButModifyPeriod->y(), mLeftPanelTitle->fontMetrics().boundingRect(leftTitle).width()+10, topButtonHeight );
 
-    QString rightTitle (tr("Phases Scene"));
-    if (mButProperties->isChecked() )
-        rightTitle = tr("Event Properties");
-    else if (mButImport->isChecked())
-        rightTitle = tr("Import Data");
-    else if (mButMultiCalib->isChecked())
-            rightTitle = tr("Multi-Calibration View");
 
-    mRightPanelTitle->setText(rightTitle);
+    updateRightPanelTitle();
+
     mRightPanelTitle->setGeometry( width() - (fm.boundingRect(mRightPanelTitle->text()).width() + textSpacer), mButModifyPeriod->y(), fm.boundingRect(mRightPanelTitle->text()).width() + 10, topButtonHeight );
 
 
@@ -1151,6 +1175,8 @@ void ModelView::updateLayout()
     mLeftWrapper->setGeometry(QRect(0, mTopRect.height(), mHandlerRect.x() , height() - mTopRect.height()));
 
     mRightWrapper->setGeometry(QRect(mHandlerRect.x() + mHandlerW, mTopRect.height(), width() - mHandlerRect.x() - mHandlerW +1, height() - mTopRect.height()));
+
+    mChronocurveSettingsView->setGeometry(QRect(mHandlerRect.x() + mHandlerW, mTopRect.height(), width() - mHandlerRect.x() - mHandlerW +1, height() - mTopRect.height()));
 
     // coordinates in mLeftWrapper
     mLeftRect = QRect(0, 0, mLeftWrapper->width(), mLeftWrapper->height());
@@ -1206,8 +1232,11 @@ void ModelView::updateLayout()
     }
     // ----------
     if (mButProperties->isChecked() || mButMultiCalib->isChecked()) {
-        mPhasesView ->resize(0, 0);
+
+        mPhasesView->resize(0, 0);
         mPhasesGlobalView->setGeometry(5, 5, int(radarW), int(radarH));
+
+        mChronocurveSettingsView->resize(0, 0);
 
         mButNewPhase->resize(0, 0);
         mButDeletePhase->resize(0, 0);
@@ -1216,9 +1245,11 @@ void ModelView::updateLayout()
         mButPhasesGrid->resize(0, 0);
         mPhasesGlobalZoom->resize(0, 0);
      }  else {
-        mPhasesView->setGeometry(mRightRect.adjusted(-1, -1, -mButtonWidth, 1));
 
+        mPhasesView->setGeometry(mRightRect.adjusted(-1, -1, -mButtonWidth, 1));
         mPhasesGlobalView->setGeometry(5, 5, int(radarW), int(radarH));
+
+        mChronocurveSettingsView->setGeometry(mRightRect);
 
         mButNewPhase       ->setGeometry(mPhasesView->width() -2, 0                 , mButtonWidth, mButtonHeigth);
         mButDeletePhase   ->setGeometry(mPhasesView->width() -2, mButtonHeigth  , mButtonWidth, mButtonHeigth);
@@ -1382,4 +1413,57 @@ void ModelView::readSettings()
     updateLayout();
 
     settings.endGroup();
+}
+
+void ModelView::toggleChronocurve(bool toggle)
+{
+    mIsChronocurve = toggle;
+
+    mPhasesView->setVisible(!toggle);
+    mPhasesGlobalView->setVisible(!toggle);
+    mPhasesGlobalZoom->setVisible(!toggle);
+    mButNewPhase->setVisible(!toggle);
+    mButDeletePhase->setVisible(!toggle);
+    mButExportPhases->setVisible(!toggle);
+    mButPhasesOverview->setVisible(!toggle);
+    mButPhasesGrid->setVisible(!toggle);
+
+    mChronocurveSettingsView->setVisible(toggle);
+
+    if(mProject){
+
+        // Save the "enabled" state of chronocurve in project settings
+        QJsonObject state = mProject->mState;
+        ChronocurveSettings settings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
+        settings.mEnabled = toggle;
+        state[STATE_CHRONOCURVE] = settings.toJson();
+        mProject->pushProjectState(state, CHRONOCURVE_SETTINGS_UPDATED_REASON, true);
+
+        // Update the chronocurve settings view with the project's values
+        mChronocurveSettingsView->setSettings(settings);
+
+        // Tell the event properties view if it should display chronocurve parameters
+        mEventPropertiesView->setChronocurveSettings(settings.mEnabled, settings.mProcessType);
+
+        //
+        mEventsScene->updateSceneFromState();
+    }
+
+    updateLayout();
+}
+
+void ModelView::updateRightPanelTitle()
+{
+    QString rightTitle(tr("Phases Scene"));
+
+    if(mIsChronocurve){
+        rightTitle = tr("Curve");
+    }else if(mButProperties->isChecked()){
+        rightTitle = tr("Event Properties");
+    }else if (mButImport->isChecked()){
+        rightTitle = tr("Import Data");
+    }else if (mButMultiCalib->isChecked()){
+        rightTitle = tr("Multi-Calibration View");
+    }
+    mRightPanelTitle->setText(rightTitle);
 }

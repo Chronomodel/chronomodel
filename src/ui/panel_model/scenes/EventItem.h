@@ -77,7 +77,11 @@ protected:
     virtual void dropEvent(QGraphicsSceneDragDropEvent* e);
 
     void updateGreyedOut();
-
+    int getChronocurveLines() const;
+    void resizeEventItem();
+    void repositionDateItems();
+    
+protected:
     QSize mSize;
     QJsonObject mSettings;
     bool mWithSelectedPhase;

@@ -62,16 +62,16 @@ public:
     ProjectView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~ProjectView();
 
+    void setScreenDefinition();
     void resizeEvent(QResizeEvent* e);
 
-    bool mRefreshResults;
-
-    void doProjectConnections(Project* project);
+    void setProject(Project* project);
+    void initResults(Model*);
+    
     void resetInterface();
 
     void readSettings();
     void writeSettings();
-    void createProject();
    // void setFont(const QFont &font);
     void newPeriod();
 
@@ -82,18 +82,15 @@ public slots:
     void showModel();
     void showResults();
     void showLogTab(const int &i);
-
-    void changeDesign(bool refresh);
+    
     void showLog();
     void showHelp(bool show);
 
     void applySettings(Model* model);
     void applyFilesSettings(Model* model);
-    void initResults(Model*);
-    void updateResults(Model*);
     void updateResultsLog(const QString& log);
-    void setAppSettings();
-
+    
+    void toggleChronocurve(bool toggle);
 
 private:
     QStackedWidget* mStack;

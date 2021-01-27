@@ -274,7 +274,6 @@ QString MCMCLoopMain::initMCMC()
     for (int i (0); i<unsortedEvents.size(); ++i) {
         if (unsortedEvents.at(i)->mType == Event::eDefault) {
 
-            qDebug() << "in initMCMC(): ---------------------------------";
             mModel->initNodeEvents();
             QString circularEventName = "";
 
@@ -288,8 +287,9 @@ QString MCMCLoopMain::initMCMC()
             mModel->initNodeEvents();
             const double max ( unsortedEvents.at(i)->getThetaMaxRecursive(tmax) );
 #ifdef DEBUG
-            if (min >= max)
+            if (min >= max){
                 qDebug() << tr("-----Error Init for event : %1 : min = %2 : max = %3-------").arg(unsortedEvents.at(i)->mName, QString::number(min), QString::number(max));
+            }
 #endif
 
 
@@ -829,7 +829,7 @@ bool MCMCLoopMain::adapt() //original code
 
 void MCMCLoopMain::finalize()
 {
-    // This is not a copy od data!
+    // This is not a copy of all data!
     // Chains only contain description of what happened in the chain (numIter, numBatch adapt, ...)
     // Real data are inside mModel members (mEvents, mPhases, ...)
     mModel->mChains = mChains;
@@ -839,6 +839,7 @@ void MCMCLoopMain::finalize()
     /** @todo Find a way to make it faster !
      */
     mModel->generateCorrelations(mChains);
+    
     // This should not be done here because it uses resultsView parameters
     // ResultView will trigger it again when loading the model
     //mModel->generatePosteriorDensities(mChains, 1024, 1);

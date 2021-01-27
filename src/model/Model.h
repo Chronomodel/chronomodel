@@ -54,7 +54,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class Project;
 
 
-class Model:public QObject
+class Model: public QObject
 {
     Q_OBJECT
 public:
@@ -75,12 +75,12 @@ public:
     QList<QStringList> getEventsTraces(const QLocale locale, const bool withDateFormat = false);
 
     void updateFormatSettings();
+    void updateDesignFromJson();
 
-    QJsonObject toJson() const;
-    void fromJson( const QJsonObject& json);
+    virtual QJsonObject toJson() const;
+    virtual void fromJson( const QJsonObject& json);
+    
     void setProject(Project *project);
-
-    void updateDesignFromJson( const QJsonObject& json);
 
     bool isValid();
     void clear();
@@ -93,13 +93,16 @@ public:
     // Only trace needed for this :
     void generateCorrelations(const QList<ChainSpecs>& chains);
 
-    void initThreshold(const double threshold);
-    double getThreshold() const ;
-    void initDensities(const int fftLength, const double bandwidth, const double threshold);
-    void updateDensities(const int fftLength, const double bandwidth, const double threshold);
+    double getThreshold() const;
+    double getBandwidth() const;
+    int getFFTLength() const;
+    
+    void setThresholdToAllModel();
+    void initDensities();
+    void updateDensities();
 
     // Computed from trace using FFT :
-    void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double bandwidth);
+    virtual void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double bandwidth);
     // Trace and Posterior density needed for this :
 
     void generateCredibility(const double threshold);
@@ -113,6 +116,9 @@ public:
     void clearPosteriorDensities();
     void clearCredibilityAndHPD();
     void clearThreshold();
+    
+    bool hasSelectedEvents();
+    bool hasSelectedPhases();
 
 public:
     ProjectSettings mSettings;

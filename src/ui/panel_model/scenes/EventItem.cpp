@@ -48,11 +48,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MainWindow.h"
 #include "Project.h"
 #include "ArrowTmpItem.h"
+#include "ChronocurveSettings.h"
 
 EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):AbstractItem(scene, parent),
     mWithSelectedPhase(false),
     mShowAllThumbs(true),
-    mPhasesHeight (20)
+    mPhasesHeight(24)
 {
     mTitleHeight = 20;
     mEltsHeight =  DateItem::mTitleHeight +  DateItem::mEltsHeight ;
@@ -104,9 +105,8 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     // ----------------------------------------------
     const bool isSelected = event.value(STATE_IS_SELECTED).toBool() || event.value(STATE_IS_CURRENT).toBool();
     setSelected(isSelected);
-    setPos(event.value(STATE_ITEM_X).toDouble(),
-                event.value(STATE_ITEM_Y).toDouble());
-
+    setPos(event.value(STATE_ITEM_X).toDouble(), event.value(STATE_ITEM_Y).toDouble());
+    
     // ----------------------------------------------
     //  Check if item should be greyed out
     // ----------------------------------------------
@@ -114,32 +114,19 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     mWithSelectedPhase = false;
 
     for (auto &&phase : phases) {
-            if ((mWithSelectedPhase == false) && (phase.toObject().value(STATE_IS_SELECTED) == true))
-                    mWithSelectedPhase = true;
-     }
-
+        if(phase.toObject().value(STATE_IS_SELECTED).toBool()){
+            mWithSelectedPhase = true;
+        }
+    }
     const bool noHide = dynamic_cast<EventsScene*>(mScene)->showAllThumbs();
-
-    if (mWithSelectedPhase || noHide)
-        setGreyedOut(false);
-    else
-        setGreyedOut(true);
+    setGreyedOut(!mWithSelectedPhase && !noHide);
+    
     // ----------------------------------------------
-    //  Calculate item size
+    //  Dates
     // ----------------------------------------------
-    qreal h = mTitleHeight + mPhasesHeight + 1* AbstractItem::mBorderWidth + 1*AbstractItem::mEltsMargin;
-
     const QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
-
-    const int count = dates.size();
-    if (count > 0)
-        h += count * (mEltsHeight + AbstractItem::mEltsMargin);
-    else
-        h += AbstractItem::mEltsMargin + mEltsHeight;
-
-     mSize = QSize(AbstractItem::mItemWidth, h);
-
-    if (event.value(STATE_EVENT_DATES).toArray() != mData.value(STATE_EVENT_DATES).toArray() || mSettings != settings) {
+    if(event.value(STATE_EVENT_DATES).toArray() != mData.value(STATE_EVENT_DATES).toArray() || mSettings != settings)
+    {
         // ----------------------------------------------
         //  Delete Date Items
         // ----------------------------------------------
@@ -153,10 +140,11 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
         //  Re-create Date Items
         // ----------------------------------------------
         const QColor color(event.value(STATE_COLOR_RED).toInt(),
-                     event.value(STATE_COLOR_GREEN).toInt(),
-                     event.value(STATE_COLOR_BLUE).toInt());
+            event.value(STATE_COLOR_GREEN).toInt(),
+            event.value(STATE_COLOR_BLUE).toInt());
 
-        for (int i=0; i<dates.size(); ++i) {
+        for (int i=0; i<dates.size(); ++i)
+        {
             const QJsonObject date = dates.at(i).toObject();
 
             try {
@@ -165,16 +153,6 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
                 DateItem* dateItem = new DateItem((EventsScene*) (mScene), date, color, settings);
                 dateItem->setParentItem(this);
                 dateItem->setGreyedOut(mGreyedOut);
-
-                QPointF pos(0,
-                            boundingRect().y() +
-                            mTitleHeight +
-                            AbstractItem::mBorderWidth +
-                            1*AbstractItem::mEltsMargin +
-                            i * (mEltsHeight + AbstractItem::mEltsMargin));
-                dateItem->setPos(pos);
-                dateItem->setOriginalPos(pos);
-                dateItem = nullptr;
             }
             catch(QException &e){
                 QMessageBox message(QMessageBox::Critical,
@@ -189,11 +167,14 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
 
     mData = event;
     mSettings = settings;
+    
+    resizeEventItem();
+    repositionDateItems();
 
     // ----------------------------------------------
-    //  Repaint based on mEvent
+    //  Repaint
     // ----------------------------------------------
-    //update(); //Done by prepareGeometryChange() at the beging of the function
+    // update(); // Done by prepareGeometryChange() at the begining of the function
 }
 
 /**
@@ -213,8 +194,9 @@ void EventItem::setGreyedOut(const bool greyedOut)
 {
     mGreyedOut = greyedOut;
     QList<QGraphicsItem*> children = childItems();
-    for (int i=0; i<children.size(); ++i)
+    for (int i=0; i<children.size(); ++i){
         static_cast<DateItem*>(children.at(i))->setGreyedOut(greyedOut);
+    }
     update();
 }
 
@@ -279,7 +261,10 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
     EventsScene* scene = dynamic_cast<EventsScene*>(mScene);
     Project* project = scene->getProject();
     QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
-    QList<QPair<QString, Date>> datesDragged = scene->decodeDataDrop(e);
+    
+    QPair<QList<QPair<QString, Date>>, QMap<QString, double>> droppedData = scene->decodeDataDrop(e);
+    QList<QPair<QString, Date>> datesDragged = droppedData.first;
+    QMap<QString, double> chronocurveData = droppedData.second;
 
     for (int i=0; i<datesDragged.size(); ++i) {
         QJsonObject date = datesDragged.at(i).second.toJson();
@@ -289,6 +274,8 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
         dates.append(date);
     }
     event[STATE_EVENT_DATES] = dates;
+    
+    Event::setChronocurveCsvDataToJsonEvent(event, chronocurveData);
 
     project->updateEvent(event, QObject::tr("Dates added to event (CSV drag)"));
     scene->updateStateSelectionFromItem();
@@ -297,44 +284,46 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
 
 void EventItem::redrawEvent()
 {
+    resizeEventItem();
+    repositionDateItems();
+}
+
+void EventItem::resizeEventItem()
+{
     prepareGeometryChange();
-    // Set DateItems positions
+    
+    float y = /*boundingRect().y() +*/ mTitleHeight + AbstractItem::mEltsMargin;
+    float h = mEltsHeight + AbstractItem::mEltsMargin;
+    
+    const QJsonArray dates = mData.value(STATE_EVENT_DATES).toArray();
+    float eventHeight = y + (dates.count() * h);
+    //qDebug() << "resizeEventItem dates count : " << dates.count();
+    
+    int bottomLines = getChronocurveLines();
+    eventHeight += (bottomLines > 0) ? bottomLines * mPhasesHeight : mPhasesHeight;
+    
+    mSize = QSize(AbstractItem::mItemWidth, eventHeight);
+}
+
+void EventItem::repositionDateItems()
+{
     const QList<QGraphicsItem*> datesItemsList = childItems();
-    // ----------------------------------------------
-    //  Calculate item size
-    // ----------------------------------------------
-    const QJsonArray dates = getEvent().value(STATE_EVENT_DATES).toArray();
-    int h = mTitleHeight + mPhasesHeight +1*AbstractItem::mBorderWidth + 1*AbstractItem::mEltsMargin;
-
-    const int count = dates.size();
-    if (count > 0)
-        h += count * (mEltsHeight + AbstractItem::mEltsMargin);
-    else
-        h +=AbstractItem:: mEltsMargin + mEltsHeight;
-
-#ifdef DEBUG
-    if (count != datesItemsList.size())
-        qDebug()<<"EventItem::redrawEvent()";
-#endif
-
-    mSize.setHeight(h);
-    int i (0);
-    for (QGraphicsItem* item: datesItemsList) {
-
+    
+    int i(0);
+    float y = boundingRect().y() + mTitleHeight + AbstractItem::mEltsMargin;
+    float h = mEltsHeight + AbstractItem::mEltsMargin;
+    
+    for(QGraphicsItem* item: datesItemsList)
+    {
         DateItem* dateItem = dynamic_cast<DateItem*>(item);
-        if (dateItem) {
-            dateItem->setGreyedOut(mGreyedOut);
-            QPointF pos(0,
-                        boundingRect().y() +  mTitleHeight +
-                        1*AbstractItem::mEltsMargin +
-                        i * (mEltsHeight + AbstractItem::mEltsMargin));
+        if (dateItem)
+        {
+            QPointF pos(0, y + i * h);
             dateItem->setPos(pos);
             dateItem->setOriginalPos(pos);
             ++i;
         }
     }
-
-  //  update(); //Done by prepareGeometryChange() at the beging of the function
 }
 
 void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
@@ -348,63 +337,116 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     QRectF rect = boundingRect();
 
     QColor eventColor = QColor(mData.value(STATE_COLOR_RED).toInt(),
-                               mData.value(STATE_COLOR_GREEN).toInt(),
-                               mData.value(STATE_COLOR_BLUE).toInt());
-    // Phases
-    const QJsonArray phases = getPhases();
-    QRectF phasesRect(rect.x(), rect.y() + rect.height() - mPhasesHeight, rect.width(), mPhasesHeight);
-    phasesRect.adjust(1, 1, -1, -1);
+       mData.value(STATE_COLOR_GREEN).toInt(),
+       mData.value(STATE_COLOR_BLUE).toInt());
 
-    const int numPhases ( phases.size());
-    const qreal w = phasesRect.width()/numPhases;
-
-    if (mGreyedOut) //setting with setGreyedOut() just above
-        painter->setOpacity(0.35);
-    else
-        painter->setOpacity(1.);
-
+    // Item background : color of the event
+    // Use the opacity to "grey out"
+    painter->setOpacity(mGreyedOut ? 0.35 : 1.);
     painter->setPen(Qt::NoPen);
     painter->setBrush(QBrush(eventColor));
     painter->drawRect(rect);
 
-   QFont font (qApp->font());
-   //font.setPointSizeF(12.);
-   font.setPixelSize(12);
+    QFont font (qApp->font());
+    //font.setPointSizeF(12.);
+    font.setPixelSize(12);
 
     font.setStyle(QFont::StyleNormal);
     font.setBold(false);
     font.setItalic(false);
-    if (numPhases == 0) {
-        QString noPhase = tr("No Phase");
-       // QFont ftAdapt = AbstractItem::adjustFont(font, noPhase, phasesRect);
-        painter->setFont(font);//ftAdapt);
-        painter->fillRect(phasesRect, QColor(0, 0, 0, 180));
-        painter->setPen(QColor(200, 200, 200));
-        painter->drawText(phasesRect, Qt::AlignCenter, noPhase );
-
-    } else {
-        for (int i =0; i<numPhases; ++i) {
-            const QJsonObject phase = phases.at(i).toObject();
-
-            const QColor c(phase.value(STATE_COLOR_RED).toInt(),
-                     phase.value(STATE_COLOR_GREEN).toInt(),
-                     phase.value(STATE_COLOR_BLUE).toInt());
-            painter->setPen(c);
-            painter->setBrush(c);
-            painter->drawRect(int (phasesRect.x() + i*w), int (phasesRect.y()), int(w), int (phasesRect.height()));
+    
+    QJsonObject state = mScene->getProject()->mState;
+    ChronocurveSettings chronocurveSettings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
+    
+    if(chronocurveSettings.mEnabled)
+    {
+        int lines = getChronocurveLines();
+        
+        QRectF bottomRect(rect.x(), rect.y() + rect.height() - lines * mPhasesHeight, rect.width(), lines * mPhasesHeight);
+        bottomRect.adjust(4, 0, -4, -4);
+        
+        QPen pen = QPen();
+        pen.setColor(CHRONOCURVE_COLOR_BORDER);
+        pen.setWidth(2);
+        painter->setPen(pen);
+        painter->setBrush(CHRONOCURVE_COLOR_BACK);
+        painter->drawRoundedRect(bottomRect, 4, 4);
+        
+        int m = 3;
+        bottomRect.adjust(m, m, -m, -m);
+        int lineX = bottomRect.x();
+        int lineY = bottomRect.y();
+        int lineH = bottomRect.height() / lines;
+        int lineW = bottomRect.width();
+        
+        painter->setFont(font);
+        painter->setPen(CHRONOCURVE_COLOR_TEXT);
+        
+        if(chronocurveSettings.showInclinaison()){
+            QString text1;
+            text1 += "Inc. = ";
+            text1 += QString::number(mData.value(STATE_EVENT_Y_INC).toDouble());
+            text1 += " ± " + QString::number(mData.value(STATE_EVENT_S_INC).toDouble());
+            
+            if(chronocurveSettings.showDeclinaison()){
+                text1 += " Dec. = ";
+                text1 += QString::number(mData.value(STATE_EVENT_Y_DEC).toDouble());
+            }
+            painter->drawText(QRectF(lineX, lineY, lineW, lineH), Qt::AlignCenter, text1);
+        }
+        
+        if(chronocurveSettings.showIntensite()){
+            QString text2 = chronocurveSettings.intensiteLabel();
+            text2 += " = ";
+            text2 += QString::number(mData.value(STATE_EVENT_Y_INT).toDouble());
+            text2 += " ± " + QString::number(mData.value(STATE_EVENT_S_INT).toDouble());
+            painter->drawText(QRectF(lineX, lineY + (chronocurveSettings.showInclinaison() ? 1 : 0) * lineH, lineW, lineH), Qt::AlignCenter, text2);
         }
     }
+    else
+    {
+        // Phases
+        QRectF phasesRect(rect.x(), rect.y() + rect.height() - mPhasesHeight, rect.width(), mPhasesHeight);
+        phasesRect.adjust(1, 1, -1, -1);
+        
+        const QJsonArray phases = getPhases();
+        const int numPhases = phases.size();
+        
+        if (numPhases == 0)
+        {
+            QString noPhase = tr("No Phase");
+            // QFont ftAdapt = AbstractItem::adjustFont(font, noPhase, phasesRect);
+            painter->setFont(font);//ftAdapt);
+            painter->fillRect(phasesRect, QColor(0, 0, 0, 180));
+            painter->setPen(QColor(200, 200, 200));
+            painter->drawText(phasesRect, Qt::AlignCenter, noPhase);
+        }
+        else
+        {
+            const qreal w = phasesRect.width() / numPhases;
+            for (int i =0; i<numPhases; ++i) {
+                const QJsonObject phase = phases.at(i).toObject();
 
-    //item box
-    painter->setPen(QColor(0, 0, 0));
-    painter->setBrush(Qt::NoBrush);
-    painter->drawRect(phasesRect);
+                const QColor c(phase.value(STATE_COLOR_RED).toInt(),
+                         phase.value(STATE_COLOR_GREEN).toInt(),
+                         phase.value(STATE_COLOR_BLUE).toInt());
+                painter->setPen(c);
+                painter->setBrush(c);
+                painter->drawRect(int (phasesRect.x() + i*w), int (phasesRect.y()), int(w), int (phasesRect.height()));
+            }
+        }
+
+        //item box
+        painter->setPen(QColor(0, 0, 0));
+        painter->setBrush(Qt::NoBrush);
+        painter->drawRect(phasesRect);
+    }
 
     // Name
-   QRectF tr(rect.x() +AbstractItem:: mBorderWidth + 2*AbstractItem::mEltsMargin ,
-              rect.y() + AbstractItem::mBorderWidth, // + AbstractItem::mEltsMargin,
-              rect.width() - 2*AbstractItem::mBorderWidth - 4*AbstractItem::mEltsMargin,
-              mTitleHeight);
+    QRectF tr(rect.x() +AbstractItem:: mBorderWidth + 2*AbstractItem::mEltsMargin ,
+        rect.y() + AbstractItem::mBorderWidth, // + AbstractItem::mEltsMargin,
+        rect.width() - 2*AbstractItem::mBorderWidth - 4*AbstractItem::mEltsMargin,
+        mTitleHeight);
 
     font.setPixelSize(14);
     font.setStyle(QFont::StyleNormal);
@@ -469,3 +511,20 @@ QRectF EventItem::boundingRect() const
 {
   return QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
 }
+
+int EventItem::getChronocurveLines() const
+{
+    QJsonObject state = mScene->getProject()->mState;
+    ChronocurveSettings chronocurveSettings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
+
+    int lines = 0;
+    if(chronocurveSettings.mEnabled)
+    {
+        lines = 1;
+        if(chronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel){
+            lines = 2;
+        }
+    }
+    return lines;
+}
+
