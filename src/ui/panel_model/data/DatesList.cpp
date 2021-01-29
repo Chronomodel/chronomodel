@@ -79,12 +79,11 @@ void DatesList::setEvent(const QJsonObject& event)
 
     if (!mEvent.isEmpty()) {
         QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
-        for (int i(0); i<dates.size(); ++i) {
+        for (int i = 0; i<dates.size(); ++i) {
             QJsonObject date = dates[i].toObject();
 
             try {
-                Date d;
-                d.fromJson(date);
+                Date d(date);
                 
                 if (!d.isNull()) {
                     QListWidgetItem* item = new QListWidgetItem();
@@ -146,20 +145,16 @@ void DatesList::handleItemClicked(QListWidgetItem* item)
 void DatesList::handleItemIsChanged()
 {
     QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
- //   bool oneSelection (false);
-    for (int i (0); i <dates.size(); ++i ) {
+    for (int i = 0; i <dates.size(); ++i ) {
         if (item(i)->isSelected() ) {
- //           oneSelection = true;
+
             QJsonObject date = dates[i].toObject();
             emit indexChange(i);
-            emit calibRequested(date); // PhD déjà pas bon
+            emit calibRequested(date);
             break;
         }
     }
- /*   if (oneSelection == false) {
-        emit indexChange(-1);
-        emit calibRequested(QJsonObject ());
-    }*/
+
 }
 
 void DatesList::handleItemDoubleClicked(QListWidgetItem* item)
@@ -173,7 +168,7 @@ void DatesList::dropEvent(QDropEvent* e)
     QListWidget::dropEvent(e);
 
     QList<int> ids;
-    for (int i(0); i<count(); ++i) {
+    for (int i = 0; i<count(); ++i) {
         QListWidgetItem* it = item(i);
         int id = it->data(0x0104).toInt();
         ids << id;
@@ -182,9 +177,10 @@ void DatesList::dropEvent(QDropEvent* e)
     QJsonObject event = mEvent;
     QJsonArray dates = event[STATE_EVENT_DATES].toArray();
     QJsonArray datesOrdered;
-    for (int i=0; i<ids.size(); ++i) {
+    for (int i = 0; i<ids.size(); ++i) {
         const int id = ids[i];
-        for (int j=0; j<dates.size(); ++j){
+
+        for (int j = 0; j<dates.size(); ++j){
             QJsonObject date = dates[j].toObject();
             int dateId = date[STATE_ID].toInt();
             if (dateId == id) {
@@ -215,7 +211,7 @@ void DatesList::forceAtLeastOneSelected()
 
     } else {
         mUpdatingSelection = true;
-        for (auto && it:mSelectedItems) {
+        for (auto&& it : mSelectedItems) {
             it->setSelected(true);
 
         }

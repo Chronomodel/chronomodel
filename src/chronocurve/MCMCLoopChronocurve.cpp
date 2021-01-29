@@ -490,7 +490,8 @@ void MCMCLoopChronocurve::update()
         {
             date.updateDelta(event);
             date.updateTheta(event);
-            date.updateSigma(event);
+            //date.updateSigma(event);
+            date.updateSigmaShrinkage(event);
             date.updateWiggle();
 
             if (doMemo) {

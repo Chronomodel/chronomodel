@@ -241,11 +241,11 @@ void CalibrationView::setDate(const Date& d)
 
         mDrawing->setTitle(mDate.mName + " (" + mDate.mPlugin->getName() + ")");
         qDebug() << "CalibrationView::setDate mUUID "<<mDate.mName << mDate.mUUID;
-        const double t1 ( mSettings.getTminFormated() );
-        const double t2 ( mSettings.getTmaxFormated() );
+        const double t1 = mSettings.getTminFormated();
+        const double t2 = mSettings.getTmaxFormated();
         if (mDate.mIsValid) {
-            const double t3 ( mDate.getFormatedTminCalib() );
-            const double t4 ( mDate.getFormatedTmaxCalib() );
+            const double t3 = mDate.getFormatedTminCalib();
+            const double t4 = mDate.getFormatedTmaxCalib();
 
             mTminDisplay = qMin(t1, t3);
             mTmaxDisplay = qMax(t2, t4);
@@ -469,7 +469,7 @@ void CalibrationView::updateGraphs()
             } else {
                 mDrawing->setRefTitle(tr("Overlay densities"));
                 QList<QString> subDatesName;
-                for (auto && d : mDate.mSubDates) {
+                for (auto&& d : mDate.mSubDates) {
                     if (d.toObject().value(STATE_DATE_DELTA_TYPE).toInt() == Date::eDeltaNone)
                         subDatesName.append(d.toObject().value(STATE_NAME).toString());
                     else
@@ -503,7 +503,7 @@ void CalibrationView::updateZoom()
 void CalibrationView::updateScaleX()
 {
     QString str = mMajorScaleEdit->text();
-    bool isNumber (true);
+    bool isNumber = true;
     double aNumber = locale().toDouble(&str, &isNumber);
 
     QFont adaptedFont (font());
@@ -560,7 +560,6 @@ void CalibrationView::updateScroll()
         mTminDisplay = val;
     else
         mTminDisplay = mSettings.getTminFormated();
-
 
     val = locale().toDouble(mEndEdit->text(), &ok);
     if (ok)
@@ -622,13 +621,6 @@ void CalibrationView::copyImage()
 }
 void CalibrationView::copyText()
 {
-     //QClipboard *p_Clipboard = QApplication::clipboard();
-    //str.remove(QRegExp("<[^>]*>"));
-    //p_Clipboard->setText(mResultsText->text().simplified());
-    /*QTextDocument doc;
-    doc.setHtml( mResultsLab->text() );
-    p_Clipboard->setText(doc.toPlainText());
-     */
     QString text = mDate.mName + " (" + mDate.mPlugin->getName() + ")" +"<br>" + mDate.getDesc() + "<br>" + mResultsText->toPlainText();
     QApplication::clipboard()->setText(text.replace("<br>", "\r"));
 
@@ -671,8 +663,8 @@ void CalibrationView::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
 
-    const int graphLeft (mButtonWidth);
-    const int graphWidth (width() - graphLeft);
+    const int graphLeft = mButtonWidth;
+    const int graphWidth = width() - graphLeft;
 
     QPainter p(this);
     //p.setRenderHint(QPainter::Antialiasing); // not necessary
@@ -701,7 +693,7 @@ void CalibrationView::updateLayout()
     const int margin = int (0.1 * mButtonWidth);
 
     //Position of Widget
-    int y (0);
+    int y = 0;
 
     mImageSaveBut->setGeometry(0, y, mButtonWidth, mButtonHeigth);
     y += mImageSaveBut->height();

@@ -46,13 +46,17 @@ class SwitchWidget: public QWidget
 {
     Q_OBJECT
 public:
+    SwitchWidget(QWidget* parent);
     SwitchWidget(QWidget* parent, QWidgetAction* action);
+
+    void setToggled(bool toggled);
 
 protected:
     void paintEvent(QPaintEvent* event);
     void mousePressEvent(QMouseEvent* event);
     
     QWidgetAction* mAction;
+    bool mToggled;
 };
 
 

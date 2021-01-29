@@ -73,7 +73,7 @@ public:
     QRect minimalGeometry() const;
     int minimalHeight() const;
     int minimalWidth() const;
-    int tabHeight() const { return mTabHeight;}
+  //  int tabHeight() const { return mTabHeight;}
 
 signals:
     void tabClicked(const int &index);

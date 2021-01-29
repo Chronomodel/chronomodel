@@ -312,18 +312,18 @@ private:
     Button* mDisplayStudyBut;
 
     // Force the min X and max X
-    Label* mSpanLab;
+    QLabel* mSpanLab;
     LineEdit* mCurrentXMinEdit;
     LineEdit* mCurrentXMaxEdit;
 
     // On the X Axis scale : choose to see the whole graph at once,
     // or zoom on it adjusting the "XScale"
-    Label* mXLab;
+    QLabel* mXLab;
     QSlider* mXSlider;
     QDoubleSpinBox* mXSpin;
 
     // On the X Axis scale : choose the major interval between 2 displayed values
-    Label* mMajorScaleLab;
+    QLabel* mMajorScaleLab;
     LineEdit* mMajorScaleEdit;
 
     // On the X Axis scale : choose the number of subdivisions between 2 displyed values
@@ -336,7 +336,7 @@ private:
     QWidget* mGraphicGroup;
     Label* mGraphicTitle;
 
-    Label* mYLab;
+    QLabel* mYLab;
     QSlider* mYSlider;
     QSpinBox* mYSpin;
 

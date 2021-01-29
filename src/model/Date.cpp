@@ -96,7 +96,7 @@ mName("No Named Date")
     mWiggleCalibration = nullptr;
 }
 
-Date::Date(const QJsonObject &json)
+Date::Date(const QJsonObject& json)
 {
     fromJson(json);
 }
@@ -270,12 +270,13 @@ void Date::fromJson(const QJsonObject& json)
         } else if (mOrigin == eCombination) {
             double tmin (+INFINITY);
             double tmax (-INFINITY);
-            for ( auto && d : mSubDates ) {
+            for (auto&& d : mSubDates ) {
 
                 const bool hasWiggle (d.toObject().value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);
                 QString toFind;
                 if (hasWiggle) {
                     toFind = "WID::" + d.toObject().value(STATE_DATE_UUID).toString();
+
                 } else {
                      toFind = d.toObject().value(STATE_DATE_UUID).toString();
                 }
@@ -1471,7 +1472,7 @@ void Date::updateSigmaJeffreys(Event* event)
     mSigma.tryUpdate(sqrt(V2), rapport);
 }
 
-
+/* original
 void Date::updateSigmaShrinkage(Event* event)
 {
     // ------------------------------------------------------------------------------------------
@@ -1492,10 +1493,43 @@ void Date::updateSigmaShrinkage(Event* event)
         const double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1.);
         rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1; // (V2 / V1) est le jacobien!
  
-    } else {
+    }
+  #ifdef DEBUG
+    else {
         qDebug()<<"Date::updateSigma x1 x2 rapport rejet";
     }
-    
+ #endif
+
+    mSigma.tryUpdate(sqrt(V2), rapport);
+}
+*/
+void Date::updateSigmaShrinkage(Event* event)
+{
+    // ------------------------------------------------------------------------------------------
+    //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
+    // ------------------------------------------------------------------------------------------
+    const double lambda = pow(mTheta.mX - (event->mTheta.mX - mDelta), 2) / 2.;
+
+    const int logVMin (-6);
+    const int logVMax (100);
+
+    const double V1 = mSigma.mX * mSigma.mX;
+    const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigma.mSigmaMH);
+    const double V2 = pow(10, logV2);
+
+    double rapport (0.);
+    if (logV2 >= logVMin && logV2 <= logVMax) {
+        const double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
+        const double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1.);
+        rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1   * sqrt(V2/V1); // (V2 / V1) est le jacobien!
+
+    }
+  #ifdef DEBUG
+    else {
+        qDebug()<<"Date::updateSigma x1 x2 rapport rejet";
+    }
+ #endif
+
     mSigma.tryUpdate(sqrt(V2), rapport);
 }
 

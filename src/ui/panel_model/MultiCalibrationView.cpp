@@ -357,7 +357,7 @@ void MultiCalibrationView::updateGraphList()
 
     QList<QJsonObject> selectedEvents;
 
-    for (auto &&ev : events) {
+    for (auto&& ev : events) {
        QJsonObject jsonEv = ev.toObject();
        if (jsonEv.value(STATE_IS_SELECTED).toBool())
             selectedEvents.append(jsonEv);
@@ -369,7 +369,7 @@ void MultiCalibrationView::updateGraphList()
 
     QString preEventName ="";
 
-    for (auto &&ev : selectedEvents) {
+    for (auto&& ev : selectedEvents) {
 
         if (ev.value(STATE_EVENT_TYPE).toInt() == Event::eKnown) {
 
@@ -383,8 +383,7 @@ void MultiCalibrationView::updateGraphList()
             calibCurve.mPen = QPen(Painting::mainColorLight, 2.);
             calibCurve.mIsHorizontalSections = true;
 
-            double tFixedFormated =  bound->fixedValue();
-            tFixedFormated = DateUtils::convertToAppSettingsFormat( bound->fixedValue());
+            double tFixedFormated = DateUtils::convertToAppSettingsFormat( bound->fixedValue());
             calibCurve.mSections.append(qMakePair(tFixedFormated, tFixedFormated));
 
             GraphView* calibGraph = new GraphView(this);
@@ -423,10 +422,9 @@ void MultiCalibrationView::updateGraphList()
         }  else {
             const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
 
-            for (auto &&date : dates) {
+            for (auto&& date : dates) {
 
-                Date d;
-                d.fromJson(date.toObject());
+                Date d (date.toObject());
                 d.autoSetTiSampler(true);
 
                 GraphCurve calibCurve;
@@ -460,9 +458,6 @@ void MultiCalibrationView::updateGraphList()
                         curveWiggle.mIsRectFromZero = true;
                         calibGraph->addCurve(curveWiggle);
                     }
-
-
-
 
                 }
 
@@ -951,11 +946,10 @@ void MultiCalibrationView::showStat()
                const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
 
 
-                for (auto &&date : dates) {
+                for (auto&& date : dates) {
                    const QJsonObject jdate = date.toObject();
 
-                   Date d;
-                   d.fromJson(jdate);
+                   Date d(jdate);
 
                    resultsStr += " <br> <strong>"+ d.mName + "</strong> (" + d.mPlugin->getName() + ")" +"<br> <i>" + d.getDesc() + "</i><br> ";
 

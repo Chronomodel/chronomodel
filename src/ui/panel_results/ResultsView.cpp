@@ -86,28 +86,31 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mModel(nullptr),
-mResultZoomX(1.),
-mResultMinX(0.),
-mResultMaxX(0.),
-mResultCurrentMinX(0.),
-mResultCurrentMaxX(0.),
-mResultMaxVariance(1000.),
-mResultMaxDuration(0.),
-mHasPhases(false),
 
 mMargin(5),
 mOptionsW(250),
-mCurrentPage(0),
-
 mMarginLeft(40),
 mMarginRight(40),
 
 mCurrentTypeGraph(GraphViewResults::ePostDistrib),
 mCurrentVariable(GraphViewResults::eTheta),
-mGraphsPerPage(APP_SETTINGS_DEFAULT_SHEET),
-mMaximunNumberOfVisibleGraph(0),
+
+mHasPhases(false),
+mResultZoomX(1.),
+mResultMinX(0.),
+mResultMaxX(0.),
+mResultCurrentMinX(0.),
+mResultCurrentMaxX(0.),
+
+mResultMaxVariance(1000.),
+mResultMaxDuration(0.),
+
 mMajorScale(100),
-mMinorCountScale(4)
+mMinorCountScale(4),
+
+mCurrentPage(0),
+mGraphsPerPage(APP_SETTINGS_DEFAULT_SHEET),
+mMaximunNumberOfVisibleGraph(0)
 {
     setMouseTracking(true);
 
@@ -334,9 +337,9 @@ mMinorCountScale(4)
     mDisplayStudyBut->setFixedHeight(25);
     mDisplayStudyBut->setToolTip(tr("Restore view with the study period span"));
 
-    mSpanLab = new Label(tr("Span"), mSpanGroup);
+    mSpanLab = new QLabel(tr("Span"), mSpanGroup);
     mSpanLab->setFixedHeight(h);
-    mSpanLab->setAdjustText(false);
+    //mSpanLab->setAdjustText(false);
 
     mCurrentXMinEdit = new LineEdit(mSpanGroup);
     mCurrentXMinEdit->setFixedHeight(h);
@@ -346,10 +349,10 @@ mMinorCountScale(4)
     mCurrentXMaxEdit->setFixedHeight(h);
     mCurrentXMaxEdit->setToolTip(tr("Enter a maximal value to display the curves"));
 
-    mXLab = new Label(tr("X"), mSpanGroup);
+    mXLab = new QLabel(tr("X"), mSpanGroup);
     mXLab->setFixedHeight(h);
     mXLab->setAlignment(Qt::AlignCenter);
-    mXLab->setAdjustText(false);
+    //mXLab->setAdjustText(false);
 
     mXSlider = new QSlider(Qt::Horizontal, mSpanGroup);
     mXSlider->setFixedHeight(h);
@@ -365,7 +368,7 @@ mMinorCountScale(4)
     mXSpin->setValue(sliderToZoom(mXSlider->value()));
     mXSpin->setToolTip(tr("Enter zoom value to magnify the curves on X span"));
 
-    mMajorScaleLab = new Label(tr("Major Interval"), mSpanGroup);
+    mMajorScaleLab = new QLabel(tr("Major Interval"), mSpanGroup);
     mMajorScaleLab->setFixedHeight(h);
     mMajorScaleLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
@@ -441,9 +444,9 @@ mMinorCountScale(4)
 
     mGraphicGroup = new QWidget();
 
-    mYLab = new Label(tr("Y"), mGraphicGroup);
+    mYLab = new QLabel(tr("Y"), mGraphicGroup);
     mYLab->setAlignment(Qt::AlignCenter);
-    mYLab->setAdjustText(false);
+    //mYLab->setAdjustText(false);
 
     mYSlider = new QSlider(Qt::Horizontal, mGraphicGroup);
     mYSlider->setRange(10, 300);
@@ -606,9 +609,9 @@ mMinorCountScale(4)
 
     mBandwidthEdit = new LineEdit(mDensityOptsGroup);
     DoubleValidator* bandwidthValidator = new DoubleValidator();
-    bandwidthValidator->setBottom(1);
-    bandwidthValidator->setTop(100);
-    bandwidthValidator->setDecimals(0);
+    bandwidthValidator->setBottom(0.0001);
+    bandwidthValidator->setTop(10);
+    bandwidthValidator->setDecimals(4);
     mBandwidthEdit->setValidator(bandwidthValidator);
 
     connect(mCredibilityCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
@@ -821,10 +824,10 @@ void ResultsView::clearResults()
 
 void ResultsView::updateModel(Model* model)
 {
-    if(mModel)
-    {
+    if (mModel == nullptr) {
         disconnect(mModel, &Model::newCalculus, this, &ResultsView::generateCurves);
     }
+
     mModel = model;
     connect(mModel, &Model::newCalculus, this, &ResultsView::generateCurves);
 
@@ -855,8 +858,9 @@ void ResultsView::updateModel(Model* model)
     mCurrentVariable = GraphViewResults::eTheta;
 
     mFFTLenCombo->setCurrentText(QString::number(mModel->getFFTLength()));
-    mBandwidthEdit->setText(QString::number(mModel->getBandwidth()));
-    mThresholdEdit->setText(QString::number(mModel->getThreshold()));
+
+    mBandwidthEdit->setText(locale.toString(mModel->getBandwidth()));
+    mThresholdEdit->setText(locale.toString(mModel->getThreshold()));
 
     applyStudyPeriod();
     updateControls();

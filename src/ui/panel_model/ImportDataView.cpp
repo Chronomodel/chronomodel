@@ -315,7 +315,7 @@ void ImportDataView::exportDates()
             Project* project = MainWindow::getInstance()->getProject();
             QJsonArray events = project->mState[STATE_EVENTS].toArray();
 
-            stream << "Title" << sep << AppSettings::mLastFile << endl;
+            stream << "Title" << sep << AppSettings::mLastFile << Qt::endl;
             bool isChronocurve = project->mState[STATE_CHRONOCURVE].toObject().value(STATE_CHRONOCURVE_ENABLED).toBool();
             int chronocurveStartColumn = 15;
 
@@ -349,7 +349,7 @@ void ImportDataView::exportDates()
                                 }
 
                                 stream << eventName << sep;
-                                stream << dateCsv.join(sep) << endl;
+                                stream << dateCsv.join(sep) << Qt::endl;
                             }
                         }
                         catch(QString error){

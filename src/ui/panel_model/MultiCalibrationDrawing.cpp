@@ -91,12 +91,12 @@ MultiCalibrationDrawing::~MultiCalibrationDrawing()
 void MultiCalibrationDrawing::setGraphList(QList<GraphView*> &list)
 {
     if (!mListCalibGraph.isEmpty()) {
-        for(auto graph : mListCalibGraph)
+        for(auto&& graph : mListCalibGraph)
             delete graph;
     }
     mListCalibGraph.clear();
 
-    for (auto &&graph : list)
+    for (auto&& graph : list)
         graph->setParent(mGraphWidget);
 
     mListCalibGraph = list;
@@ -110,11 +110,11 @@ void MultiCalibrationDrawing::setGraphList(QList<GraphView*> &list)
 void MultiCalibrationDrawing::setEventsColorList(QList<QColor> &colorList)
 {
     mListEventsColor = colorList;
-    for (auto && panel : mListBar)
+    for (auto&& panel : mListBar)
         delete panel;
 
     mListBar.clear();
-    for (auto && color : mListEventsColor) {
+    for (auto&& color : mListEventsColor) {
         ColoredBar* panel = new ColoredBar (mGraphWidget);
         panel->setColor(color);
         mListBar.append(panel);
@@ -156,11 +156,11 @@ void MultiCalibrationDrawing::updateLayout()
     QFontMetrics fm (font());
     const bool axisVisible = (mGraphHeight >= GraphViewResults::mHeightForVisibleAxis);
     const int marginBottom = (axisVisible ? int (fm.ascent() * 2.2) : int (fm.ascent() * 0.5));
-    int y (0);
-    int i (0);
+    int y = 0;
+    int i = 0;
     const int graphShift (5); // the same name and the same value as MultiCalibrationView::exportFullImage()
 
-    for (GraphView *graph: mListCalibGraph) {
+    for (auto&& graph: mListCalibGraph) {
         mListBar[i]->setGeometry(5, y, ColoredBar::mWidth, mGraphHeight - marginBottom);
         mListBar[i]->setVisible(true);
 
@@ -179,6 +179,7 @@ void MultiCalibrationDrawing::updateLayout()
             // usefull for bound, because there is no curve named "Calibration"
             if (graph->getCurve("Calibration"))
                 graph->setOverArrow(GraphView::eBothOverflow);
+
             else
                 graph->setOverArrow(GraphView::eNone);
 
@@ -225,10 +226,10 @@ void MultiCalibrationDrawing::forceRefresh()
     const bool axisVisible = (mGraphHeight >= GraphViewResults::mHeightForVisibleAxis);
     const int marginBottom =(axisVisible ? int (fontMetrics().ascent() * 2.2) : int (fontMetrics().ascent() * 0.5));
 
-    int y (0);
-    int i (0);
+    int y = 0;
+    int i = 0;
 
-    for (GraphView *graph: mListCalibGraph) {
+    for (auto&& graph: mListCalibGraph) {
         mListBar[i]->setGeometry(5, y, ColoredBar::mWidth, mGraphHeight - marginBottom);
 
          if (!graph->hasCurve()) {

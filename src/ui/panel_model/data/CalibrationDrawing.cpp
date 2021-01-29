@@ -227,9 +227,9 @@ void CalibrationDrawing::setMouseTracking(bool enable)
 void CalibrationDrawing::mouseMoveEvent(QMouseEvent* e)
 {
 
-    const int x ( qBound(0, e->pos().x(), width()) );
+    const int x = qBound(0, e->pos().x(), width());
 
-    const int y ( qBound(0, e->pos().y(), height()) );
+    const int y = qBound(0, e->pos().y(), height());
 
     // draw the red cross lines
     if (( mRefGraphView && mRefGraphView->geometry().contains(x, y))

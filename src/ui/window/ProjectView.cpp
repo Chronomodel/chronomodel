@@ -132,15 +132,15 @@ void ProjectView::setScreenDefinition()
 
 
 
-   const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
+   /*const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
 
     mLogModelEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
     mLogMCMCEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
     mLogResultsEdit->resize( width() - AppSettings::widthUnit() , logTabHusefull );
 
+*/
 
-
-    int unitY = int(screen->physicalDotsPerInchY() / cm_per_in);
+    //int unitY = int(screen->physicalDotsPerInchY() / cm_per_in);
     AppSettings::setHeigthUnit(unitY);
 }
 
@@ -150,11 +150,12 @@ void ProjectView::resizeEvent(QResizeEvent* e)
 
     setScreenDefinition();
 
-    const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
+  /*  const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
 
     mLogModelEdit->resize(width() - AppSettings::widthUnit(), logTabHusefull);
     mLogMCMCEdit->resize(width() - AppSettings::widthUnit(), logTabHusefull);
     mLogResultsEdit->resize(width() - AppSettings::widthUnit() , logTabHusefull);
+    */
 }
 
 void ProjectView::setProject(Project* project)

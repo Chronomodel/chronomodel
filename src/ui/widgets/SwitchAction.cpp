@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -78,16 +78,28 @@ void SwitchWidget::paintEvent(QPaintEvent* e)
     pen.setColor(colorText);
     painter.setPen(pen);
     
-    QFont f(font());
-    f.setPointSizeF(8);
-    painter.setFont(f);
-    painter.drawText(r.adjusted(0, 0, 0, -r.height()/2), Qt::AlignHCenter | Qt::AlignVCenter, tr("Building mode"));
-    
-    f.setPointSizeF(14);
-    f.setWeight(QFont::Bold);
-    painter.setFont(f);
-    QString text = mAction->isChecked() ? "CURVE" : "PHASES";
-    painter.drawText(r.adjusted(0, r.height()/3, 0, 0), Qt::AlignHCenter | Qt::AlignVCenter, text);
+    QFont f1(font());
+    f1.setPointSizeF(8);
+    painter.setFont(f1);
+    QFontMetrics fm1(f1);
+    QString text1 = tr("Building mode");
+ //   int text1W = fm1.horizontalAdvance(text1);
+
+    QFont f2(font());
+    f2.setPointSizeF(14);
+    f2.setWeight(QFont::Bold);
+    painter.setFont(f2);
+    QFontMetrics fm2(f2);
+    QString text2 = mToggled ? "CURVE" : "PHASES";
+   // int text2W = fm2.horizontalAdvance(text2);
+
+   // int textW = text1W + text2W;
+
+    painter.setFont(f1);
+    painter.drawText(r.adjusted(0, 5, 0, -2*r.height()/3 + 2), Qt::AlignHCenter | Qt::AlignVCenter, text1);
+
+    painter.setFont(f2);
+    painter.drawText(r.adjusted(0, r.height()/3, 0, 0), Qt::AlignHCenter | Qt::AlignVCenter, text2);
 }
 
 SwitchAction::SwitchAction(QObject* parent):QWidgetAction(parent)

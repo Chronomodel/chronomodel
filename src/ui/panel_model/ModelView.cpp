@@ -327,12 +327,10 @@ void ModelView::setProject(Project* project)
     mEventsScene->setProject(mProject);
     mChronocurveSettingsView->setProject(mProject);
 
-    if (mProject && !projectExist)
-    {
+    if (mProject && !projectExist) {
         connectScenes();
-    }
-    else if (projectExist && !mProject)
-    {
+
+    } else if (projectExist && !mProject) {
         disconnectScenes();
     }
 
@@ -496,7 +494,7 @@ void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
     mButModifyPeriod ->setGeometry((mTopWrapper->width() - fontMetrics().boundingRect(mButModifyPeriod->text()).width()) /2 - 2*mMargin, (mTopWrapper->height() - topButtonHeight)/2, fontMetrics().boundingRect(mButModifyPeriod->text()).width() + 4*mMargin, topButtonHeight );
 
 }
-
+/*
 void ModelView::createProject()
 {
     showCalibration(false);
@@ -534,7 +532,7 @@ void ModelView::createProject()
     mPhasesScene->createSceneFromState();
 
 }
-
+*/
 void ModelView::updateProject()
 {
     QJsonObject state = mProject->state();
@@ -578,7 +576,7 @@ void ModelView::updateProject()
 
 bool ModelView::findCalibrateMissing()
 {
-    bool calibMissing (false);
+    bool calibMissing = false;
     QJsonObject state = mProject->state();
 
     QJsonArray Qevents = state.value(STATE_EVENTS).toArray();
@@ -588,7 +586,7 @@ bool ModelView::findCalibrateMissing()
     */
     if (!Qevents.isEmpty()) {
         QList<Event> events;
-        for (auto Qev: Qevents)
+        for (auto&& Qev: Qevents)
             events.append(Event::fromJson(Qev.toObject()));
 
         QProgressDialog *progress = new QProgressDialog("Calibration curve missing","Wait" , 1, 10);//, qApp->activeWindow(), Qt::Window);
@@ -607,8 +605,8 @@ bool ModelView::findCalibrateMissing()
         position = 0;
         // look for missing calibration
 
-        for (auto && ev : events) {
-            for (auto && date : ev.mDates) {
+        for (auto&& ev : events) {
+            for (auto&& date : ev.mDates) {
                 // look if the refCurve is still in the Plugin Ref. Curves list
                 // because the mProject->mCalibCurves is still existing but maybe not the curve in the list of the plugin
                 if (date.mCalibration) {
@@ -656,7 +654,7 @@ void ModelView::calibrateAll(ProjectSettings newS)
     if (!Qevents.isEmpty()) {
         mProject->mCalibCurves.clear();
         QList<Event> events;
-        for (auto Qev: Qevents)
+        for (auto&& Qev: Qevents)
             events.append(Event::fromJson(Qev.toObject()));
 
         //QProgressDialog *progress = new QProgressDialog("Calibration curve generation -----2","Wait" , 1, 10, qApp->activeWindow(), Qt::Widget);
@@ -669,18 +667,18 @@ void ModelView::calibrateAll(ProjectSettings newS)
         progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
 
         int position(0);
-        for (auto && ev : events)
+        for (auto&& ev : events)
             position += ev.mDates.size();
+
         progress->setMaximum(position);
 
         position = 0;
         // rebuild all calibration
-        for (auto && ev : events) {
+        for (auto&& ev : events) {
                  const QJsonArray listDates = ev.toJson().value(STATE_EVENT_DATES).toArray();
 
-                for (auto && date : listDates) {
-                    Date d;
-                    d.fromJson(date.toObject());
+                for (auto&& date : listDates) {
+                    Date d (date.toObject());
                     d.autoSetTiSampler(true);
                     // date.mCalibration->mCurve.clear();
                     d.calibrate(newS, mProject);
@@ -759,7 +757,7 @@ void ModelView::searchEvent()
         QJsonObject state = mProject->state();
         QJsonArray events = state.value(STATE_EVENTS).toArray();
 
-        for (auto evJSON : events) {
+        for (auto&& evJSON : events) {
             const QJsonObject event = evJSON.toObject();
             const int eventId = event.value(STATE_ID).toInt();
             const QString name = event.value(STATE_NAME).toString();
@@ -770,7 +768,7 @@ void ModelView::searchEvent()
             else {
                 const QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
 
-                 for (auto &&datJSON : dates) {
+                 for (auto&& datJSON : dates) {
                      const QJsonObject data = datJSON.toObject();
                      const QString dataName = data.value(STATE_NAME).toString();
 
@@ -1108,7 +1106,7 @@ void ModelView::applyAppSettings()
 
     // ------
 
-   for (auto && item : mEventsScene->getItemsList()) {
+   for (auto&& item : mEventsScene->getItemsList()) {
         static_cast<EventItem*>(item)->redrawEvent();
         static_cast<EventItem*>(item)->update();
     }
@@ -1116,7 +1114,7 @@ void ModelView::applyAppSettings()
     // ------
     mEventPropertiesView->applyAppSettings();
 
-    for (AbstractItem* item : mPhasesScene->getItemsList()) {
+    for (auto&& item : mPhasesScene->getItemsList()) {
         static_cast<PhaseItem*>(item)->redrawPhase();
         static_cast<PhaseItem*>(item)->update();
     }
@@ -1205,7 +1203,7 @@ void ModelView::updateLayout()
     mEventsSearchEdit->setGeometry(mEventsView->x() + 5, 5, int(radarW), int (searchH));
     mEventsGlobalView->setGeometry(mEventsView->x() + 5, mEventsSearchEdit->y() + mEventsSearchEdit->height(), int(radarW), int(radarH));
 
-    mButNewEvent       ->setGeometry(0, 0, mButtonWidth, mButtonHeigth);
+    mButNewEvent      ->setGeometry(0, 0, mButtonWidth, mButtonHeigth);
     mButNewEventKnown ->setGeometry(0, mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButDeleteEvent   ->setGeometry(0, 2*mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButRecycleEvent  ->setGeometry(0, 3*mButtonHeigth, mButtonWidth, mButtonHeigth);
@@ -1214,7 +1212,7 @@ void ModelView::updateLayout()
     mButEventsGrid    ->setGeometry(0, 6*mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButProperties    ->setGeometry(0, 7*mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButMultiCalib    ->setGeometry(0, 8*mButtonHeigth, mButtonWidth, mButtonHeigth);
-    mButImport         ->setGeometry(0, 9*mButtonHeigth, mButtonWidth, mButtonHeigth);
+    mButImport        ->setGeometry(0, 9*mButtonHeigth, mButtonWidth, mButtonHeigth);
 
     mEventsGlobalZoom ->setGeometry(0, 10*mButtonHeigth, mButtonWidth, mLeftRect.height() - 10*mButtonHeigth);
 

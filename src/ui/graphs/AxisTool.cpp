@@ -68,13 +68,13 @@ mAxisColor(0, 0, 0)
  */
 qreal AxisTool::getXForValue(const qreal &value)
 {
-    const qreal rigthBlank (5.); // the same name and the same value as AxisTool::updateValues()
+    const qreal rigthBlank = 5.; // the same name and the same value as AxisTool::updateValues()
     return qreal(valueForProportion(value, qreal (mStartVal), qreal (mEndVal), qreal (0.), qreal (mTotalPix - rigthBlank), true));
 }
 
 qreal AxisTool::getYForValue(const qreal &value)
 {
-    const qreal blank (10.);
+    const qreal blank = 10.;
     return qreal(valueForProportion(value, qreal (mStartVal), qreal (mEndVal), qreal (0.), qreal (mTotalPix-blank), true));
 }
 
@@ -129,7 +129,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
     QFontMetrics fm (p.font());
 
 #ifdef Q_OS_MAC
-    const int textHeight (int (1.1 * (fm.descent() + fm.ascent()) ));
+    const int textHeight = int (1.1 * (fm.descent() + fm.ascent()) );
 #else
     const int textHeight = fm.height();
 #endif
@@ -161,6 +161,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
                 if (valueFormatFunc) {
                     p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter,stringForGraph(valueFormatFunc(mStartVal)));
                     p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter,stringForGraph(valueFormatFunc(mEndVal)));
+
                 } else {
                     p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, stringForGraph(mStartVal));
                     p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, stringForGraph(mEndVal));
@@ -168,7 +169,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
             }
         }
         else {
-            if (  mShowSubs && (mEndVal - mStartVal != HUGE_VAL) && (mEndVal > mStartVal) && (mMajorScale > 0)) {
+            if ( mShowSubs && (mEndVal - mStartVal != HUGE_VAL) && (mEndVal > mStartVal) && (mMajorScale > 0)) {
 
                 // look for the text increment
                 const QString textMin =(valueFormatFunc ? stringForGraph(valueFormatFunc(mStartVal)) : stringForGraph(mStartVal) );
@@ -190,9 +191,12 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
                 const qreal minorStep (mMajorScale/ mMinorScaleCount);
 
                 int textInc = mTextInc - 1;
-                qreal xPrev (0.);
+                qreal xPrev = 0.;
 
-                for (qreal v = mStartVal; v <= mEndVal ; v += mMajorScale)  {
+                size_t maxCount = size_t(floor((mEndVal-mStartVal)/mMajorScale));
+                qreal v; // variable used in loop
+                for (size_t count = 1; count <= maxCount; ++count) {
+                    v = mStartVal + (count * mMajorScale);
                     const qreal x = getXForValue(v) + xo;
                     linesPos.append(x);
                     ++textInc;
@@ -218,11 +222,9 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
                        }
                     }
 
-
-
                     if (mShowSubSubs && v<mEndVal) {
-                        for (qreal sv = 1.; sv < mMinorScaleCount; sv += 1.) {
-                            const qreal vm = getXForValue(sv*minorStep + v) + xo;
+                        for (int sv = 1.; sv < mMinorScaleCount; ++sv) {
+                            const qreal vm = getXForValue(qreal(sv)*minorStep + v) + xo;
                             p.drawLine(QLineF(vm, yo, vm, yo + graduationSize/2.));
                         }
                     }
@@ -268,7 +270,6 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
 
                  const QString textStarVal = (valueFormatFunc ? stringForLocal(valueFormatFunc(mStartVal)) : stringForGraph(mStartVal) );
                  const QString textEndVal = (valueFormatFunc ? stringForLocal(valueFormatFunc(mEndVal)) : stringForGraph(mEndVal) );
-                // const int textHeight =  fm.height() ;
                  w = qMax( fm.boundingRect(textStarVal).width(), fm.boundingRect(textEndVal).width() );
                  const int xText = int ((xov - graduationSize -w) *2.  / 3.);
                  qreal y = yov - getYForValue(mStartVal) - textHeight/2. ;
@@ -282,9 +283,13 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
             if ( mShowSubs && (mEndVal - mStartVal != HUGE_VAL)) {
                 mTextInc = 1;
                 // look for the text increment
-                int textInc (1);
-                qreal prevTextHeight (0.);
-                for (qreal v = mStartVal; v <= mEndVal ; v += mMajorScale)  {
+                int textInc = 1;
+                qreal prevTextHeight = 0.;
+
+                size_t maxCount = size_t(floor((mEndVal-mStartVal)/mMajorScale));
+                qreal v; // variable used in loop
+                for (size_t count = 1; count <= maxCount; ++count) {
+                    v = mStartVal + (count * mMajorScale);
                     const qreal y = getYForValue(v) + yov;
                     const int textHeight =  fm.height() ;
                     const qreal ty = y - textHeight/2.;
@@ -294,6 +299,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
                         prevTextHeight = ty + textHeight + 1.;
                         mTextInc = std::max(mTextInc, textInc);
                         textInc = 1;
+
                     } else
                         ++textInc;
 
@@ -303,7 +309,9 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
                 const qreal minorStep (mMajorScale/ mMinorScaleCount);
 
                 textInc = mTextInc - 1;
-                for (qreal v = mStartVal; v <= mEndVal ; v += mMajorScale)  {
+                //for (qreal v = mStartVal; v <= mEndVal ; v += mMajorScale)  {
+                for (size_t count = 1; count <= maxCount; ++count) {
+                    v = mStartVal + (count * mMajorScale);
                     const qreal y = yov - getYForValue(v) ;
 
                     p.drawLine(QLineF(xov, y, xov - graduationSize, y));
@@ -322,10 +330,9 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
 
                     }
 
-                    if (mShowSubSubs && v<mEndVal) {
-                        for (qreal sv = 1.; sv < mMinorScaleCount; sv += 1.) {
-                            const qreal ym = yov - getYForValue(sv*minorStep + v);
-
+                    if (mShowSubSubs && v<mEndVal) {                  
+                        for (size_t sv = 1; sv <= size_t(mMinorScaleCount); ++sv) {
+                            const qreal ym = yov - getYForValue(qreal(sv)*minorStep + v);
                             p.drawLine(QLineF(xov, ym, xov - graduationSize/2., ym));
                         }
                     }
@@ -364,7 +371,7 @@ void AxisWidget::paintEvent(QPaintEvent*)
 void Scale::findOptimal(const double & a, const double & b, const int & nOptimal)
 {
     double e (b - a);
-    double u = int(log10(e));
+    double u = floor(log10(e));
     u = std::pow(10., u);
 
     double fract[4] = { 1. , 2. , 5. , 10. };
@@ -372,7 +379,7 @@ void Scale::findOptimal(const double & a, const double & b, const int & nOptimal
     double diff (std::max(u, e));
     mark = diff;
 
-    for (int i (0); i<5; ++i) {
+    for (int i = 0; i<5; ++i) {
         const double stp = u/fract[i];
 
         if (std::abs(nOptimal - e/stp) < diff) {
