@@ -336,11 +336,18 @@ void ImportDataView::exportDates()
                             d.fromJson(date);
                             if (!d.isNull()) {
                                 QStringList dateCsv = d.toCSV(csvLocal);
-
-                                if(isChronocurve){
-                                    while(dateCsv.count() < chronocurveStartColumn){
+                                
+                                if(isChronocurve)
+                                {
+                                    // Chronocurve values start at column 15.
+                                    // They must be put from column 14 in dateCsv,
+                                    // because the row is shifted by one column at inserting eventName (see below)
+                                    int chronocurveStartColumn = 15;
+                                    while(dateCsv.count() < (chronocurveStartColumn-2)){
                                         dateCsv.append("");
                                     }
+                                    dateCsv.append(QString::number(event[STATE_EVENT_Y_INT].toDouble()));
+                                    dateCsv.append(QString::number(event[STATE_EVENT_S_INT].toDouble()));
                                     dateCsv.append(QString::number(event[STATE_EVENT_Y_INC].toDouble()));
                                     dateCsv.append(QString::number(event[STATE_EVENT_Y_DEC].toDouble()));
                                     dateCsv.append(QString::number(event[STATE_EVENT_S_INC].toDouble()));
@@ -509,21 +516,20 @@ void ImportDataTable::updateTableHeaders()
             headers << "Wiggle value 1 (fixed | Lower date | Average)";
             headers << "Wiggle value 2 (Upper date | Error)";
         }
-
-        int chronocurveStartIndex = 15;
-        while (headers.size() < numCols){
+        
+        int chronocurveStartIndex = 14;
+        while (headers.size() < numCols)
+        {
             if(headers.size() == chronocurveStartIndex){
-                headers << "Y1";
+                headers << "Y";
             }else if(headers.size() == (chronocurveStartIndex + 1)){
-                headers << "S1";
+                headers << "Error (Y)";
             }else if(headers.size() == (chronocurveStartIndex + 2)){
-                headers << "Y2";
+                headers << "Inc";
             }else if(headers.size() == (chronocurveStartIndex + 3)){
-                headers << "S2";
+                headers << "Dec";
             }else if(headers.size() == (chronocurveStartIndex + 4)){
-                headers << "Y3";
-            }else if(headers.size() == (chronocurveStartIndex + 5)){
-                headers << "S3";
+                headers << "Error (inc)";
             }else if(headers.size() > chronocurveStartIndex){
                 headers << "Comment";
             }else{

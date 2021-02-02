@@ -554,7 +554,7 @@ QList<QStringList> Model::getStats(const QLocale locale, const int precision, co
 
     // Phases
 
-    for (auto &&pPhase : mPhases) {
+    for (auto& pPhase : mPhases) {
         QStringList l = pPhase->mAlpha.getResultsList(locale, precision);
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
         l.prepend(pPhase->mName + " Begin");
@@ -568,7 +568,7 @@ QList<QStringList> Model::getStats(const QLocale locale, const int precision, co
 
     // Events
     rows << QStringList();
-     for (Event* event : mEvents) {
+     for (Event*& event : mEvents) {
         QStringList l = event->mTheta.getResultsList(locale, precision);
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
         l.prepend(event->mName);
@@ -577,7 +577,7 @@ QList<QStringList> Model::getStats(const QLocale locale, const int precision, co
 
     // Dates
     rows << QStringList();
-    for (Event* event : mEvents) {
+    for (Event*& event : mEvents) {
         for (int j = 0; j < event->mDates.size(); ++j) {
             Date& date = event->mDates[j];
 
@@ -607,7 +607,7 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
 
     int runSize (0);
 
-    for (auto &&ch :mChains)
+    for (auto& ch :mChains)
         runSize += ch.mNumRunIter / ch.mThinningInterval;
 
     QStringList headers;
@@ -626,7 +626,7 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
         for (int j = burnAdaptSize; j<burnAdaptSize + runSize; ++j) {
             QStringList l;
             l << QString::number(shift + j);
-            for (auto &&pPhase : mPhases) {
+            for (auto& pPhase : mPhases) {
                 double valueAlpha = pPhase->mAlpha.mRawTrace->at(shift + j);
 
                 if (withDateFormat)
@@ -662,19 +662,19 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
 
     int runSize (0);
 
-    for (ChainSpecs chain : mChains)
+    for (auto& chain : mChains)
         runSize += chain.mNumRunIter / chain.mThinningInterval;
 
     QStringList headers;
     headers << "iter" << phase->mName + " Begin" << phase->mName + " End";
-    for (Event* event : phase->mEvents)
+    for (auto& event : phase->mEvents)
         headers << event->mName;
 
     rows << headers;
 
     int shift (0);
 
-    for (ChainSpecs chain : mChains) {
+    for (ChainSpecs& chain : mChains) {
         int burnAdaptSize = 1 + chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);
         int runSize = chain.mNumRunIter / chain.mThinningInterval;
 
@@ -693,7 +693,7 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
 
             l << locale.toString(valueBeta, 'g', 15);
 
-            for (Event* event : phase->mEvents) {
+            for (auto& event : phase->mEvents) {
                 double value = event->mTheta.mRawTrace->at(shift + j);
                 if (withDateFormat)
                     value = DateUtils::convertToAppSettingsFormat(value);
@@ -712,19 +712,19 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
     QList<QStringList> rows;
 
     int runSize = 0;
-    for ( auto&& chain : mChains)
+    for (auto& chain : mChains)
         runSize += chain.mNumRunIter / chain.mThinningInterval;
 
 
     QStringList headers;
     headers << "iter";
-    for (auto &&pEvent : mEvents)
-        headers << pEvent->mName;
+    for (auto& event : mEvents)
+        headers << event->mName;
 
     rows << headers;
 
     int shift (0);
-    for ( auto &&chain : mChains)  {
+    for (auto& chain : mChains)  {
         const int burnAdaptSize = 1+ chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);
         const int runSize = chain.mNumRunIter / chain.mThinningInterval;
 
@@ -732,8 +732,8 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
             QStringList l;
             l << QString::number(shift + j) ;
 
-            for (auto&& pEvent : mEvents) {
-                double value = pEvent->mTheta.mRawTrace->at(shift + j);
+            for (auto& event : mEvents) {
+                double value = event->mTheta.mRawTrace->at(shift + j);
                 if (withDateFormat)
                     value = DateUtils::convertToAppSettingsFormat(value);
 
@@ -998,7 +998,7 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 #endif
 
 
-    for (auto && event : mEvents ) {
+    for (auto&& event : mEvents ) {
         event->mTheta.generateCorrelations(chains);
 #ifndef UNIT_TEST
         //progress->setValue(++position);
@@ -1013,7 +1013,7 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
         }
     }
 
-    for (auto && phase : mPhases ) {
+    for (auto&& phase : mPhases ) {
         phase->mAlpha.generateCorrelations(chains);
         phase->mBeta.generateCorrelations(chains);
 
@@ -1058,8 +1058,7 @@ void Model::setBandwidth(const double bandwidth)
 
 void Model::setFFTLength(const int FFTLength)
 {
-    if (mFFTLength != FFTLength)
-    {
+    if (mFFTLength != FFTLength) {
         mFFTLength = FFTLength;
 
         clearPosteriorDensities();
@@ -1077,8 +1076,7 @@ void Model::setFFTLength(const int FFTLength)
  */
 void Model::setThreshold(const double threshold)
 {
-    if(threshold != mThreshold)
-    {
+    if (threshold != mThreshold) {
         mThreshold = threshold;
         
         generateCredibility(mThreshold);
@@ -1091,12 +1089,11 @@ void Model::setThreshold(const double threshold)
 
 void Model::setThresholdToAllModel()
 {
-    for(auto && pEvent : mEvents)
-    {
-        if(pEvent->type() != Event::eKnown){
+    for (auto&& pEvent : mEvents) {
+        if (pEvent->type() != Event::eKnown){
           pEvent->mTheta.mThresholdUsed = mThreshold;
 
-          for (auto && date : pEvent->mDates )  {
+          for (auto&& date : pEvent->mDates ) {
                 date.mTheta.mThresholdUsed = mThreshold;
                 date.mSigma.mThresholdUsed = mThreshold;
             }

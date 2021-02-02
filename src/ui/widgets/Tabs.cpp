@@ -42,10 +42,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 Tabs::Tabs(QWidget* parent):QWidget(parent),
 mTabHeight(40),
-mCurrentIndex(-1)
+mCurrentIndex(0)
 {
     setFont(QFont());
-    setFixedHeight(mTabHeight);
+ //   setFixedHeight(mTabHeight);
+
 }
 
 Tabs::~Tabs()
@@ -98,12 +99,13 @@ QWidget* Tabs::getWidget(const int &i)
 
 QWidget* Tabs::getCurrentWidget()
 {
-     return mTabWidgets[mCurrentIndex];
+     return getWidget(mCurrentIndex);
 }
 
-QRect Tabs::widgetRect() const
+QRect Tabs::widgetRect()
 {
-    return mTabWidgets[mCurrentIndex]->rect();
+    const QWidget* w = getCurrentWidget();
+    return (w != nullptr) ? w->rect() : QRect(0, mTabHeight, width(), 0);
 }
 
 /**
@@ -168,7 +170,7 @@ void Tabs::setTab(const int &i, bool notify)
     {
         mCurrentIndex = i;
         // we start to hide all widget and after we show the current widget, because if there is the same widget used in the several
-        for (auto wid : mTabWidgets)
+        for (auto&& wid : mTabWidgets)
             if (wid)
                 wid->setVisible(false);
 
@@ -254,5 +256,10 @@ void Tabs::updateLayout()
 
         ++i;
     }
+    QWidget* wi = getCurrentWidget();
+    if (wi != nullptr) {
+        wi->setGeometry(0, mTabHeight, width(), height() - mTabHeight);
+    }
+
     update();
 }

@@ -86,7 +86,7 @@ MCMCLoopChronocurve::~MCMCLoopChronocurve()
  */
 QString MCMCLoopChronocurve::calibrate()
 {
-    if (mModel)
+    if(mModel)
     {
         QList<Event*>& events = mModel->mEvents;
         events.reserve(mModel->mEvents.size());
@@ -191,7 +191,7 @@ void MCMCLoopChronocurve::initVariablesForChain()
     mModel->mAlphaLissage.mLastAcceptsLength = acceptBufferLen;
     
     // Ré-initialisation du stockage des splines
-    mModel->mMCMCSplinesParametrique.clear();
+    mModel->mMCMCSplines.clear();
 }
 
 /**
@@ -254,8 +254,9 @@ QString MCMCLoopChronocurve::initMCMC()
             
             // ----------------------------------------------------------------
             // Chronocurve init Theta event :
+            // On initialise les theta près des dates ti
             // ----------------------------------------------------------------
-            if(mChronocurveSettings.mTimeType == ChronocurveSettings::eModeFixed)
+            if(true)//mChronocurveSettings.mTimeType == ChronocurveSettings::eModeFixed)
             {
                 // Dans le cas theta fixe (pas de Bayésien),
                 // On initialise les theta event à la valeur médiane de la calibration de leur première date.
@@ -273,6 +274,7 @@ QString MCMCLoopChronocurve::initMCMC()
             }
             else
             {
+                // Idem Chronomodel, mais jamais utilisé ici :
                 unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
             }
             
@@ -286,10 +288,10 @@ QString MCMCLoopChronocurve::initMCMC()
 
                 // 1 - Init ti
                 double sigma;
-                if (!date.mCalibration->mRepartition.isEmpty()) {
+                if (!date.mCalibration->mRepartition.isEmpty())
+                {
                     const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mCalibration->mRepartition);
-                    date.mTheta.mX = date.mCalibration->mTmin + idx *date.mCalibration->mStep;
-                  //  qDebug()<<"MCMCLoopMain::Init"<<date.mName <<" mThe.mx="<<QString::number(date.mTheta.mX, 'g', 15);
+                    date.mTheta.mX = date.mCalibration->mTmin + idx * date.mCalibration->mStep;
 
                     FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration->mCurve, tmin, tmax, date.mCalibration->mStep));
                     sigma = double (data.stddev);
@@ -310,6 +312,7 @@ QString MCMCLoopChronocurve::initMCMC()
                     }
 
                 }
+                
                 // 2 - Init Delta Wiggle matching and Clear mLastAccepts array
                 date.initDelta(unsortedEvents.at(i));
                 date.mWiggle.memo();
@@ -338,7 +341,7 @@ QString MCMCLoopChronocurve::initMCMC()
             // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
             unsortedEvents.at(i)->mTheta.mSigmaMH = sqrt(unsortedEvents.at(i)->mS02);
             unsortedEvents.at(i)->mAShrinkage = 1.;
-
+            
             // 6- Clear mLastAccepts array
             unsortedEvents.at(i)->mTheta.mLastAccepts.clear();
             unsortedEvents.at(i)->mTheta.mLastAccepts.push_back(true);
@@ -384,8 +387,10 @@ QString MCMCLoopChronocurve::initMCMC()
     QString log;
     emit stepChanged(tr("Initializing Variances..."), 0, events.size());
 
-    for (int i=0; i<events.size(); ++i) {
-        for (int j=0; j<events.at(i)->mDates.size(); ++j) {
+    for (int i=0; i<events.size(); ++i)
+    {
+        for (int j=0; j<events.at(i)->mDates.size(); ++j)
+        {
             Date& date = events.at(i)->mDates[j];
 
             // date.mSigma.mX = sqrt(shrinkageUniform(events[i]->mS02)); // modif the 2015/05/19 with PhL
@@ -480,7 +485,7 @@ void MCMCLoopChronocurve::update()
 
     ChainSpecs& chain = mChains[mChainIndex];
     const bool doMemo = (mState == eBurning) || (mState == eAdapting) || (chain.mTotalIter % chain.mThinningInterval == 0);
-    
+qDebug() <<  "MCMCLoopChronocurve::update()" <<chain.mBatchIndex;
     // --------------------------------------------------------------
     //  Update Dates (idem chronomodel)
     // --------------------------------------------------------------
@@ -491,7 +496,9 @@ void MCMCLoopChronocurve::update()
             date.updateDelta(event);
             date.updateTheta(event);
             //date.updateSigma(event);
+            //date.updateSigmaJeffreys(event);
             date.updateSigmaShrinkage(event);
+            //date.updateSigmaReParam(event);
             date.updateWiggle();
 
             if (doMemo) {
@@ -520,15 +527,14 @@ void MCMCLoopChronocurve::update()
         
         restoreEventsTheta();
         
+        // ----------------------------------------------------------------------
+        //  Dans Chronomodel, on appelle simplement : event->updateTheta(t_min,t_max); sur tous les events.
+        //  Pour mettre à jour un theta d'event dans Chronocurve, on doit accéder aux thetas des autres events.
+        //  => on effectue donc la mise à jour directement ici, sans passer par une fonction
+        //  de la classe event (qui n'a pas accès aux autres events)
+        // ----------------------------------------------------------------------
         for(Event* event : mModel->mEvents)
         {
-            // ----------------------------------------------------------------------
-            //  Dans Chronomodel, on appelle simplement : event->updateTheta(t_min,t_max);
-            //  Dans Chronocurve, on la formule de mise à jour a une composante supplémentaire.
-            //  Pour mettre theta à jour, on doit accéder aux thetas des autres events.
-            //  => on effectue donc la mise à jour directement ici, sans passer par une fonction
-            //  de la classe event (qui n'a pas accès aux autres events)
-            // ----------------------------------------------------------------------
             const double min = event->getThetaMin(t_min);
             const double max = event->getThetaMax(t_max);
 
@@ -542,7 +548,7 @@ void MCMCLoopChronocurve::update()
             // On tire une nouvelle valeur :
             const double value_new = Generator::gaussByBoxMuller(event->mTheta.mX, event->mTheta.mSigmaMH);
             
-            double rapport = 0;
+            double rapport = 0.;
             
             if (value_new >= min && value_new <= max)
             {
@@ -560,10 +566,11 @@ void MCMCLoopChronocurve::update()
                 restoreEventsTheta(); // On supprime les décalages introduits pour les calculs de h_new
                 
                 // Calcul du rapport :
-                rapport = (h_current == 0) ? 1 : (h_new / h_current);
+                rapport = (h_current == 0.) ? 1. : (h_new / h_current);
                 
                 // On reprend l'ancienne valeur, qui sera éventuellement mise à jour dans ce qui suit (Metropolis Hastings)
                 event->mTheta.mX = value_current;
+                
                 orderEventsByTheta();
                 
                 // Pour l'itération suivante :
@@ -578,6 +585,7 @@ void MCMCLoopChronocurve::update()
             if(doMemo){
                event->mTheta.memo();
                event->mTheta.saveCurrentAcceptRate();
+               qDebug()<<"mChronocurveSettings.mTimeType == ChronocurveSettings::eModeBayesian ici";
             }
         }
     }
@@ -613,15 +621,12 @@ void MCMCLoopChronocurve::update()
         SplineMatrices matrices = prepareCalculSpline();
         double h_current = h_YWI_AY(matrices) * h_alpha(matrices) * h_VG();
         
+        const double min = log10(1e-10);
+        const double max = log10(1e+20);
+        int idx = 0;
+        
         for(Event* event : mModel->mEvents)
         {
-            const double min = log10(1e-10);
-            const double max = log10(1e+20);
-            
-            if (min >= max){
-                throw QObject::tr("Error for event VG : %1 : min = %2 : max = %3").arg(event->mName, QString::number(min), QString::number(max));
-            }
-            
             // On stocke l'ancienne valeur :
             double value_current = event->mVG.mX;
             // On tire une nouvelle valeur :
@@ -637,6 +642,17 @@ void MCMCLoopChronocurve::update()
                 event->mVG.mX = value_new;
                 event->updateW();
                 
+                // Variance globale : on recopie la valeur tirée dans tous les events
+                // (nécessaire pour le calcul de h_new)
+                if(idx == 0 && !mChronocurveSettings.mUseVarianceIndividual)
+                {
+                    for(int j=1; j<mModel->mEvents.size(); ++j)
+                    {
+                        mModel->mEvents[j]->mVG = event->mVG;
+                        mModel->mEvents[j]->updateW();
+                    }
+                }
+                
                 // Calcul du rapport :
                 SplineMatrices matrices = prepareCalculSpline();
                 double h_new = h_YWI_AY(matrices) * h_alpha(matrices) * h_VG();
@@ -651,15 +667,31 @@ void MCMCLoopChronocurve::update()
                 h_current = h_new;
             }
             
-            event->mVG.tryUpdate(value_new, rapport);
-            
+            // Mise à jour Metropolis Hastings
             // A chaque fois qu'on modifie VG, W change !
+            event->mVG.tryUpdate(value_new, rapport);
             event->updateW();
             
             if(doMemo){
                event->mVG.memo();
                event->mVG.saveCurrentAcceptRate();
+               qDebug()<<"mChronocurveSettings.mVarianceType == ChronocurveSettings::eModeBayesian memo VG";
             }
+            
+            // Variance globale : on recopie mVG du 1er event dans tous les events,
+            // puis on sort de la boucle !
+            // Ceci copie aussi toutes les propriétés de MHVariable (accepts, etc...)
+            if(idx == 0 && !mChronocurveSettings.mUseVarianceIndividual)
+            {
+                for(int j=1; j<mModel->mEvents.size(); ++j)
+                {
+                    mModel->mEvents[j]->mVG = event->mVG;
+                    mModel->mEvents[j]->updateW();
+                }
+                break;
+            }
+            
+            ++idx;
         }
     }
     // Pas bayésien : on sauvegarde la valeur constante dans la trace
@@ -715,8 +747,13 @@ void MCMCLoopChronocurve::update()
         mModel->mAlphaLissage.tryUpdate(value_new, rapport);
         
         if(doMemo){
-           mModel->mAlphaLissage.memo();
-           mModel->mAlphaLissage.saveCurrentAcceptRate();
+            // On stocke le log10 de alpha pour afficher les résultats a posteriori
+            mModel->mAlphaLissage.mX = -log10(mModel->mAlphaLissage.mX);
+            mModel->mAlphaLissage.memo();
+            mModel->mAlphaLissage.mX = pow(10., -mModel->mAlphaLissage.mX);
+            
+            mModel->mAlphaLissage.saveCurrentAcceptRate();
+            qDebug()<<"mChronocurveSettings.mVarianceType == ChronocurveSettings::eModeBayesian memo mAlpha";
         }
     }
     // Pas bayésien : on sauvegarde la valeur constante dans la trace
@@ -731,11 +768,11 @@ void MCMCLoopChronocurve::update()
     }
     
     // --------------------------------------------------------------
-    //  Calcul de la spline g, g" pour chaque composante + stockage
+    //  Calcul de la spline g, g" pour chaque composante x y z + stockage
     // --------------------------------------------------------------
     if(doMemo)
     {
-        MCMCSplineParametrique splineParametrique;
+        MCMCSpline spline;
         
         // prepareCalculSpline : ne fait pas intervenir les valeurs Y(x,y,z) des events :
         // => On le fait une seule fois pour les 3 composantes
@@ -746,15 +783,15 @@ void MCMCLoopChronocurve::update()
         for(Event* event : mModel->mEvents){
             event->mY = event->mYx;
         }
-        SplineResults spline = calculSpline(matrices);
+        SplineResults s = calculSpline(matrices);
         
         MCMCSplineComposante splineX;
         splineX.vecThetaEvents = getThetaEventVector();
-        splineX.vecG = spline.vecG;
-        splineX.vecGamma = spline.vecGamma;
-        splineX.vecErrG = calculSplineError(matrices, spline);
+        splineX.vecG = s.vecG;
+        splineX.vecGamma = s.vecGamma;
+        splineX.vecErrG = calculSplineError(matrices, s);
         
-        splineParametrique.splineX = splineX;
+        spline.splineX = splineX;
         
         if(mChronocurveSettings.mProcessType != ChronocurveSettings::eProcessTypeUnivarie)
         {
@@ -763,15 +800,15 @@ void MCMCLoopChronocurve::update()
             for(Event* event : mModel->mEvents){
                 event->mY = event->mYy;
             }
-            SplineResults spline = calculSpline(matrices);
+            SplineResults s = calculSpline(matrices);
             
             MCMCSplineComposante splineY;
             splineY.vecThetaEvents = getThetaEventVector();
-            splineY.vecG = spline.vecG;
-            splineY.vecGamma = spline.vecGamma;
-            splineY.vecErrG = calculSplineError(matrices, spline);
+            splineY.vecG = s.vecG;
+            splineY.vecGamma = s.vecGamma;
+            splineY.vecErrG = calculSplineError(matrices, s);
             
-            splineParametrique.splineY = splineY;
+            spline.splineY = splineY;
         }
         if(mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel)
         {
@@ -780,22 +817,22 @@ void MCMCLoopChronocurve::update()
             for(Event* event : mModel->mEvents){
                 event->mY = event->mYz;
             }
-            SplineResults spline = calculSpline(matrices);
+            SplineResults s = calculSpline(matrices);
             
             MCMCSplineComposante splineZ;
             splineZ.vecThetaEvents = getThetaEventVector();
-            splineZ.vecG = spline.vecG;
-            splineZ.vecGamma = spline.vecGamma;
-            splineZ.vecErrG = calculSplineError(matrices, spline);
+            splineZ.vecG = s.vecG;
+            splineZ.vecGamma = s.vecGamma;
+            splineZ.vecErrG = calculSplineError(matrices, s);
             
-            splineParametrique.splineZ = splineZ;
+            spline.splineZ = splineZ;
         }
         
-        mModel->mMCMCSplinesParametrique.push_back(splineParametrique);
+        mModel->mMCMCSplines.push_back(spline);
     }
     
     // --------------------------------------------------------------
-    //  Restauration des valeurs des theta (non espacés pour le calcul)
+    //  Restauration des valeurs des theta en années (non espacés pour le calcul)
     // --------------------------------------------------------------
     restoreEventsTheta();
 }
@@ -871,6 +908,32 @@ bool MCMCLoopChronocurve::adapt()
 
 void MCMCLoopChronocurve::finalize()
 {
+    //qDebug() << *(mModel->mAlphaLissage.mRawTrace);
+    
+    // This is not a copy of all data!
+    // Chains only contain description of what happened in the chain (numIter, numBatch adapt, ...)
+    // Real data are inside mModel members (mEvents, mPhases, ...)
+    mModel->mChains = mChains;
+
+    // This is called here because it is calculated only once and will never change afterwards
+    // This is very slow : it is for this reason that the results display may be long to appear at the end of MCMC calculation.
+    /** @todo Find a way to make it faster !
+     */
+    mModel->generateCorrelations(mChains);
+    
+    // This should not be done here because it uses resultsView parameters
+    // ResultView will trigger it again when loading the model
+    //mModel->generatePosteriorDensities(mChains, 1024, 1);
+    
+    // Generate numerical results of :
+    // - MHVariables (global acceptation)
+    // - MetropolisVariable : analysis of Posterior densities and quartiles from traces.
+    // This also should be done in results view...
+    // mModel->generateNumericalResults(mChains);
+    
+    // ----------------------------------------
+    // Chronocurve specific :
+    // ----------------------------------------
     std::vector<MCMCSplineComposante> allChainsTraceX;
     std::vector<MCMCSplineComposante> allChainsTraceY;
     std::vector<MCMCSplineComposante> allChainsTraceZ;
@@ -879,13 +942,13 @@ void MCMCLoopChronocurve::finalize()
     bool hasZ = (mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel);
     
     int chainIterOffset = 0;
-    for(int i=0; i<mChains.size(); ++i)
+    for (int i=0; i<mChains.size(); ++i)
     {
         int numIter = mChains[i].mNumRunIter / mChains[i].mThinningInterval;
         
-        std::vector<MCMCSplineParametrique>::const_iterator first = mModel->mMCMCSplinesParametrique.begin() + chainIterOffset;
-        std::vector<MCMCSplineParametrique>::const_iterator last = mModel->mMCMCSplinesParametrique.begin() + chainIterOffset + numIter;
-        std::vector<MCMCSplineParametrique> chainTrace(first, last);
+        std::vector<MCMCSpline>::const_iterator first = mModel->mMCMCSplines.begin() + chainIterOffset;
+        std::vector<MCMCSpline>::const_iterator last = mModel->mMCMCSplines.begin() + chainIterOffset + numIter;
+        std::vector<MCMCSpline> chainTrace(first, last);
         
         std::vector<MCMCSplineComposante> chainTraceX;
         std::vector<MCMCSplineComposante> chainTraceY;
@@ -902,7 +965,7 @@ void MCMCLoopChronocurve::finalize()
             allChainsTraceZ.push_back(chainTrace[j].splineZ);
         }
         
-        PosteriorMeanGParametrique chainPosteriorMeanG;
+        PosteriorMeanG chainPosteriorMeanG;
         chainPosteriorMeanG.gx = computePosteriorMeanGComposante(chainTraceX);
         if(hasY){
             chainPosteriorMeanG.gy = computePosteriorMeanGComposante(chainTraceY);
@@ -911,12 +974,12 @@ void MCMCLoopChronocurve::finalize()
             chainPosteriorMeanG.gz = computePosteriorMeanGComposante(chainTraceZ);
         }
         
-        mModel->mPosteriorMeanGParametriqueByChain.push_back(chainPosteriorMeanG);
+        mModel->mPosteriorMeanGByChain.push_back(chainPosteriorMeanG);
         
         chainIterOffset += numIter;
     }
     
-    PosteriorMeanGParametrique allChainsPosteriorMeanG;
+    PosteriorMeanG allChainsPosteriorMeanG;
     allChainsPosteriorMeanG.gx = computePosteriorMeanGComposante(allChainsTraceX);
     if(hasY){
         allChainsPosteriorMeanG.gy = computePosteriorMeanGComposante(allChainsTraceY);
@@ -925,122 +988,7 @@ void MCMCLoopChronocurve::finalize()
         allChainsPosteriorMeanG.gz = computePosteriorMeanGComposante(allChainsTraceZ);
     }
     
-    mModel->mPosteriorMeanGParametrique = allChainsPosteriorMeanG;
-
-    
-    
-    /*int nbIter = mModel->mMCMCSplinesParametrique.size();
-    
-    int tmin = mModel->mSettings.mTmin;
-    int tmax = mModel->mSettings.mTmax;
-    
-    std::vector<double> vecCumulGx = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulGPx = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulGSx = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulG2x = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulErrG2x = initVecteur(tmax - tmin + 1);
-    
-    std::vector<double> vecGx = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecGPx = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecGSx = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecErrGx = initVecteur(tmax - tmin + 1);
-    
-    std::vector<double> vecCumulGy = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulGPy = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulGSy = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulG2y = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulErrG2y = initVecteur(tmax - tmin + 1);
-    
-    std::vector<double> vecGy = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecGPy = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecGSy = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecErrGy = initVecteur(tmax - tmin + 1);
-    
-    std::vector<double> vecCumulGz = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulGPz = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulGSz = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulG2z = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecCumulErrG2z = initVecteur(tmax - tmin + 1);
-
-    std::vector<double> vecGz = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecGPz = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecGSz = initVecteur(tmax - tmin + 1);
-    std::vector<double> vecErrGz = initVecteur(tmax - tmin + 1);
-    
-    
-    for(int i=0; i<nbIter; ++i)
-    {
-        MCMCSplineParametrique splineParametrique = mModel->mMCMCSplinesParametrique[i];
-        
-        for(int tIdx=0; tIdx<=(tmax - tmin); ++tIdx)
-        {
-            double t = (double)tIdx / (double)(tmax - tmin);
-            
-            vecCumulGx[tIdx] += valeurG(t, splineParametrique.splineX);
-            vecCumulGPx[tIdx] += valeurGPrime(t, splineParametrique.splineX) / (tmax - tmin);
-            vecCumulGSx[tIdx] += valeurGSeconde(t, splineParametrique.splineX) / pow(tmax - tmin, 2);
-            vecCumulG2x[tIdx] += pow(vecCumulGx[tIdx], 2);
-            vecCumulErrG2x[tIdx] += pow(valeurErrG(t, splineParametrique.splineX), 2);
-            
-            if(mChronocurveSettings.mProcessType != ChronocurveSettings::eProcessTypeUnivarie)
-            {
-                vecCumulGy[tIdx] += valeurG(t, splineParametrique.splineY);
-                vecCumulGPy[tIdx] += valeurGPrime(t, splineParametrique.splineY) / (tmax - tmin);
-                vecCumulGSy[tIdx] += valeurGSeconde(t, splineParametrique.splineY) / pow(tmax - tmin, 2);
-                vecCumulG2y[tIdx] += pow(vecCumulGy[tIdx], 2);
-                vecCumulErrG2y[tIdx] += pow(valeurErrG(t, splineParametrique.splineY), 2);
-            }
-            
-            if(mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel)
-            {
-                vecCumulGz[tIdx] += valeurG(t, splineParametrique.splineZ);
-                vecCumulGPz[tIdx] += valeurGPrime(t, splineParametrique.splineZ) / (tmax - tmin);
-                vecCumulGSz[tIdx] += valeurGSeconde(t, splineParametrique.splineZ) / pow(tmax - tmin, 2);
-                vecCumulG2z[tIdx] += pow(vecCumulGz[tIdx], 2);
-                vecCumulErrG2z[tIdx] += pow(valeurErrG(t, splineParametrique.splineZ), 2);
-            }
-        }
-    }
-    
-    for(int tIdx=0; tIdx<=(tmax-tmin); ++tIdx)
-    {
-        vecGx[tIdx] = vecCumulGx[tIdx] / nbIter;
-        vecGPx[tIdx] = vecCumulGPx[tIdx] / nbIter;
-        vecGSx[tIdx] = vecCumulGSx[tIdx] / nbIter;
-        vecErrGx[tIdx] = sqrt((vecCumulG2x[tIdx] / nbIter) - pow(vecGx[tIdx], 2) + (vecCumulErrG2x[tIdx] / nbIter));
-        
-        if(mChronocurveSettings.mProcessType != ChronocurveSettings::eProcessTypeUnivarie)
-        {
-            vecGy[tIdx] = vecCumulGy[tIdx] / nbIter;
-            vecGPy[tIdx] = vecCumulGPy[tIdx] / nbIter;
-            vecGSy[tIdx] = vecCumulGSy[tIdx] / nbIter;
-            vecErrGy[tIdx] = sqrt((vecCumulG2y[tIdx] / nbIter) - pow(vecGy[tIdx], 2) + (vecCumulErrG2y[tIdx] / nbIter));
-        }
-        
-        if(mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel)
-        {
-            vecGz[tIdx] = vecCumulGz[tIdx] / nbIter;
-            vecGPz[tIdx] = vecCumulGPz[tIdx] / nbIter;
-            vecGSz[tIdx] = vecCumulGSz[tIdx] / nbIter;
-            vecErrGz[tIdx] = sqrt((vecCumulG2z[tIdx] / nbIter) - pow(vecGz[tIdx], 2) + (vecCumulErrG2z[tIdx] / nbIter));
-        }
-    }
-    
-    mModel->mPosteriorMeanGParametrique.gx.vecG = vecGx;
-    mModel->mPosteriorMeanGParametrique.gy.vecG = vecGy;
-    mModel->mPosteriorMeanGParametrique.gz.vecG = vecGz;
-    
-    mModel->mPosteriorMeanGParametrique.gx.vecGP = vecGPx;
-    mModel->mPosteriorMeanGParametrique.gy.vecGP = vecGPy;
-    mModel->mPosteriorMeanGParametrique.gz.vecGP = vecGPz;
-    
-    mModel->mPosteriorMeanGParametrique.gx.vecGS = vecGSx;
-    mModel->mPosteriorMeanGParametrique.gy.vecGS = vecGSy;
-    mModel->mPosteriorMeanGParametrique.gz.vecGS = vecGSz;
-    
-    mModel->mPosteriorMeanGParametrique.gx.vecGErr = vecErrGx;
-    mModel->mPosteriorMeanGParametrique.gy.vecGErr = vecErrGy;
-    mModel->mPosteriorMeanGParametrique.gz.vecGErr = vecErrGz;*/
+    mModel->mPosteriorMeanG = allChainsPosteriorMeanG;
 }
 
 PosteriorMeanGComposante MCMCLoopChronocurve::computePosteriorMeanGComposante(const std::vector<MCMCSplineComposante>& trace)
@@ -1061,32 +1009,61 @@ PosteriorMeanGComposante MCMCLoopChronocurve::computePosteriorMeanGComposante(co
     
     int nbIter = trace.size();
     
+    // Dans le cas de la profondeur, on ne conserve pour les calculs
+    // que les valeurs correspondant à une dérivée première positive.
+    // Le nombre d'itérations retenues est donc modifié dans ce cas particulier.
+    int nbIterRetained = 0;
+    bool isProfondeur = (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeProfondeur);
+    
     for(int i=0; i<nbIter; ++i)
     {
         MCMCSplineComposante splineComposante = trace[i];
         
-        for(int tIdx=0; tIdx<=(tmax - tmin); ++tIdx)
+        bool isRetainable = true;
+        // If, in case of profondeur, for this iteration, GP has at least one negative value,
+        // then the whole iteration is ignored.
+        if(isProfondeur)
         {
-            double t = (double)tIdx / (double)(tmax - tmin);
+            for(int tIdx=0; tIdx<=(tmax - tmin); ++tIdx)
+            {
+                double t = (double)tIdx / (double)(tmax - tmin);
+                double gp = valeurGPrime(t, splineComposante);
+                if(gp < 0){
+                    isRetainable = false;
+                    break;
+                }
+            }
+        }
+        
+        if(isRetainable)
+        {
+            ++nbIterRetained;
             
-            vecCumulG[tIdx] += valeurG(t, splineComposante);
-            vecCumulGP[tIdx] += valeurGPrime(t, splineComposante) / (tmax - tmin);
-            vecCumulGS[tIdx] += valeurGSeconde(t, splineComposante) / pow(tmax - tmin, 2);
-            vecCumulG2[tIdx] += pow(vecCumulG[tIdx], 2);
-            vecCumulErrG2[tIdx] += pow(valeurErrG(t, splineComposante), 2);
+            for(int tIdx=0; tIdx<=(tmax - tmin); ++tIdx)
+            {
+                double t = (double)tIdx / (double)(tmax - tmin);
+                double g = valeurG(t, splineComposante);
+                double gp = valeurGPrime(t, splineComposante);
+                double gs = valeurGSeconde(t, splineComposante);
+                
+                vecCumulG[tIdx] += g;
+                vecCumulGP[tIdx] += gp / (tmax - tmin);
+                vecCumulGS[tIdx] += gs / pow(tmax - tmin, 2.);
+                vecCumulG2[tIdx] += pow(g, 2.);
+                vecCumulErrG2[tIdx] += pow(valeurErrG(t, splineComposante), 2.);
+            }
         }
     }
     
     for(int tIdx=0; tIdx<=(tmax-tmin); ++tIdx)
     {
-        vecG[tIdx] = vecCumulG[tIdx] / nbIter;
-        vecGP[tIdx] = vecCumulGP[tIdx] / nbIter;
-        vecGS[tIdx] = vecCumulGS[tIdx] / nbIter;
-        vecErrG[tIdx] = sqrt((vecCumulG2[tIdx] / nbIter) - pow(vecG[tIdx], 2) + (vecCumulErrG2[tIdx] / nbIter));
+        vecG[tIdx] = vecCumulG[tIdx] / nbIterRetained;
+        vecGP[tIdx] = vecCumulGP[tIdx] / nbIterRetained;
+        vecGS[tIdx] = vecCumulGS[tIdx] / nbIterRetained;
+        vecErrG[tIdx] = sqrt((vecCumulG2[tIdx] / nbIterRetained) - pow(vecG[tIdx], 2.) + (vecCumulErrG2[tIdx] / nbIterRetained));
     }
     
     PosteriorMeanGComposante result;
-    
     result.vecG = vecG;
     result.vecGP = vecGP;
     result.vecGS = vecGS;
@@ -1107,14 +1084,14 @@ double MCMCLoopChronocurve::valeurG(const double t, const MCMCSplineComposante& 
     {
         double t2 = spline.vecThetaEvents[1];
         double gp1 = (spline.vecG[1] - spline.vecG[0]) / (t2 - t1);
-        gp1 += -(t2 - t1) * spline.vecGamma[1] / 6;
+        gp1 += -(t2 - t1) * spline.vecGamma[1] / 6.;
         g = spline.vecG[0] - (t1 - t) * gp1;
     }
     else if(t >= tn)
     {
         double tn1 = spline.vecThetaEvents[n-2];
         double gpn = (spline.vecG[n-1] - spline.vecG[n-2]) / (tn - tn1);
-        gpn += (tn - tn1) * spline.vecGamma[n-2] / 6;
+        gpn += (tn - tn1) * spline.vecGamma[n-2] / 6.;
         g = spline.vecG[n-1] + (t - tn) * gpn;
     }
     else
@@ -1130,8 +1107,11 @@ double MCMCLoopChronocurve::valeurG(const double t, const MCMCSplineComposante& 
                 double gi2 = spline.vecG[i+1];
                 double gamma1 = spline.vecGamma[i];
                 double gamma2 = spline.vecGamma[i+1];
+                // Linear part :
                 g = ( (t-ti1) * gi2 + (ti2-t) * gi1 ) / h;
-                g += - (1/6) * (t-ti1) * (ti2-t) * ( (1+(t-ti1)/h) * gamma2 + (1+(ti2-t)/h) * gamma1 );
+                // Smoothing part :
+                double p = (1./6.) * (t-ti1) * (ti2-t) * ((1.+(t-ti1)/h) * gamma2 + (1.+(ti2-t)/h) * gamma1);
+                g -= p;
             }
         }
     }
@@ -1190,13 +1170,13 @@ double MCMCLoopChronocurve::valeurGPrime(const double t, const MCMCSplineComposa
     {
         double t2 = spline.vecThetaEvents[1];
         double gp1 = (spline.vecG[1] - spline.vecG[0]) / (t2 - t1);
-        gPrime = gp1 - (t2 - t1) * spline.vecGamma[1] / 6;
+        gPrime = gp1 - (t2 - t1) * spline.vecGamma[1] / 6.;
     }
     else if(t >= tn)
     {
         double tn1 = spline.vecThetaEvents[n-2];
         double gpn = (spline.vecG[n-1] - spline.vecG[n-2]) / (tn - tn1);
-        gPrime = gpn + (tn - tn1) * spline.vecGamma[n-2] / 6;
+        gPrime = gpn + (tn - tn1) * spline.vecGamma[n-2] / 6.;
     }
     else
     {
@@ -1211,8 +1191,8 @@ double MCMCLoopChronocurve::valeurGPrime(const double t, const MCMCSplineComposa
                 double gi2 = spline.vecG[i+1];
                 double gamma1 = spline.vecGamma[i];
                 double gamma2 = spline.vecGamma[i+1];
-                gPrime = ((gi2-gi1)/h) - (1/6) * (t-ti1) * (ti2-t) * ((gamma2-gamma1)/h);
-                gPrime += (1/6) * ((t-ti1) - (ti2-t)) * ( (1+(t-ti1)/h) * gamma2 + (1+(ti2-t)/h) * gamma1 );
+                gPrime = ((gi2-gi1)/h) - (1./.6) * (t-ti1) * (ti2-t) * ((gamma2-gamma1)/h);
+                gPrime += (1./6.) * ((t-ti1) - (ti2-t)) * ( (1.+(t-ti1)/h) * gamma2 + (1+(ti2-t)/h) * gamma1 );
             }
         }
     }
@@ -1243,34 +1223,6 @@ double MCMCLoopChronocurve::valeurGSeconde(const double t, const MCMCSplineCompo
     return gSeconde;
 }
 
-
-/*void testResults()
-{
-    std::vector<double> ti = getThetaEventVector();
-    
-    for(Event* event : mModel->mEvents){
-        event->mY = event->mYx;
-    }
-    
-    orderEventsByTheta();
-    saveEventsTheta();
-    reduceEventsTheta(); // On passe en temps réduit entre 0 et 1
-    spreadEventsTheta();
-    
-    std::vector<double> tis = getThetaEventVector();
-    
-    // Calculer la moyenne des g(t) à partir de toutes les chaines
-    
-    SplineMatrices matrices = prepareCalculSpline();
-    SplineResults spline = calculSpline(matrices);
-    std::vector<double> errG = calculSplineError(matrices, spline);
-    
-    restoreEventsTheta();
-    
-    std::vector<double> tif = getThetaEventVector();
-    std::vector<double> yi = getYEventVector();
-}*/
-
 #pragma mark Related to : calibrate
 
 void MCMCLoopChronocurve::prepareEventsY()
@@ -1280,44 +1232,52 @@ void MCMCLoopChronocurve::prepareEventsY()
     }
 }
 
+/**
+ * Preparation des valeurs Yx, Yy, Yz et Sy à partir des valeurs saisies dans l'interface : Yinc, Ydec, Sinc, Yint, Sint
+ */
 void MCMCLoopChronocurve::prepareEventY(Event* event)
 {
-    double y1 = event->mYInc;
-    double y2 = event->mYDec;
-    double y3 = event->mYInt;
-    double s1 = event->mSInc;
-    double s3 = event->mSInt;
-    
     if(mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie)
     {
         if(mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeInclinaison)
         {
-            event->mYx = y1;
-            event->mSy = s1;
+            event->mYx = event->mYInc;
+            event->mSy = event->mSInc;
         }
         else if(mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDeclinaison)
         {
-            event->mYx = y2;
-            event->mSy = s1 / cos(y1 * M_PI / 180.);
+            event->mYx = event->mYDec;
+            event->mSy = event->mSInc / cos(event->mYInc * M_PI / 180.);
         }
         else
         {
-            event->mYx = y3;
-            event->mSy = s3;
+            event->mYx = event->mYInt;
+            event->mSy = event->mSInt;
         }
+        
+        // Non utilisé en univarié, mais mis à zéro notamment pour les exports CSV :
+        event->mYy = 0;
+        event->mYz = 0;
     }
     else if(mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique)
     {
-        event->mYx = y1;
-        event->mYy = y2;
-        event->mSy = s1;
+        event->mYx = event->mYInc;
+        event->mYy = event->mYDec;
+        event->mSy = event->mSInc;
+        
+        // Non utilisé en univarié, mais mis à zéro notamment pour les exports CSV :
+        event->mYz = 0;
     }
     else if(mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel)
     {
-        event->mYx = y3 * cos(y1 * M_PI / 180.) * cos(y2 * M_PI / 180.);
-        event->mYy = y3 * cos(y1 * M_PI / 180.) * sin(y2 * M_PI / 180.);
-        event->mYz = y3 * sin(y1 * M_PI / 180.);
-        event->mSy = pow((1/3) * (s3 * s3 + 2 * y3 * y3 / (s1 * s1)), 0.5);
+        event->mYx = event->mYInt * cos(event->mYInc * M_PI / 180.) * cos(event->mYDec * M_PI / 180.);
+        event->mYy = event->mYInt * cos(event->mYInc * M_PI / 180.) * sin(event->mYDec * M_PI / 180.);
+        event->mYz = event->mYInt * sin(event->mYInc * M_PI / 180.);
+        event->mSy = pow((1./3.) * (event->mSInt * event->mSInt + 2. * event->mYInt * event->mYInt / (event->mSInc * event->mSInc)), 0.5);
+    }
+    
+    if(!mChronocurveSettings.mUseErrMesure){
+        event->mSy = 0.;
     }
 }
 
@@ -1476,56 +1436,59 @@ double MCMCLoopChronocurve::h_VG()
         
         if(mChronocurveSettings.mUseVarianceIndividual){
             
-            shrink_VG = 1;
+            shrink_VG = 1.;
             for(int i=0; i<nb_noeuds; ++i){
                 Event* e = mModel->mEvents[i];
-                double S02 = e->mSInc * e->mSInc;
-                shrink_VG *= (S02 / pow(S02 + e->mVG.mX,2));
+                double S02 = e->mSy * e->mSy;
+                shrink_VG *= (S02 / pow(S02 + e->mVG.mX, 2.));
             }
             
         }else{
             
             // S02 : moyenne harmonique des erreurs sur Y
-            double som_inv_S02 = 0;
+            double som_inv_S02 = 0.;
             
             for(int i=0; i<nb_noeuds; ++i){
                 Event* e = mModel->mEvents[i];
-                som_inv_S02 += ( 1 / (e->mSy * e->mSy));
+                som_inv_S02 += (1. / (e->mSy * e->mSy));
             }
             double S02 = nb_noeuds/som_inv_S02;
             // Shrinkage avec a = 1
             
-            shrink_VG = S02 / pow(S02 + mModel->mEvents[0]->mVG.mX, 2);
+            shrink_VG = S02 / pow(S02 + mModel->mEvents[0]->mVG.mX, 2.);
         }
     }
     
     return shrink_VG;
 }
 
+/**
+ * Les calculs sont faits avec les dates (theta event, ti dates, delta, sigma) exprimées en années.
+ * Lors de l'appel de cette fonction, theta event a été réduit (voir les appels plus haut).
+ * Il faut donc soit réduire les autres variables (plus coûteux en calculs), soit repasser theta event en années.
+*/
 double MCMCLoopChronocurve::h_theta()
 {
-    double sum = 0;
-    int nb_noeuds = mModel->mEvents.size();
+    double tmin = mModel->mSettings.mTmin;
+    double tmax = mModel->mSettings.mTmax;
     
-    for(int i=0; i<nb_noeuds; ++i)
+    double h = 1.;
+    
+    for(Event*& e : mModel->mEvents)
     {
-        Event* e = mModel->mEvents[i];
+        double p = 0.;
+        double t_moy = 0.;
         
-        double pi = 0;
-        double ti_moy = 0;
-        
-        for(int j=0; j<e->mDates.size(); ++j)
+        for(Date& date : e->mDates)
         {
-            Date& date = e->mDates[j];
-            pi += 1 / pow(date.mSigma.mX, 2);
-            ti_moy += (date.mTheta.mX + date.mDelta) / pow(date.mSigma.mX, 2);
+            double pi = 1. / pow(date.mSigma.mX, 2.);
+            p += pi;
+            t_moy += (date.mTheta.mX + date.mDelta) * pi;
         }
-        ti_moy /= pi;
+        t_moy /= p;
         
-        sum += pi * pow(e->mTheta.mX - ti_moy, 2);
+        h *= exp(-0.5 * p * pow((tmin + e->mTheta.mX * (tmax - tmin)) - t_moy, 2.));
     }
-    
-    double h = exp(-0.5 * sum);
     return h;
 }
 
@@ -1542,7 +1505,6 @@ void MCMCLoopChronocurve::orderEventsByTheta()
     // On manipule directement la liste des évènements
     QList<Event*>& result = mModel->mEvents;
     
-    //std::sort(result.begin(), result.end(), sortEventsByTheta);
     std::sort(result.begin(), result.end(), [](const Event* a, const Event* b) {
         return (a->mTheta.mX < b->mTheta.mX);
     });
@@ -1680,14 +1642,18 @@ void MCMCLoopChronocurve::spreadEventsTheta(double minStep)
 
 void MCMCLoopChronocurve::reduceEventsTheta()
 {
-    double tmin = mModel->mSettings.mTmin;
-    double tmax = mModel->mSettings.mTmax;
-    
     for(int i=0; i<mModel->mEvents.size(); i++)
     {
         double t = mModel->mEvents[i]->mTheta.mX;
-        mModel->mEvents[i]->mTheta.mX = (t - tmin) / (tmax - tmin);
+        mModel->mEvents[i]->mTheta.mX = reduceTime(t);
     }
+}
+
+double MCMCLoopChronocurve::reduceTime(double t)
+{
+    double tmin = mModel->mSettings.mTmin;
+    double tmax = mModel->mSettings.mTmax;
+    return (t - tmin) / (tmax - tmin);
 }
 
 #pragma mark Init vecteurs et matrices
@@ -1856,9 +1822,9 @@ SplineResults MCMCLoopChronocurve::calculSpline(SplineMatrices& matrices)
 {
     const std::vector<std::vector<double>>& matR = matrices.matR;
     const std::vector<std::vector<double>>& matQ = matrices.matQ;
-    const std::vector<std::vector<double>>& matQT = matrices.matQT;
+    //const std::vector<std::vector<double>>& matQT = matrices.matQT;
     const std::vector<std::vector<double>>& matQTW_1Q = matrices.matQTW_1Q;
-    const std::vector<std::vector<double>>& matQTQ = matrices.matQTQ;
+    //const std::vector<std::vector<double>>& matQTQ = matrices.matQTQ;
     
     // calcul de: R + alpha * Qt * W-1 * Q = Mat_B
     // Mat_B : matrice carrée (n-2) x (n-2) de bande 5 qui change avec alpha et Diag_W_1

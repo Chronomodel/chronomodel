@@ -85,6 +85,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 
     mMethodLab = new QLabel(tr("Method"), mTopView);
     mMethodCombo = new QComboBox(mTopView);
+    mMethodInfo = new QLabel(tr("MH : proposal = adapt. Gaussian random walk"), mTopView);
 
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eDoubleExp));
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eBoxMuller));
@@ -293,9 +294,6 @@ void EventPropertiesView::updateEvent()
 
         mColorPicker->setColor(color);
 
-        mMethodLab->setVisible(type == Event::eDefault);
-        mMethodCombo->setVisible(type == Event::eDefault);
-
         // Chronocurve
         
         // The chronocurve settings may have changed since the last time the event property view has been opened
@@ -303,6 +301,10 @@ void EventPropertiesView::updateEvent()
         ChronocurveSettings settings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
         //mChronocurveEnabled = settings.mEnabled;
         mChronocurveProcessType = settings.mProcessType;
+        
+        mMethodLab->setVisible(type == Event::eDefault);
+        mMethodCombo->setVisible(!settings.mEnabled && (type == Event::eDefault));
+        mMethodInfo->setVisible(settings.mEnabled && (type == Event::eDefault));
         
         // Y1 contient l'inclinaison. Elle est toujours nécessaire en sphérique et vectoriel.
         // En univarié, elle n'est nécessaire que pour les variables d'étude : inclinaison ou déclinaison.
@@ -680,20 +682,37 @@ void EventPropertiesView::resizeEvent(QResizeEvent* e)
 
 void EventPropertiesView::applyAppSettings()
 {
-    mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
-    mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonWidth = 50; //int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonHeigth = 50; //int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mLineEditHeight = 25; //int (0.5 * AppSettings::heigthUnit());
+    mComboBoxHeight = 25; //int(0.7 * AppSettings::heigthUnit());
+    minimumHeight += mEventView->height();
+
+    minimumHeight = 0;
+    for (auto &&but : mPluginButs1) {
+        but->resize(mButtonWidth, mButtonHeigth);
+        minimumHeight += but->height();
+    }
+
+    for (auto &&but : mPluginButs2) {
+        but->resize(mButtonWidth, mButtonHeigth);
+        minimumHeight += but->height();
+    }
+
+    minimumHeight += mDeleteBut->height();
 
     updateLayout();
 }
 
 void EventPropertiesView::updateLayout()
 {
-
-    mLineEditHeight = int (0.5 * AppSettings::heigthUnit());
-    mComboBoxHeight = int (0.7 * AppSettings::heigthUnit());
+    mButtonWidth = 50; //int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonHeigth = 50; //int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mLineEditHeight = 25; //int (0.5 * AppSettings::heigthUnit());
+    mComboBoxHeight = 25; //int (0.7 * AppSettings::heigthUnit());
 
     QFontMetrics fm (font());
-    int marginTop (int (0.2 * AppSettings::widthUnit()));
+    int marginTop = 10; //(int (0.2 * AppSettings::widthUnit()));
 
     if (hasEvent())
     {
@@ -714,6 +733,7 @@ void EventPropertiesView::updateLayout()
 
         mMethodLab->move(marginTop, mColorPicker->y() + mColorPicker->height() + marginTop);
         mMethodCombo->setGeometry(shiftMax , mMethodLab->y() - mComboBoxHeight/2 + marginTop, editWidth - marginTop, mComboBoxHeight);
+        mMethodInfo->setGeometry(shiftMax , mMethodLab->y() - mComboBoxHeight/2 + marginTop, editWidth - marginTop, mComboBoxHeight);
         
         // ----------------------------------
         //  Top View Height

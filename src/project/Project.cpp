@@ -231,7 +231,7 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
     }
 
     else if (mDesignIsChanged)
-        emit projectDesignChanged(true);
+        emit projectDesignChanged(mModel);
 
 
     if (mState != state || force)  {

@@ -55,6 +55,10 @@ protected:
     void paintEvent(QPaintEvent* event);
     void mousePressEvent(QMouseEvent* event);
     
+signals:
+    void toggled(bool toggled);
+
+protected:
     QWidgetAction* mAction;
     bool mToggled;
 };

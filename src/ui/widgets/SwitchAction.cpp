@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2018
 
 Authors :
 	Philippe LANOS
@@ -41,17 +41,37 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Painting.h"
 #include <QtWidgets>
 
-SwitchWidget::SwitchWidget(QWidget* parent, QWidgetAction* action):QWidget(parent),
-mAction(action)
+SwitchWidget::SwitchWidget(QWidget* parent):QWidget(parent),
+mAction(nullptr),
+mToggled(false)
 {
-    setFixedSize(90, 40);
+    //setFixedSize(90, 40);
+}
+
+SwitchWidget::SwitchWidget(QWidget* parent, QWidgetAction* action):QWidget(parent),
+mAction(action),
+mToggled(false)
+{
+    //setFixedSize(90, 40);
+}
+
+void SwitchWidget::setToggled(bool isToggled)
+{
+    if (isToggled != mToggled)
+    {
+        mToggled = isToggled;
+        if (mAction){
+            mAction->toggle();
+        }
+        emit toggled(isToggled);
+        update();
+    }
 }
 
 void SwitchWidget::mousePressEvent(QMouseEvent* event)
 {
     QWidget::mousePressEvent(event);
-    mAction->toggle();
-    update();
+    setToggled(!mToggled);
 }
 
 void SwitchWidget::paintEvent(QPaintEvent* e)
@@ -64,9 +84,9 @@ void SwitchWidget::paintEvent(QPaintEvent* e)
     QRectF r = rect();
     r.adjust(1, 1, -1, -1);
     
-    QColor colorBorder = mAction->isChecked() ? CHRONOCURVE_COLOR_BORDER : CHRONOMODEL_COLOR_BORDER;
-    QColor colorBack = mAction->isChecked() ? CHRONOCURVE_COLOR_BACK : CHRONOMODEL_COLOR_BACK;
-    QColor colorText = mAction->isChecked() ? CHRONOCURVE_COLOR_TEXT : CHRONOMODEL_COLOR_TEXT;
+    QColor colorBorder = mToggled ? CHRONOCURVE_COLOR_BORDER : CHRONOMODEL_COLOR_BORDER;
+    QColor colorBack = mToggled ? CHRONOCURVE_COLOR_BACK : CHRONOMODEL_COLOR_BACK;
+    QColor colorText = mToggled ? CHRONOCURVE_COLOR_TEXT : CHRONOMODEL_COLOR_TEXT;
     
     QPen pen = painter.pen();
     pen.setColor(colorBorder);
@@ -81,23 +101,23 @@ void SwitchWidget::paintEvent(QPaintEvent* e)
     QFont f1(font());
     f1.setPointSizeF(8);
     painter.setFont(f1);
-    QFontMetrics fm1(f1);
+    //QFontMetrics fm1(f1);
     QString text1 = tr("Building mode");
- //   int text1W = fm1.horizontalAdvance(text1);
-
+    //int text1W = fm1.horizontalAdvance(text1);
+    
     QFont f2(font());
     f2.setPointSizeF(14);
     f2.setWeight(QFont::Bold);
     painter.setFont(f2);
-    QFontMetrics fm2(f2);
+    //QFontMetrics fm2(f2);
     QString text2 = mToggled ? "CURVE" : "PHASES";
    // int text2W = fm2.horizontalAdvance(text2);
-
-   // int textW = text1W + text2W;
-
+    
+    //int textW = text1W + text2W;;
+    
     painter.setFont(f1);
     painter.drawText(r.adjusted(0, 5, 0, -2*r.height()/3 + 2), Qt::AlignHCenter | Qt::AlignVCenter, text1);
-
+    
     painter.setFont(f2);
     painter.drawText(r.adjusted(0, r.height()/3, 0, 0), Qt::AlignHCenter | Qt::AlignVCenter, text2);
 }

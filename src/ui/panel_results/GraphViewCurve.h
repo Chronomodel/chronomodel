@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2021
 
 Authors :
 	Philippe LANOS
@@ -53,9 +53,10 @@ public:
 
     void setComposanteG(const PosteriorMeanGComposante& composante);
     void setComposanteGChains(const QList<PosteriorMeanGComposante>& composanteChains);
-
+    void setEvents(const QList<Event*>& events);
+    
     void generateCurves(TypeGraph typeGraph, Variable variable);
-    void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, bool showG, bool showGError, bool showGP, bool showGS);
+    void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, bool showG, bool showGError, bool showGPoints, bool showGP, bool showGS);
 
 protected:
     void paintEvent(QPaintEvent* e);
@@ -64,9 +65,11 @@ protected:
 private:
     PosteriorMeanGComposante mComposanteG;
     QList<PosteriorMeanGComposante> mComposanteGChains;
+    QList<Event*> mEvents;
     
     bool mShowG;
     bool mShowGError;
+    bool mShowGPoints;
     bool mShowGP;
     bool mShowGS;
 };

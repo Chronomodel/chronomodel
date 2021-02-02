@@ -99,7 +99,10 @@ public:
         eSigma = 1,
         eDuration = 2,
         eTempo = 3,
-        eActivity = 4
+        eActivity = 4,
+        eVG = 5,
+        eG = 6,
+        eAlpha = 7
     };
     static int mHeightForVisibleAxis ;
     // member
@@ -183,7 +186,10 @@ public:
     void setShowNumericalResults(const bool show);
 
 
-    GraphView* getGraph() const { return mGraph;}
+    GraphView* getGraph() const { return mGraph; }
+    Variable getCurrentVariable() const { return mCurrentVariable; }
+    TypeGraph getCurrentType() const { return mCurrentTypeGraph; }
+    
    // GraphView::Rendering getRendering() const  { return mGraph->getRendering(); }
     QString getResultsText() const {return mResultsText;}
     QString getTextAreaToHtml() const { return mTextArea->toHtml();}
@@ -219,7 +225,7 @@ public:
                               MHVariable* variable);
 
     // This method is used to recreate all curves in mGraph.
-    // It is vitual because we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
+    // It is vitual because we want a different behavior in sub-classes (GraphViewDate, GraphViewEvent and GraphViewPhase)
     virtual void generateCurves(TypeGraph typeGraph, Variable variable);
 
     // This method is used to update visible existing curves in mGraph.

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2018
 
 Authors :
 	Philippe LANOS
@@ -44,7 +44,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ChronocurveSettingsView.h"
 #include "Event.h"
 #include "EventKnown.h"
-#include "Date.h"
 #include "Painting.h"
 #include "Button.h"
 #include "Label.h"
@@ -55,6 +54,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ScrollCompressor.h"
 #include "CalibrationView.h"
 #include "MultiCalibrationView.h"
+#include "SwitchAction.h"
 
 #include "HelpWidget.h"
 #include "MainWindow.h"
@@ -120,6 +120,7 @@ mIsChronocurve(false)
     //connect(mButModifyPeriod,  static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &ModelView::modifyPeriod);
    // connect(mButModifyPeriod,  &Button::clicked, this, &ModelView::modifyPeriod);
      connect(mButModifyPeriod,  &QPushButton::clicked, this, &ModelView::modifyPeriod);
+    mChronocurveWidget = new SwitchWidget(this);
 
     mLeftPanelTitle = new Label(tr("Events Scene"), mTopWrapper);
     mLeftPanelTitle->setLight();
@@ -347,7 +348,7 @@ void ModelView::setProject(Project* project)
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
 
-    adaptStudyPeriodButton(settings.mTmin, settings.mTmax);
+    //adaptStudyPeriodButton(settings.mTmin, settings.mTmax);
 
     mProject->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
     mProject->mState[STATE_SETTINGS_TMAX] = settings.mTmax;
@@ -407,6 +408,7 @@ void ModelView::connectScenes()
     connect(mProject, &Project::projectStateChanged, this, &ModelView::updateMultiCalibration);
     connect(mProject, &Project::projectStructureChanged, mEventPropertiesView, &EventPropertiesView::updateEvent);
 
+    connect(mChronocurveWidget, &SwitchWidget::toggled, MainWindow::getInstance(), &MainWindow::toggleChronocurve);
 }
 
 void ModelView::disconnectScenes()
@@ -486,12 +488,11 @@ void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
 {
         /* Addapt mButModifyPeriod size and position */
     // same variable in updateLayout()
-
-    const QString studyStr = tr("STUDY PERIOD") + QString(" [ %1 ; %2 ] BC/AD").arg(locale().toString(min), locale().toString(max));
-    const int topButtonHeight =  mButModifyPeriod->height();  //int ( 1 * fontMetrics().tightBoundingRect(mButModifyPeriod->text()).height());//  1 * AppSettings::heigthUnit());
+    //const int topButtonHeight =  int ( 1.3 * fontMetrics().height());//  1 * AppSettings::heigthUnit());
+    const QString studyStr = tr("STUDY PERIOD") + QString(" [ %1 ; %2 ] BC/AD").arg(locale().toString(min), locale().toString(max));;
     mButModifyPeriod->setText(studyStr);
-   // mButModifyPeriod->setIconOnly(false); // old used with the class Button
-    mButModifyPeriod ->setGeometry((mTopWrapper->width() - fontMetrics().boundingRect(mButModifyPeriod->text()).width()) /2 - 2*mMargin, (mTopWrapper->height() - topButtonHeight)/2, fontMetrics().boundingRect(mButModifyPeriod->text()).width() + 4*mMargin, topButtonHeight );
+    //mButModifyPeriod->setIconOnly(false);
+    //mButModifyPeriod ->setGeometry((mTopWrapper->width() - fontMetrics().boundingRect(mButModifyPeriod->text()).width()) /2 - 2*mMargin, (mTopWrapper->height() - topButtonHeight)/2, fontMetrics().boundingRect(mButModifyPeriod->text()).width() + 4*mMargin, topButtonHeight );
 
 }
 /*
@@ -541,6 +542,7 @@ void ModelView::updateProject()
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
 
+    mChronocurveWidget->setToggled(mProject->isChronocurve());
     adaptStudyPeriodButton(settings.mTmin, settings.mTmax);
 
     mProject->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
@@ -598,7 +600,7 @@ bool ModelView::findCalibrateMissing()
         progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
 
         int position(0);
-        for (auto && ev : events)
+        for (auto& ev : events)
             position += ev.mDates.size();
         progress->setMaximum(position);
 
@@ -667,7 +669,7 @@ void ModelView::calibrateAll(ProjectSettings newS)
         progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
 
         int position(0);
-        for (auto&& ev : events)
+        for (auto& ev : events)
             position += ev.mDates.size();
 
         progress->setMaximum(position);
@@ -1137,35 +1139,36 @@ void ModelView::resizeEvent(QResizeEvent* e)
 
 void ModelView::updateLayout()
 {
-   const  QFontMetrics fm (font());
-
-    const int textSpacer(1 * AppSettings::widthUnit()); // marge of title
-   // mTopRect = QRect(0, 0, width(),  int ( 2 * fm.height()) );
-
-    // same variable in adaptStudyPeriodButton()
-    const int topButtonHeight =  mButModifyPeriod->height();// int ( 1.3 * fontMetrics().boundingRect(mButModifyPeriod->text()).height());
-
-    mTopRect = QRect(0, 0, width(),  int ( 1.2 * topButtonHeight) );
+    const QFontMetrics fm(font());
+    
+    mTopRect = QRect(0, 0, width(), 40);
     mTopWrapper->setGeometry(mTopRect);
+    
+    int margin = AppSettings::widthUnit();
+    
+    // Label left
+    QString leftTitle = tr("Events Scene");
+    if(mButProperties->isChecked()  && mEventPropertiesView->isCalibChecked() && !mButMultiCalib->isChecked()){
+        leftTitle = tr("Calibrated Data View");
+    }
+    mLeftPanelTitle->setText(leftTitle);
+    mLeftPanelTitle->setGeometry(margin, 0, fm.boundingRect(leftTitle).width() + 10, mTopRect.height());
+        
+    // Label right
+    updateRightPanelTitle();
+    int labw = fm.boundingRect(mRightPanelTitle->text()).width() + 10;
+    mRightPanelTitle->setGeometry(width() - labw - margin, 0, labw, mTopRect.height());
+
+    // Center buttons
+    mChronocurveWidget->setGeometry(width()/2 - 90 - 2, 2, 90, mTopRect.height() - 4);
+    mButModifyPeriod->setGeometry(width()/2 + 2, 2, 300, mTopRect.height() - 4);
 
     //-------------- Top Flag
     //------- Study Period
-
-     mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.boundingRect(mButModifyPeriod->text()).width()) /2 - 2*mMargin, (mTopWrapper->height() - topButtonHeight)/2, fm.boundingRect(mButModifyPeriod->text()).width() + 4*mMargin, topButtonHeight );
-
-    // ---------- Panel Title
-    QString leftTitle (tr("Events Scene"));
-    if (mButProperties->isChecked()  && mEventPropertiesView->isCalibChecked() && !mButMultiCalib->isChecked())
-        leftTitle = tr("Calibrated Data View");
-
-    mLeftPanelTitle->setText(leftTitle);
-    mLeftPanelTitle->setGeometry(textSpacer, mButModifyPeriod->y(), mLeftPanelTitle->fontMetrics().boundingRect(leftTitle).width()+10, topButtonHeight );
-
-
-    updateRightPanelTitle();
-
-    mRightPanelTitle->setGeometry( width() - (fm.boundingRect(mRightPanelTitle->text()).width() + textSpacer), mButModifyPeriod->y(), fm.boundingRect(mRightPanelTitle->text()).width() + 10, topButtonHeight );
-
+    
+    
+    
+    
 
     // coordinates in ModelView
 
@@ -1192,8 +1195,8 @@ void ModelView::updateLayout()
 
     // ----------
 
-    const qreal radarW (5. * AppSettings::widthUnit());
-    const qreal radarH (5. * AppSettings::heigthUnit());
+    const qreal radarW (4 * AppSettings::widthUnit());
+    const qreal radarH (4. * AppSettings::heigthUnit());
     const qreal searchH (1.3 * fm.height());
     if (mButProperties->isChecked() && mEventPropertiesView->isCalibChecked())
         mEventsView ->setGeometry(0, 0, 0, 0);

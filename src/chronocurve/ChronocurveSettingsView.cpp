@@ -238,6 +238,8 @@ void ChronocurveSettingsView::setSettings(const ChronocurveSettings& settings)
         mVariableTypeInput->setCurrentIndex(4);
     }
     
+    mUseErrMesureInput->setChecked(settings.mUseErrMesure);
+    
     if(settings.mTimeType == ChronocurveSettings::eModeFixed){
         mTimeTypeInput->setCurrentIndex(0);
     }else if(settings.mTimeType == ChronocurveSettings::eModeBayesian){
@@ -290,6 +292,8 @@ ChronocurveSettings ChronocurveSettingsView::getSettings()
     }else if(mVariableTypeInput->currentIndex() == 4){
         settings.mVariableType = ChronocurveSettings::eVariableTypeAutre;
     }
+    
+    settings.mUseErrMesure = mUseErrMesureInput->isChecked();
     
     if(mTimeTypeInput->currentIndex() == 0){
         settings.mTimeType = ChronocurveSettings::eModeFixed;

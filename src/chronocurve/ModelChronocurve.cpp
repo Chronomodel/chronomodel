@@ -63,7 +63,12 @@ void ModelChronocurve::fromJson(const QJsonObject& json)
 {
     Model::fromJson(json);
     
-    if(json.contains(STATE_CHRONOCURVE))
+    for (Event* event: mEvents)
+    {
+        event->mMethod = Event::eMHAdaptGauss;
+    }
+    
+    if (json.contains(STATE_CHRONOCURVE))
     {
         const QJsonObject settings = json.value(STATE_CHRONOCURVE).toObject();
         mChronocurveSettings = ChronocurveSettings::fromJson(settings);
@@ -74,19 +79,142 @@ void ModelChronocurve::generatePosteriorDensities(const QList<ChainSpecs> &chain
 {
     Model::generatePosteriorDensities(chains, fftLen, bandwidth);
     
-    const double tmin = mSettings.getTminFormated();
-    const double tmax = mSettings.getTmaxFormated();
+    //const double tmin = mSettings.getTminFormated();
+    //const double tmax = mSettings.getTmaxFormated();
     
-    mAlphaLissage.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+    for(Event*& event : mEvents)
+    {
+        event->mVG.updateFormatedTrace();
+        event->mVG.generateHistos(chains, fftLen, bandwidth);
+    }
+    
+    //qDebug() << *(mAlphaLissage.mRawTrace);
+    mAlphaLissage.updateFormatedTrace();
+    mAlphaLissage.generateHistos(chains, fftLen, bandwidth);
 }
+
+void ModelChronocurve::generateCorrelations(const QList<ChainSpecs> &chains)
+{
+    Model::generateCorrelations(chains);
+    mAlphaLissage.generateCorrelations(chains);
+}
+
+void ModelChronocurve::generateNumericalResults(const QList<ChainSpecs> &chains)
+{
+    Model::generateNumericalResults(chains);
+
+    for (Event*& event : mEvents)
+    {
+        event->mVG.generateNumericalResults(chains);
+    }
+    mAlphaLissage.generateNumericalResults(chains);
+}
+
+void ModelChronocurve::clearThreshold()
+{
+    Model::clearThreshold();
+    mThreshold = -1.;
+    for (Event*& event : mEvents)
+    {
+        event->mVG.mThresholdUsed = -1.;
+    }
+    mAlphaLissage.mThresholdUsed = -1.;
+}
+
+void ModelChronocurve::generateCredibility(const double thresh)
+{
+    Model::generateCredibility(thresh);
+    
+    for (Event*& event : mEvents)
+    {
+        if(event->type() != Event::eKnown)
+        {
+            event->mVG.generateCredibility(mChains, thresh);
+        }
+    }
+    mAlphaLissage.generateCredibility(mChains, thresh);
+}
+
+void ModelChronocurve::generateHPD(const double thresh)
+{
+    Model::generateHPD(thresh);
+    
+    for(Event*& event : mEvents)
+    {
+        if(event->type() != Event::eKnown)
+        {
+            event->mVG.generateHPD(thresh);
+        }
+    }
+    
+    mAlphaLissage.generateHPD(thresh);
+}
+
+void ModelChronocurve::clearPosteriorDensities()
+{
+    Model::clearPosteriorDensities();
+    
+    for(Event*& event : mEvents)
+    {
+        if(event->type() != Event::eKnown)
+        {
+            event->mVG.mHisto.clear();
+            event->mVG.mChainsHistos.clear();
+        }
+    }
+    
+    mAlphaLissage.mHisto.clear();
+    mAlphaLissage.mChainsHistos.clear();
+}
+
+void ModelChronocurve::clearCredibilityAndHPD()
+{
+    Model::clearCredibilityAndHPD();
+    
+    for(Event*& event : mEvents)
+    {
+        if(event->type() != Event::eKnown)
+        {
+            event->mVG.mHPD.clear();
+            event->mVG.mCredibility = QPair<double, double>();
+        }
+    }
+    
+    mAlphaLissage.mHPD.clear();
+    mAlphaLissage.mCredibility = QPair<double, double>();
+}
+
+void ModelChronocurve::clearTraces()
+{
+    Model::clearTraces();
+    // event->reset() already resets mVG
+    mAlphaLissage.reset();
+}
+
+void ModelChronocurve::setThresholdToAllModel()
+{
+    Model::setThresholdToAllModel();
+    
+    for (Event*& event : mEvents)
+    {
+        event->mVG.mThresholdUsed = mThreshold;
+    }
+    
+    mAlphaLissage.mThresholdUsed = mThreshold;
+}
+
+
+
+
+
 
 QList<PosteriorMeanGComposante> ModelChronocurve::getChainsMeanGComposanteX()
 {
     QList<PosteriorMeanGComposante> composantes;
     
-    for(unsigned int i=0; i<mPosteriorMeanGParametriqueByChain.size(); ++i)
+    for(unsigned int i=0; i<mPosteriorMeanGByChain.size(); ++i)
     {
-        composantes.append(mPosteriorMeanGParametriqueByChain[i].gx);
+        composantes.append(mPosteriorMeanGByChain[i].gx);
     }
     return composantes;
 }
@@ -95,9 +223,9 @@ QList<PosteriorMeanGComposante> ModelChronocurve::getChainsMeanGComposanteY()
 {
     QList<PosteriorMeanGComposante> composantes;
     
-    for(unsigned int i=0; i<mPosteriorMeanGParametriqueByChain.size(); ++i)
+    for(unsigned int i=0; i<mPosteriorMeanGByChain.size(); ++i)
     {
-        composantes.append(mPosteriorMeanGParametriqueByChain[i].gy);
+        composantes.append(mPosteriorMeanGByChain[i].gy);
     }
     return composantes;
 }
@@ -106,9 +234,9 @@ QList<PosteriorMeanGComposante> ModelChronocurve::getChainsMeanGComposanteZ()
 {
     QList<PosteriorMeanGComposante> composantes;
     
-    for(unsigned int i=0; i<mPosteriorMeanGParametriqueByChain.size(); ++i)
+    for(unsigned int i=0; i<mPosteriorMeanGByChain.size(); ++i)
     {
-        composantes.append(mPosteriorMeanGParametriqueByChain[i].gz);
+        composantes.append(mPosteriorMeanGByChain[i].gz);
     }
     return composantes;
 }

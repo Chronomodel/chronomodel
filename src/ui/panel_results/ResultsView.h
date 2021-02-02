@@ -105,12 +105,16 @@ protected:
     void createByPhasesGraphs();
     void createByTempoGraphs();
     void createByCurveGraph();
-
+    void createByAlphaGraph();
+    
     void deleteAllGraphsInList(QList<GraphViewResults*>& list);
     QList<GraphViewResults*> allGraphs();
     QList<GraphViewResults*> currentGraphs(bool onlySelected);
     bool hasSelectedGraphs();
-
+    
+    void updateGraphsMax();
+    double getGraphsMax(const QList<GraphViewResults*>& graphs, const QString& title, double maxFloor);
+    
     // ------------------------------------
     //  Pagination
     // ------------------------------------
@@ -167,22 +171,24 @@ private slots:
     // ------------------------------------------------
     //  Graphs / Curves / Controls
     // ------------------------------------------------
+    void updateCurrentVariable();
     void generateCurves();
     void updateCurvesToShow();
     void updateScales();
     void updateControls();
-
+    void updateTotalGraphs();
+    
     // ------------------------------------
     //  Controls actions
     // ------------------------------------
     void applyRuler(const double min, const double max);
 
     // Tabs
-    void applyGraphTypeTab(int tabIndex);
-    void applyGraphListTab(int tabIndex);
-    void applyDisplayTab(int tabIndex);
-    void applyPageSavingTab(int tabIndex);
-
+    void applyGraphTypeTab();
+    void applyGraphListTab();
+    void applyDisplayTab();
+    void applyPageSavingTab();
+    
     void applyCurrentVariable();
     void applyUnfoldEvents();
     void applyUnfoldDates();
@@ -279,6 +285,7 @@ private:
     CheckBox* mDataCalibCheck;
     CheckBox* mWiggleCheck;
     RadioButton* mDataSigmaRadio;
+    RadioButton* mDataVGRadio;
     CheckBox* mStatCheck;
 
     QWidget* mTempoGroup;
@@ -290,10 +297,12 @@ private:
     CheckBox* mTempoStatCheck;
 
     QWidget* mCurvesGroup;
-    CheckBox* mCurveGCheck;
-    CheckBox* mCurveGPCheck;
-    CheckBox* mCurveGSCheck;
+    RadioButton* mCurveGRadio;
+    RadioButton* mCurveGPRadio;
+    RadioButton* mCurveGSRadio;
+    RadioButton* mAlphaRadio;
     CheckBox* mCurveErrorCheck;
+    CheckBox* mCurvePointsCheck;
 
     // ---------------------------------------------------------------------
     // Tabs : Display / Distrib. Options
@@ -369,7 +378,7 @@ private:
     Label* mFFTLenLab;
     QComboBox* mFFTLenCombo;
     Label* mBandwidthLab;
-    LineEdit* mBandwidthEdit;
+    QDoubleSpinBox* mBandwidthSpin;
     Button* mUpdateDisplay;
 
     // ------------------------------------
@@ -408,9 +417,9 @@ private:
     double mResultMaxX;
     double mResultCurrentMinX;
     double mResultCurrentMaxX;
-    double mResultMaxVariance;
-    double mResultMaxDuration;
-
+    
+    double mCurrentVariableMaxX;
+    
     // ----------------------------------------
     //  X Scale ticks intervals
     // ----------------------------------------

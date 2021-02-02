@@ -73,13 +73,13 @@ typedef struct MCMCSplineComposante
     
 } MCMCSplineComposante;
 
-typedef struct MCMCSplineParametrique
+typedef struct MCMCSpline
 {
     MCMCSplineComposante splineX;
     MCMCSplineComposante splineY;
     MCMCSplineComposante splineZ;
     
-} MCMCSplines;
+} MCMCSpline;
 
 typedef struct PosteriorMeanGComposante
 {
@@ -90,13 +90,13 @@ typedef struct PosteriorMeanGComposante
     
 } PosteriorMeanGComposante;
 
-typedef struct PosteriorMeanGParametrique
+typedef struct PosteriorMeanG
 {
     PosteriorMeanGComposante gx;
     PosteriorMeanGComposante gy;
     PosteriorMeanGComposante gz;
     
-} PosteriorMeanGParametrique;
+} PosteriorMeanG;
 
 class ChronocurveUtilities
 {

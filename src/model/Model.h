@@ -140,6 +140,7 @@ public:
     int mNumberOfEvents;
     int mNumberOfDates;
 
+    double mThreshold;
     // Members used in the next-previous sheet system
     // they count all the Events and the Dates availables to display
     // We could have the same Event and Date in several phases,
@@ -158,7 +159,7 @@ signals:
 private:
      int mFFTLength;
      double mBandwidth;
-     double mThreshold;
+
 };
 
 #endif
