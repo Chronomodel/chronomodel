@@ -41,82 +41,158 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <algorithm>
 #include <iostream>
 
-using namespace std;
-
-vector<double> ChronocurveUtilities::calculVecH(const vector<double>& vec)
+std::vector<double> calculVecH(const std::vector<double>& vec)
 {
-    vector<double> result;
-    for(unsigned long i=0; i < (vec.size() - 1); ++i){
+    std::vector<double> result;
+    for (unsigned long i = 0; i < (vec.size() - 1); ++i) {
         result.push_back(vec[i + 1] - vec[i]);
     }
     return result;
 }
+
+// --------------- Function with list of double value
+
+std::vector<std::vector<double>> calculMatR(const std::vector<double>& vec)
+{
+    // Calcul de la matrice R, de dimension (n-2) x (n-2) contenue dans une matrice n x n
+    // Par exemple pour n = 5 :
+    // 0 0 0 0 0
+    // 0 X X X 0
+    // 0 X X X 0
+    // 0 X X X 0
+    // 0 0 0 0 0
+
+    // vecH est de dimension n-1
+    std::vector<double> vecH = calculVecH(vec);
+    const int n = vec.size();
+
+    // matR est de dimension n-2 x n-2, mais contenue dans une matrice nxn
+    std::vector<std::vector<double>> matR = initMatrice(n, n);
+    // On parcourt n-2 valeurs :
+    for (int i = 1; i < n-1; ++i) {
+        matR[i][i] = (vecH[i-1] + vecH[i]) / 3.;
+        // Si on est en n-2 (dernière itération), on ne calcule pas les valeurs de part et d'autre de la diagonale (termes symétriques)
+        if (i < n-2) {
+            matR[i][i+1] = vecH[i] / 6.;
+            matR[i+1][i] = vecH[i] / 6.;
+        }
+    }
+    return matR;
+}
+
+std::vector<std::vector<double>> calculMatQ(const std::vector<double>& vec)
+{
+    // Calcul de la matrice Q, de dimension n x (n-2) contenue dans une matrice n x n
+    // Les 1ère et dernière colonnes sont nulles
+    // Par exemple pour n = 5 :
+    // 0 X 0 0 0
+    // 0 X X X 0
+    // 0 X X X 0
+    // 0 X X X 0
+    // 0 0 0 X 0
+
+    // vecH est de dimension n-1
+    std::vector<double> vecH = calculVecH(vec);
+    const int n = vec.size();
+
+    // matQ est de dimension n x n-2, mais contenue dans une matrice nxn
+    std::vector<std::vector<double>> matQ = initMatrice(n, n);
+    // On parcourt n-2 valeurs :
+    for (unsigned int i = 1; i < vecH.size(); ++i) {
+        matQ[i-1][i] = 1. / vecH[i-1];
+        matQ[i][i] = -((1./vecH[i-1]) + (1./vecH[i]));
+        matQ[i+1][i] = 1. / vecH[i];
+    }
+    return matQ;
+}
+
+#pragma mark Init vecteurs et matrices
+
+std::vector<double> initVecteur(int dim)
+{
+    std::vector<double> vec;
+    for (int i = 0; i < dim; ++i) {
+        vec.push_back(0.);
+    }
+    return vec;
+    // normaly: return std::vector<double>(dim)
+}
+
+std::vector<std::vector<double>> initMatrice(const int rows, const int cols)
+{
+    std::vector<std::vector<double>> matrix;
+    for (int r = 0; r < rows; ++r) {
+        std::vector<double> row;
+        for (int c = 0; c < cols; ++c) {
+            row.push_back(0.);
+        }
+        matrix.push_back(row);
+    }
+    return matrix;
+}
+
 
 bool sortItems(const double& a, const double& b)
 {
     return (a < b);
 }
 
-void display(const vector<double>& v)
+void display(const std::vector<double>& v)
 {
-    for (vector<double>::const_iterator it=v.begin(); it!=v.end(); ++it){
-        cout << *it << ' ' ;
+    for (std::vector<double>::const_iterator it=v.begin(); it!=v.end(); ++it) {
+        std::cout << *it << ' ' ;
     }
-    cout << endl;
+    std::cout << std::endl;
 }
 
-vector<double> ChronocurveUtilities::definitionNoeuds(const vector<double>& tabPts, const double minStep)
+std::vector<double> ChronocurveUtilities::definitionNoeuds(const std::vector<double>& tabPts, const double minStep)
 {
     display(tabPts);
     
-    vector<double> result = tabPts;
+    std::vector<double> result = tabPts;
     sort(result.begin(), result.end(), sortItems);
     
     // Espacement possible ?
-    if((result[result.size() - 1] - result[0]) < (result.size() - 1) * minStep){
-        cerr << "Pas assez de place pour écarter les points" << endl;
+    if ((result[result.size() - 1] - result[0]) < (result.size() - 1) * minStep) {
+        std::cerr << "Pas assez de place pour écarter les points" << std::endl;
         exit(0);
     }
     
     display(result);
     
     // Il faut au moins 3 points
-    if(result.size() >= 3)
-    {
+    if (result.size() >= 3) {
         // 0 veut dire qu'on n'a pas détecté d'égalité :
         unsigned long startIndex = 0;
         unsigned long endIndex = 0;
         
-        for(unsigned long i=1; i<result.size(); ++i)
-        {
+        for (unsigned long i=1; i<result.size(); ++i) {
             double value = result[i];
             double lastValue = result[i - 1];
             
             // Si l'écart n'est pas suffisant entre la valeur courante et la précedente,
             // alors on mémorise l'index précédent comme le début d'une égalité
             // (à condition de ne pas être déjà dans une égalité)
-            if((value - lastValue < minStep) && (startIndex == 0))
-            {
+            if ((value - lastValue < minStep) && (startIndex == 0)) {
                 // La valeur à l'index 0 ne pourra pas être déplacée vers la gauche !
                 // S'il y a égalité dès le départ, on considère qu'elle commence à l'index 1.
                 startIndex = (i == 1) ? 1 : (i-1);
             }
             
-            cout << "i = " << i << " | value = " << value << " | lastValue = " << lastValue << " | startIndex = " << startIndex << endl;
+            std::cout << "i = " << i << " | value = " << value << " | lastValue = " << lastValue << " | startIndex = " << startIndex << std::endl;
             
             // Si on est à la fin du tableau et dans un cas d'égalité,
             // alors on s'assure d'avoir suffisamment d'espace disponible
             // en incluant autant de points précédents que nécessaire dans l'égalité.
-            if((i == result.size() - 1) && (startIndex != 0))
-            {
+            if ((i == result.size() - 1) && (startIndex != 0)) {
                 endIndex = i-1;
-                for(unsigned long j=startIndex; j>=1; j--)
-                {
+                for (unsigned long j=startIndex; j>=1; j--) {
                     double delta = value - result[j-1];
                     double deltaMin = minStep * (i - j + 1);
-                    if(delta >= deltaMin){
+
+                    if (delta >= deltaMin) {
                         startIndex = j;
-                        cout << "=> Egalité finale | startIndex = " << startIndex << " | endIndex = " << endIndex << endl;
+                        std::cout << "=> Egalité finale | startIndex = " << startIndex << " | endIndex = " << endIndex << std::endl;
                         break;
                     }
                 }
@@ -125,31 +201,27 @@ vector<double> ChronocurveUtilities::definitionNoeuds(const vector<double>& tabP
             // Si l'écart entre la valeur courante et la précédente est suffisant
             // ET que l'on était dans un cas d'égalité (pour les valeurs précédentes),
             // alors il se peut qu'on ait la place de les espacer.
-            if((value - lastValue >= minStep) && (startIndex != 0))
-            {
+            if ((value - lastValue >= minStep) && (startIndex != 0)) {
                 double startValue = result[startIndex-1];
                 double delta = (value - startValue);
                 double deltaMin = minStep * (i - startIndex + 1);
                 
-                cout << "=> Vérification de l'espace disponible | delta = " << delta << " | deltaMin = " << deltaMin << endl;
+                std::cout << "=> Vérification de l'espace disponible | delta = " << delta << " | deltaMin = " << deltaMin << std::endl;
                 
-                if(delta >= deltaMin)
-                {
+                if (delta >= deltaMin) {
                     endIndex = i-1;
                 }
             }
             
-            if(endIndex != 0)
-            {
-                cout << "=> On espace les valeurs entre les bornes " << result[startIndex - 1] << " et " << result[i] << endl;
+            if (endIndex != 0) {
+                std::cout << "=> On espace les valeurs entre les bornes " << result[startIndex - 1] << " et " << result[i] << std::endl;
                 
                 // On a la place d'espacer les valeurs !
                 // - La borne inférieure ne peut pas bouger (en startIndex-1)
                 // - La borne supérieure ne peut pas bouger (en endIndex)
                 // => On espace les valeurs intermédiaires (de startIndex à endIndex-1) du minimum nécessaire
                 double startSpread = result[endIndex] - result[startIndex];
-                for(unsigned long j=startIndex; j<=endIndex; j++)
-                {
+                for (unsigned long j=startIndex; j<=endIndex; j++) {
                     if(result[j] - result[j-1] < minStep){
                         result[j] = result[j-1] + minStep;
                     }
@@ -160,16 +232,15 @@ vector<double> ChronocurveUtilities::definitionNoeuds(const vector<double>& tabP
                 double shiftBack = (endSpread - startSpread) / 2;
                 
                 // => On doit prendre garde à ne pas trop se rappocher le la borne de gauche :
-                if((result[startIndex] - shiftBack) - result[startIndex-1] < minStep){
+                if ((result[startIndex] - shiftBack) - result[startIndex-1] < minStep){
                     shiftBack = result[startIndex] - (result[startIndex-1] + minStep);
                 }
                 
                 // On doit décaler suffisamment vers la gauche pour ne pas être trop près de la borne de droite :
-                if(result[endIndex + 1] - (result[endIndex] - shiftBack) < minStep){
+                if (result[endIndex + 1] - (result[endIndex] - shiftBack) < minStep){
                     shiftBack = result[endIndex] - (result[endIndex + 1] - minStep);
                 }
-                for(unsigned long j=startIndex; j<=endIndex; j++)
-                {
+                for (unsigned long j=startIndex; j<=endIndex; j++) {
                     result[j] -= shiftBack;
                 }
                 

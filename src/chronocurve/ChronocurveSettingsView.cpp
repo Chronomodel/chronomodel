@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2021
 
 Authors :
 	Philippe LANOS
@@ -214,50 +214,59 @@ ChronocurveSettingsView::~ChronocurveSettingsView()
 
 void ChronocurveSettingsView::setSettings(const ChronocurveSettings& settings)
 {
-    const QLocale mLoc = QLocale();
+    //const QLocale mLoc = QLocale();
     
     mEnabled = settings.mEnabled;
     
-    if(settings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie){
+    if (settings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie) {
         mProcessTypeInput->setCurrentIndex(0);
-    }else if(settings.mProcessType == ChronocurveSettings::eProcessTypeSpherique){
+
+    } else if (settings.mProcessType == ChronocurveSettings::eProcessTypeSpherique) {
         mProcessTypeInput->setCurrentIndex(1);
-    }else if(settings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel){
+
+    } else if (settings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel) {
         mProcessTypeInput->setCurrentIndex(2);
     }
     
-    if(settings.mVariableType == ChronocurveSettings::eVariableTypeInclinaison){
+    if (settings.mVariableType == ChronocurveSettings::eVariableTypeInclinaison) {
         mVariableTypeInput->setCurrentIndex(0);
-    }else if(settings.mVariableType == ChronocurveSettings::eVariableTypeDeclinaison){
+
+    } else if (settings.mVariableType == ChronocurveSettings::eVariableTypeDeclinaison) {
         mVariableTypeInput->setCurrentIndex(1);
-    }else if(settings.mVariableType == ChronocurveSettings::eVariableTypeIntensite){
+
+    } else if (settings.mVariableType == ChronocurveSettings::eVariableTypeIntensite) {
         mVariableTypeInput->setCurrentIndex(2);
-    }else if(settings.mVariableType == ChronocurveSettings::eVariableTypeProfondeur){
+
+    } else if (settings.mVariableType == ChronocurveSettings::eVariableTypeProfondeur) {
         mVariableTypeInput->setCurrentIndex(3);
-    }else if(settings.mVariableType == ChronocurveSettings::eVariableTypeAutre){
+
+    } else if (settings.mVariableType == ChronocurveSettings::eVariableTypeAutre) {
         mVariableTypeInput->setCurrentIndex(4);
     }
     
     mUseErrMesureInput->setChecked(settings.mUseErrMesure);
     
-    if(settings.mTimeType == ChronocurveSettings::eModeFixed){
+    if (settings.mTimeType == ChronocurveSettings::eModeFixed) {
         mTimeTypeInput->setCurrentIndex(0);
-    }else if(settings.mTimeType == ChronocurveSettings::eModeBayesian){
+
+    } else if (settings.mTimeType == ChronocurveSettings::eModeBayesian) {
         mTimeTypeInput->setCurrentIndex(1);
     }
     
-    if(settings.mVarianceType == ChronocurveSettings::eModeFixed){
+    if (settings.mVarianceType == ChronocurveSettings::eModeFixed) {
         mVarianceTypeInput->setCurrentIndex(0);
-    }else if(settings.mVarianceType == ChronocurveSettings::eModeBayesian){
+
+    } else if (settings.mVarianceType == ChronocurveSettings::eModeBayesian) {
         mVarianceTypeInput->setCurrentIndex(1);
     }
     
     mUseVarianceIndividualInput->setChecked(settings.mUseVarianceIndividual);
     mVarianceFixedInput->setText(QString::number(settings.mVarianceFixed));
     
-    if(settings.mCoeffLissageType == ChronocurveSettings::eModeFixed){
+    if (settings.mCoeffLissageType == ChronocurveSettings::eModeFixed) {
         mCoeffLissageTypeInput->setCurrentIndex(0);
-    }else if(settings.mCoeffLissageType == ChronocurveSettings::eModeBayesian){
+
+    } else if (settings.mCoeffLissageType == ChronocurveSettings::eModeBayesian) {
         mCoeffLissageTypeInput->setCurrentIndex(1);
     }
     
@@ -268,51 +277,60 @@ void ChronocurveSettingsView::setSettings(const ChronocurveSettings& settings)
 
 ChronocurveSettings ChronocurveSettingsView::getSettings()
 {
-    const QLocale mLoc = QLocale();
+   // const QLocale mLoc = QLocale();
     ChronocurveSettings settings;
     
     settings.mEnabled = mEnabled;
     
-    if(mProcessTypeInput->currentIndex() == 0){
+    if (mProcessTypeInput->currentIndex() == 0) {
         settings.mProcessType = ChronocurveSettings::eProcessTypeUnivarie;
-    }else if(mProcessTypeInput->currentIndex() == 1){
+
+    } else if (mProcessTypeInput->currentIndex() == 1) {
         settings.mProcessType = ChronocurveSettings::eProcessTypeSpherique;
-    }else if(mProcessTypeInput->currentIndex() == 2){
+
+    } else if (mProcessTypeInput->currentIndex() == 2) {
         settings.mProcessType = ChronocurveSettings::eProcessTypeVectoriel;
     }
     
-    if(mVariableTypeInput->currentIndex() == 0){
+    if (mVariableTypeInput->currentIndex() == 0) {
         settings.mVariableType = ChronocurveSettings::eVariableTypeInclinaison;
-    }else if(mVariableTypeInput->currentIndex() == 1){
+
+    } else if (mVariableTypeInput->currentIndex() == 1) {
         settings.mVariableType = ChronocurveSettings::eVariableTypeDeclinaison;
-    }else if(mVariableTypeInput->currentIndex() == 2){
+
+    } else if (mVariableTypeInput->currentIndex() == 2) {
         settings.mVariableType = ChronocurveSettings::eVariableTypeIntensite;
-    }else if(mVariableTypeInput->currentIndex() == 3){
+
+    } else if (mVariableTypeInput->currentIndex() == 3) {
         settings.mVariableType = ChronocurveSettings::eVariableTypeProfondeur;
-    }else if(mVariableTypeInput->currentIndex() == 4){
+
+    } else if (mVariableTypeInput->currentIndex() == 4) {
         settings.mVariableType = ChronocurveSettings::eVariableTypeAutre;
     }
     
     settings.mUseErrMesure = mUseErrMesureInput->isChecked();
     
-    if(mTimeTypeInput->currentIndex() == 0){
+    if (mTimeTypeInput->currentIndex() == 0) {
         settings.mTimeType = ChronocurveSettings::eModeFixed;
-    }else if(mTimeTypeInput->currentIndex() == 1){
+
+    } else if (mTimeTypeInput->currentIndex() == 1) {
         settings.mTimeType = ChronocurveSettings::eModeBayesian;
     }
     
-    if(mVarianceTypeInput->currentIndex() == 0){
+    if (mVarianceTypeInput->currentIndex() == 0) {
         settings.mVarianceType = ChronocurveSettings::eModeFixed;
-    }else if(mVarianceTypeInput->currentIndex() == 1){
+
+    } else if (mVarianceTypeInput->currentIndex() == 1) {
         settings.mVarianceType = ChronocurveSettings::eModeBayesian;
     }
         
     settings.mUseVarianceIndividual = mUseVarianceIndividualInput->isChecked();
     settings.mVarianceFixed = mVarianceFixedInput->text().toDouble();
     
-    if(mCoeffLissageTypeInput->currentIndex() == 0){
+    if (mCoeffLissageTypeInput->currentIndex() == 0) {
         settings.mCoeffLissageType = ChronocurveSettings::eModeFixed;
-    }else if(mCoeffLissageTypeInput->currentIndex() == 1){
+
+    } else if (mCoeffLissageTypeInput->currentIndex() == 1) {
         settings.mCoeffLissageType = ChronocurveSettings::eModeBayesian;
     }
     
@@ -342,17 +360,17 @@ void ChronocurveSettingsView::save()
 
 void ChronocurveSettingsView::updateVisibilities()
 {
-    bool variableTypeRequired = (mProcessTypeInput->currentText() == "Univarié");
+    const bool variableTypeRequired = (mProcessTypeInput->currentText() == "Univarié");
     mVariableTypeLabel->setVisible(variableTypeRequired);
     mVariableTypeInput->setVisible(variableTypeRequired);
     
-    bool varianceFixed = (mVarianceTypeInput->currentText() == "Fixed");
+    const bool varianceFixed = (mVarianceTypeInput->currentText() == "Fixed");
     mVarianceFixedLabel->setVisible(varianceFixed);
     mVarianceFixedInput->setVisible(varianceFixed);
     mUseVarianceIndividualLabel->setVisible(!varianceFixed);
     mUseVarianceIndividualInput->setVisible(!varianceFixed);
     
-    bool coeffLissageFixed = (mCoeffLissageTypeInput->currentText() == "Fixed");
+    const bool coeffLissageFixed = (mCoeffLissageTypeInput->currentText() == "Fixed");
     mAlphaLissageLabel->setVisible(coeffLissageFixed);
     mAlphaLissageInput->setVisible(coeffLissageFixed);
 }

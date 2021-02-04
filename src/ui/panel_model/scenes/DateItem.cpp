@@ -69,16 +69,11 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
 
     // Date::fromJson doesn't create mCalibration
     Date d (date);
-    qDebug()<<"DateItem::DateItem " << date.value(STATE_NAME).toString()<<date.value(STATE_DATE_VALID).toBool();
-   // d.fromJson(date);
     ProjectSettings s = ProjectSettings::fromJson(settings);
 
     d.mSettings.mTmin = s.mTmin;
     d.mSettings.mTmax = s.mTmax;
     d.mSettings.mStep = s.mStep;
-    
-    if (d.mCalibration != nullptr)
-        qDebug()<<"DateItem::DateItem d description" << d.mCalibration->mDescription << d.mSettings.mTmin;
     
     if (d.mPlugin!= nullptr) {
         if (!d.mIsValid)
@@ -99,8 +94,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
               */
 
             else if (d.mCalibration && !d.mCalibration->mCurve.isEmpty()) {
-                qDebug() << "DateItem::DateItem d.mDescription " << d.mCalibration->mDescription;// << d.mWiggleCalibration->mDescription;
-                mCalibThumb = d.generateCalibThumb();
+               mCalibThumb = d.generateCalibThumb();
             }
 
             else

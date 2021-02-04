@@ -188,6 +188,7 @@ void MCMCLoop::run()
 
             try {
                 this->update();
+                qDebug()<<"MCMCLoop Burn update"<< chain.mBurnIterIndex<<chain.mNumBurnIter;
             } catch (QString error) {
                 mAbortedReason = error;
                 return;
@@ -205,7 +206,7 @@ void MCMCLoop::run()
         emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))  + " : " + tr("Adapting"), 0, chain.mMaxBatchs * chain.mNumBatchIter);
         mState = eAdapting;
 
-        while (chain.mBatchIndex * chain.mNumBatchIter < chain.mMaxBatchs * chain.mNumBatchIter) {
+        while ( chain.mBatchIndex < chain.mMaxBatchs) {
             if (isInterruptionRequested()) {
                 mAbortedReason = ABORTED_BY_USER;
                 return;
@@ -220,6 +221,7 @@ void MCMCLoop::run()
 
                 try {
                     this->update();
+                    //qDebug()<<"MCMCLoop Adapting update"<< chain.mBatchIterIndex<<"/"<<chain.mNumBatchIter<<"  "<< chain.mBatchIndex<<"/"<<chain.mMaxBatchs;
 
                 } catch (QString error) {
                     mAbortedReason = error;
@@ -232,7 +234,7 @@ void MCMCLoop::run()
                 emit stepProgressed(chain.mBatchIndex * chain.mNumBatchIter + chain.mBatchIterIndex);
             }
             ++chain.mBatchIndex;
-
+qDebug()<<"MCMCLoop Adapting update"<< chain.mBatchIterIndex<<"/"<<chain.mNumBatchIter<<"  "<< chain.mBatchIndex<<"/"<<chain.mMaxBatchs;
             if (adapt()) {
                      break;
             }

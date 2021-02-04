@@ -108,14 +108,14 @@ MHVariable::~MHVariable()
 }
 
 /**
- * @brief MHVariable::tryUpdate It's a puch function where mLastAcceptsLength = mChains[0].mNumBatchIter;
+ * @brief MHVariable::tryUpdate It's a push function where mLastAcceptsLength = mChains[0].mNumBatchIter;
  * @param x
  * @param rapport
  * @return
  */
 bool MHVariable::tryUpdate(const double x, const double rapport)
 {
-    if (mLastAccepts.length() >= mLastAcceptsLength)
+    if (mLastAccepts.size() >= mLastAcceptsLength)
         mLastAccepts.removeAt(0);
 
     bool accepted (false);
@@ -238,7 +238,7 @@ QVector<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains,
 
     accept.reserve(reserveSize);
 
-    for (int i=0; i<chains.size(); ++i) {
+    for (int i = 0; i < chains.size(); ++i) {
         // We add 1 for the init
         const int chainSize = 1 +chains.at(i).mNumBurnIter + (chains.at(i).mBatchIndex * chains.at(i).mNumBatchIter) + chains.at(i).mNumRunIter / chains.at(i).mThinningInterval;
 
@@ -247,7 +247,7 @@ QVector<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains,
             //accept.resize(chainSize
             //std::copy(from_vector.begin(), from_vector.end(), to_vector.begin());
 
-            for (int j=0; j<chainSize; ++j)
+            for (int j = 0; j < chainSize; ++j)
                 accept.append(mHistoryAcceptRateMH->at(shift + j));
 
             break;

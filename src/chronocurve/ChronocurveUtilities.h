@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2021
 
 Authors :
 	Philippe LANOS
@@ -98,11 +98,20 @@ typedef struct PosteriorMeanG
     
 } PosteriorMeanG;
 
+
+std::vector<double> calculVecH(const std::vector<double>& vec);
+std::vector<std::vector<double>> calculMatR(const std::vector<double>& vec);
+std::vector<std::vector<double>> calculMatQ(const std::vector<double>& vec);
+
+std::vector<double> initVecteur(int dim);
+std::vector<std::vector<double>> initMatrice(const int rows, const int cols);
+
 class ChronocurveUtilities
 {
 public:
-    static std::vector<double> calculVecH(const std::vector<double>& vec);
-    static std::vector<double> definitionNoeuds(const std::vector<double>& tabPts, const double minStep);
+
+
+    std::vector<double> definitionNoeuds(const std::vector<double>& tabPts, const double minStep);
 };
 
 #endif

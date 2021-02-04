@@ -520,7 +520,6 @@ void Date::reset()
 void Date::calibrate(const ProjectSettings& settings, Project *project, bool truncate)
 {
   // Check if the ref curve is in the plugin list
-    qDebug()<<"Date::calibrate";
 
     if (mOrigin == eSingleDate) {
         const QStringList refsNames = mPlugin->getRefsNames();
@@ -684,8 +683,7 @@ void Date::calibrate(const ProjectSettings& settings, Project *project, bool tru
 void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
 {
   // Check if the ref curve is in the plugin list
-    qDebug()<<"Date::calibrate Wiggle";
-    if (mDeltaType == Date::eDeltaNone) {
+      if (mDeltaType == Date::eDeltaNone) {
         mWiggleCalibration = nullptr;
         return;
     }

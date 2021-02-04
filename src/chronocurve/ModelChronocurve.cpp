@@ -63,7 +63,7 @@ void ModelChronocurve::fromJson(const QJsonObject& json)
 {
     Model::fromJson(json);
     
-    for (Event* event: mEvents)
+    for (Event*& event: mEvents)
     {
         event->mMethod = Event::eMHAdaptGauss;
     }
