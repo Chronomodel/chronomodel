@@ -58,7 +58,7 @@ EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonOb
     mTitleHeight = 20;
     mEltsHeight =  DateItem::mTitleHeight +  DateItem::mEltsHeight ;
 
-    setEvent(event, settings);
+    EventItem::setEvent(event, settings);
     mScene = static_cast<AbstractScene*>(scene);
 
 }
@@ -113,20 +113,19 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     const QJsonArray phases = getPhases();
     mWithSelectedPhase = false;
 
-    for (auto &&phase : phases) {
-        if(phase.toObject().value(STATE_IS_SELECTED).toBool()){
+    for (auto&& phase : phases) {
+        if (phase.toObject().value(STATE_IS_SELECTED).toBool()) {
             mWithSelectedPhase = true;
         }
     }
     const bool noHide = dynamic_cast<EventsScene*>(mScene)->showAllThumbs();
-    setGreyedOut(!mWithSelectedPhase && !noHide);
+    EventItem::setGreyedOut(!mWithSelectedPhase && !noHide);
     
     // ----------------------------------------------
     //  Dates
     // ----------------------------------------------
     const QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
-    if(event.value(STATE_EVENT_DATES).toArray() != mData.value(STATE_EVENT_DATES).toArray() || mSettings != settings)
-    {
+    if (event.value(STATE_EVENT_DATES).toArray() != mData.value(STATE_EVENT_DATES).toArray() || mSettings != settings) {
         // ----------------------------------------------
         //  Delete Date Items
         // ----------------------------------------------
@@ -142,9 +141,17 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
         const QColor color(event.value(STATE_COLOR_RED).toInt(),
             event.value(STATE_COLOR_GREEN).toInt(),
             event.value(STATE_COLOR_BLUE).toInt());
+        QProgressDialog *progress = new QProgressDialog(QTranslator::tr("Calibration generation") + " : "+ event.value(STATE_NAME).toString(), QTranslator::tr("Wait") , 1, 10);
+       progress->blockSignals(true);
+        progress->setWindowModality(Qt::WindowModal);
+        progress->setCancelButton(nullptr);
+        progress->setMinimumDuration(0);
+        progress->setMinimum(0);
+        progress->setMaximum(dates.size());
+        progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
 
-        for (int i=0; i<dates.size(); ++i)
-        {
+        for (int i = 0; i < dates.size(); ++i) {
+            progress->setValue(i);
             const QJsonObject date = dates.at(i).toObject();
 
             try {
@@ -161,6 +168,8 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
                 message.exec();
             }
         }
+
+progress->deleteLater();
     }
 
     mData = event;
@@ -230,7 +239,7 @@ void EventItem::updateGreyedOut()
 void EventItem::setDatesVisible(bool visible)
 {
     QList<QGraphicsItem*> dateItems = childItems();
-    for (auto &&item : dateItems)
+    for (auto&& item : dateItems)
         item->setVisible(visible);
 
 }
@@ -238,7 +247,6 @@ void EventItem::setDatesVisible(bool visible)
 // Events
 void EventItem::updateItemPosition(const QPointF& pos)
 {
-    qDebug()<<"EventItem::updateItemPosition() pos="<<pos;
     mData[STATE_ITEM_X] = double (pos.x());
     mData[STATE_ITEM_Y] = double (pos.y());
 }
@@ -311,11 +319,9 @@ void EventItem::repositionDateItems()
     float y = boundingRect().y() + mTitleHeight + AbstractItem::mEltsMargin;
     float h = mEltsHeight + AbstractItem::mEltsMargin;
     
-    for(QGraphicsItem* item: datesItemsList)
-    {
+    for (QGraphicsItem* item: datesItemsList) {
         DateItem* dateItem = dynamic_cast<DateItem*>(item);
-        if (dateItem)
-        {
+        if (dateItem) {
             QPointF pos(0, y + i * h);
             dateItem->setPos(pos);
             dateItem->setOriginalPos(pos);

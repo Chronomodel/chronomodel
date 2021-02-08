@@ -200,7 +200,7 @@ mCurveColor(Painting::mainColorDark)
     connect(mGraphHeightEdit, &QLineEdit::textEdited, this, &MultiCalibrationView::updateGraphsSize);
     connect(mColorClipBut, &Button::clicked, this, &MultiCalibrationView::changeCurveColor);
 
-    setVisible(false);
+   // setVisible(false);
 }
 
 MultiCalibrationView::~MultiCalibrationView()
@@ -355,7 +355,7 @@ void MultiCalibrationView::updateGraphList()
 
 
 
-    QList<QJsonObject> selectedEvents;
+    QVector<QJsonObject> selectedEvents;
 
     for (auto&& ev : events) {
        QJsonObject jsonEv = ev.toObject();
@@ -419,13 +419,13 @@ void MultiCalibrationView::updateGraphList()
             delete bound;
             bound = nullptr;
 
-        }  else {
+        } else {
             const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
 
             for (auto&& date : dates) {
 
                 Date d (date.toObject());
-                d.autoSetTiSampler(true);
+               // d.autoSetTiSampler(true);
 
                 GraphCurve calibCurve;
                 GraphView* calibGraph = new GraphView(this);
@@ -915,9 +915,9 @@ void MultiCalibrationView::showStat()
        // update Results from selected Event in JSON
        QJsonObject state = mProject->state();
        const QJsonArray events = state.value(STATE_EVENTS).toArray();
-       QList<QJsonObject> selectedEvents;
+       QVector<QJsonObject> selectedEvents;
 
-       for (auto ev : events) {
+       for (auto&& ev : events) {
           QJsonObject jsonEv = ev.toObject();
            if (jsonEv.value(STATE_IS_SELECTED).toBool())
                selectedEvents.append(jsonEv);
@@ -927,7 +927,7 @@ void MultiCalibrationView::showStat()
        std::sort(selectedEvents.begin(), selectedEvents.end(), [] (QJsonObject ev1, QJsonObject ev2) {return (ev1.value(STATE_ITEM_Y).toDouble() < ev2.value(STATE_ITEM_Y).toDouble());});
 
        mResultText = "";
-       for (auto &&ev : selectedEvents) {
+       for (auto& ev : selectedEvents) {
            // Insert the Event's Name only if different to the previous Event's name
            const QString eventName (ev.value(STATE_NAME).toString());
            const QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),

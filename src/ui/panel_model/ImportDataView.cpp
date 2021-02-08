@@ -121,7 +121,7 @@ void ImportDataView::browse()
         mPath = info.absolutePath();
         MainWindow::getInstance()->setCurrentPath(mPath);
 
-        while(mTable->rowCount() > 0)
+        while (mTable->rowCount() > 0)
             mTable->removeRow(0);
 
         QFile file(path);
@@ -196,13 +196,14 @@ void ImportDataView::browse()
                 const QString line = stream.readLine();
                 QStringList values = line.split(csvSep);
                 if (values.size() > 0) {
-                    qDebug()<<"ImportDataView::browse() "<<values.at(0).toUpper();
+                    //qDebug()<<"ImportDataView::browse() "<<values.at(0).toUpper();
                     if (values.size() > 2 && values.at(0) == "") {
                         values[0]="No Name "+ QString::number(noNameCount);
                         ++noNameCount;
                     }
                     if (isComment(values.at(0))) {
                         continue;
+
                     } else if (values.at(0).contains("title", Qt::CaseInsensitive) && !values.at(0).contains("ntitle", Qt::CaseInsensitive)) {
                         headers << "TITLE";
 
@@ -215,6 +216,7 @@ void ImportDataView::browse()
                         data << titleText;
                         cols = (values.size() > cols) ? values.size() : cols;
                         ++rows;
+
                     } else if (values.at(0).contains("structure", Qt::CaseInsensitive)) {
                         headers << "STRUCTURE";
                         QStringList titleText;
@@ -227,6 +229,7 @@ void ImportDataView::browse()
                         data << titleText;
                         cols = (values.size() > cols) ? values.size() : cols;
                         ++rows;
+
                     } else if (values.size() > 2) {
                         // Display the line only if we have a plugin to import it !
                         const QString EventName = values.at(0);
@@ -238,8 +241,8 @@ void ImportDataView::browse()
                             // Adapt max columns count if necessary
                             cols = (values.size() > cols) ? values.size() : cols;
                             ++rows;
-                        }
-                        else if (pluginName.contains("bound", Qt::CaseInsensitive)) {
+
+                        } else if (pluginName.contains("bound", Qt::CaseInsensitive)) {
                             headers << values.at(0);
                             data << values;
 
@@ -317,10 +320,9 @@ void ImportDataView::exportDates()
 
             stream << "Title" << sep << AppSettings::mLastFile << Qt::endl;
             bool isChronocurve = project->mState[STATE_CHRONOCURVE].toObject().value(STATE_CHRONOCURVE_ENABLED).toBool();
-            int chronocurveStartColumn = 15;
+            // int chronocurveStartColumn = 15;
 
-            for(int i=0; i<events.size(); ++i)
-            {
+            for (int i=0; i<events.size(); ++i) {
                 QJsonObject event = events[i].toObject();
                 QJsonArray dates = event[STATE_EVENT_DATES].toArray();
 
@@ -328,22 +330,21 @@ void ImportDataView::exportDates()
                 const QString eventName = event[STATE_NAME].toString();
                 if (type == Event::eKnown) {
                     stream << eventName << sep << "Bound" <<  sep << event.value(STATE_EVENT_KNOWN_FIXED).toDouble() << Qt::endl;
+
                 } else {
                    for (int j=0; j<dates.size(); ++j) {
                         QJsonObject date = dates.at(j).toObject();
                         try{
-                            Date d;
-                            d.fromJson(date);
+                            Date d (date);
                             if (!d.isNull()) {
                                 QStringList dateCsv = d.toCSV(csvLocal);
                                 
-                                if(isChronocurve)
-                                {
+                                if (isChronocurve) {
                                     // Chronocurve values start at column 15.
                                     // They must be put from column 14 in dateCsv,
                                     // because the row is shifted by one column at inserting eventName (see below)
                                     int chronocurveStartColumn = 15;
-                                    while(dateCsv.count() < (chronocurveStartColumn-2)){
+                                    while (dateCsv.count() < (chronocurveStartColumn-2)) {
                                         dateCsv.append("");
                                     }
                                     dateCsv.append(QString::number(event[STATE_EVENT_Y_INT].toDouble()));
@@ -359,7 +360,7 @@ void ImportDataView::exportDates()
                                 stream << dateCsv.join(sep) << Qt::endl;
                             }
                         }
-                        catch(QString error){
+                        catch (QString error) {
                             QMessageBox message(QMessageBox::Critical,
                                 qApp->applicationName() + " " + qApp->applicationVersion(),
                                 tr("Error : %1").arg(error),
@@ -380,11 +381,11 @@ void ImportDataView::exportDates()
 void ImportDataView::removeCsvRows(QList<int> rows)
 {
     sortIntList(rows);
-    for (int i=rows.size()-1; i>=0; --i) {
+    for (int i = rows.size()-1; i >= 0; --i) {
         //qDebug() << "Removing row : " << rows[i];
         //mTable->removeRow(rows[i]);
 
-        for (int c(0); c<mTable->columnCount(); ++c) {
+        for (int c = 0; c < mTable->columnCount(); ++c) {
             QTableWidgetItem* item = mTable->item(rows.at(i), c);
             if (item)
                 item->setBackground(QColor(100, 200, 100));
@@ -396,8 +397,8 @@ void ImportDataView::removeCsvRows(QList<int> rows)
 void ImportDataView::errorCsvRows(QList<int> rows)
 {
     sortIntList(rows);
-    for (int i=rows.size()-1; i>=0; --i) {
-        for (int c(0); c<mTable->columnCount(); ++c) {
+    for (int i = rows.size()-1; i >= 0; --i) {
+        for (int c = 0; c < mTable->columnCount(); ++c) {
             QTableWidgetItem* item = mTable->item(rows.at(i), c);
             if (item)
                 item->setBackground(QColor(220, 110, 94));
@@ -454,7 +455,7 @@ QMimeData* ImportDataTable::mimeData(const QList<QTableWidgetItem*> items) const
     QByteArray encodedData;
     QDataStream stream(&encodedData, QIODevice::WriteOnly);
 
-    int row (-1);
+    int row = -1;
     QStringList itemStr;
 
     const QString csvSep = AppSettings::mCSVCellSeparator;
@@ -491,7 +492,7 @@ void ImportDataTable::updateTableHeaders()
     QList<QTableWidgetItem*> items = selectedItems();
     QString pluginName;
     QString verticalHeader;
-    for (int i(0); i<items.size(); ++i) {
+    for (int i = 0; i<items.size(); ++i) {
         QString curPluginName = item(items[i]->row(), 0)->text();
         if (pluginName.isEmpty()) {
             pluginName = curPluginName;
@@ -506,8 +507,7 @@ void ImportDataTable::updateTableHeaders()
     QStringList headers;
     int numCols = columnCount();
 
-    if (!pluginName.isEmpty() && (verticalHeader!="TITLE")  && (verticalHeader!="STRUCTURE") && (pluginName.toLower()!="bound"))
-    {
+    if (!pluginName.isEmpty() && (verticalHeader!="TITLE")  && (verticalHeader!="STRUCTURE") && (pluginName.toLower()!="bound")) {
         PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
         headers << "Method";
         headers << plugin->csvColumns();
@@ -518,21 +518,20 @@ void ImportDataTable::updateTableHeaders()
         }
         
         int chronocurveStartIndex = 14;
-        while (headers.size() < numCols)
-        {
-            if(headers.size() == chronocurveStartIndex){
+        while (headers.size() < numCols) {
+            if (headers.size() == chronocurveStartIndex) {
                 headers << "Y";
-            }else if(headers.size() == (chronocurveStartIndex + 1)){
+            } else if (headers.size() == (chronocurveStartIndex + 1)) {
                 headers << "Error (Y)";
-            }else if(headers.size() == (chronocurveStartIndex + 2)){
+            } else if (headers.size() == (chronocurveStartIndex + 2)) {
                 headers << "Inc";
-            }else if(headers.size() == (chronocurveStartIndex + 3)){
+            } else if (headers.size() == (chronocurveStartIndex + 3)) {
                 headers << "Dec";
-            }else if(headers.size() == (chronocurveStartIndex + 4)){
+            } else if (headers.size() == (chronocurveStartIndex + 4)) {
                 headers << "Error (inc)";
-            }else if(headers.size() > chronocurveStartIndex){
+            } else if (headers.size() > chronocurveStartIndex) {
                 headers << "Comment";
-            }else{
+            } else {
                 // Empty values between dates and chronocurve
                 headers << "";
             }
@@ -542,14 +541,14 @@ void ImportDataTable::updateTableHeaders()
         QStringList cols;
         headers << "Bound";
         headers << "Value";
-        for (int i(1); i<numCols; i++)
+        for (int i = 1; i < numCols; i++)
             cols<<"";
         headers << cols;
 
     } else if ((verticalHeader!="TITLE")  || (verticalHeader!="STRUCTURE")) {
         QStringList cols;
         cols << "Info";
-        for (int i(1); i<numCols; i++)
+        for (int i = 1; i < numCols; i++)
             cols<<"";
         headers = cols;
 

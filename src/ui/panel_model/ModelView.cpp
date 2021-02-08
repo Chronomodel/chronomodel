@@ -552,21 +552,22 @@ void ModelView::updateProject()
     mProject->mState[STATE_SETTINGS_STEP_FORCED] = settings.mStepForced;
 
     setSettingsValid(settings.mTmin < settings.mTmax);
-
+ //   blockSignals(true);
+qDebug() <<"ModelView::updateProject mEventsScene->updateSceneFromState();";
     mEventsScene->updateSceneFromState();
-
+qDebug() <<"ModelView::updateProject  mPhasesScene->updateSceneFromState();";
     mPhasesScene->updateSceneFromState();
-
+//blockSignals(false);
     // Les sélections dans les scènes doivent être mises à jour après que
     // LES 2 SCENES aient été updatées
     // false : ne pas envoyer de notification pour updater l'état du projet,
     // puisque c'est justement ce que l'on fait ici!
      // DONE BY UPDATEPROJECT ????
-
+/*
     const QJsonObject& event = mEventPropertiesView->getEvent();
     if (!event.isEmpty()) {
         const QJsonArray events = state.value(STATE_EVENTS).toArray();
-        for (int i=0; i<events.size(); ++i) {
+        for (int i = 0; i < events.size(); ++i) {
             const QJsonObject evt = events.at(i).toObject();
             if (evt.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
                 if (evt != event)
@@ -574,6 +575,7 @@ void ModelView::updateProject()
             }
         }
     }
+    */
 }
 
 bool ModelView::findCalibrateMissing()
@@ -587,7 +589,7 @@ bool ModelView::findCalibrateMissing()
     * There is no date to calibrate
     */
     if (!Qevents.isEmpty()) {
-        QList<Event> events;
+        QVector<Event> events;
         for (auto&& Qev: Qevents)
             events.append(Event::fromJson(Qev.toObject()));
 
@@ -655,7 +657,7 @@ void ModelView::calibrateAll(ProjectSettings newS)
     */
     if (!Qevents.isEmpty()) {
         mProject->mCalibCurves.clear();
-        QList<Event> events;
+        QVector<Event> events;
         for (auto&& Qev: Qevents)
             events.append(Event::fromJson(Qev.toObject()));
 

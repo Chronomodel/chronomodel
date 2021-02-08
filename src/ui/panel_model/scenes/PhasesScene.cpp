@@ -170,7 +170,7 @@ void PhasesScene::sendUpdateProject(const QString& reason, bool notify, bool sto
         if (storeUndoCommand)
             mProject->pushProjectState(stateNext, reason, notify);
        // else
-            mProject->sendUpdateState(stateNext, reason, notify);
+       mProject->sendUpdateState(stateNext, reason, notify);
     }
 }
  void PhasesScene::createSceneFromState()

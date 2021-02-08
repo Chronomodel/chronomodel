@@ -61,12 +61,12 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
     // set the selection directly to the parent item, here the EventItem
     setFlag(ItemIsSelectable, false);
 
-    mDatesAnimTimer = new QTimeLine(100);
+/*    mDatesAnimTimer = new QTimeLine(100);
     mDatesAnimTimer->setFrameRange(0, 2);
 
     mDatesAnim = new QGraphicsItemAnimation();
     mDatesAnim->setTimeLine(mDatesAnimTimer);
-
+*/
     // Date::fromJson doesn't create mCalibration
     Date d (date);
     ProjectSettings s = ProjectSettings::fromJson(settings);
@@ -74,7 +74,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
     d.mSettings.mTmin = s.mTmin;
     d.mSettings.mTmax = s.mTmax;
     d.mSettings.mStep = s.mStep;
-    
+//blockSignals(true);
     if (d.mPlugin!= nullptr) {
         if (!d.mIsValid)
             mCalibThumb = QPixmap();
@@ -102,7 +102,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
 
         }
     }
-
+//blockSignals(false);
 }
 
 DateItem::~DateItem()

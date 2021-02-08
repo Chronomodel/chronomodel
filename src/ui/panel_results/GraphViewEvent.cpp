@@ -125,24 +125,20 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     // --------------------------------------------------------------------
     //  The graph name depends on the currently displayed variable
     // --------------------------------------------------------------------
-    if(variable == eTheta)
-    {
+    if (variable == eTheta) {
         mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound") : tr("Event")) + " : " + mEvent->mName;
-    }
-    else if(variable == eSigma)
-    {
+
+    } else if (variable == eSigma) {
         mTitle = ((mEvent->type() == Event::eKnown) ? tr("Bound") : tr("Std Compilation")) + " : " + mEvent->mName;
-    }
-    else if(variable == eVG)
-    {
+
+    } else if (variable == eVG) {
         mTitle = tr("Variance G") + " : " + mEvent->mName;
     }
 
     // ------------------------------------------------
     //  First tab : Posterior distrib
     // ------------------------------------------------
-    if (typeGraph == ePostDistrib)
-    {
+    if (typeGraph == ePostDistrib) {
         mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
         mGraph->setBackgroundColor(QColor(230, 230, 230));
         
@@ -280,8 +276,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             }
         }
         
-        else if (variable == eVG)
-        {
+        else if (variable == eVG) {
             mGraph->setOverArrow(GraphView::eNone);
             mGraph->mLegendX = "";
             mGraph->setBackgroundColor(QColor(230, 230, 230));
@@ -290,10 +285,8 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             qDebug() << curve.mData;
             mGraph->addCurve(curve);
             
-            if(!mEvent->mVG.mChainsHistos.isEmpty())
-            {
-                for(int j=0; j<mChains.size(); ++j)
-                {
+            if (!mEvent->mVG.mChainsHistos.isEmpty()) {
+                for (int j=0; j<mChains.size(); ++j) {
                     GraphCurve curveChain = generateDensityCurve(mEvent->mVG.histoForChain(j), "Variance G Chain " + QString::number(j), color);
                     mGraph->addCurve(curveChain);
                 }
@@ -303,33 +296,27 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     // ----------------------------------------------------------------------
     //  Trace : generate Trace, Q1, Q2, Q3 for all chains
     // ----------------------------------------------------------------------
-    else if(typeGraph == eTrace)
-    {
+    else if (typeGraph == eTrace) {
         mGraph->mLegendX = "Iterations";
         
-        if(variable == eTheta)
-        {
+        if (variable == eTheta) {
             generateTraceCurves(mChains, &(mEvent->mTheta));
-        }
-        else if(variable == eVG)
-        {
+
+        } else if(variable == eVG) {
             generateTraceCurves(mChains, &(mEvent->mVG));
         }
     }
     // ----------------------------------------------------------------------
     //  Acceptance rate : generate acceptance rate and accept target curves
     // ----------------------------------------------------------------------
-    else if(typeGraph == eAccept)
-    {
+    else if (typeGraph == eAccept)  {
         mGraph->mLegendX = "Iterations";
         
-        if(variable == eTheta && (mEvent->mMethod == Event::eMHAdaptGauss || mEvent->mMethod == Event::eFixe))
-        {
+        if (variable == eTheta && (mEvent->mMethod == Event::eMHAdaptGauss || mEvent->mMethod == Event::eFixe)) {
             generateAcceptCurves(mChains, &(mEvent->mTheta));
             mGraph->addCurve(generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
-        }
-        else if(variable == eVG)
-        {
+
+        } else if (variable == eVG) {
             generateAcceptCurves(mChains, &(mEvent->mVG));
             mGraph->addCurve(generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
         }
@@ -337,13 +324,12 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     // ----------------------------------------------------------------------
     //  Autocorrelation : generate correlation with lower and upper limits
     // ----------------------------------------------------------------------
-    else if ((typeGraph == eCorrel) && (variable == eTheta) && (!isFixedBound))
-    {
+    else if ((typeGraph == eCorrel) && (variable == eTheta) && (!isFixedBound)) {
         mGraph->mLegendX = "";
         generateCorrelCurves(mChains, &(mEvent->mTheta));
         mGraph->setXScaleDivision(10, 10);
-    }
-    else {
+
+    } else {
         mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound : %1").arg(mEvent->mName) : tr("Event : %1").arg(mEvent->mName));
         mGraph->resetNothingMessage();
     }

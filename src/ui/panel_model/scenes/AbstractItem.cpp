@@ -101,7 +101,7 @@ void AbstractItem::setCurrentInData(const bool current)
 // Events
 void AbstractItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-    qDebug()<<"AbstractItem::mousePressEvent__________??";
+    //qDebug()<<"AbstractItem::mousePressEvent__________??";
 
     if (!mScene->itemClicked(this, e)) {
         setZValue(2.);
@@ -138,7 +138,7 @@ void AbstractItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 {
     mMoving = true;
 
-    qDebug()<<"AbstractItem::mouseMoveEvent() e->pos avant mouseMove2"<<e->pos()<<e->scenePos()<<pos();
+    //qDebug()<<"AbstractItem::mouseMoveEvent() e->pos avant mouseMove2"<<e->pos()<<e->scenePos()<<pos();
     if (mScene->mShowGrid) {
         QPointF ptBefore = pos();
         qreal delta (mScene->deltaGrid());
@@ -151,8 +151,8 @@ void AbstractItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 
 
   //  if (e->pos().x()==0 || e->pos().y()==0)
- qDebug()<<"AbstractItem::mouseMoveEvent() mData"<<this->mData.value(STATE_ITEM_X).toDouble()<<mData.value(STATE_ITEM_Y).toDouble();
- qDebug()<<"AbstractItem::mouseMoveEvent() e->pos3"<<e->pos()<<e->scenePos()<<pos();
+ //qDebug()<<"AbstractItem::mouseMoveEvent() mData"<<this->mData.value(STATE_ITEM_X).toDouble()<<mData.value(STATE_ITEM_Y).toDouble();
+ //qDebug()<<"AbstractItem::mouseMoveEvent() e->pos3"<<e->pos()<<e->scenePos()<<pos();
 
 
 }
@@ -202,10 +202,10 @@ QVariant AbstractItem::itemChange(GraphicsItemChange change, const QVariant& val
 
       //  qDebug()<<"AbstractItem::itemChange() ItemPositionHasChanged "<<value.toPointF()<<"pos()"<<pos();
         updateItemPosition(value.toPointF());
-    }
+    } /*
     else if (change == ItemSelectedHasChanged || change == ItemSelectedChange) {
 
-            qDebug()<<"AbstractItem::itemChange() ItemSelectedHasChange  d "<<mData.value(STATE_NAME).toString()<<value.toBool();
+            //qDebug()<<"AbstractItem::itemChange() ItemSelectedHasChange  d "<<mData.value(STATE_NAME).toString()<<value.toBool();
            // mScene->updateStateSelectionFromItem(); // selection is manage in the scene unit
         }
     else if (change == ItemChildAddedChange ) {
@@ -214,6 +214,7 @@ QVariant AbstractItem::itemChange(GraphicsItemChange change, const QVariant& val
           // mScene->sendUpdateProject(tr("item move"), true, false);
             // mScene->updateStateSelectionFromItem(); // selection is manage in the scene unit
         }
+    */
 
     return QGraphicsItem::itemChange(change, value);
 }

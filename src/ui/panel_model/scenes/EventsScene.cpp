@@ -213,7 +213,7 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
     //mData in the mItems are copies of the Model(State) while doing setEvent(), so we have to rebuild the
     // State with correct value of the selection
     QJsonArray events = QJsonArray();
-    for (int i=0; i<mItems.size(); ++i)
+    for (int i = 0; i < mItems.size(); ++i)
         events.append(((EventItem*)mItems.at(i))->getEvent());
 
 
@@ -224,7 +224,7 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
         if (storeUndoCommand)
             mProject->pushProjectState(stateNext, reason, notify, true);
         //else
-            mProject->sendUpdateState(stateNext, reason, notify);
+        mProject->sendUpdateState(stateNext, reason, notify);
     }
 }
 void EventsScene::noHide()
@@ -323,7 +323,7 @@ void EventsScene::createSceneFromState()
     // ------------------------------------------------------
     //  Create event items
     // ------------------------------------------------------
-    int i(0);
+    int i = 0;
 
     progress->setLabelText(tr("Create event items"));
 
@@ -343,6 +343,7 @@ void EventsScene::createSceneFromState()
             newItem = new EventKnownItem(this, event, settings);
 
         mItems.append(newItem);
+        qDebug()<<"createSceneFromState Create mItems:"<<event.value(STATE_NAME).toString();
         addItem(newItem);
 
         }
@@ -354,7 +355,7 @@ void EventsScene::createSceneFromState()
 
     progress->setLabelText(tr("Create constraint items"));
     progress->setMaximum(constraints.size());
-    for (int i=0; i<constraints.size(); ++i) {
+    for (int i = 0; i < constraints.size(); ++i) {
         const QJsonObject constraint = constraints.at(i).toObject();
         progress->setValue(i);
         ArrowItem* constraintItem = new ArrowItem(this, ArrowItem::eEvent, constraint);
@@ -382,7 +383,7 @@ void EventsScene::updateSceneFromState()
 {
 
 #ifdef DEBUG
-   //qDebug()<<"EventsScene::updateSceneFromState()";
+qDebug()<<"EventsScene::updateSceneFromState()";
     QElapsedTimer startTime;
     startTime.start();
 #endif
@@ -470,30 +471,31 @@ void EventsScene::updateSceneFromState()
     // ------------------------------------------------------
     //  Create / Update event items
     // ------------------------------------------------------
-    int i (0);
-    if (displayProgress){
+    int i = 0;
+    if (displayProgress) {
         progress->setLabelText(tr("Create / Update event items"));
     }
 
-    for (auto && citer : eventsInNewState)
-    {
+    for (auto&& citer : eventsInNewState) {
         const QJsonObject event = citer.toObject();
+        qDebug()<<"updateSceneFromState event:"<<event.value(STATE_NAME).toString()<<event.value(STATE_ID).toInt();
         ++i;
         if (displayProgress)
             progress->setValue(i);
 
         bool itemUnkown = true;
 
-        for (auto && cIterOld : mItems) {
+        for (auto&& cIterOld : mItems) {
             EventItem* oldItem = (EventItem*) cIterOld;
             const QJsonObject OldItemEvent = oldItem->getEvent();
+qDebug()<<"updateSceneFromState à comparer avec OldItemEvent:"<<OldItemEvent.value(STATE_NAME).toString()<< OldItemEvent.value(STATE_ID).toInt();
 
             if ( OldItemEvent.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
 
                 itemUnkown = false;
                 if ((event != OldItemEvent) || settingsChanged) {
                     // UPDATE ITEM
-                    //qDebug() << "EventsScene::updateScene Event updated : id = " << event.value(STATE_ID).toInt()<< event.value(STATE_NAME).toString();
+                    qDebug() << "EventsScene::updateScene Event changed : id = " << event.value(STATE_ID).toInt()<< event.value(STATE_NAME).toString();
 
                     oldItem->setEvent(event, settings);
                 }
@@ -505,15 +507,20 @@ void EventsScene::updateSceneFromState()
             // CREATE ITEM
                 Event::Type type = Event::Type (event.value(STATE_EVENT_TYPE).toInt());
                 EventItem* newItem = nullptr;
+
                 if (type == Event::eDefault)
                     newItem = new EventItem(this, event, settings);
                 else //if(type == Event::eKnown)
                     newItem = new EventKnownItem(this, event, settings);
+qDebug()<<"EventsScene::updateSceneFromState Create mItems avant:"<<event.value(STATE_NAME).toString();
 
                 mItems.append(newItem);
-                addItem(newItem);
-                hasCreated = true;
 
+                addItem(newItem);
+
+
+                hasCreated = true;
+qDebug()<<"EventsScene::updateSceneFromState Create mItems:"<<event.value(STATE_NAME).toString();
 
                 // Note : setting an event in (0, 0) tells the scene that this item is new! don't work when updateScene come from Undo Action
                 // Thus the scene will move it randomly around the currently viewed center point.
@@ -529,8 +536,8 @@ void EventsScene::updateSceneFromState()
                         QGraphicsView* gview = gviews[0];
                         QPointF pt = gview->mapToScene(gview->width()/2, gview->height()/2);
                         const int posDelta (100);
-                        newItem->setPos(pt.x() + rand() % posDelta - posDelta/2,
-                                          pt.y() + rand() % posDelta - posDelta/2);
+                        newItem->setPos(pt.x() + arc4random() % posDelta - posDelta/2,
+                                          pt.y() + arc4random() % posDelta - posDelta/2);
                     }
 
                 newItem = nullptr;
@@ -703,7 +710,7 @@ void EventsScene::updateStateSelectionFromItem()
         EventItem* curItem = currentEvent();
         QJsonObject currentEvent = QJsonObject();
 
-        for (auto &&pItem : mItems) {
+        for (auto& pItem : mItems) {
             EventItem* item = static_cast<EventItem*>(pItem);
 
             // without selected update
@@ -745,7 +752,7 @@ void EventsScene::updateStateSelectionFromItem()
             // refresh the Event propreties view
 
            if (selectedItems().size() >= 1)
-                emit mProject->currentEventChanged(currentEvent);
+                emit mProject->currentEventChanged(currentEvent); // connect to EventPropertiesView::setEvent
             else {
                     QJsonObject itemEmpty;
                     emit mProject->currentEventChanged( itemEmpty);
@@ -1278,7 +1285,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
      *  Check if data have been dropped on an existing event.
      *  If so, QGraphicsScene::dropEvent(e) will pass the event to the corresponding item
      * ------------------------------------------------------------------ */
-    for (auto &&it : mItems) {
+    for (auto& it : mItems) {
         QRectF r = it->boundingRect();
         r.translate(it->scenePos());
         if (r.contains(e->scenePos())) {
@@ -1305,8 +1312,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
     const int deltaY (100);
     int EventCount (0);
 
-    for (int i=0; i<listDates.size(); ++i)
-    {
+    for (int i = 0; i < listDates.size(); ++i) {
         // We must regenerate the variables "state" and "events" after event or data inclusion
         QJsonObject state = project->state();
         QJsonArray events = state.value(STATE_EVENTS).toArray();
@@ -1315,12 +1321,11 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
         QString eventName = listDates.at(i).first;
         Date date = listDates.at(i).second;
 
-        int eventIdx (-1);
-        int j (0);
-        if (eventName.toLower() != "bound")
-        {
+        int eventIdx  = -1;
+        int j = 0;
+        if (eventName.toLower() != "bound") {
             QJsonObject eventFinded;
-            for (auto ev : events) {
+            for (auto&& ev : events) {
                 if (ev.toObject().value(STATE_NAME).toString() == eventName) {
                     eventIdx = j;
                     eventFinded = ev.toObject();
@@ -1439,8 +1444,7 @@ QPair<QList<QPair<QString, Date>>, QMap<QString, double>> EventsScene::decodeDat
     QList<QPair<QString, Date>> dates;
     QMap<QString, double> chronocurveEventValues;
 
-    while (!stream.atEnd())
-    {
+    while (!stream.atEnd()) {
         QString itemStr;
         stream >> itemStr;
 
@@ -1457,8 +1461,8 @@ QPair<QList<QPair<QString, Date>>, QMap<QString, double>> EventsScene::decodeDat
         const QString pluginName = dataStr.first();
         Date date = Date();
 
-        if(pluginName.contains("bound", Qt::CaseInsensitive))
-        {
+
+        if (pluginName.contains("bound", Qt::CaseInsensitive)) {
             QStringList dataTmp = dataStr.mid(1,dataStr.size()-1);
             date.mName = eventName;
             date.mPlugin = nullptr;
@@ -1467,39 +1471,38 @@ QPair<QList<QPair<QString, Date>>, QMap<QString, double>> EventsScene::decodeDat
             json.insert(STATE_EVENT_KNOWN_FIXED, csvLocal.toDouble(dataTmp.at(0)));
             date.mData = json;
             date.mIsValid = true ;
+            date.mUUID = QString::fromStdString(Generator::UUID());
+
 
             dates << qMakePair(pluginName, date);
             acceptedRows.append(csvRow);
-        }
-        else
-        {
+
+        } else {
             date = Date::fromCSV(dataStr, csvLocal);
-            if (!date.isNull())
-            {
+            if (!date.isNull()) {
                 dates << qMakePair(eventName, date);
                 acceptedRows.append(csvRow);
 
-                if(dataStr.size() >= 15){
+                if (dataStr.size() >= 15) {
                     chronocurveEventValues.insert("Y1", dataStr.at(15).toDouble());
                 }
-                if(dataStr.size() >= 16){
+                if (dataStr.size() >= 16) {
                     chronocurveEventValues.insert("S1", dataStr.at(16).toDouble());
                 }
-                if(dataStr.size() >= 17){
+                if (dataStr.size() >= 17) {
                     chronocurveEventValues.insert("Y2", dataStr.at(17).toDouble());
                 }
-                if(dataStr.size() >= 18){
+                if (dataStr.size() >= 18) {
                     chronocurveEventValues.insert("S2", dataStr.at(18).toDouble());
                 }
-                if(dataStr.size() >= 19){
+                if (dataStr.size() >= 19) {
                     chronocurveEventValues.insert("Y3", dataStr.at(19).toDouble());
                 }
-                if(dataStr.size() >= 20){
+                if (dataStr.size() >= 20) {
                     chronocurveEventValues.insert("S3", dataStr.at(20).toDouble());
                 }
-            }
-            else
-            {
+
+            } else {
                rejectedRows.append(csvRow);
             }
         }

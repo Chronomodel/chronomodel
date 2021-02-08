@@ -903,13 +903,13 @@ void GraphView::paintToDevice(QPaintDevice* device)
          if (mOverflowArrowMode == eBothOverflow || mOverflowArrowMode == eUnderMin) {
 
              type_data maxData = type_data (- INFINITY);
-             for (auto &&curve : mCurves)
+             for (auto& curve : mCurves)
                  if (curve.mVisible && curve.mData.size()>0)
                     maxData = std::max(maxData, curve.mData.lastKey());
                  else if (curve.mVisible && curve.mIsVerticalLine)
                      maxData = std::max(maxData, curve.mVerticalValue);
                  else if (curve.mVisible && curve.mIsHorizontalSections)
-                     for (const auto & section : curve.mSections )
+                     for (auto& section : curve.mSections )
                          maxData = std::max(maxData, section.second);
 
 
@@ -930,15 +930,17 @@ void GraphView::paintToDevice(QPaintDevice* device)
          if (mOverflowArrowMode == eBothOverflow || mOverflowArrowMode == eOverMax) {
              type_data minData = type_data (INFINITY);
 
-             for (auto &&curve : mCurves)
+             for (auto& curve : mCurves) {
                  if (curve.mVisible && curve.mData.size()>0)
                     minData = std::min(minData, curve.mData.firstKey());
+
                  else if (curve.mVisible && curve.mIsVerticalLine)
                      minData = std::min(minData, curve.mVerticalValue);
-                 else if (curve.mVisible && curve.mIsHorizontalSections)
-                     for (const auto & section : curve.mSections )
-                         minData = std::min(minData, section.first);
 
+                 else if (curve.mVisible && curve.mIsHorizontalSections)
+                     for (auto& section : curve.mSections )
+                         minData = std::min(minData, section.first);
+             }
 
              if (mCurrentMaxX <= minData) {
                  const qreal xr = mGraphWidth + mMarginLeft - 2*arrowSize;
@@ -982,7 +984,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolX.mShowSubs = mXAxisTicks;
     mAxisToolX.mShowSubSubs = mXAxisSubTicks;
     mAxisToolX.mShowText = mXAxisValues;
-//qDebug()<<"GraphView::paintotdevice"<< mXAxisValues<< mStepMinWidth << mAxisToolX.getMajorScale()<<mAxisToolX.getMinorScaleCount();
+
     mAxisToolX.updateValues(int (mGraphWidth), int (mStepMinWidth), mCurrentMinX, mCurrentMaxX);
     mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight , mGraphWidth , mMarginBottom), -1.,mUnitFunctionX);
 
@@ -1029,7 +1031,7 @@ void GraphView::drawCurves(QPainter& painter)
     // Draw curves inside axis only (not in margins!)
     painter.setClipRect(int (mMarginLeft), int (mMarginTop), int(mGraphWidth), int (mGraphHeight));
 
-    for (auto && curve : mCurves) {
+    for (auto& curve : mCurves) {
         if (curve.mVisible) {
             QPainterPath path;
 
@@ -1047,7 +1049,48 @@ void GraphView::drawCurves(QPainter& painter)
 
             painter.setBrush(brush);
 
-            if (curve.mIsHorizontalLine) {
+            if (curve.mIsRefPoints) {
+                if (curve.mData.isEmpty())
+                    continue;
+                QMap<type_data, type_data> subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
+
+                if (subData.isEmpty())
+                    continue;
+
+                QMap<type_data, type_data>::const_iterator iterData = curve.mData.cbegin();
+               // QMap<type_data, type_data>::const_iterator iterErroX = curve.mDataErrorX.cbegin();
+               // QMap<type_data, type_data>::const_iterator iterErroY = curve.mDataErrorY.cbegin();
+
+                while (iterData != curve.mData.cend()) {
+                    type_data ymoy = iterData.value();
+                    type_data xmoy = iterData.key();
+                    type_data errXmoy = curve.mDataErrorX[xmoy];
+                    type_data errYmoy = curve.mDataErrorY[xmoy];
+
+                    // vertical curves must be normalized (values from 0 to 1)
+                    // They are drawn using a 100px width
+                   // qreal x = mMarginLeft + valueX * 100.;
+                   // qreal y = getYForValue(ymoy, false);
+
+                    if (xmoy >= mCurrentMinX && xmoy <= mCurrentMaxX) {
+                        path.moveTo( getXForValue(xmoy- errXmoy), getYForValue(ymoy, true) );
+                        path.lineTo( getXForValue(xmoy + errXmoy), getYForValue(ymoy, true) );
+
+                        path.moveTo( getXForValue(xmoy), getYForValue(ymoy - errYmoy, true) );
+                        path.lineTo( getXForValue(xmoy), getYForValue(ymoy + errYmoy, true) );
+                    }
+                    ++iterData;
+                }
+
+                painter.strokePath(path, curve.mPen);
+             /*   curveRefPoints.mData.insert(tmoy, event->mYx);
+                curveRefPoints.mDataErrorX.insert(tmoy, tmax - tmin);
+                curveRefPoints.mDataErrorY.insert(tmoy, event->mSy);
+
+              */
+
+
+            } else if (curve.mIsHorizontalLine) {
                 const qreal y = getYForValue(curve.mHorizontalValue);
                 path.moveTo(mMarginLeft, y);
                 path.lineTo(mMarginLeft + mGraphWidth, y);
@@ -1066,7 +1109,7 @@ void GraphView::drawCurves(QPainter& painter)
                 const qreal y0 = getYForValue(mMinY);
                 path.moveTo(mMarginLeft, y0);
 
-                for (const auto & section : curve.mSections ) {
+                for (auto& section : curve.mSections ) {
                     const qreal x1 = getXForValue(section.first, false);
                     const qreal x2 = getXForValue(section.second, false);
 
@@ -1085,7 +1128,7 @@ void GraphView::drawCurves(QPainter& painter)
                 const qreal y1 = mMarginTop + curve.mPen.width();
                 painter.setPen(curve.mPen);
 
-                for (const auto & section : curve.mSections ) {
+                for (auto& section : curve.mSections ) {
                     const type_data s1 = section.first;
                     const type_data s2 = section.second;
 
@@ -1302,17 +1345,17 @@ void GraphView::drawCurves(QPainter& painter)
                     // Detect square signal back-end without null value at the end of the QMap
                     // e.i calibration of Unif-typo-ref
 
-                       if (curve.mIsRectFromZero && lightMap.size()>1) {
-                            QMapIterator<type_data, type_data> lastIter(lightMap);
-                            lastIter.toBack();
-                            lastIter.previous();
-                            if ( lastIter.value() == lastIter.peekPrevious().value() ) {
-                                type_data x = lastIter.key();
-                                if ( x > mCurrentMinX && x < mCurrentMaxX)
-                                    path.lineTo(getXForValue(x, true), getYForValue(0, true) );
-                            }
+                    if (curve.mIsRectFromZero && lightMap.size()>1) {
+                        QMapIterator<type_data, type_data> lastIter(lightMap);
+                        lastIter.toBack();
+                        lastIter.previous();
+                        if ( lastIter.value() == lastIter.peekPrevious().value() ) {
+                            type_data x = lastIter.key();
+                            if ( x > mCurrentMinX && x < mCurrentMaxX)
+                                path.lineTo(getXForValue(x, true), getYForValue(0, true) );
                         }
                     }
+                }
 
 
                 if (curve.mIsRectFromZero && (curve.mBrush != Qt::NoBrush) ) {
@@ -1362,7 +1405,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         type_data xMin = INFINITY;
         type_data xMax = INFINITY;
 
-        for (const auto &curve : mCurves) {
+        for (auto& curve : mCurves) {
             if (!curve.mData.empty() &&
                 !curve.mIsHorizontalLine &&
                 !curve.mIsVerticalLine &&
@@ -1395,7 +1438,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
             list.clear();
 
             list << locale.toString(x);
-            for (auto && curve : mCurves) {
+            for (auto& curve : mCurves) {
                 if (!curve.mData.empty() &&
                     !curve.mIsHorizontalLine &&
                     !curve.mIsVerticalLine &&
@@ -1422,7 +1465,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         output << "# "+ projectName + "\r";
         output << "# "+ DateUtils::getAppSettingsFormatStr() + "\r";
 
-        for (auto row : rows) {
+        for (auto& row : rows) {
             output << row.join(csvSep);
             output << "\r";
         }

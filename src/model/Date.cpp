@@ -572,15 +572,21 @@ void Date::calibrate(const ProjectSettings& settings, Project *project, bool tru
         calibrationTemp.append(v);
         repartitionTemp.append(0.);
         long double lastRepVal = v;
+/* Ne PAS mettre de progressDialog dans cette fonction car il crée un appel à EventItem::SetEvent() qui renvoie un updateProject() et reboucle
+ */
 
+ /* Warning: If the progress dialog is modal (see QProgressDialog::QProgressDialog()), setValue() calls QCoreApplication::processEvents(),
+ * so take care that this does not cause undesirable re-entrancy in your code. For example, don't use a QProgressDialog inside a paintEvent()!
+ *
            QProgressDialog *progress = new QProgressDialog(QTranslator::tr("Calibration generation") + " : "+ mName, QTranslator::tr("Wait") , 1, 10);
+          progress->blockSignals(true);
            progress->setWindowModality(Qt::WindowModal);
            progress->setCancelButton(nullptr);
            progress->setMinimumDuration(5);
            progress->setMinimum(0);
            progress->setMaximum(nbRefPts);
            progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
-
+*/
 
         /* We use long double type because
          * after several sums, the repartition can be in the double type range
@@ -589,8 +595,8 @@ void Date::calibrate(const ProjectSettings& settings, Project *project, bool tru
         long double lastV;
         long double rep;
 
-        for (int i (1); i <= nbRefPts; ++i) {
-            progress->setValue(i);
+        for (int i = 1; i <= nbRefPts; ++i) {
+//            progress->setValue(i);
 
             t = mTminRefCurve + double (i) * settings.mStep;
             lastV = v;
@@ -604,8 +610,8 @@ void Date::calibrate(const ProjectSettings& settings, Project *project, bool tru
             repartitionTemp.append(double (rep));
             lastRepVal = rep;
         }
-        progress->close();
-        delete progress;
+//        progress->close();
+ //       delete progress;
         /* ------------------------------------------------------------------
          *  Restrict the calib and repartition vectors to where data are
          * ------------------------------------------------------------------ */
@@ -728,7 +734,7 @@ void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
      * after several sums, the repartition can be in the double type range
     */
     double t;
-    for (int i (1); i <= nbRefPts; ++i) {
+    for (int i = 1; i <= nbRefPts; ++i) {
         t = minRefCurve + double (i) * settings.mStep;
         calibrationTemp.append(double(getLikelihood(t)));
     }
@@ -827,7 +833,7 @@ void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
         outputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
 
 
-        for (int i(0); i<NComplex; ++i) {
+        for (int i= 0; i<NComplex; ++i) {
             outputComplex[i][0] = gateComplex[i][0] * inputComplex[i][0] - gateComplex[i][1] * inputComplex[i][1];
             outputComplex[i][1] = gateComplex[i][0] * inputComplex[i][1] + gateComplex[i][1] * inputComplex[i][0];
         }
@@ -856,7 +862,7 @@ void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
 
         QVector<double> curve;
 
-        for ( int i(0); i<N ; i++) {
+        for ( int i = 0; i < N ; i++) {
             curve.append(outputReal[i]);
         }
 
@@ -901,10 +907,10 @@ void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
             
 
             // on peut utiliser std::copy
-            for (int i (0); i< paddingSize; i++) {
+            for (int i  = 0; i< paddingSize; i++) {
                 inputReal[i] = 0;
             }
-            for (int i (0); i< inputSize; i++) {
+            for (int i = 0; i< inputSize; i++) {
                 inputReal[i+paddingSize] = calibrationTemp[i];
             }
             for (int i ( inputSize+paddingSize); i< N; i++) {
@@ -913,7 +919,7 @@ void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
            fftw_plan plan_input = fftw_plan_dft_r2c_1d(N, inputReal, inputComplex, FFTW_ESTIMATE);
            fftw_execute(plan_input);
 
-           for (int i(0); i<NComplex; ++i) {
+           for (int i = 0; i < NComplex; ++i) {
                const double s = 2. * (double)M_PI * (double)i / (double)N;
                const double factor = exp(-0.5 * pow(s, 2.) * pow(sigma, 2.));
 
@@ -931,7 +937,7 @@ void Date::calibrateWiggle( const ProjectSettings& settings, Project *project)
             
             QVector<double> curve;
 
-            for ( int i(0); i<N ; i++) {
+            for ( int i = 0; i < N ; i++) {
                 curve.append(outputReal[i]);
             }
 
@@ -1608,6 +1614,7 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
 
         }
         date.mIsValid = plugin->isDateValid(date.mData,date.mSettings);
+        date.mUUID = QString::fromStdString(Generator::UUID());
     }
 
     plugin = nullptr;

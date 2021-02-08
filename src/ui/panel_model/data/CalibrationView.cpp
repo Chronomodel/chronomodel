@@ -262,7 +262,7 @@ void CalibrationView::setDate(const Date& d)
             throw(tr("CalibrationView::setDate ") + mDate.mPlugin->getName() + mDate.mCalibration->mName + locale().toString(mDate.mCalibration->mTmin) + locale().toString(mDate.mCalibration->mTmax));
 
         updateScroll();
-        //updateGraphs();
+
     }
     catch(QString error) {
         QMessageBox message(QMessageBox::Critical,
