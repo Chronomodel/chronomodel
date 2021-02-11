@@ -406,7 +406,7 @@ void ModelView::connectScenes()
     connect(mButMultiCalib,   static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ModelView::showMultiCalib);
     mMultiCalibrationView->setProject(mProject);
     connect(mProject, &Project::projectStateChanged, this, &ModelView::updateMultiCalibration);
-    connect(mProject, &Project::projectStructureChanged, mEventPropertiesView, &EventPropertiesView::updateEvent);
+   // connect(mProject, &Project::projectStructureChanged, mEventPropertiesView, &EventPropertiesView::updateEvent);
 
     connect(mChronocurveWidget, &SwitchWidget::toggled, MainWindow::getInstance(), &MainWindow::toggleChronocurve);
 }

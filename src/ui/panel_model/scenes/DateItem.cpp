@@ -95,9 +95,8 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
 
             else if (d.mCalibration && !d.mCalibration->mCurve.isEmpty()) {
                mCalibThumb = d.generateCalibThumb();
-            }
 
-            else
+            } else
                 mCalibThumb = QPixmap();
 
         }
@@ -108,6 +107,9 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
 DateItem::~DateItem()
 {
     mEventsScene= nullptr;
+    mDate.~QJsonObject();
+    mColor.~QColor();
+    mCalibThumb.~QPixmap();
 }
 
 const QJsonObject& DateItem::date() const
@@ -128,8 +130,7 @@ QRectF DateItem::boundingRect() const
     float h = mTitleHeight + mEltsHeight;
     
     EventItem* eventItem = dynamic_cast<EventItem*>(parentItem());
-    if(eventItem)
-    {
+    if (eventItem) {
        x = -AbstractItem::mItemWidth/2 + AbstractItem::mBorderWidth + AbstractItem::mEltsMargin;
     }
     

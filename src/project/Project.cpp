@@ -1578,6 +1578,8 @@ void Project::updateEvent(const QJsonObject& event, const QString& reason)
             break;
         }
     }
+    //mState[STATE_EVENTS] = events;
+
     stateNext[STATE_EVENTS] = events;
     pushProjectState(stateNext, reason, true);
 }
@@ -1769,6 +1771,7 @@ Date Project::createDateFromPlugin(PluginAbstract* plugin)
                 date.mDeltaMax = dialog.getDeltaMax();
                 date.mDeltaAverage = dialog.getDeltaAverage();
                 date.mDeltaError = dialog.getDeltaError();
+                date.mUUID =QString::fromStdString(Generator::UUID()); // Add UUID since version 2.1.3
             } else {
                 QMessageBox message(QMessageBox::Critical,
                                     tr("Invalid data"),

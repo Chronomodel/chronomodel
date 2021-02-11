@@ -67,6 +67,11 @@ EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonOb
 EventItem::~EventItem()
 {
     mScene = nullptr;
+    const QList<QGraphicsItem*> datesItemsList = childItems();
+
+    for (QGraphicsItem* item: datesItemsList) {
+        delete [] item;
+    }
 }
 
 /**
@@ -131,18 +136,27 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
         //  Delete Date Items
         // ----------------------------------------------
         QList<QGraphicsItem*> dateItems = childItems();
-        for (int i = 0; i<dateItems.size(); ++i) {
+        int NItems = childItems().size()-1;
+        for (int i = NItems; i >= 0; --i) {
             mScene->removeItem(dateItems[i]);
-            delete dateItems[i];
-        }
+            dateItems[i]->setParentItem(nullptr);
 
+
+            //delete [] dateItems[i];
+            dateItems.removeAt(i);
+        }
+        dateItems.clear();
+//        dateItems = childItems();
+//qDebug()<<dateItems.size();
+        mData[STATE_EVENT_DATES] = QJsonArray();
         // ----------------------------------------------
         //  Re-create Date Items
         // ----------------------------------------------
         const QColor color(event.value(STATE_COLOR_RED).toInt(),
             event.value(STATE_COLOR_GREEN).toInt(),
             event.value(STATE_COLOR_BLUE).toInt());
-        QProgressDialog *progress = new QProgressDialog(QTranslator::tr("Calibration generation") + " : "+ event.value(STATE_NAME).toString(), QTranslator::tr("Wait") , 1, 10);
+
+ /*       QProgressDialog *progress = new QProgressDialog(QTranslator::tr("Calibration generation") + " : "+ event.value(STATE_NAME).toString(), QTranslator::tr("Wait") , 1, 10);
        progress->blockSignals(true);
         progress->setWindowModality(Qt::WindowModal);
         progress->setCancelButton(nullptr);
@@ -150,9 +164,10 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
         progress->setMinimum(0);
         progress->setMaximum(dates.size());
         progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
-
+*/
         for (int i = 0; i < dates.size(); ++i) {
-            progress->setValue(i);
+
+//           progress->setValue(i);
             const QJsonObject date = dates.at(i).toObject();
 
             try {
@@ -170,12 +185,14 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
             }
         }
 
-progress->deleteLater();
+//progress->deleteLater();
     }
 
     mData = event;
     mSettings = settings;
-    
+
+//QList<QGraphicsItem*>    dateItems = childItems();
+//qDebug()<<dateItems.size();
     resizeEventItem();
     repositionDateItems();
 
@@ -202,7 +219,7 @@ void EventItem::setGreyedOut(const bool greyedOut)
 {
     mGreyedOut = greyedOut;
     QList<QGraphicsItem*> children = childItems();
-    for (int i=0; i<children.size(); ++i){
+    for (int i = 0; i < children.size(); ++i){
         static_cast<DateItem*>(children.at(i))->setGreyedOut(greyedOut);
     }
     update();
@@ -300,11 +317,11 @@ void EventItem::resizeEventItem()
 {
     prepareGeometryChange();
     
-    float y = /*boundingRect().y() +*/ mTitleHeight + AbstractItem::mEltsMargin;
-    float h = mEltsHeight + AbstractItem::mEltsMargin;
+    qreal y = /*boundingRect().y() +*/ mTitleHeight + AbstractItem::mEltsMargin;
+    qreal h = mEltsHeight + AbstractItem::mEltsMargin;
     
-    const QJsonArray dates = mData.value(STATE_EVENT_DATES).toArray();
-    float eventHeight = y + (dates.count() * h);
+    //const QJsonArray dates = mData.value(STATE_EVENT_DATES).toArray();
+    qreal eventHeight = y + (childItems().count() * h);
     //qDebug() << "resizeEventItem dates count : " << dates.count();
     
     int bottomLines = getChronocurveLines();
@@ -318,8 +335,8 @@ void EventItem::repositionDateItems()
     const QList<QGraphicsItem*> datesItemsList = childItems();
     
     int i = 0;
-    float y = boundingRect().y() + mTitleHeight + AbstractItem::mEltsMargin;
-    float h = mEltsHeight + AbstractItem::mEltsMargin;
+    qreal y = boundingRect().y() + mTitleHeight + AbstractItem::mEltsMargin;
+    qreal h = mEltsHeight + AbstractItem::mEltsMargin;
     
     for (QGraphicsItem* item: datesItemsList) {
         DateItem* dateItem = dynamic_cast<DateItem*>(item);

@@ -1352,6 +1352,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
 
                 project->updateEvent(eventFinded, QObject::tr("Dates added to event by CSV drag"));
 
+
             } else {
                 Event event;
                 // eventName=="" must never happen because we set "No Name" in ImportDataView::browse()
@@ -1479,18 +1480,19 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
             date.mName = eventName;
             date.mPlugin = nullptr;
             date.mMethod = Date::eMHSymetric; //set but not used
+
             QJsonObject json;
             json.insert(STATE_EVENT_KNOWN_FIXED, csvLocal.toDouble(dataTmp.at(0)));
             date.mData = json;
             date.mIsValid = true ;
             date.mUUID = QString::fromStdString(Generator::UUID());
 
-
             dates << qMakePair(pluginName, date);
             acceptedRows.append(csvRow);
 
         } else {
             date = Date::fromCSV(dataStr, csvLocal);
+            //date.mUUID = QString::fromStdString(Generator::UUID());
             QMap<QString, double> chronocurveValues;
             if (!date.isNull()) {
                 dates << qMakePair(eventName, date);

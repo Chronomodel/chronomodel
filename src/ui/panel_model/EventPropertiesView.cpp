@@ -346,9 +346,9 @@ void EventPropertiesView::updateEvent()
         if (type == Event::eDefault) {
             mMethodCombo->setCurrentIndex(mEvent.value(STATE_EVENT_METHOD).toInt());
             
-               qDebug() << "EventPropertiesView::updateEvent mEvent mOrigin"  << mEvent.value(STATE_EVENT_DATES).toArray().at(0).toObject().value(STATE_DATE_ORIGIN).toInt();
+        //       qDebug() << "EventPropertiesView::updateEvent mEvent mOrigin"  << mEvent.value(STATE_EVENT_DATES).toArray().at(0).toObject().value(STATE_DATE_ORIGIN).toInt();
            mDatesList->setEvent(mEvent);
-            if (mCurrentDateIdx>=0)
+            if (mCurrentDateIdx >= 0)
                 mDatesList->setCurrentRow(mCurrentDateIdx);
 
             QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
@@ -529,7 +529,7 @@ void EventPropertiesView::createDate()
             for (int i=0; i<plugins.size(); ++i) {
                 if (plugins.at(i)->getName() == but->text()) {
                     Date date = project->createDateFromPlugin(plugins.at(i));
-                    date.mUUID =QString::fromStdString(Generator::UUID()); // Add UUID since version 2.1.3
+                    //date.mUUID =QString::fromStdString(Generator::UUID()); // Add UUID since version 2.1.3
                     if (!date.isNull())
                         project->addDate(mEvent.value(STATE_ID).toInt(), date.toJson());
                 }
