@@ -91,7 +91,7 @@ bool ChronocurveSettings::isEqual(const ChronocurveSettings& s)
         s.mUseVarianceIndividual != mUseVarianceIndividual ||
         s.mVarianceFixed != mVarianceFixed ||
         s.mCoeffLissageType != mCoeffLissageType ||
-        s.mAlphaLissage != mAlphaLissage){
+        s.mAlphaLissage != mAlphaLissage) {
         return false;
     }
     return true;
@@ -196,6 +196,7 @@ QJsonObject ChronocurveSettings::toJson() const
 
 QDataStream &operator<<( QDataStream &stream, const ChronocurveSettings &data )
 {
+    (void) data;
     //stream << quint8 (data.mNumChains);
     
     return stream;
@@ -203,6 +204,7 @@ QDataStream &operator<<( QDataStream &stream, const ChronocurveSettings &data )
 
 QDataStream &operator>>( QDataStream &stream, ChronocurveSettings &data )
 {
+    (void) data;
     //quint8 tmp8;
     //stream >> tmp8;
     //data.mNumChains = tmp8;
@@ -244,14 +246,17 @@ bool ChronocurveSettings::showIntensite() const
 QString ChronocurveSettings::intensiteLabel() const
 {
     QString label;
-    if(mProcessType == ChronocurveSettings::eProcessTypeVectoriel){
+    if (mProcessType == ChronocurveSettings::eProcessTypeVectoriel){
         label = QObject::tr("Intensity");
-    }else if(mProcessType == ChronocurveSettings::eProcessTypeUnivarie){
-        if(mVariableType == ChronocurveSettings::eVariableTypeIntensite){
+
+    } else if (mProcessType == ChronocurveSettings::eProcessTypeUnivarie) {
+        if (mVariableType == ChronocurveSettings::eVariableTypeIntensite) {
             label = QObject::tr("Intensity");
-        }else if(mVariableType == ChronocurveSettings::eVariableTypeProfondeur){
+
+        } else if (mVariableType == ChronocurveSettings::eVariableTypeProfondeur) {
             label = QObject::tr("Deep");
-        }else if(mVariableType == ChronocurveSettings::eVariableTypeAutre){
+
+        } else if (mVariableType == ChronocurveSettings::eVariableTypeAutre) {
             label = QObject::tr("Mesure");
         }
     }

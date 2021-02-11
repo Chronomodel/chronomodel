@@ -300,8 +300,7 @@ void ImportDataView::exportDates()
     QString currentDir = MainWindow::getInstance()->getCurrentPath();
     QString path = QFileDialog::getSaveFileName(qApp->activeWindow(), tr("Save as CSV"), currentDir, "CSV File (*.csv)");
 
-    if (!path.isEmpty())
-    {
+    if (!path.isEmpty()) {
         QFileInfo info(path);
         mPath = info.absolutePath();
         MainWindow::getInstance()->setCurrentPath(mPath);
@@ -311,8 +310,7 @@ void ImportDataView::exportDates()
         csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
 
         QFile file(path);
-        if (file.open(QIODevice::WriteOnly | QIODevice::Text))
-        {
+        if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
             QTextStream stream(&file);
 
             Project* project = MainWindow::getInstance()->getProject();
@@ -322,7 +320,7 @@ void ImportDataView::exportDates()
             bool isChronocurve = project->mState[STATE_CHRONOCURVE].toObject().value(STATE_CHRONOCURVE_ENABLED).toBool();
             // int chronocurveStartColumn = 15;
 
-            for (int i=0; i<events.size(); ++i) {
+            for (int i = 0; i < events.size(); ++i) {
                 QJsonObject event = events[i].toObject();
                 QJsonArray dates = event[STATE_EVENT_DATES].toArray();
 
@@ -332,9 +330,9 @@ void ImportDataView::exportDates()
                     stream << eventName << sep << "Bound" <<  sep << event.value(STATE_EVENT_KNOWN_FIXED).toDouble() << Qt::endl;
 
                 } else {
-                   for (int j=0; j<dates.size(); ++j) {
+                   for (int j = 0; j < dates.size(); ++j) {
                         QJsonObject date = dates.at(j).toObject();
-                        try{
+                        try {
                             Date d (date);
                             if (!d.isNull()) {
                                 QStringList dateCsv = d.toCSV(csvLocal);
@@ -344,16 +342,15 @@ void ImportDataView::exportDates()
                                     // They must be put from column 14 in dateCsv,
                                     // because the row is shifted by one column at inserting eventName (see below)
                                     int chronocurveStartColumn = 15;
-                                    while (dateCsv.count() < (chronocurveStartColumn-2)) {
+                                    while (dateCsv.count() < chronocurveStartColumn) {
                                         dateCsv.append("");
                                     }
-                                    dateCsv.append(QString::number(event[STATE_EVENT_Y_INT].toDouble()));
-                                    dateCsv.append(QString::number(event[STATE_EVENT_S_INT].toDouble()));
-                                    dateCsv.append(QString::number(event[STATE_EVENT_Y_INC].toDouble()));
-                                    dateCsv.append(QString::number(event[STATE_EVENT_Y_DEC].toDouble()));
-                                    dateCsv.append(QString::number(event[STATE_EVENT_S_INC].toDouble()));
-                                    dateCsv.append(QString::number(event[STATE_EVENT_Y_INT].toDouble()));
-                                    dateCsv.append(QString::number(event[STATE_EVENT_S_INT].toDouble()));
+                                    dateCsv.append(csvLocal.toString(event[STATE_EVENT_Y_INC].toDouble()));
+                                    dateCsv.append(csvLocal.toString(event[STATE_EVENT_S_INC].toDouble()));
+                                    dateCsv.append(csvLocal.toString(event[STATE_EVENT_Y_DEC].toDouble()));
+
+                                    dateCsv.append(csvLocal.toString(event[STATE_EVENT_Y_INT].toDouble()));
+                                    dateCsv.append(csvLocal.toString(event[STATE_EVENT_S_INT].toDouble()));
                                 }
 
                                 stream << eventName << sep;
@@ -517,18 +514,18 @@ void ImportDataTable::updateTableHeaders()
             headers << "Wiggle value 2 (Upper date | Error)";
         }
         
-        int chronocurveStartIndex = 14;
+        int chronocurveStartIndex = 15;
         while (headers.size() < numCols) {
             if (headers.size() == chronocurveStartIndex) {
-                headers << "Y";
-            } else if (headers.size() == (chronocurveStartIndex + 1)) {
-                headers << "Error (Y)";
-            } else if (headers.size() == (chronocurveStartIndex + 2)) {
                 headers << "Inc";
-            } else if (headers.size() == (chronocurveStartIndex + 3)) {
+            } else if (headers.size() == (chronocurveStartIndex + 1)) {
+                headers << "Error Inc";
+            } else if (headers.size() == (chronocurveStartIndex + 2)) {
                 headers << "Dec";
+            } else if (headers.size() == (chronocurveStartIndex + 3)) {
+                headers << "Int";
             } else if (headers.size() == (chronocurveStartIndex + 4)) {
-                headers << "Error (inc)";
+                headers << "Error Int";
             } else if (headers.size() > chronocurveStartIndex) {
                 headers << "Comment";
             } else {

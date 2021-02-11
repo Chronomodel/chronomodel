@@ -49,6 +49,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Project.h"
 #include "ArrowTmpItem.h"
 #include "ChronocurveSettings.h"
+#include "qlocale.h"
 
 EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):AbstractItem(scene, parent),
     mWithSelectedPhase(false),
@@ -130,7 +131,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
         //  Delete Date Items
         // ----------------------------------------------
         QList<QGraphicsItem*> dateItems = childItems();
-        for (int i=0; i<dateItems.size(); ++i) {
+        for (int i = 0; i<dateItems.size(); ++i) {
             mScene->removeItem(dateItems[i]);
             delete dateItems[i];
         }
@@ -257,7 +258,8 @@ void EventItem::dropEvent(QGraphicsSceneDragDropEvent* e)
 }
 
 /**
- * @brief EventItem::handleDrop this function move a data from CSV file to an EventItem
+ * @brief EventItem::handleDrop this function move one or several data from CSV file to one EventItem
+ * We don't have to modify the chronoCurve parameter of the Event
  * @param e
  */
 void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
@@ -268,11 +270,11 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
     Project* project = scene->getProject();
     QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
     
-    QPair<QList<QPair<QString, Date>>, QMap<QString, double>> droppedData = scene->decodeDataDrop(e);
+    QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> droppedData = scene->decodeDataDrop(e);
     QList<QPair<QString, Date>> datesDragged = droppedData.first;
-    QMap<QString, double> chronocurveData = droppedData.second;
+    //QList<QMap<QString, double>> curveData = droppedData.second;
 
-    for (int i=0; i<datesDragged.size(); ++i) {
+    for (int i = 0; i < datesDragged.size(); ++i) {
         QJsonObject date = datesDragged.at(i).second.toJson();
         date[STATE_ID] = project->getUnusedDateId(dates);
         if (date[STATE_NAME].toString() == "")
@@ -281,7 +283,7 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
     }
     event[STATE_EVENT_DATES] = dates;
     
-    Event::setChronocurveCsvDataToJsonEvent(event, chronocurveData);
+    //Event::setChronocurveCsvDataToJsonEvent(event, curveData.at(0));
 
     project->updateEvent(event, QObject::tr("Dates added to event (CSV drag)"));
     scene->updateStateSelectionFromItem();
@@ -315,7 +317,7 @@ void EventItem::repositionDateItems()
 {
     const QList<QGraphicsItem*> datesItemsList = childItems();
     
-    int i(0);
+    int i = 0;
     float y = boundingRect().y() + mTitleHeight + AbstractItem::mEltsMargin;
     float h = mEltsHeight + AbstractItem::mEltsMargin;
     
@@ -362,8 +364,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     QJsonObject state = mScene->getProject()->mState;
     ChronocurveSettings chronocurveSettings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
     
-    if(chronocurveSettings.mEnabled)
-    {
+    if (chronocurveSettings.mEnabled) {
         int lines = getChronocurveLines();
         
         QRectF bottomRect(rect.x(), rect.y() + rect.height() - lines * mPhasesHeight, rect.width(), lines * mPhasesHeight);
@@ -385,30 +386,29 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         
         painter->setFont(font);
         painter->setPen(CHRONOCURVE_COLOR_TEXT);
-        
-        if(chronocurveSettings.showInclinaison()){
+
+        if (chronocurveSettings.showInclinaison()){
             QString text1;
             text1 += "Inc. = ";
-            text1 += QString::number(mData.value(STATE_EVENT_Y_INC).toDouble());
-            text1 += " ± " + QString::number(mData.value(STATE_EVENT_S_INC).toDouble());
+            text1 += QLocale().toString (mData.value(STATE_EVENT_Y_INC).toDouble());
+            text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_S_INC).toDouble());
             
             if(chronocurveSettings.showDeclinaison()){
                 text1 += " Dec. = ";
-                text1 += QString::number(mData.value(STATE_EVENT_Y_DEC).toDouble());
+                text1 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
             }
             painter->drawText(QRectF(lineX, lineY, lineW, lineH), Qt::AlignCenter, text1);
         }
         
-        if(chronocurveSettings.showIntensite()){
+        if (chronocurveSettings.showIntensite()) {
             QString text2 = chronocurveSettings.intensiteLabel();
             text2 += " = ";
-            text2 += QString::number(mData.value(STATE_EVENT_Y_INT).toDouble());
-            text2 += " ± " + QString::number(mData.value(STATE_EVENT_S_INT).toDouble());
+            text2 += QLocale().toString(mData.value(STATE_EVENT_Y_INT).toDouble());
+            text2 += " ± " + QLocale().toString(mData.value(STATE_EVENT_S_INT).toDouble());
             painter->drawText(QRectF(lineX, lineY + (chronocurveSettings.showInclinaison() ? 1 : 0) * lineH, lineW, lineH), Qt::AlignCenter, text2);
         }
-    }
-    else
-    {
+
+    } else {
         // Phases
         QRectF phasesRect(rect.x(), rect.y() + rect.height() - mPhasesHeight, rect.width(), mPhasesHeight);
         phasesRect.adjust(1, 1, -1, -1);
@@ -416,19 +416,17 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         const QJsonArray phases = getPhases();
         const int numPhases = phases.size();
         
-        if (numPhases == 0)
-        {
+        if (numPhases == 0) {
             QString noPhase = tr("No Phase");
             // QFont ftAdapt = AbstractItem::adjustFont(font, noPhase, phasesRect);
             painter->setFont(font);//ftAdapt);
             painter->fillRect(phasesRect, QColor(0, 0, 0, 180));
             painter->setPen(QColor(200, 200, 200));
             painter->drawText(phasesRect, Qt::AlignCenter, noPhase);
-        }
-        else
-        {
+
+        } else {
             const qreal w = phasesRect.width() / numPhases;
-            for (int i =0; i<numPhases; ++i) {
+            for (int i = 0; i < numPhases; ++i) {
                 const QJsonObject phase = phases.at(i).toObject();
 
                 const QColor c(phase.value(STATE_COLOR_RED).toInt(),
@@ -501,7 +499,7 @@ QJsonArray EventItem::getPhases() const
     const QStringList eventPhaseIds = eventPhaseIdsStr.split(",");
 
     QJsonArray phases = QJsonArray();
-    for (int i=0; i<allPhases.size(); ++i) {
+    for (int i = 0; i < allPhases.size(); ++i) {
         QJsonObject phase = allPhases.at(i).toObject();
         QString phaseId = QString::number(phase.value(STATE_ID).toInt());
         if (eventPhaseIds.contains(phaseId))
@@ -522,10 +520,9 @@ int EventItem::getChronocurveLines() const
     ChronocurveSettings chronocurveSettings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
 
     int lines = 0;
-    if(chronocurveSettings.mEnabled)
-    {
+    if (chronocurveSettings.mEnabled) {
         lines = 1;
-        if(chronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel){
+        if (chronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel){
             lines = 2;
         }
     }

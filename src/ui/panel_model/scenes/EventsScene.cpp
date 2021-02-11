@@ -1301,9 +1301,9 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
     e->accept();
 
 
-    QPair<QList<QPair<QString, Date>>, QMap<QString, double>> droppedData = decodeDataDrop(e);
+    QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> droppedData = decodeDataDrop(e);
     QList<QPair<QString, Date>> listDates = droppedData.first;
-    QMap<QString, double> chronocurveData = droppedData.second;
+    QList<QMap<QString, double>> listCurveData = droppedData.second;
 
     Project* project = MainWindow::getInstance()->getProject();
 
@@ -1345,7 +1345,10 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
                 eventFinded[STATE_EVENT_DATES] = datesEvent;
                 // updateEvent() do pushProjectState(stateNext, reason, true);
 
-                Event::setChronocurveCsvDataToJsonEvent(eventFinded, chronocurveData);
+                if (i < listCurveData.count()) {
+                    Event::setChronocurveCsvDataToJsonEvent(eventFinded, listCurveData.at(i));
+                }
+
 
                 project->updateEvent(eventFinded, QObject::tr("Dates added to event by CSV drag"));
 
@@ -1357,13 +1360,16 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
                 date.mId = 0;
                 if (date.mName == "")
                     date.mName = "No Name";
+
                 event.mDates.append(date);
                 event.mItemX = e->scenePos().x() + EventCount * deltaX;
                 event.mItemY = e->scenePos().y() + EventCount * deltaY;
                 event.mColor = randomColor();
 
-                QJsonObject eventJson = event.toJson();
-                Event::setChronocurveCsvDataToJsonEvent(eventJson, chronocurveData);
+                QJsonObject eventJson  (event.toJson());
+                if (i < listCurveData.count()) {
+                    Event::setChronocurveCsvDataToJsonEvent(eventJson, listCurveData.at(i));
+                }
 
                 events.append(eventJson);
                 state[STATE_EVENTS] = events;
@@ -1384,7 +1390,13 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
             bound.mItemX = e->scenePos().x() + EventCount * deltaX;
             bound.mItemY = e->scenePos().y() + EventCount * deltaY;
             bound.mColor = randomColor();
-            events.append(bound.toJson());
+            auto boundJson (bound.toJson());
+
+            if (i < listCurveData.count()) {
+                Event::setChronocurveCsvDataToJsonEvent(boundJson, listCurveData.at(i));
+            }
+            events.append(boundJson);
+
             state[STATE_EVENTS] = events;
             project->pushProjectState(state, NEW_EVEN_BY_CSV_DRAG_REASON, true);
             ++EventCount;
@@ -1431,7 +1443,7 @@ QList<Date> EventsScene::decodeDataDrop_old(QGraphicsSceneDragDropEvent* e)
     return dates;
 }
 
-QPair<QList<QPair<QString, Date>>, QMap<QString, double>> EventsScene::decodeDataDrop(QGraphicsSceneDragDropEvent* e)
+QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::decodeDataDrop(QGraphicsSceneDragDropEvent* e)
 {
     const QMimeData* mimeData = e->mimeData();
 
@@ -1442,7 +1454,7 @@ QPair<QList<QPair<QString, Date>>, QMap<QString, double>> EventsScene::decodeDat
     QList<int> rejectedRows;
 
     QList<QPair<QString, Date>> dates;
-    QMap<QString, double> chronocurveEventValues;
+    QList<QMap<QString, double>> curveValues;
 
     while (!stream.atEnd()) {
         QString itemStr;
@@ -1479,29 +1491,27 @@ QPair<QList<QPair<QString, Date>>, QMap<QString, double>> EventsScene::decodeDat
 
         } else {
             date = Date::fromCSV(dataStr, csvLocal);
+            QMap<QString, double> chronocurveValues;
             if (!date.isNull()) {
                 dates << qMakePair(eventName, date);
                 acceptedRows.append(csvRow);
 
                 if (dataStr.size() >= 15) {
-                    chronocurveEventValues.insert("Y1", dataStr.at(15).toDouble());
+                    chronocurveValues.insert("YInc", QLocale().toDouble(dataStr.at(15)));
                 }
                 if (dataStr.size() >= 16) {
-                    chronocurveEventValues.insert("S1", dataStr.at(16).toDouble());
+                    chronocurveValues.insert("SInc", QLocale().toDouble(dataStr.at(16)));
                 }
                 if (dataStr.size() >= 17) {
-                    chronocurveEventValues.insert("Y2", dataStr.at(17).toDouble());
+                    chronocurveValues.insert("YDec", QLocale().toDouble(dataStr.at(17)));
                 }
                 if (dataStr.size() >= 18) {
-                    chronocurveEventValues.insert("S2", dataStr.at(18).toDouble());
+                    chronocurveValues.insert("YInt", QLocale().toDouble(dataStr.at(18)));
                 }
                 if (dataStr.size() >= 19) {
-                    chronocurveEventValues.insert("Y3", dataStr.at(19).toDouble());
+                    chronocurveValues.insert("SInt", QLocale().toDouble(dataStr.at(19)));
                 }
-                if (dataStr.size() >= 20) {
-                    chronocurveEventValues.insert("S3", dataStr.at(20).toDouble());
-                }
-
+                curveValues << chronocurveValues;
             } else {
                rejectedRows.append(csvRow);
             }
@@ -1511,5 +1521,5 @@ QPair<QList<QPair<QString, Date>>, QMap<QString, double>> EventsScene::decodeDat
     emit csvDataLineDropAccepted(acceptedRows); //connected to slot ImportDataView::removeCsvRows
     emit csvDataLineDropRejected(rejectedRows);
 
-    return QPair<QList<QPair<QString, Date>>, QMap<QString, double>>(dates, chronocurveEventValues);
+    return QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>>(dates, curveValues);
 }

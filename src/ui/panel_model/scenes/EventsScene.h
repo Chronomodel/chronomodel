@@ -95,7 +95,7 @@ public:
     EventItem *dateReleased(DateItem *dateItem);
 
     QList<Date> decodeDataDrop_old(QGraphicsSceneDragDropEvent* e);
-    QPair<QList<QPair<QString, Date>>, QMap<QString, double>> decodeDataDrop(QGraphicsSceneDragDropEvent* e); // = Qlist<QPair<Event'name, data>>
+    QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> decodeDataDrop(QGraphicsSceneDragDropEvent* e); // = Qlist<QPair<Event'name, data>>
 
     void adaptItemsForZoom(const double prop);
 

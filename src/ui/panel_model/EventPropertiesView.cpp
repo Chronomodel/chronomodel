@@ -250,7 +250,7 @@ void EventPropertiesView::setEvent(const QJsonObject& event)
 {
     // if set Event come becaus we use Project::updateDate(), we are on the same Event
     // so we are on the EventPropertiesView not on the EventScene
-    if (mEvent[STATE_ID] != event[STATE_ID]){
+    if (mEvent[STATE_ID] != event[STATE_ID]) {
         mCalibBut->setChecked(false);
     }
     
@@ -260,7 +260,7 @@ void EventPropertiesView::setEvent(const QJsonObject& event)
     // Select the first date if the list is not empty
     QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
     bool hasDates = (dates.size() > 0);
-    if (hasDates){
+    if (hasDates) {
         mCurrentDateIdx = 0;
     }
     
@@ -327,16 +327,16 @@ void EventPropertiesView::updateEvent()
         mSIntLab->setVisible(showInt);
         mSIntEdit->setVisible(showInt);
         
-        if(showInt){
+        if (showInt) {
             mYIntLab->setText(settings.intensiteLabel() + " :");
         }
         
-        mYIncEdit->setText(QString::number(mEvent.value(STATE_EVENT_Y_INC).toDouble()));
-        mYDecEdit->setText(QString::number(mEvent.value(STATE_EVENT_Y_DEC).toDouble()));
-        mYIntEdit->setText(QString::number(mEvent.value(STATE_EVENT_Y_INT).toDouble()));
+        mYIncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Y_INC).toDouble()));
+        mYDecEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Y_DEC).toDouble()));
+        mYIntEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Y_INT).toDouble()));
         
-        mSIncEdit->setText(QString::number(mEvent.value(STATE_EVENT_S_INC).toDouble()));
-        mSIntEdit->setText(QString::number(mEvent.value(STATE_EVENT_S_INT).toDouble()));
+        mSIncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_S_INC).toDouble()));
+        mSIntEdit->setText(locale().toString(mEvent.value(STATE_EVENT_S_INT).toDouble()));
         
         mTopView->setVisible(true);
 
@@ -354,7 +354,7 @@ void EventPropertiesView::updateEvent()
             QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
            
             bool hasDates = (dates.size() > 0);
-            if (hasDates && mCurrentDateIdx>= 0) {
+            if (hasDates && mCurrentDateIdx >= 0) {
                 //emit updateCalibRequested(dates[mCurrentDateIdx].toObject());
                 mCalibBut->setEnabled(true);
                 mDeleteBut->setEnabled(true);
@@ -369,7 +369,7 @@ void EventPropertiesView::updateEvent()
 
 
         } else if (type == Event::eKnown) {
-            mKnownFixedEdit -> setText(QString::number(mEvent.value(STATE_EVENT_KNOWN_FIXED).toDouble()));
+            mKnownFixedEdit -> setText(locale().toString(mEvent.value(STATE_EVENT_KNOWN_FIXED).toDouble()));
             updateKnownGraph();
         }
     }
@@ -428,7 +428,7 @@ void EventPropertiesView::setChronocurveSettings(bool enabled, char processType)
 void EventPropertiesView::updateEventYInc()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_Y_INC] = mYIncEdit->text().toDouble();
+    event[STATE_EVENT_Y_INC] = locale().toDouble(mYIncEdit->text());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y Inc updated"));
 }
 
@@ -436,7 +436,7 @@ void EventPropertiesView::updateEventYInc()
 void EventPropertiesView::updateEventYDec()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_Y_DEC] = mYDecEdit->text().toDouble();
+    event[STATE_EVENT_Y_DEC] = locale().toDouble(mYDecEdit->text());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y Dec updated"));
 }
 
@@ -444,7 +444,7 @@ void EventPropertiesView::updateEventYDec()
 void EventPropertiesView::updateEventYInt()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_Y_INT] = mYIntEdit->text().toDouble();
+    event[STATE_EVENT_Y_INT] = locale().toDouble(mYIntEdit->text());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y Int updated"));
 }
 
@@ -452,7 +452,7 @@ void EventPropertiesView::updateEventYInt()
 void EventPropertiesView::updateEventSInc()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_S_INC] = mSIncEdit->text().toDouble();
+    event[STATE_EVENT_S_INC] = locale().toDouble(mSIncEdit->text());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S Inc updated"));
 }
 
@@ -460,7 +460,7 @@ void EventPropertiesView::updateEventSInc()
 void EventPropertiesView::updateEventSInt()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_S_INT] = mSIntEdit->text().toDouble();
+    event[STATE_EVENT_S_INT] = locale().toDouble(mSIntEdit->text());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S Int updated"));
 }
 
