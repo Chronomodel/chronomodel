@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2021
 
 Authors :
 	Philippe LANOS
@@ -86,6 +86,8 @@ public:
 
     static short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const Model* model);
 };
+
+void sampleInCumulatedRepartition (Event *event, const ProjectSettings& settings, const double min, const double max);
 
 // These 2 global functions are used to sort events and phases lists in result view
 

@@ -292,7 +292,7 @@ QString MCMCLoopMain::initMCMC()
             }
 #endif
 
-
+/*
 
             // Création de la cumulé de répartition de date
             // 1 - Search for tmin and tmax, distribution curves, identical to the calibration.
@@ -312,11 +312,11 @@ QString MCMCLoopMain::initMCMC()
 
             }
             // 2- Search for the common interval between constraints and calibrations
-
+*/
             /* In ChronoModel 2.0, we initialize the theta uniformly between tmin and tmax possible.
              * Now, we use the cumulative date density distribution function.
              */
-
+/*
             // Calibrés en dehors des contraintes
             // CE cas doit être dissocié en deux, la densité est à droite ou la densité est à gauche donc favoriser un des cotés
 
@@ -350,13 +350,13 @@ QString MCMCLoopMain::initMCMC()
                     tWhile += unionStep;
 
                 }
-
+*/
                 /* Given the stratigraphic constraints and the possibility of having dates outside the study period.
                  * The maximum of the distribution curve can be different from the number of dates
                  * and the minimum can be different from 0.
                  */
 
-
+/*
                 const double maxRepartition (unionRepartition.last());
                 const double minRepartition (unionRepartition.first());
                 if (minRepartition!=0. || maxRepartition!= 0.) {
@@ -368,6 +368,9 @@ QString MCMCLoopMain::initMCMC()
                     unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
                 }
             }
+ */
+
+            sampleInCumulatedRepartition(unsortedEvents.at(i), mModel->mSettings,min, max);
 
             unsortedEvents.at(i)->mInitialized = true;
 

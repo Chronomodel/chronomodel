@@ -206,7 +206,7 @@ QString MCMCLoopChronocurve::initMCMC()
         return ABORTED_BY_USER;
 
     // ---------------------- Reset Events ---------------------------
-    for (Event* ev : events){
+    for (Event* ev : events) {
         ev->mInitialized = false;
     }
 
@@ -234,7 +234,7 @@ QString MCMCLoopChronocurve::initMCMC()
 
             mModel->initNodeEvents(); // ?? FAIT AU-DESSUS ?
             QString circularEventName = "";
-            QList< Event*> startEvents = QList<Event*>();
+          //  QList< Event*> startEvents = QList<Event*>();
             const double min (unsortedEvents.at(i)->getThetaMinRecursive (tmin));
             
             // ?? Comment circularEventName peut-il être pas vide ?
@@ -254,8 +254,8 @@ QString MCMCLoopChronocurve::initMCMC()
             // Chronocurve init Theta event :
             // On initialise les theta près des dates ti
             // ----------------------------------------------------------------
-            if (true) //mChronocurveSettings.mTimeType == ChronocurveSettings::eModeFixed)
-            {
+            if (true) {//mChronocurveSettings.mTimeType == ChronocurveSettings::eModeFixed)
+       /*     {
                 // Dans le cas theta fixe (pas de Bayésien),
                 // On initialise les theta event à la valeur médiane de la calibration de leur première date.
                 // La valeur médiane est retrouvée grâce à Q2
@@ -270,7 +270,10 @@ QString MCMCLoopChronocurve::initMCMC()
                 
                 unsortedEvents.at(i)->mTheta.mX = quartiles.Q2;
 
-            } else {
+            }*/
+                sampleInCumulatedRepartition(unsortedEvents.at(i), mModel->mSettings,min, max);
+
+               } else {
                 // Idem Chronomodel, mais jamais utilisé ici :
                 unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
             }
@@ -350,9 +353,9 @@ QString MCMCLoopChronocurve::initMCMC()
             // Chronocurve init VG :
             // ----------------------------------------------------------------
             Event* event = unsortedEvents.at(i);
-            if(mChronocurveSettings.mVarianceType == ChronocurveSettings::eModeFixed){
+            if (mChronocurveSettings.mVarianceType == ChronocurveSettings::eModeFixed) {
                 event->mVG.mX = mChronocurveSettings.mVarianceFixed;
-            }else{
+            } else {
                 event->mVG.mX = 1.;
             }
             
@@ -383,10 +386,8 @@ QString MCMCLoopChronocurve::initMCMC()
     QString log;
     emit stepChanged(tr("Initializing Variances..."), 0, events.size());
 
-    for (int i=0; i<events.size(); ++i)
-    {
-        for (int j=0; j<events.at(i)->mDates.size(); ++j)
-        {
+    for (int i=0; i<events.size(); ++i) {
+        for (int j=0; j<events.at(i)->mDates.size(); ++j) {
             Date& date = events.at(i)->mDates[j];
 
             // date.mSigma.mX = sqrt(shrinkageUniform(events[i]->mS02)); // modif the 2015/05/19 with PhL
@@ -413,9 +414,10 @@ QString MCMCLoopChronocurve::initMCMC()
     // ----------------------------------------------------------------
     //  Init alpha lissage
     // ----------------------------------------------------------------
-    if(mChronocurveSettings.mCoeffLissageType == ChronocurveSettings::eModeFixed){
+    if (mChronocurveSettings.mCoeffLissageType == ChronocurveSettings::eModeFixed){
         mModel->mAlphaLissage.mX = mChronocurveSettings.mAlphaLissage;
-    }else{
+
+    } else {
         mModel->mAlphaLissage.mX = 1e-6;
     }
     
@@ -430,10 +432,9 @@ QString MCMCLoopChronocurve::initMCMC()
     log += "<hr>";
     log += textBold("Events Initialization (with their data)");
 
-    for (int i=0; i<events.size(); ++i) {
-        
-        const Event* event = events[i];
-        
+    for (int i = 0; i < events.size(); ++i) {
+           const Event* event = events[i];
+
         log += "<hr><br>";
         
         log += line(textBlue(tr("Event ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(events.size()), event->mName)));
@@ -441,8 +442,8 @@ QString MCMCLoopChronocurve::initMCMC()
         log += line(textBlue(tr(" - Sigma_MH on Theta : %1").arg(stringForLocal(event->mTheta.mSigmaMH))));
         log += line(textBlue(tr(" - S02 : %1").arg(stringForLocal(event->mS02))));
         
-        int j (0);
-        for (const Date & date : event->mDates) {
+        int j = 0;
+        for (const Date& date : event->mDates) {
             ++j;
             log += "<br>";
             

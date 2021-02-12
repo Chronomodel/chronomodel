@@ -38,7 +38,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "ModelUtilities.h"
-#include "Date.h"
 #include "EventConstraint.h"
 #include "PhaseConstraint.h"
 #include "../PluginAbstract.h"
@@ -751,4 +750,83 @@ short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double>& hpd, cons
         ++iter;
     }
     return answer;
+}
+
+void sampleInCumulatedRepartition( Event* event, const ProjectSettings &settings, const double min, const double max)
+{
+
+    // Création de la cumulé de répartition de date
+    // 1 - Search for tmin and tmax, distribution curves, identical to the calibration.
+    double unionTmin (+INFINITY);
+    double unionTmax (-INFINITY);
+    double unionStep (settings.mStep);
+    for (auto&& d : event->mDates) {
+        if (d.mCalibration != nullptr && !d.mCalibration->mCurve.isEmpty() ) {
+            unionTmin = std::min(unionTmin, d.mCalibration->mTmin);
+            unionTmax = std::max(unionTmax, d.mCalibration->mTmax);
+            unionStep = std::min(unionStep, d.mCalibration->mStep);
+
+        } else {
+            unionTmin = settings.mTmin;
+            unionTmax = settings.mTmax;
+        }
+
+    }
+    // 2- Search for the common interval between constraints and calibrations
+
+    /* In ChronoModel 2.0, we initialize the theta uniformly between tmin and tmax possible.
+     * Now, we use the cumulative date density distribution function.
+     */
+
+    // Calibrés en dehors des contraintes
+    // CE cas doit être dissocié en deux, la densité est à droite ou la densité est à gauche donc favoriser un des cotés
+
+    if (unionTmax< min) {
+        event->mTheta.mX = Generator::gaussByDoubleExp(min, (max-min)/3.4, min, max);
+
+    } else if (max<unionTmin){
+
+        //unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
+
+        event->mTheta.mX = Generator::gaussByDoubleExp(max, (max-min)/3.4, min, max);
+
+
+    } else {
+        unionTmin = std::max(unionTmin, min);
+        unionTmax = std::min(unionTmax, max);
+
+
+        // 3 - Création de la cumulé des courbe de répartition dans l'intervalle
+        QVector<double> unionRepartition (0);
+        double tWhile (unionTmin);
+        double sumWhile (0.);
+
+        while (tWhile<= unionTmax) {
+            sumWhile= 0.;
+            for (auto&& d : event->mDates) {
+                sumWhile += interpolate_value_from_curve(tWhile, d.mCalibration->mRepartition, d.mCalibration->mTmin, d.mCalibration->mTmax);
+
+            }
+            unionRepartition.append(sumWhile);
+            tWhile += unionStep;
+
+        }
+
+        /* Given the stratigraphic constraints and the possibility of having dates outside the study period.
+         * The maximum of the distribution curve can be different from the number of dates
+         * and the minimum can be different from 0.
+         */
+
+
+        const double maxRepartition (unionRepartition.last());
+        const double minRepartition (unionRepartition.first());
+        if (minRepartition!=0. || maxRepartition!= 0.) {
+            const double idx = vector_interpolate_idx_for_value(Generator::randomUniform()*(maxRepartition-minRepartition) + minRepartition, unionRepartition);
+            event->mTheta.mX = unionTmin + idx * unionStep;
+
+        } else {
+
+            event->mTheta.mX = Generator::randomUniform(min, max);
+        }
+    }
 }
