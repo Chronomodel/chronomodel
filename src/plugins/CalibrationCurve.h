@@ -40,11 +40,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef CALIBRATIONCURVE_H
 #define CALIBRATIONCURVE_H
 
-#include "PluginAbstract.h"
-
 #include <QString>
 #include <QMap>
-#include <MCMCSettings.h>
+#include "MCMCSettings.h"
+#include "PluginAbstract.h"
+
+//class PluginAbstract;
 
 class CalibrationCurve
 {

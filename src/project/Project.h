@@ -110,7 +110,7 @@ public:
     void updateState(const QJsonObject& state, const QString& reason, bool notify);
 
     // Special events for selection... too bad!
-    void sendEventsSelectionChanged();
+   // void sendEventsSelectionChanged(); // not used
 
     static QJsonObject emptyState();
     QJsonObject state() const;

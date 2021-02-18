@@ -489,7 +489,7 @@ EventItem* ArrowItem::findEventItemWithJsonId(const int id)
      QList<AbstractItem*> listItems = mScene->getItemsList();
      foreach (AbstractItem* it, listItems) {
         EventItem* ev = static_cast<EventItem*>(it);
-        const QJsonObject evJson = ev->getEvent();
+        const QJsonObject evJson = ev->getData();
         if (evJson.value(STATE_ID) == id)
             return ev;
     }

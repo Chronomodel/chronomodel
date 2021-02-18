@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2021
 
 Authors :
 	Philippe LANOS
@@ -45,8 +45,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ProjectSettings.h"
 #include "RefCurve.h"
 #include "Generator.h"
-//#include "PluginCombineViewAbstract.h"
-//#include "CalibrationCurve.h"
+#include "CalibrationCurve.h"
+//#include "PluginFormAbstract.h"
 
 #include <QObject>
 #include <QJsonObject>

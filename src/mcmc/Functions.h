@@ -96,6 +96,9 @@ QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString
 
 QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double, double> &hpd, double thresh);
 
+
+
+
 inline double rounddouble(const double f,const int prec)
 {
     double result;

@@ -239,17 +239,18 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
         emit projectDesignChanged(mModel);
 
 
-    if (mState != state || force)  {
+  //  if (mState != state || force)  {
 
-        SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
-        //command->setText("pushProjectState " + command->actionText());
-        if (reason != NEW_PROJECT_REASON && reason != PROJECT_LOADED_REASON)
-            MainWindow::getInstance()->getUndoStack()->push(command);
+        if (reason != NEW_PROJECT_REASON && reason != PROJECT_LOADED_REASON) {
+            SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
+            //command->setText("pushProjectState " + command->actionText());
+            MainWindow::getInstance()->getUndoStack()->push(command);  
+        }
 
         updateState(state, reason, notify);
         return true;
-    }
-    return false;
+  //  }
+  //  return false;
 
 }
 
@@ -275,6 +276,7 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
         mDesignIsChanged = true;
         mStructureIsChanged = true;
         return;
+
     } else {
         // Check Study Period modification
         const double tminPeriodNew = stateNew.value(STATE_SETTINGS_TMIN).toDouble();
@@ -507,6 +509,7 @@ void Project::updateState(const QJsonObject& state, const QString& reason, bool 
     }
 }
 
+/*
 void Project::sendEventsSelectionChanged()
 {
 #ifdef DEBUG
@@ -516,7 +519,7 @@ void Project::sendEventsSelectionChanged()
     //QCoreApplication::postEvent(this, e, Qt::NormalEventPriority);
     QGuiApplication::postEvent(this, e, Qt::NormalEventPriority);
 }
-
+*/
 // Project File Management
 
 bool Project::load(const QString& path)
@@ -628,6 +631,7 @@ bool Project::load(const QString& path)
 
            qDebug() << "in Project::load  end checkDatesCompatibility";
             //  Check if dates are valid on the current study period
+            mState = QJsonObject();
             mState = checkValidDates(loadingState);
 
             recenterProject();
@@ -638,12 +642,10 @@ bool Project::load(const QString& path)
             unselectedAllInState(); // modify mState
 
             // If a version update is to be done :
-            QJsonObject state = mState;
-            state[STATE_APP_VERSION] = qApp->applicationVersion();
+           // QJsonObject state = mState;
+            mState[STATE_APP_VERSION] = qApp->applicationVersion();
 
             // -------------------- look for the calibration file --------------------
-          //  if (newerProject || olderProject)
-           //     return true;
 
             QString caliPath = path + ".cal";
             QFileInfo calfi(caliPath);
@@ -1032,7 +1034,7 @@ bool Project::insert(const QString& path)
            newState[STATE_PHASES_CONSTRAINTS] = newPhaseConstraints;
 
            QJsonArray newEvents = newState.value(STATE_EVENTS).toArray();
-           for (auto eventJSON : newEvents) {
+           for (auto&& eventJSON : newEvents) {
               QJsonObject event = eventJSON.toObject();
               // set on the right + mItemWidth(150.) in AbstractItem.h
               event[STATE_ITEM_X] = event[STATE_ITEM_X].toDouble() + maxXEvent - minXEventNew + 200;
@@ -1051,7 +1053,7 @@ bool Project::insert(const QString& path)
            newState[STATE_EVENTS] = newEvents;
 
            QJsonArray newEventConstraints = newState.value(STATE_EVENTS_CONSTRAINTS).toArray();
-           for (auto eventConsJSON : newEventConstraints) {
+           for (auto&& eventConsJSON : newEventConstraints) {
                QJsonObject eventCons = eventConsJSON.toObject();
                eventCons[STATE_ID] = eventCons[STATE_ID].toInt() + maxIDEventConstraint;
 
@@ -1171,7 +1173,10 @@ bool Project::saveProjectToFile()
             mLastSavedState = mState;
 
             QJsonDocument jsonDoc(mState);
-            file.write(jsonDoc.toJson(QJsonDocument::Indented));
+            QByteArray textDoc = jsonDoc.toJson(QJsonDocument::Indented);
+            //file.write(jsonDoc.toJson(QJsonDocument::Indented));
+            file.write(textDoc);
+
             file.resize(file.pos());
             file.close();
         } else
@@ -1218,7 +1223,7 @@ bool Project::recenterProject()
     double minXPhase(HUGE_VAL), maxXPhase(- HUGE_VAL), minYPhase(HUGE_VAL), maxYPhase(- HUGE_VAL);
 
     const QJsonArray phases = mState.value(STATE_PHASES).toArray();
-    for (auto phaseJSON : phases) {
+    for (auto&& phaseJSON : phases) {
         QJsonObject phase = phaseJSON.toObject();
         minXPhase =std::min(minXPhase, phase[STATE_ITEM_X].toDouble());
         maxXPhase =std::max(maxXPhase, phase[STATE_ITEM_X].toDouble());
@@ -1228,7 +1233,7 @@ bool Project::recenterProject()
     }
 
     const QJsonArray events = mState.value(STATE_EVENTS).toArray();
-    for (auto eventJSON : events) {
+    for (auto&& eventJSON : events) {
         QJsonObject event = eventJSON.toObject();
         minXEvent =std::min(minXEvent, event[STATE_ITEM_X].toDouble());
         maxXEvent =std::max(maxXEvent, event[STATE_ITEM_X].toDouble());
@@ -1240,7 +1245,7 @@ bool Project::recenterProject()
 
     QJsonObject newState = mState;
     QJsonArray newPhases = newState.value(STATE_PHASES).toArray();
-    for (auto phaseJSON : newPhases) {
+    for (auto&& phaseJSON : newPhases) {
         QJsonObject phase = phaseJSON.toObject();
         phase[STATE_ITEM_X] =  phase[STATE_ITEM_X].toDouble() - (maxXPhase + minXPhase)/2.;
         phase[STATE_ITEM_Y] = phase[STATE_ITEM_Y].toDouble() - (maxYPhase + minYPhase)/2.;
@@ -1249,7 +1254,7 @@ bool Project::recenterProject()
     newState[STATE_PHASES] = newPhases;
 
     QJsonArray newEvents = newState.value(STATE_EVENTS).toArray();
-    for (auto eventJSON : newEvents) {
+    for (auto&& eventJSON : newEvents) {
        QJsonObject event = eventJSON.toObject();
        event[STATE_ITEM_X] = event[STATE_ITEM_X].toDouble() - (maxXEvent + minXEvent)/2. ;
        event[STATE_ITEM_Y] = event[STATE_ITEM_Y].toDouble() - (maxYEvent + minYEvent)/2. ;
@@ -2082,7 +2087,7 @@ QJsonObject Project::checkValidDates(const QJsonObject& stateToCheck)
     ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
 
     QJsonArray events = state.value(STATE_EVENTS).toArray();
-    for (int i=0; i<events.size(); ++i) {
+    for (int i = 0; i < events.size(); ++i) {
         QJsonObject event = events.at(i).toObject();
         QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
         for (int j=0; j<dates.size(); ++j) {

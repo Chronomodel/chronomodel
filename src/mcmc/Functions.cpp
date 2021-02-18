@@ -861,3 +861,4 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
 
     return intervals;
 }
+

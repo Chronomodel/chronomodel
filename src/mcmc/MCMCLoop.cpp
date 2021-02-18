@@ -188,7 +188,7 @@ void MCMCLoop::run()
 
             try {
                 this->update();
-                qDebug()<<"MCMCLoop Burn update"<< chain.mBurnIterIndex<<chain.mNumBurnIter;
+               // qDebug()<<"MCMCLoop Burn update"<< chain.mBurnIterIndex<<chain.mNumBurnIter;
             } catch (QString error) {
                 mAbortedReason = error;
                 return;

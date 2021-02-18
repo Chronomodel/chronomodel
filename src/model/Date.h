@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MHVariable.h"
 #include "StateKeys.h"
 #include "../project/ProjectSettings.h"
+//#include "PluginAbstract.h"
 //#include "CalibrationCurve.h"
 
 #include <QMap>

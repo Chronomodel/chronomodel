@@ -66,11 +66,13 @@ EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonOb
 
 EventItem::~EventItem()
 {
-    mScene = nullptr;
-    const QList<QGraphicsItem*> datesItemsList = childItems();
-
-    for (QGraphicsItem* item: datesItemsList) {
-        delete [] item;
+    QList<QGraphicsItem*> dateItems = childItems();
+    int NItems = childItems().size()-1;
+    for (int i = NItems; i >= 0; --i) {
+        mScene->removeItem(dateItems[i]);
+        dateItems[i]->setParentItem(nullptr);
+        delete [] dateItems[i];
+        //dateItems.removeAt(i);
     }
 }
 
@@ -86,7 +88,7 @@ void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
         itemScene->clearSelection();
     }
 
-    if (itemScene->selectedItems().size()<2 ) {
+    if (itemScene->selectedItems().size() < 2 ) {
         if (!itemScene->itemClicked(this, e))
             setZValue(2.);
         else
@@ -97,7 +99,7 @@ void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 }
 
 //Event Managment
-QJsonObject& EventItem::getEvent()
+QJsonObject& EventItem::getData()
 {
     return mData;
 }
@@ -140,8 +142,6 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
         for (int i = NItems; i >= 0; --i) {
             mScene->removeItem(dateItems[i]);
             dateItems[i]->setParentItem(nullptr);
-
-
             //delete [] dateItems[i];
             dateItems.removeAt(i);
         }

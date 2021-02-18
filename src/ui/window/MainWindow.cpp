@@ -461,8 +461,7 @@ void MainWindow::newProject()
     if ((mProject == nullptr) || (mProject->askToSave(tr("Save current project as...") )))
         yesCreate= true;
 
-    if (yesCreate)
-    {
+    if (yesCreate) {
         Project* newProject = new Project();
          // just update mAutoSaveTimer to avoid open the save() dialog box
         newProject-> mAutoSaveTimer->stop();
@@ -1131,7 +1130,7 @@ void MainWindow::activateInterface(bool activate)
     mEventsColorAction->setEnabled(activate);
     mEventsMethodAction->setEnabled(activate);
     mDatesMethodAction->setEnabled(activate);
-    for (auto act : mDatesActions)
+    for (auto&& act : mDatesActions)
         act->setEnabled(activate);
 
     // Les actions suivantes doivent être désactivées si on ferme le projet.

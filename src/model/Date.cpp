@@ -1595,20 +1595,31 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
                     delta2 = dataTmp.at(firstColNum + 2);
                 }
                 if (!isComment(deltaType) && !isComment(delta1) && !isComment(delta2)) {
-                    if (deltaType == "fixed") {
+                    if (deltaType == "fixed" && csvLocale.toDouble(delta1) != 0) {
                         date.mDeltaType = Date::eDeltaFixed;
                         date.mDeltaFixed = csvLocale.toDouble(delta1);
                         
-                    } else if (deltaType == "range") {
+                    } else if (deltaType == "range" && csvLocale.toDouble(delta1) < csvLocale.toDouble(delta2)) {
                         date.mDeltaType = Date::eDeltaRange;
                         date.mDeltaMin = csvLocale.toDouble(delta1);
                         date.mDeltaMax = csvLocale.toDouble(delta2);
                         
-                    } else if (deltaType == "gaussian") {
+                    } else if (deltaType == "gaussian" && csvLocale.toDouble(delta2) > 0) {
                         date.mDeltaType = Date::eDeltaGaussian;
                         date.mDeltaAverage = csvLocale.toDouble(delta1);
                         date.mDeltaError = csvLocale.toDouble(delta2);
+
+                    } else {
+                        date.mDeltaType = Date::eDeltaNone;
+                        date.mDeltaFixed = 0.;
+                        date.mDeltaMin = 0.;
+                        date.mDeltaMax = 0;
+                        date.mDeltaAverage = 0.;
+                        date.mDeltaError = 0.;
+
                     }
+                } else {
+                    date.mDeltaType = Date::eDeltaNone;
                 }
             }
 

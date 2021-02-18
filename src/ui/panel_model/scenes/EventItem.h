@@ -55,7 +55,7 @@ public:
     void setWithSelectedPhase(const bool selected) {mWithSelectedPhase = selected;}
     bool withSelectedPhase() { return mWithSelectedPhase;}
 
-    QJsonObject& getEvent();
+    QJsonObject& getData();
     virtual void setEvent(const QJsonObject& event, const QJsonObject& settings);
 
     virtual QRectF boundingRect() const;

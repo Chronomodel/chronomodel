@@ -342,8 +342,8 @@ void ModelView::setProject(Project* project)
 
     showCalibration(false);
 
-    QJsonObject state = mProject->state();
-    const ProjectSettings settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+   // QJsonObject state = mProject->state();
+    const ProjectSettings settings = ProjectSettings::fromJson(mProject->mState[STATE_SETTINGS].toObject());
 
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
@@ -362,6 +362,7 @@ void ModelView::setProject(Project* project)
     mProject->unselectedAllInState();
 
     mEventsScene->createSceneFromState();
+    //mEventsScene->updateSceneFromState();
     mPhasesScene->createSceneFromState();
 }
 
@@ -601,7 +602,7 @@ bool ModelView::findCalibrateMissing()
 
         progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
 
-        int position(0);
+        int position = 0;
         for (auto& ev : events)
             position += ev.mDates.size();
         progress->setMaximum(position);
@@ -754,7 +755,7 @@ void ModelView::searchEvent()
         return;
 
     // Search text has changed : regenerate corresponding events list
-    if (search != mLastSearch){
+    if (search != mLastSearch) {
         mLastSearch = search;
         mSearchIds.clear();
 

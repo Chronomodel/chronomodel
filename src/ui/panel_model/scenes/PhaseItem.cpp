@@ -391,7 +391,7 @@ QJsonArray PhaseItem::getEvents() const
     QJsonObject state = MainWindow::getInstance()->getProject()->state();
     QJsonArray allEvents = state.value(STATE_EVENTS).toArray();
     QJsonArray events;
-    for (int i=0; i<allEvents.size(); ++i) {
+    for (int i = 0; i < allEvents.size(); ++i) {
         QJsonObject event = allEvents.at(i).toObject();
         QString phasesIdsStr = event.value(STATE_EVENT_PHASE_IDS).toString();
         QStringList phasesIds = phasesIdsStr.split(",");

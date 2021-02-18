@@ -510,13 +510,15 @@ void MCMCLoopChronocurve::update()
     // --------------------------------------------------------------
     //  Update theta Events
     // --------------------------------------------------------------
-    QList<QString> tmp;
+    /*QList<QString> tmp;
     for (Event*& evt : mModel->mEvents) {
         tmp.append(evt->mName);
     }
 
     qDebug()<<"liste Event initial"<<tmp;
     tmp.clear();
+    */
+
     // copie la liste des pointeurs
     std::vector<Event*> initListEvents (mModel->mEvents.size());
     std::copy(mModel->mEvents.begin(), mModel->mEvents.end(), initListEvents.begin() );
@@ -527,13 +529,13 @@ void MCMCLoopChronocurve::update()
         reduceEventsTheta(mModel->mEvents); // On passe en temps réduit entre 0 et 1
         spreadEventsTheta(mModel->mEvents);
         
-        for (Event*& evt : mModel->mEvents) {
+        /*for (Event*& evt : mModel->mEvents) {
             tmp.append(evt->mName);
         }
 
         qDebug()<<"liste Event apres orderEventsByTheta ="<<tmp;
         tmp.clear();
-
+        */
 
         SplineMatrices matrices = prepareCalculSpline(mModel->mEvents);
         double h_current = h_YWI_AY(matrices, mModel->mEvents, mModel->mAlphaLissage.mX) * h_alpha(matrices, mModel->mEvents.size(), mModel->mAlphaLissage.mX) * h_theta(mModel->mEvents);
@@ -546,14 +548,15 @@ void MCMCLoopChronocurve::update()
         //  => on effectue donc la mise à jour directement ici, sans passer par une fonction
         //  de la classe event (qui n'a pas accès aux autres events)
         // ----------------------------------------------------------------------
-        qDebug()<<"mChronocurveSettings.mTimeType == ChronocurveSettings::eModeBayesian ici memo = "<<doMemo<<chain.mBatchIterIndex<<chain.mBatchIndex;
+       // qDebug()<<"mChronocurveSettings.mTimeType == ChronocurveSettings::eModeBayesian ici memo = "<<doMemo<<chain.mBatchIterIndex<<chain.mBatchIndex;
 
-        for (Event*& evt : mModel->mEvents) {
+        /*for (Event*& evt : mModel->mEvents) {
             tmp.append(evt->mName);
         }
 
         qDebug()<<"liste initListEvents  1 ="<<tmp;
         tmp.clear();
+        */
 
         for (Event*& event : initListEvents) {
             const double min = event->getThetaMin(t_min);
@@ -574,25 +577,7 @@ void MCMCLoopChronocurve::update()
             if (value_new >= min && value_new <= max) {
                 // On force la mise à jour de la nouvelle valeur pour calculer h_new
                 event->mTheta.mX = value_new;
-      /*          for (Event*& evt : mModel->mEvents) {
-                    tmp.append(evt->mName);
-                }
 
-                qDebug()<<"liste Event avant orderEventsByTheta 1 ="<<tmp;
-                tmp.clear();
-*/
-
-
-                /*
-                QList<double> sortedX;
-                for (Event*& event : mModel->mEvents) {
-                    sortedX.append(event->mTheta.mX);
-                }
-
-                std::sort(sortedX.begin(), sortedX.end());
-                SplineMatrices matrices = prepareCalculSplineX(sortedX);
-                double h_new = h_YWI_AXY(matrices, mModel->mEvents, mModel->mAlphaLissage.mX) * h_alpha(matrices, mModel->mEvents.size(), mModel->mAlphaLissage.mX) * h_theta(mModel->mEvents);
-*/
                 orderEventsByTheta(mModel->mEvents); // On réordonne les Events suivant les thetas croissants
                 saveEventsTheta(mModel->mEvents); // On sauvegarde les valeurs de theta pour chaque Event
                 reduceEventsTheta(mModel->mEvents); // On passe en temps réduit entre 0 et 1
@@ -601,13 +586,6 @@ void MCMCLoopChronocurve::update()
                 SplineMatrices matrices = prepareCalculSpline(mModel->mEvents);
                 double h_new = h_YWI_AY(matrices, mModel->mEvents, mModel->mAlphaLissage.mX) * h_alpha(matrices, mModel->mEvents.size(), mModel->mAlphaLissage.mX) * h_theta(mModel->mEvents);
 
-                /*
-                for (Event*& evt : mModel->mEvents) {
-                    tmp.append(evt->mName);
-                }
-                qDebug()<<"liste mModel->mEvents apres prepareCalculSpline ="<<tmp;
-                tmp.clear();
-                */
 
                 restoreEventsTheta(mModel->mEvents); // On supprime les décalages introduits par spreadEventsTheta pour les calculs de h_new
 
@@ -617,71 +595,31 @@ void MCMCLoopChronocurve::update()
                 // On reprend l'ancienne valeur, qui sera éventuellement mise à jour dans ce qui suit (Metropolis Hastings)
                 event->mTheta.mX = value_current;
 
- /*               for (Event*& evt : mModel->mEvents) {
-                    tmp.append(evt->mName);
-                }
-
-                qDebug()<<"liste Event avant orderEventsByTheta 3 ="<<tmp;
-                tmp.clear();
-*/
-    //            orderEventsByTheta(mModel->mEvents); // PHD ??
-                
                 // Pour l'itération suivante :
                 h_current = h_new;
             }
-           //  qDebug()<<"avant tryUpdate memo = "<<event->mName<<event->mTheta.mHistoryAcceptRateMH->size();
 
-
-            /*for (Event*& evt : mModel->mEvents) {
-                 tmp.append(evt->mName);
-             }
-
-             qDebug()<<"liste Event avant tryUpdate ="<<tmp;
-             tmp.clear();
-*/
             event->mTheta.tryUpdate(value_new, rapport);
 
-            // on réordonne les theta car celui courant a peut-être changé
-    //        orderEventsByTheta(mModel->mEvents); // PHD ??
-   /*         for (Event*& evt : mModel->mEvents) {
-                tmp.append(evt->mName);
-            }
-
-            qDebug()<<"liste Event avant orderEventsByTheta 3 ="<<tmp;
-            tmp.clear();
- */           //qDebug()<<"aprés orderEventByTheta memo = "<<event->mName<<event->mTheta.mHistoryAcceptRateMH->size();
 
             if (doMemo) {
                event->mTheta.memo();
                event->mTheta.saveCurrentAcceptRate();
-               qDebug()<<"aprs saveCurrentAcceptRate memo = "<<event->mName<<event->mTheta.mHistoryAcceptRateMH->size();
+               //qDebug()<<"aprs saveCurrentAcceptRate memo = "<<event->mName<<event->mTheta.mHistoryAcceptRateMH->size();
                //qDebug()<<"mChronocurveSettings.mTimeType == ChronocurveSettings::eModeBayesian ici memo = "<<chain.mBatchIterIndex<<chain.mBatchIndex<<event->mName;
             }
 
         }
-       /*
-        for (Event*& evt : mModel->mEvents) {
-            tmp.append(evt->mName);
-        }
 
-        qDebug()<<"liste  = mModel->mEvents apres upDate"<<tmp;
-        tmp.clear();
-        */
 
         // Rétablissement de l'ordre initial. Est-ce nécessaire ?
         std::copy(initListEvents.begin(), initListEvents.end(), mModel->mEvents.begin() );
 
-        /* for (Event*& evt : mModel->mEvents) {
-            tmp.append(evt->mName);
-        }
-        qDebug()<<"liste mModel->mEvents apres initListEvents apres upDate ="<<tmp;
-        tmp.clear();
-        */
+
     }
 
     // Pas bayésien : on sauvegarde la valeur constante dans la trace
-    else
-    {
+    else {
         for (Event*& event : mModel->mEvents) {
             event->mTheta.tryUpdate(event->mTheta.mX, 1);
             if (doMemo) {
@@ -733,7 +671,7 @@ void MCMCLoopChronocurve::update()
                 // Variance globale : on recopie la valeur tirée dans tous les events
                 // (nécessaire pour le calcul de h_new)
                 if (idx == 0 && !mChronocurveSettings.mUseVarianceIndividual) {
-                    for (Event* ev : mModel->mEvents) {
+                    for (Event*& ev : mModel->mEvents) {
                         ev->mVG = event->mVG;
                         ev->updateW();
                     }
@@ -1289,20 +1227,16 @@ void MCMCLoopChronocurve::prepareEventsY(QList<Event *> & lEvents)
  */
 void MCMCLoopChronocurve::prepareEventY(Event* event)
 {
-    if (mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie)
-    {
-        if (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeInclinaison)
-        {
+    if (mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie) {
+        if (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeInclinaison) {
             event->mYx = event->mYInc;
             event->mSy = event->mSInc;
-        }
-        else if (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDeclinaison)
-        {
+
+        } else if (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDeclinaison) {
             event->mYx = event->mYDec;
             event->mSy = event->mSInc / cos(event->mYInc * M_PI / 180.);
-        }
-        else
-        {
+
+        } else {
             event->mYx = event->mYInt;
             event->mSy = event->mSInt;
         }
@@ -1310,17 +1244,16 @@ void MCMCLoopChronocurve::prepareEventY(Event* event)
         // Non utilisé en univarié, mais mis à zéro notamment pour les exports CSV :
         event->mYy = 0;
         event->mYz = 0;
-    }
-    else if (mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique)
-    {
+
+    } else if (mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique) {
         event->mYx = event->mYInc;
         event->mYy = event->mYDec;
         event->mSy = event->mSInc;
         
         // Non utilisé en univarié, mais mis à zéro notamment pour les exports CSV :
         event->mYz = 0;
-    } else if (mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel)
-    {
+
+    } else if (mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel) {
         event->mYx = event->mYInt * cos(event->mYInc * M_PI / 180.) * cos(event->mYDec * M_PI / 180.);
         event->mYy = event->mYInt * cos(event->mYInc * M_PI / 180.) * sin(event->mYDec * M_PI / 180.);
         event->mYz = event->mYInt * sin(event->mYInc * M_PI / 180.);
