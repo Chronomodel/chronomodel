@@ -91,7 +91,7 @@ public:
     void restoreFromFile(const QString& fileName);
 
     // Only trace needed for this :
-    void generateCorrelations(const QList<ChainSpecs>& chains);
+    virtual void generateCorrelations(const QList<ChainSpecs>& chains);
 
     double getThreshold() const;
     double getBandwidth() const;
@@ -105,17 +105,17 @@ public:
     virtual void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double bandwidth);
     // Trace and Posterior density needed for this :
 
-    void generateCredibility(const double threshold);
-    void generateHPD(const double threshold);
+    virtual void generateCredibility(const double threshold);
+    virtual void generateHPD(const double threshold);
     // Trace and Posterior density needed for this :
-    void generateNumericalResults(const QList<ChainSpecs>& chains);
+    virtual void generateNumericalResults(const QList<ChainSpecs>& chains);
 
     void generateTempo();
 
-    void clearTraces();
-    void clearPosteriorDensities();
-    void clearCredibilityAndHPD();
-    void clearThreshold();
+    virtual void clearTraces();
+    virtual void clearPosteriorDensities();
+    virtual void clearCredibilityAndHPD();
+    virtual void clearThreshold();
     
     bool hasSelectedEvents();
     bool hasSelectedPhases();

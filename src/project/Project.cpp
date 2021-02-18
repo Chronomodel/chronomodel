@@ -499,7 +499,7 @@ qDebug() << "(---) Project::event";
 void Project::updateState(const QJsonObject& state, const QString& reason, bool notify)
 {
     //qDebug() << " ---  Receiving : " << reason;
-    mState = state;
+    mState = std::move(state);
     if (notify) {
 
          if (reason == NEW_PROJECT_REASON)
@@ -1474,7 +1474,7 @@ void Project::deleteSelectedEvents()
 {
     QJsonObject stateNext = mState;
 
-    QJsonArray events = mState.value(STATE_EVENTS).toArray();
+   /* QJsonArray events = mState.value(STATE_EVENTS).toArray();
     QJsonArray events_constraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
     QJsonArray events_trash = mState.value(STATE_EVENTS_TRASH).toArray();
 
@@ -1493,13 +1493,50 @@ void Project::deleteSelectedEvents()
                     events_constraints.removeAt(j);
 
             }
-            events.removeAt(i);
+    //        events.removeAt(i);
             events_trash.append(event);
         }
     }
-    stateNext[STATE_EVENTS] = events;
+
+       stateNext[STATE_EVENTS] = events;
     stateNext[STATE_EVENTS_CONSTRAINTS] = events_constraints;
     stateNext[STATE_EVENTS_TRASH] = events_trash;
+    */
+    QJsonArray new_events ;
+    QJsonArray new_events_constraints ;
+    //QJsonArray new_events_trash ;
+
+    QList<int> id_events_remove;
+
+    QJsonArray events = mState.value(STATE_EVENTS).toArray() ;
+    QJsonArray events_constraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
+    QJsonArray events_trash = mState.value(STATE_EVENTS_TRASH).toArray();
+
+    // Create new Event
+    for (int i = 0 ; i < events.size(); ++i) {
+        if (!events.at(i).toObject().value(STATE_IS_SELECTED).toBool()) {
+            new_events.append(events.at(i).toObject());
+
+        } else {
+            events_trash.append(events.at(i).toObject());
+            id_events_remove.append(events.at(i).toObject().value(STATE_ID).toInt());
+
+        }
+    }
+    // Create new events constraint
+    for (int i = 0; i < events_constraints.size(); ++i) {
+        QJsonObject constraint = events_constraints.at(i).toObject();
+        const int bwd_id = constraint.value(STATE_CONSTRAINT_BWD_ID).toInt();
+        const int fwd_id = constraint.value(STATE_CONSTRAINT_FWD_ID).toInt();
+
+        if ( !id_events_remove.contains(bwd_id) && !id_events_remove.contains(fwd_id) )
+            new_events_constraints.append(constraint);
+    }
+
+
+    stateNext[STATE_EVENTS] = std::move(new_events);
+    stateNext[STATE_EVENTS_CONSTRAINTS] = std::move(new_events_constraints);
+    stateNext[STATE_EVENTS_TRASH] = std::move(events_trash);
 
     pushProjectState(stateNext, "Event(s) deleted", true);
 
@@ -1543,30 +1580,40 @@ void Project::recycleEvents()
         QJsonArray events = mState.value(STATE_EVENTS).toArray();
         QJsonArray events_trash = mState.value(STATE_EVENTS_TRASH).toArray();
 
+        QJsonArray new_events_trash;
+
         QJsonObject settingsJson = stateNext[STATE_SETTINGS].toObject();
         ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
 
-        for (int i = indexes.size()-1; i >= 0; --i) {
-            QJsonObject event = events_trash.takeAt(indexes[i]).toObject();
+        for (int i = 0; i < events_trash.size(); ++i) {
+            const QJsonObject event = events_trash.at(indexes[i]).toObject();
             event[STATE_ID] = getUnusedEventId(events);
 
-            QJsonArray dates= event[STATE_EVENT_DATES].toArray();
-            for (int j = dates.size()-1; j >= 0; --j) {
-                QJsonObject date = dates.takeAt(j).toObject();
+            QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+            QJsonArray new_dates;
+            for (int j = 0; j < dates.size(); ++j) {
+                const QJsonObject new_date = dates.at(j).toObject();
                 // Validate the date before adding it to the correct event and pushing the state
-                PluginAbstract* plugin = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
-                bool valid = plugin->isDateValid(date[STATE_DATE_DATA].toObject(), settings);
-                date[STATE_DATE_VALID] = valid;
+                PluginAbstract* plugin = PluginManager::getPluginFromId(new_date[STATE_DATE_PLUGIN_ID].toString());
+                bool valid = plugin->isDateValid(new_date[STATE_DATE_DATA].toObject(), settings);
+                new_date[STATE_DATE_VALID] = valid;
 
-                date[STATE_ID] = getUnusedDateId(dates);
-                dates.append(date);
+                new_date[STATE_ID] = getUnusedDateId(dates);
+                new_dates.append(new_date);
             }
-            event[STATE_EVENT_DATES] = dates;
+            event[STATE_EVENT_DATES] = new_dates;
             events.append(event);
 
         }
-        stateNext[STATE_EVENTS] = events;
-        stateNext[STATE_EVENTS_TRASH] = events_trash;
+
+        // create new trash
+        for (int i = 0; i < events_trash.size(); ++i) {
+            if (!indexes.contains(i))
+                new_events_trash.append(events_trash[i].toObject());
+        }
+
+        stateNext[STATE_EVENTS] = std::move(events);
+        stateNext[STATE_EVENTS_TRASH] = std::move(new_events_trash);
 
         pushProjectState(stateNext, "Event(s) restored", true);
     }
