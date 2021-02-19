@@ -77,8 +77,7 @@ public:
 
         painter->setRenderHint(QPainter::Antialiasing);
 
-        if(option.state & QStyle::State_Selected)
-        {
+        if (option.state & QStyle::State_Selected) {
             //painter->fillRect(option.rect, option.palette.highlight());
             painter->fillRect(option.rect, QColor(220, 220, 220));
         }
@@ -93,9 +92,19 @@ public:
 
         QPixmap pixmap(iconS, iconS);
         QPainter p(&pixmap);
-        p.fillRect(0, 0, iconS, iconS, factColor);
-        p.setPen(Qt::black);
-        p.drawRect(0, 0, iconS, iconS);
+        if (numDates < 0) {
+            p.setPen(Qt::black);
+            p.setBrush(factColor);
+            p.drawEllipse(0+1, 0+1, iconS-2, iconS-2);
+           // p.fillRect(0, 0, iconS, iconS, factColor);
+
+        } else {
+            p.fillRect(0, 0, iconS, iconS, factColor);
+            p.setPen(Qt::black);
+            p.drawRect(0, 0, iconS, iconS);
+        }
+
+
         painter->drawPixmap(x + (iconW - iconS)/2, y + (h - iconS)/2, iconS, iconS, pixmap, 0, 0, pixmap.width(), pixmap.height());
 
         QFont font = option.font;
@@ -104,12 +113,13 @@ public:
 
         painter->setPen(Qt::black);
         painter->drawText(x + iconW, y, w - iconW, h/2, Qt::AlignLeft | Qt::AlignVCenter, factName);
-        //painter->drawContent(x + iconW, y, w - iconW, h/2, Qt::AlignLeft | Qt::AlignVCenter, factName);
-        //QAbstractTextDocumentLayout::PaintContext ctx;
-        //    ctx.clip = QRectF( x + iconW, y, w - iconW, h/2);
-        //td.documentLayout()->draw( painter, ctx );
-        painter->drawText(x + iconW, y + h/2, w - iconW, h/2, Qt::AlignLeft | Qt::AlignVCenter, QString::number(numDates) + " dates?");
-        //painter->drawText(x + iconW, y + h/2, w - iconW, h/2, Qt::AlignLeft | Qt::AlignVCenter, numDates + "??");
+
+        if (numDates < 0) {
+            painter->drawText(x + iconW, y + h/2, w - iconW, h/2, Qt::AlignLeft | Qt::AlignVCenter, " Bound");
+
+        } else {
+            painter->drawText(x + iconW, y + h/2, w - iconW, h/2, Qt::AlignLeft | Qt::AlignVCenter, QString::number(numDates) + " dates");
+        }
 
         painter->setPen(QColor(200, 200, 200));
         painter->drawLine(x, y + h, x + w, y + h);

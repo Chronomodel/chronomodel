@@ -159,7 +159,12 @@ mType(type)
             QJsonObject event = events[i].toObject();
             QListWidgetItem* item = new QListWidgetItem(event[STATE_NAME].toString());
             item->setData(0x0101, event[STATE_NAME].toString());
-            item->setData(0x0103, event[STATE_EVENT_DATES].toArray().size());
+            if ((Event::Type) event.value(STATE_EVENT_TYPE).toInt() == Event::Type::eDefault) {
+                item->setData(0x0103, event[STATE_EVENT_DATES].toArray().size());
+            } else {
+                item->setData(0x0103, -1);
+            }
+
             item->setData(0x0104, event[STATE_COLOR_RED].toInt());
             item->setData(0x0105, event[STATE_COLOR_GREEN].toInt());
             item->setData(0x0106, event[STATE_COLOR_BLUE].toInt());
