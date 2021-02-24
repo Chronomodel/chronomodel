@@ -101,6 +101,7 @@ void ModelChronocurve::generateCorrelations(const QList<ChainSpecs> &chains)
 
 void ModelChronocurve::generateNumericalResults(const QList<ChainSpecs> &chains)
 {
+
     Model::generateNumericalResults(chains);
 
     for (Event*& event : mEvents)
