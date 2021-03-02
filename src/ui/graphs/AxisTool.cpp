@@ -195,7 +195,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
 
                 size_t maxCount = size_t(floor((mEndVal-mStartVal)/mMajorScale));
                 qreal v; // variable used in loop
-                for (size_t count = 1; count <= maxCount; ++count) {
+                for (size_t count = 0; count <= maxCount; ++count) {
                     v = mStartVal + (count * mMajorScale);
                     const qreal x = getXForValue(v) + xo;
                     linesPos.append(x);
@@ -204,15 +204,16 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
                     if ( textInc == mTextInc) {
                         p.drawLine(QLineF(x, yo, x, yo + graduationSize));
                         if (mShowText) {
-                            const QString text =(valueFormatFunc ? stringForGraph(valueFormatFunc(v)) : stringForGraph(v) );
+                            const QString text = (valueFormatFunc ? stringForGraph(valueFormatFunc(v)) : stringForGraph(v) );
                             const int textWidth =  fm.horizontalAdvance(text) ;
                             const qreal tx = x - textWidth/2.;
                             const QRectF textRect(tx, yo + h - textHeight, textWidth, textHeight);
-                            p.drawText(textRect,Qt::AlignCenter ,text);
+                            p.drawText(textRect, Qt::AlignCenter ,text);
                         }
 
                         textInc = 0;
                         xPrev = x;
+
                     } else {
                         if (mShowSubSubs)
                             p.drawLine(QLineF(x, yo, x, yo + graduationSize));
