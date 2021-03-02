@@ -72,7 +72,7 @@ AboutDialog::AboutDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
     QVBoxLayout* layout = new QVBoxLayout();
     layout->addWidget(mText);
     setLayout(layout);
-    layout->setMargin(2);
+    //layout->setMargin(2);
 
     setMinimumSize(600, 600);
 }

@@ -80,6 +80,7 @@ public:
     bool mIsRefPoints;
     QMap<double, double> mDataErrorX;
     QMap<double, double> mDataErrorY;
+    QMap<double, QColor> mDataColor;
 
     bool mVisible;
 };

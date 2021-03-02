@@ -42,6 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "AbstractScene.h"
 #include "EventItem.h"
+#include "Date.h"
 #include "ProjectSettings.h"
 #include "ChronocurveSettings.h"
 
@@ -51,7 +52,7 @@ class QGraphicsItemAnimation;
 class QTimeLine;
 
 class DateItem;
-class Date;
+//class TDate;
 class HelpWidget;
 
 

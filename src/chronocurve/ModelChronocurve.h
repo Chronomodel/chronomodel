@@ -51,6 +51,9 @@ public:
     ModelChronocurve();
     virtual ~ModelChronocurve();
     
+    virtual void saveToFile(const QString& fileName);
+    virtual void restoreFromFile(const QString& fileName);
+
     virtual QJsonObject toJson() const;
     virtual void fromJson( const QJsonObject& json);
     

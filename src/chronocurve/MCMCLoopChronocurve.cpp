@@ -94,14 +94,14 @@ QString MCMCLoopChronocurve::calibrate()
 
         QList<Date*> dates;
         // find number of dates, to optimize memory space
-        int nbDates (0);
-        for (auto &&e : events)
-            nbDates += e->mDates.size();
+        int nbDates = 0;
+        for (auto&& ev : events)
+            nbDates += ev->mDates.size();
 
         dates.reserve(nbDates);
-        for (auto &&ev : events) {
+        for (auto&& ev : events) {
             int num_dates = ev->mDates.size();
-            for (int j=0; j<num_dates; ++j) {
+            for (int j = 0; j<num_dates; ++j) {
                 Date* date = &ev->mDates[j];
                 dates.push_back(date);
             }
@@ -113,8 +113,8 @@ QString MCMCLoopChronocurve::calibrate()
 
         emit stepChanged(tr("Calibrating..."), 0, dates.size());
 
-        int i (0);
-        for (auto &&date : dates) {
+        int i = 0;
+        for (auto&& date : dates) {
               if (date->mCalibration) {
                 if (date->mCalibration->mCurve.isEmpty())
                     date->calibrate(mModel->mSettings, mProject);
@@ -487,7 +487,7 @@ void MCMCLoopChronocurve::update()
     //  Update Dates (idem chronomodel)
     // --------------------------------------------------------------
     for (Event*& event : mModel->mEvents) {
-        for (Date& date : event->mDates) {
+        for (auto&& date : event->mDates) {
             date.updateDelta(event);
             date.updateTheta(event);
             //date.updateSigma(event);
@@ -955,7 +955,7 @@ void MCMCLoopChronocurve::finalize()
     bool hasZ = (mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel);
     
     int chainIterOffset = 0;
-    for (int i=0; i<mChains.size(); ++i) {
+    for (int i = 0; i < mChains.size(); ++i) {
         int numIter = mChains[i].mNumRunIter / mChains[i].mThinningInterval;
         
         std::vector<MCMCSpline>::const_iterator first = mModel->mMCMCSplines.begin() + chainIterOffset;
@@ -966,7 +966,7 @@ void MCMCLoopChronocurve::finalize()
         std::vector<MCMCSplineComposante> chainTraceY;
         std::vector<MCMCSplineComposante> chainTraceZ;
         
-        for (unsigned long j=0; j<chainTrace.size(); ++j) {
+        for (unsigned j = 0; j < chainTrace.size(); ++j) {
             chainTraceX.push_back(chainTrace[j].splineX);
             chainTraceY.push_back(chainTrace[j].splineY);
             chainTraceZ.push_back(chainTrace[j].splineZ);
@@ -1345,7 +1345,7 @@ double MCMCLoopChronocurve::h_YWI_AY_composante(SplineMatrices& matrices, QList<
     
     const int nb_noeuds = lEvents.size();
     
-    for( int i = 0; i < nb_noeuds; ++i)  {
+    for ( int i = 0; i < nb_noeuds; ++i) {
         Event* e = lEvents[i];
         
         YWY += e->mW * e->mY * e->mY;
@@ -1444,7 +1444,7 @@ double MCMCLoopChronocurve::h_VG(QList<Event*> lEvents)
         if (mChronocurveSettings.mUseVarianceIndividual){
             
             shrink_VG = 1.;
-            for (int i=0; i<nb_noeuds; ++i) {
+            for (int i = 0; i < nb_noeuds; ++i) {
                 Event*& e = lEvents[i];
                 double S02 = e->mSy * e->mSy;
                 shrink_VG *= (S02 / pow(S02 + e->mVG.mX, 2.));
@@ -1455,7 +1455,7 @@ double MCMCLoopChronocurve::h_VG(QList<Event*> lEvents)
             // S02 : moyenne harmonique des erreurs sur Y
             double som_inv_S02 = 0.;
             
-            for (int i=0; i<nb_noeuds; ++i) {
+            for (int i = 0; i < nb_noeuds; ++i) {
                 Event* e = lEvents[i];
                 som_inv_S02 += (1. / (e->mSy * e->mSy));
             }
@@ -1485,7 +1485,7 @@ double MCMCLoopChronocurve::h_theta(QList<Event*> lEvents)
         double p = 0.;
         double t_moy = 0.;
         
-        for (Date& date : e->mDates) {
+        for (auto&& date : e->mDates) {
             double pi = 1. / pow(date.mSigma.mX, 2.);
             p += pi;
             t_moy += (date.mTheta.mX + date.mDelta) * pi;
@@ -1904,7 +1904,7 @@ SplineResults MCMCLoopChronocurve::calculSpline(SplineMatrices& matrices)
     std::vector<double> vecY;
     std::vector<double> vecG;
     std::vector<double> vecQtY;
-    for (int i = 0; i < n; ++i){
+    for (int i = 0; i < n; ++i) {
         vecY.push_back(mModel->mEvents[i]->mY);
         vecG.push_back(0);
         vecQtY.push_back(0);
@@ -1912,8 +1912,7 @@ SplineResults MCMCLoopChronocurve::calculSpline(SplineMatrices& matrices)
     
     // Calcul du vecteur Vec_QtY, de dimension (n-2)
     std::vector<double> vecH = calculVecH(mModel->mEvents);
-    for (int i = 1; i < n-1; ++i)
-    {
+    for (int i = 1; i < n-1; ++i) {
         double term1 = (vecY[i+1] - vecY[i]) / vecH[i];
         double term2 = (vecY[i] - vecY[i-1]) / vecH[i-1];
         vecQtY[i] = term1 - term2;
@@ -2000,7 +1999,7 @@ std::vector<double> MCMCLoopChronocurve::calculSplineError(const SplineMatrices&
     std::vector<std::vector<double>> matA = calculMatInfluence(matrices, splines, 1);
     std::vector<double> errG = initVecteur(n);
     
-    for (int i=0; i<n; ++i) {
+    for (int i = 0; i < n; ++i) {
         double aii = matA[i][i];
         // si Aii négatif ou nul, cela veut dire que la variance sur le point est anormalement trop grande,
         // d'où une imprécision dans les calculs de Mat_B (Cf. calcul spline) et de mat_A

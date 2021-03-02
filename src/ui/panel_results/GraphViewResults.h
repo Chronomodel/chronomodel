@@ -102,7 +102,12 @@ public:
         eActivity = 4,
         eVG = 5,
         eG = 6,
-        eAlpha = 7
+        eAlpha = 7,
+        eInclination = 8,
+        eDeclination = 8,
+        eField = 8,
+        eDepth = 8,
+        eOther = 8
     };
     static int mHeightForVisibleAxis ;
     // member

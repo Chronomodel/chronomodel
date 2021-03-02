@@ -471,12 +471,10 @@ qDebug()<<"EventsScene::updateSceneFromState()";
     }
 
     // ------------------------------------------------------
-    //  Delete items not in current state
+    //  Delete EventItems not in current state
     // ------------------------------------------------------
     bool hasDeleted = false;
     for (int i = indexItemToRemove.size()-1; i >= 0; --i) {
-        //EventItem* eventItem = (EventItem*)mItems[indexItemToRemove.at(i)];
-        //QJsonObject& event = eventItem->getData();
         QJsonObject& event = mItems[indexItemToRemove.at(i)]->mData;
         Event::Type type = Event::Type (event.value(STATE_EVENT_TYPE).toInt());
 
@@ -556,15 +554,10 @@ qDebug()<<"EventsScene::updateSceneFromState()";
                     newItem = new EventItem(this, event, settings);
                 else //if(type == Event::eKnown)
                     newItem = new EventKnownItem(this, event, settings);
-//qDebug()<<"EventsScene::updateSceneFromState Create mItems avant:"<<event.value(STATE_NAME).toString();
 
                 mItems.append(newItem);
-
                 addItem(newItem);
-
-
                 hasCreated = true;
-//qDebug()<<"EventsScene::updateSceneFromState Create mItems:"<<event.value(STATE_NAME).toString();
 
                 // Note : setting an event in (0, 0) tells the scene that this item is new! don't work when updateScene come from Undo Action
                 // Thus the scene will move it randomly around the currently viewed center point.
@@ -1525,7 +1518,7 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
        // _____________
 
         const QString pluginName = dataStr.first();
-        Date date = Date();
+        Date date;
 
 
         if (pluginName.contains("bound", Qt::CaseInsensitive)) {

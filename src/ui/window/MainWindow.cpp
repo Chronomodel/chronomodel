@@ -1101,8 +1101,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     setAppSettings();
     mProjectView->readSettings();
 
-    if (mProject && (! mProject->mModel->mChains.isEmpty()) )
-    {
+    if (mProject && (! mProject->mModel->mChains.isEmpty()) ) {
         mProject->mModel->updateDesignFromJson();
         mProjectView->showResults();
    }

@@ -364,7 +364,7 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
          const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
          const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
 
-         for ( auto &&d : date.mSubDates ) {
+         for (auto&&d : date.mSubDates ) {
              Date sd (d.toObject());
            /*  QString toFind = sd.mUUID;
 

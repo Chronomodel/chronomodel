@@ -103,21 +103,23 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
     mGraph->setBackgroundColor(QColor(230, 230, 230));
     //mGraph->reserveCurves(5);
     
+
     GraphCurve curveRefPoints;
     curveRefPoints.mName = tr("Ref points Y");
+
     curveRefPoints.mPen = QPen(Qt::black, 1, Qt::SolidLine);
     curveRefPoints.mBrush = Qt::black;
     curveRefPoints.mIsHisto = false;
     curveRefPoints.mIsRectFromZero = false;
     curveRefPoints.mIsRefPoints = true;
-    
+ /*
+  *
     for (int i = 0; i < mEvents.size(); ++i) {
         Event* event = mEvents[i];
         double tmin = HUGE_VAL;
         double tmax = -HUGE_VAL;
-        
-        for (int j = 0; j<event->mDates.size(); ++j) {
-            Date& date = event->mDates[j];
+
+        for (auto&& date: event->mDates) {
             QMap<double, double> calibMap = date.getRawCalibMap();//  getFormatedCalibMap();
             const double thresh = 80;
             QMap<double, double> subData = getMapDataInRange(calibMap, mSettings.mTmin, mSettings.mTmax);// mSettings.getTminFormated(), mSettings.getTmaxFormated());
@@ -142,10 +144,12 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
             }
         }
         double tmoy = DateUtils::convertToAppSettingsFormat((tmax + tmin) / 2.);
-        
-        curveRefPoints.mData.insert(tmoy, event->mYx);
-        curveRefPoints.mDataErrorX.insert(tmoy, (tmax - tmin)/2.);
-        curveRefPoints.mDataErrorY.insert(tmoy, event->mSy);
+     */
+    for (auto& rf : mRefPoints) {
+        curveRefPoints.mData.insert(rf.Xmean, rf.Ymean);
+        curveRefPoints.mDataErrorX.insert(rf.Xmean, rf.Xerr);
+        curveRefPoints.mDataErrorY.insert(rf.Xmean, rf.Yerr);
+        curveRefPoints.mDataColor.insert(rf.Xmean, rf.color);
     }
     
     
@@ -218,9 +222,9 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
     mGraph->addCurve(curveGP);
     mGraph->addCurve(curveGS);
     mGraph->addCurve(curveRefPoints);
-    
-    for (int i=0; i<curveGChains.size(); ++i) {
-        mGraph->addCurve(curveGChains[i]);
+
+    for (auto&& cGC: curveGChains) {
+        mGraph->addCurve(cGC);
     }
 
     mGraph->setTipXLab(tr("t"));
@@ -246,7 +250,7 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
     mGraph->setCurveVisible("G Prime", mShowAllChains && mShowGP);
     mGraph->setCurveVisible("G Second", mShowAllChains && mShowGS);
     
-    for (int i=0; i<mShowChainList.size(); ++i) {
+    for (int i = 0; i < mShowChainList.size(); ++i) {
         mGraph->setCurveVisible(QString("G Chain ") + QString::number(i), mShowChainList[i] && mShowG);
     }
 }

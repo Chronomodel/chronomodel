@@ -180,7 +180,7 @@ QString PluginTL::getDateDesc(const Date* date) const
     } else {
          result = "Combine (";
         QStringList datesDesc;
-        for (auto && d: date->mSubDates) {
+        for (auto&& d: date->mSubDates) {
             Date subDate (d.toObject() );
             datesDesc.append(getDateDesc(&subDate));
         }
@@ -198,10 +198,10 @@ QPair<double,double> PluginTL::getTminTmaxRefsCurve(const QJsonObject& data) con
 
     const double k = 5.;
 
-    const double tmin = ref_year - age - k * error;
-    const double tmax = ref_year - age + k * error;
+    double tmin = ref_year - age - k * error;
+    double tmax = ref_year - age + k * error;
 
-    return qMakePair<double,double>(tmin, tmax);
+    return QPair<double,double>(tmin, tmax);
 }
 
 
@@ -274,7 +274,7 @@ QPair<double,double> PluginTL::getTminTmaxRefsCurveCombine(const QJsonArray& sub
     double tmax (-INFINITY);
     QPair<double, double> tminTmax (tmin,tmax);
 
-    for (auto && d: subData)   {
+    for (auto&& d: subData)   {
         tminTmax = getTminTmaxRefsCurve( d.toObject().value(STATE_DATE_DATA).toObject() );
         tmin = std::min(tmin, tminTmax.first);
         tmax = std::max(tmax, tminTmax.second);

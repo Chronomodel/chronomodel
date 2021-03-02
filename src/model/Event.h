@@ -40,8 +40,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define EVENT_H
 
 #include "MHVariable.h"
-#include "Date.h"
 #include "StateKeys.h"
+#include "Date.h"
 
 #include <QMap>
 #include <QColor>
@@ -49,7 +49,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 class Phase;
 class EventConstraint;
-class Date;
+
 
 class Event
 {

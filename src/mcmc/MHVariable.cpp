@@ -99,8 +99,8 @@ MHVariable::MHVariable( const MHVariable& origin)
 
 MHVariable::~MHVariable()
 {
-    mAllAccepts->~QVector();
-    mHistoryAcceptRateMH->~QVector();
+    delete mAllAccepts;
+    delete mHistoryAcceptRateMH;
 
     // mRawTrace and mFormatedTrace are destroye by the MetropolisVariable destructor
    // mRawTrace->~QVector();// = nullptr;;

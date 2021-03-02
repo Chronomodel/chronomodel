@@ -87,8 +87,8 @@ public:
 
     void initNodeEvents(); // use in MCMCLoopMain::initMCMC()
 
-    void saveToFile(const QString& fileName);
-    void restoreFromFile(const QString& fileName);
+    virtual void saveToFile(const QString& fileName);
+    virtual void restoreFromFile(const QString& fileName);
 
     // Only trace needed for this :
     virtual void generateCorrelations(const QList<ChainSpecs>& chains);

@@ -86,7 +86,7 @@ QString MCMCLoopMain::calibrate()
 
         QList<Date*> dates;
         // find number of dates, to optimize memory space
-        int nbDates (0);
+        int nbDates = 0;
         for (auto &&e : events)
             nbDates += e->mDates.size();
 
@@ -105,7 +105,7 @@ QString MCMCLoopMain::calibrate()
 
         emit stepChanged(tr("Calibrating..."), 0, dates.size());
 
-        int i (0);
+        int i = 0;
         for (auto&& date : dates) {
               if (date->mCalibration) {
                 if (date->mCalibration->mCurve.isEmpty())
@@ -133,7 +133,7 @@ void MCMCLoopMain::initVariablesForChain()
 {
     // today we have the same acceptBufferLen for every chain
     const int acceptBufferLen =  mChains[0].mNumBatchIter;
-    int initReserve (0);
+    int initReserve = 0;
 
     for (auto&& c: mChains)
        initReserve += ( 1 + (c.mMaxBatchs*c.mNumBatchIter) + c.mNumBurnIter + (c.mNumRunIter/c.mThinningInterval) );
@@ -194,7 +194,7 @@ QString MCMCLoopMain::initMCMC()
 
     // -------------------------- Init gamma ------------------------------
     emit stepChanged(tr("Initializing Phase Gaps..."), 0, phasesConstraints.size());
-    int i (0);
+    int i = 0;
     for (auto&& phC : phasesConstraints) {
         phC->initGamma();
         if (isInterruptionRequested())
@@ -226,7 +226,7 @@ QString MCMCLoopMain::initMCMC()
     int curLevel (0);
     double curLevelMaxValue = mModel->mSettings.mTmin;
 
-    for (int i=0; i<eventsByLevel.size(); ++i) {
+    for (int i = 0; i < eventsByLevel.size(); ++i) {
         if (eventsByLevel.at(i)->type() == Event::eKnown) {
             EventKnown* bound = dynamic_cast<EventKnown*>(eventsByLevel[i]);
 
@@ -271,7 +271,7 @@ QString MCMCLoopMain::initMCMC()
         }
     }
 
-    for (int i (0); i<unsortedEvents.size(); ++i) {
+    for (int i = 0; i < unsortedEvents.size(); ++i) {
         if (unsortedEvents.at(i)->mType == Event::eDefault) {
 
             mModel->initNodeEvents();
@@ -292,83 +292,17 @@ QString MCMCLoopMain::initMCMC()
             }
 #endif
 
-/*
 
-            // Création de la cumulé de répartition de date
-            // 1 - Search for tmin and tmax, distribution curves, identical to the calibration.
-            double unionTmin (+INFINITY);
-            double unionTmax (-INFINITY);
-            double unionStep (mModel->mSettings.mStep);
-            for (auto&& d : unsortedEvents.at(i)->mDates) {
-                if (d.mCalibration != nullptr && !d.mCalibration->mCurve.isEmpty() ) {
-                    unionTmin = std::min(unionTmin, d.mCalibration->mTmin);
-                    unionTmax = std::max(unionTmax, d.mCalibration->mTmax);
-                    unionStep = std::min(unionStep, d.mCalibration->mStep);
-
-                } else {
-                    unionTmin = mModel->mSettings.mTmin;
-                    unionTmax = mModel->mSettings.mTmax;
-                }
-
-            }
-            // 2- Search for the common interval between constraints and calibrations
-*/
             /* In ChronoModel 2.0, we initialize the theta uniformly between tmin and tmax possible.
              * Now, we use the cumulative date density distribution function.
              */
-/*
-            // Calibrés en dehors des contraintes
-            // CE cas doit être dissocié en deux, la densité est à droite ou la densité est à gauche donc favoriser un des cotés
 
-            if (unionTmax< min) {
-                unsortedEvents.at(i)->mTheta.mX = Generator::gaussByDoubleExp(min, (max-min)/3.4, min, max);
-
-            } else if (max<unionTmin){
-
-                //unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
-
-                unsortedEvents.at(i)->mTheta.mX = Generator::gaussByDoubleExp(max, (max-min)/3.4, min, max);
-
-
-            } else {
-                unionTmin = std::max(unionTmin, min);
-                unionTmax = std::min(unionTmax, max);
-
-
-                // 3 - Création de la cumulé des courbe de répartition dans l'intervalle
-                QVector<double> unionRepartition (0);
-                double tWhile (unionTmin);
-                double sumWhile (0.);
-
-                while (tWhile<= unionTmax) {
-                    sumWhile= 0.;
-                    for (auto&& d : unsortedEvents.at(i)->mDates) {
-                        sumWhile += interpolate_value_from_curve(tWhile, d.mCalibration->mRepartition, d.mCalibration->mTmin, d.mCalibration->mTmax);
-
-                    }
-                    unionRepartition.append(sumWhile);
-                    tWhile += unionStep;
-
-                }
-*/
                 /* Given the stratigraphic constraints and the possibility of having dates outside the study period.
                  * The maximum of the distribution curve can be different from the number of dates
                  * and the minimum can be different from 0.
                  */
 
-/*
-                const double maxRepartition (unionRepartition.last());
-                const double minRepartition (unionRepartition.first());
-                if (minRepartition!=0. || maxRepartition!= 0.) {
-                    const double idx = vector_interpolate_idx_for_value(Generator::randomUniform()*(maxRepartition-minRepartition) + minRepartition, unionRepartition);
-                    unsortedEvents.at(i)->mTheta.mX = unionTmin + idx * unionStep;
 
-                } else {
-
-                    unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
-                }
-            }
- */
 
             sampleInCumulatedRepartition(unsortedEvents.at(i), mModel->mSettings,min, max);
 
@@ -377,7 +311,7 @@ QString MCMCLoopMain::initMCMC()
             //qDebug() << "in initMCMC(): Event initialized : " << unsortedEvents[i]->mName << " : " << unsortedEvents[i]->mTheta.mX<<" between"<<min<<max;
 
             double s02_sum (0.);
-            for (int j(0); j<unsortedEvents.at(i)->mDates.size(); ++j) {
+            for (int j = 0; j < unsortedEvents.at(i)->mDates.size(); ++j) {
                 Date& date = unsortedEvents.at(i)->mDates[j];
 
                 // 1 - Init ti
@@ -391,8 +325,8 @@ QString MCMCLoopMain::initMCMC()
 
                     sigma = double (data.stddev);
                     qDebug()<<"MCMCLoopMain::Init"<<date.mName <<" sigma="<<sigma;
-                }
-                else { // in the case of mRepartion curve is null, we must init ti outside the study period
+
+                } else { // in the case of mRepartion curve is null, we must init ti outside the study period
                        // For instance we use a gaussian random sampling
                     sigma = mModel->mSettings.mTmax - mModel->mSettings.mTmin;
                     const double u = Generator::gaussByBoxMuller(0., sigma);
@@ -459,9 +393,7 @@ QString MCMCLoopMain::initMCMC()
     QString log;
     emit stepChanged(tr("Initializing Variances..."), 0, events.size());
 
-    for (int i(0); i<events.size(); ++i) {
-     //   for (int j=0; j<events.at(i)->mDates.size(); ++j) {
-       //     Date& date = events.at(i)->mDates[j];
+    for (int i = 0; i < events.size(); ++i) {
         for (auto&& date : events.at(i)->mDates) {
             // date.mSigma.mX = sqrt(shrinkageUniform(events[i]->mS02)); // modif the 2015/05/19 with PhL
             date.mSigma.mX = std::abs(date.mTheta.mX - (events.at(i)->mTheta.mX - date.mDelta)) ;
@@ -548,7 +480,7 @@ QString MCMCLoopMain::initMCMC()
         log += "<hr>";
 
         int i = 0;
-        for (const auto& phase : phases) {
+        for (auto& phase : phases) {
             ++i;
             log += "<br>";
             log += line(textPurple(tr("Phase ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(phases.size()), phase->mName)));
@@ -564,7 +496,7 @@ QString MCMCLoopMain::initMCMC()
         log += "<hr>";
 
         int i = 0;
-        for (const auto& constraint : phasesConstraints) {
+        for (auto& constraint : phasesConstraints) {
             ++i;
             log += "<br>";
             log += line(textGreen(tr("Succession ( %1 / %2) : from %3 to %4").arg(QString::number(i), QString::number(phasesConstraints.size()),constraint->mPhaseFrom->mName, constraint->mPhaseTo->mName)));
@@ -842,7 +774,8 @@ void MCMCLoopMain::finalize()
     /** @todo Find a way to make it faster !
      */
     mModel->generateCorrelations(mChains);
-    
+    mModel->updateDensities();
+
     // This should not be done here because it uses resultsView parameters
     // ResultView will trigger it again when loading the model
     //mModel->generatePosteriorDensities(mChains, 1024, 1);

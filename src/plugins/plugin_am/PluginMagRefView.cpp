@@ -302,7 +302,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
         const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
 
-       for ( auto && d : date.mSubDates ) {
+       for (auto&& d : date.mSubDates ) {
             Date sd (d.toObject());
            /* const QString toFind = sd.mUUID;
             

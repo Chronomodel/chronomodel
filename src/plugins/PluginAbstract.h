@@ -100,7 +100,7 @@ public:
         Date date;
         QJsonObject subDateJSon;
         QJsonObject data;
-        for ( auto && sDA : subDateArray ) {
+        for (auto&& sDA : subDateArray ) {
             subDateJSon = sDA.toObject();
             data = subDateJSon.value(STATE_DATE_DATA).toObject();
 

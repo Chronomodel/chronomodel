@@ -66,7 +66,7 @@ Plugin14CRefView::~Plugin14CRefView()
 
 }
 
-void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings)
+void Plugin14CRefView::setDate(const Date &date, const ProjectSettings& settings)
 {
      GraphViewRefAbstract::setDate(date, settings);
 
@@ -379,7 +379,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
            const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
            const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
 
-           for ( auto &&d : date.mSubDates ) {
+           for (auto&& d : date.mSubDates ) {
                QJsonObject subDate = d.toObject();
 
                Date sd (subDate);

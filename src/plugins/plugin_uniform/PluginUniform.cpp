@@ -201,7 +201,7 @@ long double PluginUniform::getLikelihoodCombine(const double& t, const QJsonArra
     double min (-INFINITY);
     double max (INFINITY);
 
-   for (auto && d : subData) {
+   for (auto&& d : subData) {
        const QJsonObject data = d.toObject().value(STATE_DATE_DATA).toObject();
 
        min = std::max(min, data.value(DATE_UNIFORM_MIN_STR).toDouble() );
@@ -217,7 +217,7 @@ bool PluginUniform::areDatesMergeable(const QJsonArray& dates)
 {
     const int pluginID = dates.at(0).toObject().value(STATE_DATE_DATA).toObject().value(STATE_DATE_PLUGIN_ID).toInt();
 
-    for (auto && d:dates) {
+    for (auto&& d:dates) {
         if (pluginID != d.toObject().value(STATE_DATE_DATA).toObject().value(STATE_DATE_PLUGIN_ID).toInt())
             return false;
     }
@@ -244,7 +244,7 @@ QJsonObject PluginUniform::mergeDates(const QJsonArray& dates)
 
         Project* project = MainWindow::getInstance()->getProject();
 
-        for ( auto && d : dates ) {
+        for (auto&& d : dates ) {
             names.append(d.toObject().value(STATE_NAME).toString());
 
             const bool hasWiggle (d.toObject().value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);

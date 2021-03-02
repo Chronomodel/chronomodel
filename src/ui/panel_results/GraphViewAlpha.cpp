@@ -223,7 +223,7 @@ void GraphViewAlpha::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
         mGraph->setCurveVisible("Credibility All Chains", mShowCredibility && mShowAllChains);
 
-        for (int i=0; i<mShowChainList.size(); ++i){
+        for (int i=0; i<mShowChainList.size(); ++i) {
             mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList.at(i));
         }
         

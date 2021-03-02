@@ -130,7 +130,7 @@ public:
         mSettings = settings;
         mGraph->removeAllCurves();
         
-        for (int i(0); i< subDates.size(); ++i) {
+        for (int i= 0; i < subDates.size(); ++i) {
             QJsonObject subDate = subDates.at(i).toObject();
             Date sd (subDate);
 

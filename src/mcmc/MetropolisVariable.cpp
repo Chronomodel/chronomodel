@@ -551,7 +551,7 @@ QVector<double> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs>& c
     std::vector<double> trace;
     int shift = 0;
 
-    for (int i=0; i<chains.size(); ++i) {
+    for (int i = 0; i<chains.size(); ++i) {
         // We add 1 for the init
         const unsigned long traceSize = 1 + chains.at(i).mNumBurnIter + (chains.at(i).mBatchIndex * chains.at(i).mNumBatchIter ) + int (chains.at(i).mNumRunIter / chains.at(i).mThinningInterval);
         trace.resize(traceSize);
@@ -872,6 +872,8 @@ QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
    }
 
     quint32 siz;
+    double v;
+
     stream >> siz;
     if (data.mRawTrace)
         data.mRawTrace->clear();
@@ -880,7 +882,6 @@ QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
     data.mRawTrace->reserve(siz);
 
     for (quint32 i = 0; i < siz; ++i) {
-        double v;
         stream >> v;
         data.mRawTrace->push_back(v);
     }

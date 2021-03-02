@@ -38,7 +38,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "Event.h"
-#include "Phase.h"
+#include "Date.h"
+//#include "Phase.h"
+
 #include "EventConstraint.h"
 #include "PhaseConstraint.h"
 #include "Generator.h"
@@ -174,7 +176,7 @@ Event::~Event()
 {
     mTheta.reset();
     
-    for (auto &&date : mDates) {
+    for (auto&& date : mDates) {
         date.mTheta.reset();
         date.mSigma.reset();
         date.mWiggle.reset();
@@ -224,15 +226,14 @@ Event Event::fromJson(const QJsonObject& json)
     event.mSInt = json.value(STATE_EVENT_S_INT).toDouble();
 
     const QJsonArray dates = json.value(STATE_EVENT_DATES).toArray();
+    Date dat;
+    for (auto&& date : dates) {
+        dat.fromJson(date.toObject());
+        dat.autoSetTiSampler(true); // must be after fromJson()
+        dat.mMixingLevel = event.mMixingLevel;
 
-    for (auto && date : dates) {
-        Date d;
-        d.fromJson(date.toObject());
-        d.autoSetTiSampler(true);
-        d.mMixingLevel=event.mMixingLevel;
-
-        if (!d.isNull())
-            event.mDates.append(d);
+        if (!dat.isNull())
+            event.mDates.append(dat);
         else
             throw QObject::tr("ERROR : data could not be created with plugin %1").arg(date.toObject().value(STATE_DATE_PLUGIN_ID).toString());
 

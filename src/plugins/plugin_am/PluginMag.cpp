@@ -184,7 +184,7 @@ QString PluginMag::getDateDesc(const Date* date) const
             result = "Combine (";
             QStringList datesDesc;
 
-            for (auto && d: date->mSubDates) {
+            for (auto&& d: date->mSubDates) {
                 Date subDate (d.toObject() );
                 datesDesc.append(getDateDesc(&subDate));
             }
@@ -428,7 +428,7 @@ QPair<double,double> PluginMag::getTminTmaxRefsCurve(const QJsonObject& data) co
         tmin = mRefCurves.value(ref_curve).mTmin;
         tmax = mRefCurves.value(ref_curve).mTmax;
     }
-    return qMakePair<double,double>(tmin,tmax);
+    return QPair<double,double>(tmin, tmax);
 }
 
 //Settings / Input Form / RefView
@@ -535,7 +535,7 @@ QJsonObject PluginMag::mergeDates(const QJsonArray& dates)
         QStringList names;
 
         bool subDatIsValid (true);
-        for (auto && d : dates) {
+        for (auto&& d : dates) {
             names.append(d.toObject().value(STATE_NAME).toString());
             // Validate the date before merge
             subDatIsValid = d.toObject().value(STATE_DATE_VALID).toBool() & subDatIsValid;

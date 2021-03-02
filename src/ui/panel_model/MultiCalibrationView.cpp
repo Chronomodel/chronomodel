@@ -625,8 +625,7 @@ void MultiCalibrationView::updateScroll()
         const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
         adaptedFont.setPointSizeF(ptSiz);
         mEndEdit->setFont(adaptedFont);
-    }
-    else
+    } else
         mEndEdit->setFont(font());
 
     // Usefull when we set mStartEdit and mEndEdit at the begin of the display,
@@ -949,7 +948,7 @@ void MultiCalibrationView::showStat()
                 for (auto&& date : dates) {
                    const QJsonObject jdate = date.toObject();
 
-                   Date d(jdate);
+                   Date d (jdate);
 
                    resultsStr += " <br> <strong>"+ d.mName + "</strong> (" + d.mPlugin->getName() + ")" +"<br> <i>" + d.getDesc() + "</i><br> ";
 

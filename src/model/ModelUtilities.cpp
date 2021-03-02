@@ -145,7 +145,7 @@ QString ModelUtilities::getDeltaText(const Date& date)
     QString result;
     const PluginAbstract* plugin = date.mPlugin;
     const QString str = QObject::tr("Wiggle");
-    if (plugin && plugin->wiggleAllowed()) {
+    if (plugin&& plugin->wiggleAllowed()) {
         switch (date.mDeltaType) {
             case Date::eDeltaFixed:
                 result = date.mDeltaFixed != 0. ?  str + " : " + QString::number(date.mDeltaFixed) : "";
@@ -170,7 +170,7 @@ QVector<QVector<Event*> > ModelUtilities::getNextBranches(const QVector<Event*>&
     QVector<QVector<Event*> > branches;
     QList<EventConstraint*> cts = lastNode->mConstraintsFwd;
     if (cts.size() > 0) {
-        for (int i=0; i<cts.size(); ++i) {
+        for (int i = 0; i < cts.size(); ++i) {
             QVector<Event*> branch = curBranch;
             Event* newNode = cts.at(i)->mEventTo;
 
@@ -181,7 +181,7 @@ QVector<QVector<Event*> > ModelUtilities::getNextBranches(const QVector<Event*>&
                 branch.append(newNode);
                 QVector<QVector<Event*> > nextBranches = getNextBranches(branch, cts[i]->mEventTo);
 
-                for (int j=0; j<nextBranches.size(); ++j)
+                for (int j = 0; j < nextBranches.size(); ++j)
                     branches.append(nextBranches.at(j));
 
             } else {
@@ -228,7 +228,7 @@ QVector<QVector<Event*> > ModelUtilities::getAllEventsBranches(const QList<Event
     //  store events at start of branches (= not having constraint backward)
     // ----------------------------------------
     QVector<Event*> starts;
-    for ( auto && event : events) {
+    for (auto&& event : events) {
         event->mLevel = 0;
         if (event->mConstraintsBwd.size() == 0)
             starts.append(event);
@@ -238,14 +238,14 @@ QVector<QVector<Event*> > ModelUtilities::getAllEventsBranches(const QList<Event
         throw QObject::tr("Circularity found in events model !");
 
     else {
-        for (int i=0; i<starts.size(); ++i) {
+        for (int i = 0; i < starts.size(); ++i) {
             QVector<QVector<Event*> > eventBranches;
             try {
                 eventBranches = getBranchesFromEvent(starts[i]);
             } catch(QString error) {
                 throw std::move(error);
             }
-            for (int j=0; j<eventBranches.size(); ++j)
+            for (int j = 0; j < eventBranches.size(); ++j)
                 branches.append(eventBranches[j]);
         }
     }
@@ -261,7 +261,7 @@ QVector<QVector<Phase*> > ModelUtilities::getNextBranches(const QVector<Phase*>&
     QVector<QVector<Phase*> > branches;
     QList<PhaseConstraint*> cts = lastNode->mConstraintsFwd;
     if (cts.size() > 0) {
-        for (int i=0; i<cts.size(); ++i) {
+        for (int i = 0; i < cts.size(); ++i) {
             QVector<Phase*> branch = curBranch;
             Phase* newNode = cts[i]->mPhaseTo;
 
@@ -279,12 +279,12 @@ QVector<QVector<Phase*> > ModelUtilities::getNextBranches(const QVector<Phase*>&
                 if (!branch.contains(newNode)) {
                     branch.append(newNode);
                     QVector<QVector<Phase*> > nextBranches = getNextBranches(branch, cts[i]->mPhaseTo, gamma, maxLength);
-                    for (int j=0; j<nextBranches.size(); ++j)
+                    for (int j = 0; j < nextBranches.size(); ++j)
                         branches.append(nextBranches[j]);
                 }
                 else {
                     QStringList names;
-                    for (int j=0; j<branch.size(); ++j)
+                    for (int j = 0; j < branch.size(); ++j)
                         names << branch[j]->mName;
                     names << newNode->mName;
 
@@ -293,7 +293,7 @@ QVector<QVector<Phase*> > ModelUtilities::getNextBranches(const QVector<Phase*>&
             }
             else {
                 QStringList names;
-                for (int j=0; j<curBranch.size(); ++j)
+                for (int j = 0; j < curBranch.size(); ++j)
                     names << curBranch[j]->mName;
                 names << newNode->mName;
                 throw QObject::tr("Phases branch too long :\r") + names.join(" -> ");
@@ -329,7 +329,7 @@ QVector<QVector<Phase*> > ModelUtilities::getAllPhasesBranches(const QList<Phase
     QVector<QVector<Phase*> > branches;
 
     QVector<Phase*> starts;
-    for (int i=0; i<phases.size(); ++i) {
+    for (int i = 0; i < phases.size(); ++i) {
         phases[i]->mLevel = 0;
         if (phases[i]->mConstraintsBwd.size() == 0)
             starts.append(phases[i]);
@@ -337,14 +337,14 @@ QVector<QVector<Phase*> > ModelUtilities::getAllPhasesBranches(const QList<Phase
     if (starts.size() == 0 && phases.size() != 0)
         throw QObject::tr("Circularity found in phases model !");
 
-    for (int i=0; i<starts.size(); ++i) {
+    for (int i = 0; i < starts.size(); ++i) {
         QVector<QVector<Phase*> > phaseBranches;
         try {
             phaseBranches = getBranchesFromPhase(starts[i], maxLength);
         } catch (QString error){
             throw std::move(error);
         }
-        for (int j=0; j<phaseBranches.size(); ++j)
+        for (int j = 0; j < phaseBranches.size(); ++j)
             branches.append(phaseBranches[j]);
     }
     return branches;
@@ -359,7 +359,7 @@ QVector<Event*> ModelUtilities::sortEventsByLevel(const QList<Event*>& events)
     QVector<Event*> results;
 
     while (numSorted < events.size()) {
-        for (int i=0; i<events.size(); ++i) {
+        for (int i = 0; i < events.size(); ++i) {
             if (events[i]->mLevel == curLevel) {
                 results.append(events[i]);
                 ++numSorted;
@@ -377,7 +377,7 @@ QVector<Phase*> ModelUtilities::sortPhasesByLevel(const QList<Phase*>& phases)
     QVector<Phase*> results;
 
     while (numSorted < phases.size()) {
-        for (int i=0; i<phases.size(); ++i) {
+        for (int i = 0; i < phases.size(); ++i) {
             if (phases[i]->mLevel == curLevel) {
                 results.append(phases[i]);
                 ++numSorted;
@@ -397,7 +397,7 @@ QVector<Phase*> ModelUtilities::sortPhasesByLevel(const QList<Phase*>& phases)
 QVector<Event*> ModelUtilities::unsortEvents(const QList<Event*>& events)
 {
     QVector<Event*> results(events.toVector());
-    for(int i=results.size()-1; i>0; --i){
+    for (int i = results.size()-1; i > 0; --i){
         std::swap(results[i], results[Generator::randomUniformInt(0, i)]);
     }
     return results;
@@ -778,17 +778,17 @@ void sampleInCumulatedRepartition( Event* event, const ProjectSettings &settings
      * Now, we use the cumulative date density distribution function.
      */
 
-    // Calibrés en dehors des contraintes
-    // CE cas doit être dissocié en deux, la densité est à droite ou la densité est à gauche donc favoriser un des cotés
+    // Calibrated outside the constraints
+    // CThis case must be dissociated in two, the density is on the right or the density is on the left, thus favouring one of the sides.
 
     if (unionTmax< min) {
-        event->mTheta.mX = Generator::gaussByDoubleExp(min, (max-min)/3.4, min, max);
+        event->mTheta.mX = Generator::gaussByDoubleExp(min, (max-min)*0.75, min, max);
 
     } else if (max<unionTmin){
 
         //unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
 
-        event->mTheta.mX = Generator::gaussByDoubleExp(max, (max-min)/3.4, min, max);
+        event->mTheta.mX = Generator::gaussByDoubleExp(max, (max-min)*0.75, min, max);
 
 
     } else {

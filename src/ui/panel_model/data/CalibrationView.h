@@ -48,7 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphView.h"
 
 class GraphViewRefAbstract;
-class Date;
+//class TDate;
 class Marker;
 class LineEdit;
 class Button;

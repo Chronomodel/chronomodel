@@ -397,7 +397,7 @@ QPair<double,double> PluginF14C::getTminTmaxRefsCurve(const QJsonObject& data) c
        tmin = mRefCurves.value(ref_curve).mTmin;
        tmax = mRefCurves.value(ref_curve).mTmax;
     }
-    return qMakePair<double,double>(tmin,tmax);
+    return QPair<double,double>(tmin, tmax);
 }
 
 //Settings / Input Form / RefView
@@ -406,6 +406,7 @@ GraphViewRefAbstract* PluginF14C::getGraphViewRef()
     mRefGraph = new PluginF14CRefView();
     return mRefGraph;
 }
+
 void PluginF14C::deleteGraphViewRef(GraphViewRefAbstract* graph)  {
 
     if (graph)
@@ -414,6 +415,7 @@ void PluginF14C::deleteGraphViewRef(GraphViewRefAbstract* graph)  {
     graph = nullptr;
     mRefGraph = nullptr;
 }
+
 PluginSettingsViewAbstract* PluginF14C::getSettingsView()
 {
     return new PluginF14CSettingsView(this);
@@ -525,7 +527,7 @@ QJsonObject PluginF14C::mergeDates(const QJsonArray& dates)
 
         // wiggle existence test
         bool withWiggle (false);
-        for (auto && d :dates) {
+        for (auto&& d :dates) {
              const QJsonObject dateData = d.toObject().value(STATE_DATE_DATA).toObject();
              withWiggle = withWiggle || (dateData.value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);
 
@@ -550,7 +552,7 @@ QJsonObject PluginF14C::mergeDates(const QJsonArray& dates)
 
             QStringList names;
 
-            for (auto && d :dates) {
+            for (auto&& d :dates) {
                 names.append(d.toObject().value(STATE_NAME).toString());
             }
 
@@ -587,7 +589,7 @@ QJsonObject PluginF14C::mergeDates(const QJsonArray& dates)
 
             QStringList names;
 
-            for (int i(0); i<dates.size(); ++i) {
+            for (int i =0; i<dates.size(); ++i) {
                 const QJsonObject date = dates.at(i).toObject();
                 const QJsonObject data = date.value(STATE_DATE_DATA).toObject();
 

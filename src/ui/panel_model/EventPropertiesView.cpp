@@ -542,7 +542,7 @@ void EventPropertiesView::deleteSelectedDates()
 {
     QList<QListWidgetItem*> items = mDatesList->selectedItems();
     QList<int> indexes;
-    for (int i=0; i<items.size(); ++i)
+    for (int i = 0; i<items.size(); ++i)
         indexes.push_back(mDatesList->row(items[i]));
 
     MainWindow::getInstance()->getProject()->deleteDates(mEvent.value(STATE_ID).toInt(), indexes);

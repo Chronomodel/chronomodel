@@ -112,6 +112,7 @@ mNoResults(true)
 
     mReasonChangeStructure<<"Event constraint deleted"<<"Event constraint created"<<"Event(s) deleted";
     mReasonChangeStructure<<"Event created"<<"Bound created"<<"Event method updated" ;
+    mReasonChangeStructure<<"Event(s) restored";
     mReasonChangeStructure<<"Update selected event method";//<<"Event selected";
 
     mReasonChangeStructure<<"Phase created"<<"Phase(s) deleted";
@@ -645,7 +646,7 @@ bool Project::load(const QString& path)
            // QJsonObject state = mState;
             mState[STATE_APP_VERSION] = qApp->applicationVersion();
 
-            // -------------------- look for the calibration file --------------------
+           // -------------------- look for the calibration file --------------------
 
             QString caliPath = path + ".cal";
             QFileInfo calfi(caliPath);
@@ -703,9 +704,7 @@ bool Project::load(const QString& path)
                                   // return true;
                                 }
 
-                            } /*else {
-                               // return true;
-                            }*/
+                            }
 
                         } else {
                             // loading cal curve
@@ -747,6 +746,12 @@ bool Project::load(const QString& path)
                     qDebug() << "Project::load Loading model file.res : " << dataPath << " size=" << dataFile.size();
 
                     try {
+                        delete mModel;
+                        if (isChronocurve()) {
+                            mModel = new ModelChronocurve ();
+                        } else
+                            mModel = new Model ();
+
                         mModel->fromJson(mState);
                      }
                     catch (const std::exception & e) {
@@ -1585,23 +1590,31 @@ void Project::recycleEvents()
         QJsonObject settingsJson = stateNext[STATE_SETTINGS].toObject();
         ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
 
-        for (int i = 0; i < events_trash.size(); ++i) {
+        for (int i = 0; i < indexes.size(); ++i) {
             const QJsonObject event = events_trash.at(indexes[i]).toObject();
             event[STATE_ID] = getUnusedEventId(events);
+            Event::Type type = (Event::Type) event.value(STATE_EVENT_TYPE).toInt();
 
-            QJsonArray dates = event[STATE_EVENT_DATES].toArray();
-            QJsonArray new_dates;
-            for (int j = 0; j < dates.size(); ++j) {
-                const QJsonObject new_date = dates.at(j).toObject();
-                // Validate the date before adding it to the correct event and pushing the state
-                PluginAbstract* plugin = PluginManager::getPluginFromId(new_date[STATE_DATE_PLUGIN_ID].toString());
-                bool valid = plugin->isDateValid(new_date[STATE_DATE_DATA].toObject(), settings);
-                new_date[STATE_DATE_VALID] = valid;
+            /* if the event is default type, we have to validate the dates
+             * if the event is know type, juste insert the json
+             */
+            if (type == Event::Type::eDefault) {
+                QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+                QJsonArray new_dates;
+                for (int j = 0; j < dates.size(); ++j) {
+                    const QJsonObject new_date = dates.at(j).toObject();
+                    // Validate the date before adding it to the correct event and pushing the state
+                    PluginAbstract* plugin = PluginManager::getPluginFromId(new_date[STATE_DATE_PLUGIN_ID].toString());
+                    bool valid = plugin->isDateValid(new_date[STATE_DATE_DATA].toObject(), settings);
+                    new_date[STATE_DATE_VALID] = valid;
 
-                new_date[STATE_ID] = getUnusedDateId(dates);
-                new_dates.append(new_date);
+                    new_date[STATE_ID] = getUnusedDateId(dates);
+                    new_dates.append(new_date);
+                }
+                event[STATE_EVENT_DATES] = new_dates;
+
             }
-            event[STATE_EVENT_DATES] = new_dates;
+
             events.append(event);
 
         }
@@ -2255,8 +2268,7 @@ void Project::splitDate(const int eventId, const int dateId)
     ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
 
-    for(int i=0; i<events.size(); ++i)
-    {
+    for (int i=0; i<events.size(); ++i) {
         QJsonObject event = events.at(i).toObject();
         if (event.value(STATE_ID).toInt() == eventId) {
             QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
@@ -2268,7 +2280,7 @@ void Project::splitDate(const int eventId, const int dateId)
                     QJsonArray subdates = date.value(STATE_DATE_SUB_DATES).toArray();
                     PluginAbstract* plugin = PluginManager::getPluginFromId(date.value(STATE_DATE_PLUGIN_ID).toString());
 
-                    for (int k=0; k<subdates.size(); ++k) {
+                    for (int k = 0; k<subdates.size(); ++k) {
                         QJsonObject sd = subdates.at(k).toObject();
                         bool valid = plugin->isDateValid(sd[STATE_DATE_DATA].toObject(), settings);
                         sd[STATE_DATE_VALID] = valid;
@@ -2294,13 +2306,13 @@ void Project::updateAllDataInSelectedEvents(const QHash<QString, QVariant>& grou
     QJsonObject stateNext = mState;
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
 
-    for (int i=0; i<events.size(); ++i) {
+    for (int i = 0; i < events.size(); ++i) {
         QJsonObject event = events.at(i).toObject();
         if ((event.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) &&  // Not a bound
            (event.value(STATE_IS_SELECTED).toBool())) // Event is selected
         {
             QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
-            for (int j=0; j<dates.size(); ++j) {
+            for (int j = 0; j<dates.size(); ++j) {
                 QJsonObject date = dates.at(j).toObject();
                 if (date.value(STATE_DATE_PLUGIN_ID).toString() == groupedAction.value("pluginId").toString()) {
                     QJsonObject data = date.value(STATE_DATE_DATA).toObject();

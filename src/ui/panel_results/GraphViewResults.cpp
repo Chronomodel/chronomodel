@@ -212,8 +212,7 @@ void GraphViewResults::saveAsImage()
             if (mGraph)
                 mGraph->saveAsSVG(fileName, mTitle, "GraphViewResults",true);
 
-        }
-        else {
+        } else {
 
             //---
             //GraphView::Rendering memoRendering= mGraph->getRendering();
@@ -537,8 +536,7 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
 {
     QString prefix = name.isEmpty() ? name : name + " ";
 
-    for (int i=0; i<chains.size(); ++i)
-    {
+    for (int i = 0; i < chains.size(); ++i) {
         GraphCurve curve;
         curve.mUseVectorData = true;
         curve.mName = prefix + "Trace " + QString::number(i);
@@ -567,7 +565,7 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
 
 void GraphViewResults::generateAcceptCurves(const QList<ChainSpecs> &chains,
                                             MHVariable* variable){
-    for (int i=0; i<chains.size(); ++i) {
+    for (int i = 0; i < chains.size(); ++i) {
         GraphCurve curve;
         curve.mName = "Accept " + QString::number(i);
         curve.mDataVector = variable->acceptationForChain(chains, i);
@@ -580,7 +578,7 @@ void GraphViewResults::generateAcceptCurves(const QList<ChainSpecs> &chains,
 
 void GraphViewResults::generateCorrelCurves(const QList<ChainSpecs> &chains,
                                             MHVariable* variable){
-    for (int i=0; i<chains.size(); ++i) {
+    for (int i = 0; i < chains.size(); ++i) {
         GraphCurve curve;
         curve.mName = "Correl " + QString::number(i);
         curve.mDataVector = variable->correlationForChain(i);

@@ -492,7 +492,7 @@ QPair<double,double> Plugin14C::getTminTmaxRefsCurve(const QJsonObject& data) co
        tmin = mRefCurves.value(ref_curve).mTmin;
        tmax = mRefCurves.value(ref_curve).mTmax;
     }
-    return qMakePair<double,double>(tmin,tmax);
+    return QPair<double, double>(tmin, tmax);
 }
 
 //Settings / Input Form / RefView
@@ -629,16 +629,14 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
     QJsonObject result;
     if (dates.size() > 1) {
 
-
         QStringList names;
         QJsonObject mergedData;
 
         // inherits the first data propeties as plug-in and method...
 
-
         // test wiggle existence and create the name
         bool withWiggle (false);
-        for (int i(0); i<dates.size(); ++i) {
+        for (int i = 0; i<dates.size(); ++i) {
             QJsonObject date = dates.at(i).toObject();
             const QJsonObject dateData = date.value(STATE_DATE_DATA).toObject();
             withWiggle = withWiggle || (dateData.value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);
@@ -688,7 +686,7 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
             double sum_mi_vi = 0.;
             double sum_1_vi = 0.;
 
-            for (int i (0); i<dates.size(); ++i) {
+            for (int i = 0; i<dates.size(); ++i) {
                 const QJsonObject date = dates.at(i).toObject();
                 const QJsonObject data = date.value(STATE_DATE_DATA).toObject();
 

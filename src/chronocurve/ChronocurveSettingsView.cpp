@@ -154,7 +154,7 @@ ChronocurveSettingsView::ChronocurveSettingsView(QWidget* parent):QWidget(parent
     grid->addWidget(mAlphaLissageInput, row, 1);
     
     QVBoxLayout* vlayout = new QVBoxLayout();
-    vlayout->setMargin(20);
+    //vlayout->setMargin(20);
     vlayout->addSpacing(20);
     vlayout->addWidget(mTitleLabel);
     vlayout->addSpacing(20);
@@ -178,31 +178,31 @@ ChronocurveSettingsView::ChronocurveSettingsView(QWidget* parent):QWidget(parent
     
     updateVisibilities();
     
-    connect(mProcessTypeInput, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::updateVisibilities);
+    connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::updateVisibilities);
     
-    connect(mVariableTypeInput, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::updateVisibilities);
+    connect(mVariableTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::updateVisibilities);
     
-    connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::updateVisibilities);
+    connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::updateVisibilities);
     
-    connect(mCoeffLissageTypeInput, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::updateVisibilities);
+    connect(mCoeffLissageTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::updateVisibilities);
     
     
     
-    connect(mProcessTypeInput, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::save);
+    connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::save);
     
-    connect(mVariableTypeInput, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::save);
+    connect(mVariableTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::save);
     
     connect(mUseErrMesureInput, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &ChronocurveSettingsView::save);
     
-    connect(mTimeTypeInput, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::save);
+    connect(mTimeTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::save);
     
-    connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::save);
+    connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::save);
     
     connect(mUseVarianceIndividualInput, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &ChronocurveSettingsView::save);
     
     connect(mVarianceFixedInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &ChronocurveSettingsView::save);
     
-    connect(mCoeffLissageTypeInput, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::save);
+    connect(mCoeffLissageTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::save);
     
     connect(mAlphaLissageInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &ChronocurveSettingsView::save);
 }

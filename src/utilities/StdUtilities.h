@@ -85,39 +85,64 @@ V interpolate(const T& x, const T& x1, const T& x2, const V& y1, const V& y2)
 template <typename T, typename U>
 T interpolateValueInQMap(const U& key, const QMap<U, T>& map)
 {
-    auto lIter = map.lowerBound(key);
-    T valueUpper = lIter.value();
-    T keyUpper = lIter.key();
+    if (key <= map.firstKey()) {
+        return map.first();
 
-    if (key<=keyUpper)
-        return valueUpper;
-
-    else if (lIter!=map.end()) {
-        T valueUnder = (lIter - 1).value();
-        T keyUnder =(lIter - 1).key();
-
-        return interpolate(key, keyUnder, keyUpper, valueUnder, valueUpper);
-    }
-    else
+    } else if (key >= map.lastKey()) {
         return map.last();
 
+    } else {
+        auto lIter = map.lowerBound(key);
+        auto uIter = lIter + 1;//map.upperBound(key);
+        return interpolate(key, lIter.key(), uIter.key(), lIter.value(), uIter.value());
+    }
+
+ /*
+    typename QMap<U, T>::iterator UIter = map.upperBound(key);
+    T valueUpper = UIter.value();
+    T keyUpper = UIter.key();
+    typename QMap<U, T>::iterator lIter (--UIter);
+
+    if (UIter == map.begin()) {
+        return map.first();
+    } else if (UIter)
+
+
+    if (key <= keyUnder)
+        return valueUnder;
+
+    else if (lIter != map.end()) {
+        typename QMap<U, T>::iterator UIter (++lIter);
+        if (UIter != map.end()) {
+            T valueUpper = lIter.value();
+            T keyUpper = lIter.key();
+            return interpolate(key, keyUnder, keyUpper, valueUnder, valueUpper);
+         } else {
+
+        }
+
+
+
+    }  else
+        return map.last();
+*/
 }
 
 
 template <class T>
-T vector_max_value(const QList<T>& aVector)
+T list_max_value(const QList<T>& aList)
 {
-    typename QList<T>::const_iterator it = std::max_element(aVector.cbegin(), aVector.cend());
-    if (it != aVector.cend())
+    typename QList<T>::const_iterator it = std::max_element(aList.cbegin(), aList.cend());
+    if (it != aList.cend())
         return *it;
     return T(0);
 }
 
 template <class T>
-T vector_min_value(const QList<T>& aVector)
+T list_min_value(const QList<T>& aList)
 {
-    typename QList<T>::const_iterator it = std::min_element(aVector.cbegin(), aVector.cend());
-    if (it != aVector.cend())
+    typename QList<T>::const_iterator it = std::min_element(aList.cbegin(), aList.cend());
+    if (it != aList.cend())
         return *it;
     return T(0);
 }

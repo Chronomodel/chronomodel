@@ -255,7 +255,7 @@ void ProjectView::updateMultiCalibration()
 void ProjectView::initResults(Model* model)
 {
     model->updateDesignFromJson();
-    model->initDensities();
+    model->updateDensities();
 
     model->generateModelLog();
     model->generateResultsLog();
@@ -275,9 +275,9 @@ void ProjectView::updateResults()
 {
     Project* project = MainWindow::getInstance()->getProject();
     
-    if(project->mModel)
-    {
+    if (project->mModel) {
         project->mModel->updateDesignFromJson();
+        project->mModel->updateDensities();
         mResultsView->updateModel(project->mModel);
     }
 }

@@ -201,7 +201,7 @@ QString PluginGauss::getDateDesc(const Date* date) const
     } else {
         result = "Combine (";
         QStringList datesDesc;
-        for (auto && d: date->mSubDates) {
+        for (auto&& d: date->mSubDates) {
             Date subDate (d.toObject() );
             datesDesc.append(getDateDesc(&subDate));
         }

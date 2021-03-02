@@ -43,8 +43,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QWidget>
 #include <QJsonObject>
 
-class Event;
-class Date;
+//class Event;
+//class TDate;
 class Label;
 class LineEdit;
 

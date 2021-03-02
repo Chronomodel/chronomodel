@@ -114,7 +114,7 @@ mType(type)
 
         QJsonArray dates = state[STATE_DATES_TRASH].toArray();
 
-        for (int i(0); i<dates.size(); ++i) {
+        for (int i = 0; i<dates.size(); ++i) {
             try {
                 QJsonObject date = dates[i].toObject();
 
@@ -122,7 +122,7 @@ mType(type)
                 PluginAbstract* plugin = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
                 bool valid = plugin->isDateValid(date[STATE_DATE_DATA].toObject(), settings);
                 date[STATE_DATE_VALID] = valid;
-                Date d(date);
+                Date d (date);
 
                 if (!d.isNull()) {
                     QListWidgetItem* item = new QListWidgetItem(d.mName);

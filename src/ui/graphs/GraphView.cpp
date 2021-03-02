@@ -870,7 +870,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
 
     /* ---------------------- Zones --------------------------*/
 
-    for (auto && zone : mZones) {
+    for (auto&& zone : mZones) {
         QRect r(int (getXForValue(zone.mXStart)),
                 int (mMarginTop),
                 int (getXForValue(zone.mXEnd) - getXForValue(zone.mXStart)),
@@ -906,8 +906,10 @@ void GraphView::paintToDevice(QPaintDevice* device)
              for (auto& curve : mCurves)
                  if (curve.mVisible && curve.mData.size()>0)
                     maxData = std::max(maxData, curve.mData.lastKey());
+
                  else if (curve.mVisible && curve.mIsVerticalLine)
                      maxData = std::max(maxData, curve.mVerticalValue);
+
                  else if (curve.mVisible && curve.mIsHorizontalSections)
                      for (auto& section : curve.mSections )
                          maxData = std::max(maxData, section.second);
@@ -1014,7 +1016,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
         p.setPen(Painting::borderDark);
         int y (0);
         int lineH (fm.height());
-        for (auto && info : mInfos) {
+        for (auto&& info : mInfos) {
             p.drawText(int (1.2 * mMarginLeft), int (mMarginTop  + y), int (mGraphWidth - 1.2*mMarginLeft -mMarginRight), lineH, Qt::AlignLeft | Qt::AlignBottom, info);
             y += lineH;
         }
@@ -1062,10 +1064,12 @@ void GraphView::drawCurves(QPainter& painter)
                // QMap<type_data, type_data>::const_iterator iterErroY = curve.mDataErrorY.cbegin();
 
                 while (iterData != curve.mData.cend()) {
+                    QPainterPath pathPoint;
                     type_data ymoy = iterData.value();
                     type_data xmoy = iterData.key();
                     type_data errXmoy = curve.mDataErrorX[xmoy];
                     type_data errYmoy = curve.mDataErrorY[xmoy];
+                    QColor col = curve.mDataColor[xmoy];
 
                     // vertical curves must be normalized (values from 0 to 1)
                     // They are drawn using a 100px width
@@ -1073,21 +1077,15 @@ void GraphView::drawCurves(QPainter& painter)
                    // qreal y = getYForValue(ymoy, false);
 
                     if (xmoy >= mCurrentMinX && xmoy <= mCurrentMaxX) {
-                        path.moveTo( getXForValue(xmoy- errXmoy), getYForValue(ymoy, true) );
-                        path.lineTo( getXForValue(xmoy + errXmoy), getYForValue(ymoy, true) );
+                        pathPoint.moveTo( getXForValue(xmoy- errXmoy), getYForValue(ymoy, true) );
+                        pathPoint.lineTo( getXForValue(xmoy + errXmoy), getYForValue(ymoy, true) );
 
-                        path.moveTo( getXForValue(xmoy), getYForValue(ymoy - errYmoy, true) );
-                        path.lineTo( getXForValue(xmoy), getYForValue(ymoy + errYmoy, true) );
+                        pathPoint.moveTo( getXForValue(xmoy), getYForValue(ymoy - errYmoy, true) );
+                        pathPoint.lineTo( getXForValue(xmoy), getYForValue(ymoy + errYmoy, true) );
                     }
                     ++iterData;
+                    painter.strokePath(pathPoint, QPen(col));
                 }
-
-                painter.strokePath(path, curve.mPen);
-             /*   curveRefPoints.mData.insert(tmoy, event->mYx);
-                curveRefPoints.mDataErrorX.insert(tmoy, tmax - tmin);
-                curveRefPoints.mDataErrorY.insert(tmoy, event->mSy);
-
-              */
 
 
             } else if (curve.mIsHorizontalLine) {
@@ -1192,10 +1190,11 @@ void GraphView::drawCurves(QPainter& painter)
                     QVector<type_data> lightData;
                     const type_data dataStep = type_data(subData.size()) / type_data(mGraphWidth);
                     if (dataStep > 1) {
-                        for (int i = 0; i<mGraphWidth; ++i) {
+                        for (int i = 0; i < mGraphWidth; ++i) {
                             const int idx = int (floor(i * dataStep));
                             lightData.append(subData.at(idx));
                         }
+
                     } else
                         lightData = subData;
 
@@ -1434,7 +1433,10 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
 
         // 3 - Create Row, with each curve
         //  Create data in row
-        for (type_data x= xMin; x <= xMax; x += step) {
+        type_data x;
+        int nbData = (xMax - xMin)/ step;
+        for (int i = 0; i <= nbData; ++i) {
+            x = (type_data)(i)*step + xMin;
             list.clear();
 
             list << locale.toString(x);

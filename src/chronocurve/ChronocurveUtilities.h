@@ -41,6 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <vector>
 #include <string>
+#include <QDataStream>
 
 
 typedef struct SplineMatrices
@@ -73,6 +74,9 @@ typedef struct MCMCSplineComposante
     
 } MCMCSplineComposante;
 
+QDataStream &operator<<( QDataStream& stream, const MCMCSplineComposante& spline );
+QDataStream &operator>>( QDataStream& stream, MCMCSplineComposante& spline );
+
 typedef struct MCMCSpline
 {
     MCMCSplineComposante splineX;
@@ -80,6 +84,9 @@ typedef struct MCMCSpline
     MCMCSplineComposante splineZ;
     
 } MCMCSpline;
+
+QDataStream &operator<<( QDataStream& stream, const MCMCSpline& spline );
+QDataStream &operator>>( QDataStream& stream, MCMCSpline& spline );
 
 typedef struct PosteriorMeanGComposante
 {
@@ -90,6 +97,9 @@ typedef struct PosteriorMeanGComposante
     
 } PosteriorMeanGComposante;
 
+QDataStream &operator<<( QDataStream& stream, const PosteriorMeanGComposante& pMGComposante );
+QDataStream &operator>>( QDataStream& stream, PosteriorMeanGComposante& pMGComposante );
+
 typedef struct PosteriorMeanG
 {
     PosteriorMeanGComposante gx;
@@ -98,6 +108,8 @@ typedef struct PosteriorMeanG
     
 } PosteriorMeanG;
 
+QDataStream &operator<<( QDataStream &stream, const PosteriorMeanG& pMeanG );
+QDataStream &operator>>( QDataStream &stream, PosteriorMeanG& pMeanG );
 
 std::vector<double> calculVecH(const std::vector<double>& vec);
 std::vector<std::vector<double>> calculMatR(const std::vector<double>& vec);
@@ -109,8 +121,6 @@ std::vector<std::vector<double>> initMatrice(const int rows, const int cols);
 class ChronocurveUtilities
 {
 public:
-
-
     std::vector<double> definitionNoeuds(const std::vector<double>& tabPts, const double minStep);
 };
 

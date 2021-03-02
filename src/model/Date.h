@@ -55,22 +55,29 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 class Event;
 class PluginAbstract;
-class Date;
+
 class CalibrationCurve;
 
 class Project;
 
-typedef void (*samplingFunction)(Date* date, Event* event);
+class Dato
+{
+public:
+    Dato();
 
-void fMHSymetric(Date* date, Event* event);
-void fInversion(Date* date, Event* event);
-void fMHSymGaussAdapt(Date* date,Event* event);
+    void fromJson(const QJsonObject& json);
+    virtual ~Dato();
+QString mName;
+    MHVariable mTheta; // theta i de la date
+    MHVariable mSigma; // sigma i de la date (par rapport au fait)
+    MHVariable mWiggle;
+    double mDelta;
 
-void fMHSymetricWithArg(Date* date, Event* event);
-void fMHSymGaussAdaptWithArg(Date* date, Event* event);
-void fInversionWithArg(Date* date, Event* event);
+   // samplingFunctiono updateti;
 
-double fProposalDensity(const double t, const double t0, Date* date);
+    double mTminRefCurve;
+    double mTmaxRefCurve;
+};
 
 
 
@@ -95,13 +102,53 @@ public:
         eDeltaRange = 2
     };
 
+    MHVariable mTheta; // theta i de la date
+    MHVariable mSigma; // sigma i de la date (par rapport au fait)
+    MHVariable mWiggle;
+    double mDelta;
+
+    int mId;
+    QString mUUID;
+
+    QString mName; // must be public, to be setting by dialogbox
+    QColor mColor;
+
+    QJsonObject mData;
+    OriginType mOrigin;
+    PluginAbstract* mPlugin;
+    DataMethod mMethod;
+    bool mIsValid;
+
+    DeltaType mDeltaType;
+    double mDeltaFixed;
+    double mDeltaMin;
+    double mDeltaMax;
+    double mDeltaAverage;
+    double mDeltaError;
+
+    bool mIsCurrent;
+    bool mIsSelected;
+
+    CalibrationCurve* mCalibration;
+    CalibrationCurve* mWiggleCalibration;
+
+    QMap<double, double> mCalibHPD;
+    ProjectSettings mSettings;
+
+    //QList<TDate> mSubDates;
+    QJsonArray mSubDates;
+    double mMixingLevel;
+
+
+public:
+
     Date();
+    virtual ~Date();
     Date(const QJsonObject &json);
     Date(PluginAbstract* plugin);
     Date(const Date& date);
     Date& operator=(const Date& date);
     void copyFrom(const Date& date);
-    virtual ~Date();
 
     void init();
     bool isNull() const;
@@ -137,17 +184,6 @@ public:
     QPixmap generateCalibThumb();
     QPixmap generateUnifThumb();
 
-    void initDelta(Event* event);
-
-    void updateTheta(Event* event);
-    void autoSetTiSampler(const bool bSet);
-
-    void updateDelta(Event* event);
-    void updateSigmaShrinkage(Event* event);
-    void updateSigmaJeffreys(Event* event);
-    void updateSigmaReParam(Event* event);
-    void updateWiggle();
-
     QColor getEventColor() const;
 
     double getTminRefCurve() const {return mTminRefCurve;}
@@ -161,52 +197,43 @@ public:
     double getFormatedTminCalib() const;
     double getFormatedTmaxCalib() const;
 
+    void initDelta(Event* event);
+
+    void updateTheta(Event* event);
+    void autoSetTiSampler(const bool bSet);
+
+    void updateDelta(Event* event);
+    void updateSigmaShrinkage(Event* event);
+    void updateSigmaJeffreys(Event* event);
+    void updateSigmaReParam(Event* event);
+    void updateWiggle();
+
     void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
 
-public:
-    MHVariable mTheta; // theta i de la date
-    MHVariable mSigma; // sigma i de la date (par rapport au fait)
-    MHVariable mWiggle;
-    double mDelta;
 
-    int mId;
-    QString mUUID;
 
-    QString mName; // must be public, to be setting by dialogbox
-    QColor mColor;
+    double fProposalDensity(const double t, const double t0);
 
-    QJsonObject mData;
-    OriginType mOrigin;
-    PluginAbstract* mPlugin;
-    DataMethod mMethod;
-    bool mIsValid;
+    void fMHSymetric(Event* event);
+    void fInversion(Event* event);
+    void fMHSymGaussAdapt(Event* event);
 
-    DeltaType mDeltaType;
-    double mDeltaFixed;
-    double mDeltaMin;
-    double mDeltaMax;
-    double mDeltaAverage;
-    double mDeltaError;
+    void fMHSymetricWithArg(Event* event);
+    void fMHSymGaussAdaptWithArg(Event* event);
+    void fInversionWithArg(Event* event);
 
-    bool mIsCurrent;
-    bool mIsSelected;
-
-    CalibrationCurve* mCalibration;
-    CalibrationCurve* mWiggleCalibration;
-
-    QMap<double, double> mCalibHPD;
-    ProjectSettings mSettings;
-
-    //QList<Date> mSubDates;
-    QJsonArray mSubDates;
-    double mMixingLevel;
+    typedef void (Date::*samplingFunction)(Event* event);
 
 protected:
-    samplingFunction updateti;
-
     double mTminRefCurve;
     double mTmaxRefCurve;
 
+    samplingFunction updateti;
+
 };
+
+
+
+
 
 #endif

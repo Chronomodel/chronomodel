@@ -553,12 +553,11 @@ void ModelView::updateProject()
     mProject->mState[STATE_SETTINGS_STEP_FORCED] = settings.mStepForced;
 
     setSettingsValid(settings.mTmin < settings.mTmax);
- //   blockSignals(true);
-qDebug() <<"ModelView::updateProject mEventsScene->updateSceneFromState();";
+ //   qDebug() <<"ModelView::updateProject mEventsScene->updateSceneFromState();";
     mEventsScene->updateSceneFromState();
-qDebug() <<"ModelView::updateProject  mPhasesScene->updateSceneFromState();";
+
     mPhasesScene->updateSceneFromState();
-//blockSignals(false);
+
     // Les sélections dans les scènes doivent être mises à jour après que
     // LES 2 SCENES aient été updatées
     // false : ne pas envoyer de notification pour updater l'état du projet,

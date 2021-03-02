@@ -362,3 +362,145 @@ std::vector<double> ChronocurveUtilities::definitionNoeuds(const std::vector<dou
     */
     return result;
 }
+
+
+QDataStream &operator<<( QDataStream& stream, const MCMCSplineComposante& splineComposante )
+{
+    stream << (quint32) splineComposante.vecThetaEvents.size();
+    for (auto& v : splineComposante.vecThetaEvents)
+        stream << v;
+
+    stream << (quint32) splineComposante.vecG.size();
+    for (auto& v : splineComposante.vecG)
+        stream << v;
+
+    stream << (quint32) splineComposante.vecGamma.size();
+    for (auto& v : splineComposante.vecGamma)
+        stream << v;
+
+    stream << (quint32) splineComposante.vecErrG.size();
+    for (auto& v : splineComposante.vecErrG)
+        stream << v;
+
+    return stream;
+}
+
+QDataStream &operator>>( QDataStream& stream, MCMCSplineComposante& splineComposante )
+{
+    quint32 siz;
+    double v;
+    stream >> siz;
+
+    splineComposante.vecThetaEvents.resize(siz);
+    std::generate_n(splineComposante.vecThetaEvents.begin(), siz, [&stream, &v]{stream >> v; return v;});
+
+   /*
+    if (!spline.vecThetaEvents.empty() )
+        spline.vecThetaEvents.clear();
+    else
+        spline.vecThetaEvents = std::vector<double>();
+
+    spline.vecThetaEvents.reserve(siz);
+
+    for (quint32 i = 0; i < siz; ++i) {
+
+        stream >> v;
+        spline.vecThetaEvents.push_back(v);
+    }
+    */
+
+    stream >> siz;
+    splineComposante.vecG.resize(siz);
+    std::generate_n(splineComposante.vecG.begin(), siz, [&stream, &v]{stream >> v; return v;});
+
+    stream >> siz;
+    splineComposante.vecGamma.resize(siz);
+    std::generate_n(splineComposante.vecGamma.begin(), siz, [&stream, &v]{stream >> v; return v;});
+
+    stream >> siz;
+    splineComposante.vecErrG.resize(siz);
+    std::generate_n(splineComposante.vecErrG.begin(), siz, [&stream, &v]{stream >> v; return v;});
+
+    return stream;
+};
+
+QDataStream &operator<<( QDataStream& stream, const MCMCSpline& spline )
+{
+    stream << spline.splineX;
+    stream << spline.splineY;
+    stream << spline.splineZ;
+
+    return stream;
+}
+
+QDataStream &operator>>( QDataStream& stream, MCMCSpline& spline )
+{
+    stream >> spline.splineX;
+    stream >> spline.splineY;
+    stream >> spline.splineZ;
+
+    return stream;
+}
+
+QDataStream &operator<<( QDataStream& stream, const PosteriorMeanGComposante& pMGComposante )
+{
+    stream << (quint32) pMGComposante.vecG.size();
+    for (auto& v : pMGComposante.vecG)
+        stream << v;
+
+    stream << (quint32) pMGComposante.vecGP.size();
+    for (auto& v : pMGComposante.vecGP)
+        stream << v;
+
+    stream << (quint32) pMGComposante.vecGS.size();
+    for (auto& v : pMGComposante.vecGS)
+        stream << v;
+
+    stream << (quint32) pMGComposante.vecGErr.size();
+    for (auto& v : pMGComposante.vecGErr)
+        stream << v;
+
+    return stream;
+}
+
+QDataStream &operator>>( QDataStream& stream, PosteriorMeanGComposante& pMGComposante )
+{
+    quint32 siz;
+    double v;
+
+    stream >> siz;
+    pMGComposante.vecG.resize(siz);
+    std::generate_n(pMGComposante.vecG.begin(), siz, [&stream, &v]{stream >> v; return v;});
+
+    stream >> siz;
+    pMGComposante.vecGP.resize(siz);
+    std::generate_n(pMGComposante.vecGP.begin(), siz, [&stream, &v]{stream >> v; return v;});
+
+    stream >> siz;
+    pMGComposante.vecGS.resize(siz);
+    std::generate_n(pMGComposante.vecGS.begin(), siz, [&stream, &v]{stream >> v; return v;});
+
+    stream >> siz;
+    pMGComposante.vecGErr.resize(siz);
+    std::generate_n(pMGComposante.vecGErr.begin(), siz, [&stream, &v]{stream >> v; return v;});
+
+    return stream;
+}
+
+QDataStream &operator<<( QDataStream &stream, const PosteriorMeanG& pMeanG )
+{
+    stream << pMeanG.gx;
+    stream << pMeanG.gy;
+    stream << pMeanG.gz;
+
+    return stream;
+}
+
+QDataStream &operator>>( QDataStream &stream, PosteriorMeanG& pMeanG )
+{
+    stream >> pMeanG.gx;
+    stream >> pMeanG.gy;
+    stream >> pMeanG.gz;
+
+    return stream;
+}

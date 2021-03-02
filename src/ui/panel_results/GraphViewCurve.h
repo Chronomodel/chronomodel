@@ -43,6 +43,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphViewResults.h"
 #include "ModelChronocurve.h"
 
+typedef struct RefPoint
+{
+    qreal Xmean;
+    qreal Xerr;
+    qreal Ymean;
+    qreal Yerr;
+    QColor color;
+
+} RefPoint;
 
 class GraphViewCurve: public GraphViewResults
 {
@@ -54,6 +63,7 @@ public:
     void setComposanteG(const PosteriorMeanGComposante& composante);
     void setComposanteGChains(const QList<PosteriorMeanGComposante>& composanteChains);
     void setEvents(const QList<Event*>& events);
+    void setRefPoints(const QVector<RefPoint>& rfPts) { mRefPoints = rfPts;};
     
     void generateCurves(TypeGraph typeGraph, Variable variable);
     void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, bool showG, bool showGError, bool showGPoints, bool showGP, bool showGS);
@@ -66,6 +76,7 @@ private:
     PosteriorMeanGComposante mComposanteG;
     QList<PosteriorMeanGComposante> mComposanteGChains;
     QList<Event*> mEvents;
+    QVector<RefPoint> mRefPoints;
     
     bool mShowG;
     bool mShowGError;

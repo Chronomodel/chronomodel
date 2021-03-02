@@ -83,7 +83,7 @@ void DatesList::setEvent(const QJsonObject& event)
             QJsonObject date = dates[i].toObject();
 
             try {
-                Date d(date);
+                Date d (date);
                 
                 if (!d.isNull()) {
                     QListWidgetItem* item = new QListWidgetItem();
