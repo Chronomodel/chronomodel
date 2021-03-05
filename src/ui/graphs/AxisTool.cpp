@@ -214,17 +214,17 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
                         textInc = 0;
                         xPrev = x;
 
-                    } else {
-                        if (mShowSubSubs)
-                            p.drawLine(QLineF(x, yo, x, yo + graduationSize));
-                        else if ( (x-xPrev) > mMinDeltaPix) {
-                            p.drawLine(QLineF(x, yo, x, yo + graduationSize/2.));
-                            xPrev = x;
-                       }
+                    } else if (mShowSubSubs) {
+                        p.drawLine(QLineF(x, yo, x, yo + graduationSize));
+
+                    } else if ( (x-xPrev) > mMinDeltaPix) {
+                        p.drawLine(QLineF(x, yo, x, yo + graduationSize/2.));
+                        xPrev = x;
                     }
 
+
                     if (mShowSubSubs && v<mEndVal) {
-                        for (int sv = 1.; sv < mMinorScaleCount; ++sv) {
+                        for (int sv = 1; sv < mMinorScaleCount; ++sv) {
                             const qreal vm = getXForValue(qreal(sv)*minorStep + v) + xo;
                             p.drawLine(QLineF(vm, yo, vm, yo + graduationSize/2.));
                         }
@@ -310,7 +310,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
                 const qreal minorStep (mMajorScale/ mMinorScaleCount);
 
                 textInc = mTextInc - 1;
-                //for (qreal v = mStartVal; v <= mEndVal ; v += mMajorScale)  {
+
                 for (size_t count = 1; count <= maxCount; ++count) {
                     v = mStartVal + (count * mMajorScale);
                     const qreal y = yov - getYForValue(v) ;
