@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MCMCLoop.h"
 #include "ChronocurveSettings.h"
 #include "ChronocurveUtilities.h"
+#include "EventKnown.h"
 #include <vector>
 
 class Project;
@@ -80,6 +81,7 @@ private:
 
     void prepareEventsY(QList<Event *> & lEvents);
     void prepareEventY(Event* event);
+    void prepareEventY(EventKnown* event);
     
     // Fonctions anciennement liées à do_cravate :
     std::vector<double> createDiagWInv(const QList<Event*>& lEvents);

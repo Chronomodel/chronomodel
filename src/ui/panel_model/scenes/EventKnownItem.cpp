@@ -92,7 +92,8 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     const double tmax = settings.value(STATE_SETTINGS_TMAX).toDouble();
     const double step = settings.value(STATE_SETTINGS_STEP).toDouble();
 
-    EventKnown bound = EventKnown::fromJson(event);
+    EventKnown bound ;
+    bound = EventKnown::fromJson(event);
     // if Fixed Bound with fixed value in study period or uniform Bound with bound.mUniformStart<bound.mUniformEnd
    /* if(  ( (bound.mKnownType==EventKnown::eFixed) && (tmin<=bound.mFixed) && (bound.mFixed<=tmax) )
       || ( (bound.mKnownType==EventKnown::eUniform) &&
@@ -158,9 +159,9 @@ QRectF EventKnownItem::boundingRect() const
     // the size is independant of the size name
 
     qreal h = mTitleHeight + mThumbH + mPhasesHeight + 2*AbstractItem::mEltsMargin;
-    h += 40.;
+    h += 50.;
 
-    const  qreal w ( 202);
+    const  qreal w ( 210);
 
     return QRectF(-w/2, -h/2, w, h);
 }
@@ -194,13 +195,6 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
 
     QRectF nameRect(rect.x() + side, rect.y() + top, rect.width() - 2*side, mTitleHeight);
     QRectF thumbRect(rect.x() + side, rect.y() + top + mEltsMargin + mTitleHeight, rect.width() - 2*side, mThumbH);
-    QRectF phasesRect(rect.x() + side, rect.y() + top + 2*mEltsMargin + mTitleHeight + mThumbH, rect.width() - 2*side, mPhasesHeight);
-
-    phasesRect.adjust(1, 1, -1, -1);
-    // detect selected phases and set mGreyedOut
-    const QJsonArray phases = getPhases();
-    const int numPhases = phases.size();
-    const double w = phasesRect.width()/numPhases;
 
     if (mGreyedOut) //setting with setGreyedOut() just above
         painter->setOpacity(0.1);
@@ -244,30 +238,90 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
 
 
     // Phases
+    QJsonObject state = mScene->getProject()->mState;
+    ChronocurveSettings chronocurveSettings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
 
-    if (numPhases == 0) {
-        font.setPointSizeF(10.);
-        QString noPhase = tr("No Phase");
-        QFont ftAdapt = AbstractItem::adjustFont(font, noPhase, phasesRect);
-        painter->setFont(ftAdapt);
-        painter->fillRect(phasesRect, QColor(0, 0, 0, 180));
-        painter->setPen(QColor(200, 200, 200));
-        painter->drawText(phasesRect, Qt::AlignCenter, noPhase);
-    } else {
-        for (int i=0; i<numPhases; ++i) {
-            QJsonObject phase = phases.at(i).toObject();
-            QColor c(phase.value(STATE_COLOR_RED).toInt(),
-                     phase.value(STATE_COLOR_GREEN).toInt(),
-                     phase.value(STATE_COLOR_BLUE).toInt());
-            painter->setPen(c);
-            painter->setBrush(c);
-            painter->drawRect(int (phasesRect.x() + i*w), int (phasesRect.y()), int(w), int (phasesRect.height()));
+    if (chronocurveSettings.mEnabled) {
+        int lines = getNumberChronocurveLines();
+
+        //QRectF phasesRect(rect.x() + side, rect.y() + top + 2*mEltsMargin + mTitleHeight + mThumbH, rect.width() - 2*side, mPhasesHeight);
+        QRectF paramRect(rect.x() + side, rect.y() + top + 2*mEltsMargin + mTitleHeight + mThumbH, rect.width() - 2*side, lines * mPhasesHeight);
+
+
+        paramRect.adjust(4, 0, -4, -4);
+
+        QPen pen = QPen();
+        pen.setColor(CHRONOCURVE_COLOR_BORDER);
+        pen.setWidth(2);
+        painter->setPen(pen);
+        painter->setBrush(CHRONOCURVE_COLOR_BACK);
+        painter->drawRoundedRect(paramRect, 4, 4);
+
+        int m = 3;
+        paramRect.adjust(m, m, -m, -m);
+        int lineX = paramRect.x();
+        int lineY = paramRect.y();
+        int lineH = paramRect.height() / lines;
+        int lineW = paramRect.width();
+
+        painter->setFont(font);
+        painter->setPen(CHRONOCURVE_COLOR_TEXT);
+
+        if (chronocurveSettings.showInclinaison()){
+            QString text1;
+            text1 += "Inc. = ";
+            text1 += QLocale().toString (mData.value(STATE_EVENT_Y_INC).toDouble());
+            text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_S_INC).toDouble());
+
+            if(chronocurveSettings.showDeclinaison()){
+                text1 += " Dec. = ";
+                text1 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
+            }
+            painter->drawText(QRectF(lineX, lineY, lineW, lineH), Qt::AlignCenter, text1);
+            //painter->drawText(paramRect, Qt::AlignCenter, text1);
         }
+
+        if (chronocurveSettings.showIntensite()) {
+            QString text2 = chronocurveSettings.intensiteLabel();
+            text2 += " = ";
+            text2 += QLocale().toString(mData.value(STATE_EVENT_Y_INT).toDouble());
+            text2 += " ± " + QLocale().toString(mData.value(STATE_EVENT_S_INT).toDouble());
+            painter->drawText(QRectF(lineX, lineY + (chronocurveSettings.showInclinaison() ? 1 : 0) * lineH, lineW, lineH), Qt::AlignCenter, text2);
+        }
+
+    } else {
+        QRectF phasesRect(rect.x() + side, rect.y() + top + 2*mEltsMargin + mTitleHeight + mThumbH, rect.width() - 2*side, mPhasesHeight);
+
+        phasesRect.adjust(1, 1, -1, -1);
+        // detect selected phases and set mGreyedOut
+        const QJsonArray phases = getPhases();
+        const int numPhases = phases.size();
+        const double w = phasesRect.width()/numPhases;
+
+        if (numPhases == 0) {
+            font.setPointSizeF(10.);
+            QString noPhase = tr("No Phase");
+            QFont ftAdapt = AbstractItem::adjustFont(font, noPhase, phasesRect);
+            painter->setFont(ftAdapt);
+            painter->fillRect(phasesRect, QColor(0, 0, 0, 180));
+            painter->setPen(QColor(200, 200, 200));
+            painter->drawText(phasesRect, Qt::AlignCenter, noPhase);
+        } else {
+            for (int i=0; i<numPhases; ++i) {
+                QJsonObject phase = phases.at(i).toObject();
+                QColor c(phase.value(STATE_COLOR_RED).toInt(),
+                         phase.value(STATE_COLOR_GREEN).toInt(),
+                         phase.value(STATE_COLOR_BLUE).toInt());
+                painter->setPen(c);
+                painter->setBrush(c);
+                painter->drawRect(int (phasesRect.x() + i*w), int (phasesRect.y()), int(w), int (phasesRect.height()));
+            }
+        }
+        painter->setPen(QColor(0, 0, 0));
+        painter->setBrush(Qt::NoBrush);
+        painter->drawRect(phasesRect);
     }
 
-    painter->setPen(QColor(0, 0, 0));
-    painter->setBrush(Qt::NoBrush);
-    painter->drawRect(phasesRect);
 
 
     // Border

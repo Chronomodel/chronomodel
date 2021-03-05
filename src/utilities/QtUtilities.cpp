@@ -148,7 +148,7 @@ QList<int> stringListToIntList(const QString& listStr, const QString& separator)
     QList<int> result;
     if (!listStr.isEmpty()) {
         QStringList list = listStr.split(separator);
-        for (auto str : list)
+        for (auto&& str : list)
             result.append(str.toInt());
 
     }

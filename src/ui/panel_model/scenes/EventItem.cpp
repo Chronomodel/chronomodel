@@ -324,7 +324,7 @@ void EventItem::resizeEventItem()
     qreal eventHeight = y + (childItems().count() * h);
     //qDebug() << "resizeEventItem dates count : " << dates.count();
     
-    int bottomLines = getChronocurveLines();
+    int bottomLines = getNumberChronocurveLines();
     eventHeight += (bottomLines > 0) ? bottomLines * mPhasesHeight : mPhasesHeight;
     
     mSize = QSize(AbstractItem::mItemWidth, eventHeight);
@@ -382,7 +382,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     ChronocurveSettings chronocurveSettings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
     
     if (chronocurveSettings.mEnabled) {
-        int lines = getChronocurveLines();
+        int lines = getNumberChronocurveLines();
         
         QRectF bottomRect(rect.x(), rect.y() + rect.height() - lines * mPhasesHeight, rect.width(), lines * mPhasesHeight);
         bottomRect.adjust(4, 0, -4, -4);
@@ -531,7 +531,7 @@ QRectF EventItem::boundingRect() const
   return QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
 }
 
-int EventItem::getChronocurveLines() const
+int EventItem::getNumberChronocurveLines() const
 {
     QJsonObject state = mScene->getProject()->mState;
     ChronocurveSettings chronocurveSettings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());

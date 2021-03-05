@@ -1071,6 +1071,7 @@ void GraphView::drawCurves(QPainter& painter)
                     type_data errYmoy = curve.mDataErrorY[xmoy];
                     QColor col = curve.mDataColor[xmoy];
 
+
                     // vertical curves must be normalized (values from 0 to 1)
                     // They are drawn using a 100px width
                    // qreal x = mMarginLeft + valueX * 100.;

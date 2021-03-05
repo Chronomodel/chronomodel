@@ -373,7 +373,8 @@ void MultiCalibrationView::updateGraphList()
 
         if (ev.value(STATE_EVENT_TYPE).toInt() == Event::eKnown) {
 
-            EventKnown *bound = new EventKnown(ev);
+            EventKnown *bound = new EventKnown();
+            *bound = EventKnown::fromJson(ev);
 
             GraphCurve calibCurve;
             calibCurve.mName = "Bound";

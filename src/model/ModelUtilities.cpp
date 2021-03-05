@@ -391,13 +391,14 @@ QVector<Phase*> ModelUtilities::sortPhasesByLevel(const QList<Phase*>& phases)
 /**
  * @brief ModelUtilities::unsortEvents We adapte The modern version of the Fisher–Yates shuffle
  * more : https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle?oldid=636272393#Modern_method
+ * https://en.cppreference.com/w/cpp/algorithm/random_shuffle
  * @param events
  * @return
  */
 QVector<Event*> ModelUtilities::unsortEvents(const QList<Event*>& events)
 {
     QVector<Event*> results(events.toVector());
-    for (int i = results.size()-1; i > 0; --i){
+   for (int i = results.size()-1; i > 0; --i){
         std::swap(results[i], results[Generator::randomUniformInt(0, i)]);
     }
     return results;

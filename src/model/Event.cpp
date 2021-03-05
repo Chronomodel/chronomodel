@@ -256,6 +256,7 @@ QJsonObject Event::toJson() const
     event[STATE_ITEM_Y] = mItemY;
     event[STATE_IS_SELECTED] = mIsSelected;
     event[STATE_IS_CURRENT] = mIsCurrent;
+
     event[STATE_EVENT_Y_INC] = mYInc;
     event[STATE_EVENT_Y_DEC] = mYDec;
     event[STATE_EVENT_Y_INT] = mYInt;

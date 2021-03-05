@@ -97,9 +97,9 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     
     mChronocurveWidget = new ChronocurveWidget(mTopView);
     
-    mYIncLab = new QLabel(tr("Inc.") + " :", mChronocurveWidget);
-    mYDecLab = new QLabel(tr("Dec.") + " :", mChronocurveWidget);
-    mYIntLab = new QLabel(tr("Int.") + " :", mChronocurveWidget);
+    mYIncLab = new QLabel(tr("Inc."), mChronocurveWidget);
+    mYDecLab = new QLabel(tr("Dec."), mChronocurveWidget);
+    mYIntLab = new QLabel(tr("Int."), mChronocurveWidget);
     
     mYIncEdit = new LineEdit(mChronocurveWidget);
     mYDecEdit = new LineEdit(mChronocurveWidget);
@@ -109,8 +109,8 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     connect(mYDecEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYDec);
     connect(mYIntEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYInt);
     
-    mSIncLab = new QLabel(tr("Error") + " :", mChronocurveWidget);
-    mSIntLab = new QLabel(tr("Error") + " :", mChronocurveWidget);
+    mSIncLab = new QLabel(tr("Error"), mChronocurveWidget);
+    mSIntLab = new QLabel(tr("Error"), mChronocurveWidget);
     
     mSIncEdit = new LineEdit(mChronocurveWidget);
     mSIntEdit = new LineEdit(mChronocurveWidget);
@@ -474,7 +474,8 @@ void EventPropertiesView::updateKnownGraph()
     const double tmin = settings.value(STATE_SETTINGS_TMIN).toDouble();
     const double tmax = settings.value(STATE_SETTINGS_TMAX).toDouble();
     const double step = settings.value(STATE_SETTINGS_STEP).toDouble();
-    EventKnown event = EventKnown::fromJson(mEvent);
+    EventKnown event;
+    event = EventKnown::fromJson(mEvent);
 
     if ( (tmin>event.mFixed) || (event.mFixed>tmax) )
         return;
@@ -706,88 +707,96 @@ void EventPropertiesView::applyAppSettings()
 
 void EventPropertiesView::updateLayout()
 {
+    if (mEvent.empty())
+        return;
+
+    QJsonObject state = MainWindow::getInstance()->getProject()->mState;
+    ChronocurveSettings settings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
+
     mButtonWidth = 50; //int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = 50; //int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mLineEditHeight = 25; //int (0.5 * AppSettings::heigthUnit());
     mComboBoxHeight = 25; //int (0.7 * AppSettings::heigthUnit());
 
     QFontMetrics fm (font());
-    int marginTop = 10; //(int (0.2 * AppSettings::widthUnit()));
+    const int margin = 10; //(int (0.2 * AppSettings::widthUnit()));
 
-    if (hasEvent())
-    {
+    int shiftMax (qMax(fm.boundingRect(mNameLab->text()).width(), qMax(fm.boundingRect(mColorLab->text()).width(), fm.boundingRect(mMethodLab->text()).width() )) );
+    shiftMax = shiftMax + 2*margin;
+    int editWidth (width() - shiftMax);
+
+    mNameLab->move(margin, margin);
+    mNameEdit->setGeometry(shiftMax , mNameLab->y(), editWidth - margin, mLineEditHeight);
+
+    mColorLab->move(margin, mNameEdit->y() + mNameEdit->height() + margin );
+    mColorPicker->setGeometry(shiftMax, mColorLab->y(), editWidth - margin, mLineEditHeight);
+
+    int topViewHeight = mColorPicker->y() + mColorPicker->height();
+
+    int chronocurveHeight = 0;
+
+    if (settings.mEnabled) {
+        int lines = (settings.showInclinaison() && settings.showIntensite()) ? 2 : 1;
+        chronocurveHeight = margin + (margin + mLineEditHeight) * lines;
+
+        int dx = margin;
+        int dy = margin;
+        int labW = 50;
+
+        if (settings.showInclinaison()) {
+
+            int editW = (width() - 7*margin - 2*labW) / 2;
+
+            if (settings.showDeclinaison()) {
+                editW = (width() - 9*margin - 3*labW) / 3;
+            }
+
+            mYIncLab->setGeometry(dx, dy, labW, mLineEditHeight);
+            mYIncEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
+            mSIncLab->setGeometry(dx += editW + margin, dy, labW, mLineEditHeight);
+            mSIncEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
+            if (settings.showDeclinaison()) {
+                mYDecLab->setGeometry(dx += editW + margin, dy, labW, mLineEditHeight);
+                mYDecEdit->setGeometry(dx + labW + margin, dy, editW, mLineEditHeight);
+            }
+
+            dy += mLineEditHeight + margin;
+        }
+
+        if (settings.showIntensite()) {
+            dx = margin;
+            int editW = (mChronocurveWidget->width() - 5*margin - 2*labW) / 2;
+
+            mYIntLab->setGeometry(dx, dy, labW, mLineEditHeight);
+            mYIntEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
+            mSIntLab->setGeometry(dx += editW + margin, dy, labW, mLineEditHeight);
+            mSIntEdit->setGeometry(dx + labW + margin, dy, editW, mLineEditHeight);
+        }
+
+    }
+
+    if (hasEvent())  {
+
         int butPluginHeigth = mButtonHeigth;
 
         // in EventPropertiesView coordinates
         mBoundView->resize(0, 0);
 
-        int shiftMax (qMax(fm.boundingRect(mNameLab->text()).width(), qMax(fm.boundingRect(mColorLab->text()).width(), fm.boundingRect(mMethodLab->text()).width() )) );
-        shiftMax = shiftMax + 2*marginTop;
-        int editWidth (width() - shiftMax);
-
-        mNameLab->move(marginTop, marginTop);
-        mNameEdit->setGeometry(shiftMax , mNameLab->y(), editWidth - marginTop, mLineEditHeight);
-
-        mColorLab->move(marginTop, mNameEdit->y() + mNameEdit->height() + marginTop );
-        mColorPicker->setGeometry(shiftMax, mColorLab->y(), editWidth - marginTop, mLineEditHeight);
-
-        mMethodLab->move(marginTop, mColorPicker->y() + mColorPicker->height() + marginTop);
-        mMethodCombo->setGeometry(shiftMax , mMethodLab->y() - mComboBoxHeight/2 + marginTop, editWidth - marginTop, mComboBoxHeight);
-        mMethodInfo->setGeometry(shiftMax , mMethodLab->y() - mComboBoxHeight/2 + marginTop, editWidth - marginTop, mComboBoxHeight);
+        mMethodLab->move(margin, mColorPicker->y() + mColorPicker->height() + margin);
+        mMethodCombo->setGeometry(shiftMax , mMethodLab->y() - mComboBoxHeight/2 + margin, editWidth - margin, mComboBoxHeight);
+        mMethodInfo->setGeometry(shiftMax , mMethodLab->y() - mComboBoxHeight/2 + margin, editWidth - margin, mComboBoxHeight);
         
         // ----------------------------------
         //  Top View Height
         // ----------------------------------
-        int topViewHeight = 2 * mLineEditHeight + mComboBoxHeight + 3 * marginTop;
-        int chronocurveHeight = 0;
-        
-        QJsonObject state = MainWindow::getInstance()->getProject()->mState;
-        ChronocurveSettings settings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
-        
-        if(settings.mEnabled){
-            int lines = (settings.showInclinaison() && settings.showIntensite()) ? 2 : 1;
-            chronocurveHeight = marginTop + (marginTop + mLineEditHeight) * lines;
-        }
-        mTopView->resize(width(), topViewHeight + ((chronocurveHeight > 0) ? chronocurveHeight + marginTop : 0));
+        topViewHeight += mMethodCombo->height() + margin;
+
+        mTopView->resize(width(), topViewHeight + ((chronocurveHeight > 0) ? chronocurveHeight + margin : 0));
         
         // ----------------------------------
         //  Chronocurve event data
         // ----------------------------------
-        mChronocurveWidget->setGeometry(marginTop, mMethodLab->y() + mMethodLab->height() + marginTop, width() - 2*marginTop, chronocurveHeight);
-        
-        int dx = marginTop;
-        int dy = marginTop;
-        int labW = 50;
-        
-        if(settings.showInclinaison()){
-            
-            int editW = (mChronocurveWidget->width() - 5*marginTop - 2*labW) / 2;
-            if(settings.showDeclinaison()){
-                editW = (mChronocurveWidget->width() - 7*marginTop - 3*labW) / 3;
-            }
-            
-            mYIncLab->setGeometry(dx, dy, labW, mLineEditHeight);
-            mYIncEdit->setGeometry(dx += labW + marginTop, dy, editW, mLineEditHeight);
-            mSIncLab->setGeometry(dx += editW + marginTop, dy, labW, mLineEditHeight);
-            mSIncEdit->setGeometry(dx += labW + marginTop, dy, editW, mLineEditHeight);
-            if(settings.showDeclinaison()){
-                mYDecLab->setGeometry(dx += editW + marginTop, dy, labW, mLineEditHeight);
-                mYDecEdit->setGeometry(dx += labW + marginTop, dy, editW, mLineEditHeight);
-            }
-            
-            dy += mLineEditHeight + marginTop;
-        }
-
-        if(settings.showIntensite()){
-            
-            dx = marginTop;
-            int editW = (mChronocurveWidget->width() - 5*marginTop - 2*labW) / 2;
-            
-            mYIntLab->setGeometry(dx, dy, labW, mLineEditHeight);
-            mYIntEdit->setGeometry(dx += labW + marginTop, dy, editW, mLineEditHeight);
-            mSIntLab->setGeometry(dx += editW + marginTop, dy, labW, mLineEditHeight);
-            mSIntEdit->setGeometry(dx += labW + marginTop, dy, editW, mLineEditHeight);
-        }
+        mChronocurveWidget->setGeometry(margin, mMethodLab->y() + mMethodLab->height() + margin, width() - 2*margin, chronocurveHeight);
         
         mEventView->setGeometry(0, mTopView->height(), width(), height() - mTopView->height());
 
@@ -795,25 +804,25 @@ void EventPropertiesView::updateLayout()
         QRect listRect(0, 0, mEventView->width() - mButtonWidth, mEventView->height() - butPluginHeigth);
         mDatesList->setGeometry(listRect);
 
-        int x (listRect.width());
-        int y (0);
+        int x = listRect.width();
+        int y = 0;
 
         // Plugin with calibration,
-         for (auto && plugBut : mPluginButs1) {
+         for (auto&& plugBut : mPluginButs1) {
             plugBut->setGeometry(x, y, mButtonWidth, butPluginHeigth);
             y += butPluginHeigth;
         }
 
         // plugin without calibration
 
-        for (auto && plugBut : mPluginButs2) {
+        for (auto&& plugBut : mPluginButs2) {
             plugBut->setGeometry(x, y, mButtonWidth, butPluginHeigth);
             y += butPluginHeigth;
         }
 
         y = listRect.y() + listRect.height();
-        const int w (mButtonWidth);
-        const int h (mButtonHeigth);
+        const int w  = mButtonWidth;
+        const int h = mButtonHeigth;
 
         mCalibBut->setGeometry(0, y, w, butPluginHeigth);
         mDeleteBut ->setGeometry(mCalibBut->width(), y, w, h);
@@ -823,21 +832,18 @@ void EventPropertiesView::updateLayout()
     }
     else {
         if (hasBound()) {
-
-            int shiftMax (qMax(fm.boundingRect(mNameLab->text()).width(), fm.boundingRect(mColorLab->text()).width() ));
-            shiftMax = shiftMax + 2*marginTop;
-            int editWidth (width() - shiftMax);
-
-            mNameLab->move(marginTop, marginTop);
-            mNameEdit->setGeometry(shiftMax , mNameLab->y(), editWidth - marginTop, mLineEditHeight);
-
-            mColorLab->move(marginTop, mNameEdit->y() + mNameEdit->height() + marginTop );
-            mColorPicker->setGeometry(shiftMax , mColorLab->y() , editWidth - marginTop, mLineEditHeight);
-
-            mTopView->resize(width(), 2 *mLineEditHeight + 3 * marginTop);
-
+            //-----------
             mEventView->resize(0, 0);
-            mBoundView->setGeometry(0, mTopView->height(), width() - mButtonWidth, height() - mTopView->height());
+            // mChronocurveWidget belongs to mTopView
+            if (settings.mEnabled) {
+                mChronocurveWidget->setGeometry(margin, topViewHeight + margin, mTopView->width() - 2*margin, chronocurveHeight);
+            } else {
+                mChronocurveWidget->resize(0, 0);
+            }
+            mTopView->resize(width(), topViewHeight + ((chronocurveHeight > 0) ? chronocurveHeight + margin : 0));
+
+            mBoundView->setGeometry(0, mChronocurveWidget->y() + mChronocurveWidget->height() + margin +50, width() - mButtonWidth, height() - mChronocurveWidget->y() - mChronocurveWidget->height() - 2*margin);
+
         }
     }
 }

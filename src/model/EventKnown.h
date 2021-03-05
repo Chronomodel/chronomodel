@@ -47,10 +47,13 @@ class EventKnown: public Event
 public:
 
     EventKnown();
-    explicit EventKnown(const QJsonObject& json);
+    //explicit EventKnown(const QJsonObject& json);
 
     static EventKnown fromJson(const QJsonObject& json);
     virtual QJsonObject toJson() const;
+
+    //EventKnown& operator=(const EventKnown& event);
+    //void copyFrom(const EventKnown& event);
 
     void setFixedValue(const double& value);
     double fixedValue() const;

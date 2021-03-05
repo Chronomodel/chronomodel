@@ -77,7 +77,7 @@ protected:
     virtual void dropEvent(QGraphicsSceneDragDropEvent* e);
 
     void updateGreyedOut();
-    int getChronocurveLines() const;
+    int getNumberChronocurveLines() const;
     void resizeEventItem();
     void repositionDateItems();
     

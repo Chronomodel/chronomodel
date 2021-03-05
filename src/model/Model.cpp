@@ -214,9 +214,11 @@ void Model::fromJson(const QJsonObject& json)
                     message.exec();
                 }
             } else {
-                EventKnown* e = new EventKnown(EventKnown::fromJson(event));
-                e->updateValues(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
-                mEvents.append(e);
+                EventKnown* ek = new EventKnown();
+                *ek = EventKnown::fromJson(event);
+                ek->updateValues(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
+                mEvents.append(ek);
+                ek = nullptr;
             }
         }
     }

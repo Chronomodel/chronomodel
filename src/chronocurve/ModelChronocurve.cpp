@@ -406,10 +406,7 @@ void ModelChronocurve::restoreFromFile(const QString& fileName)
 void ModelChronocurve::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth)
 {
     Model::generatePosteriorDensities(chains, fftLen, bandwidth);
-    
-    //const double tmin = mSettings.getTminFormated();
-    //const double tmax = mSettings.getTmaxFormated();
-    
+
     for (Event*& event : mEvents) {
         event->mVG.updateFormatedTrace();
         event->mVG.generateHistos(chains, fftLen, bandwidth);

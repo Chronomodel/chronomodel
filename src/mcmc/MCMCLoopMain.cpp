@@ -87,13 +87,13 @@ QString MCMCLoopMain::calibrate()
         QList<Date*> dates;
         // find number of dates, to optimize memory space
         int nbDates = 0;
-        for (auto &&e : events)
+        for (auto&&e : events)
             nbDates += e->mDates.size();
 
         dates.reserve(nbDates);
         for (Event* ev : events) {
             int num_dates = ev->mDates.size();
-            for (int j=0; j<num_dates; ++j) {
+            for (int j = 0; j<num_dates; ++j) {
                 Date* date = &ev->mDates[j];
                 dates.push_back(date);
             }
@@ -251,7 +251,7 @@ QString MCMCLoopMain::initMCMC()
     }
 
     // ----------------------------------------------------------------
-    //  Init theta f, ti, ...
+    //  Init theta event, ti, ...
     // ----------------------------------------------------------------
 
     QVector<Event*> unsortedEvents = ModelUtilities::unsortEvents (events);
@@ -456,7 +456,7 @@ QString MCMCLoopMain::initMCMC()
         }
 
 
-        int j (0);
+        int j  = 0 ;
         for (auto&& date : event->mDates) {
             ++j;
             log += "<br>";
@@ -584,9 +584,7 @@ void MCMCLoopMain::update()
         }
 
         //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
-
-
-       for (auto&& phInEv : event->mPhases)
+        for (auto&& phInEv : event->mPhases)
             phInEv->updateAll(t_min, t_max);
     }
 

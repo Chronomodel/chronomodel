@@ -1545,39 +1545,47 @@ void ResultsView::createByCurveGraph()
         QVector<RefPoint> refPts;
 
         for (auto& event : modelChronocurve()->mEvents) {
-            double tmin = HUGE_VAL;
-            double tmax = -HUGE_VAL;
-
-            for (auto&& date: event->mDates) {
-                QMap<double, double> calibMap = date.getRawCalibMap();//  getFormatedCalibMap();
-
-                QMap<double, double> subData = getMapDataInRange(calibMap, mModel->mSettings.mTmin, mModel->mSettings.mTmax);// mSettings.getTminFormated(), mSettings.getTmaxFormated());
-                QMap<double, double> hpd = create_HPD(subData, thresh);
-
-                QMapIterator<double, double> it(hpd);
-                it.toFront();
-                while (it.hasNext()) {
-                    it.next();
-                    if (it.value() != 0) {
-                        tmin = std::min(tmin, it.key());
-                        break;
-                    }
-                }
-                it.toBack();
-                while (it.hasPrevious()) {
-                    it.previous();
-                    if (it.value() != 0) {
-                        tmax = std::max(tmax, it.key());
-                        break;
-                    }
-                }
-            }
-            const double tmoy = DateUtils::convertToAppSettingsFormat((tmax + tmin) / 2.);
-            const double terr = (tmax - tmin) / 2.;
-            //tPts[tmoy] = terr;
             RefPoint rf;
-            rf.Xmean = tmoy;
-            rf.Xerr = terr;
+            if (event->mType == Event::eDefault) {
+                double tmin = HUGE_VAL;
+                double tmax = -HUGE_VAL;
+
+                for (auto&& date: event->mDates) {
+                    QMap<double, double> calibMap = date.getRawCalibMap();//  getFormatedCalibMap();
+
+                    QMap<double, double> subData = getMapDataInRange(calibMap, mModel->mSettings.mTmin, mModel->mSettings.mTmax);// mSettings.getTminFormated(), mSettings.getTmaxFormated());
+                    QMap<double, double> hpd = create_HPD(subData, thresh);
+
+                    QMapIterator<double, double> it(hpd);
+                    it.toFront();
+                    while (it.hasNext()) {
+                        it.next();
+                        if (it.value() != 0) {
+                            tmin = std::min(tmin, it.key());
+                            break;
+                        }
+                    }
+                    it.toBack();
+                    while (it.hasPrevious()) {
+                        it.previous();
+                        if (it.value() != 0) {
+                            tmax = std::max(tmax, it.key());
+                            break;
+                        }
+                    }
+                }
+                const double tmoy = DateUtils::convertToAppSettingsFormat((tmax + tmin) / 2.);
+                const double terr = (tmax - tmin) / 2.;
+                //tPts[tmoy] = terr;
+
+                rf.Xmean = tmoy;
+                rf.Xerr = terr;
+
+            } else {
+                rf.Xmean = event->mTheta.mX; // always the same value
+                rf.Xerr = 0.;
+            }
+
             if (!hasY) {
                 switch (model->mChronocurveSettings.mVariableType) {
                 case ChronocurveSettings::eVariableTypeInclinaison :

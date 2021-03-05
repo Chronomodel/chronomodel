@@ -39,6 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "EventKnown.h"
 #include "StdUtilities.h"
+#include "QtUtilities.h"
 #include "GraphView.h"
 #include "Generator.h"
 
@@ -47,69 +48,42 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 EventKnown::EventKnown():Event(),
 mFixed(0.)
 {
-    mType = eKnown;
-    mMethod= eFixe;
-    mTheta.mSigmaMH = 0.;
+    Event::mType = eKnown;
+    Event::mMethod= eFixe;
+    Event::mTheta.mSigmaMH = 0.;
 }
-
-EventKnown::EventKnown(const QJsonObject& json):Event()
-{
-    mType = Type (json[STATE_EVENT_TYPE].toInt());
-    mId = json[STATE_ID].toInt();
-    mName =  json[STATE_NAME].toString();
-    mColor = QColor(json[STATE_COLOR_RED].toInt(),
-                    json[STATE_COLOR_GREEN].toInt(),
-                    json[STATE_COLOR_BLUE].toInt());
-    mMethod = Event::eFixe;
-    mItemX = json[STATE_ITEM_X].toDouble();
-    mItemY = json[STATE_ITEM_Y].toDouble();
-    mIsSelected = json[STATE_IS_SELECTED].toBool();
-    mIsCurrent = json[STATE_IS_CURRENT].toBool();
-
-    if (json.contains(STATE_EVENT_KNOWN_FIXED))
-        mFixed = json[STATE_EVENT_KNOWN_FIXED].toDouble();
-    else
-        mFixed = 0.;
-
-    QString eventIdsStr = json[STATE_EVENT_PHASE_IDS].toString();
-    if (!eventIdsStr.isEmpty()) {
-        QStringList eventIds = eventIdsStr.split(",");
-        for(auto &&evIds :eventIds)
-            mPhasesIds.append(evIds.toInt());
-    }
-}
-
 
 // JSON
-// static function
 EventKnown EventKnown::fromJson(const QJsonObject& json)
 {
     EventKnown event;
 
-    event.mType = Type (json[STATE_EVENT_TYPE].toInt());
-    event.mId = json[STATE_ID].toInt();
-    event.mName =  json[STATE_NAME].toString();
-    event.mColor = QColor(json[STATE_COLOR_RED].toInt(),
+    event.Event::mType = Type (json[STATE_EVENT_TYPE].toInt());
+    event.Event::mId = json[STATE_ID].toInt();
+    event.Event::mName =  json[STATE_NAME].toString();
+    event.Event::mColor = QColor(json[STATE_COLOR_RED].toInt(),
                            json[STATE_COLOR_GREEN].toInt(),
                            json[STATE_COLOR_BLUE].toInt());
-    event.mMethod = Event::eFixe;
-    event.mItemX = json[STATE_ITEM_X].toDouble();
-    event.mItemY = json[STATE_ITEM_Y].toDouble();
-    event.mIsSelected = json[STATE_IS_SELECTED].toBool();
-    event.mIsCurrent = json[STATE_IS_CURRENT].toBool();
+    event.Event::mMethod = Event::eFixe;
+    event.Event::mItemX = json[STATE_ITEM_X].toDouble();
+    event.Event::mItemY = json[STATE_ITEM_Y].toDouble();
+    event.Event::mIsSelected = json[STATE_IS_SELECTED].toBool();
+    event.Event::mIsCurrent = json[STATE_IS_CURRENT].toBool();
 
     if (json.contains(STATE_EVENT_KNOWN_FIXED))
         event.mFixed = json[STATE_EVENT_KNOWN_FIXED].toDouble();
+
     else
         event.mFixed = 0.;
 
-    QString eventIdsStr = json[STATE_EVENT_PHASE_IDS].toString();
-    if (!eventIdsStr.isEmpty()) {
-        QStringList eventIds = eventIdsStr.split(",");
-        for(int i=0; i<eventIds.size(); ++i)
-            event.mPhasesIds.append(eventIds[i].toInt());
-    }
+    event.Event::mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
 
+    event.Event::mYInc = json.value(STATE_EVENT_Y_INC).toDouble();
+    event.Event::mYDec = json.value(STATE_EVENT_Y_DEC).toDouble();
+    event.Event::mYInt = json.value(STATE_EVENT_Y_INT).toDouble();
+
+    event.Event::mSInc = json.value(STATE_EVENT_S_INC).toDouble();
+    event.Event::mSInt = json.value(STATE_EVENT_S_INT).toDouble();
     return event;
 }
 
@@ -117,27 +91,46 @@ QJsonObject EventKnown::toJson() const
 {
     QJsonObject event;
 
-    event[STATE_EVENT_TYPE] = mType;
-    event[STATE_ID] = mId;
+    event[STATE_EVENT_TYPE] = Event::mType;
+    event[STATE_ID] = Event::mId;
 
-    event[STATE_NAME] = mName;
+    event[STATE_NAME] = Event::mName;
 
-    event[STATE_COLOR_RED] = mColor.red();
-    event[STATE_COLOR_GREEN] = mColor.green();
-    event[STATE_COLOR_BLUE] = mColor.blue();
+    event[STATE_COLOR_RED] = Event::mColor.red();
+    event[STATE_COLOR_GREEN] = Event::mColor.green();
+    event[STATE_COLOR_BLUE] = Event::mColor.blue();
 
     event[STATE_EVENT_METHOD] = Event::eFixe;
-    event[STATE_ITEM_X] = mItemX;
-    event[STATE_ITEM_Y] = mItemY;
-    event[STATE_IS_SELECTED] = mIsSelected;
-    event[STATE_IS_CURRENT] = mIsCurrent;
+    event[STATE_ITEM_X] = Event::mItemX;
+    event[STATE_ITEM_Y] = Event::mItemY;
+    event[STATE_IS_SELECTED] = Event::mIsSelected;
+    event[STATE_IS_CURRENT] = Event::mIsCurrent;
 
     event[STATE_EVENT_KNOWN_FIXED] = mFixed;
 
+    event[STATE_EVENT_Y_INC] = Event::mYInc;
+    event[STATE_EVENT_Y_DEC] = Event::mYDec;
+    event[STATE_EVENT_Y_INT] = Event::mYInt;
+
+    event[STATE_EVENT_S_INC] = Event::mSInc;
+    event[STATE_EVENT_S_INT] = Event::mSInt;
     return event;
 }
 
+/*
+ * EventKnown& EventKnown::operator=(const EventKnown& event)
+{
+    copyFrom(event);
+    return *this;
+}
 
+void EventKnown::copyFrom(const EventKnown& event)
+{
+    Event::copyFrom(event);
+    mFixed = event.mFixed;
+    mValues = event.mValues;
+}
+*/
 void EventKnown::setFixedValue(const double& value) {mFixed = value;}
 
 double EventKnown::fixedValue() const
@@ -155,11 +148,15 @@ void EventKnown::updateValues(const double& tmin, const double& tmax, const doub
 {
     mValues.clear();
 
-    for (double t=tmin; t<=tmax; t+=step)
+    double t = tmin;
+    while (t <= tmax) {
         mValues[t] = 0.;
+        t +=step;
+    }
+
     mValues[mFixed] = 1.;
 
-    if (mValues.size() == 0) {
+    if (mValues.size() == 0) { // ???
         for (double t=tmin; t<=tmax; t+=step)
             mValues[t] = 0.;
     }

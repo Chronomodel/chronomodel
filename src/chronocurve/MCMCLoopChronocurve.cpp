@@ -39,7 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "MCMCLoopChronocurve.h"
 #include "ModelChronocurve.h"
-#include "EventKnown.h"
+
 #include "Functions.h"
 #include "Generator.h"
 #include "StdUtilities.h"
@@ -199,15 +199,75 @@ void MCMCLoopChronocurve::initVariablesForChain()
 QString MCMCLoopChronocurve::initMCMC()
 {
     QList<Event*>& events(mModel->mEvents);
+    QList<Phase*>& phases (mModel->mPhases);
+    QList<PhaseConstraint*>& phasesConstraints (mModel->mPhaseConstraints);
+
     const double tmin = mModel->mSettings.mTmin;
     const double tmax = mModel->mSettings.mTmax;
 
     if (isInterruptionRequested())
         return ABORTED_BY_USER;
-
+// initialisation des bornes
     // ---------------------- Reset Events ---------------------------
     for (Event* ev : events) {
         ev->mInitialized = false;
+    }
+    // -------------------------- Init gamma ------------------------------
+    emit stepChanged(tr("Initializing Phase Gaps..."), 0, phasesConstraints.size());
+    int i = 0;
+    for (auto&& phC : phasesConstraints) {
+        phC->initGamma();
+        if (isInterruptionRequested())
+            return ABORTED_BY_USER;
+        ++i;
+        emit stepProgressed(i);
+    }
+
+    // ----------------------- Init tau -----------------------------------------
+    emit stepChanged(tr("Initializing Phase Durations..."), 0, phases.size());
+    i = 0;
+    for (auto&& ph : phases) {
+        ph->initTau();
+
+        if (isInterruptionRequested())
+            return ABORTED_BY_USER;
+        ++i;
+        emit stepProgressed(i);
+    }
+    /* -------------- Init Bounds --------------
+    * - Définir des niveaux pour les faits
+    * - Initialiser les bornes (uniquement, pas les faits) par niveaux croissants
+    * => Init borne :
+    *  - si valeur fixe, facile!
+    *  - si intervalle : random uniform sur l'intervalle (vérifier si min < max pour l'intervalle qui a été modifié par la validation du modèle)
+    * ---------------------------------------------------------------- */
+    QVector<Event*> eventsByLevel = ModelUtilities::sortEventsByLevel(mModel->mEvents);
+    int curLevel (0);
+    double curLevelMaxValue = mModel->mSettings.mTmin;
+
+    for (int i = 0; i < eventsByLevel.size(); ++i) {
+        if (eventsByLevel.at(i)->mType == Event::eKnown) {
+            EventKnown* bound = dynamic_cast<EventKnown*>(eventsByLevel[i]);
+
+            if (bound) {
+                if (curLevel != bound->mLevel) {
+                    curLevel = bound->mLevel;
+                    curLevelMaxValue = mModel->mSettings.mTmin;
+                }
+
+                bound->mTheta.mX = bound->mFixed;
+
+                curLevelMaxValue = qMax(curLevelMaxValue, bound->mTheta.mX);
+
+                bound->mTheta.memo();
+                bound->mTheta.mLastAccepts.clear();
+                bound->mTheta.mLastAccepts.push_back(1.);
+                bound->mTheta.saveCurrentAcceptRate();
+                bound->mInitialized = true;
+                prepareEventY(bound);
+            }
+            bound = nullptr;
+        }
     }
 
     // ----------------------------------------------------------------
@@ -348,31 +408,32 @@ QString MCMCLoopChronocurve::initMCMC()
             // 7 - Memo
             unsortedEvents.at(i)->mTheta.memo();
             unsortedEvents.at(i)->mTheta.saveCurrentAcceptRate();
-            
-            // ----------------------------------------------------------------
-            // Chronocurve init VG :
-            // ----------------------------------------------------------------
-            Event* event = unsortedEvents.at(i);
-            if (mChronocurveSettings.mVarianceType == ChronocurveSettings::eModeFixed) {
-                event->mVG.mX = mChronocurveSettings.mVarianceFixed;
-            } else {
-                event->mVG.mX = 1.;
-            }
-            
-            event->mVG.mSigmaMH = 1.;
-            event->mVG.mLastAccepts.clear();
-            event->mVG.mLastAccepts.push_back(true);
-            event->mVG.memo();
-            event->mVG.saveCurrentAcceptRate();
-            
-            // ----------------------------------------------------------------
-            //  Les W des events ne dépendant que de leur VG
-            //  Lors de l'update, on a besoin de W pour les calculs de mise à jour de theta, VG et Alpha lissage
-            //  On sera donc amenés à remettre le W à jour à chaque modification de VG
-            //  On le calcul ici lors de l'initialisation pour avoir sa valeur de départ
-            // ----------------------------------------------------------------
-            event->updateW();
         }
+        // ----------------------------------------------------------------
+        // Chronocurve init VG :
+        // ----------------------------------------------------------------
+        Event* event = unsortedEvents.at(i);
+        if (mChronocurveSettings.mVarianceType == ChronocurveSettings::eModeFixed) {
+            event->mVG.mX = mChronocurveSettings.mVarianceFixed;
+
+        } else {
+            event->mVG.mX = 1.;
+        }
+
+        event->mVG.mSigmaMH = 1.;
+        event->mVG.mLastAccepts.clear();
+        event->mVG.mLastAccepts.push_back(true);
+        event->mVG.memo();
+        event->mVG.saveCurrentAcceptRate();
+
+        // ----------------------------------------------------------------
+        //  Les W des events ne dépendant que de leur VG
+        //  Lors de l'update, on a besoin de W pour les calculs de mise à jour de theta, VG et Alpha lissage
+        //  On sera donc amenés à remettre le W à jour à chaque modification de VG
+        //  On le calcul ici lors de l'initialisation pour avoir sa valeur de départ
+        // ----------------------------------------------------------------
+        event->updateW();
+
 
         if (isInterruptionRequested())
             return ABORTED_BY_USER;
@@ -386,7 +447,7 @@ QString MCMCLoopChronocurve::initMCMC()
     QString log;
     emit stepChanged(tr("Initializing Variances..."), 0, events.size());
 
-    for (int i=0; i<events.size(); ++i) {
+    for (int i = 0; i<events.size(); ++i) {
         for (int j=0; j<events.at(i)->mDates.size(); ++j) {
             Date& date = events.at(i)->mDates[j];
 
@@ -427,23 +488,46 @@ QString MCMCLoopChronocurve::initMCMC()
     mModel->mAlphaLissage.memo();
     mModel->mAlphaLissage.saveCurrentAcceptRate();
     
+    // --------------------------- Init phases ----------------------
+    emit stepChanged(tr("Initializing Phases..."), 0, phases.size());
+
+    i = 0;
+    for (auto&& phase : phases ) {
+        phase->updateAll(tmin, tmax);
+        phase->memoAll();
+
+        if (isInterruptionRequested())
+            return ABORTED_BY_USER;
+        ++i;
+
+        emit stepProgressed(i);
+    }
 
     // --------------------------- Log Init ---------------------
     log += "<hr>";
     log += textBold("Events Initialization (with their data)");
 
-    for (int i = 0; i < events.size(); ++i) {
-           const Event* event = events[i];
-
+    i = 0;
+    for (auto&& event : events) {
+        ++i;
         log += "<hr><br>";
-        
-        log += line(textBlue(tr("Event ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(events.size()), event->mName)));
-        log += line(textBlue(tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(event->mTheta.mX), DateUtils::getAppSettingsFormatStr())));
-        log += line(textBlue(tr(" - Sigma_MH on Theta : %1").arg(stringForLocal(event->mTheta.mSigmaMH))));
-        log += line(textBlue(tr(" - S02 : %1").arg(stringForLocal(event->mS02))));
-        
+
+        if (event->type() == Event::eKnown) {
+             const EventKnown* bound = dynamic_cast<const EventKnown*>(event);
+            if (bound) {
+                log += line(textRed(tr("Bound ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(events.size()), bound->mName)));
+                log += line(textRed(tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(bound->mTheta.mX), DateUtils::getAppSettingsFormatStr())));
+                log += line(textRed(tr(" - Sigma_MH on Theta : %1").arg(stringForLocal(bound->mTheta.mSigmaMH))));
+            }
+        }
+        else {
+            log += line(textBlue(tr("Event ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(events.size()), event->mName)));
+            log += line(textBlue(tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(event->mTheta.mX), DateUtils::getAppSettingsFormatStr())));
+            log += line(textBlue(tr(" - Sigma_MH on Theta : %1").arg(stringForLocal(event->mTheta.mSigmaMH))));
+            log += line(textBlue(tr(" - S02 : %1").arg(stringForLocal(event->mS02))));
+        }
         int j = 0;
-        for (const Date& date : event->mDates) {
+        for (auto&& date : event->mDates) {
             ++j;
             log += "<br>";
             
@@ -457,6 +541,36 @@ QString MCMCLoopChronocurve::initMCMC()
             if (date.mDeltaType != Date::eDeltaNone)
                 log += line(textBlack(tr(" - Delta_i : %1").arg(stringForLocal(date.mDelta))));
 
+        }
+    }
+
+    if (phases.size() > 0) {
+        log += "<hr>";
+        log += textBold(tr("Phases Initialization"));
+        log += "<hr>";
+
+        int i = 0;
+        for (auto& phase : phases) {
+            ++i;
+            log += "<br>";
+            log += line(textPurple(tr("Phase ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(phases.size()), phase->mName)));
+            log += line(textPurple(tr(" - Begin : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mX), DateUtils::getAppSettingsFormatStr())));
+            log += line(textPurple(tr(" - End : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mX), DateUtils::getAppSettingsFormatStr())));
+            log += line(textPurple(tr(" - Tau : %1").arg(stringForLocal(phase->mTau))));
+        }
+    }
+
+    if (phasesConstraints.size() > 0) {
+        log += "<hr>";
+        log += textBold(textGreen(tr("Phases Constraints Initialization"))) ;
+        log += "<hr>";
+
+        int i = 0;
+        for (auto& constraint : phasesConstraints) {
+            ++i;
+            log += "<br>";
+            log += line(textGreen(tr("Succession ( %1 / %2) : from %3 to %4").arg(QString::number(i), QString::number(phasesConstraints.size()),constraint->mPhaseFrom->mName, constraint->mPhaseTo->mName)));
+            log += line(textGreen(tr(" - Gamma : %1").arg(stringForLocal(constraint->mGamma))));
         }
     }
 
@@ -482,7 +596,7 @@ void MCMCLoopChronocurve::update()
 
     ChainSpecs& chain = mChains[mChainIndex];
     const bool doMemo = (mState == eBurning) || (mState == eAdapting) || (chain.mTotalIter % chain.mThinningInterval == 0);
-//qDebug() <<  "MCMCLoopChronocurve::update()" <<chain.mBatchIndex;
+
     // --------------------------------------------------------------
     //  Update Dates (idem chronomodel)
     // --------------------------------------------------------------
@@ -536,57 +650,55 @@ void MCMCLoopChronocurve::update()
         // ----------------------------------------------------------------------
        // qDebug()<<"mChronocurveSettings.mTimeType == ChronocurveSettings::eModeBayesian ici memo = "<<doMemo<<chain.mBatchIterIndex<<chain.mBatchIndex;
 
-        /*for (Event*& evt : mModel->mEvents) {
-            tmp.append(evt->mName);
-        }
-
-        qDebug()<<"liste initListEvents  1 ="<<tmp;
-        tmp.clear();
-        */
-
         for (Event*& event : initListEvents) {
-            const double min = event->getThetaMin(t_min);
-            const double max = event->getThetaMax(t_max);
+            if (event->mType == Event::eDefault) {
+                const double min = event->getThetaMin(t_min);
+                const double max = event->getThetaMax(t_max);
 
-            if (min >= max) {
-                throw QObject::tr("Error for event theta : %1 : min = %2 : max = %3").arg(event->mName, QString::number(min), QString::number(max));
+                if (min >= max) {
+                    throw QObject::tr("Error for event theta : %1 : min = %2 : max = %3").arg(event->mName, QString::number(min), QString::number(max));
+                }
+
+                // On stocke l'ancienne valeur :
+                double value_current = event->mTheta.mX;
+
+                // On tire une nouvelle valeur :
+                const double value_new = Generator::gaussByBoxMuller(event->mTheta.mX, event->mTheta.mSigmaMH);
+
+                long double rapport = 0.;
+
+                if (value_new >= min && value_new <= max) {
+                    // On force la mise à jour de la nouvelle valeur pour calculer h_new
+                    event->mTheta.mX = value_new;
+
+                    orderEventsByTheta(mModel->mEvents); // On réordonne les Events suivant les thetas croissants
+                    saveEventsTheta(mModel->mEvents); // On sauvegarde les valeurs de theta pour chaque Event
+                    reduceEventsTheta(mModel->mEvents); // On passe en temps réduit entre 0 et 1
+                    spreadEventsTheta(mModel->mEvents); // On espace les temps si il y a égalité de date
+
+                    SplineMatrices matrices = prepareCalculSpline(mModel->mEvents);
+                    long double h_new = h_YWI_AY(matrices, mModel->mEvents, mModel->mAlphaLissage.mX) * h_alpha(matrices, mModel->mEvents.size(), mModel->mAlphaLissage.mX) * h_theta(mModel->mEvents);
+
+
+                    restoreEventsTheta(mModel->mEvents); // On supprime les décalages introduits par spreadEventsTheta pour les calculs de h_new
+
+                    // Calcul du rapport :
+                    rapport = (h_current == 0.) ? 1. : (h_new / h_current);
+
+                    // On reprend l'ancienne valeur, qui sera éventuellement mise à jour dans ce qui suit (Metropolis Hastings)
+                    event->mTheta.mX = value_current;
+
+                    // Pour l'itération suivante :
+                    h_current = h_new;
+                }
+
+                event->mTheta.tryUpdate(value_new, rapport);
+
+            } else { // this is a bound, nothing to sample. Always the same value
+                event->updateTheta(t_min, t_max);
+                //event->mTheta.tryUpdate(event->mTheta.mX, 1.); // always accepted
+
             }
-            
-            // On stocke l'ancienne valeur :
-            double value_current = event->mTheta.mX;
-            
-            // On tire une nouvelle valeur :
-            const double value_new = Generator::gaussByBoxMuller(event->mTheta.mX, event->mTheta.mSigmaMH);
-            
-            long double rapport = 0.;
-            
-            if (value_new >= min && value_new <= max) {
-                // On force la mise à jour de la nouvelle valeur pour calculer h_new
-                event->mTheta.mX = value_new;
-
-                orderEventsByTheta(mModel->mEvents); // On réordonne les Events suivant les thetas croissants
-                saveEventsTheta(mModel->mEvents); // On sauvegarde les valeurs de theta pour chaque Event
-                reduceEventsTheta(mModel->mEvents); // On passe en temps réduit entre 0 et 1
-                spreadEventsTheta(mModel->mEvents); // On espace les temps si il y a égalité de date
-
-                SplineMatrices matrices = prepareCalculSpline(mModel->mEvents);
-                long double h_new = h_YWI_AY(matrices, mModel->mEvents, mModel->mAlphaLissage.mX) * h_alpha(matrices, mModel->mEvents.size(), mModel->mAlphaLissage.mX) * h_theta(mModel->mEvents);
-
-
-                restoreEventsTheta(mModel->mEvents); // On supprime les décalages introduits par spreadEventsTheta pour les calculs de h_new
-
-                // Calcul du rapport :
-                rapport = (h_current == 0.) ? 1. : (h_new / h_current);
-                
-                // On reprend l'ancienne valeur, qui sera éventuellement mise à jour dans ce qui suit (Metropolis Hastings)
-                event->mTheta.mX = value_current;
-
-                // Pour l'itération suivante :
-                h_current = h_new;
-            }
-
-            event->mTheta.tryUpdate(value_new, rapport);
-
 
             if (doMemo) {
                event->mTheta.memo();
@@ -595,6 +707,9 @@ void MCMCLoopChronocurve::update()
                //qDebug()<<"mChronocurveSettings.mTimeType == ChronocurveSettings::eModeBayesian ici memo = "<<chain.mBatchIterIndex<<chain.mBatchIndex<<event->mName;
             }
 
+            //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
+            for (auto&& phInEv : event->mPhases)
+                phInEv->updateAll(t_min, t_max);
         }
 
 
@@ -602,10 +717,7 @@ void MCMCLoopChronocurve::update()
         std::copy(initListEvents.begin(), initListEvents.end(), mModel->mEvents.begin() );
 
 
-    }
-
-    // Pas bayésien : on sauvegarde la valeur constante dans la trace
-    else {
+    } else { // Pas bayésien : on sauvegarde la valeur constante dans la trace
         for (Event*& event : mModel->mEvents) {
             event->mTheta.tryUpdate(event->mTheta.mX, 1);
             if (doMemo) {
@@ -614,6 +726,17 @@ void MCMCLoopChronocurve::update()
             }
         }
     }
+
+    //--------------------- Memo Phases -----------------------------------------
+    if (doMemo) {
+        for (auto&& ph : mModel->mPhases)
+            ph->memoAll();
+    }
+
+    //--------------------- Update Phases constraints -----------------------------------------
+    for (auto&& phConst : mModel->mPhaseConstraints )
+        phConst->updateGamma();
+
 
     // --------------------------------------------------------------
     //  Remarque : à ce stade, tous les theta events sont à jour et ordonnés.
@@ -834,6 +957,31 @@ void MCMCLoopChronocurve::update()
     //  Restauration des valeurs des theta en années (non espacés pour le calcul)
     // --------------------------------------------------------------
     restoreEventsTheta(mModel->mEvents);
+
+    if ((mState == eRunning) && (chain.mRunIterIndex == chain.mNumRunIter-1)) {
+        mModel->mLogResults += "<hr>";
+        mModel->mLogResults += line(textBold(tr("Event adaptation for chain %1").arg(QString::number(mChainIndex+1))) );
+        for (auto&& event : mModel->mEvents) {
+            mModel->mLogResults += "<hr>";
+            mModel->mLogResults += line(textBold(tr("Event : %1 ").arg(event->mName)) );
+            mModel->mLogResults += line( textBold(tr("- Acceptance rate : %1 percent").arg( QString::number(100. * event->mTheta.getCurrentAcceptRate()))) );
+            // mAdaptLog += line(textBold(tr("- Theta : %1").arg( QString::number(event->mTheta.mX))) );
+            mModel->mLogResults += line(textBold(tr("- Sigma_MH on Theta : %1 at %2 ").arg( QString::number(event->mTheta.mSigmaMH), QString::number(100. * event->mTheta.getCurrentAcceptRate()))) );
+
+            for (auto&& date : event->mDates )   {
+                mModel->mLogResults += line( textBold(tr("Data : %1").arg(date.mName)) );
+                mModel->mLogResults += line( textBold(tr("- Acceptance rate : %1 percent").arg( QString::number(100. * date.mTheta.getCurrentAcceptRate()))) );
+                mModel->mLogResults += line( textBold(tr("- Sigma_MH on ti : %1").arg(QString::number(date.mTheta.mSigmaMH) )));
+                mModel->mLogResults += line( textBold(tr("- Sigma_i : %1 ").arg(QString::number(date.mSigma.mX) )) );
+                mModel->mLogResults += line( textBold(tr("- Sigma_i acceptance rate : %1 percent").arg( QString::number(100. * date.mSigma.getCurrentAcceptRate()))) );
+                mModel->mLogResults += line( textBold(tr("- Sigma_MH on Sigma_i : %1").arg(QString::number(date.mSigma.mSigmaMH, 'f'))) );
+            }
+
+        }
+
+    }
+
+
 }
 
 bool MCMCLoopChronocurve::adapt()
@@ -1203,7 +1351,7 @@ double MCMCLoopChronocurve::valeurGSeconde(const double t, const MCMCSplineCompo
 
 void MCMCLoopChronocurve::prepareEventsY(QList<Event *> & lEvents)
 {
-    for(Event* event : lEvents){
+    for (Event* event : lEvents) {
         prepareEventY(event);
     }
 }
@@ -1246,6 +1394,46 @@ void MCMCLoopChronocurve::prepareEventY(Event* event)
         event->mSy = pow((1./3.) * (event->mSInt * event->mSInt + 2. * event->mYInt * event->mYInt / (event->mSInc * event->mSInc)), 0.5);
     }
     
+    if (!mChronocurveSettings.mUseErrMesure){
+        event->mSy = 0.;
+    }
+}
+
+void MCMCLoopChronocurve::prepareEventY(EventKnown* event)
+{
+    if (mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie) {
+        if (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeInclinaison) {
+            event->mYx = event->mYInc;
+            event->mSy = event->mSInc;
+
+        } else if (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDeclinaison) {
+            event->mYx = event->mYDec;
+            event->mSy = event->mSInc / cos(event->mYInc * M_PI / 180.);
+
+        } else {
+            event->mYx = event->mYInt;
+            event->mSy = event->mSInt;
+        }
+
+        // Non utilisé en univarié, mais mis à zéro notamment pour les exports CSV :
+        event->mYy = 0;
+        event->mYz = 0;
+
+    } else if (mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique) {
+        event->mYx = event->mYInc;
+        event->mYy = event->mYDec;
+        event->mSy = event->mSInc;
+
+        // Non utilisé en univarié, mais mis à zéro notamment pour les exports CSV :
+        event->mYz = 0;
+
+    } else if (mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel) {
+        event->mYx = event->mYInt * cos(event->mYInc * M_PI / 180.) * cos(event->mYDec * M_PI / 180.);
+        event->mYy = event->mYInt * cos(event->mYInc * M_PI / 180.) * sin(event->mYDec * M_PI / 180.);
+        event->mYz = event->mYInt * sin(event->mYInc * M_PI / 180.);
+        event->mSy = pow((1./3.) * (event->mSInt * event->mSInt + 2. * event->mYInt * event->mYInt / (event->mSInc * event->mSInc)), 0.5);
+    }
+
     if (!mChronocurveSettings.mUseErrMesure){
         event->mSy = 0.;
     }
@@ -1436,11 +1624,16 @@ double MCMCLoopChronocurve::h_VG(QList<Event*> lEvents)
         if (mChronocurveSettings.mUseVarianceIndividual){
             
             shrink_VG = 1.;
-            /*for (int i = 0; i < nb_noeuds; ++i) {
-                Event*& e = lEvents[i]; */
             for (auto& e :lEvents) {
-                double S02 = e->mSy * e->mSy;
-                shrink_VG *= (S02 / pow(S02 + e->mVG.mX, 2.));
+                if (e->type() == Event::eDefault) {
+                    double S02 = pow(e->mSy, 2.);
+                    shrink_VG *= (S02 / pow(S02 + e->mVG.mX, 2.));
+
+                } else {
+                    EventKnown* ek = static_cast<EventKnown *>(e);
+                    double S02 = pow(ek->mSy, 2.);
+                    shrink_VG *= (S02 / pow(S02 + ek->mVG.mX, 2.));
+                }
             }
             
         } else {

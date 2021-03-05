@@ -1479,37 +1479,8 @@ void Project::deleteSelectedEvents()
 {
     QJsonObject stateNext = mState;
 
-   /* QJsonArray events = mState.value(STATE_EVENTS).toArray();
-    QJsonArray events_constraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
-    QJsonArray events_trash = mState.value(STATE_EVENTS_TRASH).toArray();
-
-    for (int i = events.size()-1; i >= 0; --i) {
-        QJsonObject event = events.at(i).toObject();
-
-        if (event.value(STATE_IS_SELECTED).toBool()) {
-            const int event_id = event.value(STATE_ID).toInt();
-            qDebug()<<"Project::deleteSelectedEvents : "<<event.value(STATE_NAME);
-            for (int j = events_constraints.size()-1; j >= 0; --j) {
-                QJsonObject constraint = events_constraints.at(j).toObject();
-                const int bwd_id = constraint.value(STATE_CONSTRAINT_BWD_ID).toInt();
-                const int fwd_id = constraint.value(STATE_CONSTRAINT_FWD_ID).toInt();
-
-                if (bwd_id == event_id || fwd_id == event_id)
-                    events_constraints.removeAt(j);
-
-            }
-    //        events.removeAt(i);
-            events_trash.append(event);
-        }
-    }
-
-       stateNext[STATE_EVENTS] = events;
-    stateNext[STATE_EVENTS_CONSTRAINTS] = events_constraints;
-    stateNext[STATE_EVENTS_TRASH] = events_trash;
-    */
     QJsonArray new_events ;
     QJsonArray new_events_constraints ;
-    //QJsonArray new_events_trash ;
 
     QList<int> id_events_remove;
 
@@ -3012,8 +2983,7 @@ void Project::runChronocurve()
     //  Check if project contains invalid dates, e.g. with no computable calibration curve
     // ------------------------------------------------------------------------------------------
     const QJsonArray invalidDates = getInvalidDates();
-    if (invalidDates.size() > 0)
-    {
+    if (invalidDates.size() > 0) {
         QMessageBox messageBox;
         messageBox.setMinimumWidth(10 * AppSettings::widthUnit());
         messageBox.setIcon(QMessageBox::Warning);
