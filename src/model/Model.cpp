@@ -54,6 +54,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QJsonArray>
 #include <QtWidgets>
 #include <QtCore/QStringList>
+#include <execution>
 
 // Constructor...
 Model::Model():
@@ -1058,7 +1059,7 @@ void Model::setFFTLength(const int FFTLength)
         generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
         generateHPD(mThreshold);
         generateNumericalResults(mChains);*/
-updateDensities();
+        updateDensities();
 
         emit newCalculus();
     }
@@ -1119,7 +1120,7 @@ int Model::getFFTLength() const
 
 void Model::initNodeEvents()
 {
-    std::for_each(mEvents.begin(), mEvents.end(), [](Event* ev) {
+    std::for_each( mEvents.begin(), mEvents.end(), [](Event* ev) {
         ev->mNodeInitialized = false;
         ev->mThetaNode = HUGE_VAL;
     });

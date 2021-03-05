@@ -58,7 +58,7 @@ typedef struct SplineResults
 {
     std::vector<std::vector<double>> matB;
     std::vector<std::vector<double>> matL;
-    std::vector<std::vector<double>> matD;
+    std::vector<double> matD;
     
     std::vector<double> vecG;
     std::vector<double> vecGamma;
@@ -111,12 +111,12 @@ typedef struct PosteriorMeanG
 QDataStream &operator<<( QDataStream &stream, const PosteriorMeanG& pMeanG );
 QDataStream &operator>>( QDataStream &stream, PosteriorMeanG& pMeanG );
 
-std::vector<double> calculVecH(const std::vector<double>& vec);
+std::vector<double> calculVecH(const std::vector<double> &vec);
 std::vector<std::vector<double>> calculMatR(const std::vector<double>& vec);
 std::vector<std::vector<double>> calculMatQ(const std::vector<double>& vec);
 
-std::vector<double> initVecteur(int dim);
-std::vector<std::vector<double>> initMatrice(const int rows, const int cols);
+std::vector<double> initVector(std::size_t dim);
+std::vector<std::vector<double>> initMatrix(std::size_t rows, std::size_t cols);
 
 class ChronocurveUtilities
 {

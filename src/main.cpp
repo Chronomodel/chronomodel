@@ -89,37 +89,7 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
 
 int main(int argc, char *argv[])
 {
-    /*double minStep = 2;
-    // Attendu : { 0, 3, 7, 10, 15 }
-    std::vector<double> v1 = { 3, 0, 10, 7, 15 };
-    // Attendu : { 0, 2, 4, 6, 8, 12, 16 }
-    std::vector<double> v2 = { 0, 6, 4, 1, 8, 12, 16 };
-    // Attendu : { 0, 3, 5, 7, 12, 16 }
-    std::vector<double> v3 = { 0, 6, 4, 5, 12, 16 };
-    // Attendu : { 0, 2, 4, 6, 8, 12, 16 }
-    std::vector<double> v4 = { 0, 6, 4, 5, 8, 12, 16 };
-    // Attendu : { 0, 2, 4, 6, 8, 12, 16 }
-    std::vector<double> v5 = { 0, 1, 4, 5, 6, 12, 16 };
-    // Attendu : { 0, 2, 4, 8, 11, 13 }
-    std::vector<double> v6 = { 0, 4, 1, 8, 12, 13 };
-    // Attendu : { 0, 2, 4, 6, 8, 10 }
-    std::vector<double> v7 = { 0, 3, 5, 7, 9, 10 };
-    // impossible !
-    std::vector<double> v8 = { 0, 1, 3, 5, 7, 9, 10 };
-    // Attendu : { 0, 2, 4, 6, 8, 10 }
-    std::vector<double> v9 = { 0, 1.9, 2.1, 5.8, 9, 10 };
-    // Attendu : { 0, 3.5, 5.5, 7.5, 10 }
-    std::vector<double> v10 = { 0, 4, 5.1, 7, 10 };
-    // Attendu : { 0, 3.5, 5.5, 7.5, 10, 18.5, 20.5, 22.5, 24.5 }
-    std::vector<double> v11 = { 0, 4, 5.1, 7, 10, 20, 24.1, 24.2, 24.5 };
-    
-    std::vector<double> s = ChronocurveUtilities::definitionNoeuds(v11, minStep);
-    
-    for (std::vector<double>::iterator it=s.begin(); it!=s.end(); ++it){
-        std::cout << ' ' << *it;
-    }
-    
-    exit(0);*/
+
     
     
 #ifdef Q_OS_MAC
@@ -157,7 +127,7 @@ int main(int argc, char *argv[])
     qApp->setAttribute(Qt::AA_UseHighDpiPixmaps);
     
     QString filePath = "";
-    for (int i=0; i<argc; ++i) {
+    for (int i = 0; i<argc; ++i) {
         QString arg(argv[i]);
         if (arg.contains(".chr", Qt::CaseInsensitive))
             filePath = arg;

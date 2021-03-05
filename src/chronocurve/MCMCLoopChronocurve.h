@@ -66,14 +66,14 @@ protected:
     virtual void finalize();
     
 private:
-    double h_YWI_AY(SplineMatrices& matrices, QList<Event *> & lEvents, const double alphaLissage);
-    double h_YWI_AY_composante(SplineMatrices& matrices, QList<Event*> lEvents, const double alphaLissage);
+    long double h_YWI_AY(SplineMatrices& matrices, QList<Event *> & lEvents, const double alphaLissage);
+    long double h_YWI_AY_composante(SplineMatrices& matrices, QList<Event*> lEvents, const double alphaLissage);
     double h_alpha(SplineMatrices& matrices, const int nb_noeuds, const double &alphaLissage);
     double h_theta(QList<Event*> lEvents);
     double h_VG(QList<Event*> lEvents);
     
    // double h_YWI_AYX(SplineMatrices& matrices, QList<double> & lX, const double alphaLissage);
-    double h_YWI_AY_composanteX(SplineMatrices& matrices, QList<double> lX, const double alphaLissage);
+    long double h_YWI_AY_composanteX(SplineMatrices& matrices, QList<double> lX, const double alphaLissage);
     //double h_alphaX(SplineMatrices& matrices, const int nb_noeuds, const double &alphaLissage);
   //  double h_thetaX(QList<double> lX);
    // double h_VGX(QList<double> lX);
@@ -115,19 +115,19 @@ private:
     std::vector<std::vector<double>> addIdentityToMat(const std::vector<std::vector<double>>& matrix);
     std::vector<std::vector<double>> multiConstParMat(const std::vector<std::vector<double>>& matrix, const double c, const int nbBandes);
     std::vector<std::vector<double>> multiMatParMat(const std::vector<std::vector<double>>& matrix1, const std::vector<std::vector<double>>& matrix2, const int nbBandes1, const int nbBandes2);
-    std::vector<std::vector<double>> inverseMatSym(const std::vector<std::vector<double>>& matrix1, const std::vector<std::vector<double>>& matrix2, const int nbBandes, const int shift);
+    std::vector<std::vector<double>> inverseMatSym(const std::vector<std::vector<double>>& matrix1, const std::vector<double>& matrix2, const int nbBandes, const int shift);
     double sumAllMatrix(const std::vector<std::vector<double>>& matrix);
     double sumAllVector(const std::vector<double>& matrix);
     
-    std::pair<std::vector<std::vector<double>>, std::vector<std::vector<double>>> decompositionCholesky(const std::vector<std::vector<double>>& matrix, const int nbBandes, const int shift);
+    std::pair<std::vector<std::vector<double> >, std::vector<double> > decompositionCholesky(const std::vector<std::vector<double>>& matrix, const int nbBandes, const int shift);
     
-    std::vector<double> resolutionSystemeLineaireCholesky(std::vector<std::vector<double>> matL, std::vector<std::vector<double>> matD, std::vector<double> vecQtY);
+    std::vector<double> resolutionSystemeLineaireCholesky(std::vector<std::vector<double>> matL, std::vector<double> matD, std::vector<double> vecQtY);
     
     SplineMatrices prepareCalculSpline(const QList<Event *> & sortedEvents);
     SplineMatrices prepareCalculSplineX(const QList<double>& lX);
     SplineResults calculSpline(SplineMatrices& matrices);
     
-    std::vector<std::vector<double>> calculMatInfluence(const SplineMatrices& matrices, const SplineResults& splines, const int nbBandes);
+    std::vector<double> calculMatInfluence(const SplineMatrices& matrices, const SplineResults& splines, const int nbBandes);
     std::vector<double> calculSplineError(const SplineMatrices& matrices, const SplineResults& splines);
     
     double valeurG(const double t, const MCMCSplineComposante& spline, const int n);

@@ -97,7 +97,8 @@ RESOURCES = $$PRO_PATH/Chronomodel.qrc
 # In the future we'll need to increase to C++17
 # which offered namespace std::experimental::parallel;
 #########################################
-CONFIG += c++11
+CONFIG += c++20
+QMAKE_CXXFLAGS += -std=c++20
 
 #########################################
 # MacOS specific settings
