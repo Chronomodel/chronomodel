@@ -2862,9 +2862,10 @@ void Project::exportAsText()
 // --------------------------------------------------------------------
 void Project::run()
 {
-    if(isChronocurve()){
+    if (isChronocurve()) {
         runChronocurve();
-    }else{
+
+    } else {
         runChronomodel();
     }
 }
@@ -3063,6 +3064,7 @@ void Project::runChronocurve()
         if (loop.mAbortedReason.isEmpty()) {
             //Memo of the init variable state to show in Log view
             mModel->mLogMCMC = loop.getChainsLog() + loop.getInitLog();
+            dialog.setFinishedState();
             emit mcmcFinished(mModel);
         } else {
             if (loop.mAbortedReason != ABORTED_BY_USER) {

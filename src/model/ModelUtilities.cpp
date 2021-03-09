@@ -780,16 +780,18 @@ void sampleInCumulatedRepartition( Event* event, const ProjectSettings &settings
      */
 
     // Calibrated outside the constraints
-    // CThis case must be dissociated in two, the density is on the right or the density is on the left, thus favouring one of the sides.
+    // This case must be dissociated in two, the density is on the right or the density is on the left, thus favouring one of the sides.
 
     if (unionTmax< min) {
-        event->mTheta.mX = Generator::gaussByDoubleExp(min, (max-min)*0.75, min, max);
+        //event->mTheta.mX = Generator::gaussByDoubleExp(min, (max-min)*0.75, min, max);
+        event->mTheta.mX = Generator::gaussByDoubleExp((unionTmax + unionTmin)/2., (unionTmax - unionTmin)/3., min, max);
 
-    } else if (max<unionTmin){
+    } else if (max<unionTmin) {
 
         //unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
 
-        event->mTheta.mX = Generator::gaussByDoubleExp(max, (max-min)*0.75, min, max);
+        //event->mTheta.mX = Generator::gaussByDoubleExp(max, (max-min)*0.75, min, max);
+        event->mTheta.mX = Generator::gaussByDoubleExp((unionTmax + unionTmin)/2., (unionTmax - unionTmin)/3., min, max);
 
 
     } else {

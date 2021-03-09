@@ -304,7 +304,7 @@ QString MCMCLoopMain::initMCMC()
 
 
 
-            sampleInCumulatedRepartition(unsortedEvents.at(i), mModel->mSettings,min, max);
+            sampleInCumulatedRepartition(unsortedEvents.at(i), mModel->mSettings, min, max);
 
             unsortedEvents.at(i)->mInitialized = true;
 

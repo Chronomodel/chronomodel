@@ -1041,11 +1041,6 @@ void Model::setBandwidth(const double bandwidth)
     if (mBandwidth != bandwidth) {
         mBandwidth = bandwidth;
 
-    /*    clearPosteriorDensities();
-        generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
-        generateHPD(mThreshold);
-        generateNumericalResults(mChains);
-        */
         updateDensities();
 
         emit newCalculus();
@@ -1057,10 +1052,6 @@ void Model::setFFTLength(const int FFTLength)
     if (mFFTLength != FFTLength) {
         mFFTLength = FFTLength;
 
-     /*   clearPosteriorDensities();
-        generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
-        generateHPD(mThreshold);
-        generateNumericalResults(mChains);*/
         updateDensities();
 
         emit newCalculus();
@@ -1076,9 +1067,12 @@ void Model::setThreshold(const double threshold)
     if (threshold != mThreshold) {
         mThreshold = threshold;
         
-        generateCredibility(mThreshold);
+        updateDensities();
+
+   /*     generateCredibility(mThreshold);
         generateHPD(mThreshold);
         setThresholdToAllModel();
+        */
         
         emit newCalculus();
     }
@@ -1134,17 +1128,7 @@ void Model::initNodeEvents()
 void Model::initDensities()
 {
     // memo the new value of the Threshold inside all the part of the model: phases, events and dates
- /*   clearPosteriorDensities();
-    generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
-    generateHPD(mThreshold);
 
-    generateCredibility(mThreshold);
-    generateNumericalResults(mChains);
-    
-    if (!mPhases.isEmpty()) {
-        generateTempo();
-    }
-*/
     updateDensities();
 
 }
@@ -1152,9 +1136,12 @@ void Model::initDensities()
 void Model::updateDensities()
 {
     clearPosteriorDensities();
-    generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
     // memo the new value of the Threshold inside all the part of the model: phases, events and dates
-    setThresholdToAllModel();
+  //  setThresholdToAllModel();
+
+    updateFormatSettings();
+
+    generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
 
     generateCredibility(mThreshold);
     generateHPD(mThreshold);
@@ -1171,18 +1158,22 @@ void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftL
 #ifdef DEBUG
     QTime t = QTime::currentTime();
 #endif
+
     const double tmin = mSettings.getTminFormated();
     const double tmax = mSettings.getTmaxFormated();
 
     for (auto&& event : mEvents) {
-        event->mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+     //   if (event->mTheta.HistoWithParameter(fftLen, bandwidth, tmin, tmax) == false) {
+                event->mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 
-        for (auto&& d : event->mDates)
-            d.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+                for (auto&& d : event->mDates)
+                    d.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+   //     }
     }
 
     for (auto&& phase : mPhases)
-        phase->generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+         phase->generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+
 #ifdef DEBUG
     QTime t2 = QTime::currentTime();
     qint64 timeDiff = t.msecsTo(t2);
@@ -1245,6 +1236,9 @@ void Model::generateCredibility(const double thresh)
     qDebug()<<QString("Model::generateCredibility( %1 %)").arg(thresh);
     QTime t = QTime::currentTime();
 #endif
+    if (mThreshold == thresh)
+        return;
+
     for (auto&& pEvent : mEvents) {
         bool isFixedBound = false;
         if (pEvent->type() == Event::eKnown)
@@ -1263,7 +1257,7 @@ void Model::generateCredibility(const double thresh)
 
     // Diplay a progressBar if "long" set with setMinimumDuration()
 
-    QProgressDialog *progress = new QProgressDialog(tr("Time range & credibilities generation"), tr("Wait") , 1, 10);
+/*    QProgressDialog *progress = new QProgressDialog(tr("Time range & credibilities generation"), tr("Wait") , 1, 10);
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(nullptr);
     progress->setMinimumDuration(5);
@@ -1271,7 +1265,7 @@ void Model::generateCredibility(const double thresh)
     progress->setMaximum(mPhases.size()*4);
     //progress->setMinimumWidth(7 * AppSettings::widthUnit());
     progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
-
+*/
 
     int position = 0;
 
@@ -1279,21 +1273,21 @@ void Model::generateCredibility(const double thresh)
 
         // if there is only one Event in the phase, there is no Duration
         pPhase->mAlpha.generateCredibility(mChains, thresh);
-        progress->setValue(++position);
+//        progress->setValue(++position);
 
         pPhase->mBeta.generateCredibility(mChains, thresh);
-        progress->setValue(++position);
+ //       progress->setValue(++position);
 
         pPhase->mDuration.generateCredibility(mChains, thresh);
-        progress->setValue(++position);
+ //       progress->setValue(++position);
 
         pPhase->mTimeRange = timeRangeFromTraces(pPhase->mAlpha.fullRunRawTrace(mChains),
                                                              pPhase->mBeta.fullRunRawTrace(mChains),thresh, "Time Range for Phase : "+pPhase->mName);
 
-        progress->setValue(++position);
+ //       progress->setValue(++position);
 
     }
-    progress->hide();
+ /*   progress->hide();
     progress->~QProgressDialog();
 
     QProgressDialog *progressGap = new QProgressDialog(tr("Gaps and transitions generation"), tr("Wait") , 1, 10);
@@ -1306,7 +1300,7 @@ void Model::generateCredibility(const double thresh)
     progressGap->setMaximum(mPhaseConstraints.size()*2);
 
     progressGap->setMinimumWidth(int (progressGap->fontMetrics().boundingRect(progressGap->labelText()).width() *1.5));
-
+*/
     position = 0;
     for (auto&& phaseConstraint : mPhaseConstraints) {
 
@@ -1317,16 +1311,16 @@ void Model::generateCredibility(const double thresh)
                                                              phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Gap Range : "+phaseFrom->mName+ " to "+ phaseTo->mName);
 
         qDebug()<<"Gap Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
-        progressGap->setValue(++position);
+//        progressGap->setValue(++position);
 
         phaseConstraint->mTransitionRange = transitionRangeFromTraces(phaseFrom->mBeta.fullRunRawTrace(mChains),
                                                              phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Transition Range : "+phaseFrom->mName+ " to "+ phaseTo->mName);
 
         qDebug()<<"Transition Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
-        progressGap->setValue(++position);
+//        progressGap->setValue(++position);
 
     }
-    delete progressGap;
+//    delete progressGap;
 #ifdef DEBUG
     QTime t2 (QTime::currentTime());
     qint64 timeDiff = t.msecsTo(t2);
@@ -1406,7 +1400,7 @@ void Model::generateTempo()
 
 #ifndef UNIT_TEST
     // Display a progressBar if "long" set with setMinimumDuration()
-    QProgressDialog *progress = new QProgressDialog(tr("Tempo Plot generation"), tr("Wait") , 1, 10);//, qApp->activeWindow(), Qt::Window);
+/*    QProgressDialog *progress = new QProgressDialog(tr("Tempo Plot generation"), tr("Wait") , 1, 10);//, qApp->activeWindow(), Qt::Window);
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(nullptr);
     progress->setMinimumDuration(5);
@@ -1415,7 +1409,7 @@ void Model::generateTempo()
 
     progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
     progress->show();
-    int position(0);
+ */   int position(0);
 #endif
 
     double tmin;// (mSettings.mTmin);
@@ -1455,7 +1449,7 @@ void Model::generateTempo()
         if (!phase->mRawTempo.isEmpty()) {
 #ifndef UNIT_TEST
             position += 4;
-            progress->setValue(position);
+//            progress->setValue(position);
 #endif
             continue;
         }
@@ -1509,7 +1503,7 @@ void Model::generateTempo()
 
 #ifndef UNIT_TEST
             position += 4;
-            progress->setValue(position);
+//            progress->setValue(position);
 #endif
 
             continue;
@@ -1644,7 +1638,7 @@ void Model::generateTempo()
         }
 #ifndef UNIT_TEST
         ++position;
-        progress->setValue(position);
+//        progress->setValue(position);
 #endif
 
        ///# 2 - Cumulate Nj and Nj2
@@ -1682,7 +1676,7 @@ void Model::generateTempo()
 
 #ifndef UNIT_TEST
         ++position;
-        progress->setValue(position);
+//        progress->setValue(position);
 #endif
 #ifndef ACTIVITY
         ///# 3 - Derivative function
@@ -1725,7 +1719,7 @@ void Model::generateTempo()
 #endif
 #ifndef UNIT_TEST
         ++position;
-        progress->setValue(position);
+//        progress->setValue(position);
 #endif
         ///# 4 - Credibility
         QVector<double> credInf (nbPts);
@@ -1767,13 +1761,13 @@ void Model::generateTempo()
 
 #ifndef UNIT_TEST
         ++position;
-        progress->setValue(position);
+//        progress->setValue(position);
 #endif
 
     }
 
 #ifndef UNIT_TEST
-    progress->~QProgressDialog();
+ //   progress->~QProgressDialog();
 #endif
 
 #ifdef DEBUG

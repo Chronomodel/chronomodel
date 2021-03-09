@@ -1014,9 +1014,9 @@ void GraphView::paintToDevice(QPaintDevice* device)
         QFontMetrics fm (font);
         p.setFont(font);
         p.setPen(Painting::borderDark);
-        int y (0);
+        int y = 0;
         int lineH (fm.height());
-        for (auto&& info : mInfos) {
+        for (auto& info : mInfos) {
             p.drawText(int (1.2 * mMarginLeft), int (mMarginTop  + y), int (mGraphWidth - 1.2*mMarginLeft -mMarginRight), lineH, Qt::AlignLeft | Qt::AlignBottom, info);
             y += lineH;
         }
@@ -1060,8 +1060,7 @@ void GraphView::drawCurves(QPainter& painter)
                     continue;
 
                 QMap<type_data, type_data>::const_iterator iterData = curve.mData.cbegin();
-               // QMap<type_data, type_data>::const_iterator iterErroX = curve.mDataErrorX.cbegin();
-               // QMap<type_data, type_data>::const_iterator iterErroY = curve.mDataErrorY.cbegin();
+
 
                 while (iterData != curve.mData.cend()) {
                     QPainterPath pathPoint;
@@ -1069,7 +1068,9 @@ void GraphView::drawCurves(QPainter& painter)
                     type_data xmoy = iterData.key();
                     type_data errXmoy = curve.mDataErrorX[xmoy];
                     type_data errYmoy = curve.mDataErrorY[xmoy];
-                    QColor col = curve.mDataColor[xmoy];
+                    //QColor col = curve.mDataColor[xmoy];
+                    QPen refPointsPen = pen;
+                    refPointsPen.setColor(curve.mDataColor[xmoy]);
 
 
                     // vertical curves must be normalized (values from 0 to 1)
@@ -1085,7 +1086,7 @@ void GraphView::drawCurves(QPainter& painter)
                         pathPoint.lineTo( getXForValue(xmoy), getYForValue(ymoy + errYmoy, true) );
                     }
                     ++iterData;
-                    painter.strokePath(pathPoint, QPen(col));
+                    painter.strokePath(pathPoint, refPointsPen);
                 }
 
 
@@ -1094,7 +1095,7 @@ void GraphView::drawCurves(QPainter& painter)
                 path.moveTo(mMarginLeft, y);
                 path.lineTo(mMarginLeft + mGraphWidth, y);
 
-                painter.strokePath(path, curve.mPen);
+                painter.strokePath(path, pen);
 
             } else if (curve.mIsVerticalLine) {
                 const qreal x = getXForValue(curve.mVerticalValue, false);
@@ -1121,11 +1122,11 @@ void GraphView::drawCurves(QPainter& painter)
 
                 painter.setClipRect(mMarginLeft, mMarginTop, mGraphWidth, mGraphHeight);
                 painter.fillPath(path, brush);
-                painter.strokePath(path, curve.mPen);
+                painter.strokePath(path, pen);
 
             } else if (curve.mIsTopLineSections) {
                 const qreal y1 = mMarginTop + curve.mPen.width();
-                painter.setPen(curve.mPen);
+               // painter.setPen(curve.mPen);
 
                 for (auto& section : curve.mSections ) {
                     const type_data s1 = section.first;
@@ -1364,7 +1365,7 @@ void GraphView::drawCurves(QPainter& painter)
 
                     painter.setPen(curve.mPen);
                     painter.fillPath(path, brush);
-                    painter.strokePath(path, curve.mPen);
+                    painter.strokePath(path, pen);
 
                 } else
                     painter.drawPath(path);

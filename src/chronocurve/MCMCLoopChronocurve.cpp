@@ -1505,7 +1505,7 @@ long double MCMCLoopChronocurve::h_YWI_AY_composante(SplineMatrices& matrices, Q
     SplineResults spline = calculSpline(matrices);
     std::vector<double> vecG = spline.vecG;
     std::vector<double> vecGamma = spline.vecGamma;
-    std::vector<std::vector<double>> matL = spline.matL;
+  //  std::vector<std::vector<double>> matL = spline.matL;
     std::vector<double> matD = spline.matD;
     std::vector<std::vector<double>> matQTQ = matrices.matQTQ;
     
@@ -1519,8 +1519,6 @@ long double MCMCLoopChronocurve::h_YWI_AY_composante(SplineMatrices& matrices, Q
     
     const int nb_noeuds = lEvents.size();
     
-   // for ( int i = 0; i < nb_noeuds; ++i) {
-    //    Event* e = lEvents[i];
     int i = 0;
     for (auto& e : lEvents) {
         YWY += e->mW * e->mY * e->mY;
@@ -1539,7 +1537,7 @@ long double MCMCLoopChronocurve::h_YWI_AY_composante(SplineMatrices& matrices, Q
     // inutile de refaire : Multi_Mat_par_Mat(Mat_QT,Mat_Q,Nb_noeuds,3,3,Mat_QtQ); -> déjà effectué dans calcul_mat_RQ
     
     std::pair<std::vector<std::vector<double>>, std::vector<double>> decomp = decompositionCholesky(matQTQ, 5, 1);
-    std::vector<std::vector<double>> matLq = decomp.first;
+   // std::vector<std::vector<double>> matLq = decomp.first;
     std::vector<double> matDq = decomp.second;
 
     long double det_1_2 = 1;
@@ -1561,23 +1559,11 @@ double MCMCLoopChronocurve::h_alpha(SplineMatrices& matrices, const int nb_noeud
     // La trace de la matrice produit W_1.K est égal à la somme des valeurs propores si W_1.K est symétrique,
     // ce qui implique que W_1 doit être une constante
     // d'où on remplace W_1 par la matrice W_1m moyenne des (W_1)ii
-    
-    //int nb_noeuds = mModel->mEvents.size();
 
     double W_1m = 0.;
-     W_1m = std::accumulate(diagWInv.begin(), diagWInv.begin()+ nb_noeuds, 0.);
-  /*  for (int i = 0; i < nb_noeuds; ++i) {
-        W_1m += diagWInv.at(i);
-    } */
-
+    W_1m = std::accumulate(diagWInv.begin(), diagWInv.begin()+ nb_noeuds, 0.);
     W_1m /= nb_noeuds;
 
-    std::vector<double> diag_W_1m (nb_noeuds, W_1m);//= initVecteur(nb_noeuds);
-    /*
-    for (int i = 0; i < nb_noeuds; ++i) {
-        diag_W_1m[i] = W_1m;
-    }
-*/
     // calcul des termes diagonaux de W_1.K
     std::pair<std::vector<std::vector<double>>, std::vector<double>> decomp = decompositionCholesky(matR, 3, 1);
     std::vector<std::vector<double>> matLc = decomp.first;
@@ -1587,13 +1573,21 @@ double MCMCLoopChronocurve::h_alpha(SplineMatrices& matrices, const int nb_noeud
     
     std::vector<std::vector<double>> tmp = multiMatParMat(matQ, matRInv, 3, 3);
     std::vector<std::vector<double>> matK = multiMatParMat(tmp, matQT, 3, 3);
-    std::vector<std::vector<double>> matWInvK = multiDiagParMat(diag_W_1m, matK, 1);
+
+    double vm = 0.;
+    // pHd : Si la bande vaut 1, on prend donc la diagonale de matK, le calcul se simpifie
+    /*
+     * std::vector<double> diag_W_1m (nb_noeuds, W_1m);//= initVecteur(nb_noeuds);
+     * std::vector<std::vector<double>> matWInvK = multiDiagParMat(diag_W_1m, matK, 1);
 
     double vm = 0.;
     for (int i = 0; i < nb_noeuds; ++i) {
         vm += matWInvK[i][i];
     }
-    
+    */
+    for (int i = 0; i < nb_noeuds; ++i)
+        vm += W_1m * matK.at(i).at(i);
+
     double c = (nb_noeuds-2) / vm;
 
     // initialisation de l'exposant mu du prior "shrinkage" sur alpha : fixe
@@ -1603,7 +1597,7 @@ double MCMCLoopChronocurve::h_alpha(SplineMatrices& matrices, const int nb_noeud
     double mu = 2.;
     
     // prior "shrinkage"
-    double r = (mu/c) * pow(c/(c + alphaLissage),(mu+1));
+    double r = (mu/c) * pow(c/(c + alphaLissage), mu+1);
     return r;
 }
 
@@ -1667,19 +1661,21 @@ double MCMCLoopChronocurve::h_theta(QList<Event*> lEvents)
     double tmax = mModel->mSettings.mTmax;
     
     double h = 1.;
-    
+    double p, t_moy;
+
     for (Event*& e : lEvents) {
-        double p = 0.;
-        double t_moy = 0.;
-        
-        for (auto&& date : e->mDates) {
-            double pi = 1. / pow(date.mSigma.mX, 2.);
-            p += pi;
-            t_moy += (date.mTheta.mX + date.mDelta) * pi;
+        if (e->mType == Event::eDefault) {
+            p = 0.;
+            t_moy = 0.;
+            for (auto&& date : e->mDates) {
+                double pi = 1. / pow(date.mSigma.mX, 2.);
+                p += pi;
+                t_moy += (date.mTheta.mX + date.mDelta) * pi;
+            }
+            t_moy /= p;
+
+            h *= exp(-0.5 * p * pow((tmin + e->mTheta.mX * (tmax - tmin)) - t_moy, 2.));
         }
-        t_moy /= p;
-        
-        h *= exp(-0.5 * p * pow((tmin + e->mTheta.mX * (tmax - tmin)) - t_moy, 2.));
     }
     return h;
 }
@@ -1698,9 +1694,7 @@ void MCMCLoopChronocurve::orderEventsByTheta(QList<Event *> & lEvent)
     // Ici on peut utiliser lEvent en le déclarant comme copy ??
     QList<Event*>& result = lEvent;
     
-    std::sort(result.begin(), result.end(), [](const Event* a, const Event* b) {
-        return (a->mTheta.mX < b->mTheta.mX);
-    });
+    std::sort(result.begin(), result.end(), [](const Event* a, const Event* b) { return (a->mTheta.mX < b->mTheta.mX); });
 }
 
 void MCMCLoopChronocurve::saveEventsTheta(QList<Event *> &lEvent)
@@ -2578,7 +2572,7 @@ std::vector<double> MCMCLoopChronocurve::resolutionSystemeLineaireCholesky(std::
     vecU[2] = vecQtY.at(2) - matL.at(2).at(1) * vecU.at(1);
     
     for (int i = 3; i < n-1; ++i) {
-        vecU[i] = vecQtY.at(i) - matL.at(i).at(i-1) * vecU.at(i-1) - matL.at(i).at(i-2) * vecU.at(i-2);
+        vecU[i] = vecQtY.at(i) - matL.at(i).at(i-1) * vecU.at(i-1) - matL.at(i).at(i-2) * vecU.at(i-2); // pHd : Attention utilisation des variables déjà modiiées
     }
     
     for (int i = 1; i < n-1; ++i) {
@@ -2589,7 +2583,7 @@ std::vector<double> MCMCLoopChronocurve::resolutionSystemeLineaireCholesky(std::
     vecGamma[n-3] = vecNu.at(n-3) - matL.at(n-2).at(n-3) * vecGamma.at(n-2);
     
     for (int i = n-4; i > 0; --i) {
-        vecGamma[i] = vecNu.at(i) - matL.at(i+1).at(i) * vecGamma.at(i+1) - matL.at(i+2).at(i) * vecGamma.at(i+2);
+        vecGamma[i] = vecNu.at(i) - matL.at(i+1).at(i) * vecGamma.at(i+1) - matL.at(i+2).at(i) * vecGamma.at(i+2); // pHd : Attention utilisation des variables déjà modiiées
     }
     return vecGamma;
 }

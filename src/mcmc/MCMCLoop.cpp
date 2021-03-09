@@ -234,7 +234,7 @@ void MCMCLoop::run()
                 emit stepProgressed(chain.mBatchIndex * chain.mNumBatchIter + chain.mBatchIterIndex);
             }
             ++chain.mBatchIndex;
-qDebug()<<"MCMCLoop Adapting update"<< chain.mBatchIterIndex<<"/"<<chain.mNumBatchIter<<"  "<< chain.mBatchIndex<<"/"<<chain.mMaxBatchs;
+//qDebug()<<"MCMCLoop Adapting update"<< chain.mBatchIterIndex<<"/"<<chain.mNumBatchIter<<"  "<< chain.mBatchIndex<<"/"<<chain.mMaxBatchs;
             if (adapt()) {
                      break;
             }

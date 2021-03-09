@@ -139,7 +139,7 @@ private:
 
 
 signals:
-    void formatChanged();
+   // void formatChanged(); // unused
 
 public:
     enum Support

@@ -120,6 +120,7 @@ void Event::copyFrom(const Event& event)
     mName = event.mName;
     mMethod = event.mMethod;
     mColor = event.mColor;
+    mLevel = event.mLevel;
 
     mDates = event.mDates;
     mPhases = event.mPhases;
@@ -128,6 +129,7 @@ void Event::copyFrom(const Event& event)
 
     mTheta = event.mTheta;
     mTheta.mSupport = event.mTheta.mSupport;
+    mTheta.mFormat = event.mTheta.mFormat;
 
     mS02 = event.mS02;
     mAShrinkage = event.mAShrinkage;

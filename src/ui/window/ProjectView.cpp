@@ -228,8 +228,7 @@ void ProjectView::applySettings(Model* model)
 {
     mModelView->applyAppSettings();
 
-    if(model)
-    {
+    if (model) {
         model->updateFormatSettings();
         model->generateModelLog();
         model->generateResultsLog();
@@ -277,6 +276,7 @@ void ProjectView::updateResults()
     
     if (project->mModel) {
         project->mModel->updateDesignFromJson();
+
         project->mModel->updateDensities();
         mResultsView->updateModel(project->mModel);
     }

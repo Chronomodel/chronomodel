@@ -71,7 +71,7 @@ mtmaxUsed(0.)
 
     mCredibility = QPair<double, double>();
     mHPD = QMap<double, double>();
-    QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
+   // QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
 }
 
 /** Copy constructor */
@@ -107,7 +107,7 @@ MetropolisVariable::MetropolisVariable(const MetropolisVariable &origin)
     mtminUsed = origin.mtminUsed;
     mtmaxUsed = origin.mtmaxUsed;
 
-     QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
+    // QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
 
 }
 
@@ -120,7 +120,7 @@ MetropolisVariable::~MetropolisVariable()
     mRawTrace->clear();
     mFormatedTrace->clear();
     mHPD.clear();
-    QObject::disconnect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
+  //  QObject::disconnect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
 
 }
 
@@ -157,7 +157,7 @@ MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable & ori
     mtminUsed = origin.mtminUsed;
     mtmaxUsed = origin.mtmaxUsed;
 
-    QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
+  //  QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
 
     return *this;
 }
@@ -184,6 +184,7 @@ void MetropolisVariable::reset()
         mRawTrace->squeeze();
         mFormatedTrace->clear();
         mFormatedTrace->squeeze();
+
     } else {
         mRawTrace = new QVector<double>();
         mFormatedTrace = new QVector<double>();
@@ -208,8 +209,8 @@ void MetropolisVariable::setFormat(const DateUtils::FormatDate fm)
 {
     if (fm != mFormat) {
         mFormat = fm;
-       emit formatChanged();
-        //updateFormatedTrace();
+      // emit formatChanged(); unused
+        updateFormatedTrace();
     }
 }
 
@@ -232,7 +233,7 @@ void MetropolisVariable::updateFormatedTrace()
         std::copy(mRawTrace->cbegin(),mRawTrace->cend(),mFormatedTrace->begin());
 
     else
-        std::transform(mRawTrace->cbegin(),mRawTrace->cend(),mFormatedTrace->begin(),[this](const double i){return DateUtils::convertToFormat(i,this->mFormat);});
+        std::transform(mRawTrace->cbegin(), mRawTrace->cend(), mFormatedTrace->begin(), [this](const double i){return DateUtils::convertToFormat(i,this->mFormat);});
 
 
 }
