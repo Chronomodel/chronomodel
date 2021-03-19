@@ -97,7 +97,59 @@ QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString
 QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double, double> &hpd, double thresh);
 
 
+//-------- Matrix
+std::vector<double> initVector(const unsigned n);
+std::vector<std::vector<double>> initMatrix(const unsigned rows, const unsigned cols);
+void resizeMatrix(std::vector<std::vector<double>>&matrix,  const unsigned rows, const unsigned cols);
 
+double determinant(const std::vector<std::vector<double>>& matrix);
+
+
+std::vector<std::vector<double>> transpose0(const std::vector<std::vector<double>>& matrix);
+std::vector<std::vector<double>> transpose(const std::vector<std::vector<double>>& matrix, const int nbDiag);
+std::vector<std::vector<double>> multiMatParDiag(const std::vector<std::vector<double>>& matrix, const std::vector<double>& diag, const int nbBandes);
+std::vector<std::vector<double>> multiDiagParMat(const std::vector<double>& diag, const std::vector<std::vector<double>>& matrix, const int nbBandes);
+std::vector<double> multiMatParVec(const std::vector<std::vector<double>>& matrix, const std::vector<double>& vec, const int nbBandes);
+
+std::vector<std::vector<double>> addMatEtMat0(const std::vector<std::vector<double>>& matrix1, const std::vector<std::vector<double>>& matrix2);
+std::vector<std::vector<double>> addMatEtMat(const std::vector<std::vector<double>>& matrix1, const std::vector<std::vector<double>>& matrix2, const int nbBandes);
+std::vector<std::vector<double>> addIdentityToMat(const std::vector<std::vector<double>>& matrix);
+std::vector<std::vector<double>> multiConstParMat(const std::vector<std::vector<double>>& matrix, const double c, const int nbBandes);
+
+std::vector<std::vector<double>> multiMatParMat0(const std::vector<std::vector<double>>& matrix1, const std::vector<std::vector<double>>& matrix2);
+std::vector<std::vector<double>> multiMatParMat(const std::vector<std::vector<double>>& matrix1, const std::vector<std::vector<double>>& matrix2, const int nbBandes1, const int nbBandes2);
+
+std::vector<std::vector<double>> inverseMatSym0(const std::vector<std::vector<double>>& matrix);
+std::vector<std::vector<double>> inverseMatSym(const std::vector<std::vector<double>>& matrix1, const std::vector<double>& matrix2, const int nbBandes, const int shift);
+double sumAllMatrix(const std::vector<std::vector<double>>& matrix);
+double sumAllVector(const std::vector<double>& matrix);
+
+std::vector<std::vector<double>> cofactor0(const std::vector<std::vector<double>>& matrix);
+std::vector<std::vector<double>> comatrice0(const std::vector<std::vector<double>>& matrix);
+
+
+std::vector<std::vector<double>> choleskyLL0(const std::vector<std::vector<double>>& matrix);
+std::pair<std::vector<std::vector<double> >, std::vector<double> > choleskyLDL(const std::vector<std::vector<double>>& matrix);
+std::pair<std::vector<std::vector<double> >, std::vector<double> > decompositionCholesky(const std::vector<std::vector<double>>& matrix, const int nbBandes, const int shift);
+
+std::pair<std::vector<std::vector<double> >, std::vector<std::vector<double> > > decompositionLU0(const std::vector<std::vector<double>>& A);
+
+std::vector<double> resolutionSystemeLineaireCholesky(std::vector<std::vector<double>> matL, std::vector<double> matD, std::vector<double> vecQtY);
+
+struct Strassen
+{ //https://www.sanfoundry.com/java-program-strassen-algorithm/
+
+    std::vector<std::vector<double>> multiply (const std::vector<std::vector<double>>& A, const std::vector<std::vector<double>>& B);
+std::vector<std::vector<double>> sub(const std::vector<std::vector<double>>&  A, const std::vector<std::vector<double>>& B);
+  std::vector<std::vector<double>> add(const std::vector<std::vector<double>>& A, const std::vector<std::vector<double>>& B);
+/** Funtion to split parent matrix into child matrices **/
+
+void split(const std::vector<std::vector<double>>& P, std::vector<std::vector<double> > &C, int iB, int jB) ;
+/** Funtion to join child matrices intp parent matrix **/
+
+ void join(const std::vector<std::vector<double>>& C, std::vector<std::vector<double> > &P, int iB, int jB) ;
+
+};
 
 inline double rounddouble(const double f,const int prec)
 {

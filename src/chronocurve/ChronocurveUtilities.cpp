@@ -52,8 +52,16 @@ std::vector<double> calculVecH(const std::vector<double>& vec)
 
 std::vector<double> calculVecH(const std::vector<double>& vec)
 {
+    // 2 codes possible
+    /*
     std::vector<double> result(vec.size() - 1);
     std::transform(vec.begin(), vec.end()-1, vec.begin()+1,  result.begin(),  [](int v, int v1) {return v1-v; } );
+    */
+
+    std::vector<double>result(vec.size());
+    std::adjacent_difference (vec.begin(), vec.end(), result.begin());
+    result.erase(result.begin());
+
     return result;
 }
 
@@ -71,11 +79,12 @@ std::vector<std::vector<double>> calculMatR(const std::vector<double>& vec)
 
     // vecH est de dimension n-1
     std::vector<double> vecH = calculVecH(vec);
-    const int n = vec.size();
+    const unsigned n = vec.size();
 
     // matR est de dimension n-2 x n-2, mais contenue dans une matrice nxn
     std::vector<std::vector<double>> matR = initMatrix(n, n);
     // On parcourt n-2 valeurs :
+    /* pHd : code simplified
     for (int i = 1; i < n-1; ++i) {
         matR[i][i] = (vecH[i-1] + vecH[i]) / 3.;
         // Si on est en n-2 (dernière itération), on ne calcule pas les valeurs de part et d'autre de la diagonale (termes symétriques)
@@ -84,6 +93,15 @@ std::vector<std::vector<double>> calculMatR(const std::vector<double>& vec)
             matR[i+1][i] = vecH[i] / 6.;
         }
     }
+    */
+    for ( unsigned i = 1; i < n-2; ++i) {
+        matR[i][i] = (vecH[i-1] + vecH[i]) / 3.;
+        matR[i][i+1] = vecH[i] / 6.;
+        matR[i+1][i] = vecH[i] / 6.;
+    }
+    // Si on est en n-2 (dernière itération), on ne calcule pas les valeurs de part et d'autre de la diagonale (termes symétriques)
+   matR[n-2][n-2] = (vecH[n-2-1] + vecH[n-2]) / 3.;
+
     return matR;
 }
 
@@ -100,47 +118,32 @@ std::vector<std::vector<double>> calculMatQ(const std::vector<double>& vec)
 
     // vecH est de dimension n-1
     std::vector<double> vecH = calculVecH(vec);
-    const int n = vec.size();
+    const unsigned n = vec.size();
 
     // matQ est de dimension n x n-2, mais contenue dans une matrice nxn
     std::vector<std::vector<double>> matQ = initMatrix(n, n);
     // On parcourt n-2 valeurs :
-    for (unsigned int i = 1; i < vecH.size(); ++i) {
+   /* for (unsigned i = 1; i < vecH.size(); ++i) {
         matQ[i-1][i] = 1. / vecH[i-1];
         matQ[i][i] = -((1./vecH[i-1]) + (1./vecH[i]));
         matQ[i+1][i] = 1. / vecH[i];
-    }
+    }*/
+
+    for (unsigned i = 1; i < vecH.size(); ++i) {
+            matQ[i-1][i] = 1. / vecH[i-1];
+            matQ[i+1][i] = 1. / vecH[i];
+            matQ[i][i] = -(matQ.at(i-1).at(i) + matQ.at(i+1).at(i));
+        }
+
+
     return matQ;
 }
 
 #pragma mark Init vectors et matrix
-// useless function
-std::vector<double> initVector(std::size_t dim)
-{
-   /* std::vector<double> vec;
-    for (int i = 0; i < dim; ++i) {
-        vec.push_back(0.);
-    }
-    return vec;*/
-    // normaly:
-    return std::vector<double>(dim, 0.);
-}
-
-std::vector<std::vector<double>> initMatrix(std::size_t rows, std::size_t cols)
-{
-   /* std::vector<std::vector<double>> matrix;
-    for (int r = 0; r < rows; ++r) {
-        std::vector<double> row;
-        for (int c = 0; c < cols; ++c) {
-            row.push_back(0.);
-        }
-        matrix.push_back(row);
-    }
-    return matrix;*/
-    return std::vector<std::vector<double>> (rows, std::vector<double>(cols, 0.));
-}
 
 
+// can be replace with #include <functional>   // std::greater
+// unused
 bool sortItems(const double& a, const double& b)
 {
     return (a < b);

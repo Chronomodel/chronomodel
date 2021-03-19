@@ -831,5 +831,6 @@ void sampleInCumulatedRepartition( Event* event, const ProjectSettings &settings
 
             event->mTheta.mX = Generator::randomUniform(min, max);
         }
+
     }
 }

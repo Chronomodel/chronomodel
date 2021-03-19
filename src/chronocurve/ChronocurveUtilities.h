@@ -39,6 +39,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef CHRONOCURVEUTILITIES_H
 #define CHRONOCURVEUTILITIES_H
 
+#include "Functions.h"
+
 #include <vector>
 #include <string>
 #include <QDataStream>
@@ -115,8 +117,6 @@ std::vector<double> calculVecH(const std::vector<double> &vec);
 std::vector<std::vector<double>> calculMatR(const std::vector<double>& vec);
 std::vector<std::vector<double>> calculMatQ(const std::vector<double>& vec);
 
-std::vector<double> initVector(std::size_t dim);
-std::vector<std::vector<double>> initMatrix(std::size_t rows, std::size_t cols);
 
 class ChronocurveUtilities
 {

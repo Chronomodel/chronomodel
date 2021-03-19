@@ -386,11 +386,11 @@ HEADERS += src/ui/panel_model/scenes/EventsScene.h
 HEADERS += src/ui/panel_model/scenes/PhaseItem.h
 HEADERS += src/ui/panel_model/scenes/PhasesScene.h
 
+HEADERS += src/ui/panel_results/GraphViewAlpha.h
+HEADERS += src/ui/panel_results/GraphViewCurve.h
 HEADERS += src/ui/panel_results/GraphViewDate.h
 HEADERS += src/ui/panel_results/GraphViewEvent.h
 HEADERS += src/ui/panel_results/GraphViewPhase.h
-HEADERS += src/ui/panel_results/GraphViewAlpha.h
-HEADERS += src/ui/panel_results/GraphViewCurve.h
 HEADERS += src/ui/panel_results/GraphViewResults.h
 HEADERS += src/ui/panel_results/GraphViewTempo.h
 HEADERS += src/ui/panel_results/ResultsView.h
@@ -453,37 +453,37 @@ SOURCES += src/plugins/CalibrationCurve.cpp
 SOURCES += src/plugins/PluginRefCurveSettingsView.cpp
 SOURCES += src/plugins/RefCurve.cpp
 
-equals(USE_PLUGIN_TL, 1){
-	SOURCES += src/plugins/plugin_tl/PluginTL.cpp
-	SOURCES += src/plugins/plugin_tl/PluginTLForm.cpp
-	SOURCES += src/plugins/plugin_tl/PluginTLRefView.cpp
+equals(USE_PLUGIN_TL, 1) {
+    SOURCES += src/plugins/plugin_tl/PluginTL.cpp
+    SOURCES += src/plugins/plugin_tl/PluginTLForm.cpp
+    SOURCES += src/plugins/plugin_tl/PluginTLRefView.cpp
     SOURCES += src/plugins/plugin_tl/PluginTLSettingsView.cpp
 }
-equals(USE_PLUGIN_14C, 1){
-	SOURCES += src/plugins/plugin_14C/Plugin14C.cpp
-	SOURCES += src/plugins/plugin_14C/Plugin14CForm.cpp
-	SOURCES += src/plugins/plugin_14C/Plugin14CRefView.cpp
+equals(USE_PLUGIN_14C, 1) {
+    SOURCES += src/plugins/plugin_14C/Plugin14C.cpp
+    SOURCES += src/plugins/plugin_14C/Plugin14CForm.cpp
+    SOURCES += src/plugins/plugin_14C/Plugin14CRefView.cpp
     SOURCES += src/plugins/plugin_14C/Plugin14CSettingsView.cpp
 }
-equals(USE_PLUGIN_GAUSS, 1){
-	SOURCES += src/plugins/plugin_gauss/PluginGauss.cpp
-	SOURCES += src/plugins/plugin_gauss/PluginGaussForm.cpp
-	SOURCES += src/plugins/plugin_gauss/PluginGaussRefView.cpp
+equals(USE_PLUGIN_GAUSS, 1) {
+    SOURCES += src/plugins/plugin_gauss/PluginGauss.cpp
+    SOURCES += src/plugins/plugin_gauss/PluginGaussForm.cpp
+    SOURCES += src/plugins/plugin_gauss/PluginGaussRefView.cpp
     SOURCES += src/plugins/plugin_gauss/PluginGaussSettingsView.cpp
 }
-equals(USE_PLUGIN_AM, 1){
-	SOURCES += src/plugins/plugin_am/PluginMag.cpp
-	SOURCES += src/plugins/plugin_am/PluginMagForm.cpp
-	SOURCES += src/plugins/plugin_am/PluginMagRefView.cpp
+equals(USE_PLUGIN_AM, 1) {
+    SOURCES += src/plugins/plugin_am/PluginMag.cpp
+    SOURCES += src/plugins/plugin_am/PluginMagForm.cpp
+    SOURCES += src/plugins/plugin_am/PluginMagRefView.cpp
     SOURCES += src/plugins/plugin_am/PluginMagSettingsView.cpp
 }
-equals(USE_PLUGIN_UNIFORM, 1){
-	SOURCES += src/plugins/plugin_uniform/PluginUniform.cpp
-	SOURCES += src/plugins/plugin_uniform/PluginUniformForm.cpp
+equals(USE_PLUGIN_UNIFORM, 1) {
+    SOURCES += src/plugins/plugin_uniform/PluginUniform.cpp
+    SOURCES += src/plugins/plugin_uniform/PluginUniformForm.cpp
     SOURCES += src/plugins/plugin_uniform/PluginUniformRefView.cpp
     SOURCES += src/plugins/plugin_uniform/PluginUniformSettingsView.cpp
 }
-equals(USE_PLUGIN_F14C, 1){
+equals(USE_PLUGIN_F14C, 1) {
     SOURCES += src/plugins/plugin_F14C/PluginF14C.cpp
     SOURCES += src/plugins/plugin_F14C/PluginF14CForm.cpp
     SOURCES += src/plugins/plugin_F14C/PluginF14CRefView.cpp
@@ -543,11 +543,11 @@ SOURCES += src/ui/panel_model/scenes/EventsScene.cpp
 SOURCES += src/ui/panel_model/scenes/PhaseItem.cpp
 SOURCES += src/ui/panel_model/scenes/PhasesScene.cpp
 
+SOURCES += src/ui/panel_results/GraphViewAlpha.cpp
+SOURCES += src/ui/panel_results/GraphViewCurve.cpp
 SOURCES += src/ui/panel_results/GraphViewDate.cpp
 SOURCES += src/ui/panel_results/GraphViewEvent.cpp
 SOURCES += src/ui/panel_results/GraphViewPhase.cpp
-SOURCES += src/ui/panel_results/GraphViewAlpha.cpp
-SOURCES += src/ui/panel_results/GraphViewCurve.cpp
 SOURCES += src/ui/panel_results/GraphViewResults.cpp
 SOURCES += src/ui/panel_results/GraphViewTempo.cpp
 SOURCES += src/ui/panel_results/ResultsView.cpp

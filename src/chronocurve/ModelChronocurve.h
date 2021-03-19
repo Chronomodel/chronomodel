@@ -68,7 +68,7 @@ public:
     void clearCredibilityAndHPD();
     void clearTraces();
     
-    void setThresholdToAllModel();
+    void setThresholdToAllModel(const double threshold);
     
     QList<PosteriorMeanGComposante> getChainsMeanGComposanteX();
     QList<PosteriorMeanGComposante> getChainsMeanGComposanteY();

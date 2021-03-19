@@ -772,7 +772,7 @@ void MCMCLoopMain::finalize()
     /** @todo Find a way to make it faster !
      */
     mModel->generateCorrelations(mChains);
-    mModel->updateDensities();
+//    mModel->updateDensities();
 
     // This should not be done here because it uses resultsView parameters
     // ResultView will trigger it again when loading the model

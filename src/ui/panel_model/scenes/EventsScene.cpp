@@ -1544,27 +1544,27 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
                 dates << qMakePair(eventName, date);
                 acceptedRows.append(csvRow);
 
-                if (dataStr.size() > 14) {
+                if (dataStr.size() >= 14) {
                     chronocurveValues.insert("YInt", csvLocal.toDouble(dataStr.at(13)));
                 } else {
                     chronocurveValues.insert("YInt", 0);
                 }
-                if (dataStr.size() > 15) {
+                if (dataStr.size() >= 15) {
                     chronocurveValues.insert("SInt", csvLocal.toDouble(dataStr.at(14)));
                 } else {
                     chronocurveValues.insert("SInt", 0);
                 }
-                if (dataStr.size() > 16) {
+                if (dataStr.size() >= 16) {
                     chronocurveValues.insert("YInc", csvLocal.toDouble(dataStr.at(15)));
                 } else {
                     chronocurveValues.insert("YInc", 0);
                 }
-                if (dataStr.size() > 17) {
+                if (dataStr.size() >= 17) {
                     chronocurveValues.insert("YDec", csvLocal.toDouble(dataStr.at(16)));
                 } else {
                     chronocurveValues.insert("YDec", 0);
                 }
-                if (dataStr.size() > 18) {
+                if (dataStr.size() >= 18) {
                     chronocurveValues.insert("SInc",csvLocal.toDouble(dataStr.at(17)));
                 } else {
                     chronocurveValues.insert("SInc", 0);

@@ -259,6 +259,7 @@ QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const 
     }
     return equal_areas(mapToModify, targetArea);
 }
+
 QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const QMap<float, float>& mapWithTargetArea)
 {
     if (mapToModify.isEmpty())
@@ -342,7 +343,7 @@ QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const 
     double prop = targetArea / srcArea;
 
     QMap<double, double>::iterator iter = result.begin();
-    while (iter!=result.cend() ) {
+    while (iter!=result.end() ) {
         iter.value() *= prop;
         ++iter;
     }
@@ -377,7 +378,7 @@ QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const floa
     float prop = targetArea / srcArea;
 
     QMap<float, float>::iterator iter = result.begin();
-    while (iter!=result.cend() ) {
+    while (iter!=result.end() ) {
         iter.value() *= prop;
         ++iter;
     }

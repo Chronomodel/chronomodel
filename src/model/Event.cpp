@@ -92,6 +92,7 @@ mLevel(0)
     mYz = 0.;
 
     // Valeurs utilisée pour les calculs
+    mThetaReduced = 0.;
     mY = 0.;
     mSy = 0.;
     mW = 0.;
@@ -166,6 +167,7 @@ void Event::copyFrom(const Event& event)
     mYz = event.mYz;
 
     // Valeurs utilisée pour les calculs
+    mThetaReduced = event.mThetaReduced;
     mY = event.mY;
     mSy = event.mSy;
     mW = event.mW;

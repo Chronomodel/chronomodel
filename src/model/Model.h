@@ -97,9 +97,9 @@ public:
     double getBandwidth() const;
     int getFFTLength() const;
     
-    void setThresholdToAllModel();
+    void setThresholdToAllModel(const double threshold);
     void initDensities();
-    void updateDensities();
+    void updateDensities(int fftLen, double bandwidth, double threshold);
 
     // Computed from trace using FFT :
     virtual void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double bandwidth);

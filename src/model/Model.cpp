@@ -62,9 +62,9 @@ mProject(nullptr),
 mNumberOfPhases(0),
 mNumberOfEvents(0),
 mNumberOfDates(0),
-mThreshold(95.0),
-mFFTLength(1024),
-mBandwidth(1.06)
+mThreshold(0.0),
+mFFTLength(0),
+mBandwidth(0.0)
 {
     
 }
@@ -1039,9 +1039,8 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 void Model::setBandwidth(const double bandwidth)
 {  
     if (mBandwidth != bandwidth) {
+        updateDensities(mFFTLength, bandwidth, mThreshold);
         mBandwidth = bandwidth;
-
-        updateDensities();
 
         emit newCalculus();
     }
@@ -1050,9 +1049,8 @@ void Model::setBandwidth(const double bandwidth)
 void Model::setFFTLength(const int FFTLength)
 {
     if (mFFTLength != FFTLength) {
+        updateDensities(FFTLength, mBandwidth, mThreshold);
         mFFTLength = FFTLength;
-
-        updateDensities();
 
         emit newCalculus();
     }
@@ -1064,22 +1062,19 @@ void Model::setFFTLength(const int FFTLength)
  */
 void Model::setThreshold(const double threshold)
 {
-    if (threshold != mThreshold) {
-        mThreshold = threshold;
-        
-        updateDensities();
+    if (mThreshold != threshold) {
+        generateCredibility(threshold);
+        generateHPD(threshold);
 
-   /*     generateCredibility(mThreshold);
-        generateHPD(mThreshold);
-        setThresholdToAllModel();
-        */
-        
+        setThresholdToAllModel(threshold);
+
         emit newCalculus();
     }
 }
 
-void Model::setThresholdToAllModel()
+void Model::setThresholdToAllModel(const double threshold)
 {
+    mThreshold = threshold;
     for (auto&& pEvent : mEvents) {
         if (pEvent->type() != Event::eKnown){
           pEvent->mTheta.mThresholdUsed = mThreshold;
@@ -1129,11 +1124,11 @@ void Model::initDensities()
 {
     // memo the new value of the Threshold inside all the part of the model: phases, events and dates
 
-    updateDensities();
+    updateDensities(1024, 1.06, 95.0);
 
 }
 
-void Model::updateDensities()
+void Model::updateDensities(int fftLen, double bandwidth, double threshold)
 {
     clearPosteriorDensities();
     // memo the new value of the Threshold inside all the part of the model: phases, events and dates
@@ -1141,10 +1136,14 @@ void Model::updateDensities()
 
     updateFormatSettings();
 
-    generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
+    generatePosteriorDensities(mChains, fftLen, bandwidth);
 
-    generateCredibility(mThreshold);
-    generateHPD(mThreshold);
+    generateCredibility(threshold);
+    generateHPD(threshold);
+
+    setThresholdToAllModel(threshold);
+    mBandwidth = bandwidth;
+    mFFTLength = fftLen;
 
     if (!mPhases.isEmpty()) {
         generateTempo();

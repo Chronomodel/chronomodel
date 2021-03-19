@@ -4,9 +4,10 @@
 #include <QString>
 #include <QProgressDialog>
 #include <QtTest>
+#include <QtWidgets>
 
 #include "ChronoApp.h"
-#include <QtWidgets>
+
 #include "MainController.h"
 #include "StdUtilities.h"
 #include "Functions.h"
@@ -14,15 +15,18 @@
 #include "Model.h"
 #include "Phase.h"
 #include "Event.h"
+#include "Generator.h"
+#include "Functions.h"
 
 #include "fftw3.h"
+
+# include "MCMCLoopChronocurve.h"
 
 #include <iostream>
 #include <cmath>
 #include <errno.h>
 //#include <fenv.h>
-#include "Generator.h"
-#include "Functions.h"
+
 
 
 
@@ -60,6 +64,10 @@ private Q_SLOTS:
     void tempo();
     void quantile();
     void quartileForTrace();
+
+    // test calcul chronoCurve
+    void calculMat();
+
 };
 
 ChronomodelTest::ChronomodelTest()
@@ -386,9 +394,9 @@ void ChronomodelTest::hpd()
     QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(densityHPD.mHPD, 95.);
   //  qDebug()<<"histo2 HPD"<<intervals[0].first<<intervals[0].second.first<<intervals[0].second.second;
 
-    QPair<double, double> answer = qMakePair<double, double> (181.253726753 , 217.061790521);
+    QPair<double, double> answer = qMakePair<double, double> (181.17834135537777 , 217.061790521);
 
-   QVERIFY(qFuzzyCompare(intervals[0].first, 94.9814736407));
+   QVERIFY(qFuzzyCompare(intervals[0].first, 95.0));
    QVERIFY(myFuzzyCompare(intervals[0].second.first, answer.first));
     /* obtain with ChronoModel v1.6
      * Posterior event date. :
@@ -629,28 +637,24 @@ void ChronomodelTest::quantile()
 {
     QVector<double> serie1;
     serie1 <<0.1<< 3.8<< 5.6 <<9.9 <<7.4 <<8.2 <<5.7 <<8.6 <<9.4<< 4.2 <<6.1<< 4.3<< 8.7 <<9.1 <<11.6 <<5.2 <<1.18<< 2.4<< 6.8<< 3.12;
-  for (double i(0.); i<=100.; i=i+25.) {
-        Quartiles q = quartilesTypeTest(serie1, 9, i/100. );
-qDebug()<< "serie1 "<<i << q.Q1;
+
+    Quartiles q;
+  for (int i =0.; i<=100.; i=i+25.) {
+        q = quartilesTypeTest(serie1, 9, (double)i/100. );
+       // QVERIFY(qFuzzyCompare(q.Q1 , 0.07518545614738946));
+        //qDebug()<< "serie1 "<<i << q.Q1;
     }
 
-/*     QVector<double> suite;
-    suite<<0<<1<<2<<3<<4<<5<<6<<7<<8<<9<<10;
 
-    for (double i(0.); i<=100.; i=i+10.) {
-        Quartiles q = quartilesTypeTest(suite, 1, i/100. );
-qDebug()<< "suite"<<i << q.Q1;
-    }
-*/
     QVector<double> serie2;
     serie2<< 0<<1<<2<<3<<4<<5<<6<<7<<8<<9<<10<<11<<12<<13<<14<<15<<16<<17<<18<<19<<20;
-      for (double i(0); i<=100.; i=i+25.)
+      for (int i=0; i<=100.; i=i+25.)
     {
-          Quartiles q = quartilesTypeTest(serie2, 9, i/100. );
-    qDebug()<< "serie2 "<<i << q.Q1;
+          Quartiles q = quartilesTypeTest(serie2, 9, (double)i/100. );
+          //qDebug()<< "serie2 "<<i << q.Q1;
      }
 
-qDebug()<<"---------------------------------------";
+      //qDebug()<<"---------------------------------------";
 /*     QVector<double> data12;
       data12 <<2<<3<<5<<7<<11<<13<<17<<19<<23<<29<<31<<37;
       int quantTy=2;
@@ -704,8 +708,220 @@ void ChronomodelTest::quartileForTrace()
     QVERIFY(cred.Q3 == 8.66);
 }
 
+//----------------- Test ChronoCurve
 
 
+// https://matrixcalc.org/fr/#%7B%7B3,4,5,6,7%7D,%7B8,9,10,11,12%7D,%7B13,14,15,16,17%7D,%7B18,19,20,21,22%7D,%7B23,24,25,26,27%7D%7D%2a%7B%7B31,32,33,34,35%7D,%7B36,37,38,39,40%7D,%7B41,42,43,44,45%7D,%7B46,47,48,49,50%7D,%7B51,52,53,54,55%7D%7D
+// https://www.dcode.fr/produit-matriciel#q1
+
+void ChronomodelTest::calculMat() {
+
+    std::vector<std::vector<double>> matA (5);
+    matA [0] = {{ 3.,  4.,  5,  6,  7}}; //line num 0
+    matA [1] = {{ 8,  9, 10, 11, 12}};
+    matA [2] = {{13, 14, 15, 16, 17}};
+    matA [3] = {{18, 19, 20, 21, 22}};
+    matA [4] = {{23, 24, 25, 26, 27}};
+
+    qDebug() <<"1 - test determinant matrix = 0";
+    double det = determinant(matA);
+
+    QVERIFY(det == 0);
+
+    std::vector<std::vector<double>> matB (5);
+    matB [0] = {{31, 32, 33, 34, 35}};
+    matB [1] = {{36, 37, 38, 39, 40}};
+    matB [2] = {{41, 42, 43, 44, 45}};
+    matB [3] = {{46, 47, 48, 49, 50}};
+    matB [4] = {{51, 52, 53, 54, 55}};
+
+    qDebug() <<"2 - test multiplication matrix";
+    std::vector<std::vector<double>> result = multiMatParMat0(matA, matB);
+
+    QVERIFY(result[0][0] == 1075);  QVERIFY(result[0][1] == 1100); QVERIFY(result[0][2] == 1125); QVERIFY(result[0][3] == 1150); QVERIFY(result[0][4] == 1175);
+    QVERIFY(result[1][0] == 2100);  QVERIFY(result[1][1] == 2150); QVERIFY(result[1][2] == 2200); QVERIFY(result[1][3] == 2250); QVERIFY(result[1][4] == 2300);
+    QVERIFY(result[2][0] == 3125);  QVERIFY(result[2][1] == 3200); QVERIFY(result[2][2] == 3275); QVERIFY(result[2][3] == 3350); QVERIFY(result[2][4] == 3425);
+    QVERIFY(result[3][0] == 4150);  QVERIFY(result[3][1] == 4250); QVERIFY(result[3][2] == 4350); QVERIFY(result[3][3] == 4450); QVERIFY(result[3][4] == 4550);
+    QVERIFY(result[4][0] == 5175);  QVERIFY(result[4][1] == 5300); QVERIFY(result[4][2] == 5425); QVERIFY(result[4][3] == 5550); QVERIFY(result[4][4] == 5675);
+
+    std::vector<std::vector<double>> matAs (2);
+    matAs [0] = {{ 1,  2}}; //col num 0
+    matAs [1] = {{ 3,  4}};
+
+    std::vector<std::vector<double>> matBs (2);
+    matBs [0] = {{ 5,  6}}; //col num 0
+    matBs [1] = {{ 7,  8}};
+
+    qDebug() <<"3 - test Strassen 1969 multiplication matrix";
+    Strassen S;
+    std::vector<std::vector<double>> resultStrassen = S.multiply(matAs, matBs);
+    QVERIFY(resultStrassen[0][0] == 19);  QVERIFY(resultStrassen[0][1] == 22);
+    QVERIFY(resultStrassen[1][0] == 43);  QVERIFY(resultStrassen[1][1] == 50);
+
+    resultStrassen = S.multiply(matA, matB);
+
+    QVERIFY(resultStrassen[0][0] == 1075);  QVERIFY(resultStrassen[0][1] == 1100); QVERIFY(resultStrassen[0][2] == 1125); QVERIFY(resultStrassen[0][3] == 1150); QVERIFY(resultStrassen[0][4] == 1175);
+    QVERIFY(resultStrassen[1][0] == 2100);  QVERIFY(resultStrassen[1][1] == 2150); QVERIFY(resultStrassen[1][2] == 2200); QVERIFY(resultStrassen[1][3] == 2250); QVERIFY(resultStrassen[1][4] == 2300);
+    QVERIFY(resultStrassen[2][0] == 3125);  QVERIFY(resultStrassen[2][1] == 3200); QVERIFY(resultStrassen[2][2] == 3275); QVERIFY(resultStrassen[2][3] == 3350); QVERIFY(resultStrassen[2][4] == 3425);
+    QVERIFY(resultStrassen[3][0] == 4150);  QVERIFY(resultStrassen[3][1] == 4250); QVERIFY(resultStrassen[3][2] == 4350); QVERIFY(resultStrassen[3][3] == 4450); QVERIFY(resultStrassen[3][4] == 4550);
+    QVERIFY(resultStrassen[4][0] == 5175);  QVERIFY(resultStrassen[4][1] == 5300); QVERIFY(resultStrassen[4][2] == 5425); QVERIFY(resultStrassen[4][3] == 5550); QVERIFY(resultStrassen[4][4] == 5675);
+
+    qDebug() <<"4 - test  addMatEtMat0 matrix";
+    result = addMatEtMat0(matA, matB);
+
+    QVERIFY(result[0][0] == 34); QVERIFY(result[0][1] == 36); QVERIFY(result[0][2] == 38); QVERIFY(result[0][3] == 40); QVERIFY(result[0][4] == 42);
+    QVERIFY(result[1][0] == 44); QVERIFY(result[1][1] == 46); QVERIFY(result[1][2] == 48); QVERIFY(result[1][3] == 50); QVERIFY(result[1][4] == 52);
+    QVERIFY(result[2][0] == 54); QVERIFY(result[2][1] == 56); QVERIFY(result[2][2] == 58); QVERIFY(result[2][3] == 60); QVERIFY(result[2][4] == 62);
+    QVERIFY(result[3][0] == 64); QVERIFY(result[3][1] == 66); QVERIFY(result[3][2] == 68); QVERIFY(result[3][3] == 70); QVERIFY(result[3][4] == 72);
+    QVERIFY(result[4][0] == 74); QVERIFY(result[4][1] == 76); QVERIFY(result[4][2] == 78); QVERIFY(result[4][3] == 80); QVERIFY(result[4][4] == 82);
+
+    qDebug() <<"4 - test Strassen 1969 addition matrix";
+    result = S.add(matA, matB);
+
+    QVERIFY(result[0][0] == 34); QVERIFY(result[0][1] == 36); QVERIFY(result[0][2] == 38); QVERIFY(result[0][3] == 40); QVERIFY(result[0][4] == 42);
+    QVERIFY(result[1][0] == 44); QVERIFY(result[1][1] == 46); QVERIFY(result[1][2] == 48); QVERIFY(result[1][3] == 50); QVERIFY(result[1][4] == 52);
+    QVERIFY(result[2][0] == 54); QVERIFY(result[2][1] == 56); QVERIFY(result[2][2] == 58); QVERIFY(result[2][3] == 60); QVERIFY(result[2][4] == 62);
+    QVERIFY(result[3][0] == 64); QVERIFY(result[3][1] == 66); QVERIFY(result[3][2] == 68); QVERIFY(result[3][3] == 70); QVERIFY(result[3][4] == 72);
+    QVERIFY(result[4][0] == 74); QVERIFY(result[4][1] == 76); QVERIFY(result[4][2] == 78); QVERIFY(result[4][3] == 80); QVERIFY(result[4][4] == 82);
+
+
+    qDebug() <<"5 - test transpose0 matrix";
+    result = transpose0(matA);
+
+    QVERIFY(result[0][0] == 3); QVERIFY(result[0][1] == 8);  QVERIFY(result[0][2] == 13); QVERIFY(result[0][3] == 18); QVERIFY(result[0][4] == 23);
+    QVERIFY(result[1][0] == 4); QVERIFY(result[1][1] == 9);  QVERIFY(result[1][2] == 14); QVERIFY(result[1][3] == 19); QVERIFY(result[1][4] == 24);
+    QVERIFY(result[2][0] == 5); QVERIFY(result[2][1] == 10); QVERIFY(result[2][2] == 15); QVERIFY(result[2][3] == 20); QVERIFY(result[2][4] == 25);
+    QVERIFY(result[3][0] == 6); QVERIFY(result[3][1] == 11); QVERIFY(result[3][2] == 16); QVERIFY(result[3][3] == 21); QVERIFY(result[3][4] == 26);
+    QVERIFY(result[4][0] == 7); QVERIFY(result[4][1] == 12); QVERIFY(result[4][2] == 17); QVERIFY(result[4][3] == 22); QVERIFY(result[4][4] == 27);
+
+    std::vector<std::vector<double>> matC (5);
+    matC [0] = {{ 3.,  4.,  5,  6,  0}};
+    matC [1] = {{ 8,  9, 10, 0, 12}};
+    matC [2] = {{13, 14, 0, 16, 17}};
+    matC [3] = {{18, 0, 20, 21, 22}};
+    matC [4] = {{0, 24, 25, 26, 27}};
+
+    qDebug() <<"6 - test determinant matrix";
+    det = determinant(matC);
+
+    QVERIFY(det == 1271190);
+
+    qDebug() <<"7 - test cofactor0 matrix";
+    result = cofactor0(matC);
+
+    QVERIFY(result[0][0] == 95575);  QVERIFY(result[0][1] == 86170);  QVERIFY(result[0][2] == 71749);  QVERIFY(result[0][3] == 46840);  QVERIFY(result[0][4] == -188135);
+    QVERIFY(result[1][0] == 48550);  QVERIFY(result[1][1] == 44770);  QVERIFY(result[1][2] == 38974);  QVERIFY(result[1][3] == -86600); QVERIFY(result[1][4] == 7510);
+    QVERIFY(result[2][0] == 26605);  QVERIFY(result[2][1] == 25450);  QVERIFY(result[2][2] == -61067); QVERIFY(result[2][3] == 20620);  QVERIFY(result[2][4] == 14065);
+    QVERIFY(result[3][0] == 13900);  QVERIFY(result[3][1] == -52640); QVERIFY(result[3][2] == 14824);  QVERIFY(result[3][3] == 15790);  QVERIFY(result[3][4] == 17860);
+    QVERIFY(result[4][0] == -49655); QVERIFY(result[4][1] == 6970);   QVERIFY(result[4][2] == 9049);   QVERIFY(result[4][3] == 12640);  QVERIFY(result[4][4] == 20335);
+
+    qDebug() <<"8 - test inverseMatSym0 matrix";
+    result = inverseMatSym0(matC);
+
+    QVERIFY(qFuzzyCompare(result[0][0] , 0.07518545614738946)); QVERIFY(qFuzzyCompare(result[0][1] , 0.03819255972749943));  QVERIFY(qFuzzyCompare(result[0][2] , 0.02092920806488409));  QVERIFY(qFuzzyCompare(result[0][3] , 0.01093463604968573));  QVERIFY(qFuzzyCompare(result[0][4] , -0.03906182396022624));
+    QVERIFY(qFuzzyCompare(result[1][0] , 0.06778687686341145)); QVERIFY(qFuzzyCompare(result[1][1] , 0.03521896805355611));  QVERIFY(qFuzzyCompare(result[1][2] , 0.02002061060895696));  QVERIFY(qFuzzyCompare(result[1][3] , -0.04141001738528465)); QVERIFY(qFuzzyCompare(result[1][4] , 0.005483051314122987));
+    QVERIFY(qFuzzyCompare(result[2][0] , 0.05644238862797851)); QVERIFY(qFuzzyCompare(result[2][1] , 0.03065946082017637));  QVERIFY(qFuzzyCompare(result[2][2] , -0.04803923882346463)); QVERIFY(qFuzzyCompare(result[2][3] , 0.01166151401442743));  QVERIFY(qFuzzyCompare(result[2][4] , 0.007118526734791809));
+    QVERIFY(qFuzzyCompare(result[3][0] , 0.03684736349404889)); QVERIFY(qFuzzyCompare(result[3][1] , -0.0681251425829341));  QVERIFY(qFuzzyCompare(result[3][2] , 0.01622102124780717));  QVERIFY(qFuzzyCompare(result[3][3] , 0.01242143188665738));  QVERIFY(qFuzzyCompare(result[3][4] , 0.009943438825037957));
+    QVERIFY(qFuzzyCompare(result[4][0] ,-0.1479991189358003));  QVERIFY(qFuzzyCompare(result[4][1] , 0.005907850124686318)); QVERIFY(qFuzzyCompare(result[4][2] , 0.01106443568624674));  QVERIFY(qFuzzyCompare(result[4][3] , 0.01404982732715015));  QVERIFY(qFuzzyCompare(result[4][4] , 0.01599682187556542));
+
+
+    std::vector<std::vector<double>> matK2 (4); //Positive and Symetric matrix
+    matK2 [0] = {{ 1., 1, 1, 1}};
+    matK2 [1] = {{ 1,  5, 5, 5}};
+    matK2 [2] = {{ 1,  5, 14, 14}};
+    matK2 [3] = {{ 1,  5, 14, 15}};
+
+    qDebug() <<"9 - test choleskyLL0 matrix N = 4";
+    result = choleskyLL0(matK2);
+
+    QVERIFY(result[0][0] == 1); QVERIFY(result[0][1] == 0); QVERIFY(result[0][2] == 0); QVERIFY(result[0][3] == 0);
+    QVERIFY(result[1][0] == 1); QVERIFY(result[1][1] == 2); QVERIFY(result[1][2] == 0); QVERIFY(result[1][3] == 0);
+    QVERIFY(result[2][0] == 1); QVERIFY(result[2][1] == 2); QVERIFY(result[2][2] == 3); QVERIFY(result[2][3] == 0);
+    QVERIFY(result[3][0] == 1); QVERIFY(result[3][1] == 2); QVERIFY(result[3][2] == 3); QVERIFY(result[3][3] == 1);
+
+    std::vector<std::vector<double>> matK (5); //Positive and Symetric matrix
+    matK [0] = {{ 3, 1, 1, 1, 1}};
+    matK [1] = {{ 1, 6, 4, 4, 4}};
+    matK [2] = {{ 1, 4, 7, 5, 5}};
+    matK [3] = {{ 1, 4, 5, 9, 9}};
+    matK [4] = {{ 1, 4, 5, 9, 11.}};
+
+    qDebug() <<"10 - test choleskyLL0 matrix N = 5";
+    result = choleskyLL0(matK);
+
+    QVERIFY(qFuzzyCompare(result[0][0] , 1.732050807568877));  QVERIFY(qFuzzyCompare(result[0][1] , 0.));                QVERIFY(qFuzzyCompare(result[0][2] , 0.));                QVERIFY(qFuzzyCompare(result[0][3] , 0.));                QVERIFY(qFuzzyCompare(result[0][4] , 0.));
+    QVERIFY(qFuzzyCompare(result[1][0] , 0.5773502691896258)); QVERIFY(qFuzzyCompare(result[1][1] , 2.380476142847617)); QVERIFY(qFuzzyCompare(result[1][2] , 0.));                QVERIFY(qFuzzyCompare(result[1][3] , 0.));                QVERIFY(qFuzzyCompare(result[1][4] , 0.));
+    QVERIFY(qFuzzyCompare(result[2][0] , 0.5773502691896258)); QVERIFY(qFuzzyCompare(result[2][1] , 1.540308092430811)); QVERIFY(qFuzzyCompare(result[2][2] , 2.072225288683358)); QVERIFY(qFuzzyCompare(result[2][3] , 0.));                QVERIFY(qFuzzyCompare(result[2][4] , 0.));
+    QVERIFY(qFuzzyCompare(result[3][0] , 0.5773502691896258)); QVERIFY(qFuzzyCompare(result[3][1] , 1.540308092430811)); QVERIFY(qFuzzyCompare(result[3][2] , 1.107079263817136)); QVERIFY(qFuzzyCompare(result[3][3] , 2.251331417336179)); QVERIFY(qFuzzyCompare(result[3][4] , 0.));
+    QVERIFY(qFuzzyCompare(result[4][0] , 0.5773502691896258)); QVERIFY(qFuzzyCompare(result[4][1] , 1.540308092430811)); QVERIFY(qFuzzyCompare(result[4][2] , 1.107079263817136)); QVERIFY(qFuzzyCompare(result[4][3] , 2.251331417336179)); QVERIFY(qFuzzyCompare(result[4][4] , 1.414213562373095));
+
+
+qDebug() <<"11 - test decompositionCholesky matrix N = 5";
+    std::pair<std::vector<std::vector<double>>, std::vector<double>> pairResult;
+   // pairResult = choleskyDiagonal(matK);
+    pairResult = decompositionCholesky(matK, 0 , 0);
+
+    result = pairResult.first;
+
+    std::vector<double> diag = pairResult.second;
+
+qDebug() <<"12 - test choleskyLDL matrix N = 5";
+    std::pair<std::vector<std::vector<double>>, std::vector<double>> pairResult2;
+    pairResult2 = choleskyLDL(matK);
+
+
+    std::vector<std::vector<double>> result2 = pairResult2.first;
+
+    std::vector<double> diag2 = pairResult2.second;
+
+/*
+    QVERIFY(qFuzzyCompare(result[0][0] , 1.732050807568877)); QVERIFY(qFuzzyCompare(result[1][0] , 0.5773502691896258)); QVERIFY(qFuzzyCompare(result[2][0] , 0.5773502691896258)); QVERIFY(qFuzzyCompare(result[3][0] , 0.5773502691896258)); QVERIFY(qFuzzyCompare(result[4][0] , 0.5773502691896258));
+    QVERIFY(qFuzzyCompare(result[0][1] , 0.));                QVERIFY(qFuzzyCompare(result[1][1] , 2.380476142847617));  QVERIFY(qFuzzyCompare(result[2][1] , 1.540308092430811));  QVERIFY(qFuzzyCompare(result[3][1] , 1.540308092430811));  QVERIFY(qFuzzyCompare(result[4][1] , 1.540308092430811));
+    QVERIFY(qFuzzyCompare(result[0][2] , 0.));                QVERIFY(qFuzzyCompare(result[1][2] , 0.));                 QVERIFY(qFuzzyCompare(result[2][2] , 2.072225288683358));  QVERIFY(qFuzzyCompare(result[3][2] , 1.107079263817136));  QVERIFY(qFuzzyCompare(result[4][2] , 1.107079263817136));
+    QVERIFY(qFuzzyCompare(result[0][3] , 0.));                QVERIFY(qFuzzyCompare(result[1][3] , 0.));                 QVERIFY(qFuzzyCompare(result[2][3] , 0.));                 QVERIFY(qFuzzyCompare(result[3][3] , 2.251331417336179));  QVERIFY(qFuzzyCompare(result[4][3] , 2.251331417336179));
+    QVERIFY(qFuzzyCompare(result[0][4] , 0.));                QVERIFY(qFuzzyCompare(result[1][4] , 0.));                 QVERIFY(qFuzzyCompare(result[2][4] , 0.));                 QVERIFY(qFuzzyCompare(result[3][4] , 0.));                 QVERIFY(qFuzzyCompare(result[4][4] , 1.414213562373095));
+*/
+
+
+    qDebug() <<"12 - decompositionLU0 matrix 3x3";
+    std::vector<std::vector<double>> matLU0 (3);
+    matLU0 [0] = {{ 2,  -1, 0}}; //col num 0
+    matLU0 [1] = {{ -1,  2, -1}};
+    matLU0 [2] = {{ 0,  -1, 2}};
+    std::pair<std::vector<std::vector<double> >, std::vector<std::vector<double> > > pairMatrix;
+    pairMatrix =  decompositionLU0(matLU0);
+
+    // matrix L
+    std::vector<std::vector<double> > matL = pairMatrix.first;
+    QVERIFY(matL[0][0] == 1);    QVERIFY(matL[0][1] == 0);    QVERIFY(matL[0][2] == 0);
+    QVERIFY(qFuzzyCompare(matL[1][0] , -0.5)); QVERIFY(matL[1][1] == 1);    QVERIFY(matL[1][2] == 0);
+    QVERIFY(matL[2][0] == 0);     QVERIFY(qFuzzyCompare(matL[2][1] , -0.66666666666667));; QVERIFY(matL[2][2] == 1);
+
+    // matrix U
+    std::vector<std::vector<double> > matU = pairMatrix.second;
+    QVERIFY(matU[0][0] == 2); QVERIFY(matU[0][1] == -1);  QVERIFY(matU[0][2] == 0);
+    QVERIFY(matU[1][0] == 0); QVERIFY(matU[1][1] == 1.5); QVERIFY(matU[1][2] == -1);
+    QVERIFY(matU[2][0] == 0); QVERIFY(matU[2][1] == 0);   QVERIFY(qFuzzyCompare(matU[2][2] , 1.333333333333));
+
+
+    qDebug() <<"12 - decompositionLU0 matrix 5x5";
+    pairMatrix =  decompositionLU0(matK);
+    matL = pairMatrix.first;
+qDebug() <<matL[2][1];
+    QVERIFY(qFuzzyCompare(matL[0][0] , 1.));                 QVERIFY(qFuzzyCompare(matL[0][1] , 0.));                 QVERIFY(qFuzzyCompare(matL[0][2] , 0.));                 QVERIFY(qFuzzyCompare(matL[0][3] , 0.)); QVERIFY(qFuzzyCompare(matL[0][4] , 0.));
+    QVERIFY(qFuzzyCompare(matL[1][0] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(matL[1][1] , 1. ));                QVERIFY(qFuzzyCompare(matL[1][2] , 0.));                 QVERIFY(qFuzzyCompare(matL[1][3] , 0.)); QVERIFY(qFuzzyCompare(matL[1][4] , 0.));
+    QVERIFY(qFuzzyCompare(matL[2][0] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(matL[2][1] , 0.6470588235294117)); QVERIFY(qFuzzyCompare(matL[2][2] , 1. ));                QVERIFY(qFuzzyCompare(matL[2][3] , 0.)); QVERIFY(qFuzzyCompare(matL[2][4] , 0.));
+    QVERIFY(qFuzzyCompare(matL[3][0] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(matL[3][1] , 0.6470588235294117)); QVERIFY(qFuzzyCompare(matL[3][2] , 0.5342465753424658)); QVERIFY(qFuzzyCompare(matL[3][3] , 1.)); QVERIFY(qFuzzyCompare(matL[3][4] , 0.));
+    QVERIFY(qFuzzyCompare(matL[4][0] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(matL[4][1] , 0.6470588235294117)); QVERIFY(qFuzzyCompare(matL[4][2] , 0.5342465753424658)); QVERIFY(qFuzzyCompare(matL[4][3] , 1.)); QVERIFY(qFuzzyCompare(matL[4][4] , 1.));
+
+    matU = pairMatrix.second;
+    QVERIFY(qFuzzyCompare(matU[0][0] , 3.)); QVERIFY(qFuzzyCompare(matU[0][1] , 1.));                 QVERIFY(qFuzzyCompare(matU[0][2] , 1.));                 QVERIFY(qFuzzyCompare(matU[0][3] , 1.));                QVERIFY(qFuzzyCompare(matU[0][4] , 1.));
+    QVERIFY(qFuzzyCompare(matU[1][0] , 0.)); QVERIFY(qFuzzyCompare(matU[1][1] , 5.666666666666667 )); QVERIFY(qFuzzyCompare(matU[1][2] , 3.666666666666667));  QVERIFY(qFuzzyCompare(matU[1][3] , 3.666666666666667)); QVERIFY(qFuzzyCompare(matU[1][4] , 3.666666666666667));
+    QVERIFY(qFuzzyCompare(matU[2][0] , 0.)); QVERIFY(qFuzzyCompare(matU[2][1] , 0.));                 QVERIFY(qFuzzyCompare(matU[2][2] , 4.294117647058824 )); QVERIFY(qFuzzyCompare(matU[2][3] , 2.294117647058824)); QVERIFY(qFuzzyCompare(matU[2][4] , 2.294117647058824));
+    QVERIFY(qFuzzyCompare(matU[3][0] , 0.)); QVERIFY(qFuzzyCompare(matU[3][1] , 0.));                 QVERIFY(qFuzzyCompare(matU[3][2] , 0.));                 QVERIFY(qFuzzyCompare(matU[3][3] , 5.068493150684931)); QVERIFY(qFuzzyCompare(matU[3][4] , 5.068493150684931));
+    QVERIFY(qFuzzyCompare(matU[4][0] , 0.)); QVERIFY(qFuzzyCompare(matU[4][1] , 0.));                 QVERIFY(qFuzzyCompare(matU[4][2] , 0.));                 QVERIFY(qFuzzyCompare(matU[4][3] , 0.));                QVERIFY(qFuzzyCompare(matU[4][4] , 2.));
+
+}
 
 QTEST_APPLESS_MAIN(ChronomodelTest)
 

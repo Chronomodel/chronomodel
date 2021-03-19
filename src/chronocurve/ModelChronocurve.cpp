@@ -506,9 +506,9 @@ void ModelChronocurve::clearTraces()
     mAlphaLissage.reset();
 }
 
-void ModelChronocurve::setThresholdToAllModel()
+void ModelChronocurve::setThresholdToAllModel(const double threshold)
 {
-    Model::setThresholdToAllModel();
+    Model::setThresholdToAllModel(threshold);
     
     for (Event*& event : mEvents)
         event->mVG.mThresholdUsed = mThreshold;

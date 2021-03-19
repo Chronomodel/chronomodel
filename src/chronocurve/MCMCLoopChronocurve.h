@@ -68,13 +68,16 @@ protected:
     
 private:
     long double h_YWI_AY(SplineMatrices& matrices, QList<Event *> & lEvents, const double alphaLissage);
-    long double h_YWI_AY_composante(SplineMatrices& matrices, QList<Event*> lEvents, const double alphaLissage);
+  //  long double h_YWI_AY_composante(SplineMatrices& matrices, QList<Event*> lEvents, const double alphaLissage);
+    long double h_YWI_AY_composanteX(SplineMatrices& matrices, QList<Event*> lEvents, const double alphaLissage);
+    long double h_YWI_AY_composanteY(SplineMatrices& matrices, QList<Event*> lEvents, const double alphaLissage);
+    long double h_YWI_AY_composanteZ(SplineMatrices& matrices, QList<Event*> lEvents, const double alphaLissage);
     double h_alpha(SplineMatrices& matrices, const int nb_noeuds, const double &alphaLissage);
     double h_theta(QList<Event*> lEvents);
     double h_VG(QList<Event*> lEvents);
     
    // double h_YWI_AYX(SplineMatrices& matrices, QList<double> & lX, const double alphaLissage);
-    long double h_YWI_AY_composanteX(SplineMatrices& matrices, QList<double> lX, const double alphaLissage);
+ //   long double h_YWI_AY_composanteX(SplineMatrices& matrices, QList<double> lX, const double alphaLissage);
     //double h_alphaX(SplineMatrices& matrices, const int nb_noeuds, const double &alphaLissage);
   //  double h_thetaX(QList<double> lX);
    // double h_VGX(QList<double> lX);
@@ -86,48 +89,41 @@ private:
     // Fonctions anciennement liées à do_cravate :
     std::vector<double> createDiagWInv(const QList<Event*>& lEvents);
     
-    void orderEventsByTheta(QList<Event *> & lEvents);
-    void spreadEventsTheta(QList<Event *> & lEvents, double minStep = 1e-6);
-    void reduceEventsTheta(QList<Event *> & lEvents);
+    void orderEventsByTheta(QList<Event *>& lEvents);
+    void orderEventsByThetaReduced(QList<Event*>& lEvents);
+
+    long double minimalThetaDifference(QList<Event *>& lEvents);
+    long double minimalThetaReducedDifference(QList<Event *>& lEvents);
+
+    void spreadEventsTheta(QList<Event *>& lEvents, double minStep = 1e-6);
+    void spreadEventsThetaReduced(QList<Event *>& lEvents, double minStep = 1e-9);
+
+    void reduceEventsTheta(QList<Event *>& lEvents);
     double reduceTime(double t);
-    void saveEventsTheta(QList<Event *> & lEvents);
-    void restoreEventsTheta(QList<Event *> & lEvents);
+    void saveEventsTheta(QList<Event *>& lEvents);
+    void restoreEventsTheta(QList<Event *>& lEvents);
     std::map<int, double> mThetasMemo;
     
     
     
-    std::vector<double> calculVecH(const QList<Event *> &lEvents);
+    std::vector<double> calculVecH(const QList<Event *>& lEvents);
   //  std::vector<double> calculVecHX(const QList<double> &lX);
 
-    std::vector<double> getThetaEventVector(const QList<Event *> & lEvents);
-    std::vector<double> getYEventVector(const QList<Event *> &lEvents);
+    std::vector<double> getThetaEventVector(const QList<Event *>& lEvents);
+    std::vector<double> getYEventVector(const QList<Event *>& lEvents);
     
 
-    std::vector<std::vector<double>> calculMatR(const QList<Event *> & lEvents);
-    std::vector<std::vector<double>> calculMatQ(const QList<Event *> &lEvents);
+    std::vector<std::vector<double>> calculMatR(const QList<Event *>& lEvents);
+    std::vector<std::vector<double>> calculMatQ(const QList<Event *>&lEvents);
  //   std::vector<std::vector<double>> calculMatRX(const QList<double> &lX);
  //   std::vector<std::vector<double>> calculMatQX(const QList<double> &lX);
 
 
-    std::vector<std::vector<double>> transpose(const std::vector<std::vector<double>>& matrix, const int nbDiag);
-    std::vector<std::vector<double>> multiMatParDiag(const std::vector<std::vector<double>>& matrix, const std::vector<double>& diag, const int nbBandes);
-    std::vector<std::vector<double>> multiDiagParMat(const std::vector<double>& diag, const std::vector<std::vector<double>>& matrix, const int nbBandes);
-    std::vector<double> multiMatParVec(const std::vector<std::vector<double>>& matrix, const std::vector<double>& vec, const int nbBandes);
-    std::vector<std::vector<double>> addMatEtMat(const std::vector<std::vector<double>>& matrix1, const std::vector<std::vector<double>>& matrix2, const int nbBandes);
-    std::vector<std::vector<double>> addIdentityToMat(const std::vector<std::vector<double>>& matrix);
-    std::vector<std::vector<double>> multiConstParMat(const std::vector<std::vector<double>>& matrix, const double c, const int nbBandes);
-    std::vector<std::vector<double>> multiMatParMat(const std::vector<std::vector<double>>& matrix1, const std::vector<std::vector<double>>& matrix2, const int nbBandes1, const int nbBandes2);
-    std::vector<std::vector<double>> inverseMatSym(const std::vector<std::vector<double>>& matrix1, const std::vector<double>& matrix2, const int nbBandes, const int shift);
-    double sumAllMatrix(const std::vector<std::vector<double>>& matrix);
-    double sumAllVector(const std::vector<double>& matrix);
-    
-    std::pair<std::vector<std::vector<double> >, std::vector<double> > decompositionCholesky(const std::vector<std::vector<double>>& matrix, const int nbBandes, const int shift);
-    
-    std::vector<double> resolutionSystemeLineaireCholesky(std::vector<std::vector<double>> matL, std::vector<double> matD, std::vector<double> vecQtY);
-    
+
+
     SplineMatrices prepareCalculSpline(const QList<Event *> & sortedEvents);
     SplineMatrices prepareCalculSplineX(const QList<double>& lX);
-    SplineResults calculSpline(SplineMatrices& matrices);
+    SplineResults calculSpline(SplineMatrices& matrices, std::vector<double> &vecY);
     
     std::vector<double> calculMatInfluence(const SplineMatrices& matrices, const SplineResults& splines, const int nbBandes);
     std::vector<double> calculSplineError(const SplineMatrices& matrices, const SplineResults& splines);

@@ -157,7 +157,8 @@ public:
     double mYy;
     double mYz;
     
-    // Valeurs utilisée pour les calculs
+    // Valeurs utilisées pour les calculs
+    double mThetaReduced;
     double mY;
     double mSy;
     double mW;

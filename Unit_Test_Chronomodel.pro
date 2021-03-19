@@ -1,41 +1,40 @@
-/* ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# Copyright or © or Copr. CNRS	2014 - 2018
+#
+# Authors :
+#	Philippe LANOS
+#	Helori LANOS
+# 	Philippe DUFRESNE
 
-Copyright or © or Copr. CNRS	2014 - 2018
+# This software is a computer program whose purpose is to
+#create chronological models of archeological data using Bayesian statistics.
+#
+# This software is governed by the CeCILL V2.1 license under French law and
+# abiding by the rules of distribution of free software.  You can  use,
+# modify and/ or redistribute the software under the terms of the CeCILL
+# license as circulated by CEA, CNRS and INRIA at the following URL
+# "http://www.cecill.info".
+#
+# As a counterpart to the access to the source code and  rights to copy,
+# modify and redistribute granted by the license, users are provided only
+# with a limited warranty  and the software's author,  the holder of the
+# economic rights,  and the successive licensors  have only  limited
+# liability.
 
-Authors :
-	Philippe LANOS
-	Helori LANOS
- 	Philippe DUFRESNE
-
-This software is a computer program whose purpose is to
-create chronological models of archeological data using Bayesian statistics.
-
-This software is governed by the CeCILL V2.1 license under French law and
-abiding by the rules of distribution of free software.  You can  use,
-modify and/ or redistribute the software under the terms of the CeCILL
-license as circulated by CEA, CNRS and INRIA at the following URL
-"http://www.cecill.info".
-
-As a counterpart to the access to the source code and  rights to copy,
-modify and redistribute granted by the license, users are provided only
-with a limited warranty  and the software's author,  the holder of the
-economic rights,  and the successive licensors  have only  limited
-liability.
-
-In this respect, the user's attention is drawn to the risks associated
-with loading,  using,  modifying and/or developing or reproducing the
-software by the user in light of its specific status of free software,
-that may mean  that it is complicated to manipulate,  and  that  also
-therefore means  that it is reserved for developers  and  experienced
-professionals having in-depth computer knowledge. Users are therefore
-encouraged to load and test the software's suitability as regards their
-requirements in conditions enabling the security of their systems and/or
-data to be ensured and,  more generally, to use and operate it in the
-same conditions as regards security.
-
-The fact that you are presently reading this means that you have had
-knowledge of the CeCILL V2.1 license and that you accept its terms.
---------------------------------------------------------------------- */
+# In this respect, the user's attention is drawn to the risks associated
+# with loading,  using,  modifying and/or developing or reproducing the
+# software by the user in light of its specific status of free software,
+# that may mean  that it is complicated to manipulate,  and  that  also
+# therefore means  that it is reserved for developers  and  experienced
+# professionals having in-depth computer knowledge. Users are therefore
+# encouraged to load and test the software's suitability as regards their
+# requirements in conditions enabling the security of their systems and/or
+# data to be ensured and,  more generally, to use and operate it in the
+# same conditions as regards security.
+#
+# The fact that you are presently reading this means that you have had
+# knowledge of the CeCILL V2.1 license and that you accept its terms.
+# --------------------------------------------------------------------- */
 
 QT       += testlib
 
@@ -82,7 +81,36 @@ DEFINES += SRCDIR=\\\"$$PWD/\\\"
 # In the future we'll need to increase to C++17
 # which offered namespace std::experimental::parallel;
 #########################################
-CONFIG += c++11
+CONFIG += c++20
+
+#########################################
+# MacOS specific settings
+#########################################
+macx{
+    message("MacOSX specific settings")
+        # Icon file
+        # ICON = $$PRO_PATH/icon/Chronomodel.icns
+
+        # This is the SDK used to compile : change it to whatever latest version of mac you are using.
+        # to determine which version of the macOS SDK is installed with xcode? type on a terminal
+        # xcodebuild -showsdks
+
+
+        QMAKESPEC = macx-clang
+        QMAKE_MAC_SDK = macosx
+        message("QMAKE_MAC_SDK = $$QMAKE_MAC_SDK")
+
+        # This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
+        QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
+        # Define a set of resources to deploy inside the bundle :
+        #RESOURCES_FILES.path = Contents/Resources
+        #RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
+        #RESOURCES_FILES.files += $$PRO_PATH/deploy/ABOUT.html
+        #RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel.png
+        #RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
+        #QMAKE_BUNDLE_DATA += RESOURCES_FILES
+
+}
 
 #########################################
 # Windows specific settings
@@ -115,12 +143,14 @@ USE_PLUGIN_GAUSS = 1
 USE_PLUGIN_14C = 1
 USE_PLUGIN_TL = 1
 USE_PLUGIN_AM = 1
+USE_PLUGIN_F14C = 1
 
 DEFINES += "USE_PLUGIN_UNIFORM=$${USE_PLUGIN_UNIFORM}"
 DEFINES += "USE_PLUGIN_GAUSS=$${USE_PLUGIN_GAUSS}"
 DEFINES += "USE_PLUGIN_14C=$${USE_PLUGIN_14C}"
 DEFINES += "USE_PLUGIN_TL=$${USE_PLUGIN_TL}"
 DEFINES += "USE_PLUGIN_AM=$${USE_PLUGIN_AM}"
+DEFINES += "USE_PLUGIN_F14C=$${USE_PLUGIN_F14C}"
 
 #########################################
 # FFTW
@@ -134,16 +164,11 @@ macx{
         # The generated XCode project will locate FFTW files in the project directory and statically link against it.
 
         # this is to include fftw.h in the code :
-        #INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac    # this is the Chronomodel Code
-        INCLUDEPATH += lib/FFTW/mac
-
+        INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac
 
         # Link the application with FFTW library
         # If no dylib are present, static libs (.a) are used => that's why we moved .dylib files in a "dylib" folder.
-        #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3   # this is the Chronomodel Code
-        LIBS += -L"lib/FFTW/mac" -lfftw3
-
-
+        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3
         # If we were deploying FFTW as a dynamic library, we should :
         # - Move all files from "lib/FFTW/mac/dylib" to "lib/FFTW/mac"
         # - Uncomment the lines below to copy dylib files to the bundle
@@ -198,7 +223,9 @@ INCLUDEPATH += src/plugins/plugin_am/
 INCLUDEPATH += src/plugins/plugin_gauss/
 INCLUDEPATH += src/plugins/plugin_tl/
 INCLUDEPATH += src/plugins/plugin_uniform/
+INCLUDEPATH += src/plugins/plugin_F14C/
 INCLUDEPATH += src/project/
+INCLUDEPATH += src/chronocurve/
 INCLUDEPATH += src/ui/
 INCLUDEPATH += src/ui/dialogs/
 INCLUDEPATH += src/ui/graphs/
@@ -216,7 +243,7 @@ INCLUDEPATH += src/utilities/
 # HEADERS
 #########################################
 
-HEADERS += src/MainController.h
+#HEADERS += src/MainController.h
 HEADERS += src/AppSettings.h
 HEADERS += src/StateKeys.h
 HEADERS += src/ChronoApp.h
@@ -247,33 +274,41 @@ HEADERS += src/plugins/PluginRefCurveSettingsView.h
 HEADERS += src/plugins/PluginSettingsViewAbstract.h
 HEADERS += src/plugins/RefCurve.h
 
-equals(USE_PLUGIN_TL, 1){
-        HEADERS += src/plugins/plugin_tl/PluginTL.h
-        HEADERS += src/plugins/plugin_tl/PluginTLForm.h
-        HEADERS += src/plugins/plugin_tl/PluginTLRefView.h
-        HEADERS += src/plugins/plugin_tl/PluginTLSettingsView.h
+equals(USE_PLUGIN_TL, 1) {
+    HEADERS += src/plugins/plugin_tl/PluginTL.h
+    HEADERS += src/plugins/plugin_tl/PluginTLForm.h
+    HEADERS += src/plugins/plugin_tl/PluginTLRefView.h
+    HEADERS += src/plugins/plugin_tl/PluginTLSettingsView.h
 }
-equals(USE_PLUGIN_14C, 1){
-        HEADERS += src/plugins/plugin_14C/Plugin14C.h
-        HEADERS += src/plugins/plugin_14C/Plugin14CForm.h
-        HEADERS += src/plugins/plugin_14C/Plugin14CRefView.h
-        HEADERS += src/plugins/plugin_14C/Plugin14CSettingsView.h
+equals(USE_PLUGIN_14C, 1) {
+    HEADERS += src/plugins/plugin_14C/Plugin14C.h
+    HEADERS += src/plugins/plugin_14C/Plugin14CForm.h
+    HEADERS += src/plugins/plugin_14C/Plugin14CRefView.h
+    HEADERS += src/plugins/plugin_14C/Plugin14CSettingsView.h
 }
-equals(USE_PLUGIN_GAUSS, 1){
-        HEADERS += src/plugins/plugin_gauss/PluginGauss.h
-        HEADERS += src/plugins/plugin_gauss/PluginGaussForm.h
-        HEADERS += src/plugins/plugin_gauss/PluginGaussRefView.h
-        HEADERS += src/plugins/plugin_gauss/PluginGaussSettingsView.h
+equals(USE_PLUGIN_GAUSS, 1) {
+    HEADERS += src/plugins/plugin_gauss/PluginGauss.h
+    HEADERS += src/plugins/plugin_gauss/PluginGaussForm.h
+    HEADERS += src/plugins/plugin_gauss/PluginGaussRefView.h
+    HEADERS += src/plugins/plugin_gauss/PluginGaussSettingsView.h
 }
-equals(USE_PLUGIN_AM, 1){
-        HEADERS += src/plugins/plugin_am/PluginMag.h
-        HEADERS += src/plugins/plugin_am/PluginMagForm.h
-        HEADERS += src/plugins/plugin_am/PluginMagRefView.h
-        HEADERS += src/plugins/plugin_am/PluginMagSettingsView.h
+equals(USE_PLUGIN_AM, 1) {
+    HEADERS += src/plugins/plugin_am/PluginMag.h
+    HEADERS += src/plugins/plugin_am/PluginMagForm.h
+    HEADERS += src/plugins/plugin_am/PluginMagRefView.h
+    HEADERS += src/plugins/plugin_am/PluginMagSettingsView.h
 }
-equals(USE_PLUGIN_UNIFORM, 1){
-        HEADERS += src/plugins/plugin_uniform/PluginUniform.h
-        HEADERS += src/plugins/plugin_uniform/PluginUniformForm.h
+equals(USE_PLUGIN_UNIFORM, 1) {
+    HEADERS += src/plugins/plugin_uniform/PluginUniform.h
+    HEADERS += src/plugins/plugin_uniform/PluginUniformForm.h
+    HEADERS += src/plugins/plugin_uniform/PluginUniformRefView.h
+    HEADERS += src/plugins/plugin_uniform/PluginUniformSettingsView.h
+}
+equals(USE_PLUGIN_F14C, 1) {
+    HEADERS += src/plugins/plugin_F14C/PluginF14C.h
+    HEADERS += src/plugins/plugin_F14C/PluginF14CForm.h
+    HEADERS += src/plugins/plugin_F14C/PluginF14CRefView.h
+    HEADERS += src/plugins/plugin_F14C/PluginF14CSettingsView.h
 }
 
 HEADERS += src/project/PluginManager.h
@@ -281,6 +316,12 @@ HEADERS += src/project/Project.h
 HEADERS += src/project/ProjectSettings.h
 HEADERS += src/project/SetProjectState.h
 HEADERS += src/project/StateEvent.h
+
+HEADERS += src/chronocurve/ChronocurveSettings.h
+HEADERS += src/chronocurve/ChronocurveSettingsView.h
+HEADERS += src/chronocurve/MCMCLoopChronocurve.h
+HEADERS += src/chronocurve/ModelChronocurve.h
+HEADERS += src/chronocurve/ChronocurveUtilities.h
 
 HEADERS += src/ui/dialogs/AboutDialog.h
 HEADERS += src/ui/dialogs/AppSettingsDialog.h
@@ -328,6 +369,8 @@ HEADERS += src/ui/panel_model/scenes/EventsScene.h
 HEADERS += src/ui/panel_model/scenes/PhaseItem.h
 HEADERS += src/ui/panel_model/scenes/PhasesScene.h
 
+HEADERS += src/ui/panel_results/GraphViewAlpha.h
+HEADERS += src/ui/panel_results/GraphViewCurve.h
 HEADERS += src/ui/panel_results/GraphViewDate.h
 HEADERS += src/ui/panel_results/GraphViewEvent.h
 HEADERS += src/ui/panel_results/GraphViewPhase.h
@@ -347,6 +390,8 @@ HEADERS += src/ui/widgets/Marker.h
 HEADERS += src/ui/widgets/RadioButton.h
 HEADERS += src/ui/widgets/ScrollCompressor.h
 HEADERS += src/ui/widgets/Tabs.h
+HEADERS += src/ui/widgets/SwitchAction.h
+HEADERS += src/ui/widgets/ChronocurveWidget.h
 
 HEADERS += src/ui/window/MainWindow.h
 HEADERS += src/ui/window/ProjectView.h
@@ -365,7 +410,7 @@ HEADERS += src/utilities/StdUtilities.h
 SOURCES += src/AppSettings.cpp
 SOURCES += src/ChronoApp.cpp
 #SOURCES += src/main.cpp # Don't use it while testing
-SOURCES += src/MainController.cpp
+#SOURCES += src/MainController.cpp
 
 SOURCES += src/mcmc/Functions.cpp
 SOURCES += src/mcmc/Generator.cpp
@@ -390,32 +435,40 @@ SOURCES += src/plugins/PluginRefCurveSettingsView.cpp
 SOURCES += src/plugins/RefCurve.cpp
 
 equals(USE_PLUGIN_TL, 1){
-        SOURCES += src/plugins/plugin_tl/PluginTL.cpp
-        SOURCES += src/plugins/plugin_tl/PluginTLForm.cpp
-        SOURCES += src/plugins/plugin_tl/PluginTLRefView.cpp
+    SOURCES += src/plugins/plugin_tl/PluginTL.cpp
+    SOURCES += src/plugins/plugin_tl/PluginTLForm.cpp
+    SOURCES += src/plugins/plugin_tl/PluginTLRefView.cpp
     SOURCES += src/plugins/plugin_tl/PluginTLSettingsView.cpp
 }
 equals(USE_PLUGIN_14C, 1){
-        SOURCES += src/plugins/plugin_14C/Plugin14C.cpp
-        SOURCES += src/plugins/plugin_14C/Plugin14CForm.cpp
-        SOURCES += src/plugins/plugin_14C/Plugin14CRefView.cpp
-        SOURCES += src/plugins/plugin_14C/Plugin14CSettingsView.cpp
+    SOURCES += src/plugins/plugin_14C/Plugin14C.cpp
+    SOURCES += src/plugins/plugin_14C/Plugin14CForm.cpp
+    SOURCES += src/plugins/plugin_14C/Plugin14CRefView.cpp
+    SOURCES += src/plugins/plugin_14C/Plugin14CSettingsView.cpp
 }
 equals(USE_PLUGIN_GAUSS, 1){
-        SOURCES += src/plugins/plugin_gauss/PluginGauss.cpp
-        SOURCES += src/plugins/plugin_gauss/PluginGaussForm.cpp
-        SOURCES += src/plugins/plugin_gauss/PluginGaussRefView.cpp
-        SOURCES += src/plugins/plugin_gauss/PluginGaussSettingsView.cpp
+    SOURCES += src/plugins/plugin_gauss/PluginGauss.cpp
+    SOURCES += src/plugins/plugin_gauss/PluginGaussForm.cpp
+    SOURCES += src/plugins/plugin_gauss/PluginGaussRefView.cpp
+    SOURCES += src/plugins/plugin_gauss/PluginGaussSettingsView.cpp
 }
 equals(USE_PLUGIN_AM, 1){
-        SOURCES += src/plugins/plugin_am/PluginMag.cpp
-        SOURCES += src/plugins/plugin_am/PluginMagForm.cpp
-        SOURCES += src/plugins/plugin_am/PluginMagRefView.cpp
-        SOURCES += src/plugins/plugin_am/PluginMagSettingsView.cpp
+    SOURCES += src/plugins/plugin_am/PluginMag.cpp
+    SOURCES += src/plugins/plugin_am/PluginMagForm.cpp
+    SOURCES += src/plugins/plugin_am/PluginMagRefView.cpp
+    SOURCES += src/plugins/plugin_am/PluginMagSettingsView.cpp
 }
 equals(USE_PLUGIN_UNIFORM, 1){
-        SOURCES += src/plugins/plugin_uniform/PluginUniform.cpp
-        SOURCES += src/plugins/plugin_uniform/PluginUniformForm.cpp
+    SOURCES += src/plugins/plugin_uniform/PluginUniform.cpp
+    SOURCES += src/plugins/plugin_uniform/PluginUniformForm.cpp
+    SOURCES += src/plugins/plugin_uniform/PluginUniformRefView.cpp
+    SOURCES += src/plugins/plugin_uniform/PluginUniformSettingsView.cpp
+}
+equals(USE_PLUGIN_F14C, 1){
+    SOURCES += src/plugins/plugin_F14C/PluginF14C.cpp
+    SOURCES += src/plugins/plugin_F14C/PluginF14CForm.cpp
+    SOURCES += src/plugins/plugin_F14C/PluginF14CRefView.cpp
+    SOURCES += src/plugins/plugin_F14C/PluginF14CSettingsView.cpp
 }
 
 SOURCES += src/project/PluginManager.cpp
@@ -423,6 +476,12 @@ SOURCES += src/project/Project.cpp
 SOURCES += src/project/ProjectSettings.cpp
 SOURCES += src/project/SetProjectState.cpp
 SOURCES += src/project/StateEvent.cpp
+
+SOURCES += src/chronocurve/ChronocurveSettings.cpp
+SOURCES += src/chronocurve/ChronocurveSettingsView.cpp
+SOURCES += src/chronocurve/MCMCLoopChronocurve.cpp
+SOURCES += src/chronocurve/ModelChronocurve.cpp
+SOURCES += src/chronocurve/ChronocurveUtilities.cpp
 
 SOURCES += src/ui/dialogs/AboutDialog.cpp
 SOURCES += src/ui/dialogs/AppSettingsDialog.cpp
@@ -467,6 +526,8 @@ SOURCES += src/ui/panel_model/scenes/EventsScene.cpp
 SOURCES += src/ui/panel_model/scenes/PhaseItem.cpp
 SOURCES += src/ui/panel_model/scenes/PhasesScene.cpp
 
+SOURCES += src/ui/panel_results/GraphViewAlpha.cpp
+SOURCES += src/ui/panel_results/GraphViewCurve.cpp
 SOURCES += src/ui/panel_results/GraphViewDate.cpp
 SOURCES += src/ui/panel_results/GraphViewEvent.cpp
 SOURCES += src/ui/panel_results/GraphViewPhase.cpp
@@ -486,6 +547,8 @@ SOURCES += src/ui/widgets/GroupBox.cpp
 SOURCES += src/ui/widgets/HelpWidget.cpp
 SOURCES += src/ui/widgets/Tabs.cpp
 SOURCES += src/ui/widgets/Marker.cpp
+SOURCES += src/ui/widgets/SwitchAction.cpp
+SOURCES += src/ui/widgets/ChronocurveWidget.cpp
 
 SOURCES += src/ui/window/MainWindow.cpp
 SOURCES += src/ui/window/ProjectView.cpp
