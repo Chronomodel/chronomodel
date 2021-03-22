@@ -78,24 +78,23 @@ Event::Method ModelUtilities::getEventMethodFromText(const QString& text)
 
 QString ModelUtilities::getEventMethodText(const Event::Method method)
 {
-    switch(method)
-    {
-        case Event::eMHAdaptGauss:
-        {
+    switch (method) {
+        case Event::eMHAdaptGauss:      
             return MHAdaptGaussStr;
-        }
+            break;
+
         case Event::eBoxMuller:
-        {
             return BoxMullerStr;
-        }
+            break;
+
         case Event::eDoubleExp:
-        {
             return DoubleExpStr;
-        }
+            break;
+
         default:
-        {
             return QObject::tr("Unknown");
-        }
+            break;
+
     }
 }
 
@@ -118,24 +117,19 @@ Date::DataMethod ModelUtilities::getDataMethodFromText(const QString& text)
 
 QString ModelUtilities::getDataMethodText(const Date::DataMethod method)
 {
-    switch(method)
-    {
+    switch (method) {
         case Date::eMHSymetric:
-        {
             return MHIndependantStr;
-        }
+            break;
         case Date::eInversion:
-        {
             return InversionStr;
-        }
+            break;
         case Date::eMHSymGaussAdapt:
-        {
             return MHSymGaussAdaptStr;
-        }
+            break;
         default:
-        {
             return QObject::tr("Unknown");
-        }
+            break;
     }
 }
 

@@ -1591,18 +1591,23 @@ void ResultsView::createByCurveGraph()
                 case ChronocurveSettings::eVariableTypeInclinaison :
                     rf.Ymean = event-> mYInc;
                     rf.Yerr = event->mSInc;
+                    break;
                 case ChronocurveSettings::eVariableTypeDeclinaison :
                     rf.Ymean = event-> mYDec;
                     rf.Yerr = event->mSInc / cos(event->mYInc * M_PI /180.);
+                    break;
                 case ChronocurveSettings::eVariableTypeIntensite :
                     rf.Ymean = event-> mYInc;
                     rf.Yerr = event->mSInc;
+                    break;
                 case ChronocurveSettings::eVariableTypeProfondeur :
                     rf.Ymean = event-> mYInc;
                     rf.Yerr = event->mSInc;
+                    break;
                 case ChronocurveSettings::eVariableTypeAutre :
                     rf.Ymean = event-> mYInc;
                     rf.Yerr = event->mSInc;
+                    break;
                 }
 
             } else {
@@ -1629,14 +1634,19 @@ void ResultsView::createByCurveGraph()
             switch (model->mChronocurveSettings.mVariableType) {
                  case ChronocurveSettings::eVariableTypeInclinaison :
                       graphX->setTitle(tr("Mean Inclination"));
+                      break;
                  case ChronocurveSettings::eVariableTypeDeclinaison :
                        graphX->setTitle(tr("Mean Declination"));
+                       break;
                  case ChronocurveSettings::eVariableTypeIntensite:
                       graphX->setTitle(tr("Mean Intensity"));
+                      break;
                  case ChronocurveSettings::eVariableTypeProfondeur:
                       graphX->setTitle(tr("Mean Detph"));
+                      break;
                  case ChronocurveSettings::eVariableTypeAutre:
                        graphX->setTitle(tr("Mean"));
+                       break;
             }
         } else {
             graphX->setTitle(tr("Mean Inclination"));
