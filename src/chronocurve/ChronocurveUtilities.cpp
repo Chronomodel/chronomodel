@@ -157,13 +157,13 @@ void display(const std::vector<double>& v)
     std::cout << std::endl;
 }
 
-std::vector<double> ChronocurveUtilities::definitionNoeuds(const std::vector<double>& tabPts, const double minStep)
+std::vector<long double> ChronocurveUtilities::definitionNoeuds(const std::vector<long double> &tabPts, const double minStep)
 {
    // display(tabPts);
     
     //std::vector<double> result = tabPts;
     //sort(result.begin(), result.end(), sortItems);
-    std::vector<double> result (tabPts);
+    std::vector<long double> result (tabPts);
     std::sort(result.begin(), result.end());
     
     // Espacement possible ?
@@ -229,7 +229,7 @@ std::vector<double> ChronocurveUtilities::definitionNoeuds(const std::vector<dou
             }
             
             if (endIndex != 0) {
-                qWarning( "=> On espace les valeurs entre les bornes %f et %f", result[startIndex - 1], result[i]);
+                qWarning( "=> On espace les valeurs entre les bornes %Lf et %Lf", result[startIndex - 1], result[i]);
                 
                 // On a la place d'espacer les valeurs !
                 // - La borne inférieure ne peut pas bouger (en startIndex-1)
@@ -387,19 +387,19 @@ QDataStream &operator<<( QDataStream& stream, const MCMCSplineComposante& spline
 {
     stream << (quint32) splineComposante.vecThetaEvents.size();
     for (auto& v : splineComposante.vecThetaEvents)
-        stream << v;
+        stream << (double)v;
 
     stream << (quint32) splineComposante.vecG.size();
     for (auto& v : splineComposante.vecG)
-        stream << v;
+        stream << (double)v;
 
     stream << (quint32) splineComposante.vecGamma.size();
     for (auto& v : splineComposante.vecGamma)
-        stream << v;
+        stream << (double)v;
 
     stream << (quint32) splineComposante.vecErrG.size();
     for (auto& v : splineComposante.vecErrG)
-        stream << v;
+        stream << (double)v;
 
     return stream;
 }
@@ -465,19 +465,19 @@ QDataStream &operator<<( QDataStream& stream, const PosteriorMeanGComposante& pM
 {
     stream << (quint32) pMGComposante.vecG.size();
     for (auto& v : pMGComposante.vecG)
-        stream << v;
+        stream << (double) v;
 
     stream << (quint32) pMGComposante.vecGP.size();
     for (auto& v : pMGComposante.vecGP)
-        stream << v;
+        stream << (double)v;
 
     stream << (quint32) pMGComposante.vecGS.size();
     for (auto& v : pMGComposante.vecGS)
-        stream << v;
+        stream << (double)v;
 
     stream << (quint32) pMGComposante.vecGErr.size();
     for (auto& v : pMGComposante.vecGErr)
-        stream << v;
+        stream << (double)v;
 
     return stream;
 }
@@ -523,3 +523,4 @@ QDataStream &operator>>( QDataStream &stream, PosteriorMeanG& pMeanG )
 
     return stream;
 }
+

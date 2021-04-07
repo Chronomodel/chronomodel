@@ -48,31 +48,31 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 typedef struct SplineMatrices
 {
-    std::vector<double> diagWInv;
-    std::vector<std::vector<double>> matR;
-    std::vector<std::vector<double>> matQ;
-    std::vector<std::vector<double>> matQT;
-    std::vector<std::vector<double>> matQTW_1Q;
-    std::vector<std::vector<double>> matQTQ;
+    std::vector<long double> diagWInv;
+    std::vector<std::vector<long double>> matR;
+    std::vector<std::vector<long double>> matQ;
+    std::vector<std::vector<long double>> matQT;
+    std::vector<std::vector<long double>> matQTW_1Q;
+    std::vector<std::vector<long double>> matQTQ;
 } SplineMatrices;
 
 typedef struct SplineResults
 {
-    std::vector<std::vector<double>> matB;
-    std::vector<std::vector<double>> matL;
-    std::vector<double> matD;
+    std::vector<std::vector<long double>> matB;
+    std::vector<std::vector<long double>> matL;
+    std::vector<long double> matD;
     
-    std::vector<double> vecG;
-    std::vector<double> vecGamma;
+    std::vector<long double> vecG;
+    std::vector<long double> vecGamma;
     
 } SplineResults;
 
 typedef struct MCMCSplineComposante
 {
-    std::vector<double> vecThetaEvents; // le noeud ti
-    std::vector<double> vecG;
-    std::vector<double> vecGamma;
-    std::vector<double> vecErrG;
+    std::vector<long double> vecThetaEvents; // le noeud ti
+    std::vector<long double> vecG;
+    std::vector<long double> vecGamma;
+    std::vector<long double> vecErrG;
     
 } MCMCSplineComposante;
 
@@ -92,10 +92,10 @@ QDataStream &operator>>( QDataStream& stream, MCMCSpline& spline );
 
 typedef struct PosteriorMeanGComposante
 {
-    std::vector<double> vecG;
-    std::vector<double> vecGP;
-    std::vector<double> vecGS;
-    std::vector<double> vecGErr;
+    std::vector<long double> vecG;
+    std::vector<long double> vecGP;
+    std::vector<long double> vecGS;
+    std::vector<long double> vecGErr;
     
 } PosteriorMeanGComposante;
 
@@ -113,15 +113,17 @@ typedef struct PosteriorMeanG
 QDataStream &operator<<( QDataStream &stream, const PosteriorMeanG& pMeanG );
 QDataStream &operator>>( QDataStream &stream, PosteriorMeanG& pMeanG );
 
-std::vector<double> calculVecH(const std::vector<double> &vec);
-std::vector<std::vector<double>> calculMatR(const std::vector<double>& vec);
-std::vector<std::vector<double>> calculMatQ(const std::vector<double>& vec);
+std::vector<long double> calculVecH(const std::vector<long double> &vec);
+std::vector<std::vector<long double>> calculMatR(const std::vector<long double>& vec);
+std::vector<std::vector<long double>> calculMatQ(const std::vector<long double>& vec);
 
 
 class ChronocurveUtilities
 {
 public:
-    std::vector<double> definitionNoeuds(const std::vector<double>& tabPts, const double minStep);
+    std::vector<long double> definitionNoeuds(const std::vector<long double>& tabPts, const double minStep);
+
 };
+
 
 #endif

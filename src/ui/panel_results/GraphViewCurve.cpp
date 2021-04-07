@@ -200,25 +200,58 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
     }
 
     double t;
-    double step = 1.;
+    double step = mSettings.mStep;
     //for (int tloop=mSettings.mTmin; tloop<=mSettings.mTmax; ++tloop) {
-    for (size_t idx = 0; idx <= mComposanteG.vecG.size() ; ++idx) {
+    /*
+     * Mettre ici le retour en coordonnée sphérique ou vectoriel
+     *
+     *   F:=sqrt(sqr(Gx)+sqr(Gy)+sqr(Gz));
+
+    Ic:=arcsinus(Gz/F);
+    Dc:=angleD(Gx,Gy);
+
+    Tab_chemin_IDF[iJ].IiJ:=Ic*Deg;
+    Tab_chemin_IDF[iJ].DiJ:=Dc*Deg;
+    Tab_chemin_IDF[iJ].FiJ:=F;
+
+    // Calcul de la boule d'erreur moyenne par moyenne quadratique
+    ErrGx:=Tab_parametrique[iJ].ErrGx;
+    ErrGy:=Tab_parametrique[iJ].ErrGy;
+    ErrGz:=Tab_parametrique[iJ].ErrGz;
+    ErrIDF:=sqrt((sqr(ErrGx)+sqr(ErrGy)+sqr(ErrGz))/3);
+
+// sauvegarde des erreurs sur chaque param�tre  - on convertit en degr�s pour I et D
+    Tab_chemin_IDF[iJ].ErrI:=(ErrIDF/Tab_chemin_IDF[iJ].Fij)*deg;
+    Tab_chemin_IDF[iJ].ErrD:=(ErrIDF/(Tab_chemin_IDF[iJ].Fij*cos(Tab_chemin_IDF[iJ].Iij*rad)))*deg;
+    Tab_chemin_IDF[iJ].ErrF:=ErrIDF;
+     *
+     *
+     */
+
+    for (size_t idx = 0; idx < mComposanteG.vecG.size() ; ++idx) {
 
         t = DateUtils::convertToAppSettingsFormat(idx*step + mSettings.mTmin);
-        curveG.mData.insert(t, mComposanteG.vecG[idx]);
-        curveGSup.mData.insert(t, mComposanteG.vecG[idx] + 1.96 * mComposanteG.vecGErr[idx]);
-        curveGInf.mData.insert(t, mComposanteG.vecG[idx] - 1.96 * mComposanteG.vecGErr[idx]);
-        curveGP.mData.insert(t, mComposanteG.vecGP[idx]);
-        curveGS.mData.insert(t, mComposanteG.vecGS[idx]);
+        curveG.mData.insert(t, mComposanteG.vecG.at(idx));
+        // Enveloppe à 95%  https://en.wikipedia.org/wiki/1.96
+        //curveGSup.mData.insert(t, mComposanteG.vecG.at(idx) + 1.96 * mComposanteG.vecGErr.at(idx));
+        //curveGInf.mData.insert(t, mComposanteG.vecG.at(idx) - 1.96 * mComposanteG.vecGErr.at(idx));
+
+        // Enveloppe à 68%
+        curveGSup.mData.insert(t, mComposanteG.vecG.at(idx) + 1. * mComposanteG.vecGErr.at(idx));
+        curveGInf.mData.insert(t, mComposanteG.vecG.at(idx) - 1. * mComposanteG.vecGErr.at(idx));
+
+        curveGP.mData.insert(t, mComposanteG.vecGP.at(idx));
+        curveGS.mData.insert(t, mComposanteG.vecGS.at(idx));
         
         for (int i = 0; i<curveGChains.size(); ++i) {
-            curveGChains[i].mData.insert(t, mComposanteGChains[i].vecG[idx]);
+            curveGChains[i].mData.insert(t, mComposanteGChains.at(i).vecG.at(idx));
         }
     }
     
     mGraph->addCurve(curveG);
     mGraph->addCurve(curveGSup);
     mGraph->addCurve(curveGInf);
+
     mGraph->addCurve(curveGP);
     mGraph->addCurve(curveGS);
     mGraph->addCurve(curveRefPoints);
@@ -246,11 +279,11 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
     mGraph->setCurveVisible("G", mShowAllChains && mShowG);
     mGraph->setCurveVisible("G Sup", mShowAllChains && mShowGError);
     mGraph->setCurveVisible("G Inf", mShowAllChains && mShowGError);
-    mGraph->setCurveVisible("Ref points Y", mShowAllChains && mShowGPoints);
+    mGraph->setCurveVisible("Ref points Y", mShowGPoints);// && mShowG);
     mGraph->setCurveVisible("G Prime", mShowAllChains && mShowGP);
     mGraph->setCurveVisible("G Second", mShowAllChains && mShowGS);
     
     for (int i = 0; i < mShowChainList.size(); ++i) {
-        mGraph->setCurveVisible(QString("G Chain ") + QString::number(i), mShowChainList[i] && mShowG);
+        mGraph->setCurveVisible(QString("G Chain ") + QString::number(i), mShowChainList.at(i) && mShowG);
     }
 }

@@ -410,7 +410,7 @@ HEADERS += src/utilities/StdUtilities.h
 SOURCES += src/AppSettings.cpp
 SOURCES += src/ChronoApp.cpp
 #SOURCES += src/main.cpp # Don't use it while testing
-#SOURCES += src/MainController.cpp
+SOURCES += src/MainController.cpp
 
 SOURCES += src/mcmc/Functions.cpp
 SOURCES += src/mcmc/Generator.cpp
@@ -437,7 +437,7 @@ SOURCES += src/plugins/RefCurve.cpp
 equals(USE_PLUGIN_TL, 1){
     SOURCES += src/plugins/plugin_tl/PluginTL.cpp
     SOURCES += src/plugins/plugin_tl/PluginTLForm.cpp
-    SOURCES += src/plugins/plugin_tl/PluginTLRefView.cpp
+   SOURCES += src/plugins/plugin_tl/PluginTLRefView.cpp
     SOURCES += src/plugins/plugin_tl/PluginTLSettingsView.cpp
 }
 equals(USE_PLUGIN_14C, 1){

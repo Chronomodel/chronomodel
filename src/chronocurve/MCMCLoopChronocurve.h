@@ -58,6 +58,13 @@ public:
     MCMCLoopChronocurve(ModelChronocurve* model, Project* project);
     ~MCMCLoopChronocurve();
 
+
+    void orderEventsByTheta(QList<Event *> &lEvents);
+    void orderEventsByThetaReduced(QList<Event *> &lEvents);
+    void spreadEventsThetaReduced(QList<Event *> &lEvents, double minStep = 1e-9);
+    void spreadEventsThetaReduced0(QList<Event *> &sortedEvents, double spreadSpan = 0.);
+
+
 protected:
     virtual QString calibrate();
     virtual void initVariablesForChain();
@@ -67,14 +74,14 @@ protected:
     virtual void finalize();
     
 private:
-    long double h_YWI_AY(SplineMatrices& matrices, QList<Event *> & lEvents, const double alphaLissage);
+    long double h_YWI_AY (const SplineMatrices& matrices, const QList<Event *> &lEvents, const double alphaLissage, const std::vector<long double> &vecH);
   //  long double h_YWI_AY_composante(SplineMatrices& matrices, QList<Event*> lEvents, const double alphaLissage);
-    long double h_YWI_AY_composanteX(SplineMatrices& matrices, QList<Event*> lEvents, const double alphaLissage);
-    long double h_YWI_AY_composanteY(SplineMatrices& matrices, QList<Event*> lEvents, const double alphaLissage);
-    long double h_YWI_AY_composanteZ(SplineMatrices& matrices, QList<Event*> lEvents, const double alphaLissage);
-    double h_alpha(SplineMatrices& matrices, const int nb_noeuds, const double &alphaLissage);
-    double h_theta(QList<Event*> lEvents);
-    double h_VG(QList<Event*> lEvents);
+    long double h_YWI_AY_composanteX (const SplineMatrices& matrices, const QList<Event *> lEvents, const double alphaLissage, const std::vector<long double> &vecH);
+    long double h_YWI_AY_composanteY (const SplineMatrices& matrices, const QList<Event *> lEvents, const double alphaLissage, const std::vector<long double> &vecH);
+    long double h_YWI_AY_composanteZ (const SplineMatrices& matrices, const QList<Event *> lEvents, const double alphaLissage, const std::vector<long double> &vecH);
+    long double h_alpha (const SplineMatrices &matrices, const int nb_noeuds, const double &alphaLissage);
+    long double h_theta (const QList<Event *> lEvents);
+    long double h_VG (const QList<Event *> lEvents);
     
    // double h_YWI_AYX(SplineMatrices& matrices, QList<double> & lX, const double alphaLissage);
  //   long double h_YWI_AY_composanteX(SplineMatrices& matrices, QList<double> lX, const double alphaLissage);
@@ -82,58 +89,59 @@ private:
   //  double h_thetaX(QList<double> lX);
    // double h_VGX(QList<double> lX);
 
-    void prepareEventsY(QList<Event *> & lEvents);
-    void prepareEventY(Event* event);
-    void prepareEventY(EventKnown* event);
+    void prepareEventsY(const QList<Event *> & lEvents);
+    void prepareEventY(Event * const event);
+    void prepareEventY(EventKnown* const event);
     
     // Fonctions anciennement liées à do_cravate :
-    std::vector<double> createDiagWInv(const QList<Event*>& lEvents);
-    
-    void orderEventsByTheta(QList<Event *>& lEvents);
-    void orderEventsByThetaReduced(QList<Event*>& lEvents);
+    std::vector<long double> createDiagWInv(const QList<Event *> &lEvents);
+
 
     long double minimalThetaDifference(QList<Event *>& lEvents);
-    long double minimalThetaReducedDifference(QList<Event *>& lEvents);
+    long double minimalThetaReducedDifference(QList<Event *> &lEvents);
 
-    void spreadEventsTheta(QList<Event *>& lEvents, double minStep = 1e-6);
-    void spreadEventsThetaReduced(QList<Event *>& lEvents, double minStep = 1e-9);
+    void spreadEventsTheta(QList<Event *> &lEvents, double minStep = 1e-6); // not used
 
-    void reduceEventsTheta(QList<Event *>& lEvents);
+
+    void reduceEventsTheta(QList<Event *> &lEvents);
     double reduceTime(double t);
-    void saveEventsTheta(QList<Event *>& lEvents);
-    void restoreEventsTheta(QList<Event *>& lEvents);
+    void saveEventsTheta(QList<Event *> &lEvents);
+    void restoreEventsTheta(QList<Event *> &lEvents);
     std::map<int, double> mThetasMemo;
     
     
     
-    std::vector<double> calculVecH(const QList<Event *>& lEvents);
+    std::vector<long double> calculVecH(const QList<Event *> &lEvents);
   //  std::vector<double> calculVecHX(const QList<double> &lX);
 
-    std::vector<double> getThetaEventVector(const QList<Event *>& lEvents);
-    std::vector<double> getYEventVector(const QList<Event *>& lEvents);
+    std::vector<long double> getThetaEventVector(const QList<Event *>& lEvents);
+    std::vector<long double> getYEventVector(const QList<Event *>& lEvents);
     
 
-    std::vector<std::vector<double>> calculMatR(const QList<Event *>& lEvents);
-    std::vector<std::vector<double>> calculMatQ(const QList<Event *>&lEvents);
- //   std::vector<std::vector<double>> calculMatRX(const QList<double> &lX);
- //   std::vector<std::vector<double>> calculMatQX(const QList<double> &lX);
+    std::vector<std::vector<long double>> calculMatR(std::vector<long double>& vecH);
+    std::vector<std::vector<long double>> calculMatQ(std::vector<long double>& vecH);
 
 
+    SplineMatrices prepareCalculSpline(const QList<Event *> & sortedEvents, std::vector<long double> &vecH);
 
+    SplineResults calculSpline(const SplineMatrices &matrices, const std::vector<long double> &vecY, const double alpha, const std::vector<long double> &vecH);
+    SplineResults calculSplineX(const SplineMatrices &matrices, const std::vector<long double> &vecH, std::pair<std::vector<std::vector<long double> >, std::vector<long double> >& decomp, const std::vector<std::vector<long double> > matB, const double alpha);
+    SplineResults calculSplineY(const SplineMatrices &matrices, const std::vector<long double> &vecH, std::pair<std::vector<std::vector<long double> >, std::vector<long double> >& decomp, const std::vector<std::vector<long double> > matB, const double alpha);
+    SplineResults calculSplineZ(const SplineMatrices &matrices, const std::vector<long double> &vecH, std::pair<std::vector<std::vector<long double> >, std::vector<long double> >& decomp, const std::vector<std::vector<long double> > matB, const double alpha);
 
-    SplineMatrices prepareCalculSpline(const QList<Event *> & sortedEvents);
-    SplineMatrices prepareCalculSplineX(const QList<double>& lX);
-    SplineResults calculSpline(SplineMatrices& matrices, std::vector<double> &vecY);
+    std::vector<long double> calculMatInfluence(const SplineMatrices& matrices, const std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const int nbBandes, const double alpha);
+    std::vector<long double> calculSplineError(const SplineMatrices& matrices, const  std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const double alpha);
     
-    std::vector<double> calculMatInfluence(const SplineMatrices& matrices, const SplineResults& splines, const int nbBandes);
-    std::vector<double> calculSplineError(const SplineMatrices& matrices, const SplineResults& splines);
-    
-    double valeurG(const double t, const MCMCSplineComposante& spline, const int n);
-    double valeurErrG(const double t, const MCMCSplineComposante& spline, const int n);
-    double valeurGPrime(const double t, const MCMCSplineComposante& spline, const int n);
-    double valeurGSeconde(const double t, const MCMCSplineComposante& spline, const int n);
+    double valeurG(const double t, const MCMCSplineComposante& spline);
+    double valeurErrG(const double t, const MCMCSplineComposante& spline);
+    double valeurGPrime(const double t, const MCMCSplineComposante& spline, unsigned& i0);
+    double valeurGSeconde(const double t, const MCMCSplineComposante& spline);
+
+    void valeurs_G_ErrG_GP_GS(const double t, const MCMCSplineComposante& spline, long double& G, long double& ErrG, long double& GP, long double& GS, unsigned& i0);
     
     PosteriorMeanGComposante computePosteriorMeanGComposante(const std::vector<MCMCSplineComposante>& trace);
+    std::vector<unsigned> listOfIterationsWithPositiveGPrime (const std::vector<MCMCSplineComposante> &splineTrace);
+
 
 public:
     ModelChronocurve* mModel;

@@ -48,6 +48,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QTime>
 #include <QElapsedTimer>
 
+#include <errno.h>      /* errno, EDOM */
+#include <fenv.h>
+#include <exception>
+
 // -----------------------------------------------------------------
 //  sumP = Sum (pi)
 //  sum = Sum (pi * xi)
@@ -199,6 +203,7 @@ QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& 
 
 Quartiles quartilesForTrace(const QVector<type_data> &trace)
 {
+    Q_ASSERT(&trace);
     Quartiles quartiles = quartilesType(trace, 8, 0.25);
     return quartiles;
 
@@ -867,13 +872,12 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
 // useless function
 std::vector<double> initVector(const unsigned n)
 {
-   /* std::vector<double> vec;
-    for (int i = 0; i < dim; ++i) {
-        vec.push_back(0.);
-    }
-    return vec;*/
-    // normaly:
-    return std::vector<double>(n, 0.);
+     return std::vector<double>(n, 0.);
+}
+
+std::vector<long double> initLongVector(const unsigned n)
+{
+     return std::vector<long double>(n, 0.);
 }
 
 std::vector<std::vector<double>> initMatrix(const unsigned rows, const unsigned cols)
@@ -890,6 +894,11 @@ std::vector<std::vector<double>> initMatrix(const unsigned rows, const unsigned 
     return std::vector<std::vector<double>> (rows, std::vector<double>(cols, 0.));
 }
 
+std::vector<std::vector<long double>> initLongMatrix(const unsigned rows, const unsigned cols)
+{
+   return std::vector<std::vector<long double>> (rows, std::vector<long double>(cols, 0.));
+}
+
 void resizeMatrix(std::vector<std::vector<double>>&matrix,  const unsigned rows, const unsigned cols)
 {
     matrix.resize( rows );
@@ -898,11 +907,18 @@ void resizeMatrix(std::vector<std::vector<double>>&matrix,  const unsigned rows,
     }
 }
 
+void resizeLongMatrix(std::vector<std::vector<long double>>&matrix,  const unsigned rows, const unsigned cols)
+{
+    matrix.resize( rows );
+    for ( std::vector<std::vector<long double> >::iterator it = matrix.begin(); it != matrix.end(); ++it) {
+        it->resize( cols );
+    }
+}
 
-double determinant(const std::vector<std::vector<double>>& matrix)
+long double determinant(const std::vector<std::vector<long double>>& matrix)
 {
     const int n = matrix.size();
-    double det;
+    long double det;
 
     if (n == 1) {
           det = matrix.at(0).at(0);
@@ -911,7 +927,7 @@ double determinant(const std::vector<std::vector<double>>& matrix)
         det = matrix.at(0).at(0) * matrix.at(1).at(1) - matrix.at(1).at(0) * matrix.at(0).at(1);
 
     } else {
-        std::vector<std::vector<double>> matTmp (n-1, std::vector<double>(n-1, 0.)); //= initMatrix(n-1, n-1);
+        std::vector<std::vector<long double>> matTmp (n-1, std::vector<long double>(n-1, 0.)); //= initMatrix(n-1, n-1);
         det = 0.;
         int j2;
         for (int j1=0; j1<n; j1++) {
@@ -934,13 +950,13 @@ double determinant(const std::vector<std::vector<double>>& matrix)
 
 
 // On suppose une matrice carrée N*N
-std::vector<std::vector<double>> transpose0(const std::vector<std::vector<double>>& A)
+std::vector<std::vector<long double>> transpose0(const std::vector<std::vector<long double> > &A)
 {
    const unsigned n = A.size();
-   std::vector<std::vector<double>> TA  (n, std::vector<double>(n));
+   std::vector<std::vector<long double>> TA  (n, std::vector<long double>(n));
 
-   std::vector<std::vector<double>>::const_iterator Ai;
-   std::vector<double>::const_iterator Aij;
+   std::vector<std::vector<long double>>::const_iterator Ai;
+   std::vector<long double>::const_iterator Aij;
    int i, j;
    for ( i = 0, Ai = A.begin(); Ai != A.end(); Ai++, i++)
        for (j= 0, Aij = Ai->begin() ; Aij != Ai->end(); Aij++, j++)
@@ -948,20 +964,12 @@ std::vector<std::vector<double>> transpose0(const std::vector<std::vector<double
 
    return TA;
 
-   /*
-     for (int i = 0; i < n; ++i) {
-        for (int j = 0; j < n; ++j) {
-            result[j][i] = matrix.at(i).at(j);
-        }
-    }
-    */
-    return TA;
 }
 
-std::vector<std::vector<double>> transpose(const std::vector<std::vector<double>>& matrix, const int nbBandes)
+std::vector<std::vector<long double>> transpose(const std::vector<std::vector<long double>>& matrix, const int nbBandes)
 {
     const int dim = matrix.size();
-    std::vector<std::vector<double>> result = initMatrix(dim, dim);
+    std::vector<std::vector<long double>> result = initLongMatrix(dim, dim);
 
     // calcul de la demi-largeur de bande
     const int bande = floor((nbBandes-1)/2);
@@ -979,10 +987,10 @@ std::vector<std::vector<double>> transpose(const std::vector<std::vector<double>
 }
 
 
-std::vector<std::vector<double>> multiMatParDiag(const std::vector<std::vector<double>>& matrix, const std::vector<double>& diag, const int nbBandes)
+std::vector<std::vector<long double>> multiMatParDiag(const std::vector<std::vector<long double>>& matrix, const std::vector<long double>& diag, const int nbBandes)
 {
     const int dim = matrix.size();
-    std::vector<std::vector<double>> result = initMatrix(dim, dim);
+    std::vector<std::vector<long double>> result = initLongMatrix(dim, dim);
     const int bande = floor((nbBandes-1)/2); // calcul de la demi-largeur de bande
 
     auto matrix_i = matrix.at(0);
@@ -1004,10 +1012,10 @@ std::vector<std::vector<double>> multiMatParDiag(const std::vector<std::vector<d
     return result;
 }
 
-std::vector<std::vector<double>> multiDiagParMat(const std::vector<double>& diag, const std::vector<std::vector<double>>& matrix, const int nbBandes)
+std::vector<std::vector<long double>> multiDiagParMat(const std::vector<long double>& diag, const std::vector<std::vector<long double>>& matrix, const int nbBandes)
 {
     const int dim = matrix.size();
-    std::vector<std::vector<double>> result = initMatrix(dim, dim);
+    std::vector<std::vector<long double>> result = initLongMatrix(dim, dim);
     const int bande = floor((nbBandes-1)/2); // calcul de la demi-largeur de bande
 
     for (int i = 0; i < dim; ++i) {
@@ -1026,15 +1034,21 @@ std::vector<std::vector<double>> multiDiagParMat(const std::vector<double>& diag
     return result;
 }
 
-
-std::vector<double> multiMatParVec(const std::vector<std::vector<double>>& matrix, const std::vector<double>& vec, const int nbBandes)
+/**
+ * @brief multiMatParVec - calcul différent du produit matrice par Diagonal
+ * @param matrix
+ * @param vec
+ * @param nbBandes
+ * @return
+ */
+std::vector<long double> multiMatParVec(const std::vector<std::vector<long double>>& matrix, const std::vector<long double>& vec, const int nbBandes)
 {
-    const int dim = matrix.size();
-    std::vector<double> result (dim);//= initVecteur(dim);
+    const int dim = vec.size();
+    std::vector<long double> result (dim);//= initVecteur(dim);
     const int bande = floor((nbBandes-1)/2); // calcul de la demi-largeur de bande
 
     for (int i = 0; i < dim; ++i) {
-        double sum = 0.;
+        long double sum = 0.;
         int j1 = std::max(0, i - bande);
         int j2 = std::min(dim-1, i + bande);
     /*    if (j1 < 0) {
@@ -1058,11 +1072,11 @@ std::vector<double> multiMatParVec(const std::vector<std::vector<double>>& matri
  * @param nbBandes2 The total Bandwidth = k1+k2 of Band matrix 2
  * @return
  */
-std::vector<std::vector<double>> addMatEtMat0(const std::vector<std::vector<double>>& matrix1, const std::vector<std::vector<double>>& matrix2)
+std::vector<std::vector<long double>> addMatEtMat0(const std::vector<std::vector<long double>>& matrix1, const std::vector<std::vector<long double>>& matrix2)
 {
     const int dim = matrix1.size();
 
-    std::vector<std::vector<double>> result (matrix1);
+    std::vector<std::vector<long double>> result (matrix1);
     for (int i = 0; i < dim; ++i) {
          for (int j = 0; j < dim; ++j) {
             result[i][j] +=  matrix2.at(i).at(j);
@@ -1071,7 +1085,7 @@ std::vector<std::vector<double>> addMatEtMat0(const std::vector<std::vector<doub
     return result;
 }
 
-std::vector<std::vector<double>> addMatEtMat(const std::vector<std::vector<double>>& matrix1, const std::vector<std::vector<double>>& matrix2, const int nbBandes2)
+std::vector<std::vector<long double>> addMatEtMat(const std::vector<std::vector<long double>>& matrix1, const std::vector<std::vector<long double>>& matrix2, const int nbBandes2)
 {
     const int dim = matrix1.size();
     const int k = floor((nbBandes2-1)/2); // calcul de la demi-largeur de bande
@@ -1084,7 +1098,7 @@ std::vector<std::vector<double>> addMatEtMat(const std::vector<std::vector<doubl
             result[i][j] = matrix1.at(i).at(j) + matrix2.at(i).at(j);
         }
     }*/
-    std::vector<std::vector<double>> result (matrix1);
+    std::vector<std::vector<long double>> result (matrix1);
     for (int i = 0; i < dim; ++i) {
         int j1 = std::max(0, i - k);
         int j2 = std::min(dim-1, i + k);
@@ -1101,7 +1115,7 @@ std::vector<std::vector<double>> addMatEtMat(const std::vector<std::vector<doubl
     return result;
 }
 
-std::vector<std::vector<double>> addIdentityToMat(const std::vector<std::vector<double>>& matrix)
+std::vector<std::vector<long double>> addIdentityToMat(const std::vector<std::vector<long double>>& matrix)
 {
     const int dim = matrix.size();
    /* std::vector<std::vector<double>> result = initMatrix(dim, dim);
@@ -1109,7 +1123,7 @@ std::vector<std::vector<double>> addIdentityToMat(const std::vector<std::vector<
     for (int i = 0; i < dim; ++i) {
         result[i][i] = 1. + matrix.at(i).at(i);
     }*/
-    std::vector<std::vector<double>> result (matrix);
+    std::vector<std::vector<long double>> result (matrix);
 
     for (int i = 0; i < dim; ++i)
         result[i][i] += 1.;
@@ -1117,10 +1131,10 @@ std::vector<std::vector<double>> addIdentityToMat(const std::vector<std::vector<
     return result;
 }
 
-std::vector<std::vector<double>> multiConstParMat(const std::vector<std::vector<double>>& matrix, const double c, const int nbBandes)
+std::vector<std::vector<long double>> multiConstParMat(const std::vector<std::vector<long double>>& matrix, const double c, const int nbBandes)
 {
     const int dim = matrix.size();
-    std::vector<std::vector<double>> result (matrix);//= initMatrix(dim, dim);
+    std::vector<std::vector<long double>> result (matrix);//= initMatrix(dim, dim);
     const int bande = floor((nbBandes-1)/2); // calcul de la demi-largeur de bande
 
     for (int i = 0; i < dim; ++i) {
@@ -1139,11 +1153,11 @@ std::vector<std::vector<double>> multiConstParMat(const std::vector<std::vector<
     return result;
 }
 // without optimization full matrix
-std::vector<std::vector<double>> multiMatParMat0(const std::vector<std::vector<double>>& matrix1, const std::vector<std::vector<double>>& matrix2)
+std::vector<std::vector<long double>> multiMatParMat0(const std::vector<std::vector<long double>>& matrix1, const std::vector<std::vector<long double>>& matrix2)
 {
     const int n = matrix1.size();
-    std::vector<std::vector<double>> result = initMatrix(n, n);
-    std::vector<double>::const_iterator itMat1;
+    std::vector<std::vector<long double>> result = initLongMatrix(n, n);
+    std::vector<long double>::const_iterator itMat1;
     double sum;
 
     for (int i = 0; i < n; ++i) {
@@ -1162,10 +1176,10 @@ std::vector<std::vector<double>> multiMatParMat0(const std::vector<std::vector<d
 }
 
 
-std::vector<std::vector<double>> multiMatParMat(const std::vector<std::vector<double>>& matrix1, const std::vector<std::vector<double>>& matrix2, const int nbBandes1, const int nbBandes2)
+std::vector<std::vector<long double>> multiMatParMat(const std::vector<std::vector<long double>>& matrix1, const std::vector<std::vector<long double>>& matrix2, const int nbBandes1, const int nbBandes2)
 {
     const int dim = matrix1.size();
-    std::vector<std::vector<double>> result = initMatrix(dim, dim);
+    std::vector<std::vector<long double>> result = initLongMatrix(dim, dim);
 
     const int bande1 = floor((nbBandes1-1)/2);
     const int bande2 = floor((nbBandes2-1)/2);
@@ -1192,7 +1206,7 @@ std::vector<std::vector<double>> multiMatParMat(const std::vector<std::vector<do
         } */
         int k1 = std::max(0, i - bande1);
         int k2 = std::min(dim-1, i + bande1);
-        std::vector<double>::const_iterator itMat1 = matrix1.at(i).begin();
+        std::vector<long double>::const_iterator itMat1 = matrix1.at(i).begin();
         double sum;
         for (int j = j1; j <= j2; ++j) {
           /*  int k1 = i - bande1;
@@ -1216,13 +1230,13 @@ std::vector<std::vector<double>> multiMatParMat(const std::vector<std::vector<do
     return result;
 }
 
-std::vector<std::vector<double>> inverseMatSym0(const std::vector<std::vector<double>>& matrix)
+std::vector<std::vector<long double>> inverseMatSym0(const std::vector<std::vector<long double>>& matrix)
 {
     if (matrix.size() != matrix[0].size()) {
            throw std::runtime_error("Matrix is not quadratic");
        }
     int n = matrix.size();
-    std::vector<std::vector<double>> matInv = comatrice0(matrix);
+    std::vector<std::vector<long double>> matInv = comatrice0(matrix);
 
     double det = determinant(matrix);
     for (int i = 0; i <n; i++)
@@ -1233,10 +1247,20 @@ std::vector<std::vector<double>> inverseMatSym0(const std::vector<std::vector<do
     return matInv;
 }
 
-std::vector<std::vector<double>> inverseMatSym(const std::vector<std::vector<double>>& matrixLE, const std::vector<double>& matrixDE, const int nbBandes, const int shift)
+
+/**
+**** Cette procédure effectue l'inversion d'une matrice symétrique  ****
+**** définie positive : toutes les valeurs propres doivent être     ****
+**** positives (Cf. Angot, page 177)                                ****
+**** à partir d'une décomposition de Cholesky en Mat_L et mat_D     ****
+**** Cf algorithme Hutchison et De Hoog (1985)                      ****
+**** donné par Green et Silverman, 1994, p.34                       ****
+**** Attention : il y a une faute dans le bouquin de Green...!      ****
+**/
+std::vector<std::vector<long double>> inverseMatSym(const std::vector<std::vector<long double>>& matrixLE, const std::vector<long double>& matrixDE, const int nbBandes, const int shift)
 {
     const int dim = matrixLE.size();
-    std::vector<std::vector<double>> matInv = initMatrix(dim, dim);
+    std::vector<std::vector<long double>> matInv = initLongMatrix(dim, dim);
     const int bande = floor((nbBandes-1)/2);
 
     matInv[dim-1-shift][dim-1-shift] = 1. / matrixDE.at(dim-1-shift);
@@ -1299,6 +1323,7 @@ std::vector<std::vector<double>> inverseMatSym(const std::vector<std::vector<dou
         }
     }
  */
+      //On symétrise la matrice Mat_1, même si cela n'est pas nécessaire lorsque bande=2
     for (int i = shift; i < dim-shift; ++i) {
         for (int j = i+1; j <= std::min(i+bande, dim-shift) ; ++j) {
                 matInv[j][i] = matInv.at(i).at(j);
@@ -1325,12 +1350,12 @@ double sumAllVector(const std::vector<double>& vector)
     return std::accumulate(vector.begin(), vector.end(), 0.);
 }
 
-std::vector<std::vector<double>> cofactor0(const std::vector<std::vector<double>>& matrix)
+std::vector<std::vector<long double> > cofactor0(const std::vector<std::vector<long double>>& matrix)
 {
     const int n = matrix.size();
-    std::vector<std::vector<double>> result = initMatrix(n, n);
-    std::vector<std::vector<double>> matMinorTmp = initMatrix(n-1, n-1);
-    double det;
+    std::vector<std::vector<long double>> result = initLongMatrix(n, n);
+    std::vector<std::vector<long double>> matMinorTmp = initLongMatrix(n-1, n-1);
+    long double det;
     int i1, k1;
     for (int j=0; j<n; j++) {
         for (int i=0; i<n; i++) {
@@ -1361,12 +1386,12 @@ std::vector<std::vector<double>> cofactor0(const std::vector<std::vector<double>
  * @param matrix
  * @return
  */
-std::vector<std::vector<double>> comatrice0(const std::vector<std::vector<double>>& matrix)
+std::vector<std::vector<long double>> comatrice0(const std::vector<std::vector<long double>>& matrix)
 {
     const int n = matrix.size();
-    std::vector<std::vector<double>> result = initMatrix(n, n);
-    std::vector<std::vector<double>> matMinorTmp = initMatrix(n-1, n-1);
-    double det;
+    std::vector<std::vector<long double>> result = initLongMatrix(n, n);
+    std::vector<std::vector<long double>> matMinorTmp = initLongMatrix(n-1, n-1);
+    long double det;
     int i1, k1;
     for (int j=0; j<n; j++) {
         for (int i=0; i<n; i++) {
@@ -1398,12 +1423,12 @@ std::vector<std::vector<double>> comatrice0(const std::vector<std::vector<double
  * @return matrix triangulaire supérieur
  */
 
-std::vector<std::vector<double>> choleskyLL0(const std::vector<std::vector<double>>& matrix)
+std::vector<std::vector<long double> > choleskyLL0(const std::vector<std::vector<long double> > &matrix)
 {
     const int n = matrix.size();
 
-    std::vector<std::vector<double>> L = initMatrix(n, n);
-    double sum;
+    std::vector<std::vector<long double>> L = initLongMatrix(n, n);
+    long double sum;
 
     for (int i=0; i<n; i++) {
             sum = matrix.at(i).at(i);
@@ -1433,13 +1458,13 @@ std::vector<std::vector<double>> choleskyLL0(const std::vector<std::vector<doubl
  * @param matrix
  * @return pair of 2 matrix
  */
-std::pair<std::vector<std::vector<double> >, std::vector<double> > choleskyLDL(const std::vector<std::vector<double>>& matrix)
+std::pair<std::vector<std::vector<long double> >, std::vector<long double> > choleskyLDLT(const std::vector<std::vector<long double>>& matrix)
 {
     // fonction à controler
     const int n = matrix.size();
 
-    std::vector<std::vector<double>> L = initMatrix(n, n);
-    std::vector<double> D = initVector(n);
+    std::vector<std::vector<long double>> L = initLongMatrix(n, n);
+    std::vector<long double> D = initLongVector(n);
 
     for (int i=0; i<n; i++) {
             L[i][i] = 1;
@@ -1459,7 +1484,7 @@ std::pair<std::vector<std::vector<double> >, std::vector<double> > choleskyLDL(c
 
 
 
-    return std::pair<std::vector<std::vector<double>>, std::vector<double>>(L, D);
+    return std::pair<std::vector<std::vector<long double>>, std::vector<long double>>(L, D);
 }
 
 /** ****************************************************************************
@@ -1469,13 +1494,16 @@ std::pair<std::vector<std::vector<double> >, std::vector<double> > choleskyLDL(c
 **** 1988, page 30.                                                        ****
 **** Cette décomposition ne peut s'appliquer qu'à des matrices symétriques ****
 *******************************************************************************/
-std::pair<std::vector<std::vector<double>>, std::vector<double>> decompositionCholesky(const std::vector<std::vector<double>>& matrix, const int nbBandes, const int shift)
+std::pair<std::vector<std::vector<long double>>, std::vector<long double>> decompositionCholesky(const std::vector<std::vector<long double>>& matrix, const int nbBandes, const int shift)
 {
-    const int dim = matrix.size();
-    std::vector<std::vector<double>> matL = initMatrix(dim, dim);
-    std::vector<double> matD = initVector(dim);
+    errno = 0;
+      if (math_errhandling & MATH_ERREXCEPT) feclearexcept(FE_ALL_EXCEPT);
 
-    const int bande = floor((nbBandes-1)/2);
+    const int dim = matrix.size();
+    std::vector<std::vector<long double>> matL = initLongMatrix(dim, dim);
+    std::vector<long double> matD = initLongVector(dim);
+
+   // const int bande = floor((nbBandes-1)/2);
 
     // shift : décalage qui permet d'éliminer les premières et dernières lignes et colonnes
     for (int i = shift; i < dim-shift; ++i) {
@@ -1483,15 +1511,15 @@ std::pair<std::vector<std::vector<double>>, std::vector<double>> decompositionCh
     }
     matD[shift] = matrix.at(shift).at(shift);
 
-
+try {
     for (int i = shift+1; i < dim-shift; ++i) {
         matL[i][shift] = matrix.at(i).at(shift) / matD.at(shift);
-     /*   avec bande
+     /*   avec bande */
         for (int j = shift+1; j < i; ++j) {
-            if (abs(i - j) <= bande) {
-                double sum = 0.;
+            if (abs(i - j) <= nbBandes) {
+                long double sum = 0.;
                 for (int k = shift; k < j; ++k) {
-                    if (abs(i - k) <= bande) {
+                    if (abs(i - k) <= nbBandes) {
                         sum += matL.at(i).at(k) * matD.at(k) * matL.at(j).at(k);
                     }
                 }
@@ -1499,20 +1527,19 @@ std::pair<std::vector<std::vector<double>>, std::vector<double>> decompositionCh
             }
         }
 
-        double sum = 0.;
+        long double sum = 0.;
         for (int k = shift; k < i; ++k) {
-            if (abs(i - k) <= bande) {
+            if (abs(i - k) <= nbBandes) {
                 sum += std::pow(matL.at(i).at(k), 2.) * matD.at(k);
             }
         }
-     */
-        for (int j = shift+1; j < i; ++j) {
 
-                double sum = 0.;
+        /* sans gestion de bande */
+ /*       for (int j = shift+1; j < i; ++j) {
+
+                long double sum = 0.;
                 for (int k = shift; k < j; ++k) {
-
                         sum += matL.at(i).at(k) * matD.at(k) * matL.at(j).at(k);
-
                 }
                 matL[i][j] = (matrix.at(i).at(j) - sum) / matD.at(j);
 
@@ -1520,32 +1547,52 @@ std::pair<std::vector<std::vector<double>>, std::vector<double>> decompositionCh
 
         double sum = 0.;
         for (int k = shift; k < i; ++k) {
-
                 sum += std::pow(matL.at(i).at(k), 2.) * matD.at(k);
 
         }
-
+*/
         matD[i] = matrix.at(i).at(i) - sum; // doit être positif
-        if (matD.at(i)<0) {
-            throw "decompositionCholesky() matD <0";
+        if (matD.at(i) < 0) {
+            qDebug() << "Function::decompositionCholesky : matD <0 change to 1E-20";
+            matD[i] = 1e-20;
+           // throw "Function::decompositionCholesky() matD <0";
         }
     }
-    // matL : Par exemple pour n = 5 :
+    // matL : Par exemple pour n = 5 et shift =0:
+    // 1 0 0 0 0
+    // X 1 0 0 0
+    // X X 1 0 0
+    // X X X 1 0
+    // X X X X 1
+
+    // matL : Par exemple pour n = 5 et shift =1:
     // 0 0 0 0 0
-    // 0 1 X 0 0
-    // 0 X 1 X 0
-    // 0 0 X 1 0
+    // 0 1 0 0 0
+    // 0 X 1 0 0
+    // 0 X X 1 0
     // 0 0 0 0 0
 
-    return std::pair<std::vector<std::vector<double>>, std::vector<double>>(matL, matD);
+    if (math_errhandling & MATH_ERRNO) {
+        if (errno==EDOM)
+            qDebug()<<"errno set to EDOM";
+      }
+      if (math_errhandling  &MATH_ERREXCEPT) {
+        if (fetestexcept(FE_INVALID))
+            qDebug()<<"decompositionCholesky -> FE_INVALID raised : Domain error: At least one of the arguments is a value for which the function is not defined.";
+      }
+
+    } catch(...) {
+                qDebug() << "Function::decompositionCholesky : Caught Exception!\n";
+            }
+    return std::pair<std::vector<std::vector<long double>>, std::vector<long double>>(matL, matD);
 }
 
-std::vector<double> resolutionSystemeLineaireCholesky(std::vector<std::vector<double>> matL, std::vector<double> matD, std::vector<double> vecQtY)
+std::vector<long double> resolutionSystemeLineaireCholesky(const std::vector<std::vector<long double> > &matL, const std::vector<long double> &matD, const std::vector<long double> &vecQtY)
 {
     const int n = matD.size(); //mModel->mEvents.size(); // pHd :: ?? est-ce que matD à la même dimension que mEvent??
-    std::vector<double> vecGamma (n);
-    std::vector<double> vecU (n);
-    std::vector<double> vecNu (n);
+    std::vector<long double> vecGamma (n);
+    std::vector<long double> vecU (n);
+    std::vector<long double> vecNu (n);
 
 
     vecU[1] = vecQtY.at(1);
@@ -1575,11 +1622,11 @@ std::vector<double> resolutionSystemeLineaireCholesky(std::vector<std::vector<do
  * @param B square matrix NxN
  * @return one square matrix NxN
  */
-std::vector<std::vector<double>> Strassen::sub(const std::vector<std::vector<double>>&  A, const std::vector<std::vector<double>>& B)
+std::vector<std::vector<long double>> Strassen::sub(const std::vector<std::vector<long double>>&  A, const std::vector<std::vector<long double>>& B)
 {
     const int n = A.size();
 
-    std::vector<std::vector<double>> C (n, std::vector<double>(n, 0.));
+    std::vector<std::vector<long double>> C (n, std::vector<long double>(n, 0.));
 
   /*  for (int i = 0; i < n; i++)
 
@@ -1587,11 +1634,11 @@ std::vector<std::vector<double>> Strassen::sub(const std::vector<std::vector<dou
 
             C[i][j] = A[i][j] - B[i][j];
 */
-    std::vector<std::vector<double>>::iterator ci = C.begin();
-    std::vector<double>::iterator cij;
+    std::vector<std::vector<long double>>::iterator ci = C.begin();
+    std::vector<long double>::iterator cij;
 
-    std::vector<std::vector<double>>::const_iterator ai, bi;
-    std::vector<double>::const_iterator aij, bij;
+    std::vector<std::vector<long double>>::const_iterator ai, bi;
+    std::vector<long double>::const_iterator aij, bij;
 
     for (ai = A.begin(), bi =B.begin() ; ai != A.end(); ++ai, ++bi) {
         cij = ci->begin();
@@ -1611,21 +1658,21 @@ std::vector<std::vector<double>> Strassen::sub(const std::vector<std::vector<dou
  * @param B square matrix NxN
  * @return one square matrix NxN
  */
-std::vector<std::vector<double>> Strassen::add(const std::vector<std::vector<double>>& A, const std::vector<std::vector<double>>& B)
+std::vector<std::vector<long double>> Strassen::add(const std::vector<std::vector<long double>>& A, const std::vector<std::vector<long double>>& B)
 {
     const int n = A.size();
 
-   std::vector<std::vector<double>> C (n, std::vector<double>(n, 0.));
+   std::vector<std::vector<long double>> C (n, std::vector<long double>(n, 0.));
 
    /* for (int i = 0; i < n; i++)
    for (int j = 0; j < n; j++)
        C[i][j] = A[i][j] + B[i][j];
    */
-   std::vector<std::vector<double>>::iterator ci = C.begin();
-   std::vector<double>::iterator cij;
+   std::vector<std::vector<long double>>::iterator ci = C.begin();
+   std::vector<long double>::iterator cij;
 
-   std::vector<std::vector<double>>::const_iterator ai, bi;
-   std::vector<double>::const_iterator aij, bij;
+   std::vector<std::vector<long double>>::const_iterator ai, bi;
+   std::vector<long double>::const_iterator aij, bij;
 
    for (ai = A.begin(), bi =B.begin() ; ai != A.end(); ++ai, ++bi) {
        cij = ci->begin();
@@ -1639,7 +1686,7 @@ std::vector<std::vector<double>> Strassen::add(const std::vector<std::vector<dou
 }
 /** Funtion to split parent matrix into child matrices **/
 
-void Strassen::split(const std::vector<std::vector<double>>& P,  std::vector<std::vector<double>>& C, int iB, int jB)
+void Strassen::split(const std::vector<std::vector<long double>>& P,  std::vector<std::vector<long double>>& C, int iB, int jB)
 {
     const int lig = C.size();
     const int col = C[0].size();
@@ -1649,7 +1696,7 @@ void Strassen::split(const std::vector<std::vector<double>>& P,  std::vector<std
             C[i1][j1] = P.at(i2).at(j2);
 
 }
-void Strassen::join(const std::vector<std::vector<double>>& C,  std::vector<std::vector<double>>& P, int iB, int jB)
+void Strassen::join(const std::vector<std::vector<long double>>& C,  std::vector<std::vector<long double>>& P, int iB, int jB)
 {
     const int lig = C.size();
     const int col = C[0].size();
@@ -1667,28 +1714,28 @@ void Strassen::join(const std::vector<std::vector<double>>& C,  std::vector<std:
  * @param B square matrix size NxN
  * @return square matrix size NxN
  */
-std::vector<std::vector<double>> Strassen::multiply (const std::vector<std::vector<double>>& A, const std::vector<std::vector<double>>& B)
+std::vector<std::vector<long double>> Strassen::multiply (const std::vector<std::vector<long double>>& A, const std::vector<std::vector<long double>>& B)
 {
     const int n = A.size();
-    std::vector<std::vector<double>> R;
+    std::vector<std::vector<long double>> R;
 
     /** base case **/
 
     if (n == 1) {
-        R = initMatrix(1, 1);
+        R = initLongMatrix(1, 1);
         R[0][0] = A.at(0).at(0) * B.at(0).at(0);
 
      } else {
         // controle de la puissance de n, n doit être une puissance de 2
         int nP2;
 
-        std::vector<std::vector<double>> A2;
-        std::vector<std::vector<double>> B2;
+        std::vector<std::vector<long double>> A2;
+        std::vector<std::vector<long double>> B2;
 
         if ( n != pow( 2., floor(log(n)/log(2))) ) { //null row and column filling
             nP2 = pow( 2., floor(log(n)/log(2)) + 1);
-            A2 = initMatrix(nP2, nP2);
-            B2 = initMatrix(nP2, nP2);
+            A2 = initLongMatrix(nP2, nP2);
+            B2 = initLongMatrix(nP2, nP2);
 
             join (A, A2, 0, 0);
             join (B, B2, 0, 0);
@@ -1701,15 +1748,15 @@ std::vector<std::vector<double>> Strassen::multiply (const std::vector<std::vect
 
         const int n1 = floor(nP2/2);
 
-        std::vector<std::vector<double>> A11 (n1, std::vector<double>(n1, 0.));
-        std::vector<std::vector<double>> A12 (n1, std::vector<double>(n1, 0.));
-        std::vector<std::vector<double>> A21 (n1, std::vector<double>(n1, 0.));
-        std::vector<std::vector<double>> A22 (n1, std::vector<double>(n1, 0.));
+        std::vector<std::vector<long double>> A11 (n1, std::vector<long double>(n1, 0.));
+        std::vector<std::vector<long double>> A12 (n1, std::vector<long double>(n1, 0.));
+        std::vector<std::vector<long double>> A21 (n1, std::vector<long double>(n1, 0.));
+        std::vector<std::vector<long double>> A22 (n1, std::vector<long double>(n1, 0.));
 
-        std::vector<std::vector<double>> B11 (n1, std::vector<double>(n1, 0.));
-        std::vector<std::vector<double>> B12 (n1, std::vector<double>(n1, 0.));
-        std::vector<std::vector<double>> B21 (n1, std::vector<double>(n1, 0.));
-        std::vector<std::vector<double>> B22 (n1, std::vector<double>(n1, 0.));
+        std::vector<std::vector<long double>> B11 (n1, std::vector<long double>(n1, 0.));
+        std::vector<std::vector<long double>> B12 (n1, std::vector<long double>(n1, 0.));
+        std::vector<std::vector<long double>> B21 (n1, std::vector<long double>(n1, 0.));
+        std::vector<std::vector<long double>> B22 (n1, std::vector<long double>(n1, 0.));
 
 
 
@@ -1749,19 +1796,19 @@ std::vector<std::vector<double>> Strassen::multiply (const std::vector<std::vect
 
 
 
-        std::vector<std::vector<double>> M1 = multiply(add(A11, A22), add(B11, B22));
+        std::vector<std::vector<long double>> M1 = multiply(add(A11, A22), add(B11, B22));
 
-        std::vector<std::vector<double>> M2 = multiply(add(A21, A22), B11);
+        std::vector<std::vector<long double>> M2 = multiply(add(A21, A22), B11);
 
-        std::vector<std::vector<double>> M3 = multiply(A11, sub(B12, B22));
+        std::vector<std::vector<long double>> M3 = multiply(A11, sub(B12, B22));
 
-        std::vector<std::vector<double>> M4 = multiply(A22, sub(B21, B11));
+        std::vector<std::vector<long double>> M4 = multiply(A22, sub(B21, B11));
 
-        std::vector<std::vector<double>> M5 = multiply(add(A11, A12), B22);
+        std::vector<std::vector<long double>> M5 = multiply(add(A11, A12), B22);
 
-        std::vector<std::vector<double>> M6 = multiply(sub(A21, A11), add(B11, B12));
+        std::vector<std::vector<long double>> M6 = multiply(sub(A21, A11), add(B11, B12));
 
-        std::vector<std::vector<double>> M7 = multiply(sub(A12, A22), add(B21, B22));
+        std::vector<std::vector<long double>> M7 = multiply(sub(A12, A22), add(B21, B22));
 
 
 
@@ -1777,12 +1824,12 @@ std::vector<std::vector<double>> Strassen::multiply (const std::vector<std::vect
 
         **/
 
-        std::vector<std::vector<double>> C11 = add(sub(add(M1, M4), M5), M7);
-        std::vector<std::vector<double>> C12 = add(M3, M5);
-        std::vector<std::vector<double>> C21 = add(M2, M4);
-        std::vector<std::vector<double>> C22 = add(sub(add(M1, M3), M2), M6);
+        std::vector<std::vector<long double>> C11 = add(sub(add(M1, M4), M5), M7);
+        std::vector<std::vector<long double>> C12 = add(M3, M5);
+        std::vector<std::vector<long double>> C21 = add(M2, M4);
+        std::vector<std::vector<long double>> C22 = add(sub(add(M1, M3), M2), M6);
 
-        R = initMatrix(nP2, nP2);
+        R = initLongMatrix(nP2, nP2);
 
         join(C11, R, 0 , 0);
         join(C12, R, 0 , n1);
@@ -1790,7 +1837,7 @@ std::vector<std::vector<double>> Strassen::multiply (const std::vector<std::vect
         join(C22, R, n1, n1);
 
         if (n != nP2) {
-            resizeMatrix(R, n, n);
+            resizeLongMatrix(R, n, n);
         }
 
     }
@@ -1806,12 +1853,12 @@ std::vector<std::vector<double>> Strassen::multiply (const std::vector<std::vect
  * @param A
  * @return
  */
-std::pair<std::vector<std::vector<double> >, std::vector<std::vector<double>> > decompositionLU0(const std::vector<std::vector<double>>& A)
+std::pair<std::vector<std::vector<long double> >, std::vector<std::vector<long double>> > decompositionLU0(const std::vector<std::vector<long double>>& A)
 {
    const unsigned n = A.size();
 
-    std::vector<std::vector<double>> L (n, std::vector<double>(n, 0.));
-    std::vector<std::vector<double>> U (n, std::vector<double>(n, 0.));
+    std::vector<std::vector<long double>> L (n, std::vector<long double>(n, 0.));
+    std::vector<std::vector<long double>> U (n, std::vector<long double>(n, 0.));
 
     unsigned i, j , k;
 
@@ -1838,5 +1885,5 @@ std::pair<std::vector<std::vector<double> >, std::vector<std::vector<double>> > 
 
     }
 
-    return std::pair<std::vector<std::vector<double>>, std::vector<std::vector<double>>>(L, U);
+    return std::pair<std::vector<std::vector<long double>>, std::vector<std::vector<long double>>>(L, U);
 }

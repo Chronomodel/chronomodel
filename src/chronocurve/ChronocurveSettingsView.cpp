@@ -109,7 +109,7 @@ ChronocurveSettingsView::ChronocurveSettingsView(QWidget* parent):QWidget(parent
     mCoeffLissageTypeInput->addItem(tr("Fixed"));
     mCoeffLissageTypeInput->addItem(tr("Bayesian"));
     
-    mAlphaLissageLabel = new QLabel(tr("Alpha Lissage") + " :", this);
+    mAlphaLissageLabel = new QLabel(tr("Alpha Smoothing") + " :", this);
     mAlphaLissageInput = new QLineEdit(this);
     
     
@@ -285,28 +285,33 @@ ChronocurveSettings ChronocurveSettingsView::getSettings()
     if (mProcessTypeInput->currentIndex() == 0) {
         settings.mProcessType = ChronocurveSettings::eProcessTypeUnivarie;
 
+        if (mVariableTypeInput->currentIndex() == 0) {
+            settings.mVariableType = ChronocurveSettings::eVariableTypeInclinaison;
+
+        } else if (mVariableTypeInput->currentIndex() == 1) {
+            settings.mVariableType = ChronocurveSettings::eVariableTypeDeclinaison;
+
+        } else if (mVariableTypeInput->currentIndex() == 2) {
+            settings.mVariableType = ChronocurveSettings::eVariableTypeIntensite;
+
+        } else if (mVariableTypeInput->currentIndex() == 3) {
+            settings.mVariableType = ChronocurveSettings::eVariableTypeProfondeur;
+
+        } else if (mVariableTypeInput->currentIndex() == 4) {
+            settings.mVariableType = ChronocurveSettings::eVariableTypeAutre;
+        }
+
+
     } else if (mProcessTypeInput->currentIndex() == 1) {
         settings.mProcessType = ChronocurveSettings::eProcessTypeSpherique;
+        settings.mVariableType = ChronocurveSettings::eVariableTypeInclinaison;
 
     } else if (mProcessTypeInput->currentIndex() == 2) {
         settings.mProcessType = ChronocurveSettings::eProcessTypeVectoriel;
+        settings.mVariableType = ChronocurveSettings::eVariableTypeInclinaison;
     }
     
-    if (mVariableTypeInput->currentIndex() == 0) {
-        settings.mVariableType = ChronocurveSettings::eVariableTypeInclinaison;
 
-    } else if (mVariableTypeInput->currentIndex() == 1) {
-        settings.mVariableType = ChronocurveSettings::eVariableTypeDeclinaison;
-
-    } else if (mVariableTypeInput->currentIndex() == 2) {
-        settings.mVariableType = ChronocurveSettings::eVariableTypeIntensite;
-
-    } else if (mVariableTypeInput->currentIndex() == 3) {
-        settings.mVariableType = ChronocurveSettings::eVariableTypeProfondeur;
-
-    } else if (mVariableTypeInput->currentIndex() == 4) {
-        settings.mVariableType = ChronocurveSettings::eVariableTypeAutre;
-    }
     
     settings.mUseErrMesure = mUseErrMesureInput->isChecked();
     

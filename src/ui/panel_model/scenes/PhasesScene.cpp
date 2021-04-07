@@ -657,9 +657,9 @@ void PhasesScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e
 
         if (phases.find(id) == phases.end())
             //item->setState(Qt::Unchecked);
-            item->mAtLeastOneEventSelected = false;
+            item->matLeastOneEventSelected = false;
         else
-            item->mAtLeastOneEventSelected = true;
+            item->matLeastOneEventSelected = true;
             //item->setState((phases[id] == selectedEventsCount) ? Qt::Checked : Qt::PartiallyChecked);
 
     }

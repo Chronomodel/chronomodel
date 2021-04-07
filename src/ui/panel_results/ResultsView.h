@@ -112,8 +112,10 @@ protected:
     QList<GraphViewResults*> currentGraphs(bool onlySelected);
     bool hasSelectedGraphs();
     
-    void updateGraphsMax();
+    void updateGraphsMinMax();
     double getGraphsMax(const QList<GraphViewResults*>& graphs, const QString& title, double maxFloor);
+    double getGraphsMin(const QList<GraphViewResults*>& graphs, const QString& title, double minFloor);
+
     
     // ------------------------------------
     //  Pagination
@@ -419,6 +421,7 @@ private:
     double mResultCurrentMaxX;
     
     double mCurrentVariableMaxX;
+    double mCurrentVariableMinX;
     
     // ----------------------------------------
     //  X Scale ticks intervals

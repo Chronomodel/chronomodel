@@ -55,7 +55,7 @@ public:
     //bool mEyeActivated;
     bool mControlsVisible;
     bool mControlsEnabled;
-    bool mAtLeastOneEventSelected;
+    bool matLeastOneEventSelected;
     bool mOneEventSelectedOnScene;
     QSize mSize;
  void redrawPhase();

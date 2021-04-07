@@ -615,7 +615,7 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<ChainSpecs>& chains
         const int burnAdaptSize = 1 + chain.mNumBurnIter + int (chain.mBatchIndex * chain.mNumBatchIter);
         const int runTraceSize = int(chain.mNumRunIter / chain.mThinningInterval);
         const int firstRunPosition = shift + burnAdaptSize;
-        std::copy(mFormatedTrace->begin()+ firstRunPosition, mFormatedTrace->begin() + firstRunPosition + runTraceSize, trace.begin()+ shiftTrace);
+        std::copy(mFormatedTrace->begin()+ firstRunPosition , mFormatedTrace->begin() + firstRunPosition + runTraceSize , trace.begin()+ shiftTrace);
 
         shiftTrace += runTraceSize;
         shift = firstRunPosition +runTraceSize;
@@ -679,7 +679,7 @@ QVector<double> MetropolisVariable::runFormatedTraceForChain(const QList<ChainSp
 
             if (i == index) {
                 trace.resize(traceSize);
-                std::copy(mFormatedTrace->begin()+shift+ burnAdaptSize, mFormatedTrace->begin()+shift + burnAdaptSize +traceSize, trace.begin());
+                std::copy(mFormatedTrace->begin()+shift+ burnAdaptSize , mFormatedTrace->begin()+shift + burnAdaptSize +traceSize , trace.begin());
                 break;
             }
             shift += traceSize + burnAdaptSize ;

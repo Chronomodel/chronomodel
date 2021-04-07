@@ -106,15 +106,14 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
     // ------------------------------------------------
     //  First tab : Posterior distrib
     // ------------------------------------------------
-    if(typeGraph == ePostDistrib)
-    {
-        mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
-        mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
+    if (typeGraph == ePostDistrib) {
+        mGraph->mLegendX = "Log10";
+        mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);
         mGraph->setBackgroundColor(QColor(230, 230, 230));
         mGraph->setOverArrow(GraphView::eBothOverflow);
         
-        mTitle = tr("Alpha Lissage");
+        mTitle = tr("Alpha Smoothing");
 
         // ------------------------------------
         //  Post distrib All Chains
@@ -143,10 +142,8 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
         // ------------------------------------
         //  Post Distrib Chain i
         // ------------------------------------
-        if(!mModel->mAlphaLissage.mChainsHistos.isEmpty())
-        {
-            for (int i=0; i<mChains.size(); ++i)
-            {
+        if (!mModel->mAlphaLissage.mChainsHistos.isEmpty()) {
+            for (int i=0; i<mChains.size(); ++i)  {
                 GraphCurve curvePostDistribChain = generateDensityCurve(mModel->mAlphaLissage.histoForChain(i),
                                                                         "Post Distrib Chain " + QString::number(i),
                                                                         Painting::chainColors.at(i),
@@ -163,6 +160,7 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
                                                     "Credibility All Chains",
                                                     color);
         mGraph->addCurve(curveCred);
+        mGraph->autoAdjustYScale(true);
     }
     // -------------------------------------------------
     //  History plots
@@ -171,7 +169,7 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
     {
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
-        mTitle = tr("Alpha lissage trace");
+        mTitle = tr("Alpha Smoothing trace");
 
         generateTraceCurves(mChains, &(mModel->mAlphaLissage));
     }
@@ -182,7 +180,7 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
     {
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
-        mTitle = tr("Alpha lissage acceptation");
+        mTitle = tr("Alpha Smoothing acceptation");
 
         mGraph->addCurve(generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
 
@@ -197,14 +195,14 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
     {
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(nullptr);
-        mTitle = tr("Alpha lissage autocorrelation");
+        mTitle = tr("Alpha Smoothing autocorrelation");
 
         generateCorrelCurves(mChains, &(mModel->mAlphaLissage));
         mGraph->setXScaleDivision(10, 10);
     }
     else
     {
-        mTitle = tr("Alpha lissage");
+        mTitle = tr("Alpha Smoothing");
         mGraph->resetNothingMessage();
     }
 }

@@ -92,7 +92,8 @@ public:
         ePostDistrib = 0,
         eTrace = 1,
         eAccept = 2,
-        eCorrel = 3
+        eCorrel = 3,
+        eFunction = 4
     };
     enum Variable{
         eTheta = 0,
@@ -102,12 +103,15 @@ public:
         eActivity = 4,
         eVG = 5,
         eG = 6,
-        eAlpha = 7,
+        eGP = 7,
+        eGS = 8,
+        eAlpha = 9
+  /*
         eInclination = 8,
         eDeclination = 8,
         eField = 8,
         eDepth = 8,
-        eOther = 8
+        eOther = 8*/
     };
     static int mHeightForVisibleAxis ;
     // member

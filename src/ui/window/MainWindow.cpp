@@ -1195,6 +1195,8 @@ void MainWindow::mcmcFinished(Model* model)
 
     // Tell the views to update
     mProjectView->initResults(model);
+
+
 }
 
 void MainWindow::noResult()

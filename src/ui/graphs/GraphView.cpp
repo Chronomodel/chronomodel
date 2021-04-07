@@ -234,13 +234,11 @@ GraphView::~GraphView()
 
 void GraphView::adjustYScale()
 {
-    if(mAutoAdjustYScale)
-    {
+    if (mAutoAdjustYScale) {
         qreal yMax = -HUGE_VAL;
         qreal yMin =  HUGE_VAL;
         
-        for (int curveIndex=0; curveIndex<mCurves.size(); ++curveIndex)
-        {
+        for (int curveIndex=0; curveIndex<mCurves.size(); ++curveIndex) {
             const GraphCurve& curve = mCurves.at(curveIndex);
             
             if (curve.mVisible && curve.mIsVertical) { // used for the measurement in the calibration process
@@ -1071,6 +1069,8 @@ void GraphView::drawCurves(QPainter& painter)
                     //QColor col = curve.mDataColor[xmoy];
                     QPen refPointsPen = pen;
                     refPointsPen.setColor(curve.mDataColor[xmoy]);
+                    refPointsPen.setBrush(curve.mDataColor[xmoy]);
+                    refPointsPen.setWidthF(pen.widthF());
 
 
                     // vertical curves must be normalized (values from 0 to 1)
@@ -1084,9 +1084,16 @@ void GraphView::drawCurves(QPainter& painter)
 
                         pathPoint.moveTo( getXForValue(xmoy), getYForValue(ymoy - errYmoy, true) );
                         pathPoint.lineTo( getXForValue(xmoy), getYForValue(ymoy + errYmoy, true) );
+                        painter.strokePath(pathPoint, refPointsPen);
+                        refPointsPen.setWidthF(std::max(2., pen.widthF()));
+                        painter.setBrush(refPointsPen.brush());
+                        painter.setPen(refPointsPen);
+                        painter.drawEllipse(QRectF( getXForValue(xmoy) - 1.*refPointsPen.widthF(), getYForValue(ymoy, true) - 1.*refPointsPen.widthF(),
+                                            refPointsPen.widthF()*2., refPointsPen.widthF()*2.));
                     }
                     ++iterData;
-                    painter.strokePath(pathPoint, refPointsPen);
+
+
                 }
 
 

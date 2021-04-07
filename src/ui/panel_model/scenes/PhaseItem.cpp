@@ -52,7 +52,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 PhaseItem::PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsItem* parent):AbstractItem(scene, parent),
 mControlsVisible(false),
 mControlsEnabled(false),
-mAtLeastOneEventSelected(false),
+matLeastOneEventSelected(false),
 mOneEventSelectedOnScene(false)
 {
      setPhase(phase);
@@ -137,7 +137,7 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
             mScene->getProject()->updatePhaseEvents(mData.value(STATE_ID).toInt(), Project::InsertEventsToPhase);
             return;
 
-        } else if (mAtLeastOneEventSelected && extractRect().contains(e->pos())) {
+        } else if (matLeastOneEventSelected && extractRect().contains(e->pos())) {
             //qDebug() << "PhaseItem::mousePressEvent-> extractRect clicked";
             e->accept();
             mScene->getProject()->updatePhaseEvents(mData.value(STATE_ID).toInt(), Project::ExtractEventsFromPhase);
@@ -222,7 +222,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     double dy = mEltsMargin + mEltsHeight;
 
     const bool showAlldata = mScene->showAllThumbs();
-    mAtLeastOneEventSelected = false;
+    matLeastOneEventSelected = false;
     mOneEventSelectedOnScene = false;
     
     const QJsonObject state = MainWindow::getInstance()->getProject()->state();
@@ -263,7 +263,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
         // magnify and highlight selected events
         if (isSelected) {
-            mAtLeastOneEventSelected = true;
+            matLeastOneEventSelected = true;
 
             painter->setPen(QPen(fontColor, 3.));
             r.adjust(1, 1, -1, -1);
@@ -321,7 +321,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         }
      
         
-        if (mAtLeastOneEventSelected){
+        if (matLeastOneEventSelected){
             painter->setOpacity(1);
             painter->fillRect(exRect, Qt::black);
             painter->drawPixmap(exRect, exPix2, exPix2.rect());

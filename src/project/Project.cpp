@@ -264,7 +264,6 @@ void Project::sendUpdateState(const QJsonObject& state, const QString& reason, b
     //-----------------
 #endif
     StateEvent* event = new StateEvent(state, reason, notify);
-    //QCoreApplication::postEvent(this, event, Qt::HighEventPriority);//Qt::NormalEventPriority);
     QGuiApplication::postEvent(this, event, Qt::HighEventPriority);//Qt::NormalEventPriority);
 }
 
@@ -3066,6 +3065,7 @@ void Project::runChronocurve()
             mModel->mLogMCMC = loop.getChainsLog() + loop.getInitLog();
             dialog.setFinishedState();
             emit mcmcFinished(mModel);
+
         } else {
             if (loop.mAbortedReason != ABORTED_BY_USER) {
                 QMessageBox message(QMessageBox::Warning,
