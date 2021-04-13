@@ -184,12 +184,15 @@ signals:
 public slots:
     void updateCurvesThickness(int value);
     void zoomX(const type_data min, const type_data max);
-    void exportCurrentDensityCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step =1.) const;
 
+    void exportCurrentDensities(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step = 1.) const;
     void exportCurrentVectorCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, bool writeInRows, int offset = 0) const;
 
-    void changeXScaleDivision (const Scale &sc);
-    void changeXScaleDivision (const double &major, const int & minor);
+    void exportCurrentCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step = 1.) const;
+    void exportReferenceCurves(const QString& defaultPath, const QLocale locale = QLocale::English, const QString& csvSep = ",", double step =1.) const;
+
+    void changeXScaleDivision (const Scale& sc);
+    void changeXScaleDivision (const double& major, const int& minor);
 
 protected:
     void adaptMarginBottom();

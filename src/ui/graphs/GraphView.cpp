@@ -1392,7 +1392,7 @@ void GraphView::drawCurves(QPainter& painter)
  * @brief Export a density with locale setting and separator and specific step
  * @todo Maybe we can use QString QLocale::createSeparatedList(const QStringList & list) const
  */
-void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step) const
+void GraphView::exportCurrentDensities(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step) const
 {
     if (step<=0)
         step=1;
@@ -1404,7 +1404,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
                                                     filter);
     QFile file(filename);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-        qDebug()<<"GraphView::exportCurrentCurves"<<" nbCurve to export"<<mCurves.size();
+        qDebug()<<"GraphView::exportCurrentDensityCurves"<<" nbCurve to export"<<mCurves.size();
 
         QList<QStringList> rows;
         QStringList list;
@@ -1558,6 +1558,185 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
         file.close();
     }
 }
+
+void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step) const
+{
+    if (step <= 0)
+        step = 1;
+
+    QString filter = tr("CSV (*.csv)");
+    QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                    tr("Save graph data as..."),
+                                                    defaultPath,
+                                                    filter);
+    QFile file(filename);
+    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+        qDebug()<<"GraphView::exportCurrentCurve";
+
+        QList<QStringList> rows;
+        QStringList list;
+        // 1 -Create the header
+        list << "X Axis";
+        list << "G";
+        list << "G sup 95";
+        list << "G inf 95";
+        type_data xMin = INFINITY;
+        type_data xMax = INFINITY;
+
+        for (auto& curve : mCurves) {
+            if (!curve.mData.empty() &&
+                !curve.mIsHorizontalLine &&
+                !curve.mIsVerticalLine &&
+                !curve.mIsVertical &&
+                !curve.mIsHorizontalSections &&
+                !curve.mUseVectorData &&
+                curve.mVisible) {
+
+                // 2 - Find x Min and x Max period, on all curve, we suppose Qmap is order
+                if ( std::isinf(xMin) ) {// firstCurveVisible) {
+                    xMin = curve.mData.firstKey();
+                    xMax = curve.mData.lastKey();
+                } else {
+                    xMin = qMin(xMin, curve.mData.firstKey());
+                    xMax = qMax(xMax, curve.mData.lastKey());
+                }
+            } else continue;
+        }
+        if (std::isinf(xMin) || std::isinf(xMax))
+            return;
+
+        rows<<list;
+        rows.reserve(ceil( (xMax - xMin)/step) );
+
+        // 3 - Create Row, with each curve
+        //  Create data in row
+        type_data x;
+        int nbData = (xMax - xMin)/ step;
+        for (int i = 0; i <= nbData; ++i) {
+            x = (type_data)(i)*step + xMin;
+            list.clear();
+
+            list << locale.toString(x);
+            // Il doit y avoir au moins trois courbes G, GSup, Ginf
+
+            list<<locale.toString(interpolateValueInQMap(x, mCurves.at(0).mData), 'g', 15);
+            list<<locale.toString(interpolateValueInQMap(x, mCurves.at(1).mData), 'g', 15);
+            list<<locale.toString(interpolateValueInQMap(x, mCurves.at(2).mData), 'g', 15);
+
+      //      }
+            rows<<list;
+        }
+
+        // 4 - Save Qlist
+        QTextStream output(&file);
+        const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
+        const QString projectName = tr("Project filename : %1").arg(MainWindow::getInstance()->getNameProject());
+
+        output << "# "+ version + "\r";
+        output << "# "+ projectName + "\r";
+        output << "# "+ DateUtils::getAppSettingsFormatStr() + "\r";
+
+        for (auto& row : rows) {
+            output << row.join(csvSep);
+            output << "\r";
+        }
+        file.close();
+    }
+
+}
+
+/**
+ * @brief GraphView::exportReferenceCurves
+ * @param defaultPath
+ * @param locale
+ * @param csvSep
+ * @param step
+ */
+void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step) const
+{
+    if (step <= 0)
+        step = 1;
+
+    QString filter = tr("CSV (*.csv)");
+    QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                    tr("Save graph data as..."),
+                                                    defaultPath,
+                                                    filter);
+    QFile file(filename);
+    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+        qDebug()<<"GraphView::exportReferenceCurves";
+
+        QList<QStringList> rows;
+        QStringList list;
+        // 1 -Create the header
+        list << "X Axis";
+        list << "G";
+        list << "err G";
+        type_data xMin = INFINITY;
+        type_data xMax = INFINITY;
+
+        for (auto& curve : mCurves) {
+            if (!curve.mData.empty() &&
+                !curve.mIsHorizontalLine &&
+                !curve.mIsVerticalLine &&
+                !curve.mIsVertical &&
+                !curve.mIsHorizontalSections &&
+                !curve.mUseVectorData &&
+                curve.mVisible) {
+
+                // 2 - Find x Min and x Max period, on all curve, we suppose Qmap is order
+                if ( std::isinf(xMin) ) {// firstCurveVisible) {
+                    xMin = curve.mData.firstKey();
+                    xMax = curve.mData.lastKey();
+                } else {
+                    xMin = qMin(xMin, curve.mData.firstKey());
+                    xMax = qMax(xMax, curve.mData.lastKey());
+                }
+            } else continue;
+        }
+        if (std::isinf(xMin) || std::isinf(xMax))
+            return;
+
+        rows<<list;
+        rows.reserve(ceil( (xMax - xMin)/step) );
+
+        // 3 - Create Row, with each curve
+        //  Create data in row
+        type_data x;
+        int nbData = (xMax - xMin)/ step;
+        for (int i = 0; i <= nbData; ++i) {
+            x = (type_data)(i)*step + xMin;
+            list.clear();
+
+            list << locale.toString(x);
+            // Il doit y avoir au moins trois courbes G, GSup, Ginf et nous exportons G et ErrG
+            const type_data xi = interpolateValueInQMap(x, mCurves.at(0).mData);
+            const type_data err_xi = interpolateValueInQMap(x, mCurves.at(1).mData);
+            list<<locale.toString(xi, 'g', 15);
+            list<<locale.toString((err_xi-xi)/1.96, 'g', 15);
+
+      //      }
+            rows<<list;
+        }
+
+        // 4 - Save Qlist
+        QTextStream output(&file);
+        const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
+        const QString projectName = tr("Project filename : %1").arg(MainWindow::getInstance()->getNameProject());
+
+        output << "# "+ version + "\r";
+        output << "# "+ projectName + "\r";
+        output << "# "+ DateUtils::getAppSettingsFormatStr() + "\r";
+
+        for (auto& row : rows) {
+            output << row.join(csvSep);
+            output << "\r";
+        }
+        file.close();
+    }
+
+}
+
 
 bool GraphView::saveAsSVG(const QString& fileName, const QString& graphTitle, const QString& svgDescrition, const bool withVersion, const int versionHeight)
 {

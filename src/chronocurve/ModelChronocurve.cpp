@@ -45,7 +45,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 ModelChronocurve::ModelChronocurve():Model()
 {
-
+    mAlphaLissage.mSupport = MetropolisVariable::eR;
+    mAlphaLissage.mFormat = DateUtils::eNumeric;
 }
 
 ModelChronocurve::~ModelChronocurve()
@@ -68,7 +69,6 @@ void ModelChronocurve::fromJson(const QJsonObject& json)
     
     for (Event*& event: mEvents)
         event->mMethod = Event::eMHAdaptGauss;
-
     
     if (json.contains(STATE_CHRONOCURVE)) {
         const QJsonObject settings = json.value(STATE_CHRONOCURVE).toObject();
@@ -411,8 +411,7 @@ void ModelChronocurve::generatePosteriorDensities(const QList<ChainSpecs> &chain
         event->mVG.updateFormatedTrace();
         event->mVG.generateHistos(chains, fftLen, bandwidth);
     }
-    
-    //qDebug() << *(mAlphaLissage.mRawTrace);
+
     mAlphaLissage.updateFormatedTrace();
     mAlphaLissage.generateHistos(chains, fftLen, bandwidth);
 }
@@ -425,9 +424,7 @@ void ModelChronocurve::generateCorrelations(const QList<ChainSpecs> &chains)
 
 void ModelChronocurve::generateNumericalResults(const QList<ChainSpecs> &chains)
 {
-
     Model::generateNumericalResults(chains);
-
     for (Event*& event : mEvents) {
         event->mVG.generateNumericalResults(chains);
     }
@@ -447,7 +444,6 @@ void ModelChronocurve::clearThreshold()
 void ModelChronocurve::generateCredibility(const double thresh)
 {
     Model::generateCredibility(thresh);
-    
     for (Event*& event : mEvents) {
         if (event->type() != Event::eKnown) {
             event->mVG.generateCredibility(mChains, thresh);
@@ -459,7 +455,6 @@ void ModelChronocurve::generateCredibility(const double thresh)
 void ModelChronocurve::generateHPD(const double thresh)
 {
     Model::generateHPD(thresh);
-    
     for (Event*& event : mEvents) {
         if (event->type() != Event::eKnown) {
             event->mVG.generateHPD(thresh);

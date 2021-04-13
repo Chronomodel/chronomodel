@@ -882,15 +882,6 @@ std::vector<long double> initLongVector(const unsigned n)
 
 std::vector<std::vector<double>> initMatrix(const unsigned rows, const unsigned cols)
 {
-   /* std::vector<std::vector<double>> matrix;
-    for (int r = 0; r < rows; ++r) {
-        std::vector<double> row;
-        for (int c = 0; c < cols; ++c) {
-            row.push_back(0.);
-        }
-        matrix.push_back(row);
-    }
-    return matrix;*/
     return std::vector<std::vector<double>> (rows, std::vector<double>(cols, 0.));
 }
 
@@ -1118,11 +1109,6 @@ std::vector<std::vector<long double>> addMatEtMat(const std::vector<std::vector<
 std::vector<std::vector<long double>> addIdentityToMat(const std::vector<std::vector<long double>>& matrix)
 {
     const int dim = matrix.size();
-   /* std::vector<std::vector<double>> result = initMatrix(dim, dim);
-
-    for (int i = 0; i < dim; ++i) {
-        result[i][i] = 1. + matrix.at(i).at(i);
-    }*/
     std::vector<std::vector<long double>> result (matrix);
 
     for (int i = 0; i < dim; ++i)

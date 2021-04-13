@@ -134,7 +134,7 @@ protected:
     void setXRange();
     void setXSlider(const int value);
     void setXSpin(const double value);
-    void setXIntervals();
+    void setXScale();
 
     // ------------------------------------------------
     //  Utilities
@@ -200,7 +200,7 @@ private slots:
     void applyXRange();
     void applyXSlider(int value);
     void applyXSpin(double value);
-    void applyXIntervals();
+    void applyXScale();
 
     // Graphic options
     void applyYSlider(int value);
@@ -420,8 +420,8 @@ private:
     double mResultCurrentMinX;
     double mResultCurrentMaxX;
     
-    double mCurrentVariableMaxX;
-    double mCurrentVariableMinX;
+  //  double mCurrentVariableMaxX;
+  //  double mCurrentVariableMinX;
     
     // ----------------------------------------
     //  X Scale ticks intervals

@@ -103,165 +103,157 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
     mGraph->setBackgroundColor(QColor(230, 230, 230));
     //mGraph->reserveCurves(5);
     
+    if (mCurrentVariable == eG) {
+        GraphCurve curveRefPoints;
+        curveRefPoints.mName = tr("Ref points Y");
 
-    GraphCurve curveRefPoints;
-    curveRefPoints.mName = tr("Ref points Y");
+        curveRefPoints.mPen = QPen(Qt::black, 1, Qt::SolidLine);
+        curveRefPoints.mBrush = Qt::black;
+        curveRefPoints.mIsHisto = false;
+        curveRefPoints.mIsRectFromZero = false;
+        curveRefPoints.mIsRefPoints = true;
 
-    curveRefPoints.mPen = QPen(Qt::black, 1, Qt::SolidLine);
-    curveRefPoints.mBrush = Qt::black;
-    curveRefPoints.mIsHisto = false;
-    curveRefPoints.mIsRectFromZero = false;
-    curveRefPoints.mIsRefPoints = true;
- /*
-  *
-    for (int i = 0; i < mEvents.size(); ++i) {
-        Event* event = mEvents[i];
-        double tmin = HUGE_VAL;
-        double tmax = -HUGE_VAL;
+        for (auto& rf : mRefPoints) {
+            curveRefPoints.mData.insert(rf.Xmean, rf.Ymean);
+            curveRefPoints.mDataErrorX.insert(rf.Xmean, rf.Xerr);
+            curveRefPoints.mDataErrorY.insert(rf.Xmean, rf.Yerr);
+            curveRefPoints.mDataColor.insert(rf.Xmean, rf.color);
+        }
 
-        for (auto&& date: event->mDates) {
-            QMap<double, double> calibMap = date.getRawCalibMap();//  getFormatedCalibMap();
-            const double thresh = 80;
-            QMap<double, double> subData = getMapDataInRange(calibMap, mSettings.mTmin, mSettings.mTmax);// mSettings.getTminFormated(), mSettings.getTmaxFormated());
-            QMap<double, double> hpd = create_HPD(subData, thresh);
-            
-            QMapIterator<double, double> it(hpd);
-            it.toFront();
-            while (it.hasNext()) {
-                it.next();
-                if (it.value() != 0) {
-                    tmin = std::min(tmin, it.key());
-                    break;
-                }
-            }
-            it.toBack();
-            while (it.hasPrevious()) {
-                it.previous();
-                if (it.value() != 0) {
-                    tmax = std::max(tmax, it.key());
-                    break;
-                }
+
+        GraphCurve curveG;
+        curveG.mName = tr("G");
+        curveG.mPen = QPen(QColor(119, 95, 49), 1, Qt::SolidLine);
+        curveG.mBrush = Qt::NoBrush;
+        curveG.mIsHisto = false;
+        curveG.mIsRectFromZero = false;
+
+        GraphCurve curveGSup;
+        curveGSup.mName = tr("G Sup");
+        curveGSup.mPen = QPen(QColor(100, 100, 100), 1, Qt::SolidLine);
+        curveGSup.mBrush = Qt::NoBrush;
+        curveGSup.mIsHisto = false;
+        curveGSup.mIsRectFromZero = false;
+
+        GraphCurve curveGInf;
+        curveGInf.mName = tr("G Inf");
+        curveGInf.mPen = QPen(QColor(100, 100, 100), 1, Qt::SolidLine);
+        curveGInf.mBrush = Qt::NoBrush;
+        curveGInf.mIsHisto = false;
+        curveGInf.mIsRectFromZero = false;
+        QList<GraphCurve> curveGChains;
+        for (int i = 0; i < mComposanteGChains.size(); ++i) {
+            GraphCurve curveGChain;
+            curveGChain.mName = QString("G Chain ") + QString::number(i);
+            curveGChain.mPen = QPen(Painting::chainColors[i], 1, Qt::SolidLine);
+            curveGChain.mBrush = Qt::NoBrush;
+            curveGChain.mIsHisto = false;
+            curveGChain.mIsRectFromZero = false;
+            curveGChains.append(curveGChain);
+        }
+
+        double t;
+        double step = mSettings.mStep;
+
+        /*
+         * Mettre ici le retour en coordonnée sphérique ou vectoriel
+         *
+         *   F:=sqrt(sqr(Gx)+sqr(Gy)+sqr(Gz));
+
+        Ic:=arcsinus(Gz/F);
+        Dc:=angleD(Gx,Gy);
+
+        Tab_chemin_IDF[iJ].IiJ:=Ic*Deg;
+        Tab_chemin_IDF[iJ].DiJ:=Dc*Deg;
+        Tab_chemin_IDF[iJ].FiJ:=F;
+
+        // Calcul de la boule d'erreur moyenne par moyenne quadratique
+        ErrGx:=Tab_parametrique[iJ].ErrGx;
+        ErrGy:=Tab_parametrique[iJ].ErrGy;
+        ErrGz:=Tab_parametrique[iJ].ErrGz;
+        ErrIDF:=sqrt((sqr(ErrGx)+sqr(ErrGy)+sqr(ErrGz))/3);
+
+    // sauvegarde des erreurs sur chaque param�tre  - on convertit en degr�s pour I et D
+        Tab_chemin_IDF[iJ].ErrI:=(ErrIDF/Tab_chemin_IDF[iJ].Fij)*deg;
+        Tab_chemin_IDF[iJ].ErrD:=(ErrIDF/(Tab_chemin_IDF[iJ].Fij*cos(Tab_chemin_IDF[iJ].Iij*rad)))*deg;
+        Tab_chemin_IDF[iJ].ErrF:=ErrIDF;
+         *
+         *
+         */
+
+        for (size_t idx = 0; idx < mComposanteG.vecG.size() ; ++idx) {
+
+            t = DateUtils::convertToAppSettingsFormat(idx*step + mSettings.mTmin);
+            curveG.mData.insert(t, mComposanteG.vecG.at(idx));
+            // Enveloppe à 95%  https://en.wikipedia.org/wiki/1.96
+            curveGSup.mData.insert(t, mComposanteG.vecG.at(idx) + 1.96 * mComposanteG.vecGErr.at(idx));
+            curveGInf.mData.insert(t, mComposanteG.vecG.at(idx) - 1.96 * mComposanteG.vecGErr.at(idx));
+
+            // Enveloppe à 68%
+           // curveGSup.mData.insert(t, mComposanteG.vecG.at(idx) + 1. * mComposanteG.vecGErr.at(idx));
+           // curveGInf.mData.insert(t, mComposanteG.vecG.at(idx) - 1. * mComposanteG.vecGErr.at(idx));
+
+            for (int i = 0; i<curveGChains.size(); ++i) {
+                curveGChains[i].mData.insert(t, mComposanteGChains.at(i).vecG.at(idx));
             }
         }
-        double tmoy = DateUtils::convertToAppSettingsFormat((tmax + tmin) / 2.);
-     */
-    for (auto& rf : mRefPoints) {
-        curveRefPoints.mData.insert(rf.Xmean, rf.Ymean);
-        curveRefPoints.mDataErrorX.insert(rf.Xmean, rf.Xerr);
-        curveRefPoints.mDataErrorY.insert(rf.Xmean, rf.Yerr);
-        curveRefPoints.mDataColor.insert(rf.Xmean, rf.color);
-    }
-    
-    
-    GraphCurve curveG;
-    curveG.mName = tr("G");
-    curveG.mPen = QPen(QColor(119, 95, 49), 1, Qt::SolidLine);
-    curveG.mBrush = Qt::NoBrush;
-    curveG.mIsHisto = false;
-    curveG.mIsRectFromZero = false;
-    
-    GraphCurve curveGSup;
-    curveGSup.mName = tr("G Sup");
-    curveGSup.mPen = QPen(QColor(100, 100, 100), 1, Qt::SolidLine);
-    curveGSup.mBrush = Qt::NoBrush;
-    curveGSup.mIsHisto = false;
-    curveGSup.mIsRectFromZero = false;
-    
-    GraphCurve curveGInf;
-    curveGInf.mName = tr("G Inf");
-    curveGInf.mPen = QPen(QColor(100, 100, 100), 1, Qt::SolidLine);
-    curveGInf.mBrush = Qt::NoBrush;
-    curveGInf.mIsHisto = false;
-    curveGInf.mIsRectFromZero = false;
-    
-    GraphCurve curveGP;
-    curveGP.mName = tr("G Prime");
-    curveGP.mPen = QPen(QColor(154, 80, 225), 1, Qt::SolidLine);
-    curveGP.mBrush = Qt::NoBrush;
-    curveGP.mIsHisto = false;
-    curveGP.mIsRectFromZero = false;
-    
-    GraphCurve curveGS;
-    curveGS.mName = tr("G Second");
-    curveGS.mPen = QPen(QColor(236, 105, 64), 1, Qt::SolidLine);
-    curveGS.mBrush = Qt::NoBrush;
-    curveGS.mIsHisto = false;
-    curveGS.mIsRectFromZero = false;
-    
-    QList<GraphCurve> curveGChains;
-    for (int i = 0; i < mComposanteGChains.size(); ++i) {
-        GraphCurve curveGChain;
-        curveGChain.mName = QString("G Chain ") + QString::number(i);
-        curveGChain.mPen = QPen(Painting::chainColors[i], 1, Qt::SolidLine);
-        curveGChain.mBrush = Qt::NoBrush;
-        curveGChain.mIsHisto = false;
-        curveGChain.mIsRectFromZero = false;
-        curveGChains.append(curveGChain);
-    }
 
-    double t;
-    double step = mSettings.mStep;
-    //for (int tloop=mSettings.mTmin; tloop<=mSettings.mTmax; ++tloop) {
+        mGraph->addCurve(curveG);
+        mGraph->addCurve(curveGSup);
+        mGraph->addCurve(curveGInf);
+
     /*
-     * Mettre ici le retour en coordonnée sphérique ou vectoriel
-     *
-     *   F:=sqrt(sqr(Gx)+sqr(Gy)+sqr(Gz));
 
-    Ic:=arcsinus(Gz/F);
-    Dc:=angleD(Gx,Gy);
+    */
+        mGraph->addCurve(curveRefPoints);
 
-    Tab_chemin_IDF[iJ].IiJ:=Ic*Deg;
-    Tab_chemin_IDF[iJ].DiJ:=Dc*Deg;
-    Tab_chemin_IDF[iJ].FiJ:=F;
-
-    // Calcul de la boule d'erreur moyenne par moyenne quadratique
-    ErrGx:=Tab_parametrique[iJ].ErrGx;
-    ErrGy:=Tab_parametrique[iJ].ErrGy;
-    ErrGz:=Tab_parametrique[iJ].ErrGz;
-    ErrIDF:=sqrt((sqr(ErrGx)+sqr(ErrGy)+sqr(ErrGz))/3);
-
-// sauvegarde des erreurs sur chaque param�tre  - on convertit en degr�s pour I et D
-    Tab_chemin_IDF[iJ].ErrI:=(ErrIDF/Tab_chemin_IDF[iJ].Fij)*deg;
-    Tab_chemin_IDF[iJ].ErrD:=(ErrIDF/(Tab_chemin_IDF[iJ].Fij*cos(Tab_chemin_IDF[iJ].Iij*rad)))*deg;
-    Tab_chemin_IDF[iJ].ErrF:=ErrIDF;
-     *
-     *
-     */
-
-    for (size_t idx = 0; idx < mComposanteG.vecG.size() ; ++idx) {
-
-        t = DateUtils::convertToAppSettingsFormat(idx*step + mSettings.mTmin);
-        curveG.mData.insert(t, mComposanteG.vecG.at(idx));
-        // Enveloppe à 95%  https://en.wikipedia.org/wiki/1.96
-        //curveGSup.mData.insert(t, mComposanteG.vecG.at(idx) + 1.96 * mComposanteG.vecGErr.at(idx));
-        //curveGInf.mData.insert(t, mComposanteG.vecG.at(idx) - 1.96 * mComposanteG.vecGErr.at(idx));
-
-        // Enveloppe à 68%
-        curveGSup.mData.insert(t, mComposanteG.vecG.at(idx) + 1. * mComposanteG.vecGErr.at(idx));
-        curveGInf.mData.insert(t, mComposanteG.vecG.at(idx) - 1. * mComposanteG.vecGErr.at(idx));
-
-        curveGP.mData.insert(t, mComposanteG.vecGP.at(idx));
-        curveGS.mData.insert(t, mComposanteG.vecGS.at(idx));
-        
-        for (int i = 0; i<curveGChains.size(); ++i) {
-            curveGChains[i].mData.insert(t, mComposanteGChains.at(i).vecG.at(idx));
+        for (auto&& cGC: curveGChains) {
+            mGraph->addCurve(cGC);
         }
+
     }
-    
-    mGraph->addCurve(curveG);
-    mGraph->addCurve(curveGSup);
-    mGraph->addCurve(curveGInf);
 
-    mGraph->addCurve(curveGP);
-    mGraph->addCurve(curveGS);
-    mGraph->addCurve(curveRefPoints);
+    else if (mCurrentVariable == eGP) {
+        GraphCurve curveGP;
+        curveGP.mName = tr("G Prime");
+        curveGP.mPen = QPen(QColor(154, 80, 225), 1, Qt::SolidLine);
+        curveGP.mBrush = Qt::NoBrush;
+        curveGP.mIsHisto = false;
+        curveGP.mIsRectFromZero = false;
+        double t;
+        double step = mSettings.mStep;
 
-    for (auto&& cGC: curveGChains) {
-        mGraph->addCurve(cGC);
+        for (size_t idx = 0; idx < mComposanteG.vecG.size() ; ++idx) {
+
+            t = DateUtils::convertToAppSettingsFormat(idx*step + mSettings.mTmin);
+
+            curveGP.mData.insert(t, mComposanteG.vecGP.at(idx));
+
+
+        }
+         mGraph->addCurve(curveGP);
+
+    } else if (mCurrentVariable == eGS) {
+        GraphCurve curveGS;
+        curveGS.mName = tr("G Second");
+        curveGS.mPen = QPen(QColor(236, 105, 64), 1, Qt::SolidLine);
+        curveGS.mBrush = Qt::NoBrush;
+        curveGS.mIsHisto = false;
+        curveGS.mIsRectFromZero = false;
+        double t;
+        double step = mSettings.mStep;
+
+        for (size_t idx = 0; idx < mComposanteG.vecG.size() ; ++idx) {
+            t = DateUtils::convertToAppSettingsFormat(idx*step + mSettings.mTmin);
+            curveGS.mData.insert(t, mComposanteG.vecGS.at(idx));
+        }
+        mGraph->addCurve(curveGS);
     }
 
     mGraph->setTipXLab(tr("t"));
     mGraph->setTipYLab("Y");
+
+
 }
 
 void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, bool showG, bool showGError, bool showGPoints, bool showGP, bool showGS)

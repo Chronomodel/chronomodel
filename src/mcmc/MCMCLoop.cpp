@@ -206,6 +206,7 @@ void MCMCLoop::run()
         emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))  + " : " + tr("Adapting"), 0, chain.mMaxBatchs * chain.mNumBatchIter);
         mState = eAdapting;
 
+
         while ( chain.mBatchIndex < chain.mMaxBatchs) {
             if (isInterruptionRequested()) {
                 mAbortedReason = ABORTED_BY_USER;

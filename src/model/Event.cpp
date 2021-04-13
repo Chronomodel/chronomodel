@@ -66,7 +66,7 @@ mInitialized(false),
 mLevel(0)
 {
     mTheta.mSupport = MetropolisVariable::eBounded;
-    mTheta.mFormat = DateUtils::eUnknown;;
+    mTheta.mFormat = DateUtils::eUnknown;
 
     // Item initial position :
     //int posDelta = 100;
@@ -99,6 +99,8 @@ mLevel(0)
     mWInv = 0.;
 
    // MHVariable mVG;
+    mVG.mSupport = MetropolisVariable::eRp;
+    mVG.mFormat = DateUtils::eNumeric;
 }
 
 Event::Event(const Event& event)

@@ -132,8 +132,8 @@ private:
     std::vector<long double> calculMatInfluence(const SplineMatrices& matrices, const std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const int nbBandes, const double alpha);
     std::vector<long double> calculSplineError(const SplineMatrices& matrices, const  std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const double alpha);
     
-    double valeurG(const double t, const MCMCSplineComposante& spline);
-    double valeurErrG(const double t, const MCMCSplineComposante& spline);
+    double valeurG(const double t, const MCMCSplineComposante& spline, unsigned& i0);
+    double valeurErrG(const double t, const MCMCSplineComposante& spline, unsigned& i0);
     double valeurGPrime(const double t, const MCMCSplineComposante& spline, unsigned& i0);
     double valeurGSeconde(const double t, const MCMCSplineComposante& spline);
 

@@ -49,6 +49,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <iostream>
 #include <QJsonObject>
 #include <QtWidgets>
+#include <stdio.h>
 
 PluginGauss::PluginGauss()
 {
@@ -340,32 +341,51 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
     RefCurve curve;
     curve.mName = refFile.fileName().toLower();
 
-    QFile file(refFile.absoluteFilePath());
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+   // QFile file(refFile.absoluteFilePath());
+
+    FILE * pFile;
+    pFile = fopen (refFile.absoluteFilePath().toLocal8Bit(),"r");
+
+    if (pFile != nullptr) {
+    //if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QLocale locale = QLocale(QLocale::English);
-        QTextStream stream(&file);
+     //   QTextStream stream(&file);
+
         bool firstLine = true;
-        while (!stream.atEnd())
-        {
-            QString line = stream.readLine();
+
+        char ch = ' ';
+        while (ch != EOF)  {
+
+            QString line;
+            // this code allows to open the MacOS file (QChar::LineFeed) and WindowsOS file (QChar::CarriageReturn)
+            do {
+                ch = fgetc (pFile);
+                if (ch == QChar::LineFeed || ch == QChar::CarriageReturn)
+                    break;
+                line.append(ch);
+            } while (ch != EOF);
+
             if (!isComment(line)) {
                 QStringList values = line.split(",");
-                if (values.size() >= 3) {
+                if (values.size() > 2) {
                     bool ok = true;
-                    double t = locale.toDouble(values.at(0),&ok);
-                    if(!ok)
-                        continue;
-                    double g = locale.toDouble(values.at(1),&ok);
-                    if(!ok)
-                        continue;
-                    double e = locale.toDouble(values.at(2),&ok);
+                    const double t = locale.toDouble(values.at(0), &ok);
                     if(!ok)
                         continue;
 
-                    double gSup = g + 1.96 * e;
+                    const double g = locale.toDouble(values.at(1), &ok);
                     if(!ok)
                         continue;
-                    double gInf = g - 1.96 * e;
+
+                    const double e = locale.toDouble(values.at(2), &ok);
+                    if(!ok)
+                        continue;
+
+                    const double gSup = g + 1.96 * e;
+                    if(!ok)
+                        continue;
+
+                    const double gInf = g - 1.96 * e;
                     if(!ok)
                         continue;
 
@@ -386,6 +406,7 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
 
                         curve.mDataInfMin = gInf;
                         curve.mDataInfMax = gInf;
+
                     } else {
                         curve.mDataMeanMin = qMin(curve.mDataMeanMin, g);
                         curve.mDataMeanMax = qMax(curve.mDataMeanMax, g);
@@ -403,7 +424,7 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
                 }
             }
         }
-        file.close();
+        fclose(pFile);
 
         // invalid file ?
         if (!curve.mDataMean.isEmpty()) {
@@ -428,6 +449,7 @@ double PluginGauss::getRefValueAt(const QJsonObject& data, const double& t)
         const double c = data.value(DATE_GAUSS_C_STR).toDouble();
 
         v = a * t * t + b * t + c;
+
     } else if (mode == DATE_GAUSS_MODE_CURVE) {
         const QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
         v = getRefCurveValueAt(ref_curve, t);

@@ -172,9 +172,12 @@ MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable & ori
     return *this;
 }*/
 
-void MetropolisVariable::memo()
+void MetropolisVariable::memo(double* valueToSave)
 {
-    mRawTrace->push_back(mX);
+    if (valueToSave == nullptr)
+        mRawTrace->push_back(mX);
+    else
+        mRawTrace->push_back(*valueToSave);
 }
 
 void MetropolisVariable::reset()
@@ -299,7 +302,16 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
     const int inputSize (fftLen);
     const int outputSize = 2 * (inputSize / 2 + 1);
 
-    const double sigma = dataStd(dataSrc);
+   double sigma;
+
+    if (mSupport == eRp || mSupport== eRpStar) {
+        const Quartiles Qdata = quartilesForTrace(dataSrc);
+        sigma = Qdata.Q3 - Qdata.Q1;
+
+    } else {
+        sigma = dataStd(dataSrc);
+    }
+
     QMap<double, double> result;
 
 

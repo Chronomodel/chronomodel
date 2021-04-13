@@ -312,9 +312,25 @@ void GraphViewResults::saveGraphData() const
         mGraph->exportCurrentVectorCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
 
     // All visible curves are saved in the same file, the credibility bar is not save
-    else if (mCurrentTypeGraph == ePostDistrib)
-        mGraph->exportCurrentDensityCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
+    else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable != eG)
+        mGraph->exportCurrentDensities (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
 
+    else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eG) {
+        QMessageBox messageBox;
+        messageBox.setWindowTitle(tr("Save curve"));
+        messageBox.setText(tr("Do you want a reference curve to reused with ChronoModel or data of the graphic"));
+        QAbstractButton *referenceButton = messageBox.addButton(tr("Reference Curve"), QMessageBox::YesRole);
+        QAbstractButton *dataButton = messageBox.addButton(tr("Graphics data"), QMessageBox::NoRole);
+
+        messageBox.exec();
+        if (messageBox.clickedButton() == referenceButton)
+            mGraph->exportReferenceCurves (MainWindow::getInstance()->getCurrentPath(), QLocale::English, ",",  mSettings.mStep);
+
+        else if (messageBox.clickedButton() == dataButton) {
+            mGraph->exportCurrentCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
+        }
+        else return;
+    }
 }
 
 void GraphViewResults::setNumericalResults (const QString& resultsHTML, const QString& resultsText)
@@ -345,7 +361,7 @@ void GraphViewResults::setMarginRight(qreal &m)
     mGraph->setMarginRight(m);
 }
 
-void GraphViewResults::setGraphFont(const QFont& font)
+void GraphViewResults::setGraphsFont(const QFont& font)
 {
      // Recalcule mTopShift based on the new font, and position the graph according :
     mGraphFont = font;

@@ -62,7 +62,7 @@ public:
     MetropolisVariable& operator=(const MetropolisVariable & origin);
    // MetropolisVariable& operator=(MetropolisVariable && origin);
 
-    void memo();
+    void memo(double *valueToSave = nullptr);
     virtual void reset();
     virtual void reserve( const int reserve);
 

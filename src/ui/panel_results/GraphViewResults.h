@@ -176,7 +176,7 @@ public:
     void setMarginRight (qreal &m);
 
    // void setRendering(GraphView::Rendering render);
-    virtual void setGraphFont(const QFont& font);
+    virtual void setGraphsFont(const QFont& font);
     void setGraphsThickness(int value);
     void setGraphsOpacity(int value);
 
