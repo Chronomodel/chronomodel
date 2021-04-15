@@ -1561,8 +1561,8 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
 
 void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step) const
 {
-    if (step <= 0)
-        step = 1;
+    if (step <= 0.)
+        step = 1.;
 
     QString filter = tr("CSV (*.csv)");
     QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),

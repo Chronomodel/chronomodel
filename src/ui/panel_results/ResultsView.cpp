@@ -469,7 +469,7 @@ mMaximunNumberOfVisibleGraph(0)
     //mYLab->setAdjustText(false);
 
     mYSlider = new QSlider(Qt::Horizontal, mGraphicGroup);
-    mYSlider->setRange(10, 500);
+    mYSlider->setRange(10, 1000);
     mYSlider->setTickInterval(1);
     mYSlider->setValue(100);
 
@@ -891,7 +891,10 @@ void ResultsView::updateModel(Model* model)
     //mCurrentVariableMaxX = 0.;
     
     mCurrentTypeGraph = GraphViewResults::ePostDistrib;
-    mCurrentVariable = GraphViewResults::eTheta;
+    if (isChronocurve())
+        mCurrentVariable = GraphViewResults::eG;
+    else
+        mCurrentVariable = GraphViewResults::eTheta;
 
     mFFTLenCombo->setCurrentText(QString::number(mModel->getFFTLength()));
     mBandwidthSpin->setValue(mModel->getBandwidth());
@@ -1293,7 +1296,8 @@ void ResultsView::updateTotalGraphs()
         } else {
             ModelChronocurve* model = modelChronocurve();
             bool hasY = (model->mChronocurveSettings.mProcessType != ChronocurveSettings::eProcessTypeUnivarie);
-            bool hasZ = (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel);
+            bool hasZ = (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel ||
+                         model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D);
             
             ++totalGraphs;
             if (hasY) ++totalGraphs;
@@ -1527,7 +1531,8 @@ void ResultsView::createByCurveGraph()
 
     } else  {
         bool hasY = (model->mChronocurveSettings.mProcessType != ChronocurveSettings::eProcessTypeUnivarie);
-        bool hasZ = (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel);
+        bool hasZ = (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel ||
+                     model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D);
 
         // insert refpoints for X
         const double thresh = 64.5; //80;
@@ -1644,21 +1649,21 @@ void ResultsView::createByCurveGraph()
 
                  case ChronocurveSettings::eVariableTypeIntensite:
                       if (mCurrentVariable == GraphViewResults::eGP) {
-                         graphX->setTitle(tr("Speed Intensity"));
+                         graphX->setTitle(tr("Speed Field"));
                       } else if (mCurrentVariable == GraphViewResults::eGS) {
-                          graphX->setTitle(tr("Acceleration Intensity"));
+                          graphX->setTitle(tr("Acceleration Field"));
                        } else {
-                          graphX->setTitle(tr("Mean Intensity"));
+                          graphX->setTitle(tr("Mean Field"));
                       }
                       break;
 
                  case ChronocurveSettings::eVariableTypeProfondeur:
                       if (mCurrentVariable == GraphViewResults::eGP) {
-                         graphX->setTitle(tr("Speed Detph"));
+                         graphX->setTitle(tr("Speed Depth"));
                       } else if (mCurrentVariable == GraphViewResults::eGS) {
-                          graphX->setTitle(tr("Acceleration Detph"));
+                          graphX->setTitle(tr("Acceleration Depth"));
                        } else {
-                          graphX->setTitle(tr("Mean Detph"));
+                          graphX->setTitle(tr("Mean Depth"));
                       }
                       break;
 
@@ -1672,13 +1677,24 @@ void ResultsView::createByCurveGraph()
                        }
                        break;
             }
-        } else {
+
+        } else if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique ||
+                   model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel) {
             if (mCurrentVariable == GraphViewResults::eGP) {
                graphX->setTitle(tr("Speed Inclination"));
             } else if (mCurrentVariable == GraphViewResults::eGS) {
                 graphX->setTitle(tr("Acceleration Inclination"));
              } else {
                 graphX->setTitle(tr("Mean Inclination"));
+            }
+
+        } else if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D ) {
+            if (mCurrentVariable == GraphViewResults::eGP) {
+               graphX->setTitle(tr("Speed X"));
+            } else if (mCurrentVariable == GraphViewResults::eGS) {
+                graphX->setTitle(tr("Acceleration X"));
+             } else {
+                graphX->setTitle(tr("Mean X"));
             }
         }
 
@@ -1702,13 +1718,27 @@ void ResultsView::createByCurveGraph()
             graphY->setMarginLeft(mMarginLeft);
             graphY->setMarginRight(mMarginRight);
 
-            if (mCurrentVariable == GraphViewResults::eGP) {
-               graphY->setTitle(tr("Speed Declination"));
-            } else if (mCurrentVariable == GraphViewResults::eGS) {
-                graphY->setTitle(tr("Acceleration Declination"));
-             } else {
-                graphY->setTitle(tr("Mean Declination"));
+            if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique ||
+                               model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel) {
+
+                if (mCurrentVariable == GraphViewResults::eGP) {
+                    graphY->setTitle(tr("Speed Declination"));
+                } else if (mCurrentVariable == GraphViewResults::eGS) {
+                    graphY->setTitle(tr("Acceleration Declination"));
+                } else {
+                    graphY->setTitle(tr("Mean Declination"));
+                }
+            } else if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D ) {
+
+                if (mCurrentVariable == GraphViewResults::eGP) {
+                    graphY->setTitle(tr("Speed Y"));
+                } else if (mCurrentVariable == GraphViewResults::eGS) {
+                    graphY->setTitle(tr("Acceleration Y"));
+                } else {
+                    graphY->setTitle(tr("Mean Y"));
+                }
             }
+
             graphY->setComposanteG(modelChronocurve()->mPosteriorMeanG.gy);
             graphY->setComposanteGChains(modelChronocurve()->getChainsMeanGComposanteY());
 
@@ -1737,16 +1767,28 @@ void ResultsView::createByCurveGraph()
             graphZ->setMarginLeft(mMarginLeft);
             graphZ->setMarginRight(mMarginRight);
 
-            if (mCurrentVariable == GraphViewResults::eGP) {
-               graphZ->setTitle(tr("Speed Intensity"));
+            if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel ) {
+                if (mCurrentVariable == GraphViewResults::eGP) {
+                    graphZ->setTitle(tr("Speed Field"));
 
-            } else if (mCurrentVariable == GraphViewResults::eGS) {
-                graphZ->setTitle(tr("Acceleration Intensity"));
+                } else if (mCurrentVariable == GraphViewResults::eGS) {
+                    graphZ->setTitle(tr("Acceleration Field"));
 
-             } else {
-                graphZ->setTitle(tr("Mean Intensity"));
-            }
+                } else {
+                    graphZ->setTitle(tr("Mean Field"));
+                }
             
+            } else if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D ) {
+
+                if (mCurrentVariable == GraphViewResults::eGP) {
+                    graphZ->setTitle(tr("Speed Z"));
+                } else if (mCurrentVariable == GraphViewResults::eGS) {
+                    graphZ->setTitle(tr("Acceleration Z"));
+                } else {
+                    graphZ->setTitle(tr("Mean Z"));
+                }
+            }
+
             graphZ->setComposanteG(modelChronocurve()->mPosteriorMeanG.gz);
             graphZ->setComposanteGChains(modelChronocurve()->getChainsMeanGComposanteZ());
 
@@ -2338,6 +2380,7 @@ void ResultsView::updateControls()
 
         if (isChronocurve()) {
             mDataVGRadio->setVisible(true);
+
         } else {
             mDataVGRadio->setVisible(false);
         }
@@ -2347,6 +2390,7 @@ void ResultsView::updateControls()
             mDatesfoldCheck->setVisible(false);
             mDataCalibCheck->setVisible(false);
             mWiggleCheck->setVisible(false);
+
         } else {
             mDatesfoldCheck->setVisible(true);
             
@@ -2377,7 +2421,7 @@ void ResultsView::updateControls()
         mDataCalibCheck->setVisible(showCalibControl);
         mWiggleCheck->setVisible(showCalibControl);
 
-    } else if(mGraphListTab->currentIndex() == 2) {
+    } else if(mGraphListTab->currentIndex() == 2) { // phases tab
         mGraphTypeTabs->setTabVisible(1, false); // History Plot
         mGraphTypeTabs->setTabVisible(2, false); // Acceptance Rate
         mGraphTypeTabs->setTabVisible(3, false); // Autocorrelation
@@ -2438,7 +2482,6 @@ void ResultsView::updateControls()
     // -------------------------------------------------------------------------------------
     if ( mCurrentVariable == GraphViewResults::eTempo ||
          mCurrentVariable == GraphViewResults::eActivity ||
-         mCurrentVariable == GraphViewResults::eG ||
          mCurrentVariable == GraphViewResults::eGP ||
          mCurrentVariable == GraphViewResults::eGS) {
 

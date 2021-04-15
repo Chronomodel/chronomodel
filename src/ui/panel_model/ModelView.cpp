@@ -349,13 +349,13 @@ void ModelView::setProject(Project* project)
     mTmax = settings.mTmax;
 
     //adaptStudyPeriodButton(settings.mTmin, settings.mTmax);
-
+/*
     mProject->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
     mProject->mState[STATE_SETTINGS_TMAX] = settings.mTmax;
     mProject->mState[STATE_SETTINGS_STEP] = settings.mStep;
 
     mProject->mState[STATE_SETTINGS_STEP_FORCED] = settings.mStepForced;
-
+*/
     setSettingsValid(settings.mTmin < settings.mTmax);
 
     //Unselect all Item in all scene
@@ -545,13 +545,13 @@ void ModelView::updateProject()
 
     mChronocurveWidget->setToggled(mProject->isChronocurve());
     adaptStudyPeriodButton(settings.mTmin, settings.mTmax);
-
+/*
     mProject->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
     mProject->mState[STATE_SETTINGS_TMAX] = settings.mTmax;
     mProject->mState[STATE_SETTINGS_STEP] = settings.mStep;
 
     mProject->mState[STATE_SETTINGS_STEP_FORCED] = settings.mStepForced;
-
+*/
     setSettingsValid(settings.mTmin < settings.mTmax);
  //   qDebug() <<"ModelView::updateProject mEventsScene->updateSceneFromState();";
     mEventsScene->updateSceneFromState();

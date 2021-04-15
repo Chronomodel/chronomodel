@@ -91,7 +91,7 @@ private:
 
     void prepareEventsY(const QList<Event *> & lEvents);
     void prepareEventY(Event * const event);
-    void prepareEventY(EventKnown* const event);
+  //  void prepareEventY(EventKnown* const event);
     
     // Fonctions anciennement liées à do_cravate :
     std::vector<long double> createDiagWInv(const QList<Event *> &lEvents);
@@ -140,6 +140,8 @@ private:
     void valeurs_G_ErrG_GP_GS(const double t, const MCMCSplineComposante& spline, long double& G, long double& ErrG, long double& GP, long double& GS, unsigned& i0);
     
     PosteriorMeanGComposante computePosteriorMeanGComposante(const std::vector<MCMCSplineComposante>& trace);
+
+    bool  asPositiveGPrime (const MCMCSplineComposante& splineComposante);
     std::vector<unsigned> listOfIterationsWithPositiveGPrime (const std::vector<MCMCSplineComposante> &splineTrace);
 
 

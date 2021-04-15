@@ -64,6 +64,7 @@ public:
         eProcessTypeUnivarie = 'U',
         eProcessTypeSpherique = 'S',
         eProcessTypeVectoriel = 'V',
+        eProcessType3D = '3'
     };
 
     enum VariableType // Type_var_cmt
@@ -72,7 +73,7 @@ public:
         eVariableTypeDeclinaison = 'D',
         eVariableTypeIntensite = 'F',
         eVariableTypeProfondeur = 'P',
-        eVariableTypeAutre = 'A',
+        eVariableTypeAutre = 'A'
     };
 
     enum ProcessMode

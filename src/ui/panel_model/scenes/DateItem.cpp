@@ -107,7 +107,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
 DateItem::~DateItem()
 {
     mEventsScene= nullptr;
-    mDate.~QJsonObject();
+  //  mDate.~QJsonObject(); // Don't delete the JSON, we need it when we delete an event.
     mColor.~QColor();
     mCalibThumb.~QPixmap();
 }

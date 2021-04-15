@@ -1794,8 +1794,6 @@ void Model::clearPosteriorDensities()
     QList<Event*>::iterator iterEvent = mEvents.begin();
     while (iterEvent!=mEvents.end()) {
         for (auto&& date : (*iterEvent)->mDates) {
-       // for(int j =0; j<(*iterEvent)->mDates.size(); ++j) {
-        //    Date& date = (*iterEvent)->mDates[j];
             date.mTheta.mHisto.clear();
             date.mSigma.mHisto.clear();
             date.mTheta.mChainsHistos.clear();

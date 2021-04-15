@@ -404,26 +404,45 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         painter->setFont(font);
         painter->setPen(CHRONOCURVE_COLOR_TEXT);
 
-        if (chronocurveSettings.showInclinaison()){
-            QString text1;
-            text1 += "Inc. = ";
-            text1 += QLocale().toString (mData.value(STATE_EVENT_Y_INC).toDouble());
-            text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_S_INC).toDouble());
-            
-            if(chronocurveSettings.showDeclinaison()){
-                text1 += " Dec. = ";
-                text1 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
-            }
-            painter->drawText(QRectF(lineX, lineY, lineW, lineH), Qt::AlignCenter, text1);
-        }
-        
-        if (chronocurveSettings.showIntensite()) {
-            QString text2 = chronocurveSettings.intensiteLabel();
-            text2 += " = ";
-            text2 += QLocale().toString(mData.value(STATE_EVENT_Y_INT).toDouble());
-            text2 += " ± " + QLocale().toString(mData.value(STATE_EVENT_S_INT).toDouble());
-            painter->drawText(QRectF(lineX, lineY + (chronocurveSettings.showInclinaison() ? 1 : 0) * lineH, lineW, lineH), Qt::AlignCenter, text2);
-        }
+       if ( chronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D) {
+           QString text1;
+
+           text1 += "X = ";
+           text1 += QLocale().toString (mData.value(STATE_EVENT_Y_INC).toDouble());
+           text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_S_INC).toDouble());
+
+           text1 += " Y = ";
+           text1 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
+
+           painter->drawText(QRectF(lineX, lineY, lineW, lineH), Qt::AlignCenter, text1);
+
+           QString text2 = "Z = ";
+           text2 += QLocale().toString(mData.value(STATE_EVENT_Y_INT).toDouble());
+           text2 += " ± " + QLocale().toString(mData.value(STATE_EVENT_S_INT).toDouble());
+           painter->drawText(QRectF(lineX, lineY + lineH, lineW, lineH), Qt::AlignCenter, text2);
+
+       } else {
+           if (chronocurveSettings.showInclinaison()) {
+               QString text1 = "Inc = ";
+               text1 += QLocale().toString (mData.value(STATE_EVENT_Y_INC).toDouble());
+               text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_S_INC).toDouble());
+
+               if (chronocurveSettings.showDeclinaison()) {
+                   text1 += " Dec = ";
+                   text1 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
+               }
+
+               painter->drawText(QRectF(lineX, lineY, lineW, lineH), Qt::AlignCenter, text1);
+           }
+
+           if (chronocurveSettings.showIntensite()) {
+               QString text2 = chronocurveSettings.intensiteLabel();
+               text2 += " = ";
+               text2 += QLocale().toString(mData.value(STATE_EVENT_Y_INT).toDouble());
+               text2 += " ± " + QLocale().toString(mData.value(STATE_EVENT_S_INT).toDouble());
+               painter->drawText(QRectF(lineX, lineY + (chronocurveSettings.showInclinaison() ? 1 : 0) * lineH, lineW, lineH), Qt::AlignCenter, text2);
+           }
+       }
 
     } else {
         // Phases
@@ -539,7 +558,8 @@ int EventItem::getNumberChronocurveLines() const
     int lines = 0;
     if (chronocurveSettings.mEnabled) {
         lines = 1;
-        if (chronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel){
+        if ( chronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel ||
+             chronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D ) {
             lines = 2;
         }
     }

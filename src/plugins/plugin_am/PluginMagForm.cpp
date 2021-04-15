@@ -50,7 +50,7 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
 
     mIncRadio = new QRadioButton(tr("Inclination"));
     mDecRadio = new QRadioButton(tr("Declination"));
-    mIntensityRadio = new QRadioButton(tr("Intensity"));
+    mIntensityRadio = new QRadioButton(tr("Field"));
 
     connect(mIncRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this,  &PluginMagForm:: updateOptions);
     connect(mDecRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: updateOptions);
@@ -59,7 +59,7 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     mIncLab = new QLabel(tr("Inclination"), this);
     mDecLab = new QLabel(tr("Declination"), this);
     mDecIncLab = new QLabel(tr("Inclination"), this);
-    mIntensityLab = new QLabel(tr("Intensity"), this);
+    mIntensityLab = new QLabel(tr("Field"), this);
     mAlpha95Lab = new QLabel(tr("Alpha 95"), this);
     mRefLab = new QLabel(tr("Reference"), this);
 
@@ -80,7 +80,7 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     
     mIntensityEdit = new QLineEdit(this);
     mIntensityEdit->setAlignment(Qt::AlignHCenter);
-    mIntensityEdit->setToolTip(tr("intensity is >0"));
+    mIntensityEdit->setToolTip(tr("field is >0"));
     connect(mIntensityEdit, &QLineEdit::textChanged, this, &PluginMagForm::errorIsValid);
     
     

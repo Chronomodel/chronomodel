@@ -171,7 +171,7 @@ QString PluginMag::getDateDesc(const Date* date) const
             result += "; " + QObject::tr("Inclination : %1").arg(locale.toString(inc));
             result += "; " + QObject::tr("α 95 : %1").arg(locale.toString(alpha));
         } else if (is_int)  {
-            result += QObject::tr("Intensity : %1").arg(locale.toString(intensity));
+            result += QObject::tr("Field : %1").arg(locale.toString(intensity));
             result += "; " + QObject::tr("Error : %1").arg(locale.toString(alpha));
         }
 
@@ -211,7 +211,7 @@ QStringList PluginMag::csvColumns() const
         << "type"
         << "Inclination value"
         << "Declination value"
-        << "Intensity value"
+        << "Field value"
         << "Error (sd) or α 95"
         << "Ref. curve";
     return cols;
@@ -251,15 +251,15 @@ QJsonObject PluginMag::fromCSV(const QStringList& list,const QLocale &csvLocale)
         const double valError = csvLocale.toDouble(list.at(5));
          
         if ((list.at(1) == "inclination" || list.at(1) == "declination") && (valInc>90 || valInc < -90)) {
-            QMessageBox message(QMessageBox::Warning, tr("Invalide value for inclination"), tr(" %1 : Inclination must be >=-90 and <=90").arg(name) ,  QMessageBox::Ok, qApp->activeWindow());
+            QMessageBox message(QMessageBox::Warning, tr("Invalide value for Field"), tr(" %1 : Inclination must be >=-90 and <=90").arg(name) ,  QMessageBox::Ok, qApp->activeWindow());
             message.exec();
             return json;
         } else  if (list.at(1) == "declination" && (valDec>270 || valDec < -90) ) {
             QMessageBox message(QMessageBox::Warning, tr("Invalide value for declination"), tr(" %1 : Declination must be >=-90 and <=270").arg(name) ,  QMessageBox::Ok, qApp->activeWindow());
             message.exec();
             return json;
-        } else if (list.at(1) == "intensity" && valIntensity <=0 ) {
-            QMessageBox message(QMessageBox::Warning, tr("Invalide value for intensity"), tr(" %1 : Intensity must be >0").arg(name) ,  QMessageBox::Ok, qApp->activeWindow());
+        } else if (list.at(1) == "field" && valIntensity <=0 ) {
+            QMessageBox message(QMessageBox::Warning, tr("Invalide value for Field"), tr(" %1 : Field must be >0").arg(name) ,  QMessageBox::Ok, qApp->activeWindow());
             message.exec();
             return json;
         } else if ( valError <=0 ) {
@@ -270,7 +270,7 @@ QJsonObject PluginMag::fromCSV(const QStringList& list,const QLocale &csvLocale)
         
         json.insert(DATE_AM_IS_INC_STR, list.at(1) == "inclination");
         json.insert(DATE_AM_IS_DEC_STR, list.at(1) == "declination");
-        json.insert(DATE_AM_IS_INT_STR, list.at(1) == "intensity");
+        json.insert(DATE_AM_IS_INT_STR, list.at(1) == "field");
         
                                    
         json.insert(DATE_AM_INC_STR, valInc);

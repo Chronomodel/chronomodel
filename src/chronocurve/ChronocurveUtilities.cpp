@@ -157,6 +157,59 @@ void display(const std::vector<double>& v)
     std::cout << std::endl;
 }
 
+
+PosteriorMeanG conversionIDF(const std::vector<long double>& vecGx, const std::vector<long double>& vecGy, const std::vector<long double>& vecGz, const std::vector<long double>& vecGErr)
+{
+    const double deg = 180. / M_PI ;
+    const unsigned n = vecGx.size();
+    PosteriorMeanG res;
+    res.gx.vecG.resize(n);
+    res.gx.vecGErr.resize(n);
+    res.gy.vecG.resize(n);
+    res.gy.vecGErr.resize(n);
+    res.gz.vecG.resize(n);
+    res.gz.vecGErr.resize(n);
+
+    for (unsigned j = 0; j < n ; ++j) {
+        const long double& Gx = vecGx.at(j);
+
+        const long double& Gy = vecGy.at(j);
+        const long double& Gz = vecGz.at(j);
+
+        const long double F = sqrt(pow(Gx, 2.) + pow(Gy, 2.) + pow(Gz, 2.));
+        const long double Inc = asin(Gz / F);
+        const long double Dec = atan2(Gy, Gx); // angleD(Gx, Gy);
+        // U_cmt_change_repere , ligne 470
+        // sauvegarde des erreurs sur chaque paramètre  - on convertit en degrès pour I et D
+        const long double ErrIDF = vecGErr.at(j); // On suppose toutes les erreurs identiques, isotrope
+
+        const long double ErrI = ErrIDF / F ;
+        const long double ErrD = ErrIDF / (F * cos(Inc)) ;
+
+       /* long double ErrI = Gz+ErrIDF ; // dans l'espace 3D, l'enveloppe supérieure
+        ErrI = abs(asin(ErrIDF/F) - Inc); // pour retrouver la différence
+
+       // long double ErrD = Gz+ErrIDF/F / (F * cos(Inc))
+       */
+        res.gx.vecG[j] = std::move(Inc * deg);
+        res.gx.vecGErr[j] = std::move(ErrI* deg);
+
+        res.gy.vecG[j] = std::move(Dec * deg);
+        res.gy.vecGErr[j] = std::move(ErrD* deg);
+
+        res.gz.vecG[j] = std::move(F);
+        res.gz.vecGErr[j] = std::move(ErrIDF);
+
+    }
+    return res;
+}
+
+void conversionIDF (PosteriorMeanG& G)
+{
+   PosteriorMeanG res = G;
+   G = conversionIDF(res.gx.vecG, res.gy.vecG, res.gz.vecG, res.gz.vecGErr );
+}
+
 std::vector<long double> ChronocurveUtilities::definitionNoeuds(const std::vector<long double> &tabPts, const double minStep)
 {
    // display(tabPts);

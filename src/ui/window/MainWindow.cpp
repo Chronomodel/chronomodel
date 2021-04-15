@@ -553,7 +553,7 @@ void MainWindow::openProject()
 
             mProjectView->setProject(mProject);
 
-            mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
+            mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true);
            /* if (! mProject->mModel->mChains.isEmpty())
                 emit mProject->mcmcFinished(mProject->mModel);*/
          }
@@ -1050,7 +1050,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
 
                 mProjectView->setProject(mProject);
 
-                mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
+                mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true);
                 // to do, it'is done in project load
                 if (! mProject->mModel->mChains.isEmpty()) {
                     mViewLogAction -> setEnabled(true);
@@ -1082,7 +1082,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
                 mProject->setAppSettings();
                 mProjectView->setProject(mProject);
 
-                mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
+                mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true);
                 // to do, it'is done in project load
                 if (! mProject->mModel->mChains.isEmpty()) {
                     // pushProjectState find mStructurelsChanged on true and emit NoResult()

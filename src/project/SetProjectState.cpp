@@ -64,7 +64,7 @@ SetProjectState:: ~SetProjectState()
 
 void SetProjectState::undo()
 {
-    mProject->checkStateModification(mPrevState,mProject->mState);
+    mProject->checkStateModification(mPrevState, mProject->mState);
     mProject->sendUpdateState(mPrevState, mReason, mNotify);
 
     if (mProject->structureIsChanged() )

@@ -67,19 +67,20 @@ ChronocurveSettingsView::ChronocurveSettingsView(QWidget* parent):QWidget(parent
     
     mProcessTypeLabel = new QLabel(tr("Process Type") + " :", this);
     mProcessTypeInput = new QComboBox(this);
-    mProcessTypeInput->addItem(tr("Univarié"));
-    mProcessTypeInput->addItem(tr("Sphérique"));
-    mProcessTypeInput->addItem(tr("Vectoriel"));
+    mProcessTypeInput->addItem(tr("Univariate"));
+    mProcessTypeInput->addItem(tr("Spherical"));
+    mProcessTypeInput->addItem(tr("Vectorial"));
+    mProcessTypeInput->addItem(tr("3D"));
     
     mVariableTypeLabel = new QLabel(tr("Variable Type") + " :", this);
     mVariableTypeInput = new QComboBox(this);
-    mVariableTypeInput->addItem(tr("Inclinaison"));
-    mVariableTypeInput->addItem(tr("Déclinaison"));
-    mVariableTypeInput->addItem(tr("Intensité"));
-    mVariableTypeInput->addItem(tr("Profondeur"));
-    mVariableTypeInput->addItem(tr("Autre"));
+    mVariableTypeInput->addItem(tr("Inclination"));
+    mVariableTypeInput->addItem(tr("Declination"));
+    mVariableTypeInput->addItem(tr("Field"));
+    mVariableTypeInput->addItem(tr("Depth"));
+    mVariableTypeInput->addItem(tr("Other Measure"));
     
-    mUseErrMesureLabel = new QLabel(tr("Use err mesure") + " :", this);
+    mUseErrMesureLabel = new QLabel(tr("Use err measure") + " :", this);
     mUseErrMesureInput = new QCheckBox(this);
     
     mTimeTypeLabel = new QLabel(tr("Time type") + " :", this);
@@ -214,8 +215,6 @@ ChronocurveSettingsView::~ChronocurveSettingsView()
 
 void ChronocurveSettingsView::setSettings(const ChronocurveSettings& settings)
 {
-    //const QLocale mLoc = QLocale();
-    
     mEnabled = settings.mEnabled;
     
     if (settings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie) {
@@ -224,7 +223,8 @@ void ChronocurveSettingsView::setSettings(const ChronocurveSettings& settings)
     } else if (settings.mProcessType == ChronocurveSettings::eProcessTypeSpherique) {
         mProcessTypeInput->setCurrentIndex(1);
 
-    } else if (settings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel) {
+    } else if (settings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel ||
+               settings.mProcessType == ChronocurveSettings::eProcessType3D) {
         mProcessTypeInput->setCurrentIndex(2);
     }
     
@@ -309,6 +309,10 @@ ChronocurveSettings ChronocurveSettingsView::getSettings()
     } else if (mProcessTypeInput->currentIndex() == 2) {
         settings.mProcessType = ChronocurveSettings::eProcessTypeVectoriel;
         settings.mVariableType = ChronocurveSettings::eVariableTypeInclinaison;
+
+    } else if (mProcessTypeInput->currentIndex() == 3) {
+        settings.mProcessType = ChronocurveSettings::eProcessType3D;
+        settings.mVariableType = ChronocurveSettings::eVariableTypeAutre;
     }
     
 
@@ -365,7 +369,7 @@ void ChronocurveSettingsView::save()
 
 void ChronocurveSettingsView::updateVisibilities()
 {
-    const bool variableTypeRequired = (mProcessTypeInput->currentText() == "Univarié");
+    const bool variableTypeRequired = (mProcessTypeInput->currentText() == "Univariate");
     mVariableTypeLabel->setVisible(variableTypeRequired);
     mVariableTypeInput->setVisible(variableTypeRequired);
     

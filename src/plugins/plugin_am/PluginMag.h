@@ -52,7 +52,7 @@ class PluginMagRefView;
 #define DATE_AM_ERROR_STR "error"
 #define DATE_AM_INC_STR "inc"
 #define DATE_AM_DEC_STR "dec"
-#define DATE_AM_INTENSITY_STR "intensity"
+#define DATE_AM_INTENSITY_STR "field"
 #define DATE_AM_REF_CURVE_STR "ref_curve"
 
 

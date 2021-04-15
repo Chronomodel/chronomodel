@@ -207,50 +207,50 @@ QJsonObject* Project::state_ptr()
  * @param force
  * @return
  */
-bool Project::pushProjectState(const QJsonObject& state, const QString& reason, bool notify, bool force)
+bool Project::pushProjectState(const QJsonObject& state, const QString& reason, bool notify)
 {
 
-    mStructureIsChanged = false;
-    mDesignIsChanged = false;
-    mItemsIsMoved = false;
-    //qDebug()<<"Project::pushProjectState "<<reason<<notify<<force;
-    if (mReasonChangeStructure.contains(reason))
-        mStructureIsChanged = true;
-
-    else  if (mReasonChangeDesign.contains(reason))
-        mDesignIsChanged = true;
-
-    else if (mReasonChangePosition.contains(reason))
-        mItemsIsMoved = true;
-
-    else
-        this->checkStateModification(state, mState);
-
-
-    if (mStructureIsChanged && (reason != PROJECT_LOADED_REASON) ) {
+    if (reason != NEW_PROJECT_REASON && reason != PROJECT_LOADED_REASON) {
         SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
+        //command->setText("pushProjectState " + command->actionText());
         MainWindow::getInstance()->getUndoStack()->push(command);
-        updateState(state, reason, notify);
 
-        emit projectStructureChanged(true); // connected to MainWindows::noResults
-        return true;
-    }
+    } else {
+        mStructureIsChanged = false;
+        mDesignIsChanged = false;
+        mItemsIsMoved = false;
+        //qDebug()<<"Project::pushProjectState "<<reason<<notify<<force;
+        if (mReasonChangeStructure.contains(reason))
+            mStructureIsChanged = true;
 
-    else if (mDesignIsChanged)
-        emit projectDesignChanged(mModel);
+        else  if (mReasonChangeDesign.contains(reason))
+            mDesignIsChanged = true;
+
+        else if (mReasonChangePosition.contains(reason))
+            mItemsIsMoved = true;
+
+        else
+            this->checkStateModification(state, mState);
 
 
-  //  if (mState != state || force)  {
-
-        if (reason != NEW_PROJECT_REASON && reason != PROJECT_LOADED_REASON) {
+        if (mStructureIsChanged && (reason != PROJECT_LOADED_REASON) ) {
             SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
-            //command->setText("pushProjectState " + command->actionText());
-            MainWindow::getInstance()->getUndoStack()->push(command);  
+            MainWindow::getInstance()->getUndoStack()->push(command);
+            // updateState(state, reason, notify);
+            mState = state;
+
+            emit projectStructureChanged(true); // connected to MainWindows::noResults
+            return true;
         }
 
+        else if (mDesignIsChanged)
+            emit projectDesignChanged(mModel);
+
+}
+
         updateState(state, reason, notify);
         return true;
-  //  }
+
   //  return false;
 
 }
@@ -279,13 +279,13 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
 
     } else {
         // Check Study Period modification
-        const double tminPeriodNew = stateNew.value(STATE_SETTINGS_TMIN).toDouble();
-        const double tmaxPeriodNew = stateNew.value(STATE_SETTINGS_TMAX).toDouble();
-        const double stepPeriodNew = stateNew.value(STATE_SETTINGS_STEP).toDouble();
+        const double tminPeriodNew = stateNew.value(STATE_SETTINGS).toObject().value(STATE_SETTINGS_TMIN).toDouble();
+        const double tmaxPeriodNew = stateNew.value(STATE_SETTINGS).toObject().value(STATE_SETTINGS_TMAX).toDouble();
+        const double stepPeriodNew = stateNew.value(STATE_SETTINGS).toObject().value(STATE_SETTINGS_STEP).toDouble();
 
-        const double tminPeriodOld = stateOld.value(STATE_SETTINGS_TMIN).toDouble();
-        const double tmaxPeriodOld = stateOld.value(STATE_SETTINGS_TMAX).toDouble();
-        const double stepPeriodOld = stateOld.value(STATE_SETTINGS_STEP).toDouble();
+        const double tminPeriodOld = stateOld.value(STATE_SETTINGS).toObject().value(STATE_SETTINGS_TMIN).toDouble();
+        const double tmaxPeriodOld = stateOld.value(STATE_SETTINGS).toObject().value(STATE_SETTINGS_TMAX).toDouble();
+        const double stepPeriodOld = stateOld.value(STATE_SETTINGS).toObject().value(STATE_SETTINGS_STEP).toDouble();
         if ((tminPeriodNew != tminPeriodOld) || (tmaxPeriodNew != tmaxPeriodOld) || (stepPeriodNew != stepPeriodOld)) {
             mDesignIsChanged = true;
             mStructureIsChanged = true;
@@ -499,7 +499,7 @@ qDebug() << "(---) Project::event";
 void Project::updateState(const QJsonObject& state, const QString& reason, bool notify)
 {
     //qDebug() << " ---  Receiving : " << reason;
-    mState = std::move(state);
+    mState = state; //std::move(state);
     if (notify) {
 
          if (reason == NEW_PROJECT_REASON)
@@ -576,6 +576,22 @@ bool Project::load(const QString& path)
                 QString appVersionStr = QApplication::applicationVersion();
                 QStringList appVersionList = appVersionStr.split(".");
 
+                if (loadingState.value(STATE_SETTINGS).isNull()) {
+                    QJsonObject settings;
+                    settings[STATE_SETTINGS_TMIN] = loadingState.value(STATE_SETTINGS_TMIN);
+                    settings[STATE_SETTINGS_TMAX] = loadingState.value(STATE_SETTINGS_TMAX);
+                    settings[STATE_SETTINGS_STEP] = loadingState.value(STATE_SETTINGS_STEP);
+                    settings[STATE_SETTINGS_STEP_FORCED] = loadingState.value(STATE_SETTINGS_STEP);
+                    loadingState[STATE_SETTINGS] = settings;
+                }
+                if ( !loadingState.value(STATE_SETTINGS_TMIN).isNull()) {
+                    // errase old json version
+                    loadingState.remove(STATE_SETTINGS_TMIN);
+                    loadingState.remove(STATE_SETTINGS_TMAX);
+                    loadingState.remove(STATE_SETTINGS_STEP);
+                    loadingState.remove(STATE_SETTINGS_STEP_FORCED);
+
+                }
 
                 if (projectVersionList.size() == 3 && appVersionList.size() == 3) {
 
@@ -1093,7 +1109,7 @@ bool Project::insert(const QString& path)
            stateNext[STATE_EVENTS_CONSTRAINTS] = nextEventConstraints;
 
            clearModel();
-           pushProjectState(stateNext, INSERT_PROJECT_REASON, true, true);
+           pushProjectState(stateNext, INSERT_PROJECT_REASON, true);
 
            qDebug() << "in Project::insert  unselectedAllInState";
            unselectedAllInState(); // modify mState
@@ -1292,7 +1308,7 @@ bool Project::setSettings(const ProjectSettings& settings)
         stateNext = checkValidDates(stateNext);
 
         //  Push the new state having a new study period with dates' "valid flag" updated!
-        return pushProjectState(stateNext, PROJECT_SETTINGS_UPDATED_REASON, true, true);
+        return pushProjectState(stateNext, PROJECT_SETTINGS_UPDATED_REASON, true);
     }
 }
 
@@ -1337,7 +1353,7 @@ void Project::mcmcSettings()
 }
 
 /**
- * @brief Project::resetMCMC Restore default samplinf methods on each ti and theta
+ * @brief Project::resetMCMC Restore default sampling methods on each ti and theta
  */
 void Project::resetMCMC()
 {
@@ -1478,7 +1494,7 @@ void Project::deleteSelectedEvents()
 {
     QJsonObject stateNext = mState;
 
-    QJsonArray new_events ;
+    QJsonArray new_events_list ;
     QJsonArray new_events_constraints ;
 
     QList<int> id_events_remove;
@@ -1487,14 +1503,16 @@ void Project::deleteSelectedEvents()
     QJsonArray events_constraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
     QJsonArray events_trash = mState.value(STATE_EVENTS_TRASH).toArray();
 
-    // Create new Event
+    // Create new Events liost
     for (int i = 0 ; i < events.size(); ++i) {
         if (!events.at(i).toObject().value(STATE_IS_SELECTED).toBool()) {
-            new_events.append(events.at(i).toObject());
+            new_events_list.append(events.at(i).toObject());
 
         } else {
-            events_trash.append(events.at(i).toObject());
-            id_events_remove.append(events.at(i).toObject().value(STATE_ID).toInt());
+            QJsonObject eventsToRemove = events.at(i).toObject();
+           // eventsToRemove[STATE_EVENT_DATES] = events.at(i).toObject().value(STATE_EVENT_DATES).toArray();
+            events_trash.append(eventsToRemove);
+            id_events_remove.append(eventsToRemove.value(STATE_ID).toInt());
 
         }
     }
@@ -1509,11 +1527,13 @@ void Project::deleteSelectedEvents()
     }
 
 
-    stateNext[STATE_EVENTS] = std::move(new_events);
-    stateNext[STATE_EVENTS_CONSTRAINTS] = std::move(new_events_constraints);
-    stateNext[STATE_EVENTS_TRASH] = std::move(events_trash);
+    stateNext[STATE_EVENTS] = new_events_list;
+    stateNext[STATE_EVENTS_CONSTRAINTS] = new_events_constraints;
+    stateNext[STATE_EVENTS_TRASH] = events_trash;
 
     pushProjectState(stateNext, "Event(s) deleted", true);
+
+   // mState = stateNext;
 
     // send to clear the propertiesView
     const QJsonObject itemEmpty ;
@@ -1557,7 +1577,7 @@ void Project::recycleEvents()
 
         QJsonArray new_events_trash;
 
-        QJsonObject settingsJson = stateNext[STATE_SETTINGS].toObject();
+        QJsonObject settingsJson = stateNext.value(STATE_SETTINGS).toObject();
         ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
 
         for (int i = 0; i < indexes.size(); ++i) {
@@ -1613,7 +1633,6 @@ void Project::updateEvent(const QJsonObject& event, const QString& reason)
             break;
         }
     }
-    //mState[STATE_EVENTS] = events;
 
     stateNext[STATE_EVENTS] = events;
     pushProjectState(stateNext, reason, true);
@@ -2583,7 +2602,7 @@ void Project::createEventConstraint(const int eventFromId, const int eventToId)
     constraints.append(constraint);
     state[STATE_EVENTS_CONSTRAINTS] = constraints;
 
-    pushProjectState(state, "Event constraint created", true, false);// notify=true, force=false
+    pushProjectState(state, "Event constraint created", true);// notify=true, force=false
 
 }
 
@@ -2687,7 +2706,7 @@ void Project::createPhaseConstraint(int phaseFromId, int phaseToId)
         constraints.append(constraint);
         state[STATE_PHASES_CONSTRAINTS] = constraints;
 
-        pushProjectState(state, "Phase constraint created", true, false);
+        pushProjectState(state, "Phase constraint created", true);
 
     }
 }

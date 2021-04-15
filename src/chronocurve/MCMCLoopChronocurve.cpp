@@ -567,7 +567,8 @@ QString MCMCLoopChronocurve::initMCMC()
     spline.splineX = std::move(splineX);
 
     if ( mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique ||
-         mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel ) {
+         mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel||
+         mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D ) {
         // calculSpline utilise les Y des events
         // => On le calcule ici pour la seconde composante (y)
 
@@ -584,7 +585,8 @@ QString MCMCLoopChronocurve::initMCMC()
     }
 
     if ( mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique ||
-         mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel ) {
+         mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel ||
+         mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D) {
         // Dans le future, ne sera pas utile pour le mode spherique
         // => On le calcule ici pour la troisième composante (z)
 
@@ -930,7 +932,12 @@ void MCMCLoopChronocurve::update()
 */
             SplineMatrices current_matrices = prepareCalculSpline(mModel->mEvents, vecH);
             h_YWI = h_YWI_AY(current_matrices, mModel->mEvents, mModel->mAlphaLissage.mX, vecH);
-            h_al = h_alpha(current_matrices, mModel->mEvents.size(), mModel->mAlphaLissage.mX);
+
+            if (mChronocurveSettings.mCoeffLissageType == ChronocurveSettings::eModeBayesian)
+                 h_al = h_alpha(current_matrices, mModel->mEvents.size(), mModel->mAlphaLissage.mX);
+            else
+               h_al = 1.;
+
             h_VGij = h_VG(mModel->mEvents);
 
             current_h = h_YWI * h_al * h_VGij;
@@ -961,7 +968,13 @@ void MCMCLoopChronocurve::update()
                     SplineMatrices try_matrices = prepareCalculSpline(mModel->mEvents, vecH);
 
                     h_YWI = h_YWI_AY(try_matrices, mModel->mEvents, mModel->mAlphaLissage.mX, vecH);
-                    h_al = h_alpha(try_matrices, mModel->mEvents.size(), mModel->mAlphaLissage.mX);
+
+                    if (mChronocurveSettings.mCoeffLissageType == ChronocurveSettings::eModeBayesian)
+                        h_al = h_alpha(try_matrices, mModel->mEvents.size(), mModel->mAlphaLissage.mX);
+                    else
+                        h_al = 1.;
+
+                   // h_al = h_alpha(try_matrices, mModel->mEvents.size(), mModel->mAlphaLissage.mX);
                     h_VGij = h_VG (mModel->mEvents);
 
                     try_h = h_YWI * h_al * h_VGij;
@@ -1035,7 +1048,12 @@ void MCMCLoopChronocurve::update()
                         SplineMatrices try_matrices = prepareCalculSpline(mModel->mEvents, vecH);
 
                         h_YWI = h_YWI_AY(try_matrices, mModel->mEvents, mModel->mAlphaLissage.mX, vecH);
-                        h_al = h_alpha(try_matrices, mModel->mEvents.size(), mModel->mAlphaLissage.mX);
+
+                        if (mChronocurveSettings.mCoeffLissageType == ChronocurveSettings::eModeBayesian)
+                            h_al = h_alpha(try_matrices, mModel->mEvents.size(), mModel->mAlphaLissage.mX);
+                        else
+                            h_al = 1.;
+
                         h_VGij = h_VG (mModel->mEvents);
 
                         if (h_YWI == HUGE_VAL || h_al== HUGE_VAL || h_VGij==HUGE_VAL)
@@ -1209,7 +1227,8 @@ void MCMCLoopChronocurve::update()
         spline.splineX = std::move(splineX);
         
         if ( mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel ||
-             mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique ) {
+             mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique ||
+             mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D) {
 
                     // calculSpline utilise les Y des events
             // => On le calcule ici pour la seconde composante (y)
@@ -1228,7 +1247,8 @@ void MCMCLoopChronocurve::update()
         }
 
         if ( mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel ||
-             mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique ) {
+             mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique ||
+             mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D) {
             // dans le future ne sera pas utile pour le mode sphérique
             // calculSpline utilise les Z des events
             // => On le calcule ici pour la troisième composante (z)
@@ -1374,33 +1394,41 @@ bool MCMCLoopChronocurve::adapt()
 void MCMCLoopChronocurve::finalize()
 {
     // if we are in depth mode, we have to extract iteration with only GPrime positive
-    if ( mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie && mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeProfondeur) {
-         emit stepChanged(tr("Select Positive curves ..."), 0, mChains.size());
+    if ( mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie &&
+         mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeProfondeur) {
+
         int shift  = 0;
 
-        int backshift = 0;
+
         std::vector<MCMCSpline> newMCMCSplines;
         for (int i = 0; i < mChains.size(); ++i) {
             ChainSpecs& chain = mChains[i];
 
             // we add 1 for the init
-            const int burnAdaptSize = 1 + chain.mNumBurnIter + int (chain.mBatchIndex * mChains.at(i).mNumBatchIter);
-            const int runTraceSize = int(chain.mNumRunIter / chain.mThinningInterval);
-            const int firstRunPosition = shift + burnAdaptSize ;
+            const int initBurnAdaptSize = 1 + chain.mNumBurnIter + int (chain.mBatchIndex * chain.mNumBatchIter);
+            const int runSize = floor(chain.mNumRunIter / chain.mThinningInterval);
+            const int firstRunPosition = shift + initBurnAdaptSize ;
 
-            std::vector<MCMCSpline>::const_iterator first = mModel->mMCMCSplines.begin() + firstRunPosition - 1;
-            std::vector<MCMCSpline>::const_iterator last = mModel->mMCMCSplines.begin() + firstRunPosition + runTraceSize - 1;
+            std::vector<MCMCSpline>::const_iterator first = mModel->mMCMCSplines.begin() + firstRunPosition;
+            std::vector<MCMCSpline>::const_iterator last = first + runSize -1;
 
-            std::vector<MCMCSpline> chainTrace(first, last);
+            std::vector<MCMCSpline> chainTrace(first, last+1);
 
             std::vector<MCMCSplineComposante> chainTraceX;
-            //for (unsigned j = 0; j < chainTrace.size(); ++j) {
+
             for (auto&& chTr : chainTrace) {
                 chainTraceX.push_back(chTr.splineX);
             }
-            std::vector<unsigned> positvIter = listOfIterationsWithPositiveGPrime(chainTraceX);
+            std::vector<unsigned> positvIter ;//= listOfIterationsWithPositiveGPrime(chainTraceX); //{5};
 
-            qDebug() << "pourcentage profondeur"<< positvIter.size() << "sur "<< runTraceSize;
+            emit stepChanged(tr("Select Positive curves for chain %1").arg(i), 0, chainTraceX.size());
+            for (unsigned iter = 0; iter < chainTraceX.size(); ++iter) {
+                if (asPositiveGPrime(chainTraceX.at(iter)))
+                    positvIter.push_back(iter);
+                emit stepProgressed(iter);
+            }
+
+            qDebug() << "pourcentage profondeur"<< positvIter.size() << "sur "<< runSize;
 
             if ( positvIter.size() == 0) {
 #ifdef DEBUG
@@ -1410,13 +1438,13 @@ void MCMCLoopChronocurve::finalize()
                  throw mAbortedReason;
 
             } else {
-
-                // remove from MCMCSplines, Event, data and Phase
-
+                emit stepChanged(tr("Erase invalide curves for chain %1").arg(i), 0, chainTrace.size());
+                int backshift = 0;
                 for (unsigned j = 0; j < chainTrace.size(); ++j) {
 
                     if (std::binary_search (positvIter.begin(), positvIter.end(), j) == false) {
 
+                        // remove from MCMCSplines, Event, data and Phase
                         mModel->mMCMCSplines.erase(mModel->mMCMCSplines.begin() + firstRunPosition + j - backshift);
                         mModel->mAlphaLissage.mRawTrace->erase(mModel->mAlphaLissage.mRawTrace->begin() + firstRunPosition + j - backshift);
                         mModel->mAlphaLissage.mHistoryAcceptRateMH->erase(mModel->mAlphaLissage.mHistoryAcceptRateMH->begin() + firstRunPosition + j - backshift);
@@ -1446,11 +1474,12 @@ void MCMCLoopChronocurve::finalize()
                         }
                         backshift++;
                     }
+                    emit stepProgressed(j);
                 }
             }
-            // Par simplification
-            chain.mThinningInterval = 1;
-            chain.mNumRunIter = positvIter.size();
+            // Correction des paramètres de la chaine
+           // chain.mThinningInterval = 1;
+            chain.mNumRunIter = positvIter.size() * chain.mThinningInterval;
 
             shift = firstRunPosition + positvIter.size() ;
 
@@ -1484,7 +1513,8 @@ void MCMCLoopChronocurve::finalize()
     // ----------------------------------------
 
     const bool hasY = (mChronocurveSettings.mProcessType != ChronocurveSettings::eProcessTypeUnivarie);
-    const bool hasZ = (mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel);
+    const bool hasZ = (mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel ||
+                       mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D);
 
     std::vector<MCMCSplineComposante> allChainsTraceX, chainTraceX, allChainsTraceY, chainTraceY, allChainsTraceZ, chainTraceZ;
 
@@ -1497,25 +1527,16 @@ void MCMCLoopChronocurve::finalize()
     int shift  = 0;
     int shiftTrace = 0;
 
-    // évaluation de la taille de la boucle pour affichage du progressScrool
-   // unsigned totalProgress;
-   // for(auto& ch : mChains)
-   //     totalProgress += int(ch.mNumRunIter / ch.mThinningInterval);
-
-    //emit stepChanged(tr("Compute Posterior Composantes..."), 0, totalProgress);
-
 
     for (int i = 0; i < mChains.size(); ++i) {
-        // we add 1 for the init
-        const int burnAdaptSize = 1 + mChains.at(i).mNumBurnIter + int (mChains.at(i).mBatchIndex * mChains.at(i).mNumBatchIter);
-        const int runTraceSize = int(mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval);
-        const int firstRunPosition = shift + burnAdaptSize;
 
-        std::vector<MCMCSpline>::iterator first = mModel->mMCMCSplines.begin() + firstRunPosition -1 ;
-        std::vector<MCMCSpline>::iterator last = mModel->mMCMCSplines.begin() + firstRunPosition + runTraceSize - 1 ;
+        const int initBurnAdaptSize = 1 + mChains.at(i).mNumBurnIter + int (mChains.at(i).mBatchIndex * mChains.at(i).mNumBatchIter);
+        const int runSize = floor(mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval);
+        const int firstRunPosition = shift + initBurnAdaptSize;
 
-        unsigned postionProgress = 0;
-        emit stepChanged(tr("Compute Posterior Composantes for chain %1").arg(i), 0, runTraceSize);
+        std::vector<MCMCSpline>::iterator first = mModel->mMCMCSplines.begin() + firstRunPosition ;
+        std::vector<MCMCSpline>::iterator last = first + runSize -1 ;
+
         /*
          * Mettre ici le retour en coordonnée sphérique ou vectoriel
          *
@@ -1542,74 +1563,33 @@ void MCMCLoopChronocurve::finalize()
          *
          */
 
-      if ( mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie &&
-           (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeProfondeur ||
-              mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeAutre) ) {
-          // Une seule dimension et Pas de correction de repère à faire
+        chainTraceX.clear();
+        chainTraceY.clear();
+        chainTraceZ.clear();
+        unsigned progressPosition = 0;
+        emit stepChanged(tr("Compute Posterior Mean Composantes for chain %1").arg(i), 0, runSize);
+        for (auto& cTrace = first; cTrace != last+1; ++cTrace) {
 
-           for (auto& cTrace= first; cTrace != last + 1; ++cTrace) {
-              chainTraceX.push_back(cTrace->splineX);
-              allChainsTraceX.push_back(cTrace->splineX);
+            chainTraceX.push_back(cTrace->splineX);
+            allChainsTraceX.push_back(cTrace->splineX);
 
-              emit stepProgressed(++postionProgress);
-          }
+            if (hasY) {
+                chainTraceY.push_back(cTrace->splineY);
+                allChainsTraceY.push_back(cTrace->splineY);
+            }
 
-      } else {
-
-          const double deg = 180. / M_PI ;
-
-          for (auto& cTrace = first; cTrace != last + 1; ++cTrace) {
-
-              for (unsigned j = 0; j <  cTrace->splineX.vecG.size(); ++j) {
-                  const double& Gx = cTrace->splineX.vecG.at(j);
-
-                  const double& Gy = cTrace->splineY.vecG.at(j);
-                  const double& Gz = cTrace->splineZ.vecG.at(j);
-
-                  const double F = sqrt(pow(Gx, 2.) + pow(Gy, 2.) + pow(Gz, 2.));
-                  double Inc = asin(Gz / F);
-                  double Dec = atan2(Gy, Gx); // angleD(Gx, Gy);
-                  // U_cmt_change_repere , ligne 470
-                  // sauvegarde des erreurs sur chaque paramètre  - on convertit en degrès pour I et D
-                  const double ErrIDF = cTrace->splineZ.vecErrG.at(j); // On suppose toutes les erreurs identiques, isotrope
-
-                  const double ErrI = ErrIDF / F ;
-                  const double ErrD = ErrIDF / (F * cos(Inc)) ;
-
-                  cTrace->splineX.vecG[j] = Inc * deg;
-                  cTrace->splineX.vecErrG[j] = std::move(ErrI* deg);
-
-                  if (hasY) {
-                      cTrace->splineY.vecG[j] = Dec * deg;
-                      cTrace->splineY.vecErrG[j] = std::move(ErrD* deg);
-
-                  }
-                  if (hasZ) {
-                      cTrace->splineZ.vecG[j] = std::move(F);
-                  }
-
-              }
-
-              chainTraceX.push_back(cTrace->splineX);
-              allChainsTraceX.push_back(cTrace->splineX);
-
-              if (hasY) {
-                  chainTraceY.push_back(cTrace->splineY);
-                  allChainsTraceY.push_back(cTrace->splineY);
-              }
-
-              if (hasZ) {
-                  chainTraceZ.push_back(cTrace->splineZ);
-                  allChainsTraceZ.push_back(cTrace->splineZ);
-              }
-              emit stepProgressed(++postionProgress);
-          }
-      }
+            if (hasZ) {
+                chainTraceZ.push_back(cTrace->splineZ);
+                allChainsTraceZ.push_back(cTrace->splineZ);
+            }
+            emit stepProgressed(progressPosition++);
+        }
 
 
-      emit stepChanged(tr("Compute Posterior Mean Composantes for chain %1").arg(i), 0, 0);
+
       PosteriorMeanG chainPosteriorMeanG;
       chainPosteriorMeanG.gx = computePosteriorMeanGComposante(chainTraceX);
+
       if (hasY) {
           chainPosteriorMeanG.gy = computePosteriorMeanGComposante(chainTraceY);
       }
@@ -1617,10 +1597,11 @@ void MCMCLoopChronocurve::finalize()
           chainPosteriorMeanG.gz = computePosteriorMeanGComposante(chainTraceZ);
       }
 
+
       mModel->mPosteriorMeanGByChain.push_back(chainPosteriorMeanG);
 
-      shiftTrace += runTraceSize;
-      shift = firstRunPosition +runTraceSize;
+      shiftTrace += runSize;
+      shift = firstRunPosition + runSize;
 
     }
     
@@ -1635,8 +1616,21 @@ void MCMCLoopChronocurve::finalize()
         emit stepChanged(tr("Compute Posterior Mean Composantes Z for all chains..."), 0, 0);
         allChainsPosteriorMeanG.gz = computePosteriorMeanGComposante(allChainsTraceZ);
     }
-    
-    mModel->mPosteriorMeanG = allChainsPosteriorMeanG;
+
+    // Conversion apres moyenne
+    if ( mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel ||
+         mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique) {
+        emit stepChanged(tr("Compute system Conversion..."), 0, 0);
+
+        conversionIDF(allChainsPosteriorMeanG);
+
+        for (auto&& chain: mModel->mPosteriorMeanGByChain)
+            conversionIDF(chain);
+
+    }
+
+
+    mModel->mPosteriorMeanG = std::move(allChainsPosteriorMeanG);
 
 #ifdef DEBUG
 
@@ -1676,7 +1670,7 @@ PosteriorMeanGComposante MCMCLoopChronocurve::computePosteriorMeanGComposante(co
     for (unsigned i = 0; i<nbIter; ++i) {
         const MCMCSplineComposante& splineComposante = trace.at(i);
         
-        unsigned i0 = 0; // tIdx étant croissant i0 permet de faire la recherche à l'indice du temps précedent
+        unsigned i0 = 0; // tIdx étant croissant, i0 permet de faire la recherche à l'indice du temps précedent
         for (unsigned tIdx = 0; tIdx < nbPoint ; ++tIdx) {
             t = (long double)tIdx * step + tmin ;
             valeurs_G_ErrG_GP_GS(t, splineComposante, g, errG, gp, gs, i0);
@@ -1686,7 +1680,7 @@ PosteriorMeanGComposante MCMCLoopChronocurve::computePosteriorMeanGComposante(co
             vecGS[tIdx] += std::move(gs);
             vecCumulG2[tIdx] += pow(g, 2.);
             vecCumulErrG2[tIdx] += pow(errG, 2.);
-            //vecCumulErrG2[tIdx] += sqrt(errG);//pow(errG, 2.);
+            //vecCumulErrG2[tIdx] += errG;//pow(errG, 2.);
 
         }
 
@@ -1699,8 +1693,8 @@ PosteriorMeanGComposante MCMCLoopChronocurve::computePosteriorMeanGComposante(co
         vecG[tIdx] /= nbIter;
         vecGP[tIdx] /=  nbIter_tmax;
         vecGS[tIdx] /=  nbIter_tmax2;
-        vecErrG[tIdx] = sqrt((vecCumulG2.at(tIdx) / nbIter) - pow(vecG.at(tIdx), 2.) + (vecCumulErrG2.at(tIdx) / nbIter));
-//        vecErrG[tIdx] = vecCumulErrG2.at(tIdx) / nbIter;//sqrt((vecCumulG2.at(tIdx) / nbIter) - pow(vecG.at(tIdx), 2.) + (vecCumulErrG2.at(tIdx) / nbIter));
+        vecErrG[tIdx] = sqrt( (vecCumulG2.at(tIdx) / nbIter) - pow(vecG.at(tIdx), 2.) + (vecCumulErrG2.at(tIdx) / nbIter));
+        //vecErrG[tIdx] = vecCumulErrG2.at(tIdx) / nbIter;//sqrt((vecCumulG2.at(tIdx) / nbIter) - pow(vecG.at(tIdx), 2.) + (vecCumulErrG2.at(tIdx) / nbIter));
     }
     
     PosteriorMeanGComposante result;
@@ -1728,7 +1722,8 @@ double MCMCLoopChronocurve::valeurG(const double t, const MCMCSplineComposante& 
 
     } else if(tReduce >= tn) {
         double tn1 = reduceTime(spline.vecThetaEvents[n-2]);
-        double gpn = (spline.vecG.at(n-1) - spline.vecG.at(n-2)) / (tn - tn1);
+        double gpn = (spline.vecG.at(n-1) - spline.vecG.at(n-2)) / (tn - tn1); // code d'origine
+       // double gpn = (spline.vecG.at(n-2) - spline.vecG.at(n-1)) / (tn - tn1);
         gpn += (tn - tn1) * spline.vecGamma.at(n-2) / 6.;
         g = spline.vecG.at(n-1) + (tReduce - tn) * gpn;
 
@@ -1752,14 +1747,6 @@ double MCMCLoopChronocurve::valeurG(const double t, const MCMCSplineComposante& 
                 double p = (1./6.) * ((tReduce-ti1) * (ti2-tReduce)) * ((1.+(tReduce-ti1)/h) * gamma2 + (1.+(ti2-tReduce)/h) * gamma1); // code d'origine
                 g -= p;
 
-                // test integration
-/*
-                double gPrime = ((gi2-gi1)/h) - (1./.6) * (tReduce-ti1) * (ti2-tReduce) * ((gamma2-gamma1)/h);
-                gPrime += (1./6.) * ((tReduce-ti1) - (ti2-tReduce)) * ( (1.+(tReduce-ti1)/h) * gamma2 + (1+(ti2-tReduce)/h) * gamma1 );
-
-                g = gi1 + (gi2-gi1)*(tReduce-ti1)/h - gPrime;// * (tReduce-ti1)/ h;
-                // fn test
-*/
                 break;
             }
         }
@@ -1791,6 +1778,11 @@ double MCMCLoopChronocurve::valeurErrG(const double t, const MCMCSplineComposant
             double ti1 = spline.vecThetaEvents[i0];
             double ti2 = spline.vecThetaEvents[i0+1];
             if ((t >= ti1) && (t < ti2)) {
+                /* code rencurve
+                 *   Err1:=Vec_splineP.Err_G[i];
+                 * Err2:=Vec_splineP.Err_G[i+1];
+                 * Err_G:= Err1+((t-ti1)/(ti2-ti1))*(Err2-Err1);
+                 */
                 double err1 = spline.vecErrG[i0];
                 double err2 = spline.vecErrG[i0+1];
                 errG = err1 + ((t-ti1) / (ti2-ti1)) * (err2 - err1);
@@ -1802,24 +1794,39 @@ double MCMCLoopChronocurve::valeurErrG(const double t, const MCMCSplineComposant
     return errG;
 }
 
+// cans RenCurve U-CMT-Routine_Spline Valeur_Gp
 double MCMCLoopChronocurve::valeurGPrime(const double t, const MCMCSplineComposante& spline, unsigned& i0)
 {
    unsigned n = spline.vecThetaEvents.size();
    const double tReduce =  reduceTime(t);
-   const double t1 = reduceTime(spline.vecThetaEvents[0]);
-   const double tn = reduceTime(spline.vecThetaEvents[n-1]);
+   const double t1 = reduceTime(spline.vecThetaEvents.at(0));
+   const double tn = reduceTime(spline.vecThetaEvents.at(n-1));
    double gPrime = 0.;
     
     // la dérivée première est toujours constante en dehors de l'intervalle [t1,tn]
     if (tReduce < t1) {
-        const double t2 = reduceTime(spline.vecThetaEvents[1]);
-        gPrime = (spline.vecG[1] - spline.vecG[0]) / (t2 - t1);
-        gPrime -= (t2 - t1) * spline.vecGamma[1] / 6.;
+        const double t2 = reduceTime(spline.vecThetaEvents.at(1));
+        gPrime = (spline.vecG.at(1) - spline.vecG.at(0)) / (t2 - t1);
+        gPrime -= (t2 - t1) * spline.vecGamma.at(1) / 6.;
+        /* Code Rencurve
+         * ti2:=Vec_splineP.t[2];
+         * GP1:=(Vec_spline.G[2]-Vec_spline.g[1])/(ti2-ti1);
+         * GP:=GP1-(ti2-ti1)*Vec_spline.gamma[2]/6;
+         */
+
+
 
     } else if (tReduce >= tn) {
-        const double tn1 = reduceTime(spline.vecThetaEvents[n-2]);
-        gPrime = (spline.vecG[n-1] - spline.vecG[n-2]) / (tn - tn1);
-        gPrime += (tn - tn1) * spline.vecGamma[n-2] / 6.;
+        const double tin_1 = reduceTime(spline.vecThetaEvents.at(n-2));
+        gPrime = (spline.vecG.at(n-1) - spline.vecG.at(n-2)) / (tn - tin_1); // code d'origine
+       //  gPrime = (spline.vecG.at(n-2) - spline.vecG.at(n-1)) / (tn - tn1);
+        gPrime += (tn - tin_1) * spline.vecGamma.at(n-2) / 6.;
+
+        /* Code Rencurve
+         * tin_1:=Vec_splineP.t[nb_noeuds-1];
+         * GPn:=(Vec_spline.G[nb_noeuds]-Vec_spline.G[nb_noeuds-1])/(tin-tin_1);
+         * GP:=GPn+(tin-tin_1)*Vec_spline.gamma[nb_noeuds-1]/6;
+         */
 
     } else {
         for ( ;i0< n-1; ++i0) { // pHd  !!!recherche et interpolation de GPrime
@@ -1834,6 +1841,16 @@ double MCMCLoopChronocurve::valeurGPrime(const double t, const MCMCSplineComposa
 
                 gPrime = ((gi2-gi1)/h) - (1./6.) * (tReduce-ti1) * (ti2-tReduce) * ((gamma2-gamma1)/h);
                 gPrime += (1./6.) * ((tReduce-ti1) - (ti2-tReduce)) * ( (1.+(tReduce-ti1)/h) * gamma2 + (1+(ti2-tReduce)/h) * gamma1 );
+
+                /* Code Rencurve
+                 * h:=ti2-ti1;
+                 * Gi1    := Vec_spline.G[i];
+                 * Gi2    := Vec_spline.G[i+1];
+                 * gamma1 := Vec_spline.gamma[i];
+                 * gamma2 := Vec_spline.gamma[i+1];
+                 * GP := ((Gi2-Gi1)/h) - (1/6)*(t-ti1)*(ti2-t)*((gamma2-gamma1)/h);
+                 * GP := GP + (1/6)*((t-ti1)-(ti2-t)) * ( (1+(t-ti1)/h)*gamma2 + (1+(ti2-t)/h)*gamma1 );
+                */
                 break;
             }
         }
@@ -1854,12 +1871,12 @@ double MCMCLoopChronocurve::valeurGSeconde(const double t, const MCMCSplineCompo
     double gSeconde = 0.;
     
     for (int i = 0; i < n-1; ++i) {
-        const double ti1 = reduceTime(spline.vecThetaEvents[i]);
-        const double ti2 = reduceTime(spline.vecThetaEvents[i+1]);
+        const double ti1 = reduceTime(spline.vecThetaEvents.at(i));
+        const double ti2 = reduceTime(spline.vecThetaEvents.at(i+1));
         if ((tReduce >= ti1) && (tReduce < ti2)) {
             const double h = ti2 - ti1;
-            const double gamma1 = spline.vecGamma[i];
-            const double gamma2 = spline.vecGamma[i+1];
+            const double gamma1 = spline.vecGamma.at(i);
+            const double gamma2 = spline.vecGamma.at(i+1);
             gSeconde = ((tReduce-ti1) * gamma2 + (ti2-tReduce) * gamma1) / h;
             break;
         }
@@ -1943,6 +1960,8 @@ void MCMCLoopChronocurve::valeurs_G_ErrG_GP_GS(const double t, const MCMCSplineC
                  const double err1 = spline.vecErrG.at(i0);
                  const double err2 = spline.vecErrG.at(i0 + 1);
                  errG = err1 + ((tReduce-ti1) / (ti2-ti1)) * (err2 - err1);
+                // errG = err2;
+                // errG = ( (tReduce-ti1)*err2 + (ti2-tReduce)*err1 ) /h;
 
                  // ValeurGPrime
                  /* Code RenCurve
@@ -2023,6 +2042,15 @@ void MCMCLoopChronocurve::prepareEventY(Event* const event  )
 
         const double sYInc = event->mSInc /2.4477 ;
         event->mSy = sqrt( (pow(event->mSInt, 2.) + 2. * pow(event->mYInt, 2.) * pow(sYInc, 2.)) /3.);
+
+    } else if (mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D) {
+
+        event->mYx = event->mYInc;
+        event->mYy = event->mYDec;
+        event->mYz = event->mYInt;
+
+        event->mSy = sqrt( (pow(event->mSInt, 2.) + pow(event->mSInc, 2.)) /2.);
+
     }
     
     if (!mChronocurveSettings.mUseErrMesure) {
@@ -2030,7 +2058,7 @@ void MCMCLoopChronocurve::prepareEventY(Event* const event  )
     }
 }
 
-void MCMCLoopChronocurve::prepareEventY(EventKnown* const event)
+/*void MCMCLoopChronocurve::prepareEventY(EventKnown* const event)
 {
     const double rad = M_PI / 180.;
     if (mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie) {
@@ -2054,7 +2082,7 @@ void MCMCLoopChronocurve::prepareEventY(EventKnown* const event)
     } else if (mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique) {
         event->mYInt = 100.; // Pour traiter le cas sphérique , on utilise le cas vectoriel en posant Yint = 100
         event->mSInt = 0.;//
-// fichier cmt_lit_sauve, ligne 637
+        // fichier cmt_lit_sauve, ligne 637
         event->mYx = event->mYInt * cos(event->mYInc * rad) * cos(event->mYDec * rad);
         event->mYy = event->mYInt * cos(event->mYInc * rad) * sin(event->mYDec * rad);
         event->mYz = event->mYInt * sin(event->mYInc * rad);
@@ -2073,13 +2101,22 @@ void MCMCLoopChronocurve::prepareEventY(EventKnown* const event)
         const double sYInc = event->mSInc / 2.4477;
         event->mSy = sqrt( (pow(event->mSInt, 2.) + 2. * pow(event->mYInt, 2.) * pow(sYInc, 2.)) /3.);
 
+    } else if (mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D) {
+
+        event->mYx = event->mYInc;
+        event->mYy = event->mYDec;
+        event->mYz = event->mYInt;
+
+        event->mSy = sqrt( (pow(event->mSInt, 2.) + pow(event->mSInc, 2.)) /2.);
+
+
     }
 
     if (!mChronocurveSettings.mUseErrMesure){
         event->mSy = 0.;
     }
 }
-
+*/
 #pragma mark Related to : update : calcul de h_new
 
 /**
@@ -2390,7 +2427,7 @@ long double MCMCLoopChronocurve::h_VG(const QList<Event *> lEvents)
     // Densité a priori sur variance de type "shrinkage" avec paramètre S02
     // bool_shrinkage_uniforme:=true;
 
-    double shrink_VG;
+    long double shrink_VG;
     
     if (mChronocurveSettings.mVarianceType == ChronocurveSettings::eModeFixed) {
         shrink_VG = mChronocurveSettings.mVarianceFixed;
@@ -3486,7 +3523,22 @@ std::vector<long double> MCMCLoopChronocurve::calculSplineError(const SplineMatr
 std::vector<unsigned>  MCMCLoopChronocurve::listOfIterationsWithPositiveGPrime (const std::vector<MCMCSplineComposante>& splineTrace)
 {
     size_t nbIter = splineTrace.size();
-//    const int nbEvents = mModel->mEvents.size();
+
+    std::vector<unsigned> resultList;
+
+    for (unsigned iter = 0; iter<nbIter; ++iter) {
+        const MCMCSplineComposante& splineComposante = splineTrace.at(iter);
+
+        if (asPositiveGPrime(splineComposante))
+            resultList.push_back(iter);
+    }
+
+    return resultList;
+}
+
+bool  MCMCLoopChronocurve::asPositiveGPrime (const MCMCSplineComposante& splineComposante)
+{
+
     const double& tmin = mModel->mSettings.mTmin;
     const double& tmax = mModel->mSettings.mTmax;
     const double& step = mModel->mSettings.mStep;
@@ -3494,32 +3546,26 @@ std::vector<unsigned>  MCMCLoopChronocurve::listOfIterationsWithPositiveGPrime (
     const unsigned nbPoint = floor ((tmax - tmin +1) /step);
     unsigned i0, i1, i2;
     double t;
-    std::vector<unsigned> resultList;
-    bool accepted;
-    for (unsigned iter = 0; iter<nbIter; ++iter) {
-        const MCMCSplineComposante& splineComposante = splineTrace.at(iter);
-        accepted = true;
-        i0 = 0;
-        i1 = 0;
-        i2 = 0;
-        for (unsigned tIdx=0; tIdx <= nbPoint ; ++tIdx) {
-            t = (double)tIdx * step + tmin ;
+    bool accepted = true;
+    i0 = 0;
+    i1 = 0;
+    i2 = 0;
+    for (unsigned tIdx=0; tIdx <= nbPoint ; ++tIdx) {
+        t = (double)tIdx * step + tmin ;
 
-            double deltaG = ( valeurG(t+step/2., splineComposante, i0) - valeurG(t-step/2., splineComposante, i2) )/ step;
-            double GPrime = valeurGPrime(t, splineComposante, i1);
-            //if (valeurGPrime(t, splineComposante, i0) < 0.) {
-            if (deltaG < 0.) {
-               accepted = false;
-               break;
-            }
+     //   double deltaG = ( valeurG(t+step/2., splineComposante, i0) - valeurG(t-step/2., splineComposante, i2) )/ step;
+        double GPrime = valeurGPrime(t, splineComposante, i1);
+
+        if (GPrime < 0.) {
+            accepted = false;
+            break;
         }
-        if (accepted)
-            resultList.push_back(iter);
     }
 
-    return resultList;
-}
 
+
+    return accepted;
+}
 
 
 

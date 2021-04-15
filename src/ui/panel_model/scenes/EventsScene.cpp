@@ -225,7 +225,7 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
 
         qDebug()<<"EventsScene::sendUpdateProject stateChange";
         if (storeUndoCommand)
-            mProject->pushProjectState(stateNext, reason, notify, true);
+            mProject->pushProjectState(stateNext, reason, notify);
         //else
         mProject->sendUpdateState(stateNext, reason, notify);
  //   }
@@ -460,13 +460,10 @@ qDebug()<<"EventsScene::updateSceneFromState()";
    // bool hasDeleted = false;
 
     for (int i = 0; i < mItems.size(); ++i) {
-        //EventItem* eventItem = (EventItem*)mItems[i];
-        QJsonObject& event = mItems[i]->mData;//eventItem->getData();
+        QJsonObject& event = mItems[i]->mData;
 
         if (!events_ids_inNewState.contains(event.value(STATE_ID).toInt())) {
-           // if (event.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
-                indexItemToRemove.append(i);
-           // }
+                indexItemToRemove.append(i);        
         }
     }
 

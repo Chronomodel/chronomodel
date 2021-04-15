@@ -216,11 +216,11 @@ bool ChronocurveSettings::showInclinaison() const
 {
     // Elle est toujours nécessaire en sphérique et vectoriel.
     // En univarié, elle n'est nécessaire que pour les variables d'étude : inclinaison ou déclinaison.
-    return (mProcessType == ChronocurveSettings::eProcessTypeSpherique) ||
-        (mProcessType == ChronocurveSettings::eProcessTypeVectoriel) ||
-        ((mProcessType == ChronocurveSettings::eProcessTypeUnivarie) &&
-         ((mVariableType == ChronocurveSettings::eVariableTypeInclinaison) ||
-          (mVariableType == ChronocurveSettings::eVariableTypeDeclinaison)));
+    return ( mProcessType == ChronocurveSettings::eProcessTypeSpherique) ||
+            ( mProcessType == ChronocurveSettings::eProcessTypeVectoriel) ||
+            ((mProcessType == ChronocurveSettings::eProcessTypeUnivarie) &&
+             ( mVariableType == ChronocurveSettings::eVariableTypeInclinaison ||
+               mVariableType == ChronocurveSettings::eVariableTypeDeclinaison));
 }
 
 bool ChronocurveSettings::showDeclinaison() const
@@ -228,9 +228,9 @@ bool ChronocurveSettings::showDeclinaison() const
     // Elle est toujours nécessaire en sphérique et vectoriel.
     // En univarié, elle n'est nécessaire que pour la variable d'étude : déclinaison.
     return ((mProcessType == ChronocurveSettings::eProcessTypeSpherique) ||
-        (mProcessType == ChronocurveSettings::eProcessTypeVectoriel) ||
-        ((mProcessType == ChronocurveSettings::eProcessTypeUnivarie) &&
-         (mVariableType == ChronocurveSettings::eVariableTypeDeclinaison)));
+            (mProcessType == ChronocurveSettings::eProcessTypeVectoriel) ||
+            ((mProcessType == ChronocurveSettings::eProcessTypeUnivarie) &&
+             (mVariableType == ChronocurveSettings::eVariableTypeDeclinaison)));
 }
 
 bool ChronocurveSettings::showIntensite() const
@@ -238,27 +238,30 @@ bool ChronocurveSettings::showIntensite() const
     // Elle est toujours nécessaire en vectoriel, mais jamais en sphérique.
     // En univarié, elle n'est nécessaire que pour les variables d'étude autres que inclinaison et déclinaison.
     return ((mProcessType == ChronocurveSettings::eProcessTypeVectoriel) ||
-        ((mProcessType == ChronocurveSettings::eProcessTypeUnivarie) &&
-         (mVariableType != ChronocurveSettings::eVariableTypeInclinaison) &&
-         (mVariableType != ChronocurveSettings::eVariableTypeDeclinaison)));
+            ((mProcessType == ChronocurveSettings::eProcessTypeUnivarie) &&
+             (mVariableType != ChronocurveSettings::eVariableTypeInclinaison) &&
+             (mVariableType != ChronocurveSettings::eVariableTypeDeclinaison)));
 }
 
 QString ChronocurveSettings::intensiteLabel() const
 {
     QString label;
     if (mProcessType == ChronocurveSettings::eProcessTypeVectoriel){
-        label = QObject::tr("Intensity");
+        label = QObject::tr("Field");
 
     } else if (mProcessType == ChronocurveSettings::eProcessTypeUnivarie) {
         if (mVariableType == ChronocurveSettings::eVariableTypeIntensite) {
-            label = QObject::tr("Intensity");
+            label = QObject::tr("Field");
 
         } else if (mVariableType == ChronocurveSettings::eVariableTypeProfondeur) {
-            label = QObject::tr("Deep");
+            label = QObject::tr("Depth");
 
         } else if (mVariableType == ChronocurveSettings::eVariableTypeAutre) {
-            label = QObject::tr("Mesure");
+            label = QObject::tr("Measure");
         }
     }
+    /*else if (mProcessType == ChronocurveSettings::eProcessType3D){
+        label = QObject::tr("Z");
+    }*/
     return label;
 }
