@@ -102,9 +102,6 @@ mResultMaxX(0.),
 mResultCurrentMinX(0.),
 mResultCurrentMaxX(0.),
 
-//mResultMaxVariance(1000.),
-//mResultMaxDuration(0.),
-
 mMajorScale(100),
 mMinorCountScale(4),
 
@@ -160,48 +157,48 @@ mMaximunNumberOfVisibleGraph(0)
 
 
     // -----------------------------------------------------------------
-    //  Right part
+    //  Right Part
     // -----------------------------------------------------------------
     mOptionsScroll = new QScrollArea(this);
     mOptionsWidget = new QWidget();
     mOptionsScroll->setWidget(mOptionsWidget);
-    int h = 16;
+    int h = 15;
 
     // -----------------------------------------------------------------
     //  Results Group (if graph list tab = events or phases)
     // -----------------------------------------------------------------
-    mResultsGroup = new QWidget();
+    mEventsPhasesGroup = new QWidget();
 
-    mEventsfoldCheck = new CheckBox(tr("Unfold Events"), mResultsGroup);
+    mEventsfoldCheck = new CheckBox(tr("Unfold Events"));
     mEventsfoldCheck->setFixedHeight(h);
     mEventsfoldCheck->setToolTip(tr("Display phases' events"));
 
-    mDatesfoldCheck = new CheckBox(tr("Unfold Data"), mResultsGroup);
+    mDatesfoldCheck = new CheckBox(tr("Unfold Data"));
     mDatesfoldCheck->setFixedHeight(h);
     mDatesfoldCheck->setToolTip(tr("Display Events' data"));
 
-    mDataThetaRadio = new RadioButton(tr("Calendar Dates"), mResultsGroup);
+    mDataThetaRadio = new RadioButton(tr("Calendar Dates"));
     mDataThetaRadio->setFixedHeight(h);
     mDataThetaRadio->setChecked(true);
 
-    mDataSigmaRadio = new RadioButton(tr("Ind. Std. Deviations"), mResultsGroup);
+    mDataSigmaRadio = new RadioButton(tr("Ind. Std. Deviations"));
     mDataSigmaRadio->setFixedHeight(h);
     
-    mDataVGRadio = new RadioButton(tr("Variance G"), mResultsGroup);
+    mDataVGRadio = new RadioButton(tr("Variance G"));
     mDataVGRadio->setFixedHeight(h);
 
-    mDataCalibCheck = new CheckBox(tr("Individual Calib. Dates"), mResultsGroup);
+    mDataCalibCheck = new CheckBox(tr("Individual Calib. Dates"));
     mDataCalibCheck->setFixedHeight(h);
     mDataCalibCheck->setChecked(true);
 
-    mWiggleCheck = new CheckBox(tr("Wiggle shifted"), mResultsGroup);
+    mWiggleCheck = new CheckBox(tr("Wiggle shifted"));
     mWiggleCheck->setFixedHeight(h);
 
-    mStatCheck = new CheckBox(tr("Show Stat."), mResultsGroup);
+    mStatCheck = new CheckBox(tr("Show Stat."));
     mStatCheck->setFixedHeight(h);
     mStatCheck->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
 
-    QVBoxLayout* resultsGroupLayout = new QVBoxLayout();
+    QVBoxLayout* resultsGroupLayout = new QVBoxLayout(mEventsPhasesGroup);
     resultsGroupLayout->setContentsMargins(10, 10, 10, 10);
     resultsGroupLayout->setSpacing(15);
     resultsGroupLayout->addWidget(mDataThetaRadio);
@@ -212,7 +209,9 @@ mMaximunNumberOfVisibleGraph(0)
     resultsGroupLayout->addWidget(mDataCalibCheck);
     resultsGroupLayout->addWidget(mWiggleCheck);
     resultsGroupLayout->addWidget(mStatCheck);
-    mResultsGroup->setLayout(resultsGroupLayout);
+
+    mEventsPhasesGroup->resize(8 * h, mOptionsW);
+    mEventsPhasesGroup->setLayout(resultsGroupLayout);
 
 
     // -----------------------------------------------------------------
@@ -224,23 +223,23 @@ mMaximunNumberOfVisibleGraph(0)
     mDurationRadio->setFixedHeight(h);
     mDurationRadio->setChecked(true);
 
-    mTempoRadio = new RadioButton(tr("Phase Tempo"), mTempoGroup);
+    mTempoRadio = new RadioButton(tr("Phase Tempo"));
     mTempoRadio->setFixedHeight(h);
 
-    mTempoCredCheck = new CheckBox(tr("Tempo Cred."), mTempoGroup);
+    mTempoCredCheck = new CheckBox(tr("Tempo Cred."));
     mTempoCredCheck->setFixedHeight(h);
 
-    mTempoErrCheck = new CheckBox(tr("Tempo Error"), mTempoGroup);
+    mTempoErrCheck = new CheckBox(tr("Tempo Error"));
     mTempoErrCheck->setFixedHeight(h);
 
-    mActivityRadio = new RadioButton(tr("Phase Activity"), mTempoGroup);
+    mActivityRadio = new RadioButton(tr("Phase Activity"));
     mActivityRadio->setFixedHeight(h);
 
-    mTempoStatCheck = new CheckBox(tr("Show Tempo Stat."), mTempoGroup);
+    mTempoStatCheck = new CheckBox(tr("Show Tempo Stat."));
     mTempoStatCheck->setFixedHeight(h);
     mTempoStatCheck->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
 
-    QVBoxLayout* tempoGroupLayout = new QVBoxLayout();
+    QVBoxLayout* tempoGroupLayout = new QVBoxLayout(mTempoGroup);
     tempoGroupLayout->setContentsMargins(10, 10, 10, 10);
     tempoGroupLayout->setSpacing(15);
     tempoGroupLayout->addWidget(mDurationRadio);
@@ -249,43 +248,49 @@ mMaximunNumberOfVisibleGraph(0)
     tempoGroupLayout->addWidget(mTempoErrCheck);
     tempoGroupLayout->addWidget(mActivityRadio);
     tempoGroupLayout->addWidget(mTempoStatCheck);
-    mTempoGroup->setLayout(tempoGroupLayout);
+   // mTempoGroup->setLayout(tempoGroupLayout);
 
     // -----------------------------------------------------------------
     //  Curves Group (if graph list tab = curve)
     // -----------------------------------------------------------------
     mCurvesGroup = new QWidget();
     
-    mCurveGRadio = new RadioButton(tr("G"));
+    mCurveGRadio = new RadioButton(tr("G"), mCurvesGroup);
     mCurveGRadio->setFixedHeight(h);
     mCurveGRadio->setChecked(true);
     
-    mCurveErrorCheck = new CheckBox(tr("Error envelope"));
+    mCurveErrorCheck = new CheckBox(tr("Error envelope"), mCurvesGroup);
     mCurveErrorCheck->setFixedHeight(h);
-    mCurveErrorCheck->setChecked(false);
+    mCurveErrorCheck->setChecked(true);
     
-    mCurvePointsCheck = new CheckBox(tr("Ref points"));
+    mCurvePointsCheck = new CheckBox(tr("Ref. points"), mCurvesGroup);
     mCurvePointsCheck->setFixedHeight(h);
-    mCurvePointsCheck->setChecked(false);
+    mCurvePointsCheck->setChecked(true);
 
-    mCurveGPRadio = new RadioButton(tr("G Prime"));
+    mCurveGPRadio = new RadioButton(tr("G Prime"), mCurvesGroup);
     mCurveGPRadio->setFixedHeight(h);
     
-    mCurveGSRadio = new RadioButton(tr("G Second"));
+    mCurveGSRadio = new RadioButton(tr("G Second"), mCurvesGroup);
     mCurveGSRadio->setFixedHeight(h);
     
-    mAlphaRadio = new RadioButton(tr("Alpha"));
+    mAlphaRadio = new RadioButton(tr("Alpha"), mCurvesGroup);
     mAlphaRadio->setFixedHeight(h);
     
-    QVBoxLayout* curveGroupLayout = new QVBoxLayout();
+    QVBoxLayout* curveGroupLayout = new QVBoxLayout(mCurvesGroup);
     curveGroupLayout->setContentsMargins(10, 10, 10, 10);
-    curveGroupLayout->setSpacing(15);
     curveGroupLayout->addWidget(mCurveGRadio);
-    curveGroupLayout->addWidget(mCurveErrorCheck);
-    curveGroupLayout->addWidget(mCurvePointsCheck);
+
+    QVBoxLayout* curveOptionGroupLayout = new QVBoxLayout(mCurvesGroup);
+    curveOptionGroupLayout->setContentsMargins(15, 0, 0, 0);
+    curveOptionGroupLayout->addWidget(mCurveErrorCheck, Qt::AlignLeft);
+    curveOptionGroupLayout->addWidget(mCurvePointsCheck, Qt::AlignLeft);
+
+    curveGroupLayout->addLayout(curveOptionGroupLayout);
+    curveGroupLayout->setSpacing(15);
     curveGroupLayout->addWidget(mCurveGPRadio);
     curveGroupLayout->addWidget(mCurveGSRadio);
     curveGroupLayout->addWidget(mAlphaRadio);
+
     mCurvesGroup->setLayout(curveGroupLayout);
 
     // -----------------------------------------------------------------
@@ -322,34 +327,33 @@ mMaximunNumberOfVisibleGraph(0)
     // -----------------------------------------------------------------
     mGraphListTab = new Tabs();
     mGraphListTab->setFixedHeight(mGraphListTab->tabHeight());
-    mGraphListTab->addTab(tr("Events"));
+    mGraphListTab->addTab( tr("Events"));
     mGraphListTab->addTab(tr("Phases"));
     mGraphListTab->addTab(tr("Tempo"));
     mGraphListTab->addTab(tr("Curve"));
-    mGraphListTab->setFixedHeight(mGraphListTab->tabHeight());
 
     connect(mGraphListTab, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::applyGraphListTab);
 
     // -----------------------------------------------------------------
     //  Tabs : Display / Distrib. Options
     // -----------------------------------------------------------------
-    mTabDisplayMCMC = new Tabs();
-    mTabDisplayMCMC->setFixedHeight(mTabDisplayMCMC->tabHeight());
+    mDisplayDistribTab = new Tabs();
+    mDisplayDistribTab->setFixedHeight(mDisplayDistribTab->tabHeight());
 
-    mTabDisplayMCMC->addTab(tr("Display"));
-    mTabDisplayMCMC->addTab(tr("Distrib. Options"));
+    mDisplayDistribTab->addTab(tr("Display"));
+    mDisplayDistribTab->addTab(tr("Distrib. Options"));
 
     // Necessary to reposition all elements inside the selected tab :
-    connect(mTabDisplayMCMC, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::applyDisplayTab);
+    connect(mDisplayDistribTab, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::applyDisplayTab);
 
     // -----------------------------------------------------------------
     //  Display Options layout
     // -----------------------------------------------------------------
-    mTabDisplay = new QWidget();
+    mDisplayWidget = new QWidget();
     mSpanGroup  = new QWidget();
     h = 20;
 
-    mSpanTitle = new Label(tr("Span Options"), mTabDisplay);
+    mSpanTitle = new Label(tr("Span Options"), mDisplayWidget);
     mSpanTitle->setFixedHeight(25);
     mSpanTitle->setIsTitle(true);
 
@@ -414,33 +418,31 @@ mMaximunNumberOfVisibleGraph(0)
     connect(mMajorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &ResultsView::applyXScale);
     connect(mMinorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &ResultsView::applyXScale);
 
+
+
     QHBoxLayout* spanLayout0 = new QHBoxLayout();
     spanLayout0->setContentsMargins(0, 0, 0, 0);
     spanLayout0->addWidget(mDisplayStudyBut);
 
     QHBoxLayout* spanLayout1 = new QHBoxLayout();
     spanLayout1->setContentsMargins(0, 0, 0, 0);
-    //spanLayout1->setSpacing(mMargin);
     spanLayout1->addWidget(mCurrentXMinEdit);
     spanLayout1->addWidget(mSpanLab);
     spanLayout1->addWidget(mCurrentXMaxEdit);
 
     QHBoxLayout* spanLayout2 = new QHBoxLayout();
     spanLayout2->setContentsMargins(0, 0, 0, 0);
-    //spanLayout2->setSpacing(mMargin);
     spanLayout2->addWidget(mXLab);
     spanLayout2->addWidget(mXSlider);
     spanLayout2->addWidget(mXSpin);
 
     QHBoxLayout* spanLayout3 = new QHBoxLayout();
     spanLayout3->setContentsMargins(0, 0, 0, 0);
-    //spanLayout3->setSpacing(mMargin);
     spanLayout3->addWidget(mMajorScaleLab);
     spanLayout3->addWidget(mMajorScaleEdit);
 
     QHBoxLayout* spanLayout4 = new QHBoxLayout();
     spanLayout4->setContentsMargins(0, 0, 0, 0);
-    //spanLayout4->setSpacing(mMargin);
     spanLayout4->addWidget(mMinorScaleLab);
     spanLayout4->addWidget(mMinorScaleEdit);
 
@@ -458,7 +460,7 @@ mMaximunNumberOfVisibleGraph(0)
     // ------------------------------------
     //  Graphic Options
     // ------------------------------------
-    mGraphicTitle = new Label(tr("Graphic Options"), mTabDisplay);
+    mGraphicTitle = new Label(tr("Graphic Options"), mDisplayWidget);
     mGraphicTitle->setFixedHeight(25);
     mGraphicTitle->setIsTitle(true);
 
@@ -522,26 +524,22 @@ mMaximunNumberOfVisibleGraph(0)
 
     QHBoxLayout* graphicLayout1 = new QHBoxLayout();
     graphicLayout1->setContentsMargins(0, 0, 0, 0);
-    //graphicLayout1->setSpacing(mMargin);
     graphicLayout1->addWidget(mYLab);
     graphicLayout1->addWidget(mYSlider);
     graphicLayout1->addWidget(mYSpin);
 
     QHBoxLayout* graphicLayout2 = new QHBoxLayout();
     graphicLayout2->setContentsMargins(0, 0, 0, 0);
-    //graphicLayout2->setSpacing(mMargin);
     graphicLayout2->addWidget(mLabFont);
     graphicLayout2->addWidget(mFontBut);
 
     QHBoxLayout* graphicLayout3 = new QHBoxLayout();
     graphicLayout3->setContentsMargins(0, 0, 0, 0);
-    //graphicLayout3->setSpacing(mMargin);
     graphicLayout3->addWidget(mLabThickness);
     graphicLayout3->addWidget(mThicknessCombo);
 
     QHBoxLayout* graphicLayout4 = new QHBoxLayout();
     graphicLayout4->setContentsMargins(0, 0, 0, 0);
-    //graphicLayout4->setSpacing(mMargin);
     graphicLayout4->addWidget(mLabOpacity);
     graphicLayout4->addWidget(mOpacityCombo);
 
@@ -562,7 +560,7 @@ mMaximunNumberOfVisibleGraph(0)
     displayLayout->addWidget(mSpanGroup);
     displayLayout->addWidget(mGraphicTitle);
     displayLayout->addWidget(mGraphicGroup);
-    mTabDisplay->setLayout(displayLayout);
+    mDisplayWidget->setLayout(displayLayout);
 
     // ------------------------------------
     //  MCMC Chains
@@ -637,24 +635,20 @@ mMaximunNumberOfVisibleGraph(0)
 
     QHBoxLayout* densityLayout0 = new QHBoxLayout();
     densityLayout0->setContentsMargins(0, 0, 0, 0);
-    //densityLayout0->setSpacing(mMargin);
     densityLayout0->addWidget(mCredibilityCheck);
 
     QHBoxLayout* densityLayout1 = new QHBoxLayout();
     densityLayout1->setContentsMargins(0, 0, 0, 0);
-    //densityLayout1->setSpacing(mMargin);
     densityLayout1->addWidget(mThreshLab);
     densityLayout1->addWidget(mThresholdEdit);
 
     QHBoxLayout* densityLayout2 = new QHBoxLayout();
     densityLayout2->setContentsMargins(0, 0, 0, 0);
-    //densityLayout2->setSpacing(mMargin);
     densityLayout2->addWidget(mFFTLenLab);
     densityLayout2->addWidget(mFFTLenCombo);
 
     QHBoxLayout* densityLayout3 = new QHBoxLayout();
     densityLayout3->setContentsMargins(0, 0, 0, 0);
-    //densityLayout3->setSpacing(mMargin);
     densityLayout3->addWidget(mBandwidthLab);
     densityLayout3->addWidget(mBandwidthSpin);
     
@@ -668,9 +662,9 @@ mMaximunNumberOfVisibleGraph(0)
     mDensityOptsGroup->setLayout(densityLayout);
 
     // ------------------------------------
-    //  Tab MCMC (Distrib. Options)
+    //  Tab Distrib. Options
     // ------------------------------------
-    mTabMCMC = new QWidget();
+    mDistribWidget = new QWidget();
 
     QVBoxLayout* mcmcLayout = new QVBoxLayout();
     mcmcLayout->setContentsMargins(0, 0, 0, 0);
@@ -679,29 +673,16 @@ mMaximunNumberOfVisibleGraph(0)
     mcmcLayout->addWidget(mChainsGroup);
     mcmcLayout->addWidget(mDensityOptsTitle);
     mcmcLayout->addWidget(mDensityOptsGroup);
-    mTabMCMC->setLayout(mcmcLayout);
+    mDistribWidget->setLayout(mcmcLayout);
 
-    // ------------------------------------
-    //  Pagination / Saving
-    // ------------------------------------
-    mPageWidget = new QWidget();
-    mToolsWidget = new QWidget();
-
-    mTabPageSaving = new Tabs();
-    mTabPageSaving->setFixedHeight(mTabPageSaving->tabHeight());
-    mTabPageSaving->addTab(tr("Page"));
-    mTabPageSaving->addTab(tr("Saving"));
-
-    connect(mTabPageSaving, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::applyPageSavingTab);
 
     // ------------------------------------
     //  Pagination
     // ------------------------------------
-    mPageEdit = new LineEdit(mPageWidget);
-    mPageEdit->setEnabled(false);
-    mPageEdit->setReadOnly(true);
-    mPageEdit->setAlignment(Qt::AlignCenter);
-    mPageEdit->setText(QString::number(mMaximunNumberOfVisibleGraph));
+    const int layoutWidth = mOptionsW-2*mMargin;
+    const int internSpacing = 1;
+
+    mPageWidget = new QWidget();
 
     mPreviousPageBut = new Button(tr("Prev."), mPageWidget);
     mPreviousPageBut->setCheckable(false);
@@ -709,53 +690,54 @@ mMaximunNumberOfVisibleGraph(0)
     mPreviousPageBut->setToolTip(tr("Display previous data"));
     mPreviousPageBut->setIconOnly(false);
 
+    mPageEdit = new QLineEdit(mPageWidget);
+    mPageEdit->setEnabled(false);
+    mPageEdit->setReadOnly(true);
+    mPageEdit->setAlignment(Qt::AlignCenter);
+    mPageEdit->setText(QString::number(mMaximunNumberOfVisibleGraph));
+
     mNextPageBut  = new Button(tr("Next"), mPageWidget);
     mNextPageBut->setCheckable(false);
     mNextPageBut->setFlatHorizontal();
     mNextPageBut->setToolTip(tr("Display next data"));
     mNextPageBut->setIconOnly(false);
 
-    mGraphsPerPageLab = new Label(tr("Nb Densities / Page"), mPageWidget);
+    mGraphsPerPageLab = new QLabel(tr("Nb Densities / Page"), mPageWidget );
     mGraphsPerPageLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mGraphsPerPageSpin = new QSpinBox(mPageWidget);
     mGraphsPerPageSpin->setRange(1, 100);
     mGraphsPerPageSpin->setValue(mGraphsPerPage);
     mGraphsPerPageSpin->setToolTip(tr("Enter the maximum densities to display on a sheet"));
-    
-    QHBoxLayout* pageNavigationLayout = new QHBoxLayout();
-    pageNavigationLayout->setContentsMargins(0, 0, 0, 0);
-    pageNavigationLayout->setSpacing(0);
-    pageNavigationLayout->addWidget(mPreviousPageBut);
-    pageNavigationLayout->addWidget(mPageEdit);
-    pageNavigationLayout->addWidget(mNextPageBut);
-    
-    QHBoxLayout* pageCountLayout = new QHBoxLayout();
-    pageCountLayout->setContentsMargins(0, 0, 0, 0);
-    pageCountLayout->setSpacing(0);
-    pageCountLayout->addWidget(mGraphsPerPageLab);
-    pageCountLayout->addWidget(mGraphsPerPageSpin);
-    
-    QVBoxLayout* pageLayout = new QVBoxLayout();
-    pageLayout->setContentsMargins(0, 0, 0, 0);
-    pageLayout->setSpacing(0);
-    pageLayout->addLayout(pageNavigationLayout);
-    pageLayout->addLayout(pageCountLayout);
-    mPageWidget->setLayout(pageLayout);
+
+    /* L'utilisation du QLayout ne fonctionne pas avec mPageEdit et les widgets Button.
+     * C'est pourquoi, oil est plus rapide d'utiliser directement setGeometry()
+     */
+    const int layoutWidthBy3 = (layoutWidth - 2*internSpacing)/3;
+    mPreviousPageBut->setGeometry(0, 0, layoutWidthBy3, 33);
+    mPageEdit->setGeometry(layoutWidthBy3 + internSpacing, 0, layoutWidthBy3, 33);
+    mNextPageBut->setGeometry(2*layoutWidthBy3 + 2*internSpacing, 0, layoutWidthBy3, 33);
+    mGraphsPerPageLab->setGeometry(0, 35, layoutWidth/2 - internSpacing/2 , 33);
+    mGraphsPerPageSpin->setGeometry(layoutWidth/2 + internSpacing, 35, mGraphsPerPageSpin->width(), 33);
+
+    mPageWidget->setFixedSize(layoutWidth, 66);
 
     connect(mPreviousPageBut, &Button::pressed, this, &ResultsView::applyPreviousPage);
     connect(mNextPageBut, &Button::pressed, this, &ResultsView::applyNextPage);
     connect(mGraphsPerPageSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::applyGraphsPerPage);
 
     // ------------------------------------
-    //  Tools Buttons (multiple graphs)
+    //  Save Buttons (multiple graphs)
     // ------------------------------------
-    mExportImgBut = new Button(tr("Capture"), mToolsWidget);
+
+    mSaveAllWidget = new QWidget();
+
+    mExportImgBut = new Button(tr("Capture"), mSaveAllWidget);
     mExportImgBut->setFlatHorizontal();
     mExportImgBut->setIcon(QIcon(":picture_save.png"));
     mExportImgBut->setToolTip(tr("Save all currently visible results as an image.<br><u>Note</u> : If you want to copy textual results, see the Log tab."));
 
-    mExportResults = new Button(tr("Results"), mToolsWidget);
+    mExportResults = new Button(tr("Results"), mSaveAllWidget);
     mExportResults->setFlatHorizontal();
     mExportResults->setIcon(QIcon(":csv.png"));
     mExportResults->setToolTip(tr("Export all result in several files"));
@@ -763,60 +745,105 @@ mMaximunNumberOfVisibleGraph(0)
     connect(mExportImgBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::exportFullImage);
     connect(mExportResults, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::exportResults);
 
+
+    QHBoxLayout* mSaveAllLayout = new QHBoxLayout (mSaveAllWidget);
+    mSaveAllLayout->setContentsMargins(0, 0, 0, 0);
+    mSaveAllLayout->addWidget(mExportImgBut);
+    mSaveAllLayout->addSpacing(internSpacing);
+    mSaveAllLayout->addWidget(mExportResults);
+    mSaveAllWidget->setLayout(mSaveAllLayout);
+
     // ------------------------------------
     //  Tools Buttons (single graph)
     // ------------------------------------
-    mImageSaveBut = new Button(tr("Save"), mToolsWidget);
+    mSaveSelectWidget = new QWidget();
+
+    mImageSaveBut = new Button(tr("Save"),mSaveSelectWidget);
     mImageSaveBut->setIcon(QIcon(":picture_save.png"));
     mImageSaveBut->setFlatVertical();
     mImageSaveBut->setToolTip(tr("Save image as file"));
 
-    mImageClipBut = new Button(tr("Copy"), mToolsWidget);
+    mImageClipBut = new Button(tr("Copy"), mSaveSelectWidget);
     mImageClipBut->setIcon(QIcon(":clipboard_graph.png"));
     mImageClipBut->setFlatVertical();
     mImageClipBut->setToolTip(tr("Copy image to clipboard"));
 
-    mResultsClipBut = new Button(tr("Copy"), mToolsWidget);
+    mResultsClipBut = new Button(tr("Copy"), mSaveSelectWidget);
     mResultsClipBut->setIcon(QIcon(":text.png"));
     mResultsClipBut->setFlatVertical();
     mResultsClipBut->setToolTip(tr("Copy text results to clipboard"));
 
-    mDataSaveBut = new Button(tr("Save"), mToolsWidget);
+    mDataSaveBut = new Button(tr("Save"), mSaveSelectWidget);
     mDataSaveBut->setIcon(QIcon(":data.png"));
     mDataSaveBut->setFlatVertical();
     mDataSaveBut->setToolTip(tr("Save graph data to file"));
+
+    QHBoxLayout* mSaveSelectLayout = new QHBoxLayout (mSaveSelectWidget);
+    mSaveSelectLayout->setContentsMargins(0, 0, 0, 0);
+    mSaveSelectLayout->addWidget(mImageSaveBut);
+    mSaveSelectLayout->addSpacing(internSpacing);
+    mSaveSelectLayout->addWidget(mImageClipBut);
+    mSaveSelectLayout->addSpacing(internSpacing);
+    mSaveSelectLayout->addWidget(mResultsClipBut);
+    mSaveSelectLayout->addSpacing(internSpacing);
+    mSaveSelectLayout->addWidget(mDataSaveBut);
+    mSaveSelectWidget->setLayout(mSaveSelectLayout);
 
     connect(mImageSaveBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::saveAsImage);
     connect(mImageClipBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::imageToClipboard);
     connect(mResultsClipBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::resultsToClipboard);
     connect(mDataSaveBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::saveGraphData);
 
+    // ------------------------------------
+    //  Pagination / Saving
+    // ------------------------------------
+
+    mPageSaveTab = new Tabs();
+    mPageSaveTab->addTab(tr("Page"));
+    mPageSaveTab->addTab(tr("Saving"));
+    mPageSaveTab->setFixedHeight(mPageSaveTab->tabHeight());
+
+    mPageSaveTab->setTab(0, false);
+
+    connect(mPageSaveTab, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::applyPageSavingTab);
+
     // ---------------------------------------------------------------------------
     //  Right Layout (Options)
     // ---------------------------------------------------------------------------
-    QVBoxLayout* optionsLayout = new QVBoxLayout();
-    optionsLayout->setContentsMargins(mMargin, mMargin, 0, 0);
-    optionsLayout->setSpacing(0);
-    optionsLayout->addWidget(mGraphListTab);
-    optionsLayout->addWidget(mResultsGroup);
-    optionsLayout->addWidget(mTempoGroup);
-    optionsLayout->addWidget(mCurvesGroup);
-    optionsLayout->addWidget(mTabDisplayMCMC);
-    optionsLayout->addWidget(mTabDisplay);
-    optionsLayout->addWidget(mTabMCMC);
-    optionsLayout->addWidget(mTabPageSaving);
-    optionsLayout->addWidget(mPageWidget);
-    optionsLayout->addWidget(mToolsWidget);
-    optionsLayout->addStretch();
-    mOptionsWidget->setLayout(optionsLayout);
+    mOptionsLayout = new QVBoxLayout(mOptionsWidget);
+    mOptionsLayout->setContentsMargins(mMargin, mMargin, 0, 0);
+    mOptionsLayout->setSpacing(3);
+    mOptionsLayout->addWidget(mGraphListTab);
+    mOptionsLayout->addWidget(mEventsPhasesGroup);
+    mOptionsLayout->addWidget(mTempoGroup);
+    mOptionsLayout->addWidget(mCurvesGroup);
 
+    mOptionsLayout->addWidget(mDisplayDistribTab);
+    mOptionsLayout->addWidget(mDisplayWidget);
+  //  mOptionsLayout->addWidget(mDistribWidget);
+
+    mOptionsLayout->addWidget(mPageSaveTab);
+  //  mOptionsLayout->addSpacing(2);
+    mOptionsLayout->addWidget(mPageWidget);
+
+    mOptionsLayout->addStretch();
+    mOptionsWidget->setLayout(mOptionsLayout);
+
+    mSaveAllWidget->setParent(mOptionsWidget);
+    mSaveSelectWidget->setParent(mOptionsWidget);
+
+    mSaveAllWidget->setVisible(false);
+    mSaveSelectWidget->setVisible(false);
+
+    mDistribWidget->setVisible(false);
     // ---------------------------------------------------------------------------
     //  Inititialize tabs indexes
     // ---------------------------------------------------------------------------
     mGraphTypeTabs->setTab(0, false);
     mGraphListTab->setTab(0, false);
-    mTabDisplayMCMC->setTab(0, false);
-    mTabPageSaving->setTab(0, false);
+    mDisplayDistribTab->setTab(0, false);
+
+    mPageSaveTab->setTab(0, false);
 
     mEventsScrollArea->setVisible(true);
     mPhasesScrollArea->setVisible(false);
@@ -828,7 +855,7 @@ mMaximunNumberOfVisibleGraph(0)
 
     mMarker->raise();
 
-    updateControls();
+    updateOptionsWidget();
 }
 
 ResultsView::~ResultsView()
@@ -887,13 +914,13 @@ void ResultsView::updateModel(Model* model)
     //  Create Chains option controls (radio and checkboxes under "MCMC Chains")
     // ----------------------------------------------------
     createChainsControls();
-    
-    //mCurrentVariableMaxX = 0.;
-    
+
     mCurrentTypeGraph = GraphViewResults::ePostDistrib;
-    if (isChronocurve())
+    if (isChronocurve()) {
         mCurrentVariable = GraphViewResults::eG;
-    else
+        mGraphListTab->setTab(3, false);
+
+    } else
         mCurrentVariable = GraphViewResults::eTheta;
 
     mFFTLenCombo->setCurrentText(QString::number(mModel->getFFTLength()));
@@ -901,7 +928,7 @@ void ResultsView::updateModel(Model* model)
     mThresholdEdit->setText(QString::number(mModel->getThreshold()));
     
     applyStudyPeriod();
-    updateControls();
+    updateOptionsWidget();
     createGraphs();
     updateLayout();
     
@@ -928,14 +955,8 @@ void ResultsView::updateMarkerGeometry(const int x)
 }
 
 void ResultsView::updateLayout()
-{
-    // The scroll bar extent (width or height depending on the orientation)
-    // depends on the native platform, and must be taken into account.
-    const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
-
-    //const QFontMetrics fm(font());
-
-    int leftWidth = width() - mOptionsW - sbe;
+{    
+    int leftWidth = width() - mOptionsW - mSbe;
     int graphWidth = leftWidth;
     int tabsH = mGraphTypeTabs->tabHeight();
     int rulerH = Ruler::sHeight;
@@ -961,32 +982,12 @@ void ResultsView::updateLayout()
     updateGraphsLayout();
     updateMarkerGeometry(mMarker->pos().x());
 
-    // --------------------------------------------------------
-    //  Pagination / Saving Tabs
-    // --------------------------------------------------------
-    int buttonHeight = 40;
-    int buttonSide = mOptionsW / 4;
 
-    //mTabPageSaving->resize(mOptionsW, tabsH);
-    //mPageWidget->resize(mOptionsW, 2*buttonHeight + mMargin);
-    mToolsWidget->resize(mOptionsW, buttonSide);
-
-    // --------------------------------------------------------
-    //  Tools layout
-    // --------------------------------------------------------
-    mImageSaveBut->setGeometry(0, 0, buttonSide, buttonHeight);
-    mImageClipBut->setGeometry(buttonSide, 0, buttonSide, buttonHeight);
-    mResultsClipBut->setGeometry(2 * buttonSide, 0, buttonSide, buttonHeight);
-    mDataSaveBut->setGeometry(3 * buttonSide, 0, buttonSide, buttonHeight);
-    
-    mExportImgBut->setGeometry(0, 0, 2*buttonSide, buttonHeight);
-    mExportResults->setGeometry(2*buttonSide, 0, 2*buttonSide, buttonHeight);
-    
     // --------------------------------------------------------
     //  Right layout
     // --------------------------------------------------------
     mOptionsScroll->setGeometry(leftWidth, 0, mOptionsW, height());
-    mOptionsWidget->setGeometry(0, 0, mOptionsW - sbe, 800);
+   // mOptionsWidget->setGeometry(0, 0, mOptionsW - sbe, 800);
 }
 
 
@@ -1004,11 +1005,16 @@ void ResultsView::updateGraphsLayout()
     } else if (mGraphListTab->currentIndex() == 3) {
         updateGraphsLayout(mCurveScrollArea, mByCurveGraphs);
     }
+
+    // Display the scroll area corresponding to the selected tab :
+    mEventsScrollArea->setVisible(mGraphListTab->currentIndex() == 0);
+    mPhasesScrollArea->setVisible(mGraphListTab->currentIndex() == 1);
+    mTempoScrollArea->setVisible(mGraphListTab->currentIndex() == 2);
+    mCurveScrollArea->setVisible(mGraphListTab->currentIndex() == 3);
 }
 
 void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewResults*> graphs)
 {
-    const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     QWidget* widget = scrollArea->widget();
 
     /*QPalette palette = widget->palette();
@@ -1016,10 +1022,10 @@ void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewRes
     widget->setPalette(palette);*/
 
     if (widget) {
-        widget->resize(width() - mOptionsW - sbe, graphs.size() * mGraphHeight);
+        widget->resize(width() - mOptionsW - mSbe, graphs.size() * mGraphHeight);
 
         for (int i = 0; i<graphs.size(); ++i) {
-            graphs[i]->setGeometry(0, i * mGraphHeight, width() - mOptionsW - sbe, mGraphHeight);
+            graphs[i]->setGeometry(0, i * mGraphHeight, width() - mOptionsW - mSbe, mGraphHeight);
             graphs[i]->setVisible(true);
             graphs[i]->update();
         }
@@ -1042,7 +1048,7 @@ void ResultsView::applyGraphTypeTab()
 {
     mCurrentTypeGraph = (GraphViewResults::TypeGraph) mGraphTypeTabs->currentIndex();
 
-    updateControls();
+    updateOptionsWidget();
     generateCurves();
     updateLayout();
 }
@@ -1084,7 +1090,7 @@ void ResultsView::applyGraphListTab()
     // Changing the graphs list implies to go back to page 1 :
     mCurrentPage = 0;
     
-    updateControls();
+    updateOptionsWidget();
     createGraphs();
     updateLayout();
 }
@@ -1143,38 +1149,171 @@ void ResultsView::applyCurrentVariable()
 {
     updateCurrentVariable();
     
-    updateControls();
+    updateOptionsWidget();
     createGraphs();
     updateLayout();
 }
 
 void ResultsView::applyUnfoldEvents()
 {
-    updateControls();
+    updateOptionsWidget();
     createGraphs();
     updateLayout();
 }
 
 void ResultsView::applyUnfoldDates()
 {
-    updateControls();
+    updateOptionsWidget();
     createGraphs();
     updateLayout();
 }
 
 void ResultsView::applyDisplayTab()
 {
-    updateControls();
+    updateOptionsWidget();
     updateLayout();
 }
 
 void ResultsView::applyPageSavingTab()
 {
-    updateControls();
+    updateOptionsWidget();
     updateLayout();
 }
 
 #pragma mark Chains controls
+
+void ResultsView::toggleDisplayDistrib()
+{
+    const bool isPostDistrib = isPostDistribGraph();
+    // -------------------------------------------------------------------------------------
+    //  MCMC Display options are not visible for mCurrentVariable = Tempo or Activity
+    // -------------------------------------------------------------------------------------
+    if ( mCurrentVariable == GraphViewResults::eTempo ||
+         mCurrentVariable == GraphViewResults::eActivity ||
+         mCurrentVariable == GraphViewResults::eGP ||
+         mCurrentVariable == GraphViewResults::eGS) {
+
+        mDisplayDistribTab->setTabVisible(1, false);
+        mDisplayDistribTab->setTab(0, false);
+
+    } else {
+        mDisplayDistribTab->setTabVisible(1, true);
+    }
+
+    // Recherche du widget visible
+    QWidget* widFrom = nullptr;
+    int widHeigth = 0;
+
+    if (mDisplayWidget->isVisible())
+        widFrom = mDisplayWidget;
+
+    else if (mDistribWidget->isVisible())
+        widFrom = mDistribWidget;
+
+    // Echange avec le widget correspondant
+    if (mDisplayDistribTab->currentName() == tr("Display") ) {
+        mDisplayWidget->setVisible(true);
+        mDistribWidget->setVisible(false);
+        // ------------------------------------
+        //  Display Options
+        // ------------------------------------
+        const  int internSpan = 5;
+        const int h = mDisplayStudyBut->height();
+        //widHeigth = mSpanTitle->height() + mCurrentXMinEdit->height() + mXSlider->height()
+          //          + mMajorScaleEdit->height() + mMinorScaleEdit->height() + 6*internSpan;
+        widHeigth = 11*h + 12*internSpan;
+        if ( mCurrentVariable == GraphViewResults::eTheta ||
+             mCurrentVariable == GraphViewResults::eTempo ||
+             mCurrentVariable == GraphViewResults::eActivity ||
+             mCurrentVariable == GraphViewResults::eDuration ||
+             mCurrentVariable == GraphViewResults::eSigma ||
+             mCurrentVariable == GraphViewResults::eVG ||
+             mCurrentVariable == GraphViewResults::eG ||
+             mCurrentVariable == GraphViewResults::eGP ||
+             mCurrentVariable == GraphViewResults::eGS ||
+             mCurrentVariable == GraphViewResults::eAlpha) {
+
+            mDisplayStudyBut->setText(xScaleRepresentsTime() ? tr("Study Period Display") : tr("Fit Display"));
+            mDisplayStudyBut->setVisible(true);
+            widHeigth += mDisplayStudyBut->height() + internSpan;
+        } else {
+            mDisplayStudyBut->setVisible(false);
+        }
+
+        mDisplayWidget-> setFixedHeight(widHeigth);
+        if (widFrom != mDisplayWidget)
+            mOptionsLayout->replaceWidget(widFrom, mDisplayWidget);
+
+
+    } else { // Tab Distrib. Option
+        mDisplayWidget->setVisible(false);
+        mDistribWidget->setVisible(true);
+        widHeigth = 50;
+        // ------------------------------------
+        //  MCMC Chains
+        //  Switch between checkBoxes or Radio-buttons for chains
+        // ------------------------------------
+        mAllChainsCheck->setVisible(isPostDistrib);
+
+        if (mAllChainsCheck->isVisible())
+            widHeigth += mAllChainsCheck->height();
+
+        for (auto&& checkChain : mChainChecks) {
+            checkChain->setVisible(isPostDistrib);
+            if (checkChain->isVisible())
+                widHeigth += checkChain->height();
+        }
+
+        for (auto&& chainRadio : mChainRadios) {
+            chainRadio->setVisible(!isPostDistrib);
+            if (chainRadio->isVisible())
+                widHeigth += chainRadio->height();
+        }
+
+        // ------------------------------------
+        //  Density Options
+        // ------------------------------------
+        bool showDensityOptions = isPostDistrib && (mCurrentVariable != GraphViewResults::eTempo
+                && mCurrentVariable != GraphViewResults::eG
+                && mCurrentVariable != GraphViewResults::eGP
+                && mCurrentVariable != GraphViewResults::eGS
+                && mCurrentVariable != GraphViewResults::eActivity);
+
+        mDensityOptsTitle->setVisible(showDensityOptions);
+        if (mDensityOptsTitle->isVisible())
+            widHeigth += mDensityOptsTitle->height();
+
+        mDensityOptsGroup->setVisible(showDensityOptions);
+        if (mDensityOptsGroup->isVisible())
+            widHeigth += mDensityOptsGroup->height();
+
+        if (widFrom != mDistribWidget)
+            mOptionsLayout->replaceWidget(widFrom, mDistribWidget);
+    }
+
+
+    // -------------------------------------------------------------------------------------
+    //  Update controls depending on current display tab
+    // -------------------------------------------------------------------------------------
+
+
+
+  //  mDisplayWidget->setVisible(mDisplayDistribTab->currentIndex() == 0);
+   // mDistribWidget->setVisible(mDisplayDistribTab->currentIndex() == 1);
+//    optionWidgetHeigth += mDisplayDistribTab->height();
+
+
+
+
+
+
+
+
+
+
+
+
+}
 
 void ResultsView::createChainsControls()
 {
@@ -1345,7 +1484,7 @@ void ResultsView::createByEventsGraphs()
                 graph->setMarginRight(mMarginRight);
 
                 mByEventsGraphs.append(graph);
-                connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+                connect(graph, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
             }
             ++graphIndex;
                 
@@ -1366,7 +1505,7 @@ void ResultsView::createByEventsGraphs()
                         graph->setMarginRight(mMarginRight);
 
                         mByEventsGraphs.append(graph);
-                        connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+                        connect(graph, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
                     }
                     ++graphIndex;
                 }
@@ -1409,7 +1548,7 @@ void ResultsView::createByPhasesGraphs()
                 graph->setMarginRight(mMarginRight);
 
                 mByPhasesGraphs.append(graph);
-                connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+                connect(graph, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
             }
             ++graphIndex;
             
@@ -1427,7 +1566,7 @@ void ResultsView::createByPhasesGraphs()
                         graph->setMarginRight(mMarginRight);
 
                         mByPhasesGraphs.append(graph);
-                        connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+                        connect(graph, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
                     }
                     ++graphIndex;
                         
@@ -1448,7 +1587,7 @@ void ResultsView::createByPhasesGraphs()
                                 graph->setMarginRight(mMarginRight);
 
                                 mByPhasesGraphs.append(graph);
-                                connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+                                connect(graph, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
                             }
                             ++graphIndex;
                         }
@@ -1493,7 +1632,7 @@ void ResultsView::createByTempoGraphs()
                 graph->setMarginRight(mMarginRight);
 
                 mByTempoGraphs.append(graph);
-                connect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+                connect(graph, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
             }
             ++graphIndex;
         }
@@ -1527,7 +1666,7 @@ void ResultsView::createByCurveGraph()
         graphAlpha->setModel(model);
         
         mByCurveGraphs.append(graphAlpha);
-        connect(graphAlpha, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+        connect(graphAlpha, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
 
     } else  {
         bool hasY = (model->mChronocurveSettings.mProcessType != ChronocurveSettings::eProcessTypeUnivarie);
@@ -1614,7 +1753,6 @@ void ResultsView::createByCurveGraph()
             }
         }
 
-
         GraphViewCurve* graphX = new GraphViewCurve(widget);
         graphX->setSettings(mModel->mSettings);
         graphX->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
@@ -1623,7 +1761,6 @@ void ResultsView::createByCurveGraph()
         graphX->changeXScaleDivision(mMajorScale, mMinorCountScale);
         graphX->setMarginLeft(mMarginLeft);
         graphX->setMarginRight(mMarginRight);
-       // graphX->mCurrentVariable ==
 
         if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie ) {
             switch (model->mChronocurveSettings.mVariableType) {
@@ -1706,7 +1843,7 @@ void ResultsView::createByCurveGraph()
 
         mByCurveGraphs.append(graphX);
         
-        connect(graphX, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+        connect(graphX, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
         
         if (hasY) {
             GraphViewCurve* graphY = new GraphViewCurve(widget);
@@ -1754,7 +1891,7 @@ void ResultsView::createByCurveGraph()
             graphY->setRefPoints(refPts);
             mByCurveGraphs.append(graphY);
             
-            connect(graphY, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+            connect(graphY, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
         }
         
         if (hasZ) {
@@ -1802,7 +1939,7 @@ void ResultsView::createByCurveGraph()
             graphZ->setRefPoints(refPts);
             mByCurveGraphs.append(graphZ);
             
-            connect(graphZ, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+            connect(graphZ, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
         }
     }
 }
@@ -1810,7 +1947,7 @@ void ResultsView::createByCurveGraph()
 void ResultsView::deleteAllGraphsInList(QList<GraphViewResults*>& list)
 {
     for (auto&& graph : list) {
-        disconnect(graph, &GraphViewResults::selected, this, &ResultsView::updateLayout);
+        disconnect(graph, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
         delete graph;
     }
     list.clear();
@@ -1834,8 +1971,36 @@ bool ResultsView::hasSelectedGraphs()
 QList<GraphViewResults*> ResultsView::currentGraphs(bool onlySelected)
 {
     QList<GraphViewResults*> graphs;
+    QList<GraphViewResults*> byGraphs;
 
-    if (mGraphListTab->currentIndex() == 0) {
+    switch (mGraphListTab->currentIndex()) {
+    case 0 :
+        byGraphs = mByEventsGraphs;
+        break;
+    case 1 :
+        byGraphs = mByPhasesGraphs;
+        break;
+    case 2 :
+        byGraphs = mByTempoGraphs;
+        break;
+    case 3 :
+        byGraphs = mByCurveGraphs;
+        break;
+    default:
+        byGraphs = QList<GraphViewResults*>();
+
+    }
+
+    if (onlySelected && !byGraphs.isEmpty()) {
+        for (auto&& graph : byGraphs)
+            if (graph->isSelected())
+                graphs.append(graph);
+
+    } else {
+        return byGraphs;
+    }
+
+/*    if (mGraphListTab->currentIndex() == 0) {
         for (auto&& graph : mByEventsGraphs) {
             if (!onlySelected || graph->isSelected()) {
                 graphs.append(graph);
@@ -1863,6 +2028,9 @@ QList<GraphViewResults*> ResultsView::currentGraphs(bool onlySelected)
             }
         }
     }
+*/
+
+
     return graphs;
 }
 
@@ -2006,8 +2174,8 @@ void ResultsView::updateCurvesToShow()
     // --------------------------------------------------------
     if ((mGraphListTab->currentIndex() == 3) && !mAlphaRadio->isChecked()) {
         bool showG = mCurveGRadio->isChecked();
-        bool showGError = mCurveErrorCheck->isChecked();
-        bool showGPoints = mCurvePointsCheck->isChecked();
+        bool showGError = showG && mCurveErrorCheck->isChecked();
+        bool showGPoints = showG && mCurvePointsCheck->isChecked();
         bool showGP = mCurveGPRadio->isChecked();
         bool showGS = mCurveGSRadio->isChecked();
         
@@ -2330,10 +2498,10 @@ void ResultsView::updateScales()
 
 }
 
-void ResultsView::updateControls()
+void ResultsView::updateOptionsWidget()
 {
     bool isPostDistrib = isPostDistribGraph();
-
+    unsigned optionWidgetHeigth = 0;
     // -------------------------------------------------------------------------------------
     //  Update graph list tab
     // -------------------------------------------------------------------------------------
@@ -2364,15 +2532,16 @@ void ResultsView::updateControls()
         }
     }
 
+    optionWidgetHeigth += mGraphListTab->height();
     // -------------------------------------------------------------------------------------
     //  Update controls depending on current graph list
     // -------------------------------------------------------------------------------------
-    if (mGraphListTab->currentIndex() == 0) {
+    if (mGraphListTab->currentName() == tr("Events")) {
         mGraphTypeTabs->setTabVisible(1, true); // History Plot
         mGraphTypeTabs->setTabVisible(2, true); // Acceptance Rate
         mGraphTypeTabs->setTabVisible(3, true); // Autocorrelation
 
-        mResultsGroup->setVisible(true);
+        mEventsPhasesGroup->setVisible(true);
         mTempoGroup->setVisible(false);
         mCurvesGroup->setVisible(false);
 
@@ -2399,18 +2568,25 @@ void ResultsView::updateControls()
             mDataCalibCheck->setVisible(showCalibControl);
             mWiggleCheck->setVisible(showCalibControl);
         }
+
+        optionWidgetHeigth += mEventsPhasesGroup->height();
             
-    } else if (mGraphListTab->currentIndex() == 1) {
+    } else if (mGraphListTab->currentIndex() == 1) { // phases tab
         mGraphTypeTabs->setTabVisible(1, true); // History Plot
         mGraphTypeTabs->setTabVisible(2, true); // Acceptance Rate
         mGraphTypeTabs->setTabVisible(3, true); // Autocorrelation
 
-        mResultsGroup->setVisible(true);
+        mEventsPhasesGroup->setVisible(true);
         mTempoGroup->setVisible(false);
         mCurvesGroup->setVisible(false);
+        optionWidgetHeigth += mEventsPhasesGroup->height();
 
         mEventsfoldCheck->setVisible(true);
+        optionWidgetHeigth += mEventsfoldCheck->height();
+
         mDatesfoldCheck->setVisible(mEventsfoldCheck->isChecked());
+        if (mDatesfoldCheck->isVisible())
+            optionWidgetHeigth += mDatesfoldCheck->height();
 
         if (!mEventsfoldCheck->isChecked()) {
             mDatesfoldCheck->setChecked(false);
@@ -2420,139 +2596,88 @@ void ResultsView::updateControls()
 
         mDataCalibCheck->setVisible(showCalibControl);
         mWiggleCheck->setVisible(showCalibControl);
+        if (mDataCalibCheck->isVisible())
+            optionWidgetHeigth += mDataCalibCheck->height() + mWiggleCheck->height();
 
-    } else if(mGraphListTab->currentIndex() == 2) { // phases tab
+    } else if(mGraphListTab->currentIndex() == 2) { // phases Tempo
         mGraphTypeTabs->setTabVisible(1, false); // History Plot
         mGraphTypeTabs->setTabVisible(2, false); // Acceptance Rate
         mGraphTypeTabs->setTabVisible(3, false); // Autocorrelation
         mGraphTypeTabs->setTab(0, true);
 
-        mResultsGroup->setVisible(false);
+        mEventsPhasesGroup->setVisible(false);
         mTempoGroup->setVisible(true);
         mCurvesGroup->setVisible(false);
+        optionWidgetHeigth += mTempoGroup->height();
 
         mTempoCredCheck->setVisible(mTempoRadio->isChecked());
         mTempoErrCheck->setVisible(mTempoRadio->isChecked());
+        if (mTempoCredCheck->isVisible())
+            optionWidgetHeigth += mTempoCredCheck->height() + mTempoErrCheck->height();
 
-    } else if (mGraphListTab->currentIndex() == 3) { // curve Tab
+
+    } else if (mGraphListTab->currentName() == tr("Curve")) { // curve Tab
         bool isAlpha = mAlphaRadio->isChecked();
         
         mGraphTypeTabs->setTabVisible(1, isAlpha); // History Plot
         mGraphTypeTabs->setTabVisible(2, isAlpha); // Acceptance Rate
         mGraphTypeTabs->setTabVisible(3, isAlpha); // Autocorrelation
         
-        mResultsGroup->setVisible(false);
+        mEventsPhasesGroup->setVisible(false);
         mTempoGroup->setVisible(false);
         mCurvesGroup->setVisible(true);
-        
-        bool showGOptions = mCurveGRadio->isChecked();
-        mCurveErrorCheck->setVisible(showGOptions);
-        mCurvePointsCheck->setVisible(showGOptions);
-        if (!showGOptions) {
-            mCurveErrorCheck->setChecked(false);
-            mCurvePointsCheck->setChecked(false);
+
+        int totalH = 45 + 40; // look ligne 165 in ResultsView() comment Right Part. totalH = 3 * h
+        if (mCurveGRadio->isChecked()) {
+            mCurveErrorCheck->setVisible(true);
+            mCurvePointsCheck->setVisible(true);
+            totalH += 30 + 40;
+
+        } else {
+            mCurveErrorCheck->setVisible(false);
+            mCurvePointsCheck->setVisible(false);
         }
+
+
+        mCurvesGroup->setFixedHeight(totalH);
+        optionWidgetHeigth += mCurvesGroup->height();
     }
 
-    // -------------------------------------------------------------------------------------
-    //  Update controls depending on current display tab
-    // -------------------------------------------------------------------------------------
-    mTabDisplay->setVisible(mTabDisplayMCMC->currentIndex() == 0);
-    mTabMCMC->setVisible(mTabDisplayMCMC->currentIndex() == 1);
 
-    if ( mCurrentVariable == GraphViewResults::eTheta ||
-         mCurrentVariable == GraphViewResults::eTempo ||
-         mCurrentVariable == GraphViewResults::eActivity ||
-         mCurrentVariable == GraphViewResults::eDuration ||
-         mCurrentVariable == GraphViewResults::eSigma ||
-         mCurrentVariable == GraphViewResults::eVG ||
-         mCurrentVariable == GraphViewResults::eG ||
-         mCurrentVariable == GraphViewResults::eGP ||
-         mCurrentVariable == GraphViewResults::eGS ||
-         mCurrentVariable == GraphViewResults::eAlpha) {
 
-        mDisplayStudyBut->setVisible(true);
 
-    } else {
-        mDisplayStudyBut->setVisible(false);
-    }
-
-    // -------------------------------------------------------------------------------------
-    //  MCMC Display options are not visible for mCurrentVariable = Tempo or Activity
-    // -------------------------------------------------------------------------------------
-    if ( mCurrentVariable == GraphViewResults::eTempo ||
-         mCurrentVariable == GraphViewResults::eActivity ||
-         mCurrentVariable == GraphViewResults::eGP ||
-         mCurrentVariable == GraphViewResults::eGS) {
-
-        mTabDisplayMCMC->setTabVisible(1, false);
-        mTabDisplayMCMC->setTab(0, false);
-
-    } else {
-        mTabDisplayMCMC->setTabVisible(1, true);
-    }
-
+    optionWidgetHeigth += mDensityOptsTitle->height();
+    optionWidgetHeigth += mDensityOptsGroup->height();
     // ------------------------------------
-    //  MCMC Chains
-    //  Switch between checkBoxes or Radio-buttons for chains
+    //  Display / Distrib. Option
     // ------------------------------------
-    mAllChainsCheck->setVisible(isPostDistrib);
+   optionWidgetHeigth += mDisplayDistribTab->height();
 
-    for (auto&& checkChain : mChainChecks) {
-        checkChain->setVisible(isPostDistrib);
-    }
+    toggleDisplayDistrib();
+    if (mDisplayDistribTab->currentName() == tr("Display") )
+        optionWidgetHeigth += mDisplayWidget->height();
 
-    for (auto&& chainRadio : mChainRadios) {
-        chainRadio->setVisible(!isPostDistrib);
-    }
-
-    // ------------------------------------
-    //  Density Options
-    // ------------------------------------
-    bool showDensityOptions = isPostDistrib && (mCurrentVariable != GraphViewResults::eTempo && mCurrentVariable != GraphViewResults::eActivity);
-
-    mDensityOptsTitle->setVisible(showDensityOptions);
-    mDensityOptsGroup->setVisible(showDensityOptions);
-
-    // ------------------------------------
-    //  Display Options
-    // ------------------------------------
-    mDisplayStudyBut->setText(xScaleRepresentsTime() ? tr("Study Period Display") : tr("Fit Display"));
+    else
+        optionWidgetHeigth += mDistribWidget->height();
 
     // -------------------------------------------------------------------------------------
-    //  Pagination options
+    //  Page / Save
     // -------------------------------------------------------------------------------------
-    bool showPagination = (mTabPageSaving->currentIndex() == 0);
+    optionWidgetHeigth += mPageSaveTab->height();
 
-    mPageWidget->setVisible(showPagination);
-    mToolsWidget->setVisible(!showPagination);
+    togglePageSave();
+    if (mPageSaveTab->currentName() == tr("Page") )
+        optionWidgetHeigth += mPageWidget->height();
 
-    QList<GraphViewResults*> graphsSelected = currentGraphs(true);
-    bool hasSelection = (graphsSelected.size() > 0);
+    else  if (currentGraphs(true).isEmpty())
+        optionWidgetHeigth += mSaveAllWidget->height();
 
-    mImageSaveBut->setVisible(hasSelection);
-    mImageClipBut->setVisible(hasSelection);
-    mResultsClipBut->setVisible(hasSelection);
-    mDataSaveBut->setVisible(hasSelection);
-
-    mExportImgBut->setVisible(!hasSelection);
-    mExportResults->setVisible(!hasSelection);
+    else
+        optionWidgetHeigth += mSaveSelectWidget->height();
 
 
-    // -------------------------------------------------------------------------------------
-    //  - Update the total number of graphs for all pages
-    //  - Check if the current page is still lower than the number of pages
-    //  - Update the pagination display
-    //  => All this must be done BEFORE calling createGraphs, which uses theses params to build the graphs
-    // -------------------------------------------------------------------------------------
-    updateTotalGraphs();
-    
-    int numPages = ceil((double)mMaximunNumberOfVisibleGraph / (double)mGraphsPerPage);
-    if (mCurrentPage >= numPages) {
-        mCurrentPage = 0;
-    }
-    
-    mPageEdit->setText(locale().toString(mCurrentPage + 1) + "/" + locale().toString(numPages));
+   // const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
+    mOptionsWidget->setGeometry(0, 0, mOptionsW - mSbe, optionWidgetHeigth);
 }
 
 /*void ResultsView::updateResultsLog()
@@ -2924,7 +3049,7 @@ void ResultsView::applyNextPage()
 {
     if ((mCurrentPage + 1) * mGraphsPerPage < mMaximunNumberOfVisibleGraph) {
         ++mCurrentPage;
-        updateControls();
+        updateOptionsWidget();
         createGraphs();
         updateLayout();
     }
@@ -2934,7 +3059,7 @@ void ResultsView::applyPreviousPage()
 {
     if (mCurrentPage > 0) {
         --mCurrentPage;
-        updateControls();
+        updateOptionsWidget();
         createGraphs();
         updateLayout();
     }
@@ -2944,7 +3069,7 @@ void ResultsView::applyGraphsPerPage(int graphsPerPage)
 {
     mGraphsPerPage = graphsPerPage;
     mCurrentPage = 0;
-    updateControls();
+    updateOptionsWidget();
     createGraphs();
     updateLayout();
 }
@@ -2962,6 +3087,64 @@ void ResultsView::showInfos(bool show)
 }
 
 #pragma mark Graph selection and export
+
+void ResultsView::togglePageSave()
+{
+    // Recherche du widget visible
+    QWidget* widFrom = nullptr;
+    if (mSaveSelectWidget->isVisible())
+        widFrom = mSaveSelectWidget;
+
+    else if (mSaveAllWidget->isVisible())
+        widFrom = mSaveAllWidget;
+
+    else if (mPageWidget->isVisible())
+        widFrom = mPageWidget;
+
+    // Echange avec le widget correspondant
+    if (mPageSaveTab->currentName() == tr("Page") ) { // Tab = Page
+        // -------------------------------------------------------------------------------------
+        //  - Update the total number of graphs for all pages
+        //  - Check if the current page is still lower than the number of pages
+        //  - Update the pagination display
+        //  => All this must be done BEFORE calling createGraphs, which uses theses params to build the graphs
+        // -------------------------------------------------------------------------------------
+        updateTotalGraphs();
+
+        int numPages = ceil((double)mMaximunNumberOfVisibleGraph / (double)mGraphsPerPage);
+        if (mCurrentPage >= numPages) {
+            mCurrentPage = 0;
+        }
+
+        mPageEdit->setText(locale().toString(mCurrentPage + 1) + "/" + locale().toString(numPages));
+
+        mPageWidget->setVisible(true);
+        mSaveSelectWidget->setVisible(false);
+        mSaveAllWidget->setVisible(false);
+
+        if (widFrom != mPageWidget)
+            mOptionsLayout->replaceWidget(widFrom, mPageWidget);
+
+    } else  { // Tab = Saving
+        mPageWidget->setVisible(false);
+
+        //QList<GraphViewResults*> graphsSelected = currentGraphs(true);
+        const bool hasSelection = (currentGraphs(true).size() > 0);
+        mSaveSelectWidget->setVisible(hasSelection);
+        mSaveAllWidget->setVisible(!hasSelection);
+
+        if (hasSelection && widFrom != mSaveSelectWidget) {
+               mOptionsLayout->replaceWidget(widFrom, mSaveSelectWidget);
+
+        } else if (widFrom != mSaveAllWidget) {
+              mOptionsLayout->replaceWidget(widFrom, mSaveAllWidget);
+
+        }
+
+    }
+
+
+}
 
 void ResultsView::saveGraphData()
 {
