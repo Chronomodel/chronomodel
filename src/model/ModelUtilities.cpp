@@ -779,15 +779,20 @@ void sampleInCumulatedRepartition( Event* event, const ProjectSettings &settings
     if (unionTmax< min) {
         //event->mTheta.mX = Generator::gaussByDoubleExp(min, (max-min)*0.75, min, max);
         event->mTheta.mX = Generator::gaussByDoubleExp((unionTmax + unionTmin)/2., (unionTmax - unionTmin)/3., min, max);
-
+#ifdef DEBUG
+        if (event->mTheta.mX == min)
+            qDebug() << "sampleInCumulatedRepartition unionTmax< min and (event->mTheta.mX == min)";
+#endif
     } else if (max<unionTmin) {
 
         //unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
 
         //event->mTheta.mX = Generator::gaussByDoubleExp(max, (max-min)*0.75, min, max);
         event->mTheta.mX = Generator::gaussByDoubleExp((unionTmax + unionTmin)/2., (unionTmax - unionTmin)/3., min, max);
-
-
+#ifdef DEBUG
+        if (event->mTheta.mX == max)
+            qDebug() << "sampleInCumulatedRepartition max<unionTmin and (event->mTheta.mX == max)";
+#endif
     } else {
         unionTmin = std::max(unionTmin, min);
         unionTmax = std::min(unionTmax, max);
@@ -817,12 +822,17 @@ void sampleInCumulatedRepartition( Event* event, const ProjectSettings &settings
 
         const double maxRepartition (unionRepartition.last());
         const double minRepartition (unionRepartition.first());
-        if (minRepartition!=0. || maxRepartition!= 0.) {
+        if ( (minRepartition!=0. || maxRepartition!= 0.) &&
+             (unionRepartition.size()>1)) {
+
             const double idx = vector_interpolate_idx_for_value(Generator::randomUniform()*(maxRepartition-minRepartition) + minRepartition, unionRepartition);
             event->mTheta.mX = unionTmin + idx * unionStep;
+#ifdef DEBUG
+        if (event->mTheta.mX == min || event->mTheta.mX == max)
+            qDebug() << "sampleInCumulatedRepartition event->mTheta.mX == min || event->mTheta.mX == max";
+#endif
 
         } else {
-
             event->mTheta.mX = Generator::randomUniform(min, max);
         }
 
