@@ -304,7 +304,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
 
    double sigma;
 
-    if (mSupport == eRp || mSupport== eRpStar) {
+    if (mSupport == eRp || mSupport== eRpStar) {// usefull for mVG
         const Quartiles Qdata = quartilesForTrace(dataSrc);
         sigma = Qdata.Q3 - Qdata.Q1;
 
@@ -390,10 +390,10 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
 
         for (int i=0; i<inputSize; ++i) {
              const double t = a + (double)i * delta;
-             result[t] = input[i];
+             result[t] = std::max(0., input[i]); // the histogram must not have a negative value
         }
 
-        result = getMapDataInRange(result,tBegin,tEnd);
+        result = getMapDataInRange(result, tBegin, tEnd);
 
         fftw_free(input);
         fftw_free(output);
