@@ -48,9 +48,9 @@ Button::Button(QWidget* parent):QPushButton(parent)
 
 }
 
-Button::Button(const QString& text, QWidget* parent):QPushButton(parent)
+Button::Button(const QString& text, QWidget* parent):QPushButton(text, parent)
 {
-    setText(text);
+    //setText(text);
     init();
 }
 

@@ -109,7 +109,6 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     defaultPen.setWidthF(1);
     defaultPen.setStyle(Qt::SolidLine);
 
-
     QColor color = mEvent->mColor;
     QString resultsText = ModelUtilities::eventResultsText(mEvent, false);
     QString resultsHTML = ModelUtilities::eventResultsHTML(mEvent, false);
@@ -141,8 +140,6 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     if (typeGraph == ePostDistrib) {
         mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
         mGraph->setBackgroundColor(QColor(230, 230, 230));
-        
-        mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound : %1").arg(mEvent->mName) : tr("Event : %1").arg(mEvent->mName));
 
         /* ------------------------------------------------
          *  Possible curves :

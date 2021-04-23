@@ -534,7 +534,7 @@ qDebug()<<"EventsScene::updateSceneFromState()";
                 itemUnkown = false;
                 if ((event != OldItemEvent) || settingsChanged) {
                     // UPDATE ITEM
-                    qDebug() << "EventsScene::updateScene Event changed : id = " << event.value(STATE_ID).toInt()<< event.value(STATE_NAME).toString();
+                 //   qDebug() << "EventsScene::updateScene Event changed : id = " << event.value(STATE_ID).toInt()<< event.value(STATE_NAME).toString();
 
                     oldItem->setEvent(event, settings);
                 }
@@ -1353,7 +1353,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
     const int deltaX (152);
     const int deltaY (100);
     int EventCount (0);
-QJsonObject state = project->state();
+    QJsonObject state = project->state();
     for (int i = 0; i < listDates.size(); ++i) {
         // We must regenerate the variables "state" and "events" after event or data inclusion
       //  QJsonObject state = project->state();
@@ -1392,9 +1392,9 @@ QJsonObject state = project->state();
                     Event::setChronocurveCsvDataToJsonEvent(eventFinded, listCurveData.at(i));
                 }
 
-events[eventIdx] =eventFinded;
-//                project->updateEvent(eventFinded, QObject::tr("Dates added to event by CSV drag"));
-state[STATE_EVENTS] = events;
+                events[eventIdx] =eventFinded;
+                //                project->updateEvent(eventFinded, QObject::tr("Dates added to event by CSV drag"));
+                state[STATE_EVENTS] = events;
 
             } else {
                 Event event;
@@ -1446,7 +1446,8 @@ state[STATE_EVENTS] = events;
             ++EventCount;
         }
     } // for()
-project->pushProjectState(state, NEW_EVEN_BY_CSV_DRAG_REASON, true);
+
+    project->pushProjectState(state, NEW_EVEN_BY_CSV_DRAG_REASON, true);
 }
 
 QList<Date> EventsScene::decodeDataDrop_old(QGraphicsSceneDragDropEvent* e)
@@ -1487,6 +1488,12 @@ QList<Date> EventsScene::decodeDataDrop_old(QGraphicsSceneDragDropEvent* e)
     return dates;
 }
 
+/**
+ * @brief EventsScene::decodeDataDrop insert Event when drop a CSV line from the table importCSV
+ * the table may be come from ImportDataView::exportDates()
+ * @param e
+ * @return
+ */
 QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::decodeDataDrop(QGraphicsSceneDragDropEvent* e)
 {
     const QMimeData* mimeData = e->mimeData();
@@ -1541,30 +1548,30 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
                 dates << qMakePair(eventName, date);
                 acceptedRows.append(csvRow);
 
-                if (dataStr.size() >= 14) {
-                    chronocurveValues.insert("YInt", csvLocal.toDouble(dataStr.at(13)));
-                } else {
-                    chronocurveValues.insert("YInt", 0);
-                }
-                if (dataStr.size() >= 15) {
-                    chronocurveValues.insert("SInt", csvLocal.toDouble(dataStr.at(14)));
-                } else {
-                    chronocurveValues.insert("SInt", 0);
-                }
                 if (dataStr.size() >= 16) {
                     chronocurveValues.insert("YInc", csvLocal.toDouble(dataStr.at(15)));
                 } else {
                     chronocurveValues.insert("YInc", 0);
                 }
                 if (dataStr.size() >= 17) {
-                    chronocurveValues.insert("YDec", csvLocal.toDouble(dataStr.at(16)));
+                    chronocurveValues.insert("SInc", csvLocal.toDouble(dataStr.at(16)));
+                } else {
+                    chronocurveValues.insert("SInc", 0);
+                }
+                if (dataStr.size() >= 18) {
+                    chronocurveValues.insert("YDec", csvLocal.toDouble(dataStr.at(17)));
                 } else {
                     chronocurveValues.insert("YDec", 0);
                 }
-                if (dataStr.size() >= 18) {
-                    chronocurveValues.insert("SInc",csvLocal.toDouble(dataStr.at(17)));
+                if (dataStr.size() >= 19) {
+                    chronocurveValues.insert("YInt", csvLocal.toDouble(dataStr.at(18)));
                 } else {
-                    chronocurveValues.insert("SInc", 0);
+                    chronocurveValues.insert("YInt", 0);
+                }
+                if (dataStr.size() >= 20) {
+                    chronocurveValues.insert("SInt",csvLocal.toDouble(dataStr.at(19)));
+                } else {
+                    chronocurveValues.insert("SInt", 0);
                 }
                 curveValues << chronocurveValues;
             } else {

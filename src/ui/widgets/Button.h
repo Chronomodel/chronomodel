@@ -63,6 +63,36 @@ public:
     void setIsClose(bool isClose);
     void setIconOnly(bool iconOnly) { mIconOnly = iconOnly; }
 
+    void setFixedSize(const QSize &size) {QPushButton::setFixedSize(size); }
+    void setFixedSize(int w, int h) {QPushButton::setFixedSize(w, h); }
+    void setFixedWidth(int w) {QPushButton::setFixedWidth(w); }
+    void setFixedHeight(int h) {QPushButton::setFixedHeight(h); }
+
+    QSize sizeHint() const {return QPushButton::sizeHint(); }
+    QSize minimumSizeHint() const {return QPushButton::minimumSizeHint(); }
+
+    inline void resize(int w, int h)
+    { QPushButton::resize(QSize(w, h)); }
+
+    inline void setGeometry(int ax, int ay, int aw, int ah)
+    { QPushButton::setGeometry(QRect(ax, ay, aw, ah)); }
+
+    inline QRect rect() const
+    { return QPushButton::rect(); }
+
+    inline const QRect geometry() const
+    { return QPushButton::geometry(); }
+
+    inline QSize size() const
+    { return QPushButton::size(); }
+
+    inline int width() const
+    { return QPushButton::width(); }
+
+    inline int height() const
+    { return QPushButton::height(); }
+
+
     void setColorState(ColorState state);
     virtual void setCheckable(const bool checkable);
 

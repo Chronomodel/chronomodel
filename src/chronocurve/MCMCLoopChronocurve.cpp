@@ -314,7 +314,7 @@ QString MCMCLoopChronocurve::initMCMC()
     for (int i = 0; i<unsortedEvents.size(); ++i) {
         if (unsortedEvents.at(i)->mType == Event::eDefault) {
 
-            mModel->initNodeEvents(); // ?? FAIT AU-DESSUS ?
+            mModel->initNodeEvents(); // Doit être réinitialisé pour toute recherche getThetaMinRecursive et getThetaMaxRecursive
             QString circularEventName = "";
           //  QList< Event*> startEvents = QList<Event*>();
             const double min (unsortedEvents.at(i)->getThetaMinRecursive (tmin));
@@ -329,7 +329,7 @@ QString MCMCLoopChronocurve::initMCMC()
             const double max ( unsortedEvents.at(i)->getThetaMaxRecursive(tmax) );
 #ifdef DEBUG
             if (min >= max)
-                qDebug() << tr("-----Error Init for event : %1 : min = %2 : max = %3-------").arg(unsortedEvents.at(i)->mName, QString::number(min), QString::number(max));
+                qDebug() << tr("-----Error Init for event : %1 : min = %2 : max = %3-------").arg(unsortedEvents.at(i)->mName, QString::number(min, 'f', 30), QString::number(max, 'f', 30));
 #endif
             
             // ----------------------------------------------------------------
@@ -362,6 +362,9 @@ QString MCMCLoopChronocurve::initMCMC()
             unsortedEvents.at(i)->mThetaReduced = reduceTime(unsortedEvents.at(i)->mTheta.mX);
             unsortedEvents.at(i)->mInitialized = true;
 
+#ifdef DEBUG
+         //   qDebug() << QString("initMCMC theta event : %1 %2 %3 %4").arg(unsortedEvents.at(i)->mName, QString::number(min, 'f', 30), QString::number(unsortedEvents.at(i)->mTheta.mX, 'f', 30), QString::number(max, 'f', 30));
+#endif
             // ----------------------------------------------------------------
 
             double s02_sum (0.);
@@ -550,6 +553,7 @@ QString MCMCLoopChronocurve::initMCMC()
     std::pair<std::vector<std::vector<long double>>, std::vector<long double>> decomp = decompositionCholesky(matB, 5, 1);
     std::vector<long double> vecTheta = getThetaEventVector(mModel->mEvents);
     std::vector<long double> vecErrG = calculSplineError(matrices, decomp, alpha);
+   // std::vector<long double> vecErrG = calculSplineError0(matrices, matB, alpha); // ne fonctionne pas car si VG=0, il y a des 0 dans la matrice et le determinant esgt nulle
 
     // Tout le calcul précédent ne change pas
 
@@ -730,6 +734,10 @@ void MCMCLoopChronocurve::update()
             //date.updateSigma(event);
             //date.updateSigmaJeffreys(event);
             date.updateSigmaShrinkage(event);
+#ifdef DEBUG
+            if (date.mSigma.mX <= 0)
+                qDebug(" date.mSigma.mX <= 0 ");
+#endif
             //date.updateSigmaReParam(event);
             date.updateWiggle();
 
@@ -771,7 +779,13 @@ void MCMCLoopChronocurve::update()
              //long double h_current= h_YWI_AY(matrices, mModel->mEvents, mModel->mAlphaLissage.mX) * h_alpha(matrices, mModel->mEvents.size(), mModel->mAlphaLissage.mX) * h_theta(mModel->mEvents);
 
             long double h_YWI = h_YWI_AY(matrices, mModel->mEvents, mModel->mAlphaLissage.mX, vecH_current);
-            long double h_al = h_alpha(matrices, mModel->mEvents.size(), mModel->mAlphaLissage.mX);
+            long double h_al;
+
+            if (mChronocurveSettings.mCoeffLissageType == ChronocurveSettings::eModeBayesian)
+                 h_al = h_alpha(matrices, mModel->mEvents.size(), mModel->mAlphaLissage.mX);
+            else
+               h_al = 1.;
+
             long double h_thet = h_theta(mModel->mEvents);
 
             long double h_current = h_YWI * h_al * h_thet;
@@ -940,7 +954,7 @@ void MCMCLoopChronocurve::update()
 
             h_VGij = h_VG(mModel->mEvents);
 
-            current_h = h_YWI * h_al * h_VGij;
+            current_h = h_YWI * h_al * h_VGij * 100.;
 
 
             const double logMin = -100.; //log10(1e-10);
@@ -994,14 +1008,14 @@ void MCMCLoopChronocurve::update()
                 }
 
                 // ON fait le test avec le premier event
-                mModel->mEvents.at(0)->mVG.mX = current_value;
-                mModel->mEvents.at(0)->mVG.tryUpdate(try_value, rapport);
+                mModel->mEvents.at(0)->mVG.mX = (double) current_value;
+                mModel->mEvents.at(0)->mVG.tryUpdate((double) try_value, rapport);
 
 
                 if ( mModel->mEvents.at(0)->mVG.mLastAccepts.last() == true) {
                     // la nouvelle valeur est acceptée
                     for (Event*& ev : mModel->mEvents) {
-                        ev->mVG.mX = try_value;
+                        ev->mVG.mX = (double) try_value;
                         ev->updateW();
                     }
 
@@ -1059,9 +1073,18 @@ void MCMCLoopChronocurve::update()
                         if (h_YWI == HUGE_VAL || h_al== HUGE_VAL || h_VGij==HUGE_VAL)
                             try_h = 1.;
                         else
-                            try_h = h_YWI * h_al * h_VGij;
+                            try_h = h_YWI * h_al * h_VGij *100.;
 
-                        rapport = (current_h == 0) ? 1 : ((try_h * try_value) / (current_h * current_value));
+                     //   if (try_value > 200)
+                      //      qDebug()<<"(try_value > 200)"<< (double) try_value << (double) try_h << (double) current_value << (double) current_h;
+
+                        if ( current_h == 0.)
+                            rapport = 1.;
+                        else
+                            rapport = ((try_h * try_value) / (current_h * current_value));
+
+                      // qDebug()<<QString::number( (ulong)try_h)<<(ulong) ((try_h * try_value)) <<(ulong) ((current_h * current_value));
+                      //  rapport = (current_h == 0.) ? 1. : ((try_h * try_value) / (current_h * current_value));
 
                     } else {
                         rapport = 0.;
@@ -1077,6 +1100,7 @@ void MCMCLoopChronocurve::update()
                         event->updateW();
                         // Pour l'itération suivante : Car mVG a changé
                         current_h = try_h;
+                        current_value = event->mVG.mX;
                     }
 
                     if (doMemo) {
@@ -1102,9 +1126,10 @@ void MCMCLoopChronocurve::update()
         }
 
     // Pas bayésien : on sauvegarde la valeur constante dans la trace
-    } else {
+    } else {        
         for (Event*& event : mModel->mEvents) {
-            event->mVG.tryUpdate(event->mVG.mX, 1);
+            event->mVG.tryUpdate(mChronocurveSettings.mVarianceFixed, 1);
+           // event->updateW(); //mVG never change so W never change
             if (doMemo) {
                 event->mVG.memo();
                 event->mVG.saveCurrentAcceptRate();
@@ -1210,6 +1235,14 @@ void MCMCLoopChronocurve::update()
         // le calcul de l'erreur est influencé par VG qui induit mWinv, utilisé pour fabriquer matrices->DiagWinv et calculer matrices->matQTW_1Q
         std::vector<long double> vecErrG = calculSplineError(matrices, decomp, alpha); // Les erreurs sont égales sur les trois composantes X, Y, Z splineY.vecErrG = splineX.vecErrG =
 
+    /*    for (auto&& e : vecErrG) {
+            if (e<90 || e > 200.1) {
+                        qDebug()<< " vecErrG.at(0)<99.99 "<< (double) e;
+                    }
+        }
+*/
+        //std::vector<long double> vecErrG = calculSplineError_old(matrices, decomp, alpha);
+       // std::vector<long double> vecErrG1 = calculSplineError0(matrices, matB, alpha);
         // qDebug()<< " update vecErrG = "; for (auto&& e : vecErrG) qDebug() << (double) e;
         // Tout le calcul précédent ne change pas
 
@@ -1407,7 +1440,7 @@ void MCMCLoopChronocurve::finalize()
             // we add 1 for the init
             const int initBurnAdaptSize = 1 + chain.mNumBurnIter + int (chain.mBatchIndex * chain.mNumBatchIter);
             const int runSize = floor(chain.mNumRunIter / chain.mThinningInterval);
-            const int firstRunPosition = shift + initBurnAdaptSize ;
+            const int firstRunPosition = shift + initBurnAdaptSize;
 
             std::vector<MCMCSpline>::const_iterator first = mModel->mMCMCSplines.begin() + firstRunPosition;
             std::vector<MCMCSpline>::const_iterator last = first + runSize -1;
@@ -1421,7 +1454,7 @@ void MCMCLoopChronocurve::finalize()
             }
             std::vector<unsigned> positvIter ;//= listOfIterationsWithPositiveGPrime(chainTraceX); //{5};
 
-            emit stepChanged(tr("Select Positive curves for chain %1").arg(i), 0, chainTraceX.size());
+            emit stepChanged(tr("Select Positive curves for chain %1").arg(i+1), 0, chainTraceX.size());
             for (unsigned iter = 0; iter < chainTraceX.size(); ++iter) {
                 if (asPositiveGPrime(chainTraceX.at(iter)))
                     positvIter.push_back(iter);
@@ -1434,11 +1467,11 @@ void MCMCLoopChronocurve::finalize()
 #ifdef DEBUG
                  qCritical("MCMCLoopChronocurve::finalize : NO POSITIVE curve available\n");
 #endif
-                 mAbortedReason = QString(tr("Warning : NO POSITIVE curve available with chain n° %1").arg (i));
+                 mAbortedReason = QString(tr("Warning : NO POSITIVE curve available with chain n° %1").arg (i+1));
                  throw mAbortedReason;
 
             } else {
-                emit stepChanged(tr("Erase invalide curves for chain %1").arg(i), 0, chainTrace.size());
+                emit stepChanged(tr("Erase invalide curves for chain %1").arg(i+1), 0, chainTrace.size());
                 int backshift = 0;
                 for (unsigned j = 0; j < chainTrace.size(); ++j) {
 
@@ -1567,7 +1600,7 @@ void MCMCLoopChronocurve::finalize()
         chainTraceY.clear();
         chainTraceZ.clear();
         unsigned progressPosition = 0;
-        emit stepChanged(tr("Compute Posterior Mean Composantes for chain %1").arg(i), 0, runSize);
+        emit stepChanged(tr("Compute Posterior Mean Composantes for chain %1").arg(i+1), 0, runSize);
         for (auto& cTrace = first; cTrace != last+1; ++cTrace) {
 
             chainTraceX.push_back(cTrace->splineX);
@@ -1694,7 +1727,9 @@ PosteriorMeanGComposante MCMCLoopChronocurve::computePosteriorMeanGComposante(co
         vecGP[tIdx] /=  nbIter_tmax;
         vecGS[tIdx] /=  nbIter_tmax2;
         vecErrG[tIdx] = sqrt( (vecCumulG2.at(tIdx) / nbIter) - pow(vecG.at(tIdx), 2.) + (vecCumulErrG2.at(tIdx) / nbIter));
-        //vecErrG[tIdx] = vecCumulErrG2.at(tIdx) / nbIter;//sqrt((vecCumulG2.at(tIdx) / nbIter) - pow(vecG.at(tIdx), 2.) + (vecCumulErrG2.at(tIdx) / nbIter));
+       // vecErrG[tIdx] = sqrt(vecCumulErrG2.at(tIdx) / nbIter);//test//sqrt((vecCumulG2.at(tIdx) / nbIter) - pow(vecG.at(tIdx), 2.) ); //
+
+
     }
     
     PosteriorMeanGComposante result;
@@ -2195,7 +2230,7 @@ long double MCMCLoopChronocurve::h_YWI_AY_composanteX(const SplineMatrices &matr
     }
 
     // calcul à un facteur (2*PI) puissance -(n-2) près
-    long double res = 0.5 * (nb_noeuds-2.) * log(alphaLissage) + h_exp;
+    long double res = 0.5 * (nb_noeuds-2.) * log((long double)alphaLissage) + h_exp;
     res = exp(res) * sqrt(det_1_2);
 #ifdef DEBUG
     if (math_errhandling & MATH_ERRNO) {
@@ -2207,7 +2242,7 @@ long double MCMCLoopChronocurve::h_YWI_AY_composanteX(const SplineMatrices &matr
             qDebug()<<"MCMCLoopChronocurve::h_YWI_AY_composanteX -> FE_INVALID raised : Domain error: At least one of the arguments is a value for which the function is not defined.";
       }
     //return exp(0.5 * (nb_noeuds-2.) * log(alphaLissage) + h_exp) * sqrt(det_1_2);
-    if (res == 0) {
+    if (res == 0.) {
         qWarning("h_YWI_AY_composanteX res == 0");
     }
     if (res == HUGE_VAL) {
@@ -2428,44 +2463,39 @@ long double MCMCLoopChronocurve::h_VG(const QList<Event *> lEvents)
     // bool_shrinkage_uniforme:=true;
 
     long double shrink_VG;
-    
-    if (mChronocurveSettings.mVarianceType == ChronocurveSettings::eModeFixed) {
-        shrink_VG = mChronocurveSettings.mVarianceFixed;
+
+    const int nb_noeuds = lEvents.size();
+
+    if (mChronocurveSettings.mUseVarianceIndividual) {
+
+        shrink_VG = 1.;
+        long double S02;
+        for (Event* e :lEvents) {
+            if (e->type() == Event::eDefault) {
+                S02 = pow(e->mSy, 2.);
+                shrink_VG *= (S02 / pow(S02 + e->mVG.mX, 2.));
+
+            } else {
+                EventKnown* ek = static_cast<EventKnown *>(e);
+                S02 = pow(ek->mSy, 2.);
+                shrink_VG *= (S02 / pow(S02 + ek->mVG.mX, 2.));
+            }
+        }
 
     } else {
-        
-        const int nb_noeuds = lEvents.size();
-        
-        if (mChronocurveSettings.mUseVarianceIndividual) {
-            
-            shrink_VG = 1.;
-            long double S02;
-            for (Event* e :lEvents) {
-                if (e->type() == Event::eDefault) {
-                    S02 = pow(e->mSy, 2.);
-                    shrink_VG *= (S02 / pow(S02 + e->mVG.mX, 2.));
 
-                } else {
-                    EventKnown* ek = static_cast<EventKnown *>(e);
-                    S02 = pow(ek->mSy, 2.);
-                    shrink_VG *= (S02 / pow(S02 + ek->mVG.mX, 2.));
-                }
-            }
-            
-        } else {
-            
-            // S02 : moyenne harmonique des erreurs sur Y
-            long double som_inv_S02 = 0.;
-            
-            for (Event* e :lEvents) {
-                som_inv_S02 += (1. / (e->mSy * e->mSy));
-            }
-            long double S02 = nb_noeuds/som_inv_S02;
-            // Shrinkage avec a = 1
-            
-            shrink_VG = S02 / pow(S02 + lEvents.at(0)->mVG.mX, 2.);
+        // S02 : moyenne harmonique des erreurs sur Y
+        long double som_inv_S02 = 0.;
+
+        for (Event* e :lEvents) {
+            som_inv_S02 += (1. / (e->mSy * e->mSy));
         }
+        long double S02 = nb_noeuds/som_inv_S02;
+        // Shrinkage avec a = 1
+
+        shrink_VG = S02 / pow(S02 + lEvents.at(0)->mVG.mX, 2.);
     }
+
     
     return shrink_VG;
 }
@@ -2806,7 +2836,7 @@ void MCMCLoopChronocurve::spreadEventsThetaReduced(QList<Event *> &lEvent, doubl
 /**
  * @brief MCMCLoopChronocurve::spreadEventsThetaReduced0
  * @param sortedEvents
- * @param minStep  é
+ * @param spreadSpan
  */
 void MCMCLoopChronocurve::spreadEventsThetaReduced0(QList<Event *> &sortedEvents, double spreadSpan)
 {
@@ -3254,7 +3284,7 @@ SplineResults MCMCLoopChronocurve::calculSplineX(const SplineMatrices& matrices,
 
         for (size_t i = 1; i < n-1; ++i) {
             long double term1 = (mModel->mEvents.at(i+1)->mYx - mModel->mEvents.at(i)->mYx) / vecH.at(i);
-            long double term2 = (mModel->mEvents.at(i)->mYx - mModel->mEvents.at(i-1)->mYx) / vecH[i-1];
+            long double term2 = (mModel->mEvents.at(i)->mYx - mModel->mEvents.at(i-1)->mYx) / vecH.at(i-1);
             vecQtY[i] = term1 - term2;
         }
 
@@ -3484,6 +3514,72 @@ std::vector<long double> MCMCLoopChronocurve::calculMatInfluence(const SplineMat
 
             matA[i] = 1 - alpha * matrices.diagWInv.at(i) * matQB_1QT.at(i);
 
+       /*     if (matA.at(i) < 0.99) {
+                qWarning ("MCMCLoopChronocurve::calculMatInfluence -> test Oups matA.at(i)=  <1 ") ;
+                qDebug() << (double) matA.at(i) << (double) (alpha) << (double) (matQB_1QT.at(i)) << (double) (alpha * matrices.diagWInv.at(i) * matQB_1QT.at(i) );
+
+            }
+*/
+
+            if (matA.at(i) <= 0) {
+                qWarning ("MCMCLoopChronocurve::calculMatInfluence -> Oups matA.at(i)=  <= 0  change to 1E-100");
+                matA[i] = 0; //1e-100; //pHd : A voir arbitraire
+                // throw "MCMCLoopChronocurve::calculMatInfluence -> Oups matA.at(i) <= 0 change to 1E-100";
+
+            }
+        }
+
+    } else {
+       std::generate(matA.begin(), matA.end(), []{return 1.;});
+    }
+    return matA;
+}
+
+std::vector<long double> MCMCLoopChronocurve::calculMatInfluence0(const SplineMatrices& matrices, const std::vector<std::vector<long double>> &matB , const int nbBandes, const double alpha)
+{
+    const int n = mModel->mEvents.size();
+    std::vector<long double> matA = initLongVector(n);
+
+
+    if (alpha != 0) {
+
+      //  const std::vector<std::vector<long double>>& matL = decomp.first; // we must keep a copy ?
+       // const std::vector<long double>& matD = decomp.second; // we must keep a copy ?
+
+        std::vector<std::vector<long double>> matB_1 = inverseMatSym0(matB, 1);//inverseMatSym(matL, matD, nbBandes + 4, 1);
+        std::vector<long double> matQB_1QT = initLongVector(n);
+
+        auto matQi = matrices.matQ.at(0);
+        long double term = pow(matQi.at(0), 2) * matB_1.at(0).at(0);
+        term += pow(matQi.at(1), 2) * matB_1.at(1).at(1);
+        term += 2 * matQi.at(0) * matQi.at(1) * matB_1.at(0).at(1);
+        matQB_1QT[0] = term;
+
+        for (int i = 1; i < n-1; ++i) {
+            matQi = matrices.matQ.at(i);
+            term = pow(matQi.at(i-1), 2.) * matB_1.at(i-1).at(i-1);
+            term += pow(matQi.at(i), 2.) * matB_1.at(i).at(i);
+            term += pow(matQi.at(i+1), 2.) * matB_1.at(i+1).at(i+1);
+            term += 2 * matQi.at(i-1) * matQi.at(i) * matB_1.at(i-1).at(i);
+            term += 2 * matQi.at(i-1) * matQi.at(i+1) * matB_1.at(i-1).at(i+1);
+            term += 2 * matQi.at(i) * matQi.at(i+1) * matB_1.at(i).at(i+1);
+            matQB_1QT[i] = term;
+        }
+
+        matQi = matrices.matQ.at(n-1);
+        term = pow(matQi.at(n-2), 2.) * matB_1.at(n-2).at(n-2);
+        term += pow(matQi.at(n-1), 2.) * matB_1.at(n-1).at(n-1);
+        term += 2 * matQi.at(n-2) * matQi.at(n-1) * matB_1.at(n-2).at(n-1);
+        matQB_1QT[n-1] = term;
+
+        // Multi_diag_par_Mat(Diag_W_1c,Mat_QB_1QT,Nb_noeudsc,1,tmp1);
+        // Multi_const_par_Mat(-alphac,tmp1,Nb_noeudsc,1,Mat_Ac);
+        // Addit_I_et_Mat(Mat_Ac,Nb_noeudsc);
+        // remplacé par:
+        for (int i = 0; i < n; ++i) {
+
+            matA[i] = 1 - alpha * matrices.diagWInv.at(i) * matQB_1QT.at(i);
+
             if (matA.at(i) <= 0) {
                 qWarning ("MCMCLoopChronocurve::calculMatInfluence -> Oups matA.at(i)=  <= 0  change to 1E-100");
                 matA[i] = 1E-100; //pHd : A voir arbitraire
@@ -3501,9 +3597,29 @@ std::vector<long double> MCMCLoopChronocurve::calculMatInfluence(const SplineMat
 std::vector<long double> MCMCLoopChronocurve::calculSplineError(const SplineMatrices& matrices, const std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const double alpha)
 {
     const size_t n = mModel->mEvents.size();
-    std::vector<long double> matA = calculMatInfluence(matrices, decomp, 1, alpha);
+    std::vector<long double> matA = calculMatInfluence(matrices, decomp, 5, alpha);
     std::vector<long double> errG (n); //= initVecteur(n);
     
+    int i = 0;
+    for (auto& aii : matA) {
+        // si Aii négatif ou nul, cela veut dire que la variance sur le point est anormalement trop grande,
+        // d'où une imprécision dans les calculs de Mat_B (Cf. calcul spline) et de mat_A
+        if (aii < 0) {
+            throw "MCMCLoopChronocurve::calculSplineError -> Oups aii<0 ";
+        }
+        errG[i] = sqrt(aii * (1 / mModel->mEvents.at(i)->mW));
+        ++i;
+    }
+    
+    return errG;
+}
+
+std::vector<long double> MCMCLoopChronocurve::calculSplineError0(const SplineMatrices& matrices, const std::vector<std::vector<long double>> &matB, const double alpha)
+{
+    const size_t n = mModel->mEvents.size();
+    std::vector<long double> matA = calculMatInfluence0(matrices, matB, 5, alpha);
+    std::vector<long double> errG (n); //= initVecteur(n);
+
     int i = 0;
     for (auto& aii : matA) {
         // si Aii négatif ou nul, cela veut dire que la variance sur le point est anormalement trop grande,
@@ -3514,12 +3630,9 @@ std::vector<long double> MCMCLoopChronocurve::calculSplineError(const SplineMatr
         errG[i] = sqrt(aii * (1 / mModel->mEvents.at(i)->mW));
         ++i;
     }
-    
+
     return errG;
 }
-
-
-
 std::vector<unsigned>  MCMCLoopChronocurve::listOfIterationsWithPositiveGPrime (const std::vector<MCMCSplineComposante>& splineTrace)
 {
     size_t nbIter = splineTrace.size();

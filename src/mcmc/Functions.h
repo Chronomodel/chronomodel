@@ -105,8 +105,9 @@ void resizeMatrix(std::vector<std::vector<double>>&matrix,  const unsigned rows,
 std::vector<long double> initLongVector(const unsigned n);
 std::vector<std::vector<long double>> initLongMatrix(const unsigned rows, const unsigned cols);
 
-long double determinant(const std::vector<std::vector<long double>>& matrix);
+long double determinant(const std::vector<std::vector<long double>>& matrix, const int shift = 0);
 
+std::vector<std::vector<long double> > seedMatrix(const std::vector<std::vector<long double>>& matrix, const int shift = 0);
 
 std::vector<std::vector<long double> > transpose0(const std::vector<std::vector<long double>>& matrix);
 std::vector<std::vector<long double>> transpose(const std::vector<std::vector<long double>>& matrix, const int nbDiag);
@@ -122,8 +123,10 @@ std::vector<std::vector<long double>> multiConstParMat(const std::vector<std::ve
 std::vector<std::vector<long double> > multiMatParMat0(const std::vector<std::vector<long double> > &matrix1, const std::vector<std::vector<long double> > &matrix2);
 std::vector<std::vector<long double>> multiMatParMat(const std::vector<std::vector<long double>>& matrix1, const std::vector<std::vector<long double>>& matrix2, const int nbBandes1, const int nbBandes2);
 
-std::vector<std::vector<long double>> inverseMatSym0(const std::vector<std::vector<long double>>& matrix);
+std::vector<std::vector<long double>> inverseMatSym0(const std::vector<std::vector<long double>>& matrix, const int shift = 0);
+
 std::vector<std::vector<long double>> inverseMatSym(const std::vector<std::vector<long double>>& matrix1, const std::vector<long double>& matrix2, const int nbBandes, const int shift);
+std::vector<std::vector<long double>> inverseMatSym_old(const std::vector<std::vector<long double>>& matrix1, const std::vector<long double>& matrix2, const int nbBandes, const int shift);
 long double sumAllMatrix(const std::vector<std::vector<long double>>& matrix);
 long double sumAllVector(const std::vector<long double>& matrix);
 

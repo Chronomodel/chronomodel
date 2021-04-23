@@ -714,7 +714,7 @@ void ChronomodelTest::quartileForTrace()
 //----------------- Test ChronoCurve
 
 
-// https://matrixcalc.org/fr/#%7B%7B3,4,5,6,7%7D,%7B8,9,10,11,12%7D,%7B13,14,15,16,17%7D,%7B18,19,20,21,22%7D,%7B23,24,25,26,27%7D%7D%2a%7B%7B31,32,33,34,35%7D,%7B36,37,38,39,40%7D,%7B41,42,43,44,45%7D,%7B46,47,48,49,50%7D,%7B51,52,53,54,55%7D%7D
+// https://matrixcalc.org/fr/
 // https://www.dcode.fr/produit-matriciel#q1
 
 void ChronomodelTest::calculMat() {
@@ -859,10 +859,10 @@ void ChronomodelTest::calculMat() {
     QVERIFY(qFuzzyCompare(result[4][0] , 0.5773502691896258)); QVERIFY(qFuzzyCompare(result[4][1] , 1.540308092430811)); QVERIFY(qFuzzyCompare(result[4][2] , 1.107079263817136)); QVERIFY(qFuzzyCompare(result[4][3] , 2.251331417336179)); QVERIFY(qFuzzyCompare(result[4][4] , 1.414213562373095));
 
 
-qDebug() <<"11 - test decompositionCholesky matrix N = 5";
+    qDebug() <<"11 - test decompositionCholesky matrix N = 5 shift = 0";
     std::pair<std::vector<std::vector<long double>>, std::vector<long double>> pairResult;
    // pairResult = choleskyDiagonal(matK);
-    pairResult = decompositionCholesky(matK, 0 , 0);
+    pairResult = decompositionCholesky(matK, 5 , 0);
 
     result = pairResult.first;
 
@@ -881,10 +881,14 @@ qDebug() <<"11 - test decompositionCholesky matrix N = 5";
     QVERIFY(qFuzzyCompare(diag[3] , 5.068493150684931));
     QVERIFY(qFuzzyCompare(diag[4] , 2.));
 
+    qDebug() <<"11.2 - test inverseMatSym matrix N = 5 shift = 0";
+    std::vector<std::vector<long double>> matK_1 (5);
+    matK_1 = inverseMatSym(result, diag, 5, 0); // ne fonctionne pas, devrait donner l'inverse de la matrice matK
 
+    std::vector<std::vector<long double>> matK_11 (5);
+    matK_11 = multiMatParMat(matK, matK_1, 5, 5);
 
-
-qDebug() <<"12 - test choleskyLDL matrix N = 5";
+    qDebug() <<"12 - test choleskyLDL matrix N = 5";
     std::pair<std::vector<std::vector<long double>>, std::vector<long double>> pairResult2;
     pairResult2 = choleskyLDLT(matK);
 
@@ -915,8 +919,8 @@ qDebug() <<"12 - test choleskyLDL matrix N = 5";
     matK3 [5] = {{ 0, 1, 4, 5, 9, 11., 0}};
     matK3 [6] = {{ 0, 0, 0, 0, 0, 0,   0}};
 
-    qDebug() <<"13 - test choleskyLDL matrix N = 5 with shift = 1";
-     pairResult = decompositionCholesky(matK3, 0 , 1);
+    qDebug() <<"13 - test decompositionCholesky matrix N = 5 with shift = 1";
+     pairResult = decompositionCholesky(matK3, 5 , 1);
      result = pairResult.first;
 
      diag = pairResult.second;
@@ -938,8 +942,14 @@ qDebug() <<"12 - test choleskyLDL matrix N = 5";
      QVERIFY(qFuzzyCompare(diag[5] , 2.));
      QVERIFY(qFuzzyCompare(diag[6] , 0.));
 
+     qDebug() <<"13.1 - inverseMatSym";
+     std::vector<std::vector<long double>> matK_3 (7);
+     matK_3 = inverseMatSym(result, diag, 5, 1);
 
-    qDebug() <<"13 - decompositionLU0 matrix 3x3";
+     std::vector<std::vector<long double>> matK3_1 (7);
+     matK3_1 = multiMatParMat(matK3, matK_3, 5, 5);
+
+    qDebug() <<"13.2 - decompositionLU0 matrix 3x3";
     std::vector<std::vector<long double>> matLU0 (3);
     matLU0 [0] = {{ 2,  -1, 0}}; //col num 0
     matLU0 [1] = {{ -1,  2, -1}};

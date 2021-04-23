@@ -259,7 +259,7 @@ void ProjectView::initResults(Model* model)
     model->generateModelLog();
     model->generateResultsLog();
 
-    mResultsView->updateModel(model);
+    mResultsView->updateModel(model); // prepare the view
 
     // Update log view
     mLogModelEdit->setText(model->getModelLog());
@@ -268,6 +268,7 @@ void ProjectView::initResults(Model* model)
 
     // Show results :
     mStack->setCurrentIndex(1);
+
 }
 
 void ProjectView::updateResults()

@@ -294,6 +294,7 @@ void ImportDataView::browse()
 /**
  * @brief Export all data inside event, in a compatible csv file to import them later
  *  the bound are insert as Structure but they are not importable
+ *  We can insert the dates later with EventsScene::decodeDataDrop
  */
 void ImportDataView::exportDates()
 {
@@ -341,7 +342,7 @@ void ImportDataView::exportDates()
                                     // Chronocurve values start at column 15.
                                     // They must be put from column 14 in dateCsv,
                                     // because the row is shifted by one column at inserting eventName (see below)
-                                    int chronocurveStartColumn = 15;
+                                    const int chronocurveStartColumn = 15;
                                     while (dateCsv.count() < chronocurveStartColumn) {
                                         dateCsv.append("");
                                     }

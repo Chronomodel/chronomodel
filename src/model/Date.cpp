@@ -1650,8 +1650,8 @@ void Date::updateSigmaShrinkage(Event* event)
     // ------------------------------------------------------------------------------------------
     const double lambda = pow(mTheta.mX - (event->mTheta.mX - mDelta), 2) / 2.;
 
-    const int logVMin (-6);
-    const int logVMax (100);
+    const int logVMin = -6;
+    const int logVMax = 100;
 
     const double V1 = mSigma.mX * mSigma.mX;
     const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigma.mSigmaMH);

@@ -276,7 +276,7 @@ void EventItem::dropEvent(QGraphicsSceneDragDropEvent* e)
 
 /**
  * @brief EventItem::handleDrop this function move one or several data from CSV file to one EventItem
- * We don't have to modify the chronoCurve parameter of the Event
+ * We don't have to modify the Chronocurve parameter of the Event
  * @param e
  */
 void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)

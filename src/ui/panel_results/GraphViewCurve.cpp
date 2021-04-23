@@ -54,6 +54,11 @@ GraphViewCurve::GraphViewCurve(QWidget *parent):GraphViewResults(parent)
 {
     setMainColor(Painting::borderDark);
     mGraph->setBackgroundColor(QColor(210, 210, 210));
+    mShowG = true;
+    mShowGError = true;
+    mShowGP = false;
+    mShowGPoints = true;
+    mShowGS = false;
 }
 
 GraphViewCurve::~GraphViewCurve()
@@ -186,12 +191,12 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
             t = DateUtils::convertToAppSettingsFormat(idx*step + mSettings.mTmin);
             curveG.mData.insert(t, mComposanteG.vecG.at(idx));
             // Enveloppe à 95%  https://en.wikipedia.org/wiki/1.96
-            curveGSup.mData.insert(t, mComposanteG.vecG.at(idx) + 1.96 * mComposanteG.vecGErr.at(idx));
-            curveGInf.mData.insert(t, mComposanteG.vecG.at(idx) - 1.96 * mComposanteG.vecGErr.at(idx));
+         //   curveGSup.mData.insert(t, mComposanteG.vecG.at(idx) + 1.96 * mComposanteG.vecGErr.at(idx));
+          //  curveGInf.mData.insert(t, mComposanteG.vecG.at(idx) - 1.96 * mComposanteG.vecGErr.at(idx));
 
             // Enveloppe à 68%
-           // curveGSup.mData.insert(t, mComposanteG.vecG.at(idx) + 1. * mComposanteG.vecGErr.at(idx));
-           // curveGInf.mData.insert(t, mComposanteG.vecG.at(idx) - 1. * mComposanteG.vecGErr.at(idx));
+            curveGSup.mData.insert(t, mComposanteG.vecG.at(idx) + 1. * mComposanteG.vecGErr.at(idx));
+            curveGInf.mData.insert(t, mComposanteG.vecG.at(idx) - 1. * mComposanteG.vecGErr.at(idx));
 
             for (int i = 0; i<curveGChains.size(); ++i) {
                 curveGChains[i].mData.insert(t, mComposanteGChains.at(i).vecG.at(idx));
@@ -202,9 +207,6 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->addCurve(curveGSup);
         mGraph->addCurve(curveGInf);
 
-    /*
-
-    */
         mGraph->addCurve(curveRefPoints);
 
         for (auto&& cGC: curveGChains) {

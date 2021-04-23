@@ -1081,8 +1081,8 @@ void Event::updateW()
     mWInv = mVG.mX + mSy * mSy;
     mW = 1. / mWInv;
  #ifdef DEBUG
-    if (mWInv > 1e20) {
-        qDebug()<< "in Event::updateW mWInv > 1e20";
+    if (mWInv > 1e100) {
+        qDebug()<< "in Event::updateW mWInv > 1e100 : "<< mWInv;
     }
 #endif
 

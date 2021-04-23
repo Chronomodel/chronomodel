@@ -66,6 +66,8 @@ public:
     int currentIndex() const;
     int currentId() const;
 
+    QString currentName() const;
+
     // getter
     QWidget* getWidget(const int &i);
     QWidget* getCurrentWidget();

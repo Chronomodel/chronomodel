@@ -906,36 +906,54 @@ void resizeLongMatrix(std::vector<std::vector<long double>>&matrix,  const unsig
     }
 }
 
-long double determinant(const std::vector<std::vector<long double>>& matrix)
+std::vector<std::vector<long double> > seedMatrix(const std::vector<std::vector<long double>>& matrix, const int shift)
 {
-    const int n = matrix.size();
+    std::vector<std::vector<long double> > resMatrix ( matrix.at(0).size() - 2*shift );
+    std::vector<std::vector<long double> >::iterator itRes = resMatrix.begin();
+    for ( std::vector<std::vector<long double> >::const_iterator it = matrix.cbegin()+shift; it != matrix.cend()-shift; ++it) {
+        *itRes = std::vector<long double>  ( it->cbegin() +shift, it->cend()-shift );
+        ++itRes;
+    }
+    return resMatrix;
+}
+
+long double determinant(const std::vector<std::vector<long double>>& matrix, const int shift)
+{
+    int n = matrix.size();
     long double det;
 
-    if (n == 1) {
-          det = matrix.at(0).at(0);
+    if (n - 2*shift == 1) {
+          det = matrix.at(shift).at(shift);
 
-    } else if (n == 2) {
-        det = matrix.at(0).at(0) * matrix.at(1).at(1) - matrix.at(1).at(0) * matrix.at(0).at(1);
+    } else if (n - 2*shift == 2) {
+        det = matrix.at(shift).at(shift) * matrix.at(1+shift).at(1+shift) - matrix.at(1+shift).at(shift) * matrix.at(shift).at(1+shift);
 
     } else {
-        std::vector<std::vector<long double>> matTmp (n-1, std::vector<long double>(n-1, 0.)); //= initMatrix(n-1, n-1);
+        std::vector<std::vector<long double>> matrix2 = seedMatrix(matrix, shift);
+        n = matrix2.size();
+
+        std::vector<std::vector<long double>> matTmp (n-1, std::vector<long double>(n-1, 0.));
+
         det = 0.;
         int j2;
-        for (int j1=0; j1<n; j1++) {
-            for (int i=1; i<n; i++) {
+        for (int j1= 0; j1< n; j1++) {
+            for (int i= 1; i< n; i++) {
                 j2 = 0;
-                for (int j=0; j<n; j++) {
+                for (int j = 0; j < n; j++) {
                     if (j == j1)
                         continue;
-                    matTmp[i-1][j2] = matrix.at(i).at(j);
+                    matTmp[i-1][j2] = matrix2.at(i).at(j);
                     j2++;
                 }
             }
-            det += pow(-1.0, j1+2.0) * matrix[0][j1] * determinant(matTmp);
+            det += pow(-1.0, j1+2.0) * matrix2.at(0).at(j1) * determinant(matTmp, 0);
 
         }
 
     }
+    if (det == 0) {
+           throw std::runtime_error("Function::determinant det ==0");
+       }
     return(det);
 }
 
@@ -1216,18 +1234,27 @@ std::vector<std::vector<long double>> multiMatParMat(const std::vector<std::vect
     return result;
 }
 
-std::vector<std::vector<long double>> inverseMatSym0(const std::vector<std::vector<long double>>& matrix)
+std::vector<std::vector<long double>> inverseMatSym0(const std::vector<std::vector<long double>>& matrix, const int shift)
 {
     if (matrix.size() != matrix[0].size()) {
            throw std::runtime_error("Matrix is not quadratic");
        }
-    int n = matrix.size();
-    std::vector<std::vector<long double>> matInv = comatrice0(matrix);
+    std::vector<std::vector<long double>> matInv = initLongMatrix(matrix.size(), matrix.at(0).size());
 
-    double det = determinant(matrix);
-    for (int i = 0; i <n; i++)
-        for (int j = 0; j<n; j++)
-            matInv[i][j] /= det;
+    std::vector<std::vector<long double>> matrix2 = seedMatrix(matrix, shift);
+    //n = matrix2.size();
+
+    int n = matrix.size();
+    std::vector<std::vector<long double>> matInv2 = comatrice0(matrix2);
+
+    const long double det = determinant(matrix2);
+    if (det == 0) {
+           throw std::runtime_error("inverseMatSym0 det ==0");
+       }
+    for (int i = shift; i < n-shift; i++)
+        for (int j = shift; j< n-shift; j++)
+           // matInv[i][j] /= det;
+             matInv[i][j] = matInv2[i-shift][j-shift] / det;
 
 
     return matInv;
@@ -1243,7 +1270,8 @@ std::vector<std::vector<long double>> inverseMatSym0(const std::vector<std::vect
 **** donné par Green et Silverman, 1994, p.34                       ****
 **** Attention : il y a une faute dans le bouquin de Green...!      ****
 **/
-std::vector<std::vector<long double>> inverseMatSym(const std::vector<std::vector<long double>>& matrixLE, const std::vector<long double>& matrixDE, const int nbBandes, const int shift)
+// inverse_Mat_sym dans RenCurve
+std::vector<std::vector<long double>> inverseMatSym_old(const std::vector<std::vector<long double>>& matrixLE, const std::vector<long double>& matrixDE, const int nbBandes, const int shift)
 {
     const int dim = matrixLE.size();
     std::vector<std::vector<long double>> matInv = initLongMatrix(dim, dim);
@@ -1288,33 +1316,138 @@ std::vector<std::vector<long double>> inverseMatSym(const std::vector<std::vecto
             matInv[i][i] = (1. / matrixDE.at(i)) - matrixLE[i+1][i] * matInv[i][i+1] - matrixLE[i+2][i] * matInv[i][i+2];
 
             const int kmin = std::min(bande, dim-shift-i);
-            for (int k = 3; k <= kmin; ++k) {
+         /*   for (int k = 3; k <= kmin; ++k) {
                     matInv[i][i+k] = -matrixLE[i+1][i] * matInv[i+1][i+k] - matrixLE[i+2][i] * matInv[i+2][i+k];
             }
-           /* for (int k = 3; k <= bande; ++k) {
+           */
+            for (int k = 3; k <= bande; ++k) {
                 if (i+k < (dim - shift)) {
                     matInv[i][i+k] = -matrixLE[i+1][i] * matInv[i+1][i+k] - matrixLE[i+2][i] * matInv[i+2][i+k];
                 }//else What we do?
-            }*/
+            }
         }
      }
 
+    /* Code RenCurve
+     * for i:=(dim-2-dc) downto 1+dc do begin
+    Mat_1[i,i+2]:= -Mat_L_E[i+1,i]*Mat_1[i+1,i+2] - Mat_L_E[i+2,i]*Mat_1[i+2,i+2];
+    Mat_1[i,i+1]:= -Mat_L_E[i+1,i]*Mat_1[i+1,i+1] - Mat_L_E[i+2,i]*Mat_1[i+1,i+2];
+    Mat_1[i,i]  := (1/Mat_D_E[i,i]) - Mat_L_E[i+1,i]*Mat_1[i,i+1] - Mat_L_E[i+2,i]*Mat_1[i,i+2];
+    if (bande>=3) then begin
+      for k:=3 to bande do begin
+        if (i+k<=(dim-dc)) then begin
+          Mat_1[i,i+k]:= -Mat_L_E[i+1,i]*Mat_1[i+1,i+k] - Mat_L_E[i+2,i]*Mat_1[i+2,i+k];
+        end;
+      end;
+    end;
+  end;
+     */
 
-
- /*   for (int i = shift; i < dim-shift; ++i) {
+    for (int i = shift; i < dim-shift; ++i) {
         for (int j = i+1; j <= i+bande; ++j) {
             if (j < (dim-shift)) {
                 matInv[j][i] = matInv[i][j];
             } //else What we do?
         }
     }
- */
+
       //On symétrise la matrice Mat_1, même si cela n'est pas nécessaire lorsque bande=2
-    for (int i = shift; i < dim-shift; ++i) {
-        for (int j = i+1; j <= std::min(i+bande, dim-shift) ; ++j) {
+  /*  for (int i = shift; i < dim-shift-1; ++i) {
+        for (int j = i+1; j <= std::min(i+bande, dim-shift-1) ; ++j) {
                 matInv[j][i] = matInv.at(i).at(j);
         }
     }
+    */
+    return matInv;
+}
+
+std::vector<std::vector<long double>> inverseMatSym(const std::vector<std::vector<long double>>& matrixLE, const std::vector<long double>& matrixDE, const int nbBandes, const int shift)
+{
+    const int dim = matrixLE.size();
+    std::vector<std::vector<long double>> matInv = initLongMatrix(dim, dim);
+    const int bande = floor((nbBandes-1)/2);
+
+    matInv[dim-1-shift][dim-1-shift] = 1. / matrixDE.at(dim-1-shift);
+    matInv[dim-2-shift][dim-1-shift] = -matrixLE[dim-1-shift][dim-2-shift] * matInv[dim-1-shift][dim-1-shift];
+    matInv[dim-2-shift][dim-2-shift] = (1. / matrixDE.at(dim-2-shift)) - matrixLE[dim-1-shift][dim-2-shift] * matInv[dim-2-shift][dim-1-shift];
+
+    // shift : décalage qui permet d'éliminer les premières et dernières lignes et colonnes
+  /*  for (int i = dim-3-shift; i >= shift; --i) {
+        matInv[i][i+2] = -matrixLE[i+1][i] * matInv[i+1][i+2] - matrixLE[i+2][i] * matInv[i+2][i+2];
+        matInv[i][i+1] = -matrixLE[i+1][i] * matInv[i+1][i+1] - matrixLE[i+2][i] * matInv[i+1][i+2];
+        matInv[i][i] = (1. / matrixDE[i][i]) - matrixLE[i+1][i] * matInv[i][i+1] - matrixLE[i+2][i] * matInv[i][i+2];
+
+        if (bande >= 3) {
+            for (int k = 3; k <= bande; ++k) {
+                if (i+k < (dim - shift)) {
+                    matInv[i][i+k] = -matrixLE[i+1][i] * matInv[i+1][i+k] - matrixLE[i+2][i] * matInv[i+2][i+k];
+                }//else What we do?
+            }
+        }//else What we do?
+    }
+ */
+    if (bande >= 3) {
+        for (int i = dim-3-shift; i >= shift; --i) {
+                matInv[i][i+2] = -matrixLE[i+1][i] * matInv[i+1][i+2] - matrixLE[i+2][i] * matInv[i+2][i+2];
+                matInv[i][i+1] = -matrixLE[i+1][i] * matInv[i+1][i+1] - matrixLE[i+2][i] * matInv[i+1][i+2];
+                matInv[i][i] = (1. / matrixDE.at(i)) - matrixLE[i+1][i] * matInv[i][i+1] - matrixLE[i+2][i] * matInv[i][i+1];
+
+                for (int k = 3; k <= bande; ++k) {
+                    if (i+k < (dim - shift)) {
+                        matInv[i][i+k] = -matrixLE[i+1][i] * matInv[i+1][i+k] - matrixLE[i+2][i] * matInv[i+2][i+k];
+                    }//else What we do?
+                }
+        }
+
+     } else {
+        for (int i = dim-3-shift; i >= shift; --i) {
+            matInv[i][i+2] = -matrixLE[i+1][i] * matInv[i+1][i+2] - matrixLE[i+2][i] * matInv[i+2][i+2];
+            matInv[i][i+1] = -matrixLE[i+1][i] * matInv[i+1][i+1] - matrixLE[i+2][i] * matInv[i+1][i+2];
+            matInv[i][i] = (1. / matrixDE.at(i)) - matrixLE[i+1][i] * matInv[i][i+1] - matrixLE[i+2][i] * matInv[i][i+2];
+
+          /*  const int kmin = std::min(bande, dim-shift-i);
+            for (int k = 3; k <= kmin; ++k) {
+                    matInv[i][i+k] = -matrixLE[i+1][i] * matInv[i+1][i+k] - matrixLE[i+2][i] * matInv[i+2][i+k];
+            }
+           */
+            for (int k = 3; k <= bande; ++k) {
+                if (i+k <= (dim-1 - shift)) {
+                    matInv[i][i+k] = -matrixLE[i+1][i] * matInv[i+1][i+k] - matrixLE[i+2][i] * matInv[i+2][i+k];
+                }//else What we do?
+            }
+        }
+     }
+
+    /* Code RenCurve
+     * for i:=(dim-2-dc) downto 1+dc do begin
+    Mat_1[i,i+2]:= -Mat_L_E[i+1,i]*Mat_1[i+1,i+2] - Mat_L_E[i+2,i]*Mat_1[i+2,i+2];
+    Mat_1[i,i+1]:= -Mat_L_E[i+1,i]*Mat_1[i+1,i+1] - Mat_L_E[i+2,i]*Mat_1[i+1,i+2];
+    Mat_1[i,i]  := (1/Mat_D_E[i,i]) - Mat_L_E[i+1,i]*Mat_1[i,i+1] - Mat_L_E[i+2,i]*Mat_1[i,i+2];
+    if (bande>=3) then begin
+      for k:=3 to bande do begin
+        if (i+k<=(dim-dc)) then begin
+          Mat_1[i,i+k]:= -Mat_L_E[i+1,i]*Mat_1[i+1,i+k] - Mat_L_E[i+2,i]*Mat_1[i+2,i+k];
+        end;
+      end;
+    end;
+  end;
+     */
+
+    for (int i = shift; i <= (dim - 1 -shift); ++i) {
+        for (int j = i+1; j <= i+bande; ++j) {
+            if (j <= (dim - 1 -shift)) {
+                matInv[j][i] = matInv[i][j];
+            } //else What we do?
+        }
+    }
+
+      //On symétrise la matrice Mat_1, même si cela n'est pas nécessaire lorsque bande=2
+  /*  for (int i = shift; i < dim-shift-1; ++i) {
+        for (int j = i+1; j <= std::min(i+bande, dim-shift-1) ; ++j) {
+                matInv[j][i] = matInv.at(i).at(j);
+        }
+    }
+    */
     return matInv;
 }
 

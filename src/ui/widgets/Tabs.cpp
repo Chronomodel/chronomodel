@@ -84,6 +84,9 @@ void Tabs::addTab(QWidget* wid, const QString& name)
 
     mTabWidgets.append(wid);
     wid->setParent(this);
+    for (auto& widChild : wid->children())
+        widChild->setParent(this);
+
 
     mTabVisible.append(true);
     mTabIds.append(mTabIds.size());
@@ -114,9 +117,9 @@ QRect Tabs::widgetRect()
  */
 QRect Tabs::minimalGeometry() const
 {
-    int xMaxTab (mTabRects[mTabRects.size()-1].x() + mTabRects[mTabRects.size()-1].width());
+    int xMaxTab (mTabRects.at(mTabRects.size()-1).x() + mTabRects.at(mTabRects.size()-1).width());
 
-    int w =  mTabWidgets[mCurrentIndex] ? std::max(xMaxTab, mTabWidgets[mCurrentIndex]->rect().width()) : xMaxTab;
+    int w =  mTabWidgets.at(mCurrentIndex) ? std::max(xMaxTab, mTabWidgets.at(mCurrentIndex)->rect().width()) : xMaxTab;
     int h =  mTabHeight + (mTabWidgets[mCurrentIndex] ? mTabWidgets[mCurrentIndex]->rect().height() : 0);
 
     return QRect(pos().x(), pos().y(),  w, h);
@@ -124,15 +127,15 @@ QRect Tabs::minimalGeometry() const
 
 int Tabs::minimalHeight() const
 {
-    const int h =  mTabHeight + (mTabWidgets[mCurrentIndex] ? mTabWidgets[mCurrentIndex]->rect().height() : 0);
+    const int h =  mTabHeight + (mTabWidgets.at(mCurrentIndex) ? mTabWidgets.at(mCurrentIndex)->rect().height() : 0);
     return h;
 }
 
 int Tabs::minimalWidth() const
 {
-    const int xMaxTab = !mTabRects.isEmpty() ? (mTabRects[mTabRects.size()-1].x() + mTabRects[mTabRects.size()-1].width()) : 10;
+    const int xMaxTab = !mTabRects.isEmpty() ? (mTabRects[mTabRects.size()-1].x() + mTabRects.at(mTabRects.size()-1).width()) : 10;
 
-    const int w = mTabWidgets[mCurrentIndex] ? std::max(xMaxTab, mTabWidgets[mCurrentIndex]->rect().width()) : xMaxTab;
+    const int w = mTabWidgets.at(mCurrentIndex) ? std::max(xMaxTab, mTabWidgets.at(mCurrentIndex)->rect().width()) : xMaxTab;
 
     return  w;
 }
@@ -144,7 +147,12 @@ int Tabs::currentIndex() const
 
 int Tabs::currentId() const
 {
-    return mTabIds[mCurrentIndex];
+    return mTabIds.at(mCurrentIndex);
+}
+
+QString Tabs::currentName() const
+{
+    return mTabNames.at(mCurrentIndex);
 }
 
 void Tabs::showWidget(const int &i)
@@ -166,17 +174,25 @@ void Tabs::showWidget(const int &i)
 void Tabs::setTab(const int &i, bool notify)
 {
     Q_ASSERT (i < mTabNames.size());
-    if(i != mCurrentIndex)
-    {
+    if (i != mCurrentIndex) {
         mCurrentIndex = i;
         // we start to hide all widget and after we show the current widget, because if there is the same widget used in the several
         for (auto&& wid : mTabWidgets)
-            if (wid)
+            if (wid) {
                 wid->setVisible(false);
+                for (auto& widChild : wid->children()) {
+                    if (widChild->isWidgetType())
+                        static_cast<QWidget*>(widChild)-> setVisible(false);
+                }
+            }
 
         // tabs we have to show again
-        if (mTabWidgets[mCurrentIndex])
+        if (mTabWidgets.at(mCurrentIndex)) {
             mTabWidgets[mCurrentIndex]->setVisible(true);
+            for (auto& widChild : mTabWidgets.at(mCurrentIndex)->children())
+                if (widChild->isWidgetType())
+                    static_cast<QWidget*>(widChild)-> setVisible(true);
+        }
 
         if (notify)
             emit tabClicked(i);
@@ -204,8 +220,7 @@ void Tabs::paintEvent(QPaintEvent* e)
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
 
-    for (int i=0; i<mTabNames.size(); ++i)
-    {
+    for (int i=0; i<mTabNames.size(); ++i) {
         QColor backColor = (i == mCurrentIndex) ? Painting::mainColorDark : Qt::black;
         QColor frontColor = (i == mCurrentIndex) ? Qt::white : QColor(200, 200, 200);
         
@@ -228,7 +243,7 @@ void Tabs::resizeEvent(QResizeEvent* e)
 void Tabs::mousePressEvent(QMouseEvent* e)
 {
     for (int i=0; i<mTabNames.size(); ++i)
-        if (i != mCurrentIndex && mTabRects[i].contains(e->pos()))
+        if (i != mCurrentIndex && mTabRects.at(i).contains(e->pos()))
             setTab(i, true);
 }
 
@@ -240,17 +255,13 @@ void Tabs::updateLayout()
     QFontMetrics fm(font());
 
     int i = 0;
-    for (QString& name : mTabNames)
-    {
-        if (mTabVisible[i])
-        {
+    for (QString& name : mTabNames) {
+        if (mTabVisible.at(i)) {
             const qreal w = fm.boundingRect(name).width();
             const qreal m = 1.5 * fm.boundingRect(QString("H")).width();
             mTabRects.append(QRectF(x, 1,  2*m + w, h));
             x += 2*m + w;
-        }
-        else
-        {
+        } else {
             mTabRects.append(QRectF(x, 1, 0, h));
         }
 

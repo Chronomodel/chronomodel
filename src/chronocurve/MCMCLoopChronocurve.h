@@ -130,8 +130,11 @@ private:
     SplineResults calculSplineZ(const SplineMatrices &matrices, const std::vector<long double> &vecH, std::pair<std::vector<std::vector<long double> >, std::vector<long double> >& decomp, const std::vector<std::vector<long double> > matB, const double alpha);
 
     std::vector<long double> calculMatInfluence(const SplineMatrices& matrices, const std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const int nbBandes, const double alpha);
+    std::vector<long double> calculMatInfluence0(const SplineMatrices& matrices, const std::vector<std::vector<long double>> &matB , const int nbBandes, const double alpha);
+
     std::vector<long double> calculSplineError(const SplineMatrices& matrices, const  std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const double alpha);
-    
+    std::vector<long double> calculSplineError0(const SplineMatrices& matrices, const std::vector<std::vector<long double> > &matB, const double alpha);
+
     double valeurG(const double t, const MCMCSplineComposante& spline, unsigned& i0);
     double valeurErrG(const double t, const MCMCSplineComposante& spline, unsigned& i0);
     double valeurGPrime(const double t, const MCMCSplineComposante& spline, unsigned& i0);

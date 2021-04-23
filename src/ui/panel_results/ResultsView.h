@@ -48,6 +48,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QVBoxLayout>
 #include <QTabWidget>
 #include <QLabel>
+#include <QLineEdit>
+#include <qapplication.h>
+#include <QStyle>
 
 class QStackedWidget;
 class QScrollArea;
@@ -177,7 +180,7 @@ private slots:
     void generateCurves();
     void updateCurvesToShow();
     void updateScales();
-    void updateControls();
+    void updateOptionsWidget();
     void updateTotalGraphs();
     
     // ------------------------------------
@@ -185,7 +188,11 @@ private slots:
     // ------------------------------------
     void applyRuler(const double min, const double max);
 
-    // Tabs
+    // ------------------------------------
+    //  Display / Distrib. Option
+    // ------------------------------------
+    void toggleDisplayDistrib();
+
     void applyGraphTypeTab();
     void applyGraphListTab();
     void applyDisplayTab();
@@ -214,14 +221,18 @@ private slots:
     void applyBandwidth();
     void applyThreshold();
 
-    // Pagination options
+
+    // ------------------------------------
+    //  Page / Save
+    // ------------------------------------
+    void togglePageSave();
+
+    // Pagination tools
     void applyGraphsPerPage(int i);
     void applyPreviousPage();
     void applyNextPage();
 
-    // ------------------------------------
-    //  Saving / Export
-    // ------------------------------------
+    // Save tools
     void exportFullImage();
     void exportResults();
     void saveAsImage();
@@ -253,7 +264,9 @@ private:
     qreal mMarginLeft;
     qreal mMarginRight;
     int mGraphHeight;
-
+    // The scroll bar extent (width or height depending on the orientation)
+    // depends on the native platform, and must be taken into account.
+    const int mSbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     // ---------------------------------------------------------------------
     // Left part UI components
     // ---------------------------------------------------------------------
@@ -271,6 +284,7 @@ private:
     QList<GraphViewResults*> mByTempoGraphs;
     QList<GraphViewResults*> mByCurveGraphs;
 
+    QVBoxLayout* mOptionsLayout;
     // ---------------------------------------------------------------------
     // Right UI part components
     // ---------------------------------------------------------------------
@@ -278,7 +292,7 @@ private:
     QWidget* mOptionsWidget;
     Tabs* mGraphListTab;
 
-    QWidget* mResultsGroup;
+    QWidget* mEventsPhasesGroup;
 
     CheckBox* mEventsfoldCheck;
     CheckBox* mDatesfoldCheck;
@@ -309,9 +323,9 @@ private:
     // ---------------------------------------------------------------------
     // Tabs : Display / Distrib. Options
     // ---------------------------------------------------------------------
-    Tabs* mTabDisplayMCMC;
-    QWidget* mTabDisplay;
-    QWidget* mTabMCMC;
+    Tabs* mDisplayDistribTab;
+    QWidget* mDisplayWidget;
+    QWidget* mDistribWidget;
 
     // ---------------------------------------------------------------------
     //  Span options : UI components to manipulate X axis scale
@@ -386,14 +400,19 @@ private:
     // ------------------------------------
     //  Pagination / Exoprt Tools
     // ------------------------------------
-    Tabs* mTabPageSaving;
+    QWidget* mPageSavegWidget;
+
+    Tabs* mPageSaveTab;
     QWidget* mPageWidget;
-    QWidget* mToolsWidget;
+
+    QWidget* mSaveAllWidget;
+    QWidget* mSaveSelectWidget;
+
 
     Button* mNextPageBut;
     Button* mPreviousPageBut;
-    LineEdit* mPageEdit;
-    Label* mGraphsPerPageLab;
+    QLineEdit* mPageEdit;
+    QLabel* mGraphsPerPageLab;
     QSpinBox* mGraphsPerPageSpin;
 
     Button* mExportImgBut;
