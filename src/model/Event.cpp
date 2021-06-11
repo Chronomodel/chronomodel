@@ -59,7 +59,7 @@ Event::Event():
 mType(eDefault),
 mId(0),
 mName("no Event Name"),
-mMethod(Event::eDoubleExp),
+//mMethod(Event::eDoubleExp),
 mIsCurrent(false),
 mIsSelected(false),
 mInitialized(false),
@@ -67,6 +67,8 @@ mLevel(0)
 {
     mTheta.mSupport = MetropolisVariable::eBounded;
     mTheta.mFormat = DateUtils::eUnknown;
+    mTheta.mSamplerProposal = MHVariable::eDoubleExp;
+
 
     // Item initial position :
     //int posDelta = 100;
@@ -96,11 +98,12 @@ mLevel(0)
     mY = 0.;
     mSy = 0.;
     mW = 0.;
-    mWInv = 0.;
 
    // MHVariable mVG;
     mVG.mSupport = MetropolisVariable::eRp;
     mVG.mFormat = DateUtils::eNumeric;
+    mVG.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
 }
 
 Event::Event(const Event& event)
@@ -121,7 +124,7 @@ void Event::copyFrom(const Event& event)
     mType = event.mType;
     mId = event.mId;
     mName = event.mName;
-    mMethod = event.mMethod;
+    //mMethod = event.mMethod;
     mColor = event.mColor;
     mLevel = event.mLevel;
 
@@ -133,6 +136,7 @@ void Event::copyFrom(const Event& event)
     mTheta = event.mTheta;
     mTheta.mSupport = event.mTheta.mSupport;
     mTheta.mFormat = event.mTheta.mFormat;
+    mTheta.mSamplerProposal = event.mTheta.mSamplerProposal;
 
     mS02 = event.mS02;
     mAShrinkage = event.mAShrinkage;
@@ -173,9 +177,12 @@ void Event::copyFrom(const Event& event)
     mY = event.mY;
     mSy = event.mSy;
     mW = event.mW;
-    mWInv = event.mWInv;
 
-    mVG = event.mVG;;
+    mVG = event.mVG;
+    mVG.mSupport = event.mVG.mSupport;
+    mVG.mFormat = event.mVG.mFormat;
+    mVG.mSamplerProposal = event.mVG.mSamplerProposal;
+
 }
 
 Event::~Event()
@@ -213,13 +220,13 @@ Event Event::fromJson(const QJsonObject& json)
     event.mColor = QColor(json.value(STATE_COLOR_RED).toInt(),
                           json.value(STATE_COLOR_GREEN).toInt(),
                           json.value(STATE_COLOR_BLUE).toInt());
-    event.mMethod = Method (json.value(STATE_EVENT_METHOD).toInt());
+    //event.mMethod = Method (json.value(STATE_EVENT_METHOD).toInt());
     event.mItemX = json.value(STATE_ITEM_X).toDouble();
     event.mItemY = json.value(STATE_ITEM_Y).toDouble();
     event.mIsSelected = json.value(STATE_IS_SELECTED).toBool();
     event.mIsCurrent = json.value(STATE_IS_CURRENT).toBool();
 
-    event.mTheta.mProposal = ModelUtilities::getEventMethodText(event.mMethod);
+    event.mTheta.mSamplerProposal = MHVariable::SamplerProposal (json.value(STATE_EVENT_SAMPLER).toInt());
     event.mTheta.setName("Theta of Event : "+event.mName);
 
     event.mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
@@ -257,7 +264,7 @@ QJsonObject Event::toJson() const
     event[STATE_COLOR_RED] = mColor.red();
     event[STATE_COLOR_GREEN] = mColor.green();
     event[STATE_COLOR_BLUE] = mColor.blue();
-    event[STATE_EVENT_METHOD] = mMethod;
+    event[STATE_EVENT_SAMPLER] = mTheta.mSamplerProposal;
     event[STATE_ITEM_X] = mItemX;
     event[STATE_ITEM_Y] = mItemY;
     event[STATE_IS_SELECTED] = mIsSelected;
@@ -324,6 +331,7 @@ Event::Type Event::type() const
 void Event::reset()
 {
     mTheta.reset();
+    mVG.reset();
     mInitialized = false;
     mNodeInitialized = false;
     mThetaNode = HUGE_VAL;//__builtin_inf();//INFINITY;
@@ -1011,9 +1019,9 @@ void Event::updateTheta(const double &tmin, const double &tmax)
     const double theta_avg (sum_t / sum_p);
     const double sigma (1. / sqrt(sum_p));
 
-    switch(mMethod)
+    switch(mTheta.mSamplerProposal)
     {
-        case eDoubleExp:
+        case MHVariable::eDoubleExp:
         {
             try{
                 const double theta = Generator::gaussByDoubleExp(theta_avg, sigma, min, max);
@@ -1025,7 +1033,8 @@ void Event::updateTheta(const double &tmin, const double &tmax)
             }
             break;
         }
-        case eBoxMuller:
+
+        case MHVariable::eBoxMuller:
         {
             double theta;
             long long counter (0.);
@@ -1033,14 +1042,15 @@ void Event::updateTheta(const double &tmin, const double &tmax)
                 theta = Generator::gaussByBoxMuller(theta_avg, sigma);
                 ++counter;
                 if (counter == 100000000)
-                    throw QObject::tr("No MCMC solution could be found using event method %1 for event named %2 ( %3  trials done)").arg(ModelUtilities::getEventMethodText(mMethod), mName, QString::number(counter));
+                    throw QObject::tr("No MCMC solution could be found using event method %1 for event named %2 ( %3  trials done)").arg(MHVariable::getSamplerProposalText(mTheta.mSamplerProposal), mName, QString::number(counter));
 
             } while(theta < min || theta > max);
 
             mTheta.tryUpdate(theta, 1.);
             break;
         }
-        case eMHAdaptGauss:
+
+        case MHVariable::eMHAdaptGauss:
         {
             // MH : Seul cas où le taux d'acceptation a du sens car on utilise sigma MH :
             const double theta = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
@@ -1052,6 +1062,7 @@ void Event::updateTheta(const double &tmin, const double &tmax)
             mTheta.tryUpdate(theta, rapport);
             break;
         }
+
         default:
             break;
     }
@@ -1078,11 +1089,10 @@ void Event::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, co
 
 void Event::updateW()
 {
-    mWInv = mVG.mX + mSy * mSy;
-    mW = 1. / mWInv;
+      mW = 1. / (mVG.mX + mSy * mSy);
  #ifdef DEBUG
-    if (mWInv > 1e100) {
-        qDebug()<< "in Event::updateW mWInv > 1e100 : "<< mWInv;
+    if (mW < 1e-100) {
+        qDebug()<< "in Event::updateW mW < 1e-100 : "<< mW;
     }
 #endif
 

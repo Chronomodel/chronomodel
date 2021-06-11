@@ -188,10 +188,10 @@ void MCMCSettingsDialog::setSettings(const MCMCSettings& settings)
 {
     const QLocale mLoc = QLocale();
     mNumProcEdit->setText(mLoc.toString(settings.mNumChains));
-    mNumIterEdit->setText(mLoc.toString(settings.mNumRunIter));
-    mNumBurnEdit->setText(mLoc.toString(settings.mNumBurnIter));
+    mNumIterEdit->setText(mLoc.toString(settings.mIterPerAquisition));
+    mNumBurnEdit->setText(mLoc.toString(settings.mIterPerBurn));
     mMaxBatchesEdit->setText(mLoc.toString(settings.mMaxBatches));
-    mIterPerBatchEdit->setText(mLoc.toString(settings.mNumBatchIter));
+    mIterPerBatchEdit->setText(mLoc.toString(settings.mIterPerBatch));
     mDownSamplingEdit->setText(mLoc.toString(settings.mThinningInterval));
     mSeedsEdit->setText(intListToString(settings.mSeeds, ";"));
 
@@ -205,13 +205,13 @@ MCMCSettings MCMCSettingsDialog::getSettings()
     const int UN = 1;
     settings.mNumChains = qMax(UN, mNumProcEdit->text().toInt());
 
-    settings.mNumBurnIter = qMax(UN, mNumBurnEdit->text().toInt());
+    settings.mIterPerBurn = qMax(UN, mNumBurnEdit->text().toInt());
 
     settings.mMaxBatches = qMax(UN, mMaxBatchesEdit->text().toInt());
-    settings.mNumBatchIter = qMax(UN,  mIterPerBatchEdit->text().toInt());
+    settings.mIterPerBatch = qMax(UN,  mIterPerBatchEdit->text().toInt());
 
-    settings.mNumRunIter = qMax(10, mNumIterEdit->text().toInt());
-    settings.mThinningInterval = qBound(UN, mDownSamplingEdit->text().toInt(), int (floor(settings.mNumRunIter/10)) );
+    settings.mIterPerAquisition = qMax(10, mNumIterEdit->text().toInt());
+    settings.mThinningInterval = qBound(UN, mDownSamplingEdit->text().toInt(), int (floor(settings.mIterPerAquisition/10)) );
 
     settings.mMixingLevel = qBound(0.0001, mLoc.toDouble(mLevelEdit->text()),0.9999);
 
@@ -338,8 +338,8 @@ void MCMCSettingsDialog::inputControl()
         isValided = false;
     }
 
-    settings.mNumBurnIter = mNumBurnEdit->text().toInt(&ok);
-    if (isValided == true && (ok == false || settings.mNumBurnIter < 1) ) {
+    settings.mIterPerBurn = mNumBurnEdit->text().toInt(&ok);
+    if (isValided == true && (ok == false || settings.mIterPerBurn < 1) ) {
         errorMessage = QObject::tr("The number of iteration in the burn-in must be bigger than 0");
         isValided = false;
     }
@@ -350,14 +350,14 @@ void MCMCSettingsDialog::inputControl()
         isValided = false;
     }
 
-    settings.mNumBatchIter =  mIterPerBatchEdit->text().toInt(&ok);
-    if (isValided == true && settings.mNumBatchIter < 1) {
+    settings.mIterPerBatch =  mIterPerBatchEdit->text().toInt(&ok);
+    if (isValided == true && settings.mIterPerBatch < 1) {
         errorMessage = QObject::tr("The number of the iteration in one batch of the adaptation must be bigger than 0");
         isValided = false;
     }
 
-    settings.mNumRunIter = mNumIterEdit->text().toInt(&ok);
-    if (isValided == true && (ok == false || settings.mNumRunIter < 50)) {
+    settings.mIterPerAquisition = mNumIterEdit->text().toInt(&ok);
+    if (isValided == true && (ok == false || settings.mIterPerAquisition < 50)) {
         errorMessage = QObject::tr("The number of the iteration in one run must be bigger than 50");
         isValided = false;
     }
@@ -367,12 +367,12 @@ void MCMCSettingsDialog::inputControl()
         errorMessage = QObject::tr("The thinning interval in one run must be bigger than 1");
         isValided = false;
      }
-    if (isValided == true && (ok == false || (settings.mNumRunIter/settings.mThinningInterval) < 40) ) {
-        if ((settings.mNumRunIter/40) < 2)
-            errorMessage = QObject::tr("With %1 the thinning interval in one run must be 1").arg(mLoc.toString(settings.mNumRunIter));
+    if (isValided == true && (ok == false || (settings.mIterPerAquisition/settings.mThinningInterval) < 40) ) {
+        if ((settings.mIterPerAquisition/40) < 2)
+            errorMessage = QObject::tr("With %1 the thinning interval in one run must be 1").arg(mLoc.toString(settings.mIterPerAquisition));
 
         else
-            errorMessage = QObject::tr("The thinning interval in one run must be smaller than %1").arg(mLoc.toString(static_cast<unsigned int>(floor(settings.mNumRunIter/40))));
+            errorMessage = QObject::tr("The thinning interval in one run must be smaller than %1").arg(mLoc.toString(static_cast<unsigned int>(floor(settings.mIterPerAquisition/40))));
 
         isValided = false;
      }

@@ -63,11 +63,17 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     mLogModelEdit->setFrameStyle(QFrame::NoFrame);
     mLogModelEdit->setPalette(palette);
 
-    mLogMCMCEdit = new QTextEdit();
-    mLogMCMCEdit->setReadOnly(true);
-    mLogMCMCEdit->setAcceptRichText(true);
-    mLogMCMCEdit->setFrameStyle(QFrame::NoFrame);
-    mLogMCMCEdit->setPalette(palette);
+    mLogInitEdit = new QTextEdit();
+    mLogInitEdit->setReadOnly(true);
+    mLogInitEdit->setAcceptRichText(true);
+    mLogInitEdit->setFrameStyle(QFrame::NoFrame);
+    mLogInitEdit->setPalette(palette);
+
+    mLogAdaptEdit = new QTextEdit();
+    mLogAdaptEdit->setReadOnly(true);
+    mLogAdaptEdit->setAcceptRichText(true);
+    mLogAdaptEdit->setFrameStyle(QFrame::NoFrame);
+    mLogAdaptEdit->setPalette(palette);
 
     mLogResultsEdit = new QTextEdit();
     mLogResultsEdit->setReadOnly(true);
@@ -76,16 +82,26 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     mLogResultsEdit->setPalette(palette);
 
     mLogTabs = new Tabs(this);
-    mLogTabs->addTab(mLogModelEdit,   tr("Model Description"));
-    mLogTabs->addTab(mLogMCMCEdit,    tr("MCMC Initialisation"));
-    mLogTabs->addTab(mLogResultsEdit, tr("Posterior Distrib. Stats"));
+    mLogTabs->setFixedHeight(mLogTabs->tabHeight());
+
+    mLogTabs->addTab(tr("Model Description"));
+    mLogTabs->addTab(tr("MCMC Initialisation"));
+    mLogTabs->addTab(tr("MCMC Adaptation"));
+    mLogTabs->addTab(tr("Posterior Distrib. Stats"));
+
+    mLogLayout = new QVBoxLayout();
+    mLogLayout->addWidget(mLogTabs);
+    mLogLayout->addWidget(mLogResultsEdit);
+
+    mLogView = new QWidget();
+    mLogView->setLayout(mLogLayout);
 
     connect(mLogTabs, &Tabs::tabClicked, this, &ProjectView::showLogTab);
 
     mStack = new QStackedWidget();
     mStack->addWidget(mModelView);
     mStack->addWidget(mResultsView);
-    mStack->addWidget(mLogTabs);
+    mStack->addWidget(mLogView);
     mStack->setCurrentIndex(0);
 
     QHBoxLayout* layout = new QHBoxLayout();
@@ -95,8 +111,8 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
 
     connect(mResultsView, &ResultsView::resultsLogUpdated, this, &ProjectView::updateResultsLog);
 
-    mLogTabs->setTab(2, false);
-    mLogTabs->showWidget(2);
+    mLogTabs->setTab(3, false);
+   // mLogTabs->showWidget(2);
 }
 
 ProjectView::~ProjectView()
@@ -107,15 +123,19 @@ ProjectView::~ProjectView()
 void ProjectView::setScreenDefinition()
 {
     /* find screen definition */
-
-    int numScreen (QApplication::desktop()->screenNumber(this));
     QScreen *screen;
+
+  /*  int numScreen = QApplication::desktop()->screenNumber(this));
+
     if (numScreen>0) {
         screen = QApplication::screens().at(numScreen);
+
     } else {
         screen =  QGuiApplication::primaryScreen();
-        numScreen = 0;
+      //  numScreen = 0;
     }
+    */
+    screen =  QGuiApplication::primaryScreen();
     //qreal mm_per_cm = 10;
 
     qreal cm_per_in = 2.54;
@@ -162,7 +182,8 @@ void ProjectView::resizeEvent(QResizeEvent* e)
 void ProjectView::setProject(Project* project)
 {
     mModelView->setProject(project);
-    mResultsView->setProject(project);
+    if (!project->mModel->mEvents.isEmpty())
+        mResultsView->setProject(project);
 }
 
 void ProjectView::resetInterface()
@@ -193,6 +214,7 @@ void ProjectView::showResults()
 
 void ProjectView::showLog()
 {
+    mResultsView->mModel->mLogResults.clear();
     mResultsView->mModel->generateResultsLog();
     updateResultsLog(mResultsView->mModel->getResultsLog());
     mStack->setCurrentIndex(2);
@@ -234,7 +256,8 @@ void ProjectView::applySettings(Model* model)
         model->generateResultsLog();
 
         mLogModelEdit->setText(model->getModelLog());
-        mLogMCMCEdit->setText(model->getMCMCLog());
+        mLogInitEdit->setText(model->getInitLog());
+        mLogAdaptEdit->setText(model->getAdaptLog());
         updateResultsLog(model->getResultsLog());
     }
 }
@@ -263,7 +286,8 @@ void ProjectView::initResults(Model* model)
 
     // Update log view
     mLogModelEdit->setText(model->getModelLog());
-    mLogMCMCEdit->setText(model->getMCMCLog());
+    mLogInitEdit->setText(model->getInitLog());
+    mLogAdaptEdit->setText(model->getAdaptLog());
     mLogResultsEdit->setText(model->getResultsLog());
 
     // Show results :
@@ -274,11 +298,11 @@ void ProjectView::initResults(Model* model)
 void ProjectView::updateResults()
 {
     Project* project = MainWindow::getInstance()->getProject();
-    
+
     if (project->mModel) {
         project->mModel->updateDesignFromJson();
 
-        project->mModel->updateDensities(1024, 1.06, 95.0);
+     //   project->mModel->updateDensities(1024, 1.06, 95.0);
         mResultsView->updateModel(project->mModel);
     }
 }
@@ -295,7 +319,65 @@ void ProjectView::updateResultsLog(const QString& log)
 
 void ProjectView::showLogTab(const int &i)
 {
-    mLogTabs->showWidget(i);
+    mLogTabs->setTab(i, true);
+
+    QWidget* widFrom = nullptr;
+
+    if (mLogModelEdit->isVisible())
+        widFrom = mLogModelEdit;
+
+    else if (mLogInitEdit->isVisible())
+            widFrom = mLogInitEdit;
+
+    else if (mLogResultsEdit->isVisible())
+        widFrom = mLogResultsEdit;
+
+    else if (mLogAdaptEdit->isVisible())
+        widFrom = mLogAdaptEdit;
+
+    else
+        widFrom = nullptr;
+
+    if (mLogTabs->currentName() == tr("Model Description") ) {
+        mLogModelEdit->setVisible(true);
+        mLogInitEdit->setVisible(false);
+        mLogAdaptEdit->setVisible(false);
+        mLogResultsEdit->setVisible(false);
+
+        mLogLayout->replaceWidget(widFrom, mLogModelEdit);
+
+     } else if (mLogTabs->currentName() == tr("MCMC Initialisation") ) {
+        mLogModelEdit->setVisible(false);
+        mLogInitEdit->setVisible(true);
+        mLogAdaptEdit->setVisible(false);
+        mLogResultsEdit->setVisible(false);
+
+        mLogLayout->replaceWidget(widFrom, mLogInitEdit);
+
+    } else if (mLogTabs->currentName() == tr("MCMC Adaptation") ) {
+       mLogModelEdit->setVisible(false);
+       mLogInitEdit->setVisible(false);
+       mLogAdaptEdit->setVisible(true);
+       mLogResultsEdit->setVisible(false);
+
+       mLogLayout->replaceWidget(widFrom, mLogAdaptEdit);
+
+     } else if (mLogTabs->currentName() == tr("Posterior Distrib. Stats") ) {
+        mLogModelEdit->setVisible(false);
+        mLogInitEdit->setVisible(false);
+        mLogAdaptEdit->setVisible(false);
+        mLogResultsEdit->setVisible(true);
+
+        mLogLayout->replaceWidget(widFrom, mLogResultsEdit);
+
+     } else {
+        mLogModelEdit->setVisible(false);
+        mLogInitEdit->setVisible(false);
+        mLogAdaptEdit->setVisible(false);
+        mLogResultsEdit->setVisible(false);
+    }
+
+
 }
 
 //  Read/Write settings

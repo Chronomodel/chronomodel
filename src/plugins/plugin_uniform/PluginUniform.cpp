@@ -86,16 +86,16 @@ bool PluginUniform::wiggleAllowed() const
     return true;
 }
 
-Date::DataMethod PluginUniform::getDataMethod() const
+MHVariable::SamplerProposal PluginUniform::getDataMethod() const
 {
-    return Date::eMHSymetric;
+    return MHVariable::eMHSymetric;
 }
 
-QList<Date::DataMethod> PluginUniform::allowedDataMethods() const
+QList<MHVariable::SamplerProposal> PluginUniform::allowedDataMethods() const
 {
-    QList<Date::DataMethod> methods;
-    methods.append(Date::eMHSymetric);
-    methods.append(Date::eMHSymGaussAdapt);
+    QList<MHVariable::SamplerProposal> methods;
+    methods.append(MHVariable::eMHSymetric);
+    methods.append(MHVariable::eMHSymGaussAdapt);
     return methods;
 }
 

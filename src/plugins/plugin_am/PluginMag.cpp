@@ -128,17 +128,17 @@ bool PluginMag::wiggleAllowed() const
     return false;
 }
 
-Date::DataMethod PluginMag::getDataMethod() const
+MHVariable::SamplerProposal PluginMag::getDataMethod() const
 {
-    return Date::eInversion;
+    return MHVariable::eInversion;
 }
 
-QList<Date::DataMethod> PluginMag::allowedDataMethods() const
+QList<MHVariable::SamplerProposal> PluginMag::allowedDataMethods() const
 {
-    QList<Date::DataMethod> methods;
-    methods.append(Date::eMHSymetric);
-    methods.append(Date::eInversion);
-    methods.append(Date::eMHSymGaussAdapt);
+    QList<MHVariable::SamplerProposal> methods;
+    methods.append(MHVariable::eMHSymetric);
+    methods.append(MHVariable::eInversion);
+    methods.append(MHVariable::eMHSymGaussAdapt);
     return methods;
 }
 

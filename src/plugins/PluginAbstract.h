@@ -157,8 +157,8 @@ public:
     virtual QIcon getIcon() const = 0;
     virtual bool doesCalibration() const = 0;
     virtual bool wiggleAllowed() const = 0;
-    virtual Date::DataMethod getDataMethod() const = 0;
-    virtual QList<Date::DataMethod> allowedDataMethods() const = 0;
+    virtual MHVariable::SamplerProposal getDataMethod() const = 0;
+    virtual QList<MHVariable::SamplerProposal> allowedDataMethods() const = 0;
     virtual QString csvHelp() const{return QString();}
     virtual QStringList csvColumns() const{return QStringList();}
     virtual int csvMinColumns() const {return csvColumns().size();}

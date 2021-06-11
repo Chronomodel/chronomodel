@@ -100,7 +100,7 @@ void DatesList::setEvent(const QJsonObject& event)
                     item->setData(0x0103, d.getDesc());
                     item->setData(0x0104, d.mId);
                     item->setData(0x0105, d.getWiggleDesc()); //ModelUtilities::getDeltaText(d));
-                    item->setData(0x0106, ModelUtilities::getDataMethodText(d.mMethod));
+                    item->setData(0x0106, MHVariable::getSamplerProposalText(d.mTheta.mSamplerProposal));
                     item->setData(0x0107, d.mIsValid);
                     item->setData(0x0108, date.value(STATE_DATE_SUB_DATES).toArray().size() > 0);
                     item->setData(0x0109, d.mOrigin);

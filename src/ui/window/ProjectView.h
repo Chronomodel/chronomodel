@@ -50,6 +50,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class QStackedWidget;
 class QTextEdit;
 class QTabWidget;
+class QVBoxLayout;
 
 class ModelView;
 class ResultsView;
@@ -98,9 +99,12 @@ private:
     ModelView* mModelView;
     ResultsView* mResultsView;
 
+    QWidget* mLogView;
+    QVBoxLayout* mLogLayout;
     Tabs* mLogTabs;
     QTextEdit* mLogModelEdit;
-    QTextEdit* mLogMCMCEdit;
+    QTextEdit* mLogInitEdit;
+    QTextEdit* mLogAdaptEdit;
     QTextEdit* mLogResultsEdit;
 };
 

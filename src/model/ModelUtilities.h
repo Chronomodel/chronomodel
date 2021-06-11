@@ -41,6 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define MODELUTILITIES_H
 
 #include "Model.h"
+#include "ModelChronocurve.h"
 #include "Date.h"
 #include "Event.h"
 #include "Phase.h"
@@ -52,12 +53,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class ModelUtilities
 {
 public:
-    static QString getEventMethodText(const Event::Method method);
-    static QString getDataMethodText(const Date::DataMethod method);
+
+   // static QString getDataMethodText(const Date::DataMethod method);
     static QString getDeltaText(const Date& date); // Obsolete , is replaced by the Date::getWiggleDesc()
 
-    static Event::Method getEventMethodFromText(const QString& text);
-    static Date::DataMethod getDataMethodFromText(const QString& text);
+
+    //static Event::Method getEventMethodFromText(const QString& text);
+   // static Date::DataMethod getDataMethodFromText(const QString& text);
 
     static QVector<QVector<Event*> > getNextBranches(const QVector<Event*>& curBranch, Event* lastNode);
     static QVector<QVector<Event*> > getBranchesFromEvent(Event* start);
@@ -71,18 +73,24 @@ public:
     static QVector<Phase*> sortPhasesByLevel(const QList<Phase*>& phases);
 
     static QVector<Event*> unsortEvents(const QList<Event*>& events);
+    static QString modelDescriptionHTML(const ModelChronocurve* model);
+    static QString getMCMCSettingsLog(const Model* model = nullptr);
+    static QString modelStateDescriptionHTML(const ModelChronocurve *model = nullptr, QString stateDescript = "");
+    static QString modelStateDescriptionText(const ModelChronocurve *model = nullptr, QString stateDescript = "");
 
     static QString dateResultsText(const Date* d, const Model* model = nullptr, const bool forCSV = false);
     static QString eventResultsText(const Event* e, bool withDates, const Model* model = nullptr, const bool forCSV = false);
     static QString phaseResultsText(const Phase* p, const bool forCSV = false);
     static QString tempoResultsText(const Phase* p, const bool forCSV = false);
     static QString constraintResultsText(const PhaseConstraint* p, const bool forCSV = false);
+    static QString curveResultsText(const ModelChronocurve* model = nullptr);
 
     static QString dateResultsHTML(const Date* d, const Model* model = nullptr);
     static QString eventResultsHTML(const Event* e,const bool withDates, const Model* model = nullptr);
     static QString phaseResultsHTML(const Phase* p);
     static QString tempoResultsHTML(const Phase* p);
     static QString constraintResultsHTML(const PhaseConstraint* p);
+    static QString curveResultsHTML(const ModelChronocurve* model = nullptr);
 
     static short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const Model* model);
 };

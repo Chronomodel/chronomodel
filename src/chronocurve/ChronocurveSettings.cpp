@@ -53,8 +53,8 @@ mTimeType(CHRONOCURVE_TIME_TYPE_DEFAULT),
 mVarianceType(CHRONOCURVE_VARIANCE_TYPE_DEFAULT),
 mUseVarianceIndividual(CHRONOCURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT),
 mVarianceFixed(CHRONOCURVE_VARIANCE_FIXED_DEFAULT),
-mCoeffLissageType(CHRONOCURVE_COEFF_LISSAGE_TYPE_DEFAULT),
-mAlphaLissage(CHRONOCURVE_ALPHA_LISSAGE_DEFAULT)
+mLambdaSplineType(CHRONOCURVE_COEFF_LISSAGE_TYPE_DEFAULT),
+mLambdaSpline(CHRONOCURVE_ALPHA_LISSAGE_DEFAULT)
 {
     
 }
@@ -90,8 +90,8 @@ bool ChronocurveSettings::isEqual(const ChronocurveSettings& s)
         s.mVarianceType != mVarianceType ||
         s.mUseVarianceIndividual != mUseVarianceIndividual ||
         s.mVarianceFixed != mVarianceFixed ||
-        s.mCoeffLissageType != mCoeffLissageType ||
-        s.mAlphaLissage != mAlphaLissage) {
+        s.mLambdaSplineType != mLambdaSplineType ||
+        s.mLambdaSpline != mLambdaSpline) {
         return false;
     }
     return true;
@@ -108,8 +108,8 @@ void ChronocurveSettings::copyFrom(const ChronocurveSettings& s)
     mVarianceType = s.mVarianceType;
     mUseVarianceIndividual = s.mUseVarianceIndividual;
     mVarianceFixed = s.mVarianceFixed;
-    mCoeffLissageType = s.mCoeffLissageType;
-    mAlphaLissage = s.mAlphaLissage;
+    mLambdaSplineType = s.mLambdaSplineType;
+    mLambdaSpline = s.mLambdaSpline;
 }
 
 ChronocurveSettings::~ChronocurveSettings()
@@ -129,8 +129,8 @@ ChronocurveSettings ChronocurveSettings::getDefault()
     settings.mVarianceType = CHRONOCURVE_VARIANCE_TYPE_DEFAULT;
     settings.mUseVarianceIndividual = CHRONOCURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT;
     settings.mVarianceFixed = CHRONOCURVE_VARIANCE_FIXED_DEFAULT;
-    settings.mCoeffLissageType = CHRONOCURVE_COEFF_LISSAGE_TYPE_DEFAULT;
-    settings.mAlphaLissage = CHRONOCURVE_ALPHA_LISSAGE_DEFAULT;
+    settings.mLambdaSplineType = CHRONOCURVE_COEFF_LISSAGE_TYPE_DEFAULT;
+    settings.mLambdaSpline = CHRONOCURVE_ALPHA_LISSAGE_DEFAULT;
     
     return settings;
 }
@@ -145,8 +145,8 @@ void ChronocurveSettings::restoreDefault()
     mVarianceType = CHRONOCURVE_VARIANCE_TYPE_DEFAULT;
     mUseVarianceIndividual = CHRONOCURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT;
     mVarianceFixed = CHRONOCURVE_VARIANCE_FIXED_DEFAULT;
-    mCoeffLissageType = CHRONOCURVE_COEFF_LISSAGE_TYPE_DEFAULT;
-    mAlphaLissage = CHRONOCURVE_ALPHA_LISSAGE_DEFAULT;
+    mLambdaSplineType = CHRONOCURVE_COEFF_LISSAGE_TYPE_DEFAULT;
+    mLambdaSpline = CHRONOCURVE_ALPHA_LISSAGE_DEFAULT;
 }
 
 ChronocurveSettings ChronocurveSettings::fromJson(const QJsonObject& json)
@@ -169,9 +169,9 @@ ChronocurveSettings ChronocurveSettings::fromJson(const QJsonObject& json)
     
     settings.mVarianceFixed = json.contains(STATE_CHRONOCURVE_VARIANCE_FIXED) ? json.value(STATE_CHRONOCURVE_VARIANCE_FIXED).toDouble() : CHRONOCURVE_VARIANCE_FIXED_DEFAULT;
     
-    settings.mCoeffLissageType = json.contains(STATE_CHRONOCURVE_COEFF_LISSAGE_TYPE) ? ChronocurveSettings::ProcessMode (json.value(STATE_CHRONOCURVE_COEFF_LISSAGE_TYPE).toInt()) : CHRONOCURVE_COEFF_LISSAGE_TYPE_DEFAULT;
+    settings.mLambdaSplineType = json.contains(STATE_CHRONOCURVE_COEFF_LISSAGE_TYPE) ? ChronocurveSettings::ProcessMode (json.value(STATE_CHRONOCURVE_COEFF_LISSAGE_TYPE).toInt()) : CHRONOCURVE_COEFF_LISSAGE_TYPE_DEFAULT;
     
-    settings.mAlphaLissage = json.contains(STATE_CHRONOCURVE_ALPHA_LISSAGE) ? json.value(STATE_CHRONOCURVE_ALPHA_LISSAGE).toDouble() : CHRONOCURVE_ALPHA_LISSAGE_DEFAULT;
+    settings.mLambdaSpline = json.contains(STATE_CHRONOCURVE_ALPHA_LISSAGE) ? json.value(STATE_CHRONOCURVE_ALPHA_LISSAGE).toDouble() : CHRONOCURVE_ALPHA_LISSAGE_DEFAULT;
     
     return settings;
 }
@@ -188,8 +188,8 @@ QJsonObject ChronocurveSettings::toJson() const
     mcmc[STATE_CHRONOCURVE_VARIANCE_TYPE] = QJsonValue::fromVariant((int)mVarianceType);
     mcmc[STATE_CHRONOCURVE_USE_VARIANCE_INDIVIDUAL] = QJsonValue::fromVariant(mUseVarianceIndividual);
     mcmc[STATE_CHRONOCURVE_VARIANCE_FIXED] = QJsonValue::fromVariant(mVarianceFixed);
-    mcmc[STATE_CHRONOCURVE_COEFF_LISSAGE_TYPE] = QJsonValue::fromVariant((int)mCoeffLissageType);
-    mcmc[STATE_CHRONOCURVE_ALPHA_LISSAGE] = QJsonValue::fromVariant(mAlphaLissage);
+    mcmc[STATE_CHRONOCURVE_COEFF_LISSAGE_TYPE] = QJsonValue::fromVariant((int)mLambdaSplineType);
+    mcmc[STATE_CHRONOCURVE_ALPHA_LISSAGE] = QJsonValue::fromVariant(mLambdaSpline);
     
     return mcmc;
 }

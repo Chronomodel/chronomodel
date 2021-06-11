@@ -56,7 +56,7 @@ public:
     {
         eBurning = 0,
         eAdapting = 1,
-        eRunning = 2
+        eAquisition = 2
     };
     
     MCMCLoop();
@@ -64,10 +64,10 @@ public:
 
     void setMCMCSettings(const MCMCSettings& settings);
     const QList<ChainSpecs>& chains() const;
-    const QString& getChainsLog() const;
+/*    const QString& getChainsLog() const;
     const QString getInitLog() const;
     const QString getMCMCSettingsLog() const ;
-
+*/
     void run();
 
 signals:
@@ -78,19 +78,20 @@ protected:
     virtual QString calibrate() = 0;
     virtual void initVariablesForChain() = 0;
     virtual QString initMCMC() = 0;
-    virtual void update() = 0;
+    virtual bool update() = 0;
+    virtual void memo() = 0;
     virtual void finalize() = 0;
-    virtual bool adapt() = 0;
+    virtual bool adapt(const int batchIndex) = 0;
 
 protected:
     QList<ChainSpecs> mChains;
     int mChainIndex;
     State mState;
 
-    QString mChainsLog;
+/*    QString mChainsLog;
     QString mInitLog;
     QString mAdaptLog;
-
+*/
 public:
     QString mAbortedReason;
     Project* mProject;

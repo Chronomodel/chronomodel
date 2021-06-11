@@ -105,7 +105,7 @@ public:
         eG = 6,
         eGP = 7,
         eGS = 8,
-        eAlpha = 9
+        eLambda = 9
   /*
         eInclination = 8,
         eDeclination = 8,

@@ -61,7 +61,7 @@ private slots:
     void updateTableHeaders();
 
 protected:
-    QMimeData* mimeData(const QList<QTableWidgetItem*> items) const;
+    QMimeData* mimeData(const QList<QTableWidgetItem*> &items) const;
 
 private:
     ImportDataView* mImportView;

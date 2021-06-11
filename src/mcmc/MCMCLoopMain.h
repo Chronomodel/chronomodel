@@ -56,9 +56,9 @@ protected:
     virtual QString calibrate();
     virtual void initVariablesForChain();
     virtual QString initMCMC();
-    virtual void update();
-    virtual bool adapt();
-    virtual bool adapt_V2();
+    virtual bool update();
+    virtual bool adapt(const int batchIndex);
+    virtual void memo();
     virtual void finalize();
 
 public:

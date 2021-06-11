@@ -48,7 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 typedef double type_data;
 
-struct FunctionAnalysis{
+struct FunctionStat{
     type_data max = (type_data)0.;
     type_data mode = (type_data)0.;
     type_data mean = (type_data)0.;
@@ -61,15 +61,27 @@ struct Quartiles{
     type_data Q3 = (type_data)0.;
 };
 
+struct TraceStat{
+    type_data min = (type_data)0.;
+    type_data max = (type_data)0.;
+    type_data mean = (type_data)0.;
+    type_data std = (type_data)0.;
+    Quartiles quartiles;
+};
+
+
+
 struct DensityAnalysis
 {
     Quartiles quartiles;
-    FunctionAnalysis analysis;
+    FunctionStat funcAnalysis;
+    type_data xmin;
+    type_data xmax;
 };
 
-FunctionAnalysis analyseFunction(const QMap<type_data, type_data>& aFunction);
+FunctionStat analyseFunction(const QMap<type_data, type_data>& aFunction);
 
-QString functionAnalysisToString(const FunctionAnalysis& analysis, const bool forCSV = false);
+QString FunctionStatToString(const FunctionStat& analysis, const bool forCSV = false);
 QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& nl = "<br>", const bool forCSV = false);
 
 // Standard Deviation of a vector of data
@@ -78,6 +90,7 @@ type_data dataStd(const QVector<type_data> &data);
 double shrinkageUniform(const double so2);
 
 Quartiles quartilesForTrace(const QVector<type_data>& trace);
+TraceStat traceStatistic(const QVector<type_data> &trace);
 
 QVector<double> calculRepartition (const QVector<double>& calib);
 QVector<double> calculRepartition (const QMap<double, double> &calib);
@@ -124,9 +137,12 @@ std::vector<std::vector<long double> > multiMatParMat0(const std::vector<std::ve
 std::vector<std::vector<long double>> multiMatParMat(const std::vector<std::vector<long double>>& matrix1, const std::vector<std::vector<long double>>& matrix2, const int nbBandes1, const int nbBandes2);
 
 std::vector<std::vector<long double>> inverseMatSym0(const std::vector<std::vector<long double>>& matrix, const int shift = 0);
-
 std::vector<std::vector<long double>> inverseMatSym(const std::vector<std::vector<long double>>& matrix1, const std::vector<long double>& matrix2, const int nbBandes, const int shift);
 std::vector<std::vector<long double>> inverseMatSym_old(const std::vector<std::vector<long double>>& matrix1, const std::vector<long double>& matrix2, const int nbBandes, const int shift);
+
+std::vector<std::vector<long double>> inverseMatSym_origin(const std::vector<std::vector<long double> > &matrixLE, const std::vector<long double> &matrixDE, const int nbBandes, const int shift);
+
+
 long double sumAllMatrix(const std::vector<std::vector<long double>>& matrix);
 long double sumAllVector(const std::vector<long double>& matrix);
 

@@ -45,8 +45,51 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AppSettings.h"
 
 #include <QtWidgets>
+#include <QFontMetricsF>
 #include <QtSvg>
 #include <algorithm>
+
+QString DHMS( quint64 elapsedTime)
+{
+    QString str;
+    quint64 day,hour,minute,second;
+    day= elapsedTime / (24*3600*1000);
+
+    elapsedTime -= day * 24*3600*1000;
+    hour = elapsedTime / (3600*1000);
+
+    elapsedTime -= hour*3600*1000;
+    minute = elapsedTime / (60*1000);
+
+    elapsedTime -= minute*60*1000;
+    second = elapsedTime / 1000;
+
+    elapsedTime -= second*1000;
+
+    if (day>1)
+        str = QString("%1 days").arg(QString::number(day));
+    else if (day == 1)
+        str = QString("1 day");
+
+    if (hour>1)
+        str += QString("%1 hours ").arg(QString::number(hour));
+    else if (hour == 1)
+        str += QString("1 hour ");
+
+    if (minute>1)
+        str += QString("%1 minutes ").arg(QString::number(minute));
+    else if (hour == 1)
+        str += QString("1 minute ");
+
+    if (second>1)
+        str += QString("%1 seconds ").arg(QString::number(second));
+    else if (second == 1)
+        str += QString("1 second ");
+
+    str += QString(" %3 msec").arg(QString::number(elapsedTime));
+
+    return str;
+}
 
 bool colorIsDark(const QColor& color)
 {
@@ -192,7 +235,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
     if (!fileName.isEmpty()) {
         fileInfo = QFileInfo(fileName);
         const QString fileExtension = fileInfo.suffix();
-        const int heightText (2 * qApp->fontMetrics().height());
+        const qreal heightText  = 2 * QFontMetricsF(qApp->font()).height();
         const int bottomSpace (5);
         const QString versionStr = qApp->applicationName() + " " + qApp->applicationVersion();
 

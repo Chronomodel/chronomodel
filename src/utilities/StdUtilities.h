@@ -46,6 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <cmath>
 #include <algorithm>
 #include <math.h>
+#include <iterator>
 
 #include <QMap>
 #include <QVector>
@@ -92,8 +93,9 @@ T interpolateValueInQMap(const U& key, const QMap<U, T>& map)
         return map.last();
 
     } else {
-        auto lIter = map.lowerBound(key);
-        auto uIter = lIter + 1;//map.upperBound(key);
+        auto lIter =  map.lowerBound(key);
+        auto uIter = lIter;
+        uIter++;
         return interpolate(key, lIter.key(), uIter.key(), lIter.value(), uIter.value());
     }
 
@@ -314,6 +316,7 @@ double interpolate_value_from_curve(const double t, const QVector<double> & curv
 
 double map_area(const QMap<double, double>& map);
 float map_area(const QMap<float, float>& map);
-const QMap<double, double> create_HPD(const QMap<double, double> &aMap, const double threshold);
+// const std::map<double, double> create_HPD(const QMap<double, double> &aMap, const double threshold); // Pour Qt5
+const std::map<double, double> create_HPD(const QMap<double, double> &aMap, const double threshold);
 QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmin, const double tmax, const int nbPts);
 #endif

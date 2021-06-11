@@ -119,10 +119,11 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
         curveRefPoints.mIsRefPoints = true;
 
         for (auto& rf : mRefPoints) {
-            curveRefPoints.mData.insert(rf.Xmean, rf.Ymean);
-            curveRefPoints.mDataErrorX.insert(rf.Xmean, rf.Xerr);
-            curveRefPoints.mDataErrorY.insert(rf.Xmean, rf.Yerr);
-            curveRefPoints.mDataColor.insert(rf.Xmean, rf.color);
+            auto xFormated = rf.Xmean;//DateUtils::convertToAppSettingsFormat(rf.Xmean);
+            curveRefPoints.mData.insert(xFormated, rf.Ymean);
+            curveRefPoints.mDataErrorX.insert(xFormated, rf.Xerr);
+            curveRefPoints.mDataErrorY.insert(xFormated, rf.Yerr);
+            curveRefPoints.mDataColor.insert(xFormated, rf.color);
         }
 
 
@@ -160,43 +161,18 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
         double t;
         double step = mSettings.mStep;
 
-        /*
-         * Mettre ici le retour en coordonnée sphérique ou vectoriel
-         *
-         *   F:=sqrt(sqr(Gx)+sqr(Gy)+sqr(Gz));
-
-        Ic:=arcsinus(Gz/F);
-        Dc:=angleD(Gx,Gy);
-
-        Tab_chemin_IDF[iJ].IiJ:=Ic*Deg;
-        Tab_chemin_IDF[iJ].DiJ:=Dc*Deg;
-        Tab_chemin_IDF[iJ].FiJ:=F;
-
-        // Calcul de la boule d'erreur moyenne par moyenne quadratique
-        ErrGx:=Tab_parametrique[iJ].ErrGx;
-        ErrGy:=Tab_parametrique[iJ].ErrGy;
-        ErrGz:=Tab_parametrique[iJ].ErrGz;
-        ErrIDF:=sqrt((sqr(ErrGx)+sqr(ErrGy)+sqr(ErrGz))/3);
-
-    // sauvegarde des erreurs sur chaque param�tre  - on convertit en degr�s pour I et D
-        Tab_chemin_IDF[iJ].ErrI:=(ErrIDF/Tab_chemin_IDF[iJ].Fij)*deg;
-        Tab_chemin_IDF[iJ].ErrD:=(ErrIDF/(Tab_chemin_IDF[iJ].Fij*cos(Tab_chemin_IDF[iJ].Iij*rad)))*deg;
-        Tab_chemin_IDF[iJ].ErrF:=ErrIDF;
-         *
-         *
-         */
 
         for (size_t idx = 0; idx < mComposanteG.vecG.size() ; ++idx) {
 
             t = DateUtils::convertToAppSettingsFormat(idx*step + mSettings.mTmin);
             curveG.mData.insert(t, mComposanteG.vecG.at(idx));
             // Enveloppe à 95%  https://en.wikipedia.org/wiki/1.96
-         //   curveGSup.mData.insert(t, mComposanteG.vecG.at(idx) + 1.96 * mComposanteG.vecGErr.at(idx));
-          //  curveGInf.mData.insert(t, mComposanteG.vecG.at(idx) - 1.96 * mComposanteG.vecGErr.at(idx));
+            curveGSup.mData.insert(t, mComposanteG.vecG.at(idx) + 1.96 * mComposanteG.vecGErr.at(idx));
+            curveGInf.mData.insert(t, mComposanteG.vecG.at(idx) - 1.96 * mComposanteG.vecGErr.at(idx));
 
             // Enveloppe à 68%
-            curveGSup.mData.insert(t, mComposanteG.vecG.at(idx) + 1. * mComposanteG.vecGErr.at(idx));
-            curveGInf.mData.insert(t, mComposanteG.vecG.at(idx) - 1. * mComposanteG.vecGErr.at(idx));
+            //curveGSup.mData.insert(t, mComposanteG.vecG.at(idx) + 1. * mComposanteG.vecGErr.at(idx));
+            //curveGInf.mData.insert(t, mComposanteG.vecG.at(idx) - 1. * mComposanteG.vecGErr.at(idx));
 
             for (int i = 0; i<curveGChains.size(); ++i) {
                 curveGChains[i].mData.insert(t, mComposanteGChains.at(i).vecG.at(idx));
@@ -226,14 +202,10 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
         double step = mSettings.mStep;
 
         for (size_t idx = 0; idx < mComposanteG.vecG.size() ; ++idx) {
-
             t = DateUtils::convertToAppSettingsFormat(idx*step + mSettings.mTmin);
-
             curveGP.mData.insert(t, mComposanteG.vecGP.at(idx));
-
-
         }
-         mGraph->addCurve(curveGP);
+        mGraph->addCurve(curveGP);
 
     } else if (mCurrentVariable == eGS) {
         GraphCurve curveGS;
@@ -254,7 +226,6 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
 
     mGraph->setTipXLab(tr("t"));
     mGraph->setTipYLab("Y");
-
 
 }
 

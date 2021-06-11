@@ -369,7 +369,7 @@ void CalibrationView::updateGraphs()
             subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
 
-            QMap<type_data, type_data> hpd = create_HPD(subData, thresh);
+            QMap<type_data, type_data> hpd (create_HPD(subData, thresh));
 
 
             GraphCurve hpdCurve;
@@ -404,13 +404,22 @@ void CalibrationView::updateGraphs()
             QString resultsStr;
 
             DensityAnalysis results;
-            results.analysis = analyseFunction(subData);
+            results.funcAnalysis = analyseFunction(subData);
+
 
             if (!subData.isEmpty()) {
-                QVector<double> subRepart = calculRepartition(subData);
 
-                results.quartiles = quartilesForRepartition(subRepart, subData.firstKey(), mSettings.mStep);
-                resultsStr += densityAnalysisToString(results,"<br>", false);
+                resultsStr += FunctionStatToString(results.funcAnalysis, false);
+
+                /* with the calibration we don't need the statistic on the trace*/
+                /*
+                 * QVector<double> subRepart = calculRepartition(subData);
+                 * results.quartiles = quartilesForRepartition(subRepart, subData.firstKey(), mSettings.mStep);
+                 *  results.xmin = subData.firstKey(); // useless
+                 *  results.xmax = subData.lastKey();
+                 *  resultsStr += densityAnalysisToString(results,"<br>", false);
+               */
+
              }
 
             const double realThresh = map_area(hpd) / map_area(subData);

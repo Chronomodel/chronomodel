@@ -58,13 +58,13 @@ public:
         eDefault = 0,   /**<  The classic type of Event with variance */
         eKnown = 1     /**< The Bound type */
     };
-    enum Method{
-        eFixe = -1,  /**<  use with Type==eKnown */
-        eDoubleExp = 0, /**<  The default method */
+ /*   enum Method{
+        eFixe = -1,  //<  use with Type==eKnown
+        eDoubleExp = 0, //<  The default method
         eBoxMuller = 1,
         eMHAdaptGauss = 2,
     };
-
+*/
     Event();
     Event(const Event& event);
     Event& operator=(const Event& event);
@@ -112,7 +112,7 @@ public:
     QString mName; //must be public, to be defined by dialogbox
     QColor mColor;
 
-    Method mMethod;
+ //   Method mMethod;
 
     double mItemX;
     double mItemY;
@@ -158,13 +158,12 @@ public:
     double mYz;
     
     // Valeurs utilisées pour les calculs
-    double mThetaReduced;
+    long double mThetaReduced;
     double mY;
     double mSy;
     double mW;
-    double mWInv;
     
-    MHVariable mVG; // sigma g de l'event (par rapport à g qu'on cherche à estimer)
+    MHVariable mVG; // sigma G de l'event (par rapport à G(t) qu'on cherche à estimer)
     
     // A chaque mise à jour de VG, on doit aussi mettre w à jour :
     void updateW();

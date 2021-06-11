@@ -161,8 +161,8 @@ public:
 
     void unselectedAllInState();
     void updateSelectedEventsColor(const QColor& color);
-    void updateSelectedEventsMethod(Event::Method);
-    void updateSelectedEventsDataMethod(Date::DataMethod method, const QString& pluginId);
+    void updateSelectedEventsMethod(MHVariable::SamplerProposal sp);
+    void updateSelectedEventsDataMethod(MHVariable::SamplerProposal sp, const QString& pluginId);
     void updateAllDataInSelectedEvents(const QHash<QString, QVariant>& groupedAction);
     void selectedEventsFromSelectedPhases();
 

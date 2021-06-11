@@ -41,6 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define SWITCHACTION_H
 
 #include <QWidgetAction>
+#include <QWidget>
 
 class SwitchWidget: public QWidget
 {

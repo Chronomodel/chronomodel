@@ -210,7 +210,7 @@ protected:
 
     void paintEvent(QPaintEvent*);
     void repaintGraph(const bool aAlsoPaintBackground);
-    void enterEvent(QEvent* e);
+    void enterEvent(QEnterEvent* e);
     void leaveEvent(QEvent* e);
     void mouseMoveEvent(QMouseEvent* e);
 

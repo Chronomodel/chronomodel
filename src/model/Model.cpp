@@ -63,8 +63,9 @@ mNumberOfPhases(0),
 mNumberOfEvents(0),
 mNumberOfDates(0),
 mThreshold(0.0),
-mFFTLength(0),
-mBandwidth(0.0)
+mBandwidth(0.0),
+mFFTLength(0)
+
 {
     
 }
@@ -116,7 +117,8 @@ void Model::clear()
 
     mChains.clear();
     mLogModel.clear();
-    mLogMCMC.clear();
+    mLogInit.clear();
+    mLogAdapt.clear();
     mLogResults.clear();
 }
 
@@ -286,14 +288,9 @@ void Model::fromJson(const QJsonObject& json)
                 mPhases[i]->mConstraintsBwd.append(mPhaseConstraints[j]);
             }
         }
-       // int mNumberOfEventsInAllPhases;
-       // int mNumberOfDatesInAllPhases;
-        //mNumberOfEventsInAllPhases += mPhases.at(i)->mEvents.size();
-        //for (int k=0; k<mPhases.at(i)->mEvents.size();++k)
-        //    mNumberOfDatesInAllPhases += mPhases.at(i)->mEvents.at(k)->mDates.size();
 
     }
-    //return model;
+
 }
 
 void Model::setProject( Project * project)
@@ -415,12 +412,29 @@ QJsonObject Model::toJson() const
 }
 
 // Logs
-QString Model::getMCMCLog() const{
-    return mLogMCMC;
-}
 
 QString Model::getModelLog() const{
     return mLogModel;
+}
+
+QString Model::getInitLog() const{
+    QString log;
+    int i = 1;
+    for (auto && chain : mChains) {
+        log +=   line( tr("Elapsed init time %1 for chain %2").arg(DHMS(chain.mInitElapsedTime), QString::number(i)));
+        ++i;
+    }
+    return log + mLogInit;
+}
+
+QString Model::getAdaptLog() const{
+    QString log;
+    int i = 1;
+    for (auto && chain : mChains) {
+        log +=   line( tr("Elapsed adaptation time %1 for chain %2").arg(DHMS(chain.mAdaptElapsedTime), QString::number(i)));
+        ++i;
+    }
+    return log + mLogAdapt;
 }
 
 /**
@@ -429,85 +443,7 @@ QString Model::getModelLog() const{
  */
 void Model::generateModelLog()
 {
-    QString log;
-    // Study period
-    QLocale locale = QLocale();
-    log += line(textBold(textBlack(tr("Prior Study Period : [ %1 : %2 ] %3").arg(locale.toString(mSettings.getTminFormated()), locale.toString(mSettings.getTmaxFormated()), DateUtils::getAppSettingsFormatStr() ))));
-    log += "<br>";
-
-    int i(0);
-    for (auto&& pEvent : mEvents) {
-        if (pEvent->type() == Event::eKnown) {
-            log += line(textRed(tr("Bound ( %1 / %2 ) : %3 ( %4  phases, %5 const. back., %6 const.fwd.)").arg(QString::number(i+1), QString::number(mEvents.size()), pEvent->mName,
-                                                                                                               QString::number(pEvent->mPhases.size()),
-                                                                                                               QString::number(pEvent->mConstraintsBwd.size()),
-                                                                                                               QString::number(pEvent->mConstraintsFwd.size()))));
-        } else {
-            log += line(textBlue(tr("Event ( %1 / %2 ) : %3 ( %4 data, %5 phases, %6 const. back., %7 const. fwd.)").arg(QString::number(i+1), QString::number(mEvents.size()), pEvent->mName,
-                                                                                                                         QString::number(pEvent->mDates.size()),
-                                                                                                                         QString::number(pEvent->mPhases.size()),
-                                                                                                                         QString::number(pEvent->mConstraintsBwd.size()),
-                                                                                                                         QString::number(pEvent->mConstraintsFwd.size()))
-                                 + "<br>" + tr("- Method : %1").arg(ModelUtilities::getEventMethodText(pEvent->mMethod))));
-        }
-
-        int j(0);
-        for (auto&& date : pEvent->mDates) {
-            log += "<br>";
-            log += line(textBlack(tr("Data ( %1 / %2 ) : %3").arg(QString::number(j+1), QString::number(pEvent->mDates.size()), date.mName)
-                                  + "<br>" + tr("- Type : %1").arg(date.mPlugin->getName())
-                                  + "<br>" + tr("- Method : %1").arg(ModelUtilities::getDataMethodText(date.mMethod))
-                                  + "<br>" + tr("- Params : %1").arg(date.getDesc())));
-            ++j;
-        }
-        log += "<hr>";
-        log += "<br>";
-        ++i;
-    }
-
-    i = 0;
-    for (auto &&pPhase : mPhases) {
-        log += line(textPurple(tr("Phase ( %1 / %2 ) : %3 ( %4 events, %5 const. back., %6 const. fwd.)").arg(QString::number(i+1), QString::number(mPhases.size()), pPhase->mName,
-                                                                                                              QString::number(pPhase->mEvents.size()),
-                                                                                                              QString::number(pPhase->mConstraintsBwd.size()),
-                                                                                                              QString::number(pPhase->mConstraintsFwd.size()))
-                               + "<br>" + tr("- Type : %1").arg(pPhase->getTauTypeText())));
-        log += "<br>";
-
-        for (auto &&pEvent : pPhase->mEvents)
-            log += line(textBlue(tr("Event : %1").arg(pEvent->mName)));
-
-        log += "<hr>";
-        log += "<br>";
-        ++i;
-    }
-
-   // i = 0;
-    for (auto&& pPhaseConst : mPhaseConstraints) {
-        log += "<hr>";
-        log += line(textBold(textGreen( QObject::tr("Succession from %1 to %2").arg(pPhaseConst->mPhaseFrom->mName, pPhaseConst->mPhaseTo->mName))));
-
-        switch(pPhaseConst->mGammaType) {
-            case PhaseConstraint::eGammaFixed :
-                log += line(textBold(textGreen( QObject::tr("Min Hiatus fixed = %1").arg(pPhaseConst->mGammaFixed))));
-                break;
-            case PhaseConstraint::eGammaUnknown :
-                log += line(textBold(textGreen( QObject::tr("Min Hiatus unknown") )));
-                break;
-            case PhaseConstraint::eGammaRange : //no longer used
-                 log += line(textBold(textGreen( QObject::tr("Min Hiatus between %1 and %2").arg(pPhaseConst->mGammaMin, pPhaseConst->mGammaMax))));
-                break;
-            default:
-                log += "Hiatus undefined -> ERROR";
-            break;
-        }
-
-        log += "<hr>";
-        log += "<br>";
-    }
-
-    mLogModel = log;
-
+    mLogModel = ModelUtilities::modelDescriptionHTML(static_cast<ModelChronocurve*>(this));
 }
 
 QString Model::getResultsLog() const{
@@ -517,6 +453,11 @@ QString Model::getResultsLog() const{
 void Model::generateResultsLog()
 {
     QString log;
+    int i = 1;
+    for (auto && chain : mChains) {
+        log +=   line( tr("Elapsed acquisition time %1 for chain %2").arg(DHMS(chain.mAcquisitionElapsedTime), QString::number(i)));
+        ++i;
+    }
 
     for (auto &&pPhase : mPhases) {
         log += ModelUtilities::phaseResultsHTML(pPhase);
@@ -602,8 +543,8 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
 
     int runSize (0);
 
-    for (auto& ch :mChains)
-        runSize += ch.mNumRunIter / ch.mThinningInterval;
+    for (auto& chain :mChains)
+        runSize += chain.mRealyAccepted; //ch.mIterPerAquisition / ch.mThinningInterval;
 
     QStringList headers;
     headers << "iter";
@@ -615,8 +556,8 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
 
     int shift (0);
     for (int i = 0; i < mChains.size(); ++i) {
-        int burnAdaptSize = 1 + mChains.at(i).mNumBurnIter + (mChains.at(i).mBatchIndex * mChains.at(i).mNumBatchIter);
-        int runSize = mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
+        int burnAdaptSize = 1 + mChains.at(i).mIterPerBurn + (mChains.at(i).mBatchIndex * mChains.at(i).mIterPerBatch);
+        int runSize = mChains.at(i).mRealyAccepted; //mChains.at(i).mIterPerAquisition / mChains.at(i).mThinningInterval;
 
         for (int j = burnAdaptSize; j<burnAdaptSize + runSize; ++j) {
             QStringList l;
@@ -658,7 +599,7 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
     int runSize (0);
 
     for (auto& chain : mChains)
-        runSize += chain.mNumRunIter / chain.mThinningInterval;
+        runSize += chain.mRealyAccepted; //chain.mIterPerAquisition / chain.mThinningInterval;
 
     QStringList headers;
     headers << "iter" << phase->mName + " Begin" << phase->mName + " End";
@@ -670,8 +611,8 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
     int shift (0);
 
     for (ChainSpecs& chain : mChains) {
-        int burnAdaptSize = 1 + chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);
-        int runSize = chain.mNumRunIter / chain.mThinningInterval;
+        int burnAdaptSize = 1 + chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
+        int runSize = chain.mRealyAccepted; //chain.mIterPerAquisition / chain.mThinningInterval;
 
         for (int j = burnAdaptSize; j < (burnAdaptSize + runSize); ++j) {
             QStringList l;
@@ -708,7 +649,7 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
 
     int runSize = 0;
     for (auto& chain : mChains)
-        runSize += chain.mNumRunIter / chain.mThinningInterval;
+        runSize += chain.mRealyAccepted; //chain.mIterPerAquisition / chain.mThinningInterval;
 
 
     QStringList headers;
@@ -720,8 +661,8 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
 
     int shift (0);
     for (auto& chain : mChains)  {
-        const int burnAdaptSize = 1+ chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);
-        const int runSize = chain.mNumRunIter / chain.mThinningInterval;
+        const int burnAdaptSize = 1+ chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
+        const int runSize = chain.mRealyAccepted; //chain.mIterPerAquisition / chain.mThinningInterval;
 
         for (int j = burnAdaptSize; j < burnAdaptSize + runSize; ++j) {
             QStringList l;
@@ -766,7 +707,7 @@ bool Model::isValid()
             throw QObject::tr("The phase \" %1 \" must contain at least 1 event").arg(mPhases.at(i)->mName);
     }
 
-    // 4 - Pas de circularité sur les contraintes de faits
+    // 4 - Pas de circularité sur les contraintes des Event
     QVector<QVector<Event*> > eventBranches;
     try {
         eventBranches = ModelUtilities::getAllEventsBranches(mEvents);
@@ -783,7 +724,7 @@ bool Model::isValid()
         throw &error;
     }
 
-    // 7 - Un fait ne paut pas appartenir à 2 phases en contrainte
+    // 7 - Un Event ne peut pas appartenir à 2 phases en contrainte
     for (int i = 0; i < phaseBranches.size(); ++i) {
         QVector<Event*> branchEvents;
         for (int j = 0; j < phaseBranches.at(i).size(); ++j) {
@@ -797,7 +738,7 @@ bool Model::isValid()
         }
     }
 
-    // 8 - Bounds : verifier cohérence des bornes en fonction des contraintes de faits (page 2)
+    // 8 - Bounds : vérifier cohérence des bornes en fonction des contraintes de Events (page 2)
     //  => Modifier les bornes des intervalles des bounds !! (juste dans le modèle servant pour le calcul)
     for (int i=0; i<eventBranches.size(); ++i) {
         for (int j=0; j<eventBranches.at(i).size(); ++j) {
@@ -1163,6 +1104,7 @@ void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftL
 
     for (auto&& event : mEvents) {
      //   if (event->mTheta.HistoWithParameter(fftLen, bandwidth, tmin, tmax) == false) {
+       // event->mTheta.updateFormatedTrace();
                 event->mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 
                 for (auto&& d : event->mDates)
@@ -1423,7 +1365,7 @@ void Model::generateTempo()
     /// We want an interval bigger than the maximun finded value, we need a point on tmin, tmax and tmax+deltat
     const int nbPts (nbStep + 1);
 
-    const int totalIter = int (std::ceil(mChains[0].mNumRunIter / mChains[0].mThinningInterval));
+   // const int totalIter = mChains.at(0).mRealyAccepted; //int (std::ceil(mChains[0].mIterPerAquisition / mChains[0].mThinningInterval));
 
     // create Empty containers
     QVector<int> N ;  // Tempo
@@ -1459,6 +1401,7 @@ void Model::generateTempo()
         for (auto&& ev : phase->mEvents)
             listTrace.append(ev->mTheta.fullRunRawTrace(mChains));
 
+const int totalIter = listTrace.size();
 
         /// Look for the maximum span containing values \f$ x=2 \f$
         tmin = mSettings.mTmax;
@@ -1914,12 +1857,13 @@ void Model::saveToFile(const QString& fileName)
             out << quint32 (ch.mBurnIterIndex);
             out << quint32 (ch.mMaxBatchs);
             out << ch.mMixingLevel;
-            out << quint32 (ch.mNumBatchIter);
-            out << quint32 (ch.mNumBurnIter);
-            out << quint32 (ch.mNumRunIter);
-            out << quint32 (ch.mRunIterIndex);
+            out << quint32 (ch.mIterPerBatch);
+            out << quint32 (ch.mIterPerBurn);
+            out << quint32 (ch.mIterPerAquisition);
+            out << quint32 (ch.mAquisitionIterIndex);
             out << qint32 (ch.mSeed);
             out << quint32 (ch.mThinningInterval);
+            out << quint32 (ch.mRealyAccepted);
             out << quint32 (ch.mTotalIter);
         }
         // -----------------------------------------------------
@@ -1975,7 +1919,8 @@ void Model::saveToFile(const QString& fileName)
             }
         }
         out << mLogModel;
-        out << mLogMCMC;
+        out << mLogInit;
+        out << mLogAdapt;
         out << mLogResults;
 
         file.close();
@@ -2056,12 +2001,13 @@ void Model::restoreFromFile(const QString& fileName)
         in >> ch.mBurnIterIndex;
         in >> ch.mMaxBatchs;
         in >> ch.mMixingLevel;
-        in >> ch.mNumBatchIter;
-        in >> ch.mNumBurnIter;
-        in >> ch.mNumRunIter;
-        in >> ch.mRunIterIndex;
+        in >> ch.mIterPerBatch;
+        in >> ch.mIterPerBurn;
+        in >> ch.mIterPerAquisition;
+        in >> ch.mAquisitionIterIndex;
         in >> ch.mSeed;
         in >> ch.mThinningInterval;
+        in >> ch.mRealyAccepted;
         in >> ch.mTotalIter;
         mChains.append(ch);
     }
@@ -2153,7 +2099,8 @@ void Model::restoreFromFile(const QString& fileName)
                 }
          }
         in >> mLogModel;
-        in >> mLogMCMC;
+        in >> mLogInit;
+        in >> mLogAdapt;
         in >> mLogResults;
 
         generateCorrelations(mChains);

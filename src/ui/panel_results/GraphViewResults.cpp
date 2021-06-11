@@ -301,7 +301,7 @@ void GraphViewResults::saveGraphData() const
                     if (mShowChainList.at(i)) chainIdx = i;
 
                 if (chainIdx != -1) // We add 1 for the init
-                    offset = 1 + mChains.at(chainIdx).mNumBurnIter + mChains.at(chainIdx).mBatchIndex * mChains.at(chainIdx).mNumBatchIter;
+                    offset = 1 + mChains.at(chainIdx).mIterPerBurn + mChains.at(chainIdx).mBatchIndex * mChains.at(chainIdx).mIterPerBatch;
 
                 mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, offset);
         }
@@ -590,6 +590,7 @@ void GraphViewResults::generateAcceptCurves(const QList<ChainSpecs> &chains,
         curve.mIsHisto = false;
         mGraph->addCurve(curve);
     }
+    mGraph->addCurve(generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
 }
 
 void GraphViewResults::generateCorrelCurves(const QList<ChainSpecs> &chains,

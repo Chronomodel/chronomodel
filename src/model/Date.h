@@ -89,12 +89,12 @@ public:
         eSingleDate = 0,
         eCombination = 1
     };
-    enum DataMethod{
+/*    enum DataMethod{
         eMHSymetric = 0,
         eInversion = 1,
         eMHSymGaussAdapt = 2
     };
-
+*/
     enum DeltaType{
         eDeltaNone = -1,
         eDeltaFixed = 0,
@@ -116,7 +116,7 @@ public:
     QJsonObject mData;
     OriginType mOrigin;
     PluginAbstract* mPlugin;
-    DataMethod mMethod;
+    //DataMethod mMethod;
     bool mIsValid;
 
     DeltaType mDeltaType;

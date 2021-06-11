@@ -59,12 +59,19 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 // -----------------------------------------------------------------
 
 /**
- * @brief Product a FunctionAnalysis from a QMap
+ * @brief Product a FunctionStat from a QMap
  * @todo Handle empty function case and null density case (pi = 0)
+ * @todo use Welford's online algorithm
+ * https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+ *
+ * // Calculate the variance based on equations (15) and (16) on
+            // page 216 of "The Art of Computer Programming, Volume 2",
+            // Second Edition. Donald E. Knuth.  Addison-Wesley
+            // Publishing Company, 1973.
 */
-FunctionAnalysis analyseFunction(const QMap<type_data, type_data> &aFunction)
+FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
 {
-    FunctionAnalysis result;
+    FunctionStat result;
     if (aFunction.isEmpty()) {
         result.max = (type_data)0.;
         result.mode = (type_data)0.;
@@ -106,7 +113,7 @@ FunctionAnalysis analyseFunction(const QMap<type_data, type_data> &aFunction)
         prevY = y;
     }
 
-    //FunctionAnalysis result;
+    //FunctionStat result;
     result.max = max;
     result.mode = mode;
     result.mean = (type_data)0.;
@@ -144,6 +151,40 @@ type_data dataStd(const QVector<type_data> &data)
     return sqrt(variance);
 }
 
+
+TraceStat traceStatistic(const QVector<type_data>& trace)
+{
+    TraceStat result;
+    int n=0;
+    double mean = 0;
+    double variance = 0;
+    double oldM, oldS;
+    auto minMax = std::minmax_element(trace.begin(), trace.end());
+
+    for (auto x : trace) {
+        n++;
+
+        // See Knuth TAOCP vol 2, 3rd edition, page 232
+        if (n == 1) {
+            oldM = mean = x;
+            oldS = 0.0;
+        } else  {
+            mean = oldM + (x - oldM)/n;
+            variance = oldS + (x - oldM)*(x - mean);
+
+            // set up for next iteration
+            oldM = mean;
+            oldS = variance;
+        }
+    }
+    result.min = *minMax.first;
+    result.max = *minMax.second;
+    result.mean = mean;
+    result.std = sqrt(variance/(n - 1));
+    result.quartiles = quartilesForTrace(trace);
+    return result;
+}
+
 double shrinkageUniform(const double so2)
 {
     //double u = Generator::randomUniform();
@@ -152,10 +193,10 @@ double shrinkageUniform(const double so2)
 }
 
 /**
- * @brief Return a text from a FunctionAnalysis
- * @see FunctionAnalysis
+ * @brief Return a text from a FunctionStat
+ * @see FunctionStat
  */
-QString functionAnalysisToString(const FunctionAnalysis& analysis, const bool forCSV)
+QString FunctionStatToString(const FunctionStat& analysis, const bool forCSV)
 {
     QString result;
 
@@ -184,16 +225,20 @@ QString functionAnalysisToString(const FunctionAnalysis& analysis, const bool fo
 QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& nl, const bool forCSV)
 {
     QString result (QObject::tr("No data"));
-    if (analysis.analysis.stddev>=0.) {
-        result = functionAnalysisToString(analysis.analysis, forCSV) + nl;
+    if (analysis.funcAnalysis.stddev>=0.) {
+        result = FunctionStatToString(analysis.funcAnalysis, forCSV) + nl;
         if (forCSV){
             result += QObject::tr("Q1 = %1  ;  Q2 (Median) = %2  ;  Q3 = %3 ").arg(stringForCSV(analysis.quartiles.Q1),
                                                                                 stringForCSV(analysis.quartiles.Q2),
                                                                                 stringForCSV(analysis.quartiles.Q3));
+            result += nl + QObject::tr("min = %1  ;  max  = %2 ").arg(stringForCSV(analysis.xmin),
+                                                                                stringForCSV(analysis.xmax));
         } else {
             result += QObject::tr("Q1 = %1  ;  Q2 (Median) = %2  ;  Q3 = %3 ").arg(stringForLocal(analysis.quartiles.Q1),
                                                                                 stringForLocal(analysis.quartiles.Q2),
                                                                                 stringForLocal(analysis.quartiles.Q3));
+            result += nl + QObject::tr("min = %1  ;  max  = %2 ").arg(stringForLocal(analysis.xmin),
+                                                                                stringForLocal(analysis.xmax));
         }
 
     }
@@ -206,37 +251,6 @@ Quartiles quartilesForTrace(const QVector<type_data> &trace)
     Q_ASSERT(&trace);
     Quartiles quartiles = quartilesType(trace, 8, 0.25);
     return quartiles;
-
-    /* Old function
-    Quartiles quartiles;
-    const int n = trace.size();
-    if (n<5) {
-        quartiles.Q1 = 0.;
-        quartiles.Q2 = 0.;
-        quartiles.Q3 = 0.;
-        return quartiles;
-    }
-
-    QVector<type_data> sorted (trace);
-    std::sort(sorted.begin(),sorted.end());
-
-    const int q1index = (int) ceil(n * 0.25);
-    const int q3index = (int) ceil(n * 0.75);
-
-    quartiles.Q1 = sorted.at(q1index);
-    quartiles.Q3 = sorted.at(q3index);
-
-    if (n % 2 == 0) {
-        const int q2indexLow = n / 2;
-        const int q2indexUp = q2indexLow + 1;
-
-        quartiles.Q2 = sorted.at(q2indexLow) + (sorted.at(q2indexUp) - sorted.at(q2indexLow)) / 2.;
-    } else {
-        const int q2index = (int)ceil(n * 0.5);
-        quartiles.Q2 = sorted.at(q2index);
-    }
-    return quartiles;
-    */
 }
 
 QVector<double> calculRepartition (const QVector<double>& calib)
@@ -1226,7 +1240,6 @@ std::vector<std::vector<long double>> multiMatParMat(const std::vector<std::vect
             sum = 0;
             for (int k = k1; k <= k2; ++k) {
                 sum += (*(itMat1 + k)) * matrix2.at(k).at(j);
-                //sum += matrix1.at(i).at(k) * matrix2.at(k).at(j);
             }
             result[i][j] = sum;
         }
@@ -1271,6 +1284,42 @@ std::vector<std::vector<long double>> inverseMatSym0(const std::vector<std::vect
 **** Attention : il y a une faute dans le bouquin de Green...!      ****
 **/
 // inverse_Mat_sym dans RenCurve
+std::vector<std::vector<long double>> inverseMatSym_origin(const std::vector<std::vector<long double> > &matrixLE,  const std::vector<long double> &matrixDE, const int nbBandes, const int shift)
+{
+    int dim = matrixLE.size();
+    std::vector<std::vector<long double>> matInv = initLongMatrix(dim, dim);//initMatrice(dim, dim);
+    int bande = floor((nbBandes-1)/2);
+
+    matInv[dim-1-shift][dim-1-shift] = 1. / matrixDE[dim-1-shift];
+    matInv[dim-2-shift][dim-1-shift] = -matrixLE[dim-1-shift][dim-2-shift] * matInv[dim-1-shift][dim-1-shift];
+    matInv[dim-2-shift][dim-2-shift] = (1. / matrixDE[dim-2-shift]) - matrixLE[dim-1-shift][dim-2-shift] * matInv[dim-2-shift][dim-1-shift];
+
+    // shift : décalage qui permet d'éliminer les premières et dernières lignes et colonnes
+    for (int i=dim-3-shift; i>=shift; --i) {
+        matInv[i][i+2] = -matrixLE[i+1][i] * matInv[i+1][i+2] - matrixLE[i+2][i] * matInv[i+2][i+2];
+        matInv[i][i+1] = -matrixLE[i+1][i] * matInv[i+1][i+1] - matrixLE[i+2][i] * matInv[i+1][i+2];
+        matInv[i][i] = (1. / matrixDE[i]) - matrixLE[i+1][i] * matInv[i][i+1] - matrixLE[i+2][i] * matInv[i][i+2];
+
+        if (bande >= 3)  {
+            for (int k=3; k<=bande; ++k) {
+                if (i+k < (dim - shift))  {
+                    matInv[i][i+k] = -matrixLE[i+1][i] * matInv[i+1][i+k] - matrixLE[i+2][i] * matInv[i+2][i+k];
+                }
+            }
+        }
+    }
+
+    for (int i=shift; i<dim-shift; ++i)  {
+        for (int j=i+1; j<=i+bande; ++j)  {
+            if (j < (dim-shift))   {
+                matInv[j][i] = matInv[i][j];
+            }
+        }
+    }
+
+    return matInv;
+}
+
 std::vector<std::vector<long double>> inverseMatSym_old(const std::vector<std::vector<long double>>& matrixLE, const std::vector<long double>& matrixDE, const int nbBandes, const int shift)
 {
     const int dim = matrixLE.size();
@@ -1672,8 +1721,8 @@ try {
 */
         matD[i] = matrix.at(i).at(i) - sum; // doit être positif
         if (matD.at(i) < 0) {
-            qDebug() << "Function::decompositionCholesky : matD <0 change to 1E-20";
-            matD[i] = 1e-20;
+            qDebug() << "Function::decompositionCholesky : matD <0 change to 1E-200";
+            matD[i] = 1e-200;
            // throw "Function::decompositionCholesky() matD <0";
         }
     }

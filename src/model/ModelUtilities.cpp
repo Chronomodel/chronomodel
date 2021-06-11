@@ -36,102 +36,24 @@ same conditions as regards security.
 The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
-
 #include "ModelUtilities.h"
 #include "EventConstraint.h"
 #include "PhaseConstraint.h"
-#include "../PluginAbstract.h"
+#include "ModelChronocurve.h"
+#include "Project.h"
+#include "EventKnown.h"
+#include "PluginAbstract.h"
 #include "QtUtilities.h"
 #include "Generator.h"
 
 #include <QObject>
 #include <utility>
 
-#define MHAdaptGaussStr QObject::tr("MH : proposal = adapt. Gaussian random walk")
-#define BoxMullerStr QObject::tr("AR : proposal = Gaussian")
-#define DoubleExpStr QObject::tr("AR : proposal = Double-Exponential")
-
-#define MHIndependantStr QObject::tr("MH : proposal = prior distribution")
-#define InversionStr QObject::tr("MH : proposal = distribution of calibrated date")
-#define MHSymGaussAdaptStr QObject::tr("MH : proposal = adapt. Gaussian random walk")
 
 
 bool sortEvents(Event* e1, Event* e2) {return (e1->mItemY < e2->mItemY);}
 bool sortPhases(Phase* p1, Phase* p2) {return (p1->mItemY < p2->mItemY);}
 
-Event::Method ModelUtilities::getEventMethodFromText(const QString& text)
-{
-    if (text == MHAdaptGaussStr)
-        return Event::eMHAdaptGauss;
-
-    else if (text == BoxMullerStr)
-        return Event::eBoxMuller;
-
-    else if (text == DoubleExpStr)
-        return Event::eDoubleExp;
-
-    else  {
-        // ouch... what to do ???
-        return Event::eDoubleExp;
-    }
-}
-
-QString ModelUtilities::getEventMethodText(const Event::Method method)
-{
-    switch (method) {
-        case Event::eMHAdaptGauss:      
-            return MHAdaptGaussStr;
-            break;
-
-        case Event::eBoxMuller:
-            return BoxMullerStr;
-            break;
-
-        case Event::eDoubleExp:
-            return DoubleExpStr;
-            break;
-
-        default:
-            return QObject::tr("Unknown");
-            break;
-
-    }
-}
-
-Date::DataMethod ModelUtilities::getDataMethodFromText(const QString& text)
-{
-    if (text == MHIndependantStr)
-        return Date::eMHSymetric;
-
-    else if (text == InversionStr)
-        return Date::eInversion;
-
-    else if (text == MHSymGaussAdaptStr)
-        return Date::eMHSymGaussAdapt;
-
-    else {
-        // ouch... what to do ???
-        return Date::eMHSymGaussAdapt;
-    }
-}
-
-QString ModelUtilities::getDataMethodText(const Date::DataMethod method)
-{
-    switch (method) {
-        case Date::eMHSymetric:
-            return MHIndependantStr;
-            break;
-        case Date::eInversion:
-            return InversionStr;
-            break;
-        case Date::eMHSymGaussAdapt:
-            return MHSymGaussAdaptStr;
-            break;
-        default:
-            return QObject::tr("Unknown");
-            break;
-    }
-}
 
 // Obsolete , is replaced by the Date::getWiggleDesc()
 QString ModelUtilities::getDeltaText(const Date& date)
@@ -405,6 +327,7 @@ QString ModelUtilities::dateResultsText(const Date* d, const Model* model, const
     const QString nl = "\r";
 
     text += QObject::tr("Data : %1").arg(d->mName) + nl + nl;
+    text += QObject::tr("Posterior calib. date") + nl;
     text += d->mTheta.resultsString(nl, "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, forCSV) ;
 
     if (model) {
@@ -441,14 +364,25 @@ QString ModelUtilities::eventResultsText(const Event* e, bool withDates, const M
 
     if (e->mType == Event::eKnown) {
         text += QObject::tr("Bound : %1").arg(e->mName) + nl;
+        text += QObject::tr("Posterior Bound Date") + nl;
         text += e->mTheta.resultsString( nl, "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, forCSV);
 
+        if (!e->mVG.mAllAccepts->isEmpty()) {
+           text +=  nl;
+           text += QObject::tr("Posterior Std G") + nl;
+           text += e->mVG.resultsString("<br>", "", nullptr, nullptr, false) + nl;
+       }
         text += nl+"----------------------"+nl;
     }
     else  {
         text += QObject::tr("Event : %1").arg(e->mName) + nl;
+        text += QObject::tr("Posterior Event Date") + nl;
         text += e->mTheta.resultsString( nl,"", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, forCSV);
-
+        if (!e->mVG.mAllAccepts->isEmpty()) {
+           text +=  nl;
+           text += QObject::tr("Posterior Event Std G") + nl;
+           text += e->mVG.resultsString("<br>", "", nullptr, nullptr, false) + nl;
+       }
         if (withDates) {
             text += nl + nl;
             text += "----------------------"+nl;
@@ -508,7 +442,7 @@ QString ModelUtilities::tempoResultsText(const Phase* p, const bool forCSV)
 
     text += QObject::tr("Phase : %1").arg(p->mName) + nl + nl;
 
-    text += QObject::tr("Duration") + nl;
+    text += QObject::tr("Duration (posterior distrib.)") + nl;
     text += p->mDuration.resultsString(nl, QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr , forCSV);
 
     return text;
@@ -519,70 +453,571 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p, const bo
     Q_ASSERT(p);
     QString text;
     const QString nl = "\r";
+    text += nl;
+    text += textGreen(QObject::tr("Succession : from %1 to %2").arg(p->mPhaseFrom->mName, p->mPhaseTo->mName));
+
+    switch(p->mGammaType) {
+    case PhaseConstraint::eGammaFixed :
+        text += QObject::tr("Min Hiatus fixed = %1").arg(p->mGammaFixed);
+        break;
+    case PhaseConstraint::eGammaUnknown :
+        text += QObject::tr("Min Hiatus unknown") ;
+        break;
+    case PhaseConstraint::eGammaRange : // no longer used
+        text += QObject::tr("Min Hiatus between %1 and %2").arg(p->mGammaMin, p->mGammaMax);
+        break;
+    default:
+
+        break;
+    }
+
+    if (p->mTransitionRange != QPair<double,double>()) {
         text += nl;
-        text += textGreen(QObject::tr("Succession : from %1 to %2").arg(p->mPhaseFrom->mName, p->mPhaseTo->mName));
+        // we suppose it's the same mThreshohdUsed than alpha
+        if (forCSV) {
+            const QString result = QObject::tr("Transition Range") + QString(" (%1 %) : [ %2 ; %3 ] %4").arg(stringForCSV(p->mPhaseFrom->mAlpha.mThresholdUsed),
+                                                                                                                       stringForCSV(p->getFormatedTransitionRange().first),
+                                                                                                                       stringForCSV(p->getFormatedTransitionRange().second),
+                                                                                                                       DateUtils::getAppSettingsFormatStr());
 
-        switch(p->mGammaType) {
-            case PhaseConstraint::eGammaFixed :
-                text += textGreen(QObject::tr("Min Hiatus fixed = %1").arg(p->mGammaFixed));
-                break;
-            case PhaseConstraint::eGammaUnknown :
-                text += textGreen(QObject::tr("Min Hiatus unknown")) ;
-                break;
-            case PhaseConstraint::eGammaRange : // no longer used
-                 text += textGreen(QObject::tr("Min Hiatus between %1 and %2").arg(p->mGammaMin, p->mGammaMax));
-                 break;
-            default:
+            text += result + nl;
+        } else {
+            const QString result = QObject::tr("Transition Range") + QString(" (%1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(p->mPhaseFrom->mAlpha.mThresholdUsed),
+                                                                                                                       stringForLocal(p->getFormatedTransitionRange().first),
+                                                                                                                       stringForLocal(p->getFormatedTransitionRange().second),
+                                                                                                                       DateUtils::getAppSettingsFormatStr());
 
-            break;
+            text += result + nl;
         }
 
-        if (p->mTransitionRange != QPair<double,double>()) {
-            text += nl;
-            // we suppose it's the same mThreshohdUsed than alpha
-            if (forCSV) {
-                const QString result = textGreen(QObject::tr("Transition Range") + QString(" (%1 %) : [ %2 ; %3 ] %4").arg(stringForCSV(p->mPhaseFrom->mAlpha.mThresholdUsed),
-                                                                                                   stringForCSV(p->getFormatedTransitionRange().first),
-                                                                                                   stringForCSV(p->getFormatedTransitionRange().second),
-                                                                                                   DateUtils::getAppSettingsFormatStr()));
+    }
 
-                text += result + nl;
-            } else {
-                const QString result = textGreen(QObject::tr("Transition Range") + QString(" (%1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(p->mPhaseFrom->mAlpha.mThresholdUsed),
-                                                                                                   stringForLocal(p->getFormatedTransitionRange().first),
-                                                                                                   stringForLocal(p->getFormatedTransitionRange().second),
-                                                                                                   DateUtils::getAppSettingsFormatStr()));
 
-                text += result + nl;
-            }
+    if (p->mGapRange != QPair<double,double>()) {
+        text += nl;
+        if (std::isinf(p->getFormatedGapRange().first) || std::isinf(p->getFormatedGapRange().second))
+           text += QObject::tr("No Gap") ;
 
+        else
+        if (forCSV) {
+            const QString result = QObject::tr("Gap Range") + QString(" ( %1 ) : [ %2 ; %3 ]").arg(stringForCSV(p->mPhaseFrom->mAlpha.mThresholdUsed),
+                                                                                                             stringForCSV(p->getFormatedGapRange().first),
+                                                                                                             stringForCSV(p->getFormatedGapRange().second) );
+
+            text += result + nl;
+        } else {
+            const QString result = QObject::tr("Gap Range") + QString(" ( %1 ) : [ %2 ; %3 ]").arg(stringForLocal(p->mPhaseFrom->mAlpha.mThresholdUsed),
+                                                                                                             stringForLocal(p->getFormatedGapRange().first),
+                                                                                                             stringForLocal(p->getFormatedGapRange().second) );
+
+            text += result + nl;
         }
 
 
-        if (p->mGapRange != QPair<double,double>()) {
-            text += nl;
-
-            if (forCSV) {
-                const QString result = textGreen(QObject::tr("Gap Range") + QString(" ( %1 ) : [ %2 ; %3 ]").arg(stringForCSV(p->mPhaseFrom->mAlpha.mThresholdUsed),
-                                                                                         stringForCSV(p->getFormatedGapRange().first),
-                                                                                         stringForCSV(p->getFormatedGapRange().second) ));
-
-                text += result + nl;
-            } else {
-                const QString result = textGreen(QObject::tr("Gap Range") + QString(" ( %1 ) : [ %2 ; %3 ]").arg(stringForLocal(p->mPhaseFrom->mAlpha.mThresholdUsed),
-                                                                                         stringForLocal(p->getFormatedGapRange().first),
-                                                                                         stringForLocal(p->getFormatedGapRange().second) ));
-
-                text += result + nl;
-            }
-
-
-        }
+    }
     return text;
 }
 
+QString ModelUtilities::curveResultsText(const ModelChronocurve* model)
+{
+    Q_ASSERT(model);
+
+    QString text;
+    const QString nl = "\r";
+
+    text += QObject::tr("Curve") + nl;
+  //  text += QObject::tr("- Smoothing Acceptance Rate : %1 %").arg( stringForLocal(100. * model->mLambdaSpline.getCurrentAcceptRate())) + nl;
+    text += QObject::tr("Stat on the log10 of Lambda Spline") + nl;
+    text += model->mLambdaSpline.resultsString("<br>", "", nullptr, nullptr, false);
+
+    if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeProfondeur) {
+        const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval) * model->mChains.size();
+
+        int i = 0;
+        for (auto ch : model->mChains) {
+            const unsigned positvIter= ch.mRealyAccepted;//floor(ch.mIterPerAquisition / ch.mThinningInterval);
+            const float rate = (float)positvIter/(float)requiredCurve * 100.;
+            text += nl + QObject::tr("- Accepted Curves for Chain %1 : %2 / %3 = %4 % ").
+                                  arg(QString::number(++i), QString::number(positvIter),
+                                      QString::number(requiredCurve), stringForLocal(rate) ) ;
+
+        }
+    }
+
+    return text;
+}
+
+// HTML Output
+QString ModelUtilities::modelDescriptionHTML(const ModelChronocurve* model)
+{
+    bool curveModel = model->mProject->isChronocurve();
+
+    QString log;
+    // Study period
+    QLocale locale = QLocale();
+    log += line(textBold(textBlack(QObject::tr("Prior Study Period : [ %1 : %2 ] %3").arg(locale.toString(model->mSettings.getTminFormated()), locale.toString(model->mSettings.getTmaxFormated()), DateUtils::getAppSettingsFormatStr() ))));
+    log += "<hr>";
+
+    int i(0);
+    for (auto&& pEvent : model->mEvents) {
+        if (pEvent->type() == Event::eKnown) {
+            log += line(textRed(QObject::tr("Bound ( %1 / %2 ) : %3 ( %4  phases,  %5 const. back.,  %6 const.fwd.)").arg(QString::number(i+1), QString::number(model->mEvents.size()), pEvent->mName,
+                                                                                                               QString::number(pEvent->mPhases.size()),
+                                                                                                               QString::number(pEvent->mConstraintsBwd.size()),
+                                                                                                               QString::number(pEvent->mConstraintsFwd.size()))));
+        } else {
+            log += line(textBlue(QObject::tr("Event ( %1 / %2 ) : %3 ( %4 data, %5 phases,  %6 const. back.,  %7 const. fwd.)").arg(QString::number(i+1), QString::number(model->mEvents.size()), pEvent->mName,
+                                                                                                                         QString::number(pEvent->mDates.size()),
+                                                                                                                         QString::number(pEvent->mPhases.size()),
+                                                                                                                         QString::number(pEvent->mConstraintsBwd.size()),
+                                                                                                                         QString::number(pEvent->mConstraintsFwd.size()))
+                                 + "<br>" + QObject::tr("- Method : %1").arg(MHVariable::getSamplerProposalText(pEvent->mTheta.mSamplerProposal))));
+        }
+
+        if (curveModel) {
+            if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel) {
+                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
+                log += line(textGreen(QObject::tr("- Declination : %1").arg(stringForLocal(pEvent->mYDec))));
+                log += line(textGreen(QObject::tr("- Field : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
+
+            } else if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D) {
+                log += line(textGreen(QObject::tr("- X : %1 ±  %2").arg(stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
+                log += line(textGreen(QObject::tr("- Y : %1").arg(stringForLocal(pEvent->mYDec))));
+                log += line(textGreen(QObject::tr("- Z : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
+
+            } else if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique) {
+                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
+                log += line(textGreen(QObject::tr("- Declination : %1").arg(stringForLocal(pEvent->mYDec))));
+
+            }  else  if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeProfondeur) {
+                log += line(textGreen(QObject::tr("- Depth : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
+
+            } else if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeIntensite) {
+                log += line(textGreen(QObject::tr("- Field : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
+
+            } else if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeInclinaison) {
+                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
+
+            } else if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDeclinaison) {
+                log += line(textGreen(QObject::tr("- Declination : %1 ; Inclination %2 ±  %3").arg(stringForLocal(pEvent->mYDec), stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
+
+            } else if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeAutre) {
+                log += line(textGreen(QObject::tr("- Measure : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
+
+            }
+
+        }
+        int j(0);
+        for (auto&& date : pEvent->mDates) {
+            log += "<br>";
+            log += line(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j+1), QString::number(pEvent->mDates.size()), date.mName)
+                                  + "<br>" + QObject::tr("- Type : %1").arg(date.mPlugin->getName())
+                                  + "<br>" + QObject::tr("- Method : %1").arg(MHVariable::getSamplerProposalText(date.mTheta.mSamplerProposal))
+                                  + "<br>" + QObject::tr("- Params : %1").arg(date.getDesc())));
+            ++j;
+        }
+        log += "<hr>";
+        log += "<br>";
+        ++i;
+    }
+
+    i = 0;
+    for (auto &&pPhase : model->mPhases) {
+        log += line(textPurple(QObject::tr("Phase ( %1 / %2 ) : %3 ( %4 events, %5 const. back., %6 const. fwd.)").arg(QString::number(i+1), QString::number(model->mPhases.size()), pPhase->mName,
+                                                                                                              QString::number(pPhase->mEvents.size()),
+                                                                                                              QString::number(pPhase->mConstraintsBwd.size()),
+                                                                                                              QString::number(pPhase->mConstraintsFwd.size()))
+                               + "<br>" + QObject::tr("- Type : %1").arg(pPhase->getTauTypeText())));
+        log += "<br>";
+
+        for (auto &&pEvent : pPhase->mEvents)
+            log += line(textBlue(QObject::tr("Event : %1").arg(pEvent->mName)));
+
+        log += "<hr>";
+        log += "<br>";
+        ++i;
+    }
 
 
+    for (auto&& pPhaseConst : model->mPhaseConstraints) {
+        log += "<hr>";
+        log += line(textBold(textGreen( QObject::tr("Succession from %1 to %2").arg(pPhaseConst->mPhaseFrom->mName, pPhaseConst->mPhaseTo->mName))));
+
+        switch(pPhaseConst->mGammaType) {
+            case PhaseConstraint::eGammaFixed :
+                log += line(textBold(textGreen( QObject::tr("Min Hiatus fixed = %1").arg(pPhaseConst->mGammaFixed))));
+                break;
+            case PhaseConstraint::eGammaUnknown :
+                log += line(textBold(textGreen( QObject::tr("Min Hiatus unknown") )));
+                break;
+            case PhaseConstraint::eGammaRange : //no longer used
+                 log += line(textBold(textGreen( QObject::tr("Min Hiatus between %1 and %2").arg(pPhaseConst->mGammaMin, pPhaseConst->mGammaMax))));
+                break;
+            default:
+                log += "Hiatus undefined -> ERROR";
+            break;
+        }
+
+        log += "<hr>";
+
+    }
+
+    if (curveModel) {
+        log += line(textBold(textGreen( QObject::tr("Curve Parameters"))));
+        switch(model->mChronocurveSettings.mProcessType) {
+        case ChronocurveSettings::eProcessTypeUnivarie :
+            log += textBold(textGreen( QObject::tr(" - Process Univariate on ")));
+
+            switch(model->mChronocurveSettings.mVariableType) {
+            case ChronocurveSettings::eVariableTypeInclinaison :
+                log += line(textBold(textGreen( QObject::tr("Inclination"))));
+                break;
+            case ChronocurveSettings::eVariableTypeDeclinaison :
+                log += line(textBold(textGreen( QObject::tr("Declination"))));
+                break;
+            case ChronocurveSettings::eVariableTypeIntensite :
+                log += line(textBold(textGreen( QObject::tr("Field"))));
+                break;
+            case ChronocurveSettings::eVariableTypeProfondeur :
+                 log += line(textBold(textGreen( QObject::tr("Depth"))));
+                break;
+            case ChronocurveSettings::eVariableTypeAutre :
+                 log += line(textBold(textGreen( QObject::tr("Any"))));
+                break;
+            }
+
+            break;
+
+        case ChronocurveSettings::eProcessTypeSpherique :
+            log += line(textBold(textGreen( QObject::tr(" - Process Spherical") )));
+            break;
+
+        case ChronocurveSettings::eProcessTypeVectoriel :
+            log += line(textBold(textGreen( QObject::tr(" - Process Vector"))));
+            break;
+
+        case ChronocurveSettings::eProcessType3D :
+             log += line(textBold(textGreen( QObject::tr(" - Process 3D"))));
+            break;
+        }
+
+        if (model->mChronocurveSettings.mUseErrMesure) {
+            log += line(textBold(textGreen( QObject::tr(" - Use Measurement Error"))));
+        }
+
+        if (model->mChronocurveSettings.mTimeType == ChronocurveSettings::eModeBayesian) {
+            log += line(textBold(textGreen( QObject::tr(" - Time Bayesian"))));
+
+        } else {
+            log += line(textBold(textGreen( QObject::tr(" - Time Fixed on init value"))));
+        }
+
+        if (model->mChronocurveSettings.mVarianceType == ChronocurveSettings::eModeBayesian) {
+            log += line(textBold(textGreen( QObject::tr(" - Variance Bayesian"))));
+
+        } else {
+            log += line(textBold(textGreen( QObject::tr(" - Variance Fixed : %1").arg(QString::number(model->mChronocurveSettings.mVarianceFixed)))));
+        }
+
+        if (model->mChronocurveSettings.mUseVarianceIndividual) {
+            log += line(textBold(textGreen( QObject::tr(" - Use Variance Individual"))));
+        }
+
+        if (model->mChronocurveSettings.mLambdaSplineType == ChronocurveSettings::eModeBayesian) {
+            log += line(textBold(textGreen( QObject::tr(" - Smoothing Bayesian"))));
+
+        } else {
+            log += line(textBold(textGreen( QObject::tr(" - Smoothing Fixed : %1").arg(QString::number(model->mChronocurveSettings.mLambdaSpline)))));
+        }
+
+    }
+
+    return log;
+
+}
+
+
+QString ModelUtilities::getMCMCSettingsLog(const Model* model)
+{
+    QString log;
+   // log += "<hr>";
+    log += QObject::tr("Number of chain %1").arg(QString::number(model->mMCMCSettings.mNumChains)) +"<br>";
+    log += QObject::tr("Number of burn-in iterations : %1").arg(QString::number(model->mMCMCSettings.mIterPerBurn)) + "<br>";
+    log += QObject::tr("Number of Max batches : %1").arg(QString::number(model->mMCMCSettings.mMaxBatches)) + "<br>";
+    log += QObject::tr("Number of iterations per batches : %1").arg(QString::number(model->mMCMCSettings.mIterPerBatch)) + "<br>";
+    log += QObject::tr("Number of running iterations : %1").arg(QString::number(model->mMCMCSettings.mIterPerAquisition)) + "<br>";
+    log += QObject::tr("Thinning Interval : %1").arg(QString::number(model->mMCMCSettings.mThinningInterval)) + "<br>";
+    log += QObject::tr("Mixing level : %1").arg(QString::number(model->mMCMCSettings.mMixingLevel)) + "<br>";
+
+    /*
+     * int i (0);
+    for (const ChainSpecs chain : model->mChains) {
+            ++i;
+            log += "<hr>";
+            log += QObject::tr("Chain %1").arg(QString::number(i)) +"<br>";
+            log += QObject::tr("Seed %1").arg(QString::number(chain.mSeed))+"<br>";
+            log += QObject::tr("Number of burn-in iterations : %1").arg(QString::number(chain.mBurnIterIndex)) + "<br>";
+            log += QObject::tr("Number of batches : %1 / %2").arg(QString::number(chain.mBatchIndex), QString::number(chain.mMaxBatchs)) + "<br>";
+            log += QObject::tr("Number of iterations per batches : %1").arg(QString::number(chain.mNumBatchIter)) + "<br>";
+            log += QObject::tr("Number of running iterations : %1").arg(QString::number(chain.mAquisitionIterIndex)) + "<br>";
+            log += QObject::tr("Thinning Interval : %1").arg(QString::number(chain.mThinningInterval)) + "<br>";
+            log += QObject::tr("Total iterations : %1").arg(QString::number(chain.mTotalIter)) + "<br>";
+            log += QObject::tr("Mixing level : %1").arg(QString::number(chain.mMixingLevel)) + "<br>";
+     }
+    */
+
+    return log;
+}
+
+QString ModelUtilities::modelStateDescriptionHTML(const ModelChronocurve* model, QString stateDescript)
+{
+    bool curveModel = model->mProject->isChronocurve();
+
+    int i = 0;
+    QString HTMLText = stateDescript;
+    HTMLText += "<hr>";
+    HTMLText += textBold("Events  (with their data)");
+    for (auto& event : model->mEvents) {
+        ++i;
+        HTMLText += "<hr><br>";
+
+        if (event->type() == Event::eKnown) {
+             const EventKnown* bound = dynamic_cast<const EventKnown*>(event);
+            if (bound) {
+                HTMLText += line(textRed(QObject::tr("Bound ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), bound->mName)));
+                HTMLText += line(textRed(QObject::tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(bound->mTheta.mX), DateUtils::getAppSettingsFormatStr())));
+            }
+
+        }  else {
+            HTMLText += line(textBlue(QObject::tr("Event ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), event->mName)));
+            HTMLText += line(textBlue(QObject::tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(event->mTheta.mX), DateUtils::getAppSettingsFormatStr())));
+            HTMLText += line(textBlue(QObject::tr(" - Sigma_MH on Theta : %1").arg(stringForLocal(event->mTheta.mSigmaMH))));
+            if (event->mTheta.mLastAccepts.size()>2 && event->mTheta.mSamplerProposal!= MHVariable::eFixe) {
+                HTMLText += line(textBlue(QObject::tr(" - - Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(event->mTheta.getCurrentAcceptRate()*100.), MHVariable::getSamplerProposalText(event->mTheta.mSamplerProposal))));
+           }
+
+            HTMLText += line(textBlue(QObject::tr(" - S02 : %1").arg(stringForLocal(event->mS02))));
+        }
+
+        if (curveModel) {
+            HTMLText += line(textGreen(QObject::tr(" - Variance on G : %1").arg(stringForLocal(event->mVG.mX))));
+            HTMLText += line(textGreen(QObject::tr(" - Sigma_MH on Variance on G : %1").arg(stringForLocal(event->mVG.mSigmaMH))));
+            if (event->mVG.mLastAccepts.size()>2  && event->mVG.mSamplerProposal!= MHVariable::eFixe) {
+                HTMLText += line(textGreen(QObject::tr(" - - Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(event->mVG.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(event->mVG.mSamplerProposal))));
+            }
+
+            // Recherche indice de l'event dans la liste de spline, car les events sont réordonnés
+            int thetaIdx;
+            const MCMCSpline& spline =  model->mSplinesTrace.back();
+            for (thetaIdx=0; thetaIdx < model->mEvents.size(); thetaIdx++) {
+                if ( spline.splineX.vecThetaEvents.at(thetaIdx) == event->mTheta.mX)
+                    break;
+            }
+
+            if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie)
+                HTMLText += line(textGreen(QObject::tr(" - G : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
+
+            else {
+                HTMLText += line(textGreen(QObject::tr(" - Gx : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
+                if (spline.splineY.vecG.size() != 0)
+                    HTMLText += line(textGreen(QObject::tr(" - Gy : %1").arg(stringForLocal(spline.splineY.vecG.at(thetaIdx)))));
+                if (spline.splineZ.vecG.size() != 0)
+                    HTMLText += line(textGreen(QObject::tr(" - Gz : %1").arg(stringForLocal(spline.splineZ.vecG.at(thetaIdx)))));
+            }
+        }
+        int j = 0;
+        for (auto& date : event->mDates) {
+            ++j;
+            HTMLText += "<br>";
+
+            HTMLText += line(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j), QString::number(event->mDates.size()), date.mName)));
+            HTMLText += line(textBlack(QObject::tr(" - ti : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(date.mTheta.mX), DateUtils::getAppSettingsFormatStr())));
+            if (date.mTheta.mSamplerProposal == MHVariable::eMHSymGaussAdapt) {
+                HTMLText += line(textBlack(QObject::tr(" - Sigma_MH on ti : %1").arg(stringForLocal(date.mTheta.mSigmaMH))));
+                if (date.mTheta.mLastAccepts.size()>2) {
+                    HTMLText += line(textBlack(QObject::tr(" - - Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(date.mTheta.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(date.mTheta.mSamplerProposal))));
+               }
+            }
+
+            HTMLText += line(textBlack(QObject::tr(" - Sigma_i : %1").arg(stringForLocal(date.mSigma.mX))));
+            HTMLText += line(textBlack(QObject::tr(" - Sigma_MH on Sigma_i : %1").arg(stringForLocal(date.mSigma.mSigmaMH))));
+            if (date.mSigma.mLastAccepts.size()>2) {
+                HTMLText += line(textBlack(QObject::tr(" - - Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(date.mSigma.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(date.mSigma.mSamplerProposal))));
+           }
+            if (date.mDeltaType != Date::eDeltaNone)
+                HTMLText += line(textBlack(QObject::tr(" - Delta_i : %1").arg(stringForLocal(date.mDelta))));
+
+        }
+    }
+
+    if (model->mPhases.size() > 0) {
+        HTMLText += "<hr>";
+        HTMLText += textBold(QObject::tr("Phases"));
+        HTMLText += "<hr>";
+
+        int i = 0;
+        for (auto& phase : model->mPhases) {
+            ++i;
+            HTMLText += "<br>";
+            HTMLText += line(textPurple(QObject::tr("Phase ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mPhases.size()), phase->mName)));
+            HTMLText += line(textPurple(QObject::tr(" - Begin : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mX), DateUtils::getAppSettingsFormatStr())));
+            HTMLText += line(textPurple(QObject::tr(" - End : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mX), DateUtils::getAppSettingsFormatStr())));
+            HTMLText += line(textPurple(QObject::tr(" - Tau : %1").arg(stringForLocal(phase->mTau))));
+        }
+    }
+
+    if (model->mPhaseConstraints.size() > 0) {
+        HTMLText += "<hr>";
+        HTMLText += textBold(textGreen(QObject::tr("Phases Constraints"))) ;
+        HTMLText += "<hr>";
+
+        int i = 0;
+        for (auto& constraint : model->mPhaseConstraints) {
+            ++i;
+            HTMLText += "<br>";
+            HTMLText += line(textGreen(QObject::tr("Succession ( %1 / %2) : from %3 to %4").arg(QString::number(i), QString::number(model->mPhaseConstraints.size()),constraint->mPhaseFrom->mName, constraint->mPhaseTo->mName)));
+            HTMLText += line(textGreen(QObject::tr(" - Gamma : %1").arg(stringForLocal(constraint->mGamma))));
+        }
+    }
+
+    if (curveModel) {
+        HTMLText += "<hr>";
+        HTMLText += textBold(textGreen(QObject::tr("Curve"))) ;
+        HTMLText += "<hr>";
+        HTMLText +=  line(textGreen(QObject::tr("Smoothing : %1").arg(QLocale().toString(model->mLambdaSpline.mX, 'G', 2))));
+        HTMLText +=  line(textGreen(QObject::tr(" - Sigma_MH on Smoothing : %1").arg(stringForLocal(model->mLambdaSpline.mSigmaMH))));
+        if (model->mLambdaSpline.mLastAccepts.size()>2  && model->mLambdaSpline.mSamplerProposal!= MHVariable::eFixe) {
+            HTMLText += line(textGreen(QObject::tr(" - - Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(model->mLambdaSpline.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(model->mLambdaSpline.mSamplerProposal))));
+       }
+    }
+
+    return HTMLText;
+}
+
+QString ModelUtilities::modelStateDescriptionText(const ModelChronocurve *model, QString stateDescript)
+{
+    bool curveModel = model->mProject->isChronocurve();
+    const QString nl = "\r";
+    int i = 0;
+    QString text = stateDescript;
+    text += nl;
+    text += "Events  (with their data)";
+    for (auto& event : model->mEvents) {
+        ++i;
+        text += nl;
+
+        if (event->type() == Event::eKnown) {
+            const EventKnown* bound = dynamic_cast<const EventKnown*>(event);
+            if (bound) {
+                text += QObject::tr("Bound ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), bound->mName);
+                text += QObject::tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(bound->mTheta.mX), DateUtils::getAppSettingsFormatStr());
+            }
+
+        }  else {
+            text += QObject::tr("Event ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), event->mName);
+            text += QObject::tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(event->mTheta.mX), DateUtils::getAppSettingsFormatStr());
+            text += QObject::tr(" - Sigma_MH on Theta : %1").arg(stringForLocal(event->mTheta.mSigmaMH));
+            if (event->mTheta.mLastAccepts.size()>2 && event->mTheta.mSamplerProposal!= MHVariable::eFixe) {
+                text += QObject::tr(" - - Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(event->mTheta.getCurrentAcceptRate()*100.), MHVariable::getSamplerProposalText(event->mTheta.mSamplerProposal));
+            }
+
+            text += line(textBlue(QObject::tr(" - S02 : %1").arg(stringForLocal(event->mS02))));
+        }
+
+        if (curveModel) {
+            text += QObject::tr(" - Variance on G : %1").arg(stringForLocal(event->mVG.mX));
+            text += QObject::tr(" - Sigma_MH on Variance on G : %1").arg(stringForLocal(event->mVG.mSigmaMH));
+            if (event->mVG.mLastAccepts.size()>2  && event->mVG.mSamplerProposal!= MHVariable::eFixe) {
+                text += QObject::tr(" - - Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(event->mVG.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(event->mVG.mSamplerProposal));
+            }
+
+            // Recherche indice de l'event dans la liste de spline, car les events sont réordonnés
+            int thetaIdx;
+            const MCMCSpline& spline =  model->mSplinesTrace.back();
+            for (thetaIdx=0; thetaIdx < model->mEvents.size(); thetaIdx++) {
+                if ( spline.splineX.vecThetaEvents.at(thetaIdx) == event->mTheta.mX)
+                    break;
+            }
+
+            if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie)
+                text += QObject::tr(" - G : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)));
+
+            else {
+                text += QObject::tr(" - Gx : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)));
+                if (spline.splineY.vecG.size() != 0)
+                    text += QObject::tr(" - Gy : %1").arg(stringForLocal(spline.splineY.vecG.at(thetaIdx)));
+                if (spline.splineZ.vecG.size() != 0)
+                    text += QObject::tr(" - Gz : %1").arg(stringForLocal(spline.splineZ.vecG.at(thetaIdx)));
+            }
+        }
+        int j = 0;
+        for (auto& date : event->mDates) {
+            ++j;
+            text += nl;
+
+            text += QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j), QString::number(event->mDates.size()), date.mName);
+            text += QObject::tr(" - ti : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(date.mTheta.mX), DateUtils::getAppSettingsFormatStr());
+            if (date.mTheta.mSamplerProposal == MHVariable::eMHSymGaussAdapt) {
+                text += QObject::tr(" - Sigma_MH on ti : %1").arg(stringForLocal(date.mTheta.mSigmaMH));
+                if (date.mTheta.mLastAccepts.size()>2) {
+                    text += QObject::tr(" --- Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(date.mTheta.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(date.mTheta.mSamplerProposal));
+                }
+            }
+
+            text += QObject::tr(" - Sigma_i : %1").arg(stringForLocal(date.mSigma.mX));
+            text += QObject::tr(" - Sigma_MH on Sigma_i : %1").arg(stringForLocal(date.mSigma.mSigmaMH));
+            if (date.mSigma.mLastAccepts.size()>2) {
+                text += QObject::tr(" - - Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(date.mSigma.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(date.mSigma.mSamplerProposal));
+            }
+            if (date.mDeltaType != Date::eDeltaNone)
+                text += QObject::tr(" - Delta_i : %1").arg(stringForLocal(date.mDelta));
+
+        }
+    }
+
+    if (model->mPhases.size() > 0) {
+        text += "<hr>";
+        text += QObject::tr("Phases");
+        text += "<hr>";
+
+        int i = 0;
+        for (auto& phase : model->mPhases) {
+            ++i;
+            text += nl;
+            text += QObject::tr("Phase ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mPhases.size()), phase->mName);
+            text += QObject::tr(" - Begin : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mX), DateUtils::getAppSettingsFormatStr());
+            text += (QObject::tr(" - End : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mX), DateUtils::getAppSettingsFormatStr()));
+            text += QObject::tr(" - Tau : %1").arg(stringForLocal(phase->mTau));
+        }
+    }
+
+    if (model->mPhaseConstraints.size() > 0) {
+        text += nl;
+        text += QObject::tr("Phases Constraints") ;
+        text += nl;
+
+        int i = 0;
+        for (auto& constraint : model->mPhaseConstraints) {
+            ++i;
+            text += nl;
+            text += QObject::tr("Succession ( %1 / %2) : from %3 to %4").arg(QString::number(i), QString::number(model->mPhaseConstraints.size()),constraint->mPhaseFrom->mName, constraint->mPhaseTo->mName);
+            text += QObject::tr(" - Gamma : %1").arg(stringForLocal(constraint->mGamma));
+        }
+    }
+
+    if (curveModel) {
+        text += nl;
+        text += QObject::tr("Curve") ;
+        text += nl;
+        text +=  QObject::tr("Smoothing : %1").arg(QLocale().toString(model->mLambdaSpline.mX, 'G', 2));
+        text +=  QObject::tr(" - Sigma_MH on Smoothing : %1").arg(stringForLocal(model->mLambdaSpline.mSigmaMH));
+        if (model->mLambdaSpline.mLastAccepts.size()>2  && model->mLambdaSpline.mSamplerProposal!= MHVariable::eFixe) {
+            text += QObject::tr(" - - Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(model->mLambdaSpline.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(model->mLambdaSpline.mSamplerProposal));
+        }
+}
+
+return text;
+}
 
 QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
 {
@@ -608,7 +1043,6 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
         }
      }
 
-
     text += line(textBlack(d->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false))) ;
 
     text += line("<br>");
@@ -623,13 +1057,26 @@ QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, c
     QString text;
     if (e->mType == Event::eKnown) {
         text += line(textBold(textRed(QObject::tr("Bound : %1").arg(e->mName)))) + "<br>";
-        text += line(textBold(textRed(QObject::tr("Posterior bound date"))));
+        text += line(textBold(textRed(QObject::tr("Posterior Bound Date"))));
         text += line(textRed(e->mTheta.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false)));
+
+        if (!e->mVG.mAllAccepts->isEmpty()) {
+           text +=  "<br>";
+           text += line(textBold(textGreen(QObject::tr("Posterior Std G"))));
+           text += line(textGreen(e->mVG.resultsString("<br>", "", nullptr, nullptr, false)));
+       }
     }
     else {
         text += line(textBold(textBlue(QObject::tr("Event : %1").arg(e->mName)))) + "<br>";
-        text += line(textBold(textBlue(QObject::tr("Posterior event date"))));
+        text += line(textBold(textBlue(QObject::tr("Posterior Event Date"))));
         text += line(textBlue(e->mTheta.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false)));
+
+        if (!e->mVG.mAllAccepts->isEmpty()) {
+           text +=  "<br>";
+           text += line(textBold(textGreen(QObject::tr("Posterior Std G"))));
+           text += line(textGreen(e->mVG.resultsString("<br>", "", nullptr, nullptr, false)));
+       }
+
         if (withDates){
             for (auto&& date : e->mDates)
                 text += "<br><br>" + dateResultsHTML(&(date), model);
@@ -642,7 +1089,7 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
 {
     Q_ASSERT(p);
     QString text;
-//        text += "<hr>"; // useless line
+
     text += line(textBold(textPurple(QObject::tr("Phase : %1").arg(p->mName))));
 
     text += "<br>";
@@ -684,13 +1131,28 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
     QString text;
     text += line(textBold(textGreen(QObject::tr("Succession : from %1 to %2").arg(p->mPhaseFrom->mName, p->mPhaseTo->mName))));
 
+    switch(p->mGammaType) {
+    case PhaseConstraint::eGammaFixed :
+        text += textGreen(QObject::tr("Min Hiatus fixed = %1").arg(p->mGammaFixed));
+        break;
+    case PhaseConstraint::eGammaUnknown :
+        text += textGreen(QObject::tr("Min Hiatus unknown")) ;
+        break;
+    case PhaseConstraint::eGammaRange : // no longer used
+        text += textGreen(QObject::tr("Min Hiatus between %1 and %2").arg(p->mGammaMin, p->mGammaMax));
+        break;
+    default:
+
+        break;
+    }
+
     if (p->mTransitionRange != QPair<double,double>()) {
         text += "<br>";
         // we suppose it's the same mThreshohdUsed than alpha
-        const QString result = QObject::tr("Transition Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(p->mPhaseFrom->mAlpha.mThresholdUsed),
+        const QString result = textGreen(QObject::tr("Transition Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(p->mPhaseFrom->mAlpha.mThresholdUsed),
                                                                                             stringForLocal(p->getFormatedTransitionRange().first),
                                                                                             stringForLocal(p->getFormatedTransitionRange().second),
-                                                                                            DateUtils::getAppSettingsFormatStr());
+                                                                                            DateUtils::getAppSettingsFormatStr()));
 
         text += line(textGreen(result));
     }
@@ -698,19 +1160,48 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
     if (p->mGapRange != QPair<double,double>()) {
         QString result;
         if (std::isinf(p->getFormatedGapRange().first) || std::isinf(p->getFormatedGapRange().second))
-           result = QObject::tr("No Gap") ;
+           result = textGreen(QObject::tr("No Gap") );
 
         else
-            result = QObject::tr("Gap Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(p->mPhaseFrom->mAlpha.mThresholdUsed),
+            result = textGreen(QObject::tr("Gap Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(p->mPhaseFrom->mAlpha.mThresholdUsed),
                                                                            stringForLocal(p->getFormatedGapRange().first),
                                                                            stringForLocal(p->getFormatedGapRange().second),
-                                                                           DateUtils::getAppSettingsFormatStr());
+                                                                           DateUtils::getAppSettingsFormatStr()));
 
         text += line(textGreen(result + "<br>"));
     }
 
     return text;
 }
+
+QString ModelUtilities::curveResultsHTML(const ModelChronocurve* model)
+{
+    Q_ASSERT(model);
+
+    QString text;
+
+    text += line( textBold(textGreen(QObject::tr("Curve"))) );
+   // text += line( textGreen(QObject::tr("- Smoothing Acceptance Rate : %1 %").arg( stringForLocal(100. * model->mLambdaSpline.getCurrentAcceptRate()))) );
+    text += line(textGreen(QObject::tr("Stat on the log10 of Lambda Spline")));
+    text += line(textGreen(model->mLambdaSpline.resultsString("<br>", "", nullptr, nullptr, false)));
+
+    if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeProfondeur) {
+        const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval) * model->mChains.size();
+
+        int i = 0;
+        for (auto ch : model->mChains) {
+            const unsigned positvIter= ch.mRealyAccepted;// floor(ch.mIterPerAquisition / ch.mThinningInterval);
+            const float rate = (float)positvIter/(float)requiredCurve * 100.;
+            text += line(textGreen(QObject::tr("- Accepted Curves for Chain %1 : %2 / %3 = %4 % ").
+                                  arg(QString::number(++i), QString::number(positvIter),
+                                      QString::number(requiredCurve), stringForLocal(rate))) );
+
+        }
+    }
+    text += "<hr>";
+    return text;
+}
+
 
 /**
  * @brief HPDOutsideSudyPeriod
@@ -798,7 +1289,7 @@ void sampleInCumulatedRepartition( Event* event, const ProjectSettings &settings
         unionTmax = std::min(unionTmax, max);
 
 
-        // 3 - Création de la cumulé des courbe de répartition dans l'intervalle
+        // 3 - Création de la cumulé des courbes de répartition dans l'intervalle
         QVector<double> unionRepartition (0);
         double tWhile (unionTmin);
         double sumWhile (0.);

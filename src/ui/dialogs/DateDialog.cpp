@@ -91,9 +91,9 @@ mWiggleEnabled(false)
 
     mMethodLab = new QLabel(tr("Method"), mAdvancedWidget);
     mMethodCombo = new QComboBox(mAdvancedWidget);
-    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHSymetric));
-    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eInversion));
-    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
+    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eMHSymetric));
+    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eInversion));
+    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eMHSymGaussAdapt));
 
     mWiggleLab = new Label(tr("Wiggle Matching"), mAdvancedWidget);
 
@@ -239,16 +239,32 @@ void DateDialog::setForm(PluginFormAbstract* form)
 
         // Disable methods forbidden by plugin
         const QStandardItemModel* model = qobject_cast<const QStandardItemModel*>(mMethodCombo->model());
+
+        const QList<MHVariable::SamplerProposal> allowMetho = plugin->allowedDataMethods();
+        MHVariable::SamplerProposal spTest;
         for (int i=0; i<mMethodCombo->count(); ++i) {
             QStandardItem* item = model->item(i);
-            bool allowed = plugin->allowedDataMethods().contains(Date::DataMethod (i));
+
+            switch (i) {
+            case 0 :
+                spTest = MHVariable::eMHSymetric;
+                break;
+            case 1 :
+                spTest = MHVariable::eInversion;
+                break;
+            case 2 :
+                spTest = MHVariable::eMHSymGaussAdapt;
+                break;
+            }
+
+            const bool allowed = allowMetho.contains(spTest);
 
             item->setFlags(!allowed ? item->flags() & ~(Qt::ItemIsSelectable|Qt::ItemIsEnabled)
                            : Qt::ItemIsSelectable|Qt::ItemIsEnabled);
             // visually disable by greying out - works only if combobox has been painted already and palette returns the wanted color
             item->setData(!allowed ? mMethodCombo->palette().color(QPalette::Disabled, QPalette::Text)
                           : QVariant(), // clear item data in order to use default color
-                          Qt::TextColorRole);
+                          Qt::ForegroundRole);
 
         }
     }
@@ -347,15 +363,29 @@ void DateDialog::setAdvancedVisible(bool visible)
         adjustSize();
 }
 
-void DateDialog::setDataMethod(Date::DataMethod method)
+void DateDialog::setDataMethod(MHVariable::SamplerProposal sp)
 {
-    mMethodCombo->setCurrentIndex(int(method));
+    int index =0;
+    switch (sp) {
+    case MHVariable::eMHSymetric :
+        index = 0;
+        break;
+    case MHVariable::eInversion:
+        index = 1;
+        break;
+    case MHVariable::eMHSymGaussAdapt:
+        index = 2;
+        break;
+
+    }
+
+    mMethodCombo->setCurrentIndex(index);
 }
 
 void DateDialog::setDate(const QJsonObject& date)
 {
     mNameEdit->setText(date.value(STATE_NAME).toString());
-    mMethodCombo->setCurrentIndex(date.value(STATE_DATE_METHOD).toInt());
+    setDataMethod( (MHVariable::SamplerProposal)date.value(STATE_DATE_SAMPLER).toInt());
 
     Date::DeltaType deltaType = Date::DeltaType (date.value(STATE_DATE_DELTA_TYPE).toInt());
 
@@ -405,16 +435,16 @@ double DateDialog::getDeltaMax() const {return mDeltaMaxEdit->text().toDouble();
 double DateDialog::getDeltaAverage() const {return mDeltaAverageEdit->text().toDouble();}
 double DateDialog::getDeltaError() const {return mDeltaErrorEdit->text().toDouble();}
 
-Date::DataMethod DateDialog::getMethod() const
+MHVariable::SamplerProposal DateDialog::getMethod() const
 {
-    Date::DataMethod method = Date::eMHSymetric;
+    MHVariable::SamplerProposal sampler = MHVariable::eMHSymetric;
     if (mMethodCombo->currentIndex() == 1)
-        method = Date::eInversion;
+        sampler = MHVariable::eInversion;
 
     else if (mMethodCombo->currentIndex() == 2)
-        method = Date::eMHSymGaussAdapt;
+        sampler = MHVariable::eMHSymGaussAdapt;
 
-    return method;
+    return sampler;
 }
 
 Date::DeltaType DateDialog::getDeltaType() const

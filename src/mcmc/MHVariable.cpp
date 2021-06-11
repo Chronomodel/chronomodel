@@ -44,6 +44,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QDebug>
 
+
+
+#define MHAdaptGaussStr QObject::tr("MH : proposal = adapt. Gaussian random walk")
+#define BoxMullerStr QObject::tr("AR : proposal = Gaussian")
+#define DoubleExpStr QObject::tr("AR : proposal = Double-Exponential")
+
+#define MHIndependantStr QObject::tr("MH : proposal = prior distribution")
+#define InversionStr QObject::tr("MH : proposal = distribution of calibrated date")
+#define MHSymGaussAdaptStr QObject::tr("MH : proposal = adapt. Gaussian random walk")
+
 /** Default constructor */
 MHVariable::MHVariable():
 mLastAcceptsLength(0),
@@ -137,6 +147,24 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
 
 }
 
+/**
+ * @brief MHVariable::adapt
+ * @param coef_min value [0; 1], default 0.42
+ * @param coef_max value [0; 1], default 0.46
+ * @return bool if no adaptation needed
+ */
+bool MHVariable::adapt (const double coef_min, const double coef_max, const double delta)
+{
+    bool noAdapted = true;
+    const double acceptRate = getCurrentAcceptRate();
+    if (acceptRate <= coef_min || acceptRate >= coef_max) {
+        noAdapted = false;
+        const double sign = (acceptRate <= coef_min) ? -1. : 1.;
+        mSigmaMH *= pow(10., sign * delta);
+    }
+    return noAdapted;
+}
+
 void MHVariable::reset()
 {
     MetropolisVariable::reset();
@@ -199,7 +227,7 @@ MHVariable& MHVariable::copy(MHVariable const& origin)
     mHistoryAcceptRateMH->resize(origin.mHistoryAcceptRateMH->size());
     std::copy(origin.mHistoryAcceptRateMH->begin(),origin.mHistoryAcceptRateMH->end(),mHistoryAcceptRateMH->begin());
 
-    mProposal = origin.mProposal;
+    mSamplerProposal = origin.mSamplerProposal;
 
     return *this;
 }
@@ -212,7 +240,9 @@ MHVariable& MHVariable::operator=( MHVariable const& origin)
 
 double MHVariable::getCurrentAcceptRate() const
 {
-    Q_ASSERT(!mLastAccepts.isEmpty());
+   // Q_ASSERT(!mLastAccepts.isEmpty());
+    if (mLastAccepts.isEmpty())
+        return 0.;
 
     double sum (0.);
 
@@ -234,13 +264,14 @@ QVector<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains,
 {
     QVector<double> accept(0);
     int shift (0);
-    const int reserveSize = (int) ceil(chains.at(index).mNumBurnIter + (chains.at(index).mBatchIndex * chains.at(index).mNumBatchIter) + chains.at(index).mNumRunIter / chains.at(index).mThinningInterval);
-
+    //const int reserveSize = (int) ceil(chains.at(index).mNumBurnIter + (chains.at(index).mBatchIndex * chains.at(index).mNumBatchIter) + chains.at(index).mIterPerAquisition / chains.at(index).mThinningInterval);
+    const int reserveSize = (int) ceil(chains.at(index).mIterPerBurn + (chains.at(index).mBatchIndex * chains.at(index).mIterPerBatch) + chains.at(index).mRealyAccepted);
     accept.reserve(reserveSize);
 
     for (int i = 0; i < chains.size(); ++i) {
         // We add 1 for the init
-        const int chainSize = 1 +chains.at(i).mNumBurnIter + (chains.at(i).mBatchIndex * chains.at(i).mNumBatchIter) + chains.at(i).mNumRunIter / chains.at(i).mThinningInterval;
+        //const int chainSize = 1 +chains.at(i).mNumBurnIter + (chains.at(i).mBatchIndex * chains.at(i).mNumBatchIter) + chains.at(i).mIterPerAquisition / chains.at(i).mThinningInterval;
+        const int chainSize = 1 +chains.at(i).mIterPerBurn + (chains.at(i).mBatchIndex * chains.at(i).mIterPerBatch) + chains.at(i).mRealyAccepted;
 
         if (i == index) {
             // could be done with
@@ -258,6 +289,8 @@ QVector<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains,
     return accept;
 }
 
+
+
 void MHVariable::generateGlobalRunAcceptation(const QList<ChainSpecs> &chains)
 {
     double accepted (0.);
@@ -265,8 +298,8 @@ void MHVariable::generateGlobalRunAcceptation(const QList<ChainSpecs> &chains)
     int shift (0);
 
     for (auto&& chain : chains) {
-        int burnAdaptSize = chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);
-        int runSize = chain.mNumRunIter;
+        int burnAdaptSize = 1 + chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
+        int runSize = chain.mIterPerAquisition;
         shift += burnAdaptSize;
         for (int j=shift; (j<shift + runSize) && (j<mAllAccepts->size()); ++j) {
             if (mAllAccepts->at(j))
@@ -279,6 +312,7 @@ void MHVariable::generateGlobalRunAcceptation(const QList<ChainSpecs> &chains)
     mGlobalAcceptation = accepted / acceptsLength;
 }
 
+
 void MHVariable::generateNumericalResults(const QList<ChainSpecs> &chains)
 {
     MetropolisVariable::generateNumericalResults(chains);
@@ -287,16 +321,80 @@ void MHVariable::generateNumericalResults(const QList<ChainSpecs> &chains)
 
 QString MHVariable::resultsString(const QString& nl, const QString& noResultMessage, const QString& unit, DateConversion formatFunc, const bool forCSV) const
 {
-    QString result = MetropolisVariable::resultsString(nl, noResultMessage, unit, formatFunc, forCSV);
-    if (!mProposal.isEmpty()) {
+    QString result;
+    if (mSamplerProposal != MHVariable::eFixe) {
+        result = MetropolisVariable::resultsString(nl, noResultMessage, unit, formatFunc, forCSV);
         if (forCSV)
-             result += nl + tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(stringForCSV(mGlobalAcceptation*100.), mProposal);
+             result += nl + tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(stringForCSV(mGlobalAcceptation*100.), getSamplerProposalText(mSamplerProposal));
 
         else
-             result += nl + tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(stringForLocal(mGlobalAcceptation*100.), mProposal);
+             result += nl + tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(stringForLocal(mGlobalAcceptation*100.), getSamplerProposalText(mSamplerProposal));
+
+    } else {
+        result = tr("Fixed value : %1").arg(stringForLocal(mX));
     }
     return result;
 }
+
+
+QString MHVariable::getSamplerProposalText(const MHVariable::SamplerProposal sp)
+{
+    switch (sp) {
+    // Event
+    case MHVariable::eMHAdaptGauss:
+        return MHAdaptGaussStr;
+        break;
+
+    case MHVariable::eBoxMuller:
+        return BoxMullerStr;
+        break;
+
+    case MHVariable::eDoubleExp:
+        return DoubleExpStr;
+        break;
+    // Data
+    case MHVariable::eMHSymetric:
+        return MHIndependantStr;
+        break;
+    case MHVariable::eInversion:
+        return InversionStr;
+        break;
+    case MHVariable::eMHSymGaussAdapt:
+        return MHSymGaussAdaptStr;
+        break;
+    default:
+        return QObject::tr("Unknown");
+        break;
+
+    }
+}
+
+MHVariable::SamplerProposal MHVariable::getSamplerProposalFromText(const QString& text)
+{
+    if (text == MHAdaptGaussStr)
+        return MHVariable::eMHAdaptGauss;
+
+    else if (text == BoxMullerStr)
+        return MHVariable::eBoxMuller;
+
+    else if (text == DoubleExpStr)
+        return MHVariable::eDoubleExp;
+
+    else  if (text == MHIndependantStr)
+        return MHVariable::eMHSymetric;
+
+    else if (text == InversionStr)
+        return MHVariable::eInversion;
+
+    else if (text == MHSymGaussAdaptStr)
+        return MHVariable::eMHSymGaussAdapt;
+
+    else {
+        // ouch... what to do ???
+        return MHVariable::eMHSymGaussAdapt;
+    }
+}
+
 
 QDataStream &operator<<( QDataStream &stream, const MHVariable &data )
 {
@@ -305,6 +403,7 @@ QDataStream &operator<<( QDataStream &stream, const MHVariable &data )
     /* owned by MHVariable*/
     stream << *(data.mAllAccepts);
     stream << *(data.mHistoryAcceptRateMH);
+    stream << data.mLastAccepts;
 
      //*out << this->mProposal; // it's a QString, already set
      stream << data.mSigmaMH;
@@ -327,6 +426,11 @@ QDataStream &operator>>( QDataStream &stream, MHVariable &data )
     else
         data.mHistoryAcceptRateMH = new QVector<double>();
     stream >> *(data.mHistoryAcceptRateMH);
+
+    if (!data.mLastAccepts.isEmpty())
+        data.mLastAccepts.clear();
+
+    stream >> data.mLastAccepts;
 
     stream >> data.mSigmaMH;
 

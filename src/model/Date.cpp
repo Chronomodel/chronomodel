@@ -202,7 +202,8 @@ mName("No Named Date")
     mId = -1;
     mUUID = QString("NONE");
 
-    mMethod = eMHSymetric;
+    mTheta.mSamplerProposal = MHVariable::eMHSymetric;
+    mSigma.mSamplerProposal = MHVariable::eMHAdaptGauss;
     //updateti = fMHSymetric;
 
     mIsValid = false;
@@ -242,6 +243,8 @@ void Date::init()
     mOrigin = eSingleDate;
     mPlugin = nullptr;
     mTheta.mSupport = MetropolisVariable::eR;
+    mTheta.mSamplerProposal = MHVariable::eMHSymetric;
+
     mSigma.mSupport = MetropolisVariable::eRp;
     mWiggle.mSupport = MetropolisVariable::eR;
 
@@ -251,7 +254,7 @@ void Date::init()
 
     mId = -1;
     mUUID = QString("NONE");
-    mMethod = eMHSymetric;
+    //mMethod = eMHSymetric;
     //updateti = fMHSymetric;
 
     mIsValid = true;
@@ -301,7 +304,7 @@ void Date::copyFrom(const Date& date)
     mData = date.mData;
     mOrigin = date.mOrigin;
     mPlugin = date.mPlugin;
-    mMethod = date.mMethod;
+    //mMethod = date.mMethod;
     mIsValid = date.mIsValid;
 
     mDeltaType = date.mDeltaType;
@@ -374,7 +377,8 @@ void Date::fromJson(const QJsonObject& json)
 
     QString pluginId = json.value(STATE_DATE_PLUGIN_ID).toString();
     mPlugin = PluginManager::getPluginFromId(pluginId);
-    mMethod = (DataMethod)json.value(STATE_DATE_METHOD).toInt();
+    //mMethod = (DataMethod)json.value(STATE_DATE_METHOD).toInt();
+
     mIsValid = json.value(STATE_DATE_VALID).toBool();
 
     mDeltaType = (DeltaType)json.value(STATE_DATE_DELTA_TYPE).toInt();
@@ -453,9 +457,11 @@ void Date::fromJson(const QJsonObject& json)
         }
     }
 
-    mTheta.mProposal = ModelUtilities::getDataMethodText(mMethod);
+    //mTheta.mProposal = ModelUtilities::getDataMethodText(mMethod);
     mTheta.setName("Theta of date : "+ mName);
-    mSigma.mProposal = ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt);
+    mTheta.mSamplerProposal = (MHVariable::SamplerProposal)json.value(STATE_DATE_SAMPLER).toInt();
+
+    mSigma.mSamplerProposal = MHVariable::eMHSymGaussAdapt;
     mSigma.setName("Sigma of date : "+ mName);
 
 
@@ -488,7 +494,7 @@ QJsonObject Date::toJson() const
     date[STATE_DATE_DATA] = mData;
     date[STATE_DATE_ORIGIN] = mOrigin;
     date[STATE_DATE_PLUGIN_ID] = mPlugin->getId();
-    date[STATE_DATE_METHOD] = mMethod;
+    date[STATE_DATE_SAMPLER] = mTheta.mSamplerProposal;
     date[STATE_DATE_VALID] = mIsValid;
 
     date[STATE_DATE_DELTA_TYPE] = mDeltaType;
@@ -1648,7 +1654,7 @@ void Date::updateSigmaShrinkage(Event* event)
     // ------------------------------------------------------------------------------------------
     //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
     // ------------------------------------------------------------------------------------------
-    const double lambda = pow(mTheta.mX - (event->mTheta.mX - mDelta), 2) / 2.;
+    const double lambda = pow(mTheta.mX - (event->mTheta.mX - mDelta), 2.) / 2.;
 
     const int logVMin = -6;
     const int logVMax = 100;
@@ -1661,7 +1667,7 @@ void Date::updateSigmaShrinkage(Event* event)
     if (logV2 >= logVMin && logV2 <= logVMax) {
         const double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
         const double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1.);
-        rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1   * sqrt(V2/V1); // (V2 / V1) est le jacobien!
+        rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1 ; // (V2 / V1) est le jacobien!
 
     }
   #ifdef DEBUG
@@ -1718,7 +1724,7 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
         QStringList dataTmp = dataStr.mid(1,dataStr.size()-1);
         date.mName = dataTmp.at(0);
         date.mPlugin = plugin;
-        date.mMethod = plugin->getDataMethod();
+        date.mTheta.mSamplerProposal = plugin->getDataMethod();
         date.mData = plugin->fromCSV(dataTmp, csvLocale);
 
         if (plugin->wiggleAllowed()) {
@@ -1804,17 +1810,17 @@ void Date::autoSetTiSampler(const bool bSet)
 
     if (bSet && mPlugin!= 0 && mPlugin->withLikelihoodArg() && mOrigin==eSingleDate) {
          //   if (false) {
-        switch (mMethod) {
-            case eMHSymetric:
+        switch (mTheta.mSamplerProposal) {
+            case MHVariable::eMHSymetric:
                 updateti = &Date::fMHSymetricWithArg;
                 break;
             
-            case eInversion:
+            case MHVariable::eInversion:
                 updateti = &Date::fInversionWithArg;
                 break;
             
                 // only case with acceptation rate, because we use sigmaMH :
-            case eMHSymGaussAdapt:
+            case MHVariable::eMHSymGaussAdapt:
                 updateti = &Date::fMHSymGaussAdaptWithArg;
                 break;
             
@@ -1824,17 +1830,17 @@ void Date::autoSetTiSampler(const bool bSet)
         }
        // qDebug()<<"TDate::autoSetTiSampler()"<<this->mName<<"with getLikelyhoodArg";
     } else {
-        switch (mMethod) {
-            case eMHSymetric:
+        switch (mTheta.mSamplerProposal) {
+            case MHVariable::eMHSymetric:
                 updateti = &Date::fMHSymetric;
                 break;
             
-            case eInversion:
+            case MHVariable::eInversion:
                 updateti = &Date::fInversion;
                 break;
             
                 // only case with acceptation rate, because we use sigmaMH :
-            case eMHSymGaussAdapt:
+            case MHVariable::eMHSymGaussAdapt:
                 updateti = &Date::fMHSymGaussAdapt;
                 break;
             

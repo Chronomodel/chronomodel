@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "ModelChronocurve.h"
+#include "ModelUtilities.h"
 #include "QFile"
 #include "qapplication.h"
 #include "Project.h"
@@ -45,8 +46,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 ModelChronocurve::ModelChronocurve():Model()
 {
-    mAlphaLissage.mSupport = MetropolisVariable::eR;
-    mAlphaLissage.mFormat = DateUtils::eNumeric;
+    mLambdaSpline.mSupport = MetropolisVariable::eR;
+    mLambdaSpline.mFormat = DateUtils::eNumeric;
+    mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
 }
 
 ModelChronocurve::~ModelChronocurve()
@@ -67,13 +69,31 @@ void ModelChronocurve::fromJson(const QJsonObject& json)
 {
     Model::fromJson(json);
     
-    for (Event*& event: mEvents)
-        event->mMethod = Event::eMHAdaptGauss;
-    
     if (json.contains(STATE_CHRONOCURVE)) {
         const QJsonObject settings = json.value(STATE_CHRONOCURVE).toObject();
         mChronocurveSettings = ChronocurveSettings::fromJson(settings);
     }
+
+    for (Event*& event: mEvents) {
+        if (event->type() ==  Event::eKnown ||
+            mChronocurveSettings.mTimeType == ChronocurveSettings::eModeFixed)
+               event->mTheta.mSamplerProposal = MHVariable::eFixe;
+
+        else if (event->type() ==  Event::eDefault)
+                event->mTheta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
+        if (mChronocurveSettings.mVarianceType == ChronocurveSettings::eModeFixed)
+            event->mVG.mSamplerProposal = MHVariable::eFixe;
+        else
+            event->mVG.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
+    }
+
+    if (mChronocurveSettings.mLambdaSplineType == ChronocurveSettings::eModeFixed)
+        mLambdaSpline.mSamplerProposal = MHVariable::eFixe;
+    else
+        mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
 }
 
 // Date files read / write
@@ -117,12 +137,13 @@ void ModelChronocurve::saveToFile(const QString& fileName)
                out << quint32 (ch.mBurnIterIndex);
                out << quint32 (ch.mMaxBatchs);
                out << ch.mMixingLevel;
-               out << quint32 (ch.mNumBatchIter);
-               out << quint32 (ch.mNumBurnIter);
-               out << quint32 (ch.mNumRunIter);
-               out << quint32 (ch.mRunIterIndex);
+               out << quint32 (ch.mIterPerBatch);
+               out << quint32 (ch.mIterPerBurn);
+               out << quint32 (ch.mIterPerAquisition);
+               out << quint32 (ch.mAquisitionIterIndex);
                out << qint32 (ch.mSeed);
                out << quint32 (ch.mThinningInterval);
+               out << quint32 (ch.mRealyAccepted);
                out << quint32 (ch.mTotalIter);
            }
            // -----------------------------------------------------
@@ -136,9 +157,10 @@ void ModelChronocurve::saveToFile(const QString& fileName)
            // -----------------------------------------------------
            //  Write events data
            // -----------------------------------------------------
-           for (Event*& event : mEvents)
+           for (Event*& event : mEvents) {
                out << event->mTheta;
-
+               out << event->mVG;
+           }
            // -----------------------------------------------------
            //  Write dates data
            // -----------------------------------------------------
@@ -178,16 +200,17 @@ void ModelChronocurve::saveToFile(const QString& fileName)
                }
            }
            out << mLogModel;
-           out << mLogMCMC;
+           out << mLogInit;
+           out << mLogAdapt;
            out << mLogResults;
            /* -----------------------------------------------------
             *   Write curve data
             * ----------------------------------------------------- */
 
-           out << mAlphaLissage;
+           out << mLambdaSpline;
 
-           out << (quint32) mMCMCSplines.size();
-           for (auto& splin : mMCMCSplines)
+           out << (quint32) mSplinesTrace.size();
+           for (auto& splin : mSplinesTrace)
                out << splin;
 
            out << mPosteriorMeanG;
@@ -207,29 +230,6 @@ void ModelChronocurve::saveToFile(const QString& fileName)
 * */
 void ModelChronocurve::restoreFromFile(const QString& fileName)
 {
-/*    QFile fileDat(fileName);
-   fileDat.open(QIODevice::ReadOnly);
-   QByteArray compressedData (fileDat.readAll());
-   fileDat.close();
-
-   QByteArray uncompressedData (qUncompress(compressedData));
-#ifdef DEBUG
-      qDebug() << "Lecture fichier :"<< fileName;
-      qDebug() << "TAILLE compressedData :" << compressedData.size();
-      qDebug() << "TAILLE uncompresedData :" << uncompressedData.size();
-#endif
-   compressedData.clear();
-*/
-/*    QFileInfo info(fileName);
-   QFile file(info.path() + info.baseName() + ".~dat"); // when we could compress the file
-
-   file.open(QIODevice::WriteOnly);
-   file.write(uncompressedData);
-   file.close();
-*/
-  // QFileInfo info(fileName);
-  // QFile file(info.path() + info.baseName() + ".res");
-
    QFile file(fileName);
    if (file.exists() && file.open(QIODevice::ReadOnly)) {
        QDataStream in(&file);
@@ -271,12 +271,13 @@ void ModelChronocurve::restoreFromFile(const QString& fileName)
            in >> ch.mBurnIterIndex;
            in >> ch.mMaxBatchs;
            in >> ch.mMixingLevel;
-           in >> ch.mNumBatchIter;
-           in >> ch.mNumBurnIter;
-           in >> ch.mNumRunIter;
-           in >> ch.mRunIterIndex;
+           in >> ch.mIterPerBatch;
+           in >> ch.mIterPerBurn;
+           in >> ch.mIterPerAquisition;
+           in >> ch.mAquisitionIterIndex;
            in >> ch.mSeed;
            in >> ch.mThinningInterval;
+           in >> ch.mRealyAccepted;
            in >> ch.mTotalIter;
            mChains.append(ch);
        }
@@ -294,16 +295,17 @@ void ModelChronocurve::restoreFromFile(const QString& fileName)
        //  Read events data
        // -----------------------------------------------------
 
-       for (auto&& e : mEvents)
+       for (auto&& e : mEvents) {
            in >> e->mTheta;
-
+           in >> e->mVG;
+       }
        // -----------------------------------------------------
        //  Read dates data
        // -----------------------------------------------------
 
-       for (auto&& event : mEvents) {
-           if (event->mType == Event::eDefault )
-               for (auto&& d : event->mDates) {
+       for (auto&& e : mEvents) {
+           if (e->mType == Event::eDefault )
+               for (auto&& d : e->mDates) {
                    in >> d.mTheta;
                    in >> d.mSigma;
                    if (d.mDeltaType != Date::eDeltaNone)
@@ -368,7 +370,8 @@ void ModelChronocurve::restoreFromFile(const QString& fileName)
                }
        }
        in >> mLogModel;
-       in >> mLogMCMC;
+       in >> mLogInit;
+       in >> mLogAdapt;
        in >> mLogResults;
 
        generateCorrelations(mChains);
@@ -379,11 +382,11 @@ void ModelChronocurve::restoreFromFile(const QString& fileName)
         *   Read curve data
         * ----------------------------------------------------- */
 
-       in >> mAlphaLissage;
+       in >> mLambdaSpline;
 
        in >> tmp32;
-       mMCMCSplines.resize(tmp32);
-       for (auto& splin : mMCMCSplines)
+       mSplinesTrace.resize(tmp32);
+       for (auto& splin : mSplinesTrace)
            in >> splin;
 
        in >> mPosteriorMeanG;
@@ -399,6 +402,16 @@ void ModelChronocurve::restoreFromFile(const QString& fileName)
 
 }
 
+void  ModelChronocurve::generateResultsLog()
+{
+    Model::generateResultsLog();
+
+    QString log;
+    log += ModelUtilities::curveResultsHTML(this);
+    log += "<hr>";
+
+    mLogResults += log;
+}
 
 
 
@@ -412,14 +425,17 @@ void ModelChronocurve::generatePosteriorDensities(const QList<ChainSpecs> &chain
         event->mVG.generateHistos(chains, fftLen, bandwidth);
     }
 
-    mAlphaLissage.updateFormatedTrace();
-    mAlphaLissage.generateHistos(chains, fftLen, bandwidth);
+    mLambdaSpline.updateFormatedTrace();
+    mLambdaSpline.generateHistos(chains, fftLen, bandwidth);
 }
 
 void ModelChronocurve::generateCorrelations(const QList<ChainSpecs> &chains)
 {
     Model::generateCorrelations(chains);
-    mAlphaLissage.generateCorrelations(chains);
+    for (auto&& event : mEvents )
+        event->mVG.generateCorrelations(chains);
+
+    mLambdaSpline.generateCorrelations(chains);
 }
 
 void ModelChronocurve::generateNumericalResults(const QList<ChainSpecs> &chains)
@@ -428,7 +444,7 @@ void ModelChronocurve::generateNumericalResults(const QList<ChainSpecs> &chains)
     for (Event*& event : mEvents) {
         event->mVG.generateNumericalResults(chains);
     }
-    mAlphaLissage.generateNumericalResults(chains);
+    mLambdaSpline.generateNumericalResults(chains);
 }
 
 void ModelChronocurve::clearThreshold()
@@ -438,7 +454,7 @@ void ModelChronocurve::clearThreshold()
     for (Event*& event : mEvents) {
         event->mVG.mThresholdUsed = -1.;
     }
-    mAlphaLissage.mThresholdUsed = -1.;
+    mLambdaSpline.mThresholdUsed = -1.;
 }
 
 void ModelChronocurve::generateCredibility(const double thresh)
@@ -449,7 +465,7 @@ void ModelChronocurve::generateCredibility(const double thresh)
             event->mVG.generateCredibility(mChains, thresh);
         }
     }
-    mAlphaLissage.generateCredibility(mChains, thresh);
+    mLambdaSpline.generateCredibility(mChains, thresh);
 }
 
 void ModelChronocurve::generateHPD(const double thresh)
@@ -461,7 +477,7 @@ void ModelChronocurve::generateHPD(const double thresh)
         }
     }
     
-    mAlphaLissage.generateHPD(thresh);
+    mLambdaSpline.generateHPD(thresh);
 }
 
 void ModelChronocurve::clearPosteriorDensities()
@@ -475,8 +491,8 @@ void ModelChronocurve::clearPosteriorDensities()
         }
     }
     
-    mAlphaLissage.mHisto.clear();
-    mAlphaLissage.mChainsHistos.clear();
+    mLambdaSpline.mHisto.clear();
+    mLambdaSpline.mChainsHistos.clear();
 }
 
 void ModelChronocurve::clearCredibilityAndHPD()
@@ -490,16 +506,19 @@ void ModelChronocurve::clearCredibilityAndHPD()
         }
     }
     
-    mAlphaLissage.mHPD.clear();
-    mAlphaLissage.mCredibility = QPair<double, double>();
+    mLambdaSpline.mHPD.clear();
+    mLambdaSpline.mCredibility = QPair<double, double>();
 }
 
 void ModelChronocurve::clearTraces()
 {
     Model::clearTraces();
-    // event->reset() already resets mVG
-    mAlphaLissage.reset();
+  /*  for (Event*& event : mEvents)
+        event->mVG.reset();
+*/
+    mLambdaSpline.reset();
 }
+
 
 void ModelChronocurve::setThresholdToAllModel(const double threshold)
 {
@@ -508,11 +527,8 @@ void ModelChronocurve::setThresholdToAllModel(const double threshold)
     for (Event*& event : mEvents)
         event->mVG.mThresholdUsed = mThreshold;
 
-    mAlphaLissage.mThresholdUsed = mThreshold;
+    mLambdaSpline.mThresholdUsed = mThreshold;
 }
-
-
-
 
 
 

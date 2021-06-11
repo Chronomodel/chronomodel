@@ -115,8 +115,8 @@ public:
     bool mUseVarianceIndividual; // bool_VG_individuelle
     double mVarianceFixed; // Var_G
 
-    ProcessMode mCoeffLissageType; // bool_Alpha_fixe
-    double mAlphaLissage;
+    ProcessMode mLambdaSplineType;
+    double mLambdaSpline;
 };
 
 QDataStream &operator<<( QDataStream &stream, const ChronocurveSettings &data );

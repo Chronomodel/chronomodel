@@ -204,7 +204,7 @@ void ImportDataView::browse()
                     if (isComment(values.at(0))) {
                         continue;
 
-                    } else if (values.at(0).contains("title", Qt::CaseInsensitive) && !values.at(0).contains("ntitle", Qt::CaseInsensitive)) {
+                    } else if (values.at(0).contains("title", Qt::CaseInsensitive) && !values.at(0).contains("title", Qt::CaseInsensitive)) {
                         headers << "TITLE";
 
                         QStringList titleText;
@@ -446,7 +446,7 @@ ImportDataTable::~ImportDataTable()
  * @param items
  * @return a pointer on table data
  */
-QMimeData* ImportDataTable::mimeData(const QList<QTableWidgetItem*> items) const
+QMimeData* ImportDataTable::mimeData(const QList<QTableWidgetItem *> &items) const
 {
     QMimeData* mimeData = new QMimeData();
 

@@ -131,7 +131,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         mTitle = ((mEvent->type() == Event::eKnown) ? tr("Bound") : tr("Std Compilation")) + " : " + mEvent->mName;
 
     } else if (variable == eVG) {
-        mTitle = tr("Variance G") + " : " + mEvent->mName;
+        mTitle = tr("Std G") + " : " + mEvent->mName;
     }
 
     // ------------------------------------------------
@@ -278,16 +278,22 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->mLegendX = "";
             mGraph->setBackgroundColor(QColor(230, 230, 230));
 
-            GraphCurve curve = generateDensityCurve(mEvent->mVG.fullHisto(), "Variance G All Chains", color);
+            GraphCurve curve = generateDensityCurve(mEvent->mVG.fullHisto(), "Std G All Chains", color);
             // qDebug() << curve.mData;
             mGraph->addCurve(curve);
             
             if (!mEvent->mVG.mChainsHistos.isEmpty()) {
                 for (int j = 0; j<mChains.size(); ++j) {
-                    GraphCurve curveChain = generateDensityCurve(mEvent->mVG.histoForChain(j), "Variance G Chain " + QString::number(j), color);
+                    GraphCurve curveChain = generateDensityCurve(mEvent->mVG.histoForChain(j), "Std G Chain " + QString::number(j), Painting::chainColors.at(j));
                     mGraph->addCurve(curveChain);
                 }
             }
+
+            // HPD All Chains
+            GraphCurve curveHPD = generateHPDCurve(mEvent->mVG.mHPD,
+                                                   "HPD All Chains",
+                                                   color);
+            mGraph->addCurve(curveHPD);
         }
     }
     // ----------------------------------------------------------------------
@@ -309,21 +315,27 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     else if (typeGraph == eAccept)  {
         mGraph->mLegendX = "Iterations";
         
-        if (variable == eTheta && (mEvent->mMethod == Event::eMHAdaptGauss || mEvent->mMethod == Event::eFixe)) {
+        if (variable == eTheta && (mEvent->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss || mEvent->mTheta.mSamplerProposal == MHVariable::eFixe)) {
             generateAcceptCurves(mChains, &(mEvent->mTheta));
-            mGraph->addCurve(generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
 
         } else if (variable == eVG) {
             generateAcceptCurves(mChains, &(mEvent->mVG));
-            mGraph->addCurve(generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
+
         }
+
     }
     // ----------------------------------------------------------------------
     //  Autocorrelation : generate correlation with lower and upper limits
     // ----------------------------------------------------------------------
-    else if ((typeGraph == eCorrel) && (variable == eTheta) && (!isFixedBound)) {
+    else if ((typeGraph == eCorrel) && (variable == eVG || (variable == eTheta && !isFixedBound))) {
+
         mGraph->mLegendX = "";
-        generateCorrelCurves(mChains, &(mEvent->mTheta));
+        if (variable == eTheta) {
+            generateCorrelCurves(mChains, &(mEvent->mTheta));
+
+        } else if (variable == eVG) {
+            generateCorrelCurves(mChains, &(mEvent->mVG));
+        }
         mGraph->setXScaleDivision(10, 10);
 
     } else {
@@ -341,11 +353,9 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
     bool isFixedBound = false;
 
   //  EventKnown* bound = nullptr;
-    if (mEvent->type() == Event::eKnown) {
-  //      bound = dynamic_cast<EventKnown*>(mEvent);
-        isFixedBound = true;
+    if (mEvent->type() == Event::eKnown)
+         isFixedBound = true;
 
-    }
 
     /* --------------------first tab : Posterior distrib----------------------------
      * ------------------------------------------------*/
@@ -395,13 +405,14 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         }
         
         else if (mCurrentVariable == eVG) {
-            mGraph->setCurveVisible("Variance G All Chains", mShowAllChains);
+            mGraph->setCurveVisible("Std G All Chains", mShowAllChains);
+            mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
 
             for (int j = 0; j < mShowChainList.size(); ++j) {
-                mGraph->setCurveVisible("Variance G Chain " + QString::number(j), mShowChainList.at(j));
+                mGraph->setCurveVisible("Std G Chain " + QString::number(j), mShowChainList.at(j));
             }
             
-            mGraph->setTipXLab(tr("Variance G"));
+            mGraph->setTipXLab(tr("Std G"));
             mGraph->setYAxisMode(GraphView::eHidden);
 
         }
@@ -414,22 +425,23 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      *  - Q2 i
      *  - Q3 i
      * ------------------------------------------------  */
-    else if (mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta) {
-        // We visualize only one chain (radio button)
-        for (int i = 0; i < mShowChainList.size(); ++i) {
-            mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList.at(i));
-        }
+    else if ((mCurrentTypeGraph == eTrace) &&
+             (mCurrentVariable == eVG || mCurrentVariable == eTheta)) {
+             // We visualize only one chain (radio button)
 
-        mGraph->setTipXLab(tr("Iteration"));
-        mGraph->setTipYLab("t");
+            for (int i = 0; i < mShowChainList.size(); ++i) {
+                mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList.at(i));
+            }
 
-        mGraph->setYAxisMode(GraphView::eMinMaxHidden);
-        mGraph->showInfos(true);
-        mGraph->autoAdjustYScale(true);
+            mGraph->setTipXLab(tr("Iteration"));
+            mGraph->setTipYLab("t");
 
+            mGraph->setYAxisMode(GraphView::eMinMaxHidden);
+            mGraph->showInfos(true);
+            mGraph->autoAdjustYScale(true);
 
     }
 
@@ -438,7 +450,10 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      *  - Accept i
      *  - Accept Target
      * ------------------------------------------------  */
-    else if ((mCurrentTypeGraph == eAccept) && (mCurrentVariable == eTheta) && ((mEvent->mMethod == Event::eMHAdaptGauss) || (mEvent->mMethod == Event::eFixe))) {
+    else if ((mCurrentTypeGraph == eAccept) &&
+             (mCurrentVariable == eVG ||
+              ( mCurrentVariable == eTheta && ((mEvent->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss) || (mEvent->mTheta.mSamplerProposal == MHVariable::eFixe)))
+               )) {
         mGraph->setCurveVisible("Accept Target", true);
         for (int i = 0; i < mShowChainList.size(); ++i)
             mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList.at(i));
@@ -458,19 +473,21 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      *  - Correl Limit Lower i
      *  - Correl Limit Upper i
      * ------------------------------------------------   */
-    else if (mCurrentTypeGraph == eCorrel && mCurrentVariable == eTheta && !isFixedBound) {
-        for (int i = 0; i < mShowChainList.size(); ++i) {
-            mGraph->setCurveVisible("Correl " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Correl Limit Lower " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Correl Limit Upper " + QString::number(i), mShowChainList.at(i));
-        }
-        mGraph->setTipXLab("h");
-        mGraph->setTipYLab(tr("Value"));
-        mGraph->setYAxisMode(GraphView::eMinMax);
-        mGraph->showInfos(false);
-        mGraph->clearInfos();
-        mGraph->autoAdjustYScale(false); // do  repaintGraph()
-        mGraph->setRangeY(-1, 1);
+    else if ( (mCurrentTypeGraph == eCorrel) &&
+              (mCurrentVariable == eVG ||
+               (mCurrentVariable == eTheta && !isFixedBound)  )) {
+            for (int i = 0; i < mShowChainList.size(); ++i) {
+                mGraph->setCurveVisible("Correl " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Correl Limit Lower " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Correl Limit Upper " + QString::number(i), mShowChainList.at(i));
+            }
+            mGraph->setTipXLab("h");
+            mGraph->setTipYLab(tr("Value"));
+            mGraph->setYAxisMode(GraphView::eMinMax);
+            mGraph->showInfos(false);
+            mGraph->clearInfos();
+            mGraph->autoAdjustYScale(false); // do  repaintGraph()
+            mGraph->setRangeY(-1, 1);
     }
 
     update();

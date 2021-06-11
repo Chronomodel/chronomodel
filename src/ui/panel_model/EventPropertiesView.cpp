@@ -87,9 +87,9 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mMethodCombo = new QComboBox(mTopView);
     mMethodInfo = new QLabel(tr("MH : proposal = adapt. Gaussian random walk"), mTopView);
 
-    mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eDoubleExp));
-    mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eBoxMuller));
-    mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eMHAdaptGauss));
+    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eDoubleExp));
+    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eBoxMuller));
+    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eMHAdaptGauss));
     
     connect(mNameEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventName);
     connect(mColorPicker, &ColorPicker::colorChanged, this, &EventPropertiesView::updateEventColor);
@@ -344,8 +344,20 @@ void EventPropertiesView::updateEvent()
         mBoundView->setVisible(type == Event::eKnown);
 
         if (type == Event::eDefault) {
-            mMethodCombo->setCurrentIndex(mEvent.value(STATE_EVENT_METHOD).toInt());
+            mMethodCombo->setCurrentIndex(mEvent.value(STATE_EVENT_SAMPLER).toInt());
             
+            if (mEvent.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eDoubleExp)
+                mMethodCombo->setCurrentIndex(0);
+
+            else if (mEvent.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eBoxMuller)
+                    mMethodCombo->setCurrentIndex(1);
+
+             else if (mEvent.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eMHAdaptGauss)
+                mMethodCombo->setCurrentIndex(2);
+
+
+
+
         //       qDebug() << "EventPropertiesView::updateEvent mEvent mOrigin"  << mEvent.value(STATE_EVENT_DATES).toArray().at(0).toObject().value(STATE_DATE_ORIGIN).toInt();
            mDatesList->setEvent(mEvent);
             if (mCurrentDateIdx >= 0)
@@ -402,8 +414,20 @@ void EventPropertiesView::updateEventColor(const QColor &color)
 
 void EventPropertiesView::updateEventMethod(int index)
 {
+    MHVariable::SamplerProposal sp = MHVariable::eDoubleExp;
+    switch (index) {
+    case 0 :
+        sp = MHVariable::eDoubleExp;
+        break;
+    case 1 :
+        sp = MHVariable::eBoxMuller;
+        break;
+    case 2 :
+        sp = MHVariable::eMHAdaptGauss;
+        break;
+    }
     QJsonObject event = mEvent;
-    event[STATE_EVENT_METHOD] = index;
+    event[STATE_EVENT_SAMPLER] = sp;
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event method updated"));
 }
 

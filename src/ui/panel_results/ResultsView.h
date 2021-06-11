@@ -163,7 +163,6 @@ protected:
 public slots:
 
     void clearResults(); // connected to Project::mcmcStarted
-    //void updateResultsLog();
 
 private slots:
 
@@ -316,9 +315,10 @@ private:
     RadioButton* mCurveGRadio;
     RadioButton* mCurveGPRadio;
     RadioButton* mCurveGSRadio;
-    RadioButton* mAlphaRadio;
+    RadioButton* mLambdaRadio;
     CheckBox* mCurveErrorCheck;
     CheckBox* mCurvePointsCheck;
+    CheckBox* mCurveStatCheck;
 
     // ---------------------------------------------------------------------
     // Tabs : Display / Distrib. Options

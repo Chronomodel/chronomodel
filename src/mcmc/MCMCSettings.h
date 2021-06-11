@@ -50,7 +50,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define MCMC_NUM_RUN_DEFAULT 100000
 #define MCMC_NUM_BURN_DEFAULT 1000
 #define MCMC_MAX_ADAPT_BATCHES_DEFAULT 20
-#define MCMC_ITER_PER_BATCH_DEFAULT 500
+#define MCMC_ITER_PER_BATCH_DEFAULT 200
 #define MCMC_THINNING_INTERVAL_DEFAULT 10
 
 #define MCMC_MIXING_DEFAULT 0.99
@@ -59,17 +59,25 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 struct ChainSpecs
 {
     int mSeed;
-    int mNumBurnIter;
+    int mIterPerBurn;
     int mBurnIterIndex;
     int mMaxBatchs;
-    int mNumBatchIter;
+    int mIterPerBatch;
     int mBatchIterIndex;
     int mBatchIndex;
-    int mNumRunIter;
-    int mRunIterIndex;
+    int mIterPerAquisition; //mNumRunIter;
+    int mAquisitionIterIndex; // mRunIterIndex;
     int mTotalIter; // burn + adapt + run
     int mThinningInterval;
+
+    int mRealyAccepted;
     double mMixingLevel;
+
+    qint64 mInitElapsedTime;
+    qint64 burnElapsedTime;
+    qint64 mAdaptElapsedTime;
+    qint64 mAcquisitionElapsedTime;
+
 };
 
 
@@ -89,10 +97,10 @@ public:
     QList<ChainSpecs> getChains() const;
 
     int mNumChains;
-    int mNumRunIter;
-    int mNumBurnIter;
+    int mIterPerAquisition;
+    int mIterPerBurn;
     int mMaxBatches;
-    int mNumBatchIter;
+    int mIterPerBatch;
     int mThinningInterval;
     QList<int> mSeeds;
 

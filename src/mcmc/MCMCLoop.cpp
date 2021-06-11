@@ -39,7 +39,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "MCMCLoop.h"
 #include "Generator.h"
+#include "Project.h"
 #include "QtUtilities.h"
+#include "ModelUtilities.h"
 
 #include <QDebug>
 #include <QTime>
@@ -68,16 +70,17 @@ void MCMCLoop::setMCMCSettings(const MCMCSettings& s)
         else
             chain.mSeed = Generator::createSeed();
 
-        chain.mNumBurnIter = s.mNumBurnIter;
+        chain.mIterPerBurn = s.mIterPerBurn;
         chain.mBurnIterIndex = 0;
         chain.mMaxBatchs = s.mMaxBatches;
-        chain.mNumBatchIter = s.mNumBatchIter;
+        chain.mIterPerBatch = s.mIterPerBatch;
         chain.mBatchIterIndex = 0;
         chain.mBatchIndex = 0;
-        chain.mNumRunIter = s.mNumRunIter;
-        chain.mRunIterIndex = 0;
+        chain.mIterPerAquisition = s.mIterPerAquisition;
+        chain.mAquisitionIterIndex = 0;
         chain.mTotalIter = 0;
         chain.mThinningInterval = s.mThinningInterval;
+        chain.mRealyAccepted = 0;
         chain.mMixingLevel = s.mMixingLevel;
         mChains.append(chain);
     }
@@ -86,37 +89,6 @@ void MCMCLoop::setMCMCSettings(const MCMCSettings& s)
 const QList<ChainSpecs> &MCMCLoop::chains() const
 {
     return mChains;
-}
-
-const QString& MCMCLoop::getChainsLog() const
-{
-    return mChainsLog;
-}
-
-const QString MCMCLoop::getMCMCSettingsLog() const
-{
-    QString log;
-    int i (0);
-    foreach (const ChainSpecs chain, mChains) {
-            ++i;
-            log += "<hr>";
-            log += tr("Chain %1").arg(QString::number(i)) +"<br>";
-            log += tr("Seed %1").arg(QString::number(chain.mSeed))+"<br>";
-            log += tr("Number of burn-in iterations : %1").arg(QString::number(chain.mBurnIterIndex)) + "<br>";
-            log += tr("Number of batches : %1 / %2").arg(QString::number(chain.mBatchIndex), QString::number(chain.mMaxBatchs)) + "<br>";
-            log += tr("Number of iterations per batches : %1").arg(QString::number(chain.mNumBatchIter)) + "<br>";
-            log += tr("Number of running iterations : %1").arg(QString::number(chain.mRunIterIndex)) + "<br>";
-            log += tr("Thinning Interval : %1").arg(QString::number(chain.mThinningInterval)) + "<br>";
-            log += tr("Total iterations : %1").arg(QString::number(chain.mTotalIter)) + "<br>";
-            log += tr("Mixing level : %1").arg(QString::number(chain.mMixingLevel)) + "<br>";
-     }
-
-    return log;
-}
-const QString MCMCLoop::getInitLog() const
-{
-    const QString log = getMCMCSettingsLog() + mInitLog + mAdaptLog;
-    return log;
 }
 
 void MCMCLoop::run()
@@ -140,22 +112,22 @@ void MCMCLoop::run()
 
     //----------------------- Chains --------------------------------------
 
-    QStringList seeds;
-
-    mInitLog = QString();
-
     // initVariableForChain() reserve memory space
     initVariablesForChain();
 
+    mProject->mModel->mLogInit += ModelUtilities::getMCMCSettingsLog(mProject->mModel);
+
+    QStringList seeds;
+    for (auto& chain : chains())
+         seeds << QString::number(chain.mSeed);
+
+     mProject->mModel->mLogInit += line(tr("List of used chain seeds (to be copied for re-use in MCMC Settings) : ") + seeds.join(";"));
+
     for (mChainIndex = 0; mChainIndex < mChains.size(); ++mChainIndex) {
         log += "<hr>";
-        //log += line("Chain : " + QString::number(mChainIndex + 1) + "/" + QString::number(mChains.size()));
 
         ChainSpecs& chain = mChains[mChainIndex];
         Generator::initGenerator(chain.mSeed);
-
-        log += line("Seed : " + QString::number(chain.mSeed));
-        seeds << QString::number(chain.mSeed);
 
         //----------------------- Initialising --------------------------------------
 
@@ -164,23 +136,35 @@ void MCMCLoop::run()
             return;
         }
 
+
         emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))  + " : " + tr("Initialising MCMC"), 0, 0);
 
         //QTime startInitTime = QTime::currentTime();
-
+        QElapsedTimer initTime;
+        initTime.start();
         mAbortedReason = this->initMCMC();
         if (!mAbortedReason.isEmpty())
             return;
 
+        this->memo();
+        chain.mInitElapsedTime = initTime.elapsed();
+
+
+        mProject->mModel->mLogInit += "<hr>";
+        mProject->mModel->mLogInit += line(textBold(tr("INIT CHAIN %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))));
+        mProject->mModel->mLogInit += line("Seed : " + QString::number(chain.mSeed));
+
+        mProject->mModel->mLogInit += ModelUtilities:: modelStateDescriptionHTML(static_cast<ModelChronocurve*>(mProject->mModel) );
 
         //----------------------- Burn-in --------------------------------------
 
-        emit stepChanged(tr("Chain : %1 / %2").arg(QString::number(mChainIndex + 1), QString::number(mChains.size()))  + " : " + tr("Burn-in"), 0, chain.mNumBurnIter);
+        emit stepChanged(tr("Chain : %1 / %2").arg(QString::number(mChainIndex + 1), QString::number(mChains.size()))  + " : " + tr("Burn-in"), 0, chain.mIterPerBurn);
         mState = eBurning;
 
-        //QTime startBurnTime = QTime::currentTime();
+        QElapsedTimer burningTime;
+        burningTime.start();
 
-        while (chain.mBurnIterIndex < chain.mNumBurnIter) {
+        while (chain.mBurnIterIndex < chain.mIterPerBurn) {
             if (isInterruptionRequested()) {
                 mAbortedReason = ABORTED_BY_USER;
                 return;
@@ -188,24 +172,27 @@ void MCMCLoop::run()
 
             try {
                 this->update();
-               // qDebug()<<"MCMCLoop Burn update"<< chain.mBurnIterIndex<<chain.mNumBurnIter;
+
             } catch (QString error) {
                 mAbortedReason = error;
                 return;
             }
 
+            this->memo();
             ++chain.mBurnIterIndex;
             ++chain.mTotalIter;
 
             emit stepProgressed(chain.mBurnIterIndex);
         }
-
+        chain.burnElapsedTime = burningTime.elapsed();
 
         //----------------------- Adapting --------------------------------------
 
-        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))  + " : " + tr("Adapting"), 0, chain.mMaxBatchs * chain.mNumBatchIter);
+        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))  + " : " + tr("Adapting"), 0, chain.mMaxBatchs * chain.mIterPerBatch);
         mState = eAdapting;
 
+        QElapsedTimer adaptTime;
+        adaptTime.start();
 
         while ( chain.mBatchIndex < chain.mMaxBatchs) {
             if (isInterruptionRequested()) {
@@ -214,7 +201,7 @@ void MCMCLoop::run()
             }
 
             chain.mBatchIterIndex = 0;
-            while (chain.mBatchIterIndex < chain.mNumBatchIter) {
+            while (chain.mBatchIterIndex < chain.mIterPerBatch) {
                 if (isInterruptionRequested()) {
                     mAbortedReason = ABORTED_BY_USER;
                     return;
@@ -222,77 +209,102 @@ void MCMCLoop::run()
 
                 try {
                     this->update();
-                    //qDebug()<<"MCMCLoop Adapting update"<< chain.mBatchIterIndex<<"/"<<chain.mNumBatchIter<<"  "<< chain.mBatchIndex<<"/"<<chain.mMaxBatchs;
 
                 } catch (QString error) {
                     mAbortedReason = error;
                     return;
                 }
-
+                this->memo();
                 ++chain.mBatchIterIndex;
                 ++chain.mTotalIter;
 
-                emit stepProgressed(chain.mBatchIndex * chain.mNumBatchIter + chain.mBatchIterIndex);
+                emit stepProgressed(chain.mBatchIndex * chain.mIterPerBatch + chain.mBatchIterIndex);
             }
             ++chain.mBatchIndex;
-//qDebug()<<"MCMCLoop Adapting update"<< chain.mBatchIterIndex<<"/"<<chain.mNumBatchIter<<"  "<< chain.mBatchIndex<<"/"<<chain.mMaxBatchs;
-            if (adapt()) {
-                     break;
-            }
+
+            if (adapt(chain.mBatchIndex))
+                    break;
+
 
         }
-        mAdaptLog += "<hr>";
-        if (chain.mBatchIndex * chain.mNumBatchIter < chain.mMaxBatchs * chain.mNumBatchIter) {
-            mAdaptLog += line("Adapt OK at batch : " + QString::number(chain.mBatchIndex) + "/" + QString::number(chain.mMaxBatchs));
+
+        mProject->mModel->mLogAdapt += "<hr>";
+        mProject->mModel->mLogAdapt += line(textBold(tr("ADAPTATION FOR CHAIN %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))) );
+
+        if (chain.mBatchIndex * chain.mIterPerBatch < chain.mMaxBatchs * chain.mIterPerBatch) {
+            mProject->mModel->mLogAdapt += line("Adapt OK at batch : " + QString::number(chain.mBatchIndex) + "/" + QString::number(chain.mMaxBatchs));
 
         } else {
-            mAdaptLog += line("Not adapted after : " + QString::number(chain.mBatchIndex) + " batches");
+            mProject->mModel->mLogAdapt += line(textRed("Not adapted after : " + QString::number(chain.mBatchIndex) + " batches"));
         }
-        mAdaptLog += "<hr>";
 
+        mProject->mModel->mLogAdapt += ModelUtilities::modelStateDescriptionHTML(static_cast<ModelChronocurve*>(mProject->mModel) );
+        mProject->mModel->mLogAdapt += "<hr>";
 
+        chain.mAdaptElapsedTime = adaptTime.elapsed();
 
-       /* QTime endAdaptTime = QTime::currentTime();
-        timeDiff = startAdaptTime.msecsTo(endAdaptTime);
-        log += "=> Adapt done in " + QString::number(timeDiff) + " ms\n";*/
+        chain.mAdaptElapsedTime = adaptTime.elapsed();
+        //----------------------- Aquisition --------------------------------------
 
-        //----------------------- Running --------------------------------------
+        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size())) + " : " + tr("Aquisition"), 0, chain.mIterPerAquisition);
+        mState = eAquisition;
+        QElapsedTimer aquisitionTime;
+        aquisitionTime.start();
+        int thinningIdx = 1;
+        int batchIdx = 1;
+        int totalBacth = chain.mBatchIndex;
+        bool OkToMemo;
+        chain.mRealyAccepted = 0;
 
-        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size())) + " : " + tr("Running"), 0, chain.mNumRunIter);
-        mState = eRunning;
-
-
-        while (chain.mRunIterIndex < chain.mNumRunIter) {
+        while (chain.mAquisitionIterIndex < chain.mIterPerAquisition) {
             if (isInterruptionRequested()) {
                 mAbortedReason = ABORTED_BY_USER;
                 return;
             }
 
             try {
-                this->update();
+                OkToMemo =  this->update();
+
             } catch (QString error) {
                 mAbortedReason = error;
                 return;
             }
 
-            ++chain.mRunIterIndex;
+            if (thinningIdx == chain.mThinningInterval) {
+                thinningIdx = 1;
+
+                if (OkToMemo) {
+                    this->memo();
+                     ++chain.mRealyAccepted;
+                }
+
+            } else {
+                    thinningIdx++;
+            }
+
+            if (batchIdx == chain.mIterPerBatch) {
+                adapt(totalBacth);
+                batchIdx = 1;
+                totalBacth++;
+
+            } else {
+                batchIdx++;
+            }
+
+
+            ++chain.mAquisitionIterIndex;
             ++chain.mTotalIter;
 
-            emit stepProgressed(chain.mRunIterIndex);
+            emit stepProgressed(chain.mAquisitionIterIndex);
         }
+        chain.mAcquisitionElapsedTime = aquisitionTime.elapsed();
+        mProject->mModel->mLogResults += line(tr("Run time elapsed %1").arg(DHMS(chain.mAcquisitionElapsedTime)));
 
-        /*QTime endRunTime = QTime::currentTime();
-        timeDiff = startRunTime.msecsTo(endRunTime);
-        log += "=> Acquire done in " + QString::number(timeDiff) + " ms\n";*/
 
-        //-----------------------------------------------------------------------
-
-       /* QTime endChainTime = QTime::currentTime();
-        timeDiff = startChainTime.msecsTo(endChainTime);
-        log += "=> Chain done in " + QString::number(timeDiff) + " ms\n";*/
     }
 
-    log += line(tr("List of used chain seeds (to be copied for re-use in MCMC Settings) : ") + seeds.join(";"));
+    mProject->mModel->mChains = mChains;
+
 
 
     //-----------------------------------------------------------------------
@@ -320,6 +332,6 @@ void MCMCLoop::run()
 
 
     //-----------------------------------------------------------------------
-
-    mChainsLog = log;
+    mProject->mModel->mLogResults += log;
+   // mChainsLog = log;
 }

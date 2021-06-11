@@ -249,7 +249,7 @@ void EventsScene::setShowAllThumbs(const bool show)
     for (QList<AbstractItem*>::iterator cIter = mItems.begin(); cIter != mItems.end(); ++cIter) {
         bool selectedPhase = false;
         QJsonArray phases = dynamic_cast<EventItem*>(*cIter)->getPhases();
-        foreach (const QJsonValue phase, phases) {
+        for (const QJsonValue phase : phases) {
                 if ((selectedPhase == false) && (phase.toObject().value(STATE_IS_SELECTED).toBool() == true)) {
                         selectedPhase = true;
                       //  qDebug()<<"EventsScene::setShowAllThumbs Phase Selected: "<<phase.toObject().value(STATE_NAME).toString();
@@ -1350,10 +1350,44 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
     Project* project = MainWindow::getInstance()->getProject();
 
     // Create one event per data
-    const int deltaX (152);
-    const int deltaY (100);
+    int deltaX = 0;
+    int deltaY = 200;
     int EventCount (0);
     QJsonObject state = project->state();
+    // si la liste est longue possibilité de faire une liaison strati automatique
+    enum constraintType
+    {
+        eConstraintNone = 'N',
+        eConstraintStrati = 'S',
+        eConstraintInvStrati = 'C'
+    };
+    constraintType constraint = eConstraintNone;
+
+    if (listDates.size()>4) {
+        QMessageBox messageBox;
+        messageBox.setWindowTitle(tr("Automatic Link"));
+        messageBox.setText(tr("Do you want to automatically create a constraint link between the imported events ?"));
+        QAbstractButton *stratiButton = messageBox.addButton(tr("In CSV table, the Youngest is on the top"), QMessageBox::YesRole);
+        QAbstractButton *chronoButton = messageBox.addButton(tr("In CSV table, the Oldest is on the top"), QMessageBox::NoRole);
+        messageBox.addButton(tr("&No Link"), QMessageBox::RejectRole);
+
+        messageBox.exec();
+        if (messageBox.clickedButton() == stratiButton) {
+            constraint = eConstraintStrati;
+            deltaX = 0;
+            deltaY = 200;
+        } else if (messageBox.clickedButton() == chronoButton) {
+            constraint = eConstraintInvStrati;
+            deltaX = 0;
+            deltaY = 200;
+        } else
+            constraint = eConstraintNone;
+
+    }
+
+    QJsonObject previousEvent = QJsonObject();
+    QJsonObject currentEvent;
+
     for (int i = 0; i < listDates.size(); ++i) {
         // We must regenerate the variables "state" and "events" after event or data inclusion
       //  QJsonObject state = project->state();
@@ -1371,6 +1405,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
                 if (ev.toObject().value(STATE_NAME).toString() == eventName) {
                     eventIdx = j;
                     eventFinded = ev.toObject();
+                    currentEvent = eventFinded;
                     break;
                 }
                 ++j;
@@ -1386,14 +1421,12 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
                 datesEvent.append(dateJson);
                 eventFinded[STATE_EVENT_DATES] = datesEvent;
 
-                // updateEvent() do pushProjectState(stateNext, reason, true);
-
                 if (i < listCurveData.count()) {
                     Event::setChronocurveCsvDataToJsonEvent(eventFinded, listCurveData.at(i));
                 }
 
                 events[eventIdx] =eventFinded;
-                //                project->updateEvent(eventFinded, QObject::tr("Dates added to event by CSV drag"));
+
                 state[STATE_EVENTS] = events;
 
             } else {
@@ -1401,6 +1434,8 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
                 // eventName=="" must never happen because we set "No Name" in ImportDataView::browse()
                 event.mName = (eventName=="" ? date.mName : eventName);
                 event.mId = project->getUnusedEventId(events);
+
+
                 date.mId = 0;
                 if (date.mName == "")
                     date.mName = "No Name";
@@ -1411,6 +1446,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
                 event.mColor = randomColor();
 
                 QJsonObject eventJson  (event.toJson());
+                currentEvent = eventJson;
                 if (i < listCurveData.count()) {
                     Event::setChronocurveCsvDataToJsonEvent(eventJson, listCurveData.at(i));
                 }
@@ -1425,7 +1461,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
         } else {
             EventKnown bound;
             bound.mType = Event::eKnown;
-            bound.mMethod = Event::eFixe;
+            bound.mTheta.mSamplerProposal = MHVariable::eFixe;
             bound.mFixed= date.mData[STATE_EVENT_KNOWN_FIXED].toDouble();
             // eventName=="" must never happen because we set "No Name" in ImportDataView::browse()
             bound.mName = ( !date.mName.isEmpty() ? date.mName : "No Name");
@@ -1435,7 +1471,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
             bound.mItemY = e->scenePos().y() + EventCount * deltaY;
             bound.mColor = randomColor();
             auto boundJson (bound.toJson());
-
+            currentEvent = boundJson;
             if (i < listCurveData.count()) {
                 Event::setChronocurveCsvDataToJsonEvent(boundJson, listCurveData.at(i));
             }
@@ -1445,8 +1481,41 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
             project->pushProjectState(state, NEW_EVEN_BY_CSV_DRAG_REASON, true);
             ++EventCount;
         }
-    } // for()
 
+        // Automatic constraint creation
+
+        if (constraint != eConstraintNone && !previousEvent.isEmpty()) {
+            QJsonArray eventsConstraints = state.value(STATE_EVENTS_CONSTRAINTS).toArray();
+
+            bool addConstraint = false;
+            EventConstraint c;
+            if (currentEvent.value(STATE_ID).toInt() != previousEvent.value(STATE_ID).toInt()) {
+                if ( constraint == eConstraintStrati && mProject->isEventConstraintAllowed(currentEvent, previousEvent)) {
+                       c.mFromId = currentEvent.value(STATE_ID).toInt();
+                       c.mToId = previousEvent.value(STATE_ID).toInt();
+                       addConstraint = true;
+
+                } else if (mProject->isEventConstraintAllowed(previousEvent, currentEvent)) {
+                        c.mFromId = currentEvent.value(STATE_ID).toInt();
+                        c.mToId = previousEvent.value(STATE_ID).toInt();
+                        addConstraint = true;
+                }
+
+                if (addConstraint) {
+                    c.mId = mProject->getUnusedEventConstraintId(eventsConstraints);
+
+                    QJsonObject constraint = c.toJson();
+                    eventsConstraints.append(constraint);
+                    state[STATE_EVENTS_CONSTRAINTS] = eventsConstraints;
+                    project->pushProjectState(state, "Event constraint created", true);
+                }
+            }
+
+
+        }
+        previousEvent = currentEvent;
+    } // for()
+// TODO : Prévoir une répartition uniforme des Events en augmentant l'écart lorsqu'il y a plusieurs dates
     project->pushProjectState(state, NEW_EVEN_BY_CSV_DRAG_REASON, true);
 }
 
@@ -1529,7 +1598,7 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
             QStringList dataTmp = dataStr.mid(1,dataStr.size()-1);
             date.mName = eventName;
             date.mPlugin = nullptr;
-            date.mMethod = Date::eMHSymetric; //set but not used
+            date.mTheta.mSamplerProposal = MHVariable::eMHSymetric; //set but not used
 
             QJsonObject json;
             json.insert(STATE_EVENT_KNOWN_FIXED, csvLocal.toDouble(dataTmp.at(0)));

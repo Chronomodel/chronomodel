@@ -73,8 +73,11 @@ public:
     QIcon getIcon() const;
     bool doesCalibration() const;
     bool wiggleAllowed() const;
-    Date::DataMethod getDataMethod() const;
-    QList<Date::DataMethod> allowedDataMethods() const;
+    //Date::DataMethod getDataMethod() const;
+    //QList<Date::DataMethod> allowedDataMethods() const;
+    virtual MHVariable::SamplerProposal getDataMethod() const;
+    virtual QList<MHVariable::SamplerProposal> allowedDataMethods() const;
+
     QStringList csvColumns() const;
     int csvMinColumns() const;
     int csvOptionalColumns() const {return 2;} // Corresponding to  "ΔR" and "ΔR Error"

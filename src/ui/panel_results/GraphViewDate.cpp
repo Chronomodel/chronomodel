@@ -308,7 +308,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         else
              mTitle = tr("Individual Std : %1").arg(mDate->mName);
 
-        mGraph->addCurve( generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine) );
+        //mGraph->addCurve( generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine) );
         generateAcceptCurves(mChains, variableDate);
     }
 

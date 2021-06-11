@@ -624,7 +624,7 @@ void GraphView::removeAllZones()
 }
 
 //  Mouse events & Tool Tip
-void GraphView::enterEvent(QEvent* e)
+void GraphView::enterEvent(QEnterEvent *e)
 {
     Q_UNUSED(e);
     mTipVisible = mUseTip;
@@ -667,9 +667,9 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
         mTipRect.setWidth(mTipWidth);
         mTipRect.setHeight(mTipHeight);
 
-        mTipX = getValueForX(e->x() );//+ 1.);
+        mTipX = getValueForX(e->position().x() );//+ 1.);
 
-        mTipY = getValueForY(e->y());//+0.5);
+        mTipY = getValueForY(e->position().y());//+0.5);
 
         update(old_rect.adjusted(-20, -20, 20, 20).toRect());
 

@@ -64,10 +64,11 @@ public:
     void generateModelLog();
     QString getModelLog() const;
 
-    void generateResultsLog();
+    virtual void generateResultsLog();
     QString getResultsLog() const;
 
-    QString getMCMCLog() const;
+    QString getInitLog() const;
+    QString getAdaptLog() const;
 
     QList<QStringList> getStats(const QLocale locale, const int precision, const bool withDateFormat = false);
     QList<QStringList> getPhasesTraces(QLocale locale, const bool withDateFormat = false);
@@ -97,7 +98,7 @@ public:
     double getBandwidth() const;
     int getFFTLength() const;
     
-    void setThresholdToAllModel(const double threshold);
+    virtual void setThresholdToAllModel(const double threshold);
     void initDensities();
     void updateDensities(int fftLen, double bandwidth, double threshold);
 
@@ -133,14 +134,19 @@ public:
     QList<ChainSpecs> mChains;
 
     QString mLogModel;
-    QString mLogMCMC;
+    QString mLogInit;
+    QString mLogAdapt;
     QString mLogResults;
 
     int mNumberOfPhases;
     int mNumberOfEvents;
     int mNumberOfDates;
 
+
     double mThreshold;
+    double mBandwidth;
+    int mFFTLength;
+
     // Members used in the next-previous sheet system
     // they count all the Events and the Dates availables to display
     // We could have the same Event and Date in several phases,
@@ -156,9 +162,6 @@ public slots:
 signals:
     void newCalculus();
 
-private:
-     int mFFTLength;
-     double mBandwidth;
 
 };
 

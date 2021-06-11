@@ -57,8 +57,10 @@ public:
     virtual QJsonObject toJson() const;
     virtual void fromJson( const QJsonObject& json);
     
+    virtual void generateResultsLog();
+
     void generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth);
-    void generateCorrelations(const QList<ChainSpecs> &chains);
+    virtual void generateCorrelations(const QList<ChainSpecs> &chains);
     void generateNumericalResults(const QList<ChainSpecs> &chains);
     void generateCredibility(const double thresh);
     void generateHPD(const double thresh);
@@ -68,17 +70,20 @@ public:
     void clearCredibilityAndHPD();
     void clearTraces();
     
-    void setThresholdToAllModel(const double threshold);
+    virtual void setThresholdToAllModel(const double threshold);
     
     QList<PosteriorMeanGComposante> getChainsMeanGComposanteX();
     QList<PosteriorMeanGComposante> getChainsMeanGComposanteY();
     QList<PosteriorMeanGComposante> getChainsMeanGComposanteZ();
-    
+
+
 public:
     ChronocurveSettings mChronocurveSettings;
     
-    MHVariable mAlphaLissage;
-    std::vector<MCMCSpline> mMCMCSplines; // valeurs aux noeuds
+    MHVariable mLambdaSpline;
+    MCMCSpline mSpline; // valeurs courrantes de la spline
+
+    std::vector<MCMCSpline> mSplinesTrace; // memo des valeurs aux noeuds
     
     PosteriorMeanG mPosteriorMeanG; // valeurs en tout t
     std::vector<PosteriorMeanG> mPosteriorMeanGByChain; // valeurs en tout t par chaine

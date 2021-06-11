@@ -366,7 +366,7 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
 
                // Check EVENTS STRUCTURE
                if ( eventsNew.at(i).toObject().value(STATE_EVENT_TYPE) != eventsOld.at(i).toObject().value(STATE_EVENT_TYPE) ||
-                   eventsNew.at(i).toObject().value(STATE_EVENT_METHOD) != eventsOld.at(i).toObject().value(STATE_EVENT_METHOD) ||
+                   eventsNew.at(i).toObject().value(STATE_EVENT_SAMPLER) != eventsOld.at(i).toObject().value(STATE_EVENT_SAMPLER) ||
                    eventsNew.at(i).toObject().value(STATE_EVENT_PHASE_IDS) != eventsOld.at(i).toObject().value(STATE_EVENT_PHASE_IDS) ||
 
                    eventsNew.at(i).toObject().value(STATE_EVENT_KNOWN_FIXED) != eventsOld.at(i).toObject().value(STATE_EVENT_KNOWN_FIXED) )
@@ -585,7 +585,7 @@ bool Project::load(const QString& path)
                     loadingState[STATE_SETTINGS] = settings;
                 }
                 if ( !loadingState.value(STATE_SETTINGS_TMIN).isNull()) {
-                    // errase old json version
+                    // erase old json version
                     loadingState.remove(STATE_SETTINGS_TMIN);
                     loadingState.remove(STATE_SETTINGS_TMAX);
                     loadingState.remove(STATE_SETTINGS_STEP);
@@ -1368,7 +1368,7 @@ void Project::resetMCMC()
 
         for (int i = 0; i < events.size(); ++i) {
             QJsonObject event = events.at(i).toObject();
-            event[STATE_EVENT_METHOD] = int (Event::eDoubleExp);
+            event[STATE_EVENT_SAMPLER] = int (MHVariable::eDoubleExp);
 
             QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
             for (int j = 0; j < dates.size(); ++j) {
@@ -1378,7 +1378,7 @@ void Project::resetMCMC()
                     Date d;
                     d.fromJson(date);
                     if (!d.isNull()) {
-                        date[STATE_DATE_METHOD] = int (d.mPlugin->getDataMethod());
+                        date[STATE_DATE_SAMPLER] = int (d.mPlugin->getDataMethod());
                         dates[j] = date;
                     }
                 } catch(QString error) {
@@ -1743,14 +1743,14 @@ void Project::updateSelectedEventsColor(const QColor& color)
     pushProjectState(stateNext, "Update selected events color", true);
 }
 
-void Project::updateSelectedEventsMethod(Event::Method method)
+void Project::updateSelectedEventsMethod(MHVariable::SamplerProposal sp)
 {
     QJsonObject stateNext = mState;
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
     for (int i = 0; i<events.size(); ++i) {
         QJsonObject evt = events.at(i).toObject();
         if (evt.value(STATE_IS_SELECTED).toBool()) {
-            evt[STATE_EVENT_METHOD] = method;
+            evt[STATE_EVENT_SAMPLER] = sp;
             events[i] = evt;
         }
     }
@@ -1758,7 +1758,7 @@ void Project::updateSelectedEventsMethod(Event::Method method)
     pushProjectState(stateNext, "Update selected events method", true);
 }
 
-void Project::updateSelectedEventsDataMethod(Date::DataMethod method, const QString& pluginId)
+void Project::updateSelectedEventsDataMethod(MHVariable::SamplerProposal sp, const QString& pluginId)
 {
     QJsonObject stateNext = mState;
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
@@ -1769,7 +1769,7 @@ void Project::updateSelectedEventsDataMethod(Date::DataMethod method, const QStr
             for (int j = 0; j<dates.size(); ++j) {
                 QJsonObject date = dates[j].toObject();
                 if (date[STATE_DATE_PLUGIN_ID].toString() == pluginId) {
-                    date[STATE_DATE_METHOD] = method;
+                    date[STATE_DATE_SAMPLER] = sp;
                     dates[j] = date;
                 }
             }
@@ -1818,7 +1818,7 @@ Date Project::createDateFromPlugin(PluginAbstract* plugin)
                 date.mData = form->getData();
 
                 date.mName = dialog.getName();
-                date.mMethod = dialog.getMethod();
+                date.mTheta.mSamplerProposal = dialog.getMethod();
                 date.mDeltaType = dialog.getDeltaType();
                 date.mDeltaFixed = dialog.getDeltaFixed();
                 date.mDeltaMin = dialog.getDeltaMin();
@@ -1875,6 +1875,32 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
     QJsonArray phases = state.value(STATE_PHASES).toArray();
     for (int i = 0; i<events.size(); ++i) {
         QJsonObject event = events.at(i).toObject();
+
+        // Since v3 , 2021-04-30, ,the key "method" disaped and it's change with "sampler" for EVENT and DATA.
+        /*
+         *    enum Method{
+         * eFixe = -1,  //<  use with Type==eKnown
+         * eDoubleExp = 0, //<  The default method
+         * eBoxMuller = 1,
+         * eMHAdaptGauss = 2,
+         */
+        if (event.find(STATE_EVENT_METHOD) != event.end()) {
+            switch (event.value(STATE_EVENT_METHOD).toInt()) {
+            case -1 :
+                event[STATE_EVENT_SAMPLER] = MHVariable::eFixe;
+            case 0 :
+                event[STATE_EVENT_SAMPLER] = MHVariable::eDoubleExp;
+            case 1 :
+                event[STATE_EVENT_SAMPLER] = MHVariable::eBoxMuller;
+            case 2:
+                event[STATE_EVENT_SAMPLER] = MHVariable::eMHAdaptGauss;
+
+            }
+            event.remove(STATE_EVENT_METHOD);
+        }
+       // event[STATE_EVENT_SAMPLER] = event.value(STATE_EVENT_METHOD)
+
+
         QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
         for (int j = 0; j < dates.size(); ++j) {
             QJsonObject date = dates.at(j).toObject();
@@ -1902,6 +1928,24 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
                 isCorrected = true;
             }
 
+            /*    enum DataMethod{
+                    eMHSymetric = 0,
+                    eInversion = 1,
+                    eMHSymGaussAdapt = 2
+                };
+            */
+            if (date.find(STATE_DATE_METHOD) != date.end()) { // since version 3.0
+                switch (date.value(STATE_DATE_METHOD).toInt()) {
+                case 0 :
+                    date[STATE_DATE_SAMPLER] = MHVariable::eMHSymetric;
+                case 1 :
+                    date[STATE_DATE_SAMPLER] = MHVariable::eInversion;
+                case 2:
+                    date[STATE_DATE_SAMPLER] = MHVariable::eMHSymGaussAdapt;
+
+                }
+                date.remove(STATE_DATE_METHOD);
+            }
             // etc...
 
             // -----------------------------------------------------------
@@ -1922,6 +1966,19 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
                 // Add UUID since version 2.1.3
                 if (subdate.find(STATE_DATE_UUID) == subdate.end()) {
                     subdate[STATE_DATE_UUID] = QString::fromStdString(Generator::UUID());
+                }
+
+                if (subdate.find(STATE_DATE_METHOD) == date.end()) { // since version 3.0
+                    switch (subdate.value(STATE_DATE_METHOD).toInt()) {
+                    case 0 :
+                        subdate[STATE_DATE_SAMPLER] = MHVariable::eMHSymetric;
+                    case 1 :
+                        subdate[STATE_DATE_SAMPLER] = MHVariable::eInversion;
+                    case 2:
+                        subdate[STATE_DATE_SAMPLER] = MHVariable::eMHSymGaussAdapt;
+                    }
+
+                    subdate.remove(STATE_DATE_METHOD);
                 }
                 
                 subdates[k] = subdate;
@@ -1992,7 +2049,7 @@ void Project::updateDate(int eventId, int dateIndex)
                         date[STATE_DATE_DATA] = form->getData();
 
                         date[STATE_NAME] = dialog.getName();
-                        date[STATE_DATE_METHOD] = dialog.getMethod();
+                        date[STATE_DATE_SAMPLER] = dialog.getMethod();
 
                         date[STATE_DATE_DELTA_TYPE] = dialog.getDeltaType();
                         date[STATE_DATE_DELTA_FIXED] = dialog.getDeltaFixed();
@@ -2547,7 +2604,7 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
 QJsonObject Project::getPhasesWithId(const int id)
 {
     const QJsonArray phases = mState.value(STATE_PHASES).toArray();
-    foreach (const QJsonValue pha, phases) {
+    for (const QJsonValue pha : phases) {
         if (pha.toObject().value(STATE_ID) == id)
             return pha.toObject();
     }
@@ -2922,7 +2979,8 @@ void Project::runChronomodel()
     emit mcmcStarted();
 
     clearModel();
-
+    mModel = new Model ();
+    mModel->setProject(this);
     mModel->fromJson(mState);
     bool modelOk = false;
     try {
@@ -2959,7 +3017,7 @@ void Project::runChronomodel()
 
             if (loop.mAbortedReason.isEmpty()) {
                 //Memo of the init variable state to show in Log view
-                mModel->mLogMCMC = loop.getChainsLog() + loop.getInitLog();
+                //mModel->mLogInit = loop.getChainsLog() + loop.getInitLog();
                 emit mcmcFinished(mModel);
             } else {
                 if (loop.mAbortedReason != ABORTED_BY_USER) {
@@ -3081,7 +3139,7 @@ void Project::runChronocurve()
     {
         if (loop.mAbortedReason.isEmpty()) {
             //Memo of the init variable state to show in Log view
-            mModel->mLogMCMC = loop.getChainsLog() + loop.getInitLog();
+            //mModel->mLogInit = loop.getChainsLog() + loop.getInitLog();
             dialog.setFinishedState();
             emit mcmcFinished(mModel);
 

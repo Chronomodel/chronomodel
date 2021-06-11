@@ -78,8 +78,10 @@ public:
     QIcon getIcon() const;
     bool doesCalibration() const;
     bool wiggleAllowed() const;
-    Date::DataMethod getDataMethod() const;
-    QList<Date::DataMethod> allowedDataMethods() const;
+    //Date::DataMethod getDataMethod() const;
+    //QList<Date::DataMethod> allowedDataMethods() const;
+    MHVariable::SamplerProposal getDataMethod() const;
+    QList<MHVariable::SamplerProposal> allowedDataMethods() const;
     QString csvHelp() const;
     QStringList csvColumns() const;
     int csvMinColumns() const;

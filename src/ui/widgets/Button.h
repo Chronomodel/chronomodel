@@ -99,7 +99,7 @@ public:
 protected:
     void paintEvent(QPaintEvent* e);
 
-    virtual void enterEvent(QEvent * e);
+    virtual void enterEvent(QEnterEvent * e);
     virtual void leaveEvent(QEvent *e);
     virtual void keyPressEvent(QKeyEvent* event);
 

@@ -86,7 +86,7 @@ void Label::setPalette(QPalette &palette)
 
 void Label::setBackground(QColor color)
 {
-    mPalette.setColor(QPalette::Background, color);
+    mPalette.setColor(QPalette::Window, color);
 }
 
 void Label::setIsTitle(bool isTitle)
@@ -95,7 +95,7 @@ void Label::setIsTitle(bool isTitle)
 
     if (mIsTitle) {
         mPalette.setColor(QPalette::Text, Qt::white);
-        mPalette.setColor(QPalette::Background, Painting::mainColorGrey);
+        mPalette.setColor(QPalette::Window, Painting::mainColorGrey);
         setAlignment(Qt::AlignCenter);
      }
     else {

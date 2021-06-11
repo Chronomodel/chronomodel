@@ -99,10 +99,10 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
     defaultPen.setStyle(Qt::SolidLine);
 
     QColor color = Qt::blue;
-    //QString resultsText = ModelUtilities::eventResultsText(mEvent, false);
-    //QString resultsHTML = ModelUtilities::eventResultsHTML(mEvent, false);
-    //setNumericalResults(resultsHTML, resultsText);
-    
+ /*   QString resultsText = ModelUtilities::curveResultsText(mEvent, false);
+    QString resultsHTML = ModelUtilities::curveResultsHTML(mEvent, false);
+    setNumericalResults(resultsHTML, resultsText);
+*/
     // ------------------------------------------------
     //  First tab : Posterior distrib
     // ------------------------------------------------
@@ -113,16 +113,16 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->setBackgroundColor(QColor(230, 230, 230));
         mGraph->setOverArrow(GraphView::eBothOverflow);
         
-        mTitle = tr("Alpha Smoothing");
+        mTitle = tr("Lambda Spline");
 
         // ------------------------------------
         //  Post distrib All Chains
         // ------------------------------------
-        //GraphCurve curvePostDistrib = generateDensityCurve(mModel->mAlphaLissage.fullHisto(), "Post Distrib All Chains", color);
+        //GraphCurve curvePostDistrib = generateDensityCurve(mModel->mLambdaSpline.fullHisto(), "Post Distrib All Chains", color);
         
         GraphCurve curvePostDistrib;
         curvePostDistrib.mName = "Post Distrib All Chains";
-        curvePostDistrib.mData = mModel->mAlphaLissage.fullHisto();
+        curvePostDistrib.mData = mModel->mLambdaSpline.fullHisto();
         curvePostDistrib.mPen = QPen(color, 1, Qt::SolidLine);
         curvePostDistrib.mBrush = Qt::NoBrush;
         curvePostDistrib.mIsHisto = false;
@@ -130,21 +130,21 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
         
         mGraph->addCurve(curvePostDistrib);
         
-        //qDebug() << mModel->mAlphaLissage.fullHisto();
+        //qDebug() << mModel->mLambdaSpline.fullHisto();
         //qDebug() << curvePostDistrib.mData;
 
         // ------------------------------------
         //  HPD All Chains
         // ------------------------------------
-        GraphCurve curveHPD = generateHPDCurve(mModel->mAlphaLissage.mHPD, "HPD All Chains", color);
+        GraphCurve curveHPD = generateHPDCurve(mModel->mLambdaSpline.mHPD, "HPD All Chains", color);
         mGraph->addCurve(curveHPD);
 
         // ------------------------------------
         //  Post Distrib Chain i
         // ------------------------------------
-        if (!mModel->mAlphaLissage.mChainsHistos.isEmpty()) {
+        if (!mModel->mLambdaSpline.mChainsHistos.isEmpty()) {
             for (int i=0; i<mChains.size(); ++i)  {
-                GraphCurve curvePostDistribChain = generateDensityCurve(mModel->mAlphaLissage.histoForChain(i),
+                GraphCurve curvePostDistribChain = generateDensityCurve(mModel->mLambdaSpline.histoForChain(i),
                                                                         "Post Distrib Chain " + QString::number(i),
                                                                         Painting::chainColors.at(i),
                                                                         Qt::SolidLine,
@@ -156,7 +156,7 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
         // ------------------------------------
         //  Theta Credibility
         // ------------------------------------
-        GraphCurve curveCred = generateSectionCurve(mModel->mAlphaLissage.mCredibility,
+        GraphCurve curveCred = generateSectionCurve(mModel->mLambdaSpline.mCredibility,
                                                     "Credibility All Chains",
                                                     color);
         mGraph->addCurve(curveCred);
@@ -165,44 +165,40 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
     // -------------------------------------------------
     //  History plots
     // -------------------------------------------------
-    else if(typeGraph == eTrace)
-    {
+    else if(typeGraph == eTrace) {
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
-        mTitle = tr("Alpha Smoothing trace");
+        mTitle = tr("Lambda Spline trace");
 
-        generateTraceCurves(mChains, &(mModel->mAlphaLissage));
+        generateTraceCurves(mChains, &(mModel->mLambdaSpline));
     }
     // -------------------------------------------------
     //  Acceptance rate
     // -------------------------------------------------
-    else if (typeGraph == eAccept)
-    {
+    else if (typeGraph == eAccept) {
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
-        mTitle = tr("Alpha Smoothing acceptation");
+        mTitle = tr("Lambda Spline acceptation");
 
-        mGraph->addCurve(generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
+       // mGraph->addCurve(generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
 
-        generateAcceptCurves(mChains, &(mModel->mAlphaLissage));
+        generateAcceptCurves(mChains, &(mModel->mLambdaSpline));
         mGraph->repaint();
     }
 
     // -------------------------------------------------
     //  Autocorrelation
     // -------------------------------------------------
-    else if (typeGraph == eCorrel)
-    {
+    else if (typeGraph == eCorrel) {
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(nullptr);
-        mTitle = tr("Alpha Smoothing autocorrelation");
+        mTitle = tr("Smoothing autocorrelation");
 
-        generateCorrelCurves(mChains, &(mModel->mAlphaLissage));
+        generateCorrelCurves(mChains, &(mModel->mLambdaSpline));
         mGraph->setXScaleDivision(10, 10);
-    }
-    else
-    {
-        mTitle = tr("Alpha Smoothing");
+
+    } else  {
+        mTitle = tr("Smoothing");
         mGraph->resetNothingMessage();
     }
 }
@@ -213,8 +209,7 @@ void GraphViewAlpha::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
     GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showCredibility, showError, showWiggle);
 
-    if (mCurrentTypeGraph == ePostDistrib)
-    {
+    if (mCurrentTypeGraph == ePostDistrib)  {
         mGraph->setTipYLab("");
         
         mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
@@ -231,10 +226,8 @@ void GraphViewAlpha::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         mGraph->clearInfos();
     }
 
-    else if (mCurrentTypeGraph == eTrace)
-    {
-        for (int i=0; i<mShowChainList.size(); ++i)
-        {
+    else if (mCurrentTypeGraph == eTrace)  {
+        for (int i=0; i<mShowChainList.size(); ++i) {
             mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList.at(i));
             mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList.at(i));
             mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList.at(i));
@@ -274,7 +267,7 @@ void GraphViewAlpha::updateCurvesToShow(bool showAllChains, const QList<bool>& s
        *  - Correl Limit Lower i
        *  - Correl Limit Upper i
        * ------------------------------------------------   */
-      else if (mCurrentTypeGraph == eCorrel && mCurrentVariable == eTheta) {
+      else if (mCurrentTypeGraph == eCorrel) {
           for (int i=0; i<mShowChainList.size(); ++i) {
               mGraph->setCurveVisible("Correl " + QString::number(i), mShowChainList.at(i));
               mGraph->setCurveVisible("Correl Limit Lower " + QString::number(i), mShowChainList.at(i));

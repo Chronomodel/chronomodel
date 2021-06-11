@@ -47,6 +47,18 @@ class MHVariable: public MetropolisVariable
 {
 
 public:
+    enum SamplerProposal{
+        // Event
+        eFixe = -1,  //<  use with Type==eKnown
+        eDoubleExp = 0, //<  The default method for Event->theta
+        eBoxMuller = 1,
+        eMHAdaptGauss = 2,
+        // Data
+        eMHSymetric = 3,
+        eInversion = 4,
+        eMHSymGaussAdapt = 5
+    };
+
     MHVariable();
     explicit MHVariable(const MHVariable &origin);
     virtual ~MHVariable();
@@ -60,6 +72,7 @@ public:
     void saveCurrentAcceptRate();
 
     bool tryUpdate(const double x, const double rapportToTry);
+    bool adapt (const double coef_min = 0.42, const double coef_max = 0.46, const double delta = 0.01);
 
     QVector<double> acceptationForChain(const QList<ChainSpecs>& chains, int index);
     void generateGlobalRunAcceptation(const QList<ChainSpecs>& chains);
@@ -69,6 +82,9 @@ public:
                           const QString& noResultMessage = QObject::tr("No result to display"),
                           const QString& unit = QString(),
                           DateConversion formatFunc = nullptr, const bool forCSV = false) const;
+
+    static QString getSamplerProposalText(const MHVariable::SamplerProposal sp);
+    static MHVariable::SamplerProposal getSamplerProposalFromText(const QString& text);
 
 public:
     double mSigmaMH;
@@ -95,7 +111,8 @@ public:
 
     QVector<double>* mHistoryAcceptRateMH;
 
-    QString mProposal;
+    SamplerProposal mSamplerProposal;
+
 };
 
 QDataStream &operator<<( QDataStream &stream, const MHVariable &data );

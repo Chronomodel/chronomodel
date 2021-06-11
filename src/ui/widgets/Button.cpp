@@ -105,7 +105,7 @@ void Button::setColorState(ColorState state)
     update();
 }
 
-void Button::enterEvent(QEvent *e)
+void Button::enterEvent(QEnterEvent *e)
 {
     mMouseOver = true;
     //update();
@@ -225,7 +225,7 @@ void Button::paintEvent(QPaintEvent* e)
 
         QFont adaptedFont (font());
         QFontMetricsF fm (adaptedFont);
-        qreal textSize = fm.width(text());
+        qreal textSize = fm.horizontalAdvance(text());
         if (textSize > (r.width() - 10. )) {
             const qreal fontRate = textSize / (r.width() - 10. );
             const qreal ptSiz = adaptedFont.pointSizeF() / fontRate;

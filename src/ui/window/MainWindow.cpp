@@ -845,9 +845,9 @@ void MainWindow::changeEventsMethod()
         return;
 
     QStringList opts;
-    opts.append(ModelUtilities::getEventMethodText(Event::eMHAdaptGauss));
-    opts.append(ModelUtilities::getEventMethodText(Event::eBoxMuller));
-    opts.append(ModelUtilities::getEventMethodText(Event::eDoubleExp));
+    opts.append(MHVariable::getSamplerProposalText(MHVariable::eMHAdaptGauss));
+    opts.append(MHVariable::getSamplerProposalText(MHVariable::eBoxMuller));
+    opts.append(MHVariable::getSamplerProposalText(MHVariable::eDoubleExp));
 
     bool ok;
     QString methodStr = QInputDialog::getItem(qApp->activeWindow(),
@@ -855,7 +855,7 @@ void MainWindow::changeEventsMethod()
                                           tr("Change Selected Events MCMC Method") + " :",
                                           opts, 0, false, &ok);
     if (ok && !methodStr.isEmpty()) {
-        Event::Method method = ModelUtilities::getEventMethodFromText(methodStr);
+        MHVariable::SamplerProposal method = MHVariable::getSamplerProposalFromText(methodStr);
         mProject->updateSelectedEventsMethod(method);
     }
 }
@@ -877,16 +877,16 @@ void MainWindow::changeDatesMethod()
                                              opts, 0, false, &ok);
     if (ok) {
         opts.clear();
-        opts.append(ModelUtilities::getDataMethodText(Date::eMHSymetric));
-        opts.append(ModelUtilities::getDataMethodText(Date::eInversion));
-        opts.append(ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
+        opts.append(MHVariable::getSamplerProposalText(MHVariable::eMHSymetric));
+        opts.append(MHVariable::getSamplerProposalText(MHVariable::eInversion));
+        opts.append(MHVariable::getSamplerProposalText(MHVariable::eMHSymGaussAdapt));
 
         QString methodStr = QInputDialog::getItem(qApp->activeWindow(),
                                                   tr("Change Data Method"),
                                                   tr("Change MCMC method of data in selected events") + " :",
                                                   opts, 0, false, &ok);
         if (ok && !methodStr.isEmpty()) {
-            Date::DataMethod method = ModelUtilities::getDataMethodFromText(methodStr);
+            MHVariable::SamplerProposal method = MHVariable::getSamplerProposalFromText(methodStr);
             PluginAbstract* plugin =PluginManager::getPluginFromName(pluginName);
             QString pluginId = plugin->getId();
             mProject->updateSelectedEventsDataMethod(method, pluginId);
@@ -1080,11 +1080,13 @@ void MainWindow::readSettings(const QString& defaultFilePath)
                 connectProject();
 
                 mProject->setAppSettings();
+              //  mProject->mModel->fromJson(mProject->mState); // !!!!
+
                 mProjectView->setProject(mProject);
 
                 mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true);
                 // to do, it'is done in project load
-                if (! mProject->mModel->mChains.isEmpty()) {
+                if (mProject->mModel!=nullptr && !mProject->mModel->mChains.isEmpty()) {
                     // pushProjectState find mStructurelsChanged on true and emit NoResult()
                 //    mProject->mStructureIsChanged = false;
                 //    mProject->setNoResults(false);
@@ -1101,8 +1103,9 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     setAppSettings();
     mProjectView->readSettings();
 
-    if (mProject && (! mProject->mModel->mChains.isEmpty()) ) {
+    if (mProject->mModel!=nullptr && (! mProject->mModel->mChains.isEmpty()) ) {
         mProject->mModel->updateDesignFromJson();
+   //     mProject->mModel->updateDensities(1024, 1.06, 95.0);  //todo ici à remettre en place
         mProjectView->showResults();
    }
 }
@@ -1143,7 +1146,7 @@ void MainWindow::activateInterface(bool activate)
 
     //  int largeurEcran = QApplication::desktop()->width();
     //  int hauteurEcran = QApplication::desktop()->height();
-
+/*
     int numScreen (QApplication::desktop()->screenNumber(this));
     QScreen *screen;
     if (numScreen>0) {
@@ -1160,7 +1163,7 @@ void MainWindow::activateInterface(bool activate)
     qDebug()<<"MainWindow::activateInterface this >>screenGeometry"<< numScreen << QApplication::desktop()->screenGeometry(this) << QApplication::desktop()->availableGeometry(this)<< QApplication::desktop()->width();
     qDebug()<<"MainWindow::activateInterface screen width"<< width() / screen->physicalDotsPerInchX() * cm_per_in;
     qDebug()<<"MainWindow::activateInterface screen height"<< height() / screen->physicalDotsPerInchY() * cm_per_in;
-
+*/
 }
 
 void MainWindow::setRunEnabled(bool enabled)

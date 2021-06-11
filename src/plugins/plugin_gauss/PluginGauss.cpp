@@ -121,17 +121,17 @@ bool PluginGauss::wiggleAllowed() const
     return true;
 }
 
-Date::DataMethod PluginGauss::getDataMethod() const
+MHVariable::SamplerProposal PluginGauss::getDataMethod() const
 {
-    return Date::eMHSymGaussAdapt;
+    return MHVariable::eMHSymGaussAdapt;
 }
 
-QList<Date::DataMethod> PluginGauss::allowedDataMethods() const
+QList<MHVariable::SamplerProposal> PluginGauss::allowedDataMethods() const
 {
-    QList<Date::DataMethod> methods;
-    methods.append(Date::eMHSymetric);
-    methods.append(Date::eInversion);
-    methods.append(Date::eMHSymGaussAdapt);
+    QList<MHVariable::SamplerProposal> methods;
+    methods.append(MHVariable::eMHSymetric);
+    methods.append(MHVariable::eInversion);
+    methods.append(MHVariable::eMHSymGaussAdapt);
     return methods;
 }
 

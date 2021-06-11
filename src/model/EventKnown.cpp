@@ -49,7 +49,7 @@ EventKnown::EventKnown():Event(),
 mFixed(0.)
 {
     Event::mType = eKnown;
-    Event::mMethod= eFixe;
+    Event::mTheta.mSamplerProposal= MHVariable::eFixe;
     Event::mTheta.mSigmaMH = 0.;
 }
 
@@ -64,7 +64,8 @@ EventKnown EventKnown::fromJson(const QJsonObject& json)
     event.Event::mColor = QColor(json[STATE_COLOR_RED].toInt(),
                            json[STATE_COLOR_GREEN].toInt(),
                            json[STATE_COLOR_BLUE].toInt());
-    event.Event::mMethod = Event::eFixe;
+    //event.Event::mMethod = Event::eFixe;
+    event.mTheta.mSamplerProposal= MHVariable::eFixe;
     event.Event::mItemX = json[STATE_ITEM_X].toDouble();
     event.Event::mItemY = json[STATE_ITEM_Y].toDouble();
     event.Event::mIsSelected = json[STATE_IS_SELECTED].toBool();
@@ -84,6 +85,8 @@ EventKnown EventKnown::fromJson(const QJsonObject& json)
 
     event.Event::mSInc = json.value(STATE_EVENT_S_INC).toDouble();
     event.Event::mSInt = json.value(STATE_EVENT_S_INT).toDouble();
+
+    event.mVG.mSamplerProposal= MHVariable::eMHAdaptGauss;
     return event;
 }
 
@@ -100,7 +103,7 @@ QJsonObject EventKnown::toJson() const
     event[STATE_COLOR_GREEN] = Event::mColor.green();
     event[STATE_COLOR_BLUE] = Event::mColor.blue();
 
-    event[STATE_EVENT_METHOD] = Event::eFixe;
+    event[STATE_EVENT_SAMPLER] = MHVariable::eFixe;
     event[STATE_ITEM_X] = Event::mItemX;
     event[STATE_ITEM_Y] = Event::mItemY;
     event[STATE_IS_SELECTED] = Event::mIsSelected;

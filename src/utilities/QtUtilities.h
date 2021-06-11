@@ -51,6 +51,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 bool colorIsDark(const QColor& color);
 void sortIntList(QList<int>& list);
 
+QString DHMS(quint64 elapsedTime);
+
 QList<QStringList> readCSV(const QString& filePath, const QString& separator = ",");
 int defaultDpiX();
 qreal dpiScaled(qreal value);

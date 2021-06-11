@@ -56,7 +56,7 @@ ChronocurveSettingsView::ChronocurveSettingsView(QWidget* parent):QWidget(parent
     palette.setColor(QPalette::WindowText, CHRONOCURVE_COLOR_TEXT);
     mTitleLabel->setPalette(palette);
     
-    mDescriptionLabel = new QLabel(tr("These parameters give you controls over the way curves are built. MCMC (Bayesian) can be activated for event time, VG or global alpha smoothing factor, etc blablabla"), this);
+    mDescriptionLabel = new QLabel(tr("These parameters give you controls over the way curves are built. MCMC (Bayesian) can be activated for event time, VG or global lambda spline factor, etc. "), this);
     mDescriptionLabel->setAlignment(Qt::AlignCenter);
     mDescriptionLabel->setWordWrap(true);
     //QFont descFont;
@@ -65,53 +65,47 @@ ChronocurveSettingsView::ChronocurveSettingsView(QWidget* parent):QWidget(parent
     palette.setColor(QPalette::WindowText, Qt::gray);
     mDescriptionLabel->setPalette(palette);
     
-    mProcessTypeLabel = new QLabel(tr("Process Type") + " :", this);
+    mProcessTypeLabel = new QLabel(tr("Process") , this);
     mProcessTypeInput = new QComboBox(this);
     mProcessTypeInput->addItem(tr("Univariate"));
     mProcessTypeInput->addItem(tr("Spherical"));
-    mProcessTypeInput->addItem(tr("Vectorial"));
+    mProcessTypeInput->addItem(tr("Vector"));
     mProcessTypeInput->addItem(tr("3D"));
     
-    mVariableTypeLabel = new QLabel(tr("Variable Type") + " :", this);
+    mVariableTypeLabel = new QLabel(tr("Variable"), this);
     mVariableTypeInput = new QComboBox(this);
     mVariableTypeInput->addItem(tr("Inclination"));
     mVariableTypeInput->addItem(tr("Declination"));
     mVariableTypeInput->addItem(tr("Field"));
     mVariableTypeInput->addItem(tr("Depth"));
-    mVariableTypeInput->addItem(tr("Other Measure"));
+    mVariableTypeInput->addItem(tr("Any Measure"));
     
-    mUseErrMesureLabel = new QLabel(tr("Use err measure") + " :", this);
+    mUseErrMesureLabel = new QLabel(tr("Use Measurement Err."), this);
     mUseErrMesureInput = new QCheckBox(this);
     
-    mTimeTypeLabel = new QLabel(tr("Time type") + " :", this);
+    mTimeTypeLabel = new QLabel(tr("Time Type"), this);
     mTimeTypeInput = new QComboBox(this);
     mTimeTypeInput->addItem(tr("Fixed"));
     mTimeTypeInput->addItem(tr("Bayesian"));
     
-    /*mUseTimeBayesianEventLabel = new QLabel(tr("Time bayesian event"), this);
-    mUseTimeBayesianEventInput = new QCheckBox(this);
-    
-    mUseTimeBayesianConstraintLabel = new QLabel(tr("Time bayesian constraint"), this);
-    mUseTimeBayesianConstraintInput = new QCheckBox(this);*/
-    
-    mVarianceTypeLabel = new QLabel(tr("Variance type") + " :", this);
+    mVarianceTypeLabel = new QLabel(tr("Variance"), this);
     mVarianceTypeInput = new QComboBox(this);
     mVarianceTypeInput->addItem(tr("Fixed"));
     mVarianceTypeInput->addItem(tr("Bayesian"));
     
-    mUseVarianceIndividualLabel = new QLabel(tr("Variance individual") + " :", this);
+    mUseVarianceIndividualLabel = new QLabel(tr("Variance Individual"), this);
     mUseVarianceIndividualInput = new QCheckBox(this);
     
-    mVarianceFixedLabel = new QLabel(tr("Variance fixed") + " :", this);
+    mVarianceFixedLabel = new QLabel(tr("Variance Value"), this);
     mVarianceFixedInput = new QLineEdit(this);
     
-    mCoeffLissageTypeLabel = new QLabel(tr("Coeff lissage type") + " :", this);
-    mCoeffLissageTypeInput = new QComboBox(this);
-    mCoeffLissageTypeInput->addItem(tr("Fixed"));
-    mCoeffLissageTypeInput->addItem(tr("Bayesian"));
+    mLambdaSplineTypeLabel = new QLabel(tr("Smoothing"), this);
+    mLambdaSplineTypeInput = new QComboBox(this);
+    mLambdaSplineTypeInput->addItem(tr("Fixed"));
+    mLambdaSplineTypeInput->addItem(tr("Bayesian"));
     
-    mAlphaLissageLabel = new QLabel(tr("Alpha Smoothing") + " :", this);
-    mAlphaLissageInput = new QLineEdit(this);
+    mLambdaSplineLabel = new QLabel(tr("Smoothing Value"), this);
+    mLambdaSplineInput = new QLineEdit(this);
     
     
     
@@ -126,7 +120,8 @@ ChronocurveSettingsView::ChronocurveSettingsView(QWidget* parent):QWidget(parent
 
     grid->addWidget(mVariableTypeLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mVariableTypeInput, row, 1);
-     
+
+    grid->setVerticalSpacing(15);
     grid->addWidget(mUseErrMesureLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mUseErrMesureInput, row, 1);
     
@@ -148,11 +143,11 @@ ChronocurveSettingsView::ChronocurveSettingsView(QWidget* parent):QWidget(parent
     grid->addWidget(mVarianceFixedLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mVarianceFixedInput, row, 1);
     
-    grid->addWidget(mCoeffLissageTypeLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mCoeffLissageTypeInput, row, 1);
+    grid->addWidget(mLambdaSplineTypeLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mLambdaSplineTypeInput, row, 1);
     
-    grid->addWidget(mAlphaLissageLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mAlphaLissageInput, row, 1);
+    grid->addWidget(mLambdaSplineLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mLambdaSplineInput, row, 1);
     
     QVBoxLayout* vlayout = new QVBoxLayout();
     //vlayout->setMargin(20);
@@ -185,7 +180,7 @@ ChronocurveSettingsView::ChronocurveSettingsView(QWidget* parent):QWidget(parent
     
     connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::updateVisibilities);
     
-    connect(mCoeffLissageTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::updateVisibilities);
+    connect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::updateVisibilities);
     
     
     
@@ -203,9 +198,9 @@ ChronocurveSettingsView::ChronocurveSettingsView(QWidget* parent):QWidget(parent
     
     connect(mVarianceFixedInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &ChronocurveSettingsView::save);
     
-    connect(mCoeffLissageTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::save);
+    connect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::save);
     
-    connect(mAlphaLissageInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &ChronocurveSettingsView::save);
+    connect(mLambdaSplineInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &ChronocurveSettingsView::save);
 }
 
 ChronocurveSettingsView::~ChronocurveSettingsView()
@@ -263,14 +258,14 @@ void ChronocurveSettingsView::setSettings(const ChronocurveSettings& settings)
     mUseVarianceIndividualInput->setChecked(settings.mUseVarianceIndividual);
     mVarianceFixedInput->setText(QString::number(settings.mVarianceFixed));
     
-    if (settings.mCoeffLissageType == ChronocurveSettings::eModeFixed) {
-        mCoeffLissageTypeInput->setCurrentIndex(0);
+    if (settings.mLambdaSplineType == ChronocurveSettings::eModeFixed) {
+        mLambdaSplineTypeInput->setCurrentIndex(0);
 
-    } else if (settings.mCoeffLissageType == ChronocurveSettings::eModeBayesian) {
-        mCoeffLissageTypeInput->setCurrentIndex(1);
+    } else if (settings.mLambdaSplineType == ChronocurveSettings::eModeBayesian) {
+        mLambdaSplineTypeInput->setCurrentIndex(1);
     }
     
-    mAlphaLissageInput->setText(QString::number(settings.mAlphaLissage));
+    mLambdaSplineInput->setText(QString::number(settings.mLambdaSpline));
     
     updateVisibilities();
 }
@@ -336,14 +331,14 @@ ChronocurveSettings ChronocurveSettingsView::getSettings()
     settings.mUseVarianceIndividual = mUseVarianceIndividualInput->isChecked();
     settings.mVarianceFixed = mVarianceFixedInput->text().toDouble();
     
-    if (mCoeffLissageTypeInput->currentIndex() == 0) {
-        settings.mCoeffLissageType = ChronocurveSettings::eModeFixed;
+    if (mLambdaSplineTypeInput->currentIndex() == 0) {
+        settings.mLambdaSplineType = ChronocurveSettings::eModeFixed;
 
-    } else if (mCoeffLissageTypeInput->currentIndex() == 1) {
-        settings.mCoeffLissageType = ChronocurveSettings::eModeBayesian;
+    } else if (mLambdaSplineTypeInput->currentIndex() == 1) {
+        settings.mLambdaSplineType = ChronocurveSettings::eModeBayesian;
     }
     
-    settings.mAlphaLissage = mAlphaLissageInput->text().toDouble();
+    settings.mLambdaSpline = mLambdaSplineInput->text().toDouble();
     
     return settings;
 }
@@ -379,8 +374,8 @@ void ChronocurveSettingsView::updateVisibilities()
     mUseVarianceIndividualLabel->setVisible(!varianceFixed);
     mUseVarianceIndividualInput->setVisible(!varianceFixed);
     
-    const bool coeffLissageFixed = (mCoeffLissageTypeInput->currentText() == "Fixed");
-    mAlphaLissageLabel->setVisible(coeffLissageFixed);
-    mAlphaLissageInput->setVisible(coeffLissageFixed);
+    const bool coeffLissageFixed = (mLambdaSplineTypeInput->currentText() == "Fixed");
+    mLambdaSplineLabel->setVisible(coeffLissageFixed);
+    mLambdaSplineInput->setVisible(coeffLissageFixed);
 }
 

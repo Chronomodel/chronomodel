@@ -480,7 +480,7 @@ void MultiCalibrationView::updateGraphList()
                         QMap<type_data, type_data> subData = calibCurve.mData;
                         subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
-                        QMap<type_data, type_data> hpd = create_HPD(subData, mThreshold);
+                        QMap<type_data, type_data> hpd (create_HPD(subData, mThreshold));
 
                         GraphCurve hpdCurve;
                         hpdCurve.mName = "Calibration HPD";
@@ -561,7 +561,7 @@ void MultiCalibrationView::updateHPDGraphs(const QString &thres)
             QMap<type_data, type_data> subData = calibCurve->mData;
             subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
-            QMap<type_data, type_data> hpd = create_HPD(subData, mThreshold);
+            QMap<type_data, type_data> hpd (create_HPD(subData, mThreshold));
 
             GraphCurve* hpdCurve = gr->getCurve("Calibration HPD");
             hpdCurve->mData = hpd;
@@ -969,7 +969,9 @@ void MultiCalibrationView::showStat()
                            subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
                            DensityAnalysis results;
-                           results.analysis = analyseFunction(subData);
+                           results.funcAnalysis = analyseFunction(subData);
+                          // results.xmin = map_min_value(subData);
+                           //results.xmax = map_max_value(subData);
 
                            if (!subData.isEmpty()) {
                                QVector<double> subRepart = calculRepartition(subData);
@@ -979,7 +981,7 @@ void MultiCalibrationView::showStat()
 
                                 // hpd results
 
-                               QMap<type_data, type_data> hpd = create_HPD(subData, mThreshold);
+                               QMap<type_data, type_data> hpd (create_HPD(subData, mThreshold));
 
                                const double realThresh = map_area(hpd) / map_area(subData);
 

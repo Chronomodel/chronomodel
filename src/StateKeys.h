@@ -73,7 +73,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define STATE_DATE_UUID "UUID"
 #define STATE_DATE_DATA "data"
 #define STATE_DATE_PLUGIN_ID "plugin_id"
-#define STATE_DATE_METHOD "method"
+#define STATE_DATE_METHOD "method" // Obsolete change with "sampler"
+#define STATE_DATE_SAMPLER "sampler"
+
 #define STATE_DATE_VALID "valid"
 #define STATE_DATE_ORIGIN "origin"
 #define STATE_DATE_DELTA_TYPE "delta_type"
@@ -85,7 +87,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define STATE_DATE_SUB_DATES "subdates"
 
 #define STATE_EVENT_TYPE "type"
-#define STATE_EVENT_METHOD "method"
+#define STATE_EVENT_METHOD "method" // Obsolete change with "sampler"
+#define STATE_EVENT_SAMPLER "sampler"
+
 #define STATE_EVENT_DATES "dates"
 #define STATE_EVENT_PHASE_IDS "phase_ids"
 

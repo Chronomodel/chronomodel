@@ -96,11 +96,11 @@ private:
     QLabel* mVarianceFixedLabel;
     QLineEdit* mVarianceFixedInput;
     
-    QLabel* mCoeffLissageTypeLabel;
-    QComboBox* mCoeffLissageTypeInput;
+    QLabel* mLambdaSplineTypeLabel;
+    QComboBox* mLambdaSplineTypeInput;
     
-    QLabel* mAlphaLissageLabel;
-    QLineEdit* mAlphaLissageInput;
+    QLabel* mLambdaSplineLabel;
+    QLineEdit* mLambdaSplineInput;
 };
 
 #endif

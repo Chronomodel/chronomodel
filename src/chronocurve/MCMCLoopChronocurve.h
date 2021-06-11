@@ -62,27 +62,32 @@ public:
     void orderEventsByTheta(QList<Event *> &lEvents);
     void orderEventsByThetaReduced(QList<Event *> &lEvents);
     void spreadEventsThetaReduced(QList<Event *> &lEvents, double minStep = 1e-9);
-    void spreadEventsThetaReduced0(QList<Event *> &sortedEvents, double spreadSpan = 0.);
+    void spreadEventsThetaReduced0(QList<Event *> &sortedEvents, long double spreadSpan = 0.);
 
 
 protected:
     virtual QString calibrate();
     virtual void initVariablesForChain();
     virtual QString initMCMC();
-    virtual void update();
-    virtual bool adapt();
+    virtual bool update();
+    virtual bool adapt(const int batchIndex);
+    virtual void memo();
     virtual void finalize();
     
 private:
-    long double h_YWI_AY (const SplineMatrices& matrices, const QList<Event *> &lEvents, const double alphaLissage, const std::vector<long double> &vecH);
+    long double h_YWI_AY (const SplineMatrices& matrices, const QList<Event *> &lEvents, const long double lambdaSpline, const std::vector<long double> &vecH);
   //  long double h_YWI_AY_composante(SplineMatrices& matrices, QList<Event*> lEvents, const double alphaLissage);
-    long double h_YWI_AY_composanteX (const SplineMatrices& matrices, const QList<Event *> lEvents, const double alphaLissage, const std::vector<long double> &vecH);
-    long double h_YWI_AY_composanteY (const SplineMatrices& matrices, const QList<Event *> lEvents, const double alphaLissage, const std::vector<long double> &vecH);
-    long double h_YWI_AY_composanteZ (const SplineMatrices& matrices, const QList<Event *> lEvents, const double alphaLissage, const std::vector<long double> &vecH);
-    long double h_alpha (const SplineMatrices &matrices, const int nb_noeuds, const double &alphaLissage);
+    long double h_YWI_AY_composanteX (const SplineMatrices& matrices, const QList<Event *> lEvents, const double lambdaSpline, const std::vector<long double> &vecH);
+    long double h_YWI_AY_composanteX_origin (const SplineMatrices& matrices, const QList<Event *> lEvents, const double lambdaSpline, const std::vector<long double> &vecH);
+
+    long double h_YWI_AY_composanteY (const SplineMatrices& matrices, const QList<Event *> lEvents, const long double lambdaSpline, const std::vector<long double> &vecH);
+    long double h_YWI_AY_composanteZ (const SplineMatrices& matrices, const QList<Event *> lEvents, const long double lambdaSpline, const std::vector<long double> &vecH);
+    long double h_alpha (const SplineMatrices &matrices, const int nb_noeuds, const long double &lambdaSpline);
     long double h_theta (const QList<Event *> lEvents);
+    long double h_theta_Event (const Event * e);
     long double h_VG (const QList<Event *> lEvents);
     
+    double Calcul_Variances_Yij_Rice_GSJ (const QList<Event *> lEvents);
    // double h_YWI_AYX(SplineMatrices& matrices, QList<double> & lX, const double alphaLissage);
  //   long double h_YWI_AY_composanteX(SplineMatrices& matrices, QList<double> lX, const double alphaLissage);
     //double h_alphaX(SplineMatrices& matrices, const int nb_noeuds, const double &alphaLissage);
@@ -104,7 +109,8 @@ private:
 
 
     void reduceEventsTheta(QList<Event *> &lEvents);
-    double reduceTime(double t);
+    long double reduceTime(double t);
+    long double yearTime(double reduceTime);
     void saveEventsTheta(QList<Event *> &lEvents);
     void restoreEventsTheta(QList<Event *> &lEvents);
     std::map<int, double> mThetasMemo;
@@ -121,19 +127,23 @@ private:
     std::vector<std::vector<long double>> calculMatR(std::vector<long double>& vecH);
     std::vector<std::vector<long double>> calculMatQ(std::vector<long double>& vecH);
 
+    MCMCSpline currentSpline (QList<Event *> &lEvents, bool doSortAndSpreadTheta = false, std::vector<long double> vecH = std::vector<long double>(), SplineMatrices matrices = SplineMatrices());
 
     SplineMatrices prepareCalculSpline(const QList<Event *> & sortedEvents, std::vector<long double> &vecH);
 
-    SplineResults calculSpline(const SplineMatrices &matrices, const std::vector<long double> &vecY, const double alpha, const std::vector<long double> &vecH);
-    SplineResults calculSplineX(const SplineMatrices &matrices, const std::vector<long double> &vecH, std::pair<std::vector<std::vector<long double> >, std::vector<long double> >& decomp, const std::vector<std::vector<long double> > matB, const double alpha);
-    SplineResults calculSplineY(const SplineMatrices &matrices, const std::vector<long double> &vecH, std::pair<std::vector<std::vector<long double> >, std::vector<long double> >& decomp, const std::vector<std::vector<long double> > matB, const double alpha);
-    SplineResults calculSplineZ(const SplineMatrices &matrices, const std::vector<long double> &vecH, std::pair<std::vector<std::vector<long double> >, std::vector<long double> >& decomp, const std::vector<std::vector<long double> > matB, const double alpha);
+    SplineResults calculSpline(const SplineMatrices &matrices, const std::vector<long double> &vecY, const double lambdaSpline, const std::vector<long double> &vecH);
+    SplineResults calculSplineX(const SplineMatrices &matrices, const std::vector<long double> &vecH, std::pair<std::vector<std::vector<long double> >, std::vector<long double> >& decomp, const std::vector<std::vector<long double> > matB, const double lambdaSpline);
+    SplineResults calculSplineY(const SplineMatrices &matrices, const std::vector<long double> &vecH, std::pair<std::vector<std::vector<long double> >, std::vector<long double> >& decomp, const std::vector<std::vector<long double> > matB, const double lambdaSpline);
+    SplineResults calculSplineZ(const SplineMatrices &matrices, const std::vector<long double> &vecH, std::pair<std::vector<std::vector<long double> >, std::vector<long double> >& decomp, const std::vector<std::vector<long double> > matB, const double lambdaSpline);
 
-    std::vector<long double> calculMatInfluence(const SplineMatrices& matrices, const std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const int nbBandes, const double alpha);
-    std::vector<long double> calculMatInfluence0(const SplineMatrices& matrices, const std::vector<std::vector<long double>> &matB , const int nbBandes, const double alpha);
+    std::vector<long double> calculMatInfluence(const SplineMatrices& matrices, const std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const int nbBandes, const double lambdaSpline);
+    std::vector<long double> calculMatInfluence0(const SplineMatrices& matrices, const std::vector<std::vector<long double>> &matB , const int nbBandes, const double lambdaSpline);
 
-    std::vector<long double> calculSplineError(const SplineMatrices& matrices, const  std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const double alpha);
-    std::vector<long double> calculSplineError0(const SplineMatrices& matrices, const std::vector<std::vector<long double> > &matB, const double alpha);
+    std::vector<long double> calculSplineError(const SplineMatrices& matrices, const  std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const double lambdaSpline);
+    std::vector<long double> calculSplineError0(const SplineMatrices& matrices, const std::vector<std::vector<long double> > &matB, const double lambdaSpline);
+
+    std::vector<long double> calculMatInfluence_origin(const SplineMatrices& matrices, const SplineResults &splines , const int nbBandes, const double lambdaSpline);
+    std::vector<long double> calculSplineError_origin(const SplineMatrices& matrices, const SplineResults& splines, const double lambdaSpline);
 
     double valeurG(const double t, const MCMCSplineComposante& spline, unsigned& i0);
     double valeurErrG(const double t, const MCMCSplineComposante& spline, unsigned& i0);
@@ -141,10 +151,12 @@ private:
     double valeurGSeconde(const double t, const MCMCSplineComposante& spline);
 
     void valeurs_G_ErrG_GP_GS(const double t, const MCMCSplineComposante& spline, long double& G, long double& ErrG, long double& GP, long double& GS, unsigned& i0);
-    
+    void valeurs_G_ErrG_GP_GS_pHd(const double t, const MCMCSplineComposante& spline, long double& G, long double& ErrG, long double& GP, long double& GS, unsigned& i0);
+
     PosteriorMeanGComposante computePosteriorMeanGComposante(const std::vector<MCMCSplineComposante>& trace);
 
-    bool  asPositiveGPrime (const MCMCSplineComposante& splineComposante);
+    bool  hasPositiveGPrime (const MCMCSplineComposante& splineComposante);
+    bool  hasPositiveGPrimeByDet (const MCMCSplineComposante& splineComposante);
     std::vector<unsigned> listOfIterationsWithPositiveGPrime (const std::vector<MCMCSplineComposante> &splineTrace);
 
 
