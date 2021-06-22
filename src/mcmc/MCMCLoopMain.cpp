@@ -176,7 +176,7 @@ void MCMCLoopMain::initVariablesForChain()
    }
 }
 
-QString MCMCLoopMain::initMCMC()
+QString MCMCLoopMain::initialize()
 {
     QList<Event*>& events (mModel->mEvents);
     QList<Phase*>& phases (mModel->mPhases);
@@ -264,7 +264,7 @@ QString MCMCLoopMain::initMCMC()
         QList< Event*> startEvents = QList<Event*>();
 
         const bool ok (e->getThetaMaxPossible (e, circularEventName, startEvents));
-         qDebug() << " MCMCLoopMain::InitMCMC check constraint" << e->mName << ok;
+         qDebug() << " MCMCLoopMain::initialize check constraint" << e->mName << ok;
         if (!ok) {
             mAbortedReason = QString(tr("Warning : Find Circular Constraint Path %1  %2 ")).arg (e->mName, circularEventName);
             return mAbortedReason;
@@ -283,7 +283,7 @@ QString MCMCLoopMain::initMCMC()
                 return mAbortedReason;
             }
 
-            //qDebug() << "in initMCMC(): Event initialised min : " << unsortedEvents[i]->mName << " : "<<" min"<<min<<tmin;
+            //qDebug() << "in initialize(): Event initialised min : " << unsortedEvents[i]->mName << " : "<<" min"<<min<<tmin;
             mModel->initNodeEvents();
             const double max ( unsortedEvents.at(i)->getThetaMaxRecursive(tmax) );
 #ifdef DEBUG
@@ -308,7 +308,7 @@ QString MCMCLoopMain::initMCMC()
 
             unsortedEvents.at(i)->mInitialized = true;
 
-            //qDebug() << "in initMCMC(): Event initialized : " << unsortedEvents[i]->mName << " : " << unsortedEvents[i]->mTheta.mX<<" between"<<min<<max;
+            //qDebug() << "in initialize(): Event initialized : " << unsortedEvents[i]->mName << " : " << unsortedEvents[i]->mTheta.mX<<" between"<<min<<max;
 
             double s02_sum (0.);
             for (int j = 0; j < unsortedEvents.at(i)->mDates.size(); ++j) {
@@ -316,15 +316,15 @@ QString MCMCLoopMain::initMCMC()
 
                 // 1 - Init ti
                 double sigma;
+                // modif du 2021-06-16 pHd
+                FunctionStat data = analyseFunction(vector_to_map(date.mCalibration->mCurve, date.mCalibration->mTmin, date.mCalibration->mTmax, date.mCalibration->mStep));
+                sigma = double (data.std);
+                //
                 if (!date.mCalibration->mRepartition.isEmpty()) {
                     const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mCalibration->mRepartition);
                     date.mTheta.mX = date.mCalibration->mTmin + idx * date.mCalibration->mStep;
-                    qDebug()<<"MCMCLoopMain::Init"<<date.mName <<" mThe.mx="<<QString::number(date.mTheta.mX, 'g', 15)<<date.mCalibration->mTmin<<date.mCalibration->mStep;
-
-                    FunctionStat data = analyseFunction(vector_to_map(date.mCalibration->mCurve, date.mCalibration->mTmin, date.mCalibration->mTmax, date.mCalibration->mStep));
-
-                    sigma = double (data.stddev);
-                    qDebug()<<"MCMCLoopMain::Init"<<date.mName <<" sigma="<<sigma;
+                  //  qDebug()<<"MCMCLoopMain::Init"<<date.mName <<" mTheta.mx="<<QString::number(date.mTheta.mX, 'g', 15)<<date.mCalibration->mTmin<<date.mCalibration->mStep;
+                  //  qDebug()<<"MCMCLoopMain::Init"<<date.mName <<" sigma="<<sigma;
 
                 } else { // in the case of mRepartion curve is null, we must init ti outside the study period
                        // For instance we use a gaussian random sampling
@@ -349,7 +349,7 @@ QString MCMCLoopMain::initMCMC()
               //  date.mWiggle.saveCurrentAcceptRate();
 
                 // 3 - Init sigma MH adaptatif of each Data ti
-                date.mTheta.mSigmaMH = sigma * 1.44; // modif pHd 2021/01/21 -------------------0,56=1-0,44 ??
+                date.mTheta.mSigmaMH = sigma;// * 1.44; // modif pHd 2021/01/21 -------------------0,56=1-0,44 ??
 
                 // 4 - Clear mLastAccepts array and set this init at 100%
                 date.mTheta.mLastAccepts.clear();
@@ -557,7 +557,8 @@ void MCMCLoopMain::finalize()
     /** @todo Find a way to make it faster !
      */
     mModel->generateCorrelations(mChains);
-//    mModel->updateDensities();
+
+    mModel->initDensities();
 
     // This should not be done here because it uses resultsView parameters
     // ResultView will trigger it again when loading the model
