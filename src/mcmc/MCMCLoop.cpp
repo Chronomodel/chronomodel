@@ -123,7 +123,18 @@ void MCMCLoop::run()
 
      mProject->mModel->mLogInit += line(tr("List of used chain seeds (to be copied for re-use in MCMC Settings) : ") + seeds.join(";"));
 
+
+     // copie la liste des pointeurs, pour garder l'ordre initiale ders Events;
+     // le mécanisme d'initialisation pour les courbes modifie cette liste, hors il faut la réablir pour les chaines suivantes
+     std::vector<Event*> initListEvents (mProject->mModel->mEvents.size());
+     std::copy(mProject->mModel->mEvents.begin(), mProject->mModel->mEvents.end(), initListEvents.begin() );
+
     for (mChainIndex = 0; mChainIndex < mChains.size(); ++mChainIndex) {
+        if (mChainIndex > 0) {
+            // rétablissement de l'ordre des Events, indispensable en cas de calcul de courbe. Car le cacul modifie l'ordre des events
+            std::copy(initListEvents.begin(), initListEvents.end(), mProject->mModel->mEvents.begin() );
+        }
+
         log += "<hr>";
 
         ChainSpecs& chain = mChains[mChainIndex];
@@ -139,23 +150,43 @@ void MCMCLoop::run()
 
         emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))  + " : " + tr("Initialising MCMC"), 0, 0);
 
-        //QTime startInitTime = QTime::currentTime();
         QElapsedTimer initTime;
         initTime.start();
-        mAbortedReason = this->initMCMC();
+        mAbortedReason = this->initialize();
         if (!mAbortedReason.isEmpty())
             return;
 
         this->memo();
         chain.mInitElapsedTime = initTime.elapsed();
-
+        initTime.~QElapsedTimer();
 
         mProject->mModel->mLogInit += "<hr>";
         mProject->mModel->mLogInit += line(textBold(tr("INIT CHAIN %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))));
         mProject->mModel->mLogInit += line("Seed : " + QString::number(chain.mSeed));
 
         mProject->mModel->mLogInit += ModelUtilities:: modelStateDescriptionHTML(static_cast<ModelChronocurve*>(mProject->mModel) );
+// Save mLogInit for debug
+#ifdef DEBUG
+        mProject->mModel->mChains[mChainIndex].mInitElapsedTime = mChains[mChainIndex].mInitElapsedTime;// only to take the time
+        QString dirPath = "../../../../..";//QFileInfo(".").absolutePath() ;
+        QFile file(dirPath + "/Last_Project_Initialization.html");
 
+        const QString projectName = tr("Project filename : %1").arg(mProject->mName);
+        if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+            QTextStream output(&file);
+            output<<"<!DOCTYPE html>"<< Qt::endl;
+            output<<"<html>"<< Qt::endl;
+            output<<"<body>"<< Qt::endl;
+
+            output<<"<h2>"<< projectName+ "</h2>" << Qt::endl;
+            output<<"<hr>";
+            output<<mProject->mModel->getInitLog();
+
+            output<<"</body>"<< Qt::endl;
+            output<<"</html>"<< Qt::endl;
+        }
+        file.close();
+#endif
         //----------------------- Burn-in --------------------------------------
 
         emit stepChanged(tr("Chain : %1 / %2").arg(QString::number(mChainIndex + 1), QString::number(mChains.size()))  + " : " + tr("Burn-in"), 0, chain.mIterPerBurn);
@@ -185,6 +216,7 @@ void MCMCLoop::run()
             emit stepProgressed(chain.mBurnIterIndex);
         }
         chain.burnElapsedTime = burningTime.elapsed();
+        burningTime.~QElapsedTimer();
 
         //----------------------- Adapting --------------------------------------
 
@@ -193,6 +225,8 @@ void MCMCLoop::run()
 
         QElapsedTimer adaptTime;
         adaptTime.start();
+
+        qint64 interTime;
 
         while ( chain.mBatchIndex < chain.mMaxBatchs) {
             if (isInterruptionRequested()) {
@@ -210,6 +244,7 @@ void MCMCLoop::run()
                 try {
                     this->update();
 
+
                 } catch (QString error) {
                     mAbortedReason = error;
                     return;
@@ -221,6 +256,12 @@ void MCMCLoop::run()
                 emit stepProgressed(chain.mBatchIndex * chain.mIterPerBatch + chain.mBatchIterIndex);
             }
             ++chain.mBatchIndex;
+
+            //if (!(adaptTime.elapsed() % 2000)) {
+                //interTime = adaptTime.elapsed();
+                interTime = adaptTime.elapsed() * (double)(chain.mIterPerAquisition + chain.mIterPerBatch* (chain.mMaxBatchs-chain.mBatchIndex)) / (double)(chain.mIterPerBatch* chain.mBatchIndex);
+                emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()) + " : " + "Adapting ; Estimated time left " + DHMS(interTime)));
+           // }
 
             if (adapt(chain.mBatchIndex))
                     break;
@@ -242,8 +283,8 @@ void MCMCLoop::run()
         mProject->mModel->mLogAdapt += "<hr>";
 
         chain.mAdaptElapsedTime = adaptTime.elapsed();
+        adaptTime.~QElapsedTimer();
 
-        chain.mAdaptElapsedTime = adaptTime.elapsed();
         //----------------------- Aquisition --------------------------------------
 
         emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size())) + " : " + tr("Aquisition"), 0, chain.mIterPerAquisition);
@@ -260,6 +301,10 @@ void MCMCLoop::run()
             if (isInterruptionRequested()) {
                 mAbortedReason = ABORTED_BY_USER;
                 return;
+            }
+            if (!(chain.mAquisitionIterIndex % chain.mIterPerBatch)) {
+                interTime = aquisitionTime.elapsed()* (double)(chain.mIterPerAquisition-chain.mAquisitionIterIndex) / (double)chain.mAquisitionIterIndex;
+                emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()) + " : Aquisition ; Estimated time left " + DHMS(interTime)));
             }
 
             try {
@@ -298,7 +343,8 @@ void MCMCLoop::run()
             emit stepProgressed(chain.mAquisitionIterIndex);
         }
         chain.mAcquisitionElapsedTime = aquisitionTime.elapsed();
-        mProject->mModel->mLogResults += line(tr("Run time elapsed %1").arg(DHMS(chain.mAcquisitionElapsedTime)));
+        aquisitionTime.~QElapsedTimer();
+        mProject->mModel->mLogResults += line(tr("Acquisition time elapsed %1").arg(DHMS(chain.mAcquisitionElapsedTime)));
 
 
     }
@@ -313,25 +359,25 @@ void MCMCLoop::run()
 
     try {
         this->finalize();
+
     } catch (QString error) {
         mAbortedReason = error;
         return;
     }
-
+#ifdef DEBUG
     QTime endTime = QTime::currentTime();
 
     QTime timeDiff(0,0,0, (int)startTime.elapsed());
-    //timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
 
-    log += line(tr("Model computed") );
-    log += line(tr("finish at %1").arg(endTime.toString("hh:mm:ss.zzz")) );
-    log += line(tr("time elapsed %1 h %2 m %3 s %4 ms").arg(QString::number(timeDiff.hour()),
+qDebug()<<"Model computed";
+qDebug()<<tr("finish at %1").arg(endTime.toString("hh:mm:ss.zzz")) ;
+qDebug()<<tr("Total time elapsed %1 h %2 m %3 s %4 ms").arg(QString::number(timeDiff.hour()),
                                                             QString::number(timeDiff.minute()),
                                                             QString::number(timeDiff.second()),
-                                                            QString::number(timeDiff.msec()) ));
-
+                                                            QString::number(timeDiff.msec()) );
+#endif
 
     //-----------------------------------------------------------------------
-    mProject->mModel->mLogResults += log;
+  //  mProject->mModel->mLogResults += log;
    // mChainsLog = log;
 }

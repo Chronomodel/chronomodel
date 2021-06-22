@@ -64,20 +64,18 @@ public:
 
     void setMCMCSettings(const MCMCSettings& settings);
     const QList<ChainSpecs>& chains() const;
-/*    const QString& getChainsLog() const;
-    const QString getInitLog() const;
-    const QString getMCMCSettingsLog() const ;
-*/
+
     void run();
 
 signals:
     void stepChanged(QString title, int min, int max);
     void stepProgressed(int value);
+    void setMessage(QString message);
 
 protected:
     virtual QString calibrate() = 0;
     virtual void initVariablesForChain() = 0;
-    virtual QString initMCMC() = 0;
+    virtual QString initialize() = 0;
     virtual bool update() = 0;
     virtual void memo() = 0;
     virtual void finalize() = 0;
@@ -88,10 +86,6 @@ protected:
     int mChainIndex;
     State mState;
 
-/*    QString mChainsLog;
-    QString mInitLog;
-    QString mAdaptLog;
-*/
 public:
     QString mAbortedReason;
     Project* mProject;
