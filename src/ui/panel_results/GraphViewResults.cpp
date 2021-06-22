@@ -565,7 +565,7 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
         const double max ( vector_max_value(curve.mDataVector) );
         mGraph->setRangeY(floor(min), ceil(max));
 
-        const Quartiles& quartiles = variable->mChainsResults.at(i).quartiles;
+        const Quartiles& quartiles = variable->mChainsResults.at(i).traceAnalysis.quartiles;
         
         GraphCurve curveQ1 = generateHorizontalLine(quartiles.Q1, prefix + "Q1 " + QString::number(i), Qt::green);
         mGraph->addCurve(curveQ1);

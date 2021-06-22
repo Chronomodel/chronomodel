@@ -976,7 +976,7 @@ void MultiCalibrationView::showStat()
                            if (!subData.isEmpty()) {
                                QVector<double> subRepart = calculRepartition(subData);
 
-                               results.quartiles = quartilesForRepartition(subRepart, subData.firstKey(), mSettings.mStep);
+                               results.traceAnalysis.quartiles = quartilesForRepartition(subRepart, subData.firstKey(), mSettings.mStep);
                                resultsStr += densityAnalysisToString(results);
 
                                 // hpd results
