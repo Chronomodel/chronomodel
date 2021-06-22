@@ -68,7 +68,7 @@ public:
 protected:
     virtual QString calibrate();
     virtual void initVariablesForChain();
-    virtual QString initMCMC();
+    virtual QString initialize();
     virtual bool update();
     virtual bool adapt(const int batchIndex);
     virtual void memo();
@@ -136,10 +136,10 @@ private:
     SplineResults calculSplineY(const SplineMatrices &matrices, const std::vector<long double> &vecH, std::pair<std::vector<std::vector<long double> >, std::vector<long double> >& decomp, const std::vector<std::vector<long double> > matB, const double lambdaSpline);
     SplineResults calculSplineZ(const SplineMatrices &matrices, const std::vector<long double> &vecH, std::pair<std::vector<std::vector<long double> >, std::vector<long double> >& decomp, const std::vector<std::vector<long double> > matB, const double lambdaSpline);
 
-    std::vector<long double> calculMatInfluence(const SplineMatrices& matrices, const std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const int nbBandes, const double lambdaSpline);
-    std::vector<long double> calculMatInfluence0(const SplineMatrices& matrices, const std::vector<std::vector<long double>> &matB , const int nbBandes, const double lambdaSpline);
+   // std::vector<long double> calculMatInfluence(const SplineMatrices& matrices, const std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const int nbBandes, const double lambdaSpline);
+   // std::vector<long double> calculMatInfluence0(const SplineMatrices& matrices, const std::vector<std::vector<long double>> &matB , const int nbBandes, const double lambdaSpline);
 
-    std::vector<long double> calculSplineError(const SplineMatrices& matrices, const  std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const double lambdaSpline);
+  //  std::vector<long double> calculSplineError(const SplineMatrices& matrices, const  std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const double lambdaSpline);
     std::vector<long double> calculSplineError0(const SplineMatrices& matrices, const std::vector<std::vector<long double> > &matB, const double lambdaSpline);
 
     std::vector<long double> calculMatInfluence_origin(const SplineMatrices& matrices, const SplineResults &splines , const int nbBandes, const double lambdaSpline);
@@ -152,6 +152,9 @@ private:
 
     void valeurs_G_ErrG_GP_GS(const double t, const MCMCSplineComposante& spline, long double& G, long double& ErrG, long double& GP, long double& GS, unsigned& i0);
     void valeurs_G_ErrG_GP_GS_pHd(const double t, const MCMCSplineComposante& spline, long double& G, long double& ErrG, long double& GP, long double& GS, unsigned& i0);
+
+    long double initLambdaSpline();
+    long double cross_validation (const SplineMatrices& matrices, const std::vector<long double> &vecH, const double lambdaSpline);
 
     PosteriorMeanGComposante computePosteriorMeanGComposante(const std::vector<MCMCSplineComposante>& trace);
 

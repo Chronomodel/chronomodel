@@ -216,7 +216,7 @@ void MCMCLoopChronocurve::initVariablesForChain()
 /**
  * Idem Chronomodel + initialisation de VG (events) et Lambda Spline (global)
  */
-QString MCMCLoopChronocurve::initMCMC()
+QString MCMCLoopChronocurve::initialize()
 {
 
     QList<Event*>& events(mModel->mEvents);
@@ -299,7 +299,7 @@ QString MCMCLoopChronocurve::initMCMC()
     prepareEventsY(mModel->mEvents);
 
     QVector<Event*> unsortedEvents = ModelUtilities::unsortEvents(events);
-    
+
     emit stepChanged(tr("Initializing Events..."), 0, unsortedEvents.size());
     
     for (auto&& e : unsortedEvents) {
@@ -334,7 +334,10 @@ QString MCMCLoopChronocurve::initMCMC()
             if (min >= max)
                 qDebug() << tr("-----Error Init for event : %1 : min = %2 : max = %3-------").arg(unsortedEvents.at(i)->mName, QString::number(min, 'f', 30), QString::number(max, 'f', 30));
 #endif
-            
+            if (min >= max) {
+                mAbortedReason = QString(tr("Error Init for event : %1 : min = %2 : max = %3-------").arg(unsortedEvents.at(i)->mName, QString::number(min, 'f', 30), QString::number(max, 'f', 30)));
+                return mAbortedReason;
+            }
             // ----------------------------------------------------------------
             // Chronocurve init Theta event :
             // On initialise les theta près des dates ti
@@ -366,7 +369,7 @@ QString MCMCLoopChronocurve::initMCMC()
             unsortedEvents.at(i)->mInitialized = true;
 
 #ifdef DEBUG
-         //   qDebug() << QString("initMCMC theta event : %1 %2 %3 %4").arg(unsortedEvents.at(i)->mName, QString::number(min, 'f', 30), QString::number(unsortedEvents.at(i)->mTheta.mX, 'f', 30), QString::number(max, 'f', 30));
+         //   qDebug() << QString("initialize theta event : %1 %2 %3 %4").arg(unsortedEvents.at(i)->mName, QString::number(min, 'f', 30), QString::number(unsortedEvents.at(i)->mTheta.mX, 'f', 30), QString::number(max, 'f', 30));
 #endif
             // ----------------------------------------------------------------
 
@@ -376,16 +379,22 @@ QString MCMCLoopChronocurve::initMCMC()
 
                 // 1 - Init ti
                 double sigma;
+                // modif du 2021-06-16 pHd
+                FunctionStat data = analyseFunction(vector_to_map(date.mCalibration->mCurve, mModel->mSettings.mTmin, mModel->mSettings.mTmax, date.mCalibration->mStep));
+                sigma = double (data.std);
+                //
                 if (!date.mCalibration->mRepartition.isEmpty()) {
                     const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mCalibration->mRepartition);
                     date.mTheta.mX = date.mCalibration->mTmin + idx * date.mCalibration->mStep;
-
-                    FunctionStat data = analyseFunction(vector_to_map(date.mCalibration->mCurve, tmin, tmax, date.mCalibration->mStep));
-                    sigma = double (data.stddev);
+                    /* // modif du 2021-06-16 pHd
+                      FunctionStat data = analyseFunction(vector_to_map(date.mCalibration->mCurve, tmin, tmax, date.mCalibration->mStep));
+                      sigma = double (data.std);
+                    */
 
                 } else { // in the case of mRepartion curve is null, we must init ti outside the study period
                        // For instance we use a gaussian random sampling
                     sigma = mModel->mSettings.mTmax - mModel->mSettings.mTmin;
+                    qDebug()<<"mRepartion curve is null for"<< date.mName;
                     const double u = Generator::gaussByBoxMuller(0., sigma);
                     if (u<0)
                         date.mTheta.mX = mModel->mSettings.mTmin + u;
@@ -432,9 +441,11 @@ QString MCMCLoopChronocurve::initMCMC()
             unsortedEvents.at(i)->mTheta.tryUpdate(unsortedEvents.at(i)->mTheta.mX, 2.);
             
         }
+
         // ----------------------------------------------------------------
         // Chronocurve init VG :
         // ----------------------------------------------------------------
+
         Event* event = unsortedEvents.at(i);
         const double var_RICE = Calcul_Variances_Yij_Rice_GSJ(mModel->mEvents);
         if (mChronocurveSettings.mVarianceType == ChronocurveSettings::eModeFixed) {
@@ -443,18 +454,15 @@ QString MCMCLoopChronocurve::initMCMC()
         } else {
             if (mChronocurveSettings.mUseVarianceIndividual) { // Variance G individuelle
                 if (mChronocurveSettings.mUseErrMesure)
-                    event->mVG.mX = var_RICE; //pow(event->mSy, 2.);// 1e+0; //1e20; utilise RICE pour initialiser ou une spline
+                    event->mVG.mX = var_RICE;
                 else
                     event->mVG.mX = 1.;
 
             } else { // Variance G Clobale
                 if ( i == 0) {
                     if (mChronocurveSettings.mUseErrMesure) {
-                       /* double som_inv_S02 = 0.;
-                        for (Event*& e : mModel->mEvents) {
-                            som_inv_S02 += (1. / pow(e->mSy, 2.)); // utiliser RICE pour initialiser
-                        }*/
-                        event->mVG.mX = var_RICE; //mModel->mEvents.size() /som_inv_S02;
+                        event->mVG.mX = var_RICE;
+
                     } else {
                         event->mVG.mX = 1.;
                     }
@@ -495,6 +503,7 @@ QString MCMCLoopChronocurve::initMCMC()
     // ----------------------------------------------------------------
     //  Init Sigma_i and its Sigma_MH
     // ----------------------------------------------------------------
+
     QString log;
     emit stepChanged(tr("Initializing Variances..."), 0, events.size());
 
@@ -522,6 +531,7 @@ QString MCMCLoopChronocurve::initMCMC()
     // ----------------------------------------------------------------
     //  Init Lambda Spline
     // ----------------------------------------------------------------
+
     if (mChronocurveSettings.mLambdaSplineType == ChronocurveSettings::eModeFixed){
         mModel->mLambdaSpline.mX = mChronocurveSettings.mLambdaSpline;
 
@@ -530,7 +540,7 @@ QString MCMCLoopChronocurve::initMCMC()
         // long double res0 = 0.5 * (nb_noeuds-2.) * log((long double)alphaLissage) + h_exp;
         // long double res = exp(res0) * sqrt(det_1_2);
         mModel->mLambdaSpline.mX = 1.E-6;//powl(10., -16. /(events.size()-2.));// (exp(0.5 * (events.size()-2.) * (-8));
-
+mModel->mLambdaSpline.mX = initLambdaSpline();
         // autre possibilité d'initialiser Lambda Spline
         //const double alphaInit = 1./ pow( (mModel->mSettings.mTmax - mModel->mSettings.mTmin)/ mModel->mEvents.size(), 3.);
        // mModel->mLambdaSpline.mX = alphaInit;
@@ -583,15 +593,12 @@ QString MCMCLoopChronocurve::initMCMC()
 // fin test
 
 
-    // --------------------------- memo spline ----------------------
+    // --------------------------- Current spline ----------------------
     
     // --------------------------------------------------------------
-    //  Calcul de la spline g, g" pour chaque composante x y z + stockage
+    //  Calcul de la spline g, g" pour chaque composante x y z
     // --------------------------------------------------------------
     mModel->mSpline = currentSpline(mModel->mEvents, true);
-  // mModel->mSplinesTrace.push_back(mModel->mSpline);
-
-
 
     // --------------------------- Init phases ----------------------
     emit stepChanged(tr("Initializing Phases..."), 0, phases.size());
@@ -599,7 +606,7 @@ QString MCMCLoopChronocurve::initMCMC()
     i = 0;
     for (auto&& phase : phases ) {
         phase->updateAll(tmin, tmax);
-       // phase->memoAll();
+
 
         if (isInterruptionRequested())
             return ABORTED_BY_USER;
@@ -607,10 +614,6 @@ QString MCMCLoopChronocurve::initMCMC()
 
         emit stepProgressed(i);
     }
-
-
-
-
 
 
 
@@ -1062,7 +1065,7 @@ bool MCMCLoopChronocurve::update()
  // pHd : current_matrices n'a pas changé
 
                 try_h = h_YWI_AY(current_matrices, mModel->mEvents, try_value, current_vecH) * h_alpha(current_matrices, mModel->mEvents.size(), try_value);
-                //rapport = (current_h == 0) ? 1 : ((try_h * try_value) / (current_h * current_value));
+
                 if ( current_h == 0.)
                     rapport = 1.;
                 else
@@ -1092,12 +1095,14 @@ bool MCMCLoopChronocurve::update()
      mModel->mSpline = currentSpline(mModel->mEvents, false, current_vecH, current_matrices);
 
     // 2 - test GPrime positive
+
     // bool test = hasPositiveGPrimeByDet(mModel->mSpline.splineX);
    //  bool test2 = hasPositiveGPrime(mModel->mSpline.splineX);
    //  if (test == true) qDebug()<< "test GPrime"<< (test==true);
 
     if (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeProfondeur)
         return hasPositiveGPrimeByDet(mModel->mSpline.splineX);
+        //return hasPositiveGPrime(mModel->mSpline.splineX);
 
     else
         return true;
@@ -1123,8 +1128,6 @@ return false;
 
 bool MCMCLoopChronocurve::adapt(const int batchIndex)
 {
-    //ChainSpecs& chain = mChains[mChainIndex];
-
     const double taux_min = 0.42;           // taux_min minimal rate of acceptation=42
     const double taux_max = 0.46;           // taux_max maximal rate of acceptation=46
 
@@ -1344,7 +1347,8 @@ void MCMCLoopChronocurve::finalize()
 
     // This should not be done here because it uses resultsView parameters
     // ResultView will trigger it again when loading the model
-    //mModel->generatePosteriorDensities(mChains, 1024, 1);
+    mModel->initDensities();
+   // mModel->generatePosteriorDensities(mChains, 1024, 1);
     
     // Generate numerical results of :
     // - MHVariables (global acceptation)
@@ -1985,7 +1989,96 @@ void MCMCLoopChronocurve::valeurs_G_ErrG_GP_GS_pHd(const double t, const MCMCSpl
 
 
 }
+/*********************************************************************************
+**** Cette procedure calcule la Cross Validation
+**** cad la prédiction de (g_(ti)-Yij) sans le point Yij
+**********************************************************************************/
+/*Procedure Calcul_Cross_Validation(var CVc,GCVc,DLEc:extended);
+var i,k:integer;
+    Wij,Wi,Aii,CVC1,CVC2:extended;
+begin
+  // Nombre de degré de liberté
+  DLEc:= Nb_ref-trace(Mat_A,nb_noeuds);
 
+  if (DLEc<>0) then begin
+
+    {Calcul de la validation croisée CV }
+    CVc:=0;
+    for k:=1 to Nb_ref do begin
+      i:=Tab_pts[k].index_crav;
+      Wij:=Tab_pts[k].Wij;
+      CVC1:= Vec_spline.g[i]-Tab_pts[k].Yij;
+      CVC2:= 1 - ((Wij*Mat_A[i,i])/Tab_crav[i].Wi);
+      CVc:=CVc + Wij * sqr(CVC1/CVC2);
+    end;
+    CVc:=CVc/W;
+
+    {Calcul de la validation croisée généralisée GCV }
+    GCVc:=0;
+    for i:=1 to nb_noeuds do begin
+      Wi:=Tab_crav[i].Wi;
+      GCVc:=GCVc + Wi * ( sqr(Vec_spline.g[i]-Tab_crav[i].Yi) + Tab_crav[i].Si2 );
+    end;
+    GCVc:= (GCVc/sqr(DLEc/Nb_ref))/W;
+
+  end;
+
+end;
+*/
+long double MCMCLoopChronocurve::cross_validation (const SplineMatrices& matrices, const std::vector<long double>& vecH, const double lambdaSpline)
+{
+
+    const long double N = matrices.diagWInv.size();
+    std::vector<std::vector<long double>> tmp = multiConstParMat(matrices.matQTW_1Q, lambdaSpline, 5);
+    std::vector<std::vector<long double>> matB = addMatEtMat(matrices.matR, tmp, 5);
+    // Decomposition_Cholesky de matB en matL et matD
+    // Si alpha global: calcul de Mat_B = R + alpha * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
+    std::pair<std::vector<std::vector<long double>>, std::vector<long double>> decomp = decompositionCholesky(matB, 5, 1);
+    SplineResults s = calculSplineX (matrices, vecH, decomp, matB, lambdaSpline);
+
+    auto matA = calculMatInfluence_origin(matrices, s , 1, lambdaSpline);
+    // Nombre de degré de liberté
+    auto DLEc = N - std::accumulate(matA.begin(), matA.end(), 0.);
+
+   long double GCV = 0.;
+   for (int i = 0 ; i < N; i++) {
+       // utiliser mYx pour splineX
+      // auto tmp =  pow(s.vecG.at(i) - mModel->mEvents.at(i)->mYx, 2.);
+
+       GCV +=  pow(s.vecG.at(i) - mModel->mEvents.at(i)->mYx, 2.)/ matrices.diagWInv.at(i) ;
+
+   }
+   GCV /= pow(DLEc, 2.);
+
+
+    return GCV;
+}
+
+
+long double MCMCLoopChronocurve::initLambdaSpline()
+{
+    std::vector<long double> GCV;
+    std::vector<long double> lambda;
+
+    orderEventsByThetaReduced(mModel->mEvents);
+    spreadEventsThetaReduced0(mModel->mEvents);
+
+    auto vecH = calculVecH(mModel->mEvents);
+    auto matrices = prepareCalculSpline(mModel->mEvents, vecH);
+
+    long double lambdaTest;
+
+    for (int idxLambda = -20; idxLambda < 10; ++idxLambda ) {
+        lambdaTest = pow(10., (long double)idxLambda);
+
+        GCV.push_back(cross_validation(matrices, vecH, lambdaTest));
+        lambda.push_back(lambdaTest);
+    }
+
+    const int idxLambdaMin = std::distance(GCV.begin(), std::min_element(GCV.begin(), GCV.end()) );
+
+    return lambda.at(idxLambdaMin);
+}
 
 
 #pragma mark Related to : calibrate
@@ -2889,8 +2982,7 @@ void MCMCLoopChronocurve::spreadEventsThetaReduced(QList<Event *> &lEvent, doubl
                 shiftBack = result.at(endIndex)->mThetaReduced - (result.at(endIndex + 1)->mThetaReduced - minStep);
             }
 
-            //for (int j = startIndex; j <= endIndex; j++) {
-              //   result[j]->mTheta.mX -= shiftBack;
+
             for (auto r = result.begin() + startIndex; r != result.begin() + endIndex; ++r) {
                 (*r)->mThetaReduced -= shiftBack;
             }
@@ -3525,6 +3617,7 @@ SplineResults MCMCLoopChronocurve::calculSplineZ(const SplineMatrices& matrices,
  Bande : nombre de diagonales non nulles
  used only with MCMCLoopChronocurve::calculSplineError()
  */
+/*
 std::vector<long double> MCMCLoopChronocurve::calculMatInfluence(const SplineMatrices& matrices, const std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const int nbBandes, const double lambdaSpline)
 {
     const int n = mModel->mEvents.size();
@@ -3570,12 +3663,7 @@ std::vector<long double> MCMCLoopChronocurve::calculMatInfluence(const SplineMat
 
             matA[i] = 1 - lambdaSpline * matrices.diagWInv.at(i) * matQB_1QT.at(i);
 
-       /*     if (matA.at(i) < 0.99) {
-                qWarning ("MCMCLoopChronocurve::calculMatInfluence -> test Oups matA.at(i)=  <1 ") ;
-                qDebug() << (double) matA.at(i) << (double) (alpha) << (double) (matQB_1QT.at(i)) << (double) (alpha * matrices.diagWInv.at(i) * matQB_1QT.at(i) );
 
-            }
-*/
 
             if (matA.at(i) <= 0) {
                 qWarning ("MCMCLoopChronocurve::calculMatInfluence -> Oups matA.at(i)=  <= 0  change to 1E-100");
@@ -3595,7 +3683,9 @@ std::vector<long double> MCMCLoopChronocurve::calculMatInfluence(const SplineMat
 
     return matA;
 }
+*/
 
+/*
 std::vector<long double> MCMCLoopChronocurve::calculMatInfluence0(const SplineMatrices& matrices, const std::vector<std::vector<long double>> &matB , const int nbBandes, const double lambdaSpline)
 {
     const int n = mModel->mEvents.size();
@@ -3654,6 +3744,7 @@ std::vector<long double> MCMCLoopChronocurve::calculMatInfluence0(const SplineMa
     }
     return matA;
 }
+*/
 
 std::vector<long double> MCMCLoopChronocurve::calculMatInfluence_origin(const SplineMatrices& matrices, const SplineResults& splines , const int nbBandes, const double lambdaSpline)
 {
@@ -3666,7 +3757,7 @@ std::vector<long double> MCMCLoopChronocurve::calculMatInfluence_origin(const Sp
       //  const std::vector<std::vector<long double>>& matL = decomp.first; // we must keep a copy ?
        // const std::vector<long double>& matD = decomp.second; // we must keep a copy ?
 
-        std::vector<std::vector<long double>> matB_1 = inverseMatSym_origin(splines.matL, splines.matD, nbBandes + 4, 1);//inverseMatSym(matL, matD, nbBandes + 4, 1);
+        std::vector<std::vector<long double>> matB_1 = inverseMatSym_origin(splines.matL, splines.matD, nbBandes + 4, 1);
         std::vector<long double> matQB_1QT = initLongVector(n);
 
         auto matQi = matrices.matQ.at(0);
@@ -3700,77 +3791,26 @@ std::vector<long double> MCMCLoopChronocurve::calculMatInfluence_origin(const Sp
 
             matA[i] = 1 - lambdaSpline * matrices.diagWInv.at(i) * matQB_1QT.at(i);
 
-            if (matA.at(i) <= 0) {
-                qWarning ("MCMCLoopChronocurve::calculMatInfluence -> Oups matA.at(i)=  <= 0  change to 1E-100");
+            if (matA.at(i) < 0) {
+                qWarning ("MCMCLoopChronocurve::calculMatInfluence -> Oups matA.at(i) < 0  change to 1E-100");
                 matA[i] = 1E-100; //pHd : A voir arbitraire
-                // throw "MCMCLoopChronocurve::calculMatInfluence -> Oups matA.at(i) <= 0 change to 1E-100";
 
+            }
+            if (matA.at(i) == 0) {
+                qWarning ("MCMCLoopChronocurve::calculMatInfluence -> Oups matA.at(i) = 0  change to 1E-100");
+                matA[i] = 1E-100; //pHd : A voir arbitraire
             }
         }
 
     } else {
        std::generate(matA.begin(), matA.end(), []{return 1.;});
     }
-    // pour controle
-  //  const long double sooomm = std::accumulate(matA.begin(), matA.end(), 0.);
-  //  qDebug() << "MCMCLoopChronocurve::calculMatInfluence_origin sooomm,matAii" << (double) sooomm;
-
 
     return matA;
 }
+
 
 /*
- * std::vector<std::vector<double>> MCMCLoopChronocurve::calculMatInfluence(const SplineMatrices& matrices, const SplineResults &splines , const int nbBandes, const double alpha);
-{
-    unsigned int n = mModel->mEvents.size();
-    std::vector<std::vector<long double>> matA = initLongMatrix(n, n);
-
-    if(mModel->mLambdaSpline.mX != 0)
-    {
-        std::vector<std::vector<long double>> matB1 = inverseMatSym(splines.matL, splines.matD, nbBandes + 4, 1);
-        std::vector<std::vector<long double>> matQB_1QT = initLongMatrix(n, n);
-
-        double term = pow(matrices.matQ[0][0], 2) * matB1[0][0];
-        term += pow(matrices.matQ[0][1], 2) * matB1[1][1];
-        term += 2 * matrices.matQ[0][0] * matrices.matQ[0][1] * matB1[0][1];
-        matQB_1QT[0][0] = term;
-
-        for(unsigned int i=1; i<(n-1); ++i)
-        {
-            term = pow(matrices.matQ[i][i-1], 2) * matB1[i-1][i-1];
-            term += pow(matrices.matQ[i][i], 2) * matB1[i][i];
-            term += pow(matrices.matQ[i][i+1], 2) * matB1[i+1][i+1];
-            term += 2 * matrices.matQ[i][i-1] * matrices.matQ[i][i] * matB1[i-1][i];
-            term += 2 * matrices.matQ[i][i-1] * matrices.matQ[i][i+1] * matB1[i-1][i+1];
-            term += 2 * matrices.matQ[i][i] * matrices.matQ[i][i+1] * matB1[i][i+1];
-            matQB_1QT[i][i] = term;
-        }
-
-        term = pow(matrices.matQ[n-1][n-2], 2) * matB1[n-2][n-2];
-        term += pow(matrices.matQ[n-1][n-1], 2) * matB1[n-1][n-1];
-        term += 2 * matrices.matQ[n-1][n-2] * matrices.matQ[n-1][n-1] * matB1[n-2][n-1];
-        matQB_1QT[n-1][n-1] = term;
-
-        // Multi_diag_par_Mat(Diag_W_1c,Mat_QB_1QT,Nb_noeudsc,1,tmp1);
-        // Multi_const_par_Mat(-alphac,tmp1,Nb_noeudsc,1,Mat_Ac);
-        // Addit_I_et_Mat(Mat_Ac,Nb_noeudsc);
-        // remplacé par:
-        for(unsigned int i=0; i<n; ++i)
-        {
-            matA[i][i] = 1 - mModel->mLambdaSpline.mX * matrices.diagWInv[i] * matQB_1QT[i][i];
-        }
-    }
-    else
-    {
-        for(unsigned int i=0; i<n; ++i)
-        {
-            matA[i][i] = 1;
-        }
-    }
-    return matA;
-}
-*/
-
 std::vector<long double> MCMCLoopChronocurve::calculSplineError(const SplineMatrices& matrices, const std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const double lambdaSpline)
 {
     const size_t n = mModel->mEvents.size();
@@ -3790,7 +3830,8 @@ std::vector<long double> MCMCLoopChronocurve::calculSplineError(const SplineMatr
     
     return errG;
 }
-
+*/
+/*
 std::vector<long double> MCMCLoopChronocurve::calculSplineError0(const SplineMatrices& matrices, const std::vector<std::vector<long double>> &matB, const double lambdaSpline)
 {
     const size_t n = mModel->mEvents.size();
@@ -3810,6 +3851,7 @@ std::vector<long double> MCMCLoopChronocurve::calculSplineError0(const SplineMat
 
     return errG;
 }
+*/
 
 std::vector<long double> MCMCLoopChronocurve::calculSplineError_origin(const SplineMatrices& matrices, const SplineResults& splines, const double lambdaSpline)
 {
@@ -3818,13 +3860,13 @@ std::vector<long double> MCMCLoopChronocurve::calculSplineError_origin(const Spl
     std::vector<long double> errG (n);// = initVecteur(n);
 
     for (unsigned int i=0; i<n; ++i) {
-        double aii = matA[i];
+        const double& aii = matA.at(i);
         // si Aii négatif ou nul, cela veut dire que la variance sur le point est anormalement trop grande,
         // d'où une imprécision dans les calculs de Mat_B (Cf. calcul spline) et de mat_A
         if (aii <= 0) {
             throw "Oups";
         }
-        errG[i] = sqrt(aii  / mModel->mEvents[i]->mW);
+        errG[i] = sqrt(aii  / mModel->mEvents.at(i)->mW);
     }
 
     return errG;
@@ -3867,11 +3909,6 @@ MCMCSpline MCMCLoopChronocurve::currentSpline ( QList<Event *> &lEvents, bool do
 
 
     // le calcul de l'erreur est influencé par VG qui induit 1/mW, utilisé pour fabriquer matrices->DiagWinv et calculer matrices->matQTW_1Q
-
-    //std::vector<long double> vecErrG = calculSplineError_old(matrices, decomp, alpha);
-    // std::vector<long double> vecErrG1 = calculSplineError0(matrices, matB, alpha);
-    // qDebug()<< " update vecErrG = "; for (auto&& e : vecErrG) qDebug() << (double) e;
-
     // Tout le calcul précédent ne change pas
 
     SplineResults s = calculSplineX(matrices, vecH, decomp, matB, lambda);
@@ -3886,8 +3923,7 @@ MCMCSpline MCMCLoopChronocurve::currentSpline ( QList<Event *> &lEvents, bool do
     splineX.vecG = std::move(s.vecG);
     splineX.vecGamma = std::move(s.vecGamma);
 
-    splineX.vecErrG = vecErrG; //calculSplineError(matrices, s);
-    // splineX.vecErrG = calculSplineError_origin(matrices, s, alpha);
+    splineX.vecErrG = vecErrG;
 
     spline.splineX = std::move(splineX);
 
