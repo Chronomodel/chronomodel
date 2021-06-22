@@ -531,17 +531,29 @@ QString ModelUtilities::curveResultsText(const ModelChronocurve* model)
     text += model->mLambdaSpline.resultsString("<br>", "", nullptr, nullptr, false);
 
     if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeProfondeur) {
-        const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval) * model->mChains.size();
-
+        const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
+        unsigned totalPositvIter = 0;
+        unsigned totalPequiredCurve = 0;
+        float rate;
         int i = 0;
         for (auto ch : model->mChains) {
-            const unsigned positvIter= ch.mRealyAccepted;//floor(ch.mIterPerAquisition / ch.mThinningInterval);
-            const float rate = (float)positvIter/(float)requiredCurve * 100.;
+            const unsigned positvIter= ch.mRealyAccepted;
+            totalPositvIter += positvIter;
+            const unsigned requiredCurveChain = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
+            totalPequiredCurve += requiredCurveChain;
+            rate = (float)positvIter/(float)requiredCurve * 100.;
             text += nl + QObject::tr("- Accepted Curves for Chain %1 : %2 / %3 = %4 % ").
                                   arg(QString::number(++i), QString::number(positvIter),
-                                      QString::number(requiredCurve), stringForLocal(rate) ) ;
+                                      QString::number(requiredCurveChain), stringForLocal(rate) ) ;
 
         }
+
+
+        rate  = (float)totalPositvIter/(float)totalPequiredCurve * 100.;
+        text += nl + QObject::tr("- Accepted Curves for All Chain : %2 / %3 = %4 % ").
+                              arg(QString::number(totalPositvIter),
+                                  QString::number(totalPequiredCurve), stringForLocal(rate) ) ;
+
     }
 
     return text;
@@ -749,22 +761,7 @@ QString ModelUtilities::getMCMCSettingsLog(const Model* model)
     log += QObject::tr("Thinning Interval : %1").arg(QString::number(model->mMCMCSettings.mThinningInterval)) + "<br>";
     log += QObject::tr("Mixing level : %1").arg(QString::number(model->mMCMCSettings.mMixingLevel)) + "<br>";
 
-    /*
-     * int i (0);
-    for (const ChainSpecs chain : model->mChains) {
-            ++i;
-            log += "<hr>";
-            log += QObject::tr("Chain %1").arg(QString::number(i)) +"<br>";
-            log += QObject::tr("Seed %1").arg(QString::number(chain.mSeed))+"<br>";
-            log += QObject::tr("Number of burn-in iterations : %1").arg(QString::number(chain.mBurnIterIndex)) + "<br>";
-            log += QObject::tr("Number of batches : %1 / %2").arg(QString::number(chain.mBatchIndex), QString::number(chain.mMaxBatchs)) + "<br>";
-            log += QObject::tr("Number of iterations per batches : %1").arg(QString::number(chain.mNumBatchIter)) + "<br>";
-            log += QObject::tr("Number of running iterations : %1").arg(QString::number(chain.mAquisitionIterIndex)) + "<br>";
-            log += QObject::tr("Thinning Interval : %1").arg(QString::number(chain.mThinningInterval)) + "<br>";
-            log += QObject::tr("Total iterations : %1").arg(QString::number(chain.mTotalIter)) + "<br>";
-            log += QObject::tr("Mixing level : %1").arg(QString::number(chain.mMixingLevel)) + "<br>";
-     }
-    */
+
 
     return log;
 }
@@ -1186,17 +1183,27 @@ QString ModelUtilities::curveResultsHTML(const ModelChronocurve* model)
     text += line(textGreen(model->mLambdaSpline.resultsString("<br>", "", nullptr, nullptr, false)));
 
     if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeProfondeur) {
-        const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval) * model->mChains.size();
+        const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
+        unsigned totalPositvIter = 0;
+        unsigned totalPequiredCurve = 0;
+        float rate;
 
         int i = 0;
         for (auto ch : model->mChains) {
-            const unsigned positvIter= ch.mRealyAccepted;// floor(ch.mIterPerAquisition / ch.mThinningInterval);
-            const float rate = (float)positvIter/(float)requiredCurve * 100.;
+            const unsigned positvIter= ch.mRealyAccepted;
+            totalPositvIter += positvIter;
+            const unsigned requiredCurveChain = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
+            totalPequiredCurve += requiredCurveChain;
+            rate = (float)positvIter/(float)requiredCurve * 100.;
             text += line(textGreen(QObject::tr("- Accepted Curves for Chain %1 : %2 / %3 = %4 % ").
                                   arg(QString::number(++i), QString::number(positvIter),
                                       QString::number(requiredCurve), stringForLocal(rate))) );
 
         }
+        rate  = (float)totalPositvIter/(float)totalPequiredCurve * 100.;
+        text += line(textGreen( QObject::tr("- Accepted Curves for All Chain : %2 / %3 = %4 % ").
+                              arg(QString::number(totalPositvIter),
+                                  QString::number(totalPequiredCurve), stringForLocal(rate) ) ));
     }
     text += "<hr>";
     return text;
@@ -1280,6 +1287,7 @@ void sampleInCumulatedRepartition( Event* event, const ProjectSettings &settings
 
         //event->mTheta.mX = Generator::gaussByDoubleExp(max, (max-min)*0.75, min, max);
         event->mTheta.mX = Generator::gaussByDoubleExp((unionTmax + unionTmin)/2., (unionTmax - unionTmin)/3., min, max);
+
 #ifdef DEBUG
         if (event->mTheta.mX == max)
             qDebug() << "sampleInCumulatedRepartition max<unionTmin and (event->mTheta.mX == max)";
