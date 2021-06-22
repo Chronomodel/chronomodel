@@ -69,6 +69,7 @@ public slots:
     void setProgress2(int value);
 
     void setFinishedState();
+    void setMessage(const QString& message);
 
 protected:
     void keyPressEvent(QKeyEvent* e);

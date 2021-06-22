@@ -73,7 +73,7 @@ mLoop(loop)
     // -----------
 
     connect(mCancelBut, &QPushButton::clicked, this, &MCMCProgressDialog::cancelMCMC);
-
+    connect(mLoop, &MCMCLoop::setMessage, this, &MCMCProgressDialog::setMessage);
     connect(mLoop, &MCMCLoop::finished, this, &MCMCProgressDialog::setFinishedState);
     connect(mLoop, &MCMCLoop::stepChanged, this, &MCMCProgressDialog::setTitle1);
     connect(mLoop, &MCMCLoop::stepProgressed, this, &MCMCProgressDialog::setProgress1);
@@ -93,6 +93,12 @@ int MCMCProgressDialog::startMCMC()
 void MCMCProgressDialog::cancelMCMC()
 {
     mLoop->requestInterruption();
+}
+
+void MCMCProgressDialog:: setMessage(const QString& message)
+{
+    mLabel1->setText(message);
+    setMinimumWidth(int (fontMetrics().boundingRect(message).width() * 1.5));
 }
 
 void MCMCProgressDialog::setTitle1(const QString& message, int minProgress, int maxProgress)
