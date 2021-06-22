@@ -86,7 +86,7 @@ public:
     bool isValid();
     void clear();
 
-    void initNodeEvents(); // use in MCMCLoopMain::initMCMC()
+    void initNodeEvents(); // use in MCMCLoopMain::initialize()
 
     virtual void saveToFile(const QString& fileName);
     virtual void restoreFromFile(const QString& fileName);
@@ -106,7 +106,7 @@ public:
     virtual void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double bandwidth);
     // Trace and Posterior density needed for this :
 
-    virtual void generateCredibility(const double threshold);
+    virtual void generateCredibility(const double& threshold);
     virtual void generateHPD(const double threshold);
     // Trace and Posterior density needed for this :
     virtual void generateNumericalResults(const QList<ChainSpecs>& chains);

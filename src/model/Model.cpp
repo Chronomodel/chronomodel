@@ -62,9 +62,9 @@ mProject(nullptr),
 mNumberOfPhases(0),
 mNumberOfEvents(0),
 mNumberOfDates(0),
-mThreshold(0.0),
-mBandwidth(0.0),
-mFFTLength(0)
+mThreshold(-1.),
+mBandwidth(1.06),
+mFFTLength(1024)
 
 {
     
@@ -1063,9 +1063,9 @@ void Model::initNodeEvents()
  */
 void Model::initDensities()
 {
+    clearThreshold();
     // memo the new value of the Threshold inside all the part of the model: phases, events and dates
-
-    updateDensities(1024, 1.06, 95.0);
+    updateDensities(mFFTLength, mBandwidth, 95.);
 
 }
 
@@ -1153,7 +1153,7 @@ void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
 
 void Model::clearThreshold()
 {
-    mThreshold = -1.;
+   // mThreshold = -1.;
 
     for (auto&& event : mEvents) {
         event->mTheta.mThresholdUsed = -1.;
@@ -1171,7 +1171,7 @@ void Model::clearThreshold()
     }
 }
 
-void Model::generateCredibility(const double thresh)
+void Model::generateCredibility(const double &thresh)
 {
 #ifdef DEBUG
     qDebug()<<QString("Model::generateCredibility( %1 %)").arg(thresh);
@@ -1833,25 +1833,19 @@ void Model::saveToFile(const QString& fileName)
     if (file.open(QIODevice::WriteOnly)) {
 
         QDataStream out(&file);
-        out.setVersion(QDataStream::Qt_5_5);
-
+        out.setVersion(QDataStream::Qt_6_1);
 
         out << quint32 (out.version());// we could add software version here << quint16(out.version());
         out << qApp->applicationVersion();
         // -----------------------------------------------------
         //  Write info
         // -----------------------------------------------------
-        out << quint32 (mPhases.size());
-        out << quint32 (mEvents.size());
-
-        int numDates = 0;
-        for (Event*& ev : mEvents)
-            numDates += ev->mDates.size();
-
-        out << quint32 (numDates);
-
         out << quint32 (mChains.size());
         for (ChainSpecs& ch : mChains) {
+            out << ch.burnElapsedTime;
+            out << ch.mAdaptElapsedTime;
+            out << ch.mAcquisitionElapsedTime;
+
             out << quint32 (ch.mBatchIndex);
             out << quint32 (ch.mBatchIterIndex);
             out << quint32 (ch.mBurnIterIndex);
@@ -1968,7 +1962,7 @@ void Model::restoreFromFile(const QString& fileName)
     in >> QDataStreamVersion;
     in.setVersion(QDataStreamVersion);
 
-    if (in.version()!= QDataStream::Qt_5_5)
+    if (in.version()!= QDataStream::Qt_6_1)
             return;
 
     QString appliVersion;
@@ -1985,17 +1979,15 @@ void Model::restoreFromFile(const QString& fileName)
 
     quint32 tmp32;
     in >> tmp32;
-    //const int numPhases = (int)tmp32;
-    in >> tmp32;
-    //const int numEvents = (int)tmp32;
-    in >> tmp32;
-    //const int numdates = (int)tmp32;
 
-    in >> tmp32;
     mChains.clear();
     mChains.reserve(int (tmp32));
     for (quint32 i=0 ; i<tmp32; ++i) {
         ChainSpecs ch;
+        in >> ch.burnElapsedTime;
+        in >> ch.mAdaptElapsedTime;
+        in >> ch.mAcquisitionElapsedTime;
+
         in >> ch.mBatchIndex;
         in >> ch.mBatchIterIndex;
         in >> ch.mBurnIterIndex;
@@ -2075,7 +2067,6 @@ void Model::restoreFromFile(const QString& fileName)
 
                     d.mCalibration = & (mProject->mCalibCurves[d.mUUID]);
 
-
                     quint32 tmpUint32;
                     in >> tmpUint32;
                     double tmpKey;
@@ -2103,7 +2094,7 @@ void Model::restoreFromFile(const QString& fileName)
         in >> mLogAdapt;
         in >> mLogResults;
 
-        generateCorrelations(mChains);
+        //generateCorrelations(mChains);
        // generatePosteriorDensities(mChains, 1024, 1);
        // generateNumericalResults(mChains);
 
