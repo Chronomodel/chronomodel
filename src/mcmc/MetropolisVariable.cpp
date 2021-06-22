@@ -302,7 +302,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
     const int inputSize (fftLen);
     const int outputSize = 2 * (inputSize / 2 + 1);
 
-   double sigma = dataStd(dataSrc);
+   double sigma = std_Knuth(dataSrc);
 
    /* In the case of Vg and Vt (sigma_ti), there may be very large values that pull the mean.
     * It is preferable in this case, to evaluate an equivalent of the standard deviation using the quantiles at 15.85%, in the Gaussian case.
@@ -326,12 +326,6 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
         }
         return result;
     }
-    // DEBUG
-   /*QVector<double> histo = vector_to_histo(dataSrc,tmin,tmax,fftLen);
-    const double step = (tmax-tmin)/fftLen;
-    result = vector_to_map(histo, tmin, tmax, step);
-    return result;
-    */// /// DEBUG
 
      const double h = bandwidth * sigma * pow(dataSrc.size(), -1./5.);
      const double a = vector_min_value(dataSrc) - 4. * h;
@@ -519,23 +513,25 @@ void MetropolisVariable::generateNumericalResults(const QList<ChainSpecs> &chain
 {
     // Results for chain concatenation
     mResults.funcAnalysis = analyseFunction(mHisto);
-    mResults.quartiles = quartilesForTrace(fullRunTrace(chains)); // fullRunTrace is the formated Traces
-    mResults.xmin = vector_min_value(fullRunTrace(chains));
-    mResults.xmax = vector_max_value(fullRunTrace(chains));
-    // fix the calcul of the mean and the std with the trace, not with the smoothed density
-    mResults.funcAnalysis.mean = mean(fullRunTrace(chains));
-    mResults.funcAnalysis.stddev = dataStd(fullRunTrace(chains));
+    auto statTrace = traceStatistic(fullRunRawTrace(chains));
 
+    mResults.traceAnalysis = std::move(statTrace); //squartilesForTrace(fullRunTrace(chains)); // fullRunTrace is the formated Traces
+ /*   mResults.xmin = std::move(statTrace.min);//  vector_min_value(fullRunTrace(chains));
+    mResults.xmax = std::move(statTrace.max);//vector_max_value(fullRunTrace(chains));
+    mResults.funcAnalysis.mean = std::move(statTrace.mean);//mean(fullRunTrace(chains));
+    mResults.funcAnalysis.stddev = std::move(statTrace.std);//std_Koening(fullRunTrace(chains));
+*/
     // Results for individual chains
     mChainsResults.clear();
     for (int i = 0; i<mChainsHistos.size(); ++i) {
         DensityAnalysis result;
         result.funcAnalysis = analyseFunction(mChainsHistos.at(i));
-        result.quartiles = quartilesForTrace(runFormatedTraceForChain(chains, i));
-        result.xmin = vector_min_value(runFormatedTraceForChain(chains, i));
-        result.xmax = vector_max_value(runFormatedTraceForChain(chains, i));
-        result.funcAnalysis.mean = mean(fullRunTrace(chains));
-        result.funcAnalysis.stddev = dataStd(fullRunTrace(chains));
+        statTrace = traceStatistic(runFormatedTraceForChain(chains, i));
+        result.traceAnalysis =  std::move(statTrace); //quartilesForTrace(runFormatedTraceForChain(chains, i));
+ /*       result.xmin = std::move(statTrace.min);//vector_min_value(runFormatedTraceForChain(chains, i));
+        result.xmax = std::move(statTrace.max);//vector_max_value(runFormatedTraceForChain(chains, i));
+        result.funcAnalysis.mean = std::move(statTrace.mean);//mean(fullRunTrace(chains));
+        result.funcAnalysis.stddev = std::move(statTrace.std);//std_Koening(fullRunTrace(chains)); */
         mChainsResults.append(result);
     }
 }
@@ -750,17 +746,22 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
 {
     QStringList list;
     if (withDateFormat) {
-        list << locale.toString(mResults.funcAnalysis.mode, 'f', precision);
-        list << locale.toString(mResults.funcAnalysis.mean, 'f', precision);
-        list << locale.toString(mResults.funcAnalysis.stddev, 'f', precision);
-        list << locale.toString(mResults.xmin, 'f', precision);
-        list << locale.toString(mResults.xmax, 'f', precision);
-        list << locale.toString(mResults.quartiles.Q1, 'f', precision);
-        list << locale.toString(mResults.quartiles.Q2, 'f', precision);
-        list << locale.toString(mResults.quartiles.Q3, 'f', precision);
+        // Statistic Results on Trace
+        list << locale.toString(mResults.traceAnalysis.mean, 'f', precision);
+        list << locale.toString(mResults.traceAnalysis.std, 'f', precision);
+        list << locale.toString(mResults.traceAnalysis.min, 'f', precision);
+        list << locale.toString(mResults.traceAnalysis.max, 'f', precision);
+        list << locale.toString(mResults.traceAnalysis.quartiles.Q1, 'f', precision);
+        list << locale.toString(mResults.traceAnalysis.quartiles.Q2, 'f', precision);
+        list << locale.toString(mResults.traceAnalysis.quartiles.Q3, 'f', precision);
         list << locale.toString(mExactCredibilityThreshold * 100., 'f', 2);
         list << locale.toString(mCredibility.first, 'f', precision);
         list << locale.toString(mCredibility.second, 'f', precision);
+
+         // Statistic Results on Density
+        list << locale.toString(mResults.funcAnalysis.mode, 'f', precision);
+        list << locale.toString(mResults.funcAnalysis.mean, 'f', precision);
+        list << locale.toString(mResults.funcAnalysis.std, 'f', precision);
 
         const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThresholdUsed);
 
@@ -771,18 +772,21 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
         }
 
     } else {
-        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.funcAnalysis.mode), 'f', precision);
-        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.funcAnalysis.mean), 'f', precision);
-        list << locale.toString(mResults.funcAnalysis.stddev, 'f', precision);
-        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.xmin), 'f', precision);
-        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.xmax), 'f', precision);
-        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.quartiles.Q1), 'f', precision);
-        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.quartiles.Q2), 'f', precision);
-        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.quartiles.Q3), 'f', precision);
+          // Statistic Results on Trace
+        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.traceAnalysis.mean), 'f', precision);
+        list << locale.toString(mResults.traceAnalysis.std, 'f', precision);
+        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.traceAnalysis.min), 'f', precision);
+        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.traceAnalysis.max), 'f', precision);
+        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.traceAnalysis.quartiles.Q1), 'f', precision);
+        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.traceAnalysis.quartiles.Q2), 'f', precision);
+        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.traceAnalysis.quartiles.Q3), 'f', precision);
         list << locale.toString(mExactCredibilityThreshold * 100., 'f', 2);
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mCredibility.first), 'f', precision);
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mCredibility.second), 'f', precision);
-
+        // Statistic Results on Density
+        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.funcAnalysis.mode), 'f', precision);
+        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.funcAnalysis.mean), 'f', precision);
+        list << locale.toString(mResults.funcAnalysis.std, 'f', precision);
         const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThresholdUsed);
 
         for (auto&& interval : intervals) {
@@ -794,8 +798,12 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
 
     return list;
 }
+
+/** Write Data
+ */
 QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
 {
+
     switch (data.mSupport) {
        case MetropolisVariable::eR : stream << quint8(0); // on R
         break;
@@ -837,17 +845,18 @@ QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
           break;
     }
 
-    stream << data.mRawTrace->size();
+    stream << (quint32) data.mRawTrace->size();
     for (QVector<double>::const_iterator v = data.mRawTrace->cbegin(); v != data.mRawTrace->cend(); ++v)
         stream << *v;
 
-   // qDebug()<<"&operator<<( QDataStream &stream, const MetropolisVariable &data )"<<data.mRawTrace->size();
 
     // *out << this->mFormatedTrace; // useless
 
     return stream;
 }
 
+/** Read Data
+ */
 QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
 {
     quint8 support;
@@ -866,6 +875,8 @@ QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
       case 5 : data.mSupport = MetropolisVariable::eBounded; // on bounded support
          break;
    }
+
+//stream >> tmp;
 
     qint16 formatDate;
     stream >> formatDate;

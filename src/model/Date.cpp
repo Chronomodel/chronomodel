@@ -1700,11 +1700,13 @@ void Date::updateSigmaReParam(Event* event)
         const double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1.);
         
         rapport = x1 * sqrt(V1/V2) * x2 * pow(V2 / V1, 2.); // (V2 / V1) est le jacobien!
- 
-    } else {
+
+    }
+#ifdef DEBUG
+    else {
         qDebug()<<"TDate::updateSigmaReParam x1 x2 rapport rejet";
     }
-    
+#endif
     mSigma.tryUpdate(sqrt(V2), rapport);
 }
 
