@@ -63,10 +63,11 @@ public:
     void setComposanteG(const PosteriorMeanGComposante& composante);
     void setComposanteGChains(const QList<PosteriorMeanGComposante>& composanteChains);
     void setEvents(const QList<Event*>& events);
-    void setRefPoints(const QVector<RefPoint>& rfPts) { mRefPoints = rfPts;};
+    void setEventsPoints(const QVector<RefPoint>& rfPts) { mEventsPoints = rfPts;};
+    void setDataPoints(const QVector<RefPoint>& rfPts) { mDataPoints = rfPts;};
     
     void generateCurves(TypeGraph typeGraph, Variable variable);
-    void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, bool showG, bool showGError, bool showGPoints, bool showGP, bool showGS);
+    void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, bool showG, bool showGError, bool showGPoints, bool showDataPoints, bool showGP, bool showGS);
 
 protected:
     void paintEvent(QPaintEvent* e);
@@ -76,11 +77,13 @@ private:
     PosteriorMeanGComposante mComposanteG;
     QList<PosteriorMeanGComposante> mComposanteGChains;
     QList<Event*> mEvents;
-    QVector<RefPoint> mRefPoints;
+    QVector<RefPoint> mEventsPoints;
+    QVector<RefPoint> mDataPoints;
     
     bool mShowG;
     bool mShowGError;
-    bool mShowGPoints;
+    bool mShowEventsPoints;
+    bool mShowDataPoints;
     bool mShowGP;
     bool mShowGS;
 };

@@ -263,9 +263,13 @@ mMaximunNumberOfVisibleGraph(0)
     mCurveErrorCheck->setFixedHeight(h);
     mCurveErrorCheck->setChecked(true);
     
-    mCurvePointsCheck = new CheckBox(tr("Ref. points"), mCurvesGroup);
-    mCurvePointsCheck->setFixedHeight(h);
-    mCurvePointsCheck->setChecked(true);
+    mCurveEventsPointsCheck = new CheckBox(tr("Events Points"), mCurvesGroup);
+    mCurveEventsPointsCheck->setFixedHeight(h);
+    mCurveEventsPointsCheck->setChecked(true);
+
+    mCurveDataPointsCheck = new CheckBox(tr("Data Points"), mCurvesGroup);
+    mCurveDataPointsCheck->setFixedHeight(h);
+    mCurveDataPointsCheck->setChecked(true);
 
     mCurveGPRadio = new RadioButton(tr("G Prime"), mCurvesGroup);
     mCurveGPRadio->setFixedHeight(h);
@@ -289,7 +293,8 @@ mMaximunNumberOfVisibleGraph(0)
     curveOptionGroupLayout->setContentsMargins(15, 0, 0, 0);
    // curveOptionGroupLayout->setSpacing(55);
     curveOptionGroupLayout->addWidget(mCurveErrorCheck, Qt::AlignLeft);
-    curveOptionGroupLayout->addWidget(mCurvePointsCheck, Qt::AlignLeft);
+    curveOptionGroupLayout->addWidget(mCurveEventsPointsCheck, Qt::AlignLeft);
+    curveOptionGroupLayout->addWidget(mCurveDataPointsCheck, Qt::AlignLeft);
 
     curveGroupLayout->setSpacing(15);
     curveGroupLayout->addLayout(curveOptionGroupLayout);
@@ -330,7 +335,8 @@ mMaximunNumberOfVisibleGraph(0)
     connect(mLambdaRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
 
     connect(mCurveErrorCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
-    connect(mCurvePointsCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mCurveEventsPointsCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mCurveDataPointsCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
 
     // -----------------------------------------------------------------
     //  Graph List tab (has to be created after mResultsGroup and mTempoGroup)
@@ -1679,15 +1685,54 @@ void ResultsView::createByCurveGraph()
 
         // insert refpoints for X
         const double thresh = 68.4; //80;
-        QVector<RefPoint> refPts;
+        QVector<RefPoint> eventsPts;
+        QVector<RefPoint> dataPts;
+
 
         for (auto& event : modelChronocurve()->mEvents) {
-            RefPoint rf;
+            RefPoint evPts;
+            RefPoint dPts;
+
+            // Set Y
+            if (!hasY) {
+                switch (model->mChronocurveSettings.mVariableType) {
+                case ChronocurveSettings::eVariableTypeInclinaison :
+                    evPts.Ymean = event-> mYInc;
+                    evPts.Yerr = event->mSInc;
+                    break;
+                case ChronocurveSettings::eVariableTypeDeclinaison :
+                    evPts.Ymean = event-> mYDec;
+                    evPts.Yerr = event->mSInc / cos(event->mYInc * M_PI /180.);
+                    break;
+                case ChronocurveSettings::eVariableTypeIntensite :
+                    evPts.Ymean = event-> mYInt;
+                    evPts.Yerr = event->mSInt;
+                    break;
+                case ChronocurveSettings::eVariableTypeProfondeur :
+                    evPts.Ymean = event-> mYInt;
+                    evPts.Yerr = event->mSInt;
+                    break;
+                case ChronocurveSettings::eVariableTypeAutre :
+                    evPts.Ymean = event-> mYInt;
+                    evPts.Yerr = event->mSInt;
+                    break;
+                }
+
+            } else { //must be inclination
+                evPts.Ymean = event-> mYInc;
+                evPts.Yerr = event->mSInc;
+            }
+            evPts.color = event->mColor;
+
+            // Set X = time
             if (event->mType == Event::eDefault) {
+
                 double tmin = HUGE_VAL;
                 double tmax = -HUGE_VAL;
 
                 for (auto&& date: event->mDates) {
+                    double dataTmin = HUGE_VAL;
+                    double dataTmax = -HUGE_VAL;
                     QMap<double, double> calibMap = date.getRawCalibMap();//  getFormatedCalibMap();
 
                     QMap<double, double> hpd;
@@ -1703,13 +1748,12 @@ void ResultsView::createByCurveGraph()
                     }
 
 
-
                     QMapIterator<double, double> it(hpd);
                     it.toFront();
                     while (it.hasNext()) {
                         it.next();
                         if (it.value() != 0) {
-                            tmin = std::min(tmin, it.key());
+                            dataTmin = std::min(dataTmin, it.key());
                             break;
                         }
                     }
@@ -1717,56 +1761,48 @@ void ResultsView::createByCurveGraph()
                     while (it.hasPrevious()) {
                         it.previous();
                         if (it.value() != 0) {
-                            tmax = std::max(tmax, it.key());
+                            dataTmax = std::max(dataTmax, it.key());
                             break;
                         }
                     }
+                    tmin = std::min(tmin, dataTmin);
+                    tmax = std::max(tmax, dataTmax);
+
+                    dPts.Xmean = (dataTmax + dataTmin) / 2.;
+                    dPts.Xerr = (dataTmax - dataTmin)/2.;
+                    dPts.Ymean = evPts.Ymean;
+                    dPts.Yerr = evPts.Yerr;
+                    dPts.color = event->mColor;
+
+
+                    // memo Data Points
+                    dataPts.append(dPts);
                 }
-                double tmoy = tmax==tmin ? tmax : (tmax + tmin) / 2.;
+                double tmoy = (tmax + tmin) / 2.;
                 tmoy = DateUtils::convertToAppSettingsFormat(tmoy);
                 const double terr = (tmax - tmin) / 2.;
 
-
-                rf.Xmean = tmoy;
-                rf.Xerr = terr;
+                evPts.Xmean = tmoy;
+                evPts.Xerr = terr;
 
             } else {
-                rf.Xmean = event->mTheta.mX; // always the same value
-                rf.Xerr = 0.;
+                evPts.Xmean = event->mTheta.mX; // always the same value
+                evPts.Xerr = 0.;
+
+                dPts.Xmean = event->mTheta.mX; // always the same value
+                dPts.Xerr = 0;
+
+                dPts.Ymean = evPts.Ymean;
+                dPts.Yerr = evPts.Yerr;
+                dPts.color = event->mColor;
+
+                // memo Data Points
+                dataPts.append(dPts);
             }
 
-            if (!hasY) {
-                switch (model->mChronocurveSettings.mVariableType) {
-                case ChronocurveSettings::eVariableTypeInclinaison :
-                    rf.Ymean = event-> mYInc;
-                    rf.Yerr = event->mSInc;
-                    break;
-                case ChronocurveSettings::eVariableTypeDeclinaison :
-                    rf.Ymean = event-> mYDec;
-                    rf.Yerr = event->mSInc / cos(event->mYInc * M_PI /180.);
-                    break;
-                case ChronocurveSettings::eVariableTypeIntensite :
-                    rf.Ymean = event-> mYInt;
-                    rf.Yerr = event->mSInt;
-                    break;
-                case ChronocurveSettings::eVariableTypeProfondeur :
-                    rf.Ymean = event-> mYInt;
-                    rf.Yerr = event->mSInt;
-                    break;
-                case ChronocurveSettings::eVariableTypeAutre :
-                    rf.Ymean = event-> mYInt;
-                    rf.Yerr = event->mSInt;
-                    break;
-                }
-                rf.color = event->mColor;
-                refPts.append(rf);
+            // memo Events Points
+            eventsPts.append(evPts);
 
-            } else { //must be inclination
-                rf.Ymean = event-> mYInc;
-                rf.Yerr = event->mSInc;
-                rf.color = event->mColor;
-                refPts.append(rf);
-            }
         }
 
         GraphViewCurve* graphX = new GraphViewCurve(widget);
@@ -1791,7 +1827,7 @@ void ResultsView::createByCurveGraph()
                       } else if (mCurrentVariable == GraphViewResults::eGS) {
                           graphX->setTitle(tr("Acceleration Inclination"));
                        } else {
-                          graphX->setTitle(tr("Mean Inclination"));
+                          graphX->setTitle(tr("Inclination"));
                       }
                       break;
 
@@ -1801,7 +1837,7 @@ void ResultsView::createByCurveGraph()
                        } else if (mCurrentVariable == GraphViewResults::eGS) {
                            graphX->setTitle(tr("Acceleration Declination"));
                         } else {
-                           graphX->setTitle(tr("Mean Declination"));
+                           graphX->setTitle(tr("Declination"));
                        }
                        break;
 
@@ -1811,7 +1847,7 @@ void ResultsView::createByCurveGraph()
                       } else if (mCurrentVariable == GraphViewResults::eGS) {
                           graphX->setTitle(tr("Acceleration Field"));
                        } else {
-                          graphX->setTitle(tr("Mean Field"));
+                          graphX->setTitle(tr("Field"));
                       }
                       break;
 
@@ -1821,7 +1857,7 @@ void ResultsView::createByCurveGraph()
                       } else if (mCurrentVariable == GraphViewResults::eGS) {
                           graphX->setTitle(tr("Acceleration Depth"));
                        } else {
-                          graphX->setTitle(tr("Mean Depth"));
+                          graphX->setTitle(tr("Depth"));
                       }
                       break;
 
@@ -1831,7 +1867,7 @@ void ResultsView::createByCurveGraph()
                        } else if (mCurrentVariable == GraphViewResults::eGS) {
                            graphX->setTitle(tr("Acceleration"));
                         } else {
-                           graphX->setTitle(tr("Mean"));
+                           graphX->setTitle(tr("Measure"));
                        }
                        break;
             }
@@ -1843,7 +1879,7 @@ void ResultsView::createByCurveGraph()
             } else if (mCurrentVariable == GraphViewResults::eGS) {
                 graphX->setTitle(tr("Acceleration Inclination"));
              } else {
-                graphX->setTitle(tr("Mean Inclination"));
+                graphX->setTitle(tr("Inclination"));
             }
 
         } else if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D ) {
@@ -1852,14 +1888,15 @@ void ResultsView::createByCurveGraph()
             } else if (mCurrentVariable == GraphViewResults::eGS) {
                 graphX->setTitle(tr("Acceleration X"));
              } else {
-                graphX->setTitle(tr("Mean X"));
+                graphX->setTitle(tr("X"));
             }
         }
 
         graphX->setComposanteG(modelChronocurve()->mPosteriorMeanG.gx);
         graphX->setComposanteGChains(modelChronocurve()->getChainsMeanGComposanteX());
         graphX->setEvents(modelChronocurve()->mEvents);
-        graphX->setRefPoints(refPts);
+        graphX->setEventsPoints(eventsPts);
+        graphX->setDataPoints(dataPts);
 
 
         mByCurveGraphs.append(graphX);
@@ -1884,7 +1921,7 @@ void ResultsView::createByCurveGraph()
                 } else if (mCurrentVariable == GraphViewResults::eGS) {
                     graphY->setTitle(tr("Acceleration Declination"));
                 } else {
-                    graphY->setTitle(tr("Mean Declination"));
+                    graphY->setTitle(tr("Declination"));
                 }
             } else if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D ) {
 
@@ -1893,7 +1930,7 @@ void ResultsView::createByCurveGraph()
                 } else if (mCurrentVariable == GraphViewResults::eGS) {
                     graphY->setTitle(tr("Acceleration Y"));
                 } else {
-                    graphY->setTitle(tr("Mean Y"));
+                    graphY->setTitle(tr("Y"));
                 }
             }
 
@@ -1904,12 +1941,20 @@ void ResultsView::createByCurveGraph()
             // change the values of the Y and the error, with the values of the declination and the error, we keep tmean
             int i = 0;
             for (auto& event : modelChronocurve()->mEvents) {
-                refPts[i].Ymean = event-> mYDec;
-                refPts[i].Yerr = event->mSInc / cos(event->mYInc * M_PI /180.);
-                refPts[i].color = event->mColor;
+                eventsPts[i].Ymean = event-> mYDec;
+                eventsPts[i].Yerr = event->mSInc / cos(event->mYInc * M_PI /180.);
+               // eventsPts[i].color = event->mColor;
+
+                for (int iData = 0 ; iData < event->mDates.size(); ++iData) {
+                    dataPts[iData + i].Ymean = eventsPts.at(i).Ymean;
+                    dataPts[iData + i].Yerr = eventsPts.at(i).Ymean;
+                  //  dataPts[iData + i].color = event->mColor;
+                  }
+
+
                 ++i;
             }
-            graphY->setRefPoints(refPts);
+            graphY->setEventsPoints(eventsPts);
             mByCurveGraphs.append(graphY);
             
             connect(graphY, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
@@ -1933,7 +1978,7 @@ void ResultsView::createByCurveGraph()
                     graphZ->setTitle(tr("Acceleration Field"));
 
                 } else {
-                    graphZ->setTitle(tr("Mean Field"));
+                    graphZ->setTitle(tr("Field"));
                 }
             
             } else if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D ) {
@@ -1943,7 +1988,7 @@ void ResultsView::createByCurveGraph()
                 } else if (mCurrentVariable == GraphViewResults::eGS) {
                     graphZ->setTitle(tr("Acceleration Z"));
                 } else {
-                    graphZ->setTitle(tr("Mean Z"));
+                    graphZ->setTitle(tr("Z"));
                 }
             }
 
@@ -1953,11 +1998,19 @@ void ResultsView::createByCurveGraph()
             graphZ->setEvents(modelChronocurve()->mEvents);
             int i = 0;
             for (auto& event : modelChronocurve()->mEvents) {
-                refPts[i].Ymean = event-> mYInt;
-                refPts[i].Yerr = event->mSInt;
+                eventsPts[i].Ymean = event-> mYInt;
+                eventsPts[i].Yerr = event->mSInt;
+
+                for (int iData = 0 ; iData < event->mDates.size(); ++iData) {
+                    dataPts[iData + i].Ymean = eventsPts.at(i).Ymean;
+                    dataPts[iData + i].Yerr = eventsPts.at(i).Ymean;
+                    //dataPts[iData + i].color = event->mColor;
+                  }
+
+
                 ++i;
             }
-            graphZ->setRefPoints(refPts);
+            graphZ->setEventsPoints(eventsPts);
             mByCurveGraphs.append(graphZ);
             
             connect(graphZ, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
@@ -1968,7 +2021,8 @@ void ResultsView::createByCurveGraph()
 void ResultsView::deleteAllGraphsInList(QList<GraphViewResults*>& list)
 {
     for (auto&& graph : list) {
-        disconnect(graph, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
+        //disconnect(graph, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
+        disconnect(graph, nullptr, nullptr, nullptr); //Disconnect everything connected to
         delete graph;
     }
     list.clear();
@@ -2214,7 +2268,8 @@ void ResultsView::updateCurvesToShow()
     if ((mGraphListTab->currentIndex() == 3) && !mLambdaRadio->isChecked()) {
         const bool showG = mCurveGRadio->isChecked();
         const bool showGError = showG && mCurveErrorCheck->isChecked();
-        const bool showGPoints = showG && mCurvePointsCheck->isChecked();
+        const bool showEventsPoints = showG && mCurveEventsPointsCheck->isChecked();
+        const bool showDataPoints = mCurveDataPointsCheck->isChecked();
         const bool showGP = mCurveGPRadio->isChecked();
         const bool showGS = mCurveGSRadio->isChecked();
         const bool showStat = mCurveStatCheck->isChecked();
@@ -2225,7 +2280,7 @@ void ResultsView::updateCurvesToShow()
         for (GraphViewResults*& graph : listGraphs) {
             GraphViewCurve* graphCurve = static_cast<GraphViewCurve*>(graph);
             graphCurve->setShowNumericalResults(showStat);
-            graphCurve->updateCurvesToShowForG(showAllChains, showChainList, showG, showGError, showGPoints, showGP, showGS);
+            graphCurve->updateCurvesToShowForG(showAllChains, showChainList, showG, showGError, showEventsPoints, showDataPoints, showGP, showGS);
         }
     }
     // --------------------------------------------------------
@@ -2622,12 +2677,14 @@ void ResultsView::updateOptionsWidget()
         int totalH = 5 * h *1.5; // look ligne 165 in ResultsView() comment Right Part. totalH = 3 * h
         if (mCurveGRadio->isChecked()) {
             mCurveErrorCheck->setVisible(true);
-            mCurvePointsCheck->setVisible(true);
-            totalH += 2 * h *1.5;
+            mCurveEventsPointsCheck->setVisible(true);
+            mCurveDataPointsCheck->setVisible(true);
+            totalH += 3 * h *1.5;
 
         } else {
             mCurveErrorCheck->setVisible(false);
-            mCurvePointsCheck->setVisible(false);
+            mCurveEventsPointsCheck->setVisible(false);
+            mCurveDataPointsCheck->setVisible(false);
         }
 
 

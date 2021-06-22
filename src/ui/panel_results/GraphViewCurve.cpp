@@ -57,7 +57,8 @@ GraphViewCurve::GraphViewCurve(QWidget *parent):GraphViewResults(parent)
     mShowG = true;
     mShowGError = true;
     mShowGP = false;
-    mShowGPoints = true;
+    mShowEventsPoints = true;
+    mShowDataPoints = true;
     mShowGS = false;
 }
 
@@ -109,23 +110,39 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
     //mGraph->reserveCurves(5);
     
     if (mCurrentVariable == eG) {
-        GraphCurve curveRefPoints;
-        curveRefPoints.mName = tr("Ref points Y");
+        GraphCurve curveEventsPoints;
+        curveEventsPoints.mName = tr("Events Points");
 
-        curveRefPoints.mPen = QPen(Qt::black, 1, Qt::SolidLine);
-        curveRefPoints.mBrush = Qt::black;
-        curveRefPoints.mIsHisto = false;
-        curveRefPoints.mIsRectFromZero = false;
-        curveRefPoints.mIsRefPoints = true;
+        curveEventsPoints.mPen = QPen(Qt::black, 1, Qt::SolidLine);
+        curveEventsPoints.mBrush = Qt::black;
+        curveEventsPoints.mIsHisto = false;
+        curveEventsPoints.mIsRectFromZero = false;
+        curveEventsPoints.mIsRefPoints = true;
 
-        for (auto& rf : mRefPoints) {
-            auto xFormated = rf.Xmean;//DateUtils::convertToAppSettingsFormat(rf.Xmean);
-            curveRefPoints.mData.insert(xFormated, rf.Ymean);
-            curveRefPoints.mDataErrorX.insert(xFormated, rf.Xerr);
-            curveRefPoints.mDataErrorY.insert(xFormated, rf.Yerr);
-            curveRefPoints.mDataColor.insert(xFormated, rf.color);
+        for (auto& rf : mEventsPoints) {
+            //auto xFormated = rf.Xmean;
+            curveEventsPoints.mData.insert(rf.Xmean, rf.Ymean);
+            curveEventsPoints.mDataErrorX.insert(rf.Xmean, rf.Xerr);
+            curveEventsPoints.mDataErrorY.insert(rf.Xmean, rf.Yerr);
+            curveEventsPoints.mDataColor.insert(rf.Xmean, rf.color);
         }
 
+        GraphCurve curveDataPoints;
+        curveDataPoints.mName = tr("Data Points");
+
+        curveDataPoints.mPen = QPen(Qt::black, 1, Qt::SolidLine);
+        curveDataPoints.mBrush = Qt::black;
+        curveDataPoints.mIsHisto = false;
+        curveDataPoints.mIsRectFromZero = false;
+        curveDataPoints.mIsRefPoints = true;
+
+        for (auto& rf : mDataPoints) {
+            //auto xFormated = rf.Xmean;
+            curveDataPoints.mData.insert(rf.Xmean, rf.Ymean);
+            curveDataPoints.mDataErrorX.insert(rf.Xmean, rf.Xerr);
+            curveDataPoints.mDataErrorY.insert(rf.Xmean, rf.Yerr);
+            curveDataPoints.mDataColor.insert(rf.Xmean, rf.color);
+        }
 
         GraphCurve curveG;
         curveG.mName = tr("G");
@@ -183,7 +200,8 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->addCurve(curveGSup);
         mGraph->addCurve(curveGInf);
 
-        mGraph->addCurve(curveRefPoints);
+        mGraph->addCurve(curveEventsPoints);
+        mGraph->addCurve(curveDataPoints);
 
         for (auto&& cGC: curveGChains) {
             mGraph->addCurve(cGC);
@@ -229,7 +247,7 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
 
 }
 
-void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, bool showG, bool showGError, bool showGPoints, bool showGP, bool showGS)
+void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, bool showG, bool showGError, bool showEventsPoints, bool showDataPoints, bool showGP, bool showGS)
 {
     // From GraphViewResults::updateCurvesToShow
     mShowAllChains = showAllChains;
@@ -237,14 +255,16 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
     
     mShowG = showG;
     mShowGError = showGError;
-    mShowGPoints = showGPoints;
+    mShowEventsPoints = showEventsPoints;
+    mShowDataPoints = showDataPoints;
     mShowGP = showGP;
     mShowGS = showGS;
     
     mGraph->setCurveVisible("G", mShowAllChains && mShowG);
     mGraph->setCurveVisible("G Sup", mShowAllChains && mShowGError);
     mGraph->setCurveVisible("G Inf", mShowAllChains && mShowGError);
-    mGraph->setCurveVisible("Ref points Y", mShowGPoints);// && mShowG);
+    mGraph->setCurveVisible("Events Points", mShowEventsPoints);
+    mGraph->setCurveVisible("Data Points", mShowDataPoints);
     mGraph->setCurveVisible("G Prime", mShowAllChains && mShowGP);
     mGraph->setCurveVisible("G Second", mShowAllChains && mShowGS);
     
