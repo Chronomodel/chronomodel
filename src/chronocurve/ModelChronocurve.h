@@ -62,10 +62,10 @@ public:
     void generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth);
     virtual void generateCorrelations(const QList<ChainSpecs> &chains);
     void generateNumericalResults(const QList<ChainSpecs> &chains);
-    void generateCredibility(const double thresh);
+    virtual void generateCredibility(const double &thresh);
     void generateHPD(const double thresh);
     
-    void clearThreshold();
+    virtual void clearThreshold();
     void clearPosteriorDensities();
     void clearCredibilityAndHPD();
     void clearTraces();

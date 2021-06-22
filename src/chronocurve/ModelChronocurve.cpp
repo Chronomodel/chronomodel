@@ -43,6 +43,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "qapplication.h"
 #include "Project.h"
 
+#include "qdatastream.h"
+
 
 ModelChronocurve::ModelChronocurve():Model()
 {
@@ -113,7 +115,7 @@ void ModelChronocurve::saveToFile(const QString& fileName)
        if (file.open(QIODevice::WriteOnly)) {
 
            QDataStream out(&file);
-           out.setVersion(QDataStream::Qt_5_5);
+           out.setVersion(QDataStream::Qt_6_1);
 
 
            out << quint32 (out.version());// we could add software version here << quint16(out.version());
@@ -121,7 +123,7 @@ void ModelChronocurve::saveToFile(const QString& fileName)
            // -----------------------------------------------------
            //  Write info
            // -----------------------------------------------------
-           out << quint32 (mPhases.size());
+       /*    out << quint32 (mPhases.size());
            out << quint32 (mEvents.size());
 
            int numDates = 0;
@@ -129,9 +131,14 @@ void ModelChronocurve::saveToFile(const QString& fileName)
                numDates += ev->mDates.size();
 
            out << quint32 (numDates);
+           */
 
            out << quint32 (mChains.size());
            for (ChainSpecs& ch : mChains) {
+               out << ch.burnElapsedTime;
+               out << ch.mAdaptElapsedTime;
+               out << ch.mAcquisitionElapsedTime;
+
                out << quint32 (ch.mBatchIndex);
                out << quint32 (ch.mBatchIterIndex);
                out << quint32 (ch.mBurnIterIndex);
@@ -149,6 +156,7 @@ void ModelChronocurve::saveToFile(const QString& fileName)
            // -----------------------------------------------------
            //  Write phases data
            // -----------------------------------------------------
+
            for (Phase*& phase : mPhases) {
                out << phase->mAlpha;
                out << phase->mBeta;
@@ -157,6 +165,7 @@ void ModelChronocurve::saveToFile(const QString& fileName)
            // -----------------------------------------------------
            //  Write events data
            // -----------------------------------------------------
+
            for (Event*& event : mEvents) {
                out << event->mTheta;
                out << event->mVG;
@@ -237,8 +246,9 @@ void ModelChronocurve::restoreFromFile(const QString& fileName)
        int QDataStreamVersion;
        in >> QDataStreamVersion;
        in.setVersion(QDataStreamVersion);
-
-       if (in.version()!= QDataStream::Qt_5_5)
+qDebug()<<in.version()<<QDataStream::Qt_5_5<<QDataStream::Qt_6_1<<QDataStreamVersion;
+      // if (in.version()!= int(QDataStream::Qt_5_5) & in.version()!= int(QDataStream::Qt_6_1))
+      if (in.version() != QDataStream::Qt_6_1)
            return;
 
        QString appliVersion;
@@ -255,17 +265,15 @@ void ModelChronocurve::restoreFromFile(const QString& fileName)
 
        quint32 tmp32;
        in >> tmp32;
-       //const int numPhases = (int)tmp32;
-       in >> tmp32;
-       //const int numEvents = (int)tmp32;
-       in >> tmp32;
-       //const int numdates = (int)tmp32;
 
-       in >> tmp32;
        mChains.clear();
        mChains.reserve(int (tmp32));
        for (quint32 i=0 ; i<tmp32; ++i) {
            ChainSpecs ch;
+           in >> ch.burnElapsedTime;
+           in >> ch.mAdaptElapsedTime;
+           in >> ch.mAcquisitionElapsedTime;
+
            in >> ch.mBatchIndex;
            in >> ch.mBatchIterIndex;
            in >> ch.mBurnIterIndex;
@@ -316,6 +324,7 @@ void ModelChronocurve::restoreFromFile(const QString& fileName)
                    in >> d.mDeltaMax;
                    in >> d.mDeltaAverage;
                    in >> d.mDeltaError;
+
                    qint32 tmpInt32;
                    in >> tmpInt32;
                    d.mSettings.mTmin = int (tmpInt32);
@@ -450,14 +459,14 @@ void ModelChronocurve::generateNumericalResults(const QList<ChainSpecs> &chains)
 void ModelChronocurve::clearThreshold()
 {
     Model::clearThreshold();
-    mThreshold = -1.;
+   // mThreshold = -1.;
     for (Event*& event : mEvents) {
         event->mVG.mThresholdUsed = -1.;
     }
     mLambdaSpline.mThresholdUsed = -1.;
 }
 
-void ModelChronocurve::generateCredibility(const double thresh)
+void ModelChronocurve::generateCredibility(const double& thresh)
 {
     Model::generateCredibility(thresh);
     for (Event*& event : mEvents) {
