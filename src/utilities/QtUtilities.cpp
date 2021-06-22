@@ -52,41 +52,54 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 QString DHMS( quint64 elapsedTime)
 {
     QString str;
-    quint64 day,hour,minute,second;
-    day= elapsedTime / (24*3600*1000);
+    quint64 day, hour, minute, second;
+
+    day = elapsedTime / (24*3600*1000);
+
+    if (day>1)
+        str = QString("%1 days ").arg(QString::number(day));
+    else if (day == 1)
+        str = QString("1 day ");
 
     elapsedTime -= day * 24*3600*1000;
     hour = elapsedTime / (3600*1000);
 
-    elapsedTime -= hour*3600*1000;
-    minute = elapsedTime / (60*1000);
-
-    elapsedTime -= minute*60*1000;
-    second = elapsedTime / 1000;
-
-    elapsedTime -= second*1000;
-
-    if (day>1)
-        str = QString("%1 days").arg(QString::number(day));
-    else if (day == 1)
-        str = QString("1 day");
-
-    if (hour>1)
+    if (hour > 1)
         str += QString("%1 hours ").arg(QString::number(hour));
     else if (hour == 1)
         str += QString("1 hour ");
 
-    if (minute>1)
+    // If we have more than one day, we do not display below the hour
+    if (day >= 1)
+        return str;
+
+    elapsedTime -= hour*3600*1000;
+    minute = elapsedTime / (60*1000);
+
+    if (minute > 1)
         str += QString("%1 minutes ").arg(QString::number(minute));
-    else if (hour == 1)
+    else if (minute == 1)
         str += QString("1 minute ");
 
-    if (second>1)
+    // If we have more than one hour, we do not display below the minute
+    if (hour >= 1)
+        return str;
+
+    elapsedTime -= minute*60*1000;
+    second = elapsedTime / 1000;
+
+    if (second > 1)
         str += QString("%1 seconds ").arg(QString::number(second));
     else if (second == 1)
         str += QString("1 second ");
 
-    str += QString(" %3 msec").arg(QString::number(elapsedTime));
+    // If we have more than one minute, we do not display below the second
+    if (minute >= 1)
+        return str;
+
+    elapsedTime -= second*1000;
+
+    str += QString("%3 msec").arg(QString::number(elapsedTime));
 
     return str;
 }
@@ -105,7 +118,7 @@ bool intLessThan(const int& v1, const int& v2)
 void sortIntList(QList<int>& list)
 {
    // qSort(list.begin(), list.end(), intLessThan);// http://doc.qt.io/qt-5/qtalgorithms-obsolete.html#qSort
-    std::sort(list.begin(),list.end(),intLessThan);
+    std::sort(list.begin(),list.end(), intLessThan);
 }
 
 
@@ -162,7 +175,7 @@ bool isComment(const QString& str)
     commentsMarkers << "//" << "#" << "/*"<<"!"<<QString(char(148));
     QString strClean = str.trimmed();
 
-    for (auto &&str : commentsMarkers) {
+    for (auto&& str : commentsMarkers) {
         if (strClean.startsWith(str))
             return true;
     }
@@ -201,7 +214,7 @@ QList<int> stringListToIntList(const QString& listStr, const QString& separator)
 QStringList intListToStringList(const QList<int>& intList)
 {
     QStringList list;
-    for (int i=0; i<intList.size(); ++i)
+    for (int i = 0; i<intList.size(); ++i)
         list.append(QString::number(intList[i]));
     return list;
 }
@@ -466,9 +479,9 @@ QString textBackgroundColor(const QString &str, const QColor &color)
 
 QColor randomColor()
 {
-    return QColor(rand() % 255,
-                  rand() % 255,
-                  rand() % 255);
+    return QColor(arc4random() % 255,
+                  arc4random() % 255,
+                  arc4random() % 255);
 }
 
 bool constraintIsCircular(QJsonArray constraints, const int fromId, const int toId)
