@@ -76,7 +76,7 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
         result.max = (type_data)0.;
         result.mode = (type_data)0.;
         result.mean = (type_data)0.;
-        result.stddev = (type_data)(-1.);
+        result.std = (type_data)(-1.);
         qDebug() << "WARNING : in analyseFunction() aFunction isEmpty !! ";
         return result;
     }
@@ -117,7 +117,7 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
     result.max = max;
     result.mode = mode;
     result.mean = (type_data)0.;
-    result.stddev = (type_data)0.;
+    result.std = (type_data)0.;
 
     if (sumP != 0) {
         result.mean = sum / sumP;
@@ -128,14 +128,18 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
             variance = -variance;
         }
 
-        result.stddev = sqrt(variance);
+        result.std = sqrt(variance);
     }
 
     return result;
 }
 
-
-type_data dataStd(const QVector<type_data> &data)
+/**
+ * @brief std_Koening Algorithm using the Koenig-Huygens formula, can induce a negative variance
+ * @param data
+ * @return
+ */
+type_data std_Koening(const QVector<type_data> &data)
 {
     // Work with double precision here because sum2 might be big !
 
@@ -144,43 +148,75 @@ type_data dataStd(const QVector<type_data> &data)
     const type_data mean = s / data.size();
     const type_data variance = s2 / data.size() - mean * mean;
 
+    TraceStat result= traceStatistic(data);
+qDebug() << "std_Koening comparaison calcul Knuth" << sqrt(variance) << result.std;
+
     if (variance < 0) {
-        qDebug() << "WARNING : in dataStd() negative variance found : " << variance<<" return 0";
+        qDebug() << "WARNING : in std_Koening() negative variance found : " << variance<<" force return 0";
         return (type_data)0.;
     }
+
     return sqrt(variance);
 }
 
 
+/**
+ * @brief std_Knuth : Donald E. Knuth (TAOCP) (1998). The Art of Computer Programming, volume 2:
+ * Seminumerical Algorithms, 3rd edn., p. 232. Boston: Addison-Wesley.
+ * This algorithm was found by Welford:
+ * Welford, B. P. (1962). "Note on a method for calculating corrected sums of squares and products".
+ * Technometrics. 4 (3): 419–420. doi:10.2307/1266577. JSTOR 1266577.
+ * @param data
+ * @return
+ */
+type_data std_Knuth(const QVector<type_data> &data)
+{
+    int n = 0;
+    type_data mean = 0.;
+    type_data variance = 0.;
+    type_data previousMean = 0.;
+    type_data previousVariance = 0.;
+
+    for (auto&& x : data) {
+        n++;
+        previousMean = std::move(mean);
+        previousVariance = std::move(variance);
+        mean = previousMean + (x - previousMean)/n;
+        variance = previousVariance + (x - previousMean)*(x - mean);
+    }
+
+    return sqrt(variance/n);
+
+}
+
+/**
+ * @brief traceStatistic : This function uses the Knuth-Welford algorithm to calculate the standard deviation.
+ * @param trace
+ * @return
+ */
 TraceStat traceStatistic(const QVector<type_data>& trace)
 {
     TraceStat result;
-    int n=0;
-    double mean = 0;
-    double variance = 0;
-    double oldM, oldS;
-    auto minMax = std::minmax_element(trace.begin(), trace.end());
+    int n = 0;
+    type_data mean = 0.;
+    type_data variance = 0.;
+    type_data previousMean = 0.;
+    type_data previousVariance = 0.;
 
-    for (auto x : trace) {
+    for (auto&& x : trace) {
         n++;
-
-        // See Knuth TAOCP vol 2, 3rd edition, page 232
-        if (n == 1) {
-            oldM = mean = x;
-            oldS = 0.0;
-        } else  {
-            mean = oldM + (x - oldM)/n;
-            variance = oldS + (x - oldM)*(x - mean);
-
-            // set up for next iteration
-            oldM = mean;
-            oldS = variance;
-        }
+        previousMean = std::move(mean);
+        previousVariance = std::move(variance);
+        mean = previousMean + (x - previousMean)/n;
+        variance = previousVariance + (x - previousMean)*(x - mean);
     }
-    result.min = *minMax.first;
-    result.max = *minMax.second;
-    result.mean = mean;
-    result.std = sqrt(variance/(n - 1));
+    result.mean = std::move(mean);
+    result.std = sqrt(variance/n);
+
+    auto minMax = std::minmax_element(trace.begin(), trace.end());
+    result.min = std::move(*minMax.first);
+    result.max = std::move(*minMax.second);
+
     result.quartiles = quartilesForTrace(trace);
     return result;
 }
@@ -188,7 +224,7 @@ TraceStat traceStatistic(const QVector<type_data>& trace)
 double shrinkageUniform(const double so2)
 {
     //double u = Generator::randomUniform();
-    const double u = Generator::randomUniform(0,1);
+    const double u = Generator::randomUniform(0, 1);
     return (so2 * (1. - u) / u);
 }
 
@@ -200,18 +236,18 @@ QString FunctionStatToString(const FunctionStat& analysis, const bool forCSV)
 {
     QString result;
 
-    if (analysis.stddev<0.)
+    if (analysis.std<0.)
         result = QObject::tr("No data");
 
     else
         if (forCSV) {
-            result += QObject::tr("MAP = %1  ;  Mean = %2  ;  Std deviation = %3").arg(stringForCSV(analysis.mode),
-                                                                                    stringForCSV(analysis.mean),
-                                                                                    stringForCSV(analysis.stddev));
+            result += QObject::tr("MAP = %1  ;  Mean = %2  ;  Std = %3").arg( stringForCSV(analysis.mode),
+                                                                              stringForCSV(analysis.mean),
+                                                                              stringForCSV(analysis.std));
         }  else {
-            result += QObject::tr("MAP = %1  ;  Mean = %2  ;  Std deviation = %3").arg(stringForLocal(analysis.mode),
-                                                                                    stringForLocal(analysis.mean),
-                                                                                    stringForLocal(analysis.stddev));
+            result += QObject::tr("MAP = %1  ;  Mean = %2  ;  Std = %3").arg( stringForLocal(analysis.mode),
+                                                                              stringForLocal(analysis.mean),
+                                                                              stringForLocal(analysis.std));
         }
 
 
@@ -225,21 +261,28 @@ QString FunctionStatToString(const FunctionStat& analysis, const bool forCSV)
 QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& nl, const bool forCSV)
 {
     QString result (QObject::tr("No data"));
-    if (analysis.funcAnalysis.stddev>=0.) {
-        result = FunctionStatToString(analysis.funcAnalysis, forCSV) + nl;
-        if (forCSV){
-            result += QObject::tr("Q1 = %1  ;  Q2 (Median) = %2  ;  Q3 = %3 ").arg(stringForCSV(analysis.quartiles.Q1),
-                                                                                stringForCSV(analysis.quartiles.Q2),
-                                                                                stringForCSV(analysis.quartiles.Q3));
-            result += nl + QObject::tr("min = %1  ;  max  = %2 ").arg(stringForCSV(analysis.xmin),
-                                                                                stringForCSV(analysis.xmax));
+    if (analysis.funcAnalysis.std>=0.) {
+
+        result = QObject::tr("Trace Stat.") + nl;
+        if (forCSV) {
+            result += QObject::tr("Mean = %1  ;  Std = %2").arg( stringForCSV(analysis.traceAnalysis.mean),
+                                                                 stringForCSV(analysis.traceAnalysis.std)) + nl;
+            result += QObject::tr("Q1 = %1  ;  Q2 (Median) = %2  ;  Q3 = %3 ").arg( stringForCSV(analysis.traceAnalysis.quartiles.Q1),
+                                                                                    stringForCSV(analysis.traceAnalysis.quartiles.Q2),
+                                                                                    stringForCSV(analysis.traceAnalysis.quartiles.Q3));
+            result += nl + QObject::tr("min = %1  ;  max  = %2 ").arg( stringForCSV(analysis.traceAnalysis.min),
+                                                                       stringForCSV(analysis.traceAnalysis.max))+ nl;
         } else {
-            result += QObject::tr("Q1 = %1  ;  Q2 (Median) = %2  ;  Q3 = %3 ").arg(stringForLocal(analysis.quartiles.Q1),
-                                                                                stringForLocal(analysis.quartiles.Q2),
-                                                                                stringForLocal(analysis.quartiles.Q3));
-            result += nl + QObject::tr("min = %1  ;  max  = %2 ").arg(stringForLocal(analysis.xmin),
-                                                                                stringForLocal(analysis.xmax));
+            result += QObject::tr("Mean = %1  ;  Std = %2").arg( stringForLocal(analysis.traceAnalysis.mean),
+                                                                 stringForLocal(analysis.traceAnalysis.std)) + nl;
+            result += QObject::tr("Q1 = %1  ;  Q2 (Median) = %2  ;  Q3 = %3 ").arg( stringForLocal(analysis.traceAnalysis.quartiles.Q1),
+                                                                                    stringForLocal(analysis.traceAnalysis.quartiles.Q2),
+                                                                                    stringForLocal(analysis.traceAnalysis.quartiles.Q3));
+            result += nl + QObject::tr("min = %1  ;  max  = %2 ").arg( stringForLocal(analysis.traceAnalysis.min),
+                                                                       stringForLocal(analysis.traceAnalysis.max))+ nl;
         }
+        result += QObject::tr("Density Stat.") + nl;
+        result += FunctionStatToString(analysis.funcAnalysis, forCSV) + nl;
 
     }
     return result;
@@ -1320,6 +1363,7 @@ std::vector<std::vector<long double>> inverseMatSym_origin(const std::vector<std
     return matInv;
 }
 
+/*
 std::vector<std::vector<long double>> inverseMatSym_old(const std::vector<std::vector<long double>>& matrixLE, const std::vector<long double>& matrixDE, const int nbBandes, const int shift)
 {
     const int dim = matrixLE.size();
@@ -1331,20 +1375,7 @@ std::vector<std::vector<long double>> inverseMatSym_old(const std::vector<std::v
     matInv[dim-2-shift][dim-2-shift] = (1. / matrixDE.at(dim-2-shift)) - matrixLE[dim-1-shift][dim-2-shift] * matInv[dim-2-shift][dim-1-shift];
 
     // shift : décalage qui permet d'éliminer les premières et dernières lignes et colonnes
-  /*  for (int i = dim-3-shift; i >= shift; --i) {
-        matInv[i][i+2] = -matrixLE[i+1][i] * matInv[i+1][i+2] - matrixLE[i+2][i] * matInv[i+2][i+2];
-        matInv[i][i+1] = -matrixLE[i+1][i] * matInv[i+1][i+1] - matrixLE[i+2][i] * matInv[i+1][i+2];
-        matInv[i][i] = (1. / matrixDE[i][i]) - matrixLE[i+1][i] * matInv[i][i+1] - matrixLE[i+2][i] * matInv[i][i+2];
 
-        if (bande >= 3) {
-            for (int k = 3; k <= bande; ++k) {
-                if (i+k < (dim - shift)) {
-                    matInv[i][i+k] = -matrixLE[i+1][i] * matInv[i+1][i+k] - matrixLE[i+2][i] * matInv[i+2][i+k];
-                }//else What we do?
-            }
-        }//else What we do?
-    }
- */
     if (bande >= 3) {
         for (int i = dim-3-shift; i >= shift; --i) {
                 matInv[i][i+2] = -matrixLE[i+1][i] * matInv[i+1][i+2] - matrixLE[i+2][i] * matInv[i+2][i+2];
@@ -1364,11 +1395,7 @@ std::vector<std::vector<long double>> inverseMatSym_old(const std::vector<std::v
             matInv[i][i+1] = -matrixLE[i+1][i] * matInv[i+1][i+1] - matrixLE[i+2][i] * matInv[i+1][i+2];
             matInv[i][i] = (1. / matrixDE.at(i)) - matrixLE[i+1][i] * matInv[i][i+1] - matrixLE[i+2][i] * matInv[i][i+2];
 
-            const int kmin = std::min(bande, dim-shift-i);
-         /*   for (int k = 3; k <= kmin; ++k) {
-                    matInv[i][i+k] = -matrixLE[i+1][i] * matInv[i+1][i+k] - matrixLE[i+2][i] * matInv[i+2][i+k];
-            }
-           */
+
             for (int k = 3; k <= bande; ++k) {
                 if (i+k < (dim - shift)) {
                     matInv[i][i+k] = -matrixLE[i+1][i] * matInv[i+1][i+k] - matrixLE[i+2][i] * matInv[i+2][i+k];
@@ -1377,20 +1404,7 @@ std::vector<std::vector<long double>> inverseMatSym_old(const std::vector<std::v
         }
      }
 
-    /* Code RenCurve
-     * for i:=(dim-2-dc) downto 1+dc do begin
-    Mat_1[i,i+2]:= -Mat_L_E[i+1,i]*Mat_1[i+1,i+2] - Mat_L_E[i+2,i]*Mat_1[i+2,i+2];
-    Mat_1[i,i+1]:= -Mat_L_E[i+1,i]*Mat_1[i+1,i+1] - Mat_L_E[i+2,i]*Mat_1[i+1,i+2];
-    Mat_1[i,i]  := (1/Mat_D_E[i,i]) - Mat_L_E[i+1,i]*Mat_1[i,i+1] - Mat_L_E[i+2,i]*Mat_1[i,i+2];
-    if (bande>=3) then begin
-      for k:=3 to bande do begin
-        if (i+k<=(dim-dc)) then begin
-          Mat_1[i,i+k]:= -Mat_L_E[i+1,i]*Mat_1[i+1,i+k] - Mat_L_E[i+2,i]*Mat_1[i+2,i+k];
-        end;
-      end;
-    end;
-  end;
-     */
+
 
     for (int i = shift; i < dim-shift; ++i) {
         for (int j = i+1; j <= i+bande; ++j) {
@@ -1401,14 +1415,10 @@ std::vector<std::vector<long double>> inverseMatSym_old(const std::vector<std::v
     }
 
       //On symétrise la matrice Mat_1, même si cela n'est pas nécessaire lorsque bande=2
-  /*  for (int i = shift; i < dim-shift-1; ++i) {
-        for (int j = i+1; j <= std::min(i+bande, dim-shift-1) ; ++j) {
-                matInv[j][i] = matInv.at(i).at(j);
-        }
-    }
-    */
+
     return matInv;
 }
+*/
 
 std::vector<std::vector<long double>> inverseMatSym(const std::vector<std::vector<long double>>& matrixLE, const std::vector<long double>& matrixDE, const int nbBandes, const int shift)
 {

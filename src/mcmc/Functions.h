@@ -52,7 +52,7 @@ struct FunctionStat{
     type_data max = (type_data)0.;
     type_data mode = (type_data)0.;
     type_data mean = (type_data)0.;
-    type_data stddev = (type_data)0.;
+    type_data std = (type_data)0.;
 };
 
 struct Quartiles{
@@ -73,10 +73,11 @@ struct TraceStat{
 
 struct DensityAnalysis
 {
-    Quartiles quartiles;
+   // Quartiles quartiles;
     FunctionStat funcAnalysis;
-    type_data xmin;
-    type_data xmax;
+    TraceStat traceAnalysis;
+   // type_data xmin;
+   // type_data xmax;
 };
 
 FunctionStat analyseFunction(const QMap<type_data, type_data>& aFunction);
@@ -85,7 +86,8 @@ QString FunctionStatToString(const FunctionStat& analysis, const bool forCSV = f
 QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& nl = "<br>", const bool forCSV = false);
 
 // Standard Deviation of a vector of data
-type_data dataStd(const QVector<type_data> &data);
+type_data std_Koening(const QVector<type_data> &data);
+type_data std_Knuth(const QVector<type_data> &data);
 
 double shrinkageUniform(const double so2);
 
@@ -138,7 +140,7 @@ std::vector<std::vector<long double>> multiMatParMat(const std::vector<std::vect
 
 std::vector<std::vector<long double>> inverseMatSym0(const std::vector<std::vector<long double>>& matrix, const int shift = 0);
 std::vector<std::vector<long double>> inverseMatSym(const std::vector<std::vector<long double>>& matrix1, const std::vector<long double>& matrix2, const int nbBandes, const int shift);
-std::vector<std::vector<long double>> inverseMatSym_old(const std::vector<std::vector<long double>>& matrix1, const std::vector<long double>& matrix2, const int nbBandes, const int shift);
+//std::vector<std::vector<long double>> inverseMatSym_old(const std::vector<std::vector<long double>>& matrix1, const std::vector<long double>& matrix2, const int nbBandes, const int shift);
 
 std::vector<std::vector<long double>> inverseMatSym_origin(const std::vector<std::vector<long double> > &matrixLE, const std::vector<long double> &matrixDE, const int nbBandes, const int shift);
 
