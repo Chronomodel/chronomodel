@@ -609,8 +609,12 @@ float vector_interpolate_idx_for_value(const float value, const QVector<float>& 
 double interpolate_value_from_curve(const double t, const QVector<double> & curve,const double curveTmin, const double curveTmax)
 {
      // We need at least two points to interpolate
-    if (curve.size() < 2 || t < curveTmin || t > curveTmax)
-        return 0.;
+    if (curve.size() < 2 || t <= curveTmin) {
+        return curve.first();
+
+    } else if (t >= curveTmax) {
+        return curve.last();
+    }
 
     const double prop = (t - curveTmin) / (curveTmax - curveTmin);
     const double idx = prop * (curve.size() - 1); // tricky : if (tmax - tmin) = 2000, then calib size is 2001 !
