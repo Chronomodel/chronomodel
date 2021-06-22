@@ -46,7 +46,6 @@ MainController::MainController(const QString& filePath)
 {
     Painting::init();
     PluginManager::loadPlugins();
-    //AppSettings::AppSettings();
     AppSettings::readSettings();
 
     mMainWindow = MainWindow::getInstance();

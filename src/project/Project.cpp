@@ -786,7 +786,6 @@ bool Project::load(const QString& path)
                         mModel->setProject(this);
                         mModel->restoreFromFile(dataPath);
                         setNoResults(false);
-                        emit mcmcFinished(mModel);
 
                     } catch (const std::exception & e) {
                         QMessageBox message(QMessageBox::Critical,

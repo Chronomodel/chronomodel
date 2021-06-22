@@ -123,9 +123,7 @@ int main(int argc, char *argv[])
     a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));
-    
-    qApp->setAttribute(Qt::AA_UseHighDpiPixmaps);
-    
+     
     QString filePath = "";
     for (int i = 0; i<argc; ++i) {
         QString arg(argv[i]);

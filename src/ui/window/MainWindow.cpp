@@ -550,12 +550,13 @@ void MainWindow::openProject()
             activateInterface(true);
             updateWindowTitle();
         // Create mEventsScene and mPhasesScenes
+        if ( !mProject->mModel->mChains.isEmpty())
+                mcmcFinished(mProject->mModel); //do initDensities()
 
             mProjectView->setProject(mProject);
 
             mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true);
-           /* if (! mProject->mModel->mChains.isEmpty())
-                emit mProject->mcmcFinished(mProject->mModel);*/
+
          }
 
         mUndoStack->clear();
@@ -766,16 +767,6 @@ void MainWindow::openManual()
 {
     QDesktopServices::openUrl(QUrl("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf", QUrl::TolerantMode));
 
-
- /*   QString path = qApp->applicationDirPath();
-#ifdef Q_OS_MAC
-    QDir dir(path);
-    dir.cdUp();
-    path = dir.absolutePath() + "/Resources";
-#endif
-    path += "/Chronomodel_User_Manual.pdf";
-    QDesktopServices::openUrl(QUrl("file:///" + path, QUrl::TolerantMode));
-  */
 }
 
 void MainWindow::showHelp(bool show)
@@ -796,10 +787,7 @@ void MainWindow::openWebsite()
 void MainWindow::setFont(const QFont &font)
 {
     mToolBar->setFont(font);
-    //mCentralStack->setFont(font);
     mProjectView->setFont(font);
-    //mProject->setFont(font);
-    //mUndoStack->setFont(font);
     mUndoView->setFont(font);
     mUndoDock->setFont(font);
 }
@@ -810,16 +798,17 @@ void MainWindow::setLanguage(QAction* action)
     QString lang = action->data().toString();
     QLocale locale = QLocale(lang);
     QLocale::setDefault(locale);
-
+/*
     QTranslator qtTranslator;
-    qtTranslator.load("qt_" + locale.name(), QLibraryInfo::location(QLibraryInfo::TranslationsPath));
-    qApp->installTranslator(&qtTranslator);
+    if (qtTranslator.load("qt_" + locale.name(), QLibraryInfo::path(QLibraryInfo::TranslationsPath)))
+        QCoreApplication::installTranslator(&qtTranslator);
 
     QTranslator translator;
     if (translator.load(locale, ":/Chronomodel", "_")) {
         qDebug() << "-> Locale set to : " << QLocale::languageToString(locale.language()) << "(" << locale.name() << ")";
         qApp->installTranslator(&translator);
     }
+*/
 }
 
 // Grouped Actions
@@ -1045,6 +1034,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
                 activateInterface(true);
                 updateWindowTitle();
                 connectProject();
+                mcmcFinished(mProject->mModel); //do initDensities()
 
                 mProject->setAppSettings();
 
@@ -1078,9 +1068,10 @@ void MainWindow::readSettings(const QString& defaultFilePath)
                 activateInterface(true);
                 updateWindowTitle();
                 connectProject();
+                if ( !mProject->mModel->mChains.isEmpty())
+                    mcmcFinished(mProject->mModel); //do initDensities()
 
                 mProject->setAppSettings();
-              //  mProject->mModel->fromJson(mProject->mState); // !!!!
 
                 mProjectView->setProject(mProject);
 
