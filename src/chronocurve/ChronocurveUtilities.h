@@ -72,7 +72,7 @@ typedef struct MCMCSplineComposante
     std::vector<long double> vecThetaEvents; // le noeud ti
     std::vector<long double> vecG;
     std::vector<long double> vecGamma;
-    std::vector<long double> vecErrG;
+    std::vector<long double> vecVarG;
     
 } MCMCSplineComposante;
 
@@ -95,7 +95,7 @@ typedef struct PosteriorMeanGComposante
     std::vector<long double> vecG;
     std::vector<long double> vecGP;
     std::vector<long double> vecGS;
-    std::vector<long double> vecGErr;
+    std::vector<long double> vecVarG;
     
 } PosteriorMeanGComposante;
 

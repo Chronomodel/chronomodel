@@ -99,10 +99,7 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
     defaultPen.setStyle(Qt::SolidLine);
 
     QColor color = Qt::blue;
- /*   QString resultsText = ModelUtilities::curveResultsText(mEvent, false);
-    QString resultsHTML = ModelUtilities::curveResultsHTML(mEvent, false);
-    setNumericalResults(resultsHTML, resultsText);
-*/
+
     // ------------------------------------------------
     //  First tab : Posterior distrib
     // ------------------------------------------------
@@ -118,8 +115,7 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
         // ------------------------------------
         //  Post distrib All Chains
         // ------------------------------------
-        //GraphCurve curvePostDistrib = generateDensityCurve(mModel->mLambdaSpline.fullHisto(), "Post Distrib All Chains", color);
-        
+
         GraphCurve curvePostDistrib;
         curvePostDistrib.mName = "Post Distrib All Chains";
         curvePostDistrib.mData = mModel->mLambdaSpline.fullHisto();
@@ -129,9 +125,6 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
         //curvePostDistrib.mIsRectFromZero = true; // for Unif-typo. calibs., invisible for others!
         
         mGraph->addCurve(curvePostDistrib);
-        
-        //qDebug() << mModel->mLambdaSpline.fullHisto();
-        //qDebug() << curvePostDistrib.mData;
 
         // ------------------------------------
         //  HPD All Chains
@@ -165,10 +158,11 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
     // -------------------------------------------------
     //  History plots
     // -------------------------------------------------
-    else if(typeGraph == eTrace) {
+    else if (typeGraph == eTrace) {
         mGraph->mLegendX = "Iterations";
+        mGraph->setTipYLab("Lambda");
         mGraph->setFormatFunctX(nullptr);
-        mTitle = tr("Lambda Spline trace");
+        mTitle = tr("Lambda Spline Trace");
 
         generateTraceCurves(mChains, &(mModel->mLambdaSpline));
     }
@@ -177,10 +171,9 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
     // -------------------------------------------------
     else if (typeGraph == eAccept) {
         mGraph->mLegendX = "Iterations";
+        mGraph->setTipYLab("Rate");
         mGraph->setFormatFunctX(nullptr);
-        mTitle = tr("Lambda Spline acceptation");
-
-       // mGraph->addCurve(generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
+        mTitle = tr("Lambda Spline Acceptation");
 
         generateAcceptCurves(mChains, &(mModel->mLambdaSpline));
         mGraph->repaint();
@@ -192,13 +185,13 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
     else if (typeGraph == eCorrel) {
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(nullptr);
-        mTitle = tr("Smoothing autocorrelation");
+        mTitle = tr("Lambda Spline Autocorrelation");
 
         generateCorrelCurves(mChains, &(mModel->mLambdaSpline));
         mGraph->setXScaleDivision(10, 10);
 
     } else  {
-        mTitle = tr("Smoothing");
+        mTitle = tr("Lambda Spline");
         mGraph->resetNothingMessage();
     }
 }
@@ -242,25 +235,7 @@ void GraphViewAlpha::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         mGraph->autoAdjustYScale(true);
     }
 
-      /* ----------------------Third tab : Acceptance rate--------------------------
-       *  Possible curves :
-       *  - Accept i
-       *  - Accept Target
-       * ------------------------------------------------  */
-      /*else if ((mCurrentTypeGraph == eAccept) && (mCurrentVariable == eTheta) && ((mEvent->mMethod == Event::eMHAdaptGauss) || (mEvent->mMethod == Event::eFixe))) {
-          mGraph->setCurveVisible("Accept Target", true);
-          for (int i=0; i<mShowChainList.size(); ++i)
-              mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList.at(i));
 
-          mGraph->setTipXLab(tr("Iteration"));
-          mGraph->setTipYLab(tr("Rate"));
-
-          mGraph->setYAxisMode(GraphView::eMinMax);
-          mGraph->showInfos(false);
-          mGraph->clearInfos();
-          mGraph->autoAdjustYScale(false); // do  repaintGraph()
-          mGraph->setRangeY(0, 100);
-      }*/
       /* ----------------------fourth tab : Autocorrelation--------------------------
        *  Possible curves :
        *  - Correl i

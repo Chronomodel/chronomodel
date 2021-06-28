@@ -689,18 +689,16 @@ void EventsScene::clean()
     // ------------------------------------------------------
     //  Delete all items
     // ------------------------------------------------------
-    int itemsSize = mItems.size() -1;
+    const int itemsSize = mItems.size() -1;
     for (int i = itemsSize; i >= 0; --i) {
         EventItem* eventItem = (EventItem*)mItems[i];
 
-   //     QJsonObject& event = eventItem->getData();
-
-   //     if (event.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
             QList<QGraphicsItem*> dateItems = eventItem->childItems();
-            int dateItemsSize = dateItems.size() -1;
+            const int dateItemsSize = dateItems.size() -1;
             for (int j = dateItemsSize; j >= 0; --j) {
-                removeItem(dateItems[j]);
-                delete dateItems[j];
+                //removeItem(dateItems[j]);
+                delete dateItems.first();
+                dateItems.removeFirst();
             }
   //      }
 #ifdef DEBUG
@@ -728,7 +726,6 @@ mItems.clear();
     // ------------------------------------------------------
     //  Reset scene rect
     // ------------------------------------------------------
-    //setSceneRect(QRectF(-100, -100, 200, 200));
     update(sceneRect());
 }
 
@@ -1267,7 +1264,7 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
 void EventsScene::keyReleaseEvent(QKeyEvent* keyEvent)
 {
     if (keyEvent->key() == Qt::Key_Alt) {
-        qDebug() << "EventsScene::keyReleaseEvent You Released: "<<"Qt::Key_Alt";
+       // qDebug() << "EventsScene::keyReleaseEvent You Released: "<<"Qt::Key_Alt";
         mDrawingArrow = false;
         mAltIsDown = false;
         //mSelectKeyIsDown = false;
@@ -1277,7 +1274,7 @@ void EventsScene::keyReleaseEvent(QKeyEvent* keyEvent)
     }
 #ifdef Q_OS_WIN
     else if (keyEvent->key() == Qt::Key_Shift) {
-        qDebug() << "EventsScene::keyReleaseEvent You Released: "<<"Qt::Key_Shift";
+       // qDebug() << "EventsScene::keyReleaseEvent You Released: "<<"Qt::Key_Shift";
         mDrawingArrow = false;
         //mAltIsDown = false;
         mSelectKeyIsDown = false;
@@ -1287,7 +1284,7 @@ void EventsScene::keyReleaseEvent(QKeyEvent* keyEvent)
 #endif
 #ifdef Q_OS_MAC
    else if ((QApplication::keyboardModifiers() == Qt::ControlModifier)) {
-        qDebug() << "EventsScene::keyReleaseEvent You Released: "<<"Qt::ControlModifier";
+       // qDebug() << "EventsScene::keyReleaseEvent You Released: "<<"Qt::ControlModifier";
         mDrawingArrow = false;
         //mAltIsDown = false;
         mSelectKeyIsDown = false;
@@ -1305,7 +1302,7 @@ void EventsScene::keyReleaseEvent(QKeyEvent* keyEvent)
 // Drag & Drop
 void EventsScene::dragMoveEvent(QGraphicsSceneDragDropEvent* e)
 {
-    for (auto &&it : mItems) {
+    for (auto&& it : mItems) {
         QRectF r = it->boundingRect();
         r.translate(it->scenePos());
         if (r.contains(e->scenePos())) {
@@ -1352,9 +1349,9 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
     // Create one event per data
     int deltaX = 0;
     int deltaY = 200;
-    int EventCount (0);
+    int EventCount = 0;
     QJsonObject state = project->state();
-    // si la liste est longue possibilité de faire une liaison strati automatique
+    // if the list is long possibility to make an automatic strati link
     enum constraintType
     {
         eConstraintNone = 'N',
@@ -1376,10 +1373,12 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
             constraint = eConstraintStrati;
             deltaX = 0;
             deltaY = 200;
+
         } else if (messageBox.clickedButton() == chronoButton) {
             constraint = eConstraintInvStrati;
             deltaX = 0;
             deltaY = 200;
+
         } else
             constraint = eConstraintNone;
 
@@ -1416,7 +1415,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
                 QJsonObject dateJson = date.toJson();
                 QJsonArray datesEvent = eventFinded.value(STATE_EVENT_DATES).toArray();
                 dateJson[STATE_ID] = project->getUnusedDateId(datesEvent);
-                if (dateJson[STATE_NAME].toString() == "")
+                if (dateJson.value(STATE_NAME).toString() == "")
                     dateJson[STATE_NAME] = "No Name " + QString::number(dateJson[STATE_ID].toInt());
                 datesEvent.append(dateJson);
                 eventFinded[STATE_EVENT_DATES] = datesEvent;

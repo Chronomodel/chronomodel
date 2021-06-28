@@ -184,8 +184,8 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
             t = DateUtils::convertToAppSettingsFormat(idx*step + mSettings.mTmin);
             curveG.mData.insert(t, mComposanteG.vecG.at(idx));
             // Enveloppe à 95%  https://en.wikipedia.org/wiki/1.96
-            curveGSup.mData.insert(t, mComposanteG.vecG.at(idx) + 1.96 * mComposanteG.vecGErr.at(idx));
-            curveGInf.mData.insert(t, mComposanteG.vecG.at(idx) - 1.96 * mComposanteG.vecGErr.at(idx));
+            curveGSup.mData.insert(t, mComposanteG.vecG.at(idx) + 1.96 * sqrt(mComposanteG.vecVarG.at(idx)));
+            curveGInf.mData.insert(t, mComposanteG.vecG.at(idx) - 1.96 * sqrt(mComposanteG.vecVarG.at(idx)));
 
             // Enveloppe à 68%
             //curveGSup.mData.insert(t, mComposanteG.vecG.at(idx) + 1. * mComposanteG.vecGErr.at(idx));

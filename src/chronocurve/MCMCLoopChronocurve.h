@@ -58,7 +58,6 @@ public:
     MCMCLoopChronocurve(ModelChronocurve* model, Project* project);
     ~MCMCLoopChronocurve();
 
-
     void orderEventsByTheta(QList<Event *> &lEvents);
     void orderEventsByThetaReduced(QList<Event *> &lEvents);
     void spreadEventsThetaReduced(QList<Event *> &lEvents, double minStep = 1e-9);
@@ -96,9 +95,7 @@ private:
 
     void prepareEventsY(const QList<Event *> & lEvents);
     void prepareEventY(Event * const event);
-  //  void prepareEventY(EventKnown* const event);
-    
-    // Fonctions anciennement liées à do_cravate :
+
     std::vector<long double> createDiagWInv(const QList<Event *> &lEvents);
 
 
@@ -144,6 +141,7 @@ private:
 
     std::vector<long double> calculMatInfluence_origin(const SplineMatrices& matrices, const SplineResults &splines , const int nbBandes, const double lambdaSpline);
     std::vector<long double> calculSplineError_origin(const SplineMatrices& matrices, const SplineResults& splines, const double lambdaSpline);
+    std::vector<long double> calcul_spline_variance(const SplineMatrices& matrices, const SplineResults& splines, const double lambdaSpline);
 
     double valeurG(const double t, const MCMCSplineComposante& spline, unsigned& i0);
     double valeurErrG(const double t, const MCMCSplineComposante& spline, unsigned& i0);
@@ -151,12 +149,16 @@ private:
     double valeurGSeconde(const double t, const MCMCSplineComposante& spline);
 
     void valeurs_G_ErrG_GP_GS(const double t, const MCMCSplineComposante& spline, long double& G, long double& ErrG, long double& GP, long double& GS, unsigned& i0);
-    void valeurs_G_ErrG_GP_GS_pHd(const double t, const MCMCSplineComposante& spline, long double& G, long double& ErrG, long double& GP, long double& GS, unsigned& i0);
+    void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante& spline, long double& G, long double& VarG, long double& GP, long double& GS, unsigned& i0);
+
 
     long double initLambdaSpline();
     long double cross_validation (const SplineMatrices& matrices, const std::vector<long double> &vecH, const double lambdaSpline);
+    long double general_cross_validation (const SplineMatrices& matrices, const std::vector<long double> &vecH, const double lambdaSpline);
 
-    PosteriorMeanGComposante computePosteriorMeanGComposante(const std::vector<MCMCSplineComposante>& trace);
+    PosteriorMeanGComposante computePosteriorMeanGComposante(const std::vector<MCMCSplineComposante>& trace, const QString& ProgressBarText);
+    PosteriorMeanGComposante compute_posterior_mean_G_composante(const std::vector<MCMCSplineComposante>& trace, const QString& ProgressBarText);
+    PosteriorMeanGComposante computePosteriorMeanGComposante_chain_allchain(const std::vector<MCMCSplineComposante>& trace, PosteriorMeanGComposante& meanGAllChain, int prevChainSize);
 
     bool  hasPositiveGPrime (const MCMCSplineComposante& splineComposante);
     bool  hasPositiveGPrimeByDet (const MCMCSplineComposante& splineComposante);

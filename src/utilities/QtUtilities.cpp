@@ -97,6 +97,9 @@ QString DHMS( quint64 elapsedTime)
     if (minute >= 1)
         return str;
 
+    if (second >= 1)
+        return str;
+
     elapsedTime -= second*1000;
 
     str += QString("%3 msec").arg(QString::number(elapsedTime));
