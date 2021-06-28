@@ -48,6 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <cmath>
 #include <errno.h>
 #include <fenv.h>
+#include <stdlib.h>
 
 #include "ChronocurveUtilities.h"
 #include <vector>
@@ -74,7 +75,7 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
             break;
         case QtFatalMsg:
             txt += QString("{Fatal} \t\t %1").arg(msg);
-            abort();
+            exit (EXIT_FAILURE);
             break;
         default:
             return ;
