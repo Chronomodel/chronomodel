@@ -108,6 +108,7 @@ AppSettings& AppSettings::operator=(const AppSettings& s)
 
 void AppSettings::readSettings()
 {
+
     QSettings settings;
     settings.beginGroup("MainWindow");
 
@@ -133,9 +134,14 @@ void AppSettings::readSettings()
     AppSettings::mPrecision = settings.value(APP_SETTINGS_STR_PRECISION, APP_SETTINGS_DEFAULT_PRECISION).toInt();
     AppSettings::mNbSheet = settings.value(APP_SETTINGS_STR_SHEET, APP_SETTINGS_DEFAULT_SHEET).toInt();
 
-    AppSettings::mLastDir = settings.value("last_project_dir", "").toString();
-    AppSettings::mLastFile = settings.value("last_project_filename", "").toString();
+    try {
+        AppSettings::mLastDir = settings.value("last_project_dir", "").toString();
+        AppSettings::mLastFile = settings.value("last_project_filename", "").toString();
 
+    } catch (...) {
+        AppSettings::mLastDir = "";
+        AppSettings::mLastFile = "";
+    }
     settings.endGroup();
 
 }
@@ -171,27 +177,7 @@ void AppSettings::writeSettings()
     settings.endGroup();// Group MainWindows
 }
 
-/*
-void AppSettings::copyFrom(const AppSettings& s)
-{
-    mLanguage = s.mLanguage;
-    mCountry = s.mCountry;
-    mFont = s.mFont;
 
-    mAutoSave = s.mAutoSave;
-    mAutoSaveDelay = s.mAutoSaveDelay;
-    mShowHelp = s.mShowHelp;
-    mCSVCellSeparator = s.mCSVCellSeparator;
-    mCSVDecSeparator = s.mCSVDecSeparator;
-    mOpenLastProjectAtLaunch = s.mOpenLastProjectAtLaunch;
-    mPixelRatio = s.mPixelRatio;
-    mDpm = s.mDpm;
-    mImageQuality = s.mImageQuality;
-    mFormatDate = s.mFormatDate;
-    mPrecision = s.mPrecision;
-    mNbSheet = s.mNbSheet;
-}
-*/
 AppSettings::~AppSettings()
 {
 

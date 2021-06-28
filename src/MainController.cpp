@@ -49,9 +49,16 @@ MainController::MainController(const QString& filePath)
     AppSettings::readSettings();
 
     mMainWindow = MainWindow::getInstance();
-    mMainWindow->readSettings(filePath);
-    mMainWindow->move(AppSettings::mLastPosition);
-    mMainWindow->resize(AppSettings::mLastSize);
+    try {
+       // if (filePath!="")
+       mMainWindow->readSettings(filePath);
+
+       mMainWindow->move(AppSettings::mLastPosition);
+       mMainWindow->resize(AppSettings::mLastSize);
+
+    }  catch(...) {
+        qDebug() << "MainController:: Caught Exception!\n";
+    }
 
     mMainWindow->show();
 
