@@ -116,6 +116,10 @@ public:
     QMap<double, double> mTempoCredibilitySup;
 
     QMap<double, double> mActivity;
+    QMap<double, double> mActivityInf;
+    QMap<double, double> mActivitySup;
+    double mActivityMeanUnif;
+    double mActivityStdUnif;
 
     // Raw curve without date format
 
@@ -127,6 +131,8 @@ public:
     QMap<double, double> mRawTempoCredibilitySup;
 
     QMap<double, double> mRawActivity;
+    QMap<double, double> mRawActivityInf;
+    QMap<double, double> mRawActivitySup;
 
     TauType mTauType;
     double mTauFixed;

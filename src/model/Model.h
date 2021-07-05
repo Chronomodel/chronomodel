@@ -111,7 +111,10 @@ public:
     // Trace and Posterior density needed for this :
     virtual void generateNumericalResults(const QList<ChainSpecs>& chains);
 
-    void generateTempo();
+    void generateTempoAndActivity();
+    void generateTempo(int gridLenth);
+    void generateTempoTest();// a detruire
+    void generateActivity(int gridLenth, double h);
 
     virtual void clearTraces();
     virtual void clearPosteriorDensities();
@@ -146,6 +149,7 @@ public:
     double mThreshold;
     double mBandwidth;
     int mFFTLength;
+    double mHActivity;
 
     // Members used in the next-previous sheet system
     // they count all the Events and the Dates availables to display
@@ -158,6 +162,7 @@ public slots:
     void setThreshold(const double threshold);
     void setBandwidth(const double bandwidth);
     void setFFTLength(const int FFTLength);
+    void setHActivity(const double h);
 
 signals:
     void newCalculus();

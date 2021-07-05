@@ -160,7 +160,7 @@ QString DateUtils::convertToAppSettingsFormatStr(const double valueToFormat, con
 
 double DateUtils::convertToAppSettingsFormat(const double& valueToFormat)
 {
-    return DateUtils::convertToFormat(valueToFormat, getAppSettingsFormat());
+    return DateUtils::convertToFormat(valueToFormat, AppSettings::mFormatDate); //getAppSettingsFormat() = AppSettings::mFormatDate
 }
 
 QString DateUtils::convertFromAppSettingsFormatStr(const double formattedValue)
@@ -170,14 +170,14 @@ QString DateUtils::convertFromAppSettingsFormatStr(const double formattedValue)
 
 double DateUtils::convertFromAppSettingsFormat(const double &formattedValue)
 {
-    return DateUtils::convertFromFormat(formattedValue, getAppSettingsFormat());
+    return DateUtils::convertFromFormat(formattedValue, AppSettings::mFormatDate);
 }
 
 QMap<double, double> DateUtils::convertMapToAppSettingsFormat(const QMap<double, double> &mapToFormat)
 {
    QMap<double, double> mapResult;
    for (QMap<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
-       mapResult.insert(convertToAppSettingsFormat(value.key()), value.value());
+       mapResult.insert(convertToFormat(value.key(), AppSettings::mFormatDate), value.value());
 
    return mapResult;
 }

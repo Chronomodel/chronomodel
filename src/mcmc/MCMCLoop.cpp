@@ -97,7 +97,7 @@ void MCMCLoop::run()
     QElapsedTimer startTime;
     startTime.start();
 
-    QString log= "Start " + mDate + " -> " + QTime::currentTime().toString("hh:mm:ss.zzz");
+    QString log = "Start " + mDate + " -> " + QTime::currentTime().toString("hh:mm:ss.zzz");
 
 
     //----------------------- Calibrating --------------------------------------
@@ -129,6 +129,8 @@ void MCMCLoop::run()
      std::vector<Event*> initListEvents (mProject->mModel->mEvents.size());
      std::copy(mProject->mModel->mEvents.begin(), mProject->mModel->mEvents.end(), initListEvents.begin() );
 
+    unsigned estimatedTotalIter = mChains.size() *(mChains.at(0).mIterPerBurn + mChains.at(0).mIterPerBatch*mChains.at(0).mMaxBatchs + mChains.at(0).mIterPerAquisition);
+    unsigned iterDone = 0;
     for (mChainIndex = 0; mChainIndex < mChains.size(); ++mChainIndex) {
         if (mChainIndex > 0) {
             // rétablissement de l'ordre des Events, indispensable en cas de calcul de courbe. Car le cacul modifie l'ordre des events
@@ -195,6 +197,8 @@ void MCMCLoop::run()
         QElapsedTimer burningTime;
         burningTime.start();
 
+        qint64 interTime;
+
         while (chain.mBurnIterIndex < chain.mIterPerBurn) {
             if (isInterruptionRequested()) {
                 mAbortedReason = ABORTED_BY_USER;
@@ -213,6 +217,10 @@ void MCMCLoop::run()
             ++chain.mBurnIterIndex;
             ++chain.mTotalIter;
 
+            ++iterDone;
+            interTime = burningTime.elapsed() * (double)(estimatedTotalIter - iterDone) / (double)chain.mBurnIterIndex;
+            emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()) + " : " + "Burning ; Estimated time left " + DHMS(interTime)));
+
             emit stepProgressed(chain.mBurnIterIndex);
         }
         chain.burnElapsedTime = burningTime.elapsed();
@@ -226,7 +234,6 @@ void MCMCLoop::run()
         QElapsedTimer adaptTime;
         adaptTime.start();
 
-        qint64 interTime;
 
         while ( chain.mBatchIndex < chain.mMaxBatchs) {
             if (isInterruptionRequested()) {
@@ -257,17 +264,19 @@ void MCMCLoop::run()
             }
             ++chain.mBatchIndex;
 
-            //if (!(adaptTime.elapsed() % 2000)) {
-                //interTime = adaptTime.elapsed();
-                interTime = adaptTime.elapsed() * (double)(chain.mIterPerAquisition + chain.mIterPerBatch* (chain.mMaxBatchs-chain.mBatchIndex)) / (double)(chain.mIterPerBatch* chain.mBatchIndex);
-                emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()) + " : " + "Adapting ; Estimated time left " + DHMS(interTime)));
-           // }
+            iterDone += chain.mIterPerBatch;
+            interTime = adaptTime.elapsed() * (double)(estimatedTotalIter - iterDone)/ (double)(chain.mIterPerBatch*chain.mBatchIndex);
+
+            emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()) + " : " + "Adapting ; Estimated time left " + DHMS(interTime)));
+
 
             if (adapt(chain.mBatchIndex))
                     break;
 
 
         }
+        // Fix Total iteration if adaptation break before the end
+        estimatedTotalIter -= (chain.mMaxBatchs-chain.mBatchIndex)*chain.mIterPerBatch;
 
         mProject->mModel->mLogAdapt += "<hr>";
         mProject->mModel->mLogAdapt += line(textBold(tr("ADAPTATION FOR CHAIN %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))) );
@@ -291,6 +300,7 @@ void MCMCLoop::run()
         mState = eAquisition;
         QElapsedTimer aquisitionTime;
         aquisitionTime.start();
+
         int thinningIdx = 1;
         int batchIdx = 1;
         int totalBacth = chain.mBatchIndex;
@@ -302,8 +312,12 @@ void MCMCLoop::run()
                 mAbortedReason = ABORTED_BY_USER;
                 return;
             }
+            ++iterDone;
+
             if (!(chain.mAquisitionIterIndex % chain.mIterPerBatch)) {
-                interTime = aquisitionTime.elapsed()* (double)(chain.mIterPerAquisition-chain.mAquisitionIterIndex) / (double)chain.mAquisitionIterIndex;
+
+                interTime = aquisitionTime.elapsed() * (double) (estimatedTotalIter - iterDone) / (double) chain.mAquisitionIterIndex;
+
                 emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()) + " : Aquisition ; Estimated time left " + DHMS(interTime)));
             }
 

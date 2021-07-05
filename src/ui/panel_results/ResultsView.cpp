@@ -644,11 +644,15 @@ mMaximunNumberOfVisibleGraph(0)
 
     mBandwidthSpin = new QDoubleSpinBox(mDensityOptsGroup);
     mBandwidthSpin->setDecimals(2);
+
+    mHActivityLab = new Label(tr("h Window"), mDensityOptsGroup);
+    mHActivityEdit = new LineEdit(mDensityOptsGroup);
     
     connect(mCredibilityCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     connect(mFFTLenCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::applyFFTLength);
     connect(mBandwidthSpin, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &ResultsView::applyBandwidth);
     connect(mThresholdEdit, &LineEdit::editingFinished, this, &ResultsView::applyThreshold);
+    connect(mHActivityEdit, &LineEdit::editingFinished, this, &ResultsView::applyHActivity);
 
     QHBoxLayout* densityLayout0 = new QHBoxLayout();
     densityLayout0->setContentsMargins(0, 0, 0, 0);
@@ -668,6 +672,11 @@ mMaximunNumberOfVisibleGraph(0)
     densityLayout3->setContentsMargins(0, 0, 0, 0);
     densityLayout3->addWidget(mBandwidthLab);
     densityLayout3->addWidget(mBandwidthSpin);
+
+    QHBoxLayout* densityLayout4 = new QHBoxLayout();
+    densityLayout4->setContentsMargins(0, 0, 0, 0);
+    densityLayout4->addWidget(mHActivityLab);
+    densityLayout4->addWidget(mHActivityEdit);
     
     QVBoxLayout* densityLayout = new QVBoxLayout();
     densityLayout->setContentsMargins(10, 10, 10, 10);
@@ -676,6 +685,7 @@ mMaximunNumberOfVisibleGraph(0)
     densityLayout->addLayout(densityLayout1);
     densityLayout->addLayout(densityLayout2);
     densityLayout->addLayout(densityLayout3);
+    densityLayout->addLayout(densityLayout4);
     mDensityOptsGroup->setLayout(densityLayout);
 
     // ------------------------------------
@@ -798,11 +808,11 @@ mMaximunNumberOfVisibleGraph(0)
     QHBoxLayout* mSaveSelectLayout = new QHBoxLayout (mSaveSelectWidget);
     mSaveSelectLayout->setContentsMargins(0, 0, 0, 0);
     mSaveSelectLayout->addWidget(mImageSaveBut);
-    mSaveSelectLayout->addSpacing(internSpacing);
+   // mSaveSelectLayout->addSpacing(internSpacing);
     mSaveSelectLayout->addWidget(mImageClipBut);
-    mSaveSelectLayout->addSpacing(internSpacing);
+   // mSaveSelectLayout->addSpacing(internSpacing);
     mSaveSelectLayout->addWidget(mResultsClipBut);
-    mSaveSelectLayout->addSpacing(internSpacing);
+   // mSaveSelectLayout->addSpacing(internSpacing);
     mSaveSelectLayout->addWidget(mDataSaveBut);
     mSaveSelectWidget->setLayout(mSaveSelectLayout);
 
@@ -940,9 +950,10 @@ void ResultsView::updateModel(Model* model)
     } else
         mCurrentVariable = GraphViewResults::eTheta;
 
-    mFFTLenCombo->setCurrentText(QString::number(mModel->getFFTLength()));
+    mFFTLenCombo->setCurrentText(stringForLocal(mModel->getFFTLength()));
     mBandwidthSpin->setValue(mModel->getBandwidth());
-    mThresholdEdit->setText(QString::number(mModel->getThreshold()));
+    mThresholdEdit->setText(stringForLocal(mModel->getThreshold()));
+    mHActivityEdit->setText(stringForLocal(mModel->mHActivity));
     
     applyStudyPeriod();
     updateOptionsWidget();
@@ -1209,10 +1220,9 @@ void ResultsView::toggleDisplayDistrib()
 {
     const bool isPostDistrib = isPostDistribGraph();
     // -------------------------------------------------------------------------------------
-    //  MCMC Display options are not visible for mCurrentVariable = Tempo or Activity
+    //  MCMC Display options are not visible for mCurrentVariable = Tempo
     // -------------------------------------------------------------------------------------
     if ( mCurrentVariable == GraphViewResults::eTempo ||
-         mCurrentVariable == GraphViewResults::eActivity ||
          mCurrentVariable == GraphViewResults::eGP ||
          mCurrentVariable == GraphViewResults::eGS) {
 
@@ -1299,17 +1309,13 @@ void ResultsView::toggleDisplayDistrib()
         bool showDensityOptions = isPostDistrib && (mCurrentVariable != GraphViewResults::eTempo
                 && mCurrentVariable != GraphViewResults::eG
                 && mCurrentVariable != GraphViewResults::eGP
-                && mCurrentVariable != GraphViewResults::eGS
-                && mCurrentVariable != GraphViewResults::eActivity);
+                && mCurrentVariable != GraphViewResults::eGS);
+             //   && mCurrentVariable != GraphViewResults::eActivity);
 
         mDensityOptsTitle->setVisible(showDensityOptions);
-     /*   if (mDensityOptsTitle->isVisible())
-            widHeigth += mDensityOptsTitle->height();
-*/
+
         mDensityOptsGroup->setVisible(showDensityOptions);
-    /*    if (mDensityOptsGroup->isVisible())
-            widHeigth += mDensityOptsGroup->height();
-            */
+
         if (widFrom != mDistribWidget)
             mOptionsLayout->replaceWidget(widFrom, mDistribWidget);
     }
@@ -2565,7 +2571,7 @@ void ResultsView::updateOptionsWidget()
     } else {
         mGraphListTab->setTabVisible(1, mHasPhases); // Phases
         mGraphListTab->setTabVisible(2, mHasPhases); // Tempo
-        mGraphListTab->setTabVisible(3, mHasPhases); // Curve
+        mGraphListTab->setTabVisible(3, false); // Curve
         
         // If the current tab is not currently visible :
         // - Show the "Phases" tab (1) which is a good default choice if the model has phases.
@@ -3064,6 +3070,11 @@ void ResultsView::applyFFTLength()
     mModel->setFFTLength(len);
 }
 
+void ResultsView::applyHActivity()
+{
+    const double h = locale().toDouble(mHActivityEdit->text());
+    mModel->setHActivity(h);
+}
 void ResultsView::applyBandwidth()
 {
     const double bandwidth = mBandwidthSpin->value();

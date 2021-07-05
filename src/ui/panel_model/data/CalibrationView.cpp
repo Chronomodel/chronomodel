@@ -409,7 +409,7 @@ void CalibrationView::updateGraphs()
 
             if (!subData.isEmpty()) {
 
-                resultsStr += FunctionStatToString(results.funcAnalysis, false);
+                resultsStr += FunctionStatToString(results.funcAnalysis);
 
                 /* with the calibration we don't need the statistic on the trace*/
                 /*

@@ -718,6 +718,7 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
     QString result = densityAnalysisToString(mResults, nl, forCSV) + nl;
 
     if (forCSV) {
+        result += tr("Probabilities") + nl;
             if (!mHPD.isEmpty())
                 result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForCSV(mThresholdUsed), getHPDText(mHPD, mThresholdUsed, unit, conversionFunc, true)) + nl;
 
@@ -729,6 +730,7 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
                                                                                        unit);
            }
    } else {
+        result += "<i>"+ tr("Probabilities") + " </i>"+ nl;
             if (!mHPD.isEmpty())
                 result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForLocal(mThresholdUsed), getHPDText(mHPD, mThresholdUsed, unit, conversionFunc, false)) + nl;
 

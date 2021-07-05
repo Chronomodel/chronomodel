@@ -131,6 +131,10 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
         result.std = sqrt(variance);
     }
 
+    const double step = (aFunction.lastKey() - aFunction.firstKey()) / (double)aFunction.size();
+    QVector<double> subRepart = calculRepartition(aFunction);
+    result.quartiles = quartilesForRepartition(subRepart, aFunction.firstKey(), step);
+
     return result;
 }
 
@@ -189,6 +193,47 @@ type_data std_Knuth(const QVector<type_data> &data)
 
 }
 
+
+double std_Knuth(const std::vector<int>& data)
+{
+    int n = 0;
+    double mean = 0.;
+    double variance = 0.;
+    double previousMean = 0.;
+    double previousVariance = 0.;
+
+    for (auto&& x : data) {
+        n++;
+        previousMean = std::move(mean);
+        previousVariance = std::move(variance);
+        mean = previousMean + ((double)x - previousMean) / n;
+        variance = previousVariance + ( (double)x - previousMean)*( (double)x - mean);
+    }
+
+    return sqrt(variance/n);
+
+}
+
+
+void mean_std_Knuth(const std::vector<int>& data, double& mean, double& std)
+{
+    int n = 0;
+    double variance = 0.;
+    double previousMean = 0.;
+    double previousVariance = 0.;
+
+    for (auto&& x : data) {
+        n++;
+        previousMean = std::move(mean);
+        previousVariance = std::move(variance);
+        mean = previousMean + ((double)x - previousMean) / n;
+        variance = previousVariance + ( (double)x - previousMean)*( (double)x - mean);
+    }
+
+    std = std::move(sqrt(variance/n));
+
+}
+
 /**
  * @brief traceStatistic : This function uses the Knuth-Welford algorithm to calculate the standard deviation.
  * @param trace
@@ -232,7 +277,7 @@ double shrinkageUniform(const double so2)
  * @brief Return a text from a FunctionStat
  * @see FunctionStat
  */
-QString FunctionStatToString(const FunctionStat& analysis, const bool forCSV)
+QString FunctionStatToString(const FunctionStat& analysis, const QString& nl, const bool forCSV)
 {
     QString result;
 
@@ -243,11 +288,17 @@ QString FunctionStatToString(const FunctionStat& analysis, const bool forCSV)
         if (forCSV) {
             result += QObject::tr("MAP = %1  ;  Mean = %2  ;  Std = %3").arg( stringForCSV(analysis.mode),
                                                                               stringForCSV(analysis.mean),
-                                                                              stringForCSV(analysis.std));
+                                                                              stringForCSV(analysis.std)) + nl;
+            result += QObject::tr("Q1 = %1  ;  Q2 = %2  ;  Q3 = %3").arg( stringForCSV(analysis.quartiles.Q1),
+                                                                          stringForCSV(analysis.quartiles.Q2),
+                                                                          stringForCSV(analysis.quartiles.Q3));
         }  else {
             result += QObject::tr("MAP = %1  ;  Mean = %2  ;  Std = %3").arg( stringForLocal(analysis.mode),
                                                                               stringForLocal(analysis.mean),
-                                                                              stringForLocal(analysis.std));
+                                                                              stringForLocal(analysis.std)) + nl;
+            result += QObject::tr("Q1 = %1  ;  Q2 = %2  ;  Q3 = %3").arg( stringForLocal(analysis.quartiles.Q1),
+                                                                          stringForLocal(analysis.quartiles.Q2),
+                                                                          stringForLocal(analysis.quartiles.Q3));
         }
 
 
@@ -263,26 +314,32 @@ QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& 
     QString result (QObject::tr("No data"));
     if (analysis.funcAnalysis.std>=0.) {
 
-        result = QObject::tr("Trace Stat.") + nl;
+
         if (forCSV) {
+            result =  QObject::tr("Trace Stat.") + nl;
             result += QObject::tr("Mean = %1  ;  Std = %2").arg( stringForCSV(analysis.traceAnalysis.mean),
                                                                  stringForCSV(analysis.traceAnalysis.std)) + nl;
             result += QObject::tr("Q1 = %1  ;  Q2 (Median) = %2  ;  Q3 = %3 ").arg( stringForCSV(analysis.traceAnalysis.quartiles.Q1),
                                                                                     stringForCSV(analysis.traceAnalysis.quartiles.Q2),
-                                                                                    stringForCSV(analysis.traceAnalysis.quartiles.Q3));
-            result += nl + QObject::tr("min = %1  ;  max  = %2 ").arg( stringForCSV(analysis.traceAnalysis.min),
-                                                                       stringForCSV(analysis.traceAnalysis.max))+ nl;
+                                                                                    stringForCSV(analysis.traceAnalysis.quartiles.Q3)) + nl;
+            result +=  QObject::tr("min = %1  ;  max  = %2 ").arg( stringForCSV(analysis.traceAnalysis.min),
+                                                                       stringForCSV(analysis.traceAnalysis.max)) + nl;
+            result += nl + QObject::tr("Density Stat.") +  nl;
+
+
         } else {
+            result = "<i>" + QObject::tr("Trace Stat.")  + "</i>"+ nl;
             result += QObject::tr("Mean = %1  ;  Std = %2").arg( stringForLocal(analysis.traceAnalysis.mean),
                                                                  stringForLocal(analysis.traceAnalysis.std)) + nl;
             result += QObject::tr("Q1 = %1  ;  Q2 (Median) = %2  ;  Q3 = %3 ").arg( stringForLocal(analysis.traceAnalysis.quartiles.Q1),
                                                                                     stringForLocal(analysis.traceAnalysis.quartiles.Q2),
-                                                                                    stringForLocal(analysis.traceAnalysis.quartiles.Q3));
-            result += nl + QObject::tr("min = %1  ;  max  = %2 ").arg( stringForLocal(analysis.traceAnalysis.min),
-                                                                       stringForLocal(analysis.traceAnalysis.max))+ nl;
+                                                                                    stringForLocal(analysis.traceAnalysis.quartiles.Q3)) + nl;
+            result += QObject::tr("min = %1  ;  max  = %2 ").arg( stringForLocal(analysis.traceAnalysis.min),
+                                                                       stringForLocal(analysis.traceAnalysis.max)) + nl;
+            result += nl + "<i>" + QObject::tr("Density Stat.") + "</i>"+ nl;
         }
-        result += QObject::tr("Density Stat.") + nl;
-        result += FunctionStatToString(analysis.funcAnalysis, forCSV) + nl;
+
+        result += FunctionStatToString(analysis.funcAnalysis, nl, forCSV) + nl;
 
     }
     return result;
@@ -366,6 +423,7 @@ Quartiles quartilesForRepartition(const QVector<double>& repartition, const doub
 
     return quartiles;
 }
+
 /**
  * @brief credibilityForTrace find the smallest interval Credibility with the confidence thresh
  * @param trace
@@ -556,11 +614,8 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
 
 #ifdef DEBUG
     qDebug()<<description;
-    QTime timeDiff(0,0,0, int(startTime.elapsed()));
-    //timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
-    qDebug()<<"timeRangeFromTraces ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
+    qDebug()<<"timeRangeFromTraces done in " + DHMS(startTime.elapsed());
 #endif
-
     return range;
 }
 
@@ -714,7 +769,7 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const 
  * @param traceBeta
  * @param traceAlpha
  * @param thresh
- * @param description Obsolete function keep only for memory and test
+ * @param description : Obsolete function keep only for memory and test
  * @return
  */
 QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, const QVector<float>& traceAlpha, const float thresh, const QString description)

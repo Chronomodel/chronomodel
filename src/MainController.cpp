@@ -50,8 +50,8 @@ MainController::MainController(const QString& filePath)
 
     mMainWindow = MainWindow::getInstance();
     try {
-       // if (filePath!="")
-       mMainWindow->readSettings(filePath);
+        //if (filePath!="")
+        mMainWindow->readSettings(filePath);
 
        mMainWindow->move(AppSettings::mLastPosition);
        mMainWindow->resize(AppSettings::mLastSize);

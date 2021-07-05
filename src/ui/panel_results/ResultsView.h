@@ -219,6 +219,7 @@ private slots:
     void applyFFTLength();
     void applyBandwidth();
     void applyThreshold();
+    void applyHActivity();
 
 
     // ------------------------------------
@@ -397,6 +398,9 @@ private:
     Label* mBandwidthLab;
     QDoubleSpinBox* mBandwidthSpin;
     Button* mUpdateDisplay;
+
+    Label* mHActivityLab;
+    LineEdit* mHActivityEdit;
 
     // ------------------------------------
     //  Pagination / Exoprt Tools

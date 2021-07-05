@@ -242,17 +242,47 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
     else if (typeGraph == ePostDistrib && variable == eActivity) {
 
         mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
-        mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
+        mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);
 
         mTitle = tr("Phase Activity : %1").arg(mPhase->mName);
-        GraphCurve curveActivity = generateDensityCurve(mPhase->mActivity,
-                                                     "Post Distrib Activity All Chains",
-                                                     color, Qt::SolidLine);
+        GraphCurve curveActivity = generateDensityCurve( mPhase->mActivity,
+                                                         "Post Distrib Activity All Chains",
+                                                         color, Qt::SolidLine);
+
+        GraphCurve curveActivityInf = generateDensityCurve( mPhase->mActivityInf,
+                                                            "Post Distrib Activity Inf All Chains",
+                                                            color, Qt::DashLine);
+
+        GraphCurve curveActivitySup = generateDensityCurve( mPhase->mActivitySup,
+                                                            "Post Distrib Activity Sup All Chains",
+                                                            color, Qt::DashLine);
+
+        // Display envelope Uniform
+        const double M_m = abs(mPhase->mActivity.lastKey() - mPhase->mActivity.firstKey());
+        const double meanUnif = mPhase->mEvents.size() / M_m;
+        GraphCurve curveMeanUnif = generateHorizontalLine( meanUnif,
+                                                           "Post Distrib Activity Unif Mean",
+                                                           Qt::red, Qt::SolidLine);
+
+        GraphCurve curveUnifInf = generateHorizontalLine( mPhase->mActivityMeanUnif - mPhase->mActivityStdUnif,
+                                                          "Post Distrib Activity Unif Inf",
+                                                          Qt::red, Qt::DashLine);
+        GraphCurve curveUnifSup = generateHorizontalLine( mPhase->mActivityMeanUnif + mPhase->mActivityStdUnif,
+                                                          "Post Distrib Activity Unif Sup",
+                                                          Qt::red, Qt::DashLine);
 
         mGraph->setOverArrow(GraphView::eBothOverflow);
+
+
         mGraph->addCurve(curveActivity);
-        const type_data yMax = map_max_value(curveActivity.mData);
+        mGraph->addCurve(curveActivityInf);
+        mGraph->addCurve(curveActivitySup);
+        mGraph->addCurve(curveMeanUnif);
+        mGraph->addCurve(curveUnifInf);
+        mGraph->addCurve(curveUnifSup);
+
+        const type_data yMax = map_max_value(curveActivitySup.mData);
 
         mGraph->setRangeY(0., yMax);
 
@@ -346,6 +376,12 @@ void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& s
           if ( Activity && !Activity->mData.isEmpty()) {
 
               mGraph->setCurveVisible("Post Distrib Activity All Chains", true);
+              mGraph->setCurveVisible("Post Distrib Activity Inf All Chains", showError);
+              mGraph->setCurveVisible("Post Distrib Activity Sup All Chains", showError);
+              // enveloppe Uniforne
+              mGraph->setCurveVisible("Post Distrib Activity Unif Mean", showError);
+              mGraph->setCurveVisible("Post Distrib Activity Unif Inf", showError);
+              mGraph->setCurveVisible("Post Distrib Activity Unif Sup", showError);
 
               mGraph->setTipXLab("t");
               mGraph->setTipYLab("");
