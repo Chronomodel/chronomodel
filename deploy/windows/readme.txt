@@ -4,13 +4,13 @@ PROJECT
 
 ChronoModel Project
 "http://www.chronomodel.com"
-version 2.0
-2018-12-11
+version 3.0
+2021-07-07
 
 ————————————————————————————————————————————————————————————————————————
 CREDITS
 ————————————————————————————————————————————————————————————————————————
-Copyright ©2018 CNRS
+Copyright ©2021 CNRS
 used under the terms:
 CeCILL FREE SOFTWARE LICENSE AGREEMENT
 Version 2.1 dated 2013-06-21
@@ -31,12 +31,12 @@ Project Manager:
 
 ChronoModel was originally written by:
 
-	Helori LANOS (2014-2017)
+	Helori LANOS (2014-2017 + 2020)
 
 
 The current maintainer is:
 
-	Philippe DUFRESNE (2015-2018)
+	Philippe DUFRESNE (2015-2021)
 
 ————————————————————————————————————————————————————————————————————————
 CONTRIBUTORS

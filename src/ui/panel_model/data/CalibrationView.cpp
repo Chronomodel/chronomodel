@@ -223,7 +223,7 @@ void CalibrationView::setDate(const QJsonObject& date)
 
 void CalibrationView::setDate(const Date& d)
 {
-    Q_ASSERT(&d);
+    //Q_ASSERT(&d);
 
     Project* project = MainWindow::getInstance()->getProject();
     const QJsonObject state = project->state();

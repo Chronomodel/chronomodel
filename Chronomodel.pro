@@ -86,7 +86,7 @@ RESOURCES = $$PRO_PATH/Chronomodel.qrc
 #RESOURCES = Chronomodel.qrc
 
 # Compilation warning flags
-# QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter # invalid option for MSVC2015
+ QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter # invalid option for MSVC2015
 # QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter
 
 
@@ -97,8 +97,8 @@ RESOURCES = $$PRO_PATH/Chronomodel.qrc
 # In the future we'll need to increase to C++17
 # which offered namespace std::experimental::parallel;
 #########################################
-CONFIG += c++2b
-QMAKE_CXXFLAGS += -std=c++2b
+CONFIG += c++2a
+QMAKE_CXXFLAGS += -std=c++2a
 
 #########################################
 # MacOS specific settings
@@ -134,7 +134,7 @@ macx{
 win32{
 	# Resource file (Windows only)
         message("WIN specific settings")
-        QMAKESPEC = win32-msvc  # for 32-bit and 64-bit
+        QMAKESPEC = win32-g++ #win32-msvc  # for 32-bit and 64-bit
         RC_FILE += Chronomodel.rc
         RC_ICONS += $$PRO_PATH/icon/Chronomodel.ico
         QT_FATAL_WARNING = 1

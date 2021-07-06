@@ -54,7 +54,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QJsonArray>
 #include <QtWidgets>
 #include <QtCore/QStringList>
-#include <execution>
+//#include <execution>
 
 // Constructor...
 Model::Model():

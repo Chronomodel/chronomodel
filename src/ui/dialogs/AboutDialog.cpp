@@ -55,7 +55,7 @@ AboutDialog::AboutDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
     path = dir.absolutePath() + "/Resources";
 #else
     //http://doc.qt.io/qt-5/qstandardpaths.html#details
-    QStringList dataPath = QStandardPaths::standardLocations(QStandardPaths::DataLocation);
+    QStringList dataPath = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
     QString path  =  dataPath[0];
 #endif
 

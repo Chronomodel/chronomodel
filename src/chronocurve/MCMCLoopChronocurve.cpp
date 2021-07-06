@@ -2465,8 +2465,9 @@ long double MCMCLoopChronocurve::h_YWI_AY_composanteX(const SplineMatrices &matr
         return 1.;
     }
     errno = 0;
+#ifdef Q_OS_MAC
     if (math_errhandling & MATH_ERREXCEPT) feclearexcept(FE_ALL_EXCEPT);
-
+#endif
     std::vector<long double> vecY (mModel->mEvents.size());
     std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
 
@@ -2527,6 +2528,7 @@ long double MCMCLoopChronocurve::h_YWI_AY_composanteX(const SplineMatrices &matr
 
  //   long double res1= expl(res0 +log(det_1_2)/2);
 #ifdef DEBUG
+ #ifdef Q_OS_MAC
     if (math_errhandling & MATH_ERRNO) {
         if (errno==EDOM)
             qDebug()<<"errno set to EDOM";
@@ -2543,7 +2545,7 @@ long double MCMCLoopChronocurve::h_YWI_AY_composanteX(const SplineMatrices &matr
         }
 
       }
-
+#endif
     if (res == HUGE_VAL) {
         qWarning("h_YWI_AY_composanteX res == HUGE_VAL");
     }
@@ -2628,8 +2630,9 @@ long double MCMCLoopChronocurve::h_YWI_AY_composanteY(const SplineMatrices& matr
         return 1.;
     }
     errno = 0;
+#ifdef Q_OS_MAC
       if (math_errhandling & MATH_ERREXCEPT) feclearexcept(FE_ALL_EXCEPT);
-
+#endif
     std::vector<long double> vecY (lEvents.size());
     std::transform(lEvents.begin(), lEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYy;});
 
@@ -2688,6 +2691,7 @@ long double MCMCLoopChronocurve::h_YWI_AY_composanteY(const SplineMatrices& matr
     // calcul à un facteur (2*PI) puissance -(n-2) près
     long double res = 0.5l * (nb_noeuds-2.) * log(lambdaSpline) + h_exp;
     res = exp(res) * sqrt(det_1_2);
+#ifdef Q_OS_MAC
     if (math_errhandling & MATH_ERRNO) {
         if (errno==EDOM)
             qDebug()<<"errno set to EDOM";
@@ -2696,6 +2700,7 @@ long double MCMCLoopChronocurve::h_YWI_AY_composanteY(const SplineMatrices& matr
         if (fetestexcept(FE_INVALID))
             qDebug()<<"MCMCLoopChronocurve::h_YWI_AY_composanteY -> FE_INVALID raised : Domain error: At least one of the arguments is a value for which the function is not defined.";
       }
+#endif
     //return exp(0.5 * (nb_noeuds-2.) * log(alphaLissage) + h_exp) * sqrt(det_1_2);
     return res;
 }
@@ -2705,8 +2710,9 @@ long double MCMCLoopChronocurve::h_YWI_AY_composanteZ(const SplineMatrices& matr
         return 1.;
     }
     errno = 0;
+#ifdef Q_OS_MAC
       if (math_errhandling & MATH_ERREXCEPT) feclearexcept(FE_ALL_EXCEPT);
-
+#endif
     std::vector<long double> vecY (lEvents.size());
     std::transform(lEvents.begin(), lEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYz;});
 
@@ -2764,6 +2770,7 @@ long double MCMCLoopChronocurve::h_YWI_AY_composanteZ(const SplineMatrices& matr
     // calcul à un facteur (2*PI) puissance -(n-2) près
     long double res = 0.5l * (nb_noeuds-2.) * log(lambdaSpline) + h_exp;
     res = exp(res) * sqrt(det_1_2);
+#ifdef Q_OS_MAC
     if (math_errhandling & MATH_ERRNO) {
         if (errno==EDOM)
             qDebug()<<"errno set to EDOM";
@@ -2772,6 +2779,7 @@ long double MCMCLoopChronocurve::h_YWI_AY_composanteZ(const SplineMatrices& matr
         if (fetestexcept(FE_INVALID))
             qDebug()<<"MCMCLoopChronocurve::h_YWI_AY_composanteZ -> FE_INVALID raised : Domain error: At least one of the arguments is a value for which the function is not defined.";
       }
+ #endif
     //return exp(0.5 * (nb_noeuds-2.) * log(alphaLissage) + h_exp) * sqrt(det_1_2);
     return res;
 }

@@ -1,12 +1,12 @@
 ChronoModel project
 "http://www.chronomodel.com"
-version 2.0
-2018-08-17
+version 3.0
+2021-07-07
 
 ——————————————————
 CREDITS
 ——————————————————
-Copyright ©2018 CNRS
+Copyright ©2021 CNRS
 used under the terms:
 CeCILL FREE SOFTWARE LICENSE AGREEMENT
 Version 2.1 dated 2013-06-21
@@ -29,7 +29,7 @@ BUILD ON MAC
 
 Pre-requisite:
 - Xcode (latest version recommended)
-- Qt 5 installed on your Mac (latest version recommended)
+- Qt 6 installed on your Mac (latest version recommended)
 - Xcode tools installed (for pkgbuild tool, among others…)
 
 The build_all_mac.sh contains everything to:
@@ -60,6 +60,26 @@ Then refer to this documentation to solve the problem :
 https://support.microsoft.com/en-us/kb/156276
 It will guide you through adding a new register key.
 Without it, Qt may fail to compile the resource file Chronomodel.rc
+
+- Install Qt 6 and use the following lines to make a batch file
+
+cls
+set "QTDIR=C:\QT\6.1.2"
+set PATH=%PATH%;%QTDIR%\bin\;C:\Qt\Tools\mingw810_64\bin\
+
+set "QMAKESPEC=%QTDIR%\mingw81_64\mkspecs\win32-g++"
+set "DIRPROJECT=%HOMEPATH%\Documents\GitHub\chronomodel"
+
+rem %QTDIR%\mingw81_64\bin\qmake.exe -project %Overwrite the file .pro
+echo qmake
+ %QTDIR%\mingw81_64\bin\qmake.exe -makefile
+
+echo MAJ linguistic
+ %QTDIR%\mingw81_64\bin\lupdate.exe %DIRPROJECT%\Chronomodel.pro
+ %QTDIR%\mingw81_64\bin\lrelease.exe %DIRPROJECT%\Chronomodel.pro
+
+C:\Qt\Tools\mingw810_64\bin\mingw32-make.exe
+
 
 ——————————————————
 BUILD ON UBUNTU (linux)

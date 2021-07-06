@@ -348,7 +348,7 @@ QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& 
 
 Quartiles quartilesForTrace(const QVector<type_data> &trace)
 {
-    Q_ASSERT(&trace);
+    //Q_ASSERT(&trace);
     Quartiles quartiles = quartilesType(trace, 8, 0.25);
     return quartiles;
 }
@@ -1730,7 +1730,7 @@ std::pair<std::vector<std::vector<long double> >, std::vector<long double> > cho
 std::pair<std::vector<std::vector<long double>>, std::vector<long double>> decompositionCholesky(const std::vector<std::vector<long double>>& matrix, const int nbBandes, const int shift)
 {
     errno = 0;
-      if (math_errhandling & MATH_ERREXCEPT) feclearexcept(FE_ALL_EXCEPT);
+      //if (math_errhandling & MATH_ERREXCEPT) feclearexcept(FE_ALL_EXCEPT);
 
     const int dim = matrix.size();
     std::vector<std::vector<long double>> matL = initLongMatrix(dim, dim);
@@ -1804,7 +1804,7 @@ try {
     // 0 X 1 0 0
     // 0 X X 1 0
     // 0 0 0 0 0
-
+/*
     if (math_errhandling & MATH_ERRNO) {
         if (errno==EDOM)
             qDebug()<<"errno set to EDOM";
@@ -1813,7 +1813,7 @@ try {
         if (fetestexcept(FE_INVALID))
             qDebug()<<"decompositionCholesky -> FE_INVALID raised : Domain error: At least one of the arguments is a value for which the function is not defined.";
       }
-
+*/
     } catch(...) {
                 qDebug() << "Function::decompositionCholesky : Caught Exception!\n";
             }

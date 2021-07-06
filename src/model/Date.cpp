@@ -67,7 +67,7 @@ Dato::~Dato()
 
 void Dato::fromJson(const QJsonObject& json)
 {
-    Q_ASSERT(&json);
+    //Q_ASSERT(&json);
  //   mId = json.value(STATE_ID).toInt();
     mName = json.value(STATE_NAME).toString();
  /*   mColor = QColor(json.value(STATE_COLOR_RED).toInt(),
@@ -356,7 +356,7 @@ QColor Date::getEventColor() const
 
 void Date::fromJson(const QJsonObject& json)
 {
-    Q_ASSERT(&json);
+    //Q_ASSERT(&json);
 
     mId = json.value(STATE_ID).toInt();
     mName = json.value(STATE_NAME).toString();

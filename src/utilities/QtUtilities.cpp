@@ -482,9 +482,15 @@ QString textBackgroundColor(const QString &str, const QColor &color)
 
 QColor randomColor()
 {
+#ifdef Q_OS_MAC
     return QColor(arc4random() % 255,
                   arc4random() % 255,
                   arc4random() % 255);
+#else
+    return QColor(rand() % 255,
+                  rand() % 255,
+                  rand() % 255);
+#endif
 }
 
 bool constraintIsCircular(QJsonArray constraints, const int fromId, const int toId)

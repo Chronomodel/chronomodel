@@ -199,8 +199,8 @@ public:
     }
     virtual bool isCombineValid(const QJsonObject& data, const ProjectSettings& settings)
    {
-       Q_ASSERT(&data);
-       Q_ASSERT(&settings);
+       //Q_ASSERT(&data);
+       //Q_ASSERT(&settings);
        
        QJsonArray subData = data.value(STATE_DATE_SUB_DATES).toArray();
       
