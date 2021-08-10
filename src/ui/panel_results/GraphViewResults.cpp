@@ -497,6 +497,9 @@ GraphCurve GraphViewResults::generateDensityCurve(const QMap<double, double>& da
     if (!data.isEmpty()) {
         curve.mData = data;
         curve.mPen = QPen(lineColor, 1, penStyle);
+
+        if (penStyle == Qt::CustomDashLine)
+            curve.mPen.setDashPattern(QList<qreal>{5, 5});
         curve.mBrush = brush;
         curve.mIsHisto = false;
         curve.mIsRectFromZero = true; // for Unif-typo. calibs., invisible for others!
@@ -543,6 +546,8 @@ GraphCurve GraphViewResults::generateHorizontalLine(const double yValue,
     curve.mHorizontalValue = yValue;
     curve.mPen.setStyle(penStyle);
     curve.mPen.setColor(color);
+    if (penStyle == Qt::CustomDashLine)
+        curve.mPen.setDashPattern(QList<qreal>{5, 5});
     return curve;
 }
 

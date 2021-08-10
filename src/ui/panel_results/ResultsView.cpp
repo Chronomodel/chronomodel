@@ -263,11 +263,11 @@ mMaximunNumberOfVisibleGraph(0)
     mCurveErrorCheck->setFixedHeight(h);
     mCurveErrorCheck->setChecked(true);
     
-    mCurveEventsPointsCheck = new CheckBox(tr("Events Points"), mCurvesGroup);
+    mCurveEventsPointsCheck = new CheckBox(tr("Events Mean"), mCurvesGroup);
     mCurveEventsPointsCheck->setFixedHeight(h);
     mCurveEventsPointsCheck->setChecked(true);
 
-    mCurveDataPointsCheck = new CheckBox(tr("Data Points"), mCurvesGroup);
+    mCurveDataPointsCheck = new CheckBox(tr("Data Mean"), mCurvesGroup);
     mCurveDataPointsCheck->setFixedHeight(h);
     mCurveDataPointsCheck->setChecked(true);
 
@@ -639,13 +639,13 @@ mMaximunNumberOfVisibleGraph(0)
     mFFTLenCombo->addItem("8192");
     mFFTLenCombo->addItem("16384");
 
-    mBandwidthLab = new Label(tr("Bandwidth Const."), mDensityOptsGroup);
+    mBandwidthLab = new Label(tr("FFTW Bandwidth"), mDensityOptsGroup);
     mBandwidthLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mBandwidthSpin = new QDoubleSpinBox(mDensityOptsGroup);
     mBandwidthSpin->setDecimals(2);
 
-    mHActivityLab = new Label(tr("h Window"), mDensityOptsGroup);
+    mHActivityLab = new Label(tr("Activity Bandwidth"), mDensityOptsGroup);
     mHActivityEdit = new LineEdit(mDensityOptsGroup);
     
     connect(mCredibilityCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
@@ -706,7 +706,7 @@ mMaximunNumberOfVisibleGraph(0)
     // ------------------------------------
     //  Pagination
     // ------------------------------------
-    const int layoutWidth = mOptionsW-2*mMargin;
+    const int layoutWidth = mOptionsW-4*mMargin;
     const int internSpacing = 1;
 
     mPageWidget = new QWidget();
@@ -738,12 +738,13 @@ mMaximunNumberOfVisibleGraph(0)
     mGraphsPerPageSpin->setToolTip(tr("Enter the maximum densities to display on a sheet"));
 
     /* L'utilisation du QLayout ne fonctionne pas avec mPageEdit et les widgets Button.
-     * C'est pourquoi, oil est plus rapide d'utiliser directement setGeometry()
+     * C'est pourquoi, il est plus rapide d'utiliser directement setGeometry()
      */
     const int layoutWidthBy3 = (layoutWidth - 2*internSpacing)/3;
     mPreviousPageBut->setGeometry(0, 0, layoutWidthBy3, 33);
     mPageEdit->setGeometry(layoutWidthBy3 + internSpacing, 0, layoutWidthBy3, 33);
     mNextPageBut->setGeometry(2*layoutWidthBy3 + 2*internSpacing, 0, layoutWidthBy3, 33);
+
     mGraphsPerPageLab->setGeometry(0, 35, layoutWidth/2 - internSpacing/2 , 33);
     mGraphsPerPageSpin->setGeometry(layoutWidth/2 + internSpacing, 35, mGraphsPerPageSpin->width(), 33);
 
@@ -772,14 +773,19 @@ mMaximunNumberOfVisibleGraph(0)
     connect(mExportImgBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::exportFullImage);
     connect(mExportResults, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::exportResults);
 
+    const int layoutWidthBy2 = (layoutWidth - internSpacing)/2;
+    mExportImgBut->setGeometry(0, 0, layoutWidthBy2, 33);
+    mExportResults->setGeometry(layoutWidthBy2 + internSpacing, 0, layoutWidthBy2, 33);
 
-    QHBoxLayout* mSaveAllLayout = new QHBoxLayout (mSaveAllWidget);
+    mSaveAllWidget->setFixedSize(layoutWidth, 33);
+
+ /*   QHBoxLayout* mSaveAllLayout = new QHBoxLayout (mSaveAllWidget);
     mSaveAllLayout->setContentsMargins(0, 0, 0, 0);
     mSaveAllLayout->addWidget(mExportImgBut);
-    mSaveAllLayout->addSpacing(internSpacing);
+   // mSaveAllLayout->addSpacing(internSpacing);
     mSaveAllLayout->addWidget(mExportResults);
     mSaveAllWidget->setLayout(mSaveAllLayout);
-
+*/
     // ------------------------------------
     //  Tools Buttons (single graph)
     // ------------------------------------
@@ -805,16 +811,13 @@ mMaximunNumberOfVisibleGraph(0)
     mDataSaveBut->setFlatVertical();
     mDataSaveBut->setToolTip(tr("Save graph data to file"));
 
-    QHBoxLayout* mSaveSelectLayout = new QHBoxLayout (mSaveSelectWidget);
-    mSaveSelectLayout->setContentsMargins(0, 0, 0, 0);
-    mSaveSelectLayout->addWidget(mImageSaveBut);
-   // mSaveSelectLayout->addSpacing(internSpacing);
-    mSaveSelectLayout->addWidget(mImageClipBut);
-   // mSaveSelectLayout->addSpacing(internSpacing);
-    mSaveSelectLayout->addWidget(mResultsClipBut);
-   // mSaveSelectLayout->addSpacing(internSpacing);
-    mSaveSelectLayout->addWidget(mDataSaveBut);
-    mSaveSelectWidget->setLayout(mSaveSelectLayout);
+    const int layoutWidthBy4 = (layoutWidth - 3*internSpacing)/4;
+    mImageSaveBut->setGeometry(0, 0, layoutWidthBy4, 33);
+    mImageClipBut->setGeometry(layoutWidthBy4 + internSpacing, 0, layoutWidthBy4, 33);
+    mResultsClipBut->setGeometry(2*layoutWidthBy4 + 2*internSpacing, 0, layoutWidthBy4, 33);
+    mDataSaveBut->setGeometry(3*layoutWidthBy4 + 3*internSpacing, 0, layoutWidthBy4 , 33);
+
+    mSaveSelectWidget->setFixedSize(layoutWidth, 33);
 
     connect(mImageSaveBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::saveAsImage);
     connect(mImageClipBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::imageToClipboard);
@@ -1702,23 +1705,23 @@ void ResultsView::createByCurveGraph()
             // Set Y
             if (!hasY) {
                 switch (model->mChronocurveSettings.mVariableType) {
-                case ChronocurveSettings::eVariableTypeInclinaison :
+                case ChronocurveSettings::eVariableTypeInclination :
                     evPts.Ymean = event-> mYInc;
                     evPts.Yerr = event->mSInc;
                     break;
-                case ChronocurveSettings::eVariableTypeDeclinaison :
+                case ChronocurveSettings::eVariableTypeDeclination :
                     evPts.Ymean = event-> mYDec;
                     evPts.Yerr = event->mSInc / cos(event->mYInc * M_PI /180.);
                     break;
-                case ChronocurveSettings::eVariableTypeIntensite :
+                case ChronocurveSettings::eVariableTypeField :
                     evPts.Ymean = event-> mYInt;
                     evPts.Yerr = event->mSInt;
                     break;
-                case ChronocurveSettings::eVariableTypeProfondeur :
+                case ChronocurveSettings::eVariableTypeDepth :
                     evPts.Ymean = event-> mYInt;
                     evPts.Yerr = event->mSInt;
                     break;
-                case ChronocurveSettings::eVariableTypeAutre :
+                case ChronocurveSettings::eVariableTypeOther :
                     evPts.Ymean = event-> mYInt;
                     evPts.Yerr = event->mSInt;
                     break;
@@ -1737,8 +1740,14 @@ void ResultsView::createByCurveGraph()
                 double tmax = -HUGE_VAL;
 
                 for (auto&& date: event->mDates) {
+
                     double dataTmin = HUGE_VAL;
                     double dataTmax = -HUGE_VAL;
+                    QMap<double, double> calibMap = date.getFormatedCalibMap();
+
+                    FunctionStat calibStat = analyseFunction(calibMap);
+
+                    /*
                     QMap<double, double> calibMap = date.getRawCalibMap();//  getFormatedCalibMap();
 
                     QMap<double, double> hpd;
@@ -1771,31 +1780,36 @@ void ResultsView::createByCurveGraph()
                             break;
                         }
                     }
+
                     tmin = std::min(tmin, dataTmin);
                     tmax = std::max(tmax, dataTmax);
 
-                    dPts.Xmean = (dataTmax + dataTmin) / 2.;
+                    dPts.Xmean = DateUtils::convertToAppSettingsFormat((dataTmax + dataTmin) / 2.);
                     dPts.Xerr = (dataTmax - dataTmin)/2.;
+
+                    */
+
+                    dPts.Xmean = DateUtils::convertToAppSettingsFormat(calibStat.mean);
+                    dPts.Xerr = calibStat.std;
                     dPts.Ymean = evPts.Ymean;
                     dPts.Yerr = evPts.Yerr;
                     dPts.color = event->mColor;
 
-
                     // memo Data Points
                     dataPts.append(dPts);
                 }
-                double tmoy = (tmax + tmin) / 2.;
-                tmoy = DateUtils::convertToAppSettingsFormat(tmoy);
-                const double terr = (tmax - tmin) / 2.;
 
-                evPts.Xmean = tmoy;
-                evPts.Xerr = terr;
+
+                //event->mTheta.mHPD;
+                evPts.Xmean = DateUtils::convertToAppSettingsFormat(event->mTheta.mResults.funcAnalysis.mean);
+                evPts.Xerr = event->mTheta.mResults.funcAnalysis.std;
+
 
             } else {
-                evPts.Xmean = event->mTheta.mX; // always the same value
+                evPts.Xmean = DateUtils::convertToAppSettingsFormat(event->mTheta.mX); // always the same value
                 evPts.Xerr = 0.;
 
-                dPts.Xmean = event->mTheta.mX; // always the same value
+                dPts.Xmean = evPts.Xmean;//event->mTheta.mX; // always the same value
                 dPts.Xerr = 0;
 
                 dPts.Ymean = evPts.Ymean;
@@ -1827,7 +1841,7 @@ void ResultsView::createByCurveGraph()
 
         if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie ) {
             switch (model->mChronocurveSettings.mVariableType) {
-                 case ChronocurveSettings::eVariableTypeInclinaison :
+                 case ChronocurveSettings::eVariableTypeInclination :
                       if (mCurrentVariable == GraphViewResults::eGP) {
                          graphX->setTitle(tr("Speed Inclination"));
                       } else if (mCurrentVariable == GraphViewResults::eGS) {
@@ -1837,7 +1851,7 @@ void ResultsView::createByCurveGraph()
                       }
                       break;
 
-                 case ChronocurveSettings::eVariableTypeDeclinaison :
+                 case ChronocurveSettings::eVariableTypeDeclination :
                        if (mCurrentVariable == GraphViewResults::eGP) {
                           graphX->setTitle(tr("Speed Declination"));
                        } else if (mCurrentVariable == GraphViewResults::eGS) {
@@ -1847,7 +1861,7 @@ void ResultsView::createByCurveGraph()
                        }
                        break;
 
-                 case ChronocurveSettings::eVariableTypeIntensite:
+                 case ChronocurveSettings::eVariableTypeField:
                       if (mCurrentVariable == GraphViewResults::eGP) {
                          graphX->setTitle(tr("Speed Field"));
                       } else if (mCurrentVariable == GraphViewResults::eGS) {
@@ -1857,7 +1871,7 @@ void ResultsView::createByCurveGraph()
                       }
                       break;
 
-                 case ChronocurveSettings::eVariableTypeProfondeur:
+                 case ChronocurveSettings::eVariableTypeDepth:
                       if (mCurrentVariable == GraphViewResults::eGP) {
                          graphX->setTitle(tr("Speed Depth"));
                       } else if (mCurrentVariable == GraphViewResults::eGS) {
@@ -1867,7 +1881,7 @@ void ResultsView::createByCurveGraph()
                       }
                       break;
 
-                 case ChronocurveSettings::eVariableTypeAutre:
+                 case ChronocurveSettings::eVariableTypeOther:
                        if (mCurrentVariable == GraphViewResults::eGP) {
                           graphX->setTitle(tr("Speed"));
                        } else if (mCurrentVariable == GraphViewResults::eGS) {

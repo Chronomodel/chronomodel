@@ -46,15 +46,19 @@ MainController::MainController(const QString& filePath)
 {
     Painting::init();
     PluginManager::loadPlugins();
+    QCoreApplication::setApplicationName("ChronoModel");
+    QCoreApplication::setApplicationVersion("3.1-alpha"); // must match value in Chronomodel.pro
+    QCoreApplication::setOrganizationDomain("http://www.chronomodel.com");
+    QCoreApplication::setOrganizationName("CNRS");
+
     AppSettings::readSettings();
 
     mMainWindow = MainWindow::getInstance();
     try {
-       if (filePath!="")
-         mMainWindow->readSettings(filePath);
+        mMainWindow->readSettings(filePath); // le problème est ici pour macOS
 
-       mMainWindow->move(AppSettings::mLastPosition);
-       mMainWindow->resize(AppSettings::mLastSize);
+        mMainWindow->move(AppSettings::mLastPosition);
+        mMainWindow->resize(AppSettings::mLastSize);
 
     }  catch(...) {
         qDebug() << "MainController:: Caught Exception!\n";

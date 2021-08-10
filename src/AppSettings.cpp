@@ -44,6 +44,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QLocale>
 #include <QFontMetrics>
 
+#include <QFile>
+
 int AppSettings::mWidthUnit;
 int AppSettings::mHeigthUnit;
 
@@ -106,10 +108,42 @@ AppSettings& AppSettings::operator=(const AppSettings& s)
 }
 */
 
+/*
+ * On macOS and iOS, if the file format is NativeFormat, these files are used by default:
+
+    $HOME/Library/Preferences/com.chronomodel.http:  www.ChronoModel.plist
+    $HOME/Library/Preferences/CNRS.chronomodel.plist
+    $HOME/Library/Preferences/com.yourcompany.chronomodel.plist
+
+/Users/dufresne/Library/Preferences/com.chronomodel.http:  www.ChronoModel.plist
+
+    $HOME/Library/Preferences/fr.CNRS.chronomodel.plist
+
+    /Library/Preferences/com.MySoft.Star Runner.plist
+    /Library/Preferences/com.MySoft.plist
+
+On Windows, NativeFormat settings are stored in the following registry paths:
+
+    HKEY_CURRENT_USER\Software\MySoft\Star Runner
+    HKEY_CURRENT_USER\Software\MySoft\OrganizationDefaults
+    HKEY_LOCAL_MACHINE\Software\MySoft\Star Runner
+    HKEY_LOCAL_MACHINE\Software\MySoft\OrganizationDefaults
+
+ *
+ */
+
+
 void AppSettings::readSettings()
 {
 
     QSettings settings;
+ qDebug()<< settings.fileName();
+ QFile file(settings.fileName());
+ if (file.exists())
+     qDebug()<< settings.fileName() <<"exist";
+else
+       qDebug()<< settings.fileName() <<"n exist pas";
+
     settings.beginGroup("MainWindow");
 
     AppSettings::mLastPosition = settings.value("pos",  QPoint(200, 200)).toPoint();

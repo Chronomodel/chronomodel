@@ -113,8 +113,10 @@ public:
 
     void generateTempoAndActivity();
     void generateTempo(int gridLenth);
+    void generateTempo_old(int gridLenth);
     void generateTempoTest();// a detruire
     void generateActivity(int gridLenth, double h);
+    void generateActivity_old(int gridLenth, double h);
 
     virtual void clearTraces();
     virtual void clearPosteriorDensities();

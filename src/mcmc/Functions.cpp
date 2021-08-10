@@ -1345,6 +1345,13 @@ std::vector<std::vector<long double>> multiMatParMat(const std::vector<std::vect
     return result;
 }
 
+/**
+ * @brief inverseMatSym0 Cette procedure execute l'inversion d'une matrice en utilisant la
+ * formule de la comatrice
+ * @param matrix
+ * @param shift
+ * @return
+ */
 std::vector<std::vector<long double>> inverseMatSym0(const std::vector<std::vector<long double>>& matrix, const int shift)
 {
     if (matrix.size() != matrix[0].size()) {
@@ -1353,7 +1360,6 @@ std::vector<std::vector<long double>> inverseMatSym0(const std::vector<std::vect
     std::vector<std::vector<long double>> matInv = initLongMatrix(matrix.size(), matrix.at(0).size());
 
     std::vector<std::vector<long double>> matrix2 = seedMatrix(matrix, shift);
-    //n = matrix2.size();
 
     int n = matrix.size();
     std::vector<std::vector<long double>> matInv2 = comatrice0(matrix2);
@@ -1364,7 +1370,6 @@ std::vector<std::vector<long double>> inverseMatSym0(const std::vector<std::vect
        }
     for (int i = shift; i < n-shift; i++)
         for (int j = shift; j< n-shift; j++)
-           // matInv[i][j] /= det;
              matInv[i][j] = matInv2[i-shift][j-shift] / det;
 
 

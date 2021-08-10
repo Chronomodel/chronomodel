@@ -38,7 +38,7 @@
 # --------------------------------------------------------------------- */
 
 # DEFINES += VERSION_NUMBER=\\\"2.0.10\\\"
-VERSION = 3.0-alpha
+VERSION = 3.1-alpha
  #VERSION_NUMBER # must match value in src/main.cpp and Chronomodel.rc (for windows)
 #PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_

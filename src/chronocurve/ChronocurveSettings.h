@@ -46,7 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #define CHRONOCURVE_ENABLED_DEFAULT false
 #define CHRONOCURVE_PROCESS_TYPE_DEFAULT ChronocurveSettings::eProcessTypeUnivarie
-#define CHRONOCURVE_VARIABLE_TYPE_DEFAULT ChronocurveSettings::eVariableTypeInclinaison
+#define CHRONOCURVE_VARIABLE_TYPE_DEFAULT ChronocurveSettings::eVariableTypeInclination
 #define CHRONOCURVE_USE_ERR_MESURE_DEFAULT true
 #define CHRONOCURVE_TIME_TYPE_DEFAULT ChronocurveSettings::eModeBayesian
 #define CHRONOCURVE_VARIANCE_TYPE_DEFAULT ChronocurveSettings::eModeBayesian
@@ -69,11 +69,11 @@ public:
 
     enum VariableType // Type_var_cmt
     {
-        eVariableTypeInclinaison = 'I',
-        eVariableTypeDeclinaison = 'D',
-        eVariableTypeIntensite = 'F',
-        eVariableTypeProfondeur = 'P',
-        eVariableTypeAutre = 'A'
+        eVariableTypeInclination = 'I',
+        eVariableTypeDeclination = 'D',
+        eVariableTypeField = 'F',
+        eVariableTypeDepth = 'P',
+        eVariableTypeOther = 'A'
     };
 
     enum ProcessMode

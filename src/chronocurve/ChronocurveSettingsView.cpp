@@ -223,19 +223,19 @@ void ChronocurveSettingsView::setSettings(const ChronocurveSettings& settings)
         mProcessTypeInput->setCurrentIndex(2);
     }
     
-    if (settings.mVariableType == ChronocurveSettings::eVariableTypeInclinaison) {
+    if (settings.mVariableType == ChronocurveSettings::eVariableTypeInclination) {
         mVariableTypeInput->setCurrentIndex(0);
 
-    } else if (settings.mVariableType == ChronocurveSettings::eVariableTypeDeclinaison) {
+    } else if (settings.mVariableType == ChronocurveSettings::eVariableTypeDeclination) {
         mVariableTypeInput->setCurrentIndex(1);
 
-    } else if (settings.mVariableType == ChronocurveSettings::eVariableTypeIntensite) {
+    } else if (settings.mVariableType == ChronocurveSettings::eVariableTypeField) {
         mVariableTypeInput->setCurrentIndex(2);
 
-    } else if (settings.mVariableType == ChronocurveSettings::eVariableTypeProfondeur) {
+    } else if (settings.mVariableType == ChronocurveSettings::eVariableTypeDepth) {
         mVariableTypeInput->setCurrentIndex(3);
 
-    } else if (settings.mVariableType == ChronocurveSettings::eVariableTypeAutre) {
+    } else if (settings.mVariableType == ChronocurveSettings::eVariableTypeOther) {
         mVariableTypeInput->setCurrentIndex(4);
     }
     
@@ -281,33 +281,33 @@ ChronocurveSettings ChronocurveSettingsView::getSettings()
         settings.mProcessType = ChronocurveSettings::eProcessTypeUnivarie;
 
         if (mVariableTypeInput->currentIndex() == 0) {
-            settings.mVariableType = ChronocurveSettings::eVariableTypeInclinaison;
+            settings.mVariableType = ChronocurveSettings::eVariableTypeInclination;
 
         } else if (mVariableTypeInput->currentIndex() == 1) {
-            settings.mVariableType = ChronocurveSettings::eVariableTypeDeclinaison;
+            settings.mVariableType = ChronocurveSettings::eVariableTypeDeclination;
 
         } else if (mVariableTypeInput->currentIndex() == 2) {
-            settings.mVariableType = ChronocurveSettings::eVariableTypeIntensite;
+            settings.mVariableType = ChronocurveSettings::eVariableTypeField;
 
         } else if (mVariableTypeInput->currentIndex() == 3) {
-            settings.mVariableType = ChronocurveSettings::eVariableTypeProfondeur;
+            settings.mVariableType = ChronocurveSettings::eVariableTypeDepth;
 
         } else if (mVariableTypeInput->currentIndex() == 4) {
-            settings.mVariableType = ChronocurveSettings::eVariableTypeAutre;
+            settings.mVariableType = ChronocurveSettings::eVariableTypeOther;
         }
 
 
     } else if (mProcessTypeInput->currentIndex() == 1) {
         settings.mProcessType = ChronocurveSettings::eProcessTypeSpherique;
-        settings.mVariableType = ChronocurveSettings::eVariableTypeInclinaison;
+        settings.mVariableType = ChronocurveSettings::eVariableTypeInclination;
 
     } else if (mProcessTypeInput->currentIndex() == 2) {
         settings.mProcessType = ChronocurveSettings::eProcessTypeVectoriel;
-        settings.mVariableType = ChronocurveSettings::eVariableTypeInclinaison;
+        settings.mVariableType = ChronocurveSettings::eVariableTypeInclination;
 
     } else if (mProcessTypeInput->currentIndex() == 3) {
         settings.mProcessType = ChronocurveSettings::eProcessType3D;
-        settings.mVariableType = ChronocurveSettings::eVariableTypeAutre;
+        settings.mVariableType = ChronocurveSettings::eVariableTypeOther;
     }
     
 

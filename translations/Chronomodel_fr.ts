@@ -1138,7 +1138,7 @@ You can also edit constraints by double clicking on the arrow</source>
     <name>GraphViewTempo</name>
     <message>
         <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="72"/>
-        <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="309"/>
+        <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="307"/>
         <source>Phase : %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1149,7 +1149,7 @@ You can also edit constraints by double clicking on the arrow</source>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="126"/>
-        <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="299"/>
+        <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="297"/>
         <source>Phase Duration : %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1170,12 +1170,12 @@ You can also edit constraints by double clicking on the arrow</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="296"/>
+        <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="294"/>
         <source>Iterations</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="408"/>
+        <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="406"/>
         <source>Iteration</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3209,39 +3209,6 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     </message>
 </context>
 <context>
-    <name>ProjectSettingsDialog</name>
-    <message>
-        <location filename="../src/project/ProjectSettingsDialog.cpp" line="48"/>
-        <source>Project Properties</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/project/ProjectSettingsDialog.cpp" line="54"/>
-        <source>&lt;p&gt;You can define here the project time boundaries.&lt;/p&gt;                                  &lt;p&gt;Changing these boundaries will result in re-calibrating every dates in the project.&lt;/p&gt;                                  &lt;p&gt;Then, you will have to re-launch the MCMC process manually.&lt;/p&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/project/ProjectSettingsDialog.cpp" line="60"/>
-        <source>Start year</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/project/ProjectSettingsDialog.cpp" line="65"/>
-        <source>End year</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/project/ProjectSettingsDialog.cpp" line="71"/>
-        <source>OK</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/project/ProjectSettingsDialog.cpp" line="72"/>
-        <source>Cancel</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>ProjectView</name>
     <message>
         <location filename="../src/ui/window/ProjectView.cpp" line="87"/>
@@ -4203,7 +4170,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="200"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3265"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3268"/>
         <source>Image (*.png);;Photo (*.jpg);;Scalable Vector Graphics (*.svg)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4385,7 +4352,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="346"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2592"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2595"/>
         <source>Events</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4401,14 +4368,14 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="349"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2672"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2675"/>
         <source>Curve</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="359"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1247"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2712"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1250"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2715"/>
         <source>Display</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4424,7 +4391,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="376"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1269"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1272"/>
         <source>Study Period Display</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4450,7 +4417,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="392"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1897"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1900"/>
         <source>X</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4486,7 +4453,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="485"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1939"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1942"/>
         <source>Y</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4557,12 +4524,12 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="642"/>
-        <source>Bandwidth Const.</source>
+        <source>FFTW Bandwidth</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="648"/>
-        <source>h Window</source>
+        <source>Activity Bandwidth</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4596,222 +4563,222 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="762"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="763"/>
         <source>Capture</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="765"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="766"/>
         <source>Save all currently visible results as an image.&lt;br&gt;&lt;u&gt;Note&lt;/u&gt; : If you want to copy textual results, see the Log tab.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="767"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="768"/>
         <source>Results</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="770"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="771"/>
         <source>Export all result in several files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="788"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="803"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="794"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="809"/>
         <source>Save</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="791"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="797"/>
         <source>Save image as file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="793"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="798"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="799"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="804"/>
         <source>Copy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="796"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="802"/>
         <source>Copy image to clipboard</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="801"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="807"/>
         <source>Copy text results to clipboard</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="806"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="812"/>
         <source>Save graph data to file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="829"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2724"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3148"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="832"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2727"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3151"/>
         <source>Page</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="830"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="833"/>
         <source>Saving</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1269"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1272"/>
         <source>Fit Display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1333"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1340"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1336"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1343"/>
         <source>Chain %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1676"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1679"/>
         <source>Lambda Spline</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1832"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1884"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1835"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1887"/>
         <source>Speed Inclination</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1834"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1886"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1837"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1889"/>
         <source>Acceleration Inclination</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1836"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1888"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1839"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1891"/>
         <source>Inclination</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1842"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1926"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1845"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1929"/>
         <source>Speed Declination</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1844"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1928"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1847"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1931"/>
         <source>Acceleration Declination</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1846"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1930"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1849"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1933"/>
         <source>Declination</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1852"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1981"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1855"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1984"/>
         <source>Speed Field</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1854"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1984"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1857"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1987"/>
         <source>Acceleration Field</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1856"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1987"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1859"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1990"/>
         <source>Field</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1862"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1865"/>
         <source>Speed Depth</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1864"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1867"/>
         <source>Acceleration Depth</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1866"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1869"/>
         <source>Depth</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1872"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1875"/>
         <source>Speed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1874"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1877"/>
         <source>Acceleration</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1876"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1879"/>
         <source>Measure</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1893"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1896"/>
         <source>Speed X</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1895"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1898"/>
         <source>Acceleration X</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1935"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1938"/>
         <source>Speed Y</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1937"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1940"/>
         <source>Acceleration Y</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1993"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1996"/>
         <source>Speed Z</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1995"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1998"/>
         <source>Acceleration Z</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1997"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2000"/>
         <source>Z</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3263"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3592"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3266"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3595"/>
         <source>Save graph image as...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3389"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3392"/>
         <source>Export to directory...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3391"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3394"/>
         <source>Directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3405"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3408"/>
         <source>Project filename : %1</source>
         <translation type="unfinished"></translation>
     </message>

@@ -1059,10 +1059,12 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     QString path = "";
 
 
-    if (defaultFilePath !="" ) {
+  /*  if (defaultFilePath !="" ) {
         path = defaultFilePath;
 
-    } else if (AppSettings::mOpenLastProjectAtLaunch) {
+    } else
+   */
+        if (AppSettings::mOpenLastProjectAtLaunch) {
         const QString dir = AppSettings::mLastDir;
         const QString filename = AppSettings::mLastFile;
         if (dir != "" & filename !="")

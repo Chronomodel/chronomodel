@@ -530,7 +530,7 @@ QString ModelUtilities::curveResultsText(const ModelChronocurve* model)
     text += QObject::tr("Stat on the log10 of Lambda Spline") + nl;
     text += model->mLambdaSpline.resultsString("<br>", "", nullptr, nullptr, false);
 
-    if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeProfondeur) {
+    if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDepth) {
         const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
         unsigned totalPositvIter = 0;
         unsigned totalPequiredCurve = 0;
@@ -601,19 +601,19 @@ QString ModelUtilities::modelDescriptionHTML(const ModelChronocurve* model)
                 log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
                 log += line(textGreen(QObject::tr("- Declination : %1").arg(stringForLocal(pEvent->mYDec))));
 
-            }  else  if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeProfondeur) {
+            }  else  if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDepth) {
                 log += line(textGreen(QObject::tr("- Depth : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
 
-            } else if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeIntensite) {
+            } else if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeField) {
                 log += line(textGreen(QObject::tr("- Field : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
 
-            } else if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeInclinaison) {
+            } else if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeInclination) {
                 log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
 
-            } else if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDeclinaison) {
+            } else if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDeclination) {
                 log += line(textGreen(QObject::tr("- Declination : %1 ; Inclination %2 ±  %3").arg(stringForLocal(pEvent->mYDec), stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
 
-            } else if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeAutre) {
+            } else if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeOther) {
                 log += line(textGreen(QObject::tr("- Measure : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
 
             }
@@ -681,19 +681,19 @@ QString ModelUtilities::modelDescriptionHTML(const ModelChronocurve* model)
             log += textBold(textGreen( QObject::tr(" - Process Univariate on ")));
 
             switch(model->mChronocurveSettings.mVariableType) {
-            case ChronocurveSettings::eVariableTypeInclinaison :
+            case ChronocurveSettings::eVariableTypeInclination :
                 log += line(textBold(textGreen( QObject::tr("Inclination"))));
                 break;
-            case ChronocurveSettings::eVariableTypeDeclinaison :
+            case ChronocurveSettings::eVariableTypeDeclination :
                 log += line(textBold(textGreen( QObject::tr("Declination"))));
                 break;
-            case ChronocurveSettings::eVariableTypeIntensite :
+            case ChronocurveSettings::eVariableTypeField :
                 log += line(textBold(textGreen( QObject::tr("Field"))));
                 break;
-            case ChronocurveSettings::eVariableTypeProfondeur :
+            case ChronocurveSettings::eVariableTypeDepth :
                  log += line(textBold(textGreen( QObject::tr("Depth"))));
                 break;
-            case ChronocurveSettings::eVariableTypeAutre :
+            case ChronocurveSettings::eVariableTypeOther :
                  log += line(textBold(textGreen( QObject::tr("Any"))));
                 break;
             }
@@ -1182,7 +1182,7 @@ QString ModelUtilities::curveResultsHTML(const ModelChronocurve* model)
     text += line(textGreen(QObject::tr("Stat on the log10 of Lambda Spline")));
     text += line(textGreen(model->mLambdaSpline.resultsString("<br>", "", nullptr, nullptr, false)));
 
-    if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeProfondeur) {
+    if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDepth) {
         const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
         unsigned totalPositvIter = 0;
         unsigned totalPequiredCurve = 0;

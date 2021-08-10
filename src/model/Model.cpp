@@ -2145,9 +2145,227 @@ void Model::generateTempoAndActivity()
 
 }
 
-
-
 void Model::generateTempo(int gridLenth)
+{
+#ifdef DEBUG
+    QElapsedTimer tClock;
+    tClock.start();
+#endif
+
+// Avoid to redo calculation, when mActivity exist, it happen when the control is changed
+    int tempoToDo = 0;
+    for (auto&& phase : mPhases) {
+        if (phase->mRawTempo.isEmpty())
+            ++tempoToDo;
+    }
+
+    if (tempoToDo == 0) // no computation
+        return;
+
+    // debut code
+    /// We want an interval bigger than the maximun finded value, we need a point on tmin, tmax and tmax+deltat
+
+
+    double tmin;// (mSettings.mTmin);
+    double tmax; // (mSettings.mTmax);
+
+    for (auto&& phase : mPhases) {
+        // Avoid to redo calculation, when mTempo exist, it happen when the control is changed
+        if (!phase->mRawTempo.isEmpty()) {
+#ifndef UNIT_TEST
+          //  position += 4;
+//            progress->setValue(position);
+#endif
+            continue;
+        }
+        // create Empty containers
+        std::vector<std::vector<int>> Ni (gridLenth);
+
+         ///# 1 - Generate Event scenario
+         // We suppose, it is the same iteration number for all chains
+        std::vector<QVector<double>> listTrace;
+        for (auto& ev : phase->mEvents)
+            listTrace.push_back(ev->mTheta.fullRunRawTrace(mChains));
+
+        const int totalIter = listTrace.at(0).size();
+
+        /// Look for the maximum span containing values \f$ x=2 \f$
+        tmin = mSettings.mTmax;
+        tmax = mSettings.mTmin;
+
+#ifndef UNIT_TEST
+        for (auto& l:listTrace) {
+            const double lmin = *std::min_element(l.cbegin(), l.cend());
+            tmin = std::min(tmin, lmin );
+            const double lmax = *std::max_element(l.cbegin(), l.cend());
+            tmax = std::max(tmax, lmax);
+        }
+        tmin = std::floor(tmin);
+        tmax = std::ceil(tmax);
+#endif
+        if (tmin == tmax) {
+
+           qDebug()<<"Model::generateTempo() tmin == tmax : " <<phase->mName;
+            phase->mRawTempo[tmin] = 1;
+            phase->mRawTempo[mSettings.mTmax] = 1;
+
+            // Convertion in the good Date format
+            phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
+
+#ifndef UNIT_TEST
+          //  position += 4;
+//            progress->setValue(position);
+#endif
+
+            continue;
+        }
+#ifdef DEBUG
+        if (tmax > mSettings.mTmax) {
+            qWarning("Model::generateActivity() tmax>mSettings.mTmax force tmax = mSettings.mTmax");
+            tmax = mSettings.mTmax;
+        }
+#endif
+
+        /// \f$ \delta_t = (t_max - t_min)/(gridLenth-1) \f$
+        const double delta_t = (tmax-tmin) / double(gridLenth-1);
+
+
+        /// Loop
+        std::vector<double> scenario;
+        for (int i = 0; i<totalIter; ++i) {
+
+            /// Create one scenario per iteration
+            scenario.clear();
+            for (auto& lt : listTrace)
+                scenario.push_back(lt.at(i));
+
+            /// Insert the scenario dates in the activity grid
+            std::vector<int> Nij (gridLenth);
+
+            int idxGridMin;
+
+            for (auto& tScenario : scenario) {
+                idxGridMin = std::max (0, (int) ceil((tScenario - tmin) / delta_t));
+
+                for (auto&& nij = Nij.begin() + idxGridMin; nij < Nij.end() ; ++nij) {
+                    ++*nij ;
+                }
+
+            }
+
+            std::vector<int>::iterator itNij (Nij.begin());
+            for (auto&& n : Ni) {
+                n.push_back(*itNij);
+                ++itNij;
+            }
+
+        }
+        /// Loop End on totalIter
+
+
+    ///# Calculation of the variance
+        QVector<double> inf;
+        QVector<double> sup;
+       // QVector<double> mean;
+
+        QVector<double> esp;
+        double p, e, v, infp;
+        const double n = (double) phase->mEvents.size();
+        const double nr = (double) (totalIter * phase->mEvents.size());
+
+        ///# 4 - Credibility
+        QVector<double> credInf (gridLenth);
+        QVector<double> credSup (gridLenth);
+
+        QVector<double>::iterator itCredInf (credInf.begin());
+        QVector<double>::iterator itCredSup (credSup.begin());
+        for (auto& vecNij : Ni) {
+
+            //p = 0;
+            p = std::accumulate(vecNij.begin(),  vecNij.end(), 0.);
+            p /= nr;
+
+            e =  n * p ;
+
+            v = n * p * (1-p);
+
+            esp.append(e);
+
+            // Forbidden negative error
+            infp = ( e < 1.96 * sqrt(v) ? 0. : e - 1.96 * sqrt(v) );
+            inf.append( infp );
+            sup.append( e + 1.96 * sqrt(v));
+
+
+            Quartiles cred = quartilesType(vecNij, 8, 0.025);
+            *itCredInf = cred.Q1;
+            *itCredSup = cred.Q3;
+            ++itCredInf;
+            ++itCredSup;
+
+        }
+#ifndef UNIT_TEST
+       // ++position;
+//        progress->setValue(position);
+#endif
+
+
+        phase->mRawTempo = vector_to_map(esp, tmin, tmax, delta_t);
+        phase->mRawTempoInf = vector_to_map(inf, tmin, tmax, delta_t);
+        phase->mRawTempoSup = vector_to_map(sup, tmin, tmax, delta_t);
+
+        // close the error curve on mean value
+        const double tEnd = phase->mRawTempo.lastKey();
+        const double vEnd = phase->mRawTempo[tEnd];
+
+        if ( tEnd <= mSettings.mTmax) {
+            phase->mRawTempoInf[tEnd] = vEnd;
+            phase->mRawTempoSup[tEnd ] = vEnd;
+        }
+        phase->mRawTempo.insert(mSettings.mTmax, vEnd);
+
+        const double tBegin = phase->mRawTempo.firstKey();
+
+        // We need to add a point with the value 0 for the automatique Y scaling
+        if ((tBegin) >= mSettings.mTmin) {
+            phase->mRawTempo[tBegin] = 0;
+            phase->mRawTempoInf[tBegin] = 0;
+            phase->mRawTempoSup[tBegin] = 0;
+        }
+        phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
+        phase->mTempoInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoInf);
+        phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
+
+        // credibility creation
+        phase->mRawTempoCredibilityInf = vector_to_map(credInf, tmin, tmax, delta_t);
+        phase->mRawTempoCredibilitySup = vector_to_map(credSup, tmin, tmax, delta_t);
+
+        // Joining curves on the curve Tempo
+        if ( tmax  <= mSettings.mTmax) {
+            phase->mRawTempoCredibilityInf[mSettings.mTmax] = vEnd;
+            phase->mRawTempoCredibilitySup[mSettings.mTmax] = vEnd;
+        }
+
+        if (tBegin >= mSettings.mTmin) {
+            phase->mRawTempoCredibilityInf[tBegin] = 0;
+            phase->mRawTempoCredibilitySup[tBegin] = 0;
+        }
+        // Convertion in the good Date format
+        phase->mTempoCredibilityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilityInf);
+        phase->mTempoCredibilitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilitySup);
+
+     } // Loop End on phase
+
+#ifdef DEBUG
+    qDebug() <<  QString("=> Model::generateTempo() done in " + DHMS(tClock.elapsed()));
+
+#endif
+
+}
+
+
+
+void Model::generateTempo_old(int gridLenth)
 {
 #ifdef DEBUG
     QElapsedTimer tClock;
@@ -2351,6 +2569,8 @@ void Model::generateTempo(int gridLenth)
 #endif
 
 }
+
+
 /**
  *  @brief Clear model data
  */
@@ -2393,6 +2613,184 @@ void Model:: generateActivity(int gridLenth, double h)
 {
 #ifdef DEBUG
     qDebug()<<"Model::generateActivity() "<<mSettings.mTmin<<mSettings.mTmax;
+    QElapsedTimer tClock;
+    tClock.start();
+#endif
+
+// Avoid to redo calculation, when mActivity exist, it happen when the control is changed
+    int activityToDo = 0;
+    for (auto&& phase : mPhases) {
+        if (phase->mRawActivity.isEmpty() || gridLenth != mFFTLength || h != mHActivity)
+            ++activityToDo;
+    }
+
+    if (activityToDo == 0) // no computation
+        return;
+
+    // debut code
+    /// We want an interval bigger than the maximun finded value, we need a point on tmin, tmax and tmax+deltat
+
+    double tmin, tmax;
+
+    for (auto&& phase : mPhases) {
+        // create Empty containers
+        std::vector<std::vector<int>> Ni (gridLenth);
+
+         ///# 1 - Generate Event scenario
+         // We suppose, it is the same iteration number for all chains
+        std::vector<QVector<double>> listTrace;
+        for (auto& ev : phase->mEvents)
+            listTrace.push_back(ev->mTheta.fullRunRawTrace(mChains));
+
+        const int totalIter = listTrace.front().size();
+
+        /// Look for the maximum span containing values \f$ x=2 \f$
+        tmin = mSettings.mTmax;
+        tmax = mSettings.mTmin;
+
+#ifndef UNIT_TEST
+        for (auto& l:listTrace) {
+            const double lmin = *std::min_element(l.cbegin(), l.cend());
+            tmin = std::min(tmin, lmin );
+            const double lmax = *std::max_element(l.cbegin(), l.cend());
+            tmax = std::max(tmax, lmax);
+        }
+        tmin = std::floor(tmin);
+        tmax = std::ceil(tmax);
+#endif
+        if (tmin == tmax) {
+
+           qDebug()<<"Model::generateActivity() tmin == tmax : " <<phase->mName;
+            phase->mRawActivity[tmin] = 1;
+
+            // Convertion in the good Date format
+            phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
+
+#ifndef UNIT_TEST
+          //  position += 4;
+//            progress->setValue(position);
+#endif
+
+            continue;
+        }
+#ifdef DEBUG
+        if (tmax > mSettings.mTmax) {
+            qWarning("Model::generateActivity() tmax>mSettings.mTmax force tmax = mSettings.mTmax");
+            tmax = mSettings.mTmax;
+        }
+#endif
+
+        /// \f$ \delta_t = (t_max - t_min)/(gridLenth-1) \f$
+        const double delta_t = (tmax-tmin) / double(gridLenth-1);
+         if (h < delta_t)
+             h = delta_t;
+
+         double h_2 = h / 2.;
+
+        /// Loop
+        std::vector<double> scenario;
+        for (int i = 0; i<totalIter; ++i) {
+
+            /// Create one scenario per iteration
+            scenario.clear();
+            for (auto& lt : listTrace)
+                scenario.push_back(lt.at(i));
+
+            /// Insert the scenario dates in the activity grid
+            std::vector<int> Nij (gridLenth);
+
+            int idxGridMin, idxGridMax;
+
+            for (auto& tScenario : scenario) {
+                idxGridMin = std::max (0, (int) ceil((tScenario - h_2 - tmin) / delta_t));
+                idxGridMax = std::min (gridLenth-1, (int) floor((tScenario + h_2 - tmin) / delta_t));
+
+                for (auto&& nij = Nij.begin() + idxGridMin; nij <= Nij.begin() + idxGridMax; ++nij) {
+                    ++*nij ;
+                }
+
+            }
+
+            std::vector<int>::iterator itNij (Nij.begin());
+            for (auto&& n : Ni) {
+                n.push_back(*itNij);
+                ++itNij;
+            }
+
+        }
+        /// Loop End on totalIter
+
+
+    ///# Calculation of the mean and variance
+        QVector<double> inf;
+        QVector<double> sup;
+        QVector<double> esp;
+        double q, e, v, infp;
+        const double n = (double) phase->mEvents.size();
+        const double nr = (double) (totalIter * phase->mEvents.size());
+
+        for (auto& vecNij : Ni) {
+            q = 0;
+            //mean_std_Knuth(vecNij, m, s);
+            q = std::accumulate(vecNij.begin(),  vecNij.end(), 0.);
+            q /= nr;
+
+            e =  q * n / h;
+
+            v = q * (1-q) * n / pow(h, 2.);
+
+            esp.append(e);
+
+            // Forbidden negative error
+            infp = ( e < 1.96 * sqrt(v) ? 0. : e - 1.96 * sqrt(v) );
+            inf.append( infp );
+            sup.append( e + 1.96 * sqrt(v));
+
+        }
+#ifndef UNIT_TEST
+       // ++position;
+//        progress->setValue(position);
+#endif
+
+
+        phase->mRawActivity = vector_to_map(esp, tmin, tmax, delta_t);
+        phase->mRawActivityInf = vector_to_map(inf, tmin, tmax, delta_t);
+        phase->mRawActivitySup = vector_to_map(sup, tmin, tmax, delta_t);
+
+        if ( tmax  <= mSettings.mTmax) {
+            phase->mRawActivity.last() = 0.;
+            phase->mRawActivityInf.last() = 0.;
+            phase->mRawActivitySup.last() = 0.;
+        }
+
+        if (tmin >= mSettings.mTmin) {
+            phase->mRawActivity.first() = 0.;
+            phase->mRawActivityInf.first() = 0.;
+            phase->mRawActivitySup.first() = 0.;
+
+        }
+        phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
+        phase->mActivityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityInf);
+        phase->mActivitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivitySup);
+
+
+        const double M_m = tmax - tmin;
+        phase->mActivityMeanUnif = n / M_m;
+        phase->mActivityStdUnif = 1.96 * sqrt(phase->mActivityMeanUnif * ((1./ h) - (1 / M_m)) );
+
+     } // Loop End on phase
+
+#ifdef DEBUG
+    qDebug() <<  QString("=> Model::generateActivity() done in " + DHMS(tClock.elapsed()));
+
+#endif
+
+}
+
+void Model:: generateActivity_old(int gridLenth, double h)
+{
+#ifdef DEBUG
+    qDebug()<<"Model::generateActivity_old() "<<mSettings.mTmin<<mSettings.mTmax;
     QElapsedTimer tClock;
     tClock.start();
 #endif
@@ -2555,7 +2953,7 @@ void Model:: generateActivity(int gridLenth, double h)
      } // Loop End on phase
 
 #ifdef DEBUG
-    qDebug() <<  QString("=> Model::generateActivity() done in " + DHMS(tClock.elapsed()));
+    qDebug() <<  QString("=> Model::generateActivity_old() done in " + DHMS(tClock.elapsed()));
 
 #endif
 

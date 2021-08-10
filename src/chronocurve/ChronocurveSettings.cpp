@@ -219,8 +219,8 @@ bool ChronocurveSettings::showInclinaison() const
     return ( mProcessType == ChronocurveSettings::eProcessTypeSpherique) ||
             ( mProcessType == ChronocurveSettings::eProcessTypeVectoriel) ||
             ((mProcessType == ChronocurveSettings::eProcessTypeUnivarie) &&
-             ( mVariableType == ChronocurveSettings::eVariableTypeInclinaison ||
-               mVariableType == ChronocurveSettings::eVariableTypeDeclinaison));
+             ( mVariableType == ChronocurveSettings::eVariableTypeInclination ||
+               mVariableType == ChronocurveSettings::eVariableTypeDeclination));
 }
 
 bool ChronocurveSettings::showDeclinaison() const
@@ -230,7 +230,7 @@ bool ChronocurveSettings::showDeclinaison() const
     return ((mProcessType == ChronocurveSettings::eProcessTypeSpherique) ||
             (mProcessType == ChronocurveSettings::eProcessTypeVectoriel) ||
             ((mProcessType == ChronocurveSettings::eProcessTypeUnivarie) &&
-             (mVariableType == ChronocurveSettings::eVariableTypeDeclinaison)));
+             (mVariableType == ChronocurveSettings::eVariableTypeDeclination)));
 }
 
 bool ChronocurveSettings::showIntensite() const
@@ -239,8 +239,8 @@ bool ChronocurveSettings::showIntensite() const
     // En univarié, elle n'est nécessaire que pour les variables d'étude autres que inclinaison et déclinaison.
     return ((mProcessType == ChronocurveSettings::eProcessTypeVectoriel) ||
             ((mProcessType == ChronocurveSettings::eProcessTypeUnivarie) &&
-             (mVariableType != ChronocurveSettings::eVariableTypeInclinaison) &&
-             (mVariableType != ChronocurveSettings::eVariableTypeDeclinaison)));
+             (mVariableType != ChronocurveSettings::eVariableTypeInclination) &&
+             (mVariableType != ChronocurveSettings::eVariableTypeDeclination)));
 }
 
 QString ChronocurveSettings::intensiteLabel() const
@@ -250,13 +250,13 @@ QString ChronocurveSettings::intensiteLabel() const
         label = QObject::tr("Field");
 
     } else if (mProcessType == ChronocurveSettings::eProcessTypeUnivarie) {
-        if (mVariableType == ChronocurveSettings::eVariableTypeIntensite) {
+        if (mVariableType == ChronocurveSettings::eVariableTypeField) {
             label = QObject::tr("Field");
 
-        } else if (mVariableType == ChronocurveSettings::eVariableTypeProfondeur) {
+        } else if (mVariableType == ChronocurveSettings::eVariableTypeDepth) {
             label = QObject::tr("Depth");
 
-        } else if (mVariableType == ChronocurveSettings::eVariableTypeAutre) {
+        } else if (mVariableType == ChronocurveSettings::eVariableTypeOther) {
             label = QObject::tr("Measure");
         }
     }

@@ -120,7 +120,6 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
         curveEventsPoints.mIsRefPoints = true;
 
         for (auto& rf : mEventsPoints) {
-            //auto xFormated = rf.Xmean;
             curveEventsPoints.mData.insert(rf.Xmean, rf.Ymean);
             curveEventsPoints.mDataErrorX.insert(rf.Xmean, rf.Xerr);
             curveEventsPoints.mDataErrorY.insert(rf.Xmean, rf.Yerr);
@@ -136,8 +135,7 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
         curveDataPoints.mIsRectFromZero = false;
         curveDataPoints.mIsRefPoints = true;
 
-        for (auto& rf : mDataPoints) {
-            //auto xFormated = rf.Xmean;
+        for (auto& rf : mDataPoints) {       
             curveDataPoints.mData.insert(rf.Xmean, rf.Ymean);
             curveDataPoints.mDataErrorX.insert(rf.Xmean, rf.Xerr);
             curveDataPoints.mDataErrorY.insert(rf.Xmean, rf.Yerr);
@@ -153,14 +151,16 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
 
         GraphCurve curveGSup;
         curveGSup.mName = tr("G Sup");
-        curveGSup.mPen = QPen(QColor(100, 100, 100), 1, Qt::SolidLine);
+        curveGSup.mPen = QPen(QColor(119, 95, 49), 1, Qt::CustomDashLine);
+        curveGSup.mPen.setDashPattern(QList<qreal>{5, 5});
         curveGSup.mBrush = Qt::NoBrush;
         curveGSup.mIsHisto = false;
         curveGSup.mIsRectFromZero = false;
 
         GraphCurve curveGInf;
         curveGInf.mName = tr("G Inf");
-        curveGInf.mPen = QPen(QColor(100, 100, 100), 1, Qt::SolidLine);
+        curveGInf.mPen = QPen(QColor(119, 95, 49), 1, Qt::CustomDashLine);
+        curveGInf.mPen.setDashPattern(QList<qreal>{5, 5});
         curveGInf.mBrush = Qt::NoBrush;
         curveGInf.mIsHisto = false;
         curveGInf.mIsRectFromZero = false;

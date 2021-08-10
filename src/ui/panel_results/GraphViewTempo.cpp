@@ -252,25 +252,23 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
 
         GraphCurve curveActivityInf = generateDensityCurve( mPhase->mActivityInf,
                                                             "Post Distrib Activity Inf All Chains",
-                                                            color, Qt::DashLine);
+                                                            color.lighter(), Qt::DotLine);
 
         GraphCurve curveActivitySup = generateDensityCurve( mPhase->mActivitySup,
                                                             "Post Distrib Activity Sup All Chains",
-                                                            color, Qt::DashLine);
+                                                            color.lighter(), Qt::DotLine);
 
         // Display envelope Uniform
-        const double M_m = abs(mPhase->mActivity.lastKey() - mPhase->mActivity.firstKey());
-        const double meanUnif = mPhase->mEvents.size() / M_m;
-        GraphCurve curveMeanUnif = generateHorizontalLine( meanUnif,
+        GraphCurve curveMeanUnif = generateHorizontalLine( mPhase->mActivityMeanUnif,
                                                            "Post Distrib Activity Unif Mean",
-                                                           Qt::red, Qt::SolidLine);
+                                                           QColor(Qt::darkGray).darker(), Qt::CustomDashLine);
 
         GraphCurve curveUnifInf = generateHorizontalLine( mPhase->mActivityMeanUnif - mPhase->mActivityStdUnif,
                                                           "Post Distrib Activity Unif Inf",
-                                                          Qt::red, Qt::DashLine);
+                                                          Qt::darkGray, Qt::CustomDashLine);
         GraphCurve curveUnifSup = generateHorizontalLine( mPhase->mActivityMeanUnif + mPhase->mActivityStdUnif,
                                                           "Post Distrib Activity Unif Sup",
-                                                          Qt::red, Qt::DashLine);
+                                                          Qt::darkGray, Qt::CustomDashLine);
 
         mGraph->setOverArrow(GraphView::eBothOverflow);
 

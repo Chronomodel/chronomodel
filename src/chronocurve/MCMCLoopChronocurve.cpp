@@ -315,6 +315,17 @@ QString MCMCLoopChronocurve::initialize()
             mAbortedReason = QString(tr("Warning : Find Circular Constraint Path %1  %2 ")).arg (e->mName, circularEventName);
             return mAbortedReason;
         }
+
+        // Controle la cohérence des contraintes strati-temporel et des valeurs de profondeurs
+        if (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDepth ) {
+             for (auto&& eForWard : e->mConstraintsFwd) {
+                 const bool notOk (e->mYInt > eForWard->mEventTo->mYInt);
+                 if (notOk) {
+                     mAbortedReason = QString(tr("Warning: chronological constraint not in accordance with the stratigraphy: %1 - %2 path, control depth value!")).arg (e->mName, eForWard->mEventTo->mName);
+                     return mAbortedReason;
+                 }
+             }
+        }
     }
 
     for (int i = 0; i<unsortedEvents.size(); ++i) {
@@ -542,8 +553,8 @@ QString MCMCLoopChronocurve::initialize()
         // il ne faut pas que h_YWI_AY() soit incalculable ou nul
         // long double res0 = 0.5 * (nb_noeuds-2.) * log((long double)alphaLissage) + h_exp;
         // long double res = exp(res0) * sqrt(det_1_2);
-        mModel->mLambdaSpline.mX = 1.E-6;//powl(10., -16. /(events.size()-2.));// (exp(0.5 * (events.size()-2.) * (-8));
-mModel->mLambdaSpline.mX = initLambdaSpline();
+        mModel->mLambdaSpline.mX = 1.E-6;
+        mModel->mLambdaSpline.mX = initLambdaSpline();
         // autre possibilité d'initialiser Lambda Spline
         //const double alphaInit = 1./ pow( (mModel->mSettings.mTmax - mModel->mSettings.mTmin)/ mModel->mEvents.size(), 3.);
        // mModel->mLambdaSpline.mX = alphaInit;
@@ -1103,7 +1114,7 @@ bool MCMCLoopChronocurve::update()
    //  bool test2 = hasPositiveGPrime(mModel->mSpline.splineX);
    //  if (test == true) qDebug()<< "test GPrime"<< (test==true);
 
-    if (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeProfondeur)
+    if (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDepth)
         return hasPositiveGPrimeByDet(mModel->mSpline.splineX);
         //return hasPositiveGPrime(mModel->mSpline.splineX);
 
@@ -1223,7 +1234,7 @@ void MCMCLoopChronocurve::finalize()
  /*
     // if we are in depth mode, we have to extract iteration with only GPrime positive
     if ( mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie &&
-         mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeProfondeur) {
+         mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDepth) {
 
         int shift  = 0;
 
@@ -1334,7 +1345,7 @@ void MCMCLoopChronocurve::finalize()
     for (int i = 0; i < mChains.size(); ++i) {
         ChainSpecs& chain = mChains[i];
         if (chain.mRealyAccepted == 0) {
-            mAbortedReason = QString(tr("Warning : NO POSITIVE curve available with chain n° %1, current seed to change %2").arg (i+1, chain.mSeed));
+            mAbortedReason = QString(tr("Warning : NO POSITIVE curve available with chain n° %1, current seed to change %2").arg (QString::number(i+1), QString::number(chain.mSeed)));
             throw mAbortedReason;
         }
 
@@ -1353,7 +1364,7 @@ void MCMCLoopChronocurve::finalize()
     // This should not be done here because it uses resultsView parameters
     // ResultView will trigger it again when loading the model
     mModel->initDensities();
-   // mModel->generatePosteriorDensities(mChains, 1024, 1);
+    // mModel->generatePosteriorDensities(mChains, 1024, 1);
     
     // Generate numerical results of :
     // - MHVariables (global acceptation)
@@ -2290,7 +2301,7 @@ long double MCMCLoopChronocurve::initLambdaSpline()
     // on recherche la plus petite valeur de CV
     unsigned long idxDifMin = std::distance(CV.begin(), std::min_element(CV.begin(), CV.end()) );
 
-    // si le mini est a une des bornes, il n'y a aps de solution
+    // si le mini est a une des bornes, il n'y a pas de solution
     // Donc on recherche la plus grande variation, le "coude"
     if (idxDifMin== 0 || idxDifMin == (CV.size()-1)) {
         // On recherche la plus grande variation de GCV
@@ -2325,11 +2336,11 @@ void MCMCLoopChronocurve::prepareEventY(Event* const event  )
 {
     const double rad = M_PI / 180.;
     if (mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie) {
-        if (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeInclinaison) {
+        if (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeInclination) {
             event->mYx = event->mYInc;
             event->mSy = event->mSInc;
 
-        } else if (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDeclinaison) {
+        } else if (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDeclination) {
             event->mYx = event->mYDec;
             event->mSy = event->mSInc / cos(event->mYInc * rad);
 
@@ -2380,11 +2391,11 @@ void MCMCLoopChronocurve::prepareEventY(Event* const event  )
 {
     const double rad = M_PI / 180.;
     if (mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie) {
-        if (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeInclinaison) {
+        if (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeInclination) {
             event->mYx = event->mYInc;
             event->mSy = event->mSInc / 2.4477;
 
-        } else if (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDeclinaison) {
+        } else if (mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDeclination) {
             event->mYx = event->mYDec;
             event->mSy = event->mSInc / (2.4477 * cos(event->mYInc * rad));
 
@@ -2813,7 +2824,18 @@ long double MCMCLoopChronocurve::h_alpha(const SplineMatrices& matrices, const i
     std::vector<std::vector<long double>>& matL = decomp.first;
     std::vector<long double>& matD = decomp.second;
     
-    std::vector<std::vector<long double>> matRInv = inverseMatSym_origin(matL, matD, 5, 1);// l'inverson de matR à partir de la décomposition en matL et matD
+   // std::vector<std::vector<long double>> matRInv = inverseMatSym_origin(matL, matD, 5, 1);// l'inverson de matR à partir de la décomposition en matL et matD
+
+    std::vector<std::vector<long double>> matRInv;
+    if (matD.size() > 3) {
+         matRInv = inverseMatSym_origin(matL, matD, 5, 1);
+
+    } else {
+        matRInv = initLongMatrix(3, 3);
+        matRInv[1][1]= 1/ matD.at(1);  // pHd à faire confirmer
+    }
+
+
 
     std::vector<std::vector<long double>> tmp = multiMatParMat(matQ, matRInv, 3, 3);
     std::vector<std::vector<long double>> matK = multiMatParMat(tmp, matQT, 3, 3);
@@ -3705,7 +3727,7 @@ SplineResults MCMCLoopChronocurve::calculSplineX(const SplineMatrices& matrices,
         spline.matD = std::move(matD);
 
     } catch(...) {
-                qCritical() << "MCMCLoopChronocurve::calculSpline : Caught Exception!\n";
+                qCritical() << "MCMCLoopChronocurve::calculSplineX : Caught Exception!\n";
     }
 
     return spline;
@@ -3993,8 +4015,14 @@ std::vector<long double> MCMCLoopChronocurve::calculMatInfluence_origin(const Sp
 
       //  const std::vector<std::vector<long double>>& matL = decomp.first; // we must keep a copy ?
        // const std::vector<long double>& matD = decomp.second; // we must keep a copy ?
+        std::vector<std::vector<long double>> matB_1;
+        if (splines.matD.size() > 3) {
+             matB_1 = inverseMatSym_origin(splines.matL, splines.matD, nbBandes + 4, 1);
 
-        std::vector<std::vector<long double>> matB_1 = inverseMatSym_origin(splines.matL, splines.matD, nbBandes + 4, 1);
+        } else {
+            matB_1 = initLongMatrix(3, 3);
+            matB_1[1][1]= 1./ splines.matD.at(1);  // pHd à faire confirmer
+        }
         std::vector<long double> matQB_1QT = initLongVector(n);
 
         auto matQi = matrices.matQ.at(0);
@@ -4189,15 +4217,15 @@ MCMCSpline MCMCLoopChronocurve::currentSpline ( QList<Event *> &lEvents, bool do
         // calculSpline utilise les Y des events
         // => On le calcule ici pour la seconde composante (y)
 
-        s = calculSplineY(matrices, vecH, decomp, matB, lambda); //matL et matB ne sont pas changé
+        s = calculSplineY(matrices, vecH, decomp, matB, lambda); //matL et matB ne sont pas changés
 
         MCMCSplineComposante splineY;
 
         splineY.vecG = std::move(s.vecG);
         splineY.vecGamma = std::move(s.vecGamma);
 
-        splineY.vecThetaEvents = vecTheta; //getThetaEventVector(mModel->mEvents);
-        splineY.vecVarG = vecVarG; //calculSplineError(matrices, s); // Les erreurs sont égales sur les trois composantes X, Y, Z splineY.vecErrG = splineX.vecErrG =
+        splineY.vecThetaEvents = vecTheta;
+        splineY.vecVarG = vecVarG;  // Les erreurs sont égales sur les trois composantes X, Y, Z splineY.vecErrG = splineX.vecErrG =
 
         spline.splineY = std::move(splineY);
     }
@@ -4205,7 +4233,7 @@ MCMCSpline MCMCLoopChronocurve::currentSpline ( QList<Event *> &lEvents, bool do
     if ( mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel ||
          mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique ||
          mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D) {
-        // dans le future ne sera pas utile pour le mode sphérique
+        // dans le future, ne sera pas utile pour le mode sphérique
         // calculSpline utilise les Z des events
         // => On le calcule ici pour la troisième composante (z)
 
@@ -4267,8 +4295,6 @@ bool  MCMCLoopChronocurve::hasPositiveGPrime (const MCMCSplineComposante& spline
         }
     }
 
-
-
     return accepted;
 }
 
@@ -4293,7 +4319,7 @@ bool  MCMCLoopChronocurve::hasPositiveGPrimeByDet (const MCMCSplineComposante& s
         const double s = t_i + t_i1;
         const double p = t_i * t_i1;
         const double d = ( (t_i1 - 2*t_i)*gamma_i1 + (2*t_i1 - t_i)*gamma_i )/(6*hi);
-        // resolution equation
+        // résolution équation
 
         const double aDelta = 3* b;
         const double bDelta = 2*d - 2*s*b;
