@@ -55,8 +55,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "ModelUtilities.h"
 #include "PluginOptionsDialog.h"
-#include "ChronocurveSettings.h"
-#include "ChronocurveWidget.h"
+#include "CurveSettings.h"
+#include "CurveWidget.h"
 #include <QtWidgets>
 
 
@@ -67,8 +67,8 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mButtonHeigth  (int (1.3 * AppSettings::heigthUnit()) * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE),
     mLineEditHeight  (int (0.5 * AppSettings::heigthUnit())),
     mComboBoxHeight (int (0.7 * AppSettings::heigthUnit())),
-    mChronocurveEnabled(false),
-    mChronocurveProcessType(ChronocurveSettings::eProcessTypeUnivarie)
+    mCurveEnabled(false),
+    mCurveProcessType(CurveSettings::eProcessTypeNone)
 
 {
     minimumHeight = 0;
@@ -95,28 +95,31 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     connect(mColorPicker, &ColorPicker::colorChanged, this, &EventPropertiesView::updateEventColor);
     connect(mMethodCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &EventPropertiesView::updateEventMethod);
     
-    mChronocurveWidget = new ChronocurveWidget(mTopView);
+    // field curve parameter
+
+    mCurveWidget = new CurveWidget(mTopView);
     
-    mYIncLab = new QLabel(tr("Inc."), mChronocurveWidget);
-    mYDecLab = new QLabel(tr("Dec."), mChronocurveWidget);
-    mYIntLab = new QLabel(tr("Int."), mChronocurveWidget);
+    mYIncLab = new QLabel(tr("Inc."), mCurveWidget);
+    mYDecLab = new QLabel(tr("Dec."), mCurveWidget);
+    mYIntLab = new QLabel(tr("Int."), mCurveWidget);
     
-    mYIncEdit = new LineEdit(mChronocurveWidget);
-    mYDecEdit = new LineEdit(mChronocurveWidget);
-    mYIntEdit = new LineEdit(mChronocurveWidget);
+    mYIncEdit = new LineEdit(mCurveWidget);
+    mYDecEdit = new LineEdit(mCurveWidget);
+    mYIntEdit = new LineEdit(mCurveWidget);
     
     connect(mYIncEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYInc);
     connect(mYDecEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYDec);
     connect(mYIntEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYInt);
     
-    mSIncLab = new QLabel(tr("Error"), mChronocurveWidget);
-    mSIntLab = new QLabel(tr("Error"), mChronocurveWidget);
+    mSIncLab = new QLabel(tr("Error"), mCurveWidget);
+    mSIntLab = new QLabel(tr("Error"), mCurveWidget);
     
-    mSIncEdit = new LineEdit(mChronocurveWidget);
-    mSIntEdit = new LineEdit(mChronocurveWidget);
+    mSIncEdit = new LineEdit(mCurveWidget);
+    mSIntEdit = new LineEdit(mCurveWidget);
     
     connect(mSIncEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSInc);
     connect(mSIntEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSInt);
+
 
     // Event default propreties Window mEventView
     mEventView = new QWidget(this);
@@ -294,23 +297,25 @@ void EventPropertiesView::updateEvent()
 
         mColorPicker->setColor(color);
 
-        // Chronocurve
+        // Curve
         
-        // The chronocurve settings may have changed since the last time the event property view has been opened
+        // The Curve settings may have changed since the last time the event property view has been opened
         QJsonObject state = MainWindow::getInstance()->getProject()->mState;
-        ChronocurveSettings settings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
-        //mChronocurveEnabled = settings.mEnabled;
-        mChronocurveProcessType = settings.mProcessType;
+        CurveSettings settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+        bool isCurve = (settings.mProcessType != CurveSettings::eProcessTypeNone);
+
+        //mCurveEnabled = settings.mEnabled;
+        mCurveProcessType = settings.mProcessType;
         
         mMethodLab->setVisible(type == Event::eDefault);
-        mMethodCombo->setVisible(!settings.mEnabled && (type == Event::eDefault));
-        mMethodInfo->setVisible(settings.mEnabled && (type == Event::eDefault));
+        mMethodCombo->setVisible( !isCurve && (type == Event::eDefault));
+        mMethodInfo->setVisible( isCurve && (type == Event::eDefault));
         
         // Y1 contient l'inclinaison. Elle est toujours nécessaire en sphérique et vectoriel.
         // En univarié, elle n'est nécessaire que pour les variables d'étude : inclinaison ou déclinaison.
-        bool showInc = mChronocurveEnabled && settings.showInclinaison();
-        bool showDec = mChronocurveEnabled && settings.showDeclinaison();
-        bool showInt = mChronocurveEnabled && settings.showIntensite();
+        bool showInc = mCurveEnabled && settings.showInclinaison();
+        bool showDec = mCurveEnabled && settings.showDeclinaison();
+        bool showInt = mCurveEnabled && settings.showIntensite();
         
         mYIncLab->setVisible(showInc);
         mYIncEdit->setVisible(showInc);
@@ -440,15 +445,15 @@ void EventPropertiesView::updateKnownFixed(const QString& text)
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound fixed value updated"));
 }
 
-// Chronocurve
-void EventPropertiesView::setChronocurveSettings(bool enabled, char processType)
+// Curve
+void EventPropertiesView::setCurveSettings(bool enabled, char processType)
 {
-    mChronocurveEnabled = enabled;
-    mChronocurveProcessType = processType;
+    mCurveEnabled = enabled;
+    mCurveProcessType = processType;
     updateEvent();
 }
 
-// Chronocurve
+// Curve
 void EventPropertiesView::updateEventYInc()
 {
     QJsonObject event = mEvent;
@@ -456,7 +461,7 @@ void EventPropertiesView::updateEventYInc()
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y Inc updated"));
 }
 
-// Chronocurve
+// Curve
 void EventPropertiesView::updateEventYDec()
 {
     QJsonObject event = mEvent;
@@ -464,7 +469,7 @@ void EventPropertiesView::updateEventYDec()
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y Dec updated"));
 }
 
-// Chronocurve
+// Curve
 void EventPropertiesView::updateEventYInt()
 {
     QJsonObject event = mEvent;
@@ -472,7 +477,7 @@ void EventPropertiesView::updateEventYInt()
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y Int updated"));
 }
 
-// Chronocurve
+// Curve
 void EventPropertiesView::updateEventSInc()
 {
     QJsonObject event = mEvent;
@@ -480,7 +485,7 @@ void EventPropertiesView::updateEventSInc()
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S Inc updated"));
 }
 
-// Chronocurve
+// Curve
 void EventPropertiesView::updateEventSInt()
 {
     QJsonObject event = mEvent;
@@ -735,7 +740,8 @@ void EventPropertiesView::updateLayout()
         return;
 
     QJsonObject state = MainWindow::getInstance()->getProject()->mState;
-    ChronocurveSettings settings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
+    CurveSettings curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+    const bool withCurve = (curveSettings.mProcessType != CurveSettings::eProcessTypeNone);
 
     mButtonWidth = 50; //int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = 50; //int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
@@ -757,21 +763,21 @@ void EventPropertiesView::updateLayout()
 
     int topViewHeight = mColorPicker->y() + mColorPicker->height();
 
-    int chronocurveHeight = 0;
+    int CurveHeight = 0;
 
-    if (settings.mEnabled) {
-        int lines = (settings.showInclinaison() && settings.showIntensite()) ? 2 : 1;
-        chronocurveHeight = margin + (margin + mLineEditHeight) * lines;
+    if (withCurve) {
+        int lines = (curveSettings.showInclinaison() && curveSettings.showIntensite()) ? 2 : 1;
+        CurveHeight = margin + (margin + mLineEditHeight) * lines;
 
         int dx = margin;
         int dy = margin;
         int labW = 50;
 
-        if (settings.showInclinaison()) {
+        if (curveSettings.showInclinaison()) {
 
             int editW = (width() - 7*margin - 2*labW) / 2;
 
-            if (settings.showDeclinaison()) {
+            if (curveSettings.showDeclinaison()) {
                 editW = (width() - 9*margin - 3*labW) / 3;
             }
 
@@ -779,7 +785,7 @@ void EventPropertiesView::updateLayout()
             mYIncEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
             mSIncLab->setGeometry(dx += editW + margin, dy, labW, mLineEditHeight);
             mSIncEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
-            if (settings.showDeclinaison()) {
+            if (curveSettings.showDeclinaison()) {
                 mYDecLab->setGeometry(dx += editW + margin, dy, labW, mLineEditHeight);
                 mYDecEdit->setGeometry(dx + labW + margin, dy, editW, mLineEditHeight);
             }
@@ -787,9 +793,9 @@ void EventPropertiesView::updateLayout()
             dy += mLineEditHeight + margin;
         }
 
-        if (settings.showIntensite()) {
+        if (curveSettings.showIntensite()) {
             dx = margin;
-            int editW = (mChronocurveWidget->width() - 5*margin - 2*labW) / 2;
+            int editW = (mCurveWidget->width() - 5*margin - 2*labW) / 2;
 
             mYIntLab->setGeometry(dx, dy, labW, mLineEditHeight);
             mYIntEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
@@ -815,12 +821,12 @@ void EventPropertiesView::updateLayout()
         // ----------------------------------
         topViewHeight += mMethodCombo->height() + margin;
 
-        mTopView->resize(width(), topViewHeight + ((chronocurveHeight > 0) ? chronocurveHeight + margin : 0));
+        mTopView->resize(width(), topViewHeight + ((CurveHeight > 0) ? CurveHeight + margin : 0));
         
         // ----------------------------------
-        //  Chronocurve event data
+        //  Curve event data
         // ----------------------------------
-        mChronocurveWidget->setGeometry(margin, mMethodLab->y() + mMethodLab->height() + margin, width() - 2*margin, chronocurveHeight);
+        mCurveWidget->setGeometry(margin, mMethodLab->y() + mMethodLab->height() + margin, width() - 2*margin, CurveHeight);
         
         mEventView->setGeometry(0, mTopView->height(), width(), height() - mTopView->height());
 
@@ -858,15 +864,15 @@ void EventPropertiesView::updateLayout()
         if (hasBound()) {
             //-----------
             mEventView->resize(0, 0);
-            // mChronocurveWidget belongs to mTopView
-            if (settings.mEnabled) {
-                mChronocurveWidget->setGeometry(margin, topViewHeight + margin, mTopView->width() - 2*margin, chronocurveHeight);
+            // mCurveWidget belongs to mTopView
+            if (withCurve) {
+                mCurveWidget->setGeometry(margin, topViewHeight + margin, mTopView->width() - 2*margin, CurveHeight);
             } else {
-                mChronocurveWidget->resize(0, 0);
+                mCurveWidget->resize(0, 0);
             }
-            mTopView->resize(width(), topViewHeight + ((chronocurveHeight > 0) ? chronocurveHeight + margin : 0));
+            mTopView->resize(width(), topViewHeight + ((CurveHeight > 0) ? CurveHeight + margin : 0));
 
-            mBoundView->setGeometry(0, mChronocurveWidget->y() + mChronocurveWidget->height() + margin +50, width() - mButtonWidth, height() - mChronocurveWidget->y() - mChronocurveWidget->height() - 2*margin);
+            mBoundView->setGeometry(0, mCurveWidget->y() + mCurveWidget->height() + margin +50, width() - mButtonWidth, height() - mCurveWidget->y() - mCurveWidget->height() - 2*margin);
 
         }
     }

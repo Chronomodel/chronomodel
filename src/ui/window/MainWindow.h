@@ -117,7 +117,7 @@ public slots:
     void mcmcFinished(Model*);
     void noResult();
     void updateProject();
-    void toggleChronocurve(bool checked);
+    void toggleCurve(bool checked);
 
     void changeEventsColor();
     void changeEventsMethod();
@@ -167,7 +167,7 @@ private:
     QAction* mRunAction;
     QAction* mResetMCMCAction;
     
-    SwitchAction* mChronocurveAction;
+    SwitchAction* mCurveAction;
 
     QActionGroup* mViewGroup;
     QAction* mViewModelAction;

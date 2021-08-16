@@ -295,7 +295,7 @@ void EventsScene::createSceneFromState()
     const QJsonArray constraints = state.value(STATE_EVENTS_CONSTRAINTS).toArray();
     const QJsonObject settings = state.value(STATE_SETTINGS).toObject();
 
-    const QJsonObject chronocurveSettings = state.value(STATE_CHRONOCURVE).toObject();
+    const QJsonObject CurveSettings = state.value(STATE_CURVE).toObject();
 
 
 
@@ -308,7 +308,7 @@ void EventsScene::createSceneFromState()
     progress->setMinimumWidth(int (progress->fontMetrics().horizontalAdvance(progress->labelText()) * 1.5));
 
     mSettings = ProjectSettings::fromJson(settings);
-    mChronocurveSettings = ChronocurveSettings::fromJson(chronocurveSettings);
+    mCurveSettings = CurveSettings::fromJson(CurveSettings);
 
     mUpdatingItems = true;
 
@@ -405,7 +405,7 @@ qDebug()<<"EventsScene::updateSceneFromState()";
 
 
     QJsonObject settings = state.value(STATE_SETTINGS).toObject();
-    QJsonObject chronocurveSettings = state.value(STATE_CHRONOCURVE).toObject();
+    QJsonObject curveSettings = state.value(STATE_CURVE).toObject();
 
     QProgressDialog* progress = nullptr;
     bool displayProgress = false;
@@ -445,10 +445,10 @@ qDebug()<<"EventsScene::updateSceneFromState()";
         mSettings = s;
     }
 
-    ChronocurveSettings cs = ChronocurveSettings::fromJson(chronocurveSettings);
-    if (mChronocurveSettings != cs) {
+    CurveSettings cs = CurveSettings::fromJson(curveSettings);
+    if (mCurveSettings != cs) {
         settingsChanged = true;
-        mChronocurveSettings = cs;
+        mCurveSettings = cs;
     }
 
     mUpdatingItems = true;
@@ -1427,7 +1427,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
                 eventFinded[STATE_EVENT_DATES] = datesEvent;
 
                 if (i < listCurveData.count()) {
-                    Event::setChronocurveCsvDataToJsonEvent(eventFinded, listCurveData.at(i));
+                    Event::setCurveCsvDataToJsonEvent(eventFinded, listCurveData.at(i));
                 }
 
                 events[eventIdx] =eventFinded;
@@ -1453,7 +1453,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
                 QJsonObject eventJson  (event.toJson());
                 currentEvent = eventJson;
                 if (i < listCurveData.count()) {
-                    Event::setChronocurveCsvDataToJsonEvent(eventJson, listCurveData.at(i));
+                    Event::setCurveCsvDataToJsonEvent(eventJson, listCurveData.at(i));
                 }
 
                 events.append(eventJson);
@@ -1478,7 +1478,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
             auto boundJson (bound.toJson());
             currentEvent = boundJson;
             if (i < listCurveData.count()) {
-                Event::setChronocurveCsvDataToJsonEvent(boundJson, listCurveData.at(i));
+                Event::setCurveCsvDataToJsonEvent(boundJson, listCurveData.at(i));
             }
             events.append(boundJson);
 
@@ -1617,37 +1617,37 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
         } else {
             date = Date::fromCSV(dataStr, csvLocal);
             //date.mUUID = QString::fromStdString(Generator::UUID());
-            QMap<QString, double> chronocurveValues;
+            QMap<QString, double> CurveValues;
             if (!date.isNull()) {
                 dates << qMakePair(eventName, date);
                 acceptedRows.append(csvRow);
 
                 if (dataStr.size() >= 16) {
-                    chronocurveValues.insert("YInc", csvLocal.toDouble(dataStr.at(15)));
+                    CurveValues.insert("YInc", csvLocal.toDouble(dataStr.at(15)));
                 } else {
-                    chronocurveValues.insert("YInc", 0);
+                    CurveValues.insert("YInc", 0);
                 }
                 if (dataStr.size() >= 17) {
-                    chronocurveValues.insert("SInc", csvLocal.toDouble(dataStr.at(16)));
+                    CurveValues.insert("SInc", csvLocal.toDouble(dataStr.at(16)));
                 } else {
-                    chronocurveValues.insert("SInc", 0);
+                    CurveValues.insert("SInc", 0);
                 }
                 if (dataStr.size() >= 18) {
-                    chronocurveValues.insert("YDec", csvLocal.toDouble(dataStr.at(17)));
+                    CurveValues.insert("YDec", csvLocal.toDouble(dataStr.at(17)));
                 } else {
-                    chronocurveValues.insert("YDec", 0);
+                    CurveValues.insert("YDec", 0);
                 }
                 if (dataStr.size() >= 19) {
-                    chronocurveValues.insert("YInt", csvLocal.toDouble(dataStr.at(18)));
+                    CurveValues.insert("YInt", csvLocal.toDouble(dataStr.at(18)));
                 } else {
-                    chronocurveValues.insert("YInt", 0);
+                    CurveValues.insert("YInt", 0);
                 }
                 if (dataStr.size() >= 20) {
-                    chronocurveValues.insert("SInt",csvLocal.toDouble(dataStr.at(19)));
+                    CurveValues.insert("SInt",csvLocal.toDouble(dataStr.at(19)));
                 } else {
-                    chronocurveValues.insert("SInt", 0);
+                    CurveValues.insert("SInt", 0);
                 }
-                curveValues << chronocurveValues;
+                curveValues << CurveValues;
             } else {
                rejectedRows.append(csvRow);
             }

@@ -37,30 +37,31 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef CHRONOCURVESETTINGS_H
-#define CHRONOCURVESETTINGS_H
+#ifndef CURVESETTINGS_H
+#define CURVESETTINGS_H
 
 #include "StateKeys.h"
 #include <QJsonObject>
 #include <QString>
 
-#define CHRONOCURVE_ENABLED_DEFAULT false
-#define CHRONOCURVE_PROCESS_TYPE_DEFAULT ChronocurveSettings::eProcessTypeUnivarie
-#define CHRONOCURVE_VARIABLE_TYPE_DEFAULT ChronocurveSettings::eVariableTypeInclination
-#define CHRONOCURVE_USE_ERR_MESURE_DEFAULT true
-#define CHRONOCURVE_TIME_TYPE_DEFAULT ChronocurveSettings::eModeBayesian
-#define CHRONOCURVE_VARIANCE_TYPE_DEFAULT ChronocurveSettings::eModeBayesian
-#define CHRONOCURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT true
-#define CHRONOCURVE_VARIANCE_FIXED_DEFAULT 1
-#define CHRONOCURVE_COEFF_LISSAGE_TYPE_DEFAULT ChronocurveSettings::eModeBayesian
-#define CHRONOCURVE_ALPHA_LISSAGE_DEFAULT 0
+//#define Curve_ENABLED_DEFAULT false
+#define CURVE_PROCESS_TYPE_DEFAULT CurveSettings::eProcessTypeUnivarie
+#define CURVE_VARIABLE_TYPE_DEFAULT CurveSettings::eVariableTypeInclination
+#define CURVE_USE_ERR_MESURE_DEFAULT true
+#define CURVE_TIME_TYPE_DEFAULT CurveSettings::eModeBayesian
+#define CURVE_VARIANCE_TYPE_DEFAULT CurveSettings::eModeBayesian
+#define CURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT true
+#define CURVE_VARIANCE_FIXED_DEFAULT 1
+#define CURVE_COEFF_LISSAGE_TYPE_DEFAULT CurveSettings::eModeBayesian
+#define CURVE_ALPHA_LISSAGE_DEFAULT 0
 
 
-class ChronocurveSettings
+class CurveSettings
 {
 public:
     enum ProcessType
     {
+        eProcessTypeNone = 'N',
         eProcessTypeUnivarie = 'U',
         eProcessTypeSpherique = 'S',
         eProcessTypeVectoriel = 'V',
@@ -82,17 +83,18 @@ public:
         eModeBayesian = 'B',
     };
     
-    ChronocurveSettings();
-    ChronocurveSettings(const ChronocurveSettings& s);
-    ChronocurveSettings& operator=(const ChronocurveSettings& s);
-    bool operator!=(const ChronocurveSettings& s);
-    bool operator==(const ChronocurveSettings& s);
-    void copyFrom(const ChronocurveSettings& s);
-    bool isEqual(const ChronocurveSettings& s);
-    ~ChronocurveSettings();
+    CurveSettings();
+    CurveSettings(const CurveSettings& s);
+    CurveSettings& operator=(const CurveSettings& s);
+    bool operator!=( CurveSettings const& s) const ;
+    bool operator==(CurveSettings const & s) const;
+   // bool operator==(const CurveSettings& ls, const CurveSettings& rs);
+    void copyFrom(const CurveSettings& s);
+    bool isEqual(const CurveSettings& s) const ;
+    ~CurveSettings();
 
-    static ChronocurveSettings fromJson(const QJsonObject& json);
-    static ChronocurveSettings getDefault();
+    static CurveSettings fromJson(const QJsonObject& json);
+    static CurveSettings getDefault();
     void restoreDefault();
     QJsonObject toJson() const;
     
@@ -100,9 +102,11 @@ public:
     bool showDeclinaison() const;
     bool showIntensite() const;
     QString intensiteLabel() const;
+
+    QString processText() const;
     
 public:
-    bool mEnabled;
+   // bool mEnabled;
     
     ProcessType mProcessType; // Type de traitement
     VariableType mVariableType; // Type de variable étudiée
@@ -119,7 +123,7 @@ public:
     double mLambdaSpline;
 };
 
-QDataStream &operator<<( QDataStream &stream, const ChronocurveSettings &data );
-QDataStream &operator>>( QDataStream &stream, ChronocurveSettings &data );
+QDataStream &operator<<( QDataStream &stream, const CurveSettings &data );
+QDataStream &operator>>( QDataStream &stream, CurveSettings &data );
 
-#endif // endif ChronocurveSettings_H
+#endif // endif CurveSettings_H

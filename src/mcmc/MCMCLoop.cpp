@@ -166,7 +166,7 @@ void MCMCLoop::run()
         mProject->mModel->mLogInit += line(textBold(tr("INIT CHAIN %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))));
         mProject->mModel->mLogInit += line("Seed : " + QString::number(chain.mSeed));
 
-        mProject->mModel->mLogInit += ModelUtilities:: modelStateDescriptionHTML(static_cast<ModelChronocurve*>(mProject->mModel) );
+        mProject->mModel->mLogInit += ModelUtilities:: modelStateDescriptionHTML(static_cast<ModelCurve*>(mProject->mModel) );
 // Save mLogInit for debug
 #ifdef DEBUG
         mProject->mModel->mChains[mChainIndex].mInitElapsedTime = mChains[mChainIndex].mInitElapsedTime;// only to take the time
@@ -288,7 +288,7 @@ void MCMCLoop::run()
             mProject->mModel->mLogAdapt += line(textRed("Not adapted after : " + QString::number(chain.mBatchIndex) + " batches"));
         }
 
-        mProject->mModel->mLogAdapt += ModelUtilities::modelStateDescriptionHTML(static_cast<ModelChronocurve*>(mProject->mModel) );
+        mProject->mModel->mLogAdapt += ModelUtilities::modelStateDescriptionHTML(static_cast<ModelCurve*>(mProject->mModel) );
         mProject->mModel->mLogAdapt += "<hr>";
 
         chain.mAdaptElapsedTime = adaptTime.elapsed();

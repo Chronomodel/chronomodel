@@ -37,19 +37,37 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef CHRONOCURVEWIDGET_H
-#define CHRONOCURVEWIDGET_H
+#ifndef CurveWIDGET_H
+#define CurveWIDGET_H
 
 #include <QWidget>
+#include <QLabel>
+#include <QLineEdit>
 
-class ChronocurveWidget: public QWidget
+class CurveWidget: public QWidget
 {
     Q_OBJECT
 public:
-    ChronocurveWidget(QWidget* parent);
+    CurveWidget(QWidget* parent);
 
+private:
+    QLabel* mYIncLab;
+    QLineEdit* mYIncEdit;
+
+    QLabel* mYDecLab;
+    QLineEdit* mYDecEdit;
+
+    QLabel* mSIncLab;
+    QLineEdit* mSIncEdit;
+
+    QLabel* mYIntLab;
+    QLineEdit* mYIntEdit;
+
+    QLabel* mSIntLab;
+    QLineEdit* mSIntEdit;
 protected:
     void paintEvent(QPaintEvent* event);
+
 };
 
 #endif

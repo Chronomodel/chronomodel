@@ -48,19 +48,31 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MainWindow.h"
 #include "Project.h"
 #include "ArrowTmpItem.h"
-#include "ChronocurveSettings.h"
+#include "CurveSettings.h"
 #include "qlocale.h"
 
 EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):AbstractItem(scene, parent),
     mWithSelectedPhase(false),
     mShowAllThumbs(true),
-    mPhasesHeight(24)
+    mPhasesHeight (20)
 {
     mTitleHeight = 20;
     mEltsHeight =  DateItem::mTitleHeight +  DateItem::mEltsHeight ;
 
     EventItem::setEvent(event, settings);
     mScene = static_cast<AbstractScene*>(scene);
+
+    QFont font;
+    //font.setPointSizeF(12.);
+    font.setPixelSize(12);
+
+    font.setStyle(QFont::StyleNormal);
+    font.setBold(false);
+    font.setItalic(false);
+
+    const QFontMetricsF fm (font);
+
+    mCurveLineHeight =  fm.height();
 
 }
 
@@ -193,6 +205,8 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
 
 //QList<QGraphicsItem*>    dateItems = childItems();
 //qDebug()<<dateItems.size();
+
+
     resizeEventItem();
     repositionDateItems();
 
@@ -276,7 +290,7 @@ void EventItem::dropEvent(QGraphicsSceneDragDropEvent* e)
 
 /**
  * @brief EventItem::handleDrop this function move one or several data from CSV file to one EventItem
- * We don't have to modify the Chronocurve parameter of the Event
+ * We don't have to modify the Curve parameter of the Event
  * @param e
  */
 void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
@@ -300,7 +314,7 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
     }
     event[STATE_EVENT_DATES] = dates;
     
-    //Event::setChronocurveCsvDataToJsonEvent(event, curveData.at(0));
+    //Event::setCurveCsvDataToJsonEvent(event, curveData.at(0));
 
     project->updateEvent(event, QObject::tr("Dates added to event (CSV drag)"));
     scene->updateStateSelectionFromItem();
@@ -323,9 +337,15 @@ void EventItem::resizeEventItem()
     //const QJsonArray dates = mData.value(STATE_EVENT_DATES).toArray();
     qreal eventHeight = y + (childItems().count() * h);
     //qDebug() << "resizeEventItem dates count : " << dates.count();
-    
-    int bottomLines = getNumberChronocurveLines();
-    eventHeight += (bottomLines > 0) ? bottomLines * mPhasesHeight : mPhasesHeight;
+
+    QJsonObject state = mScene->getProject()->mState;
+    CurveSettings curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+
+    const int nbLines = getNumberCurveLines(curveSettings);
+
+    mCurveTextHeight = (nbLines>0 ? nbLines*mCurveLineHeight: 0);
+
+    eventHeight += mCurveTextHeight + mPhasesHeight + (nbLines>0 ? 3*AbstractItem::mEltsMargin : 2*AbstractItem::mEltsMargin);
     
     mSize = QSize(AbstractItem::mItemWidth, eventHeight);
 }
@@ -371,7 +391,6 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->drawRect(rect);
 
     QFont font (qApp->font());
-    //font.setPointSizeF(12.);
     font.setPixelSize(12);
 
     font.setStyle(QFont::StyleNormal);
@@ -379,110 +398,22 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     font.setItalic(false);
     
     QJsonObject state = mScene->getProject()->mState;
-    ChronocurveSettings chronocurveSettings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
-    
-    if (chronocurveSettings.mEnabled) {
-        int lines = getNumberChronocurveLines();
-        
-        QRectF bottomRect(rect.x(), rect.y() + rect.height() - lines * mPhasesHeight, rect.width(), lines * mPhasesHeight);
-        bottomRect.adjust(4, 0, -4, -4);
-        
-        QPen pen = QPen();
-        pen.setColor(CHRONOCURVE_COLOR_BORDER);
-        pen.setWidth(2);
-        painter->setPen(pen);
-        painter->setBrush(CHRONOCURVE_COLOR_BACK);
-        painter->drawRoundedRect(bottomRect, 4, 4);
-        
-        int m = 3;
-        bottomRect.adjust(m, m, -m, -m);
-        int lineX = bottomRect.x();
-        int lineY = bottomRect.y();
-        int lineH = bottomRect.height() / lines;
-        int lineW = bottomRect.width();
-        
-        painter->setFont(font);
-        painter->setPen(CHRONOCURVE_COLOR_TEXT);
+    CurveSettings curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
 
-       if ( chronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D) {
-           QString text1;
+    const qreal vMarge = AbstractItem::mEltsMargin;
+    const qreal hMarge = AbstractItem::mEltsMargin;
 
-           text1 += "X = ";
-           text1 += QLocale().toString (mData.value(STATE_EVENT_Y_INC).toDouble());
-           text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_S_INC).toDouble());
+    QRectF curveRect(rect.x() + hMarge, rect.y() + rect.height() - mCurveTextHeight - mPhasesHeight - 2*vMarge, rect.width() - 2*hMarge, mCurveTextHeight);
 
-           text1 += " Y = ";
-           text1 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
+    paintBoxCurveParameter(painter, curveRect, curveSettings);
 
-           painter->drawText(QRectF(lineX, lineY, lineW, lineH), Qt::AlignCenter, text1);
-
-           QString text2 = "Z = ";
-           text2 += QLocale().toString(mData.value(STATE_EVENT_Y_INT).toDouble());
-           text2 += " ± " + QLocale().toString(mData.value(STATE_EVENT_S_INT).toDouble());
-           painter->drawText(QRectF(lineX, lineY + lineH, lineW, lineH), Qt::AlignCenter, text2);
-
-       } else {
-           if (chronocurveSettings.showInclinaison()) {
-               QString text1 = "Inc = ";
-               text1 += QLocale().toString (mData.value(STATE_EVENT_Y_INC).toDouble());
-               text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_S_INC).toDouble());
-
-               if (chronocurveSettings.showDeclinaison()) {
-                   text1 += " Dec = ";
-                   text1 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
-               }
-
-               painter->drawText(QRectF(lineX, lineY, lineW, lineH), Qt::AlignCenter, text1);
-           }
-
-           if (chronocurveSettings.showIntensite()) {
-               QString text2 = chronocurveSettings.intensiteLabel();
-               text2 += " = ";
-               text2 += QLocale().toString(mData.value(STATE_EVENT_Y_INT).toDouble());
-               text2 += " ± " + QLocale().toString(mData.value(STATE_EVENT_S_INT).toDouble());
-               painter->drawText(QRectF(lineX, lineY + (chronocurveSettings.showInclinaison() ? 1 : 0) * lineH, lineW, lineH), Qt::AlignCenter, text2);
-           }
-       }
-
-    } else {
-        // Phases
-        QRectF phasesRect(rect.x(), rect.y() + rect.height() - mPhasesHeight, rect.width(), mPhasesHeight);
-        phasesRect.adjust(1, 1, -1, -1);
-        
-        const QJsonArray phases = getPhases();
-        const int numPhases = phases.size();
-        
-        if (numPhases == 0) {
-            QString noPhase = tr("No Phase");
-            // QFont ftAdapt = AbstractItem::adjustFont(font, noPhase, phasesRect);
-            painter->setFont(font);//ftAdapt);
-            painter->fillRect(phasesRect, QColor(0, 0, 0, 180));
-            painter->setPen(QColor(200, 200, 200));
-            painter->drawText(phasesRect, Qt::AlignCenter, noPhase);
-
-        } else {
-            const qreal w = phasesRect.width() / numPhases;
-            for (int i = 0; i < numPhases; ++i) {
-                const QJsonObject phase = phases.at(i).toObject();
-
-                const QColor c(phase.value(STATE_COLOR_RED).toInt(),
-                         phase.value(STATE_COLOR_GREEN).toInt(),
-                         phase.value(STATE_COLOR_BLUE).toInt());
-                painter->setPen(c);
-                painter->setBrush(c);
-                painter->drawRect(int (phasesRect.x() + i*w), int (phasesRect.y()), int(w), int (phasesRect.height()));
-            }
-        }
-
-        //item box
-        painter->setPen(QColor(0, 0, 0));
-        painter->setBrush(Qt::NoBrush);
-        painter->drawRect(phasesRect);
-    }
+    // Phases
+    QRectF phasesRect(rect.x() + hMarge , rect.y() + rect.height() - mPhasesHeight -vMarge, rect.width() - 2*hMarge, mPhasesHeight);
+    paintBoxPhases(painter, phasesRect)   ;
 
     // Name
     QRectF tr(rect.x() +AbstractItem:: mBorderWidth + 2*AbstractItem::mEltsMargin ,
-        rect.y() + AbstractItem::mBorderWidth, // + AbstractItem::mEltsMargin,
+        rect.y() + AbstractItem::mBorderWidth,
         rect.width() - 2*AbstractItem::mBorderWidth - 4*AbstractItem::mEltsMargin,
         mTitleHeight);
 
@@ -550,19 +481,144 @@ QRectF EventItem::boundingRect() const
   return QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
 }
 
-int EventItem::getNumberChronocurveLines() const
+int EventItem::getNumberCurveLines(CurveSettings& cs) const
 {
-    QJsonObject state = mScene->getProject()->mState;
-    ChronocurveSettings chronocurveSettings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
-
-    int lines = 0;
-    if (chronocurveSettings.mEnabled) {
-        lines = 1;
-        if ( chronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel ||
-             chronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D ) {
-            lines = 2;
-        }
+    switch (cs.mProcessType) {
+    case CurveSettings::eProcessTypeNone:
+        return 0;
+        break;
+    case CurveSettings::eProcessTypeUnivarie:
+        return 1;
+        break;
+    case CurveSettings::eProcessTypeSpherique:
+        return 1;
+        break;
+    case CurveSettings::eProcessTypeVectoriel:
+        return 2;
+        break;
+    case CurveSettings::eProcessType3D:
+        return 2;
+        break;
     }
-    return lines;
+
 }
 
+void EventItem::paintBoxCurveParameter (QPainter* painter, QRectF rectBox, CurveSettings& cs )
+{
+    const int nbLines = getNumberCurveLines(cs);
+    if (nbLines>0) {
+
+        QPen pen = QPen();
+        pen.setColor(CURVE_COLOR_BORDER);
+        pen.setWidth(1);
+        painter->setPen(pen);
+        painter->setBrush(CURVE_COLOR_BACK);
+        painter->drawRoundedRect(rectBox, 4, 4);
+
+        const qreal lineX = rectBox.x();
+        const qreal lineY = rectBox.y();
+
+        const qreal lineW = rectBox.width();
+        QFont font;
+        font.setPixelSize(12);
+
+        font.setStyle(QFont::StyleNormal);
+        font.setBold(false);
+        font.setItalic(false);
+        painter->setFont(font);
+        painter->setPen(CURVE_COLOR_TEXT);
+
+        if ( cs.mProcessType == CurveSettings::eProcessType3D) {
+            QString text1;
+
+            text1 += "X = ";
+            text1 += QLocale().toString (mData.value(STATE_EVENT_Y_INC).toDouble());
+            text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_S_INC).toDouble());
+
+            text1 += " Y = ";
+            text1 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
+
+            painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
+
+            QString text2 = "Z = ";
+            text2 += QLocale().toString(mData.value(STATE_EVENT_Y_INT).toDouble());
+            text2 += " ± " + QLocale().toString(mData.value(STATE_EVENT_S_INT).toDouble());
+            painter->drawText(QRectF(lineX, lineY + mCurveLineHeight, lineW, mCurveLineHeight), Qt::AlignCenter, text2);
+
+        } else {
+            if (cs.showInclinaison()) {
+                QString text1 = "Inc = ";
+                text1 += QLocale().toString (mData.value(STATE_EVENT_Y_INC).toDouble());
+                text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_S_INC).toDouble());
+
+                if (cs.showDeclinaison()) {
+                    text1 += " Dec = ";
+                    text1 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
+                }
+
+                painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
+            }
+
+            if (cs.showIntensite()) {
+                QString text2 = cs.intensiteLabel();
+                text2 += " = ";
+                text2 += QLocale().toString(mData.value(STATE_EVENT_Y_INT).toDouble());
+                text2 += " ± " + QLocale().toString(mData.value(STATE_EVENT_S_INT).toDouble());
+                painter->drawText(QRectF(lineX, lineY + (cs.showInclinaison() ? 1 : 0) * mCurveLineHeight, lineW, mCurveLineHeight), Qt::AlignCenter, text2);
+            }
+        }
+
+    }
+
+
+}
+
+void EventItem::paintBoxPhases (QPainter *painter, QRectF rectBox)
+{
+    QFont font, memoFont;
+    memoFont = painter->font();
+
+    font.setStyle(QFont::StyleNormal);
+    font.setBold(false);
+    font.setItalic(false);
+    painter->setFont(font);
+    const QJsonArray phases = getPhases();
+    const int numPhases = phases.size();
+
+    if (numPhases == 0) {
+
+        //painter->fillRect(phasesRect, QColor(0, 0, 0, 180));
+      //  painter->setBrush(QColor(0, 0, 0, 180));
+      //  painter->drawRoundedRect(phasesRect, 4, 4);
+        painter->setPen(QColor(200, 200, 200));
+
+        QString noPhase = tr("No Phase");
+        // QFont ftAdapt = AbstractItem::adjustFont(font, noPhase, phasesRect);
+       // painter->setFont(font);//ftAdapt);
+        painter->drawText(rectBox, Qt::AlignCenter, noPhase);
+
+    } else {
+        const qreal w = (rectBox.width() - (numPhases-1)*mEltsMargin) / numPhases;
+        qreal dx = 0;
+        for (int i = 0; i < numPhases; ++i) {
+            dx = i*(w + mEltsMargin);
+            const QJsonObject phase = phases.at(i).toObject();
+
+            const QColor c(phase.value(STATE_COLOR_RED).toInt(),
+                           phase.value(STATE_COLOR_GREEN).toInt(),
+                           phase.value(STATE_COLOR_BLUE).toInt());
+            painter->setPen(QColor(0, 0, 0));
+            painter->setBrush(c);
+            painter->drawRoundedRect( (rectBox.x() + dx),  (rectBox.y()), (w),  (rectBox.height()), 4, 4);
+
+        }
+    }
+
+    //item box
+/*    painter->setPen(QColor(0, 0, 0));
+    painter->setBrush(Qt::NoBrush);
+    painter->drawRoundedRect(phasesRect, 4, 4);*/
+
+    painter->setFont(memoFont);
+
+}

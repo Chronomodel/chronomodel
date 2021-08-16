@@ -75,7 +75,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "AppSettings.h"
 
-#include "ModelChronocurve.h"
+#include "ModelCurve.h"
 
 #include <QtWidgets>
 #include <iostream>
@@ -946,7 +946,7 @@ void ResultsView::updateModel(Model* model)
     createChainsControls();
 
     mCurrentTypeGraph = GraphViewResults::ePostDistrib;
-    if (isChronocurve()) {
+    if (isCurve()) {
         mCurrentVariable = GraphViewResults::eG;
         mGraphListTab->setTab(3, false);
 
@@ -1446,10 +1446,10 @@ void ResultsView::updateTotalGraphs()
 
         } else {
             if (!mModel->mEvents.isEmpty()) {
-                ModelChronocurve* model = modelChronocurve();
-                bool hasY = (model->mChronocurveSettings.mProcessType != ChronocurveSettings::eProcessTypeUnivarie);
-                bool hasZ = (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel ||
-                             model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D);
+                ModelCurve* model = modelCurve();
+                bool hasY = (model->mCurveSettings.mProcessType != CurveSettings::eProcessTypeNone && model->mCurveSettings.mProcessType != CurveSettings::eProcessTypeUnivarie) ;
+                bool hasZ = (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVectoriel ||
+                             model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D);
 
                 ++totalGraphs;
                 if (hasY) ++totalGraphs;
@@ -1540,7 +1540,7 @@ void ResultsView::createByPhasesGraphs()
     // ----------------------------------------------------------------------
     // Show all, unless at least one is selected
     // ----------------------------------------------------------------------
-    bool showAllPhases = ! mModel->hasSelectedPhases();
+    const bool showAllPhases = ! mModel->hasSelectedPhases();
 
     // ----------------------------------------------------------------------
     //  Iterate through all, and create corresponding graphs
@@ -1624,7 +1624,7 @@ void ResultsView::createByTempoGraphs()
     // ----------------------------------------------------------------------
     // Show all, unless at least one is selected
     // ----------------------------------------------------------------------
-    bool showAllPhases = ! mModel->hasSelectedPhases();
+    const bool showAllPhases = ! mModel->hasSelectedPhases();
 
     // ----------------------------------------------------------------------
     //  Iterate through all, and create corresponding graphs
@@ -1655,10 +1655,10 @@ void ResultsView::createByTempoGraphs()
 
 void ResultsView::createByCurveGraph()
 {
-    Q_ASSERT(isChronocurve());
-//if (!isChronocurve())
+    Q_ASSERT(isCurve());
+//if (!isCurve())
   //  return;
-    ModelChronocurve* model = modelChronocurve();
+    ModelCurve* model = modelCurve();
     
     // ----------------------------------------------------------------------
     //  Disconnect and delete existing graphs
@@ -1688,40 +1688,41 @@ void ResultsView::createByCurveGraph()
         connect(graphAlpha, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
 
     } else  {
-        bool hasY = (model->mChronocurveSettings.mProcessType != ChronocurveSettings::eProcessTypeUnivarie);
-        bool hasZ = (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel ||
-                     model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D);
+        //bool hasY = (model->mCurveSettings.mProcessType != CurveSettings::eProcessTypeUnivarie);
+        const bool hasY = (model->mCurveSettings.mProcessType != CurveSettings::eProcessTypeNone && model->mCurveSettings.mProcessType != CurveSettings::eProcessTypeUnivarie) ;
+        const bool hasZ = (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVectoriel ||
+                     model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D);
 
         // insert refpoints for X
-        const double thresh = 68.4; //80;
+      //  const double thresh = 68.4; //80;
         QVector<RefPoint> eventsPts;
         QVector<RefPoint> dataPts;
 
 
-        for (auto& event : modelChronocurve()->mEvents) {
+        for (auto& event : modelCurve()->mEvents) {
             RefPoint evPts;
             RefPoint dPts;
 
             // Set Y
             if (!hasY) {
-                switch (model->mChronocurveSettings.mVariableType) {
-                case ChronocurveSettings::eVariableTypeInclination :
+                switch (model->mCurveSettings.mVariableType) {
+                case CurveSettings::eVariableTypeInclination :
                     evPts.Ymean = event-> mYInc;
                     evPts.Yerr = event->mSInc;
                     break;
-                case ChronocurveSettings::eVariableTypeDeclination :
+                case CurveSettings::eVariableTypeDeclination :
                     evPts.Ymean = event-> mYDec;
                     evPts.Yerr = event->mSInc / cos(event->mYInc * M_PI /180.);
                     break;
-                case ChronocurveSettings::eVariableTypeField :
+                case CurveSettings::eVariableTypeField :
                     evPts.Ymean = event-> mYInt;
                     evPts.Yerr = event->mSInt;
                     break;
-                case ChronocurveSettings::eVariableTypeDepth :
+                case CurveSettings::eVariableTypeDepth :
                     evPts.Ymean = event-> mYInt;
                     evPts.Yerr = event->mSInt;
                     break;
-                case ChronocurveSettings::eVariableTypeOther :
+                case CurveSettings::eVariableTypeOther :
                     evPts.Ymean = event-> mYInt;
                     evPts.Yerr = event->mSInt;
                     break;
@@ -1736,13 +1737,8 @@ void ResultsView::createByCurveGraph()
             // Set X = time
             if (event->mType == Event::eDefault) {
 
-                double tmin = HUGE_VAL;
-                double tmax = -HUGE_VAL;
-
                 for (auto&& date: event->mDates) {
 
-                    double dataTmin = HUGE_VAL;
-                    double dataTmax = -HUGE_VAL;
                     QMap<double, double> calibMap = date.getFormatedCalibMap();
 
                     FunctionStat calibStat = analyseFunction(calibMap);
@@ -1806,7 +1802,7 @@ void ResultsView::createByCurveGraph()
 
 
             } else {
-                evPts.Xmean = DateUtils::convertToAppSettingsFormat(event->mTheta.mX); // always the same value
+                evPts.Xmean = DateUtils::convertToAppSettingsFormat(static_cast<EventKnown*>(event)->mFixed); // always the same value
                 evPts.Xerr = 0.;
 
                 dPts.Xmean = evPts.Xmean;//event->mTheta.mX; // always the same value
@@ -1839,9 +1835,9 @@ void ResultsView::createByCurveGraph()
         QString resultsHTML = ModelUtilities::curveResultsHTML(model);
         graphX->setNumericalResults(resultsHTML, resultsText);
 
-        if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie ) {
-            switch (model->mChronocurveSettings.mVariableType) {
-                 case ChronocurveSettings::eVariableTypeInclination :
+        if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie ) {
+            switch (model->mCurveSettings.mVariableType) {
+                 case CurveSettings::eVariableTypeInclination :
                       if (mCurrentVariable == GraphViewResults::eGP) {
                          graphX->setTitle(tr("Speed Inclination"));
                       } else if (mCurrentVariable == GraphViewResults::eGS) {
@@ -1851,7 +1847,7 @@ void ResultsView::createByCurveGraph()
                       }
                       break;
 
-                 case ChronocurveSettings::eVariableTypeDeclination :
+                 case CurveSettings::eVariableTypeDeclination :
                        if (mCurrentVariable == GraphViewResults::eGP) {
                           graphX->setTitle(tr("Speed Declination"));
                        } else if (mCurrentVariable == GraphViewResults::eGS) {
@@ -1861,7 +1857,7 @@ void ResultsView::createByCurveGraph()
                        }
                        break;
 
-                 case ChronocurveSettings::eVariableTypeField:
+                 case CurveSettings::eVariableTypeField:
                       if (mCurrentVariable == GraphViewResults::eGP) {
                          graphX->setTitle(tr("Speed Field"));
                       } else if (mCurrentVariable == GraphViewResults::eGS) {
@@ -1871,7 +1867,7 @@ void ResultsView::createByCurveGraph()
                       }
                       break;
 
-                 case ChronocurveSettings::eVariableTypeDepth:
+                 case CurveSettings::eVariableTypeDepth:
                       if (mCurrentVariable == GraphViewResults::eGP) {
                          graphX->setTitle(tr("Speed Depth"));
                       } else if (mCurrentVariable == GraphViewResults::eGS) {
@@ -1881,7 +1877,7 @@ void ResultsView::createByCurveGraph()
                       }
                       break;
 
-                 case ChronocurveSettings::eVariableTypeOther:
+                 case CurveSettings::eVariableTypeOther:
                        if (mCurrentVariable == GraphViewResults::eGP) {
                           graphX->setTitle(tr("Speed"));
                        } else if (mCurrentVariable == GraphViewResults::eGS) {
@@ -1892,29 +1888,33 @@ void ResultsView::createByCurveGraph()
                        break;
             }
 
-        } else if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique ||
-                   model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel) {
+        } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherique ||
+                   model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVectoriel) {
             if (mCurrentVariable == GraphViewResults::eGP) {
-               graphX->setTitle(tr("Speed Inclination"));
+               graphX->setTitle(tr("Speed X"));
+
             } else if (mCurrentVariable == GraphViewResults::eGS) {
-                graphX->setTitle(tr("Acceleration Inclination"));
+                graphX->setTitle(tr("Acceleration X"));
+
              } else {
                 graphX->setTitle(tr("Inclination"));
             }
 
-        } else if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D ) {
+        } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D ) {
             if (mCurrentVariable == GraphViewResults::eGP) {
                graphX->setTitle(tr("Speed X"));
+
             } else if (mCurrentVariable == GraphViewResults::eGS) {
                 graphX->setTitle(tr("Acceleration X"));
+
              } else {
                 graphX->setTitle(tr("X"));
             }
         }
 
-        graphX->setComposanteG(modelChronocurve()->mPosteriorMeanG.gx);
-        graphX->setComposanteGChains(modelChronocurve()->getChainsMeanGComposanteX());
-        graphX->setEvents(modelChronocurve()->mEvents);
+        graphX->setComposanteG(modelCurve()->mPosteriorMeanG.gx);
+        graphX->setComposanteGChains(modelCurve()->getChainsMeanGComposanteX());
+        graphX->setEvents(modelCurve()->mEvents);
         graphX->setEventsPoints(eventsPts);
         graphX->setDataPoints(dataPts);
 
@@ -1933,17 +1933,17 @@ void ResultsView::createByCurveGraph()
             graphY->setMarginLeft(mMarginLeft);
             graphY->setMarginRight(mMarginRight);
 
-            if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique ||
-                               model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel) {
+            if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherique ||
+                               model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVectoriel) {
 
                 if (mCurrentVariable == GraphViewResults::eGP) {
-                    graphY->setTitle(tr("Speed Declination"));
+                    graphY->setTitle(tr("Speed Y"));
                 } else if (mCurrentVariable == GraphViewResults::eGS) {
-                    graphY->setTitle(tr("Acceleration Declination"));
+                    graphY->setTitle(tr("Acceleration Y"));
                 } else {
                     graphY->setTitle(tr("Declination"));
                 }
-            } else if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D ) {
+            } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D ) {
 
                 if (mCurrentVariable == GraphViewResults::eGP) {
                     graphY->setTitle(tr("Speed Y"));
@@ -1954,27 +1954,41 @@ void ResultsView::createByCurveGraph()
                 }
             }
 
-            graphY->setComposanteG(modelChronocurve()->mPosteriorMeanG.gy);
-            graphY->setComposanteGChains(modelChronocurve()->getChainsMeanGComposanteY());
+            graphY->setComposanteG(modelCurve()->mPosteriorMeanG.gy);
+            graphY->setComposanteGChains(modelCurve()->getChainsMeanGComposanteY());
 
-            graphY->setEvents(modelChronocurve()->mEvents);
+            graphY->setEvents(modelCurve()->mEvents);
             // change the values of the Y and the error, with the values of the declination and the error, we keep tmean
             int i = 0;
-            for (auto& event : modelChronocurve()->mEvents) {
-                eventsPts[i].Ymean = event-> mYDec;
-                eventsPts[i].Yerr = event->mSInc / cos(event->mYInc * M_PI /180.);
-               // eventsPts[i].color = event->mColor;
+            int iDataPts = 0;
+            for (auto& event : modelCurve()->mEvents) {
+                if (model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D ) {
+                    eventsPts[i].Ymean = event-> mYDec;
+                    eventsPts[i].Yerr = event->mSInc;
 
-                for (int iData = 0 ; iData < event->mDates.size(); ++iData) {
-                    dataPts[iData + i].Ymean = eventsPts.at(i).Ymean;
-                    dataPts[iData + i].Yerr = eventsPts.at(i).Ymean;
-                  //  dataPts[iData + i].color = event->mColor;
-                  }
+                } else {
+                    eventsPts[i].Ymean = event-> mYDec;
+                    eventsPts[i].Yerr = event->mSInc / cos(event->mYInc * M_PI /180.);
+                }
 
+                if (event->mType == Event::eDefault) {
+
+                    for (int iData = 0 ; iData < event->mDates.size(); ++iData) {
+                        dataPts[iDataPts].Ymean = eventsPts.at(i).Ymean;
+                        dataPts[iDataPts].Yerr = eventsPts.at(i).Yerr;
+                        iDataPts++;
+                    }
+
+                } else {
+                    dataPts[iDataPts].Ymean = eventsPts.at(i).Ymean;
+                    dataPts[iDataPts].Yerr = eventsPts.at(i).Yerr;
+                    iDataPts++;
+                }
 
                 ++i;
             }
             graphY->setEventsPoints(eventsPts);
+            graphY->setDataPoints(dataPts);
             mByCurveGraphs.append(graphY);
             
             connect(graphY, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
@@ -1990,18 +2004,18 @@ void ResultsView::createByCurveGraph()
             graphZ->setMarginLeft(mMarginLeft);
             graphZ->setMarginRight(mMarginRight);
 
-            if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel ) {
+            if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVectoriel ) {
                 if (mCurrentVariable == GraphViewResults::eGP) {
-                    graphZ->setTitle(tr("Speed Field"));
+                    graphZ->setTitle(tr("Speed Z"));
 
                 } else if (mCurrentVariable == GraphViewResults::eGS) {
-                    graphZ->setTitle(tr("Acceleration Field"));
+                    graphZ->setTitle(tr("Acceleration Z"));
 
                 } else {
                     graphZ->setTitle(tr("Field"));
                 }
             
-            } else if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D ) {
+            } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D ) {
 
                 if (mCurrentVariable == GraphViewResults::eGP) {
                     graphZ->setTitle(tr("Speed Z"));
@@ -2012,25 +2026,35 @@ void ResultsView::createByCurveGraph()
                 }
             }
 
-            graphZ->setComposanteG(modelChronocurve()->mPosteriorMeanG.gz);
-            graphZ->setComposanteGChains(modelChronocurve()->getChainsMeanGComposanteZ());
+            graphZ->setComposanteG(modelCurve()->mPosteriorMeanG.gz);
+            graphZ->setComposanteGChains(modelCurve()->getChainsMeanGComposanteZ());
 
-            graphZ->setEvents(modelChronocurve()->mEvents);
+            graphZ->setEvents(modelCurve()->mEvents);
             int i = 0;
-            for (auto& event : modelChronocurve()->mEvents) {
+            int iDataPts = 0;
+            for (auto& event : modelCurve()->mEvents) {
                 eventsPts[i].Ymean = event-> mYInt;
                 eventsPts[i].Yerr = event->mSInt;
 
-                for (int iData = 0 ; iData < event->mDates.size(); ++iData) {
-                    dataPts[iData + i].Ymean = eventsPts.at(i).Ymean;
-                    dataPts[iData + i].Yerr = eventsPts.at(i).Ymean;
-                    //dataPts[iData + i].color = event->mColor;
-                  }
+                if (event->mType == Event::eDefault) {
+
+                    for (int iData = 0 ; iData < event->mDates.size(); ++iData) {
+                        dataPts[iDataPts].Ymean = eventsPts.at(i).Ymean;
+                        dataPts[iDataPts].Yerr = eventsPts.at(i).Yerr;
+                        iDataPts++;
+                    }
+
+                } else {
+                    dataPts[iDataPts].Ymean = eventsPts.at(i).Ymean;
+                    dataPts[iDataPts].Yerr = eventsPts.at(i).Yerr;
+                    iDataPts++;
+                }
 
 
                 ++i;
             }
             graphZ->setEventsPoints(eventsPts);
+            graphZ->setDataPoints(dataPts);
             mByCurveGraphs.append(graphZ);
             
             connect(graphZ, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
@@ -2572,7 +2596,7 @@ void ResultsView::updateOptionsWidget()
     // -------------------------------------------------------------------------------------
     //  Update graph list tab
     // -------------------------------------------------------------------------------------
-    if (isChronocurve()) {
+  /*  if (isCurve()) {
         mGraphListTab->setTabVisible(1, false); // Phases
         mGraphListTab->setTabVisible(2, false); // Tempo
         mGraphListTab->setTabVisible(3, true); // Curve
@@ -2583,21 +2607,25 @@ void ResultsView::updateOptionsWidget()
             mGraphListTab->setTab(0, false);
         }
     } else {
-        mGraphListTab->setTabVisible(1, mHasPhases); // Phases
+   */
+    mGraphListTab->setTabVisible(1, mHasPhases); // Phases
         mGraphListTab->setTabVisible(2, mHasPhases); // Tempo
-        mGraphListTab->setTabVisible(3, false); // Curve
+        mGraphListTab->setTabVisible(3, isCurve()); // Curve
         
         // If the current tab is not currently visible :
         // - Show the "Phases" tab (1) which is a good default choice if the model has phases.
         // - Show the "Events" tab (0) which is a good default choice if the model doesn't have phases.
-        
-        if (mHasPhases && mGraphListTab->currentIndex() >= 3) {
+     /*   if (isCurve()) {
+            mGraphListTab->setTab(3, false);
+
+        } else */
+        if (mHasPhases && mGraphListTab->currentIndex() >= 3 && !isCurve()) {
             mGraphListTab->setTab(1, false);
 
-        } else if (!mHasPhases && mGraphListTab->currentIndex() >= 1) {
+        } else if (!mHasPhases && !isCurve() && mGraphListTab->currentIndex() >= 1) {
             mGraphListTab->setTab(1, false);
         }
-    }
+  //  }
 
     optionWidgetHeigth += mGraphListTab->height();
     // -------------------------------------------------------------------------------------
@@ -2614,7 +2642,7 @@ void ResultsView::updateOptionsWidget()
 
         mEventsfoldCheck->setVisible(false);
 
-        if (isChronocurve()) {
+        if (isCurve()) {
             mDataVGRadio->setVisible(true);
 
         } else {
@@ -3630,17 +3658,17 @@ void ResultsView::exportFullImage()
 
 }
 
-#pragma mark Chronocurve
+#pragma mark Curve
 
-bool ResultsView::isChronocurve() const
+bool ResultsView::isCurve() const
 {
     if (mModel)
-        return mModel->mProject->isChronocurve();
+        return mModel->mProject->isCurve();
     else
         return false;
 }
 
-ModelChronocurve* ResultsView::modelChronocurve() const
+ModelCurve* ResultsView::modelCurve() const
 {
-    return dynamic_cast<ModelChronocurve*>(mModel);
+    return dynamic_cast<ModelCurve*>(mModel);
 }

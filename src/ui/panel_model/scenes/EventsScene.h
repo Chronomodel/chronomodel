@@ -44,7 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "EventItem.h"
 #include "Date.h"
 #include "ProjectSettings.h"
-#include "ChronocurveSettings.h"
+#include "CurveSettings.h"
 
 #include <QWheelEvent>
 
@@ -136,7 +136,7 @@ private:
     QTimer* mHelpTimer;
     
     ProjectSettings mSettings;
-    ChronocurveSettings mChronocurveSettings;
+    CurveSettings mCurveSettings;
 
 //    QGraphicsItemAnimation* mDatesAnim;
 //    QTimeLine* mDatesAnimTimer;

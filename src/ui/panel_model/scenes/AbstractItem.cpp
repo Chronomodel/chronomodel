@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AbstractItem.h"
 #include "ArrowTmpItem.h"
 #include "StateKeys.h"
+#include "Painting.h"
 #include <QtWidgets>
 
  int AbstractItem::mBorderWidth  (2);
@@ -235,3 +236,5 @@ QFont AbstractItem::adjustFont(const QFont &ft, const QString &str, const  QRect
     } else
         return ft;
 }
+
+

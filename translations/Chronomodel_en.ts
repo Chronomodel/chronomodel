@@ -209,118 +209,118 @@
     </message>
 </context>
 <context>
-    <name>ChronocurveSettingsView</name>
+    <name>CurveSettingsView</name>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="49"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="49"/>
         <source>Curve Parameters</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="59"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="59"/>
         <source>These parameters give you controls over the way curves are built. MCMC (Bayesian) can be activated for event time, VG or global lambda spline factor, etc. </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="68"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="68"/>
         <source>Process</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="70"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="70"/>
         <source>Univariate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="71"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="71"/>
         <source>Spherical</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="72"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="72"/>
         <source>Vector</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="73"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="73"/>
         <source>3D</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="75"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="75"/>
         <source>Variable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="77"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="77"/>
         <source>Inclination</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="78"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="78"/>
         <source>Declination</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="79"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="79"/>
         <source>Field</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="80"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="80"/>
         <source>Depth</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="81"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="81"/>
         <source>Any Measure</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="83"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="83"/>
         <source>Use Measurement Err.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="86"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="86"/>
         <source>Time Type</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="88"/>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="93"/>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="104"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="88"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="93"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="104"/>
         <source>Fixed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="89"/>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="94"/>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="105"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="89"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="94"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="105"/>
         <source>Bayesian</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="91"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="91"/>
         <source>Variance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="96"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="96"/>
         <source>Variance Individual</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="99"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="99"/>
         <source>Variance Value</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="102"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="102"/>
         <source>Smoothing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettingsView.cpp" line="107"/>
+        <location filename="../src/Curve/CurveSettingsView.cpp" line="107"/>
         <source>Smoothing Value</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1313,121 +1313,121 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     </message>
 </context>
 <context>
-    <name>MCMCLoopChronocurve</name>
+    <name>MCMCLoopCurve</name>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="120"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="120"/>
         <source>Calibrating...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="128"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="128"/>
         <source>Invalid Model -&gt; No Calibration on Data %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="143"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="143"/>
         <source>Invalid model</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="240"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="240"/>
         <source>Initializing Phase Gaps...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="251"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="251"/>
         <source>Initializing Phase Durations...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="306"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="306"/>
         <source>Initializing Events...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="315"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="315"/>
         <source>Warning : Find Circular Constraint Path %1  %2 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="330"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="330"/>
         <source>Warning : Find Circular constraint with %1  bad path  %2 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="338"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="338"/>
         <source>-----Error Init for event : %1 : min = %2 : max = %3-------</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="341"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="341"/>
         <source>Error Init for event : %1 : min = %2 : max = %3-------</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="511"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="511"/>
         <source>Initializing Variances...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="607"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="607"/>
         <source>Initializing Phases...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="1337"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="1337"/>
         <source>Warning : NO POSITIVE curve available with chain n° %1, current seed to change %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="1436"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="1436"/>
         <source>Build chain %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="1457"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="1457"/>
         <source>Calcul Mean Composante X for chain %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="1462"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="1462"/>
         <source>Calcul Mean Composante Y for chain %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="1465"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="1465"/>
         <source>Calcul Mean Composante Z for chain %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="1483"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="1483"/>
         <source>Calcul Mean Composante X for All chain</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="1486"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="1486"/>
         <source>Calcul Mean Composante Y for All chain</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="1489"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="1489"/>
         <source>Calcul Mean Composante Z for All chain</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="1496"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="1496"/>
         <source>Compute system Conversion...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="3020"/>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="3132"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="3020"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="3132"/>
         <source>Not enought span between events theta</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="3025"/>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="3137"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="3025"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="3137"/>
         <source>3 events minimum required</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3238,25 +3238,25 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettings.cpp" line="250"/>
-        <location filename="../src/chronocurve/ChronocurveSettings.cpp" line="254"/>
+        <location filename="../src/Curve/CurveSettings.cpp" line="250"/>
+        <location filename="../src/Curve/CurveSettings.cpp" line="254"/>
         <location filename="../src/model/ModelUtilities.cpp" line="691"/>
         <source>Field</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettings.cpp" line="257"/>
+        <location filename="../src/Curve/CurveSettings.cpp" line="257"/>
         <location filename="../src/model/ModelUtilities.cpp" line="694"/>
         <source>Depth</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/ChronocurveSettings.cpp" line="260"/>
+        <location filename="../src/Curve/CurveSettings.cpp" line="260"/>
         <source>Measure</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/chronocurve/MCMCLoopChronocurve.cpp" line="746"/>
+        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="746"/>
         <source>Error for event theta : %1 : min = %2 : max = %3</source>
         <translation type="unfinished"></translation>
     </message>

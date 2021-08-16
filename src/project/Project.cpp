@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Project.h"
 #include "MainWindow.h"
 #include "Model.h"
-#include "ModelChronocurve.h"
+#include "ModelCurve.h"
 #include "PluginManager.h"
 #include "MCMCSettingsDialog.h"
 
@@ -65,7 +65,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 
 #include "MCMCLoopMain.h"
-#include "MCMCLoopChronocurve.h"
+#include "MCMCLoopCurve.h"
 #include "MCMCProgressDialog.h"
 
 #include "SetProjectState.h"
@@ -762,8 +762,8 @@ bool Project::load(const QString& path)
 
                     try {
                         delete mModel;
-                        if (isChronocurve()) {
-                            mModel = new ModelChronocurve ();
+                        if (isCurve()) {
+                            mModel = new ModelCurve ();
                         } else
                             mModel = new Model ();
 
@@ -2936,8 +2936,8 @@ void Project::exportAsText()
 // --------------------------------------------------------------------
 void Project::run()
 {
-    if (isChronocurve()) {
-        runChronocurve();
+    if (isCurve()) {
+        runCurve();
 
     } else {
         runChronomodel();
@@ -3047,13 +3047,13 @@ void Project::clearModel()
      emit noResult();
 }
 
-bool Project::isChronocurve() const{
+bool Project::isCurve() const{
     QJsonObject state = this->state();
-    QJsonObject chronocurveSettings = state[STATE_CHRONOCURVE].toObject();
-    return chronocurveSettings.value(STATE_CHRONOCURVE_ENABLED).toBool();
+    QJsonObject CurveSettings = state[STATE_CURVE].toObject();
+    return (CurveSettings.value(STATE_CURVE_PROCESS_TYPE).toInt() != CurveSettings::eProcessTypeNone);
 }
 
-void Project::runChronocurve()
+void Project::runCurve()
 {
     // ------------------------------------------------------------------------------------------
     //  Check if project contains invalid dates, e.g. with no computable calibration curve
@@ -3088,11 +3088,11 @@ void Project::runChronocurve()
     emit mcmcStarted();
 
     // ------------------------------------------------------------------------------------------
-    //  Clear current model and recreate et Chronocurve Model
+    //  Clear current model and recreate et Curve Model
     //  using the project state
     // ------------------------------------------------------------------------------------------
     clearModel();
-    mModel = new ModelChronocurve();
+    mModel = new ModelCurve();
     mModel->setProject(this);
     mModel->fromJson(mState);
     
@@ -3115,9 +3115,9 @@ void Project::runChronocurve()
     }
     
     // ------------------------------------------------------------------------------------------
-    //  Start MCMC for Chronocurve
+    //  Start MCMC for Curve
     // ------------------------------------------------------------------------------------------
-    MCMCLoopChronocurve loop((ModelChronocurve*)mModel, this);
+    MCMCLoopCurve loop((ModelCurve*)mModel, this);
     MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint);
 
     /* --------------------------------------------------------------------

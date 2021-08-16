@@ -37,26 +37,26 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef MCMCLOOPCHRONOCURVE_H
-#define MCMCLOOPCHRONOCURVE_H
+#ifndef MCMCLOOPCURVE_H
+#define MCMCLOOPCURVE_H
 
 #include "MCMCLoop.h"
-#include "ChronocurveSettings.h"
-#include "ChronocurveUtilities.h"
+#include "CurveSettings.h"
+#include "CurveUtilities.h"
 #include "EventKnown.h"
 #include <vector>
 
 class Project;
-class ModelChronocurve;
+class ModelCurve;
 class Event;
 
 
-class MCMCLoopChronocurve: public MCMCLoop
+class MCMCLoopCurve: public MCMCLoop
 {
     Q_OBJECT
 public:
-    MCMCLoopChronocurve(ModelChronocurve* model, Project* project);
-    ~MCMCLoopChronocurve();
+    MCMCLoopCurve(ModelCurve* model, Project* project);
+    ~MCMCLoopCurve();
 
     void orderEventsByTheta(QList<Event *> &lEvents);
     void orderEventsByThetaReduced(QList<Event *> &lEvents);
@@ -166,8 +166,8 @@ private:
 
 
 public:
-    ModelChronocurve* mModel;
-    ChronocurveSettings mChronocurveSettings;
+    ModelCurve* mModel;
+    CurveSettings mCurveSettings;
 };
 
 #endif

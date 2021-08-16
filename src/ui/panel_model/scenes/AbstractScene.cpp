@@ -278,7 +278,6 @@ void AbstractScene::itemReleased(AbstractItem* item, QGraphicsSceneMouseEvent* e
 QRectF AbstractScene::specialItemsBoundingRect(QRectF r) const
 {
     QRectF rect = r;
-    //for (int i(0); i<mItems.size(); ++i) {
     for (auto item : mItems) {
         const QRectF bRect = item->boundingRect();
         QRectF r(item->scenePos().x() - bRect.width()/2,
@@ -361,7 +360,8 @@ void AbstractScene::keyReleaseEvent(QKeyEvent* keyEvent)
 
 void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
 {
-    painter->fillRect(rect, QColor(230, 230, 230));
+    //painter->fillRect(rect, QColor(230, 230, 230));
+    painter->fillRect(rect, Qt::white);
 
     painter->setBrush(Qt::white);
     painter->setPen(Qt::NoPen);

@@ -50,7 +50,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <fenv.h>
 #include <stdlib.h>
 
-#include "ChronocurveUtilities.h"
+#include "CurveUtilities.h"
 #include <vector>
 
 

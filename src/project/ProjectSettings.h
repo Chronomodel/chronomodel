@@ -56,9 +56,9 @@ public:
     ProjectSettings();
     ProjectSettings(const ProjectSettings& s);
     ProjectSettings& operator=(const ProjectSettings& s);
-    bool operator!=(const ProjectSettings& s);
-    bool operator==(const ProjectSettings& s);
-    bool isEqual(const ProjectSettings& s);
+    bool operator!=(ProjectSettings const& s) const;
+    bool operator==(ProjectSettings const& s) const;
+    bool isEqual(ProjectSettings const& s) const;
     void copyFrom(const ProjectSettings& s);
     virtual ~ProjectSettings();
 

@@ -39,7 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ModelUtilities.h"
 #include "EventConstraint.h"
 #include "PhaseConstraint.h"
-#include "ModelChronocurve.h"
+#include "ModelCurve.h"
 #include "Project.h"
 #include "EventKnown.h"
 #include "PluginAbstract.h"
@@ -518,7 +518,7 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p, const bo
     return text;
 }
 
-QString ModelUtilities::curveResultsText(const ModelChronocurve* model)
+QString ModelUtilities::curveResultsText(const ModelCurve* model)
 {
     Q_ASSERT(model);
 
@@ -530,7 +530,7 @@ QString ModelUtilities::curveResultsText(const ModelChronocurve* model)
     text += QObject::tr("Stat on the log10 of Lambda Spline") + nl;
     text += model->mLambdaSpline.resultsString("<br>", "", nullptr, nullptr, false);
 
-    if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDepth) {
+    if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth) {
         const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
         unsigned totalPositvIter = 0;
         unsigned totalPequiredCurve = 0;
@@ -560,9 +560,9 @@ QString ModelUtilities::curveResultsText(const ModelChronocurve* model)
 }
 
 // HTML Output
-QString ModelUtilities::modelDescriptionHTML(const ModelChronocurve* model)
+QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
 {
-    bool curveModel = model->mProject->isChronocurve();
+    bool curveModel = model->mProject->isCurve();
 
     QString log;
     // Study period
@@ -587,33 +587,33 @@ QString ModelUtilities::modelDescriptionHTML(const ModelChronocurve* model)
         }
 
         if (curveModel) {
-            if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel) {
+            if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVectoriel) {
                 log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
                 log += line(textGreen(QObject::tr("- Declination : %1").arg(stringForLocal(pEvent->mYDec))));
                 log += line(textGreen(QObject::tr("- Field : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
 
-            } else if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessType3D) {
+            } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D) {
                 log += line(textGreen(QObject::tr("- X : %1 ±  %2").arg(stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
                 log += line(textGreen(QObject::tr("- Y : %1").arg(stringForLocal(pEvent->mYDec))));
                 log += line(textGreen(QObject::tr("- Z : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
 
-            } else if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeSpherique) {
+            } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherique) {
                 log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
                 log += line(textGreen(QObject::tr("- Declination : %1").arg(stringForLocal(pEvent->mYDec))));
 
-            }  else  if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDepth) {
+            }  else  if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth) {
                 log += line(textGreen(QObject::tr("- Depth : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
 
-            } else if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeField) {
+            } else if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeField) {
                 log += line(textGreen(QObject::tr("- Field : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
 
-            } else if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeInclination) {
+            } else if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeInclination) {
                 log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
 
-            } else if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDeclination) {
+            } else if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeDeclination) {
                 log += line(textGreen(QObject::tr("- Declination : %1 ; Inclination %2 ±  %3").arg(stringForLocal(pEvent->mYDec), stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
 
-            } else if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeOther) {
+            } else if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeOther) {
                 log += line(textGreen(QObject::tr("- Measure : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
 
             }
@@ -676,70 +676,73 @@ QString ModelUtilities::modelDescriptionHTML(const ModelChronocurve* model)
 
     if (curveModel) {
         log += line(textBold(textGreen( QObject::tr("Curve Parameters"))));
-        switch(model->mChronocurveSettings.mProcessType) {
-        case ChronocurveSettings::eProcessTypeUnivarie :
+        switch(model->mCurveSettings.mProcessType) {
+        case CurveSettings::eProcessTypeNone :
+            log += line(textBold(textGreen( QObject::tr(" - not functionnal link") )));
+            break;
+        case CurveSettings::eProcessTypeUnivarie :
             log += textBold(textGreen( QObject::tr(" - Process Univariate on ")));
 
-            switch(model->mChronocurveSettings.mVariableType) {
-            case ChronocurveSettings::eVariableTypeInclination :
+            switch(model->mCurveSettings.mVariableType) {
+            case CurveSettings::eVariableTypeInclination :
                 log += line(textBold(textGreen( QObject::tr("Inclination"))));
                 break;
-            case ChronocurveSettings::eVariableTypeDeclination :
+            case CurveSettings::eVariableTypeDeclination :
                 log += line(textBold(textGreen( QObject::tr("Declination"))));
                 break;
-            case ChronocurveSettings::eVariableTypeField :
+            case CurveSettings::eVariableTypeField :
                 log += line(textBold(textGreen( QObject::tr("Field"))));
                 break;
-            case ChronocurveSettings::eVariableTypeDepth :
+            case CurveSettings::eVariableTypeDepth :
                  log += line(textBold(textGreen( QObject::tr("Depth"))));
                 break;
-            case ChronocurveSettings::eVariableTypeOther :
+            case CurveSettings::eVariableTypeOther :
                  log += line(textBold(textGreen( QObject::tr("Any"))));
                 break;
             }
 
             break;
 
-        case ChronocurveSettings::eProcessTypeSpherique :
+        case CurveSettings::eProcessTypeSpherique :
             log += line(textBold(textGreen( QObject::tr(" - Process Spherical") )));
             break;
 
-        case ChronocurveSettings::eProcessTypeVectoriel :
+        case CurveSettings::eProcessTypeVectoriel :
             log += line(textBold(textGreen( QObject::tr(" - Process Vector"))));
             break;
 
-        case ChronocurveSettings::eProcessType3D :
+        case CurveSettings::eProcessType3D :
              log += line(textBold(textGreen( QObject::tr(" - Process 3D"))));
             break;
         }
 
-        if (model->mChronocurveSettings.mUseErrMesure) {
+        if (model->mCurveSettings.mUseErrMesure) {
             log += line(textBold(textGreen( QObject::tr(" - Use Measurement Error"))));
         }
 
-        if (model->mChronocurveSettings.mTimeType == ChronocurveSettings::eModeBayesian) {
+        if (model->mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
             log += line(textBold(textGreen( QObject::tr(" - Time Bayesian"))));
 
         } else {
             log += line(textBold(textGreen( QObject::tr(" - Time Fixed on init value"))));
         }
 
-        if (model->mChronocurveSettings.mVarianceType == ChronocurveSettings::eModeBayesian) {
+        if (model->mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
             log += line(textBold(textGreen( QObject::tr(" - Variance Bayesian"))));
 
         } else {
-            log += line(textBold(textGreen( QObject::tr(" - Variance Fixed : %1").arg(QString::number(model->mChronocurveSettings.mVarianceFixed)))));
+            log += line(textBold(textGreen( QObject::tr(" - Variance Fixed : %1").arg(QString::number(model->mCurveSettings.mVarianceFixed)))));
         }
 
-        if (model->mChronocurveSettings.mUseVarianceIndividual) {
+        if (model->mCurveSettings.mUseVarianceIndividual) {
             log += line(textBold(textGreen( QObject::tr(" - Use Variance Individual"))));
         }
 
-        if (model->mChronocurveSettings.mLambdaSplineType == ChronocurveSettings::eModeBayesian) {
+        if (model->mCurveSettings.mLambdaSplineType == CurveSettings::eModeBayesian) {
             log += line(textBold(textGreen( QObject::tr(" - Smoothing Bayesian"))));
 
         } else {
-            log += line(textBold(textGreen( QObject::tr(" - Smoothing Fixed : %1").arg(QString::number(model->mChronocurveSettings.mLambdaSpline)))));
+            log += line(textBold(textGreen( QObject::tr(" - Smoothing Fixed : %1").arg(QString::number(model->mCurveSettings.mLambdaSpline)))));
         }
 
     }
@@ -766,9 +769,9 @@ QString ModelUtilities::getMCMCSettingsLog(const Model* model)
     return log;
 }
 
-QString ModelUtilities::modelStateDescriptionHTML(const ModelChronocurve* model, QString stateDescript)
+QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QString stateDescript)
 {
-    bool curveModel = model->mProject->isChronocurve();
+    bool curveModel = model->mProject->isCurve();
 
     int i = 0;
     QString HTMLText = stateDescript;
@@ -811,15 +814,17 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelChronocurve* model,
                     break;
             }
 
-            if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie)
-                HTMLText += line(textGreen(QObject::tr(" - G : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
+            if (model->mCurveSettings.mProcessType != CurveSettings::eProcessTypeNone) {
+                if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie)
+                    HTMLText += line(textGreen(QObject::tr(" - G : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
 
-            else {
-                HTMLText += line(textGreen(QObject::tr(" - Gx : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
-                if (spline.splineY.vecG.size() != 0)
-                    HTMLText += line(textGreen(QObject::tr(" - Gy : %1").arg(stringForLocal(spline.splineY.vecG.at(thetaIdx)))));
-                if (spline.splineZ.vecG.size() != 0)
-                    HTMLText += line(textGreen(QObject::tr(" - Gz : %1").arg(stringForLocal(spline.splineZ.vecG.at(thetaIdx)))));
+                else {
+                    HTMLText += line(textGreen(QObject::tr(" - Gx : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
+                    if (spline.splineY.vecG.size() != 0)
+                        HTMLText += line(textGreen(QObject::tr(" - Gy : %1").arg(stringForLocal(spline.splineY.vecG.at(thetaIdx)))));
+                    if (spline.splineZ.vecG.size() != 0)
+                        HTMLText += line(textGreen(QObject::tr(" - Gz : %1").arg(stringForLocal(spline.splineZ.vecG.at(thetaIdx)))));
+                }
             }
         }
         int j = 0;
@@ -891,9 +896,9 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelChronocurve* model,
     return HTMLText;
 }
 
-QString ModelUtilities::modelStateDescriptionText(const ModelChronocurve *model, QString stateDescript)
+QString ModelUtilities::modelStateDescriptionText(const ModelCurve *model, QString stateDescript)
 {
-    bool curveModel = model->mProject->isChronocurve();
+    bool curveModel = model->mProject->isCurve();
     const QString nl = "\r";
     int i = 0;
     QString text = stateDescript;
@@ -936,7 +941,7 @@ QString ModelUtilities::modelStateDescriptionText(const ModelChronocurve *model,
                     break;
             }
 
-            if (model->mChronocurveSettings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie)
+            if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie)
                 text += QObject::tr(" - G : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)));
 
             else {
@@ -1171,7 +1176,7 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
     return text;
 }
 
-QString ModelUtilities::curveResultsHTML(const ModelChronocurve* model)
+QString ModelUtilities::curveResultsHTML(const ModelCurve* model)
 {
     Q_ASSERT(model);
 
@@ -1182,7 +1187,7 @@ QString ModelUtilities::curveResultsHTML(const ModelChronocurve* model)
     text += line(textGreen(QObject::tr("Stat on the log10 of Lambda Spline")));
     text += line(textGreen(model->mLambdaSpline.resultsString("<br>", "", nullptr, nullptr, false)));
 
-    if (model->mChronocurveSettings.mVariableType == ChronocurveSettings::eVariableTypeDepth) {
+    if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth) {
         const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
         unsigned totalPositvIter = 0;
         unsigned totalPequiredCurve = 0;

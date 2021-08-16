@@ -390,7 +390,7 @@ void ProjectView::readSettings()
     mModelView->readSettings();
 }
 
-void ProjectView::toggleChronocurve(bool toggle)
+void ProjectView::toggleCurve(bool toggle)
 {
-    mModelView->toggleChronocurve(toggle);
+    mModelView->showCurveSettings(toggle);
 }

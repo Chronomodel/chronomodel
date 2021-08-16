@@ -37,7 +37,7 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#include "ChronocurveUtilities.h"
+#include "CurveUtilities.h"
 #include <algorithm>
 #include <iostream>
 /*
@@ -194,6 +194,73 @@ PosteriorMeanG conversionIDF(const std::vector<long double>& vecGx, const std::v
         res.gx.vecG[j] = std::move(Inc * deg);
         res.gx.vecVarG[j] = std::move(ErrI* deg);
 
+
+        res.gy.vecG[j] = std::move(Dec * deg);
+        res.gy.vecVarG[j] = std::move(ErrD* deg);
+
+        res.gz.vecG[j] = std::move(F);
+        res.gz.vecVarG[j] = std::move(ErrIDF);
+
+    }
+
+    return res;
+}
+
+void conversionIDF (PosteriorMeanG& G)
+{
+   PosteriorMeanG res = conversionIDF(G.gx.vecG, G.gy.vecG, G.gz.vecG, G.gz.vecVarG );
+   G.gx.vecG = std::move(res.gx.vecG);
+   G.gy.vecG = std::move(res.gy.vecG);
+   G.gz.vecG = std::move(res.gz.vecG);
+
+   G.gx.vecVarG = std::move(res.gx.vecVarG);
+   G.gy.vecVarG = std::move(res.gy.vecVarG);
+   G.gz.vecVarG = std::move(res.gz.vecVarG);
+}
+
+/**
+ * @brief conversionID identic to conversionIDF
+ * @param vecGx
+ * @param vecGy
+ * @param vecGz
+ * @param vecGErr
+ * @return
+ */
+PosteriorMeanG conversionID(const std::vector<long double>& vecGx, const std::vector<long double>& vecGy, const std::vector<long double>& vecGz, const std::vector<long double>& vecGErr)
+{
+    const double deg = 180. / M_PI ;
+    const unsigned n = vecGx.size();
+    PosteriorMeanG res;
+    res.gx.vecG.resize(n);
+    res.gx.vecVarG.resize(n);
+    res.gy.vecG.resize(n);
+    res.gy.vecVarG.resize(n);
+    res.gz.vecG.resize(n);
+    res.gz.vecVarG.resize(n);
+
+    for (unsigned j = 0; j < n ; ++j) {
+        const long double& Gx = vecGx.at(j);
+        const long double& Gy = vecGy.at(j);
+        const long double& Gz = vecGz.at(j);
+
+        const long double F = 100.;
+        const long double Inc = asin(Gz / F);
+        const long double Dec = atan2(Gy, Gx); // angleD(Gx, Gy);
+        // U_cmt_change_repere , ligne 470
+        // sauvegarde des erreurs sur chaque paramètre  - on convertit en degrès pour I et D
+        const long double ErrIDF = vecGErr.at(j); // On suppose toutes les erreurs identiques, isotrope
+
+        const long double ErrI = ErrIDF / F ;
+        const long double ErrD = ErrIDF / (F * cos(Inc)) ;
+
+       /* long double ErrI = Gz+ErrIDF ; // dans l'espace 3D, l'enveloppe supérieure
+        ErrI = abs(asin(ErrIDF/F) - Inc); // pour retrouver la différence
+
+       // long double ErrD = Gz+ErrIDF/F / (F * cos(Inc))
+       */
+        res.gx.vecG[j] = std::move(Inc * deg);
+        res.gx.vecVarG[j] = std::move(ErrI* deg);
+
         res.gy.vecG[j] = std::move(Dec * deg);
         res.gy.vecVarG[j] = std::move(ErrD* deg);
 
@@ -204,18 +271,22 @@ PosteriorMeanG conversionIDF(const std::vector<long double>& vecGx, const std::v
     return res;
 }
 
-void conversionIDF (PosteriorMeanG& G)
+void conversionID (PosteriorMeanG& G)
 {
-   PosteriorMeanG res = G;
-   G = conversionIDF(res.gx.vecG, res.gy.vecG, res.gz.vecG, res.gz.vecVarG );
+    PosteriorMeanG res = conversionID(G.gx.vecG, G.gy.vecG, G.gz.vecG, G.gz.vecVarG );
+    G.gx.vecG = std::move(res.gx.vecG);
+    G.gy.vecG = std::move(res.gy.vecG);
+    G.gz.vecG = std::move(res.gz.vecG);
+
+    G.gx.vecVarG = std::move(res.gx.vecVarG);
+    G.gy.vecVarG = std::move(res.gy.vecVarG);
+    G.gz.vecVarG = std::move(res.gz.vecVarG);
 }
 
-std::vector<long double> ChronocurveUtilities::definitionNoeuds(const std::vector<long double> &tabPts, const double minStep)
+std::vector<long double> CurveUtilities::definitionNoeuds(const std::vector<long double> &tabPts, const double minStep)
 {
    // display(tabPts);
-    
-    //std::vector<double> result = tabPts;
-    //sort(result.begin(), result.end(), sortItems);
+
     std::vector<long double> result (tabPts);
     std::sort(result.begin(), result.end());
     

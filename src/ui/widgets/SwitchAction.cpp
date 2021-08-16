@@ -42,25 +42,26 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 
 SwitchWidget::SwitchWidget(QWidget* parent):QWidget(parent),
-mAction(nullptr),
-mToggled(false)
+    mAction(nullptr),
+    mText ("None"),
+    mToggled(false)
 {
     //setFixedSize(90, 40);
+
 }
 
 SwitchWidget::SwitchWidget(QWidget* parent, QWidgetAction* action):QWidget(parent),
-mAction(action),
-mToggled(false)
+    mAction(action),
+    mToggled(false)
 {
     //setFixedSize(90, 40);
 }
 
 void SwitchWidget::setToggled(bool isToggled)
 {
-    if (isToggled != mToggled)
-    {
+    if (isToggled != mToggled) {
         mToggled = isToggled;
-        if (mAction){
+        if (mAction) {
             mAction->toggle();
         }
         emit toggled(isToggled);
@@ -74,6 +75,7 @@ void SwitchWidget::mousePressEvent(QMouseEvent* event)
     setToggled(!mToggled);
 }
 
+
 void SwitchWidget::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
@@ -84,9 +86,9 @@ void SwitchWidget::paintEvent(QPaintEvent* e)
     QRectF r = rect();
     r.adjust(1, 1, -1, -1);
     
-    QColor colorBorder = mToggled ? CHRONOCURVE_COLOR_BORDER : CHRONOMODEL_COLOR_BORDER;
-    QColor colorBack = mToggled ? CHRONOCURVE_COLOR_BACK : CHRONOMODEL_COLOR_BACK;
-    QColor colorText = mToggled ? CHRONOCURVE_COLOR_TEXT : CHRONOMODEL_COLOR_TEXT;
+    QColor colorBorder = mToggled ? CURVE_COLOR_BORDER : CHRONOMODEL_COLOR_BORDER;
+    QColor colorBack = mToggled ? CURVE_COLOR_BACK : CHRONOMODEL_COLOR_BACK;
+    QColor colorText = mToggled ? CURVE_COLOR_TEXT : CHRONOMODEL_COLOR_TEXT;
     
     QPen pen = painter.pen();
     pen.setColor(colorBorder);
@@ -102,7 +104,7 @@ void SwitchWidget::paintEvent(QPaintEvent* e)
     f1.setPointSizeF(8);
     painter.setFont(f1);
     //QFontMetrics fm1(f1);
-    QString text1 = tr("Building mode");
+    QString text1 = tr("Functional Link");
     //int text1W = fm1.horizontalAdvance(text1);
     
     QFont f2(font());
@@ -110,7 +112,7 @@ void SwitchWidget::paintEvent(QPaintEvent* e)
     f2.setWeight(QFont::Bold);
     painter.setFont(f2);
     //QFontMetrics fm2(f2);
-    QString text2 = mToggled ? "CURVE" : "PHASES";
+   // QString text2 = mToggled ? "CURVE" : "PHASES";
    // int text2W = fm2.horizontalAdvance(text2);
     
     //int textW = text1W + text2W;;
@@ -119,8 +121,9 @@ void SwitchWidget::paintEvent(QPaintEvent* e)
     painter.drawText(r.adjusted(0, 5, 0, -2*r.height()/3 + 2), Qt::AlignHCenter | Qt::AlignVCenter, text1);
     
     painter.setFont(f2);
-    painter.drawText(r.adjusted(0, r.height()/3, 0, 0), Qt::AlignHCenter | Qt::AlignVCenter, text2);
+    painter.drawText(r.adjusted(0, r.height()/3, 0, 0), Qt::AlignHCenter | Qt::AlignVCenter, mText);
 }
+
 
 SwitchAction::SwitchAction(QObject* parent):QWidgetAction(parent)
 {

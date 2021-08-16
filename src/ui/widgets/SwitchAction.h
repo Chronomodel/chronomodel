@@ -42,6 +42,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QWidgetAction>
 #include <QWidget>
+#include <QComboBox>
+#include <QLabel>
 
 class SwitchWidget: public QWidget
 {
@@ -59,8 +61,12 @@ protected:
 signals:
     void toggled(bool toggled);
 
+public slots:
+    void setText (QString str) { mText = str; repaint();};
+
 protected:
     QWidgetAction* mAction;
+    QString mText;
     bool mToggled;
 };
 

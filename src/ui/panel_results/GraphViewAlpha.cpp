@@ -39,7 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "GraphViewAlpha.h"
 #include "GraphView.h"
-#include "ModelChronocurve.h"
+#include "ModelCurve.h"
 #include "Painting.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
@@ -64,7 +64,7 @@ GraphViewAlpha::~GraphViewAlpha()
 }
 
 
-void GraphViewAlpha::setModel(ModelChronocurve* model)
+void GraphViewAlpha::setModel(ModelCurve* model)
 {
     Q_ASSERT(model);
     mModel = model;

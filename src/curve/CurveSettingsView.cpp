@@ -37,14 +37,14 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#include "ChronocurveSettingsView.h"
+#include "CurveSettingsView.h"
 #include "Project.h"
 #include "Painting.h"
 #include <QtWidgets>
 #include <QVariant>
 
 
-ChronocurveSettingsView::ChronocurveSettingsView(QWidget* parent):QWidget(parent)
+CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
 {
     mTitleLabel = new QLabel(tr("Curve Parameters"), this);
     mTitleLabel->setAlignment(Qt::AlignCenter);
@@ -53,7 +53,7 @@ ChronocurveSettingsView::ChronocurveSettingsView(QWidget* parent):QWidget(parent
     titleFont.setPointSize(20);
     mTitleLabel->setFont(titleFont);
     QPalette palette = mTitleLabel->palette();
-    palette.setColor(QPalette::WindowText, CHRONOCURVE_COLOR_TEXT);
+    palette.setColor(QPalette::WindowText, CURVE_COLOR_TEXT);
     mTitleLabel->setPalette(palette);
     
     mDescriptionLabel = new QLabel(tr("These parameters give you controls over the way curves are built. MCMC (Bayesian) can be activated for event time, VG or global lambda spline factor, etc. "), this);
@@ -67,6 +67,7 @@ ChronocurveSettingsView::ChronocurveSettingsView(QWidget* parent):QWidget(parent
     
     mProcessTypeLabel = new QLabel(tr("Process") , this);
     mProcessTypeInput = new QComboBox(this);
+    mProcessTypeInput->addItem(tr("None"));
     mProcessTypeInput->addItem(tr("Univariate"));
     mProcessTypeInput->addItem(tr("Spherical"));
     mProcessTypeInput->addItem(tr("Vector"));
@@ -174,94 +175,104 @@ ChronocurveSettingsView::ChronocurveSettingsView(QWidget* parent):QWidget(parent
     
     updateVisibilities();
     
-    connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::updateVisibilities);
+    connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
     
-    connect(mVariableTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::updateVisibilities);
+    connect(mVariableTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
     
-    connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::updateVisibilities);
+    connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
     
-    connect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::updateVisibilities);
+    connect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
     
     
     
-    connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::save);
+    connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
     
-    connect(mVariableTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::save);
+    connect(mVariableTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
     
-    connect(mUseErrMesureInput, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &ChronocurveSettingsView::save);
+    connect(mUseErrMesureInput, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::save);
     
-    connect(mTimeTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::save);
+    connect(mTimeTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
     
-    connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::save);
+    connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
     
-    connect(mUseVarianceIndividualInput, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &ChronocurveSettingsView::save);
+    connect(mUseVarianceIndividualInput, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::save);
     
-    connect(mVarianceFixedInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &ChronocurveSettingsView::save);
+    connect(mVarianceFixedInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
     
-    connect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ChronocurveSettingsView::save);
+    connect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
     
-    connect(mLambdaSplineInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &ChronocurveSettingsView::save);
+    connect(mLambdaSplineInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
 }
 
-ChronocurveSettingsView::~ChronocurveSettingsView()
+CurveSettingsView::~CurveSettingsView()
 {
     
 }
 
-void ChronocurveSettingsView::setSettings(const ChronocurveSettings& settings)
+void CurveSettingsView::setSettings(const CurveSettings& settings)
 {
-    mEnabled = settings.mEnabled;
-    
-    if (settings.mProcessType == ChronocurveSettings::eProcessTypeUnivarie) {
+    //mEnabled = settings.mEnabled;
+    switch (settings.mProcessType) {
+    case CurveSettings::eProcessTypeNone:
         mProcessTypeInput->setCurrentIndex(0);
-
-    } else if (settings.mProcessType == ChronocurveSettings::eProcessTypeSpherique) {
+        break;
+    case CurveSettings::eProcessTypeUnivarie:
         mProcessTypeInput->setCurrentIndex(1);
-
-    } else if (settings.mProcessType == ChronocurveSettings::eProcessTypeVectoriel ||
-               settings.mProcessType == ChronocurveSettings::eProcessType3D) {
+        break;
+    case CurveSettings::eProcessTypeSpherique:
         mProcessTypeInput->setCurrentIndex(2);
+        break;
+    case CurveSettings::eProcessTypeVectoriel:
+        mProcessTypeInput->setCurrentIndex(3);
+        break;
+    case CurveSettings::eProcessType3D:
+        mProcessTypeInput->setCurrentIndex(4);
+        break;
+
+    }
+
+    switch (settings.mVariableType) {
+    case CurveSettings::eVariableTypeInclination:
+        mVariableTypeInput->setCurrentIndex(0);
+        break;
+    case CurveSettings::eVariableTypeDeclination:
+        mVariableTypeInput->setCurrentIndex(1);
+        break;
+    case CurveSettings::eVariableTypeField:
+        mVariableTypeInput->setCurrentIndex(2);
+        break;
+    case CurveSettings::eVariableTypeDepth:
+        mVariableTypeInput->setCurrentIndex(3);
+        break;
+    case CurveSettings::eVariableTypeOther:
+        mVariableTypeInput->setCurrentIndex(4);
+        break;
     }
     
-    if (settings.mVariableType == ChronocurveSettings::eVariableTypeInclination) {
-        mVariableTypeInput->setCurrentIndex(0);
-
-    } else if (settings.mVariableType == ChronocurveSettings::eVariableTypeDeclination) {
-        mVariableTypeInput->setCurrentIndex(1);
-
-    } else if (settings.mVariableType == ChronocurveSettings::eVariableTypeField) {
-        mVariableTypeInput->setCurrentIndex(2);
-
-    } else if (settings.mVariableType == ChronocurveSettings::eVariableTypeDepth) {
-        mVariableTypeInput->setCurrentIndex(3);
-
-    } else if (settings.mVariableType == ChronocurveSettings::eVariableTypeOther) {
-        mVariableTypeInput->setCurrentIndex(4);
-    }
     
     mUseErrMesureInput->setChecked(settings.mUseErrMesure);
     
-    if (settings.mTimeType == ChronocurveSettings::eModeFixed) {
+    if (settings.mTimeType == CurveSettings::eModeFixed) {
         mTimeTypeInput->setCurrentIndex(0);
 
-    } else if (settings.mTimeType == ChronocurveSettings::eModeBayesian) {
+    } else if (settings.mTimeType == CurveSettings::eModeBayesian) {
         mTimeTypeInput->setCurrentIndex(1);
     }
     
-    if (settings.mVarianceType == ChronocurveSettings::eModeFixed) {
+    if (settings.mVarianceType == CurveSettings::eModeFixed) {
         mVarianceTypeInput->setCurrentIndex(0);
 
-    } else if (settings.mVarianceType == ChronocurveSettings::eModeBayesian) {
+    } else if (settings.mVarianceType == CurveSettings::eModeBayesian) {
         mVarianceTypeInput->setCurrentIndex(1);
     }
     
     mUseVarianceIndividualInput->setChecked(settings.mUseVarianceIndividual);
     mVarianceFixedInput->setText(QString::number(settings.mVarianceFixed));
     
-    if (settings.mLambdaSplineType == ChronocurveSettings::eModeFixed) {
+    if (settings.mLambdaSplineType == CurveSettings::eModeFixed) {
         mLambdaSplineTypeInput->setCurrentIndex(0);
 
-    } else if (settings.mLambdaSplineType == ChronocurveSettings::eModeBayesian) {
+    } else if (settings.mLambdaSplineType == CurveSettings::eModeBayesian) {
         mLambdaSplineTypeInput->setCurrentIndex(1);
     }
     
@@ -270,44 +281,47 @@ void ChronocurveSettingsView::setSettings(const ChronocurveSettings& settings)
     updateVisibilities();
 }
 
-ChronocurveSettings ChronocurveSettingsView::getSettings()
+CurveSettings CurveSettingsView::getSettings()
 {
-   // const QLocale mLoc = QLocale();
-    ChronocurveSettings settings;
-    
-    settings.mEnabled = mEnabled;
-    
+    CurveSettings settings;
+
     if (mProcessTypeInput->currentIndex() == 0) {
-        settings.mProcessType = ChronocurveSettings::eProcessTypeUnivarie;
+        settings.mProcessType = CurveSettings::eProcessTypeNone;
 
-        if (mVariableTypeInput->currentIndex() == 0) {
-            settings.mVariableType = ChronocurveSettings::eVariableTypeInclination;
+    } else if (mProcessTypeInput->currentIndex() == 1) {
+        settings.mProcessType = CurveSettings::eProcessTypeUnivarie;
 
-        } else if (mVariableTypeInput->currentIndex() == 1) {
-            settings.mVariableType = ChronocurveSettings::eVariableTypeDeclination;
+        switch (mVariableTypeInput->currentIndex()) {
+        case 0:
+            settings.mVariableType = CurveSettings::eVariableTypeInclination;
+            break;
+        case 1:
+            settings.mVariableType = CurveSettings::eVariableTypeDeclination;
+            break;
+        case 2:
+            settings.mVariableType = CurveSettings::eVariableTypeField;
+            break;
+        case 3:
+            settings.mVariableType = CurveSettings::eVariableTypeDepth;
+            break;
+        case 4:
+            settings.mVariableType = CurveSettings::eVariableTypeOther;
+            break;
 
-        } else if (mVariableTypeInput->currentIndex() == 2) {
-            settings.mVariableType = ChronocurveSettings::eVariableTypeField;
-
-        } else if (mVariableTypeInput->currentIndex() == 3) {
-            settings.mVariableType = ChronocurveSettings::eVariableTypeDepth;
-
-        } else if (mVariableTypeInput->currentIndex() == 4) {
-            settings.mVariableType = ChronocurveSettings::eVariableTypeOther;
         }
 
 
-    } else if (mProcessTypeInput->currentIndex() == 1) {
-        settings.mProcessType = ChronocurveSettings::eProcessTypeSpherique;
-        settings.mVariableType = ChronocurveSettings::eVariableTypeInclination;
-
     } else if (mProcessTypeInput->currentIndex() == 2) {
-        settings.mProcessType = ChronocurveSettings::eProcessTypeVectoriel;
-        settings.mVariableType = ChronocurveSettings::eVariableTypeInclination;
+        settings.mProcessType = CurveSettings::eProcessTypeSpherique;
+        settings.mVariableType = CurveSettings::eVariableTypeInclination;
 
     } else if (mProcessTypeInput->currentIndex() == 3) {
-        settings.mProcessType = ChronocurveSettings::eProcessType3D;
-        settings.mVariableType = ChronocurveSettings::eVariableTypeOther;
+        settings.mProcessType = CurveSettings::eProcessTypeVectoriel;
+        settings.mVariableType = CurveSettings::eVariableTypeInclination;
+
+    } else if (mProcessTypeInput->currentIndex() == 4) {
+        settings.mProcessType = CurveSettings::eProcessType3D;
+        settings.mVariableType = CurveSettings::eVariableTypeOther;
     }
     
 
@@ -315,27 +329,27 @@ ChronocurveSettings ChronocurveSettingsView::getSettings()
     settings.mUseErrMesure = mUseErrMesureInput->isChecked();
     
     if (mTimeTypeInput->currentIndex() == 0) {
-        settings.mTimeType = ChronocurveSettings::eModeFixed;
+        settings.mTimeType = CurveSettings::eModeFixed;
 
     } else if (mTimeTypeInput->currentIndex() == 1) {
-        settings.mTimeType = ChronocurveSettings::eModeBayesian;
+        settings.mTimeType = CurveSettings::eModeBayesian;
     }
     
     if (mVarianceTypeInput->currentIndex() == 0) {
-        settings.mVarianceType = ChronocurveSettings::eModeFixed;
+        settings.mVarianceType = CurveSettings::eModeFixed;
 
     } else if (mVarianceTypeInput->currentIndex() == 1) {
-        settings.mVarianceType = ChronocurveSettings::eModeBayesian;
+        settings.mVarianceType = CurveSettings::eModeBayesian;
     }
         
     settings.mUseVarianceIndividual = mUseVarianceIndividualInput->isChecked();
     settings.mVarianceFixed = mVarianceFixedInput->text().toDouble();
     
     if (mLambdaSplineTypeInput->currentIndex() == 0) {
-        settings.mLambdaSplineType = ChronocurveSettings::eModeFixed;
+        settings.mLambdaSplineType = CurveSettings::eModeFixed;
 
     } else if (mLambdaSplineTypeInput->currentIndex() == 1) {
-        settings.mLambdaSplineType = ChronocurveSettings::eModeBayesian;
+        settings.mLambdaSplineType = CurveSettings::eModeBayesian;
     }
     
     settings.mLambdaSpline = mLambdaSplineInput->text().toDouble();
@@ -343,39 +357,79 @@ ChronocurveSettings ChronocurveSettingsView::getSettings()
     return settings;
 }
 
-void ChronocurveSettingsView::setProject(Project *project)
+void CurveSettingsView::setProject(Project *project)
 {
     mProject = project;
 }
 
-void ChronocurveSettingsView::reset()
+void CurveSettingsView::reset()
 {
-    ChronocurveSettings settings = ChronocurveSettings::getDefault();
+    CurveSettings settings = CurveSettings::getDefault();
     setSettings(settings);
 }
 
-void ChronocurveSettingsView::save()
+void CurveSettingsView::save()
 {
-    ChronocurveSettings settings = getSettings();
+    CurveSettings settings = getSettings();
     QJsonObject stateNext = mProject->mState;
-    stateNext[STATE_CHRONOCURVE] = settings.toJson();
-    mProject->pushProjectState(stateNext, CHRONOCURVE_SETTINGS_UPDATED_REASON, true);
+    stateNext[STATE_CURVE] = settings.toJson();
+    mProject->pushProjectState(stateNext, CURVE_SETTINGS_UPDATED_REASON, true);
+    emit newProcess(mProcessTypeInput->currentText());
 }
 
-void ChronocurveSettingsView::updateVisibilities()
+void CurveSettingsView::updateVisibilities()
 {
-    const bool variableTypeRequired = (mProcessTypeInput->currentText() == "Univariate");
-    mVariableTypeLabel->setVisible(variableTypeRequired);
-    mVariableTypeInput->setVisible(variableTypeRequired);
-    
-    const bool varianceFixed = (mVarianceTypeInput->currentText() == "Fixed");
-    mVarianceFixedLabel->setVisible(varianceFixed);
-    mVarianceFixedInput->setVisible(varianceFixed);
-    mUseVarianceIndividualLabel->setVisible(!varianceFixed);
-    mUseVarianceIndividualInput->setVisible(!varianceFixed);
-    
-    const bool coeffLissageFixed = (mLambdaSplineTypeInput->currentText() == "Fixed");
-    mLambdaSplineLabel->setVisible(coeffLissageFixed);
-    mLambdaSplineInput->setVisible(coeffLissageFixed);
+    if (mProcessTypeInput->currentText() == "None") {
+
+        mUseErrMesureLabel->setVisible(false);
+        mUseErrMesureInput->setVisible(false);
+
+        mTimeTypeLabel->setVisible(false);
+        mTimeTypeInput->setVisible(false);
+
+        mVariableTypeLabel->setVisible(false);
+        mVariableTypeInput->setVisible(false);
+
+        mVarianceTypeLabel->setVisible(false);
+        mVarianceTypeInput->setVisible(false);
+
+        mVarianceFixedLabel->setVisible(false);
+        mVarianceFixedInput->setVisible(false);
+
+        mUseVarianceIndividualLabel->setVisible(false);
+        mUseVarianceIndividualInput->setVisible(false);
+
+        mLambdaSplineTypeLabel->setVisible(false);
+        mLambdaSplineTypeInput->setVisible(false);
+
+        mLambdaSplineLabel->setVisible(false);
+        mLambdaSplineInput->setVisible(false);
+
+    } else {
+
+        mUseErrMesureLabel->setVisible(true);
+        mUseErrMesureInput->setVisible(true);
+        mTimeTypeLabel->setVisible(true);
+        mTimeTypeInput->setVisible(true);
+
+        const bool variableTypeRequired = (mProcessTypeInput->currentText() == "Univariate");
+        mVariableTypeLabel->setVisible(variableTypeRequired);
+        mVariableTypeInput->setVisible(variableTypeRequired);
+
+        mVarianceTypeLabel->setVisible(true);
+        mVarianceTypeInput->setVisible(true);
+        const bool varianceFixed = (mVarianceTypeInput->currentText() == "Fixed");
+        mVarianceFixedLabel->setVisible(varianceFixed);
+        mVarianceFixedInput->setVisible(varianceFixed);
+        mUseVarianceIndividualLabel->setVisible(!varianceFixed);
+        mUseVarianceIndividualInput->setVisible(!varianceFixed);
+
+        mLambdaSplineTypeLabel->setVisible(true);
+        mLambdaSplineTypeInput->setVisible(true);
+        const bool coeffLissageFixed = (mLambdaSplineTypeInput->currentText() == "Fixed");
+        mLambdaSplineLabel->setVisible(coeffLissageFixed);
+        mLambdaSplineInput->setVisible(coeffLissageFixed);
+    }
 }
+
 

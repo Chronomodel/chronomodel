@@ -92,7 +92,7 @@ public slots:
     void applyFilesSettings(Model* model);
     void updateResultsLog(const QString& log);
     
-    void toggleChronocurve(bool toggle);
+    void toggleCurve(bool toggle);
 
 private:
     QStackedWidget* mStack;

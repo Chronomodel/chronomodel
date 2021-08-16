@@ -78,7 +78,7 @@ public:
 
     void reset();
     
-    static void setChronocurveCsvDataToJsonEvent(QJsonObject& event, const QMap<QString, double>& chronocurveData);
+    static void setCurveCsvDataToJsonEvent(QJsonObject& event, const QMap<QString, double>& CurveData);
 
 
     /// Functions used within the MCMC process ( not in the init part!) :
@@ -142,7 +142,7 @@ public:
     double mMixingLevel;
     
     // --------------------------------------------------------
-    //  Chronocurve
+    //  Curve
     // --------------------------------------------------------
     
     // Valeurs entrées par l'utilisateur

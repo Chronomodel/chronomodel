@@ -78,7 +78,7 @@ mLevel(0)
     // Note : setting an event in (0, 0) tells the scene that this item is new!
     // Thus the scene will move it randomly around the currently viewed center point.
     // --------------------------------------------------------
-    //  Chronocurve
+    //  Curve
     // --------------------------------------------------------
 
     // Valeurs entrées par l'utilisateur
@@ -295,28 +295,28 @@ QJsonObject Event::toJson() const
     return event;
 }
 
-void Event::setChronocurveCsvDataToJsonEvent(QJsonObject& event, const QMap<QString, double>& chronocurveData)
+void Event::setCurveCsvDataToJsonEvent(QJsonObject& event, const QMap<QString, double>& CurveData)
 {
     QMap<QString, double>::const_iterator i;
     
-    i = chronocurveData.find("YInc");
-    if (i != chronocurveData.end()) {
+    i = CurveData.find("YInc");
+    if (i != CurveData.end()) {
         event[STATE_EVENT_Y_INC] = i.value();
     }
-    i = chronocurveData.find("SInc");
-    if (i != chronocurveData.end()) {
+    i = CurveData.find("SInc");
+    if (i != CurveData.end()) {
         event[STATE_EVENT_S_INC] = i.value();
     }
-    i = chronocurveData.find("YDec");
-    if (i != chronocurveData.end()) {
+    i = CurveData.find("YDec");
+    if (i != CurveData.end()) {
         event[STATE_EVENT_Y_DEC] = i.value();
     }
-    i = chronocurveData.find("YInt");
-    if (i != chronocurveData.end()) {
+    i = CurveData.find("YInt");
+    if (i != CurveData.end()) {
         event[STATE_EVENT_Y_INT] = i.value();
     }
-    i = chronocurveData.find("SInt");
-    if (i != chronocurveData.end()) {
+    i = CurveData.find("SInt");
+    if (i != CurveData.end()) {
         event[STATE_EVENT_S_INT] = i.value();
     }
 }

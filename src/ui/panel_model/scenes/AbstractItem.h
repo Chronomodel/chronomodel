@@ -41,6 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define ABSTRACTITEM_H
 
 #include "AbstractScene.h"
+#include "CurveSettings.h"
 
 #include <QGraphicsObject>
 #include <QJsonObject>
@@ -59,6 +60,7 @@ public:
     void setCurrentInData(const bool current);
 
     static QFont adjustFont(const QFont &ft, const  QString & str, const QRectF &r);
+
 
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent* e);
@@ -85,6 +87,7 @@ public:
     bool mMoving; // used in AbstractScene::itemReleased() to merge item like eventItem and phaseItem
     bool mMergeable;
     bool mGreyedOut;
+
 
 
 

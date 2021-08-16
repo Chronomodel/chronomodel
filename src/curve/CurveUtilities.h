@@ -36,8 +36,8 @@ same conditions as regards security.
 The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
-#ifndef CHRONOCURVEUTILITIES_H
-#define CHRONOCURVEUTILITIES_H
+#ifndef CurveUTILITIES_H
+#define CurveUTILITIES_H
 
 #include "Functions.h"
 
@@ -120,7 +120,10 @@ std::vector<std::vector<long double>> calculMatQ(const std::vector<long double>&
 void conversionIDF(PosteriorMeanG& G);
 PosteriorMeanG conversionIDF(const std::vector<long double> &vecGx, const std::vector<long double> &vecGy, const std::vector<long double> &vecGz, const std::vector<long double> &vecGErr);
 
-class ChronocurveUtilities
+void conversionID(PosteriorMeanG& G);
+PosteriorMeanG conversionID(const std::vector<long double> &vecGx, const std::vector<long double> &vecGy, const std::vector<long double> &vecGz, const std::vector<long double> &vecGErr);
+
+class CurveUtilities
 {
 public:
     std::vector<long double> definitionNoeuds(const std::vector<long double>& tabPts, const double minStep);

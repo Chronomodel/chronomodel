@@ -60,7 +60,7 @@ class Button;
 class RadioButton;
 class GraphView;
 
-class ChronocurveWidget;
+class CurveWidget;
 
 
 class EventPropertiesView: public QWidget
@@ -79,7 +79,7 @@ public:
     bool hasBound() const;
     bool hasEventWithDates() const;
 
-    void setChronocurveSettings(bool enabled, char processType);
+    void setCurveSettings(bool enabled, char processType);
 
 public slots:
     void setEvent(const QJsonObject& event);
@@ -98,7 +98,7 @@ private slots:
     void updateEventMethod(int index);
     void updateIndex(int index);
 
-    // Chronocurve
+    // Curve
     void updateEventYInc();
     void updateEventYDec();
     void updateEventYInt();
@@ -168,7 +168,7 @@ private:
 
     int mComboBoxHeight;
 
-    ChronocurveWidget* mChronocurveWidget;
+    CurveWidget* mCurveWidget;
 
     QLabel* mYIncLab;
     QLineEdit* mYIncEdit;
@@ -185,8 +185,8 @@ private:
     QLabel* mSIntLab;
     QLineEdit* mSIntEdit;
 
-    bool mChronocurveEnabled;
-    char mChronocurveProcessType;
+    bool mCurveEnabled;
+    char mCurveProcessType;
 };
 
 #endif

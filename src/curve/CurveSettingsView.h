@@ -37,11 +37,11 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef CHRONOCURVESETTINGSVIEW_H
-#define CHRONOCURVESETTINGSVIEW_H
+#ifndef CurveSETTINGSVIEW_H
+#define CurveSETTINGSVIEW_H
 
 #include <QWidget>
-#include "ChronocurveSettings.h"
+#include "CurveSettings.h"
 
 class QLabel;
 class QComboBox;
@@ -50,17 +50,19 @@ class QLineEdit;
 class Project;
 
 
-class ChronocurveSettingsView: public QWidget
+class CurveSettingsView: public QWidget
 {
     Q_OBJECT
 public:
-    ChronocurveSettingsView(QWidget* parent = nullptr);
-    virtual ~ChronocurveSettingsView();
+    CurveSettingsView(QWidget* parent = nullptr);
+    virtual ~CurveSettingsView();
 
-    void setSettings(const ChronocurveSettings& settings);
-    ChronocurveSettings getSettings();
+    void setSettings(const CurveSettings& settings);
+    CurveSettings getSettings();
     
     void setProject(Project *project);
+signals:
+    void newProcess(QString str);
     
 protected slots:
     void updateVisibilities();

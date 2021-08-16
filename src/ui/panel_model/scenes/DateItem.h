@@ -65,7 +65,7 @@ public:
     QRectF boundingRect() const;
 
     static int mTitleHeight;
-    static  int mEltsHeight;
+    static int mEltsHeight;
 protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
     void mousePressEvent(QGraphicsSceneMouseEvent* e);

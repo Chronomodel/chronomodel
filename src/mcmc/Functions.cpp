@@ -1187,7 +1187,7 @@ std::vector<long double> multiMatParVec(const std::vector<std::vector<long doubl
 }
 
 /**
- * @brief MCMCLoopChronocurve::addMatEtMat
+ * @brief MCMCLoopCurve::addMatEtMat
  * @param matrix1 Band matrix
  * @param matrix2 Band matrix
  * @param nbBandes2 The total Bandwidth = k1+k2 of Band matrix 2

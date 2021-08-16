@@ -423,7 +423,7 @@ Quartiles quartilesType(const std::vector<T>& trace, const int quartileType, con
     if (parQ1.first <= 0)
        Q.Q1 = (double)traceSorted.front();
 
-    else if (parQ1.first < traceSorted.size())
+    else if (parQ1.first < (int)traceSorted.size())
             Q.Q1 = (1.- parQ1.second)*(double)traceSorted.at(parQ1.first-1) + parQ1.second*(double)traceSorted.at(parQ1.first);
     else
         Q.Q1 = (double)traceSorted.back();
@@ -432,7 +432,7 @@ Quartiles quartilesType(const std::vector<T>& trace, const int quartileType, con
     if (parQ2.first <= 0)
        Q.Q2 = (double)traceSorted.front();
 
-    else if (parQ2.first < traceSorted.size())
+    else if (parQ2.first < (int)traceSorted.size())
             Q.Q2 = (1.- parQ2.second)*(double)traceSorted.at(parQ2.first-1) + parQ2.second*(double)traceSorted.at(parQ2.first);
     else
         Q.Q2 = (double)traceSorted.back();
@@ -441,7 +441,7 @@ Quartiles quartilesType(const std::vector<T>& trace, const int quartileType, con
     if (parQ3.first <= 0)
        Q.Q3 = (double)traceSorted.front();
 
-    else if (parQ3.first < traceSorted.size())
+    else if (parQ3.first < (int)traceSorted.size())
             Q.Q3 = (1.- parQ3.second)*(double)traceSorted.at(parQ3.first-1) + parQ3.second*(double)traceSorted.at(parQ3.first);
     else
         Q.Q3 = (double)traceSorted.back();

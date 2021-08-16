@@ -82,8 +82,8 @@ void Model::clear()
     // - The Dates MH variables are reset (freeing trace memory)
     // - The Dates are cleared
     for (Event*& ev: mEvents) {
-        // Event can be an Event or an EventChronocurve.
-        // => do not delete it using ~Event(), because the appropriate destructor could be ~EventChronocurve().
+        // Event can be an Event or an EventCurve.
+        // => do not delete it using ~Event(), because the appropriate destructor could be ~EventCurve().
         delete ev;
         ev = nullptr;
     }
@@ -445,7 +445,7 @@ QString Model::getAdaptLog() const{
  */
 void Model::generateModelLog()
 {
-    mLogModel = ModelUtilities::modelDescriptionHTML(static_cast<ModelChronocurve*>(this));
+    mLogModel = ModelUtilities::modelDescriptionHTML(static_cast<ModelCurve*>(this));
 }
 
 QString Model::getResultsLog() const{

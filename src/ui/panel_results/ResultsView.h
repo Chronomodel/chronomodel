@@ -64,7 +64,7 @@ class QPushButton;
 
 class Project;
 class Model;
-class ModelChronocurve;
+class ModelCurve;
 class Tabs;
 class Ruler;
 class GraphView;
@@ -155,10 +155,10 @@ protected:
     void updateGraphsHeight();
 
     // ------------------------------------------------
-    //  Chronocurve
+    //  Curve
     // ------------------------------------------------
-    ModelChronocurve* modelChronocurve() const;
-    bool isChronocurve() const;
+    ModelCurve* modelCurve() const;
+    bool isCurve() const;
 
 public slots:
 

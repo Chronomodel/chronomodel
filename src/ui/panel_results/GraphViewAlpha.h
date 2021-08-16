@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "GraphViewResults.h"
 
-class ModelChronocurve;
+class ModelCurve;
 
 class GraphViewAlpha: public GraphViewResults
 {
@@ -51,7 +51,7 @@ public:
     explicit GraphViewAlpha(QWidget *parent = nullptr);
     virtual ~GraphViewAlpha();
 
-    void setModel(ModelChronocurve* model);
+    void setModel(ModelCurve* model);
 
     void generateCurves(TypeGraph typeGraph, Variable variable);
     void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
@@ -61,7 +61,7 @@ protected:
     void resizeEvent(QResizeEvent* );
 
 private:
-    ModelChronocurve* mModel;
+    ModelCurve* mModel;
 
 };
 

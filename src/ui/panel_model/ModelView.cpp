@@ -41,7 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "EventsScene.h"
 #include "PhasesScene.h"
 #include "PhaseItem.h"
-#include "ChronocurveSettingsView.h"
+#include "CurveSettingsView.h"
 #include "Event.h"
 #include "EventKnown.h"
 #include "Painting.h"
@@ -55,6 +55,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CalibrationView.h"
 #include "MultiCalibrationView.h"
 #include "SwitchAction.h"
+
 
 #include "HelpWidget.h"
 #include "MainWindow.h"
@@ -84,7 +85,7 @@ mSplitProp(0.6),
 mHandlerW ( int (0.25 *AppSettings::widthUnit())),
 mIsSplitting(false),
 mCalibVisible(false),
-mIsChronocurve(false)
+mCurveSettingsVisible(false)
 {
     setMouseTracking(true);
     //setFont(AppSettings::font());
@@ -120,7 +121,7 @@ mIsChronocurve(false)
     //connect(mButModifyPeriod,  static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &ModelView::modifyPeriod);
    // connect(mButModifyPeriod,  &Button::clicked, this, &ModelView::modifyPeriod);
      connect(mButModifyPeriod,  &QPushButton::clicked, this, &ModelView::modifyPeriod);
-    mChronocurveWidget = new SwitchWidget(this);
+    ButCurve = new SwitchWidget(this);
 
     mLeftPanelTitle = new Label(tr("Events Scene"), mTopWrapper);
     mLeftPanelTitle->setLight();
@@ -221,9 +222,9 @@ mIsChronocurve(false)
     connect(mEventsScene, &EventsScene::csvDataLineDropAccepted, mImportDataView, &ImportDataView::removeCsvRows);
     connect(mEventsScene, &EventsScene::csvDataLineDropRejected, mImportDataView, &ImportDataView::errorCsvRows);
 
-    // -------- Chronocurve settings ---------------------------
-    mChronocurveSettingsView = new ChronocurveSettingsView(mRightWrapper);
-
+    // -------- Curve settings ---------------------------
+    mCurveSettingsView = new CurveSettingsView(mRightWrapper);
+    connect(mCurveSettingsView, &CurveSettingsView::newProcess, ButCurve, &SwitchWidget::setText);
     // -------- Windows Phase scene ---------------------------
 
     mPhasesView = new QGraphicsView(mRightWrapper);
@@ -277,6 +278,7 @@ mIsChronocurve(false)
     connect(mButPhasesOverview, &Button::toggled, mPhasesGlobalView, &SceneGlobalView::setVisible);
     connect(mButPhasesGrid, &Button::toggled, mPhasesScene, &PhasesScene::showGrid);
 
+
     // -------- Windows Event propreties -----------------------
 
     mEventPropertiesView = new EventPropertiesView(mRightWrapper);
@@ -309,7 +311,7 @@ mIsChronocurve(false)
 
     // ---- update and paint with the appSettingsFont
 
-    toggleChronocurve(false);
+    //toggleCurve(false);
     applyAppSettings();
 }
 
@@ -326,7 +328,7 @@ void ModelView::setProject(Project* project)
     mProject = project;
     mPhasesScene->setProject(mProject);
     mEventsScene->setProject(mProject);
-    mChronocurveSettingsView->setProject(mProject);
+    mCurveSettingsView->setProject(mProject);
 
     if (mProject && !projectExist) {
         connectScenes();
@@ -409,7 +411,7 @@ void ModelView::connectScenes()
     connect(mProject, &Project::projectStateChanged, this, &ModelView::updateMultiCalibration);
    // connect(mProject, &Project::projectStructureChanged, mEventPropertiesView, &EventPropertiesView::updateEvent);
 
-    connect(mChronocurveWidget, &SwitchWidget::toggled, MainWindow::getInstance(), &MainWindow::toggleChronocurve);
+    connect(ButCurve, &SwitchWidget::toggled, MainWindow::getInstance(), &MainWindow::toggleCurve);
 }
 
 void ModelView::disconnectScenes()
@@ -543,8 +545,10 @@ void ModelView::updateProject()
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
 
-    mChronocurveWidget->setToggled(mProject->isChronocurve());
+    //ButCurve->setToggled(mProject->isCurve());
     adaptStudyPeriodButton(settings.mTmin, settings.mTmax);
+    const CurveSettings cs = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+    ButCurve->setText(cs.processText());
 /*
     mProject->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
     mProject->mState[STATE_SETTINGS_TMAX] = settings.mTmax;
@@ -844,9 +848,9 @@ void ModelView::showProperties()
        }
         mButImport-> setChecked(false);
 
-       // show Properties View
-       mEventPropertiesView->updateEvent();
-       mEventPropertiesView->show();
+        // show Properties View
+        mEventPropertiesView->updateEvent();
+        mEventPropertiesView->show();
 
         mCalibrationView->repaint();
 
@@ -982,7 +986,9 @@ void ModelView::eventsAreSelected()
         mButDeleteEvent->setDisabled(false);
 
      }
+
     updateLayout();
+
     if (!mButMultiCalib->isChecked() && !mButProperties->isChecked())
         mPhasesScene->eventsSelected();
 }
@@ -1051,6 +1057,7 @@ void ModelView::showPhases()
         mButImport->setChecked(false);
 
 }
+
 void ModelView::slideRightPanel()
 {
     mAnimationShow->setStartValue(mRightHiddenRect);
@@ -1150,7 +1157,7 @@ void ModelView::updateLayout()
     
     // Label left
     QString leftTitle = tr("Events Scene");
-    if(mButProperties->isChecked()  && mEventPropertiesView->isCalibChecked() && !mButMultiCalib->isChecked()){
+    if (mButProperties->isChecked()  && mEventPropertiesView->isCalibChecked() && !mButMultiCalib->isChecked()){
         leftTitle = tr("Calibrated Data View");
     }
     mLeftPanelTitle->setText(leftTitle);
@@ -1162,8 +1169,9 @@ void ModelView::updateLayout()
     mRightPanelTitle->setGeometry(width() - labw - margin, 0, labw, mTopRect.height());
 
     // Center buttons
-    mChronocurveWidget->setGeometry(width()/2 - 90 - 2, 2, 90, mTopRect.height() - 4);
-    mButModifyPeriod->setGeometry(width()/2 + 2, 2, 300, mTopRect.height() - 4);
+    mButModifyPeriod->setGeometry(width()/2 - 150, 2, 300, mTopRect.height() - 4);
+    ButCurve->setGeometry(mButModifyPeriod->x() + mButModifyPeriod->width() + 2, 3, 100, mTopRect.height() - 6);
+
 
     //-------------- Top Flag
     //------- Study Period
@@ -1179,9 +1187,7 @@ void ModelView::updateLayout()
 
     mRightWrapper->setGeometry(QRect(mHandlerRect.x() + mHandlerW, mTopRect.height(), width() - mHandlerRect.x() - mHandlerW +1, height() - mTopRect.height()));
 
-    mChronocurveSettingsView->setGeometry(QRect(mHandlerRect.x() + mHandlerW, mTopRect.height(), width() - mHandlerRect.x() - mHandlerW +1, height() - mTopRect.height()));
-
-    // coordinates in mLeftWrapper
+     // coordinates in mLeftWrapper
     mLeftRect = QRect(0, 0, mLeftWrapper->width(), mLeftWrapper->height());
     mLeftHiddenRect = mLeftRect.adjusted(0, 0, -mLeftWrapper->width(), 0);
 
@@ -1194,6 +1200,8 @@ void ModelView::updateLayout()
     mMultiCalibrationView->setGeometry(mButMultiCalib->isChecked() ? mRightRect : mRightHiddenRect);
 
     mImportDataView->setGeometry(mButImport->isChecked() ? mRightRect : mRightHiddenRect);
+
+    mCurveSettingsView->setGeometry(mCurveSettingsVisible ? mRightRect : mRightHiddenRect);
 
     // ----------
 
@@ -1239,7 +1247,7 @@ void ModelView::updateLayout()
         mPhasesView->resize(0, 0);
         mPhasesGlobalView->setGeometry(5, 5, int(radarW), int(radarH));
 
-        mChronocurveSettingsView->resize(0, 0);
+        mCurveSettingsView->resize(0, 0);
 
         mButNewPhase->resize(0, 0);
         mButDeletePhase->resize(0, 0);
@@ -1247,19 +1255,18 @@ void ModelView::updateLayout()
         mButPhasesOverview->resize(0, 0);
         mButPhasesGrid->resize(0, 0);
         mPhasesGlobalZoom->resize(0, 0);
+
      }  else {
 
         mPhasesView->setGeometry(mRightRect.adjusted(-1, -1, -mButtonWidth, 1));
         mPhasesGlobalView->setGeometry(5, 5, int(radarW), int(radarH));
 
-        mChronocurveSettingsView->setGeometry(mRightRect);
-
-        mButNewPhase       ->setGeometry(mPhasesView->width() -2, 0                 , mButtonWidth, mButtonHeigth);
-        mButDeletePhase   ->setGeometry(mPhasesView->width() -2, mButtonHeigth  , mButtonWidth, mButtonHeigth);
-        mButExportPhases  ->setGeometry(mPhasesView->width() -2, 2*mButtonHeigth, mButtonWidth, mButtonHeigth);
-        mButPhasesOverview->setGeometry(mPhasesView->width() -2, 3*mButtonHeigth, mButtonWidth, mButtonHeigth);
+        mButNewPhase       ->setGeometry(mPhasesView->width() -2, 0              , mButtonWidth, mButtonHeigth);
+        mButDeletePhase    ->setGeometry(mPhasesView->width() -2, mButtonHeigth  , mButtonWidth, mButtonHeigth);
+        mButExportPhases   ->setGeometry(mPhasesView->width() -2, 2*mButtonHeigth, mButtonWidth, mButtonHeigth);
+        mButPhasesOverview ->setGeometry(mPhasesView->width() -2, 3*mButtonHeigth, mButtonWidth, mButtonHeigth);
         mButPhasesGrid     ->setGeometry(mPhasesView->width() -2, 4*mButtonHeigth, mButtonWidth, mButtonHeigth);
-        mPhasesGlobalZoom ->setGeometry(mPhasesView->width() -2, 5*mButtonHeigth, mButtonWidth, mRightRect.height() - 5*mButtonHeigth);
+        mPhasesGlobalZoom  ->setGeometry(mPhasesView->width() -2, 5*mButtonHeigth, mButtonWidth, mRightRect.height() - 5*mButtonHeigth);
      }
     update();
 }
@@ -1407,6 +1414,7 @@ void ModelView::readSettings()
 
     if (panelIndex == 1)
         mButProperties->setChecked(true);
+
     else if (panelIndex == 2)
         mButImport->setChecked(true);
 
@@ -1418,55 +1426,109 @@ void ModelView::readSettings()
     settings.endGroup();
 }
 
-void ModelView::toggleChronocurve(bool toggle)
+void ModelView::showCurveSettings(bool show)
 {
-    mIsChronocurve = toggle;
+    mCurveSettingsVisible = show;
 
-    mPhasesView->setVisible(!toggle);
-    mPhasesGlobalView->setVisible(!toggle);
-    mPhasesGlobalZoom->setVisible(!toggle);
-    mButNewPhase->setVisible(!toggle);
-    mButDeletePhase->setVisible(!toggle);
-    mButExportPhases->setVisible(!toggle);
-    mButPhasesOverview->setVisible(!toggle);
-    mButPhasesGrid->setVisible(!toggle);
+    mPhasesView->setVisible(!show);
+    mPhasesGlobalView->setVisible(!show);
+    mPhasesGlobalZoom->setVisible(!show);
+    mButNewPhase->setVisible(!show);
+    mButDeletePhase->setVisible(!show);
+    mButExportPhases->setVisible(!show);
+    mButPhasesOverview->setVisible(!show);
+    mButPhasesGrid->setVisible(!show);
 
-    mChronocurveSettingsView->setVisible(toggle);
+    if (show) {
+        if (mButProperties->isChecked()) {
+            // hide mEventPropertiesView
+            mAnimationHide->setStartValue(mRightRect);
+            mAnimationHide->setEndValue(mRightHiddenRect);
+            mAnimationHide->setTargetObject(mEventPropertiesView);
+            mAnimationHide->start();
 
-    if(mProject){
+            mButProperties->setChecked(false);
 
-        // Save the "enabled" state of chronocurve in project settings
-        QJsonObject state = mProject->mState;
-        ChronocurveSettings settings = ChronocurveSettings::fromJson(state.value(STATE_CHRONOCURVE).toObject());
-        settings.mEnabled = toggle;
-        state[STATE_CHRONOCURVE] = settings.toJson();
-        mProject->pushProjectState(state, CHRONOCURVE_SETTINGS_UPDATED_REASON, true);
+        } else if (mButMultiCalib->isChecked()) {
+            // hide mMultiCalibrationView
+            mAnimationHide->setStartValue(mRightRect);
+            mAnimationHide->setEndValue(mRightHiddenRect);
+            mAnimationHide->setTargetObject(mMultiCalibrationView);
+            mAnimationHide->start();
 
-        // Update the chronocurve settings view with the project's values
-        mChronocurveSettingsView->setSettings(settings);
+            mButMultiCalib->setChecked(false);
 
-        // Tell the event properties view if it should display chronocurve parameters
-        mEventPropertiesView->setChronocurveSettings(settings.mEnabled, settings.mProcessType);
+        } else if (mButImport->isChecked()) {
+            // hide mImportDataView
+            mAnimationHide->setStartValue(mRightRect);
+            mAnimationHide->setEndValue(mRightHiddenRect);
+            mAnimationHide->setTargetObject(mImportDataView);
+            mAnimationHide->start();
 
-        //
-        mEventsScene->updateSceneFromState();
-    }
+            mButImport->setChecked(false);
+        }
+
+        mAnimationShow->setTargetObject(mCurveSettingsView);
+
+        mAnimationShow->setStartValue(mRightHiddenRect);
+        mAnimationShow->setEndValue(mRightRect);
+
+        mCurveSettingsView->raise();
+       // mAnimationShow->setTargetObject(mEventPropertiesView);
+        mAnimationShow->start();
+
+
+        mCurveSettingsView->setVisible(show);
+
+        if (mProject) {
+
+            // Save the "enabled" state of Curve in project settings
+            QJsonObject state = mProject->mState;
+            CurveSettings settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+            // settings.mEnabled = toggle;
+            const bool isCurve = (settings.mProcessType != CurveSettings::eProcessTypeNone);
+            state[STATE_CURVE] = settings.toJson();
+            mProject->pushProjectState(state, CURVE_SETTINGS_UPDATED_REASON, true);
+
+            // Update the Curve settings view with the project's values
+            mCurveSettingsView->setSettings(settings);
+
+            // Tell the event properties view if it should display Curve parameters
+            mEventPropertiesView->setCurveSettings(isCurve, settings.mProcessType);
+
+            mEventsScene->updateSceneFromState();
+        }
 
     updateLayout();
+
+    } else {
+        mAnimationHide->setTargetObject(mCurveSettingsView);
+
+        mAnimationHide->setStartValue(mRightRect);
+        mAnimationHide->setEndValue(mRightHiddenRect);
+
+        mAnimationHide->start();
+
+    }
+    updateRightPanelTitle();
 }
 
 void ModelView::updateRightPanelTitle()
 {
     QString rightTitle(tr("Phases Scene"));
 
-    if(mIsChronocurve){
-        rightTitle = tr("Curve");
-    }else if(mButProperties->isChecked()){
+    if (mCurveSettingsVisible) {
+        rightTitle = tr("Curve Settings");
+
+    } else if (mButProperties->isChecked()) {
         rightTitle = tr("Event Properties");
-    }else if (mButImport->isChecked()){
+
+    } else if (mButImport->isChecked()) {
         rightTitle = tr("Import Data");
-    }else if (mButMultiCalib->isChecked()){
+
+    } else if (mButMultiCalib->isChecked()) {
         rightTitle = tr("Multi-Calibration View");
     }
+
     mRightPanelTitle->setText(rightTitle);
 }

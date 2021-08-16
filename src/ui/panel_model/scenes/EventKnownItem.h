@@ -62,9 +62,9 @@ protected:
 
 private:
     QImage mThumb;
-    int mThumbH;
+    qreal mThumbH;
     bool mThumbVisible;
-    int mPhasesHeight;
+
 };
 
 #endif

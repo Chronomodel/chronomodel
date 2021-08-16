@@ -237,9 +237,9 @@ void MainWindow::createActions()
     //-----------------------------------------------------------------
     // View Actions
     //-----------------------------------------------------------------
-    mChronocurveAction = new SwitchAction(this);
-    mChronocurveAction->setCheckable(true);
-    mChronocurveAction->setChecked(false);
+    mCurveAction = new SwitchAction(this);
+    mCurveAction->setCheckable(true);
+    mCurveAction->setChecked(false);
 
     mViewModelAction = new QAction(QIcon(":model_p.png"), tr("Model"), this);
     mViewModelAction->setCheckable(true);
@@ -427,7 +427,7 @@ void MainWindow::createToolBars()
     separator3->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     mToolBar->addWidget(separator3);
 
-    mToolBar->addAction(mChronocurveAction);
+    mToolBar->addAction(mCurveAction);
     mToolBar->addAction(mViewModelAction);
     mToolBar->addAction(mMCMCSettingsAction);
     mToolBar->addAction(mRunAction);
@@ -603,7 +603,7 @@ void MainWindow::connectProject()
     connect(mProject, &Project::projectStateChanged, this, &MainWindow::updateProject);
     connect(mProject, &Project::projectStructureChanged, this, &MainWindow::noResult);
 
-    connect(mChronocurveAction, &QAction::toggled, this, &MainWindow::toggleChronocurve);
+  //  connect(mCurveAction, &QAction::toggled, this, &MainWindow::toggleCurve);
     connect(mMCMCSettingsAction, &QAction::triggered, mProject, &Project::mcmcSettings);
     connect(mResetMCMCAction, &QAction::triggered, mProject, &Project::resetMCMC);
     connect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
@@ -622,7 +622,7 @@ void MainWindow::disconnectProject()
     disconnect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
     disconnect(mRunAction, &QAction::triggered, mProject, &Project::run);
 
-    connect(mChronocurveAction, &QAction::triggered, this, &MainWindow::toggleChronocurve);
+   // connect(mCurveAction, &QAction::triggered, this, &MainWindow::toggleCurve);
 }
 
 void MainWindow::closeProject()
@@ -690,12 +690,12 @@ void MainWindow::updateProject()
     mRunAction->setEnabled(true);
     mProjectView->updateProject();
     
-    //mChronocurveAction->setChecked(mProject->isChronocurve());
+    //mCurveAction->setChecked(mProject->isCurve());
 }
 
-void MainWindow::toggleChronocurve(bool checked)
+void MainWindow::toggleCurve(bool checked)
 {
-    mProjectView->toggleChronocurve(checked);
+    mProjectView->toggleCurve(checked);
 }
 
 // Settings & About
@@ -1133,7 +1133,7 @@ void MainWindow::activateInterface(bool activate)
     mProjectSaveAsAction->setEnabled(activate);
     mProjectExportAction->setEnabled(activate);
 
-    mChronocurveAction->setEnabled(activate);
+    mCurveAction->setEnabled(activate);
     mViewModelAction->setEnabled(activate);
     mMCMCSettingsAction->setEnabled(activate);
     mResetMCMCAction->setEnabled(activate);

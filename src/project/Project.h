@@ -62,7 +62,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define MCMC_SETTINGS_UPDATED_REASON "MCMC Settings updated"
 #define MCMC_SETTINGS_RESTORE_DEFAULT_REASON "MCMC Settings restore default"
 #define MCMC_METHODE_RESET_REASON "MCMC methods reset"
-#define CHRONOCURVE_SETTINGS_UPDATED_REASON "Chronocurve Settings updated"
+#define CURVE_SETTINGS_UPDATED_REASON "Curve Settings updated"
 #define DATE_MOVE_TO_EVENT_REASON "Date moved to event"
 #define NEW_EVEN_BY_CSV_DRAG_REASON "New Event by CSV drag"
 
@@ -189,7 +189,7 @@ public:
     void createEventKnown(qreal x, qreal y);
     void createPhase(qreal x, qreal y);
     
-    bool isChronocurve() const;
+    bool isCurve() const;
 
 public slots:
     bool save();
@@ -200,7 +200,7 @@ public slots:
     
     void run();
     void runChronomodel();
-    void runChronocurve();
+    void runCurve();
 
     void setAppSettings();
 

@@ -37,7 +37,7 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#include "ModelChronocurve.h"
+#include "ModelCurve.h"
 #include "ModelUtilities.h"
 #include "QFile"
 #include "qapplication.h"
@@ -46,52 +46,52 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "qdatastream.h"
 
 
-ModelChronocurve::ModelChronocurve():Model()
+ModelCurve::ModelCurve():Model()
 {
     mLambdaSpline.mSupport = MetropolisVariable::eR;
     mLambdaSpline.mFormat = DateUtils::eNumeric;
     mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
 }
 
-ModelChronocurve::~ModelChronocurve()
+ModelCurve::~ModelCurve()
 {
 
 }
 
-QJsonObject ModelChronocurve::toJson() const
+QJsonObject ModelCurve::toJson() const
 {
     QJsonObject json = Model::toJson();
     
-    json[STATE_CHRONOCURVE] = mChronocurveSettings.toJson();
+    json[STATE_CURVE] = mCurveSettings.toJson();
     
     return json;
 }
 
-void ModelChronocurve::fromJson(const QJsonObject& json)
+void ModelCurve::fromJson(const QJsonObject& json)
 {
     Model::fromJson(json);
     
-    if (json.contains(STATE_CHRONOCURVE)) {
-        const QJsonObject settings = json.value(STATE_CHRONOCURVE).toObject();
-        mChronocurveSettings = ChronocurveSettings::fromJson(settings);
+    if (json.contains(STATE_CURVE)) {
+        const QJsonObject settings = json.value(STATE_CURVE).toObject();
+        mCurveSettings = CurveSettings::fromJson(settings);
     }
 
     for (Event*& event: mEvents) {
         if (event->type() ==  Event::eKnown ||
-            mChronocurveSettings.mTimeType == ChronocurveSettings::eModeFixed)
+            mCurveSettings.mTimeType == CurveSettings::eModeFixed)
                event->mTheta.mSamplerProposal = MHVariable::eFixe;
 
         else if (event->type() ==  Event::eDefault)
                 event->mTheta.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
-        if (mChronocurveSettings.mVarianceType == ChronocurveSettings::eModeFixed)
+        if (mCurveSettings.mVarianceType == CurveSettings::eModeFixed)
             event->mVG.mSamplerProposal = MHVariable::eFixe;
         else
             event->mVG.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
     }
 
-    if (mChronocurveSettings.mLambdaSplineType == ChronocurveSettings::eModeFixed)
+    if (mCurveSettings.mLambdaSplineType == CurveSettings::eModeFixed)
         mLambdaSpline.mSamplerProposal = MHVariable::eFixe;
     else
         mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
@@ -102,7 +102,7 @@ void ModelChronocurve::fromJson(const QJsonObject& json)
 /** @Brief Save .res file, the result of computation and compress it
 *
 * */
-void ModelChronocurve::saveToFile(const QString& fileName)
+void ModelCurve::saveToFile(const QString& fileName)
 {
    if (!mEvents.empty()) {
        // -----------------------------------------------------
@@ -237,7 +237,7 @@ void ModelChronocurve::saveToFile(const QString& fileName)
 /** @Brief Read the .res file, it's the result of the saved computation
 *
 * */
-void ModelChronocurve::restoreFromFile(const QString& fileName)
+void ModelCurve::restoreFromFile(const QString& fileName)
 {
    QFile file(fileName);
    if (file.exists() && file.open(QIODevice::ReadOnly)) {
@@ -411,7 +411,7 @@ qDebug()<<in.version()<<QDataStream::Qt_5_5<<QDataStream::Qt_6_1<<QDataStreamVer
 
 }
 
-void  ModelChronocurve::generateResultsLog()
+void  ModelCurve::generateResultsLog()
 {
     Model::generateResultsLog();
 
@@ -422,10 +422,7 @@ void  ModelChronocurve::generateResultsLog()
     mLogResults += log;
 }
 
-
-
-
-void ModelChronocurve::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth)
+void ModelCurve::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth)
 {
     Model::generatePosteriorDensities(chains, fftLen, bandwidth);
 
@@ -438,7 +435,7 @@ void ModelChronocurve::generatePosteriorDensities(const QList<ChainSpecs> &chain
     mLambdaSpline.generateHistos(chains, fftLen, bandwidth);
 }
 
-void ModelChronocurve::generateCorrelations(const QList<ChainSpecs> &chains)
+void ModelCurve::generateCorrelations(const QList<ChainSpecs> &chains)
 {
     Model::generateCorrelations(chains);
     for (auto&& event : mEvents )
@@ -447,7 +444,7 @@ void ModelChronocurve::generateCorrelations(const QList<ChainSpecs> &chains)
     mLambdaSpline.generateCorrelations(chains);
 }
 
-void ModelChronocurve::generateNumericalResults(const QList<ChainSpecs> &chains)
+void ModelCurve::generateNumericalResults(const QList<ChainSpecs> &chains)
 {
     Model::generateNumericalResults(chains);
     for (Event*& event : mEvents) {
@@ -456,7 +453,7 @@ void ModelChronocurve::generateNumericalResults(const QList<ChainSpecs> &chains)
     mLambdaSpline.generateNumericalResults(chains);
 }
 
-void ModelChronocurve::clearThreshold()
+void ModelCurve::clearThreshold()
 {
     Model::clearThreshold();
    // mThreshold = -1.;
@@ -466,7 +463,7 @@ void ModelChronocurve::clearThreshold()
     mLambdaSpline.mThresholdUsed = -1.;
 }
 
-void ModelChronocurve::generateCredibility(const double& thresh)
+void ModelCurve::generateCredibility(const double& thresh)
 {
     Model::generateCredibility(thresh);
     for (Event*& event : mEvents) {
@@ -477,7 +474,7 @@ void ModelChronocurve::generateCredibility(const double& thresh)
     mLambdaSpline.generateCredibility(mChains, thresh);
 }
 
-void ModelChronocurve::generateHPD(const double thresh)
+void ModelCurve::generateHPD(const double thresh)
 {
     Model::generateHPD(thresh);
     for (Event*& event : mEvents) {
@@ -489,7 +486,7 @@ void ModelChronocurve::generateHPD(const double thresh)
     mLambdaSpline.generateHPD(thresh);
 }
 
-void ModelChronocurve::clearPosteriorDensities()
+void ModelCurve::clearPosteriorDensities()
 {
     Model::clearPosteriorDensities();
     
@@ -504,7 +501,7 @@ void ModelChronocurve::clearPosteriorDensities()
     mLambdaSpline.mChainsHistos.clear();
 }
 
-void ModelChronocurve::clearCredibilityAndHPD()
+void ModelCurve::clearCredibilityAndHPD()
 {
     Model::clearCredibilityAndHPD();
     
@@ -519,7 +516,7 @@ void ModelChronocurve::clearCredibilityAndHPD()
     mLambdaSpline.mCredibility = QPair<double, double>();
 }
 
-void ModelChronocurve::clearTraces()
+void ModelCurve::clearTraces()
 {
     Model::clearTraces();
   /*  for (Event*& event : mEvents)
@@ -529,7 +526,7 @@ void ModelChronocurve::clearTraces()
 }
 
 
-void ModelChronocurve::setThresholdToAllModel(const double threshold)
+void ModelCurve::setThresholdToAllModel(const double threshold)
 {
     Model::setThresholdToAllModel(threshold);
     
@@ -541,7 +538,7 @@ void ModelChronocurve::setThresholdToAllModel(const double threshold)
 
 
 
-QList<PosteriorMeanGComposante> ModelChronocurve::getChainsMeanGComposanteX()
+QList<PosteriorMeanGComposante> ModelCurve::getChainsMeanGComposanteX()
 {
     QList<PosteriorMeanGComposante> composantes;
     
@@ -551,7 +548,7 @@ QList<PosteriorMeanGComposante> ModelChronocurve::getChainsMeanGComposanteX()
     return composantes;
 }
 
-QList<PosteriorMeanGComposante> ModelChronocurve::getChainsMeanGComposanteY()
+QList<PosteriorMeanGComposante> ModelCurve::getChainsMeanGComposanteY()
 {
     QList<PosteriorMeanGComposante> composantes;
 
@@ -561,7 +558,7 @@ QList<PosteriorMeanGComposante> ModelChronocurve::getChainsMeanGComposanteY()
     return composantes;
 }
 
-QList<PosteriorMeanGComposante> ModelChronocurve::getChainsMeanGComposanteZ()
+QList<PosteriorMeanGComposante> ModelCurve::getChainsMeanGComposanteZ()
 {
     QList<PosteriorMeanGComposante> composantes;
     

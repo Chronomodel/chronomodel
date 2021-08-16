@@ -77,7 +77,12 @@ protected:
     virtual void dropEvent(QGraphicsSceneDragDropEvent* e);
 
     void updateGreyedOut();
-    int getNumberChronocurveLines() const;
+
+    int getNumberCurveLines(CurveSettings& cs) const;
+    void paintBoxCurveParameter (QPainter *painter, QRectF rectBox, CurveSettings& cs);
+
+    void paintBoxPhases (QPainter *painter, QRectF rectBox);
+
     void resizeEventItem();
     void repositionDateItems();
     
@@ -87,8 +92,12 @@ protected:
     bool mWithSelectedPhase;
     bool mShowAllThumbs;
 
-   private:
-     int mPhasesHeight;
+protected:
+    qreal mPhasesHeight;
+    qreal mCurveLineHeight;
+    qreal mCurveTextHeight;
+
+
 };
 
 #endif

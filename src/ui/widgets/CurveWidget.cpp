@@ -36,21 +36,34 @@ same conditions as regards security.
 The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
-#ifndef EVENTCHRONOCURVE_H
-#define EVENTCHRONOCURVE_H
 
-#include "Event.h"
+#include "CurveWidget.h"
+#include "Painting.h"
+#include "CurveSettings.h"
+#include <QtWidgets>
 
 
-class EventChronocurve: public Event
+CurveWidget::CurveWidget(QWidget* parent):QWidget(parent)
 {
-public:
-    EventChronocurve();
-    virtual void copyFrom(const Event& event);
-    virtual ~EventChronocurve();
 
-    virtual void reset();
-    virtual void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
-};
 
-#endif
+}
+
+void CurveWidget::paintEvent(QPaintEvent* e)
+{
+    Q_UNUSED(e);
+    
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    
+    QRectF r = rect();
+    r.adjust(1, 1, -1, -1);
+    
+    QPen pen = painter.pen();
+    pen.setColor(CURVE_COLOR_BORDER);
+    pen.setWidth(2);
+    
+    painter.setPen(pen);
+    painter.setBrush(CURVE_COLOR_BACK);
+    painter.drawRoundedRect(r, 4, 4);
+}

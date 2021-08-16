@@ -63,17 +63,17 @@ ProjectSettings& ProjectSettings::operator=(const ProjectSettings& s)
     return *this;
 }
 
-bool ProjectSettings::operator!=(const ProjectSettings& s)
+bool ProjectSettings::operator!=(ProjectSettings const& s) const
 {
     return !isEqual(s);
 }
 
-bool ProjectSettings::operator==(const ProjectSettings& s)
+bool ProjectSettings::operator==( ProjectSettings const& s) const
 {
     return isEqual(s);
 }
 
-bool ProjectSettings::isEqual(const ProjectSettings& s)
+bool ProjectSettings::isEqual(ProjectSettings const& s) const
 {
     if (s.mTmin != mTmin ||
        s.mTmax != mTmax ||

@@ -365,7 +365,7 @@ void DateDialog::setAdvancedVisible(bool visible)
 
 void DateDialog::setDataMethod(MHVariable::SamplerProposal sp)
 {
-    int index =0;
+    int index;
     switch (sp) {
     case MHVariable::eMHSymetric :
         index = 0;
@@ -376,7 +376,14 @@ void DateDialog::setDataMethod(MHVariable::SamplerProposal sp)
     case MHVariable::eMHSymGaussAdapt:
         index = 2;
         break;
-
+    // The following cases are not for data Method
+    case MHVariable::eFixe:
+    case MHVariable::eDoubleExp:
+    case MHVariable::eBoxMuller:
+    case MHVariable::eMHAdaptGauss:
+    default:
+        index = -1;
+        break;
     }
 
     mMethodCombo->setCurrentIndex(index);

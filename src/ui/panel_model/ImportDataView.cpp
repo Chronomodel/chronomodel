@@ -46,6 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Label.h"
 #include "MainWindow.h"
 #include "Project.h"
+#include "CurveSettings.h"
 
 #include <QtWidgets>
 
@@ -318,8 +319,8 @@ void ImportDataView::exportDates()
             QJsonArray events = project->mState[STATE_EVENTS].toArray();
 
             stream << "Title" << sep << AppSettings::mLastFile << Qt::endl;
-            bool isChronocurve = project->mState[STATE_CHRONOCURVE].toObject().value(STATE_CHRONOCURVE_ENABLED).toBool();
-            // int chronocurveStartColumn = 15;
+            bool isCurve = (project->mState[STATE_CURVE].toObject().value(STATE_CURVE_PROCESS_TYPE).toInt() != CurveSettings::eProcessTypeNone);
+            // int CurveStartColumn = 15;
 
             for (int i = 0; i < events.size(); ++i) {
                 QJsonObject event = events[i].toObject();
@@ -338,12 +339,12 @@ void ImportDataView::exportDates()
                             if (!d.isNull()) {
                                 QStringList dateCsv = d.toCSV(csvLocal);
                                 
-                                if (isChronocurve) {
-                                    // Chronocurve values start at column 15.
+                                if (isCurve) {
+                                    // Curve values start at column 15.
                                     // They must be put from column 14 in dateCsv,
                                     // because the row is shifted by one column at inserting eventName (see below)
-                                    const int chronocurveStartColumn = 15;
-                                    while (dateCsv.count() < chronocurveStartColumn) {
+                                    const int CurveStartColumn = 15;
+                                    while (dateCsv.count() < CurveStartColumn) {
                                         dateCsv.append("");
                                     }
                                     dateCsv.append(csvLocal.toString(event[STATE_EVENT_Y_INC].toDouble()));
@@ -515,22 +516,22 @@ void ImportDataTable::updateTableHeaders()
             headers << "Wiggle value 2 (Upper date | Error)";
         }
         
-        int chronocurveStartIndex = 15;
+        int CurveStartIndex = 15;
         while (headers.size() < numCols) {
-            if (headers.size() == chronocurveStartIndex) {
+            if (headers.size() == CurveStartIndex) {
                 headers << "Inc";
-            } else if (headers.size() == (chronocurveStartIndex + 1)) {
+            } else if (headers.size() == (CurveStartIndex + 1)) {
                 headers << "Error Inc";
-            } else if (headers.size() == (chronocurveStartIndex + 2)) {
+            } else if (headers.size() == (CurveStartIndex + 2)) {
                 headers << "Dec";
-            } else if (headers.size() == (chronocurveStartIndex + 3)) {
+            } else if (headers.size() == (CurveStartIndex + 3)) {
                 headers << "Int";
-            } else if (headers.size() == (chronocurveStartIndex + 4)) {
+            } else if (headers.size() == (CurveStartIndex + 4)) {
                 headers << "Error Int";
-            } else if (headers.size() > chronocurveStartIndex) {
+            } else if (headers.size() > CurveStartIndex) {
                 headers << "Comment";
             } else {
-                // Empty values between dates and chronocurve
+                // Empty values between dates and Curve
                 headers << "";
             }
         }

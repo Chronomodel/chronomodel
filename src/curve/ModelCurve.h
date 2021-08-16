@@ -37,19 +37,19 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef MODELCHRONOCURVE_H
-#define MODELCHRONOCURVE_H
+#ifndef MODELCURVE_H
+#define MODELCURVE_H
 
 #include "Model.h"
-#include "ChronocurveUtilities.h"
-#include "ChronocurveSettings.h"
+#include "CurveUtilities.h"
+#include "CurveSettings.h"
 
 
-class ModelChronocurve: public Model
+class ModelCurve: public Model
 {
 public:
-    ModelChronocurve();
-    virtual ~ModelChronocurve();
+    ModelCurve();
+    virtual ~ModelCurve();
     
     virtual void saveToFile(const QString& fileName);
     virtual void restoreFromFile(const QString& fileName);
@@ -78,7 +78,7 @@ public:
 
 
 public:
-    ChronocurveSettings mChronocurveSettings;
+    CurveSettings mCurveSettings;
     
     MHVariable mLambdaSpline;
     MCMCSpline mSpline; // valeurs courrantes de la spline

@@ -57,7 +57,7 @@ class ProjectSettings;
 class ModelToolsView;
 class EventsScene;
 class PhasesScene;
-class ChronocurveSettingsView;
+class CurveSettingsView;
 class Event;
 class PhasesList;
 class ImportDataView;
@@ -102,23 +102,9 @@ public slots:
     void noEventSelected();
     void applyAppSettings();
 
-    void toggleChronocurve(bool toggle);
+    void showCurveSettings(bool show);
     void updateRightPanelTitle();
 
-protected:
-    void paintEvent(QPaintEvent* e);
-    void resizeEvent(QResizeEvent* e);
-    void updateLayout();
-    void mousePressEvent(QMouseEvent* e);
-    void mouseReleaseEvent(QMouseEvent* e);
-    void mouseMoveEvent(QMouseEvent* e);
-    void keyPressEvent(QKeyEvent* event);
-
-    void adaptStudyPeriodButton(const double& min, const double& max);
-    void connectScenes();
-    void disconnectScenes();
-
-private slots:
     void togglePropeties();
     void showProperties();
     void hideProperties();
@@ -144,6 +130,19 @@ private slots:
     void createEventInPlace();
     void createEventKnownInPlace();
     void createPhaseInPlace();
+
+protected:
+    void paintEvent(QPaintEvent* e);
+    void resizeEvent(QResizeEvent* e);
+    void updateLayout();
+    void mousePressEvent(QMouseEvent* e);
+    void mouseReleaseEvent(QMouseEvent* e);
+    void mouseMoveEvent(QMouseEvent* e);
+    void keyPressEvent(QKeyEvent* event);
+
+    void adaptStudyPeriodButton(const double& min, const double& max);
+    void connectScenes();
+    void disconnectScenes();
 
 private:
     void exportSceneImage(QGraphicsScene* scene);
@@ -182,7 +181,7 @@ private:
     ImportDataView* mImportDataView;
     EventPropertiesView* mEventPropertiesView;
 
-    ChronocurveSettingsView* mChronocurveSettingsView;
+    CurveSettingsView* mCurveSettingsView;
 
     PhasesScene* mPhasesScene;
     QGraphicsView* mPhasesView;
@@ -214,7 +213,7 @@ private:
 
     //Button* mButModifyPeriod;
     QPushButton* mButModifyPeriod;
-    SwitchWidget* mChronocurveWidget;
+    SwitchWidget* ButCurve;
 
     Label* mLeftPanelTitle;
     Label* mRightPanelTitle;
@@ -241,7 +240,7 @@ private:
     int mHandlerW;
     bool mIsSplitting;
     bool mCalibVisible;
-    bool mIsChronocurve;
+    bool mCurveSettingsVisible;
 };
 
 #endif

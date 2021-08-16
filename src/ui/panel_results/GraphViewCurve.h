@@ -41,7 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define GRAPHVIEWCURVE_H
 
 #include "GraphViewResults.h"
-#include "ModelChronocurve.h"
+#include "ModelCurve.h"
 
 typedef struct RefPoint
 {

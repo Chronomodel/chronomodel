@@ -43,13 +43,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QList>
 #include <QtWidgets>
 
-//#define CHRONOCURVE_COLOR_TEXT QColor(44, 122, 123)
-//#define CHRONOCURVE_COLOR_BACK QColor(230, 255, 250)
-//#define CHRONOCURVE_COLOR_BORDER QColor(44, 122, 123)
+//#define Curve_COLOR_TEXT QColor(44, 122, 123)
+//#define Curve_COLOR_BACK QColor(230, 255, 250)
+//#define Curve_COLOR_BORDER QColor(44, 122, 123)
 
-#define CHRONOCURVE_COLOR_TEXT QColor(77, 37, 121)
-#define CHRONOCURVE_COLOR_BACK QColor(243, 231, 255)
-#define CHRONOCURVE_COLOR_BORDER QColor(77, 37, 121)
+#define CURVE_COLOR_TEXT QColor(77, 37, 121)
+#define CURVE_COLOR_BACK QColor(243, 231, 255)
+#define CURVE_COLOR_BORDER QColor(77, 37, 121)
 
 #define CHRONOMODEL_COLOR_TEXT QColor(40, 99, 157)
 #define CHRONOMODEL_COLOR_BACK QColor(235, 248, 255)

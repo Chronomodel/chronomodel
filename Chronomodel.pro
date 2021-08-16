@@ -242,7 +242,7 @@ INCLUDEPATH += src/plugins/plugin_tl/
 INCLUDEPATH += src/plugins/plugin_uniform/
 INCLUDEPATH += src/plugins/plugin_F14C/
 INCLUDEPATH += src/project/
-INCLUDEPATH += src/chronocurve/
+INCLUDEPATH += src/curve/
 INCLUDEPATH += src/ui/
 INCLUDEPATH += src/ui/dialogs/
 INCLUDEPATH += src/ui/graphs/
@@ -337,11 +337,11 @@ HEADERS += src/project/ProjectSettings.h
 HEADERS += src/project/SetProjectState.h
 HEADERS += src/project/StateEvent.h
 
-HEADERS += src/chronocurve/ChronocurveSettings.h
-HEADERS += src/chronocurve/ChronocurveSettingsView.h
-HEADERS += src/chronocurve/MCMCLoopChronocurve.h
-HEADERS += src/chronocurve/ModelChronocurve.h
-HEADERS += src/chronocurve/ChronocurveUtilities.h
+HEADERS += src/curve/CurveSettings.h
+HEADERS += src/curve/CurveSettingsView.h
+HEADERS += src/curve/MCMCLoopCurve.h
+HEADERS += src/curve/ModelCurve.h
+HEADERS += src/curve/CurveUtilities.h
 
 HEADERS += src/ui/dialogs/AboutDialog.h
 HEADERS += src/ui/dialogs/AppSettingsDialog.h
@@ -409,7 +409,7 @@ HEADERS += src/ui/widgets/RadioButton.h
 HEADERS += src/ui/widgets/ScrollCompressor.h
 HEADERS += src/ui/widgets/Tabs.h
 HEADERS += src/ui/widgets/SwitchAction.h
-HEADERS += src/ui/widgets/ChronocurveWidget.h
+HEADERS += src/ui/widgets/CurveWidget.h
 
 HEADERS += src/ui/window/MainWindow.h
 HEADERS += src/ui/window/ProjectView.h
@@ -498,11 +498,11 @@ SOURCES += src/project/ProjectSettings.cpp
 SOURCES += src/project/SetProjectState.cpp
 SOURCES += src/project/StateEvent.cpp
 
-SOURCES += src/chronocurve/ChronocurveSettings.cpp
-SOURCES += src/chronocurve/ChronocurveSettingsView.cpp
-SOURCES += src/chronocurve/MCMCLoopChronocurve.cpp
-SOURCES += src/chronocurve/ModelChronocurve.cpp
-SOURCES += src/chronocurve/ChronocurveUtilities.cpp
+SOURCES += src/curve/CurveSettings.cpp
+SOURCES += src/curve/CurveSettingsView.cpp
+SOURCES += src/curve/MCMCLoopCurve.cpp
+SOURCES += src/curve/ModelCurve.cpp
+SOURCES += src/curve/CurveUtilities.cpp
 
 SOURCES += src/ui/dialogs/AboutDialog.cpp
 SOURCES += src/ui/dialogs/AppSettingsDialog.cpp
@@ -567,7 +567,7 @@ SOURCES += src/ui/widgets/HelpWidget.cpp
 SOURCES += src/ui/widgets/Tabs.cpp
 SOURCES += src/ui/widgets/Marker.cpp
 SOURCES += src/ui/widgets/SwitchAction.cpp
-SOURCES += src/ui/widgets/ChronocurveWidget.cpp
+SOURCES += src/ui/widgets/CurveWidget.cpp
 
 SOURCES += src/ui/window/MainWindow.cpp
 SOURCES += src/ui/window/ProjectView.cpp
