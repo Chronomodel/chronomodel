@@ -59,8 +59,7 @@ EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonOb
     mTitleHeight = 20;
     mEltsHeight =  DateItem::mTitleHeight +  DateItem::mEltsHeight ;
 
-    EventItem::setEvent(event, settings);
-    mScene = static_cast<AbstractScene*>(scene);
+
 
     QFont font;
     //font.setPointSizeF(12.);
@@ -73,6 +72,9 @@ EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonOb
     const QFontMetricsF fm (font);
 
     mCurveLineHeight =  fm.height();
+
+    EventItem::setEvent(event, settings);
+    mScene = static_cast<AbstractScene*>(scene);
 
 }
 
@@ -331,10 +333,9 @@ void EventItem::resizeEventItem()
 {
     prepareGeometryChange();
     
-    qreal y = /*boundingRect().y() +*/ mTitleHeight + AbstractItem::mEltsMargin;
+    qreal y =  mTitleHeight + AbstractItem::mEltsMargin;
     qreal h = mEltsHeight + AbstractItem::mEltsMargin;
-    
-    //const QJsonArray dates = mData.value(STATE_EVENT_DATES).toArray();
+
     qreal eventHeight = y + (childItems().count() * h);
     //qDebug() << "resizeEventItem dates count : " << dates.count();
 
@@ -424,10 +425,9 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
     QString name = mData.value(STATE_NAME).toString();
 
-     //QFont ftAdapt = AbstractItem::adjustFont(font, name, tr);
-    painter->setFont(font);//ftAdapt);
+    painter->setFont(font);
 
-    QFontMetrics metrics(font);//ftAdapt);
+    QFontMetrics metrics(font);
     name = metrics.elidedText(name, Qt::ElideRight, int (tr.width() - 5 ));
 
     const QColor frontColor = getContrastedColor(eventColor);

@@ -370,7 +370,7 @@ qDebug()<<in.version()<<QDataStream::Qt_5_5<<QDataStream::Qt_6_1<<QDataStreamVer
                    const QString toFind ("WID::"+ d.mUUID);
 
                    if (d.mWiggleCalibration==nullptr || d.mWiggleCalibration->mCurve.isEmpty()) {
-                       qDebug()<<"Model::restoreFromFile vide";
+                       qDebug()<<"ModelCurve::restoreFromFile mWiggleCalibration vide";
 
                    } else {
                        d.mWiggleCalibration = & (mProject->mCalibCurves[toFind]);

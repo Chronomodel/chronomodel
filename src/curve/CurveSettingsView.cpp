@@ -211,7 +211,16 @@ CurveSettingsView::~CurveSettingsView()
 
 void CurveSettingsView::setSettings(const CurveSettings& settings)
 {
-    //mEnabled = settings.mEnabled;
+    mProcessTypeInput->blockSignals(true);
+    mVariableTypeInput->blockSignals(true);
+    mUseErrMesureInput->blockSignals(true);
+    mTimeTypeInput->blockSignals(true);
+    mVarianceTypeInput->blockSignals(true);
+    mUseVarianceIndividualInput->blockSignals(true);
+    mVarianceFixedInput->blockSignals(true);
+    mLambdaSplineTypeInput->blockSignals(true);
+    mLambdaSplineInput->blockSignals(true);
+
     switch (settings.mProcessType) {
     case CurveSettings::eProcessTypeNone:
         mProcessTypeInput->setCurrentIndex(0);
@@ -278,6 +287,16 @@ void CurveSettingsView::setSettings(const CurveSettings& settings)
     
     mLambdaSplineInput->setText(QString::number(settings.mLambdaSpline));
     
+    mProcessTypeInput->blockSignals(false);
+    mVariableTypeInput->blockSignals(false);
+    mUseErrMesureInput->blockSignals(false);
+    mTimeTypeInput->blockSignals(false);
+    mVarianceTypeInput->blockSignals(false);
+    mUseVarianceIndividualInput->blockSignals(false);
+    mVarianceFixedInput->blockSignals(false);
+    mLambdaSplineTypeInput->blockSignals(false);
+    mLambdaSplineInput->blockSignals(false);
+
     updateVisibilities();
 }
 
@@ -360,6 +379,14 @@ CurveSettings CurveSettingsView::getSettings()
 void CurveSettingsView::setProject(Project *project)
 {
     mProject = project;
+    blockSignals(true);
+
+
+    CurveSettings curveSettings;
+    curveSettings.fromJson(mProject->mState.value(STATE_CURVE).toObject());
+
+    setSettings(curveSettings);
+    blockSignals(false);
 }
 
 void CurveSettingsView::reset()
@@ -370,9 +397,9 @@ void CurveSettingsView::reset()
 
 void CurveSettingsView::save()
 {
-    CurveSettings settings = getSettings();
+    CurveSettings curveSettings = getSettings();
     QJsonObject stateNext = mProject->mState;
-    stateNext[STATE_CURVE] = settings.toJson();
+    stateNext[STATE_CURVE] = curveSettings.toJson();
     mProject->pushProjectState(stateNext, CURVE_SETTINGS_UPDATED_REASON, true);
     emit newProcess(mProcessTypeInput->currentText());
 }

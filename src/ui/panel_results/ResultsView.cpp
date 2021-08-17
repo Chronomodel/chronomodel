@@ -1052,13 +1052,20 @@ void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewRes
     palette.setBrush(QPalette::Background, Qt::blue);
     widget->setPalette(palette);*/
 
-    if (widget) {
-        widget->resize(width() - mOptionsW - mSbe, graphs.size() * mGraphHeight);
+    // used to magnify the graph for curve
+    int coefDisplay = 1;
+    if (mGraphListTab->currentIndex() == 3 )
+        coefDisplay = 3;
 
-        for (int i = 0; i<graphs.size(); ++i) {
-            graphs[i]->setGeometry(0, i * mGraphHeight, width() - mOptionsW - mSbe, mGraphHeight);
-            graphs[i]->setVisible(true);
-            graphs[i]->update();
+    if (widget) {
+        widget->resize(width() - mOptionsW - mSbe, graphs.size() * mGraphHeight * coefDisplay);
+
+        //for (int i = 0; i<graphs.size(); ++i) {
+        int i = 0;
+        for (auto& g : graphs) {
+            g->setGeometry(0, (i++) * mGraphHeight*coefDisplay, width() - mOptionsW - mSbe, mGraphHeight * coefDisplay);
+            g->setVisible(true);
+            g->update();
         }
     }
 }

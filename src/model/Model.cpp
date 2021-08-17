@@ -3279,7 +3279,7 @@ void Model::restoreFromFile(const QString& fileName)
                      const QString toFind ("WID::"+ d.mUUID);
 
                      if (d.mWiggleCalibration==nullptr || d.mWiggleCalibration->mCurve.isEmpty()) {
-                         qDebug()<<"Model::restoreFromFile vide";
+                         qDebug()<<"Model::restoreFromFile mWiggleCalibration vide";
 
                      } else {
                          d.mWiggleCalibration = & (mProject->mCalibCurves[toFind]);
