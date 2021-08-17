@@ -96,16 +96,17 @@ public:
         eFunction = 4
     };
     enum Variable{
-        eTheta = 0,
-        eSigma = 1,
-        eDuration = 2,
-        eTempo = 3,
-        eActivity = 4,
-        eVG = 5,
-        eG = 6,
-        eGP = 7,
-        eGS = 8,
-        eLambda = 9
+        eBeginEnd = 0,
+        eTheta = 1,
+        eSigma = 2,
+        eDuration = 3,
+        eTempo = 4,
+        eActivity = 5,
+        eVG = 6,
+        eG = 7,
+        eGP = 8,
+        eGS = 9,
+        eLambda = 10
   /*
         eInclination = 8,
         eDeclination = 8,

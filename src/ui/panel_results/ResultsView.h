@@ -276,12 +276,12 @@ private:
 
     QScrollArea* mEventsScrollArea;
     QScrollArea* mPhasesScrollArea;
-    QScrollArea* mTempoScrollArea;
+   // QScrollArea* mTempoScrollArea;
     QScrollArea* mCurveScrollArea;
 
     QList<GraphViewResults*> mByEventsGraphs;
     QList<GraphViewResults*> mByPhasesGraphs;
-    QList<GraphViewResults*> mByTempoGraphs;
+   // QList<GraphViewResults*> mByTempoGraphs;
     QList<GraphViewResults*> mByCurveGraphs;
 
     QVBoxLayout* mOptionsLayout;
@@ -292,10 +292,10 @@ private:
     QWidget* mOptionsWidget;
     Tabs* mGraphListTab;
 
-    QWidget* mEventsPhasesGroup;
+    // Tab Events
+    QWidget* mEventsGroup;
 
-    CheckBox* mEventsfoldCheck;
-    CheckBox* mDatesfoldCheck;
+    CheckBox* mEventsDatesUnfoldCheck;
     RadioButton* mDataThetaRadio;
 
     CheckBox* mDataCalibCheck;
@@ -304,7 +304,12 @@ private:
     RadioButton* mDataVGRadio;
     CheckBox* mStatCheck;
 
-    QWidget* mTempoGroup;
+    // Tab Phases
+    QWidget* mPhasesGroup;
+    RadioButton* mBeginEndRadio;
+    CheckBox* mEventsUnfoldCheck;
+    CheckBox* mPhasesDatesUnfoldCheck;
+
     RadioButton* mDurationRadio;
     RadioButton* mTempoRadio;
     CheckBox* mTempoCredCheck;
@@ -312,6 +317,7 @@ private:
     RadioButton* mActivityRadio;
     CheckBox* mTempoStatCheck;
 
+    // tab Curves
     QWidget* mCurvesGroup;
     RadioButton* mCurveGRadio;
     RadioButton* mCurveGPRadio;

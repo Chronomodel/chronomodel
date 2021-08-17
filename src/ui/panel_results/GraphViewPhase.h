@@ -55,7 +55,7 @@ public:
  //   void setGraphFont(const QFont& font);
 
     void generateCurves(TypeGraph typeGraph, Variable variable);
-    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
+    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showError, bool showWiggle);
 
 
 protected:
