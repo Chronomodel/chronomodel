@@ -762,8 +762,11 @@ bool Project::load(const QString& path)
 
                     try {
                         delete mModel;
+
                         if (isCurve()) {
                             mModel = new ModelCurve ();
+                            qDebug() << "Project::load Create a ModelCurve";
+
                         } else
                             mModel = new Model ();
 
@@ -784,8 +787,24 @@ bool Project::load(const QString& path)
 
                     try {
                         mModel->setProject(this);
-                        mModel->restoreFromFile(dataPath);
+
+                        QFile file(dataPath);
+                        if (file.exists() && file.open(QIODevice::ReadOnly)){
+
+                        //    if ( file.size()!=0 /* uncompressedData.size()!=0*/ ) {
+                     //           QDataStream in(&uncompressedData, QIODevice::ReadOnly);
+                        QDataStream in(&file);
+
+                        mModel->restoreFromFile(&in);
+                        file.close();
+                        // file.remove(); // delete the temporary file with uncompressed data
+
+
                         setNoResults(false);
+
+                     } else {
+                            setNoResults(true);
+                        }
 
                     } catch (const std::exception & e) {
                         QMessageBox message(QMessageBox::Critical,
@@ -1228,10 +1247,23 @@ bool Project::saveProjectToFile()
     if (checkFile.exists() && checkFile.isFile())
         QFile(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res").remove();
 
-    if (!mNoResults && !mModel->mChains.isEmpty()) {
+    if (!mNoResults && !mModel->mEvents.empty()) {
         qDebug() << "Project::saveProjectToFile() Saving project results in "<<AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res";
         mModel->setProject(this);
-        mModel->saveToFile(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res");
+
+        // -----------------------------------------------------
+        //  Create file
+        // -----------------------------------------------------
+        //QFileInfo info(fileName);
+        // QFile file(info.path() + info.baseName() + ".~res"); // when we could do a compressed file
+        //QFile file(info.path() + info.baseName() + ".res");
+        QFile file(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res");
+        if (file.open(QIODevice::WriteOnly)) {
+            QDataStream out(&file);
+            mModel->saveToFile(&out);
+            file.close();
+        }
+
     }
     return true;
 }
@@ -3048,9 +3080,11 @@ void Project::clearModel()
 }
 
 bool Project::isCurve() const{
-    QJsonObject state = this->state();
-    QJsonObject CurveSettings = state[STATE_CURVE].toObject();
-    return (CurveSettings.value(STATE_CURVE_PROCESS_TYPE).toInt() != CurveSettings::eProcessTypeNone);
+   // QJsonObject state = this->state();
+   // QJsonObject CurveSettings = state[STATE_CURVE].toObject();
+    const QJsonObject CurveSettings = mState.value(STATE_CURVE).toObject();
+    return (!CurveSettings.isEmpty() && char(CurveSettings.value(STATE_CURVE_PROCESS_TYPE).toInt()) != char(CurveSettings::eProcessTypeNone));
+
 }
 
 void Project::runCurve()

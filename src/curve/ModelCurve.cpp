@@ -102,19 +102,11 @@ void ModelCurve::fromJson(const QJsonObject& json)
 /** @Brief Save .res file, the result of computation and compress it
 *
 * */
-void ModelCurve::saveToFile(const QString& fileName)
+void ModelCurve::saveToFile(QDataStream *out)
 {
-   if (!mEvents.empty()) {
-       // -----------------------------------------------------
-       //  Create file
-       // -----------------------------------------------------
-       //QFileInfo info(fileName);
-       // QFile file(info.path() + info.baseName() + ".~res"); // when we could do a compressed file
-       //QFile file(info.path() + info.baseName() + ".res");
-       QFile file(fileName);
-       if (file.open(QIODevice::WriteOnly)) {
+    Model::saveToFile(out);
 
-           QDataStream out(&file);
+/*
            out.setVersion(QDataStream::Qt_6_1);
 
 
@@ -123,15 +115,7 @@ void ModelCurve::saveToFile(const QString& fileName)
            // -----------------------------------------------------
            //  Write info
            // -----------------------------------------------------
-       /*    out << quint32 (mPhases.size());
-           out << quint32 (mEvents.size());
 
-           int numDates = 0;
-           for (Event*& ev : mEvents)
-               numDates += ev->mDates.size();
-
-           out << quint32 (numDates);
-           */
 
            out << quint32 (mChains.size());
            for (ChainSpecs& ch : mChains) {
@@ -212,41 +196,51 @@ void ModelCurve::saveToFile(const QString& fileName)
            out << mLogInit;
            out << mLogAdapt;
            out << mLogResults;
-           /* -----------------------------------------------------
-            *   Write curve data
-            * ----------------------------------------------------- */
+*/
 
-           out << mLambdaSpline;
+    /* -----------------------------------------------------
+    *   Write curve data
+    * ----------------------------------------------------- */
+    // -----------------------------------------------------
+    //  Write events VG
+    // -----------------------------------------------------
 
-           out << (quint32) mSplinesTrace.size();
-           for (auto& splin : mSplinesTrace)
-               out << splin;
+    for (Event*& event : mEvents)
+        *out << event->mVG;
 
-           out << mPosteriorMeanG;
+    *out << mLambdaSpline;
 
-           out << (quint32) mPosteriorMeanGByChain.size();
-           for (auto& pMByChain : mPosteriorMeanGByChain)
-               out << pMByChain;
+    *out << (quint32) mSplinesTrace.size();
+    for (auto& splin : mSplinesTrace)
+        *out << splin;
 
-           file.close();
+    *out << mPosteriorMeanG;
+
+    *out << (quint32) mPosteriorMeanGByChain.size();
+    for (auto& pMByChain : mPosteriorMeanGByChain)
+        *out << pMByChain;
 
 
-       }
-   }
+
 }
 /** @Brief Read the .res file, it's the result of the saved computation
 *
 * */
-void ModelCurve::restoreFromFile(const QString& fileName)
+void ModelCurve::restoreFromFile(QDataStream* in)
 {
+
+    Model::restoreFromFile(in);
+ /*
    QFile file(fileName);
    if (file.exists() && file.open(QIODevice::ReadOnly)) {
+
+
        QDataStream in(&file);
 
        int QDataStreamVersion;
        in >> QDataStreamVersion;
        in.setVersion(QDataStreamVersion);
-qDebug()<<in.version()<<QDataStream::Qt_5_5<<QDataStream::Qt_6_1<<QDataStreamVersion;
+//qDebug()<<in.version()<<QDataStream::Qt_5_5<<QDataStream::Qt_6_1<<QDataStreamVersion;
       // if (in.version()!= int(QDataStream::Qt_5_5) & in.version()!= int(QDataStream::Qt_6_1))
       if (in.version() != QDataStream::Qt_6_1)
            return;
@@ -342,16 +336,7 @@ qDebug()<<in.version()<<QDataStream::Qt_5_5<<QDataStream::Qt_6_1<<QDataStreamVer
                    in >> tmp;
                    d.setTmaxRefCurve(tmp);
 
-                   /* Check if the Calibration Curve exist*/
 
-                   //           QMap<QString, CalibrationCurve>::const_iterator it = mProject->mCalibCurves.find (toFind);
-
-                   // if no curve Create a new instance in mProject->mCalibration
-                   //             if ( it == mProject->mCalibCurves.end())
-                   //                 mProject->mCalibCurves.insert(toFind, CalibrationCurve());
-
-                   //mProject->mCalibCurves.insert(toFind, CalibrationCurve());
-                   //     qDebug()<<"Model:restoreFromFile insert a new mCalibration "<<toFind;
 
                    d.mCalibration = & (mProject->mCalibCurves[d.mUUID]);
 
@@ -382,32 +367,37 @@ qDebug()<<in.version()<<QDataStream::Qt_5_5<<QDataStream::Qt_6_1<<QDataStreamVer
        in >> mLogInit;
        in >> mLogAdapt;
        in >> mLogResults;
-
-       generateCorrelations(mChains);
+*/
+    generateCorrelations(mChains);
        // generatePosteriorDensities(mChains, 1024, 1);
        // generateNumericalResults(mChains);
 
-       /* -----------------------------------------------------
-        *   Read curve data
-        * ----------------------------------------------------- */
 
-       in >> mLambdaSpline;
+    /* -----------------------------------------------------
+    *  Read events VG
+    *----------------------------------------------------- */
 
-       in >> tmp32;
-       mSplinesTrace.resize(tmp32);
-       for (auto& splin : mSplinesTrace)
-           in >> splin;
+    for (auto&& e : mEvents)
+        *in >> e->mVG;
 
-       in >> mPosteriorMeanG;
+    /* -----------------------------------------------------
+    *   Read curve data
+    * ----------------------------------------------------- */
+    quint32 tmp32;
+    *in >> mLambdaSpline;
 
-       in >> tmp32;
-       mPosteriorMeanGByChain.resize(tmp32);
-       for (auto& pMByChain : mPosteriorMeanGByChain)
-           in >> pMByChain;
+    *in >> tmp32;
+    mSplinesTrace.resize(tmp32);
+    for (auto& splin : mSplinesTrace)
+        *in >> splin;
 
-       file.close();
+    *in >> mPosteriorMeanG;
 
-   }
+    *in >> tmp32;
+    mPosteriorMeanGByChain.resize(tmp32);
+    for (auto& pMByChain : mPosteriorMeanGByChain)
+        *in >> pMByChain;
+
 
 }
 
@@ -447,9 +437,9 @@ void ModelCurve::generateCorrelations(const QList<ChainSpecs> &chains)
 void ModelCurve::generateNumericalResults(const QList<ChainSpecs> &chains)
 {
     Model::generateNumericalResults(chains);
-    for (Event*& event : mEvents) {
+    for (Event*& event : mEvents)
         event->mVG.generateNumericalResults(chains);
-    }
+
     mLambdaSpline.generateNumericalResults(chains);
 }
 
@@ -457,9 +447,9 @@ void ModelCurve::clearThreshold()
 {
     Model::clearThreshold();
    // mThreshold = -1.;
-    for (Event*& event : mEvents) {
+    for (Event*& event : mEvents)
         event->mVG.mThresholdUsed = -1.;
-    }
+
     mLambdaSpline.mThresholdUsed = -1.;
 }
 
@@ -467,9 +457,9 @@ void ModelCurve::generateCredibility(const double& thresh)
 {
     Model::generateCredibility(thresh);
     for (Event*& event : mEvents) {
-        if (event->type() != Event::eKnown) {
+       // if (event->type() != Event::eKnown) {
             event->mVG.generateCredibility(mChains, thresh);
-        }
+       // }
     }
     mLambdaSpline.generateCredibility(mChains, thresh);
 }

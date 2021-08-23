@@ -53,8 +53,8 @@ public:
 
     void setModel(ModelCurve* model);
 
-    void generateCurves(TypeGraph typeGraph, Variable variable);
-    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
+    void generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList);
+    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QVector<variable_t>& showVariableList);
 
 protected:
     void paintEvent(QPaintEvent* e);

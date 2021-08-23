@@ -139,6 +139,14 @@ int Tabs::minimalWidth() const
 
     return  w;
 }
+QSize Tabs::sizeHint() const
+{
+    if (mTabNames.isEmpty())
+        return QSize(2*mTabHeight, mTabHeight);
+    else
+        return QSize(minimalWidth(), minimalHeight() );
+}
+
 
 int Tabs::currentIndex() const
 {

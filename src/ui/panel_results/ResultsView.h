@@ -106,7 +106,7 @@ protected:
     void createGraphs();
     void createByEventsGraphs();
     void createByPhasesGraphs();
-    void createByTempoGraphs();
+    //void createByTempoGraphs();
     void createByCurveGraph();
     void createByAlphaGraph();
     
@@ -134,6 +134,7 @@ protected:
     // ------------------------------------------------
     //  Span options
     // ------------------------------------------------
+    GraphViewResults::variable_t getMainVariable() const;
     void setXRange();
     void setXSlider(const int value);
     void setXSpin(const double value);
@@ -175,7 +176,7 @@ private slots:
     // ------------------------------------------------
     //  Graphs / Curves / Controls
     // ------------------------------------------------
-    void updateCurrentVariable();
+    void updateMainVariable();
     void generateCurves();
     void updateCurvesToShow();
     void updateScales();
@@ -194,12 +195,12 @@ private slots:
 
     void applyGraphTypeTab();
     void applyGraphListTab();
-    void applyDisplayTab();
-    void applyPageSavingTab();
+  //  void applyDisplayTab();
+   // void applyPageSavingTab();
     
     void applyCurrentVariable();
-    void applyUnfoldEvents();
-    void applyUnfoldDates();
+   // void applyUnfoldEvents();
+   // void applyUnfoldDates();
 
     // Span options
     void applyStudyPeriod();
@@ -296,18 +297,20 @@ private:
     QWidget* mEventsGroup;
 
     CheckBox* mEventsDatesUnfoldCheck;
-    RadioButton* mDataThetaRadio;
+    RadioButton* mEventDateRadio;
 
     CheckBox* mDataCalibCheck;
     CheckBox* mWiggleCheck;
     RadioButton* mDataSigmaRadio;
-    RadioButton* mDataVGRadio;
+
+    RadioButton* mEventVGRadio;
+
     CheckBox* mStatCheck;
 
     // Tab Phases
     QWidget* mPhasesGroup;
     RadioButton* mBeginEndRadio;
-    CheckBox* mEventsUnfoldCheck;
+    CheckBox* mPhasesEventsUnfoldCheck;
     CheckBox* mPhasesDatesUnfoldCheck;
 
     RadioButton* mDurationRadio;
@@ -315,7 +318,7 @@ private:
     CheckBox* mTempoCredCheck;
     CheckBox* mTempoErrCheck;
     RadioButton* mActivityRadio;
-    CheckBox* mTempoStatCheck;
+    CheckBox* mPhasesStatCheck;
 
     // tab Curves
     QWidget* mCurvesGroup;
@@ -437,8 +440,9 @@ private:
     // ----------------------------------------
     //  Useful Variables
     // ----------------------------------------
-    GraphViewResults::TypeGraph mCurrentTypeGraph;
-    GraphViewResults::Variable mCurrentVariable;
+    GraphViewResults::graph_t mCurrentTypeGraph;
+    QVector<GraphViewResults::variable_t> mCurrentVariableList;
+    GraphViewResults::variable_t mMainVariable;
     bool mHasPhases;
 
     // ----------------------------------------
@@ -449,9 +453,6 @@ private:
     double mResultMaxX;
     double mResultCurrentMinX;
     double mResultCurrentMaxX;
-    
-  //  double mCurrentVariableMaxX;
-  //  double mCurrentVariableMinX;
     
     // ----------------------------------------
     //  X Scale ticks intervals
@@ -466,11 +467,9 @@ private:
     int mGraphsPerPage;
     int mMaximunNumberOfVisibleGraph;
 
-
-
     // ------------------------------------
-    QMap<QPair<GraphViewResults::Variable, GraphViewResults::TypeGraph>, QPair<double, double>> mZooms;
-    QMap<QPair<GraphViewResults::Variable, GraphViewResults::TypeGraph>, QPair<double, int>> mScales;
+    QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, double>> mZooms;
+    QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, int>> mScales;
 };
 
 #endif

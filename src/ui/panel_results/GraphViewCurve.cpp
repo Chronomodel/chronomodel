@@ -54,12 +54,12 @@ GraphViewCurve::GraphViewCurve(QWidget *parent):GraphViewResults(parent)
 {
     setMainColor(Painting::borderDark);
     mGraph->setBackgroundColor(QColor(210, 210, 210));
-    mShowG = true;
+  /*  mShowG = true;
     mShowGError = true;
     mShowGP = false;
     mShowEventsPoints = true;
     mShowDataPoints = true;
-    mShowGS = false;
+    mShowGS = false;*/
 }
 
 GraphViewCurve::~GraphViewCurve()
@@ -92,9 +92,9 @@ void GraphViewCurve::resizeEvent(QResizeEvent* )
     updateLayout();
 }
 
-void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
+void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList)
 {
-    GraphViewResults::generateCurves(typeGraph, variable);
+    GraphViewResults::generateCurves(typeGraph, variableList);
     
     mGraph->removeAllCurves();
     mGraph->removeAllZones();
@@ -109,7 +109,7 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
     mGraph->setBackgroundColor(QColor(230, 230, 230));
     //mGraph->reserveCurves(5);
     
-    if (mCurrentVariable == eG) {
+    if (mCurrentVariableList.contains(eG)) {
         GraphCurve curveEventsPoints;
         curveEventsPoints.mName = tr("Events Points");
 
@@ -209,7 +209,7 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
 
     }
 
-    else if (mCurrentVariable == eGP) {
+    else if (mCurrentVariableList.contains(eGP)) {
         GraphCurve curveGP;
         curveGP.mName = tr("G Prime");
         curveGP.mPen = QPen(QColor(154, 80, 225), 1, Qt::SolidLine);
@@ -225,7 +225,7 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
         }
         mGraph->addCurve(curveGP);
 
-    } else if (mCurrentVariable == eGS) {
+    } else if (mCurrentVariableList.contains(eGS)) {
         GraphCurve curveGS;
         curveGS.mName = tr("G Second");
         curveGS.mPen = QPen(QColor(236, 105, 64), 1, Qt::SolidLine);
@@ -247,28 +247,28 @@ void GraphViewCurve::generateCurves(TypeGraph typeGraph, Variable variable)
 
 }
 
-void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, bool showG, bool showGError, bool showEventsPoints, bool showDataPoints, bool showGP, bool showGS)
+void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, const QVector<variable_t>& showVariableList)
 {
     // From GraphViewResults::updateCurvesToShow
     mShowAllChains = showAllChains;
     mShowChainList = showChainList;
     
-    mShowG = showG;
-    mShowGError = showGError;
-    mShowEventsPoints = showEventsPoints;
-    mShowDataPoints = showDataPoints;
-    mShowGP = showGP;
-    mShowGS = showGS;
+    const bool showG = showVariableList.contains(eG);
+    const bool showGError = showVariableList.contains(eGError);
+    const bool showEventsPoints = showVariableList.contains(eGEventsPts);
+    const bool showDataPoints = showVariableList.contains(eGDatesPts);
+    const bool showGP = showVariableList.contains(eGP);
+    const bool showGS = showVariableList.contains(eGS);
     
-    mGraph->setCurveVisible("G", mShowAllChains && mShowG);
-    mGraph->setCurveVisible("G Sup", mShowAllChains && mShowGError);
-    mGraph->setCurveVisible("G Inf", mShowAllChains && mShowGError);
-    mGraph->setCurveVisible("Events Points", mShowEventsPoints);
-    mGraph->setCurveVisible("Data Points", mShowDataPoints);
-    mGraph->setCurveVisible("G Prime", mShowAllChains && mShowGP);
-    mGraph->setCurveVisible("G Second", mShowAllChains && mShowGS);
+    mGraph->setCurveVisible("G", mShowAllChains && showG);
+    mGraph->setCurveVisible("G Sup", mShowAllChains && showGError);
+    mGraph->setCurveVisible("G Inf", mShowAllChains && showGError);
+    mGraph->setCurveVisible("Events Points", showEventsPoints);
+    mGraph->setCurveVisible("Data Points", showDataPoints);
+    mGraph->setCurveVisible("G Prime", mShowAllChains && showGP);
+    mGraph->setCurveVisible("G Second", mShowAllChains && showGS);
     
     for (int i = 0; i < mShowChainList.size(); ++i) {
-        mGraph->setCurveVisible(QString("G Chain ") + QString::number(i), mShowChainList.at(i) && mShowG);
+        mGraph->setCurveVisible(QString("G Chain ") + QString::number(i), mShowChainList.at(i) && showG);
     }
 }

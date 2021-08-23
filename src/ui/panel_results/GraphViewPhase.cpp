@@ -88,11 +88,11 @@ void GraphViewPhase::resizeEvent(QResizeEvent* )
     updateLayout();
 }
 
-void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
+void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList)
 {
     //qDebug()<<"GraphViewPhase::generateCurves()";
     Q_ASSERT(mPhase);
-    GraphViewResults::generateCurves(typeGraph, variable);
+    GraphViewResults::generateCurves(typeGraph, variableList);
 
     mGraph->removeAllCurves();
     mGraph->reserveCurves(9);
@@ -127,7 +127,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
      *  - Post Distrib Tempo All Chains
 
      * ------------------------------------------------  */
-    if (typeGraph == ePostDistrib && variable == eBeginEnd) {
+    if (typeGraph == ePostDistrib && mCurrentVariableList.contains(eBeginEnd)) {
         mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
         mGraph->mLegendY = "";
         mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
@@ -213,7 +213,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
             }
         mGraph->setYAxisMode(GraphView::eMinMax);
 
-    } else if (typeGraph == ePostDistrib && variable == eDuration) {
+    } else if (typeGraph == ePostDistrib && mCurrentVariableList.contains(eDuration)) {
         mGraph->mLegendX = tr("Years");
         mGraph->mLegendY = "";
         mGraph->setFormatFunctX(nullptr);
@@ -261,7 +261,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
 
                 mGraph->addCurve(curveDuration);
             }
-    } else if (typeGraph == ePostDistrib && variable == eSigma) {
+    } else if (typeGraph == ePostDistrib && mCurrentVariableList.contains(eSigma)) {
 
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
@@ -298,7 +298,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
 
         }
 
-    } else if (typeGraph == ePostDistrib && variable == eDuration) {
+    } else if (typeGraph == ePostDistrib && mCurrentVariableList.contains(eDuration)) {
         mGraph->mLegendX = tr("Years");
         mGraph->mLegendY = "";
         mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
@@ -346,7 +346,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
 
                 mGraph->addCurve(curveDuration);
             }
-    } else if (typeGraph == ePostDistrib && variable == eTempo) {
+    } else if (typeGraph == ePostDistrib && mCurrentVariableList.contains(eTempo)) {
         mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
         mGraph->mLegendY = "";
         mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
@@ -416,7 +416,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
 
         mGraph->setRangeY(0., yMax);
 
-    } else if (typeGraph == ePostDistrib && variable == eActivity) {
+    } else if (typeGraph == ePostDistrib && mCurrentVariableList.contains(eActivity)) {
 
         mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
         mGraph->setFormatFunctX(nullptr);
@@ -473,7 +473,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
      *  - Q2 Beta i
      *  - Q3 Beta i
      * ------------------------------------------------ */
-    else if (typeGraph == eTrace && variable == eBeginEnd) {
+    else if (typeGraph == eTrace && mCurrentVariableList.contains(eBeginEnd)) {
         mGraph->mLegendX = tr("Iterations");
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);//DateUtils::convertToAppSettingsFormat);
@@ -482,7 +482,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         generateTraceCurves(mChains, &(mPhase->mAlpha), "Alpha");
         generateTraceCurves(mChains, &(mPhase->mBeta), "Beta");
         mGraph->autoAdjustYScale(true);
-    } else if (typeGraph == eTrace && variable == eDuration) {
+    } else if (typeGraph == eTrace && mCurrentVariableList.contains(eDuration)) {
         mGraph->mLegendX = tr("Iterations");
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);
@@ -504,10 +504,10 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
 
 }
 
-void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showError, bool showWiggle)
+void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QVector<variable_t>& showVariableList)
 {
     Q_ASSERT(mPhase);
-    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showCredibility, showError, showWiggle);
+    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showVariableList);
 
     /* --------------------first tab : posterior distrib----------------------------
      *
@@ -531,7 +531,8 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      *  - Post Distrib Tempo Cred Sup All Chains
      * ------------------------------------------------
      */
-    if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eBeginEnd) {
+    if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eBeginEnd)) {
+        const bool showCredibility = true;
         mGraph->setTipYLab("");
 
         mGraph->setCurveVisible("Post Distrib Alpha All Chains", mShowAllChains);
@@ -539,7 +540,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         mGraph->setCurveVisible("HPD Alpha All Chains", mShowAllChains);
         mGraph->setCurveVisible("HPD Beta All Chains", mShowAllChains);
 
-        mGraph->setCurveVisible("Time Range", mShowAllChains && mShowCredibility);
+        mGraph->setCurveVisible("Time Range", mShowAllChains && showCredibility);
 
         for (int i=0; i<mShowChainList.size(); ++i) {
             mGraph->setCurveVisible("Post Distrib Alpha " + QString::number(i), mShowChainList.at(i));
@@ -555,7 +556,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
     }
 
-    else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eSigma) {
+    else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eSigma)) {
             for (auto && ev : mPhase->mEvents) {
                 const int n (ev->mDates.size());
                 for (auto i=0 ; i<n; ++i) {
@@ -571,14 +572,14 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->autoAdjustYScale(true);
 
     }
-    else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eDuration) {
+    else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eDuration)) {
         const GraphCurve* duration = mGraph->getCurve("Post Distrib Duration All Chains");
 
         if ( duration && !duration->mData.isEmpty()) {
-
+            const bool showCredibility = true;
             mGraph->setCurveVisible("Post Distrib Duration All Chains", mShowAllChains);
             mGraph->setCurveVisible("HPD Duration All Chains", mShowAllChains);
-            mGraph->setCurveVisible("Credibility All Chains", mShowCredibility && mShowAllChains);
+            mGraph->setCurveVisible("Credibility All Chains", showCredibility && mShowAllChains);
 
             for (int i=0; i<mShowChainList.size(); ++i)
                 mGraph->setCurveVisible("Post Distrib Duration " + QString::number(i), mShowChainList.at(i));
@@ -590,11 +591,13 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         }
 
     }
-    else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eTempo) {
+    else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eTempo)) {
     // With variable eTemp there is no choice of "chain", it must be "all chains"
          const GraphCurve* tempo = mGraph->getCurve("Post Distrib Tempo All Chains");
 
          if ( tempo && !tempo->mData.isEmpty()) {
+             const bool showError = mShowVariableList.contains(eTempoError);
+             const bool showCredibility = mShowVariableList.contains(eTempCredibility);
              mGraph->setCurveVisible("Post Distrib Tempo All Chains", true);
              mGraph->setCurveVisible("Post Distrib Tempo Inf All Chains", showError);
              mGraph->setCurveVisible("Post Distrib Tempo Sup All Chains", showError);
@@ -609,12 +612,12 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
          }
 
     }
-    else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eActivity) {
+    else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eActivity)) {
         // With variable eActivity there is no choice of "chain", it must be "all chains"
           const GraphCurve* Activity = mGraph->getCurve("Post Distrib Activity All Chains");
 
           if ( Activity && !Activity->mData.isEmpty()) {
-
+              const bool showError = true;
               mGraph->setCurveVisible("Post Distrib Activity All Chains", true);
               mGraph->setCurveVisible("Post Distrib Activity Inf All Chains", showError);
               mGraph->setCurveVisible("Post Distrib Activity Sup All Chains", showError);
@@ -646,7 +649,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      *  - Duration Q2 i
      *  - Duration Q3 i
      * ------------------------------------------------ */
-    else if (mCurrentTypeGraph == eTrace && mCurrentVariable == eBeginEnd) {
+    else if (mCurrentTypeGraph == eTrace && mShowVariableList.contains(eBeginEnd)) {
 
         for (int i=0; i<mShowChainList.size(); ++i) {
             mGraph->setCurveVisible("Alpha Trace " + QString::number(i), mShowChainList.at(i));
@@ -665,7 +668,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         mGraph->setYAxisMode(GraphView::eMinMaxHidden);
         mGraph->showInfos(true);
         mGraph->autoAdjustYScale(true);
-    } else if (mCurrentTypeGraph == eTrace && mCurrentVariable == eDuration) {
+    } else if (mCurrentTypeGraph == eTrace && mShowVariableList.contains(eDuration)) {
 
         for (int i=0; i<mShowChainList.size(); ++i) {
             mGraph->setCurveVisible("Duration Trace " + QString::number(i), mShowChainList.at(i));

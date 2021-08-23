@@ -112,7 +112,7 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     connect(mResultsView, &ResultsView::resultsLogUpdated, this, &ProjectView::updateResultsLog);
 
     mLogTabs->setTab(3, false);
-   // mLogTabs->showWidget(2);
+
 }
 
 ProjectView::~ProjectView()

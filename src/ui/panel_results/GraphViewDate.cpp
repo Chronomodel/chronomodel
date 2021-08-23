@@ -93,11 +93,11 @@ void GraphViewDate::paintEvent(QPaintEvent* e)
 //    return mDate->getEventColor();
 //}
 
-void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
+void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList)
 {
     Q_ASSERT(mDate);
     //qDebug()<<"GraphViewDate::generateCurves()";
-    GraphViewResults::generateCurves(typeGraph, variable);
+    GraphViewResults::generateCurves(typeGraph, variableList);
 
     /* ------------------------------------------------
      *  Reset the graph object settings
@@ -124,17 +124,17 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
      * ------------------------------------------------
      */
     MHVariable* variableDate = &(mDate->mTheta);
-    if (variable == eTheta)
+    if (variableList.contains(eDataTi) )
         variableDate = &(mDate->mTheta);
 
-    else if(variable == eSigma)
+    else if(variableList.contains(eSigma))
         variableDate = &(mDate->mSigma);
 
     /* ------------------------------------------------
      *  First tab : Posterior distrib.
      * ------------------------------------------------
      */
-    if (typeGraph == ePostDistrib && (variable == eTheta || variable == eSigma)) {
+    if (typeGraph == ePostDistrib && (variableList.contains(eDataTi) || variableList.contains(eSigma))) {
 
         /* ------------------------------------------------
          *  Possible Curves :
@@ -146,7 +146,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
          *  - Wiggle
          * ------------------------------------------------
          */
-        if (variable == eTheta) {
+        if (variableList.contains(eDataTi)) {
             mGraph->setOverArrow(GraphView::eBothOverflow);
             mTitle = tr("Data : %1").arg(mDate->mName);
 
@@ -235,7 +235,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
          *  - Sigma Chain i
          * ------------------------------------------------
          */
-        else if (variable == eSigma) {
+        else if (variableList.contains(eSigma)) {
             mGraph->setOverArrow(GraphView::eNone);
             mTitle = tr("Individual Std : %1").arg(mDate->mName);
 
@@ -280,11 +280,11 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
      *  - Q3 i
      * ------------------------------------------------
      */
-    else if (typeGraph == eTrace && (variable == eTheta || variable == eSigma)) {
+    else if (typeGraph == eTrace && (variableList.contains(eDataTi) || variableList.contains(eSigma))) {
         mGraph->mLegendX = tr("Iterations");
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);//DateUtils::convertToAppSettingsFormat);
-        if (variable == eTheta)
+        if (variableList.contains(eDataTi))
             mTitle = tr("Data : %1").arg(mDate->mName);
         else
              mTitle = tr("Individual Std : %1").arg(mDate->mName);
@@ -298,12 +298,12 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
      *  - Accept Target
      * ------------------------------------------------
      */
-    else if (typeGraph == eAccept && (variable == eTheta || variable == eSigma)) {
+    else if (typeGraph == eAccept && (variableList.contains(eDataTi) || variableList.contains(eSigma))) {
         mGraph->mLegendX = tr("Iterations");
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);
         mGraph->autoAdjustYScale(true);
-        if (variable == eTheta)
+        if (variableList.contains(eDataTi))
             mTitle = tr("Data : %1").arg(mDate->mName);
         else
              mTitle = tr("Individual Std : %1").arg(mDate->mName);
@@ -320,11 +320,11 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
      *  - Correl Limit Upper i
      * ------------------------------------------------
      */
-    else if (typeGraph == eCorrel && (variable == eTheta || variable == eSigma)) {
+    else if (typeGraph == eCorrel && (variableList.contains(eDataTi) || variableList.contains(eSigma))) {
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);
-        if (variable == eTheta)
+        if (variableList.contains(eDataTi))
             mTitle = tr("Data : %1").arg(mDate->mName);
         else
              mTitle = tr("Individual Std : %1").arg(mDate->mName);
@@ -340,9 +340,9 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
 
 }
 
-void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle)
+void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QVector<variable_t>& variableList)
 {
-    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
+    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, variableList);
 
     /* --------------------First Tab : Posterior distrib.------------*/
 
@@ -358,13 +358,16 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
          *  - Wiggle
          * ------------------------------------------------
          */
-        if (mCurrentVariable == eTheta) {
+        if (variableList.contains(eDataTi)) {
 
+            const bool showCredibility = true;
+            const bool showCalib = variableList.contains(eDataCalibrate);
+            const bool showWiggle = variableList.contains(eDataWiggle);
             mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
             mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
-            mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowCredibility);
-            mGraph->setCurveVisible("Calibration", mShowCalib);
-            mGraph->setCurveVisible("Wiggle", mShowWiggle);
+            mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && showCredibility);
+            mGraph->setCurveVisible("Calibration", showCalib);
+            mGraph->setCurveVisible("Wiggle", showWiggle);
             for (int i=0; i<mShowChainList.size(); ++i)
                 mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
 
@@ -380,7 +383,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
          *  - Sigma Chain i
          * ------------------------------------------------
          */
-        else if (mCurrentVariable == eSigma) {
+        else if (variableList.contains(eSigma)) {
             mGraph->setCurveVisible("Sigma all Chains", mShowAllChains);
             for (int i=0; i<mShowChainList.size(); ++i)
                 mGraph->setCurveVisible("Sigma for Chain " + QString::number(i), mShowChainList[i]);

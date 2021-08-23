@@ -88,31 +88,28 @@ class GraphViewResults: public QWidget
 {
     Q_OBJECT
 public:
-    enum TypeGraph{
-        ePostDistrib = 0,
-        eTrace = 1,
-        eAccept = 2,
-        eCorrel = 3,
-        eFunction = 4
+    enum graph_t{
+        ePostDistrib,
+        eTrace,
+        eAccept,
+        eCorrel,
+        eFunction
     };
-    enum Variable{
-        eBeginEnd = 0,
-        eTheta = 1,
-        eSigma = 2,
-        eDuration = 3,
-        eTempo = 4,
-        eActivity = 5,
-        eVG = 6,
-        eG = 7,
-        eGP = 8,
-        eGS = 9,
-        eLambda = 10
-  /*
-        eInclination = 8,
-        eDeclination = 8,
-        eField = 8,
-        eDepth = 8,
-        eOther = 8*/
+    enum variable_t{
+        eBeginEnd,
+        eThetaEvent,
+        eDataTi, eDataCalibrate, eDataWiggle,
+        eSigma ,
+        eVG,
+
+        eTempo, eTempCredibility, eTempoError,
+        eActivity,
+        eDuration,
+
+        eG, eGError, eGEventsPts, eGDatesPts,
+        eGP,
+        eGS,
+        eLambda
     };
     static int mHeightForVisibleAxis ;
     // member
@@ -121,8 +118,8 @@ protected:
     Overlay* mOverLaySelect;
 
     GraphView* mGraph;
-    TypeGraph mCurrentTypeGraph;
-    Variable mCurrentVariable;
+    graph_t mCurrentTypeGraph;
+    QVector<variable_t> mCurrentVariableList;
 
     QString mTitle;
 
@@ -133,10 +130,12 @@ protected:
 
     bool mShowAllChains;
     QList<bool> mShowChainList;
-    bool mShowCredibility;
+    QVector<variable_t> mShowVariableList;
+  /*  bool mShowCredibility;
 
     bool mShowCalib;
     bool mShowWiggle;
+    */
     bool mShowNumResults;
     bool mIsSelected;
     bool mShowSelectedRect;
@@ -197,8 +196,8 @@ public:
 
 
     GraphView* getGraph() const { return mGraph; }
-    Variable getCurrentVariable() const { return mCurrentVariable; }
-    TypeGraph getCurrentType() const { return mCurrentTypeGraph; }
+    QVector<variable_t> getCurrentVariables() const { return mCurrentVariableList; }
+    graph_t getCurrentType() const { return mCurrentTypeGraph; }
     
    // GraphView::Rendering getRendering() const  { return mGraph->getRendering(); }
     QString getResultsText() const {return mResultsText;}
@@ -236,11 +235,12 @@ public:
 
     // This method is used to recreate all curves in mGraph.
     // It is vitual because we want a different behavior in sub-classes (GraphViewDate, GraphViewEvent and GraphViewPhase)
-    virtual void generateCurves(TypeGraph typeGraph, Variable variable);
+    virtual void generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList);
 
     // This method is used to update visible existing curves in mGraph.
     // It is vitual because we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
-    virtual void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
+    //virtual void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
+    virtual void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QVector<variable_t> & showVariableList);
 
 public slots:
     void setRange(type_data min, type_data max);

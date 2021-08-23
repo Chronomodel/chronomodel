@@ -45,7 +45,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QString>
 
 //#define Curve_ENABLED_DEFAULT false
-#define CURVE_PROCESS_TYPE_DEFAULT CurveSettings::eProcessTypeUnivarie
+#define CURVE_PROCESS_TYPE_DEFAULT CurveSettings::eProcessTypeNone
 #define CURVE_VARIABLE_TYPE_DEFAULT CurveSettings::eVariableTypeInclination
 #define CURVE_USE_ERR_MESURE_DEFAULT true
 #define CURVE_TIME_TYPE_DEFAULT CurveSettings::eModeBayesian

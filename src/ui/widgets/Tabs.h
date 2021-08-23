@@ -76,6 +76,8 @@ public:
     QRect minimalGeometry() const;
     int minimalHeight() const;
     int minimalWidth() const;
+    virtual QSize sizeHint() const;
+    virtual int height() const {return mTabHeight;};
 
     int tabHeight() const { return mTabHeight;}
 

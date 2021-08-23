@@ -81,11 +81,11 @@ void GraphViewAlpha::resizeEvent(QResizeEvent* )
     updateLayout();
 }
 
-void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
+void GraphViewAlpha::generateCurves(const graph_t typeGraph, const QVector<variable_t> &variableList)
 {
     Q_ASSERT(mModel);
 
-    GraphViewResults::generateCurves(typeGraph, variable);
+    GraphViewResults::generateCurves(typeGraph, variableList);
     
     mGraph->removeAllCurves();
     mGraph->removeAllZones();
@@ -196,18 +196,18 @@ void GraphViewAlpha::generateCurves(TypeGraph typeGraph, Variable variable)
     }
 }
 
-void GraphViewAlpha::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showError, bool showWiggle)
+void GraphViewAlpha::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QVector<variable_t>& variableList)
 {
     Q_ASSERT(mModel);
 
-    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showCredibility, showError, showWiggle);
+    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, variableList);
 
     if (mCurrentTypeGraph == ePostDistrib)  {
         mGraph->setTipYLab("");
         
         mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
         mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
-        mGraph->setCurveVisible("Credibility All Chains", mShowCredibility && mShowAllChains);
+        mGraph->setCurveVisible("Credibility All Chains", variableList.contains(eTempCredibility) && mShowAllChains);
 
         for (int i=0; i<mShowChainList.size(); ++i) {
             mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList.at(i));

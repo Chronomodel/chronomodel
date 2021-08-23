@@ -66,8 +66,8 @@ public:
     void setEventsPoints(const QVector<RefPoint>& rfPts) { mEventsPoints = rfPts;};
     void setDataPoints(const QVector<RefPoint>& rfPts) { mDataPoints = rfPts;};
     
-    void generateCurves(TypeGraph typeGraph, Variable variable);
-    void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, bool showG, bool showGError, bool showGPoints, bool showDataPoints, bool showGP, bool showGS);
+    void generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList);
+    void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, const QVector<variable_t>& showVariableList);
 
 protected:
     void paintEvent(QPaintEvent* e);
@@ -79,13 +79,15 @@ private:
     QList<Event*> mEvents;
     QVector<RefPoint> mEventsPoints;
     QVector<RefPoint> mDataPoints;
-    
+
+    /*
     bool mShowG;
     bool mShowGError;
     bool mShowEventsPoints;
     bool mShowDataPoints;
     bool mShowGP;
     bool mShowGS;
+    */
 };
 
 #endif

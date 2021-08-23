@@ -55,11 +55,14 @@ int GraphViewResults::mHeightForVisibleAxis = int (4 * AppSettings::heigthUnit()
 
 GraphViewResults::GraphViewResults(QWidget *parent):QWidget(parent),
 mCurrentTypeGraph(ePostDistrib),
-mCurrentVariable(eTheta),
+mCurrentVariableList(QVector<variable_t>(eThetaEvent)),
 mShowAllChains(true),
+mShowVariableList(eThetaEvent),
+  /*
 mShowCredibility(false),
 mShowCalib(false),
 mShowWiggle(false),
+  */
 mShowNumResults(false),
 mIsSelected(false),
 mShowSelectedRect(true),
@@ -121,19 +124,22 @@ GraphViewResults::~GraphViewResults()
 
 }
 
-void GraphViewResults::generateCurves(TypeGraph typeGraph, Variable variable)
+void GraphViewResults::generateCurves(const graph_t typeGraph, const QVector<variable_t> &variableList)
 {
     mCurrentTypeGraph = typeGraph;
-    mCurrentVariable = variable;
+    mCurrentVariableList = variableList;
 }
 
-void GraphViewResults::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle)
+void GraphViewResults::updateCurvesToShow(bool showAllChains, const QVector<bool>& showChainList, const QVector<variable_t> &showVariableList)
 {
     mShowAllChains = showAllChains;
     mShowChainList = showChainList;
-    mShowCredibility = showCredibility;
+    mShowVariableList = showVariableList;
+    /*
+    mShowCredibility = graphList;
     mShowCalib = showCalib;
     mShowWiggle = showWiggle;
+    */
    // update();
 }
 
@@ -143,7 +149,7 @@ void GraphViewResults::setSettings(const ProjectSettings& settings)
     mSettings = settings;
 }
 
-void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc, const QList<ChainSpecs>& chains)
+void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc, const QVector<ChainSpecs> &chains)
 {
     mMCMCSettings = mcmc;
     mChains = chains;
@@ -312,10 +318,10 @@ void GraphViewResults::saveGraphData() const
         mGraph->exportCurrentVectorCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
 
     // All visible curves are saved in the same file, the credibility bar is not save
-    else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable != eG)
+    else if (mCurrentTypeGraph == ePostDistrib && !mShowVariableList.contains(eG))
         mGraph->exportCurrentDensities (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
 
-    else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eG) {
+    else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eG)) {
         QMessageBox messageBox;
         messageBox.setWindowTitle(tr("Save curve"));
         messageBox.setText(tr("Do you want a reference curve to reused with ChronoModel or data of the graphic"));

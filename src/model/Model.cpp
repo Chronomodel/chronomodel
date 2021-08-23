@@ -3018,113 +3018,98 @@ void Model::clearTraces()
 /** @Brief Save .res file, the result of computation and compress it
  *
  * */
-void Model::saveToFile(const QString& fileName)
+void Model::saveToFile(QDataStream *out)
 {
-    if (!mEvents.empty()) {
+
+    out->setVersion(QDataStream::Qt_6_1);
+
+    *out << quint32 (out->version());// we could add software version here << quint16(out.version());
+    *out << qApp->applicationVersion();
     // -----------------------------------------------------
-    //  Create file
+    //  Write info
     // -----------------------------------------------------
-    //QFileInfo info(fileName);
-   // QFile file(info.path() + info.baseName() + ".~res"); // when we could do a compressed file
-    //QFile file(info.path() + info.baseName() + ".res");
-    QFile file(fileName);
-    if (file.open(QIODevice::WriteOnly)) {
+    *out << quint32 (mChains.size());
+    for (ChainSpecs& ch : mChains) {
+        *out << ch.burnElapsedTime;
+        *out << ch.mAdaptElapsedTime;
+        *out << ch.mAcquisitionElapsedTime;
 
-        QDataStream out(&file);
-        out.setVersion(QDataStream::Qt_6_1);
-
-        out << quint32 (out.version());// we could add software version here << quint16(out.version());
-        out << qApp->applicationVersion();
-        // -----------------------------------------------------
-        //  Write info
-        // -----------------------------------------------------
-        out << quint32 (mChains.size());
-        for (ChainSpecs& ch : mChains) {
-            out << ch.burnElapsedTime;
-            out << ch.mAdaptElapsedTime;
-            out << ch.mAcquisitionElapsedTime;
-
-            out << quint32 (ch.mBatchIndex);
-            out << quint32 (ch.mBatchIterIndex);
-            out << quint32 (ch.mBurnIterIndex);
-            out << quint32 (ch.mMaxBatchs);
-            out << ch.mMixingLevel;
-            out << quint32 (ch.mIterPerBatch);
-            out << quint32 (ch.mIterPerBurn);
-            out << quint32 (ch.mIterPerAquisition);
-            out << quint32 (ch.mAquisitionIterIndex);
-            out << qint32 (ch.mSeed);
-            out << quint32 (ch.mThinningInterval);
-            out << quint32 (ch.mRealyAccepted);
-            out << quint32 (ch.mTotalIter);
-        }
-        // -----------------------------------------------------
-        //  Write phases data
-        // -----------------------------------------------------
-        for (Phase*& phase : mPhases) {
-            out << phase->mAlpha;
-            out << phase->mBeta;
-            out << phase->mDuration;
-        }
-        // -----------------------------------------------------
-        //  Write events data
-        // -----------------------------------------------------
-        for (Event*& event : mEvents)
-            out << event->mTheta;
-
-        // -----------------------------------------------------
-        //  Write dates data
-        // -----------------------------------------------------
-        for (Event*& event : mEvents) {
-            if (event->mType == Event::eDefault ) {
-                QList<Date> dates (event->mDates);
-                 for (auto&& d  : dates) {
-                     out << d.mTheta;
-                     out << d.mSigma;
-                      if (d.mDeltaType != Date::eDeltaNone)
-                          out << d.mWiggle;
-
-                      out << d.mDeltaFixed;
-                      out << d.mDeltaMin;
-                      out << d.mDeltaMax;
-                      out << d.mDeltaAverage;
-                      out << d.mDeltaError;
-
-                      out << qint32 (d.mSettings.mTmin);
-                      out << qint32 (d.mSettings.mTmax);
-                      out <<  d.mSettings.mStep;
-                      out << quint8 (d.mSettings.mStepForced==true? 1: 0);
-
-
-                      out << d.getTminRefCurve();
-                      out << d.getTmaxRefCurve();
-
-                      //mCalibration and mWiggleCalibration are saved in to *.cal file
-
-                      out << quint32 (d.mCalibHPD.size());
-                      for (QMap<double, double>::const_iterator it = d.mCalibHPD.cbegin(); it!=d.mCalibHPD.cend();++it) {
-                          out << it.key();
-                          out << it.value();
-                       }
-                    }
-
-            }
-        }
-        out << mLogModel;
-        out << mLogInit;
-        out << mLogAdapt;
-        out << mLogResults;
-
-        file.close();
-
-
+        *out << quint32 (ch.mBatchIndex);
+        *out << quint32 (ch.mBatchIterIndex);
+        *out << quint32 (ch.mBurnIterIndex);
+        *out << quint32 (ch.mMaxBatchs);
+        *out << ch.mMixingLevel;
+        *out << quint32 (ch.mIterPerBatch);
+        *out << quint32 (ch.mIterPerBurn);
+        *out << quint32 (ch.mIterPerAquisition);
+        *out << quint32 (ch.mAquisitionIterIndex);
+        *out << qint32 (ch.mSeed);
+        *out << quint32 (ch.mThinningInterval);
+        *out << quint32 (ch.mRealyAccepted);
+        *out << quint32 (ch.mTotalIter);
     }
-  }
+    // -----------------------------------------------------
+    //  Write phases data
+    // -----------------------------------------------------
+    for (Phase*& phase : mPhases) {
+        *out << phase->mAlpha;
+        *out << phase->mBeta;
+        *out << phase->mDuration;
+    }
+    // -----------------------------------------------------
+    //  Write events data
+    // -----------------------------------------------------
+    for (Event*& event : mEvents)
+        *out << event->mTheta;
+
+    // -----------------------------------------------------
+    //  Write dates data
+    // -----------------------------------------------------
+    for (Event*& event : mEvents) {
+        if (event->mType == Event::eDefault ) {
+            QList<Date> dates (event->mDates);
+            for (auto&& d  : dates) {
+                *out << d.mTheta;
+                *out << d.mSigma;
+                if (d.mDeltaType != Date::eDeltaNone)
+                    *out << d.mWiggle;
+
+                *out << d.mDeltaFixed;
+                *out << d.mDeltaMin;
+                *out << d.mDeltaMax;
+                *out << d.mDeltaAverage;
+                *out << d.mDeltaError;
+
+                *out << qint32 (d.mSettings.mTmin);
+                *out << qint32 (d.mSettings.mTmax);
+                *out <<  d.mSettings.mStep;
+                *out << quint8 (d.mSettings.mStepForced==true? 1: 0);
+
+
+                *out << d.getTminRefCurve();
+                *out << d.getTmaxRefCurve();
+
+                //mCalibration and mWiggleCalibration are saved in to *.cal file
+
+                *out << quint32 (d.mCalibHPD.size());
+                for (QMap<double, double>::const_iterator it = d.mCalibHPD.cbegin(); it!=d.mCalibHPD.cend();++it) {
+                    *out << it.key();
+                    *out << it.value();
+                }
+            }
+
+        }
+    }
+    *out << mLogModel;
+    *out << mLogInit;
+    *out << mLogAdapt;
+    *out << mLogResults;
+
 }
 /** @Brief Read the .res file, it's the result of the saved computation
  *
  * */
-void Model::restoreFromFile(const QString& fileName)
+void Model::restoreFromFile(QDataStream *in)
 {
 /*    QFile fileDat(fileName);
     fileDat.open(QIODevice::ReadOnly);
@@ -3149,56 +3134,57 @@ void Model::restoreFromFile(const QString& fileName)
    // QFileInfo info(fileName);
    // QFile file(info.path() + info.baseName() + ".res");
 
-    QFile file(fileName);
-    if (file.exists() && file.open(QIODevice::ReadOnly)){
+   // QFile file(in);
+  //  if (file.exists() && file.open(QIODevice::ReadOnly)){
 
     //    if ( file.size()!=0 /* uncompressedData.size()!=0*/ ) {
  //           QDataStream in(&uncompressedData, QIODevice::ReadOnly);
-    QDataStream in(&file);
+   // QDataStream in(&file);
 
     int QDataStreamVersion;
-    in >> QDataStreamVersion;
-    in.setVersion(QDataStreamVersion);
+    *in >> QDataStreamVersion;
+    in->setVersion(QDataStreamVersion);
 
-    if (in.version()!= QDataStream::Qt_6_1)
+    if (in->version()!= QDataStream::Qt_6_1)
             return;
 
     QString appliVersion;
-    in >> appliVersion;
+    *in >> appliVersion;
     // prepare the future
     //QStringList projectVersionList = appliVersion.split(".");
+#ifdef DEBUG
     if (appliVersion != qApp->applicationVersion())
-        qDebug()<<file.fileName()<<" different version ="<<appliVersion<<" actual ="<<qApp->applicationVersion();
+        qDebug()<<" Different Model version ="<<appliVersion<<" actual ="<<qApp->applicationVersion();
 
-
+#endif
     // -----------------------------------------------------
     //  Read info
     // -----------------------------------------------------
 
     quint32 tmp32;
-    in >> tmp32;
+    *in >> tmp32;
 
     mChains.clear();
     mChains.reserve(int (tmp32));
     for (quint32 i=0 ; i<tmp32; ++i) {
         ChainSpecs ch;
-        in >> ch.burnElapsedTime;
-        in >> ch.mAdaptElapsedTime;
-        in >> ch.mAcquisitionElapsedTime;
+        *in >> ch.burnElapsedTime;
+        *in >> ch.mAdaptElapsedTime;
+        *in >> ch.mAcquisitionElapsedTime;
 
-        in >> ch.mBatchIndex;
-        in >> ch.mBatchIterIndex;
-        in >> ch.mBurnIterIndex;
-        in >> ch.mMaxBatchs;
-        in >> ch.mMixingLevel;
-        in >> ch.mIterPerBatch;
-        in >> ch.mIterPerBurn;
-        in >> ch.mIterPerAquisition;
-        in >> ch.mAquisitionIterIndex;
-        in >> ch.mSeed;
-        in >> ch.mThinningInterval;
-        in >> ch.mRealyAccepted;
-        in >> ch.mTotalIter;
+        *in >> ch.mBatchIndex;
+        *in >> ch.mBatchIterIndex;
+        *in >> ch.mBurnIterIndex;
+        *in >> ch.mMaxBatchs;
+        *in >> ch.mMixingLevel;
+        *in >> ch.mIterPerBatch;
+        *in >> ch.mIterPerBurn;
+        *in >> ch.mIterPerAquisition;
+        *in >> ch.mAquisitionIterIndex;
+        *in >> ch.mSeed;
+        *in >> ch.mThinningInterval;
+        *in >> ch.mRealyAccepted;
+        *in >> ch.mTotalIter;
         mChains.append(ch);
     }
 
@@ -3207,16 +3193,16 @@ void Model::restoreFromFile(const QString& fileName)
         // -----------------------------------------------------
 
         for (auto&& p : mPhases) {
-               in >> p->mAlpha;
-               in >> p->mBeta;
-               in >> p->mDuration;
+               *in >> p->mAlpha;
+               *in >> p->mBeta;
+               *in >> p->mDuration;
             }
         // -----------------------------------------------------
         //  Read events data
         // -----------------------------------------------------
 
         for (auto&& e:mEvents)
-            in >> e->mTheta;
+            *in >> e->mTheta;
 
         // -----------------------------------------------------
         //  Read dates data
@@ -3225,31 +3211,31 @@ void Model::restoreFromFile(const QString& fileName)
         for (auto&& event : mEvents) {
             if (event->mType == Event::eDefault )
                  for (auto&& d : event->mDates) {
-                    in >> d.mTheta;
-                    in >> d.mSigma;
+                    *in >> d.mTheta;
+                    *in >> d.mSigma;
                     if (d.mDeltaType != Date::eDeltaNone)
-                        in >> d.mWiggle;
+                       *in >> d.mWiggle;
 
-                    in >> d.mDeltaFixed;
-                    in >> d.mDeltaMin;
-                    in >> d.mDeltaMax;
-                    in >> d.mDeltaAverage;
-                    in >> d.mDeltaError;
+                    *in >> d.mDeltaFixed;
+                    *in >> d.mDeltaMin;
+                    *in >> d.mDeltaMax;
+                    *in >> d.mDeltaAverage;
+                    *in >> d.mDeltaError;
                     qint32 tmpInt32;
-                    in >> tmpInt32;
+                    *in >> tmpInt32;
                     d.mSettings.mTmin = int (tmpInt32);
-                    in >> tmpInt32;
+                    *in >> tmpInt32;
                     d.mSettings.mTmax = int (tmpInt32);
-                    in >> d.mSettings.mStep;
+                    *in >> d.mSettings.mStep;
                     quint8 btmp;
-                    in >> btmp;
+                   * in >> btmp;
                     d.mSettings.mStepForced =(btmp==1);
 
                    // in >> d.mSubDates;
                     double tmp;
-                    in >> tmp;
+                    *in >> tmp;
                     d.setTminRefCurve(tmp);
-                    in >> tmp;
+                    *in >> tmp;
                     d.setTmaxRefCurve(tmp);
 
                     /* Check if the Calibration Curve exist*/
@@ -3266,12 +3252,12 @@ void Model::restoreFromFile(const QString& fileName)
                     d.mCalibration = & (mProject->mCalibCurves[d.mUUID]);
 
                     quint32 tmpUint32;
-                    in >> tmpUint32;
+                    *in >> tmpUint32;
                     double tmpKey;
                     double tmpValue;
                     for (quint32 i= 0; i<tmpUint32; i++) {
-                        in >> tmpKey;
-                        in >> tmpValue;
+                       *in >> tmpKey;
+                       *in >> tmpValue;
                         d.mCalibHPD[tmpKey]= tmpValue;
                     }
 #ifdef DEBUG
@@ -3287,10 +3273,10 @@ void Model::restoreFromFile(const QString& fileName)
 #endif
                 }
          }
-        in >> mLogModel;
-        in >> mLogInit;
-        in >> mLogAdapt;
-        in >> mLogResults;
+        *in >> mLogModel;
+        *in >> mLogInit;
+        *in >> mLogAdapt;
+        *in >> mLogResults;
 
         //generateCorrelations(mChains);
        // generatePosteriorDensities(mChains, 1024, 1);
@@ -3300,10 +3286,9 @@ void Model::restoreFromFile(const QString& fileName)
         //  Read curve data
         // -----------------------------------------------------
 
-        file.close();
+    //    file.close();
        // file.remove(); // delete the temporary file with uncompressed data
-    }
-
+  //  }
 }
 
 bool Model::hasSelectedEvents()
