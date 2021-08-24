@@ -133,7 +133,7 @@ int Tabs::minimalHeight() const
 
 int Tabs::minimalWidth() const
 {
-    const int xMaxTab = !mTabRects.isEmpty() ? (mTabRects[mTabRects.size()-1].x() + mTabRects.at(mTabRects.size()-1).width()) : 10;
+    const int xMaxTab = !mTabRects.isEmpty() ? (mTabRects.at(mTabRects.size()-1).x() + mTabRects.at(mTabRects.size()-1).width()) : 10;
 
     const int w = mTabWidgets.at(mCurrentIndex) ? std::max(xMaxTab, mTabWidgets.at(mCurrentIndex)->rect().width()) : xMaxTab;
 
@@ -224,18 +224,44 @@ void Tabs::setFont(const QFont &font)
 void Tabs::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
-
+    const qreal ray = 5;
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
 
-    for (int i=0; i<mTabNames.size(); ++i) {
+    for (int i = 0; i<mTabNames.size(); ++i) {
         QColor backColor = (i == mCurrentIndex) ? Painting::mainColorDark : Qt::black;
         QColor frontColor = (i == mCurrentIndex) ? Qt::white : QColor(200, 200, 200);
         
-        const QRectF r = mTabRects[i];
-        p.fillRect(r, backColor);
+        const QRectF r = mTabRects.at(i);
+        QPainterPath pth;
+       /*
+        * // 1 rounded corner at left
+        pth.moveTo(r.x(), r.y() + r.height());
+        pth.lineTo(r.x(), r.y() + ray);
+
+        pth.arcTo(r.x() , r.y(), 2*ray, 2*ray, -180, -90);
+        pth.lineTo(r.x() + r.width()  , r.y() );
+
+        pth.lineTo(r.x() + r.width(), r.y() + r.height() );
+        pth.closeSubpath();
+       */
+
+        // 2 rounded corners
+        pth.moveTo(r.x(), r.y() + r.height());
+        pth.lineTo(r.x(), r.y() + ray);
+
+        pth.arcTo(r.x() , r.y(), 2*ray, 2*ray, -180, -90);
+        pth.lineTo(r.x() + r.width() - ray , r.y() );
+
+        pth.arcTo(r.x() + r.width() -2*ray , r.y(), 2*ray, 2*ray, 90, -90);
+        pth.lineTo(r.x() + r.width(), r.y() + r.height() );
+        pth.closeSubpath();
+
+        p.fillPath(pth, backColor);
+
         p.setPen(frontColor);
         p.drawText(r, Qt::AlignCenter, mTabNames[i]);
+
     }
 
     p.setPen(Painting::mainColorDark);
@@ -267,10 +293,10 @@ void Tabs::updateLayout()
         if (mTabVisible.at(i)) {
             const qreal w = fm.boundingRect(name).width();
             const qreal m = 1.5 * fm.boundingRect(QString("H")).width();
-            mTabRects.append(QRectF(x, 1,  2*m + w, h));
+            mTabRects.append(QRectF(x + i, 1,  2*m + w, h));
             x += 2*m + w;
         } else {
-            mTabRects.append(QRectF(x, 1, 0, h));
+            mTabRects.append(QRectF(x+ i, 1, 0, h));
         }
 
         ++i;
