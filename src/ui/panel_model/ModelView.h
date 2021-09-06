@@ -94,6 +94,7 @@ public:
 public slots:
     void updateProject();
     void modifyPeriod();
+    void updateCurveButton() const;
 
     void updateMultiCalibration();
 
@@ -157,7 +158,7 @@ private:
     EventsScene* mEventsScene;
     QGraphicsView* mEventsView;
 
-    SceneGlobalView* mEventsGlobalView;
+    SceneGlobalView* mEventsOverview;
     ScrollCompressor* mEventsGlobalZoom;
 
     QLineEdit* mEventsSearchEdit;
@@ -170,7 +171,7 @@ private:
     Button* mButDeleteEvent;
     Button* mButRecycleEvent;
     Button* mButExportEvents;
-    Button* mButEventsOverview;
+    Button* mButEventsGlobalView;
     Button* mButEventsGrid;
     Button* mButProperties;
     Button* mButMultiCalib;
@@ -192,7 +193,7 @@ private:
     Button* mButNewPhase;
     Button* mButDeletePhase;
     Button* mButExportPhases;
-    Button* mButPhasesOverview;
+    Button* mButPhasesGlobaliew;
     Button* mButPhasesGrid;
 
     QPropertyAnimation* mAnimationHide;
@@ -205,6 +206,7 @@ private:
     CalibrationView* mCalibrationView;
     MultiCalibrationView* mMultiCalibrationView;
 
+
     QPropertyAnimation* mAnimationCalib;
 
     // ------
@@ -213,7 +215,8 @@ private:
 
     //Button* mButModifyPeriod;
     QPushButton* mButModifyPeriod;
-    SwitchWidget* ButCurve;
+    //SwitchWidget* ButCurve;
+    Button* mButCurve;
 
     Label* mLeftPanelTitle;
     Label* mRightPanelTitle;

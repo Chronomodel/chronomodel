@@ -241,7 +241,7 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
 
 // Default time in BP, data in 14C age, data column is 1
     bool timeInBP (true);
-    bool timeInBC (false);
+    //bool timeInBC (false);
     bool dataInF14C (false);
     bool dataInAge (true);
     int ageColumn (1);
@@ -270,11 +270,11 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
                 QStringList values = line.split(dataSep);
                 
                 if (values.at(0).contains("BP", Qt::CaseInsensitive) ) {
-                    timeInBC = false;
+                    //timeInBC = false;
                     timeInBP = true;
                     
                 } else if (values.at(0).contains("BC", Qt::CaseInsensitive)  || values.at(0).contains("year", Qt::CaseInsensitive)) {
-                    timeInBC = true;
+                    //timeInBC = true;
                     timeInBP = false;
                 }
                 

@@ -47,7 +47,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 // Constructor / Destructor / Init
 ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
 {
-
+setMouseTracking(true);
     setScreenDefinition();
 
     mModelView = new ModelView();

@@ -952,10 +952,10 @@ bool Project::insert(const QString& path)
            const QJsonArray phases = mState.value(STATE_PHASES).toArray();
 
            if (phases.isEmpty()) {
-               minXPhase = 0;
+               //minXPhase = 0;
                maxXPhase = 0;
-               minYPhase = 0;
-               maxYPhase = 0;
+               //minYPhase = 0;
+               //maxYPhase = 0;
 
            } else {
                for (auto&& phaseJSON : phases) {
@@ -980,10 +980,10 @@ bool Project::insert(const QString& path)
 
            const QJsonArray events = mState.value(STATE_EVENTS).toArray();
            if (events.isEmpty()) {
-               minXEvent = 0;
+               //minXEvent = 0;
                maxXEvent = 0;
-               minYEvent = 0;
-               maxYEvent = 0;
+               //minYEvent = 0;
+               //maxYEvent = 0;
 
            } else {
                for (auto&& eventJSON : events) {

@@ -117,10 +117,10 @@ QRect Tabs::widgetRect()
  */
 QRect Tabs::minimalGeometry() const
 {
-    int xMaxTab (mTabRects.at(mTabRects.size()-1).x() + mTabRects.at(mTabRects.size()-1).width());
+    const int xMaxTab (mTabRects.at(mTabRects.size()-1).x() + mTabRects.at(mTabRects.size()-1).width());
 
-    int w =  mTabWidgets.at(mCurrentIndex) ? std::max(xMaxTab, mTabWidgets.at(mCurrentIndex)->rect().width()) : xMaxTab;
-    int h =  mTabHeight + (mTabWidgets[mCurrentIndex] ? mTabWidgets[mCurrentIndex]->rect().height() : 0);
+    const int w =  mTabWidgets.at(mCurrentIndex) ? std::max(xMaxTab, mTabWidgets.at(mCurrentIndex)->rect().width()) : xMaxTab;
+    const int h =  mTabHeight + (mTabWidgets[mCurrentIndex] ? mTabWidgets[mCurrentIndex]->rect().height() : 0);
 
     return QRect(pos().x(), pos().y(),  w, h);
 }
@@ -133,12 +133,13 @@ int Tabs::minimalHeight() const
 
 int Tabs::minimalWidth() const
 {
-    const int xMaxTab = !mTabRects.isEmpty() ? (mTabRects.at(mTabRects.size()-1).x() + mTabRects.at(mTabRects.size()-1).width()) : 10;
+    const int xMaxTab = !mTabRects.isEmpty() ? (mTabRects.last().x() + mTabRects.last().width() ) : 10;
 
     const int w = mTabWidgets.at(mCurrentIndex) ? std::max(xMaxTab, mTabWidgets.at(mCurrentIndex)->rect().width()) : xMaxTab;
 
     return  w;
 }
+
 QSize Tabs::sizeHint() const
 {
     if (mTabNames.isEmpty())
@@ -231,36 +232,38 @@ void Tabs::paintEvent(QPaintEvent* e)
     for (int i = 0; i<mTabNames.size(); ++i) {
         QColor backColor = (i == mCurrentIndex) ? Painting::mainColorDark : Qt::black;
         QColor frontColor = (i == mCurrentIndex) ? Qt::white : QColor(200, 200, 200);
-        
-        const QRectF r = mTabRects.at(i);
-        QPainterPath pth;
-       /*
-        * // 1 rounded corner at left
-        pth.moveTo(r.x(), r.y() + r.height());
-        pth.lineTo(r.x(), r.y() + ray);
+        if (mTabVisible.at(i)) {
 
-        pth.arcTo(r.x() , r.y(), 2*ray, 2*ray, -180, -90);
-        pth.lineTo(r.x() + r.width()  , r.y() );
+            const QRectF r = mTabRects.at(i);
+            QPainterPath pth;
+            /*
+             * // 1 rounded corner at left
+              pth.moveTo(r.x(), r.y() + r.height());
+              pth.lineTo(r.x(), r.y() + ray);
 
-        pth.lineTo(r.x() + r.width(), r.y() + r.height() );
-        pth.closeSubpath();
-       */
+              pth.arcTo(r.x() , r.y(), 2*ray, 2*ray, -180, -90);
+              pth.lineTo(r.x() + r.width()  , r.y() );
 
-        // 2 rounded corners
-        pth.moveTo(r.x(), r.y() + r.height());
-        pth.lineTo(r.x(), r.y() + ray);
+              pth.lineTo(r.x() + r.width(), r.y() + r.height() );
+              pth.closeSubpath();
+             */
 
-        pth.arcTo(r.x() , r.y(), 2*ray, 2*ray, -180, -90);
-        pth.lineTo(r.x() + r.width() - ray , r.y() );
+            // 2 rounded corners
+            pth.moveTo(r.x(), r.y() + r.height());
+            pth.lineTo(r.x(), r.y() + ray);
 
-        pth.arcTo(r.x() + r.width() -2*ray , r.y(), 2*ray, 2*ray, 90, -90);
-        pth.lineTo(r.x() + r.width(), r.y() + r.height() );
-        pth.closeSubpath();
+            pth.arcTo(r.x() , r.y(), 2*ray, 2*ray, -180, -90);
+            pth.lineTo(r.x() + r.width() - ray , r.y() );
 
-        p.fillPath(pth, backColor);
+            pth.arcTo(r.x() + r.width() -2*ray , r.y(), 2*ray, 2*ray, 90, -90);
+            pth.lineTo(r.x() + r.width(), r.y() + r.height() );
+            pth.closeSubpath();
 
-        p.setPen(frontColor);
-        p.drawText(r, Qt::AlignCenter, mTabNames[i]);
+            p.fillPath(pth, backColor);
+
+            p.setPen(frontColor);
+            p.drawText(r, Qt::AlignCenter, mTabNames.at(i));
+       }
 
     }
 
@@ -270,7 +273,7 @@ void Tabs::paintEvent(QPaintEvent* e)
 
 void Tabs::resizeEvent(QResizeEvent* e)
 {
-    Q_UNUSED(e);
+    (void) e;
     updateLayout();
 }
 
@@ -281,18 +284,20 @@ void Tabs::mousePressEvent(QMouseEvent* e)
             setTab(i, true);
 }
 
+/**
+ * @brief Create mTabRects which allows the drawing of tabs
+ */
 void Tabs::updateLayout()
 {
     mTabRects.clear();
     qreal x = 1.;
     const qreal h = mTabHeight - 1.;
-    QFontMetrics fm(font());
-
+    QFontMetrics fm (font());
+    const qreal m = 1.0 * fm.lineSpacing();
     int i = 0;
     for (QString& name : mTabNames) {
         if (mTabVisible.at(i)) {
-            const qreal w = fm.boundingRect(name).width();
-            const qreal m = 1.5 * fm.boundingRect(QString("H")).width();
+            const qreal w = fm.horizontalAdvance(name);
             mTabRects.append(QRectF(x + i, 1,  2*m + w, h));
             x += 2*m + w;
         } else {

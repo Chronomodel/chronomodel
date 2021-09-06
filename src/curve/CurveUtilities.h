@@ -118,10 +118,10 @@ std::vector<std::vector<long double>> calculMatR(const std::vector<long double>&
 std::vector<std::vector<long double>> calculMatQ(const std::vector<long double>& vec);
 
 void conversionIDF(PosteriorMeanG& G);
-PosteriorMeanG conversionIDF(const std::vector<long double> &vecGx, const std::vector<long double> &vecGy, const std::vector<long double> &vecGz, const std::vector<long double> &vecGErr);
+PosteriorMeanG conversionIDF(const std::vector<long double> &vecGx, const std::vector<long double> &vecGy, const std::vector<long double> &vecGz, const std::vector<long double> &vecGxErr, const std::vector<long double> &vecGyErr, const std::vector<long double> &vecGzErr);
 
 void conversionID(PosteriorMeanG& G);
-PosteriorMeanG conversionID(const std::vector<long double> &vecGx, const std::vector<long double> &vecGy, const std::vector<long double> &vecGz, const std::vector<long double> &vecGErr);
+PosteriorMeanG conversionID(const std::vector<long double> &vecGx, const std::vector<long double> &vecGy, const std::vector<long double> &vecGz, const std::vector<long double> &vecGxErr, const std::vector<long double> &vecGyErr, const std::vector<long double> &vecGzErr);
 
 class CurveUtilities
 {

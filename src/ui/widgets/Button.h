@@ -95,6 +95,8 @@ public:
 
     void setColorState(ColorState state);
     virtual void setCheckable(const bool checkable);
+    virtual void setText(const QString &text);
+    virtual void resizeEvent(QResizeEvent* e);
 
 protected:
     void paintEvent(QPaintEvent* e);
@@ -111,6 +113,7 @@ protected:
     bool mMouseOver;
 
     ColorState mColorState;
+    QFont mFont;
 
 public:
     bool mUseMargin;

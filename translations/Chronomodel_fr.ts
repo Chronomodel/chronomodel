@@ -209,123 +209,6 @@
     </message>
 </context>
 <context>
-    <name>CurveSettingsView</name>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="49"/>
-        <source>Curve Parameters</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="59"/>
-        <source>These parameters give you controls over the way curves are built. MCMC (Bayesian) can be activated for event time, VG or global lambda spline factor, etc. </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="68"/>
-        <source>Process</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="70"/>
-        <source>Univariate</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="71"/>
-        <source>Spherical</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="72"/>
-        <source>Vector</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="73"/>
-        <source>3D</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="75"/>
-        <source>Variable</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="77"/>
-        <source>Inclination</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="78"/>
-        <source>Declination</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="79"/>
-        <source>Field</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="80"/>
-        <source>Depth</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="81"/>
-        <source>Any Measure</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="83"/>
-        <source>Use Measurement Err.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="86"/>
-        <source>Time Type</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="88"/>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="93"/>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="104"/>
-        <source>Fixed</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="89"/>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="94"/>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="105"/>
-        <source>Bayesian</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="91"/>
-        <source>Variance</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="96"/>
-        <source>Variance Individual</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="99"/>
-        <source>Variance Value</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="102"/>
-        <source>Smoothing</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/Curve/CurveSettingsView.cpp" line="107"/>
-        <source>Smoothing Value</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>ColorPicker</name>
     <message>
         <location filename="../src/ui/widgets/ColorPicker.cpp" line="72"/>
@@ -373,6 +256,128 @@
     <message>
         <location filename="../src/ui/dialogs/ConstraintDialog.cpp" line="75"/>
         <source>Delete constraint</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>CurveSettingsView</name>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="49"/>
+        <source>Curve Parameters</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="59"/>
+        <source>These parameters give you controls over the way curves are built. MCMC (Bayesian) can be activated for event time, VG or global lambda spline factor, etc. </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="68"/>
+        <source>Process</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="70"/>
+        <source>None</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="71"/>
+        <source>Univariate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="72"/>
+        <source>Spherical</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="73"/>
+        <source>Vector</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="74"/>
+        <source>3D</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="76"/>
+        <source>Variable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="78"/>
+        <source>Inclination</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="79"/>
+        <source>Declination</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="80"/>
+        <source>Field</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="81"/>
+        <source>Depth</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="82"/>
+        <source>Any Measure</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="84"/>
+        <source>Use Measurement Err.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="87"/>
+        <source>Time Type</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="89"/>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="94"/>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="105"/>
+        <source>Fixed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="90"/>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="95"/>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="106"/>
+        <source>Bayesian</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="92"/>
+        <source>Variance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="97"/>
+        <source>Variance Individual</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="100"/>
+        <source>Variance Value</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="103"/>
+        <source>Smoothing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettingsView.cpp" line="108"/>
+        <source>Smoothing Value</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -535,7 +540,7 @@
 <context>
     <name>EventItem</name>
     <message>
-        <location filename="../src/ui/panel_model/scenes/EventItem.cpp" line="456"/>
+        <location filename="../src/ui/panel_model/scenes/EventItem.cpp" line="595"/>
         <source>No Phase</source>
         <translation type="unfinished"></translation>
     </message>
@@ -543,13 +548,8 @@
 <context>
     <name>EventKnownItem</name>
     <message>
-        <location filename="../src/ui/panel_model/scenes/EventKnownItem.cpp" line="234"/>
+        <location filename="../src/ui/panel_model/scenes/EventKnownItem.cpp" line="258"/>
         <source>Invalid bound</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/panel_model/scenes/EventKnownItem.cpp" line="303"/>
-        <source>No Phase</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -576,129 +576,129 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="100"/>
-        <source>Inc.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="101"/>
-        <source>Dec.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="102"/>
-        <source>Int.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="112"/>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="113"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="114"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="115"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="140"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="143"/>
         <source>Insert %1 Data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="152"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="155"/>
         <source>Delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="155"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="158"/>
         <source>Delete Data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="160"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="163"/>
         <source>Restore</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="163"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="166"/>
         <source>Restore Deleted Data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="169"/>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="173"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="172"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="176"/>
         <source>Calibrate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="175"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="178"/>
         <source>Combine</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="179"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="182"/>
         <source>Combine Data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="181"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="184"/>
         <source>Split</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="185"/>
-        <source>Split combined Data</source>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="102"/>
+        <source>Inclination</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="221"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="103"/>
+        <source>Declination</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="104"/>
+        <source>Field</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="188"/>
+        <source>Split Combined Data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="224"/>
         <source>Value</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="403"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="414"/>
         <source>Event name updated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="412"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="423"/>
         <source>Event color updated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="431"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="442"/>
         <source>Event method updated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="440"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="451"/>
         <source>Bound fixed value updated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="456"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="467"/>
         <source>Event Y Inc updated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="464"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="475"/>
         <source>Event Y Dec updated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="472"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="483"/>
         <source>Event Y Int updated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="480"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="491"/>
         <source>Event S Inc updated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="488"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="499"/>
         <source>Event S Int updated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="697"/>
+        <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="709"/>
         <source>No event selected !</source>
         <translation type="unfinished"></translation>
     </message>
@@ -884,22 +884,22 @@ You can also edit constraints by double clicking on the arrow</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewCurve.cpp" line="131"/>
+        <location filename="../src/ui/panel_results/GraphViewCurve.cpp" line="130"/>
         <source>Data Points</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewCurve.cpp" line="148"/>
+        <location filename="../src/ui/panel_results/GraphViewCurve.cpp" line="146"/>
         <source>G</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewCurve.cpp" line="155"/>
+        <location filename="../src/ui/panel_results/GraphViewCurve.cpp" line="153"/>
         <source>G Sup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewCurve.cpp" line="162"/>
+        <location filename="../src/ui/panel_results/GraphViewCurve.cpp" line="161"/>
         <source>G Inf</source>
         <translation type="unfinished"></translation>
     </message>
@@ -952,23 +952,23 @@ You can also edit constraints by double clicking on the arrow</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="390"/>
+        <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="393"/>
         <source>sigma</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="411"/>
-        <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="429"/>
+        <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="414"/>
+        <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="432"/>
         <source>Iteration</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="430"/>
+        <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="433"/>
         <source>Rate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="453"/>
+        <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="456"/>
         <source>Value</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1041,42 +1041,57 @@ You can also edit constraints by double clicking on the arrow</source>
     <name>GraphViewPhase</name>
     <message>
         <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="74"/>
-        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="132"/>
-        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="316"/>
-        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="336"/>
+        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="135"/>
+        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="480"/>
+        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="500"/>
         <source>Phase : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="188"/>
-        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="196"/>
+        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="191"/>
+        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="199"/>
+        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="404"/>
+        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="412"/>
         <source>Outside study period</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="216"/>
+        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="217"/>
+        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="302"/>
         <source>Years</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="221"/>
-        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="326"/>
+        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="222"/>
+        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="307"/>
+        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="489"/>
         <source>Phase Duration : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="269"/>
+        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="270"/>
         <source>Phase&apos;s Events&apos; Std Compil. : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="313"/>
-        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="323"/>
-        <source>Iterations</source>
+        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="354"/>
+        <source>Phase Tempo : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="425"/>
+        <source>Phase Activity : %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="477"/>
+        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="486"/>
+        <source>Iterations</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="666"/>
+        <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="680"/>
         <source>Iteration</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1084,147 +1099,101 @@ You can also edit constraints by double clicking on the arrow</source>
 <context>
     <name>GraphViewResults</name>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="108"/>
+        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="111"/>
         <source>Nothing to display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="202"/>
+        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="208"/>
         <source>Save graph image as...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="289"/>
+        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="295"/>
         <source>Save all trace</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="290"/>
+        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="296"/>
         <source>Do you want the entire trace from the beginning of the process or only the acquisition part</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="291"/>
+        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="297"/>
         <source>All trace</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="292"/>
+        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="298"/>
         <source>Only acquired part</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="320"/>
+        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="326"/>
         <source>Save curve</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="321"/>
+        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="327"/>
         <source>Do you want a reference curve to reused with ChronoModel or data of the graphic</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="322"/>
+        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="328"/>
         <source>Reference Curve</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="323"/>
+        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="329"/>
         <source>Graphics data</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>GraphViewTempo</name>
-    <message>
-        <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="72"/>
-        <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="307"/>
-        <source>Phase : %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="121"/>
-        <source>Years</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="126"/>
-        <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="297"/>
-        <source>Phase Duration : %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="175"/>
-        <source>Phase Tempo : %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="225"/>
-        <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="233"/>
-        <source>Outside study period</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="248"/>
-        <source>Phase Activity : %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="294"/>
-        <source>Iterations</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/panel_results/GraphViewTempo.cpp" line="406"/>
-        <source>Iteration</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>ImportDataView</name>
     <message>
-        <location filename="../src/ui/panel_model/ImportDataView.cpp" line="55"/>
+        <location filename="../src/ui/panel_model/ImportDataView.cpp" line="56"/>
         <source>Load CSV file...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ImportDataView.cpp" line="56"/>
+        <location filename="../src/ui/panel_model/ImportDataView.cpp" line="57"/>
         <source>Export all project data as CSV</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ImportDataView.cpp" line="60"/>
+        <location filename="../src/ui/panel_model/ImportDataView.cpp" line="61"/>
         <source>Your CSV file must contain 1 data per row. Each row must start with an Event name, the second row is the datation method to use. Allowed datation methods are : 14C, AM, Gauss, Unif, TL/OSL.
 Comments are allowed in your CSV. They must start with  # or // and can be placed at the end of a data row. When placed at the begining of a row, the whole row is ignored.<byte value="xd"/> Be careful, cell separator and decimal separator of the CSV file should be those defined in the Application Settings, otherwise the CSV file will not be opened</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ImportDataView.cpp" line="117"/>
+        <location filename="../src/ui/panel_model/ImportDataView.cpp" line="118"/>
         <source>Open CSV File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ImportDataView.cpp" line="271"/>
+        <location filename="../src/ui/panel_model/ImportDataView.cpp" line="272"/>
         <source>Bad file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ImportDataView.cpp" line="271"/>
+        <location filename="../src/ui/panel_model/ImportDataView.cpp" line="272"/>
         <source>Maybe you need to check the manual to build your CSV file !</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ImportDataView.cpp" line="271"/>
+        <location filename="../src/ui/panel_model/ImportDataView.cpp" line="272"/>
         <source>More...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ImportDataView.cpp" line="302"/>
+        <location filename="../src/ui/panel_model/ImportDataView.cpp" line="303"/>
         <source>Save as CSV</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ImportDataView.cpp" line="364"/>
+        <location filename="../src/ui/panel_model/ImportDataView.cpp" line="365"/>
         <source>Error : %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1315,119 +1284,124 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
 <context>
     <name>MCMCLoopCurve</name>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="120"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="120"/>
         <source>Calibrating...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="128"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="128"/>
         <source>Invalid Model -&gt; No Calibration on Data %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="143"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="143"/>
         <source>Invalid model</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="240"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="240"/>
         <source>Initializing Phase Gaps...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="251"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="251"/>
         <source>Initializing Phase Durations...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="306"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="306"/>
         <source>Initializing Events...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="315"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="315"/>
         <source>Warning : Find Circular Constraint Path %1  %2 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="330"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="324"/>
+        <source>Warning: chronological constraint not in accordance with the stratigraphy: %1 - %2 path, control depth value!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="341"/>
         <source>Warning : Find Circular constraint with %1  bad path  %2 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="338"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="349"/>
         <source>-----Error Init for event : %1 : min = %2 : max = %3-------</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="341"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="352"/>
         <source>Error Init for event : %1 : min = %2 : max = %3-------</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="511"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="522"/>
         <source>Initializing Variances...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="607"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="618"/>
         <source>Initializing Phases...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="1337"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="1348"/>
         <source>Warning : NO POSITIVE curve available with chain n° %1, current seed to change %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="1436"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="1447"/>
         <source>Build chain %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="1457"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="1471"/>
         <source>Calcul Mean Composante X for chain %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="1462"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="1474"/>
         <source>Calcul Mean Composante Y for chain %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="1465"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="1475"/>
         <source>Calcul Mean Composante Z for chain %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="1483"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="1496"/>
         <source>Calcul Mean Composante X for All chain</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="1486"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="1498"/>
         <source>Calcul Mean Composante Y for All chain</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="1489"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="1499"/>
         <source>Calcul Mean Composante Z for All chain</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="1496"/>
-        <source>Compute system Conversion...</source>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="1509"/>
+        <source>Compute System Conversion...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="3020"/>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="3132"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="3053"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="3165"/>
         <source>Not enought span between events theta</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="3025"/>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="3137"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="3058"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="3170"/>
         <source>3 events minimum required</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1620,320 +1594,320 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="86"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="87"/>
         <source>Initial state</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="98"/>
-        <location filename="../src/ui/window/MainWindow.cpp" line="563"/>
-        <location filename="../src/ui/window/MainWindow.cpp" line="594"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="99"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="564"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="595"/>
         <source>Ready</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="169"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="170"/>
         <source>Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="176"/>
-        <location filename="../src/ui/window/MainWindow.cpp" line="962"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="177"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="963"/>
         <source>&amp;New</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="178"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="179"/>
         <source>Create a new project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="179"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="180"/>
         <source>New project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="180"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="181"/>
         <source>What&apos;s This? :Create a new project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="184"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="185"/>
         <source>Open</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="186"/>
-        <location filename="../src/ui/window/MainWindow.cpp" line="195"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="187"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="196"/>
         <source>Open an existing project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="189"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="190"/>
         <source>Insert</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="190"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="191"/>
         <source>Insert an existing project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="193"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="194"/>
         <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="198"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="199"/>
         <source>&amp;Save</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="200"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="201"/>
         <source>Save the current project in the same place with the same name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="202"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="203"/>
         <source>Save as...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="203"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="204"/>
         <source>Change the current project on an other name or on an other place</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="205"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="206"/>
         <source>Export</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="211"/>
         <location filename="../src/ui/window/MainWindow.cpp" line="212"/>
-        <location filename="../src/ui/window/MainWindow.cpp" line="682"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="213"/>
         <location filename="../src/ui/window/MainWindow.cpp" line="683"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="684"/>
         <source>Undo</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="217"/>
         <location filename="../src/ui/window/MainWindow.cpp" line="218"/>
-        <location filename="../src/ui/window/MainWindow.cpp" line="686"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="219"/>
         <location filename="../src/ui/window/MainWindow.cpp" line="687"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="688"/>
         <source>Redo</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="221"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="222"/>
         <source>Show Undo Stack</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="226"/>
-        <location filename="../src/ui/window/MainWindow.cpp" line="362"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="227"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="363"/>
         <source>MCMC</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="227"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="228"/>
         <source>Change MCMC Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="229"/>
-        <location filename="../src/ui/window/MainWindow.cpp" line="231"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="230"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="232"/>
         <source>Run</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="233"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="234"/>
         <source>Run Model</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="235"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="236"/>
         <source>Reset Events and Data methods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="244"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="245"/>
         <source>Model</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="247"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="248"/>
         <source>Results</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="251"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="252"/>
         <source>Log</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="278"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="279"/>
         <source>Selected Events: Change Colour</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="281"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="282"/>
         <source>Selected Events: Change Method</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="284"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="285"/>
         <source>Selected Events: Change Data Method</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="287"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="288"/>
         <source>Select All Events of the Selected Phases</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="293"/>
-        <location filename="../src/ui/window/MainWindow.cpp" line="379"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="294"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="380"/>
         <source>About</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="296"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="297"/>
         <source>About Qt</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="299"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="300"/>
         <source>Help</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="303"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="304"/>
         <source>Manual Online</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="306"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="307"/>
         <source>Website</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="312"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="313"/>
         <source>English</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="316"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="317"/>
         <source>French</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="333"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="334"/>
         <source>File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="353"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="354"/>
         <source>Edit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="371"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="372"/>
         <source>View</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="387"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="388"/>
         <source>Actions</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="461"/>
-        <location filename="../src/ui/window/MainWindow.cpp" line="528"/>
-        <location filename="../src/ui/window/MainWindow.cpp" line="631"/>
-        <location filename="../src/ui/window/MainWindow.cpp" line="666"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="462"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="529"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="632"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="667"/>
         <source>Save current project as...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="472"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="473"/>
         <source>Save new project as...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="521"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="522"/>
         <source>Open File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="523"/>
-        <location filename="../src/ui/window/MainWindow.cpp" line="575"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="524"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="576"/>
         <source>Chronomodel Project (*.chr)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="537"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="538"/>
         <source>Loading project : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="573"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="574"/>
         <source>Insert File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="579"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="580"/>
         <source>Insert project : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="684"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="685"/>
         <source>Click to go back to the previous action</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="688"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="689"/>
         <source>Click to redo the last action</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="826"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="827"/>
         <source>Change Selected Events Colour</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="843"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="844"/>
         <source>Change Events Method</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="844"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="845"/>
         <source>Change Selected Events MCMC Method</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="864"/>
-        <location filename="../src/ui/window/MainWindow.cpp" line="874"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="865"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="875"/>
         <source>Change Data Method</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="865"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="866"/>
         <source>For what type of data do you want to change the method ?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="875"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="876"/>
         <source>Change MCMC method of data in selected events</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="917"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="918"/>
         <source>Do you really want to quit ChronoModel ?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="922"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="923"/>
         <source>Save project before quitting?</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2025,199 +1999,199 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
 <context>
     <name>ModelView</name>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="114"/>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="493"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="115"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="495"/>
         <source>STUDY PERIOD</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="125"/>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="1152"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="126"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="1160"/>
         <source>Events Scene</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="129"/>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="1460"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="130"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="1519"/>
         <source>Phases Scene</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="148"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="149"/>
         <source>Search Event or Data...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="150"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="151"/>
         <source>New Event</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="151"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="152"/>
         <source>Create a new Event</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="155"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="156"/>
         <source>New Bound</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="156"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="157"/>
         <source>Create a new Bound</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="160"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="161"/>
         <source>Delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="161"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="162"/>
         <source>Delete selected Event(s) or Bound(s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="165"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="166"/>
         <source>Restore</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="166"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="167"/>
         <source>Restore deleted item (Event or Bound)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="170"/>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="253"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="171"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="254"/>
         <source>Save Image</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="171"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="172"/>
         <source>Save image of the Events scene as a file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="175"/>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="258"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="176"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="259"/>
         <source>Overview</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="176"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="177"/>
         <source>Overview on the global Events scene</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="181"/>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="264"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="182"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="265"/>
         <source>Grid</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="182"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="183"/>
         <source>Drawing a grid under the events scene to organize</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="189"/>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="272"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="190"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="273"/>
         <source>Zoom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="194"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="195"/>
         <source>Properties</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="195"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="196"/>
         <source>Show the propeties of the first selected Event</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="202"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="203"/>
         <source>MultiCalib</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="203"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="204"/>
         <source>Show the calibrated curves of data within selected Events</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="210"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="211"/>
         <source>Data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="211"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="212"/>
         <source>Show the data importation panel from file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="243"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="244"/>
         <source>New Phase</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="244"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="245"/>
         <source>Create a new Phase</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="248"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="249"/>
         <source>Delete Phase</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="249"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="250"/>
         <source>Delete selected Phase(s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="254"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="255"/>
         <source>Save image of the Phases scene as a file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="259"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="260"/>
         <source>Overview on the global Phases scene</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="265"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="266"/>
         <source>Drawing a grid under the Phases scene to organize</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="1154"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="1162"/>
         <source>Calibrated Data View</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="1299"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="1307"/>
         <source>Save model image as...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="1463"/>
-        <source>Curve</source>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="1522"/>
+        <source>Curve Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="1465"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="1525"/>
         <source>Event Properties</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="1467"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="1528"/>
         <source>Import Data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/ModelView.cpp" line="1469"/>
+        <location filename="../src/ui/panel_model/ModelView.cpp" line="1531"/>
         <source>Multi-Calibration View</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2225,7 +2199,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
 <context>
     <name>MultiCalibrationDrawing</name>
     <message>
-        <location filename="../src/ui/panel_model/MultiCalibrationDrawing.cpp" line="236"/>
+        <location filename="../src/ui/panel_model/MultiCalibrationDrawing.cpp" line="242"/>
         <source>No Calibration</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2318,39 +2292,39 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="393"/>
-        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="943"/>
+        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="411"/>
+        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="961"/>
         <source>Bound : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="468"/>
+        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="486"/>
         <source>Event</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="742"/>
-        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="751"/>
+        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="760"/>
+        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="769"/>
         <source>Outside study period</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="766"/>
+        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="784"/>
         <source>Save calibration image as...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="833"/>
+        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="851"/>
         <source>Save graph image as...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="875"/>
+        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="893"/>
         <source>Select Colour</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="996"/>
+        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="1014"/>
         <source>Not  computable</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2974,36 +2948,36 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/project/Project.cpp" line="533"/>
         <location filename="../src/project/Project.cpp" line="559"/>
-        <location filename="../src/project/Project.cpp" line="831"/>
-        <location filename="../src/project/Project.cpp" line="854"/>
+        <location filename="../src/project/Project.cpp" line="850"/>
+        <location filename="../src/project/Project.cpp" line="873"/>
         <source>Error loading project file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/project/Project.cpp" line="534"/>
         <location filename="../src/project/Project.cpp" line="560"/>
-        <location filename="../src/project/Project.cpp" line="832"/>
-        <location filename="../src/project/Project.cpp" line="855"/>
+        <location filename="../src/project/Project.cpp" line="851"/>
+        <location filename="../src/project/Project.cpp" line="874"/>
         <source>The project file could not be loaded.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/project/Project.cpp" line="536"/>
-        <location filename="../src/project/Project.cpp" line="834"/>
+        <location filename="../src/project/Project.cpp" line="853"/>
         <source>Could not be find</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/project/Project.cpp" line="561"/>
-        <location filename="../src/project/Project.cpp" line="856"/>
+        <location filename="../src/project/Project.cpp" line="875"/>
         <source>Error message</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/project/Project.cpp" line="617"/>
         <location filename="../src/project/Project.cpp" line="631"/>
-        <location filename="../src/project/Project.cpp" line="892"/>
-        <location filename="../src/project/Project.cpp" line="906"/>
+        <location filename="../src/project/Project.cpp" line="911"/>
+        <location filename="../src/project/Project.cpp" line="925"/>
         <source>Project version doesn&apos;t match</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3043,167 +3017,167 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="774"/>
+        <location filename="../src/project/Project.cpp" line="777"/>
         <source>Error loading project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="775"/>
+        <location filename="../src/project/Project.cpp" line="778"/>
         <source>The project could not be loaded.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="776"/>
-        <location filename="../src/project/Project.cpp" line="794"/>
-        <location filename="../src/project/Project.cpp" line="1386"/>
+        <location filename="../src/project/Project.cpp" line="779"/>
+        <location filename="../src/project/Project.cpp" line="813"/>
+        <location filename="../src/project/Project.cpp" line="1418"/>
         <source>Error : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="792"/>
+        <location filename="../src/project/Project.cpp" line="811"/>
         <source>Error loading project MCMC results</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="793"/>
+        <location filename="../src/project/Project.cpp" line="812"/>
         <source>The project MCMC results could not be loaded.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="819"/>
-        <location filename="../src/project/Project.cpp" line="2973"/>
-        <location filename="../src/project/Project.cpp" line="3082"/>
+        <location filename="../src/project/Project.cpp" line="838"/>
+        <location filename="../src/project/Project.cpp" line="3005"/>
+        <location filename="../src/project/Project.cpp" line="3116"/>
         <source>Save current project as...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="1133"/>
+        <location filename="../src/project/Project.cpp" line="1152"/>
         <source>Chronomodel Project (*.chr)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="1162"/>
+        <location filename="../src/project/Project.cpp" line="1181"/>
         <source>Do you want to save the current project ?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="1295"/>
+        <location filename="../src/project/Project.cpp" line="1327"/>
         <source>Inconsistent values</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="1295"/>
+        <location filename="../src/project/Project.cpp" line="1327"/>
         <source>Start Date must be lower than End Date !</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="1360"/>
+        <location filename="../src/project/Project.cpp" line="1392"/>
         <source>Reset MCMC methods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="1361"/>
+        <location filename="../src/project/Project.cpp" line="1393"/>
         <source>All event&apos;s and data&apos;s MCMC methods will be reset to their default value.<byte value="xd"/>Do you really want to do this ?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="1416"/>
+        <location filename="../src/project/Project.cpp" line="1448"/>
         <source>Study period definition required</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="1417"/>
+        <location filename="../src/project/Project.cpp" line="1449"/>
         <source>To start your new project, you first have to define a study period.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="1447"/>
+        <location filename="../src/project/Project.cpp" line="1479"/>
         <source>New Event</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="1455"/>
+        <location filename="../src/project/Project.cpp" line="1487"/>
         <source>Event created</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="1465"/>
+        <location filename="../src/project/Project.cpp" line="1497"/>
         <source>New Bound</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="1473"/>
+        <location filename="../src/project/Project.cpp" line="1505"/>
         <source>Bound created</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="1830"/>
-        <location filename="../src/project/Project.cpp" line="2082"/>
+        <location filename="../src/project/Project.cpp" line="1862"/>
+        <location filename="../src/project/Project.cpp" line="2114"/>
         <source>Invalid data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="2268"/>
+        <location filename="../src/project/Project.cpp" line="2300"/>
         <source>Cannot combine</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="2402"/>
-        <location filename="../src/project/Project.cpp" line="2457"/>
-        <location filename="../src/project/Project.cpp" line="2812"/>
+        <location filename="../src/project/Project.cpp" line="2434"/>
+        <location filename="../src/project/Project.cpp" line="2489"/>
+        <location filename="../src/project/Project.cpp" line="2844"/>
         <source>Invalid value</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="2813"/>
+        <location filename="../src/project/Project.cpp" line="2845"/>
         <source>The fixed value must be positive!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="2823"/>
+        <location filename="../src/project/Project.cpp" line="2855"/>
         <source>Invalid values</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="2824"/>
+        <location filename="../src/project/Project.cpp" line="2856"/>
         <source>Min must be lower than max!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="2958"/>
+        <location filename="../src/project/Project.cpp" line="2990"/>
         <source>Risk on computation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="2959"/>
-        <location filename="../src/project/Project.cpp" line="3067"/>
+        <location filename="../src/project/Project.cpp" line="2991"/>
+        <location filename="../src/project/Project.cpp" line="3101"/>
         <source>The model contains at least one date whose calibration is not digitally computable. <byte value="xd"/><byte value="xd"/>Do you really want to continue ?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="2960"/>
+        <location filename="../src/project/Project.cpp" line="2992"/>
         <source>Stop, check the data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="2990"/>
-        <location filename="../src/project/Project.cpp" line="3107"/>
+        <location filename="../src/project/Project.cpp" line="3022"/>
+        <location filename="../src/project/Project.cpp" line="3141"/>
         <source>Your model is not valid</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="3024"/>
-        <location filename="../src/project/Project.cpp" line="3148"/>
+        <location filename="../src/project/Project.cpp" line="3056"/>
+        <location filename="../src/project/Project.cpp" line="3182"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="3066"/>
+        <location filename="../src/project/Project.cpp" line="3100"/>
         <source>Your data seems to be invalid</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/project/Project.cpp" line="3068"/>
+        <location filename="../src/project/Project.cpp" line="3102"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3238,25 +3212,35 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../src/Curve/CurveSettings.cpp" line="250"/>
-        <location filename="../src/Curve/CurveSettings.cpp" line="254"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="691"/>
+        <location filename="../src/curve/CurveSettings.cpp" line="260"/>
+        <source>Y</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettings.cpp" line="281"/>
+        <location filename="../src/curve/CurveSettings.cpp" line="288"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="694"/>
         <source>Field</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/CurveSettings.cpp" line="257"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="694"/>
+        <location filename="../src/curve/CurveSettings.cpp" line="284"/>
+        <source>Z</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettings.cpp" line="291"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="697"/>
         <source>Depth</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/CurveSettings.cpp" line="260"/>
+        <location filename="../src/curve/CurveSettings.cpp" line="294"/>
         <source>Measure</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/Curve/MCMCLoopCurve.cpp" line="746"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="757"/>
         <source>Error for event theta : %1 : min = %2 : max = %3</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3443,13 +3427,13 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="329"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1023"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1031"/>
         <source>Data : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="330"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1024"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1032"/>
         <source>Posterior calib. date</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3465,46 +3449,46 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="343"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1036"/>
-        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="991"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1044"/>
+        <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="1009"/>
         <source>Solutions exist outside study period</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="350"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1046"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1054"/>
         <source>Posterior Std. Deviation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="366"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1056"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1064"/>
         <source>Bound : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="367"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1057"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1065"/>
         <source>Posterior Bound Date</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="372"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1062"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1073"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1070"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1081"/>
         <source>Posterior Std G</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="378"/>
         <location filename="../src/model/ModelUtilities.cpp" line="646"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1067"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1075"/>
         <source>Event : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="379"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1068"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1076"/>
         <source>Posterior Event Date</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3516,118 +3500,118 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="403"/>
         <location filename="../src/model/ModelUtilities.cpp" line="443"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1090"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1116"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1098"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1124"/>
         <source>Phase : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="406"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1093"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1101"/>
         <source>Begin (posterior distrib.)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="411"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1097"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1105"/>
         <source>End (posterior distrib.)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="418"/>
         <location filename="../src/model/ModelUtilities.cpp" line="424"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1103"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1111"/>
         <source>Phase Time Range</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="445"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1119"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1127"/>
         <source>Duration (posterior distrib.)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="446"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1120"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1128"/>
         <source>No duration estimated ! (normal if only 1 event in the phase)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="446"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1120"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1128"/>
         <source>Years</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="457"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1129"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1137"/>
         <source>Succession : from %1 to %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="461"/>
         <location filename="../src/model/ModelUtilities.cpp" line="660"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1133"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1141"/>
         <source>Min Hiatus fixed = %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="464"/>
         <location filename="../src/model/ModelUtilities.cpp" line="663"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1136"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1144"/>
         <source>Min Hiatus unknown</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="467"/>
         <location filename="../src/model/ModelUtilities.cpp" line="666"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1139"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1147"/>
         <source>Min Hiatus between %1 and %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="478"/>
         <location filename="../src/model/ModelUtilities.cpp" line="485"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1149"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1157"/>
         <source>Transition Range</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="499"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1160"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1168"/>
         <source>No Gap</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="503"/>
         <location filename="../src/model/ModelUtilities.cpp" line="509"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1163"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1171"/>
         <source>Gap Range</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="528"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="882"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1007"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1180"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="887"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1015"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1188"/>
         <source>Curve</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="530"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1182"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1190"/>
         <source>Stat on the log10 of Lambda Spline</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="545"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1198"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1206"/>
         <source>- Accepted Curves for Chain %1 : %2 / %3 = %4 % </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="553"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1204"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1212"/>
         <source>- Accepted Curves for All Chain : %2 / %3 = %4 % </source>
         <translation type="unfinished"></translation>
     </message>
@@ -3703,8 +3687,8 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="625"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="830"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="955"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="835"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="962"/>
         <source>Data ( %1 / %2 ) : %3</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3736,297 +3720,305 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="681"/>
+        <source> - not functionnal link</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/model/ModelUtilities.cpp" line="684"/>
         <source> - Process Univariate on </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="685"/>
+        <location filename="../src/curve/CurveSettings.cpp" line="232"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="688"/>
         <source>Inclination</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="688"/>
+        <location filename="../src/curve/CurveSettings.cpp" line="235"/>
+        <source>X</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/curve/CurveSettings.cpp" line="257"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="691"/>
         <source>Declination</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="697"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="700"/>
         <source>Any</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="704"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="707"/>
         <source> - Process Spherical</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="708"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="711"/>
         <source> - Process Vector</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="712"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="715"/>
         <source> - Process 3D</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="717"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="720"/>
         <source> - Use Measurement Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="721"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="724"/>
         <source> - Time Bayesian</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="724"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="727"/>
         <source> - Time Fixed on init value</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="728"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="731"/>
         <source> - Variance Bayesian</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="731"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="734"/>
         <source> - Variance Fixed : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="735"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="738"/>
         <source> - Use Variance Individual</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="739"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="742"/>
         <source> - Smoothing Bayesian</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="742"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="745"/>
         <source> - Smoothing Fixed : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="756"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="759"/>
         <source>Number of chain %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="757"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="760"/>
         <source>Number of burn-in iterations : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="758"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="761"/>
         <source>Number of Max batches : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="759"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="762"/>
         <source>Number of iterations per batches : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="760"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="763"/>
         <source>Number of running iterations : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="761"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="764"/>
         <source>Thinning Interval : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="762"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="765"/>
         <source>Mixing level : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="784"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="909"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="787"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="914"/>
         <source>Bound ( %1 / %2 ) : %3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="785"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="790"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="910"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="788"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="793"/>
         <location filename="../src/model/ModelUtilities.cpp" line="915"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="920"/>
         <source> - Theta : %1 %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="789"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="914"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="792"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="919"/>
         <source>Event ( %1 / %2 ) : %3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="791"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="916"/>
-        <source> - Sigma_MH on Theta : %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="793"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="803"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="835"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="842"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="887"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="918"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="928"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="967"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1012"/>
-        <source> - - Current Acceptance Rate : %1 % (%2)</source>
+        <location filename="../src/model/ModelUtilities.cpp" line="795"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="805"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="839"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="846"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="891"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="923"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="933"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="966"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="974"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1019"/>
+        <source>     Current Acceptance Rate : %1 % (%2)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/model/ModelUtilities.cpp" line="796"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="921"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="924"/>
+        <source> - Sigma_MH on Theta : %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/model/ModelUtilities.cpp" line="799"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="927"/>
         <source> - S02 : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="800"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="925"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="803"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="931"/>
         <source> - Variance on G : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="801"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="926"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="806"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="935"/>
         <source> - Sigma_MH on Variance on G : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="815"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="940"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="819"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="947"/>
         <source> - G : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="818"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="943"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="822"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="950"/>
         <source> - Gx : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="820"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="945"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="824"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="952"/>
         <source> - Gy : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="822"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="947"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="826"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="954"/>
         <source> - Gz : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="831"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="956"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="836"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="963"/>
         <source> - ti : %1 %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="833"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="958"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="841"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="968"/>
         <source> - Sigma_MH on ti : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="839"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="964"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="844"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="972"/>
         <source> - Sigma_i : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="840"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="965"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="848"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="976"/>
         <source> - Sigma_MH on Sigma_i : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="845"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="970"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="850"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="978"/>
         <source> - Delta_i : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="852"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="977"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="857"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="985"/>
         <source>Phases</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="859"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="984"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="864"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="992"/>
         <source>Phase ( %1 / %2 ) : %3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="860"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="985"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="865"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="993"/>
         <source> - Begin : %1 %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="861"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="986"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="866"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="994"/>
         <source> - End : %1 %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="862"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="987"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="867"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="995"/>
         <source> - Tau : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="868"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="993"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="873"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1001"/>
         <source>Phases Constraints</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="875"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1000"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="880"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1008"/>
         <source>Succession ( %1 / %2) : from %3 to %4</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="876"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1001"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="881"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1009"/>
         <source> - Gamma : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="884"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1009"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="889"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1017"/>
         <source>Smoothing : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="885"/>
-        <location filename="../src/model/ModelUtilities.cpp" line="1010"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="892"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1020"/>
         <source> - Sigma_MH on Smoothing : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="960"/>
-        <source> --- Current Acceptance Rate : %1 % (%2)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="1030"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1038"/>
         <source>Solutions exist before study period</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/ModelUtilities.cpp" line="1033"/>
+        <location filename="../src/model/ModelUtilities.cpp" line="1041"/>
         <source>Solutions exist after study period</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4164,13 +4156,13 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_model/scenes/EventItem.cpp" line="305"/>
+        <location filename="../src/ui/panel_model/scenes/EventItem.cpp" line="321"/>
         <source>Dates added to event (CSV drag)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="200"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3268"/>
+        <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="206"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3876"/>
         <source>Image (*.png);;Photo (*.jpg);;Scalable Vector Graphics (*.svg)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4208,577 +4200,598 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
 <context>
     <name>ResultsView</name>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="118"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="117"/>
         <source>Posterior Distrib.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="119"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="118"/>
         <source>History Plot</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="120"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="119"/>
         <source>Acceptance Rate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="121"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="120"/>
         <source>Autocorrelation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="172"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="169"/>
+        <source>Event Date</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="210"/>
+        <source>Begin-End</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="214"/>
         <source>Unfold Events</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="174"/>
-        <source>Display phases&apos; events</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="176"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="165"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="218"/>
         <source>Unfold Data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="178"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="167"/>
         <source>Display Events&apos; data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="180"/>
-        <source>Calendar Dates</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="184"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="173"/>
         <source>Ind. Std. Deviations</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="187"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="176"/>
         <source>Std G</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="190"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="179"/>
         <source>Individual Calib. Dates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="194"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="183"/>
         <source>Wiggle shifted</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="197"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="283"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="186"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="238"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="301"/>
         <source>Show Stat.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="199"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="188"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="240"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="285"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="303"/>
         <source>Display numerical results computed on posterior densities below all graphs.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="222"/>
-        <source>Phase Duration</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="226"/>
-        <source>Phase Tempo</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="229"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="225"/>
         <source>Tempo Cred.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="232"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="228"/>
         <source>Tempo Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="235"/>
-        <source>Phase Activity</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="238"/>
-        <source>Show Tempo Stat.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="258"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="276"/>
         <source>G</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="262"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="280"/>
         <source>Error envelope</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="266"/>
-        <source>Events Points</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="270"/>
-        <source>Data Points</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="274"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="292"/>
         <source>G Prime</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="277"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="295"/>
         <source>G Second</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="280"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="298"/>
         <source>Lambda</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="346"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2595"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="375"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1171"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1488"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1511"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2412"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3012"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="4114"/>
         <source>Events</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="347"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="376"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1192"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1491"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1522"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2429"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3073"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="4118"/>
         <source>Phases</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="348"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="222"/>
         <source>Tempo</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="349"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2675"/>
-        <source>Curve</source>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="216"/>
+        <source>Display Phases&apos; Pvents</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="359"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1250"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2715"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="220"/>
+        <source>Display Events&apos; Pata</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="231"/>
+        <source>Activity</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="234"/>
+        <source>Duration</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="284"/>
+        <source>Events Mean</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="288"/>
+        <source>Data Mean</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="377"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1252"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1494"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1540"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2390"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3148"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="4122"/>
+        <source>Curves</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="387"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1360"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3214"/>
         <source>Display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="360"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="388"/>
         <source>Distrib. Options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="372"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="400"/>
         <source>Span Options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="376"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1272"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="404"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1371"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3227"/>
         <source>Study Period Display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="378"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="406"/>
         <source>Restore view with the study period span</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="380"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="408"/>
         <source>Span</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="386"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="414"/>
         <source>Enter a minimal value to display the curves</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="390"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="418"/>
         <source>Enter a maximal value to display the curves</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="392"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1900"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="420"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2017"/>
         <source>X</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="409"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="437"/>
         <source>Enter zoom value to magnify the curves on X span</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="411"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="439"/>
         <source>Major Interval</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="418"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="446"/>
         <source>Enter a interval for the main division of the axes under the curves, upper than 1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="420"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="448"/>
         <source>Minor Interval Count</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="427"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="455"/>
         <source>Enter a interval for the subdivision of the Major Interval for the scale under the curves, upper than 1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="479"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="505"/>
         <source>Graphic Options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="485"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1942"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="511"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2061"/>
         <source>Y</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="497"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="523"/>
         <source>Enter zoom value to magnify the curves on Y scale</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="499"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="525"/>
         <source>Font</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="504"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="530"/>
         <source>Click to change the font on the drawing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="506"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="532"/>
         <source>Thickness</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="515"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="541"/>
         <source>Select to change the thickness of the drawing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="518"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="544"/>
         <source>Opacity</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="533"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="559"/>
         <source>Select to change the opacity of the drawing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="586"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="612"/>
         <source>MCMC Chains</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="592"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="618"/>
         <source>Chain Concatenation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="607"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="633"/>
         <source>Density Options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="613"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="639"/>
         <source>Show Confidence Bar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="617"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="643"/>
         <source>Confidence Level (%)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="627"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="654"/>
         <source>Grid Length</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="642"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="670"/>
         <source>FFTW Bandwidth</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="648"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="677"/>
         <source>Activity Bandwidth</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="714"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="744"/>
         <source>Prev.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="717"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="747"/>
         <source>Display previous data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="726"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="756"/>
         <source>Next</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="729"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="759"/>
         <source>Display next data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="732"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="762"/>
         <source>Nb Densities / Page</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="738"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="768"/>
         <source>Enter the maximum densities to display on a sheet</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="763"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="793"/>
         <source>Capture</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="766"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="796"/>
         <source>Save all currently visible results as an image.&lt;br&gt;&lt;u&gt;Note&lt;/u&gt; : If you want to copy textual results, see the Log tab.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="768"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="798"/>
         <source>Results</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="771"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="801"/>
         <source>Export all result in several files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="794"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="809"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="817"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="832"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3780"/>
         <source>Save</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="797"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="820"/>
         <source>Save image as file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="799"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="804"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="822"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="827"/>
         <source>Copy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="802"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="825"/>
         <source>Copy image to clipboard</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="807"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="830"/>
         <source>Copy text results to clipboard</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="812"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="835"/>
         <source>Save graph data to file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="832"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2727"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3151"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="863"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3297"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3757"/>
         <source>Page</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="833"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="864"/>
         <source>Saving</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1272"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1371"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3227"/>
         <source>Fit Display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1336"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1343"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1445"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1452"/>
         <source>Chain %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1679"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1784"/>
         <source>Lambda Spline</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1835"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1887"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1948"/>
         <source>Speed Inclination</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1837"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1889"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1950"/>
         <source>Acceleration Inclination</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1839"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1891"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1952"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2006"/>
         <source>Inclination</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1845"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1929"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1958"/>
         <source>Speed Declination</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1847"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1931"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1960"/>
         <source>Acceleration Declination</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1849"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1933"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1962"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2052"/>
         <source>Declination</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1855"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1984"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1968"/>
         <source>Speed Field</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1857"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1987"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1970"/>
         <source>Acceleration Field</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1859"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1990"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1972"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2124"/>
         <source>Field</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1865"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1978"/>
         <source>Speed Depth</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1867"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1980"/>
         <source>Acceleration Depth</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1869"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1982"/>
         <source>Depth</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1875"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1988"/>
         <source>Speed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1877"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1990"/>
         <source>Acceleration</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1879"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1992"/>
         <source>Measure</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1896"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2000"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2011"/>
         <source>Speed X</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1898"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2003"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2014"/>
         <source>Acceleration X</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1938"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2048"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2057"/>
         <source>Speed Y</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1940"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2050"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2059"/>
         <source>Acceleration Y</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1996"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2118"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2130"/>
         <source>Speed Z</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="1998"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2121"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2133"/>
         <source>Acceleration Z</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2000"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="2136"/>
         <source>Z</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3266"/>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3595"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3874"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="4200"/>
         <source>Save graph image as...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3392"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="4000"/>
         <source>Export to directory...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3394"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="4002"/>
         <source>Directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/panel_results/ResultsView.cpp" line="3408"/>
+        <location filename="../src/ui/panel_results/ResultsView.cpp" line="4016"/>
         <source>Project filename : %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4825,8 +4838,8 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
 <context>
     <name>SwitchWidget</name>
     <message>
-        <location filename="../src/ui/widgets/SwitchAction.cpp" line="105"/>
-        <source>Building mode</source>
+        <location filename="../src/ui/widgets/SwitchAction.cpp" line="107"/>
+        <source>Functional Link</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

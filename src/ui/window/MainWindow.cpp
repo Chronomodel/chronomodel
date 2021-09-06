@@ -50,6 +50,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 #include <QLocale>
 #include <QFont>
+#include <iostream>
 
 // Constructor / Destructor
 MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
@@ -1016,7 +1017,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     else
         resize( QSize(400, 400));
 
-    mProjectView->showHelp(AppSettings::mShowHelp);
+    mProjectView->showHelp(false);
     mHelpAction->setChecked(AppSettings::mShowHelp);
 
   //  bool fileOpened = false;
@@ -1071,7 +1072,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
             path = dir + "/" + filename;
 
     }
-
+std::cout<<path.toCFString();
 
     if (path != "") {
        /* const QString dir = AppSettings::mLastDir;
@@ -1113,7 +1114,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     setAppSettings();
     mProjectView->readSettings();
 
-    if (mProject->mModel!=nullptr && (! mProject->mModel->mChains.isEmpty()) ) {
+    if (mProject!=nullptr && mProject->mModel!=nullptr && (! mProject->mModel->mChains.isEmpty()) ) {
         mProject->mModel->updateDesignFromJson();
    //     mProject->mModel->updateDensities(1024, 1.06, 95.0);  //todo ici à remettre en place
         mProjectView->showResults();

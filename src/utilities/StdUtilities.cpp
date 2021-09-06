@@ -462,9 +462,9 @@ QMap<double, double> vector_to_map(const QVector<double>& data, const double min
 
     else {
         const int nbPts = 1 + int (round((max - min) / step)); // step is not usefull, it's must be data.size/(max-min+1)
-
-        for (int i=0; i<nbPts; ++i) {
-            double t = min + i * step;
+        double t;
+        for (int i = 0; i<nbPts; ++i) {
+            t = min + i * step;
 
             if (i < data.size())
                 map.insert(t, data.at(i));
@@ -477,15 +477,15 @@ QMap<double, double> vector_to_map(const QVector<double>& data, const double min
 QMap<double, double> vector_to_map(const QVector<int>& data, const double min, const double max, const double step)
 {
     Q_ASSERT(max>=min && !data.isEmpty());
-    QMap<double, double> map;
+    QMap<double, double> map ;
     if (min == max)
         map.insert(min, data.at(0));
 
     else {
         const int nbPts = 1 + (int)round((max - min) / step); // step is not usefull, it's must be data.size/(max-min+1)
-
-        for (int i=0; i<nbPts; ++i) {
-            double t = min + i * step;
+        double t;
+        for (int i = 0; i<nbPts; ++i) {
+             t = min + i * step;
 
             if (i < data.size())
                 map.insert(t,  double (data.at(i)));

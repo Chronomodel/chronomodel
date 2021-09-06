@@ -158,7 +158,7 @@ void display(const std::vector<double>& v)
 }
 
 
-PosteriorMeanG conversionIDF(const std::vector<long double>& vecGx, const std::vector<long double>& vecGy, const std::vector<long double>& vecGz, const std::vector<long double>& vecGErr)
+PosteriorMeanG conversionIDF(const std::vector<long double>& vecGx, const std::vector<long double>& vecGy, const std::vector<long double>& vecGz, const std::vector<long double>& vecGxErr, const std::vector<long double> &vecGyErr, const std::vector<long double> &vecGzErr)
 {
     const double deg = 180. / M_PI ;
     const unsigned n = vecGx.size();
@@ -181,7 +181,15 @@ PosteriorMeanG conversionIDF(const std::vector<long double>& vecGx, const std::v
         const long double Dec = atan2(Gy, Gx); // angleD(Gx, Gy);
         // U_cmt_change_repere , ligne 470
         // sauvegarde des erreurs sur chaque paramètre  - on convertit en degrès pour I et D
-        const long double ErrIDF = vecGErr.at(j); // On suppose toutes les erreurs identiques, isotrope
+        // Calcul de la boule d'erreur moyenne par moyenne quadratique loigne 464
+       /*   ErrGx:=Tab_parametrique[iJ].ErrGx;
+          ErrGy:=Tab_parametrique[iJ].ErrGy;
+          ErrGz:=Tab_parametrique[iJ].ErrGz;
+          ErrIDF:=sqrt((sqr(ErrGx)+sqr(ErrGy)+sqr(ErrGz))/3);
+        */
+
+
+        const long double ErrIDF = sqrt((pow(vecGxErr.at(j), 2.) +pow(vecGyErr.at(j), 2.) +pow(vecGzErr.at(j), 2.))/3.);
 
         const long double ErrI = ErrIDF / F ;
         const long double ErrD = ErrIDF / (F * cos(Inc)) ;
@@ -208,7 +216,7 @@ PosteriorMeanG conversionIDF(const std::vector<long double>& vecGx, const std::v
 
 void conversionIDF (PosteriorMeanG& G)
 {
-   PosteriorMeanG res = conversionIDF(G.gx.vecG, G.gy.vecG, G.gz.vecG, G.gz.vecVarG );
+   PosteriorMeanG res = conversionIDF(G.gx.vecG, G.gy.vecG, G.gz.vecG, G.gx.vecVarG, G.gy.vecVarG, G.gz.vecVarG );
    G.gx.vecG = std::move(res.gx.vecG);
    G.gy.vecG = std::move(res.gy.vecG);
    G.gz.vecG = std::move(res.gz.vecG);
@@ -226,54 +234,14 @@ void conversionIDF (PosteriorMeanG& G)
  * @param vecGErr
  * @return
  */
-PosteriorMeanG conversionID(const std::vector<long double>& vecGx, const std::vector<long double>& vecGy, const std::vector<long double>& vecGz, const std::vector<long double>& vecGErr)
+PosteriorMeanG conversionID(const std::vector<long double>& vecGx, const std::vector<long double>& vecGy, const std::vector<long double>& vecGz, const std::vector<long double>& vecGxErr, const std::vector<long double>& vecGyErr, const std::vector<long double>& vecGzErr)
 {
-    const double deg = 180. / M_PI ;
-    const unsigned n = vecGx.size();
-    PosteriorMeanG res;
-    res.gx.vecG.resize(n);
-    res.gx.vecVarG.resize(n);
-    res.gy.vecG.resize(n);
-    res.gy.vecVarG.resize(n);
-    res.gz.vecG.resize(n);
-    res.gz.vecVarG.resize(n);
-
-    for (unsigned j = 0; j < n ; ++j) {
-        const long double& Gx = vecGx.at(j);
-        const long double& Gy = vecGy.at(j);
-        const long double& Gz = vecGz.at(j);
-
-        const long double F = 100.;
-        const long double Inc = asin(Gz / F);
-        const long double Dec = atan2(Gy, Gx); // angleD(Gx, Gy);
-        // U_cmt_change_repere , ligne 470
-        // sauvegarde des erreurs sur chaque paramètre  - on convertit en degrès pour I et D
-        const long double ErrIDF = vecGErr.at(j); // On suppose toutes les erreurs identiques, isotrope
-
-        const long double ErrI = ErrIDF / F ;
-        const long double ErrD = ErrIDF / (F * cos(Inc)) ;
-
-       /* long double ErrI = Gz+ErrIDF ; // dans l'espace 3D, l'enveloppe supérieure
-        ErrI = abs(asin(ErrIDF/F) - Inc); // pour retrouver la différence
-
-       // long double ErrD = Gz+ErrIDF/F / (F * cos(Inc))
-       */
-        res.gx.vecG[j] = std::move(Inc * deg);
-        res.gx.vecVarG[j] = std::move(ErrI* deg);
-
-        res.gy.vecG[j] = std::move(Dec * deg);
-        res.gy.vecVarG[j] = std::move(ErrD* deg);
-
-        res.gz.vecG[j] = std::move(F);
-        res.gz.vecVarG[j] = std::move(ErrIDF);
-
-    }
-    return res;
+   return conversionIDF(vecGx, vecGy, vecGz, vecGxErr, vecGyErr, vecGzErr);
 }
 
 void conversionID (PosteriorMeanG& G)
 {
-    PosteriorMeanG res = conversionID(G.gx.vecG, G.gy.vecG, G.gz.vecG, G.gz.vecVarG );
+    PosteriorMeanG res = conversionID(G.gx.vecG, G.gy.vecG, G.gz.vecG, G.gx.vecVarG, G.gy.vecVarG, G.gz.vecVarG );
     G.gx.vecG = std::move(res.gx.vecG);
     G.gy.vecG = std::move(res.gy.vecG);
     G.gz.vecG = std::move(res.gz.vecG);

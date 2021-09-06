@@ -42,15 +42,19 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 
 
-Button::Button(QWidget* parent):QPushButton(parent)
+Button::Button(QWidget* parent):QPushButton(parent),
+  mIconOnly(true),
+  mFont(QPushButton::font())
+
 {
     init();
 
 }
 
-Button::Button(const QString& text, QWidget* parent):QPushButton(text, parent)
+Button::Button(const QString& text, QWidget* parent):QPushButton(text, parent),
+    mIconOnly(true),
+    mFont(QPushButton::font())
 {
-    //setText(text);
     init();
 }
 
@@ -62,12 +66,32 @@ void Button::init()
     mMouseOver = false;
     mFlatVertical = false;
     mFlatHorizontal = false;
+    QPushButton::setFlat(false);
     mIsClose = false;
 
     mColorState = eDefault;
 
     mUseMargin = false;
-    mIconOnly = true;
+
+
+    QIcon ic = icon();
+    bool textOnly = !mIconOnly && !text().isEmpty() && ic.isNull();
+
+    if (!mIconOnly) {
+        mFont = QPushButton::font();
+        if (textOnly)
+            mFont.setBold(true);
+
+        QFontMetricsF fm (mFont);
+        qreal textSize = fm.horizontalAdvance(text());
+
+        while (textSize > (rect().width() - 30. )) {
+            mFont.setPointSizeF(mFont.pointSizeF() - 1);
+            fm = QFontMetricsF(mFont);
+            textSize = fm.horizontalAdvance(text());
+        }
+    }
+
   
 }
 
@@ -84,12 +108,14 @@ void Button::keyPressEvent(QKeyEvent* event)
 void Button::setFlatVertical()
 {
     mFlatVertical = true;
+    QPushButton::setFlat(true);
     update();
 }
 
 void Button::setFlatHorizontal()
 {
     mFlatHorizontal = true;
+    QPushButton::setFlat(true);
     update();
 }
 
@@ -120,6 +146,28 @@ void Button::leaveEvent(QEvent * e)
     QPushButton::QWidget::leaveEvent(e);
 }
 
+void Button::resizeEvent(QResizeEvent* e)
+{
+    const bool textOnly = !mIconOnly && !text().isEmpty() && icon().isNull();
+
+    if (!mIconOnly) {
+        mFont = QPushButton::font();
+        if (textOnly)
+            mFont.setBold(true);
+
+        QFontMetricsF fm (mFont);
+        qreal textSize = fm.horizontalAdvance(text());
+
+        while (textSize > (rect().width() - 5. )) {
+            mFont.setPointSizeF(mFont.pointSizeF() - 1);
+            fm = QFontMetricsF(mFont);
+            textSize = fm.horizontalAdvance(text());
+        }
+    }
+
+    QPushButton::resizeEvent(e);
+}
+
 void Button::setCheckable(const bool checkable)
 {
     if (!checkable)
@@ -129,6 +177,28 @@ void Button::setCheckable(const bool checkable)
 
     QPushButton::setCheckable(checkable);
 
+}
+
+void Button::setText(const QString& text)
+{
+    QPushButton::setText(text);
+/*
+    QIcon ic = icon();
+    bool textOnly = !mIconOnly && ic.isNull();
+
+    mFont = QPushButton::font();
+    if (textOnly)
+        mFont.setBold(true);
+
+    QFontMetricsF fm (mFont);
+    qreal textSize = fm.horizontalAdvance(text);
+
+    while (textSize > (rect().width() - 5. )) {
+        mFont.setPointSizeF(mFont.pointSizeF() - 1);
+        fm = QFontMetricsF(mFont);
+        textSize = fm.horizontalAdvance(text);
+    }
+*/
 }
 
 void Button::paintEvent(QPaintEvent* e)
@@ -177,7 +247,8 @@ void Button::paintEvent(QPaintEvent* e)
 
     } else if (mFlatVertical || mFlatHorizontal) {
 
-        QColor gradColTop(40, 40, 40);
+        //QColor gradColTop(40, 40, 40);
+        QColor gradColTop(180, 180, 180);
         QColor gradColBot(30, 30, 30);
         QColor gradLineLight(Painting::borderDark);
         QColor gradLineDark(0, 0, 0);
@@ -189,74 +260,86 @@ void Button::paintEvent(QPaintEvent* e)
             gradLineDark = QColor(80, 80, 80);
 
         } else if (isDown() || isChecked()) {
-            gradColTop = Painting::mainColorDark;
+            gradColTop = Painting::mainColorDark.lighter(225);
             gradColBot = Painting::mainColorDark;
             gradLineLight = QColor(30, 30, 30);
             gradLineDark = QColor(10, 10, 10);
         }
-        QLinearGradient grad(0, 0, 0, r.height());
-        grad.setColorAt(0, gradColTop);
-        grad.setColorAt(1, gradColBot);
+
+        QGradient grad;
+        if (mFlatVertical) {
+           grad =  QLinearGradient(0, 0, r.width(), r.height());
+           grad.setColorAt(0., gradColBot);
+           grad.setColorAt(0.85, gradColBot);
+           grad.setColorAt(1, gradColTop);
+
+          /* grad = QRadialGradient(QPointF(r.width()/2, 0),  3*r.height()/3);//QLinearGradient (0, 0, 0, r.height());
+          // grad.setColorAt(0., gradColBot);
+           grad.setColorAt(0.85, gradColBot);
+           grad.setColorAt(1, gradColTop);*/
+        } else if (mFlatHorizontal) {
+           grad = QRadialGradient(QPointF(r.width()/2, 0),  2*r.width()/3);//QLinearGradient (0, 0, 0, r.height());
+           grad.setColorAt(0., gradColBot);
+           grad.setColorAt(0.5, gradColBot);
+           grad.setColorAt(1, gradColTop);
+        }
+
+       // grad.setColorAt(0, gradColTop);
+
 
         if (mMouseOver)
             painter.fillRect(r.adjusted(-50, -50, 50, 50), grad);
         else
             painter.fillRect(r, grad);
-
+/*
         painter.setPen(gradLineLight);
         if (mFlatVertical)
             painter.drawLine(0, 0, r.width(), 0);
+
         else if (mFlatHorizontal)
             painter.drawLine(0, 0, 0, r.height());
 
         painter.setPen(gradLineDark);
         if (mFlatVertical)
             painter.drawLine(0, r.height(), r.width(), r.height());
+
         else if (mFlatHorizontal)
             painter.drawLine(r.width(), 0, r.width(), r.height());
-
+*/
         // ---------
 
         QIcon ic = icon();
         painter.setPen(QColor(200, 200, 200));
 
-        bool iconOnly = mIconOnly;
+
         bool textOnly = !mIconOnly && !text().isEmpty() && ic.isNull();
 
-        QFont adaptedFont (font());
-        QFontMetricsF fm (adaptedFont);
-        qreal textSize = fm.horizontalAdvance(text());
-        if (textSize > (r.width() - 10. )) {
-            const qreal fontRate = textSize / (r.width() - 10. );
-            const qreal ptSiz = adaptedFont.pointSizeF() / fontRate;
-            adaptedFont.setPointSizeF(ptSiz);
-        }
-        painter.setFont(adaptedFont);
 
+        painter.setFont(mFont);
         if (textOnly) {
-
             if (mMouseOver) {
                  painter.setPen(QColor(250, 250, 250));
-                 painter.drawText(r.adjusted(-50, -50, 50, 50), Qt::AlignHCenter | Qt::AlignVCenter, text());
+                 painter.drawText(r.adjusted(-30, -30, 30, 30), Qt::AlignHCenter | Qt::AlignVCenter, text());
 
             } else {
                 painter.setPen(QColor(200, 200, 200));
                 painter.drawText(r, Qt::AlignHCenter | Qt::AlignVCenter, text());
             }
 
-        } else if (iconOnly) {
+        } else if (mIconOnly) {
             qreal border = qMax( 3., qMin(width(), height()) * 0.2);
             if (mMouseOver)
                 border = 0.;
 
             const qreal w = r.width() - 2.*border;
             const qreal h = r.height() - 2.*border;
-            qreal borderH(0.);
-            qreal borderW(0.);
+            qreal borderH;
+            qreal borderW;
             const qreal s = qMin(w, h);
             if (h>w) {
                 borderH = (r.height() - s)/2.;
                 borderW = border;
+
             } else {
                 borderH = border;
                 borderW = (r.width() - s)/2.;
@@ -270,7 +353,7 @@ void Button::paintEvent(QPaintEvent* e)
             painter.drawPixmap(iconRect, pixmap, QRectF(0, 0, pixmap.width(), pixmap.height()));
 
         } else if ( !(ic.isNull()) && !(text().isEmpty())) {
-            int textH = 22;
+            const int textH = 22;
 
             qreal border = 5.;
             if (mMouseOver) {
@@ -280,12 +363,11 @@ void Button::paintEvent(QPaintEvent* e)
             const qreal h = r.height() - border - textH;
             const qreal s = qMin(w, h);
 
-
-
             QRectF iconRect((r.width() - s)/2., border, s, s);
             QPixmap pixmap = ic.pixmap(iconRect.size().toSize());
             if (!isEnabled())
                 painter.setOpacity(0.2);
+
             painter.drawPixmap(iconRect, pixmap, QRectF(0, 0, pixmap.width(), pixmap.height()));
             painter.setOpacity(1);
             painter.setPen(QColor(200, 200, 200));

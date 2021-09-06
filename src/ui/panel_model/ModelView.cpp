@@ -115,13 +115,20 @@ mCurveSettingsVisible(false)
     mButModifyPeriod = new QPushButton(tr("STUDY PERIOD") , mTopWrapper);
 
   // mButModifyPeriod->setStyleSheet("QPushButton:active {background-color: rgb(230, 230, 230); border: none;}  "); // bug QT 5.15
-
+    //ButCurve = new SwitchWidget(this);
+    mButCurve = new Button(tr("Functional Link :"), mTopWrapper);
+    mButCurve->setToolTip(tr("Define curve parameters"));
+    mButCurve->setFlatHorizontal();
+    mButCurve->setCheckable(true);
+    mButCurve->setIconOnly(false);
 
     adaptStudyPeriodButton(mTmin, mTmax);
     //connect(mButModifyPeriod,  static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &ModelView::modifyPeriod);
-   // connect(mButModifyPeriod,  &Button::clicked, this, &ModelView::modifyPeriod);
-     connect(mButModifyPeriod,  &QPushButton::clicked, this, &ModelView::modifyPeriod);
-    ButCurve = new SwitchWidget(this);
+    // connect(mButModifyPeriod,  &Button::clicked, this, &ModelView::modifyPeriod);
+    connect(mButModifyPeriod,  &QPushButton::clicked, this, &ModelView::modifyPeriod);
+
+   // connect(mButCurve, static_cast<void (Button::*)(bool)>(&Button::toggled), this, &ModelView::showCurveSettings);
+    connect(mButCurve, &Button::toggled, this, &ModelView::showCurveSettings);
 
     mLeftPanelTitle = new Label(tr("Events Scene"), mTopWrapper);
     mLeftPanelTitle->setLight();
@@ -131,6 +138,11 @@ mCurveSettingsVisible(false)
     mRightPanelTitle->setLight();
     mRightPanelTitle->setBackground(Painting::borderDark);
 
+    const QFontMetrics fm(font());
+    const int radarW = 4 * AppSettings::widthUnit();
+    const int radarH = 4 * AppSettings::heigthUnit();
+    const int searchH = round(1.3 * fm.height());
+
    // ---- Windows on the left hand Event scene --------------
     mEventsView = new QGraphicsView(mLeftWrapper);
     mEventsScene = new EventsScene(mEventsView);
@@ -139,14 +151,17 @@ mCurveSettingsVisible(false)
     mEventsView->setInteractive(true);
     mEventsView->setDragMode(QGraphicsView::RubberBandDrag);
 
-    mEventsGlobalView = new SceneGlobalView(mEventsScene, mEventsView, mLeftWrapper);
-    mEventsGlobalView->setVisible(false);
+    mEventsOverview = new SceneGlobalView(mEventsScene, mEventsView, mLeftWrapper);
+    mEventsOverview->setVisible(false);
 
     mEventsSearchEdit = new QLineEdit(mLeftWrapper);
-    //mEventsSearchEdit->setPlaceholderText(tr("Search Event or Data..."));
     mEventsSearchEdit->setVisible(false);
    // mEventsSearchEdit->setStyleSheet("QLineEdit {background-color: rgb(100, 100, 100); color: white;}");
     mEventsSearchEdit->setPlaceholderText(tr("Search Event or Data..."));
+
+
+    mEventsSearchEdit->setGeometry(mEventsView->x() + 5, 5, radarW, searchH);
+    mEventsOverview->setGeometry(mEventsView->x() + 5, mEventsSearchEdit->y() + mEventsSearchEdit->height(), radarW, radarH);
 
     mButNewEvent = new Button(tr("New Event"), mLeftWrapper);
     mButNewEvent->setToolTip(tr("Create a new Event"));
@@ -173,11 +188,11 @@ mCurveSettingsVisible(false)
     mButExportEvents->setIcon(QIcon(":picture_save.png"));
     mButExportEvents->setFlatVertical();
 
-    mButEventsOverview = new Button(tr("Overview"), mLeftWrapper);
-    mButEventsOverview->setToolTip(tr("Overview on the global Events scene"));
-    mButEventsOverview->setIcon(QIcon(":eye_w.png"));
-    mButEventsOverview->setCheckable(true);
-    mButEventsOverview->setFlatVertical();
+    mButEventsGlobalView = new Button(tr("Overview"), mLeftWrapper);
+    mButEventsGlobalView->setToolTip(tr("Overview on the global Events scene"));
+    mButEventsGlobalView->setIcon(QIcon(":eye_w.png"));
+    mButEventsGlobalView->setCheckable(true);
+    mButEventsGlobalView->setFlatVertical();
 
     mButEventsGrid = new Button(tr("Grid"), mLeftWrapper);
     mButEventsGrid->setToolTip(tr("Drawing a grid under the events scene to organize"));
@@ -198,7 +213,7 @@ mCurveSettingsVisible(false)
     mButProperties->setIcon(QIcon(":settings_w.png"));
     mButProperties->setChecked(false);
     mButProperties->setDisabled(true);
-    mButProperties->setFlatHorizontal();
+    mButProperties->setFlatVertical();
 
     mButMultiCalib = new Button(tr("MultiCalib"), mLeftWrapper);
     mButMultiCalib->setToolTip(tr("Show the calibrated curves of data within selected Events"));
@@ -206,13 +221,13 @@ mCurveSettingsVisible(false)
     mButMultiCalib->setIcon(QIcon(":multiCalib_w.png"));
     mButMultiCalib->setChecked(false);
     mButMultiCalib->setDisabled(true);
-    mButMultiCalib->setFlatHorizontal();
+    mButMultiCalib->setFlatVertical();
 
     mButImport = new Button(tr("Data"), mLeftWrapper);
     mButImport->setToolTip(tr("Show the data importation panel from file"));
     mButImport->setCheckable(true);
     mButImport->setIcon(QIcon(":csv_import.png"));
-    mButImport->setFlatHorizontal();
+    mButImport->setFlatVertical();
 
     connect(mButImport, static_cast<void (Button::*)(bool)>(&Button::toggled), this, &ModelView::showImport);
 
@@ -224,7 +239,7 @@ mCurveSettingsVisible(false)
 
     // -------- Curve settings ---------------------------
     mCurveSettingsView = new CurveSettingsView(mRightWrapper);
-    connect(mCurveSettingsView, &CurveSettingsView::newProcess, ButCurve, &SwitchWidget::setText);
+    connect(mCurveSettingsView, &CurveSettingsView::newProcess, this, &ModelView::updateCurveButton);
     // -------- Windows Phase scene ---------------------------
 
     mPhasesView = new QGraphicsView(mRightWrapper);
@@ -240,6 +255,7 @@ mCurveSettingsVisible(false)
 
     mPhasesGlobalView = new SceneGlobalView(mPhasesScene, mPhasesView, mRightWrapper);
     mPhasesGlobalView->setVisible(false);
+    mPhasesGlobalView->setGeometry(5, 5, radarW, radarH);
 
     mButNewPhase = new Button(tr("New Phase"), mRightWrapper);
     mButNewPhase->setToolTip(tr("Create a new Phase"));
@@ -256,11 +272,11 @@ mCurveSettingsVisible(false)
     mButExportPhases->setIcon(QIcon(":picture_save.png"));
     mButExportPhases->setFlatVertical();
 
-    mButPhasesOverview = new Button(tr("Overview"), mRightWrapper);
-    mButPhasesOverview->setToolTip(tr("Overview on the global Phases scene"));
-    mButPhasesOverview->setIcon(QIcon(":eye_w.png"));
-    mButPhasesOverview->setCheckable(true);
-    mButPhasesOverview->setFlatVertical();
+    mButPhasesGlobaliew = new Button(tr("Overview"), mRightWrapper);
+    mButPhasesGlobaliew->setToolTip(tr("Overview on the global Phases scene"));
+    mButPhasesGlobaliew->setIcon(QIcon(":eye_w.png"));
+    mButPhasesGlobaliew->setCheckable(true);
+    mButPhasesGlobaliew->setFlatVertical();
 
     mButPhasesGrid = new Button(tr("Grid"), mRightWrapper);
     mButEventsGrid->setToolTip(tr("Drawing a grid under the Phases scene to organize"));
@@ -275,7 +291,7 @@ mCurveSettingsVisible(false)
     connect(mPhasesGlobalZoom, &ScrollCompressor::valueChanged, this, &ModelView::updatePhasesZoom);
     connect(mButExportPhases, &Button::clicked, this, &ModelView::exportPhasesScene);
 
-    connect(mButPhasesOverview, &Button::toggled, mPhasesGlobalView, &SceneGlobalView::setVisible);
+    connect(mButPhasesGlobaliew, &Button::toggled, mPhasesGlobalView, &SceneGlobalView::setVisible);
     connect(mButPhasesGrid, &Button::toggled, mPhasesScene, &PhasesScene::showGrid);
 
 
@@ -376,8 +392,8 @@ void ModelView::connectScenes()
     connect(mButDeleteEvent,  static_cast<void (Button::*)(bool)> (&Button::clicked), mEventsScene, &EventsScene::deleteSelectedItems);
 
     connect(mButRecycleEvent,  static_cast<void (Button::*)(bool)> (&Button::clicked), mProject, &Project::recycleEvents);
-    connect(mButEventsOverview, &Button::toggled, mEventsGlobalView, &SceneGlobalView::setVisible);
-    connect(mButEventsOverview, &Button::toggled, mEventsSearchEdit, &QLineEdit::setVisible);
+    connect(mButEventsGlobalView, &Button::toggled, mEventsOverview, &SceneGlobalView::setVisible);
+    connect(mButEventsGlobalView, &Button::toggled, mEventsSearchEdit, &QLineEdit::setVisible);
     connect(mEventsSearchEdit, &QLineEdit::returnPressed, this, &ModelView::searchEvent);
     connect(mEventsGlobalZoom, &ScrollCompressor::valueChanged, this, &ModelView::updateEventsZoom);
     connect(mButExportEvents, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ModelView::exportEventsScene);
@@ -387,6 +403,7 @@ void ModelView::connectScenes()
     //connect(mButNewPhase,  static_cast<void (Button::*)(bool)> (&Button::clicked), mProject, &Project::createPhase);
     connect(mButNewPhase,  static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ModelView::createPhaseInPlace);
     connect(mButDeletePhase,  static_cast<void (Button::*)(bool)> (&Button::clicked), mPhasesScene, &PhasesScene::deleteSelectedItems);
+    connect(mButPhasesGlobaliew, &Button::toggled, mPhasesGlobalView, &SceneGlobalView::setVisible);
 
      connect(mEventsScene, &EventsScene::noSelection, this, &ModelView::noEventSelected);
     connect(mEventsScene, &EventsScene::eventsAreSelected, this, &ModelView::eventsAreSelected);
@@ -411,7 +428,7 @@ void ModelView::connectScenes()
     connect(mProject, &Project::projectStateChanged, this, &ModelView::updateMultiCalibration);
    // connect(mProject, &Project::projectStructureChanged, mEventPropertiesView, &EventPropertiesView::updateEvent);
 
-    connect(ButCurve, &SwitchWidget::toggled, MainWindow::getInstance(), &MainWindow::toggleCurve);
+    connect(mButCurve, &Button::toggled, MainWindow::getInstance(), &MainWindow::toggleCurve);
 }
 
 void ModelView::disconnectScenes()
@@ -421,8 +438,8 @@ void ModelView::disconnectScenes()
     disconnect(mButDeleteEvent,  static_cast<void (Button::*)(bool)> (&Button::clicked), mEventsScene, &EventsScene::deleteSelectedItems);
 
     disconnect(mButRecycleEvent, &Button::clicked, mProject, &Project::recycleEvents);
-    disconnect(mButEventsOverview, &Button::toggled, mEventsGlobalView, &SceneGlobalView::setVisible);
-    disconnect(mButEventsOverview, &Button::toggled, mEventsSearchEdit, &QLineEdit::setVisible);
+    disconnect(mButEventsGlobalView, &Button::toggled, mEventsOverview, &SceneGlobalView::setVisible);
+    disconnect(mButEventsGlobalView, &Button::toggled, mEventsSearchEdit, &QLineEdit::setVisible);
     disconnect(mEventsSearchEdit, &QLineEdit::returnPressed, this, &ModelView::searchEvent);
     disconnect(mEventsGlobalZoom, &ScrollCompressor::valueChanged, this, &ModelView::updateEventsZoom);
     disconnect(mButExportEvents, &Button::clicked, this, &ModelView::exportEventsScene);
@@ -434,6 +451,7 @@ void ModelView::disconnectScenes()
     //disconnect(mButNewPhase, &Button::clicked, mProject, &Project::createPhase);
     disconnect(mButNewPhase, &Button::clicked, this, &ModelView::createPhaseInPlace);
     disconnect(mButDeletePhase, &Button::clicked, mPhasesScene, &PhasesScene::deleteSelectedItems);
+    disconnect(mButPhasesGlobaliew, &Button::toggled, mPhasesGlobalView, &SceneGlobalView::setVisible);
 
     // when there is no Event selected we must show all data inside phases
     disconnect(mEventsScene, &EventsScene::noSelection, this, &ModelView::noEventSelected);
@@ -449,6 +467,8 @@ void ModelView::disconnectScenes()
     disconnect(mEventPropertiesView, &EventPropertiesView::splitDateRequested, mProject, &Project::splitDate);
     disconnect(mEventPropertiesView, &EventPropertiesView::updateCalibRequested, this, &ModelView::updateCalibration);
     disconnect(mEventPropertiesView, &EventPropertiesView::showCalibRequested, this, &ModelView::showCalibration);
+
+    disconnect(mButCurve, &Button::toggled, MainWindow::getInstance(), &MainWindow::toggleCurve);
 
 }
 
@@ -547,8 +567,9 @@ void ModelView::updateProject()
 
     //ButCurve->setToggled(mProject->isCurve());
     adaptStudyPeriodButton(settings.mTmin, settings.mTmax);
-    const CurveSettings cs = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
-    ButCurve->setText(cs.processText());
+    emit updateCurveButton();
+   // const CurveSettings cs = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+   // mButCurve->setText(tr("Functional Link : ") + cs.processText());
 /*
     mProject->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
     mProject->mState[STATE_SETTINGS_TMAX] = settings.mTmax;
@@ -729,6 +750,14 @@ void ModelView::modifyPeriod()
 
 }
 
+void ModelView::updateCurveButton() const
+{
+    QJsonObject state = mProject->state();
+
+    const CurveSettings cs = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+    mButCurve->setText(tr("Functional Link : ") + cs.processText());
+}
+
 /**
  * @brief ModelView::setSettingsValid
  * Important : just disable "Run" and "Results" and "Log" when typing in tmin and tmax edit boxes
@@ -845,6 +874,14 @@ void ModelView::showProperties()
            mAnimationHide->start();
 
            mButMultiCalib->setChecked(false);
+       } else  if (mButCurve->isChecked()) {
+           // hide mMultiCalibrationView
+           mAnimationHide->setStartValue(mRightRect);
+           mAnimationHide->setEndValue(mRightHiddenRect);
+           mAnimationHide->setTargetObject(mCurveSettingsView);
+           mAnimationHide->start();
+
+           mButCurve->setChecked(false);
        }
         mButImport-> setChecked(false);
 
@@ -900,35 +937,44 @@ void ModelView::hideProperties()
 void ModelView::showMultiCalib()
 {
     //updateLayout();
+    mAnimationHide->setStartValue(mRightRect);
+    mAnimationHide->setEndValue(mRightHiddenRect);
     if (mButMultiCalib->isChecked() && mButMultiCalib->isEnabled()) {
+        mPhasesGlobalZoom->hide();
         if (mButProperties->isChecked()) {
             // hide mEventPropertiesView
-            mAnimationHide->setStartValue(mRightRect);
-            mAnimationHide->setEndValue(mRightHiddenRect);
             mAnimationHide->setTargetObject(mEventPropertiesView);
             mAnimationHide->start();
 
             mButProperties->setChecked(false);
+
+        }  else  if (mButCurve->isChecked()) {
+            // hide mCurveSettingsView
+            mAnimationHide->setTargetObject(mCurveSettingsView);
+            mAnimationHide->start();
+
+            mButCurve->setChecked(false);
         }
 
         mMultiCalibrationView->updateGraphList();
         mMultiCalibrationView->setVisible(true);
 
-        mButImport      -> setChecked(false);
+        mButImport    -> setChecked(false);
         mAnimationShow->setStartValue(mRightHiddenRect);
         mAnimationShow->setEndValue(mRightRect);
+
         mMultiCalibrationView->raise();
 
         mAnimationShow->setTargetObject(mMultiCalibrationView);
         mAnimationShow->start();
 
      } else {
-             mAnimationHide->setStartValue(mRightRect);
-             mAnimationHide->setEndValue(mRightHiddenRect);
              mAnimationHide->setTargetObject(mMultiCalibrationView);
              mAnimationHide->start();
+             if (mButPhasesGlobaliew->isChecked())
+                 mPhasesGlobalView->show();
     }
-    updateLayout();
+
 }
 
 void ModelView::updateMultiCalibration()
@@ -1142,7 +1188,7 @@ void ModelView::applyAppSettings()
 
 void ModelView::resizeEvent(QResizeEvent* e)
 {
-    Q_UNUSED(e);
+    (void) e;
     updateLayout();
 }
 
@@ -1169,16 +1215,11 @@ void ModelView::updateLayout()
     mRightPanelTitle->setGeometry(width() - labw - margin, 0, labw, mTopRect.height());
 
     // Center buttons
-    mButModifyPeriod->setGeometry(width()/2 - 150, 2, 300, mTopRect.height() - 4);
-    ButCurve->setGeometry(mButModifyPeriod->x() + mButModifyPeriod->width() + 2, 3, 100, mTopRect.height() - 6);
+    mButModifyPeriod->setGeometry(width()/2 - 251, 2, 300, mTopRect.height() - 4);
+    mButCurve->setGeometry(mButModifyPeriod->x() + mButModifyPeriod->width() + 2, 5, 200, mTopRect.height() - 10);
 
 
     //-------------- Top Flag
-    //------- Study Period
-    
-    
-    
-    
 
     // coordinates in ModelView
 
@@ -1197,6 +1238,7 @@ void ModelView::updateLayout()
 
     mEventPropertiesView->setGeometry(mButProperties->isChecked() ? mRightRect : mRightHiddenRect);
 
+
     mMultiCalibrationView->setGeometry(mButMultiCalib->isChecked() ? mRightRect : mRightHiddenRect);
 
     mImportDataView->setGeometry(mButImport->isChecked() ? mRightRect : mRightHiddenRect);
@@ -1205,23 +1247,23 @@ void ModelView::updateLayout()
 
     // ----------
 
-    const qreal radarW (4 * AppSettings::widthUnit());
-    const qreal radarH (4. * AppSettings::heigthUnit());
-    const qreal searchH (1.3 * fm.height());
+    const int radarW = 4 * AppSettings::widthUnit();
+    const int radarH = 4 * AppSettings::heigthUnit();
+    const int searchH = round(1.3 * fm.height());
     if (mButProperties->isChecked() && mEventPropertiesView->isCalibChecked())
         mEventsView ->setGeometry(0, 0, 0, 0);
     else
         mEventsView ->setGeometry(mLeftRect.adjusted(mButtonWidth -1, -1, +1, +1));
-
-    mEventsSearchEdit->setGeometry(mEventsView->x() + 5, 5, int(radarW), int (searchH));
-    mEventsGlobalView->setGeometry(mEventsView->x() + 5, mEventsSearchEdit->y() + mEventsSearchEdit->height(), int(radarW), int(radarH));
-
+/*
+    mEventsSearchEdit->setGeometry(mEventsView->x() + 5, 5, radarW, searchH);
+    mEventsOverview->setGeometry(mEventsView->x() + 5, mEventsSearchEdit->y() + mEventsSearchEdit->height(), radarW, radarH);
+*/
     mButNewEvent      ->setGeometry(0, 0, mButtonWidth, mButtonHeigth);
     mButNewEventKnown ->setGeometry(0, mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButDeleteEvent   ->setGeometry(0, 2*mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButRecycleEvent  ->setGeometry(0, 3*mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButExportEvents  ->setGeometry(0, 4*mButtonHeigth, mButtonWidth, mButtonHeigth);
-    mButEventsOverview->setGeometry(0, 5*mButtonHeigth, mButtonWidth, mButtonHeigth);
+    mButEventsGlobalView->setGeometry(0, 5*mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButEventsGrid    ->setGeometry(0, 6*mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButProperties    ->setGeometry(0, 7*mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButMultiCalib    ->setGeometry(0, 8*mButtonHeigth, mButtonWidth, mButtonHeigth);
@@ -1230,41 +1272,43 @@ void ModelView::updateLayout()
     mEventsGlobalZoom ->setGeometry(0, 10*mButtonHeigth, mButtonWidth, mLeftRect.height() - 10*mButtonHeigth);
 
     const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
-    const qreal helpW = qMin(400.0, mEventsView->width() - radarW - mMargin - sbe);
-    const qreal helpH = mEventsScene->getHelpView()->heightForWidth(int(helpW));
-    mEventsScene->getHelpView()->setGeometry(mEventsView->width() - mMargin - int(helpW), mMargin, int(helpW), int(helpH));
+    const int helpW = qMin(400, mEventsView->width() - radarW - mMargin - sbe);
+    const int helpH = mEventsScene->getHelpView()->heightForWidth(helpW);
+    mEventsScene->getHelpView()->setGeometry(mEventsView->width() - mMargin - helpW, mMargin, helpW, helpH);
 
     // ----------
-    if (mCalibrationView) {
+    if (mCalibrationView->isVisible()) {
         if (mButProperties->isChecked() && mEventPropertiesView->isCalibChecked() )
             mCalibrationView->setGeometry( mLeftRect );
         else
             mCalibrationView->setGeometry(0, 0, 0, 0);
     }
     // ----------
-    if (mButProperties->isChecked() || mButMultiCalib->isChecked()) {
+    if (mButProperties->isChecked() || mButMultiCalib->isChecked()
+            || mButCurve->isChecked()) {
 
         mPhasesView->resize(0, 0);
-        mPhasesGlobalView->setGeometry(5, 5, int(radarW), int(radarH));
+        mPhasesGlobalView->hide();//resize(0, 0);
 
         mCurveSettingsView->resize(0, 0);
 
-        mButNewPhase->resize(0, 0);
-        mButDeletePhase->resize(0, 0);
-        mButExportPhases->resize(0, 0);
-        mButPhasesOverview->resize(0, 0);
-        mButPhasesGrid->resize(0, 0);
-        mPhasesGlobalZoom->resize(0, 0);
+        mButNewPhase      ->resize(0, 0);
+        mButDeletePhase   ->resize(0, 0);
+        mButExportPhases  ->resize(0, 0);
+        mButPhasesGlobaliew->resize(0, 0);
+        mButPhasesGrid    ->resize(0, 0);
+        mPhasesGlobalZoom ->resize(0, 0);
 
      }  else {
 
         mPhasesView->setGeometry(mRightRect.adjusted(-1, -1, -mButtonWidth, 1));
-        mPhasesGlobalView->setGeometry(5, 5, int(radarW), int(radarH));
+        if (mButPhasesGlobaliew->isChecked())
+            mPhasesGlobalView->show();//setGeometry(5, 5, radarW, radarH);
 
         mButNewPhase       ->setGeometry(mPhasesView->width() -2, 0              , mButtonWidth, mButtonHeigth);
         mButDeletePhase    ->setGeometry(mPhasesView->width() -2, mButtonHeigth  , mButtonWidth, mButtonHeigth);
         mButExportPhases   ->setGeometry(mPhasesView->width() -2, 2*mButtonHeigth, mButtonWidth, mButtonHeigth);
-        mButPhasesOverview ->setGeometry(mPhasesView->width() -2, 3*mButtonHeigth, mButtonWidth, mButtonHeigth);
+        mButPhasesGlobaliew ->setGeometry(mPhasesView->width() -2, 3*mButtonHeigth, mButtonWidth, mButtonHeigth);
         mButPhasesGrid     ->setGeometry(mPhasesView->width() -2, 4*mButtonHeigth, mButtonWidth, mButtonHeigth);
         mPhasesGlobalZoom  ->setGeometry(mPhasesView->width() -2, 5*mButtonHeigth, mButtonWidth, mRightRect.height() - 5*mButtonHeigth);
      }
@@ -1330,9 +1374,6 @@ void ModelView::updateCalibration(const QJsonObject& date)
 
     }
 
-
-
-
 }
 
 // come from EventPropertiesView::showCalibRequested
@@ -1365,7 +1406,7 @@ void ModelView::mousePressEvent(QMouseEvent* e)
 
 void ModelView::mouseReleaseEvent(QMouseEvent* e)
 {
-    Q_UNUSED(e);
+    (void) e;
     mIsSplitting = false;
 }
 
@@ -1436,7 +1477,7 @@ void ModelView::showCurveSettings(bool show)
     mButNewPhase->setVisible(!show);
     mButDeletePhase->setVisible(!show);
     mButExportPhases->setVisible(!show);
-    mButPhasesOverview->setVisible(!show);
+    mButPhasesGlobaliew->setVisible(!show);
     mButPhasesGrid->setVisible(!show);
 
     if (show) {
@@ -1486,15 +1527,16 @@ void ModelView::showCurveSettings(bool show)
             QJsonObject state = mProject->mState;
             CurveSettings settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
             // settings.mEnabled = toggle;
-            const bool isCurve = (settings.mProcessType != CurveSettings::eProcessTypeNone);
+           // const bool isCurve = (settings.mProcessType != CurveSettings::eProcessTypeNone);
             state[STATE_CURVE] = settings.toJson();
-            mProject->pushProjectState(state, CURVE_SETTINGS_UPDATED_REASON, true);
+
 
             // Update the Curve settings view with the project's values
             mCurveSettingsView->setSettings(settings);
+            mProject->pushProjectState(state, CURVE_SETTINGS_UPDATED_REASON, true);
 
             // Tell the event properties view if it should display Curve parameters
-            mEventPropertiesView->setCurveSettings(isCurve, settings.mProcessType);
+            //mEventPropertiesView->setCurveSettings(isCurve, settings.mProcessType);
 
             mEventsScene->updateSceneFromState();
         }

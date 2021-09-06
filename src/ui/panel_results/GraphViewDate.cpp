@@ -182,7 +182,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
             mGraph->addCurve(curveHPD);
 
             // Calibration
-            const QMap<double,double> formatedCalib = mDate->getFormatedCalibMap();
+            const QMap<double,double> formatedCalib = mDate->getFormatedCalibToShow();//getFormatedCalibMap();
 
             GraphCurve curveCalib = generateDensityCurve(formatedCalib,
                                                          "Calibration",
@@ -306,7 +306,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
         if (variableList.contains(eDataTi))
             mTitle = tr("Data : %1").arg(mDate->mName);
         else
-             mTitle = tr("Individual Std : %1").arg(mDate->mName);
+            mTitle = tr("Individual Std : %1").arg(mDate->mName);
 
         //mGraph->addCurve( generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine) );
         generateAcceptCurves(mChains, variableDate);

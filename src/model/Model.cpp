@@ -1228,7 +1228,7 @@ void Model::generateCredibility(const double &thresh)
     progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
 */
 
-    int position = 0;
+    //int position = 0;
 
     for (auto&& pPhase :mPhases) {
 
@@ -1262,7 +1262,7 @@ void Model::generateCredibility(const double &thresh)
 
     progressGap->setMinimumWidth(int (progressGap->fontMetrics().boundingRect(progressGap->labelText()).width() *1.5));
 */
-    position = 0;
+    //position = 0;
     for (auto&& phaseConstraint : mPhaseConstraints) {
 
         Phase* phaseFrom = phaseConstraint->mPhaseFrom;
@@ -2730,7 +2730,7 @@ void Model:: generateActivity(int gridLenth, double h)
         const double nr = (double) (totalIter * phase->mEvents.size());
 
         for (auto& vecNij : Ni) {
-            q = 0;
+            //q = 0;
             //mean_std_Knuth(vecNij, m, s);
             q = std::accumulate(vecNij.begin(),  vecNij.end(), 0.);
             q /= nr;

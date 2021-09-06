@@ -41,10 +41,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MainWindow.h"
 
 #include <QtWidgets>
+#include <iostream>
 
 ChronoApp::ChronoApp(int& argc, char** argv):QApplication(argc, argv)
 {
-
+    std::cout<<"start ChronoApp";
 }
 
 ChronoApp::~ChronoApp()
@@ -66,6 +67,7 @@ bool ChronoApp::event(QEvent* e)
     }*/
     if (e->type() == QEvent::FileOpen) {
         QString path = static_cast<QFileOpenEvent*>(e)->file();
+        std::cout<<"in ChronoApp::event path = "<< path.toCFString();
 
         MainWindow* w = MainWindow::getInstance();
 

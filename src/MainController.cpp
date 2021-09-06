@@ -51,10 +51,10 @@ MainController::MainController(const QString& filePath)
     QCoreApplication::setOrganizationDomain("http://www.chronomodel.com");
     QCoreApplication::setOrganizationName("CNRS");
 
-    AppSettings::readSettings();
-
     mMainWindow = MainWindow::getInstance();
     try {
+        AppSettings::readSettings();
+
         mMainWindow->readSettings(filePath); // le problème est ici pour macOS
 
         mMainWindow->move(AppSettings::mLastPosition);

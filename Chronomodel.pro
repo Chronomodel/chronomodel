@@ -118,7 +118,7 @@ macx{
         message("QMAKE_MAC_SDK = $$QMAKE_MAC_SDK")
 
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
-        QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14
+        QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14 # OS X 10.9 	Mavericks oct 2013  # essai sinon 10.14
 	# Define a set of resources to deploy inside the bundle :
 	RESOURCES_FILES.path = Contents/Resources
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib

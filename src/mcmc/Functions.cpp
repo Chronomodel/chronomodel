@@ -152,8 +152,8 @@ type_data std_Koening(const QVector<type_data> &data)
     const type_data mean = s / data.size();
     const type_data variance = s2 / data.size() - mean * mean;
 
-    TraceStat result= traceStatistic(data);
-qDebug() << "std_Koening comparaison calcul Knuth" << sqrt(variance) << result.std;
+  //  TraceStat result= traceStatistic(data);
+//qDebug() << "std_Koening comparaison calcul Knuth" << sqrt(variance) << result.std;
 
     if (variance < 0) {
         qDebug() << "WARNING : in std_Koening() negative variance found : " << variance<<" force return 0";

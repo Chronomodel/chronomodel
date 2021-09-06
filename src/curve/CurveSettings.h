@@ -98,10 +98,13 @@ public:
     void restoreDefault();
     QJsonObject toJson() const;
     
-    bool showInclinaison() const;
-    bool showDeclinaison() const;
-    bool showIntensite() const;
-    QString intensiteLabel() const;
+    bool showInclination() const;
+    bool showDeclination() const;
+    bool showIntensity() const;
+
+    QString inclinationLabel() const;
+    QString declinationLabel() const;
+    QString intensityLabel() const;
 
     QString processText() const;
     

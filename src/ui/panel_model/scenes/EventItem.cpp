@@ -546,12 +546,12 @@ void EventItem::paintBoxCurveParameter (QPainter* painter, QRectF rectBox, Curve
             painter->drawText(QRectF(lineX, lineY + mCurveLineHeight, lineW, mCurveLineHeight), Qt::AlignCenter, text2);
 
         } else {
-            if (cs.showInclinaison()) {
+            if (cs.showInclination()) {
                 QString text1 = "Inc = ";
                 text1 += QLocale().toString (mData.value(STATE_EVENT_Y_INC).toDouble());
                 text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_S_INC).toDouble());
 
-                if (cs.showDeclinaison()) {
+                if (cs.showDeclination()) {
                     text1 += " Dec = ";
                     text1 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
                 }
@@ -559,12 +559,12 @@ void EventItem::paintBoxCurveParameter (QPainter* painter, QRectF rectBox, Curve
                 painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
             }
 
-            if (cs.showIntensite()) {
-                QString text2 = cs.intensiteLabel();
+            if (cs.showIntensity()) {
+                QString text2 = cs.intensityLabel();
                 text2 += " = ";
                 text2 += QLocale().toString(mData.value(STATE_EVENT_Y_INT).toDouble());
                 text2 += " ± " + QLocale().toString(mData.value(STATE_EVENT_S_INT).toDouble());
-                painter->drawText(QRectF(lineX, lineY + (cs.showInclinaison() ? 1 : 0) * mCurveLineHeight, lineW, mCurveLineHeight), Qt::AlignCenter, text2);
+                painter->drawText(QRectF(lineX, lineY + (cs.showInclination() ? 1 : 0) * mCurveLineHeight, lineW, mCurveLineHeight), Qt::AlignCenter, text2);
             }
         }
 

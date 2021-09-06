@@ -1014,7 +1014,7 @@ void ResultsView::mouseMoveEvent(QMouseEvent* e)
 
 void ResultsView::resizeEvent(QResizeEvent* e)
 {
-    Q_UNUSED(e);
+    (void) e;
     updateLayout();
 }
 
@@ -1026,12 +1026,11 @@ void ResultsView::updateMarkerGeometry(const int x)
 
 void ResultsView::updateLayout()
 {    
-    int leftWidth = width() - mOptionsW - mSbe;
-    int graphWidth = leftWidth;
-    int tabsH = mGraphTypeTabs->tabHeight();
-    int rulerH = Ruler::sHeight;
-    int stackH = height() - mMargin - tabsH - rulerH;
+    const int leftWidth = width() - mOptionsW - mSbe;
+    const int tabsH = mGraphTypeTabs->tabHeight();
+    const int rulerH = Ruler::sHeight;
 
+    int graphWidth = leftWidth;
     if (mStatCheck->isChecked() || mPhasesStatCheck->isChecked() || mCurveStatCheck->isChecked()) {
         graphWidth = (2./3.) * leftWidth;
     }
@@ -1042,6 +1041,7 @@ void ResultsView::updateLayout()
     mGraphTypeTabs->setGeometry(mMargin, mMargin, leftWidth, tabsH);
     mRuler->setGeometry(0, mMargin + tabsH, graphWidth, rulerH);
 
+    const int stackH = height() - mMargin - tabsH - rulerH;
     QRect graphScrollGeometry(0, mMargin + tabsH + rulerH, leftWidth, stackH);
 
     mEventsScrollArea->setGeometry(graphScrollGeometry);
@@ -1759,9 +1759,10 @@ void ResultsView::createByTempoGraphs()
 */
 void ResultsView::createByCurveGraph()
 {
-    Q_ASSERT(isCurve());
-//if (!isCurve())
-  //  return;
+   // Q_ASSERT(isCurve());
+    if (!isCurve())
+        return;
+
     ModelCurve* model = modelCurve();
     
     // ----------------------------------------------------------------------
@@ -1844,7 +1845,7 @@ void ResultsView::createByCurveGraph()
 
                 for (auto&& date: event->mDates) {
 
-                    QMap<double, double> calibMap = date.getFormatedCalibMap();
+                    QMap<double, double> calibMap = date.getFormatedCalibToShow();//getFormatedCalibMap();
 
                     FunctionStat calibStat = analyseFunction(calibMap);
 
@@ -2981,8 +2982,8 @@ void ResultsView::updateOptionsWidget()
     //  Update graph list tab
     // -------------------------------------------------------------------------------------
 
- //   mGraphListTab->setTabVisible(1, mHasPhases); // Phases
-   // mGraphListTab->setTabVisible(2, isCurve()); // Curve
+    mGraphListTab->setTabVisible(1, mHasPhases); // Phases
+    mGraphListTab->setTabVisible(2, isCurve()); // Curve
 
 
     delete mOptionsLayout;
@@ -2997,9 +2998,12 @@ void ResultsView::updateOptionsWidget()
             mGraphListTab->setTab(1, false);
 
         } else if (!mHasPhases && !isCurve() && mGraphListTab->currentIndex() >= 1) {
-            mGraphListTab->setTab(1, false);
+            mGraphListTab->setTab(0, false);
         }
-  //  }
+
+     //   if (!mHasPhases)
+     //       mGraphListTabsetTabVisible [1].hide();
+  //
 
     optionWidgetHeigth += mGraphListTab->height();
     // -------------------------------------------------------------------------------------
