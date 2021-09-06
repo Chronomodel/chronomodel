@@ -67,8 +67,8 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mButtonHeigth  (int (1.3 * AppSettings::heigthUnit()) * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE),
     mLineEditHeight  (int (0.5 * AppSettings::heigthUnit())),
     mComboBoxHeight (int (0.7 * AppSettings::heigthUnit())),
-    mCurveEnabled(false),
-    mCurveProcessType(CurveSettings::eProcessTypeNone)
+    mCurveEnabled(false)
+    //mCurveProcessType(CurveSettings::eProcessTypeNone)
 
 {
     minimumHeight = 0;
@@ -99,9 +99,9 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 
     mCurveWidget = new CurveWidget(mTopView);
     
-    mYIncLab = new QLabel(tr("Inc."), mCurveWidget);
-    mYDecLab = new QLabel(tr("Dec."), mCurveWidget);
-    mYIntLab = new QLabel(tr("Int."), mCurveWidget);
+    mYIncLab = new QLabel(tr("Inclination"), mCurveWidget);
+    mYDecLab = new QLabel(tr("Declination"), mCurveWidget);
+    mYIntLab = new QLabel(tr("Field"), mCurveWidget);
     
     mYIncEdit = new LineEdit(mCurveWidget);
     mYDecEdit = new LineEdit(mCurveWidget);
@@ -134,14 +134,14 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 
     const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
 
-    for (int i=0; i<plugins.size(); ++i) {
+    for (int i = 0; i<plugins.size(); ++i) {
 
         Button* button = new Button(plugins.at(i)->getName(), mEventView);
         button->setIcon(plugins.at(i)->getIcon());
         button->setFlatVertical();
         button->setIconOnly(false);
         button->setToolTip(tr("Insert %1 Data").arg(plugins.at(i)->getName()) );
-        //button->resize(mButtonWidth, mButtonWidth);
+
         connect(button, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &EventPropertiesView::createDate);
 
         minimumHeight += button->height();
@@ -179,13 +179,13 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mCombineBut->setFlatVertical();
     mCombineBut->setIconOnly(false);
     mCombineBut->setEnabled(false);
-    mCombineBut->setToolTip(tr("Combine Data"));
+    mCombineBut->setToolTip(tr("Combine data from the same plugin"));
 
     mSplitBut = new Button(tr("Split"), mEventView);
     mSplitBut->setFlatVertical();
     mSplitBut->setIconOnly(false);
     mSplitBut->setEnabled(false);
-    mSplitBut->setToolTip(tr("Split combined Data"));
+    mSplitBut->setToolTip(tr("Split Combined Data"));
 
     connect(mCalibBut, &Button::clicked, this, &EventPropertiesView::showCalibRequested);
     connect(mCalibBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &EventPropertiesView::updateButton);
@@ -261,7 +261,7 @@ void EventPropertiesView::setEvent(const QJsonObject& event)
     mEvent = event;
     
     // Select the first date if the list is not empty
-    QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
+    const QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
     bool hasDates = (dates.size() > 0);
     if (hasDates) {
         mCurrentDateIdx = 0;
@@ -287,8 +287,8 @@ void EventPropertiesView::updateEvent()
 
     } else {
         Event::Type type = Event::Type (mEvent.value(STATE_EVENT_TYPE).toInt());
-        QString name = mEvent.value(STATE_NAME).toString();
-        QColor color(mEvent.value(STATE_COLOR_RED).toInt(),
+        const QString name = mEvent.value(STATE_NAME).toString();
+        const QColor color(mEvent.value(STATE_COLOR_RED).toInt(),
                      mEvent.value(STATE_COLOR_GREEN).toInt(),
                      mEvent.value(STATE_COLOR_BLUE).toInt());
 
@@ -300,31 +300,43 @@ void EventPropertiesView::updateEvent()
         // Curve
         
         // The Curve settings may have changed since the last time the event property view has been opened
-        QJsonObject state = MainWindow::getInstance()->getProject()->mState;
-        CurveSettings settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
-        bool isCurve = (settings.mProcessType != CurveSettings::eProcessTypeNone);
+        const QJsonObject state = MainWindow::getInstance()->getProject()->mState;
+        const CurveSettings settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+        mCurveEnabled = (settings.mProcessType != CurveSettings::eProcessTypeNone);
 
         //mCurveEnabled = settings.mEnabled;
-        mCurveProcessType = settings.mProcessType;
+        //mCurveProcessType = settings.mProcessType;
         
         mMethodLab->setVisible(type == Event::eDefault);
-        mMethodCombo->setVisible( !isCurve && (type == Event::eDefault));
-        mMethodInfo->setVisible( isCurve && (type == Event::eDefault));
+        mMethodCombo->setVisible( !mCurveEnabled && (type == Event::eDefault));
+        mMethodInfo->setVisible( mCurveEnabled && (type == Event::eDefault));
         
         // Y1 contient l'inclinaison. Elle est toujours nécessaire en sphérique et vectoriel.
         // En univarié, elle n'est nécessaire que pour les variables d'étude : inclinaison ou déclinaison.
-        bool showInc = mCurveEnabled && settings.showInclinaison();
-        bool showDec = mCurveEnabled && settings.showDeclinaison();
-        bool showInt = mCurveEnabled && settings.showIntensite();
+        bool showInc = mCurveEnabled && settings.showInclination();
+        bool showDec = mCurveEnabled && settings.showDeclination();
+        bool showInt = mCurveEnabled && settings.showIntensity();
         
         mYIncLab->setVisible(showInc);
         mYIncEdit->setVisible(showInc);
-        
-        mYDecLab->setVisible(showDec);
-        mYDecEdit->setVisible(showDec);
-        
+
         mSIncLab->setVisible(showInc);
         mSIncEdit->setVisible(showInc);
+        if (showInc) {
+            mYIncLab->setText(settings.inclinationLabel());
+            mYIncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Y_INC).toDouble()));
+            mSIncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_S_INC).toDouble()));
+        }
+        
+
+        mYDecLab->setVisible(showDec);
+        mYDecEdit->setVisible(showDec);
+
+        if (showDec) {
+            mYDecLab->setText(settings.declinationLabel());          
+            mYDecEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Y_DEC).toDouble()));
+        }
+
         
         mYIntLab->setVisible(showInt);
         mYIntEdit->setVisible(showInt);
@@ -333,15 +345,11 @@ void EventPropertiesView::updateEvent()
         mSIntEdit->setVisible(showInt);
         
         if (showInt) {
-            mYIntLab->setText(settings.intensiteLabel() + " :");
+            mYIntLab->setText(settings.intensityLabel());
+            mYIntEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Y_INT).toDouble()));
+            mSIntEdit->setText(locale().toString(mEvent.value(STATE_EVENT_S_INT).toDouble()));
         }
-        
-        mYIncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Y_INC).toDouble()));
-        mYDecEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Y_DEC).toDouble()));
-        mYIntEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Y_INT).toDouble()));
-        
-        mSIncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_S_INC).toDouble()));
-        mSIntEdit->setText(locale().toString(mEvent.value(STATE_EVENT_S_INT).toDouble()));
+
         
         mTopView->setVisible(true);
 
@@ -368,9 +376,9 @@ void EventPropertiesView::updateEvent()
             if (mCurrentDateIdx >= 0)
                 mDatesList->setCurrentRow(mCurrentDateIdx);
 
-            QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
+            const QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
            
-            bool hasDates = (dates.size() > 0);
+            const bool hasDates = (dates.size() > 0);
             if (hasDates && mCurrentDateIdx >= 0) {
                 //emit updateCalibRequested(dates[mCurrentDateIdx].toObject());
                 mCalibBut->setEnabled(true);
@@ -446,12 +454,16 @@ void EventPropertiesView::updateKnownFixed(const QString& text)
 }
 
 // Curve
-void EventPropertiesView::setCurveSettings(bool enabled, char processType)
+
+/*
+void EventPropertiesView::setCurveSettings(const CurveSettings::ProcessType processType)
 {
-    mCurveEnabled = enabled;
-    mCurveProcessType = processType;
+    mCurveEnabled = (processType != CurveSettings::eProcessTypeNone);
+    //mCurveProcessType = processType;
     updateEvent();
 }
+*/
+
 
 // Curve
 void EventPropertiesView::updateEventYInc()
@@ -499,7 +511,7 @@ void EventPropertiesView::updateKnownGraph()
 
     Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
-    QJsonObject settings = state.value(STATE_SETTINGS).toObject();
+    const QJsonObject settings = state.value(STATE_SETTINGS).toObject();
     const double tmin = settings.value(STATE_SETTINGS_TMIN).toDouble();
     const double tmax = settings.value(STATE_SETTINGS_TMAX).toDouble();
     const double step = settings.value(STATE_SETTINGS_STEP).toDouble();
@@ -606,7 +618,7 @@ void EventPropertiesView::updateCombineAvailability()
         mergeable = true;
         PluginAbstract* plugin = nullptr;
 
-        for (int i(0); i<items.size(); ++i) {
+        for (int i= 0; i<items.size(); ++i) {
             int idx = mDatesList->row(items.at(i));
             if (idx < dates.size()) {
                 QJsonObject date = dates.at(idx).toObject();
@@ -646,7 +658,7 @@ void EventPropertiesView::sendCombineSelectedDates()
     QList<QListWidgetItem*> items = mDatesList->selectedItems();
     QList<int> dateIds;
 
-    for (int i=0; i<items.size(); ++i) {
+    for (int i = 0; i<items.size(); ++i) {
         const int idx = mDatesList->row(items.at(i));
         if (idx < dates.size()) {
             QJsonObject date = dates.at(idx).toObject();
@@ -677,9 +689,10 @@ void EventPropertiesView::sendSplitDate()
 void EventPropertiesView::keyPressEvent(QKeyEvent* e)
 {
     if ((e->key() == Qt::Key_Escape) && mCalibBut->isChecked())
-        mCalibBut->click();
+        emit mCalibBut->click();
+
     else if ((e->key() == Qt::Key_C) && !mCalibBut->isChecked())
-        mCalibBut->click();
+        emit mCalibBut->click();
 
     QWidget::keyPressEvent(e);
 
@@ -706,7 +719,7 @@ void EventPropertiesView::paintEvent(QPaintEvent* e)
 
 void EventPropertiesView::resizeEvent(QResizeEvent* e)
 {
-    Q_UNUSED(e);
+    (void) e;
     updateLayout();
 }
 
@@ -740,7 +753,7 @@ void EventPropertiesView::updateLayout()
         return;
 
     QJsonObject state = MainWindow::getInstance()->getProject()->mState;
-    CurveSettings curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+    const CurveSettings curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
     const bool withCurve = (curveSettings.mProcessType != CurveSettings::eProcessTypeNone);
 
     mButtonWidth = 50; //int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
@@ -766,18 +779,18 @@ void EventPropertiesView::updateLayout()
     int CurveHeight = 0;
 
     if (withCurve) {
-        int lines = (curveSettings.showInclinaison() && curveSettings.showIntensite()) ? 2 : 1;
+        const int lines = (curveSettings.showInclination() && curveSettings.showIntensity()) ? 2 : 1;
         CurveHeight = margin + (margin + mLineEditHeight) * lines;
 
         int dx = margin;
         int dy = margin;
-        int labW = 50;
+        const int labW = 80;
 
-        if (curveSettings.showInclinaison()) {
+        if (curveSettings.showInclination()) {
 
             int editW = (width() - 7*margin - 2*labW) / 2;
 
-            if (curveSettings.showDeclinaison()) {
+            if (curveSettings.showDeclination()) {
                 editW = (width() - 9*margin - 3*labW) / 3;
             }
 
@@ -785,7 +798,8 @@ void EventPropertiesView::updateLayout()
             mYIncEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
             mSIncLab->setGeometry(dx += editW + margin, dy, labW, mLineEditHeight);
             mSIncEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
-            if (curveSettings.showDeclinaison()) {
+
+            if (curveSettings.showDeclination()) {
                 mYDecLab->setGeometry(dx += editW + margin, dy, labW, mLineEditHeight);
                 mYDecEdit->setGeometry(dx + labW + margin, dy, editW, mLineEditHeight);
             }
@@ -793,7 +807,7 @@ void EventPropertiesView::updateLayout()
             dy += mLineEditHeight + margin;
         }
 
-        if (curveSettings.showIntensite()) {
+        if (curveSettings.showIntensity()) {
             dx = margin;
             int editW = (mCurveWidget->width() - 5*margin - 2*labW) / 2;
 
@@ -867,6 +881,7 @@ void EventPropertiesView::updateLayout()
             // mCurveWidget belongs to mTopView
             if (withCurve) {
                 mCurveWidget->setGeometry(margin, topViewHeight + margin, mTopView->width() - 2*margin, CurveHeight);
+
             } else {
                 mCurveWidget->resize(0, 0);
             }
@@ -896,7 +911,7 @@ bool EventPropertiesView::isCalibChecked() const
 bool EventPropertiesView::hasEvent() const
 {
     if (!mEvent.isEmpty()) {
-        Event::Type type = Event::Type (mEvent[STATE_EVENT_TYPE].toInt());
+        Event::Type type = Event::Type (mEvent.value(STATE_EVENT_TYPE).toInt());
         return (type == Event::eDefault);
     }
     return false;
@@ -905,7 +920,7 @@ bool EventPropertiesView::hasEvent() const
 bool EventPropertiesView::hasBound() const
 {
     if (!mEvent.isEmpty()) {
-        Event::Type type = Event::Type (mEvent[STATE_EVENT_TYPE].toInt());
+        Event::Type type = Event::Type (mEvent.value(STATE_EVENT_TYPE).toInt());
         return (type == Event::eKnown);
     }
     return false;
@@ -914,9 +929,9 @@ bool EventPropertiesView::hasBound() const
 bool EventPropertiesView::hasEventWithDates() const
 {
     if (!mEvent.isEmpty()) {
-        Event::Type type = Event::Type (mEvent[STATE_EVENT_TYPE].toInt());
+        Event::Type type = Event::Type (mEvent.value(STATE_EVENT_TYPE).toInt());
         if (type == Event::eDefault) {
-            const QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+            const QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
             return (dates.size() > 0);
         }
     }

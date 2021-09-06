@@ -176,6 +176,9 @@ public:
     const QMap<double, double> getFormatedCalibMap() const;
     const QMap<double, double> getFormatedWiggleCalibMap() const;
     
+    const QMap<double, double> getFormatedCalibToShow() const;
+    const QMap<double, double> getFormatedWiggleCalibToShow() const;
+
     const QMap<double, double> getRawCalibMap() const;
     const QMap<double, double> getRawWiggleCalibMap() const;
 

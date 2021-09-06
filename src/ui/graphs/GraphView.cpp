@@ -1246,7 +1246,7 @@ void GraphView::drawCurves(QPainter& painter)
                     QMap<type_data, type_data> lightMap;
 
                     if (subData.size() > mGraphWidth) { //always used in the items thumbnails
-                        int valuesPerPixel = subData.size() /int(mGraphWidth);
+                        int valuesPerPixel = (int)subData.size() /int(mGraphWidth);
                         if (valuesPerPixel == 0)
                             valuesPerPixel = 1;
                         QMap<type_data, type_data>::const_iterator iter = subData.cbegin();

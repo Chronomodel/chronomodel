@@ -195,7 +195,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     connect(mResultsClipBut, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &CalibrationView::copyText);
     connect(mImageClipBut, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &CalibrationView::copyImage);
 
-    setVisible(false);
+   // setVisible(false);
 }
 
 CalibrationView::~CalibrationView()
@@ -324,11 +324,11 @@ void CalibrationView::updateGraphs()
 
         QMap<double, double> calibMap;
         if (mDate.mIsValid)
-            calibMap = mDate.getFormatedCalibMap();
+            calibMap = mDate.getFormatedCalibToShow();//getFormatedCalibMap();
          
         QMap<double, double> wiggleCalibMap;
         if (mDate.mDeltaType != Date::eDeltaNone)
-             wiggleCalibMap =  mDate.getFormatedWiggleCalibMap();
+             wiggleCalibMap =  mDate.getFormatedWiggleCalibToShow();
 
 
         if (!calibMap.isEmpty()) {

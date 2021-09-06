@@ -43,6 +43,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QWidget>
 #include <QJsonObject>
 
+#include "CurveSettings.h"
+
 //class Event;
 //class TDate;
 class Label;
@@ -79,7 +81,7 @@ public:
     bool hasBound() const;
     bool hasEventWithDates() const;
 
-    void setCurveSettings(bool enabled, char processType);
+    // void setCurveSettings(const CurveSettings::ProcessType processType);
 
 public slots:
     void setEvent(const QJsonObject& event);
@@ -186,7 +188,7 @@ private:
     QLineEdit* mSIntEdit;
 
     bool mCurveEnabled;
-    char mCurveProcessType;
+   // CurveSettings::ProcessType mCurveProcessType;
 };
 
 #endif

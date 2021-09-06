@@ -356,13 +356,12 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
 
          }
    } else {
-
-
-         double tminDisplay;
-         double tmaxDisplay;
-
-         const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
-         const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
+       
+       const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
+       const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
+       
+       double tminDisplay = t1;
+       double tmaxDisplay = t1;
 
          for (auto&&d : date.mSubDates ) {
              Date sd (d.toObject());
@@ -375,7 +374,7 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
              else {
                  sd.calibrate(settings, project);
              }
-*/
+    */
              if (!date.isNull() && date.mIsValid) {
                  const double t3 = sd.getFormatedTminCalib();
                  const double t4 = sd.getFormatedTmaxCalib();

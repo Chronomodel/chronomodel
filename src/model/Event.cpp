@@ -108,7 +108,7 @@ mLevel(0)
 
 Event::Event(const Event& event)
 {
-    copyFrom(event);
+    Event::copyFrom(event);
 }
 
 Event& Event::operator=(const Event& event)
@@ -457,7 +457,7 @@ bool Event::getThetaMaxPossible(const Event *originEvent, QString &circularEvent
     QList<Event*> newStartEvents = startEvents;
     newStartEvents.append(this);
 
-    const QString parallelStr  (" | ");
+   // const QString parallelStr  (" | ");
     const QString serieStr  (" ➡︎ ");
 
     if (mNodeInitialized)
@@ -692,7 +692,7 @@ double Event::getThetaMinRecursive_old(const double defaultValue,
     double min4 (defaultValue);
     for (auto&& branch : phaseBranches) {
         double branchMin = defaultValue;
-        for (auto&&phase : branch) {
+        for (auto&& phase : branch) {
             if (phase->mEvents.contains(this)) {
                 min4 = qMax(min4, branchMin);
                 break;

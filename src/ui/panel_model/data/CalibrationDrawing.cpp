@@ -120,7 +120,7 @@ void CalibrationDrawing::setCalibGraph(GraphView* calibGraph)
 
 void CalibrationDrawing::paintEvent(QPaintEvent* e)
 {
-    Q_UNUSED(e);
+    (void) e;
     // drawing a background under curve
     QPainter p(this);
     p.fillRect(rect(), Qt::white);

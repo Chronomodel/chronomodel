@@ -1186,6 +1186,51 @@ const QMap<double, double> Date::getFormatedCalibMap() const
 
 }
 
+/**
+ * @fn Date::getFormatedCalibToShow
+ * @brief The goal is to have a light curve in memory for a faster drawing
+ * @return const QMap<double, double>
+ */
+
+const QMap<double, double> Date::getFormatedCalibToShow() const
+{
+    if (mCalibration->mCurve.isEmpty())
+        return QMap<double, double>();
+
+    QMap<double, double> calib = getRawCalibMap();
+
+
+    if (mCalibration->mRepartition.last() > 0.) {
+        double tminCal, tmaxCal;
+        QVector<double> curve;
+        const double threshold  = 0.01 * (*std::max_element(mCalibration->mCurve.begin(), mCalibration->mCurve.end()));
+
+        int minIdx = 0;
+        for (auto& v : mCalibration->mCurve) {
+            if (v >threshold) break;
+            minIdx++;
+        }
+
+        int maxIdx = mCalibration->mCurve.size()-1;
+        for (auto itv = mCalibration->mCurve.rbegin(); itv!= mCalibration->mCurve.rend(); itv++) {
+            if (*itv >threshold) break;
+            maxIdx--;
+        }
+
+        tminCal = mTminRefCurve + minIdx * mCalibration->mStep;
+        tmaxCal = mTminRefCurve + maxIdx * mCalibration->mStep;
+
+        curve = mCalibration->mCurve.mid(minIdx, (maxIdx - minIdx) + 1);
+        curve = equal_areas(curve, mCalibration->mStep, 1.);
+        calib = vector_to_map(curve, tminCal, tmaxCal, mCalibration->mStep );
+
+    } else {
+        calib = vector_to_map(mCalibration->mCurve, mCalibration->mTmin, mCalibration->mTmax, mCalibration->mStep);
+    }
+
+    return DateUtils::convertMapToAppSettingsFormat(calib);
+}
+
 const QMap<double, double> Date::getRawWiggleCalibMap() const
 {
     return vector_to_map(mWiggleCalibration->mCurve, mWiggleCalibration->mTmin, mWiggleCalibration->mTmax, mWiggleCalibration->mStep);
@@ -1208,6 +1253,45 @@ const QMap<double, double> Date::getFormatedWiggleCalibMap() const
 
 }
 
+
+
+const QMap<double, double> Date::getFormatedWiggleCalibToShow() const
+{
+    if (mWiggleCalibration == nullptr || mWiggleCalibration->mCurve.isEmpty())
+        return QMap<double, double>();
+
+    QMap<double, double> calib = getRawWiggleCalibMap();
+
+
+    double tminCal, tmaxCal;
+    QVector<double> curve;
+    const double threshold  = 0.01 * (*std::max_element(mWiggleCalibration->mCurve.begin(), mWiggleCalibration->mCurve.end()));
+
+    int minIdx = 0;
+    for (auto& v : mWiggleCalibration->mCurve) {
+        if (v >threshold) break;
+        minIdx++;
+    }
+
+    int maxIdx = mWiggleCalibration->mCurve.size()-1;
+    for (auto itv = mWiggleCalibration->mCurve.rbegin(); itv!= mWiggleCalibration->mCurve.rend(); itv++) {
+        if (*itv >threshold) break;
+        maxIdx--;
+    }
+
+    tminCal = mTminRefCurve + minIdx * mCalibration->mStep;
+    tmaxCal = mTminRefCurve + maxIdx * mCalibration->mStep;
+
+    curve = mWiggleCalibration->mCurve.mid(minIdx, (maxIdx - minIdx) + 1);
+    curve = equal_areas(curve, mCalibration->mStep, 1.);
+    calib = vector_to_map(curve, tminCal, tmaxCal, mCalibration->mStep );
+
+
+
+    return DateUtils::convertMapToAppSettingsFormat(calib);
+}
+
+
 QVector<double> Date::getFormatedRepartition() const
 {
     if (DateUtils::convertToAppSettingsFormat(mCalibration->mTmin)>DateUtils::convertToAppSettingsFormat(mCalibration->mTmax)) {
@@ -1215,7 +1299,7 @@ QVector<double> Date::getFormatedRepartition() const
         QVector<double> repart;
         double lastValue = mCalibration->mRepartition.last();
         QVector<double>::const_iterator iter = mCalibration->mRepartition.cend()-1;
-        while (iter!=mCalibration->mRepartition.cbegin()-1) {
+        while (iter != mCalibration->mRepartition.cbegin()-1) {
              repart.append(lastValue-(*iter));
              --iter;
         }
@@ -1347,10 +1431,10 @@ QPixmap Date::generateUnifThumb()
 
 
 /**
- * @brief TDate::generateCalibThumb Uses the calibration curve already calculated to update the thumbnail.
+ * @fn Date::generateCalibThumb()
+ * @brief Uses the calibration curve already calculated to update the thumbnail.
  * @return
  */
-
 QPixmap Date::generateCalibThumb()
 {
     if (mIsValid) {
