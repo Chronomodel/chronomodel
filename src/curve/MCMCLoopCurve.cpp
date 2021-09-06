@@ -1506,7 +1506,7 @@ allChainsPosteriorMeanG.gx.vecVarG.resize(nbPoint);
     // Conversion after the average
     if ( mCurveSettings.mProcessType == CurveSettings::eProcessTypeVectoriel ||
          mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherique) {
-        emit stepChanged(tr("Compute system conversion..."), 0, 0);
+        emit stepChanged(tr("Compute System Conversion..."), 0, 0);
 
         if (hasZ) {
             conversionIDF(allChainsPosteriorMeanG);
@@ -2344,13 +2344,15 @@ void MCMCLoopCurve::prepareEventY(Event* const event  )
 {
     const double rad = M_PI / 180.;
     if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie) {
+        // Dans RenCurve, fichier U_cmt_lit_sauve
         if (mCurveSettings.mVariableType == CurveSettings::eVariableTypeInclination) {
+
             event->mYx = event->mYInc;
-            event->mSy = event->mSInc;
+            event->mSy = event->mSInc; //ligne 348 : EctYij:= (1/sqrt(Kij))*Deg;
 
         } else if (mCurveSettings.mVariableType == CurveSettings::eVariableTypeDeclination) {
             event->mYx = event->mYDec;
-            event->mSy = event->mSInc / cos(event->mYInc * rad);
+            event->mSy = event->mSInc / cos(event->mYInc * rad); //ligne 364 : EctYij:=(1/(sqrt(Kij)*cos(Iij*rad)))*Deg;
 
         } else {
             event->mYx = event->mYInt;
@@ -2369,16 +2371,17 @@ void MCMCLoopCurve::prepareEventY(Event* const event  )
         event->mYy = event->mYInt * cos(event->mYInc * rad) * sin(event->mYDec * rad);
         event->mYz = event->mYInt * sin(event->mYInc * rad);
 
-        const double sYInc = event->mSInc / 2.4477;
-        event->mSy = sqrt( (pow(event->mSInt, 2.) + 2. * pow(event->mYInt, 2.) * pow(sYInc, 2.)) /3.);
+        const double sYInc = event->mSInc *rad;// 2.4477;
+        event->mSy = event->mYInt*sYInc; // ligne 537 : EctYij:= Fij/sqrt(Kij);
 
     } else if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeVectoriel) {
+
         event->mYx = event->mYInt * cos(event->mYInc * rad) * cos(event->mYDec * rad);
         event->mYy = event->mYInt * cos(event->mYInc * rad) * sin(event->mYDec * rad);
         event->mYz = event->mYInt * sin(event->mYInc * rad);
 
-        const double sYInc = event->mSInc /2.4477 ;
-        event->mSy = sqrt( (pow(event->mSInt, 2.) + 2. * pow(event->mYInt, 2.) * pow(sYInc, 2.)) /3.);
+        const double sYInc = event->mSInc *rad;//2.4477 ;
+        event->mSy = sqrt( (pow(event->mSInt, 2.) + 2. * pow(event->mYInt*sYInc, 2.) ) /3.); // ligne 520 : EctYij:=sqrt( ( sqr(EctFij) + (2*sqr(Fij)/Kij) )/3 );
 
     } else if (mCurveSettings.mProcessType == CurveSettings::eProcessType3D) {
 
@@ -2386,7 +2389,7 @@ void MCMCLoopCurve::prepareEventY(Event* const event  )
         event->mYy = event->mYDec;
         event->mYz = event->mYInt;
 
-        event->mSy = sqrt( (pow(event->mSInt, 2.) + pow(event->mSInc, 2.)) /2.);
+        event->mSy = sqrt( (pow(event->mSInt, 2.) +2*pow(event->mSInc, 2.)) /3.);
 
     }
     
