@@ -150,19 +150,33 @@ void MultiCalibrationDrawing::mouseMoveEvent(QMouseEvent* e)
     */
 }
 
-
+/*void MultiCalibrationDrawing::paintEvent(QPaintEvent * e)
+{
+    updateLayout();
+    (void) e;
+}
+*/
 void MultiCalibrationDrawing::updateLayout()
 {
+    if (mListBar.isEmpty())
+        return;
     QFontMetrics fm (font());
     const bool axisVisible = (mGraphHeight >= GraphViewResults::mHeightForVisibleAxis);
     const int marginBottom = (axisVisible ? int (fm.ascent() * 2.2) : int (fm.ascent() * 0.5));
     int y = 0;
     int i = 0;
-    const int graphShift (5); // the same name and the same value as MultiCalibrationView::exportFullImage()
+    const int graphShift = 5; // the same name and the same value as MultiCalibrationView::exportFullImage()
+qDebug()<<"MultiCalibrationDrawing::updateLayout()";
 
     for (auto&& graph: mListCalibGraph) {
-        mListBar[i]->setGeometry(5, y, ColoredBar::mWidth, mGraphHeight - marginBottom);
+        if (mListAxisVisible.at(i))
+            mListBar[i]->setGeometry(5, y, ColoredBar::mWidth, mGraphHeight - marginBottom);
+        else
+            mListBar[i]->setGeometry(5, y, ColoredBar::mWidth, mGraphHeight);
+
         mListBar[i]->setVisible(true);
+
+        graph->showXAxisValues(axisVisible && mListAxisVisible[i]);
 
         if (!graph->hasCurve()) {
             graph->showInfos(true);
@@ -170,8 +184,7 @@ void MultiCalibrationDrawing::updateLayout()
             graph->setGeometry(ColoredBar::mWidth + graphShift, y, width() - ColoredBar::mWidth - graphShift, mGraphHeight );
             graph->setVisible(true);
 
-         } else {
-            graph->showXAxisValues(axisVisible);
+         } else {           
             graph->showXAxisSubTicks(true);
             graph->setMarginBottom(marginBottom);
             graph->setYAxisMode(GraphView::eHidden);
@@ -198,14 +211,15 @@ void MultiCalibrationDrawing::updateLayout()
         mMarkerX->resize( mMarkerX->thickness(), y);
     else
         hideMarker();
-    update();
+  //  update();
 }
 
 void MultiCalibrationDrawing::resizeEvent(QResizeEvent* e)
 {
     (void) e;
+
     mScrollArea->setGeometry(0, 0, width(), height());
-    updateLayout();
+   // updateLayout();
 }
 
 QPixmap MultiCalibrationDrawing::grab()

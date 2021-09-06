@@ -39,6 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "MultiCalibrationView.h"
 
+#include "Project.h"
 #include "DoubleValidator.h"
 #include "Painting.h"
 #include "QtUtilities.h"
@@ -47,8 +48,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphViewResults.h"
 
 #include <QPainter>
-#include "Project.h"
+
 #include <QJsonArray>
+#include <QLocale>
 
 MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mMajorScale (100),
@@ -63,7 +65,7 @@ mCurveColor(Painting::mainColorDark)
     mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     setMouseTracking(true);
     mDrawing = new MultiCalibrationDrawing(this);
-    setMouseTracking(true);
+    mDrawing->setMouseTracking(true);
 
     mTextArea = new QTextEdit(this);
     mTextArea->setFrameStyle(QFrame::HLine);
@@ -109,6 +111,11 @@ mCurveColor(Painting::mainColorDark)
     QIntValidator* heightValidator = new QIntValidator();
     heightValidator->setRange(50, 500);
     mGraphHeightEdit->setValidator(heightValidator);
+    mGraphHeightEdit->setAdjustText(true);
+
+    mYZoom = new ScrollCompressor(this);
+    mYZoom->setProp(0.5);
+    mYZoom->showText(tr("Zoom"), true);
 
     mColorClipBut = new Button(tr("Color"), this);
     mColorClipBut->setIcon(QIcon(":color.png"));
@@ -116,9 +123,9 @@ mCurveColor(Painting::mainColorDark)
     mColorClipBut->setToolTip(tr("Set Personal Densities Color"));
     mColorClipBut->setIconOnly(true);
 
-    frameSeparator = new QFrame(this);
-    frameSeparator->setFrameStyle(QFrame::Panel);
-    frameSeparator->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
+   // frameSeparator = new QFrame(this);
+    //frameSeparator->setFrameStyle(QFrame::Panel);
+    //frameSeparator->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
 
     mStartLab = new Label(tr("Start"), this);
     mStartLab->setAdjustText();
@@ -198,6 +205,8 @@ mCurveColor(Painting::mainColorDark)
     connect(mImageClipBut, &Button::clicked, this, &MultiCalibrationView::copyImage);
     connect(mStatClipBut, &Button::clicked, this, &MultiCalibrationView::showStat);
     connect(mGraphHeightEdit, &QLineEdit::textEdited, this, &MultiCalibrationView::updateGraphsSize);
+    connect(mYZoom, &ScrollCompressor::valueChanged, this, &MultiCalibrationView::updateYZoom);
+
     connect(mColorClipBut, &Button::clicked, this, &MultiCalibrationView::changeCurveColor);
 
    // setVisible(false);
@@ -211,16 +220,28 @@ MultiCalibrationView::~MultiCalibrationView()
 void MultiCalibrationView::resizeEvent(QResizeEvent* )
 {
     updateLayout();
+qDebug()<<"MultiCalibrationView::resizeEvent(QResizeEvent* )";
 }
+
+/*
+void MultiCalibrationView::mouseMoveEvent(QMouseEvent* e)
+{
+    QWidget::mouseMoveEvent(e);
+    (void) e;
+
+    mDrawing->update();
+
+
+}
+*/
 
 void MultiCalibrationView::paintEvent(QPaintEvent* e)
 {
     (void) e;
-    const int graphWidth (width() - mButtonWidth);
 
     QPainter p(this);
     // drawing a background under button
-    p.fillRect(QRect(graphWidth, 0, mButtonWidth, height()), Painting::borderDark);
+    p.fillRect(QRect(width() - mButtonWidth, 0, mButtonWidth, height()), Painting::borderDark);
 
     // drawing a background under curve
    // p.fillRect(QRect(0, 0, graphWidth, height()), Qt::green);
@@ -233,7 +254,7 @@ void MultiCalibrationView::setVisible(bool visible)
     mImageSaveBut->setVisible(visible);
     mImageClipBut->setVisible(visible);
     mStatClipBut->setVisible(visible);
-    frameSeparator->setVisible(visible);
+    //frameSeparator->setVisible(visible);
 
     mStartLab->setVisible(visible);
     mStartEdit->setVisible(visible);
@@ -257,17 +278,23 @@ void MultiCalibrationView::applyAppSettings()
 
 void MultiCalibrationView::updateLayout()
 {
-    const int x0  (width() - mButtonWidth);
-    const int margin ( int(0.1 * mButtonWidth));
-    const int xm (x0 + margin);
+    const int graphWidth  = width() - mButtonWidth;
+   // QPainter p(this);
+    // drawing a background under button
+    //p.fillRect(QRect(graphWidth, 0, mButtonWidth, height()), Painting::borderDark);
 
-    const int textHeight (int (1.2 * (fontMetrics().descent() + fontMetrics().ascent()) ));
-    const int verticalSpacer (int (0.3 * AppSettings::heigthUnit()));
+
+    const int x0   = width() - mButtonWidth;
+    const int margin = int(0.1 * mButtonWidth);
+    const int xm = x0 + margin;
+qDebug()<<"MultiCalibrationView::updateLayout()";
+    const int textHeight = int (1.2 * (fontMetrics().descent() + fontMetrics().ascent()) );
+    const int verticalSpacer = int (0.3 * AppSettings::heigthUnit());
     mMarginRight = int (1.5 * floor(fontMetrics().boundingRect(mEndEdit->text()).width()/2) + 5);
     mMarginLeft = int (1.5 * floor(fontMetrics().boundingRect(mStartEdit->text()).width()/2) + 5);
 
     //Position of Widget
-    int y (0);
+    int y  = 0;
 
     mImageSaveBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
     y += mImageSaveBut->height();
@@ -283,10 +310,11 @@ void MultiCalibrationView::updateLayout()
 
     mColorClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
     y += mColorClipBut->height();
-
     const int separatorHeight (height() - y - 10* textHeight - 10*verticalSpacer);
-    frameSeparator->setGeometry(x0, y, mButtonWidth, separatorHeight);
-    y += frameSeparator->height() + verticalSpacer;
+    mYZoom->setGeometry(x0, y, mButtonWidth, separatorHeight);
+    y += mYZoom->height() + verticalSpacer;
+   // frameSeparator->setGeometry(x0, y, mButtonWidth, separatorHeight);
+   // y += frameSeparator->height() + verticalSpacer;
 
     mStartLab->setGeometry(x0, y, mButtonWidth, textHeight);
     y += mStartLab->height();
@@ -314,16 +342,19 @@ void MultiCalibrationView::updateLayout()
     y += mHPDLab->height();
     mHPDEdit->setGeometry(xm, y, mButtonWidth - 2 * margin, textHeight);
 
-    const int graphWidth = width() - mButtonWidth;
+    //const int graphWidth = width() - mButtonWidth;
 
-    if (mStatClipBut->isChecked())
+    if (mStatClipBut->isChecked()) {
+        mTextArea->show();
         mTextArea->setGeometry(0, 0, graphWidth, height());
-
-    else {
+        mDrawing->hide();
+    } else {
+        mTextArea->hide();
+        mDrawing->show();
         mDrawing->setGeometry(0, 0, graphWidth, height());
-        mDrawing->setGraphHeight(mGraphHeight);
+        mDrawing->setGraphHeight(mGraphHeight); //pHd change ici
 
-        mDrawing->update();
+       // mDrawing->update();
     }
 
 }
@@ -350,6 +381,7 @@ void MultiCalibrationView::updateGraphList()
 
     QList<GraphView*> graphList;
     QList<QColor> colorList;
+    QList<bool> listAxisVisible;
     const QJsonArray events = state.value(STATE_EVENTS).toArray();
 
 
@@ -437,7 +469,7 @@ void MultiCalibrationView::updateGraphList()
                     calibCurve.mPen.setWidth(1);
                     calibCurve.mIsHisto = false;
 
-                    calibCurve.mData = d.getFormatedCalibMap();
+                    calibCurve.mData = d.getFormatedCalibToShow();//getFormatedCalibMap();
 
                     const bool isUnif (d.mPlugin->getName() == "Unif");
                     calibCurve.mIsRectFromZero = isUnif;
@@ -448,7 +480,7 @@ void MultiCalibrationView::updateGraphList()
                     // Drawing the wiggle
                     if (d.mDeltaType !=  Date::eDeltaNone) {
                         GraphCurve curveWiggle;
-                        QMap<double, double> calibWiggle = normalize_map(d.getFormatedWiggleCalibMap(), map_max_value(calibCurve.mData));
+                        QMap<double, double> calibWiggle = normalize_map(d.getFormatedWiggleCalibToShow(), map_max_value(calibCurve.mData));
                         curveWiggle.mData = calibWiggle;
 
                         curveWiggle.mName = "Wiggle";
@@ -464,11 +496,14 @@ void MultiCalibrationView::updateGraphList()
 
                 // Insert the Event Name only if different to the previous Event's name
                 QString eventName (ev.value(STATE_NAME).toString());
-                if (eventName != preEventName)
+                listAxisVisible.append(true);
+                if (eventName != preEventName) {
                     calibGraph->addInfo(tr("Event") + " : "+ eventName);
 
-                else
+                } else {
                     calibGraph->addInfo("");
+                    listAxisVisible[listAxisVisible.size()-2] = false;
+                }
 
                 preEventName = eventName;
 
@@ -527,7 +562,10 @@ void MultiCalibrationView::updateGraphList()
    mDrawing->showMarker();
    updateGraphsSize(mGraphHeightEdit->text());
    mDrawing->setEventsColorList(colorList);
-   mDrawing->setGraphList(graphList);
+   mDrawing->setListAxisVisible(listAxisVisible);
+
+   mDrawing->setGraphList(graphList); // must be after setEventsColorList() and setListAxisVisible()
+
 
    if (mStatClipBut->isChecked())
        showStat();
@@ -579,7 +617,7 @@ void MultiCalibrationView::updateGraphsSize(const QString &sizeStr)
     bool ok;
     double val = locale().toDouble(sizeStr, &ok);
     if (ok) {
-        const double origin (GraphViewResults::mHeightForVisibleAxis);//Same value in ResultsView::applyAppSettings()
+        const double origin = GraphViewResults::mHeightForVisibleAxis;//Same value in ResultsView::applyAppSettings()
         const double prop (val / 100.);
         mGraphHeight = int ( prop * origin );
 
@@ -587,6 +625,20 @@ void MultiCalibrationView::updateGraphsSize(const QString &sizeStr)
         return;
 
     mDrawing->setGraphHeight(mGraphHeight);
+
+}
+
+void MultiCalibrationView::updateYZoom(const double prop)
+{
+    const double origin = GraphViewResults::mHeightForVisibleAxis;//Same value in ResultsView::applyAppSettings()
+
+    mGraphHeight = int ( prop * origin /50 * 100 );
+
+    mDrawing->setGraphHeight(mGraphHeight);
+    QString sizeText = QLocale().toString(mGraphHeight / origin * 100, 'f', 0);
+    mGraphHeightEdit->blockSignals(true);
+    mGraphHeightEdit->setText(sizeText);
+    mGraphHeightEdit->blockSignals(false);
 
 }
 

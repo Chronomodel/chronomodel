@@ -79,6 +79,9 @@ public:
     void setGraphList(QList<GraphView*> &list);
     void setEventsColorList(QList<QColor> &colorList);
     QList<GraphView*> *getGraphList() {return &mListCalibGraph;}
+
+    void setListAxisVisible(QList<bool> &list) { mListAxisVisible = list;};
+
     void updateLayout();
     void forceRefresh();
     void setGraphHeight(const int & height);
@@ -94,6 +97,7 @@ private:
     QList<GraphView*> mListCalibGraph;
     QList<QColor> mListEventsColor;
     QList<ColoredBar*> mListBar;
+    QList<bool> mListAxisVisible;
 
     QScrollArea* mScrollArea;
     QWidget* mGraphWidget;
@@ -108,11 +112,24 @@ private:
 
     bool mMouseOverCurve;
 
+
 protected:
   //  void paintEvent(QPaintEvent*);
     void mouseMoveEvent(QMouseEvent* e);
     void resizeEvent(QResizeEvent* e);
 
+ //   void paintEvent(QPaintEvent *);
+    /* override {
+        const QColor color (49, 112, 176, 40);
+        QFont font (QFont().family(), 30, QFont::Medium, false);
+
+        QPainter p (this);
+        p.setFont(font);
+        p.fillRect(rect(), color);
+        p.setPen(color.darker());
+        p.drawText(rect(), Qt::AlignCenter | Qt::TextWordWrap, QObject::tr("Selected"));
+        p.end();
+    }*/
 };
 
 #endif // MULTICALIBRATIONDRAWING_H

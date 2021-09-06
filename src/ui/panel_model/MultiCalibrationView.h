@@ -51,6 +51,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "LineEdit.h"
 #include "MultiCalibrationDrawing.h"
 #include "ColorPicker.h"
+#include "ScrollCompressor.h"
 
 #include "ProjectSettings.h"
 
@@ -74,6 +75,7 @@ protected:
     void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent*);
     void updateLayout();
+ //   void mouseMoveEvent(QMouseEvent* e);
 
 public slots:
     virtual void setVisible(bool visible);
@@ -84,6 +86,8 @@ public slots:
 private slots:
     void updateHPDGraphs(const QString & thres);
     void updateGraphsSize(const QString & sizeStr);
+    void updateYZoom(const double prop);
+
     void updateGraphsZoom();
     void updateScroll();
     void exportImage();
@@ -119,10 +123,11 @@ private:
     Button* mColorClipBut;
     ColorPicker* mColorPicker;
 
-    QFrame* frameSeparator;
+    //QFrame* frameSeparator;
 
     Label* mGraphHeightLab;
     LineEdit* mGraphHeightEdit;
+    ScrollCompressor* mYZoom;
 
     Label* mHPDLab;
     LineEdit* mHPDEdit;
