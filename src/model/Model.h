@@ -112,11 +112,11 @@ public:
     virtual void generateNumericalResults(const QList<ChainSpecs>& chains);
 
     void generateTempoAndActivity();
-    void generateTempo(int gridLenth);
-    void generateTempo_old(int gridLenth);
+    void generateTempo(size_t gridLenth);
+    void generateTempo_old(size_t gridLenth);
     void generateTempoTest();// a detruire
-    void generateActivity(int gridLenth, double h);
-    void generateActivity_old(int gridLenth, double h);
+    void generateActivity(size_t gridLenth, double h);
+    void generateActivity_old(size_t gridLenth, double h);
 
     virtual void clearTraces();
     virtual void clearPosteriorDensities();
@@ -150,7 +150,7 @@ public:
 
     double mThreshold;
     double mBandwidth;
-    int mFFTLength;
+    size_t mFFTLength;
     double mHActivity;
 
     // Members used in the next-previous sheet system
@@ -163,7 +163,7 @@ public:
 public slots:
     void setThreshold(const double threshold);
     void setBandwidth(const double bandwidth);
-    void setFFTLength(const int FFTLength);
+    void setFFTLength(size_t FFTLength);
     void setHActivity(const double h);
 
 signals:

@@ -457,9 +457,7 @@ void ModelCurve::generateCredibility(const double& thresh)
 {
     Model::generateCredibility(thresh);
     for (Event*& event : mEvents) {
-       // if (event->type() != Event::eKnown) {
-            event->mVG.generateCredibility(mChains, thresh);
-       // }
+        event->mVG.generateCredibility(mChains, thresh);
     }
     mLambdaSpline.generateCredibility(mChains, thresh);
 }

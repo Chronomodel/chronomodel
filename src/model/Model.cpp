@@ -148,8 +148,8 @@ void Model::updateFormatSettings()
         phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
         phase->mTempoInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoInf);
         phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
-        phase->mTempoCredibilityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilityInf);
-        phase->mTempoCredibilitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilitySup);
+       // phase->mTempoCredibilityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilityInf);
+       // phase->mTempoCredibilitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilitySup);
 
         phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
         phase->mActivityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityInf);
@@ -989,7 +989,7 @@ void Model::setBandwidth(const double bandwidth)
     }
 }
 
-void Model::setFFTLength(const int FFTLength)
+void Model::setFFTLength(size_t FFTLength)
 {
     if (mFFTLength != FFTLength) {
         updateDensities(FFTLength, mBandwidth, mThreshold);
@@ -1440,7 +1440,7 @@ const int totalIter = listTrace.size();
 
            qDebug()<<"Model::generateTempo() tmin == tmax : " <<phase->mName;
 
-            phase->mRawTempoCredibilityInf[tmax] = 1;
+            //phase->mRawTempoCredibilityInf[tmax] = 1;
 
             phase->mRawTempo[tmax] = 1;
             phase->mRawTempoInf[tmax] = 1;
@@ -1448,8 +1448,8 @@ const int totalIter = listTrace.size();
 
             phase->mRawTempo.insert(mSettings.mTmax, 1);
 
-            phase->mRawTempoCredibilityInf[tmax] = 1;
-            phase->mRawTempoCredibilitySup[tmax] = 1;
+           // phase->mRawTempoCredibilityInf[tmax] = 1;
+          //  phase->mRawTempoCredibilitySup[tmax] = 1;
 
         //    phase->mRawActivity[tmin] = 1;
 
@@ -1457,8 +1457,8 @@ const int totalIter = listTrace.size();
             phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
             phase->mTempoInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoInf);
             phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
-            phase->mTempoCredibilityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilityInf);
-            phase->mTempoCredibilitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilitySup);
+         //   phase->mTempoCredibilityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilityInf);
+         //   phase->mTempoCredibilitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilitySup);
 
          //   phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
 
@@ -1683,22 +1683,22 @@ const int totalIter = listTrace.size();
 //        progress->setValue(position);
 #endif
         ///# 4 - Credibility
-        QVector<double> credInf (nbPts);
+/*        QVector<double> credInf (nbPts);
         QVector<double> credSup (nbPts);
 
-        QVector<double>::iterator itCredInf (credInf.begin());
-        QVector<double>::iterator itCredSup (credSup.begin());
+       // QVector<double>::iterator itCredInf (credInf.begin());
+      //  QVector<double>::iterator itCredSup (credSup.begin());
         int index = 0; // index of table N corresponding to the first value // faster than used of Distance
         double t = tmin;
         while (t <= tmax ) {
-            /* quartile for 95%,
-             * 2.5% on inferior curve
-             * and 2.5% on the superior curve */
-            Quartiles cred = quartilesType(Ni[t], 8, 0.025);
-            *itCredInf = cred.Q1;
-            *itCredSup = cred.Q3;
-            ++itCredInf;
-            ++itCredSup;
+            // quartile for 95%,
+            // 2.5% on inferior curve
+            // and 2.5% on the superior curve
+         //   Quartiles cred = quartilesType(Ni[t], 8, 0.025);
+       //     *itCredInf = cred.Q1;
+       //     *itCredSup = cred.Q3;
+       //     ++itCredInf;
+       //     ++itCredSup;
 
             ++index;
             t = tmin + index*deltat;
@@ -1719,7 +1719,7 @@ const int totalIter = listTrace.size();
         // Convertion in the good Date format
         phase->mTempoCredibilityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilityInf);
         phase->mTempoCredibilitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilitySup);
-
+*/
 #ifndef UNIT_TEST
         ++position;
 //        progress->setValue(position);
@@ -1840,7 +1840,7 @@ void Model::generateTempoAndActivity()
 
            qDebug()<<"Model::generateTempo() tmin == tmax : " <<phase->mName;
 
-            phase->mRawTempoCredibilityInf[tmax] = 1;
+          //  phase->mRawTempoCredibilityInf[tmax] = 1;
 
             phase->mRawTempo[tmax] = 1;
             phase->mRawTempoInf[tmax] = 1;
@@ -1848,8 +1848,8 @@ void Model::generateTempoAndActivity()
 
             phase->mRawTempo.insert(mSettings.mTmax, 1);
 
-            phase->mRawTempoCredibilityInf[tmax] = 1;
-            phase->mRawTempoCredibilitySup[tmax] = 1;
+           // phase->mRawTempoCredibilityInf[tmax] = 1;
+           // phase->mRawTempoCredibilitySup[tmax] = 1;
 
             phase->mRawActivity[tmin] = 1;
 
@@ -1857,8 +1857,8 @@ void Model::generateTempoAndActivity()
             phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
             phase->mTempoInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoInf);
             phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
-            phase->mTempoCredibilityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilityInf);
-            phase->mTempoCredibilitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilitySup);
+          //  phase->mTempoCredibilityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilityInf);
+          //  phase->mTempoCredibilitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilitySup);
 
             phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
 
@@ -2109,7 +2109,7 @@ void Model::generateTempoAndActivity()
             ++index;
             t = tmin + index*deltat;
         }
-        phase->mRawTempoCredibilityInf = vector_to_map(credInf, tmin, tmax, deltat);
+     /*   phase->mRawTempoCredibilityInf = vector_to_map(credInf, tmin, tmax, deltat);
         phase->mRawTempoCredibilitySup = vector_to_map(credSup, tmin, tmax, deltat);
 
         // Joining curves on the curve Tempo
@@ -2125,7 +2125,7 @@ void Model::generateTempoAndActivity()
         // Convertion in the good Date format
         phase->mTempoCredibilityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilityInf);
         phase->mTempoCredibilitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilitySup);
-
+*/
 #ifndef UNIT_TEST
         ++position;
         progress->setValue(position);
@@ -2145,7 +2145,7 @@ void Model::generateTempoAndActivity()
 
 }
 
-void Model::generateTempo(int gridLenth)
+void Model::generateTempo(size_t gridLenth)
 {
 #ifdef DEBUG
     QElapsedTimer tClock;
@@ -2187,14 +2187,14 @@ void Model::generateTempo(int gridLenth)
         for (auto& ev : phase->mEvents)
             listTrace.push_back(ev->mTheta.fullRunRawTrace(mChains));
 
-        const int totalIter = listTrace.at(0).size();
+        size_t totalIter = listTrace.at(0).size();
 
         /// Look for the maximum span containing values \f$ x=2 \f$
         tmin = mSettings.mTmax;
         tmax = mSettings.mTmin;
 
 #ifndef UNIT_TEST
-        for (auto& l:listTrace) {
+        for (auto& l : listTrace) {
             const double lmin = *std::min_element(l.cbegin(), l.cend());
             tmin = std::min(tmin, lmin );
             const double lmax = *std::max_element(l.cbegin(), l.cend());
@@ -2232,7 +2232,7 @@ void Model::generateTempo(int gridLenth)
 
         /// Loop
         std::vector<double> scenario;
-        for (int i = 0; i<totalIter; ++i) {
+        for (size_t i = 0; i<totalIter; ++i) {
 
             /// Create one scenario per iteration
             scenario.clear();
@@ -2266,19 +2266,22 @@ void Model::generateTempo(int gridLenth)
     ///# Calculation of the variance
         QVector<double> inf;
         QVector<double> sup;
-       // QVector<double> mean;
 
         QVector<double> esp;
+
+
+      ///# 4 - Credibility
         double p, e, v, infp;
         const double n = (double) phase->mEvents.size();
         const double nr = (double) (totalIter * phase->mEvents.size());
 
-        ///# 4 - Credibility
-        QVector<double> credInf (gridLenth);
+
+ /*       QVector<double> credInf (gridLenth);
         QVector<double> credSup (gridLenth);
 
         QVector<double>::iterator itCredInf (credInf.begin());
         QVector<double>::iterator itCredSup (credSup.begin());
+*/
         for (auto& vecNij : Ni) {
 
             //p = 0;
@@ -2297,13 +2300,14 @@ void Model::generateTempo(int gridLenth)
             sup.append( e + 1.96 * sqrt(v));
 
 
-            Quartiles cred = quartilesType(vecNij, 8, 0.025);
+     /*       Quartiles cred = quartilesType(vecNij, 8, 0.025);
             *itCredInf = cred.Q1;
             *itCredSup = cred.Q3;
             ++itCredInf;
             ++itCredSup;
-
+*/
         }
+
 #ifndef UNIT_TEST
        // ++position;
 //        progress->setValue(position);
@@ -2335,7 +2339,7 @@ void Model::generateTempo(int gridLenth)
         phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
         phase->mTempoInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoInf);
         phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
-
+/*
         // credibility creation
         phase->mRawTempoCredibilityInf = vector_to_map(credInf, tmin, tmax, delta_t);
         phase->mRawTempoCredibilitySup = vector_to_map(credSup, tmin, tmax, delta_t);
@@ -2353,7 +2357,7 @@ void Model::generateTempo(int gridLenth)
         // Convertion in the good Date format
         phase->mTempoCredibilityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilityInf);
         phase->mTempoCredibilitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilitySup);
-
+*/
      } // Loop End on phase
 
 #ifdef DEBUG
@@ -2365,7 +2369,7 @@ void Model::generateTempo(int gridLenth)
 
 
 
-void Model::generateTempo_old(int gridLenth)
+void Model::generateTempo_old(size_t gridLenth)
 {
 #ifdef DEBUG
     QElapsedTimer tClock;
@@ -2544,7 +2548,7 @@ void Model::generateTempo_old(int gridLenth)
         phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
 
         // credibility creation
-        phase->mRawTempoCredibilityInf = vector_to_map(credInf, tmin, tmax, delta_t);
+/*        phase->mRawTempoCredibilityInf = vector_to_map(credInf, tmin, tmax, delta_t);
         phase->mRawTempoCredibilitySup = vector_to_map(credSup, tmin, tmax, delta_t);
 
         // Joining curves on the curve Tempo
@@ -2560,7 +2564,7 @@ void Model::generateTempo_old(int gridLenth)
         // Convertion in the good Date format
         phase->mTempoCredibilityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilityInf);
         phase->mTempoCredibilitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilitySup);
-
+*/
      } // Loop End on phase
 
 #ifdef DEBUG
@@ -2609,7 +2613,7 @@ void Model::clearPosteriorDensities()
  * @param gridLenth
  * @param h defined in year, if h<0 then h= delta_t \f$ \delta_t = (t_max - t_min)/(gridLenth) \f$
  */
-void Model:: generateActivity(int gridLenth, double h)
+void Model:: generateActivity(size_t gridLenth, double h)
 {
 #ifdef DEBUG
     qDebug()<<"Model::generateActivity() "<<mSettings.mTmin<<mSettings.mTmax;
@@ -2642,7 +2646,7 @@ void Model:: generateActivity(int gridLenth, double h)
         for (auto& ev : phase->mEvents)
             listTrace.push_back(ev->mTheta.fullRunRawTrace(mChains));
 
-        const int totalIter = listTrace.front().size();
+        int totalIter = listTrace.front().size();
 
         /// Look for the maximum span containing values \f$ x=2 \f$
         tmin = mSettings.mTmax;
@@ -2702,8 +2706,8 @@ void Model:: generateActivity(int gridLenth, double h)
             int idxGridMin, idxGridMax;
 
             for (auto& tScenario : scenario) {
-                idxGridMin = std::max (0, (int) ceil((tScenario - h_2 - tmin) / delta_t));
-                idxGridMax = std::min (gridLenth-1, (int) floor((tScenario + h_2 - tmin) / delta_t));
+                idxGridMin = std::max ((size_t)0, (size_t) ceil((tScenario - h_2 - tmin) / delta_t));
+                idxGridMax = std::min (gridLenth-1, (size_t) floor((tScenario + h_2 - tmin) / delta_t));
 
                 for (auto&& nij = Nij.begin() + idxGridMin; nij <= Nij.begin() + idxGridMax; ++nij) {
                     ++*nij ;
@@ -2787,7 +2791,7 @@ void Model:: generateActivity(int gridLenth, double h)
 
 }
 
-void Model:: generateActivity_old(int gridLenth, double h)
+void Model:: generateActivity_old(size_t gridLenth, double h)
 {
 #ifdef DEBUG
     qDebug()<<"Model::generateActivity_old() "<<mSettings.mTmin<<mSettings.mTmax;
@@ -2820,7 +2824,7 @@ void Model:: generateActivity_old(int gridLenth, double h)
         for (auto& ev : phase->mEvents)
             listTrace.push_back(ev->mTheta.fullRunRawTrace(mChains));
 
-        const int totalIter = listTrace.front().size();
+        size_t totalIter = listTrace.front().size();
 
         /// Look for the maximum span containing values \f$ x=2 \f$
         tmin = mSettings.mTmax;
@@ -2867,7 +2871,7 @@ void Model:: generateActivity_old(int gridLenth, double h)
 
         /// Loop
         std::vector<double> scenario;
-        for (int i = 0; i<totalIter; ++i) {
+        for (size_t i = 0; i<totalIter; ++i) {
 
             /// Create one scenario per iteration
             scenario.clear();
@@ -2875,13 +2879,13 @@ void Model:: generateActivity_old(int gridLenth, double h)
                 scenario.push_back(lt.at(i));
 
             /// Insert the scenario dates in the activity grid
-            std::vector<int> Nij (gridLenth);
+            std::vector<unsigned> Nij (gridLenth);
 
-            int idxGridMin, idxGridMax;
+            size_t idxGridMin, idxGridMax;
 
             for (auto& tScenario : scenario) {
-                idxGridMin = std::max (0, (int) ceil((tScenario - h_2 - tmin) / delta_t));
-                idxGridMax = std::min (gridLenth-1, (int) floor((tScenario + h_2 - tmin) / delta_t));
+                idxGridMin = std::max ((size_t)0, (size_t) ceil((tScenario - h_2 - tmin) / delta_t));
+                idxGridMax = std::min (gridLenth-1, (size_t) floor((tScenario + h_2 - tmin) / delta_t));
 
                 for (auto&& nij = Nij.begin() + idxGridMin; nij <= Nij.begin() + idxGridMax; ++nij) {
                     ++*nij ;
@@ -2889,7 +2893,7 @@ void Model:: generateActivity_old(int gridLenth, double h)
 
             }
 
-            std::vector<int>::iterator itNij (Nij.begin());
+            std::vector<unsigned>::iterator itNij (Nij.begin());
             for (auto&& n : Ni) {
                 n.push_back(*itNij);
                 ++itNij;
@@ -3008,8 +3012,8 @@ void Model::clearTraces()
         ph->mRawTempo.clear();
         ph->mRawTempoInf.clear();
         ph->mRawTempoSup.clear();
-        ph->mRawTempoCredibilityInf.clear();
-        ph->mRawTempoCredibilitySup.clear();
+       // ph->mRawTempoCredibilityInf.clear();
+       // ph->mRawTempoCredibilitySup.clear();
     }
 }
 

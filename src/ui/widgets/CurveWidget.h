@@ -51,20 +51,7 @@ public:
     CurveWidget(QWidget* parent);
 
 private:
-    QLabel* mYIncLab;
-    QLineEdit* mYIncEdit;
 
-    QLabel* mYDecLab;
-    QLineEdit* mYDecEdit;
-
-    QLabel* mSIncLab;
-    QLineEdit* mSIncEdit;
-
-    QLabel* mYIntLab;
-    QLineEdit* mYIntEdit;
-
-    QLabel* mSIntLab;
-    QLineEdit* mSIntEdit;
 protected:
     void paintEvent(QPaintEvent* event);
 

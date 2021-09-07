@@ -116,20 +116,20 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
 
 
 //-------- Matrix
-std::vector<double> initVector(const unsigned n);
-std::vector<std::vector<double>> initMatrix(const unsigned rows, const unsigned cols);
-void resizeMatrix(std::vector<std::vector<double>>&matrix,  const unsigned rows, const unsigned cols);
+std::vector<double> initVector(size_t n);
+std::vector<std::vector<double>> initMatrix(size_t rows, size_t cols);
+void resizeMatrix(std::vector<std::vector<double>>&matrix,  size_t rows, size_t cols);
 
-std::vector<long double> initLongVector(const unsigned n);
-std::vector<std::vector<long double>> initLongMatrix(const unsigned rows, const unsigned cols);
+std::vector<long double> initLongVector(size_t n);
+std::vector<std::vector<long double>> initLongMatrix(size_t rows, size_t cols);
 
-long double determinant(const std::vector<std::vector<long double>>& matrix, const int shift = 0);
+long double determinant(const std::vector<std::vector<long double>>& matrix, size_t shift = 0);
 
-std::vector<std::vector<long double> > seedMatrix(const std::vector<std::vector<long double>>& matrix, const int shift = 0);
+std::vector<std::vector<long double> > seedMatrix(const std::vector<std::vector<long double>>& matrix, size_t shift = 0);
 
 std::vector<std::vector<long double> > transpose0(const std::vector<std::vector<long double>>& matrix);
 std::vector<std::vector<long double>> transpose(const std::vector<std::vector<long double>>& matrix, const int nbDiag);
-std::vector<std::vector<long double>> multiMatParDiag(const std::vector<std::vector<long double>>& matrix, const std::vector<long double>& diag, const int nbBandes);
+std::vector<std::vector<long double>> multiMatParDiag(const std::vector<std::vector<long double>>& matrix, const std::vector<long double>& diag, size_t nbBandes);
 std::vector<std::vector<long double>> multiDiagParMat(const std::vector<long double>& diag, const std::vector<std::vector<long double>>& matrix, const int nbBandes);
 std::vector<long double> multiMatParVec(const std::vector<std::vector<long double>>& matrix, const std::vector<long double>& vec, const int nbBandes);
 

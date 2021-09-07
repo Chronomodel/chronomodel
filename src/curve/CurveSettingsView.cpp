@@ -69,6 +69,7 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     mProcessTypeInput = new QComboBox(this);
     mProcessTypeInput->addItem(tr("None"));
     mProcessTypeInput->addItem(tr("Univariate"));
+    mProcessTypeInput->addItem(tr("2D"));
     mProcessTypeInput->addItem(tr("Spherical"));
     mProcessTypeInput->addItem(tr("Vector"));
     mProcessTypeInput->addItem(tr("3D"));
@@ -228,14 +229,17 @@ void CurveSettingsView::setSettings(const CurveSettings& settings)
     case CurveSettings::eProcessTypeUnivarie:
         mProcessTypeInput->setCurrentIndex(1);
         break;
-    case CurveSettings::eProcessTypeSpherique:
+    case CurveSettings::eProcessType2D:
         mProcessTypeInput->setCurrentIndex(2);
         break;
-    case CurveSettings::eProcessTypeVectoriel:
+    case CurveSettings::eProcessTypeSpherical:
         mProcessTypeInput->setCurrentIndex(3);
         break;
-    case CurveSettings::eProcessType3D:
+    case CurveSettings::eProcessTypeVector:
         mProcessTypeInput->setCurrentIndex(4);
+        break;
+    case CurveSettings::eProcessType3D:
+        mProcessTypeInput->setCurrentIndex(5);
         break;
 
     }
@@ -329,16 +333,19 @@ CurveSettings CurveSettingsView::getSettings()
 
         }
 
-
     } else if (mProcessTypeInput->currentIndex() == 2) {
-        settings.mProcessType = CurveSettings::eProcessTypeSpherique;
+        settings.mProcessType = CurveSettings::eProcessType2D;
         settings.mVariableType = CurveSettings::eVariableTypeInclination;
 
     } else if (mProcessTypeInput->currentIndex() == 3) {
-        settings.mProcessType = CurveSettings::eProcessTypeVectoriel;
+        settings.mProcessType = CurveSettings::eProcessTypeSpherical;
         settings.mVariableType = CurveSettings::eVariableTypeInclination;
 
     } else if (mProcessTypeInput->currentIndex() == 4) {
+        settings.mProcessType = CurveSettings::eProcessTypeVector;
+        settings.mVariableType = CurveSettings::eVariableTypeInclination;
+
+    } else if (mProcessTypeInput->currentIndex() == 5) {
         settings.mProcessType = CurveSettings::eProcessType3D;
         settings.mVariableType = CurveSettings::eVariableTypeOther;
     }

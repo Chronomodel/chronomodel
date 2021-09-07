@@ -1637,16 +1637,29 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
                 } else {
                     CurveValues.insert("YDec", 0);
                 }
-                if (dataStr.size() >= 19) {
+
+                if (dataStr.size() >= 21) {
+                    CurveValues.insert("SDec", csvLocal.toDouble(dataStr.at(18)));
+                    CurveValues.insert("YInt", csvLocal.toDouble(dataStr.at(19)));
+                    CurveValues.insert("SInt", csvLocal.toDouble(dataStr.at(20)));
+
+                } else if (dataStr.size() >= 20) {
+                    CurveValues.insert("SDec", 0);
                     CurveValues.insert("YInt", csvLocal.toDouble(dataStr.at(18)));
-                } else {
-                    CurveValues.insert("YInt", 0);
-                }
-                if (dataStr.size() >= 20) {
                     CurveValues.insert("SInt",csvLocal.toDouble(dataStr.at(19)));
+
+                } else if (dataStr.size() >= 19) {
+                    CurveValues.insert("SDec", 0);
+                    CurveValues.insert("YInt", csvLocal.toDouble(dataStr.at(18)));
+                    CurveValues.insert("SInt", 0);
+
                 } else {
+                    CurveValues.insert("SDec", 0);
+                    CurveValues.insert("YInt", 0);
                     CurveValues.insert("SInt", 0);
                 }
+
+
                 curveValues << CurveValues;
             } else {
                rejectedRows.append(csvRow);

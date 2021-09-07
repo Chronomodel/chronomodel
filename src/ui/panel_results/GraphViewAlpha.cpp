@@ -207,9 +207,9 @@ void GraphViewAlpha::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         
         mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
         mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
-        mGraph->setCurveVisible("Credibility All Chains", variableList.contains(eTempCredibility) && mShowAllChains);
+        //mGraph->setCurveVisible("Credibility All Chains", variableList.contains(eTempCredibility) && mShowAllChains);
 
-        for (int i=0; i<mShowChainList.size(); ++i) {
+        for (unsigned i = 0; i<mShowChainList.size(); ++i) {
             mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList.at(i));
         }
         
@@ -220,7 +220,7 @@ void GraphViewAlpha::updateCurvesToShow(bool showAllChains, const QList<bool>& s
     }
 
     else if (mCurrentTypeGraph == eTrace)  {
-        for (int i=0; i<mShowChainList.size(); ++i) {
+        for (unsigned i = 0; i<mShowChainList.size(); ++i) {
             mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList.at(i));
             mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList.at(i));
             mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList.at(i));

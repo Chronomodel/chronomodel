@@ -863,27 +863,41 @@ void ModelView::createPhaseInPlace()
 void ModelView::showProperties()
 {
     // Why now ?!
-    updateLayout();
+  //  updateLayout();
+    mAnimationHide->setStartValue(mRightRect);
+    mAnimationHide->setEndValue(mRightHiddenRect);
 
     if (mButProperties->isChecked() && mButProperties->isEnabled()) {
        if (mButMultiCalib->isChecked()) {
            // hide mMultiCalibrationView
-           mAnimationHide->setStartValue(mRightRect);
-           mAnimationHide->setEndValue(mRightHiddenRect);
+
            mAnimationHide->setTargetObject(mMultiCalibrationView);
            mAnimationHide->start();
 
            mButMultiCalib->setChecked(false);
-       } else  if (mButCurve->isChecked()) {
+
+       } else  if (mCurveSettingsVisible) {
            // hide mMultiCalibrationView
-           mAnimationHide->setStartValue(mRightRect);
-           mAnimationHide->setEndValue(mRightHiddenRect);
            mAnimationHide->setTargetObject(mCurveSettingsView);
            mAnimationHide->start();
 
            mButCurve->setChecked(false);
+
+       } else  if (mButImport->isChecked()) {
+           // hide mMultiCalibrationView
+           mAnimationHide->setTargetObject(mImportDataView);
+           mAnimationHide->start();
+
+           mButImport->setChecked(false);
+
+       } else  {
+           // hide mMultiCalibrationView
+           mAnimationHide->setTargetObject(mPhasesView);
+           mAnimationHide->start();
+
        }
-        mButImport-> setChecked(false);
+
+
 
         // show Properties View
         mEventPropertiesView->updateEvent();
@@ -895,7 +909,7 @@ void ModelView::showProperties()
 
         mAnimationShow->setStartValue(mRightHiddenRect);
         mAnimationShow->setEndValue(mRightRect);
-        mEventPropertiesView->raise();
+       // mEventPropertiesView->raise();
         mAnimationShow->setTargetObject(mEventPropertiesView);
         mAnimationShow->start();
 
@@ -903,11 +917,11 @@ void ModelView::showProperties()
        mAnimationCalib->setTargetObject(nullptr);
       // delete mCalibrationView;
 
-        mAnimationHide->setStartValue(mRightRect);
-        mAnimationHide->setEndValue(mRightHiddenRect);
         mAnimationHide->setTargetObject(mEventPropertiesView);
         mAnimationHide->start();
 
+        mAnimationShow->setTargetObject(mPhasesView);
+        mAnimationShow->start();
      }
 
     //updateLayout();
@@ -954,16 +968,22 @@ void ModelView::showMultiCalib()
             mAnimationHide->start();
 
             mButCurve->setChecked(false);
-        }
 
+        } else  if (mButImport->isChecked()) {
+            // hide mCurveSettingsView
+            mAnimationHide->setTargetObject(mImportDataView);
+            mAnimationHide->start();
+
+            mButImport->setChecked(false);
+
+        }
         mMultiCalibrationView->updateGraphList();
         mMultiCalibrationView->setVisible(true);
 
-        mButImport    -> setChecked(false);
         mAnimationShow->setStartValue(mRightHiddenRect);
         mAnimationShow->setEndValue(mRightRect);
 
-        mMultiCalibrationView->raise();
+        //mMultiCalibrationView->raise();
 
         mAnimationShow->setTargetObject(mMultiCalibrationView);
         mAnimationShow->start();
@@ -974,7 +994,7 @@ void ModelView::showMultiCalib()
              if (mButPhasesGlobaliew->isChecked())
                  mPhasesGlobalView->show();
     }
-
+    updateLayout();
 }
 
 void ModelView::updateMultiCalibration()
@@ -993,6 +1013,8 @@ void ModelView::showImport()
    if (mButImport->isChecked()) {
        if (mProject->studyPeriodIsValid()) {
             mButProperties  -> setChecked(false);
+            mButCurve  -> setChecked(false);
+
             mAnimationShow->setStartValue(mRightHiddenRect);
             mAnimationShow->setEndValue(mRightRect);
             mImportDataView->raise();
@@ -1238,7 +1260,6 @@ void ModelView::updateLayout()
 
     mEventPropertiesView->setGeometry(mButProperties->isChecked() ? mRightRect : mRightHiddenRect);
 
-
     mMultiCalibrationView->setGeometry(mButMultiCalib->isChecked() ? mRightRect : mRightHiddenRect);
 
     mImportDataView->setGeometry(mButImport->isChecked() ? mRightRect : mRightHiddenRect);
@@ -1248,8 +1269,8 @@ void ModelView::updateLayout()
     // ----------
 
     const int radarW = 4 * AppSettings::widthUnit();
-    const int radarH = 4 * AppSettings::heigthUnit();
-    const int searchH = round(1.3 * fm.height());
+    //const int radarH = 4 * AppSettings::heigthUnit();
+    //const int searchH = round(1.3 * fm.height());
     if (mButProperties->isChecked() && mEventPropertiesView->isCalibChecked())
         mEventsView ->setGeometry(0, 0, 0, 0);
     else
@@ -1310,6 +1331,7 @@ void ModelView::updateLayout()
         mButExportPhases   ->setGeometry(mPhasesView->width() -2, 2*mButtonHeigth, mButtonWidth, mButtonHeigth);
         mButPhasesGlobaliew ->setGeometry(mPhasesView->width() -2, 3*mButtonHeigth, mButtonWidth, mButtonHeigth);
         mButPhasesGrid     ->setGeometry(mPhasesView->width() -2, 4*mButtonHeigth, mButtonWidth, mButtonHeigth);
+        mPhasesGlobalZoom->show();
         mPhasesGlobalZoom  ->setGeometry(mPhasesView->width() -2, 5*mButtonHeigth, mButtonWidth, mRightRect.height() - 5*mButtonHeigth);
      }
     update();
@@ -1471,14 +1493,14 @@ void ModelView::showCurveSettings(bool show)
 {
     mCurveSettingsVisible = show;
 
-    mPhasesView->setVisible(!show);
-    mPhasesGlobalView->setVisible(!show);
+    //mPhasesView->setVisible(!show);
+   /* mPhasesGlobalView->setVisible(!show && mButPhasesGlobaliew->isChecked());
     mPhasesGlobalZoom->setVisible(!show);
     mButNewPhase->setVisible(!show);
     mButDeletePhase->setVisible(!show);
     mButExportPhases->setVisible(!show);
     mButPhasesGlobaliew->setVisible(!show);
-    mButPhasesGrid->setVisible(!show);
+    mButPhasesGrid->setVisible(!show);*/
 
     if (show) {
         if (mButProperties->isChecked()) {
@@ -1514,7 +1536,7 @@ void ModelView::showCurveSettings(bool show)
         mAnimationShow->setStartValue(mRightHiddenRect);
         mAnimationShow->setEndValue(mRightRect);
 
-        mCurveSettingsView->raise();
+       // mCurveSettingsView->raise();
        // mAnimationShow->setTargetObject(mEventPropertiesView);
         mAnimationShow->start();
 
@@ -1541,9 +1563,19 @@ void ModelView::showCurveSettings(bool show)
             mEventsScene->updateSceneFromState();
         }
 
-    updateLayout();
+   // updateLayout();
 
     } else {
+
+     //   mPhasesView->show();
+    /*    mPhasesGlobalView->setVisible(!show && mButPhasesGlobaliew->isChecked());
+        mPhasesGlobalZoom->show();
+        mButNewPhase->show();
+        mButDeletePhase->show();
+        mButExportPhases->show();
+        mButPhasesGlobaliew->show();
+        mButPhasesGrid->show();*/
+
         mAnimationHide->setTargetObject(mCurveSettingsView);
 
         mAnimationHide->setStartValue(mRightRect);
@@ -1551,8 +1583,22 @@ void ModelView::showCurveSettings(bool show)
 
         mAnimationHide->start();
 
+        mAnimationShow->setTargetObject(mPhasesView);
+
+        mAnimationShow->setStartValue(mRightHiddenRect);
+        mAnimationShow->setEndValue(mRightRect);
+
+       // mPhasesView->raise();
+
+        mAnimationShow->start();
+
+
+
+
     }
     updateRightPanelTitle();
+    updateLayout();
+
 }
 
 void ModelView::updateRightPanelTitle()

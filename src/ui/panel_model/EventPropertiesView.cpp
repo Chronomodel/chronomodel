@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2021
 
 Authors :
 	Philippe LANOS
@@ -68,7 +68,6 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mLineEditHeight  (int (0.5 * AppSettings::heigthUnit())),
     mComboBoxHeight (int (0.7 * AppSettings::heigthUnit())),
     mCurveEnabled(false)
-    //mCurveProcessType(CurveSettings::eProcessTypeNone)
 
 {
     minimumHeight = 0;
@@ -77,13 +76,15 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mTopView = new QWidget(this);
 
     mNameLab = new QLabel(tr("Name"), mTopView);
-    mNameLab->setAlignment(Qt::AlignRight);
+    mNameLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mNameEdit = new LineEdit(mTopView);
 
     mColorLab = new QLabel(tr("Color"), mTopView);
+    mColorLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mColorPicker = new ColorPicker(Qt::black, mTopView);
 
     mMethodLab = new QLabel(tr("Method"), mTopView);
+    mMethodLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mMethodCombo = new QComboBox(mTopView);
     mMethodInfo = new QLabel(tr("MH : proposal = adapt. Gaussian random walk"), mTopView);
 
@@ -99,26 +100,36 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 
     mCurveWidget = new CurveWidget(mTopView);
     
-    mYIncLab = new QLabel(tr("Inclination"), mCurveWidget);
-    mYDecLab = new QLabel(tr("Declination"), mCurveWidget);
-    mYIntLab = new QLabel(tr("Field"), mCurveWidget);
+    mX_IncLab = new QLabel(tr("Inclination"), mCurveWidget);
+    mX_IncLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    mY_DecLab = new QLabel(tr("Declination"), mCurveWidget);
+    mY_DecLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    mZ_IntLab = new QLabel(tr("Field"), mCurveWidget);
+    mZ_IntLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     
-    mYIncEdit = new LineEdit(mCurveWidget);
-    mYDecEdit = new LineEdit(mCurveWidget);
-    mYIntEdit = new LineEdit(mCurveWidget);
+    mX_IncEdit = new LineEdit(mCurveWidget);
+    mY_DecEdit = new LineEdit(mCurveWidget);
+    mZ_IntEdit = new LineEdit(mCurveWidget);
+
     
-    connect(mYIncEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYInc);
-    connect(mYDecEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYDec);
-    connect(mYIntEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYInt);
+    connect(mX_IncEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYInc);
+    connect(mY_DecEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYDec);
+    connect(mZ_IntEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYInt);
     
-    mSIncLab = new QLabel(tr("Error"), mCurveWidget);
-    mSIntLab = new QLabel(tr("Error"), mCurveWidget);
+    mS_X_IncLab = new QLabel(tr("Error"), mCurveWidget);
+    mS_X_IncLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    mS_Y_Lab = new QLabel(tr("Error"), mCurveWidget);
+    mS_Y_Lab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    mS_Z_IntLab = new QLabel(tr("Error"), mCurveWidget);
+    mS_Z_IntLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     
-    mSIncEdit = new LineEdit(mCurveWidget);
-    mSIntEdit = new LineEdit(mCurveWidget);
+    mS_X_IncEdit = new LineEdit(mCurveWidget);
+    mS_Y_Edit = new LineEdit(mCurveWidget);
+    mS_Z_IntEdit = new LineEdit(mCurveWidget);
     
-    connect(mSIncEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSInc);
-    connect(mSIntEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSInt);
+    connect(mS_X_IncEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSInc);
+    connect(mS_Y_Edit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSDec);
+    connect(mS_Z_IntEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSInt);
 
 
     // Event default propreties Window mEventView
@@ -316,38 +327,46 @@ void EventPropertiesView::updateEvent()
         bool showInc = mCurveEnabled && settings.showInclination();
         bool showDec = mCurveEnabled && settings.showDeclination();
         bool showInt = mCurveEnabled && settings.showIntensity();
+        bool showYErr = mCurveEnabled && settings.showYErr();
         
-        mYIncLab->setVisible(showInc);
-        mYIncEdit->setVisible(showInc);
+        mX_IncLab->setVisible(showInc);
+        mX_IncEdit->setVisible(showInc);
 
-        mSIncLab->setVisible(showInc);
-        mSIncEdit->setVisible(showInc);
+        mS_X_IncLab->setVisible(showInc);
+        mS_X_IncEdit->setVisible(showInc);
         if (showInc) {
-            mYIncLab->setText(settings.inclinationLabel());
-            mYIncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Y_INC).toDouble()));
-            mSIncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_S_INC).toDouble()));
+            mX_IncLab->setText(settings.inclinationLabel());
+            mX_IncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_X_INC).toDouble()));
+            mS_X_IncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_S_X_INC).toDouble()));
         }
         
 
-        mYDecLab->setVisible(showDec);
-        mYDecEdit->setVisible(showDec);
+        mY_DecLab->setVisible(showDec);
+        mY_DecEdit->setVisible(showDec);
 
         if (showDec) {
-            mYDecLab->setText(settings.declinationLabel());          
-            mYDecEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Y_DEC).toDouble()));
+            mY_DecLab->setText(settings.declinationLabel());
+            mY_DecEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Y_DEC).toDouble()));
         }
 
+        mS_Y_Lab->setVisible(showYErr);
+        mS_Y_Edit->setVisible(showYErr);
+
+        if (showYErr) {
+            mS_Y_Lab->setText(tr("Error"));
+            mS_Y_Edit->setText(locale().toString(mEvent.value(STATE_EVENT_S_Y_DEC).toDouble()));
+        }
+
+        mZ_IntLab->setVisible(showInt);
+        mZ_IntEdit->setVisible(showInt);
         
-        mYIntLab->setVisible(showInt);
-        mYIntEdit->setVisible(showInt);
-        
-        mSIntLab->setVisible(showInt);
-        mSIntEdit->setVisible(showInt);
+        mS_Z_IntLab->setVisible(showInt);
+        mS_Z_IntEdit->setVisible(showInt);
         
         if (showInt) {
-            mYIntLab->setText(settings.intensityLabel());
-            mYIntEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Y_INT).toDouble()));
-            mSIntEdit->setText(locale().toString(mEvent.value(STATE_EVENT_S_INT).toDouble()));
+            mZ_IntLab->setText(settings.intensityLabel());
+            mZ_IntEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Z_INT).toDouble()));
+            mS_Z_IntEdit->setText(locale().toString(mEvent.value(STATE_EVENT_S_Z_INT).toDouble()));
         }
 
         
@@ -365,7 +384,7 @@ void EventPropertiesView::updateEvent()
             else if (mEvent.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eBoxMuller)
                     mMethodCombo->setCurrentIndex(1);
 
-             else if (mEvent.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eMHAdaptGauss)
+            else if (mEvent.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eMHAdaptGauss)
                 mMethodCombo->setCurrentIndex(2);
 
 
@@ -469,40 +488,43 @@ void EventPropertiesView::setCurveSettings(const CurveSettings::ProcessType proc
 void EventPropertiesView::updateEventYInc()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_Y_INC] = locale().toDouble(mYIncEdit->text());
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y Inc updated"));
+    event[STATE_EVENT_X_INC] = locale().toDouble(mX_IncEdit->text());
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event X-Inc updated"));
 }
 
-// Curve
 void EventPropertiesView::updateEventYDec()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_Y_DEC] = locale().toDouble(mYDecEdit->text());
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y Dec updated"));
+    event[STATE_EVENT_Y_DEC] = locale().toDouble(mY_DecEdit->text());
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y-Dec updated"));
 }
 
-// Curve
 void EventPropertiesView::updateEventYInt()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_Y_INT] = locale().toDouble(mYIntEdit->text());
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y Int updated"));
+    event[STATE_EVENT_Z_INT] = locale().toDouble(mZ_IntEdit->text());
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Z-Int updated"));
 }
 
-// Curve
 void EventPropertiesView::updateEventSInc()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_S_INC] = locale().toDouble(mSIncEdit->text());
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S Inc updated"));
+    event[STATE_EVENT_S_X_INC] = locale().toDouble(mS_X_IncEdit->text());
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S X-Inc updated"));
 }
 
-// Curve
+void EventPropertiesView::updateEventSDec()
+{
+    QJsonObject event = mEvent;
+    event[STATE_EVENT_S_Y_DEC] = locale().toDouble(mS_Y_Edit->text());
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S Y updated"));
+}
+
 void EventPropertiesView::updateEventSInt()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_S_INT] = locale().toDouble(mSIntEdit->text());
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S Int updated"));
+    event[STATE_EVENT_S_Z_INT] = locale().toDouble(mS_Z_IntEdit->text());
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S Z-Int updated"));
 }
 
 void EventPropertiesView::updateKnownGraph()
@@ -701,7 +723,7 @@ void EventPropertiesView::keyPressEvent(QKeyEvent* e)
 // Layout
 void EventPropertiesView::paintEvent(QPaintEvent* e)
 {
-    Q_UNUSED(e);
+    (void) e;
     QWidget::paintEvent(e);
     QPainter p(this);
     p.fillRect(rect(), palette().color(QPalette::Window));
@@ -766,12 +788,13 @@ void EventPropertiesView::updateLayout()
 
     int shiftMax (qMax(fm.boundingRect(mNameLab->text()).width(), qMax(fm.boundingRect(mColorLab->text()).width(), fm.boundingRect(mMethodLab->text()).width() )) );
     shiftMax = shiftMax + 2*margin;
-    int editWidth (width() - shiftMax);
+    const int editWidth  = width() - shiftMax;
+    const int labeltWidth = width() - editWidth - 2*margin;
 
-    mNameLab->move(margin, margin);
+    mNameLab->setGeometry(margin, margin, labeltWidth, mLineEditHeight);
     mNameEdit->setGeometry(shiftMax , mNameLab->y(), editWidth - margin, mLineEditHeight);
 
-    mColorLab->move(margin, mNameEdit->y() + mNameEdit->height() + margin );
+    mColorLab->setGeometry(margin, mNameEdit->y() + mNameEdit->height() + margin , labeltWidth, mLineEditHeight);
     mColorPicker->setGeometry(shiftMax, mColorLab->y(), editWidth - margin, mLineEditHeight);
 
     int topViewHeight = mColorPicker->y() + mColorPicker->height();
@@ -779,42 +802,68 @@ void EventPropertiesView::updateLayout()
     int CurveHeight = 0;
 
     if (withCurve) {
-        const int lines = (curveSettings.showInclination() && curveSettings.showIntensity()) ? 2 : 1;
+        int lines = 1;
+        if (curveSettings.showYErr()) {
+            ++lines;
+        }
+        if (curveSettings.showInclination() && curveSettings.showIntensity()) {
+            ++lines;
+        }
+       // const int lines = (curveSettings.showInclination() && curveSettings.showIntensity()) ? 2 : 1;
         CurveHeight = margin + (margin + mLineEditHeight) * lines;
 
         int dx = margin;
         int dy = margin;
         const int labW = 80;
+        const  int YshiftLabel = (mLineEditHeight - mX_IncLab->height())/2;
 
+        int editW;
         if (curveSettings.showInclination()) {
+            if (curveSettings.showDeclination() && !curveSettings.showYErr()) {
+                editW = (mCurveWidget->width() - 9*margin - 3*labW) / 3;
 
-            int editW = (width() - 7*margin - 2*labW) / 2;
-
-            if (curveSettings.showDeclination()) {
-                editW = (width() - 9*margin - 3*labW) / 3;
+            } else {
+                editW = (mCurveWidget->width() - 5*margin - 2*labW) / 2;
             }
 
-            mYIncLab->setGeometry(dx, dy, labW, mLineEditHeight);
-            mYIncEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
-            mSIncLab->setGeometry(dx += editW + margin, dy, labW, mLineEditHeight);
-            mSIncEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
+           /* if (curveSettings.showDeclination()) {
+                editW = (width() - 9*margin - 3*labW) / 3;
+            }*/
 
-            if (curveSettings.showDeclination()) {
-                mYDecLab->setGeometry(dx += editW + margin, dy, labW, mLineEditHeight);
-                mYDecEdit->setGeometry(dx + labW + margin, dy, editW, mLineEditHeight);
+            mX_IncLab->setGeometry(dx, dy - YshiftLabel, labW, mLineEditHeight);
+            mX_IncEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
+            mS_X_IncLab->setGeometry(dx += editW + margin, dy - YshiftLabel, labW, mLineEditHeight);
+            mS_X_IncEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
+
+            if (curveSettings.showDeclination() && !curveSettings.showYErr())  {
+                mY_DecLab->setGeometry(dx += editW + margin, dy - YshiftLabel, labW, mLineEditHeight);
+                mY_DecEdit->setGeometry(dx + labW + margin, dy, editW, mLineEditHeight);
             }
 
             dy += mLineEditHeight + margin;
         }
 
+        if (curveSettings.showYErr()) {
+            dx = margin;
+            editW = (mCurveWidget->width() - 5*margin - 2*labW) / 2;
+
+            mY_DecLab->setGeometry(dx, dy - YshiftLabel, labW, mLineEditHeight);
+            mY_DecEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
+            mS_Y_Lab->setGeometry(dx += editW + margin, dy - YshiftLabel, labW, mLineEditHeight);
+            mS_Y_Edit->setGeometry(dx + labW + margin, dy, editW, mLineEditHeight);
+
+            dy += mLineEditHeight + margin;
+        }
+
+
         if (curveSettings.showIntensity()) {
             dx = margin;
-            int editW = (mCurveWidget->width() - 5*margin - 2*labW) / 2;
+            editW = (mCurveWidget->width() - 5*margin - 2*labW) / 2;
 
-            mYIntLab->setGeometry(dx, dy, labW, mLineEditHeight);
-            mYIntEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
-            mSIntLab->setGeometry(dx += editW + margin, dy, labW, mLineEditHeight);
-            mSIntEdit->setGeometry(dx + labW + margin, dy, editW, mLineEditHeight);
+            mZ_IntLab->setGeometry(dx, dy - YshiftLabel, labW, mLineEditHeight);
+            mZ_IntEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
+            mS_Z_IntLab->setGeometry(dx += editW + margin, dy - YshiftLabel, labW, mLineEditHeight);
+            mS_Z_IntEdit->setGeometry(dx + labW + margin, dy, editW, mLineEditHeight);
         }
 
     }
@@ -826,14 +875,20 @@ void EventPropertiesView::updateLayout()
         // in EventPropertiesView coordinates
         mBoundView->resize(0, 0);
 
-        mMethodLab->move(margin, mColorPicker->y() + mColorPicker->height() + margin);
-        mMethodCombo->setGeometry(shiftMax , mMethodLab->y() - mComboBoxHeight/2 + margin, editWidth - margin, mComboBoxHeight);
-        mMethodInfo->setGeometry(shiftMax , mMethodLab->y() - mComboBoxHeight/2 + margin, editWidth - margin, mComboBoxHeight);
+        mMethodLab->setGeometry(margin, mColorPicker->y() + mColorPicker->height() + margin, labeltWidth, mLineEditHeight);
+        if (withCurve) {
+            mMethodCombo->setGeometry(0 , 0, 0, 0);
+            mMethodInfo ->setGeometry(shiftMax , mMethodLab->y(), editWidth - margin, mComboBoxHeight);
+        } else {
+            mMethodCombo->setGeometry(shiftMax , mMethodLab->y(), editWidth - margin, mComboBoxHeight);
+            mMethodInfo ->setGeometry(0 , 0, 0, 0);
+        }
+
         
         // ----------------------------------
         //  Top View Height
         // ----------------------------------
-        topViewHeight += mMethodCombo->height() + margin;
+        topViewHeight += mComboBoxHeight + 2*margin;
 
         mTopView->resize(width(), topViewHeight + ((CurveHeight > 0) ? CurveHeight + margin : 0));
         
@@ -885,9 +940,9 @@ void EventPropertiesView::updateLayout()
             } else {
                 mCurveWidget->resize(0, 0);
             }
-            mTopView->resize(width(), topViewHeight + ((CurveHeight > 0) ? CurveHeight + margin : 0));
+            mTopView->resize(width(), topViewHeight + (withCurve ? CurveHeight + margin : 0));
 
-            mBoundView->setGeometry(0, mCurveWidget->y() + mCurveWidget->height() + margin +50, width() - mButtonWidth, height() - mCurveWidget->y() - mCurveWidget->height() - 2*margin);
+            mBoundView->setGeometry(0, mCurveWidget->y() + mCurveWidget->height() + margin, width(), height() - mCurveWidget->y() - mCurveWidget->height() - 2*margin);
 
         }
     }

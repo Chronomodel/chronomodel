@@ -93,17 +93,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define STATE_EVENT_DATES "dates"
 #define STATE_EVENT_PHASE_IDS "phase_ids"
 
-//#define STATE_EVENT_KNOWN_TYPE "known_type"
 #define STATE_EVENT_KNOWN_FIXED "known_fixed"
-//#define STATE_EVENT_KNOWN_START "known_unif_start"
-//#define STATE_EVENT_KNOWN_END "known_unif_end"
 
-#define STATE_EVENT_Y_INC "YInc"
+#define STATE_EVENT_X_INC "YInc"
 #define STATE_EVENT_Y_DEC "YDec"
-#define STATE_EVENT_Y_INT "YInt"
+#define STATE_EVENT_Z_INT "YInt"
 
-#define STATE_EVENT_S_INC "SInc"
-#define STATE_EVENT_S_INT "SInt"
+#define STATE_EVENT_S_X_INC "SInc"
+#define STATE_EVENT_S_Y_DEC "SDec"
+#define STATE_EVENT_S_Z_INT "SInt"
 
 #define STATE_PHASE_TAU_TYPE "tau_type"
 #define STATE_PHASE_TAU_FIXED "tau_fixed"
@@ -130,7 +128,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #define STATE_MCMC_MIXING "mixing_level"
 
-//#define STATE_Curve_ENABLED "enabled"
 #define STATE_CURVE_PROCESS_TYPE "process_type"
 #define STATE_CURVE_VARIABLE_TYPE "variable_type"
 #define STATE_CURVE_SELECT_OUV "select_ouv"

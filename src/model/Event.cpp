@@ -165,6 +165,7 @@ void Event::copyFrom(const Event& event)
     mYInt = event.mYInt;
     
     mSInc = event.mSInc;
+    mSDec = event.mSDec;
     mSInt = event.mSInt;
 
     // Valeurs préparées (projetées)
@@ -231,12 +232,13 @@ Event Event::fromJson(const QJsonObject& json)
 
     event.mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
 
-    event.mYInc = json.value(STATE_EVENT_Y_INC).toDouble();
+    event.mYInc = json.value(STATE_EVENT_X_INC).toDouble();
     event.mYDec = json.value(STATE_EVENT_Y_DEC).toDouble();
-    event.mYInt = json.value(STATE_EVENT_Y_INT).toDouble();
+    event.mYInt = json.value(STATE_EVENT_Z_INT).toDouble();
     
-    event.mSInc = json.value(STATE_EVENT_S_INC).toDouble();
-    event.mSInt = json.value(STATE_EVENT_S_INT).toDouble();
+    event.mSInc = json.value(STATE_EVENT_S_X_INC).toDouble();
+    event.mSDec = json.value(STATE_EVENT_S_Y_DEC).toDouble();
+    event.mSInt = json.value(STATE_EVENT_S_Z_INT).toDouble();
 
     const QJsonArray dates = json.value(STATE_EVENT_DATES).toArray();
     Date dat;
@@ -270,11 +272,12 @@ QJsonObject Event::toJson() const
     event[STATE_IS_SELECTED] = mIsSelected;
     event[STATE_IS_CURRENT] = mIsCurrent;
 
-    event[STATE_EVENT_Y_INC] = mYInc;
+    event[STATE_EVENT_X_INC] = mYInc;
     event[STATE_EVENT_Y_DEC] = mYDec;
-    event[STATE_EVENT_Y_INT] = mYInt;
-    event[STATE_EVENT_S_INC] = mSInc;
-    event[STATE_EVENT_S_INT] = mSInt;
+    event[STATE_EVENT_Z_INT] = mYInt;
+    event[STATE_EVENT_S_X_INC] = mSInc;
+    event[STATE_EVENT_S_Y_DEC] = mSDec;
+    event[STATE_EVENT_S_Z_INT] = mSInt;
 
     QString eventIdsStr;
     if (mPhasesIds.size() > 0) {
@@ -301,23 +304,29 @@ void Event::setCurveCsvDataToJsonEvent(QJsonObject& event, const QMap<QString, d
     
     i = CurveData.find("YInc");
     if (i != CurveData.end()) {
-        event[STATE_EVENT_Y_INC] = i.value();
+        event[STATE_EVENT_X_INC] = i.value();
     }
     i = CurveData.find("SInc");
     if (i != CurveData.end()) {
-        event[STATE_EVENT_S_INC] = i.value();
+        event[STATE_EVENT_S_X_INC] = i.value();
     }
+
     i = CurveData.find("YDec");
     if (i != CurveData.end()) {
         event[STATE_EVENT_Y_DEC] = i.value();
     }
+    i = CurveData.find("SDec");
+    if (i != CurveData.end()) {
+        event[STATE_EVENT_S_Y_DEC] = i.value();
+    }
+
     i = CurveData.find("YInt");
     if (i != CurveData.end()) {
-        event[STATE_EVENT_Y_INT] = i.value();
+        event[STATE_EVENT_Z_INT] = i.value();
     }
     i = CurveData.find("SInt");
     if (i != CurveData.end()) {
-        event[STATE_EVENT_S_INT] = i.value();
+        event[STATE_EVENT_S_Z_INT] = i.value();
     }
 }
 

@@ -376,9 +376,12 @@ QString MCMCLoopMain::initialize()
             // 6- Clear mLastAccepts array
             unsortedEvents.at(i)->mTheta.mLastAccepts.clear();
             unsortedEvents.at(i)->mTheta.mLastAccepts.push_back(1.);
+
             // 7 - Memo
            // unsortedEvents.at(i)->mTheta.memo();
            // unsortedEvents.at(i)->mTheta.saveCurrentAcceptRate();
+            unsortedEvents.at(i)->mVG.mAllAccepts->clear();
+            unsortedEvents.at(i)->mVG.mLastAccepts.clear();
         }
 
         if (isInterruptionRequested())

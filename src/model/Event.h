@@ -149,7 +149,9 @@ public:
     double mYInc;
     double mYDec;
     double mYInt;
+
     double mSInc;
+    double mSDec;
     double mSInt;
     
     // Valeurs préparées (projetées)

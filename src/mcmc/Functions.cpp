@@ -175,7 +175,7 @@ type_data std_Koening(const QVector<type_data> &data)
  */
 type_data std_Knuth(const QVector<type_data> &data)
 {
-    int n = 0;
+    unsigned n = 0;
     type_data mean = 0.;
     type_data variance = 0.;
     type_data previousMean = 0.;
@@ -437,19 +437,19 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, double t
     (void) description;
     QPair<double, double> credibility(0.,0.);
     exactThresholdResult = 0.;
-    const int n = trace.size();
+    size_t n = trace.size();
     if (thresh > 0 && n > 0) {
         double threshold = inRange(0.0, thresh, 100.0);
         QVector<double> sorted (trace);
         std::sort(sorted.begin(),sorted.end());
 
-        const int numToRemove = (int)floor(n * (1. - threshold / 100.));
+        size_t numToRemove = (size_t)floor(n * (1. - threshold / 100.));
         exactThresholdResult = ((double)n - (double)numToRemove) / (double)n;
 
         double lmin = 0.;
         int foundJ = 0;
 
-        for (int j=0; j<=numToRemove; ++j) {
+        for (size_t j=0; j<=numToRemove; ++j) {
             const double l = sorted.at((n - 1) - numToRemove + j) - sorted.at(j);
             if ((lmin == 0.f) || (l < lmin)) {
                 foundJ = j;
@@ -468,7 +468,7 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, double t
 }
 
 // Used in generateTempo for credibility
-QPair<double, double> credibilityForTrace(const QVector<int>& trace, double thresh, double& exactThresholdResult,const  QString description)
+QPair<double, double> credibilityForTrace(const QVector<int>& trace, double thresh, double& exactThresholdResult, const QString description)
 {
     (void) description;
     QPair<double, double> credibility(0.,0.);
@@ -479,13 +479,13 @@ QPair<double, double> credibilityForTrace(const QVector<int>& trace, double thre
         QVector<int> sorted (trace);
         std::sort(sorted.begin(),sorted.end());
 
-        const int numToRemove = (int)floor(n * (1. - threshold / 100.));
+        unsigned numToRemove = (unsigned)floor(n * (1. - threshold / 100.));
         exactThresholdResult = ((double)n - (double)numToRemove) / (double)n;
 
         double lmin (0.);
         int foundJ (0);
 
-        for (int j=0; j<=numToRemove; ++j) {
+        for (unsigned j=0; j<=numToRemove; ++j) {
             const double l = sorted.at((n - 1) - numToRemove + j) - sorted.at(j);
             if ((lmin == 0.) || (l < lmin)) {
                 foundJ = j;
@@ -525,9 +525,9 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
 
     // if thresh is equal 0 then return an QPair=(-INFINITY,+INFINITY)
 
-    const int n = trace1.size();
+    unsigned n = trace1.size();
 
-    if ( (thresh > 0) && (n > 0) && ((int)trace2.size() == n) ) {
+    if ( (thresh > 0) && (n > 0) && ((unsigned)trace2.size() == n) ) {
 
         const double gamma = 1. - thresh/100.;
 
@@ -655,9 +655,9 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const 
     // limit of precision, to accelerate the calculus, we set the same as RChronoModel
     const double epsilonStep = 0.1/100.;
 
-    const int n = traceBegin.size();
+    const unsigned  n = traceBegin.size();
 
-    if ( (thresh > 0.f) && (n > 0) && ((int)traceEnd.size() == n) ) {
+    if ( (thresh > 0.f) && (n > 0) && ((unsigned)traceEnd.size() == n) ) {
 
         const double gamma = 1. - thresh/100.;
 
@@ -793,13 +793,13 @@ QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, cons
         float dMax = 0.0;
 
         // make couple beta vs alpha in a std::map, it's a sorted container with ">"
-        std::multimap<float,float> mapPair;
+        std::multimap<float, float> mapPair;
 
         QVector<float>::const_iterator ctB = traceBeta.cbegin();
         QVector<float>::const_iterator ctA = traceAlpha.cbegin();
 
         while (ctB != traceBeta.cend() ) {
-            mapPair.insert(std::pair<float,float>(*ctB,*ctA));
+            mapPair.insert(std::pair<float, float>(*ctB,*ctA));
             ++ctA;
             ++ctB;
         }
@@ -982,27 +982,27 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
 #pragma mark Calcul Matriciel
 
 // useless function
-std::vector<double> initVector(const unsigned n)
+std::vector<double> initVector(size_t n)
 {
      return std::vector<double>(n, 0.);
 }
 
-std::vector<long double> initLongVector(const unsigned n)
+std::vector<long double> initLongVector(size_t n)
 {
      return std::vector<long double>(n, 0.);
 }
 
-std::vector<std::vector<double>> initMatrix(const unsigned rows, const unsigned cols)
+std::vector<std::vector<double>> initMatrix(size_t rows, size_t cols)
 {
     return std::vector<std::vector<double>> (rows, std::vector<double>(cols, 0.));
 }
 
-std::vector<std::vector<long double>> initLongMatrix(const unsigned rows, const unsigned cols)
+std::vector<std::vector<long double>> initLongMatrix(size_t rows, size_t cols)
 {
    return std::vector<std::vector<long double>> (rows, std::vector<long double>(cols, 0.));
 }
 
-void resizeMatrix(std::vector<std::vector<double>>&matrix,  const unsigned rows, const unsigned cols)
+void resizeMatrix(std::vector<std::vector<double>>&matrix,  size_t rows, size_t cols)
 {
     matrix.resize( rows );
     for ( std::vector<std::vector<double> >::iterator it = matrix.begin(); it != matrix.end(); ++it) {
@@ -1010,7 +1010,7 @@ void resizeMatrix(std::vector<std::vector<double>>&matrix,  const unsigned rows,
     }
 }
 
-void resizeLongMatrix(std::vector<std::vector<long double>>&matrix,  const unsigned rows, const unsigned cols)
+void resizeLongMatrix(std::vector<std::vector<long double>>&matrix,  size_t rows, size_t cols)
 {
     matrix.resize( rows );
     for ( std::vector<std::vector<long double> >::iterator it = matrix.begin(); it != matrix.end(); ++it) {
@@ -1018,7 +1018,7 @@ void resizeLongMatrix(std::vector<std::vector<long double>>&matrix,  const unsig
     }
 }
 
-std::vector<std::vector<long double> > seedMatrix(const std::vector<std::vector<long double>>& matrix, const int shift)
+std::vector<std::vector<long double> > seedMatrix(const std::vector<std::vector<long double>>& matrix, size_t shift)
 {
     std::vector<std::vector<long double> > resMatrix ( matrix.at(0).size() - 2*shift );
     std::vector<std::vector<long double> >::iterator itRes = resMatrix.begin();
@@ -1029,9 +1029,9 @@ std::vector<std::vector<long double> > seedMatrix(const std::vector<std::vector<
     return resMatrix;
 }
 
-long double determinant(const std::vector<std::vector<long double>>& matrix, const int shift)
+long double determinant(const std::vector<std::vector<long double>>& matrix, size_t shift)
 {
-    int n = matrix.size();
+    size_t n = matrix.size();
     long double det;
 
     if (n - 2*shift == 1) {
@@ -1048,10 +1048,10 @@ long double determinant(const std::vector<std::vector<long double>>& matrix, con
 
         det = 0.;
         int j2;
-        for (int j1= 0; j1< n; j1++) {
-            for (int i= 1; i< n; i++) {
+        for (size_t j1= 0; j1< n; j1++) {
+            for (size_t i= 1; i< n; i++) {
                 j2 = 0;
-                for (int j = 0; j < n; j++) {
+                for (size_t j = 0; j < n; j++) {
                     if (j == j1)
                         continue;
                     matTmp[i-1][j2] = matrix2.at(i).at(j);
@@ -1073,12 +1073,12 @@ long double determinant(const std::vector<std::vector<long double>>& matrix, con
 // On suppose une matrice carrée N*N
 std::vector<std::vector<long double>> transpose0(const std::vector<std::vector<long double> > &A)
 {
-   const unsigned n = A.size();
+   size_t n = A.size();
    std::vector<std::vector<long double>> TA  (n, std::vector<long double>(n));
 
    std::vector<std::vector<long double>>::const_iterator Ai;
    std::vector<long double>::const_iterator Aij;
-   int i, j;
+   size_t i, j;
    for ( i = 0, Ai = A.begin(); Ai != A.end(); Ai++, i++)
        for (j= 0, Aij = Ai->begin() ; Aij != Ai->end(); Aij++, j++)
            TA[j][i] = *Aij ;
@@ -1108,7 +1108,7 @@ std::vector<std::vector<long double>> transpose(const std::vector<std::vector<lo
 }
 
 
-std::vector<std::vector<long double>> multiMatParDiag(const std::vector<std::vector<long double>>& matrix, const std::vector<long double>& diag, const int nbBandes)
+std::vector<std::vector<long double>> multiMatParDiag(const std::vector<std::vector<long double>>& matrix, const std::vector<long double>& diag, size_t nbBandes)
 {
     const int dim = matrix.size();
     std::vector<std::vector<long double>> result = initLongMatrix(dim, dim);

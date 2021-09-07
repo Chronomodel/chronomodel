@@ -1377,7 +1377,8 @@ void MCMCLoopCurve::finalize()
     // ----------------------------------------
 
     const bool hasY = (mCurveSettings.mProcessType != CurveSettings::eProcessTypeUnivarie);
-    const bool hasZ = (mCurveSettings.mProcessType == CurveSettings::eProcessTypeVectoriel ||
+    const bool hasZ = (mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
+                       mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical ||
                        mCurveSettings.mProcessType == CurveSettings::eProcessType3D);
 
     std::vector<MCMCSplineComposante> allChainsTraceX, chainTraceX, allChainsTraceY, chainTraceY, allChainsTraceZ, chainTraceZ;
@@ -1454,14 +1455,14 @@ allChainsPosteriorMeanG.gx.vecVarG.resize(nbPoint);
                 chainTraceY.push_back(cTrace->splineY);
                 allChainsTraceY.push_back(cTrace->splineY);
 
+               // chainTraceZ.push_back(cTrace->splineZ);
+               // allChainsTraceZ.push_back(cTrace->splineZ);
+            }
+
+            if (hasZ) {
                 chainTraceZ.push_back(cTrace->splineZ);
                 allChainsTraceZ.push_back(cTrace->splineZ);
             }
-
-           /* if (hasZ) {
-                chainTraceZ.push_back(cTrace->splineZ);
-                allChainsTraceZ.push_back(cTrace->splineZ);
-            }*/
             emit stepProgressed(progressPosition++);
         }
 
@@ -1472,11 +1473,11 @@ allChainsPosteriorMeanG.gx.vecVarG.resize(nbPoint);
 
       if (hasY) {
           chainPosteriorMeanG.gy = compute_posterior_mean_G_composante(chainTraceY, tr("Calcul Mean Composante Y for chain %1").arg(i+1));
+         // chainPosteriorMeanG.gz = compute_posterior_mean_G_composante(chainTraceZ, tr("Calcul Mean Composante Z for chain %1").arg(i+1));
+      }
+      if (hasZ) {
           chainPosteriorMeanG.gz = compute_posterior_mean_G_composante(chainTraceZ, tr("Calcul Mean Composante Z for chain %1").arg(i+1));
       }
-    /*  if (hasZ) {
-          chainPosteriorMeanG.gz = compute_posterior_mean_G_composante(chainTraceZ, tr("Calcul Mean Composante Z for chain %1").arg(i+1));
-      }*/
 
       mModel->mPosteriorMeanGByChain.push_back(chainPosteriorMeanG);
 
@@ -1496,19 +1497,19 @@ allChainsPosteriorMeanG.gx.vecVarG.resize(nbPoint);
         allChainsPosteriorMeanG.gx = compute_posterior_mean_G_composante(allChainsTraceX, tr("Calcul Mean Composante X for All chain"));
         if (hasY) {
             allChainsPosteriorMeanG.gy = compute_posterior_mean_G_composante(allChainsTraceY, tr("Calcul Mean Composante Y for All chain"));
+           // allChainsPosteriorMeanG.gz = compute_posterior_mean_G_composante(allChainsTraceZ, tr("Calcul Mean Composante Z for All chain"));
+        }
+        if (hasZ) {
             allChainsPosteriorMeanG.gz = compute_posterior_mean_G_composante(allChainsTraceZ, tr("Calcul Mean Composante Z for All chain"));
         }
-     /*   if (hasZ) {
-            allChainsPosteriorMeanG.gz = compute_posterior_mean_G_composante(allChainsTraceZ, tr("Calcul Mean Composante Z for All chain"));
-        }*/
     }
 
     // Conversion after the average
-    if ( mCurveSettings.mProcessType == CurveSettings::eProcessTypeVectoriel ||
-         mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherique) {
+    if ( mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
+         mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical) {
         emit stepChanged(tr("Compute System Conversion..."), 0, 0);
 
-        if (hasZ) {
+        if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector) {
             conversionIDF(allChainsPosteriorMeanG);
             for (auto&& chain: mModel->mPosteriorMeanGByChain)
                 conversionIDF(chain);
@@ -1839,14 +1840,12 @@ double MCMCLoopCurve::valeurG(const double t, const MCMCSplineComposante& spline
                 double gi2 = spline.vecG.at(i0+1);
 
                 // Linear part :
-              //  g = ( (tReduce-ti1) * gi2 + (ti2-tReduce) * gi1 ) / h; // modif pHd
-               // g = gi1 - (gi2-gi1)*(ti1-tReduce)/h; // code d'origine
                 g = gi1 + (gi2-gi1)*(tReduce-ti1)/h;
 
                 // Smoothing part :
                 double gamma1 = spline.vecGamma.at(i0);
                 double gamma2 = spline.vecGamma.at(i0+1);
-                double p = (1./6.) * ((tReduce-ti1) * (ti2-tReduce)) * ((1.+(tReduce-ti1)/h) * gamma2 + (1.+(ti2-tReduce)/h) * gamma1); // code d'origine
+                double p = (1./6.) * ((tReduce-ti1) * (ti2-tReduce)) * ((1.+(tReduce-ti1)/h) * gamma2 + (1.+(ti2-tReduce)/h) * gamma1);
                 g -= p;
 
                 break;
@@ -1920,8 +1919,7 @@ double MCMCLoopCurve::valeurGPrime(const double t, const MCMCSplineComposante& s
 
     } else if (tReduce >= tn) {
         const double tin_1 = reduceTime(spline.vecThetaEvents.at(n-2));
-        gPrime = (spline.vecG.at(n-1) - spline.vecG.at(n-2)) / (tn - tin_1); // code d'origine
-       //  gPrime = (spline.vecG.at(n-2) - spline.vecG.at(n-1)) / (tn - tn1);
+        gPrime = (spline.vecG.at(n-1) - spline.vecG.at(n-2)) / (tn - tin_1);
         gPrime += (tn - tin_1) * spline.vecGamma.at(n-2) / 6.;
 
         /* Code Rencurve
@@ -1931,7 +1929,7 @@ double MCMCLoopCurve::valeurGPrime(const double t, const MCMCSplineComposante& s
          */
 
     } else {
-        for ( ;i0< n-1; ++i0) { // pHd  !!!recherche et interpolation de GPrime
+        for ( ;i0< n-1; ++i0) {
             const double ti1 = reduceTime(spline.vecThetaEvents.at(i0));
             const double ti2 = reduceTime(spline.vecThetaEvents.at(i0+1));
             if ((tReduce >= ti1) && (tReduce < ti2)) {
@@ -1969,7 +1967,7 @@ double MCMCLoopCurve::valeurGSeconde(const double t, const MCMCSplineComposante&
 {
    const int n = spline.vecThetaEvents.size();
     const double tReduce = reduceTime(t);
-    // la dérivée seconde est toujours nulle en dehors de l'intervalle [t1,tn]
+    // The second derivative is always zero outside the interval [t1,tn].
     double gSeconde = 0.;
     
     for (int i = 0; i < n-1; ++i) {
@@ -1997,7 +1995,7 @@ void MCMCLoopCurve::valeurs_G_ErrG_GP_GS(const double t, const MCMCSplineComposa
     GP = 0.;
     GS = 0.;
 
-     // la dérivée première est toujours constante en dehors de l'intervalle [t1,tn]
+     // The first derivative is always constant outside the interval [t1,tn].
      if (tReduce < t1) {
          const long double t2 = reduceTime(spline.vecThetaEvents.at(1));
 
@@ -2101,7 +2099,7 @@ void MCMCLoopCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposa
     GP = 0.;
     GS = 0.;
 
-     // la dérivée première est toujours constante en dehors de l'intervalle [t1,tn]
+     // The first derivative is always constant outside the interval [t1,tn].
      if (tReduce < t1) {
          const long double t2 = reduceTime(spline.vecThetaEvents.at(1));
 
@@ -2309,7 +2307,7 @@ long double MCMCLoopCurve::initLambdaSpline()
     // on recherche la plus petite valeur de CV
     unsigned long idxDifMin = std::distance(CV.begin(), std::min_element(CV.begin(), CV.end()) );
 
-    // si le mini est a une des bornes, il n'y a pas de solution
+    // si le mini est à une des bornes, il n'y a pas de solution
     // Donc on recherche la plus grande variation, le "coude"
     if (idxDifMin== 0 || idxDifMin == (CV.size()-1)) {
         // On recherche la plus grande variation de GCV
@@ -2363,7 +2361,17 @@ void MCMCLoopCurve::prepareEventY(Event* const event  )
         event->mYy = 0;
         event->mYz = 0;
 
-    } else if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherique) {
+    } else if (mCurveSettings.mProcessType == CurveSettings::eProcessType2D) {
+        event->mYInt = 100.; // Pour traiter le cas 2D , on utilise le cas 3D en posant Yint = 100
+        event->mSInt = 0.;
+
+        event->mYx = event->mYInc;
+        event->mYy = event->mYDec;
+        event->mYz = event->mYInt;
+
+        event->mSy = sqrt( (pow(event->mSDec, 2.) + pow(event->mSInc, 2.)) /2.);
+
+    } else if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical) {
         event->mYInt = 100.; // Pour traiter le cas sphérique , on utilise le cas vectoriel en posant Yint = 100
         event->mSInt = 0.;
 
@@ -2374,7 +2382,7 @@ void MCMCLoopCurve::prepareEventY(Event* const event  )
         const double sYInc = event->mSInc *rad;// 2.4477;
         event->mSy = event->mYInt*sYInc; // ligne 537 : EctYij:= Fij/sqrt(Kij);
 
-    } else if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeVectoriel) {
+    } else if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector) {
 
         event->mYx = event->mYInt * cos(event->mYInc * rad) * cos(event->mYDec * rad);
         event->mYy = event->mYInt * cos(event->mYInc * rad) * sin(event->mYDec * rad);
@@ -2389,7 +2397,7 @@ void MCMCLoopCurve::prepareEventY(Event* const event  )
         event->mYy = event->mYDec;
         event->mYz = event->mYInt;
 
-        event->mSy = sqrt( (pow(event->mSInt, 2.) +2*pow(event->mSInc, 2.)) /3.);
+        event->mSy = sqrt( (pow(event->mSInt, 2.) + pow(event->mSDec, 2.) + pow(event->mSInc, 2.)) /3.);
 
     }
     
@@ -2398,65 +2406,7 @@ void MCMCLoopCurve::prepareEventY(Event* const event  )
     }
 }
 
-/*void MCMCLoopCurve::prepareEventY(EventKnown* const event)
-{
-    const double rad = M_PI / 180.;
-    if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie) {
-        if (mCurveSettings.mVariableType == CurveSettings::eVariableTypeInclination) {
-            event->mYx = event->mYInc;
-            event->mSy = event->mSInc / 2.4477;
 
-        } else if (mCurveSettings.mVariableType == CurveSettings::eVariableTypeDeclination) {
-            event->mYx = event->mYDec;
-            event->mSy = event->mSInc / (2.4477 * cos(event->mYInc * rad));
-
-        } else {
-            event->mYx = event->mYInt;
-            event->mSy = event->mSInt;
-        }
-
-        // Non utilisé en univarié, mais mis à zéro notamment pour les exports CSV :
-        event->mYy = 0;
-        event->mYz = 0;
-
-    } else if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherique) {
-        event->mYInt = 100.; // Pour traiter le cas sphérique , on utilise le cas vectoriel en posant Yint = 100
-        event->mSInt = 0.;//
-        // fichier cmt_lit_sauve, ligne 637
-        event->mYx = event->mYInt * cos(event->mYInc * rad) * cos(event->mYDec * rad);
-        event->mYy = event->mYInt * cos(event->mYInc * rad) * sin(event->mYDec * rad);
-        event->mYz = event->mYInt * sin(event->mYInc * rad);
-
-        const double sYInc = event->mSInc / 2.4477;
-        event->mSy = sqrt( (pow(event->mSInt, 2.) + 2. * pow(event->mYInt, 2.) * pow(sYInc, 2.)) /3.);
-
-        // Non utilisé en univarié, mais mis à zéro notamment pour les exports CSV :
-       // event->mYz = 0;
-
-    } else if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeVectoriel) {
-        event->mYx = event->mYInt * cos(event->mYInc * rad) * cos(event->mYDec * rad);
-        event->mYy = event->mYInt * cos(event->mYInc * rad) * sin(event->mYDec * rad);
-        event->mYz = event->mYInt * sin(event->mYInc * rad);
-
-        const double sYInc = event->mSInc / 2.4477;
-        event->mSy = sqrt( (pow(event->mSInt, 2.) + 2. * pow(event->mYInt, 2.) * pow(sYInc, 2.)) /3.);
-
-    } else if (mCurveSettings.mProcessType == CurveSettings::eProcessType3D) {
-
-        event->mYx = event->mYInc;
-        event->mYy = event->mYDec;
-        event->mYz = event->mYInt;
-
-        event->mSy = sqrt( (pow(event->mSInt, 2.) + pow(event->mSInc, 2.)) /2.);
-
-
-    }
-
-    if (!mCurveSettings.mUseErrMesure){
-        event->mSy = 0.;
-    }
-}
-*/
 #pragma mark Related to : update : calcul de h_new
 
 /**
@@ -2464,15 +2414,14 @@ void MCMCLoopCurve::prepareEventY(Event* const event  )
  */
 long double MCMCLoopCurve::h_YWI_AY(const SplineMatrices& matrices, const QList<Event *> &lEvents, const long double lambdaSpline, const std::vector<long double>& vecH)
 {
-     long double h = h_YWI_AY_composanteX_origin( matrices, lEvents, lambdaSpline, vecH);
-    // long double h = h_YWI_AY_composanteX_origin( matrices, lEvents, alphaLissage, vecH); // controler donne le même résultat
-    
-    if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherique) {
+    long double h = h_YWI_AY_composanteX_origin( matrices, lEvents, lambdaSpline, vecH);
+
+    if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical) {
 
         h *= h_YWI_AY_composanteY (matrices, lEvents, lambdaSpline, vecH);
         h *= h_YWI_AY_composanteZ (matrices, lEvents, lambdaSpline, vecH);
 
-    } else  if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeVectoriel) {
+    } else  if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector) {
 
         h *= h_YWI_AY_composanteY(matrices, lEvents, lambdaSpline, vecH);
         h *= h_YWI_AY_composanteZ(matrices, lEvents, lambdaSpline, vecH);
@@ -2591,32 +2540,32 @@ long double MCMCLoopCurve::h_YWI_AY_composanteX_origin(const SplineMatrices &mat
 
 
 
-        SplineResults spline = calculSpline(matrices, vecY, lambdaSpline, vecH);
-        std::vector<long double>& vecG = spline.vecG;
-        std::vector<long double> vecGamma = spline.vecGamma;
-        std::vector<std::vector<long double>> matL = spline.matL;
-        std::vector<long double> matD = spline.matD;
-        std::vector<std::vector<long double>> matQTQ = matrices.matQTQ;
+    SplineResults spline = calculSpline(matrices, vecY, lambdaSpline, vecH);
+    std::vector<long double>& vecG = spline.vecG;
+    std::vector<long double> vecGamma = spline.vecGamma;
+    std::vector<std::vector<long double>> matL = spline.matL;
+    std::vector<long double> matD = spline.matD;
+    std::vector<std::vector<long double>> matQTQ = matrices.matQTQ;
 
-        // -------------------------------------------
-        // Calcul de l'exposant
-        // -------------------------------------------
+    // -------------------------------------------
+    // Calcul de l'exposant
+    // -------------------------------------------
 
-        // Calcul de la forme quadratique YT W Y  et  YT WA Y
-        long double YWY = 0.;
-        long double YWAY = 0.;
+    // Calcul de la forme quadratique YT W Y  et  YT WA Y
+    long double YWY = 0.;
+    long double YWAY = 0.;
 
-        int nb_noeuds = lEvents.size();
+    int nb_noeuds = lEvents.size();
 
-       for (int i=0; i<nb_noeuds; ++i)
-        {
-            Event* e = lEvents[i];
+    for (int i=0; i<nb_noeuds; ++i)
+    {
+        Event* e = lEvents[i];
 
-            YWY += (long double)e->mW * (long double)e->mYx * (long double)e->mYx;
-            YWAY += (long double)e->mYx * (long double)e->mW * vecG[i];
-        }
+        YWY += (long double)e->mW * (long double)e->mYx * (long double)e->mYx;
+        YWAY += (long double)e->mYx * (long double)e->mW * vecG[i];
+    }
 
-        long double h_exp = -0.5l * (YWY-YWAY);
+    long double h_exp = -0.5l * (YWY-YWAY);
 
 /*         long double h_exp = 0.;
         int i = 0;
@@ -2624,26 +2573,27 @@ long double MCMCLoopCurve::h_YWI_AY_composanteX_origin(const SplineMatrices &mat
             h_exp  += (long double) e->mW * (long double)e->mYx * ((long double)e->mYx - vecG.at(i++));
         }
         h_exp *= -0.5l;
-  */      // -------------------------------------------
-        // Calcul de la norme
-        // -------------------------------------------
-        // Inutile de calculer le determinant de QT*Q (respectivement ST*Q)
-        // (il suffit de passer par la décomposition Cholesky du produit matriciel QT*Q)
-        // ni de calculer le determinant(Mat_B) car il suffit d'utiliser Mat_D (respectivement Mat_U) déjà calculé
-        // inutile de refaire : Multi_Mat_par_Mat(Mat_QT,Mat_Q,Nb_noeuds,3,3,Mat_QtQ); -> déjà effectué dans calcul_mat_RQ
+  */
+    // -------------------------------------------
+    // Calcul de la norme
+    // -------------------------------------------
+    // Inutile de calculer le determinant de QT*Q (respectivement ST*Q)
+    // (il suffit de passer par la décomposition Cholesky du produit matriciel QT*Q)
+    // ni de calculer le determinant(Mat_B) car il suffit d'utiliser Mat_D (respectivement Mat_U) déjà calculé
+    // inutile de refaire : Multi_Mat_par_Mat(Mat_QT,Mat_Q,Nb_noeuds,3,3,Mat_QtQ); -> déjà effectué dans calcul_mat_RQ
 
-        std::pair<std::vector<std::vector<long double>>, std::vector<long double>> decomp = decompositionCholesky(matQTQ, 5, 1);
-        std::vector<std::vector<long double>> matLq = decomp.first;
-        std::vector<long double> matDq = decomp.second;
+    std::pair<std::vector<std::vector<long double>>, std::vector<long double>> decomp = decompositionCholesky(matQTQ, 5, 1);
+    std::vector<std::vector<long double>> matLq = decomp.first;
+    std::vector<long double> matDq = decomp.second;
 
-        long double det_1_2 = 1.;
-        for(int i=1; i<nb_noeuds-1; ++i){
-            det_1_2 *= matDq[i] / matD[i];
-        }
+    long double det_1_2 = 1.;
+    for(int i=1; i<nb_noeuds-1; ++i){
+        det_1_2 *= matDq[i] / matD[i];
+    }
 
-        // calcul à un facteur (2*PI) puissance -(n-2) près
+    // calcul à un facteur (2*PI) puissance -(n-2) près
 
-        return exp(0.5l * (long double)(nb_noeuds-2) * log(lambdaSpline) + h_exp) * sqrt(det_1_2);
+    return exp(0.5l * (long double)(nb_noeuds-2) * log(lambdaSpline) + h_exp) * sqrt(det_1_2);
 }
 
 long double MCMCLoopCurve::h_YWI_AY_composanteY(const SplineMatrices& matrices, const QList<Event *> lEvents, const long double lambdaSpline, const std::vector<long double>& vecH)
@@ -4018,7 +3968,7 @@ std::vector<long double> MCMCLoopCurve::calculMatInfluence0(const SplineMatrices
 
 std::vector<long double> MCMCLoopCurve::calculMatInfluence_origin(const SplineMatrices& matrices, const SplineResults& splines , const int nbBandes, const double lambdaSpline)
 {
-    const int n = mModel->mEvents.size();
+    const size_t n = mModel->mEvents.size();
     std::vector<long double> matA = initLongVector(n);
 
 
@@ -4032,7 +3982,7 @@ std::vector<long double> MCMCLoopCurve::calculMatInfluence_origin(const SplineMa
 
         } else {
             matB_1 = initLongMatrix(3, 3);
-            matB_1[1][1]= 1./ splines.matD.at(1);  // pHd à faire confirmer
+            matB_1[1][1] = 1./ splines.matD.at(1);  // pHd à faire confirmer
         }
         std::vector<long double> matQB_1QT = initLongVector(n);
 
@@ -4042,7 +3992,7 @@ std::vector<long double> MCMCLoopCurve::calculMatInfluence_origin(const SplineMa
         term += 2 * matQi.at(0) * matQi.at(1) * matB_1.at(0).at(1);
         matQB_1QT[0] = term;
 
-        for (int i = 1; i < n-1; ++i) {
+        for (size_t i = 1; i < n-1; ++i) {
             matQi = matrices.matQ.at(i);
             term = pow(matQi.at(i-1), 2.) * matB_1.at(i-1).at(i-1);
             term += pow(matQi.at(i), 2.) * matB_1.at(i).at(i);
@@ -4063,7 +4013,7 @@ std::vector<long double> MCMCLoopCurve::calculMatInfluence_origin(const SplineMa
         // Multi_const_par_Mat(-alphac,tmp1,Nb_noeudsc,1,Mat_Ac);
         // Addit_I_et_Mat(Mat_Ac,Nb_noeudsc);
         // remplacé par:
-        for (int i = 0; i < n; ++i) {
+        for (size_t i = 0; i < n; ++i) {
 
             matA[i] = 1 - lambdaSpline * matrices.diagWInv.at(i) * matQB_1QT.at(i);
 
@@ -4221,8 +4171,9 @@ MCMCSpline MCMCLoopCurve::currentSpline ( QList<Event *> &lEvents, bool doSortAn
     spline.splineX = std::move(splineX);
 
 
-    if ( mCurveSettings.mProcessType == CurveSettings::eProcessTypeVectoriel ||
-         mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherique ||
+    if ( mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
+         mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical ||
+         mCurveSettings.mProcessType == CurveSettings::eProcessType2D ||
          mCurveSettings.mProcessType == CurveSettings::eProcessType3D) {
 
         // calculSpline utilise les Y des events
@@ -4241,8 +4192,8 @@ MCMCSpline MCMCLoopCurve::currentSpline ( QList<Event *> &lEvents, bool doSortAn
         spline.splineY = std::move(splineY);
     }
 
-    if ( mCurveSettings.mProcessType == CurveSettings::eProcessTypeVectoriel ||
-         mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherique ||
+    if ( mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
+         mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical ||
          mCurveSettings.mProcessType == CurveSettings::eProcessType3D) {
         // dans le future, ne sera pas utile pour le mode sphérique
         // calculSpline utilise les Z des events
@@ -4255,8 +4206,8 @@ MCMCSpline MCMCLoopCurve::currentSpline ( QList<Event *> &lEvents, bool doSortAn
         splineZ.vecG = std::move(s.vecG);
         splineZ.vecGamma = std::move(s.vecGamma);
 
-        splineZ.vecThetaEvents = vecTheta; //getThetaEventVector(mModel->mEvents);
-        splineZ.vecVarG = vecVarG; //calculSplineError(matrices, s);
+        splineZ.vecThetaEvents = vecTheta;
+        splineZ.vecVarG = vecVarG;
 
         spline.splineZ = std::move(splineZ);
     }

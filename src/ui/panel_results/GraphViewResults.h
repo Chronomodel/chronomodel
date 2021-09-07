@@ -102,7 +102,8 @@ public:
         eSigma ,
         eVG,
 
-        eTempo, eTempCredibility, eTempoError,
+        eTempo, //eTempCredibility,
+        eTempoError,
         eActivity,
         eDuration,
 

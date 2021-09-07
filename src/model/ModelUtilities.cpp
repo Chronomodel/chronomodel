@@ -587,17 +587,21 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
         }
 
         if (curveModel) {
-            if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVectoriel) {
+            if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector) {
                 log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
                 log += line(textGreen(QObject::tr("- Declination : %1").arg(stringForLocal(pEvent->mYDec))));
                 log += line(textGreen(QObject::tr("- Field : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
+
+            } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessType2D) {
+                log += line(textGreen(QObject::tr("- X : %1 ±  %2").arg(stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
+                log += line(textGreen(QObject::tr("- Y : %1 ±  %2").arg(stringForLocal(pEvent->mYDec), stringForLocal(pEvent->mSDec))));
 
             } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D) {
                 log += line(textGreen(QObject::tr("- X : %1 ±  %2").arg(stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
                 log += line(textGreen(QObject::tr("- Y : %1").arg(stringForLocal(pEvent->mYDec))));
                 log += line(textGreen(QObject::tr("- Z : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
 
-            } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherique) {
+            } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical) {
                 log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
                 log += line(textGreen(QObject::tr("- Declination : %1").arg(stringForLocal(pEvent->mYDec))));
 
@@ -703,11 +707,14 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
 
             break;
 
-        case CurveSettings::eProcessTypeSpherique :
+        case CurveSettings::eProcessType2D :
+            log += line(textBold(textGreen( QObject::tr(" - Process 2D"))));
+            break;
+        case CurveSettings::eProcessTypeSpherical :
             log += line(textBold(textGreen( QObject::tr(" - Process Spherical") )));
             break;
 
-        case CurveSettings::eProcessTypeVectoriel :
+        case CurveSettings::eProcessTypeVector :
             log += line(textBold(textGreen( QObject::tr(" - Process Vector"))));
             break;
 
@@ -1082,7 +1089,7 @@ QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, c
            text += line(textGreen(e->mVG.resultsString("<br>", "", nullptr, nullptr, false)));
        }
 
-        if (withDates){
+        if (withDates) {
             for (auto&& date : e->mDates)
                 text += "<br><br>" + dateResultsHTML(&(date), model);
         }

@@ -216,9 +216,10 @@ bool CurveSettings::showInclination() const
 {
     // Elle est toujours nécessaire en sphérique et vectoriel.
     // En univarié, elle n'est nécessaire que pour les variables d'étude : inclinaison ou déclinaison.
-    return ( mProcessType == CurveSettings::eProcessTypeSpherique) ||
+    return ( mProcessType == CurveSettings::eProcessTypeSpherical) ||
              mProcessType == CurveSettings::eProcessType3D ||
-            ( mProcessType == CurveSettings::eProcessTypeVectoriel) ||
+            mProcessType == CurveSettings::eProcessType2D ||
+            ( mProcessType == CurveSettings::eProcessTypeVector) ||
             ((mProcessType == CurveSettings::eProcessTypeUnivarie) &&
              ( mVariableType == CurveSettings::eVariableTypeInclination ||
                mVariableType == CurveSettings::eVariableTypeDeclination));
@@ -227,11 +228,13 @@ bool CurveSettings::showInclination() const
 QString CurveSettings::inclinationLabel() const
 {
     QString label;
-    if ( mProcessType == CurveSettings::eProcessTypeVectoriel ||
-         mProcessType == CurveSettings::eProcessTypeSpherique) {
+    if ( (mProcessType == CurveSettings::eProcessTypeUnivarie &&
+           ( mVariableType == CurveSettings::eVariableTypeInclination || mVariableType == CurveSettings::eVariableTypeDeclination)) ||
+         mProcessType == CurveSettings::eProcessTypeVector ||
+         mProcessType == CurveSettings::eProcessTypeSpherical) {
           label = QObject::tr("Inclination");
 
-    } else if (mProcessType == CurveSettings::eProcessType3D) {
+    } else if (mProcessType == CurveSettings::eProcessType3D || mProcessType == CurveSettings::eProcessType2D) {
         label = QObject::tr("X");
 
     }
@@ -242,21 +245,22 @@ bool CurveSettings::showDeclination() const
 {
     // Elle est toujours nécessaire en sphérique et vectoriel.
     // En univarié, elle n'est nécessaire que pour la variable d'étude : déclinaison.
-    return ((mProcessType == CurveSettings::eProcessTypeSpherique) ||
-            (mProcessType == CurveSettings::eProcessType3D) ||
-            (mProcessType == CurveSettings::eProcessTypeVectoriel) ||
-            ((mProcessType == CurveSettings::eProcessTypeUnivarie) &&
-             (mVariableType == CurveSettings::eVariableTypeDeclination)));
+    return ( mProcessType == CurveSettings::eProcessTypeSpherical ||
+             mProcessType == CurveSettings::eProcessType3D ||
+             mProcessType == CurveSettings::eProcessType2D ||
+             mProcessType == CurveSettings::eProcessTypeVector ||
+             ( mProcessType == CurveSettings::eProcessTypeUnivarie &&
+               mVariableType == CurveSettings::eVariableTypeDeclination));
 }
 
 QString CurveSettings::declinationLabel() const
 {
     QString label;
-    if ( mProcessType == CurveSettings::eProcessTypeVectoriel ||
-         mProcessType == CurveSettings::eProcessTypeSpherique) {
+    if ( mProcessType == CurveSettings::eProcessTypeVector ||
+         mProcessType == CurveSettings::eProcessTypeSpherical) {
           label = QObject::tr("Declination");
 
-    } else if (mProcessType == CurveSettings::eProcessType3D) {
+    } else if (mProcessType == CurveSettings::eProcessType2D || mProcessType == CurveSettings::eProcessType3D) {
         label = QObject::tr("Y");
 
     }
@@ -267,17 +271,24 @@ bool CurveSettings::showIntensity() const
 {
     // Elle est toujours nécessaire en vectoriel, mais jamais en sphérique.
     // En univarié, elle n'est nécessaire que pour les variables d'étude autres que inclinaison et déclinaison.
-    return ((mProcessType == CurveSettings::eProcessTypeVectoriel) ||
+    return ((mProcessType == CurveSettings::eProcessTypeVector) ||
             (mProcessType == CurveSettings::eProcessType3D) ||
             ((mProcessType == CurveSettings::eProcessTypeUnivarie) &&
              (mVariableType != CurveSettings::eVariableTypeInclination) &&
              (mVariableType != CurveSettings::eVariableTypeDeclination)));
 }
 
+bool CurveSettings::showYErr() const
+{
+    // Elle est toujours nécessaire en vectoriel, mais jamais en sphérique.
+    // En univarié, elle n'est nécessaire que pour les variables d'étude autres que inclinaison et déclinaison.
+    return (mProcessType == CurveSettings::eProcessType2D ||mProcessType == CurveSettings::eProcessType3D) ;
+}
+
 QString CurveSettings::intensityLabel() const
 {
     QString label;
-    if (mProcessType == CurveSettings::eProcessTypeVectoriel) {
+    if (mProcessType == CurveSettings::eProcessTypeVector) {
         label = QObject::tr("Field");
 
     } else if (mProcessType == CurveSettings::eProcessType3D) {
@@ -306,10 +317,13 @@ QString CurveSettings::processText() const
     case eProcessTypeUnivarie:
         return QString("Univariate");
         break;
-    case eProcessTypeSpherique:
+    case eProcessType2D:
+        return QString("2D");
+        break;
+    case eProcessTypeSpherical:
         return QString("Spherical");
         break;
-    case eProcessTypeVectoriel:
+    case eProcessTypeVector:
         return QString("Vector");
         break;
     case eProcessType3D:

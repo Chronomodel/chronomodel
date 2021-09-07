@@ -523,7 +523,7 @@ void MetropolisVariable::generateNumericalResults(const QList<ChainSpecs> &chain
 */
     // Results for individual chains
     mChainsResults.clear();
-    for (int i = 0; i<mChainsHistos.size(); ++i) {
+    for (auto i = 0; i<mChainsHistos.size(); ++i) {
         DensityAnalysis result;
         result.funcAnalysis = analyseFunction(mChainsHistos.at(i));
         statTrace = traceStatistic(runFormatedTraceForChain(chains, i));

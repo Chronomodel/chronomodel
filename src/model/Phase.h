@@ -112,8 +112,8 @@ public:
     QMap<double, double> mTempoInf;
     QMap<double, double> mTempoSup;
 
-    QMap<double, double> mTempoCredibilityInf;
-    QMap<double, double> mTempoCredibilitySup;
+    //QMap<double, double> mTempoCredibilityInf;
+    //QMap<double, double> mTempoCredibilitySup;
 
     QMap<double, double> mActivity;
     QMap<double, double> mActivityInf;
@@ -127,8 +127,8 @@ public:
     QMap<double, double> mRawTempoInf;
     QMap<double, double> mRawTempoSup;
 
-    QMap<double, double> mRawTempoCredibilityInf;
-    QMap<double, double> mRawTempoCredibilitySup;
+    //QMap<double, double> mRawTempoCredibilityInf;
+    //QMap<double, double> mRawTempoCredibilitySup;
 
     QMap<double, double> mRawActivity;
     QMap<double, double> mRawActivityInf;

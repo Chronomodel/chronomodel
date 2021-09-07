@@ -106,6 +106,7 @@ private slots:
     void updateEventYInt();
 
     void updateEventSInc();
+    void updateEventSDec();
     void updateEventSInt();
 
     void createDate();
@@ -172,20 +173,23 @@ private:
 
     CurveWidget* mCurveWidget;
 
-    QLabel* mYIncLab;
-    QLineEdit* mYIncEdit;
+    QLabel* mX_IncLab;
+    QLineEdit* mX_IncEdit;
 
-    QLabel* mYDecLab;
-    QLineEdit* mYDecEdit;
+    QLabel* mS_X_IncLab;
+    QLineEdit* mS_X_IncEdit;
 
-    QLabel* mSIncLab;
-    QLineEdit* mSIncEdit;
+    QLabel* mY_DecLab;
+    QLineEdit* mY_DecEdit;
 
-    QLabel* mYIntLab;
-    QLineEdit* mYIntEdit;
+    QLabel* mS_Y_Lab;
+    QLineEdit* mS_Y_Edit;
 
-    QLabel* mSIntLab;
-    QLineEdit* mSIntEdit;
+    QLabel* mZ_IntLab;
+    QLineEdit* mZ_IntEdit;
+
+    QLabel* mS_Z_IntLab;
+    QLineEdit* mS_Z_IntEdit;
 
     bool mCurveEnabled;
    // CurveSettings::ProcessType mCurveProcessType;

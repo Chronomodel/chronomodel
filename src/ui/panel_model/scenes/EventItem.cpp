@@ -490,14 +490,17 @@ int EventItem::getNumberCurveLines(CurveSettings& cs) const
     case CurveSettings::eProcessTypeUnivarie:
         return 1;
         break;
-    case CurveSettings::eProcessTypeSpherique:
+    case CurveSettings::eProcessTypeSpherical:
         return 1;
         break;
-    case CurveSettings::eProcessTypeVectoriel:
+    case CurveSettings::eProcessTypeVector:
+        return 2;
+        break;
+    case CurveSettings::eProcessType2D:
         return 2;
         break;
     case CurveSettings::eProcessType3D:
-        return 2;
+        return 3;
         break;
     }
 
@@ -532,24 +535,40 @@ void EventItem::paintBoxCurveParameter (QPainter* painter, QRectF rectBox, Curve
             QString text1;
 
             text1 += "X = ";
-            text1 += QLocale().toString (mData.value(STATE_EVENT_Y_INC).toDouble());
-            text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_S_INC).toDouble());
-
-            text1 += " Y = ";
-            text1 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
-
+            text1 += QLocale().toString (mData.value(STATE_EVENT_X_INC).toDouble());
+            text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_S_X_INC).toDouble());
             painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
 
-            QString text2 = "Z = ";
-            text2 += QLocale().toString(mData.value(STATE_EVENT_Y_INT).toDouble());
-            text2 += " ± " + QLocale().toString(mData.value(STATE_EVENT_S_INT).toDouble());
+            QString text2 = " Y = ";
+            text2 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
+            text2 += " ± " + QLocale().toString (mData.value(STATE_EVENT_S_Y_DEC).toDouble());
+
+            painter->drawText(QRectF(lineX, lineY + mCurveLineHeight, lineW, mCurveLineHeight), Qt::AlignCenter, text2);
+
+            QString text3 = "Z = ";
+            text3 += QLocale().toString(mData.value(STATE_EVENT_Z_INT).toDouble());
+            text3 += " ± " + QLocale().toString(mData.value(STATE_EVENT_S_Z_INT).toDouble());
+            painter->drawText(QRectF(lineX, lineY + 2*mCurveLineHeight, lineW, mCurveLineHeight), Qt::AlignCenter, text3);
+
+        } else if ( cs.mProcessType == CurveSettings::eProcessType2D) {
+            QString text1;
+
+            text1 += "X = ";
+            text1 += QLocale().toString (mData.value(STATE_EVENT_X_INC).toDouble());
+            text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_S_X_INC).toDouble());
+            painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
+
+            QString text2 = " Y = ";
+            text2 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
+            text2 += " ± " + QLocale().toString (mData.value(STATE_EVENT_S_Y_DEC).toDouble());
+
             painter->drawText(QRectF(lineX, lineY + mCurveLineHeight, lineW, mCurveLineHeight), Qt::AlignCenter, text2);
 
         } else {
             if (cs.showInclination()) {
                 QString text1 = "Inc = ";
-                text1 += QLocale().toString (mData.value(STATE_EVENT_Y_INC).toDouble());
-                text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_S_INC).toDouble());
+                text1 += QLocale().toString (mData.value(STATE_EVENT_X_INC).toDouble());
+                text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_S_X_INC).toDouble());
 
                 if (cs.showDeclination()) {
                     text1 += " Dec = ";
@@ -562,8 +581,8 @@ void EventItem::paintBoxCurveParameter (QPainter* painter, QRectF rectBox, Curve
             if (cs.showIntensity()) {
                 QString text2 = cs.intensityLabel();
                 text2 += " = ";
-                text2 += QLocale().toString(mData.value(STATE_EVENT_Y_INT).toDouble());
-                text2 += " ± " + QLocale().toString(mData.value(STATE_EVENT_S_INT).toDouble());
+                text2 += QLocale().toString(mData.value(STATE_EVENT_Z_INT).toDouble());
+                text2 += " ± " + QLocale().toString(mData.value(STATE_EVENT_S_Z_INT).toDouble());
                 painter->drawText(QRectF(lineX, lineY + (cs.showInclination() ? 1 : 0) * mCurveLineHeight, lineW, mCurveLineHeight), Qt::AlignCenter, text2);
             }
         }

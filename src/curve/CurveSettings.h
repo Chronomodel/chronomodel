@@ -63,8 +63,9 @@ public:
     {
         eProcessTypeNone = 'N',
         eProcessTypeUnivarie = 'U',
-        eProcessTypeSpherique = 'S',
-        eProcessTypeVectoriel = 'V',
+        eProcessTypeSpherical = 'S',
+        eProcessType2D = '2',
+        eProcessTypeVector = 'V',
         eProcessType3D = '3'
     };
 
@@ -101,6 +102,7 @@ public:
     bool showInclination() const;
     bool showDeclination() const;
     bool showIntensity() const;
+    bool showYErr() const;
 
     QString inclinationLabel() const;
     QString declinationLabel() const;

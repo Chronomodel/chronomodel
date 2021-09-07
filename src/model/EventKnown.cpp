@@ -79,12 +79,13 @@ EventKnown EventKnown::fromJson(const QJsonObject& json)
 
     event.Event::mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
 
-    event.Event::mYInc = json.value(STATE_EVENT_Y_INC).toDouble();
+    event.Event::mYInc = json.value(STATE_EVENT_X_INC).toDouble();
     event.Event::mYDec = json.value(STATE_EVENT_Y_DEC).toDouble();
-    event.Event::mYInt = json.value(STATE_EVENT_Y_INT).toDouble();
+    event.Event::mYInt = json.value(STATE_EVENT_Z_INT).toDouble();
 
-    event.Event::mSInc = json.value(STATE_EVENT_S_INC).toDouble();
-    event.Event::mSInt = json.value(STATE_EVENT_S_INT).toDouble();
+    event.Event::mSInc = json.value(STATE_EVENT_S_X_INC).toDouble();
+    event.Event::mSDec = json.value(STATE_EVENT_S_X_INC).toDouble();
+    event.Event::mSInt = json.value(STATE_EVENT_S_Z_INT).toDouble();
 
     event.mVG.mSamplerProposal= MHVariable::eMHAdaptGauss;
     return event;
@@ -111,12 +112,13 @@ QJsonObject EventKnown::toJson() const
 
     event[STATE_EVENT_KNOWN_FIXED] = mFixed;
 
-    event[STATE_EVENT_Y_INC] = Event::mYInc;
+    event[STATE_EVENT_X_INC] = Event::mYInc;
     event[STATE_EVENT_Y_DEC] = Event::mYDec;
-    event[STATE_EVENT_Y_INT] = Event::mYInt;
+    event[STATE_EVENT_Z_INT] = Event::mYInt;
 
-    event[STATE_EVENT_S_INC] = Event::mSInc;
-    event[STATE_EVENT_S_INT] = Event::mSInt;
+    event[STATE_EVENT_S_X_INC] = Event::mSInc;
+    event[STATE_EVENT_S_Y_DEC] = Event::mSDec;
+    event[STATE_EVENT_S_Z_INT] = Event::mSInt;
     return event;
 }
 

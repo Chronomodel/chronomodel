@@ -347,12 +347,12 @@ void ImportDataView::exportDates()
                                     while (dateCsv.count() < CurveStartColumn) {
                                         dateCsv.append("");
                                     }
-                                    dateCsv.append(csvLocal.toString(event[STATE_EVENT_Y_INC].toDouble()));
-                                    dateCsv.append(csvLocal.toString(event[STATE_EVENT_S_INC].toDouble()));
+                                    dateCsv.append(csvLocal.toString(event[STATE_EVENT_X_INC].toDouble()));
+                                    dateCsv.append(csvLocal.toString(event[STATE_EVENT_S_X_INC].toDouble()));
                                     dateCsv.append(csvLocal.toString(event[STATE_EVENT_Y_DEC].toDouble()));
-
-                                    dateCsv.append(csvLocal.toString(event[STATE_EVENT_Y_INT].toDouble()));
-                                    dateCsv.append(csvLocal.toString(event[STATE_EVENT_S_INT].toDouble()));
+                                    //dateCsv.append(csvLocal.toString(event[STATE_EVENT_S_Y_DEC].toDouble()));
+                                    dateCsv.append(csvLocal.toString(event[STATE_EVENT_Z_INT].toDouble()));
+                                    dateCsv.append(csvLocal.toString(event[STATE_EVENT_S_Z_INT].toDouble()));
                                 }
 
                                 stream << eventName << sep;

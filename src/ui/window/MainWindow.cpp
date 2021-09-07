@@ -681,8 +681,12 @@ void MainWindow::updateProject()
 {
     qDebug()<<"MainWindow::updateProject()";
     mUndoAction->setText(tr("Undo"));
-    mUndoAction->setToolTip(tr("Undo") + " : " + mUndoStack->undoText());
-    mUndoAction->setStatusTip(tr("Click to go back to the previous action") + " : " + mUndoStack->undoText());
+    QString stackText ="";
+    if (mUndoStack->count()>1)
+        stackText = " : " + mUndoStack->undoText();
+
+    mUndoAction->setToolTip(tr("Undo") + stackText);
+    mUndoAction->setStatusTip(tr("Click to go back to the previous action") + stackText);
 
     mRedoAction->setText(tr("Redo"));
     mRedoAction->setToolTip(tr("Redo") + " : " + mUndoStack->redoText());
