@@ -152,12 +152,12 @@ int main(int argc, char *argv[])
     }*/
 
     //qInstallMessageHandler(customMessageHandler);
-
-    std::cout<<"in main filePath ="<<filePath.toCFString();
+#ifdef DEBUG
+    std::cout<<"in main filePath ="<<filePath.toStdString();
+#endif
     MainController* c = new MainController(filePath);
     (void) c;
 
-   // return  a.exec();
     a.exec();
     
     delete c;

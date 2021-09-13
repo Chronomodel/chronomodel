@@ -139,10 +139,13 @@ void AppSettings::readSettings()
     QSettings settings;
  qDebug()<< settings.fileName();
  QFile file(settings.fileName());
+
+#ifdef DEBUG
  if (file.exists())
      qDebug()<< settings.fileName() <<"exist";
 else
        qDebug()<< settings.fileName() <<"n exist pas";
+#endif
 
     settings.beginGroup("MainWindow");
 

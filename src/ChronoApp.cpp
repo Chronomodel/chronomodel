@@ -58,7 +58,6 @@ ChronoApp::~ChronoApp()
 bool ChronoApp::event(QEvent* e)
 {
 
-
     /*QFileOpenEvent* foe = dynamic_cast<QFileOpenEvent*>(e);
     if(foe)
     {
@@ -67,16 +66,14 @@ bool ChronoApp::event(QEvent* e)
     }*/
     if (e->type() == QEvent::FileOpen) {
         QString path = static_cast<QFileOpenEvent*>(e)->file();
-        std::cout<<"in ChronoApp::event path = "<< path.toCFString();
+        std::cout<<"in ChronoApp::event path = "<< path.toStdString();
 
         MainWindow* w = MainWindow::getInstance();
 
         w->readSettings(path);
 
         w = nullptr;
-        /*QMessageBox box;
-        box.setText(static_cast<QFileOpenEvent*>(e)->file());
-        box.exec();*/
+
     }
     return QApplication::event(e);
 }
