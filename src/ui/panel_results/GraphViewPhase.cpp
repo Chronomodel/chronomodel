@@ -112,6 +112,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
     setNumericalResults(resultsHTML, resultsText);
 
     mGraph->setOverArrow(GraphView::eNone);
+
     /* -------------first tab : posterior distrib-----------------------------------
      *  Possible curves :
      *  - Post Distrib Alpha All Chains
@@ -298,7 +299,8 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
 
         }
 
-    } else if (typeGraph == ePostDistrib && mCurrentVariableList.contains(eDuration)) {
+    }
+    /*else if (typeGraph == ePostDistrib && mCurrentVariableList.contains(eDuration)) {
         mGraph->mLegendX = tr("Years");
         mGraph->mLegendY = "";
         mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
@@ -325,10 +327,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
             mGraph->addCurve(curveDuration);
 
 
-            /* ------------------------------------
-             *  Theta Credibility
-             * ------------------------------------
-             */
+
             GraphCurve curveCred = generateSectionCurve(mPhase->mDuration.mCredibility,
                                                             "Credibility All Chains",
                                                             color);
@@ -346,7 +345,9 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
 
                 mGraph->addCurve(curveDuration);
             }
-    } else if (typeGraph == ePostDistrib && mCurrentVariableList.contains(eTempo)) {
+    }
+            */
+    else if (typeGraph == ePostDistrib && mCurrentVariableList.contains(eTempo)) {
         mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
         mGraph->mLegendY = "";
         mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
@@ -430,13 +431,13 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
 
         GraphCurve curveActivityInf = generateDensityCurve( mPhase->mActivityInf,
                                                             "Post Distrib Activity Inf All Chains",
-                                                            color.lighter(), Qt::DotLine);
+                                                            color, Qt::CustomDashLine);
 
         GraphCurve curveActivitySup = generateDensityCurve( mPhase->mActivitySup,
                                                             "Post Distrib Activity Sup All Chains",
-                                                            color.lighter(), Qt::DotLine);
+                                                            color, Qt::CustomDashLine);
 
-        // Display envelope Uniform
+         // Display envelope Uniform
         GraphCurve curveMeanUnif = generateHorizontalLine( mPhase->mActivityMeanUnif,
                                                            "Post Distrib Activity Unif Mean",
                                                            QColor(Qt::darkGray).darker(), Qt::CustomDashLine);

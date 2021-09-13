@@ -1791,8 +1791,8 @@ try {
 */
         matD[i] = matrix.at(i).at(i) - sum; // doit être positif
         if (matD.at(i) < 0) {
-            qDebug() << "Function::decompositionCholesky : matD <0 change to 1E-200";
-            matD[i] = 1e-200;
+            qDebug() << "Function::decompositionCholesky : matD <0 change to 0";
+            matD[i] = 0;//1e-200;
            // throw "Function::decompositionCholesky() matD <0";
         }
     }

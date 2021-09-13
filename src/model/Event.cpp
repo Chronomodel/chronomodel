@@ -1098,8 +1098,11 @@ void Event::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, co
 
 void Event::updateW()
 {
-      mW = 1. / (mVG.mX + mSy * mSy);
+    mW = 1. / (mVG.mX + mSy * mSy);
  #ifdef DEBUG
+    if (mVG.mX < 1e-100) {
+        qDebug()<< "in Event::updateW mVG.mX < 1e-100 : "<< mVG.mX;
+    }
     if (mW < 1e-100) {
         qDebug()<< "in Event::updateW mW < 1e-100 : "<< mW;
     }

@@ -1231,118 +1231,7 @@ void MCMCLoopCurve::memo()
 
 void MCMCLoopCurve::finalize()
 {
- /*
-    // if we are in depth mode, we have to extract iteration with only GPrime positive
-    if ( mCurveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie &&
-         mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth) {
-
-        int shift  = 0;
-
-
-        std::vector<MCMCSpline> newMCMCSplines;
-        for (int i = 0; i < mChains.size(); ++i) {
-            ChainSpecs& chain = mChains[i];
-
-            // we add 1 for the init
-            const int initBurnAdaptSize = 1 + chain.mNumBurnIter + int (chain.mBatchIndex * chain.mNumBatchIter);
-            const int runSize = floor(chain.mIterPerAquisition / chain.mThinningInterval);
-            // The vector mAllAcept memory all the sampling, there is no thinning
-           // const int AllAceptSize = chain.mIterPerAquisition ;
-            const int firstRunPosition = shift + initBurnAdaptSize;
-
-            std::vector<MCMCSpline>::const_iterator first = mModel->mSplinesTrace.begin() + firstRunPosition;
-            std::vector<MCMCSpline>::const_iterator last = first + runSize -1;
-
-            std::vector<MCMCSpline> chainTrace(first, last+1);
-
-            std::vector<MCMCSplineComposante> chainTraceX;
-
-            for (auto&& chTr : chainTrace) {
-                chainTraceX.push_back(chTr.splineX);
-            }
-            std::vector<unsigned> positvIter ;//= listOfIterationsWithPositiveGPrime(chainTraceX); //{5};
-
-            emit stepChanged(tr("Select Positive curves for chain %1").arg(i+1), 0, chainTraceX.size());
-            for (unsigned iter = 0; iter < chainTraceX.size(); ++iter) {
-                if (hasPositiveGPrime(chainTraceX.at(iter)))
-                    positvIter.push_back(iter);
-                emit stepProgressed(iter);
-            }
-
-            qDebug() << "pourcentage profondeur"<< positvIter.size() << "sur "<< runSize;
-
-            if ( positvIter.size() == 0) {
-#ifdef DEBUG
-                 qCritical("MCMCLoopCurve::finalize : NO POSITIVE curve available\n");
-#endif
-                 mAbortedReason = QString(tr("Warning : NO POSITIVE curve available with chain n° %1").arg (i+1));
-                 throw mAbortedReason;
-
-            } else {
-                emit stepChanged(tr("Erase invalide curves for chain %1").arg(i+1), 0, chainTrace.size());
-                int backshift = 0;
-                for (unsigned j = 0; j < chainTrace.size(); ++j) {
-
-                    if (std::binary_search (positvIter.begin(), positvIter.end(), j) == false) {
-
-                        // remove from MCMCSplines, Event, data and Phase
-                        mModel->mSplinesTrace.erase(mModel->mSplinesTrace.begin() + firstRunPosition + j - backshift);
-                        mModel->mLambdaSpline.mRawTrace->erase(mModel->mLambdaSpline.mRawTrace->begin() + firstRunPosition + j - backshift);
-                        mModel->mLambdaSpline.mHistoryAcceptRateMH->erase(mModel->mLambdaSpline.mHistoryAcceptRateMH->begin() + firstRunPosition + j - backshift);
-                     //   mModel->mLambdaSpline.mAllAccepts->erase(mModel->mLambdaSpline.mAllAccepts->begin() + firstRunPosition + j - backshift,
-                       //                                          mModel->mLambdaSpline.mAllAccepts->begin() + firstRunPosition + j*chain.mThinningInterval - backshift );
-
-                        for (auto& ev : mModel->mEvents) {
-                            ev->mTheta.mRawTrace->erase(ev->mTheta.mRawTrace->begin() + firstRunPosition + j - backshift);
-                            ev->mTheta.mHistoryAcceptRateMH->erase(ev->mTheta.mHistoryAcceptRateMH->begin() + firstRunPosition + j - backshift);
-                       //     ev->mTheta.mAllAccepts->erase(ev->mTheta.mAllAccepts->begin() + firstRunPosition + j - backshift,
-                         //                                 ev->mTheta.mAllAccepts->begin() + firstRunPosition + j*chain.mThinningInterval - backshift );
-
-                            ev->mVG.mRawTrace->erase(ev->mVG.mRawTrace->begin() + firstRunPosition + j - backshift);
-                            ev->mVG.mHistoryAcceptRateMH->erase(ev->mVG.mHistoryAcceptRateMH->begin() + firstRunPosition + j - backshift);
-                          //  ev->mVG.mAllAccepts->erase(ev->mVG.mAllAccepts->begin() + firstRunPosition + j - backshift,
-                        //                               ev->mVG.mAllAccepts->begin() + firstRunPosition + j*chain.mThinningInterval - backshift );
-
-
-                            for (auto& dat : ev->mDates) {
-                                dat.mTheta.mRawTrace->erase(dat.mTheta.mRawTrace->begin() + firstRunPosition + j - backshift);
-                                dat.mTheta.mHistoryAcceptRateMH->erase(dat.mTheta.mHistoryAcceptRateMH->begin() + firstRunPosition + j - backshift);
-                             //   dat.mTheta.mAllAccepts->erase(dat.mTheta.mAllAccepts->begin() + firstRunPosition + j - backshift,
-                               //                               dat.mTheta.mAllAccepts->begin() + firstRunPosition + j*chain.mThinningInterval - backshift );
-
-                                dat.mSigma.mRawTrace->erase(dat.mSigma.mRawTrace->begin() + firstRunPosition + j - backshift);
-                                dat.mSigma.mHistoryAcceptRateMH->erase(dat.mSigma.mHistoryAcceptRateMH->begin() + firstRunPosition + j - backshift);
-                            //    dat.mSigma.mAllAccepts->erase(dat.mSigma.mAllAccepts->begin() + firstRunPosition + j - backshift,
-                              //                                dat.mSigma.mAllAccepts->begin() + firstRunPosition + j*chain.mThinningInterval - backshift );
-
-                                dat.mWiggle.mRawTrace->erase(dat.mWiggle.mRawTrace->begin() + firstRunPosition + j - backshift);
-                                // dat.mWiggle.mHistoryAcceptRateMH->erase(dat.mWiggle.mHistoryAcceptRateMH->begin() + firstRunPosition + j - backshift);
-                            }
-
-                        }
-                        for (auto& ph : mModel->mPhases) {
-                            ph->mAlpha.mRawTrace->erase(ph->mAlpha.mRawTrace->begin() + firstRunPosition + j - backshift);
-                            ph->mBeta.mRawTrace->erase(ph->mBeta.mRawTrace->begin() + firstRunPosition + j - backshift);
-                            ph->mDuration.mRawTrace->erase(ph->mDuration.mRawTrace->begin() + firstRunPosition + j - backshift);
-                        }
-                        backshift++;
-                    }
-                    emit stepProgressed(j);
-                }
-            }
-            // Correction des paramètres de la chaine
-            chain.mIterPerAquisition = positvIter.size() * chain.mThinningInterval;
-
-            shift = firstRunPosition + positvIter.size() ;
-
-
-        }
-
-    }
-
-*/
-
-    for (int i = 0; i < mChains.size(); ++i) {
+   for (int i = 0; i < mChains.size(); ++i) {
         ChainSpecs& chain = mChains[i];
         if (chain.mRealyAccepted == 0) {
             mAbortedReason = QString(tr("Warning : NO POSITIVE curve available with chain n° %1, current seed to change %2").arg (QString::number(i+1), QString::number(chain.mSeed)));
@@ -1415,32 +1304,6 @@ allChainsPosteriorMeanG.gx.vecVarG.resize(nbPoint);
         std::vector<MCMCSpline>::iterator first = mModel->mSplinesTrace.begin() + firstRunPosition ;
         std::vector<MCMCSpline>::iterator last = first + runSize -1 ;
 
-        /*
-         * Mettre ici le retour en coordonnée sphérique ou vectoriel-> à faire à la fin
-         *
-         *   F:=sqrt(sqr(Gx)+sqr(Gy)+sqr(Gz));
-
-        Ic:=arcsinus(Gz/F);
-        Dc:=angleD(Gx,Gy);
-
-        Tab_chemin_IDF[iJ].IiJ:=Ic*Deg;
-        Tab_chemin_IDF[iJ].DiJ:=Dc*Deg;
-        Tab_chemin_IDF[iJ].FiJ:=F;
-
-        // Calcul de la boule d'erreur moyenne par moyenne quadratique
-        ErrGx:=Tab_parametrique[iJ].ErrGx;
-        ErrGy:=Tab_parametrique[iJ].ErrGy;
-        ErrGz:=Tab_parametrique[iJ].ErrGz;
-        ErrIDF:=sqrt((sqr(ErrGx)+sqr(ErrGy)+sqr(ErrGz))/3);
-
-    // sauvegarde des erreurs sur chaque param�tre  - on convertit en degr�s pour I et D
-        Tab_chemin_IDF[iJ].ErrI:=(ErrIDF/Tab_chemin_IDF[iJ].Fij)*deg;
-        Tab_chemin_IDF[iJ].ErrD:=(ErrIDF/(Tab_chemin_IDF[iJ].Fij*cos(Tab_chemin_IDF[iJ].Iij*rad)))*deg;
-        Tab_chemin_IDF[iJ].ErrF:=ErrIDF;
-         *
-         *
-         */
-
         chainTraceX.clear();
         chainTraceY.clear();
         chainTraceZ.clear();
@@ -1454,9 +1317,6 @@ allChainsPosteriorMeanG.gx.vecVarG.resize(nbPoint);
             if (hasY) {
                 chainTraceY.push_back(cTrace->splineY);
                 allChainsTraceY.push_back(cTrace->splineY);
-
-               // chainTraceZ.push_back(cTrace->splineZ);
-               // allChainsTraceZ.push_back(cTrace->splineZ);
             }
 
             if (hasZ) {
@@ -1985,6 +1845,8 @@ double MCMCLoopCurve::valeurGSeconde(const double t, const MCMCSplineComposante&
     return gSeconde;
 }
 
+
+// Obsolete
 void MCMCLoopCurve::valeurs_G_ErrG_GP_GS(const double t, const MCMCSplineComposante& spline, long double& G, long double& errG, long double& GP, long double& GS, unsigned& i0)
 {
 
@@ -2098,6 +1960,7 @@ void MCMCLoopCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposa
     const long double tn = reduceTime(spline.vecThetaEvents.at(n-1));
     GP = 0.;
     GS = 0.;
+    long double h;
 
      // The first derivative is always constant outside the interval [t1,tn].
      if (tReduce < t1) {
@@ -2119,7 +1982,7 @@ void MCMCLoopCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposa
      } else if (tReduce >= tn) {
 
          const long double tn1 = reduceTime(spline.vecThetaEvents.at(n-2));
-         // ValeurG
+        // deltaTheta = spline.vecThetaEvents.at(n-2) - t;
 
          // valeurErrG
          varG = spline.vecVarG.at(n-1);
@@ -2131,14 +1994,18 @@ void MCMCLoopCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposa
          // valeurGSeconde
          //GS =0.;
 
+         // ValeurG
          G = spline.vecG.at(n-1) + (tReduce - tn) * GP;
+
 
      } else {
          for (; i0 < n-1; ++i0) {
              const long double ti1 = reduceTime(spline.vecThetaEvents.at(i0));
              const long double ti2 = reduceTime(spline.vecThetaEvents.at(i0 + 1));
+             h = ti2 - ti1;
+
              if ((tReduce >= ti1) && (tReduce < ti2)) {
-                 const long double h = ti2 - ti1;
+
                  const long double gi1 = spline.vecG.at(i0);
                  const long double gi2 = spline.vecG.at(i0 + 1);
                  const long double gamma1 = spline.vecGamma.at(i0);
@@ -2150,10 +2017,11 @@ void MCMCLoopCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposa
                   *  G := G - (1/6)*(t-ti1)*(ti2-t) * ( (1+(t-ti1)/h)*gamma2 + (1+(ti2-t)/h)*gamma1 );
                   */
                     // Linear part :
-                // G = gi1 + (gi2-gi1)*(tReduce-ti1)/h;
+                 // G = gi1 + (gi2-gi1)*(tReduce-ti1)/h;
                  G = ( (tReduce-ti1)*gi2 + (ti2-tReduce)*gi1 ) /h;
-                    // Smoothing part :
+                  // Smoothing part :
                  G -= (1./6.) * ((tReduce-ti1) * (ti2-tReduce)) * ((1.+(tReduce-ti1)/h) * gamma2 + (1.+(ti2-tReduce)/h) * gamma1);
+
 
                  // valeurErrG
                  /* Code Rencurve
@@ -2164,9 +2032,8 @@ void MCMCLoopCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposa
                  const long double err1 = sqrt(spline.vecVarG.at(i0));
                  const long double err2 = sqrt(spline.vecVarG.at(i0 + 1));
                  varG = pow(err1 + ((tReduce-ti1) / (ti2-ti1)) * (err2 - err1) , 2.l);
-               //  varG = var1 + ((tReduce-ti1) / (ti2-ti1)) * (err2 - err1);
-                // errG = err2;
-                // errG = ( (tReduce-ti1)*err2 + (ti2-tReduce)*err1 ) /h;
+//if (err1 < 1 || err2 < 1)
+  //  qDebug()<<"ici"<<double(err1)<<double(err2);
 
                  // ValeurGPrime
                  /* Code RenCurve
@@ -2185,13 +2052,16 @@ void MCMCLoopCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposa
                  // valeurGSeconde
                  GS = ((tReduce-ti1) * gamma2 + (ti2-tReduce) * gamma1) / h;
 
+
                  break;
              }
          }
 
      }
 
-
+     // Value slope correction
+     GP /=(mModel->mSettings.mTmax- mModel->mSettings.mTmin);
+     GS /= pow(mModel->mSettings.mTmax- mModel->mSettings.mTmin, 2.);
 }
 
 
@@ -2404,6 +2274,10 @@ void MCMCLoopCurve::prepareEventY(Event* const event  )
     if (!mCurveSettings.mUseErrMesure) {
         event->mSy = 0.;
     }
+
+    // because of the problems of change of formula in case of null value. zero is forbidden and replaced by an arbitary value
+    if (event->mSy == 0)
+        event->mSy = std::numeric_limits<double>::epsilon() * 1.E6;
 }
 
 
@@ -3982,7 +3856,7 @@ std::vector<long double> MCMCLoopCurve::calculMatInfluence_origin(const SplineMa
 
         } else {
             matB_1 = initLongMatrix(3, 3);
-            matB_1[1][1] = 1./ splines.matD.at(1);  // pHd à faire confirmer
+            matB_1[1][1] = 1./ splines.matD.at(1);  // pHd à faire confirmer, cas 3 points
         }
         std::vector<long double> matQB_1QT = initLongVector(n);
 
@@ -4017,15 +3891,22 @@ std::vector<long double> MCMCLoopCurve::calculMatInfluence_origin(const SplineMa
 
             matA[i] = 1 - lambdaSpline * matrices.diagWInv.at(i) * matQB_1QT.at(i);
 
-            if (matA.at(i) < 0) {
-                qWarning ("MCMCLoopCurve::calculMatInfluence -> Oups matA.at(i) < 0  change to 1E-100");
-                matA[i] = 1E-100; //pHd : A voir arbitraire
+            if (matA.at(i) < 0.) {
+                qWarning ("MCMCLoopCurve::calculMatInfluence -> Oups matA.at(i) < 0  change to 0");
+                matA[i] = 0.; //1E-100; //pHd : A voir arbitraire
 
             }
-            if (matA.at(i) == 0) {
-                qWarning ("MCMCLoopCurve::calculMatInfluence -> Oups matA.at(i) = 0  change to 1E-100");
-                matA[i] = 1E-100; //pHd : A voir arbitraire
+            if (matA.at(i) == 0.) {
+                qWarning ("MCMCLoopCurve::calculMatInfluence -> Oups matA.at(i) = 0  change to 0");
+                matA[i] = 0;//1E-100; //pHd : A voir arbitraire
             }
+
+            if (matA.at(i) > 1E+4) {
+                qWarning ("MCMCLoopCurve::calculMatInfluence -> Oups matA.at(i) > 1E+6  change to 0");
+                matA[i] = 0.; //1E-100; //pHd : A voir arbitraire
+
+            }
+
         }
 
     } else {
@@ -4107,10 +3988,14 @@ std::vector<long double> MCMCLoopCurve::calcul_spline_variance(const SplineMatri
         const double& aii = matA.at(i);
         // si Aii négatif ou nul, cela veut dire que la variance sur le point est anormalement trop grande,
         // d'où une imprécision dans les calculs de Mat_B (Cf. calcul spline) et de mat_A
-        if (aii <= 0) {
-            throw "Oups";
+        if (aii <= 0.) {
+            qDebug()<<" calcul_spline_variance : Oups aii <= 0";
+            varG[i] = 0.;
+
+        } else {
+            varG[i] = aii  / mModel->mEvents.at(i)->mW;
         }
-        varG[i] = aii  / mModel->mEvents.at(i)->mW;
+
     }
 
     return varG;

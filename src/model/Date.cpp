@@ -1217,8 +1217,11 @@ const QMap<double, double> Date::getFormatedCalibToShow() const
             maxIdx--;
         }
 
-        tminCal = mTminRefCurve + minIdx * mCalibration->mStep;
-        tmaxCal = mTminRefCurve + maxIdx * mCalibration->mStep;
+       // tminCal = mTminRefCurve + minIdx * mCalibration->mStep;
+       // tmaxCal = mTminRefCurve + maxIdx * mCalibration->mStep;
+
+        tminCal = mCalibration->mTmin + minIdx * mCalibration->mStep;
+        tmaxCal = mCalibration->mTmin + maxIdx * mCalibration->mStep;
 
         curve = mCalibration->mCurve.mid(minIdx, (maxIdx - minIdx) + 1);
         curve = equal_areas(curve, mCalibration->mStep, 1.);

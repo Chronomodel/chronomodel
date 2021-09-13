@@ -1715,52 +1715,10 @@ void ResultsView::createByPhasesGraphs()
         }
     }
 }
-/*
-void ResultsView::createByTempoGraphs()
-{
-    Q_ASSERT(mModel);
 
-    // ----------------------------------------------------------------------
-    //  Disconnect and delete existing graphs
-    // ----------------------------------------------------------------------
-    deleteAllGraphsInList(mByPhasesGraphs);
-
-    // ----------------------------------------------------------------------
-    // Show all, unless at least one is selected
-    // ----------------------------------------------------------------------
-    const bool showAllPhases = ! mModel->hasSelectedPhases();
-
-    // ----------------------------------------------------------------------
-    //  Iterate through all, and create corresponding graphs
-    // ----------------------------------------------------------------------
-    QWidget* tempoWidget = mPhasesScrollArea->widget();
-    int graphIndex = 0;
-
-    for (auto& phase : mModel->mPhases) {
-        if (phase->mIsSelected || showAllPhases) {
-            if (graphIndexIsInCurrentPage(graphIndex)) {
-                GraphViewTempo* graph = new GraphViewTempo(tempoWidget);
-                graph->setSettings(mModel->mSettings);
-                graph->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
-                graph->setPhase(phase);
-                graph->setGraphsFont(mFontBut->font());
-                graph->setGraphsThickness(mThicknessCombo->currentIndex());
-                graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
-                graph->setMarginLeft(mMarginLeft);
-                graph->setMarginRight(mMarginRight);
-
-                mByPhasesGraphs.append(graph);
-                connect(graph, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
-            }
-            ++graphIndex;
-        }
-    }
-}
-*/
 void ResultsView::createByCurveGraph()
 {
-   // Q_ASSERT(isCurve());
-    if (!isCurve())
+   if (!isCurve())
         return;
 
     ModelCurve* model = modelCurve();
@@ -1783,18 +1741,16 @@ void ResultsView::createByCurveGraph()
         graphAlpha->setMarginRight(mMarginRight);
         graphAlpha->setTitle(tr("Lambda Spline"));
         graphAlpha->setModel(model);
-        
 
         QString resultsText = ModelUtilities::curveResultsText(model);
         QString resultsHTML = ModelUtilities::curveResultsHTML(model);
         graphAlpha->setNumericalResults(resultsHTML, resultsText);
 
         mByCurveGraphs.append(graphAlpha);
-        //connect(graphAlpha, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
+
         connect(graphAlpha, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
 
     } else  {
-        //bool hasY = (model->mCurveSettings.mProcessType != CurveSettings::eProcessTypeUnivarie);
         const bool hasY = (model->mCurveSettings.mProcessType != CurveSettings::eProcessTypeNone && model->mCurveSettings.mProcessType != CurveSettings::eProcessTypeUnivarie) ;
         const bool hasZ = (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
                      model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D);
@@ -1947,8 +1903,10 @@ void ResultsView::createByCurveGraph()
                  case CurveSettings::eVariableTypeInclination :
                       if (mMainVariable == GraphViewResults::eGP) {
                          graphX->setTitle(tr("Speed Inclination"));
+
                       } else if (mMainVariable == GraphViewResults::eGS) {
-                          graphX->setTitle(tr("Acceleration Inclination"));
+                          graphX->setTitle(tr("Inclination Acceleration"));
+
                        } else {
                           graphX->setTitle(tr("Inclination"));
                       }
@@ -1957,8 +1915,10 @@ void ResultsView::createByCurveGraph()
                  case CurveSettings::eVariableTypeDeclination :
                        if (mMainVariable == GraphViewResults::eGP) {
                           graphX->setTitle(tr("Speed Declination"));
+
                        } else if (mMainVariable == GraphViewResults::eGS) {
-                           graphX->setTitle(tr("Acceleration Declination"));
+                           graphX->setTitle(tr("Declination Acceleration"));
+
                         } else {
                            graphX->setTitle(tr("Declination"));
                        }
@@ -1966,9 +1926,11 @@ void ResultsView::createByCurveGraph()
 
                  case CurveSettings::eVariableTypeField:
                       if (mMainVariable == GraphViewResults::eGP) {
-                         graphX->setTitle(tr("Speed Field"));
+                         graphX->setTitle(tr("Field Speed"));
+
                       } else if (mMainVariable == GraphViewResults::eGS) {
-                          graphX->setTitle(tr("Acceleration Field"));
+                          graphX->setTitle(tr("Field Acceleration"));
+
                        } else {
                           graphX->setTitle(tr("Field"));
                       }
@@ -1976,9 +1938,11 @@ void ResultsView::createByCurveGraph()
 
                  case CurveSettings::eVariableTypeDepth:
                       if (mMainVariable == GraphViewResults::eGP) {
-                         graphX->setTitle(tr("Speed Depth"));
+                         graphX->setTitle(tr("Depth Speed"));
+
                       } else if (mMainVariable == GraphViewResults::eGS) {
-                          graphX->setTitle(tr("Acceleration Depth"));
+                          graphX->setTitle(tr("Depth Acceleration"));
+
                        } else {
                           graphX->setTitle(tr("Depth"));
                       }
@@ -1987,8 +1951,10 @@ void ResultsView::createByCurveGraph()
                  case CurveSettings::eVariableTypeOther:
                        if (mMainVariable == GraphViewResults::eGP) {
                           graphX->setTitle(tr("Speed"));
+
                        } else if (mMainVariable == GraphViewResults::eGS) {
                            graphX->setTitle(tr("Acceleration"));
+
                         } else {
                            graphX->setTitle(tr("Measure"));
                        }
@@ -1998,10 +1964,10 @@ void ResultsView::createByCurveGraph()
         } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical ||
                    model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector) {
             if (mMainVariable == GraphViewResults::eGP) {
-               graphX->setTitle(tr("Speed X"));
+               graphX->setTitle(tr("X Speed"));
 
             } else if (mMainVariable == GraphViewResults::eGS) {
-                graphX->setTitle(tr("Acceleration X"));
+                graphX->setTitle(tr("X Acceleration"));
 
              } else {
                 graphX->setTitle(tr("Inclination"));
@@ -2009,10 +1975,10 @@ void ResultsView::createByCurveGraph()
 
         } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D  || model->mCurveSettings.mProcessType == CurveSettings::eProcessType2D) {
             if (mMainVariable == GraphViewResults::eGP) {
-               graphX->setTitle(tr("Speed X"));
+               graphX->setTitle(tr("X Speed"));
 
             } else if (mMainVariable == GraphViewResults::eGS) {
-                graphX->setTitle(tr("Acceleration X"));
+                graphX->setTitle(tr("X Acceleration"));
 
              } else {
                 graphX->setTitle(tr("X"));
@@ -2025,10 +1991,8 @@ void ResultsView::createByCurveGraph()
         graphX->setEventsPoints(eventsPts);
         graphX->setDataPoints(dataPts);
 
-
         mByCurveGraphs.append(graphX);
-        
-        //connect(graphX, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
+
         connect(graphX, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
 
         
@@ -2046,9 +2010,11 @@ void ResultsView::createByCurveGraph()
                                model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector) {
 
                 if (mMainVariable == GraphViewResults::eGP) {
-                    graphY->setTitle(tr("Speed Y"));
+                    graphY->setTitle(tr("Y Speed"));
+
                 } else if (mMainVariable == GraphViewResults::eGS) {
-                    graphY->setTitle(tr("Acceleration Y"));
+                    graphY->setTitle(tr("Y Acceleration"));
+
                 } else {
                     graphY->setTitle(tr("Declination"));
                 }
@@ -2056,9 +2022,9 @@ void ResultsView::createByCurveGraph()
                        model->mCurveSettings.mProcessType == CurveSettings::eProcessType2D) {
 
                 if (mMainVariable == GraphViewResults::eGP) {
-                    graphY->setTitle(tr("Speed Y"));
+                    graphY->setTitle(tr("Y Speed"));
                 } else if (mMainVariable == GraphViewResults::eGS) {
-                    graphY->setTitle(tr("Acceleration Y"));
+                    graphY->setTitle(tr("Y Acceleration"));
                 } else {
                     graphY->setTitle(tr("Y"));
                 }
@@ -2101,8 +2067,7 @@ void ResultsView::createByCurveGraph()
             graphY->setEventsPoints(eventsPts);
             graphY->setDataPoints(dataPts);
             mByCurveGraphs.append(graphY);
-            
-            //connect(graphY, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
+
             connect(graphY, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
         }
         
@@ -2118,10 +2083,10 @@ void ResultsView::createByCurveGraph()
 
             if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ) {
                 if (mMainVariable == GraphViewResults::eGP) {
-                    graphZ->setTitle(tr("Speed Z"));
+                    graphZ->setTitle(tr("Z Speed"));
 
                 } else if (mMainVariable == GraphViewResults::eGS) {
-                    graphZ->setTitle(tr("Acceleration Z"));
+                    graphZ->setTitle(tr("Z Acceleration"));
 
                 } else {
                     graphZ->setTitle(tr("Field"));
@@ -2130,10 +2095,10 @@ void ResultsView::createByCurveGraph()
             } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D ) {
 
                 if (mMainVariable == GraphViewResults::eGP) {
-                    graphZ->setTitle(tr("Speed Z"));
+                    graphZ->setTitle(tr("Z Speed"));
 
                 } else if (mMainVariable == GraphViewResults::eGS) {
-                    graphZ->setTitle(tr("Acceleration Z"));
+                    graphZ->setTitle(tr("Z Acceleration"));
 
                 } else {
                     graphZ->setTitle(tr("Z"));
@@ -2170,8 +2135,7 @@ void ResultsView::createByCurveGraph()
             graphZ->setEventsPoints(eventsPts);
             graphZ->setDataPoints(dataPts);
             mByCurveGraphs.append(graphZ);
-            
-            //connect(graphZ, &GraphViewResults::selected, this, &ResultsView::togglePageSave); //updateOptionsWidget
+
             connect(graphZ, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
         }
     }
@@ -2180,7 +2144,6 @@ void ResultsView::createByCurveGraph()
 void ResultsView::deleteAllGraphsInList(QList<GraphViewResults*>& list)
 {
     for (auto&& graph : list) {
-        //disconnect(graph, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
         disconnect(graph, nullptr, nullptr, nullptr); //Disconnect everything connected to
         delete graph;
     }
