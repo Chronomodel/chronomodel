@@ -1003,7 +1003,7 @@ void MultiCalibrationView::showStat()
 
                    Date d (jdate);
 
-                   resultsStr += " <br> <strong>"+ d.mName + "</strong> (" + d.mPlugin->getName() + ")" +"<br> <i>" + d.getDesc() + "</i><br> ";
+                   resultsStr += "<strong>"+ d.mName + "</strong> (" + d.mPlugin->getName() + ")" +"<br> <i>" + d.getDesc() + "</i><br> ";
 
                  if (d.mIsValid && !d.mCalibration->mCurve.isEmpty()) {
 
@@ -1022,16 +1022,12 @@ void MultiCalibrationView::showStat()
 
                            DensityAnalysis results;
                            results.funcAnalysis = analyseFunction(subData);
-                          // results.xmin = map_min_value(subData);
-                           //results.xmax = map_max_value(subData);
 
                            if (!subData.isEmpty()) {
-                               QVector<double> subRepart = calculRepartition(subData);
 
-                               results.traceAnalysis.quartiles = quartilesForRepartition(subRepart, subData.firstKey(), mSettings.mStep);
-                               resultsStr += densityAnalysisToString(results);
+                               resultsStr += "<br>" + FunctionStatToString(results.funcAnalysis);
 
-                                // hpd results
+                               // hpd results
 
                                QMap<type_data, type_data> hpd (create_HPD(subData, mThreshold));
 
