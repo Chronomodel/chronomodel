@@ -2,10 +2,10 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "ChronoModel"
-#define MyAppVersion "3.0_alpha"
+#define MyAppVersion "3.1.3"
 #define MyAppPublisher "CNRS"
 #define MyAppURL "http://www.chronomodel.com"
-#define MyAppExeName "Chronomodel.exe"
+#define MyAppExeName "chronomodel.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -45,7 +45,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
                                                                               
 [Files]
-Source: "..\..\build\release\Chronomodel.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\build\release\chronomodel.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "additionnal_files\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\Calib\*"; DestDir: "{userappdata}\CNRS\ChronoModel\Calib\"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
