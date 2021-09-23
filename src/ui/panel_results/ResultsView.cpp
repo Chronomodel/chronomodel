@@ -445,7 +445,7 @@ mMaximunNumberOfVisibleGraph(0)
     mMajorScaleEdit->setText(QString::number(mMajorScale));
     mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves, upper than 1"));
 
-    mMinorScaleLab = new Label(tr("Minor Interval Count"), mSpanGroup);
+    mMinorScaleLab = new QLabel(tr("Minor Interval Count"), mSpanGroup);
     mMinorScaleLab->setFixedHeight(h);
     mMinorScaleLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 

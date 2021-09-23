@@ -361,7 +361,7 @@ private:
     LineEdit* mMajorScaleEdit;
 
     // On the X Axis scale : choose the number of subdivisions between 2 displyed values
-    Label* mMinorScaleLab;
+    QLabel* mMinorScaleLab;
     LineEdit* mMinorScaleEdit;
 
     // ------------------------------------
