@@ -550,9 +550,9 @@ void MainWindow::openProject()
         if (mProject->load(path)) {
             activateInterface(true);
             updateWindowTitle();
-        // Create mEventsScene and mPhasesScenes
-        if ( !mProject->mModel->mChains.isEmpty())
-                mcmcFinished(mProject->mModel); //do initDensities()
+            // Create mEventsScene and mPhasesScenes
+            if ( !mProject->mModel->mChains.isEmpty())
+                    mcmcFinished(mProject->mModel); //do initDensities()
 
             mProjectView->setProject(mProject);
 
@@ -1120,7 +1120,6 @@ std::cout<<path.toStdString();
 
     if (mProject!=nullptr && mProject->mModel!=nullptr && (! mProject->mModel->mChains.isEmpty()) ) {
         mProject->mModel->updateDesignFromJson();
-   //     mProject->mModel->updateDensities(1024, 1.06, 95.0);  //todo ici à remettre en place
         mProjectView->showResults();
    }
 }

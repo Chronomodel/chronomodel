@@ -360,28 +360,19 @@ void ModelView::setProject(Project* project)
 
     showCalibration(false);
 
-   // QJsonObject state = mProject->state();
     const ProjectSettings settings = ProjectSettings::fromJson(mProject->mState[STATE_SETTINGS].toObject());
 
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
 
-    //adaptStudyPeriodButton(settings.mTmin, settings.mTmax);
-/*
-    mProject->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
-    mProject->mState[STATE_SETTINGS_TMAX] = settings.mTmax;
-    mProject->mState[STATE_SETTINGS_STEP] = settings.mStep;
-
-    mProject->mState[STATE_SETTINGS_STEP_FORCED] = settings.mStepForced;
-*/
     setSettingsValid(settings.mTmin < settings.mTmax);
 
     //Unselect all Item in all scene
     mProject->unselectedAllInState();
 
     mEventsScene->createSceneFromState();
-    //mEventsScene->updateSceneFromState();
     mPhasesScene->createSceneFromState();
+    applyAppSettings();
 }
 
 void ModelView::connectScenes()
@@ -568,15 +559,7 @@ void ModelView::updateProject()
     //ButCurve->setToggled(mProject->isCurve());
     adaptStudyPeriodButton(settings.mTmin, settings.mTmax);
     emit updateCurveButton();
-   // const CurveSettings cs = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
-   // mButCurve->setText(tr("Functional Link : ") + cs.processText());
-/*
-    mProject->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
-    mProject->mState[STATE_SETTINGS_TMAX] = settings.mTmax;
-    mProject->mState[STATE_SETTINGS_STEP] = settings.mStep;
 
-    mProject->mState[STATE_SETTINGS_STEP_FORCED] = settings.mStepForced;
-*/
     setSettingsValid(settings.mTmin < settings.mTmax);
  //   qDebug() <<"ModelView::updateProject mEventsScene->updateSceneFromState();";
     mEventsScene->updateSceneFromState();
@@ -601,6 +584,7 @@ void ModelView::updateProject()
         }
     }
     */
+    updateLayout();
 }
 
 bool ModelView::findCalibrateMissing()
