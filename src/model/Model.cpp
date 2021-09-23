@@ -99,7 +99,7 @@ void Model::clear()
     if (!mPhases.isEmpty()) {
         for (Phase*& ph: mPhases) {
             if (ph) {
-                ph->~Phase();
+                delete ph;
                 ph = nullptr;
             }
         }
@@ -2635,14 +2635,17 @@ void Model:: generateActivity(size_t gridLenth, double h)
     /// We want an interval bigger than the maximun finded value, we need a point on tmin, tmax and tmax+deltat
 
     double tmin, tmax;
+    QVector<int> Nij ;
+    Nij.reserve(gridLenth);
+    QVector<double> scenario;
 
     for (auto&& phase : mPhases) {
         // create Empty containers
-        std::vector<std::vector<int>> Ni (gridLenth);
+        QVector<QVector<int>> Ni (gridLenth);
 
-         ///# 1 - Generate Event scenario
-         // We suppose, it is the same iteration number for all chains
-        std::vector<QVector<double>> listTrace;
+        ///# 1 - Generate Event scenario
+        // We suppose, it is the same iteration number for all chains
+        QVector<QVector<double>> listTrace;
         for (auto& ev : phase->mEvents)
             listTrace.push_back(ev->mTheta.fullRunRawTrace(mChains));
 
@@ -2692,7 +2695,9 @@ void Model:: generateActivity(size_t gridLenth, double h)
          double h_2 = h / 2.;
 
         /// Loop
-        std::vector<double> scenario;
+        //std::vector<double> scenario;
+       // std::vector<int> Nij ;
+   try{
         for (int i = 0; i<totalIter; ++i) {
 
             /// Create one scenario per iteration
@@ -2701,13 +2706,14 @@ void Model:: generateActivity(size_t gridLenth, double h)
                 scenario.push_back(lt.at(i));
 
             /// Insert the scenario dates in the activity grid
-            std::vector<int> Nij (gridLenth);
+            //std::vector<int> Nij ;
+            Nij.resize(gridLenth);
 
             int idxGridMin, idxGridMax;
 
             for (auto& tScenario : scenario) {
-                idxGridMin = std::max ((size_t)0, (size_t) ceil((tScenario - h_2 - tmin) / delta_t));
-                idxGridMax = std::min (gridLenth-1, (size_t) floor((tScenario + h_2 - tmin) / delta_t));
+                idxGridMin = std::max ((int)0, (int) ceil((tScenario - h_2 - tmin) / delta_t));
+                idxGridMax = std::min ((int)gridLenth-1, (int) floor((tScenario + h_2 - tmin) / delta_t));
 
                 for (auto&& nij = Nij.begin() + idxGridMin; nij <= Nij.begin() + idxGridMax; ++nij) {
                     ++*nij ;
@@ -2715,16 +2721,21 @@ void Model:: generateActivity(size_t gridLenth, double h)
 
             }
 
-            std::vector<int>::iterator itNij (Nij.begin());
+            QVector<int>::iterator itNij (Nij.begin());
             for (auto&& n : Ni) {
                 n.push_back(*itNij);
                 ++itNij;
             }
-
+            Nij.clear();
         }
         /// Loop End on totalIter
+} catch (std::exception& e) {
+        qWarning()<< "Model::generateActivity exception caught: " << e.what() << '\n';
 
+    } catch(...) {
+        qWarning() << "Model::generateActivity Caught Exception!\n";
 
+    }
     ///# Calculation of the mean and variance
         QVector<double> inf;
         QVector<double> sup;
@@ -2780,7 +2791,7 @@ void Model:: generateActivity(size_t gridLenth, double h)
 
         const double M_m = tmax - tmin;
         phase->mActivityMeanUnif = n / M_m;
-        phase->mActivityStdUnif = 1.96 * sqrt(phase->mActivityMeanUnif * ((1./ h) - (1 / M_m)) );
+        phase->mActivityStdUnif = 1.96 * sqrt(phase->mActivityMeanUnif * ((1./ h) - (1. / M_m)) );
 
      } // Loop End on phase
 

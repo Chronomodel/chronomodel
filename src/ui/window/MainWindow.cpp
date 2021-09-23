@@ -1072,11 +1072,11 @@ void MainWindow::readSettings(const QString& defaultFilePath)
         if (AppSettings::mOpenLastProjectAtLaunch) {
         const QString dir = AppSettings::mLastDir;
         const QString filename = AppSettings::mLastFile;
-        if (dir != "" & filename !="")
+        if ((dir != "") & (filename !=""))
             path = dir + "/" + filename;
 
     }
-std::cout<<path.toCFString();
+std::cout<<path.toStdString();
 
     if (path != "") {
        /* const QString dir = AppSettings::mLastDir;
