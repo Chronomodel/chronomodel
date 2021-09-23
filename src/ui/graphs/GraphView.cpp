@@ -1704,22 +1704,25 @@ void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale 
         //  Create data in row
         type_data x;
         int nbData = (xMax - xMin)/ step;
+        QLocale csvLocal (locale);
+        csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
         for (int i = 0; i <= nbData; ++i) {
             x = (type_data)(i)*step + xMin;
             list.clear();
 
-            list << locale.toString(x);
+            list << csvLocal.toString(x);
             // Il doit y avoir au moins trois courbes G, GSup, Ginf et nous exportons G et ErrG
             const type_data xi = interpolateValueInQMap(x, mCurves.at(0).mData);
             const type_data err_xi = interpolateValueInQMap(x, mCurves.at(1).mData);
-            list<<locale.toString(xi, 'g', 15);
-            list<<locale.toString((err_xi-xi)/1.96, 'g', 15);
+            list<<csvLocal.toString(xi, 'g', 15);
+            list<<csvLocal.toString((err_xi-xi)/1.96, 'g', 15);
 
       //      }
             rows<<list;
         }
 
         // 4 - Save Qlist
+
         QTextStream output(&file);
         const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
         const QString projectName = tr("Project filename : %1").arg(MainWindow::getInstance()->getNameProject());
