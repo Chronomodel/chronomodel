@@ -1919,12 +1919,16 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
             switch (event.value(STATE_EVENT_METHOD).toInt()) {
             case -1 :
                 event[STATE_EVENT_SAMPLER] = MHVariable::eFixe;
+                break;
             case 0 :
                 event[STATE_EVENT_SAMPLER] = MHVariable::eDoubleExp;
+                break;
             case 1 :
                 event[STATE_EVENT_SAMPLER] = MHVariable::eBoxMuller;
+                break;
             case 2:
                 event[STATE_EVENT_SAMPLER] = MHVariable::eMHAdaptGauss;
+                break;
 
             }
             event.remove(STATE_EVENT_METHOD);
@@ -1969,10 +1973,13 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
                 switch (date.value(STATE_DATE_METHOD).toInt()) {
                 case 0 :
                     date[STATE_DATE_SAMPLER] = MHVariable::eMHSymetric;
+                    break;
                 case 1 :
                     date[STATE_DATE_SAMPLER] = MHVariable::eInversion;
+                    break;
                 case 2:
                     date[STATE_DATE_SAMPLER] = MHVariable::eMHSymGaussAdapt;
+                    break;
 
                 }
                 date.remove(STATE_DATE_METHOD);
@@ -2003,10 +2010,13 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
                     switch (subdate.value(STATE_DATE_METHOD).toInt()) {
                     case 0 :
                         subdate[STATE_DATE_SAMPLER] = MHVariable::eMHSymetric;
+                        break;
                     case 1 :
                         subdate[STATE_DATE_SAMPLER] = MHVariable::eInversion;
+                        break;
                     case 2:
                         subdate[STATE_DATE_SAMPLER] = MHVariable::eMHSymGaussAdapt;
+                        break;
                     }
 
                     subdate.remove(STATE_DATE_METHOD);
