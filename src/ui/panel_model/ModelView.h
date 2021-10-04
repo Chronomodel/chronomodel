@@ -94,7 +94,7 @@ public:
 public slots:
     void updateProject();
     void modifyPeriod();
-    void updateCurveButton() const;
+    void updateCurveButton();
 
     void updateMultiCalibration();
 

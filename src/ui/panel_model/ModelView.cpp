@@ -417,7 +417,6 @@ void ModelView::connectScenes()
     connect(mButMultiCalib,   static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ModelView::showMultiCalib);
     mMultiCalibrationView->setProject(mProject);
     connect(mProject, &Project::projectStateChanged, this, &ModelView::updateMultiCalibration);
-   // connect(mProject, &Project::projectStructureChanged, mEventPropertiesView, &EventPropertiesView::updateEvent);
 
     connect(mButCurve, &Button::toggled, MainWindow::getInstance(), &MainWindow::toggleCurve);
 }
@@ -558,7 +557,7 @@ void ModelView::updateProject()
 
     //ButCurve->setToggled(mProject->isCurve());
     adaptStudyPeriodButton(settings.mTmin, settings.mTmax);
-    emit updateCurveButton();
+    updateCurveButton();
 
     setSettingsValid(settings.mTmin < settings.mTmax);
  //   qDebug() <<"ModelView::updateProject mEventsScene->updateSceneFromState();";
@@ -734,7 +733,7 @@ void ModelView::modifyPeriod()
 
 }
 
-void ModelView::updateCurveButton() const
+void ModelView::updateCurveButton()
 {
     QJsonObject state = mProject->state();
 
@@ -1253,16 +1252,16 @@ void ModelView::updateLayout()
     // ----------
 
     const int radarW = 4 * AppSettings::widthUnit();
-    //const int radarH = 4 * AppSettings::heigthUnit();
-    //const int searchH = round(1.3 * fm.height());
+    const int radarH = 4 * AppSettings::heigthUnit();
+    const int searchH = round(1.3 * fm.height());
     if (mButProperties->isChecked() && mEventPropertiesView->isCalibChecked())
         mEventsView ->setGeometry(0, 0, 0, 0);
     else
         mEventsView ->setGeometry(mLeftRect.adjusted(mButtonWidth -1, -1, +1, +1));
-/*
+
     mEventsSearchEdit->setGeometry(mEventsView->x() + 5, 5, radarW, searchH);
     mEventsOverview->setGeometry(mEventsView->x() + 5, mEventsSearchEdit->y() + mEventsSearchEdit->height(), radarW, radarH);
-*/
+
     mButNewEvent      ->setGeometry(0, 0, mButtonWidth, mButtonHeigth);
     mButNewEventKnown ->setGeometry(0, mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButDeleteEvent   ->setGeometry(0, 2*mButtonHeigth, mButtonWidth, mButtonHeigth);
@@ -1292,30 +1291,40 @@ void ModelView::updateLayout()
     if (mButProperties->isChecked() || mButMultiCalib->isChecked()
             || mButCurve->isChecked()) {
 
-        mPhasesView->resize(0, 0);
-        mPhasesGlobalView->hide();//resize(0, 0);
+        mPhasesView->hide();
+        mPhasesGlobalView->hide();
 
-        mCurveSettingsView->resize(0, 0);
-
-        mButNewPhase      ->resize(0, 0);
-        mButDeletePhase   ->resize(0, 0);
-        mButExportPhases  ->resize(0, 0);
-        mButPhasesGlobaliew->resize(0, 0);
-        mButPhasesGrid    ->resize(0, 0);
-        mPhasesGlobalZoom ->resize(0, 0);
+        mButNewPhase      ->hide();
+        mButDeletePhase   ->hide();
+        mButExportPhases  ->hide();
+        mButPhasesGlobaliew->hide();
+        mButPhasesGrid    ->hide();
+        mPhasesGlobalZoom ->hide();
 
      }  else {
+        mCurveSettingsView->hide();
 
+        mPhasesView->show();
         mPhasesView->setGeometry(mRightRect.adjusted(-1, -1, -mButtonWidth, 1));
-        if (mButPhasesGlobaliew->isChecked())
-            mPhasesGlobalView->show();//setGeometry(5, 5, radarW, radarH);
-
+        if (mButPhasesGlobaliew->isChecked()) {
+            mPhasesGlobalView->show();
+            mPhasesGlobalView->setGeometry(5, 5, radarW, radarH);
+        }
+        mButNewPhase->show();
         mButNewPhase       ->setGeometry(mPhasesView->width() -2, 0              , mButtonWidth, mButtonHeigth);
+
+        mButDeletePhase ->show();
         mButDeletePhase    ->setGeometry(mPhasesView->width() -2, mButtonHeigth  , mButtonWidth, mButtonHeigth);
+
+        mButExportPhases->show();
         mButExportPhases   ->setGeometry(mPhasesView->width() -2, 2*mButtonHeigth, mButtonWidth, mButtonHeigth);
+
+        mButPhasesGlobaliew->show();
         mButPhasesGlobaliew ->setGeometry(mPhasesView->width() -2, 3*mButtonHeigth, mButtonWidth, mButtonHeigth);
+
+        mButPhasesGrid->show();
         mButPhasesGrid     ->setGeometry(mPhasesView->width() -2, 4*mButtonHeigth, mButtonWidth, mButtonHeigth);
-        mPhasesGlobalZoom->show();
+        mPhasesGlobalZoom  ->show();
         mPhasesGlobalZoom  ->setGeometry(mPhasesView->width() -2, 5*mButtonHeigth, mButtonWidth, mRightRect.height() - 5*mButtonHeigth);
      }
     update();
@@ -1477,15 +1486,6 @@ void ModelView::showCurveSettings(bool show)
 {
     mCurveSettingsVisible = show;
 
-    //mPhasesView->setVisible(!show);
-   /* mPhasesGlobalView->setVisible(!show && mButPhasesGlobaliew->isChecked());
-    mPhasesGlobalZoom->setVisible(!show);
-    mButNewPhase->setVisible(!show);
-    mButDeletePhase->setVisible(!show);
-    mButExportPhases->setVisible(!show);
-    mButPhasesGlobaliew->setVisible(!show);
-    mButPhasesGrid->setVisible(!show);*/
-
     if (show) {
         if (mButProperties->isChecked()) {
             // hide mEventPropertiesView
@@ -1551,14 +1551,6 @@ void ModelView::showCurveSettings(bool show)
 
     } else {
 
-     //   mPhasesView->show();
-    /*    mPhasesGlobalView->setVisible(!show && mButPhasesGlobaliew->isChecked());
-        mPhasesGlobalZoom->show();
-        mButNewPhase->show();
-        mButDeletePhase->show();
-        mButExportPhases->show();
-        mButPhasesGlobaliew->show();
-        mButPhasesGrid->show();*/
 
         mAnimationHide->setTargetObject(mCurveSettingsView);
 
