@@ -135,12 +135,6 @@ void GraphViewResults::updateCurvesToShow(bool showAllChains, const QVector<bool
     mShowAllChains = showAllChains;
     mShowChainList = showChainList;
     mShowVariableList = showVariableList;
-    /*
-    mShowCredibility = graphList;
-    mShowCalib = showCalib;
-    mShowWiggle = showWiggle;
-    */
-   // update();
 }
 
 

@@ -54,12 +54,6 @@ GraphViewCurve::GraphViewCurve(QWidget *parent):GraphViewResults(parent)
 {
     setMainColor(Painting::borderDark);
     mGraph->setBackgroundColor(QColor(210, 210, 210));
-  /*  mShowG = true;
-    mShowGError = true;
-    mShowGP = false;
-    mShowEventsPoints = true;
-    mShowDataPoints = true;
-    mShowGS = false;*/
 }
 
 GraphViewCurve::~GraphViewCurve()

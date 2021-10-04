@@ -1759,9 +1759,8 @@ void ResultsView::createByCurveGraph()
       //  const double thresh = 68.4; //80;
         QVector<RefPoint> eventsPts;
         QVector<RefPoint> dataPts;
-
-
-        for (auto& event : modelCurve()->mEvents) {
+        if (mMainVariable == GraphViewResults::eG) {
+            for (auto& event : modelCurve()->mEvents) {
             RefPoint evPts;
             RefPoint dPts;
 
@@ -1848,7 +1847,7 @@ void ResultsView::createByCurveGraph()
 
                     */
 
-                    dPts.Xmean = DateUtils::convertToAppSettingsFormat(calibStat.mean);
+                    dPts.Xmean = calibStat.mean;
                     dPts.Xerr = calibStat.std;
                     dPts.Ymean = evPts.Ymean;
                     dPts.Yerr = evPts.Yerr;
@@ -1883,6 +1882,8 @@ void ResultsView::createByCurveGraph()
             eventsPts.append(evPts);
 
         }
+
+         }
 
         GraphViewCurve* graphX = new GraphViewCurve(widget);
         graphX->setSettings(mModel->mSettings);
@@ -1988,8 +1989,11 @@ void ResultsView::createByCurveGraph()
         graphX->setComposanteG(modelCurve()->mPosteriorMeanG.gx);
         graphX->setComposanteGChains(modelCurve()->getChainsMeanGComposanteX());
         graphX->setEvents(modelCurve()->mEvents);
-        graphX->setEventsPoints(eventsPts);
-        graphX->setDataPoints(dataPts);
+
+        if (mMainVariable == GraphViewResults::eG) {
+            graphX->setEventsPoints(eventsPts);
+            graphX->setDataPoints(dataPts);
+         }
 
         mByCurveGraphs.append(graphX);
 
