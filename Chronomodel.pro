@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------
 
-#Copyright or © or Copr. CNRS	2014 - 2021
+#Copyright or © or Copr. CNRS	2014 - 2022
 
 #Authors :
 #	Philippe LANOS
@@ -38,7 +38,7 @@
 # --------------------------------------------------------------------- */
 
 # DEFINES += VERSION_NUMBER=\\\"2.0.10\\\"
-VERSION = 3.1.3
+VERSION = 3.1.4
  #VERSION_NUMBER # must match value in src/main.cpp and mainControler and Chronomodel.rc (for windows)
 #PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_

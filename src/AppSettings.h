@@ -60,7 +60,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define APP_SETTINGS_DEFAULT_IMAGE_QUALITY 100
 #define APP_SETTINGS_DEFAULT_FORMATDATE DateUtils::eBCAD
 #define APP_SETTINGS_DEFAULT_PRECISION 0
-#define APP_SETTINGS_DEFAULT_SHEET 10
+#define APP_SETTINGS_DEFAULT_SHEET 50
 
 #define APP_SETTINGS_STR_LANGUAGE "language"
 #define APP_SETTINGS_STR_COUNTRY "country"

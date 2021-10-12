@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 
     a.setApplicationName("ChronoModel");
     a.setApplicationDisplayName("ChronoModel");
-    a.setApplicationVersion("3.1.3");//VERSION_NUMBER);//"2.0.9-alpha");  // must match value in Chronomodel.pro
+    a.setApplicationVersion("3.1.4");//VERSION_NUMBER);//"2.0.9-alpha");  // must match value in Chronomodel.pro
     a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));
