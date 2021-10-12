@@ -588,37 +588,37 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
 
         if (curveModel) {
             if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector) {
-                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
+                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
                 log += line(textGreen(QObject::tr("- Declination : %1").arg(stringForLocal(pEvent->mYDec))));
-                log += line(textGreen(QObject::tr("- Field : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
+                log += line(textGreen(QObject::tr("- Field : %1 ±  %2").arg(stringForLocal(pEvent->mZField), stringForLocal(pEvent->mS_ZField))));
 
             } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessType2D) {
-                log += line(textGreen(QObject::tr("- X : %1 ±  %2").arg(stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
-                log += line(textGreen(QObject::tr("- Y : %1 ±  %2").arg(stringForLocal(pEvent->mYDec), stringForLocal(pEvent->mSDec))));
+                log += line(textGreen(QObject::tr("- X : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Y : %1 ±  %2").arg(stringForLocal(pEvent->mYDec), stringForLocal(pEvent->mS_Y))));
 
             } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D) {
-                log += line(textGreen(QObject::tr("- X : %1 ±  %2").arg(stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
-                log += line(textGreen(QObject::tr("- Y : %1").arg(stringForLocal(pEvent->mYDec))));
-                log += line(textGreen(QObject::tr("- Z : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
+                log += line(textGreen(QObject::tr("- X : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Y : %1 ±  %2")).arg(stringForLocal(pEvent->mYDec), stringForLocal(pEvent->mS_Y)));
+                log += line(textGreen(QObject::tr("- Z : %1 ±  %2").arg(stringForLocal(pEvent->mZField), stringForLocal(pEvent->mS_ZField))));
 
             } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical) {
-                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
+                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
                 log += line(textGreen(QObject::tr("- Declination : %1").arg(stringForLocal(pEvent->mYDec))));
 
             }  else  if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth) {
-                log += line(textGreen(QObject::tr("- Depth : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
+                log += line(textGreen(QObject::tr("- Depth : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
 
             } else if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeField) {
-                log += line(textGreen(QObject::tr("- Field : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
+                log += line(textGreen(QObject::tr("- Field : %1 ±  %2").arg(stringForLocal(pEvent->mZField), stringForLocal(pEvent->mS_ZField))));
 
             } else if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeInclination) {
-                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
+                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
 
             } else if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeDeclination) {
-                log += line(textGreen(QObject::tr("- Declination : %1 ; Inclination %2 ±  %3").arg(stringForLocal(pEvent->mYDec), stringForLocal(pEvent->mYInc), stringForLocal(pEvent->mSInc))));
+                log += line(textGreen(QObject::tr("- Declination : %1 ; Inclination %2 ±  %3").arg(stringForLocal(pEvent->mYDec), stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
 
             } else if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeOther) {
-                log += line(textGreen(QObject::tr("- Measure : %1 ±  %2").arg(stringForLocal(pEvent->mYInt), stringForLocal(pEvent->mSInt))));
+                log += line(textGreen(QObject::tr("- Measure : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
 
             }
 

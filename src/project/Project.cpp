@@ -113,11 +113,13 @@ mNoResults(true)
     mReasonChangeStructure<<"Event constraint deleted"<<"Event constraint created"<<"Event(s) deleted";
     mReasonChangeStructure<<"Event created"<<"Bound created"<<"Event method updated" ;
     mReasonChangeStructure<<"Event(s) restored";
-    mReasonChangeStructure<<"Update selected event method";//<<"Event selected";
+    mReasonChangeStructure<<"Update selected event method";
 
     mReasonChangeStructure<<"Phase created"<<"Phase(s) deleted";
     mReasonChangeStructure<<"Phase updated"<<"Phase constraint created"<<"Phase constraint updated"<<"Phase's events updated";
     mReasonChangeStructure<<"Phase selected";
+
+    mReasonChangeStructure<<"Curve Settings updated";
     mReasonChangeStructure.squeeze();
 
     mReasonChangeDesign<<"Date name updates"<<"Date color updated";
@@ -219,7 +221,7 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
         mStructureIsChanged = false;
         mDesignIsChanged = false;
         mItemsIsMoved = false;
-        //qDebug()<<"Project::pushProjectState "<<reason<<notify<<force;
+        qDebug()<<"Project::pushProjectState "<<reason<<notify;
         if (mReasonChangeStructure.contains(reason))
             mStructureIsChanged = true;
 
@@ -988,19 +990,19 @@ bool Project::insert(const QString& path)
            } else {
                for (auto&& eventJSON : events) {
                    QJsonObject event = eventJSON.toObject();
-                   minXEvent =std::min(minXEvent, event[STATE_ITEM_X].toDouble());
-                   maxXEvent =std::max(maxXEvent, event[STATE_ITEM_X].toDouble());
+                   minXEvent =std::min(minXEvent, event.value(STATE_ITEM_X).toDouble());
+                   maxXEvent =std::max(maxXEvent, event.value(STATE_ITEM_X).toDouble());
 
-                   minYEvent =std::min(minYEvent, event[STATE_ITEM_Y].toDouble());
-                   maxYEvent =std::max(maxYEvent, event[STATE_ITEM_Y].toDouble());
-                   maxIDEvent =std::max(maxIDEvent, event[STATE_ID].toInt());
+                   minYEvent =std::min(minYEvent, event.value(STATE_ITEM_Y).toDouble());
+                   maxYEvent =std::max(maxYEvent, event.value(STATE_ITEM_Y).toDouble());
+                   maxIDEvent =std::max(maxIDEvent, event.value(STATE_ID).toInt());
                }
                maxIDEvent += 1;
 
                const QJsonArray eventConstraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
                for (auto&& eventConsJSON : eventConstraints) {
                    QJsonObject eventCons = eventConsJSON.toObject();
-                   maxIDEventConstraint =std::max(maxIDEventConstraint, eventCons[STATE_ID].toInt());
+                   maxIDEventConstraint =std::max(maxIDEventConstraint, eventCons.value(STATE_ID).toInt());
                }
                maxIDEventConstraint += 1;
             }
@@ -1018,10 +1020,10 @@ bool Project::insert(const QString& path)
            } else {
                for (auto&& eventJSON : eventsNew) {
                    QJsonObject event = eventJSON.toObject();
-                   minXEventNew =std::min(minXEventNew, event[STATE_ITEM_X].toDouble());
+                   minXEventNew =std::min(minXEventNew, event.value(STATE_ITEM_X).toDouble());
 
-                   minYEventNew =std::min(minYEventNew, event[STATE_ITEM_Y].toDouble());
-                   maxYEventNew =std::max(maxYEventNew, event[STATE_ITEM_Y].toDouble());
+                   minYEventNew =std::min(minYEventNew, event.value(STATE_ITEM_Y).toDouble());
+                   maxYEventNew =std::max(maxYEventNew, event.value(STATE_ITEM_Y).toDouble());
                }
           }
 
@@ -1037,10 +1039,10 @@ bool Project::insert(const QString& path)
            } else {
                for (auto&& phaseJSON : phasesNew) {
                    QJsonObject phase = phaseJSON.toObject();
-                   minXPhaseNew =std::min(minXPhaseNew, phase[STATE_ITEM_X].toDouble());
+                   minXPhaseNew =std::min(minXPhaseNew, phase.value(STATE_ITEM_X).toDouble());
 
-                   minYPhaseNew =std::min(minYPhaseNew, phase[STATE_ITEM_Y].toDouble());
-                   maxYPhaseNew =std::max(maxYPhaseNew, phase[STATE_ITEM_Y].toDouble());
+                   minYPhaseNew =std::min(minYPhaseNew, phase.value(STATE_ITEM_Y).toDouble());
+                   maxYPhaseNew =std::max(maxYPhaseNew, phase.value(STATE_ITEM_Y).toDouble());
 
                }
             }
@@ -1051,10 +1053,10 @@ bool Project::insert(const QString& path)
            for (auto&& phaseJSON : newPhases) {
                QJsonObject phase = phaseJSON.toObject();
                // set on the right+ + mItemWidth(150.) in AbstractItem.h
-               phase[STATE_ITEM_X] =  phase[STATE_ITEM_X].toDouble() + maxXPhase - minXPhaseNew + 200;
+               phase[STATE_ITEM_X] =  phase.value(STATE_ITEM_X).toDouble() + maxXPhase - minXPhaseNew + 200;
                // center on Y
-               phase[STATE_ITEM_Y] = phase[STATE_ITEM_Y].toDouble() - (maxYPhaseNew + minYPhaseNew)/2.;
-               phase[STATE_ID] = phase[STATE_ID].toInt() + maxIDPhase;
+               phase[STATE_ITEM_Y] = phase.value(STATE_ITEM_Y).toDouble() - (maxYPhaseNew + minYPhaseNew)/2.;
+               phase[STATE_ID] = phase.value(STATE_ID).toInt() + maxIDPhase;
 
                phaseJSON = phase;
            }
@@ -1064,8 +1066,8 @@ bool Project::insert(const QString& path)
            for (auto&& phaseConsJSON : newPhaseConstraints) {
                QJsonObject phaseCons = phaseConsJSON.toObject();
                phaseCons[STATE_ID] = phaseCons[STATE_ID].toInt() + maxIDPhaseConstraint;
-               phaseCons[STATE_CONSTRAINT_FWD_ID] = phaseCons[STATE_CONSTRAINT_FWD_ID].toInt() + maxIDPhase;
-               phaseCons[STATE_CONSTRAINT_BWD_ID] = phaseCons[STATE_CONSTRAINT_BWD_ID].toInt() + maxIDPhase;
+               phaseCons[STATE_CONSTRAINT_FWD_ID] = phaseCons.value(STATE_CONSTRAINT_FWD_ID).toInt() + maxIDPhase;
+               phaseCons[STATE_CONSTRAINT_BWD_ID] = phaseCons.value(STATE_CONSTRAINT_BWD_ID).toInt() + maxIDPhase;
 
                phaseConsJSON = phaseCons;
            }
@@ -1075,10 +1077,10 @@ bool Project::insert(const QString& path)
            for (auto&& eventJSON : newEvents) {
               QJsonObject event = eventJSON.toObject();
               // set on the right + mItemWidth(150.) in AbstractItem.h
-              event[STATE_ITEM_X] = event[STATE_ITEM_X].toDouble() + maxXEvent - minXEventNew + 200;
+              event[STATE_ITEM_X] = event.value(STATE_ITEM_X).toDouble() + maxXEvent - minXEventNew + 200;
               // center on Y
-              event[STATE_ITEM_Y] = event[STATE_ITEM_Y].toDouble() - (maxYEventNew + minYEventNew)/2. ;
-              event[STATE_ID] = event[STATE_ID].toInt() + maxIDEvent;
+              event[STATE_ITEM_Y] = event.value(STATE_ITEM_Y).toDouble() - (maxYEventNew + minYEventNew)/2. ;
+              event[STATE_ID] = event.value(STATE_ID).toInt() + maxIDEvent;
 
               QList<int> mPhasesIds  = stringListToIntList(event.value(STATE_EVENT_PHASE_IDS).toString(), ",");
               for ( int i = 0; i<mPhasesIds.size(); ++i)
@@ -1093,10 +1095,10 @@ bool Project::insert(const QString& path)
            QJsonArray newEventConstraints = newState.value(STATE_EVENTS_CONSTRAINTS).toArray();
            for (auto&& eventConsJSON : newEventConstraints) {
                QJsonObject eventCons = eventConsJSON.toObject();
-               eventCons[STATE_ID] = eventCons[STATE_ID].toInt() + maxIDEventConstraint;
+               eventCons[STATE_ID] = eventCons.value(STATE_ID).toInt() + maxIDEventConstraint;
 
-               eventCons[STATE_CONSTRAINT_FWD_ID] = eventCons[STATE_CONSTRAINT_FWD_ID].toInt() + maxIDEvent;
-               eventCons[STATE_CONSTRAINT_BWD_ID] = eventCons[STATE_CONSTRAINT_BWD_ID].toInt() + maxIDEvent;
+               eventCons[STATE_CONSTRAINT_FWD_ID] = eventCons.value(STATE_CONSTRAINT_FWD_ID).toInt() + maxIDEvent;
+               eventCons[STATE_CONSTRAINT_BWD_ID] = eventCons.value(STATE_CONSTRAINT_BWD_ID).toInt() + maxIDEvent;
 
               eventConsJSON = eventCons;
            }
@@ -1119,6 +1121,7 @@ bool Project::insert(const QString& path)
            QJsonArray nextEvents = mState.value(STATE_EVENTS).toArray();
            for (auto&& eventJSON : newEvents)
                nextEvents.append(eventJSON.toObject());
+
            stateNext[STATE_EVENTS] = nextEvents;
 
            QJsonArray nextEventConstraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
@@ -1904,10 +1907,27 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
     isCorrected = false;
     QJsonArray events = state.value(STATE_EVENTS).toArray();
     QJsonArray phases = state.value(STATE_PHASES).toArray();
+    QJsonObject curveSetJSon;
+    CurveSettings cs;
+
+    if (state.find("chronocurve") != state.end()) {
+        state.remove("chronocurve");
+    }
+
+    if (state.find(STATE_CURVE) != state.end()) {
+        curveSetJSon = state.value(STATE_CURVE).toObject();
+        cs= CurveSettings::fromJson(curveSetJSon);
+
+    } else {
+        cs = CurveSettings();
+        cs.mProcessType = CurveSettings::eProcessTypeNone;
+    }
+
+
     for (int i = 0; i<events.size(); ++i) {
         QJsonObject event = events.at(i).toObject();
 
-        // Since v3 , 2021-04-30, ,the key "method" disaped and it's change with "sampler" for EVENT and DATA.
+        // Since v3 , 2021-04-30, ,the key "method" disapered and it's change with "sampler" for EVENT and DATA.
         /*
          *    enum Method{
          * eFixe = -1,  //<  use with Type==eKnown
@@ -1933,8 +1953,40 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
             }
             event.remove(STATE_EVENT_METHOD);
         }
-       // event[STATE_EVENT_SAMPLER] = event.value(STATE_EVENT_METHOD)
 
+        // Since v 3.1.4
+        if (event.find("YInc") != event.end()) {
+            event[STATE_EVENT_X_INC_DEPTH] = event.value("YInc").toDouble();
+            event.remove("YInc");
+        }
+        if (event.find("SInc") != event.end()) {
+            event[STATE_EVENT_SX_ALPHA95_SDEPTH] = event.value("SInc").toDouble();
+            event.remove("SInc");
+        }
+        if (event.find("YDec") != event.end()) {
+            event[STATE_EVENT_Y_DEC] = event.value("YDec").toDouble();
+            event[STATE_EVENT_SY] = 0.0;
+            event.remove("YDec");
+        }
+        if (event.find("YInt") != event.end()) {
+            if (cs.mProcessType == CurveSettings::eProcessTypeUnivarie &&
+                       (cs.mVariableType == CurveSettings::eVariableTypeDepth || cs.mVariableType == CurveSettings::eVariableTypeOther ))
+                 event[STATE_EVENT_X_INC_DEPTH] = event.value("YInt").toDouble();
+            else
+                event[STATE_EVENT_Z_F] = event.value("YInt").toDouble();
+
+            event.remove("YInt");
+        }
+        if (event.find("SInt") != event.end()) {
+            if (cs.mProcessType == CurveSettings::eProcessTypeUnivarie &&
+                    (cs.mVariableType == CurveSettings::eVariableTypeDepth || cs.mVariableType == CurveSettings::eVariableTypeOther ))
+                 event[STATE_EVENT_SX_ALPHA95_SDEPTH] = event.value("SInt").toDouble();
+            else
+                event[STATE_EVENT_SZ_SF] = event.value("SInt").toDouble();
+
+            event.remove("SInt");
+
+        }
 
         QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
         for (int j = 0; j < dates.size(); ++j) {
@@ -2029,9 +2081,10 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
 
             dates[j] = date;
             event[STATE_EVENT_DATES] = dates;
-            events[i] = event;
-            state[STATE_EVENTS] = events;
+
         }
+        events[i] = event;
+        state[STATE_EVENTS] = events;
     }
     // conversion since version 1.4 test
     bool phaseConversion = false;
