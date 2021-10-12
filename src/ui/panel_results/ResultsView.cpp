@@ -128,18 +128,21 @@ mMaximunNumberOfVisibleGraph(0)
     mMarker = new Marker(this);
 
     mEventsScrollArea = new QScrollArea(this);
+    mEventsScrollArea->QScrollArea::setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     mEventsScrollArea->setMouseTracking(true);
     QWidget* eventsWidget = new QWidget();
     eventsWidget->setMouseTracking(true);
     mEventsScrollArea->setWidget(eventsWidget);
 
     mPhasesScrollArea = new QScrollArea(this);
+    mPhasesScrollArea->QScrollArea::setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     mPhasesScrollArea->setMouseTracking(true);
     QWidget* phasesWidget = new QWidget();
     phasesWidget->setMouseTracking(true);
     mPhasesScrollArea->setWidget(phasesWidget);
 
     mCurveScrollArea = new QScrollArea(this);
+    mCurveScrollArea->QScrollArea::setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     mCurveScrollArea->setMouseTracking(true);
     QWidget* curveWidget = new QWidget();
     curveWidget->setMouseTracking(true);
@@ -1026,9 +1029,8 @@ void ResultsView::updateMarkerGeometry(const int x)
 
 void ResultsView::updateLayout()
 {    
-    const int leftWidth = width() - mOptionsW - mSbe;
+    const int leftWidth = width() - mOptionsW;// - mSbe;
     const int tabsH = mGraphTypeTabs->tabHeight();
-    const int rulerH = Ruler::sHeight;
 
     int graphWidth = leftWidth;
     if (mStatCheck->isChecked() || mPhasesStatCheck->isChecked() || mCurveStatCheck->isChecked()) {
@@ -1039,14 +1041,15 @@ void ResultsView::updateLayout()
     //  Left layout
     // ----------------------------------------------------------
     mGraphTypeTabs->setGeometry(mMargin, mMargin, leftWidth, tabsH);
-    mRuler->setGeometry(0, mMargin + tabsH, graphWidth, rulerH);
+    mRuler->setGeometry(0, mMargin + tabsH, graphWidth, Ruler::sHeight);
 
-    const int stackH = height() - mMargin - tabsH - rulerH;
-    QRect graphScrollGeometry(0, mMargin + tabsH + rulerH, leftWidth, stackH);
+    const int stackH = height() - mMargin - tabsH - Ruler::sHeight;
+    QRect graphScrollGeometry(0, mMargin + tabsH + Ruler::sHeight, leftWidth, stackH);
 
     mEventsScrollArea->setGeometry(graphScrollGeometry);
     mPhasesScrollArea->setGeometry(graphScrollGeometry);
     mCurveScrollArea->setGeometry(graphScrollGeometry);
+
 
     updateGraphsLayout();
     updateMarkerGeometry(mMarker->pos().x());
@@ -1062,6 +1065,12 @@ void ResultsView::updateLayout()
 
 void ResultsView::updateGraphsLayout()
 {
+
+    // Display the scroll area corresponding to the selected tab
+    mEventsScrollArea->setVisible(mGraphListTab->currentIndex() == 0);
+    mPhasesScrollArea->setVisible(mGraphListTab->currentIndex() == 1);
+    mCurveScrollArea->setVisible(mGraphListTab->currentIndex() == 2);
+
     if (mGraphListTab->currentIndex() == 0) {
         updateGraphsLayout(mEventsScrollArea, mByEventsGraphs);
 
@@ -1072,10 +1081,6 @@ void ResultsView::updateGraphsLayout()
         updateGraphsLayout(mCurveScrollArea, mByCurveGraphs);
     }
 
-    // Display the scroll area corresponding to the selected tab :
-    mEventsScrollArea->setVisible(mGraphListTab->currentIndex() == 0);
-    mPhasesScrollArea->setVisible(mGraphListTab->currentIndex() == 1);
-    mCurveScrollArea->setVisible(mGraphListTab->currentIndex() == 2);
 }
 
 void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewResults*> graphs)
@@ -1092,15 +1097,15 @@ void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewRes
         coefDisplay = 3;
 
     if (widget) {
-        widget->resize(width() - mOptionsW - mSbe, graphs.size() * mGraphHeight * coefDisplay);
+        widget->resize(width() - mOptionsW - 2, graphs.size() * mGraphHeight * coefDisplay);
 
-        //for (int i = 0; i<graphs.size(); ++i) {
         int i = 0;
         for (auto& g : graphs) {
-            g->setGeometry(0, (i++) * mGraphHeight*coefDisplay, width() - mOptionsW - mSbe, mGraphHeight * coefDisplay);
+            g->setGeometry(0, (i++) * mGraphHeight*coefDisplay, widget->width() , mGraphHeight * coefDisplay);
             g->setVisible(true);
             g->update();
         }
+        mRuler->resize(widget->width(), mRuler->height());
     }
 }
 
@@ -1768,31 +1773,31 @@ void ResultsView::createByCurveGraph()
             if (!hasY) {
                 switch (model->mCurveSettings.mVariableType) {
                 case CurveSettings::eVariableTypeInclination :
-                    evPts.Ymean = event-> mYInc;
-                    evPts.Yerr = event->mSInc;
+                    evPts.Ymean = event->mXIncDepth;
+                    evPts.Yerr = event->mS_XA95Depth;
                     break;
                 case CurveSettings::eVariableTypeDeclination :
-                    evPts.Ymean = event-> mYDec;
-                    evPts.Yerr = event->mSInc / cos(event->mYInc * M_PI /180.);
+                    evPts.Ymean = event->mYDec;
+                    evPts.Yerr = event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
                     break;
                 case CurveSettings::eVariableTypeField :
-                    evPts.Ymean = event-> mYInt;
-                    evPts.Yerr = event->mSInt;
+                    evPts.Ymean = event->mZField;
+                    evPts.Yerr = event->mS_ZField;
                     break;
                 case CurveSettings::eVariableTypeDepth :
-                    evPts.Ymean = event-> mYInt;
-                    evPts.Yerr = event->mSInt;
+                    evPts.Ymean = event->mXIncDepth;
+                    evPts.Yerr = event->mS_XA95Depth;
                     break;
                 case CurveSettings::eVariableTypeOther :
-                    evPts.Ymean = event-> mYInt;
-                    evPts.Yerr = event->mSInt;
+                    evPts.Ymean = event->mXIncDepth;
+                    evPts.Yerr = event->mS_XA95Depth;
                     break;
                 }
 
             } else {
-                //must be inclination
-                evPts.Ymean = event-> mYInc;
-                evPts.Yerr = event->mSInc;
+                //must be inclination or X
+                evPts.Ymean = event->mXIncDepth;
+                evPts.Yerr = event->mS_XA95Depth;
             }
             evPts.color = event->mColor;
 
@@ -1804,48 +1809,6 @@ void ResultsView::createByCurveGraph()
                     QMap<double, double> calibMap = date.getFormatedCalibToShow();
 
                     FunctionStat calibStat = analyseFunction(calibMap);
-
-                    /*
-                    QMap<double, double> calibMap = date.getRawCalibMap();//  getFormatedCalibMap();
-
-                    QMap<double, double> hpd;
-                    QMap<double, double> subData = getMapDataInRange(calibMap, mModel->mSettings.mTmin, mModel->mSettings.mTmax);// mSettings.getTminFormated(), mSettings.getTmaxFormated());
-
-                    if (subData.size() == 0) {
-                        continue;
-                    } else if (subData.size() == 1) {
-                        hpd = subData;
-
-                    } else {
-                         hpd = QMap<double, double>(create_HPD(subData, thresh));
-                    }
-
-
-                    QMapIterator<double, double> it(hpd);
-                    it.toFront();
-                    while (it.hasNext()) {
-                        it.next();
-                        if (it.value() != 0) {
-                            dataTmin = std::min(dataTmin, it.key());
-                            break;
-                        }
-                    }
-                    it.toBack();
-                    while (it.hasPrevious()) {
-                        it.previous();
-                        if (it.value() != 0) {
-                            dataTmax = std::max(dataTmax, it.key());
-                            break;
-                        }
-                    }
-
-                    tmin = std::min(tmin, dataTmin);
-                    tmax = std::max(tmax, dataTmax);
-
-                    dPts.Xmean = DateUtils::convertToAppSettingsFormat((dataTmax + dataTmin) / 2.);
-                    dPts.Xerr = (dataTmax - dataTmin)/2.;
-
-                    */
 
                     dPts.Xmean = calibStat.mean;
                     dPts.Xerr = calibStat.std;
@@ -2038,38 +2001,41 @@ void ResultsView::createByCurveGraph()
             graphY->setComposanteGChains(modelCurve()->getChainsMeanGComposanteY());
 
             graphY->setEvents(modelCurve()->mEvents);
-            // change the values of the Y and the error, with the values of the declination and the error, we keep tmean
-            int i = 0;
-            int iDataPts = 0;
-            for (auto& event : modelCurve()->mEvents) {
-                if ( model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D ||
-                     model->mCurveSettings.mProcessType == CurveSettings::eProcessType2D ) {
-                      eventsPts[i].Ymean = event-> mYDec;
-                      eventsPts[i].Yerr = event->mSDec;
 
-                } else {
-                    eventsPts[i].Ymean = event-> mYDec;
-                    eventsPts[i].Yerr = event->mSInc / cos(event->mYInc * M_PI /180.);
-                }
+            if (mMainVariable == GraphViewResults::eG) {
+                // change the values of the Y and the error, with the values of the declination and the error, we keep tmean
+                int i = 0;
+                int iDataPts = 0;
+                for (auto& event : modelCurve()->mEvents) {
+                    if ( model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D ||
+                         model->mCurveSettings.mProcessType == CurveSettings::eProcessType2D ) {
+                        eventsPts[i].Ymean = event->mYDec;
+                        eventsPts[i].Yerr = event->mS_Y;
 
-                if (event->mType == Event::eDefault) {
+                    } else {
+                        eventsPts[i].Ymean = event-> mYDec;
+                        eventsPts[i].Yerr = event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
+                    }
 
-                    for (int iData = 0 ; iData < event->mDates.size(); ++iData) {
+                    if (event->mType == Event::eDefault) {
+
+                        for (int iData = 0 ; iData < event->mDates.size(); ++iData) {
+                            dataPts[iDataPts].Ymean = eventsPts.at(i).Ymean;
+                            dataPts[iDataPts].Yerr = eventsPts.at(i).Yerr;
+                            iDataPts++;
+                        }
+
+                    } else {
                         dataPts[iDataPts].Ymean = eventsPts.at(i).Ymean;
                         dataPts[iDataPts].Yerr = eventsPts.at(i).Yerr;
                         iDataPts++;
                     }
 
-                } else {
-                    dataPts[iDataPts].Ymean = eventsPts.at(i).Ymean;
-                    dataPts[iDataPts].Yerr = eventsPts.at(i).Yerr;
-                    iDataPts++;
+                    ++i;
                 }
-
-                ++i;
+                graphY->setEventsPoints(eventsPts);
+                graphY->setDataPoints(dataPts);
             }
-            graphY->setEventsPoints(eventsPts);
-            graphY->setDataPoints(dataPts);
             mByCurveGraphs.append(graphY);
 
             connect(graphY, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
@@ -2113,31 +2079,33 @@ void ResultsView::createByCurveGraph()
             graphZ->setComposanteGChains(modelCurve()->getChainsMeanGComposanteZ());
 
             graphZ->setEvents(modelCurve()->mEvents);
-            int i = 0;
-            int iDataPts = 0;
-            for (auto& event : modelCurve()->mEvents) {
-                eventsPts[i].Ymean = event-> mYInt;
-                eventsPts[i].Yerr = event->mSInt;
+            if (mMainVariable == GraphViewResults::eG) {
+                int i = 0;
+                int iDataPts = 0;
+                for (auto& event : modelCurve()->mEvents) {
+                    eventsPts[i].Ymean = event->mZField;
+                    eventsPts[i].Yerr = event->mS_ZField;
 
-                if (event->mType == Event::eDefault) {
+                    if (event->mType == Event::eDefault) {
 
-                    for (int iData = 0 ; iData < event->mDates.size(); ++iData) {
+                        for (int iData = 0 ; iData < event->mDates.size(); ++iData) {
+                            dataPts[iDataPts].Ymean = eventsPts.at(i).Ymean;
+                            dataPts[iDataPts].Yerr = eventsPts.at(i).Yerr;
+                            iDataPts++;
+                        }
+
+                    } else {
                         dataPts[iDataPts].Ymean = eventsPts.at(i).Ymean;
                         dataPts[iDataPts].Yerr = eventsPts.at(i).Yerr;
                         iDataPts++;
                     }
 
-                } else {
-                    dataPts[iDataPts].Ymean = eventsPts.at(i).Ymean;
-                    dataPts[iDataPts].Yerr = eventsPts.at(i).Yerr;
-                    iDataPts++;
+
+                    ++i;
                 }
-
-
-                ++i;
+                graphZ->setEventsPoints(eventsPts);
+                graphZ->setDataPoints(dataPts);
             }
-            graphZ->setEventsPoints(eventsPts);
-            graphZ->setDataPoints(dataPts);
             mByCurveGraphs.append(graphZ);
 
             connect(graphZ, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);

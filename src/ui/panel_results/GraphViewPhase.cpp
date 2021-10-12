@@ -133,6 +133,8 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         mGraph->mLegendY = "";
         mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
         mGraph->setFormatFunctY(nullptr);
+         mGraph->setYAxisMode(GraphView::eMinMaxHidden);
+
         mTitle = tr("Phase : %1").arg(mPhase->mName);
         QMap<double,double> &alpha = mPhase->mAlpha.fullHisto();
         QMap<double,double> &beta = mPhase->mBeta.fullHisto();
@@ -212,14 +214,14 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
                 mGraph->addCurve(curveAlpha);
                 mGraph->addCurve(curveBeta);
             }
-        mGraph->setYAxisMode(GraphView::eMinMax);
+       // mGraph->setYAxisMode(GraphView::eMinMax);
 
     } else if (typeGraph == ePostDistrib && mCurrentVariableList.contains(eDuration)) {
         mGraph->mLegendX = tr("Years");
         mGraph->mLegendY = "";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);
-
+        mGraph->setYAxisMode(GraphView::eMinMaxHidden);
         mTitle = tr("Phase Duration : %1").arg(mPhase->mName);
         GraphCurve curveDuration;
 
@@ -267,7 +269,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
         mGraph->setFormatFunctY(nullptr);
-
+        mGraph->setYAxisMode(GraphView::eMinMaxHidden);
         mTitle = tr("Phase's Events' Std Compil. : %1").arg(mPhase->mName);
 
 
@@ -300,58 +302,14 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         }
 
     }
-    /*else if (typeGraph == ePostDistrib && mCurrentVariableList.contains(eDuration)) {
-        mGraph->mLegendX = tr("Years");
-        mGraph->mLegendY = "";
-        mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
-        mGraph->setFormatFunctY(nullptr);
 
-        mTitle = tr("Phase Duration : %1").arg(mPhase->mName);
-        GraphCurve curveDuration;
-
-        if (mPhase->mDuration.fullHisto().size()>1) {
-            curveDuration = generateDensityCurve(mPhase->mDuration.fullHisto(),
-                                                            "Post Distrib Duration All Chains",
-                                                            color);
-
-            mGraph->setRangeX(0., ceil(curveDuration.mData.lastKey()));
-            color.setAlpha(255);
-            GraphCurve curveDurationHPD = generateHPDCurve(mPhase->mDuration.mHPD,
-                                                           "HPD Duration All Chains",
-                                                           color);
-            mGraph->setCanControlOpacity(true);
-            mGraph->addCurve(curveDurationHPD);
-            mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
-            mGraph->setFormatFunctY(nullptr);
-            mGraph->setOverArrow(GraphView::eBothOverflow);
-            mGraph->addCurve(curveDuration);
-
-
-
-            GraphCurve curveCred = generateSectionCurve(mPhase->mDuration.mCredibility,
-                                                            "Credibility All Chains",
-                                                            color);
-            mGraph->addCurve(curveCred);
-
-        } else
-            mGraph->resetNothingMessage();
-
-
-        if (!mPhase->mDuration.mChainsHistos.isEmpty())
-            for (auto i=0; i<mChains.size(); ++i) {
-                GraphCurve curveDuration = generateDensityCurve(mPhase->mDuration.histoForChain(i),
-                                                             "Post Distrib Duration " + QString::number(i),
-                                                             Painting::chainColors.at(i), Qt::DotLine);
-
-                mGraph->addCurve(curveDuration);
-            }
-    }
-            */
     else if (typeGraph == ePostDistrib && mCurrentVariableList.contains(eTempo)) {
         mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
         mGraph->mLegendY = "";
         mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
         mGraph->setFormatFunctY(nullptr);
+        mGraph->setYAxisMode(GraphView::eMinMax);
+
         mTitle = tr("Phase Tempo : %1").arg(mPhase->mName);
 
         GraphCurve curveTempo = generateDensityCurve(mPhase->mTempo,
@@ -423,6 +381,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);
+        mGraph->setYAxisMode(GraphView::eMinMax);
 
         mTitle = tr("Phase Activity : %1").arg(mPhase->mName);
         GraphCurve curveActivity = generateDensityCurve( mPhase->mActivity,
@@ -479,15 +438,18 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         mGraph->mLegendX = tr("Iterations");
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);//DateUtils::convertToAppSettingsFormat);
+        mGraph->setYAxisMode(GraphView::eMinMax);
         mTitle = tr("Phase : %1").arg(mPhase->mName);
 
         generateTraceCurves(mChains, &(mPhase->mAlpha), "Alpha");
         generateTraceCurves(mChains, &(mPhase->mBeta), "Beta");
         mGraph->autoAdjustYScale(true);
+
     } else if (typeGraph == eTrace && mCurrentVariableList.contains(eDuration)) {
         mGraph->mLegendX = tr("Iterations");
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);
+        mGraph->setYAxisMode(GraphView::eMinMax);
         mTitle = tr("Phase Duration : %1").arg(mPhase->mName);
 
         generateTraceCurves(mChains, &(mPhase->mDuration), "Duration");
@@ -551,7 +513,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
         mGraph->setTipXLab("t");
         mGraph->setTipYLab("");
-        mGraph->setYAxisMode(GraphView::eHidden);
+        //mGraph->setYAxisMode(GraphView::eHidden);
         mGraph->showInfos(false);
         mGraph->clearInfos();
         mGraph->autoAdjustYScale(true); // do repaintGraph()
@@ -570,7 +532,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 }
             }
             mGraph->setTipXLab("Sigma");
-            mGraph->setYAxisMode(GraphView::eHidden);
+           // mGraph->setYAxisMode(GraphView::eHidden);
             mGraph->autoAdjustYScale(true);
 
     }
@@ -588,7 +550,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
             mGraph->setTipXLab("t");
             mGraph->setTipYLab("");
-            mGraph->setYAxisMode(GraphView::eHidden);
+            //mGraph->setYAxisMode(GraphView::eHidden);
             mGraph->autoAdjustYScale(true);
         }
 
@@ -609,7 +571,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
              mGraph->setTipXLab("t");
              mGraph->setTipYLab("n");
-             mGraph->setYAxisMode(GraphView::eMinMax);
+            // mGraph->setYAxisMode(GraphView::eMinMax);
              mGraph->autoAdjustYScale(true);// do repaintGraph()
          }
 
@@ -629,8 +591,8 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
               mGraph->setCurveVisible("Post Distrib Activity Unif Sup", showError);
 
               mGraph->setTipXLab("t");
-              mGraph->setTipYLab("");
-              mGraph->setYAxisMode(GraphView::eHidden);
+              mGraph->setTipYLab("n");
+              //mGraph->setYAxisMode(GraphView::eHidden);
               mGraph->autoAdjustYScale(true); // do repaintGraph()
           }
 
@@ -681,7 +643,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
         mGraph->setTipXLab(tr("Iteration"));
         mGraph->setTipYLab("t");
-        mGraph->setYAxisMode(GraphView::eMinMax);
+        //mGraph->setYAxisMode(GraphView::eMinMax);
         mGraph->autoAdjustYScale(true); // do repaintGraph()
     }
 
