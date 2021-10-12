@@ -209,7 +209,6 @@ mCurveColor(Painting::mainColorDark)
 
     connect(mColorClipBut, &Button::clicked, this, &MultiCalibrationView::changeCurveColor);
 
-   // setVisible(false);
 }
 
 MultiCalibrationView::~MultiCalibrationView()
@@ -223,17 +222,6 @@ void MultiCalibrationView::resizeEvent(QResizeEvent* )
 qDebug()<<"MultiCalibrationView::resizeEvent(QResizeEvent* )";
 }
 
-/*
-void MultiCalibrationView::mouseMoveEvent(QMouseEvent* e)
-{
-    QWidget::mouseMoveEvent(e);
-    (void) e;
-
-    mDrawing->update();
-
-
-}
-*/
 
 void MultiCalibrationView::paintEvent(QPaintEvent* e)
 {
@@ -241,10 +229,10 @@ void MultiCalibrationView::paintEvent(QPaintEvent* e)
 
     QPainter p(this);
     // drawing a background under button
-    p.fillRect(QRect(width() - mButtonWidth, 0, mButtonWidth, height()), Painting::borderDark);
+    p.fillRect(width() - mButtonWidth, 0, mButtonWidth, mDrawing->height(), Painting::borderDark);
 
-    // drawing a background under curve
-   // p.fillRect(QRect(0, 0, graphWidth, height()), Qt::green);
+    // Bottom Tools Bar
+    p.fillRect(0, mStartLab->y() - 2,  width(), height() -mDrawing->height() + 2, Painting::borderDark);
 
 
 }
@@ -273,18 +261,15 @@ void MultiCalibrationView::applyAppSettings()
     mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
 
-    updateLayout();
+    if (this->isVisible())
+        updateLayout();
 }
 
 void MultiCalibrationView::updateLayout()
 {
-    const int graphWidth  = width() - mButtonWidth;
-   // QPainter p(this);
-    // drawing a background under button
-    //p.fillRect(QRect(graphWidth, 0, mButtonWidth, height()), Painting::borderDark);
+    const int graphWidth = width() - mButtonWidth;
 
-
-    const int x0   = width() - mButtonWidth;
+    const int x0 = width() - mButtonWidth;
     const int margin = int(0.1 * mButtonWidth);
     const int xm = x0 + margin;
 qDebug()<<"MultiCalibrationView::updateLayout()";
@@ -303,58 +288,59 @@ qDebug()<<"MultiCalibrationView::updateLayout()";
     mStatClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
     y += mStatClipBut->height() + 5;
 
+    mColorClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
+    y += mColorClipBut->height();
+
     mGraphHeightLab->setGeometry(x0, y, mButtonWidth, textHeight);
     y += mGraphHeightLab->height();
     mGraphHeightEdit->setGeometry(xm, y, mButtonWidth - 2 * margin, textHeight);
     y += mGraphHeightEdit->height() + verticalSpacer;
 
-    mColorClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
-    y += mColorClipBut->height();
-    const int separatorHeight (height() - y - 10* textHeight - 10*verticalSpacer);
-    mYZoom->setGeometry(x0, y, mButtonWidth, separatorHeight);
-    y += mYZoom->height() + verticalSpacer;
-   // frameSeparator->setGeometry(x0, y, mButtonWidth, separatorHeight);
-   // y += frameSeparator->height() + verticalSpacer;
 
-    mStartLab->setGeometry(x0, y, mButtonWidth, textHeight);
-    y += mStartLab->height();
-    mStartEdit->setGeometry(xm, y, mButtonWidth  - 2 * margin, textHeight);
-    y += mStartEdit->height() + verticalSpacer;
-    mEndLab->setGeometry(x0, y, mButtonWidth, textHeight);
-    y += mEndLab->height();
-    mEndEdit->setGeometry(xm, y, mButtonWidth - 2 * margin, textHeight);
-    y += mEndEdit->height() + verticalSpacer;
+    // Bottom tools bar
+    const qreal yPosBottomBar0 = height() - 2*textHeight - 12;
+    const qreal yPosBottomBar1 = yPosBottomBar0 + textHeight + 2;
 
-    mMajorScaleLab->setGeometry(x0, y, mButtonWidth, textHeight);
-    y += mMajorScaleLab->height();
-    mMajorScaleEdit->setGeometry(xm, y, mButtonWidth - 2 * margin, textHeight);
-    y += mMajorScaleEdit->height() + verticalSpacer;
+    mYZoom->setGeometry(x0, y, mButtonWidth, yPosBottomBar0 - y);
+
+    const qreal labelWidth = std::min( fontMetrics().boundingRect("000000").width() , width() /5);
+    const qreal editWidth = labelWidth;
+    const qreal marginBottomBar = (width()- 5.*labelWidth )/6.;
+
+
+    qreal xShift = marginBottomBar;
+    mStartLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
+    mStartEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
+
+    xShift = labelWidth + 2*marginBottomBar;
+    mEndLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
+    mEndEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
+
+    xShift = 2*labelWidth + 3*marginBottomBar;
+    mMajorScaleLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
+    mMajorScaleEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
     mMajorScaleEdit->setText(locale().toString(mMajorScale));
 
-    mMinorScaleLab->setGeometry(x0, y, mButtonWidth, textHeight);
-    y += mMinorScaleLab->height();
-    mMinorScaleEdit->setGeometry(xm, y, mButtonWidth  - 2 * margin, textHeight);
-    y += mMinorScaleEdit->height() + 3*verticalSpacer;
+    xShift = 3*labelWidth + 4*marginBottomBar;
+    mMinorScaleLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
+    mMinorScaleEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
     mMinorScaleEdit->setText(locale().toString(mMinorScale));
 
-
-    mHPDLab->setGeometry(x0, y, mButtonWidth, textHeight);
-    y += mHPDLab->height();
-    mHPDEdit->setGeometry(xm, y, mButtonWidth - 2 * margin, textHeight);
-
-    //const int graphWidth = width() - mButtonWidth;
+    xShift = 4*labelWidth + 5*marginBottomBar;
+    mHPDLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
+    mHPDEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
 
     if (mStatClipBut->isChecked()) {
         mTextArea->show();
-        mTextArea->setGeometry(0, 0, graphWidth, height());
+        mTextArea->setGeometry(0, 0, graphWidth, yPosBottomBar0);
         mDrawing->hide();
+
     } else {
         mTextArea->hide();
         mDrawing->show();
-        mDrawing->setGeometry(0, 0, graphWidth, height());
-        mDrawing->setGraphHeight(mGraphHeight); //pHd change ici
+        mDrawing->setGeometry(0, 0, graphWidth, yPosBottomBar0);
+        mDrawing->setGraphHeight(mGraphHeight);
 
-       // mDrawing->update();
     }
 
 }
@@ -444,6 +430,7 @@ void MultiCalibrationView::updateGraphList()
 
            // calibGraph->setRendering(GraphView::eHD);
             graphList.append(calibGraph);
+            listAxisVisible.append(true);
 
             QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
                                   ev.value(STATE_COLOR_GREEN).toInt(),

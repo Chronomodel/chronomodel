@@ -211,15 +211,13 @@ qDebug()<<"MultiCalibrationDrawing::updateLayout()";
         mMarkerX->resize( mMarkerX->thickness(), y);
     else
         hideMarker();
-  //  update();
+
 }
 
 void MultiCalibrationDrawing::resizeEvent(QResizeEvent* e)
 {
     (void) e;
-
-    mScrollArea->setGeometry(0, 0, width(), height());
-   // updateLayout();
+    mScrollArea->setGeometry(0, 0, width()+2, height());
 }
 
 QPixmap MultiCalibrationDrawing::grab()
