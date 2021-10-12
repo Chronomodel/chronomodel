@@ -82,11 +82,11 @@ mLevel(0)
     // --------------------------------------------------------
 
     // Valeurs entrées par l'utilisateur
-    mYInc = 0.;
+    mXIncDepth = 0.;
     mYDec = 0.;
-    mYInt = 0.;
-    mSInc = 0.;
-    mSInt = 0.;
+    mZField = 0.;
+    mS_XA95Depth = 0.;
+    mS_ZField = 0.;
 
     // Valeurs préparées (projetées)
     mYx = 0.;
@@ -160,13 +160,13 @@ void Event::copyFrom(const Event& event)
     mMixingLevel = event.mMixingLevel;
     
     // Valeurs entrées par l'utilisateur
-    mYInc = event.mYInc;
+    mXIncDepth = event.mXIncDepth;
     mYDec = event.mYDec;
-    mYInt = event.mYInt;
+    mZField = event.mZField;
     
-    mSInc = event.mSInc;
-    mSDec = event.mSDec;
-    mSInt = event.mSInt;
+    mS_XA95Depth = event.mS_XA95Depth;
+    mS_Y = event.mS_Y;
+    mS_ZField = event.mS_ZField;
 
     // Valeurs préparées (projetées)
     mYx = event.mYx;
@@ -232,13 +232,13 @@ Event Event::fromJson(const QJsonObject& json)
 
     event.mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
 
-    event.mYInc = json.value(STATE_EVENT_X_INC).toDouble();
+    event.mXIncDepth = json.value(STATE_EVENT_X_INC_DEPTH).toDouble();
     event.mYDec = json.value(STATE_EVENT_Y_DEC).toDouble();
-    event.mYInt = json.value(STATE_EVENT_Z_INT).toDouble();
+    event.mZField = json.value(STATE_EVENT_Z_F).toDouble();
     
-    event.mSInc = json.value(STATE_EVENT_S_X_INC).toDouble();
-    event.mSDec = json.value(STATE_EVENT_S_Y_DEC).toDouble();
-    event.mSInt = json.value(STATE_EVENT_S_Z_INT).toDouble();
+    event.mS_XA95Depth = json.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble();
+    event.mS_Y = json.value(STATE_EVENT_SY).toDouble();
+    event.mS_ZField = json.value(STATE_EVENT_SZ_SF).toDouble();
 
     const QJsonArray dates = json.value(STATE_EVENT_DATES).toArray();
     Date dat;
@@ -272,16 +272,17 @@ QJsonObject Event::toJson() const
     event[STATE_IS_SELECTED] = mIsSelected;
     event[STATE_IS_CURRENT] = mIsCurrent;
 
-    event[STATE_EVENT_X_INC] = mYInc;
+    event[STATE_EVENT_X_INC_DEPTH] = mXIncDepth;
     event[STATE_EVENT_Y_DEC] = mYDec;
-    event[STATE_EVENT_Z_INT] = mYInt;
-    event[STATE_EVENT_S_X_INC] = mSInc;
-    event[STATE_EVENT_S_Y_DEC] = mSDec;
-    event[STATE_EVENT_S_Z_INT] = mSInt;
+    event[STATE_EVENT_Z_F] = mZField;
+    event[STATE_EVENT_SX_ALPHA95_SDEPTH] = mS_XA95Depth;
+    event[STATE_EVENT_SY] = mS_Y;
+    event[STATE_EVENT_SZ_SF] = mS_ZField;
 
     QString eventIdsStr;
     if (mPhasesIds.size() > 0) {
-        QStringList eventIds;
+        //QStringList eventIds;
+        QVector<QString> eventIds;
         for (int i=0; i<mPhasesIds.size(); ++i)
             eventIds.append(QString::number(mPhasesIds.at(i)));
         eventIdsStr = eventIds.join(",");
@@ -302,31 +303,31 @@ void Event::setCurveCsvDataToJsonEvent(QJsonObject& event, const QMap<QString, d
 {
     QMap<QString, double>::const_iterator i;
     
-    i = CurveData.find("YInc");
+    i = CurveData.find(STATE_EVENT_X_INC_DEPTH);
     if (i != CurveData.end()) {
-        event[STATE_EVENT_X_INC] = i.value();
+        event[STATE_EVENT_X_INC_DEPTH] = i.value();
     }
-    i = CurveData.find("SInc");
+    i = CurveData.find(STATE_EVENT_SX_ALPHA95_SDEPTH);
     if (i != CurveData.end()) {
-        event[STATE_EVENT_S_X_INC] = i.value();
+        event[STATE_EVENT_SX_ALPHA95_SDEPTH] = i.value();
     }
 
-    i = CurveData.find("YDec");
+    i = CurveData.find(STATE_EVENT_Y_DEC);
     if (i != CurveData.end()) {
         event[STATE_EVENT_Y_DEC] = i.value();
     }
-    i = CurveData.find("SDec");
+    i = CurveData.find(STATE_EVENT_SY);
     if (i != CurveData.end()) {
-        event[STATE_EVENT_S_Y_DEC] = i.value();
+        event[STATE_EVENT_SY] = i.value();
     }
 
-    i = CurveData.find("YInt");
+    i = CurveData.find(STATE_EVENT_Z_F);
     if (i != CurveData.end()) {
-        event[STATE_EVENT_Z_INT] = i.value();
+        event[STATE_EVENT_Z_F] = i.value();
     }
-    i = CurveData.find("SInt");
+    i = CurveData.find(STATE_EVENT_SZ_SF);
     if (i != CurveData.end()) {
-        event[STATE_EVENT_S_Z_INT] = i.value();
+        event[STATE_EVENT_SZ_SF] = i.value();
     }
 }
 

@@ -77,40 +77,44 @@ ImportDataView::~ImportDataView()
 }
 
 /**
- * @brief Import data from a CSV file in the table
- * @todo File encoding must be UTF8, Unix LF !!
- * Title; toy csv file
- *  Structure; Terrestrial
- *  // just comment
- *  14C;onshore;1200;30;intcal13.14c;
- *  14C;WithWiggle;50000;5;intcal13.14c;0;0;range;5;10
- *  Structure; Event : Oceanic
- *  14C;shell;2900;36;marine04.14c;-150;20
- *  14C;oyster;3000;30;marine13.14c;200;10
- *
- * Since version 1.6.4_alpha
- * example of csv file below
- *
-// this is a comment :test file for csv with Event's name
+ * @brief EventsScene::decodeDataDrop insert Event when drop a CSV line from the table importCSV
+ * the table may be come from ImportDataView::exportDates()
+ *  Since version 3.1.3
+ * @param e
+ * @example
+ * Maximal number of columns used in ChronoModel;
+ * // this is a comment :test file for csv with Event's name
 Title; Toy
-EVENT1;AM;mesure_inclinaison_a_Paris;inclination;68,5;0;0;0,98;gal2002sph2014_i.ref
-EventAM;AM;mesure_Declinaison_a_Paris;declination;60;10;0;3;gal2002sph2014_d.ref
-Event14C;14C;14C1;1225;30;intcal13.14c;0;0
-// No event name
-;Gauss;Gauss_ss_event;0;50;equation;0;1;0;none
-// event with data name missing
-Event9;Gauss;;650;50;none;none
-Event1;Gauss; New Data;24;50;none;none
-Event1;14C;New 14C;1600;35;intcal13.14c;0;0;none
-Event1;14C;With Wiggle;50000;5;intcal13.14c;0;0;range;5;10
-# test info
-Structure; Terrestrial
-Event8;Gauss; New Data;-79;50;none;none
-
-EventAM;AM;incli;inclination;60;0;0;1;gal2002sph2014_i.ref;none
-Event14C;14C;shell;2900;36;marine04.14c;-150;20;none
-Event1;14C;onshore;1600;35;intcal13.14c;0;0;none
- *
+//1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20
+Structure;Event 1;
+// Event name;Dating method;dating name/code;Age;error;calibration curve;Reservoir R;delta R;"wiggle matching
+""fixed""
+""range""
+""gaussian""";wiggle value 1;Wiggle value 2;;;;X_Inc_Depth;Err X- apha95- Err depth;Y_Declinaison;Err Y;Z_Field;Err Z_Err F;
+Event name 1;14C;14C_Ly_5212;1370;50;intcal20.14c;0;0;none;;;;;;74;5;50;-10;2;;
+Event name 2;14C;14C_Ly_5212;1370;50;intcal20.14c;0;0;gaussian;30;5;;;;;;;;;;
+// Event name;methode;dating name/code;Age;error;"reference year
+(for measurement)";;;;;;;;;prof;err prof;;;;;
+Event name 3;TL/OSL;TL-CLER-202a;987;120;1990;;;;;;;;;220;3;;;;;
+Event name 4;TL/OSL;TL-CLER-202b;1170;140;1990;;;;;;;;;;;;;;;
+Event name 5;TL/OSL;TL-CLER-203;1280;170;1990;;;;;;;;;;;;;;;
+// Event name;methode;dating name/code;measurement type;mean value;Inclination  value corresponding to declination;colonne inutile !;"std error
+alpha95";Reference Curve;;;;;;;;;;;;
+Event name 6;AM;kiln A;inclination;65;0;0;2,5;FranceInc;;;;;;;;;;;;
+Event name 7;AM;kiln A;declination;-20;65;0;2,5;FranceDec;;;;;;;;;;;;
+Event name 8;AM;kiln A;intensity;53;0;53;5;FranceInt;;;;;;;;;;;;
+// Event name;methode;dating name/code;mean;error;calibration curve;param a;param b;param c;"wiggle matching
+""fixed""
+""range""
+""gaussian""";wiggle value 1;Wiggle value 2;;;;;;;;;
+Event name 9;GAUSS;date 1;1000;50;none;;;;;;;;;;;;;;;
+Event name 10;GAUSS;date 1;1000;50;none;;;;;;;;;;;;;;;
+Event name 11;GAUSS;date 1;1000;50;ReferenceCurveName;;;;;;;;;;;;;;;
+Event name 12;GAUSS;date 2;1000;50;equation;0,01;-1;-1000;fixed;20;;;;;;;;;;
+Event name 13;GAUSS;date 2;1000;50;equation;0,01;-1;-1000;range;10;15;;;;;;;;;
+// Event name;methode;dating name/code;date t1;date t2;;;;;;;;;;;;;;;;
+Event name 14;UNIF;date archéo ;300;500;;;;;;;;;;;;;;;;
+ * @return
  */
 void ImportDataView::browse()
 {
@@ -316,24 +320,24 @@ void ImportDataView::exportDates()
             QTextStream stream(&file);
 
             Project* project = MainWindow::getInstance()->getProject();
-            QJsonArray events = project->mState[STATE_EVENTS].toArray();
+            QJsonArray events = project->mState.value(STATE_EVENTS).toArray();
 
             stream << "Title" << sep << AppSettings::mLastFile << Qt::endl;
-            bool isCurve = (project->mState[STATE_CURVE].toObject().value(STATE_CURVE_PROCESS_TYPE).toInt() != CurveSettings::eProcessTypeNone);
+            bool isCurve = (project->mState.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt() != CurveSettings::eProcessTypeNone);
             // int CurveStartColumn = 15;
 
-            for (int i = 0; i < events.size(); ++i) {
-                QJsonObject event = events[i].toObject();
-                QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+            for (auto ev : events) {
+                QJsonObject event = ev.toObject();
+                QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
 
-                int type = event[STATE_EVENT_TYPE].toInt();
-                const QString eventName = event[STATE_NAME].toString();
+                const int type = event.value(STATE_EVENT_TYPE).toInt();
+                const QString eventName = event.value(STATE_NAME).toString();
                 if (type == Event::eKnown) {
                     stream << eventName << sep << "Bound" <<  sep << event.value(STATE_EVENT_KNOWN_FIXED).toDouble() << Qt::endl;
 
                 } else {
-                   for (int j = 0; j < dates.size(); ++j) {
-                        QJsonObject date = dates.at(j).toObject();
+                   for (auto iDate : dates) {
+                        QJsonObject date = iDate.toObject();
                         try {
                             Date d (date);
                             if (!d.isNull()) {
@@ -347,12 +351,12 @@ void ImportDataView::exportDates()
                                     while (dateCsv.count() < CurveStartColumn) {
                                         dateCsv.append("");
                                     }
-                                    dateCsv.append(csvLocal.toString(event[STATE_EVENT_X_INC].toDouble()));
-                                    dateCsv.append(csvLocal.toString(event[STATE_EVENT_S_X_INC].toDouble()));
-                                    dateCsv.append(csvLocal.toString(event[STATE_EVENT_Y_DEC].toDouble()));
-                                    //dateCsv.append(csvLocal.toString(event[STATE_EVENT_S_Y_DEC].toDouble()));
-                                    dateCsv.append(csvLocal.toString(event[STATE_EVENT_Z_INT].toDouble()));
-                                    dateCsv.append(csvLocal.toString(event[STATE_EVENT_S_Z_INT].toDouble()));
+                                    dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_X_INC_DEPTH).toDouble()));
+                                    dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble()));
+                                    dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_Y_DEC).toDouble()));
+                                    dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_SY).toDouble()));
+                                    dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_Z_F).toDouble()));
+                                    dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_SZ_SF).toDouble()));
                                 }
 
                                 stream << eventName << sep;
@@ -516,18 +520,20 @@ void ImportDataTable::updateTableHeaders()
             headers << "Wiggle value 2 (Upper date | Error)";
         }
         
-        int CurveStartIndex = 15;
+        const int CurveStartIndex = 13; // +1 for index +1 begin = 15
         while (headers.size() < numCols) {
             if (headers.size() == CurveStartIndex) {
-                headers << "Inc";
+                headers << "X_Inc_Depth";
             } else if (headers.size() == (CurveStartIndex + 1)) {
-                headers << "Error Inc";
+                headers << "Err X- apha95- Err depth";
             } else if (headers.size() == (CurveStartIndex + 2)) {
-                headers << "Dec";
+                headers << "Y_Dec";
             } else if (headers.size() == (CurveStartIndex + 3)) {
-                headers << "Int";
+                headers << "Err Y";
             } else if (headers.size() == (CurveStartIndex + 4)) {
-                headers << "Error Int";
+                headers << "Z_Field";
+            } else if (headers.size() == (CurveStartIndex + 5)) {
+                headers << "Err Z_Err F";
             } else if (headers.size() > CurveStartIndex) {
                 headers << "Comment";
             } else {

@@ -95,13 +95,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #define STATE_EVENT_KNOWN_FIXED "known_fixed"
 
-#define STATE_EVENT_X_INC "YInc"
-#define STATE_EVENT_Y_DEC "YDec"
-#define STATE_EVENT_Z_INT "YInt"
+#define STATE_EVENT_X_INC_DEPTH "X_Inc_Depth"   // old value "YInc"
+#define STATE_EVENT_SX_ALPHA95_SDEPTH "sX_Alpha95_sDepth" // old value"SInc"
 
-#define STATE_EVENT_S_X_INC "SInc"
-#define STATE_EVENT_S_Y_DEC "SDec"
-#define STATE_EVENT_S_Z_INT "SInt"
+#define STATE_EVENT_Y_DEC "Y_Dec" //old value "YDec"
+#define STATE_EVENT_SY "sY" // old value "SDec"
+
+#define STATE_EVENT_Z_F "Z_Field" // old value"YInt"
+#define STATE_EVENT_SZ_SF "sZ_sF" // old value "SInt"
 
 #define STATE_PHASE_TAU_TYPE "tau_type"
 #define STATE_PHASE_TAU_FIXED "tau_fixed"

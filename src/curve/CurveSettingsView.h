@@ -61,6 +61,7 @@ public:
     CurveSettings getSettings();
     
     void setProject(Project *project);
+
 signals:
     void newProcess(QString str);
     

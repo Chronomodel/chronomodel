@@ -137,7 +137,7 @@ public:
 
     bool mNodeInitialized;
     double mThetaNode;
-    int mLevel; // used to init mcmc
+    int mLevel; // Used to init mcmc
     
     double mMixingLevel;
     
@@ -145,21 +145,21 @@ public:
     //  Curve
     // --------------------------------------------------------
     
-    // Valeurs entrées par l'utilisateur
-    double mYInc;
+    // Values entered by the user
+    double mXIncDepth; //mYInc;
     double mYDec;
-    double mYInt;
+    double mZField; // mYInt;
 
-    double mSInc;
-    double mSDec;
-    double mSInt;
+    double mS_XA95Depth; // mSInc;
+    double mS_Y; //mSDec;
+    double mS_ZField; //  mSInt;
     
-    // Valeurs préparées (projetées)
+    // Prepared (projected) values
     double mYx;
     double mYy;
     double mYz;
     
-    // Valeurs utilisées pour les calculs
+    // Values used for the calculations
     long double mThetaReduced;
     double mY;
     double mSy;

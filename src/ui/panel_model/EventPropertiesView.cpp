@@ -336,8 +336,8 @@ void EventPropertiesView::updateEvent()
         mS_X_IncEdit->setVisible(showInc);
         if (showInc) {
             mX_IncLab->setText(settings.inclinationLabel());
-            mX_IncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_X_INC).toDouble()));
-            mS_X_IncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_S_X_INC).toDouble()));
+            mX_IncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_X_INC_DEPTH).toDouble()));
+            mS_X_IncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble()));
         }
         
 
@@ -354,7 +354,7 @@ void EventPropertiesView::updateEvent()
 
         if (showYErr) {
             mS_Y_Lab->setText(tr("Error"));
-            mS_Y_Edit->setText(locale().toString(mEvent.value(STATE_EVENT_S_Y_DEC).toDouble()));
+            mS_Y_Edit->setText(locale().toString(mEvent.value(STATE_EVENT_SY).toDouble()));
         }
 
         mZ_IntLab->setVisible(showInt);
@@ -365,8 +365,8 @@ void EventPropertiesView::updateEvent()
         
         if (showInt) {
             mZ_IntLab->setText(settings.intensityLabel());
-            mZ_IntEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Z_INT).toDouble()));
-            mS_Z_IntEdit->setText(locale().toString(mEvent.value(STATE_EVENT_S_Z_INT).toDouble()));
+            mZ_IntEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Z_F).toDouble()));
+            mS_Z_IntEdit->setText(locale().toString(mEvent.value(STATE_EVENT_SZ_SF).toDouble()));
         }
 
         
@@ -488,7 +488,7 @@ void EventPropertiesView::setCurveSettings(const CurveSettings::ProcessType proc
 void EventPropertiesView::updateEventYInc()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_X_INC] = locale().toDouble(mX_IncEdit->text());
+    event[STATE_EVENT_X_INC_DEPTH] = locale().toDouble(mX_IncEdit->text());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event X-Inc updated"));
 }
 
@@ -502,28 +502,28 @@ void EventPropertiesView::updateEventYDec()
 void EventPropertiesView::updateEventYInt()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_Z_INT] = locale().toDouble(mZ_IntEdit->text());
+    event[STATE_EVENT_Z_F] = locale().toDouble(mZ_IntEdit->text());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Z-Int updated"));
 }
 
 void EventPropertiesView::updateEventSInc()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_S_X_INC] = locale().toDouble(mS_X_IncEdit->text());
+    event[STATE_EVENT_SX_ALPHA95_SDEPTH] = locale().toDouble(mS_X_IncEdit->text());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S X-Inc updated"));
 }
 
 void EventPropertiesView::updateEventSDec()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_S_Y_DEC] = locale().toDouble(mS_Y_Edit->text());
+    event[STATE_EVENT_SY] = locale().toDouble(mS_Y_Edit->text());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S Y updated"));
 }
 
 void EventPropertiesView::updateEventSInt()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_S_Z_INT] = locale().toDouble(mS_Z_IntEdit->text());
+    event[STATE_EVENT_SZ_SF] = locale().toDouble(mS_Z_IntEdit->text());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S Z-Int updated"));
 }
 

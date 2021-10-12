@@ -1566,6 +1566,37 @@ QList<Date> EventsScene::decodeDataDrop_old(QGraphicsSceneDragDropEvent* e)
  * @brief EventsScene::decodeDataDrop insert Event when drop a CSV line from the table importCSV
  * the table may be come from ImportDataView::exportDates()
  * @param e
+ * @example
+ * Maximal number of columns used in ChronoModel;
+1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20
+Structure;Event 1;
+// Event name;Dating method;dating name/code;Age;error;calibration curve;Reservoir R;delta R;"wiggle matching
+""fixed""
+""range""
+""gaussian""";wiggle value 1;Wiggle value 2;;;;X_Inc_Depth;Err X- apha95- Err depth;Y_Declinaison;Err Y;Z_Field;Err Z_Err F;
+Event name 1;14C;14C_Ly_5212;1370;50;intcal20.14c;0;0;none;;;;;;74;5;50;-10;2;;
+Event name 2;14C;14C_Ly_5212;1370;50;intcal20.14c;0;0;gaussian;30;5;;;;;;;;;;
+// Event name;methode;dating name/code;Age;error;"reference year
+(for measurement)";;;;;;;;;prof;err prof;;;;;
+Event name 3;TL/OSL;TL-CLER-202a;987;120;1990;;;;;;;;;220;3;;;;;
+Event name 4;TL/OSL;TL-CLER-202b;1170;140;1990;;;;;;;;;;;;;;;
+Event name 5;TL/OSL;TL-CLER-203;1280;170;1990;;;;;;;;;;;;;;;
+// Event name;methode;dating name/code;measurement type;mean value;Inclination  value corresponding to declination;colonne inutile !;"std error
+alpha95";Reference Curve;;;;;;;;;;;;
+Event name 6;AM;kiln A;inclination;65;0;0;2,5;FranceInc;;;;;;;;;;;;
+Event name 7;AM;kiln A;declination;-20;65;0;2,5;FranceDec;;;;;;;;;;;;
+Event name 8;AM;kiln A;intensity;53;0;53;5;FranceInt;;;;;;;;;;;;
+// Event name;methode;dating name/code;mean;error;calibration curve;param a;param b;param c;"wiggle matching
+""fixed""
+""range""
+""gaussian""";wiggle value 1;Wiggle value 2;;;;;;;;;
+Event name 9;GAUSS;date 1;1000;50;none;;;;;;;;;;;;;;;
+Event name 10;GAUSS;date 1;1000;50;none;;;;;;;;;;;;;;;
+Event name 11;GAUSS;date 1;1000;50;ReferenceCurveName;;;;;;;;;;;;;;;
+Event name 12;GAUSS;date 2;1000;50;equation;0,01;-1;-1000;fixed;20;;;;;;;;;;
+Event name 13;GAUSS;date 2;1000;50;equation;0,01;-1;-1000;range;10;15;;;;;;;;;
+// Event name;methode;dating name/code;date t1;date t2;;;;;;;;;;;;;;;;
+Event name 14;UNIF;date archéo ;300;500;;;;;;;;;;;;;;;;
  * @return
  */
 QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::decodeDataDrop(QGraphicsSceneDragDropEvent* e)
@@ -1616,47 +1647,41 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
 
         } else {
             date = Date::fromCSV(dataStr, csvLocal);
-            //date.mUUID = QString::fromStdString(Generator::UUID());
             QMap<QString, double> CurveValues;
             if (!date.isNull()) {
                 dates << qMakePair(eventName, date);
                 acceptedRows.append(csvRow);
 
-                if (dataStr.size() >= 16) {
-                    CurveValues.insert("YInc", csvLocal.toDouble(dataStr.at(15)));
+                if (dataStr.size() >= 14) {
+                    CurveValues.insert(STATE_EVENT_X_INC_DEPTH, csvLocal.toDouble(dataStr.at(13)));
                 } else {
-                    CurveValues.insert("YInc", 0);
+                    CurveValues.insert(STATE_EVENT_X_INC_DEPTH, 0);
+                }
+                if (dataStr.size() >= 15) {
+                    CurveValues.insert(STATE_EVENT_SX_ALPHA95_SDEPTH, csvLocal.toDouble(dataStr.at(14)));
+                } else {
+                    CurveValues.insert(STATE_EVENT_SX_ALPHA95_SDEPTH, 0);
+                }
+                if (dataStr.size() >= 16) {
+                    CurveValues.insert(STATE_EVENT_Y_DEC, csvLocal.toDouble(dataStr.at(15)));
+                } else {
+                    CurveValues.insert(STATE_EVENT_Y_DEC, 0);
                 }
                 if (dataStr.size() >= 17) {
-                    CurveValues.insert("SInc", csvLocal.toDouble(dataStr.at(16)));
+                    CurveValues.insert(STATE_EVENT_SY, csvLocal.toDouble(dataStr.at(16)));
                 } else {
-                    CurveValues.insert("SInc", 0);
+                    CurveValues.insert(STATE_EVENT_SY, 0);
                 }
                 if (dataStr.size() >= 18) {
-                    CurveValues.insert("YDec", csvLocal.toDouble(dataStr.at(17)));
+                    CurveValues.insert(STATE_EVENT_Z_F, csvLocal.toDouble(dataStr.at(17)));
                 } else {
-                    CurveValues.insert("YDec", 0);
+                    CurveValues.insert(STATE_EVENT_Z_F, 0);
                 }
 
-                if (dataStr.size() >= 21) {
-                    CurveValues.insert("SDec", csvLocal.toDouble(dataStr.at(18)));
-                    CurveValues.insert("YInt", csvLocal.toDouble(dataStr.at(19)));
-                    CurveValues.insert("SInt", csvLocal.toDouble(dataStr.at(20)));
-
-                } else if (dataStr.size() >= 20) {
-                    CurveValues.insert("SDec", 0);
-                    CurveValues.insert("YInt", csvLocal.toDouble(dataStr.at(18)));
-                    CurveValues.insert("SInt",csvLocal.toDouble(dataStr.at(19)));
-
-                } else if (dataStr.size() >= 19) {
-                    CurveValues.insert("SDec", 0);
-                    CurveValues.insert("YInt", csvLocal.toDouble(dataStr.at(18)));
-                    CurveValues.insert("SInt", 0);
-
+                if (dataStr.size() >= 19) {
+                    CurveValues.insert(STATE_EVENT_SZ_SF, csvLocal.toDouble(dataStr.at(18)));
                 } else {
-                    CurveValues.insert("SDec", 0);
-                    CurveValues.insert("YInt", 0);
-                    CurveValues.insert("SInt", 0);
+                    CurveValues.insert(STATE_EVENT_SZ_SF, 0);
                 }
 
 

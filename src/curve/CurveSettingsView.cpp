@@ -464,6 +464,6 @@ void CurveSettingsView::updateVisibilities()
         mLambdaSplineLabel->setVisible(coeffLissageFixed);
         mLambdaSplineInput->setVisible(coeffLissageFixed);
     }
+    
 }
-
 

@@ -270,19 +270,15 @@ QString CurveSettings::declinationLabel() const
 bool CurveSettings::showIntensity() const
 {
     // Elle est toujours nécessaire en vectoriel, mais jamais en sphérique.
-    // En univarié, elle n'est nécessaire que pour les variables d'étude autres que inclinaison et déclinaison.
-    return ((mProcessType == CurveSettings::eProcessTypeVector) ||
-            (mProcessType == CurveSettings::eProcessType3D) ||
-            ((mProcessType == CurveSettings::eProcessTypeUnivarie) &&
-             (mVariableType != CurveSettings::eVariableTypeInclination) &&
-             (mVariableType != CurveSettings::eVariableTypeDeclination)));
+    // En univarié, elle n'est jamais nécessaire .
+    return (mProcessType == CurveSettings::eProcessTypeVector ||  mProcessType == CurveSettings::eProcessType3D );
 }
 
 bool CurveSettings::showYErr() const
 {
     // Elle est toujours nécessaire en vectoriel, mais jamais en sphérique.
     // En univarié, elle n'est nécessaire que pour les variables d'étude autres que inclinaison et déclinaison.
-    return (mProcessType == CurveSettings::eProcessType2D ||mProcessType == CurveSettings::eProcessType3D) ;
+    return (mProcessType == CurveSettings::eProcessType2D || mProcessType == CurveSettings::eProcessType3D) ;
 }
 
 QString CurveSettings::intensityLabel() const
@@ -294,16 +290,6 @@ QString CurveSettings::intensityLabel() const
     } else if (mProcessType == CurveSettings::eProcessType3D) {
         label = QObject::tr("Z");
 
-    } else if (mProcessType == CurveSettings::eProcessTypeUnivarie) {
-        if (mVariableType == CurveSettings::eVariableTypeField) {
-            label = QObject::tr("Field");
-
-        } else if (mVariableType == CurveSettings::eVariableTypeDepth) {
-            label = QObject::tr("Depth");
-
-        } else if (mVariableType == CurveSettings::eVariableTypeOther) {
-            label = QObject::tr("Measure");
-        }
     }
     return label;
 }

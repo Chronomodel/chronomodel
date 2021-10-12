@@ -319,7 +319,7 @@ QString MCMCLoopCurve::initialize()
         // Controle la cohérence des contraintes strati-temporel et des valeurs de profondeurs
         if (mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth ) {
              for (auto&& eForWard : e->mConstraintsFwd) {
-                 const bool notOk (e->mYInt > eForWard->mEventTo->mYInt);
+                 const bool notOk (e->mZField > eForWard->mEventTo->mZField);
                  if (notOk) {
                      mAbortedReason = QString(tr("Warning: chronological constraint not in accordance with the stratigraphy: %1 - %2 path, control depth value!")).arg (e->mName, eForWard->mEventTo->mName);
                      return mAbortedReason;
@@ -2215,59 +2215,59 @@ void MCMCLoopCurve::prepareEventY(Event* const event  )
         // Dans RenCurve, fichier U_cmt_lit_sauve
         if (mCurveSettings.mVariableType == CurveSettings::eVariableTypeInclination) {
 
-            event->mYx = event->mYInc;
-            event->mSy = event->mSInc; //ligne 348 : EctYij:= (1/sqrt(Kij))*Deg;
+            event->mYx = event->mXIncDepth;
+            event->mSy = event->mS_XA95Depth; //ligne 348 : EctYij:= (1/sqrt(Kij))*Deg;
 
         } else if (mCurveSettings.mVariableType == CurveSettings::eVariableTypeDeclination) {
             event->mYx = event->mYDec;
-            event->mSy = event->mSInc / cos(event->mYInc * rad); //ligne 364 : EctYij:=(1/(sqrt(Kij)*cos(Iij*rad)))*Deg;
+            event->mSy = event->mS_XA95Depth / cos(event->mXIncDepth * rad); //ligne 364 : EctYij:=(1/(sqrt(Kij)*cos(Iij*rad)))*Deg;
 
         } else {
-            event->mYx = event->mYInt;
-            event->mSy = event->mSInt;
+            event->mYx = event->mZField;
+            event->mSy = event->mS_ZField;
         }
         
-        // Non utilisé en univarié, mais mis à zéro notamment pour les exports CSV :
+        // Not used in univariate, but set to zero especially for CSV exports:
         event->mYy = 0;
         event->mYz = 0;
 
     } else if (mCurveSettings.mProcessType == CurveSettings::eProcessType2D) {
-        event->mYInt = 100.; // Pour traiter le cas 2D , on utilise le cas 3D en posant Yint = 100
-        event->mSInt = 0.;
+        event->mZField = 100.; // To treat the 2D case, we use the 3D case by setting Yint = 100
+        event->mS_ZField = 0.;
 
-        event->mYx = event->mYInc;
+        event->mYx = event->mXIncDepth;
         event->mYy = event->mYDec;
-        event->mYz = event->mYInt;
+        event->mYz = event->mZField;
 
-        event->mSy = sqrt( (pow(event->mSDec, 2.) + pow(event->mSInc, 2.)) /2.);
+        event->mSy = sqrt( (pow(event->mS_Y, 2.) + pow(event->mS_XA95Depth, 2.)) /2.);
 
     } else if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical) {
-        event->mYInt = 100.; // Pour traiter le cas sphérique , on utilise le cas vectoriel en posant Yint = 100
-        event->mSInt = 0.;
+        event->mZField = 100.; // To treat the spherical case, we use the vector case by posing Yint = 100
+        event->mS_ZField = 0.;
 
-        event->mYx = event->mYInt * cos(event->mYInc * rad) * cos(event->mYDec * rad);
-        event->mYy = event->mYInt * cos(event->mYInc * rad) * sin(event->mYDec * rad);
-        event->mYz = event->mYInt * sin(event->mYInc * rad);
+        event->mYx = event->mZField * cos(event->mXIncDepth * rad) * cos(event->mYDec * rad);
+        event->mYy = event->mZField * cos(event->mXIncDepth * rad) * sin(event->mYDec * rad);
+        event->mYz = event->mZField * sin(event->mXIncDepth * rad);
 
-        const double sYInc = event->mSInc *rad;// 2.4477;
-        event->mSy = event->mYInt*sYInc; // ligne 537 : EctYij:= Fij/sqrt(Kij);
+        const double sYInc = event->mS_XA95Depth *rad;// 2.4477;
+        event->mSy = event->mZField*sYInc; // ligne 537 : EctYij:= Fij/sqrt(Kij);
 
     } else if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector) {
 
-        event->mYx = event->mYInt * cos(event->mYInc * rad) * cos(event->mYDec * rad);
-        event->mYy = event->mYInt * cos(event->mYInc * rad) * sin(event->mYDec * rad);
-        event->mYz = event->mYInt * sin(event->mYInc * rad);
+        event->mYx = event->mZField * cos(event->mXIncDepth * rad) * cos(event->mYDec * rad);
+        event->mYy = event->mZField * cos(event->mXIncDepth * rad) * sin(event->mYDec * rad);
+        event->mYz = event->mZField * sin(event->mXIncDepth * rad);
 
-        const double sYInc = event->mSInc *rad;//2.4477 ;
-        event->mSy = sqrt( (pow(event->mSInt, 2.) + 2. * pow(event->mYInt*sYInc, 2.) ) /3.); // ligne 520 : EctYij:=sqrt( ( sqr(EctFij) + (2*sqr(Fij)/Kij) )/3 );
+        const double sYInc = event->mS_XA95Depth *rad;//2.4477 ;
+        event->mSy = sqrt( (pow(event->mS_ZField, 2.) + 2. * pow(event->mZField*sYInc, 2.) ) /3.); // ligne 520 : EctYij:=sqrt( ( sqr(EctFij) + (2*sqr(Fij)/Kij) )/3 );
 
     } else if (mCurveSettings.mProcessType == CurveSettings::eProcessType3D) {
 
-        event->mYx = event->mYInc;
+        event->mYx = event->mXIncDepth;
         event->mYy = event->mYDec;
-        event->mYz = event->mYInt;
+        event->mYz = event->mZField;
 
-        event->mSy = sqrt( (pow(event->mSInt, 2.) + pow(event->mSDec, 2.) + pow(event->mSInc, 2.)) /3.);
+        event->mSy = sqrt( (pow(event->mS_ZField, 2.) + pow(event->mS_Y, 2.) + pow(event->mS_XA95Depth, 2.)) /3.);
 
     }
     
@@ -2275,7 +2275,7 @@ void MCMCLoopCurve::prepareEventY(Event* const event  )
         event->mSy = 0.;
     }
 
-    // because of the problems of change of formula in case of null value. zero is forbidden and replaced by an arbitary value
+    // Because of the problems of change of formula in case of null value. Zero is forbidden and replaced by an arbitary value
     if (event->mSy == 0)
         event->mSy = std::numeric_limits<double>::epsilon() * 1.E6;
 }
