@@ -303,7 +303,7 @@ qDebug()<<"MultiCalibrationView::updateLayout()";
 
     mYZoom->setGeometry(x0, y, mButtonWidth, yPosBottomBar0 - y);
 
-    const qreal labelWidth = std::min( fontMetrics().boundingRect("000000").width() , width() /5);
+    const qreal labelWidth = std::min( fontMetrics().boundingRect("-1000000").width() , width() /5);
     const qreal editWidth = labelWidth;
     const qreal marginBottomBar = (width()- 5.*labelWidth )/6.;
 

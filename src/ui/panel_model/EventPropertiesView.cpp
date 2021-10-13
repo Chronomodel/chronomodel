@@ -726,7 +726,13 @@ void EventPropertiesView::paintEvent(QPaintEvent* e)
     (void) e;
     QWidget::paintEvent(e);
     QPainter p(this);
-    p.fillRect(rect(), palette().color(QPalette::Window));
+    //p.fillRect(rect(), palette().color(QPalette::Window));
+    Event::Type type = Event::Type (mEvent.value(STATE_EVENT_TYPE).toInt());
+    if (type == Event::eKnown)
+       p.fillRect(rect(), palette().color(QPalette::Window));
+    else
+        p.fillRect(0, mTopView->height(), width(), height() - mTopView->y(), Painting::borderDark);
+    // behind plugin button
 
     if (mEvent.isEmpty()) {
         QFont font = p.font();
@@ -766,7 +772,8 @@ void EventPropertiesView::applyAppSettings()
 
     minimumHeight += mDeleteBut->height();
 
-    updateLayout();
+    if (isVisible())
+        updateLayout();
 }
 
 void EventPropertiesView::updateLayout()

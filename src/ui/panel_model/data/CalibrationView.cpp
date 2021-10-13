@@ -172,7 +172,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mCalibGraph->setMouseTracking(true);
 
     mResultsText = new QTextEdit(this);
-    mResultsText->setFrameStyle(QFrame::HLine);
+    mResultsText->setFrameStyle(QFrame::NoFrame);
     QPalette palette = this->palette();
     palette.setColor(QPalette::Base, Qt::white);
     palette.setColor(QPalette::Text, Qt::black);
@@ -195,7 +195,6 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     connect(mResultsClipBut, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &CalibrationView::copyText);
     connect(mImageClipBut, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &CalibrationView::copyImage);
 
-   // setVisible(false);
 }
 
 CalibrationView::~CalibrationView()
@@ -208,7 +207,8 @@ void CalibrationView::applyAppSettings()
     mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
 
-    repaint();
+    if (isVisible())
+        repaint();
 }
 
 void CalibrationView::setDate(const QJsonObject& date)
@@ -223,8 +223,6 @@ void CalibrationView::setDate(const QJsonObject& date)
 
 void CalibrationView::setDate(const Date& d)
 {
-    //Q_ASSERT(&d);
-
     Project* project = MainWindow::getInstance()->getProject();
     const QJsonObject state = project->state();
     const QJsonObject settings = state.value(STATE_SETTINGS).toObject();
@@ -477,7 +475,7 @@ void CalibrationView::updateGraphs()
 
             } else {
                 mDrawing->setRefTitle(tr("Overlay densities"));
-                QList<QString> subDatesName;
+                QVector<QString> subDatesName;
                 for (auto&& d : mDate.mSubDates) {
                     if (d.toObject().value(STATE_DATE_DELTA_TYPE).toInt() == Date::eDeltaNone)
                         subDatesName.append(d.toObject().value(STATE_NAME).toString());
@@ -676,13 +674,14 @@ void CalibrationView::paintEvent(QPaintEvent* e)
     const int graphWidth = width() - graphLeft;
 
     QPainter p(this);
-    //p.setRenderHint(QPainter::Antialiasing); // not necessary
     // drawing a background under button
-    p.fillRect(QRect(0, 0, graphLeft, height()), Painting::borderDark);
-
+    p.fillRect(0, 0, graphLeft, height(), Painting::borderDark);
+    // behind toolBar
+    p.fillRect(graphLeft, mDrawing->y()+mDrawing->height(), graphWidth, height() - mDrawing->height() - mResultsText->height(), Painting::borderDark);
     // drawing a background under curve
-    p.fillRect(QRect(graphLeft, 0, graphWidth, height()), Qt::white);
-
+    p.fillRect(graphLeft, 0, graphWidth, mDrawing->height(),  Qt::white);
+    // behind mResultText
+    p.fillRect(graphLeft, mResultsText->y(), graphWidth, height() - mResultsText->y() , Qt::white);
     updateLayout();
 
 }
@@ -699,7 +698,7 @@ void CalibrationView::updateLayout()
     // same variable in MultiCalibrationView::updateLayout()
     const int textHeight (int (1.2 * (fm.descent() + fm.ascent()) ));
     const int verticalSpacer (int (0.3 * AppSettings::heigthUnit()));
-    const int margin = int (0.1 * mButtonWidth);
+    //const int margin = int (0.1 * mButtonWidth);
 
     //Position of Widget
     int y = 0;
@@ -713,37 +712,49 @@ void CalibrationView::updateLayout()
 
     const int separatorHeight (height()- y - 10*textHeight - 10* verticalSpacer);
     frameSeparator->setGeometry(0, y, mButtonWidth, separatorHeight);
-    y += frameSeparator->height() + verticalSpacer;
+ //   y += frameSeparator->height() + verticalSpacer;
 
-    mStartLab->setGeometry(0, y, mButtonWidth, textHeight);
-    y += mStartLab->height();
-    mStartEdit->setGeometry(margin, y, mButtonWidth - 2*margin, textHeight);
-    y += mStartEdit->height() + verticalSpacer;
-    mEndLab->setGeometry(0, y, mButtonWidth, textHeight);
-    y += mEndLab->height();
-    mEndEdit->setGeometry(margin, y, mButtonWidth - 2*margin, textHeight);
-    y += mEndEdit->height() + verticalSpacer;
-
-    mMajorScaleLab->setGeometry(0, y, mButtonWidth, textHeight);
-    y += mMajorScaleLab->height();
-    mMajorScaleEdit->setGeometry(margin, y, mButtonWidth- 2*margin, textHeight);
-    y += mMajorScaleEdit->height() + verticalSpacer;
-
-    mMinorScaleLab->setGeometry(0, y, mButtonWidth, textHeight);
-    y += mMinorScaleLab->height();
-    mMinorScaleEdit->setGeometry(margin, y, mButtonWidth - 2*margin, textHeight);
-    y += mMinorScaleEdit->height() + 3*verticalSpacer;
-
-    mHPDLab->setGeometry(0, y, mButtonWidth, textHeight);
-    y += mHPDLab->height();
-    mHPDEdit->setGeometry(margin, y, mButtonWidth - 2*margin, textHeight);
 
     const int graphLeft = mImageSaveBut->x() + mImageSaveBut->width();
     const int graphWidth = width() - graphLeft;
 
     const int resTextH = 5 * fm.height();
-    mDrawing->setGeometry(graphLeft, 0, graphWidth, height() - resTextH);
-    mResultsText->setGeometry(graphLeft + 20, mDrawing->y() + mDrawing->height(), graphWidth - 40 , resTextH);
+    const qreal toolBarHeigth = 2*textHeight + 12;
+    mDrawing->setGeometry(graphLeft, 0, graphWidth, height() - resTextH - toolBarHeigth);
+
+    // Bottom toolBar
+    const qreal yPosBottomBar0 = mDrawing->y() + mDrawing->height();
+    const qreal yPosBottomBar1 = yPosBottomBar0 + textHeight + 2;
+
+    const qreal labelWidth = std::min( fontMetrics().boundingRect("-1000000").width() , graphWidth /5);
+    const qreal editWidth = labelWidth;
+    const qreal marginBottomBar = (width()- 5.*labelWidth )/6.;
+
+
+    qreal xShift = marginBottomBar + graphLeft;
+    mStartLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
+    mStartEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
+
+    xShift = labelWidth + 2*marginBottomBar;
+    mEndLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
+    mEndEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
+
+    xShift = 2*labelWidth + 3*marginBottomBar;
+    mMajorScaleLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
+    mMajorScaleEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
+    mMajorScaleEdit->setText(locale().toString(mMajorScale));
+
+    xShift = 3*labelWidth + 4*marginBottomBar;
+    mMinorScaleLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
+    mMinorScaleEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
+    mMinorScaleEdit->setText(locale().toString(mMinorScale));
+
+    xShift = 4*labelWidth + 5*marginBottomBar;
+    mHPDLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
+    mHPDEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
+
+    // ResultBox
+    mResultsText->setGeometry(graphLeft + 20, mDrawing->y() + mDrawing->height() + toolBarHeigth, graphWidth - 40 , resTextH);
     mResultsText->setAutoFillBackground (true);
 
 }
