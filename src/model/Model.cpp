@@ -467,7 +467,7 @@ void Model::generateResultsLog()
          QString tempoStr = ModelUtilities::tempoResultsHTML(pPhase);
          tempoStr.remove(1, 41);
          log += tempoStr;
-        log += "<hr>";
+         log += "<hr>";
     }
 
     for (auto &&pPhaseConstraint : mPhaseConstraints) {
@@ -479,7 +479,7 @@ void Model::generateResultsLog()
         log += "<hr>";
     }
 
-    mLogResults += log;
+    mLogResults = log;
 }
 
 // Results CSV

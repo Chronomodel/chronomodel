@@ -170,13 +170,9 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
                     mGraph->addCurve(curveLineBound);
                 }
 
-            }
+            } else {
 
 
-            // ------------------------------------
-            //  HPD All Chains
-            // ------------------------------------
-            if (!isFixedBound) {
                 /* ------------------------------------
                  *  Post Distrib All Chains
                  * ------------------------------------

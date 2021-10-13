@@ -251,7 +251,12 @@ void ProjectView::applySettings(Model* model)
     mModelView->applyAppSettings();
 
     if (model) {
-        model->updateFormatSettings();
+        const double memoThreshold = model->mThreshold;
+        model->mThreshold = -1;
+        model->clearThreshold();
+        model->updateDensities(model->mFFTLength, model->mBandwidth, memoThreshold);//  updateFormatSettings();
+        emit model->newCalculus(); //redraw densities
+
         model->generateModelLog();
         model->generateResultsLog();
 
@@ -259,6 +264,7 @@ void ProjectView::applySettings(Model* model)
         mLogInitEdit->setText(model->getInitLog());
         mLogAdaptEdit->setText(model->getAdaptLog());
         updateResultsLog(model->getResultsLog());
+
     }
 }
 
@@ -314,6 +320,7 @@ void ProjectView::updateResultsLog(const QString& log)
     mLogResultsEdit->setStyleSheet(styleSh);
 #endif
     mLogResultsEdit->setHtml(log);
+
 }
 
 void ProjectView::showLogTab(const int &i)

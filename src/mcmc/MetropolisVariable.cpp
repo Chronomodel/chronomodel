@@ -462,7 +462,8 @@ void MetropolisVariable::generateHPD(const double threshold)
 void MetropolisVariable::generateCredibility(const QList<ChainSpecs> &chains, double threshold)
 {
     if (!mHisto.isEmpty())
-        mCredibility = credibilityForTrace(fullRunTrace(chains), threshold, mExactCredibilityThreshold,"Compute credibility for "+getName());
+        //mCredibility = credibilityForTrace(fullRunTrace(chains), threshold, mExactCredibilityThreshold,"Compute credibility for "+getName());
+    mCredibility = credibilityForTrace(fullRunTrace(chains), threshold, mExactCredibilityThreshold,"Compute credibility for "+getName());
     else
         mCredibility = QPair<double,double>();
 
@@ -513,7 +514,7 @@ void MetropolisVariable::generateNumericalResults(const QList<ChainSpecs> &chain
 {
     // Results for chain concatenation
     mResults.funcAnalysis = analyseFunction(mHisto);
-    auto statTrace = traceStatistic(fullRunRawTrace(chains));
+    auto statTrace = traceStatistic(fullRunTrace(chains));
 
     mResults.traceAnalysis = std::move(statTrace); //squartilesForTrace(fullRunTrace(chains)); // fullRunTrace is the formated Traces
  /*   mResults.xmin = std::move(statTrace.min);//  vector_min_value(fullRunTrace(chains));
