@@ -91,6 +91,7 @@ private slots:
 
     void updateZoom();
     void updateScroll();
+    void applyStudyPeriod();
     void exportImage();
     void copyImage();
     void copyText();
@@ -130,6 +131,9 @@ private:
 
     Label* mEndLab;
     LineEdit* mEndEdit;
+
+    // Adjust the zoom on the study period
+    Button* mDisplayStudyBut;
 
     Label* mMajorScaleLab;
     LineEdit* mMajorScaleEdit;

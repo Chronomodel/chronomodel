@@ -137,6 +137,11 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mEndEdit->setAdjustText();
     mEndEdit->setText("1000");
 
+    mDisplayStudyBut = new Button(tr("Study Period Display"), this);
+    //mDisplayStudyBut->setFixedHeight(25);
+    mDisplayStudyBut->setToolTip(tr("Restore view with the study period span"));
+
+
     mMajorScaleLab = new Label(tr("Maj. Int"), this);
     mMajorScaleLab->setAdjustText();
     mMajorScaleLab->setAlignment(Qt::AlignHCenter);
@@ -187,6 +192,10 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
 
     connect(mStartEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &CalibrationView::updateScroll);
     connect(mEndEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &CalibrationView::updateScroll);
+
+
+    connect(mDisplayStudyBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &CalibrationView::applyStudyPeriod);
+
     connect(mMajorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &CalibrationView::updateScaleX);
     connect(mMinorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &CalibrationView::updateScaleX);
 
@@ -211,6 +220,12 @@ void CalibrationView::applyAppSettings()
         repaint();
 }
 
+void CalibrationView::applyStudyPeriod()
+{
+    mStartEdit->setText(QString::number(mSettings.getTminFormated()));
+    mEndEdit->setText(QString::number(mSettings.getTmaxFormated()));
+    updateScroll();
+}
 void CalibrationView::setDate(const QJsonObject& date)
 {
     Q_ASSERT(&date);
@@ -697,8 +712,6 @@ void CalibrationView::updateLayout()
 
     // same variable in MultiCalibrationView::updateLayout()
     const int textHeight (int (1.2 * (fm.descent() + fm.ascent()) ));
-    const int verticalSpacer (int (0.3 * AppSettings::heigthUnit()));
-    //const int margin = int (0.1 * mButtonWidth);
 
     //Position of Widget
     int y = 0;
@@ -706,14 +719,6 @@ void CalibrationView::updateLayout()
     mImageSaveBut->setGeometry(0, y, mButtonWidth, mButtonHeigth);
     y += mImageSaveBut->height();
     mImageClipBut->setGeometry(0, y, mButtonWidth, mButtonHeigth);
-    y += mImageClipBut->height();
-    mResultsClipBut->setGeometry(0, y, mButtonWidth, mButtonHeigth);
-    y += mResultsClipBut->height();
-
-    const int separatorHeight (height()- y - 10*textHeight - 10* verticalSpacer);
-    frameSeparator->setGeometry(0, y, mButtonWidth, separatorHeight);
- //   y += frameSeparator->height() + verticalSpacer;
-
 
     const int graphLeft = mImageSaveBut->x() + mImageSaveBut->width();
     const int graphWidth = width() - graphLeft;
@@ -723,37 +728,46 @@ void CalibrationView::updateLayout()
     mDrawing->setGeometry(graphLeft, 0, graphWidth, height() - resTextH - toolBarHeigth);
 
     // Bottom toolBar
-    const qreal yPosBottomBar0 = mDrawing->y() + mDrawing->height();
-    const qreal yPosBottomBar1 = yPosBottomBar0 + textHeight + 2;
+    const int yPosBottomBar0 = mDrawing->y() + mDrawing->height();
+    const int yPosBottomBar1 = yPosBottomBar0 + textHeight + 2;
 
-    const qreal labelWidth = std::min( fontMetrics().boundingRect("-1000000").width() , graphWidth /5);
-    const qreal editWidth = labelWidth;
-    const qreal marginBottomBar = (width()- 5.*labelWidth )/6.;
+    const int buttonWidth = mDisplayStudyBut->width();
+
+    const int labelWidth = std::min( fontMetrics().boundingRect("-1000000").width() , (graphWidth - buttonWidth) /5);
+    const int editWidth = labelWidth;
+    const int marginBottomBar = (graphWidth- 5.*labelWidth - buttonWidth)/7.;
 
 
     qreal xShift = marginBottomBar + graphLeft;
     mStartLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
     mStartEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
 
-    xShift = labelWidth + 2*marginBottomBar;
+    xShift += mStartLab->width() + marginBottomBar;
     mEndLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
     mEndEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
 
-    xShift = 2*labelWidth + 3*marginBottomBar;
+    xShift += mEndLab->width() + marginBottomBar;
+    //mDisplayStudyBut->move(xShift, mDrawing->y()+mDrawing->height() + (toolBarHeigth - mDisplayStudyBut->height())/2); y middle
+    mDisplayStudyBut->setGeometry(xShift, yPosBottomBar1-1, mDisplayStudyBut->width(), textHeight + 2);
+
+
+    xShift += mDisplayStudyBut->width() + marginBottomBar;
     mMajorScaleLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
     mMajorScaleEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
     mMajorScaleEdit->setText(locale().toString(mMajorScale));
 
-    xShift = 3*labelWidth + 4*marginBottomBar;
+    xShift += mMajorScaleLab->width() + marginBottomBar;
     mMinorScaleLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
     mMinorScaleEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
     mMinorScaleEdit->setText(locale().toString(mMinorScale));
 
-    xShift = 4*labelWidth + 5*marginBottomBar;
+    xShift += mMinorScaleLab->width() + marginBottomBar;
     mHPDLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
     mHPDEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
 
     // ResultBox
+    mResultsClipBut->setGeometry(0, mDrawing->y() + mDrawing->height() + toolBarHeigth, mButtonWidth, mButtonHeigth);
+   // y += mResultsClipBut->height();
     mResultsText->setGeometry(graphLeft + 20, mDrawing->y() + mDrawing->height() + toolBarHeigth, graphWidth - 40 , resTextH);
     mResultsText->setAutoFillBackground (true);
 

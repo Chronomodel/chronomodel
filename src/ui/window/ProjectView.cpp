@@ -254,7 +254,7 @@ void ProjectView::applySettings(Model* model)
         const double memoThreshold = model->mThreshold;
         model->mThreshold = -1;
         model->clearThreshold();
-        model->updateDensities(model->mFFTLength, model->mBandwidth, memoThreshold);//  updateFormatSettings();
+        model->updateDensities(model->mFFTLength, model->mBandwidth, memoThreshold);
         emit model->newCalculus(); //redraw densities
 
         model->generateModelLog();
