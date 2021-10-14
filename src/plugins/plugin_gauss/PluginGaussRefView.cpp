@@ -119,19 +119,23 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             curve.mPen.setColor(Painting::mainColorDark);
             curve.mIsHisto = false;
 
-            double yMin (tminDisplay);
-            double yMax (tmaxDisplay);
+            double yMin = tminDisplay;
+            double yMax = tmaxDisplay;
 
             if (mode == DATE_GAUSS_MODE_NONE) {
               // nothing to do
 
             } else if (mode == DATE_GAUSS_MODE_EQ) {
                 QMap<double,double> refCurve;
-                double stepDisplay (tmaxDisplay - tminDisplay);
+                double stepDisplay = tmaxDisplay - tminDisplay;
                 if (a>0)
                     stepDisplay = stepDisplay/1000.;
 
-                for (double t = tminDisplay; t<=tmaxDisplay; t += stepDisplay) {
+                double t = 0;
+                //for (double t = tminDisplay; t<=tmaxDisplay; t += stepDisplay) {
+                const int imax = (tmaxDisplay - tminDisplay +1) / stepDisplay;
+                for (int i = 0; i<= imax; i++) {
+                    t = tminDisplay + i*stepDisplay;
                     const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
                     refCurve[t] = a * tRaw * tRaw + b * tRaw + c;
                 }
@@ -218,12 +222,13 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                      yMax = qMax(yMax, curveG95Sup.value(tminDisplay));
                 }
 
-
+                double t, tDisplay, error;
                 for ( QMap<double, double>::const_iterator &&iPt = curve.mDataMean.cbegin();  iPt!=curve.mDataMean.cend(); ++iPt) {
-                    const double t (iPt.key());
-                    const double tDisplay = DateUtils::convertToAppSettingsFormat(t);
+                    t = iPt.key();
+                    tDisplay = DateUtils::convertToAppSettingsFormat(t);
+
                     if (tDisplay>=tminDisplay && tDisplay<=tmaxDisplay) {
-                        const double error = plugin->getRefErrorAt(date.mData, t, mode) * 1.96;
+                        error = plugin->getRefErrorAt(date.mData, t, mode) * 1.96;
 
                         curveG[tDisplay] = iPt.value();
                         curveG95Sup[tDisplay] = iPt.value() + error;
@@ -233,6 +238,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                         yMax = qMax(yMax, curveG95Sup.value(tDisplay));
                     }
                 }
+                /*
                 if (tmaxDisplay>curve.mDataMean.firstKey() && tmaxDisplay<curve.mDataMean.lastKey()) {
                      QMap<double, double>::const_iterator iter = curve.mDataMean.lowerBound(tmaxDisplay);
                      double v;
@@ -256,7 +262,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                      yMin = qMin(yMin, curveG95Inf.value(tmaxDisplay));
                      yMax = qMax(yMax, curveG95Sup.value(tmaxDisplay));
                 }
-
+                */
                 GraphCurve graphCurveG95Sup;
                 graphCurveG95Sup.mName = "G95Sup";
                 graphCurveG95Sup.mData = curveG95Sup;
@@ -284,8 +290,6 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                 yMin = qMin(yMin, age - error * 3);
                 yMax = qMax(yMax, age + error * 3);
 
-                //mGraph->setRangeY(yMin, yMax);
-
                 /* ----------------------------------------------
                  *  Measure curve
                  * ---------------------------------------------- */
@@ -304,9 +308,12 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                  * => the visible part of the measurement may be very reduced ! */
                 const double step = (yMax - yMin) / 5000.;
                 QMap<double, double> measureCurve;
-                for (double t(yMin); t<yMax; t += step) {
-                    const double v = exp(-0.5 * pow((t - age) / error, 2.));
-                    measureCurve[t] = v;
+                double t;
+
+                for (int i = 0; i<5000; i++) {
+                    t = yMin + i*step;
+                    measureCurve[t] = exp(-0.5 * pow((t - age) / error, 2.));
+
                 }
                 measureCurve = normalize_map(measureCurve);
 

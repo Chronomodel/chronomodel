@@ -228,14 +228,18 @@ void Plugin14CRefView::setDate(const Date &date, const ProjectSettings& settings
              curveMeasure.mIsHisto = false;
 
              /* 5000 pts are used on vertical measurement
-         * because the y scale auto adjusts depending on x zoom.
-         * => the visible part of the measurement may be very reduced ! */
-             double step = (yMax - yMin) / 5000.;
+              * because the y scale auto adjusts depending on x zoom.
+              * => the visible part of the measurement may be very reduced ! */
+             const double step = (yMax - yMin) / 5000.;
              QMap<double, double> measureCurve;
-             for (double t (yMin); t<yMax; t += step) {
-                 const double v = exp(-0.5 * pow((age - t) / error, 2.));
-                 measureCurve[t] = v;
+             double t;
+
+             for (int i = 0; i<5000; i++) {
+                 t = yMin + i*step;
+                 measureCurve[t] = exp(-0.5 * pow((t - age) / error, 2.));
+
              }
+
              measureCurve = normalize_map(measureCurve);
              curveMeasure.mData = measureCurve;
              mGraph->addCurve(curveMeasure);
@@ -244,8 +248,8 @@ void Plugin14CRefView::setDate(const Date &date, const ProjectSettings& settings
              QString info = tr("Age BP : %1  ± %2").arg(locale().toString(age), locale().toString(error));
 
              /* ----------------------------------------------
-         *  Delta R curve
-         * ---------------------------------------------- */
+              *  Delta R curve
+              * ---------------------------------------------- */
              if (delta_r != 0. && delta_r_error != 0.) {
                  // Apply reservoir effect
                  age = (age - delta_r);
@@ -268,15 +272,16 @@ void Plugin14CRefView::setDate(const Date &date, const ProjectSettings& settings
                  curveDeltaR.mIsHisto = false;
 
                  /* 5000 pts are used on vertical measurement
-             * because the y scale auto adjusts depending on x zoom.
-             * => the visible part of the measure may be very reduced ! */
-                 step = (yMax - yMin) / 5000.;
+                  * because the y scale auto adjusts depending on x zoom.
+                  * => the visible part of the measure may be very reduced ! */
+
                  QMap<double, double> deltaRCurve;
-                 for (double t = yMin; t<yMax; t += step) {
-                     const double v = exp(-0.5 * pow((age - t) / error, 2.));
-                     deltaRCurve[t] = v;
-                     //curveDeltaR.mData[t] = v;
+
+                 for (int i = 0; i<5000; i++) {
+                     t = yMin + i*step;
+                     deltaRCurve[t] = exp(-0.5 * pow((age - t) / error, 2.));
                  }
+
                  deltaRCurve = normalize_map(deltaRCurve);
                  curveDeltaR.mData = deltaRCurve;
                  mGraph->addCurve(curveDeltaR);
@@ -317,12 +322,14 @@ void Plugin14CRefView::setDate(const Date &date, const ProjectSettings& settings
                  curveSubMeasure.mIsHisto = false;
 
                  /* 5000 pts are used on vertical measurement
-             * because the y scale auto adjusts depending on x zoom.
-             * => the visible part of the measurement may be very reduced ! */
-                 const double step = (yMax - yMin) / 1000.;
+                  * because the y scale auto adjusts depending on x zoom.
+                  * => the visible part of the measurement may be very reduced ! */
+
                  QMap<double, double> subCurve;
-                 for (double t = yMin; t<yMax; t += step) {
-                     const double v = exp(-0.5 * pow((sub_age - t) / sub_error, 2.));
+                 double v;
+                 for (int i = 0; i<5000; i++) {
+                     t = yMin + i*step;
+                     v = exp(-0.5 * pow((sub_age - t) / sub_error, 2.));
                      subCurve.insert(t, v);
                  }
                  subCurve = normalize_map(subCurve);

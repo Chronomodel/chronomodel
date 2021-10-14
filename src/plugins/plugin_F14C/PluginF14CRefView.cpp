@@ -226,20 +226,23 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
              curveMeasure.mIsHisto = false;
 
              /* 5000 pts are used on vertical measurement
-         * because the y scale auto adjusts depending on x zoom.
-         * => the visible part of the measurement may be very reduced ! */
-             double step = (yMax - yMin) / 5000.;
+              * because the y scale auto adjusts depending on x zoom.
+              * => the visible part of the measurement may be very reduced ! */
+             const double step = (yMax - yMin) / 5000.;
              QMap<double, double> measureCurve;
-             for (double t (yMin); t<yMax; t += step) {
-                 const double v = exp(-0.5 * pow((age - t) / error, 2.));
-                 measureCurve[t] = v;
+             double t;
+
+             for (int i = 0; i<5000; i++) {
+                 t = yMin + i*step;
+                 measureCurve[t] = exp(-0.5 * pow((t - age) / error, 2.));
+
              }
              measureCurve = normalize_map(measureCurve);
              curveMeasure.mData = measureCurve;
              mGraph->addCurve(curveMeasure);
 
              // Infos to write :
-             QString info = tr("Age BP : %1  ± %2").arg(locale().toString(age), locale().toString(error));
+          //   QString info = tr("Age BP : %1  ± %2").arg(locale().toString(age), locale().toString(error));
 
              /* ----------------------------------------------
          *  Delta R curve

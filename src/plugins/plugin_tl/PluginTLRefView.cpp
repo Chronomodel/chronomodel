@@ -147,13 +147,16 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
                 /* 5000 pts are used on vertical measurement
                  * because the y scale auto adjusts depending on x zoom.
                  * => the visible part of the measurement may be very reduced ! */
-                QMap<double, double> measureCurve;
                 const double step = (yMax - yMin) / 5000.;
+                QMap<double, double> measureCurve;
+                double t;
 
-                for (double t=yMin; t<yMax; t += step) {
-                    const double v = exp(-0.5 * pow((t - age) / error, 2));
-                    measureCurve[t] = v;
+                for (int i = 0; i<5000; i++) {
+                    t = yMin + i*step;
+                    measureCurve[t] = exp(-0.5 * pow((t - age) / error, 2.));
+
                 }
+
                 measureCurve = normalize_map(measureCurve);
                 curveMeasure.mData = measureCurve;
                 mGraph->addCurve(curveMeasure);
