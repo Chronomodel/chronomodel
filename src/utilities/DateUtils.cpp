@@ -74,33 +74,33 @@ double DateUtils::convertToFormat(const double &valueToFormat, const FormatDate 
             break;
     }
 }
-double DateUtils::convertFromFormat(const double &formattedValue, const FormatDate &format)
+double DateUtils::convertFromFormat(const double &formatedValue, const FormatDate &format)
 {
     switch (format) {
         case eCalBP:
-            return 1950. - formattedValue;
+            return 1950. - formatedValue;
             break;
         case eCalB2K:
-            return 2000. - formattedValue;
+            return 2000. - formatedValue;
             break;
         case eDatBP:
-            return formattedValue + 1950.;
+            return formatedValue + 1950.;
             break;
         case eDatB2K:
-            return formattedValue + 2000.;
+            return formatedValue + 2000.;
             break;
         case eKa:
-            return (2. - formattedValue)*1e+03;
+            return (2. - formatedValue)*1e+03;
         break;
         case eMa:
-            return (- formattedValue*1e+06);
+            return (- formatedValue*1e+06);
         break;
 
         case eBCAD:
         case eBCECE:
         case eNumeric:
         default:
-            return formattedValue;
+            return formatedValue;
             break;
     }
 }

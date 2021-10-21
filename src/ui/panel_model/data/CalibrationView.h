@@ -48,7 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphView.h"
 
 class GraphViewRefAbstract;
-//class TDate;
+
 class Marker;
 class LineEdit;
 class Button;
@@ -57,7 +57,6 @@ class QLabel;
 class Label;
 class QSlider;
 class QScrollBar;
-class QFrame;
 class QGraphicsScene;
 class QGraphicsView;
 class CalibrationDrawing;
@@ -73,7 +72,7 @@ public:
     void setDate(const QJsonObject& date);
     void setDate(const Date& date);
    // void setFont(const QFont& font);
-    void initScale (const double &majorScale, const int &minorScale) { mMajorScale= majorScale; mMinorScale = minorScale;}
+    void initScale (const double majorScale, const int minorScale) { mMajorScale= majorScale; mMinorScale = minorScale;}
     void initScale (const Scale &s) { mMajorScale = s.mark; mMinorScale = s.tip;}
 
 protected:
@@ -120,8 +119,6 @@ private:
     Button* mImageSaveBut;
     Button* mImageClipBut;
     Button* mResultsClipBut;
-
-    QFrame* frameSeparator;
 
     Label* mHPDLab;
     LineEdit* mHPDEdit;

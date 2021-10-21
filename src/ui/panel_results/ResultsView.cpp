@@ -1806,7 +1806,8 @@ void ResultsView::createByCurveGraph()
 
                 for (auto&& date: event->mDates) {
 
-                    QMap<double, double> calibMap = date.getFormatedCalibToShow();
+                    //QMap<double, double> calibMap = date.getFormatedCalibToShow();
+                    QMap<double, double> calibMap = date.getRawCalibMap();
 
                     FunctionStat calibStat = analyseFunction(calibMap);
 
@@ -1822,12 +1823,17 @@ void ResultsView::createByCurveGraph()
 
 
                 //event->mTheta.mHPD;
-                evPts.Xmean = DateUtils::convertToAppSettingsFormat(event->mTheta.mResults.funcAnalysis.mean);
+
+                /* The Results are in mFormatDate, but Xmean must be in not formated format.
+                 * Because the convertion is done within GraphViewCurve::generateCurves
+                 */
+                evPts.Xmean = DateUtils::convertFromFormat(event->mTheta.mResults.funcAnalysis.mean, AppSettings::mFormatDate);
                 evPts.Xerr = event->mTheta.mResults.funcAnalysis.std;
 
 
             } else {
-                evPts.Xmean = DateUtils::convertToAppSettingsFormat(static_cast<EventKnown*>(event)->mFixed); // always the same value
+                //evPts.Xmean = DateUtils::convertToAppSettingsFormat(static_cast<EventKnown*>(event)->mFixed); // always the same value
+                evPts.Xmean = static_cast<EventKnown*>(event)->mFixed;
                 evPts.Xerr = 0.;
 
                 dPts.Xmean = evPts.Xmean;//event->mTheta.mX; // always the same value

@@ -216,18 +216,22 @@ bool CurveSettings::showInclination() const
 {
     // Elle est toujours nécessaire en sphérique et vectoriel.
     // En univarié, elle n'est nécessaire que pour les variables d'étude : inclinaison ou déclinaison.
-    return ( mProcessType == CurveSettings::eProcessTypeSpherical) ||
+    return ( mProcessType == CurveSettings::eProcessTypeSpherical ||
              mProcessType == CurveSettings::eProcessType3D ||
             mProcessType == CurveSettings::eProcessType2D ||
-            ( mProcessType == CurveSettings::eProcessTypeVector) ||
-            ((mProcessType == CurveSettings::eProcessTypeUnivarie) &&
-             ( mVariableType == CurveSettings::eVariableTypeInclination ||
-               mVariableType == CurveSettings::eVariableTypeDeclination));
+             mProcessType == CurveSettings::eProcessTypeVector ||
+            (mProcessType == CurveSettings::eProcessTypeUnivarie && (mVariableType == CurveSettings::eVariableTypeInclination ||
+               mVariableType == CurveSettings::eVariableTypeDeclination)) ||
+            (mProcessType == CurveSettings::eProcessTypeUnivarie &&  mVariableType == CurveSettings::eVariableTypeOther) ||
+            (mProcessType == CurveSettings::eProcessTypeUnivarie &&  mVariableType == CurveSettings::eVariableTypeDepth)  ||
+             (mProcessType == CurveSettings::eProcessTypeUnivarie &&  mVariableType == CurveSettings::eVariableTypeField) );
 }
 
 QString CurveSettings::inclinationLabel() const
 {
     QString label;
+
+
     if ( (mProcessType == CurveSettings::eProcessTypeUnivarie &&
            ( mVariableType == CurveSettings::eVariableTypeInclination || mVariableType == CurveSettings::eVariableTypeDeclination)) ||
          mProcessType == CurveSettings::eProcessTypeVector ||
@@ -236,6 +240,15 @@ QString CurveSettings::inclinationLabel() const
 
     } else if (mProcessType == CurveSettings::eProcessType3D || mProcessType == CurveSettings::eProcessType2D) {
         label = QObject::tr("X");
+
+    } else  if (mProcessType == CurveSettings::eProcessTypeUnivarie || mVariableType == CurveSettings::eVariableTypeDepth) {
+        label = QObject::tr("Depth");
+
+    } else  if (mProcessType == CurveSettings::eProcessTypeUnivarie || mVariableType == CurveSettings::eVariableTypeOther) {
+        label = QObject::tr("Measure");
+
+    } else  if (mProcessType == CurveSettings::eProcessTypeUnivarie || mVariableType == CurveSettings::eVariableTypeField) {
+        label = QObject::tr("Field");
 
     }
     return label;

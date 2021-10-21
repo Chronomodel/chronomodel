@@ -531,6 +531,7 @@ QString ModelUtilities::curveResultsText(const ModelCurve* model)
     text += model->mLambdaSpline.resultsString("<br>", "", nullptr, nullptr, false);
 
     if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth) {
+        text += nl + QObject::tr("Positive curves accepted") + nl;
         const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
         unsigned totalPositvIter = 0;
         unsigned totalPequiredCurve = 0;
@@ -1198,6 +1199,7 @@ QString ModelUtilities::curveResultsHTML(const ModelCurve* model)
     text += line(textGreen(model->mLambdaSpline.resultsString("<br>", "", nullptr, nullptr, false)));
 
     if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth) {
+         text += "<br>" + line( textBold(textGreen(QObject::tr("Positive curves accepted")));
         const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
         unsigned totalPositvIter = 0;
         unsigned totalPequiredCurve = 0;

@@ -825,7 +825,10 @@ void EventPropertiesView::updateLayout()
         const  int YshiftLabel = (mLineEditHeight - mX_IncLab->height())/2;
 
         int editW;
-        if (curveSettings.showInclination()) {
+        if ( curveSettings.showInclination() ||
+             (curveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie && curveSettings.mVariableType == CurveSettings::eVariableTypeOther ) ||
+             (curveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie && curveSettings.mVariableType == CurveSettings::eVariableTypeDepth) ) {
+
             if (curveSettings.showDeclination() && !curveSettings.showYErr()) {
                 editW = (mCurveWidget->width() - 9*margin - 3*labW) / 3;
 
@@ -833,7 +836,7 @@ void EventPropertiesView::updateLayout()
                 editW = (mCurveWidget->width() - 5*margin - 2*labW) / 2;
             }
 
-           /* if (curveSettings.showDeclination()) {
+            /* if (curveSettings.showDeclination()) {
                 editW = (width() - 9*margin - 3*labW) / 3;
             }*/
 
@@ -861,7 +864,6 @@ void EventPropertiesView::updateLayout()
 
             dy += mLineEditHeight + margin;
         }
-
 
         if (curveSettings.showIntensity()) {
             dx = margin;

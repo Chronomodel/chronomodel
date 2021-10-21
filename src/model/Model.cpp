@@ -423,7 +423,7 @@ QString Model::getInitLog() const{
     QString log;
     int i = 1;
     for (auto && chain : mChains) {
-        log +=   line( tr("Elapsed init time %1 for chain %2").arg(DHMS(chain.mInitElapsedTime), QString::number(i)));
+        log += line( tr("Elapsed init time %1 for chain %2").arg(DHMS(chain.mInitElapsedTime), QString::number(i)));
         ++i;
     }
     return log + mLogInit;
@@ -433,7 +433,7 @@ QString Model::getAdaptLog() const{
     QString log;
     int i = 1;
     for (auto && chain : mChains) {
-        log +=   line( tr("Elapsed adaptation time %1 for chain %2").arg(DHMS(chain.mAdaptElapsedTime), QString::number(i)));
+        log += line( tr("Elapsed adaptation time %1 for chain %2").arg(DHMS(chain.mAdaptElapsedTime), QString::number(i)));
         ++i;
     }
     return log + mLogAdapt;
@@ -457,10 +457,10 @@ void Model::generateResultsLog()
     QString log;
     int i = 1;
     for (auto && chain : mChains) {
-        log +=   line( tr("Elapsed acquisition time %1 for chain %2").arg(DHMS(chain.mAcquisitionElapsedTime), QString::number(i)));
+        log += line( tr("Elapsed acquisition time %1 for chain %2").arg(DHMS(chain.mAcquisitionElapsedTime), QString::number(i)));
         ++i;
     }
-
+    log += "<hr>";
     for (auto &&pPhase : mPhases) {
         log += ModelUtilities::phaseResultsHTML(pPhase);
         /** @todo delete repeted word phase */
@@ -488,7 +488,7 @@ QList<QStringList> Model::getStats(const QLocale locale, const int precision, co
     (void) withDateFormat;
     QList<QStringList> rows;
 
-    int maxHpd (0);
+    int maxHpd = 0;
 
     // Phases
 
@@ -546,7 +546,7 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
     int runSize (0);
 
     for (auto& chain :mChains)
-        runSize += chain.mRealyAccepted; //ch.mIterPerAquisition / ch.mThinningInterval;
+        runSize += chain.mRealyAccepted;
 
     QStringList headers;
     headers << "iter";
@@ -559,7 +559,7 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
     int shift (0);
     for (int i = 0; i < mChains.size(); ++i) {
         int burnAdaptSize = 1 + mChains.at(i).mIterPerBurn + (mChains.at(i).mBatchIndex * mChains.at(i).mIterPerBatch);
-        int runSize = mChains.at(i).mRealyAccepted; //mChains.at(i).mIterPerAquisition / mChains.at(i).mThinningInterval;
+        int runSize = mChains.at(i).mRealyAccepted;
 
         for (int j = burnAdaptSize; j<burnAdaptSize + runSize; ++j) {
             QStringList l;
@@ -601,7 +601,7 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
     int runSize (0);
 
     for (auto& chain : mChains)
-        runSize += chain.mRealyAccepted; //chain.mIterPerAquisition / chain.mThinningInterval;
+        runSize += chain.mRealyAccepted;
 
     QStringList headers;
     headers << "iter" << phase->mName + " Begin" << phase->mName + " End";
@@ -614,7 +614,7 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
 
     for (ChainSpecs& chain : mChains) {
         int burnAdaptSize = 1 + chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
-        int runSize = chain.mRealyAccepted; //chain.mIterPerAquisition / chain.mThinningInterval;
+        int runSize = chain.mRealyAccepted;
 
         for (int j = burnAdaptSize; j < (burnAdaptSize + runSize); ++j) {
             QStringList l;
@@ -651,7 +651,7 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
 
     int runSize = 0;
     for (auto& chain : mChains)
-        runSize += chain.mRealyAccepted; //chain.mIterPerAquisition / chain.mThinningInterval;
+        runSize += chain.mRealyAccepted;
 
 
     QStringList headers;
@@ -661,10 +661,10 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
 
     rows << headers;
 
-    int shift (0);
+    int shift = 0;
     for (auto& chain : mChains)  {
         const int burnAdaptSize = 1+ chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
-        const int runSize = chain.mRealyAccepted; //chain.mIterPerAquisition / chain.mThinningInterval;
+        const int runSize = chain.mRealyAccepted;
 
         for (int j = burnAdaptSize; j < burnAdaptSize + runSize; ++j) {
             QStringList l;
@@ -993,8 +993,6 @@ void Model::setFFTLength(size_t FFTLength)
 {
     if (mFFTLength != FFTLength) {
         updateDensities(FFTLength, mBandwidth, mThreshold);
-        //mFFTLength = FFTLength;
-
         emit newCalculus();
     }
 }
@@ -1420,7 +1418,7 @@ void Model::generateTempoTest()
         for (auto&& ev : phase->mEvents)
             listTrace.append(ev->mTheta.fullRunRawTrace(mChains));
 
-const int totalIter = listTrace.size();
+        const int totalIter = listTrace.size();
 
         /// Look for the maximum span containing values \f$ x=2 \f$
         tmin = mSettings.mTmax;

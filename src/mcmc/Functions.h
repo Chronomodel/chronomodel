@@ -117,6 +117,8 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
 
 //-------- Matrix
 std::vector<double> initVector(size_t n);
+
+std::vector<std::vector<int>> initIntMatrix(size_t rows, size_t cols);
 std::vector<std::vector<double>> initMatrix(size_t rows, size_t cols);
 void resizeMatrix(std::vector<std::vector<double>>&matrix,  size_t rows, size_t cols);
 
@@ -493,4 +495,7 @@ Quartiles quartilesType(const QVector<T>& trace, const int quartileType, const d
 
     return Q;
 }
+
+
+
 #endif

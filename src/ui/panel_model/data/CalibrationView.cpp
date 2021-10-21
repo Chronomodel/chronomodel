@@ -97,10 +97,6 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mResultsClipBut->setToolTip(tr("Copy text results to clipboard"));
     mResultsClipBut->setIconOnly(true);
 
-    frameSeparator = new QFrame(this);
-    frameSeparator->setFrameStyle(QFrame::Panel);
-    frameSeparator->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
-
     mHPDLab = new Label(tr("HPD (%)"), this);
     mHPDLab->setAlignment(Qt::AlignHCenter);
     mHPDLab->setAdjustText();
@@ -653,7 +649,6 @@ void CalibrationView::setVisible(bool visible)
     mImageSaveBut->setVisible(visible);
     mImageClipBut->setVisible(visible);
     mResultsClipBut->setVisible(visible);
-    frameSeparator->setVisible(visible);
 
     mStartLab->setVisible(visible);
     mStartEdit->setVisible(visible);

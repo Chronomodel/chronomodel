@@ -347,7 +347,7 @@ void ImportDataView::exportDates()
                                     // Curve values start at column 15.
                                     // They must be put from column 14 in dateCsv,
                                     // because the row is shifted by one column at inserting eventName (see below)
-                                    const int CurveStartColumn = 15;
+                                    const int CurveStartColumn = 13;
                                     while (dateCsv.count() < CurveStartColumn) {
                                         dateCsv.append("");
                                     }

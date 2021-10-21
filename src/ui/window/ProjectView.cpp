@@ -250,7 +250,7 @@ void ProjectView::applySettings(Model* model)
 {
     mModelView->applyAppSettings();
 
-    if (model) {
+    if (model && !model->mEvents.isEmpty()) {
         const double memoThreshold = model->mThreshold;
         model->mThreshold = -1;
         model->clearThreshold();

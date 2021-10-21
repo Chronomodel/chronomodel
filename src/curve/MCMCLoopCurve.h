@@ -156,9 +156,12 @@ private:
     long double cross_validation (const SplineMatrices& matrices, const std::vector<long double> &vecH, const double lambdaSpline);
     long double general_cross_validation (const SplineMatrices& matrices, const std::vector<long double> &vecH, const double lambdaSpline);
 
-    PosteriorMeanGComposante computePosteriorMeanGComposante(const std::vector<MCMCSplineComposante>& trace, const QString& ProgressBarText);
+    PosteriorMeanGComposante computePosteriorMeanGComposante(const std::vector<MCMCSplineComposante>& trace, const QString& ProgressBarText); // Obsolete
     PosteriorMeanGComposante compute_posterior_mean_G_composante(const std::vector<MCMCSplineComposante>& trace, const QString& ProgressBarText);
-    PosteriorMeanGComposante computePosteriorMeanGComposante_chain_allchain(const std::vector<MCMCSplineComposante>& trace, PosteriorMeanGComposante& meanGAllChain, int prevChainSize);
+
+    PosteriorMeanGComposante computePosteriorMeanGComposante_chain_allchain(const std::vector<MCMCSplineComposante>& trace, PosteriorMeanGComposante& meanGAllChain, int prevChainSize);// Obsolete
+
+    std::vector<std::vector<int> > compute_posterior_map_G_composante(const std::vector<MCMCSplineComposante>& trace);
 
     bool  hasPositiveGPrime (const MCMCSplineComposante& splineComposante);
     bool  hasPositiveGPrimeByDet (const MCMCSplineComposante& splineComposante);

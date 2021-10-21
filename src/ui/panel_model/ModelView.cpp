@@ -874,10 +874,19 @@ void ModelView::showProperties()
            mButImport->setChecked(false);
 
        } else  {
-           // hide mMultiCalibrationView
+           // hide mPhasesView
+
            mAnimationHide->setTargetObject(mPhasesView);
            mAnimationHide->start();
+           mPhasesView->hide();
+           mPhasesGlobalView->hide();
 
+           mButNewPhase      ->hide();
+           mButDeletePhase   ->hide();
+           mButExportPhases  ->hide();
+           mButPhasesGlobaliew->hide();
+           mButPhasesGrid    ->hide();
+           mPhasesGlobalZoom ->hide();
        }
 
 
@@ -903,8 +912,20 @@ void ModelView::showProperties()
         mAnimationHide->setTargetObject(mEventPropertiesView);
         mAnimationHide->start();
 
+        mPhasesView->show();
+        mPhasesGlobalView->setVisible(mButPhasesGlobaliew->isChecked());
+
+        mButNewPhase      ->show();
+        mButDeletePhase   ->show();
+        mButExportPhases  ->show();
+        mButPhasesGlobaliew->show();
+        mButPhasesGrid    ->show();
+        mPhasesGlobalZoom ->show();
+
         mAnimationShow->setTargetObject(mPhasesView);
         mAnimationShow->start();
+
+
      }
 
     //updateLayout();
@@ -1311,21 +1332,21 @@ void ModelView::updateLayout()
             mPhasesGlobalView->setGeometry(5, 5, radarW, radarH);
         }
         mButNewPhase->show();
-        mButNewPhase       ->setGeometry(mPhasesView->width() -2, 0              , mButtonWidth, mButtonHeigth);
+        mButNewPhase->setGeometry(mPhasesView->width() -2, 0              , mButtonWidth, mButtonHeigth);
 
-        mButDeletePhase ->show();
-        mButDeletePhase    ->setGeometry(mPhasesView->width() -2, mButtonHeigth  , mButtonWidth, mButtonHeigth);
+        mButDeletePhase->show();
+        mButDeletePhase->setGeometry(mPhasesView->width() -2, mButtonHeigth  , mButtonWidth, mButtonHeigth);
 
         mButExportPhases->show();
-        mButExportPhases   ->setGeometry(mPhasesView->width() -2, 2*mButtonHeigth, mButtonWidth, mButtonHeigth);
+        mButExportPhases->setGeometry(mPhasesView->width() -2, 2*mButtonHeigth, mButtonWidth, mButtonHeigth);
 
         mButPhasesGlobaliew->show();
-        mButPhasesGlobaliew ->setGeometry(mPhasesView->width() -2, 3*mButtonHeigth, mButtonWidth, mButtonHeigth);
+        mButPhasesGlobaliew->setGeometry(mPhasesView->width() -2, 3*mButtonHeigth, mButtonWidth, mButtonHeigth);
 
         mButPhasesGrid->show();
-        mButPhasesGrid     ->setGeometry(mPhasesView->width() -2, 4*mButtonHeigth, mButtonWidth, mButtonHeigth);
-        mPhasesGlobalZoom  ->show();
-        mPhasesGlobalZoom  ->setGeometry(mPhasesView->width() -2, 5*mButtonHeigth, mButtonWidth, mRightRect.height() - 5*mButtonHeigth);
+        mButPhasesGrid->setGeometry(mPhasesView->width() -2, 4*mButtonHeigth, mButtonWidth, mButtonHeigth);
+        mPhasesGlobalZoom->show();
+        mPhasesGlobalZoom->setGeometry(mPhasesView->width() -2, 5*mButtonHeigth, mButtonWidth, mRightRect.height() - 5*mButtonHeigth);
      }
     update();
 }

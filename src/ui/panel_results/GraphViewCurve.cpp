@@ -114,10 +114,11 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         curveEventsPoints.mIsRefPoints = true;
 
         for (auto& rf : mEventsPoints) {
-            curveEventsPoints.mData.insert(rf.Xmean, rf.Ymean);
-            curveEventsPoints.mDataErrorX.insert(rf.Xmean, rf.Xerr);
-            curveEventsPoints.mDataErrorY.insert(rf.Xmean, rf.Yerr);
-            curveEventsPoints.mDataColor.insert(rf.Xmean, rf.color);
+            auto tRef = DateUtils::convertToAppSettingsFormat(rf.Xmean);
+            curveEventsPoints.mData.insert(tRef, rf.Ymean);
+            curveEventsPoints.mDataErrorX.insert(tRef, rf.Xerr);
+            curveEventsPoints.mDataErrorY.insert(tRef, rf.Yerr);
+            curveEventsPoints.mDataColor.insert(tRef, rf.color);
         }
 
         GraphCurve curveDataPoints;
@@ -129,11 +130,12 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         curveDataPoints.mIsRectFromZero = false;
         curveDataPoints.mIsRefPoints = true;
 
-        for (auto& rf : mDataPoints) {       
-            curveDataPoints.mData.insert(rf.Xmean, rf.Ymean);
-            curveDataPoints.mDataErrorX.insert(rf.Xmean, rf.Xerr);
-            curveDataPoints.mDataErrorY.insert(rf.Xmean, rf.Yerr);
-            curveDataPoints.mDataColor.insert(rf.Xmean, rf.color);
+        for (auto& rf : mDataPoints) {
+            auto tRef = DateUtils::convertToAppSettingsFormat(rf.Xmean);
+            curveDataPoints.mData.insert(tRef, rf.Ymean);
+            curveDataPoints.mDataErrorX.insert(tRef, rf.Xerr);
+            curveDataPoints.mDataErrorY.insert(tRef, rf.Yerr);
+            curveDataPoints.mDataColor.insert(tRef, rf.color);
         }
 
         GraphCurve curveG;

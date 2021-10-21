@@ -64,10 +64,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
  * @todo use Welford's online algorithm
  * https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
  *
- * // Calculate the variance based on equations (15) and (16) on
-            // page 216 of "The Art of Computer Programming, Volume 2",
-            // Second Edition. Donald E. Knuth.  Addison-Wesley
-            // Publishing Company, 1973.
+ *  Calculate the variance based on equations (15) and (16) on
+ *  page 216 of "The Art of Computer Programming, Volume 2",
+ * Second Edition. Donald E. Knuth.  Addison-Wesley
+ * Publishing Company, 1973.
 */
 FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
 {
@@ -409,7 +409,7 @@ Quartiles quartilesForRepartition(const QVector<double>& repartition, const doub
     Quartiles quartiles;
     if (repartition.size()<5) {
         quartiles.Q1 = 0.;
-        quartiles.Q2 = 0.;
+        quartiles.Q2 = tmin;
         quartiles.Q3 = 0.;
         return quartiles;
     }
@@ -992,10 +992,18 @@ std::vector<long double> initLongVector(size_t n)
      return std::vector<long double>(n, 0.);
 }
 
+
+std::vector<std::vector<int>> initIntMatrix(size_t rows, size_t cols)
+{
+    return std::vector<std::vector<int>> (rows, std::vector<int>(cols, 0.));
+}
+
 std::vector<std::vector<double>> initMatrix(size_t rows, size_t cols)
 {
     return std::vector<std::vector<double>> (rows, std::vector<double>(cols, 0.));
 }
+
+
 
 std::vector<std::vector<long double>> initLongMatrix(size_t rows, size_t cols)
 {
