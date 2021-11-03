@@ -129,8 +129,8 @@ class Generator
 public:
     Generator();
     virtual ~Generator();
-    static int createSeed();
-    static void initGenerator(const int seed);
+    static unsigned createSeed();
+    static void initGenerator(const unsigned seed);
 
     static double randomUniform(const double &min = 0., const double &max = 1.) ;
     static int randomUniformInt(const int& min = 0, const int& max = 1);

@@ -3073,7 +3073,7 @@ void Model::saveToFile(QDataStream *out)
         *out << quint32 (ch.mIterPerBurn);
         *out << quint32 (ch.mIterPerAquisition);
         *out << quint32 (ch.mAquisitionIterIndex);
-        *out << qint32 (ch.mSeed);
+        *out << unsigned (ch.mSeed);
         *out << quint32 (ch.mThinningInterval);
         *out << quint32 (ch.mRealyAccepted);
         *out << quint32 (ch.mTotalIter);

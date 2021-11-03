@@ -655,9 +655,9 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const 
     // limit of precision, to accelerate the calculus, we set the same as RChronoModel
     const double epsilonStep = 0.1/100.;
 
-    const unsigned  n = traceBegin.size();
+    const int  n = traceBegin.size();
 
-    if ( (thresh > 0.f) && (n > 0) && ((unsigned)traceEnd.size() == n) ) {
+    if ( (thresh > 0.f) && (n > 0) && (traceEnd.size() == n) ) {
 
         const double gamma = 1. - thresh/100.;
 
@@ -672,7 +672,7 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const 
 
         // 1 - map with relation Alpha to Beta
         std::multimap<double, double> alphaBeta;
-        for(int i=0; i<traceBegin.size(); ++i)
+        for (int i=0; i<traceBegin.size(); ++i)
             alphaBeta.insert(std::pair<double, double>(traceAlpha.at(i),traceBeta.at(i)) );
 
         // keep the beta trace in the same position of the Alpha, so we need to sort them with there values of alpha
@@ -699,12 +699,13 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const 
 
             if ((haSup > (int)traceBeta.size()) || (haInf > (int)traceBeta.size()))
                 return range;
+
             if ((haInf < 0) || (haSup < 0))
                 return range;
 
             const double a = traceBeta.at(haInf) + ( (ha-(double)haInf)*(traceBeta.at(haSup)-traceBeta.at(haInf)) );
 
-            // 3 - copy only value of beta with alpha smaller than a(epsilon)!
+            // 3 - Copy only value of beta with alpha smaller than a(epsilon)!
             const int alphaIdx(haSup < n ? haSup : n-1 );//( ha == haInf ? haInf : haSup );//( ha == haSup ? haSup : haInf );// //
 
             const int remainingElemt ( alphaIdx );

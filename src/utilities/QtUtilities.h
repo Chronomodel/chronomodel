@@ -58,8 +58,13 @@ int defaultDpiX();
 qreal dpiScaled(qreal value);
 QColor getContrastedColor(const QColor& color);
 QList<int> stringListToIntList(const QString& listStr, const QString& separator = ",");
+QList<unsigned> stringListToUnsignedList(const QString& listStr, const QString& separator = ",");
+
+
 QStringList intListToStringList(const QList<int>& intList);
+QStringList unsignedListToStringList(const QList<unsigned>& unsignedList);
 QString intListToString(const QList<int>& intList, const QString& separator = ",");
+QString unsignedListToString(const QList<unsigned>& intList, const QString& separator);
 
 QFileInfo saveWidgetAsImage(QObject* widget, const QRect& r, const QString& dialogTitle, const QString& defaultPath);
 bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName);

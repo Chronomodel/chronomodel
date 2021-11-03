@@ -207,7 +207,18 @@ QList<int> stringListToIntList(const QString& listStr, const QString& separator)
     QList<int> result;
     if (!listStr.isEmpty()) {
         QStringList list = listStr.split(separator);
-        for (auto&& str : list)
+        for (auto& str : list)
+            result.append(str.toInt());
+
+    }
+    return result;
+}
+QList<unsigned> stringListToUnsignedList(const QString& listStr, const QString& separator)
+{
+    QList<unsigned> result;
+    if (!listStr.isEmpty()) {
+        QStringList list = listStr.split(separator);
+        for (auto& str : list)
             result.append(str.toInt());
 
     }
@@ -217,8 +228,16 @@ QList<int> stringListToIntList(const QString& listStr, const QString& separator)
 QStringList intListToStringList(const QList<int>& intList)
 {
     QStringList list;
-    for (int i = 0; i<intList.size(); ++i)
-        list.append(QString::number(intList[i]));
+    for (auto& i : intList)
+        list.append(QString::number(i));
+    return list;
+}
+
+QStringList unsignedListToStringList(const QList<unsigned>& unsignedList)
+{
+    QStringList list;
+    for (auto& un : unsignedList)
+        list.append(QString::number(un));
     return list;
 }
 
@@ -228,6 +247,11 @@ QString intListToString(const QList<int>& intList, const QString& separator)
     return list.join(separator);
 }
 
+QString unsignedListToString(const QList<unsigned>& intList, const QString& separator)
+{
+    QStringList list = unsignedListToStringList(intList);
+    return list.join(separator);
+}
 
 QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogTitle, const QString& defaultPath)
 {

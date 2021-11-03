@@ -55,6 +55,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 //int matherr(struct exception *e);
 
+// Mersenne Twister 19937 generator
 std::mt19937 Generator::sEngine(0);
 std::uniform_real_distribution<double> Generator::sDoubleDistribution(0.0, 1.0);
 
@@ -63,7 +64,7 @@ c_UUID Generator::UUID;
 //http://xoroshiro.di.unimi.it/
 std::uint64_t Generator::xorshift64starSeed(35); /**< used with Generator::xorshift64star(void) */
 
-void Generator::initGenerator(const int seed)
+void Generator::initGenerator(const unsigned seed)
 {
    sEngine.seed(seed);
    sDoubleDistribution.reset();
@@ -71,7 +72,7 @@ void Generator::initGenerator(const int seed)
    xorshift64starSeed = seed;
 }
 
-int Generator::createSeed()
+unsigned Generator::createSeed()
 {
     // obtain a seed from the system clock:
     // unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();

@@ -193,7 +193,7 @@ void MCMCSettingsDialog::setSettings(const MCMCSettings& settings)
     mMaxBatchesEdit->setText(mLoc.toString(settings.mMaxBatches));
     mIterPerBatchEdit->setText(mLoc.toString(settings.mIterPerBatch));
     mDownSamplingEdit->setText(mLoc.toString(settings.mThinningInterval));
-    mSeedsEdit->setText(intListToString(settings.mSeeds, ";"));
+    mSeedsEdit->setText(unsignedListToString(settings.mSeeds, ";"));
 
     mLevelEdit->setText(mLoc.toString(settings.mMixingLevel));
 }
@@ -215,7 +215,7 @@ MCMCSettings MCMCSettingsDialog::getSettings()
 
     settings.mMixingLevel = qBound(0.0001, mLoc.toDouble(mLevelEdit->text()),0.9999);
 
-    settings.mSeeds = stringListToIntList(mSeedsEdit->text(), ";");
+    settings.mSeeds = stringListToUnsignedList(mSeedsEdit->text(), ";");
 
     return settings;
 }
@@ -326,7 +326,7 @@ void MCMCSettingsDialog::updateLayout()
 void MCMCSettingsDialog::inputControl()
 {
     bool isValided (true);
-    bool ok(true);
+    bool ok (true);
     const QLocale mLoc = QLocale();
     QString errorMessage;
 
@@ -334,69 +334,71 @@ void MCMCSettingsDialog::inputControl()
 
     settings.mNumChains = mNumProcEdit->text().toInt(&ok);
     if (ok == false || settings.mNumChains < 1 ) {
-        errorMessage = QObject::tr("The number of chain must be bigger than 0");
+        errorMessage = tr("The number of chain must be bigger than 0");
         isValided = false;
     }
 
     settings.mIterPerBurn = mNumBurnEdit->text().toInt(&ok);
     if (isValided == true && (ok == false || settings.mIterPerBurn < 1) ) {
-        errorMessage = QObject::tr("The number of iteration in the burn-in must be bigger than 0");
+        errorMessage = tr("The number of iteration in the burn-in must be bigger than 0");
         isValided = false;
     }
 
     settings.mMaxBatches = mMaxBatchesEdit->text().toInt(&ok);
     if (isValided == true && (ok == false || settings.mMaxBatches < 1) ) {
-        errorMessage = QObject::tr("The number of the maximun batches in the adaptation must be bigger than 0");
+        errorMessage = tr("The number of the maximun batches in the adaptation must be bigger than 0");
         isValided = false;
     }
 
     settings.mIterPerBatch =  mIterPerBatchEdit->text().toInt(&ok);
     if (isValided == true && settings.mIterPerBatch < 1) {
-        errorMessage = QObject::tr("The number of the iteration in one batch of the adaptation must be bigger than 0");
+        errorMessage = tr("The number of the iteration in one batch of the adaptation must be bigger than 0");
         isValided = false;
     }
 
     settings.mIterPerAquisition = mNumIterEdit->text().toInt(&ok);
     if (isValided == true && (ok == false || settings.mIterPerAquisition < 50)) {
-        errorMessage = QObject::tr("The number of the iteration in one run must be bigger than 50");
+        errorMessage = tr("The number of the iteration in one run must be bigger than 50");
         isValided = false;
     }
 
     settings.mThinningInterval = mDownSamplingEdit->text().toInt(&ok);
     if (isValided == true && (ok == false || settings.mThinningInterval < 1 ) ) {
-        errorMessage = QObject::tr("The thinning interval in one run must be bigger than 1");
+        errorMessage = tr("The thinning interval in one run must be bigger than 1");
         isValided = false;
      }
+
     if (isValided == true && (ok == false || (settings.mIterPerAquisition/settings.mThinningInterval) < 40) ) {
         if ((settings.mIterPerAquisition/40) < 2)
-            errorMessage = QObject::tr("With %1 the thinning interval in one run must be 1").arg(mLoc.toString(settings.mIterPerAquisition));
+            errorMessage = tr("With %1 the thinning interval in one run must be 1").arg(mLoc.toString(settings.mIterPerAquisition));
 
         else
-            errorMessage = QObject::tr("The thinning interval in one run must be smaller than %1").arg(mLoc.toString(static_cast<unsigned int>(floor(settings.mIterPerAquisition/40))));
+            errorMessage = tr("The thinning interval in one run must be smaller than %1").arg(mLoc.toString(static_cast<unsigned int>(floor(settings.mIterPerAquisition/40))));
 
         isValided = false;
      }
 
     settings.mMixingLevel = mLoc.toDouble(mLevelEdit->text(), &ok);
     if (isValided == true && (ok == false || settings.mMixingLevel < 0.0001 || settings.mMixingLevel > 0.9999) ) {
-            errorMessage = QObject::tr("The number of the iteration in one run must be bigger than %1  and smaller than %2").arg(mLoc.toString(0.0001), mLoc.toString(0.9999));
+            errorMessage = tr("The number of the iteration in one run must be bigger than %1  and smaller than %2").arg(mLoc.toString(0.0001), mLoc.toString(0.9999));
             isValided = false;
      }
 
+    QList<int> seedList;
     if (isValided) {
-        settings.mSeeds = stringListToIntList(mSeedsEdit->text(), ";");
-        for (auto seed : settings.mSeeds)
-            //if (std::isnan(seed) || // bug with MSVC2015_64bit
-            if ( seed == 0) {
-                errorMessage = QObject::tr("Each seed must be an integer, bigger than 0");
+        seedList = stringListToIntList(mSeedsEdit->text(), ";");
+        for (auto& seed : seedList)
+            if ( seed <= 0) {
+                errorMessage = tr("Each seed must be an integer, bigger than 0");
                 isValided = false;
             }
     }
 
-    if (isValided)
+    if (isValided) {
+        settings.mSeeds = stringListToUnsignedList(mSeedsEdit->text(), ";");;
         emit inputValided();
 
-    else
+   } else
         QMessageBox::warning(this, tr("Invalid input"),
                                    errorMessage,
                                    QMessageBox::Ok ,
@@ -426,7 +428,6 @@ void MCMCSettingsDialog::setQuickTest()
     mIterPerBatchEdit->setText(locale().toString(100));
     mNumIterEdit->setText(locale().toString(200));
     mDownSamplingEdit->setText(locale().toString(5));
-    //mSeedsEdit->setText("");
 
     mLevelEdit->setText(locale().toString(0.99));
 }

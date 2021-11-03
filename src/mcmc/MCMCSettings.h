@@ -58,7 +58,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 struct ChainSpecs
 {
-    int mSeed;
+    unsigned mSeed;
     int mIterPerBurn;
     int mBurnIterIndex;
     int mMaxBatchs;
@@ -102,7 +102,7 @@ public:
     int mMaxBatches;
     int mIterPerBatch;
     int mThinningInterval;
-    QList<int> mSeeds;
+    QList<unsigned> mSeeds;
 
     int mFinalBatchIndex;
     double mMixingLevel;
