@@ -427,8 +427,6 @@ QVector<float> equal_areas(const QVector<float>& data, const float step, const f
     long double srcArea (0.l);
     long double lastV = data.at(0);
 
-    //for (int i=1; i<data.size(); ++i) {
-    //    const long double v = data.at(i);
     for (auto&& value : data) {
         const long double v = value;
 
@@ -440,8 +438,6 @@ QVector<float> equal_areas(const QVector<float>& data, const float step, const f
 
     const long double invProp =srcArea / area;
     QVector<float> result;
-    //for(int i=0; i<data.size(); ++i)
-    //    result.append(data.at(i) / invProp);
 
     QVector<float>::const_iterator cIter = data.cbegin();
     while (cIter != data.cend() ) {

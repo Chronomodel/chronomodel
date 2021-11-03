@@ -983,7 +983,6 @@ void ResultsView::updateModel(Model* model)
     mCurrentVariableList.clear();
     if (isCurve()) {
         mMainVariable = GraphViewResults::eG;
-        //mCurrentVariableList.append(GraphViewResults::eG);
         mGraphListTab->setTab(2, false);
 
     } else if (mHasPhases) {
@@ -1065,7 +1064,6 @@ void ResultsView::updateLayout()
 
 void ResultsView::updateGraphsLayout()
 {
-
     // Display the scroll area corresponding to the selected tab
     mEventsScrollArea->setVisible(mGraphListTab->currentIndex() == 0);
     mPhasesScrollArea->setVisible(mGraphListTab->currentIndex() == 1);
@@ -1087,17 +1085,13 @@ void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewRes
 {
     QWidget* widget = scrollArea->widget();
 
-    /*QPalette palette = widget->palette();
-    palette.setBrush(QPalette::Background, Qt::blue);
-    widget->setPalette(palette);*/
-
-    // used to magnify the graph for curve
+    // Used to magnify the graph for curve
     int coefDisplay = 1;
     if (mGraphListTab->currentIndex() == 2 )
         coefDisplay = 3;
 
     if (widget) {
-        widget->resize(width() - mOptionsW - 2, graphs.size() * mGraphHeight * coefDisplay);
+        widget->resize(width() - mOptionsW, graphs.size() * mGraphHeight * coefDisplay);
 
         int i = 0;
         for (auto& g : graphs) {
@@ -1105,7 +1099,7 @@ void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewRes
             g->setVisible(true);
             g->update();
         }
-        mRuler->resize(widget->width(), mRuler->height());
+
     }
 }
 
