@@ -752,11 +752,11 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
         // Statistic Results on Trace
         list << locale.toString(mResults.traceAnalysis.mean, 'f', precision);
         list << locale.toString(mResults.traceAnalysis.std, 'f', precision);
-        list << locale.toString(mResults.traceAnalysis.min, 'f', precision);
-        list << locale.toString(mResults.traceAnalysis.max, 'f', precision);
         list << locale.toString(mResults.traceAnalysis.quartiles.Q1, 'f', precision);
         list << locale.toString(mResults.traceAnalysis.quartiles.Q2, 'f', precision);
         list << locale.toString(mResults.traceAnalysis.quartiles.Q3, 'f', precision);
+        list << locale.toString(mResults.traceAnalysis.min, 'f', precision);
+        list << locale.toString(mResults.traceAnalysis.max, 'f', precision);
         list << locale.toString(mExactCredibilityThreshold * 100., 'f', 2);
         list << locale.toString(mCredibility.first, 'f', precision);
         list << locale.toString(mCredibility.second, 'f', precision);
@@ -765,6 +765,9 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
         list << locale.toString(mResults.funcAnalysis.mode, 'f', precision);
         list << locale.toString(mResults.funcAnalysis.mean, 'f', precision);
         list << locale.toString(mResults.funcAnalysis.std, 'f', precision);
+        list << locale.toString(mResults.funcAnalysis.quartiles.Q1, 'f', precision);
+        list << locale.toString(mResults.funcAnalysis.quartiles.Q2, 'f', precision);
+        list << locale.toString(mResults.funcAnalysis.quartiles.Q3, 'f', precision);
 
         const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThresholdUsed);
 
