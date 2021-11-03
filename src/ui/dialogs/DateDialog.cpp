@@ -280,15 +280,15 @@ void DateDialog::checkWiggle()
 {
     if (mDeltaFixedRadio->isChecked()) {
         bool ok1 = true;
-        const int f = mDeltaFixedEdit->text().toInt(&ok1);
-        mWiggleIsValid = ( ok1 && f>0 );
+        mDeltaFixedEdit->text().toInt(&ok1);
+        mWiggleIsValid = ok1;
 
     } else if (mDeltaRangeRadio->isChecked()) {
         bool ok1 = true;
         bool ok2 = true;
         const int dmin = mDeltaMinEdit->text().toInt(&ok1);
         const int dmax = mDeltaMaxEdit->text().toInt(&ok2);
-        mWiggleIsValid = ( ok1 && ok2 && ( (dmax>dmin) ) );
+        mWiggleIsValid = ( ok1 && ok2 &&  (dmax>dmin) );
 
     } else if(mDeltaGaussRadio->isChecked()) {
         bool ok1 = true;

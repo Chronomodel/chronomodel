@@ -39,15 +39,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "CalibrationView.h"
 
-#include <QtWidgets>
-#include <QClipboard>
-
 #include "Ruler.h"
 #include "Date.h"
 #include "Event.h"
 #include "Marker.h"
-#include "../PluginAbstract.h"
-#include "../GraphViewRefAbstract.h"
+#include "PluginAbstract.h"
+#include "GraphViewRefAbstract.h"
 #include "MainWindow.h"
 #include "Project.h"
 #include "GraphView.h"
@@ -62,6 +59,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "DoubleValidator.h"
 
 #include "CalibrationDrawing.h"
+
+#include <QtWidgets>
+#include <QClipboard>
 
 CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
     mRefGraphView(nullptr),
@@ -358,7 +358,8 @@ void CalibrationView::updateGraphs()
                 calibWiggleCurve.mName = "Wiggle";
                 calibWiggleCurve.mPen.setColor(Qt::red);
                 calibWiggleCurve.mIsHisto = false;
-                calibWiggleCurve.mData = normalize_map(wiggleCalibMap, map_max_value(calibMap));;
+                // to have both densities at the same height
+                calibWiggleCurve.mData = normalize_map(wiggleCalibMap, map_max_value(calibMap));
                 calibWiggleCurve.mIsRectFromZero = false;
                 calibWiggleCurve.mBrush = QBrush(Qt::NoBrush);
                 mCalibGraph->addCurve(calibWiggleCurve);

@@ -1217,9 +1217,6 @@ const QMap<double, double> Date::getFormatedCalibToShow() const
             maxIdx--;
         }
 
-       // tminCal = mTminRefCurve + minIdx * mCalibration->mStep;
-       // tmaxCal = mTminRefCurve + maxIdx * mCalibration->mStep;
-
         tminCal = mCalibration->mTmin + minIdx * mCalibration->mStep;
         tmaxCal = mCalibration->mTmin + maxIdx * mCalibration->mStep;
 
@@ -1282,16 +1279,17 @@ const QMap<double, double> Date::getFormatedWiggleCalibToShow() const
         maxIdx--;
     }
 
-    tminCal = mTminRefCurve + minIdx * mCalibration->mStep;
-    tmaxCal = mTminRefCurve + maxIdx * mCalibration->mStep;
+    tminCal = mWiggleCalibration->mTmin + minIdx * mWiggleCalibration->mStep;
+    tmaxCal = mWiggleCalibration->mTmin + maxIdx * mWiggleCalibration->mStep;
 
     curve = mWiggleCalibration->mCurve.mid(minIdx, (maxIdx - minIdx) + 1);
-    curve = equal_areas(curve, mCalibration->mStep, 1.);
-    calib = vector_to_map(curve, tminCal, tmaxCal, mCalibration->mStep );
+    curve = equal_areas(curve, mWiggleCalibration->mStep, 1.);
+    calib = vector_to_map(curve, tminCal, tmaxCal, mWiggleCalibration->mStep );
+   // calib = normalize_map(calib);
 
 
 
-    return DateUtils::convertMapToAppSettingsFormat(calib);
+    return DateUtils::convertMapToAppSettingsFormat(std::move(calib));
 }
 
 
