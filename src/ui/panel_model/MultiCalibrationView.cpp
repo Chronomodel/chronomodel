@@ -99,6 +99,12 @@ mCurveColor(Painting::mainColorDark)
     mStatClipBut->setChecked(false);
     mStatClipBut->setCheckable(true);
 
+    mExportResults = new Button(tr("Results"), this);
+    mExportResults->setFlatHorizontal();
+    mExportResults->setIcon(QIcon(":csv.png"));
+    mExportResults->setToolTip(tr("Export all result in several files"));
+
+
     mGraphHeightLab = new Label(tr("Y Zoom"), this);
     mGraphHeightLab->setAdjustText();
     mGraphHeightLab->setAlignment(Qt::AlignHCenter);
@@ -198,12 +204,13 @@ mCurveColor(Painting::mainColorDark)
     connect(mEndEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &MultiCalibrationView::updateScroll);
     connect(mMajorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &MultiCalibrationView::updateScaleX);
     connect(mMinorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &MultiCalibrationView::updateScaleX);
-
-
     connect(mHPDEdit, &QLineEdit::textEdited, this, &MultiCalibrationView::updateHPDGraphs);
+
     connect(mImageSaveBut, &Button::clicked, this, &MultiCalibrationView::exportFullImage);
     connect(mImageClipBut, &Button::clicked, this, &MultiCalibrationView::copyImage);
     connect(mStatClipBut, &Button::clicked, this, &MultiCalibrationView::showStat);
+    connect(mExportResults, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &MultiCalibrationView::exportResults);
+
     connect(mGraphHeightEdit, &QLineEdit::textEdited, this, &MultiCalibrationView::updateGraphsSize);
     connect(mYZoom, &ScrollCompressor::valueChanged, this, &MultiCalibrationView::updateYZoom);
 
@@ -287,6 +294,9 @@ qDebug()<<"MultiCalibrationView::updateLayout()";
     y += mImageClipBut->height();
     mStatClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
     y += mStatClipBut->height() + 5;
+
+    mExportResults->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
+    y += mExportResults->height() + 5;
 
     mColorClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
     y += mColorClipBut->height();
@@ -450,7 +460,7 @@ void MultiCalibrationView::updateGraphList()
                 GraphCurve calibCurve;
                 GraphView* calibGraph = new GraphView(this);
 
-                 if (d.mIsValid && !d.mCalibration->mCurve.isEmpty()) {
+                 if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mCurve.isEmpty()) {
                     calibCurve.mName = "Calibration";
                     calibCurve.mPen.setColor(penColor);
                     calibCurve.mPen.setWidth(1);
@@ -497,7 +507,7 @@ void MultiCalibrationView::updateGraphList()
                 calibGraph->addInfo(d.mName);
                 calibGraph->showInfos(true);
 
-                if (d.mIsValid && !d.mCalibration->mCurve.isEmpty()) {
+                if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mCurve.isEmpty()) {
                         // hpd is calculate only on the study Period
                         QMap<type_data, type_data> subData = calibCurve.mData;
                         subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
@@ -943,6 +953,120 @@ void MultiCalibrationView::copyText()
 {
     QApplication::clipboard()->setText(mResultText.replace("<br>", "\r"));
 }
+void MultiCalibrationView::exportResults()
+{
+
+
+        const QString csvSep = AppSettings::mCSVCellSeparator;
+        //const int precision = AppSettings::mPrecision;
+        QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+
+        csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
+
+        const QString currentPath = MainWindow::getInstance()->getCurrentPath();
+        const QString filePath = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                        tr("Export to file..."),
+                                                        currentPath,
+                                                       tr("Directory"));
+
+        if (!filePath.isEmpty()) {
+
+
+            // copy tabs ------------------------------------------
+            const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
+            const QString projectName = tr("Project filename : %1").arg(MainWindow::getInstance()->getNameProject()) + "<br>";
+
+
+        // _____________
+            // update Results from selected Event in JSON
+            QJsonObject state = mProject->state();
+            const QJsonArray events = state.value(STATE_EVENTS).toArray();
+            QVector<QJsonObject> selectedEvents;
+
+            for (auto&& ev : events) {
+               QJsonObject jsonEv = ev.toObject();
+                if (jsonEv.value(STATE_IS_SELECTED).toBool())
+                    selectedEvents.append(jsonEv);
+            }
+
+            // Sort Event by Position
+            std::sort(selectedEvents.begin(), selectedEvents.end(), [] (QJsonObject ev1, QJsonObject ev2) {return (ev1.value(STATE_ITEM_Y).toDouble() < ev2.value(STATE_ITEM_Y).toDouble());});
+
+            QList<QStringList> stats ;
+            QStringList header;
+            header << "Event"<<"Data type" << "Data Name" <<"Data Description"<<"MAP"<< "Mean"<<"Std";
+            header <<"Q1" <<"Q2" << "Q3"<<"HPD %";
+            stats.append(header);
+
+            for (auto& ev : selectedEvents) {
+
+                // Insert the Event's Name only if different to the previous Event's name
+
+                const QString eventName (ev.value(STATE_NAME).toString());
+
+
+                if ( Event::Type (ev.value(STATE_EVENT_TYPE).toInt()) == Event::eKnown) {
+                    const double bound = ev.value(STATE_EVENT_KNOWN_FIXED).toDouble();
+                    QStringList statLine;
+                    statLine<<eventName<<"Bound"<< locale().toString(bound) + " BC/AD";
+                    stats.append(statLine);
+
+                } else {
+                    const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
+
+                     for (auto& date : dates) {
+                        const QJsonObject jdate = date.toObject();
+
+                        Date d (jdate);
+                        QStringList statLine;
+                        statLine<<eventName<<d.mPlugin->getName()<< d.mName <<d.getDesc();
+
+                        const bool isUnif (d.mPlugin->getName() == "Unif");
+                        if (d.mIsValid && !d.mCalibration->mCurve.isEmpty() && !isUnif) {
+
+                            d.autoSetTiSampler(true); // needed if calibration is not done
+
+                            QMap<double, double> calibMap = d.getFormatedCalibMap();
+                            // hpd is calculate only on the study Period
+
+                            QMap<double, double>  subData = calibMap;
+                            subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+
+                            DensityAnalysis results;
+                            results.funcAnalysis = analyseFunction(subData);
+
+                            if (!subData.isEmpty()) {
+
+                                statLine<< csvLocal.toString(results.funcAnalysis.mode) << csvLocal.toString(results.funcAnalysis.mean) << csvLocal.toString(results.funcAnalysis.std);
+                                statLine<< csvLocal.toString(results.funcAnalysis.quartiles.Q1) << csvLocal.toString(results.funcAnalysis.quartiles.Q2) << csvLocal.toString(results.funcAnalysis.quartiles.Q3);
+                                // hpd results
+
+                                QMap<type_data, type_data> hpd (create_HPD(subData, mThreshold));
+
+                                const double realThresh = map_area(hpd) / map_area(subData);
+
+                               statLine<< csvLocal.toString(100. *realThresh, 'f',1) << getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, true);
+                            }
+
+                        } else
+                            statLine<< "Stat Not Computable";
+
+                      stats.append(statLine);
+                    }
+                 }
+
+
+           }
+
+
+        // _____________
+
+            saveCsvTo(stats, filePath, csvSep, true);
+
+
+        }
+
+}
 
 void MultiCalibrationView::showStat()
 {
@@ -992,7 +1116,7 @@ void MultiCalibrationView::showStat()
 
                    resultsStr += "<strong>"+ d.mName + "</strong> (" + d.mPlugin->getName() + ")" +"<br> <i>" + d.getDesc() + "</i><br> ";
 
-                 if (d.mIsValid && !d.mCalibration->mCurve.isEmpty()) {
+                 if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mCurve.isEmpty()) {
 
 
                        const bool isUnif (d.mPlugin->getName() == "Unif");

@@ -154,7 +154,7 @@ QString PluginUniform::getDateDesc(const Date* date) const
     QString result;
 
     const QJsonObject &data = date->mData;
-    result += QObject::tr("Interval") + QString(" : [ %1 ; %2 ] BC/AD").arg(locale.toString(data.value(DATE_UNIFORM_MIN_STR).toDouble()),
+    result += QObject::tr("Interval") + QString(" = [ %1 : %2 ] BC/AD").arg(locale.toString(data.value(DATE_UNIFORM_MIN_STR).toDouble()),
                                                                             locale.toString(data.value(DATE_UNIFORM_MAX_STR).toDouble()));
 
     return result;

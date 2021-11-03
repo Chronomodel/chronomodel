@@ -867,26 +867,9 @@ QString intervalText(const QPair<double, QPair<double, double> > &interval,  Dat
     const double inter2 = (conversionFunc ? conversionFunc(interval.second.second) : interval.second.second );
 
      if (forCSV)
-         return "[ " + stringForCSV(inter1) + " ; " + stringForCSV(inter2) + " ] (" + stringForCSV(perCent) + "%)";
+         return "[ " + stringForCSV(inter1) + " : " + stringForCSV(inter2) + " ] (" + stringForCSV(perCent) + "%)";
      else
          return "[ " + stringForLocal(interval.second.first) + " ; " + stringForLocal(interval.second.second) + " ] (" + stringForLocal(interval.first) + "%)";
-
-/*
-    if (forCSV) {
-        if (formatFunc)
-            return "[ " + formatFunc(interval.second.first, true) + " ; " + formatFunc(interval.second.second, true) + " ] (" + stringForCSV(interval.first) + "%)";
-
-        else
-            return "[ " + stringForCSV(interval.second.first) + " ; " + stringForCSV(interval.second.second) + " ] (" + stringForCSV(interval.first) + "%)";
-
-    } else {
-        if (formatFunc)
-            return "[ " + formatFunc(interval.second.first, false) + " ; " + formatFunc(interval.second.second, false) + " ] (" + stringForLocal(interval.first) + "%)";
-
-        else
-            return "[ " + stringForLocal(interval.second.first) + " ; " + stringForLocal(interval.second.second) + " ] (" + stringForLocal(interval.first) + "%)";
-
-    }*/
 
 }
 

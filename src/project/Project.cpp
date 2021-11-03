@@ -1636,6 +1636,10 @@ void Project::recycleEvents()
                     new_date[STATE_DATE_VALID] = valid;
 
                     new_date[STATE_ID] = getUnusedDateId(dates);
+                    // Add UUID since version 2.1.3
+                    if (new_date.find(STATE_DATE_UUID) == new_date.end()) {
+                        new_date[STATE_DATE_UUID] = QString::fromStdString(Generator::UUID());
+                    }
                     new_dates.append(new_date);
                 }
                 event[STATE_EVENT_DATES] = new_dates;

@@ -133,13 +133,13 @@ QString PluginF14C::getDateDesc(const Date* date) const
     const double error = data.value(DATE_F14C_ERROR_STR).toDouble();
     const QString ref_curve = data.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
 
-    result += QObject::tr("Age : %1").arg(locale.toString(age));
+    result += QObject::tr("F14C = %1").arg(locale.toString(age));
     result += " ± " + locale.toString(error);
 
     if (mRefCurves.contains(ref_curve) && !mRefCurves.value(ref_curve).mDataMean.isEmpty())
-        result += "; " + tr("Ref. curve : %1").arg(ref_curve);
+        result += ": " + tr("Ref. curve = %1").arg(ref_curve);
     else
-        result += "; " + tr("ERROR -> Ref. curve : %1").arg(ref_curve);
+        result += ": " + tr("ERROR -> Ref. curve : %1").arg(ref_curve);
 
 
     return result;

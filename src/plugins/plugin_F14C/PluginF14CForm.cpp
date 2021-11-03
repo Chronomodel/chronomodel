@@ -55,8 +55,6 @@ PluginF14CForm::PluginF14CForm(PluginF14C* plugin, QWidget* parent, Qt::WindowFl
 
     mAverageLab = new QLabel(tr("F14C"), this);
     mErrorLab = new QLabel(tr("Error (sd)"), this);
-  //  mRLab = new QLabel(tr("Reservoir Effect (ΔR)"), this);
-  //  mRErrorLab = new QLabel(tr("ΔR Error"), this);
     mRefLab = new QLabel(tr("Reference curve"), this);
 
     mAverageEdit = new QLineEdit(this);

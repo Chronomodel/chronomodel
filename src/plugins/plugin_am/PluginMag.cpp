@@ -165,20 +165,20 @@ QString PluginMag::getDateDesc(const Date* date) const
             result += QObject::tr("Inclination : %1").arg(locale.toString(inc));
             // this is the html form, but not reconized in the DatesListItemDelegate
            // result += "; " + QString("α<SUB>95</SUB>") + " : " + locale.toString(alpha);
-             result += "; " + QObject::tr("α 95 : %1").arg(locale.toString(alpha));
+             result += " : " + QObject::tr("α 95 = %1").arg(locale.toString(alpha));
         } else if (is_dec) {
             result += QObject::tr("Declination : %1").arg(locale.toString(dec));
-            result += "; " + QObject::tr("Inclination : %1").arg(locale.toString(inc));
-            result += "; " + QObject::tr("α 95 : %1").arg(locale.toString(alpha));
+            result += " : " + QObject::tr("Inclination = %1").arg(locale.toString(inc));
+            result += " : " + QObject::tr("α 95 = %1").arg(locale.toString(alpha));
         } else if (is_int)  {
-            result += QObject::tr("Field : %1").arg(locale.toString(intensity));
-            result += "; " + QObject::tr("Error : %1").arg(locale.toString(alpha));
+            result += QObject::tr("Field = %1").arg(locale.toString(intensity));
+            result += " : " + QObject::tr("Error = %1").arg(locale.toString(alpha));
         }
 
         if (mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty())
-            result += "; " + tr("Ref. curve : %1").arg(ref_curve);
+            result += " : " + tr("Ref. curve = %1").arg(ref_curve);
         else
-            result += "; " + tr("ERROR -> Ref. curve : %1").arg(ref_curve);
+            result += " = " + tr("ERROR -> Ref. curve : %1").arg(ref_curve);
         
     } else {
             result = "Combine (";

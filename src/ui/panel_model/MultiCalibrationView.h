@@ -94,6 +94,7 @@ private slots:
     void exportFullImage();
     void copyImage();
     void copyText();
+    void exportResults();
 
     void changeCurveColor();
     void showStat();
@@ -120,6 +121,7 @@ private:
     Button* mImageSaveBut;
     Button* mImageClipBut;
     Button* mStatClipBut;
+    Button* mExportResults;
     Button* mColorClipBut;
     ColorPicker* mColorPicker;
 
