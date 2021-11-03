@@ -1469,8 +1469,10 @@ int Project::getUnusedEventId(const QJsonArray& events)
         idIsFree = true;
         for (int i = 0; i<events.size(); ++i) {
             QJsonObject event = events.at(i).toObject();
-            if (event.value(STATE_ID).toInt() == id)
+            if (event.value(STATE_ID).toInt() == id) {
                 idIsFree = false;
+                break;
+            }
         }
     }
     return id;
@@ -1615,8 +1617,9 @@ void Project::recycleEvents()
         ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
 
         for (int i = 0; i < indexes.size(); ++i) {
-            const QJsonObject event = events_trash.at(indexes[i]).toObject();
-            event[STATE_ID] = getUnusedEventId(events);
+            QJsonObject event = events_trash.at(indexes[i]).toObject();
+            const int id = getUnusedEventId(events);
+            event[STATE_ID] = id;//getUnusedEventId(events);
             Event::Type type = (Event::Type) event.value(STATE_EVENT_TYPE).toInt();
 
             /* if the event is default type, we have to validate the dates
@@ -1626,7 +1629,7 @@ void Project::recycleEvents()
                 QJsonArray dates = event[STATE_EVENT_DATES].toArray();
                 QJsonArray new_dates;
                 for (int j = 0; j < dates.size(); ++j) {
-                    const QJsonObject new_date = dates.at(j).toObject();
+                    QJsonObject new_date = dates.at(j).toObject();
                     // Validate the date before adding it to the correct event and pushing the state
                     PluginAbstract* plugin = PluginManager::getPluginFromId(new_date[STATE_DATE_PLUGIN_ID].toString());
                     bool valid = plugin->isDateValid(new_date[STATE_DATE_DATA].toObject(), settings);
@@ -1829,8 +1832,10 @@ int Project::getUnusedDateId(const QJsonArray& dates) const
         idIsFree = true;
         for (int i = 0; i < dates.size(); ++i) {
             QJsonObject date = dates.at(i).toObject();
-            if (date.value(STATE_ID).toInt() == id)
+            if (date.value(STATE_ID).toInt() == id) {
                 idIsFree = false;
+                break;
+            }
         }
     }
     return id;
@@ -2611,10 +2616,12 @@ int Project::getUnusedPhaseId(const QJsonArray& phases)
     while (!idIsFree) {
         ++id;
         idIsFree = true;
-        for (int i=0; i<phases.size(); ++i) {
+        for (int i = 0; i<phases.size(); ++i) {
             const QJsonObject phase = phases.at(i).toObject();
-            if (phase.value(STATE_ID).toInt() == id)
+            if (phase.value(STATE_ID).toInt() == id) {
                 idIsFree = false;
+                break;
+            }
         }
     }
     return id;
@@ -2811,10 +2818,12 @@ int Project::getUnusedEventConstraintId(const QJsonArray& constraints)
     while (!idIsFree) {
         ++id;
         idIsFree = true;
-        for (int i=0; i<constraints.size(); ++i) {
+        for (int i = 0; i<constraints.size(); ++i) {
             QJsonObject constraint = constraints.at(i).toObject();
-            if (constraint.value(STATE_ID).toInt() == id)
+            if (constraint.value(STATE_ID).toInt() == id) {
                 idIsFree = false;
+                break;
+            }
         }
     }
     return id;
@@ -2938,10 +2947,12 @@ int Project::getUnusedPhaseConstraintId(const QJsonArray& constraints)
     while (!idIsFree) {
         ++id;
         idIsFree = true;
-        for (int i=0; i<constraints.size(); ++i) {
+        for (int i = 0; i<constraints.size(); ++i) {
             QJsonObject constraint = constraints.at(i).toObject();
-            if (constraint.value(STATE_ID).toInt() == id)
+            if (constraint.value(STATE_ID).toInt() == id) {
                 idIsFree = false;
+                break;
+            }
         }
     }
     return id;

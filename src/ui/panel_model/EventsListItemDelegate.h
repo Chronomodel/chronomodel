@@ -73,7 +73,8 @@ public:
         int w = option.rect.width();
         int h = option.rect.height();
         int iconW = 30;
-        int iconS = 20;
+        int iconH = 20;
+        const int marginW = 5;
 
         painter->setRenderHint(QPainter::Antialiasing);
 
@@ -83,42 +84,38 @@ public:
         }
         QString factName = index.model()->data(index, 0x0101).toString();
         QTextDocument td;
-            td.setHtml(factName);
+        td.setHtml(factName);
+
         int numDates = index.model()->data(index, 0x0103).toInt();
         //QString numDates = index.model()->data(index, 0x0103).toString();
         QColor factColor = QColor(index.model()->data(index, 0x0104).toInt(),
                                   index.model()->data(index, 0x0105).toInt(),
                                   index.model()->data(index, 0x0106).toInt());
 
-        QPixmap pixmap(iconS, iconS);
-        QPainter p(&pixmap);
-        if (numDates < 0) {
-            p.setPen(Qt::black);
-            p.setBrush(factColor);
-            p.drawEllipse(0+1, 0+1, iconS-2, iconS-2);
-           // p.fillRect(0, 0, iconS, iconS, factColor);
+        painter->setPen(Qt::black);
+        painter->setBrush(factColor);
+        if (numDates < 0) { 
+            painter->drawEllipse(x + marginW, y + (h - iconH)/2, iconW, iconH);
 
         } else {
-            p.fillRect(0, 0, iconS, iconS, factColor);
-            p.setPen(Qt::black);
-            p.drawRect(0, 0, iconS, iconS);
+            painter->fillRect(x + marginW, y + (h - iconH)/2, iconW, iconH, factColor);
+            painter->drawRect(x + marginW, y + (h - iconH)/2, iconW, iconH);
+
         }
 
-
-        painter->drawPixmap(x + (iconW - iconS)/2, y + (h - iconS)/2, iconS, iconS, pixmap, 0, 0, pixmap.width(), pixmap.height());
 
         QFont font = option.font;
         font.setPointSizeF(pointSize(11));
         painter->setFont(font);
 
         painter->setPen(Qt::black);
-        painter->drawText(x + iconW, y, w - iconW, h/2, Qt::AlignLeft | Qt::AlignVCenter, factName);
+        painter->drawText( x + 2*marginW + iconW, y, w - iconW - 2*marginW, h/2, Qt::AlignLeft | Qt::AlignVCenter, factName);
 
         if (numDates < 0) {
-            painter->drawText(x + iconW, y + h/2, w - iconW, h/2, Qt::AlignLeft | Qt::AlignVCenter, " Bound");
+            painter->drawText(x + 2*marginW + iconW, y + h/2, w - iconW - 2*marginW, h/2, Qt::AlignLeft | Qt::AlignVCenter, " Bound");
 
         } else {
-            painter->drawText(x + iconW, y + h/2, w - iconW, h/2, Qt::AlignLeft | Qt::AlignVCenter, QString::number(numDates) + " dates");
+            painter->drawText(x + 2*marginW + iconW, y + h/2, w - iconW - 2*marginW, h/2, Qt::AlignLeft | Qt::AlignVCenter, QString::number(numDates) + " Data");
         }
 
         painter->setPen(QColor(200, 200, 200));
