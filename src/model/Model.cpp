@@ -693,22 +693,33 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
  */
 bool Model::isValid()
 {
+    bool curveModel = mProject->isCurve();
     // 1 - At least one event is required in a model
-    if (mEvents.isEmpty())
+    // 3 events is needed for a curve
+    if (mEvents.isEmpty()) {
         throw QObject::tr("At least one event is required");
+        return false;
+
+     } else if (curveModel && mEvents.size() < 3) {
+            throw tr("The model must contain at least 3 Events");
+            return false;
+    }
 
     // 2 - The event must contain at least 1 data
     for (int i = 0; i < mEvents.size(); ++i) {
-        if (mEvents.at(i)->type() == Event::eDefault) {
-            if (mEvents.at(i)->mDates.size() == 0)
-                throw QObject::tr("The event  \" %1 \" must contain at least 1 data").arg(mEvents.at(i)->mName);
+        if (mEvents.at(i)->type() == Event::eDefault && mEvents.at(i)->mDates.size() == 0) {
+                    throw tr("The event  \" %1 \" must contain at least 1 data").arg(mEvents.at(i)->mName);
+                    return false;
+
         }
     }
 
     // 3 - The phase must contain at least 1 event
-    for (int i=0; i<mPhases.size(); ++i) {
-        if (mPhases.at(i)->mEvents.size() == 0)
-            throw QObject::tr("The phase \" %1 \" must contain at least 1 event").arg(mPhases.at(i)->mName);
+    for (int i = 0; i<mPhases.size(); ++i) {
+        if (mPhases.at(i)->mEvents.size() == 0) {
+            throw tr("The phase \" %1 \" must contain at least 1 event").arg(mPhases.at(i)->mName);
+            return false;
+        }
     }
 
     // 4 - Pas de circularité sur les contraintes des Event
@@ -744,8 +755,8 @@ bool Model::isValid()
 
     // 8 - Bounds : vérifier cohérence des bornes en fonction des contraintes de Events (page 2)
     //  => Modifier les bornes des intervalles des bounds !! (juste dans le modèle servant pour le calcul)
-    for (int i=0; i<eventBranches.size(); ++i) {
-        for (int j=0; j<eventBranches.at(i).size(); ++j) {
+    for (int i = 0; i<eventBranches.size(); ++i) {
+        for (auto j = 0; j<eventBranches.at(i).size(); ++j) {
             Event* event = eventBranches[i][j];
             if (event->type() == Event::eKnown)  {
                 EventKnown* bound = dynamic_cast<EventKnown*>(event);
@@ -757,7 +768,7 @@ bool Model::isValid()
                 // On vérifie toutes les bornes avant et on prend le max
                 // de leurs valeurs fixes ou du début de leur intervalle :
                 double lower = double (mSettings.mTmin);
-                for (int k(0); k<j; ++k) {
+                for (auto k = 0; k<j; ++k) {
                     Event* evt = eventBranches[i][k];
                     if (evt->mType == Event::eKnown) {
                         EventKnown* bd = dynamic_cast<EventKnown*>(evt);
@@ -780,7 +791,7 @@ bool Model::isValid()
                 // Check bound interval upper value
                 // --------------------
                 double upper = mSettings.mTmax;
-                for (int k=j+1; k<eventBranches.at(i).size(); ++k) {
+                for (auto k = j+1; k<eventBranches.at(i).size(); ++k) {
                     Event* evt = eventBranches[i][k];
                     if (evt->mType == Event::eKnown) {
                         EventKnown* bd = dynamic_cast<EventKnown*>(evt);
@@ -799,7 +810,7 @@ bool Model::isValid()
     }
 
     // 9 - Gamma min (ou fixe) entre 2 phases doit être inférieur à la différence entre : le min des sups des intervalles des bornes de la phase suivante ET le max des infs des intervalles des bornes de la phase précédente
-    for (int i=0; i<mPhaseConstraints.size(); ++i) {
+    for (int i = 0; i<mPhaseConstraints.size(); ++i) {
         double gammaMin = 0.;
         PhaseConstraint::GammaType gType = mPhaseConstraints.at(i)->mGammaType;
         if (gType == PhaseConstraint::eGammaFixed)
@@ -810,7 +821,7 @@ bool Model::isValid()
 
         double lower = mSettings.mTmin;
         Phase* phaseFrom = mPhaseConstraints.at(i)->mPhaseFrom;
-        for (int j=0; j<phaseFrom->mEvents.size(); ++j) {
+        for (int j = 0; j<phaseFrom->mEvents.size(); ++j) {
             EventKnown* bound = dynamic_cast<EventKnown*>(phaseFrom->mEvents[j]);
             if (bound)
                 lower = qMax(lower, bound->mFixed);
@@ -837,7 +848,7 @@ bool Model::isValid()
     //      - L'inf est le max entre : sa valeur courante ou (le max des infs des intervalles des bornes - tau max ou fixe)
     //      - Le sup est le min entre : sa valeur courante ou (le min des sups des intervalles des bornes + tau max ou fixe)
 
-    for (int i=0; i<mPhases.size(); ++i) {
+    for (int i = 0; i<mPhases.size(); ++i) {
         if (mPhases.at(i)->mTauType != Phase::eTauUnknown) {
             double tauMax = mPhases.at(i)->mTauFixed;
             if (mPhases.at(i)->mTauType == Phase::eTauRange)
@@ -847,7 +858,7 @@ bool Model::isValid()
             double max = mSettings.mTmax;
             bool boundFound = false;
 
-            for (int j=0; j<mPhases.at(i)->mEvents.size(); ++j) {
+            for (int j = 0; j<mPhases.at(i)->mEvents.size(); ++j) {
                 if (mPhases.at(i)->mEvents.at(j)->mType == Event::eKnown) {
                     EventKnown* bound = dynamic_cast<EventKnown*>(mPhases.at(i)->mEvents[j]);
                     if (bound) {
@@ -867,33 +878,33 @@ bool Model::isValid()
     }
 
     // 11 - Vérifier la cohérence entre les contraintes de faits et de phase
-    for (int i=0; i<phaseBranches.size(); ++i) {
-        for (int j=0; j<phaseBranches.at(i).size(); ++j) {
+    for (int i = 0; i<phaseBranches.size(); ++i) {
+        for (int j = 0; j<phaseBranches.at(i).size(); ++j) {
             Phase* phase = phaseBranches[i][j];
-            for (int k=0; k<phase->mEvents.size(); ++k) {
+            for (int k = 0; k<phase->mEvents.size(); ++k) {
                 Event* event = phase->mEvents[k];
 
                 bool phaseFound = false;
 
                 // On réinspecte toutes les phases de la branche et on vérifie que le fait n'a pas de contrainte en contradiction avec les contraintes de phase !
-                for (int l=0; l<phaseBranches.at(i).size(); ++l) {
+                for (int l = 0; l<phaseBranches.at(i).size(); ++l) {
                     Phase* p = phaseBranches[i][l];
                     if (p == phase)
                         phaseFound = true;
 
                     else {
-                        for (int m=0; m<p->mEvents.size(); ++m) {
+                        for (int m = 0; m<p->mEvents.size(); ++m) {
                             Event* e = p->mEvents[m];
 
                             // Si on regarde l'élément d'un phase d'avant, le fait ne peut pas être en contrainte vers un fait de cette phase
                             if (!phaseFound) {
-                                for (int n=0; n<e->mConstraintsBwd.size(); ++n) {
+                                for (int n = 0; n<e->mConstraintsBwd.size(); ++n) {
                                     if (e->mConstraintsBwd[n]->mEventFrom == event)
                                         throw tr("The event %1  (in phase %2 ) is before the event %3 (in phase %4), BUT the phase %5 is after the phase %6 .\r=> Contradiction !").arg(event->mName, phase->mName, e->mName, p->mName, phase->mName, p->mName) ;
 
                                 }
                             } else {
-                                for (int n=0; n<e->mConstraintsFwd.size(); ++n) {
+                                for (int n = 0; n<e->mConstraintsFwd.size(); ++n) {
                                     if (e->mConstraintsFwd[n]->mEventTo == event)
                                         throw tr("The event %1 ( in phase %2 ) is after the event %3  ( in phase %4 ), BUT the phase %4 is before the phase .\r=> Contradiction !").arg(event->mName, phase->mName, e->mName, p->mName, phase->mName, p->mName);
                                 }
@@ -967,10 +978,8 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 #endif
 
 #ifdef DEBUG
-    //QTime t2 = QTime::currentTime();
+
     QTime timeDiff(0,0,0, (int)t.elapsed());
-   // timeDiff = timeDiff.addMSecs(t.elapsed()).addMSecs(-1);
-//    qint64 timeDiff = t.msecsTo(t2);
 
     qDebug() <<  QString("=> Model::generateCorrelations done in  %1 h %2 m %3 s %4 ms").arg(QString::number(timeDiff.hour()),
                                                                 QString::number(timeDiff.minute()),
@@ -1039,7 +1048,7 @@ void Model::setThresholdToAllModel(const double threshold)
             }
         }
     }
-    for (auto && pPhase :mPhases) {
+    for (auto&& pPhase : mPhases) {
        pPhase->mAlpha.mThresholdUsed = mThreshold;
        pPhase->mBeta.mThresholdUsed = mThreshold;
        pPhase->mDuration.mThresholdUsed = mThreshold;
@@ -1123,13 +1132,10 @@ void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftL
     const double tmax = mSettings.getTmaxFormated();
 
     for (auto&& event : mEvents) {
-     //   if (event->mTheta.HistoWithParameter(fftLen, bandwidth, tmin, tmax) == false) {
-       // event->mTheta.updateFormatedTrace();
                 event->mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 
                 for (auto&& d : event->mDates)
                     d.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
-   //     }
     }
 
     for (auto&& phase : mPhases)
