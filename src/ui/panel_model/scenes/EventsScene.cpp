@@ -951,10 +951,11 @@ EventItem* EventsScene::currentEvent() const
 
 AbstractItem* EventsScene::collidingItem(const QGraphicsItem* item)
 {
-    for (int i = 0; i < mItems.size(); ++i) {
-        bool isBound = (dynamic_cast<EventKnownItem*>(mItems.at(i)) != nullptr);
-        if (item != mItems.at(i) && !isBound && item->collidesWithItem(mItems.at(i)))
-            return mItems[i];
+    //for (int i = 0; i < mItems.size(); ++i) {
+    for (auto && it : mItems) {
+        bool isBound = (dynamic_cast<EventKnownItem*>(it) != nullptr);
+        if (item != it && !isBound && item->collidesWithItem(it))
+            return it;
     }
     return nullptr;
 }
