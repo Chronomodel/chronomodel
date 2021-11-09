@@ -375,7 +375,7 @@ void CalibrationView::updateGraphs()
             // hpd results
             const double thresh = qBound(0., locale().toDouble(input), 100.);
             // do QMap<type_data, type_data> mData; to calcul HPD on study Period
-            QMap<type_data, type_data> subData = calibCurve.mData;
+            QMap<type_data, type_data> subData = mDate.getFormatedCalibMap(); //calibCurve.mData;
             subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
 
