@@ -99,9 +99,11 @@ mCurveColor(Painting::mainColorDark)
     mStatClipBut->setChecked(false);
     mStatClipBut->setCheckable(true);
 
-    mExportResults = new Button(tr("Results"), this);
-    mExportResults->setFlatHorizontal();
-    mExportResults->setIcon(QIcon(":csv.png"));
+    mExportResults = new Button(tr("CSV"), this);
+    mExportResults->setFlatVertical();
+    mExportResults->setIcon(QIcon(":export_csv_w.png"));
+    mExportResults->setIconOnly(true);
+    mExportResults->setChecked(false);
     mExportResults->setToolTip(tr("Export all result in several files"));
 
 
@@ -1107,14 +1109,20 @@ void MultiCalibrationView::showStat()
 
            } else {
                const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
-
+               bool firstDate = true;
 
                 for (auto&& date : dates) {
                    const QJsonObject jdate = date.toObject();
 
                    Date d (jdate);
+                   // Adding a line between date result
+                   if (firstDate) {
+                       firstDate = false;
+                   } else {
+                       resultsStr += "<hr>";
+                   }
 
-                   resultsStr += "<strong>"+ d.mName + "</strong> (" + d.mPlugin->getName() + ")" +"<br> <i>" + d.getDesc() + "</i><br> ";
+                   resultsStr += "<br><strong>"+ d.mName + "</strong> (" + d.mPlugin->getName() + ")" +"<br> <i>" + d.getDesc() + "</i><br> ";
 
                  if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mCurve.isEmpty()) {
 
@@ -1156,7 +1164,7 @@ void MultiCalibrationView::showStat()
 
                }
             }
-            mResultText += resultsStr;
+            mResultText += resultsStr ;
       }
 
     mTextArea->setHtml(mResultText);
