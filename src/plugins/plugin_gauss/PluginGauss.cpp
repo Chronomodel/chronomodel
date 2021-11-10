@@ -191,7 +191,7 @@ QString PluginGauss::getDateDesc(const Date* date) const
             result += "; " + QObject::tr("Ref. curve") + " : g(t) = " + eq;
         }
         else if (mode == DATE_GAUSS_MODE_CURVE) {
-            const QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
+            const QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString().toLower();
             if (mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty())
                 result += "; " + tr("Ref. curve : %1").arg(ref_curve);
             else
@@ -292,6 +292,7 @@ QStringList PluginGauss::toCSV(const QJsonObject& data, const QLocale& csvLocale
         list << csvLocale.toString(data.value(DATE_GAUSS_A_STR).toDouble());
         list << csvLocale.toString(data.value(DATE_GAUSS_B_STR).toDouble());
         list << csvLocale.toString(data.value(DATE_GAUSS_C_STR).toDouble());
+
     }  else if (data.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_CURVE)
         list << data.value(DATE_GAUSS_CURVE_STR).toString();
 
@@ -722,8 +723,6 @@ QJsonObject PluginGauss::mergeDates(const QJsonArray& dates)
             result["error"] = tr("Combine is not possible, not enough coincident densities; numeric issue");
             return result;
         }
-
-
 
 
         // inherits the first data propeties as plug-in and method...
