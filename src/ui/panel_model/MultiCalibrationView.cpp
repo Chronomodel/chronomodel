@@ -957,8 +957,6 @@ void MultiCalibrationView::copyText()
 }
 void MultiCalibrationView::exportResults()
 {
-
-
         const QString csvSep = AppSettings::mCSVCellSeparator;
         //const int precision = AppSettings::mPrecision;
         QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
@@ -975,8 +973,8 @@ void MultiCalibrationView::exportResults()
 
 
             // copy tabs ------------------------------------------
-            const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
-            const QString projectName = tr("Project filename : %1").arg(MainWindow::getInstance()->getNameProject()) + "<br>";
+            //const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
+            //const QString projectName = tr("Project filename : %1").arg(MainWindow::getInstance()->getNameProject()) + "<br>";
 
 
         // _____________
@@ -997,9 +995,9 @@ void MultiCalibrationView::exportResults()
             QList<QStringList> stats ;
             QStringList header;
             header << "Event"<<"Data type" << "Data Name" <<"Data Description"<<"MAP"<< "Mean"<<"Std";
-            header <<"Q1" <<"Q2" << "Q3"<<"HPD %";
-            stats.append(header);
-
+            header <<"Q1" <<"Q2" << "Q3"<<"HPD total %";//<<"HPD begin 1"<<"HPD end 1"<<"HPD % 1"<<"HPD begin 2"<<"HPD end 2"<<"HPD % 2";
+            //stats.append(header);
+            int maxHpd = 2;
             for (auto& ev : selectedEvents) {
 
                 // Insert the Event's Name only if different to the previous Event's name
@@ -1047,7 +1045,11 @@ void MultiCalibrationView::exportResults()
 
                                 const double realThresh = map_area(hpd) / map_area(subData);
 
-                               statLine<< csvLocal.toString(100. *realThresh, 'f',1) << getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, true);
+                                QString hpdStr = getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, true);
+                                int nh = int(hpdStr.count(AppSettings::mCSVCellSeparator));
+                                maxHpd = std::max(maxHpd, nh);//int(hpdStr.count(AppSettings::mCSVCellSeparator)));
+                                statLine<< csvLocal.toString(100. *realThresh, 'f',1) << hpdStr;
+
                             }
 
                         } else
@@ -1059,8 +1061,14 @@ void MultiCalibrationView::exportResults()
 
 
            }
-
-
+            //
+            int nbHPD = (maxHpd + 1)/3;
+            for (int i = 0; i < nbHPD; ++i) {
+                header << "HPD" + QString::number(i + 1) + " begin";
+                header << "HPD" + QString::number(i + 1) + " end";
+                header << "HPD" + QString::number(i + 1) + " %";
+            }
+            stats.insert(0, header);
         // _____________
 
             saveCsvTo(stats, filePath, csvSep, true);

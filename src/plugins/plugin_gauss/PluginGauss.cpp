@@ -188,14 +188,14 @@ QString PluginGauss::getDateDesc(const Date* date) const
 
             eq += cStr;
 
-            result += "; " + QObject::tr("Ref. curve") + " : g(t) = " + eq;
+            result += " " + QObject::tr("Ref. curve") + " : g(t) = " + eq;
         }
         else if (mode == DATE_GAUSS_MODE_CURVE) {
             const QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString().toLower();
             if (mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty())
-                result += "; " + tr("Ref. curve : %1").arg(ref_curve);
+                result += " " + tr("Ref. curve : %1").arg(ref_curve);
             else
-                result += ", " + tr("ERROR ->  Ref. curve : %1").arg(ref_curve);
+                result += " " + tr("ERROR ->  Ref. curve : %1").arg(ref_curve);
 
         }
     } else {
@@ -370,23 +370,23 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
                 if (values.size() > 2) {
                     bool ok = true;
                     const double t = locale.toDouble(values.at(0), &ok);
-                    if(!ok)
+                    if (!ok)
                         continue;
 
                     const double g = locale.toDouble(values.at(1), &ok);
-                    if(!ok)
+                    if (!ok)
                         continue;
 
                     const double e = locale.toDouble(values.at(2), &ok);
-                    if(!ok)
+                    if (!ok)
                         continue;
 
                     const double gSup = g + 1.96 * e;
-                    if(!ok)
+                    if (!ok)
                         continue;
 
                     const double gInf = g - 1.96 * e;
-                    if(!ok)
+                    if (!ok)
                         continue;
 
                     curve.mDataMean[t] = g;
@@ -459,7 +459,7 @@ double PluginGauss::getRefValueAt(const QJsonObject& data, const double& t)
 
 double PluginGauss::getRefErrorAt(const QJsonObject& data, const double& t, const QString mode)
 {
-    double e (0.);
+    double e = 0.;
 
     if (mode == DATE_GAUSS_MODE_CURVE) {
         QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
@@ -470,9 +470,9 @@ double PluginGauss::getRefErrorAt(const QJsonObject& data, const double& t, cons
 
 QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) const
 {
-    double tmin (0.);
-    double tmax (0.);
-    const double k (10.);
+    double tmin = 0.;
+    double tmax = 0.;
+    const double k = 10.;
 
     if (data.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_CURVE) {
         QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
@@ -601,8 +601,8 @@ bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& se
 {
     QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
     bool valid = true;
-    long double v (0.l);
-    long double lastV (0.l);
+    long double v = 0.l;
+    long double lastV = 0.l;
     if (mode == DATE_GAUSS_MODE_CURVE) {
          // controle valid solution (double)likelihood>0
         // remember likelihood type is long double
@@ -615,7 +615,7 @@ bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& se
 
         else {
             double t = curve.mTmin;
-            long double repartition (0.l);
+            long double repartition = 0.l;
             while (valid==false && t<=curve.mTmax) {
                 v = static_cast<long double> (getLikelihood(t, data));
                 // we have to check this calculs
@@ -644,7 +644,7 @@ bool PluginGauss::areDatesMergeable(const QJsonArray& )
 QJsonObject PluginGauss::mergeDates(const QJsonArray& dates)
 {
     QJsonObject result;
-    const double k (10.);
+    const double k = 10.;
     if (dates.size() > 1) {
 
         QStringList names;
@@ -662,8 +662,8 @@ QJsonObject PluginGauss::mergeDates(const QJsonArray& dates)
         QString toFind;
 */
         // il faut ajouter le décallage induit par le wiggle si il existe dWiggleMin, dWiggleMax
-        double dWiggleMin(0.);
-        double dWiggleMax(0.);
+        double dWiggleMin = 0.;
+        double dWiggleMax = 0.;
         for ( auto && d : dates ) {
             names.append(d.toObject().value(STATE_NAME).toString());
             QPair<double, double> tminTmax = getTminTmaxRefsCurve(d.toObject().value(STATE_DATE_DATA).toObject());

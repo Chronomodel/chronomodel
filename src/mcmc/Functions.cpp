@@ -865,10 +865,9 @@ QString intervalText(const QPair<double, QPair<double, double> > &interval,  Dat
     const double perCent = interval.first;
     const double inter1 = (conversionFunc ? conversionFunc(interval.second.first) : interval.second.first );
     const double inter2 = (conversionFunc ? conversionFunc(interval.second.second) : interval.second.second );
-
-     if (forCSV)
-         return "[ " + stringForCSV(inter1) + " : " + stringForCSV(inter2) + " ] (" + stringForCSV(perCent) + "%)";
-     else
+    if (forCSV)
+         return stringForCSV(inter1) + AppSettings::mCSVCellSeparator + stringForCSV(inter2) + AppSettings::mCSVCellSeparator + stringForCSV(perCent);
+    else
          return "[ " + stringForLocal(interval.second.first) + " ; " + stringForLocal(interval.second.second) + " ] (" + stringForLocal(interval.first) + "%)";
 
 }
@@ -884,9 +883,15 @@ QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString
     for (auto&& interval : intervals)
         results << intervalText(interval, conversionFunc, forCSV);
 
-    QString result = results.join(", ");
-    if (!unit.isEmpty())
-        result += " " + unit;
+    QString result;
+    if (forCSV) {
+        result = results.join(AppSettings::mCSVCellSeparator);
+
+    } else {
+        result = results.join(", ");
+        if (!unit.isEmpty())
+                result += " " + unit;
+    }
 
     return result;
 }
