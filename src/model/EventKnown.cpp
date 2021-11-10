@@ -84,7 +84,7 @@ EventKnown EventKnown::fromJson(const QJsonObject& json)
     event.Event::mZField = json.value(STATE_EVENT_Z_F).toDouble();
 
     event.Event::mS_XA95Depth = json.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble();
-    event.Event::mS_Y = json.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble();
+    event.Event::mS_Y = json.value(STATE_EVENT_SY).toDouble();
     event.Event::mS_ZField = json.value(STATE_EVENT_SZ_SF).toDouble();
 
     event.mVG.mSamplerProposal= MHVariable::eMHAdaptGauss;
