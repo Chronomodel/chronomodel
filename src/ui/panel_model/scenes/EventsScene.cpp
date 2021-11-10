@@ -50,8 +50,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Project.h"
 #include "HelpWidget.h"
 #include "QtUtilities.h"
+#include "PluginManager.h"
+
 #include <QtWidgets>
 #include <QProgressDialog>
+#include <QMessageBox>
 
 
 EventsScene::EventsScene(QGraphicsView* view, QObject* parent):AbstractScene(view, parent)
@@ -1348,7 +1351,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
 
 
     QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> droppedData = decodeDataDrop(e);
-    QList<QPair<QString, Date>> listDates = droppedData.first;
+    QList<QPair<QString, Date>> listEvent_Data = droppedData.first;
     QList<QMap<QString, double>> listCurveData = droppedData.second;
 
     Project* project = MainWindow::getInstance()->getProject();
@@ -1367,7 +1370,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
     };
     constraintType constraint = eConstraintNone;
 
-    if (listDates.size()>4) {
+    if (listEvent_Data.size()>4) {
         QMessageBox messageBox;
         messageBox.setWindowTitle(tr("Automatic Link"));
         messageBox.setText(tr("Do you want to automatically create a constraint link between the imported events ?"));
@@ -1394,18 +1397,19 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
     QJsonObject previousEvent = QJsonObject();
     QJsonObject currentEvent;
 
-    for (int i = 0; i < listDates.size(); ++i) {
+    for (int i = 0; i < listEvent_Data.size(); ++i) {
         // We must regenerate the variables "state" and "events" after event or data inclusion
       //  QJsonObject state = project->state();
         QJsonArray events = state.value(STATE_EVENTS).toArray();
 
         // look for an existing event with the same Name
-        QString eventName = listDates.at(i).first;
-        Date date = listDates.at(i).second;
+        QString eventName = listEvent_Data.at(i).first;
+        Date date = listEvent_Data.at(i).second;
 
         int eventIdx  = -1;
         int j = 0;
-        if (eventName.toLower() != "bound") {
+
+        if (!eventName.contains("bound", Qt::CaseInsensitive)) {
             QJsonObject eventFinded;
             for (auto&& ev : events) {
                 if (ev.toObject().value(STATE_NAME).toString() == eventName) {
@@ -1477,11 +1481,12 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
             bound.mItemY = e->scenePos().y() + EventCount * deltaY;
             bound.mColor = randomColor();
             auto boundJson (bound.toJson());
-            currentEvent = boundJson;
+
             if (i < listCurveData.count()) {
                 Event::setCurveCsvDataToJsonEvent(boundJson, listCurveData.at(i));
             }
             events.append(boundJson);
+            currentEvent = boundJson;
 
             state[STATE_EVENTS] = events;
             project->pushProjectState(state, NEW_EVEN_BY_CSV_DRAG_REASON, true);
@@ -1643,12 +1648,21 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
             date.mIsValid = true ;
             date.mUUID = QString::fromStdString(Generator::UUID());
 
-            dates << qMakePair(pluginName, date);
+            // We force the name of the Event in "Bound" to recognize then that it was a bound.
+            dates << qMakePair("bound", date);
             acceptedRows.append(csvRow);
 
         } else {
-            date = Date::fromCSV(dataStr, csvLocal);
-            QMap<QString, double> CurveValues;
+            PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
+            if (plugin) {
+                date = Date::fromCSV(dataStr, csvLocal);
+                dates << qMakePair(eventName, date);
+                acceptedRows.append(csvRow);
+            } else {
+                return (QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>>());
+            }
+        }
+           /* QMap<QString, double> CurveValues;
             if (!date.isNull()) {
                 dates << qMakePair(eventName, date);
                 acceptedRows.append(csvRow);
@@ -1689,8 +1703,52 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
                 curveValues << CurveValues;
             } else {
                rejectedRows.append(csvRow);
+            }*/
+
+            QMap<QString, double> CurveValues;
+            if (!date.mData.isEmpty()) {
+
+
+                if (dataStr.size() >= 14) {
+                    CurveValues.insert(STATE_EVENT_X_INC_DEPTH, csvLocal.toDouble(dataStr.at(13)));
+                } else {
+                    CurveValues.insert(STATE_EVENT_X_INC_DEPTH, 0);
+                }
+                if (dataStr.size() >= 15) {
+                    CurveValues.insert(STATE_EVENT_SX_ALPHA95_SDEPTH, csvLocal.toDouble(dataStr.at(14)));
+                } else {
+                    CurveValues.insert(STATE_EVENT_SX_ALPHA95_SDEPTH, 0);
+                }
+                if (dataStr.size() >= 16) {
+                    CurveValues.insert(STATE_EVENT_Y_DEC, csvLocal.toDouble(dataStr.at(15)));
+                } else {
+                    CurveValues.insert(STATE_EVENT_Y_DEC, 0);
+                }
+                if (dataStr.size() >= 17) {
+                    CurveValues.insert(STATE_EVENT_SY, csvLocal.toDouble(dataStr.at(16)));
+                } else {
+                    CurveValues.insert(STATE_EVENT_SY, 0);
+                }
+                if (dataStr.size() >= 18) {
+                    CurveValues.insert(STATE_EVENT_Z_F, csvLocal.toDouble(dataStr.at(17)));
+                } else {
+                    CurveValues.insert(STATE_EVENT_Z_F, 0);
+                }
+
+                if (dataStr.size() >= 19) {
+                    CurveValues.insert(STATE_EVENT_SZ_SF, csvLocal.toDouble(dataStr.at(18)));
+                } else {
+                    CurveValues.insert(STATE_EVENT_SZ_SF, 0);
+                }
+
+
+                curveValues << CurveValues;
+
+            } else {
+                rejectedRows.append(csvRow);
             }
-        }
+
+
     }
 
     emit csvDataLineDropAccepted(acceptedRows); //connected to slot ImportDataView::removeCsvRows

@@ -102,7 +102,7 @@ QList<MHVariable::SamplerProposal> PluginUniform::allowedDataMethods() const
 QStringList PluginUniform::csvColumns() const
 {
     QStringList cols;
-    cols << "Name" << "Lower date" << "Upper date";
+    cols << "Name" << "Lower date" << "Upper date" <<"";
     return cols;
 }
 
@@ -144,6 +144,7 @@ QStringList PluginUniform::toCSV(const QJsonObject& data, const QLocale& csvLoca
     QStringList list;
     list << csvLocale.toString(data.value(DATE_UNIFORM_MIN_STR).toDouble());
     list << csvLocale.toString(data.value(DATE_UNIFORM_MAX_STR).toDouble());
+    list << "";
     return list;
 }
 

@@ -143,7 +143,8 @@ void ImportDataView::browse()
             int cols (0);
 
             QStringList headers;
-            const QStringList pluginNames = PluginManager::getPluginsNames();
+            QStringList pluginNames = PluginManager::getPluginsNames();
+            pluginNames.append("bound");
 
             const QString csvSep = AppSettings::mCSVCellSeparator;
 
@@ -201,7 +202,7 @@ void ImportDataView::browse()
                 const QString line = stream.readLine();
                 QStringList values = line.split(csvSep);
                 if (values.size() > 0) {
-                    //qDebug()<<"ImportDataView::browse() "<<values.at(0).toUpper();
+
                     if (values.size() > 2 && values.at(0) == "") {
                         values[0]="No Name "+ QString::number(noNameCount);
                         ++noNameCount;
@@ -209,7 +210,7 @@ void ImportDataView::browse()
                     if (isComment(values.at(0))) {
                         continue;
 
-                    } else if (values.at(0).contains("title", Qt::CaseInsensitive) && !values.at(0).contains("title", Qt::CaseInsensitive)) {
+                    } else if (values.at(0).contains("title", Qt::CaseInsensitive)) {
                         headers << "TITLE";
 
                         QStringList titleText;
@@ -247,13 +248,6 @@ void ImportDataView::browse()
                             cols = (values.size() > cols) ? values.size() : cols;
                             ++rows;
 
-                        } else if (pluginName.contains("bound", Qt::CaseInsensitive)) {
-                            headers << values.at(0);
-                            data << values;
-
-                            // Adapt max columns count if necessary
-                            cols = (values.size() > cols) ? values.size() : cols;
-                            ++rows;
                         }
                     }
                 } else {
@@ -323,20 +317,44 @@ void ImportDataView::exportDates()
             QJsonArray events = project->mState.value(STATE_EVENTS).toArray();
 
             stream << "Title" << sep << AppSettings::mLastFile << Qt::endl;
+            stream <<"#Event name"<<sep<<"method"<<sep<<"dating name/code"<<sep<<"method param a"<<sep<<"method param b"<<sep<<"method param c"<<sep<<"wiggle type"<<sep<<"wiggle param a"<<sep<<"wiggle param b";
+            stream<<sep<<sep<<sep<<sep<<sep<<sep<<sep<<sep<<"X_Inc_Depth"<<sep<<"Err X- apha95- Err depth"<<sep<<"Y_Declinaison"<<sep<<"Err Y"<<sep<<"Z_Field"<<sep<<"Err Z_Err F" <<Qt::endl;
             bool isCurve = (project->mState.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt() != CurveSettings::eProcessTypeNone);
-            // int CurveStartColumn = 15;
 
-            for (auto ev : events) {
+            for (auto&& ev : events) {
                 QJsonObject event = ev.toObject();
                 QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
 
                 const int type = event.value(STATE_EVENT_TYPE).toInt();
                 const QString eventName = event.value(STATE_NAME).toString();
-                if (type == Event::eKnown) {
-                    stream << eventName << sep << "Bound" <<  sep << event.value(STATE_EVENT_KNOWN_FIXED).toDouble() << Qt::endl;
 
+
+                if (type == Event::eKnown) {
+                    QList<QString> dateCsv;
+                    dateCsv.append("Bound");
+                    dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_KNOWN_FIXED).toDouble()));
+
+                    if (isCurve) {
+                        // Curve values start at column 15.
+                        // They must be put from column 14 in dateCsv,
+                        // because the row is shifted by one column at inserting eventName (see below)
+                        const int CurveStartColumn = 13;
+                        while (dateCsv.count() < CurveStartColumn) {
+                            dateCsv.append("");
+                        }
+                        dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_X_INC_DEPTH).toDouble()));
+                        dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble()));
+                        dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_Y_DEC).toDouble()));
+                        dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_SY).toDouble()));
+                        dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_Z_F).toDouble()));
+                        dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_SZ_SF).toDouble()));
+
+
+                        stream << eventName << sep;
+                        stream << dateCsv.join(sep) << Qt::endl;
+                    }
                 } else {
-                   for (auto iDate : dates) {
+                   for (auto&& iDate : dates) {
                         QJsonObject date = iDate.toObject();
                         try {
                             Date d (date);
@@ -385,9 +403,6 @@ void ImportDataView::removeCsvRows(QList<int> rows)
 {
     sortIntList(rows);
     for (int i = rows.size()-1; i >= 0; --i) {
-        //qDebug() << "Removing row : " << rows[i];
-        //mTable->removeRow(rows[i]);
-
         for (int c = 0; c < mTable->columnCount(); ++c) {
             QTableWidgetItem* item = mTable->item(rows.at(i), c);
             if (item)
@@ -473,8 +488,6 @@ QMimeData* ImportDataTable::mimeData(const QList<QTableWidgetItem *> &items) con
                 row = item->row();
                 itemStr << QString::number(row);
 
-                //QString pluginName = verticalHeaderItem(row)->text();
-                // itemStr << pluginName;
                 QString evenName = verticalHeaderItem(row)->text();
                 itemStr << evenName;
 
@@ -510,16 +523,19 @@ void ImportDataTable::updateTableHeaders()
     QStringList headers;
     int numCols = columnCount();
 
-    if (!pluginName.isEmpty() && (verticalHeader!="TITLE")  && (verticalHeader!="STRUCTURE") && (pluginName.toLower()!="bound")) {
+    if (!pluginName.isEmpty() && (verticalHeader!="TITLE")  && (verticalHeader!="STRUCTURE") && (!pluginName.contains("bound", Qt::CaseInsensitive))) {
         PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
-        headers << "Method";
-        headers << plugin->csvColumns();
-        if (plugin->wiggleAllowed()) {
-            headers << "Wiggle Type (none | fixed | range | gaussian)";
-            headers << "Wiggle value 1 (fixed | Lower date | Average)";
-            headers << "Wiggle value 2 (Upper date | Error)";
-        }
-        
+        if (plugin!=nullptr) {
+            headers << "Method";
+            headers << plugin->csvColumns();
+            if (plugin->wiggleAllowed()) {
+                headers << "Wiggle Type (none | fixed | range | gaussian)";
+                headers << "Wiggle value 1 (fixed | Lower date | Average)";
+                headers << "Wiggle value 2 (Upper date | Error)";
+            }
+        } /*else {
+            return;
+        }*/
         const int CurveStartIndex = 13; // +1 for index +1 begin = 15
         while (headers.size() < numCols) {
             if (headers.size() == CurveStartIndex) {
@@ -542,13 +558,32 @@ void ImportDataTable::updateTableHeaders()
             }
         }
 
-    } else if (pluginName.toLower()=="bound") {
-        QStringList cols;
+    } else if (pluginName.contains("bound", Qt::CaseInsensitive)) {
+
         headers << "Bound";
         headers << "Value";
-        for (int i = 1; i < numCols; i++)
-            cols<<"";
-        headers << cols;
+
+        const int CurveStartIndex = 13; // +1 for index +1 begin = 15
+        while (headers.size() < numCols) {
+            if (headers.size() == CurveStartIndex) {
+                headers << "X_Inc_Depth";
+            } else if (headers.size() == (CurveStartIndex + 1)) {
+                headers << "Err X- apha95- Err depth";
+            } else if (headers.size() == (CurveStartIndex + 2)) {
+                headers << "Y_Dec";
+            } else if (headers.size() == (CurveStartIndex + 3)) {
+                headers << "Err Y";
+            } else if (headers.size() == (CurveStartIndex + 4)) {
+                headers << "Z_Field";
+            } else if (headers.size() == (CurveStartIndex + 5)) {
+                headers << "Err Z_Err F";
+            } else if (headers.size() > CurveStartIndex) {
+                headers << "Comment";
+            } else {
+                // Empty values between dates and Curve
+                headers << "";
+            }
+        }
 
     } else if ((verticalHeader!="TITLE")  || (verticalHeader!="STRUCTURE")) {
         QStringList cols;
