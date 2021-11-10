@@ -800,7 +800,7 @@ mMaximunNumberOfVisibleGraph(0)
 
     mExportResults = new Button(tr("Results"), mSaveAllWidget);
     mExportResults->setFlatHorizontal();
-    mExportResults->setIcon(QIcon(":csv.png"));
+    mExportResults->setIcon(QIcon(":export_csv_w.png"));
     mExportResults->setToolTip(tr("Export all result in several files"));
 
     connect(mExportImgBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::exportFullImage);

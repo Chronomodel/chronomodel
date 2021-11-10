@@ -85,5 +85,7 @@
         <file alias="multiCalib_w.png">resources/multiCalib_w.png</file>
         <file alias="color.png">resources/color.png</file>
         <file alias="clipboard_graph.png">resources/cilpboard_graph.png</file>
+        <file alias="export_csv_w.png">resources/export_csv_w.png</file>
+        <file alias="export_csv.png">resources/export_csv.png</file>
     </qresource>
 </RCC>
