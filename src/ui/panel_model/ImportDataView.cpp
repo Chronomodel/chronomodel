@@ -318,7 +318,7 @@ void ImportDataView::exportDates()
 
             stream << "Title" << sep << AppSettings::mLastFile << Qt::endl;
             stream <<"#Event name"<<sep<<"method"<<sep<<"dating name/code"<<sep<<"method param a"<<sep<<"method param b"<<sep<<"method param c"<<sep<<"wiggle type"<<sep<<"wiggle param a"<<sep<<"wiggle param b";
-            stream<<sep<<sep<<sep<<sep<<sep<<sep<<sep<<sep<<"X_Inc_Depth"<<sep<<"Err X- apha95- Err depth"<<sep<<"Y_Declinaison"<<sep<<"Err Y"<<sep<<"Z_Field"<<sep<<"Err Z_Err F" <<Qt::endl;
+            stream<<sep<<sep<<sep<<sep<<sep<<sep<<"X_Inc_Depth"<<sep<<"Err X- apha95- Err depth"<<sep<<"Y_Declinaison"<<sep<<"Err Y"<<sep<<"Z_Field"<<sep<<"Err Z_Err F" <<Qt::endl;
             bool isCurve = (project->mState.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt() != CurveSettings::eProcessTypeNone);
 
             for (auto&& ev : events) {
