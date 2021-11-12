@@ -1474,7 +1474,7 @@ QPixmap Date::generateCalibThumb()
             curveWiggle.mData = calibWiggle;
 
             curveWiggle.mName = "Wiggle";
-            curveWiggle.mPen.setColor(Qt::red);
+            curveWiggle.mPen.setColor(Qt::blue);
             curveWiggle.mPen.setWidth(4);
             curveWiggle.mBrush = QBrush(Qt::NoBrush);
             curveWiggle.mIsHisto = false;

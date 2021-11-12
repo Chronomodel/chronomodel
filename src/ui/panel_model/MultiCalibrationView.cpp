@@ -104,7 +104,7 @@ mCurveColor(Painting::mainColorDark)
     mExportResults->setIcon(QIcon(":export_csv_w.png"));
     mExportResults->setIconOnly(true);
     mExportResults->setChecked(false);
-    mExportResults->setToolTip(tr("Export all result in several files"));
+    mExportResults->setToolTip(tr("Export stats to a CSV file"));
 
 
     mGraphHeightLab = new Label(tr("Y Zoom"), this);

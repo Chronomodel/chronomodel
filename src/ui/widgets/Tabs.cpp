@@ -45,8 +45,6 @@ mTabHeight(40),
 mCurrentIndex(0)
 {
     setFont(QFont());
- //   setFixedHeight(mTabHeight);
-
 }
 
 Tabs::~Tabs()
@@ -168,8 +166,8 @@ void Tabs::showWidget(const int &i)
 {
     Q_ASSERT(i<mTabWidgets.size());
 
-    int j(0);
-    for (auto &&w:mTabWidgets) {
+    int j = 0;
+    for (auto && w:mTabWidgets) {
         if (j!= i)
             w->setVisible(false);
         else

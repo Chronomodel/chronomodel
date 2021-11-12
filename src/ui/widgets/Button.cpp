@@ -134,9 +134,7 @@ void Button::setColorState(ColorState state)
 void Button::enterEvent(QEnterEvent *e)
 {
     mMouseOver = true;
-    //update();
- //   if (QPushButton::isCheckable())
-        QPushButton::QWidget::enterEvent(e);
+    QPushButton::QWidget::enterEvent(e);
     update();
 }
 void Button::leaveEvent(QEvent * e)
@@ -248,7 +246,8 @@ void Button::paintEvent(QPaintEvent* e)
     } else if (mFlatVertical || mFlatHorizontal) {
 
         //QColor gradColTop(40, 40, 40);
-        QColor gradColTop(180, 180, 180);
+        //QColor gradColTop(180, 180, 180);
+        QColor gradColTop = Painting::borderDark;
         QColor gradColBot(30, 30, 30);
         QColor gradLineLight(Painting::borderDark);
         QColor gradLineDark(0, 0, 0);
@@ -260,37 +259,38 @@ void Button::paintEvent(QPaintEvent* e)
             gradLineDark = QColor(80, 80, 80);
 
         } else if (isDown() || isChecked()) {
-            gradColTop = Painting::mainColorDark.lighter(225);
-            gradColBot = Painting::mainColorDark;
+            gradColTop = Painting::mainColorDark;
+            gradColBot = Painting::mainColorDark.lighter(225);
             gradLineLight = QColor(30, 30, 30);
             gradLineDark = QColor(10, 10, 10);
         }
-
+/*
         QGradient grad;
         if (mFlatVertical) {
            grad =  QLinearGradient(0, 0, r.width(), r.height());
            grad.setColorAt(0., gradColBot);
            grad.setColorAt(0.85, gradColBot);
            grad.setColorAt(1, gradColTop);
-
+*/
           /* grad = QRadialGradient(QPointF(r.width()/2, 0),  3*r.height()/3);//QLinearGradient (0, 0, 0, r.height());
           // grad.setColorAt(0., gradColBot);
            grad.setColorAt(0.85, gradColBot);
            grad.setColorAt(1, gradColTop);*/
-        } else if (mFlatHorizontal) {
+ /*       } else if (mFlatHorizontal) {
            grad = QRadialGradient(QPointF(r.width()/2, 0),  2*r.width()/3);//QLinearGradient (0, 0, 0, r.height());
            grad.setColorAt(0., gradColBot);
            grad.setColorAt(0.5, gradColBot);
            grad.setColorAt(1, gradColTop);
         }
-
+*/
        // grad.setColorAt(0, gradColTop);
 
 
         if (mMouseOver)
-            painter.fillRect(r.adjusted(-50, -50, 50, 50), grad);
+            //painter.fillRect(r.adjusted(-50, -50, 50, 50), grad);
+            painter.fillRect(r.adjusted(-50, -50, 50, 50), gradColTop);
         else
-            painter.fillRect(r, grad);
+            painter.fillRect(r, gradColTop);
 /*
         painter.setPen(gradLineLight);
         if (mFlatVertical)
