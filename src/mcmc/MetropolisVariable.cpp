@@ -302,7 +302,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
     const int inputSize (fftLen);
     const int outputSize = 2 * (inputSize / 2 + 1);
 
-   double sigma = std_Knuth(dataSrc);
+   double sigma = std_Knuth(dataSrc);//std_Koening(dataSrc);//
 
    /* In the case of Vg and Vt (sigma_ti), there may be very large values that pull the mean.
     * It is preferable in this case, to evaluate an equivalent of the standard deviation using the quantiles at 15.85%, in the Gaussian case.
@@ -331,8 +331,8 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
      const double a = vector_min_value(dataSrc) - 4. * h;
      const double b = vector_max_value(dataSrc) + 4. * h;
 
-     double* input = (double*) fftw_malloc(fftLen * sizeof(double));
-     generateBufferForHisto(input, dataSrc, fftLen, a, b);
+     double* input = (double*) fftw_malloc(inputSize * sizeof(double));
+     generateBufferForHisto(input, dataSrc, inputSize, a, b);
 
      double* output = (double*) fftw_malloc(outputSize * sizeof(double));
 
@@ -380,7 +380,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
                   tEnd = tmax;
               break;
         }
-        const double delta = (b - a) / fftLen;
+        const double delta = (b - a) / (inputSize-1);
 
         for (int i=0; i<inputSize; ++i) {
              const double t = a + (double)i * delta;
@@ -720,27 +720,29 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
 
     if (forCSV) {
         result += tr("Probabilities") + nl;
-            if (!mHPD.isEmpty())
-                result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForCSV(mThresholdUsed), getHPDText(mHPD, mThresholdUsed, unit, conversionFunc, true)) + nl;
 
             // the mCredibility is already in the time scale, we don't need to convert
             if (mCredibility != QPair<double, double>()) {
                 result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForCSV(mExactCredibilityThreshold * 100.),
                                                                                        stringForCSV(mCredibility.first),
                                                                                        stringForCSV(mCredibility.second),
-                                                                                       unit);
+                                                                                       unit) + nl;
+                if (!mHPD.isEmpty())
+                    result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForCSV(mThresholdUsed), getHPDText(mHPD, mThresholdUsed, unit, conversionFunc, true)) + nl;
+
            }
    } else {
         result += "<i>"+ tr("Probabilities") + " </i>"+ nl;
-            if (!mHPD.isEmpty())
-                result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForLocal(mThresholdUsed), getHPDText(mHPD, mThresholdUsed, unit, conversionFunc, false)) + nl;
 
             // the mCredibility is already in the time scale, we don't need to convert
             if (mCredibility != QPair<double, double>())
                 result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(mExactCredibilityThreshold * 100.),
                                                                                        stringForLocal(mCredibility.first),
                                                                                        stringForLocal(mCredibility.second),
-                                                                                       unit);
+                                                                                       unit) + nl;
+            if (!mHPD.isEmpty())
+                result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForLocal(mThresholdUsed), getHPDText(mHPD, mThresholdUsed, unit, conversionFunc, false)) + nl;
+
   }
    return result;
 }
@@ -757,9 +759,7 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
         list << locale.toString(mResults.traceAnalysis.quartiles.Q3, 'f', precision);
         list << locale.toString(mResults.traceAnalysis.min, 'f', precision);
         list << locale.toString(mResults.traceAnalysis.max, 'f', precision);
-        list << locale.toString(mExactCredibilityThreshold * 100., 'f', 2);
-        list << locale.toString(mCredibility.first, 'f', precision);
-        list << locale.toString(mCredibility.second, 'f', precision);
+
 
          // Statistic Results on Density
         list << locale.toString(mResults.funcAnalysis.mode, 'f', precision);
@@ -768,6 +768,10 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
         list << locale.toString(mResults.funcAnalysis.quartiles.Q1, 'f', precision);
         list << locale.toString(mResults.funcAnalysis.quartiles.Q2, 'f', precision);
         list << locale.toString(mResults.funcAnalysis.quartiles.Q3, 'f', precision);
+
+        list << locale.toString(mExactCredibilityThreshold * 100., 'f', 2);
+        list << locale.toString(mCredibility.first, 'f', precision);
+        list << locale.toString(mCredibility.second, 'f', precision);
 
         const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThresholdUsed);
 

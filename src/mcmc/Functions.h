@@ -88,7 +88,8 @@ QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& 
 
 // Standard Deviation of a vector of data
 type_data std_Koening(const QVector<type_data> &data);
-type_data std_Knuth(const QVector<type_data> &data);
+double std_Knuth(const QVector<double> &data);
+double std_Knuth(const std::vector<double> &data);
 double std_Knuth(const std::vector<int> &data);
 void mean_std_Knuth(const std::vector<int> &data, double& mean, double& std);
 

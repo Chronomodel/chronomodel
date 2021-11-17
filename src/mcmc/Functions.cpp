@@ -140,6 +140,7 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
 
 /**
  * @brief std_Koening Algorithm using the Koenig-Huygens formula, can induce a negative variance
+ * return std biaised, must be corrected if unbiais needed
  * @param data
  * @return
  */
@@ -173,13 +174,13 @@ type_data std_Koening(const QVector<type_data> &data)
  * @param data
  * @return
  */
-type_data std_Knuth(const QVector<type_data> &data)
+double std_Knuth(const QVector<double> &data)
 {
     unsigned n = 0;
-    type_data mean = 0.;
-    type_data variance = 0.;
-    type_data previousMean = 0.;
-    type_data previousVariance = 0.;
+    long double mean = 0.;
+    long double variance = 0.;
+    long double previousMean = 0.;
+    long double previousVariance = 0.;
 
     for (auto&& x : data) {
         n++;
@@ -189,18 +190,17 @@ type_data std_Knuth(const QVector<type_data> &data)
         variance = previousVariance + (x - previousMean)*(x - mean);
     }
 
-    return sqrt(variance/n);
+    return sqrt(variance/(long double)(n-1)); // unbiais
 
 }
-
 
 double std_Knuth(const std::vector<int>& data)
 {
     int n = 0;
-    double mean = 0.;
-    double variance = 0.;
-    double previousMean = 0.;
-    double previousVariance = 0.;
+    long double mean = 0.;
+    long double variance = 0.;
+    long double previousMean = 0.;
+    long double previousVariance = 0.;
 
     for (auto&& x : data) {
         n++;
@@ -210,7 +210,7 @@ double std_Knuth(const std::vector<int>& data)
         variance = previousVariance + ( (double)x - previousMean)*( (double)x - mean);
     }
 
-    return sqrt(variance/n);
+    return sqrt(variance/(n-1)); // unbiais
 
 }
 
@@ -230,7 +230,7 @@ void mean_std_Knuth(const std::vector<int>& data, double& mean, double& std)
         variance = previousVariance + ( (double)x - previousMean)*( (double)x - mean);
     }
 
-    std = std::move(sqrt(variance/n));
+    std = std::move(sqrt(variance/(n-1)));// unbiais
 
 }
 
@@ -256,7 +256,7 @@ TraceStat traceStatistic(const QVector<type_data>& trace)
         variance = previousVariance + (x - previousMean)*(x - mean);
     }
     result.mean = std::move(mean);
-    result.std = sqrt(variance/n);
+    result.std = sqrt(variance/(n-1)); // unbiais
 
     auto minMax = std::minmax_element(trace.begin(), trace.end());
     result.min = std::move(*minMax.first);
@@ -1060,9 +1060,10 @@ long double determinant(const std::vector<std::vector<long double>>& matrix, siz
         }
 
     }
-    if (det == 0) {
+ /*   if (det == 0) {
            throw std::runtime_error("Function::determinant det ==0");
        }
+ */
     return(det);
 }
 
