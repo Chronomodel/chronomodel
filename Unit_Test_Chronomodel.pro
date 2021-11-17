@@ -81,7 +81,8 @@ DEFINES += SRCDIR=\\\"$$PWD/\\\"
 # In the future we'll need to increase to C++17
 # which offered namespace std::experimental::parallel;
 #########################################
-CONFIG += c++20
+CONFIG += c++2a
+QMAKE_CXXFLAGS += -std=c++2a
 
 #########################################
 # MacOS specific settings
@@ -101,7 +102,7 @@ macx{
         message("QMAKE_MAC_SDK = $$QMAKE_MAC_SDK")
 
         # This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
-        QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
+        QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14
         # Define a set of resources to deploy inside the bundle :
         #RESOURCES_FILES.path = Contents/Resources
         #RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
@@ -118,8 +119,7 @@ macx{
 win32{
         # Resource file (Windows only)
         message("WIN specific settings")
-       QMAKESPEC = win32-msvc  # for 32-bit and 64-bit
-
+        QMAKESPEC = win32-g++  # for 32-bit and 64-bit
         RC_FILE += Chronomodel.rc
         #RC_ICONS += $$PRO_PATH/icon/Chronomodel.ico
         QT_FATAL_WARNING = 1
@@ -225,7 +225,7 @@ INCLUDEPATH += src/plugins/plugin_tl/
 INCLUDEPATH += src/plugins/plugin_uniform/
 INCLUDEPATH += src/plugins/plugin_F14C/
 INCLUDEPATH += src/project/
-INCLUDEPATH += src/chronocurve/
+INCLUDEPATH += src/curve/
 INCLUDEPATH += src/ui/
 INCLUDEPATH += src/ui/dialogs/
 INCLUDEPATH += src/ui/graphs/
@@ -243,10 +243,19 @@ INCLUDEPATH += src/utilities/
 # HEADERS
 #########################################
 
-#HEADERS += src/MainController.h
+#HEADERS += src/MainController.h \
+#       src/ui/panel_model/MultiCalibrationView.h \
+#       src/ui/panel_model/MultiCalibrationDrawing.h \
+#       src/utilities/Matrix.h
 HEADERS += src/AppSettings.h
 HEADERS += src/StateKeys.h
 HEADERS += src/ChronoApp.h
+
+HEADERS += src/curve/CurveSettings.h
+HEADERS += src/curve/CurveSettingsView.h
+HEADERS += src/curve/CurveUtilities.h
+HEADERS += src/curve/MCMCLoopCurve.h
+HEADERS += src/curve/ModelCurve.h
 
 HEADERS += src/mcmc/Functions.h
 HEADERS += src/mcmc/Generator.h
@@ -317,12 +326,6 @@ HEADERS += src/project/ProjectSettings.h
 HEADERS += src/project/SetProjectState.h
 HEADERS += src/project/StateEvent.h
 
-HEADERS += src/chronocurve/ChronocurveSettings.h
-HEADERS += src/chronocurve/ChronocurveSettingsView.h
-HEADERS += src/chronocurve/MCMCLoopChronocurve.h
-HEADERS += src/chronocurve/ModelChronocurve.h
-HEADERS += src/chronocurve/ChronocurveUtilities.h
-
 HEADERS += src/ui/dialogs/AboutDialog.h
 HEADERS += src/ui/dialogs/AppSettingsDialog.h
 HEADERS += src/ui/dialogs/AppSettingsDialogItemDelegate.h
@@ -375,7 +378,6 @@ HEADERS += src/ui/panel_results/GraphViewDate.h
 HEADERS += src/ui/panel_results/GraphViewEvent.h
 HEADERS += src/ui/panel_results/GraphViewPhase.h
 HEADERS += src/ui/panel_results/GraphViewResults.h
-HEADERS += src/ui/panel_results/GraphViewTempo.h
 HEADERS += src/ui/panel_results/ResultsView.h
 
 HEADERS += src/ui/widgets/Button.h
@@ -391,7 +393,7 @@ HEADERS += src/ui/widgets/RadioButton.h
 HEADERS += src/ui/widgets/ScrollCompressor.h
 HEADERS += src/ui/widgets/Tabs.h
 HEADERS += src/ui/widgets/SwitchAction.h
-HEADERS += src/ui/widgets/ChronocurveWidget.h
+HEADERS += src/ui/widgets/CurveWidget.h
 
 HEADERS += src/ui/window/MainWindow.h
 HEADERS += src/ui/window/ProjectView.h
@@ -411,6 +413,12 @@ SOURCES += src/AppSettings.cpp
 SOURCES += src/ChronoApp.cpp
 #SOURCES += src/main.cpp # Don't use it while testing
 SOURCES += src/MainController.cpp
+
+SOURCES += src/curve/CurveSettings.cpp
+SOURCES += src/curve/CurveSettingsView.cpp
+SOURCES += src/curve/CurveUtilities.cpp
+SOURCES += src/curve/MCMCLoopCurve.cpp
+SOURCES += src/curve/ModelCurve.cpp
 
 SOURCES += src/mcmc/Functions.cpp
 SOURCES += src/mcmc/Generator.cpp
@@ -477,12 +485,6 @@ SOURCES += src/project/ProjectSettings.cpp
 SOURCES += src/project/SetProjectState.cpp
 SOURCES += src/project/StateEvent.cpp
 
-SOURCES += src/chronocurve/ChronocurveSettings.cpp
-SOURCES += src/chronocurve/ChronocurveSettingsView.cpp
-SOURCES += src/chronocurve/MCMCLoopChronocurve.cpp
-SOURCES += src/chronocurve/ModelChronocurve.cpp
-SOURCES += src/chronocurve/ChronocurveUtilities.cpp
-
 SOURCES += src/ui/dialogs/AboutDialog.cpp
 SOURCES += src/ui/dialogs/AppSettingsDialog.cpp
 SOURCES += src/ui/dialogs/ConstraintDialog.cpp
@@ -532,7 +534,6 @@ SOURCES += src/ui/panel_results/GraphViewDate.cpp
 SOURCES += src/ui/panel_results/GraphViewEvent.cpp
 SOURCES += src/ui/panel_results/GraphViewPhase.cpp
 SOURCES += src/ui/panel_results/GraphViewResults.cpp
-SOURCES += src/ui/panel_results/GraphViewTempo.cpp
 SOURCES += src/ui/panel_results/ResultsView.cpp
 
 SOURCES += src/ui/widgets/ColorPicker.cpp
@@ -548,7 +549,7 @@ SOURCES += src/ui/widgets/HelpWidget.cpp
 SOURCES += src/ui/widgets/Tabs.cpp
 SOURCES += src/ui/widgets/Marker.cpp
 SOURCES += src/ui/widgets/SwitchAction.cpp
-SOURCES += src/ui/widgets/ChronocurveWidget.cpp
+SOURCES += src/ui/widgets/CurveWidget.cpp
 
 SOURCES += src/ui/window/MainWindow.cpp
 SOURCES += src/ui/window/ProjectView.cpp

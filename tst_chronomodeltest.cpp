@@ -20,8 +20,8 @@
 
 #include "fftw3.h"
 
-#include "MCMCLoopChronocurve.h"
-#include "ModelChronocurve.h"
+#include "MCMCLoopCurve.h"
+#include "ModelCurve.h"
 #include "Project.h"
 
 #include <iostream>
@@ -172,17 +172,18 @@ void ChronomodelTest::trace()
 {
 
     ChainSpecs chain1;
-    chain1.mNumBurnIter = 3; //used
+    chain1.mIterPerBurn = 3; //used
     chain1.mBurnIterIndex=1;
 
     chain1.mBatchIterIndex = 2;
     chain1.mBatchIndex = 2; //used
-    chain1.mNumBatchIter = 3; //used
+    chain1.mIterPerBatch = 3; //used
 
-    chain1.mNumRunIter = 10; //used
-    chain1.mRunIterIndex = 5;
+    chain1.mIterPerAquisition = 10; //used
+    chain1.mAquisitionIterIndex = 5;
 
     chain1.mThinningInterval = 1; //used
+    chain1.mRealyAccepted = 10; //used
 
     MetropolisVariable fullTrace;
     fullTrace.mRawTrace = new QVector<double>();
@@ -191,17 +192,18 @@ void ChronomodelTest::trace()
         fullTrace.mRawTrace->append(i);
     //----------chain2
     ChainSpecs chain2;
-    chain2.mNumBurnIter = 3; //used
+    chain2.mIterPerBurn = 3; //used
     chain2.mBurnIterIndex=1;
 
     chain2.mBatchIterIndex = 2;
     chain2.mBatchIndex = 2; //used
-    chain2.mNumBatchIter = 3; //used
+    chain2.mIterPerBatch = 3; //used
 
-    chain2.mNumRunIter = 10; //used 2 iter more unused
-    chain2.mRunIterIndex = 5;
+    chain2.mIterPerAquisition = 10; //used 2 iter more unused
+    chain2.mAquisitionIterIndex = 5;
 
     chain2.mThinningInterval = 1; //used
+    chain2.mRealyAccepted = 10; //used
  // Adding chain2 in fullTrace
     for (auto i=1; i<21; ++i)
         fullTrace.mRawTrace->append(i);
@@ -283,17 +285,18 @@ void ChronomodelTest::fft()
     const double tmax (20);
 
     ChainSpecs chain1;
-    chain1.mNumBurnIter = 1; //used
+    chain1.mIterPerBurn = 1; //used
     chain1.mBurnIterIndex=1;
 
     chain1.mBatchIterIndex = 2;
     chain1.mBatchIndex = 0; //used
-    chain1.mNumBatchIter = 0; //used
+    chain1.mIterPerBatch = 0; //used
 
-    chain1.mNumRunIter = 18; //used
-    chain1.mRunIterIndex = 5;
+    chain1.mIterPerAquisition = 18; //used
+    chain1.mAquisitionIterIndex = 0;
 
     chain1.mThinningInterval = 1; //used
+    chain1.mRealyAccepted = 18; //used
 
 
     QVector<double> trace1;
@@ -312,7 +315,7 @@ void ChronomodelTest::fft()
 
     density1.generateHistos(chain1Spe, fftLen, bandwidth, tmin, tmax) ;
     //qDebug()<<"histo1"<<density1.mHisto;
-    QVERIFY(qFuzzyCompare(density1.mHisto.firstKey(), -5.35157149234));
+    QVERIFY(qFuzzyCompare(density1.mHisto.firstKey(), -5.54093161815921));//-5.35157149234));
 
     ChainSpecs chain2 (chain1);
     ChainSpecs chain3 (chain1);
@@ -337,24 +340,25 @@ void ChronomodelTest::fft()
     density2.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
     //qDebug()<<"histo2"<<density2.mHisto;
 
-    QVERIFY(qFuzzyCompare(density2.mHisto.firstKey(), -4.06316390051));
+    QVERIFY(qFuzzyCompare(density2.mHisto.firstKey(), -4.112396566542358)); //-4.06316390051));
 }
 
 void ChronomodelTest::hpd()
 {
     //--- test HPD --- Only one chain
     ChainSpecs chainHPD1;
-    chainHPD1.mNumBurnIter = 10; //used
-    chainHPD1.mBurnIterIndex=0;
+    chainHPD1.mIterPerBurn = 10; //used
+    chainHPD1.mBurnIterIndex = 0;
 
     chainHPD1.mBatchIterIndex = 0;
     chainHPD1.mBatchIndex = 10; //used
-    chainHPD1.mNumBatchIter = 100; //used
+    chainHPD1.mIterPerBatch = 100; //used
 
-    chainHPD1.mNumRunIter = 200; //used
-    chainHPD1.mRunIterIndex = 0;
+    chainHPD1.mIterPerAquisition = 200; //not used
+    chainHPD1.mAquisitionIterIndex = 0;
 
-    chainHPD1.mThinningInterval = 5; //used
+    chainHPD1.mThinningInterval = 0; //not used
+    chainHPD1.mRealyAccepted = 40; // 40 used mToltal = 1 + 10 + 10*100 + 40 =1051
 
 
     QList<ChainSpecs> chainHPDs;
@@ -391,13 +395,29 @@ void ChronomodelTest::hpd()
 
     densityHPD.mRawTrace = &traceHPD;
     densityHPD.mFormatedTrace = &traceHPD;
-    densityHPD.generateHistos(chainHPDs, 1024, 1.06, -1000., 2000.);
+    /*
+    const QVector<double> test_stat {32.495245 , 71.404288, 145.226621 , 56.585285,  84.360405 , 78.379382 , 99.621780};// , 75.229839 , 76.667125 , 79.484980, 106.903918, 125.845227, 151.512385 , 90.581431 , 57.410082 , 87.816521 , 16.592070, 104.729166, 153.559666, 150.331152 , 81.376184,  92.457870 , 89.661235, 107.619384 ,128.017155 , 72.341386 ,111.224275,  46.945097 , 24.393485 , 37.476728 ,157.863145 , 61.758697,  85.422980 ,125.197683 , 79.224371,  68.910965, 144.378219, 125.581241 , 18.637394, 115.689468, 128.111543 ,191.139432 ,146.703681 , 72.329983 ,135.000873,  88.285547, 118.860073 , 77.568237 , 95.219087 , 73.738182 , 75.024902 , 13.232312, 144.140485 , 83.363317};
+    TraceStat resStat = traceStatistic(test_stat);
+    double som =0;
+    for (auto ts : test_stat) {
+        som += (ts - resStat.mean)*(ts-resStat.mean);
+    }
+    som = sqrt(som/(test_stat.size()-1)); // non biaisé
+    double test_sd = std_Knuth(test_stat); // non biaisé
+    double test_sd2 = std_Koening(test_stat); // stat biaisé
+ //QVERIFY(test_sd == test_sd2*sqrt(test_stat.size()/(test_stat.size()-1)));
+
+    const QVector<double> subFullTrace (densityHPD.fullRunTrace(chainHPDs));
+    test_sd = std_Knuth(subFullTrace);
+    */
+    densityHPD.generateHistos(chainHPDs, 2048, 1.06, -1000., 2000.); //1024
     densityHPD.generateHPD(95.);
 
     QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(densityHPD.mHPD, 95.);
   //  qDebug()<<"histo2 HPD"<<intervals[0].first<<intervals[0].second.first<<intervals[0].second.second;
 
-    QPair<double, double> answer = qMakePair<double, double> (181.17834135537777 , 217.061790521);
+    //QPair<double, double> answer = qMakePair<double, double> (181.17834135537777 , 217.061790521);
+     QPair<double, double> answer = qMakePair<double, double> (180.9866694951419 , 217.35305862040275);
 
    QVERIFY(qFuzzyCompare(intervals[0].first, 95.0));
    QVERIFY(myFuzzyCompare(intervals[0].second.first, answer.first));
@@ -449,15 +469,15 @@ void ChronomodelTest::tempo()
 
 
     ChainSpecs chain1;
-    chain1.mNumBurnIter = 0; //not used
+    chain1.mIterPerBurn = 0; //not used
     chain1.mBurnIterIndex = 0;
 
     chain1.mBatchIterIndex = 0;
     chain1.mBatchIndex = 0; //not used
-    chain1.mNumBatchIter = 0; //not used
+    chain1.mIterPerBatch = 0; //not used
 
-    chain1.mNumRunIter = 20; //used
-    chain1.mRunIterIndex = 5;
+    chain1.mIterPerAquisition = 20; //used
+    chain1.mAquisitionIterIndex = 5;
 
     chain1.mThinningInterval = 1; //used
 
@@ -973,7 +993,7 @@ void ChronomodelTest::calculMat() {
     qDebug() <<"14 - decompositionLU0 matrix 5x5";
     pairMatrix =  decompositionLU0(matK);
     matL = pairMatrix.first;
-qDebug() << (double) matL[2][1];
+    //qDebug() << (double) matL[2][1];
     QVERIFY(qFuzzyCompare(matL[0][0] , 1.));                 QVERIFY(qFuzzyCompare(matL[0][1] , 0.));                 QVERIFY(qFuzzyCompare(matL[0][2] , 0.));                 QVERIFY(qFuzzyCompare(matL[0][3] , 0.)); QVERIFY(qFuzzyCompare(matL[0][4] , 0.));
     QVERIFY(qFuzzyCompare(matL[1][0] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(matL[1][1] , 1. ));                QVERIFY(qFuzzyCompare(matL[1][2] , 0.));                 QVERIFY(qFuzzyCompare(matL[1][3] , 0.)); QVERIFY(qFuzzyCompare(matL[1][4] , 0.));
     QVERIFY(qFuzzyCompare(matL[2][0] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(matL[2][1] , 0.6470588235294117)); QVERIFY(qFuzzyCompare(matL[2][2] , 1. ));                QVERIFY(qFuzzyCompare(matL[2][3] , 0.)); QVERIFY(qFuzzyCompare(matL[2][4] , 0.));
@@ -991,10 +1011,10 @@ qDebug() << (double) matL[2][1];
 
 void ChronomodelTest::curveFunction()
 {
-    qDebug() << "test orderEventsByThetaReduced";
+    qDebug() << "1 test orderEventsByThetaReduced";
     Project proj ;
-    ModelChronocurve modl;
-    MCMCLoopChronocurve loopCurve (&modl, &proj);
+    ModelCurve modl;
+    MCMCLoopCurve loopCurve (&modl, &proj);
 
     QList <Event*> lEvents;
     Event E1 ;
@@ -1030,7 +1050,7 @@ void ChronomodelTest::curveFunction()
 
      double comparPrecision = std::numeric_limits<double>::epsilon() *5.;
 
-     qDebug() << "test orderEventsByThetaReduced";
+     qDebug() << "2 test orderEventsByThetaReduced";
      // non modification
      lEvents[0]->mThetaReduced = 0.1;
      lEvents[1]->mThetaReduced = 0.2;
@@ -1056,12 +1076,12 @@ void ChronomodelTest::curveFunction()
      loopCurve.spreadEventsThetaReduced0(lEvents);
 
      QVERIFY(lEvents[0]->mThetaReduced == 0.1);
-     QVERIFY(myFuzzyCompare(lEvents[1]->mThetaReduced , 0.1999999999999889, comparPrecision));
-     QVERIFY(myFuzzyCompare(lEvents[2]->mThetaReduced , 0.20000000000000556, comparPrecision));
-     QVERIFY(myFuzzyCompare(lEvents[3]->mThetaReduced , 0.20000000000002222, comparPrecision));
+     QVERIFY(myFuzzyCompare(lEvents[1]->mThetaReduced , 0.1999999998889777, comparPrecision));
+     QVERIFY(myFuzzyCompare(lEvents[2]->mThetaReduced , 0.20000000005551116, comparPrecision));
+     QVERIFY(myFuzzyCompare(lEvents[3]->mThetaReduced , 0.20000000022204462, comparPrecision));
      QVERIFY(lEvents[4]->mThetaReduced == 0.3);
 
-      qDebug() << "test orderEventsByThetaReduced egal at left";
+      qDebug() << "3 test orderEventsByThetaReduced egal at left";
       // un paquet en début de liste
      lEvents[0]->mThetaReduced = 0.02;
      lEvents[1]->mThetaReduced = 0.02;
@@ -1072,13 +1092,13 @@ void ChronomodelTest::curveFunction()
      loopCurve.spreadEventsThetaReduced0(lEvents);
 
      QVERIFY(myFuzzyCompare(lEvents[0]->mThetaReduced , 0.02, comparPrecision));
-     QVERIFY(myFuzzyCompare(lEvents[1]->mThetaReduced , 0.020000000000011103, comparPrecision));
-     QVERIFY(myFuzzyCompare(lEvents[2]->mThetaReduced , 0.020000000000022205, comparPrecision));
+     QVERIFY(myFuzzyCompare(lEvents[1]->mThetaReduced , 0.020000000111022303, comparPrecision));
+     QVERIFY(myFuzzyCompare(lEvents[2]->mThetaReduced , 0.020000000222044605, comparPrecision));
      QVERIFY(myFuzzyCompare(lEvents[3]->mThetaReduced , 0.1, comparPrecision));
      QVERIFY(lEvents[4]->mThetaReduced == 0.3);
 
 
-     qDebug() << "test orderEventsByThetaReduced egal at right";
+     qDebug() << "4 test orderEventsByThetaReduced egal at right";
 
      // un paquet en fin de liste
     lEvents[0]->mThetaReduced = 0.02;
@@ -1091,8 +1111,8 @@ void ChronomodelTest::curveFunction()
 
     QVERIFY(qFuzzyCompare(lEvents[0]->mThetaReduced , 0.02));
     QVERIFY(qFuzzyCompare(lEvents[1]->mThetaReduced , 0.2));
-    QVERIFY(myFuzzyCompare(lEvents[2]->mThetaReduced , 0.3009999999999778, comparPrecision));
-    QVERIFY(myFuzzyCompare(lEvents[3]->mThetaReduced , 0.3009999999999889, comparPrecision));
+    QVERIFY(myFuzzyCompare(lEvents[2]->mThetaReduced , 0.3009999997779554, comparPrecision));
+    QVERIFY(myFuzzyCompare(lEvents[3]->mThetaReduced , 0.3009999998889777, comparPrecision));
     QVERIFY(myFuzzyCompare(lEvents[4]->mThetaReduced , 0.301 , comparPrecision));
 
     // deux paquets en début et fin de liste
@@ -1105,9 +1125,9 @@ void ChronomodelTest::curveFunction()
     loopCurve.spreadEventsThetaReduced0(lEvents);
 
     QVERIFY(myFuzzyCompare(lEvents[0]->mThetaReduced , 0.02, comparPrecision));
-    QVERIFY(myFuzzyCompare(lEvents[1]->mThetaReduced , 0.020000000000022205, comparPrecision));
+    QVERIFY(myFuzzyCompare(lEvents[1]->mThetaReduced , 0.020000000222044605, comparPrecision));
     QVERIFY(qFuzzyCompare(lEvents[2]->mThetaReduced , 0.3) );
-    QVERIFY(myFuzzyCompare(lEvents[3]->mThetaReduced , 0.3009999999999778, comparPrecision));
+    QVERIFY(myFuzzyCompare(lEvents[3]->mThetaReduced , 0.3009999997779554, comparPrecision));
     QVERIFY(myFuzzyCompare(lEvents[4]->mThetaReduced , 0.301, comparPrecision));
 
 
