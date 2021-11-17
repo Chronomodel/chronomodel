@@ -55,6 +55,9 @@ public:
     void setPen(QPen pen);
 
     QMap<type_data, type_data> mData;
+    std::vector<std::vector<double>> mMap;
+    std::pair<double, double> mMapRangeY;
+    std::pair<double, double> mMapRangeX;
 
     QString mName;
     QPen mPen;

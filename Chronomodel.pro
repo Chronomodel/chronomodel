@@ -268,6 +268,12 @@ HEADERS += src/AppSettings.h
 HEADERS += src/StateKeys.h
 HEADERS += src/ChronoApp.h
 
+HEADERS += src/curve/CurveSettings.h
+HEADERS += src/curve/CurveSettingsView.h
+HEADERS += src/curve/MCMCLoopCurve.h
+HEADERS += src/curve/ModelCurve.h
+HEADERS += src/curve/CurveUtilities.h
+
 HEADERS += src/mcmc/Functions.h
 HEADERS += src/mcmc/Generator.h
 HEADERS += src/mcmc/MCMCLoop.h
@@ -337,11 +343,6 @@ HEADERS += src/project/ProjectSettings.h
 HEADERS += src/project/SetProjectState.h
 HEADERS += src/project/StateEvent.h
 
-HEADERS += src/curve/CurveSettings.h
-HEADERS += src/curve/CurveSettingsView.h
-HEADERS += src/curve/MCMCLoopCurve.h
-HEADERS += src/curve/ModelCurve.h
-HEADERS += src/curve/CurveUtilities.h
 
 HEADERS += src/ui/dialogs/AboutDialog.h
 HEADERS += src/ui/dialogs/AppSettingsDialog.h
@@ -432,6 +433,12 @@ SOURCES += src/ChronoApp.cpp
 SOURCES += src/main.cpp
 SOURCES += src/MainController.cpp
 
+SOURCES += src/curve/CurveSettings.cpp
+SOURCES += src/curve/CurveSettingsView.cpp
+SOURCES += src/curve/MCMCLoopCurve.cpp
+SOURCES += src/curve/ModelCurve.cpp
+SOURCES += src/curve/CurveUtilities.cpp
+
 SOURCES += src/mcmc/Functions.cpp
 SOURCES += src/mcmc/Generator.cpp
 SOURCES += src/mcmc/MCMCLoop.cpp
@@ -496,12 +503,6 @@ SOURCES += src/project/Project.cpp
 SOURCES += src/project/ProjectSettings.cpp
 SOURCES += src/project/SetProjectState.cpp
 SOURCES += src/project/StateEvent.cpp
-
-SOURCES += src/curve/CurveSettings.cpp
-SOURCES += src/curve/CurveSettingsView.cpp
-SOURCES += src/curve/MCMCLoopCurve.cpp
-SOURCES += src/curve/ModelCurve.cpp
-SOURCES += src/curve/CurveUtilities.cpp
 
 SOURCES += src/ui/dialogs/AboutDialog.cpp
 SOURCES += src/ui/dialogs/AppSettingsDialog.cpp

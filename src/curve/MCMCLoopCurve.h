@@ -161,7 +161,7 @@ private:
 
     PosteriorMeanGComposante computePosteriorMeanGComposante_chain_allchain(const std::vector<MCMCSplineComposante>& trace, PosteriorMeanGComposante& meanGAllChain, int prevChainSize);// Obsolete
 
-    std::vector<std::vector<int> > compute_posterior_map_G_composante(const std::vector<MCMCSplineComposante>& trace);
+    std::vector<std::vector<double> > compute_posterior_map_G_composante(const std::vector<MCMCSplineComposante>& trace, std::pair<double, double> rangeY, const unsigned gridLength);
 
     bool  hasPositiveGPrime (const MCMCSplineComposante& splineComposante);
     bool  hasPositiveGPrimeByDet (const MCMCSplineComposante& splineComposante);

@@ -1330,7 +1330,19 @@ allChainsPosteriorMeanG.gx.vecVarG.resize(nbPoint);
 
       PosteriorMeanG chainPosteriorMeanG;
       chainPosteriorMeanG.gx = compute_posterior_mean_G_composante(chainTraceX, tr("Calcul Mean Composante X for chain %1").arg(i+1));
-    //  std::vector<std::vector<int>> mapGx = compute_posterior_map_G_composante(chainTraceX);
+
+      // Look for y Range
+      double minY;
+      double maxY;
+      double meanG, varG;
+      for (size_t idx = 0; idx < chainPosteriorMeanG.gx.vecG.size() ; ++idx) {
+         meanG = chainPosteriorMeanG.gx.vecG.at(idx);
+         varG = chainPosteriorMeanG.gx.vecVarG.at(idx);
+         minY = std::min( minY, meanG - 1.96 * sqrt(varG));
+         maxY = std::max( maxY, meanG + 1.96 * sqrt(varG));
+      }
+      mModel->mMapRangeY = std::pair<double, double>(minY, maxY);
+      mModel->mMapGX = compute_posterior_map_G_composante(chainTraceX, mModel->mMapRangeY , 1024);
 
       if (hasY) {
           chainPosteriorMeanG.gy = compute_posterior_mean_G_composante(chainTraceY, tr("Calcul Mean Composante Y for chain %1").arg(i+1));
@@ -1678,17 +1690,17 @@ PosteriorMeanGComposante MCMCLoopCurve::computePosteriorMeanGComposante_chain_al
 }
 
 
-std::vector<std::vector<int>> MCMCLoopCurve::compute_posterior_map_G_composante(const std::vector<MCMCSplineComposante>& trace)
+std::vector<std::vector<double>> MCMCLoopCurve::compute_posterior_map_G_composante(const std::vector<MCMCSplineComposante>& trace, std::pair<double, double> rangeY, const unsigned gridLength)
 {
     const double tmin = mModel->mSettings.mTmin;
     const double tmax = mModel->mSettings.mTmax;
-    const long double ymin = -10000;
-    const long double ymax = +10000;
+    const long double ymin = rangeY.first;
+    const long double ymax = rangeY.second;
 
-    const unsigned nbPtsX = 100;
-    const unsigned nbPtsY = 100;
+    const unsigned nbPtsX = gridLength;
+    const unsigned nbPtsY = gridLength;
     //const double step = mModel->mSettings.mStep;
-    const double step = (tmin - tmax) / nbPtsX;
+    const double step = (tmax - tmin) / nbPtsX;
 
    // const unsigned nbPoint = 100;//floor ((tmax - tmin +1) /step);
 
@@ -1701,15 +1713,12 @@ std::vector<std::vector<int>> MCMCLoopCurve::compute_posterior_map_G_composante(
     // erreur intra spline
     std::vector<long double> vecVarErrG (nbPoint);
 */
-    std::vector<std::vector<int>> curveMap;
-    curveMap = initIntMatrix(nbPtsX+1, nbPtsY+1);
+    std::vector<std::vector<double>> curveMap;
+    curveMap = initMatrix(nbPtsX+1, nbPtsY+1);
     //const unsigned long nbIter = trace.size();
 
     long double t, g, gp, gs, varG;
-    g = 0.;
-    gp = 0;
-    varG = 0;
-    gs = 0;
+
  /* TODO used Welford's online algorithm
   * https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
   */
@@ -1729,35 +1738,17 @@ std::vector<std::vector<int>> MCMCLoopCurve::compute_posterior_map_G_composante(
             g = std::max(ymin, std::min(g, ymax));
 
 
-            idxY = floor((g-ymin)/(ymax-ymin) * nbPtsY);
-            curveMap[tIdx][idxY] = curveMap[tIdx][idxY] + 1;
-         /*   prevMeanG = vecG.at(tIdx);
-            vecG[tIdx] +=  (g - prevMeanG)/n;
-            vecGP[tIdx] +=  (gp - vecGP.at(tIdx))/n;
-            vecGS[tIdx] +=  (gs - vecGS.at(tIdx))/n;
+            idxY = unsigned(floor((g-ymin)/(ymax-ymin) * nbPtsY));
+            curveMap[tIdx][idxY] = curveMap[tIdx][idxY] + 1./(double)trace.size();
 
-            vecVarianceG[tIdx] +=  (g - prevMeanG)*(g - vecG.at(tIdx));
-
-            vecVarErrG[tIdx] += (varG - vecVarErrG.at(tIdx)) / n  ;
-            */
         }
 
-       // emit stepProgressed(n);
+
 
     }
 
-   /*  int tIdx = 0;
-     for (auto& vVarG : vecVarG) {
-         vVarG = vecVarianceG.at(tIdx) / n + vecVarErrG.at(tIdx);
-         ++tIdx;
-     }
-*/
-   /*  PosteriorMeanGComposante result;
-     result.vecG = std::move(vecG);
-     result.vecGP = std::move(vecGP);
-     result.vecGS = std::move(vecGS);
-     result.vecVarG = std::move(vecVarG);
-*/
+
+
     return curveMap;
 }
 

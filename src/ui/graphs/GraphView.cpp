@@ -1181,6 +1181,47 @@ void GraphView::drawCurves(QPainter& painter)
                 path.lineTo(mMarginLeft, mMarginTop);
                 painter.drawPath(path);
 
+            } else if (curve.mMap.size() > 0) { // it's a map
+                /* -------------------------- Map ---------------------------*/
+                double xi = 0;
+                double tReal;
+                double yReal;
+                const double minY = curve.mMapRangeY.first;
+                const double maxY = curve.mMapRangeY.second;
+                const double minX = curve.mMapRangeX.first;
+                const double maxX = curve.mMapRangeX.second;
+                int gridLength = curve.mMap.size()-1;
+
+                for (auto & l : curve.mMap) {
+                    double yi = 0;
+                    for (auto & c : l) {
+                        if (c>.00) {
+                            yReal = yi*(maxY-minY)/gridLength + minY;
+                            tReal = xi*(maxX-minX)/gridLength + minX;
+
+                            double x = getXForValue(tReal, true);
+                            double y = getYForValue(yReal, false);
+                            QColor col = QColor(Qt::yellow);
+                            col.setAlphaF(0.2);
+                            painter.setPen(col);
+                            if (c>.95) {
+                                painter.setPen(Qt::black);
+                                qDebug()<<xi<<yi<<tReal<<yReal;
+                            }
+                            else if (c>.50)
+                                painter.setPen((Qt::blue));
+                            else if (c>.025)
+                                painter.setPen(Qt::red);
+
+                            //painter.drawPoint(x, y);
+                            painter.drawRect(x,y, 1, 1);
+                        }
+                        yi = yi+1;
+                    }
+                    xi= xi+1;
+                }
+
+
             } else { // it's horizontal curve
 
                 path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);

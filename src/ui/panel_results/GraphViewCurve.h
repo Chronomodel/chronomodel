@@ -62,6 +62,9 @@ public:
 
     void setComposanteG(const PosteriorMeanGComposante& composante);
     void setComposanteGChains(const QList<PosteriorMeanGComposante>& composanteChains);
+
+    void setMap(const std::vector<std::vector<double>>& map, std::pair<double, double> rangeX, std::pair<double, double> rangeY);
+
     void setEvents(const QList<Event*>& events);
     void setEventsPoints(const QVector<RefPoint>& rfPts) { mEventsPoints = rfPts;};
     void setDataPoints(const QVector<RefPoint>& rfPts) { mDataPoints = rfPts;};
@@ -76,6 +79,11 @@ protected:
 private:
     PosteriorMeanGComposante mComposanteG;
     QList<PosteriorMeanGComposante> mComposanteGChains;
+
+    std::vector<std::vector<double>> mMap;
+    std::pair<double, double> mMapRangeX;
+    std::pair<double, double> mMapRangeY;
+
     QList<Event*> mEvents;
     QVector<RefPoint> mEventsPoints;
     QVector<RefPoint> mDataPoints;

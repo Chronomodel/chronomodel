@@ -71,6 +71,13 @@ void GraphViewCurve::setComposanteGChains(const QList<PosteriorMeanGComposante>&
     mComposanteGChains = composanteChains;
 }
 
+void GraphViewCurve::setMap(const std::vector<std::vector<double>>& map, std::pair<double, double> rangeX, std::pair<double, double> rangeY)
+{
+    mMap = map;
+    mMapRangeY = std::move(rangeY);
+    mMapRangeX = std::move(rangeX);
+}
+
 void GraphViewCurve::setEvents(const QList<Event*>& events)
 {
     mEvents = events;
@@ -160,6 +167,17 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         curveGInf.mBrush = Qt::NoBrush;
         curveGInf.mIsHisto = false;
         curveGInf.mIsRectFromZero = false;
+
+        GraphCurve curveMap;
+        curveMap.mName = tr("M");
+        curveMap.mPen = QPen(QColor(119, 95, 49), 1, Qt::SolidLine);
+        curveMap.mBrush = Qt::NoBrush;
+        curveMap.mIsHisto = false;
+        curveMap.mIsRectFromZero = false;
+        curveMap.mMap = mMap;
+        curveMap.mMapRangeY = mMapRangeY;
+        curveMap.mMapRangeX = mMapRangeX;
+
         QList<GraphCurve> curveGChains;
         for (int i = 0; i < mComposanteGChains.size(); ++i) {
             GraphCurve curveGChain;
@@ -172,8 +190,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         }
 
         double t;
-        double step = mSettings.mStep;
-
+        const double step = mSettings.mStep;
 
         for (size_t idx = 0; idx < mComposanteG.vecG.size() ; ++idx) {
 
@@ -195,6 +212,8 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         mGraph->addCurve(curveG);
         mGraph->addCurve(curveGSup);
         mGraph->addCurve(curveGInf);
+
+        mGraph->addCurve(curveMap);
 
         mGraph->addCurve(curveEventsPoints);
         mGraph->addCurve(curveDataPoints);
@@ -257,6 +276,7 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
     const bool showGS = showVariableList.contains(eGS);
     
     mGraph->setCurveVisible("G", mShowAllChains && showG);
+    mGraph->setCurveVisible("M", mShowAllChains && showG);
     mGraph->setCurveVisible("G Sup", mShowAllChains && showGError);
     mGraph->setCurveVisible("G Inf", mShowAllChains && showGError);
     mGraph->setCurveVisible("Events Points", showEventsPoints);

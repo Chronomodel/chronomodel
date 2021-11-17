@@ -137,7 +137,7 @@ void AppSettings::readSettings()
 {
 
     QSettings settings;
- qDebug()<< settings.fileName();
+ //qDebug()<< settings.fileName();
  QFile file(settings.fileName());
 
 #ifdef DEBUG

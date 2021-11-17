@@ -669,6 +669,7 @@ mMaximunNumberOfVisibleGraph(0)
     mFFTLenCombo->addItem("8192");
     mFFTLenCombo->addItem("16384");
     mFFTLenCombo->setFixedHeight(16);
+    mFFTLenCombo->setCurrentIndex(5);
 
     mBandwidthLab = new Label(tr("FFTW Bandwidth"), mDensityOptsGroup);
     mBandwidthLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
@@ -1953,6 +1954,7 @@ void ResultsView::createByCurveGraph()
         graphX->setComposanteGChains(modelCurve()->getChainsMeanGComposanteX());
         graphX->setEvents(modelCurve()->mEvents);
 
+        graphX->setMap(modelCurve()->mMapGX, std::pair<double, double> (mModel->mSettings.mTmin, mModel->mSettings.mTmax), modelCurve()->mMapRangeY);
         if (mMainVariable == GraphViewResults::eG) {
             graphX->setEventsPoints(eventsPts);
             graphX->setDataPoints(dataPts);
