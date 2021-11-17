@@ -87,6 +87,9 @@ public:
     
     PosteriorMeanG mPosteriorMeanG; // valeurs en tout t
     std::vector<PosteriorMeanG> mPosteriorMeanGByChain; // valeurs en tout t par chaine
+    std::vector<std::vector<double>> mMapGX;
+    std::pair<double, double> mMapRangeY;
+
 };
 
 #endif

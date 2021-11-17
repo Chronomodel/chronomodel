@@ -529,8 +529,8 @@ QList<QStringList> Model::getStats(const QLocale locale, const int precision, co
     // Headers
     QStringList list;
     // list << "Item" << "MAP" << "Mean" << "Std dev" << "Q1" << "Q2" << "Q3" << "Credibility %" << "Credibility begin" << "Credibility end";
-    list << "Item" << "Trace:Mean" << "Trace:Std" << "Trace:min value" << "Trace:max value" << "Trace:Q1"<< "Trace:Q2"<< "Trace:Q3" << "Credibility %" << "Credibility start" << "Credibility end";
-    list <<"Density:MAP"<< "Density:Mean" << "Density:Std"<< "Density:Q1"<< "Density:Q2"<< "Density:Q3";
+    list << "Item" << "Trace:Mean" << "Trace:Std"  << "Trace:Q1"<< "Trace:Q2"<< "Trace:Q3" << "Trace:min value" << "Trace:max value";
+    list <<"Density:MAP"<< "Density:Mean" << "Density:Std"<< "Density:Q1"<< "Density:Q2"<< "Density:Q3" << "Credibility %" << "Credibility start" << "Credibility end";
     for (int i = 0; i < maxHpd; ++i) {
         list << "HPD" + QString::number(i + 1) + " %";
         list << "HPD" + QString::number(i + 1) + " begin";
