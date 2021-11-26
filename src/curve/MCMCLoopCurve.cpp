@@ -50,6 +50,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "../PluginAbstract.h"
 #include "CalibrationCurve.h"
+#include "Matrix.h"
 
 #include <vector>
 #include <cmath>
@@ -1281,20 +1282,31 @@ void MCMCLoopCurve::finalize()
     int shift  = 0;
     int shiftTrace = 0;
 
-/*    const double tmin = mModel->mSettings.mTmin;
-    const double tmax = mModel->mSettings.mTmax;
-    const double step = mModel->mSettings.mStep;
+    long double minY_X = +INFINITY;
+    long double maxY_X = -INFINITY;
 
-    const unsigned nbPoint = floor ((tmax - tmin +1) /step);
-*/
+    long double maxVarY_X = -INFINITY;
+    std::pair<std::vector<long double>::iterator, std::vector<long double>::iterator> minMaxY_X;
+    std::pair<std::vector<long double>::iterator, std::vector<long double>::iterator> minMaxVarY_X;
+
+
+    long double minY_Y = +INFINITY;
+    long double maxY_Y = -INFINITY;
+
+    long double maxVarY_Y = -INFINITY;
+    std::pair<std::vector<long double>::iterator, std::vector<long double>::iterator> minMaxY_Y;
+    std::pair<std::vector<long double>::iterator, std::vector<long double>::iterator> minMaxVarY_Y;
+
+
+    long double minY_Z = +INFINITY;
+    long double maxY_Z = -INFINITY;
+
+    long double maxVarY_Z = -INFINITY;
+    std::pair<std::vector<long double>::iterator, std::vector<long double>::iterator> minMaxY_Z;
+    std::pair<std::vector<long double>::iterator, std::vector<long double>::iterator> minMaxVarY_Z;
 
     PosteriorMeanG allChainsPosteriorMeanG;
-/*
- * allChainsPosteriorMeanG.gx.vecG.resize(nbPoint);
-allChainsPosteriorMeanG.gx.vecGP.resize(nbPoint);
-allChainsPosteriorMeanG.gx.vecGS.resize(nbPoint);
-allChainsPosteriorMeanG.gx.vecVarG.resize(nbPoint);
-*/
+
     for (int i = 0; i < mChains.size(); ++i) {
 
         const int initBurnAdaptSize = 1 + mChains.at(i).mIterPerBurn + int (mChains.at(i).mBatchIndex * mChains.at(i).mIterPerBatch);
@@ -1309,47 +1321,79 @@ allChainsPosteriorMeanG.gx.vecVarG.resize(nbPoint);
         chainTraceZ.clear();
         unsigned progressPosition = 0;
         emit stepChanged(tr("Build chain %1").arg(i+1), 0, runSize);
+
+
+
         for (auto& cTrace = first; cTrace != last+1; ++cTrace) {
 
             chainTraceX.push_back(cTrace->splineX);
             allChainsTraceX.push_back(cTrace->splineX);
+            minMaxY_X = std::minmax_element(cTrace->splineX.vecG.begin(), cTrace->splineX.vecG.end());
+            minMaxVarY_X = std::minmax_element(cTrace->splineX.vecVarG.begin(), cTrace->splineX.vecVarG.end());
+            minY_X = std::min( minY_X, *minMaxY_X.first);
+            maxY_X = std::max( maxY_X, *minMaxY_X.second);
+
+            maxVarY_X = std::max( maxVarY_X, *minMaxVarY_X.second);
 
             if (hasY) {
                 chainTraceY.push_back(cTrace->splineY);
                 allChainsTraceY.push_back(cTrace->splineY);
+
+                minMaxY_Y = std::minmax_element(cTrace->splineY.vecG.begin(), cTrace->splineY.vecG.end());
+                minY_Y = std::min( minY_Y, *minMaxY_Y.first);
+                maxY_Y = std::max( maxY_Y, *minMaxY_Y.second);
+
+                minMaxVarY_Y = std::minmax_element(cTrace->splineY.vecVarG.begin(), cTrace->splineY.vecVarG.end());
+                maxVarY_Y = std::max( maxVarY_Y, *minMaxVarY_Y.second);
             }
 
             if (hasZ) {
                 chainTraceZ.push_back(cTrace->splineZ);
                 allChainsTraceZ.push_back(cTrace->splineZ);
+
+                minMaxY_Z = std::minmax_element(cTrace->splineZ.vecG.begin(), cTrace->splineZ.vecG.end());
+                minY_Z = std::min( minY_Z, *minMaxY_X.first);
+                maxY_Z = std::max( maxY_Z, *minMaxY_X.second);
+
+                minMaxVarY_Z = std::minmax_element(cTrace->splineZ.vecVarG.begin(), cTrace->splineZ.vecVarG.end());
+                maxVarY_Z = std::max( maxVarY_Z, *minMaxVarY_Z.second);
             }
             emit stepProgressed(progressPosition++);
         }
 
-
+        minY_X = minY_X - 1.96*sqrt(maxVarY_X) - (maxY_X - minY_X)/5.;
+        maxY_X = maxY_X + 1.96*sqrt(maxVarY_X) + (maxY_X - minY_X)/5.;
 
       PosteriorMeanG chainPosteriorMeanG;
-      chainPosteriorMeanG.gx = compute_posterior_mean_G_composante(chainTraceX, tr("Calcul Mean Composante X for chain %1").arg(i+1));
+      //chainPosteriorMeanG.gx = compute_posterior_mean_G_composante(chainTraceX, tr("Calcul Mean Composante X for chain %1").arg(i+1));
 
       // Look for y Range
-      double minY;
+    /*  double minY;
       double maxY;
       double meanG, varG;
       for (size_t idx = 0; idx < chainPosteriorMeanG.gx.vecG.size() ; ++idx) {
          meanG = chainPosteriorMeanG.gx.vecG.at(idx);
          varG = chainPosteriorMeanG.gx.vecVarG.at(idx);
+
          minY = std::min( minY, meanG - 1.96 * sqrt(varG));
          maxY = std::max( maxY, meanG + 1.96 * sqrt(varG));
       }
-      mModel->mMapRangeY = std::pair<double, double>(minY, maxY);
-      mModel->mMapGX = compute_posterior_map_G_composante(chainTraceX, mModel->mMapRangeY , 1024);
+*/
+     // chainPosteriorMeanG.gx.mapG = compute_posterior_map_G_composante(chainTraceX, minY, maxY , 1024);
+
+      chainPosteriorMeanG.gx = compute_posterior_mean_map_G_composante(chainTraceX, minY_X, maxY_X, 1000, tr("Calcul Mean Composante X for chain %1").arg(i+1) );
 
       if (hasY) {
-          chainPosteriorMeanG.gy = compute_posterior_mean_G_composante(chainTraceY, tr("Calcul Mean Composante Y for chain %1").arg(i+1));
-         // chainPosteriorMeanG.gz = compute_posterior_mean_G_composante(chainTraceZ, tr("Calcul Mean Composante Z for chain %1").arg(i+1));
+          minY_Y = minY_Y - 1.96*sqrt(maxVarY_Y) - (maxY_Y - minY_Y)/10.;
+          maxY_Y = maxY_Y + 1.96*sqrt(maxVarY_Y) - (maxY_Y - minY_Y)/10.;
+          //chainPosteriorMeanG.gy = compute_posterior_mean_G_composante(chainTraceY, tr("Calcul Mean Composante Y for chain %1").arg(i+1));
+          chainPosteriorMeanG.gy = compute_posterior_mean_map_G_composante(chainTraceY, minY_Y, maxY_Y, 1000, tr("Calcul Mean Composante X for chain %1").arg(i+1) );
       }
       if (hasZ) {
-          chainPosteriorMeanG.gz = compute_posterior_mean_G_composante(chainTraceZ, tr("Calcul Mean Composante Z for chain %1").arg(i+1));
+          minY_Z = minY_Z - 1.96*sqrt(maxVarY_Z) - (maxY_Z - minY_Z)/10.;
+          maxY_Z = maxY_Z + 1.96*sqrt(maxVarY_Z) - (maxY_Z - minY_Z)/10.;
+          //chainPosteriorMeanG.gz = compute_posterior_mean_G_composante(chainTraceZ, tr("Calcul Mean Composante Z for chain %1").arg(i+1));
+          chainPosteriorMeanG.gz = compute_posterior_mean_map_G_composante(chainTraceX, minY_Z, maxY_Z, 1000, tr("Calcul Mean Composante X for chain %1").arg(i+1) );
       }
 
       mModel->mPosteriorMeanGByChain.push_back(chainPosteriorMeanG);
@@ -1359,21 +1403,20 @@ allChainsPosteriorMeanG.gx.vecVarG.resize(nbPoint);
 
     }
     
-
-    // PosteriorMeanG allChainsPosteriorMeanG;
-
     if (mChains.size() == 1) {
         allChainsPosteriorMeanG = mModel->mPosteriorMeanGByChain.at(0);
 
     } else {
-
-        allChainsPosteriorMeanG.gx = compute_posterior_mean_G_composante(allChainsTraceX, tr("Calcul Mean Composante X for All chain"));
+        //allChainsPosteriorMeanG.gx = compute_posterior_mean_G_composante(allChainsTraceX, tr("Calcul Mean Composante X for All chain"));
+        allChainsPosteriorMeanG.gx = compute_posterior_mean_map_G_composante(allChainsTraceX, minY_X, maxY_X, 1000, tr("Calcul Mean Composante X for All chain") );
         if (hasY) {
-            allChainsPosteriorMeanG.gy = compute_posterior_mean_G_composante(allChainsTraceY, tr("Calcul Mean Composante Y for All chain"));
-           // allChainsPosteriorMeanG.gz = compute_posterior_mean_G_composante(allChainsTraceZ, tr("Calcul Mean Composante Z for All chain"));
+            //allChainsPosteriorMeanG.gy = compute_posterior_mean_G_composante(allChainsTraceY, tr("Calcul Mean Composante Y for All chain"));
+            allChainsPosteriorMeanG.gy = compute_posterior_mean_map_G_composante(allChainsTraceY, minY_Y, maxY_Y, 1000, tr("Calcul Mean Composante Y for All chain") );
+
         }
         if (hasZ) {
-            allChainsPosteriorMeanG.gz = compute_posterior_mean_G_composante(allChainsTraceZ, tr("Calcul Mean Composante Z for All chain"));
+            //allChainsPosteriorMeanG.gz = compute_posterior_mean_G_composante(allChainsTraceZ, tr("Calcul Mean Composante Z for All chain"));
+            allChainsPosteriorMeanG.gz = compute_posterior_mean_map_G_composante(allChainsTraceZ, minY_Z, maxY_Z, 1000, tr("Calcul Mean Composante X for All chain") );
         }
     }
 
@@ -1398,12 +1441,11 @@ allChainsPosteriorMeanG.gx.vecVarG.resize(nbPoint);
     mModel->mPosteriorMeanG = std::move(allChainsPosteriorMeanG);
 
 #ifdef DEBUG
+    QTime endTime = QTime::currentTime();
 
-    QTime timeDiff(0, 0, 0, int(startTime.elapsed()));
-    qDebug() <<  QString("=> MCMCLoopCurve::finalize done in %1 h %2 m %3 s %4 ms").arg(QString::number(timeDiff.hour()),
-                                                                                      QString::number(timeDiff.minute()),
-                                                                                      QString::number(timeDiff.second()),
-                                                                                      QString::number(timeDiff.msec()) );
+    qDebug()<<"ModelCurve computed";
+    qDebug()<<tr("MCMCLoopCurve::finalize() finish at %1").arg(endTime.toString("hh:mm:ss.zzz")) ;
+    qDebug()<<tr("Total time elapsed %1").arg(QString(DHMS(startTime.elapsed())));
 #endif
 
 
@@ -1412,21 +1454,10 @@ allChainsPosteriorMeanG.gx.vecVarG.resize(nbPoint);
 
 double MCMCLoopCurve::Calcul_Variances_Yij_Rice_GSJ (const QList<Event *> lEvents)
 {
-  /*double som_Yij =0;
-  double som_Yij2=0;
-  for (int k=1; k < lEvents.size(); ++k) {
-
-    double Yij = lEvents.at(k)->mY;// tab_pts[k].Yij;
-    som_Yij = som_Yij+Yij;
-    som_Yij2  =som_Yij2 + pow(Yij, 2.);
-}
-  double moy_Yij = som_Yij/lEvents.size();
-  double Var_Yij = (som_Yij2/lEvents.size())-pow(moy_Yij, 2.);
-*/
-  // Calcul de la variance Rice (1984)
+   // Calcul de la variance Rice (1984)
   double Var_Rice =0;
-  for (int i=1; i < lEvents.size(); ++i) {
-        Var_Rice =Var_Rice + pow(lEvents.at(i)->mYx-lEvents.at(i-1)->mYx, 2.);
+  for (int i = 1; i < lEvents.size(); ++i) {
+        Var_Rice = Var_Rice + pow(lEvents.at(i)->mYx-lEvents.at(i-1)->mYx, 2.);
   }
   Var_Rice = 0.5*Var_Rice/(lEvents.size()-1);
 /*
@@ -1591,6 +1622,207 @@ PosteriorMeanGComposante MCMCLoopCurve::compute_posterior_mean_G_composante(cons
 }
 
 
+PosteriorMeanGComposante MCMCLoopCurve::compute_posterior_mean_map_G_composante(const std::vector<MCMCSplineComposante>& trace, const long double ymin, const long double ymax, const unsigned gridLength, const QString& ProgressBarText)
+{
+#ifdef DEBUG
+    qDebug()<<"MCMCLoopCurve::compute_posterior_mean_map_G_composante "<<mModel->mSettings.mTmin<<mModel->mSettings.mTmax;
+    QElapsedTimer tClock;
+    tClock.start();
+#endif
+    const double tmin = mModel->mSettings.mTmin;
+    const double tmax = mModel->mSettings.mTmax;
+
+    const int nbPoint = gridLength; //floor ((tmax - tmin +1) /step);
+
+    std::vector<long double> vecG (nbPoint);
+    std::vector<long double> vecGP (nbPoint);
+    std::vector<long double> vecGS (nbPoint);
+    // erreur inter spline
+    std::vector<long double> vecVarianceG (nbPoint);
+    std::vector<long double> vecVarG (nbPoint);
+    // erreur intra spline
+    std::vector<long double> vecVarErrG (nbPoint);
+
+    int  nbIter = trace.size();
+
+
+    const int nbPtsX = gridLength;
+    const int nbPtsY = gridLength;
+
+    const double stepT = (tmax - tmin) / (nbPtsX - 1);
+    const double stepY = (ymax - ymin) / (nbPtsY - 1);
+
+    CurveMap curveMap (nbPtsX, nbPtsY);
+    curveMap.setRangeX(tmin, tmax);
+    curveMap.setRangeY(ymin, ymax);
+
+    long double t, g, gp, gs, varG, stdG;
+
+ /* TODO used Welford's online algorithm
+  * https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+  */
+
+    g = 0.;
+    gp = 0;
+    varG = 0;
+    gs = 0;
+
+    emit stepChanged(ProgressBarText, 0, nbIter);
+
+    int n = 0;
+    long double  prevMeanG;
+
+    double maxDensity = 0;
+    double minDensity = +INFINITY;
+    const double k = 3.; // Le nombre de fois sigma G, pour le calcul de la densité
+    double a, b, coefG;
+  //  long double  prevMeanG;
+    int  idxYErrMin, idxYErrMax;
+    for (auto&& splineComposante : trace ) {
+        n++;
+        unsigned i0 = 0; // tIdx étant croissant, i0 permet de faire la recherche à l'indice du temps précedent
+        for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
+            t = (long double)idxT * stepT + tmin ;
+            valeurs_G_VarG_GP_GS(t, splineComposante, g, varG, gp, gs, i0);
+
+            // -- calcul Mean
+            prevMeanG = vecG.at(idxT);
+            vecG[idxT] +=  (g - prevMeanG)/n;
+            vecGP[idxT] +=  (gp - vecGP.at(idxT))/n;
+            vecGS[idxT] +=  (gs - vecGS.at(idxT))/n;
+
+            vecVarianceG[idxT] +=  (g - prevMeanG)*(g - vecG.at(idxT));
+
+            vecVarErrG[idxT] += (varG - vecVarErrG.at(idxT)) / n  ;
+
+            // ---
+
+
+
+            // -- calcul map
+            g = std::max(ymin, std::min(g, ymax));
+            stdG =sqrt(varG);
+
+            //idxY = floor((g-ymin) / stepY);
+
+
+/*
+#ifdef DEBUG
+           if ((curveMap.row()*idxT + idxY) < (curveMap.row()*curveMap.column()))
+               curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + 1./(double)(trace.size() * 13);
+           else
+               qDebug()<<"pb in MCMCLoopCurve::compute_posterior_map_G_composante";
+ #else
+            curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + 1./(double)(trace.size() * 13);
+ #endif
+            maxDensity = std::max(maxDensity, curveMap.at(idxT, idxY));
+            minDensity = std::min(minDensity, curveMap.at(idxT, idxY));
+
+*/
+            // ajout densité erreur sur Y
+            /* il faut utiliser un pas de grille et le coefficient dans la grille dans l'intervalle [a,b] pour N(mu, sigma) est égale à la différence 1/2*(erf((b-mu)/(sigma*sqrt(2)) - erf((a-mu)/(sigma*sqrt(2))
+             * https://en.wikipedia.org/wiki/Error_function
+             */
+            idxYErrMin = (g - k*stdG - ymin) / stepY;
+            idxYErrMax = (g + k*stdG - ymin) / stepY;
+
+            if (idxYErrMin == idxYErrMax) {
+#ifdef DEBUG
+                    if ((curveMap.row()*idxT + idxYErrMin) < (curveMap.row()*curveMap.column()))
+                        curveMap(idxT, idxYErrMin) = curveMap.at(idxYErrMin, idxYErrMin) + 1./(double)(trace.size() * 1);
+                    else
+                        qDebug()<<"pb in MCMCLoopCurve::compute_posterior_map_G_composante";
+#else
+                    curveMap(idxT, idxYErrMin) = curveMap.at(idxT, idxYErrMin) + 1./(double)(trace.size() * 1);
+#endif
+
+                    maxDensity = std::max(maxDensity, curveMap.at(idxT, idxYErrMin));
+                    minDensity = std::min(minDensity, curveMap.at(idxT, idxYErrMin));
+
+            } else if (0< idxYErrMin && idxYErrMax< (nbPtsY-1)) {
+                std::vector<double>::iterator ptr_Ymin = curveMap.ptr_at(idxT, idxYErrMin);
+                std::vector<double>::iterator ptr_Ymax = curveMap.ptr_at(idxT, idxYErrMax);
+
+                int idErr = idxYErrMin;
+                for (std::vector<double>::iterator ptr_idErr = ptr_Ymin; ptr_idErr <= ptr_Ymax; ptr_idErr++) {
+                    a = (idErr - 0.5)*stepY + ymin;
+                    b = (idErr + 0.5)*stepY + ymin;
+                    coefG = diff_erf(a, b, g, stdG )/(double)(trace.size() * 1);
+#ifdef DEBUG
+                   // if ((curveMap.row()*idxT + idxY) < (curveMap.row()*curveMap.column()))
+                        //curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + coefG/(double)(trace.size() * 1);
+                        *ptr_idErr = (*ptr_idErr) + coefG;
+                   // else
+                   //     qDebug()<<"pb in MCMCLoopCurve::compute_posterior_map_G_composante";
+#else
+                    //curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + coefG/(double)(trace.size() * 1);
+                    *ptr_idErr = (*ptr_idErr) + coefG;
+#endif
+
+                    //maxDensity = std::max(maxDensity, curveMap.at(idxT, idxY));
+                    //minDensity = std::min(minDensity, curveMap.at(idxT, idxY));
+                    maxDensity = std::max(maxDensity, *ptr_idErr);
+                    minDensity = std::min(minDensity, *ptr_idErr);
+
+                    idErr++;
+                }
+            }
+
+        /*
+            for (int i = 0 ; i< 1; i++) {
+                g_err = g - sqrt(varG)*(double)i/3.;
+                coefG = pow(g_err - g, 2.)*varG;
+                coefG = exp( -coefG/2.)/ sqrt(2*M_PI*varG);
+
+                if (coefG > 0) {
+                    g_err = std::max(ymin, std::min(g_err, ymax));
+
+                    idxY = unsigned(floor((g_err-ymin)/(ymax-ymin) * (nbPtsY-1)));
+
+#ifdef DEBUG
+                    if ((curveMap.row()*idxT + idxY) < (curveMap.row()*curveMap.column()))
+                        curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + coefG/(double)(trace.size() * 1);
+                    else
+                        qDebug()<<"pb in MCMCLoopCurve::compute_posterior_map_G_composante";
+#else
+                    curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + 1./(double)(trace.size() * 1);
+#endif
+
+                    maxDensity = std::max(maxDensity, curveMap.at(idxT, idxY));
+                    minDensity = std::min(minDensity, curveMap.at(idxT, idxY));
+                }
+
+             } */
+        }
+
+         emit stepProgressed(n);
+
+    }
+
+    curveMap.max_value = maxDensity;
+    curveMap.min_value = minDensity;
+
+    int tIdx = 0;
+    for (auto& vVarG : vecVarG) {
+        vVarG = vecVarianceG.at(tIdx) / n + vecVarErrG.at(tIdx);
+        ++tIdx;
+    }
+
+    PosteriorMeanGComposante result;
+    result.vecG = std::move(vecG);
+    result.vecGP = std::move(vecGP);
+    result.vecGS = std::move(vecGS);
+    result.vecVarG = std::move(vecVarG);
+
+    result.mapG = std::move(curveMap);
+
+#ifdef DEBUG
+    qDebug() <<  QString("=> MCMCLoopCurve::compute_posterior_mean_map_G_composante done in " + DHMS(tClock.elapsed()));
+
+#endif
+
+    return result;
+}
 
 
 // Obsolete
@@ -1690,34 +1922,27 @@ PosteriorMeanGComposante MCMCLoopCurve::computePosteriorMeanGComposante_chain_al
 }
 
 
-std::vector<std::vector<double>> MCMCLoopCurve::compute_posterior_map_G_composante(const std::vector<MCMCSplineComposante>& trace, std::pair<double, double> rangeY, const unsigned gridLength)
+CurveMap MCMCLoopCurve::compute_posterior_map_G_composante(const std::vector<MCMCSplineComposante>& trace, const long double ymin , const long double ymax, const unsigned gridLength)
 {
+#ifdef DEBUG
+    qDebug()<<"MCMCLoopCurve::compute_posterior_map_G_composante "<<mModel->mSettings.mTmin<<mModel->mSettings.mTmax;
+    QElapsedTimer tClock;
+    tClock.start();
+#endif
     const double tmin = mModel->mSettings.mTmin;
     const double tmax = mModel->mSettings.mTmax;
-    const long double ymin = rangeY.first;
-    const long double ymax = rangeY.second;
 
     const unsigned nbPtsX = gridLength;
     const unsigned nbPtsY = gridLength;
-    //const double step = mModel->mSettings.mStep;
-    const double step = (tmax - tmin) / nbPtsX;
 
-   // const unsigned nbPoint = 100;//floor ((tmax - tmin +1) /step);
+    const double stepT = (tmax - tmin) / (nbPtsX - 1);
+    const double stepY = (ymax - ymin) / (nbPtsY - 1);
 
-  /*  std::vector<long double> vecG (nbPoint);
-    std::vector<long double> vecGP (nbPoint);
-    std::vector<long double> vecGS (nbPoint);
-    // erreur inter spline
-    std::vector<long double> vecVarianceG (nbPoint);
-    std::vector<long double> vecVarG (nbPoint);
-    // erreur intra spline
-    std::vector<long double> vecVarErrG (nbPoint);
-*/
-    std::vector<std::vector<double>> curveMap;
-    curveMap = initMatrix(nbPtsX+1, nbPtsY+1);
-    //const unsigned long nbIter = trace.size();
+    CurveMap curveMap (nbPtsX, nbPtsY);
+    curveMap.setRangeX(tmin, tmax);
+    curveMap.setRangeY(ymin, ymax);
 
-    long double t, g, gp, gs, varG;
+    long double t, g, gp, gs, varG, stdG;
 
  /* TODO used Welford's online algorithm
   * https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
@@ -1725,29 +1950,125 @@ std::vector<std::vector<double>> MCMCLoopCurve::compute_posterior_map_G_composan
    // emit stepChanged(ProgressBarText, 0, nbIter);
 
     int n = 0;
+    double maxDensity = 0;
+    double minDensity = +INFINITY;
+    const double k = 3.; // Le nombre de fois sigma G, pour le calcul de la densité
+    double a, b, coefG;
   //  long double  prevMeanG;
-    unsigned idxY;
+    unsigned idxY, idxYErrMin, idxYErrMax;
     for (auto&& splineComposante : trace ) {
         n++;
         unsigned i0 = 0; // tIdx étant croissant, i0 permet de faire la recherche à l'indice du temps précedent
-        for (unsigned tIdx = 0; tIdx <= nbPtsX ; ++tIdx) {
-            t = (long double)tIdx * step + tmin ;
+        for (unsigned idxT = 0; idxT < nbPtsX ; ++idxT) {
+            t = (long double)idxT * stepT + tmin ;
             valeurs_G_VarG_GP_GS(t, splineComposante, g, varG, gp, gs, i0);
 
             // pour debug
             g = std::max(ymin, std::min(g, ymax));
+            stdG =sqrt(varG);
 
+            idxY = floor((g-ymin) / stepY);
+/*
+#ifdef DEBUG
+           if ((curveMap.row()*idxT + idxY) < (curveMap.row()*curveMap.column()))
+               curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + 1./(double)(trace.size() * 13);
+           else
+               qDebug()<<"pb in MCMCLoopCurve::compute_posterior_map_G_composante";
+ #else
+            curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + 1./(double)(trace.size() * 13);
+ #endif
+            maxDensity = std::max(maxDensity, curveMap.at(idxT, idxY));
+            minDensity = std::min(minDensity, curveMap.at(idxT, idxY));
 
-            idxY = unsigned(floor((g-ymin)/(ymax-ymin) * nbPtsY));
-            curveMap[tIdx][idxY] = curveMap[tIdx][idxY] + 1./(double)trace.size();
+*/
+            // ajout densité erreur sur Y
+            /* il faut utiliser un pas de grille et le coefficient dans la grille dans l'intervalle [a,b] pour N(mu, sigma) est égale à la différence 1/2*(erf((b-mu)/(sigma*sqrt(2)) - erf((a-mu)/(sigma*sqrt(2))
+             * https://en.wikipedia.org/wiki/Error_function
+             */
+            idxYErrMin = (g - k*stdG - ymin) / stepY;
+            idxYErrMax = (g + k*stdG - ymin) / stepY;
 
+            if (idxYErrMin == idxYErrMax) {
+#ifdef DEBUG
+                    if ((curveMap.row()*idxT + idxY) < (curveMap.row()*curveMap.column()))
+                        curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + 1./(double)(trace.size() * 1);
+                    else
+                        qDebug()<<"pb in MCMCLoopCurve::compute_posterior_map_G_composante";
+#else
+                    curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + 1./(double)(trace.size() * 1);
+#endif
+
+                    maxDensity = std::max(maxDensity, curveMap.at(idxT, idxY));
+                    minDensity = std::min(minDensity, curveMap.at(idxT, idxY));
+
+            } else {
+                std::vector<double>::iterator ptr_Ymin = curveMap.ptr_at(idxT, idxYErrMin);
+                std::vector<double>::iterator ptr_Ymax = curveMap.ptr_at(idxT, idxYErrMax);
+
+               // for (unsigned idErr = idxYErrMin; idErr <= idxYErrMax; idErr++) {
+                unsigned long idErr = idxYErrMin;
+                for (std::vector<double>::iterator ptr_idErr = ptr_Ymin; ptr_idErr <= ptr_Ymax; ptr_idErr++) {
+                    a = (idErr - 0.5)*stepY + ymin;
+                    b = (idErr + 0.5)*stepY + ymin;
+                    coefG = diff_erf(a, b, g, stdG )/(double)(trace.size() * 1);
+#ifdef DEBUG
+                    if ((curveMap.row()*idxT + idxY) < (curveMap.row()*curveMap.column()))
+                        //curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + coefG/(double)(trace.size() * 1);
+                        *ptr_idErr = (*ptr_idErr) + coefG;
+                    else
+                        qDebug()<<"pb in MCMCLoopCurve::compute_posterior_map_G_composante";
+#else
+                    //curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + coefG/(double)(trace.size() * 1);
+                    *ptr_idErr = (*ptr_idErr) + coefG;
+#endif
+
+                    //maxDensity = std::max(maxDensity, curveMap.at(idxT, idxY));
+                    //minDensity = std::min(minDensity, curveMap.at(idxT, idxY));
+                    maxDensity = std::max(maxDensity, *ptr_idErr);
+                    minDensity = std::min(minDensity, *ptr_idErr);
+
+                    idErr++;
+                }
+            }
+
+        /*
+            for (int i = 0 ; i< 1; i++) {
+                g_err = g - sqrt(varG)*(double)i/3.;
+                coefG = pow(g_err - g, 2.)*varG;
+                coefG = exp( -coefG/2.)/ sqrt(2*M_PI*varG);
+
+                if (coefG > 0) {
+                    g_err = std::max(ymin, std::min(g_err, ymax));
+
+                    idxY = unsigned(floor((g_err-ymin)/(ymax-ymin) * (nbPtsY-1)));
+
+#ifdef DEBUG
+                    if ((curveMap.row()*idxT + idxY) < (curveMap.row()*curveMap.column()))
+                        curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + coefG/(double)(trace.size() * 1);
+                    else
+                        qDebug()<<"pb in MCMCLoopCurve::compute_posterior_map_G_composante";
+#else
+                    curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + 1./(double)(trace.size() * 1);
+#endif
+
+                    maxDensity = std::max(maxDensity, curveMap.at(idxT, idxY));
+                    minDensity = std::min(minDensity, curveMap.at(idxT, idxY));
+                }
+
+             } */
         }
 
 
 
     }
 
+    curveMap.max_value = maxDensity;
+    curveMap.min_value = minDensity;
 
+#ifdef DEBUG
+    qDebug() <<  QString("=> MCMCLoopCurve::compute_posterior_map_G_composante done in " + DHMS(tClock.elapsed()));
+
+#endif
 
     return curveMap;
 }
@@ -1761,35 +2082,35 @@ double MCMCLoopCurve::valeurG(const double t, const MCMCSplineComposante& spline
     const double tn = reduceTime(spline.vecThetaEvents.at(n-1));
     double g = 0;
     
+    double t2, ti1, ti2, tn1, p, gp1, gpn, gi1, gi2, gamma1, gamma2, h;
     if (tReduce < t1) {
-        double t2 = reduceTime(spline.vecThetaEvents.at(1));
-        double gp1 = (spline.vecG.at(1) - spline.vecG.at(0)) / (t2 - t1);
+        t2 = reduceTime(spline.vecThetaEvents.at(1));
+        gp1 = (spline.vecG.at(1) - spline.vecG.at(0)) / (t2 - t1);
         gp1 -= (t2 - t1) * spline.vecGamma.at(1) / 6.;
         g = spline.vecG.at(0) - (t1 - tReduce) * gp1;
 
-    } else if(tReduce >= tn) {
-        double tn1 = reduceTime(spline.vecThetaEvents[n-2]);
-        double gpn = (spline.vecG.at(n-1) - spline.vecG.at(n-2)) / (tn - tn1); // code d'origine
-       // double gpn = (spline.vecG.at(n-2) - spline.vecG.at(n-1)) / (tn - tn1);
+    } else if (tReduce >= tn) {
+        tn1 = reduceTime(spline.vecThetaEvents.at(n-2));
+        gpn = (spline.vecG.at(n-1) - spline.vecG.at(n-2)) / (tn - tn1);
         gpn += (tn - tn1) * spline.vecGamma.at(n-2) / 6.;
         g = spline.vecG.at(n-1) + (tReduce - tn) * gpn;
 
     } else {
         for (; i0 < n-1; ++i0) {
-            double ti1 = reduceTime(spline.vecThetaEvents.at(i0));
-            double ti2 = reduceTime(spline.vecThetaEvents.at(i0+1));
+            ti1 = reduceTime(spline.vecThetaEvents.at(i0));
+            ti2 = reduceTime(spline.vecThetaEvents.at(i0+1));
             if ((tReduce >= ti1) && (tReduce < ti2)) {
-                double h = ti2 - ti1;
-                double gi1 = spline.vecG.at(i0);
-                double gi2 = spline.vecG.at(i0+1);
+                h = ti2 - ti1;
+                gi1 = spline.vecG.at(i0);
+                gi2 = spline.vecG.at(i0+1);
 
                 // Linear part :
                 g = gi1 + (gi2-gi1)*(tReduce-ti1)/h;
 
                 // Smoothing part :
-                double gamma1 = spline.vecGamma.at(i0);
-                double gamma2 = spline.vecGamma.at(i0+1);
-                double p = (1./6.) * ((tReduce-ti1) * (ti2-tReduce)) * ((1.+(tReduce-ti1)/h) * gamma2 + (1.+(ti2-tReduce)/h) * gamma1);
+                gamma1 = spline.vecGamma.at(i0);
+                gamma2 = spline.vecGamma.at(i0+1);
+                p = (1./6.) * ((tReduce-ti1) * (ti2-tReduce)) * ((1.+(tReduce-ti1)/h) * gamma2 + (1.+(ti2-tReduce)/h) * gamma1);
                 g -= p;
 
                 break;

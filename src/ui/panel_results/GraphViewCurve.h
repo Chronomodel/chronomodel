@@ -42,16 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "GraphViewResults.h"
 #include "ModelCurve.h"
-
-typedef struct RefPoint
-{
-    qreal Xmean;
-    qreal Xerr;
-    qreal Ymean;
-    qreal Yerr;
-    QColor color;
-
-} RefPoint;
+#include "GraphCurve.h"
 
 class GraphViewCurve: public GraphViewResults
 {
@@ -63,11 +54,9 @@ public:
     void setComposanteG(const PosteriorMeanGComposante& composante);
     void setComposanteGChains(const QList<PosteriorMeanGComposante>& composanteChains);
 
-    void setMap(const std::vector<std::vector<double>>& map, std::pair<double, double> rangeX, std::pair<double, double> rangeY);
-
     void setEvents(const QList<Event*>& events);
-    void setEventsPoints(const QVector<RefPoint>& rfPts) { mEventsPoints = rfPts;};
-    void setDataPoints(const QVector<RefPoint>& rfPts) { mDataPoints = rfPts;};
+    void setEventsPoints(const QVector<CurveRefPts>& rfPts) { mEventsPoints = rfPts;};
+    void setDataPoints(const QVector<CurveRefPts>& rfPts) { mDataPoints = rfPts;};
     
     void generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList);
     void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, const QVector<variable_t>& showVariableList);
@@ -80,22 +69,10 @@ private:
     PosteriorMeanGComposante mComposanteG;
     QList<PosteriorMeanGComposante> mComposanteGChains;
 
-    std::vector<std::vector<double>> mMap;
-    std::pair<double, double> mMapRangeX;
-    std::pair<double, double> mMapRangeY;
-
     QList<Event*> mEvents;
-    QVector<RefPoint> mEventsPoints;
-    QVector<RefPoint> mDataPoints;
+    QVector<CurveRefPts> mEventsPoints;
+    QVector<CurveRefPts> mDataPoints;
 
-    /*
-    bool mShowG;
-    bool mShowGError;
-    bool mShowEventsPoints;
-    bool mShowDataPoints;
-    bool mShowGP;
-    bool mShowGS;
-    */
 };
 
 #endif

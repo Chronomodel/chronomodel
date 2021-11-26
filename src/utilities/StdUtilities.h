@@ -200,6 +200,31 @@ T map_min_value(const QMap<U, T>& aMap)
     return min;
 }
 
+template <class U, class T>
+T multimap_max_value(const QMultiMap<U, T>& aMap)
+{
+    QMultiMapIterator<U, T> iter(aMap);
+    T max = iter.hasNext() ?  iter.next().value()  :  T(0) ;
+
+    while (iter.hasNext()) {
+        iter.next();
+        max = qMax(max, iter.value());
+    }
+    return max;
+}
+
+template <class U, class T>
+T multimap_min_value(const QMultiMap<U, T>& aMap)
+{
+    QMultiMapIterator<U, T> iter(aMap);
+    T min = iter.hasNext() ?  iter.next().value()  :  T(0) ;
+
+    while (iter.hasNext()) {
+        iter.next();
+        min = qMin(min, iter.value());
+    }
+    return min;
+}
 // --------------------------------
 // can replace with std::accumulate(vector.begin(), vector.end(), T(0))
 template<typename T>
@@ -319,4 +344,7 @@ float map_area(const QMap<float, float>& map);
 // const std::map<double, double> create_HPD(const QMap<double, double> &aMap, const double threshold); // Pour Qt5
 const std::map<double, double> create_HPD(const QMap<double, double> &aMap, const double threshold);
 QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmin, const double tmax, const int nbPts);
+
+inline double diff_erf(double a, double b, double mu = 0., double sigma = 1.) {return 0.5*(erf((b-mu)/(sigma*M_SQRT2)) - erf((a-mu)/(sigma*M_SQRT2)));}
+
 #endif

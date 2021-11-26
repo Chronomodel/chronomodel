@@ -44,6 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CurveSettings.h"
 #include "CurveUtilities.h"
 #include "EventKnown.h"
+#include "Matrix.h"
 #include <vector>
 
 class Project;
@@ -62,7 +63,6 @@ public:
     void orderEventsByThetaReduced(QList<Event *> &lEvents);
     void spreadEventsThetaReduced(QList<Event *> &lEvents, double minStep = 1e-9);
     void spreadEventsThetaReduced0(QList<Event *> &sortedEvents, long double spreadSpan = 0.);
-
 
 protected:
     virtual QString calibrate();
@@ -159,9 +159,11 @@ private:
     PosteriorMeanGComposante computePosteriorMeanGComposante(const std::vector<MCMCSplineComposante>& trace, const QString& ProgressBarText); // Obsolete
     PosteriorMeanGComposante compute_posterior_mean_G_composante(const std::vector<MCMCSplineComposante>& trace, const QString& ProgressBarText);
 
+    PosteriorMeanGComposante compute_posterior_mean_map_G_composante(const std::vector<MCMCSplineComposante>& trace, const long double ymin, const long double ymax, const unsigned gridLength, const QString& ProgressBarText);
+
     PosteriorMeanGComposante computePosteriorMeanGComposante_chain_allchain(const std::vector<MCMCSplineComposante>& trace, PosteriorMeanGComposante& meanGAllChain, int prevChainSize);// Obsolete
 
-    std::vector<std::vector<double> > compute_posterior_map_G_composante(const std::vector<MCMCSplineComposante>& trace, std::pair<double, double> rangeY, const unsigned gridLength);
+    CurveMap compute_posterior_map_G_composante(const std::vector<MCMCSplineComposante>& trace, const long double ymin, const long double ymax, const unsigned gridLength);
 
     bool  hasPositiveGPrime (const MCMCSplineComposante& splineComposante);
     bool  hasPositiveGPrimeByDet (const MCMCSplineComposante& splineComposante);

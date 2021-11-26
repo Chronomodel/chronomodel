@@ -107,7 +107,7 @@ public:
         eActivity,
         eDuration,
 
-        eG, eGError, eGEventsPts, eGDatesPts,
+        eG, eGError, eMap, eGEventsPts, eGDatesPts,
         eGP,
         eGS,
         eLambda

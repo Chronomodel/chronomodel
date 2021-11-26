@@ -93,9 +93,15 @@ const QList<ChainSpecs> &MCMCLoop::chains() const
 
 void MCMCLoop::run()
 {
-    QString mDate = QDateTime::currentDateTime().toString("dddd dd MMMM yyyy");
+#if DEBUG
+    qDebug()<<"MCMCLoop::run ";
+#endif
+
     QElapsedTimer startTime;
     startTime.start();
+
+    QString mDate = QDateTime::currentDateTime().toString("dddd dd MMMM yyyy");
+
 
     QString log = "Start " + mDate + " -> " + QTime::currentTime().toString("hh:mm:ss.zzz");
 
@@ -378,20 +384,15 @@ void MCMCLoop::run()
         mAbortedReason = error;
         return;
     }
+
+
 #ifdef DEBUG
     QTime endTime = QTime::currentTime();
 
-    QTime timeDiff(0,0,0, (int)startTime.elapsed());
-
-qDebug()<<"Model computed";
-qDebug()<<tr("finish at %1").arg(endTime.toString("hh:mm:ss.zzz")) ;
-qDebug()<<tr("Total time elapsed %1 h %2 m %3 s %4 ms").arg(QString::number(timeDiff.hour()),
-                                                            QString::number(timeDiff.minute()),
-                                                            QString::number(timeDiff.second()),
-                                                            QString::number(timeDiff.msec()) );
+    qDebug()<<"Model computed";
+    qDebug()<<tr("finish at %1").arg(endTime.toString("hh:mm:ss.zzz")) ;
+    qDebug()<<tr("Total time elapsed %1").arg(QString(DHMS(startTime.elapsed())));
 #endif
 
-    //-----------------------------------------------------------------------
-  //  mProject->mModel->mLogResults += log;
-   // mChainsLog = log;
+
 }

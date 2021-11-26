@@ -425,9 +425,9 @@ void MCMCSettingsDialog::setQuickTest()
 
     mNumBurnEdit->setText(locale().toString(10));
     mMaxBatchesEdit->setText(locale().toString(10));
-    mIterPerBatchEdit->setText(locale().toString(100));
-    mNumIterEdit->setText(locale().toString(200));
-    mDownSamplingEdit->setText(locale().toString(5));
+    mIterPerBatchEdit->setText(locale().toString(20));
+    mNumIterEdit->setText(locale().toString(100));
+    mDownSamplingEdit->setText(locale().toString(1));
 
     mLevelEdit->setText(locale().toString(0.99));
 }

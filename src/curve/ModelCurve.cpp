@@ -129,8 +129,6 @@ void ModelCurve::saveToFile(QDataStream *out)
     for (auto& pMByChain : mPosteriorMeanGByChain)
         *out << pMByChain;
 
-
-
 }
 /** @Brief Read the .res file, it's the result of the saved computation
 *
@@ -166,7 +164,6 @@ void ModelCurve::restoreFromFile(QDataStream* in)
     mPosteriorMeanGByChain.resize(tmp32);
     for (auto& pMByChain : mPosteriorMeanGByChain)
         *in >> pMByChain;
-
 
 }
 

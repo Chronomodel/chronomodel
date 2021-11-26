@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Model.h"
 #include "CurveUtilities.h"
 #include "CurveSettings.h"
+#include "Matrix.h"
 
 
 class ModelCurve: public Model
@@ -87,8 +88,6 @@ public:
     
     PosteriorMeanG mPosteriorMeanG; // valeurs en tout t
     std::vector<PosteriorMeanG> mPosteriorMeanGByChain; // valeurs en tout t par chaine
-    std::vector<std::vector<double>> mMapGX;
-    std::pair<double, double> mMapRangeY;
 
 };
 

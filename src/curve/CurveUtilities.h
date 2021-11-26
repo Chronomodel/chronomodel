@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define CurveUTILITIES_H
 
 #include "Functions.h"
+#include "Matrix.h"
 
 #include <vector>
 #include <string>
@@ -96,6 +97,7 @@ typedef struct PosteriorMeanGComposante
     std::vector<long double> vecGP;
     std::vector<long double> vecGS;
     std::vector<long double> vecVarG;
+    CurveMap mapG;
     
 } PosteriorMeanGComposante;
 

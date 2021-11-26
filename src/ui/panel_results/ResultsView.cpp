@@ -284,6 +284,10 @@ mMaximunNumberOfVisibleGraph(0)
     mCurveErrorCheck->setFixedHeight(h);
     mCurveErrorCheck->setChecked(true);
     
+    mCurveMapCheck = new CheckBox(tr("Curve Map"), mCurvesGroup);
+    mCurveMapCheck->setFixedHeight(h);
+    mCurveMapCheck->setChecked(true);
+
     mCurveEventsPointsCheck = new CheckBox(tr("Events Mean"), mCurvesGroup);
     mCurveEventsPointsCheck->setFixedHeight(h);
     mCurveEventsPointsCheck->setChecked(true);
@@ -308,11 +312,12 @@ mMaximunNumberOfVisibleGraph(0)
 
     QVBoxLayout* curveGroupLayout = new QVBoxLayout();
 
-        QVBoxLayout* curveOptionGroupLayout = new QVBoxLayout();
-        curveOptionGroupLayout->setContentsMargins(15, 0, 0, 0);
-        curveOptionGroupLayout->addWidget(mCurveErrorCheck, Qt::AlignLeft);
-        curveOptionGroupLayout->addWidget(mCurveEventsPointsCheck, Qt::AlignLeft);
-        curveOptionGroupLayout->addWidget(mCurveDataPointsCheck, Qt::AlignLeft);
+    QVBoxLayout* curveOptionGroupLayout = new QVBoxLayout();
+    curveOptionGroupLayout->setContentsMargins(15, 0, 0, 0);
+    curveOptionGroupLayout->addWidget(mCurveErrorCheck, Qt::AlignLeft);
+    curveOptionGroupLayout->addWidget(mCurveMapCheck, Qt::AlignLeft);
+    curveOptionGroupLayout->addWidget(mCurveEventsPointsCheck, Qt::AlignLeft);
+    curveOptionGroupLayout->addWidget(mCurveDataPointsCheck, Qt::AlignLeft);
 
 
     curveGroupLayout->setContentsMargins(10, 10, 10, 10);
@@ -367,6 +372,7 @@ mMaximunNumberOfVisibleGraph(0)
     connect(mLambdaRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
 
     connect(mCurveErrorCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mCurveMapCheck, &CheckBox::clicked, this,  &ResultsView::updateCurvesToShow);
     connect(mCurveEventsPointsCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     connect(mCurveDataPointsCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
 
@@ -1260,6 +1266,9 @@ void ResultsView::updateMainVariable()
             if (mCurveErrorCheck->isChecked())
                 mCurrentVariableList.append(GraphViewResults::eGError);
 
+            if (mCurveMapCheck->isChecked())
+                mCurrentVariableList.append(GraphViewResults::eMap);
+
             if (mCurveEventsPointsCheck->isChecked())
                 mCurrentVariableList.append(GraphViewResults::eGEventsPts);
 
@@ -1757,46 +1766,48 @@ void ResultsView::createByCurveGraph()
 
         // insert refpoints for X
       //  const double thresh = 68.4; //80;
-        QVector<RefPoint> eventsPts;
-        QVector<RefPoint> dataPts;
+        QVector<CurveRefPts> eventsPts;
+        QVector<CurveRefPts> dataPts;
         if (mMainVariable == GraphViewResults::eG) {
             for (auto& event : modelCurve()->mEvents) {
-            RefPoint evPts;
-            RefPoint dPts;
-
-            // Set Y
-            if (!hasY) {
-                switch (model->mCurveSettings.mVariableType) {
-                case CurveSettings::eVariableTypeInclination :
-                    evPts.Ymean = event->mXIncDepth;
-                    evPts.Yerr = event->mS_XA95Depth;
-                    break;
-                case CurveSettings::eVariableTypeDeclination :
-                    evPts.Ymean = event->mYDec;
-                    evPts.Yerr = event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
-                    break;
-                case CurveSettings::eVariableTypeField :
-                    evPts.Ymean = event->mZField;
-                    evPts.Yerr = event->mS_ZField;
-                    break;
-                case CurveSettings::eVariableTypeDepth :
-                    evPts.Ymean = event->mXIncDepth;
-                    evPts.Yerr = event->mS_XA95Depth;
-                    break;
-                case CurveSettings::eVariableTypeOther :
-                    evPts.Ymean = event->mXIncDepth;
-                    evPts.Yerr = event->mS_XA95Depth;
-                    break;
-                }
+                CurveRefPts evPts;
+                CurveRefPts dPts;
+                 double verr;
+                // Set Y
+                if (!hasY) {
+                    switch (model->mCurveSettings.mVariableType) {
+                    case CurveSettings::eVariableTypeInclination :
+                        evPts.Ymax = event->mXIncDepth + event->mS_XA95Depth;
+                        evPts.Ymin = event->mXIncDepth - event->mS_XA95Depth;
+                        break;
+                    case CurveSettings::eVariableTypeDeclination :
+                        verr = event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
+                        evPts.Ymin = event->mYDec - verr;
+                        evPts.Ymax = event->mYDec + verr;
+                        break;
+                    case CurveSettings::eVariableTypeField :
+                        evPts.Ymin = event->mZField - event->mS_ZField;
+                        evPts.Ymax = event->mZField + event->mS_ZField;
+                        break;
+                    case CurveSettings::eVariableTypeDepth :
+                        evPts.Ymin = event->mXIncDepth - 1.95*event->mS_XA95Depth;
+                        evPts.Ymax = event->mXIncDepth + 1.95*event->mS_XA95Depth;
+                        break;
+                    case CurveSettings::eVariableTypeOther :
+                        evPts.Ymin = event->mXIncDepth - 1.95*event->mS_XA95Depth;
+                        evPts.Ymax = event->mXIncDepth + 1.95*event->mS_XA95Depth;
+                        break;
+                    }
 
             } else {
                 //must be inclination or X
-                evPts.Ymean = event->mXIncDepth;
-                evPts.Yerr = event->mS_XA95Depth;
+                evPts.Ymin = event->mXIncDepth - event->mS_XA95Depth;
+                evPts.Ymax = event->mXIncDepth + event->mS_XA95Depth;
             }
             evPts.color = event->mColor;
 
             // Set X = time
+
             if (event->mType == Event::eDefault) {
 
                 for (auto&& date: event->mDates) {
@@ -1804,6 +1815,26 @@ void ResultsView::createByCurveGraph()
                     //QMap<double, double> calibMap = date.getFormatedCalibToShow();
                     QMap<double, double> calibMap = date.getRawCalibMap();
 
+
+                    // hpd is calculate only on the study Period
+                    //QMap<type_data, type_data> subData = calibCurve->mData;
+                    QMap<type_data, type_data> subData = getMapDataInRange(calibMap, model->mSettings.mTmin, model->mSettings.mTmax);
+
+                    QMap<type_data, type_data> hpd (create_HPD(calibMap, event->mTheta.mThresholdUsed));
+
+                    QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(hpd, 100);
+
+                    for (auto h : intervals) {
+                        dPts.Xmin = h.second.first;
+                        dPts.Xmax = h.second.second;
+                        dPts.Ymin = evPts.Ymin;
+                        dPts.Ymax = evPts.Ymax;
+                        dPts.color = event->mColor;
+
+                        // memo Data Points
+                        dataPts.append(dPts);
+                    }
+                    /*
                     FunctionStat calibStat = analyseFunction(calibMap);
 
                     dPts.Xmean = calibStat.mean;
@@ -1814,6 +1845,7 @@ void ResultsView::createByCurveGraph()
 
                     // memo Data Points
                     dataPts.append(dPts);
+                    */
                 }
 
 
@@ -1822,28 +1854,44 @@ void ResultsView::createByCurveGraph()
                 /* The Results are in mFormatDate, but Xmean must be in not formated format.
                  * Because the convertion is done within GraphViewCurve::generateCurves
                  */
-                evPts.Xmean = DateUtils::convertFromFormat(event->mTheta.mResults.funcAnalysis.mean, AppSettings::mFormatDate);
-                evPts.Xerr = event->mTheta.mResults.funcAnalysis.std;
+
+                 QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(event->mTheta.mHPD, 100.);
+                 for (auto h : intervals) {
+                     evPts.Xmin = DateUtils::convertFromFormat( h.second.first, AppSettings::mFormatDate);
+                     evPts.Xmax = DateUtils::convertFromFormat( h.second.second, AppSettings::mFormatDate);
+                     evPts.Ymin = evPts.Ymin;
+                     evPts.Ymax = evPts.Ymax;
+                     evPts.color = event->mColor;
+
+                     // memo Data Points
+                     eventsPts.append(evPts);
+                 }
+                //evPts.Xmin = event->mTheta.mHPD.first();
+                //evPts.Xmax = event->mTheta.mHPD.last();
+
+                //evPts.Xmin = DateUtils::convertFromFormat(event->mTheta.mResults.funcAnalysis.mean, AppSettings::mFormatDate) - 1.95*event->mTheta.mResults.funcAnalysis.std;
+               // evPts.Xmax = DateUtils::convertFromFormat(event->mTheta.mResults.funcAnalysis.mean, AppSettings::mFormatDate) + 1.95*event->mTheta.mResults.funcAnalysis.std;
 
 
             } else {
                 //evPts.Xmean = DateUtils::convertToAppSettingsFormat(static_cast<EventKnown*>(event)->mFixed); // always the same value
-                evPts.Xmean = static_cast<EventKnown*>(event)->mFixed;
-                evPts.Xerr = 0.;
+                evPts.Xmin = static_cast<EventKnown*>(event)->mFixed;
+                evPts.Xmax = static_cast<EventKnown*>(event)->mFixed;
 
-                dPts.Xmean = evPts.Xmean;//event->mTheta.mX; // always the same value
-                dPts.Xerr = 0;
+                dPts.Xmin = evPts.Xmin;//event->mTheta.mX; // always the same value
+                dPts.Xmax = evPts.Xmax;
 
-                dPts.Ymean = evPts.Ymean;
-                dPts.Yerr = evPts.Yerr;
+                dPts.Ymin = evPts.Ymin;
+                dPts.Ymax = evPts.Ymax;
                 dPts.color = event->mColor;
 
                 // memo Data Points
                 dataPts.append(dPts);
+                eventsPts.append(evPts);
             }
 
             // memo Events Points
-            eventsPts.append(evPts);
+            //eventsPts.append(evPts);
 
         }
 
@@ -1949,12 +1997,15 @@ void ResultsView::createByCurveGraph()
                 graphX->setTitle(tr("X"));
             }
         }
+        //graphX->setMap(modelCurve()->mPosteriorMeanG.gx.mapG);//, std::pair<double, double> (mModel->mSettings.mTmin, mModel->mSettings.mTmax), modelCurve()->mMapRangeY);
+
 
         graphX->setComposanteG(modelCurve()->mPosteriorMeanG.gx);
         graphX->setComposanteGChains(modelCurve()->getChainsMeanGComposanteX());
         graphX->setEvents(modelCurve()->mEvents);
 
-        graphX->setMap(modelCurve()->mMapGX, std::pair<double, double> (mModel->mSettings.mTmin, mModel->mSettings.mTmax), modelCurve()->mMapRangeY);
+
+
         if (mMainVariable == GraphViewResults::eG) {
             graphX->setEventsPoints(eventsPts);
             graphX->setDataPoints(dataPts);
@@ -1987,6 +2038,7 @@ void ResultsView::createByCurveGraph()
                 } else {
                     graphY->setTitle(tr("Declination"));
                 }
+
             } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D ||
                        model->mCurveSettings.mProcessType == CurveSettings::eProcessType2D) {
 
@@ -2011,25 +2063,25 @@ void ResultsView::createByCurveGraph()
                 for (auto& event : modelCurve()->mEvents) {
                     if ( model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D ||
                          model->mCurveSettings.mProcessType == CurveSettings::eProcessType2D ) {
-                        eventsPts[i].Ymean = event->mYDec;
-                        eventsPts[i].Yerr = event->mS_Y;
+                        eventsPts[i].Ymin = event->mYDec - event->mS_Y;
+                        eventsPts[i].Ymax = event->mYDec + event->mS_Y;
 
                     } else {
-                        eventsPts[i].Ymean = event-> mYDec;
-                        eventsPts[i].Yerr = event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
+                        eventsPts[i].Ymin = event-> mYDec - event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
+                        eventsPts[i].Ymax =  event-> mYDec + event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
                     }
 
                     if (event->mType == Event::eDefault) {
 
                         for (int iData = 0 ; iData < event->mDates.size(); ++iData) {
-                            dataPts[iDataPts].Ymean = eventsPts.at(i).Ymean;
-                            dataPts[iDataPts].Yerr = eventsPts.at(i).Yerr;
+                            dataPts[iDataPts].Ymin = eventsPts.at(i).Ymin;
+                            dataPts[iDataPts].Ymax = eventsPts.at(i).Ymax;
                             iDataPts++;
                         }
 
                     } else {
-                        dataPts[iDataPts].Ymean = eventsPts.at(i).Ymean;
-                        dataPts[iDataPts].Yerr = eventsPts.at(i).Yerr;
+                        dataPts[iDataPts].Ymin = eventsPts.at(i).Ymin;
+                        dataPts[iDataPts].Ymax = eventsPts.at(i).Ymax;
                         iDataPts++;
                     }
 
@@ -2085,20 +2137,20 @@ void ResultsView::createByCurveGraph()
                 int i = 0;
                 int iDataPts = 0;
                 for (auto& event : modelCurve()->mEvents) {
-                    eventsPts[i].Ymean = event->mZField;
-                    eventsPts[i].Yerr = event->mS_ZField;
+                    eventsPts[i].Ymin = event->mZField - 1.96*event->mS_ZField;
+                    eventsPts[i].Ymax = event->mZField + 1.96*event->mS_ZField;
 
                     if (event->mType == Event::eDefault) {
 
                         for (int iData = 0 ; iData < event->mDates.size(); ++iData) {
-                            dataPts[iDataPts].Ymean = eventsPts.at(i).Ymean;
-                            dataPts[iDataPts].Yerr = eventsPts.at(i).Yerr;
+                            dataPts[iDataPts].Ymin = eventsPts.at(i).Ymin;
+                            dataPts[iDataPts].Ymax = eventsPts.at(i).Ymax;
                             iDataPts++;
                         }
 
                     } else {
-                        dataPts[iDataPts].Ymean = eventsPts.at(i).Ymean;
-                        dataPts[iDataPts].Yerr = eventsPts.at(i).Yerr;
+                        dataPts[iDataPts].Ymin = eventsPts.at(i).Ymin;
+                        dataPts[iDataPts].Ymax = eventsPts.at(i).Ymax;
                         iDataPts++;
                     }
 
@@ -2331,6 +2383,7 @@ void ResultsView::updateCurvesToShow()
 
        if (mCurveGRadio->isChecked()) showVariableList.append(GraphViewResults::eG);
        if (mCurveErrorCheck->isChecked()) showVariableList.append(GraphViewResults::eGError);
+       if (mCurveMapCheck->isChecked()) showVariableList.append(GraphViewResults::eMap);
        if (mCurveEventsPointsCheck->isChecked()) showVariableList.append(GraphViewResults::eGEventsPts);
        if (mCurveDataPointsCheck->isChecked()) showVariableList.append(GraphViewResults::eGDatesPts);
 
@@ -2860,6 +2913,7 @@ void ResultsView::updateOptionsWidget()
 
         if (mCurveGRadio->isChecked()) {
             mCurveErrorCheck->show();
+            mCurveMapCheck->show();
             mCurveEventsPointsCheck->show();
             mCurveDataPointsCheck->show();
             totalH += 3 * h;
@@ -2867,6 +2921,7 @@ void ResultsView::updateOptionsWidget()
             QVBoxLayout* curveOptionGroupLayout = new QVBoxLayout();
             curveOptionGroupLayout->setContentsMargins(15, 0, 0, 0);
             curveOptionGroupLayout->addWidget(mCurveErrorCheck, Qt::AlignLeft);
+            curveOptionGroupLayout->addWidget(mCurveMapCheck, Qt:: AlignLeft);
             curveOptionGroupLayout->addWidget(mCurveEventsPointsCheck, Qt::AlignLeft);
             curveOptionGroupLayout->addWidget(mCurveDataPointsCheck, Qt::AlignLeft);
 
@@ -2874,6 +2929,7 @@ void ResultsView::updateOptionsWidget()
 
         } else {
             mCurveErrorCheck->hide();
+            mCurveMapCheck->hide();
             mCurveEventsPointsCheck->hide();
             mCurveDataPointsCheck->hide();
         }

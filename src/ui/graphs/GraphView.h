@@ -200,6 +200,7 @@ protected:
     void updateGraphSize(int w, int h);
 
     void drawCurves(QPainter& painter);
+    void drawMap(GraphCurve &curve, QPainter& painter);
 
 #if GRAPH_OPENGL
     virtual void initializeGL();

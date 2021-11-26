@@ -40,11 +40,28 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef GRAPHCURVE_H
 #define GRAPHCURVE_H
 
+#include "Matrix.h"
 #include <QMap>
 #include <QString>
 #include <QPen>
 
 typedef double type_data;
+class CurveRefPts
+{
+public:
+    enum PointType
+    {
+        eCross = 'C',
+        ePoint = 'P',
+        eLine = 'L',
+        eDotLine = 'D',
+    };
+
+    PointType type;
+    double Xmin, Xmax;
+    double Ymin, Ymax;
+    QColor color;
+};
 
 class GraphCurve
 {
@@ -55,9 +72,7 @@ public:
     void setPen(QPen pen);
 
     QMap<type_data, type_data> mData;
-    std::vector<std::vector<double>> mMap;
-    std::pair<double, double> mMapRangeY;
-    std::pair<double, double> mMapRangeX;
+    CurveMap mMap;
 
     QString mName;
     QPen mPen;
@@ -81,9 +96,7 @@ public:
     bool mIsVertical;
     
     bool mIsRefPoints;
-    QMap<double, double> mDataErrorX;
-    QMap<double, double> mDataErrorY;
-    QMap<double, QColor> mDataColor;
+    QList<CurveRefPts> mRefPoints;
 
     bool mVisible;
 };

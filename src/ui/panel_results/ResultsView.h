@@ -325,6 +325,7 @@ private:
     RadioButton* mCurveGSRadio;
     RadioButton* mLambdaRadio;
     CheckBox* mCurveErrorCheck;
+    CheckBox* mCurveMapCheck;
     CheckBox* mCurveEventsPointsCheck;
     CheckBox* mCurveDataPointsCheck;
     CheckBox* mCurveStatCheck;
