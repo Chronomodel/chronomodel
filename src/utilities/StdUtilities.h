@@ -345,6 +345,8 @@ float map_area(const QMap<float, float>& map);
 const std::map<double, double> create_HPD(const QMap<double, double> &aMap, const double threshold);
 QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmin, const double tmax, const int nbPts);
 
-inline double diff_erf(double a, double b, double mu = 0., double sigma = 1.) {return 0.5*(erf((b-mu)/(sigma*M_SQRT2)) - erf((a-mu)/(sigma*M_SQRT2)));}
+inline double diff_erf(double a, double b, double mu = 0., double sigma = 1.) {
+    return 0.5*(erf((b-mu)/(sigma*M_SQRT2)) - erf((a-mu)/(sigma*M_SQRT2)));
+}
 
 #endif

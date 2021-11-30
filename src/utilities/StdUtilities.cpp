@@ -692,8 +692,10 @@ const std::map<double, double> create_HPD(const QMap<double, double>& aMap, cons
                             const double tPrev = std::prev(iterMap)->first;
                             area += (v + vPrev)/2*(t - tPrev);
                             // we need to save a surface, so we need to save 4 values
-                            result[t] = v;
-                            result[tPrev] = vPrev;
+                            if (area < areaSearched) {
+                                result[t] = v;
+                                result[tPrev] = vPrev;
+                            }
                         }
                     }
 
@@ -703,8 +705,11 @@ const std::map<double, double> create_HPD(const QMap<double, double>& aMap, cons
                             const double tNext = std::next(iterMap)->first;
                             area += (v + vNext)/2*(tNext - t);
                             // we need to save a surface, so we need to save 4 values
-                            result[t] = v;
-                            result[tNext] = vNext;
+                            if (area < areaSearched) {
+                                result[t] = v;
+                                result[tNext] = vNext;
+                            }
+
                         }
                     }
 
