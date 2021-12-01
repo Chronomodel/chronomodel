@@ -71,7 +71,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 
 {
     minimumHeight = 0;
-    qDebug() << "EventPropertiesView::EventPropertiesView mButtonWidth="<< mButtonWidth;
+    // qDebug() << "EventPropertiesView::EventPropertiesView mButtonWidth="<< mButtonWidth;
     // ------------- commun with defautlt Event and Bound ----------
     mTopView = new QWidget(this);
 
@@ -207,10 +207,10 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 
     mBoundView = new QWidget(this);
 
-    mKnownFixedEdit = new QLineEdit(mBoundView);
+    mKnownFixedEdit = new LineEdit(mBoundView);
 
-    QDoubleValidator* doubleValidator = new QDoubleValidator(this);
-    doubleValidator->setDecimals(2);
+    //QDoubleValidator* doubleValidator = new QDoubleValidator(this);
+    //doubleValidator->setDecimals(2);
 
     mKnownGraph = new GraphView(mBoundView);
     mKnownGraph->setMinimumHeight(250);
@@ -388,8 +388,6 @@ void EventPropertiesView::updateEvent()
                 mMethodCombo->setCurrentIndex(2);
 
 
-
-
         //       qDebug() << "EventPropertiesView::updateEvent mEvent mOrigin"  << mEvent.value(STATE_EVENT_DATES).toArray().at(0).toObject().value(STATE_DATE_ORIGIN).toInt();
            mDatesList->setEvent(mEvent);
             if (mCurrentDateIdx >= 0)
@@ -405,12 +403,10 @@ void EventPropertiesView::updateEvent()
                 mRecycleBut->setEnabled(true);
 
             } else {
-               // mCalibBut->click();
                 mCalibBut->setEnabled(false);
                 mDeleteBut->setEnabled(false);
                 mRecycleBut->setEnabled(true);
             }
-
 
         } else if (type == Event::eKnown) {
             mKnownFixedEdit -> setText(locale().toString(mEvent.value(STATE_EVENT_KNOWN_FIXED).toDouble()));
@@ -467,8 +463,12 @@ void EventPropertiesView::updateEventMethod(int index)
 
 void EventPropertiesView::updateKnownFixed(const QString& text)
 {
+    bool ok;
+    double fixedValue = locale().toDouble(text, &ok);
+    if ( ok == false || fixedValue == mEvent[STATE_EVENT_KNOWN_FIXED])
+        return;
     QJsonObject event = mEvent;
-    event[STATE_EVENT_KNOWN_FIXED] = round(text.toDouble());
+    event[STATE_EVENT_KNOWN_FIXED] = fixedValue;
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound fixed value updated"));
 }
 
@@ -938,8 +938,7 @@ void EventPropertiesView::updateLayout()
         mCombineBut->setGeometry(mRecycleBut->x() + mRecycleBut->width(), y, w, butPluginHeigth);
         mSplitBut->setGeometry(mCombineBut->x() + mCombineBut->width(), y, w, butPluginHeigth);
     }
-    else {
-        if (hasBound()) {
+    else if (hasBound()) {
             //-----------
             mEventView->resize(0, 0);
             // mCurveWidget belongs to mTopView
@@ -951,10 +950,10 @@ void EventPropertiesView::updateLayout()
             }
             mTopView->resize(width(), topViewHeight + (withCurve ? CurveHeight + margin : 0));
 
-            mBoundView->setGeometry(0, mCurveWidget->y() + mCurveWidget->height() + margin, width(), height() - mCurveWidget->y() - mCurveWidget->height() - 2*margin);
+            mBoundView->setGeometry(0, mTopView->height(), width(), height() - mTopView->height());
 
-        }
     }
+
 }
 
 void EventPropertiesView::updateButton() {
