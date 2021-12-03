@@ -56,7 +56,7 @@ ImportDataView::ImportDataView(QWidget* parent, Qt::WindowFlags flags):QWidget(p
     mBrowseBut = new Button(tr("Load CSV file..."), this);
     mExportBut = new Button(tr("Export all project data as CSV"), this);
     mHelp = new HelpWidget(this);
-    mHelp->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=31"); //chapter 3.4.2.1 Radiocarbon dating (14C)
+    mHelp->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=31"); //chapter 3.4.2.1 Radiocarbon dating (14C)
 
     mHelp->setText(tr("Your CSV file must contain 1 data per row. Each row must start with an Event name, the second row is the datation method to use. Allowed datation methods are : 14C, AM, Gauss, Unif, TL/OSL.\nComments are allowed in your CSV. They must start with  # or // and can be placed at the end of a data row. When placed at the begining of a row, the whole row is ignored.\r Be careful, cell separator and decimal separator of the CSV file should be those defined in the Application Settings, otherwise the CSV file will not be opened"));
 
@@ -267,7 +267,7 @@ void ImportDataView::browse()
              */
             if (data.isEmpty()){
                 // to have a \ char in string, in C++ you must use two char
-                QMessageBox message(QMessageBox::Warning, tr("Bad file"), tr("Maybe you need to check the manual to build your CSV file !") + " <a href='https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=29 '>"+ tr("More...")+"</a> ",
+                QMessageBox message(QMessageBox::Warning, tr("Bad file"), tr("Maybe you need to check the manual to build your CSV file !") + " <a href='https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=29 '>"+ tr("More...")+"</a> ",
                                     QMessageBox::Ok, qApp->activeWindow());
                 message.exec();
             } else {
