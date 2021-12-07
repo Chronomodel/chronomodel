@@ -770,7 +770,7 @@ void MainWindow::setAppSettings()
 
 void MainWindow::openManual()
 {
-    QDesktopServices::openUrl(QUrl("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf", QUrl::TolerantMode));
+    QDesktopServices::openUrl(QUrl("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf", QUrl::TolerantMode));
 
 }
 
