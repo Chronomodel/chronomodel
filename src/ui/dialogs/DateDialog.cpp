@@ -221,7 +221,6 @@ void DateDialog::setForm(PluginFormAbstract* form)
         connect(mForm, &PluginFormAbstract::OkEnabled, this, &DateDialog::setPluginDataValid);
         connect(mForm, &PluginFormAbstract::sizeChanged , this, &DateDialog::updateVisibleControls);
 
-
         mLayout->insertWidget(2, mForm);
         PluginAbstract* plugin = form->mPlugin;
 

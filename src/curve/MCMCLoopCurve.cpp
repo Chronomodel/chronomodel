@@ -1361,37 +1361,27 @@ void MCMCLoopCurve::finalize()
             emit stepProgressed(progressPosition++);
         }
 
-        minY_X = minY_X - 1.96*sqrt(maxVarY_X) - (maxY_X - minY_X)/5.;
-        maxY_X = maxY_X + 1.96*sqrt(maxVarY_X) + (maxY_X - minY_X)/5.;
+        const auto spanY_X = (maxY_X - minY_X) / 5.;
+        minY_X = minY_X - 1.96*sqrt(maxVarY_X) - spanY_X;
+        maxY_X = maxY_X + 1.96*sqrt(maxVarY_X) + spanY_X;
 
       PosteriorMeanG chainPosteriorMeanG;
       //chainPosteriorMeanG.gx = compute_posterior_mean_G_composante(chainTraceX, tr("Calcul Mean Composante X for chain %1").arg(i+1));
-
-      // Look for y Range
-    /*  double minY;
-      double maxY;
-      double meanG, varG;
-      for (size_t idx = 0; idx < chainPosteriorMeanG.gx.vecG.size() ; ++idx) {
-         meanG = chainPosteriorMeanG.gx.vecG.at(idx);
-         varG = chainPosteriorMeanG.gx.vecVarG.at(idx);
-
-         minY = std::min( minY, meanG - 1.96 * sqrt(varG));
-         maxY = std::max( maxY, meanG + 1.96 * sqrt(varG));
-      }
-*/
      // chainPosteriorMeanG.gx.mapG = compute_posterior_map_G_composante(chainTraceX, minY, maxY , 1024);
 
       chainPosteriorMeanG.gx = compute_posterior_mean_map_G_composante(chainTraceX, minY_X, maxY_X, 1000, tr("Calcul Mean Composante X for chain %1").arg(i+1) );
 
       if (hasY) {
-          minY_Y = minY_Y - 1.96*sqrt(maxVarY_Y) - (maxY_Y - minY_Y)/10.;
-          maxY_Y = maxY_Y + 1.96*sqrt(maxVarY_Y) - (maxY_Y - minY_Y)/10.;
+          const auto spanY_Y = (maxY_X - minY_X) / 5.;
+          minY_Y = minY_Y - 1.96*sqrt(maxVarY_Y) - spanY_Y;
+          maxY_Y = maxY_Y + 1.96*sqrt(maxVarY_Y) + spanY_Y;
           //chainPosteriorMeanG.gy = compute_posterior_mean_G_composante(chainTraceY, tr("Calcul Mean Composante Y for chain %1").arg(i+1));
           chainPosteriorMeanG.gy = compute_posterior_mean_map_G_composante(chainTraceY, minY_Y, maxY_Y, 1000, tr("Calcul Mean Composante X for chain %1").arg(i+1) );
       }
       if (hasZ) {
-          minY_Z = minY_Z - 1.96*sqrt(maxVarY_Z) - (maxY_Z - minY_Z)/10.;
-          maxY_Z = maxY_Z + 1.96*sqrt(maxVarY_Z) - (maxY_Z - minY_Z)/10.;
+          const auto spanY_Z = (maxY_Z - minY_Z) / 5.;
+          minY_Z = minY_Z - 1.96*sqrt(maxVarY_Z) - spanY_Z;
+          maxY_Z = maxY_Z + 1.96*sqrt(maxVarY_Z) + spanY_Z;
           //chainPosteriorMeanG.gz = compute_posterior_mean_G_composante(chainTraceZ, tr("Calcul Mean Composante Z for chain %1").arg(i+1));
           chainPosteriorMeanG.gz = compute_posterior_mean_map_G_composante(chainTraceX, minY_Z, maxY_Z, 1000, tr("Calcul Mean Composante X for chain %1").arg(i+1) );
       }
@@ -1643,8 +1633,7 @@ PosteriorMeanGComposante MCMCLoopCurve::compute_posterior_mean_map_G_composante(
     // erreur intra spline
     std::vector<long double> vecVarErrG (nbPoint);
 
-    int  nbIter = trace.size();
-
+    double nbIter = trace.size();
 
     const int nbPtsX = gridLength;
     const int nbPtsY = gridLength;
@@ -1667,15 +1656,15 @@ PosteriorMeanGComposante MCMCLoopCurve::compute_posterior_mean_map_G_composante(
     varG = 0;
     gs = 0;
 
-    emit stepChanged(ProgressBarText, 0, nbIter);
+    emit stepChanged(ProgressBarText, 0, trace.size());
 
-    int n = 0;
+    long double n = 0;
     long double  prevMeanG;
 
     double maxDensity = 0;
     double minDensity = +INFINITY;
     const double k = 3.; // Le nombre de fois sigma G, pour le calcul de la densité
-    double a, b, coefG;
+    double a, b, surfG;
   //  long double  prevMeanG;
     int  idxYErrMin, idxYErrMax;
     for (auto&& splineComposante : trace ) {
@@ -1695,13 +1684,9 @@ PosteriorMeanGComposante MCMCLoopCurve::compute_posterior_mean_map_G_composante(
 
             vecVarErrG[idxT] += (varG - vecVarErrG.at(idxT)) / n  ;
 
-            // ---
-
-
-
             // -- calcul map
             g = std::max(ymin, std::min(g, ymax));
-            stdG =sqrt(varG);
+            stdG = sqrt(varG);
 
             //idxY = floor((g-ymin) / stepY);
 
@@ -1723,40 +1708,40 @@ PosteriorMeanGComposante MCMCLoopCurve::compute_posterior_mean_map_G_composante(
             /* il faut utiliser un pas de grille et le coefficient dans la grille dans l'intervalle [a,b] pour N(mu, sigma) est égale à la différence 1/2*(erf((b-mu)/(sigma*sqrt(2)) - erf((a-mu)/(sigma*sqrt(2))
              * https://en.wikipedia.org/wiki/Error_function
              */
-            idxYErrMin = (g - k*stdG - ymin) / stepY;
-            idxYErrMax = (g + k*stdG - ymin) / stepY;
+            idxYErrMin = std::max( 0, int((g - k*stdG - ymin) / stepY));
+            idxYErrMax = std::min(int( (g + k*stdG - ymin) / stepY), nbPtsY);
 
-            if (idxYErrMin == idxYErrMax) {
+            if (idxYErrMin == idxYErrMax && idxYErrMin > 0 && idxYErrMax < nbPtsY) {
 #ifdef DEBUG
                     if ((curveMap.row()*idxT + idxYErrMin) < (curveMap.row()*curveMap.column()))
-                        curveMap(idxT, idxYErrMin) = curveMap.at(idxYErrMin, idxYErrMin) + 1./(double)(trace.size() * 1);
+                        curveMap(idxT, idxYErrMin) = curveMap.at(idxYErrMin, idxYErrMin) + 1./nbIter;
                     else
                         qDebug()<<"pb in MCMCLoopCurve::compute_posterior_map_G_composante";
 #else
-                    curveMap(idxT, idxYErrMin) = curveMap.at(idxT, idxYErrMin) + 1./(double)(trace.size() * 1);
+                    curveMap(idxT, idxYErrMin) = curveMap.at(idxT, idxYErrMin) + 1./nbIter ;
 #endif
 
                     maxDensity = std::max(maxDensity, curveMap.at(idxT, idxYErrMin));
                     minDensity = std::min(minDensity, curveMap.at(idxT, idxYErrMin));
 
-            } else if (0< idxYErrMin && idxYErrMax< (nbPtsY-1)) {
-                std::vector<double>::iterator ptr_Ymin = curveMap.ptr_at(idxT, idxYErrMin);
-                std::vector<double>::iterator ptr_Ymax = curveMap.ptr_at(idxT, idxYErrMax);
+            } else if (0 < idxYErrMin && idxYErrMax < nbPtsY) {
+                double* ptr_Ymin = curveMap.ptr_at(idxT, idxYErrMin);
+                double* ptr_Ymax = curveMap.ptr_at(idxT, idxYErrMax);
 
                 int idErr = idxYErrMin;
-                for (std::vector<double>::iterator ptr_idErr = ptr_Ymin; ptr_idErr <= ptr_Ymax; ptr_idErr++) {
+                for (double* ptr_idErr = ptr_Ymin; ptr_idErr <= ptr_Ymax; ptr_idErr++) {
                     a = (idErr - 0.5)*stepY + ymin;
                     b = (idErr + 0.5)*stepY + ymin;
-                    coefG = diff_erf(a, b, g, stdG )/(double)(trace.size() * 1);
+                    surfG = diff_erf(a, b, g, stdG )/nbIter;
 #ifdef DEBUG
                    // if ((curveMap.row()*idxT + idxY) < (curveMap.row()*curveMap.column()))
                         //curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + coefG/(double)(trace.size() * 1);
-                        *ptr_idErr = (*ptr_idErr) + coefG;
+                        *ptr_idErr = (*ptr_idErr) + surfG;
                    // else
                    //     qDebug()<<"pb in MCMCLoopCurve::compute_posterior_map_G_composante";
 #else
                     //curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + coefG/(double)(trace.size() * 1);
-                    *ptr_idErr = (*ptr_idErr) + coefG;
+                    *ptr_idErr = (*ptr_idErr) + surfG;
 #endif
 
                     //maxDensity = std::max(maxDensity, curveMap.at(idxT, idxY));
@@ -1768,31 +1753,7 @@ PosteriorMeanGComposante MCMCLoopCurve::compute_posterior_mean_map_G_composante(
                 }
             }
 
-        /*
-            for (int i = 0 ; i< 1; i++) {
-                g_err = g - sqrt(varG)*(double)i/3.;
-                coefG = pow(g_err - g, 2.)*varG;
-                coefG = exp( -coefG/2.)/ sqrt(2*M_PI*varG);
 
-                if (coefG > 0) {
-                    g_err = std::max(ymin, std::min(g_err, ymax));
-
-                    idxY = unsigned(floor((g_err-ymin)/(ymax-ymin) * (nbPtsY-1)));
-
-#ifdef DEBUG
-                    if ((curveMap.row()*idxT + idxY) < (curveMap.row()*curveMap.column()))
-                        curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + coefG/(double)(trace.size() * 1);
-                    else
-                        qDebug()<<"pb in MCMCLoopCurve::compute_posterior_map_G_composante";
-#else
-                    curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + 1./(double)(trace.size() * 1);
-#endif
-
-                    maxDensity = std::max(maxDensity, curveMap.at(idxT, idxY));
-                    minDensity = std::min(minDensity, curveMap.at(idxT, idxY));
-                }
-
-             } */
         }
 
          emit stepProgressed(n);
@@ -2002,12 +1963,12 @@ CurveMap MCMCLoopCurve::compute_posterior_map_G_composante(const std::vector<MCM
                     minDensity = std::min(minDensity, curveMap.at(idxT, idxY));
 
             } else {
-                std::vector<double>::iterator ptr_Ymin = curveMap.ptr_at(idxT, idxYErrMin);
-                std::vector<double>::iterator ptr_Ymax = curveMap.ptr_at(idxT, idxYErrMax);
+                double* ptr_Ymin = curveMap.ptr_at(idxT, idxYErrMin);
+                double* ptr_Ymax = curveMap.ptr_at(idxT, idxYErrMax);
 
                // for (unsigned idErr = idxYErrMin; idErr <= idxYErrMax; idErr++) {
                 unsigned long idErr = idxYErrMin;
-                for (std::vector<double>::iterator ptr_idErr = ptr_Ymin; ptr_idErr <= ptr_Ymax; ptr_idErr++) {
+                for (double* ptr_idErr = ptr_Ymin; ptr_idErr <= ptr_Ymax; ptr_idErr++) {
                     a = (idErr - 0.5)*stepY + ymin;
                     b = (idErr + 0.5)*stepY + ymin;
                     coefG = diff_erf(a, b, g, stdG )/(double)(trace.size() * 1);
@@ -2125,6 +2086,7 @@ double MCMCLoopCurve::valeurG(const double t, const MCMCSplineComposante& spline
 //  Valeur de Err_G en t à partir de Vec_Err_G
 //  par interpolation linéaire des erreurs entre les noeuds
 // ------------------------------------------------------------------
+//obsolete
 double MCMCLoopCurve::valeurErrG(const double t, const MCMCSplineComposante& spline, unsigned& i0)
 {
     const unsigned n = spline.vecThetaEvents.size();
@@ -2404,6 +2366,7 @@ void MCMCLoopCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposa
 
 
      } else {
+
          for (; i0 < n-1; ++i0) {
              const long double ti1 = reduceTime(spline.vecThetaEvents.at(i0));
              const long double ti2 = reduceTime(spline.vecThetaEvents.at(i0 + 1));
@@ -2510,11 +2473,14 @@ long double MCMCLoopCurve::general_cross_validation (const SplineMatrices& matri
 {
 
     const long double N = matrices.diagWInv.size();
-    std::vector<std::vector<long double>> tmp = multiConstParMat(matrices.matQTW_1Q, lambdaSpline, 5);
-    std::vector<std::vector<long double>> matB = addMatEtMat(matrices.matR, tmp, 5);
+    //Matrix2D tmp = multiConstParMat(matrices.matQTW_1Q, lambdaSpline, 5);
+    //Matrix2D matB = addMatEtMat(matrices.matR, tmp, 5);
+
+    Matrix2D matB = addMatEtMat(matrices.matR, multiConstParMat(matrices.matQTW_1Q, lambdaSpline, 5), 5);
+
     // Decomposition_Cholesky de matB en matL et matD
     // Si alpha global: calcul de Mat_B = R + alpha * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
-    std::pair<std::vector<std::vector<long double>>, std::vector<long double>> decomp = decompositionCholesky(matB, 5, 1);
+    std::pair<Matrix2D, std::vector<long double>> decomp = decompositionCholesky(matB, 5, 1);
     SplineResults s = calculSplineX (matrices, vecH, decomp, matB, lambdaSpline);
 
     auto matA = calculMatInfluence_origin(matrices, s , 1, lambdaSpline);
@@ -2536,11 +2502,14 @@ long double MCMCLoopCurve::cross_validation (const SplineMatrices& matrices, con
 {
 
     const long double N = matrices.diagWInv.size();
-    std::vector<std::vector<long double>> tmp = multiConstParMat(matrices.matQTW_1Q, lambdaSpline, 5);
-    std::vector<std::vector<long double>> matB = addMatEtMat(matrices.matR, tmp, 5);
+    //Matrix2D tmp = multiConstParMat(matrices.matQTW_1Q, lambdaSpline, 5);
+    //Matrix2D matB = addMatEtMat(matrices.matR, tmp, 5);
+
+    Matrix2D matB = addMatEtMat(matrices.matR, multiConstParMat(matrices.matQTW_1Q, lambdaSpline, 5), 5);
+
     // Decomposition_Cholesky de matB en matL et matD
     // Si alpha global: calcul de Mat_B = R + alpha * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
-    std::pair<std::vector<std::vector<long double>>, std::vector<long double>> decomp = decompositionCholesky(matB, 5, 1);
+    std::pair<Matrix2D, std::vector<long double>> decomp = decompositionCholesky(matB, 5, 1);
     SplineResults s = calculSplineX (matrices, vecH, decomp, matB, lambdaSpline);
 
     auto matA = calculMatInfluence_origin(matrices, s , 1, lambdaSpline);
@@ -2725,7 +2694,7 @@ long double MCMCLoopCurve::h_YWI_AY_composanteX(const SplineMatrices &matrices, 
     std::vector<long double>& vecG = spline.vecG;
 
     std::vector<long double>& matD = spline.matD;
-    const std::vector<std::vector<long double>>& matQTQ = matrices.matQTQ;
+    const Matrix2D& matQTQ = matrices.matQTQ;
 
     // -------------------------------------------
     // Calcul de l'exposant
@@ -2736,16 +2705,6 @@ long double MCMCLoopCurve::h_YWI_AY_composanteX(const SplineMatrices &matrices, 
 
     const int nb_noeuds = lEvents.size();
 
-   /* int i = 0;
-    long double YWY = 0.;
-    long double YWAY = 0.;
-    for (auto& e : lEvents) {
-        YWY  += (long double)e->mW * (long double)e->mYx * (long double)e->mYx;
-        YWAY += (long double)e->mW * (long double)e->mYx * vecG.at(i);
-        ++i;
-    }
-    long double h_exp = -0.5 * (YWY-YWAY);
-*/
     long double h_exp = 0.;
     int i = 0;
     for (auto& e : lEvents) {
@@ -2763,7 +2722,7 @@ long double MCMCLoopCurve::h_YWI_AY_composanteX(const SplineMatrices &matrices, 
     * inutile de refaire : Multi_Mat_par_Mat(Mat_QT,Mat_Q,Nb_noeuds,3,3,Mat_QtQ); -> déjà effectué dans calcul_mat_RQ
     */
 
-    std::pair<std::vector<std::vector<long double>>, std::vector<long double>> decomp = decompositionCholesky(matQTQ, 5, 1);
+    std::pair<Matrix2D, std::vector<long double>> decomp = decompositionCholesky(matQTQ, 5, 1);
 
     std::vector<long double>& matDq = decomp.second;
 
@@ -2817,14 +2776,12 @@ long double MCMCLoopCurve::h_YWI_AY_composanteX_origin(const SplineMatrices &mat
     std::vector<long double> vecY (lEvents.size());
     std::transform(lEvents.begin(), lEvents.end(), vecY.begin(), [](Event* ev) {return (long double)ev->mYx;});
 
-
-
     SplineResults spline = calculSpline(matrices, vecY, lambdaSpline, vecH);
     std::vector<long double>& vecG = spline.vecG;
     std::vector<long double> vecGamma = spline.vecGamma;
-    std::vector<std::vector<long double>> matL = spline.matL;
+    Matrix2D matL = spline.matL;
     std::vector<long double> matD = spline.matD;
-    std::vector<std::vector<long double>> matQTQ = matrices.matQTQ;
+    Matrix2D matQTQ = matrices.matQTQ;
 
     // -------------------------------------------
     // Calcul de l'exposant
@@ -2846,13 +2803,6 @@ long double MCMCLoopCurve::h_YWI_AY_composanteX_origin(const SplineMatrices &mat
 
     long double h_exp = -0.5l * (YWY-YWAY);
 
-/*         long double h_exp = 0.;
-        int i = 0;
-        for (auto& e : lEvents) {
-            h_exp  += (long double) e->mW * (long double)e->mYx * ((long double)e->mYx - vecG.at(i++));
-        }
-        h_exp *= -0.5l;
-  */
     // -------------------------------------------
     // Calcul de la norme
     // -------------------------------------------
@@ -2861,8 +2811,8 @@ long double MCMCLoopCurve::h_YWI_AY_composanteX_origin(const SplineMatrices &mat
     // ni de calculer le determinant(Mat_B) car il suffit d'utiliser Mat_D (respectivement Mat_U) déjà calculé
     // inutile de refaire : Multi_Mat_par_Mat(Mat_QT,Mat_Q,Nb_noeuds,3,3,Mat_QtQ); -> déjà effectué dans calcul_mat_RQ
 
-    std::pair<std::vector<std::vector<long double>>, std::vector<long double>> decomp = decompositionCholesky(matQTQ, 5, 1);
-    std::vector<std::vector<long double>> matLq = decomp.first;
+    std::pair<Matrix2D, std::vector<long double>> decomp = decompositionCholesky(matQTQ, 5, 1);
+   // Matrix2D matLq = decomp.first;
     std::vector<long double> matDq = decomp.second;
 
     long double det_1_2 = 1.;
@@ -2891,7 +2841,7 @@ long double MCMCLoopCurve::h_YWI_AY_composanteY(const SplineMatrices& matrices, 
     std::vector<long double>& vecG = spline.vecG;
 
     std::vector<long double>& matD = spline.matD;
-    const std::vector<std::vector<long double>>& matQTQ = matrices.matQTQ;
+    const Matrix2D& matQTQ = matrices.matQTQ;
 
     // -------------------------------------------
     // Calcul de l'exposant
@@ -2902,18 +2852,6 @@ long double MCMCLoopCurve::h_YWI_AY_composanteY(const SplineMatrices& matrices, 
 
     const int nb_noeuds = lEvents.size();
 
-   /*
-    long double YWY = 0.;
-    long double YWAY = 0.;
-    int i = 0;
-    for (auto& e : lEvents) {
-        YWY += e->mW * e->mYy * e->mYy;
-        YWAY += e->mYy * e->mW * vecG.at(i);
-        ++i;
-    }
-
-    long double h_exp = -0.5 * (YWY-YWAY);
-  */
     long double h_exp = 0.;
     int i = 0;
     for (auto& e : lEvents) {
@@ -2930,7 +2868,7 @@ long double MCMCLoopCurve::h_YWI_AY_composanteY(const SplineMatrices& matrices, 
     * ni de calculer le determinant(Mat_B) car il suffit d'utiliser Mat_D (respectivement Mat_U) déjà calculé
     * inutile de refaire : Multi_Mat_par_Mat(Mat_QT,Mat_Q,Nb_noeuds,3,3,Mat_QtQ); -> déjà effectué dans calcul_mat_RQ */
 
-    std::pair<std::vector<std::vector<long double>>, std::vector<long double>> decomp = decompositionCholesky(matQTQ, 5, 1);
+    std::pair<Matrix2D, std::vector<long double>> decomp = decompositionCholesky(matQTQ, 5, 1);
    // std::vector<std::vector<double>> matLq = decomp.first;
     std::vector<long double>& matDq = decomp.second;
 
@@ -2972,7 +2910,7 @@ long double MCMCLoopCurve::h_YWI_AY_composanteZ(const SplineMatrices& matrices, 
     //std::vector<double>& vecGamma = spline.vecGamma;
   //  std::vector<std::vector<double>> matL = spline.matL;
     std::vector<long double>& matD = spline.matD;
-    const std::vector<std::vector<long double>>& matQTQ = matrices.matQTQ;
+    const Matrix2D& matQTQ = matrices.matQTQ;
 
     // -------------------------------------------
     // Calcul de l'exposant
@@ -3009,7 +2947,7 @@ long double MCMCLoopCurve::h_YWI_AY_composanteZ(const SplineMatrices& matrices, 
     // ni de calculer le determinant(Mat_B) car il suffit d'utiliser Mat_D (respectivement Mat_U) déjà calculé
     // inutile de refaire : Multi_Mat_par_Mat(Mat_QT,Mat_Q,Nb_noeuds,3,3,Mat_QtQ); -> déjà effectué dans calcul_mat_RQ
 
-    std::pair<std::vector<std::vector<long double>>, std::vector<long double>> decomp = decompositionCholesky(matQTQ, 5, 1);
+    std::pair<Matrix2D, std::vector<long double>> decomp = decompositionCholesky(matQTQ, 5, 1);
    // std::vector<std::vector<double>> matLq = decomp.first;
     std::vector<long double>& matDq = decomp.second;
 
@@ -3039,9 +2977,9 @@ long double MCMCLoopCurve::h_YWI_AY_composanteZ(const SplineMatrices& matrices, 
 long double MCMCLoopCurve::h_alpha(const SplineMatrices& matrices, const int nb_noeuds, const long double &lambdaSpline)
 {
     const std::vector<long double>& diagWInv = matrices.diagWInv;
-    const std::vector<std::vector<long double>>& matR = matrices.matR;
-    const std::vector<std::vector<long double>>& matQ = matrices.matQ;
-    const std::vector<std::vector<long double>>& matQT = matrices.matQT;
+    const Matrix2D& matR = matrices.matR;
+    const Matrix2D& matQ = matrices.matQ;
+    const Matrix2D& matQT = matrices.matQT;
     
     // La trace de la matrice produit W_1.K est égal à la somme des valeurs propores si W_1.K est symétrique,
     // ce qui implique que W_1 doit être une constante
@@ -3052,7 +2990,7 @@ long double MCMCLoopCurve::h_alpha(const SplineMatrices& matrices, const int nb_
     W_1m /= nb_noeuds;
 
     // calcul des termes diagonaux de W_1.K
-    std::pair<std::vector<std::vector<long double>>, std::vector<long double>> decomp = decompositionCholesky(matR, 3, 1);
+    std::pair<Matrix2D, std::vector<long double>> decomp = decompositionCholesky(matR, 3, 1);
   /*  if (determinant(matR) == 0) {
         qDebug() << "cholesky impossible matrice non inversible";
         throw "error cholesky noninversibler matrix";
@@ -3061,12 +2999,12 @@ long double MCMCLoopCurve::h_alpha(const SplineMatrices& matrices, const int nb_
 
     std::pair<std::vector<std::vector<double>>, std::vector<double>> decomp = choleskyLDL(matR); // ne peut pas être appliqué directemenent car décalage de zéro
 */
-    std::vector<std::vector<long double>>& matL = decomp.first;
+    Matrix2D& matL = decomp.first;
     std::vector<long double>& matD = decomp.second;
     
    // std::vector<std::vector<long double>> matRInv = inverseMatSym_origin(matL, matD, 5, 1);// l'inverson de matR à partir de la décomposition en matL et matD
 
-    std::vector<std::vector<long double>> matRInv;
+    Matrix2D matRInv;
     if (matD.size() > 3) {
          matRInv = inverseMatSym_origin(matL, matD, 5, 1);
 
@@ -3077,18 +3015,22 @@ long double MCMCLoopCurve::h_alpha(const SplineMatrices& matrices, const int nb_
 
 
 
-    std::vector<std::vector<long double>> tmp = multiMatParMat(matQ, matRInv, 3, 3);
-    std::vector<std::vector<long double>> matK = multiMatParMat(tmp, matQT, 3, 3);
+    //Matrix2D tmp = multiMatParMat(matQ, matRInv, 3, 3);
+    //Matrix2D matK = multiMatParMat(tmp, matQT, 3, 3);
+
+    Matrix2D matK = multiMatParMat(multiMatParMat(matQ, matRInv, 3, 3), matQT, 3, 3);
 
     //long double vm = 0.;
     // pHd : Si la bande vaut 1, on prend donc la diagonale de matK, le calcul se simpifie
     //
-      std::vector<long double> diag_W_1m (nb_noeuds, W_1m);//= initVecteur(nb_noeuds);
-      std::vector<std::vector<long double>> matW_1K = multiDiagParMat(diag_W_1m, matK, 1);
+    //  std::vector<long double> diag_W_1m (nb_noeuds, W_1m);//= initVecteur(nb_noeuds);
+     // Matrix2D matW_1K = multiDiagParMat(diag_W_1m, matK, 1);
+
+    Matrix2D matW_1K = multiDiagParMat(std::vector<long double> (nb_noeuds, W_1m), matK, 1);
 
     long double vm = 0.;
     for (int i = 0; i < nb_noeuds; ++i) {
-        vm += matW_1K.at(i).at(i);
+        vm += matW_1K[i][i];
     }
 
    // for (int i = 0; i < nb_noeuds; ++i)
@@ -3148,7 +3090,10 @@ long double MCMCLoopCurve::h_VG(const QList<Event *> lEvents)
         shrink_VG = S02 / pow(S02 + (long double)lEvents.at(0)->mVG.mX, 2.l);
     }
 
-    
+    if (shrink_VG < std::numeric_limits<long double>::epsilon()) {
+        qDebug() <<"in MCMCLoopCurve::h_VG shrinl_VG < epsilon()"<< (double) shrink_VG; // à voir avec PhL
+        //shrink_VG = std::numeric_limits<long double>::epsilon();
+    }
     return shrink_VG;
 }
 
@@ -3630,7 +3575,7 @@ std::vector<long double> MCMCLoopCurve::getYEventVector(const QList<Event*>& lEv
 #pragma mark Calcul Spline
 
 // dans RenCurve procedure Calcul_Mat_Q_Qt_R ligne 66; doit donner une matrice symetrique; sinon erreur dans cholesky
-std::vector<std::vector<long double>> MCMCLoopCurve::calculMatR(std::vector<long double>& vecH)
+Matrix2D MCMCLoopCurve::calculMatR(std::vector<long double>& vecH)
 {
     // Calcul de la matrice R, de dimension (n-2) x (n-2) contenue dans une matrice n x n
     // Par exemple pour n = 5 :
@@ -3644,7 +3589,7 @@ std::vector<std::vector<long double>> MCMCLoopCurve::calculMatR(std::vector<long
     const int n = vecH.size()+1;
     
     // matR est de dimension n-2 x n-2, mais contenue dans une matrice nxn
-    std::vector<std::vector<long double>> matR = initLongMatrix(n, n);
+    Matrix2D matR = initLongMatrix(n, n);
     // On parcourt n-2 valeurs :
     for (int i = 1; i < n-1; ++i) {
         matR[i][i] = (vecH.at(i-1) + vecH.at(i)) / 3.;
@@ -3675,7 +3620,7 @@ std::vector<std::vector<long double>> MCMCLoopCurve::calculMatR(std::vector<long
 }
 
 // dans RenCurve procedure Calcul_Mat_Q_Qt_R ligne 55
-std::vector<std::vector<long double>> MCMCLoopCurve::calculMatQ(std::vector<long double>& vecH)
+Matrix2D MCMCLoopCurve::calculMatQ(std::vector<long double>& vecH)
 {
     // Calcul de la matrice Q, de dimension n x (n-2) contenue dans une matrice n x n
     // Les 1ère et dernière colonnes sont nulles
@@ -3690,7 +3635,7 @@ std::vector<std::vector<long double>> MCMCLoopCurve::calculMatQ(std::vector<long
     const unsigned n = vecH.size()+1;
     
     // matQ est de dimension n x n-2, mais contenue dans une matrice nxn
-    std::vector<std::vector<long double>> matQ = initLongMatrix(n, n);
+   Matrix2D matQ = initLongMatrix(n, n);
     // On parcourt n-2 valeurs :
     for (unsigned i = 1; i < n-1; ++i) {
         matQ[i-1][i] = 1. / vecH.at(i-1);
@@ -3766,21 +3711,21 @@ std::vector<long double> MCMCLoopCurve::createDiagWInv(const QList<Event*>& lEve
  */
 SplineMatrices MCMCLoopCurve::prepareCalculSpline(const QList<Event *>& sortedEvents, std::vector<long double>& vecH)
 {
-    std::vector<std::vector<long double>> matR = calculMatR(vecH);
-    std::vector<std::vector<long double>> matQ = calculMatQ(vecH);
+    Matrix2D matR = calculMatR(vecH);
+    Matrix2D matQ = calculMatQ(vecH);
     
     // Calcul de la transposée QT de la matrice Q, de dimension (n-2) x n
-    std::vector<std::vector<long double>> matQT = transpose(matQ, 3);
+    Matrix2D matQT = transpose(matQ, 3);
 
     // Calcul de la matrice matQTW_1Q, de dimension (n-2) x (n-2) pour calcul Mat_B
     // matQTW_1Q possèdera 3+3-1=5 bandes
     std::vector<long double> diagWInv = createDiagWInv(sortedEvents);
-    std::vector<std::vector<long double>> tmp = multiMatParDiag(matQT, diagWInv, 3);
-    std::vector<std::vector<long double>> matQTW_1Q = multiMatParMat(tmp, matQ, 3, 3);
+    Matrix2D tmp = multiMatParDiag(matQT, diagWInv, 3);
+    Matrix2D matQTW_1Q = multiMatParMat(tmp, matQ, 3, 3);
 
     // Calcul de la matrice QTQ, de dimension (n-2) x (n-2) pour calcul Mat_B
     // Mat_QTQ possèdera 3+3-1=5 bandes
-    std::vector<std::vector<long double>> matQTQ = multiMatParMat(matQT, matQ, 3, 3);
+    Matrix2D matQTQ = multiMatParMat(matQT, matQ, 3, 3);
 
     SplineMatrices matrices;
     matrices.diagWInv = std::move(diagWInv);
@@ -3811,17 +3756,17 @@ SplineMatrices MCMCLoopCurve::prepareCalculSpline(const QList<Event *>& sortedEv
 SplineResults MCMCLoopCurve::calculSpline(const SplineMatrices& matrices, const std::vector<long double>& vecY, const double lambdaSpline, const std::vector<long double>& vecH)
 {
     SplineResults spline;
-    const std::vector<std::vector<long double>>& matR = matrices.matR;
-    const std::vector<std::vector<long double>>& matQ = matrices.matQ;
-    const std::vector<std::vector<long double>>& matQTW_1Q = matrices.matQTW_1Q;
+    const Matrix2D& matR = matrices.matR;
+    const Matrix2D& matQ = matrices.matQ;
+    const Matrix2D& matQTW_1Q = matrices.matQTW_1Q;
 
     try {
         // calcul de: R + lambda * Qt * W-1 * Q = Mat_B
         // Mat_B : matrice carrée (n-2) x (n-2) de bande 5 qui change avec alpha et Diag_W_1
-        std::vector<std::vector<long double>> matB;
+        Matrix2D matB;
 
         if (lambdaSpline != 0) {
-            std::vector<std::vector<long double>> tmp = multiConstParMat(matQTW_1Q, lambdaSpline, 5);
+            Matrix2D tmp = multiConstParMat(matQTW_1Q, lambdaSpline, 5);
             matB = addMatEtMat(matR, tmp, 5);
 
         } else {
@@ -3830,8 +3775,8 @@ SplineResults MCMCLoopCurve::calculSpline(const SplineMatrices& matrices, const 
 
         // Decomposition_Cholesky de matB en matL et matD
         // Si lambda global: calcul de Mat_B = R + lambda * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
-        std::pair<std::vector<std::vector<long double>>, std::vector<long double>> decomp = decompositionCholesky(matB, 5, 1);
-        std::vector<std::vector<long double>> matL = decomp.first;
+        std::pair<Matrix2D, std::vector<long double>> decomp = decompositionCholesky(matB, 5, 1);
+        Matrix2D matL = decomp.first;
         std::vector<long double> matD = decomp.second;
 
         // Calcul des vecteurs G et Gamma en fonction de Y
@@ -3889,7 +3834,7 @@ SplineResults MCMCLoopCurve::calculSpline(const SplineMatrices& matrices, const 
 /*
  * MatB doit rester en copie
  */
-SplineResults MCMCLoopCurve::calculSplineX(const SplineMatrices& matrices, const std::vector<long double>& vecH, std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const std::vector<std::vector<long double>> matB, const double lambdaSpline)
+SplineResults MCMCLoopCurve::calculSplineX(const SplineMatrices& matrices, const std::vector<long double>& vecH, std::pair<Matrix2D, std::vector<long double> > &decomp, const Matrix2D matB, const double lambdaSpline)
 {
    //
    // const std::vector<std::vector<double>>& matR = matrices.matR;
@@ -3914,7 +3859,7 @@ SplineResults MCMCLoopCurve::calculSplineX(const SplineMatrices& matrices, const
       */
 
 
-        const std::vector<std::vector<long double>> matL = decomp.first; // we must keep a copy
+        const Matrix2D matL = decomp.first; // we must keep a copy
         const std::vector<long double> matD = decomp.second; // we must keep a copy
 
         // Calcul des vecteurs G et Gamma en fonction de Y
@@ -3976,13 +3921,13 @@ SplineResults MCMCLoopCurve::calculSplineX(const SplineMatrices& matrices, const
 /*
  * MatB doit rester en copie
  */
-SplineResults MCMCLoopCurve::calculSplineY(const SplineMatrices& matrices, const  std::vector<long double>& vecH, std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const  std::vector<std::vector<long double>> matB, const double lambdaSpline)
+SplineResults MCMCLoopCurve::calculSplineY(const SplineMatrices& matrices, const  std::vector<long double>& vecH, std::pair<Matrix2D, std::vector<long double> > &decomp, const Matrix2D matB, const double lambdaSpline)
 {
 
     SplineResults spline;
     try {
 
-        const std::vector<std::vector<long double>> matL = decomp.first;
+        const Matrix2D matL = decomp.first;
         const std::vector<long double> matD = decomp.second;
 
         // Calcul des vecteurs G et Gamma en fonction de Y
@@ -4044,12 +3989,12 @@ SplineResults MCMCLoopCurve::calculSplineY(const SplineMatrices& matrices, const
 /*
  * MatB doit rester en copie
  */
-SplineResults MCMCLoopCurve::calculSplineZ(const SplineMatrices& matrices, const std::vector<long double>& vecH, std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const std::vector<std::vector<long double>> matB, const double lambdaSpline)
+SplineResults MCMCLoopCurve::calculSplineZ(const SplineMatrices& matrices, const std::vector<long double>& vecH, std::pair<Matrix2D, std::vector<long double> > &decomp, const Matrix2D matB, const double lambdaSpline)
 {
     SplineResults spline;
     try {
 
-        const std::vector<std::vector<long double>> matL = decomp.first; // we must keep a copy
+        const Matrix2D matL = decomp.first; // we must keep a copy
         const std::vector<long double> matD = decomp.second; // we must keep a copy
 
         // Calcul des vecteurs G et Gamma en fonction de Y
@@ -4255,7 +4200,7 @@ std::vector<long double> MCMCLoopCurve::calculMatInfluence_origin(const SplineMa
 
       //  const std::vector<std::vector<long double>>& matL = decomp.first; // we must keep a copy ?
        // const std::vector<long double>& matD = decomp.second; // we must keep a copy ?
-        std::vector<std::vector<long double>> matB_1;
+        Matrix2D matB_1;
         if (splines.matD.size() > 3) {
              matB_1 = inverseMatSym_origin(splines.matL, splines.matD, nbBandes + 4, 1);
 
@@ -4265,27 +4210,27 @@ std::vector<long double> MCMCLoopCurve::calculMatInfluence_origin(const SplineMa
         }
         std::vector<long double> matQB_1QT = initLongVector(n);
 
-        auto matQi = matrices.matQ.at(0);
-        long double term = pow(matQi.at(0), 2) * matB_1.at(0).at(0);
-        term += pow(matQi.at(1), 2) * matB_1.at(1).at(1);
-        term += 2 * matQi.at(0) * matQi.at(1) * matB_1.at(0).at(1);
+        auto matQi = matrices.matQ[0];
+        long double term = pow(matQi[0], 2) * matB_1[0][0];
+        term += pow(matQi[1], 2) * matB_1[1][1];
+        term += 2 * matQi[0] * matQi[1] * matB_1[0][1];
         matQB_1QT[0] = term;
 
         for (size_t i = 1; i < n-1; ++i) {
-            matQi = matrices.matQ.at(i);
-            term = pow(matQi.at(i-1), 2.) * matB_1.at(i-1).at(i-1);
-            term += pow(matQi.at(i), 2.) * matB_1.at(i).at(i);
-            term += pow(matQi.at(i+1), 2.) * matB_1.at(i+1).at(i+1);
-            term += 2 * matQi.at(i-1) * matQi.at(i) * matB_1.at(i-1).at(i);
-            term += 2 * matQi.at(i-1) * matQi.at(i+1) * matB_1.at(i-1).at(i+1);
-            term += 2 * matQi.at(i) * matQi.at(i+1) * matB_1.at(i).at(i+1);
+            matQi = matrices.matQ[i];
+            term = pow(matQi[i-1], 2.) * matB_1[i-1][i-1];
+            term += pow(matQi[i], 2.) * matB_1[i][i];
+            term += pow(matQi[i+1], 2.) * matB_1[i+1][i+1];
+            term += 2 * matQi[i-1] * matQi[i] * matB_1[i-1][i];
+            term += 2 * matQi[i-1] * matQi[i+1] * matB_1[i-1][i+1];
+            term += 2 * matQi[i] * matQi[i+1] * matB_1[i][i+1];
             matQB_1QT[i] = term;
         }
 
-        matQi = matrices.matQ.at(n-1);
-        term = pow(matQi.at(n-2), 2.) * matB_1.at(n-2).at(n-2);
-        term += pow(matQi.at(n-1), 2.) * matB_1.at(n-1).at(n-1);
-        term += 2 * matQi.at(n-2) * matQi.at(n-1) * matB_1.at(n-2).at(n-1);
+        matQi = matrices.matQ[n-1];
+        term = pow(matQi[n-2], 2.) * matB_1[n-2][n-2];
+        term += pow(matQi[n-1], 2.) * matB_1[n-1][n-1];
+        term += 2 * matQi[n-2] * matQi[n-1] * matB_1[n-2][n-1];
         matQB_1QT[n-1] = term;
 
         // Multi_diag_par_Mat(Diag_W_1c,Mat_QB_1QT,Nb_noeudsc,1,tmp1);
@@ -4426,10 +4371,10 @@ MCMCSpline MCMCLoopCurve::currentSpline ( QList<Event *> &lEvents, bool doSortAn
     // calculSpline utilise les Y des events
     // => On le calcule ici pour la première composante (x)
 
-    std::vector<std::vector<long double>> matB; //matR;
+    Matrix2D matB; //matR;
     const double lambda = mModel->mLambdaSpline.mX;
     if (lambda != 0) {
-        std::vector<std::vector<long double>> tmp = multiConstParMat(matrices.matQTW_1Q, lambda, 5);
+        Matrix2D tmp = multiConstParMat(matrices.matQTW_1Q, lambda, 5);
         matB = addMatEtMat(matrices.matR, tmp, 5);
 
     } else {
@@ -4438,7 +4383,7 @@ MCMCSpline MCMCLoopCurve::currentSpline ( QList<Event *> &lEvents, bool doSortAn
 
     // Decomposition_Cholesky de matB en matL et matD
     // Si alpha global: calcul de Mat_B = R + alpha * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
-    std::pair<std::vector<std::vector<long double>>, std::vector<long double>> decomp = decompositionCholesky(matB, 5, 1);
+    std::pair<Matrix2D, std::vector<long double>> decomp = decompositionCholesky(matB, 5, 1);
 
 
     // le calcul de l'erreur est influencé par VG qui induit 1/mW, utilisé pour fabriquer matrices->DiagWinv et calculer matrices->matQTW_1Q
@@ -4505,6 +4450,8 @@ MCMCSpline MCMCLoopCurve::currentSpline ( QList<Event *> &lEvents, bool doSortAn
     return spline;
 }
 
+// obsolete
+/*
 std::vector<unsigned>  MCMCLoopCurve::listOfIterationsWithPositiveGPrime (const std::vector<MCMCSplineComposante>& splineTrace)
 {
     size_t nbIter = splineTrace.size();
@@ -4520,7 +4467,10 @@ std::vector<unsigned>  MCMCLoopCurve::listOfIterationsWithPositiveGPrime (const 
 
     return resultList;
 }
+*/
 
+// obsolete
+/*
 bool  MCMCLoopCurve::hasPositiveGPrime (const MCMCSplineComposante& splineComposante)
 {
 
@@ -4549,7 +4499,7 @@ bool  MCMCLoopCurve::hasPositiveGPrime (const MCMCSplineComposante& splineCompos
 
     return accepted;
 }
-
+*/
 
 bool  MCMCLoopCurve::hasPositiveGPrimeByDet (const MCMCSplineComposante& splineComposante)
 {

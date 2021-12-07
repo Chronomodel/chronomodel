@@ -5,12 +5,15 @@
 #include <cmath>
 #include <QDataStream>
 #include <QtDebug>
+#include <valarray>
+
+
 
 class CurveMap
 {
 public:
     quint64 _row, _column;
-    std::vector<double> data;
+    std::valarray<double> data;
     std::pair<double, double> rangeY;
     std::pair<double, double> rangeX;
 
@@ -25,16 +28,16 @@ public:
 
     double& at(quint64 i, quint64 j) {
         try {
-            return data.at(_row*i + j);
+            return data[_row*i + j];
         }  catch (...) {
             qDebug() <<"CurveMap over ???"<<i << j;
-            return data.at(0);
+            return data[0];
         }
 
     }
     double& operator()(quint64 i, quint64 j) { return data[_row*i + j];} //Set
-    const double& operator()(quint64 i, quint64 j)  const { return data.at(_row*i + j);} //Get
-    std::vector<double>::iterator ptr_at(quint64 i, quint64 j) {return data.begin() + (_row*i + j);}
+    const double& operator()(quint64 i, quint64 j)  const { return data[_row*i + j];} //Get
+    double* ptr_at(quint64 i, quint64 j) {return (begin(data) + (_row*i + j));}
 
     quint64 row(){return _row;}
     quint64 column(){return _column;}
@@ -47,6 +50,8 @@ public:
     virtual ~CurveMap();
 
 };
+
+typedef std::valarray<std::valarray<long double>> Matrix2D;
 
 QDataStream &operator<<( QDataStream& stream, const CurveMap &map );
 QDataStream &operator>>( QDataStream& stream, CurveMap &map );

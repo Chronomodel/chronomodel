@@ -83,6 +83,29 @@ protected:
     }
 };
 
+class OverLine : public QWidget {
+public:
+    OverLine(QWidget * parent = nullptr) : QWidget{parent} {
+       setAttribute(Qt::WA_TransparentForMouseEvents);
+     //   setWindowFlags(Qt::Widget | Qt::FramelessWindowHint | Qt::ToolTip | Qt::WindowStaysOnTopHint);
+       setAttribute(Qt::WA_NoSystemBackground, true);
+       setAttribute(Qt::WA_TranslucentBackground, true);
+    }
+
+protected:
+
+    void paintEvent(QPaintEvent *) override {
+        const QColor color (49, 112, 176, 40);
+        QFont font (QFont().family(), 30, QFont::Medium, false);
+
+        QPainter p (this);
+        p.setFont(font);
+        p.fillRect(rect(), color);
+        p.setPen(color.darker());
+        p.drawText(rect(), Qt::AlignCenter | Qt::TextWordWrap, QObject::tr("Selected"));
+        p.end();
+    }
+};
 
 class GraphViewResults: public QWidget
 {

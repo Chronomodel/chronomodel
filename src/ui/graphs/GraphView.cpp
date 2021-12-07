@@ -53,11 +53,7 @@ class ProjectSettings;
 
 // Constructor / Destructor
 
-#if GRAPH_OPENGL
-GraphView::GraphView(QWidget *parent):QOpenGLWidget(parent),
-#else
 GraphView::GraphView(QWidget *parent):QWidget(parent),
-#endif
 mStepMinWidth(3), // define when the minor scale on axis can appear
 mXAxisLine(true),
 mXAxisArrow(true),
@@ -244,6 +240,8 @@ void GraphView::adjustYScale()
             if (curve.mVisible && curve.mIsVertical) { // used for the measurement in the calibration process
                 yMax = qMax(yMax, curve.mData.lastKey());
                 yMin = qMin(yMin, curve.mData.firstKey());
+
+
             }
 
             if (curve.mVisible && !curve.mIsVertical && !curve.mIsHorizontalLine  && !curve.mIsVerticalLine && !curve.mIsHorizontalSections) {
@@ -258,6 +256,11 @@ void GraphView::adjustYScale()
                     QMap<qreal, qreal> subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
                     yMax = qMax(yMax, map_max_value(subData));
                     yMin = qMin(yMin, map_min_value(subData));
+                }
+                // map
+                if (curve.mMap.data.size() > 0) {
+                    yMax = qMax(yMax, curve.mMap.rangeY.second);
+                    yMin = qMin(yMin, curve.mMap.rangeY.first);
                 }
              }
         }
@@ -679,6 +682,7 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
 
     update(mTipRect.adjusted(-20, -20, 20, 20).toRect());
 
+
     // forward to parent to move a marker for example
     e->ignore();
 }
@@ -693,20 +697,9 @@ void GraphView::setTipYLab(const QString& lab)
     mTipYLab = lab =="" ? "":  lab + " = ";
 }
 
-#if GRAPH_OPENGL
-void GraphView::initializeGL()
-{
-    //QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
-    //f->glEnable(GL_MULTISAMPLE_ARB);
-}
-void GraphView::resizeGL(int w, int h)
-{
-    repaintGraph(true);
-}
-#else
 void GraphView::resizeEvent(QResizeEvent* event)
 {
-    Q_UNUSED(event);
+    (void)event;
 
     if (!mBufferBack.isNull()) {
         const qreal sx = qreal(rect().width()) / qreal (mBufferBack.rect().width());
@@ -718,10 +711,7 @@ void GraphView::resizeEvent(QResizeEvent* event)
             paintToDevice(&mBufferBack);
 
         } else {
-//            QTransform mx;
-//            mx.scale(sx, sy);
-
-            mBufferBack = mBufferBack.transformed(QTransform::fromScale(sx, sy), Qt::SmoothTransformation);
+         mBufferBack = mBufferBack.transformed(QTransform::fromScale(sx, sy), Qt::SmoothTransformation);
         }
 
     }
@@ -733,7 +723,6 @@ void GraphView::resizeEvent(QResizeEvent* event)
 
     repaintGraph(true);
 }
-#endif
 
 void GraphView::updateGraphSize(int w, int h)
 {

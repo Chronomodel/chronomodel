@@ -750,12 +750,12 @@ void CalibrationView::updateLayout()
     xShift += mDisplayStudyBut->width() + marginBottomBar;
     mMajorScaleLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
     mMajorScaleEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
-    mMajorScaleEdit->setText(locale().toString(mMajorScale));
+   // mMajorScaleEdit->setText(locale().toString(mMajorScale));
 
     xShift += mMajorScaleLab->width() + marginBottomBar;
     mMinorScaleLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
     mMinorScaleEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
-    mMinorScaleEdit->setText(locale().toString(mMinorScale));
+  //  mMinorScaleEdit->setText(locale().toString(mMinorScale));
 
     xShift += mMinorScaleLab->width() + marginBottomBar;
     mHPDLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);

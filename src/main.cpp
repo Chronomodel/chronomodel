@@ -38,21 +38,19 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "ChronoApp.h"
-#include <QtWidgets>
 #include "MainController.h"
 #include "StdUtilities.h"
-
+#include "CurveUtilities.h"
 #include "fftw3.h"
 
+#include <QtWidgets>
 #include <iostream>
 #include <cmath>
 #include <errno.h>
 #include <fenv.h>
 #include <stdlib.h>
 
-#include "CurveUtilities.h"
 #include <vector>
-
 
 // STDC FENV_ACCESS ON // not supported with Clang
 
@@ -91,8 +89,6 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
 int main(int argc, char *argv[])
 {
 
-    
-    
 #ifdef Q_OS_MAC
     if (math_errhandling & MATH_ERREXCEPT) {
         std::cout << "cmath raises exceptions" << std::endl;
@@ -103,24 +99,11 @@ int main(int argc, char *argv[])
 
 #endif
 
-    // --------------------------------------
-    //  OpenGL specific settings
-    // --------------------------------------
-    /*
-     * QSurfaceFormat format;
-    format.setRenderableType(QSurfaceFormat::OpenGL);
-    format.setProfile(QSurfaceFormat::CoreProfile);
-    format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
-    format.setSamples(4);
-    QSurfaceFormat::setDefaultFormat(format);
-    */
-    // --------------------------------------
-
     ChronoApp a(argc, argv);
 
     a.setApplicationName("ChronoModel");
     a.setApplicationDisplayName("ChronoModel");
-    a.setApplicationVersion("3.1.5");//VERSION_NUMBER);//"2.0.9-alpha");  // must match value in Chronomodel.pro
+    a.setApplicationVersion("3.1.5");//VERSION_NUMBER);  // must match value in Chronomodel.pro
     a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));

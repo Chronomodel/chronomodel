@@ -187,7 +187,8 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
 
         GraphCurve curveMap;
         curveMap.mName = tr("Map");
-        curveMap.mPen = QPen(QColor(119, 95, 49), 1, Qt::SolidLine);
+        //curveMap.mPen = QPen(QColor(119, 95, 49), 1, Qt::SolidLine);
+        curveMap.mPen = QPen(Qt::black, 1, Qt::SolidLine);
         curveMap.mBrush = Qt::NoBrush;
         curveMap.mIsHisto = false;
         curveMap.mIsRectFromZero = false;
@@ -201,12 +202,17 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         } else {
             curveMap.mMap.setRangeX(tmaxFormated, tminFormated);
             // we must reflect the map
-            CurveMap displayMap (0, 0);
+           // CurveMap displayMap (0, 0);
+            CurveMap displayMap (curveMap.mMap._row, curveMap.mMap._column);
 
             int c  = curveMap.mMap._column-1;
+           // displayMap.data = std::valarray<double>(curveMap.mMap._row * curveMap.mMap._column);
+            int i = 0 ;
             while ( c >= 0) {
-                for (quint64 r = 0; r < curveMap.mMap._row ; r++)
-                    displayMap.data.push_back(mComposanteG.mapG.at(c, r));
+                for (quint64 r = 0; r < curveMap.mMap._row ; r++) {
+                    displayMap.data[i++] = mComposanteG.mapG.at(c, r);
+                    //displayMap.data.push_back(mComposanteG.mapG.at(c, r));
+                }
                 c--;
             }
 
@@ -240,12 +246,16 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             } else {
                 curveMapChain.mMap.setRangeX(tmaxFormated, tminFormated);
                 // we must reflect the map
-                CurveMap displayMap (0, 0);
+                // CurveMap displayMap (0, 0);
+                CurveMap displayMap (curveMap.mMap._row, curveMap.mMap._column);
 
                 int c  = curveMap.mMap._column-1;
+                int i = 0;
                 while ( c >= 0) {
-                    for (quint64 r = 0; r < curveMap.mMap._row ; r++)
-                        displayMap.data.push_back(mComposanteGChains[i].mapG.at(c, r));
+                    for (quint64 r = 0; r < curveMap.mMap._row ; r++) {
+                         displayMap.data[i++] = mComposanteG.mapG.at(c, r);
+                       // displayMap.data.push_back(mComposanteGChains[i].mapG.at(c, r));
+                    }
                     c--;
                 }
                 curveMapChain.mMap.data = std::move(displayMap.data);

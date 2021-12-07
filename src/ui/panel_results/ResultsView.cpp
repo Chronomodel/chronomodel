@@ -656,7 +656,7 @@ mMaximunNumberOfVisibleGraph(0)
     DoubleValidator* percentValidator = new DoubleValidator();
     percentValidator->setBottom(0.0);
     percentValidator->setTop(100.0);
-    percentValidator->setDecimals(1);
+    //percentValidator->setDecimals(1);
     mThresholdEdit->setValidator(percentValidator);
     mThresholdEdit->setFixedHeight(16);
 
@@ -1031,6 +1031,7 @@ void ResultsView::updateMarkerGeometry(const int x)
 {
     const int markerXPos = inRange(0, x, mRuler->x() + mRuler->width());
     mMarker->setGeometry(markerXPos, mGraphTypeTabs->height() + mMargin, mMarker->thickness(), height() - mGraphTypeTabs->height() - mMargin);
+    update(markerXPos -5, mGraphTypeTabs->height() + mMargin, 10, mGraphTypeTabs->height() + mMargin);
 }
 
 void ResultsView::updateLayout()
@@ -1447,27 +1448,28 @@ void ResultsView::toggleDisplayDistrib()
 
 void ResultsView::createChainsControls()
 {
-    if (mModel->mChains.size() != mChainChecks.size())
+    if (mModel->mChains.size() != mChainChecks.size()) {
         deleteChainsControls();
 
-    for (int i=0; i<mModel->mChains.size(); ++i) {
-        CheckBox* check = new CheckBox(tr("Chain %1").arg(QString::number(i+1)), mChainsGroup);
-        check->setFixedHeight(16);
-        check->setVisible(true);
-        mChainChecks.append(check);
+        for (int i=0; i<mModel->mChains.size(); ++i) {
+            CheckBox* check = new CheckBox(tr("Chain %1").arg(QString::number(i+1)), mChainsGroup);
+            check->setFixedHeight(16);
+            check->setVisible(true);
+            mChainChecks.append(check);
 
-        connect(check, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+            connect(check, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
 
-        RadioButton* radio = new RadioButton(tr("Chain %1").arg(QString::number(i+1)), mChainsGroup);
-        radio->setFixedHeight(16);
-        radio->setChecked(i == 0);
-        radio->setVisible(true);
-        mChainRadios.append(radio);
+            RadioButton* radio = new RadioButton(tr("Chain %1").arg(QString::number(i+1)), mChainsGroup);
+            radio->setFixedHeight(16);
+            radio->setChecked(i == 0);
+            radio->setVisible(true);
+            mChainRadios.append(radio);
 
-        connect(radio, &RadioButton::clicked, this, &ResultsView::updateCurvesToShow);
+            connect(radio, &RadioButton::clicked, this, &ResultsView::updateCurvesToShow);
 
-        mChainsGroup->layout()->addWidget(check);
-        mChainsGroup->layout()->addWidget(radio);
+            mChainsGroup->layout()->addWidget(check);
+            mChainsGroup->layout()->addWidget(radio);
+        }
     }
 }
 

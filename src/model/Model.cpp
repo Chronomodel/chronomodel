@@ -2689,11 +2689,14 @@ void Model:: generateActivity(size_t gridLength, double h)
 
             continue;
         }
+
+
 #ifdef DEBUG
         if (tmax > mSettings.mTmax) {
             qWarning("Model::generateActivity() tmax>mSettings.mTmax force tmax = mSettings.mTmax");
             tmax = mSettings.mTmax;
         }
+
 #endif
 
         /// \f$ \delta_t = (t_max - t_min + 2*h)/(gridLenth-1) \f$

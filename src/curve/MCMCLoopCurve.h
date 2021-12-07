@@ -121,23 +121,23 @@ private:
     std::vector<long double> getYEventVector(const QList<Event *>& lEvents);
     
 
-    std::vector<std::vector<long double>> calculMatR(std::vector<long double>& vecH);
-    std::vector<std::vector<long double>> calculMatQ(std::vector<long double>& vecH);
+    Matrix2D calculMatR(std::vector<long double>& vecH);
+    Matrix2D calculMatQ(std::vector<long double>& vecH);
 
     MCMCSpline currentSpline (QList<Event *> &lEvents, bool doSortAndSpreadTheta = false, std::vector<long double> vecH = std::vector<long double>(), SplineMatrices matrices = SplineMatrices());
 
     SplineMatrices prepareCalculSpline(const QList<Event *> & sortedEvents, std::vector<long double> &vecH);
 
     SplineResults calculSpline(const SplineMatrices &matrices, const std::vector<long double> &vecY, const double lambdaSpline, const std::vector<long double> &vecH);
-    SplineResults calculSplineX(const SplineMatrices &matrices, const std::vector<long double> &vecH, std::pair<std::vector<std::vector<long double> >, std::vector<long double> >& decomp, const std::vector<std::vector<long double> > matB, const double lambdaSpline);
-    SplineResults calculSplineY(const SplineMatrices &matrices, const std::vector<long double> &vecH, std::pair<std::vector<std::vector<long double> >, std::vector<long double> >& decomp, const std::vector<std::vector<long double> > matB, const double lambdaSpline);
-    SplineResults calculSplineZ(const SplineMatrices &matrices, const std::vector<long double> &vecH, std::pair<std::vector<std::vector<long double> >, std::vector<long double> >& decomp, const std::vector<std::vector<long double> > matB, const double lambdaSpline);
+    SplineResults calculSplineX(const SplineMatrices &matrices, const std::vector<long double> &vecH, std::pair<Matrix2D, std::vector<long double> > &decomp, const Matrix2D matB, const double lambdaSpline);
+    SplineResults calculSplineY(const SplineMatrices &matrices, const std::vector<long double> &vecH, std::pair<Matrix2D, std::vector<long double> >& decomp, const Matrix2D matB, const double lambdaSpline);
+    SplineResults calculSplineZ(const SplineMatrices &matrices, const std::vector<long double> &vecH, std::pair<Matrix2D, std::vector<long double> >& decomp, const Matrix2D matB, const double lambdaSpline);
 
    // std::vector<long double> calculMatInfluence(const SplineMatrices& matrices, const std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const int nbBandes, const double lambdaSpline);
    // std::vector<long double> calculMatInfluence0(const SplineMatrices& matrices, const std::vector<std::vector<long double>> &matB , const int nbBandes, const double lambdaSpline);
 
   //  std::vector<long double> calculSplineError(const SplineMatrices& matrices, const  std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const double lambdaSpline);
-    std::vector<long double> calculSplineError0(const SplineMatrices& matrices, const std::vector<std::vector<long double> > &matB, const double lambdaSpline);
+    std::vector<long double> calculSplineError0(const SplineMatrices& matrices, const Matrix2D &matB, const double lambdaSpline);
 
     std::vector<long double> calculMatInfluence_origin(const SplineMatrices& matrices, const SplineResults &splines , const int nbBandes, const double lambdaSpline);
     std::vector<long double> calculSplineError_origin(const SplineMatrices& matrices, const SplineResults& splines, const double lambdaSpline);
@@ -164,10 +164,13 @@ private:
     PosteriorMeanGComposante computePosteriorMeanGComposante_chain_allchain(const std::vector<MCMCSplineComposante>& trace, PosteriorMeanGComposante& meanGAllChain, int prevChainSize);// Obsolete
 
     CurveMap compute_posterior_map_G_composante(const std::vector<MCMCSplineComposante>& trace, const long double ymin, const long double ymax, const unsigned gridLength);
+    // Obsolete
+    //bool  hasPositiveGPrime (const MCMCSplineComposante& splineComposante);
 
-    bool  hasPositiveGPrime (const MCMCSplineComposante& splineComposante);
     bool  hasPositiveGPrimeByDet (const MCMCSplineComposante& splineComposante);
-    std::vector<unsigned> listOfIterationsWithPositiveGPrime (const std::vector<MCMCSplineComposante> &splineTrace);
+
+    // Obsolete
+    //std::vector<unsigned> listOfIterationsWithPositiveGPrime (const std::vector<MCMCSplineComposante> &splineTrace);
 
 
 public:

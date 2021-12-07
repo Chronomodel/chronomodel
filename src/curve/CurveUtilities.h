@@ -47,20 +47,21 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QDataStream>
 
 
+
 typedef struct SplineMatrices
 {
     std::vector<long double> diagWInv;
-    std::vector<std::vector<long double>> matR;
-    std::vector<std::vector<long double>> matQ;
-    std::vector<std::vector<long double>> matQT;
-    std::vector<std::vector<long double>> matQTW_1Q;
-    std::vector<std::vector<long double>> matQTQ;
+    Matrix2D matR;
+    Matrix2D matQ;
+    Matrix2D matQT;
+    Matrix2D matQTW_1Q;
+    Matrix2D matQTQ;
 } SplineMatrices;
 
 typedef struct SplineResults
 {
-    std::vector<std::vector<long double>> matB;
-    std::vector<std::vector<long double>> matL;
+    Matrix2D matB;
+    Matrix2D matL;
     std::vector<long double> matD;
     
     std::vector<long double> vecG;
