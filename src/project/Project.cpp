@@ -104,27 +104,27 @@ mNoResults(true)
     mModel = new Model();
     mModel->setProject(this);
 
-    mReasonChangeStructure<< PROJECT_LOADED_REASON << PROJECT_SETTINGS_UPDATED_REASON << INSERT_PROJECT_REASON;
-    mReasonChangeStructure<<NEW_EVEN_BY_CSV_DRAG_REASON;
+    mReasonChangeStructure << PROJECT_LOADED_REASON << PROJECT_SETTINGS_UPDATED_REASON << INSERT_PROJECT_REASON;
+    mReasonChangeStructure << NEW_EVEN_BY_CSV_DRAG_REASON;
 
-    mReasonChangeStructure<<"Date created"<<DATE_MOVE_TO_EVENT_REASON<<"Date updated";
-    mReasonChangeStructure<<"Dates splitted"<< "Dates combined"<<"Update selected data method";
+    mReasonChangeStructure << "Date created" << DATE_MOVE_TO_EVENT_REASON << "Date updated";
+    mReasonChangeStructure << "Dates splitted" << "Dates combined" << "Update selected data method";
 
-    mReasonChangeStructure<<"Event constraint deleted"<<"Event constraint created"<<"Event(s) deleted";
-    mReasonChangeStructure<<"Event created"<<"Bound created"<<"Event method updated" ;
-    mReasonChangeStructure<<"Event(s) restored";
-    mReasonChangeStructure<<"Update selected event method";
+    mReasonChangeStructure << "Event constraint deleted" << "Event constraint created" << "Event(s) deleted";
+    mReasonChangeStructure << "Event created" << "Bound created" << "Event method updated" ;
+    mReasonChangeStructure << "Event(s) restored";
+    mReasonChangeStructure << "Update selected event method";
 
-    mReasonChangeStructure<<"Phase created"<<"Phase(s) deleted";
-    mReasonChangeStructure<<"Phase updated"<<"Phase constraint created"<<"Phase constraint updated"<<"Phase's events updated";
-    mReasonChangeStructure<<"Phase selected";
+    mReasonChangeStructure << "Phase created" << "Phase(s) deleted";
+    mReasonChangeStructure << "Phase updated" << "Phase constraint created" << "Phase constraint updated" << "Phase's events updated";
+    mReasonChangeStructure << "Phase selected";
 
-    mReasonChangeStructure<<"Curve Settings updated";
+    mReasonChangeStructure << "Curve Settings updated";
     mReasonChangeStructure.squeeze();
 
-    mReasonChangeDesign<<"Date name updates"<<"Date color updated";
-    mReasonChangeDesign<<"Event color updated"<<"Event name updated";
-    mReasonChangeDesign<<"Phase color updated"<<"Phase name updated";
+    mReasonChangeDesign << "Date name updates" << "Date color updated";
+    mReasonChangeDesign << "Event color updated" << "Event name updated";
+    mReasonChangeDesign << "Phase color updated" << "Phase name updated";
     mReasonChangeDesign.squeeze();
 
     mReasonChangePosition<<"item moved";
@@ -1765,17 +1765,30 @@ void Project::selectedEventsFromSelectedPhases()
     pushProjectState(stateNext, "Select events in selected phases", true);
 }
 
+void Project::selectedEventsWithString(const QString str)
+{
+    const QJsonArray events = mState.value(STATE_EVENTS).toArray();
+    QJsonArray newEvents = QJsonArray();
+    for (auto &e : events) {
+        QJsonObject evt = e.toObject();
+        evt[STATE_IS_SELECTED] = e.toObject().value(STATE_NAME).toString().contains(str);
+        newEvents.append(evt);
+     }
+    // create new state to push
+    QJsonObject stateNext = mState;
+    stateNext[STATE_EVENTS] = newEvents;
+    pushProjectState(stateNext, "Select events with string", true);
+}
 void Project::updateSelectedEventsColor(const QColor& color)
 {
-
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
-    for (int i = 0; i < events.size(); ++i) {
-        QJsonObject evt = events.at(i).toObject();
+    for (auto &&e : events) {
+        QJsonObject evt = e.toObject();
         if (evt.value(STATE_IS_SELECTED).toBool()) {
             evt[STATE_COLOR_RED] = color.red();
             evt[STATE_COLOR_GREEN] = color.green();
             evt[STATE_COLOR_BLUE] = color.blue();
-            events[i] = evt;
+            e = evt;
         }
     }
 

@@ -288,6 +288,8 @@ void MainWindow::createActions()
     mSelectEventsAction = new QAction(tr("Select All Events of the Selected Phases"), this);
     connect(mSelectEventsAction, &QAction::triggered, this, &MainWindow::selectedEventInSelectedPhases);
 
+    mSelectEventsNameAction = new QAction(tr("Select All Events with string"), this);
+    connect(mSelectEventsNameAction, &QAction::triggered, this, &MainWindow::selectedEventWithString);
     //-----------------------------------------------------------------
     // Help/About Menu
     //-----------------------------------------------------------------
@@ -386,6 +388,7 @@ void MainWindow::createMenus()
     // Grouped Actions Menu
     //-----------------------------------------------------------------
     mActionsMenu = menuBar()->addMenu(tr("Actions"));
+    mActionsMenu->addAction((mSelectEventsNameAction));
     mActionsMenu->addAction(mSelectEventsAction);
     mActionsMenu->addSeparator();
     mActionsMenu->addAction(mEventsColorAction);
@@ -822,6 +825,15 @@ void MainWindow::selectedEventInSelectedPhases() {
         mProject->selectedEventsFromSelectedPhases();
 }
 
+void MainWindow::selectedEventWithString() {
+    if (mProject) {
+        bool ok;
+        const QString text = QInputDialog::getText(this, tr("Find events containing the text"),
+                                              tr("Text to search"), QLineEdit::Normal, QString(), &ok);
+         if (ok && !text.isEmpty())
+             mProject->selectedEventsWithString(text);
+    }
+}
 
 void MainWindow::changeEventsColor()
 {
