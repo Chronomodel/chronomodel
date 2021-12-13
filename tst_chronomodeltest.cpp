@@ -29,6 +29,9 @@
 #include <errno.h>
 //#include <fenv.h>
 
+#include <time.h>       /* time_t, struct tm, difftime, time, mktime */
+#include <chrono>
+
 
 
 
@@ -69,6 +72,7 @@ private Q_SLOTS:
 
     // test calcul chronoCurve
     void calculMat();
+    void stat();
     void curveFunction();
 
 };
@@ -739,19 +743,63 @@ void ChronomodelTest::quartileForTrace()
 
 void ChronomodelTest::calculMat() {
 
-    std::vector<std::vector<long double>> matA (5);
+    Matrix2D mat3D (3);
+    mat3D [0] = {{ 1.,  2.,  3}}; //line num 0
+    mat3D [1] = {{ 4,  1, 5}};
+    mat3D [2] = {{6, 7, 1}};
+
+    qDebug() <<"1.1.a - test determinant() matrix = 84";
+    long double det = determinant(mat3D);
+    QVERIFY(det == 84);
+
+    qDebug() <<"1.1.b - test determinant_gauss() matrix = 84";
+    det = determinant_gauss(mat3D);
+    QVERIFY(det == 84);
+
+    Matrix2D matA (5);
+    matA [0] = {{ 1.,  4.,  5,  6,  7}}; //line num 0
+    matA [1] = {{ 8,  1, 10, 11, 12}};
+    matA [2] = {{13, 14, 1, 16, 17}};
+    matA [3] = {{18, 19, 20, 1, 22}};
+    matA [4] = {{23, 24, 25, 26, 1}};
+
+    qDebug() <<"1.2.a - test determinant() matrix = 1041744";
+    auto start = std::chrono::high_resolution_clock::now();
+
+    det = determinant(matA);
+    auto end = std::chrono::high_resolution_clock::now();
+    // Calculating total time taken by the program.
+    double time_taken =  std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+    qDebug() << "Time taken by program is : " << time_taken;
+
+    QVERIFY(det == 1041744.);
+
+    qDebug() <<"1.2.b - test determinant_gauss() matrix = 1041744";
+    start = std::chrono::high_resolution_clock::now();
+
+    det = determinant_gauss(matA);
+    end = std::chrono::high_resolution_clock::now();
+    time_taken =  std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+    qDebug() << "Time taken by program is : " << time_taken;
+    QVERIFY((double) det == (double) 1041744);
+
+
     matA [0] = {{ 3.,  4.,  5,  6,  7}}; //line num 0
     matA [1] = {{ 8,  9, 10, 11, 12}};
     matA [2] = {{13, 14, 15, 16, 17}};
     matA [3] = {{18, 19, 20, 21, 22}};
     matA [4] = {{23, 24, 25, 26, 27}};
 
-    qDebug() <<"1 - test determinant matrix = 0";
-    long double det = determinant(matA);
+    qDebug() <<"1.3.a - test determinant() matrix = 0";
 
+    det = determinant(matA);
     QVERIFY(det == 0);
 
-    std::vector<std::vector<long double>> matB (5);
+    qDebug() <<"1.3.b - test determinant_gauss() matrix = 0";
+    det = determinant_gauss(matA);
+    QVERIFY(det == 0);
+
+    Matrix2D matB (5);
     matB [0] = {{31, 32, 33, 34, 35}};
     matB [1] = {{36, 37, 38, 39, 40}};
     matB [2] = {{41, 42, 43, 44, 45}};
@@ -759,7 +807,7 @@ void ChronomodelTest::calculMat() {
     matB [4] = {{51, 52, 53, 54, 55}};
 
     qDebug() <<"2 - test multiplication matrix";
-    std::vector<std::vector<long double>> result = multiMatParMat0(matA, matB);
+    Matrix2D result = multiMatParMat0(matA, matB);
 
     QVERIFY(result[0][0] == 1075);  QVERIFY(result[0][1] == 1100); QVERIFY(result[0][2] == 1125); QVERIFY(result[0][3] == 1150); QVERIFY(result[0][4] == 1175);
     QVERIFY(result[1][0] == 2100);  QVERIFY(result[1][1] == 2150); QVERIFY(result[1][2] == 2200); QVERIFY(result[1][3] == 2250); QVERIFY(result[1][4] == 2300);
@@ -767,17 +815,17 @@ void ChronomodelTest::calculMat() {
     QVERIFY(result[3][0] == 4150);  QVERIFY(result[3][1] == 4250); QVERIFY(result[3][2] == 4350); QVERIFY(result[3][3] == 4450); QVERIFY(result[3][4] == 4550);
     QVERIFY(result[4][0] == 5175);  QVERIFY(result[4][1] == 5300); QVERIFY(result[4][2] == 5425); QVERIFY(result[4][3] == 5550); QVERIFY(result[4][4] == 5675);
 
-    std::vector<std::vector<long double>> matAs (2);
+    Matrix2D matAs (2);
     matAs [0] = {{ 1,  2}}; //col num 0
     matAs [1] = {{ 3,  4}};
 
-    std::vector<std::vector<long double>> matBs (2);
+    Matrix2D matBs (2);
     matBs [0] = {{ 5,  6}}; //col num 0
     matBs [1] = {{ 7,  8}};
 
     qDebug() <<"3 - test Strassen 1969 multiplication matrix";
     Strassen S;
-    std::vector<std::vector<long double>> resultStrassen = S.multiply(matAs, matBs);
+    Matrix2D resultStrassen = S.multiply(matAs, matBs);
     QVERIFY(resultStrassen[0][0] == 19);  QVERIFY(resultStrassen[0][1] == 22);
     QVERIFY(resultStrassen[1][0] == 43);  QVERIFY(resultStrassen[1][1] == 50);
 
@@ -817,7 +865,7 @@ void ChronomodelTest::calculMat() {
     QVERIFY(result[3][0] == 6); QVERIFY(result[3][1] == 11); QVERIFY(result[3][2] == 16); QVERIFY(result[3][3] == 21); QVERIFY(result[3][4] == 26);
     QVERIFY(result[4][0] == 7); QVERIFY(result[4][1] == 12); QVERIFY(result[4][2] == 17); QVERIFY(result[4][3] == 22); QVERIFY(result[4][4] == 27);
 
-    std::vector<std::vector<long double>> matC (5);
+    Matrix2D matC (5);
     matC [0] = {{ 3.,  4.,  5,  6,  0}};
     matC [1] = {{ 8,  9, 10, 0, 12}};
     matC [2] = {{13, 14, 0, 16, 17}};
@@ -848,7 +896,7 @@ void ChronomodelTest::calculMat() {
     QVERIFY(qFuzzyCompare(result[4][0] ,-0.1479991189358003));  QVERIFY(qFuzzyCompare(result[4][1] , 0.005907850124686318)); QVERIFY(qFuzzyCompare(result[4][2] , 0.01106443568624674));  QVERIFY(qFuzzyCompare(result[4][3] , 0.01404982732715015));  QVERIFY(qFuzzyCompare(result[4][4] , 0.01599682187556542));
 
 
-    std::vector<std::vector<long double>> matK2 (4); //Positive and Symetric matrix
+    Matrix2D matK2 (4); //Positive and Symetric matrix
     matK2 [0] = {{ 1., 1, 1, 1}};
     matK2 [1] = {{ 1,  5, 5, 5}};
     matK2 [2] = {{ 1,  5, 14, 14}};
@@ -862,7 +910,7 @@ void ChronomodelTest::calculMat() {
     QVERIFY(result[2][0] == 1); QVERIFY(result[2][1] == 2); QVERIFY(result[2][2] == 3); QVERIFY(result[2][3] == 0);
     QVERIFY(result[3][0] == 1); QVERIFY(result[3][1] == 2); QVERIFY(result[3][2] == 3); QVERIFY(result[3][3] == 1);
 
-    std::vector<std::vector<long double>> matK (5); //Positive and Symetric matrix
+    Matrix2D matK (5); //Positive and Symetric matrix
     matK [0] = {{ 3, 1, 1, 1, 1}};
     matK [1] = {{ 1, 6, 4, 4, 4}};
     matK [2] = {{ 1, 4, 7, 5, 5}};
@@ -880,7 +928,7 @@ void ChronomodelTest::calculMat() {
 
 
     qDebug() <<"11 - test decompositionCholesky matrix N = 5 shift = 0";
-    std::pair<std::vector<std::vector<long double>>, std::vector<long double>> pairResult;
+    std::pair<Matrix2D, std::vector<long double>> pairResult;
    // pairResult = choleskyDiagonal(matK);
     pairResult = decompositionCholesky(matK, 5 , 0);
 
@@ -902,14 +950,14 @@ void ChronomodelTest::calculMat() {
     QVERIFY(qFuzzyCompare(diag[4] , 2.));
 
     qDebug() <<"11.2 - test inverseMatSym matrix N = 5 shift = 0";
-    std::vector<std::vector<long double>> matK_1 (5);
+    Matrix2D matK_1 (5);
     matK_1 = inverseMatSym(result, diag, 5, 0); // ne fonctionne pas, devrait donner l'inverse de la matrice matK
 
-    std::vector<std::vector<long double>> matK_11 (5);
+    Matrix2D matK_11 (5);
     matK_11 = multiMatParMat(matK, matK_1, 5, 5);
 
     qDebug() <<"12 - test choleskyLDL matrix N = 5";
-    std::pair<std::vector<std::vector<long double>>, std::vector<long double>> pairResult2;
+    std::pair<Matrix2D, std::vector<long double>> pairResult2;
     pairResult2 = choleskyLDLT(matK);
 
     result = pairResult2.first;
@@ -930,7 +978,7 @@ void ChronomodelTest::calculMat() {
     QVERIFY(qFuzzyCompare(diag[4] , 2.));
 
 
-    std::vector<std::vector<long double>> matK3 (7); //Positive and Symetric matrix with shift
+    Matrix2D matK3 (7); //Positive and Symetric matrix with shift
     matK3 [0] = {{ 0, 0, 0, 0, 0, 0,  0}};
     matK3 [1] = {{ 0, 3, 1, 1, 1, 1,  0}};
     matK3 [2] = {{ 0, 1, 6, 4, 4, 4,  0}};
@@ -963,28 +1011,28 @@ void ChronomodelTest::calculMat() {
      QVERIFY(qFuzzyCompare(diag[6] , 0.));
 
      qDebug() <<"13.1 - inverseMatSym";
-     std::vector<std::vector<long double>> matK_3 (7);
+     Matrix2D matK_3 (7);
      matK_3 = inverseMatSym(result, diag, 5, 1);
 
-     std::vector<std::vector<long double>> matK3_1 (7);
+     Matrix2D matK3_1 (7);
      matK3_1 = multiMatParMat(matK3, matK_3, 5, 5);
 
     qDebug() <<"13.2 - decompositionLU0 matrix 3x3";
-    std::vector<std::vector<long double>> matLU0 (3);
+    Matrix2D matLU0 (3);
     matLU0 [0] = {{ 2,  -1, 0}}; //col num 0
     matLU0 [1] = {{ -1,  2, -1}};
     matLU0 [2] = {{ 0,  -1, 2}};
-    std::pair<std::vector<std::vector<long double> >, std::vector<std::vector<long double> > > pairMatrix;
+    std::pair<Matrix2D, Matrix2D > pairMatrix;
     pairMatrix =  decompositionLU0(matLU0);
 
     // matrix L
-    std::vector<std::vector<long double> > matL = pairMatrix.first;
+    Matrix2D matL = pairMatrix.first;
     QVERIFY(matL[0][0] == 1);                  QVERIFY(matL[0][1] == 0);                               QVERIFY(matL[0][2] == 0);
     QVERIFY(qFuzzyCompare(matL[1][0] , -0.5)); QVERIFY(matL[1][1] == 1);                               QVERIFY(matL[1][2] == 0);
     QVERIFY(matL[2][0] == 0);                  QVERIFY(qFuzzyCompare(matL[2][1] , -0.66666666666667)); QVERIFY(matL[2][2] == 1);
 
     // matrix U
-    std::vector<std::vector<long double> > matU = pairMatrix.second;
+    Matrix2D matU = pairMatrix.second;
     QVERIFY(matU[0][0] == 2); QVERIFY(matU[0][1] == -1);  QVERIFY(matU[0][2] == 0);
     QVERIFY(matU[1][0] == 0); QVERIFY(matU[1][1] == 1.5); QVERIFY(matU[1][2] == -1);
     QVERIFY(matU[2][0] == 0); QVERIFY(matU[2][1] == 0);   QVERIFY(qFuzzyCompare(matU[2][2] , 1.333333333333));
@@ -1009,6 +1057,23 @@ void ChronomodelTest::calculMat() {
 
 }
 
+void ChronomodelTest::stat() {
+    // https://calculis.net/droite-regression-lineaire
+    const std::vector<double>& data_x {2, 7, 13, 15, 20, 24, 25, 29, 30, 31};
+    const std::vector<double>& data_y {14, 24, 36, 40, 50, 58, 60, 68, 70, 72};
+    //
+    auto param = linear_regression(data_x, data_y);
+    qDebug() <<"15 - linear_regression";
+    QVERIFY(qFuzzyCompare(param.first , 2));
+    QVERIFY(qFuzzyCompare(param.second , 10));
+
+    const std::vector<double>& data_y2 {3.62, 3.78, 4.32, 4.14, 4.88, 5.01, 4.94, 5.39, 5.28, 5.42};
+
+    param = linear_regression(data_x, data_y2);
+
+    QVERIFY(qFuzzyCompare(param.first , 0.065105680317041));
+    QVERIFY(qFuzzyCompare(param.second , 3.401928665786));
+}
 void ChronomodelTest::curveFunction()
 {
     qDebug() << "1 test orderEventsByThetaReduced";

@@ -92,7 +92,15 @@ type_data std_Koening(const QVector<type_data> &data);
 double std_Knuth(const QVector<double> &data);
 double std_Knuth(const std::vector<double> &data);
 double std_Knuth(const std::vector<int> &data);
+
+double std_unbiais_Knuth(const QVector<double> &data);
+double std_unbiais_Knuth(const std::vector<double> &data);
+double std_unbiais_Knuth(const std::vector<int> &data);
+
 void mean_std_Knuth(const std::vector<int> &data, double& mean, double& std);
+double covariance(const std::vector<double>& dataX, const std::vector<double>& dataY);
+
+const std::pair<double, double> linear_regression(const std::vector<double>& dataX, const std::vector<double>& dataY);
 
 double shrinkageUniform(const double so2);
 
@@ -127,7 +135,8 @@ void resizeMatrix(std::vector<double> &matrix,  size_t rows, size_t cols);
 std::vector<long double> initLongVector(size_t n);
 Matrix2D initLongMatrix(size_t rows, size_t cols);
 
-long double determinant(const Matrix2D& matrix, size_t shift = 0);
+long double determinant(const Matrix2D& matrix, size_t shift = 0); // à contrôler
+long double determinant_gauss(const Matrix2D &matrix, size_t shift = 0);
 
 Matrix2D seedMatrix(const Matrix2D& matrix, size_t shift = 0);
 
@@ -147,7 +156,6 @@ Matrix2D multiMatParMat(const Matrix2D& matrix1, const Matrix2D& matrix2, const 
 
 Matrix2D inverseMatSym0(const Matrix2D& matrix, const int shift = 0);
 Matrix2D inverseMatSym(const Matrix2D & matrix1, const std::vector<long double>& matrix2, const int nbBandes, const int shift);
-//std::vector<std::vector<long double>> inverseMatSym_old(const std::vector<std::vector<long double>>& matrix1, const std::vector<long double>& matrix2, const int nbBandes, const int shift);
 
 Matrix2D inverseMatSym_origin(const Matrix2D &matrixLE, const std::vector<long double> &matrixDE, const int nbBandes, const int shift);
 
@@ -159,7 +167,7 @@ Matrix2D cofactor0(const Matrix2D &matrix);
 Matrix2D comatrice0(const Matrix2D &matrix);
 
 
-Matrix2D choleskyLL0(const std::vector<std::vector<long double>>& matrix);
+Matrix2D choleskyLL0(const Matrix2D& matrix);
 std::pair<Matrix2D, std::vector<long double> > choleskyLDLT(const Matrix2D& matrix);
 std::pair<Matrix2D, std::vector<long double> > decompositionCholesky(const Matrix2D &matrix, const int nbBandes, const int shift);
 

@@ -190,7 +190,27 @@ double std_Knuth(const QVector<double> &data)
         variance = previousVariance + (x - previousMean)*(x - mean);
     }
 
-    return sqrt(variance/(long double)(n-1)); // unbiais
+    return sqrt(variance/(long double)n);
+
+}
+
+double std_Knuth(const std::vector<double> &data)
+{
+    unsigned n = 0;
+    long double mean = 0.;
+    long double variance = 0.;
+    long double previousMean = 0.;
+    long double previousVariance = 0.;
+
+    for (auto&& x : data) {
+        n++;
+        previousMean = std::move(mean);
+        previousVariance = std::move(variance);
+        mean = previousMean + (x - previousMean)/n;
+        variance = previousVariance + (x - previousMean)*(x - mean);
+    }
+
+    return sqrt(variance/(long double)n);
 
 }
 
@@ -210,10 +230,69 @@ double std_Knuth(const std::vector<int>& data)
         variance = previousVariance + ( (double)x - previousMean)*( (double)x - mean);
     }
 
-    return sqrt(variance/(n-1)); // unbiais
+    return sqrt(variance/n);
 
 }
 
+double std_unbiais_Knuth (const QVector<double> &data)
+{
+    unsigned n = 0;
+    long double mean = 0.;
+    long double variance = 0.;
+    long double previousMean = 0.;
+    long double previousVariance = 0.;
+
+    for (auto&& x : data) {
+        n++;
+        previousMean = std::move(mean);
+        previousVariance = std::move(variance);
+        mean = previousMean + (x - previousMean)/n;
+        variance = previousVariance + (x - previousMean)*(x - mean);
+    }
+
+    return sqrt(variance/(long double)(n-1)); // unbiais
+
+}
+
+double std_unbiais_Knuth(const std::vector<double> &data)
+{
+    unsigned n = 0;
+    long double mean = 0.;
+    long double variance = 0.;
+    long double previousMean = 0.;
+    long double previousVariance = 0.;
+
+    for (auto&& x : data) {
+        n++;
+        previousMean = std::move(mean);
+        previousVariance = std::move(variance);
+        mean = previousMean + (x - previousMean)/n;
+        variance = previousVariance + (x - previousMean)*(x - mean);
+    }
+
+    return sqrt(variance/(long double)(n-1));
+
+}
+
+double std_unbiais_Knuth(const std::vector<int>& data)
+{
+    int n = 0;
+    long double mean = 0.;
+    long double variance = 0.;
+    long double previousMean = 0.;
+    long double previousVariance = 0.;
+
+    for (auto&& x : data) {
+        n++;
+        previousMean = std::move(mean);
+        previousVariance = std::move(variance);
+        mean = previousMean + ((double)x - previousMean) / n;
+        variance = previousVariance + ( (double)x - previousMean)*( (double)x - mean);
+    }
+
+    return sqrt(variance/(n-1)); // unbiais
+
+}
 
 void mean_std_Knuth(const std::vector<int>& data, double& mean, double& std)
 {
@@ -233,6 +312,78 @@ void mean_std_Knuth(const std::vector<int>& data, double& mean, double& std)
     std = std::move(sqrt(variance/(n-1)));// unbiais
 
 }
+
+// dataX and dataY must have the same length
+double covariance(const std::vector<double>& dataX, const std::vector<double>& dataY)
+{
+    double meanx = 0.;
+    double meany = 0.;
+    double covar = 0.;
+    double n = 0;
+    double dx;
+    auto ptr_dX = dataX.begin();
+    auto ptr_dY = dataY.begin();
+
+    for (;ptr_dX != dataX.end(); ptr_dX++, ptr_dY++ ) {
+        n++;
+        dx = *ptr_dX - meanx;
+        meanx += dx / n;
+        meany += (*ptr_dY - meany) / n;
+        covar += dx * (*ptr_dY - meany);
+    }
+
+
+    return covar / n;
+    // Bessel's correction for sample variance
+   // sample_covar = C / (n - 1)
+}
+
+// dataX and dataY must have the same length
+/**
+ * @brief linear_regression using knuth algorithm
+ * @param dataX
+ * @param dataY
+ * @return a, b coef and constant $$Y = a*t + b$$
+ */
+const std::pair<double, double> linear_regression(const std::vector<double>& dataX, const std::vector<double>& dataY)
+{
+    double mean_x = 0.;
+    double mean_y = 0.;
+    double covar = 0.;
+    double var_x = 0;
+    double previousMean_x;
+    double n = 0;
+    double dx;
+    auto ptr_x = dataX.begin();
+    auto ptr_y = dataY.begin();
+
+    for (;ptr_x != dataX.end(); ptr_x++, ptr_y++ ) {
+        n++;
+        previousMean_x = mean_x;
+
+        dx = *ptr_x - mean_x;
+        mean_x += dx / n;
+        var_x += ( *ptr_x - previousMean_x)*( *ptr_x - mean_x);
+
+        mean_y += (*ptr_y - mean_y) / n;
+        covar += dx * (*ptr_y - mean_y);
+
+    }
+
+    //var_x /= n; // useless
+    //covar /= n;
+
+    double a = (covar / var_x);
+    double b = mean_y - a*mean_x;
+
+    return std::pair<double, double>(std::move(a), std::move(b));
+}
+
+
+
+
+
+
 
 /**
  * @brief traceStatistic : This function uses the Knuth-Welford algorithm to calculate the standard deviation.
@@ -1006,21 +1157,33 @@ void resizeMatrix(std::vector<std::vector<double>> &matrix,  size_t rows, size_t
     }
 }
 
-void resizeLongMatrix(Matrix2D&matrix,  size_t rows, size_t cols)
+void resizeLongMatrix(Matrix2D & matrix,  size_t rows, size_t cols)
 {
+    Matrix2D resMatrix ( rows );
+    std::valarray<long double>* itRes = begin(resMatrix);
+    std::valarray<long double>* it = begin(matrix);
+    for ( ; it != end(matrix) && itRes != end(resMatrix) ; ++it, ++itRes) {
+        *itRes = std::valarray<long double>  ( (*it)[std::slice(0, cols, 1)] );
+    }
+    matrix = resMatrix;
+ /*
     matrix.resize( rows );
     for ( auto it = begin(matrix); it != end(matrix); ++it) {
         it->resize( cols );
     }
+    */
 }
 
 Matrix2D seedMatrix(const Matrix2D &matrix, size_t shift)
 {
-    Matrix2D resMatrix ( matrix[0].size() - 2*shift );
+    if (shift == 0)
+        return matrix;
+    size_t n = matrix[0].size() - 2*shift;
+    Matrix2D resMatrix ( n );
     auto itRes = begin(resMatrix);
     for ( auto it = begin(matrix)+shift; it != end(matrix)-shift; ++it) {
         //*itRes = std::valarray<long double>  ( begin(*it) +shift, end(*it)-shift );
-        *itRes = std::valarray<long double>  ( (*it)[std::slice(1, matrix[0].size() - 2, 1)] );
+        *itRes = std::valarray<long double>  ( (*it)[std::slice(0, n, 1)] );
         ++itRes;
     }
     return resMatrix;
@@ -1028,6 +1191,7 @@ Matrix2D seedMatrix(const Matrix2D &matrix, size_t shift)
 
 long double determinant(const Matrix2D &matrix, size_t shift)
 {
+ //https://askcodez.com/matrice-de-determinant-de-lalgorithme-de-c.html
     size_t n = matrix.size();
     long double det;
 
@@ -1068,6 +1232,105 @@ long double determinant(const Matrix2D &matrix, size_t shift)
 }
 
 
+/**
+ * @brief determinant_gauss
+ * https://codes-sources.commentcamarche.net/source/36387-determinants-gauss-cofacteurs
+ * calcul d'un determinant avec le pivot de Gauss,  la complexite est en n^3
+ * @param matrix
+ * @param shift
+ * @return
+ */
+long double determinant_gauss(const Matrix2D &matrix, size_t shift)
+{
+    size_t n = matrix.size();
+    long double det;
+
+    if (n - 2*shift == 1) {
+          det = matrix[shift][shift];
+
+    } else if (n - 2*shift == 2) {
+        det = matrix[shift][shift] * matrix[1+shift][1+shift] - matrix[1+shift][shift] * matrix[shift][1+shift];
+
+    } else {
+        Matrix2D matrix2 = seedMatrix(matrix, shift);
+        n = matrix2.size();
+
+        Matrix2D matTmp = matrix2; //initLongMatrix(n-1, n-1);
+
+   // size_t   x,y;  // <x> pour les colonnes
+                // <y> pour les lignes
+    size_t   i,j;  // <i> pour les colonnes
+                // <j> pour les lignes
+
+    /* on copie <_mat> dans <mat> car on n'a pas le droit
+    * de modifier les valeurs de la matrice <_mat>
+    */
+
+ /*   for ( y= 0; y < n; y++)  {
+      for( x=0 ;x < n; x++)    {
+        matTmp[y][x] = matrix2[y][x];
+        }
+      }
+  */
+    /* on calcule le determinant par la methode des pivots de Gauss
+    * on rend la matrice triangulaire superieur tout en conservant
+    * le determinant de la matrice a chaque iteration
+    */
+    det = 1.;
+
+    // on balaye les lignes
+    for ( j=0; j<n-1; j++)    {
+
+      size_t  rankMax,rank;
+      long double  coeffMax;
+
+      // ( etape 1 )
+      rankMax = j;
+      for (rank=j+1;rank<n;rank++) {
+        if (fabs(matTmp[rankMax][j]) < fabs(matTmp[rank][j])) {
+          rankMax = rank;
+        }
+      }
+
+      coeffMax = matTmp[rankMax][j];
+      if (fabs(coeffMax) <= std::numeric_limits<long double>::epsilon())  {
+         return( 0.);
+      }
+      // ( etape 2 )
+      if (rankMax != j)  {
+        long double tmp;
+        for (i=j; i<n; i++) {
+          tmp = matTmp[j][i];
+          matTmp[j][i] = matTmp[rankMax][i];
+          matTmp[rankMax][i] = tmp;
+          }
+        det *= -1.;
+      }
+
+      det *= coeffMax;
+      // ( etape 3 )
+      long double coeff;
+      for (rank=j+1; rank<n; rank++) {
+        coeff = matTmp[rank][j]/coeffMax;
+        for ( i=j; i<n; i++)  {
+          matTmp[rank][i] -= coeff*matTmp[j][i];
+        }
+      }
+
+    }
+
+    det *= matTmp[n-1][n-1];
+   }
+
+
+#ifdef DEBUG
+    if (det == 0) {
+              throw std::runtime_error("Function::determinant det ==0");
+          }
+#endif
+      //-----
+    return (det);
+}
 // On suppose une matrice carrée N*N
 Matrix2D transpose0(const Matrix2D &A)
 {
@@ -1075,7 +1338,7 @@ Matrix2D transpose0(const Matrix2D &A)
    Matrix2D TA  = initLongMatrix(n, n);
 
    auto Ai = begin(A);
-   const long double * Aij = begin(*Ai);
+   const long double * Aij;
    size_t i, j;
    for ( i = 0 ; Ai != end(A); Ai++, i++)
        for (j= 0, Aij = begin(*Ai) ; Aij != end(*Ai); Aij++, j++)
@@ -2079,21 +2342,21 @@ Matrix2D Strassen::multiply (const Matrix2D& A, const Matrix2D& B)
  * @param A
  * @return
  */
-std::pair<std::vector<std::vector<long double> >, std::vector<std::vector<long double>> > decompositionLU0(const std::vector<std::vector<long double>>& A)
+std::pair<Matrix2D, Matrix2D > decompositionLU0(const Matrix2D& A)
 {
    const unsigned n = A.size();
 
-    std::vector<std::vector<long double>> L (n, std::vector<long double>(n, 0.));
-    std::vector<std::vector<long double>> U (n, std::vector<long double>(n, 0.));
+    Matrix2D L = initLongMatrix(n, n);
+    Matrix2D U  = initLongMatrix(n, n);
 
     unsigned i, j , k;
 
     for (i = 0; i < n; i++) {
         // Upper triangle
         for (k  = i; k < n; k++) {
-            U[i][k] = A.at(i).at(k);
+            U[i][k] = A[i][k];
             for (j = 0; j < i; j++)
-                U[i][k] -=  U.at(j).at(k) * L.at(i).at(j);
+                U[i][k] -=  U[j][k] * L[i][j];
         }
 
         // diagonal creation
@@ -2101,15 +2364,15 @@ std::pair<std::vector<std::vector<long double> >, std::vector<std::vector<long d
 
         // Lower triangle
         for (k = i+1; k < n; k++) {
-            L[k][i] = A.at(k).at(i);
+            L[k][i] = A[k][i];
             for (j = 0; j < i; j++)
-                L[k][i] -=  U.at(j).at(i) * L.at(k).at(j);
+                L[k][i] -=  U[j][i] * L[k][j];
 
-            L[k][i] /= U.at(i).at(i);
+            L[k][i] /= U[i][i];
         }
 
 
     }
 
-    return std::pair<std::vector<std::vector<long double>>, std::vector<std::vector<long double>>>(L, U);
+    return std::pair<Matrix2D, Matrix2D>(L, U);
 }

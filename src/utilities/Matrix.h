@@ -12,7 +12,7 @@
 class CurveMap
 {
 public:
-    quint64 _row, _column;
+    unsigned _row, _column;
     std::valarray<double> data;
     std::pair<double, double> rangeY;
     std::pair<double, double> rangeX;
@@ -21,12 +21,12 @@ public:
     double max_value;
 
     CurveMap();
-    explicit CurveMap(quint64 row, quint64 col):_row(row), _column(col), data(_row*_column), min_value(0), max_value(0) {}
+    explicit CurveMap(unsigned row, unsigned col):_row(row), _column(col), data(_row*_column), min_value(0), max_value(0) {}
 
     void setRangeX(double minX, double maxX) {rangeX = std::pair<double, double>(minX, maxX);}
     void setRangeY(double minY, double maxY) {rangeY = std::pair<double, double>(minY, maxY);}
 
-    double& at(quint64 i, quint64 j) {
+    double& at(unsigned i, unsigned j) {
         try {
             return data[_row*i + j];
         }  catch (...) {
@@ -35,12 +35,12 @@ public:
         }
 
     }
-    double& operator()(quint64 i, quint64 j) { return data[_row*i + j];} //Set
-    const double& operator()(quint64 i, quint64 j)  const { return data[_row*i + j];} //Get
-    double* ptr_at(quint64 i, quint64 j) {return (begin(data) + (_row*i + j));}
+    double& operator()(unsigned i, unsigned j) { return data[_row*i + j];} //Set
+    const double& operator()(unsigned i, unsigned j)  const { return data[_row*i + j];} //Get
+    double* ptr_at(unsigned i, unsigned j) {return (begin(data) + (_row*i + j));}
 
-    quint64 row(){return _row;}
-    quint64 column(){return _column;}
+    unsigned row() {return _row;}
+    unsigned column() {return _column;}
 
     double minX() {return rangeX.first;}
     double maxX() {return rangeX.second;}
