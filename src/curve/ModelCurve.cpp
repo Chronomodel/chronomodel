@@ -39,11 +39,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ModelCurve.h"
 #include "ModelUtilities.h"
-#include "QFile"
-#include "qapplication.h"
 #include "Project.h"
+#include "QtUtilities.h"
 
-#include "qdatastream.h"
+#include <QFile>
+#include <qdatastream.h>
+#include <qapplication.h>
 
 
 ModelCurve::ModelCurve():Model()
@@ -164,6 +165,37 @@ void ModelCurve::restoreFromFile(QDataStream* in)
     mPosteriorMeanGByChain.resize(tmp32);
     for (auto& pMByChain : mPosteriorMeanGByChain)
         *in >> pMByChain;
+
+}
+
+void ModelCurve::saveMapToFile(QFile *file, const QString csvSep)
+{
+    QTextStream output(file);
+    const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
+    output<<"# " +version+"\r";
+
+    output<<"# Date Format : "+ DateUtils::getAppSettingsFormatStr() +"\r";
+
+    auto mapG = mPosteriorMeanG.gx.mapG.data;
+
+    const double stepX = (mPosteriorMeanG.gx.mapG.maxX() -mPosteriorMeanG.gx.mapG.minX()) / (mPosteriorMeanG.gx.mapG._column - 1);
+    const double stepY = (mPosteriorMeanG.gx.mapG.maxY() -mPosteriorMeanG.gx.mapG.minY()) / (mPosteriorMeanG.gx.mapG._row - 1);
+
+    // Header
+    output << ""<< csvSep;
+    for (unsigned c = 0; c < mPosteriorMeanG.gx.mapG._column; ++c)  {
+        output << stringForCSV(mPosteriorMeanG.gx.mapG.minY() + c * stepY) << csvSep;
+    }
+    output << "\r";
+
+    unsigned i = 0;
+    for (unsigned c = 0; c < mPosteriorMeanG.gx.mapG._column; ++c)  {
+        output << stringForCSV(mPosteriorMeanG.gx.mapG.minX() + c * stepX)  << csvSep;
+        for (unsigned r = 0; r < mPosteriorMeanG.gx.mapG._row; ++r)  {
+            output << stringForCSV(mapG[i++]) << csvSep;
+        }
+        output << "\r";
+    }
 
 }
 

@@ -388,7 +388,8 @@ void CalibrationView::updateGraphs()
             hpdCurve.mBrush = brushColor;
             hpdCurve.mIsHisto = false;
             hpdCurve.mIsRectFromZero = true;
-            hpdCurve.mData = hpd;
+            //hpdCurve.mData = hpd;
+            hpdCurve.mData = normalize_map(hpd, map_max_value(calibMap));
             mCalibGraph->addCurve(hpdCurve);
 
             // update max inside the display period

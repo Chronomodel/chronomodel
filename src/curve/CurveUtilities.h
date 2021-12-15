@@ -117,8 +117,8 @@ QDataStream &operator<<( QDataStream &stream, const PosteriorMeanG& pMeanG );
 QDataStream &operator>>( QDataStream &stream, PosteriorMeanG& pMeanG );
 
 std::vector<long double> calculVecH(const std::vector<long double> &vec);
-std::vector<std::vector<long double>> calculMatR(const std::vector<long double>& vec);
-std::vector<std::vector<long double>> calculMatQ(const std::vector<long double>& vec);
+Matrix2D calculMatR(const std::vector<long double>& vec);
+Matrix2D calculMatQ(const std::vector<long double>& vec);
 
 void conversionIDF(PosteriorMeanG& G);
 PosteriorMeanG conversionIDF(const std::vector<long double> &vecGx, const std::vector<long double> &vecGy, const std::vector<long double> &vecGz, const std::vector<long double> &vecGxErr, const std::vector<long double> &vecGyErr, const std::vector<long double> &vecGzErr);

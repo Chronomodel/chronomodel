@@ -306,6 +306,19 @@ QString MCMCLoopCurve::initialize()
 
     emit stepChanged(tr("Initializing Events..."), 0, unsortedEvents.size());
     
+    //--------- linear regression
+    long double g_ti;
+    std::pair<double, double> linearParam;
+    std::vector<double> vecX, vecY;
+    for ( auto i = 0 ; i<unsortedEvents.size(); i++) {
+        vecX.push_back(unsortedEvents[i]->mTheta.mX);
+        vecY.push_back(unsortedEvents[i]->mVG.mX);
+        linearParam = linear_regression(vecX, vecY);
+       // g_ti = linearParam.first * unsortedEvents[i]->mTheta.mX + linearParam.second;
+    }
+
+    // ------
+
     for (auto&& e : unsortedEvents) {
         mModel->initNodeEvents();
         QString circularEventName = "";
@@ -469,6 +482,7 @@ QString MCMCLoopCurve::initialize()
         } else {
             if (mCurveSettings.mUseVarianceIndividual) { // Variance G individuelle
                 if (mCurveSettings.mUseErrMesure)
+                  //  event->mVG.mX = pow( linearParam.first * event->mTheta.mX + linearParam.second - event->mYx,  2.);
                     event->mVG.mX = var_RICE;
                 else
                     event->mVG.mX = 1.;
@@ -883,6 +897,8 @@ bool MCMCLoopCurve::update()
 //if (mState == eAquisition)
 //qDebug()<< ModelUtilities::modelStateDescriptionText(mModel);
 
+
+    // Events must be order
     current_h_VG = h_VG(mModel->mEvents);
     current_h = current_h_YWI * current_h_lambda * current_h_VG;
 
@@ -1916,7 +1932,7 @@ CurveMap MCMCLoopCurve::compute_posterior_map_G_composante(const std::vector<MCM
     const double k = 3.; // Le nombre de fois sigma G, pour le calcul de la densité
     double a, b, coefG;
   //  long double  prevMeanG;
-    unsigned idxY, idxYErrMin, idxYErrMax;
+    int idxY, idxYErrMin, idxYErrMax;
     for (auto&& splineComposante : trace ) {
         n++;
         unsigned i0 = 0; // tIdx étant croissant, i0 permet de faire la recherche à l'indice du temps précedent
@@ -1929,19 +1945,7 @@ CurveMap MCMCLoopCurve::compute_posterior_map_G_composante(const std::vector<MCM
             stdG =sqrt(varG);
 
             idxY = floor((g-ymin) / stepY);
-/*
-#ifdef DEBUG
-           if ((curveMap.row()*idxT + idxY) < (curveMap.row()*curveMap.column()))
-               curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + 1./(double)(trace.size() * 13);
-           else
-               qDebug()<<"pb in MCMCLoopCurve::compute_posterior_map_G_composante";
- #else
-            curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + 1./(double)(trace.size() * 13);
- #endif
-            maxDensity = std::max(maxDensity, curveMap.at(idxT, idxY));
-            minDensity = std::min(minDensity, curveMap.at(idxT, idxY));
 
-*/
             // ajout densité erreur sur Y
             /* il faut utiliser un pas de grille et le coefficient dans la grille dans l'intervalle [a,b] pour N(mu, sigma) est égale à la différence 1/2*(erf((b-mu)/(sigma*sqrt(2)) - erf((a-mu)/(sigma*sqrt(2))
              * https://en.wikipedia.org/wiki/Error_function
@@ -1952,11 +1956,11 @@ CurveMap MCMCLoopCurve::compute_posterior_map_G_composante(const std::vector<MCM
             if (idxYErrMin == idxYErrMax) {
 #ifdef DEBUG
                     if ((curveMap.row()*idxT + idxY) < (curveMap.row()*curveMap.column()))
-                        curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + 1./(double)(trace.size() * 1);
+                        curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + 1./(double)trace.size();
                     else
                         qDebug()<<"pb in MCMCLoopCurve::compute_posterior_map_G_composante";
 #else
-                    curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + 1./(double)(trace.size() * 1);
+                    curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + 1./(double)trace.size() ;
 #endif
 
                     maxDensity = std::max(maxDensity, curveMap.at(idxT, idxY));
@@ -1974,17 +1978,13 @@ CurveMap MCMCLoopCurve::compute_posterior_map_G_composante(const std::vector<MCM
                     coefG = diff_erf(a, b, g, stdG )/(double)(trace.size() * 1);
 #ifdef DEBUG
                     if ((curveMap.row()*idxT + idxY) < (curveMap.row()*curveMap.column()))
-                        //curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + coefG/(double)(trace.size() * 1);
                         *ptr_idErr = (*ptr_idErr) + coefG;
                     else
                         qDebug()<<"pb in MCMCLoopCurve::compute_posterior_map_G_composante";
 #else
-                    //curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + coefG/(double)(trace.size() * 1);
                     *ptr_idErr = (*ptr_idErr) + coefG;
 #endif
 
-                    //maxDensity = std::max(maxDensity, curveMap.at(idxT, idxY));
-                    //minDensity = std::min(minDensity, curveMap.at(idxT, idxY));
                     maxDensity = std::max(maxDensity, *ptr_idErr);
                     minDensity = std::min(minDensity, *ptr_idErr);
 
@@ -3057,6 +3057,7 @@ long double MCMCLoopCurve::h_alpha(const SplineMatrices& matrices, const int nb_
 
 
 /* ancienne fonction U_cmt_MCMC:: h_Vgij dans RenCurve
+ * lEvents.size() must be geater than 2
  */
 long double MCMCLoopCurve::h_VG(const QList<Event *> lEvents)
 {
@@ -3069,11 +3070,38 @@ long double MCMCLoopCurve::h_VG(const QList<Event *> lEvents)
 
     if (mCurveSettings.mUseVarianceIndividual) {
 
-        shrink_VG = 1.;
+
         long double S02;
-        for (Event* e :lEvents) {
-            S02 = pow((long double)e->mSy, 2.l);
-            shrink_VG *= (S02 / pow(S02 + (long double)e->mVG.mX, 2.l));
+        if (true) {
+            // selon Gasset et al., 1986
+            //i==0
+            S02 = pow( ((long double)lEvents[0]->mVG.mX - (long double)lEvents[1]->mVG.mX)/2. , 2.l);
+            shrink_VG = (S02 / pow(S02 + (long double)lEvents[0]->mVG.mX, 2.l));
+
+            // 0<i<n
+            long double g_ti;
+            std::pair<double, double> linearParam;
+            std::vector<double> vecX, vecY;
+            for ( auto i = 1 ; i<lEvents.size()-1; i++) {
+                vecX = std::vector<double> {lEvents[i-1]->mTheta.mX, lEvents[i]->mTheta.mX, lEvents[i+1]->mTheta.mX};
+                vecY = std::vector<double> {lEvents[i-1]->mVG.mX, lEvents[i]->mVG.mX, lEvents[i+1]->mVG.mX};
+                linearParam = linear_regression(vecX, vecY);
+                g_ti = linearParam.first * lEvents[i]->mTheta.mX + linearParam.second;
+                S02 = pow(g_ti - lEvents[i]->mVG.mX, 2.l);
+                shrink_VG *= (S02 / pow(S02 + (long double)lEvents[i]->mVG.mX, 2.l));
+            }
+
+            // i== n
+            S02 = pow( ((long double)lEvents[lEvents.size()-1]->mVG.mX - (long double)lEvents[lEvents.size()-2]->mVG.mX)/2. , 2.l);
+            shrink_VG *= (S02 / pow(S02 + (long double)lEvents[lEvents.size()-1]->mVG.mX, 2.l));
+
+        } else {
+
+            shrink_VG = 1.;
+            for (Event* e :lEvents) {
+                S02 = pow((long double)e->mSy, 2.l);
+                shrink_VG *= (S02 / pow(S02 + (long double)e->mVG.mX, 2.l));
+            }
         }
 
     } else {
@@ -3091,7 +3119,7 @@ long double MCMCLoopCurve::h_VG(const QList<Event *> lEvents)
     }
 
     if (shrink_VG < std::numeric_limits<long double>::epsilon()) {
-        qDebug() <<"in MCMCLoopCurve::h_VG shrinl_VG < epsilon()"<< (double) shrink_VG; // à voir avec PhL
+        qDebug() <<"in MCMCLoopCurve::h_VG shrinl_VG < epsilon()"<< (double)shrink_VG; // à voir avec PhL
         //shrink_VG = std::numeric_limits<long double>::epsilon();
     }
     return shrink_VG;

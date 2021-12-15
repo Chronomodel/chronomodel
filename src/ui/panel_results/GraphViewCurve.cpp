@@ -207,9 +207,9 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
 
             int c  = curveMap.mMap._column-1;
            // displayMap.data = std::valarray<double>(curveMap.mMap._row * curveMap.mMap._column);
-            int i = 0 ;
+            unsigned i = 0 ;
             while ( c >= 0) {
-                for (quint64 r = 0; r < curveMap.mMap._row ; r++) {
+                for (unsigned r = 0; r < curveMap.mMap._row ; r++) {
                     displayMap.data[i++] = mComposanteG.mapG.at(c, r);
                     //displayMap.data.push_back(mComposanteG.mapG.at(c, r));
                 }
@@ -249,10 +249,10 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
                 // CurveMap displayMap (0, 0);
                 CurveMap displayMap (curveMap.mMap._row, curveMap.mMap._column);
 
-                int c  = curveMap.mMap._column-1;
-                int i = 0;
+                unsigned c  = curveMap.mMap._column-1;
+                unsigned i = 0;
                 while ( c >= 0) {
-                    for (quint64 r = 0; r < curveMap.mMap._row ; r++) {
+                    for (unsigned r = 0; r < curveMap.mMap._row ; r++) {
                          displayMap.data[i++] = mComposanteG.mapG.at(c, r);
                        // displayMap.data.push_back(mComposanteGChains[i].mapG.at(c, r));
                     }

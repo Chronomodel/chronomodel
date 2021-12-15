@@ -69,6 +69,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
  * Second Edition. Donald E. Knuth.  Addison-Wesley
  * Publishing Company, 1973.
 */
+
+//https://fanf2.user.srcf.net/hermes/doc/antiforgery/stats.pdf
 FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
 {
     FunctionStat result;
@@ -91,6 +93,8 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
     QList<type_data> uniformXValues;
 
     QMap<type_data,type_data>::const_iterator citer = aFunction.cbegin();
+
+    /*
     for (;citer != aFunction.cend(); ++citer) {
         const type_data x = citer.key();
         const type_data y = citer.value();
@@ -112,10 +116,56 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
         }
         prevY = y;
     }
+*/
+
+/*
+ * w_sum = w_sum2 = mean = S = 0
+
+    for x, w in data_weight_pairs:
+        w_sum = w_sum + w
+        w_sum2 = w_sum2 + w * w
+        mean_old = mean
+        mean = mean_old + (w / w_sum) * (x - mean_old)
+        S = S + w * (x - mean_old) * (x - mean)
+
+    population_variance = S / w_sum
+*/
+    type_data y_sum = 0;
+    //type_data y_sum2;
+    type_data mean = 0;
+    type_data mean_old;
+    type_data  x , y;
+    type_data variance = 0;
+    for (;citer != aFunction.cend(); ++citer) {
+        x = citer.key();
+        y = citer.value();
+        y_sum +=  y;
+        //y_sum2 +=  y * y;
+        mean_old = mean;
+        mean +=  (y / y_sum) * (x - mean_old);
+        variance += y * (x - mean_old) * (x - mean);
+
+        // find max
+        if (max <= y) {
+            max = y;
+            if (prevY == y) {
+                uniformXValues.append(x);
+                int middleIndex = floor(uniformXValues.size()/2);
+                mode = uniformXValues.at(middleIndex);
+            } else {
+                uniformXValues.clear();
+                mode = x;
+            }
+        }
+        prevY = y;
+    }
+    variance /=  y_sum;
 
     //FunctionStat result;
-    result.max = max;
-    result.mode = mode;
+    result.max = std::move(max);
+    result.mode = std::move(mode);
+
+/*
     result.mean = (type_data)0.;
     result.std = (type_data)0.;
 
@@ -127,9 +177,10 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
             qDebug() << "WARNING : in analyseFunction() negative variance found : " << variance<<" return 0";
             variance = -variance;
         }
-
+*/
         result.std = sqrt(variance);
-    }
+        result.mean = std::move(mean);
+   // }
 
     const double step = (aFunction.lastKey() - aFunction.firstKey()) / (double)(aFunction.size() - 1);
     QVector<double> subRepart = calculRepartition(aFunction);

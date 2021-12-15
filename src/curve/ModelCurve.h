@@ -45,6 +45,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CurveSettings.h"
 #include "Matrix.h"
 
+#include <QFile>
 
 class ModelCurve: public Model
 {
@@ -54,6 +55,8 @@ public:
     
     virtual void saveToFile(QDataStream *out);
     virtual void restoreFromFile(QDataStream *in);
+
+    void saveMapToFile(QFile *file, const QString csvSep);
 
     virtual QJsonObject toJson() const;
     virtual void fromJson( const QJsonObject& json);

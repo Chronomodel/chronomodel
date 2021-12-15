@@ -309,6 +309,11 @@ QString PluginGauss::getRefExt() const
 
 QString PluginGauss::getRefsPath() const
 {
+    //http://doc.qt.io/qt-5/qstandardpaths.html#details
+/*    QStringList dataPath = QStandardPaths::standardLocations(QStandardPaths::AppLocalDataLocation); //QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
+   // QStringList dataPath2 = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+    QString path  =  dataPath[0]; // "/Users/dufresne/Library/Application Support/CNRS/ChronoModel"
+*/
 #ifdef Q_OS_MAC
     QString path  =  qApp->applicationDirPath();
     QDir dir(path);

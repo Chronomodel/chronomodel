@@ -302,7 +302,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
     const int inputSize (fftLen);
     const int outputSize = 2 * (inputSize / 2 + 1);
 
-   double sigma = std_Knuth(dataSrc);//std_Koening(dataSrc);//
+   double sigma = std_unbiais_Knuth(dataSrc);//std_Koening(dataSrc);//
 
    /* In the case of Vg and Vt (sigma_ti), there may be very large values that pull the mean.
     * It is preferable in this case, to evaluate an equivalent of the standard deviation using the quantiles at 15.85%, in the Gaussian case.

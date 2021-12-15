@@ -3851,6 +3851,17 @@ void ResultsView::exportResults()
             }
             QList<QStringList> eventsTraces = mModel->getEventsTraces(csvLocal, false);
             saveCsvTo(eventsTraces, dirPath + "/Chain_all_Events.csv", csvSep, false);
+
+            // Saving Curve Map
+            if (mModel->mProject->isCurve()) {
+                file.setFileName(dirPath + "/Curve_Map.csv");
+
+                if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+                    modelCurve()->saveMapToFile(&file, csvSep);
+
+                    file.close();
+                }
+            }
         }
     }
 }

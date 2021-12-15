@@ -1633,6 +1633,7 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
        // _____________
 
         const QString pluginName = dataStr.first();
+        PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
         Date date;
 
 
@@ -1652,15 +1653,15 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
             dates << qMakePair("bound", date);
             acceptedRows.append(csvRow);
 
-        } else {
-            PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
-            if (plugin) {
+        } else if (plugin) {
+
+           //  {
                 date = Date::fromCSV(dataStr, csvLocal);
                 dates << qMakePair(eventName, date);
                 acceptedRows.append(csvRow);
-            } else {
-                return (QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>>());
-            }
+          //  } else {
+          //      return (QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>>());
+          //  }
         }
            /* QMap<QString, double> CurveValues;
             if (!date.isNull()) {
