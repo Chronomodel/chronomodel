@@ -401,3 +401,8 @@ void ProjectView::toggleCurve(bool toggle)
 {
     mModelView->showCurveSettings(toggle);
 }
+
+void ProjectView::eventsAreSelected()
+ {
+     mModelView->eventsAreSelected();
+ }

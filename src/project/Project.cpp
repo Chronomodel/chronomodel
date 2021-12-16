@@ -1735,9 +1735,26 @@ void Project::mergeEvents(int eventFromId, int eventToId)
 }
 
 // Grouped actions on events
-void Project::selectedEventsFromSelectedPhases()
-{
 
+void Project::selectAllEvents()
+{
+    const QJsonArray events = mState.value(STATE_EVENTS).toArray();
+    QJsonArray newEvents = QJsonArray();
+    for (int i = 0; i < events.size(); ++i) {
+         QJsonObject evt = events.at(i).toObject();
+         evt[STATE_IS_SELECTED] = true;
+         newEvents.append(evt);
+
+     }
+    // create new state to push
+    QJsonObject stateNext = mState;
+    stateNext[STATE_EVENTS] = newEvents;
+    pushProjectState(stateNext, "Select All Events", true);
+}
+
+bool Project::selectEventsFromSelectedPhases()
+{
+    bool res = false;
     const QJsonArray events = mState.value(STATE_EVENTS).toArray();
     QJsonArray newEvents = QJsonArray();
     for (int i = 0; i < events.size(); ++i) {
@@ -1751,6 +1768,7 @@ void Project::selectedEventsFromSelectedPhases()
                  const QJsonObject pha = getPhasesWithId(id.toInt());
                  if (pha.value(STATE_IS_SELECTED) == true) {
                      willBeSelected = true;
+                     res = true;
                      break;
                  }
              }
@@ -1763,21 +1781,26 @@ void Project::selectedEventsFromSelectedPhases()
     QJsonObject stateNext = mState;
     stateNext[STATE_EVENTS] = newEvents;
     pushProjectState(stateNext, "Select events in selected phases", true);
+    return res;
 }
 
-void Project::selectedEventsWithString(const QString str)
+bool Project::selectedEventsWithString(const QString str)
 {
+    bool res = false;
     const QJsonArray events = mState.value(STATE_EVENTS).toArray();
     QJsonArray newEvents = QJsonArray();
     for (auto &e : events) {
         QJsonObject evt = e.toObject();
         evt[STATE_IS_SELECTED] = e.toObject().value(STATE_NAME).toString().contains(str);
+        if (e.toObject().value(STATE_NAME).toString().contains(str))
+            res =true;
         newEvents.append(evt);
      }
     // create new state to push
     QJsonObject stateNext = mState;
     stateNext[STATE_EVENTS] = newEvents;
     pushProjectState(stateNext, "Select events with string", true);
+    return res;
 }
 void Project::updateSelectedEventsColor(const QColor& color)
 {

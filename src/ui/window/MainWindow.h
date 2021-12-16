@@ -122,8 +122,9 @@ public slots:
     void changeEventsColor();
     void changeEventsMethod();
     void changeDatesMethod();
-    void selectedEventInSelectedPhases();
-    void selectedEventWithString();
+    void selectAllEvents();
+    void selectEventInSelectedPhases();
+    void selectEventWithString();
     void doGroupedAction();
 
 
@@ -178,6 +179,7 @@ private:
     QAction* mUndoAction;
     QAction* mRedoAction;
     QAction* mUndoViewAction;
+    QAction* mSelectAllAction;
 
     QAction* mSelectEventsAction;
     QAction* mSelectEventsNameAction;

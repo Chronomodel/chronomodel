@@ -164,8 +164,10 @@ public:
     void updateSelectedEventsMethod(MHVariable::SamplerProposal sp);
     void updateSelectedEventsDataMethod(MHVariable::SamplerProposal sp, const QString& pluginId);
     void updateAllDataInSelectedEvents(const QHash<QString, QVariant>& groupedAction);
-    void selectedEventsFromSelectedPhases();
-    void selectedEventsWithString(const QString str);
+
+    void selectAllEvents();
+    bool selectEventsFromSelectedPhases();
+    bool selectedEventsWithString(const QString str);
 
     void updatePhase(const QJsonObject& phaseIn);
     int getUnusedPhaseId(const QJsonArray& phases);

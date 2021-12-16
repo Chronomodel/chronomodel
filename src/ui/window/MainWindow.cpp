@@ -221,6 +221,12 @@ void MainWindow::createActions()
     mUndoViewAction = mUndoDock->toggleViewAction();
     mUndoViewAction->setText(tr("Show Undo Stack"));
 
+    mSelectAllAction = new QAction( tr("&Select All Events"), this);
+    mSelectAllAction->setShortcuts(QKeySequence::SelectAll);
+    mSelectAllAction->setStatusTip(tr("Select All Events"));
+    connect(mSelectAllAction, &QAction::triggered, this, &MainWindow::selectAllEvents);
+
+
     //-----------------------------------------------------------------
     // MCMC Actions
     //-----------------------------------------------------------------
@@ -286,10 +292,10 @@ void MainWindow::createActions()
     connect(mDatesMethodAction, &QAction::triggered, this, &MainWindow::changeDatesMethod);
 
     mSelectEventsAction = new QAction(tr("Select All Events of the Selected Phases"), this);
-    connect(mSelectEventsAction, &QAction::triggered, this, &MainWindow::selectedEventInSelectedPhases);
+    connect(mSelectEventsAction, &QAction::triggered, this, &MainWindow::selectEventInSelectedPhases);
 
     mSelectEventsNameAction = new QAction(tr("Select All Events with string"), this);
-    connect(mSelectEventsNameAction, &QAction::triggered, this, &MainWindow::selectedEventWithString);
+    connect(mSelectEventsNameAction, &QAction::triggered, this, &MainWindow::selectEventWithString);
     //-----------------------------------------------------------------
     // Help/About Menu
     //-----------------------------------------------------------------
@@ -357,6 +363,7 @@ void MainWindow::createMenus()
 
     mEditMenu->addAction(mUndoAction);
     mEditMenu->addAction(mRedoAction);
+    mEditMenu->addAction(mSelectAllAction);
     mEditMenu->setFont(ft);
 
     //-----------------------------------------------------------------
@@ -820,18 +827,28 @@ void MainWindow::setLanguage(QAction* action)
 }
 
 // Grouped Actions
-void MainWindow::selectedEventInSelectedPhases() {
-    if (mProject)
-        mProject->selectedEventsFromSelectedPhases();
+void MainWindow::selectAllEvents() {
+    if (mProject) {
+        mProject->selectAllEvents();
+        mProjectView->eventsAreSelected();
+    }
+
 }
 
-void MainWindow::selectedEventWithString() {
+void MainWindow::selectEventInSelectedPhases() {
+    if (mProject)
+        if (mProject->selectEventsFromSelectedPhases())
+            mProjectView->eventsAreSelected();
+}
+
+void MainWindow::selectEventWithString() {
     if (mProject) {
         bool ok;
         const QString text = QInputDialog::getText(this, tr("Find events containing the text"),
                                               tr("Text to search"), QLineEdit::Normal, QString(), &ok);
          if (ok && !text.isEmpty())
-             mProject->selectedEventsWithString(text);
+            if (mProject->selectedEventsWithString(text) )
+                mProjectView->eventsAreSelected();
     }
 }
 

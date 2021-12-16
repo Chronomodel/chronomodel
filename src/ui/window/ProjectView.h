@@ -76,6 +76,7 @@ public:
     void newPeriod();
 
     void updateMultiCalibration();
+    void eventsAreSelected();
 
 public slots:
     void initResults(Model*);

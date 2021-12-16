@@ -3332,21 +3332,11 @@ void Model::restoreFromFile(QDataStream *in)
 
 bool Model::hasSelectedEvents()
 {
-    for (auto& event : mEvents) {
-        if (event->mIsSelected) {
-            return true;
-        }
-    }
-    return false;
+   return std::any_of(mEvents.begin(), mEvents.end(), [](Event * e){return e->mIsSelected;});
 }
 
 bool Model::hasSelectedPhases()
 {
-    for (auto& phase : mPhases) {
-        if (phase->mIsSelected) {
-            return true;
-        }
-    }
-    return false;
+    return std::any_of(mPhases.begin(), mPhases.end(), [](Phase * p){return p->mIsSelected;});
 }
 

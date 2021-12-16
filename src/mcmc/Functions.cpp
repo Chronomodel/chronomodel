@@ -85,16 +85,16 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
 
     type_data max (0.);
     type_data mode (0.);
-    type_data sum (0.);
-    type_data sum2 (0.);
-    type_data sumP (0.);
 
-    type_data prevY (0.);
+    type_data prev_y (0.);
     QList<type_data> uniformXValues;
 
     QMap<type_data,type_data>::const_iterator citer = aFunction.cbegin();
 
     /*
+    type_data sum2 (0.);
+    type_data sumP (0.);
+    type_data sum (0.);
     for (;citer != aFunction.cend(); ++citer) {
         const type_data x = citer.key();
         const type_data y = citer.value();
@@ -116,56 +116,7 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
         }
         prevY = y;
     }
-*/
 
-/*
- * w_sum = w_sum2 = mean = S = 0
-
-    for x, w in data_weight_pairs:
-        w_sum = w_sum + w
-        w_sum2 = w_sum2 + w * w
-        mean_old = mean
-        mean = mean_old + (w / w_sum) * (x - mean_old)
-        S = S + w * (x - mean_old) * (x - mean)
-
-    population_variance = S / w_sum
-*/
-    type_data y_sum = 0;
-    //type_data y_sum2;
-    type_data mean = 0;
-    type_data mean_old;
-    type_data  x , y;
-    type_data variance = 0;
-    for (;citer != aFunction.cend(); ++citer) {
-        x = citer.key();
-        y = citer.value();
-        y_sum +=  y;
-        //y_sum2 +=  y * y;
-        mean_old = mean;
-        mean +=  (y / y_sum) * (x - mean_old);
-        variance += y * (x - mean_old) * (x - mean);
-
-        // find max
-        if (max <= y) {
-            max = y;
-            if (prevY == y) {
-                uniformXValues.append(x);
-                int middleIndex = floor(uniformXValues.size()/2);
-                mode = uniformXValues.at(middleIndex);
-            } else {
-                uniformXValues.clear();
-                mode = x;
-            }
-        }
-        prevY = y;
-    }
-    variance /=  y_sum;
-
-    //FunctionStat result;
-    result.max = std::move(max);
-    result.mode = std::move(mode);
-
-/*
     result.mean = (type_data)0.;
     result.std = (type_data)0.;
 
@@ -178,9 +129,41 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
             variance = -variance;
         }
 */
-        result.std = sqrt(variance);
-        result.mean = std::move(mean);
-   // }
+
+    type_data y_sum = 0;
+    type_data mean = 0;
+    type_data mean_prev;
+    type_data  x , y;
+    type_data variance = 0;
+    for (;citer != aFunction.cend(); ++citer) {
+        x = citer.key();
+        y = citer.value();
+        y_sum +=  y;
+
+        mean_prev = mean;
+        mean +=  (y / y_sum) * (x - mean_prev);
+        variance += y * (x - mean_prev) * (x - mean);
+
+        // find max
+        if (max <= y) {
+            max = y;
+            if (prev_y == y) {
+                uniformXValues.append(x);
+                int middleIndex = floor(uniformXValues.size()/2);
+                mode = uniformXValues.at(middleIndex);
+            } else {
+                uniformXValues.clear();
+                mode = x;
+            }
+        }
+        prev_y = y;
+    }
+    variance /=  y_sum;
+
+    result.max = std::move(max);
+    result.mode = std::move(mode);
+    result.std = sqrt(variance);
+    result.mean = std::move(mean);
 
     const double step = (aFunction.lastKey() - aFunction.firstKey()) / (double)(aFunction.size() - 1);
     QVector<double> subRepart = calculRepartition(aFunction);
@@ -250,8 +233,8 @@ double std_Knuth(const std::vector<double> &data)
     unsigned n = 0;
     long double mean = 0.;
     long double variance = 0.;
-    long double previousMean = 0.;
-    long double previousVariance = 0.;
+    long double previousMean;
+    long double previousVariance;
 
     for (auto&& x : data) {
         n++;
@@ -1596,7 +1579,7 @@ Matrix2D multiMatParMat0(const Matrix2D& matrix1, const Matrix2D& matrix2)
             (*result)[i][j] = sum;
         }
     }
-    return std::move(*result);
+    return *result;
 }
 
 
@@ -1650,7 +1633,7 @@ Matrix2D multiMatParMat(const Matrix2D& matrix1, const Matrix2D& matrix2, const 
             (*result)[i][j] = sum;
         }
     }
-    return std::move(*result);
+    return *result;
 }
 
 /**
