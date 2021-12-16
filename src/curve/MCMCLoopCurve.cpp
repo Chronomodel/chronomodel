@@ -307,14 +307,12 @@ QString MCMCLoopCurve::initialize()
     emit stepChanged(tr("Initializing Events..."), 0, unsortedEvents.size());
     
     //--------- linear regression
-    long double g_ti;
     std::pair<double, double> linearParam;
     std::vector<double> vecX, vecY;
-    for ( auto i = 0 ; i<unsortedEvents.size(); i++) {
+    for ( int i = 0 ; i<unsortedEvents.size(); i++) {
         vecX.push_back(unsortedEvents[i]->mTheta.mX);
         vecY.push_back(unsortedEvents[i]->mVG.mX);
         linearParam = linear_regression(vecX, vecY);
-       // g_ti = linearParam.first * unsortedEvents[i]->mTheta.mX + linearParam.second;
     }
 
     // ------
@@ -508,12 +506,12 @@ QString MCMCLoopCurve::initialize()
 
         event->mVG.mSigmaMH = 1.;
 
-        // ----------------------------------------------------------------
-        //  Les W des events ne dépendant que de leur VG
-        //  Lors de l'update, on a besoin de W pour les calculs de mise à jour de theta, VG et Lambda Spline
-        //  On sera donc amenés à remettre le W à jour à chaque modification de VG
-        //  On le calcul ici lors de l'initialisation pour avoir sa valeur de départ
-        // ----------------------------------------------------------------
+        /* ----------------------------------------------------------------
+          The W of the events depend only on their VG
+          During the update, we need W for the calculations of theta, VG and Lambda Spline update
+          We will thus have to update the W at each VG modification
+          We calculate it here during the initialization to have its starting value
+         ---------------------------------------------------------------- */
         event->updateW();
 
 
@@ -1368,8 +1366,8 @@ void MCMCLoopCurve::finalize()
                 allChainsTraceZ.push_back(cTrace->splineZ);
 
                 minMaxY_Z = std::minmax_element(cTrace->splineZ.vecG.begin(), cTrace->splineZ.vecG.end());
-                minY_Z = std::min( minY_Z, *minMaxY_X.first);
-                maxY_Z = std::max( maxY_Z, *minMaxY_X.second);
+                minY_Z = std::min( minY_Z, *minMaxY_Z.first);
+                maxY_Z = std::max( maxY_Z, *minMaxY_Z.second);
 
                 minMaxVarY_Z = std::minmax_element(cTrace->splineZ.vecVarG.begin(), cTrace->splineZ.vecVarG.end());
                 maxVarY_Z = std::max( maxVarY_Z, *minMaxVarY_Z.second);
@@ -1391,15 +1389,13 @@ void MCMCLoopCurve::finalize()
           const auto spanY_Y = (maxY_X - minY_X) / 5.;
           minY_Y = minY_Y - 1.96*sqrt(maxVarY_Y) - spanY_Y;
           maxY_Y = maxY_Y + 1.96*sqrt(maxVarY_Y) + spanY_Y;
-          //chainPosteriorMeanG.gy = compute_posterior_mean_G_composante(chainTraceY, tr("Calcul Mean Composante Y for chain %1").arg(i+1));
-          chainPosteriorMeanG.gy = compute_posterior_mean_map_G_composante(chainTraceY, minY_Y, maxY_Y, 1000, tr("Calcul Mean Composante X for chain %1").arg(i+1) );
+          chainPosteriorMeanG.gy = compute_posterior_mean_map_G_composante(chainTraceY, minY_Y, maxY_Y, 1000, tr("Calcul Mean Composante Y for chain %1").arg(i+1) );
       }
       if (hasZ) {
           const auto spanY_Z = (maxY_Z - minY_Z) / 5.;
           minY_Z = minY_Z - 1.96*sqrt(maxVarY_Z) - spanY_Z;
           maxY_Z = maxY_Z + 1.96*sqrt(maxVarY_Z) + spanY_Z;
-          //chainPosteriorMeanG.gz = compute_posterior_mean_G_composante(chainTraceZ, tr("Calcul Mean Composante Z for chain %1").arg(i+1));
-          chainPosteriorMeanG.gz = compute_posterior_mean_map_G_composante(chainTraceX, minY_Z, maxY_Z, 1000, tr("Calcul Mean Composante X for chain %1").arg(i+1) );
+          chainPosteriorMeanG.gz = compute_posterior_mean_map_G_composante(chainTraceX, minY_Z, maxY_Z, 1000, tr("Calcul Mean Composante Z for chain %1").arg(i+1) );
       }
 
       mModel->mPosteriorMeanGByChain.push_back(chainPosteriorMeanG);
@@ -1413,16 +1409,13 @@ void MCMCLoopCurve::finalize()
         allChainsPosteriorMeanG = mModel->mPosteriorMeanGByChain.at(0);
 
     } else {
-        //allChainsPosteriorMeanG.gx = compute_posterior_mean_G_composante(allChainsTraceX, tr("Calcul Mean Composante X for All chain"));
         allChainsPosteriorMeanG.gx = compute_posterior_mean_map_G_composante(allChainsTraceX, minY_X, maxY_X, 1000, tr("Calcul Mean Composante X for All chain") );
         if (hasY) {
-            //allChainsPosteriorMeanG.gy = compute_posterior_mean_G_composante(allChainsTraceY, tr("Calcul Mean Composante Y for All chain"));
             allChainsPosteriorMeanG.gy = compute_posterior_mean_map_G_composante(allChainsTraceY, minY_Y, maxY_Y, 1000, tr("Calcul Mean Composante Y for All chain") );
 
         }
         if (hasZ) {
-            //allChainsPosteriorMeanG.gz = compute_posterior_mean_G_composante(allChainsTraceZ, tr("Calcul Mean Composante Z for All chain"));
-            allChainsPosteriorMeanG.gz = compute_posterior_mean_map_G_composante(allChainsTraceZ, minY_Z, maxY_Z, 1000, tr("Calcul Mean Composante X for All chain") );
+            allChainsPosteriorMeanG.gz = compute_posterior_mean_map_G_composante(allChainsTraceZ, minY_Z, maxY_Z, 1000, tr("Calcul Mean Composante Z for All chain") );
         }
     }
 
@@ -1461,7 +1454,7 @@ void MCMCLoopCurve::finalize()
 double MCMCLoopCurve::Calcul_Variances_Yij_Rice_GSJ (const QList<Event *> lEvents)
 {
    // Calcul de la variance Rice (1984)
-  double Var_Rice =0;
+  double Var_Rice = 0;
   for (int i = 1; i < lEvents.size(); ++i) {
         Var_Rice = Var_Rice + pow(lEvents.at(i)->mYx-lEvents.at(i-1)->mYx, 2.);
   }
@@ -2366,10 +2359,10 @@ void MCMCLoopCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposa
 
 
      } else {
-
+         long double ti1, ti2, err1, err2;
          for (; i0 < n-1; ++i0) {
-             const long double ti1 = reduceTime(spline.vecThetaEvents.at(i0));
-             const long double ti2 = reduceTime(spline.vecThetaEvents.at(i0 + 1));
+             ti1 = reduceTime(spline.vecThetaEvents.at(i0));
+             ti2 = reduceTime(spline.vecThetaEvents.at(i0 + 1));
              h = ti2 - ti1;
 
              if ((tReduce >= ti1) && (tReduce < ti2)) {
@@ -2397,8 +2390,8 @@ void MCMCLoopCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposa
                   *   Err2:=Vec_splineP.Err_G[i+1];
                   *   Err_G:= Err1+((t-ti1)/(ti2-ti1))*(Err2-Err1);
                   */
-                 const long double err1 = sqrt(spline.vecVarG.at(i0));
-                 const long double err2 = sqrt(spline.vecVarG.at(i0 + 1));
+                 err1 = sqrt(spline.vecVarG.at(i0));
+                 err2 = sqrt(spline.vecVarG.at(i0 + 1));
                  varG = pow(err1 + ((tReduce-ti1) / (ti2-ti1)) * (err2 - err1) , 2.l);
 //if (err1 < 1 || err2 < 1)
   //  qDebug()<<"ici"<<double(err1)<<double(err2);

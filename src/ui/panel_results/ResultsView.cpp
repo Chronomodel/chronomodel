@@ -1770,6 +1770,9 @@ void ResultsView::createByCurveGraph()
       //  const double thresh = 68.4; //80;
         QVector<CurveRefPts> eventsPts;
         QVector<CurveRefPts> dataPts;
+        // Stock the numbre of ref points per Event and Data
+        std::vector<int> dataPerEvent;
+        std::vector<int> hpdPerEvent;
         if (mMainVariable == GraphViewResults::eG) {
             for (auto& event : modelCurve()->mEvents) {
                 CurveRefPts evPts;
@@ -1788,8 +1791,8 @@ void ResultsView::createByCurveGraph()
                         evPts.Ymax = event->mYDec + verr;
                         break;
                     case CurveSettings::eVariableTypeField :
-                        evPts.Ymin = event->mZField - event->mS_ZField;
-                        evPts.Ymax = event->mZField + event->mS_ZField;
+                        evPts.Ymin = event->mZField - 1.95*event->mS_ZField;
+                        evPts.Ymax = event->mZField + 1.95*event->mS_ZField;
                         break;
                     case CurveSettings::eVariableTypeDepth :
                         evPts.Ymin = event->mXIncDepth - 1.95*event->mS_XA95Depth;
@@ -1803,8 +1806,8 @@ void ResultsView::createByCurveGraph()
 
             } else {
                 //must be inclination or X
-                evPts.Ymin = event->mXIncDepth - event->mS_XA95Depth;
-                evPts.Ymax = event->mXIncDepth + event->mS_XA95Depth;
+                evPts.Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
+                evPts.Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
             }
             evPts.color = event->mColor;
 
@@ -1825,7 +1828,7 @@ void ResultsView::createByCurveGraph()
                     QMap<type_data, type_data> hpd (create_HPD(calibMap, event->mTheta.mThresholdUsed));
 
                     QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(hpd, 100);
-
+                    dataPerEvent.push_back(intervals.size());
                     for (auto h : intervals) {
                         dPts.Xmin = h.second.first;
                         dPts.Xmax = h.second.second;
@@ -1858,6 +1861,7 @@ void ResultsView::createByCurveGraph()
                  */
 
                  QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(event->mTheta.mHPD, 100.);
+                 hpdPerEvent.push_back(intervals.size());
                  for (auto h : intervals) {
                      evPts.Xmin = DateUtils::convertFromFormat( h.second.first, AppSettings::mFormatDate);
                      evPts.Xmax = DateUtils::convertFromFormat( h.second.second, AppSettings::mFormatDate);
@@ -2062,31 +2066,27 @@ void ResultsView::createByCurveGraph()
                 // change the values of the Y and the error, with the values of the declination and the error, we keep tmean
                 int i = 0;
                 int iDataPts = 0;
+                int iEventPts = -1;
                 for (auto& event : modelCurve()->mEvents) {
-                    if ( model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D ||
-                         model->mCurveSettings.mProcessType == CurveSettings::eProcessType2D ) {
-                        eventsPts[i].Ymin = event->mYDec - event->mS_Y;
-                        eventsPts[i].Ymax = event->mYDec + event->mS_Y;
+                    for (int j = 0 ; j< hpdPerEvent[i]; j++) {
+                        iEventPts++;
+                        if ( model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D ||
+                             model->mCurveSettings.mProcessType == CurveSettings::eProcessType2D ) {
+                            eventsPts[iEventPts].Ymin = event->mYDec - 1.96*event->mS_Y;
+                            eventsPts[iEventPts].Ymax = event->mYDec + 1.96*event->mS_Y;
 
-                    } else {
-                        eventsPts[i].Ymin = event-> mYDec - event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
-                        eventsPts[i].Ymax =  event-> mYDec + event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
-                    }
-
-                    if (event->mType == Event::eDefault) {
-
-                        for (int iData = 0 ; iData < event->mDates.size(); ++iData) {
-                            dataPts[iDataPts].Ymin = eventsPts.at(i).Ymin;
-                            dataPts[iDataPts].Ymax = eventsPts.at(i).Ymax;
-                            iDataPts++;
+                        } else {
+                            eventsPts[iEventPts].Ymin = event-> mYDec - event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
+                            eventsPts[iEventPts].Ymax = event-> mYDec + event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
                         }
 
-                    } else {
-                        dataPts[iDataPts].Ymin = eventsPts.at(i).Ymin;
-                        dataPts[iDataPts].Ymax = eventsPts.at(i).Ymax;
-                        iDataPts++;
                     }
 
+                    for (int j = 0 ; j< dataPerEvent[i]; j++) {
+                        dataPts[iDataPts].Ymin = eventsPts.at(iEventPts).Ymin;
+                        dataPts[iDataPts].Ymax = eventsPts.at(iEventPts).Ymax;
+                        iDataPts++;
+                    }
                     ++i;
                 }
                 graphY->setEventsPoints(eventsPts);
@@ -2138,25 +2138,18 @@ void ResultsView::createByCurveGraph()
             if (mMainVariable == GraphViewResults::eG) {
                 int i = 0;
                 int iDataPts = 0;
+                int iEventPts = -1;
                 for (auto& event : modelCurve()->mEvents) {
-                    eventsPts[i].Ymin = event->mZField - 1.96*event->mS_ZField;
-                    eventsPts[i].Ymax = event->mZField + 1.96*event->mS_ZField;
-
-                    if (event->mType == Event::eDefault) {
-
-                        for (int iData = 0 ; iData < event->mDates.size(); ++iData) {
-                            dataPts[iDataPts].Ymin = eventsPts.at(i).Ymin;
-                            dataPts[iDataPts].Ymax = eventsPts.at(i).Ymax;
-                            iDataPts++;
-                        }
-
-                    } else {
-                        dataPts[iDataPts].Ymin = eventsPts.at(i).Ymin;
-                        dataPts[iDataPts].Ymax = eventsPts.at(i).Ymax;
+                    for (int j = 0 ; j< hpdPerEvent[i]; j++) {
+                        iEventPts++;
+                        eventsPts[iEventPts].Ymin = event->mZField - 1.96*event->mS_ZField;
+                        eventsPts[iEventPts].Ymax = event->mZField + 1.96*event->mS_ZField;
+                     }
+                     for (int j =0 ; j< dataPerEvent[i]; j++) {
+                        dataPts[iDataPts].Ymin = eventsPts.at(iEventPts).Ymin;
+                        dataPts[iDataPts].Ymax = eventsPts.at(iEventPts).Ymax;
                         iDataPts++;
                     }
-
-
                     ++i;
                 }
                 graphZ->setEventsPoints(eventsPts);
