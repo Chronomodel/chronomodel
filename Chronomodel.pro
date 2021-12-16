@@ -121,7 +121,7 @@ macx{
         QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14 # OS X 10.9 	Mavericks oct 2013  # essai sinon 10.14
 	# Define a set of resources to deploy inside the bundle :
 	RESOURCES_FILES.path = Contents/Resources
-	RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
+        # RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib // used for older version <3.1.6
         RESOURCES_FILES.files += $$PRO_PATH/deploy/ABOUT.html
         RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel.png
         #RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns

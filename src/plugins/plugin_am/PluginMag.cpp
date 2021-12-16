@@ -306,17 +306,8 @@ QString PluginMag::getRefExt() const
 
 QString PluginMag::getRefsPath() const
 {
-    #ifdef Q_OS_MAC
-        QString path  =  qApp->applicationDirPath();
-        QDir dir(path);
-        dir.cdUp();
-        path = dir.absolutePath() + "/Resources";
-    #else
-        //http://doc.qt.io/qt-5/qstandardpaths.html#details
-        QStringList dataPath = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
-        QString path  =  dataPath[0];
-    #endif
-
+    QStringList dataPath = QStandardPaths::standardLocations(QStandardPaths::AppLocalDataLocation);
+    QString path  =  dataPath[0]; // "/Library/Application Support/CNRS/ChronoModel"
     QString calibPath = path + "/Calib/AM";
     return calibPath;
 }
