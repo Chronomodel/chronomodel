@@ -1174,26 +1174,26 @@ bool MCMCLoopCurve::adapt(const int batchIndex)
 
             //--------------------- Adapt Sigma MH de t_i -----------------------------------------
             if (date.mTheta.mSamplerProposal == MHVariable::eMHSymGaussAdapt)
-                noAdapt *= date.mTheta.adapt(taux_min, taux_max, delta);
+                noAdapt = noAdapt && date.mTheta.adapt(taux_min, taux_max, delta);
 
             //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
-            noAdapt *= date.mSigma.adapt(taux_min, taux_max, delta);
+            noAdapt = noAdapt && date.mSigma.adapt(taux_min, taux_max, delta);
 
         }
 
         //--------------------- Adapt Sigma MH de Theta Event -----------------------------------------      
        if ((event->mType != Event::eKnown) && ( event->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss) )
-           noAdapt *= event->mTheta.adapt(taux_min, taux_max, delta);
+           noAdapt = noAdapt && event->mTheta.adapt(taux_min, taux_max, delta);
 
        //--------------------- Adapt Sigma MH de VG -----------------------------------------
 //qDebug()<<event->mName<< event->mVG.getCurrentAcceptRate() << event->mVG.mX << event->mVG.mSigmaMH;
-        noAdapt *= event->mVG.adapt(taux_min, taux_max, delta);
+        noAdapt = noAdapt && event->mVG.adapt(taux_min, taux_max, delta);
 
     }
     
     //--------------------- Adapt Sigma MH de Lambda Spline -----------------------------------------
     if (mModel->mLambdaSpline.mSamplerProposal == MHVariable::eMHAdaptGauss)
-        noAdapt *= mModel->mLambdaSpline.adapt(taux_min, taux_max, delta);
+        noAdapt = noAdapt && mModel->mLambdaSpline.adapt(taux_min, taux_max, delta);
 //qDebug()<<mModel->mLambdaSpline.getCurrentAcceptRate() <<"\t"<< mModel->mLambdaSpline.mX <<"\t"<< mModel->mLambdaSpline.mSigmaMH;
 
     return noAdapt;

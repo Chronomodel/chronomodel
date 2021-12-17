@@ -299,7 +299,7 @@ std::vector<long double> CurveUtilities::definitionNoeuds(const std::vector<long
 
                     if (delta >= deltaMin) {
                         startIndex = j;
-                        qWarning("=> Egalité finale | startIndex = %U | endIndex = %U" ,(unsigned int)startIndex , (unsigned int)endIndex );
+                        qWarning("=> Egalité finale | startIndex = %d | endIndex = %d" ,(int)startIndex , (int)endIndex );
                         break;
                     }
                 }

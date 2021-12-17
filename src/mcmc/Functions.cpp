@@ -756,7 +756,7 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
             // traceBeta is sorted with the value alpha join
             auto it = std::copy( traceBeta.begin()+ alphaIdx, traceBeta.end(), betaUpper.begin() );
 
-            const int betaUpperSize = (const int) std::distance(betaUpper.begin(), it);
+            const int betaUpperSize = (int) std::distance(betaUpper.begin(), it);
 
             betaUpper.resize(betaUpperSize);  // shrink container to new size
 
@@ -899,7 +899,7 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const 
             // traceAlpha is sorted with the value alpha join
             auto it = std::copy( traceAlpha.begin(), traceAlpha.begin() + alphaIdx, alphaUnder.begin() );
 
-            const int alphaUnderSize = (const int) std::distance(alphaUnder.begin(),it);
+            const int alphaUnderSize = (int) std::distance(alphaUnder.begin(),it);
 
             alphaUnder.resize(alphaUnderSize);  // shrink container to new size
 
@@ -973,7 +973,7 @@ QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, cons
     const int n = traceBeta.size();
     if ( (thresh > 0) && (n > 0) && ((int)traceAlpha.size() == n) ) {
 
-        const int nTarget = (const int) ceil( (float)n * thresh/100.);
+        const int nTarget = (int) ceil( (float)n * thresh/100.);
         const int nGamma = n - nTarget;
 
         float dMax = 0.0;

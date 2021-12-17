@@ -503,7 +503,7 @@ int EventItem::getNumberCurveLines(CurveSettings& cs) const
         return 3;
         break;
     }
-
+    return -1;
 }
 
 void EventItem::paintBoxCurveParameter (QPainter* painter, QRectF rectBox, CurveSettings& cs )

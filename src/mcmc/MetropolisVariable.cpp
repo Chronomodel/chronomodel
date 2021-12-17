@@ -75,7 +75,7 @@ mtmaxUsed(0.)
 }
 
 /** Copy constructor */
-MetropolisVariable::MetropolisVariable(const MetropolisVariable &origin)
+MetropolisVariable::MetropolisVariable(const MetropolisVariable &origin):MetropolisVariable()
 {
     mX = origin.mX;
     mRawTrace = new QVector<double>(origin.mRawTrace->size());

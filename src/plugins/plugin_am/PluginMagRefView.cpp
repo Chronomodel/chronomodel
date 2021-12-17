@@ -66,9 +66,6 @@ PluginMagRefView::~PluginMagRefView()
 
 void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings)
 {
-    Q_ASSERT(&date);
-    Q_ASSERT(&settings);
-    
     GraphViewRefAbstract::setDate(date, settings);
     
     if (date.mOrigin == Date::eSingleDate) {

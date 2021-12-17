@@ -224,8 +224,7 @@ void CalibrationView::applyStudyPeriod()
 }
 void CalibrationView::setDate(const QJsonObject& date)
 {
-    Q_ASSERT(&date);
-    if (date.isEmpty())
+     if (date.isEmpty())
         return;
 
     Date d (date);

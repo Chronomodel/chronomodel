@@ -69,7 +69,7 @@ mHistoryAcceptRateMH(nullptr)
 
 /** Copy constructor */
 
-MHVariable::MHVariable( const MHVariable& origin)
+MHVariable::MHVariable( const MHVariable& origin):MHVariable()
 {
    // MetropolisVariable(origin);
 

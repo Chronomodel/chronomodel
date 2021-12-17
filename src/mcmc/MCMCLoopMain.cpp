@@ -504,16 +504,16 @@ bool MCMCLoopMain::adapt(const int batchIndex) //original code
 
             //--------------------- Adapt Sigma MH de t_i -----------------------------------------
             if (date.mTheta.mSamplerProposal == MHVariable::eMHSymGaussAdapt)
-                noAdapt *= date.mTheta.adapt(taux_min, taux_max, delta);
+                noAdapt = noAdapt && date.mTheta.adapt(taux_min, taux_max, delta);
 
             //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
-            noAdapt *= date.mSigma.adapt(taux_min, taux_max, delta);
+            noAdapt = noAdapt && date.mSigma.adapt(taux_min, taux_max, delta);
 
         }
 
         //--------------------- Adapt Sigma MH de Theta Event -----------------------------------------
        if ((event->mType != Event::eKnown) && ( event->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss) )
-           noAdapt *= event->mTheta.adapt(taux_min, taux_max, delta);
+           noAdapt = noAdapt && event->mTheta.adapt(taux_min, taux_max, delta);
 
     }
 

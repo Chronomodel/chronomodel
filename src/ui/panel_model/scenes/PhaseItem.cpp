@@ -75,7 +75,6 @@ QJsonObject& PhaseItem::getPhase()
 
 void PhaseItem::setPhase(const QJsonObject& phase)
 {
-    Q_ASSERT(&phase);
     mData = phase;
 
     setSelected(mData.value(STATE_IS_SELECTED).toBool() || mData.value(STATE_IS_CURRENT).toBool() );

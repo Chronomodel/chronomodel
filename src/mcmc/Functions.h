@@ -420,7 +420,6 @@ QPair<int, double> gammaQuartile(const QVector<T> &trace, const int quartileType
 template <typename T>
 Quartiles quartilesType(const std::vector<T>& trace, const int quartileType, const double p)
 {
-    Q_ASSERT(&trace);
     Quartiles Q;
     std::vector<T> traceSorted (trace);
 
@@ -465,10 +464,8 @@ Quartiles quartilesType(const std::vector<T>& trace, const int quartileType, con
 template <typename T>
 Quartiles quartilesType(const QVector<T>& trace, const int quartileType, const double p)
 {
-    Q_ASSERT(&trace);
     Quartiles Q;
     QVector<T> traceSorted (trace);
-
 
     QPair<int, double> parQ1 = gammaQuartile(trace, quartileType, p); // first is j and second is gamma
     QPair<int, double> parQ2 = gammaQuartile(trace, quartileType, 0.5);

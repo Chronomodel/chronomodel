@@ -249,7 +249,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
                 // CurveMap displayMap (0, 0);
                 CurveMap displayMap (curveMap.mMap._row, curveMap.mMap._column);
 
-                unsigned c  = curveMap.mMap._column-1;
+                int c  = curveMap.mMap._column-1;
                 unsigned i = 0;
                 while ( c >= 0) {
                     for (unsigned r = 0; r < curveMap.mMap._row ; r++) {

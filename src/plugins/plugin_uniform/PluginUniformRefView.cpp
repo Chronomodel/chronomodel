@@ -67,10 +67,7 @@ PluginUniformRefView::~PluginUniformRefView()
 
 void PluginUniformRefView::setDate(const Date& date, const ProjectSettings& settings)
 {
-    Q_ASSERT(&date);
-    Q_ASSERT(&settings);
     GraphViewRefAbstract::setDate(date, settings);
-    
     
     if (date.mOrigin == Date::eSingleDate) { // not a combination
 
