@@ -2131,8 +2131,8 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
         events[i] = event;
         state[STATE_EVENTS] = events;
     }
-    // conversion since version 1.4 test
-    bool phaseConversion = false;
+    // conversion since version 1.4 test, obsolete since V3, never used
+  /*  bool phaseConversion = false;
     for (int i = 0; i < phases.size(); i++) {
        QJsonObject phase = phases.at(i).toObject();
        if ( phase[STATE_PHASE_TAU_TYPE].toInt() == Phase::eTauRange) {
@@ -2145,7 +2145,7 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
     }
     if (phaseConversion)
         state[STATE_PHASES] = phases;
-
+    */
     return state;
 }
 

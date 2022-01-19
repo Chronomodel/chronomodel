@@ -539,7 +539,7 @@ void EventItem::paintBoxCurveParameter (QPainter* painter, QRectF rectBox, Curve
             text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble());
             painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
 
-            QString text2 = " Y = ";
+            QString text2 = "Y = ";
             text2 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
             text2 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SY).toDouble());
 
@@ -558,7 +558,7 @@ void EventItem::paintBoxCurveParameter (QPainter* painter, QRectF rectBox, Curve
             text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble());
             painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
 
-            QString text2 = " Y = ";
+            QString text2 = "Y = ";
             text2 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
             text2 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SY).toDouble());
 

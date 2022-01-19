@@ -168,10 +168,12 @@ void MCMCLoopMain::initVariablesForChain()
     for (auto&& phase : mModel->mPhases) {
         phase->mAlpha.reset();
         phase->mBeta.reset();
+        phase->mTau.reset();
         phase->mDuration.reset();
 
         phase->mAlpha.mRawTrace->reserve(initReserve);
         phase->mBeta.mRawTrace->reserve(initReserve);
+        phase->mTau.mRawTrace->reserve(initReserve);
         phase->mDuration.mRawTrace->reserve(initReserve);
    }
 }
@@ -182,8 +184,8 @@ QString MCMCLoopMain::initialize()
     QList<Phase*>& phases (mModel->mPhases);
     QList<PhaseConstraint*>& phasesConstraints (mModel->mPhaseConstraints);
 
-    const double tmin = mModel->mSettings.mTmin;
-    const double tmax = mModel->mSettings.mTmax;
+    const double tminPeriod = mModel->mSettings.mTmin;
+    const double tmaxPeriod = mModel->mSettings.mTmax;
 
     if (isInterruptionRequested())
         return ABORTED_BY_USER;
@@ -207,7 +209,7 @@ QString MCMCLoopMain::initialize()
     emit stepChanged(tr("Initializing Phase Durations..."), 0, phases.size());
     i = 0;
     for (auto&& ph : phases) {
-        ph->initTau();
+        ph->initTau(tminPeriod, tmaxPeriod);
 
         if (isInterruptionRequested())
             return ABORTED_BY_USER;
@@ -242,8 +244,8 @@ QString MCMCLoopMain::initialize()
 
                 bound->mTheta.memo();
                 bound->mTheta.mLastAccepts.clear();
-                bound->mTheta.mLastAccepts.push_back(1.);
-                bound->mTheta.saveCurrentAcceptRate();
+                bound->mTheta.tryUpdate(bound->mTheta.mX, 2.);
+
                 bound->mInitialized = true;
             }
             bound = nullptr;
@@ -277,7 +279,7 @@ QString MCMCLoopMain::initialize()
             mModel->initNodeEvents();
             QString circularEventName = "";
 
-            const double min (unsortedEvents.at(i)->getThetaMinRecursive (tmin));
+            const double min = unsortedEvents.at(i)->getThetaMinRecursive (tminPeriod);
             if (!circularEventName.isEmpty()) {
                 mAbortedReason = QString(tr("Warning : Find Circular constraint with %1  bad path  %2 ")).arg(unsortedEvents.at(i)->mName, circularEventName);
                 return mAbortedReason;
@@ -285,7 +287,7 @@ QString MCMCLoopMain::initialize()
 
             //qDebug() << "in initialize(): Event initialised min : " << unsortedEvents[i]->mName << " : "<<" min"<<min<<tmin;
             mModel->initNodeEvents();
-            const double max ( unsortedEvents.at(i)->getThetaMaxRecursive(tmax) );
+            const double max = unsortedEvents.at(i)->getThetaMaxRecursive(tmaxPeriod);
 #ifdef DEBUG
             if (min >= max){
                 qDebug() << tr("-----Error Init for event : %1 : min = %2 : max = %3-------").arg(unsortedEvents.at(i)->mName, QString::number(min), QString::number(max));
@@ -310,7 +312,7 @@ QString MCMCLoopMain::initialize()
 
             //qDebug() << "in initialize(): Event initialized : " << unsortedEvents[i]->mName << " : " << unsortedEvents[i]->mTheta.mX<<" between"<<min<<max;
 
-            double s02_sum (0.);
+            double s02_sum = 0.;
             for (int j = 0; j < unsortedEvents.at(i)->mDates.size(); ++j) {
                 Date& date = unsortedEvents.at(i)->mDates[j];
 
@@ -328,12 +330,12 @@ QString MCMCLoopMain::initialize()
 
                 } else { // in the case of mRepartion curve is null, we must init ti outside the study period
                        // For instance we use a gaussian random sampling
-                    sigma = mModel->mSettings.mTmax - mModel->mSettings.mTmin;
+                    sigma = tmaxPeriod - tminPeriod;
                     const double u = Generator::gaussByBoxMuller(0., sigma);
                     if (u<0)
-                        date.mTheta.mX = mModel->mSettings.mTmin + u;
+                        date.mTheta.mX = tminPeriod + u;
                     else
-                        date.mTheta.mX = mModel->mSettings.mTmax + u;
+                        date.mTheta.mX = tmaxPeriod + u;
 
                     if (date.mTheta.mSamplerProposal == MHVariable::eInversion) {
                         qDebug()<<"Automatic sampling method exchange eInversion to eMHSymetric for"<< date.mName;
@@ -344,21 +346,18 @@ QString MCMCLoopMain::initialize()
                 }
                 // 2 - Init Delta Wiggle matching and Clear mLastAccepts array
                 date.initDelta(unsortedEvents.at(i));
-              //  date.mWiggle.memo();
-                date.mWiggle.mLastAccepts.push_back(1.);
-              //  date.mWiggle.saveCurrentAcceptRate();
+                date.mWiggle.mLastAccepts.clear();
+                //date.mWiggle.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                date.mWiggle.tryUpdate(date.mWiggle.mX, 2.);
 
                 // 3 - Init sigma MH adaptatif of each Data ti
-                date.mTheta.mSigmaMH = sigma;// * 1.44; // modif pHd 2021/01/21 -------------------0,56=1-0,44 ??
+                date.mTheta.mSigmaMH = sigma;
 
                 // 4 - Clear mLastAccepts array and set this init at 100%
                 date.mTheta.mLastAccepts.clear();
-                date.mTheta.mLastAccepts.push_back(1.);
+                //date.mTheta.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                date.mTheta.tryUpdate(date.mTheta.mX, 2.);
 
-                // 5 - Memo
-               // date.mTheta.memo();
-
-                //date.mTheta.saveCurrentAcceptRate();
 
                 // intermediary calculus for the harmonic average
                 s02_sum += 1. / (sigma * sigma);
@@ -375,11 +374,10 @@ QString MCMCLoopMain::initialize()
 
             // 6- Clear mLastAccepts array
             unsortedEvents.at(i)->mTheta.mLastAccepts.clear();
-            unsortedEvents.at(i)->mTheta.mLastAccepts.push_back(1.);
+            //unsortedEvents.at(i)->mTheta.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+            unsortedEvents.at(i)->mTheta.tryUpdate(unsortedEvents.at(i)->mTheta.mX, 2.);
 
             // 7 - Memo
-           // unsortedEvents.at(i)->mTheta.memo();
-           // unsortedEvents.at(i)->mTheta.saveCurrentAcceptRate();
             unsortedEvents.at(i)->mVG.mAllAccepts->clear();
             unsortedEvents.at(i)->mVG.mLastAccepts.clear();
         }
@@ -424,8 +422,7 @@ QString MCMCLoopMain::initialize()
 
     i = 0;
     for (auto&& phase : phases ) {
-        phase->updateAll(tmin, tmax);
-       // phase->memoAll();
+        phase->updateAll(tminPeriod, tmaxPeriod);
 
         if (isInterruptionRequested())
             return ABORTED_BY_USER;
@@ -434,14 +431,13 @@ QString MCMCLoopMain::initialize()
         emit stepProgressed(i);
     }
 
-
     return QString();
 }
 
 bool MCMCLoopMain::update()
 {
-    const double t_max (mModel->mSettings.mTmax);
-    const double t_min (mModel->mSettings.mTmin);
+    const double tminPeriod = mModel->mSettings.mTmin;
+    const double tmaxPeriod = mModel->mSettings.mTmax;
 
     //--------------------- Update Event -----------------------------------------
 
@@ -458,13 +454,13 @@ bool MCMCLoopMain::update()
 #ifdef TEST
       //  event->mTheta.mX = 0.;
 #else
-        event->updateTheta(t_min,t_max);
+        event->updateTheta(tminPeriod, tmaxPeriod);
 #endif
 
 
         //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
         for (auto&& phInEv : event->mPhases)
-            phInEv->updateAll(t_min, t_max);
+            phInEv->updateAll(tminPeriod, tmaxPeriod);
     }
 
 

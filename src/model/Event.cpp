@@ -602,7 +602,7 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event 
                 if (!newStartEvents.contains(event))
                    thetaMax = std::max(thetaMax, event->getThetaMinRecursive(defaultValue, newStartEvents));
             }
-            maxPhases = std::max(maxPhases, thetaMax - phase->mTau);
+            maxPhases = std::max(maxPhases, thetaMax - phase->mTau.mX);
 
         }
         //qDebug()<<"getThetaMin fin mTau maxPhases="<<maxPhases;
@@ -694,7 +694,7 @@ double Event::getThetaMinRecursive_old(const double defaultValue,
                 if (event != this && event->mInitialized)
                     thetaMax = qMax(event->mTheta.mX, thetaMax);
             }
-            minPhases = qMax(minPhases, thetaMax - phases->mTau);
+            minPhases = qMax(minPhases, thetaMax - phases->mTau.mX);
         }
     }
 
@@ -771,7 +771,7 @@ double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event 
                 if (!newStartEvents.contains(event))
                     thetaMin = std::min(thetaMin, event->getThetaMaxRecursive(defaultValue, newStartEvents));
             }
-            minPhases = std::min(minPhases, thetaMin + phase->mTau);
+            minPhases = std::min(minPhases, thetaMin + phase->mTau.mX);
         }
     }
 
@@ -860,7 +860,7 @@ double Event::getThetaMaxRecursive_old(const double defaultValue,
                     thetaMin = qMin(event->mTheta.mX, thetaMin);
 
             }
-            max3 = qMin(max3, thetaMin + phase->mTau);
+            max3 = qMin(max3, thetaMin + phase->mTau.mX);
         }
     }
 
@@ -931,7 +931,7 @@ double Event::getThetaMin(double defaultValue)
                 if (event != this) // && event->mInitialized)
                     thetaMax = std::max(event->mTheta.mX, thetaMax);
             }
-            min3 = std::max(min3, thetaMax - phase->mTau);
+            min3 = std::max(min3, thetaMax - phase->mTau.mX);
         }
     }
 
@@ -978,7 +978,7 @@ double Event::getThetaMax(double defaultValue)
                 if (event != this) // && event->mInitialized)
                     thetaMin = std::min(event->mTheta.mX, thetaMin);
             }
-            max3 = std::min(max3, thetaMin + phase->mTau);
+            max3 = std::min(max3, thetaMin + phase->mTau.mX);
         }
     }
 

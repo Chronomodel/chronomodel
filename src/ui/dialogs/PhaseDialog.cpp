@@ -73,6 +73,7 @@ PhaseDialog::PhaseDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
     mTauTypeCombo = new QComboBox(this);
     mTauTypeCombo->addItem(tr("Unknown"));
     mTauTypeCombo->addItem(tr("Known"));
+    mTauTypeCombo->addItem(tr("Span Uniform")); //z-only
 
     mTauFixedEdit = new LineEdit(this);
 
@@ -128,18 +129,16 @@ void PhaseDialog::showAppropriateTauOptions(int typeIndex)
     Q_UNUSED(typeIndex)
     Phase::TauType type = Phase::TauType (mTauTypeCombo->currentIndex());
     switch (type) {
+        case Phase::eZOnly:
         case Phase::eTauUnknown:
-        {
             mTauFixedLab->setVisible(false);
             mTauFixedEdit->setVisible(false);
             break;
-        }
+
         case Phase::eTauFixed:
-        {
             mTauFixedLab->setVisible(true);
             mTauFixedEdit->setVisible(true);
             break;
-        }
 
         default:
             break;

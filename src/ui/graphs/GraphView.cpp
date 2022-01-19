@@ -1792,8 +1792,8 @@ void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale 
 
             list << csvLocal.toString(x);
             // Il doit y avoir au moins trois courbes G, GSup, Ginf et nous exportons G et ErrG
-            const type_data xi = interpolateValueInQMap(x, mCurves.at(0).mData);
-            const type_data err_xi = interpolateValueInQMap(x, mCurves.at(1).mData);
+            const type_data xi = interpolateValueInQMap(x, mCurves.at(1).mData); // G
+            const type_data err_xi = interpolateValueInQMap(x, mCurves.at(2).mData); // GSup
             list<<csvLocal.toString(xi, 'g', 15);
             list<<csvLocal.toString((err_xi-xi)/1.96, 'g', 15);
 

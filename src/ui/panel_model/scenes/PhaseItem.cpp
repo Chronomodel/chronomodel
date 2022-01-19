@@ -48,7 +48,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ArrowTmpItem.h"
 #include <QtWidgets>
 
-
 PhaseItem::PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsItem* parent):AbstractItem(scene, parent),
 mControlsVisible(false),
 mControlsEnabled(false),
@@ -407,6 +406,9 @@ QString PhaseItem::getTauString() const
     if (type == Phase::eTauFixed)
         tauStr += tr("Duration ≤ %1").arg(QString::number(mData.value(STATE_PHASE_TAU_FIXED).toDouble()));
 
+    else if (type == Phase::eZOnly)
+        tauStr += tr("Span Uniform");
+
     return tauStr;
 }
 
@@ -419,7 +421,6 @@ QRectF PhaseItem::checkRect() const
              mTitleHeight);
     return r;
 }
-
 
 QRectF PhaseItem::extractRect() const
 {

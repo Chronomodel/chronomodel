@@ -143,6 +143,7 @@ void Model::updateFormatSettings()
         phase->mAlpha.setFormat(AppSettings::mFormatDate);
         phase->mBeta.setFormat(AppSettings::mFormatDate);
         phase->mDuration.setFormat(DateUtils::eNumeric);
+        phase->mTau.setFormat(DateUtils::eNumeric);
 
         // update Tempo and activity curves
         phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
@@ -502,6 +503,13 @@ QList<QStringList> Model::getStats(const QLocale locale, const int precision, co
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
         l.prepend(pPhase->mName + " End");
         rows << l;
+
+        /*
+        l = pPhase->mTau.getResultsList(locale, precision);
+        maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
+        l.prepend(pPhase->mName + " Tau");
+        rows << l;
+        */
     }
 
     // Events
@@ -580,6 +588,9 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
 
                 l << locale.toString(valueBeta, 'g', 15);
 
+                double valueTau = pPhase->mTau.mRawTrace->at(shift + j);
+                l << locale.toString(valueTau, 'g', 15);
+
             }
             rows << l;
         }
@@ -632,6 +643,9 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
                 valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
 
             l << locale.toString(valueBeta, 'g', 15);
+
+            double valueTau = phase->mTau.mRawTrace->at(shift + j);
+            l << locale.toString(valueTau, 'g', 15);
 
             for (auto& event : phase->mEvents) {
                 double value = event->mTheta.mRawTrace->at(shift + j);
@@ -851,8 +865,8 @@ bool Model::isValid()
     for (int i = 0; i<mPhases.size(); ++i) {
         if (mPhases.at(i)->mTauType != Phase::eTauUnknown) {
             double tauMax = mPhases.at(i)->mTauFixed;
-            if (mPhases.at(i)->mTauType == Phase::eTauRange)
-                tauMax = mPhases.at(i)->mTauMax;
+           // if (mPhases.at(i)->mTauType == Phase::eTauRange)
+           //     tauMax = mPhases.at(i)->mTauMax;
 
             double min = mSettings.mTmin;
             double max = mSettings.mTmax;
@@ -967,6 +981,7 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
     for (auto&& phase : mPhases ) {
         phase->mAlpha.generateCorrelations(chains);
         phase->mBeta.generateCorrelations(chains);
+        phase->mTau.generateCorrelations(chains); // à voir avec PhL, est-ce utile ?
 
 #ifndef UNIT_TEST
     //    progress->setValue(++position);
@@ -1051,6 +1066,7 @@ void Model::setThresholdToAllModel(const double threshold)
     for (auto&& pPhase : mPhases) {
        pPhase->mAlpha.mThresholdUsed = mThreshold;
        pPhase->mBeta.mThresholdUsed = mThreshold;
+       pPhase->mTau.mThresholdUsed = mThreshold;
        pPhase->mDuration.mThresholdUsed = mThreshold;
     }
 }
@@ -1167,6 +1183,7 @@ void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
     for (auto&& phase : mPhases) {
         phase->mAlpha.generateNumericalResults(chains);
         phase->mBeta.generateNumericalResults(chains);
+        phase->mTau.generateNumericalResults(chains);
         phase->mDuration.generateNumericalResults(chains);
     }
 
@@ -1192,6 +1209,7 @@ void Model::clearThreshold()
     for (auto&& phase : mPhases) {
         phase->mAlpha.mThresholdUsed = -1.;
         phase->mBeta.mThresholdUsed = -1.;
+        phase->mTau.mThresholdUsed = -1.;
         phase->mDuration.mThresholdUsed = -1.;
     }
 }
@@ -1244,7 +1262,7 @@ void Model::generateCredibility(const double &thresh)
 
         pPhase->mBeta.generateCredibility(mChains, thresh);
  //       progress->setValue(++position);
-
+        pPhase->mTau.generateCredibility(mChains, thresh);
         pPhase->mDuration.generateCredibility(mChains, thresh);
  //       progress->setValue(++position);
 
@@ -2604,10 +2622,12 @@ void Model::clearPosteriorDensities()
     while (iterPhase!=mPhases.end()) {
         (*iterPhase)->mAlpha.mHisto.clear();
         (*iterPhase)->mBeta.mHisto.clear();
+        (*iterPhase)->mTau.mHisto.clear();
         (*iterPhase)->mDuration.mHisto.clear();
 
         (*iterPhase)->mAlpha.mChainsHistos.clear();
         (*iterPhase)->mBeta.mChainsHistos.clear();
+        (*iterPhase)->mTau.mChainsHistos.clear();
         (*iterPhase)->mDuration.mChainsHistos.clear();
         ++iterPhase;
     }
@@ -3022,6 +3042,9 @@ void Model::clearCredibilityAndHPD()
         (*iterPhase)->mBeta.mCredibility = QPair<double, double>();
         //(*iterPhase)->mBeta.mThresholdOld = 0;
 
+        (*iterPhase)->mTau.mHPD.clear();
+        (*iterPhase)->mTau.mCredibility = QPair<double, double>();
+
         (*iterPhase)->mDuration.mHPD.clear();
         (*iterPhase)->mDuration.mCredibility = QPair<double, double>();
         //(*iterPhase)->mDuration.mThresholdOld = 0;
@@ -3042,6 +3065,7 @@ void Model::clearTraces()
     for (auto&& ph : mPhases) {
         ph->mAlpha.reset();
         ph->mBeta.reset();
+        ph->mTau.reset();
         ph->mDuration.reset();
 
         ph->mRawTempo.clear();
@@ -3093,6 +3117,7 @@ void Model::saveToFile(QDataStream *out)
     for (Phase*& phase : mPhases) {
         *out << phase->mAlpha;
         *out << phase->mBeta;
+        *out << phase->mTau;
         *out << phase->mDuration;
     }
     // -----------------------------------------------------
@@ -3234,6 +3259,7 @@ void Model::restoreFromFile(QDataStream *in)
         for (auto&& p : mPhases) {
                *in >> p->mAlpha;
                *in >> p->mBeta;
+               *in >> p->mTau;
                *in >> p->mDuration;
             }
         // -----------------------------------------------------

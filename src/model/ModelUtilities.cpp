@@ -872,7 +872,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
             HTMLText += line(textPurple(QObject::tr("Phase ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mPhases.size()), phase->mName)));
             HTMLText += line(textPurple(QObject::tr(" - Begin : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mX), DateUtils::getAppSettingsFormatStr())));
             HTMLText += line(textPurple(QObject::tr(" - End : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mX), DateUtils::getAppSettingsFormatStr())));
-            HTMLText += line(textPurple(QObject::tr(" - Tau : %1").arg(stringForLocal(phase->mTau))));
+            HTMLText += line(textPurple(QObject::tr(" - Tau : %1").arg(stringForLocal(phase->mTau.mX))));
         }
     }
 
@@ -1000,7 +1000,7 @@ QString ModelUtilities::modelStateDescriptionText(const ModelCurve *model, QStri
             text += QObject::tr("Phase ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mPhases.size()), phase->mName);
             text += QObject::tr(" - Begin : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mX), DateUtils::getAppSettingsFormatStr());
             text += (QObject::tr(" - End : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mX), DateUtils::getAppSettingsFormatStr()));
-            text += QObject::tr(" - Tau : %1").arg(stringForLocal(phase->mTau));
+            text += QObject::tr(" - Tau : %1").arg(stringForLocal(phase->mTau.mX));
         }
     }
 

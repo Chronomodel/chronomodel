@@ -57,7 +57,8 @@ public:
     enum TauType{
         eTauUnknown = 0,
         eTauFixed = 1,
-        eTauRange = 2
+     //   eTauRange = 2, // usefull to convert old file in Project::checkDatesCompatibility()
+        eZOnly = 2
     };
 
     Phase();
@@ -79,12 +80,12 @@ public:
 
     void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
 
-    void updateAll(const double tmin, const double tmax);
+    void updateAll(const double tminPeriod, const double tmaxPeriod);
     void memoAll();
 
     QString getTauTypeText() const;
-    void initTau();
-    void updateTau();
+    void initTau(const double tminPeriod, const double tmaxPeriod);
+    void updateTau(const double tminPeriod, const double tmaxPeriod);
 
 public:
     int mId;
@@ -98,7 +99,7 @@ public:
 
     MetropolisVariable mAlpha;
     MetropolisVariable mBeta;
-    double mTau;
+
     QPair<double,double> mTimeRange;
 
     // Used to display correctly if alpha or beta is a fixed bound
@@ -134,6 +135,7 @@ public:
     QMap<double, double> mRawActivityInf;
     QMap<double, double> mRawActivitySup;
 
+    MetropolisVariable mTau;
     TauType mTauType;
     double mTauFixed;
     double mTauMin;

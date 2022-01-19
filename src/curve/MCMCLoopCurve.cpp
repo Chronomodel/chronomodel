@@ -189,7 +189,18 @@ void MCMCLoopCurve::initVariablesForChain()
             date.mWiggle.mLastAcceptsLength = acceptBufferLen;
         }
     }
-    
+
+    for (auto&& phase : mModel->mPhases) {
+        phase->mAlpha.reset();
+        phase->mBeta.reset();
+        phase->mTau.reset();
+        phase->mDuration.reset();
+
+        phase->mAlpha.mRawTrace->reserve(initReserve);
+        phase->mBeta.mRawTrace->reserve(initReserve);
+        phase->mTau.mRawTrace->reserve(initReserve);
+        phase->mDuration.mRawTrace->reserve(initReserve);
+   }
     mModel->mLambdaSpline.reset();
     mModel->mLambdaSpline.reserve(initReserve);
     mModel->mLambdaSpline.mLastAccepts.reserve(acceptBufferLen);
@@ -227,8 +238,8 @@ QString MCMCLoopCurve::initialize()
     QList<Phase*>& phases (mModel->mPhases);
     QList<PhaseConstraint*>& phasesConstraints (mModel->mPhaseConstraints);
 
-    const double tmin = mModel->mSettings.mTmin;
-    const double tmax = mModel->mSettings.mTmax;
+    const double tminPeriod = mModel->mSettings.mTmin;
+    const double tmaxPeriod = mModel->mSettings.mTmax;
 
     if (isInterruptionRequested())
         return ABORTED_BY_USER;
@@ -252,7 +263,7 @@ QString MCMCLoopCurve::initialize()
     emit stepChanged(tr("Initializing Phase Durations..."), 0, phases.size());
     i = 0;
     for (auto&& ph : phases) {
-        ph->initTau();
+        ph->initTau(tminPeriod, tmaxPeriod);
 
         if (isInterruptionRequested())
             return ABORTED_BY_USER;
@@ -285,10 +296,9 @@ QString MCMCLoopCurve::initialize()
 
                 curLevelMaxValue = qMax(curLevelMaxValue, bound->mTheta.mX);
 
-             //   bound->mTheta.memo();
                 bound->mTheta.mLastAccepts.clear();
-                bound->mTheta.mLastAccepts.push_back(1.);
-                //bound->mTheta.saveCurrentAcceptRate();
+                bound->mTheta.tryUpdate(bound->mTheta.mX, 2.);
+
                 bound->mInitialized = true;
                 prepareEventY(bound);
             }
@@ -346,7 +356,7 @@ QString MCMCLoopCurve::initialize()
             mModel->initNodeEvents(); // Doit être réinitialisé pour toute recherche getThetaMinRecursive et getThetaMaxRecursive
             QString circularEventName = "";
 
-            const double min (unsortedEvents.at(i)->getThetaMinRecursive (tmin));
+            const double min = unsortedEvents.at(i)->getThetaMinRecursive (tminPeriod);
             
             // ?? Comment circularEventName peut-il être pas vide ?
             if (!circularEventName.isEmpty()) {
@@ -355,7 +365,7 @@ QString MCMCLoopCurve::initialize()
             }
             
             mModel->initNodeEvents();
-            const double max ( unsortedEvents.at(i)->getThetaMaxRecursive(tmax) );
+            const double max = unsortedEvents.at(i)->getThetaMaxRecursive(tmaxPeriod);
 #ifdef DEBUG
             if (min >= max)
                 qDebug() << tr("-----Error Init for event : %1 : min = %2 : max = %3-------").arg(unsortedEvents.at(i)->mName, QString::number(min, 'f', 30), QString::number(max, 'f', 30));
@@ -399,7 +409,7 @@ QString MCMCLoopCurve::initialize()
 #endif
             // ----------------------------------------------------------------
 
-            double s02_sum (0.);
+            double s02_sum = 0.;
             for (int j = 0; j < unsortedEvents.at(i)->mDates.size(); ++j) {
                 Date& date = unsortedEvents.at(i)->mDates[j];
 
@@ -419,13 +429,13 @@ QString MCMCLoopCurve::initialize()
 
                 } else { // in the case of mRepartion curve is null, we must init ti outside the study period
                        // For instance we use a gaussian random sampling
-                    sigma = mModel->mSettings.mTmax - mModel->mSettings.mTmin;
+                    sigma = tmaxPeriod - tminPeriod;
                     qDebug()<<"mRepartion curve is null for"<< date.mName;
                     const double u = Generator::gaussByBoxMuller(0., sigma);
                     if (u<0)
-                        date.mTheta.mX = mModel->mSettings.mTmin + u;
+                        date.mTheta.mX = tminPeriod + u;
                     else
-                        date.mTheta.mX = mModel->mSettings.mTmax + u;
+                        date.mTheta.mX = tmaxPeriod + u;
 
                     if (date.mTheta.mSamplerProposal == MHVariable::eInversion) {
                         qDebug()<<"Automatic sampling method exchange eInversion to eMHSymetric for"<< date.mName;
@@ -632,8 +642,7 @@ QString MCMCLoopCurve::initialize()
 
     i = 0;
     for (auto&& phase : phases ) {
-        phase->updateAll(tmin, tmax);
-
+        phase->updateAll(tminPeriod, tmaxPeriod);
 
         if (isInterruptionRequested())
             return ABORTED_BY_USER;
@@ -641,8 +650,6 @@ QString MCMCLoopCurve::initialize()
 
         emit stepProgressed(i);
     }
-
-
 
     return QString();
 }
@@ -657,8 +664,9 @@ QString MCMCLoopCurve::initialize()
 bool MCMCLoopCurve::update()
 {
  try {
-    const double t_max (mModel->mSettings.mTmax);
-    const double t_min (mModel->mSettings.mTmin);
+    const double tminPeriod = mModel->mSettings.mTmin;
+    const double tmaxPeriod = mModel->mSettings.mTmax;
+
    // --------------------------------------------------------------
     //  Update Dates (idem chronomodel)
     // --------------------------------------------------------------
@@ -763,8 +771,8 @@ bool MCMCLoopCurve::update()
 
                  */
                     // ----
-                    const double min = event->getThetaMin(t_min);
-                    const double max = event->getThetaMax(t_max);
+                    const double min = event->getThetaMin(tminPeriod);
+                    const double max = event->getThetaMax(tmaxPeriod);
 
                     if (min >= max) {
                         throw QObject::tr("Error for event theta : %1 : min = %2 : max = %3").arg(event->mName, QString::number(min), QString::number(max));
@@ -823,7 +831,7 @@ bool MCMCLoopCurve::update()
 
 
                 } else { // this is a bound, nothing to sample. Always the same value
-                    event->updateTheta(t_min, t_max);
+                    event->updateTheta(tminPeriod, tmaxPeriod);
                     // Pour l'itération suivante :
                      // current_h = try_h; // there is no try_h, we stay on current_h
                 }
@@ -834,7 +842,7 @@ bool MCMCLoopCurve::update()
 
                 //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
                 for (auto&& phInEv : event->mPhases)
-                    phInEv->updateAll(t_min, t_max);
+                    phInEv->updateAll(tminPeriod, tmaxPeriod);
 
             } // End of loop initListEvents
 
@@ -853,7 +861,7 @@ bool MCMCLoopCurve::update()
             //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
             // maybe not usefull ??
             for (auto&& phInEv : event->mPhases)
-                phInEv->updateAll(t_min, t_max);
+                phInEv->updateAll(tminPeriod, tmaxPeriod);
         }
 
     }
@@ -2546,7 +2554,7 @@ long double MCMCLoopCurve::initLambdaSpline()
 
     // si le mini est à une des bornes, il n'y a pas de solution
     // Donc on recherche la plus grande variation, le "coude"
-    if (idxDifMin== 0 || idxDifMin == (CV.size()-1)) {
+    if (idxDifMin == 0 || idxDifMin == (CV.size()-1)) {
         // On recherche la plus grande variation de GCV
         std::vector<long double> difResult (CV.size()-1);
         std::transform(CV.begin(), CV.end()-1, CV.begin()+1 , difResult.begin(), [](long double a, long double b) {return pow(a-b, 2.l);});

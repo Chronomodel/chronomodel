@@ -48,7 +48,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 Phase::Phase():
 mId(0),
 mName("no Phase Name"),
-mTau(0.),
 mTauType(Phase::eTauUnknown),
 mTauFixed(0.),
 mTauMin(0.),
@@ -63,6 +62,9 @@ mLevel(0)
 
     mBeta.mSupport = MetropolisVariable::eBounded;
     mBeta.mFormat = DateUtils::eUnknown;
+
+    mTau.mSupport = MetropolisVariable::eRp;
+    mTau.mFormat = DateUtils::eUnknown;
 
     mDuration.mSupport = MetropolisVariable::eRp;
     mDuration.mFormat = DateUtils::eUnknown;
@@ -154,6 +156,7 @@ Phase Phase::fromJson(const QJsonObject& json)
 
     p.mAlpha.setName("Begin of Phase : "+p.mName);
     p.mBeta.setName("End of Phase : "+p.mName);
+    p.mTau.setName("Tau of Phase : " + p.mName);
     p.mDuration.setName("Duration of Phase : "+p.mName);
 
     return p;
@@ -295,26 +298,15 @@ double Phase::getMaxThetaPrevPhases(const double tmin)
 
 // --------------------------------------------------------------------------------
 
-void Phase::updateAll(const double tmin, const double tmax)
+void Phase::updateAll(const double tminPeriod, const double tmaxPeriod)
 {
     //static bool initalized = false; // What is it??
 
-    mAlpha.mX = getMinThetaEvents(tmin);
-    mBeta.mX = getMaxThetaEvents(tmax);
+    mAlpha.mX = getMinThetaEvents(tminPeriod);
+    mBeta.mX = getMaxThetaEvents(tmaxPeriod);
     mDuration.mX = mBeta.mX - mAlpha.mX;
 
-   /*   if (initalized) {
-            double oldAlpha = mAlpha.mX;
-            double oldBeta = mBeta.mX;
-            if (mAlpha.mX != oldAlpha)
-                mIsAlphaFixed = false;
-
-            if (mBeta.mX != oldBeta)
-                mIsAlphaFixed = false;
-        }
-    */
-
-    updateTau();
+    updateTau(tminPeriod, tmaxPeriod);
 
     //initalized = true;
 }
@@ -322,53 +314,157 @@ void Phase::updateAll(const double tmin, const double tmax)
 QString Phase::getTauTypeText() const
 {
     switch (mTauType) {
-        case eTauFixed:
-                return QObject::tr("Max duration ≤ %1").arg( QString::number(mTauFixed));
-            break;
-        case eTauUnknown:
-                return QObject::tr("Max duration unknown");
-            break;
-
-        case eTauRange: // no longer used
-            return QObject::tr("Tau Range") + QString(" [ %1 ; %2 ]").arg(QString::number(mTauMin), QString::number(mTauMax));
-        break;
-        default:
-                return QObject::tr("Tau Undefined->Error");
-            break;
-    }
+            case eTauFixed:
+                    return QObject::tr("Max Duration ≤ %1").arg( QString::number(mTauFixed));
+                break;
+            case eTauUnknown:
+                    return QObject::tr("Max Duration Unknown");
+                break;
+            case eZOnly:
+                    return QObject::tr("Span Uniform");
+                break;
+         /*   case eTauRange: // no longer used ->OBSOLETE
+                return QObject::tr("Tau Range") + QString(" [ %1 ; %2 ]").arg(QString::number(mTauMin), QString::number(mTauMax));
+            break;  */
+            default:
+                    return QObject::tr("Tau Undefined -> Error");
+                break;
+        }
 
 }
 
-void Phase::initTau()
+void Phase::initTau(const double tminPeriod, const double tmaxPeriod)
 {
     if (mTauType == eTauFixed && mTauFixed != 0.)
-        mTau = mTauFixed;
+        mTau.mX = mTauFixed;
 
-    else if (mTauType == eTauRange && mTauMax > mTauMin) // no longer used
-        mTau = mTauMax;
-
+   /* else if (mTauType == eTauRange && mTauMax > mTauMin) // no longer used
+        mTau.mX = mTauMax;
+*/
+    else if (mTauType==eZOnly) {
+            // Modif PhD ; initialisation arbitraire
+            mTau.mX = tmaxPeriod - tminPeriod;
+            // nothing to do
+        }
     else if (mTauType == eTauUnknown) {
         // nothing to do
     }
 }
 
-void Phase::updateTau()
+// Formule du 25 mars 2020
+
+double somKn (double x, int n, double Rp, double s)
 {
-    if (mTauType == eTauFixed && mTauFixed != 0.)
-        mTau = mTauFixed;
+  double som  = 0.;
 
-    else if (mTauType == eTauRange && mTauMax > mTauMin)
-        mTau = Generator::randomUniform(qMax(mTauMin, mBeta.mX - mAlpha.mX), mTauMax);
+  if (n >= 3) {
+      for (double np1 = 1.; np1 <= double(n-2); ++np1 ) { // memory np1 = n - p - 1.;
+          som +=  (pow(Rp/x, np1) - pow(Rp/s, np1) )/np1;
+      }
+  }
+  return(std::move(som));
+}
 
-    else if (mTauType == eTauUnknown) {
-        // Nothing to do!
+double intFx (double x, int n, double Rp, double s)
+{
+
+  if (n < 2) {
+    return(0.);
+
+  } else if (n < 3) {
+    return( log( x/(Rp-x) * (Rp-s)/s ) );
+
+  } else {
+      return( log( x/(Rp-x) * (Rp-s)/s )- somKn(x, n, Rp, s) );
+  }
+
+}
+
+double Px(double x, int n, double Rp)
+{
+    const double P2 = 1./(Rp-x) + (1./x) ;
+
+    double som = 0.;
+    for (int p = 1; p <=(n-2); ++p ) {
+      som +=  (pow(Rp, n - p -1.) / pow(x, double(n-p)) );
     }
+
+    return(std::move(P2+som) );
+
+}
+void Phase::updateTau(const double tminPeriod, const double tmaxPeriod)
+{
+    if (mTauType == eTauFixed && mTauFixed != 0.) {
+        mTau.mX = mTauFixed;
+
+  /*  } else if (mTauType == eTauRange && mTauMax > mTauMin) {
+        mTau.mX = Generator::randomUniform(qMax(mTauMin, mBeta.mX - mAlpha.mX), mTauMax);
+*/
+   } else if (mTauType == eZOnly) {
+            // Modif PhD 2022
+            // model definition
+
+            const int n = mEvents.length();
+            double s = mBeta.mX - mAlpha.mX;
+            const double precision = .0001;
+            const double R = tmaxPeriod - tminPeriod;
+            const double Rp = R/(n-1)*n;
+
+            const double u = Generator::randomUniform(0.0, 1.0);
+
+            // solve equation F(x)-u=0
+            const double FbMax = intFx(R, n, Rp, s);
+            //double Fb = 1.0 - u;  // pour mémoire
+
+
+
+                // Newton
+
+            double xn = s;
+            double  b1;
+            double itF, p;
+            if ( !isinf(FbMax)) {
+                double Epsilon = R;
+
+                while ( Epsilon >= precision/100.) {
+
+                    itF = intFx(xn, n, Rp, s);
+
+                    itF = itF - u*FbMax;
+                    p = Px(xn, n, Rp);
+
+                    //b1 = itF != 0. ? (x - (itF / p )): x;
+                    b1 = xn - (itF / p );
+                    Epsilon = abs((xn - b1)/b1);
+                    xn = std::move(b1);
+
+                }
+                 xn = std::max(s, std::min(xn, R));
+
+            }
+
+
+
+         //  mTau.mX = std::move(xd);
+
+            //if (abs(xn-mTau.mX)> 1.*precision) {
+             //  qDebug()<<"-----------precision------> U = "<< u << " R = "<< R <<  "xd = "<<xd <<  "xn = "<< xn <<" s = "<< s;
+           // } else
+
+
+            mTau.mX = std::move(xn);
+
+        }
+   /* else if (mTauType == eTauUnknown) {
+        // Nothing to do!
+    }*/
 }
 
 void Phase::memoAll()
 {
     mAlpha.memo();
     mBeta.memo();
+    mTau.memo();
     mDuration.memo();
 #ifdef DEBUG
     if (mBeta.mX - mAlpha.mX < 0.)
@@ -381,6 +477,7 @@ void Phase::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, co
   //  if (mAlpha.HistoWithParameter(fftLen, bandwidth, tmin, tmax) == false) {
         mAlpha.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
         mBeta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+        mTau.generateHistos(chains, fftLen, bandwidth);
         mDuration.generateHistos(chains, fftLen, bandwidth);
   //  }
 }
