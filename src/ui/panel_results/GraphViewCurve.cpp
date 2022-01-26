@@ -109,7 +109,6 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
     //mGraph->reserveCurves(5);
     
     double t;
-    //const double step = mSettings.mStep;
 
     // We use the parameter saved with the map
     const double step = (mComposanteG.mapG.maxX() - mComposanteG.mapG.minX()) / (mComposanteG.mapG._column -1);
@@ -169,14 +168,6 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         curveG.mIsHisto = false;
         curveG.mIsRectFromZero = false;
 
-        GraphCurve curveGSup;
-        curveGSup.mName = tr("G Sup");
-        curveGSup.mPen = QPen(QColor(119, 95, 49), 1, Qt::CustomDashLine);
-        curveGSup.mPen.setDashPattern(QList<qreal>{5, 5});
-        curveGSup.mBrush = Qt::NoBrush;
-        curveGSup.mIsHisto = false;
-        curveGSup.mIsRectFromZero = false;
-
         GraphCurve curveGInf;
         curveGInf.mName = tr("G Inf");
         curveGInf.mPen = QPen(QColor(119, 95, 49), 1, Qt::CustomDashLine);
@@ -184,6 +175,14 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         curveGInf.mBrush = Qt::NoBrush;
         curveGInf.mIsHisto = false;
         curveGInf.mIsRectFromZero = false;
+
+        GraphCurve curveGSup;
+        curveGSup.mName = tr("G Sup");
+        curveGSup.mPen = QPen(QColor(119, 95, 49), 1, Qt::CustomDashLine);
+        curveGSup.mPen.setDashPattern(QList<qreal>{5, 5});
+        curveGSup.mBrush = Qt::NoBrush;
+        curveGSup.mIsHisto = false;
+        curveGSup.mIsRectFromZero = false;
 
         GraphCurve curveMap;
         curveMap.mName = tr("Map");
@@ -221,7 +220,10 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
 
 
         QList<GraphCurve> curveGChains;
+        QList<GraphCurve> curveGInfChains;
+        QList<GraphCurve> curveGSupChains;
         QList<GraphCurve> curveMapChains;
+
         for (unsigned i = 0; i < mComposanteGChains.size(); ++i) {
             GraphCurve curveGChain;
             curveGChain.mName = QString("G Chain ") + QString::number(i);
@@ -231,6 +233,26 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             curveGChain.mIsRectFromZero = false;
 
             curveGChains.append(curveGChain);
+
+            GraphCurve curveGInfChain;
+            curveGInfChain.mName = QString("G Inf Chain ") + QString::number(i);
+            curveGInfChain.mPen = QPen(Painting::chainColors[i], 1, Qt::CustomDashLine);
+            curveGInfChain.mPen.setDashPattern(QList<qreal>{5, 5});
+            curveGInfChain.mBrush = Qt::NoBrush;
+            curveGInfChain.mIsHisto = false;
+            curveGInfChain.mIsRectFromZero = false;
+
+            curveGInfChains.append(curveGInfChain);
+
+            GraphCurve curveGSupChain;
+            curveGSupChain.mName = QString("G Sup Chain ") + QString::number(i);
+            curveGSupChain.mPen = QPen(Painting::chainColors[i], 1, Qt::CustomDashLine);
+            curveGSupChain.mPen.setDashPattern(QList<qreal>{5, 5});
+            curveGSupChain.mBrush = Qt::NoBrush;
+            curveGSupChain.mIsHisto = false;
+            curveGSupChain.mIsRectFromZero = false;
+
+            curveGSupChains.append(curveGSupChain);
 
             GraphCurve curveMapChain;
             curveMapChain.mName = QString("Map Chain ") + QString::number(i);
@@ -280,6 +302,8 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
 
             for (int i = 0; i<curveGChains.size(); ++i) {
                 curveGChains[i].mData.insert(t, mComposanteGChains.at(i).vecG.at(idx));
+                curveGSupChains[i].mData.insert(t, mComposanteGChains.at(i).vecG.at(idx) + 1.96 * sqrt(mComposanteGChains.at(i).vecVarG.at(idx)));
+                curveGInfChains[i].mData.insert(t, mComposanteGChains.at(i).vecG.at(idx) - 1.96 * sqrt(mComposanteGChains.at(i).vecVarG.at(idx)));
             }
         }
         mGraph->addCurve(curveMap); // to be draw in first
@@ -288,16 +312,19 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         mGraph->addCurve(curveGSup);
         mGraph->addCurve(curveGInf);
 
-        mGraph->addCurve(curveEventsPoints);
-        mGraph->addCurve(curveDataPoints);
 
-        for (auto&& cGC: curveGChains) {
-            mGraph->addCurve(cGC);
+        for (int i = 0; i<curveGChains.size(); ++i) {
+            mGraph->addCurve(curveGChains[i]);
+            mGraph->addCurve(curveGInfChains[i]);
+            mGraph->addCurve(curveGSupChains[i]);
         }
+
         for (auto&& cMapC: curveMapChains) {
             mGraph->addCurve(cMapC);
         }
-
+        // must be put at the end to print the points above
+        mGraph->addCurve(curveEventsPoints);
+        mGraph->addCurve(curveDataPoints);
     }
 
     else if (mCurrentVariableList.contains(eGP)) {
@@ -312,7 +339,28 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             t = DateUtils::convertToAppSettingsFormat(idx*step + tmin);
             curveGP.mData.insert(t, mComposanteG.vecGP.at(idx));
         }
+
         mGraph->addCurve(curveGP);
+
+        QList<GraphCurve> curveGPChains;
+        for (unsigned i = 0; i < mComposanteGChains.size(); ++i) {
+            GraphCurve curveGPChain;
+            curveGPChain.mName = QString("G Prime Chain ") + QString::number(i);
+            curveGPChain.mPen = QPen(Painting::chainColors[i], 1, Qt::SolidLine);
+            curveGPChain.mBrush = Qt::NoBrush;
+            curveGPChain.mIsHisto = false;
+            curveGPChain.mIsRectFromZero = false;
+            for (size_t idx = 0; idx < mComposanteG.vecGP.size() ; ++idx) {
+                t = DateUtils::convertToAppSettingsFormat(idx*step + tmin);
+                curveGPChain.mData.insert(t, mComposanteG.vecGP.at(idx));
+            }
+            curveGPChains.append(curveGPChain);
+        }
+
+        for (auto&& cGP: curveGPChains) {
+            mGraph->addCurve(cGP);
+        }
+
 
     } else if (mCurrentVariableList.contains(eGS)) {
         GraphCurve curveGS;
@@ -322,11 +370,30 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         curveGS.mIsHisto = false;
         curveGS.mIsRectFromZero = false;
 
-        for (size_t idx = 0; idx < mComposanteG.vecG.size() ; ++idx) {
+        for (size_t idx = 0; idx < mComposanteG.vecGS.size() ; ++idx) {
             t = DateUtils::convertToAppSettingsFormat(idx*step + tmin);
             curveGS.mData.insert(t, mComposanteG.vecGS.at(idx));
         }
         mGraph->addCurve(curveGS);
+
+        QList<GraphCurve> curveGSChains;
+        for (unsigned i = 0; i < mComposanteGChains.size(); ++i) {
+            GraphCurve curveGSChain;
+            curveGSChain.mName = QString("G Second Chain ") + QString::number(i);
+            curveGSChain.mPen = QPen(Painting::chainColors[i], 1, Qt::SolidLine);
+            curveGSChain.mBrush = Qt::NoBrush;
+            curveGSChain.mIsHisto = false;
+            curveGSChain.mIsRectFromZero = false;
+            for (size_t idx = 0; idx < mComposanteG.vecGS.size() ; ++idx) {
+                t = DateUtils::convertToAppSettingsFormat(idx*step + tmin);
+                curveGSChain.mData.insert(t, mComposanteG.vecGS.at(idx));
+            }
+            curveGSChains.append(curveGSChain);
+        }
+
+        for (auto&& cGS: curveGSChains) {
+            mGraph->addCurve(cGS);
+        }
     }
 
     mGraph->setTipXLab(tr("t"));
@@ -359,6 +426,10 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
     
     for (int i = 0; i < mShowChainList.size(); ++i) {
         mGraph->setCurveVisible(QString("G Chain ") + QString::number(i), mShowChainList.at(i) && showG);
+        mGraph->setCurveVisible(QString("G Inf Chain ") + QString::number(i), mShowChainList.at(i) && showGError);
+        mGraph->setCurveVisible(QString("G Sup Chain ") + QString::number(i), mShowChainList.at(i) && showGError);
         mGraph->setCurveVisible(QString("Map Chain ") + QString::number(i), mShowChainList.at(i) && showMap);
+        mGraph->setCurveVisible(QString("G Prime Chain ") + QString::number(i), mShowChainList.at(i) && showGP);
+        mGraph->setCurveVisible(QString("G Second Chain ") + QString::number(i), mShowChainList.at(i) && showGS);
     }
 }
