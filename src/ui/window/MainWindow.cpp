@@ -1053,9 +1053,9 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     mProjectView->showHelp(false);
     mHelpAction->setChecked(AppSettings::mShowHelp);
 
-  //  bool fileOpened = false;
-    /*
-    if (defaultFilePath!="") {
+    bool fileOpened = false;
+
+    if (defaultFilePath != "") {
         QFileInfo fileInfo(defaultFilePath);
         if (fileInfo.isFile()) {
             if (!mProject)
@@ -1089,7 +1089,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
             }
         }
     }
-*/
+
     QString path = "";
 
 
@@ -1097,7 +1097,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
         path = defaultFilePath;
 
     } else
-   */
+
         if (AppSettings::mOpenLastProjectAtLaunch) {
         const QString dir = AppSettings::mLastDir;
         const QString filename = AppSettings::mLastFile;
@@ -1105,6 +1105,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
             path = dir + "/" + filename;
 
     }
+        */
 std::cout<<path.toStdString();
 
     if (path != "") {

@@ -53,9 +53,22 @@ MainController::MainController(const QString& filePath)
 
     mMainWindow = MainWindow::getInstance();
     try {
+       // AppSettings();
         AppSettings::readSettings();
+        QString path;
+       if (filePath != "" ) {
+              path = filePath;
 
-        mMainWindow->readSettings(filePath); // le problème est ici pour macOS
+       } else  if ((filePath == "" ) && AppSettings::mOpenLastProjectAtLaunch) {
+           const QString dir = AppSettings::mLastDir;
+           const QString filename = AppSettings::mLastFile;
+           if ((dir != "") && (filename !=""))
+               path = dir + "/" + filename;
+
+       }
+
+
+        mMainWindow->readSettings(path); // le problème est ici pour macOS
 
         mMainWindow->move(AppSettings::mLastPosition);
         mMainWindow->resize(AppSettings::mLastSize);

@@ -168,7 +168,7 @@ T vector_min_value(const QVector<T>& aVector)
 }
 
  template<typename T>
- const T inRange(const T minimum, const T value ,const T maximum)
+ inline const T inRange(const T minimum, const T value ,const T maximum)
 {
     // see qBound in qglobal
     return std::max(minimum, std::min(maximum, value));
