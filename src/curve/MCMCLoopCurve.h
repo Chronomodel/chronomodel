@@ -169,6 +169,7 @@ private:
 
     bool  hasPositiveGPrimeByDet (const MCMCSplineComposante& splineComposante);
 
+    void memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSplineComposante &splineComposante, const int realyAccepted);
     // Obsolete
     //std::vector<unsigned> listOfIterationsWithPositiveGPrime (const std::vector<MCMCSplineComposante> &splineTrace);
 
