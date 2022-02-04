@@ -3366,3 +3366,27 @@ bool Model::hasSelectedPhases()
     return std::any_of(mPhases.begin(), mPhases.end(), [](Phase * p){return p->mIsSelected;});
 }
 
+void Model::reduceEventsTheta(QList<Event *> &lEvent)
+{
+    for (auto&& e : lEvent)
+        e->mTheta.mX = reduceTime( e->mTheta.mX );
+}
+
+long double Model::reduceTime(double t)
+{
+    const double tmin = mSettings.mTmin;
+    const double tmax = mSettings.mTmax;
+    return (long double) (t - tmin) / (tmax - tmin);
+}
+
+long double Model::yearTime(double reduceTime)
+{
+    const double tmin = mSettings.mTmin;
+    const double tmax = mSettings.mTmax;
+    return (long double)  reduceTime * (tmax - tmin) + tmin ;
+}
+
+QString Model::initializeTheta()
+{
+        return QString();
+}

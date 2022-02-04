@@ -1791,16 +1791,16 @@ void ResultsView::createByCurveGraph()
                         evPts.Ymax = event->mYDec + verr;
                         break;
                     case CurveSettings::eVariableTypeField :
-                        evPts.Ymin = event->mZField - 1.95*event->mS_ZField;
-                        evPts.Ymax = event->mZField + 1.95*event->mS_ZField;
+                        evPts.Ymin = event->mZField - 1.96*event->mS_ZField;
+                        evPts.Ymax = event->mZField + 1.96*event->mS_ZField;
                         break;
                     case CurveSettings::eVariableTypeDepth :
-                        evPts.Ymin = event->mXIncDepth - 1.95*event->mS_XA95Depth;
-                        evPts.Ymax = event->mXIncDepth + 1.95*event->mS_XA95Depth;
+                        evPts.Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
+                        evPts.Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
                         break;
                     case CurveSettings::eVariableTypeOther :
-                        evPts.Ymin = event->mXIncDepth - 1.95*event->mS_XA95Depth;
-                        evPts.Ymax = event->mXIncDepth + 1.95*event->mS_XA95Depth;
+                        evPts.Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
+                        evPts.Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
                         break;
                     }
 

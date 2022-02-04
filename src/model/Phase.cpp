@@ -341,7 +341,7 @@ void Phase::initTau(const double tminPeriod, const double tmaxPeriod)
    /* else if (mTauType == eTauRange && mTauMax > mTauMin) // no longer used
         mTau.mX = mTauMax;
 */
-    else if (mTauType==eZOnly) {
+    else if (mTauType == eZOnly) {
             // Modif PhD ; initialisation arbitraire
             mTau.mX = tmaxPeriod - tminPeriod;
             // nothing to do

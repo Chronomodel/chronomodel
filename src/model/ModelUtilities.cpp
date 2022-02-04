@@ -268,6 +268,8 @@ QVector<QVector<Phase*> > ModelUtilities::getAllPhasesBranches(const QList<Phase
 
 
 //Sort events by level
+// Obsolete
+/*
 QVector<Event*> ModelUtilities::sortEventsByLevel(const QList<Event*>& events)
 {
     int numSorted = 0;
@@ -285,7 +287,9 @@ QVector<Event*> ModelUtilities::sortEventsByLevel(const QList<Event*>& events)
     }
     return results;
 }
-
+*/
+/*
+// Obsolete
 QVector<Phase*> ModelUtilities::sortPhasesByLevel(const QList<Phase*>& phases)
 {
     int numSorted = 0;
@@ -303,6 +307,7 @@ QVector<Phase*> ModelUtilities::sortPhasesByLevel(const QList<Phase*>& phases)
     }
     return results;
 }
+*/
 
 /**
  * @brief ModelUtilities::unsortEvents We adapte The modern version of the Fisher–Yates shuffle
@@ -1285,24 +1290,20 @@ void sampleInCumulatedRepartition( Event* event, const ProjectSettings &settings
     // 2- Search for the common interval between constraints and calibrations
 
     /* In ChronoModel 2.0, we initialize the theta uniformly between tmin and tmax possible.
+     *  unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
      * Now, we use the cumulative date density distribution function.
      */
 
     // Calibrated outside the constraints
     // This case must be dissociated in two, the density is on the right or the density is on the left, thus favouring one of the sides.
 
-    if (unionTmax< min) {
-        //event->mTheta.mX = Generator::gaussByDoubleExp(min, (max-min)*0.75, min, max);
+    if (unionTmax < min) {
         event->mTheta.mX = Generator::gaussByDoubleExp((unionTmax + unionTmin)/2., (unionTmax - unionTmin)/3., min, max);
 #ifdef DEBUG
         if (event->mTheta.mX == min)
             qDebug() << "sampleInCumulatedRepartition unionTmax< min and (event->mTheta.mX == min)";
 #endif
-    } else if (max<unionTmin) {
-
-        //unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
-
-        //event->mTheta.mX = Generator::gaussByDoubleExp(max, (max-min)*0.75, min, max);
+    } else if (max < unionTmin) {
         event->mTheta.mX = Generator::gaussByDoubleExp((unionTmax + unionTmin)/2., (unionTmax - unionTmin)/3., min, max);
 
 #ifdef DEBUG
@@ -1312,7 +1313,6 @@ void sampleInCumulatedRepartition( Event* event, const ProjectSettings &settings
     } else {
         unionTmin = std::max(unionTmin, min);
         unionTmax = std::min(unionTmax, max);
-
 
         // 3 - Création de la cumulé des courbes de répartition dans l'intervalle
         QVector<double> unionRepartition (0);

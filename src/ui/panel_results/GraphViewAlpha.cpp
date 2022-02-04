@@ -218,7 +218,14 @@ void GraphViewAlpha::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         mGraph->showInfos(false);
         mGraph->clearInfos();
     }
-
+    /* ------------------Second tab : History plots.------------------------------
+     *  Possible Curves (could be for theta or sigma):
+     *  - Trace i
+     *  - Q1 i
+     *  - Q2 i
+     *  - Q3 i
+     * ------------------------------------------------
+     */
     else if (mCurrentTypeGraph == eTrace)  {
         for (unsigned i = 0; i<mShowChainList.size(); ++i) {
             mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList.at(i));
@@ -233,6 +240,26 @@ void GraphViewAlpha::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         mGraph->setYAxisMode(GraphView::eMinMaxHidden);
         mGraph->showInfos(true);
         mGraph->autoAdjustYScale(true);
+    }
+    /* -----------------------Third tab : Acceptance rate.-------------------------
+     *  Possible curves (could be for theta or sigma):
+     *  - Accept i
+     *  - Accept Target
+     * ------------------------------------------------ */
+    else if (mCurrentTypeGraph == eAccept) {
+
+        mGraph->setCurveVisible("Accept Target", true);
+        for (int i=0; i<mShowChainList.size(); ++i)
+            mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList.at(i));
+
+        mGraph->setTipXLab(tr("Iteration"));
+        mGraph->setTipYLab(tr("Rate"));
+
+        mGraph->setYAxisMode(GraphView::eMinMax );
+        mGraph->showInfos(false);
+        mGraph->clearInfos();
+        mGraph->autoAdjustYScale(false); // do  repaintGraph()
+        mGraph->setRangeY(0, 100); // do repaintGraph() !!
     }
 
 

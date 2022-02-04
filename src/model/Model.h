@@ -87,6 +87,11 @@ public:
     void clear();
 
     void initNodeEvents(); // use in MCMCLoopMain::initialize()
+    QString initializeTheta();
+
+    void reduceEventsTheta(QList<Event *> &lEvent);
+    long double reduceTime(double t);
+    long double yearTime(double reduceTime);
 
     virtual void saveToFile(QDataStream* out);
     virtual void restoreFromFile(QDataStream* in);

@@ -86,7 +86,7 @@ MCMCProgressDialog::~MCMCProgressDialog()
 
 int MCMCProgressDialog::startMCMC()
 {
-    mLoop->start(QThread::NormalPriority);//HighPriority);// NormalPriority);
+    mLoop->start(QThread::HighPriority);// NormalPriority);
     return exec();
 }
 

@@ -94,7 +94,7 @@ const QList<ChainSpecs> &MCMCLoop::chains() const
 void MCMCLoop::run()
 {
 #if DEBUG
-    qDebug()<<"MCMCLoop::run ";
+    qDebug()<<"MCMCLoop::run";
 #endif
 
     QElapsedTimer startTime;
@@ -139,7 +139,7 @@ void MCMCLoop::run()
     unsigned iterDone = 0;
     for (mChainIndex = 0; mChainIndex < mChains.size(); ++mChainIndex) {
         if (mChainIndex > 0) {
-            // rétablissement de l'ordre des Events, indispensable en cas de calcul de courbe. Car le cacul modifie l'ordre des events
+            // rétablissement de l'ordre des Events, indispensable en cas de calcul de courbe. Car le update modifie l'ordre des events
             std::copy(initListEvents.begin(), initListEvents.end(), mProject->mModel->mEvents.begin() );
         }
 
@@ -161,6 +161,7 @@ void MCMCLoop::run()
         QElapsedTimer initTime;
         initTime.start();
         mAbortedReason = this->initialize();
+
         if (!mAbortedReason.isEmpty())
             return;
 
@@ -291,7 +292,7 @@ void MCMCLoop::run()
             mProject->mModel->mLogAdapt += line("Adapt OK at batch : " + QString::number(chain.mBatchIndex) + "/" + QString::number(chain.mMaxBatchs));
 
         } else {
-            mProject->mModel->mLogAdapt += line(textRed("Not adapted after : " + QString::number(chain.mBatchIndex) + " batches"));
+            mProject->mModel->mLogAdapt += line(textRed("Warning : Not adapted after " + QString::number(chain.mBatchIndex) + " batches"));
         }
 
         mProject->mModel->mLogAdapt += ModelUtilities::modelStateDescriptionHTML(static_cast<ModelCurve*>(mProject->mModel) );
@@ -356,7 +357,6 @@ void MCMCLoop::run()
                 batchIdx++;
             }
 
-
             ++chain.mAquisitionIterIndex;
             ++chain.mTotalIter;
 
@@ -370,8 +370,6 @@ void MCMCLoop::run()
     }
 
     mProject->mModel->mChains = mChains;
-
-
 
     //-----------------------------------------------------------------------
 

@@ -55,11 +55,16 @@ class Event;
 class MCMCLoopCurve: public MCMCLoop
 {
     Q_OBJECT
+
+public:
+    ModelCurve* mModel;
+    CurveSettings mCurveSettings;
+
 public:
     MCMCLoopCurve(ModelCurve* model, Project* project);
     ~MCMCLoopCurve();
 
-    void orderEventsByTheta(QList<Event *> &lEvents);
+   // void orderEventsByTheta(QList<Event *> &lEvents); // Obsolete
     void orderEventsByThetaReduced(QList<Event *> &lEvents);
     void spreadEventsThetaReduced(QList<Event *> &lEvents, double minStep = 1e-9);
     void spreadEventsThetaReduced0(QList<Event *> &sortedEvents, long double spreadSpan = 0.);
@@ -81,15 +86,16 @@ private:
 
     long double h_YWI_AY_composanteY (const SplineMatrices& matrices, const QList<Event *> lEvents, const long double lambdaSpline, const std::vector<long double> &vecH);
     long double h_YWI_AY_composanteZ (const SplineMatrices& matrices, const QList<Event *> lEvents, const long double lambdaSpline, const std::vector<long double> &vecH);
-    long double h_alpha (const SplineMatrices &matrices, const int nb_noeuds, const long double &lambdaSpline);
+    long double h_lambda (const SplineMatrices &matrices, const int nb_noeuds, const long double &lambdaSpline);
     long double h_theta (const QList<Event *> lEvents);
     long double h_theta_Event (const Event * e);
     long double h_VG (const QList<Event *> lEvents);
     
-    double Calcul_Variances_Yij_Rice_GSJ (const QList<Event *> lEvents);
+    long double S02_lambda (const SplineMatrices &matrices, const int nb_noeuds);
+    double Calcul_Variance_Rice (const QList<Event *> lEvents);
    // double h_YWI_AYX(SplineMatrices& matrices, QList<double> & lX, const double alphaLissage);
  //   long double h_YWI_AY_composanteX(SplineMatrices& matrices, QList<double> lX, const double alphaLissage);
-    //double h_alphaX(SplineMatrices& matrices, const int nb_noeuds, const double &alphaLissage);
+    //double h_lambdaX(SplineMatrices& matrices, const int nb_noeuds, const double &alphaLissage);
   //  double h_thetaX(QList<double> lX);
    // double h_VGX(QList<double> lX);
 
@@ -98,28 +104,26 @@ private:
 
     std::vector<long double> createDiagWInv(const QList<Event *> &lEvents);
 
-
     long double minimalThetaDifference(QList<Event *>& lEvents);
     long double minimalThetaReducedDifference(QList<Event *> &lEvents);
 
     void spreadEventsTheta(QList<Event *> &lEvents, double minStep = 1e-6); // not used
 
-
-    void reduceEventsTheta(QList<Event *> &lEvents);
-    long double reduceTime(double t);
-    long double yearTime(double reduceTime);
+    inline void reduceEventsTheta(QList<Event *> &lEvents);
+    //long double reduceTime(double t);
+    inline long double yearTime(double reduceTime) ;
     void saveEventsTheta(QList<Event *> &lEvents);
     void restoreEventsTheta(QList<Event *> &lEvents);
+
+
+
     std::map<int, double> mThetasMemo;
-    
-    
     
     std::vector<long double> calculVecH(const QList<Event *> &lEvents);
   //  std::vector<double> calculVecHX(const QList<double> &lX);
 
     std::vector<long double> getThetaEventVector(const QList<Event *>& lEvents);
     std::vector<long double> getYEventVector(const QList<Event *>& lEvents);
-    
 
     Matrix2D calculMatR(std::vector<long double>& vecH);
     Matrix2D calculMatQ(std::vector<long double>& vecH);
@@ -153,6 +157,8 @@ private:
 
 
     long double initLambdaSpline();
+
+    long double initLambdaSplineByCV();
     long double cross_validation (const SplineMatrices& matrices, const std::vector<long double> &vecH, const double lambdaSpline);
     long double general_cross_validation (const SplineMatrices& matrices, const std::vector<long double> &vecH, const double lambdaSpline);
 
@@ -174,9 +180,6 @@ private:
     //std::vector<unsigned> listOfIterationsWithPositiveGPrime (const std::vector<MCMCSplineComposante> &splineTrace);
 
 
-public:
-    ModelCurve* mModel;
-    CurveSettings mCurveSettings;
 };
 
 #endif

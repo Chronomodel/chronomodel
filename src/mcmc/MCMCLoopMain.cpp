@@ -218,30 +218,16 @@ QString MCMCLoopMain::initialize()
     }
 
     /* -------------- Init Bounds --------------
-    * - Définir des niveaux pour les faits
-    * - Initialiser les bornes (uniquement, pas les faits) par niveaux croissants
     * => Init borne :
     *  - si valeur fixe, facile!
-    *  - si intervalle : random uniform sur l'intervalle (vérifier si min < max pour l'intervalle qui a été modifié par la validation du modèle)
     * ---------------------------------------------------------------- */
-    QVector<Event*> eventsByLevel = ModelUtilities::sortEventsByLevel(mModel->mEvents);
-    int curLevel (0);
-    double curLevelMaxValue = mModel->mSettings.mTmin;
 
-    for (int i = 0; i < eventsByLevel.size(); ++i) {
-        if (eventsByLevel.at(i)->type() == Event::eKnown) {
-            EventKnown* bound = dynamic_cast<EventKnown*>(eventsByLevel[i]);
+    for (int i = 0; i < events.size(); ++i) {
+        if (events.at(i)->type() == Event::eKnown) {
+            EventKnown* bound = dynamic_cast<EventKnown*>(events[i]);
 
             if (bound) {
-                if (curLevel != bound->mLevel) {
-                    curLevel = bound->mLevel;
-                    curLevelMaxValue = mModel->mSettings.mTmin;
-                }
-
                 bound->mTheta.mX = bound->mFixed;
-
-                curLevelMaxValue = qMax(curLevelMaxValue, bound->mTheta.mX);
-
                 bound->mTheta.memo();
                 bound->mTheta.mLastAccepts.clear();
                 bound->mTheta.tryUpdate(bound->mTheta.mX, 2.);
@@ -260,6 +246,7 @@ QString MCMCLoopMain::initialize()
 
     emit stepChanged(tr("Initializing Events..."), 0, unsortedEvents.size());
 
+    // Check Strati constraint
     for (auto&& e : unsortedEvents) {
         mModel->initNodeEvents();
         QString circularEventName = "";
@@ -293,7 +280,10 @@ QString MCMCLoopMain::initialize()
                 qDebug() << tr("-----Error Init for event : %1 : min = %2 : max = %3-------").arg(unsortedEvents.at(i)->mName, QString::number(min), QString::number(max));
             }
 #endif
-
+            if (min >= max) {
+                mAbortedReason = QString(tr("Error Init for event : %1 : min = %2 : max = %3-------").arg(unsortedEvents.at(i)->mName, QString::number(min, 'f', 30), QString::number(max, 'f', 30)));
+                return mAbortedReason;
+            }
 
             /* In ChronoModel 2.0, we initialize the theta uniformly between tmin and tmax possible.
              * Now, we use the cumulative date density distribution function.
@@ -422,7 +412,17 @@ QString MCMCLoopMain::initialize()
 
     i = 0;
     for (auto&& phase : phases ) {
-        phase->updateAll(tminPeriod, tmaxPeriod);
+        //phase->updateAll(tminPeriod, tmaxPeriod);
+        double tmp = phase->mEvents[0]->mTheta.mX;
+        // All Event must be Initialized
+        std::for_each(phase->mEvents.begin(), phase->mEvents.end(), [&tmp] (Event* ev){tmp = std::min(ev->mTheta.mX, tmp);});
+        phase->mAlpha.mX = tmp;
+
+        tmp = phase->mEvents[0]->mTheta.mX;
+        std::for_each(phase->mEvents.begin(), phase->mEvents.end(), [&tmp] (Event* ev){tmp = std::max(ev->mTheta.mX, tmp);});
+        phase->mBeta.mX = tmp;
+
+        phase->mDuration.mX = phase->mBeta.mX - phase->mAlpha.mX;
 
         if (isInterruptionRequested())
             return ABORTED_BY_USER;
@@ -500,16 +500,16 @@ bool MCMCLoopMain::adapt(const int batchIndex) //original code
 
             //--------------------- Adapt Sigma MH de t_i -----------------------------------------
             if (date.mTheta.mSamplerProposal == MHVariable::eMHSymGaussAdapt)
-                noAdapt = noAdapt && date.mTheta.adapt(taux_min, taux_max, delta);
+                noAdapt = date.mTheta.adapt(taux_min, taux_max, delta) && noAdapt;
 
             //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
-            noAdapt = noAdapt && date.mSigma.adapt(taux_min, taux_max, delta);
+            noAdapt = date.mSigma.adapt(taux_min, taux_max, delta) && noAdapt;
 
         }
 
         //--------------------- Adapt Sigma MH de Theta Event -----------------------------------------
        if ((event->mType != Event::eKnown) && ( event->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss) )
-           noAdapt = noAdapt && event->mTheta.adapt(taux_min, taux_max, delta);
+           noAdapt = event->mTheta.adapt(taux_min, taux_max, delta) && noAdapt;
 
     }
 

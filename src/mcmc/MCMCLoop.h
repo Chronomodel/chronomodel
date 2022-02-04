@@ -64,7 +64,6 @@ public:
 
     void setMCMCSettings(const MCMCSettings& settings);
     const QList<ChainSpecs>& chains() const;
-
     void run();
 
 signals:
@@ -76,6 +75,7 @@ protected:
     virtual QString calibrate() = 0;
     virtual void initVariablesForChain() = 0;
     virtual QString initialize() = 0;
+
     virtual bool update() = 0;
     virtual void memo() = 0;
     virtual void finalize() = 0;

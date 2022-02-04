@@ -69,8 +69,8 @@ public:
     static QVector<QVector<Phase*> > getBranchesFromPhase(Phase* start, const double maxLength);
     static QVector<QVector<Phase*> > getAllPhasesBranches(const QList<Phase*>& events, const double maxLength);
 
-    static QVector<Event*> sortEventsByLevel(const QList<Event*>& events);
-    static QVector<Phase*> sortPhasesByLevel(const QList<Phase*>& phases);
+    // static QVector<Event*> sortEventsByLevel(const QList<Event*>& events); // Obsolete
+    // static QVector<Phase*> sortPhasesByLevel(const QList<Phase*>& phases); // Obsolete
 
     static QVector<Event*> unsortEvents(const QList<Event*>& events);
     static QString modelDescriptionHTML(const ModelCurve* model);

@@ -147,7 +147,7 @@ public:
     bool mIsSelected;
     bool mIsCurrent;
 
-    int mLevel;
+    int mLevel; // ?? is it usefull ??
 
 };
 

@@ -1065,28 +1065,47 @@ void GraphView::drawCurves(QPainter& painter)
                         refPointsPen.setWidthF(pen.widthF());
                          QPainterPath pathPoint;
                         if (iterRefPts->type == CurveRefPts::eCross) {
-
-                            pathPoint.moveTo( getXForValue(xmin), getYForValue(ymoy, true) );
-                            pathPoint.lineTo( getXForValue(xmax), getYForValue(ymoy, true) );
-
-                            pathPoint.moveTo( getXForValue(xmoy), getYForValue(ymin, true) );
-                            pathPoint.lineTo( getXForValue(xmoy), getYForValue(ymax, true) );
-                            painter.strokePath(pathPoint, refPointsPen);
                             refPointsPen.setWidthF(std::max(2., pen.widthF()));
+                            qreal yPlot = getYForValue(ymoy, true);
+
+                            qreal xPlot = getXForValue(xmoy);
+                            qreal xMinPlot = getXForValue(xmin);
+                            qreal xMaxPlot = getXForValue(xmax);
+
+                            pathPoint.moveTo( xMinPlot, yPlot );
+                            pathPoint.lineTo( xMaxPlot, yPlot );
+
+                            pathPoint.moveTo( xPlot, getYForValue(ymin, true) );
+                            pathPoint.lineTo( xPlot, getYForValue(ymax, true) );
+                            painter.strokePath(pathPoint, refPointsPen);
+
                             painter.setBrush(refPointsPen.brush());
                             painter.setPen(refPointsPen);
-                            painter.drawEllipse(QRectF( getXForValue(xmoy) - 1.*refPointsPen.widthF(), getYForValue(ymoy, true) - 1.*refPointsPen.widthF(),
+                            painter.drawEllipse(QRectF( xPlot - refPointsPen.widthF(), yPlot - refPointsPen.widthF(),
                                                         refPointsPen.widthF()*2., refPointsPen.widthF()*2.));
                         }
                         else if (iterRefPts->type == CurveRefPts::eLine) {
+                            qreal penWidth = std::max(2., pen.widthF());
+                            refPointsPen.setWidthF(penWidth);
 
-                            pathPoint.moveTo( getXForValue(xmin), getYForValue(ymoy, true) );
-                            pathPoint.lineTo( getXForValue(xmax), getYForValue(ymoy, true) );
+                            qreal yPlot = getYForValue(ymoy, true);
+                            qreal xMinPlot = getXForValue(xmin);
+                            qreal xMaxPlot = getXForValue(xmax);
 
-                            refPointsPen.setWidthF(std::max(2., pen.widthF()));
+                            // Draw a line with a border color background
+                            QRectF border (xMinPlot - 1, yPlot - (1+penWidth)/2., xMaxPlot - xMinPlot + 1, penWidth +1 );
+                            painter.setBrush(refPointsPen.brush());// Qt::NoBrush);
+                            painter.setPen(QPen(getBackgroundColor(), 1));
+                            painter.drawRect(border);
+                            /* drax only a line
+                            pathPoint.moveTo( xMinPlot, yPlot );
+                            pathPoint.lineTo( xMaxPlot, yPlot );
+
                             painter.setBrush(refPointsPen.brush());
                             painter.setPen(refPointsPen);
                             painter.strokePath(pathPoint, refPointsPen);
+                            */
+
 
                         }
                         else if (iterRefPts->type == CurveRefPts::eDotLine) {
@@ -1413,31 +1432,38 @@ void GraphView::drawMap(GraphCurve& curve, QPainter& painter)
     const double maxVal = curve.mMap.max_value;
     const double minVal = curve.mMap.min_value;
   //  int gridLength = curve.mMap.row()-1;
-    qreal rectXSize = getXForValue((maxX-minX)/(curve.mMap.row()-1) + minX, false) - getXForValue( minX, false) ;
-    qreal rectYSize = getYForValue( minY, false) -getYForValue((maxY-minY)/(curve.mMap.column()-1) + minY, false)  ;
+    //qreal rectXSize = getXForValue((maxX-minX)/(curve.mMap.row()-1) + minX, false) - getXForValue(minX, false) ;
+    //qreal rectYSize = getYForValue(minY, false) -getYForValue((maxY-minY)/(curve.mMap.column()-1) + minY, false)  ;
+
+    qreal rectXSize = (getXForValue(maxX, false) - getXForValue(minX, false) ) / (curve.mMap.row()-1);
+    qreal rectYSize = (getYForValue(minY, false) - getYForValue(maxY, false) ) / (curve.mMap.column()-1)  ;
     QPen rectPen;
-    rectPen.setStyle(Qt::NoPen);
+    rectPen.setStyle(Qt::NoPen);//SolidLine);// NoPen);
+
     const double val99 = .099*(maxVal-minVal)+minVal;
     const double val95 = .075*(maxVal-minVal)+minVal;
     const double val50 = .025*(maxVal-minVal)+minVal;
     const double val25 = .010*(maxVal-minVal)+minVal;
     QColor col;
-    double val, x, y, alp;
+    double val, alp;
+    qreal xtop, xbottom, ytop, ybottom;
+    painter.setRenderHint(QPainter::Antialiasing);
+    xtop = getXForValue(minX, false);
 
-    for (unsigned r = 0 ; r <curve.mMap.row(); r++) {
-
-        for (unsigned c = 0 ; c<curve.mMap.column(); c++) {
+    for (unsigned r = 1 ; r <curve.mMap.row(); r++) {
+        tReal = r*(maxX-minX)/(curve.mMap.row()-1) + minX;
+        //x = getXForValue(tReal, false);
+        xbottom =  getXForValue(tReal, false) + rectXSize/2.;
+        ytop = getYForValue(minY, false);
+        for (unsigned c = 1 ; c<curve.mMap.column(); c++) {
             val = curve.mMap.at(r, c);
 
             if ( val > minVal) {
                 yReal = c*(maxY-minY)/(curve.mMap.column()-1) + minY;
-                tReal = r*(maxX-minX)/(curve.mMap.row()-1) + minX;
+                ybottom = getYForValue(yReal, false) + rectYSize/2.;
 
-                x = getXForValue(tReal, false);
-                y = getYForValue(yReal, false);
                 if (false) {
                     col = QColor(Qt::yellow);
-
 
                     if (val > val99)
                         col = QColor(Qt::black);
@@ -1455,13 +1481,24 @@ void GraphView::drawMap(GraphCurve& curve, QPainter& painter)
                     col = QColor(curve.mPen.color());
                     col.setAlphaF(sqrt(alp));
                 }
-
+                //rectPen.setColor(col);
+                // https://doc.qt.io/qt-6/qrectf.html
+                painter.setPen(Qt::NoPen);
                 painter.setBrush(col);
-                painter.fillRect(QRectF(x-rectXSize/2., y-rectYSize/2., rectXSize, rectYSize), col);
+
+                //painter.drawRect(QRectF(x-rectXSize/2., y-rectYSize/2., rectXSize, rectYSize));
+                QRectF rectMap;
+                //rectMap.setRect(xtop, ytop, rectXSize, rectYSize);
+                rectMap.setCoords(xtop, ytop, xbottom, ybottom);
+                painter.drawRect(rectMap);
+                //painter.drawRect(QRectF(xtop, ytop, rectXSize, rectYSize));
+                //painter.setBrush(col);
+                //painter.fillRect(QRectF(x-rectXSize/2., y-rectYSize/2., rectXSize, rectYSize), col);
+                ytop = ybottom;
             }
 
         }
-
+        xtop = xbottom;
     }
 
 }
@@ -1699,9 +1736,9 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
             list << locale.toString(x);
             // Il doit y avoir au moins trois courbes G, GSup, Ginf
 
-            list<<locale.toString(interpolateValueInQMap(x, mCurves.at(0).mData), 'g', 15);
-            list<<locale.toString(interpolateValueInQMap(x, mCurves.at(1).mData), 'g', 15);
-            list<<locale.toString(interpolateValueInQMap(x, mCurves.at(2).mData), 'g', 15);
+            list<<locale.toString(interpolateValueInQMap(x, mCurves.at(1).mData), 'g', 15); // G
+            list<<locale.toString(interpolateValueInQMap(x, mCurves.at(2).mData), 'g', 15); // G Sup
+            list<<locale.toString(interpolateValueInQMap(x, mCurves.at(3).mData), 'g', 15); // G Inf
 
       //      }
             rows<<list;

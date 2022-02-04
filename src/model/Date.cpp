@@ -1632,7 +1632,7 @@ void Date::initDelta(Event*)
             //mDelta = event->mTheta.mX - mTheta.mX;
             const double tmin = mDeltaAverage - 5*mDeltaError;
             const double tmax = mDeltaAverage + 5*mDeltaError;
-            mDelta = Generator::gaussByDoubleExp(mDeltaAverage,mDeltaError, tmin, tmax);
+            mDelta = Generator::gaussByDoubleExp(mDeltaAverage, mDeltaError, tmin, tmax);
             }
             break;
         
