@@ -1789,7 +1789,7 @@ bool Project::selectedEventsWithString(const QString str)
     bool res = false;
     const QJsonArray events = mState.value(STATE_EVENTS).toArray();
     QJsonArray newEvents = QJsonArray();
-    for (auto &e : events) {
+    for (auto e : events) {
         QJsonObject evt = e.toObject();
         evt[STATE_IS_SELECTED] = e.toObject().value(STATE_NAME).toString().contains(str);
         if (e.toObject().value(STATE_NAME).toString().contains(str))

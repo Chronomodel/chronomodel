@@ -51,7 +51,8 @@ public:
 
 };
 
-typedef std::valarray<std::valarray<long double>> Matrix2D;
+typedef std::valarray<std::valarray<double>> Matrix2D;
+Matrix2D initMatrix2D(size_t rows, size_t cols);
 
 QDataStream &operator<<( QDataStream& stream, const CurveMap &map );
 QDataStream &operator>>( QDataStream& stream, CurveMap &map );

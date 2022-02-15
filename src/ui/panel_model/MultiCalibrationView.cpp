@@ -228,7 +228,6 @@ MultiCalibrationView::~MultiCalibrationView()
 void MultiCalibrationView::resizeEvent(QResizeEvent* )
 {
     updateLayout();
-qDebug()<<"MultiCalibrationView::resizeEvent(QResizeEvent* )";
 }
 
 
@@ -1014,7 +1013,7 @@ void MultiCalibrationView::exportResults()
                 } else {
                     const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
 
-                     for (auto& date : dates) {
+                     for (auto date : dates) {
                         const QJsonObject jdate = date.toObject();
 
                         Date d (jdate);

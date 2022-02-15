@@ -253,6 +253,7 @@ Event Event::fromJson(const QJsonObject& json)
             throw QObject::tr("ERROR : data could not be created with plugin %1").arg(date.toObject().value(STATE_DATE_PLUGIN_ID).toString());
 
     }
+    event.mVG = MHVariable();
     return event;
 }
 
@@ -869,7 +870,7 @@ double Event::getThetaMaxRecursive_old(const double defaultValue,
     for (auto &&branch : phaseBranches) {
 
         double branchMax (defaultValue);
-        for (int j=branch.size()-1; j>=0; --j) {
+        for (auto j=branch.size()-1; j>=0; --j) {
             const Phase* phase = branch[j];
             if (phase->mEvents.contains(this)) {
                 max4 = qMin(max4, branchMax);

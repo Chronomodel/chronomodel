@@ -50,7 +50,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 typedef struct SplineMatrices
 {
-    std::vector<long double> diagWInv;
+    std::vector<double> diagWInv;
     Matrix2D matR;
     Matrix2D matQ;
     Matrix2D matQT;
@@ -62,19 +62,19 @@ typedef struct SplineResults
 {
     Matrix2D matB;
     Matrix2D matL;
-    std::vector<long double> matD;
+    std::vector<double> matD;
     
-    std::vector<long double> vecG;
-    std::vector<long double> vecGamma;
+    std::vector<double> vecG;
+    std::vector<double> vecGamma;
     
 } SplineResults;
 
 typedef struct MCMCSplineComposante
 {
-    std::vector<long double> vecThetaEvents; // le noeud ti
-    std::vector<long double> vecG;
-    std::vector<long double> vecGamma;
-    std::vector<long double> vecVarG;
+    std::vector<double> vecThetaEvents; // le noeud ti
+    std::vector<double> vecG;
+    std::vector<double> vecGamma;
+    std::vector<double> vecVarG;
     
 } MCMCSplineComposante;
 
@@ -94,14 +94,14 @@ QDataStream &operator>>( QDataStream& stream, MCMCSpline& spline );
 
 typedef struct PosteriorMeanGComposante
 {
-    std::vector<long double> vecG;
-    std::vector<long double> vecGP;
-    std::vector<long double> vecGS;
-    std::vector<long double> vecVarG;
+    std::vector<double> vecG;
+    std::vector<double> vecGP;
+    std::vector<double> vecGS;
+    std::vector<double> vecVarG;
     // inter spline error
-    std::vector<long double> vecVarianceG;
+    std::vector<double> vecVarianceG;
     // intra spline error
-    std::vector<long double> vecVarErrG;
+    std::vector<double> vecVarErrG;
     // spline map
     CurveMap mapG;
     
@@ -121,20 +121,20 @@ typedef struct PosteriorMeanG
 QDataStream &operator<<( QDataStream &stream, const PosteriorMeanG& pMeanG );
 QDataStream &operator>>( QDataStream &stream, PosteriorMeanG& pMeanG );
 
-std::vector<long double> calculVecH(const std::vector<long double> &vec);
-Matrix2D calculMatR(const std::vector<long double>& vec);
-Matrix2D calculMatQ(const std::vector<long double>& vec);
+std::vector<double> calculVecH(const std::vector< double> &vec);
+Matrix2D calculMatR(const std::vector<double>& vec);
+Matrix2D calculMatQ(const std::vector<double>& vec);
 
 void conversionIDF(PosteriorMeanG& G);
-PosteriorMeanG conversionIDF(const std::vector<long double> &vecGx, const std::vector<long double> &vecGy, const std::vector<long double> &vecGz, const std::vector<long double> &vecGxErr, const std::vector<long double> &vecGyErr, const std::vector<long double> &vecGzErr);
+PosteriorMeanG conversionIDF(const std::vector<double> &vecGx, const std::vector<double> &vecGy, const std::vector<double> &vecGz, const std::vector<double> &vecGxErr, const std::vector<double> &vecGyErr, const std::vector<double> &vecGzErr);
 
 void conversionID(PosteriorMeanG& G);
-PosteriorMeanG conversionID(const std::vector<long double> &vecGx, const std::vector<long double> &vecGy, const std::vector<long double> &vecGz, const std::vector<long double> &vecGxErr, const std::vector<long double> &vecGyErr, const std::vector<long double> &vecGzErr);
+PosteriorMeanG conversionID(const std::vector<double> &vecGx, const std::vector<double> &vecGy, const std::vector<double> &vecGz, const std::vector<double> &vecGxErr, const std::vector<double> &vecGyErr, const std::vector<double> &vecGzErr);
 
 class CurveUtilities
 {
 public:
-    std::vector<long double> definitionNoeuds(const std::vector<long double>& tabPts, const double minStep);
+    std::vector<double> definitionNoeuds(const std::vector<double>& tabPts, const double minStep);
 
 };
 

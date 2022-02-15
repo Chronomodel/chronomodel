@@ -65,7 +65,10 @@ QDataStream &operator>>( QDataStream &stream, CurveMap &map )
 
 }
 
-
+Matrix2D initMatrix2D(size_t rows, size_t cols)
+{
+   return std::valarray(std::valarray<double>(cols), rows) ;
+}
 /*
 Matrix::Matrix()
 {

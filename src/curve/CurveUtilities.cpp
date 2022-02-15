@@ -67,7 +67,7 @@ std::vector<double> calculVecH(const std::vector<double>& vec)
 
 // --------------- Function with list of double value
 
-std::vector<std::vector<double>> calculMatR(const std::vector<double>& vec)
+Matrix2D calculMatR(const std::vector<double>& vec)
 {
     // Calcul de la matrice R, de dimension (n-2) x (n-2) contenue dans une matrice n x n
     // Par exemple pour n = 5 :
@@ -82,7 +82,7 @@ std::vector<std::vector<double>> calculMatR(const std::vector<double>& vec)
     const unsigned n = vec.size();
 
     // matR est de dimension n-2 x n-2, mais contenue dans une matrice nxn
-    std::vector<std::vector<double>> matR = initMatrix(n, n);
+    Matrix2D matR = initMatrix2D(n, n);
     // On parcourt n-2 valeurs :
     /* pHd : code simplified
     for (int i = 1; i < n-1; ++i) {
@@ -105,7 +105,7 @@ std::vector<std::vector<double>> calculMatR(const std::vector<double>& vec)
     return matR;
 }
 
-std::vector<std::vector<double>> calculMatQ(const std::vector<double>& vec)
+Matrix2D calculMatQ(const std::vector<double>& vec)
 {
     // Calcul de la matrice Q, de dimension n x (n-2) contenue dans une matrice n x n
     // Les 1ère et dernière colonnes sont nulles
@@ -121,7 +121,7 @@ std::vector<std::vector<double>> calculMatQ(const std::vector<double>& vec)
     const unsigned n = vec.size();
 
     // matQ est de dimension n x n-2, mais contenue dans une matrice nxn
-    std::vector<std::vector<double>> matQ = initMatrix(n, n);
+    Matrix2D matQ = initMatrix2D(n, n);
     // On parcourt n-2 valeurs :
    /* for (unsigned i = 1; i < vecH.size(); ++i) {
         matQ[i-1][i] = 1. / vecH[i-1];
@@ -132,7 +132,7 @@ std::vector<std::vector<double>> calculMatQ(const std::vector<double>& vec)
     for (unsigned i = 1; i < vecH.size(); ++i) {
             matQ[i-1][i] = 1. / vecH[i-1];
             matQ[i+1][i] = 1. / vecH[i];
-            matQ[i][i] = -(matQ.at(i-1).at(i) + matQ.at(i+1).at(i));
+            matQ[i][i] = -(matQ[i-1][i] + matQ[i+1][i]);
         }
 
 
@@ -158,10 +158,10 @@ void display(const std::vector<double>& v)
 }
 
 
-PosteriorMeanG conversionIDF(const std::vector<long double>& vecGx, const std::vector<long double>& vecGy, const std::vector<long double>& vecGz, const std::vector<long double>& vecGxErr, const std::vector<long double> &vecGyErr, const std::vector<long double> &vecGzErr)
+PosteriorMeanG conversionIDF(const std::vector<double>& vecGx, const std::vector<double>& vecGy, const std::vector<double>& vecGz, const std::vector<double>& vecGxErr, const std::vector<double> &vecGyErr, const std::vector<double> &vecGzErr)
 {
     const double deg = 180. / M_PI ;
-    const unsigned n = vecGx.size();
+    auto n = vecGx.size();
     PosteriorMeanG res;
     res.gx.vecG.resize(n);
     res.gx.vecVarG.resize(n);
@@ -170,15 +170,15 @@ PosteriorMeanG conversionIDF(const std::vector<long double>& vecGx, const std::v
     res.gz.vecG.resize(n);
     res.gz.vecVarG.resize(n);
 
-    for (unsigned j = 0; j < n ; ++j) {
-        const long double& Gx = vecGx.at(j);
+    for (unsigned long j = 0; j < n ; ++j) {
+        const double& Gx = vecGx.at(j);
 
-        const long double& Gy = vecGy.at(j);
-        const long double& Gz = vecGz.at(j);
+        const double& Gy = vecGy.at(j);
+        const double& Gz = vecGz.at(j);
 
-        const long double F = sqrt(pow(Gx, 2.) + pow(Gy, 2.) + pow(Gz, 2.));
-        const long double Inc = asin(Gz / F);
-        const long double Dec = atan2(Gy, Gx); // angleD(Gx, Gy);
+        const double F = sqrt(pow(Gx, 2.) + pow(Gy, 2.) + pow(Gz, 2.));
+        const double Inc = asin(Gz / F);
+        const double Dec = atan2(Gy, Gx); // angleD(Gx, Gy);
         // U_cmt_change_repere , ligne 470
         // sauvegarde des erreurs sur chaque paramètre  - on convertit en degrès pour I et D
         // Calcul de la boule d'erreur moyenne par moyenne quadratique loigne 464
@@ -189,10 +189,10 @@ PosteriorMeanG conversionIDF(const std::vector<long double>& vecGx, const std::v
         */
 
 
-        const long double ErrIDF = sqrt((pow(vecGxErr.at(j), 2.) +pow(vecGyErr.at(j), 2.) +pow(vecGzErr.at(j), 2.))/3.);
+        const double ErrIDF = sqrt((pow(vecGxErr.at(j), 2.) +pow(vecGyErr.at(j), 2.) +pow(vecGzErr.at(j), 2.))/3.);
 
-        const long double ErrI = ErrIDF / F ;
-        const long double ErrD = ErrIDF / (F * cos(Inc)) ;
+        const double ErrI = ErrIDF / F ;
+        const double ErrD = ErrIDF / (F * cos(Inc)) ;
 
        /* long double ErrI = Gz+ErrIDF ; // dans l'espace 3D, l'enveloppe supérieure
         ErrI = abs(asin(ErrIDF/F) - Inc); // pour retrouver la différence
@@ -234,7 +234,7 @@ void conversionIDF (PosteriorMeanG& G)
  * @param vecGErr
  * @return
  */
-PosteriorMeanG conversionID(const std::vector<long double>& vecGx, const std::vector<long double>& vecGy, const std::vector<long double>& vecGz, const std::vector<long double>& vecGxErr, const std::vector<long double>& vecGyErr, const std::vector<long double>& vecGzErr)
+PosteriorMeanG conversionID(const std::vector<double>& vecGx, const std::vector<double>& vecGy, const std::vector<double>& vecGz, const std::vector<double>& vecGxErr, const std::vector<double>& vecGyErr, const std::vector<double>& vecGzErr)
 {
    return conversionIDF(vecGx, vecGy, vecGz, vecGxErr, vecGyErr, vecGzErr);
 }
@@ -251,11 +251,11 @@ void conversionID (PosteriorMeanG& G)
     G.gz.vecVarG = std::move(res.gz.vecVarG);
 }
 
-std::vector<long double> CurveUtilities::definitionNoeuds(const std::vector<long double> &tabPts, const double minStep)
+std::vector<double> CurveUtilities::definitionNoeuds(const std::vector<double> &tabPts, const double minStep)
 {
    // display(tabPts);
 
-    std::vector<long double> result (tabPts);
+    std::vector<double> result (tabPts);
     std::sort(result.begin(), result.end());
     
     // Espacement possible ?
@@ -321,7 +321,7 @@ std::vector<long double> CurveUtilities::definitionNoeuds(const std::vector<long
             }
             
             if (endIndex != 0) {
-                qWarning( "=> On espace les valeurs entre les bornes %Lf et %Lf", result[startIndex - 1], result[i]);
+                qWarning( "=> On espace les valeurs entre les bornes %f et %f", result[startIndex - 1], result[i]);
                 
                 // On a la place d'espacer les valeurs !
                 // - La borne inférieure ne peut pas bouger (en startIndex-1)

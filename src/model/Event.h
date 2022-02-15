@@ -160,7 +160,7 @@ public:
     double mYz;
     
     // Values used for the calculations
-    long double mThetaReduced;
+    double mThetaReduced;
     double mY;
     double mSy;
     double mW;
