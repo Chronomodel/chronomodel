@@ -182,7 +182,7 @@ void ProjectView::resizeEvent(QResizeEvent* e)
 void ProjectView::setProject(Project* project)
 {
     mModelView->setProject(project);
-    if (!project->mModel->mEvents.isEmpty())
+    if (project->withResults())
         mResultsView->setProject(project);
 }
 

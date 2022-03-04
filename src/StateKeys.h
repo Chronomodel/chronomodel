@@ -131,6 +131,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #define STATE_CURVE_PROCESS_TYPE "process_type"
 #define STATE_CURVE_VARIABLE_TYPE "variable_type"
+#define STATE_CURVE_THRESHOLD "speed_threshold"
 #define STATE_CURVE_SELECT_OUV "select_ouv"
 #define STATE_CURVE_OUV_MAX "ouv_max"
 #define STATE_CURVE_USE_CORR_LAT "use_corr_lat"

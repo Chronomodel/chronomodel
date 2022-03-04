@@ -82,6 +82,9 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     mVariableTypeInput->addItem(tr("Depth"));
     mVariableTypeInput->addItem(tr("Any Measure"));
     
+    mThresholdLabel = new QLabel(tr("Speed threshold"), this);
+    mThresholdInput = new QLineEdit(this);
+
     mUseErrMesureLabel = new QLabel(tr("Use Measurement Err."), this);
     mUseErrMesureInput = new QCheckBox(this);
     
@@ -122,6 +125,9 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
 
     grid->addWidget(mVariableTypeLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mVariableTypeInput, row, 1);
+
+    grid->addWidget(mThresholdLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mThresholdInput, row, 1);
 
     grid->setVerticalSpacing(15);
     grid->addWidget(mUseErrMesureLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
@@ -189,6 +195,8 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
     
     connect(mVariableTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
+
+    connect(mThresholdInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
     
     connect(mUseErrMesureInput, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::save);
     
@@ -214,6 +222,7 @@ void CurveSettingsView::setSettings(const CurveSettings& settings)
 {
     mProcessTypeInput->blockSignals(true);
     mVariableTypeInput->blockSignals(true);
+    mThresholdInput->blockSignals(true);
     mUseErrMesureInput->blockSignals(true);
     mTimeTypeInput->blockSignals(true);
     mVarianceTypeInput->blockSignals(true);
@@ -278,7 +287,9 @@ void CurveSettingsView::setSettings(const CurveSettings& settings)
     } else if (settings.mVarianceType == CurveSettings::eModeBayesian) {
         mVarianceTypeInput->setCurrentIndex(1);
     }
-    
+    mThresholdInput->setText(QString::number(settings.mThreshold));
+
+
     mUseVarianceIndividualInput->setChecked(settings.mUseVarianceIndividual);
     mVarianceFixedInput->setText(QString::number(settings.mVarianceFixed));
     
@@ -293,6 +304,7 @@ void CurveSettingsView::setSettings(const CurveSettings& settings)
     
     mProcessTypeInput->blockSignals(false);
     mVariableTypeInput->blockSignals(false);
+    mThresholdInput->blockSignals(false);
     mUseErrMesureInput->blockSignals(false);
     mTimeTypeInput->blockSignals(false);
     mVarianceTypeInput->blockSignals(false);
@@ -326,6 +338,7 @@ CurveSettings CurveSettingsView::getSettings()
             break;
         case 3:
             settings.mVariableType = CurveSettings::eVariableTypeDepth;
+            settings.mThreshold = mThresholdInput->text().toDouble();
             break;
         case 4:
             settings.mVariableType = CurveSettings::eVariableTypeOther;
@@ -424,6 +437,9 @@ void CurveSettingsView::updateVisibilities()
         mVariableTypeLabel->setVisible(false);
         mVariableTypeInput->setVisible(false);
 
+        mThresholdLabel->setVisible(false);
+        mThresholdInput->setVisible(false);
+
         mVarianceTypeLabel->setVisible(false);
         mVarianceTypeInput->setVisible(false);
 
@@ -450,6 +466,10 @@ void CurveSettingsView::updateVisibilities()
         mVariableTypeLabel->setVisible(variableTypeRequired);
         mVariableTypeInput->setVisible(variableTypeRequired);
 
+        const bool showThreshold = (mVariableTypeInput->currentText() == "Depth");
+        mThresholdLabel->setVisible(showThreshold);
+        mThresholdInput->setVisible(showThreshold);
+
         mVarianceTypeLabel->setVisible(true);
         mVarianceTypeInput->setVisible(true);
         const bool varianceFixed = (mVarianceTypeInput->currentText() == "Fixed");
@@ -460,9 +480,9 @@ void CurveSettingsView::updateVisibilities()
 
         mLambdaSplineTypeLabel->setVisible(true);
         mLambdaSplineTypeInput->setVisible(true);
-        const bool coeffLissageFixed = (mLambdaSplineTypeInput->currentText() == "Fixed");
-        mLambdaSplineLabel->setVisible(coeffLissageFixed);
-        mLambdaSplineInput->setVisible(coeffLissageFixed);
+        const bool lambdaSplineFixed = (mLambdaSplineTypeInput->currentText() == "Fixed");
+        mLambdaSplineLabel->setVisible(lambdaSplineFixed);
+        mLambdaSplineInput->setVisible(lambdaSplineFixed);
     }
     
 }

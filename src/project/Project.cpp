@@ -819,10 +819,13 @@ bool Project::load(const QString& path)
                         message.exec();
                     }
                 } else {
+                    qDebug() << "Project::load() no file.res : "<< dataPath;
+
                     setNoResults(true);
                     clearModel();
                 }
             } else {
+                qDebug() << "Project::load() no file.res : "<< dataPath;
                 setNoResults(true);
                 clearModel();
             }
@@ -1201,10 +1204,26 @@ bool Project::askToSave(const QString& saveDialogTitle)
 
 bool Project::saveProjectToFile()
 {
+
+    QString path = AppSettings::mLastDir + "/" + AppSettings::mLastFile;
+    QFile file_chr(path);
+
+    QFile file_cal(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".cal");
+    QFile file_res(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res");
+
      if (mLastSavedState != mState) {
-        QString path = AppSettings::mLastDir + "/" + AppSettings::mLastFile;
-        QFile file(path);
-        if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
+        // création d'une copie du dernier resultat avec succés
+        if (mNoResults && file_res.exists() && file_cal.exists()) {
+
+            file_chr.copy(path + "_bak");
+
+            file_cal.copy(path + ".cal_bak");
+
+            file_res.copy(path + ".res_bak");
+        }
+
+
+        if (file_chr.open(QIODevice::ReadWrite | QIODevice::Text)) {
 #ifdef DEBUG
             qDebug() << "Project::saveProjectToFile() Project saved to : " << path;
 #endif
@@ -1216,10 +1235,10 @@ bool Project::saveProjectToFile()
             QJsonDocument jsonDoc(mState);
             QByteArray textDoc = jsonDoc.toJson(QJsonDocument::Indented);
             //file.write(jsonDoc.toJson(QJsonDocument::Indented));
-            file.write(textDoc);
+            file_chr.write(textDoc);
 
-            file.resize(file.pos());
-            file.close();
+            file_chr.resize(file_chr.pos());
+            file_chr.close();
         } else
             return false;
 
@@ -1229,10 +1248,9 @@ bool Project::saveProjectToFile()
 #endif
     }
 
-    QFile file(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".cal");
-    if (file.open(QIODevice::WriteOnly)) {
+    if (file_cal.open(QIODevice::WriteOnly)) {
 
-        QDataStream out(&file);
+        QDataStream out(&file_cal);
         out.setVersion(QDataStream::Qt_5_5);
         out << out.version();
 
@@ -1243,15 +1261,17 @@ bool Project::saveProjectToFile()
             out << it.key();
             out << it.value();
         }
-        file.close();
+        file_cal.close();
      }
 
-    QFileInfo checkFile(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res");
+    QFileInfo checkFile(file_res.fileName());
     if (checkFile.exists() && checkFile.isFile())
-        QFile(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res").remove();
+        file_res.remove();
 
     if (!mNoResults && !mModel->mEvents.empty()) {
+ #ifdef DEBUG
         qDebug() << "Project::saveProjectToFile() Saving project results in "<<AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res";
+#endif
         mModel->setProject(this);
 
         // -----------------------------------------------------
@@ -1260,11 +1280,11 @@ bool Project::saveProjectToFile()
         //QFileInfo info(fileName);
         // QFile file(info.path() + info.baseName() + ".~res"); // when we could do a compressed file
         //QFile file(info.path() + info.baseName() + ".res");
-        QFile file(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res");
-        if (file.open(QIODevice::WriteOnly)) {
-            QDataStream out(&file);
+
+        if (file_res.open(QIODevice::WriteOnly)) {
+            QDataStream out(&file_res);
             mModel->saveToFile(&out);
-            file.close();
+            file_res.close();
         }
 
     }

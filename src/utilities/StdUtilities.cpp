@@ -639,13 +639,13 @@ double interpolate_value_from_curve(const double t, const QVector<double> & curv
 
 const std::map<double, double> create_HPD(const QMap<double, double>& aMap, const double threshold)
 {
-    std::map<double, double> result = std::map<double, double>();
+    std::map<double, double> result;
 
     if (aMap.size() < 2)  // in case of only one value (e.g. a bound fixed) or no value
         return result;
 
 
-    const double areaTot = map_area(aMap);
+    const long double areaTot = map_area(aMap);
 
     std::map<double, double> aMapStd = aMap.toStdMap();
     if (areaTot==threshold) {
@@ -656,12 +656,13 @@ const std::map<double, double> create_HPD(const QMap<double, double>& aMap, cons
         try {
             std::multimap<double, double> inverted;
             std::multimap<double, double>::const_iterator cIter = aMapStd.cbegin();
+
             while (cIter != aMapStd.cend()) {
                  const double t = cIter->first;//key();
                  const double v = cIter->second;//value();
                  result[t] = 0.; // important to init all the possible value
 
-                inverted.insert(std::pair<double,double>(v, t));
+                inverted.insert(std::pair<double, double>(v, t));
                  ++cIter;
             }
 
@@ -669,8 +670,8 @@ const std::map<double, double> create_HPD(const QMap<double, double>& aMap, cons
             std::reverse_iterator<iter_type> iterInverted (inverted.rbegin());
 
 
-            double area (0.);
-            double areaSearched = areaTot * threshold / 100.;
+            long double area (0.);
+            long double areaSearched = areaTot * threshold / 100.;
 
             iterInverted++;
         //--------------------
@@ -688,9 +689,9 @@ const std::map<double, double> create_HPD(const QMap<double, double>& aMap, cons
                     if ( iterMap != aMapStd.begin() && iterMap != aMapStd.end()) { // meaning : iterMap is not the first item
 
                         const double vPrev = std::prev(iterMap)->second;
-                        if (vPrev>=v) {
+                        if (vPrev >= v ) {
                             const double tPrev = std::prev(iterMap)->first;
-                            area += (v + vPrev)/2*(t - tPrev);
+                            area += (long double)(v + vPrev)/2 * (long double)(t - tPrev);
                             // we need to save a surface, so we need to save 4 values
                             if (area < areaSearched) {
                                 result[t] = v;
@@ -701,9 +702,10 @@ const std::map<double, double> create_HPD(const QMap<double, double>& aMap, cons
 
                     if (iterMap != aMapStd.end() ) {
                         const double vNext = std::next(iterMap)->second;
-                        if (vNext>v) {
+                        if (vNext > v) {
                             const double tNext = std::next(iterMap)->first;
-                            area += (v + vNext)/2*(tNext - t);
+
+                            area += (long double)(v + vNext)/2. * (long double)(tNext - t);
                             // we need to save a surface, so we need to save 4 values
                             if (area < areaSearched) {
                                 result[t] = v;
@@ -715,9 +717,10 @@ const std::map<double, double> create_HPD(const QMap<double, double>& aMap, cons
 
                 }
 
-                if (std::next(iterInverted) != inverted.rend() &&  (std::prev(iterInverted)->first==v) )
-                        result[t] = v;
-                    else {
+                if (std::next(iterInverted) != inverted.rend() &&  (std::prev(iterInverted)->first==v) ) {
+                     result[t] = v;
+
+                } else {
                         if (area < areaSearched)
                             result[t] = v;
 

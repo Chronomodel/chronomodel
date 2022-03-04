@@ -169,6 +169,9 @@ Matrix2D comatrice0(const Matrix2D &matrix);
 
 Matrix2D choleskyLL0(const Matrix2D& matrix);
 std::pair<Matrix2D, std::vector< double> > choleskyLDLT(const Matrix2D& matrix);
+std::pair<Matrix2D, std::vector<double> > choleskyLDLT(const Matrix2D& matrix, const int shift);
+std::pair<Matrix2D, std::vector<double> > choleskyLDLT(const Matrix2D& matrix, const int nbBandes, const int shift);
+std::pair<Matrix2D, std::vector<double> > choleskyLDLT_Dsup0(const Matrix2D& matrix, const int nbBandes, const int shift);
 std::pair<Matrix2D, std::vector< double> > decompositionCholesky(const Matrix2D &matrix, const int nbBandes, const int shift);
 
 std::pair<Matrix2D, Matrix2D > decompositionLU0(const Matrix2D &A);

@@ -45,9 +45,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 CurveSettings::CurveSettings():
-//mEnabled(Curve_ENABLED_DEFAULT),
 mProcessType(CURVE_PROCESS_TYPE_DEFAULT),
 mVariableType(CURVE_VARIABLE_TYPE_DEFAULT),
+  mThreshold(0.),
 mUseErrMesure(CURVE_USE_ERR_MESURE_DEFAULT),
 mTimeType(CURVE_TIME_TYPE_DEFAULT),
 mVarianceType(CURVE_VARIANCE_TYPE_DEFAULT),
@@ -82,8 +82,7 @@ bool CurveSettings::operator==(CurveSettings const & s) const
 
 bool CurveSettings::isEqual(const CurveSettings& s) const
 {
-  //  if (s.mEnabled != mEnabled ||
-    if (s.mProcessType != mProcessType ||
+   if (s.mProcessType != mProcessType ||
         s.mVariableType != mVariableType ||
         s.mUseErrMesure != mUseErrMesure ||
         s.mTimeType != mTimeType ||
@@ -103,6 +102,7 @@ void CurveSettings::copyFrom(const CurveSettings& s)
   //  mEnabled = s.mEnabled;
     mProcessType = s.mProcessType;
     mVariableType = s.mVariableType;
+    mThreshold = s.mThreshold;
     mUseErrMesure = s.mUseErrMesure;
     mTimeType = s.mTimeType;
     mVarianceType = s.mVarianceType;
@@ -124,6 +124,7 @@ CurveSettings CurveSettings::getDefault()
    // settings.mEnabled = Curve_ENABLED_DEFAULT;
     settings.mProcessType = CURVE_PROCESS_TYPE_DEFAULT;
     settings.mVariableType = CURVE_VARIABLE_TYPE_DEFAULT;
+    settings.mThreshold = 0;
     settings.mUseErrMesure = CURVE_USE_ERR_MESURE_DEFAULT;
     settings.mTimeType = CURVE_TIME_TYPE_DEFAULT;
     settings.mVarianceType = CURVE_VARIANCE_TYPE_DEFAULT;
@@ -140,6 +141,7 @@ void CurveSettings::restoreDefault()
   //  mEnabled = Curve_ENABLED_DEFAULT;
     mProcessType = CURVE_PROCESS_TYPE_DEFAULT;
     mVariableType = CURVE_VARIABLE_TYPE_DEFAULT;
+    mThreshold = 0;
     mUseErrMesure = CURVE_USE_ERR_MESURE_DEFAULT;
     mTimeType = CURVE_TIME_TYPE_DEFAULT;
     mVarianceType = CURVE_VARIANCE_TYPE_DEFAULT;
@@ -152,12 +154,11 @@ void CurveSettings::restoreDefault()
 CurveSettings CurveSettings::fromJson(const QJsonObject& json)
 {
     CurveSettings settings;
-    
-  //  settings.mEnabled = json.contains(STATE_Curve_ENABLED) ?  json.value(STATE_Curve_ENABLED).toBool() : Curve_ENABLED_DEFAULT;
-    
+
     settings.mProcessType = json.contains(STATE_CURVE_PROCESS_TYPE) ? CurveSettings::ProcessType (json.value(STATE_CURVE_PROCESS_TYPE).toInt()) : CURVE_PROCESS_TYPE_DEFAULT;
     
     settings.mVariableType = json.contains(STATE_CURVE_VARIABLE_TYPE) ? CurveSettings::VariableType (json.value(STATE_CURVE_VARIABLE_TYPE).toInt()) : CURVE_VARIABLE_TYPE_DEFAULT;
+    settings.mThreshold  = json.contains(STATE_CURVE_THRESHOLD) ? json.value(STATE_CURVE_THRESHOLD).toDouble() : 0.;
     
     settings.mUseErrMesure = json.contains(STATE_CURVE_USE_ERR_MESURE) ? json.value(STATE_CURVE_USE_ERR_MESURE).toBool() : CURVE_USE_ERR_MESURE_DEFAULT;
     
@@ -178,20 +179,20 @@ CurveSettings CurveSettings::fromJson(const QJsonObject& json)
 
 QJsonObject CurveSettings::toJson() const
 {
-    QJsonObject mcmc;
+    QJsonObject cs;
+
+    cs[STATE_CURVE_PROCESS_TYPE] = QJsonValue::fromVariant((int)mProcessType);
+    cs[STATE_CURVE_VARIABLE_TYPE] = QJsonValue::fromVariant((int)mVariableType);
+    cs[STATE_CURVE_THRESHOLD] = QJsonValue::fromVariant(mThreshold);
+    cs[STATE_CURVE_USE_ERR_MESURE] = QJsonValue::fromVariant(mUseErrMesure);
+    cs[STATE_CURVE_TIME_TYPE] = QJsonValue::fromVariant((int)mTimeType);
+    cs[STATE_CURVE_VARIANCE_TYPE] = QJsonValue::fromVariant((int)mVarianceType);
+    cs[STATE_CURVE_USE_VARIANCE_INDIVIDUAL] = QJsonValue::fromVariant(mUseVarianceIndividual);
+    cs[STATE_CURVE_VARIANCE_FIXED] = QJsonValue::fromVariant(mVarianceFixed);
+    cs[STATE_CURVE_COEFF_LISSAGE_TYPE] = QJsonValue::fromVariant((int)mLambdaSplineType);
+    cs[STATE_CURVE_ALPHA_LISSAGE] = QJsonValue::fromVariant(mLambdaSpline);
     
-  //  mcmc[STATE_Curve_ENABLED] = QJsonValue::fromVariant(mEnabled);
-    mcmc[STATE_CURVE_PROCESS_TYPE] = QJsonValue::fromVariant((int)mProcessType);
-    mcmc[STATE_CURVE_VARIABLE_TYPE] = QJsonValue::fromVariant((int)mVariableType);
-    mcmc[STATE_CURVE_USE_ERR_MESURE] = QJsonValue::fromVariant(mUseErrMesure);
-    mcmc[STATE_CURVE_TIME_TYPE] = QJsonValue::fromVariant((int)mTimeType);
-    mcmc[STATE_CURVE_VARIANCE_TYPE] = QJsonValue::fromVariant((int)mVarianceType);
-    mcmc[STATE_CURVE_USE_VARIANCE_INDIVIDUAL] = QJsonValue::fromVariant(mUseVarianceIndividual);
-    mcmc[STATE_CURVE_VARIANCE_FIXED] = QJsonValue::fromVariant(mVarianceFixed);
-    mcmc[STATE_CURVE_COEFF_LISSAGE_TYPE] = QJsonValue::fromVariant((int)mLambdaSplineType);
-    mcmc[STATE_CURVE_ALPHA_LISSAGE] = QJsonValue::fromVariant(mLambdaSpline);
-    
-    return mcmc;
+    return cs;
 }
 
 QDataStream &operator<<( QDataStream &stream, const CurveSettings &data )
@@ -212,80 +213,60 @@ QDataStream &operator>>( QDataStream &stream, CurveSettings &data )
     return stream;
 }
 
-bool CurveSettings::showInclination() const
+
+bool CurveSettings::showX() const
 {
-    // Elle est toujours nécessaire en sphérique et vectoriel.
-    // En univarié, elle n'est nécessaire que pour les variables d'étude : inclinaison ou déclinaison.
-    return ( mProcessType == CurveSettings::eProcessTypeSpherical ||
-             mProcessType == CurveSettings::eProcessType3D ||
-            mProcessType == CurveSettings::eProcessType2D ||
-             mProcessType == CurveSettings::eProcessTypeVector ||
-            (mProcessType == CurveSettings::eProcessTypeUnivarie && (mVariableType == CurveSettings::eVariableTypeInclination ||
-               mVariableType == CurveSettings::eVariableTypeDeclination)) ||
-            (mProcessType == CurveSettings::eProcessTypeUnivarie &&  mVariableType == CurveSettings::eVariableTypeOther) ||
-            (mProcessType == CurveSettings::eProcessTypeUnivarie &&  mVariableType == CurveSettings::eVariableTypeDepth)  ||
-             (mProcessType == CurveSettings::eProcessTypeUnivarie &&  mVariableType == CurveSettings::eVariableTypeField) );
+    return (XLabel()!="");
 }
 
-QString CurveSettings::inclinationLabel() const
+QString CurveSettings::XLabel() const
 {
-    QString label;
+    if (mProcessType == CurveSettings::eProcessTypeUnivarie) {
+        if ( mVariableType == CurveSettings::eVariableTypeInclination || mVariableType == CurveSettings::eVariableTypeDeclination) {
+          return QObject::tr("Inclination");
 
+        } else if (  mVariableType == CurveSettings::eVariableTypeDepth) {
+              return QObject::tr("Depth");
 
-    if ( (mProcessType == CurveSettings::eProcessTypeUnivarie &&
-           ( mVariableType == CurveSettings::eVariableTypeInclination || mVariableType == CurveSettings::eVariableTypeDeclination)) ||
-         mProcessType == CurveSettings::eProcessTypeVector ||
-         mProcessType == CurveSettings::eProcessTypeSpherical) {
-          label = QObject::tr("Inclination");
+        } else  if (mVariableType == CurveSettings::eVariableTypeOther) {
+              return QObject::tr("Measure");
+
+        } else  if ( mVariableType == CurveSettings::eVariableTypeField) {
+              return QObject::tr("Field");
+        }
 
     } else if (mProcessType == CurveSettings::eProcessType3D || mProcessType == CurveSettings::eProcessType2D) {
-        label = QObject::tr("X");
+        return QObject::tr("X");
 
-    } else  if (mProcessType == CurveSettings::eProcessTypeUnivarie || mVariableType == CurveSettings::eVariableTypeDepth) {
-        label = QObject::tr("Depth");
-
-    } else  if (mProcessType == CurveSettings::eProcessTypeUnivarie || mVariableType == CurveSettings::eVariableTypeOther) {
-        label = QObject::tr("Measure");
-
-    } else  if (mProcessType == CurveSettings::eProcessTypeUnivarie || mVariableType == CurveSettings::eVariableTypeField) {
-        label = QObject::tr("Field");
-
+    } if (mProcessType == CurveSettings::eProcessTypeVector || mProcessType == CurveSettings::eProcessTypeSpherical) {
+         return QObject::tr("Inclination");
     }
-    return label;
+
+
+    return QString();
 }
 
-bool CurveSettings::showDeclination() const
+bool CurveSettings::showY() const
 {
-    // Elle est toujours nécessaire en sphérique et vectoriel.
-    // En univarié, elle n'est nécessaire que pour la variable d'étude : déclinaison.
-    return ( mProcessType == CurveSettings::eProcessTypeSpherical ||
-             mProcessType == CurveSettings::eProcessType3D ||
-             mProcessType == CurveSettings::eProcessType2D ||
-             mProcessType == CurveSettings::eProcessTypeVector ||
-             ( mProcessType == CurveSettings::eProcessTypeUnivarie &&
-               mVariableType == CurveSettings::eVariableTypeDeclination));
+    return (YLabel()!="");
 }
 
-QString CurveSettings::declinationLabel() const
+QString CurveSettings::YLabel() const
 {
-    QString label;
     if ( mProcessType == CurveSettings::eProcessTypeVector ||
          mProcessType == CurveSettings::eProcessTypeSpherical) {
-          label = QObject::tr("Declination");
+          return QObject::tr("Declination");
 
     } else if (mProcessType == CurveSettings::eProcessType2D || mProcessType == CurveSettings::eProcessType3D) {
-        label = QObject::tr("Y");
+        return QObject::tr("Y");
+
+    } else if (mProcessType == CurveSettings::eProcessTypeUnivarie && mVariableType == CurveSettings::eVariableTypeDeclination) {
+        return QObject::tr("Declination");
 
     }
-    return label;
+    return QString();
 }
 
-bool CurveSettings::showIntensity() const
-{
-    // Elle est toujours nécessaire en vectoriel, mais jamais en sphérique.
-    // En univarié, elle n'est jamais nécessaire .
-    return (mProcessType == CurveSettings::eProcessTypeVector ||  mProcessType == CurveSettings::eProcessType3D );
-}
 
 bool CurveSettings::showYErr() const
 {
@@ -294,17 +275,21 @@ bool CurveSettings::showYErr() const
     return (mProcessType == CurveSettings::eProcessType2D || mProcessType == CurveSettings::eProcessType3D) ;
 }
 
-QString CurveSettings::intensityLabel() const
+bool CurveSettings::showZ() const
 {
-    QString label;
+    return (ZLabel()!="");
+}
+
+QString CurveSettings::ZLabel() const
+{
     if (mProcessType == CurveSettings::eProcessTypeVector) {
-        label = QObject::tr("Field");
+        return QObject::tr("Field");
 
     } else if (mProcessType == CurveSettings::eProcessType3D) {
-        label = QObject::tr("Z");
+        return QObject::tr("Z");
 
     }
-    return label;
+    return QString();
 }
 
 QString CurveSettings::processText() const

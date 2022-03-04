@@ -248,20 +248,27 @@ void GraphView::adjustYScale()
 
                 if (curve.mUseVectorData) {
                     QVector<qreal> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, qreal (0.), qreal (curve.mDataVector.size()));
-
-                    yMax = qMax(yMax, vector_max_value(subData));
                     yMin = qMin(yMin, vector_min_value(subData));
+                    yMax = qMax(yMax, vector_max_value(subData));
+
 
                 } else  {
                     QMap<qreal, qreal> subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
-                    yMax = qMax(yMax, map_max_value(subData));
                     yMin = qMin(yMin, map_min_value(subData));
+                    yMax = qMax(yMax, map_max_value(subData));
+
                 }
                 // map
                 if (curve.mMap.data.size() > 0) {
-                    yMax = qMax(yMax, curve.mMap.rangeY.second);
                     yMin = qMin(yMin, curve.mMap.rangeY.first);
+                    yMax = qMax(yMax, curve.mMap.rangeY.second);
                 }
+
+                for (auto rf : curve.mRefPoints) {
+                    yMin = qMin(yMin, rf.Ymin);
+                    yMax = qMax(yMax, rf.Ymax);
+                }
+
              }
         }
         if (yMax > yMin) {
@@ -1422,7 +1429,6 @@ void GraphView::drawCurves(QPainter& painter)
 
 void GraphView::drawMap(GraphCurve& curve, QPainter& painter)
 {
-   // double xi = 0;
     double tReal;
     double yReal;
     const double minY = curve.mMap.minY();
@@ -1431,39 +1437,37 @@ void GraphView::drawMap(GraphCurve& curve, QPainter& painter)
     const double maxX = curve.mMap.maxX();
     const double maxVal = curve.mMap.max_value;
     const double minVal = curve.mMap.min_value;
-  //  int gridLength = curve.mMap.row()-1;
-    //qreal rectXSize = getXForValue((maxX-minX)/(curve.mMap.row()-1) + minX, false) - getXForValue(minX, false) ;
-    //qreal rectYSize = getYForValue(minY, false) -getYForValue((maxY-minY)/(curve.mMap.column()-1) + minY, false)  ;
 
     qreal rectXSize = (getXForValue(maxX, false) - getXForValue(minX, false) ) / (curve.mMap.row()-1);
     qreal rectYSize = (getYForValue(minY, false) - getYForValue(maxY, false) ) / (curve.mMap.column()-1)  ;
     QPen rectPen;
     rectPen.setStyle(Qt::NoPen);//SolidLine);// NoPen);
 
-    const double val99 = .099*(maxVal-minVal)+minVal;
+    /*const double val99 = .099*(maxVal-minVal)+minVal;
     const double val95 = .075*(maxVal-minVal)+minVal;
     const double val50 = .025*(maxVal-minVal)+minVal;
     const double val25 = .010*(maxVal-minVal)+minVal;
+    */
     QColor col;
     double val, alp;
     qreal xtop, xbottom, ytop, ybottom;
     painter.setRenderHint(QPainter::Antialiasing);
     xtop = getXForValue(minX, false);
 
-    for (unsigned r = 1 ; r <curve.mMap.row(); r++) {
+    for (unsigned r = 1 ; r < curve.mMap.row(); r++) {
         tReal = r*(maxX-minX)/(curve.mMap.row()-1) + minX;
-        //x = getXForValue(tReal, false);
         xbottom =  getXForValue(tReal, false) + rectXSize/2.;
         ytop = getYForValue(minY, false);
-        for (unsigned c = 1 ; c<curve.mMap.column(); c++) {
+
+        for (unsigned c = 1 ; c < curve.mMap.column(); c++) {
             val = curve.mMap.at(r, c);
+            yReal = c*(maxY-minY)/(curve.mMap.column()-1) + minY;
+            ybottom = getYForValue(yReal, false) - rectYSize/2.;
 
             if ( val > minVal) {
-                yReal = c*(maxY-minY)/(curve.mMap.column()-1) + minY;
-                ybottom = getYForValue(yReal, false) + rectYSize/2.;
 
                 if (false) {
-                    col = QColor(Qt::yellow);
+                   /* col = QColor(Qt::yellow);
 
                     if (val > val99)
                         col = QColor(Qt::black);
@@ -1475,28 +1479,25 @@ void GraphView::drawMap(GraphCurve& curve, QPainter& painter)
                         col = QColor(Qt::red);
 
                     col.setAlphaF(0.5);
-
+                    */
                 } else {
                     alp = (val - minVal)/ (maxVal - minVal);
+
                     col = QColor(curve.mPen.color());
                     col.setAlphaF(sqrt(alp));
+
                 }
                 //rectPen.setColor(col);
                 // https://doc.qt.io/qt-6/qrectf.html
                 painter.setPen(Qt::NoPen);
                 painter.setBrush(col);
 
-                //painter.drawRect(QRectF(x-rectXSize/2., y-rectYSize/2., rectXSize, rectYSize));
                 QRectF rectMap;
-                //rectMap.setRect(xtop, ytop, rectXSize, rectYSize);
                 rectMap.setCoords(xtop, ytop, xbottom, ybottom);
                 painter.drawRect(rectMap);
-                //painter.drawRect(QRectF(xtop, ytop, rectXSize, rectYSize));
-                //painter.setBrush(col);
-                //painter.fillRect(QRectF(x-rectXSize/2., y-rectYSize/2., rectXSize, rectYSize), col);
-                ytop = ybottom;
-            }
 
+            }
+            ytop = ybottom;
         }
         xtop = xbottom;
     }

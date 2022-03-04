@@ -486,7 +486,7 @@ void MainWindow::newProject()
             // resetInterface Disconnect also the scene
             resetInterface();
 
-            activateInterface(true);
+            //activateInterface(true);
 
             /* Reset the project state and the MCMC Setting to the default value
              * and then send a notification to update the views : send desabled */
@@ -496,6 +496,8 @@ void MainWindow::newProject()
             delete mProject;
 
             mProject = newProject;
+
+            activateInterface(true); // mProject doit exister
 
             // Create project connections
             connectProject();
@@ -1053,8 +1055,6 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     mProjectView->showHelp(false);
     mHelpAction->setChecked(AppSettings::mShowHelp);
 
-    bool fileOpened = false;
-
     if (defaultFilePath != "") {
         QFileInfo fileInfo(defaultFilePath);
         if (fileInfo.isFile()) {
@@ -1069,7 +1069,8 @@ void MainWindow::readSettings(const QString& defaultFilePath)
                 activateInterface(true);
                 updateWindowTitle();
                 connectProject();
-                mcmcFinished(mProject->mModel); //do initDensities()
+                if (mProject->withResults())
+                    mcmcFinished(mProject->mModel); //do initDensities()
 
                 mProject->setAppSettings();
 
@@ -1077,7 +1078,8 @@ void MainWindow::readSettings(const QString& defaultFilePath)
 
                 mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true);
                 // to do, it'is done in project load
-                if (! mProject->mModel->mChains.isEmpty()) {
+                //if (! mProject->mModel->mChains.isEmpty()) {
+                if (mProject->withResults()) {
                     mViewLogAction -> setEnabled(true);
                     mViewResultsAction -> setEnabled(true);
                     mViewResultsAction -> setChecked(true); // Just check the Result Button after computation and mResultsView is show after
@@ -1085,7 +1087,6 @@ void MainWindow::readSettings(const QString& defaultFilePath)
                     mProject->mModel->updateFormatSettings();
                  }
 
-                fileOpened = true;
             }
         }
     }
@@ -1183,9 +1184,14 @@ void MainWindow::activateInterface(bool activate)
     // Par contre, elles ne doivent pas être ré-activée dès l'ouverture d'un projet
     mRunAction->setEnabled(activate);
 
-    if (!activate) {
+    //if (!activate) {
+    if (activate && mProject->withResults()) {
         mViewResultsAction->setEnabled(activate);
         mViewLogAction->setEnabled(activate);
+
+    } else {
+        mViewResultsAction->setEnabled(false);
+        mViewLogAction->setEnabled(false);
     }
 
     //  int largeurEcran = QApplication::desktop()->width();

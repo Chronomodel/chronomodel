@@ -143,7 +143,7 @@ protected:
     // ------------------------------------------------
     //  Utilities
     // ------------------------------------------------
-    bool isPostDistribGraph();
+    inline bool isPostDistribGraph();
     bool xScaleRepresentsTime();
     double sliderToZoom(const int &coef);
     int zoomToSlider(const double &zoom);

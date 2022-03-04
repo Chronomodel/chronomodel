@@ -69,11 +69,9 @@ mLevel(0)
     mTheta.mFormat = DateUtils::eUnknown;
     mTheta.mSamplerProposal = MHVariable::eDoubleExp;
 
-
     // Item initial position :
-    //int posDelta = 100;
-    mItemX = 0.;//rand() % posDelta - posDelta/2;
-    mItemY = 0.;//rand() % posDelta - posDelta/2;
+    mItemX = 0.;
+    mItemY = 0.;
 
     // Note : setting an event in (0, 0) tells the scene that this item is new!
     // Thus the scene will move it randomly around the currently viewed center point.
@@ -85,7 +83,9 @@ mLevel(0)
     mXIncDepth = 0.;
     mYDec = 0.;
     mZField = 0.;
+
     mS_XA95Depth = 0.;
+    mS_Y = 0.;
     mS_ZField = 0.;
 
     // Valeurs préparées (projetées)
@@ -214,7 +214,7 @@ Event::~Event()
 // JSON
 Event Event::fromJson(const QJsonObject& json)
 {
-    Event event;
+    Event event = Event();
     event.mType = Type (json.value(STATE_EVENT_TYPE).toInt());
     event.mId = json.value(STATE_ID).toInt();
     event.mName = json.value(STATE_NAME).toString();
@@ -253,7 +253,12 @@ Event Event::fromJson(const QJsonObject& json)
             throw QObject::tr("ERROR : data could not be created with plugin %1").arg(date.toObject().value(STATE_DATE_PLUGIN_ID).toString());
 
     }
-    event.mVG = MHVariable();
+    /*event.mVG = MHVariable();
+    // MHVariable mVG;
+     mVG.mSupport = MetropolisVariable::eRp;
+     mVG.mFormat = DateUtils::eNumeric;
+     mVG.mSamplerProposal = MHVariable::eMHAdaptGauss;
+     */
     return event;
 }
 

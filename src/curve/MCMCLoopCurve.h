@@ -80,19 +80,28 @@ protected:
     
 private:
      double h_YWI_AY (const SplineMatrices& matrices, const QList<Event *> &lEvents, const  double lambdaSpline, const std::vector< double> &vecH);
-  //  long double h_YWI_AY_composante(SplineMatrices& matrices, QList<Event*> lEvents, const double alphaLissage);
+
      double h_YWI_AY_composanteX (const SplineMatrices& matrices, const QList<Event *> lEvents, const double lambdaSpline, const std::vector< double> &vecH);
-     double h_YWI_AY_composanteX_origin (const SplineMatrices& matrices, const QList<Event *> lEvents, const double lambdaSpline, const std::vector< double> &vecH);
 
      double h_YWI_AY_composanteY (const SplineMatrices& matrices, const QList<Event *> lEvents, const  double lambdaSpline, const std::vector< double> &vecH);
      double h_YWI_AY_composanteZ (const SplineMatrices& matrices, const QList<Event *> lEvents, const  double lambdaSpline, const std::vector< double> &vecH);
      double h_lambda (const SplineMatrices &matrices, const int nb_noeuds, const  double &lambdaSpline);
      double h_theta (const QList<Event *> lEvents);
      double h_theta_Event (const Event * e);
-     double h_VG (const QList<Event *> lEvents);
-    
-     double S02_lambda (const SplineMatrices &matrices, const int nb_noeuds);
-    double Calcul_Variance_Rice (const QList<Event *> lEvents);
+     double h_VG (const QList<Event *> _events);
+     //double h_VG_global(const QList<Event *> _events, double VG);
+     inline double h_VG_global(const double S02, const double VG);
+     inline double h_VG_Event(const Event * e);
+     double S02_VG_global(const QList<Event *> _events);
+
+     double mS02_VG_global;
+
+     double S02_lambda_WI (const SplineMatrices &matrices, const int nb_noeuds);
+     double S02_lambda_old (const SplineMatrices &matrices, const int nb_noeuds);
+
+     //void init_VG_with_S02(QList<Event *> _events);
+
+     double Calcul_Variance_Rice (const QList<Event *> lEvents);
    // double h_YWI_AYX(SplineMatrices& matrices, QList<double> & lX, const double alphaLissage);
  //   long double h_YWI_AY_composanteX(SplineMatrices& matrices, QList<double> lX, const double alphaLissage);
     //double h_lambdaX(SplineMatrices& matrices, const int nb_noeuds, const double &alphaLissage);
@@ -102,7 +111,8 @@ private:
     void prepareEventsY(const QList<Event *> & lEvents);
     void prepareEventY(Event * const event);
 
-    std::vector< double> createDiagWInv(const QList<Event *> &lEvents);
+    std::vector<double> createDiagWInv(const QList<Event *> &lEvents);
+    std::vector<double> createDiagWInv_Vg0(const QList<Event*>& lEvents);
 
      double minimalThetaDifference(QList<Event *>& lEvents);
      double minimalThetaReducedDifference(QList<Event *> &lEvents);
@@ -112,8 +122,8 @@ private:
     inline void reduceEventsTheta(QList<Event *> &lEvents);
     //long double reduceTime(double t);
     inline  double yearTime(double reduceTime) ;
-    void saveEventsTheta(QList<Event *> &lEvents);
-    void restoreEventsTheta(QList<Event *> &lEvents);
+    void saveEventsTheta(QList<Event *> &lEvents); // Obsolete
+    void restoreEventsTheta(QList<Event *> &lEvents); // Obsolete
 
 
 
@@ -131,6 +141,8 @@ private:
     MCMCSpline currentSpline (QList<Event *> &lEvents, bool doSortAndSpreadTheta = false, std::vector< double> vecH = std::vector<double>(), SplineMatrices matrices = SplineMatrices());
 
     SplineMatrices prepareCalculSpline(const QList<Event *> & sortedEvents, std::vector< double> &vecH);
+    SplineMatrices prepareCalculSpline_WI(const QList<Event *> & sortedEvents, std::vector< double> &vecH);
+    SplineMatrices prepareCalculSpline_W_Vg0(const QList<Event *> & sortedEvents, std::vector< double> &vecH);
 
     SplineResults calculSpline(const SplineMatrices &matrices, const std::vector<double> &vecY, const double lambdaSpline, const std::vector<double> &vecH);
 
@@ -157,11 +169,12 @@ private:
     void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante& spline,  double& G,  double& VarG,  double& GP,  double& GS, unsigned& i0);
 
 
-     double initLambdaSpline();
+    double initLambdaSpline();
+    double initLambdaSplineByCV();
+    double initLambdaSplineBy_h_YWI_AY();
 
-     double initLambdaSplineByCV();
-     double cross_validation (const SplineMatrices& matrices, const std::vector<double> &vecH, const double lambdaSpline);
-     double general_cross_validation (const SplineMatrices& matrices, const std::vector<double> &vecH, const double lambdaSpline);
+    double cross_validation (const SplineMatrices& matrices, const std::vector<double> &vecH, const double lambdaSpline);
+    double general_cross_validation (const SplineMatrices& matrices, const std::vector<double> &vecH, const double lambdaSpline);
 
     PosteriorMeanGComposante computePosteriorMeanGComposante(const std::vector<MCMCSplineComposante>& trace, const QString& ProgressBarText); // Obsolete
     PosteriorMeanGComposante compute_posterior_mean_G_composante(const std::vector<MCMCSplineComposante>& trace, const QString& ProgressBarText);
@@ -174,7 +187,9 @@ private:
     // Obsolete
     //bool  hasPositiveGPrime (const MCMCSplineComposante& splineComposante);
 
-    bool  hasPositiveGPrimeByDet (const MCMCSplineComposante& splineComposante);
+    bool hasPositiveGPrimeByDet (const MCMCSplineComposante& splineComposante);
+    bool hasPositiveGPrimeByDerivate (const MCMCSplineComposante& splineComposante, const double k = 0.);
+    bool hasPositiveGPrimePlusConst (const MCMCSplineComposante& splineComposante, const double dy_threshold = 0.);
 
     void memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSplineComposante &splineComposante, const int realyAccepted);
     // Obsolete

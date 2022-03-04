@@ -101,13 +101,13 @@ private slots:
     void updateIndex(int index);
 
     // Curve
-    void updateEventYInc();
+    void updateEventXInc();
     void updateEventYDec();
-    void updateEventYInt();
+    void updateEventZF();
 
-    void updateEventSInc();
-    void updateEventSDec();
-    void updateEventSInt();
+    void updateEventSXInc();
+    void updateEventSYDec();
+    void updateEventSZF();
 
     void createDate();
     void deleteSelectedDates();

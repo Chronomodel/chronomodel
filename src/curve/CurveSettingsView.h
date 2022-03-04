@@ -84,6 +84,9 @@ private:
     QLabel* mVariableTypeLabel;
     QComboBox* mVariableTypeInput;
     
+    QLabel* mThresholdLabel;
+    QLineEdit* mThresholdInput;
+
     QLabel* mUseErrMesureLabel;
     QCheckBox* mUseErrMesureInput;
     

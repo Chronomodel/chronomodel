@@ -73,8 +73,7 @@ mCurveColor(Painting::mainColorDark)
     palette.setColor(QPalette::Base, Qt::white);
     palette.setColor(QPalette::Text, Qt::black);
     mTextArea->setPalette(palette);
-    //QFont font = mTextArea->font();
-    //mTextArea->setFont(font);
+
     mTextArea->setText(tr("Nothing to display"));
     mTextArea->setVisible(false);
     mTextArea->setReadOnly(true);
@@ -396,9 +395,9 @@ void MultiCalibrationView::updateGraphList()
     // Sort Event by Position
     std::sort(selectedEvents.begin(), selectedEvents.end(), [] (QJsonObject ev1, QJsonObject ev2) {return (ev1.value(STATE_ITEM_Y).toDouble() < ev2.value(STATE_ITEM_Y).toDouble());});
 
-    QString preEventName ="";
+    QJsonObject* preEvent = nullptr;
 
-    for (auto&& ev : selectedEvents) {
+    for (QJsonObject& ev : selectedEvents) {
 
         if (ev.value(STATE_EVENT_TYPE).toInt() == Event::eKnown) {
 
@@ -495,7 +494,7 @@ void MultiCalibrationView::updateGraphList()
                 // Insert the Event Name only if different to the previous Event's name
                 QString eventName (ev.value(STATE_NAME).toString());
                 listAxisVisible.append(true);
-                if (eventName != preEventName) {
+                if (&ev != preEvent) {
                     calibGraph->addInfo(tr("Event") + " : "+ eventName);
 
                 } else {
@@ -503,7 +502,7 @@ void MultiCalibrationView::updateGraphList()
                     listAxisVisible[listAxisVisible.size()-2] = false;
                 }
 
-                preEventName = eventName;
+                preEvent =  &ev ;//eventName;
 
                 calibGraph->addInfo(d.mName);
                 calibGraph->showInfos(true);

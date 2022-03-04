@@ -99,14 +99,14 @@ public:
     void restoreDefault();
     QJsonObject toJson() const;
     
-    bool showInclination() const;
-    bool showDeclination() const;
-    bool showIntensity() const;
+    bool showX() const;
+    bool showY() const;
+    bool showZ() const;
     bool showYErr() const;
 
-    QString inclinationLabel() const;
-    QString declinationLabel() const;
-    QString intensityLabel() const;
+    QString XLabel() const;
+    QString YLabel() const;
+    QString ZLabel() const;
 
     QString processText() const;
     
@@ -115,7 +115,8 @@ public:
     
     ProcessType mProcessType; // Type de traitement
     VariableType mVariableType; // Type de variable étudiée
-    
+    double mThreshold; // Seuil de la vitesse de croissance
+
     bool mUseErrMesure; // bool_err_mes
     
     ProcessMode mTimeType; // bool_temps_fixes true ou false

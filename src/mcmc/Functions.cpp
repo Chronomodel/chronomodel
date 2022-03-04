@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QDebug>
 #include <QApplication>
+#include <iostream>
 #include <set>
 #include <map>
 #include <QTime>
@@ -66,8 +67,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
  *
  *  Calculate the variance based on equations (15) and (16) on
  *  page 216 of "The Art of Computer Programming, Volume 2",
- * Second Edition. Donald E. Knuth.  Addison-Wesley
- * Publishing Company, 1973.
+ *  Second Edition. Donald E. Knuth.  Addison-Wesley
+ *  Publishing Company, 1973.
 */
 
 //https://fanf2.user.srcf.net/hermes/doc/antiforgery/stats.pdf
@@ -636,7 +637,7 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, double t
 
         for (size_t j=0; j<=numToRemove; ++j) {
             const double l = sorted.at((n - 1) - numToRemove + j) - sorted.at(j);
-            if ((lmin == 0.f) || (l < lmin)) {
+            if ((lmin == 0.) || (l < lmin)) {
                 foundJ = j;
                 lmin = l;
             }
@@ -647,9 +648,11 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, double t
 
     if (credibility.first == credibility.second) {
         //It means : there is only one value
-        return QPair<double, double>();
+        exactThresholdResult = 1;
+        //return QPair<double, double>();
     }
-    else return credibility;
+
+        return credibility;
 }
 
 // Used in generateTempo for credibility
@@ -683,9 +686,11 @@ QPair<double, double> credibilityForTrace(const QVector<int>& trace, double thre
 
     if (credibility.first == credibility.second) {
         //It means : there is only one value
-        return QPair<double, double>();
+        exactThresholdResult = 1;
+        //return QPair<double, double>();
     }
-    else return credibility;
+    //else
+        return credibility;
 }
 
 
@@ -1127,16 +1132,17 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
                 inter.second = curInterval;
                   intervals.append(inter);
                   areaCur = 0.;
-
+//std::cout<<"Function::intervalsForHpd"<<inter.first<< inter.second.first<<inter.second.second;
 
             } else {
-                 areaCur += (lastValueInInter+it.value())/2 * (it.key()-lastKeyInInter);
+                 areaCur += (lastValueInInter + it.value())/2 * (it.key() - lastKeyInInter);
 
                 lastKeyInInter = it.key();
                 lastValueInInter = it.value();
 
             }
         }
+
     }
 
     if (inInterval) { // Correction to close unclosed interval
@@ -1212,7 +1218,7 @@ Matrix2D seedMatrix(const Matrix2D &matrix, size_t shift)
     auto itRes = begin(resMatrix);
     for ( auto it = begin(matrix)+shift; it != end(matrix)-shift; ++it) {
         //*itRes = std::valarray<long double>  ( begin(*it) +shift, end(*it)-shift );
-        *itRes = std::valarray<double>  ( (*it)[std::slice(0, n, 1)] );
+        *itRes = std::valarray<double>  ( (*it)[std::slice(shift, n, 1)] );
         ++itRes;
     }
     return resMatrix;
@@ -1432,14 +1438,8 @@ Matrix2D multiDiagParMat(const std::vector<double>& diag, const Matrix2D& matrix
     for (int i = 0; i < dim; ++i) {
         int j1 = std::max(0, i - bande);
         int j2 = std::min(dim-1, i + bande);
-     /*   if (j1 < 0) {
-            j1 = 0;
-        }
-        if (j2 >= dim) {
-            j2 = dim-1;
-        }*/
         for (int j = j1; j <= j2; ++j) {
-            result[i][j] = diag.at(i) * matrix[i][j];
+            result[i][j] = diag[i] * matrix[i][j];
         }
     }
     return result;
@@ -1455,7 +1455,7 @@ Matrix2D multiDiagParMat(const std::vector<double>& diag, const Matrix2D& matrix
 std::vector<double> multiMatParVec(const Matrix2D& matrix, const std::vector<double>& vec, const int nbBandes)
 {
     const int dim = vec.size();
-    std::vector<double> result (dim);//= initVecteur(dim);
+    std::vector<double> result;// (dim);//= initVecteur(dim);
     const int bande = floor((nbBandes-1)/2); // calcul de la demi-largeur de bande
     double sum;
     for (int i = 0; i < dim; ++i) {
@@ -1464,9 +1464,9 @@ std::vector<double> multiMatParVec(const Matrix2D& matrix, const std::vector<dou
         int j2 = std::min(dim-1, i + bande);
 
         for (int j = j1; j <= j2; ++j) {
-            sum += matrix[i][j] * vec.at(j);
+            sum += matrix[i][j] * vec[j];
         }
-        result[i] = sum;
+        result.push_back(sum);// result[i] = sum;
     }
     return result;
 }
@@ -1496,27 +1496,12 @@ Matrix2D addMatEtMat(const Matrix2D& matrix1, const Matrix2D& matrix2, const int
     const int dim = matrix1.size();
     const int k = floor((nbBandes2-1)/2); // calcul de la demi-largeur de bande
 
-    /*std::vector<std::vector<double>> result = initMatrix(dim, dim);
-    for (int i = 0; i < dim; ++i) {
-        int j1 = std::max(0, i - bande);
-        int j2 = std::min(dim-1, i + bande);
-        for (int j = j1; j <= j2; ++j) {
-            result[i][j] = matrix1.at(i).at(j) + matrix2.at(i).at(j);
-        }
-    }*/
-
     Matrix2D result = matrix1;
     int j1, j2;
     for (int i = 0; i < dim; ++i) {
         j1 = std::max(0, i - k);
         j2 = std::min(dim-1, i + k);
-       /* if (j1 < 0) {
-            j1 = 0;
-        }
-        if (j2 >= dim) {
-            j2 = dim-1;
-        }*/
-        for (int j = j1; j <= j2; ++j) {
+         for (int j = j1; j <= j2; ++j) {
             result[i][j] +=  matrix2[i][j];
         }
     }
@@ -1543,14 +1528,8 @@ Matrix2D multiConstParMat(const Matrix2D& matrix, const double c, const int nbBa
     for (int i = 0; i < dim; ++i) {
         int j1 = std::max(0, i - bande);
         int j2 = std::min(dim-1, i + bande);
-        /*if (j1 < 0) {
-            j1 = 0;
-        }
-        if (j2 >= dim) {
-            j2 = dim-1;
-        }*/
         for (int j = j1; j <= j2; ++j) {
-            result[i][j] *= c ;//* matrix.at(i).at(j);
+            result[i][j] *= c ;
         }
     }
     return result;
@@ -1591,37 +1570,11 @@ Matrix2D multiMatParMat(const Matrix2D& matrix1, const Matrix2D& matrix2, const 
     for (int i = 0; i < dim; ++i) {
         int j1 = std::max(0, i - bandeRes);
         int j2 = std::min(dim-1, i + bandeRes);
-     /*   if (j1 < 0) {
-            j1 = 0;
-        }
-        if (j2 >= dim) {
-            j2 = dim-1;
-        }*/
-
-       /* size_t k1 = i - bande1;
-        size_t k2 = i + bande1;
-
-        if (k1 < 0) {
-            k1 = 0;
-        }
-        if (k2 >= dim) {
-            k2 = dim-1;
-        } */
         int k1 = std::max(0, i - bande1);
         int k2 = std::min(dim-1, i + bande1);
         auto itMat1 = begin(matrix1[i]);
         double sum;
         for (int j = j1; j <= j2; ++j) {
-          /*  int k1 = i - bande1;
-            int k2 = i + bande1;
-
-            if (k1 < 0) {
-                k1 = 0;
-            }
-            if (k2 >= dim) {
-                k2 = dim-1;
-            }
-*/
             sum = 0;
             for (int k = k1; k <= k2; ++k) {
                 sum += (*(itMat1 + k)) * matrix2[k][j];
@@ -1651,9 +1604,9 @@ Matrix2D inverseMatSym0(const Matrix2D& matrix, const int shift)
     int n = matrix.size();
     Matrix2D matInv2 = comatrice0(matrix2);
 
-    const long double det = determinant(matrix2);
+    const double det = determinant(matrix2);
     if (det == 0) {
-           throw std::runtime_error("inverseMatSym0 det ==0");
+           throw std::runtime_error("inverseMatSym0 det == 0");
        }
     for (int i = shift; i < n-shift; i++)
         for (int j = shift; j< n-shift; j++)
@@ -1714,62 +1667,7 @@ Matrix2D inverseMatSym_origin(const Matrix2D &matrixLE,  const std::vector<doubl
     return matInv;
 }
 
-/*
-std::vector<std::vector<long double>> inverseMatSym_old(const std::vector<std::vector<long double>>& matrixLE, const std::vector<long double>& matrixDE, const int nbBandes, const int shift)
-{
-    const int dim = matrixLE.size();
-    std::vector<std::vector<long double>> matInv = initLongMatrix(dim, dim);
-    const int bande = floor((nbBandes-1)/2);
 
-    matInv[dim-1-shift][dim-1-shift] = 1. / matrixDE.at(dim-1-shift);
-    matInv[dim-2-shift][dim-1-shift] = -matrixLE[dim-1-shift][dim-2-shift] * matInv[dim-1-shift][dim-1-shift];
-    matInv[dim-2-shift][dim-2-shift] = (1. / matrixDE.at(dim-2-shift)) - matrixLE[dim-1-shift][dim-2-shift] * matInv[dim-2-shift][dim-1-shift];
-
-    // shift : décalage qui permet d'éliminer les premières et dernières lignes et colonnes
-
-    if (bande >= 3) {
-        for (int i = dim-3-shift; i >= shift; --i) {
-                matInv[i][i+2] = -matrixLE[i+1][i] * matInv[i+1][i+2] - matrixLE[i+2][i] * matInv[i+2][i+2];
-                matInv[i][i+1] = -matrixLE[i+1][i] * matInv[i+1][i+1] - matrixLE[i+2][i] * matInv[i+1][i+2];
-                matInv[i][i] = (1. / matrixDE.at(i)) - matrixLE[i+1][i] * matInv[i][i+1] - matrixLE[i+2][i] * matInv[i][i+2];
-
-                for (int k = 3; k <= bande; ++k) {
-                    if (i+k < (dim - shift)) {
-                        matInv[i][i+k] = -matrixLE[i+1][i] * matInv[i+1][i+k] - matrixLE[i+2][i] * matInv[i+2][i+k];
-                    }//else What we do?
-                }
-        }
-
-     } else {
-        for (int i = dim-3-shift; i >= shift; --i) {
-            matInv[i][i+2] = -matrixLE[i+1][i] * matInv[i+1][i+2] - matrixLE[i+2][i] * matInv[i+2][i+2];
-            matInv[i][i+1] = -matrixLE[i+1][i] * matInv[i+1][i+1] - matrixLE[i+2][i] * matInv[i+1][i+2];
-            matInv[i][i] = (1. / matrixDE.at(i)) - matrixLE[i+1][i] * matInv[i][i+1] - matrixLE[i+2][i] * matInv[i][i+2];
-
-
-            for (int k = 3; k <= bande; ++k) {
-                if (i+k < (dim - shift)) {
-                    matInv[i][i+k] = -matrixLE[i+1][i] * matInv[i+1][i+k] - matrixLE[i+2][i] * matInv[i+2][i+k];
-                }//else What we do?
-            }
-        }
-     }
-
-
-
-    for (int i = shift; i < dim-shift; ++i) {
-        for (int j = i+1; j <= i+bande; ++j) {
-            if (j < (dim-shift)) {
-                matInv[j][i] = matInv[i][j];
-            } //else What we do?
-        }
-    }
-
-      //On symétrise la matrice Mat_1, même si cela n'est pas nécessaire lorsque bande=2
-
-    return matInv;
-}
-*/
 
 Matrix2D inverseMatSym(const Matrix2D& matrixLE, const std::vector<double>& matrixDE, const int nbBandes, const int shift)
 {
@@ -1781,26 +1679,11 @@ Matrix2D inverseMatSym(const Matrix2D& matrixLE, const std::vector<double>& matr
     matInv[dim-2-shift][dim-1-shift] = -matrixLE[dim-1-shift][dim-2-shift] * matInv[dim-1-shift][dim-1-shift];
     matInv[dim-2-shift][dim-2-shift] = (1. / matrixDE.at(dim-2-shift)) - matrixLE[dim-1-shift][dim-2-shift] * matInv[dim-2-shift][dim-1-shift];
 
-    // shift : décalage qui permet d'éliminer les premières et dernières lignes et colonnes
-  /*  for (int i = dim-3-shift; i >= shift; --i) {
-        matInv[i][i+2] = -matrixLE[i+1][i] * matInv[i+1][i+2] - matrixLE[i+2][i] * matInv[i+2][i+2];
-        matInv[i][i+1] = -matrixLE[i+1][i] * matInv[i+1][i+1] - matrixLE[i+2][i] * matInv[i+1][i+2];
-        matInv[i][i] = (1. / matrixDE[i][i]) - matrixLE[i+1][i] * matInv[i][i+1] - matrixLE[i+2][i] * matInv[i][i+2];
-
-        if (bande >= 3) {
-            for (int k = 3; k <= bande; ++k) {
-                if (i+k < (dim - shift)) {
-                    matInv[i][i+k] = -matrixLE[i+1][i] * matInv[i+1][i+k] - matrixLE[i+2][i] * matInv[i+2][i+k];
-                }//else What we do?
-            }
-        }//else What we do?
-    }
- */
     if (bande >= 3) {
         for (int i = dim-3-shift; i >= shift; --i) {
                 matInv[i][i+2] = -matrixLE[i+1][i] * matInv[i+1][i+2] - matrixLE[i+2][i] * matInv[i+2][i+2];
                 matInv[i][i+1] = -matrixLE[i+1][i] * matInv[i+1][i+1] - matrixLE[i+2][i] * matInv[i+1][i+2];
-                matInv[i][i] = (1. / matrixDE.at(i)) - matrixLE[i+1][i] * matInv[i][i+1] - matrixLE[i+2][i] * matInv[i][i+1];
+                matInv[i][i] = (1. / matrixDE[i]) - matrixLE[i+1][i] * matInv[i][i+1] - matrixLE[i+2][i] * matInv[i][i+1];
 
                 for (int k = 3; k <= bande; ++k) {
                     if (i+k < (dim - shift)) {
@@ -1813,13 +1696,8 @@ Matrix2D inverseMatSym(const Matrix2D& matrixLE, const std::vector<double>& matr
         for (int i = dim-3-shift; i >= shift; --i) {
             matInv[i][i+2] = -matrixLE[i+1][i] * matInv[i+1][i+2] - matrixLE[i+2][i] * matInv[i+2][i+2];
             matInv[i][i+1] = -matrixLE[i+1][i] * matInv[i+1][i+1] - matrixLE[i+2][i] * matInv[i+1][i+2];
-            matInv[i][i] = (1. / matrixDE.at(i)) - matrixLE[i+1][i] * matInv[i][i+1] - matrixLE[i+2][i] * matInv[i][i+2];
+            matInv[i][i] = (1. / matrixDE[i]) - matrixLE[i+1][i] * matInv[i][i+1] - matrixLE[i+2][i] * matInv[i][i+2];
 
-          /*  const int kmin = std::min(bande, dim-shift-i);
-            for (int k = 3; k <= kmin; ++k) {
-                    matInv[i][i+k] = -matrixLE[i+1][i] * matInv[i+1][i+k] - matrixLE[i+2][i] * matInv[i+2][i+k];
-            }
-           */
             for (int k = 3; k <= bande; ++k) {
                 if (i+k <= (dim-1 - shift)) {
                     matInv[i][i+k] = -matrixLE[i+1][i] * matInv[i+1][i+k] - matrixLE[i+2][i] * matInv[i+2][i+k];
@@ -1960,24 +1838,21 @@ Matrix2D choleskyLL0(const Matrix2D &matrix)
     double sum;
 
     for (int i=0; i<n; i++) {
-            sum = matrix[i][i];
-            for (int k=0; k<i; k++)
-                sum -= pow(L[i][k], 2.);
+        sum = matrix[i][i];
+        for (int k=0; k<i; k++)
+            sum -= pow(L[i][k], 2.);
 
+        L[i][i] = sqrt(sum);
 
-            L[i][i] = sqrt(sum);
+        for (int j=i+1; j<n; j++) {
+            sum = matrix[i][j];
 
-            for (int j=i+1; j<n; j++) {
-                sum = matrix[i][j];
+            for (int k=0; k<j-1; k++)
+                sum -=  L[j][k] * L[i][k];
 
-                for (int k=0; k<j-1; k++)
-                    sum -=  L[j][k] * L[i][k];
-
-
-                L[j][i] = sum / L[i][i];
-            }
+            L[j][i] = sum / L[i][i];
         }
-
+    }
 
     return L;
 }
@@ -2009,10 +1884,95 @@ std::pair<Matrix2D, std::vector<double> > choleskyLDLT(const Matrix2D& matrix)
                 D[i] -=  D.at(j) * pow(L[i][j], 2.);
       }
 
+    return std::pair<Matrix2D, std::vector< double>>(L, D);
+}
+
+std::pair<Matrix2D, std::vector<double> > choleskyLDLT(const Matrix2D& matrix, const int shift)
+{
+    const int n = matrix.size();
+
+    Matrix2D L = initMatrix2D(n, n);
+    std::vector<double> D (n);
+
+    for (int i = shift; i < n-shift; i++) {
+            L[i][i] = 1;
+            for (int j = shift; j < std::min(i, n-shift); j++) {
+                L[i][j] = matrix[i][j];
+                for (int k = shift; k< std::min(j, n-shift); k++) {
+                   L[i][j] -=  L[i][k] * L[j][k] *D.at(k);
+                }
+                L[i][j] /= D[j];
+            }
+            D[i] = matrix[i][i];
+            for (int j = shift; j< std::min(i, n-shift); j++)
+                D[i] -=  D[j] * pow(L[i][j], 2.);
+      }
+
+    return std::pair<Matrix2D, std::vector< double>>(L, D);
+}
+
+std::pair<Matrix2D, std::vector<double> > choleskyLDLT(const Matrix2D& matrix, const int nbBandes, const int shift)
+{
+    // fonction à controler
+    const int n = matrix.size();
+
+    Matrix2D L = initMatrix2D(n, n);
+    std::vector<double> D (n);
+
+    for (int i = shift; i < n-shift; i++) {
+            L[i][i] = 1;
+            for (int j = shift; j < std::min(i, n-shift); j++) {
+               if (abs(i - j) <= nbBandes) {
+                   L[i][j] = matrix[i][j];
+                   for (int k = shift; k< std::min(j, n-shift); k++) {
+                       L[i][j] -=  L[i][k] * L[j][k] *D.at(k);
+                   }
+                   L[i][j] /= D[j];
+               }
+            }
+            D[i] = matrix[i][i];
+            for (int j = shift; j< std::min(i, n-shift); j++)
+                if (abs(i - j) <= nbBandes)
+                    D[i] -=  D[j] * pow(L[i][j], 2.);
+      }
+
+    return std::pair<Matrix2D, std::vector< double>>(L, D);
+}
 
 
+std::pair<Matrix2D, std::vector<double> > choleskyLDLT_Dsup0(const Matrix2D& matrix, const int nbBandes, const int shift)
+{
+    // fonction à controler
+    const int n = matrix.size();
 
+    Matrix2D L = initMatrix2D(n, n);
+    std::vector<double> D = initVector(n);
 
+    for (int i = shift; i < n-shift; i++) {
+            L[i][i] = 1;
+            for (int j = shift; j < std::min(i, n-shift); j++) {
+               if (abs(i - j) <= nbBandes) {
+                   L[i][j] = matrix[i][j];
+                   for (int k = shift; k< std::min(j, n-shift); k++) {
+                       L[i][j] -=  L[i][k] * L[j][k] *D.at(k);
+                   }
+                   L[i][j] /= D[j];
+               }
+            }
+            D[i] = matrix[i][i];
+            for (int j = shift; j< std::min(i, n-shift); j++) {
+                if (abs(i - j) <= nbBandes)
+                    D[i] -=  D[j] * pow(L[i][j], 2.);
+            }
+
+      }
+
+    for (int i = shift; i < n-shift; i++) {
+        if (D[i] < 0) {
+            qDebug() << "Function::choleskyLDLT_Dsup0 : D <0 change to 0"<< D[i];
+            D[i] = 0;
+        }
+    }
     return std::pair<Matrix2D, std::vector< double>>(L, D);
 }
 
@@ -2032,7 +1992,7 @@ std::pair<Matrix2D, std::vector<double>> decompositionCholesky(const Matrix2D& m
 
     const int dim = matrix.size();
     Matrix2D matL = initMatrix2D(dim, dim);
-    std::vector< double> matD = initVector(dim);
+    std::vector< double> matD (dim);
 
     if (dim - 2*shift == 1) { // cas des splines avec 3 points
        /* long double Wh1_1 = matrix[1][0];
@@ -2056,7 +2016,7 @@ std::pair<Matrix2D, std::vector<double>> decompositionCholesky(const Matrix2D& m
 
         try {
             for (int i = shift+1; i < dim-shift; ++i) {
-                matL[i][shift] = matrix[i][shift] / matD.at(shift);
+                matL[i][shift] = matrix[i][shift] / matD[shift];
                 /*   avec bande */
                 for (int j = shift+1; j < i; ++j) {
                     if (abs(i - j) <= nbBandes) {
@@ -2073,32 +2033,19 @@ std::pair<Matrix2D, std::vector<double>> decompositionCholesky(const Matrix2D& m
                 double sum = 0.;
                 for (int k = shift; k < i; ++k) {
                     if (abs(i - k) <= nbBandes) {
-                        sum += std::pow(matL[i][k], 2.) * matD.at(k);
+                        sum += std::pow(matL[i][k], 2.) * matD[k];
                     }
                 }
 
-                /* sans gestion de bande */
-                /*       for (int j = shift+1; j < i; ++j) {
 
-                long double sum = 0.;
-                for (int k = shift; k < j; ++k) {
-                        sum += matL.at(i).at(k) * matD.at(k) * matL.at(j).at(k);
-                }
-                matL[i][j] = (matrix.at(i).at(j) - sum) / matD.at(j);
-
-        }
-
-        double sum = 0.;
-        for (int k = shift; k < i; ++k) {
-                sum += std::pow(matL.at(i).at(k), 2.) * matD.at(k);
-
-        }
-*/
                 matD[i] = matrix[i][i] - sum; // doit être positif
-                if (matD.at(i) < 0) {
-                    qDebug() << "Function::decompositionCholesky : matD <0 change to 0";
-                    matD[i] = 0;//1e-200;
-                    // throw "Function::decompositionCholesky() matD <0";
+
+            }
+
+            for (int i = shift; i < dim-shift; ++i) {
+                if (matD[i] < 0) {
+                    qDebug() << "Function::decompositionCholesky : matD <0 change to 0"<< matD[i];
+                    matD[i] = 0;
                 }
             }
             // matL : Par exemple pour n = 5 et shift =0:
@@ -2114,20 +2061,13 @@ std::pair<Matrix2D, std::vector<double>> decompositionCholesky(const Matrix2D& m
             // 0 X 1 0 0
             // 0 X X 1 0
             // 0 0 0 0 0
-            /*
-    if (math_errhandling & MATH_ERRNO) {
-        if (errno==EDOM)
-            qDebug()<<"errno set to EDOM";
-      }
-      if (math_errhandling  &MATH_ERREXCEPT) {
-        if (fetestexcept(FE_INVALID))
-            qDebug()<<"decompositionCholesky -> FE_INVALID raised : Domain error: At least one of the arguments is a value for which the function is not defined.";
-      }
-*/
+
         } catch(...) {
             qDebug() << "Function::decompositionCholesky : Caught Exception!\n";
         }
     }
+
+   std::pair<Matrix2D, std::vector<double>> tmp =  choleskyLDLT_Dsup0(matrix, nbBandes, shift);
     return std::pair<Matrix2D, std::vector<double>>(matL, matD);
 }
 
@@ -2143,18 +2083,18 @@ std::vector<double> resolutionSystemeLineaireCholesky(const Matrix2D &matL, cons
         vecU[2] = vecQtY[2] - matL[2][1] * vecU[1];
 
         for (int i = 3; i < n-1; ++i) {
-            vecU[i] = vecQtY[i] - matL[i][i-1] * vecU.at(i-1) - matL[i][i-2] * vecU.at(i-2); // pHd : Attention utilisation des variables déjà modiiées
+            vecU[i] = vecQtY[i] - matL[i][i-1] * vecU[i-1] - matL[i][i-2] * vecU[i-2]; // pHd : Attention utilisation des variables déjà modifiées
         }
 
         for (int i = 1; i < n-1; ++i) {
-            vecNu[i] = vecU.at(i) / matD.at(i);
+            vecNu[i] = vecU[i] / matD[i];
         }
 
         vecGamma[n-2] = vecNu.at(n-2);
         vecGamma[n-3] = vecNu.at(n-3) - matL[n-2][n-3] * vecGamma[n-2];
 
         for (int i = n-4; i > 0; --i) {
-            vecGamma[i] = vecNu.at(i) - matL[i+1][i] * vecGamma[i+1] - matL[i+2][i] * vecGamma[i+2]; // pHd : Attention utilisation des variables déjà modiiées
+            vecGamma[i] = vecNu[i] - matL[i+1][i] * vecGamma[i+1] - matL[i+2][i] * vecGamma[i+2]; // pHd : Attention utilisation des variables déjà modifiées
         }
 
     } else {

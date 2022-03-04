@@ -321,7 +321,8 @@ void EventsScene::createSceneFromState()
     if (mItems.size()>0) {
         clearSelection();
         clear();
-    }
+        mItems.clear();
+     }
     // this item is delete with clear, but we need it.
     mTempArrow = new ArrowTmpItem();
     addItem(mTempArrow);
@@ -339,7 +340,6 @@ void EventsScene::createSceneFromState()
     for (QJsonArray::const_iterator citer = eventsInState.constBegin(); citer != eventsInState.constEnd(); ++citer) {
         const QJsonObject event = (*citer).toObject();
         ++i;
-
 
         progress->setValue(i);
 
@@ -370,17 +370,13 @@ void EventsScene::createSceneFromState()
         ArrowItem* constraintItem = new ArrowItem(this, ArrowItem::eEvent, constraint);
         mConstraintItems.append(constraintItem);
         addItem(constraintItem);
-
     }
 
     mUpdatingItems = false;
 
     delete progress;
  #ifdef DEBUG
-     QTime timeDiff(0,0,0, (int)startTime.elapsed() );
-     //timeDiff = timeDiff.addMSecs().addMSecs(-1);
-
-    qDebug()<<"EventsScene::createScene() finish at " + timeDiff.toString("hh:mm:ss.zzz");
+    qDebug()<<tr("EventsScene::createScene() finish in %1").arg(QString(DHMS(startTime.elapsed())));
  #endif
 }
 
@@ -698,16 +694,15 @@ void EventsScene::clean()
     // ------------------------------------------------------
     //  Delete all items
     // ------------------------------------------------------
-    const int itemsSize = mItems.size() -1;
+    const int itemsSize = mItems.size() - 1;
     for (int i = itemsSize; i >= 0; --i) {
         EventItem* eventItem = (EventItem*)mItems[i];
 
             QList<QGraphicsItem*> dateItems = eventItem->childItems();
             const int dateItemsSize = dateItems.size() -1;
             for (int j = dateItemsSize; j >= 0; --j) {
-                //removeItem(dateItems[j]);
-                delete dateItems.first();
-                dateItems.removeFirst();
+                delete dateItems.first(); // delete the object
+                dateItems.removeFirst(); // remove the pointer
             }
   //      }
 #ifdef DEBUG
@@ -720,7 +715,8 @@ void EventsScene::clean()
         eventItem->setVisible(false); // The item disappears and after it's deleted later
        // eventItem->deleteLater();
     }
-mItems.clear();
+
+    mItems.clear();
     // ------------------------------------------------------
     //  Delete all constraints
     // ------------------------------------------------------
@@ -745,7 +741,7 @@ mItems.clear();
 void EventsScene::updateStateSelectionFromItem()
 {
     qDebug()<<"EventsScene::updateStateSelectionFromItem";
-    int nbOfSelectedEvent (0);
+    int nbOfSelectedEvent = 0;
     QJsonArray updatedEvents = QJsonArray();
 
   //  selectedItems().clear();
@@ -762,12 +758,8 @@ void EventsScene::updateStateSelectionFromItem()
 
             const bool selected = (item->isSelected() || item->withSelectedDate() );
 
-   //         selectedItems().append(item);
             if (selected)
                 ++nbOfSelectedEvent;
-
-          //  if (selected)
-          //  qDebug()<<"EventsScene::updateStateSelectionFromItem updateState selected="<<prevEvent.value(STATE_NAME).toString()<<selected;
 
             const bool isCurrent = (curItem == item);
             // update mData in AbtractItem

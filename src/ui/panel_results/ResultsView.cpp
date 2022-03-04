@@ -2266,7 +2266,7 @@ void ResultsView::updateGraphsMinMax()
             mResultMaxX = getGraphsMax(listGraphs, "Post Distrib Duration", 100.);
 
         }else if (mMainVariable == GraphViewResults::eVG) {
-            mResultMinX = getGraphsMin(listGraphs, "Std G", 0.);
+            mResultMinX = 0; //getGraphsMin(listGraphs, "Std G", 0.);
             mResultMaxX = getGraphsMax(listGraphs, "Std G", 100.);
 
         } else if (mMainVariable == GraphViewResults::eLambda) {

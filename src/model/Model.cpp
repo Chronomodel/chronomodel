@@ -993,14 +993,9 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 #endif
 
 #ifdef DEBUG
-
-    QTime timeDiff(0,0,0, (int)t.elapsed());
-
-    qDebug() <<  QString("=> Model::generateCorrelations done in  %1 h %2 m %3 s %4 ms").arg(QString::number(timeDiff.hour()),
-                                                                QString::number(timeDiff.minute()),
-                                                                QString::number(timeDiff.second()),
-                                                                QString::number(timeDiff.msec()) );
+    qDebug() <<  "=> Model::generateCorrelations done in  %1 h %2 m %3 s %4 ms" + DHMS(t.elapsed());
 #endif
+
 }
 
 #pragma mark FFTLength, Threshold, bandwidth

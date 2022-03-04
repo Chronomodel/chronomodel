@@ -112,9 +112,9 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mZ_IntEdit = new LineEdit(mCurveWidget);
 
     
-    connect(mX_IncEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYInc);
+    connect(mX_IncEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventXInc);
     connect(mY_DecEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYDec);
-    connect(mZ_IntEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYInt);
+    connect(mZ_IntEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventZF);
     
     mS_X_IncLab = new QLabel(tr("Error"), mCurveWidget);
     mS_X_IncLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -127,9 +127,9 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mS_Y_Edit = new LineEdit(mCurveWidget);
     mS_Z_IntEdit = new LineEdit(mCurveWidget);
     
-    connect(mS_X_IncEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSInc);
-    connect(mS_Y_Edit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSDec);
-    connect(mS_Z_IntEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSInt);
+    connect(mS_X_IncEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSXInc);
+    connect(mS_Y_Edit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSYDec);
+    connect(mS_Z_IntEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSZF);
 
 
     // Event default propreties Window mEventView
@@ -324,28 +324,60 @@ void EventPropertiesView::updateEvent()
         
         // Y1 contient l'inclinaison. Elle est toujours nécessaire en sphérique et vectoriel.
         // En univarié, elle n'est nécessaire que pour les variables d'étude : inclinaison ou déclinaison.
-        bool showInc = mCurveEnabled && settings.showInclination();
-        bool showDec = mCurveEnabled && settings.showDeclination();
-        bool showInt = mCurveEnabled && settings.showIntensity();
-        bool showYErr = mCurveEnabled && settings.showYErr();
-        
-        mX_IncLab->setVisible(showInc);
-        mX_IncEdit->setVisible(showInc);
+        bool showXEdit, showYEdit, showZEdit, showYErr;
 
-        mS_X_IncLab->setVisible(showInc);
-        mS_X_IncEdit->setVisible(showInc);
-        if (showInc) {
-            mX_IncLab->setText(settings.inclinationLabel());
-            mX_IncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_X_INC_DEPTH).toDouble()));
-            mS_X_IncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble()));
+        if (!mCurveEnabled) {
+             showXEdit = false;
+             showYEdit = false;
+             showZEdit = false;
+             showYErr = false;
+
+        } else {
+            /*
+             showXEdit = true;
+             showYEdit = (settings.mProcessType == CurveSettings::eProcessType3D ) ||
+                         (settings.mProcessType == CurveSettings::eProcessType2D ) ||
+                         (settings.mProcessType == CurveSettings::eProcessTypeVector ) ||
+                         (settings.mProcessType == CurveSettings::eProcessTypeSpherical ) ||
+                         ( (settings.mProcessType == CurveSettings::eProcessTypeUnivarie ) &&
+                           (settings.mVariableType == CurveSettings::eVariableTypeDeclination) ) ;
+
+             showYErr = (settings.mProcessType == CurveSettings::eProcessType3D ) ||
+                        (settings.mProcessType == CurveSettings::eProcessType2D ) ||
+                        (settings.mProcessType == CurveSettings::eProcessTypeVector ) ;
+
+             showZEdit = (settings.mProcessType == CurveSettings::eProcessType3D ) ||
+                         (settings.mProcessType == CurveSettings::eProcessTypeVector );
+             */
+            showXEdit = settings.showX();
+            showYEdit = settings.showY();
+            showZEdit = settings.showZ();
+            showYErr = settings.showYErr();
+        }
+        
+        mX_IncLab->setVisible(showXEdit);
+        mX_IncEdit->setVisible(showXEdit);
+
+        mS_X_IncLab->setVisible(showXEdit);
+        mS_X_IncEdit->setVisible(showXEdit);
+        if (showXEdit) {
+            mX_IncLab->setText(settings.XLabel());
+            if (settings.mVariableType == CurveSettings::eVariableTypeField) {
+                mX_IncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Z_F).toDouble()));
+                mS_X_IncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_SZ_SF).toDouble()));
+
+            } else {
+                mX_IncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_X_INC_DEPTH).toDouble()));
+                mS_X_IncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble()));
+            }
         }
         
 
-        mY_DecLab->setVisible(showDec);
-        mY_DecEdit->setVisible(showDec);
+        mY_DecLab->setVisible(showYEdit);
+        mY_DecEdit->setVisible(showYEdit);
 
-        if (showDec) {
-            mY_DecLab->setText(settings.declinationLabel());
+        if (showYEdit) {
+            mY_DecLab->setText(settings.YLabel());
             mY_DecEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Y_DEC).toDouble()));
         }
 
@@ -357,14 +389,14 @@ void EventPropertiesView::updateEvent()
             mS_Y_Edit->setText(locale().toString(mEvent.value(STATE_EVENT_SY).toDouble()));
         }
 
-        mZ_IntLab->setVisible(showInt);
-        mZ_IntEdit->setVisible(showInt);
+        mZ_IntLab->setVisible(showZEdit);
+        mZ_IntEdit->setVisible(showZEdit);
         
-        mS_Z_IntLab->setVisible(showInt);
-        mS_Z_IntEdit->setVisible(showInt);
+        mS_Z_IntLab->setVisible(showZEdit);
+        mS_Z_IntEdit->setVisible(showZEdit);
         
-        if (showInt) {
-            mZ_IntLab->setText(settings.intensityLabel());
+        if (showZEdit) {
+            mZ_IntLab->setText(settings.ZLabel());
             mZ_IntEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Z_F).toDouble()));
             mS_Z_IntEdit->setText(locale().toString(mEvent.value(STATE_EVENT_SZ_SF).toDouble()));
         }
@@ -485,10 +517,19 @@ void EventPropertiesView::setCurveSettings(const CurveSettings::ProcessType proc
 
 
 // Curve
-void EventPropertiesView::updateEventYInc()
+void EventPropertiesView::updateEventXInc()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_X_INC_DEPTH] = locale().toDouble(mX_IncEdit->text());
+
+    const QJsonObject state = MainWindow::getInstance()->getProject()->mState;
+    const CurveSettings settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+
+    if (settings.mProcessType == CurveSettings::eProcessTypeUnivarie && (settings.mVariableType == CurveSettings::eVariableTypeField)) {
+        event[STATE_EVENT_Z_F] = locale().toDouble(mX_IncEdit->text());
+
+    } else
+        event[STATE_EVENT_X_INC_DEPTH] = locale().toDouble(mX_IncEdit->text());
+
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event X-Inc updated"));
 }
 
@@ -499,32 +540,40 @@ void EventPropertiesView::updateEventYDec()
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y-Dec updated"));
 }
 
-void EventPropertiesView::updateEventYInt()
+void EventPropertiesView::updateEventZF()
 {
     QJsonObject event = mEvent;
     event[STATE_EVENT_Z_F] = locale().toDouble(mZ_IntEdit->text());
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Z-Int updated"));
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Z-F updated"));
 }
 
-void EventPropertiesView::updateEventSInc()
+void EventPropertiesView::updateEventSXInc()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_SX_ALPHA95_SDEPTH] = locale().toDouble(mS_X_IncEdit->text());
+    const QJsonObject state = MainWindow::getInstance()->getProject()->mState;
+    const CurveSettings settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+    if (settings.mProcessType == CurveSettings::eProcessTypeUnivarie && (settings.mVariableType == CurveSettings::eVariableTypeField)) {
+        event[STATE_EVENT_SZ_SF] = locale().toDouble(mS_X_IncEdit->text());
+
+    } else
+        event[STATE_EVENT_SX_ALPHA95_SDEPTH] = locale().toDouble(mS_X_IncEdit->text());
+
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S X-Inc updated"));
 }
 
-void EventPropertiesView::updateEventSDec()
+void EventPropertiesView::updateEventSYDec()
 {
     QJsonObject event = mEvent;
     event[STATE_EVENT_SY] = locale().toDouble(mS_Y_Edit->text());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S Y updated"));
 }
 
-void EventPropertiesView::updateEventSInt()
+void EventPropertiesView::updateEventSZF()
 {
     QJsonObject event = mEvent;
     event[STATE_EVENT_SZ_SF] = locale().toDouble(mS_Z_IntEdit->text());
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S Z-Int updated"));
+
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S Z-F updated"));
 }
 
 void EventPropertiesView::updateKnownGraph()
@@ -813,7 +862,7 @@ void EventPropertiesView::updateLayout()
         if (curveSettings.showYErr()) {
             ++lines;
         }
-        if (curveSettings.showInclination() && curveSettings.showIntensity()) {
+        if (curveSettings.showZ()) {
             ++lines;
         }
        // const int lines = (curveSettings.showInclination() && curveSettings.showIntensity()) ? 2 : 1;
@@ -825,11 +874,8 @@ void EventPropertiesView::updateLayout()
         const  int YshiftLabel = (mLineEditHeight - mX_IncLab->height())/2;
 
         int editW;
-        if ( curveSettings.showInclination() ||
-             (curveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie && curveSettings.mVariableType == CurveSettings::eVariableTypeOther ) ||
-             (curveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie && curveSettings.mVariableType == CurveSettings::eVariableTypeDepth) ) {
-
-            if (curveSettings.showDeclination() && !curveSettings.showYErr()) {
+        if ( curveSettings.showX()) {
+            if (curveSettings.showY() && !curveSettings.showYErr()) {
                 editW = (mCurveWidget->width() - 9*margin - 3*labW) / 3;
 
             } else {
@@ -845,7 +891,7 @@ void EventPropertiesView::updateLayout()
             mS_X_IncLab->setGeometry(dx += editW + margin, dy - YshiftLabel, labW, mLineEditHeight);
             mS_X_IncEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
 
-            if (curveSettings.showDeclination() && !curveSettings.showYErr())  {
+            if (curveSettings.showY() && !curveSettings.showYErr())  {
                 mY_DecLab->setGeometry(dx += editW + margin, dy - YshiftLabel, labW, mLineEditHeight);
                 mY_DecEdit->setGeometry(dx + labW + margin, dy, editW, mLineEditHeight);
             }
@@ -865,7 +911,7 @@ void EventPropertiesView::updateLayout()
             dy += mLineEditHeight + margin;
         }
 
-        if (curveSettings.showIntensity()) {
+        if (curveSettings.showZ()) {
             dx = margin;
             editW = (mCurveWidget->width() - 5*margin - 2*labW) / 2;
 
