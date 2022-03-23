@@ -576,7 +576,7 @@ QJsonObject PluginF14C::mergeDates(const QJsonArray& dates)
                 }
             }
 */
-            double sum_vi (0.);
+           // double sum_vi = 0.;
             double sum_mi_vi (0.);
             double sum_1_vi (0.);
 
@@ -590,7 +590,7 @@ QJsonObject PluginF14C::mergeDates(const QJsonArray& dates)
                 const double a = data.value(DATE_F14C_FRACTION_STR).toDouble();
                 const double e = data.value(DATE_F14C_ERROR_STR).toDouble();
 
-                sum_vi += e;
+               // sum_vi += e;
                 sum_mi_vi += a/e;
                 sum_1_vi += 1/e;
             }

@@ -234,7 +234,7 @@ bool PluginTL::areDatesMergeable(const QJsonArray& )
     return true;
 }
 /**
- * @brief Combine several Gauss Age
+ * @brief Combine several TL
  **/
 QJsonObject PluginTL::mergeDates(const QJsonArray& dates)
 {
@@ -250,16 +250,19 @@ QJsonObject PluginTL::mergeDates(const QJsonArray& dates)
         
         QStringList names;
 
-        for (auto && d: dates)
+        for (auto&& d: dates)
             names.append(d.toObject().value(STATE_NAME).toString());
 
         // inherits the first data propeties as plug-in and method...
         result = dates.at(0).toObject();
         result[STATE_NAME] =  names.join(" | ");
+        result[STATE_DATE_UUID] = QString::fromStdString( Generator::UUID());
         result[STATE_DATE_DATA] = mergedData;
         result[STATE_DATE_ORIGIN] = Date::eCombination;
         result[STATE_DATE_SUB_DATES] = dates;
         result[STATE_DATE_VALID] = true;
+
+        result[STATE_DATE_DELTA_TYPE] = Date::eDeltaNone;
         
 
     } else
@@ -267,20 +270,6 @@ QJsonObject PluginTL::mergeDates(const QJsonArray& dates)
 
     return result;
 
-}
-QPair<double,double> PluginTL::getTminTmaxRefsCurveCombine(const QJsonArray& subData)
-{
-    double tmin (INFINITY);
-    double tmax (-INFINITY);
-    QPair<double, double> tminTmax (tmin,tmax);
-
-    for (auto&& d: subData)   {
-        tminTmax = getTminTmaxRefsCurve( d.toObject().value(STATE_DATE_DATA).toObject() );
-        tmin = std::min(tmin, tminTmax.first);
-        tmax = std::max(tmax, tminTmax.second);
-        
-    }
-    return qMakePair(tmin, tmax);
 }
 
 

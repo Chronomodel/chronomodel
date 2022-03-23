@@ -674,7 +674,7 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
                 }
             }
 
-            double sum_vi = 0.;
+            //double sum_vi = 0.;
             double sum_mi_vi = 0.;
             double sum_1_vi = 0.;
 
@@ -691,7 +691,7 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
                 const double m = a - r;
                 const double v = e * e + re * re;
 
-                sum_vi += v;
+                //sum_vi += v;
                 sum_mi_vi += m/v;
                 sum_1_vi += 1/v;
             }

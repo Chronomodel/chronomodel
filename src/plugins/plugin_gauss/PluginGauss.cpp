@@ -694,35 +694,7 @@ QJsonObject PluginGauss::mergeDates(const QJsonArray& dates)
             min = std::max(tminTmax.first + dWiggleMin, min);
             max = std::min(tminTmax.second + dWiggleMax, max);
         }
-          /*  const bool hasWiggle (d.toObject().value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);
 
-            // wiggle existence test
-            withWiggle = withWiggle || hasWiggle;
-
-            if (hasWiggle) {
-                toFind = "WID::" + d.toObject().value(STATE_DATE_UUID).toString();
-
-            } else {
-                toFind = d.toObject().value(STATE_DATE_UUID).toString();
-
-            }
-
-            QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
-
-            if ( it!=project->mCalibCurves.end()) {
-                CalibrationCurve* d_mCalibration = & it.value();
-                min = std::max(d_mCalibration->mTmin, min);
-                max = std::min(d_mCalibration->mTmax, max);
-
-            } else {
-                min = +INFINITY;
-                max = -INFINITY;
-            }
-
-
-        }
-
-*/
         if ((max - min) <= 100.) {
             result["error"] = tr("Combine is not possible, not enough coincident densities; numeric issue");
             return result;
@@ -735,36 +707,21 @@ QJsonObject PluginGauss::mergeDates(const QJsonArray& dates)
         result[STATE_DATE_UUID] = QString::fromStdString( Generator::UUID());
         result[STATE_DATE_SUB_DATES] = dates;
 
-    //    if (withWiggle) {
-            QJsonObject mergedData;
 
-            mergedData[DATE_GAUSS_AGE_STR] = 1000.;
-            mergedData[DATE_GAUSS_ERROR_STR] = 100.;
-            mergedData[DATE_GAUSS_MODE_STR] = DATE_GAUSS_MODE_NONE;
+        QJsonObject mergedData;
 
-
-            result[STATE_DATE_DATA] = mergedData;
-            result[STATE_DATE_ORIGIN] = Date::eCombination;
-
-            result[STATE_DATE_VALID] = true;
-            result[STATE_DATE_DELTA_TYPE] = Date::eDeltaNone;
+        mergedData[DATE_GAUSS_AGE_STR] = 1000.;
+        mergedData[DATE_GAUSS_ERROR_STR] = 100.;
+        mergedData[DATE_GAUSS_MODE_STR] = DATE_GAUSS_MODE_NONE;
 
 
-      /*  } else {
+        result[STATE_DATE_DATA] = mergedData;
+        result[STATE_DATE_ORIGIN] = Date::eCombination;
 
-            QJsonObject mergedData;
-// Calcul les valeurs théoriques impossible pour le produit de plusieurs gaussienne
-            mergedData[DATE_GAUSS_AGE_STR] = 1000;
-            mergedData[DATE_GAUSS_ERROR_STR] = 100;
-            mergedData[DATE_GAUSS_MODE_STR] = DATE_GAUSS_MODE_NONE;
+        result[STATE_DATE_VALID] = true;
+        result[STATE_DATE_DELTA_TYPE] = Date::eDeltaNone;
 
 
-            result[STATE_DATE_DATA] = mergedData;
-            result[STATE_DATE_ORIGIN] = Date::eSingleDate;
-
-            result[STATE_DATE_VALID] = true;
-        }
-        */
 
     } else
         result["error"] = tr("Combine needs at least 2 data !");

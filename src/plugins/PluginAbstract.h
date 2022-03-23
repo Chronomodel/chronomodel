@@ -96,7 +96,7 @@ public:
     
     long double getLikelihoodCombine  (const double& t, const QJsonArray& subDateArray, const double step)
     {
-        long double produit (1.l);
+        long double produit = 1.l;
         Date date;
         QJsonObject subDateJSon;
         QJsonObject data;
@@ -242,7 +242,7 @@ public:
     {
         double tmin (INFINITY);
         double tmax (-INFINITY);
-        for ( auto && sD : subDateArray ) {
+        for ( auto&& sD : subDateArray ) {
                 QPair<double, double> tminTmax = getTminTmaxRefsCurve( sD.toObject());
 
                 tmin = std::min(tmin, tminTmax.first);

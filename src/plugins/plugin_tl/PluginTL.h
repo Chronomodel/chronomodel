@@ -68,8 +68,8 @@ public:
     
     bool areDatesMergeable(const QJsonArray& dates);
     QJsonObject mergeDates(const QJsonArray& dates);
-    long double getLikelihoodCombine(const double& t, const QJsonArray& data);
-    QPair<double,double> getTminTmaxRefsCurveCombine(const QJsonArray& subData);    
+   // long double getLikelihoodCombine(const double& t, const QJsonArray& data);
+   // QPair<double,double> getTminTmaxRefsCurveCombine(const QJsonArray& subData);
 
     QString getName() const;
     QIcon getIcon() const;
