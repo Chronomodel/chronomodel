@@ -334,19 +334,31 @@ QMap<float, float> vector_to_map(const QVector<float>& data, const float min, co
 QMap<double, double> vector_to_map(const QVector<double>& data, const double min, const double max, const double step);
 QMap<double, double> vector_to_map(const QVector<int> &data, const double min, const double max, const double step);
 
-double vector_interpolate_idx_for_value(const double value, const QVector<double> &vector);
-float vector_interpolate_idx_for_value(const float value, const QVector<float> &vector);
+double vector_interpolate_idx_for_value(const double value, const QVector<double>& vector);
+double vector_interpolate_idx_for_value(const double value, const std::vector<double>& vector);
+float vector_interpolate_idx_for_value(const float value, const QVector<float>& vector);
 
-double interpolate_value_from_curve(const double t, const QVector<double> & curve,const double curveTmin, const double curveTmax);
+double interpolate_value_from_curve(const double t, const QVector<double>& curve,const double curveTmin, const double curveTmax);
 
 double map_area(const QMap<double, double>& map);
 float map_area(const QMap<float, float>& map);
+double map_area(const QMap<int, double>& density);
+double map_area(const std::map<double, double>& density);
+
 // const std::map<double, double> create_HPD(const QMap<double, double> &aMap, const double threshold); // Pour Qt5
-const std::map<double, double> create_HPD(const QMap<double, double> &aMap, const double threshold);
+const std::map<double, double> create_HPD(const QMap<double, double>& density, const double threshold = 95.);
+
+const std::map<int, double> create_HPD(const QMap<int, double>& density, const double threshold = 95.);
+
 QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmin, const double tmax, const int nbPts);
 
 inline double diff_erf(double a, double b, double mu = 0., double sigma = 1.) {
     return 0.5*(erf((b-mu)/(sigma*M_SQRT2)) - erf((a-mu)/(sigma*M_SQRT2)));
 }
 
+/*
+ int Binomial(int n, int r);
+ int binomialCoefficients(int n, int k);
+ int getBionomialCoefficient(int n, int k , std::vector<std::vector<int>>& dp);
+*/
 #endif

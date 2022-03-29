@@ -333,22 +333,6 @@ void EventPropertiesView::updateEvent()
              showYErr = false;
 
         } else {
-            /*
-             showXEdit = true;
-             showYEdit = (settings.mProcessType == CurveSettings::eProcessType3D ) ||
-                         (settings.mProcessType == CurveSettings::eProcessType2D ) ||
-                         (settings.mProcessType == CurveSettings::eProcessTypeVector ) ||
-                         (settings.mProcessType == CurveSettings::eProcessTypeSpherical ) ||
-                         ( (settings.mProcessType == CurveSettings::eProcessTypeUnivarie ) &&
-                           (settings.mVariableType == CurveSettings::eVariableTypeDeclination) ) ;
-
-             showYErr = (settings.mProcessType == CurveSettings::eProcessType3D ) ||
-                        (settings.mProcessType == CurveSettings::eProcessType2D ) ||
-                        (settings.mProcessType == CurveSettings::eProcessTypeVector ) ;
-
-             showZEdit = (settings.mProcessType == CurveSettings::eProcessType3D ) ||
-                         (settings.mProcessType == CurveSettings::eProcessTypeVector );
-             */
             showXEdit = settings.showX();
             showYEdit = settings.showY();
             showZEdit = settings.showZ();
@@ -618,7 +602,7 @@ void EventPropertiesView::updateKnownGraph()
     tUpper = tLower;
 
 
-    curve.mSections.append(qMakePair(tLower,tUpper));
+    curve.mSections.push_back(qMakePair(tLower,tUpper));
     mKnownGraph->addCurve(curve);
     QFontMetrics fm (mKnownGraph->font());
     mKnownGraph->setMarginBottom(fm.ascent() + 10. );

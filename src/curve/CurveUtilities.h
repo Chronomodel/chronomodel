@@ -102,6 +102,10 @@ typedef struct PosteriorMeanGComposante
     std::vector<double> vecVarianceG;
     // intra spline error
     std::vector<double> vecVarErrG;
+
+    // inter derivate variance
+    // std::vector<double> vecVarGP; // test
+
     // spline map
     CurveMap mapG;
     

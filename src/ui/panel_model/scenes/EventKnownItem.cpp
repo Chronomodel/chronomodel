@@ -151,7 +151,7 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
         tUpper = tLower;
 
 
-        curve.mSections.append(qMakePair(tLower,tUpper));
+        curve.mSections.push_back(qMakePair(tLower,tUpper));
         graph->addCurve(curve);
         //---------------------
 

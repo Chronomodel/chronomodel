@@ -191,19 +191,19 @@ mName("No Named Date")
     mColor = Qt::blue;
     mOrigin = eSingleDate;
     mPlugin = nullptr;
-    mTheta.mSupport = MetropolisVariable::eR;
-    mSigma.mSupport = MetropolisVariable::eRp;
+    mTi.mSupport = MetropolisVariable::eR;
+    mSigmaTi.mSupport = MetropolisVariable::eRp;
     mWiggle.mSupport = MetropolisVariable::eR;
 
-    mTheta.mFormat = DateUtils::eUnknown;
-    mSigma.mFormat = DateUtils::eUnknown;
+    mTi.mFormat = DateUtils::eUnknown;
+    mSigmaTi.mFormat = DateUtils::eUnknown;
     mWiggle.mFormat = DateUtils::eUnknown;
 
     mId = -1;
     mUUID = QString("NONE");
 
-    mTheta.mSamplerProposal = MHVariable::eMHSymetric;
-    mSigma.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    mTi.mSamplerProposal = MHVariable::eMHSymetric;
+    mSigmaTi.mSamplerProposal = MHVariable::eMHAdaptGauss;
     //updateti = fMHSymetric;
 
     mIsValid = false;
@@ -242,14 +242,14 @@ void Date::init()
     mColor = Qt::blue;
     mOrigin = eSingleDate;
     mPlugin = nullptr;
-    mTheta.mSupport = MetropolisVariable::eR;
-    mTheta.mSamplerProposal = MHVariable::eMHSymetric;
+    mTi.mSupport = MetropolisVariable::eR;
+    mTi.mSamplerProposal = MHVariable::eMHSymetric;
 
-    mSigma.mSupport = MetropolisVariable::eRp;
+    mSigmaTi.mSupport = MetropolisVariable::eRp;
     mWiggle.mSupport = MetropolisVariable::eR;
 
-    mTheta.mFormat = DateUtils::eUnknown;
-    mSigma.mFormat = DateUtils::eUnknown;
+    mTi.mFormat = DateUtils::eUnknown;
+    mSigmaTi.mFormat = DateUtils::eUnknown;
     mWiggle.mFormat = DateUtils::eUnknown;
 
     mId = -1;
@@ -290,8 +290,8 @@ Date& Date::operator=(const Date& date)
 
 void Date::copyFrom(const Date& date)
 {
-    mTheta = date.mTheta;
-    mSigma = date.mSigma;
+    mTi = date.mTi;
+    mSigmaTi = date.mSigmaTi;
     mWiggle = date.mWiggle;
     mDelta = date.mDelta;
 
@@ -458,11 +458,11 @@ void Date::fromJson(const QJsonObject& json)
     }
 
     //mTheta.mProposal = ModelUtilities::getDataMethodText(mMethod);
-    mTheta.setName("Theta of date : "+ mName);
-    mTheta.mSamplerProposal = (MHVariable::SamplerProposal)json.value(STATE_DATE_SAMPLER).toInt();
+    mTi.setName("Theta of date : "+ mName);
+    mTi.mSamplerProposal = (MHVariable::SamplerProposal)json.value(STATE_DATE_SAMPLER).toInt();
 
-    mSigma.mSamplerProposal = MHVariable::eMHSymGaussAdapt;
-    mSigma.setName("Sigma of date : "+ mName);
+    mSigmaTi.mSamplerProposal = MHVariable::eMHSymGaussAdapt;
+    mSigmaTi.setName("Sigma of date : "+ mName);
 
 
 
@@ -494,7 +494,7 @@ QJsonObject Date::toJson() const
     date[STATE_DATE_DATA] = mData;
     date[STATE_DATE_ORIGIN] = mOrigin;
     date[STATE_DATE_PLUGIN_ID] = mPlugin->getId();
-    date[STATE_DATE_SAMPLER] = mTheta.mSamplerProposal;
+    date[STATE_DATE_SAMPLER] = mTi.mSamplerProposal;
     date[STATE_DATE_VALID] = mIsValid;
 
     date[STATE_DATE_DELTA_TYPE] = mDeltaType;
@@ -647,8 +647,8 @@ QString Date::getWiggleDesc(const QJsonObject& json)
 
 void Date::reset()
 {
-    mTheta.reset();
-    mSigma.reset();
+    mTi.reset();
+    mSigmaTi.reset();
     mWiggle.reset();
 }
 
@@ -1334,8 +1334,8 @@ double Date::getFormatedTmaxCalib()const
 
 void Date::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
-    mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
-    mSigma.generateHistos(chains, fftLen, bandwidth);
+    mTi.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+    mSigmaTi.generateHistos(chains, fftLen, bandwidth);
 
     if ( !( mDeltaType == Date::eDeltaNone ) )
         mWiggle.generateHistos(chains, fftLen, bandwidth);
@@ -1396,7 +1396,8 @@ QPixmap Date::generateUnifThumb()
             const double tminDisplay = qBound(tmin, tLower, tmax);
             const double tmaxDisplay = qBound(tmin, tUpper, tmax);
 
-            curve.mSections.append(qMakePair(tminDisplay, tmaxDisplay));
+            //curve.mSections.append(qMakePair(tminDisplay, tmaxDisplay));
+            curve.mSections.push_back(qMakePair(tminDisplay, tmaxDisplay));
             graph.addCurve(curve);
 
             curve.mName = "Calibration";
@@ -1647,20 +1648,20 @@ void Date::initDelta(Event*)
 
 void Date::updateDelta(Event* event)
 {
-    const double lambdai = event->mTheta.mX - mTheta.mX;
+    const double lambdai = event->mTheta.mX - mTi.mX;
     
     switch (mDeltaType) {
         case eDeltaNone:
             break;
         
         case eDeltaRange:
-            mDelta = Generator::gaussByDoubleExp(lambdai, mSigma.mX, mDeltaMin, mDeltaMax);
+            mDelta = Generator::gaussByDoubleExp(lambdai, mSigmaTi.mX, mDeltaMin, mDeltaMax);
             break;
         
         case eDeltaGaussian: {
            // const double lambdai = event->mTheta.mX - mTheta.mX;
-            const double w = ( 1/(mSigma.mX * mSigma.mX) ) + ( 1/(mDeltaError * mDeltaError) );
-            const double deltaAvg = (lambdai / (mSigma.mX * mSigma.mX) + mDeltaAverage / (mDeltaError * mDeltaError)) / w;
+            const double w = ( 1/(mSigmaTi.mX * mSigmaTi.mX) ) + ( 1/(mDeltaError * mDeltaError) );
+            const double deltaAvg = (lambdai / (mSigmaTi.mX * mSigmaTi.mX) + mDeltaAverage / (mDeltaError * mDeltaError)) / w;
             const double x = Generator::gaussByBoxMuller(0, 1);
             const double delta = deltaAvg + x / sqrt(w);
 
@@ -1680,17 +1681,17 @@ void Date::updateSigmaJeffreys(Event* event)
     // ------------------------------------------------------------------------------------------
     //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
     // ------------------------------------------------------------------------------------------
-    const double lambda = pow(mTheta.mX - (event->mTheta.mX - mDelta), 2) / 2.;
+    const double lambda = pow(mTi.mX - (event->mTheta.mX - mDelta), 2) / 2.;
 
    
     const double a (.0001); //precision
     const double b (pow(mSettings.mTmax - mSettings.mTmin, 2.));
 
-    const double V1 = mSigma.mX * mSigma.mX;
+    const double V1 = mSigmaTi.mX * mSigmaTi.mX;
 
     double V2 (0.);
     do {
-        const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigma.mSigmaMH);
+        const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigmaTi.mSigmaMH);
         V2 = pow(10, logV2);
     } while ((V2<a) || (V2>b));
     
@@ -1700,7 +1701,7 @@ void Date::updateSigmaJeffreys(Event* event)
     const double rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1; // (V2 / V1) est le jacobien!
     //qDebug() <<"TDate:: updateSigmaJeffreys"<<V2<< rapport;
     
-    mSigma.tryUpdate(sqrt(V2), rapport);
+    mSigmaTi.tryUpdate(sqrt(V2), rapport);
 }
 
 void Date::updateSigmaShrinkage(Event* event)
@@ -1708,13 +1709,13 @@ void Date::updateSigmaShrinkage(Event* event)
     // ------------------------------------------------------------------------------------------
     //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
     // ------------------------------------------------------------------------------------------
-    const double lambda = pow(mTheta.mX - (event->mTheta.mX - mDelta), 2.) / 2.;
+    const double lambda = pow(mTi.mX - (event->mTheta.mX - mDelta), 2.) / 2.;
 
     const int logVMin = -6;
     const int logVMax = 100;
 
-    const double V1 = mSigma.mX * mSigma.mX;
-    const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigma.mSigmaMH);
+    const double V1 = mSigmaTi.mX * mSigmaTi.mX;
+    const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigmaTi.mSigmaMH);
     const double V2 = pow(10, logV2);
 
     double rapport  = 0.;
@@ -1730,7 +1731,7 @@ void Date::updateSigmaShrinkage(Event* event)
     }
  #endif
 
-    mSigma.tryUpdate(sqrt(V2), rapport);
+    mSigmaTi.tryUpdate(sqrt(V2), rapport);
 }
 
 void Date::updateSigmaReParam(Event* event)
@@ -1738,15 +1739,15 @@ void Date::updateSigmaReParam(Event* event)
     // ------------------------------------------------------------------------------------------
     //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
     // ------------------------------------------------------------------------------------------
-    const double lambda = pow(mTheta.mX - (event->mTheta.mX - mDelta), 2) / 2.;
+    const double lambda = pow(mTi.mX - (event->mTheta.mX - mDelta), 2) / 2.;
 
     const int VMin (0);
 
-    const double V1 = mSigma.mX * mSigma.mX;
+    const double V1 = mSigmaTi.mX * mSigmaTi.mX;
   
-    const double r1 = pow( (mTheta.mX - (event->mTheta.mX - mDelta))/mSigma.mX, 2);
-    const double r2 = Generator::gaussByBoxMuller(r1, mSigma.mSigmaMH);
-    const double V2 = pow( (mTheta.mX - (event->mTheta.mX - mDelta)), 2)/ r2;
+    const double r1 = pow( (mTi.mX - (event->mTheta.mX - mDelta))/mSigmaTi.mX, 2);
+    const double r2 = Generator::gaussByBoxMuller(r1, mSigmaTi.mSigmaMH);
+    const double V2 = pow( (mTi.mX - (event->mTheta.mX - mDelta)), 2)/ r2;
 
     double rapport (0.);
     if (V2 > VMin ) {
@@ -1761,12 +1762,12 @@ void Date::updateSigmaReParam(Event* event)
         qDebug()<<"TDate::updateSigmaReParam x1 x2 rapport rejet";
     }
 #endif
-    mSigma.tryUpdate(sqrt(V2), rapport);
+    mSigmaTi.tryUpdate(sqrt(V2), rapport);
 }
 
 void Date::updateWiggle()
 {
-    mWiggle.mX = mTheta.mX + mDelta;
+    mWiggle.mX = mTi.mX + mDelta;
 }
 
 // CSV dates
@@ -1780,7 +1781,7 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
         QStringList dataTmp = dataStr.mid(1,dataStr.size()-1);
         date.mName = dataTmp.at(0);
         date.mPlugin = plugin;
-        date.mTheta.mSamplerProposal = plugin->getDataMethod();
+        date.mTi.mSamplerProposal = plugin->getDataMethod();
         date.mData = plugin->fromCSV(dataTmp, csvLocale);
 
         if (plugin->wiggleAllowed()) {
@@ -1866,7 +1867,7 @@ void Date::autoSetTiSampler(const bool bSet)
 
     if (bSet && mPlugin!= 0 && mPlugin->withLikelihoodArg() && mOrigin==eSingleDate) {
          //   if (false) {
-        switch (mTheta.mSamplerProposal) {
+        switch (mTi.mSamplerProposal) {
             case MHVariable::eMHSymetric:
                 updateti = &Date::fMHSymetricWithArg;
                 break;
@@ -1886,7 +1887,7 @@ void Date::autoSetTiSampler(const bool bSet)
         }
        // qDebug()<<"TDate::autoSetTiSampler()"<<this->mName<<"with getLikelyhoodArg";
     } else {
-        switch (mTheta.mSamplerProposal) {
+        switch (mTi.mSamplerProposal) {
             case MHVariable::eMHSymetric:
                 updateti = &Date::fMHSymetric;
                 break;
@@ -1927,10 +1928,10 @@ void Date::fMHSymetric(Event* event)
          date->mTheta.tryUpdate(theta, rapport);
     */
 
-        const double tiNew = Generator::gaussByBoxMuller(event->mTheta.mX - mDelta, mSigma.mX);
-        const double rapport = getLikelihood(tiNew) / getLikelihood(mTheta.mX);
+        const double tiNew = Generator::gaussByBoxMuller(event->mTheta.mX - mDelta, mSigmaTi.mX);
+        const double rapport = getLikelihood(tiNew) / getLikelihood(mTi.mX);
 
-        mTheta.tryUpdate(tiNew, rapport);
+        mTi.tryUpdate(tiNew, rapport);
 
 
 }
@@ -1942,16 +1943,16 @@ void Date::fMHSymetric(Event* event)
 void Date::fMHSymetricWithArg(Event* event)
 {
 
-    const double tiNew = Generator::gaussByBoxMuller(event->mTheta.mX - mDelta, mSigma.mX);
+    const double tiNew = Generator::gaussByBoxMuller(event->mTheta.mX - mDelta, mSigmaTi.mX);
 
     QPair<long double, long double> argOld, argNew;
 
-    argOld = getLikelihoodArg(mTheta.mX);
+    argOld = getLikelihoodArg(mTi.mX);
     argNew = getLikelihoodArg(tiNew);
 
     const long double rapport=sqrt(argOld.first/argNew.first)*exp(argNew.second-argOld.second);
 
-    mTheta.tryUpdate(tiNew, (double)rapport);
+    mTi.tryUpdate(tiNew, (double)rapport);
 
 }
 
@@ -2023,7 +2024,7 @@ void Date::fInversion(Event* event)
         tiNew = tminCalib + idx *mCalibration->mStep;
     } else {
         // -- gaussian
-        const double t0 = mTheta.mX;
+        const double t0 = mTi.mX;
         const double s = (tmax-tmin)/2.;
 
         tiNew = Generator::gaussByBoxMuller(t0, s);
@@ -2045,18 +2046,18 @@ void Date::fInversion(Event* event)
         */
     }
 
-    const double rapport1 = getLikelihood(tiNew) / getLikelihood(mTheta.mX);
+    const double rapport1 = getLikelihood(tiNew) / getLikelihood(mTi.mX);
 
-    const double rapport2 = exp((-0.5 / (mSigma.mX * mSigma.mX)) *
+    const double rapport2 = exp((-0.5 / (mSigmaTi.mX * mSigmaTi.mX)) *
                           (pow(tiNew - (event->mTheta.mX - mDelta), 2) -
-                           pow(mTheta.mX - (event->mTheta.mX - mDelta), 2))
+                           pow(mTi.mX - (event->mTheta.mX - mDelta), 2))
                           );
 
-    const double rapport3 = fProposalDensity(mTheta.mX, tiNew) /
-                        fProposalDensity(tiNew, mTheta.mX);
+    const double rapport3 = fProposalDensity(mTi.mX, tiNew) /
+                        fProposalDensity(tiNew, mTi.mX);
 
 
-    mTheta.tryUpdate(tiNew, rapport1 * rapport2 * rapport3);
+    mTi.tryUpdate(tiNew, rapport1 * rapport2 * rapport3);
 }
 
 void Date::fInversionWithArg(Event* event)
@@ -2102,17 +2103,17 @@ void Date::fInversionWithArg(Event* event)
 
     QPair<long double, long double> argOld, argNew;
 
-    argOld = getLikelihoodArg(mTheta.mX);
+    argOld = getLikelihoodArg(mTi.mX);
     argNew = getLikelihoodArg(tiNew);
 
     const long double logGRapport = argNew.second-argOld.second;
-    const long double logHRapport = (-0.5l/powl(mSigma.mX, 2.)) * (  powl(tiNew - (event->mTheta.mX - mDelta), 2.) - powl(mTheta.mX - (event->mTheta.mX - mDelta), 2.) ); // modif 2020-09-28
+    const long double logHRapport = (-0.5l/powl(mSigmaTi.mX, 2.)) * (  powl(tiNew - (event->mTheta.mX - mDelta), 2.) - powl(mTi.mX - (event->mTheta.mX - mDelta), 2.) ); // modif 2020-09-28
 
     const long double rapport = sqrt(argOld.first/argNew.first) * exp(logGRapport+logHRapport);
 
-    const long double rapportPD = fProposalDensity(mTheta.mX, tiNew) / fProposalDensity(tiNew, mTheta.mX);
+    const long double rapportPD = fProposalDensity(mTi.mX, tiNew) / fProposalDensity(tiNew, mTi.mX);
 
-    mTheta.tryUpdate(tiNew, (double)(rapport * rapportPD));
+    mTi.tryUpdate(tiNew, (double)(rapport * rapportPD));
 
 }
 
@@ -2122,13 +2123,13 @@ void Date::fInversionWithArg(Event* event)
  */
 void Date::fMHSymGaussAdapt(Event* event)
 {
-    const double tiNew = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
-    double rapport = getLikelihood(tiNew) / getLikelihood(mTheta.mX);
-    rapport *= exp((-0.5/(mSigma.mX * mSigma.mX)) * (   pow(tiNew - (event->mTheta.mX - mDelta), 2)
-                                                                  - pow(mTheta.mX - (event->mTheta.mX - mDelta), 2)
+    const double tiNew = Generator::gaussByBoxMuller(mTi.mX, mTi.mSigmaMH);
+    double rapport = getLikelihood(tiNew) / getLikelihood(mTi.mX);
+    rapport *= exp((-0.5/(mSigmaTi.mX * mSigmaTi.mX)) * (   pow(tiNew - (event->mTheta.mX - mDelta), 2)
+                                                                  - pow(mTi.mX - (event->mTheta.mX - mDelta), 2)
                                                                  ));
 
-    mTheta.tryUpdate(tiNew, rapport);
+    mTi.tryUpdate(tiNew, rapport);
 }
 
 
@@ -2139,20 +2140,20 @@ void Date::fMHSymGaussAdapt(Event* event)
  */
 void Date::fMHSymGaussAdaptWithArg(Event* event)
 {
-    const double tiNew = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
+    const double tiNew = Generator::gaussByBoxMuller(mTi.mX, mTi.mSigmaMH);
 
     QPair<long double, long double> argOld, argNew;
 
-    argOld = getLikelihoodArg(mTheta.mX);
+    argOld = getLikelihoodArg(mTi.mX);
     argNew = getLikelihoodArg(tiNew);
 
     const long double logGRapport = argNew.second - argOld.second;
-    const long double logHRapport = (-0.5 / (mSigma.mX * mSigma.mX)) * (  pow(tiNew - (event->mTheta.mX - mDelta), 2)
-                                                                      - pow(mTheta.mX - (event->mTheta.mX - mDelta), 2)
+    const long double logHRapport = (-0.5 / (mSigmaTi.mX * mSigmaTi.mX)) * (  pow(tiNew - (event->mTheta.mX - mDelta), 2)
+                                                                      - pow(mTi.mX - (event->mTheta.mX - mDelta), 2)
                                                                       );
 
     const long double rapport = sqrt(argOld.first / argNew.first) * exp(logGRapport+logHRapport);
 
-    mTheta.tryUpdate(tiNew, (double) rapport);
+    mTi.tryUpdate(tiNew, (double) rapport);
 
 }

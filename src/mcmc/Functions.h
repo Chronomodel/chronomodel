@@ -92,17 +92,19 @@ type_data std_Koening(const QVector<type_data> &data);
 double std_Knuth(const QVector<double> &data);
 double std_Knuth(const std::vector<double> &data);
 double std_Knuth(const std::vector<int> &data);
+void mean_variance_Knuth(const std::vector<double> &data, double& mean, double& variance);
+void mean_variance_Knuth(const QVector<double> &data, double& mean, double& variance);
 
 double std_unbiais_Knuth(const QVector<double> &data);
 double std_unbiais_Knuth(const std::vector<double> &data);
 double std_unbiais_Knuth(const std::vector<int> &data);
+void mean_std_unbiais_Knuth(const std::vector<int> &data, double& mean, double& std);
 
-void mean_std_Knuth(const std::vector<int> &data, double& mean, double& std);
 double covariance(const std::vector<double>& dataX, const std::vector<double>& dataY);
 
 const std::pair<double, double> linear_regression(const std::vector<double>& dataX, const std::vector<double>& dataY);
 
-double shrinkageUniform(const double so2);
+double shrinkageUniform(const double s02);
 
 Quartiles quartilesForTrace(const QVector<type_data>& trace);
 TraceStat traceStatistic(const QVector<type_data> &trace);
@@ -124,6 +126,7 @@ QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString
 
 QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double, double> &hpd, double thresh);
 
+std::pair<int,std::pair<int, int> > intervalMonomodalHpd(const std::map<int, double> &density, double thresh = 95);
 
 //-------- Matrix
 std::vector<double> initVector(size_t n);

@@ -431,7 +431,6 @@ void CalibrationView::updateGraphs()
                */
 
              }
-
             const double realThresh = map_area(hpd) / map_area(subData);
 
             resultsStr +=  "<br> HPD (" + stringForLocal(100. * realThresh) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false) ;

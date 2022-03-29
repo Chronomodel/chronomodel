@@ -82,7 +82,7 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     mVariableTypeInput->addItem(tr("Depth"));
     mVariableTypeInput->addItem(tr("Any Measure"));
     
-    mThresholdLabel = new QLabel(tr("Speed threshold"), this);
+    mThresholdLabel = new QLabel(tr("Minimal Rate of Change"), this);
     mThresholdInput = new QLineEdit(this);
 
     mUseErrMesureLabel = new QLabel(tr("Use Measurement Err."), this);

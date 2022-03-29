@@ -68,7 +68,7 @@ public:
     void fromJson(const QJsonObject& json);
     virtual ~Dato();
     QString mName;
-    MHVariable mTheta; // theta i de la date
+    MHVariable mTi; //mTheta; // theta i de la date
     MHVariable mSigma; // sigma i de la date (par rapport au fait)
     MHVariable mWiggle;
     double mDelta;
@@ -102,8 +102,8 @@ public:
         eDeltaRange = 2
     };
 
-    MHVariable mTheta; // theta i de la date
-    MHVariable mSigma; // sigma i de la date (par rapport au fait)
+    MHVariable mTi;//mTheta; // theta i de la date
+    MHVariable mSigmaTi; // sigma i de la date (par rapport au fait)
     MHVariable mWiggle;
     double mDelta;
 

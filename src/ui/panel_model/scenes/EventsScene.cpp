@@ -393,7 +393,7 @@ qDebug()<<"EventsScene::updateSceneFromState()";
     startTime.start();
 #endif
 
-    if (mProject->mState.value(STATE_EVENTS).toArray().isEmpty() && mProject->mState.value(STATE_PHASES).toArray().isEmpty())
+    if (mProject->mState.value(STATE_EVENTS).toArray().isEmpty() && mProject->mState.value(STATE_PHASES).toArray().isEmpty() && mItems.isEmpty())
         return;
 
     QJsonObject state = mProject->state();
@@ -1633,7 +1633,7 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
             QStringList dataTmp = dataStr.mid(1,dataStr.size()-1);
             date.mName = eventName;
             date.mPlugin = nullptr;
-            date.mTheta.mSamplerProposal = MHVariable::eMHSymetric; //set but not used
+            date.mTi.mSamplerProposal = MHVariable::eMHSymetric; //set but not used
 
             QJsonObject json;
             json.insert(STATE_EVENT_KNOWN_FIXED, csvLocal.toDouble(dataTmp.at(0)));

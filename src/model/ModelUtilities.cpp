@@ -333,10 +333,10 @@ QString ModelUtilities::dateResultsText(const Date* d, const Model* model, const
 
     text += QObject::tr("Data : %1").arg(d->mName) + nl + nl;
     text += QObject::tr("Posterior calib. date") + nl;
-    text += d->mTheta.resultsString(nl, "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, forCSV) ;
+    text += d->mTi.resultsString(nl, "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, forCSV) ;
 
     if (model) {
-        short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTheta.mHPD, model);
+        short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTi.mHPD, model);
         switch (position) {
             case -1:
                 text += QObject::tr("Solutions exist under study period");
@@ -354,9 +354,9 @@ QString ModelUtilities::dateResultsText(const Date* d, const Model* model, const
     text += nl + nl;
     text += QObject::tr("Posterior Std. Deviation") + nl;
     if (forCSV)
-        text += d->mSigma.resultsString(nl, "", DateUtils::getAppSettingsFormatStr(), nullptr, forCSV);
+        text += d->mSigmaTi.resultsString(nl, "", DateUtils::getAppSettingsFormatStr(), nullptr, forCSV);
     else
-         text += d->mSigma.resultsString(nl, "", DateUtils::getAppSettingsFormatStr(), nullptr, forCSV);
+         text += d->mSigmaTi.resultsString(nl, "", DateUtils::getAppSettingsFormatStr(), nullptr, forCSV);
 
     return text;
 }
@@ -634,7 +634,7 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
             log += "<br>";
             log += line(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j+1), QString::number(pEvent->mDates.size()), date.mName)
                                   + "<br>" + QObject::tr("- Type : %1").arg(date.mPlugin->getName())
-                                  + "<br>" + QObject::tr("- Method : %1").arg(MHVariable::getSamplerProposalText(date.mTheta.mSamplerProposal))
+                                  + "<br>" + QObject::tr("- Method : %1").arg(MHVariable::getSamplerProposalText(date.mTi.mSamplerProposal))
                                   + "<br>" + QObject::tr("- Params : %1").arg(date.getDesc())));
             ++j;
         }
@@ -846,19 +846,19 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
             HTMLText += "<br>";
 
             HTMLText += line(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j), QString::number(event->mDates.size()), date.mName)));
-            HTMLText += line(textBlack(QObject::tr(" - ti : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(date.mTheta.mX), DateUtils::getAppSettingsFormatStr())));
-            if (date.mTheta.mSamplerProposal == MHVariable::eMHSymGaussAdapt) {
-                if (date.mTheta.mLastAccepts.size()>2) {
-                    HTMLText += line(textBlack(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(date.mTheta.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(date.mTheta.mSamplerProposal))));
+            HTMLText += line(textBlack(QObject::tr(" - ti : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(date.mTi.mX), DateUtils::getAppSettingsFormatStr())));
+            if (date.mTi.mSamplerProposal == MHVariable::eMHSymGaussAdapt) {
+                if (date.mTi.mLastAccepts.size()>2) {
+                    HTMLText += line(textBlack(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(date.mTi.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(date.mTi.mSamplerProposal))));
                 }
-                HTMLText += line(textBlack(QObject::tr(" - Sigma_MH on ti : %1").arg(stringForLocal(date.mTheta.mSigmaMH))));
+                HTMLText += line(textBlack(QObject::tr(" - Sigma_MH on ti : %1").arg(stringForLocal(date.mTi.mSigmaMH))));
             }
 
-            HTMLText += line(textBlack(QObject::tr(" - Sigma_i : %1").arg(stringForLocal(date.mSigma.mX))));
-            if (date.mSigma.mLastAccepts.size()>2) {
-                HTMLText += line(textBlack(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(date.mSigma.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(date.mSigma.mSamplerProposal))));
+            HTMLText += line(textBlack(QObject::tr(" - Sigma_i : %1").arg(stringForLocal(date.mSigmaTi.mX))));
+            if (date.mSigmaTi.mLastAccepts.size()>2) {
+                HTMLText += line(textBlack(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(date.mSigmaTi.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(date.mSigmaTi.mSamplerProposal))));
             }
-            HTMLText += line(textBlack(QObject::tr(" - Sigma_MH on Sigma_i : %1").arg(stringForLocal(date.mSigma.mSigmaMH))));
+            HTMLText += line(textBlack(QObject::tr(" - Sigma_MH on Sigma_i : %1").arg(stringForLocal(date.mSigmaTi.mSigmaMH))));
             if (date.mDeltaType != Date::eDeltaNone)
                 HTMLText += line(textBlack(QObject::tr(" - Delta_i : %1").arg(stringForLocal(date.mDelta))));
 
@@ -973,20 +973,20 @@ QString ModelUtilities::modelStateDescriptionText(const ModelCurve *model, QStri
             text += nl;
 
             text += QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j), QString::number(event->mDates.size()), date.mName);
-            text += QObject::tr(" - ti : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(date.mTheta.mX), DateUtils::getAppSettingsFormatStr());
-            if (date.mTheta.mSamplerProposal == MHVariable::eMHSymGaussAdapt) {
-                if (date.mTheta.mLastAccepts.size()>2) {
-                    text += QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(date.mTheta.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(date.mTheta.mSamplerProposal));
+            text += QObject::tr(" - ti : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(date.mTi.mX), DateUtils::getAppSettingsFormatStr());
+            if (date.mTi.mSamplerProposal == MHVariable::eMHSymGaussAdapt) {
+                if (date.mTi.mLastAccepts.size()>2) {
+                    text += QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(date.mTi.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(date.mTi.mSamplerProposal));
                 }
-                text += QObject::tr(" - Sigma_MH on ti : %1").arg(stringForLocal(date.mTheta.mSigmaMH));
+                text += QObject::tr(" - Sigma_MH on ti : %1").arg(stringForLocal(date.mTi.mSigmaMH));
 
             }
 
-            text += QObject::tr(" - Sigma_i : %1").arg(stringForLocal(date.mSigma.mX));
-            if (date.mSigma.mLastAccepts.size()>2) {
-                text += QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(date.mSigma.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(date.mSigma.mSamplerProposal));
+            text += QObject::tr(" - Sigma_i : %1").arg(stringForLocal(date.mSigmaTi.mX));
+            if (date.mSigmaTi.mLastAccepts.size()>2) {
+                text += QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(date.mSigmaTi.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(date.mSigmaTi.mSamplerProposal));
             }
-            text += QObject::tr(" - Sigma_MH on Sigma_i : %1").arg(stringForLocal(date.mSigma.mSigmaMH));
+            text += QObject::tr(" - Sigma_MH on Sigma_i : %1").arg(stringForLocal(date.mSigmaTi.mSigmaMH));
             if (date.mDeltaType != Date::eDeltaNone)
                 text += QObject::tr(" - Delta_i : %1").arg(stringForLocal(date.mDelta));
 
@@ -1045,7 +1045,7 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
     text += line(textBold(textBlack(QObject::tr("Posterior calib. date"))));
 
     if (model) {
-        short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTheta.mHPD, model);
+        short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTi.mHPD, model);
         switch (position) {
             case -1:
                text += line( textBold(textRed(QObject::tr("Solutions exist before study period") )) );
@@ -1061,11 +1061,11 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
         }
      }
 
-    text += line(textBlack(d->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false))) ;
+    text += line(textBlack(d->mTi.resultsString("<br>", "",DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false))) ;
 
     text += line("<br>");
     text += line(textBold(textBlack(QObject::tr("Posterior Std. Deviation"))));
-    text += line(textBlack(d->mSigma.resultsString()));
+    text += line(textBlack(d->mSigmaTi.resultsString()));
     return text;
 }
 

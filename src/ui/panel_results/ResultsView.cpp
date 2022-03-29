@@ -1,4 +1,4 @@
-/* ---------------------------------------------------------------------
+   /* ---------------------------------------------------------------------
 
 Copyright or © or Copr. CNRS	2014 - 2018
 
@@ -169,9 +169,9 @@ mMaximunNumberOfVisibleGraph(0)
     mEventsDatesUnfoldCheck->setFixedHeight(h);
     mEventsDatesUnfoldCheck->setToolTip(tr("Display Events' data"));
 
-    mEventDateRadio = new RadioButton(tr("Event Date"));
-    mEventDateRadio->setFixedHeight(h);
-    mEventDateRadio->setChecked(true);
+    mEventThetaRadio = new RadioButton(tr("Event"));
+    mEventThetaRadio->setFixedHeight(h);
+    mEventThetaRadio->setChecked(true);
 
     mDataSigmaRadio = new RadioButton(tr("Ind. Std. Deviations"));
     mDataSigmaRadio->setFixedHeight(h);
@@ -193,7 +193,7 @@ mMaximunNumberOfVisibleGraph(0)
     QVBoxLayout* resultsGroupLayout = new QVBoxLayout();
     resultsGroupLayout->setContentsMargins(10, 10, 10, 10);
     resultsGroupLayout->setSpacing(15);
-    resultsGroupLayout->addWidget(mEventDateRadio);
+    resultsGroupLayout->addWidget(mEventThetaRadio);
     resultsGroupLayout->addWidget(mDataSigmaRadio);
     resultsGroupLayout->addWidget(mEventVGRadio);
 
@@ -335,7 +335,7 @@ mMaximunNumberOfVisibleGraph(0)
     // -----------------------------------------------------------------
     //  Connections
     // -----------------------------------------------------------------
-    connect(mEventDateRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
+    connect(mEventThetaRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
 
    // connect(mEventsDatesUnfoldCheck, &CheckBox::clicked, this, &ResultsView::applyUnfoldDates);
     connect(mEventsDatesUnfoldCheck, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
@@ -990,6 +990,7 @@ void ResultsView::updateModel(Model* model)
     mCurrentVariableList.clear();
     if (isCurve()) {
         mMainVariable = GraphViewResults::eG;
+        mCurveGRadio->setChecked(true);
         mGraphListTab->setTab(2, false);
 
     } else if (mHasPhases) {
@@ -1000,6 +1001,7 @@ void ResultsView::updateModel(Model* model)
         mMainVariable = GraphViewResults::eThetaEvent;
         mGraphListTab->setTab(0, false);
     }
+    updateMainVariable();
     mCurrentVariableList.append(mMainVariable);
     mFFTLenCombo->setCurrentText(stringForLocal(mModel->getFFTLength()));
     mBandwidthSpin->setValue(mModel->getBandwidth());
@@ -1102,7 +1104,7 @@ void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewRes
         widget->resize(width() - mOptionsW, graphs.size() * mGraphHeight * coefDisplay);
 
         int i = 0;
-        for (auto& g : graphs) {
+        for (auto&& g : graphs) {
             g->setGeometry(0, (i++) * mGraphHeight*coefDisplay, widget->width() , mGraphHeight * coefDisplay);
             g->setVisible(true);
             g->update();
@@ -1149,7 +1151,7 @@ void ResultsView::applyGraphListTab()
     // Update the current variable to the most appropriate for this list :
     if (currentIndex == 0) {
         mMainVariable = GraphViewResults::eThetaEvent;
-        mEventDateRadio->setChecked(true);
+        mEventThetaRadio->setChecked(true);
 
     } else if (currentIndex == 1) {
         mMainVariable = GraphViewResults::eBeginEnd;
@@ -1176,7 +1178,7 @@ void ResultsView::updateMainVariable()
     mCurrentVariableList.clear();
 
     if (mGraphListTab->currentName() == tr("Events")) {
-        if (mEventDateRadio->isChecked()) {
+        if (mEventThetaRadio->isChecked()) {
             mMainVariable = GraphViewResults::eThetaEvent;
             if (mEventsDatesUnfoldCheck->isChecked()) {
                 mCurrentVariableList.append(GraphViewResults::eDataTi);
@@ -1281,6 +1283,9 @@ void ResultsView::updateMainVariable()
 
         } else if (mCurveGPRadio->isChecked()) {
             mMainVariable = GraphViewResults::eGP;
+            if (mCurveErrorCheck->isChecked())
+                mCurrentVariableList.append(GraphViewResults::eGError);
+
             mCurrentTypeGraph = GraphViewResults::ePostDistrib;
             mGraphTypeTabs->setTab(0, false);
 
@@ -1521,7 +1526,7 @@ void ResultsView::updateTotalGraphs()
     
     if (mGraphListTab->currentName() == tr("Events")) {
         bool showAllEvents = ! mModel->hasSelectedEvents();
-        for (auto&& event : mModel->mEvents) {
+        for (const auto& event : mModel->mEvents) {
             if (event->mIsSelected || showAllEvents) {
                 ++totalGraphs;
                 
@@ -1533,12 +1538,12 @@ void ResultsView::updateTotalGraphs()
     } else if (mGraphListTab->currentName() == tr("Phases")) {
         bool showAllPhases = ! mModel->hasSelectedPhases();
 
-        for (auto&& phase : mModel->mPhases) {
+        for (const auto& phase : mModel->mPhases) {
             if (phase->mIsSelected || showAllPhases) {
                 ++totalGraphs;
                 
                 if (mPhasesEventsUnfoldCheck->isChecked())  {
-                    for (auto&& event : phase->mEvents) {
+                    for (const auto& event : phase->mEvents) {
                         ++totalGraphs;
 
                         if (mPhasesDatesUnfoldCheck->isChecked())
@@ -1592,7 +1597,7 @@ void ResultsView::createByEventsGraphs()
     QWidget* eventsWidget = mEventsScrollArea->widget();
     int graphIndex = 0;
 
-    for (auto& event : mModel->mEvents) {
+    for (const auto& event : mModel->mEvents) {
         if (event->mIsSelected || showAllEvents) {
             if (graphIndexIsInCurrentPage(graphIndex)) {
                 GraphViewEvent* graph = new GraphViewEvent(eventsWidget);
@@ -1614,7 +1619,7 @@ void ResultsView::createByEventsGraphs()
             ++graphIndex;
                 
             if (mEventsDatesUnfoldCheck->isChecked()) {
-                for (auto& date : event->mDates) {
+                for (auto&& date : event->mDates) {
                     if (graphIndexIsInCurrentPage(graphIndex)) {
 
                         GraphViewDate* graph = new GraphViewDate(eventsWidget);
@@ -1660,7 +1665,7 @@ void ResultsView::createByPhasesGraphs()
     QWidget* phasesWidget = mPhasesScrollArea->widget();
     int graphIndex = 0;
 
-    for (auto& phase : mModel->mPhases) {
+    for (const auto& phase : mModel->mPhases) {
         if (phase->mIsSelected || showAllPhases) {
             if (graphIndexIsInCurrentPage(graphIndex)) {
                 GraphViewPhase* graph = new GraphViewPhase(phasesWidget);
@@ -1680,7 +1685,7 @@ void ResultsView::createByPhasesGraphs()
             ++graphIndex;
             
             if (mPhasesEventsUnfoldCheck->isChecked()) {
-                for (auto& event : phase->mEvents) {
+                for (const auto& event : phase->mEvents) {
                      if (graphIndexIsInCurrentPage(graphIndex)) {
                         GraphViewEvent* graph = new GraphViewEvent(phasesWidget);
                         graph->setSettings(mModel->mSettings);
@@ -1774,7 +1779,7 @@ void ResultsView::createByCurveGraph()
         std::vector<int> dataPerEvent;
         std::vector<int> hpdPerEvent;
         if (mMainVariable == GraphViewResults::eG) {
-            for (auto& event : modelCurve()->mEvents) {
+            for (const auto& event : modelCurve()->mEvents) {
                 CurveRefPts evPts;
                 CurveRefPts dPts;
                  double verr;
@@ -1815,7 +1820,7 @@ void ResultsView::createByCurveGraph()
 
             if (event->mType == Event::eDefault) {
 
-                for (auto&& date: event->mDates) {
+                for (const auto& date: event->mDates) {
 
                     //QMap<double, double> calibMap = date.getFormatedCalibToShow();
                     QMap<double, double> calibMap = date.getRawCalibMap();
@@ -1823,13 +1828,13 @@ void ResultsView::createByCurveGraph()
 
                     // hpd is calculate only on the study Period
                     //QMap<type_data, type_data> subData = calibCurve->mData;
-                    QMap<type_data, type_data> subData = getMapDataInRange(calibMap, model->mSettings.mTmin, model->mSettings.mTmax);
+                    //QMap<type_data, type_data> subData = getMapDataInRange(calibMap, model->mSettings.mTmin, model->mSettings.mTmax);
 
                     QMap<type_data, type_data> hpd (create_HPD(calibMap, event->mTheta.mThresholdUsed));
 
                     QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(hpd, 100);
                     dataPerEvent.push_back(intervals.size());
-                    for (auto h : intervals) {
+                    for (const auto& h : intervals) {
                         dPts.Xmin = h.second.first;
                         dPts.Xmax = h.second.second;
                         dPts.Ymin = evPts.Ymin;
@@ -1839,18 +1844,7 @@ void ResultsView::createByCurveGraph()
                         // memo Data Points
                         dataPts.append(dPts);
                     }
-                    /*
-                    FunctionStat calibStat = analyseFunction(calibMap);
 
-                    dPts.Xmean = calibStat.mean;
-                    dPts.Xerr = calibStat.std;
-                    dPts.Ymean = evPts.Ymean;
-                    dPts.Yerr = evPts.Yerr;
-                    dPts.color = event->mColor;
-
-                    // memo Data Points
-                    dataPts.append(dPts);
-                    */
                 }
 
 
@@ -1862,7 +1856,7 @@ void ResultsView::createByCurveGraph()
 
                  QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(event->mTheta.mHPD, 100.);
                  hpdPerEvent.push_back(intervals.size());
-                 for (auto h : intervals) {
+                 for (const auto& h : intervals) {
                      evPts.Xmin = DateUtils::convertFromFormat( h.second.first, AppSettings::mFormatDate);
                      evPts.Xmax = DateUtils::convertFromFormat( h.second.second, AppSettings::mFormatDate);
                      evPts.Ymin = evPts.Ymin;
@@ -1921,7 +1915,7 @@ void ResultsView::createByCurveGraph()
             switch (model->mCurveSettings.mVariableType) {
                  case CurveSettings::eVariableTypeInclination :
                       if (mMainVariable == GraphViewResults::eGP) {
-                         graphX->setTitle(tr("Speed Inclination"));
+                         graphX->setTitle(tr("Incl. Var. Rate"));
 
                       } else if (mMainVariable == GraphViewResults::eGS) {
                           graphX->setTitle(tr("Inclination Acceleration"));
@@ -1933,7 +1927,7 @@ void ResultsView::createByCurveGraph()
 
                  case CurveSettings::eVariableTypeDeclination :
                        if (mMainVariable == GraphViewResults::eGP) {
-                          graphX->setTitle(tr("Speed Declination"));
+                          graphX->setTitle(tr("Decl. Var. Rate"));
 
                        } else if (mMainVariable == GraphViewResults::eGS) {
                            graphX->setTitle(tr("Declination Acceleration"));
@@ -1945,7 +1939,7 @@ void ResultsView::createByCurveGraph()
 
                  case CurveSettings::eVariableTypeField:
                       if (mMainVariable == GraphViewResults::eGP) {
-                         graphX->setTitle(tr("Field Speed"));
+                         graphX->setTitle(tr("Field Var. Rate"));
 
                       } else if (mMainVariable == GraphViewResults::eGS) {
                           graphX->setTitle(tr("Field Acceleration"));
@@ -1957,7 +1951,7 @@ void ResultsView::createByCurveGraph()
 
                  case CurveSettings::eVariableTypeDepth:
                       if (mMainVariable == GraphViewResults::eGP) {
-                         graphX->setTitle(tr("Depth Speed"));
+                         graphX->setTitle(tr("Depth Var. Rate"));
 
                       } else if (mMainVariable == GraphViewResults::eGS) {
                           graphX->setTitle(tr("Depth Acceleration"));
@@ -1969,7 +1963,7 @@ void ResultsView::createByCurveGraph()
 
                  case CurveSettings::eVariableTypeOther:
                        if (mMainVariable == GraphViewResults::eGP) {
-                          graphX->setTitle(tr("Speed"));
+                          graphX->setTitle(tr("Var. Rate"));
 
                        } else if (mMainVariable == GraphViewResults::eGS) {
                            graphX->setTitle(tr("Acceleration"));
@@ -1983,7 +1977,7 @@ void ResultsView::createByCurveGraph()
         } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical ||
                    model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector) {
             if (mMainVariable == GraphViewResults::eGP) {
-               graphX->setTitle(tr("X Speed"));
+               graphX->setTitle(tr("dX"));
 
             } else if (mMainVariable == GraphViewResults::eGS) {
                 graphX->setTitle(tr("X Acceleration"));
@@ -1994,7 +1988,7 @@ void ResultsView::createByCurveGraph()
 
         } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D  || model->mCurveSettings.mProcessType == CurveSettings::eProcessType2D) {
             if (mMainVariable == GraphViewResults::eGP) {
-               graphX->setTitle(tr("X Speed"));
+               graphX->setTitle(tr("dX"));
 
             } else if (mMainVariable == GraphViewResults::eGS) {
                 graphX->setTitle(tr("X Acceleration"));
@@ -2036,7 +2030,7 @@ void ResultsView::createByCurveGraph()
                                model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector) {
 
                 if (mMainVariable == GraphViewResults::eGP) {
-                    graphY->setTitle(tr("Y Speed"));
+                    graphY->setTitle(tr("dY"));
 
                 } else if (mMainVariable == GraphViewResults::eGS) {
                     graphY->setTitle(tr("Y Acceleration"));
@@ -2049,7 +2043,7 @@ void ResultsView::createByCurveGraph()
                        model->mCurveSettings.mProcessType == CurveSettings::eProcessType2D) {
 
                 if (mMainVariable == GraphViewResults::eGP) {
-                    graphY->setTitle(tr("Y Speed"));
+                    graphY->setTitle(tr("dY"));
                 } else if (mMainVariable == GraphViewResults::eGS) {
                     graphY->setTitle(tr("Y Acceleration"));
                 } else {
@@ -2067,7 +2061,7 @@ void ResultsView::createByCurveGraph()
                 int i = 0;
                 int iDataPts = 0;
                 int iEventPts = -1;
-                for (auto& event : modelCurve()->mEvents) {
+                for (const auto& event : modelCurve()->mEvents) {
                     for (int j = 0 ; j< hpdPerEvent[i]; j++) {
                         iEventPts++;
                         if ( model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D ||
@@ -2109,7 +2103,7 @@ void ResultsView::createByCurveGraph()
 
             if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ) {
                 if (mMainVariable == GraphViewResults::eGP) {
-                    graphZ->setTitle(tr("Z Speed"));
+                    graphZ->setTitle(tr("dZ"));
 
                 } else if (mMainVariable == GraphViewResults::eGS) {
                     graphZ->setTitle(tr("Z Acceleration"));
@@ -2121,7 +2115,7 @@ void ResultsView::createByCurveGraph()
             } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D ) {
 
                 if (mMainVariable == GraphViewResults::eGP) {
-                    graphZ->setTitle(tr("Z Speed"));
+                    graphZ->setTitle(tr("dZ"));
 
                 } else if (mMainVariable == GraphViewResults::eGS) {
                     graphZ->setTitle(tr("Z Acceleration"));
@@ -2139,7 +2133,7 @@ void ResultsView::createByCurveGraph()
                 int i = 0;
                 int iDataPts = 0;
                 int iEventPts = -1;
-                for (auto& event : modelCurve()->mEvents) {
+                for (const auto& event : modelCurve()->mEvents) {
                     for (int j = 0 ; j< hpdPerEvent[i]; j++) {
                         iEventPts++;
                         eventsPts[iEventPts].Ymin = event->mZField - 1.96*event->mS_ZField;
@@ -2214,7 +2208,6 @@ QList<GraphViewResults*> ResultsView::currentGraphs(bool onlySelected)
         return byGraphs;
     }
 
-
     return graphs;
 }
 
@@ -2224,7 +2217,7 @@ QList<GraphViewResults*> ResultsView::currentGraphs(bool onlySelected)
 
 bool ResultsView::graphIndexIsInCurrentPage(int graphIndex)
 {
-    int firstIndexToShow = mCurrentPage * mGraphsPerPage;
+    const int firstIndexToShow = mCurrentPage * mGraphsPerPage;
     return (graphIndex >= firstIndexToShow) && (graphIndex < (firstIndexToShow + mGraphsPerPage));
 }
 
@@ -2240,10 +2233,8 @@ bool ResultsView::graphIndexIsInCurrentPage(int graphIndex)
 */
 void ResultsView::generateCurves()
 {
-    // -----------------------------------------------------------------
-    //  Generate all graphs curves in the current list
-    // -----------------------------------------------------------------
     QList<GraphViewResults*> listGraphs = currentGraphs(false);
+
     for (GraphViewResults*& graph : listGraphs) {
         graph->generateCurves(GraphViewResults::graph_t(mCurrentTypeGraph), mCurrentVariableList);
     }
@@ -2266,7 +2257,7 @@ void ResultsView::updateGraphsMinMax()
             mResultMaxX = getGraphsMax(listGraphs, "Post Distrib Duration", 100.);
 
         }else if (mMainVariable == GraphViewResults::eVG) {
-            mResultMinX = 0; //getGraphsMin(listGraphs, "Std G", 0.);
+            mResultMinX = 0;
             mResultMaxX = getGraphsMax(listGraphs, "Std G", 100.);
 
         } else if (mMainVariable == GraphViewResults::eLambda) {
@@ -2279,7 +2270,7 @@ void ResultsView::updateGraphsMinMax()
         }
 
      } else if ((mCurrentTypeGraph == GraphViewResults::eTrace) || (mCurrentTypeGraph == GraphViewResults::eAccept)) {
-            for (int i=0; i<mChainRadios.size(); ++i) {
+            for (int i = 0; i<mChainRadios.size(); ++i) {
                 if (mChainRadios.at(i)->isChecked()) {
                     const ChainSpecs& chain = mModel->mChains.at(i);
                     mResultMinX = 0;
@@ -2300,20 +2291,16 @@ void ResultsView::updateGraphsMinMax()
 double ResultsView::getGraphsMax(const QList<GraphViewResults*>& graphs, const QString& title, double maxFloor)
 {
     double max = 0.;
-    
-    QList<GraphViewResults*>::const_iterator it = graphs.cbegin();
-    QList<GraphViewResults*>::const_iterator itEnd = graphs.cend();
 
-    while (it != itEnd)  {
-        GraphViewResults* graphWrapper = (*it);
-        QList<GraphCurve> curves = graphWrapper->getGraph()->getCurves();
-        for (auto&& curve : curves) {
+    for (const auto& graphWrapper : graphs) {
+        const QList<GraphCurve> curves = graphWrapper->getGraph()->getCurves();
+        for (const auto& curve : curves) {
               if (curve.mName.contains(title) && (curve.mVisible == true)) {
                 max = ceil(std::max(max, curve.mData.lastKey()));
             }
         }
-        ++it;
     }
+
     return std::max(maxFloor, max);
 }
 
@@ -2321,18 +2308,13 @@ double ResultsView::getGraphsMin(const QList<GraphViewResults*>& graphs, const Q
 {
     double min = 0.;
 
-    QList<GraphViewResults*>::const_iterator it = graphs.cbegin();
-    QList<GraphViewResults*>::const_iterator itEnd = graphs.cend();
-
-    while (it != itEnd)  {
-        GraphViewResults* graphWrapper = (*it);
-        QList<GraphCurve> curves = graphWrapper->getGraph()->getCurves();
-        for (auto&& curve : curves) {
+    for (const auto& graphWrapper : graphs) {
+        const QList<GraphCurve> curves = graphWrapper->getGraph()->getCurves();
+        for (const auto& curve : curves) {
             if (curve.mName.contains(title) && (curve.mVisible == true)) {
                 min = floor(std::min(min, curve.mData.firstKey()));
             }
         }
-        ++it;
     }
 
     return std::min(minFloor, min);
@@ -2398,7 +2380,7 @@ void ResultsView::updateCurvesToShow()
     }
 
     else if (mGraphListTab->currentName() == tr("Events")) {
-        if (mEventDateRadio->isChecked()) {
+        if (mEventThetaRadio->isChecked()) {
             showVariableList.append(GraphViewResults::eThetaEvent);
             if (mEventsDatesUnfoldCheck->isChecked()) {
                showVariableList.append(GraphViewResults::eDataTi);
@@ -2445,6 +2427,8 @@ void ResultsView::updateCurvesToShow()
 
         } else if (mActivityRadio->isChecked()) {
             showVariableList.append(GraphViewResults::eActivity);
+            if (mTempoErrCheck->isChecked())
+               showVariableList.append(GraphViewResults::eTempoError);
 
             if (mPhasesEventsUnfoldCheck->isChecked()) {
                 showVariableList.append(GraphViewResults::eThetaEvent);
@@ -2599,6 +2583,7 @@ void ResultsView::updateScales()
 
     } else if (mCurrentTypeGraph == GraphViewResults::ePostDistrib &&
                ( mMainVariable == GraphViewResults::eSigma ||
+                 mMainVariable == GraphViewResults::eVG ||
                         mMainVariable ==GraphViewResults::eDuration) ) {
 
                 // The X zoom uses a log scale on the spin box and can be controlled by the linear slider
@@ -2616,8 +2601,7 @@ void ResultsView::updateScales()
 
 
     } else if (mCurrentTypeGraph == GraphViewResults::ePostDistrib &&
-                       ( mMainVariable == GraphViewResults::eVG ||
-                         mMainVariable ==GraphViewResults::eLambda) ){
+                       mMainVariable ==GraphViewResults::eLambda ){
 
                 // The X zoom uses a log scale on the spin box and can be controlled by the linear slider
                 mXSlider->setRange(-100, 100);
@@ -2637,7 +2621,7 @@ void ResultsView::updateScales()
     } else if ( mCurrentTypeGraph == GraphViewResults::eTrace ||
                 mCurrentTypeGraph == GraphViewResults::eAccept) {
         int idSelect = 0;
-        for (auto && chRadio : mChainRadios) {
+        for (const auto& chRadio : mChainRadios) {
             if (chRadio->isChecked())
                 break;
             ++idSelect;
@@ -2768,7 +2752,7 @@ void ResultsView::updateOptionsWidget()
         QVBoxLayout* eventGroupLayout = new QVBoxLayout();
         eventGroupLayout->setContentsMargins(10, 10, 10, 10);
         //eventGroupLayout->setSpacing(15);
-        eventGroupLayout->addWidget(mEventDateRadio);
+        eventGroupLayout->addWidget(mEventThetaRadio);
         eventGroupLayout->addWidget(mDataSigmaRadio);
         qreal totalH =  3*h;
         if (isCurve()) {
@@ -2781,7 +2765,7 @@ void ResultsView::updateOptionsWidget()
 
         eventGroupLayout->addWidget(mEventsDatesUnfoldCheck);
 
-        if (isPostDistrib && mEventDateRadio->isChecked() && mEventsDatesUnfoldCheck->isChecked()) {
+        if (isPostDistrib && mEventThetaRadio->isChecked() && mEventsDatesUnfoldCheck->isChecked()) {
             mDataCalibCheck->show();
             mWiggleCheck->show();
             totalH += 2 * h;
@@ -3142,8 +3126,8 @@ void ResultsView::updateZoomX()
         curMin = curMax - span;
     }
 
-    mResultCurrentMinX = curMin;
-    mResultCurrentMaxX = curMax;
+    mResultCurrentMinX = std::max(curMin, mResultMinX);
+    mResultCurrentMaxX = std::min(curMax, mResultMaxX);;
 
     mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
 
@@ -3230,8 +3214,8 @@ void ResultsView::setXScale()
 
 void ResultsView::applyRuler(const double min, const double max)
 {
-    mResultCurrentMinX = min;
-    mResultCurrentMaxX = max;
+    mResultCurrentMinX = std::max(min, mResultMinX);
+    mResultCurrentMaxX = std::min(max, mResultMaxX);//max;
 
     setXRange();
     updateGraphsZoomX();
@@ -3260,7 +3244,7 @@ void ResultsView::applyStudyPeriod()
     } else if ( mCurrentTypeGraph == GraphViewResults::eTrace ||
                 mCurrentTypeGraph == GraphViewResults::eAccept) {
         int idSelect = 0;
-        for (auto && chRadio : mChainRadios) {
+        for (const auto& chRadio : mChainRadios) {
                if (chRadio->isChecked())
                       break;
                ++idSelect;
@@ -3554,7 +3538,7 @@ void ResultsView::resultsToClipboard()
 {
     QString resultText;
     QList<GraphViewResults*> graphs = currentGraphs(true);
-    for (auto&& graph : graphs) {
+    for (const auto& graph : graphs) {
         resultText += graph->getTextAreaToPlainText();
     }
     QClipboard* clipboard = QApplication::clipboard();

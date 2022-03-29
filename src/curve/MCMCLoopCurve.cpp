@@ -173,15 +173,15 @@ void MCMCLoopCurve::initVariablesForChain()
         // event->mTheta.mAllAccepts.clear(); //don't clean, avalable for cumulate chain
 
         for (Date& date : event->mDates) {
-            date.mTheta.reset();
-            date.mTheta.reserve(initReserve);
-            date.mTheta.mLastAccepts.reserve(acceptBufferLen);
-            date.mTheta.mLastAcceptsLength = acceptBufferLen;
+            date.mTi.reset();
+            date.mTi.reserve(initReserve);
+            date.mTi.mLastAccepts.reserve(acceptBufferLen);
+            date.mTi.mLastAcceptsLength = acceptBufferLen;
 
-            date.mSigma.reset();
-            date.mSigma.reserve(initReserve);
-            date.mSigma.mLastAccepts.reserve(acceptBufferLen);
-            date.mSigma.mLastAcceptsLength = acceptBufferLen;
+            date.mSigmaTi.reset();
+            date.mSigmaTi.reserve(initReserve);
+            date.mSigmaTi.mLastAccepts.reserve(acceptBufferLen);
+            date.mSigmaTi.mLastAcceptsLength = acceptBufferLen;
 
             date.mWiggle.reset();
             date.mWiggle.reserve(initReserve);
@@ -379,7 +379,7 @@ QString MCMCLoopCurve::initialize()
                     //
                     if (!date.mCalibration->mRepartition.isEmpty()) {
                         const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mCalibration->mRepartition);
-                        date.mTheta.mX = date.mCalibration->mTmin + idx * date.mCalibration->mStep;
+                        date.mTi.mX = date.mCalibration->mTmin + idx * date.mCalibration->mStep;
                         // modif du 2021-06-16 pHd
 
                     } else { // in the case of mRepartion curve is null, we must init ti outside the study period
@@ -388,13 +388,13 @@ QString MCMCLoopCurve::initialize()
                         qDebug()<<"mRepartion curve is null for"<< date.mName;
                         const double u = Generator::gaussByBoxMuller(0., sigma);
                         if (u<0)
-                            date.mTheta.mX = tminPeriod + u;
+                            date.mTi.mX = tminPeriod + u;
                         else
-                            date.mTheta.mX = tmaxPeriod + u;
+                            date.mTi.mX = tmaxPeriod + u;
 
-                        if (date.mTheta.mSamplerProposal == MHVariable::eInversion) {
+                        if (date.mTi.mSamplerProposal == MHVariable::eInversion) {
                             qDebug()<<"Automatic sampling method exchange eInversion to eMHSymetric for"<< date.mName;
-                            date.mTheta.mSamplerProposal = MHVariable::eMHSymetric;
+                            date.mTi.mSamplerProposal = MHVariable::eMHSymetric;
                             date.autoSetTiSampler(true);
                         }
 
@@ -407,24 +407,24 @@ QString MCMCLoopCurve::initialize()
                     date.mWiggle.tryUpdate(date.mWiggle.mX, 2.);
 
                     // 3 - Init sigma MH adaptatif of each Data ti
-                    date.mTheta.mSigmaMH = sigma;
+                    date.mTi.mSigmaMH = sigma;
 
                     // 4 - Clear mLastAccepts array and set this init at 100%
-                    date.mTheta.mLastAccepts.clear();
+                    date.mTi.mLastAccepts.clear();
                     //date.mTheta.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
-                    date.mTheta.tryUpdate(date.mTheta.mX, 2.);
+                    date.mTi.tryUpdate(date.mTi.mX, 2.);
 
                     // 5 - Init Sigma_i and its Sigma_MH
-                    date.mSigma.mX = std::abs(date.mTheta.mX - (unsortedEvents.at(i)->mTheta.mX - date.mDelta));
+                    date.mSigmaTi.mX = std::abs(date.mTi.mX - (unsortedEvents.at(i)->mTheta.mX - date.mDelta));
 
-                    if (date.mSigma.mX <= 1E-6) {
-                        date.mSigma.mX = 1E-6; // Add control the 2015/06/15 with PhL
+                    if (date.mSigmaTi.mX <= 1E-6) {
+                        date.mSigmaTi.mX = 1E-6; // Add control the 2015/06/15 with PhL
                         //log += line(date.mName + textBold("Sigma indiv. <=1E-6 set to 1E-6"));
                     }
-                    date.mSigma.mSigmaMH = 1.;//1.27;  //1.;
+                    date.mSigmaTi.mSigmaMH = 1.;//1.27;  //1.;
 
-                    date.mSigma.mLastAccepts.clear();
-                    date.mSigma.tryUpdate(date.mSigma.mX, 2.);
+                    date.mSigmaTi.mLastAccepts.clear();
+                    date.mSigmaTi.tryUpdate(date.mSigmaTi.mX, 2.);
 
                     // intermediary calculus for the harmonic average
                     s02_sum += 1. / (sigma * sigma);
@@ -626,8 +626,11 @@ QString MCMCLoopCurve::initialize()
             mModel->mLambdaSpline.mX = mCurveSettings.mLambdaSpline;
 
         else
-            //mModel->mLambdaSpline.mX = 1E-6;//initLambdaSplineBy_h_YWI_AY();// initLambdaSpline();////1E-6 // Pour test
-            mModel->mLambdaSpline.mX =initLambdaSplineByCV();
+            //mModel->mLambdaSpline.mX = 1E-6;// Pour RenCurve
+            mModel->mLambdaSpline.mX = initLambdaSplineBy_h_YWI_AY();
+
+            //mModel->mLambdaSpline.mX = initLambdaSpline();// Utilise S02_lambda_WI()
+            //mModel->mLambdaSpline.mX =initLambdaSplineByCV();
 
 
         mModel->mLambdaSpline.mSigmaMH = 1;
@@ -666,6 +669,7 @@ QString MCMCLoopCurve::initialize()
     clearCompo.vecVarG = std::vector<double> (nbPoint);
     clearCompo.vecVarianceG = std::vector<double> (nbPoint);
     clearCompo.vecVarErrG = std::vector<double> (nbPoint);
+    //clearCompo.vecVarGP = std::vector<double> (nbPoint);
 
     PosteriorMeanG clearMeanG;
     clearMeanG.gx = clearCompo;
@@ -749,7 +753,7 @@ bool MCMCLoopCurve::update()
                     //date.updateSigmaJeffreys(event);
                     date.updateSigmaShrinkage(event);
 #ifdef DEBUG
-                    if (date.mSigma.mX <= 0)
+                    if (date.mSigmaTi.mX <= 0)
                         qDebug(" date.mSigma.mX <= 0 ");
 #endif
                     //date.updateSigmaReParam(event);
@@ -1065,6 +1069,7 @@ bool MCMCLoopCurve::update()
 
                     }
                     else {
+                        //auto factorVG = 100.;
                         // On stocke l'ancienne valeur :
                         current_value = mModel->mEvents.at(0)->mVG.mX;
                         //current_h_VG = h_VG_global(mModel->mEvents, current_value);
@@ -1269,11 +1274,11 @@ bool MCMCLoopCurve::adapt(const int batchIndex)
     for (auto& event : mModel->mEvents) {
        for (auto& date : event->mDates) {
             //--------------------- Adapt Sigma MH de t_i -----------------------------------------
-            if (date.mTheta.mSamplerProposal == MHVariable::eMHSymGaussAdapt)
-                noAdapt *= date.mTheta.adapt(taux_min, taux_max, delta);
+            if (date.mTi.mSamplerProposal == MHVariable::eMHSymGaussAdapt)
+                noAdapt *= date.mTi.adapt(taux_min, taux_max, delta);
 
             //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
-            noAdapt *= date.mSigma.adapt(taux_min, taux_max, delta);
+            noAdapt *= date.mSigmaTi.adapt(taux_min, taux_max, delta);
 
         }
 
@@ -1313,12 +1318,12 @@ void MCMCLoopCurve::memo()
 
         for (auto&& date : event->mDates )   {
             //--------------------- Memo Dates -----------------------------------------
-            date.mTheta.memo();
-            date.mSigma.memo();
+            date.mTi.memo();
+            date.mSigmaTi.memo();
             date.mWiggle.memo();
 
-            date.mTheta.saveCurrentAcceptRate();
-            date.mSigma.saveCurrentAcceptRate();
+            date.mTi.saveCurrentAcceptRate();
+            date.mSigmaTi.saveCurrentAcceptRate();
         }
 
     }
@@ -1413,6 +1418,9 @@ void MCMCLoopCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSp
     // erreur intra spline
     std::vector<double>::iterator itVecVarErrG = postGCompo.vecVarErrG.begin();
 
+    // inter derivate variance
+    //std::vector<double>::iterator itVecVarianceGP = postGCompo.vecVarGP.begin();
+
     double t, g, gp, gs, varG, stdG;
     g = 0.;
     gp = 0;
@@ -1420,10 +1428,8 @@ void MCMCLoopCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSp
     gs = 0;
 
     double n = realyAccepted;
-    double  prevMeanG;
+    double  prevMeanG; //, prevMeanGP;
 
-    double maxDensity = curveMap.max_value;
-    double minDensity = curveMap.min_value;
     const double k = 3.; // Le nombre de fois sigma G, pour le calcul de la densité
     double a, b, surfG;
 
@@ -1439,6 +1445,7 @@ void MCMCLoopCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSp
         // -- calcul Mean
         prevMeanG = *itVecG;
         *itVecG +=  (g - prevMeanG)/n;
+        //prevMeanGP = *itVecGP;
         *itVecGP +=  (gp - *itVecGP)/n;
         *itVecGS +=  (gs - *itVecGS)/n;
         // erreur inter spline
@@ -1446,11 +1453,15 @@ void MCMCLoopCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSp
         // erreur intra spline
         *itVecVarErrG += (varG - *itVecVarErrG) / n  ;
 
+        // inter derivate variance
+        //*itVecVarianceGP +=  (gp - prevMeanGP)*(gp - *itVecGP);
+
         ++itVecG;
         ++itVecGP;
         ++itVecGS;
         ++itVecVarianceG;
         ++itVecVarErrG;
+       // ++itVecVarianceGP;
 
         // -- calcul map
         // g = std::max(ymin, std::min(g, ymax));
@@ -3342,8 +3353,8 @@ double MCMCLoopCurve::h_VG_global(const QList<Event *> _events, double VG)
 */
 double MCMCLoopCurve::h_VG_global(const double S02, const double VG)
 {
-   // return S02 / pow(S02 + VG, 2.);
-    return 1. / pow(S02 + VG, 5.); // test
+    return S02 / pow(S02 + VG, 2.);
+   // return 1. / pow(S02 + VG, 5.); // test
 }
 
 double MCMCLoopCurve::h_VG_Event(const Event * e)
@@ -3376,9 +3387,9 @@ double MCMCLoopCurve::h_theta_Event (const Event * e)
         double h1 = 1.;
         double pi;
         for (auto&& date : e->mDates) {
-            pi = 1. / pow(date.mSigma.mX, 2.);
+            pi = 1. / pow(date.mSigmaTi.mX, 2.);
             p += pi;
-            t_moy += (date.mTheta.mX + date.mDelta) * pi;
+            t_moy += (date.mTi.mX + date.mDelta) * pi;
         }
         t_moy /= p;
 
@@ -4737,7 +4748,7 @@ bool MCMCLoopCurve::hasPositiveGPrimeByDerivate (const MCMCSplineComposante& spl
         double cDelta = p*b - s*d + a;
 
         const double delta_0 = (pow(bDelta, 2.) - 4*aDelta*cDelta);
-        const double yVertex =  - pow(bDelta, 2.)/ (4.*aDelta) + cDelta ;
+        //const double yVertex =  - pow(bDelta, 2.)/ (4.*aDelta) + cDelta ;
 
         if (aDelta < 0) {
             double delta_prim ;

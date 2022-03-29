@@ -284,14 +284,14 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
          */
             int i(0);
             for (auto&& date : ev->mDates) {
-                GraphCurve curve = generateDensityCurve(date.mSigma.fullHisto(),
+                GraphCurve curve = generateDensityCurve(date.mSigmaTi.fullHisto(),
                                                         "Sigma Date " + QString::number(i) + " All Chains",
                                                         color);
 
                 mGraph->addCurve(curve);
-                if (!date.mSigma.mChainsHistos.isEmpty())
+                if (!date.mSigmaTi.mChainsHistos.isEmpty())
                     for (int j=0; j<mChains.size(); ++j) {
-                        GraphCurve curveChain = generateDensityCurve(date.mSigma.histoForChain(j),
+                        GraphCurve curveChain = generateDensityCurve(date.mSigmaTi.histoForChain(j),
                                                                      "Sigma Date " + QString::number(i) + " Chain " + QString::number(j),
                                                                      Painting::chainColors.at(j));
                         mGraph->addCurve(curveChain);
@@ -407,6 +407,10 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         GraphCurve curveUnifSup = generateHorizontalLine( mPhase->mActivityMeanUnif + mPhase->mActivityStdUnif,
                                                           "Post Distrib Activity Unif Sup",
                                                           Qt::darkGray, Qt::CustomDashLine);
+        // Display p_value
+        GraphCurve curvePValue = generateDensityCurve( mPhase->mActivityPValue,
+                                                         "Post Distrib Activity p_value All Chains",
+                                                         Qt::red, Qt::SolidLine);
 
         mGraph->setOverArrow(GraphView::eBothOverflow);
 
@@ -417,6 +421,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         mGraph->addCurve(curveMeanUnif);
         mGraph->addCurve(curveUnifInf);
         mGraph->addCurve(curveUnifSup);
+        mGraph->addCurve(curvePValue);
 
         const type_data yMax = map_max_value(curveActivitySup.mData);
 
@@ -581,14 +586,18 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
           const GraphCurve* Activity = mGraph->getCurve("Post Distrib Activity All Chains");
 
           if ( Activity && !Activity->mData.isEmpty()) {
-              const bool showError = true;
+              const bool showError = mShowVariableList.contains(eTempoError);//true;
               mGraph->setCurveVisible("Post Distrib Activity All Chains", true);
               mGraph->setCurveVisible("Post Distrib Activity Inf All Chains", showError);
               mGraph->setCurveVisible("Post Distrib Activity Sup All Chains", showError);
+
               // enveloppe Uniforne
-              mGraph->setCurveVisible("Post Distrib Activity Unif Mean", showError);
+              mGraph->setCurveVisible("Post Distrib Activity Unif Mean", true);
               mGraph->setCurveVisible("Post Distrib Activity Unif Inf", showError);
               mGraph->setCurveVisible("Post Distrib Activity Unif Sup", showError);
+
+              // p_value curve
+              mGraph->setCurveVisible("Post Distrib Activity p_value All Chains", showError);
 
               mGraph->setTipXLab("t");
               mGraph->setTipYLab("n");

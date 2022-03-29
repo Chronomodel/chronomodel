@@ -252,10 +252,10 @@ double std_Knuth(const std::vector<double> &data)
 double std_Knuth(const std::vector<int>& data)
 {
     int n = 0;
-    long double mean = 0.;
-    long double variance = 0.;
-    long double previousMean = 0.;
-    long double previousVariance = 0.;
+    double mean = 0.;
+    double variance = 0.;
+    double previousMean = 0.;
+    double previousVariance = 0.;
 
     for (auto&& x : data) {
         n++;
@@ -269,13 +269,48 @@ double std_Knuth(const std::vector<int>& data)
 
 }
 
+void mean_variance_Knuth(const std::vector<double>& data, double& mean, double& variance)
+{
+    int n = 0;
+    variance = 0.;
+    mean = 0.;
+    double previousMean = 0.;
+    double previousVariance = 0.;
+
+    for (auto&& x : data) {
+        n++;
+        previousMean = std::move(mean);
+        previousVariance = std::move(variance);
+        mean = previousMean + (x - previousMean) / n;
+        variance = previousVariance + ( x - previousMean)*( x - mean);
+    }
+
+}
+void mean_variance_Knuth(const QVector<double>& data, double& mean, double& variance)
+{
+    int n = 0;
+    variance = 0.;
+    mean = 0.;
+    double previousMean = 0.;
+    double previousVariance = 0.;
+
+    for (auto&& x : data) {
+        n++;
+        previousMean = std::move(mean);
+        previousVariance = std::move(variance);
+        mean = previousMean + (x - previousMean) / n;
+        variance = previousVariance + ( x - previousMean)*( x - mean);
+    }
+
+}
+
 double std_unbiais_Knuth (const QVector<double> &data)
 {
     unsigned n = 0;
-    long double mean = 0.;
-    long double variance = 0.;
-    long double previousMean = 0.;
-    long double previousVariance = 0.;
+    double mean = 0.;
+    double variance = 0.;
+    double previousMean = 0.;
+    double previousVariance = 0.;
 
     for (auto&& x : data) {
         n++;
@@ -285,7 +320,7 @@ double std_unbiais_Knuth (const QVector<double> &data)
         variance = previousVariance + (x - previousMean)*(x - mean);
     }
 
-    return sqrt(variance/(long double)(n-1)); // unbiais
+    return sqrt(variance/(double)(n-1)); // unbiais
 
 }
 
@@ -329,7 +364,7 @@ double std_unbiais_Knuth(const std::vector<int>& data)
 
 }
 
-void mean_std_Knuth(const std::vector<int>& data, double& mean, double& std)
+void mean_std_unbiais_Knuth(const std::vector<int>& data, double& mean, double& std)
 {
     int n = 0;
     double variance = 0.;
@@ -415,11 +450,6 @@ const std::pair<double, double> linear_regression(const std::vector<double>& dat
 }
 
 
-
-
-
-
-
 /**
  * @brief traceStatistic : This function uses the Knuth-Welford algorithm to calculate the standard deviation.
  * @param trace
@@ -452,11 +482,11 @@ TraceStat traceStatistic(const QVector<type_data>& trace)
     return result;
 }
 
-double shrinkageUniform(const double so2)
+double shrinkageUniform(const double s02)
 {
     //double u = Generator::randomUniform();
     const double u = Generator::randomUniform(0, 1);
-    return (so2 * (1. - u) / u);
+    return (s02 * (1. - u) / u);
 }
 
 /**
@@ -546,7 +576,7 @@ QVector<double> calculRepartition (const QVector<double>& calib)
     // we use long double type because
     // after several sums, the repartion can be in the double type range
     long double lastRepVal (0.);
-    for (auto &&v : calib) {
+    for (auto&& v : calib) {
         long double lastV = v;
 
         long double rep = lastRepVal;
@@ -585,7 +615,7 @@ QVector<double> calculRepartition (const QMap<double, double>  &calib)
         ++it;
     }
     // normalize repartition
-    for (auto &&v : repartitionTemp)
+    for (auto&& v : repartitionTemp)
         v = v/lastRepVal;
 
     return repartitionTemp;
@@ -1158,6 +1188,82 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
 
     return intervals;
 }
+
+
+/**
+ * @brief intervalMonomodalHpd
+ * Détermine le mode et un seul intervalle HPD pour une densité mono-modale
+ * @param density
+ * @param thresh
+ * @return
+ */
+std::pair<int, std::pair<int, int> > intervalMonomodalHpd(const std::map<int, double>& density, double thresh)
+{
+    //std::map<int, int> interval;
+
+    if (density.size() < 2)  // in case of only one value (e.g. a bound fixed) or no value
+        return qMakePair(0, qMakePair(0, 0));
+
+
+    double areaTot = std::accumulate(density.cbegin(), density.cend(), 0., [](double sum, const std::pair<int, double> m){return sum + m.second;  });
+
+    // Inversion de la map
+
+    std::multimap<double, int> inverted;
+
+    for (const auto& d : density) {
+       inverted.insert(std::pair<double, int>(d.second, d.first));
+    }
+
+    // Par définition les maps sont triées, donc la dernière valeur est le mode, rend() pointe sur la derniere valeur
+
+    int mode = inverted.rbegin()->second;
+
+
+    // On fait la somme en remontant la map inversée, jusqu'à avoir la somme seuil
+
+
+    typedef std::multimap<double, int>::iterator iter_type;
+    std::reverse_iterator<iter_type> iterInverted (inverted.rbegin());
+
+    double area = 0.;
+    double areaSearched = areaTot * thresh / 100.;
+    int imin = mode;
+    int imax = mode;
+
+    int lastIMin, lastIMax;
+    if (areaTot == areaSearched) {
+        return qMakePair(mode, qMakePair(density.cbegin()->first, density.rbegin()->first));;
+
+    } else {
+
+        try {
+
+            while (iterInverted != inverted.rend() && area<areaSearched) {
+
+                int t = iterInverted->second;
+                const double v = iterInverted->first;
+
+                area += v;
+
+                imin = std::min(imin, t);
+                imax = std::max(imax, t);
+                iterInverted++;
+                lastIMax = imax;
+                lastIMin = imin;
+            }
+            // on prend les indices avant que areaSearched soit dépassé
+            return qMakePair(mode, qMakePair(lastIMin, lastIMax));
+       }
+       catch (std::exception const & e) {
+            qDebug()<< "in Function::intervalMonomodalHpd int Error"<<e.what();
+            return qMakePair(0, qMakePair(0, 0));;
+       }
+    }
+
+}
+
+
 
 #pragma mark Calcul Matriciel
 

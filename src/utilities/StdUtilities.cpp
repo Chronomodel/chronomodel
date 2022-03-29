@@ -553,6 +553,47 @@ double vector_interpolate_idx_for_value(const double value, const QVector<double
 
     return 0;
 }
+double vector_interpolate_idx_for_value(const double value, const std::vector<double>& vector)
+{
+    double idxInf = 0.;
+    double idxSup = vector.size() - 1;
+
+    if (value < vector.front())
+        return idxInf;
+
+    if (value>vector.back())
+        return idxSup;
+
+    // Dichotomie, we can't use indexOf because we don't know the step between each value in the Qvector
+
+    if (idxSup > idxInf) {
+        do
+        {
+            const int idxMid = (int)idxInf + int (floor((idxSup - idxInf) / 2.));
+            const double valueMid = vector.at(idxMid);
+
+            if (value < valueMid)
+                idxSup = idxMid;
+            else
+                idxInf = idxMid;
+
+        } while (idxSup - idxInf > 1);
+
+        const double valueInf = vector.at(idxInf);
+        const double valueSup = vector.at(idxSup);
+
+        double prop = 0.;
+        // prevent valueSup=valueInf because in this case prop = NaN
+        if (valueSup>valueInf)
+            prop = (value - valueInf) / (valueSup - valueInf);
+
+        const double idx = double (idxInf) + prop;
+
+        return idx;
+    }
+
+    return 0;
+}
 float vector_interpolate_idx_for_value(const float value, const QVector<float>& vector)
 {
     int idxInf = 0;
@@ -622,7 +663,7 @@ double interpolate_value_from_curve(const double t, const QVector<double> & curv
 
     } else if (curve[idxUnder] != 0. && curve[idxUpper] != 0.) {
         // Important for gate: no interpolation around gates
-        return interpolate((double) idx, (double)idxUnder, (double)idxUpper, curve[idxUnder], curve[idxUpper]);
+        return interpolate( idx, (double)idxUnder, (double)idxUpper, curve[idxUnder], curve[idxUpper]);
 
     } else {
         return 0.;
@@ -635,19 +676,17 @@ double interpolate_value_from_curve(const double t, const QVector<double> & curv
     @brief  to define a area we need at least 2 value in the map
     @param threshold is in percent
  */
-
-
-const std::map<double, double> create_HPD(const QMap<double, double>& aMap, const double threshold)
+const std::map<double, double> create_HPD(const QMap<double, double>& density, const double threshold)
 {
     std::map<double, double> result;
 
-    if (aMap.size() < 2)  // in case of only one value (e.g. a bound fixed) or no value
+    if (density.size() < 2)  // in case of only one value (e.g. a bound fixed) or no value
         return result;
 
 
-    const long double areaTot = map_area(aMap);
+    const long double areaTot = map_area(density);
 
-    std::map<double, double> aMapStd = aMap.toStdMap();
+    std::map<double, double> aMapStd = density.toStdMap();
     if (areaTot==threshold) {
         result = aMapStd;
         return result;
@@ -658,11 +697,11 @@ const std::map<double, double> create_HPD(const QMap<double, double>& aMap, cons
             std::multimap<double, double>::const_iterator cIter = aMapStd.cbegin();
 
             while (cIter != aMapStd.cend()) {
-                 const double t = cIter->first;//key();
-                 const double v = cIter->second;//value();
+                 const double t = cIter->first;
+                 const double v = cIter->second;
                  result[t] = 0.; // important to init all the possible value
 
-                inverted.insert(std::pair<double, double>(v, t));
+                inverted.insert({v, t});
                  ++cIter;
             }
 
@@ -670,7 +709,107 @@ const std::map<double, double> create_HPD(const QMap<double, double>& aMap, cons
             std::reverse_iterator<iter_type> iterInverted (inverted.rbegin());
 
 
-            long double area (0.);
+            double area = 0.;
+
+            const double areaSearched = areaTot * threshold / 100.;
+            double t, tPrev, tNext, v, vPrev, vNext;
+            std::map<double, double> ::iterator iterMap;
+
+            while (std::next(iterInverted) != inverted.rend()) {
+                iterInverted++;
+                t = iterInverted->second;
+                v = iterInverted->first;
+                iterMap = aMapStd.find(t);
+
+                //    This part of code fix the case of irregular QMap when the step between keys are not the same
+
+                if (iterMap->first == t) { // meaning : find(t) find the good key else iterMap = end()
+
+                    if ( iterMap != aMapStd.begin()) { // meaning : iterMap is not the first item
+
+                        vPrev = std::prev(iterMap)->second;
+                        if (vPrev >= v ) {
+                            tPrev = std::prev(iterMap)->first;
+                            area += (v + vPrev)/2. * (t - tPrev);
+                            // we need to save a surface, so we need to save 4 values
+                            if (area < areaSearched) {
+                                result[t] = v;
+                                result[tPrev] = vPrev;
+                            }
+                        }
+                    }
+
+                    if (iterMap != aMapStd.end() ) {
+                        vNext = std::next(iterMap)->second;
+                        if (vNext >= v) {
+                            tNext = std::next(iterMap)->first;
+                            area += (v + vNext)/2. *(tNext - t);
+                            // we need to save a surface, so we need to save 4 values
+                            if (area < areaSearched) {
+                                result[t] = v;
+                                result[tNext] = vNext;
+                            }
+
+                        }
+                    }
+
+                }
+
+                if (std::next(iterInverted) != inverted.rend() &&  (std::prev(iterInverted)->first == v) ) {
+                     result[t] = v;
+
+                } else {
+                        if (area < areaSearched)
+                            result[t] = v;
+
+                        else if (area >= areaSearched) {
+                            return result;
+                        }
+
+                }
+            }
+            return result;
+       }
+       catch (std::exception const & e) {
+            qDebug()<< "in stdUtilities::create_HPD() Error"<<e.what();
+            return aMapStd;
+       }
+
+
+    }
+}
+
+const std::map<int, double> create_HPD(const QMap<int, double>& density, const double threshold)
+{
+    std::map<int, double> result;
+
+    if (density.size() < 2)  // in case of only one value (e.g. a bound fixed) or no value
+        return result;
+
+
+    long double areaTot = map_area(density);
+
+
+    std::map<int, double> densityStd = density.toStdMap();
+    if (areaTot == threshold) {
+        result = densityStd;
+        return result;
+
+    } else {
+        try {
+            std::multimap<double, int> inverted;
+
+            for (const auto& d : densityStd) {
+                result[d.first] = 0.; // important to init all the possible value
+
+               inverted.insert(std::pair<double, int>(d.second, d.first));
+            }
+
+            typedef std::multimap<double, int>::iterator iter_type;
+            std::reverse_iterator<iter_type> iterInverted (inverted.rbegin());
+
+
+            long double area = 0.;
             long double areaSearched = areaTot * threshold / 100.;
 
             iterInverted++;
@@ -680,13 +819,13 @@ const std::map<double, double> create_HPD(const QMap<double, double>& aMap, cons
                 double t = iterInverted->second;//.value();
                 const double v = iterInverted->first;//.key();
 
-                std::map<double, double> ::iterator iterMap = aMapStd.find(t);
+                std::map<int, double> ::iterator iterMap = densityStd.find(t);
 
                 //    This part of code fix the case of irregular QMap when the step between keys are not the same
 
                 if (iterMap->first == t) { // meaning : find(t) find the good key else iterMap = end()
 
-                    if ( iterMap != aMapStd.begin() && iterMap != aMapStd.end()) { // meaning : iterMap is not the first item
+                    if ( iterMap != densityStd.begin() && iterMap != densityStd.end()) { // meaning : iterMap is not the first item
 
                         const double vPrev = std::prev(iterMap)->second;
                         if (vPrev >= v ) {
@@ -700,7 +839,7 @@ const std::map<double, double> create_HPD(const QMap<double, double>& aMap, cons
                         }
                     }
 
-                    if (iterMap != aMapStd.end() ) {
+                    if (iterMap != densityStd.end() ) {
                         const double vNext = std::next(iterMap)->second;
                         if (vNext > v) {
                             const double tNext = std::next(iterMap)->first;
@@ -733,8 +872,8 @@ const std::map<double, double> create_HPD(const QMap<double, double>& aMap, cons
             return result;
        }
        catch (std::exception const & e) {
-            qDebug()<< "in stdUtilities::create_HPD() Error"<<e.what();
-            return aMapStd;
+            qDebug()<< "in stdUtilities::create_HPD() int Error"<<e.what();
+            return densityStd;
        }
 
 
@@ -755,11 +894,13 @@ double map_area(const QMap<double, double>& map)
     while (cIter != map.cend())  {
         const double v = cIter.value();
         const double t = cIter.key();
-        if (lastV>0 && v>0)
+        if (lastV>0 && v>0) {
             srcArea += (lastV+v)/2 * (t-lastT);
-
+         }
         lastV = v;
         lastT = t;
+
+
         ++cIter;
     }
 
@@ -788,6 +929,40 @@ float map_area(const QMap<float, float>& map)
     }
 
     return srcArea;
+}
+
+double map_area(const std::map<double, double>& density)
+{
+    if (density.size()<2)
+        return 0.0;
+
+    std::map<double, double>::const_iterator cIter = density.cbegin();
+    long double srcArea (0.);
+
+    long double lastV = cIter->second;
+    long double lastT = cIter->first;
+    ++cIter;
+    while (cIter != density.cend())  {
+        const double v = cIter->second;
+        const double t = cIter->first;
+        if (lastV>0 && v>0) {
+            srcArea += (lastV+v)/2. * (long double)(t-lastT);
+            qDebug() << t << v;
+        }
+        lastV = v;
+        lastT = t;
+
+
+        ++cIter;
+    }
+
+    return srcArea;
+}
+
+
+double map_area(const QMap<int, double>& density)
+{
+    return std::accumulate(density.constBegin(), density.constEnd(), 0., [](double sum, auto m){return sum + m;  });
 }
 
 QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmin, const double tmax, const int nbPts)
@@ -834,3 +1009,62 @@ QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmi
 
     return histo;
 }
+
+/**
+ * @brief Binomial
+ * fonction naive -> à ne pas utiliser
+ * @link https://www.codespeedy.com/calculating-binomial-coefficient-using-recursion-in-cpp/
+ * https://itecnote.com/tecnote/c-calculating-binomial-coefficient-nck-for-large-n-k/
+ * @param n
+ * @param r
+ * @return
+ */
+/*
+int Binomial(int n, int r)
+{
+  if (r == 0 || n == 0 || r == n)
+    return 1;
+  return Binomial(n-1, r) + Binomial(n-1, r-1);
+}
+*/
+/**
+ * @brief binomialCoefficients
+ * Cette fonction est 1000 fois plus rapide que Binomial (la fonction naive)
+ * @link https://www.tutorialspoint.com/binomial-coefficient-in-cplusplus
+ * @param n
+ * @param k
+ * @return
+ */
+/*
+int binomialCoefficients(int n, int k) {
+   std::vector<int> C (k+1);
+   C[0] = 1;
+   for (int i = 1; i <= n; i++) {
+      for (int j = min(i, k); j > 0; j--)
+         C[j] += C[j-1];
+   }
+   return C[k];
+}
+*/
+/**
+ * @brief getBionomialCoefficient
+ * Fonction la plus rapide par l'utilisation d'un dictionnaire dp, qu'il faut inititaliser avant l'utilisation
+ * std::vector<std::vector<int>> dp(nMax + 1, std::vector<int>(kMax + 1, -1));
+ * @link https://www.geeksforgeeks.org/binomial-coefficient-dp-9/?ref=gcse
+ * @param n
+ * @param k
+ * @param dp
+ * @return
+ */
+/*
+int getBionomialCoefficient(int n, int k , std::vector<std::vector<int>>& dp)
+{
+    if (k == 0 || k == n || n==0)
+        return dp[n][k] = 1;
+
+    if (dp[n][k] != -1)
+        return dp[n][k];
+
+    return dp[n][k] = getBionomialCoefficient(n - 1, k - 1, dp) + getBionomialCoefficient(n - 1, k, dp);
+}
+*/

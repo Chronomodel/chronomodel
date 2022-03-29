@@ -148,15 +148,15 @@ void MCMCLoopMain::initVariablesForChain()
         // event->mTheta.mAllAccepts.clear(); //don't clean, avalable for cumulate chain
 
         for (auto&& date : event->mDates) {
-            date.mTheta.reset();
-            date.mTheta.reserve(initReserve);
-            date.mTheta.mLastAccepts.reserve(acceptBufferLen);
-            date.mTheta.mLastAcceptsLength = acceptBufferLen;
+            date.mTi.reset();
+            date.mTi.reserve(initReserve);
+            date.mTi.mLastAccepts.reserve(acceptBufferLen);
+            date.mTi.mLastAcceptsLength = acceptBufferLen;
 
-            date.mSigma.reset();
-            date.mSigma.reserve(initReserve);
-            date.mSigma.mLastAccepts.reserve(acceptBufferLen);
-            date.mSigma.mLastAcceptsLength = acceptBufferLen;
+            date.mSigmaTi.reset();
+            date.mSigmaTi.reserve(initReserve);
+            date.mSigmaTi.mLastAccepts.reserve(acceptBufferLen);
+            date.mSigmaTi.mLastAcceptsLength = acceptBufferLen;
 
             date.mWiggle.reset();
             date.mWiggle.reserve(initReserve);
@@ -276,7 +276,7 @@ QString MCMCLoopMain::initialize()
             mModel->initNodeEvents();
             const double max = unsortedEvents.at(i)->getThetaMaxRecursive(tmaxPeriod);
 #ifdef DEBUG
-            if (min >= max){
+            if (min >= max) {
                 qDebug() << tr("-----Error Init for event : %1 : min = %2 : max = %3-------").arg(unsortedEvents.at(i)->mName, QString::number(min), QString::number(max));
             }
 #endif
@@ -300,7 +300,7 @@ QString MCMCLoopMain::initialize()
 
             unsortedEvents.at(i)->mInitialized = true;
 
-            //qDebug() << "in initialize(): Event initialized : " << unsortedEvents[i]->mName << " : " << unsortedEvents[i]->mTheta.mX<<" between"<<min<<max;
+            qDebug() << "---------------->      in initialize(): Event initialized : " << unsortedEvents[i]->mName << " : " << unsortedEvents[i]->mTheta.mX <<" between"<< min << max;
 
             double s02_sum = 0.;
             for (int j = 0; j < unsortedEvents.at(i)->mDates.size(); ++j) {
@@ -314,7 +314,7 @@ QString MCMCLoopMain::initialize()
                 //
                 if (!date.mCalibration->mRepartition.isEmpty()) {
                     const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mCalibration->mRepartition);
-                    date.mTheta.mX = date.mCalibration->mTmin + idx * date.mCalibration->mStep;
+                    date.mTi.mX = date.mCalibration->mTmin + idx * date.mCalibration->mStep;
                   //  qDebug()<<"MCMCLoopMain::Init"<<date.mName <<" mTheta.mx="<<QString::number(date.mTheta.mX, 'g', 15)<<date.mCalibration->mTmin<<date.mCalibration->mStep;
                   //  qDebug()<<"MCMCLoopMain::Init"<<date.mName <<" sigma="<<sigma;
 
@@ -323,13 +323,13 @@ QString MCMCLoopMain::initialize()
                     sigma = tmaxPeriod - tminPeriod;
                     const double u = Generator::gaussByBoxMuller(0., sigma);
                     if (u<0)
-                        date.mTheta.mX = tminPeriod + u;
+                        date.mTi.mX = tminPeriod + u;
                     else
-                        date.mTheta.mX = tmaxPeriod + u;
+                        date.mTi.mX = tmaxPeriod + u;
 
-                    if (date.mTheta.mSamplerProposal == MHVariable::eInversion) {
+                    if (date.mTi.mSamplerProposal == MHVariable::eInversion) {
                         qDebug()<<"Automatic sampling method exchange eInversion to eMHSymetric for"<< date.mName;
-                        date.mTheta.mSamplerProposal = MHVariable::eMHSymetric;
+                        date.mTi.mSamplerProposal = MHVariable::eMHSymetric;
                         date.autoSetTiSampler(true);
                     }
 
@@ -341,12 +341,12 @@ QString MCMCLoopMain::initialize()
                 date.mWiggle.tryUpdate(date.mWiggle.mX, 2.);
 
                 // 3 - Init sigma MH adaptatif of each Data ti
-                date.mTheta.mSigmaMH = sigma;
+                date.mTi.mSigmaMH = sigma;
 
                 // 4 - Clear mLastAccepts array and set this init at 100%
-                date.mTheta.mLastAccepts.clear();
+                date.mTi.mLastAccepts.clear();
                 //date.mTheta.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
-                date.mTheta.tryUpdate(date.mTheta.mX, 2.);
+                date.mTi.tryUpdate(date.mTi.mX, 2.);
 
 
                 // intermediary calculus for the harmonic average
@@ -387,16 +387,16 @@ QString MCMCLoopMain::initialize()
     for (int i = 0; i < events.size(); ++i) {
         for (auto&& date : events.at(i)->mDates) {
             // date.mSigma.mX = sqrt(shrinkageUniform(events[i]->mS02)); // modif the 2015/05/19 with PhL
-            date.mSigma.mX = std::abs(date.mTheta.mX - (events.at(i)->mTheta.mX - date.mDelta)) ;
+            date.mSigmaTi.mX = std::abs(date.mTi.mX - (events.at(i)->mTheta.mX - date.mDelta)) ;
 
-            if (date.mSigma.mX<=1E-6) {
-               date.mSigma.mX = 1E-6; // Add control the 2015/06/15 with PhL
+            if (date.mSigmaTi.mX<=1E-6) {
+               date.mSigmaTi.mX = 1E-6; // Add control the 2015/06/15 with PhL
                log += line(date.mName + textBold("Sigma indiv. <=1E-6 set to 1E-6"));
             }
-            date.mSigma.mSigmaMH = 1.27;  //1.; // modif pHd 2021-01-20 : Empiric formula Here mTheta.mSigmaMH is equal to the standard deviation on the date density
+            date.mSigmaTi.mSigmaMH = 1.27;  //1.; // modif pHd 2021-01-20 : Empiric formula Here mTheta.mSigmaMH is equal to the standard deviation on the date density
 
-            date.mSigma.mLastAccepts.clear();
-            date.mSigma.mLastAccepts.push_back(1.);
+            date.mSigmaTi.mLastAccepts.clear();
+            date.mSigmaTi.mLastAccepts.push_back(1.);
 
            // date.mSigma.memo();
            // date.mSigma.saveCurrentAcceptRate();
@@ -499,11 +499,11 @@ bool MCMCLoopMain::adapt(const int batchIndex) //original code
        for (auto& date : event->mDates) {
 
             //--------------------- Adapt Sigma MH de t_i -----------------------------------------
-            if (date.mTheta.mSamplerProposal == MHVariable::eMHSymGaussAdapt)
-                noAdapt = date.mTheta.adapt(taux_min, taux_max, delta) && noAdapt;
+            if (date.mTi.mSamplerProposal == MHVariable::eMHSymGaussAdapt)
+                noAdapt = date.mTi.adapt(taux_min, taux_max, delta) && noAdapt;
 
             //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
-            noAdapt = date.mSigma.adapt(taux_min, taux_max, delta) && noAdapt;
+            noAdapt = date.mSigmaTi.adapt(taux_min, taux_max, delta) && noAdapt;
 
         }
 
@@ -527,12 +527,12 @@ void MCMCLoopMain::memo()
 
         for (auto&& date : event->mDates )   {
             //--------------------- Memo Dates -----------------------------------------
-            date.mTheta.memo();
-            date.mSigma.memo();
+            date.mTi.memo();
+            date.mSigmaTi.memo();
             date.mWiggle.memo();
 
-            date.mTheta.saveCurrentAcceptRate();
-            date.mSigma.saveCurrentAcceptRate();
+            date.mTi.saveCurrentAcceptRate();
+            date.mSigmaTi.saveCurrentAcceptRate();
         }
 
     }

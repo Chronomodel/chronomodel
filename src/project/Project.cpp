@@ -262,11 +262,13 @@ void Project::sendUpdateState(const QJsonObject& state, const QString& reason, b
 {
 #ifdef DEBUG
     qDebug()<<"Project::sendUpdateState "<<reason<<notify;
-    //-----------------
-    //-----------------
 #endif
-    StateEvent* event = new StateEvent(state, reason, notify);
-    QGuiApplication::postEvent(this, event, Qt::HighEventPriority);//Qt::NormalEventPriority);
+    /* The event must be allocated on the heap since the post event queue will take ownership of the event
+     * and delete it once it has been posted.
+     * It is not safe to access the event after it has been posted.*/
+    //StateEvent* event = new StateEvent(state, reason, notify);
+    QGuiApplication::postEvent(this, new StateEvent(state, reason, notify), Qt::HighEventPriority);//Qt::NormalEventPriority);
+
 }
 
 void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObject& stateOld)
@@ -455,7 +457,8 @@ void Project::unselectedAllInState()
         *iEvent = e;
     }
     mState[STATE_EVENTS] = events;
-qDebug()<<"Project::unselectedAllInState end";
+
+    qDebug()<<"Project::unselectedAllInState end";
 
 }
 
@@ -475,7 +478,8 @@ bool Project::event(QEvent* e)
         StateEvent* se = static_cast<StateEvent*>(e);
         if (se)
             updateState(se->state(), se->reason(), se->notify());
-qDebug() << "(---) Project::event";
+
+        qDebug() << "(---) Project::event";
         return true;
     } /*else if (e->type() == 1001) {
 #ifdef DEBUG
@@ -1917,7 +1921,7 @@ Date Project::createDateFromPlugin(PluginAbstract* plugin)
                 date.mData = form->getData();
 
                 date.mName = dialog.getName();
-                date.mTheta.mSamplerProposal = dialog.getMethod();
+                date.mTi.mSamplerProposal = dialog.getMethod();
                 date.mDeltaType = dialog.getDeltaType();
                 date.mDeltaFixed = dialog.getDeltaFixed();
                 date.mDeltaMin = dialog.getDeltaMin();

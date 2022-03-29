@@ -158,7 +158,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
                 curveLineBound.mIsHorizontalSections = true;
                 qreal tLower = bound->formatedFixedValue();
                 qreal tUpper = tLower;
-                curveLineBound.mSections.append(qMakePair(tLower,tUpper));
+                curveLineBound.mSections.push_back(qMakePair(tLower,tUpper));
                 mGraph->addCurve(curveLineBound);
 
                 // generate theorical curves
@@ -253,14 +253,14 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
 
             int i = 0;
             for (auto&& date : mEvent->mDates) {
-                GraphCurve curve = generateDensityCurve(date.mSigma.fullHisto(),
+                GraphCurve curve = generateDensityCurve(date.mSigmaTi.fullHisto(),
                                                         "Sigma Date " + QString::number(i) + " All Chains",
                                                         color);
 
                 mGraph->addCurve(curve);
-                if (!date.mSigma.mChainsHistos.isEmpty())
+                if (!date.mSigmaTi.mChainsHistos.isEmpty())
                     for (int j=0; j<mChains.size(); ++j) {
-                        GraphCurve curveChain = generateDensityCurve(date.mSigma.histoForChain(j),
+                        GraphCurve curveChain = generateDensityCurve(date.mSigmaTi.histoForChain(j),
                                                                      "Sigma Date " + QString::number(i) + " Chain " + QString::number(j),
                                                                      Painting::chainColors.at(j));
                         mGraph->addCurve(curveChain);

@@ -294,8 +294,8 @@ private:
     // Tab Events
     QWidget* mEventsGroup;
 
+    RadioButton* mEventThetaRadio;
     CheckBox* mEventsDatesUnfoldCheck;
-    RadioButton* mEventDateRadio;
 
     CheckBox* mDataCalibCheck;
     CheckBox* mWiggleCheck;

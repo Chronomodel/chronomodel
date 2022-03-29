@@ -116,12 +116,10 @@ public:
     // Trace and Posterior density needed for this :
     virtual void generateNumericalResults(const QList<ChainSpecs>& chains);
 
-    void generateTempoAndActivity();
+    // void generateTempoAndActivity(); // Obsolete
     void generateTempo(size_t gridLenth);
-    void generateTempo_old(size_t gridLenth);
-    void generateTempoTest();// a detruire
+
     void generateActivity(size_t gridLenth, double h);
-    void generateActivity_old(size_t gridLenth, double h);
 
     virtual void clearTraces();
     virtual void clearPosteriorDensities();

@@ -548,6 +548,10 @@ QDataStream &operator<<( QDataStream& stream, const PosteriorMeanGComposante& pM
     for (auto& v : pMGComposante.vecGP)
         stream << (double)v;
 
+/*    stream << (quint32) pMGComposante.vecVarGP.size();
+    for (auto& v : pMGComposante.vecVarGP)
+        stream << (double)v;
+*/
     stream << (quint32) pMGComposante.vecGS.size();
     for (auto& v : pMGComposante.vecGS)
         stream << (double)v;
@@ -573,6 +577,10 @@ QDataStream &operator>>( QDataStream& stream, PosteriorMeanGComposante& pMGCompo
     pMGComposante.vecGP.resize(siz);
     std::generate_n(pMGComposante.vecGP.begin(), siz, [&stream, &v]{stream >> v; return v;});
 
+/*    stream >> siz;
+    pMGComposante.vecVarGP.resize(siz);
+    std::generate_n(pMGComposante.vecVarGP.begin(), siz, [&stream, &v]{stream >> v; return v;});
+*/
     stream >> siz;
     pMGComposante.vecGS.resize(siz);
     std::generate_n(pMGComposante.vecGS.begin(), siz, [&stream, &v]{stream >> v; return v;});

@@ -526,7 +526,7 @@ GraphCurve GraphViewResults::generateSectionCurve(const QPair<double, double> &s
                                                       const QColor& color) const{
     GraphCurve curve;
     curve.mName = name;
-    curve.mSections.append(section);
+    curve.mSections.push_back(section);
     curve.mPen.setColor(color);
     curve.mPen.setWidth(3);
     curve.mPen.setStyle(Qt::SolidLine);
