@@ -91,12 +91,12 @@ public:
 
     bool mIsHorizontalSections; // Used for bounds (in scene and property views) and Unif, typo (scene view)
     bool mIsTopLineSections; // Used for credibilities (and "one day" for phases alpha/beta interval??)
-    QList<QPair<type_data, type_data> > mSections;
+    std::vector<QPair<type_data, type_data> > mSections;
 
     bool mIsVertical;
     
     bool mIsRefPoints;
-    QList<CurveRefPts> mRefPoints;
+    std::vector<CurveRefPts> mRefPoints;
 
     bool mVisible;
 };

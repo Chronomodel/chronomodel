@@ -137,9 +137,7 @@ void AbstractItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
 
 void AbstractItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 {
-    mMoving = true;
-
-    //qDebug()<<"AbstractItem::mouseMoveEvent() e->pos avant mouseMove2"<<e->pos()<<e->scenePos()<<pos();
+    auto ptInit = pos();
     if (mScene->mShowGrid) {
         QPointF ptBefore = pos();
         qreal delta (mScene->deltaGrid());
@@ -149,11 +147,12 @@ void AbstractItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
     }
 
     QGraphicsItem::mouseMoveEvent(e);
+    mMoving = !(ptInit==pos());
 
-
+//qDebug() <<"AbstractItem::mouseMoveEvent() mMoving="<<mMoving;
   //  if (e->pos().x()==0 || e->pos().y()==0)
  //qDebug()<<"AbstractItem::mouseMoveEvent() mData"<<this->mData.value(STATE_ITEM_X).toDouble()<<mData.value(STATE_ITEM_Y).toDouble();
- //qDebug()<<"AbstractItem::mouseMoveEvent() e->pos3"<<e->pos()<<e->scenePos()<<pos();
+ //()<<"AbstractItem::mouseMoveEvent() e->pos3"<<e->pos()<<e->scenePos()<<pos();
 
 
 }
@@ -172,7 +171,7 @@ void AbstractItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* e)
 
 QVariant AbstractItem::itemChange(GraphicsItemChange change, const QVariant& value)
 {
-//qDebug()<<"AbstractItem::itemChange()"<<change<<value;
+
     if (change == ItemPositionChange && scene()) {
         // value is the new position.
         QPointF newPos = value.toPointF();

@@ -121,6 +121,7 @@ public:
     QMap<double, double> mActivitySup;
     double mActivityMeanUnif;
     double mActivityStdUnif;
+    QMap<double, double> mActivityPValue;
 
     // Raw curve without date format
 
@@ -134,6 +135,7 @@ public:
     QMap<double, double> mRawActivity;
     QMap<double, double> mRawActivityInf;
     QMap<double, double> mRawActivitySup;
+    QMap<double, double> mRawActivityPValue;
 
     MetropolisVariable mTau;
     TauType mTauType;

@@ -287,8 +287,7 @@ void GraphView::adjustYScale()
 
 void GraphView::zoomX(const type_data min, const type_data max)
 {
-    if (mCurrentMinX != min || mCurrentMaxX != max || mMinY>=mMaxY || mAutoAdjustYScale)
-    {
+    if (mCurrentMinX != min || mCurrentMaxX != max || mMinY>=mMaxY || mAutoAdjustYScale) {
         mCurrentMinX = min;
         mCurrentMaxX = max;
 
@@ -444,7 +443,7 @@ void GraphView::autoAdjustYScale(bool active)
   //  if (active)
  //       mAxisToolY.mShowText = false;
 
-    repaintGraph(true);
+   // repaintGraph(true);//not necessary ?
 }
 /**
  * @brief Adjust the Y axis with 0 for the minimun and find the Maximum value in the visible curve
@@ -560,8 +559,7 @@ void GraphView::addCurve(const GraphCurve& curve)
 
 void GraphView::removeCurve(const QString& name)
 {
-    for(int i=0; i<mCurves.size(); ++i)
-    {
+    for (int i=0; i<mCurves.size(); ++i) {
         if (mCurves.at(i).mName == name) {
             mCurves.removeAt(i);
             break;
@@ -586,17 +584,14 @@ void GraphView::reserveCurves(const int size)
 void GraphView::setCurveVisible(const QString& name, const bool visible)
 {
     bool modified = false;
-    for(auto && curve : mCurves)
-    {
-        if(curve.mName == name && curve.mVisible != visible)
-        {
+    for (auto && curve : mCurves) {
+        if (curve.mName == name && curve.mVisible != visible) {
             curve.mVisible = visible;
             modified = true;
             break;
         }
     }
-    if(modified)
-    {
+    if (modified) {
         adjustYScale();
         repaintGraph(false);
     }
@@ -1046,7 +1041,7 @@ void GraphView::drawCurves(QPainter& painter)
             painter.setBrush(brush);
 
             if (curve.mIsRefPoints) {
-                if (curve.mRefPoints.isEmpty())
+                if (curve.mRefPoints.empty())
                     continue;
                // QMap<type_data, type_data> subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
 

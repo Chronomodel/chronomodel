@@ -1762,7 +1762,7 @@ void Model:: generateActivity(size_t gridLength, double h)
         double q, e, v, infp;
 
         const double qUnif_qUnif = qUnif / (1-qUnif);
-        // Calcul de la courbe de repartition inverse de la p_value pour k=0 à n Events
+        // Calcul de la courbe de répartition inverse de la p_value pour k=0 à n Events
         QVector<double> rep_inv_p_value;
         std::vector<double> p_value_k;
         std::map<int, double> p_value_density;
@@ -1777,7 +1777,7 @@ void Model:: generateActivity(size_t gridLength, double h)
             p_value_density[k] = p_value_k[k];
         }
 
-        // Calcul du HPD pour la courbe uniforme, pour définir le max= mode et l'intervalle d'erreur à 95%
+        // Calcul du HPD pour la courbe uniforme, pour définir le max = mode et l'intervalle d'erreur à 95%
         auto hpd95 = intervalMonomodalHpd(p_value_density, 95.);
 
         //QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(hpd955, 100);

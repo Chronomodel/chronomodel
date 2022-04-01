@@ -1199,12 +1199,9 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
  */
 std::pair<int, std::pair<int, int> > intervalMonomodalHpd(const std::map<int, double>& density, double thresh)
 {
-    //std::map<int, int> interval;
-
     if (density.size() < 2)  // in case of only one value (e.g. a bound fixed) or no value
         return qMakePair(0, qMakePair(0, 0));
-
-
+    // On considère ici une fonction histogramme, la surface est considèrée constante et chaque fréquence a une la même surface
     double areaTot = std::accumulate(density.cbegin(), density.cend(), 0., [](double sum, const std::pair<int, double> m){return sum + m.second;  });
 
     // Inversion de la map
@@ -1215,13 +1212,12 @@ std::pair<int, std::pair<int, int> > intervalMonomodalHpd(const std::map<int, do
        inverted.insert(std::pair<double, int>(d.second, d.first));
     }
 
-    // Par définition les maps sont triées, donc la dernière valeur est le mode, rend() pointe sur la derniere valeur
+    // Par définition les maps sont triées, donc la dernière valeur est le mode, rbegin() pointe sur la derniere valeur
 
     int mode = inverted.rbegin()->second;
 
 
     // On fait la somme en remontant la map inversée, jusqu'à avoir la somme seuil
-
 
     typedef std::multimap<double, int>::iterator iter_type;
     std::reverse_iterator<iter_type> iterInverted (inverted.rbegin());
@@ -1239,7 +1235,7 @@ std::pair<int, std::pair<int, int> > intervalMonomodalHpd(const std::map<int, do
 
         try {
 
-            while (iterInverted != inverted.rend() && area<areaSearched) {
+            while (iterInverted != inverted.rend() && area<=areaSearched) {
 
                 int t = iterInverted->second;
                 const double v = iterInverted->first;

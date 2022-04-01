@@ -234,7 +234,7 @@ T sum(const QVector<T>& vector)
    /* std::for_each(vector.begin(), vector.end(), [&s](T& v){
         s += v;
     });*/
-    for (auto&& v : vector) {
+    for (const auto& v : vector) {
         s += v;
     }
     return s;
@@ -247,7 +247,7 @@ T sum2(const QVector<T>& vector)
     /*std::for_each(vector.cbegin(), vector.cend(), [&sum](T& v){
         sum += v * v;
     });*/
-    for (auto&& v : vector) {
+    for (const auto& v : vector) {
         sum += v * v;
     }
     return sum;
@@ -260,7 +260,7 @@ T sumShifted(const QVector<T>& vector, const T& shift)
     /*std::for_each(vector.cbegin(), vector.cend(), [&sum, &shift](T& v){
         sum += v + shift;
     });*/
-     for (auto&& v : vector) {
+     for (const auto& v : vector) {
         sum += v + shift;
     }
     return sum;
@@ -273,7 +273,7 @@ T sum2Shifted(const QVector<T>& vector, const T& shift)
     /*std::for_each(vector.cbegin(), vector.cend(), [&sum, &shift](T& v){
         sum += (v + shift) * (v + shift);
     });*/
-     for (auto&& v : vector)
+     for (const auto& v : vector)
         sum += (v + shift) * (v + shift);
 
 
