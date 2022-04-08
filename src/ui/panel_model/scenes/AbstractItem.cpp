@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -41,6 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ArrowTmpItem.h"
 #include "StateKeys.h"
 #include "Painting.h"
+
 #include <QtWidgets>
 
  int AbstractItem::mBorderWidth  (2);
@@ -62,14 +63,15 @@ AbstractItem::AbstractItem(AbstractScene* scene, QGraphicsItem* parent):QGraphic
                      QGraphicsItem::ItemSendsScenePositionChanges |
                      QGraphicsItem::ItemSendsGeometryChanges);
 
-    // Not yet supported with retina display in Qt 5.3
-#ifndef Q_OS_MAC
+    // Not supported with retina display in Qt 5.3
+    // but now we are in Qt 6
+//#ifndef Q_OS_MAC
     QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect();
     shadow->setColor(Qt::black);
-    shadow->setBlurRadius(4);
-    shadow->setOffset(1, 1);
+    shadow->setBlurRadius(30);
+    shadow->setOffset(3, 3);
     setGraphicsEffect(shadow);
-#endif
+//#endif
 }
 
 AbstractItem::~AbstractItem()
