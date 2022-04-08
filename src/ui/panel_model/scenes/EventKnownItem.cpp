@@ -84,7 +84,7 @@ EventKnownItem::~EventKnownItem()
 
 void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
 {
-    prepareGeometryChange();
+   // prepareGeometryChange();
 
     mData = event;
 
@@ -115,8 +115,10 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     if ( (tmin<=bound.mFixed) && (bound.mFixed<=tmax) ) {
         bound.updateValues(tmin, tmax, step);
 
-        GraphView* graph = new GraphView();
-        graph->setFixedSize(200, 50);
+        GraphView* graph = new GraphView(); // AbstractItem::mItemWidth
+        //graph->setFixedSize(200, 50);
+        qreal w = AbstractItem::mItemWidth - 2*(AbstractItem::mBorderWidth + AbstractItem::mEltsMargin);
+        graph->setFixedSize(w, 50);
         graph->setMargins(0, 0, 0, 0);
 
         graph->setRangeX(tmin, tmax);
@@ -169,7 +171,7 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     QJsonObject state = mScene->getProject()->mState;
     CurveSettings curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
 
-    int nbLines = getNumberCurveLines(curveSettings);
+    const int nbLines = getNumberCurveLines(curveSettings);
     mCurveTextHeight = (nbLines>0 ? nbLines*mCurveLineHeight: 0);
 }
 
@@ -179,9 +181,9 @@ QRectF EventKnownItem::boundingRect() const
    // int nbLines = getNumberCurveLines();
    // mCurveTextHeight = (nbLines>0 ? nbLines*mCurveLineHeight + AbstractItem::mEltsMargin: 0);
     qreal h = mTitleHeight + mThumbH + mPhasesHeight + 2*AbstractItem::mEltsMargin + mCurveTextHeight;
-    h += 50.;
+    h += 55.;
 
-    const  qreal w = 210;
+    const qreal w = 230;
 
     return QRectF(-w/2, -h/2, w, h);
 }
@@ -193,8 +195,8 @@ void EventKnownItem::setDatesVisible(bool visible)
 
 void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
-    Q_UNUSED(option);
-    Q_UNUSED(widget);
+    (void) option;
+    (void) widget;
 
     painter->setRenderHint(QPainter::Antialiasing);
 
@@ -210,31 +212,29 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
         painter->drawEllipse(rect.adjusted(1, 1, -1, -1));
     }
 
-    const double side = 30;//40.;
-    const double top = 15;//25.;
+    // w is the same value fixed in DateItem::boundingRect()
+    const qreal w = AbstractItem::mItemWidth - 2*(AbstractItem::mBorderWidth + AbstractItem::mEltsMargin);
+
+    const qreal side = (rect.width() - w )/2.;
+    const qreal top = 10;//25.;
 
     QRectF nameRect(rect.x() + side, rect.y() + top, rect.width() - 2*side, mTitleHeight);
-    QRectF thumbRect(rect.x() + side, rect.y() + top + AbstractItem::mEltsMargin + mTitleHeight, rect.width() - 2*side, mThumbH);
+    QRectF thumbRect(rect.x() + side, rect.y() + top + AbstractItem::mEltsMargin + mTitleHeight, w, mThumbH);
 
     if (mGreyedOut) //setting with setGreyedOut() just above
         painter->setOpacity(0.1);
     else
         painter->setOpacity(1.);
 
-    // the elliptic item box
+    // The elliptic item box
     painter->setPen(Qt::NoPen);
     painter->setBrush(eventColor);
     painter->drawEllipse(rect);
 
     // Name
-
-
-   // QFont font (APP_SETTINGS_DEFAULT_FONT_FAMILY, 12, 50, false);
-    QFont font ;
-    //font.setPointSizeF(12.);
-
     QString name = mData.value(STATE_NAME).toString();
 
+    QFont font ;
     font.setPixelSize(14);
     font.setStyle(QFont::StyleNormal);
     font.setBold(true);
@@ -250,8 +250,7 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     painter->drawText(nameRect, Qt::AlignCenter, name);
 
 
-
-    // thumbnail
+    // Thumbnail
     if (mThumb.isNull()) {
         painter->fillRect(thumbRect, Qt::white);
         painter->setPen(Qt::red);

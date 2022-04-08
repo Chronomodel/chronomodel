@@ -78,18 +78,6 @@ EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonOb
 
 EventItem::~EventItem()
 {
-   /* QList<QGraphicsItem*> dateItems = childItems();
-
-    int NItems = dateItems.size()-1;
-
-    for (int i = NItems; i >= 0; --i) {
-        if (mScene->getItemsList().contains(dateItems[i]))
-            mScene->removeItem(dateItems[i]);
-        //dateItems[i]->setParentItem(nullptr);
-        delete [] dateItems[i];
-        //dateItems.removeAt(i);
-    }  
-*/
     mData = QJsonObject();
     QList<QGraphicsItem*> dateItems = childItems();
     const int dateItemsSize = dateItems.size() - 1;

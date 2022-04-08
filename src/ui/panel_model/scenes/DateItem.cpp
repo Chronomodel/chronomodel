@@ -124,10 +124,10 @@ void DateItem::setOriginalPos(const QPointF pos)
 
 QRectF DateItem::boundingRect() const
 {
-    float x = 0;
-    float y = 0;
-    float w = AbstractItem::mItemWidth - 2*(AbstractItem::mBorderWidth + AbstractItem::mEltsMargin);
-    float h = mTitleHeight + mEltsHeight;
+    qreal x = 0;
+    qreal y = 0;
+    qreal w = AbstractItem::mItemWidth - 2*(AbstractItem::mBorderWidth + AbstractItem::mEltsMargin);
+    qreal h = mTitleHeight + mEltsHeight;
     
     EventItem* eventItem = dynamic_cast<EventItem*>(parentItem());
     if (eventItem) {
