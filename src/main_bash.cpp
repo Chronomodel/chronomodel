@@ -101,12 +101,12 @@ int main(int argc, char *argv[])
 
     ChronoApp a(argc, argv);
 
-    a.setApplicationName("ChronoModel");
+    a.setApplicationName("ChronoModel"); // Must be ChronoModel to find the calibration curves
     a.setApplicationDisplayName("ChronoModel_bash");
     a.setApplicationVersion("3.1.6");//VERSION_NUMBER);  // must match value in Chronomodel.pro
-    a.setOrganizationDomain("http://www.chronomodel.com");
+    //a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
-    a.setWindowIcon(QIcon(":chronomodel.png"));
+    a.setWindowIcon(QIcon(":chronomodel_bash.icns"));
      
     QString filePath = "";
    /* for (int i = 0; i<argc; ++i) {

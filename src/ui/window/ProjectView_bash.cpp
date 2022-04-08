@@ -47,80 +47,27 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 // Constructor / Destructor / Init
 ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
 {
-setMouseTracking(true);
+    //setMouseTracking(true);
     setScreenDefinition();
 
     mTable = new QTableWidget(this);
     mTable->setColumnCount(1);
+
+    mAddButton = new QPushButton ("Add File", this);
+    mRemoveButton = new QPushButton ("Remove File", this);
+
+    connect(mAddButton, &QPushButton::pressed, this, &ProjectView::tableAdd);
+    connect(mRemoveButton, &QPushButton::pressed, this, &ProjectView::tableRemove);
+
     mTable->setFixedWidth(width()/2);
-    mTable->move(width()/4, 0);
-    mTable->setColumnWidth(0, width()/2);
+    mTable->setGeometry(QRect(width()/4, 50, width()/2, height()));
 
-   /*
-    mModelView = new ModelView();
-    mResultsView = new ResultsView();
+    auto x1 = mTable->pos().x();
+    x1 = x1 /2 - 75;
+    mAddButton->setGeometry(QRect(0, 0, 150, 0));
+    mRemoveButton->setGeometry(QRect(10, mAddButton->pos().y()+mAddButton->height() + 10, 150, 0));
 
-    QPalette palette;
-    palette.setColor(QPalette::Base, Qt::transparent);
-    palette.setColor(QPalette::Text, Qt::black);
-
-    mLogModelEdit = new QTextEdit();
-    mLogModelEdit->setReadOnly(true);
-    mLogModelEdit->setAcceptRichText(true);
-    mLogModelEdit->setFrameStyle(QFrame::NoFrame);
-    mLogModelEdit->setPalette(palette);
-
-    mLogInitEdit = new QTextEdit();
-    mLogInitEdit->setReadOnly(true);
-    mLogInitEdit->setAcceptRichText(true);
-    mLogInitEdit->setFrameStyle(QFrame::NoFrame);
-    mLogInitEdit->setPalette(palette);
-
-    mLogAdaptEdit = new QTextEdit();
-    mLogAdaptEdit->setReadOnly(true);
-    mLogAdaptEdit->setAcceptRichText(true);
-    mLogAdaptEdit->setFrameStyle(QFrame::NoFrame);
-    mLogAdaptEdit->setPalette(palette);
-
-    mLogResultsEdit = new QTextEdit();
-    mLogResultsEdit->setReadOnly(true);
-    mLogResultsEdit->setAcceptRichText(true);
-    mLogResultsEdit->setFrameStyle(QFrame::NoFrame);
-    mLogResultsEdit->setPalette(palette);
-
-    mLogTabs = new Tabs(this);
-    mLogTabs->setFixedHeight(mLogTabs->tabHeight());
-
-    mLogTabs->addTab(tr("Model Description"));
-    mLogTabs->addTab(tr("MCMC Initialisation"));
-    mLogTabs->addTab(tr("MCMC Adaptation"));
-    mLogTabs->addTab(tr("Posterior Distrib. Stats"));
-
-    mLogLayout = new QVBoxLayout();
-    mLogLayout->addWidget(mLogTabs);
-    mLogLayout->addWidget(mLogResultsEdit);
-
-    mLogView = new QWidget();
-    mLogView->setLayout(mLogLayout);
-
-    connect(mLogTabs, &Tabs::tabClicked, this, &ProjectView::showLogTab);
-
-    mStack = new QStackedWidget();
-    mStack->addWidget(mModelView);
-    mStack->addWidget(mResultsView);
-    mStack->addWidget(mLogView);
-    mStack->setCurrentIndex(0);
-
-    QHBoxLayout* layout = new QHBoxLayout();
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->addWidget(mStack);
-    setLayout(layout);
-
-    connect(mResultsView, &ResultsView::resultsLogUpdated, this, &ProjectView::updateResultsLog);
-
-    mLogTabs->setTab(3, false);
-    */
-
+    mLog = new QTextEdit(this);
 }
 
 ProjectView::~ProjectView()
@@ -175,78 +122,49 @@ void ProjectView::setScreenDefinition()
 
 void ProjectView::resizeEvent(QResizeEvent* e)
 {
-    Q_UNUSED(e);
+    (void)e;
+    mTable->setFixedWidth(width()/3);
+    mTable->setColumnWidth(0, width()/3);
+    mTable->setGeometry(QRect(width()/3, 20, width()/3, height() - 20));
 
-    setScreenDefinition();
-    mTable->setFixedWidth(width()/2);
-    mTable->move(width()/4, 0);
-    mTable->setColumnWidth(0, width()/2);
+    auto x1 = mTable->pos().x();
+    x1 = x1 /2 - 75;
+    mAddButton->setGeometry(QRect(x1, 50, 150, 50));
 
-    /*const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
+    mRemoveButton->setGeometry(QRect(x1, mAddButton->pos().y() + mAddButton->height() + 10, 150, 50));
 
-    mLogModelEdit->resize(width() - AppSettings::widthUnit(), logTabHusefull);
-    mLogMCMCEdit->resize(width() - AppSettings::widthUnit(), logTabHusefull);
-    mLogResultsEdit->resize(width() - AppSettings::widthUnit() , logTabHusefull);
-*/
+    x1 = mTable->pos().x() + mTable->width();
+
+    mLog->setGeometry(QRect(x1 + 10, mTable->pos().y(), width() - x1 - 20, mTable->height()));
+
 }
 
-
-/*
-void ProjectView::setProject(Project* project)
+void ProjectView::tableAdd()
 {
-    mModelView->setProject(project);
-    if (project->withResults())
-        mResultsView->setProject(project);
+    const QString currentPath = QDir::homePath();
+    QString path = QFileDialog::getOpenFileName(this,
+                                                      tr("Open File"),
+                                                      currentPath,
+                                                      tr("Chronomodel Project (*.chr)"));
+
+    if (!path.isEmpty()) {
+        mTable->setRowCount(mTable->rowCount()+1);
+
+        QTableWidgetItem *newItem = new QTableWidgetItem(path);
+        mTable->setItem(mTable->rowCount()-1 , 0, newItem );
+    }
 }
 
-void ProjectView::resetInterface()
+void ProjectView::tableRemove()
 {
-   showModel();
-    mModelView   -> resetInterface();
-    mResultsView -> clearResults();
+    auto selecI = mTable->selectedItems();
+    for (auto i=selecI.rbegin() ; i != selecI.rend(); i++)
+        mTable->removeRow((*i)->row());
 
 }
-
-void ProjectView::showHelp(bool show)
-{
-    mModelView->showHelp(show);
-}
-
-void ProjectView::showModel()
-{
-   // mStack->setCurrentIndex(0);
-}
-
-void ProjectView::showResults()
-{
-    mResultsView->clearResults();
-    mStack->setCurrentIndex(1);
-    
-    this->updateResults();
-}
-
-
-void ProjectView::showLog()
-{
-    mResultsView->mModel->mLogResults.clear();
-    mResultsView->mModel->generateResultsLog();
-    updateResultsLog(mResultsView->mModel->getResultsLog());
-    mStack->setCurrentIndex(2);
-}
-
-
-void ProjectView::updateProject()
-{
-    mModelView->updateProject();
-}
-
-void ProjectView::newPeriod()
-{
-    mModelView->modifyPeriod();
-}
-*/
 void ProjectView::applyFilesSettings(Model* model)
 {
+    (void) model;
     // Rebuild all calibration curve
 
   //  QJsonObject state = mProject->state();//mModelView->getProject()->state();
@@ -258,165 +176,3 @@ void ProjectView::applyFilesSettings(Model* model)
    // applySettings(model);
 }
 
-/*
-void ProjectView::applySettings(Model* model)
-{
-   // mModelView->applyAppSettings();
-
-    if (model && !model->mEvents.isEmpty()) {
-        const double memoThreshold = model->mThreshold;
-        model->mThreshold = -1;
-        model->clearThreshold();
-        model->updateDensities(model->mFFTLength, model->mBandwidth, memoThreshold);
-        emit model->newCalculus(); //redraw densities
-
-        model->generateModelLog();
-        model->generateResultsLog();
-
-        mLogModelEdit->setText(model->getModelLog());
-        mLogInitEdit->setText(model->getInitLog());
-        mLogAdaptEdit->setText(model->getAdaptLog());
-        updateResultsLog(model->getResultsLog());
-
-    }
-
-}
-*/
-
-
-
-
-
-/*
-void ProjectView::updateMultiCalibration()
-{
-   // mModelView->updateMultiCalibration();
-}
-
-void ProjectView::initResults(Model* model)
-{
-    model->updateDesignFromJson();
-    model->initDensities();
-
-    model->generateModelLog();
-    model->generateResultsLog();
-
-    mResultsView->updateModel(model); // prepare the view
-
-    // Update log view
-    mLogModelEdit->setText(model->getModelLog());
-    mLogInitEdit->setText(model->getInitLog());
-    mLogAdaptEdit->setText(model->getAdaptLog());
-    mLogResultsEdit->setText(model->getResultsLog());
-
-    // Show results :
-    mStack->setCurrentIndex(1);
-
-}
-
-void ProjectView::updateResults()
-{
-    Project* project = MainWindow::getInstance()->getProject();
-
-    if (project->mModel) {
-        project->mModel->updateDesignFromJson();
-
-        mResultsView->updateModel(project->mModel);
-    }
-}
-
-void ProjectView::updateResultsLog(const QString& log)
-{
-#ifdef Q_OS_MAC
-    const QFont font (qApp->font());
-    QString styleSh = "QLineEdit { border-radius: 5px; font: "+ QString::number(font.pointSize()) + "px ;font-family: "+font.family() + ";}";
-    mLogResultsEdit->setStyleSheet(styleSh);
-#endif
-    mLogResultsEdit->setHtml(log);
-
-}
-
-void ProjectView::showLogTab(const int &i)
-{
-    mLogTabs->setTab(i, true);
-
-    QWidget* widFrom = nullptr;
-
-    if (mLogModelEdit->isVisible())
-        widFrom = mLogModelEdit;
-
-    else if (mLogInitEdit->isVisible())
-            widFrom = mLogInitEdit;
-
-    else if (mLogResultsEdit->isVisible())
-        widFrom = mLogResultsEdit;
-
-    else if (mLogAdaptEdit->isVisible())
-        widFrom = mLogAdaptEdit;
-
-    else
-        widFrom = nullptr;
-
-    if (mLogTabs->currentName() == tr("Model Description") ) {
-        mLogModelEdit->setVisible(true);
-        mLogInitEdit->setVisible(false);
-        mLogAdaptEdit->setVisible(false);
-        mLogResultsEdit->setVisible(false);
-
-        mLogLayout->replaceWidget(widFrom, mLogModelEdit);
-
-     } else if (mLogTabs->currentName() == tr("MCMC Initialisation") ) {
-        mLogModelEdit->setVisible(false);
-        mLogInitEdit->setVisible(true);
-        mLogAdaptEdit->setVisible(false);
-        mLogResultsEdit->setVisible(false);
-
-        mLogLayout->replaceWidget(widFrom, mLogInitEdit);
-
-    } else if (mLogTabs->currentName() == tr("MCMC Adaptation") ) {
-       mLogModelEdit->setVisible(false);
-       mLogInitEdit->setVisible(false);
-       mLogAdaptEdit->setVisible(true);
-       mLogResultsEdit->setVisible(false);
-
-       mLogLayout->replaceWidget(widFrom, mLogAdaptEdit);
-
-     } else if (mLogTabs->currentName() == tr("Posterior Distrib. Stats") ) {
-        mLogModelEdit->setVisible(false);
-        mLogInitEdit->setVisible(false);
-        mLogAdaptEdit->setVisible(false);
-        mLogResultsEdit->setVisible(true);
-
-        mLogLayout->replaceWidget(widFrom, mLogResultsEdit);
-
-     } else {
-        mLogModelEdit->setVisible(false);
-        mLogInitEdit->setVisible(false);
-        mLogAdaptEdit->setVisible(false);
-        mLogResultsEdit->setVisible(false);
-    }
-
-
-}
-
-//  Read/Write settings
-void ProjectView::writeSettings()
-{
-    mModelView->writeSettings();
-}
-
-void ProjectView::readSettings()
-{
-    mModelView->readSettings();
-}
-
-void ProjectView::toggleCurve(bool toggle)
-{
-    mModelView->showCurveSettings(toggle);
-}
-
-void ProjectView::eventsAreSelected()
- {
-     mModelView->eventsAreSelected();
- }
-*/

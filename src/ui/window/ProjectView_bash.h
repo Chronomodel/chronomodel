@@ -43,18 +43,20 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MCMCLoopMain.h"
 #include "AppSettings.h"
 #include "Project.h"
-#include "Tabs.h"
+//#include "Tabs.h"
 
 #include <QWidget>
 #include <QTableWidget>
+#include <QPushButton>
+#include <QTextEdit>
 
 class QStackedWidget;
-class QTextEdit;
+//class QTextEdit;
 class QTabWidget;
-class QVBoxLayout;
+//class QVBoxLayout;
 
-class ModelView;
-class ResultsView;
+//class ModelView;
+//class ResultsView;
 class Event;
 
 class ProjectView: public QWidget
@@ -64,59 +66,26 @@ public:
     ProjectView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~ProjectView();
 
-    void setScreenDefinition();
-
     QTableWidget* mTable;
+    QTextEdit* mLog;
+
+    void setScreenDefinition();
 
     void resizeEvent(QResizeEvent* e);
 
-
-/*    void setProject(Project* project);
-    
-    void resetInterface();
-
-    void readSettings();
-    void writeSettings();
-    void newPeriod();
-
-    void updateMultiCalibration();
-    void eventsAreSelected();
+    void applyFilesSettings(Model* model);
 
 public slots:
-    void initResults(Model*);
-    void updateResults();
-    void updateProject();
-    void showModel();
-    void showResults();
-    void showLogTab(const int &i);
-    
-    void showLog();
-    void showHelp(bool show);
-
-    void applySettings(Model* model);
-*/
-    void applyFilesSettings(Model* model);
-/*
-    void updateResultsLog(const QString& log);
-    
-    void toggleCurve(bool toggle);
-*/
+    void tableAdd();
+    void tableRemove();
 
 private:
 
+    QPushButton* mAddButton;
+    QPushButton* mRemoveButton;
 
-   /* QStackedWidget* mStack;
-    ModelView* mModelView;
-    ResultsView* mResultsView;
 
-    QWidget* mLogView;
-    QVBoxLayout* mLogLayout;
-    Tabs* mLogTabs;
-    QTextEdit* mLogModelEdit;
-    QTextEdit* mLogInitEdit;
-    QTextEdit* mLogAdaptEdit;
-    QTextEdit* mLogResultsEdit;
-    */
+
 };
 
 #endif

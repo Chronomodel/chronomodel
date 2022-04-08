@@ -45,6 +45,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AppSettingsDialog.h"
 #include "PluginManager.h"
 #include "ModelUtilities.h"
+#include "QtUtilities.h"
 #include "SwitchAction.h"
 
 #include <QtWidgets>
@@ -98,11 +99,11 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
 
     statusBar()->showMessage(tr("Ready"));
     //setUnifiedTitleAndToolBarOnMac(true);
-    setWindowIcon(QIcon(":chronomodel.png"));
+    setWindowIcon(QIcon(":chronomodel_bash.png"));
 
     resize(AppSettings::mLastSize);
 
-    // connect(mProjectSaveAction, static_cast<void (QAction::*)(bool)> (&QAction::triggered), this, &MainWindow::saveProject);
+    connect(mProjectSaveAction, static_cast<void (QAction::*)(bool)> (&QAction::triggered), this, &MainWindow::saveProject);
     // connect(mProjectSaveAsAction, static_cast<void (QAction::*)(bool)> (&QAction::triggered), this, &MainWindow::saveProjectAs);
 
     /*connect(mViewModelAction, static_cast<void (QAction::*)(bool)> (&QAction::triggered), mProjectView, &ProjectView::showModel );
@@ -123,7 +124,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
         AppSettings::mCSVDecSeparator=".";
     }
 
-    activateInterface(false);
+    activateInterface(true);
 }
 
 MainWindow::~MainWindow()
@@ -195,17 +196,17 @@ void MainWindow::createActions()
     mCloseProjectAction->setShortcuts(QKeySequence::Close);
     mCloseProjectAction->setStatusTip(tr("Open an existing project"));
     connect(mCloseProjectAction, &QAction::triggered, this, &MainWindow::closeProject);
-
+*/
     mProjectSaveAction = new QAction(QIcon(":save_p.png"), tr("&Save"), this);
     mProjectSaveAction->setShortcuts(QKeySequence::Save);
     mProjectSaveAction->setStatusTip(tr("Save the current project in the same place with the same name"));
-
+/*
     mProjectSaveAsAction = new QAction(QIcon(":save_p.png"), tr("Save as..."), this);
     mProjectSaveAsAction->setStatusTip(tr("Change the current project on an other name or on an other place"));
 
     mProjectExportAction = new QAction(QIcon(":export.png"), tr("Export"), this);
     mProjectExportAction->setVisible(false);
-*/
+
     mUndoAction = mUndoStack->createUndoAction(this);
     mUndoAction->setShortcuts(QKeySequence::Undo);
     mUndoAction->setIcon(QIcon(":undo_p.png"));
@@ -220,7 +221,7 @@ void MainWindow::createActions()
 
     mUndoViewAction = mUndoDock->toggleViewAction();
     mUndoViewAction->setText(tr("Show Undo Stack"));
-
+*/
 /*    mSelectAllAction = new QAction( tr("&Select All Events"), this);
     mSelectAllAction->setShortcuts(QKeySequence::SelectAll);
     mSelectAllAction->setStatusTip(tr("Select All Events"));
@@ -362,8 +363,8 @@ void MainWindow::createMenus()
     //-----------------------------------------------------------------
     mEditMenu = menuBar()->addMenu(tr("Edit"));
 
-    mEditMenu->addAction(mUndoAction);
-    mEditMenu->addAction(mRedoAction);
+  //  mEditMenu->addAction(mUndoAction);
+  //  mEditMenu->addAction(mRedoAction);
 //    mEditMenu->addAction(mSelectAllAction);
     mEditMenu->setFont(ft);
 
@@ -429,11 +430,11 @@ void MainWindow::createToolBars()
 
   //  mToolBar->addAction(mNewProjectAction);
     mToolBar->addAction(mOpenProjectAction);
-  /*  mToolBar->addAction(mProjectSaveAction);
-    mToolBar->addAction(mProjectExportAction);
-*/
-    mToolBar->addAction(mUndoAction);
-    mToolBar->addAction(mRedoAction);
+    mToolBar->addAction(mProjectSaveAction);
+ //   mToolBar->addAction(mProjectExportAction);
+
+ //   mToolBar->addAction(mUndoAction);
+ //   mToolBar->addAction(mRedoAction);
 
     QWidget* separator3 = new QWidget(this);
     separator3->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -529,58 +530,66 @@ void MainWindow::openProject()
 {
     const QString currentPath = getCurrentPath();
     QString path = QFileDialog::getOpenFileName(this,
-                                                      tr("Open File"),
+                                                      tr("Insert File"),
                                                       currentPath,
-                                                      tr("Chronomodel Project (*.chr)"));
+                                                      tr("Chronomodel Bash Project (*.chb)"));
 
-    if (!path.isEmpty()) {
-activateInterface(true);
-      /*  if (mProject) {
-            mProject->askToSave(tr("Save current project as..."));
+    QFileInfo checkFile (path);
+    if (!checkFile.exists() || !checkFile.isFile()) {
+        QMessageBox message(QMessageBox::Critical,
+                            tr("Error loading project file"),
+                            tr("The project file could not be loaded.") + "\r" +
+                            path  +
+                            tr("Could not be find"),
+                            QMessageBox::Ok,
+                            qApp->activeWindow());
+        message.exec();
 
-            disconnectProject();
+    }
 
-            //resetInterface(): clear mEventsScene and mPhasesScene, set mProject = nullptr
-            resetInterface();
+    qDebug() << "in Project::load Loading Bash Project file : " << path;
+    QFile bashFile (path);
+    if (bashFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QFileInfo info(path);
+        MainWindow::getInstance()->setCurrentPath(info.absolutePath());
 
-            delete mProject;
+        AppSettings::mLastDir = info.absolutePath();
+        AppSettings::mLastFile = info.fileName();
+
+        QByteArray saveData = bashFile.readAll();
+        QJsonParseError error;
+        QJsonDocument jsonDoc (QJsonDocument::fromJson(saveData, &error));
+
+        if (error.error !=  QJsonParseError::NoError) {
+            QMessageBox message(QMessageBox::Critical,
+                                tr("Error loading Bash project file"),
+                                tr("The Bash project file could not be loaded.") + "\r" +
+                                tr("Error message") + " : " + error.errorString(),
+                                QMessageBox::Ok,
+                                qApp->activeWindow());
+            message.exec();
+
+        } else {
+
+            mProjectView->mTable->clear();
+            mProjectView->mTable->setRowCount(0);
+            QJsonObject loadingState = jsonDoc.object();
+
+            QJsonArray list = loadingState.value("project_list").toArray();
+
+            for (int i = 0; i <list.count(); ++i) {
+                QString iPath = list.at(i).toString();
+                mProjectView->mTable->setRowCount(mProjectView->mTable->rowCount()+1);
+
+                QTableWidgetItem *newItem = new QTableWidgetItem(iPath);
+                mProjectView->mTable->setItem(mProjectView->mTable->rowCount()-1 , 0, newItem );
+
+            }
+
+
+            statusBar()->showMessage(tr("Loading Bash Project : %1").arg(path));
+            //activateInterface(true); // do several connection
         }
-        */
-
-
-mProjectView->mTable->setRowCount(mProjectView->mTable->rowCount()+1);
-
-        statusBar()->showMessage(tr("Loading project : %1").arg(path));
-        QTableWidgetItem *newItem = new QTableWidgetItem(path);
-        mProjectView->mTable->setItem(mProjectView->mTable->rowCount()-1 , 0, newItem );
-        /*
-        // assign new project
-        mProject = new Project();
-        connectProject();
-
-        //setAppSettings(): just update mAutoSaveTimer
-        mProject->setAppSettings();
-        const QFileInfo info(path);
-        setCurrentPath(info.absolutePath());
-
-
-        // look MainWindows::readSetting()
-        if (mProject->load(path)) {
-            activateInterface(true);
-            updateWindowTitle();
-            // Create mEventsScene and mPhasesScenes
-            if ( !mProject->mModel->mChains.isEmpty())
-                    mcmcFinished(mProject->mModel); //do initDensities()
-
-            mProjectView->setProject(mProject);
-
-            mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true);
-
-         }
-
-        mUndoStack->clear();
-        statusBar()->showMessage(tr("Ready"));
-        */
     }
 
 }
@@ -678,8 +687,49 @@ void MainWindow::closeProject()
 
 void MainWindow::saveProject()
 {
-    mProject->save();
-    updateWindowTitle();
+    QString path = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                           "Save current bash project as...",
+                                           MainWindow::getInstance()->getCurrentPath(),
+                                           tr("Chronomodel Bash Project (*.chb)"));
+
+
+    if (!path.isEmpty()) {
+        QFileInfo info (path);
+        MainWindow::getInstance()->setCurrentPath(info.absolutePath());
+
+        QFile file_chb (path);
+
+        QJsonObject mBash;
+
+        mBash[STATE_APP_VERSION] = QApplication::applicationVersion();
+
+        QJsonArray mList ;
+        QJsonArray seeds;
+        for (int i = 0; i<mProjectView->mTable->rowCount(); ++i) {
+            auto itemText = mProjectView->mTable->item(i, 0)->text();
+            mList.append (QJsonValue::fromVariant(itemText));
+        }
+        mBash["project_list"] = mList;
+
+        QJsonDocument jsonDoc (mBash);
+        QByteArray textDoc = jsonDoc.toJson (QJsonDocument::Indented);
+
+        if (file_chb.open(QIODevice::ReadWrite | QIODevice::Text)) {
+#ifdef DEBUG
+            qDebug() << "Mainwindows::saveProject() Project Bash saved to : " << path;
+#endif
+            file_chb.write (textDoc);
+
+            file_chb.resize (file_chb.pos());
+            file_chb.close ();
+        }
+
+
+    }
+
+
+    //mProject->save();
+   // updateWindowTitle();
 }
 /*
 void MainWindow::saveProjectAs()
@@ -697,28 +747,7 @@ void MainWindow::updateWindowTitle()
 #endif
 }
 
-/*
-void MainWindow::updateProject()
-{
-    qDebug()<<"MainWindow::updateProject()";
-    mUndoAction->setText(tr("Undo"));
-    QString stackText ="";
-    if (mUndoStack->count()>1)
-        stackText = " : " + mUndoStack->undoText();
 
-    mUndoAction->setToolTip(tr("Undo") + stackText);
-    mUndoAction->setStatusTip(tr("Click to go back to the previous action") + stackText);
-
-    mRedoAction->setText(tr("Redo"));
-    mRedoAction->setToolTip(tr("Redo") + " : " + mUndoStack->redoText());
-    mRedoAction->setStatusTip(tr("Click to redo the last action") + " : " + mUndoStack->redoText());
-
-    mRunAction->setEnabled(true);
-  //  mProjectView->updateProject();
-    
-    //mCurveAction->setChecked(mProject->isCurve());
-}
-*/
 
 void MainWindow::toggleCurve(bool checked)
 {
@@ -757,12 +786,7 @@ void MainWindow::setAppFilesSettings()
     tooltipFont.setItalic(true);
 
     QToolTip::setFont(tooltipFont);
-/*
-    if (mProject) {
-        mProject->setAppSettings();
-        mProjectView->applyFilesSettings(mProject->mModel);
-    }
-*/
+
     writeSettings();
 }
 
@@ -782,13 +806,6 @@ void MainWindow::setAppSettings()
 
     QToolTip::setFont(tooltipFont);
 
- /*   if (mProject) {
-        mProject->setAppSettings();
-        mProjectView->updateMultiCalibration();
-        mProjectView->applySettings(mProject->mModel);
-
-    }
- */
     writeSettings();
 }
 
@@ -842,61 +859,7 @@ void MainWindow::setLanguage(QAction* action)
 
 // Grouped Actions
 /*
-void MainWindow::selectAllEvents() {
-    if (mProject) {
-        mProject->selectAllEvents();
-        mProjectView->eventsAreSelected();
-    }
 
-}
-
-void MainWindow::selectEventInSelectedPhases() {
-    if (mProject)
-        if (mProject->selectEventsFromSelectedPhases())
-            mProjectView->eventsAreSelected();
-}
-
-void MainWindow::selectEventWithString() {
-    if (mProject) {
-        bool ok;
-        const QString text = QInputDialog::getText(this, tr("Find events containing the text"),
-                                              tr("Text to search"), QLineEdit::Normal, QString(), &ok);
-         if (ok && !text.isEmpty())
-            if (mProject->selectedEventsWithString(text) )
-                mProjectView->eventsAreSelected();
-    }
-}
-
-void MainWindow::changeEventsColor()
-{
-    if (!mProject)
-        return;
-
-    const QColor color = QColorDialog::getColor(Qt::blue, qApp->activeWindow(), tr("Change Selected Events Colour"));
-    if (color.isValid() && mProject)
-        mProject->updateSelectedEventsColor(color);
-
-}
-void MainWindow::changeEventsMethod()
-{
-    if (!mProject)
-        return;
-
-    QStringList opts;
-    opts.append(MHVariable::getSamplerProposalText(MHVariable::eMHAdaptGauss));
-    opts.append(MHVariable::getSamplerProposalText(MHVariable::eBoxMuller));
-    opts.append(MHVariable::getSamplerProposalText(MHVariable::eDoubleExp));
-
-    bool ok;
-    QString methodStr = QInputDialog::getItem(qApp->activeWindow(),
-                                          tr("Change Events Method"),
-                                          tr("Change Selected Events MCMC Method") + " :",
-                                          opts, 0, false, &ok);
-    if (ok && !methodStr.isEmpty()) {
-        MHVariable::SamplerProposal method = MHVariable::getSamplerProposalFromText(methodStr);
-        mProject->updateSelectedEventsMethod(method);
-    }
-}
 
 void MainWindow::changeDatesMethod()
 {
@@ -962,6 +925,7 @@ void MainWindow::doGroupedAction()
  */
 void MainWindow::closeEvent(QCloseEvent* e)
 {
+    (void) e;
     QGuiApplication::exit(0);
 }
 
@@ -1079,6 +1043,12 @@ void MainWindow::calibrateAll()
 
 void MainWindow::runModel()
 {
+    QElapsedTimer startTime;
+    startTime.start();
+
+    mProjectView->mLog->append(QDateTime::currentDateTime().toString("dddd dd MMMM yyyy"));
+    mProjectView->mLog->append(textBold( textRed("Start Bash Project at ")) + QTime::currentTime().toString("hh:mm:ss.zzz") );
+
     for (auto i = 0 ; i < mProjectView->mTable->rowCount(); i++) {
         QString path = mProjectView->mTable->item(i, 0)->text();
         QFileInfo chrFile (path);
@@ -1087,7 +1057,7 @@ void MainWindow::runModel()
         AppSettings::mLastFile = chrFile.baseName();
         QString fileRun = AppSettings::mLastDir + "/" + AppSettings::mLastFile;
         qDebug()<<"Run file"<< fileRun;
-
+        mProjectView->mLog->append("Run File : " + textBold(chrFile.baseName()));
         if (!mProject)
             mProject = new Project();
 
@@ -1098,18 +1068,28 @@ void MainWindow::runModel()
         try {
             mProject->load(path);
             AppSettings::mAutoSave = true; // usefull to disable savebox in run()
+            mProjectView->mLog->append("    Calibration");
+            mProjectView->repaint();
             calibrateAll();
+            mProjectView->mLog->append("    Start Run");
+            startTime.start();
             mProject->run();
-
+            mProjectView->mLog->append("    End Run, time elapsed "+ DHMS(startTime.elapsed()));
             mProject->setNoResults(false);
+             mProjectView->repaint();
+            mProjectView->mLog->append("    Start Saving");
             mProject->save();
-
+            mProjectView->mLog->append(textGreen("    End Saving") );
+            mProjectView->mLog->append(textGreen("") );
         } catch (...) {
-            qDebug()<<"error with file : "<<path;
+            mProjectView->mLog->append(textRed("Error with file : "+ path));
+
         }
 
-
     }
+
+    mProjectView->mLog->append(QDateTime::currentDateTime().toString("dddd dd MMMM yyyy"));
+    mProjectView->mLog->append(textBold("End Bash Project at ") + QTime::currentTime().toString("hh:mm:ss.zzz") );
 }
 
 void MainWindow::setRunEnabled(bool enabled)

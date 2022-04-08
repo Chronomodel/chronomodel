@@ -38,11 +38,14 @@
 # --------------------------------------------------------------------- */
 include(Chronomodel.pro)
 message("PRO_PATH : $$_PRO_FILE_PWD_")
-
+TARGET = chronomodel_bash
 #########################################
 # MacOS specific settings
 #########################################
 macx{
+
+     ICON = $$PRO_PATH/icon/Chronomodel_Bash.icns
+
      RESOURCES_FILES.files -= $$PRO_PATH/deploy/Chronomodel.png
      RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel_Bash.png
 }
@@ -67,3 +70,6 @@ SOURCES += src/ui/window/MainWindow_bash.cpp
 
 SOURCES -= src/ui/window/ProjectView.cpp
 SOURCES += src/ui/window/ProjectView_bash.cpp
+
+DISTFILES += \
+    icon/Chronomodel_Bash.icns

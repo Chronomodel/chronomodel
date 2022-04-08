@@ -48,7 +48,7 @@ MainController::MainController(const QString& filePath)
     PluginManager::loadPlugins();
     QCoreApplication::setApplicationName("ChronoModel_bash");
     QCoreApplication::setApplicationVersion("3.1.6"); // must match value in Chronomodel.pro
-    QCoreApplication::setOrganizationDomain("http://www.chronomodel.com");
+   // QCoreApplication::setOrganizationDomain("http://www.chronomodel.com");
     QCoreApplication::setOrganizationName("CNRS");
 
     mMainWindow = MainWindow::getInstance();

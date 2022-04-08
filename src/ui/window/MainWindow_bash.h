@@ -164,8 +164,9 @@ private:
  /*   QAction* mInsertProjectAction;
     QAction* mCloseProjectAction;
 
+  */
     QAction* mProjectSaveAction;
-    QAction* mProjectSaveAsAction;
+ /*   QAction* mProjectSaveAsAction;
     QAction* mProjectExportAction;
 */
     //QAction* mMCMCSettingsAction;
@@ -179,10 +180,10 @@ private:
     QAction* mViewResultsAction;
     QAction* mViewLogAction;
 
-    QAction* mUndoAction;
-    QAction* mRedoAction;
-    QAction* mUndoViewAction;
-    QAction* mSelectAllAction;
+//    QAction* mUndoAction;
+//    QAction* mRedoAction;
+//    QAction* mUndoViewAction;
+//    QAction* mSelectAllAction;
 /*
     QAction* mSelectEventsAction;
     QAction* mSelectEventsNameAction;
