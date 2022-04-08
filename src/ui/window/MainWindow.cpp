@@ -55,7 +55,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 // Constructor / Destructor
 MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
 {
-   // setWindowTitle("ChronoModel");
 #ifdef DEBUG
     setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + " DEBUG Mode ");
 #else
@@ -68,7 +67,6 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     QToolTip::setPalette(tooltipPalette);
     QFont tooltipFont(font());
     tooltipFont.setItalic(true);
-
 
     QToolTip::setFont(tooltipFont);
 
@@ -86,7 +84,6 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     mUndoView = new QUndoView(mUndoStack);
     mUndoView->setEmptyLabel(tr("Initial state"));
     mUndoDock = new QDockWidget(this);
-    //mUndoDock->setFixedWidth(250);
     mUndoDock->setWidget(mUndoView);
     mUndoDock->setAllowedAreas(Qt::RightDockWidgetArea);
     addDockWidget(Qt::RightDockWidgetArea, mUndoDock);
@@ -118,6 +115,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     if (newLoc.decimalPoint()==',') {
         AppSettings::mCSVCellSeparator=";";
         AppSettings::mCSVDecSeparator=",";
+
     } else {
         AppSettings::mCSVCellSeparator=",";
         AppSettings::mCSVDecSeparator=".";
@@ -467,7 +465,7 @@ void MainWindow::newProject()
     // Return true if the project doesn't need to be saved.
     // Returns true if the user saves the project or if the user doesn't want to save it.
     // Returns false if the user cancels.
-    bool yesCreate= false;
+    bool yesCreate = false;
 
     if ((mProject == nullptr) || (mProject->askToSave(tr("Save current project as...") )))
         yesCreate= true;
@@ -693,7 +691,7 @@ void MainWindow::updateProject()
 {
     qDebug()<<"MainWindow::updateProject()";
     mUndoAction->setText(tr("Undo"));
-    QString stackText ="";
+    QString stackText = "";
     if (mUndoStack->count()>1)
         stackText = " : " + mUndoStack->undoText();
 
@@ -1014,38 +1012,6 @@ void MainWindow::writeSettings()
 
 void MainWindow::readSettings(const QString& defaultFilePath)
 {
- /*   QSettings settings;
-    settings.beginGroup("MainWindow");
-
-    resize(settings.value("size", QSize(400, 400)).toSize());
-    move(settings.value("pos", QPoint(200, 200)).toPoint());
-
-    settings.beginGroup("AppSettings");
-    mAppSettings.mLanguage = (QLocale::Language) settings.value(APP_SETTINGS_STR_LANGUAGE, QLocale::system().language()).toInt();
-    mAppSettings.mCountry = (QLocale::Country) settings.value(APP_SETTINGS_STR_COUNTRY, QLocale::system().language()).toInt();
-    QFont f;
-    QString fam = settings.value(APP_SETTINGS_STR_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_FAMILY).toString();
-    qreal pointF = settings.value(APP_SETTINGS_STR_FONT_SIZE, APP_SETTINGS_DEFAULT_FONT_SIZE).toDouble();
-    f.setFamily(fam);
-    f.setPointSizeF(pointF);
-    AppSettings::setFont(f);
-    mAppSettings.mAutoSave = settings.value(APP_SETTINGS_STR_AUTO_SAVE, APP_SETTINGS_DEFAULT_AUTO_SAVE).toBool();
-    mAppSettings.mAutoSaveDelay = settings.value(APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC, APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC).toInt();
-    mAppSettings.mShowHelp = settings.value(APP_SETTINGS_STR_SHOW_HELP, APP_SETTINGS_DEFAULT_SHOW_HELP).toBool();
-    mAppSettings.mCSVCellSeparator = settings.value(APP_SETTINGS_STR_CELL_SEP, APP_SETTINGS_DEFAULT_CELL_SEP).toString();
-    mAppSettings.mCSVDecSeparator = settings.value(APP_SETTINGS_STR_DEC_SEP, APP_SETTINGS_DEFAULT_DEC_SEP).toString();
-    mAppSettings.mOpenLastProjectAtLaunch = settings.value(APP_SETTINGS_STR_OPEN_PROJ, APP_SETTINGS_DEFAULT_OPEN_PROJ).toBool();
-    mAppSettings.mPixelRatio = settings.value(APP_SETTINGS_STR_PIXELRATIO, APP_SETTINGS_DEFAULT_PIXELRATIO).toInt();
-    mAppSettings.mDpm = settings.value(APP_SETTINGS_STR_DPM, APP_SETTINGS_DEFAULT_DPM).toInt();
-    mAppSettings.mImageQuality = settings.value(APP_SETTINGS_STR_IMAGE_QUALITY, APP_SETTINGS_DEFAULT_IMAGE_QUALITY).toInt();
-    mAppSettings.mFormatDate = (DateUtils::FormatDate)settings.value(APP_SETTINGS_STR_FORMATDATE, APP_SETTINGS_DEFAULT_FORMATDATE).toInt();
-    mAppSettings.mPrecision = settings.value(APP_SETTINGS_STR_PRECISION, APP_SETTINGS_DEFAULT_PRECISION).toInt();
-    mAppSettings.mNbSheet = settings.value(APP_SETTINGS_STR_SHEET, APP_SETTINGS_DEFAULT_SHEET).toInt();
-    settings.endGroup();
-
-    //settings.endGroup();
-*/
-
     move( AppSettings::mLastPosition);
     if (AppSettings::mLastSize.width() >50)
         resize( AppSettings::mLastSize);

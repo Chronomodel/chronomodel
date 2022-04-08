@@ -68,6 +68,11 @@ mGreyedOut(false)
             QGraphicsItem::ItemSendsGeometryChanges);
 
     setData(constraint);
+    QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect();
+    shadow->setColor(Qt::black);
+    shadow->setBlurRadius(30);
+    shadow->setOffset(3, 3);
+    setGraphicsEffect(shadow);
 }
 
 ArrowItem::~ArrowItem()
@@ -171,7 +176,6 @@ void ArrowItem::hoverMoveEvent(QGraphicsSceneHoverEvent* e)
 
     const QRectF br = boundingRect();
 
-
     const bool shouldShowDelete = br.contains(e->pos());
     if (shouldShowDelete != mShowDelete) {
         mShowDelete = shouldShowDelete;
@@ -228,7 +232,7 @@ QPainterPath ArrowItem::shape() const
 {
     QPainterPath path;
     QRectF rect = boundingRect();
-    const qreal shift (15.);
+    const qreal shift = 15;
 
     if (mXStart < mXEnd && mYStart >= mYEnd) {
         path.moveTo(mXStart + shift, mYStart);
@@ -271,7 +275,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
     painter->setRenderHint(QPainter::Antialiasing);
 
-    const int penWidth (2);
+    const int penWidth = 2;
     QColor color = mEditing ? QColor(77, 180, 62) : QColor(0, 0, 0);
     //set the Arrow under the Event
     setZValue(-1);
@@ -326,8 +330,8 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     const double angle_deg = angle_rad * 180. / M_PI;
 
     QPainterPath path;
-    const qreal arrow_w (15.);
-    const qreal arrow_l (25.);
+    const qreal arrow_w = 15;
+    const qreal arrow_l = 25;
     path.moveTo(-arrow_w/2., arrow_l/2.);
     path.lineTo(arrow_w/2., arrow_l/2.);
     path.lineTo(0., -arrow_l/2.);
@@ -350,6 +354,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->rotate(angle_deg);
             painter->fillPath(path, color);
             painter->restore();
+
         } else {
             painter->save();
             painter->translate(axeBox.x() + posX1, axeBox.y() + posY2);
@@ -363,6 +368,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->fillPath(path, color);
             painter->restore();
         }
+
     } else if (mXStart < mXEnd && mYStart < mYEnd) {
         if (showMiddleArrow) {
             painter->save();
@@ -370,6 +376,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->rotate(180. - angle_deg);
             painter->fillPath(path, color);
             painter->restore();
+
         } else {
             painter->save();
             painter->translate(axeBox.x() + posX1, axeBox.y() + posY1);
@@ -383,6 +390,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->fillPath(path, color);
             painter->restore();
         }
+
     } else if (mXStart >= mXEnd && mYStart < mYEnd) {
         if (showMiddleArrow) {
             painter->save();
@@ -390,6 +398,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->rotate(180. + angle_deg);
             painter->fillPath(path, color);
             painter->restore();
+
         } else {
             painter->save();
             painter->translate(axeBox.x() + posX2, axeBox.y() + posY1);
@@ -403,6 +412,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->fillPath(path, color);
             painter->restore();
         }
+
     } else if (mXStart >= mXEnd && mYStart >= mYEnd) {
         if (showMiddleArrow) {
             painter->save();
@@ -410,6 +420,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->rotate(-angle_deg);
             painter->fillPath(path, color);
             painter->restore();
+
         } else {
             painter->save();
             painter->translate(axeBox.x() + posX2, axeBox.y() + posY2);
@@ -430,8 +441,8 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
 QSize ArrowItem::getBubbleSize(const QString& text) const
 {
-    int w (0);
-    int h (0);
+    int w = 0;
+    int h = 0;
     if (!text.isEmpty()) {
         QFont font;
         if (mShowDelete)
@@ -442,11 +453,11 @@ QSize ArrowItem::getBubbleSize(const QString& text) const
         QFontMetrics metrics(font);
         w = metrics.boundingRect(text).width() + 10 ;
         h = metrics.height() + 10;
-    }
 
-    if (text.count() < 5) {
-        w = std::max(w, h);
-        h = w;
+        if (text.count() < 5) {
+            w = std::max(w, h);
+            h = w;
+        }
     }
 
     return QSize(w, h);
@@ -454,11 +465,11 @@ QSize ArrowItem::getBubbleSize(const QString& text) const
 
 QRectF ArrowItem::getBubbleRect(const QString& text) const
 {
-    const QSize s (getBubbleSize(text));
-    const QRectF rect (boundingRect());
+    const QSize s = getBubbleSize(text);
+    const QRectF rect = boundingRect();
 
-    const int bubble_x = int (rect.x() + (rect.width() - s.width()) / 2) ;
-    const int bubble_y = int (rect.y() + (rect.height() - s.height()) / 2) ;
+    const int bubble_x = rect.x() + (rect.width() - s.width()) / 2 ;
+    const int bubble_y = rect.y() + (rect.height() - s.height()) / 2 ;
     return QRectF(QPoint(bubble_x, bubble_y), s);
 
 }

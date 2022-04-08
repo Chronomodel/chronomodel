@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -48,6 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "EventKnown.h"
 #include "StdUtilities.h"
 #include "Project.h"
+
 #include <QtWidgets>
 
 
@@ -55,25 +56,11 @@ EventKnownItem::EventKnownItem(EventsScene* eventsScene, const QJsonObject& even
     mThumbH(20),
     mThumbVisible(true)
 {
-
     mScene = static_cast<AbstractScene*>(eventsScene);
 
     mTitleHeight = 25;
     mEltsHeight = 60;
-/*
 
-    QFont font;
-    //font.setPointSizeF(12.);
-    font.setPixelSize(12);
-
-    font.setStyle(QFont::StyleNormal);
-    font.setBold(false);
-    font.setItalic(false);
-
-    const QFontMetricsF fm (font);
-
-    mCurveLineHeight =  fm.height();
-    */
     setEvent(event, settings);
 }
 
