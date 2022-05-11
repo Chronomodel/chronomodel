@@ -197,19 +197,13 @@ QJsonObject CurveSettings::toJson() const
 
 QDataStream &operator<<( QDataStream &stream, const CurveSettings &data )
 {
-    (void) data;
-    //stream << quint8 (data.mNumChains);
-    
+    (void) data;  
     return stream;
 }
 
 QDataStream &operator>>( QDataStream &stream, CurveSettings &data )
 {
     (void) data;
-    //quint8 tmp8;
-    //stream >> tmp8;
-    //data.mNumChains = tmp8;
-
     return stream;
 }
 

@@ -117,7 +117,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             GraphCurve curve;
             curve.mName = "Reference";
             curve.mPen.setColor(Painting::mainColorDark);
-            curve.mIsHisto = false;
+
 
             double yMin = tminDisplay;
             double yMax = tmaxDisplay;
@@ -267,21 +267,18 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                 graphCurveG95Sup.mName = "G95Sup";
                 graphCurveG95Sup.mData = curveG95Sup;
                 graphCurveG95Sup.mPen.setColor(QColor(180, 180, 180));
-                graphCurveG95Sup.mIsHisto = false;
                 mGraph->addCurve(graphCurveG95Sup);
 
                 GraphCurve graphCurveG95Inf;
                 graphCurveG95Inf.mName = "G95Inf";
                 graphCurveG95Inf.mData = curveG95Inf;
                 graphCurveG95Inf.mPen.setColor(QColor(180, 180, 180));
-                graphCurveG95Inf.mIsHisto = false;
                 mGraph->addCurve(graphCurveG95Inf);
 
                 GraphCurve graphCurveG;
                 graphCurveG.mName = "G";
                 graphCurveG.mData = curveG;
                 graphCurveG.mPen.setColor(Qt::blue);
-                graphCurveG.mIsHisto = false;
                 mGraph->addCurve(graphCurveG);
 
             }
@@ -300,8 +297,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                 QColor curveColor(mMeasureColor);
                 curveColor.setAlpha(50);
                 curveMeasure.mBrush = curveColor;
-                curveMeasure.mIsVertical = true;
-                curveMeasure.mIsHisto = false;
+                curveMeasure.mType = GraphCurve::CurveType::eVerticalQMap;
 
                 /* 5000 pts are used on vertical measurement
                  * because the y scale auto adjusts depending on x zoom.
@@ -329,19 +325,19 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                 curveMeasureAvg.mName = "MeasureAvg";
                 curveMeasureAvg.mPen.setColor(mMeasureColor);
                 curveMeasureAvg.mPen.setStyle(Qt::SolidLine);
-                curveMeasureAvg.mIsHorizontalLine = true;
+                curveMeasureAvg.mType = GraphCurve::CurveType::eHorizontalLine;
 
                 GraphCurve curveMeasureSup;
                 curveMeasureSup.mName = "MeasureSup";
                 curveMeasureSup.mPen.setColor(mMeasureColor);
                 curveMeasureSup.mPen.setStyle(Qt::DashLine);
-                curveMeasureSup.mIsHorizontalLine = true;
+                curveMeasureSup.mType = GraphCurve::CurveType::eHorizontalLine;
 
                 GraphCurve curveMeasureInf;
                 curveMeasureInf.mName = "MeasureInf";
                 curveMeasureInf.mPen.setColor(mMeasureColor);
                 curveMeasureInf.mPen.setStyle(Qt::DashLine);
-                curveMeasureInf.mIsHorizontalLine = true;
+                curveMeasureInf.mType = GraphCurve::CurveType::eHorizontalLine;
 
                 curveMeasureAvg.mHorizontalValue = age;
                 curveMeasureSup.mHorizontalValue = age + error;

@@ -54,7 +54,7 @@ public:
         eCross = 'C',
         ePoint = 'P',
         eLine = 'L',
-        eDotLine = 'D',
+        eDotLine = 'D'
     };
 
     PointType type;
@@ -71,33 +71,66 @@ public:
 
     void setPen(QPen pen);
 
+    enum CurveType
+    {
+        eHisto,
+        eQMapData,
+        eQVectorData,
+        eHorizontalLine,
+        eVerticalLine,
+        eHorizontalSections,
+        eTopLineSections,
+        eVerticalQMap,
+        eRefPoints,
+        eCurveMap,
+        eShapeData
+
+    };
+
+    CurveType mType;
     QMap<type_data, type_data> mData;
     CurveMap mMap;
 
     QString mName;
     QPen mPen;
     QBrush mBrush;
-    bool mIsHisto;
+
+    inline bool isHisto() const {return mType == eHisto;}
+    inline bool isVectorData() const {return mType == eQVectorData;}
+
+    inline bool isHorizontalLine() const {return mType == eHorizontalLine;}
+    inline bool isVerticalLine() const {return mType == eVerticalLine;}
+    inline bool isHorizontalSections() const {return mType == eHorizontalSections;}
+    inline bool isTopLineSections() const {return mType == eTopLineSections;}
+    inline bool isVertical() const {return mType == eVerticalQMap;}
+
+    inline bool isRefPoints() const {return mType == eRefPoints;}
+    inline bool isCurveMap() const {return mType == eCurveMap;}
+    inline bool isShapeData() const {return mType == eShapeData;}
+
+    //bool mIsHisto;
     bool mIsRectFromZero; // draw a vertical line when graph value leaves 0 : usefull for HPD and Unif, Typo!
 
-    bool mUseVectorData; // Used for traces, correlations and acceptations.
+   // bool mUseVectorData; // Used for traces, correlations and acceptations.
+
     QVector<type_data> mDataVector;
 
-    bool mIsHorizontalLine; // Used for calib measures, 44% targets, quartiles, ...
+    //bool mIsHorizontalLine; // Used for calib measures, 44% targets, quartiles, ...
     type_data mHorizontalValue;
 
-    bool mIsVerticalLine; // Used for bounds (in results view)
+   // bool mIsVerticalLine; // Used for bounds (in results view)
     type_data mVerticalValue;
 
-    bool mIsHorizontalSections; // Used for bounds (in scene and property views) and Unif, typo (scene view)
-    bool mIsTopLineSections; // Used for credibilities (and "one day" for phases alpha/beta interval??)
+   // bool mIsHorizontalSections; // Used for bounds (in scene and property views) and Unif, typo (scene view)
+    //bool mIsTopLineSections; // Used for credibilities (and "one day" for phases alpha/beta interval??)
     std::vector<QPair<type_data, type_data> > mSections;
 
-    bool mIsVertical;
+    //bool mIsVertical;
     
-    bool mIsRefPoints;
+    //bool mIsRefPoints;
     std::vector<CurveRefPts> mRefPoints;
 
+    std::pair<QMap<type_data, type_data>, QMap<type_data, type_data>> mShape;
     bool mVisible;
 };
 

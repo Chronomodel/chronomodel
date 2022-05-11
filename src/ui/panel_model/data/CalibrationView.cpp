@@ -344,7 +344,6 @@ void CalibrationView::updateGraphs()
             GraphCurve calibCurve;
             calibCurve.mName = "Calibration";
             calibCurve.mPen.setColor(penColor);
-            calibCurve.mIsHisto = false;
             calibCurve.mData = calibMap;
             calibCurve.mIsRectFromZero = isUnif;
             calibCurve.mBrush = isUnif ? QBrush(brushColor) : QBrush(Qt::NoBrush);
@@ -356,7 +355,6 @@ void CalibrationView::updateGraphs()
             if (!wiggleCalibMap.isEmpty()) { 
                 calibWiggleCurve.mName = "Wiggle";
                 calibWiggleCurve.mPen.setColor(Qt::red);
-                calibWiggleCurve.mIsHisto = false;
                 // to have both densities at the same height
                 calibWiggleCurve.mData = normalize_map(wiggleCalibMap, map_max_value(calibMap));
                 calibWiggleCurve.mIsRectFromZero = false;
@@ -385,7 +383,6 @@ void CalibrationView::updateGraphs()
             hpdCurve.mName = "Calibration HPD";
             hpdCurve.mPen = brushColor;
             hpdCurve.mBrush = brushColor;
-            hpdCurve.mIsHisto = false;
             hpdCurve.mIsRectFromZero = true;
             //hpdCurve.mData = hpd;
             hpdCurve.mData = normalize_map(hpd, map_max_value(calibMap));

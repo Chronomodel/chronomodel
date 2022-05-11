@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "LineEdit.h"
 #include "ColorPicker.h"
 #include "Event.h"
-#include "EventKnown.h"
+#include "EventBound.h"
 #include "DatesList.h"
 #include "Button.h"
 #include "GraphView.h"
@@ -389,7 +389,7 @@ void EventPropertiesView::updateEvent()
         mTopView->setVisible(true);
 
         mEventView->setVisible(type == Event::eDefault);
-        mBoundView->setVisible(type == Event::eKnown);
+        mBoundView->setVisible(type == Event::eBound);
 
         if (type == Event::eDefault) {
             mMethodCombo->setCurrentIndex(mEvent.value(STATE_EVENT_SAMPLER).toInt());
@@ -424,7 +424,7 @@ void EventPropertiesView::updateEvent()
                 mRecycleBut->setEnabled(true);
             }
 
-        } else if (type == Event::eKnown) {
+        } else if (type == Event::eBound) {
             mKnownFixedEdit -> setText(locale().toString(mEvent.value(STATE_EVENT_KNOWN_FIXED).toDouble()));
             updateKnownGraph();
         }
@@ -595,7 +595,7 @@ void EventPropertiesView::updateKnownGraph()
 
     curve.mPen = QPen(Painting::mainColorLight, 2.);
 
-    curve.mIsHorizontalSections = true;
+    curve.mType = GraphCurve::eHorizontalSections;
     qreal tLower;
     qreal tUpper;
     tLower = event.fixedValue();
@@ -761,7 +761,7 @@ void EventPropertiesView::paintEvent(QPaintEvent* e)
     QPainter p(this);
     //p.fillRect(rect(), palette().color(QPalette::Window));
     Event::Type type = Event::Type (mEvent.value(STATE_EVENT_TYPE).toInt());
-    if (type == Event::eKnown)
+    if (type == Event::eBound)
        p.fillRect(rect(), palette().color(QPalette::Window));
     else
         p.fillRect(0, mTopView->height(), width(), height() - mTopView->y(), Painting::borderDark);
@@ -1014,7 +1014,7 @@ bool EventPropertiesView::hasBound() const
 {
     if (!mEvent.isEmpty()) {
         Event::Type type = Event::Type (mEvent.value(STATE_EVENT_TYPE).toInt());
-        return (type == Event::eKnown);
+        return (type == Event::eBound);
     }
     return false;
 }

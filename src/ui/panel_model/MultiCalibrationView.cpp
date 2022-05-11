@@ -44,7 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Painting.h"
 #include "QtUtilities.h"
 #include "MainWindow.h"
-#include "EventKnown.h"
+#include "EventBound.h"
 #include "GraphViewResults.h"
 
 #include <QPainter>
@@ -399,7 +399,7 @@ void MultiCalibrationView::updateGraphList()
 
     for (QJsonObject& ev : selectedEvents) {
 
-        if (ev.value(STATE_EVENT_TYPE).toInt() == Event::eKnown) {
+        if (ev.value(STATE_EVENT_TYPE).toInt() == Event::eBound) {
 
             EventKnown *bound = new EventKnown();
             *bound = EventKnown::fromJson(ev);
@@ -410,10 +410,9 @@ void MultiCalibrationView::updateGraphList()
             calibCurve.mPen.setWidth(20);
             calibCurve.mBrush = brushColor;
             calibCurve.mPen = QPen(Painting::mainColorLight, 2.);
-            calibCurve.mIsHorizontalSections = true;
+            calibCurve.mType = GraphCurve::CurveType::eHorizontalSections;
 
             double tFixedFormated = DateUtils::convertToAppSettingsFormat( bound->fixedValue());
-            //calibCurve.mSections.append(qMakePair(tFixedFormated, tFixedFormated));
             calibCurve.mSections.push_back(qMakePair(tFixedFormated, tFixedFormated));
 
             GraphView* calibGraph = new GraphView(this);
@@ -465,7 +464,8 @@ void MultiCalibrationView::updateGraphList()
                     calibCurve.mName = "Calibration";
                     calibCurve.mPen.setColor(penColor);
                     calibCurve.mPen.setWidth(1);
-                    calibCurve.mIsHisto = false;
+                    //calibCurve.mIsHisto = false;
+                    calibCurve.mType =GraphCurve::CurveType::eQMapData;
 
                     calibCurve.mData = d.getFormatedCalibToShow();//getFormatedCalibMap();
 
@@ -479,13 +479,14 @@ void MultiCalibrationView::updateGraphList()
                     if (d.mDeltaType !=  Date::eDeltaNone) {
                         GraphCurve curveWiggle;
                         QMap<double, double> calibWiggle = normalize_map(d.getFormatedWiggleCalibToShow(), map_max_value(calibCurve.mData));
+                        curveWiggle.mType = GraphCurve::CurveType::eQMapData;
                         curveWiggle.mData = calibWiggle;
 
                         curveWiggle.mName = "Wiggle";
                         curveWiggle.mPen.setColor(Qt::red);
                         curveWiggle.mPen.setWidth(1);
                         curveWiggle.mBrush = QBrush(Qt::NoBrush);
-                        curveWiggle.mIsHisto = false;
+                        //curveWiggle.mIsHisto = false;
                         curveWiggle.mIsRectFromZero = true;
                         calibGraph->addCurve(curveWiggle);
                     }
@@ -519,7 +520,8 @@ void MultiCalibrationView::updateGraphList()
                         hpdCurve.mName = "Calibration HPD";
                         hpdCurve.mPen = brushColor;
                         hpdCurve.mBrush = brushColor;
-                        hpdCurve.mIsHisto = false;
+                        hpdCurve.mType = GraphCurve::CurveType::eQMapData;
+                        //hpdCurve.mIsHisto = false;
                         hpdCurve.mIsRectFromZero = true;
                         hpdCurve.mData = hpd;
                         calibGraph->addCurve(hpdCurve);
@@ -1004,7 +1006,7 @@ void MultiCalibrationView::exportResults()
                 const QString eventName (ev.value(STATE_NAME).toString());
 
 
-                if ( Event::Type (ev.value(STATE_EVENT_TYPE).toInt()) == Event::eKnown) {
+                if ( Event::Type (ev.value(STATE_EVENT_TYPE).toInt()) == Event::eBound) {
                     const double bound = ev.value(STATE_EVENT_KNOWN_FIXED).toDouble();
                     QStringList statLine;
                     statLine<<eventName<<"Bound"<< locale().toString(bound) + " BC/AD";
@@ -1110,7 +1112,7 @@ void MultiCalibrationView::showStat()
 
 
 
-           if ( Event::Type (ev.value(STATE_EVENT_TYPE).toInt()) == Event::eKnown) {
+           if ( Event::Type (ev.value(STATE_EVENT_TYPE).toInt()) == Event::eBound) {
                const double bound = ev.value(STATE_EVENT_KNOWN_FIXED).toDouble();
                resultsStr += " <br><strong>"+ tr("Bound : %1").arg(locale().toString(bound)) +" BC/AD </strong><br>";
 

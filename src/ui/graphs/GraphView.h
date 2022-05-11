@@ -191,6 +191,7 @@ protected:
 
     void drawCurves(QPainter& painter);
     void drawMap(GraphCurve &curve, QPainter& painter);
+    void drawShape(GraphCurve &curve, QPainter& painter);
 
     void resizeEvent(QResizeEvent* event);
 

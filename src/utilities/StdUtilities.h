@@ -339,6 +339,7 @@ double vector_interpolate_idx_for_value(const double value, const std::vector<do
 float vector_interpolate_idx_for_value(const float value, const QVector<float>& vector);
 
 double interpolate_value_from_curve(const double t, const QVector<double>& curve,const double curveTmin, const double curveTmax);
+double interpolate_value_from_curve(const double x, const std::vector<double>& curve,const double Xmin, const double Xmax);
 
 double map_area(const QMap<double, double>& map);
 float map_area(const QMap<float, float>& map);
@@ -356,9 +357,12 @@ inline double diff_erf(double a, double b, double mu = 0., double sigma = 1.) {
     return 0.5*(erf((b-mu)/(sigma*M_SQRT2)) - erf((a-mu)/(sigma*M_SQRT2)));
 }
 
+
+std::pair<double, double>binomialConfidence95(const int n, const double p, std::vector<std::vector<int>>& binomialDico, const double alpha = .05);
 /*
  int Binomial(int n, int r);
  int binomialCoefficients(int n, int k);
- int getBionomialCoefficient(int n, int k , std::vector<std::vector<int>>& dp);
 */
+ int binomialCoefficient(int n, int k , std::vector<std::vector<int>>& binomialDico);
+
 #endif

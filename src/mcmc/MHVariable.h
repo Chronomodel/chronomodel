@@ -49,7 +49,7 @@ class MHVariable: public MetropolisVariable
 public:
     enum SamplerProposal{
         // Event
-        eFixe = -1,  //<  use with Type==eKnown
+        eFixe = -1,  //<  use with Type==eBound
         eDoubleExp = 0, //<  The default method for Event->theta
         eBoxMuller = 1,
         eMHAdaptGauss = 2,

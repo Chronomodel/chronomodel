@@ -102,10 +102,6 @@ public:
 
     QPair<double,double> mTimeRange;
 
-    // Used to display correctly if alpha or beta is a fixed bound
-   /* bool mIsAlphaFixed;
-    bool mIsBetaFixed;
-   */
     MetropolisVariable mDuration;
     QString mDurationCredibility;
 
@@ -119,9 +115,9 @@ public:
     QMap<double, double> mActivity;
     QMap<double, double> mActivityInf;
     QMap<double, double> mActivitySup;
-    double mActivityMeanUnif;
-    double mActivityStdUnif;
-    QMap<double, double> mActivityPValue;
+    QMap<double, double> mActivityUnifMean;
+    QMap<double, double> mActivityUnifInf;
+    QMap<double, double> mActivityUnifSup;
 
     // Raw curve without date format
 
@@ -135,7 +131,9 @@ public:
     QMap<double, double> mRawActivity;
     QMap<double, double> mRawActivityInf;
     QMap<double, double> mRawActivitySup;
-    QMap<double, double> mRawActivityPValue;
+    QMap<double, double> mRawActivityUnifMean;
+    QMap<double, double> mRawActivityUnifInf;
+    QMap<double, double> mRawActivityUnifSup;
 
     MetropolisVariable mTau;
     TauType mTauType;

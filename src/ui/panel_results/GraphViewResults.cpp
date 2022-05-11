@@ -326,8 +326,8 @@ void GraphViewResults::saveGraphData() const
         if (messageBox.clickedButton() == referenceButton)
             mGraph->exportReferenceCurves (MainWindow::getInstance()->getCurrentPath(), QLocale::English, ",",  mSettings.mStep);
 
-        else if (messageBox.clickedButton() == dataButton) {
-            mGraph->exportCurrentCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
+        else if (messageBox.clickedButton() == dataButton) { // Export raw Data, the step is not 1 is map.column()
+            mGraph->exportCurrentCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, 0);// mSettings.mStep);
         }
         else return;
     }
@@ -501,7 +501,6 @@ GraphCurve GraphViewResults::generateDensityCurve(const QMap<double, double>& da
         if (penStyle == Qt::CustomDashLine)
             curve.mPen.setDashPattern(QList<qreal>{5, 5});
         curve.mBrush = brush;
-        curve.mIsHisto = false;
         curve.mIsRectFromZero = true; // for Unif-typo. calibs., invisible for others!
    }
     return curve;
@@ -515,7 +514,6 @@ GraphCurve GraphViewResults::generateHPDCurve(QMap<double, double> &data,
     curve.mData = data;
     curve.mPen = Qt::NoPen;// color;
     curve.mBrush = QBrush(color);
-    curve.mIsHisto = false;
     curve.mIsRectFromZero = true;
 
     return curve;
@@ -530,7 +528,7 @@ GraphCurve GraphViewResults::generateSectionCurve(const QPair<double, double> &s
     curve.mPen.setColor(color);
     curve.mPen.setWidth(3);
     curve.mPen.setStyle(Qt::SolidLine);
-    curve.mIsTopLineSections = true;
+    curve.mType = GraphCurve::eTopLineSections;
 
     return curve;
 }
@@ -542,12 +540,32 @@ GraphCurve GraphViewResults::generateHorizontalLine(const double yValue,
 {
     GraphCurve curve;
     curve.mName = name;
-    curve.mIsHorizontalLine = true;
+    curve.mType = GraphCurve::eHorizontalLine;
     curve.mHorizontalValue = yValue;
     curve.mPen.setStyle(penStyle);
     curve.mPen.setColor(color);
     if (penStyle == Qt::CustomDashLine)
         curve.mPen.setDashPattern(QList<qreal>{5, 5});
+    return curve;
+}
+
+GraphCurve GraphViewResults::generateShapeCurve(const QMap<double, double>& dataInf, const QMap<double, double>& dataSup,
+                                                  const QString& name,
+                                                  const QColor& lineColor,
+                                                  const Qt::PenStyle penStyle,
+                                                  const QBrush& brush) const {
+    GraphCurve curve;
+    curve.mName = name;
+    curve.mType = GraphCurve::eShapeData;
+   // if (!data.isEmpty()) {
+        curve.mShape = std::make_pair(dataInf, dataSup);
+        curve.mPen = QPen(lineColor, 1, penStyle);
+
+      //  if (penStyle == Qt::CustomDashLine)
+        //    curve.mPen.setDashPattern(QList<qreal>{5, 5});
+        curve.mBrush = brush;
+        curve.mIsRectFromZero = false; // for Unif-typo. calibs., invisible for others!
+ //  }
     return curve;
 }
 
@@ -559,11 +577,12 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
 
     for (int i = 0; i < chains.size(); ++i) {
         GraphCurve curve;
-        curve.mUseVectorData = true;
+
+        curve.mType = GraphCurve::eQVectorData;
+        //curve.mUseVectorData = true;
         curve.mName = prefix + "Trace " + QString::number(i);
         curve.mDataVector = variable->fullTraceForChain(chains, i);
         curve.mPen.setColor(Painting::chainColors.at(i));
-        curve.mIsHisto = false;
         mGraph->addCurve(curve);
 
         const double min ( vector_min_value(curve.mDataVector) );
@@ -589,10 +608,9 @@ void GraphViewResults::generateAcceptCurves(const QList<ChainSpecs> &chains,
     for (int i = 0; i < chains.size(); ++i) {
         GraphCurve curve;
         curve.mName = "Accept " + QString::number(i);
+        curve.mType = GraphCurve::eQVectorData;
         curve.mDataVector = variable->acceptationForChain(chains, i);
         curve.mPen.setColor(Painting::chainColors.at(i));
-        curve.mUseVectorData = true;
-        curve.mIsHisto = false;
         mGraph->addCurve(curve);
     }
     mGraph->addCurve(generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
@@ -603,15 +621,14 @@ void GraphViewResults::generateCorrelCurves(const QList<ChainSpecs> &chains,
     for (int i = 0; i < chains.size(); ++i) {
         GraphCurve curve;
         curve.mName = "Correl " + QString::number(i);
+        curve.mType = GraphCurve::eQVectorData;
         curve.mDataVector = variable->correlationForChain(i);
         // if there is no data, no curve to add.
         // It can append if there is not enought iteration, for example since a test
         if (curve.mDataVector.isEmpty())
             continue;
 
-        curve.mUseVectorData = true;
         curve.mPen.setColor(Painting::chainColors.at(i));
-        curve.mIsHisto = false;
         mGraph->addCurve(curve);
 
         //to do, we only need the totalIter number?
@@ -630,3 +647,4 @@ void GraphViewResults::generateCorrelCurves(const QList<ChainSpecs> &chains,
         mGraph->addCurve(curveLimitUpper);
     }
 }
+

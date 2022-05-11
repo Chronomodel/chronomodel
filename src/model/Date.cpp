@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "Date.h"
+//#include "AbstractItem.h"
 //#include "Event.h"
 #include "Generator.h"
 #include "StdUtilities.h"
@@ -1391,7 +1392,8 @@ QPixmap Date::generateUnifThumb()
             GraphCurve curve;
             curve.mBrush = color;
             curve.mPen.setColor(Qt::red);
-            curve.mIsHorizontalSections = true;
+            curve.mType = GraphCurve::CurveType::eHorizontalSections ;
+            //curve.mIsHorizontalSections = true;
 
             const double tminDisplay = qBound(tmin, tLower, tmax);
             const double tmaxDisplay = qBound(tmin, tUpper, tmax);
@@ -1407,12 +1409,12 @@ QPixmap Date::generateUnifThumb()
                 GraphCurve curveWiggle;
                 QMap<double, double> calibWiggle = normalize_map(getMapDataInRange(getRawWiggleCalibMap(), tmin, tmax));
                 curveWiggle.mData = calibWiggle;
-
+                curveWiggle.mType = GraphCurve::CurveType::eQMapData;
                 curveWiggle.mName = "Wiggle";
                 curveWiggle.mPen.setColor(Qt::red);
                 curveWiggle.mPen.setWidth(4);
                 curveWiggle.mBrush = QBrush(Qt::NoBrush);
-                curveWiggle.mIsHisto = false;
+                //curveWiggle.mIsHisto = false;
                 curveWiggle.mIsRectFromZero = true;
                 graph.addCurve(curveWiggle);
             }
@@ -1451,7 +1453,7 @@ QPixmap Date::generateCalibThumb()
         QMap<double, double> calib = normalize_map(getMapDataInRange(getRawCalibMap(), tmin, tmax));
         qDebug()<<"generateCalibThumb mName "<<mCalibration->mName<<mCalibration->mCurve.size()<<calib.size();
         curve.mData = calib;
-
+        curve.mType = GraphCurve::CurveType::eQMapData;
         if (curve.mData.isEmpty())
             return QPixmap();
 
@@ -1461,7 +1463,7 @@ QPixmap Date::generateCalibThumb()
 
         curve.mPen = QPen(color, 2.f);
         curve.mBrush = color;
-        curve.mIsHisto = false;
+        //curve.mIsHisto = false;
         curve.mIsRectFromZero = true; // For Unif, Typo !!
 
         GraphView graph;
@@ -1473,12 +1475,13 @@ QPixmap Date::generateCalibThumb()
             GraphCurve curveWiggle;
             QMap<double, double> calibWiggle = normalize_map(getMapDataInRange(getRawWiggleCalibMap(), tmin, tmax));
             curveWiggle.mData = calibWiggle;
+            curveWiggle.mType = GraphCurve::CurveType::eQMapData;
 
             curveWiggle.mName = "Wiggle";
             curveWiggle.mPen.setColor(Qt::blue);
             curveWiggle.mPen.setWidth(4);
             curveWiggle.mBrush = QBrush(Qt::NoBrush);
-            curveWiggle.mIsHisto = false;
+            //curveWiggle.mIsHisto = false;
             curveWiggle.mIsRectFromZero = true; 
             graph.addCurve(curveWiggle);
         }
@@ -1718,7 +1721,7 @@ void Date::updateSigmaShrinkage(Event* event)
     const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigmaTi.mSigmaMH);
     const double V2 = pow(10, logV2);
 
-    double rapport  = 0.;
+    double rapport  = -1.;
     if (logV2 >= logVMin && logV2 <= logVMax) {
         const double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
         const double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1.);

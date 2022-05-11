@@ -39,7 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "EventsScene.h"
 #include "Event.h"
-#include "EventKnown.h"
+#include "EventBound.h"
 #include "EventConstraint.h"
 #include "EventItem.h"
 #include "EventKnownItem.h"
@@ -348,7 +348,7 @@ void EventsScene::createSceneFromState()
         EventItem* newItem;
         if (type == Event::eDefault)
             newItem = new EventItem(this, event, settings);
-        else //if(type == Event::eKnown)
+        else //if(type == Event::eBound)
             newItem = new EventKnownItem(this, event, settings);
 
         mItems.append(newItem);
@@ -486,7 +486,7 @@ qDebug()<<"EventsScene::updateSceneFromState()";
                     delete dateItems[j];
                 }
                 delete eventItem;
-            } else if (type == Event::eKnown) {
+            } else if (type == Event::eBound) {
                 EventKnownItem* eventItem = (EventKnownItem*)mItems[indexItemToRemove.at(i)];
 
                delete eventItem;
@@ -548,7 +548,7 @@ qDebug()<<"EventsScene::updateSceneFromState()";
 
                 if (type == Event::eDefault)
                     newItem = new EventItem(this, event, settings);
-                else //if(type == Event::eKnown)
+                else //if(type == Event::eBound)
                     newItem = new EventKnownItem(this, event, settings);
 
                 mItems.append(newItem);
@@ -1462,7 +1462,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
 
         } else {
             EventKnown bound;
-            bound.mType = Event::eKnown;
+            bound.mType = Event::eBound;
             bound.mTheta.mSamplerProposal = MHVariable::eFixe;
             bound.mFixed= date.mData[STATE_EVENT_KNOWN_FIXED].toDouble();
             // eventName=="" must never happen because we set "No Name" in ImportDataView::browse()

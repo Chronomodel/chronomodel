@@ -38,7 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "MCMCLoopMain.h"
-#include "EventKnown.h"
+#include "EventBound.h"
 #include "Functions.h"
 #include "Generator.h"
 #include "StdUtilities.h"
@@ -223,7 +223,7 @@ QString MCMCLoopMain::initialize()
     * ---------------------------------------------------------------- */
 
     for (int i = 0; i < events.size(); ++i) {
-        if (events.at(i)->type() == Event::eKnown) {
+        if (events.at(i)->type() == Event::eBound) {
             EventKnown* bound = dynamic_cast<EventKnown*>(events[i]);
 
             if (bound) {
@@ -479,15 +479,12 @@ bool MCMCLoopMain::update()
 
 bool MCMCLoopMain::adapt(const int batchIndex) //original code
 {
-    //ChainSpecs& chain = mChains[mChainIndex];
-
-    /*const double taux_min = 41.;          // taux_min minimal rate of acceptation=42
+/*  const double taux_min = 41.;          // taux_min minimal rate of acceptation=42
     const double taux_max = 47.;           // taux_max maximal rate of acceptation=46
 */
 
     const double taux_min = 0.42;           // taux_min minimal rate of acceptation=42
     const double taux_max = 0.46;           // taux_max maximal rate of acceptation=46
-
 
     bool noAdapt = true;
 
@@ -495,7 +492,7 @@ bool MCMCLoopMain::adapt(const int batchIndex) //original code
 
     const double delta = (batchIndex < 10000) ? 0.01 : (1. / sqrt(batchIndex));
 
-    for (auto& event : mModel->mEvents) {
+    for (const auto& event : mModel->mEvents) {
        for (auto& date : event->mDates) {
 
             //--------------------- Adapt Sigma MH de t_i -----------------------------------------
@@ -508,7 +505,7 @@ bool MCMCLoopMain::adapt(const int batchIndex) //original code
         }
 
         //--------------------- Adapt Sigma MH de Theta Event -----------------------------------------
-       if ((event->mType != Event::eKnown) && ( event->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss) )
+       if ((event->mType != Event::eBound) && ( event->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss) )
            noAdapt = event->mTheta.adapt(taux_min, taux_max, delta) && noAdapt;
 
     }
@@ -520,7 +517,7 @@ bool MCMCLoopMain::adapt(const int batchIndex) //original code
 
 void MCMCLoopMain::memo()
 {
-    for (auto&& event : mModel->mEvents) {
+    for (const auto& event : mModel->mEvents) {
         //--------------------- Memo Events -----------------------------------------
         event->mTheta.memo();
         event->mTheta.saveCurrentAcceptRate();
@@ -538,7 +535,7 @@ void MCMCLoopMain::memo()
     }
 
     //--------------------- Memo Phases -----------------------------------------
-    for (auto&& ph : mModel->mPhases)
+    for (const auto& ph : mModel->mPhases)
             ph->memoAll();
 
 
@@ -546,6 +543,12 @@ void MCMCLoopMain::memo()
 
 void MCMCLoopMain::finalize()
 {
+#ifdef DEBUG
+    qDebug()<<QString("MCMCLoopMain::finalize");
+    QElapsedTimer startTime;
+    startTime.start();
+#endif
+
     // This is not a copy of all data!
     // Chains only contain description of what happened in the chain (numIter, numBatch adapt, ...)
     // Real data are inside mModel members (mEvents, mPhases, ...)
@@ -568,4 +571,12 @@ void MCMCLoopMain::finalize()
     // - MetropolisVariable : analysis of Posterior densities and quartiles from traces.
     // This also should be done in results view...
     //mModel->generateNumericalResults(mChains);
+
+#ifdef DEBUG
+    QTime endTime = QTime::currentTime();
+
+    qDebug()<<"Model computed";
+    qDebug()<<QString("MCMCLoopMain::finalize() finish at %1").arg(endTime.toString("hh:mm:ss.zzz")) ;
+    qDebug()<<QString("Total time elapsed %1").arg(DHMS(startTime.elapsed()));
+#endif
 }

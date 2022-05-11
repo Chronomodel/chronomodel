@@ -43,7 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MCMCLoop.h"
 #include "CurveSettings.h"
 #include "CurveUtilities.h"
-#include "EventKnown.h"
+#include "EventBound.h"
 #include "Matrix.h"
 #include <vector>
 
@@ -60,13 +60,12 @@ public:
     ModelCurve* mModel;
     CurveSettings mCurveSettings;
 
-public:
     MCMCLoopCurve(ModelCurve* model, Project* project);
     ~MCMCLoopCurve();
 
    // void orderEventsByTheta(QList<Event *> &lEvents); // Obsolete
     void orderEventsByThetaReduced(QList<Event *> &lEvents);
-    void spreadEventsThetaReduced(QList<Event *> &lEvents, double minStep = 1e-9);
+    // void spreadEventsThetaReduced(QList<Event *> &lEvents, double minStep = 1e-9);
     void spreadEventsThetaReduced0(QList<Event *> &sortedEvents,  double spreadSpan = 0.);
 
 protected:
@@ -88,11 +87,15 @@ private:
      double h_lambda (const SplineMatrices &matrices, const int nb_noeuds, const  double &lambdaSpline);
      double h_theta (const QList<Event *> lEvents);
      double h_theta_Event (const Event * e);
-     double h_VG (const QList<Event *> _events);
-     //double h_VG_global(const QList<Event *> _events, double VG);
-     inline double h_VG_global(const double S02, const double VG);
-     inline double h_VG_Event(const Event * e);
-     double S02_VG_global(const QList<Event *> _events);
+
+     qsizetype mFirstEventIndex; // Utile pour VG global, correspond au premier Event qui n'est pas un Bound
+     double h_VG_old (const QList<Event *> _events);
+
+     inline double h_VG_Event(const Event * e, double S02_Vg_Yx);
+     inline double h_VG_event_old(const Event * e);
+     double rate_h_VG(const QList<Event *> events, double current_S02_Vg_Yx, double try_S02_Vg_Yx);
+
+     double S02_Vg_Yx(QList<Event *> _events, SplineMatrices matricesWI, std::vector<double> vecH, const double lambdaSpline);
 
      double mS02_VG_global;
 
@@ -130,23 +133,22 @@ private:
     std::map<int, double> mThetasMemo;
     
     std::vector< double> calculVecH(const QList<Event *> &lEvents);
-  //  std::vector<double> calculVecHX(const QList<double> &lX);
 
     std::vector< double> getThetaEventVector(const QList<Event *>& lEvents);
     std::vector< double> getYEventVector(const QList<Event *>& lEvents);
 
-    Matrix2D calculMatR(std::vector< double>& vecH);
-    Matrix2D calculMatQ(std::vector< double>& vecH);
+    Matrix2D calculMatR(const std::vector<double>& vecH);
+    Matrix2D calculMatQ(const std::vector<double>& vecH);
 
-    MCMCSpline currentSpline (QList<Event *> &lEvents, bool doSortAndSpreadTheta = false, std::vector< double> vecH = std::vector<double>(), SplineMatrices matrices = SplineMatrices());
+    MCMCSpline currentSpline (QList<Event *> &lEvents, bool doSortAndSpreadTheta = false, std::vector<double> vecH = std::vector<double>(), SplineMatrices matrices = SplineMatrices());
 
-    SplineMatrices prepareCalculSpline(const QList<Event *> & sortedEvents, std::vector< double> &vecH);
-    SplineMatrices prepareCalculSpline_WI(const QList<Event *> & sortedEvents, std::vector< double> &vecH);
+    SplineMatrices prepareCalculSpline(const QList<Event *> & sortedEvents, const std::vector< double> &vecH);
+    SplineMatrices prepareCalculSpline_WI(const QList<Event *> & sortedEvents, const std::vector<double> &vecH);
     SplineMatrices prepareCalculSpline_W_Vg0(const QList<Event *> & sortedEvents, std::vector< double> &vecH);
 
     SplineResults calculSpline(const SplineMatrices &matrices, const std::vector<double> &vecY, const double lambdaSpline, const std::vector<double> &vecH);
 
-    SplineResults calculSplineX(const SplineMatrices &matrices, const std::vector<double> &vecH, std::pair<Matrix2D, std::vector<double> > &decomp, const Matrix2D matB, const double lambdaSpline);
+    SplineResults calculSplineX(const SplineMatrices &matrices, const std::vector<double> &vecH, std::pair<Matrix2D, std::vector<double> >& decomp, const Matrix2D matB, const double lambdaSpline);
     SplineResults calculSplineY(const SplineMatrices &matrices, const std::vector<double> &vecH, std::pair<Matrix2D, std::vector<double> >& decomp, const Matrix2D matB, const double lambdaSpline);
     SplineResults calculSplineZ(const SplineMatrices &matrices, const std::vector<double> &vecH, std::pair<Matrix2D, std::vector<double> >& decomp, const Matrix2D matB, const double lambdaSpline);
 

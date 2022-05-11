@@ -329,7 +329,7 @@ void ImportDataView::exportDates()
                 const QString eventName = event.value(STATE_NAME).toString();
 
 
-                if (type == Event::eKnown) {
+                if (type == Event::eBound) {
                     QList<QString> dateCsv;
                     dateCsv.append("Bound");
                     dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_KNOWN_FIXED).toDouble()));

@@ -51,12 +51,23 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 QString DHMS( quint64 elapsedTime)
 {
+    if (elapsedTime == 0)
+        return "";
+
     QString str;
-    quint64 day, hour, minute, second;
+    quint64 day = 0;
+    quint64 hour = 0;
+    quint64 minute = 0;
+    quint64 second =0;
 
-    day = elapsedTime / (24*3600*1000);
+    if (elapsedTime >= (24*3600*1000))
+        day = elapsedTime / (24*3600*1000);
 
-    if (day>1)
+
+    if (day > 6)
+        return QString("%1 days ").arg(QString::number(day));
+
+    else if (day > 1)
         str = QString("%1 days ").arg(QString::number(day));
     else if (day == 1)
         str = QString("1 day ");

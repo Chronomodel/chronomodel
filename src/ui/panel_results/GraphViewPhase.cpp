@@ -316,19 +316,19 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
                                                      "Post Distrib Tempo All Chains",
                                                      color.darker(), Qt::SolidLine);
         curveTempo.mIsRectFromZero = false;
-        curveTempo.mIsHisto = false;
+
 
         GraphCurve curveTempoInf = generateDensityCurve(mPhase->mTempoInf,
                                                      "Post Distrib Tempo Inf All Chains",
                                                      color, Qt::DashLine);
         curveTempoInf.mIsRectFromZero = false;
-        curveTempoInf.mIsHisto = false;
+
 
         GraphCurve curveTempoSup = generateDensityCurve(mPhase->mTempoSup,
                                                      "Post Distrib Tempo Sup All Chains",
                                                      color, Qt::DashLine);
         curveTempoSup.mIsRectFromZero = false;
-        curveTempoSup.mIsHisto = false;
+
 /*
         GraphCurve curveCredInf = generateDensityCurve(mPhase->mTempoCredibilityInf,
                                                      "Post Distrib Tempo Cred Inf All Chains",
@@ -343,9 +343,19 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         curveCredSup.mIsRectFromZero = false;
         curveCredSup.mIsHisto = false;
 */
-        mGraph->addCurve(curveTempoInf);
+        color.setAlpha(50);
+       // QBrush envBrush (color);
+
+
+        GraphCurve curveTempoEnv = generateShapeCurve(mPhase->mTempoInf, mPhase->mTempoSup,
+                                                     "Post Distrib Tempo Env All Chains",
+                                                     color, Qt::DashLine, color);
+
+        mGraph->addCurve(curveTempoEnv);
+       // mGraph->addCurve(curveTempoInf);
         mGraph->addCurve(curveTempo);
-        mGraph->addCurve(curveTempoSup);
+       // mGraph->addCurve(curveTempoSup);
+
 
   //      mGraph->addCurve(curveCredInf);
    //     mGraph->addCurve(curveCredSup);
@@ -384,9 +394,13 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         mGraph->setYAxisMode(GraphView::eMinMax);
 
         mTitle = tr("Phase Activity : %1").arg(mPhase->mName);
-        GraphCurve curveActivity = generateDensityCurve( mPhase->mActivity,
+        /*GraphCurve curveActivity = generateDensityCurve( mPhase->mActivity,
                                                          "Post Distrib Activity All Chains",
                                                          color, Qt::SolidLine);
+         */
+        GraphCurve curveActivity = generateHPDCurve( mPhase->mActivity,
+                                                         "Post Distrib Activity All Chains",
+                                                         color);
 
         GraphCurve curveActivityInf = generateDensityCurve( mPhase->mActivityInf,
                                                             "Post Distrib Activity Inf All Chains",
@@ -397,20 +411,20 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
                                                             color, Qt::CustomDashLine);
 
          // Display envelope Uniform
-        GraphCurve curveMeanUnif = generateHorizontalLine( mPhase->mActivityMeanUnif,
+        /*GraphCurve curveMeanUnif = generateDensityCurve( mPhase->mActivityUnifMean,
                                                            "Post Distrib Activity Unif Mean",
-                                                           QColor(Qt::darkGray).darker(), Qt::CustomDashLine);
+                                                           QColor(Qt::darkGray).darker(), Qt::SolidLine);
+       */
+        GraphCurve curveMeanUnif = generateHPDCurve( mPhase->mActivityUnifMean,
+                                                           "Post Distrib Activity Unif Mean",
+                                                           Qt::darkGray);
 
-        GraphCurve curveUnifInf = generateHorizontalLine( mPhase->mActivityMeanUnif - mPhase->mActivityStdUnif,
+        GraphCurve curveUnifInf = generateDensityCurve( mPhase->mActivityUnifInf,
                                                           "Post Distrib Activity Unif Inf",
                                                           Qt::darkGray, Qt::CustomDashLine);
-        GraphCurve curveUnifSup = generateHorizontalLine( mPhase->mActivityMeanUnif + mPhase->mActivityStdUnif,
+        GraphCurve curveUnifSup = generateDensityCurve( mPhase->mActivityUnifSup,
                                                           "Post Distrib Activity Unif Sup",
                                                           Qt::darkGray, Qt::CustomDashLine);
-        // Display p_value
-        GraphCurve curvePValue = generateDensityCurve( mPhase->mActivityPValue,
-                                                         "Post Distrib Activity p_value All Chains",
-                                                         Qt::red, Qt::SolidLine);
 
         mGraph->setOverArrow(GraphView::eBothOverflow);
 
@@ -421,7 +435,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         mGraph->addCurve(curveMeanUnif);
         mGraph->addCurve(curveUnifInf);
         mGraph->addCurve(curveUnifSup);
-        mGraph->addCurve(curvePValue);
+       // mGraph->addCurve(curvePValue);
 
         const type_data yMax = map_max_value(curveActivitySup.mData);
 
@@ -570,6 +584,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
              mGraph->setCurveVisible("Post Distrib Tempo All Chains", true);
              mGraph->setCurveVisible("Post Distrib Tempo Inf All Chains", showError);
              mGraph->setCurveVisible("Post Distrib Tempo Sup All Chains", showError);
+             mGraph->setCurveVisible("Post Distrib Tempo Env All Chains", showError);
 
              //mGraph->setCurveVisible("Post Distrib Tempo Cred Inf All Chains", showCredibility);
              //mGraph->setCurveVisible("Post Distrib Tempo Cred Sup All Chains", showCredibility);

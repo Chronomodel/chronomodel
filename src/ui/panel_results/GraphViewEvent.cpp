@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphViewEvent.h"
 #include "GraphView.h"
 #include "Event.h"
-#include "EventKnown.h"
+#include "EventBound.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
 #include "ModelUtilities.h"
@@ -116,7 +116,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
 
     bool isFixedBound = false;
     EventKnown* bound = nullptr;
-    if (mEvent->type() == Event::eKnown) {
+    if (mEvent->type() == Event::eBound) {
         bound = dynamic_cast<EventKnown*>(mEvent);
         isFixedBound = (bound != nullptr);
     }
@@ -125,10 +125,10 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
     //  The graph name depends on the currently displayed variable
     // --------------------------------------------------------------------
     if (mCurrentVariableList.contains(eThetaEvent)) {
-        mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound") : tr("Event")) + " : " + mEvent->mName;
+        mTitle = ((mEvent->type()==Event::eBound) ? tr("Bound") : tr("Event")) + " : " + mEvent->mName;
 
     } else if (mCurrentVariableList.contains(eSigma)) {
-        mTitle = ((mEvent->type() == Event::eKnown) ? tr("Bound") : tr("Std Compilation")) + " : " + mEvent->mName;
+        mTitle = ((mEvent->type() == Event::eBound) ? tr("Bound") : tr("Std Compilation")) + " : " + mEvent->mName;
 
     } else if (mCurrentVariableList.contains(eVG)) {
         mTitle = tr("Std G") + " : " + mEvent->mName;
@@ -155,7 +155,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
                 GraphCurve curveLineBound;
                 curveLineBound.mName = "Post Distrib All Chains";
                 curveLineBound.mPen.setColor(color);
-                curveLineBound.mIsHorizontalSections = true;
+                curveLineBound.mType = GraphCurve::eHorizontalSections;
                 qreal tLower = bound->formatedFixedValue();
                 qreal tUpper = tLower;
                 curveLineBound.mSections.push_back(qMakePair(tLower,tUpper));
@@ -335,7 +335,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
         mGraph->setXScaleDivision(10, 10);
 
     } else {
-        mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound : %1").arg(mEvent->mName) : tr("Event : %1").arg(mEvent->mName));
+        mTitle = ((mEvent->type()==Event::eBound) ? tr("Bound : %1").arg(mEvent->mName) : tr("Event : %1").arg(mEvent->mName));
         mGraph->resetNothingMessage();
     }
 
@@ -349,7 +349,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
     bool isFixedBound = false;
 
   //  EventKnown* bound = nullptr;
-    if (mEvent->type() == Event::eKnown)
+    if (mEvent->type() == Event::eBound)
          isFixedBound = true;
 
 

@@ -115,9 +115,9 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
 
         curveEventsPoints.mPen = QPen(Qt::black, 1, Qt::SolidLine);
         curveEventsPoints.mBrush = Qt::black;
-        curveEventsPoints.mIsHisto = false;
         curveEventsPoints.mIsRectFromZero = false;
-        curveEventsPoints.mIsRefPoints = true;
+
+        curveEventsPoints.mType = GraphCurve::eRefPoints;
 
         CurveRefPts ref;
         for (auto& ePts : mEventsPoints) {
@@ -138,9 +138,9 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
 
         curveDataPoints.mPen = QPen(Qt::black, 1, Qt::SolidLine);
         curveDataPoints.mBrush = Qt::black;
-        curveDataPoints.mIsHisto = false;
         curveDataPoints.mIsRectFromZero = false;
-        curveDataPoints.mIsRefPoints = true;
+
+        curveDataPoints.mType = GraphCurve::eRefPoints;
 
         for (auto& dPts : mDataPoints) {
             ref.Xmin = DateUtils::convertToAppSettingsFormat(dPts.Xmin);
@@ -160,7 +160,6 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         curveG.mName = tr("G");
         curveG.mPen = QPen(QColor(119, 95, 49), 1, Qt::SolidLine);
         curveG.mBrush = Qt::NoBrush;
-        curveG.mIsHisto = false;
         curveG.mIsRectFromZero = false;
 
         GraphCurve curveGInf;
@@ -168,7 +167,6 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         curveGInf.mPen = QPen(QColor(119, 95, 49), 1, Qt::CustomDashLine);
         curveGInf.mPen.setDashPattern(QList<qreal>{5, 5});
         curveGInf.mBrush = Qt::NoBrush;
-        curveGInf.mIsHisto = false;
         curveGInf.mIsRectFromZero = false;
 
         GraphCurve curveGSup;
@@ -176,16 +174,24 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         curveGSup.mPen = QPen(QColor(119, 95, 49), 1, Qt::CustomDashLine);
         curveGSup.mPen.setDashPattern(QList<qreal>{5, 5});
         curveGSup.mBrush = Qt::NoBrush;
-        curveGSup.mIsHisto = false;
         curveGSup.mIsRectFromZero = false;
+
+        GraphCurve curveGEnv;
+      /*  curveGEnv.mName = tr("G Env");
+        curveGEnv.mPen = QPen(QColor(119, 95, 49), 1, Qt::CustomDashLine);
+        curveGEnv.mPen.setDashPattern(QList<qreal>{5, 5});
+        curveGEnv.mBrush = QColor(119, 95, 49);
+        curveGEnv.mIsRectFromZero = false; */
+        curveGEnv.mType = GraphCurve::eShapeData;
 
         GraphCurve curveMap;
         curveMap.mName = tr("Map");
         //curveMap.mPen = QPen(QColor(119, 95, 49), 1, Qt::SolidLine);
         curveMap.mPen = QPen(Qt::black, 1, Qt::SolidLine);
         curveMap.mBrush = Qt::NoBrush;
-        curveMap.mIsHisto = false;
         curveMap.mIsRectFromZero = false;
+
+        curveMap.mType = GraphCurve::eCurveMap;
         curveMap.mMap = mComposanteG.mapG;
         const double tminFormated = DateUtils::convertToAppSettingsFormat(mComposanteG.mapG.minX());
         const double tmaxFormated = DateUtils::convertToAppSettingsFormat(mComposanteG.mapG.maxX());
@@ -224,7 +230,6 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             curveGChain.mName = QString("G Chain ") + QString::number(i);
             curveGChain.mPen = QPen(Painting::chainColors[i], 1, Qt::SolidLine);
             curveGChain.mBrush = Qt::NoBrush;
-            curveGChain.mIsHisto = false;
             curveGChain.mIsRectFromZero = false;
 
             curveGChains.append(curveGChain);
@@ -234,7 +239,6 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             curveGInfChain.mPen = QPen(Painting::chainColors[i], 1, Qt::CustomDashLine);
             curveGInfChain.mPen.setDashPattern(QList<qreal>{5, 5});
             curveGInfChain.mBrush = Qt::NoBrush;
-            curveGInfChain.mIsHisto = false;
             curveGInfChain.mIsRectFromZero = false;
 
             curveGInfChains.append(curveGInfChain);
@@ -244,7 +248,6 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             curveGSupChain.mPen = QPen(Painting::chainColors[i], 1, Qt::CustomDashLine);
             curveGSupChain.mPen.setDashPattern(QList<qreal>{5, 5});
             curveGSupChain.mBrush = Qt::NoBrush;
-            curveGSupChain.mIsHisto = false;
             curveGSupChain.mIsRectFromZero = false;
 
             curveGSupChains.append(curveGSupChain);
@@ -253,8 +256,9 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             curveMapChain.mName = QString("Map Chain ") + QString::number(i);
             curveMapChain.mPen = QPen(Painting::chainColors[i], 1, Qt::SolidLine);
             curveMapChain.mBrush = Qt::NoBrush;
-            curveMapChain.mIsHisto = false;
             curveMapChain.mIsRectFromZero = false;
+
+            curveMapChain.mType = GraphCurve::eCurveMap;
             curveMapChain.mMap = mComposanteGChains.at(i).mapG;
 
             if (tmaxFormated > tminFormated) {
@@ -301,11 +305,18 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
                 curveGInfChains[i].mData.insert(t, mComposanteGChains.at(i).vecG[idx] - 1.96 * sqrt(mComposanteGChains.at(i).vecVarG[idx]));
             }
         }
+
+        QColor envColor (119, 95, 49);
+        envColor.setAlpha(30);
+        curveGEnv = generateShapeCurve(curveGInf.mData, curveGSup.mData,
+                                         "G Env",
+                                         QColor(119, 95, 49), Qt::DashLine, envColor);
+        mGraph->addCurve(curveGEnv);
         mGraph->addCurve(curveMap); // to be draw in first
 
         mGraph->addCurve(curveG);
-        mGraph->addCurve(curveGSup);
-        mGraph->addCurve(curveGInf);
+       // mGraph->addCurve(curveGSup);
+       // mGraph->addCurve(curveGInf);
 
 
         for (int i = 0; i<curveGChains.size(); ++i) {
@@ -327,7 +338,6 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         curveGP.mName = tr("G Prime");
         curveGP.mPen = QPen(QColor(119, 95, 49),1, Qt::SolidLine);//QColor(154, 80, 225), 1, Qt::SolidLine);
         curveGP.mBrush = Qt::NoBrush;
-        curveGP.mIsHisto = false;
         curveGP.mIsRectFromZero = false;
 
        /* GraphCurve curveGPInf;
@@ -370,7 +380,6 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             curveGPChain.mName = QString("G Prime Chain ") + QString::number(i);
             curveGPChain.mPen = QPen(Painting::chainColors[i], 1, Qt::SolidLine);
             curveGPChain.mBrush = Qt::NoBrush;
-            curveGPChain.mIsHisto = false;
             curveGPChain.mIsRectFromZero = false;
 
           /*  GraphCurve curveGPInfChain;
@@ -417,7 +426,6 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         curveGS.mName = tr("G Second");
         curveGS.mPen = QPen(QColor(119, 95, 49), 1, Qt::SolidLine); // QColor(236, 105, 64),
         curveGS.mBrush = Qt::NoBrush;
-        curveGS.mIsHisto = false;
         curveGS.mIsRectFromZero = false;
 
         for (size_t idx = 0; idx < mComposanteG.vecGS.size() ; ++idx) {
@@ -432,7 +440,6 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             curveGSChain.mName = QString("G Second Chain ") + QString::number(i);
             curveGSChain.mPen = QPen(Painting::chainColors[i], 1, Qt::SolidLine);
             curveGSChain.mBrush = Qt::NoBrush;
-            curveGSChain.mIsHisto = false;
             curveGSChain.mIsRectFromZero = false;
             for (size_t idx = 0; idx < mComposanteGChains[i].vecGS.size() ; ++idx) {
                 t = DateUtils::convertToAppSettingsFormat(idx*step + tmin);
@@ -467,8 +474,11 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
     
     mGraph->setCurveVisible("G", mShowAllChains && showG);
     mGraph->setCurveVisible("Map", mShowAllChains && showMap);
+
+    mGraph->setCurveVisible("G Env", mShowAllChains && showGError && showG);
     mGraph->setCurveVisible("G Sup", mShowAllChains && showGError && showG);
     mGraph->setCurveVisible("G Inf", mShowAllChains && showGError && showG);
+
     mGraph->setCurveVisible("Events Points", showEventsPoints);
     mGraph->setCurveVisible("Data Points", showDataPoints);
     mGraph->setCurveVisible("G Prime", mShowAllChains && showGP);

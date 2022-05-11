@@ -181,21 +181,21 @@ void Plugin14CRefView::setDate(const Date &date, const ProjectSettings& settings
              graphCurveG.mName = "G";
              graphCurveG.mData = curveG;
              graphCurveG.mPen.setColor(Painting::mainColorDark);
-             graphCurveG.mIsHisto = false;
+             //graphCurveG.mIsHisto = false;
              mGraph->addCurve(graphCurveG);
 
              GraphCurve graphCurveG95Sup;
              graphCurveG95Sup.mName = "G95Sup";
              graphCurveG95Sup.mData = curveG95Sup;
              graphCurveG95Sup.mPen.setColor(QColor(180, 180, 180));
-             graphCurveG95Sup.mIsHisto = false;
+             //graphCurveG95Sup.mIsHisto = false;
              mGraph->addCurve(graphCurveG95Sup);
 
              GraphCurve graphCurveG95Inf;
              graphCurveG95Inf.mName = "G95Inf";
              graphCurveG95Inf.mData = curveG95Inf;
              graphCurveG95Inf.mPen.setColor(QColor(180, 180, 180));
-             graphCurveG95Inf.mIsHisto = false;
+             //graphCurveG95Inf.mIsHisto = false;
              mGraph->addCurve(graphCurveG95Inf);
 
              // Display reference curve name
@@ -224,8 +224,9 @@ void Plugin14CRefView::setDate(const Date &date, const ProjectSettings& settings
              }
              curveMeasure.mPen = penColor;
              curveMeasure.mBrush = brushColor;
-             curveMeasure.mIsVertical = true;
-             curveMeasure.mIsHisto = false;
+             curveMeasure.mType = GraphCurve::CurveType::eVerticalQMap;
+             //curveMeasure.mIsVertical = true;
+             //curveMeasure.mIsHisto = false;
 
              /* 5000 pts are used on vertical measurement
               * because the y scale auto adjusts depending on x zoom.
@@ -268,8 +269,9 @@ void Plugin14CRefView::setDate(const Date &date, const ProjectSettings& settings
                  curveDeltaR.mPen = penColor;
                  curveDeltaR.mBrush = brushColor;
 
-                 curveDeltaR.mIsVertical = true;
-                 curveDeltaR.mIsHisto = false;
+                 curveDeltaR.mType = GraphCurve::CurveType::eVerticalQMap;
+                 //curveDeltaR.mIsVertical = true;
+                 //curveDeltaR.mIsHisto = false;
 
                  /* 5000 pts are used on vertical measurement
                   * because the y scale auto adjusts depending on x zoom.
@@ -318,8 +320,8 @@ void Plugin14CRefView::setDate(const Date &date, const ProjectSettings& settings
 
                  curveSubMeasure.mPen = penColor;
                  curveSubMeasure.mBrush = brushColor;
-                 curveSubMeasure.mIsVertical = true;
-                 curveSubMeasure.mIsHisto = false;
+                 curveSubMeasure.mType = GraphCurve::CurveType::eVerticalQMap;
+
 
                  /* 5000 pts are used on vertical measurement
                   * because the y scale auto adjusts depending on x zoom.
@@ -351,19 +353,19 @@ void Plugin14CRefView::setDate(const Date &date, const ProjectSettings& settings
              curveMeasureAvg.mName = "MeasureAvg";
              curveMeasureAvg.mPen.setColor(mMeasureColor);
              curveMeasureAvg.mPen.setStyle(Qt::SolidLine);
-             curveMeasureAvg.mIsHorizontalLine = true;
+             curveMeasureAvg.mType = GraphCurve::CurveType::eHorizontalLine;
 
              GraphCurve curveMeasureSup;
              curveMeasureSup.mName = "MeasureSup";
              curveMeasureSup.mPen.setColor(mMeasureColor);
              curveMeasureSup.mPen.setStyle(Qt::DashLine);
-             curveMeasureSup.mIsHorizontalLine = true;
+             curveMeasureSup.mType = GraphCurve::CurveType::eHorizontalLine;
 
              GraphCurve curveMeasureInf;
              curveMeasureInf.mName = "MeasureInf";
              curveMeasureInf.mPen.setColor(mMeasureColor);
              curveMeasureInf.mPen.setStyle(Qt::DashLine);
-             curveMeasureInf.mIsHorizontalLine = true;
+             curveMeasureInf.mType = GraphCurve::CurveType::eHorizontalLine;
 
              curveMeasureAvg.mHorizontalValue = age;
              curveMeasureSup.mHorizontalValue = age + error;

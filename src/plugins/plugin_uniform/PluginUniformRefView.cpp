@@ -106,7 +106,6 @@ void PluginUniformRefView::setDate(const Date& date, const ProjectSettings& sett
         GraphCurve curve;
         curve.mName = "Reference";
         curve.mPen.setColor(Painting::mainColorDark);
-        curve.mIsHisto = false;
 
         GraphCurve gCurve;
         gCurve.mName = date.mName;
@@ -118,8 +117,6 @@ void PluginUniformRefView::setDate(const Date& date, const ProjectSettings& sett
         curveColor.setAlpha(50);
         gCurve.mBrush = curveColor;
 
-        gCurve.mIsVertical = false;
-        gCurve.mIsHisto = false;
         gCurve.mIsRectFromZero = true;
 
         QMap<double, double> calib = normalize_map(getMapDataInRange(date.getFormatedCalibMap(), tminDisplay, tmaxDisplay));

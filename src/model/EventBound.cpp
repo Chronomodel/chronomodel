@@ -37,7 +37,7 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#include "EventKnown.h"
+#include "EventBound.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
 #include "GraphView.h"
@@ -48,7 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 EventKnown::EventKnown():Event(),
 mFixed(0.)
 {
-    Event::mType = eKnown;
+    Event::mType = eBound;
     Event::mTheta.mSamplerProposal= MHVariable::eFixe;
     Event::mTheta.mSigmaMH = 0.;
 }

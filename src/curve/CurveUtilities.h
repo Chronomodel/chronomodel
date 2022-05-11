@@ -138,7 +138,7 @@ PosteriorMeanG conversionID(const std::vector<double> &vecGx, const std::vector<
 class CurveUtilities
 {
 public:
-    std::vector<double> definitionNoeuds(const std::vector<double>& tabPts, const double minStep);
+    std::vector<double> definitionNoeuds(const std::vector<double>& tabPts, const double minStep); // Obsolete
 
 };
 

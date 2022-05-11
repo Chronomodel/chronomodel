@@ -45,7 +45,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MCMCSettingsDialog.h"
 
 #include "Event.h"
-#include "EventKnown.h"
+#include "EventBound.h"
 #include "EventDialog.h"
 #include "EventConstraint.h"
 #include "ConstraintDialog.h"
@@ -1999,7 +1999,7 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
         // Since v3 , 2021-04-30, ,the key "method" disapered and it's change with "sampler" for EVENT and DATA.
         /*
          *    enum Method{
-         * eFixe = -1,  //<  use with Type==eKnown
+         * eFixe = -1,  //<  use with Type==eBound
          * eDoubleExp = 0, //<  The default method
          * eBoxMuller = 1,
          * eMHAdaptGauss = 2,

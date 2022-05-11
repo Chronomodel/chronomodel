@@ -247,6 +247,12 @@ public:
                                       const QColor& color,
                                       const Qt::PenStyle penStyle = Qt::SolidLine) const;
 
+    GraphCurve generateShapeCurve(const QMap<double, double>& dataInf, const QMap<double, double>& dataSup,
+                                                      const QString& name,
+                                                      const QColor& lineColor,
+                                                      const Qt::PenStyle penStyle,
+                                                      const QBrush& brush) const;
+
     void generateTraceCurves(const QList<ChainSpecs>& chains,
                              MetropolisVariable* variable,
                              const QString& name = QString());

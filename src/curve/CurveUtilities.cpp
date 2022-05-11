@@ -251,6 +251,7 @@ void conversionID (PosteriorMeanG& G)
     G.gz.vecVarG = std::move(res.gz.vecVarG);
 }
 
+// Obsolete
 std::vector<double> CurveUtilities::definitionNoeuds(const std::vector<double> &tabPts, const double minStep)
 {
    // display(tabPts);

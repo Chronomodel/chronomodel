@@ -179,21 +179,18 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
              graphCurveG.mName = "G";
              graphCurveG.mData = curveG;
              graphCurveG.mPen.setColor(Painting::mainColorDark);
-             graphCurveG.mIsHisto = false;
              mGraph->addCurve(graphCurveG);
 
              GraphCurve graphCurveG95Sup;
              graphCurveG95Sup.mName = "G95Sup";
              graphCurveG95Sup.mData = curveG95Sup;
              graphCurveG95Sup.mPen.setColor(QColor(180, 180, 180));
-             graphCurveG95Sup.mIsHisto = false;
              mGraph->addCurve(graphCurveG95Sup);
 
              GraphCurve graphCurveG95Inf;
              graphCurveG95Inf.mName = "G95Inf";
              graphCurveG95Inf.mData = curveG95Inf;
              graphCurveG95Inf.mPen.setColor(QColor(180, 180, 180));
-             graphCurveG95Inf.mIsHisto = false;
              mGraph->addCurve(graphCurveG95Inf);
 
              // Display reference curve name
@@ -222,8 +219,7 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
              //       }
              curveMeasure.mPen = penColor;
              curveMeasure.mBrush = brushColor;
-             curveMeasure.mIsVertical = true;
-             curveMeasure.mIsHisto = false;
+             curveMeasure.mType = GraphCurve::CurveType::eVerticalQMap;
 
              /* 5000 pts are used on vertical measurement
               * because the y scale auto adjusts depending on x zoom.
@@ -305,8 +301,7 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
 
                  curveSubMeasure.mPen = penColor;
                  curveSubMeasure.mBrush = brushColor;
-                 curveSubMeasure.mIsVertical = true;
-                 curveSubMeasure.mIsHisto = false;
+                 curveSubMeasure.mType = GraphCurve::CurveType::eVerticalQMap;
 
                  const double step = (yMax - yMin) / 1000.;
                  QMap<double, double> subCurve;
@@ -333,19 +328,19 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
              curveMeasureAvg.mName = "MeasureAvg";
              curveMeasureAvg.mPen.setColor(mMeasureColor);
              curveMeasureAvg.mPen.setStyle(Qt::SolidLine);
-             curveMeasureAvg.mIsHorizontalLine = true;
+             curveMeasureAvg.mType = GraphCurve::CurveType::eHorizontalLine;
 
              GraphCurve curveMeasureSup;
              curveMeasureSup.mName = "MeasureSup";
              curveMeasureSup.mPen.setColor(mMeasureColor);
              curveMeasureSup.mPen.setStyle(Qt::DashLine);
-             curveMeasureSup.mIsHorizontalLine = true;
+             curveMeasureSup.mType = GraphCurve::CurveType::eHorizontalLine;
 
              GraphCurve curveMeasureInf;
              curveMeasureInf.mName = "MeasureInf";
              curveMeasureInf.mPen.setColor(mMeasureColor);
              curveMeasureInf.mPen.setStyle(Qt::DashLine);
-             curveMeasureInf.mIsHorizontalLine = true;
+             curveMeasureInf.mType = GraphCurve::CurveType::eHorizontalLine;
 
              curveMeasureAvg.mHorizontalValue = age;
              curveMeasureSup.mHorizontalValue = age + error;

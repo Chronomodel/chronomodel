@@ -561,7 +561,7 @@ double vector_interpolate_idx_for_value(const double value, const std::vector<do
     if (value < vector.front())
         return idxInf;
 
-    if (value>vector.back())
+    if (value > vector.back())
         return idxSup;
 
     // Dichotomie, we can't use indexOf because we don't know the step between each value in the Qvector
@@ -584,7 +584,7 @@ double vector_interpolate_idx_for_value(const double value, const std::vector<do
 
         double prop = 0.;
         // prevent valueSup=valueInf because in this case prop = NaN
-        if (valueSup>valueInf)
+        if (valueSup > valueInf)
             prop = (value - valueInf) / (valueSup - valueInf);
 
         const double idx = double (idxInf) + prop;
@@ -670,7 +670,33 @@ double interpolate_value_from_curve(const double t, const QVector<double> & curv
     }
 
 }
+double interpolate_value_from_curve(const double x, const std::vector<double>& curve,const double Xmin, const double Xmax)
+{
+     // We need at least two points to interpolate
+    if (curve.size() < 2 || x <= Xmin) {
+        return curve.front();
 
+    } else if (x >= Xmax) {
+        return curve.back();
+    }
+
+    const double prop = (x - Xmin) / (Xmax - Xmin);
+    const double idx = prop * (curve.size() - 1); // tricky : if (Xmax - Xmin) = 2000, then calib size is 2001 !
+    const int idxUnder = (int)floor(idx);
+    const int idxUpper = (int)ceil(idx);//idxUnder + 1;
+
+    if (idxUnder == idxUpper) {
+        return curve[idxUnder];
+
+    } else if (curve[idxUnder] != 0. && curve[idxUpper] != 0.) {
+        // Important for gate: no interpolation around gates
+        return interpolate( idx, (double)idxUnder, (double)idxUpper, curve[idxUnder], curve[idxUpper]);
+
+    } else {
+        return 0.;
+    }
+
+}
 /**
     @brief  This function make a QMap which are a copy of the QMap aMap to obtain an percent of area
     @brief  to define a area we need at least 2 value in the map
@@ -1056,15 +1082,71 @@ int binomialCoefficients(int n, int k) {
  * @param dp
  * @return
  */
-/*
-int getBionomialCoefficient(int n, int k , std::vector<std::vector<int>>& dp)
+
+int binomialCoefficient(int n, int k , std::vector<std::vector<int>>& binomialDico)
 {
-    if (k == 0 || k == n || n==0)
-        return dp[n][k] = 1;
+    if (k == 0 || k == n || n == 0)
+        return binomialDico[n][k] = 1;
 
-    if (dp[n][k] != -1)
-        return dp[n][k];
+    if (binomialDico[n][k] != -1)
+        return binomialDico[n][k];
 
-    return dp[n][k] = getBionomialCoefficient(n - 1, k - 1, dp) + getBionomialCoefficient(n - 1, k, dp);
+    return binomialDico[n][k] = binomialCoefficient(n - 1, k - 1, binomialDico) + binomialCoefficient(n - 1, k, binomialDico);
 }
-*/
+
+std::pair<double, double>binomialConfidence95(const int n, const double p, std::vector<std::vector<int>>& binomialDico, const double alpha)
+{
+    double k1, k2;
+    double sum_p = 0.;
+
+    const double alpha2 = alpha/2.;
+    const double one_alpha2 = (1-alpha/2.);
+
+    k1 = 0;
+    k2 = 0;
+    double prev_sum = 0;
+    for (int k = 0; k<n+1; ++k) {
+        if (k == 0) {
+            sum_p = pow(1-p, n);
+
+        } else {
+            sum_p += binomialCoefficient(n, k, binomialDico) * pow(p, k) * pow(1-p, n-k);
+        }
+
+
+        if (sum_p == alpha2) {
+            k2 = k;
+
+        } else  if (prev_sum < alpha2 && alpha2< sum_p) {
+            if ( k == 0) {
+                k2 = 0;
+            } else if (k<n) {
+                k2 = (alpha2-prev_sum)/(sum_p-prev_sum) + k -1;
+
+            } else {
+                k2 = n;
+            }
+        }
+
+        if (sum_p == one_alpha2) {
+            k1 = k;
+
+        } else if (prev_sum < one_alpha2 && one_alpha2 < sum_p) {
+            if ( k == 0) {
+                k1 = 0;
+
+            } else if (k<n) {
+                k1 = (one_alpha2-prev_sum)/(sum_p-prev_sum) + k ;
+
+            } else {
+                k1 = n;
+            }
+
+        }
+
+        prev_sum = sum_p;
+
+    }
+
+    return std::make_pair(k2/n, k1/n);
+}

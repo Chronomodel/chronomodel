@@ -41,7 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PhaseConstraint.h"
 #include "ModelCurve.h"
 #include "Project.h"
-#include "EventKnown.h"
+#include "EventBound.h"
 #include "PluginAbstract.h"
 #include "QtUtilities.h"
 #include "Generator.h"
@@ -352,7 +352,7 @@ QString ModelUtilities::dateResultsText(const Date* d, const Model* model, const
         }
      }
     text += nl + nl;
-    text += QObject::tr("Posterior Std. Deviation") + nl;
+    text += QObject::tr("Posterior Std ti") + nl;
     if (forCSV)
         text += d->mSigmaTi.resultsString(nl, "", DateUtils::getAppSettingsFormatStr(), nullptr, forCSV);
     else
@@ -367,14 +367,14 @@ QString ModelUtilities::eventResultsText(const Event* e, bool withDates, const M
     QString text;
     const QString nl = "\r";
 
-    if (e->mType == Event::eKnown) {
+    if (e->mType == Event::eBound) {
         text += QObject::tr("Bound : %1").arg(e->mName) + nl;
         text += QObject::tr("Posterior Bound Date") + nl;
         text += e->mTheta.resultsString( nl, "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, forCSV);
 
         if (!e->mVG.mAllAccepts->isEmpty()) {
            text +=  nl;
-           text += QObject::tr("Posterior Std G") + nl;
+           text += QObject::tr("Posterior Std gi") + nl;
            text += e->mVG.resultsString("<br>", "", nullptr, nullptr, false) + nl;
        }
         text += nl+"----------------------"+nl;
@@ -578,7 +578,7 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
 
     int i = 0;
     for (auto&& pEvent : model->mEvents) {
-        if (pEvent->type() == Event::eKnown) {
+        if (pEvent->type() == Event::eBound) {
             log += line(textRed(QObject::tr("Bound ( %1 / %2 ) : %3 ( %4  phases,  %5 const. back.,  %6 const.fwd.)").arg(QString::number(i+1), QString::number(model->mEvents.size()), pEvent->mName,
                                                                                                                QString::number(pEvent->mPhases.size()),
                                                                                                                QString::number(pEvent->mConstraintsBwd.size()),
@@ -707,7 +707,7 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
                  log += line(textBold(textGreen( QObject::tr("Depth"))));
                 break;
             case CurveSettings::eVariableTypeOther :
-                 log += line(textBold(textGreen( QObject::tr("Any"))));
+                 log += line(textBold(textGreen( QObject::tr("Any Measurement"))));
                 break;
             }
 
@@ -794,7 +794,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
         ++i;
         HTMLText += "<hr><br>";
 
-        if (event->type() == Event::eKnown) {
+        if (event->type() == Event::eBound) {
              const EventKnown* bound = dynamic_cast<const EventKnown*>(event);
             if (bound) {
                 HTMLText += line(textRed(QObject::tr("Bound ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), bound->mName)));
@@ -899,7 +899,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
         HTMLText += "<hr>";
         HTMLText += textBold(textGreen(QObject::tr("Curve"))) ;
         HTMLText += "<hr>";
-        HTMLText +=  line(textGreen(QObject::tr("Smoothing : %1").arg(QLocale().toString(model->mLambdaSpline.mX, 'G', 2))));
+        HTMLText +=  line(textGreen(QObject::tr("Log10 Smoothing : %1").arg(QLocale().toString(log10(model->mLambdaSpline.mX), 'G', 2))));
         if (model->mLambdaSpline.mLastAccepts.size()>2  && model->mLambdaSpline.mSamplerProposal!= MHVariable::eFixe) {
             HTMLText += line(textGreen(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(model->mLambdaSpline.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(model->mLambdaSpline.mSamplerProposal))));
             HTMLText +=  line(textGreen(QObject::tr(" - Sigma_MH on Smoothing : %1").arg(stringForLocal(model->mLambdaSpline.mSigmaMH))));
@@ -921,7 +921,7 @@ QString ModelUtilities::modelStateDescriptionText(const ModelCurve *model, QStri
         ++i;
         text += nl;
 
-        if (event->type() == Event::eKnown) {
+        if (event->type() == Event::eBound) {
             const EventKnown* bound = dynamic_cast<const EventKnown*>(event);
             if (bound) {
                 text += QObject::tr("Bound ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), bound->mName);
@@ -1027,10 +1027,10 @@ QString ModelUtilities::modelStateDescriptionText(const ModelCurve *model, QStri
         text += nl;
         text += QObject::tr("Curve") ;
         text += nl;
-        text +=  QObject::tr("Smoothing : %1").arg(QLocale().toString(model->mLambdaSpline.mX, 'G', 2));
+        text +=  QObject::tr("Log10 Smoothing : %1").arg(QLocale().toString(log10(model->mLambdaSpline.mX), 'G', 2));
         if (model->mLambdaSpline.mLastAccepts.size()>2  && model->mLambdaSpline.mSamplerProposal!= MHVariable::eFixe) {
             text += QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(model->mLambdaSpline.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(model->mLambdaSpline.mSamplerProposal));
-            text +=  QObject::tr(" - Sigma_MH on Smoothing : %1").arg(stringForLocal(model->mLambdaSpline.mSigmaMH));
+            text += QObject::tr(" - Sigma_MH on Smoothing : %1").arg(stringForLocal(model->mLambdaSpline.mSigmaMH));
         }
 }
 
@@ -1064,7 +1064,7 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
     text += line(textBlack(d->mTi.resultsString("<br>", "",DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false))) ;
 
     text += line("<br>");
-    text += line(textBold(textBlack(QObject::tr("Posterior Std. Deviation"))));
+    text += line(textBold(textBlack(QObject::tr("Posterior Std ti"))));
     text += line(textBlack(d->mSigmaTi.resultsString()));
     return text;
 }
@@ -1073,14 +1073,14 @@ QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, c
 {
     Q_ASSERT(e);
     QString text;
-    if (e->mType == Event::eKnown) {
+    if (e->mType == Event::eBound) {
         text += line(textBold(textRed(QObject::tr("Bound : %1").arg(e->mName)))) + "<br>";
         text += line(textBold(textRed(QObject::tr("Posterior Bound Date"))));
         text += line(textRed(e->mTheta.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false)));
 
         if (!e->mVG.mAllAccepts->isEmpty()) {
            text +=  "<br>";
-           text += line(textBold(textGreen(QObject::tr("Posterior Std G"))));
+           text += line(textBold(textGreen(QObject::tr("Posterior Std gi"))));
            text += line(textGreen(e->mVG.resultsString("<br>", "", nullptr, nullptr, false)));
        }
     }
@@ -1091,7 +1091,7 @@ QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, c
 
         if (!e->mVG.mAllAccepts->isEmpty()) {
            text +=  "<br>";
-           text += line(textBold(textGreen(QObject::tr("Posterior Std G"))));
+           text += line(textBold(textGreen(QObject::tr("Posterior Std gi"))));
            text += line(textGreen(e->mVG.resultsString("<br>", "", nullptr, nullptr, false)));
        }
 

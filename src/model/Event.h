@@ -54,9 +54,9 @@ class EventConstraint;
 class Event
 {
 public:
-    enum Type{
-        eDefault = 0,   /**<  The classic type of Event with variance */
-        eKnown = 1     /**< The Bound type */
+    enum Type {
+        eDefault = 0,   /*  The classic type of Event with variance */
+        eBound = 1     /* The Bound type */
     };
 
     Event();

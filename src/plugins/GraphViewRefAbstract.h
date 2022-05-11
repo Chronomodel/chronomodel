@@ -144,8 +144,8 @@ public:
             curveColor.setAlpha(100);
             gCurve.mBrush = QBrush(curveColor);
 
-            gCurve.mIsVertical = false;
-            gCurve.mIsHisto = false;
+            //gCurve.mIsVertical = false;
+            //gCurve.mIsHisto = false;
             gCurve.mIsRectFromZero = true;
             
             Project* project = MainWindow::getInstance()->getProject();
@@ -172,7 +172,7 @@ public:
             }
 
             gCurve.mData = calib;
-            
+            gCurve.mType = GraphCurve::CurveType::eQMapData;
             mGraph->addCurve(gCurve);
             mGraph->setRangeX(tminDisplay, tmaxDisplay);
             mGraph->setCurrentX(tminDisplay, tmaxDisplay);

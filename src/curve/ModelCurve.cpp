@@ -78,7 +78,7 @@ void ModelCurve::fromJson(const QJsonObject& json)
     }
 
     for (Event*& event: mEvents) {
-        if (event->type() ==  Event::eKnown ||
+        if (event->type() ==  Event::eBound ||
             mCurveSettings.mTimeType == CurveSettings::eModeFixed)
                event->mTheta.mSamplerProposal = MHVariable::eFixe;
 
@@ -264,7 +264,7 @@ void ModelCurve::generateHPD(const double thresh)
 {
     Model::generateHPD(thresh);
     for (Event*& event : mEvents) {
-        if (event->type() != Event::eKnown) {
+        if (event->type() != Event::eBound) {
             event->mVG.generateHPD(thresh);
         }
     }
@@ -277,7 +277,7 @@ void ModelCurve::clearPosteriorDensities()
     Model::clearPosteriorDensities();
     
     for (Event*& event : mEvents) {
-        if (event->type() != Event::eKnown) {
+        if (event->type() != Event::eBound) {
             event->mVG.mHisto.clear();
             event->mVG.mChainsHistos.clear();
         }
@@ -292,7 +292,7 @@ void ModelCurve::clearCredibilityAndHPD()
     Model::clearCredibilityAndHPD();
     
     for (Event*& event : mEvents) {
-        if (event->type() != Event::eKnown) {
+        if (event->type() != Event::eBound) {
             event->mVG.mHPD.clear();
             event->mVG.mCredibility = QPair<double, double>();
         }

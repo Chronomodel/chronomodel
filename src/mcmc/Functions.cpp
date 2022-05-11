@@ -976,109 +976,12 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const 
     }
 
 #ifdef DEBUG
-    //qDebug()<<description;
-    QTime timeDiff(0, 0, 0, (int) startTime.elapsed());
-    //timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
-    qDebug()<<"gapRangeFromTraces ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
+     qDebug()<<"gapRangeFromTraces done in " + DHMS(startTime.elapsed());
+
 #endif
 
     return range;
 }
-
-/**
- * @brief gapRangeFromTraces_old
- * @param traceBeta
- * @param traceAlpha
- * @param thresh
- * @param description : Obsolete function keep only for memory and test
- * @return
- */
-QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, const QVector<float>& traceAlpha, const float thresh, const QString description)
-{
-    (void) description;
-#ifdef DEBUG
-    QElapsedTimer startTime ;
-    startTime.start();
-#endif
-
-    QPair<float, float> range = QPair<float, float>(- INFINITY, + INFINITY);
-    // limit of precision, to accelerate the calculus
-    const float perCentStep = 0.01f;
-
-    const int n = traceBeta.size();
-    if ( (thresh > 0) && (n > 0) && ((int)traceAlpha.size() == n) ) {
-
-        const int nTarget = (int) ceil( (float)n * thresh/100.);
-        const int nGamma = n - nTarget;
-
-        float dMax = 0.0;
-
-        // make couple beta vs alpha in a std::map, it's a sorted container with ">"
-        std::multimap<float, float> mapPair;
-
-        QVector<float>::const_iterator ctB = traceBeta.cbegin();
-        QVector<float>::const_iterator ctA = traceAlpha.cbegin();
-
-        while (ctB != traceBeta.cend() ) {
-            mapPair.insert(std::pair<float, float>(*ctB,*ctA));
-            ++ctA;
-            ++ctB;
-        }
-
-        // we suppose there is never the several time the same value inside traceBeta or inside traceAlpha
-        // so we can just shift the iterator
-        std::multimap<float,float>::const_reverse_iterator i_shift = mapPair.rbegin();
-
-        std::vector<float> alphaUnder;
-        alphaUnder.reserve(n);
-        std::multimap<float,float>::const_reverse_iterator iMapTmp = i_shift;
-
-
-        const int epsilonStep = qMax(1, (int)floor(nGamma*perCentStep));
-
-        for (int nEpsilon = 0; (nEpsilon <= nGamma ) && (i_shift != mapPair.rend()); ) {
-
-            // We use a reverse Iterator so the first is the last value in the QMap
-            const float a = (*i_shift).first;//a=beta(i)=a(epsilon);
-
-            // find position of beta egual a(epsilon)
-            iMapTmp = i_shift;
-            alphaUnder.clear();
-            while (iMapTmp != mapPair.rend()) {
-                alphaUnder.push_back((*iMapTmp).second);
-                ++iMapTmp;
-            }
-            //std::sort(alphaUnder.begin(),alphaUnder.end());
-
-            const int j = nGamma - nEpsilon;
-            std::nth_element(alphaUnder.begin(), alphaUnder.begin() + j, alphaUnder.end());
-
-            const float b = alphaUnder.at(j); //b=alpha(j)
-            // keep the longest length
-            if ((b-a) > dMax) {
-                dMax = b-a;
-                range.first = a;
-                range.second = b;
-            }
-
-            nEpsilon = nEpsilon + epsilonStep;
-            if (nEpsilon<=nGamma)
-                std::advance(i_shift,epsilonStep);// reverse_iterator
-        }
-
-    }
-
-#ifdef DEBUG
-    //qDebug()<<description;
-    QTime timeDiff(0, 0, 0, (int)startTime.elapsed() );
-    //timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
-    qDebug()<<"gapRangeFromTraces_old ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
-#endif
-
-    return range;
-}
-
-
 
 QString intervalText(const QPair<double, QPair<double, double> > &interval,  DateConversion conversionFunc, const bool forCSV)
 {

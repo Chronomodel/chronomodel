@@ -321,12 +321,7 @@ void MCMCLoop::run()
             }
             ++iterDone;
 
-            if (!(chain.mAquisitionIterIndex % chain.mIterPerBatch)) {
 
-                interTime = aquisitionTime.elapsed() * (double) (estimatedTotalIter - iterDone) / (double) chain.mAquisitionIterIndex;
-
-                emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()) + " : Aquisition ; Estimated time left " + DHMS(interTime)));
-            }
 
             try {
                 OkToMemo =  this->update();
@@ -359,6 +354,14 @@ void MCMCLoop::run()
 
             ++chain.mAquisitionIterIndex;
             ++chain.mTotalIter;
+
+            if (!(chain.mAquisitionIterIndex % chain.mIterPerBatch)) {
+
+                interTime = aquisitionTime.elapsed() * (double) (estimatedTotalIter - iterDone) / (double) chain.mAquisitionIterIndex;
+
+                emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()) + " : Aquisition ; Estimated time left " + DHMS(interTime)));
+            }
+
 
             emit stepProgressed(chain.mAquisitionIterIndex);
         }

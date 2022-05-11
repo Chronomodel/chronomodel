@@ -45,7 +45,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PhaseConstraint.h"
 #include "Generator.h"
 #include "StdUtilities.h"
-#include "EventKnown.h"
+#include "EventBound.h"
 #include "ModelUtilities.h"
 #include "QtUtilities.h"
 
@@ -629,7 +629,9 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event*
                    }*/
                 }
             }
-            maxPhases = std::max(maxPhases, thetaMax - phase->mTau.mX);
+            // Si aucune date initialisé maxPhase n'est pas évaluable donc égale à defaultValue
+            if (thetaMax != defaultValue)
+                maxPhases = std::max(maxPhases, thetaMax - phase->mTau.mX);
 
         }
 
@@ -735,7 +737,9 @@ double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event*
 
                 }
             }
-            minPhases = std::min(minPhases, thetaMin + phase->mTau.mX);
+            // Si aucune date initialisé minPhase n'est pas évaluable donc égale à defaultValue
+            if (thetaMin != defaultValue)
+                minPhases = std::min(minPhases, thetaMin + phase->mTau.mX);
         }
      }
 
@@ -792,26 +796,24 @@ double Event::getThetaMin(double defaultValue)
     //  Déterminer la borne min courante pour le tirage de theta
     // ------------------------------------------------------------------
 
-    // Max des thetas des faits en contrainte directe antérieure
-    double maxThetaBwd (defaultValue);
+    // Max des thetas des faits en contrainte directe antérieure, ils sont déjà initialiés
+    double maxThetaBwd = defaultValue;
     for (auto&& constBwd : mConstraintsBwd) {
-       // if (constBwd->mEventFrom->mInitialized) { // les faits sont tous initialisés ici
             double thetaf (constBwd->mEventFrom->mTheta.mX);
             maxThetaBwd = std::max(maxThetaBwd, thetaf);
-       // }
     }
 
     // Le fait appartient à une ou plusieurs phases.
     // Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
     // Il faut s'assurer d'être au-dessus du plus grand theta de la phase moins la durée
     // (on utilise la valeur courante de la durée pour cela puisqu'elle est échantillonnée)
-    double min3 (defaultValue);
+    double min3 = defaultValue;
 
     for (auto&& phase : mPhases) {
         if (phase->mTauType != Phase::eTauUnknown) {
             double thetaMax = defaultValue;
             for (auto&& event : phase->mEvents) {
-                if (event != this) // && event->mInitialized)
+                if (event != this)
                     thetaMax = std::max(event->mTheta.mX, thetaMax);
             }
             min3 = std::max(min3, thetaMax - phase->mTau.mX);
@@ -838,12 +840,9 @@ double Event::getThetaMax(double defaultValue)
     //  Déterminer la borne max
     // ------------------------------------------------------------------
 
-    //double max1 = defaultValue;
-
     // Min des thetas des faits en contrainte directe et qui nous suivent
     double maxThetaFwd = defaultValue;
     for (auto&& cFwd : mConstraintsFwd) {
-            //double thetaf = cFwd->mEventTo->mTheta.mX;
             maxThetaFwd = std::min(maxThetaFwd, cFwd->mEventTo->mTheta.mX);
     }
 
@@ -856,7 +855,7 @@ double Event::getThetaMax(double defaultValue)
         if (phase->mTauType != Phase::eTauUnknown) {
             double thetaMin = defaultValue;
              for (auto&& event : phase->mEvents) {
-                if (event != this) // && event->mInitialized)
+                if (event != this)
                     thetaMin = std::min(event->mTheta.mX, thetaMin);
             }
             max3 = std::min(max3, thetaMin + phase->mTau.mX);
@@ -866,13 +865,10 @@ double Event::getThetaMax(double defaultValue)
     // Contraintes des phases suivantes
     double maxPhaseNext = defaultValue;
     for (auto&& phase : mPhases) {
-        //double thetaMin = phase->getMinThetaNextPhases(defaultValue);
         maxPhaseNext = std::min(maxPhaseNext, phase->getMinThetaNextPhases(defaultValue));
     }
 
-    //const double max_tmp1 = std::min(defaultValue, maxThetaFwd);
     const double max_tmp2 = std::min(max3, maxPhaseNext);
-    //const double max = std::min(max_tmp1, max_tmp2);
     const double max = std::min(maxThetaFwd, max_tmp2);
 
     return max;
@@ -882,12 +878,10 @@ void Event::updateTheta(const double& tmin, const double& tmax)
 {
     const double min = getThetaMin(tmin);
     const double max = getThetaMax(tmax);
+    //qDebug() << "----------->      in Event::updateTheta(): Event initialized : " << this->mName << " : " << this->mTheta.mX << " between" << "[" << min << " ; " << max << "]";
 
     if (min >= max)
         throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(mName, QString::number(min), QString::number(max));
-
-
-    //qDebug() << "[" << min << ", " << max << "]";
 
     // -------------------------------------------------------------------------------------------------
     //  Evaluer theta.
@@ -958,7 +952,7 @@ void Event::updateTheta(const double& tmin, const double& tmax)
 
 void Event::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
-    if (type() != Event::eKnown)
+    if (type() != Event::eBound)
         mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 
     else {
@@ -976,15 +970,21 @@ void Event::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, co
 
 void Event::updateW()
 {
-    mW = 1. / (mVG.mX + mSy * mSy);
- #ifdef DEBUG
-    if (mVG.mX < 1e-100) {
-        qDebug()<< "in Event::updateW mVG.mX < 1e-100 : "<< mVG.mX;
-    }
-    if (mW < 1e-100) {
-        qDebug()<< "in Event::updateW mW < 1e-100 : "<< mW;
-    }
-#endif
+    try {
+#ifdef DEBUG
+        if ((mVG.mX + mSy * mSy) < 1e-100) {
+            qDebug()<< "in Event::updateW mVG.mX + mSy * mSy = 0 : ";
+        }
+ #endif
+        mW = 1. / (mVG.mX + mSy * mSy);
 
+#ifdef DEBUG
+        if (mW < 1e-100) {
+            qDebug()<< "in Event::updateW mW < 1e-100 : "<< mW;
+        }
+#endif
+    }  catch (...) {
+        qWarning() <<"updateW() mW = 0";
+    }
 
 }

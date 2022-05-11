@@ -110,12 +110,13 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
                 GraphCurve curve;
                 curve.mName = "Reference";
                 curve.mPen.setColor(Painting::mainColorDark);
-                curve.mIsHisto = false;
+                //curve.mIsHisto = false;
                 QMap<double, double> refCurve;
 
                 refCurve[tminDisplay] = ref_year - DateUtils::convertFromAppSettingsFormat(tminDisplay);
                 refCurve[tmaxDisplay] = ref_year - DateUtils::convertFromAppSettingsFormat(tmaxDisplay);
                 curve.mData =refCurve;
+                curve.mType = GraphCurve::CurveType::eQMapData;
                 mGraph->addCurve(curve);
 
                 // ----------------------------------------------
@@ -140,9 +141,9 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
                 QColor curveColor(mMeasureColor);
                 curveColor.setAlpha(50);
                 curveMeasure.mBrush = curveColor;
-
-                curveMeasure.mIsVertical = true;
-                curveMeasure.mIsHisto = false;
+                curveMeasure.mType = GraphCurve::CurveType::eVerticalQMap;
+                //curveMeasure.mIsVertical = true;
+                //curveMeasure.mIsHisto = false;
 
                 /* 5000 pts are used on vertical measurement
                  * because the y scale auto adjusts depending on x zoom.
@@ -169,19 +170,22 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
                 curveMeasureAvg.mName = "MeasureAvg";
                 curveMeasureAvg.mPen.setColor(mMeasureColor);
                 curveMeasureAvg.mPen.setStyle(Qt::SolidLine);
-                curveMeasureAvg.mIsHorizontalLine = true;
+                curveMeasure.mType = GraphCurve::CurveType::eHorizontalLine;
+                //curveMeasureAvg.mIsHorizontalLine = true;
 
                 GraphCurve curveMeasureSup;
                 curveMeasureSup.mName = "MeasureSup";
                 curveMeasureSup.mPen.setColor(mMeasureColor);
                 curveMeasureSup.mPen.setStyle(Qt::DashLine);
-                curveMeasureSup.mIsHorizontalLine = true;
+                curveMeasureSup.mType = GraphCurve::CurveType::eHorizontalLine;
+                //curveMeasureSup.mIsHorizontalLine = true;
 
                 GraphCurve curveMeasureInf;
                 curveMeasureInf.mName = "MeasureInf";
                 curveMeasureInf.mPen.setColor(mMeasureColor);
                 curveMeasureInf.mPen.setStyle(Qt::DashLine);
-                curveMeasureInf.mIsHorizontalLine = true;
+                curveMeasureInf.mType = GraphCurve::CurveType::eHorizontalLine;
+                //curveMeasureInf.mIsHorizontalLine = true;
 
                 curveMeasureAvg.mHorizontalValue = age;
                 curveMeasureSup.mHorizontalValue = age + error;

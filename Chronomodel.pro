@@ -286,7 +286,8 @@ HEADERS += src/model/Constraint.h
 HEADERS += src/model/Date.h
 HEADERS += src/model/Event.h
 HEADERS += src/model/EventConstraint.h
-HEADERS += src/model/EventKnown.h
+HEADERS += \
+    src/model/EventBound.h
 HEADERS += src/model/Model.h
 HEADERS += src/model/ModelUtilities.h
 HEADERS += src/model/Phase.h
@@ -451,7 +452,8 @@ SOURCES += src/model/Constraint.cpp
 SOURCES += src/model/Date.cpp
 SOURCES += src/model/Event.cpp
 SOURCES += src/model/EventConstraint.cpp
-SOURCES += src/model/EventKnown.cpp
+SOURCES += \
+    src/model/EventBound.cpp
 SOURCES += src/model/Model.cpp
 SOURCES += src/model/ModelUtilities.cpp
 SOURCES += src/model/Phase.cpp

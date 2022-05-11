@@ -52,7 +52,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "Date.h"
 #include "Event.h"
-#include "EventKnown.h"
+#include "EventBound.h"
 #include "Phase.h"
 
 #include "Label.h"
@@ -173,10 +173,10 @@ mMaximunNumberOfVisibleGraph(0)
     mEventThetaRadio->setFixedHeight(h);
     mEventThetaRadio->setChecked(true);
 
-    mDataSigmaRadio = new RadioButton(tr("Ind. Std. Deviations"));
+    mDataSigmaRadio = new RadioButton(tr("Std-ti"));
     mDataSigmaRadio->setFixedHeight(h);
     
-    mEventVGRadio = new RadioButton(tr("Std G"));
+    mEventVGRadio = new RadioButton(tr("Std-gi"));
     mEventVGRadio->setFixedHeight(h);
 
     mDataCalibCheck = new CheckBox(tr("Individual Calib. Dates"));
@@ -228,7 +228,7 @@ mMaximunNumberOfVisibleGraph(0)
     //mTempoCredCheck = new CheckBox(tr("Tempo Cred."), mPhasesGroup);
     //mTempoCredCheck->setFixedHeight(h);
 
-    mTempoErrCheck = new CheckBox(tr("Tempo Error"), mPhasesGroup);
+    mTempoErrCheck = new CheckBox(tr("Error"), mPhasesGroup);
     mTempoErrCheck->setFixedHeight(h);
 
     mActivityRadio = new RadioButton(tr("Activity"), mPhasesGroup);
@@ -246,21 +246,22 @@ mMaximunNumberOfVisibleGraph(0)
 
     QVBoxLayout* phasesUnfoldGroupLayout = new QVBoxLayout();
     phasesUnfoldGroupLayout->setContentsMargins(15, 0, 0, 0);
+    phasesUnfoldGroupLayout->addWidget(mTempoErrCheck, Qt::AlignLeft);
     phasesUnfoldGroupLayout->addWidget(mPhasesEventsUnfoldCheck, Qt::AlignLeft);
     phasesUnfoldGroupLayout->addWidget(mPhasesDatesUnfoldCheck, Qt::AlignLeft);
 
-    QVBoxLayout* phasesTempoGroupLayout = new QVBoxLayout();
+  /*  QVBoxLayout* phasesTempoGroupLayout = new QVBoxLayout();
     phasesTempoGroupLayout->setContentsMargins(15, 0, 0, 0);
     //phasesTempoGroupLayout->addWidget(mTempoCredCheck, Qt::AlignLeft);
     phasesTempoGroupLayout->addWidget(mTempoErrCheck, Qt::AlignLeft);
-
+*/
     phasesGroupLayout->setContentsMargins(10, 10, 10, 10);
 
     phasesGroupLayout->addWidget(mBeginEndRadio);
     phasesGroupLayout->setSpacing(10);
     phasesGroupLayout->addWidget(mTempoRadio);
     phasesGroupLayout->setSpacing(10);
-    phasesGroupLayout->addLayout(phasesTempoGroupLayout);
+   // phasesGroupLayout->addLayout(phasesTempoGroupLayout);
     phasesGroupLayout->addWidget(mActivityRadio);
   //  phasesGroupLayout->setSpacing(10);
     phasesGroupLayout->addLayout(phasesUnfoldGroupLayout);
@@ -2262,7 +2263,7 @@ void ResultsView::updateGraphsMinMax()
 
         } else if (mMainVariable == GraphViewResults::eLambda) {
             mResultMinX = getGraphsMin(listGraphs, "Lambda", -20.);
-            mResultMaxX = getGraphsMax(listGraphs, "Lambda", 20.);
+            mResultMaxX = getGraphsMax(listGraphs, "Lambda", 10.);
 
         } else {
             mResultMinX = mModel->mSettings.getTminFormated();
@@ -2714,20 +2715,17 @@ void ResultsView::updateOptionsWidget()
     mOptionsLayout = new QVBoxLayout();
     mOptionsLayout->setContentsMargins(mMargin, mMargin, 0, 0);
     mOptionsLayout->addWidget(mGraphListTab);
-        // If the current tab is not currently visible :
-        // - Show the "Phases" tab (1) which is a good default choice if the model has phases.
-        // - Show the "Events" tab (0) which is a good default choice if the model doesn't have phases.
+    // If the current tab is not currently visible :
+    // - Show the "Phases" tab (1) which is a good default choice if the model has phases.
+    // - Show the "Events" tab (0) which is a good default choice if the model doesn't have phases.
 
-        if (mHasPhases && mGraphListTab->currentIndex() >= 2 && !isCurve()) {
-            mGraphListTab->setTab(1, false);
+    if (mHasPhases && mGraphListTab->currentIndex() >= 2 && !isCurve()) {
+        mGraphListTab->setTab(1, false);
 
-        } else if (!mHasPhases && !isCurve() && mGraphListTab->currentIndex() >= 1) {
-            mGraphListTab->setTab(0, false);
-        }
+    } else if (!mHasPhases && !isCurve() && mGraphListTab->currentIndex() >= 1) {
+        mGraphListTab->setTab(0, false);
+    }
 
-     //   if (!mHasPhases)
-     //       mGraphListTabsetTabVisible [1].hide();
-  //
 
     optionWidgetHeigth += mGraphListTab->height();
     // -------------------------------------------------------------------------------------
@@ -2780,7 +2778,6 @@ void ResultsView::updateOptionsWidget()
         } else {
             mDataCalibCheck->hide();
             mWiggleCheck->hide();
-
         }
         eventGroupLayout->addWidget(mStatCheck);
         totalH += h;
@@ -2811,8 +2808,7 @@ void ResultsView::updateOptionsWidget()
             mPhasesDatesUnfoldCheck->setChecked(false);
         }
 
-
-        //--- change layout
+        //--- Change layout
         QVBoxLayout* phasesGroupLayout = new QVBoxLayout();
         phasesGroupLayout->setContentsMargins(10, 10, 10, 10);
 
@@ -2820,42 +2816,31 @@ void ResultsView::updateOptionsWidget()
         phasesGroupLayout->addWidget(mTempoRadio);
         qreal totalH = 2 * h; // look ligne 165 in ResultsView() comment Right Part. totalH = 3 * h
 
-        if (mTempoRadio->isChecked()) {
-            //mTempoCredCheck->show();
-            mTempoErrCheck->show();
-            QVBoxLayout* phasesTempoGroupLayout = new QVBoxLayout();
-            phasesTempoGroupLayout->setContentsMargins(15, 0, 0, 0);
-            //phasesTempoGroupLayout->addWidget(mTempoCredCheck, Qt::AlignLeft);
-            phasesTempoGroupLayout->addWidget(mTempoErrCheck, Qt::AlignLeft);
-            totalH += 2*h;
-            phasesGroupLayout->addLayout(phasesTempoGroupLayout);
-
-        } else {
-            //mTempoCredCheck->hide();
-            mTempoErrCheck->hide();
-        }
-
         phasesGroupLayout->addWidget(mActivityRadio);
         totalH += h;
 
         if (!mDurationRadio->isChecked()) {
-            QVBoxLayout* phasesUnfoldGroupLayout = new QVBoxLayout();
-            phasesUnfoldGroupLayout->setContentsMargins(15, 0, 0, 0);
+            QVBoxLayout* phasesUnfoldErrorGroupLayout = new QVBoxLayout();
+            phasesUnfoldErrorGroupLayout->setContentsMargins(15, 0, 0, 0);
             mPhasesEventsUnfoldCheck->show();
-            phasesUnfoldGroupLayout->addWidget(mPhasesEventsUnfoldCheck, Qt::AlignLeft);
+            if (!mBeginEndRadio->isChecked())
+                phasesUnfoldErrorGroupLayout->addWidget(mTempoErrCheck, Qt::AlignLeft);
+
+            phasesUnfoldErrorGroupLayout->addWidget(mPhasesEventsUnfoldCheck, Qt::AlignLeft);
             totalH += h;
             if (mPhasesEventsUnfoldCheck->isChecked()) {
                 mPhasesDatesUnfoldCheck->show();
-                phasesUnfoldGroupLayout->addWidget(mPhasesDatesUnfoldCheck, Qt::AlignLeft);
+                phasesUnfoldErrorGroupLayout->addWidget(mPhasesDatesUnfoldCheck, Qt::AlignLeft);
                 totalH += h;
             } else {
                 mPhasesDatesUnfoldCheck->hide();
             }
-            phasesGroupLayout->addLayout(phasesUnfoldGroupLayout);
+            phasesGroupLayout->addLayout(phasesUnfoldErrorGroupLayout);
 
         } else {
             mPhasesEventsUnfoldCheck->hide();
             mPhasesDatesUnfoldCheck->hide();
+            mTempoErrCheck->hide();
         }
 
         phasesGroupLayout->addWidget(mDurationRadio);
@@ -3061,7 +3046,6 @@ void ResultsView::updateOptionsWidget()
         optionWidgetHeigth += mSaveSelectWidget->height();
    }
 
-
     mOptionsLayout->addStretch();
     mOptionsWidget->setLayout(mOptionsLayout);
     mOptionsWidget->setGeometry(0, 0, mOptionsW - mMargin, optionWidgetHeigth);
@@ -3153,8 +3137,8 @@ void ResultsView::updateGraphsZoomX()
     QPair<GraphViewResults::variable_t, GraphViewResults::graph_t> key(mMainVariable, mCurrentTypeGraph);
 
     if (xScaleRepresentsTime()) {
-        double minFormatted = DateUtils::convertFromAppSettingsFormat(mResultCurrentMinX);
-        double maxFormatted = DateUtils::convertFromAppSettingsFormat(mResultCurrentMaxX);
+        const double minFormatted = DateUtils::convertFromAppSettingsFormat(mResultCurrentMinX);
+        const double maxFormatted = DateUtils::convertFromAppSettingsFormat(mResultCurrentMaxX);
 
         std::pair<double, double> resultMinMax = std::minmax(minFormatted, maxFormatted);
 
@@ -3214,9 +3198,14 @@ void ResultsView::setXScale()
 
 void ResultsView::applyRuler(const double min, const double max)
 {
-    mResultCurrentMinX = std::max(min, mResultMinX);
-    mResultCurrentMaxX = std::min(max, mResultMaxX);//max;
+    if (xScaleRepresentsTime()) {
+        mResultCurrentMinX = min;
+        mResultCurrentMaxX = max;
 
+    } else {
+        mResultCurrentMinX = std::max(min, mResultMinX);
+        mResultCurrentMaxX = std::min(max, mResultMaxX);
+    }
     setXRange();
     updateGraphsZoomX();
 }

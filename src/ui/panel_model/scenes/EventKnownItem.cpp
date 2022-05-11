@@ -45,7 +45,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "Painting.h"
 #include "GraphView.h"
-#include "EventKnown.h"
+#include "EventBound.h"
 #include "StdUtilities.h"
 #include "Project.h"
 
@@ -132,7 +132,7 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
         curve.mBrush = Painting::mainColorLight;
         curve.mPen = QPen(Painting::mainColorLight, 2.);
 
-        curve.mIsHorizontalSections = true;
+        curve.mType = GraphCurve::eHorizontalSections;
         qreal tLower;
         qreal tUpper;
 

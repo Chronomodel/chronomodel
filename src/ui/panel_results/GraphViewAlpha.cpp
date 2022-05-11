@@ -121,7 +121,6 @@ void GraphViewAlpha::generateCurves(const graph_t typeGraph, const QVector<varia
         curvePostDistrib.mData = mModel->mLambdaSpline.fullHisto();
         curvePostDistrib.mPen = QPen(color, 1, Qt::SolidLine);
         curvePostDistrib.mBrush = Qt::NoBrush;
-        curvePostDistrib.mIsHisto = false;
         //curvePostDistrib.mIsRectFromZero = true; // for Unif-typo. calibs., invisible for others!
         
         mGraph->addCurve(curvePostDistrib);

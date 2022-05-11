@@ -42,19 +42,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 GraphCurve::GraphCurve():
+mType(eQMapData),
 mPen(Qt::black, 1),
 mBrush(Qt::NoBrush),
-mIsHisto(true),
 mIsRectFromZero(false),
-mUseVectorData(false),
-mIsHorizontalLine(false),
 mHorizontalValue(type_data(0)),
-mIsVerticalLine(false),
 mVerticalValue(type_data(0)),
-mIsHorizontalSections(false),
-mIsTopLineSections(false),
-mIsVertical(false),
-mIsRefPoints(false),
 mVisible(true)
 {
 

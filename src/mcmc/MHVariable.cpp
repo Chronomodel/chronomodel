@@ -133,9 +133,13 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
     if (rapport >= 1.)
         accepted = true;
 
-    else {
+    else if (rapport >= 0){
         const double uniform = Generator::randomUniform();
-        accepted = (rapport >= uniform);
+        accepted = (uniform <= rapport);
+#ifdef DEBUG
+        if (uniform == 0)
+            qDebug()<< "MHVariable::tryUpdate() uniform == 0";
+#endif
     }
 
     if (accepted)
@@ -263,7 +267,7 @@ void MHVariable::saveCurrentAcceptRate()
 QVector<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains, int index)
 {
     QVector<double> accept(0);
-    int shift (0);
+    int shift = 0;
     //const int reserveSize = (int) ceil(chains.at(index).mNumBurnIter + (chains.at(index).mBatchIndex * chains.at(index).mNumBatchIter) + chains.at(index).mIterPerAquisition / chains.at(index).mThinningInterval);
     const int reserveSize = (int) ceil(chains.at(index).mIterPerBurn + (chains.at(index).mBatchIndex * chains.at(index).mIterPerBatch) + chains.at(index).mRealyAccepted);
     accept.reserve(reserveSize);
@@ -293,13 +297,13 @@ QVector<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains,
 
 void MHVariable::generateGlobalRunAcceptation(const QList<ChainSpecs> &chains)
 {
-    double accepted (0.);
-    double acceptsLength (0.);
-    int shift (0);
+    double accepted = 0.;
+    double acceptsLength = 0.;
+    int shift = 0;
 
     for (auto&& chain : chains) {
-        int burnAdaptSize = 1 + chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
-        int runSize = chain.mIterPerAquisition;
+        const int burnAdaptSize = 1 + chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
+        const int runSize = chain.mIterPerAquisition;
         shift += burnAdaptSize;
         for (int j=shift; (j<shift + runSize) && (j<mAllAccepts->size()); ++j) {
             if (mAllAccepts->at(j))
@@ -331,7 +335,8 @@ QString MHVariable::resultsString(const QString& nl, const QString& noResultMess
              result += nl + tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(stringForLocal(mGlobalAcceptation*100.), getSamplerProposalText(mSamplerProposal));
 
     } else {
-        result = tr("Fixed value : %1").arg(stringForLocal(mX));
+        // result = tr("Fixed value : %1").arg(stringForLocal(mX)); //mResults.traceAnalysis.mean
+        result = tr("Fixed value : %1").arg(stringForLocal(mResults.traceAnalysis.mean)); // for VG mX is Variance and we need std G
     }
     return result;
 }

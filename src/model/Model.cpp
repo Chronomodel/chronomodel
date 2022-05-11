@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Model.h"
 #include "Date.h"
 #include "Project.h"
-#include "EventKnown.h"
+#include "EventBound.h"
 #include "MCMCLoopMain.h"
 #include "MCMCProgressDialog.h"
 #include "ModelUtilities.h"
@@ -155,6 +155,11 @@ void Model::updateFormatSettings()
         phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
         phase->mActivityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityInf);
         phase->mActivitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivitySup);
+
+
+        phase->mActivityUnifMean = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifMean);
+        phase->mActivityUnifInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifInf);
+        phase->mActivityUnifSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifSup);
 
     }
 }
@@ -764,7 +769,7 @@ bool Model::isValid()
     for (int i = 0; i<eventBranches.size(); ++i) {
         for (auto j = 0; j<eventBranches.at(i).size(); ++j) {
             Event* event = eventBranches[i][j];
-            if (event->type() == Event::eKnown)  {
+            if (event->type() == Event::eBound)  {
                 EventKnown* bound = dynamic_cast<EventKnown*>(event);
 
                 // --------------------
@@ -776,7 +781,7 @@ bool Model::isValid()
                 double lower = double (mSettings.mTmin);
                 for (auto k = 0; k<j; ++k) {
                     Event* evt = eventBranches[i][k];
-                    if (evt->mType == Event::eKnown) {
+                    if (evt->mType == Event::eBound) {
                         EventKnown* bd = dynamic_cast<EventKnown*>(evt);
                         //if(bd->mKnownType == EventKnown::eFixed)
                         lower = qMax(lower, bd->mFixed);
@@ -799,7 +804,7 @@ bool Model::isValid()
                 double upper = mSettings.mTmax;
                 for (auto k = j+1; k<eventBranches.at(i).size(); ++k) {
                     Event* evt = eventBranches[i][k];
-                    if (evt->mType == Event::eKnown) {
+                    if (evt->mType == Event::eBound) {
                         EventKnown* bd = dynamic_cast<EventKnown*>(evt);
                         // if (bd->mKnownType == EventKnown::eFixed)
                         upper = qMin(upper, bd->mFixed);
@@ -865,7 +870,7 @@ bool Model::isValid()
             bool boundFound = false;
 
             for (int j = 0; j<mPhases.at(i)->mEvents.size(); ++j) {
-                if (mPhases.at(i)->mEvents.at(j)->mType == Event::eKnown) {
+                if (mPhases.at(i)->mEvents.at(j)->mType == Event::eBound) {
                     EventKnown* bound = dynamic_cast<EventKnown*>(mPhases.at(i)->mEvents[j]);
                     if (bound) {
                         boundFound = true;
@@ -937,55 +942,23 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
     t.start();
 #endif
 
-#ifndef UNIT_TEST
-    // we can't use a progressBar here becasue ther is the finalyze bar on the top, and it's bug
-    // Display a progressBar if "long" set with setMinimumDuration()
- /*   QProgressDialog *progress = new QProgressDialog(tr("Correlation generation"), tr("Wait") , 1, 10);
-    progress->setWindowModality(Qt::NonModal);
-    progress->setCancelButton(0);
-    progress->setMinimumDuration(4);
-    progress->setMinimum(0);
-
-    int sum (0);
-    for (auto && event : mEvents )
-        sum += (event->mDates.size() + 1);
-
-    progress->setMaximum(mPhases.size() + sum);
-    int position(0);*/
-#endif
-
-
     for (const auto& event : mEvents ) {
         event->mTheta.generateCorrelations(chains);
-#ifndef UNIT_TEST
-        //progress->setValue(++position);
-#endif
+
         for (auto&& date : event->mDates ) {
             date.mTi.generateCorrelations(chains);
             date.mSigmaTi.generateCorrelations(chains);
-
-#ifndef UNIT_TEST
-            //progress->setValue(++position);
-#endif
         }
     }
 
     for (const auto& phase : mPhases ) {
         phase->mAlpha.generateCorrelations(chains);
         phase->mBeta.generateCorrelations(chains);
-        phase->mTau.generateCorrelations(chains); // à voir avec PhL, est-ce utile ?
-
-#ifndef UNIT_TEST
-    //    progress->setValue(++position);
-#endif
+        phase->mTau.generateCorrelations(chains); // ??? à voir avec PhL, est-ce utile ?
     }
 
-#ifndef UNIT_TEST
-//    progress->~QProgressDialog();
-#endif
-
 #ifdef DEBUG
-    qDebug() <<  "=> Model::generateCorrelations done in  %1 h %2 m %3 s %4 ms" + DHMS(t.elapsed());
+    qDebug() <<  "=> Model::generateCorrelations done in " + DHMS(t.elapsed());
 #endif
 
 }
@@ -1041,7 +1014,7 @@ void Model::setThresholdToAllModel(const double threshold)
 {
     mThreshold = threshold;
     for (const auto& pEvent : mEvents) {
-        if (pEvent->type() != Event::eKnown){
+        if (pEvent->type() != Event::eBound){
           pEvent->mTheta.mThresholdUsed = mThreshold;
 
           for (auto&& date : pEvent->mDates ) {
@@ -1110,10 +1083,9 @@ void Model::updateDensities(int fftLen, double bandwidth, double threshold)
 
 
     if (!mPhases.isEmpty()) {
-       // generateTempoAndActivity();
         generateTempo(fftLen);
 
-        generateActivity(fftLen, mHActivity); // pHd 2021-06-30  TODO pouvoir changer h
+        generateActivity(fftLen, mHActivity); // ??? pHd 2021-06-30  TODO pouvoir changer h
 
     }
     generateNumericalResults(mChains);
@@ -1212,7 +1184,7 @@ void Model::generateCredibility(const double &thresh)
 
     for (const auto& pEvent : mEvents) {
         bool isFixedBound = false;
-        if (pEvent->type() == Event::eKnown)
+        if (pEvent->type() == Event::eBound)
                 isFixedBound = true;
 
         if (!isFixedBound) {
@@ -1310,7 +1282,7 @@ void Model::generateHPD(const double thresh)
     while (iterEvent!=mEvents.end()) {
         bool isFixedBound = false;
 
-        if ((*iterEvent)->type() == Event::eKnown) {
+        if ((*iterEvent)->type() == Event::eBound) {
             //EventKnown* ek = dynamic_cast<EventKnown*>(*iterEvent);
             //if(ek->knownType() == EventKnown::eFixed)
                 isFixedBound = true;
@@ -1355,7 +1327,7 @@ void Model::generateTempo(size_t gridLenth)
     tClock.start();
 #endif
 
-// Avoid to redo calculation, when mActivity exist, it happen when the control is changed
+// Avoid to redo calculation, when mRawTempo exist, it happen when the control is changed
     int tempoToDo = 0;
     for (const auto& phase : mPhases) {
         if (phase->mRawTempo.isEmpty())
@@ -1607,13 +1579,118 @@ void Model::clearPosteriorDensities()
     }
 }
 
+void Model::generateActivityBinomialeCurve(const int n, std::vector<double>& C1x, std::vector<double>& C2x, std::vector<std::vector<int> > &binomialDico, const double alpha)
+{
+    const double p_frac = 100.;
+    const double x_frac = 20.;
+
+    const double alpha2 = alpha/2.;
+    const double one_alpha2 = (1-alpha/2.);
+
+    double p, p_value, sum_p = 0.;
+
+    double x;
+    double k1, k2;
+    std::vector<double> rep_Bi;
+
+    /* Calcul de la courbe p=f(x) */
+    std::vector<double> C1;
+    std::vector<double> C2;
+
+
+
+    for (int i = 0; i< p_frac; ++i) {
+           p = i/p_frac;
+           rep_Bi.clear();
+
+           k1 = 0;
+           k2 = 0;
+           double prev_sum = 0;
+           for (int k = 0; k<n+1; ++k) {
+               if (k == 0) {
+                   p_value = pow(1-p, n);
+                   sum_p = p_value;
+                   rep_Bi.push_back(sum_p);
+
+               } else {
+                   p_value = binomialCoefficient(n, k, binomialDico) * pow(p, k) * pow(1-p, n-k);
+
+                   sum_p += p_value;
+                   rep_Bi.push_back(sum_p);
+               }
+
+
+                if (sum_p == alpha2) {
+                   k2 = k;
+
+               } else  if (prev_sum < alpha2 && alpha2< sum_p) {
+                   if ( k == 0) {
+                       k2 = 0;
+                   } else if (k<n) {
+                     k2 = (alpha2-prev_sum)/(sum_p-prev_sum) + k -1;
+
+                   } else {
+                       k2 = n;
+                   }
+               }
+
+               if (sum_p == one_alpha2) {
+                   k1 = k;
+
+               } else if (prev_sum < one_alpha2 && one_alpha2 < sum_p) {
+                   if ( k == 0) {
+                       k1 = 0;
+
+                   } else if (k<n) {
+                       k1 = (one_alpha2-prev_sum)/(sum_p-prev_sum) + k ;
+
+                   } else {
+                       k1 = n;
+                   }
+
+
+               }
+
+               prev_sum = sum_p;
+
+           }
+
+           C1.push_back(k1);
+           C2.push_back(k2);
+
+       }
+    // p = 100%
+    C1.push_back(n);
+    C2.push_back(n);
+
+    /* Inversion de la courbe pour obtenir x=f(p)  */
+
+    for (int i = 0; i<= x_frac; ++i) {
+        x = (double)(i*n) / x_frac;
+        p = 0.;
+        unsigned long j = 0;
+        while (C1[j] < x && j<C1.size()) {
+            p = j / p_frac;
+            ++j;
+          }
+        C1x.push_back(p);
+
+        j = 0;
+        p = 0;
+         while (C2[j] <= x && j<C2.size()) {
+            p = j /p_frac;
+            ++j;
+          }
+        C2x.push_back(p);
+    }
+}
 
 /**
  * @brief Model::generateActivity
  * @param gridLenth
  * @param h defined in year, if h<0 then h= delta_t \f$ \delta_t = (t_max - t_min + 4h )/(gridLenth) \f$
  */
-void Model:: generateActivity(size_t gridLength, double h)
+void Model::generateActivity(size_t gridLength, double h)
 {
 #ifdef DEBUG
     qDebug()<<"Model::generateActivity() "<<mSettings.mTmin<<mSettings.mTmax;
@@ -1631,6 +1708,7 @@ void Model:: generateActivity(size_t gridLength, double h)
     if (activityToDo == 0) // no computation
         return;
 
+
     /// We want an interval bigger than the maximun finded value, we need a point on tmin, tmax and tmax+deltat
 
     double tmin, tmax;
@@ -1640,6 +1718,15 @@ void Model:: generateActivity(size_t gridLength, double h)
     std::vector<double> scenario;
 
     for (const auto& phase : mPhases) {
+        // Curves for error binomial
+        const double n = phase->mEvents.size();
+        std::vector<double> C1;
+        std::vector<double> C2;
+
+        std::vector<std::vector<int>> dico(n + 1, std::vector<int>(n + 1, -1));
+
+        generateActivityBinomialeCurve(n, C1, C2, dico);
+
         // create Empty containers
         std::vector<std::vector<int>> Ni (gridLength);
 
@@ -1658,25 +1745,36 @@ void Model:: generateActivity(size_t gridLength, double h)
         double min_elem = listTrace.at(0).at(0);
         double max_elem = min_elem;
 
-        double lmin, lmax;
         for (const auto& l : listTrace) {
-            lmin = *std::min_element(l.cbegin(), l.cend());
-            min_elem = std::min(min_elem, lmin);
-            lmax = *std::max_element(l.cbegin(), l.cend());
-            max_elem = std::max(max_elem, lmax);
+            const auto lminmax = std::minmax_element(l.cbegin(), l.cend());
+            min_elem = std::min(min_elem, *lminmax.first);
+            max_elem = std::max(max_elem, *lminmax.second);
         }
         tmin = std::floor(min_elem);
         tmax = std::ceil(max_elem);
 
 #endif
-        const double n = phase->mEvents.size();
         const double nr = totalIter * phase->mEvents.size();
 
-        //const double M_m = tmax - tmin;
         const double M_m = max_elem - min_elem;
-        phase->mActivityMeanUnif = n / M_m;
-        phase->mActivityStdUnif = 1.96 * sqrt(phase->mActivityMeanUnif * ((1./ h) - (1. / M_m)) );
-        const double qUnif = h / M_m;
+
+        phase->mRawActivityUnifMean.insert(min_elem, n / M_m);
+        phase->mRawActivityUnifMean.insert(max_elem, n / M_m); // ?? à revoir
+
+        const double qUnif = std::min(h, M_m) / M_m;
+        auto unifInfSup = binomialConfidence95(n, qUnif, dico);
+
+        const double unifInf = unifInfSup.first * n/std::min(h, M_m);// ??? à controler
+        phase->mRawActivityUnifInf.insert(min_elem, unifInf);
+        phase->mRawActivityUnifInf.insert(max_elem, unifInf); // ?? à revoir
+
+
+        const double unifSup = unifInfSup.second * n/std::min(h, M_m);// ??? à controler
+        phase->mRawActivityUnifSup.insert(min_elem, unifSup);
+        phase->mRawActivityUnifSup.insert(max_elem, unifSup); // ?? à revoir
+
+       //  phase->mActivityStdUnif = 1.96 * sqrt(phase->mActivityMeanUnif * ((1./ h) - (1. / M_m)) );
+       // const double qUnif = h / M_m;
 
         if (tmin == tmax) {
             qDebug()<<"Model::generateActivity() tmin == tmax : " <<phase->mName;
@@ -1709,7 +1807,7 @@ void Model:: generateActivity(size_t gridLength, double h)
              delta_t = (tmax-tmin + 2*h) / double(gridLength-1); // done delta_t = (tmax-tmin)/(double(grigLenth-1)-2))
 
          }
-         double h_2 = h / 2.;
+         const double h_2 = h / 2.;
          // overlaps
 
          tmin -= h;
@@ -1758,36 +1856,14 @@ void Model:: generateActivity(size_t gridLength, double h)
         QVector<double> inf;
         QVector<double> sup;
         QVector<double> esp;
-        QVector<double> p_value;
-        double q, e, v, infp;
-
-        const double qUnif_qUnif = qUnif / (1-qUnif);
-        // Calcul de la courbe de répartition inverse de la p_value pour k=0 à n Events
-        QVector<double> rep_inv_p_value;
-        std::vector<double> p_value_k;
-        std::map<int, double> p_value_density;
-        rep_inv_p_value.push_back(pow(1.-qUnif, n));
-        p_value_k.push_back(pow(1.-qUnif, n));
-
-        for (auto k = 1; k < n+1; k++) {
-
-            p_value_k.push_back(qUnif_qUnif*(n-k+1)/k * p_value_k[k-1]);
-            rep_inv_p_value.push_back( rep_inv_p_value.back()  + p_value_k[k] );
-
-            p_value_density[k] = p_value_k[k];
-        }
-
-        // Calcul du HPD pour la courbe uniforme, pour définir le max = mode et l'intervalle d'erreur à 95%
-        auto hpd95 = intervalMonomodalHpd(p_value_density, 95.);
-
-        //QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(hpd955, 100);
+        double f, e, Q1, Q2;
 
         double tCurrent, tCurrent_inf, tCurrent_sup, h_effective;
         int i = 0;
 
         for (const auto& vecNij : Ni) {
 
-            q = std::accumulate(vecNij.begin(),  vecNij.end(), 0.) / nr;
+            f = std::accumulate(vecNij.begin(),  vecNij.end(), 0.) / nr;
 
             // Define the effective h
             tCurrent = tmin + i*delta_t;
@@ -1795,33 +1871,34 @@ void Model:: generateActivity(size_t gridLength, double h)
             tCurrent_sup = std::min(tmax, tCurrent + h_2);
             h_effective = tCurrent_sup - tCurrent_inf;
 
-            e =  q * n / h_effective;
-
-            v = q * (1-q) * n / pow(h_effective, 2.);
+            e =  f * n / h_effective;
 
             esp.append(e);
 
-            // Forbidden negative error
+
+            /* Old calculus : Valable dans l'approx gaussienne : qd : f * (1-f) * n > 9
+             *
+             * Forbidden negative error
+            v = f * (1-f) * n / pow(h_effective, 2.);
             infp = ( e < 1.96 * sqrt(v) ? 0. : e - 1.96 * sqrt(v) );
             inf.append( infp );
             sup.append( e + 1.96 * sqrt(v));
-            //Xn = floor(q*h);
-            //p_value.append( q == 0? 0.:1-rep_inv_p_value[Xn-1] );
-             // p_value.append( rep_inv_p_value[Xn-1] ); // test - p_value_k[0]
 
-            p_value.append( 1 -interpolate_value_from_curve(q*h, rep_inv_p_value, 0, n)  ); // test
+            */
+
+            Q1 = interpolate_value_from_curve(f, C1, 0, 1.)* n / h; // ??? h ou h_effective à confirmer
+            inf.append(Q1);
+
+            Q2 = interpolate_value_from_curve(f, C2, 0, 1.)* n / h;
+
+            sup.append(Q2);
+
             i++;
         }
-#ifndef UNIT_TEST
-       // ++position;
-//        progress->setValue(position);
-#endif
-
 
         phase->mRawActivity = vector_to_map(esp, tmin, tmax, delta_t);
         phase->mRawActivityInf = vector_to_map(inf, tmin, tmax, delta_t);
         phase->mRawActivitySup = vector_to_map(sup, tmin, tmax, delta_t);
-        phase->mRawActivityPValue = vector_to_map(p_value, tmin, tmax, delta_t);
 
         if ( tmax  <= mSettings.mTmax) {
             phase->mRawActivity.last() = 0.;
@@ -1838,7 +1915,11 @@ void Model:: generateActivity(size_t gridLength, double h)
         phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
         phase->mActivityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityInf);
         phase->mActivitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivitySup);
-        phase->mActivityPValue = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityPValue);
+
+
+        phase->mActivityUnifMean = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifMean);
+        phase->mActivityUnifInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifInf);
+        phase->mActivityUnifSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifSup);
 
 
      } // Loop End on phase
@@ -1850,179 +1931,6 @@ void Model:: generateActivity(size_t gridLength, double h)
 
 }
 
-/*
-void Model:: generateActivity_old(size_t gridLenth, double h)
-{
-#ifdef DEBUG
-    qDebug()<<"Model::generateActivity_old() "<<mSettings.mTmin<<mSettings.mTmax;
-    QElapsedTimer tClock;
-    tClock.start();
-#endif
-
-// Avoid to redo calculation, when mActivity exist, it happen when the control is changed
-    int activityToDo = 0;
-    for (auto&& phase : mPhases) {
-        if (phase->mRawActivity.isEmpty() || gridLenth != mFFTLength || h != mHActivity)
-            ++activityToDo;
-    }
-
-    if (activityToDo == 0) // no computation
-        return;
-
-    // debut code
-    /// We want an interval bigger than the maximun finded value, we need a point on tmin, tmax and tmax+deltat
-
-    double tmin, tmax;
-
-    for (auto&& phase : mPhases) {
-        // create Empty containers
-        std::vector<std::vector<int>> Ni (gridLenth);
-
-         ///# 1 - Generate Event scenario
-         // We suppose, it is the same iteration number for all chains
-        std::vector<QVector<double>> listTrace;
-        for (auto& ev : phase->mEvents)
-            listTrace.push_back(ev->mTheta.fullRunRawTrace(mChains));
-
-        size_t totalIter = listTrace.front().size();
-
-        /// Look for the maximum span containing values \f$ x=2 \f$
-        tmin = mSettings.mTmax;
-        tmax = mSettings.mTmin;
-
-#ifndef UNIT_TEST
-        for (auto& l:listTrace) {
-            const double lmin = *std::min_element(l.cbegin(), l.cend());
-            tmin = std::min(tmin, lmin );
-            const double lmax = *std::max_element(l.cbegin(), l.cend());
-            tmax = std::max(tmax, lmax);
-        }
-        tmin = std::floor(tmin);
-        tmax = std::ceil(tmax);
-#endif
-        if (tmin == tmax) {
-
-           qDebug()<<"Model::generateActivity() tmin == tmax : " <<phase->mName;
-            phase->mRawActivity[tmin] = 1;
-
-            // Convertion in the good Date format
-            phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
-
-#ifndef UNIT_TEST
-          //  position += 4;
-//            progress->setValue(position);
-#endif
-
-            continue;
-        }
-#ifdef DEBUG
-        if (tmax > mSettings.mTmax) {
-            qWarning("Model::generateActivity() tmax>mSettings.mTmax force tmax = mSettings.mTmax");
-            tmax = mSettings.mTmax;
-        }
-#endif
-
-        /// \f$ \delta_t = (t_max - t_min)/(gridLenth-1) \f$
-        const double delta_t = (tmax-tmin) / double(gridLenth-1);
-         if (h < delta_t)
-             h = delta_t;
-
-         double h_2 = h / 2.;
-
-        /// Loop
-        std::vector<double> scenario;
-        for (size_t i = 0; i<totalIter; ++i) {
-
-            /// Create one scenario per iteration
-            scenario.clear();
-            for (auto& lt : listTrace)
-                scenario.push_back(lt.at(i));
-
-            /// Insert the scenario dates in the activity grid
-            std::vector<unsigned> Nij (gridLenth);
-
-            size_t idxGridMin, idxGridMax;
-
-            for (auto& tScenario : scenario) {
-                idxGridMin = std::max ((size_t)0, (size_t) ceil((tScenario - h_2 - tmin) / delta_t));
-                idxGridMax = std::min (gridLenth-1, (size_t) floor((tScenario + h_2 - tmin) / delta_t));
-
-                for (auto&& nij = Nij.begin() + idxGridMin; nij <= Nij.begin() + idxGridMax; ++nij) {
-                    ++*nij ;
-                }
-
-            }
-
-            std::vector<unsigned>::iterator itNij (Nij.begin());
-            for (auto&& n : Ni) {
-                n.push_back(*itNij);
-                ++itNij;
-            }
-
-        }
-        /// Loop End on totalIter
-
-
-    ///# Calculation of the variance
-        QVector<double> inf;
-        QVector<double> sup;
-        QVector<double> mean;
-        double m, s, infp;
-
-        for (auto& vecNij : Ni) {
-            m = s = 0;
-            mean_std_Knuth(vecNij, m, s);
-            m /= h;
-            s /= h;
-
-            mean.append(m);
-
-            // Forbidden negative error
-            infp = ( m < s ? 0. : m - s );
-            inf.append( infp );
-            sup.append( m + s);
-
-        }
-#ifndef UNIT_TEST
-       // ++position;
-//        progress->setValue(position);
-#endif
-
-
-        phase->mRawActivity = vector_to_map(mean, tmin, tmax, delta_t);
-        phase->mRawActivityInf = vector_to_map(inf, tmin, tmax, delta_t);
-        phase->mRawActivitySup = vector_to_map(sup, tmin, tmax, delta_t);
-
-        if ( tmax  <= mSettings.mTmax) {
-            phase->mRawActivity.last() = 0.;
-            phase->mRawActivityInf.last() = 0.;
-            phase->mRawActivitySup.last() = 0.;
-        }
-
-        if (tmin >= mSettings.mTmin) {
-            phase->mRawActivity.first() = 0.;
-            phase->mRawActivityInf.first() = 0.;
-            phase->mRawActivitySup.first() = 0.;
-
-        }
-        phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
-        phase->mActivityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityInf);
-        phase->mActivitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivitySup);
-
-
-        const double M_m = tmax - tmin;
-        phase->mActivityMeanUnif = phase->mEvents.size() / M_m;
-        phase->mActivityStdUnif = sqrt(phase->mActivityMeanUnif * ((1./ h) - (1 / M_m)) );
-
-     } // Loop End on phase
-
-#ifdef DEBUG
-    qDebug() <<  QString("=> Model::generateActivity_old() done in " + DHMS(tClock.elapsed()));
-
-#endif
-
-}
-*/
 
 void Model::clearCredibilityAndHPD()
 {
@@ -2079,6 +1987,14 @@ void Model::clearTraces()
         ph->mRawTempoSup.clear();
        // ph->mRawTempoCredibilityInf.clear();
        // ph->mRawTempoCredibilitySup.clear();
+
+        ph->mRawActivity.clear();
+        ph->mRawActivityInf.clear();
+        ph->mRawActivitySup.clear();
+
+        ph->mRawActivityUnifMean.clear();
+        ph->mRawActivityUnifInf.clear();
+        ph->mRawActivityUnifSup.clear();
     }
 }
 
