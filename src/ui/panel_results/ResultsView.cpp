@@ -2823,8 +2823,11 @@ void ResultsView::updateOptionsWidget()
             QVBoxLayout* phasesUnfoldErrorGroupLayout = new QVBoxLayout();
             phasesUnfoldErrorGroupLayout->setContentsMargins(15, 0, 0, 0);
             mPhasesEventsUnfoldCheck->show();
-            if (!mBeginEndRadio->isChecked())
+            if (!mBeginEndRadio->isChecked()) {
+                mTempoErrCheck->show();
                 phasesUnfoldErrorGroupLayout->addWidget(mTempoErrCheck, Qt::AlignLeft);
+            } else
+                mTempoErrCheck->hide();
 
             phasesUnfoldErrorGroupLayout->addWidget(mPhasesEventsUnfoldCheck, Qt::AlignLeft);
             totalH += h;

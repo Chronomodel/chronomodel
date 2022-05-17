@@ -120,7 +120,7 @@ public:
     void generateTempo(size_t gridLenth);
 
     void generateActivity(size_t gridLenth, double h);
-    void generateActivityBinomialeCurve(const int n, std::vector<double>& C1x, std::vector<double>& C2x, std::vector<std::vector<int>>& binomialDico, const double alpha = .05);
+    void generateActivityBinomialeCurve(const int n, std::vector<double>& C1x, std::vector<double>& C2x, const double alpha = .05);
 
     virtual void clearTraces();
     virtual void clearPosteriorDensities();

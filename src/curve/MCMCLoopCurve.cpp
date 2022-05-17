@@ -3407,6 +3407,7 @@ double MCMCLoopCurve::S02_Vg_Yx( QList<Event *> _events, SplineMatrices matrices
 
     S02 /= (double)(vecG.size()) - traceA;
     return S02;
+    //return 100.;// ??? pour test
 }
 
 /**

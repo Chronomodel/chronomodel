@@ -1579,19 +1579,19 @@ void Model::clearPosteriorDensities()
     }
 }
 
-void Model::generateActivityBinomialeCurve(const int n, std::vector<double>& C1x, std::vector<double>& C2x, std::vector<std::vector<int> > &binomialDico, const double alpha)
+void Model::generateActivityBinomialeCurve(const int n, std::vector<double>& C1x, std::vector<double>& C2x, const double alpha)
 {
     const double p_frac = 100.;
-    const double x_frac = 20.;
+    const double x_frac = 100.;
 
     const double alpha2 = alpha/2.;
     const double one_alpha2 = (1-alpha/2.);
 
-    double p, p_value, sum_p = 0.;
+    double p, proba, sum_p = 0.;
 
-    double x;
+    double x, qq;
     double k1, k2;
-    std::vector<double> rep_Bi;
+   // std::vector<double> rep_Bi;
 
     /* Calcul de la courbe p=f(x) */
     std::vector<double> C1;
@@ -1599,26 +1599,28 @@ void Model::generateActivityBinomialeCurve(const int n, std::vector<double>& C1x
 
 
 
-    for (int i = 0; i< p_frac; ++i) {
+    for (int i = 0; i< (p_frac-1); ++i) {
            p = i/p_frac;
-           rep_Bi.clear();
+         //  rep_Bi.clear();
 
+           qq = p/(1-p);
            k1 = 0;
            k2 = 0;
            double prev_sum = 0;
+           sum_p = 0;
            for (int k = 0; k<n+1; ++k) {
                if (k == 0) {
-                   p_value = pow(1-p, n);
-                   sum_p = p_value;
-                   rep_Bi.push_back(sum_p);
+                   proba = pow(1-p, n);
+         //          rep_Bi.push_back(sum_p);
 
                } else {
-                   p_value = binomialCoefficient(n, k, binomialDico) * pow(p, k) * pow(1-p, n-k);
+                   //p_value = binomialCoefficient(n, k, binomialDico) * pow(p, k) * pow(1-p, n-k);
+                   proba *= (double)(n-k+1)/(double)k * qq;
 
-                   sum_p += p_value;
-                   rep_Bi.push_back(sum_p);
+
+           //        rep_Bi.push_back(sum_p);
                }
-
+               sum_p += proba;
 
                 if (sum_p == alpha2) {
                    k2 = k;
@@ -1626,8 +1628,9 @@ void Model::generateActivityBinomialeCurve(const int n, std::vector<double>& C1x
                } else  if (prev_sum < alpha2 && alpha2< sum_p) {
                    if ( k == 0) {
                        k2 = 0;
+
                    } else if (k<n) {
-                     k2 = (alpha2-prev_sum)/(sum_p-prev_sum) + k -1;
+                     k2 = (alpha2-prev_sum)/proba + k -1;
 
                    } else {
                        k2 = n;
@@ -1642,12 +1645,11 @@ void Model::generateActivityBinomialeCurve(const int n, std::vector<double>& C1x
                        k1 = 0;
 
                    } else if (k<n) {
-                       k1 = (one_alpha2-prev_sum)/(sum_p-prev_sum) + k ;
+                       k1 = (one_alpha2-prev_sum)/proba + k ;
 
                    } else {
                        k1 = n;
                    }
-
 
                }
 
@@ -1712,6 +1714,7 @@ void Model::generateActivity(size_t gridLength, double h)
     /// We want an interval bigger than the maximun finded value, we need a point on tmin, tmax and tmax+deltat
 
     double tmin, tmax;
+    const double h_2 = h/2.;
     std::vector<int> Nij ;
     Nij.reserve(gridLength);
 
@@ -1720,12 +1723,14 @@ void Model::generateActivity(size_t gridLength, double h)
     for (const auto& phase : mPhases) {
         // Curves for error binomial
         const double n = phase->mEvents.size();
-        std::vector<double> C1;
-        std::vector<double> C2;
+        phase->mRawActivityUnifMean.clear();
+        phase->mRawActivityUnifInf.clear();
+        phase->mRawActivityUnifSup.clear();
 
-        std::vector<std::vector<int>> dico(n + 1, std::vector<int>(n + 1, -1));
 
-        generateActivityBinomialeCurve(n, C1, C2, dico);
+        std::vector<double> Rq = binomialeCurveByLog(n); //  Pour qUnif, détermine la courbe x= r (q)
+
+        std::vector<double> Gx = inverseCurve(Rq); // Pour qActivity, détermine la courbe p = g (x)
 
         // create Empty containers
         std::vector<std::vector<int>> Ni (gridLength);
@@ -1756,25 +1761,31 @@ void Model::generateActivity(size_t gridLength, double h)
 #endif
         const double nr = totalIter * phase->mEvents.size();
 
-        const double M_m = max_elem - min_elem;
+        const double M_m = max_elem - min_elem + h;
 
-        phase->mRawActivityUnifMean.insert(min_elem, n / M_m);
-        phase->mRawActivityUnifMean.insert(max_elem, n / M_m); // ?? à revoir
+        phase->mRawActivityUnifMean.insert(min_elem - h_2, n / M_m);
+        phase->mRawActivityUnifMean.insert(max_elem + h_2, n / M_m);
 
-        const double qUnif = std::min(h, M_m) / M_m;
-        auto unifInfSup = binomialConfidence95(n, qUnif, dico);
+        const double qUnif = h/ M_m;
+        double unifInf, unifSup;
+       // if (n*qUnif*(1-qUnif) > 10.) {
+        // cas approximation gaussienne // inutile avec binomialeCurveByLog testé avec n=5000
+     /*   if (pow(1-qUnif, n) <= 0) { // over Range in binimialConfidence95()
+                unifInf = (n / M_m) - 1.96 * sqrt(n / M_m) * ((1./ h) - (1. / M_m)) ;
+                unifSup = (n / M_m) + 1.96 * sqrt(n / M_m) * ((1./ h) - (1. / M_m)) ;
 
-        const double unifInf = unifInfSup.first * n/std::min(h, M_m);// ??? à controler
-        phase->mRawActivityUnifInf.insert(min_elem, unifInf);
-        phase->mRawActivityUnifInf.insert(max_elem, unifInf); // ?? à revoir
+        } else {
+        */
+            unifInf = interpolate_value_from_curve(qUnif, Rq, 0, 1.)* n / h;
+            unifSup = findOnOppositeCurve(qUnif, Rq)* n / h;
+       // }
+
+        phase->mRawActivityUnifInf.insert(min_elem - h_2, unifInf);
+        phase->mRawActivityUnifInf.insert(max_elem + h_2, unifInf); // ?? à revoir
 
 
-        const double unifSup = unifInfSup.second * n/std::min(h, M_m);// ??? à controler
-        phase->mRawActivityUnifSup.insert(min_elem, unifSup);
-        phase->mRawActivityUnifSup.insert(max_elem, unifSup); // ?? à revoir
-
-       //  phase->mActivityStdUnif = 1.96 * sqrt(phase->mActivityMeanUnif * ((1./ h) - (1. / M_m)) );
-       // const double qUnif = h / M_m;
+        phase->mRawActivityUnifSup.insert(min_elem - h_2, unifSup);
+        phase->mRawActivityUnifSup.insert(max_elem + h_2, unifSup); // ??? à revoir
 
         if (tmin == tmax) {
             qDebug()<<"Model::generateActivity() tmin == tmax : " <<phase->mName;
@@ -1800,18 +1811,18 @@ void Model::generateActivity(size_t gridLength, double h)
 
 #endif
 
-        /// \f$ \delta_t = (t_max - t_min + 2*h)/(gridLenth-1) \f$
-        double delta_t = (tmax-tmin + 2*h) / double(gridLength-1);
+        /// \f$ \delta_t = (t_max - t_min + h)/(gridLenth-1) \f$
+        double delta_t = (tmax-tmin + h) / double(gridLength-1);
         if (h < delta_t) {
              h = delta_t;
-             delta_t = (tmax-tmin + 2*h) / double(gridLength-1); // done delta_t = (tmax-tmin)/(double(grigLenth-1)-2))
+             delta_t = (tmax-tmin + h) / double(gridLength-1); // done delta_t = (tmax-tmin)/(double(grigLenth-1)-2))
 
          }
-         const double h_2 = h / 2.;
+
          // overlaps
 
-         tmin -= h;
-         tmax += h;
+         tmin -= h_2;
+         tmax += h_2;
         /// Loop
 
    try {
@@ -1858,20 +1869,21 @@ void Model::generateActivity(size_t gridLength, double h)
         QVector<double> esp;
         double f, e, Q1, Q2;
 
-        double tCurrent, tCurrent_inf, tCurrent_sup, h_effective;
+        //double tCurrent; , tCurrent_inf, tCurrent_sup, h_effective;
         int i = 0;
 
         for (const auto& vecNij : Ni) {
 
             f = std::accumulate(vecNij.begin(),  vecNij.end(), 0.) / nr;
 
-            // Define the effective h
-            tCurrent = tmin + i*delta_t;
-            tCurrent_inf = std::max(tmin, tCurrent - h_2); // fix boundary effect
-            tCurrent_sup = std::min(tmax, tCurrent + h_2);
-            h_effective = tCurrent_sup - tCurrent_inf;
+            // Define the effective h // Obsolete
+           /* tCurrent = tmin + i*delta_t;
+             tCurrent_inf = std::max(tmin, tCurrent - h_2); // fix boundary effect
+             tCurrent_sup = std::min(tmax, tCurrent + h_2);
+             h_effective = tCurrent_sup - tCurrent_inf;
+           */
 
-            e =  f * n / h_effective;
+            e =  f * n / h; //h_effective; // ??? h ou h_effective à confirmer
 
             esp.append(e);
 
@@ -1886,13 +1898,17 @@ void Model::generateActivity(size_t gridLength, double h)
 
             */
 
-            Q1 = interpolate_value_from_curve(f, C1, 0, 1.)* n / h; // ??? h ou h_effective à confirmer
-            inf.append(Q1);
+            Q1 = interpolate_value_from_curve(f, Gx, 0, 1.)* n / h; // ??? h ou h_effective à confirmer
+            sup.append(Q1);
 
-            Q2 = interpolate_value_from_curve(f, C2, 0, 1.)* n / h;
+            Q2 = findOnOppositeCurve(f, Gx)* n / h;
+            inf.append(Q2);
 
-            sup.append(Q2);
-
+#ifdef DEBUG
+            if (Q1<Q2) {
+                qDebug()<<"generateActivity() Q1<Q2 f="<<f<< " Q1="<<Q1<<" Q2="<<Q2;
+            }
+#endif
             i++;
         }
 

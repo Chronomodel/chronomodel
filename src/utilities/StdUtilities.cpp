@@ -1094,25 +1094,27 @@ int binomialCoefficient(int n, int k , std::vector<std::vector<int>>& binomialDi
     return binomialDico[n][k] = binomialCoefficient(n - 1, k - 1, binomialDico) + binomialCoefficient(n - 1, k, binomialDico);
 }
 
-std::pair<double, double>binomialConfidence95(const int n, const double p, std::vector<std::vector<int>>& binomialDico, const double alpha)
+std::pair<double, double>binomialConfidence95(const int n, const double p, const double alpha)
 {
-    double k1, k2;
+    double k1, k2, proba;
     double sum_p = 0.;
 
     const double alpha2 = alpha/2.;
     const double one_alpha2 = (1-alpha/2.);
-
+    const double qq = p/(1-p);
     k1 = 0;
     k2 = 0;
     double prev_sum = 0;
     for (int k = 0; k<n+1; ++k) {
         if (k == 0) {
-            sum_p = pow(1-p, n);
+            proba = pow(1-p, n);
 
         } else {
-            sum_p += binomialCoefficient(n, k, binomialDico) * pow(p, k) * pow(1-p, n-k);
-        }
+            //sum_p += binomialCoefficient(n, k, binomialDico) * pow(p, k) * pow(1-p, n-k);
+            proba *= (double)(n-k+1)/(double)k * qq;
 
+        }
+        sum_p += proba;
 
         if (sum_p == alpha2) {
             k2 = k;
@@ -1121,7 +1123,7 @@ std::pair<double, double>binomialConfidence95(const int n, const double p, std::
             if ( k == 0) {
                 k2 = 0;
             } else if (k<n) {
-                k2 = (alpha2-prev_sum)/(sum_p-prev_sum) + k -1;
+                k2 = (alpha2-prev_sum)/proba + k -1;
 
             } else {
                 k2 = n;
@@ -1136,7 +1138,7 @@ std::pair<double, double>binomialConfidence95(const int n, const double p, std::
                 k1 = 0;
 
             } else if (k<n) {
-                k1 = (one_alpha2-prev_sum)/(sum_p-prev_sum) + k ;
+                k1 = (one_alpha2-prev_sum)/proba + k ;
 
             } else {
                 k1 = n;
@@ -1149,4 +1151,112 @@ std::pair<double, double>binomialConfidence95(const int n, const double p, std::
     }
 
     return std::make_pair(k2/n, k1/n);
+}
+
+
+/**
+ Pour qUnif, détermine la courbe x= r (q)
+ On suppose q variant de 0 à 1 avec un pas de 1/q_frac
+ retourne un tableau de taille q_frac+1 et x est une fréquence entre 0 et 1
+ */
+//binomialeCurveByLog testé avec n=5000
+std::vector<double> binomialeCurveByLog(const int n, const double alpha, const int q_frac)
+{
+
+    std::vector<double> Rq;
+
+    if (n<2) {
+        Rq = std::vector<double>(q_frac, 1.);
+        return Rq;
+    }
+
+    const double alpha2 = alpha/2.;
+
+    double q, lnP = 0, prev_sum = 0, sum_p = 0.;
+
+    double x, R;
+
+
+    // p = 0%
+    Rq.push_back(0);
+
+    for (int i = 1; i< q_frac; ++i) {
+        q = i/(double) q_frac;
+
+        R = log(q/(1-q)); // La raison de la suite
+        x = 0;
+        // k=0
+        lnP = n*log(1-q);
+        sum_p = exp(lnP);
+        prev_sum = sum_p;
+        if (sum_p >= alpha2) {
+            Rq.push_back(x/n);
+            continue;
+
+        } else {
+            x = -1;
+            for (int k = 1; k<n && x == -1; ++k) {
+
+               lnP += (R+ log((double)(n-k+1)/(double)k) );
+               sum_p += exp(lnP);
+
+                if (sum_p == alpha2) {
+                   x = k;
+
+               } else  if (prev_sum < alpha2 && alpha2< sum_p) {
+                   const auto proba = exp(lnP);
+                   x = (alpha2-prev_sum)/proba + k -1;
+
+               }
+
+               prev_sum = sum_p;
+
+           }
+            if (x == -1)
+                x = n;
+
+            Rq.push_back(x/n);
+        }
+
+    }
+    // p = 100%
+    Rq.push_back(n/n);
+
+    return Rq;
+
+}
+
+/**
+ Pour qActivity, détermine la courbe p = g (x)  en inversant x = r (p) ; p une fréquence entre 0 et 1
+ taille x_frac+1
+ */
+std::vector<double> inverseCurve(const std::vector<double> Rq, const int x_frac)
+{
+    double x, p, p_frac = Rq.size()-1;
+    unsigned long j;
+    std::vector<double> Gx;
+    for (int i = 0; i<= x_frac; ++i) {
+        x = (double)(i) / x_frac;
+        p = 0.;
+        j = 0;
+        while ( j<Rq.size() && Rq[j] <= x) {
+            p = j / p_frac;
+            ++j;
+          }
+        Gx.push_back(p);
+
+    }
+ return Gx;
+}
+
+
+double findOnOppositeCurve (const double p, const std::vector<double> C)
+{
+    const double p_frac = C.size() - 1;
+    const double one_P = (1 - p)*p_frac;
+    const unsigned long minIdx = std::max(( unsigned long)0, ( unsigned long) std::floor(one_P) );
+    const unsigned long maxIdx =  std::min(( unsigned long)C.size() - 1, ( unsigned long)std::ceil(one_P) );
+    const double X2 = 1 - (C[minIdx] + C[maxIdx])/2.; // We can do linear interpolation
+    return  X2;
+
 }

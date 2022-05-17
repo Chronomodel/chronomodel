@@ -343,13 +343,11 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         curveCredSup.mIsRectFromZero = false;
         curveCredSup.mIsHisto = false;
 */
-        color.setAlpha(50);
-       // QBrush envBrush (color);
-
-
+        auto brushColor = color;
+        brushColor.setAlpha(30);
         GraphCurve curveTempoEnv = generateShapeCurve(mPhase->mTempoInf, mPhase->mTempoSup,
                                                      "Post Distrib Tempo Env All Chains",
-                                                     color, Qt::DashLine, color);
+                                                     color, Qt::DashLine, brushColor);
 
         mGraph->addCurve(curveTempoEnv);
        // mGraph->addCurve(curveTempoInf);
@@ -382,7 +380,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         zoneMax.mText = tr("Outside study period");
         mGraph->addZone(zoneMax);
 
-        const type_data yMax = map_max_value(curveTempoSup.mData);
+        const type_data yMax = map_max_value(mPhase->mTempoSup);
 
         mGraph->setRangeY(0., yMax);
 
@@ -394,50 +392,60 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         mGraph->setYAxisMode(GraphView::eMinMax);
 
         mTitle = tr("Phase Activity : %1").arg(mPhase->mName);
-        /*GraphCurve curveActivity = generateDensityCurve( mPhase->mActivity,
+        GraphCurve curveActivity = generateDensityCurve( mPhase->mActivity,
                                                          "Post Distrib Activity All Chains",
                                                          color, Qt::SolidLine);
-         */
+        /*
         GraphCurve curveActivity = generateHPDCurve( mPhase->mActivity,
                                                          "Post Distrib Activity All Chains",
                                                          color);
-
-        GraphCurve curveActivityInf = generateDensityCurve( mPhase->mActivityInf,
+        */
+        /*GraphCurve curveActivityInf = generateDensityCurve( mPhase->mActivityInf,
                                                             "Post Distrib Activity Inf All Chains",
                                                             color, Qt::CustomDashLine);
 
         GraphCurve curveActivitySup = generateDensityCurve( mPhase->mActivitySup,
                                                             "Post Distrib Activity Sup All Chains",
                                                             color, Qt::CustomDashLine);
+        */
+        auto brushColor = color;
+        brushColor.setAlpha(30);
+        GraphCurve curveActivityEnv = generateShapeCurve(mPhase->mActivityInf, mPhase->mActivitySup,
+                                                     "Post Distrib Activity Env All Chains",
+                                                     color, Qt::DashLine, brushColor);
 
-         // Display envelope Uniform
+        // Display envelope Uniform
         /*GraphCurve curveMeanUnif = generateDensityCurve( mPhase->mActivityUnifMean,
                                                            "Post Distrib Activity Unif Mean",
                                                            QColor(Qt::darkGray).darker(), Qt::SolidLine);
        */
-        GraphCurve curveMeanUnif = generateHPDCurve( mPhase->mActivityUnifMean,
+        GraphCurve curveActivityUnifMean = generateDensityCurve( mPhase->mActivityUnifMean,
                                                            "Post Distrib Activity Unif Mean",
                                                            Qt::darkGray);
-
+        /*
         GraphCurve curveUnifInf = generateDensityCurve( mPhase->mActivityUnifInf,
                                                           "Post Distrib Activity Unif Inf",
                                                           Qt::darkGray, Qt::CustomDashLine);
         GraphCurve curveUnifSup = generateDensityCurve( mPhase->mActivityUnifSup,
                                                           "Post Distrib Activity Unif Sup",
                                                           Qt::darkGray, Qt::CustomDashLine);
+        */
+        brushColor = Qt::darkGray;
+        brushColor.setAlpha(40);
+        GraphCurve curveActivityUnivEnv = generateShapeCurve(mPhase->mActivityUnifInf, mPhase->mActivityUnifSup,
+                                                     "Post Distrib Activity Unif Env All Chains",
+                                                     Qt::darkGray, Qt::DashLine, brushColor);
 
         mGraph->setOverArrow(GraphView::eBothOverflow);
 
-
+        mGraph->addCurve(curveActivityEnv);
         mGraph->addCurve(curveActivity);
-        mGraph->addCurve(curveActivityInf);
-        mGraph->addCurve(curveActivitySup);
-        mGraph->addCurve(curveMeanUnif);
-        mGraph->addCurve(curveUnifInf);
-        mGraph->addCurve(curveUnifSup);
-       // mGraph->addCurve(curvePValue);
 
-        const type_data yMax = map_max_value(curveActivitySup.mData);
+        mGraph->addCurve(curveActivityUnifMean);
+        mGraph->addCurve(curveActivityUnivEnv);
+
+
+        const type_data yMax = map_max_value(mPhase->mActivitySup);
 
         mGraph->setRangeY(0., yMax);
 
@@ -591,7 +599,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
              mGraph->setTipXLab("t");
              mGraph->setTipYLab("n");
-            // mGraph->setYAxisMode(GraphView::eMinMax);
+
              mGraph->autoAdjustYScale(true);// do repaintGraph()
          }
 
@@ -603,20 +611,15 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
           if ( Activity && !Activity->mData.isEmpty()) {
               const bool showError = mShowVariableList.contains(eTempoError);//true;
               mGraph->setCurveVisible("Post Distrib Activity All Chains", true);
-              mGraph->setCurveVisible("Post Distrib Activity Inf All Chains", showError);
-              mGraph->setCurveVisible("Post Distrib Activity Sup All Chains", showError);
+              mGraph->setCurveVisible("Post Distrib Activity Env All Chains", showError);
 
-              // enveloppe Uniforne
+              // envelope Uniform
               mGraph->setCurveVisible("Post Distrib Activity Unif Mean", true);
-              mGraph->setCurveVisible("Post Distrib Activity Unif Inf", showError);
-              mGraph->setCurveVisible("Post Distrib Activity Unif Sup", showError);
-
-              // p_value curve
-              mGraph->setCurveVisible("Post Distrib Activity p_value All Chains", showError);
+              mGraph->setCurveVisible("Post Distrib Activity Unif Env All Chains", showError);
 
               mGraph->setTipXLab("t");
               mGraph->setTipYLab("n");
-              //mGraph->setYAxisMode(GraphView::eHidden);
+
               mGraph->autoAdjustYScale(true); // do repaintGraph()
           }
 
