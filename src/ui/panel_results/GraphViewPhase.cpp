@@ -90,7 +90,6 @@ void GraphViewPhase::resizeEvent(QResizeEvent* )
 
 void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList)
 {
-    //qDebug()<<"GraphViewPhase::generateCurves()";
     Q_ASSERT(mPhase);
     GraphViewResults::generateCurves(typeGraph, variableList);
 
@@ -214,7 +213,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
                 mGraph->addCurve(curveAlpha);
                 mGraph->addCurve(curveBeta);
             }
-       // mGraph->setYAxisMode(GraphView::eMinMax);
+
 
     } else if (typeGraph == ePostDistrib && mCurrentVariableList.contains(eDuration)) {
         mGraph->mLegendX = tr("Years");
@@ -273,7 +272,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         mTitle = tr("Phase's Events' Std Compil. : %1").arg(mPhase->mName);
 
 
-        for ( auto && ev : mPhase->mEvents) {
+        for (auto&& ev : mPhase->mEvents) {
         /* ------------------------------------------------
          *  Events don't have std dev BUT we can visualize
          *  an overlay of all dates std dev instead.
@@ -282,7 +281,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
          *  - Sigma Date i Chain j
          * ------------------------------------------------
          */
-            int i(0);
+            int i = 0;
             for (auto&& date : ev->mDates) {
                 GraphCurve curve = generateDensityCurve(date.mSigmaTi.fullHisto(),
                                                         "Sigma Date " + QString::number(i) + " All Chains",
@@ -329,20 +328,6 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
                                                      color, Qt::DashLine);
         curveTempoSup.mIsRectFromZero = false;
 
-/*
-        GraphCurve curveCredInf = generateDensityCurve(mPhase->mTempoCredibilityInf,
-                                                     "Post Distrib Tempo Cred Inf All Chains",
-                                                     color, Qt::SolidLine);
-        curveCredInf.mIsRectFromZero = false;
-        curveCredInf.mIsHisto = false;
-
-        GraphCurve curveCredSup = generateDensityCurve(mPhase->mTempoCredibilitySup,
-                                                     "Post Distrib Tempo Cred Sup All Chains",
-                                                     color, Qt::SolidLine);
-
-        curveCredSup.mIsRectFromZero = false;
-        curveCredSup.mIsHisto = false;
-*/
         auto brushColor = color;
         brushColor.setAlpha(30);
         GraphCurve curveTempoEnv = generateShapeCurve(mPhase->mTempoInf, mPhase->mTempoSup,
@@ -350,13 +335,8 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
                                                      color, Qt::DashLine, brushColor);
 
         mGraph->addCurve(curveTempoEnv);
-       // mGraph->addCurve(curveTempoInf);
         mGraph->addCurve(curveTempo);
-       // mGraph->addCurve(curveTempoSup);
 
-
-  //      mGraph->addCurve(curveCredInf);
-   //     mGraph->addCurve(curveCredSup);
 
         mGraph->setOverArrow(GraphView::eBothOverflow);
 
@@ -395,19 +375,6 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         GraphCurve curveActivity = generateDensityCurve( mPhase->mActivity,
                                                          "Post Distrib Activity All Chains",
                                                          color, Qt::SolidLine);
-        /*
-        GraphCurve curveActivity = generateHPDCurve( mPhase->mActivity,
-                                                         "Post Distrib Activity All Chains",
-                                                         color);
-        */
-        /*GraphCurve curveActivityInf = generateDensityCurve( mPhase->mActivityInf,
-                                                            "Post Distrib Activity Inf All Chains",
-                                                            color, Qt::CustomDashLine);
-
-        GraphCurve curveActivitySup = generateDensityCurve( mPhase->mActivitySup,
-                                                            "Post Distrib Activity Sup All Chains",
-                                                            color, Qt::CustomDashLine);
-        */
         auto brushColor = color;
         brushColor.setAlpha(30);
         GraphCurve curveActivityEnv = generateShapeCurve(mPhase->mActivityInf, mPhase->mActivitySup,
@@ -415,23 +382,13 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
                                                      color, Qt::DashLine, brushColor);
 
         // Display envelope Uniform
-        /*GraphCurve curveMeanUnif = generateDensityCurve( mPhase->mActivityUnifMean,
+
+        GraphCurve curveActivityUnifMean = generateDensityCurve(mPhase->mActivityUnifMean,
                                                            "Post Distrib Activity Unif Mean",
-                                                           QColor(Qt::darkGray).darker(), Qt::SolidLine);
-       */
-        GraphCurve curveActivityUnifMean = generateDensityCurve( mPhase->mActivityUnifMean,
-                                                           "Post Distrib Activity Unif Mean",
-                                                           Qt::darkGray);
-        /*
-        GraphCurve curveUnifInf = generateDensityCurve( mPhase->mActivityUnifInf,
-                                                          "Post Distrib Activity Unif Inf",
-                                                          Qt::darkGray, Qt::CustomDashLine);
-        GraphCurve curveUnifSup = generateDensityCurve( mPhase->mActivityUnifSup,
-                                                          "Post Distrib Activity Unif Sup",
-                                                          Qt::darkGray, Qt::CustomDashLine);
-        */
+                                                           Qt::darkGray, Qt::SolidLine);
+
         brushColor = Qt::darkGray;
-        brushColor.setAlpha(40);
+        brushColor.setAlpha(50);
         GraphCurve curveActivityUnivEnv = generateShapeCurve(mPhase->mActivityUnifInf, mPhase->mActivityUnifSup,
                                                      "Post Distrib Activity Unif Env All Chains",
                                                      Qt::darkGray, Qt::DashLine, brushColor);
@@ -441,11 +398,10 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         mGraph->addCurve(curveActivityEnv);
         mGraph->addCurve(curveActivity);
 
-        mGraph->addCurve(curveActivityUnifMean);
         mGraph->addCurve(curveActivityUnivEnv);
+        mGraph->addCurve(curveActivityUnifMean);
 
-
-        const type_data yMax = map_max_value(mPhase->mActivitySup);
+        const type_data yMax = std:: max(map_max_value(mPhase->mActivitySup), map_max_value(mPhase->mActivityUnifSup));
 
         mGraph->setRangeY(0., yMax);
 
@@ -491,7 +447,6 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
        mTitle = tr("Phase : %1").arg(mPhase->mName);
        mGraph->resetNothingMessage();
     }
-
 
 }
 
@@ -540,13 +495,13 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
         mGraph->setTipXLab("t");
         mGraph->setTipYLab("");
-        //mGraph->setYAxisMode(GraphView::eHidden);
+
         mGraph->showInfos(false);
         mGraph->clearInfos();
-        mGraph->autoAdjustYScale(true); // do repaintGraph()
+        mGraph->autoAdjustYScale(true);
 
     }
-
+/*
     else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eSigma)) {
             for (auto && ev : mPhase->mEvents) {
                 auto n = ev->mDates.size();
@@ -559,10 +514,9 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 }
             }
             mGraph->setTipXLab("Sigma");
-           // mGraph->setYAxisMode(GraphView::eHidden);
             mGraph->autoAdjustYScale(true);
 
-    }
+    } */
     else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eDuration)) {
         const GraphCurve* duration = mGraph->getCurve("Post Distrib Duration All Chains");
 
@@ -572,12 +526,11 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setCurveVisible("HPD Duration All Chains", mShowAllChains);
             mGraph->setCurveVisible("Credibility All Chains", showCredibility && mShowAllChains);
 
-            for (unsigned i=0; i<mShowChainList.size(); ++i)
+            for (auto i=0; i<mShowChainList.size(); ++i)
                 mGraph->setCurveVisible("Post Distrib Duration " + QString::number(i), mShowChainList.at(i));
 
             mGraph->setTipXLab("t");
             mGraph->setTipYLab("");
-            //mGraph->setYAxisMode(GraphView::eHidden);
             mGraph->autoAdjustYScale(true);
         }
 
@@ -587,20 +540,16 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
          const GraphCurve* tempo = mGraph->getCurve("Post Distrib Tempo All Chains");
 
          if ( tempo && !tempo->mData.isEmpty()) {
-             const bool showError = mShowVariableList.contains(eTempoError);
-             //const bool showCredibility = mShowVariableList.contains(eTempCredibility);
+             const bool showError = mShowVariableList.contains(eError);
              mGraph->setCurveVisible("Post Distrib Tempo All Chains", true);
              mGraph->setCurveVisible("Post Distrib Tempo Inf All Chains", showError);
              mGraph->setCurveVisible("Post Distrib Tempo Sup All Chains", showError);
              mGraph->setCurveVisible("Post Distrib Tempo Env All Chains", showError);
 
-             //mGraph->setCurveVisible("Post Distrib Tempo Cred Inf All Chains", showCredibility);
-             //mGraph->setCurveVisible("Post Distrib Tempo Cred Sup All Chains", showCredibility);
-
              mGraph->setTipXLab("t");
              mGraph->setTipYLab("n");
 
-             mGraph->autoAdjustYScale(true);// do repaintGraph()
+             mGraph->autoAdjustYScale(true);
          }
 
     }
@@ -609,18 +558,19 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
           const GraphCurve* Activity = mGraph->getCurve("Post Distrib Activity All Chains");
 
           if ( Activity && !Activity->mData.isEmpty()) {
-              const bool showError = mShowVariableList.contains(eTempoError);//true;
+              const bool showError = mShowVariableList.contains(eError);
               mGraph->setCurveVisible("Post Distrib Activity All Chains", true);
               mGraph->setCurveVisible("Post Distrib Activity Env All Chains", showError);
 
               // envelope Uniform
-              mGraph->setCurveVisible("Post Distrib Activity Unif Mean", true);
-              mGraph->setCurveVisible("Post Distrib Activity Unif Env All Chains", showError);
+              const bool showActivityUnif = mShowVariableList.contains(eActivityUnif);
+              mGraph->setCurveVisible("Post Distrib Activity Unif Mean", showActivityUnif);
+              mGraph->setCurveVisible("Post Distrib Activity Unif Env All Chains", showError && showActivityUnif);
 
               mGraph->setTipXLab("t");
               mGraph->setTipYLab("n");
 
-              mGraph->autoAdjustYScale(true); // do repaintGraph()
+              mGraph->autoAdjustYScale(true);
           }
 
      }
@@ -659,6 +609,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         mGraph->setYAxisMode(GraphView::eMinMaxHidden);
         mGraph->showInfos(true);
         mGraph->autoAdjustYScale(true);
+
     } else if (mCurrentTypeGraph == eTrace && mShowVariableList.contains(eDuration)) {
 
         for (int i=0; i<mShowChainList.size(); ++i) {
@@ -670,8 +621,9 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
         mGraph->setTipXLab(tr("Iteration"));
         mGraph->setTipYLab("t");
-        //mGraph->setYAxisMode(GraphView::eMinMax);
-        mGraph->autoAdjustYScale(true); // do repaintGraph()
+        mGraph->setYAxisMode(GraphView::eMinMaxHidden);
+        mGraph->showInfos(true);
+        mGraph->autoAdjustYScale(true);
     }
 
     repaint();

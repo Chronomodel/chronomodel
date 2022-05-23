@@ -125,9 +125,10 @@ public:
         eSigma ,
         eVG,
 
-        eTempo, //eTempCredibility,
-        eTempoError,
+        eTempo,
         eActivity,
+        eActivityUnif,
+        eError,
         eDuration,
 
         eG, eGError, eMap, eGEventsPts, eGDatesPts,

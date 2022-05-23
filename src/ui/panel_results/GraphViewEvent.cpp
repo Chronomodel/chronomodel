@@ -486,5 +486,5 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setRangeY(-1, 1);
     }
 
-    update();
+    repaint();
 }

@@ -423,7 +423,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
 
         mGraph->setYAxisMode(GraphView::eMinMaxHidden);
         mGraph->showInfos(true);
-        mGraph->autoAdjustYScale(true); // do  repaintGraph()
+        mGraph->autoAdjustYScale(true);
     }
     /* -----------------------Third tab : Acceptance rate.-------------------------
      *  Possible curves (could be for theta or sigma):
@@ -442,7 +442,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
         mGraph->setYAxisMode(GraphView::eMinMax );
         mGraph->showInfos(false);
         mGraph->clearInfos();
-        mGraph->autoAdjustYScale(false); // do  repaintGraph()
+        mGraph->autoAdjustYScale(false);
         mGraph->setRangeY(0, 100); // do repaintGraph() !!
     }
 

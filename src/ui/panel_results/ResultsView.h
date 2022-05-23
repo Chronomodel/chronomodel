@@ -313,9 +313,10 @@ private:
 
     RadioButton* mDurationRadio;
     RadioButton* mTempoRadio;
- //   CheckBox* mTempoCredCheck;
-    CheckBox* mTempoErrCheck;
     RadioButton* mActivityRadio;
+    CheckBox* mActivityUnifCheck;
+
+    CheckBox* mErrCheck;
     CheckBox* mPhasesStatCheck;
 
     // tab Curves

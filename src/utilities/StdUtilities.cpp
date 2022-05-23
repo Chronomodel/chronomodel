@@ -670,6 +670,7 @@ double interpolate_value_from_curve(const double t, const QVector<double> & curv
     }
 
 }
+
 double interpolate_value_from_curve(const double x, const std::vector<double>& curve,const double Xmin, const double Xmax)
 {
      // We need at least two points to interpolate
@@ -697,6 +698,7 @@ double interpolate_value_from_curve(const double x, const std::vector<double>& c
     }
 
 }
+
 /**
     @brief  This function make a QMap which are a copy of the QMap aMap to obtain an percent of area
     @brief  to define a area we need at least 2 value in the map
@@ -1036,123 +1038,6 @@ QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmi
     return histo;
 }
 
-/**
- * @brief Binomial
- * fonction naive -> à ne pas utiliser
- * @link https://www.codespeedy.com/calculating-binomial-coefficient-using-recursion-in-cpp/
- * https://itecnote.com/tecnote/c-calculating-binomial-coefficient-nck-for-large-n-k/
- * @param n
- * @param r
- * @return
- */
-/*
-int Binomial(int n, int r)
-{
-  if (r == 0 || n == 0 || r == n)
-    return 1;
-  return Binomial(n-1, r) + Binomial(n-1, r-1);
-}
-*/
-/**
- * @brief binomialCoefficients
- * Cette fonction est 1000 fois plus rapide que Binomial (la fonction naive)
- * @link https://www.tutorialspoint.com/binomial-coefficient-in-cplusplus
- * @param n
- * @param k
- * @return
- */
-/*
-int binomialCoefficients(int n, int k) {
-   std::vector<int> C (k+1);
-   C[0] = 1;
-   for (int i = 1; i <= n; i++) {
-      for (int j = min(i, k); j > 0; j--)
-         C[j] += C[j-1];
-   }
-   return C[k];
-}
-*/
-/**
- * @brief getBionomialCoefficient
- * Fonction la plus rapide par l'utilisation d'un dictionnaire dp, qu'il faut inititaliser avant l'utilisation
- * std::vector<std::vector<int>> dp(nMax + 1, std::vector<int>(kMax + 1, -1));
- * @link https://www.geeksforgeeks.org/binomial-coefficient-dp-9/?ref=gcse
- * @param n
- * @param k
- * @param dp
- * @return
- */
-
-int binomialCoefficient(int n, int k , std::vector<std::vector<int>>& binomialDico)
-{
-    if (k == 0 || k == n || n == 0)
-        return binomialDico[n][k] = 1;
-
-    if (binomialDico[n][k] != -1)
-        return binomialDico[n][k];
-
-    return binomialDico[n][k] = binomialCoefficient(n - 1, k - 1, binomialDico) + binomialCoefficient(n - 1, k, binomialDico);
-}
-
-std::pair<double, double>binomialConfidence95(const int n, const double p, const double alpha)
-{
-    double k1, k2, proba;
-    double sum_p = 0.;
-
-    const double alpha2 = alpha/2.;
-    const double one_alpha2 = (1-alpha/2.);
-    const double qq = p/(1-p);
-    k1 = 0;
-    k2 = 0;
-    double prev_sum = 0;
-    for (int k = 0; k<n+1; ++k) {
-        if (k == 0) {
-            proba = pow(1-p, n);
-
-        } else {
-            //sum_p += binomialCoefficient(n, k, binomialDico) * pow(p, k) * pow(1-p, n-k);
-            proba *= (double)(n-k+1)/(double)k * qq;
-
-        }
-        sum_p += proba;
-
-        if (sum_p == alpha2) {
-            k2 = k;
-
-        } else  if (prev_sum < alpha2 && alpha2< sum_p) {
-            if ( k == 0) {
-                k2 = 0;
-            } else if (k<n) {
-                k2 = (alpha2-prev_sum)/proba + k -1;
-
-            } else {
-                k2 = n;
-            }
-        }
-
-        if (sum_p == one_alpha2) {
-            k1 = k;
-
-        } else if (prev_sum < one_alpha2 && one_alpha2 < sum_p) {
-            if ( k == 0) {
-                k1 = 0;
-
-            } else if (k<n) {
-                k1 = (one_alpha2-prev_sum)/proba + k ;
-
-            } else {
-                k1 = n;
-            }
-
-        }
-
-        prev_sum = sum_p;
-
-    }
-
-    return std::make_pair(k2/n, k1/n);
-}
-
 
 /**
  Pour qUnif, détermine la courbe x= r (q)
@@ -1174,7 +1059,7 @@ std::vector<double> binomialeCurveByLog(const int n, const double alpha, const i
 
     double q, lnP = 0, prev_sum = 0, sum_p = 0.;
 
-    double x, R;
+    double x, R, last_x = 1., last_q = 0.;
 
 
     // p = 0%
@@ -1212,8 +1097,13 @@ std::vector<double> binomialeCurveByLog(const int n, const double alpha, const i
                prev_sum = sum_p;
 
            }
-            if (x == -1)
-                x = n;
+            if (x == -1) {
+                x = interpolate( q , last_q, 1., last_x, (double) n);
+
+            } else {
+                last_x = x;
+                last_q = q;
+            }
 
             Rq.push_back(x/n);
         }
@@ -1232,7 +1122,8 @@ std::vector<double> binomialeCurveByLog(const int n, const double alpha, const i
  */
 std::vector<double> inverseCurve(const std::vector<double> Rq, const int x_frac)
 {
-    double x, p, p_frac = Rq.size()-1;
+    double x, p;
+    const double p_frac = Rq.size()-1;
     unsigned long j;
     std::vector<double> Gx;
     for (int i = 0; i<= x_frac; ++i) {
@@ -1242,21 +1133,27 @@ std::vector<double> inverseCurve(const std::vector<double> Rq, const int x_frac)
         while ( j<Rq.size() && Rq[j] <= x) {
             p = j / p_frac;
             ++j;
-          }
-        Gx.push_back(p);
+        }
+        if (Rq[j-1] == x)
+            Gx.push_back(p);
+        else
+            Gx.push_back( interpolate( x, Rq[j-1], Rq[j], p, p + 1./p_frac));
 
     }
- return Gx;
+    return Gx;
 }
 
 
-double findOnOppositeCurve (const double p, const std::vector<double> C)
+double findOnOppositeCurve (const double x, const std::vector<double> Gx)
 {
-    const double p_frac = C.size() - 1;
-    const double one_P = (1 - p)*p_frac;
-    const unsigned long minIdx = std::max(( unsigned long)0, ( unsigned long) std::floor(one_P) );
-    const unsigned long maxIdx =  std::min(( unsigned long)C.size() - 1, ( unsigned long)std::ceil(one_P) );
-    const double X2 = 1 - (C[minIdx] + C[maxIdx])/2.; // We can do linear interpolation
-    return  X2;
+    const double x_frac = Gx.size() - 1;
+    const double one_X = (1 - x)*x_frac;
+    const unsigned long minIdx = std::max((unsigned long)0, (unsigned long) std::floor(one_X) );
+    const unsigned long maxIdx = std::min((unsigned long)Gx.size() - 1, (unsigned long)std::ceil(one_X) );
+
+    if (minIdx == maxIdx)
+        return 1. -  Gx[minIdx];
+
+    return 1. - interpolate( one_X, (double)minIdx, (double)maxIdx, Gx[minIdx], Gx[maxIdx]);
 
 }

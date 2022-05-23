@@ -357,18 +357,10 @@ inline double diff_erf(double a, double b, double mu = 0., double sigma = 1.) {
     return 0.5*(erf((b-mu)/(sigma*M_SQRT2)) - erf((a-mu)/(sigma*M_SQRT2)));
 }
 
-
-std::pair<double, double>binomialConfidence95(const int n, const double p, const double alpha = .05);
-/*
- int Binomial(int n, int r);
- int binomialCoefficients(int n, int k);
-*/
- int binomialCoefficient(int n, int k , std::vector<std::vector<int>>& binomialDico);
-
 // Fonction utilisée pour la courbe d'activité
 std::vector<double> binomialeCurveByLog(const int n, const double alpha= .05, const int q_frac = 500);
 
 std::vector<double> inverseCurve(const std::vector<double> Rp, const int x_frac = 500);
 
-double findOnOppositeCurve (const double p, const std::vector<double> C);
+double findOnOppositeCurve (const double x, const std::vector<double> Gx);
 #endif

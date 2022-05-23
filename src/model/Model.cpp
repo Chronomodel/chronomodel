@@ -1450,16 +1450,8 @@ void Model::generateTempo(size_t gridLenth)
         const double n = (double) phase->mEvents.size();
         const double nr = (double) (totalIter * phase->mEvents.size());
 
-
- /*       QVector<double> credInf (gridLenth);
-        QVector<double> credSup (gridLenth);
-
-        QVector<double>::iterator itCredInf (credInf.begin());
-        QVector<double>::iterator itCredSup (credSup.begin());
-*/
         for (const auto& vecNij : Ni) {
 
-            //p = 0;
             p = std::accumulate(vecNij.begin(),  vecNij.end(), 0.);
             p /= nr;
 
@@ -1474,13 +1466,6 @@ void Model::generateTempo(size_t gridLenth)
             inf.append( infp );
             sup.append( e + 1.96 * sqrt(v));
 
-
-     /*       Quartiles cred = quartilesType(vecNij, 8, 0.025);
-            *itCredInf = cred.Q1;
-            *itCredSup = cred.Q3;
-            ++itCredInf;
-            ++itCredSup;
-*/
         }
 
 #ifndef UNIT_TEST
@@ -1514,25 +1499,7 @@ void Model::generateTempo(size_t gridLenth)
         phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
         phase->mTempoInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoInf);
         phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
-/*
-        // credibility creation
-        phase->mRawTempoCredibilityInf = vector_to_map(credInf, tmin, tmax, delta_t);
-        phase->mRawTempoCredibilitySup = vector_to_map(credSup, tmin, tmax, delta_t);
 
-        // Joining curves on the curve Tempo
-        if ( tmax  <= mSettings.mTmax) {
-            phase->mRawTempoCredibilityInf[mSettings.mTmax] = vEnd;
-            phase->mRawTempoCredibilitySup[mSettings.mTmax] = vEnd;
-        }
-
-        if (tBegin >= mSettings.mTmin) {
-            phase->mRawTempoCredibilityInf[tBegin] = 0;
-            phase->mRawTempoCredibilitySup[tBegin] = 0;
-        }
-        // Convertion in the good Date format
-        phase->mTempoCredibilityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilityInf);
-        phase->mTempoCredibilitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilitySup);
-*/
      } // Loop End on phase
 
 #ifdef DEBUG
@@ -1695,7 +1662,7 @@ void Model::generateActivityBinomialeCurve(const int n, std::vector<double>& C1x
 void Model::generateActivity(size_t gridLength, double h)
 {
 #ifdef DEBUG
-    qDebug()<<"Model::generateActivity() "<<mSettings.mTmin<<mSettings.mTmax;
+   // qDebug()<<"Model::generateActivity() "<<mSettings.mTmin<<mSettings.mTmax;
     QElapsedTimer tClock;
     tClock.start();
 #endif
@@ -1714,7 +1681,7 @@ void Model::generateActivity(size_t gridLength, double h)
     /// We want an interval bigger than the maximun finded value, we need a point on tmin, tmax and tmax+deltat
 
     double tmin, tmax;
-    const double h_2 = h/2.;
+
     std::vector<int> Nij ;
     Nij.reserve(gridLength);
 
@@ -1728,11 +1695,78 @@ void Model::generateActivity(size_t gridLength, double h)
         phase->mRawActivityUnifSup.clear();
 
 
-        std::vector<double> Rq = binomialeCurveByLog(n); //  Pour qUnif, détermine la courbe x= r (q)
+        std::vector<double> Rq = binomialeCurveByLog(n); //  Détermine la courbe x = r (q)
 
         std::vector<double> Gx = inverseCurve(Rq); // Pour qActivity, détermine la courbe p = g (x)
 
+        // Create concatened trace for Mean and Variance estimation needed for uniform predict
+
+
+       // double t_minUnif = mSettings.mTmax;
+       // double t_maxUnif = mSettings.mTmin;
+
+        std::vector<double> concaTrace;
+        for (const auto& ev : phase->mEvents) {
+            const auto rawtrace = ev->mTheta.fullRunRawTrace(mChains);
+            concaTrace.resize(concaTrace.size() + rawtrace.size());
+            std::copy_backward( rawtrace.begin(), rawtrace.end(), concaTrace.end() );
+
+          //  const auto quartileTraceEvent = quartilesType(concaTrace, 7, 0.025);
+
+         //   t_minUnif = std::min(t_minUnif, quartileTraceEvent.Q1);
+          //  t_maxUnif = std::max(t_maxUnif, quartileTraceEvent.Q3);
+        }
+
+        const double t_minUnif = *std::min_element(concaTrace.begin(), concaTrace.end());
+        const double t_maxUnif = *std::max_element(concaTrace.begin(), concaTrace.end());
+        const double mu = -1;
+        const double R_etendue = (n+1)/(n-1)/(1.+ mu*sqrt(2./(double)((n-1)*(n+2))) )*(t_maxUnif-t_minUnif);
+        //const double TUnif = t_maxUnif - t_minUnif;
+
+        // Define the effective h
+        //const double h_effective = std::max(mSettings.mStep, std::min(h, TUnif));
+
+
+        // prevent h=0;
+        h = std::max(mSettings.mStep, h);
+
+        const double fUnif = std::min(h, R_etendue) / R_etendue;
+
+        const double midR = (t_maxUnif + t_minUnif)/2.;
+
+        phase->mRawActivityUnifMean.insert(midR - R_etendue/2.,  n /  R_etendue);
+        phase->mRawActivityUnifMean.insert(midR + R_etendue/2.,  n /  R_etendue);
+
+        //double unifInf, unifSup;
+       // if (n*qUnif*(1-qUnif) > 10.) {
+        // cas approximation gaussienne // inutile avec binomialeCurveByLog, testé avec n=5000
+     /*   if (pow(1-qUnif, n) <= 0) { // over Range in binimialConfidence95()
+                unifInf = (n / M_m) - 1.96 * sqrt(n / M_m) * ((1./ h) - (1. / M_m)) ;
+                unifSup = (n / M_m) + 1.96 * sqrt(n / M_m) * ((1./ h) - (1. / M_m)) ;
+
+        } else {
+        */
+         const double unifSup = interpolate_value_from_curve(fUnif, Gx, 0, 1.)* n / std::min(h, R_etendue);
+         const double unifInf = findOnOppositeCurve(fUnif, Gx)* n / std::min(h, R_etendue);
+       // }
+         if (unifInf > (n /  R_etendue)) {
+             qDebug()<<"generateActivity() unif<min"<< unifInf << ">"<< (n /  R_etendue);
+         }
+
+         if (unifSup < (n /  R_etendue)) {
+             qDebug()<<"generateActivity() unif>max"<< unifSup << ">"<< (n /  R_etendue);
+         }
+        phase->mRawActivityUnifInf.insert(midR - R_etendue/2., unifInf);
+        phase->mRawActivityUnifInf.insert(midR + R_etendue/2., unifInf);
+
+
+        phase->mRawActivityUnifSup.insert(midR - R_etendue/2., unifSup);
+        phase->mRawActivityUnifSup.insert(midR + R_etendue/2., unifSup);
+
+        const double h_2 = h/2.;
+
         // create Empty containers
+
         std::vector<std::vector<int>> Ni (gridLength);
 
         ///# 1 - Generate Event scenario
@@ -1761,31 +1795,8 @@ void Model::generateActivity(size_t gridLength, double h)
 #endif
         const double nr = totalIter * phase->mEvents.size();
 
-        const double M_m = max_elem - min_elem + h;
+        //const double M_m = max_elem - min_elem;
 
-        phase->mRawActivityUnifMean.insert(min_elem - h_2, n / M_m);
-        phase->mRawActivityUnifMean.insert(max_elem + h_2, n / M_m);
-
-        const double qUnif = h/ M_m;
-        double unifInf, unifSup;
-       // if (n*qUnif*(1-qUnif) > 10.) {
-        // cas approximation gaussienne // inutile avec binomialeCurveByLog testé avec n=5000
-     /*   if (pow(1-qUnif, n) <= 0) { // over Range in binimialConfidence95()
-                unifInf = (n / M_m) - 1.96 * sqrt(n / M_m) * ((1./ h) - (1. / M_m)) ;
-                unifSup = (n / M_m) + 1.96 * sqrt(n / M_m) * ((1./ h) - (1. / M_m)) ;
-
-        } else {
-        */
-            unifInf = interpolate_value_from_curve(qUnif, Rq, 0, 1.)* n / h;
-            unifSup = findOnOppositeCurve(qUnif, Rq)* n / h;
-       // }
-
-        phase->mRawActivityUnifInf.insert(min_elem - h_2, unifInf);
-        phase->mRawActivityUnifInf.insert(max_elem + h_2, unifInf); // ?? à revoir
-
-
-        phase->mRawActivityUnifSup.insert(min_elem - h_2, unifSup);
-        phase->mRawActivityUnifSup.insert(max_elem + h_2, unifSup); // ??? à revoir
 
         if (tmin == tmax) {
             qDebug()<<"Model::generateActivity() tmin == tmax : " <<phase->mName;
@@ -1811,19 +1822,21 @@ void Model::generateActivity(size_t gridLength, double h)
 
 #endif
 
+        /// \f$ \delta_t_min = (t_max - t_min)/(gridLength-1) \f$
+        const double delta_t_min = (tmax-tmin) / double(gridLength-1);
+
         /// \f$ \delta_t = (t_max - t_min + h)/(gridLenth-1) \f$
         double delta_t = (tmax-tmin + h) / double(gridLength-1);
-        if (h < delta_t) {
-             h = delta_t;
-             delta_t = (tmax-tmin + h) / double(gridLength-1); // done delta_t = (tmax-tmin)/(double(grigLenth-1)-2))
-
+        if (h < delta_t_min) {
+             h = delta_t_min;
+             delta_t = delta_t_min;
          }
 
          // overlaps
 
          tmin -= h_2;
          tmax += h_2;
-        /// Loop
+        // Loop
 
    try {
         int idxGridMin, idxGridMax;
@@ -1869,21 +1882,13 @@ void Model::generateActivity(size_t gridLength, double h)
         QVector<double> esp;
         double f, e, Q1, Q2;
 
-        //double tCurrent; , tCurrent_inf, tCurrent_sup, h_effective;
         int i = 0;
 
         for (const auto& vecNij : Ni) {
 
             f = std::accumulate(vecNij.begin(),  vecNij.end(), 0.) / nr;
 
-            // Define the effective h // Obsolete
-           /* tCurrent = tmin + i*delta_t;
-             tCurrent_inf = std::max(tmin, tCurrent - h_2); // fix boundary effect
-             tCurrent_sup = std::min(tmax, tCurrent + h_2);
-             h_effective = tCurrent_sup - tCurrent_inf;
-           */
-
-            e =  f * n / h; //h_effective; // ??? h ou h_effective à confirmer
+            e =  f * n / h;
 
             esp.append(e);
 
@@ -1898,7 +1903,7 @@ void Model::generateActivity(size_t gridLength, double h)
 
             */
 
-            Q1 = interpolate_value_from_curve(f, Gx, 0, 1.)* n / h; // ??? h ou h_effective à confirmer
+            Q1 = interpolate_value_from_curve(f, Gx, 0, 1.)* n / h;
             sup.append(Q1);
 
             Q2 = findOnOppositeCurve(f, Gx)* n / h;

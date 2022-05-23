@@ -579,26 +579,30 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
         GraphCurve curve;
 
         curve.mType = GraphCurve::eQVectorData;
-        //curve.mUseVectorData = true;
         curve.mName = prefix + "Trace " + QString::number(i);
         curve.mDataVector = variable->fullTraceForChain(chains, i);
         curve.mPen.setColor(Painting::chainColors.at(i));
         mGraph->addCurve(curve);
 
-        const double min ( vector_min_value(curve.mDataVector) );
-        const double max ( vector_max_value(curve.mDataVector) );
+        const double min = vector_min_value(curve.mDataVector);
+        const double max = vector_max_value(curve.mDataVector);
         mGraph->setRangeY(floor(min), ceil(max));
 
         const Quartiles& quartiles = variable->mChainsResults.at(i).traceAnalysis.quartiles;
-        
-        GraphCurve curveQ1 = generateHorizontalLine(quartiles.Q1, prefix + "Q1 " + QString::number(i), Qt::green);
-        mGraph->addCurve(curveQ1);
-        
-        GraphCurve curveQ2 = generateHorizontalLine(quartiles.Q2, prefix + "Q2 " + QString::number(i), Qt::red);
+
+        auto colBorder = QColor(Qt::darkBlue).darker(100);
+        colBorder.setAlpha(100);
+        auto colMediane = QColor(Qt::darkBlue).darker(120);
+        colMediane.setAlpha(100);
+
+        GraphCurve curveQ3 = generateHorizontalLine(quartiles.Q3, prefix + "Q3 " + QString::number(i), colBorder);
+        mGraph->addCurve(curveQ3);
+
+        GraphCurve curveQ2 = generateHorizontalLine(quartiles.Q2, prefix + "Q2 " + QString::number(i), colMediane);
         mGraph->addCurve(curveQ2);
 
-        GraphCurve curveQ3 = generateHorizontalLine(quartiles.Q3, prefix + "Q3 " + QString::number(i), Qt::green);
-        mGraph->addCurve(curveQ3);
+        GraphCurve curveQ1 = generateHorizontalLine(quartiles.Q1, prefix + "Q1 " + QString::number(i), colBorder);
+        mGraph->addCurve(curveQ1);
     }
 }
 

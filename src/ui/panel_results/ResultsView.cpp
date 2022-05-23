@@ -1,4 +1,4 @@
-   /* ---------------------------------------------------------------------
+/* ---------------------------------------------------------------------
 
 Copyright or © or Copr. CNRS	2014 - 2018
 
@@ -225,14 +225,14 @@ mMaximunNumberOfVisibleGraph(0)
     mTempoRadio = new RadioButton(tr("Tempo"), mPhasesGroup);
     mTempoRadio->setFixedHeight(h);
 
-    //mTempoCredCheck = new CheckBox(tr("Tempo Cred."), mPhasesGroup);
-    //mTempoCredCheck->setFixedHeight(h);
-
-    mTempoErrCheck = new CheckBox(tr("Error"), mPhasesGroup);
-    mTempoErrCheck->setFixedHeight(h);
-
     mActivityRadio = new RadioButton(tr("Activity"), mPhasesGroup);
     mActivityRadio->setFixedHeight(h);
+
+    mActivityUnifCheck = new CheckBox(tr("Unif Theo"), mPhasesGroup);
+    mActivityUnifCheck->setFixedHeight(h);
+
+    mErrCheck = new CheckBox(tr("Error"), mPhasesGroup);
+    mErrCheck->setFixedHeight(h);
 
     mDurationRadio = new RadioButton(tr("Duration"), mPhasesGroup);
     mDurationRadio->setFixedHeight(h);
@@ -246,7 +246,8 @@ mMaximunNumberOfVisibleGraph(0)
 
     QVBoxLayout* phasesUnfoldGroupLayout = new QVBoxLayout();
     phasesUnfoldGroupLayout->setContentsMargins(15, 0, 0, 0);
-    phasesUnfoldGroupLayout->addWidget(mTempoErrCheck, Qt::AlignLeft);
+    phasesUnfoldGroupLayout->addWidget(mErrCheck, Qt::AlignLeft);
+    phasesUnfoldGroupLayout->addWidget(mActivityUnifCheck, Qt::AlignLeft);
     phasesUnfoldGroupLayout->addWidget(mPhasesEventsUnfoldCheck, Qt::AlignLeft);
     phasesUnfoldGroupLayout->addWidget(mPhasesDatesUnfoldCheck, Qt::AlignLeft);
 
@@ -360,12 +361,12 @@ mMaximunNumberOfVisibleGraph(0)
 
     connect(mStatCheck, &CheckBox::clicked, this, &ResultsView::showInfos);
 
+    connect(mErrCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mActivityUnifCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
 
     connect(mPhasesStatCheck, &CheckBox::clicked, this, &ResultsView::showInfos);
     connect(mCurveStatCheck, &CheckBox::clicked, this, &ResultsView::showInfos);
 
-    //connect(mTempoCredCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
-    connect(mTempoErrCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     
     connect(mCurveGRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
     connect(mCurveGPRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
@@ -1680,8 +1681,7 @@ void ResultsView::createByPhasesGraphs()
                 graph->setMarginRight(mMarginRight);
 
                 mByPhasesGraphs.append(graph);
-                //connect(graph, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
-               connect(graph, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
+                connect(graph, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
             }
             ++graphIndex;
             
@@ -1699,7 +1699,6 @@ void ResultsView::createByPhasesGraphs()
                         graph->setMarginRight(mMarginRight);
 
                         mByPhasesGraphs.append(graph);
-                        //connect(graph, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
                         connect(graph, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
                     }
                     ++graphIndex;
@@ -1721,7 +1720,6 @@ void ResultsView::createByPhasesGraphs()
                                 graph->setMarginRight(mMarginRight);
 
                                 mByPhasesGraphs.append(graph);
-                                //connect(graph, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
                                 connect(graph, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
                             }
                             ++graphIndex;
@@ -2411,8 +2409,8 @@ void ResultsView::updateCurvesToShow()
                }
         } else if (mTempoRadio->isChecked()) {
             showVariableList.append(GraphViewResults::eTempo);
-            if (mTempoErrCheck->isChecked())
-               showVariableList.append(GraphViewResults::eTempoError);
+            if (mErrCheck->isChecked())
+               showVariableList.append(GraphViewResults::eError);
             //if (mTempoCredCheck->isChecked())
              //  showVariableList.append(GraphViewResults::eTempCredibility);
 
@@ -2428,8 +2426,10 @@ void ResultsView::updateCurvesToShow()
 
         } else if (mActivityRadio->isChecked()) {
             showVariableList.append(GraphViewResults::eActivity);
-            if (mTempoErrCheck->isChecked())
-               showVariableList.append(GraphViewResults::eTempoError);
+            if (mErrCheck->isChecked())
+               showVariableList.append(GraphViewResults::eError);
+            if (mActivityUnifCheck->isChecked())
+               showVariableList.append(GraphViewResults::eActivityUnif);
 
             if (mPhasesEventsUnfoldCheck->isChecked()) {
                 showVariableList.append(GraphViewResults::eThetaEvent);
@@ -2814,39 +2814,51 @@ void ResultsView::updateOptionsWidget()
 
         phasesGroupLayout->addWidget(mBeginEndRadio);
         phasesGroupLayout->addWidget(mTempoRadio);
-        qreal totalH = 2 * h; // look ligne 165 in ResultsView() comment Right Part. totalH = 3 * h
-
         phasesGroupLayout->addWidget(mActivityRadio);
-        totalH += h;
+        qreal totalH = 3 * h; // look ligne 165 in ResultsView() comment Right Part. totalH = 3 * h
 
-        if (!mDurationRadio->isChecked()) {
-            QVBoxLayout* phasesUnfoldErrorGroupLayout = new QVBoxLayout();
-            phasesUnfoldErrorGroupLayout->setContentsMargins(15, 0, 0, 0);
-            mPhasesEventsUnfoldCheck->show();
-            if (!mBeginEndRadio->isChecked()) {
-                mTempoErrCheck->show();
-                phasesUnfoldErrorGroupLayout->addWidget(mTempoErrCheck, Qt::AlignLeft);
-            } else
-                mTempoErrCheck->hide();
 
-            phasesUnfoldErrorGroupLayout->addWidget(mPhasesEventsUnfoldCheck, Qt::AlignLeft);
+        QVBoxLayout* phasesUnfoldErrorGroupLayout = new QVBoxLayout();
+        phasesUnfoldErrorGroupLayout->setContentsMargins(15, 0, 0, 0);
+
+        if (mBeginEndRadio->isChecked() || mDurationRadio->isChecked()) {
+
+           mErrCheck->hide();
+           mActivityUnifCheck->hide();
+
+        } else if (mTempoRadio->isChecked()) {
+
+            mErrCheck->show();
+            phasesUnfoldErrorGroupLayout->addWidget(mErrCheck, Qt::AlignLeft);
             totalH += h;
-            if (mPhasesEventsUnfoldCheck->isChecked()) {
-                mPhasesDatesUnfoldCheck->show();
-                phasesUnfoldErrorGroupLayout->addWidget(mPhasesDatesUnfoldCheck, Qt::AlignLeft);
-                totalH += h;
-            } else {
-                mPhasesDatesUnfoldCheck->hide();
-            }
-            phasesGroupLayout->addLayout(phasesUnfoldErrorGroupLayout);
+            mActivityUnifCheck->hide();
+
+        } else if (mActivityRadio->isChecked()) {
+
+            mErrCheck->show();
+            phasesUnfoldErrorGroupLayout->addWidget(mErrCheck, Qt::AlignLeft);
+            totalH += h;
+            mActivityUnifCheck->show();
+            phasesUnfoldErrorGroupLayout->addWidget(mActivityUnifCheck, Qt::AlignLeft);
+            totalH += h;
+        }
+        phasesGroupLayout->addWidget(mDurationRadio);
+
+        mPhasesEventsUnfoldCheck->show();
+        phasesUnfoldErrorGroupLayout->addWidget(mPhasesEventsUnfoldCheck, Qt::AlignLeft);
+        totalH += h;
+        if (mPhasesEventsUnfoldCheck->isChecked()) {
+            mPhasesDatesUnfoldCheck->show();
+            phasesUnfoldErrorGroupLayout->addWidget(mPhasesDatesUnfoldCheck, Qt::AlignLeft);
+            totalH += h;
 
         } else {
-            mPhasesEventsUnfoldCheck->hide();
             mPhasesDatesUnfoldCheck->hide();
-            mTempoErrCheck->hide();
         }
 
-        phasesGroupLayout->addWidget(mDurationRadio);
+        phasesGroupLayout->addLayout(phasesUnfoldErrorGroupLayout);
+
+
         phasesGroupLayout->addWidget(mPhasesStatCheck);
         totalH += 2*h;
 

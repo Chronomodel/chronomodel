@@ -92,45 +92,6 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
 
     QMap<type_data,type_data>::const_iterator citer = aFunction.cbegin();
 
-    /*
-    type_data sum2 (0.);
-    type_data sumP (0.);
-    type_data sum (0.);
-    for (;citer != aFunction.cend(); ++citer) {
-        const type_data x = citer.key();
-        const type_data y = citer.value();
-
-        sumP += y;
-        sum += y * x;
-        sum2 += y * x * x;
-
-        if (max <= y) {
-            max = y;
-            if (prevY == y) {
-                uniformXValues.append(x);
-                int middleIndex = floor(uniformXValues.size()/2);
-                mode = uniformXValues.at(middleIndex);
-            } else {
-                uniformXValues.clear();
-                mode = x;
-            }
-        }
-        prevY = y;
-    }
-
-    result.mean = (type_data)0.;
-    result.std = (type_data)0.;
-
-    if (sumP != 0) {
-        result.mean = sum / sumP;
-        type_data variance = (sum2 / sumP) - pow(result.mean, 2);
-
-        if (variance < 0) {
-            qDebug() << "WARNING : in analyseFunction() negative variance found : " << variance<<" return 0";
-            variance = -variance;
-        }
-*/
-
     type_data y_sum = 0;
     type_data mean = 0;
     type_data mean_prev;
@@ -284,7 +245,7 @@ void mean_variance_Knuth(const std::vector<double>& data, double& mean, double& 
         mean = previousMean + (x - previousMean) / n;
         variance = previousVariance + ( x - previousMean)*( x - mean);
     }
-
+    variance /= n;
 }
 void mean_variance_Knuth(const QVector<double>& data, double& mean, double& variance)
 {
@@ -301,7 +262,7 @@ void mean_variance_Knuth(const QVector<double>& data, double& mean, double& vari
         mean = previousMean + (x - previousMean) / n;
         variance = previousVariance + ( x - previousMean)*( x - mean);
     }
-
+    variance /= n;
 }
 
 double std_unbiais_Knuth (const QVector<double> &data)
@@ -564,7 +525,6 @@ QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& 
 
 Quartiles quartilesForTrace(const QVector<type_data> &trace)
 {
-    //Q_ASSERT(&trace);
     Quartiles quartiles = quartilesType(trace, 8, 0.25);
     return quartiles;
 }

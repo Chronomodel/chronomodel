@@ -454,7 +454,7 @@ void GraphView::autoAdjustYScale(bool active)
   //  if (active)
  //       mAxisToolY.mShowText = false;
 
-   // repaintGraph(true);//not necessary ?
+  //  repaintGraph(true);//not necessary ?
 }
 /**
  * @brief Adjust the Y axis with 0 for the minimun and find the Maximum value in the visible curve
@@ -998,11 +998,11 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolY.mShowSubs = mYAxisTicks;
         mAxisToolY.mShowSubSubs = mYAxisSubTicks;
 
-    if (mAutoAdjustYScale && mYAxisMode != eHidden && mShowInfos) {
-          const QString minMaxText =QString(tr( "Min = %1  /  Max = %2")).arg(stringForLocal(mMinY), stringForLocal(mMaxY));
-        mInfos.clear();
-        mInfos.append(minMaxText);
-    }
+        if (mAutoAdjustYScale && mYAxisMode != eHidden && mShowInfos) {
+            const QString minMaxText =QString(tr( "Min = %1  /  Max = %2")).arg(stringForLocal(mMinY), stringForLocal(mMaxY));
+            mInfos.clear();
+            mInfos.append(minMaxText);
+        }
         mAxisToolY.updateValues(int (mGraphHeight), int (mStepMinWidth), mMinY, mMaxY);
         mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), -1., mUnitFunctionY);
 
@@ -1175,7 +1175,6 @@ void GraphView::drawCurves(QPainter& painter)
 
             } else if (curve.isTopLineSections()) {
                 const qreal y1 = mMarginTop + curve.mPen.width();
-               // painter.setPen(curve.mPen);
 
                 for (auto& section : curve.mSections ) {
                     const type_data s1 = section.first;
@@ -1545,8 +1544,20 @@ void GraphView::drawShape(GraphCurve &curve, QPainter& painter)
     path.lineTo(firstX, firstY);
 
     painter.setPen(curve.mPen);
-    painter.fillPath(path, curve.mBrush);
-    painter.strokePath(path, curve.mPen);
+
+    auto brush = curve.mBrush;
+    if (mCanControlOpacity) {
+        QColor c = brush.color();
+        c.setAlpha(curve.mBrush.color().alpha()*mOpacity / 100);
+        brush.setColor(c);
+    }
+    painter.fillPath(path, brush);
+
+
+    QPen pen = curve.mPen;
+    pen.setWidth(pen.width() * mThickness);
+    //painter.setPen(pen);
+    painter.strokePath(path, pen);
 
 }
 //Save & Export
