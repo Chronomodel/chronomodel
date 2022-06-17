@@ -3218,8 +3218,6 @@ void Project::clearModel()
 }
 
 bool Project::isCurve() const{
-   // QJsonObject state = this->state();
-   // QJsonObject CurveSettings = state[STATE_CURVE].toObject();
     const QJsonObject CurveSettings = mState.value(STATE_CURVE).toObject();
     return (!CurveSettings.isEmpty() && char(CurveSettings.value(STATE_CURVE_PROCESS_TYPE).toInt()) != char(CurveSettings::eProcessTypeNone));
 

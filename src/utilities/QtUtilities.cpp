@@ -287,12 +287,12 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
         fileInfo = QFileInfo(fileName);
         const QString fileExtension = fileInfo.suffix();
         const qreal heightText  = 2 * QFontMetricsF(qApp->font()).height();
-        const int bottomSpace (5);
+        const int bottomSpace = 5;
         const QString versionStr = qApp->applicationName() + " " + qApp->applicationVersion();
 
         if (fileExtension == "svg") {
             if (mGraph)
-                mGraph->saveAsSVG(fileName, versionStr, "GraphView",true);
+                mGraph->saveAsSVG(fileName, versionStr, "GraphView", true);
 
             else if (scene) {
                 const  QRect viewBox = QRect( r.x(), r.y(), r.width(), r.height() );
@@ -454,8 +454,7 @@ bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName)
 
 QString prepareTooltipText(const QString& title, const QString& text)
 {
-    QString result = "<div style=\"margin:10px\"><p style=\"font-weight: bold; font-style: normal\">" + title + "</p><p>" + text + "</p></div>";
-    return result;
+    return "<div style=\"margin:10px\"><p style=\"font-weight: bold; font-style: normal\">" + title + "</p><p>" + text + "</p></div>";
 }
 
 QString line(const QString& str)
@@ -497,21 +496,18 @@ QString textColor(const QString &str,const QColor &color)
 {
     int red, green, blue;
     color.getRgb(&red, &green, &blue);
-    const QString text ="<span style=""color:rgb("+ QString::number(red)
+    return "<span style=""color:rgb("+ QString::number(red)
                                         + "," + QString::number(green)
                                         + "," + QString ::number(blue) + ");>" + str + "</span>";
 
-   return text;
 }
 QString textBackgroundColor(const QString &str, const QColor &color)
 {
     int red, green, blue;
     color.getRgb(&red, &green, &blue);
-    const QString text ="<center><p style=""background-color:rgb("+ QString::number(red)
+    return "<center><p style=""background-color:rgb("+ QString::number(red)
                                         + "," + QString::number(green)
                                         + "," + QString ::number(blue) + "); >" + str + "</p></center>";
-
-   return text;
 }
 
 
@@ -530,11 +526,11 @@ QColor randomColor()
 
 bool constraintIsCircular(QJsonArray constraints, const int fromId, const int toId)
 {
-    for (int i=0; i<constraints.size(); ++i) {
+    for (int i = 0; i<constraints.size(); ++i) {
         QJsonObject constraint = constraints.at(i).toObject();
 
         // Detect circularity
-        if (constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == toId && constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == fromId)
+        if (constraint[STATE_CONSTRAINT_BWD_ID].toInt() == toId  .value(STATE_CONSTRAINT_BWD_ID).toInt() == toId && constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == fromId)
             return true;
 
         // If the constraint follows the one we are trying to create,

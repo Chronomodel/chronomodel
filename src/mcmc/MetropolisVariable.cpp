@@ -210,9 +210,8 @@ void MetropolisVariable::reserve( const int reserve)
 
 void MetropolisVariable::setFormat(const DateUtils::FormatDate fm)
 {
-    if (fm != mFormat) {
+    if (fm != mFormat || mFormatedTrace->size() != mRawTrace->size()) {
         mFormat = fm;
-      // emit formatChanged(); unused
         updateFormatedTrace();
     }
 }
@@ -226,18 +225,21 @@ void MetropolisVariable::updateFormatedTrace()
     if (!mRawTrace)
         return;
 
-    mFormatedTrace->clear();
+    //mFormatedTrace->clear();
     if (mRawTrace->size() == 0)
        return;
 
-    mFormatedTrace->resize(mRawTrace->size());
 
     if (mFormat == DateUtils::eNumeric)
-        std::copy(mRawTrace->cbegin(),mRawTrace->cend(),mFormatedTrace->begin());
+        mFormatedTrace = mRawTrace; // it's the same pointer, if you delete mFormatedTrace, you delete mRawTrace
+        /* mFormatedTrace->resize(mRawTrace->size());
+         * std::copy(mRawTrace->cbegin(), mRawTrace->cend(), mFormatedTrace->begin());
+         */
 
-    else
+    else {
+        mFormatedTrace->resize(mRawTrace->size());
         std::transform(mRawTrace->cbegin(), mRawTrace->cend(), mFormatedTrace->begin(), [this](const double i){return DateUtils::convertToFormat(i,this->mFormat);});
-
+    }
 
 }
 
@@ -254,9 +256,6 @@ void MetropolisVariable::generateBufferForHisto(double *input, const QVector<dou
 
     const double denum = dataSrc.size();
 
-    //float* input = (float*) fftwf_malloc(numPts * sizeof(float));
-
-    //memset(input, 0.f, numPts);
     for (int i=0; i<numPts; ++i)
         input[i]= 0.;
 
@@ -411,7 +410,6 @@ void MetropolisVariable::generateHistos(const QList<ChainSpecs>& chains, const i
     for (int i=0; i<chains.size(); ++i) {
         const QVector<double> subTrace ( runFormatedTraceForChain(chains, i));
         if (!subTrace.isEmpty()) {
-            //const QMap<double, double> histo (generateHisto(subTrace, fftLen, bandwidth, tmin, tmax) );
             mChainsHistos.append(generateHisto(subTrace, fftLen, bandwidth, tmin, tmax) );
         }
     }
@@ -444,10 +442,6 @@ void MetropolisVariable::generateHPD(const double threshold)
         }
         mHPD = QMap<double, double>(create_HPD(mHisto, thresh));
 
-        // No need to have HPD for all chains !
-        //mChainsHPD.clear();
-        //for(int i=0; i<mChainsHistos.size(); ++i)
-        //  mChainsHPD.append(create_HPD(mChainsHistos[i], 1, threshold));
     }
     else {
         // This can happen on phase duration, if only one event inside.
@@ -462,8 +456,7 @@ void MetropolisVariable::generateHPD(const double threshold)
 void MetropolisVariable::generateCredibility(const QList<ChainSpecs> &chains, double threshold)
 {
     if (!mHisto.isEmpty())
-        //mCredibility = credibilityForTrace(fullRunTrace(chains), threshold, mExactCredibilityThreshold,"Compute credibility for "+getName());
-    mCredibility = credibilityForTrace(fullRunTrace(chains), threshold, mExactCredibilityThreshold,"Compute credibility for "+getName());
+        mCredibility = credibilityForTrace(fullRunTrace(chains), threshold, mExactCredibilityThreshold,"Compute credibility for "+getName());
     else
         mCredibility = QPair<double,double>();
 
@@ -485,14 +478,13 @@ void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
             continue;
 
         QVector<double> results;
-        //results.reserve(hmax);
-
         const int n = trace.size();
 
         double mean, variance;
         mean_variance_Knuth(trace, mean, variance);
+        variance *= trace.size();
 
-        // Correlation pour cette chaine
+        // Correlation for this chain
 
         for (int h = 0; h <= hmax; ++h) {
             sH = 0.;
@@ -603,7 +595,10 @@ QVector<double> MetropolisVariable::fullRunRawTrace(const QList<ChainSpecs>& cha
 
 QVector<double> MetropolisVariable::fullRunTrace(const QList<ChainSpecs>& chains)
 {
-    // calcul reserve space
+    if (mFormatedTrace->isEmpty())
+        return QVector<double>();
+
+    // Calcul reserve space
     int reserveSize = 0;
 
     for (const ChainSpecs& chain : chains)

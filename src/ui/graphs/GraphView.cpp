@@ -341,21 +341,21 @@ QColor GraphView::getBackgroundColor() const
 void GraphView::addInfo(const QString& info)
 {
     mInfos << info;
-    if (mShowInfos)
-        repaintGraph(false);
+   // if (mShowInfos)
+     //   repaintGraph(false);
 }
 
 void GraphView::clearInfos()
 {
     mInfos.clear();
-    if (mShowInfos)
-        repaintGraph(false);
+  //  if (mShowInfos)
+    //    repaintGraph(false);
 }
 
 void GraphView::showInfos(bool show)
 {
     mShowInfos = show;
-    repaintGraph(true);
+   // repaintGraph(true);
 }
 
 void GraphView::setNothingMessage(const QString& message)
@@ -999,10 +999,11 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolY.mShowSubSubs = mYAxisSubTicks;
 
         if (mAutoAdjustYScale && mYAxisMode != eHidden && mShowInfos) {
-            const QString minMaxText =QString(tr( "Min = %1  /  Max = %2")).arg(stringForLocal(mMinY), stringForLocal(mMaxY));
+            const QString minMaxText = QString(tr( "Min = %1  /  Max = %2")).arg(stringForLocal(mMinY), stringForLocal(mMaxY));
             mInfos.clear();
             mInfos.append(minMaxText);
         }
+
         mAxisToolY.updateValues(int (mGraphHeight), int (mStepMinWidth), mMinY, mMaxY);
         mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), -1., mUnitFunctionY);
 
@@ -1010,7 +1011,8 @@ void GraphView::paintToDevice(QPaintDevice* device)
     /* ----------------------------------------------------
      *  Graph specific infos at the top right
      * ----------------------------------------------------*/
-    if (mShowInfos && mYAxisMode == eHidden) {
+    // never used
+  /*  if (!mShowInfos && mYAxisMode == eHidden) {
         QFontMetrics fm (font);
         p.setFont(font);
         p.setPen(Painting::borderDark);
@@ -1020,7 +1022,8 @@ void GraphView::paintToDevice(QPaintDevice* device)
             p.drawText(int (1.2 * mMarginLeft), int (mMarginTop  + y), int (mGraphWidth - 1.2*mMarginLeft -mMarginRight), lineH, Qt::AlignLeft | Qt::AlignBottom, info);
             y += lineH;
         }
-    }
+
+    }  */
     p.end();
 }
 
@@ -1475,7 +1478,7 @@ void GraphView::drawMap(GraphCurve& curve, QPainter& painter)
             ybottom = getYForValue(yReal, false) - rectYSize/2.;
 
             if ( val > minVal) {
-
+#ifdef DEBUG
                 if (false) {
                    /* col = QColor(Qt::yellow);
 
@@ -1491,12 +1494,14 @@ void GraphView::drawMap(GraphCurve& curve, QPainter& painter)
                     col.setAlphaF(0.5);
                     */
                 } else {
+#endif
                     alp = (val - minVal)/ (maxVal - minVal);
 
                     col = QColor(curve.mPen.color());
                     col.setAlphaF(sqrt(alp));
-
+#ifdef DEBUG
                 }
+#endif
                 //rectPen.setColor(col);
                 // https://doc.qt.io/qt-6/qrectf.html
                 painter.setPen(Qt::NoPen);
@@ -1589,7 +1594,7 @@ void GraphView::exportCurrentDensities(const QString& defaultPath, const QLocale
 
         for (auto& curve : mCurves) {
             if (!curve.mData.empty() &&
-                curve.isVectorData() &&
+                curve.isSingleCurve() &&
                 curve.mVisible) {
 
                 // 1 -Create the header
@@ -1608,20 +1613,20 @@ void GraphView::exportCurrentDensities(const QString& defaultPath, const QLocale
             return;
 
         rows<<list;
-        rows.reserve(ceil( (xMax - xMin)/step) );
+        rows.reserve(ceil( (xMax - xMin + 1)/step) );
 
         // 3 - Create Row, with each curve
         //  Create data in row
-        type_data x;
+        double x;
         int nbData = (xMax - xMin)/ step;
         for (int i = 0; i <= nbData; ++i) {
-            x = (type_data)(i)*step + xMin;
+            x = (double)(i)*step + xMin;
             list.clear();
 
             list << locale.toString(x);
             for (auto& curve : mCurves) {
                 if (!curve.mData.empty() &&
-                     curve.isVectorData() &&
+                     curve.isSingleCurve() &&
                     curve.mVisible) {
 
                     const type_data xi = interpolateValueInQMap(x, curve.mData);
@@ -1727,8 +1732,8 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
 
 void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step) const
 {
-    //if (step <= 0.)
-    //    step = 1.;
+    if (step <= 0.)
+        step = 1.;
 
     QString filter = tr("CSV (*.csv)");
     QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
@@ -1742,18 +1747,15 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
         QList<QStringList> rows;
         QStringList list;
         // 1 -Create the header
-        list << "X Axis";
+      /*  list << "X Axis";
         list << "G";
         list << "G sup 95";
-        list << "G inf 95";
-        type_data xMin = INFINITY;
-        type_data xMax = INFINITY;
+        list << "G inf 95"; */
+        double xMin = INFINITY;
+        double xMax = -INFINITY;
 
         for (auto& curve : mCurves) {
-            if (!curve.mData.empty() &&
-                curve.isVectorData() &&
-                curve.mVisible) {
-
+            if (curve.isSingleCurve() && curve.mVisible) {
                 // 2 - Find x Min and x Max period, on all curve, we suppose Qmap is order
                 if ( std::isinf(xMin) ) {// firstCurveVisible) {
                     xMin = curve.mData.firstKey();
@@ -1762,33 +1764,63 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
                     xMin = qMin(xMin, curve.mData.firstKey());
                     xMax = qMax(xMax, curve.mData.lastKey());
                 }
-            } else continue;
+
+            } else if (curve.isShapeData() && curve.mVisible) {
+
+                if ( std::isinf(xMin) ) {// firstCurveVisible) {
+                    xMin = curve.mShape.first.firstKey();
+                    xMax = curve.mShape.first.lastKey();
+                } else {
+                    xMin = qMin(xMin, curve.mShape.first.firstKey());
+                    xMax = qMax(xMax, curve.mShape.first.lastKey());
+                }
+            }
+            else continue;
         }
         if (std::isinf(xMin) || std::isinf(xMax))
             return;
 
-        if (step <= 0.)
-               step = ceil(xMax - xMin +1) / (double)mCurves.at(1).mData.size() ;
+        //rows<<list;
+        const int nbData = ceil(xMax - xMin)/ step + 1;
+        rows.reserve(nbData +1);
 
+        // 1 -Create the header
+        list << "X Axis";
+        for (auto& c : mCurves) {
+            if (c.mVisible) {
+                if (c.isSingleCurve())
+                    list << c.mName; // for example G
+
+                if (c.isShapeData()) {
+                    list<<c.mName + " Inf";
+                    list<<c.mName + " Sup"; // for example env G
+                }
+            }
+        }
         rows<<list;
-        rows.reserve(ceil( (xMax - xMin + 1)/step) );
 
         // 3 - Create Row, with each curve
         //  Create data in row
-        type_data x;
-        int nbData = ceil(xMax - xMin)/ step + 1;
+        double x;
+
         for (int i = 0; i < nbData; ++i) {
-            x = (type_data)(i)*step + xMin;
+            x = (double)(i)*step + xMin;
             list.clear();
 
             list << locale.toString(x);
-            // Il doit y avoir au moins trois courbes G, GSup, Ginf
 
-            list<<locale.toString(interpolateValueInQMap(x, mCurves.at(1).mData), 'g', 15); // G
-            list<<locale.toString(interpolateValueInQMap(x, mCurves.at(2).mData), 'g', 15); // G Sup
-            list<<locale.toString(interpolateValueInQMap(x, mCurves.at(3).mData), 'g', 15); // G Inf
+            for (auto& c : mCurves) {
+                if (c.mVisible) {
+                    if (c.isSingleCurve()) {
+                        list<<locale.toString(interpolateValueInQMap(x, c.mData), 'g', 15); // for example G
 
-      //      }
+                    } else if (c.isShapeData()) {
+                        list<<locale.toString(interpolateValueInQMap(x, c.mShape.first), 'g', 15);
+                        list<<locale.toString(interpolateValueInQMap(x, c.mShape.second), 'g', 15); // for example env G
+                    }
+                }
+            }
+
             rows<<list;
         }
 
@@ -1824,7 +1856,7 @@ void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale 
 
     QString filter = tr("CSV (*.csv)");
     QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
-                                                    tr("Save graph data as..."),
+                                                    tr("Save Reference Curve as..."),
                                                     defaultPath,
                                                     filter);
     QFile file(filename);
@@ -1840,20 +1872,17 @@ void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale 
         type_data xMin = INFINITY;
         type_data xMax = INFINITY;
 
+        QMap <type_data, type_data> G, G_Sup;
         for (auto& curve : mCurves) {
-            if (!curve.mData.empty() &&
-                curve.isVectorData() &&
-                curve.mVisible) {
+            if (curve.mName == "G") {
+                G = curve.mData;
+                xMin = G.firstKey();
+                xMax = G.lastKey();
 
-                // 2 - Find x Min and x Max period, on all curve, we suppose Qmap is order
-                if ( std::isinf(xMin) ) {// firstCurveVisible) {
-                    xMin = curve.mData.firstKey();
-                    xMax = curve.mData.lastKey();
-                } else {
-                    xMin = qMin(xMin, curve.mData.firstKey());
-                    xMax = qMax(xMax, curve.mData.lastKey());
-                }
-            } else continue;
+            } else if (curve.mName == "G Env") {
+                G_Sup = curve.mShape.second;
+            }
+
         }
         if (std::isinf(xMin) || std::isinf(xMax))
             return;
@@ -1873,8 +1902,8 @@ void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale 
 
             list << csvLocal.toString(x);
             // Il doit y avoir au moins trois courbes G, GSup, Ginf et nous exportons G et ErrG
-            const type_data xi = interpolateValueInQMap(x, mCurves.at(1).mData); // G
-            const type_data err_xi = interpolateValueInQMap(x, mCurves.at(2).mData); // GSup
+            const type_data xi = interpolateValueInQMap(x, G); // G
+            const type_data err_xi = interpolateValueInQMap(x, G_Sup); // GSup
             list<<csvLocal.toString(xi, 'g', 15);
             list<<csvLocal.toString((err_xi-xi)/1.96, 'g', 15);
 

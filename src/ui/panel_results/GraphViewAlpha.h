@@ -53,7 +53,7 @@ public:
 
     void setModel(ModelCurve* model);
 
-    void generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList);
+    void generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList, const Model *model);
     void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QVector<variable_t>& showVariableList);
 
 protected:

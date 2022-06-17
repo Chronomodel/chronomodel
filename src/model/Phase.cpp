@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -64,10 +64,10 @@ mLevel(0)
     mBeta.mFormat = DateUtils::eUnknown;
 
     mTau.mSupport = MetropolisVariable::eRp;
-    mTau.mFormat = DateUtils::eUnknown;
+    mTau.mFormat = DateUtils::eNumeric;
 
     mDuration.mSupport = MetropolisVariable::eRp;
-    mDuration.mFormat = DateUtils::eUnknown;
+    mDuration.mFormat = DateUtils::eNumeric;
     // Item initial position :
     mItemX = 0.;
     mItemY = 0.;
@@ -237,7 +237,7 @@ double Phase::getMaxThetaEvents(double tmax)
  */
 double Phase::getMinThetaEvents(double tmin)
 {
-    Q_ASSERT_X(!mEvents.isEmpty(), "Phase::getMinThetaEvents", QString("No Event in Phase :" + this->mName).toStdString().c_str());
+    Q_ASSERT_X(!mEvents.isEmpty(), "Phase::getMinThetaEvents", QString("No Event in Phase :" + mName).toStdString().c_str());
     (void) tmin;
     double theta (mEvents[0]->mTheta.mX);
 
@@ -358,7 +358,7 @@ double somKn (double x, int n, double Rp, double s)
   double som  = 0.;
 
   if (n >= 3) {
-      for (double np1 = 1.; np1 <= double(n-2); ++np1 ) { // memory np1 = n - p - 1.;
+      for (int np1 = 1.; np1 <= (n-2); ++np1 ) { // memory np1 = n - p - 1.;
           som +=  (pow(Rp/x, np1) - pow(Rp/s, np1) )/np1;
       }
   }
@@ -386,9 +386,12 @@ double Px(double x, int n, double Rp)
 
     double som = 0.;
     for (int p = 1; p <=(n-2); ++p ) {
-      som +=  (pow(Rp, n - p -1.) / pow(x, double(n-p)) );
+      //som +=  (pow(Rp, n - p -1) / pow(x, n-p) );
+      som += pow(Rp/x, n-p)/Rp;
     }
-
+if (isnan(P2+som)) {
+    qDebug()<<"Px is Nan "<<x<<" "<<n<<" "<<Rp;
+}
     return(std::move(P2+som) );
 
 }
@@ -447,9 +450,10 @@ void Phase::updateTau(const double tminPeriod, const double tmaxPeriod)
 
          //  mTau.mX = std::move(xd);
 
-            //if (abs(xn-mTau.mX)> 1.*precision) {
-             //  qDebug()<<"-----------precision------> U = "<< u << " R = "<< R <<  "xd = "<<xd <<  "xn = "<< xn <<" s = "<< s;
-           // } else
+       /*  if (xn<mTau.mX) {
+               qDebug()<<"-----------precision------> U = "<< u << " R = "<< R <<  "xd = "<<xn <<  "xn = "<< xn <<" s = "<< s;
+          }
+ */ // } else
 
 
             mTau.mX = std::move(xn);
@@ -464,7 +468,8 @@ void Phase::memoAll()
 {
     mAlpha.memo();
     mBeta.memo();
-    mTau.memo();
+   // if (mTauType == eZOnly)
+     //   mTau.memo();
     mDuration.memo();
 #ifdef DEBUG
     if (mBeta.mX - mAlpha.mX < 0.)
@@ -477,7 +482,8 @@ void Phase::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, co
   //  if (mAlpha.HistoWithParameter(fftLen, bandwidth, tmin, tmax) == false) {
         mAlpha.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
         mBeta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
-        mTau.generateHistos(chains, fftLen, bandwidth);
+       // if (mTauType == eZOnly)
+         //   mTau.generateHistos(chains, fftLen, bandwidth);
         mDuration.generateHistos(chains, fftLen, bandwidth);
   //  }
 }

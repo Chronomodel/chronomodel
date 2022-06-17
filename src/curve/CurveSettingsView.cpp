@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CurveSettingsView.h"
 #include "Project.h"
 #include "Painting.h"
+#include "QtUtilities.h"
 #include <QtWidgets>
 #include <QVariant>
 
@@ -287,11 +288,11 @@ void CurveSettingsView::setSettings(const CurveSettings& settings)
     } else if (settings.mVarianceType == CurveSettings::eModeBayesian) {
         mVarianceTypeInput->setCurrentIndex(1);
     }
-    mThresholdInput->setText(QString::number(settings.mThreshold));
+    mThresholdInput->setText(stringForLocal(settings.mThreshold));
 
 
     mUseVarianceIndividualInput->setChecked(settings.mUseVarianceIndividual);
-    mVarianceFixedInput->setText(QString::number(settings.mVarianceFixed));
+    mVarianceFixedInput->setText(stringForLocal(settings.mVarianceFixed));
     
     if (settings.mLambdaSplineType == CurveSettings::eModeFixed) {
         mLambdaSplineTypeInput->setCurrentIndex(0);
@@ -300,7 +301,7 @@ void CurveSettingsView::setSettings(const CurveSettings& settings)
         mLambdaSplineTypeInput->setCurrentIndex(1);
     }
     
-    mLambdaSplineInput->setText(QString::number(settings.mLambdaSpline));
+    mLambdaSplineInput->setText(stringForLocal(settings.mLambdaSpline));
     
     mProcessTypeInput->blockSignals(false);
     mVariableTypeInput->blockSignals(false);
@@ -338,7 +339,7 @@ CurveSettings CurveSettingsView::getSettings()
             break;
         case 3:
             settings.mVariableType = CurveSettings::eVariableTypeDepth;
-            settings.mThreshold = mThresholdInput->text().toDouble();
+            settings.mThreshold = locale().toDouble(mThresholdInput->text());
             break;
         case 4:
             settings.mVariableType = CurveSettings::eVariableTypeOther;
@@ -382,8 +383,9 @@ CurveSettings CurveSettingsView::getSettings()
     }
         
     settings.mUseVarianceIndividual = mUseVarianceIndividualInput->isChecked();
-    settings.mVarianceFixed = mVarianceFixedInput->text().toDouble();
-    
+    settings.mVarianceFixed = locale().toDouble(mVarianceFixedInput->text());
+
+
     if (mLambdaSplineTypeInput->currentIndex() == 0) {
         settings.mLambdaSplineType = CurveSettings::eModeFixed;
 
@@ -391,7 +393,7 @@ CurveSettings CurveSettingsView::getSettings()
         settings.mLambdaSplineType = CurveSettings::eModeBayesian;
     }
     
-    settings.mLambdaSpline = mLambdaSplineInput->text().toDouble();
+    settings.mLambdaSpline = locale().toDouble(mLambdaSplineInput->text());
     
     return settings;
 }

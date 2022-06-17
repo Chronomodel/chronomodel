@@ -104,6 +104,7 @@ public:
     inline bool isTopLineSections() const {return mType == eTopLineSections;}
     inline bool isVertical() const {return mType == eVerticalQMap;}
 
+    inline bool isSingleCurve() const {return mType == eQMapData;}
     inline bool isRefPoints() const {return mType == eRefPoints;}
     inline bool isCurveMap() const {return mType == eCurveMap;}
     inline bool isShapeData() const {return mType == eShapeData;}

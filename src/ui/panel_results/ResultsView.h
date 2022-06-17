@@ -144,9 +144,9 @@ protected:
     //  Utilities
     // ------------------------------------------------
     inline bool isPostDistribGraph();
-    bool xScaleRepresentsTime();
-    double sliderToZoom(const int &coef);
-    int zoomToSlider(const double &zoom);
+    inline bool xScaleRepresentsTime();
+    inline double sliderToZoom(const int &coef);
+    inline int zoomToSlider(const double &zoom);
 
     // ------------------------------------------------
     //  Controls actions helpers
@@ -159,7 +159,7 @@ protected:
     //  Curve
     // ------------------------------------------------
     ModelCurve* modelCurve() const;
-    bool isCurve() const;
+    inline bool isCurve() const;
 
 public slots:
 
@@ -325,6 +325,8 @@ private:
     RadioButton* mCurveGPRadio;
     RadioButton* mCurveGSRadio;
     RadioButton* mLambdaRadio;
+    RadioButton* mS02VgRadio;
+
     CheckBox* mCurveErrorCheck;
     CheckBox* mCurveMapCheck;
     CheckBox* mCurveEventsPointsCheck;
@@ -399,7 +401,7 @@ private:
     // ------------------------------------
     QWidget* mDensityOptsGroup;
     Label* mDensityOptsTitle;
-    Label* mThreshLab;
+    QLabel* mThreshLab;
     CheckBox* mCredibilityCheck;
     LineEdit* mThresholdEdit;
     Label* mFFTLenLab;

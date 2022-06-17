@@ -78,19 +78,41 @@ public:
     static QString modelStateDescriptionHTML(const ModelCurve *model = nullptr, QString stateDescript = "");
     static QString modelStateDescriptionText(const ModelCurve *model = nullptr, QString stateDescript = "");
 
+    // Results in text format
     static QString dateResultsText(const Date* d, const Model* model = nullptr, const bool forCSV = false);
-    static QString eventResultsText(const Event* e, bool withDates, const Model* model = nullptr, const bool forCSV = false);
-    static QString phaseResultsText(const Phase* p, const bool forCSV = false);
-    static QString tempoResultsText(const Phase* p, const bool forCSV = false);
-    static QString constraintResultsText(const PhaseConstraint* p, const bool forCSV = false);
-    static QString curveResultsText(const ModelCurve* model = nullptr);
+    static QString sigmaTiResultsText(const Date* d, const bool forCSV = false);
 
+    static QString eventResultsText(const Event* e, bool withDates, const Model* model = nullptr, const bool forCSV = false);
+    static QString VgResultsText(const Event* e);
+
+    static QString phaseResultsText(const Phase* p, const bool forCSV = false);
+    static QString durationResultsText(const Phase* p, const bool forCSV = false);
+    static QString tempoResultsText(const Phase* p);
+    static QString activityResultsText(const Phase* p, const bool forCSV = false);
+
+    static QString constraintResultsText(const PhaseConstraint* p, const bool forCSV = false);
+
+    static QString curveResultsText(const ModelCurve* model = nullptr);
+    static QString lambdaResultsText(const ModelCurve* model = nullptr);
+    static QString S02ResultsText(const ModelCurve* model = nullptr);
+
+    // Results in HTML format
     static QString dateResultsHTML(const Date* d, const Model* model = nullptr);
-    static QString eventResultsHTML(const Event* e,const bool withDates, const Model* model = nullptr);
+    static QString sigmaTiResultsHTML(const Date* d);
+
+    static QString eventResultsHTML(const Event* e, const bool withDates, const Model* model = nullptr);
+    static QString VgResultsHTML(const Event* e);
+
     static QString phaseResultsHTML(const Phase* p);
+
     static QString tempoResultsHTML(const Phase* p);
+    static QString activityResultsHTML(const Phase* p);
+    static QString durationResultsHTML(const Phase* p);
     static QString constraintResultsHTML(const PhaseConstraint* p);
+
     static QString curveResultsHTML(const ModelCurve* model = nullptr);
+    static QString lambdaResultsHTML(const ModelCurve* model = nullptr);
+    static QString S02ResultsHTML(const ModelCurve* model = nullptr);
 
     static short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const Model* model);
 };

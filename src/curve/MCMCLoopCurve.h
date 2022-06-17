@@ -91,13 +91,14 @@ private:
      qsizetype mFirstEventIndex; // Utile pour VG global, correspond au premier Event qui n'est pas un Bound
      double h_VG_old (const QList<Event *> _events);
 
-     inline double h_VG_Event(const Event * e, double S02_Vg_Yx);
+     inline double h_VG_Event(const Event * e, double S02_Vg);
      inline double h_VG_event_old(const Event * e);
-     double rate_h_VG(const QList<Event *> events, double current_S02_Vg_Yx, double try_S02_Vg_Yx);
+     double h_S02_Vg(const QList<Event *> events, double S02_Vg, const double var_Y);
 
      double S02_Vg_Yx(QList<Event *> _events, SplineMatrices matricesWI, std::vector<double> vecH, const double lambdaSpline);
 
-     double mS02_VG_global;
+     double Var_residual_spline;
+     double var_Y;
 
      double S02_lambda_WI (const SplineMatrices &matrices, const int nb_noeuds);
      double S02_lambda_old (const SplineMatrices &matrices, const int nb_noeuds);
@@ -168,7 +169,7 @@ private:
     double valeurGSeconde(const double t, const MCMCSplineComposante& spline);
 
     void valeurs_G_ErrG_GP_GS(const double t, const MCMCSplineComposante& spline,  double& G,  double& ErrG, double& GP, double& GS, unsigned& i0);
-    void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante& spline,  double& G,  double& VarG,  double& GP,  double& GS, unsigned& i0);
+    //void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante& spline,  double& G,  double& VarG,  double& GP,  double& GS, unsigned& i0);
 
 
     double initLambdaSpline();
@@ -176,16 +177,17 @@ private:
     double initLambdaSplineBy_h_YWI_AY();
 
     double cross_validation (const SplineMatrices& matrices, const std::vector<double> &vecH, const double lambdaSpline);
-    double general_cross_validation (const SplineMatrices& matrices, const std::vector<double> &vecH, const double lambdaSpline);
+    double general_cross_validation (const SplineMatrices& matrices, const std::vector<double> &vecH, const double lambdaSpline); // Obsolete
 
-    PosteriorMeanGComposante computePosteriorMeanGComposante(const std::vector<MCMCSplineComposante>& trace, const QString& ProgressBarText); // Obsolete
-    PosteriorMeanGComposante compute_posterior_mean_G_composante(const std::vector<MCMCSplineComposante>& trace, const QString& ProgressBarText);
+   // PosteriorMeanGComposante computePosteriorMeanGComposante(const std::vector<MCMCSplineComposante>& trace, const QString& ProgressBarText); // Obsolete
+   // PosteriorMeanGComposante compute_posterior_mean_G_composante(const std::vector<MCMCSplineComposante>& trace, const QString& ProgressBarText); // Obsolete
 
-    PosteriorMeanGComposante compute_posterior_mean_map_G_composante(const std::vector<MCMCSplineComposante>& trace, const double ymin, const double ymax, const unsigned gridLength, const QString& ProgressBarText);
+    //PosteriorMeanGComposante compute_posterior_mean_map_G_composante(const std::vector<MCMCSplineComposante>& trace, const double ymin, const double ymax, const unsigned gridLength, const QString& ProgressBarText);
 
-    PosteriorMeanGComposante computePosteriorMeanGComposante_chain_allchain(const std::vector<MCMCSplineComposante>& trace, PosteriorMeanGComposante& meanGAllChain, int prevChainSize);// Obsolete
+   // PosteriorMeanGComposante computePosteriorMeanGComposante_chain_allchain(const std::vector<MCMCSplineComposante>& trace, PosteriorMeanGComposante& meanGAllChain, int prevChainSize);// Obsolete
 
-    CurveMap compute_posterior_map_G_composante(const std::vector<MCMCSplineComposante>& trace, const double ymin, const double ymax, const unsigned gridLength);
+    // Obsolete
+    //CurveMap compute_posterior_map_G_composante(const std::vector<MCMCSplineComposante>& trace, const double ymin, const double ymax, const unsigned gridLength);
     // Obsolete
     //bool  hasPositiveGPrime (const MCMCSplineComposante& splineComposante);
 

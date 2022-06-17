@@ -116,8 +116,8 @@ public:
     // Trace and Posterior density needed for this :
     virtual void generateNumericalResults(const QList<ChainSpecs>& chains);
 
-    // void generateTempoAndActivity(); // Obsolete
-    void generateTempo(size_t gridLenth);
+    void generateTempoAndActivity(size_t gridLenth, double h);
+    void generateTempo(size_t gridLength);
 
     void generateActivity(size_t gridLenth, double h);
     void generateActivityBinomialeCurve(const int n, std::vector<double>& C1x, std::vector<double>& C2x, const double alpha = .05);
@@ -156,13 +156,9 @@ public:
     double mBandwidth;
     size_t mFFTLength;
     double mHActivity;
+    // Stockage des courbes binomiales en fonction de n
+    std::unordered_map<int, std::vector<double>> mBinomiale_Gx;
 
-    // Members used in the next-previous sheet system
-    // they count all the Events and the Dates availables to display
-    // We could have the same Event and Date in several phases,
-    // so mNumberOfEventsInAllPhases is not egual to mNumberOfEvents
-    //int mNumberOfEventsInAllPhases;
-    //int mNumberOfDatesInAllPhases;
 
 public slots:
     void setThreshold(const double threshold);

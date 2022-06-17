@@ -56,7 +56,7 @@ public:
     virtual void saveToFile(QDataStream *out);
     virtual void restoreFromFile(QDataStream *in);
 
-    void saveMapToFile(QFile *file, const QString csvSep);
+    void saveMapToFile(QFile *file, const QString csvSep, const CurveMap &map);
 
     virtual QJsonObject toJson() const;
     virtual void fromJson( const QJsonObject& json);
@@ -85,12 +85,23 @@ public:
     CurveSettings mCurveSettings;
     
     MHVariable mLambdaSpline;
+    MHVariable mS02Vg;
     MCMCSpline mSpline; // valeurs courrantes de la spline
 
     std::vector<MCMCSpline> mSplinesTrace; // memo des valeurs aux noeuds
     
     PosteriorMeanG mPosteriorMeanG; // valeurs en tout t
     std::vector<PosteriorMeanG> mPosteriorMeanGByChain; // valeurs en tout t par chaine
+
+
+    PosteriorMeanGComposante buildCurveAndMap(const int nbPtsX, const int nbPtsY, const char charComp = 'X', const bool doMap = false, const double mapYMin = 0, double mapYMax = 0);
+    // same as void GraphView::exportReferenceCurves()
+    void exportMeanGComposanteToReferenceCurves(const PosteriorMeanGComposante pMeanCompoXYZ, const QString& defaultPath, QLocale csvLocale, const QString& csvSep) const;
+
+private:
+    void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante& spline,  double& G,  double& VarG,  double& GP,  double& GS, unsigned& i0);
+    friend class MCMCLoopCurve;
+    std::vector<MCMCSpline> fullRunSplineTrace(const QList<ChainSpecs>& chains);
 
 };
 

@@ -119,6 +119,7 @@ public slots:
     void updateProject();
     void toggleCurve(bool checked);
 
+    void rebuildExportCurve();
     void changeEventsColor();
     void changeEventsMethod();
     void changeDatesMethod();
@@ -183,6 +184,8 @@ private:
 
     QAction* mSelectEventsAction;
     QAction* mSelectEventsNameAction;
+    QAction* mExportCurveAction;
+
     QAction* mEventsColorAction;
     QAction* mEventsMethodAction;
     QAction* mDatesMethodAction;

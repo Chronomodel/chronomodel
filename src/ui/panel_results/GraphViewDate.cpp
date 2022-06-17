@@ -70,7 +70,7 @@ void GraphViewDate::setDate(Date* date)
 {
     Q_ASSERT(date);
     mDate = date;
-    setItemTitle(tr("Data : %1").arg(mDate->mName));
+    //setItemTitle(tr("Data : %1").arg(mDate->mName));
 
     update();
 }
@@ -87,16 +87,11 @@ void GraphViewDate::paintEvent(QPaintEvent* e)
     GraphViewResults::paintEvent(e);
 }
 
-// not used since v1.4
-//QColor GraphViewDate::getEventColor()
-//{
-//    return mDate->getEventColor();
-//}
 
-void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList)
+void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList, const Model* model)
 {
-   // Q_ASSERT(mDate);
     //qDebug()<<"GraphViewDate::generateCurves()";
+    (void) model;
     GraphViewResults::generateCurves(typeGraph, variableList);
 
     /* ------------------------------------------------
@@ -115,21 +110,25 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
     QPen defaultPen;
     defaultPen.setWidthF(1);
     defaultPen.setStyle(Qt::SolidLine);
-    QString resultsText = ModelUtilities::dateResultsText(mDate);
-    QString resultsHTML = ModelUtilities::dateResultsHTML(mDate);
+
+    QString resultsText = tr("Nothing to Display");
+    QString resultsHTML = tr("Nothing to Display");
+    if (variableList.contains(eDataTi)) {
+        resultsText = ModelUtilities::dateResultsText(mDate);
+        resultsHTML = ModelUtilities::dateResultsHTML(mDate);
+
+    } else if (variableList.contains(eSigma)) {
+        resultsText = ModelUtilities::sigmaTiResultsText(mDate);
+        resultsHTML = ModelUtilities::sigmaTiResultsHTML(mDate);
+    }
+
     setNumericalResults(resultsHTML, resultsText);
 
     /* ------------------------------------------------
      *  Are we working on calendar date or std dev ?
      * ------------------------------------------------
      */
-   /* MHVariable* variableDate = &(mDate->mTheta);
-    if (variableList.contains(eDataTi) )
-        variableDate = &(mDate->mTheta);
 
-    else if(variableList.contains(eSigma))
-        variableDate = &(mDate->mSigma);
-*/
     /* ------------------------------------------------
      *  First tab : Posterior distrib.
      * ------------------------------------------------
@@ -155,7 +154,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
             mGraph->setFormatFunctY(nullptr);
 
             //  Post Distrib All Chains
-            GraphCurve curvePostDistrib = generateDensityCurve(mDate->mTi.fullHisto(),
+            GraphCurve curvePostDistrib = densityCurve(mDate->mTi.fullHisto(),
                                                          "Post Distrib All Chains",
                                                          color,
                                                          Qt::SolidLine,
@@ -166,7 +165,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
             // Post Distrib Chain i
             if (!mDate->mTi.mChainsHistos.isEmpty())
                 for (int i=0; i<mChains.size(); ++i) {
-                    GraphCurve curvePostDistribChain = generateDensityCurve(mDate->mTi.histoForChain(i),
+                    GraphCurve curvePostDistribChain = densityCurve(mDate->mTi.histoForChain(i),
                                                                             "Post Distrib Chain " + QString::number(i),
                                                                             Painting::chainColors.at(i),
                                                                             Qt::SolidLine,
@@ -175,7 +174,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
                 }
 
             // HPD All Chains
-            GraphCurve curveHPD = generateHPDCurve(mDate->mTi.mHPD,
+            GraphCurve curveHPD = HPDCurve(mDate->mTi.mHPD,
                                                    "HPD All Chains",
                                                     color);
             mGraph->addCurve(curveHPD);
@@ -183,7 +182,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
             // Calibration
             const QMap<double,double> formatedCalib = mDate->getFormatedCalibToShow();//getFormatedCalibMap();
 
-            GraphCurve curveCalib = generateDensityCurve(formatedCalib,
+            GraphCurve curveCalib = densityCurve(formatedCalib,
                                                          "Calibration",
                                                          QColor(150, 150, 150),
                                                          Qt::SolidLine,
@@ -191,7 +190,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
             mGraph->addCurve(curveCalib);
 
             // Wiggle
-            GraphCurve curveWiggle = generateDensityCurve(mDate->mWiggle.fullHisto(),
+            GraphCurve curveWiggle = densityCurve(mDate->mWiggle.fullHisto(),
                                                           "Wiggle",
                                                           mColor,
                                                           Qt::DashLine,
@@ -199,7 +198,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
             mGraph->addCurve(curveWiggle);
 
             // Credibility (must be the last created curve because uses yMax!
-            GraphCurve curveCred = generateSectionCurve(mDate->mTi.mCredibility,
+            GraphCurve curveCred = sectionCurve(mDate->mTi.mCredibility,
                                                             "Credibility All Chains",
                                                             color);
             mGraph->addCurve(curveCred);
@@ -229,8 +228,9 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
 
         /* ------------------------------------------------
          *  Possible Curves :
-         *  - Sigma All Chains
-         *  - Sigma Chain i
+         *  - Sigma
+         *  -- Post Distrib All Chains
+         *  -- Post Distrib Chain i
          * ------------------------------------------------
          */
         else if (variableList.contains(eSigma)) {
@@ -242,8 +242,8 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
             mGraph->setFormatFunctY(nullptr);
 
             //  Post Distrib All Chains
-            GraphCurve curvePostDistrib = generateDensityCurve(mDate->mSigmaTi.fullHisto(),
-                                                               "Sigma all Chains",
+            GraphCurve curvePostDistrib = densityCurve(mDate->mSigmaTi.fullHisto(),
+                                                               "Post Distrib all Chains",
                                                                color,
                                                                Qt::SolidLine,
                                                                Qt::NoBrush);
@@ -252,16 +252,16 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
             // Post Distrib Chain i
             if (!mDate->mSigmaTi.mChainsHistos.isEmpty())
                 for (int i=0; i<mChains.size(); ++i) {
-                    GraphCurve curvePostDistribChain = generateDensityCurve(mDate->mSigmaTi.histoForChain(i),
-                                                                            "Sigma for Chain " + QString::number(i),
+                    GraphCurve curvePostDistribChain = densityCurve(mDate->mSigmaTi.histoForChain(i),
+                                                                            "Post Distrib Chain " + QString::number(i),
                                                                             Painting::chainColors.at(i),
                                                                             Qt::SolidLine,
                                                                             Qt::NoBrush);
                     mGraph->addCurve(curvePostDistribChain);
                 }
             // HPD All Chains
-            GraphCurve curveHPD = generateHPDCurve(mDate->mSigmaTi.mHPD,
-                                                   "Sigma HPD All Chains",
+            GraphCurve curveHPD = HPDCurve(mDate->mSigmaTi.mHPD,
+                                                   "HPD All Chains",
                                                     color);
             mGraph->addCurve(curveHPD);
 
@@ -313,7 +313,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
             generateAcceptCurves(mChains, &mDate->mSigmaTi);
         }
 
-        //mGraph->addCurve( generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine) );
+        //mGraph->addCurve( horizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine) );
 
     }
 
@@ -386,16 +386,17 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
         }
         /* ------------------------------------------------
          *  Possible Curves :
-         *  - Sigma All Chains
-         *  - Sigma Chain i
+         *  - Sigma
+         *  -- Post Distrib All Chains
+         *  -- Post Distrib Chain i
          * ------------------------------------------------
          */
         else if (variableList.contains(eSigma)) {
-            mGraph->setCurveVisible("Sigma all Chains", mShowAllChains);
+            mGraph->setCurveVisible("Post Distrib all Chains", mShowAllChains);
             for (int i=0; i<mShowChainList.size(); ++i)
-                mGraph->setCurveVisible("Sigma for Chain " + QString::number(i), mShowChainList[i]);
+                mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
 
-            mGraph->setCurveVisible("Sigma HPD All Chains", mShowAllChains);
+            mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
 
             mGraph->setTipXLab(tr("sigma"));
             mGraph->setYAxisMode(GraphView::eHidden);

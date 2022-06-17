@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2021
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -37,41 +37,31 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef GRAPHVIEWCURVE_H
-#define GRAPHVIEWCURVE_H
+#ifndef GRAPHVIEWS02_H
+#define GRAPHVIEWS02_H
 
 #include "GraphViewResults.h"
-#include "ModelCurve.h"
-#include "GraphCurve.h"
 
-class GraphViewCurve: public GraphViewResults
+class ModelCurve;
+
+class GraphViewS02: public GraphViewResults
 {
     Q_OBJECT
 public:
-    explicit GraphViewCurve(QWidget *parent = nullptr);
-    virtual ~GraphViewCurve();
+    explicit GraphViewS02(QWidget *parent = nullptr);
+    virtual ~GraphViewS02();
 
-    void setComposanteG(const PosteriorMeanGComposante& composante);
-    void setComposanteGChains(const QList<PosteriorMeanGComposante>& composanteChains);
+    void setModel(ModelCurve* model);
 
-    void setEvents(const QList<Event*>& events);
-    void setEventsPoints(const QVector<CurveRefPts>& rfPts) { mEventsPoints = rfPts;};
-    void setDataPoints(const QVector<CurveRefPts>& rfPts) { mDataPoints = rfPts;};
-    
-    void generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList, const Model *model = nullptr);
-    void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, const QVector<variable_t>& showVariableList);
+    void generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList, const Model* model = nullptr);
+    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QVector<variable_t>& showVariableList);
 
 protected:
     void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent* );
 
 private:
-    PosteriorMeanGComposante mComposanteG;
-    QList<PosteriorMeanGComposante> mComposanteGChains;
-
-    QList<Event*> mEvents;
-    QVector<CurveRefPts> mEventsPoints;
-    QVector<CurveRefPts> mDataPoints;
+    ModelCurve* mModel;
 
 };
 

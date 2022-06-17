@@ -82,7 +82,6 @@ public:
     static double convertFromAppSettingsFormat(const double &formattedValue);
     static QString convertFromAppSettingsFormatStr(const double formattedValue);
 
-
     static FormatDate getAppSettingsFormat();
     static QString getAppSettingsFormatStr();
 

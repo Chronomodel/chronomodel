@@ -69,7 +69,7 @@ void GraphViewEvent::setEvent(Event* event)
 
     mEvent = event;
     QString eventTitle = ( (mEvent->mType == Event::eDefault) ? tr("Event : %1").arg(mEvent->mName) : tr("Bound : %1").arg(mEvent->mName) ) ;
-    setItemTitle(eventTitle);
+    //setItemTitle(eventTitle);
     setItemColor(mEvent->mColor);
     update();
 }
@@ -85,10 +85,10 @@ void GraphViewEvent::resizeEvent(QResizeEvent* )
     updateLayout();
 }
 
-void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variable_t> & variableList)
+void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variable_t> & variableList, const Model* model)
 {
     Q_ASSERT(mEvent);
-    
+    (void) model;
     GraphViewResults::generateCurves(typeGraph, variableList);
 
     /* ------------------------------------------------
@@ -110,8 +110,18 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
     defaultPen.setStyle(Qt::SolidLine);
 
     QColor color = mEvent->mColor;
-    QString resultsText = ModelUtilities::eventResultsText(mEvent, false);
-    QString resultsHTML = ModelUtilities::eventResultsHTML(mEvent, false);
+
+    QString resultsText = tr("Nothing to Display");
+    QString resultsHTML = tr("Nothing to Display");
+    if (mCurrentVariableList.contains(eVg)) {
+        resultsText = ModelUtilities::VgResultsText(mEvent);
+        resultsHTML = ModelUtilities::VgResultsHTML(mEvent);
+
+    } else if (mCurrentVariableList.contains(eThetaEvent)) {
+        resultsText = ModelUtilities::eventResultsText(mEvent, false);
+        resultsHTML = ModelUtilities::eventResultsHTML(mEvent, false);
+    }
+
     setNumericalResults(resultsHTML, resultsText);
 
     bool isFixedBound = false;
@@ -130,7 +140,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
     } else if (mCurrentVariableList.contains(eSigma)) {
         mTitle = ((mEvent->type() == Event::eBound) ? tr("Bound") : tr("Std Compilation")) + " : " + mEvent->mName;
 
-    } else if (mCurrentVariableList.contains(eVG)) {
+    } else if (mCurrentVariableList.contains(eVg)) {
         mTitle = tr("Std G") + " : " + mEvent->mName;
     }
 
@@ -181,13 +191,13 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
                 curvePostDistrib.mName = "Post Distrib All Chains";
                 curvePostDistrib.mPen.setColor(color);
 
-                curvePostDistrib = generateDensityCurve(mEvent->mTheta.fullHisto(),
+                curvePostDistrib = densityCurve(mEvent->mTheta.fullHisto(),
                                                                        "Post Distrib All Chains",
                                                                        color);
                 mGraph->addCurve(curvePostDistrib);
 
                 // HPD All Chains
-                GraphCurve curveHPD = generateHPDCurve(mEvent->mTheta.mHPD,
+                GraphCurve curveHPD = HPDCurve(mEvent->mTheta.mHPD,
                                                        "HPD All Chains",
                                                        color);
                 mGraph->addCurve(curveHPD);
@@ -198,7 +208,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
                  */
                 if (!mEvent->mTheta.mChainsHistos.isEmpty())
                     for (int i = 0; i < mChains.size(); ++i) {
-                        GraphCurve curvePostDistribChain = generateDensityCurve(mEvent->mTheta.histoForChain(i),
+                        GraphCurve curvePostDistribChain = densityCurve(mEvent->mTheta.histoForChain(i),
                                                                                 "Post Distrib Chain " + QString::number(i),
                                                                                 Painting::chainColors.at(i),
                                                                                 Qt::SolidLine,
@@ -210,29 +220,19 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
                  *  Theta Credibility
                  * ------------------------------------
                  */
-                GraphCurve curveCred = generateSectionCurve(mEvent->mTheta.mCredibility,
+                GraphCurve curveCred = sectionCurve(mEvent->mTheta.mCredibility,
                                                                 "Credibility All Chains",
                                                                 color);
                 mGraph->addCurve(curveCred);
             }
-            // ------------------------------------------------------------
-            //  Add zones outside study period
-            // ------------------------------------------------------------
+            /* ------------------------------------------------------------
+            *   Add zones outside study period
+            * ------------------------------------------------------------*/
 
-            GraphZone zoneMin;
-            zoneMin.mXStart = -INFINITY;
-            zoneMin.mXEnd = mSettings.getTminFormated();
-            zoneMin.mColor = QColor(217, 163, 69);
-            zoneMin.mColor.setAlpha(35);
-            zoneMin.mText = tr("Outside study period");
+            const GraphZone zoneMin (-INFINITY, mSettings.getTminFormated());
             mGraph->addZone(zoneMin);
 
-            GraphZone zoneMax;
-            zoneMax.mXStart = mSettings.getTmaxFormated();
-            zoneMax.mXEnd = INFINITY;
-            zoneMax.mColor = QColor(217, 163, 69);
-            zoneMax.mColor.setAlpha(35);
-            zoneMax.mText = tr("Outside study period");
+            const GraphZone zoneMax (mSettings.getTmaxFormated(), INFINITY);
             mGraph->addZone(zoneMax);
         }
 
@@ -241,8 +241,8 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
          *  Events don't have std dev BUT we can visualize
          *  an overlay of all dates std dev instead.
          *  Possible curves, FOR ALL DATES :
-         *  - Sigma Date i All Chains
-         *  - Sigma Date i Chain j
+         *  - Post Distrib i All Chains
+         *  - Post Distrib i Chain j
          * ------------------------------------------------
          */
         else if (mCurrentVariableList.contains(eSigma)) {
@@ -253,15 +253,15 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
 
             int i = 0;
             for (auto&& date : mEvent->mDates) {
-                GraphCurve curve = generateDensityCurve(date.mSigmaTi.fullHisto(),
-                                                        "Sigma Date " + QString::number(i) + " All Chains",
+                GraphCurve curve = densityCurve(date.mSigmaTi.fullHisto(),
+                                                        "Post Distrib Date " + QString::number(i) + " All Chains",
                                                         color);
 
                 mGraph->addCurve(curve);
                 if (!date.mSigmaTi.mChainsHistos.isEmpty())
                     for (int j=0; j<mChains.size(); ++j) {
-                        GraphCurve curveChain = generateDensityCurve(date.mSigmaTi.histoForChain(j),
-                                                                     "Sigma Date " + QString::number(i) + " Chain " + QString::number(j),
+                        GraphCurve curveChain = densityCurve(date.mSigmaTi.histoForChain(j),
+                                                                     "Post Distrib Date " + QString::number(i) + " Chain " + QString::number(j),
                                                                      Painting::chainColors.at(j));
                         mGraph->addCurve(curveChain);
                     }
@@ -269,26 +269,24 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
             }
         }
         
-        else if (mCurrentVariableList.contains(eVG)) {
+        else if (mCurrentVariableList.contains(eVg)) {
             mGraph->setOverArrow(GraphView::eNone);
             mGraph->mLegendX = "";
             mGraph->setBackgroundColor(QColor(230, 230, 230));
 
-            GraphCurve curve = generateDensityCurve(mEvent->mVG.fullHisto(), "Std G All Chains", color);
-            // qDebug() << curve.mData;
+            GraphCurve curve = densityCurve(mEvent->mVG.fullHisto(), "Post Distrib All Chains", color);
+
             mGraph->addCurve(curve);
             
             if (!mEvent->mVG.mChainsHistos.isEmpty()) {
                 for (int j = 0; j<mChains.size(); ++j) {
-                    GraphCurve curveChain = generateDensityCurve(mEvent->mVG.histoForChain(j), "Std G Chain " + QString::number(j), Painting::chainColors.at(j));
+                    GraphCurve curveChain = densityCurve(mEvent->mVG.histoForChain(j), "Post Distrib Chain " + QString::number(j), Painting::chainColors.at(j));
                     mGraph->addCurve(curveChain);
                 }
             }
 
             // HPD All Chains
-            GraphCurve curveHPD = generateHPDCurve(mEvent->mVG.mHPD,
-                                                   "HPD All Chains",
-                                                   color);
+            GraphCurve curveHPD = HPDCurve(mEvent->mVG.mHPD, "HPD All Chains", color);
             mGraph->addCurve(curveHPD);
         }
     }
@@ -301,7 +299,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
         if (mCurrentVariableList.contains(eThetaEvent)) {
             generateTraceCurves(mChains, &(mEvent->mTheta));
 
-        } else if (mCurrentVariableList.contains(eVG)) {
+        } else if (mCurrentVariableList.contains(eVg)) {
             generateTraceCurves(mChains, &(mEvent->mVG));
         }
     }
@@ -314,7 +312,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
         if (mCurrentVariableList.contains(eThetaEvent) && (mEvent->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss || mEvent->mTheta.mSamplerProposal == MHVariable::eFixe)) {
             generateAcceptCurves(mChains, &(mEvent->mTheta));
 
-        } else if (mCurrentVariableList.contains(eVG)) {
+        } else if (mCurrentVariableList.contains(eVg)) {
             generateAcceptCurves(mChains, &(mEvent->mVG));
 
         }
@@ -323,13 +321,13 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
     // ----------------------------------------------------------------------
     //  Autocorrelation : generate correlation with lower and upper limits
     // ----------------------------------------------------------------------
-    else if ((typeGraph == eCorrel) && (mCurrentVariableList.contains(eVG) || (mCurrentVariableList.contains(eThetaEvent) && !isFixedBound))) {
+    else if ((typeGraph == eCorrel) && (mCurrentVariableList.contains(eVg) || (mCurrentVariableList.contains(eThetaEvent) && !isFixedBound))) {
 
         mGraph->mLegendX = "";
         if (mCurrentVariableList.contains(eThetaEvent)) {
             generateCorrelCurves(mChains, &(mEvent->mTheta));
 
-        } else if (mCurrentVariableList.contains(eVG)) {
+        } else if (mCurrentVariableList.contains(eVg)) {
             generateCorrelCurves(mChains, &(mEvent->mVG));
         }
         mGraph->setXScaleDivision(10, 10);
@@ -383,16 +381,16 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
          *  Events don't have std dev BUT we can visualize
          *  an overlay of all dates std dev instead.
          *  Possible curves, FOR ALL DATES :
-         *  - Sigma Date i All Chains
-         *  - Sigma Date i Chain j
+         *  - Post Distrib Date i All Chains
+         *  - Post Distrib Date i Chain j
          * ------------------------------------------------
          */
         else if (mShowVariableList.contains(eSigma)) {
             for (int i = 0; i < mEvent->mDates.size(); ++i) {
-                mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " All Chains", mShowAllChains);
+                mGraph->setCurveVisible("Post Distrib Date " + QString::number(i) + " All Chains", mShowAllChains);
 
                 for (int j = 0; j < mShowChainList.size(); ++j)
-                    mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " Chain " + QString::number(j), mShowChainList.at(j));
+                    mGraph->setCurveVisible("Post Distrib Date " + QString::number(i) + " Chain " + QString::number(j), mShowChainList.at(j));
 
             }
             mGraph->setTipXLab(tr("Sigma"));
@@ -400,12 +398,12 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
         }
         
-        else if (mShowVariableList.contains(eVG)) {
-            mGraph->setCurveVisible("Std G All Chains", mShowAllChains);
+        else if (mShowVariableList.contains(eVg)) {
+            mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
             mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
 
             for (int j = 0; j < mShowChainList.size(); ++j) {
-                mGraph->setCurveVisible("Std G Chain " + QString::number(j), mShowChainList.at(j));
+                mGraph->setCurveVisible("Post Distrib Chain " + QString::number(j), mShowChainList.at(j));
             }
             
             mGraph->setTipXLab(tr("Std G"));
@@ -422,7 +420,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      *  - Q3 i
      * ------------------------------------------------  */
     else if ((mCurrentTypeGraph == eTrace) &&
-             (mShowVariableList.contains(eThetaEvent) || mShowVariableList.contains(eVG) )) {
+             (mShowVariableList.contains(eThetaEvent) || mShowVariableList.contains(eVg) )) {
              // We visualize only one chain (radio button)
 
             for (int i = 0; i < mShowChainList.size(); ++i) {
@@ -447,7 +445,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      *  - Accept Target
      * ------------------------------------------------  */
     else if ((mCurrentTypeGraph == eAccept) &&
-             (mShowVariableList.contains(eVG) ||
+             (mShowVariableList.contains(eVg) ||
               ( mShowVariableList.contains(eThetaEvent) && ((mEvent->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss) || (mEvent->mTheta.mSamplerProposal == MHVariable::eFixe)))
                )) {
         mGraph->setCurveVisible("Accept Target", true);
@@ -470,7 +468,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      *  - Correl Limit Upper i
      * ------------------------------------------------   */
     else if ( (mCurrentTypeGraph == eCorrel) &&
-              (mShowVariableList.contains(eVG) ||
+              (mShowVariableList.contains(eVg) ||
                (mShowVariableList.contains(eThetaEvent) && !isFixedBound)  )) {
             for (int i = 0; i < mShowChainList.size(); ++i) {
                 mGraph->setCurveVisible("Correl " + QString::number(i), mShowChainList.at(i));

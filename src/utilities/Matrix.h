@@ -42,10 +42,10 @@ public:
     unsigned row() {return _row;}
     unsigned column() {return _column;}
 
-    double minX() {return rangeX.first;}
-    double maxX() {return rangeX.second;}
-    double minY() {return rangeY.first;}
-    double maxY() {return rangeY.second;}
+    double minX() const {return rangeX.first;}
+    double maxX() const {return rangeX.second;}
+    double minY() const {return rangeY.first;}
+    double maxY() const {return rangeY.second;}
 
     virtual ~CurveMap();
 

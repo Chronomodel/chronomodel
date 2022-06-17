@@ -44,6 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PhaseConstraint.h"
 #include "MetropolisVariable.h"
 
+#include <unordered_map>
 #include <QString>
 #include <QList>
 #include <QJsonObject>
@@ -109,15 +110,12 @@ public:
     QMap<double, double> mTempoInf;
     QMap<double, double> mTempoSup;
 
-    //QMap<double, double> mTempoCredibilityInf;
-    //QMap<double, double> mTempoCredibilitySup;
-
     QMap<double, double> mActivity;
     QMap<double, double> mActivityInf;
     QMap<double, double> mActivitySup;
     QMap<double, double> mActivityUnifMean;
-    QMap<double, double> mActivityUnifInf;
-    QMap<double, double> mActivityUnifSup;
+   // QMap<double, double> mActivityUnifInf;
+   // QMap<double, double> mActivityUnifSup;
 
     // Raw curve without date format
 
@@ -125,15 +123,13 @@ public:
     QMap<double, double> mRawTempoInf;
     QMap<double, double> mRawTempoSup;
 
-    //QMap<double, double> mRawTempoCredibilityInf;
-    //QMap<double, double> mRawTempoCredibilitySup;
-
     QMap<double, double> mRawActivity;
     QMap<double, double> mRawActivityInf;
     QMap<double, double> mRawActivitySup;
     QMap<double, double> mRawActivityUnifMean;
-    QMap<double, double> mRawActivityUnifInf;
-    QMap<double, double> mRawActivityUnifSup;
+    //QMap<double, double> mRawActivityUnifInf;
+    //QMap<double, double> mRawActivityUnifSup;
+    std::unordered_map<std::string, TValueStack> mActivityValueStack;
 
     MetropolisVariable mTau;
     TauType mTauType;

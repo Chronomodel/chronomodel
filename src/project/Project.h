@@ -130,7 +130,7 @@ public:
      * @param noResults
      */
     void setNoResults( const bool& noResults) { mNoResults = noResults;}
-    bool withResults() {return !mNoResults;}
+    bool withResults() {return (!mNoResults) && mModel;}
 
     bool setSettings(const ProjectSettings& settings);
 

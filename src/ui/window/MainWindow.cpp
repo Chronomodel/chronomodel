@@ -46,6 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginManager.h"
 #include "ModelUtilities.h"
 #include "SwitchAction.h"
+#include "RebuidCurveDialog.h"
 
 #include <QtWidgets>
 #include <QLocale>
@@ -294,6 +295,9 @@ void MainWindow::createActions()
 
     mSelectEventsNameAction = new QAction(tr("Select All Events with string"), this);
     connect(mSelectEventsNameAction, &QAction::triggered, this, &MainWindow::selectEventWithString);
+
+    mExportCurveAction = new QAction(tr("Rebuid and Export Curve and Map"), this);
+    connect(mExportCurveAction, &QAction::triggered, this, &MainWindow::rebuildExportCurve);
     //-----------------------------------------------------------------
     // Help/About Menu
     //-----------------------------------------------------------------
@@ -404,6 +408,8 @@ void MainWindow::createMenus()
     for (int i=0; i<mDatesActions.size(); ++i)
         mActionsMenu->addAction(mDatesActions[i]);
 
+    mActionsMenu->addSeparator();
+    mActionsMenu->addAction(mExportCurveAction);
 }
 /**
  * @brief MainWindow::createToolBars
@@ -841,7 +847,8 @@ void MainWindow::selectEventInSelectedPhases() {
             mProjectView->eventsAreSelected();
 }
 
-void MainWindow::selectEventWithString() {
+void MainWindow::selectEventWithString()
+{
     if (mProject) {
         bool ok;
         const QString text = QInputDialog::getText(this, tr("Find events containing the text"),
@@ -850,6 +857,50 @@ void MainWindow::selectEventWithString() {
             if (mProject->selectedEventsWithString(text) )
                 mProjectView->eventsAreSelected();
     }
+}
+
+void MainWindow::rebuildExportCurve()
+{
+    if (!mProject || !mProject->isCurve() || !mProject->mModel)
+        return;
+
+   RebuidCurveDialog qDialog = RebuidCurveDialog();
+
+
+    if (qDialog.exec() && (qDialog.doCurve() || qDialog.doMap())) {
+
+       const int XGrid = qDialog.getXSpinResult();
+       const int YGrid = qDialog.getYSpinResult();
+
+       QLocale csvLocale = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+
+       ModelCurve* modelCurve = static_cast<ModelCurve*>(mProject->mModel);
+       auto postCompoG = modelCurve->buildCurveAndMap(XGrid, YGrid, 'X', qDialog.doMap(), qDialog.getYMin(), qDialog.getYMax());
+
+       if (qDialog.doCurve())
+           modelCurve->exportMeanGComposanteToReferenceCurves(postCompoG, MainWindow::getInstance()->getCurrentPath(), csvLocale, AppSettings::mCSVCellSeparator);
+
+       if (qDialog.doMap()) {
+           const QString filter = tr("CSV (*.csv)");
+           const QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                           tr("Save Map Curve as..."),
+                                                           MainWindow::getInstance()->getCurrentPath(),
+                                                           filter);
+           QFile file(filename);
+
+           if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+               modelCurve->saveMapToFile(&file, AppSettings::mCSVCellSeparator, postCompoG.mapG);
+
+               file.close();
+           }
+       }
+
+
+    } else {
+        return;
+    }
+
+
 }
 
 void MainWindow::changeEventsColor()
@@ -1146,6 +1197,7 @@ void MainWindow::activateInterface(bool activate)
     for (auto&& act : mDatesActions)
         act->setEnabled(activate);
 
+    mExportCurveAction->setEnabled(activate && mProject->isCurve() && mProject->withResults());
     // Les actions suivantes doivent être désactivées si on ferme le projet.
     // Par contre, elles ne doivent pas être ré-activée dès l'ouverture d'un projet
     mRunAction->setEnabled(activate);

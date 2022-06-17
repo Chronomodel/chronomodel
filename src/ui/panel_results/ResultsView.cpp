@@ -45,6 +45,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphViewPhase.h"
 #include "GraphViewAlpha.h"
 #include "GraphViewCurve.h"
+#include "GraphViewS02.h"
 
 #include "Tabs.h"
 #include "Ruler.h"
@@ -76,11 +77,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ModelCurve.h"
 
-#include <QtWidgets>
 #include <iostream>
+
+#include <QtWidgets>
 #include <QtSvg>
 #include <QFontDialog>
-
 
 
 ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
@@ -169,14 +170,14 @@ mMaximunNumberOfVisibleGraph(0)
     mEventsDatesUnfoldCheck->setFixedHeight(h);
     mEventsDatesUnfoldCheck->setToolTip(tr("Display Events' data"));
 
-    mEventThetaRadio = new RadioButton(tr("Event"));
+    mEventThetaRadio = new RadioButton(tr("Event Date"));
     mEventThetaRadio->setFixedHeight(h);
     mEventThetaRadio->setChecked(true);
 
-    mDataSigmaRadio = new RadioButton(tr("Std-ti"));
+    mDataSigmaRadio = new RadioButton(tr("Std ti"));
     mDataSigmaRadio->setFixedHeight(h);
     
-    mEventVGRadio = new RadioButton(tr("Std-gi"));
+    mEventVGRadio = new RadioButton(tr("Std G"));
     mEventVGRadio->setFixedHeight(h);
 
     mDataCalibCheck = new CheckBox(tr("Individual Calib. Dates"));
@@ -278,7 +279,7 @@ mMaximunNumberOfVisibleGraph(0)
     // -----------------------------------------------------------------
     mCurvesGroup = new QWidget();
     
-    mCurveGRadio = new RadioButton(tr("G"), mCurvesGroup);
+    mCurveGRadio = new RadioButton(tr("G Curve"), mCurvesGroup);
     mCurveGRadio->setFixedHeight(h);
     mCurveGRadio->setChecked(true);
     
@@ -298,15 +299,18 @@ mMaximunNumberOfVisibleGraph(0)
     mCurveDataPointsCheck->setFixedHeight(h);
     mCurveDataPointsCheck->setChecked(true);
 
-    mCurveGPRadio = new RadioButton(tr("G Prime"), mCurvesGroup);
+    mCurveGPRadio = new RadioButton(tr("G Var. Rate"), mCurvesGroup);
     mCurveGPRadio->setFixedHeight(h);
     
-    mCurveGSRadio = new RadioButton(tr("G Second"), mCurvesGroup);
+    mCurveGSRadio = new RadioButton(tr("G Acceleration"), mCurvesGroup);
     mCurveGSRadio->setFixedHeight(h);
     
     mLambdaRadio = new RadioButton(tr("Lambda"), mCurvesGroup);
     mLambdaRadio->setFixedHeight(h);
     
+    mS02VgRadio = new RadioButton(tr("S02 Vg"), mCurvesGroup);
+    mS02VgRadio->setFixedHeight(h);
+
     mCurveStatCheck = new CheckBox(tr("Show Stat."));
     mCurveStatCheck->setFixedHeight(h);
     mCurveStatCheck->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
@@ -329,6 +333,7 @@ mMaximunNumberOfVisibleGraph(0)
     curveGroupLayout->addWidget(mCurveGPRadio);
     curveGroupLayout->addWidget(mCurveGSRadio);
     curveGroupLayout->addWidget(mLambdaRadio);
+    curveGroupLayout->addWidget(mS02VgRadio);
     curveGroupLayout->addWidget(mCurveStatCheck);
 
     mCurvesGroup->setLayout(curveGroupLayout);
@@ -355,7 +360,6 @@ mMaximunNumberOfVisibleGraph(0)
     connect(mActivityRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
     connect(mDurationRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
 
-
     connect(mDataCalibCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     connect(mWiggleCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
 
@@ -366,12 +370,12 @@ mMaximunNumberOfVisibleGraph(0)
 
     connect(mPhasesStatCheck, &CheckBox::clicked, this, &ResultsView::showInfos);
     connect(mCurveStatCheck, &CheckBox::clicked, this, &ResultsView::showInfos);
-
     
     connect(mCurveGRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
     connect(mCurveGPRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
     connect(mCurveGSRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
     connect(mLambdaRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
+    connect(mS02VgRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
 
     connect(mCurveErrorCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     connect(mCurveMapCheck, &CheckBox::clicked, this,  &ResultsView::updateCurvesToShow);
@@ -651,7 +655,7 @@ mMaximunNumberOfVisibleGraph(0)
     mCredibilityCheck->setFixedHeight(16);
     mCredibilityCheck->setChecked(true);
 
-    mThreshLab = new Label(tr("Confidence Level (%)"), mDensityOptsGroup);
+    mThreshLab = new QLabel(tr("Confidence Level (%)"), mDensityOptsGroup);
     mThreshLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mThresholdEdit = new LineEdit(mDensityOptsGroup);
@@ -1197,7 +1201,7 @@ void ResultsView::updateMainVariable()
             mMainVariable = GraphViewResults::eSigma;
 
         } else if (mEventVGRadio->isChecked()) {
-            mMainVariable = GraphViewResults::eVG;
+            mMainVariable = GraphViewResults::eVg;
         }
 
     } else if (mGraphListTab->currentName() == tr("Phases")) {
@@ -1264,7 +1268,9 @@ void ResultsView::updateMainVariable()
 
         if (mLambdaRadio->isChecked()) {
             mMainVariable = GraphViewResults::eLambda;
-          //  mCurrentVariableList.append(GraphViewResults::eLambda);
+
+        } else if (mS02VgRadio->isChecked()) {
+            mMainVariable = GraphViewResults::eS02Vg;
 
         } else if (mCurveGRadio->isChecked()) {
             mMainVariable = GraphViewResults::eG;
@@ -1757,13 +1763,25 @@ void ResultsView::createByCurveGraph()
         graphAlpha->setTitle(tr("Lambda Spline"));
         graphAlpha->setModel(model);
 
-        QString resultsText = ModelUtilities::curveResultsText(model);
-        QString resultsHTML = ModelUtilities::curveResultsHTML(model);
-        graphAlpha->setNumericalResults(resultsHTML, resultsText);
-
         mByCurveGraphs.append(graphAlpha);
 
         connect(graphAlpha, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
+
+    } else  if (mS02VgRadio->isChecked())  {
+        GraphViewS02* graphS02 = new GraphViewS02(widget);
+        graphS02->setSettings(mModel->mSettings);
+        graphS02->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+        graphS02->setGraphsFont(mFontBut->font());
+        graphS02->setGraphsThickness(mThicknessCombo->currentIndex());
+        graphS02->changeXScaleDivision(mMajorScale, mMinorCountScale);
+        graphS02->setMarginLeft(mMarginLeft);
+        graphS02->setMarginRight(mMarginRight);
+        graphS02->setTitle(tr("S02 Vg"));
+        graphS02->setModel(model);
+
+        mByCurveGraphs.append(graphS02);
+
+        connect(graphS02, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
 
     } else  {
         const bool hasY = (model->mCurveSettings.mProcessType != CurveSettings::eProcessTypeNone && model->mCurveSettings.mProcessType != CurveSettings::eProcessTypeUnivarie) ;
@@ -1808,91 +1826,77 @@ void ResultsView::createByCurveGraph()
                         break;
                     }
 
-            } else {
-                //must be inclination or X
-                evPts.Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
-                evPts.Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
-            }
-            evPts.color = event->mColor;
+                } else {
+                    //must be inclination or X
+                    evPts.Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
+                    evPts.Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
+                }
+                evPts.color = event->mColor;
 
-            // Set X = time
+                // Set X = time
 
-            if (event->mType == Event::eDefault) {
+                if (event->mType == Event::eDefault) {
 
-                for (const auto& date: event->mDates) {
+                    for (const auto& date: event->mDates) {
 
-                    //QMap<double, double> calibMap = date.getFormatedCalibToShow();
-                    QMap<double, double> calibMap = date.getRawCalibMap();
+                        QMap<double, double> calibMap = date.getRawCalibMap();
 
+                        QMap<type_data, type_data> hpd (create_HPD(calibMap, event->mTheta.mThresholdUsed));
 
-                    // hpd is calculate only on the study Period
-                    //QMap<type_data, type_data> subData = calibCurve->mData;
-                    //QMap<type_data, type_data> subData = getMapDataInRange(calibMap, model->mSettings.mTmin, model->mSettings.mTmax);
+                        QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(hpd, 100);
+                        dataPerEvent.push_back(intervals.size());
+                        for (const auto& h : intervals) {
+                            dPts.Xmin = h.second.first;
+                            dPts.Xmax = h.second.second;
+                            dPts.Ymin = evPts.Ymin;
+                            dPts.Ymax = evPts.Ymax;
+                            dPts.color = event->mColor;
 
-                    QMap<type_data, type_data> hpd (create_HPD(calibMap, event->mTheta.mThresholdUsed));
+                            // memo Data Points
+                            dataPts.append(dPts);
+                        }
 
-                    QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(hpd, 100);
-                    dataPerEvent.push_back(intervals.size());
-                    for (const auto& h : intervals) {
-                        dPts.Xmin = h.second.first;
-                        dPts.Xmax = h.second.second;
-                        dPts.Ymin = evPts.Ymin;
-                        dPts.Ymax = evPts.Ymax;
-                        dPts.color = event->mColor;
-
-                        // memo Data Points
-                        dataPts.append(dPts);
                     }
 
-                }
 
+                    //event->mTheta.mHPD;
 
-                //event->mTheta.mHPD;
-
-                /* The Results are in mFormatDate, but Xmean must be in not formated format.
+                    /* The Results are in mFormatDate, but Xmean must be in not formated format.
                  * Because the convertion is done within GraphViewCurve::generateCurves
                  */
 
-                 QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(event->mTheta.mHPD, 100.);
-                 hpdPerEvent.push_back(intervals.size());
-                 for (const auto& h : intervals) {
-                     evPts.Xmin = DateUtils::convertFromFormat( h.second.first, AppSettings::mFormatDate);
-                     evPts.Xmax = DateUtils::convertFromFormat( h.second.second, AppSettings::mFormatDate);
-                     evPts.Ymin = evPts.Ymin;
-                     evPts.Ymax = evPts.Ymax;
-                     evPts.color = event->mColor;
+                    QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(event->mTheta.mHPD, 100.);
+                    hpdPerEvent.push_back(intervals.size());
+                    for (const auto& h : intervals) {
+                        evPts.Xmin = DateUtils::convertFromFormat( h.second.first, AppSettings::mFormatDate);
+                        evPts.Xmax = DateUtils::convertFromFormat( h.second.second, AppSettings::mFormatDate);
+                        evPts.Ymin = evPts.Ymin;
+                        evPts.Ymax = evPts.Ymax;
+                        evPts.color = event->mColor;
 
-                     // memo Data Points
-                     eventsPts.append(evPts);
-                 }
-                //evPts.Xmin = event->mTheta.mHPD.first();
-                //evPts.Xmax = event->mTheta.mHPD.last();
-
-                //evPts.Xmin = DateUtils::convertFromFormat(event->mTheta.mResults.funcAnalysis.mean, AppSettings::mFormatDate) - 1.95*event->mTheta.mResults.funcAnalysis.std;
-               // evPts.Xmax = DateUtils::convertFromFormat(event->mTheta.mResults.funcAnalysis.mean, AppSettings::mFormatDate) + 1.95*event->mTheta.mResults.funcAnalysis.std;
+                        // memo Data Points
+                        eventsPts.append(evPts);
+                    }
 
 
-            } else {
-                //evPts.Xmean = DateUtils::convertToAppSettingsFormat(static_cast<EventKnown*>(event)->mFixed); // always the same value
-                evPts.Xmin = static_cast<EventKnown*>(event)->mFixed;
-                evPts.Xmax = static_cast<EventKnown*>(event)->mFixed;
+                } else {
+                    //evPts.Xmean = DateUtils::convertToAppSettingsFormat(static_cast<EventKnown*>(event)->mFixed); // always the same value
+                    evPts.Xmin = static_cast<EventKnown*>(event)->mFixed;
+                    evPts.Xmax = static_cast<EventKnown*>(event)->mFixed;
 
-                dPts.Xmin = evPts.Xmin;//event->mTheta.mX; // always the same value
-                dPts.Xmax = evPts.Xmax;
+                    dPts.Xmin = evPts.Xmin;//event->mTheta.mX; // always the same value
+                    dPts.Xmax = evPts.Xmax;
 
-                dPts.Ymin = evPts.Ymin;
-                dPts.Ymax = evPts.Ymax;
-                dPts.color = event->mColor;
+                    dPts.Ymin = evPts.Ymin;
+                    dPts.Ymax = evPts.Ymax;
+                    dPts.color = event->mColor;
 
-                // memo Data Points
-                dataPts.append(dPts);
-                eventsPts.append(evPts);
+                    // memo Data Points
+                    dataPts.append(dPts);
+                    eventsPts.append(evPts);
+                }
+
             }
-
-            // memo Events Points
-            //eventsPts.append(evPts);
-
-        }
 
          }
 
@@ -1996,13 +2000,10 @@ void ResultsView::createByCurveGraph()
                 graphX->setTitle(tr("X"));
             }
         }
-        //graphX->setMap(modelCurve()->mPosteriorMeanG.gx.mapG);//, std::pair<double, double> (mModel->mSettings.mTmin, mModel->mSettings.mTmax), modelCurve()->mMapRangeY);
-
 
         graphX->setComposanteG(modelCurve()->mPosteriorMeanG.gx);
         graphX->setComposanteGChains(modelCurve()->getChainsMeanGComposanteX());
         graphX->setEvents(modelCurve()->mEvents);
-
 
 
         if (mMainVariable == GraphViewResults::eG) {
@@ -2203,11 +2204,12 @@ QList<GraphViewResults*> ResultsView::currentGraphs(bool onlySelected)
             if (graph->isSelected())
                 graphs.append(graph);
 
+        return graphs;
+
     } else {
         return byGraphs;
     }
 
-    return graphs;
 }
 
 
@@ -2235,7 +2237,7 @@ void ResultsView::generateCurves()
     QList<GraphViewResults*> listGraphs = currentGraphs(false);
 
     for (GraphViewResults*& graph : listGraphs) {
-        graph->generateCurves(GraphViewResults::graph_t(mCurrentTypeGraph), mCurrentVariableList);
+        graph->generateCurves(GraphViewResults::graph_t(mCurrentTypeGraph), mCurrentVariableList, mModel);
     }
     
     updateCurvesToShow();
@@ -2249,27 +2251,32 @@ void ResultsView::updateGraphsMinMax()
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
         if (mMainVariable == GraphViewResults::eSigma) {
             mResultMinX = 0.;
-            mResultMaxX = getGraphsMax(listGraphs, "Sigma", 100.);
+            mResultMaxX = getGraphsMax(listGraphs, "Post Distrib", 100.);
 
         } else if (mMainVariable == GraphViewResults::eDuration) {
             mResultMinX = 0.;
-            mResultMaxX = getGraphsMax(listGraphs, "Post Distrib Duration", 100.);
+            mResultMaxX = getGraphsMax(listGraphs, "Post Distrib All Chains", 100.);
 
-        }else if (mMainVariable == GraphViewResults::eVG) {
+        }else if (mMainVariable == GraphViewResults::eVg) {
             mResultMinX = 0;
-            mResultMaxX = getGraphsMax(listGraphs, "Std G", 100.);
+            mResultMaxX = getGraphsMax(listGraphs, "Post Distrib All Chains", 100.);
 
         } else if (mMainVariable == GraphViewResults::eLambda) {
             mResultMinX = getGraphsMin(listGraphs, "Lambda", -20.);
             mResultMaxX = getGraphsMax(listGraphs, "Lambda", 10.);
 
+        } else if (mMainVariable == GraphViewResults::eS02Vg) {
+            mResultMinX = 0;
+            mResultMaxX = getGraphsMax(listGraphs, "Post Distrib All Chains", 100.);
+
         } else {
+            //auto span = (mModel->mSettings.getTmaxFormated() - mModel->mSettings.getTminFormated())/2. * mXSpin->minimum();
             mResultMinX = mModel->mSettings.getTminFormated();
             mResultMaxX = mModel->mSettings.getTmaxFormated();
         }
 
      } else if ((mCurrentTypeGraph == GraphViewResults::eTrace) || (mCurrentTypeGraph == GraphViewResults::eAccept)) {
-            for (int i = 0; i<mChainRadios.size(); ++i) {
+            for (qsizetype i = 0; i<mChainRadios.size(); ++i) {
                 if (mChainRadios.at(i)->isChecked()) {
                     const ChainSpecs& chain = mModel->mChains.at(i);
                     mResultMinX = 0;
@@ -2355,7 +2362,7 @@ void ResultsView::updateCurvesToShow()
     // --------------------------------------------------------
     //  Options for "Curves"
     // --------------------------------------------------------
-    if ((mGraphListTab->currentName() == tr("Curves")) && !mLambdaRadio->isChecked()) {
+    if ((mGraphListTab->currentName() == tr("Curves")) && !mLambdaRadio->isChecked() && !mS02VgRadio->isChecked()) {
 
        if (mCurveGRadio->isChecked()) showVariableList.append(GraphViewResults::eG);
        if (mCurveErrorCheck->isChecked()) showVariableList.append(GraphViewResults::eGError);
@@ -2376,9 +2383,14 @@ void ResultsView::updateCurvesToShow()
             graphCurve->setShowNumericalResults(showStat);
             graphCurve->updateCurvesToShowForG(showAllChains, showChainList, showVariableList);
         }
-    }
 
-    else if (mGraphListTab->currentName() == tr("Events")) {
+    } else if ((mGraphListTab->currentName() == tr("Curves")) && mLambdaRadio->isChecked() && !mS02VgRadio->isChecked()) {
+        showVariableList.append(GraphViewResults::eLambda);
+
+    } else if ((mGraphListTab->currentName() == tr("Curves")) && !mLambdaRadio->isChecked() && mS02VgRadio->isChecked()) {
+        showVariableList.append(GraphViewResults::eS02Vg);
+
+    } else if (mGraphListTab->currentName() == tr("Events")) {
         if (mEventThetaRadio->isChecked()) {
             showVariableList.append(GraphViewResults::eThetaEvent);
             if (mEventsDatesUnfoldCheck->isChecked()) {
@@ -2391,7 +2403,7 @@ void ResultsView::updateCurvesToShow()
             showVariableList.append(GraphViewResults::eSigma);
 
         } else if (mEventVGRadio->isChecked()) {
-            showVariableList.append(GraphViewResults::eVG);
+            showVariableList.append(GraphViewResults::eVg);
         }
 
     }
@@ -2411,8 +2423,7 @@ void ResultsView::updateCurvesToShow()
             showVariableList.append(GraphViewResults::eTempo);
             if (mErrCheck->isChecked())
                showVariableList.append(GraphViewResults::eError);
-            //if (mTempoCredCheck->isChecked())
-             //  showVariableList.append(GraphViewResults::eTempCredibility);
+
 
             if (mPhasesEventsUnfoldCheck->isChecked()) {
                 showVariableList.append(GraphViewResults::eThetaEvent);
@@ -2584,8 +2595,9 @@ void ResultsView::updateScales()
 
     } else if (mCurrentTypeGraph == GraphViewResults::ePostDistrib &&
                ( mMainVariable == GraphViewResults::eSigma ||
-                 mMainVariable == GraphViewResults::eVG ||
-                        mMainVariable ==GraphViewResults::eDuration) ) {
+                 mMainVariable == GraphViewResults::eVg ||
+                 mMainVariable == GraphViewResults::eDuration ||
+                 mMainVariable == GraphViewResults::eS02Vg ) ) {
 
                 // The X zoom uses a log scale on the spin box and can be controlled by the linear slider
                 mXSlider->setRange(-100, 100);
@@ -2602,7 +2614,7 @@ void ResultsView::updateScales()
 
 
     } else if (mCurrentTypeGraph == GraphViewResults::ePostDistrib &&
-                       mMainVariable ==GraphViewResults::eLambda ){
+               mMainVariable == GraphViewResults::eLambda ) {
 
                 // The X zoom uses a log scale on the spin box and can be controlled by the linear slider
                 mXSlider->setRange(-100, 100);
@@ -2741,7 +2753,7 @@ void ResultsView::updateOptionsWidget()
         mEventsGroup->show();
         mPhasesGroup->setVisible(false);
         mCurvesGroup->setVisible(false);
-        const qreal h = mDataCalibCheck->height() * 1.5;
+        const qreal h = mEventThetaRadio->height() * 1.5;
 
         mEventVGRadio->setVisible(isCurve());
         //--- change layout
@@ -2873,15 +2885,16 @@ void ResultsView::updateOptionsWidget()
         mOptionsLayout->addWidget(mCurvesGroup);
 
         const bool isLambda = mLambdaRadio->isChecked();
+        const bool isS02Vg = mS02VgRadio->isChecked();
 
-        mGraphTypeTabs->setTabVisible(1, isLambda); // History Plot
-        mGraphTypeTabs->setTabVisible(2, isLambda); // Acceptance Rate
-        mGraphTypeTabs->setTabVisible(3, isLambda); // Autocorrelation
+        mGraphTypeTabs->setTabVisible(1, isLambda || isS02Vg); // History Plot
+        mGraphTypeTabs->setTabVisible(2, isLambda || isS02Vg); // Acceptance Rate
+        mGraphTypeTabs->setTabVisible(3, isLambda || isS02Vg); // Autocorrelation
 
         mEventsGroup->setVisible(false);
         mPhasesGroup->setVisible(false);
         mCurvesGroup->setVisible(true);
-        const qreal h = mCurveErrorCheck->height() * 1.5;
+        const qreal h = mCurveGRadio->height() * 1.3;
 
         //--- change layout
         QVBoxLayout* curveGroupLayout = new QVBoxLayout();
@@ -2895,7 +2908,7 @@ void ResultsView::updateOptionsWidget()
             mCurveMapCheck->show();
             mCurveEventsPointsCheck->show();
             mCurveDataPointsCheck->show();
-            totalH += 3 * h;
+            totalH += 4 * mCurveErrorCheck->height()*1.3 ;
 
             QVBoxLayout* curveOptionGroupLayout = new QVBoxLayout();
             curveOptionGroupLayout->setContentsMargins(15, 0, 0, 0);
@@ -2915,8 +2928,9 @@ void ResultsView::updateOptionsWidget()
         curveGroupLayout->addWidget(mCurveGPRadio);
         curveGroupLayout->addWidget(mCurveGSRadio);
         curveGroupLayout->addWidget(mLambdaRadio);
+        curveGroupLayout->addWidget(mS02VgRadio);
         curveGroupLayout->addWidget(mCurveStatCheck);
-        totalH += 4 * h;
+        totalH += 5 * h;
 
         delete mCurvesGroup->layout() ;
         mCurvesGroup->setLayout(curveGroupLayout);
@@ -2932,12 +2946,10 @@ void ResultsView::updateOptionsWidget()
     // ------------------------------------
     optionWidgetHeigth += mDisplayDistribTab->height();
 
-   // toggleDisplayDistrib();
-
     mOptionsLayout->addWidget(mDisplayDistribTab);
 
     qreal widHeigth = 0;
-    const  qreal internSpan = 5;
+    const  qreal internSpan = 10;
     if (mDisplayDistribTab->currentName() == tr("Display") ) {
         mDisplayWidget->show();
         mDistribWidget->hide();
@@ -2949,7 +2961,7 @@ void ResultsView::updateOptionsWidget()
 
         const qreal h = mDisplayStudyBut->height();
 
-        widHeigth = 11*h + 12*internSpan;
+        widHeigth = 11*h + 6*internSpan;
 
         mDisplayStudyBut->setText(xScaleRepresentsTime() ? tr("Study Period Display") : tr("Fit Display"));
         mDisplayStudyBut->setVisible(true);
@@ -2988,26 +3000,97 @@ void ResultsView::updateOptionsWidget()
         // ------------------------------------
         //  Density Options
         // ------------------------------------
-        bool showDensityOptions = isPostDistrib && (mMainVariable != GraphViewResults::eTempo
-                && mMainVariable != GraphViewResults::eG
+        bool showDensityOptions = isPostDistrib &&
+                (  mMainVariable != GraphViewResults::eG
                 && mMainVariable != GraphViewResults::eGP
                 && mMainVariable != GraphViewResults::eGS);
 
 
+        mFFTLenLab->show();
+        mFFTLenLab->setFixedHeight(20);
+        mFFTLenCombo->show();
+        mFFTLenCombo->setFixedHeight(20);
+        int nbObject = 0;
+
+        if (mMainVariable == GraphViewResults::eActivity) {
+            mThreshLab->hide();
+            mThreshLab->setFixedHeight(0);
+            mThresholdEdit->hide();
+            mThresholdEdit->setFixedHeight(0);
+
+            mCredibilityCheck->hide();
+            mCredibilityCheck->setFixedHeight(0);
+
+            mBandwidthLab->hide();
+            mBandwidthLab->setFixedHeight(0);
+            mBandwidthSpin->hide();
+            mBandwidthSpin->setFixedHeight(0);
+
+            mHActivityLab->show();
+            mHActivityLab->setFixedHeight(20);
+            mHActivityEdit->show();
+            mHActivityEdit->setFixedHeight(20);
+
+            nbObject += 1;
+
+        } else if (mMainVariable == GraphViewResults::eTempo) {
+            mThreshLab->hide();
+            mThreshLab->setFixedHeight(0);
+            mThresholdEdit->hide();
+            mThresholdEdit->setFixedHeight(0);
+
+            mCredibilityCheck->hide();
+            mCredibilityCheck->setFixedHeight(0);
+
+            mBandwidthLab->hide();
+            mBandwidthLab->setFixedHeight(0);
+            mBandwidthSpin->hide();
+            mBandwidthSpin->setFixedHeight(0);
+
+            mHActivityLab->hide();
+            mHActivityLab->setFixedHeight(0);
+            mHActivityEdit->hide();
+            mHActivityEdit->setFixedHeight(0);
+
+            //nbObject += 0;
+
+        } else {
+            mThreshLab->show();
+            mThreshLab->setFixedHeight(20);
+            mThresholdEdit->show();
+            mThresholdEdit->setFixedHeight(20);
+
+            mCredibilityCheck->show();
+            mCredibilityCheck->setFixedHeight(20);
+
+            mBandwidthLab->show();
+            mBandwidthLab->setFixedHeight(20);
+            mBandwidthSpin->show();
+            mBandwidthSpin->setFixedHeight(20);
+
+            mHActivityLab->hide();
+            mHActivityLab->setFixedHeight(0);
+            mHActivityEdit->hide();
+            mHActivityEdit->setFixedHeight(0);
+
+            nbObject += 3;
+        }
+
         mDensityOptsTitle->setVisible(showDensityOptions);
         mDensityOptsGroup->setVisible(showDensityOptions);
+
         if (showDensityOptions) {
 
             mDensityOptsGroup->setFixedHeight( mCredibilityCheck->height() + mThresholdEdit->height() + mFFTLenCombo->height()
                                               + mBandwidthSpin->height() + mHActivityEdit->height()
-                                               + 10* internSpan);
+                                               + (nbObject+1)* internSpan);
 
-            widHeigth += mDensityOptsTitle->height() + mDensityOptsGroup->height();
+            widHeigth += mDensityOptsTitle->height() + mDensityOptsGroup->height() + 4*internSpan;
 
+        } else
+            widHeigth += 2*internSpan;
 
-        }
-        widHeigth += 4*internSpan;
-        mDistribWidget-> setFixedHeight(widHeigth);
+        mDistribWidget->setFixedHeight(widHeigth);
         mOptionsLayout->addWidget(mDistribWidget);
         optionWidgetHeigth += mDistribWidget->height();
     }
@@ -3020,7 +3103,6 @@ void ResultsView::updateOptionsWidget()
     mOptionsLayout->addWidget(mPageSaveTab);
     optionWidgetHeigth += mPageSaveTab->height();
 
-   // togglePageSave();
     if (mPageSaveTab->currentName() == tr("Page") ) {
 
         // -------------------------------------------------------------------------------------
@@ -3075,7 +3157,7 @@ bool ResultsView::isPostDistribGraph()
 
 bool ResultsView::xScaleRepresentsTime()
 {
-    return isPostDistribGraph() && ( mMainVariable == GraphViewResults::eBeginEnd||
+    return (mCurrentTypeGraph == GraphViewResults::ePostDistrib) && ( mMainVariable == GraphViewResults::eBeginEnd||
                                      mMainVariable == GraphViewResults::eThetaEvent ||
                                      mMainVariable == GraphViewResults::eTempo ||
                                      mMainVariable == GraphViewResults::eActivity ||
@@ -3125,8 +3207,8 @@ void ResultsView::updateZoomX()
         curMin = curMax - span;
     }
 
-    mResultCurrentMinX = std::max(curMin, mResultMinX);
-    mResultCurrentMaxX = std::min(curMax, mResultMaxX);;
+    mResultCurrentMinX = curMin; //std::max(curMin, mResultMinX);
+    mResultCurrentMaxX = curMax; //std::min(curMax, mResultMaxX);;
 
     mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
 
@@ -3213,13 +3295,25 @@ void ResultsView::setXScale()
 
 void ResultsView::applyRuler(const double min, const double max)
 {
-    if (xScaleRepresentsTime()) {
+    if (xScaleRepresentsTime() ||
+            mMainVariable == GraphViewResults::eLambda) {
         mResultCurrentMinX = min;
         mResultCurrentMaxX = max;
 
     } else {
-        mResultCurrentMinX = std::max(min, mResultMinX);
-        mResultCurrentMaxX = std::min(max, mResultMaxX);
+        if (mCurrentTypeGraph == GraphViewResults::ePostDistrib &&
+            (mMainVariable == GraphViewResults::eSigma ||
+             mMainVariable == GraphViewResults::eDuration ||
+             mMainVariable == GraphViewResults::eVg  ||
+             mMainVariable == GraphViewResults::eS02Vg ) ) {
+                mResultCurrentMinX = std::max(min, mResultMinX);
+                mResultCurrentMaxX = max;
+
+            } else {
+                mResultCurrentMinX = min; //std::max(min, mResultMinX);
+                mResultCurrentMaxX = max;//std::min(max, mResultMaxX);
+            }
+
     }
     setXRange();
     updateGraphsZoomX();
@@ -3233,7 +3327,8 @@ void ResultsView::applyStudyPeriod()
 
     } else if ( mMainVariable == GraphViewResults::eSigma ||
                 mMainVariable == GraphViewResults::eDuration ||
-                mMainVariable == GraphViewResults::eVG  ) {
+                mMainVariable == GraphViewResults::eVg  ||
+                mMainVariable == GraphViewResults::eS02Vg ) {
         mResultCurrentMinX = 0.;
         mResultCurrentMaxX = mResultMaxX;
 
@@ -3262,7 +3357,15 @@ void ResultsView::applyStudyPeriod()
 
     }
         
-    mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
+    if (xScaleRepresentsTime()) {
+        //auto span = (mModel->mSettings.getTmaxFormated() - mModel->mSettings.getTminFormated())/2. * mXSpin->minimum();
+        //mResultMinX = mModel->mSettings.getTminFormated() - span ;
+        //mResultMaxX = mModel->mSettings.getTmaxFormated() + span ;
+
+        mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
+
+    } else
+        mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
 
     Scale Xscale;
     Xscale.findOptimal(mResultCurrentMinX, mResultCurrentMaxX, 10);
@@ -3604,7 +3707,7 @@ void ResultsView::saveAsImage()
     QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
         tr("Save graph image as..."),
         MainWindow::getInstance()->getCurrentPath(),
-        QObject::tr("Image (*.png);;Photo (*.jpg);;Scalable Vector Graphics (*.svg)"));
+        QObject::tr("Image (*.png);;Photo (*.jpg);; Windows Bitmap (*.bmp);;Scalable Vector Graphics (*.svg)"));
 
     if (!fileName.isEmpty()) {
         // --------------------------------------------------
@@ -3838,7 +3941,7 @@ void ResultsView::exportResults()
                 file.setFileName(dirPath + "/Curve_Map.csv");
 
                 if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-                    modelCurve()->saveMapToFile(&file, csvSep);
+                    modelCurve()->saveMapToFile(&file, csvSep, modelCurve()->mPosteriorMeanG.gx.mapG);
 
                     file.close();
                 }
@@ -3976,6 +4079,9 @@ bool ResultsView::isCurve() const
         return false;
 }
 
+/* dynamic_cast can only be used with pointers and references.
+ *  On failure to cast, a null pointer is returned.
+ */
 ModelCurve* ResultsView::modelCurve() const
 {
     return dynamic_cast<ModelCurve*>(mModel);
@@ -3988,8 +4094,8 @@ GraphViewResults::variable_t ResultsView::getMainVariable() const
         return GraphViewResults::eThetaEvent;
     else if (mCurrentVariableList.contains(GraphViewResults::eSigma))
         return GraphViewResults::eSigma;
-    else if (mCurrentVariableList.contains(GraphViewResults::eVG))
-        return GraphViewResults::eVG;
+    else if (mCurrentVariableList.contains(GraphViewResults::eVg))
+        return GraphViewResults::eVg;
     else if (mCurrentVariableList.contains(GraphViewResults::eSigma))
         return GraphViewResults::eSigma;
 
@@ -4010,7 +4116,8 @@ GraphViewResults::variable_t ResultsView::getMainVariable() const
         return GraphViewResults::eGS;
     else if (mCurrentVariableList.contains(GraphViewResults::eLambda))
         return GraphViewResults::eLambda;
-
+    else if (mCurrentVariableList.contains(GraphViewResults::eS02Vg))
+        return GraphViewResults::eS02Vg;
     else
         return GraphViewResults::eThetaEvent;
 }

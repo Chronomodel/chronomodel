@@ -878,7 +878,7 @@ void Event::updateTheta(const double& tmin, const double& tmax)
 {
     const double min = getThetaMin(tmin);
     const double max = getThetaMax(tmax);
-    //qDebug() << "----------->      in Event::updateTheta(): Event initialized : " << this->mName << " : " << this->mTheta.mX << " between" << "[" << min << " ; " << max << "]";
+    //qDebug() << "----------->      in Event::updateTheta(): Event update : " << this->mName << " : " << this->mTheta.mX << " between" << "[" << min << " ; " << max << "]";
 
     if (min >= max)
         throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(mName, QString::number(min), QString::number(max));

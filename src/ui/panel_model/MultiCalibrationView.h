@@ -110,7 +110,7 @@ public:
 private:
 
     MultiCalibrationDrawing* mDrawing;
-    QTextEdit* mTextArea;
+    QTextEdit* mStatArea;
     int mButtonWidth;
     int mButtonHeigth;
 

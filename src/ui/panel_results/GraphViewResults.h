@@ -58,6 +58,7 @@ class Button;
 
 class MHVariable;
 class MetropolisVariable;
+class Model;
 
 class Overlay : public QWidget {
 public:
@@ -123,7 +124,7 @@ public:
         eThetaEvent,
         eDataTi, eDataCalibrate, eDataWiggle,
         eSigma ,
-        eVG,
+        eVg,
 
         eTempo,
         eActivity,
@@ -134,7 +135,8 @@ public:
         eG, eGError, eMap, eGEventsPts, eGDatesPts,
         eGP,
         eGS,
-        eLambda
+        eLambda,
+        eS02Vg
     };
     static int mHeightForVisibleAxis ;
     // member
@@ -151,7 +153,7 @@ protected:
     QString mResultsText;
 
     QColor mItemColor;
-    QString mItemTitle;
+   // QString mItemTitle;
 
     bool mShowAllChains;
     QList<bool> mShowChainList;
@@ -171,7 +173,7 @@ protected:
 
     QColor mMainColor;
 
-    QTextEdit* mTextArea;
+    QTextEdit* mStatArea;
 
     qreal mMargin;
     qreal mLineH;
@@ -206,7 +208,7 @@ public:
     void setGraphsOpacity(int value);
 
     void setItemColor(const QColor& itemColor);
-    void setItemTitle(const QString& itemTitle);
+  //  void setItemTitle(const QString& itemTitle);
 
     bool isSelected() const  { return mIsSelected;}
     void setSelected( const bool&  selected) {
@@ -226,29 +228,35 @@ public:
     
    // GraphView::Rendering getRendering() const  { return mGraph->getRendering(); }
     QString getResultsText() const {return mResultsText;}
-    QString getTextAreaToHtml() const { return mTextArea->toHtml();}
-    QString getTextAreaToPlainText() const { return mTextArea->toPlainText();}
+    QString getTextAreaToHtml() const { return mStatArea->toHtml();}
+    QString getTextAreaToPlainText() const { return mStatArea->toPlainText();}
 
-    GraphCurve generateDensityCurve(const QMap<double, double> &data,
+    GraphCurve densityCurve(const QMap<double, double> &data,
                                     const QString& name,
                                     const QColor& lineColor,
                                     const Qt::PenStyle penStyle = Qt::SolidLine,
                                     const QBrush& brush = Qt::NoBrush) const;
 
-    GraphCurve generateHPDCurve(QMap<double, double>& data,
+    GraphCurve GCurve(const QMap<double, double> &data,
+                                    const QString& name,
+                                    const QColor& lineColor,
+                                    const Qt::PenStyle penStyle = Qt::SolidLine,
+                                    const QBrush& brush = Qt::NoBrush) const;
+
+    GraphCurve HPDCurve(QMap<double, double>& data,
                                 const QString& name,
                                 const QColor& color) const;
 
-    GraphCurve generateSectionCurve(const QPair<double, double>& section,
+    GraphCurve sectionCurve(const QPair<double, double>& section,
                                         const QString& name,
                                         const QColor& color) const;
 
-    GraphCurve generateHorizontalLine(const double yValue,
+    GraphCurve horizontalLine(const double yValue,
                                       const QString& name,
                                       const QColor& color,
                                       const Qt::PenStyle penStyle = Qt::SolidLine) const;
 
-    GraphCurve generateShapeCurve(const QMap<double, double>& dataInf, const QMap<double, double>& dataSup,
+    GraphCurve shapeCurve(const QMap<double, double>& dataInf, const QMap<double, double>& dataSup,
                                                       const QString& name,
                                                       const QColor& lineColor,
                                                       const Qt::PenStyle penStyle,
@@ -266,7 +274,7 @@ public:
 
     // This method is used to recreate all curves in mGraph.
     // It is vitual because we want a different behavior in sub-classes (GraphViewDate, GraphViewEvent and GraphViewPhase)
-    virtual void generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList);
+    virtual void generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList, const Model* model = nullptr);
 
     // This method is used to update visible existing curves in mGraph.
     // It is vitual because we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)

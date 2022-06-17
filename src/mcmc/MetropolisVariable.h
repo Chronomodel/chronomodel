@@ -51,6 +51,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QDataStream>
 #include <QObject>
 
+class TValueStack
+{
+public :
+    std::string mName;
+    double mValue;
+    std::string mComment ;
+
+    TValueStack():mName("name"), mValue(0.), mComment("comment") {};
+    explicit TValueStack(std::string name, double value = 0., std::string comment ="") :mName(name), mValue(value), mComment(comment) {};
+
+};
+
 class MetropolisVariable: public QObject
 {
     Q_OBJECT

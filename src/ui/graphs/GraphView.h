@@ -89,6 +89,7 @@ public:
     void setBackgroundColor(const QColor &color);
     QColor getBackgroundColor() const;
 
+    void setInfo(const QString& info) {mInfos.clear(); mInfos.append(info);};
     void addInfo(const QString& info);
     QString getInfo(char sep = '|');
     void clearInfos();

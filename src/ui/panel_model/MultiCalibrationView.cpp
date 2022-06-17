@@ -67,16 +67,16 @@ mCurveColor(Painting::mainColorDark)
     mDrawing = new MultiCalibrationDrawing(this);
     mDrawing->setMouseTracking(true);
 
-    mTextArea = new QTextEdit(this);
-    mTextArea->setFrameStyle(QFrame::HLine);
-    QPalette palette = mTextArea->palette();
+    mStatArea = new QTextEdit(this);
+    mStatArea->setFrameStyle(QFrame::HLine);
+    QPalette palette = mStatArea->palette();
     palette.setColor(QPalette::Base, Qt::white);
     palette.setColor(QPalette::Text, Qt::black);
-    mTextArea->setPalette(palette);
+    mStatArea->setPalette(palette);
 
-    mTextArea->setText(tr("Nothing to display"));
-    mTextArea->setVisible(false);
-    mTextArea->setReadOnly(true);
+    mStatArea->setText(tr("Nothing to display"));
+    mStatArea->setVisible(false);
+    mStatArea->setReadOnly(true);
 
     mImageSaveBut = new Button(tr("Save"), this);
     mImageSaveBut->setIcon(QIcon(":picture_save.png"));
@@ -341,12 +341,12 @@ qDebug()<<"MultiCalibrationView::updateLayout()";
     mHPDEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
 
     if (mStatClipBut->isChecked()) {
-        mTextArea->show();
-        mTextArea->setGeometry(0, 0, graphWidth, yPosBottomBar0);
+        mStatArea->show();
+        mStatArea->setGeometry(0, 0, graphWidth, yPosBottomBar0);
         mDrawing->hide();
 
     } else {
-        mTextArea->hide();
+        mStatArea->hide();
         mDrawing->show();
         mDrawing->setGeometry(0, 0, graphWidth, yPosBottomBar0);
         mDrawing->setGraphHeight(mGraphHeight);
@@ -912,7 +912,7 @@ void MultiCalibrationView::exportFullImage()
 void MultiCalibrationView::copyImage()
 {
     if (mStatClipBut->isChecked()) {
-        QApplication::clipboard()->setText(mTextArea->toPlainText());
+        QApplication::clipboard()->setText(mStatArea->toPlainText());
 
     } else {
         mDrawing->hideMarker();
@@ -1083,8 +1083,8 @@ void MultiCalibrationView::showStat()
 {
    if (mStatClipBut ->isChecked()) {
        mDrawing->setVisible(false);
-       mTextArea->setVisible(true);
-       mTextArea->setFont(font());
+       mStatArea->setVisible(true);
+       mStatArea->setFont(font());
 
        // update Results from selected Event in JSON
        QJsonObject state = mProject->state();
@@ -1176,12 +1176,12 @@ void MultiCalibrationView::showStat()
             mResultText += resultsStr ;
       }
 
-    mTextArea->setHtml(mResultText);
+    mStatArea->setHtml(mResultText);
 
 
     } else {
        mDrawing->setVisible(true);
-       mTextArea->setVisible(false);
+       mStatArea->setVisible(false);
     }
 
    updateLayout();

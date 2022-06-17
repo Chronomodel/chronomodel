@@ -2032,13 +2032,13 @@ std::pair<Matrix2D, std::vector<double>> decompositionCholesky(const Matrix2D& m
         }
     }
 
-   std::pair<Matrix2D, std::vector<double>> tmp =  choleskyLDLT_Dsup0(matrix, nbBandes, shift);
+   //std::pair<Matrix2D, std::vector<double>> tmp =  choleskyLDLT_Dsup0(matrix, nbBandes, shift);
     return std::pair<Matrix2D, std::vector<double>>(matL, matD);
 }
 
 std::vector<double> resolutionSystemeLineaireCholesky(const Matrix2D &matL, const std::vector<double> &matD, const std::vector<double> &vecQtY)
 {
-    const int n = matD.size(); //mModel->mEvents.size(); // pHd :: ?? est-ce que matD à la même dimension que mEvent?? -> NON
+    const int n = matD.size();
     std::vector<double> vecGamma (n);
     std::vector<double> vecU (n);
     std::vector<double> vecNu (n);
