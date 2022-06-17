@@ -1,21 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Installer>
 	<Name>ChronoModel</Name>
-        <Version>2.0.9-alpha</Version>
-	<Title>Installer</Title>
+        <Version>3.1.7</Version>
+        <Title>ChronoModel_Installer</Title>
 	<Publisher>ChronoModel Team</Publisher>
 	<ProductUrl>http://chronomodel.com</ProductUrl>
         <TargetDir>@ApplicationsDir@/Chronomodel</TargetDir>
-        <!--  if (installer.value("os") == "X11") {
-        <RunProgram>@TargetDir@/Chronomodel.app</RunProgram>
+        if (installer.value("os") === "win") {
+            <RunProgram>@TargetDir@/Chronomodel.exe</RunProgram>
+        }
+        if (installer.value("os") === "x11") {
+            <RunProgram>@TargetDir@/Chronomodel.app</RunProgram>
         }
 
-        if (installer.value("os") == "win") {
-       <RunProgram>@TargetDir@/Chronomodel.exe</RunProgram>
-       } -->
+
         <!--@TargetDir@/-->
         <InstallerApplicationIcon>installericon</InstallerApplicationIcon>
-            <Logo>Chronomodel.png</Logo>
+            <!--Logo>Chronomodel.png</Logo-->
         <MaintenanceToolName>Chronomodel_uninstaller</MaintenanceToolName>
 
         <Background>Chronomodel.png</Background>
