@@ -99,15 +99,23 @@ int main(int argc, char *argv[])
 
 #endif
 
+  // QFont guiFont = QGuiApplication::font();
     ChronoApp a(argc, argv);
 
     a.setApplicationName("ChronoModel");
     a.setApplicationDisplayName("ChronoModel");
-    a.setApplicationVersion("3.1.6");//VERSION_NUMBER);  // must match value in Chronomodel.pro
+    a.setApplicationVersion("3.1.7");//VERSION_NUMBER);  // must match value in Chronomodel.pro
     a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));
-     
+
+    QFontInfo F_info(a.font());
+
+    //specify a new font. This happens, for instance, on macOS and iOS, where the system UI fonts are not accessible to the user
+    if (QFontDatabase::isPrivateFamily(F_info.family()))
+        a.setFont(QFont("Arial", F_info.pixelSize()));
+
+
     QString filePath = "";
     for (int i = 0; i<argc; ++i) {
         QString arg(argv[i]);

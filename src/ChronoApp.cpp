@@ -45,7 +45,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 ChronoApp::ChronoApp(int& argc, char** argv):QApplication(argc, argv)
 {
+#ifdef DEBUG
     std::cout<<"start ChronoApp";
+#endif
 }
 
 ChronoApp::~ChronoApp()
@@ -66,8 +68,9 @@ bool ChronoApp::event(QEvent* e)
     }*/
     if (e->type() == QEvent::FileOpen) {
         QString path = static_cast<QFileOpenEvent*>(e)->file();
+#ifdef DEBUG
         std::cout<<"in ChronoApp::event path = "<< path.toStdString();
-
+#endif
         MainWindow* w = MainWindow::getInstance();
 
         w->readSettings(path);
