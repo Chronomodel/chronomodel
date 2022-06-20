@@ -116,7 +116,7 @@ Plugin14CForm::~Plugin14CForm()
 
 void Plugin14CForm::setData(const QJsonObject& data, bool isCombined)
 {
-    const QLocale locale=QLocale();
+    const QLocale locale = QLocale();
     const double a = data.value(DATE_14C_AGE_STR).toDouble();
     const double e = data.value(DATE_14C_ERROR_STR).toDouble();
     const double r = data.value(DATE_14C_DELTA_R_STR).toDouble();
@@ -139,7 +139,7 @@ void Plugin14CForm::setData(const QJsonObject& data, bool isCombined)
 QJsonObject Plugin14CForm::getData()
 {
     QJsonObject data;
-    const QLocale locale=QLocale();
+    const QLocale locale = QLocale();
     const double a = locale.toDouble(mAverageEdit->text());
     const double e = locale.toDouble(mErrorEdit->text());
     const double r = locale.toDouble(mREdit->text());

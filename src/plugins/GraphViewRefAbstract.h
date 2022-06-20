@@ -158,7 +158,7 @@ public:
                 toFind = "WID::" + sd.mUUID;
             }
 
-            QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
+            QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find(toFind);
 
             if ( it != project->mCalibCurves.end())
                 sd.mCalibration = & it.value();

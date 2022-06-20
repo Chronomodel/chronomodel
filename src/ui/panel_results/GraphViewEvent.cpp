@@ -197,7 +197,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
                 mGraph->addCurve(curvePostDistrib);
 
                 // HPD All Chains
-                GraphCurve curveHPD = HPDCurve(mEvent->mTheta.mHPD,
+                const GraphCurve curveHPD = HPDCurve(mEvent->mTheta.mHPD,
                                                        "HPD All Chains",
                                                        color);
                 mGraph->addCurve(curveHPD);
@@ -220,7 +220,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
                  *  Theta Credibility
                  * ------------------------------------
                  */
-                GraphCurve curveCred = sectionCurve(mEvent->mTheta.mCredibility,
+                const GraphCurve curveCred = sectionCurve(mEvent->mTheta.mCredibility,
                                                                 "Credibility All Chains",
                                                                 color);
                 mGraph->addCurve(curveCred);

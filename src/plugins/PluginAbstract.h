@@ -325,7 +325,7 @@ public:
 
     double getRefCurveErrorAt(const QString& curveName, const double& t)
     {
-        double error (0.);
+        double error = 0.;
         if (mRefCurves.constFind(curveName) != mRefCurves.constEnd()) {
             const RefCurve& curve = mRefCurves.value(curveName);
 

@@ -52,8 +52,8 @@ PluginMagSettingsView::PluginMagSettingsView(PluginMag* plugin, QWidget* parent,
 
     QVBoxLayout* layout = new QVBoxLayout();
     layout->setContentsMargins(0, 0, 0, 0);
-    layout->addWidget(mRefView);
-    setLayout(layout);
+   layout->addWidget(mRefView);
+   setLayout(layout);
 }
 
 PluginMagSettingsView::~PluginMagSettingsView()

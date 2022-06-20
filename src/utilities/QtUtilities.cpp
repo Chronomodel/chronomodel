@@ -530,7 +530,7 @@ bool constraintIsCircular(QJsonArray constraints, const int fromId, const int to
         QJsonObject constraint = constraints.at(i).toObject();
 
         // Detect circularity
-        if (constraint[STATE_CONSTRAINT_BWD_ID].toInt() == toId  .value(STATE_CONSTRAINT_BWD_ID).toInt() == toId && constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == fromId)
+        if (constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == toId && constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == fromId)
             return true;
 
         // If the constraint follows the one we are trying to create,

@@ -44,6 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphView.h"
 #include "StdUtilities.h"
 #include "Painting.h"
+#include "GraphViewResults.h"
 
 #include <QtWidgets>
 
@@ -67,10 +68,9 @@ PluginMagRefView::~PluginMagRefView()
 void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings)
 {
     GraphViewRefAbstract::setDate(date, settings);
-    
+
     if (date.mOrigin == Date::eSingleDate) {
-    
-    
+
         double tminDisplay;
         double tmaxDisplay;
         const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
@@ -82,6 +82,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
 
             tminDisplay = qMin(t1,qMin(t2,t3));
             tmaxDisplay = qMax(t1,qMax(t2,t4));
+
         } else {
             tminDisplay = qMin(t1, t2);
             tmaxDisplay = qMax(t1, t2);
@@ -97,15 +98,43 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         mGraph->setFormatFunctX(nullptr);
 
         if (!date.isNull()) {
-            bool is_inc = date.mData.value(DATE_AM_IS_INC_STR).toBool();
-            bool is_dec = date.mData.value(DATE_AM_IS_DEC_STR).toBool();
-            bool is_int = date.mData.value(DATE_AM_IS_INT_STR).toBool();
 
-            double inc = date.mData.value(DATE_AM_INC_STR).toDouble();
-            double dec = date.mData.value(DATE_AM_DEC_STR).toDouble();
-            double intensity = date.mData.value(DATE_AM_INTENSITY_STR).toDouble();
-            double alpha = date.mData.value(DATE_AM_ERROR_STR).toDouble();
-            QString ref_curve = date.mData.value(DATE_AM_REF_CURVE_STR).toString().toLower();
+            const double incl = date.mData.value(DATE_AM_INC_STR).toDouble();
+            const double decl = date.mData.value(DATE_AM_DEC_STR).toDouble();
+
+            const double alpha95 = date.mData.value(DATE_AM_ALPHA95_STR).toDouble();
+            const double field = date.mData.value(DATE_AM_FIELD_STR).toDouble();
+            const double error_f = date.mData.value(DATE_AM_ERROR_F_STR).toDouble();
+
+            const ProcessTypeAM pta = static_cast<ProcessTypeAM> (date.mData.value(DATE_AM_PROCESS_TYPE_STR).toInt());
+
+            QString ref_curve;
+            switch (pta) {
+            case eInc:
+                ref_curve = date.mData.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
+                break;
+            case eDec:
+                ref_curve = date.mData.value(DATE_AM_REF_CURVED_STR).toString().toLower();
+                break;
+            case eField:
+                ref_curve = date.mData.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
+                break;
+          /*  case eID:
+                mIDRadio->setChecked(true);
+                break;
+            case eIF:
+                mIFRadio->setChecked(true);
+                break;
+            case eIDF:
+                mIDFRadio->setChecked(true);
+                break;
+                */
+            default:
+                break;
+            }
+
+            if (ref_curve == "")
+                return;
 
             /* ----------------------------------------------
              *  Reference curve
@@ -171,13 +200,15 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
                    yMax = qMax(yMax, curveG95Sup.value(tDisplay));
                 }
             }
+
             mGraph->setRangeX(tminDisplay,tmaxDisplay);
             mGraph->setCurrentX(tminDisplay, tmaxDisplay);
 
-            GraphCurve graphCurveG;
+            GraphCurve graphCurveG; // = GCurve( curveG, "G", Painting::mainColorDark);
             graphCurveG.mName = "G";
             graphCurveG.mData = curveG;
             graphCurveG.mPen.setColor(Painting::mainColorDark);
+
             mGraph->addCurve(graphCurveG);
 
             GraphCurve graphCurveG95Sup;
@@ -198,17 +229,33 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
              * ---------------------------------------------- */
             double error (0.);
             double avg (0.);
-            if (is_inc)  {
-                avg = inc;
-                error = alpha / 2.448;
 
-            } else if (is_dec) {
-                avg = dec;
-                error = alpha / (2.448 * cos(inc * M_PI / 180.));
 
-            } else if (is_int) {
-                avg = intensity;
-                error = alpha;
+            switch (pta) {
+            case eInc:
+                avg = incl;
+                error = alpha95 / 2.448;
+                break;
+            case eDec:
+                avg = decl;
+                error = alpha95 / (2.448 * cos(incl * M_PI / 180.));
+                break;
+            case eField:
+                avg = field;
+                error = error_f;
+                break;
+          /*  case eID:
+                mIDRadio->setChecked(true);
+                break;
+            case eIF:
+                mIFRadio->setChecked(true);
+                break;
+            case eIDF:
+                mIDFRadio->setChecked(true);
+                break;
+                */
+            default:
+                break;
             }
 
             yMin = qMin(yMin, avg - error);
@@ -238,17 +285,10 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
             QMap<double,double> measureCurve;
             double t;
 
+
             for (int i = 0; i<5000; i++) {
                 t = yMin + i*step;
-                if (is_inc)
-                    measureCurve[t] = exp(-0.5 * pow((t - inc) / error, 2.));
-
-                else if (is_dec)
-                    measureCurve[t] = exp(-0.5 * pow((t - dec) / error, 2.));
-
-                else if(is_int)
-                    measureCurve[t] = exp(-0.5 * pow((t - intensity) / error, 2.));
-
+                measureCurve[t] = exp(-0.5 * pow((t - avg) / error, 2.));
             }
             measureCurve = normalize_map(measureCurve);
             curveMeasure.mData = measureCurve;
@@ -290,7 +330,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
 
         }
     } else { // eCombineDate
-        
+
         double tminDisplay(mTminDisplay);
         double tmaxDisplay(mTmaxDisplay);
 
@@ -299,20 +339,14 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
 
        for (auto&& d : date.mSubDates ) {
             Date sd (d.toObject());
-           /* const QString toFind = sd.mUUID;
-            
-            Project* project = MainWindow::getInstance()->getProject();
-            QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
-            if ( it != project->mCalibCurves.end())
-                sd.mCalibration = & it.value();
-           */
-            
+
             if (!sd.isNull() && sd.mIsValid) {
                 const double t3 = sd.getFormatedTminCalib();
                 const double t4 = sd.getFormatedTmaxCalib();
-    
+
                 tminDisplay = qMin(t1, qMin(t2,t3));
                 tmaxDisplay = qMax(t1, qMax(t2,t4));
+
             } else {
                 tminDisplay = qMin(t1, t2);
                 tmaxDisplay = qMax(t1, t2);
@@ -320,7 +354,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         }
         GraphViewRefAbstract::drawSubDates(date.mSubDates, settings, tminDisplay, tmaxDisplay);
     }
-        
+
 }
 
 void PluginMagRefView::zoomX(const double min, const double max)

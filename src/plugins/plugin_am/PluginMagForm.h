@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -62,6 +62,10 @@ public:
     QJsonObject getData();
 
     bool isValid();
+/*    bool isValidD();
+    bool isValidDD();
+    bool isValidF();
+    bool isValidIF();*/
 
 signals:
     void OkEnabled(bool enabled = true) ;
@@ -69,28 +73,44 @@ signals:
 protected slots:
     void updateOptions();
     void errorIsValid(QString str);
+  /*  void errorIsValididf(QString str);
+    void errorIsValidif(QString str);
+    void errorIsValidii(QString str);
+    void errorIsValidff(QString str);*/
     void incIsValid(QString str);
     void decIsValid(QString str);
+  //  void iterationValid(QString str);
 
 private:
     QRadioButton* mIncRadio;
     QRadioButton* mDecRadio;
-    QRadioButton* mIntensityRadio;
+    QRadioButton* mFieldRadio;
+    QRadioButton* mIDRadio;
+    QRadioButton* mIFRadio;
+    QRadioButton* mIDFRadio;
 
     QLabel* mIncLab;
     QLabel* mDecLab;
-    QLabel* mDecIncLab;
-    QLabel* mIntensityLab;
     QLabel* mAlpha95Lab;
-    QLabel* mRefLab;
+    QLabel* mFieldLab;
+    QLabel* mFieldErrorLab;
+    QLabel* mMCMCIterationLab;
+
+    QLabel* mRefILab;
+    QLabel* mRefDLab;
+    QLabel* mRefFLab;
 
     QLineEdit* mIncEdit;
     QLineEdit* mDecEdit;
-    QLineEdit* mDecIncEdit;
-    QLineEdit* mIntensityEdit;
     QLineEdit* mAlpha95Edit;
+    QLineEdit* mFieldEdit;
+    QLineEdit* mFieldErrorEdit;
+    QLineEdit* mMCMCIterationEdit;
 
-    QComboBox* mRefCombo;
+    QComboBox* mRefICombo;
+    QComboBox* mRefDCombo;
+    QComboBox* mRefFCombo;
+
 };
 
 #endif

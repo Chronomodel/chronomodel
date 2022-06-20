@@ -44,16 +44,34 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "../PluginAbstract.h"
 
+enum ProcessTypeAM
+{
+    eCombine = -1,
+    eNone = 0,
+    eInc = 1,
+    eDec = 2,
+    eField = 3,
+    eID = 4,
+    eIF = 5,
+    eIDF = 6
+};
+
 class PluginMagRefView;
 
-#define DATE_AM_IS_INC_STR "is_inc"
-#define DATE_AM_IS_DEC_STR "is_dec"
-#define DATE_AM_IS_INT_STR "is_int"
-#define DATE_AM_ERROR_STR "error"
+#define DATE_AM_PROCESS_TYPE_STR "process_type"
+
+#define DATE_AM_ALPHA95_STR "alpha95"
+#define DATE_AM_ERROR_F_STR "error_f"
+
 #define DATE_AM_INC_STR "inc"
 #define DATE_AM_DEC_STR "dec"
-#define DATE_AM_INTENSITY_STR "field"
-#define DATE_AM_REF_CURVE_STR "ref_curve"
+#define DATE_AM_FIELD_STR "field"
+
+#define DATE_AM_ITERATION_STR "iteration_mcmc"
+
+#define DATE_AM_REF_CURVEI_STR "refI_curve"
+#define DATE_AM_REF_CURVED_STR "refD_curve"
+#define DATE_AM_REF_CURVEF_STR "refF_curve"
 
 
 class DATATION_SHARED_EXPORT PluginMag : public PluginAbstract
@@ -67,10 +85,10 @@ public:
 
      // virtual function
     long double getLikelihood(const double& t, const QJsonObject& data);
-    bool withLikelihoodArg() {return true; }
+    bool withLikelihoodArg() {return false; }
     QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);
-    
-    
+    long double Likelihood(const double& t, const QJsonObject& data);
+
     bool areDatesMergeable(const QJsonArray& dates);
     QJsonObject mergeDates(const QJsonArray& dates);
     //long double getLikelihoodCombine(const double& t, const QJsonArray& data);
@@ -108,6 +126,9 @@ public:
     double getRefErrorAt(const QJsonObject& data, const double& t);
 
     QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
+
+private:
+    bool measureIsValidForCurve(const double m, const QString &ref, const QJsonObject &data, const ProjectSettings &settings);
 };
 
 #endif

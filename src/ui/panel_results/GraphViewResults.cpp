@@ -521,7 +521,7 @@ GraphCurve GraphViewResults::GCurve(const QMap<double, double>& data,
     GraphCurve curve;
     curve.mName = name; // This is the name of the columns when exporting the graphs
     if (!data.isEmpty()) {
-        curve.mData = std::move(data);
+        curve.mData = data;
         curve.mPen = QPen(lineColor, 1, penStyle);
 
         if (penStyle == Qt::CustomDashLine)
@@ -538,7 +538,7 @@ GraphCurve GraphViewResults::HPDCurve(QMap<double, double> &data,
 {
     GraphCurve curve;
     curve.mName = name;
-    curve.mData = std::move(data);
+    curve.mData = data;
     curve.mPen = Qt::NoPen;
     curve.mBrush = QBrush(color);
     curve.mIsRectFromZero = true;
