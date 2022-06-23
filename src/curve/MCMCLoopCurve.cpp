@@ -3163,15 +3163,15 @@ double MCMCLoopCurve::h_VG_global(const QList<Event *> _events, double VG)
 
 double MCMCLoopCurve::h_VG_Event(const Event* e, double S02_Vg)
 {
-    const int a = 3;
+    const int a = 1;
     return pow(S02_Vg/(S02_Vg + e->mVG.mX), a+1) / S02_Vg;
 }
 
 double MCMCLoopCurve::h_S02_Vg(const QList<Event *> events, double S02_Vg, const double var_Y)
 {
-    const double alp = var_Y/(var_Y-1.);
+    const double alp = 1.; //var_Y/(var_Y-1.);
     const double prior = pow(1./S02_Vg, alp+1.) * exp(-alp/S02_Vg);
-    const int a = 3;
+    const int a = 1;
 
     if (mCurveSettings.mUseVarianceIndividual) {
         double prod_h_Vg = 1.;
