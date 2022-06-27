@@ -51,6 +51,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ModelUtilities.h"
 #include "Project.h"
 #include "MainWindow.h"
+#include "GraphCurve.h"
 
 #if USE_FFT
 #include "fftw3.h"
@@ -1389,33 +1390,19 @@ QPixmap Date::generateUnifThumb()
 
             const QColor color = mPlugin->getColor();
 
-            GraphCurve curve;
-            curve.mBrush = color;
-            curve.mPen.setColor(Qt::red);
-            curve.mType = GraphCurve::CurveType::eHorizontalSections ;
-            //curve.mIsHorizontalSections = true;
-
             const double tminDisplay = qBound(tmin, tLower, tmax);
             const double tmaxDisplay = qBound(tmin, tUpper, tmax);
 
-            //curve.mSections.append(qMakePair(tminDisplay, tmaxDisplay));
-            curve.mSections.push_back(qMakePair(tminDisplay, tmaxDisplay));
-            graph.addCurve(curve);
+            const GraphCurve curve = horizontalSection(qMakePair(tminDisplay, tmaxDisplay), "Calibration", color, QBrush(color));
 
-            curve.mName = "Calibration";
+            graph.addCurve(curve);
 
             // Drawing the wiggle
             if (mDeltaType != eDeltaNone) {
-                GraphCurve curveWiggle;
+
                 QMap<double, double> calibWiggle = normalize_map(getMapDataInRange(getRawWiggleCalibMap(), tmin, tmax));
-                curveWiggle.mData = calibWiggle;
-                curveWiggle.mType = GraphCurve::CurveType::eQMapData;
-                curveWiggle.mName = "Wiggle";
-                curveWiggle.mPen.setColor(Qt::red);
-                curveWiggle.mPen.setWidth(4);
-                curveWiggle.mBrush = QBrush(Qt::NoBrush);
-                //curveWiggle.mIsHisto = false;
-                curveWiggle.mIsRectFromZero = true;
+                GraphCurve curveWiggle = densityCurve(calibWiggle, "Wiggle", Qt::red);
+
                 graph.addCurve(curveWiggle);
             }
             graph.repaint();
@@ -1449,22 +1436,14 @@ QPixmap Date::generateCalibThumb()
         const double tmin = mSettings.mTmin;
         const double tmax = mSettings.mTmax;
 
-        GraphCurve curve;
+
         QMap<double, double> calib = normalize_map(getMapDataInRange(getRawCalibMap(), tmin, tmax));
         qDebug()<<"generateCalibThumb mName "<<mCalibration->mName<<mCalibration->mCurve.size()<<calib.size();
-        curve.mData = calib;
-        curve.mType = GraphCurve::CurveType::eQMapData;
-        if (curve.mData.isEmpty())
+        if (calib.isEmpty())
             return QPixmap();
 
-        curve.mName = "Calibration";
-
         const QColor color = mPlugin->getColor();
-
-        curve.mPen = QPen(color, 2.f);
-        curve.mBrush = color;
-        //curve.mIsHisto = false;
-        curve.mIsRectFromZero = true; // For Unif, Typo !!
+        const GraphCurve curve = densityCurve(calib, "Calibration", mPlugin->getColor(), Qt::SolidLine, color);
 
         GraphView graph;
 
@@ -1472,17 +1451,11 @@ QPixmap Date::generateCalibThumb()
         
         // Drawing the wiggle
         if (mDeltaType != eDeltaNone) {
-            GraphCurve curveWiggle;
-            QMap<double, double> calibWiggle = normalize_map(getMapDataInRange(getRawWiggleCalibMap(), tmin, tmax));
-            curveWiggle.mData = calibWiggle;
-            curveWiggle.mType = GraphCurve::CurveType::eQMapData;
 
-            curveWiggle.mName = "Wiggle";
-            curveWiggle.mPen.setColor(Qt::blue);
-            curveWiggle.mPen.setWidth(4);
-            curveWiggle.mBrush = QBrush(Qt::NoBrush);
-            //curveWiggle.mIsHisto = false;
-            curveWiggle.mIsRectFromZero = true; 
+            const QMap<double, double> calibWiggle = normalize_map(getMapDataInRange(getRawWiggleCalibMap(), tmin, tmax));
+
+            GraphCurve curveWiggle = densityCurve(calibWiggle, "Wiggle", Qt::blue, Qt::SolidLine, QBrush(Qt::NoBrush));
+
             graph.addCurve(curveWiggle);
         }
         
@@ -1518,6 +1491,7 @@ QPixmap Date::generateCalibThumb()
         p.end();
 
         return thumb;
+
     } else {
         // If date is invalid, return a null pixmap!
         return QPixmap();

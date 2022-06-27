@@ -64,11 +64,12 @@ void HelpWidget::construct()
 
     // Not yet supported with retina display in Qt 5.3
 #ifndef Q_OS_MAC
-    QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect();
+   /* QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect();
     shadow->setColor(Qt::black);
     shadow->setBlurRadius(4);
     shadow->setOffset(1, 1);
     setGraphicsEffect(shadow);
+    */
 #endif
 }
 

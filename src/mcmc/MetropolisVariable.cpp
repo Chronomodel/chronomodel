@@ -309,7 +309,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
 
 
     if (mSupport == eRp || mSupport== eRpStar) {
-        const Quartiles quartiles = quartilesType(dataSrc, 8, 0.1585); //0.1585 = (1-0.683)/2.
+        const Quartiles quartiles = quantilesType(dataSrc, 8, 0.1585); //0.1585 = (1-0.683)/2.
         sigma = std::min(sigma,(quartiles.Q3 - quartiles.Q1)/2.);
     }
 

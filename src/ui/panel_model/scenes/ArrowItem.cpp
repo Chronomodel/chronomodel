@@ -68,11 +68,11 @@ mGreyedOut(false)
             QGraphicsItem::ItemSendsGeometryChanges);
 
     setData(constraint);
-    QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect();
+   /* QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect();
     shadow->setColor(Qt::black);
     shadow->setBlurRadius(30);
     shadow->setOffset(3, 3);
-    setGraphicsEffect(shadow);
+    setGraphicsEffect(shadow);*/
 }
 
 ArrowItem::~ArrowItem()

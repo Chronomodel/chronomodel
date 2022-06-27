@@ -198,7 +198,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
             mGraph->addCurve(curveWiggle);
 
             // Credibility (must be the last created curve because uses yMax!
-            GraphCurve curveCred = sectionCurve(mDate->mTi.mCredibility,
+            GraphCurve curveCred = topLineSection(mDate->mTi.mCredibility,
                                                             "Credibility All Chains",
                                                             color);
             mGraph->addCurve(curveCred);

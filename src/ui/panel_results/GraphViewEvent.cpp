@@ -46,6 +46,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ModelUtilities.h"
 #include "Painting.h"
 #include "MainWindow.h"
+
+
 #include <QtWidgets>
 
 
@@ -220,7 +222,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
                  *  Theta Credibility
                  * ------------------------------------
                  */
-                const GraphCurve curveCred = sectionCurve(mEvent->mTheta.mCredibility,
+                const GraphCurve curveCred = topLineSection(mEvent->mTheta.mCredibility,
                                                                 "Credibility All Chains",
                                                                 color);
                 mGraph->addCurve(curveCred);

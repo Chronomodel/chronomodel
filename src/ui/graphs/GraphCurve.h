@@ -41,11 +41,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define GRAPHCURVE_H
 
 #include "Matrix.h"
+#include "Painting.h"
+
 #include <QMap>
 #include <QString>
 #include <QPen>
 
 typedef double type_data;
+
 class CurveRefPts
 {
 public:
@@ -87,6 +90,7 @@ public:
 
     };
 
+//private:
     CurveType mType;
     QMap<type_data, type_data> mData;
     CurveMap mMap;
@@ -95,6 +99,21 @@ public:
     QPen mPen;
     QBrush mBrush;
 
+    bool mIsRectFromZero; // draw a vertical line when graph value leaves 0 : usefull for HPD and Unif, Typo!
+
+    QVector<type_data> mDataVector;
+    type_data mHorizontalValue;
+    type_data mVerticalValue;
+
+    std::vector<QPair<type_data, type_data> > mSections;
+
+    std::vector<CurveRefPts> mRefPoints;
+
+    std::pair<QMap<type_data, type_data>, QMap<type_data, type_data>> mShape;
+
+    bool mVisible;
+
+public :
     inline bool isHisto() const {return mType == eHisto;}
     inline bool isVectorData() const {return mType == eQVectorData;}
 
@@ -109,30 +128,44 @@ public:
     inline bool isCurveMap() const {return mType == eCurveMap;}
     inline bool isShapeData() const {return mType == eShapeData;}
 
-    //bool mIsHisto;
-    bool mIsRectFromZero; // draw a vertical line when graph value leaves 0 : usefull for HPD and Unif, Typo!
-
-   // bool mUseVectorData; // Used for traces, correlations and acceptations.
-
-    QVector<type_data> mDataVector;
-
-    //bool mIsHorizontalLine; // Used for calib measures, 44% targets, quartiles, ...
-    type_data mHorizontalValue;
-
-   // bool mIsVerticalLine; // Used for bounds (in results view)
-    type_data mVerticalValue;
-
-   // bool mIsHorizontalSections; // Used for bounds (in scene and property views) and Unif, typo (scene view)
-    //bool mIsTopLineSections; // Used for credibilities (and "one day" for phases alpha/beta interval??)
-    std::vector<QPair<type_data, type_data> > mSections;
-
-    //bool mIsVertical;
-    
-    //bool mIsRefPoints;
-    std::vector<CurveRefPts> mRefPoints;
-
-    std::pair<QMap<type_data, type_data>, QMap<type_data, type_data>> mShape;
-    bool mVisible;
+    void setBrush(const QBrush& brush)  { mBrush = brush;}
+    void setPenStyle(const Qt::PenStyle& penStyle)  { mPen.setStyle(penStyle);}
+    void setLineColor(const QColor& lineColor)  { mPen.setColor(lineColor);}
 };
+
+GraphCurve densityCurve(const QMap<double, double> &data,
+                                const QString& name,
+                                const QColor& lineColor,
+                                const Qt::PenStyle penStyle = Qt::SolidLine,
+                                const QBrush& brush = Qt::NoBrush) ;
+
+GraphCurve GCurve(const QMap<double, double> &data,
+                                const QString& name,
+                                const QColor& lineColor,
+                                const Qt::PenStyle penStyle = Qt::SolidLine,
+                                const QBrush& brush = Qt::NoBrush) ;
+
+GraphCurve HPDCurve (QMap<double, double>& data,
+                     const QString& name, const QColor& color) ;
+
+GraphCurve topLineSection (const std::pair<double, double>& section,
+                           const QString& name,
+                           const QColor& color) ;
+
+GraphCurve horizontalSection (const std::pair<double, double>& section,
+                              const QString& name,
+                              const QColor& color = Painting::mainColorLight,
+                              const QBrush& brush = Qt::NoBrush) ;
+
+GraphCurve horizontalLine (const double yValue,
+                           const QString& name,
+                           const QColor& color,
+                           const Qt::PenStyle penStyle = Qt::SolidLine) ;
+
+GraphCurve shapeCurve (const QMap<double, double>& dataInf, const QMap<double, double>& dataSup,
+                       const QString& name, const QColor& lineColor, const Qt::PenStyle penStyle,
+                       const QBrush& brush) ;
+
+
 
 #endif

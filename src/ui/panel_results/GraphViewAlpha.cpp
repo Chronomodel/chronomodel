@@ -140,7 +140,7 @@ void GraphViewAlpha::generateCurves(const graph_t typeGraph, const QVector<varia
         // ------------------------------------
         if (!mModel->mLambdaSpline.mChainsHistos.isEmpty()) {
             for (int i=0; i<mChains.size(); ++i)  {
-                GraphCurve curvePostDistribChain = densityCurve(mModel->mLambdaSpline.histoForChain(i),
+                const GraphCurve curvePostDistribChain = densityCurve(mModel->mLambdaSpline.histoForChain(i),
                                                                         "Post Distrib Chain " + QString::number(i),
                                                                         Painting::chainColors.at(i),
                                                                         Qt::SolidLine,
@@ -152,7 +152,7 @@ void GraphViewAlpha::generateCurves(const graph_t typeGraph, const QVector<varia
         // ------------------------------------
         //  Theta Credibility
         // ------------------------------------
-        GraphCurve curveCred = sectionCurve(mModel->mLambdaSpline.mCredibility,
+        const GraphCurve curveCred = topLineSection(mModel->mLambdaSpline.mCredibility,
                                                     "Credibility All Chains",
                                                     color);
         mGraph->addCurve(curveCred);

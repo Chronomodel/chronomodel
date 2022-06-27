@@ -66,11 +66,12 @@ AbstractItem::AbstractItem(AbstractScene* scene, QGraphicsItem* parent):QGraphic
     // Not supported with retina display in Qt 5.3
     // but now we are in Qt 6
 //#ifndef Q_OS_MAC
-    QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect();
+/*    QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect();
     shadow->setColor(Qt::black);
     shadow->setBlurRadius(30);
     shadow->setOffset(3, 3);
     setGraphicsEffect(shadow);
+*/
 //#endif
 }
 

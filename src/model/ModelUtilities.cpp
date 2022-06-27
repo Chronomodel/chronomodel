@@ -1308,8 +1308,8 @@ QString ModelUtilities::activityResultsHTML(const Phase* p)
     QString textValue = stringForLocal(p->mActivityValueStack.at("R_etendue").mValue);
     text += line(textPurple("Unif. Span = " + textValue ));
 
-    textValue = stringForLocal(p->mActivityValueStack.at("Unif Score").mValue);
-    text += line(textPurple("Unif Score = " + textValue));
+    textValue = stringForLocal(p->mActivityValueStack.at("Significance Score").mValue);
+    text += line(textPurple("Significance Score = " + textValue));
 
     return text;
 }

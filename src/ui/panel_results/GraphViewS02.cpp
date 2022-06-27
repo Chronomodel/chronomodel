@@ -147,7 +147,7 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variabl
         // ------------------------------------
         //  Theta Credibility
         // ------------------------------------
-        GraphCurve curveCred = sectionCurve(mModel->mS02Vg.mCredibility,
+        GraphCurve curveCred = topLineSection(mModel->mS02Vg.mCredibility,
                                                     "Credibility All Chains",
                                                     color);
         mGraph->addCurve(curveCred);

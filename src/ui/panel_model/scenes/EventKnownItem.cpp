@@ -127,7 +127,7 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
 
         //---------------------
 
-        GraphCurve curve;
+        /*GraphCurve curve;
         curve.mName = "Bound";
         curve.mBrush = Painting::mainColorLight;
         curve.mPen = QPen(Painting::mainColorLight, 2.);
@@ -138,9 +138,11 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
 
         tLower = bound.mFixed;
         tUpper = tLower;
-
-
         curve.mSections.push_back(qMakePair(tLower,tUpper));
+
+        */
+        const GraphCurve curve = horizontalSection(qMakePair(bound.mFixed, bound.mFixed),"Bound", Painting::mainColorLight, QBrush(Painting::mainColorLight));
+
         graph->addCurve(curve);
         //---------------------
 

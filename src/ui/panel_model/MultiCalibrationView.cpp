@@ -403,17 +403,9 @@ void MultiCalibrationView::updateGraphList()
 
             EventKnown *bound = new EventKnown();
             *bound = EventKnown::fromJson(ev);
+            const double tFixedFormated = DateUtils::convertToAppSettingsFormat( bound->fixedValue());
 
-            GraphCurve calibCurve;
-            calibCurve.mName = "Bound";
-            calibCurve.mPen.setColor(penColor);
-            calibCurve.mPen.setWidth(20);
-            calibCurve.mBrush = brushColor;
-            calibCurve.mPen = QPen(Painting::mainColorLight, 2.);
-            calibCurve.mType = GraphCurve::CurveType::eHorizontalSections;
-
-            double tFixedFormated = DateUtils::convertToAppSettingsFormat( bound->fixedValue());
-            calibCurve.mSections.push_back(qMakePair(tFixedFormated, tFixedFormated));
+            const GraphCurve calibCurve = horizontalSection( qMakePair(tFixedFormated, tFixedFormated), "Bound", penColor, QBrush(brushColor));
 
             GraphView* calibGraph = new GraphView(this);
             QString boundName (ev.value(STATE_NAME).toString());
@@ -438,11 +430,10 @@ void MultiCalibrationView::updateGraphList()
             calibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
             calibGraph->setOverArrow(GraphView::eNone);
 
-           // calibGraph->setRendering(GraphView::eHD);
             graphList.append(calibGraph);
             listAxisVisible.append(true);
 
-            QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
+            const QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
                                   ev.value(STATE_COLOR_GREEN).toInt(),
                                   ev.value(STATE_COLOR_BLUE).toInt());
             colorList.append(color);
@@ -461,33 +452,17 @@ void MultiCalibrationView::updateGraphList()
                 GraphView* calibGraph = new GraphView(this);
 
                  if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mCurve.isEmpty()) {
-                    calibCurve.mName = "Calibration";
-                    calibCurve.mPen.setColor(penColor);
-                    calibCurve.mPen.setWidth(1);
-                    //calibCurve.mIsHisto = false;
-                    calibCurve.mType =GraphCurve::CurveType::eQMapData;
-
-                    calibCurve.mData = d.getFormatedCalibToShow();//getFormatedCalibMap();
-
-                    const bool isUnif (d.mPlugin->getName() == "Unif");
-                    calibCurve.mIsRectFromZero = isUnif;
-                    calibCurve.mBrush = QBrush(Qt::NoBrush);
+                    calibCurve = densityCurve(d.getFormatedCalibToShow(), "Calibration", penColor);
 
                     calibGraph->addCurve(calibCurve);
 
                     // Drawing the wiggle
                     if (d.mDeltaType !=  Date::eDeltaNone) {
-                        GraphCurve curveWiggle;
-                        QMap<double, double> calibWiggle = normalize_map(d.getFormatedWiggleCalibToShow(), map_max_value(calibCurve.mData));
-                        curveWiggle.mType = GraphCurve::CurveType::eQMapData;
-                        curveWiggle.mData = calibWiggle;
 
-                        curveWiggle.mName = "Wiggle";
-                        curveWiggle.mPen.setColor(Qt::red);
-                        curveWiggle.mPen.setWidth(1);
-                        curveWiggle.mBrush = QBrush(Qt::NoBrush);
-                        //curveWiggle.mIsHisto = false;
-                        curveWiggle.mIsRectFromZero = true;
+                        const QMap<double, double> calibWiggle = normalize_map(d.getFormatedWiggleCalibToShow(), map_max_value(calibCurve.mData));
+
+                        const GraphCurve curveWiggle = densityCurve(calibWiggle, "Wiggle", Qt::red);
+
                         calibGraph->addCurve(curveWiggle);
                     }
 

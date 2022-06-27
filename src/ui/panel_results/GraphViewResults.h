@@ -231,36 +231,6 @@ public:
     QString getTextAreaToHtml() const { return mStatArea->toHtml();}
     QString getTextAreaToPlainText() const { return mStatArea->toPlainText();}
 
-    GraphCurve densityCurve(const QMap<double, double> &data,
-                                    const QString& name,
-                                    const QColor& lineColor,
-                                    const Qt::PenStyle penStyle = Qt::SolidLine,
-                                    const QBrush& brush = Qt::NoBrush) const;
-
-    GraphCurve GCurve(const QMap<double, double> &data,
-                                    const QString& name,
-                                    const QColor& lineColor,
-                                    const Qt::PenStyle penStyle = Qt::SolidLine,
-                                    const QBrush& brush = Qt::NoBrush) const;
-
-    GraphCurve HPDCurve(QMap<double, double>& data,
-                                const QString& name,
-                                const QColor& color) const;
-
-    GraphCurve sectionCurve(const QPair<double, double>& section,
-                                        const QString& name,
-                                        const QColor& color) const;
-
-    GraphCurve horizontalLine(const double yValue,
-                                      const QString& name,
-                                      const QColor& color,
-                                      const Qt::PenStyle penStyle = Qt::SolidLine) const;
-
-    GraphCurve shapeCurve(const QMap<double, double>& dataInf, const QMap<double, double>& dataSup,
-                                                      const QString& name,
-                                                      const QColor& lineColor,
-                                                      const Qt::PenStyle penStyle,
-                                                      const QBrush& brush) const;
 
     void generateTraceCurves(const QList<ChainSpecs>& chains,
                              MetropolisVariable* variable,

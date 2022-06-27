@@ -525,7 +525,7 @@ QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& 
 
 Quartiles quartilesForTrace(const QVector<type_data> &trace)
 {
-    Quartiles quartiles = quartilesType(trace, 8, 0.25);
+    Quartiles quartiles = quantilesType(trace, 8, 0.25);
     return quartiles;
 }
 

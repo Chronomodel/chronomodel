@@ -1338,8 +1338,15 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
     }
 
     for (const auto& phase : mPhases) {
-        if (phase->mEvents.size() < 2)
+        if (phase->mEvents.size() < 2) {
+            phase->mActivityValueStack["Significance Score"] = TValueStack("Significance Score", 0);
+            phase->mActivityValueStack["R_etendue"] = TValueStack("R_etendue", mSettings.mTmax - mSettings.mTmin);
+            phase->mActivityValueStack["t_min"] = TValueStack("t_min", mSettings.mTmin);
+            phase->mActivityValueStack["t_max"] = TValueStack("t_max", mSettings.mTmax);
+            phase->mActivityValueStack["t_min_R"] = TValueStack("t_min_R", mSettings.mTmin);
+            phase->mActivityValueStack["t_max_R"] = TValueStack("t_max_R", mSettings.mTmax);
             continue;
+        }
 
         // Curves for error binomial
         const double n = phase->mEvents.size();
@@ -1364,9 +1371,9 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
 
         for (const auto& ev : phase->mEvents) {
             const auto rawtrace = ev->mTheta.fullRunRawTrace(mChains);
-            Quartiles Q99 = quartilesType(rawtrace, 7, 0.99);
-            t_min_R = std::min(t_min_R, Q99.Q1);
-            t_max_R = std::max(t_max_R, Q99.Q2);
+            const Quartiles Q95 = quantilesType(rawtrace, 7, 0.025);
+            t_min_R = std::min(t_min_R, Q95.Q1);
+            t_max_R = std::max(t_max_R, Q95.Q3);
 
             concaTrace.resize(concaTrace.size() + rawtrace.size());
             std::copy_backward( rawtrace.begin(), rawtrace.end(), concaTrace.end() );
@@ -1389,7 +1396,7 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
             // Convertion in the good Date format
             phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
 
-            phase->mActivityValueStack["Unif Score"] = TValueStack("Unif Score", 0);
+            phase->mActivityValueStack["Significance Score"] = TValueStack("Significance Score", 0);
             phase->mActivityValueStack["R_etendue"] = TValueStack("R_etendue", 0);
             phase->mActivityValueStack["t_min"] = TValueStack("t_min", t_min_data);
             phase->mActivityValueStack["t_max"] = TValueStack("t_max", t_max_data);
@@ -1456,8 +1463,8 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
         int iTempoMin;
 
         for (const auto& t : concaTrace) {
-            iActivityGridMin = inRange(0, (int) ceil((t - h_2 - t_min) / delta_t), (int)gridLength-1) ; //std::min( (int)gridLength-1, std::max (0, (int) ceil((t - h_2 - t_min) / delta_t)) );
-            iActivityGridMax = inRange(0, (int) ceil((t + h_2 - t_min) / delta_t), (int)gridLength-1) ; //std::min( (int)gridLength-1, std::max (0, (int) ceil((t + h_2 - t_min) / delta_t)) );
+            iActivityGridMin = inRange(0, (int) ceil((t - h_2 - t_min) / delta_t), (int)gridLength-1) ;
+            iActivityGridMax = inRange(0, (int) ceil((t + h_2 - t_min) / delta_t), (int)gridLength-1) ;
 
             if (iActivityGridMax == iActivityGridMin) {
                 ++*(niActivity.begin()+iActivityGridMin);
@@ -1552,7 +1559,7 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
 
         }
 
-        phase->mActivityValueStack["Unif Score"] = TValueStack("Unif Score", UnifScore);
+        phase->mActivityValueStack["Significance Score"] = TValueStack("Significance Score", UnifScore);
         phase->mActivityValueStack["R_etendue"] = TValueStack("R_etendue", R_etendue);
         phase->mActivityValueStack["t_min"] = TValueStack("t_min", t_min_data);
         phase->mActivityValueStack["t_max"] = TValueStack("t_max", t_max_data);
@@ -2088,7 +2095,7 @@ void Model::generateActivity(size_t gridLength, double h)
         for (const auto& t : concaTrace) {
 
             idxGridMin = inRange(0, (int) ceil((t - h_2 - t_min) / delta_t), (int)gridLength-1) ;
-            idxGridMax = inRange(0, (int) ceil((t - h_2 + t_min) / delta_t), (int)gridLength-1) ;
+            idxGridMax = inRange(0, (int) ceil((t + h_2 - t_min) / delta_t), (int)gridLength-1) ;
 
             if (idxGridMax == idxGridMin) {
                 ++*(NiTot.begin()+idxGridMin);
@@ -2140,7 +2147,7 @@ void Model::generateActivity(size_t gridLength, double h)
             nbIt++;
         }
 
-        phase->mActivityValueStack["Unif Score"] = TValueStack("Unif Score", UnifScore);
+        phase->mActivityValueStack["Significance Score"] = TValueStack("Significance Score", UnifScore);
 
         phase->mRawActivity = vector_to_map(esp, t_min, t_max, delta_t);
         phase->mRawActivityInf = vector_to_map(inf, t_min, t_max, delta_t);
