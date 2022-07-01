@@ -328,9 +328,6 @@ QVector<float> normalize_vector(const QVector<float>& aVector);
 QVector<double> stretch_vector(const QVector<double>& aVector, const double from, const double to);
 QVector<float> stretch_vector(const QVector<float>& aVector, const float from, const float to);
 
-//QMap<double, double> normalize_map(const QMap<double, double>& aMap);
-//QMap<float, float> normalize_map(const QMap<float, float>& aMap);
-
 QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const QMap<double, double>& mapWithTargetArea);
 QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const QMap<float, float>& mapWithTargetArea);
 QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const double targetArea);
@@ -351,15 +348,19 @@ float vector_interpolate_idx_for_value(const float value, const QVector<float>& 
 double interpolate_value_from_curve(const double t, const QVector<double>& curve,const double curveTmin, const double curveTmax);
 double interpolate_value_from_curve(const double x, const std::vector<double>& curve,const double Xmin, const double Xmax);
 
+double map_area_threshold(const std::map<double, double>& density, const double threshold, const double areaMax = 1.);
+
 double map_area(const QMap<double, double>& map);
 float map_area(const QMap<float, float>& map);
 double map_area(const QMap<int, double>& density);
 double map_area(const std::map<double, double>& density);
 
 // const std::map<double, double> create_HPD(const QMap<double, double> &aMap, const double threshold); // Pour Qt5
+const std::map<double, double> create_HPD_old(const QMap<double, double>& density, const double threshold = 95.); // Osolete -> BUG
 const std::map<double, double> create_HPD(const QMap<double, double>& density, const double threshold = 95.);
 
-const std::map<int, double> create_HPD(const QMap<int, double>& density, const double threshold = 95.);
+
+//const std::map<int, double> create_HPD(const QMap<int, double>& density, const double threshold = 95.);
 
 QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmin, const double tmax, const int nbPts);
 

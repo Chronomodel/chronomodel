@@ -361,9 +361,6 @@ void CalibrationView::updateGraphs()
                 calibWiggleCurve.mBrush = QBrush(Qt::NoBrush);
                 mCalibGraph->addCurve(calibWiggleCurve);
             }
-            
-            
-         //   mCalibGraph->setTipXLab("t"); // don't work
 
             QString input = mHPDEdit->text();
             mHPDEdit->validator()->fixup(input);
@@ -372,19 +369,18 @@ void CalibrationView::updateGraphs()
             // hpd results
             const double thresh = qBound(0., locale().toDouble(input), 100.);
             // do QMap<type_data, type_data> mData; to calcul HPD on study Period
-            QMap<type_data, type_data> subData = mDate.getFormatedCalibMap(); //calibCurve.mData;
+            QMap<type_data, type_data> subData = mDate.getFormatedCalibMap();
             subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
 
-            QMap<type_data, type_data> hpd (create_HPD(subData, thresh));
-
+            QMap<double, double> hpd (create_HPD(subData, thresh));
 
             GraphCurve hpdCurve;
             hpdCurve.mName = "Calibration HPD";
             hpdCurve.mPen = brushColor;
             hpdCurve.mBrush = brushColor;
             hpdCurve.mIsRectFromZero = true;
-            //hpdCurve.mData = hpd;
+
             hpdCurve.mData = normalize_map(hpd, map_max_value(calibMap));
             mCalibGraph->addCurve(hpdCurve);
 
