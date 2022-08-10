@@ -168,12 +168,12 @@ void MCMCLoopMain::initVariablesForChain()
     for (auto&& phase : mModel->mPhases) {
         phase->mAlpha.reset();
         phase->mBeta.reset();
-        phase->mTau.reset();
+        //phase->mTau.reset();
         phase->mDuration.reset();
 
         phase->mAlpha.mRawTrace->reserve(initReserve);
         phase->mBeta.mRawTrace->reserve(initReserve);
-        phase->mTau.mRawTrace->reserve(initReserve);
+        //phase->mTau.mRawTrace->reserve(initReserve);
         phase->mDuration.mRawTrace->reserve(initReserve);
    }
 }

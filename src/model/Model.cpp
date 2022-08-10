@@ -590,8 +590,8 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
 
                 l << locale.toString(valueBeta, 'g', 15);
 
-                double valueTau = pPhase->mTau.mRawTrace->at(shift + j);
-                l << locale.toString(valueTau, 'g', 15);
+                // double valueTau = pPhase->mTau.mRawTrace->at(shift + j);
+                // l << locale.toString(valueTau, 'g', 15);
 
             }
             rows << l;
@@ -646,9 +646,9 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
 
             l << locale.toString(valueBeta, 'g', 15);
 
-            double valueTau = phase->mTau.mRawTrace->at(shift + j);
+           /* double valueTau = phase->mTau.mRawTrace->at(shift + j);
             l << locale.toString(valueTau, 'g', 15);
-
+*/
             for (const auto& event : phase->mEvents) {
                 double value = event->mTheta.mRawTrace->at(shift + j);
                 if (withDateFormat)
@@ -1216,7 +1216,7 @@ void Model::generateCredibility(const double &thresh)
 
         pPhase->mBeta.generateCredibility(mChains, thresh);
  //       progress->setValue(++position);
-        pPhase->mTau.generateCredibility(mChains, thresh);
+      //  pPhase->mTau.generateCredibility(mChains, thresh);
         pPhase->mDuration.generateCredibility(mChains, thresh);
  //       progress->setValue(++position);
 
@@ -1861,12 +1861,12 @@ void Model::clearPosteriorDensities()
     while (iterPhase!=mPhases.end()) {
         (*iterPhase)->mAlpha.mHisto.clear();
         (*iterPhase)->mBeta.mHisto.clear();
-        (*iterPhase)->mTau.mHisto.clear();
+       // (*iterPhase)->mTau.mHisto.clear();
         (*iterPhase)->mDuration.mHisto.clear();
 
         (*iterPhase)->mAlpha.mChainsHistos.clear();
         (*iterPhase)->mBeta.mChainsHistos.clear();
-        (*iterPhase)->mTau.mChainsHistos.clear();
+        //(*iterPhase)->mTau.mChainsHistos.clear();
         (*iterPhase)->mDuration.mChainsHistos.clear();
         ++iterPhase;
     }
@@ -2245,8 +2245,8 @@ void Model::clearCredibilityAndHPD()
         (*iterPhase)->mBeta.mCredibility = QPair<double, double>();
         //(*iterPhase)->mBeta.mThresholdOld = 0;
 
-        (*iterPhase)->mTau.mHPD.clear();
-        (*iterPhase)->mTau.mCredibility = QPair<double, double>();
+        //(*iterPhase)->mTau.mHPD.clear();
+       // (*iterPhase)->mTau.mCredibility = QPair<double, double>();
 
         (*iterPhase)->mDuration.mHPD.clear();
         (*iterPhase)->mDuration.mCredibility = QPair<double, double>();
@@ -2268,7 +2268,7 @@ void Model::clearTraces()
     for (const auto& ph : mPhases) {
         ph->mAlpha.reset();
         ph->mBeta.reset();
-        ph->mTau.reset();
+        //ph->mTau.reset();
         ph->mDuration.reset();
 
         ph->mRawTempo.clear();
