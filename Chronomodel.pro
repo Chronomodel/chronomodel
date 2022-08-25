@@ -38,7 +38,7 @@
 # --------------------------------------------------------------------- */
 
 # DEFINES += VERSION_NUMBER=\\\"2.0.10\\\"
-VERSION = 3.1.8
+VERSION = 3.1.9
  #VERSION_NUMBER # must match value in src/main.cpp and mainControler and Chronomodel.rc (for windows)
 #PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_
@@ -288,7 +288,7 @@ HEADERS += src/model/Date.h
 HEADERS += src/model/Event.h
 HEADERS += src/model/EventConstraint.h
 HEADERS += \
-    src/model/EventBound.h
+    src/model/Bound.h
 HEADERS += src/model/Model.h
 HEADERS += src/model/ModelUtilities.h
 HEADERS += src/model/Phase.h
@@ -456,7 +456,7 @@ SOURCES += src/model/Date.cpp
 SOURCES += src/model/Event.cpp
 SOURCES += src/model/EventConstraint.cpp
 SOURCES += \
-    src/model/EventBound.cpp
+    src/model/Bound.cpp
 SOURCES += src/model/Model.cpp
 SOURCES += src/model/ModelUtilities.cpp
 SOURCES += src/model/Phase.cpp
