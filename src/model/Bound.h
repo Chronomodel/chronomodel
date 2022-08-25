@@ -37,19 +37,19 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef EVENT_KNOWN_H
-#define EVENT_KNOWN_H
+#ifndef BOUND_H
+#define BOUND_H
 
 #include "Event.h"
 
-class EventKnown: public Event
+class Bound: public Event
 {
 public:
 
-    EventKnown();
+    Bound();
     //explicit EventKnown(const QJsonObject& json);
 
-    static EventKnown fromJson(const QJsonObject& json);
+    static Bound fromJson(const QJsonObject& json);
     virtual QJsonObject toJson() const;
 
     //EventKnown& operator=(const EventKnown& event);

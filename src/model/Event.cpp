@@ -45,7 +45,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PhaseConstraint.h"
 #include "Generator.h"
 #include "StdUtilities.h"
-#include "EventBound.h"
+#include "Bound.h"
 #include "ModelUtilities.h"
 #include "QtUtilities.h"
 
@@ -956,7 +956,7 @@ void Event::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, co
         mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 
     else {
-        EventKnown* ek = dynamic_cast<EventKnown*>(this);
+        Bound* ek = dynamic_cast<Bound*>(this);
             // Nothing todo : this is just a Dirac !
             ek->mTheta.mHisto.clear();
             ek->mTheta.mChainsHistos.clear();

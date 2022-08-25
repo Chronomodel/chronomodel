@@ -43,7 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PhaseItem.h"
 #include "CurveSettingsView.h"
 #include "Event.h"
-#include "EventBound.h"
+#include "Bound.h"
 #include "Painting.h"
 #include "Button.h"
 #include "Label.h"

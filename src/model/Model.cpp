@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Model.h"
 #include "Date.h"
 #include "Project.h"
-#include "EventBound.h"
+#include "Bound.h"
 #include "MCMCLoopMain.h"
 #include "MCMCProgressDialog.h"
 #include "ModelUtilities.h"
@@ -226,8 +226,8 @@ void Model::fromJson(const QJsonObject& json)
                     message.exec();
                 }
             } else {
-                EventKnown* ek = new EventKnown();
-                *ek = EventKnown::fromJson(event);
+                Bound* ek = new Bound();
+                *ek = Bound::fromJson(event);
                 ek->updateValues(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
                 mEvents.append(ek);
                 ek = nullptr;
@@ -770,7 +770,7 @@ bool Model::isValid()
         for (auto j = 0; j<eventBranches.at(i).size(); ++j) {
             Event* event = eventBranches[i][j];
             if (event->type() == Event::eBound)  {
-                EventKnown* bound = dynamic_cast<EventKnown*>(event);
+                Bound* bound = dynamic_cast<Bound*>(event);
 
                 // --------------------
                 // Check bound interval lower value
@@ -782,7 +782,7 @@ bool Model::isValid()
                 for (auto k = 0; k<j; ++k) {
                     Event* evt = eventBranches[i][k];
                     if (evt->mType == Event::eBound) {
-                        EventKnown* bd = dynamic_cast<EventKnown*>(evt);
+                        Bound* bd = dynamic_cast<Bound*>(evt);
                         //if(bd->mKnownType == EventKnown::eFixed)
                         lower = qMax(lower, bd->mFixed);
                         //else if(bd->mKnownType == EventKnown::eUniform)
@@ -805,7 +805,7 @@ bool Model::isValid()
                 for (auto k = j+1; k<eventBranches.at(i).size(); ++k) {
                     Event* evt = eventBranches[i][k];
                     if (evt->mType == Event::eBound) {
-                        EventKnown* bd = dynamic_cast<EventKnown*>(evt);
+                        Bound* bd = dynamic_cast<Bound*>(evt);
                         // if (bd->mKnownType == EventKnown::eFixed)
                         upper = qMin(upper, bd->mFixed);
 
@@ -833,7 +833,7 @@ bool Model::isValid()
         double lower = mSettings.mTmin;
         Phase* phaseFrom = mPhaseConstraints.at(i)->mPhaseFrom;
         for (int j = 0; j<phaseFrom->mEvents.size(); ++j) {
-            EventKnown* bound = dynamic_cast<EventKnown*>(phaseFrom->mEvents[j]);
+            Bound* bound = dynamic_cast<Bound*>(phaseFrom->mEvents[j]);
             if (bound)
                 lower = qMax(lower, bound->mFixed);
 
@@ -841,7 +841,7 @@ bool Model::isValid()
         double upper = double (mSettings.mTmax);
         Phase* phaseTo = mPhaseConstraints.at(i)->mPhaseTo;
         for (int j=0; j<phaseTo->mEvents.size(); ++j) {
-            EventKnown* bound = dynamic_cast<EventKnown*>(phaseTo->mEvents[j]);
+            Bound* bound = dynamic_cast<Bound*>(phaseTo->mEvents[j]);
             if (bound)
                 upper = qMin(upper, bound->mFixed);
 
@@ -871,7 +871,7 @@ bool Model::isValid()
 
             for (int j = 0; j<mPhases.at(i)->mEvents.size(); ++j) {
                 if (mPhases.at(i)->mEvents.at(j)->mType == Event::eBound) {
-                    EventKnown* bound = dynamic_cast<EventKnown*>(mPhases.at(i)->mEvents[j]);
+                    Bound* bound = dynamic_cast<Bound*>(mPhases.at(i)->mEvents[j]);
                     if (bound) {
                         boundFound = true;
                         min = std::max(min, bound->mFixed);

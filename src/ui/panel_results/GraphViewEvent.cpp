@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphViewEvent.h"
 #include "GraphView.h"
 #include "Event.h"
-#include "EventBound.h"
+#include "Bound.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
 #include "ModelUtilities.h"
@@ -127,9 +127,9 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
     setNumericalResults(resultsHTML, resultsText);
 
     bool isFixedBound = false;
-    EventKnown* bound = nullptr;
+    Bound* bound = nullptr;
     if (mEvent->type() == Event::eBound) {
-        bound = dynamic_cast<EventKnown*>(mEvent);
+        bound = dynamic_cast<Bound*>(mEvent);
         isFixedBound = (bound != nullptr);
     }
     

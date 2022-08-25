@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "LineEdit.h"
 #include "ColorPicker.h"
 #include "Event.h"
-#include "EventBound.h"
+#include "Bound.h"
 #include "DatesList.h"
 #include "Button.h"
 #include "GraphView.h"
@@ -570,19 +570,19 @@ void EventPropertiesView::updateKnownGraph()
     const double tmin = settings.value(STATE_SETTINGS_TMIN).toDouble();
     const double tmax = settings.value(STATE_SETTINGS_TMAX).toDouble();
     const double step = settings.value(STATE_SETTINGS_STEP).toDouble();
-    EventKnown event;
-    event = EventKnown::fromJson(mEvent);
+    Bound bound;
+    bound = Bound::fromJson(mEvent);
 
-    if ( (tmin>event.mFixed) || (event.mFixed>tmax) )
+    if ( (tmin>bound.mFixed) || (bound.mFixed>tmax) )
         return;
 
-    event.updateValues(tmin, tmax,step );
+    bound.updateValues(tmin, tmax,step );
 
     mKnownGraph->setRangeX(tmin,tmax);
 
     mKnownGraph->setCurrentX(tmin,tmax);
 
-    double max = map_max_value(event.mValues);
+    double max = map_max_value(bound.mValues);
     max = (max == 0.) ? 1. : max;
     mKnownGraph->setRangeY(0, max);
     mKnownGraph->showYAxisValues(false);
@@ -596,13 +596,10 @@ void EventPropertiesView::updateKnownGraph()
     curve.mPen = QPen(Painting::mainColorLight, 2.);
 
     curve.mType = GraphCurve::eHorizontalSections;
-    qreal tLower;
-    qreal tUpper;
-    tLower = event.fixedValue();
-    tUpper = tLower;
+    qreal tLower = bound.fixedValue();
+    qreal tUpper = tLower;
 
-
-    curve.mSections.push_back(qMakePair(tLower,tUpper));
+    curve.mSections.push_back(qMakePair(tLower, tUpper));
     mKnownGraph->addCurve(curve);
     QFontMetrics fm (mKnownGraph->font());
     mKnownGraph->setMarginBottom(fm.ascent() + 10. );

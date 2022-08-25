@@ -38,7 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "MCMCLoopMain.h"
-#include "EventBound.h"
+#include "Bound.h"
 #include "Functions.h"
 #include "Generator.h"
 #include "StdUtilities.h"
@@ -224,7 +224,7 @@ QString MCMCLoopMain::initialize()
 
     for (int i = 0; i < events.size(); ++i) {
         if (events.at(i)->type() == Event::eBound) {
-            EventKnown* bound = dynamic_cast<EventKnown*>(events[i]);
+            Bound* bound = dynamic_cast<Bound*>(events[i]);
 
             if (bound) {
                 bound->mTheta.mX = bound->mFixed;

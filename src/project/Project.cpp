@@ -45,7 +45,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MCMCSettingsDialog.h"
 
 #include "Event.h"
-#include "EventBound.h"
+#include "Bound.h"
 #include "EventDialog.h"
 #include "EventConstraint.h"
 #include "ConstraintDialog.h"
@@ -1525,10 +1525,10 @@ void Project::createEventKnown(qreal x, qreal y)
     if (studyPeriodIsValid()) {
         EventDialog* dialog = new EventDialog(qApp->activeWindow(), tr("New Bound"));
         if (dialog->exec() == QDialog::Accepted) {
-            EventKnown eventKnown = EventKnown();
-            eventKnown.mName = dialog->getName();
-            eventKnown.mColor= dialog->getColor();
-            QJsonObject eventJSON (eventKnown.toJson());
+            Bound bound = Bound();
+            bound.mName = dialog->getName();
+            bound.mColor= dialog->getColor();
+            QJsonObject eventJSON (bound.toJson());
             eventJSON[STATE_ITEM_X] = x;
             eventJSON[STATE_ITEM_Y] = y;
             addEvent(eventJSON, tr("Bound created"));

@@ -37,15 +37,15 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#include "EventBound.h"
-#include "StdUtilities.h"
+#include "Bound.h"
+//#include "StdUtilities.h"
 #include "QtUtilities.h"
-#include "GraphView.h"
-#include "Generator.h"
+//#include "GraphView.h"
+//#include "Generator.h"
 
 #include <QObject>
 
-EventKnown::EventKnown():Event(),
+Bound::Bound():Event(),
 mFixed(0.)
 {
     Event::mType = eBound;
@@ -54,9 +54,9 @@ mFixed(0.)
 }
 
 // JSON
-EventKnown EventKnown::fromJson(const QJsonObject& json)
+Bound Bound::fromJson(const QJsonObject& json)
 {
-    EventKnown event;
+    Bound event;
 
     event.Event::mType = Type (json[STATE_EVENT_TYPE].toInt());
     event.Event::mId = json[STATE_ID].toInt();
@@ -91,7 +91,7 @@ EventKnown EventKnown::fromJson(const QJsonObject& json)
     return event;
 }
 
-QJsonObject EventKnown::toJson() const
+QJsonObject Bound::toJson() const
 {
     QJsonObject event;
 
@@ -136,20 +136,20 @@ void EventKnown::copyFrom(const EventKnown& event)
     mValues = event.mValues;
 }
 */
-void EventKnown::setFixedValue(const double& value) {mFixed = value;}
+void Bound::setFixedValue(const double& value) {mFixed = value;}
 
-double EventKnown::fixedValue() const
+double Bound::fixedValue() const
 {
     return mFixed;
 }
 
-double EventKnown::formatedFixedValue() const
+double Bound::formatedFixedValue() const
 {
     return DateUtils::convertToAppSettingsFormat(mFixed);
 }
 
 
-void EventKnown::updateValues(const double& tmin, const double& tmax, const double& step)
+void Bound::updateValues(const double& tmin, const double& tmax, const double& step)
 {
     mValues.clear();
 
@@ -167,7 +167,7 @@ void EventKnown::updateValues(const double& tmin, const double& tmax, const doub
     }
 }
 
-void EventKnown::updateTheta(const double& tmin, const double& tmax)
+void Bound::updateTheta(const double& tmin, const double& tmax)
 {
     (void) tmin;
     (void) tmax;

@@ -53,7 +53,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "Date.h"
 #include "Event.h"
-#include "EventBound.h"
+#include "Bound.h"
 #include "Phase.h"
 
 #include "Label.h"
@@ -61,7 +61,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "LineEdit.h"
 #include "CheckBox.h"
 #include "RadioButton.h"
-#include "Painting.h"
+//#include "Painting.h"
 
 #include "MainWindow.h"
 #include "Project.h"
@@ -71,7 +71,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ModelUtilities.h"
 #include "DoubleValidator.h"
 
-#include "../PluginAbstract.h"
+//#include "../PluginAbstract.h"
 
 #include "AppSettings.h"
 
@@ -1879,10 +1879,12 @@ void ResultsView::createByCurveGraph()
                     }
 
 
+
+
                 } else {
-                    //evPts.Xmean = DateUtils::convertToAppSettingsFormat(static_cast<EventKnown*>(event)->mFixed); // always the same value
-                    evPts.Xmin = static_cast<EventKnown*>(event)->mFixed;
-                    evPts.Xmax = static_cast<EventKnown*>(event)->mFixed;
+
+                    evPts.Xmin = static_cast<Bound*>(event)->mFixed;
+                    evPts.Xmax = static_cast<Bound*>(event)->mFixed;
 
                     dPts.Xmin = evPts.Xmin;//event->mTheta.mX; // always the same value
                     dPts.Xmax = evPts.Xmax;
@@ -1894,6 +1896,8 @@ void ResultsView::createByCurveGraph()
                     // memo Data Points
                     dataPts.append(dPts);
                     eventsPts.append(evPts);
+                    hpdPerEvent.push_back(1);
+                    dataPerEvent.push_back(1);
                 }
 
             }

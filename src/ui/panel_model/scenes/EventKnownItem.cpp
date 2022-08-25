@@ -45,7 +45,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "Painting.h"
 #include "GraphView.h"
-#include "EventBound.h"
+#include "Bound.h"
 #include "StdUtilities.h"
 #include "Project.h"
 
@@ -93,8 +93,8 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     const double tmax = settings.value(STATE_SETTINGS_TMAX).toDouble();
     const double step = settings.value(STATE_SETTINGS_STEP).toDouble();
 
-    EventKnown bound ;
-    bound = EventKnown::fromJson(event);
+    Bound bound ;
+    bound = Bound::fromJson(event);
     // if Fixed Bound with fixed value in study period or uniform Bound with bound.mUniformStart<bound.mUniformEnd
    /* if(  ( (bound.mKnownType==EventKnown::eFixed) && (tmin<=bound.mFixed) && (bound.mFixed<=tmax) )
       || ( (bound.mKnownType==EventKnown::eUniform) &&

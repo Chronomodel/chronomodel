@@ -39,7 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "EventsScene.h"
 #include "Event.h"
-#include "EventBound.h"
+#include "Bound.h"
 #include "EventConstraint.h"
 #include "EventItem.h"
 #include "EventKnownItem.h"
@@ -1461,7 +1461,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
             }
 
         } else {
-            EventKnown bound;
+            Bound bound;
             bound.mType = Event::eBound;
             bound.mTheta.mSamplerProposal = MHVariable::eFixe;
             bound.mFixed= date.mData[STATE_EVENT_KNOWN_FIXED].toDouble();

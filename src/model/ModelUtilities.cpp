@@ -41,7 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PhaseConstraint.h"
 #include "ModelCurve.h"
 #include "Project.h"
-#include "EventBound.h"
+#include "Bound.h"
 #include "PluginAbstract.h"
 #include "QtUtilities.h"
 #include "Generator.h"
@@ -873,7 +873,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
         HTMLText += "<hr><br>";
 
         if (event->type() == Event::eBound) {
-             const EventKnown* bound = dynamic_cast<const EventKnown*>(event);
+             const Bound* bound = dynamic_cast<const Bound*>(event);
             if (bound) {
                 HTMLText += line(textRed(QObject::tr("Bound ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), bound->mName)));
                 HTMLText += line(textRed(QObject::tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(bound->mTheta.mX), DateUtils::getAppSettingsFormatStr())));
@@ -1009,7 +1009,7 @@ QString ModelUtilities::modelStateDescriptionText(const ModelCurve *model, QStri
         text += nl;
 
         if (event->type() == Event::eBound) {
-            const EventKnown* bound = dynamic_cast<const EventKnown*>(event);
+            const Bound* bound = dynamic_cast<const Bound*>(event);
             if (bound) {
                 text += QObject::tr("Bound ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), bound->mName);
                 text += QObject::tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(bound->mTheta.mX), DateUtils::getAppSettingsFormatStr());
@@ -1291,7 +1291,7 @@ QString ModelUtilities::activityResultsHTML(const Phase* p)
 
     if (t1>t2)
         std::swap(t1, t2);
-
+    text += line( QString("<i>" + QObject::tr("Trace Stat.")  + "</i>"));
     text += line(textPurple("Theta min = " + stringForLocal(t1) + " " + DateUtils::getAppSettingsFormatStr()));
     text += line(textPurple("Theta max = " + stringForLocal(t2) + " " + DateUtils::getAppSettingsFormatStr()));
 

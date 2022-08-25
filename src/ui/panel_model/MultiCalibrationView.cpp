@@ -44,7 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Painting.h"
 #include "QtUtilities.h"
 #include "MainWindow.h"
-#include "EventBound.h"
+#include "Bound.h"
 #include "GraphViewResults.h"
 
 #include <QPainter>
@@ -401,8 +401,8 @@ void MultiCalibrationView::updateGraphList()
 
         if (ev.value(STATE_EVENT_TYPE).toInt() == Event::eBound) {
 
-            EventKnown *bound = new EventKnown();
-            *bound = EventKnown::fromJson(ev);
+            Bound *bound = new Bound();
+            *bound = Bound::fromJson(ev);
             const double tFixedFormated = DateUtils::convertToAppSettingsFormat( bound->fixedValue());
 
             const GraphCurve calibCurve = horizontalSection( qMakePair(tFixedFormated, tFixedFormated), "Bound", penColor, QBrush(brushColor));
