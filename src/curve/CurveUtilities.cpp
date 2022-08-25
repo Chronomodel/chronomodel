@@ -211,19 +211,120 @@ PosteriorMeanG conversionIDF(const std::vector<double>& vecGx, const std::vector
 
     }
 
+    auto gmaxF = sqrt(pow(res.gx.mapG.maxY(), 2.) + pow(res.gy.mapG.maxY(), 2.) + pow(res.gz.mapG.maxY(), 2.));
+    auto gFMax = asin(res.gz.mapG.maxY() / gmaxF);
+    const double gIncMax = asin(res.gz.mapG.maxY() / gmaxF);
+    const double gDecMax = atan2(res.gy.mapG.maxY(),res.gx.mapG.maxY());
+
+    auto gminF = sqrt(pow(res.gx.mapG.minY(), 2.) + pow(res.gy.mapG.minY(), 2.) + pow(res.gz.mapG.minY(), 2.));
+    auto gFMin = asin(res.gz.mapG.minY() / gminF);
+    const double gIncMin = asin(res.gz.mapG.minY() / gminF);
+    const double gDecMin = atan2(res.gy.mapG.minY(),res.gx.mapG.minY());
+
+
+    res.gx.mapG.setRangeY(gIncMin, gIncMax);
+    res.gy.mapG.setRangeY(gDecMin, gDecMax);
+    res.gz.mapG.setRangeY(gFMin, gFMax);
+
     return res;
 }
 
 void conversionIDF (PosteriorMeanG& G)
 {
-   PosteriorMeanG res = conversionIDF(G.gx.vecG, G.gy.vecG, G.gz.vecG, G.gx.vecVarG, G.gy.vecVarG, G.gz.vecVarG );
-   G.gx.vecG = std::move(res.gx.vecG);
+   //PosteriorMeanG res = conversionIDF(G.gx.vecG, G.gy.vecG, G.gz.vecG, G.gx.vecVarG, G.gy.vecVarG, G.gz.vecVarG );
+  // PosteriorMeanG res = G; // on peut utiliser le constructeur de la fonction par copie
+
+
+   const double deg = 180. / M_PI ;
+
+   //PosteriorMeanG& res = G;
+   auto& vecGx = G.gx.vecG;
+   auto& vecGy = G.gy.vecG;
+   auto& vecGz = G.gz.vecG;
+
+   auto& vecGxErr = G.gx.vecVarG;
+   auto& vecGyErr = G.gy.vecVarG;
+   auto& vecGzErr = G.gz.vecVarG;
+
+   const unsigned long n = vecGx.size();
+  /* res.gx.vecG.resize(n);
+   res.gx.vecVarG.resize(n);
+   res.gy.vecG.resize(n);
+   res.gy.vecVarG.resize(n);
+   res.gz.vecG.resize(n);
+   res.gz.vecVarG.resize(n);*/
+
+   for (unsigned long j = 0; j < n ; ++j) {
+       const double& Gx = vecGx.at(j);
+
+       const double& Gy = vecGy.at(j);
+       const double& Gz = vecGz.at(j);
+
+       const double F = sqrt(pow(Gx, 2.) + pow(Gy, 2.) + pow(Gz, 2.));
+       const double Inc = asin(Gz / F);
+       const double Dec = atan2(Gy, Gx); // angleD(Gx, Gy);
+       // U_cmt_change_repere , ligne 470
+       // sauvegarde des erreurs sur chaque paramètre  - on convertit en degrès pour I et D
+       // Calcul de la boule d'erreur moyenne par moyenne quadratique loigne 464
+      /*   ErrGx:=Tab_parametrique[iJ].ErrGx;
+         ErrGy:=Tab_parametrique[iJ].ErrGy;
+         ErrGz:=Tab_parametrique[iJ].ErrGz;
+         ErrIDF:=sqrt((sqr(ErrGx)+sqr(ErrGy)+sqr(ErrGz))/3);
+       */
+
+
+       const double ErrIDF = sqrt((pow(vecGxErr.at(j), 2.) + pow(vecGyErr.at(j), 2.) + pow(vecGzErr.at(j), 2.))/3.);
+
+       const double ErrI = ErrIDF / F ;
+       const double ErrD = ErrIDF / (F * cos(Inc)) ;
+
+      /* long double ErrI = Gz+ErrIDF ; // dans l'espace 3D, l'enveloppe supérieure
+       ErrI = abs(asin(ErrIDF/F) - Inc); // pour retrouver la différence
+
+      // long double ErrD = Gz+ErrIDF/F / (F * cos(Inc))
+      */
+       G.gx.vecG[j] = std::move(Inc * deg);
+       G.gx.vecVarG[j] = std::move(ErrI* deg);
+
+
+       G.gy.vecG[j] = std::move(Dec * deg);
+       G.gy.vecVarG[j] = std::move(ErrD* deg);
+
+       G.gz.vecG[j] = std::move(F);
+       G.gz.vecVarG[j] = std::move(ErrIDF);
+
+   }
+
+   // Conversion of the map
+   // 1 - nouveau extrenum
+   const double gzFmax = sqrt(pow(G.gx.mapG.maxY(), 2.) + pow(G.gy.mapG.maxY(), 2.) + pow(G.gz.mapG.maxY(), 2.));
+   const double gxIncMax = asin(G.gz.mapG.maxY() / gzFmax);
+   const double gyDecMax = atan2(G.gy.mapG.maxY(), G.gx.mapG.maxY());
+
+   const double gzFmin = sqrt(pow(G.gx.mapG.minY(), 2.) + pow(G.gy.mapG.minY(), 2.) + pow(G.gz.mapG.minY(), 2.));
+   const double gxIncMin = asin(G.gz.mapG.minY() / gzFmin);
+   const double gyDecMin = atan2(G.gy.mapG.minY(), G.gx.mapG.minY());
+
+
+   G.gx.mapG.setRangeY(gxIncMin * deg, gxIncMax * deg);
+   G.gy.mapG.setRangeY(gyDecMin * deg, gyDecMax * deg);
+   G.gz.mapG.setRangeY(std::move(gzFmin), std::move(gzFmax));
+
+
+
+
+   // -----------------
+/*   G.gx.vecG = std::move(res.gx.vecG);
    G.gy.vecG = std::move(res.gy.vecG);
    G.gz.vecG = std::move(res.gz.vecG);
 
    G.gx.vecVarG = std::move(res.gx.vecVarG);
    G.gy.vecVarG = std::move(res.gy.vecVarG);
    G.gz.vecVarG = std::move(res.gz.vecVarG);
+
+   G.gx.mapG = std::move(res.gx.mapG);
+   G.gy.mapG = std::move(res.gy.mapG);
+   G.gz.mapG = std::move(res.gz.mapG);*/
 }
 
 /**

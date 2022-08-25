@@ -182,7 +182,10 @@ void ModelCurve::restoreFromFile(QDataStream* in)
 
 }
 
-/* C'est le même algorithme que MCMCCurve::memo_PosteriorG()
+/* C' était le même algorithme que MCMCCurve::memo_PosteriorG()
+ */
+/** @TODO
+ *  memo_Posterior à changer, elle inclue la conversion IDF
  */
 PosteriorMeanGComposante ModelCurve::buildCurveAndMap(const int nbPtsX, const int nbPtsY, const char charComp, const bool doMap, const double mapYMin, double mapYMax)
 {
@@ -704,6 +707,44 @@ void ModelCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante
      GP /=(mSettings.mTmax - mSettings.mTmin);
      GS /= pow(mSettings.mTmax - mSettings.mTmin, 2.);
 }
+
+void ModelCurve::valeurs_G_varG_on_i(const MCMCSplineComposante& spline, double& G, double& varG, unsigned long &i)
+{
+    const double n = spline.vecThetaEvents.size();
+    if (i < 0 || i > n-1) {
+        G = 0;
+        varG = 0;
+
+    } else if (i == 0 || i == n-1) {
+        G = spline.vecG.at(i);
+        varG = spline.vecVarG.at(i);
+
+    } else if ((i > 0) && (i < n-1)) {
+
+        const double tReduce =  reduceTime(spline.vecThetaEvents.at(i)); //(t - tmin) / (tmax - tmin);
+
+        const double ti1 = reduceTime(spline.vecThetaEvents.at(i));
+        const double ti2 = reduceTime(spline.vecThetaEvents.at(i + 1));
+        const double h = ti2 - ti1;
+        const double gi1 = spline.vecG.at(i);
+
+        // ValeurG
+        G =  (ti2-tReduce)*gi1 /h;
+
+        varG = spline.vecVarG.at(i);
+
+
+
+    }
+
+}
+
+
+
+
+
+
+
 
 /**
  * @brief ModelCurve::exportMeanGComposanteToReferenceCurves

@@ -98,8 +98,11 @@ public:
     // same as void GraphView::exportReferenceCurves()
     void exportMeanGComposanteToReferenceCurves(const PosteriorMeanGComposante pMeanCompoXYZ, const QString& defaultPath, QLocale csvLocale, const QString& csvSep) const;
 
+
 private:
     void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante& spline,  double& G,  double& VarG,  double& GP,  double& GS, unsigned& i0);
+    void valeurs_G_varG_on_i(const MCMCSplineComposante& spline, double& G, double& varG, unsigned long &i);
+
     friend class MCMCLoopCurve;
     std::vector<MCMCSpline> fullRunSplineTrace(const QList<ChainSpecs>& chains);
 

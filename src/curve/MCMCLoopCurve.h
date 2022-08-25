@@ -43,7 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MCMCLoop.h"
 #include "CurveSettings.h"
 #include "CurveUtilities.h"
-#include "EventBound.h"
+//#include "EventBound.h"
 #include "Matrix.h"
 #include <vector>
 
@@ -93,7 +93,7 @@ private:
 
      inline double h_VG_Event(const Event * e, double S02_Vg);
      inline double h_VG_event_old(const Event * e);
-     double h_S02_Vg(const QList<Event *> events, double S02_Vg, const double var_Y);
+     double h_S02_Vg(const QList<Event *> events, double S02_Vg);
 
      double S02_Vg_Yx(QList<Event *> _events, SplineMatrices matricesWI, std::vector<double> vecH, const double lambdaSpline);
 
@@ -163,7 +163,7 @@ private:
     std::vector<double> calculSplineError_origin(const SplineMatrices& matrices, const SplineResults& splines, const double lambdaSpline);
     std::vector<double> calcul_spline_variance(const SplineMatrices& matrices, const SplineResults& splines, const double lambdaSpline);
 
-    double valeurG(const double t, const MCMCSplineComposante& spline, unsigned& i0);
+    double valeurG(const double t, const MCMCSplineComposante& spline, unsigned long &i0);
     double valeurErrG(const double t, const MCMCSplineComposante& spline, unsigned& i0);
     double valeurGPrime(const double t, const MCMCSplineComposante& spline, unsigned& i0);
     double valeurGSeconde(const double t, const MCMCSplineComposante& spline);
@@ -196,6 +196,8 @@ private:
     bool hasPositiveGPrimePlusConst (const MCMCSplineComposante& splineComposante, const double dy_threshold = 0.);
 
     void memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSplineComposante &splineComposante, const int realyAccepted);
+
+    void memo_PosteriorG_3D(PosteriorMeanG& postG, MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
     // Obsolete
     //std::vector<unsigned> listOfIterationsWithPositiveGPrime (const std::vector<MCMCSplineComposante> &splineTrace);
 
