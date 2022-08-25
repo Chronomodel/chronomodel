@@ -38,14 +38,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "GraphViewCurve.h"
+
 #include "GraphView.h"
 #include "ModelCurve.h"
 #include "Painting.h"
-#include "StdUtilities.h"
-#include "QtUtilities.h"
 #include "DateUtils.h"
 #include "ModelUtilities.h"
-#include "MainWindow.h"
+
 #include <QtWidgets>
 
 // Constructor / Destructor
@@ -96,7 +95,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
     mGraph->resetNothingMessage();
     mGraph->setOverArrow(GraphView::eNone);
     mGraph->setTipXLab("t");
-    mGraph->setYAxisMode(GraphView::eMinMax);
+    mGraph->setYAxisMode(GraphView::eAllTicks);
     mGraph->autoAdjustYScale(true);
     mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
     mGraph->setFormatFunctX(nullptr);

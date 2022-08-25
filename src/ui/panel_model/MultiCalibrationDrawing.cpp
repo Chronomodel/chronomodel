@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "MultiCalibrationDrawing.h"
+#include "GraphView.h"
 #include "AppSettings.h"
 #include "GraphViewResults.h"
 
