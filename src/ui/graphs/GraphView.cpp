@@ -413,21 +413,21 @@ void GraphView::setYAxisMode(AxisMode mode)
         */
         mAxisToolY.mMinMaxOnly = (mYAxisMode == eMinMax);
 
-        if (mYAxisMode==eMinMax) {
+        if (mYAxisMode == eMinMax) {
             showYAxisValues(false);
             showYAxisTicks(false);
             showYAxisSubTicks(false);
             mYAxisArrow = false;
             mAxisToolY.mShowText = true;
 
-        } else  if (mYAxisMode==eMinMaxHidden) {
+        } else  if (mYAxisMode == eMinMaxHidden) {
             showYAxisValues(false);
             showYAxisTicks(false);
             showYAxisSubTicks(false);
             mYAxisArrow = false;
             mAxisToolY.mShowText = false;
 
-        } else  if (mYAxisMode==eHidden) {
+        } else  if (mYAxisMode == eHidden) {
             showYAxisValues(false);
             showYAxisTicks(false);
             showYAxisSubTicks(false);

@@ -145,6 +145,7 @@ Matrix2D seedMatrix(const Matrix2D& matrix, size_t shift = 0);
 
 Matrix2D transpose0(const Matrix2D &matrix);
 Matrix2D transpose(const Matrix2D& matrix, const int nbDiag);
+
 Matrix2D multiMatParDiag(const Matrix2D &matrix, const std::vector<double> &diag, size_t nbBandes);
 Matrix2D multiDiagParMat(const std::vector<double>& diag, const Matrix2D& matrix, const int nbBandes);
 std::vector<double> multiMatParVec(const Matrix2D &matrix, const std::vector<double>& vec, const int nbBandes);
@@ -156,6 +157,10 @@ Matrix2D multiConstParMat(const Matrix2D & matrix, const double c, const int nbB
 
 Matrix2D multiMatParMat0(const Matrix2D &matrix1, const Matrix2D &matrix2);
 Matrix2D multiMatParMat(const Matrix2D& matrix1, const Matrix2D& matrix2, const int nbBandes1, const int nbBandes2);
+
+Matrix2D multiplyMatrix_Naive(const Matrix2D& a, const Matrix2D& b);
+Matrix2D multiplyMatrix_Winograd(const Matrix2D &a, const Matrix2D &b);
+Matrix2D multiplyMatrixBanded_Winograd(const Matrix2D &a, const Matrix2D &b,  int bandwidth = 0);
 
 Matrix2D inverseMatSym0(const Matrix2D& matrix, const int shift = 0);
 Matrix2D inverseMatSym(const Matrix2D & matrix1, const std::vector<double>& matrix2, const int nbBandes, const int shift);
@@ -178,6 +183,9 @@ std::pair<Matrix2D, std::vector<double> > choleskyLDLT_Dsup0(const Matrix2D& mat
 std::pair<Matrix2D, std::vector< double> > decompositionCholesky(const Matrix2D &matrix, const int nbBandes, const int shift);
 
 std::pair<Matrix2D, Matrix2D > decompositionLU0(const Matrix2D &A);
+
+std::pair<Matrix2D, Matrix2D > decompositionQR(const Matrix2D& A);
+std::pair<Matrix2D, Matrix2D> householderQR(Matrix2D& A);
 
 std::vector< double> resolutionSystemeLineaireCholesky(const Matrix2D & matL, const std::vector< double>& matD, const std::vector< double>& vecQtY);
 

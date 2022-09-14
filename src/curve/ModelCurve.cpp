@@ -39,7 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ModelCurve.h"
 #include "ModelUtilities.h"
-#include "Project.h"
+//#include "Project.h"
 #include "QtUtilities.h"
 #include <MainWindow.h>
 
@@ -258,24 +258,20 @@ PosteriorMeanGComposante ModelCurve::buildCurveAndMap(const int nbPtsX, const in
     std::vector<double>& vecVarErrG = compoG.vecVarErrG;
 
 
-    // inter derivate variance
-    //std::vector<double>::iterator itVecVarianceGP = postGCompo.vecVarGP.begin();
-
     double t, g, gp, gs, varG, stdG;
     g = 0.;
     gp = 0;
     varG = 0;
     gs = 0;
 
-    //double n = mSplinesTrace.size();// realyAccepted;
-    double  prevMeanG; //, prevMeanGP;
+    double  prevMeanG;
 
-    const double k = 3.; // Le nombre de fois sigma G, pour le calcul de la densité
+    const double k = 3.; // Le nombre de fois sigma G, pour le calcul de la densité sudr la map
     double a, b, surfG;
 
     int  idxYErrMin, idxYErrMax;
 
-    // refaire un vecteur vers les composantes X, Y ou Z utile
+    // Refaire un vecteur pour les composantes X, Y ou Z utile
 
     auto runTrace = fullRunSplineTrace(mChains);
     std::vector<MCMCSplineComposante> traceCompoXYZ (runTrace.size());
@@ -312,13 +308,13 @@ PosteriorMeanGComposante ModelCurve::buildCurveAndMap(const int nbPtsX, const in
         itVecVarianceG = compoG.vecVarianceG.begin();
         itVecVarErrG = compoG.vecVarErrG.begin();
 
-        // 3 - calcul pour la composante
+        // 3 - Calcul pour la composante
         unsigned i0 = 0; // tIdx étant croissant, i0 permet de faire la recherche à l'indice du temps précedent
         for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
             t = (double)idxT * stepT + mSettings.mTmin ;
             valeurs_G_VarG_GP_GS(t, splineXYZ, g, varG, gp, gs, i0);
 
-            // -- calcul Mean
+            // -- Calcul Mean
             prevMeanG = *itVecG;
             *itVecG +=  (g - prevMeanG)/n;
 
@@ -336,14 +332,14 @@ PosteriorMeanGComposante ModelCurve::buildCurveAndMap(const int nbPtsX, const in
             ++itVecVarErrG;
 
 
-            // -- calcul map
+            // -- Calcul map
             if (doMap) {
                 stdG = sqrt(varG);
 
-                // ajout densité erreur sur Y
+                // Ajout densité erreur sur Y
                 /* il faut utiliser un pas de grille et le coefficient dans la grille dans l'intervalle [a,b] pour N(mu, sigma) est égale à la différence 1/2*(erf((b-mu)/(sigma*sqrt(2)) - erf((a-mu)/(sigma*sqrt(2))
-             * https://en.wikipedia.org/wiki/Error_function
-             */
+                 * https://en.wikipedia.org/wiki/Error_function
+                 */
                 idxYErrMin = inRange( 0, int((g - k*stdG - ymin) / stepY), nbPtsY-1);
                 idxYErrMax = inRange( 0, int((g + k*stdG - ymin) / stepY), nbPtsY-1);
 

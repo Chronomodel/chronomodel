@@ -471,10 +471,13 @@ void Model::generateResultsLog()
     log += "<hr>";
     for (const auto& pPhase : mPhases) {
         log += ModelUtilities::phaseResultsHTML(pPhase);
-        /** @todo delete repeted word phase */
-         QString tempoStr = ModelUtilities::tempoResultsHTML(pPhase);
+        log += "<br>";
+        log += line(textBold(textPurple(QObject::tr("Duration (posterior distrib.)"))));
+        log += line(textPurple(pPhase->mDuration.resultsString("<br>", QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr, false)));
+
+       /*  QString tempoStr = ModelUtilities::tempoResultsHTML(pPhase);
          tempoStr.remove(1, 41);
-         log += tempoStr;
+         log += tempoStr;*/
          log += "<hr>";
     }
 
@@ -1345,6 +1348,8 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
             phase->mActivityValueStack["t_max"] = TValueStack("t_max", mSettings.mTmax);
             phase->mActivityValueStack["t_min_R"] = TValueStack("t_min_R", mSettings.mTmin);
             phase->mActivityValueStack["t_max_R"] = TValueStack("t_max_R", mSettings.mTmax);
+            phase->mActivityValueStack["minQ25"] = TValueStack("minQ25", mSettings.mTmin);
+            phase->mActivityValueStack["maxQ975"] = TValueStack("maxQ975", mSettings.mTmax);
             continue;
         }
 
@@ -1402,7 +1407,13 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
             phase->mActivityValueStack["t_max"] = TValueStack("t_max", t_max_data);
             phase->mActivityValueStack["t_min_R"] = TValueStack("t_min_R", 0);
             phase->mActivityValueStack["t_max_R"] = TValueStack("t_max_R", 0);
+            phase->mActivityValueStack["minQ25"] = TValueStack("minQ25", 0);
+            phase->mActivityValueStack["maxQ975"] = TValueStack("maxQ975", 0);
             continue;
+
+        } else {
+            phase->mActivityValueStack["minQ25"] = TValueStack("minQ25", t_min_R);
+            phase->mActivityValueStack["maxQ975"] = TValueStack("minQ975", t_max_R);
         }
 
 

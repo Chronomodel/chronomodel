@@ -1,4 +1,5 @@
 #include "Matrix.h"
+#include <iostream>
 #include <vector>
 #include <cmath>
 
@@ -48,17 +49,13 @@ QDataStream &operator>>( QDataStream &stream, CurveMap &map )
 
     unsigned long siz = map._column * map._row;
 
-   /* if (map.data.size() > 0)
-        map.data.clear();
-    else */
     map.data = std::valarray<double>(siz);
 
-    //map.data.reserve(siz);
 
     double v;
     for (unsigned long i = 0; i < siz; ++i) {
         stream >> v;
-        map.data[i] = v ; //.push_back(v);
+        map.data[i] = v ;
     }
 
     return stream;
@@ -69,10 +66,28 @@ Matrix2D initMatrix2D(size_t rows, size_t cols)
 {
    return std::valarray(std::valarray<double>(cols), rows) ;
 }
-/*
-Matrix::Matrix()
-{
 
+#pragma mark Usefull to debug
+void showMatrix(const Matrix2D&  m, const std::string& str)
+{
+  std::cout << str << "\n";
+  for(unsigned long i = 0; i < m.size(); i++) {
+    for (unsigned long j = 0; j < m[0].size(); j++) {
+      printf(" %8.5f", m[i][j]);
+    }
+    printf("\n");
+  }
+  printf("\n");
 }
 
-*/
+void showVector(const std::vector<double>&  m, const std::string& str)
+{
+ std::cout << str << "\n";
+ for(unsigned long i = 0; i < m.size(); i++) {
+     printf(" %8.5f", m[i]);
+   printf("\n");
+ }
+ printf("\n");
+}
+
+

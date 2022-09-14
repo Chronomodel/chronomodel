@@ -172,8 +172,8 @@ private:
     //void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante& spline,  double& G,  double& VarG,  double& GP,  double& GS, unsigned& i0);
 
 
-    double initLambdaSpline();
-    double initLambdaSplineByCV();
+   // double initLambdaSpline();
+   // double initLambdaSplineByCV();
     double initLambdaSplineBy_h_YWI_AY();
 
     double cross_validation (const SplineMatrices& matrices, const std::vector<double> &vecH, const double lambdaSpline);

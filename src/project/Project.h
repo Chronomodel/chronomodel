@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef PROJECT_H
 #define PROJECT_H
 
-#include "AppSettings.h"
+//#include "AppSettings.h"
 #include "ProjectSettings.h"
 #include "MCMCSettings.h"
 #include "MCMCLoopMain.h"
@@ -69,7 +69,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 class Date;
 class Event;
-class EventKnown;
+//class EventKnown;
 class Phase;
 class EventConstraint;
 class PhaseConstraint;

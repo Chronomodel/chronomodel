@@ -2080,11 +2080,16 @@ void ResultsView::createByCurveGraph()
 
                     }
 
-                    for (int j = 0 ; j< dataPerEvent[i]; j++) {
-                        dataPts[iDataPts].Ymin = eventsPts.at(iEventPts).Ymin;
-                        dataPts[iDataPts].Ymax = eventsPts.at(iEventPts).Ymax;
-                        iDataPts++;
+                    try {
+                        for (int j = 0 ; j< dataPerEvent[i]; j++) {
+                            dataPts[iDataPts].Ymin = eventsPts.at(iEventPts).Ymin;
+                            dataPts[iDataPts].Ymax = eventsPts.at(iEventPts).Ymax;
+                            iDataPts++;
+                        }
+                    } catch (...) {
+                        qDebug() << "ResultView::createByCurveGraph pg graphY";
                     }
+
                     ++i;
                 }
                 graphY->setEventsPoints(eventsPts);

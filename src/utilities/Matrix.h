@@ -57,20 +57,8 @@ Matrix2D initMatrix2D(size_t rows, size_t cols);
 QDataStream &operator<<( QDataStream& stream, const CurveMap &map );
 QDataStream &operator>>( QDataStream& stream, CurveMap &map );
 
+void showMatrix(const Matrix2D&  m, const std::string& str="");
 
-/*
-class Matrix
-{
-public:
-    Matrix();
-   // Matrix(std::size_t N);
-    //double& at(std::size_t i, std::size_t j);
-    //double& operator[](std::size_t i, std::size_t j);
 
-    virtual ~Matrix();
-private:
-    std::size_t N;
-    std::vector<double> data;
-};
-*/
+void showVector(const std::vector<double>&  m, const std::string& str="");
 #endif // MATRIX_H

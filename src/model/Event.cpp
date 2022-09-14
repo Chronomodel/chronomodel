@@ -38,15 +38,17 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "Event.h"
+
+
 #include "Date.h"
-//#include "Phase.h"
+#include "Phase.h"
 
 #include "EventConstraint.h"
 #include "PhaseConstraint.h"
 #include "Generator.h"
-#include "StdUtilities.h"
+//#include "StdUtilities.h"
 #include "Bound.h"
-#include "ModelUtilities.h"
+//#include "ModelUtilities.h"
 #include "QtUtilities.h"
 
 #include <QString>
@@ -803,10 +805,11 @@ double Event::getThetaMin(double defaultValue)
             maxThetaBwd = std::max(maxThetaBwd, thetaf);
     }
 
-    // Le fait appartient à une ou plusieurs phases.
-    // Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
-    // Il faut s'assurer d'être au-dessus du plus grand theta de la phase moins la durée
-    // (on utilise la valeur courante de la durée pour cela puisqu'elle est échantillonnée)
+    /* Le fait appartient à une ou plusieurs phases.
+     * Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
+     * Il faut s'assurer d'être au-dessus du plus grand theta de la phase moins la durée
+     * (on utilise la valeur courante de la durée pour cela puisqu'elle est échantillonnée)
+     */
     double min3 = defaultValue;
 
     for (auto&& phase : mPhases) {
@@ -846,10 +849,11 @@ double Event::getThetaMax(double defaultValue)
             maxThetaFwd = std::min(maxThetaFwd, cFwd->mEventTo->mTheta.mX);
     }
 
-    // Le fait appartient à une ou plusieurs phases.
-    // Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
-    // Il faut s'assurer d'être en-dessous du plus petit theta de la phase plus la durée
-    // (on utilise la valeur courante de la durée pour cela puisqu'elle est échantillonnée)
+    /* Le fait appartient à une ou plusieurs phases.
+     * Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
+     * Il faut s'assurer d'être en-dessous du plus petit theta de la phase plus la durée
+     * (on utilise la valeur courante de la durée pour cela puisqu'elle est échantillonnée)
+     */
     double max3 = defaultValue;
     for (auto&& phase : mPhases) {
         if (phase->mTauType != Phase::eTauUnknown) {
@@ -906,7 +910,6 @@ void Event::updateTheta(const double& tmin, const double& tmax)
         {
             try{
                 const double theta = Generator::gaussByDoubleExp(theta_avg, sigma, min, max);
-                //qDebug() << "Event::updateTheta() case eDoubleExp rapport=1 ";
                 mTheta.tryUpdate(theta, 1.);
             }
             catch(QString error){
@@ -939,7 +942,6 @@ void Event::updateTheta(const double& tmin, const double& tmax)
             if (theta >= min && theta <= max)
                 rapport = exp((-0.5/(sigma*sigma)) * (pow(theta - theta_avg, 2.) - pow(mTheta.mX - theta_avg, 2.)));
 
-            //qDebug() << "Event::updateTheta() case eMHAdaptGauss rapport="<<rapport;
             mTheta.tryUpdate(theta, rapport);
             break;
         }
@@ -972,19 +974,18 @@ void Event::updateW()
 {
     try {
 #ifdef DEBUG
-        if ((mVG.mX + mSy * mSy) < 1e-100) {
-            qDebug()<< "in Event::updateW mVG.mX + mSy * mSy = 0 : ";
+        if ((mVG.mX + mSy * mSy) < 1e-20) {
+            qDebug()<< "in Event::updateW mVG.mX + mSy * mSy < 1e-20 : ";
+        } else         if (mW < 1e-20) {
+            qDebug()<< "in Event::updateW mW < 1e-20 : "<< mW;
+        } else if (mW > 1e+15) {
+            qDebug()<< "in Event::updateW mW > 1e+10 : "<< mW;
         }
  #endif
         mW = 1. / (mVG.mX + mSy * mSy);
 
-#ifdef DEBUG
-        if (mW < 1e-100) {
-            qDebug()<< "in Event::updateW mW < 1e-100 : "<< mW;
-        }
-#endif
     }  catch (...) {
-        qWarning() <<"updateW() mW = 0";
+        qWarning() <<"[Event] updateW() mW = 0";
     }
 
 }

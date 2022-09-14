@@ -558,7 +558,7 @@ void EventItem::paintBoxCurveParameter (QPainter* painter, QRectF rectBox, Curve
 
             text1 += "X = ";
             text1 += QLocale().toString (mData.value(STATE_EVENT_X_INC_DEPTH).toDouble());
-            text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble());
+            text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble(), 'g', 3);
             painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
 
             QString text2 = "Y = ";
@@ -570,7 +570,7 @@ void EventItem::paintBoxCurveParameter (QPainter* painter, QRectF rectBox, Curve
         } else if ( cs.mProcessType == CurveSettings::eProcessTypeSpherical) {
             QString text1 =  QObject::tr("Inc") + " = ";
             text1 += QLocale().toString (mData.value(STATE_EVENT_X_INC_DEPTH).toDouble());
-            text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble());
+            text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble(), 'g', 3);
 
             text1 += " "+ QObject::tr("Dec") + " = ";
             text1 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
@@ -580,7 +580,7 @@ void EventItem::paintBoxCurveParameter (QPainter* painter, QRectF rectBox, Curve
         } else if ( cs.mProcessType == CurveSettings::eProcessTypeVector) {
             QString text1 =  QObject::tr("Inc") + " = ";
             text1 += QLocale().toString (mData.value(STATE_EVENT_X_INC_DEPTH).toDouble());
-            text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble());
+            text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble(), 'g', 3);
 
             text1 += " "+ QObject::tr("Dec") + " = ";
             text1 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
@@ -612,7 +612,7 @@ void EventItem::paintBoxCurveParameter (QPainter* painter, QRectF rectBox, Curve
             } else {
                     QString text1 =  QObject::tr("Inc") + " = ";
                     text1 += QLocale().toString (mData.value(STATE_EVENT_X_INC_DEPTH).toDouble());
-                    text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble());
+                    text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble(), 'g', 3);
 
                     if (cs.mVariableType == CurveSettings::eVariableTypeDeclination) {
                         text1 += " "+ QObject::tr("Dec") + " = ";
