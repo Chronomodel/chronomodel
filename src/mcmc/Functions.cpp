@@ -1455,8 +1455,9 @@ Matrix2D addMatEtMat0(const Matrix2D& matrix1, const Matrix2D& matrix2)
          for (int j = 0; j < dim; ++j) {
             result_i[j] +=  matrix2_i[j];
         }
+        i++;
     }
-    i++;
+
     return result;
 }
 
@@ -2139,12 +2140,12 @@ std::pair<Matrix2D, std::vector<double>> decompositionCholesky(const Matrix2D& m
                 matD[i] = matrix[i][i] - sum; // doit être positif
 #ifdef DEBUG
                 if (matD[i] <= 0) {
-                    qDebug() << "Function::decompositionCholesky : matD <0 change to 0"<< matD[i];
+                    qDebug() << "[Function] decompositionCholesky : matD ="<< matD[i]<< " <=0 change to 0";
                     matD[i] = 0;
                 }
-                if (matD[i] >= 1.E12) {
-                    qDebug() << "Function::decompositionCholesky : matD[i] >= 1.E12  "<<i << matD[i];
-                   // matD[i] = 1.E10;
+                if (matD[i] >= 1.E20) {
+                    qDebug() << "[Function] decompositionCholesky : matD[i] ="<< matD[i]<< " >= 1.E+20 ";
+
                 }
 #endif
             }
@@ -2164,7 +2165,7 @@ std::pair<Matrix2D, std::vector<double>> decompositionCholesky(const Matrix2D& m
             // 0 0 0 0 0
 
         } catch(...) {
-            qDebug() << "Function::decompositionCholesky : Caught Exception!\n";
+            qDebug() << "[Function] decompositionCholesky : Caught Exception!\n";
         }
     }
 
@@ -2224,8 +2225,8 @@ Matrix2D Strassen::sub(const Matrix2D &  A, const Matrix2D& B)
 
     const std::valarray<double>* ai = begin(A);
     const std::valarray<double>* bi = begin(B);
-    const double* aij;// = begin(*ai);
-    const double* bij;// = begin(*bi);
+    const double* aij;
+    const double* bij;
 
     for ( ; ai != end(A); ++ai, ++bi) {
         cij = begin(*ci);
@@ -2256,8 +2257,8 @@ Matrix2D Strassen::add(const Matrix2D& A, const Matrix2D& B)
 
    const std::valarray<double>* ai = begin(A);
    const std::valarray<double>* bi = begin(B);
-   const double* aij;// = begin(*ai);
-   const double* bij;// = begin(*bi);
+   const double* aij;
+   const double* bij;
 
    for ( ; ai != end(A); ++ai, ++bi) {
        cij = begin(*ci);
@@ -2311,7 +2312,7 @@ Matrix2D Strassen::multiply(const Matrix2D& A, const Matrix2D& B)
         R[0][0] = A[0][0] * B[0][0];
 
      } else {
-        // controle de la puissance de n, n doit être une puissance de 2
+        // Controle de la puissance de n, n doit être une puissance de 2
         int nP2;
 
         Matrix2D A2;

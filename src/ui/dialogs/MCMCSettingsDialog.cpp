@@ -357,9 +357,15 @@ void MCMCSettingsDialog::inputControl()
     }
 
     settings.mIterPerAquisition = mNumIterEdit->text().toInt(&ok);
+
     if (isValided == true && (ok == false || settings.mIterPerAquisition < 50)) {
         errorMessage = tr("The number of the iteration in one run must be bigger than 50");
+
+#ifndef DEBUG
         isValided = false;
+#else
+        errorMessage = tr("But this is DEBUG ...");
+#endif
     }
 
     settings.mThinningInterval = mDownSamplingEdit->text().toInt(&ok);
@@ -374,8 +380,11 @@ void MCMCSettingsDialog::inputControl()
 
         else
             errorMessage = tr("The thinning interval in one run must be smaller than %1").arg(mLoc.toString(static_cast<unsigned int>(floor(settings.mIterPerAquisition/40))));
-
+#ifndef DEBUG
         isValided = false;
+#else
+        errorMessage = tr("But this is DEBUG ...");
+#endif
      }
 
     settings.mMixingLevel = mLoc.toDouble(mLevelEdit->text(), &ok);

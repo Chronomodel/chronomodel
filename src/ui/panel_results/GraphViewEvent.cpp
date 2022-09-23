@@ -68,9 +68,8 @@ GraphViewEvent::~GraphViewEvent()
 void GraphViewEvent::setEvent(Event* event)
 {
     Q_ASSERT(event);
-
     mEvent = event;
-    QString eventTitle = ( (mEvent->mType == Event::eDefault) ? tr("Event : %1").arg(mEvent->mName) : tr("Bound : %1").arg(mEvent->mName) ) ;
+    //QString eventTitle = ( (mEvent->mType == Event::eDefault) ? tr("Event : %1").arg(mEvent->mName) : tr("Bound : %1").arg(mEvent->mName) ) ;
     //setItemTitle(eventTitle);
     setItemColor(mEvent->mColor);
     update();
@@ -140,7 +139,10 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
         mTitle = ((mEvent->type()==Event::eBound) ? tr("Bound") : tr("Event")) + " : " + mEvent->mName;
 
     } else if (mCurrentVariableList.contains(eSigma)) {
-        mTitle = ((mEvent->type() == Event::eBound) ? tr("Bound") : tr("Std Compilation")) + " : " + mEvent->mName;
+        if (typeGraph == ePostDistrib)
+            mTitle = ((mEvent->type() == Event::eBound) ? tr("Bound") : tr("Std Compilation")) + " : " + mEvent->mName;
+        else
+            mTitle = ((mEvent->type()==Event::eBound) ? tr("Bound") : tr("Event")) + " : " + mEvent->mName;
 
     } else if (mCurrentVariableList.contains(eVg)) {
         mTitle = tr("Std G") + " : " + mEvent->mName;
@@ -161,7 +163,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
          *  - Post Distrib Chain i
          * ------------------------------------------------
          */
-        if (mCurrentVariableList.contains(eThetaEvent)) {
+        if (mCurrentVariableList.contains(eThetaEvent)) {  
             mGraph->setOverArrow(GraphView::eBothOverflow);
             if (isFixedBound) {
                 GraphCurve curveLineBound;
@@ -303,6 +305,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
 
         } else if (mCurrentVariableList.contains(eVg)) {
             generateTraceCurves(mChains, &(mEvent->mVG));
+
         }
     }
     // ----------------------------------------------------------------------
@@ -336,7 +339,6 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
 
     } else {
         mTitle = ((mEvent->type()==Event::eBound) ? tr("Bound : %1").arg(mEvent->mName) : tr("Event : %1").arg(mEvent->mName));
-        mGraph->resetNothingMessage();
     }
 
 }
@@ -436,7 +438,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setTipYLab("t");
 
             mGraph->setYAxisMode(GraphView::eMinMaxHidden);
-            mGraph->showInfos(true);
+            mGraph->showInfos(!isFixedBound);
             mGraph->autoAdjustYScale(true);
 
     }

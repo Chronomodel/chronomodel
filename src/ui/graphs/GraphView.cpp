@@ -305,10 +305,11 @@ void GraphView::zoomX(const type_data min, const type_data max)
         mAxisToolX.updateValues(width(), 10., min, max);
         
         adjustYScale();
-        
+        // qDebug()<<  "[GraphView] zoomX"   <<  mMinY<< " "<<mMaxY;
         repaintGraph(true);
+
     }
-    update();
+
 }
 
 void GraphView::changeXScaleDivision (const Scale &sc)
@@ -330,7 +331,7 @@ void GraphView::changeXScaleDivision (const double &major, const int & minor)
 void GraphView::setBackgroundColor(const QColor &color)
 {
     mBackgroundColor = color;
-    repaintGraph(true);
+   // repaintGraph(true);
 }
 
 QColor GraphView::getBackgroundColor() const
@@ -361,13 +362,13 @@ void GraphView::showInfos(bool show)
 void GraphView::setNothingMessage(const QString& message)
 {
     mNothingMessage = message;
-    repaintGraph(true);
+   // repaintGraph(true);
 }
 
 void GraphView::resetNothingMessage()
 {
     mNothingMessage = tr("Nothing to display");
-    repaintGraph(true);
+  //  repaintGraph(true);
 }
 /*
 void GraphView::setRendering(GraphView::Rendering render)
@@ -381,38 +382,77 @@ GraphView::Rendering GraphView::getRendering()
     return mRendering;
 }
 */
-void GraphView::showXAxisLine(bool show)     {if(mXAxisLine != show){mXAxisLine = show; repaintGraph(true);} }
-void GraphView::showXAxisArrow(bool show)    {if(mXAxisArrow != show){mXAxisArrow = show; repaintGraph(true);} }
-void GraphView::showXAxisTicks(bool show)    {if(mXAxisTicks != show){mXAxisTicks = show; repaintGraph(true);} }
-void GraphView::showXAxisSubTicks(bool show) {if(mXAxisSubTicks != show){mXAxisSubTicks = show; repaintGraph(true);} }
-void GraphView::showXAxisValues(bool show)   {if(mXAxisValues != show){mXAxisValues = show; repaintGraph(true);} }
+/*
+void GraphView::showXAxisLine(bool show)     { if (mXAxisLine != show) {mXAxisLine = show; repaintGraph(true);} }
+void GraphView::showXAxisArrow(bool show)    { if (mXAxisArrow != show) {mXAxisArrow = show; repaintGraph(true);} }
+void GraphView::showXAxisTicks(bool show)    { if (mXAxisTicks != show) {mXAxisTicks = show; repaintGraph(true);} }
+void GraphView::showXAxisSubTicks(bool show) { if (mXAxisSubTicks != show) {mXAxisSubTicks = show; repaintGraph(true);} }
+void GraphView::showXAxisValues(bool show)   { if (mXAxisValues != show) {mXAxisValues = show; repaintGraph(true);} }
 
-void GraphView::showYAxisLine(bool show)     {if(mYAxisLine != show){mYAxisLine = show; repaintGraph(true);} }
-void GraphView::showYAxisArrow(bool show)    {if(mYAxisArrow != show){mYAxisArrow = show; repaintGraph(true);} }
-void GraphView::showYAxisTicks(bool show)    {if(mYAxisTicks != show){mYAxisTicks = show; repaintGraph(true);} }
-void GraphView::showYAxisSubTicks(bool show) {if(mYAxisSubTicks != show){mYAxisSubTicks = show; repaintGraph(true);} }
-void GraphView::showYAxisValues(bool show)   {if(mYAxisValues != show){mYAxisValues = show; repaintGraph(true);} }
+void GraphView::showYAxisLine(bool show)     { if (mYAxisLine != show) {mYAxisLine = show; repaintGraph(true);} }
+void GraphView::showYAxisArrow(bool show)    { if (mYAxisArrow != show) {mYAxisArrow = show; repaintGraph(true);} }
+void GraphView::showYAxisTicks(bool show)    { if (mYAxisTicks != show) {mYAxisTicks = show; repaintGraph(true);} }
+void GraphView::showYAxisSubTicks(bool show) { if (mYAxisSubTicks != show) {mYAxisSubTicks = show; repaintGraph(true);} }
+void GraphView::showYAxisValues(bool show)   { if (mYAxisValues != show) {mYAxisValues = show; repaintGraph(true);} }
+*/
+
+// Just Setter no action
+void GraphView::showXAxisLine(bool show)     { mXAxisLine = show;}
+void GraphView::showXAxisArrow(bool show)    { mXAxisArrow = show;}
+void GraphView::showXAxisTicks(bool show)    { mXAxisTicks = show;}
+void GraphView::showXAxisSubTicks(bool show) { mXAxisSubTicks = show;}
+void GraphView::showXAxisValues(bool show)   { mXAxisValues = show;}
+
+void GraphView::showYAxisLine(bool show)     { mYAxisLine = show;}
+void GraphView::showYAxisArrow(bool show)    { mYAxisArrow = show;}
+void GraphView::showYAxisTicks(bool show)    { mYAxisTicks = show;}
+void GraphView::showYAxisSubTicks(bool show) { mYAxisSubTicks = show;}
+void GraphView::showYAxisValues(bool show)   { mYAxisValues = show;}
 
 
 void GraphView::setXAxisMode(AxisMode mode)
 {
-    if (mXAxisMode != mode) {
-        mXAxisMode = mode;
+   mXAxisMode = mode;
         mAxisToolX.mShowText = (mXAxisMode!=eHidden);
-       // repaintGraph(true); //not necessary ?
-    }
 }
 
 void GraphView::setYAxisMode(AxisMode mode)
 {
     if (mYAxisMode != mode) {
         mYAxisMode = mode;
-      /*  showYAxisValues(true);
-        showYAxisTicks(true);
-        showYAxisSubTicks(true);
-        */
-        mAxisToolY.mMinMaxOnly = (mYAxisMode == eMinMax);
 
+        mAxisToolY.mMinMaxOnly = (mYAxisMode == eMinMax);
+        switch (mYAxisMode) {
+        case eMinMax:
+            showYAxisValues(false);
+            showYAxisTicks(false);
+            showYAxisSubTicks(false);
+            mYAxisArrow = false;
+            mAxisToolY.mShowText = true;
+            break;
+        case eMinMaxHidden:
+            showYAxisValues(false);
+            showYAxisTicks(false);
+            showYAxisSubTicks(false);
+            mYAxisArrow = false;
+            mAxisToolY.mShowText = false;
+            break;
+        case eHidden:
+            showYAxisValues(false);
+            showYAxisTicks(false);
+            showYAxisSubTicks(false);
+            mYAxisArrow = false;
+            break;
+        default:
+            showYAxisValues(true);
+            showYAxisTicks(true);
+            showYAxisSubTicks(true);
+            mYAxisArrow = false;
+            mAxisToolY.mShowText = false;
+            break;
+        }
+
+  /*
         if (mYAxisMode == eMinMax) {
             showYAxisValues(false);
             showYAxisTicks(false);
@@ -440,7 +480,7 @@ void GraphView::setYAxisMode(AxisMode mode)
             mYAxisArrow = false;
             mAxisToolY.mShowText = false;
         }
-     //   repaintGraph(true); //not necessary ?
+ */
     }
 }
 
@@ -451,66 +491,8 @@ void GraphView::setYAxisMode(AxisMode mode)
 void GraphView::autoAdjustYScale(bool active)
 {
     mAutoAdjustYScale = active;
-  //  if (active)
- //       mAxisToolY.mShowText = false;
 
-  //  repaintGraph(true);//not necessary ?
 }
-/**
- * @brief Adjust the Y axis with 0 for the minimun and find the Maximum value in the visible curve
- */
-/*void GraphView::adjustYToMaxValue(const qreal& marginProp)
-{
-    type_data yMax(0.);
-
-    for (auto c :mCurves) {
-        if (c.mVisible &&
-            !c.mIsHorizontalLine &&
-            !c.mIsHorizontalSections &&
-            !c.mIsVerticalLine &&
-            !c.mIsTopLineSections &&
-            !c.mIsVertical
-                ) {
-
-                if (!c.mUseVectorData)
-                    yMax = qMax(yMax, map_max_value(c.mData));
-
-                else if (c.mUseVectorData)
-                    yMax = qMax(yMax, vector_max_value(c.mDataVector));
-
-        }
-    }
-    setRangeY(0, yMax * (1. + marginProp));
-}
-
-void GraphView::adjustYToMinMaxValue()
-{
-    type_data yMin (0.);
-    type_data yMax (0.);
-
-    QList<GraphCurve>::const_iterator iter = mCurves.cbegin();
-    bool firstFound = false;
-    while (iter != mCurves.cend()) {
-        if (iter->mVisible) {
-            if (iter->mUseVectorData) {
-                yMin = firstFound ? qMin(yMin, vector_min_value(iter->mDataVector)) : vector_min_value(iter->mDataVector);
-                yMax = firstFound ? qMax(yMax, vector_max_value(iter->mDataVector)) : vector_max_value(iter->mDataVector);
-
-            } else if (!iter->mUseVectorData &&
-                    !iter->mIsHorizontalLine &&
-                    !iter->mIsHorizontalSections &&
-                    !iter->mIsVerticalLine &&
-                    !iter->mIsVertical) {
-                yMin = firstFound ? qMin(yMin, map_min_value(iter->mData)) : map_min_value(iter->mData);
-                yMax = firstFound ? qMax(yMax, map_max_value(iter->mData) ): map_max_value(iter->mData);
-            }
-            firstFound = true;
-        }
-        ++iter;
-    }
-    setRangeY(yMin, yMax);
-
-}*/
 
 void GraphView::setGraphFont(const QFont& font)
 {
@@ -610,9 +592,9 @@ void GraphView::setCurveVisible(const QString& name, const bool visible)
 
 GraphCurve* GraphView::getCurve(const QString& name)
 {
-    for (auto &&cu : mCurves)
-        if (cu.mName == name)
-            return &cu;
+    for (auto&& curve : mCurves)
+        if (curve.mName == name)
+            return &curve;
 
     return nullptr;
 }
@@ -630,13 +612,13 @@ int GraphView::numCurves() const
 void GraphView::addZone(const GraphZone& zone)
 {
     mZones.append(zone);
-    repaintGraph(false);
+   // repaintGraph(false);
 }
 
 void GraphView::removeAllZones()
 {
     mZones.clear();
-    repaintGraph(false);
+   // repaintGraph(false);
 }
 
 //  Mouse events & Tool Tip
@@ -753,7 +735,7 @@ void GraphView::updateGraphSize(int w, int h)
 
 void GraphView::repaintGraph(const bool aAlsoPaintBackground)
 {
-    if (aAlsoPaintBackground){
+    if (aAlsoPaintBackground) {
         mBufferBack = QPixmap();
     }
     update();

@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ProjectSettings.h"
 #include "MCMCSettings.h"
-#include "MCMCLoop.h"
+//#include "MCMCLoop.h"
 #include "GraphView.h"
 
 #include <QWidget>
@@ -263,8 +263,8 @@ public slots:
     void imageToClipboard();
     void resultsToClipboard();
     void saveGraphData() const; // must be accessible by ResultsView
-    void changeXScaleDivision(const Scale &sc) {mGraph->changeXScaleDivision(sc); update();}
-    void changeXScaleDivision(const double &major, const int &minor) {mGraph->changeXScaleDivision(major, minor); update();}
+    void changeXScaleDivision(const Scale &sc) {mGraph->changeXScaleDivision(sc);};//; update();}
+    void changeXScaleDivision(const double &major, const int &minor) {mGraph->changeXScaleDivision(major, minor);}; //update();}
 
 protected:
 

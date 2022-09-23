@@ -864,8 +864,30 @@ void MainWindow::rebuildExportCurve()
     if (!mProject || !mProject->isCurve() || !mProject->mModel)
         return;
 
-   RebuidCurveDialog qDialog = RebuidCurveDialog();
+    QStringList compoList;
+    ModelCurve* curveModel = dynamic_cast<ModelCurve*>(mProject->mModel);
+    switch (curveModel->mCurveSettings.mProcessType) {
+    case CurveSettings::eProcessTypeUnivarie:
+        compoList.append("X");
+        break;
+    case CurveSettings::eProcessTypeSpherical:
+        compoList.append({"X", "Y"});
+        break;
+    case CurveSettings::eProcessType2D:
+        compoList.append({"X", "Y"});
+        break;
+    case CurveSettings::eProcessTypeVector:
+        compoList.append({"X", "Y", "Z"});
+        break;
+    case CurveSettings::eProcessType3D:
+        compoList.append({"X", "Y", "Z"});
+        break;
+    default:
+        break;
+    }
 
+   RebuidCurveDialog qDialog = RebuidCurveDialog();
+   qDialog.setCompo(compoList);
 
     if (qDialog.exec() && (qDialog.doCurve() || qDialog.doMap())) {
 
@@ -875,7 +897,9 @@ void MainWindow::rebuildExportCurve()
        QLocale csvLocale = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
 
        ModelCurve* modelCurve = static_cast<ModelCurve*>(mProject->mModel);
-       auto postCompoG = modelCurve->buildCurveAndMap(XGrid, YGrid, 'X', qDialog.doMap(), qDialog.getYMin(), qDialog.getYMax());
+       QString compo = qDialog.compo();
+       const char chCompo = compo.toStdString().front();
+       auto postCompoG = modelCurve->buildCurveAndMap(XGrid, YGrid, chCompo, qDialog.doMap(), qDialog.getYMin(), qDialog.getYMax());
 
        if (qDialog.doCurve())
            modelCurve->exportMeanGComposanteToReferenceCurves(postCompoG, MainWindow::getInstance()->getCurrentPath(), csvLocale, AppSettings::mCSVCellSeparator);

@@ -53,6 +53,8 @@ public:
 
     QPainterPath mPainterPath;
 
+    type_data   mCurrentMinX;
+    type_data   mCurrentMaxX;
     // Getters
     bool parameterChange() const;
     type_data rangeX() const;
@@ -110,8 +112,6 @@ protected:
     type_data	mMinY;
     type_data	mMaxY;
 
-    type_data   mCurrentMinX;
-    type_data   mCurrentMaxX;
 
     // previous parameter
     qreal		mPrevGraphWidth;

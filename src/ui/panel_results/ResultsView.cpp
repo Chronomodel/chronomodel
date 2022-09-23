@@ -2673,6 +2673,8 @@ void ResultsView::updateScales()
         mXSpin->setSingleStep(1.);
         mXSpin->setDecimals(0);
 
+        // find new minY and maxY
+
 
     } else if ( mCurrentTypeGraph == GraphViewResults::eCorrel) {
         // The x axis represents h, always in [0, 40]
@@ -2715,7 +2717,6 @@ void ResultsView::updateScales()
     setXSlider(zoomToSlider(mResultZoomX));
     setXSpin(mResultZoomX);
     setXScale();
-
 
 }
 

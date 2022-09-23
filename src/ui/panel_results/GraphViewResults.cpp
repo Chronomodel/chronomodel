@@ -167,19 +167,24 @@ void GraphViewResults::setCurrentX(type_data min, type_data max)
 void GraphViewResults::zoom(type_data min, type_data max)
 {
     mGraph->zoomX(min, max);
+    const auto graphInfo = mGraph->getInfo();
+    // Force le rafraichissement de l'indication Min = ... / Max = ...
+    if (!graphInfo.isEmpty())
+        qApp->processEvents();
+
+    updateLayout();
+
 }
 
 void GraphViewResults::setMainColor(const QColor& color)
 {
     mMainColor = color;
-    update();
 }
 //Export Image & Data
 
 void GraphViewResults::setTitle(const QString& title)
 {
     mTitle = title;
-    update();
 }
 
 void GraphViewResults::saveAsImage()
@@ -418,8 +423,9 @@ void GraphViewResults::updateLayout()
         mGraph->showXAxisValues(axisVisible);
         mGraph->setMarginBottom(axisVisible ? fm.ascent()* 2.0 : fm.ascent());
     }
-
+ //qApp->processEvents();
     update();
+    //paintEvent(NULL);
 }
 
 void GraphViewResults::mousePressEvent(QMouseEvent *event)
@@ -437,8 +443,8 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     fontTitle.setPointSizeF(mGraphFont.pointSizeF()*1.1);
     QFontMetrics fmTitle(fontTitle);
 
-    QPainter p;
-    p.begin(this);
+    QPainter p(this);
+    //p.begin(this);
     p.fillRect(rect(), mGraph->getBackgroundColor());
     p.setFont(fontTitle);
 
@@ -452,7 +458,7 @@ void GraphViewResults::paintEvent(QPaintEvent* )
      *  Write info at the right of the title line
      */
 
-   QString graphInfo = mGraph->getInfo();
+    QString graphInfo = mGraph->getInfo();
    if (!graphInfo.isEmpty()) {
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 8, 0))
         if (mShowNumResults)
@@ -466,6 +472,9 @@ void GraphViewResults::paintEvent(QPaintEvent* )
            p.drawText(QRectF(width() - fmTitle.width(graphInfo)  - 3 * AppSettings::widthUnit(), mTopShift - fmTitle.ascent()-fmTitle.descent() , fmTitle.width(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
 #endif
    }
+   // force le rafraichissement
+  // if (!graphInfo.isEmpty())
+   //    qApp->processEvents();
 
     p.setPen(QColor(105, 105, 105));
     if (mShowNumResults)

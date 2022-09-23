@@ -7,6 +7,7 @@
 #include <QDialogButtonBox>
 #include <QDialog>
 #include <QSpinBox>
+#include <QComboBox>
 
 class RebuidCurveDialog : public QDialog
 {
@@ -21,12 +22,14 @@ public:
     double getYMax() const;
     bool doCurve() {return curveCB->isChecked();}
     bool doMap() {return mapCB->isChecked();}
+    QString compo();
+    void setCompo(QStringList &list);
 
 protected slots:
     void updateOptions();
     void YMinIsValid(QString str);
     void YMaxIsValid(QString str);
-    void setOkEnabled(bool valid);
+    void setOkEnabled();
 
 private:
     QLabel *label;
@@ -42,6 +45,7 @@ private:
     bool YMinOK;
     bool YMaxOK;
     QLineEdit *YmaxEdit;
+    QComboBox *mCompo;
 
 signals:
     void OkEnabled(bool enabled = true) ;

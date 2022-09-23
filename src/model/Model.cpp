@@ -48,13 +48,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "StdUtilities.h"
 #include "DateUtils.h"
 #include "MainWindow.h"
-#include "../PluginAbstract.h"
+#include "PluginAbstract.h"
 #include "MetropolisVariable.h"
 
 #include <QJsonArray>
 #include <QtWidgets>
 #include <QtCore/QStringList>
-//#include <execution>
+#include <execution>
+
 
 #if USE_FFT
 #include "fftw3.h"
@@ -1289,7 +1290,10 @@ void Model::generateHPD(const double thresh)
 
         if (!isFixedBound) {
             (*iterEvent)->mTheta.generateHPD(thresh);
-
+#ifdef DEBUG
+            if ((*iterEvent)->mTheta.mHPD.isEmpty())
+    qDebug() <<  "=> [Model] generateHPD() mTheta.mHPD.isEmpty()) " + (*iterEvent)->mName ;
+#endif
             for (int j = 0; j<(*iterEvent)->mDates.size(); ++j) {
                 Date& date = (*iterEvent)->mDates[j];
                 date.mTi.generateHPD(thresh);

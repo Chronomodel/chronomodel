@@ -1,4 +1,5 @@
 #include "RebuidCurveDialog.h"
+//#include "QtWidgets/qcombobox.h"
 
 #include <QHBoxLayout>
 #include <QPushButton>
@@ -43,25 +44,30 @@ RebuidCurveDialog::RebuidCurveDialog(QWidget *parent)
     connect(buttonBox, &QDialogButtonBox::accepted, this, &RebuidCurveDialog::accept);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &RebuidCurveDialog::reject);
 
+    mCompo = new QComboBox(this);
+   /* mCompo->addItem(tr("X"));
+    mCompo->addItem(tr("Y"));
+    mCompo->addItem(tr("Z"));
+*/
 
     QGridLayout *midLayout = new QGridLayout;
-     midLayout->addWidget(new QLabel(tr("Grid Length")), 0, 1);
-    midLayout->addWidget(curveCB, 1, 0);
-    midLayout->addWidget(XspinBox, 1, 1);
-    midLayout->addWidget(mapCB, 2, 0);
-    midLayout->addWidget(YspinBox, 2, 1);
-    midLayout->addWidget(new QLabel(tr("Y min")), 3, 0);
-    midLayout->addWidget(new QLabel(tr("Y max")), 3, 1);
-    midLayout->addWidget(YminEdit, 4, 0);
-    midLayout->addWidget(YmaxEdit, 4, 1);
-    //midLayout->addWidget(buttonBox);
+    midLayout->addWidget(new QLabel(tr("Composante")), 0, 0);
+    midLayout->addWidget(mCompo, 0, 1);
+
+    midLayout->addWidget(new QLabel(tr("Grid Length")), 1, 1);
+    midLayout->addWidget(curveCB, 2, 0);
+    midLayout->addWidget(XspinBox, 2, 1);
+    midLayout->addWidget(mapCB, 3, 0);
+    midLayout->addWidget(YspinBox, 3, 1);
+    midLayout->addWidget(new QLabel(tr("Y min")), 4, 0);
+    midLayout->addWidget(new QLabel(tr("Y max")), 4, 1);
+    midLayout->addWidget(YminEdit, 5, 0);
+    midLayout->addWidget(YmaxEdit, 5, 1);
 
     QBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->setSizeConstraint(QLayout::SetFixedSize);
     mainLayout->addLayout(midLayout);
     mainLayout->addWidget(buttonBox);
-
-   // mainLayout->setRowStretch(2, 1);
 
     setLayout(mainLayout);
 
@@ -119,9 +125,9 @@ double RebuidCurveDialog::getYMax() const
     return locale.toDouble(YmaxEdit->text(), &ok);
 }
 
-void RebuidCurveDialog::setOkEnabled(bool valid)
+void RebuidCurveDialog::setOkEnabled()
 {
-    bool isValid = (mapCB->isChecked() && YMinOK && YMaxOK) || !mapCB->isChecked();
+    const bool isValid = (mapCB->isChecked() && YMinOK && YMaxOK) || !mapCB->isChecked();
     buttonBox->button(QDialogButtonBox::Ok)->setEnabled(isValid);
 }
 
@@ -130,4 +136,15 @@ void RebuidCurveDialog::updateOptions()
     YminEdit->setEnabled(mapCB->isChecked());
     YmaxEdit->setEnabled(mapCB->isChecked());
     YspinBox->setEnabled(mapCB->isChecked());
+}
+
+QString RebuidCurveDialog::compo()
+{
+    return mCompo->currentText();
+}
+
+void RebuidCurveDialog::setCompo(QStringList &list)
+{
+    mCompo->clear();
+    mCompo->addItems(list);
 }

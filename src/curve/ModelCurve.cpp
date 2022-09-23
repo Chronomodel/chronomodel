@@ -180,6 +180,7 @@ void ModelCurve::restoreFromFile(QDataStream* in)
     for (auto& pMByChain : mPosteriorMeanGByChain)
         *in >> pMByChain;
 
+    generateCorrelations(mChains);
 }
 
 /* C' était le même algorithme que MCMCCurve::memo_PosteriorG()
@@ -267,9 +268,9 @@ PosteriorMeanGComposante ModelCurve::buildCurveAndMap(const int nbPtsX, const in
     double  prevMeanG;
 
     const double k = 3.; // Le nombre de fois sigma G, pour le calcul de la densité sudr la map
-    double a, b, surfG;
+    //double a, b, surfG;
 
-    int  idxYErrMin, idxYErrMax;
+    //int  idxYErrMin, idxYErrMax;
 
     // Refaire un vecteur pour les composantes X, Y ou Z utile
 
@@ -277,13 +278,13 @@ PosteriorMeanGComposante ModelCurve::buildCurveAndMap(const int nbPtsX, const in
     std::vector<MCMCSplineComposante> traceCompoXYZ (runTrace.size());
     switch (charComp) {
     case 'X':
-         std::transform(runTrace.begin(), runTrace.end(), traceCompoXYZ.begin(), [](MCMCSpline s){return s.splineX;});
+         std::transform(runTrace.begin(), runTrace.end(), traceCompoXYZ.begin(), [](MCMCSpline &s){return s.splineX;});
         break;
     case 'Y':
-         std::transform(runTrace.begin(), runTrace.end(), traceCompoXYZ.begin(), [](MCMCSpline s){return s.splineY;});
+         std::transform(runTrace.begin(), runTrace.end(), traceCompoXYZ.begin(), [](MCMCSpline &s){return s.splineY;});
         break;
     case 'Z':
-         std::transform(runTrace.begin(), runTrace.end(), traceCompoXYZ.begin(), [](MCMCSpline s){return s.splineZ;});
+         std::transform(runTrace.begin(), runTrace.end(), traceCompoXYZ.begin(), [](MCMCSpline &s){return s.splineZ;});
         break;
     default:
         break;
@@ -340,8 +341,8 @@ PosteriorMeanGComposante ModelCurve::buildCurveAndMap(const int nbPtsX, const in
                 /* il faut utiliser un pas de grille et le coefficient dans la grille dans l'intervalle [a,b] pour N(mu, sigma) est égale à la différence 1/2*(erf((b-mu)/(sigma*sqrt(2)) - erf((a-mu)/(sigma*sqrt(2))
                  * https://en.wikipedia.org/wiki/Error_function
                  */
-                idxYErrMin = inRange( 0, int((g - k*stdG - ymin) / stepY), nbPtsY-1);
-                idxYErrMax = inRange( 0, int((g + k*stdG - ymin) / stepY), nbPtsY-1);
+                const int idxYErrMin = inRange( 0, int((g - k*stdG - ymin) / stepY), nbPtsY-1);
+                const int idxYErrMax = inRange( 0, int((g + k*stdG - ymin) / stepY), nbPtsY-1);
 
                 if (idxYErrMin == idxYErrMax && idxYErrMin > 0 && idxYErrMax < nbPtsY-1) {
 #ifdef DEBUG
@@ -364,9 +365,9 @@ PosteriorMeanGComposante ModelCurve::buildCurveAndMap(const int nbPtsX, const in
 
                     int idErr = idxYErrMin;
                     for (double* ptr_idErr = ptr_Ymin; ptr_idErr <= ptr_Ymax; ptr_idErr++) {
-                        a = (idErr - 0.5)*stepY + ymin;
-                        b = (idErr + 0.5)*stepY + ymin;
-                        surfG = diff_erf(a, b, g, stdG );// correction à faire dans finalyze /nbIter;
+                        const double a = (idErr - 0.5)*stepY + ymin;
+                        const double b = (idErr + 0.5)*stepY + ymin;
+                        const double surfG = diff_erf(a, b, g, stdG );// correction à faire dans finalyze /nbIter;
                         *ptr_idErr = (*ptr_idErr) + surfG;
 
                         curveMap.max_value = std::max(curveMap.max_value, *ptr_idErr);
@@ -385,6 +386,7 @@ PosteriorMeanGComposante ModelCurve::buildCurveAndMap(const int nbPtsX, const in
             vVarG = vecVarianceG.at(tIdx)/ n + vecVarErrG.at(tIdx);
             ++tIdx;
         }
+
     }
     return compoG;
 }
@@ -461,7 +463,7 @@ void ModelCurve::generatePosteriorDensities(const QList<ChainSpecs> &chains, int
 {
     Model::generatePosteriorDensities(chains, fftLen, bandwidth);
 
-    for (Event*& event : mEvents) {
+    for (Event* &event : mEvents) {
         event->mVG.updateFormatedTrace();
         event->mVG.generateHistos(chains, fftLen, bandwidth);
     }
@@ -617,7 +619,7 @@ QList<PosteriorMeanGComposante> ModelCurve::getChainsMeanGComposanteZ()
     return composantes;
 }
 
-void ModelCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante& spline, double& G, double& varG, double& GP, double& GS, unsigned& i0)
+void ModelCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante &spline, double& G, double& varG, double& GP, double& GS, unsigned& i0)
 {
     unsigned n = spline.vecThetaEvents.size();
     const double tReduce =  reduceTime(t);
@@ -734,11 +736,6 @@ void ModelCurve::valeurs_G_varG_on_i(const MCMCSplineComposante& spline, double&
     }
 
 }
-
-
-
-
-
 
 
 

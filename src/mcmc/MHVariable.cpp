@@ -248,13 +248,13 @@ double MHVariable::getCurrentAcceptRate() const
     if (mLastAccepts.isEmpty())
         return 0.;
 
-    double sum (0.);
+   // double sum (0.);
 
-    sum = std::accumulate(mLastAccepts.begin(), mLastAccepts.end(), sum,[](double s, double a){return s+(a ? 1. : 0.);}); //#include <numeric>
+    const double sum = std::accumulate(mLastAccepts.begin(), mLastAccepts.end(), 0.,[](double s, double a){return s+(a ? 1. : 0.);}) / mLastAccepts.size(); //#include <numeric>
 
-    sum = sum / (double)mLastAccepts.size();
+    //sum = sum / (double)mLastAccepts.size();
 
-    return sum ;
+    return std::move(sum) ;
 
 }
 

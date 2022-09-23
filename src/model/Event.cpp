@@ -975,14 +975,20 @@ void Event::updateW()
     try {
 #ifdef DEBUG
         if ((mVG.mX + mSy * mSy) < 1e-20) {
-            qDebug()<< "in Event::updateW mVG.mX + mSy * mSy < 1e-20 : ";
-        } else         if (mW < 1e-20) {
-            qDebug()<< "in Event::updateW mW < 1e-20 : "<< mW;
-        } else if (mW > 1e+15) {
-            qDebug()<< "in Event::updateW mW > 1e+10 : "<< mW;
+            qDebug()<< "[Event] updateW() mVG.mX + mSy * mSy < 1e-20";
+        }
+#endif
+        mW = 1. / (mVG.mX + mSy * mSy);
+
+#ifdef DEBUG
+        if (mW < 1e-20) {
+            qDebug()<< "[Event] updateW() mW < 1e-20"<< mW;
+
+        } else if (mW > 1e+20) {
+            qDebug()<< "[Event] updateW() mW > 1e+20"<< mW;
         }
  #endif
-        mW = 1. / (mVG.mX + mSy * mSy);
+
 
     }  catch (...) {
         qWarning() <<"[Event] updateW() mW = 0";
