@@ -38,7 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "GraphView.h"
-#include "Ruler.h"
+//#include "Ruler.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
 #include "DateUtils.h"
@@ -485,13 +485,11 @@ void GraphView::setYAxisMode(AxisMode mode)
 }
 
 /**
- * @brief If active is true, the current view automaticaly adjust Y axis to the current view.
- * @brief it's a dynamic adjustment
+ * @brief If active is true, the current view automaticaly adjust Y axis on the next paint.
  */
 void GraphView::autoAdjustYScale(bool active)
 {
     mAutoAdjustYScale = active;
-
 }
 
 void GraphView::setGraphFont(const QFont& font)
@@ -546,8 +544,8 @@ void GraphView::setFormatFunctY(DateConversion f)
 void GraphView::addCurve(const GraphCurve& curve)
 {
     mCurves.append(curve);
-    adjustYScale();
-    repaintGraph(false);
+  //  adjustYScale();
+  //  repaintGraph(false);
 }
 
 void GraphView::removeCurve(const QString& name)
@@ -558,8 +556,8 @@ void GraphView::removeCurve(const QString& name)
             break;
         }
     }
-    adjustYScale();
-    repaintGraph(false);
+//    adjustYScale();
+//    repaintGraph(false);
 }
 
 void GraphView::removeAllCurves()
@@ -955,9 +953,9 @@ void GraphView::paintToDevice(QPaintDevice* device)
     /* ----------------------------------------------------
      *  Horizontal axis
      * ----------------------------------------------------*/
-      QPen pen = QPen(Qt::black, 1);
-      pen.setWidth(pen.width() * mThickness);
-      p.setPen(pen);
+     QPen pen = QPen(Qt::black, 1);
+     pen.setWidth(pen.width() * mThickness);
+     p.setPen(pen);
      if (!mLegendX.isEmpty() && mXAxisValues) {
           QRectF tr(mMarginLeft, mGraphHeight + mMarginTop - mMarginBottom, mGraphWidth, mMarginBottom);
           p.setPen(Qt::black);
@@ -993,19 +991,19 @@ void GraphView::paintToDevice(QPaintDevice* device)
     /* ----------------------------------------------------
      *  Graph specific infos at the top right
      * ----------------------------------------------------*/
-    // never used
-  /*  if (!mShowInfos && mYAxisMode == eHidden) {
+    // Used by Multicalibration
+   if (mShowInfos && mYAxisMode == eHidden) {
         QFontMetrics fm (font);
         p.setFont(font);
         p.setPen(Painting::borderDark);
         int y = 0;
         int lineH (fm.height());
-        for (auto& info : mInfos) {
+        for (const auto& info : mInfos) {
             p.drawText(int (1.2 * mMarginLeft), int (mMarginTop  + y), int (mGraphWidth - 1.2*mMarginLeft -mMarginRight), lineH, Qt::AlignLeft | Qt::AlignBottom, info);
             y += lineH;
         }
 
-    }  */
+    }
     p.end();
 }
 
