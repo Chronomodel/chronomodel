@@ -1362,7 +1362,10 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
     };
     constraintType constraint = eConstraintNone;
 
-    if (listEvent_Data.size()>4) {
+    QJsonArray eventsConstraints = state.value(STATE_EVENTS_CONSTRAINTS).toArray();
+    const bool eventConstraintsExist = !eventsConstraints.isEmpty();
+
+    if (listEvent_Data.size()>4 && !eventConstraintsExist) {
         QMessageBox messageBox;
         messageBox.setWindowTitle(tr("Automatic Link"));
         messageBox.setText(tr("Do you want to automatically create a constraint link between the imported events ?"));
