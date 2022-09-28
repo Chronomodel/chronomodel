@@ -444,7 +444,7 @@ void PluginMagForm::updateOptions()
     mRefDCombo->setVisible(true);
     mRefFCombo->setVisible(true);*/
 
-    const bool showInc = mIncRadio->isChecked() || mIDRadio->isChecked() ||
+    const bool showInc = mIncRadio->isChecked() || mIDRadio->isChecked() || mDecRadio->isChecked() ||
             mIFRadio->isChecked() || mIDFRadio->isChecked();
     mIncLab->setVisible(showInc);
     mIncEdit->setVisible(showInc);
