@@ -252,18 +252,12 @@ mMaximunNumberOfVisibleGraph(0)
     phasesUnfoldGroupLayout->addWidget(mPhasesEventsUnfoldCheck, Qt::AlignLeft);
     phasesUnfoldGroupLayout->addWidget(mPhasesDatesUnfoldCheck, Qt::AlignLeft);
 
-  /*  QVBoxLayout* phasesTempoGroupLayout = new QVBoxLayout();
-    phasesTempoGroupLayout->setContentsMargins(15, 0, 0, 0);
-    //phasesTempoGroupLayout->addWidget(mTempoCredCheck, Qt::AlignLeft);
-    phasesTempoGroupLayout->addWidget(mTempoErrCheck, Qt::AlignLeft);
-*/
     phasesGroupLayout->setContentsMargins(10, 10, 10, 10);
 
     phasesGroupLayout->addWidget(mBeginEndRadio);
     phasesGroupLayout->setSpacing(10);
     phasesGroupLayout->addWidget(mTempoRadio);
     phasesGroupLayout->setSpacing(10);
-   // phasesGroupLayout->addLayout(phasesTempoGroupLayout);
     phasesGroupLayout->addWidget(mActivityRadio);
   //  phasesGroupLayout->setSpacing(10);
     phasesGroupLayout->addLayout(phasesUnfoldGroupLayout);
@@ -272,8 +266,6 @@ mMaximunNumberOfVisibleGraph(0)
 
     phasesGroupLayout->addWidget(mPhasesStatCheck);
 
-   // mPhasesGroup->setLayout(phasesGroupLayout);
-    //mPhasesGroup->resize(9 * h, mOptionsW);
     // -----------------------------------------------------------------
     //  Curves Group (if graph list tab = curve)
     // -----------------------------------------------------------------
@@ -344,15 +336,12 @@ mMaximunNumberOfVisibleGraph(0)
     // -----------------------------------------------------------------
     connect(mEventThetaRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
 
-   // connect(mEventsDatesUnfoldCheck, &CheckBox::clicked, this, &ResultsView::applyUnfoldDates);
     connect(mEventsDatesUnfoldCheck, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
 
     connect(mDataSigmaRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
     connect(mEventVGRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
 
     connect(mBeginEndRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
-    //connect(mPhasesEventsUnfoldCheck, &CheckBox::clicked, this, &ResultsView::applyUnfoldEvents);
-    //connect(mPhasesDatesUnfoldCheck, &CheckBox::clicked, this, &ResultsView::applyUnfoldDates);
     connect(mPhasesEventsUnfoldCheck, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
     connect(mPhasesDatesUnfoldCheck, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
 
@@ -363,13 +352,13 @@ mMaximunNumberOfVisibleGraph(0)
     connect(mDataCalibCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     connect(mWiggleCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
 
-    connect(mStatCheck, &CheckBox::clicked, this, &ResultsView::showInfos);
+    connect(mStatCheck, &CheckBox::clicked, this, &ResultsView::showStats);
 
     connect(mErrCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     connect(mActivityUnifCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
 
-    connect(mPhasesStatCheck, &CheckBox::clicked, this, &ResultsView::showInfos);
-    connect(mCurveStatCheck, &CheckBox::clicked, this, &ResultsView::showInfos);
+    connect(mPhasesStatCheck, &CheckBox::clicked, this, &ResultsView::showStats);
+    connect(mCurveStatCheck, &CheckBox::clicked, this, &ResultsView::showStats);
     
     connect(mCurveGRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
     connect(mCurveGPRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
@@ -868,9 +857,6 @@ mMaximunNumberOfVisibleGraph(0)
     connect(mResultsClipBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::resultsToClipboard);
     connect(mDataSaveBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::saveGraphData);
 
-
-    //  mSaveAllWidget->setParent(mPageWidget);
-    //  mSaveSelectWidget->setParent(mPageWidget);
     // ------------------------------------
     //  Page / Saving
     // ------------------------------------
@@ -991,6 +977,7 @@ void ResultsView::updateModel(Model* model)
     //  Create Chains option controls (radio and checkboxes under "MCMC Chains")
     // ----------------------------------------------------
     createChainsControls();
+    mAllChainsCheck->setChecked(true);
 
     mCurrentTypeGraph = GraphViewResults::ePostDistrib;
     mCurrentVariableList.clear();
@@ -1019,7 +1006,7 @@ void ResultsView::updateModel(Model* model)
     createGraphs();
     updateLayout();
     
-    showInfos(false);
+    showStats(false);
 }
 
 #pragma mark Layout
@@ -1097,6 +1084,20 @@ void ResultsView::updateGraphsLayout()
 
 }
 
+
+void safe_update_graph(std::mutex &mutex_g, GraphViewResults* g)
+{
+    const std::lock_guard<std::mutex> lock(mutex_g);
+    //std::thread ([](GraphViewResults* gv) {
+                                            g->setVisible(true);
+                                            g->update();
+   //                                        }, g );
+
+    // g_mutex is automatically released when lock
+    // goes out of scope
+}
+
+
 void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewResults*> graphs)
 {
     QWidget* widget = scrollArea->widget();
@@ -1112,10 +1113,24 @@ void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewRes
         int i = 0;
         for (auto&& g : graphs) {
             g->setGeometry(0, (i++) * mGraphHeight*coefDisplay, widget->width() , mGraphHeight * coefDisplay);
-            g->setVisible(true);
-            g->update();
+           // g->setVisible(true);
+           // g->update();
         }
 
+
+        std::vector<std::thread> queue;
+        std::mutex g_mutex;  // protects g, utilise la même memoire graphique
+        for (auto g : graphs) {
+            queue.push_back( std::thread ([&g_mutex] (GraphViewResults* g) {
+                                                       const std::lock_guard<std::mutex> lock(g_mutex);
+                                                        g->setVisible(true);
+                                                        g->update();}
+            ,  g) );
+        };
+
+        for (auto&& th : queue) {
+            th.join();
+        }
     }
 }
 
@@ -1318,38 +1333,6 @@ void ResultsView::applyCurrentVariable()
     updateLayout();
 }
 
-/*
-void ResultsView::applyUnfoldEvents()
-{
-    updateMainVariable();
-    createGraphs();
-   // updateOptionsWidget();
-
-    updateLayout();
-}
-
-void ResultsView::applyUnfoldDates()
-{
-    updateMainVariable();
-    createGraphs();
-   // updateOptionsWidget();
-
-    updateLayout();
-}
-
-
-void ResultsView::applyDisplayTab()
-{
-    updateOptionsWidget();
-  //  updateLayout();
-}
-
-void ResultsView::applyPageSavingTab()
-{
-    updateOptionsWidget();
-    updateLayout();
-}
-*/
 #pragma mark Chains controls
 
 void ResultsView::toggleDisplayDistrib()
@@ -1444,7 +1427,6 @@ void ResultsView::toggleDisplayDistrib()
             mDensityOptsGroup->setFixedHeight( mCredibilityCheck->height() + mThresholdEdit->height() + mFFTLenCombo->height()
                                               + mBandwidthSpin->height() + mHActivityEdit->height()
                                                + 10* internSpan);
-           // mDensityOptsGroup->setFixedHeight(150);
 
             widHeigth += mDensityOptsTitle->height() + mDensityOptsGroup->height();
 
@@ -3567,7 +3549,7 @@ void ResultsView::applyGraphsPerPage(int graphsPerPage)
     updateLayout();
 }
 
-void ResultsView::showInfos(bool show)
+void ResultsView::showStats(bool show)
 {
     mPhasesStatCheck->setChecked(show);
     mStatCheck->setChecked(show);
