@@ -79,7 +79,7 @@ Matrix2D calculMatR(const std::vector<double>& vec)
 
     // vecH est de dimension n-1
     std::vector<double> vecH = calculVecH(vec);
-    const unsigned n = vec.size();
+    const unsigned long n = vec.size();
 
     // matR est de dimension n-2 x n-2, mais contenue dans une matrice nxn
     Matrix2D matR = initMatrix2D(n, n);
@@ -94,7 +94,7 @@ Matrix2D calculMatR(const std::vector<double>& vec)
         }
     }
     */
-    for ( unsigned i = 1; i < n-2; ++i) {
+    for ( unsigned long i = 1; i < n-2; ++i) {
         matR[i][i] = (vecH[i-1] + vecH[i]) / 3.;
         matR[i][i+1] = vecH[i] / 6.;
         matR[i+1][i] = vecH[i] / 6.;
@@ -118,7 +118,7 @@ Matrix2D calculMatQ(const std::vector<double>& vec)
 
     // vecH est de dimension n-1
     std::vector<double> vecH = calculVecH(vec);
-    const unsigned n = vec.size();
+    const long unsigned n = vec.size();
 
     // matQ est de dimension n x n-2, mais contenue dans une matrice nxn
     Matrix2D matQ = initMatrix2D(n, n);
@@ -129,7 +129,7 @@ Matrix2D calculMatQ(const std::vector<double>& vec)
         matQ[i+1][i] = 1. / vecH[i];
     }*/
 
-    for (unsigned i = 1; i < vecH.size(); ++i) {
+    for (unsigned long i = 1; i < vecH.size(); ++i) {
             matQ[i-1][i] = 1. / vecH[i-1];
             matQ[i+1][i] = 1. / vecH[i];
             matQ[i][i] = -(matQ[i-1][i] + matQ[i+1][i]);

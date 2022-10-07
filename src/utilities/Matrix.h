@@ -26,18 +26,18 @@ public:
     void setRangeX(double minX, double maxX) {rangeX = std::pair<double, double>(minX, maxX);}
     void setRangeY(double minY, double maxY) {rangeY = std::pair<double, double>(minY, maxY);}
 
-    double& at(unsigned i, unsigned j) {
+    double& at(unsigned c, unsigned r) { // beCarefull invertion of row and column between definiton of CurveMap() and at()
         try {
-            return data[_row*i + j];
+            return data[_row*c + r];
         }  catch (...) {
-            qDebug() <<"CurveMap over ???"<<i << j;
+            qDebug() <<"CurveMap over ???"<<c << r;
             return data[0];
         }
 
     }
-    double& operator()(unsigned i, unsigned j) { return data[_row*i + j];} //Set
-    const double& operator()(unsigned i, unsigned j)  const { return data[_row*i + j];} //Get
-    double* ptr_at(unsigned i, unsigned j) {return (begin(data) + (_row*i + j));}
+    double& operator()(unsigned c, unsigned r) { return data[_row*c + r];} //Set
+    const double& operator()(unsigned c, unsigned r)  const { return data[_row*c + r];} //Get
+    double* ptr_at(unsigned c, unsigned r) {return (begin(data) + (_row*c + r));}
 
     unsigned row() {return _row;}
     unsigned column() {return _column;}
@@ -54,11 +54,11 @@ public:
 typedef std::valarray<std::valarray<double>> Matrix2D;
 Matrix2D initMatrix2D(size_t rows, size_t cols);
 
-QDataStream &operator<<( QDataStream& stream, const CurveMap &map );
-QDataStream &operator>>( QDataStream& stream, CurveMap &map );
+QDataStream &operator<<( QDataStream &stream, const CurveMap &map );
+QDataStream &operator>>( QDataStream &stream, CurveMap &map );
 
-void showMatrix(const Matrix2D&  m, const std::string& str="");
+void showMatrix(const Matrix2D & m, const std::string& str="");
 
 
-void showVector(const std::vector<double>&  m, const std::string& str="");
+void showVector(const std::vector<double> & m, const std::string &str="");
 #endif // MATRIX_H

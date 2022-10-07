@@ -316,7 +316,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         showMiddleArrow = false;
         const QRectF br = getBubbleRect(bubbleText);
 
-        if (bubbleText.count() > 5)
+        if (bubbleText.size() > 5)
             painter->drawRect(br);
         else
             painter->drawEllipse(br);
@@ -454,7 +454,7 @@ QSize ArrowItem::getBubbleSize(const QString& text) const
         w = metrics.boundingRect(text).width() + 10 ;
         h = metrics.height() + 10;
 
-        if (text.count() < 5) {
+        if (text.size() < 5) {
             w = std::max(w, h);
             h = w;
         }

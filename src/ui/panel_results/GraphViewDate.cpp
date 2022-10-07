@@ -423,7 +423,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
         mGraph->setTipYLab("t");
 
         mGraph->setYAxisMode(GraphView::eMinMaxHidden);
-        mGraph->showInfos(true);
+        mGraph->showInfos(false);
         mGraph->autoAdjustYScale(true);
     }
     /* -----------------------Third tab : Acceptance rate.-------------------------

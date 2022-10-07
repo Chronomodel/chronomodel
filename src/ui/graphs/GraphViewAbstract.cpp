@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -38,7 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "GraphViewAbstract.h"
-#include "StdUtilities.h"
+//#include "StdUtilities.h"
 #include <cmath>
 #include <QDebug>
 
@@ -46,18 +46,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 // Constructor / Destructor
 
 GraphViewAbstract::GraphViewAbstract():
-mGraphWidth(150.), mGraphHeight(50),
-mMarginLeft(50), mMarginRight(10), mMarginTop(5), mMarginBottom(15),
-mMinX(0.), mMaxX(10.),
-mMinY(0.), mMaxY(10.),
-mCurrentMinX(-HUGE_VAL),mCurrentMaxX(HUGE_VAL)
+    mCurrentMinX(-HUGE_VAL), mCurrentMaxX(HUGE_VAL),
+    mGraphWidth(150.), mGraphHeight(50), mMarginLeft(50), mMarginRight(10),
+    mMarginTop(5), mMarginBottom(15),
+    mMinX(0.), mMaxX(10.),
+    mMinY(0.),mMaxY(10.)
 {
-//qDebug()<<"contructor GraphViewAbstract::GraphViewAbstrac ";
+
 }
 
 GraphViewAbstract::~GraphViewAbstract(){}
 
-// Getters
+# pragma mark Getters
 
 type_data GraphViewAbstract::rangeX() const {return mMaxX - mMinX;}
 type_data GraphViewAbstract::rangeY() const {return mMaxY - mMinY;}
@@ -77,7 +77,7 @@ qreal GraphViewAbstract::marginTop() const {return mMarginTop;}
 qreal GraphViewAbstract::marginBottom() const {return mMarginBottom;}
 
 
-// Setters
+# pragma mark Setters -> No Action
 
 void GraphViewAbstract::setRangeX(const type_data &aMinX, const type_data &aMaxX)
 {
@@ -89,8 +89,6 @@ void GraphViewAbstract::setCurrentX(const type_data &aMinX, const type_data &aMa
 {
     mCurrentMinX = aMinX;
     mCurrentMaxX = aMaxX;
-   // repaintGraph(true); // not necessary
-
 }
 
 void GraphViewAbstract::setRangeY(const type_data &aMinY, const type_data &aMaxY)
@@ -107,35 +105,25 @@ void GraphViewAbstract::setRangeY(const type_data &aMinY, const type_data &aMaxY
             mMinY = aMinY;
             mMaxY = aMaxY;
         }
-        repaintGraph(true);
+       // repaintGraph(true);
     }
 }
 
-void GraphViewAbstract::setMinimumX(const type_data &aMinX)			{ if (mMinX != aMinX) {mMinX = aMinX; /*repaintGraph(true);*/}}
-void GraphViewAbstract::setMaximumX(const type_data &aMaxX)			{ if (mMaxX != aMaxX) {mMaxX = aMaxX; /*repaintGraph(true);*/}}
-void GraphViewAbstract::setMinimumY(const type_data &aMinY)			{ if (mMinY != aMinY) {mMinY = aMinY; /*repaintGraph(true);*/}}
-void GraphViewAbstract::setMaximumY(const type_data &aMaxY)			{ if (mMaxY != aMaxY) {mMaxY = aMaxY; /*repaintGraph(true);*/}}
+void GraphViewAbstract::setMinimumX(const type_data &aMinX)			{ if (mMinX != aMinX) mMinX = aMinX;}
+void GraphViewAbstract::setMaximumX(const type_data &aMaxX)			{ if (mMaxX != aMaxX) mMaxX = aMaxX;}
+void GraphViewAbstract::setMinimumY(const type_data &aMinY)			{ if (mMinY != aMinY) mMinY = aMinY;}
+void GraphViewAbstract::setMaximumY(const type_data &aMaxY)			{ if (mMaxY != aMaxY) mMaxY = aMaxY;}
 
-void GraphViewAbstract::setMarginLeft(const qreal &aMarginLeft)		{ if (mMarginLeft != aMarginLeft) {mMarginLeft = aMarginLeft; /*repaintGraph(true);*/}}
-void GraphViewAbstract::setMarginRight(const qreal &aMarginRight)	{ if (mMarginRight != aMarginRight) {mMarginRight = aMarginRight; /*repaintGraph(true);*/}}
-void GraphViewAbstract::setMarginTop(const qreal &aMarginTop)		{ if (mMarginTop != aMarginTop) {mMarginTop = aMarginTop; /*repaintGraph(true);*/}}
-void GraphViewAbstract::setMarginBottom(const qreal &aMarginBottom)	{ if (mMarginBottom != aMarginBottom) {mMarginBottom = aMarginBottom; /*repaintGraph(true);*/}}
+void GraphViewAbstract::setMarginLeft(const qreal &aMarginLeft)		{ if (mMarginLeft != aMarginLeft) mMarginLeft = aMarginLeft;}
+void GraphViewAbstract::setMarginRight(const qreal &aMarginRight)	{ if (mMarginRight != aMarginRight) mMarginRight = aMarginRight;}
+void GraphViewAbstract::setMarginTop(const qreal &aMarginTop)		{ if (mMarginTop != aMarginTop) mMarginTop = aMarginTop; }
+void GraphViewAbstract::setMarginBottom(const qreal &aMarginBottom)	{ if (mMarginBottom != aMarginBottom) mMarginBottom = aMarginBottom;}
 void GraphViewAbstract::setMargins(const qreal &aMarginLeft, const qreal &aMarginRight, const qreal &aMarginTop, const qreal &aMarginBottom)
 {
 	mMarginLeft = aMarginLeft;
 	mMarginRight = aMarginRight;
 	mMarginTop = aMarginTop;
 	mMarginBottom = aMarginBottom;
-}
-
-bool GraphViewAbstract::parameterChange() const
-{
-    bool no = (mMarginLeft == mPrevMarginLeft) && (mMarginRight == mPrevMarginRight);
-    no = no && (mMarginTop == mPrevMarginTop) && (mMarginBottom == mPrevMarginBottom);
-    no = no && (mCurrentMinX == mPrevCurrentMinX) && (mCurrentMaxX == mPrevCurrentMaxX);
-    no = no && (mGraphWidth == mPrevGraphWidth) && (mGraphHeight == mPrevGraphHeight);
-
-    return !no;
 }
 
 void GraphViewAbstract::setPrevParameter()
@@ -150,6 +138,15 @@ void GraphViewAbstract::setPrevParameter()
    mPrevGraphHeight = mGraphHeight;
 }
 
+bool GraphViewAbstract::parameterChange() const
+{
+    bool no = (mMarginLeft == mPrevMarginLeft) && (mMarginRight == mPrevMarginRight);
+    no = no && (mMarginTop == mPrevMarginTop) && (mMarginBottom == mPrevMarginBottom);
+    no = no && (mCurrentMinX == mPrevCurrentMinX) && (mCurrentMaxX == mPrevCurrentMaxX);
+    no = no && (mGraphWidth == mPrevGraphWidth) && (mGraphHeight == mPrevGraphHeight);
+
+    return !no;
+}
 /**
  * @brief GraphViewAbstract::getXForValue find a position on a graph for a Value in a table
  * @param aValue
@@ -159,28 +156,25 @@ void GraphViewAbstract::setPrevParameter()
 qreal GraphViewAbstract:: getXForValue(const type_data& aValue, const bool& aConstainResult)
 {
     const qreal rigthBlank (5.); // the same name and the same value as AxisTool::updateValues()
-    return qreal (mMarginLeft + valueForProportion(aValue, mCurrentMinX, mCurrentMaxX, type_data (0.), type_data (mGraphWidth - rigthBlank), aConstainResult));
+    return mMarginLeft + valueForProportion(aValue, mCurrentMinX, mCurrentMaxX, 0., std::max(0.,  mGraphWidth - rigthBlank) , aConstainResult);
 }
 
 type_data GraphViewAbstract::getValueForX(const qreal& x, const bool& aConstainResult)
 {
     const qreal rigthBlank (5.); // the same name and the same value as AxisTool::updateValues() if AxisTool::mIsHorizontal
     const qreal lXFromSide = x - mMarginLeft;
-    const type_data lValue = valueForProportion(type_data(lXFromSide), type_data (0.), type_data (mGraphWidth - rigthBlank), mCurrentMinX, mCurrentMaxX, aConstainResult);
-	return lValue;
+    return valueForProportion(type_data(lXFromSide), 0., std::max(0.,  mGraphWidth - rigthBlank), mCurrentMinX, mCurrentMaxX, aConstainResult);
 }
 
 #define TOPBLANK 10
 qreal GraphViewAbstract::getYForValue(const type_data& aValue, const bool& aConstainResult)
 {
-    const type_data lYFromBase = valueForProportion(aValue, mMinY, mMaxY, type_data (0.), type_data (mGraphHeight) -TOPBLANK, aConstainResult);
-    const qreal y = mGraphHeight+ mMarginTop - qreal(lYFromBase) ;
-    return y;
+    const type_data lYFromBase = valueForProportion(aValue, mMinY, mMaxY, 0., std::max(0., type_data (mGraphHeight) - TOPBLANK), aConstainResult);
+    return mGraphHeight + mMarginTop - qreal(lYFromBase) ;
 }
 
 type_data GraphViewAbstract::getValueForY(const qreal& y, const bool& aConstainResult)
 {
     const qreal lYFromBase = mMarginTop + mGraphHeight - y;
-    const type_data lValue = valueForProportion( type_data (lYFromBase), type_data (0.), type_data (mGraphHeight) -TOPBLANK, mMinY, mMaxY, aConstainResult);
-    return lValue;
+    return valueForProportion( type_data (lYFromBase), 0., std::max(0., type_data (mGraphHeight) - TOPBLANK), mMinY, mMaxY, aConstainResult);
 }

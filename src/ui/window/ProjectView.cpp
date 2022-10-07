@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -41,7 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ProjectView.h"
 #include "ModelView.h"
 #include "ResultsView.h"
-#include "Painting.h"
+//#include "Painting.h"
 #include "AppSettings.h"
 
 // Constructor / Destructor / Init
@@ -171,12 +171,6 @@ void ProjectView::resizeEvent(QResizeEvent* e)
 
     setScreenDefinition();
 
-  /*  const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
-
-    mLogModelEdit->resize(width() - AppSettings::widthUnit(), logTabHusefull);
-    mLogMCMCEdit->resize(width() - AppSettings::widthUnit(), logTabHusefull);
-    mLogResultsEdit->resize(width() - AppSettings::widthUnit() , logTabHusefull);
-    */
 }
 
 void ProjectView::setProject(Project* project)
@@ -208,7 +202,7 @@ void ProjectView::showResults()
     mResultsView->clearResults();
     mStack->setCurrentIndex(1);
     
-    this->updateResults();
+    updateResults();
 }
 
 
@@ -288,8 +282,7 @@ void ProjectView::initResults(Model* model)
     model->generateModelLog();
     model->generateResultsLog();
 
-    mResultsView->updateModel(model); // prepare the view
-
+    mResultsView->initModel(model);
     // Update log view
     mLogModelEdit->setText(model->getModelLog());
     mLogInitEdit->setText(model->getInitLog());

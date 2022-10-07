@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -54,7 +54,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QJsonArray>
 #include <QtWidgets>
 #include <QtCore/QStringList>
-#include <execution>
+//#include <execution>
+#include <thread>
 
 
 #if USE_FFT
@@ -86,14 +87,14 @@ void Model::clear()
     // - The Event MH variables are reset (freeing trace memory)
     // - The Dates MH variables are reset (freeing trace memory)
     // - The Dates are cleared
-    for (Event*& ev: mEvents) {
+    for (Event* &ev: mEvents) {
         // Event can be an Event or an EventCurve.
         // => do not delete it using ~Event(), because the appropriate destructor could be ~EventCurve().
         delete ev;
         ev = nullptr;
     }
     
-    for (EventConstraint*& ec : mEventConstraints) {
+    for (EventConstraint* &ec : mEventConstraints) {
         delete ec;
         ec = nullptr;
     }
@@ -102,7 +103,7 @@ void Model::clear()
     mEventConstraints.clear();
 
     if (!mPhases.isEmpty()) {
-        for (Phase*& ph: mPhases) {
+        for (Phase* &ph: mPhases) {
             if (ph) {
                 delete ph;
                 ph = nullptr;
@@ -112,7 +113,7 @@ void Model::clear()
     }
 
     if (!mPhaseConstraints.isEmpty()) {
-        for (PhaseConstraint*& pc : mPhaseConstraints) {
+        for (PhaseConstraint* &pc : mPhaseConstraints) {
             if (pc)
                 pc->~PhaseConstraint();
 
@@ -947,17 +948,27 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 #endif
 
     for (const auto& event : mEvents ) {
-        event->mTheta.generateCorrelations(chains);
+        //event->mTheta.generateCorrelations(chains);
+        std::thread thTheta ([event] (QList<ChainSpecs> ch) {event->mTheta.generateCorrelations(ch);}, chains);
 
         for (auto&& date : event->mDates ) {
             date.mTi.generateCorrelations(chains);
             date.mSigmaTi.generateCorrelations(chains);
+           /* std::thread thTi ([date] (QList<ChainSpecs> ch) {date.mTi.generateCorrelations(ch);}, chains);
+            std::thread thSigmaTi ([*date] (QList<ChainSpecs> ch) {date.mSigmaTi.generateCorrelations(ch);}, chains);*/
         }
+        thTheta.join();
     }
 
     for (const auto& phase : mPhases ) {
-        phase->mAlpha.generateCorrelations(chains);
-        phase->mBeta.generateCorrelations(chains);
+       /* phase->mAlpha.generateCorrelations(chains);
+        phase->mBeta.generateCorrelations(chains);*/
+
+        std::thread thAlpha ([phase] (QList<ChainSpecs> ch) {phase->mAlpha.generateCorrelations(ch);}, chains);
+        std::thread thBeta ([phase] (QList<ChainSpecs> ch) {phase->mBeta.generateCorrelations(ch);}, chains);
+        thAlpha.join();
+        thBeta.join();
+
         //phase->mTau.generateCorrelations(chains); // ??? à voir avec PhL, est-ce utile ?
     }
 
@@ -1005,9 +1016,18 @@ void Model::setHActivity(const double h)
 void Model::setThreshold(const double threshold)
 {
     if (mThreshold != threshold) {
-        generateCredibility(threshold);
-        generateHPD(threshold);
+        std::thread thCred ([this] (double threshold)
+        {
+            generateCredibility(threshold);
+        } , threshold);
 
+        std::thread thHPD ([this] (double threshold)
+        {
+            generateHPD(threshold);
+        } , threshold);
+
+        thCred.join();
+        thHPD.join();
         setThresholdToAllModel(threshold);
 
         emit newCalculus();
@@ -1027,6 +1047,7 @@ void Model::setThresholdToAllModel(const double threshold)
             }
         }
     }
+
     for (const auto& p : mPhases) {
        p->mAlpha.mThresholdUsed = mThreshold;
        p->mBeta.mThresholdUsed = mThreshold;
@@ -1127,23 +1148,31 @@ void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
     QElapsedTimer t;
     t.start();
 #endif
+    std::thread thEvents ([this] (QList<ChainSpecs> chains)
+    {
+        for (const auto& event : mEvents) {
+            event->mTheta.generateNumericalResults(chains);
 
-    for (const auto& event : mEvents) {
-        event->mTheta.generateNumericalResults(chains);
+            for (auto&& date : event->mDates) {
+                date.mTi.generateNumericalResults(chains);
+                date.mSigmaTi.generateNumericalResults(chains);
+            }
 
-        for (auto&& date : event->mDates) {
-            date.mTi.generateNumericalResults(chains);
-            date.mSigmaTi.generateNumericalResults(chains);
         }
+    } , chains);
 
-    }
+    std::thread thPhases ([this] (QList<ChainSpecs> chains)
+    {
+        for (const auto& phase : mPhases) {
+            phase->mAlpha.generateNumericalResults(chains);
+            phase->mBeta.generateNumericalResults(chains);
+            // phase->mTau.generateNumericalResults(chains);
+            phase->mDuration.generateNumericalResults(chains);
+        }
+    } , chains);
 
-    for (const auto& phase : mPhases) {
-        phase->mAlpha.generateNumericalResults(chains);
-        phase->mBeta.generateNumericalResults(chains);
-        // phase->mTau.generateNumericalResults(chains);
-        phase->mDuration.generateNumericalResults(chains);
-    }
+    thEvents.join();
+    thPhases.join();
 
 #ifdef DEBUG
 
@@ -1181,88 +1210,61 @@ void Model::generateCredibility(const double &thresh)
 #endif
     if (mThreshold == thresh)
         return;
-
-    for (const auto& pEvent : mEvents) {
-        bool isFixedBound = false;
-        if (pEvent->type() == Event::eBound)
+    std::thread thEvents ([this] (double thresh)
+    {
+        for (const auto& pEvent : mEvents) {
+            bool isFixedBound = false;
+            if (pEvent->type() == Event::eBound)
                 isFixedBound = true;
 
-        if (!isFixedBound) {
-            pEvent->mTheta.generateCredibility(mChains, thresh);
+            if (!isFixedBound) {
+                pEvent->mTheta.generateCredibility(mChains, thresh);
 
-            for (auto&& date : pEvent->mDates )  {
-                date.mTi.generateCredibility(mChains, thresh);
-                date.mSigmaTi.generateCredibility(mChains, thresh);
+                for (auto&& date : pEvent->mDates )  {
+                    date.mTi.generateCredibility(mChains, thresh);
+                    date.mSigmaTi.generateCredibility(mChains, thresh);
+                }
             }
+
         }
+    } , thresh);
 
-    }
+    std::thread thPhases ([this] (double thresh)
+    {
+        for (const auto& pPhase :mPhases) {
+            // if there is only one Event in the phase, there is no Duration
+            pPhase->mAlpha.generateCredibility(mChains, thresh);
+            pPhase->mBeta.generateCredibility(mChains, thresh);
+            //  pPhase->mTau.generateCredibility(mChains, thresh);
+            pPhase->mDuration.generateCredibility(mChains, thresh);
+            pPhase->mTimeRange = timeRangeFromTraces( pPhase->mAlpha.fullRunRawTrace(mChains),
+                                                      pPhase->mBeta.fullRunRawTrace(mChains), thresh, "Time Range for Phase : " + pPhase->mName);
+        }
+    } , thresh);
 
-    // Diplay a progressBar if "long" set with setMinimumDuration()
+    std::thread thPhasesConst ([this] (double thresh)
+    {
+        for (const auto& phaseConstraint : mPhaseConstraints) {
 
-/*    QProgressDialog *progress = new QProgressDialog(tr("Time range & credibilities generation"), tr("Wait") , 1, 10);
-    progress->setWindowModality(Qt::WindowModal);
-    progress->setCancelButton(nullptr);
-    progress->setMinimumDuration(5);
-    progress->setMinimum(0);
-    progress->setMaximum(mPhases.size()*4);
-    //progress->setMinimumWidth(7 * AppSettings::widthUnit());
-    progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
-*/
+            Phase* phaseFrom = phaseConstraint->mPhaseFrom;
+            Phase* phaseTo  = phaseConstraint->mPhaseTo;
 
-    //int position = 0;
+            phaseConstraint->mGapRange = gapRangeFromTraces(phaseFrom->mBeta.fullRunRawTrace(mChains),
+                                                            phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Gap Range : "+ phaseFrom->mName+ " to "+ phaseTo->mName);
 
-    for (const auto& pPhase :mPhases) {
+            qDebug()<<"Gap Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
 
-        // if there is only one Event in the phase, there is no Duration
-        pPhase->mAlpha.generateCredibility(mChains, thresh);
-//        progress->setValue(++position);
+            phaseConstraint->mTransitionRange = transitionRangeFromTraces(phaseFrom->mBeta.fullRunRawTrace(mChains),
+                                                                          phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Transition Range : "+ phaseFrom->mName+ " to "+ phaseTo->mName);
 
-        pPhase->mBeta.generateCredibility(mChains, thresh);
- //       progress->setValue(++position);
-      //  pPhase->mTau.generateCredibility(mChains, thresh);
-        pPhase->mDuration.generateCredibility(mChains, thresh);
- //       progress->setValue(++position);
+            qDebug()<<"Transition Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
+        }
+    } , thresh);
 
-        pPhase->mTimeRange = timeRangeFromTraces(pPhase->mAlpha.fullRunRawTrace(mChains),
-                                                             pPhase->mBeta.fullRunRawTrace(mChains),thresh, "Time Range for Phase : "+pPhase->mName);
+    thEvents.join();
+    thPhases.join();
+    thPhasesConst.join();
 
- //       progress->setValue(++position);
-
-    }
- /*   progress->hide();
-    progress->~QProgressDialog();
-
-    QProgressDialog *progressGap = new QProgressDialog(tr("Gaps and transitions generation"), tr("Wait") , 1, 10);
-    progressGap->setWindowModality(Qt::WindowModal);
-    progressGap->setCancelButton(nullptr);
-    progressGap->setMinimumDuration(5);
-    progressGap->setMinimum(0);
-    progressGap->setMaximum(mPhases.size()*4);
-    progressGap->setMinimum(0);
-    progressGap->setMaximum(mPhaseConstraints.size()*2);
-
-    progressGap->setMinimumWidth(int (progressGap->fontMetrics().boundingRect(progressGap->labelText()).width() *1.5));
-*/
-    //position = 0;
-    for (const auto& phaseConstraint : mPhaseConstraints) {
-
-        Phase* phaseFrom = phaseConstraint->mPhaseFrom;
-        Phase* phaseTo  = phaseConstraint->mPhaseTo;
-
-        phaseConstraint->mGapRange = gapRangeFromTraces(phaseFrom->mBeta.fullRunRawTrace(mChains),
-                                                             phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Gap Range : "+phaseFrom->mName+ " to "+ phaseTo->mName);
-
-        qDebug()<<"Gap Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
-//        progressGap->setValue(++position);
-
-        phaseConstraint->mTransitionRange = transitionRangeFromTraces(phaseFrom->mBeta.fullRunRawTrace(mChains),
-                                                             phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Transition Range : "+phaseFrom->mName+ " to "+ phaseTo->mName);
-
-        qDebug()<<"Transition Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
-//        progressGap->setValue(++position);
-
-    }
 //    delete progressGap;
 #ifdef DEBUG
 
@@ -1277,15 +1279,13 @@ void Model::generateHPD(const double thresh)
     QElapsedTimer t;
     t.start();
 #endif
-
+/*
     QList<Event*>::iterator iterEvent = mEvents.begin();
     while (iterEvent!=mEvents.end()) {
         bool isFixedBound = false;
 
         if ((*iterEvent)->type() == Event::eBound) {
-            //EventKnown* ek = dynamic_cast<EventKnown*>(*iterEvent);
-            //if(ek->knownType() == EventKnown::eFixed)
-                isFixedBound = true;
+                 isFixedBound = true;
         }
 
         if (!isFixedBound) {
@@ -1302,6 +1302,7 @@ void Model::generateHPD(const double thresh)
         }
         ++iterEvent;
     }
+
     QList<Phase*>::iterator iterPhase = mPhases.begin();
     while (iterPhase!=mPhases.end()) {
        // if there is only one Event in the phase, there is no Duration
@@ -1310,6 +1311,52 @@ void Model::generateHPD(const double thresh)
        (*iterPhase)->mDuration.generateHPD(thresh);
         ++iterPhase;
     }
+*/
+//- use thread
+    std::thread thEvents ([this] (double thresh)
+    {
+        for (const auto& ev : mEvents) {
+            if (ev->type() != Event::eBound) {
+                ev->mTheta.generateHPD(thresh);
+    #ifdef DEBUG
+                if (ev->mTheta.mHPD.isEmpty())
+        qDebug() <<  "=> [Model] generateHPD() mTheta.mHPD.isEmpty()) " + ev->mName ;
+    #endif
+                for (int j = 0; j<ev->mDates.size(); ++j) {
+                    Date& date = ev->mDates[j];
+                    date.mTi.generateHPD(thresh);
+                    date.mSigmaTi.generateHPD(thresh);
+                }
+            }
+        }
+    } , thresh);
+
+    std::thread thPhases ([this] (double thresh)
+    {
+        for (const auto& ph : mPhases) {
+            std::thread thAlpha ([ph] (double thresh)
+            {
+                ph->mAlpha.generateHPD(thresh);
+            }, thresh);
+            std::thread thBeta ([ph] (double thresh)
+            {
+                ph->mBeta.generateHPD(thresh);
+            }, thresh);
+            std::thread thDuration ([ph] (double thresh)
+            {
+                ph->mDuration.generateHPD(thresh);
+            }, thresh);
+
+            thAlpha.join();
+            thBeta.join();
+            thDuration.join();
+
+        }
+    } , thresh);
+
+    thEvents.join();
+    thPhases.join();
+
 #ifdef DEBUG
     qDebug() <<  "=> Model::generateHPD done in " + DHMS(t.elapsed()) ;
 #endif
@@ -1398,12 +1445,17 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
            qDebug()<<"Model::generateTempoAndActivity() tmin == tmax : " <<phase->mName;
             phase->mRawTempo[t_min_data] = 1;
             phase->mRawTempo[mSettings.mTmax] = 1;
-            // Convertion in the good Date format
-            phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
 
             phase->mRawActivity[t_min_data] = 1;
             // Convertion in the good Date format
-            phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
+            auto handle_ConvertTempo = std::async(std::launch::async, DateUtils::convertMapToAppSettingsFormat, phase->mRawTempo);
+            auto handle_ConvertActivity = std::async(std::launch::async, DateUtils::convertMapToAppSettingsFormat, phase->mRawActivity);
+
+            // phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
+            // phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
+
+            phase->mTempo = handle_ConvertTempo.get();
+            phase->mActivity = handle_ConvertActivity.get();
 
             phase->mActivityValueStack["Significance Score"] = TValueStack("Significance Score", 0);
             phase->mActivityValueStack["R_etendue"] = TValueStack("R_etendue", 0);
@@ -1595,15 +1647,32 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
             phase->mRawActivitySup.first() = 0.;
 
         }
+        /*
+        // Convertion in the good Date format
+        auto handle_ConvertTempo = std::async(std::launch::async, DateUtils::convertMapToAppSettingsFormat, phase->mRawTempo);
+        auto handle_ConvertActivity = std::async(std::launch::async, DateUtils::convertMapToAppSettingsFormat, phase->mRawActivity);
+
+        // phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
+        // phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
+
+        phase->mTempo = handle_ConvertTempo.get();
+        phase->mActivity = handle_ConvertActivity.get();
+        */
+
+        auto handle_mActivity = std::async(std::launch::async, DateUtils::convertMapToAppSettingsFormat, phase->mRawActivity);
+        auto handle_mActivityInf = std::async(std::launch::async, DateUtils::convertMapToAppSettingsFormat, phase->mRawActivityInf);
+        auto handle_mActivitySup = std::async(std::launch::async, DateUtils::convertMapToAppSettingsFormat, phase->mRawActivitySup);
+        auto handle_mActivityUnifMean = std::async(std::launch::async, DateUtils::convertMapToAppSettingsFormat, phase->mRawActivityUnifMean);
+
+
+        /*
         phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
         phase->mActivityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityInf);
         phase->mActivitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivitySup);
-
-
         phase->mActivityUnifMean = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifMean);
-     /*   phase->mActivityUnifInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifInf);
-        phase->mActivityUnifSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifSup);
-*/
+        */
+
+
 
         phase->mRawTempo = vector_to_map(espT, t_min, t_max, delta_t);
         phase->mRawTempoInf = vector_to_map(infT, t_min, t_max, delta_t);
@@ -1630,6 +1699,12 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
         phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
         phase->mTempoInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoInf);
         phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
+
+        // On  laisse le temps de faire les tempo
+        phase->mActivity = handle_mActivity.get();
+        phase->mActivityInf = handle_mActivityInf.get();
+        phase->mActivitySup = handle_mActivitySup.get();
+        phase->mActivityUnifMean = handle_mActivityUnifMean.get();
 
      } // Loop End on phase
 
@@ -2550,17 +2625,17 @@ void Model::restoreFromFile(QDataStream *in)
                        *in >> tmpValue;
                         d.mCalibHPD[tmpKey]= tmpValue;
                     }
-#ifdef DEBUG
+//#ifdef DEBUG
 
                      const QString toFind ("WID::"+ d.mUUID);
 
-                     if (d.mWiggleCalibration==nullptr || d.mWiggleCalibration->mCurve.isEmpty()) {
-                         qDebug()<<"Model::restoreFromFile mWiggleCalibration vide";
+                     if (d.mWiggleCalibration == nullptr || d.mWiggleCalibration->mCurve.isEmpty()) {
+                         qDebug()<<"[Model::restoreFromFile] mWiggleCalibration vide";
 
                      } else {
                          d.mWiggleCalibration = & (mProject->mCalibCurves[toFind]);
                      }
-#endif
+//#endif
                 }
          }
         *in >> mLogModel;

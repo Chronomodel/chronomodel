@@ -288,7 +288,7 @@ void EventsScene::createSceneFromState()
 {
 
 #ifdef DEBUG
-    qDebug()<<"EventsScene::createSceneFromState()";
+    qDebug()<<"[EventsScene::createSceneFromState] Start";
     QElapsedTimer startTime;
     startTime.start();
 #endif
@@ -376,7 +376,7 @@ void EventsScene::createSceneFromState()
 
     delete progress;
  #ifdef DEBUG
-    qDebug()<<tr("EventsScene::createScene() finish in %1").arg(QString(DHMS(startTime.elapsed())));
+    qDebug()<<tr("[EventsScene::createScene] finish in %1").arg(QString(DHMS(startTime.elapsed())));
  #endif
 }
 
@@ -388,7 +388,7 @@ void EventsScene::updateSceneFromState()
 {
 
 #ifdef DEBUG
-qDebug()<<"EventsScene::updateSceneFromState()";
+qDebug()<<"[EventsScene::updateSceneFromState] Start";
     QElapsedTimer startTime;
     startTime.start();
 #endif
@@ -456,7 +456,6 @@ qDebug()<<"EventsScene::updateSceneFromState()";
     // ------------------------------------------------------
     //  Find items not in current state
     QList<int> indexItemToRemove;
-   // bool hasDeleted = false;
 
     for (int i = 0; i < mItems.size(); ++i) {
         QJsonObject& event = mItems[i]->mData;
@@ -679,12 +678,11 @@ qDebug()<<"EventsScene::updateSceneFromState()";
 
 
  #ifdef DEBUG
-/*
      QTime timeDiff(0,0,0,1);
      timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
 
-    //qDebug()<<"EventsScene::updateScene() finish at " + timeDiff.toString("hh:mm:ss.zzz");
-*/
+    qDebug()<<"[EventsScene::updateScene] finish at " + timeDiff.toString("hh:mm:ss.zzz");
+
  #endif
 }
 
@@ -720,7 +718,7 @@ void EventsScene::clean()
     // ------------------------------------------------------
     //  Delete all constraints
     // ------------------------------------------------------
-    for (int i = mConstraintItems.size()-1; i >= 0; --i) {
+    for (auto i = mConstraintItems.size()-1; i >= 0; --i) {
         ArrowItem* constraintItem = mConstraintItems[i];
         removeItem(constraintItem);
         mConstraintItems.removeOne(constraintItem);

@@ -41,11 +41,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphView.h"
 #include "Event.h"
 #include "Bound.h"
-#include "StdUtilities.h"
-#include "QtUtilities.h"
+//#include "StdUtilities.h"
+//#include "QtUtilities.h"
 #include "ModelUtilities.h"
 #include "Painting.h"
-#include "MainWindow.h"
+//#include "MainWindow.h"
 
 
 #include <QtWidgets>
@@ -438,7 +438,8 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setTipYLab("t");
 
             mGraph->setYAxisMode(GraphView::eMinMaxHidden);
-            mGraph->showInfos(!isFixedBound);
+            //mGraph->showInfos(!isFixedBound);
+            mGraph->showInfos(false);
             mGraph->autoAdjustYScale(true);
 
     }

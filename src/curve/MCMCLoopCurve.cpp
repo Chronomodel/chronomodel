@@ -115,7 +115,7 @@ QString MCMCLoopCurve::calibrate()
 
         dates.reserve(nbDates);
         for (auto&& ev : events) {
-            int num_dates = ev->mDates.size();
+            auto num_dates = ev->mDates.size();
             for (int j = 0; j<num_dates; ++j) {
                 Date* date = &ev->mDates[j];
                 dates.push_back(date);
@@ -725,7 +725,7 @@ QString MCMCLoopCurve::initialize()
         mModel->mSpline = currentSpline(mModel->mEvents, true);
 
         // init Posterior MeanG and map
-        const int nbPoint = 300;//501;//500; 1611;// map size and curve size
+        const int nbPoint = 300;// map size and curve size
 
         const bool hasY = (mCurveSettings.mProcessType != CurveSettings::eProcessTypeUnivarie);
         const bool hasZ = (mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
@@ -733,12 +733,12 @@ QString MCMCLoopCurve::initialize()
                            mCurveSettings.mProcessType == CurveSettings::eProcessType3D);
 
         PosteriorMeanGComposante clearCompo;
-        clearCompo.mapG = CurveMap (nbPoint, nbPoint);
+        clearCompo.mapG = CurveMap (nbPoint, nbPoint);// (row, column)
         clearCompo.mapG.setRangeX(mModel->mSettings.mTmin, mModel->mSettings.mTmax);
         clearCompo.mapG.min_value = +INFINITY;
         clearCompo.mapG.max_value = 0;
 
-        clearCompo.vecG = std::vector<double> (nbPoint);
+        clearCompo.vecG = std::vector<double> (nbPoint); // column
         clearCompo.vecGP = std::vector<double> (nbPoint);
         clearCompo.vecGS = std::vector<double> (nbPoint);
         clearCompo.vecVarG = std::vector<double> (nbPoint);
@@ -847,6 +847,11 @@ QString MCMCLoopCurve::initialize()
  */
 bool MCMCLoopCurve::update()
 {
+    const bool hasY = ( mCurveSettings.mProcessType != CurveSettings::eProcessTypeUnivarie);
+    const bool hasZ = ( mCurveSettings.mProcessType == CurveSettings::eProcessType2D ||
+                        mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
+                        mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical ||
+                        mCurveSettings.mProcessType == CurveSettings::eProcessType3D);
 
     try {
         const double tminPeriod = mModel->mSettings.mTmin;
@@ -968,11 +973,18 @@ bool MCMCLoopCurve::update()
                             try_vecH = calculVecH(mModel->mEvents);
                             try_matrices = prepareCalculSpline(mModel->mEvents, try_vecH);
 
-                            try_h_YWI = h_YWI_AY(try_matrices, mModel->mEvents, mModel->mLambdaSpline.mX, try_vecH);
+                            auto handle_try_h_YWI = std::async(std::launch::async,  MCMCLoopCurve::h_YWI_AY, try_matrices, mModel->mEvents, mModel->mLambdaSpline.mX, try_vecH, hasY, hasZ);
 
-                            try_h_lambda = h_lambda(try_matrices, mModel->mEvents.size(), mModel->mLambdaSpline.mX);
+                            auto handle_try_h_lambda = std::async(std::launch::async,
+                                                         MCMCLoopCurve::h_lambda, try_matrices, mModel->mEvents.size(), mModel->mLambdaSpline.mX);
 
-                            try_h_theta = h_theta_Event(event);
+                            auto handle_try_h_theta = std::async(std::launch::async, MCMCLoopCurve::h_theta_Event, event);
+
+                            try_h_YWI = h_YWI_AY(try_matrices, mModel->mEvents, mModel->mLambdaSpline.mX, try_vecH, hasY, hasZ);
+
+                            try_h_lambda = handle_try_h_lambda.get();// h_lambda(try_matrices, mModel->mEvents.size(), mModel->mLambdaSpline.mX);
+
+                            try_h_theta = handle_try_h_theta.get(); //h_theta_Event(event);
 
                             // Calcul du rapport :
                             try_h = try_h_YWI * try_h_lambda* try_h_theta;
@@ -1496,6 +1508,7 @@ void MCMCLoopCurve::memo()
 
             for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
                 t = (double)idxT * stepT + mModel->mSettings.mTmin ;
+                // Le premier calcul avec splineX évalue i0, qui est retoiurné, à la bonne position pour les deux autres splines
                 mModel->valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineX, gx_the, varGx, gp, gs, i0);
                 mModel->valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineY, gy_the, varGy, gp, gs, i0);
                 mModel->valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineZ, gz_the, varGz, gp, gs, i0);
@@ -1543,7 +1556,6 @@ void MCMCLoopCurve::memo()
         }
 
 
-
         if (mChainIndex == 0 ) {// do not change the Y range between several chain
             minY_X = std::min(minY_X, meanG->gx.mapG.minY());
             maxY_X = std::max(maxY_X, meanG->gx.mapG.maxY());
@@ -1553,8 +1565,6 @@ void MCMCLoopCurve::memo()
             minY_X = std::min(minY_X, chainG->gx.mapG.minY());
             maxY_X = std::max(maxY_X, chainG->gx.mapG.maxY());
         }
-if (maxY_X>100)
-    qDebug()<<"maxY_x>100"<<maxY_X;
 
         chainG->gx.mapG.setRangeY(minY_X, maxY_X);
 
@@ -1722,25 +1732,7 @@ void MCMCLoopCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSp
             varGx = varG;
             break;
         }
-    /*    if (variableType == CurveSettings::eVariableTypeDeclination) {
-            const double F = sqrt(pow(gx, 2.) + pow(gy, 2.) + pow(gz, 2.));
-            const double Inc = asin(gz / F);
-            const double Dec = atan2(gy, gx);
 
-            const double ErrF = sqrt((varGx + varGy + varGz)/3.);
-
-            const double ErrI = ErrF / F ;
-            const double ErrD = ErrF / (F * cos(Inc)) ;
-
-            gx = Inc * deg;
-            gy = Dec * deg;
-            gz = F;
-
-            varGx = ErrI * deg;
-            varGy = ErrD * deg;
-            varGz = ErrF;
-        }
-        */
 
         // -- calcul Mean
         prevMeanG = *itVecG;
@@ -1852,18 +1844,18 @@ void MCMCLoopCurve::memo_PosteriorG_3D(PosteriorMeanG& postG, MCMCSpline &spline
 
     // 2 - Variables temporaires
     // référence sur variables globales
-    std::vector<double>& vecVarG_XInc = postG.gx.vecVarG;
-    std::vector<double>& vecVarG_YDec = postG.gy.vecVarG;
-    std::vector<double>& vecVarG_ZF = postG.gz.vecVarG;
+    std::vector<double> &vecVarG_XInc = postG.gx.vecVarG;
+    std::vector<double> &vecVarG_YDec = postG.gy.vecVarG;
+    std::vector<double> &vecVarG_ZF = postG.gz.vecVarG;
     // Variables temporaires
     // erreur inter spline
-    std::vector<double>& vecVarianceG_XInc = postG.gx.vecVarianceG;
-    std::vector<double>& vecVarianceG_YDec = postG.gy.vecVarianceG;
-    std::vector<double>& vecVarianceG_ZF = postG.gz.vecVarianceG;
+    std::vector<double> &vecVarianceG_XInc = postG.gx.vecVarianceG;
+    std::vector<double> &vecVarianceG_YDec = postG.gy.vecVarianceG;
+    std::vector<double> &vecVarianceG_ZF = postG.gz.vecVarianceG;
     // erreur intra spline
-    std::vector<double>& vecVarErrG_XInc = postG.gx.vecVarErrG;
-    std::vector<double>& vecVarErrG_YDec = postG.gy.vecVarErrG;
-    std::vector<double>& vecVarErrG_ZF = postG.gz.vecVarErrG;
+    std::vector<double> &vecVarErrG_XInc = postG.gx.vecVarErrG;
+    std::vector<double> &vecVarErrG_YDec = postG.gy.vecVarErrG;
+    std::vector<double> &vecVarErrG_ZF = postG.gz.vecVarErrG;
 
     //Pointeur sur tableau
     std::vector<double>::iterator itVecG_XInc = postG.gx.vecG.begin();
@@ -1900,7 +1892,7 @@ void MCMCLoopCurve::memo_PosteriorG_3D(PosteriorMeanG& postG, MCMCSpline &spline
     double  prevMeanG_XInc, prevMeanG_YDec, prevMeanG_ZF;
 
     const double k = 3.; // Le nombre de fois sigma G, pour le calcul de la densité
-    double a, b, surfG;
+    //double a, b, surfG;
 
     int  idxYErrMin, idxYErrMax;
 
@@ -1983,9 +1975,9 @@ void MCMCLoopCurve::memo_PosteriorG_3D(PosteriorMeanG& postG, MCMCSpline &spline
 
             int idErr = idxYErrMin;
             for (double* ptr_idErr = ptr_Ymin; ptr_idErr <= ptr_Ymax; ptr_idErr++) {
-                a = (idErr - 0.5) * stepY_XInc + ymin_XInc;
-                b = (idErr + 0.5) * stepY_XInc + ymin_XInc;
-                surfG = diff_erf(a, b, gx, stdGx );// correction à faire dans finalyze /nbIter;
+                double a = (idErr - 0.5) * stepY_XInc + ymin_XInc;
+                double b = (idErr + 0.5) * stepY_XInc + ymin_XInc;
+                double surfG = diff_erf(a, b, gx, stdGx );// correction à faire dans finalyze /nbIter;
 #ifdef DEBUG
                 *ptr_idErr = (*ptr_idErr) + surfG;
 #else
@@ -2022,8 +2014,8 @@ void MCMCLoopCurve::memo_PosteriorG_3D(PosteriorMeanG& postG, MCMCSpline &spline
 
         auto stdGy = sqrt(varGy);
 
-        // ajout densité erreur sur Y
-        /* il faut utiliser un pas de grille et le coefficient dans la grille dans l'intervalle [a,b] pour N(mu, sigma) est égale à la différence 1/2*(erf((b-mu)/(sigma*sqrt(2)) - erf((a-mu)/(sigma*sqrt(2))
+        // Ajout densité erreur sur Y
+        /* Il faut utiliser un pas de grille et le coefficient dans la grille dans l'intervalle [a,b] pour N(mu, sigma) est égale à la différence 1/2*(erf((b-mu)/(sigma*sqrt(2)) - erf((a-mu)/(sigma*sqrt(2))
         * https://en.wikipedia.org/wiki/Error_function
         */
         idxYErrMin = inRange( 0, int((gy - k*stdGy - ymin_YDec) / stepY_YDec), nbPtsY_YDec -1);
@@ -2048,9 +2040,9 @@ void MCMCLoopCurve::memo_PosteriorG_3D(PosteriorMeanG& postG, MCMCSpline &spline
 
             int idErr = idxYErrMin;
             for (double* ptr_idErr = ptr_Ymin; ptr_idErr <= ptr_Ymax; ptr_idErr++) {
-                a = (idErr - 0.5) * stepY_YDec + ymin_YDec;
-                b = (idErr + 0.5) * stepY_YDec + ymin_YDec;
-                surfG = diff_erf(a, b, gy, stdGy );
+                double a = (idErr - 0.5) * stepY_YDec + ymin_YDec;
+                double b = (idErr + 0.5) * stepY_YDec + ymin_YDec;
+                double surfG = diff_erf(a, b, gy, stdGy );
 #ifdef DEBUG
                 *ptr_idErr = (*ptr_idErr) + surfG;
 #else
@@ -2088,7 +2080,7 @@ void MCMCLoopCurve::memo_PosteriorG_3D(PosteriorMeanG& postG, MCMCSpline &spline
             // -- Calcul map on ZF
 
             // curveMap = curveMap_ZF;//postG.gz.mapG;
-            auto stdGz = sqrt(varGz);
+            const auto stdGz = sqrt(varGz);
 
             // ajout densité erreur sur Y
             /* il faut utiliser un pas de grille et le coefficient dans la grille dans l'intervalle [a,b] pour N(mu, sigma) est égale à la différence 1/2*(erf((b-mu)/(sigma*sqrt(2)) - erf((a-mu)/(sigma*sqrt(2))
@@ -2116,9 +2108,9 @@ void MCMCLoopCurve::memo_PosteriorG_3D(PosteriorMeanG& postG, MCMCSpline &spline
 
                 int idErr = idxYErrMin;
                 for (double* ptr_idErr = ptr_Ymin; ptr_idErr <= ptr_Ymax; ptr_idErr++) {
-                    a = (idErr - 0.5) * stepY_ZF + ymin_ZF;
-                    b = (idErr + 0.5) * stepY_ZF + ymin_ZF;
-                    surfG = diff_erf(a, b, gz, stdGz );
+                    double a = (idErr - 0.5) * stepY_ZF + ymin_ZF;
+                    double b = (idErr + 0.5) * stepY_ZF + ymin_ZF;
+                    double surfG = diff_erf(a, b, gz, stdGz );
 #ifdef DEBUG
                     *ptr_idErr = (*ptr_idErr) + surfG;
 #else
@@ -2134,9 +2126,6 @@ void MCMCLoopCurve::memo_PosteriorG_3D(PosteriorMeanG& postG, MCMCSpline &spline
 
 
         }
-
-
-
 
 
     }
@@ -2169,7 +2158,7 @@ void MCMCLoopCurve::finalize()
 #endif
 
     for (int i = 0; i < mChains.size(); ++i) {
-        ChainSpecs& chain = mChains[i];
+        ChainSpecs &chain = mChains[i];
         if (chain.mRealyAccepted == 0) {
             mAbortedReason = QString(tr("Warning : NO POSITIVE curve available with chain n° %1, current seed to change %2").arg (QString::number(i+1), QString::number(chain.mSeed)));
             throw mAbortedReason;
@@ -2753,12 +2742,12 @@ void MCMCLoopCurve::prepareEventY(Event* const event  )
 /**
  * Calcul de h_YWI_AY pour toutes les composantes de Y event (suivant la configuration univarié, spérique ou vectoriel)
  */
-long double MCMCLoopCurve::h_YWI_AY(const SplineMatrices& matrices, const QList<Event *> &events, const double lambdaSpline, const std::vector< double>& vecH)
+long double MCMCLoopCurve::h_YWI_AY(const SplineMatrices& matrices, const QList<Event *> &events, const double lambdaSpline, const std::vector< double>& vecH, const bool hasY, const bool hasZ)
 {
     const Matrix2D& matR = matrices.matR;
 
     Matrix2D matB;
-    const bool hasY = (mCurveSettings.mProcessType != CurveSettings::eProcessTypeUnivarie);
+   // const bool hasY = (mCurveSettings.mProcessType != CurveSettings::eProcessTypeUnivarie);
 
 
     if (lambdaSpline != 0) {
@@ -2814,12 +2803,16 @@ long double MCMCLoopCurve::h_YWI_AY_composanteX(const SplineMatrices &matrices, 
     // Calcul de la forme quadratique YT W Y  et  YT WA Y
 
     const int n = events.size();
-
+    // Schoolbook algo
+    /*
     long double h_exp = 0.;
     int i = 0;
-    for (auto& e : events) {
+    for (const auto& e : events) {
         h_exp  +=  e->mW * e->mYx * (e->mYx - vecG.at(i++));
     }
+    */
+    // C++ algo
+    long double h_exp = std::transform_reduce(PAR events.cbegin(), events.cend(), vecG.cbegin(), 0., std::plus{}, [](Event* e,  double g) { return e->mW * e->mYx * (e->mYx - g); });
 
     // -------------------------------------------
     // Calcul de la norme
@@ -2875,11 +2868,16 @@ long double MCMCLoopCurve::h_YWI_AY_composanteY(const SplineMatrices &matrices, 
 
     const int n = events.size();
 
+    // Schoolbook algo
+    /*
     long double h_exp = 0.;
     int i = 0;
-    for (auto& e : events) {
+    for (const auto& e : events) {
         h_exp  +=  e->mW * e->mYy * (e->mYy - vecG.at(i++));
     }
+    */
+    // C++ algo
+    long double h_exp = std::transform_reduce(PAR events.cbegin(), events.cend(), vecG.cbegin(), 0., std::plus{}, [](Event* e,  double g) { return e->mW * e->mYy * (e->mYy - g); });
 
     // -------------------------------------------
     // Calcul de la norme
@@ -2934,11 +2932,15 @@ long double MCMCLoopCurve::h_YWI_AY_composanteZ(const SplineMatrices &matrices, 
 
     const int n = events.size();
 
+    /*
     long double h_exp = 0.;
     int i = 0;
-    for (auto& e : events) {
+    for (const auto& e : events) {
         h_exp  +=  e->mW * e->mYz * (e->mYz - vecG.at(i++));
     }
+    */
+    // C++ algo
+    long double h_exp = std::transform_reduce(PAR events.cbegin(), events.cend(), vecG.cbegin(), 0., std::plus{}, [](Event* e,  double g) { return e->mW * e->mYz * (e->mYz - g); });
 
     // -------------------------------------------
     // Calcul de la norme
@@ -3009,11 +3011,15 @@ long double MCMCLoopCurve::h_YWI_AY_composanteX_decomp(const SplineMatrices &mat
 
     const int nb_noeuds = events.size();
 
+    /*
     long double h_exp = 0.;
     int i = 0;
     for (auto& e : events) {
         h_exp  +=  e->mW * e->mYx * (e->mYx - vecG.at(i++));
     }
+    */
+    // C++ algo
+    long double h_exp = std::transform_reduce(PAR events.cbegin(), events.cend(), vecG.cbegin(), 0., std::plus{}, [](Event* e,  double g) { return e->mW * e->mYx * (e->mYx - g); });
 
     // -------------------------------------------
     // Calcul de la norme
@@ -3498,7 +3504,7 @@ double MCMCLoopCurve::h_VG_event_old(const Event * e)
  */
 double MCMCLoopCurve::S02_Vg_Yx(QList<Event *> &events, SplineMatrices &matricesWI, std::vector<double>& vecH, const double lambdaSpline)
 {
-    const MCMCSpline &splineWI = currentSpline(events, false, vecH, matricesWI);
+    const MCMCSpline &splineWI = currentSpline(events, false, vecH, matricesWI); // peut-être utiliser calculSplineX()
     const std::vector< double> &vecG = splineWI.splineX.vecG;
 
     double S02 = 0.;

@@ -937,13 +937,14 @@ void ResultsView::setProject(Project* project)
      * => The previous nor the new results can be displayed so we must start by clearing the results view! */
 
     clearResults();
-    updateModel(project->mModel);
+    //updateModel(project->mModel);
+    initModel(project->mModel);
     connect(project, &Project::mcmcStarted, this, &ResultsView::clearResults);
 }
 
 void ResultsView::clearResults()
 {
-    deleteChainsControls();
+   // deleteChainsControls();
     deleteAllGraphsInList(mByEventsGraphs);
     deleteAllGraphsInList(mByPhasesGraphs);
     deleteAllGraphsInList(mByCurveGraphs);
@@ -951,6 +952,8 @@ void ResultsView::clearResults()
 
 void ResultsView::updateModel(Model* model)
 {
+    (void) model;
+    /*
     if (mModel == nullptr) {
         disconnect(mModel, &Model::newCalculus, this, &ResultsView::generateCurves);
     }
@@ -1001,12 +1004,73 @@ void ResultsView::updateModel(Model* model)
     mThresholdEdit->setText(stringForLocal(mModel->getThreshold()));
     mHActivityEdit->setText(stringForLocal(mModel->mHActivity));
     
+   // applyStudyPeriod();
+   // updateOptionsWidget();
+*/
+    createGraphs();
+    updateLayout();
+    
+ //   showStats(mStatCheck->isChecked());
+}
+
+void ResultsView::initModel(Model* model)
+{
+    if (mModel == nullptr) {
+        disconnect(mModel, &Model::newCalculus, this, &ResultsView::generateCurves);
+    }
+
+    mModel = model;
+    connect(mModel, &Model::newCalculus, this, &ResultsView::generateCurves);
+
+    Scale xScale;
+    xScale.findOptimal(mModel->mSettings.mTmin, mModel->mSettings.mTmax, 7);
+    mMajorScale = xScale.mark;
+    mMinorCountScale = 4;
+
+    mRuler->setRange(mModel->mSettings.getTminFormated(), mModel->mSettings.getTmaxFormated());
+    mRuler->setCurrent(mModel->mSettings.getTminFormated(), mModel->mSettings.getTmaxFormated());
+    mRuler->setScaleDivision(mMajorScale, mMinorCountScale);
+
+    QLocale locale = QLocale();
+    mMajorScaleEdit->setText(locale.toString(mMajorScale));
+    mMinorScaleEdit->setText(locale.toString(mMinorCountScale));
+
+    mHasPhases = (mModel->mPhases.size() > 0);
+
+    // ----------------------------------------------------
+    //  Create Chains option controls (radio and checkboxes under "MCMC Chains")
+    // ----------------------------------------------------
+    createChainsControls();
+    mAllChainsCheck->setChecked(true);
+
+    mCurrentTypeGraph = GraphViewResults::ePostDistrib;
+    mCurrentVariableList.clear();
+    if (isCurve()) {
+        mMainVariable = GraphViewResults::eG;
+        mCurveGRadio->setChecked(true);
+        mGraphListTab->setTab(2, false);
+
+    } else if (mHasPhases) {
+        mMainVariable = GraphViewResults::eBeginEnd;
+        mGraphListTab->setTab(1, false);
+
+    } else {
+        mMainVariable = GraphViewResults::eThetaEvent;
+        mGraphListTab->setTab(0, false);
+    }
+    updateMainVariable();
+    mCurrentVariableList.append(mMainVariable);
+    mFFTLenCombo->setCurrentText(stringForLocal(mModel->getFFTLength()));
+    mBandwidthSpin->setValue(mModel->getBandwidth());
+    mThresholdEdit->setText(stringForLocal(mModel->getThreshold()));
+    mHActivityEdit->setText(stringForLocal(mModel->mHActivity));
+
     applyStudyPeriod();
     updateOptionsWidget();
     createGraphs();
     updateLayout();
-    
-    showStats(false);
+
+    showStats(mStatCheck->isChecked());
 }
 
 #pragma mark Layout
@@ -1113,11 +1177,11 @@ void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewRes
         int i = 0;
         for (auto&& g : graphs) {
             g->setGeometry(0, (i++) * mGraphHeight*coefDisplay, widget->width() , mGraphHeight * coefDisplay);
-           // g->setVisible(true);
-           // g->update();
+            g->setVisible(true);
+            g->update();
         }
 
-
+/*
         std::vector<std::thread> queue;
         std::mutex g_mutex;  // protects g, utilise la même memoire graphique
         for (auto g : graphs) {
@@ -1131,6 +1195,7 @@ void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewRes
         for (auto&& th : queue) {
             th.join();
         }
+*/
     }
 }
 
@@ -2972,18 +3037,18 @@ void ResultsView::updateOptionsWidget()
         // ------------------------------------
         mAllChainsCheck->setVisible(isPostDistrib);
 
-        if (mAllChainsCheck->isVisible())
+        if (isPostDistrib)
             widHeigth += internSpan + mAllChainsCheck->height() + internSpan;
 
         for (auto&& checkChain : mChainChecks) {
             checkChain->setVisible(isPostDistrib);
-            if (checkChain->isVisible())
+            if (isPostDistrib)
                 widHeigth += checkChain->height() + internSpan;
         }
 
         for (auto&& chainRadio : mChainRadios) {
             chainRadio->setVisible(!isPostDistrib);
-            if (chainRadio->isVisible())
+            if (!isPostDistrib)
                 widHeigth += chainRadio->height() + internSpan;
         }
 
@@ -3158,7 +3223,7 @@ bool ResultsView::xScaleRepresentsTime()
                                      mMainVariable == GraphViewResults::eGS );
 }
 
-double ResultsView::sliderToZoom(const int &coef)
+double ResultsView::sliderToZoom(const int coef)
 {
     return isPostDistribGraph() ? pow(10., double (coef/100.)) : coef;
 }
@@ -3249,8 +3314,8 @@ void ResultsView::setXRange()
     mCurrentXMinEdit->blockSignals(true);
     mCurrentXMaxEdit->blockSignals(true);
 
-    mCurrentXMinEdit->setText(locale.toString(mResultCurrentMinX,'f',0));
-    mCurrentXMaxEdit->setText(locale.toString(mResultCurrentMaxX,'f',0));
+    mCurrentXMinEdit->setText(locale.toString(mResultCurrentMinX, 'f', 0));
+    mCurrentXMaxEdit->setText(locale.toString(mResultCurrentMaxX, 'f', 0));
 
     mCurrentXMinEdit->blockSignals(false);
     mCurrentXMaxEdit->blockSignals(false);

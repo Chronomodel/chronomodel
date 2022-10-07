@@ -233,7 +233,7 @@ void GraphViewS02::updateCurvesToShow(bool showAllChains, const QList<bool>& sho
         mGraph->setTipYLab("sqrt S02 Vg");
 
         mGraph->setYAxisMode(GraphView::eMinMaxHidden);
-        mGraph->showInfos(true);
+        mGraph->showInfos(false);
         mGraph->autoAdjustYScale(true);
     }
     /* -----------------------Third tab : Acceptance rate.-------------------------

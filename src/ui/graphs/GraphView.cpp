@@ -717,7 +717,7 @@ void GraphView::resizeEvent(QResizeEvent* event)
     repaintGraph(true);
 }
 
-void GraphView::updateGraphSize(int w, int h)
+void GraphView::updateGraphSize(qreal w, qreal h)
 {
 #ifdef Q_OS_MAC
      mBottomSpacer = 0.02 * h;
@@ -725,8 +725,8 @@ void GraphView::updateGraphSize(int w, int h)
      mBottomSpacer = 0.04 * h;
 #endif
 
-    mGraphWidth = w - mMarginLeft - mMarginRight;
-    mGraphHeight = h - mMarginTop - mMarginBottom - mBottomSpacer;
+    mGraphWidth = std::max(0., w - mMarginLeft - mMarginRight);
+    mGraphHeight = std::max(0., h - mMarginTop - mMarginBottom - mBottomSpacer);
     mAxisToolX.updateValues(int (mGraphWidth), int (mStepMinWidth), mCurrentMinX, mCurrentMaxX);
     mAxisToolY.updateValues(int (mGraphHeight), 12, mMinY, mMaxY);
 }
@@ -1431,8 +1431,8 @@ void GraphView::drawMap(GraphCurve& curve, QPainter& painter)
     const double maxVal = curve.mMap.max_value;
     const double minVal = curve.mMap.min_value;
 
-    qreal rectXSize = (getXForValue(maxX, false) - getXForValue(minX, false) ) / (curve.mMap.row()-1);
-    qreal rectYSize = (getYForValue(minY, false) - getYForValue(maxY, false) ) / (curve.mMap.column()-1)  ;
+    qreal rectXSize = (getXForValue(maxX, false) - getXForValue(minX, false) ) / (curve.mMap.column()-1); // Phd echange ici
+    qreal rectYSize = (getYForValue(minY, false) - getYForValue(maxY, false) ) / (curve.mMap.row()-1)  ;
     QPen rectPen;
     rectPen.setStyle(Qt::NoPen);//SolidLine);// NoPen);
 
@@ -1447,14 +1447,14 @@ void GraphView::drawMap(GraphCurve& curve, QPainter& painter)
     painter.setRenderHint(QPainter::Antialiasing);
     xtop = getXForValue(minX, false);
 
-    for (unsigned r = 1 ; r < curve.mMap.row(); r++) {
-        tReal = r*(maxX-minX)/(curve.mMap.row()-1) + minX;
+    for (unsigned c1 = 1 ; c1 < curve.mMap.column(); c1++) {
+        tReal = c1*(maxX-minX)/(curve.mMap.column()-1) + minX;
         xbottom =  getXForValue(tReal, false) + rectXSize/2.;
         ytop = getYForValue(minY, false);
 
-        for (unsigned c = 1 ; c < curve.mMap.column(); c++) {
-            val = curve.mMap.at(r, c);
-            yReal = c*(maxY-minY)/(curve.mMap.column()-1) + minY;
+        for (unsigned r = 1 ; r < curve.mMap.row(); r++) {
+            val = curve.mMap.at(c1, r);
+            yReal = r*(maxY-minY)/(curve.mMap.row()-1) + minY;
             ybottom = getYForValue(yReal, false) - rectYSize/2.;
 
             if ( val > minVal) {
@@ -1476,7 +1476,12 @@ void GraphView::drawMap(GraphCurve& curve, QPainter& painter)
                 } else {
 #endif
                     alp = (val - minVal)/ (maxVal - minVal);
-
+#ifdef DEBUG
+                    if (alp > 1)
+                        qDebug()<<"GRaphView::drawMap alpha> 1 ??";
+                    if (sqrt(alp) > 1)
+                        qDebug()<<"GRaphView::drawMap sqrt(alpha)> 1 ??";
+#endif
                     col = QColor(curve.mPen.color());
                     col.setAlphaF(sqrt(alp));
 #ifdef DEBUG

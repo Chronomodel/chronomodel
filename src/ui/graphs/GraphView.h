@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -181,7 +181,7 @@ public slots:
     void exportCurrentVectorCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, bool writeInRows, int offset = 0) const;
 
     void exportCurrentCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step = 1.) const;
-    void exportReferenceCurves(const QString& defaultPath, const QLocale locale = QLocale::English, const QString& csvSep = ",", double step =1.) const;
+    void exportReferenceCurves(const QString& defaultPath, const QLocale locale = QLocale::English, const QString& csvSep = ",", double step = 1.) const;
 
     void changeXScaleDivision (const Scale& sc);
     void changeXScaleDivision (const double& major, const int& minor);
@@ -189,7 +189,7 @@ public slots:
 protected:
     void adaptMarginBottom();
 
-    void updateGraphSize(int w, int h);
+    void updateGraphSize(qreal w, qreal h);
 
     void drawCurves(QPainter& painter);
     void drawMap(GraphCurve &curve, QPainter& painter);

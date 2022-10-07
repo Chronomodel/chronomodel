@@ -987,7 +987,7 @@ void ModelView::showMultiCalib()
         mAnimationShow->setStartValue(mRightHiddenRect);
         mAnimationShow->setEndValue(mRightRect);
 
-        //mMultiCalibrationView->raise();
+       // mMultiCalibrationView->raise();
 
         mAnimationShow->setTargetObject(mMultiCalibrationView);
         mAnimationShow->start();
@@ -1238,7 +1238,7 @@ void ModelView::updateLayout()
     // Label right
     updateRightPanelTitle();
     int labw = fm.boundingRect(mRightPanelTitle->text()).width() + 10;
-    mRightPanelTitle->setGeometry(width() - labw - margin, 0, labw, mTopRect.height());
+    mRightPanelTitle->setGeometry(std::max(0, width() - labw - margin), 0, labw, mTopRect.height());
 
     // Center buttons
     mButModifyPeriod->setGeometry(width()/2 - 251, 2, 300, mTopRect.height() - 4);
@@ -1252,7 +1252,7 @@ void ModelView::updateLayout()
     mHandlerRect = QRect(int((width()-mHandlerW)*mSplitProp), mTopRect.height(), mHandlerW, height() - mTopRect.height());
     mLeftWrapper->setGeometry(QRect(0, mTopRect.height(), mHandlerRect.x() , height() - mTopRect.height()));
 
-    mRightWrapper->setGeometry(QRect(mHandlerRect.x() + mHandlerW, mTopRect.height(), width() - mHandlerRect.x() - mHandlerW +1, height() - mTopRect.height()));
+    mRightWrapper->setGeometry(QRect(mHandlerRect.x() + mHandlerW, mTopRect.height(), std::max(0, width() - mHandlerRect.x() - mHandlerW +1), height() - mTopRect.height()));
 
      // coordinates in mLeftWrapper
     mLeftRect = QRect(0, 0, mLeftWrapper->width(), mLeftWrapper->height());

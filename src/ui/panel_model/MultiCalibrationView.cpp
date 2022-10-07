@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -44,11 +44,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Painting.h"
 #include "QtUtilities.h"
 #include "MainWindow.h"
-#include "Bound.h"
+//#include "Bound.h"
 #include "GraphViewResults.h"
+#include "CurveSettings.h"
 
 #include <QPainter>
-
 #include <QJsonArray>
 #include <QLocale>
 
@@ -274,12 +274,12 @@ void MultiCalibrationView::applyAppSettings()
 
 void MultiCalibrationView::updateLayout()
 {
-    const int graphWidth = width() - mButtonWidth;
+    const int graphWidth = std::max(0, width() - mButtonWidth);
 
-    const int x0 = width() - mButtonWidth;
+    const int x0 = graphWidth;
     const int margin = int(0.1 * mButtonWidth);
     const int xm = x0 + margin;
-qDebug()<<"MultiCalibrationView::updateLayout()";
+//qDebug()<<"MultiCalibrationView::updateLayout()";
     const int textHeight = int (1.2 * (fontMetrics().descent() + fontMetrics().ascent()) );
     const int verticalSpacer = int (0.3 * AppSettings::heigthUnit());
     mMarginRight = int (1.5 * floor(fontMetrics().boundingRect(mEndEdit->text()).width()/2) + 5);
@@ -347,9 +347,12 @@ qDebug()<<"MultiCalibrationView::updateLayout()";
 
     } else {
         mStatArea->hide();
-        mDrawing->show();
-        mDrawing->setGeometry(0, 0, graphWidth, yPosBottomBar0);
+        //mDrawing->show();
         mDrawing->setGraphHeight(mGraphHeight);
+        mDrawing->setGeometry(0, 0, graphWidth, yPosBottomBar0);
+        mDrawing->updateLayout();
+        //mDrawing->setGraphHeight(mGraphHeight);
+        mDrawing->show();
 
     }
 
@@ -358,6 +361,7 @@ qDebug()<<"MultiCalibrationView::updateLayout()";
 void MultiCalibrationView::updateGraphList()
 {
     QJsonObject state = mProject->state();
+
     mSettings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
     mTminDisplay = mSettings.getTminFormated() ;
@@ -380,10 +384,12 @@ void MultiCalibrationView::updateGraphList()
     QList<bool> listAxisVisible;
     const QJsonArray events = state.value(STATE_EVENTS).toArray();
 
-
-
+    bool curveModel = mProject->isCurve();
 
     QVector<QJsonObject> selectedEvents;
+
+    CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
+    CurveSettings::VariableType variableType = static_cast<CurveSettings::VariableType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_VARIABLE_TYPE).toInt());
 
     for (auto&& ev : events) {
        QJsonObject jsonEv = ev.toObject();
@@ -398,19 +404,25 @@ void MultiCalibrationView::updateGraphList()
     QJsonObject* preEvent = nullptr;
 
     for (QJsonObject& ev : selectedEvents) {
-
+        QString curveDescription = curveModel ? Event::curveDescriptionFromJsonEvent(ev, processType, variableType): "";
+        
         if (ev.value(STATE_EVENT_TYPE).toInt() == Event::eBound) {
 
-            Bound *bound = new Bound();
-            *bound = Bound::fromJson(ev);
-            const double tFixedFormated = DateUtils::convertToAppSettingsFormat( bound->fixedValue());
+          //  Bound *bound = new Bound();
+           // *bound = Bound::fromJson(ev);
+            const double fixedValue = ev.value(STATE_EVENT_KNOWN_FIXED).toDouble();
+            const double tFixedFormated = DateUtils::convertToAppSettingsFormat( fixedValue);
 
             const GraphCurve calibCurve = horizontalSection( qMakePair(tFixedFormated, tFixedFormated), "Bound", penColor, QBrush(brushColor));
 
             GraphView* calibGraph = new GraphView(this);
             QString boundName (ev.value(STATE_NAME).toString());
+            if (curveModel) {
+                calibGraph->addInfo(tr("Bound : %1 %2").arg(boundName, curveDescription));
+            } else {
+                calibGraph->addInfo(tr("Bound : %1").arg(boundName));
+            }
 
-            calibGraph->addInfo(tr("Bound : %1").arg(boundName));
             calibGraph->showInfos(true);
 
             calibGraph->setRangeY(0., 1.);
@@ -437,8 +449,8 @@ void MultiCalibrationView::updateGraphList()
                                   ev.value(STATE_COLOR_GREEN).toInt(),
                                   ev.value(STATE_COLOR_BLUE).toInt());
             colorList.append(color);
-            delete bound;
-            bound = nullptr;
+           // delete bound;
+           // bound = nullptr;
 
         } else {
             const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
@@ -446,7 +458,6 @@ void MultiCalibrationView::updateGraphList()
             for (auto&& date : dates) {
 
                 Date d (date.toObject());
-               // d.autoSetTiSampler(true);
 
                 GraphCurve calibCurve;
                 GraphView* calibGraph = new GraphView(this);
@@ -470,9 +481,18 @@ void MultiCalibrationView::updateGraphList()
 
                 // Insert the Event Name only if different to the previous Event's name
                 QString eventName (ev.value(STATE_NAME).toString());
+
+
+
+
+
                 listAxisVisible.append(true);
                 if (&ev != preEvent) {
-                    calibGraph->addInfo(tr("Event") + " : "+ eventName);
+                    if (curveModel) {
+                        calibGraph->addInfo(tr("Event : %1 %2").arg(eventName, curveDescription));
+                    } else {
+                        calibGraph->addInfo(tr("Event : %1").arg(eventName));
+                    }
 
                 } else {
                     calibGraph->addInfo("");
@@ -546,7 +566,7 @@ void MultiCalibrationView::updateGraphList()
        showStat();
 
    updateScroll();
-   update();
+   //update();
 }
 
 void MultiCalibrationView::updateMultiCalib()
@@ -614,7 +634,7 @@ void MultiCalibrationView::updateYZoom(const double prop)
     mGraphHeightEdit->blockSignals(true);
     mGraphHeightEdit->setText(sizeText);
     mGraphHeightEdit->blockSignals(false);
-
+    mDrawing->updateLayout();
 }
 
 void MultiCalibrationView::updateScroll()
@@ -1066,6 +1086,12 @@ void MultiCalibrationView::showStat()
        const QJsonArray events = state.value(STATE_EVENTS).toArray();
        QVector<QJsonObject> selectedEvents;
 
+
+       bool curveModel = mProject->isCurve();
+       CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
+       CurveSettings::VariableType variableType = static_cast<CurveSettings::VariableType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_VARIABLE_TYPE).toInt());
+
+
        for (auto&& ev : events) {
           QJsonObject jsonEv = ev.toObject();
            if (jsonEv.value(STATE_IS_SELECTED).toBool())
@@ -1077,13 +1103,16 @@ void MultiCalibrationView::showStat()
 
        mResultText = "";
        for (auto& ev : selectedEvents) {
+
+           QString curveDescription = curveModel ? Event::curveDescriptionFromJsonEvent(ev, processType, variableType): "";
+
            // Insert the Event's Name only if different to the previous Event's name
-           const QString eventName (ev.value(STATE_NAME).toString());
-           const QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
+           QString eventName (ev.value(STATE_NAME).toString() + " " + curveDescription);
+           QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
                                  ev.value(STATE_COLOR_GREEN).toInt(),
                                  ev.value(STATE_COLOR_BLUE).toInt());
            const QColor nameColor = getContrastedColor(color);
-           QString resultsStr = textBackgroundColor("<big>" +textColor(eventName, nameColor) + "</big> ", color);
+           QString resultsStr = textBackgroundColor("<big>" + textColor(eventName, nameColor) + "</big> ", color);
 
 
 

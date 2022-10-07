@@ -87,6 +87,7 @@ public:
     ~ResultsView();
 
     void setProject(Project* project);
+    void initModel(Model* model);
     void updateModel(Model* model);
 
 protected:
@@ -145,7 +146,7 @@ protected:
     // ------------------------------------------------
     inline bool isPostDistribGraph();
     inline bool xScaleRepresentsTime();
-    inline double sliderToZoom(const int &coef);
+    inline double sliderToZoom(const int coef);
     inline int zoomToSlider(const double &zoom);
 
     // ------------------------------------------------
@@ -171,7 +172,7 @@ private slots:
     //  Layout
     // ------------------------------------------------
     void updateLayout();
-    void showInfos(bool);
+    void showStats(bool);
 
     // ------------------------------------------------
     //  Graphs / Curves / Controls

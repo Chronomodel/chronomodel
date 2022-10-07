@@ -51,11 +51,8 @@ public:
     GraphViewAbstract();
     virtual ~GraphViewAbstract();
 
-    QPainterPath mPainterPath;
 
-    type_data   mCurrentMinX;
-    type_data   mCurrentMaxX;
-    // Getters
+#pragma mark Getters
     bool parameterChange() const;
     type_data rangeX() const;
     type_data rangeY() const;
@@ -72,7 +69,7 @@ public:
     qreal marginTop() const;
     qreal marginBottom() const;
 
-    // Setters
+ #pragma mark Setters
     void setPrevParameter();
 
     virtual void setRangeX(const type_data &aMinX, const type_data &aMaxX);
@@ -99,6 +96,11 @@ protected:
     virtual type_data getValueForY(const qreal &y, const bool &aConstainResult = true);
 
 protected:
+    QPainterPath mPainterPath;
+
+    type_data   mCurrentMinX;
+    type_data   mCurrentMaxX;
+
     qreal		mGraphWidth;
     qreal		mGraphHeight;
 
@@ -128,12 +130,12 @@ protected:
 };
 
 template <typename T>
-T valueForProportion(const T &value, const T &valMin, const T &valMax, const T &Pmin, const T &Pmax, const bool &resultInBounds)
+inline T valueForProportion(const T &value, const T &valMin, const T &valMax, const T &Pmin, const T &Pmax, const bool &resultInBounds)
 {
     T v2 = Pmin + (value - valMin) * (Pmax - Pmin) / (valMax - valMin);
 
     if (resultInBounds)
-        v2 = qBound(Pmin,v2,Pmax);
+        v2 = qBound(Pmin, v2, Pmax);
 
     return v2;
 }

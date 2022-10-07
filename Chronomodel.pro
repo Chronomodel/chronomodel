@@ -91,7 +91,7 @@ RESOURCES = $$PRO_PATH/Chronomodel.qrc
 
 
 #########################################
-# C++ 11
+# C++ 2a
 # Config must use C++ 11 for random number generator
 # This works for Windows, Linux & Mac 10.7 and +
 # In the future we'll need to increase to C++17
@@ -114,6 +114,11 @@ macx{
 
 
         QMAKESPEC = macx-clang
+
+
+#QMAKE_LFLAGS += -lomp
+#QMAKE_CXXFLAGS += -Xpreprocessor -fopenmp
+
         QMAKE_MAC_SDK = macosx
         message("QMAKE_MAC_SDK = $$QMAKE_MAC_SDK")
 
@@ -182,11 +187,13 @@ macx{
 	# this is to include fftw.h in the code :
 	INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac
 
-
+#INCLUDEPATH += $$_PRO_FILE_PWD_/lib/openMP/mac_12
 	# Link the application with FFTW library
 	# If no dylib are present, static libs (.a) are used => that's why we moved .dylib files in a "dylib" folder.
         #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
         LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3
+
+#LIBS += -L"$$_PRO_FILE_PWD_/lib/openMP/mac_12/dylib" -llibomp.dylib # Pour openMP
 
 	# If we were deploying FFTW as a dynamic library, we should :
 	# - Move all files from "lib/FFTW/mac/dylib" to "lib/FFTW/mac"
@@ -261,7 +268,7 @@ INCLUDEPATH += src/utilities/
 #########################################
 
 HEADERS += src/MainController.h \
-    src/ui/dialogs/RebuidCurveDialog.h \
+    src/ui/dialogs/RebuildCurveDialog.h \
     src/ui/panel_model/MultiCalibrationView.h \
     src/ui/panel_model/MultiCalibrationDrawing.h \
     src/utilities/Matrix.h
@@ -429,7 +436,7 @@ HEADERS += src/utilities/StdUtilities.h
 #########################################
 
 SOURCES += src/AppSettings.cpp \
-    src/ui/dialogs/RebuidCurveDialog.cpp \
+    src/ui/dialogs/RebuildCurveDialog.cpp \
     src/ui/panel_model/MultiCalibrationView.cpp \
     src/ui/panel_model/MultiCalibrationDrawing.cpp \
     src/utilities/Matrix.cpp

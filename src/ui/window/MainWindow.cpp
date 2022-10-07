@@ -46,7 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginManager.h"
 #include "ModelUtilities.h"
 #include "SwitchAction.h"
-#include "RebuidCurveDialog.h"
+#include "RebuildCurveDialog.h"
 
 #include <QtWidgets>
 #include <QLocale>
@@ -296,7 +296,7 @@ void MainWindow::createActions()
     mSelectEventsNameAction = new QAction(tr("Select All Events with string"), this);
     connect(mSelectEventsNameAction, &QAction::triggered, this, &MainWindow::selectEventWithString);
 
-    mExportCurveAction = new QAction(tr("Rebuid and Export Curve and Map"), this);
+    mExportCurveAction = new QAction(tr("Rebuild and Export Curve and Map"), this);
     connect(mExportCurveAction, &QAction::triggered, this, &MainWindow::rebuildExportCurve);
     //-----------------------------------------------------------------
     // Help/About Menu
@@ -871,13 +871,13 @@ void MainWindow::rebuildExportCurve()
         compoList.append("X");
         break;
     case CurveSettings::eProcessTypeSpherical:
-        compoList.append({"X", "Y"});
+        compoList.append({"Inc", "Dec"});
         break;
     case CurveSettings::eProcessType2D:
         compoList.append({"X", "Y"});
         break;
     case CurveSettings::eProcessTypeVector:
-        compoList.append({"X", "Y", "Z"});
+        compoList.append({"Inc", "Dec", "Field"});
         break;
     case CurveSettings::eProcessType3D:
         compoList.append({"X", "Y", "Z"});
@@ -886,24 +886,116 @@ void MainWindow::rebuildExportCurve()
         break;
     }
 
-   RebuidCurveDialog qDialog = RebuidCurveDialog();
-   qDialog.setCompo(compoList);
+    const bool hasY = (curveModel->mCurveSettings.mProcessType != CurveSettings::eProcessTypeUnivarie);
+    const bool hasZ = (curveModel->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
+                       curveModel->mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical ||
+                       curveModel->mCurveSettings.mProcessType == CurveSettings::eProcessType3D);
+
+    // Setting actual minmax value
+    std::vector<std::pair<double, double>> tabMinMax;
+    tabMinMax.push_back(curveModel->mPosteriorMeanG.gx.mapG.rangeY);
+    if (hasY)
+        tabMinMax.push_back(curveModel->mPosteriorMeanG.gy.mapG.rangeY);
+    if (hasZ)
+        tabMinMax.push_back(curveModel->mPosteriorMeanG.gz.mapG.rangeY);
+
+    std::pair<unsigned, unsigned> mapSizeXY = std::pair<unsigned, unsigned> {curveModel->mPosteriorMeanG.gx.mapG._column, curveModel->mPosteriorMeanG.gx.mapG._row};
+    RebuildCurveDialog qDialog = RebuildCurveDialog(compoList, &tabMinMax, mapSizeXY);
+
 
     if (qDialog.exec() && (qDialog.doCurve() || qDialog.doMap())) {
 
-       const int XGrid = qDialog.getXSpinResult();
-       const int YGrid = qDialog.getYSpinResult();
-
-       QLocale csvLocale = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+        auto newMapSizeXY = qDialog.getMapSize();
+        const int XGrid = newMapSizeXY.first;
+        const int YGrid = newMapSizeXY.second;
+       tabMinMax = qDialog.getYTabMinMax();
 
        ModelCurve* modelCurve = static_cast<ModelCurve*>(mProject->mModel);
-       QString compo = qDialog.compo();
-       const char chCompo = compo.toStdString().front();
-       auto postCompoG = modelCurve->buildCurveAndMap(XGrid, YGrid, chCompo, qDialog.doMap(), qDialog.getYMin(), qDialog.getYMax());
+       //QString compo = qDialog.compo();
+      // const char chCompo = compo.toStdString().front();
 
-       if (qDialog.doCurve())
+  /*     auto postCompoG = modelCurve->buildCurveAndMap(XGrid, YGrid, chCompo, qDialog.doMap(), qDialog.getYMin(), qDialog.getYMax());
+       // Setting new mean on composant
+       switch (chCompo) {
+       case 'X':
+           modelCurve->mPosteriorMeanG.gx = postCompoG;
+           break;
+       case 'Y':
+           modelCurve->mPosteriorMeanG.gy = postCompoG;
+           break;
+       case 'Z':
+           modelCurve->mPosteriorMeanG.gz = postCompoG;
+           break;
+       default:
+           break;
+       }
+  */
+       // ____
+
+       auto runTrace = modelCurve->fullRunSplineTrace(modelCurve->mChains);
+
+       // init Posterior MeanG and map
+
+
+       PosteriorMeanGComposante clearCompo;
+       clearCompo.mapG = CurveMap (YGrid, XGrid); // Attention invesion ->explicit CurveMap(unsigned row, unsigned col)
+       clearCompo.mapG.setRangeX(curveModel->mSettings.mTmin, curveModel->mSettings.mTmax);
+
+       clearCompo.mapG.min_value = +INFINITY;
+       clearCompo.mapG.max_value = 0;
+
+       clearCompo.vecG = std::vector<double> (XGrid);
+       clearCompo.vecGP = std::vector<double> (XGrid);
+       clearCompo.vecGS = std::vector<double> (XGrid);
+       clearCompo.vecVarG = std::vector<double> (XGrid);
+       clearCompo.vecVarianceG = std::vector<double> (XGrid);
+       clearCompo.vecVarErrG = std::vector<double> (XGrid);
+
+       PosteriorMeanG clearMeanG;
+       clearMeanG.gx = clearCompo;
+       clearMeanG.gx.mapG.setRangeY(tabMinMax[0].first, tabMinMax[0].second);
+
+       if ( hasY) {
+           clearMeanG.gy = clearCompo;
+           clearMeanG.gy.mapG.setRangeY(tabMinMax[1].first, tabMinMax[1].second);
+           if (hasZ) {
+               clearMeanG.gz = clearCompo;
+               clearMeanG.gz.mapG.setRangeY(tabMinMax[2].first, tabMinMax[2].second);
+           }
+       }
+
+       modelCurve->mPosteriorMeanG = clearMeanG;
+
+       int totalIterAccepted = 1;
+       if (!hasY) {
+            for (auto &splineXYZ : runTrace) {
+                modelCurve->memo_PosteriorG(modelCurve->mPosteriorMeanG.gx, splineXYZ.splineX,  totalIterAccepted++ );
+            }
+
+        } else {
+            for (auto &splineXYZ : runTrace) {
+                modelCurve->memo_PosteriorG_3D(modelCurve->mPosteriorMeanG, splineXYZ, modelCurve->mCurveSettings.mProcessType,  totalIterAccepted++ );
+            }
+        }
+       // update min-value
+      // auto mini = *std::min_element(begin(modelCurve->mPosteriorMeanG.gx.mapG.data), end(modelCurve->mPosteriorMeanG.gx.mapG.data));
+
+       modelCurve->mPosteriorMeanG.gx.mapG.min_value =  *std::min_element(begin(modelCurve->mPosteriorMeanG.gx.mapG.data), end(modelCurve->mPosteriorMeanG.gx.mapG.data));
+
+       if (hasY) {
+           modelCurve->mPosteriorMeanG.gy.mapG.min_value = *std::min_element(begin(modelCurve->mPosteriorMeanG.gy.mapG.data), end(modelCurve->mPosteriorMeanG.gy.mapG.data));
+
+           if (hasZ) {
+               modelCurve->mPosteriorMeanG.gz.mapG.min_value = *std::min_element(begin(modelCurve->mPosteriorMeanG.gz.mapG.data), end(modelCurve->mPosteriorMeanG.gz.mapG.data));
+           }
+       }
+       // update ResultView
+       mProjectView->updateResults();
+/*
+       if (qDialog.doCurve()) {
            modelCurve->exportMeanGComposanteToReferenceCurves(postCompoG, MainWindow::getInstance()->getCurrentPath(), csvLocale, AppSettings::mCSVCellSeparator);
 
+       }
        if (qDialog.doMap()) {
            const QString filter = tr("CSV (*.csv)");
            const QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
@@ -918,7 +1010,7 @@ void MainWindow::rebuildExportCurve()
                file.close();
            }
        }
-
+*/
 
     } else {
         return;
@@ -1287,6 +1379,8 @@ void MainWindow::mcmcFinished(Model* model)
 
     // Just check the Result Button (the view will be shown by ProjectView::initResults below)
     mViewResultsAction->setChecked(true);
+
+    mExportCurveAction->setEnabled(mProject->isCurve());
 
     // Tell the views to update
     mProjectView->initResults(model);

@@ -547,7 +547,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setTipXLab(tr("Iteration"));
             mGraph->setTipYLab("t");
             mGraph->setYAxisMode(GraphView::eMinMaxHidden);
-            mGraph->showInfos(true);
+            mGraph->showInfos(false);
             mGraph->autoAdjustYScale(true);
 
         } else if (mShowVariableList.contains(eDuration)) {
@@ -562,7 +562,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setTipXLab(tr("Iteration"));
             mGraph->setTipYLab("t");
             mGraph->setYAxisMode(GraphView::eMinMaxHidden);
-            mGraph->showInfos(true);
+            mGraph->showInfos(false);
             mGraph->autoAdjustYScale(true);
         }
     }

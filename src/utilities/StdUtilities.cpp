@@ -38,12 +38,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "StdUtilities.h"
-#include "AppSettings.h"
+//#include "AppSettings.h"
 
 #include <ctgmath>
 #include <cstdlib>
 #include <iostream>
 #include <fenv.h>
+#include <QObject>
 
 using namespace std;
 
@@ -184,13 +185,14 @@ QVector<double> normalize_vector(const QVector<double>& aVector)
 
     QVector<double>::const_iterator it = max_element(aVector.begin(), aVector.end());
     if (it != aVector.end()) {
-        double max_value = *it;
+        const double max_value = *it;
 
-        for (auto&& value : aVector)
+        for (const auto& value : aVector)
             histo.push_back(value/max_value);
     }
     return histo;
 }
+
 QVector<float> normalize_vector(const QVector<float>& aVector)
 {
     QVector<float> histo;
@@ -217,8 +219,9 @@ QVector<double> stretch_vector(const QVector<double>& aVector, const double from
         const double max = *(max_element(aVector.constBegin(), aVector.constEnd()));
 
         if (min < max) {
-            for (QVector<double>::const_iterator it = aVector.constBegin(); it != aVector.constEnd(); ++it)
-                histo.push_back(from + (to - from) * (*it - min) / (max - min));
+            //for (QVector<double>::const_iterator it = aVector.constBegin(); it != aVector.constEnd(); ++it)
+            for (const auto& val : aVector)
+                histo.push_back(from + (to - from) * (val - min) / (max - min));
 
         } else // Just 1 value... set it to "from" (setting it to "to" could also be done though...)
             histo.push_back(to);

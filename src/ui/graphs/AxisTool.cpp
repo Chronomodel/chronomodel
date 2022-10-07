@@ -69,13 +69,13 @@ mAxisColor(0, 0, 0)
 qreal AxisTool::getXForValue(const qreal &value)
 {
     const qreal rigthBlank = 5.; // the same name and the same value as AxisTool::updateValues()
-    return qreal(valueForProportion(value, qreal (mStartVal), qreal (mEndVal), qreal (0.), qreal (mTotalPix - rigthBlank), true));
+    return valueForProportion(value, qreal (mStartVal), qreal (mEndVal), 0., std::max(0., mTotalPix - rigthBlank), true);
 }
 
 qreal AxisTool::getYForValue(const qreal &value)
 {
     const qreal blank = 10.;
-    return qreal(valueForProportion(value, qreal (mStartVal), qreal (mEndVal), qreal (0.), qreal (mTotalPix-blank), true));
+    return valueForProportion(value, qreal (mStartVal), qreal (mEndVal), 0., std::max(0., mTotalPix-blank), true);
 }
 
 void AxisTool::updateValues(const int &totalPix, const int &minDeltaPix, const qreal &minVal, const qreal &maxVal)

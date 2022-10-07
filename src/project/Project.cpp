@@ -260,9 +260,9 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
 
 void Project::sendUpdateState(const QJsonObject& state, const QString& reason, bool notify)
 {
-#ifdef DEBUG
-    qDebug()<<"Project::sendUpdateState "<<reason<<notify;
-#endif
+
+    qDebug()<<"[Project::sendUpdateState] "<<reason<<notify;
+
     /* The event must be allocated on the heap since the post event queue will take ownership of the event
      * and delete it once it has been posted.
      * It is not safe to access the event after it has been posted.*/
@@ -458,7 +458,7 @@ void Project::unselectedAllInState()
     }
     mState[STATE_EVENTS] = events;
 
-    qDebug()<<"Project::unselectedAllInState end";
+    qDebug()<<"[Project::unselectedAllInState] end";
 
 }
 
@@ -479,7 +479,7 @@ bool Project::event(QEvent* e)
         if (se)
             updateState(se->state(), se->reason(), se->notify());
 
-        qDebug() << "(---) Project::event";
+        qDebug() << "(---) [Project::event]";
         return true;
     } /*else if (e->type() == 1001) {
 #ifdef DEBUG
@@ -547,7 +547,7 @@ bool Project::load(const QString& path)
     }
     QFile file(path);
 
-    qDebug() << "in Project::load Loading project file : " << path;
+    qDebug() << "[Project::load] Loading project file : " << path;
 
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QFileInfo info(path);
@@ -647,11 +647,11 @@ bool Project::load(const QString& path)
             //  Ask all plugins if dates are corrects.
             //  If not, it may be an incompatibility between plugins versions (new parameter added for example...)
             //  This function gives a chance to plugins to modify dates saved with old versions in order to use them with the new version.
-           qDebug() << "in Project::load  begin checkDatesCompatibility";
+           qDebug() << "[Project::load]  begin checkDatesCompatibility";
            bool isCorrected;
            loadingState = checkDatesCompatibility(loadingState, isCorrected);
 
-           qDebug() << "in Project::load  end checkDatesCompatibility";
+           qDebug() << "[Project::load]  end checkDatesCompatibility";
             //  Check if dates are valid on the current study period
             mState = QJsonObject();
             mState = checkValidDates(loadingState);
@@ -660,7 +660,7 @@ bool Project::load(const QString& path)
             // When openning a project, it is maked as saved : mState == mLastSavedState
             mLastSavedState = mState;
 
-            qDebug() << "in Project::load  unselectedAllInState";
+            qDebug() << "[Project::load]  unselectedAllInState";
             unselectedAllInState(); // modify mState
 
             // If a version update is to be done :
@@ -678,7 +678,7 @@ bool Project::load(const QString& path)
                 if (calFile.open(QIODevice::ReadOnly)) {
 
                     if (calFile.exists()) {
-                        qDebug() << "Project::load Loading model file.cal : " << calFile.fileName() << " size =" << calFile.size();
+                        qDebug() << "[Project::load] Loading model file.cal : " << calFile.fileName() << " size =" << calFile.size();
                         QDataStream in(&calFile);
 
                         int QDataStreamVersion;
@@ -764,14 +764,14 @@ bool Project::load(const QString& path)
             if (fi.isFile() && !mCalibCurves.isEmpty()) {
                 if (dataFile.exists()) {
 
-                    qDebug() << "Project::load Loading model file.res : " << dataPath << " size=" << dataFile.size();
+                    qDebug() << "[Project::load] Loading model file.res : " << dataPath << " size=" << dataFile.size();
 
                     try {
                         delete mModel;
 
                         if (isCurve()) {
                             mModel = new ModelCurve ();
-                            qDebug() << "Project::load Create a ModelCurve";
+                            qDebug() << "[Project::load] Create a ModelCurve";
 
                         } else
                             mModel = new Model ();
@@ -823,13 +823,13 @@ bool Project::load(const QString& path)
                         message.exec();
                     }
                 } else {
-                    qDebug() << "Project::load() no file.res : "<< dataPath;
+                    qDebug() << "[Project::load] no file.res : "<< dataPath;
 
                     setNoResults(true);
                     clearModel();
                 }
             } else {
-                qDebug() << "Project::load() no file.res : "<< dataPath;
+                qDebug() << "[Project::load] no file.res : "<< dataPath;
                 setNoResults(true);
                 clearModel();
             }
@@ -867,7 +867,7 @@ bool Project::insert(const QString& path)
     }
     QFile file(path);
 
-    qDebug() << "in Project::load Loading project file : " << path;
+    qDebug() << "[Project::insert] Loading project file : " << path;
 
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QFileInfo info(path);
@@ -886,6 +886,7 @@ bool Project::insert(const QString& path)
                                 qApp->activeWindow());
             message.exec();
             return false;
+
         } else {
             if (mModel)
                 mModel->clear();
@@ -944,11 +945,11 @@ bool Project::insert(const QString& path)
             //  Ask all plugins if dates are corrects.
             //  If not, it may be an incompatibility between plugins versions (new parameter added for example...)
             //  This function gives a chance to plugins to modify dates saved with old versions in order to use them with the new version.
-           qDebug() << "in Project::load  begin checkDatesCompatibility";
+           qDebug() << "[Project::insert]  begin checkDatesCompatibility";
            bool isCorrected;
            loadedState = checkDatesCompatibility(loadedState, isCorrected);
 
-            qDebug() << "in Project::load  end checkDatesCompatibility";
+            qDebug() << "[Project::insert]  end checkDatesCompatibility";
             //  Check if dates are valid on the current study period
             loadedState = checkValidDates(loadedState);
 
@@ -1139,7 +1140,7 @@ bool Project::insert(const QString& path)
            clearModel();
            pushProjectState(stateNext, INSERT_PROJECT_REASON, true);
 
-           qDebug() << "in Project::insert  unselectedAllInState";
+           qDebug() << "[Project::insert]  unselectedAllInState";
            unselectedAllInState(); // modify mState
            return true;
         }
@@ -1228,9 +1229,9 @@ bool Project::saveProjectToFile()
 
 
         if (file_chr.open(QIODevice::ReadWrite | QIODevice::Text)) {
-#ifdef DEBUG
-            qDebug() << "Project::saveProjectToFile() Project saved to : " << path;
-#endif
+
+            qDebug() << "[Project::saveProjectToFile] Project saved to : " << path;
+
             // reset version number
             mState[STATE_APP_VERSION] = QApplication::applicationVersion();
 
@@ -1246,8 +1247,9 @@ bool Project::saveProjectToFile()
         } else
             return false;
 
-    } else {
+    }
 #ifdef DEBUG
+     else {
         //qDebug() << "Nothing new to save in project model";
 #endif
     }
@@ -1273,9 +1275,9 @@ bool Project::saveProjectToFile()
         file_res.remove();
 
     if (!mNoResults && !mModel->mEvents.empty()) {
- #ifdef DEBUG
-        qDebug() << "Project::saveProjectToFile() Saving project results in "<<AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res";
-#endif
+
+        qDebug() << "[Project::saveProjectToFile] Saving project results in "<<AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res";
+
         mModel->setProject(this);
 
         // -----------------------------------------------------
@@ -1629,7 +1631,6 @@ void Project::recycleEvents()
     TrashDialog dialog(TrashDialog::eEvent, qApp->activeWindow());
     if (dialog.exec() == QDialog::Accepted) {
         QList<int> indexes = dialog.getSelectedIndexes();
-        //qDebug() << indexes;
 
         QJsonObject stateNext = mState;
         QJsonArray events = mState.value(STATE_EVENTS).toArray();
@@ -1643,7 +1644,7 @@ void Project::recycleEvents()
         for (int i = 0; i < indexes.size(); ++i) {
             QJsonObject event = events_trash.at(indexes[i]).toObject();
             const int id = getUnusedEventId(events);
-            event[STATE_ID] = id;//getUnusedEventId(events);
+            event[STATE_ID] = id;
             Event::Type type = (Event::Type) event.value(STATE_EVENT_TYPE).toInt();
 
             /* if the event is default type, we have to validate the dates
@@ -1752,8 +1753,6 @@ void Project::mergeEvents(int eventFromId, int eventToId)
 
     }
     stateNext[STATE_EVENTS_CONSTRAINTS] = constraints;
-
-    //qDebug() << events;
 
     pushProjectState(stateNext, "Events merged", true);
 }
@@ -1975,7 +1974,7 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
 {
     isCorrected = false;
     QJsonArray events = state.value(STATE_EVENTS).toArray();
-    QJsonArray phases = state.value(STATE_PHASES).toArray();
+ //   QJsonArray phases = state.value(STATE_PHASES).toArray();
     QJsonObject curveSetJSon;
     CurveSettings cs;
 
@@ -2312,7 +2311,6 @@ void Project::recycleDates(int eventId)
     TrashDialog dialog(TrashDialog::eDate, qApp->activeWindow());
     if (dialog.exec() == QDialog::Accepted) {
         QList<int> indexes = dialog.getSelectedIndexes();
-        //qDebug() << indexes;
 
         QJsonObject stateNext = mState;
         QJsonArray events = mState.value(STATE_EVENTS).toArray();
@@ -2552,7 +2550,6 @@ void Project::createPhase(qreal x, qreal y)
 
                 phase[STATE_ID] = getUnusedPhaseId(phases);
 
-                //QJsonObject eventJSON (event.toJson());
                 phase[STATE_ITEM_X] = x;
                 phase[STATE_ITEM_Y] = y;
 
@@ -2769,7 +2766,7 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
 QJsonObject Project::getPhasesWithId(const int id)
 {
     const QJsonArray phases = mState.value(STATE_PHASES).toArray();
-    for (const QJsonValue pha : phases) {
+    for (const QJsonValue& pha : phases) {
         if (pha.toObject().value(STATE_ID) == id)
             return pha.toObject();
     }
@@ -2784,11 +2781,18 @@ bool Project::isEventConstraintAllowed(const QJsonObject& eventFrom, const QJson
     const int eventFromId = eventFrom.value(STATE_ID).toInt();
     const int eventToId = eventTo.value(STATE_ID).toInt();
     bool ConstraintAllowed = true;
-    for (int i=0; i<constraints.size(); ++i) {
-        const QJsonObject constraint = constraints.at(i).toObject();
+
+    for (const auto &cts : constraints) {
+        const QJsonObject constraint = cts.toObject();
         if (constraint.value(STATE_CONSTRAINT_BWD_ID) == eventFromId && constraint.value(STATE_CONSTRAINT_FWD_ID) == eventToId) {
             ConstraintAllowed = false;
-            qDebug() << "Project::isEventConstraintAllowed: not Allowed " ;
+            qDebug() << "[Project::isEventConstraintAllowed] not Allowed " ;
+            return ConstraintAllowed;
+
+        } else if (constraint.value(STATE_CONSTRAINT_BWD_ID) == eventToId && constraint.value(STATE_CONSTRAINT_FWD_ID) == eventFromId) {
+            ConstraintAllowed = false;
+            qDebug() << "[Project::isEventConstraintAllowed] not Allowed " ;
+            return ConstraintAllowed;
         }
     }
     return ConstraintAllowed;
@@ -2815,7 +2819,7 @@ void Project::createEventConstraint(const int eventFromId, const int eventToId)
     }
 
 
-    qDebug()<<"Project::createEventConstraint "<<eventFrom.value(STATE_NAME)<<eventTo.value(STATE_NAME);
+    qDebug()<<"[Project::createEventConstraint] "<<eventFrom.value(STATE_NAME)<<eventTo.value(STATE_NAME);
     EventConstraint c;
     c.mId = getUnusedEventConstraintId(constraints);
     c.mFromId = eventFrom.value(STATE_ID).toInt();
@@ -3202,7 +3206,7 @@ void Project::runChronomodel()
         }
         // Dialog is never "rejected", so this should never happen :
         else {
-            qDebug() << "ERROR : MCMCProgressDialog::rejected : Should NEVER happen !";
+            qDebug() << "[Project::runChronomodel] ERROR : MCMCProgressDialog::rejected : Should NEVER happen !";
             clearModel();
         }
     }
@@ -3219,7 +3223,7 @@ void Project::clearModel()
 
 bool Project::isCurve() const{
     const QJsonObject CurveSettings = mState.value(STATE_CURVE).toObject();
-    return (!CurveSettings.isEmpty() && char(CurveSettings.value(STATE_CURVE_PROCESS_TYPE).toInt()) != char(CurveSettings::eProcessTypeNone));
+    return (!CurveSettings.isEmpty() && CurveSettings.value(STATE_CURVE_PROCESS_TYPE).toInt() != CurveSettings::eProcessTypeNone);
 
 }
 
@@ -3304,8 +3308,7 @@ void Project::runCurve()
           - The run function returns
       => THE DIALOG IS NEVER REJECTED ! (Escape key also disabled to prevent default behavior)
      -------------------------------------------------------------------- */
-    if (dialog.startMCMC() == QDialog::Accepted)
-    {
+    if (dialog.startMCMC() == QDialog::Accepted) {
         if (loop.mAbortedReason.isEmpty()) {
             //Memo of the init variable state to show in Log view
             //mModel->mLogInit = loop.getChainsLog() + loop.getInitLog();
@@ -3326,7 +3329,7 @@ void Project::runCurve()
     }
     // Dialog is never "rejected", so this should never happen :
     else {
-        qDebug() << "ERROR : MCMCProgressDialog::rejected : Should NEVER happen !";
+        qDebug() << "[Project::runCurve] ERROR : MCMCProgressDialog::rejected : Should NEVER happen !";
         clearModel();
     }
 }

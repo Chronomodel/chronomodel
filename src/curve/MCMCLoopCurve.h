@@ -78,20 +78,20 @@ protected:
     virtual void finalize();
     
 private:
-     long double h_YWI_AY(const SplineMatrices& matrices, const QList<Event *> &events, const  double lambdaSpline, const std::vector< double> &vecH);
+     static long double h_YWI_AY(const SplineMatrices& matrices, const QList<Event *> &events, const  double lambdaSpline, const std::vector< double> &vecH, const bool hasY = false, const bool hasZ = false);
 
-     long double h_YWI_AY_composanteX(const SplineMatrices &matrices, const QList<Event *> &events,  const std::vector<double>& vecH, const std::pair<Matrix2D, std::vector<double> > &decomp_matB, const std::pair<Matrix2D, std::vector<double> > &decomp_QTQ, const Matrix2D &matB, const double lambdaSpline);
-     long double h_YWI_AY_composanteY(const SplineMatrices &matrices, const QList<Event *> &events,  const std::vector<double>& vecH, const std::pair<Matrix2D, std::vector<double> > &decomp_matB, const std::pair<Matrix2D, std::vector<double> > &decomp_QTQ, const Matrix2D &matB, const double lambdaSpline);
-     long double h_YWI_AY_composanteZ(const SplineMatrices &matrices, const QList<Event *> &events,  const std::vector<double>& vecH, const std::pair<Matrix2D, std::vector<double> > &decomp_matB, const std::pair<Matrix2D, std::vector<double> > &decomp_QTQ, const Matrix2D &matB, const double lambdaSpline);
+     static long double h_YWI_AY_composanteX(const SplineMatrices &matrices, const QList<Event *> &events,  const std::vector<double>& vecH, const std::pair<Matrix2D, std::vector<double> > &decomp_matB, const std::pair<Matrix2D, std::vector<double> > &decomp_QTQ, const Matrix2D &matB, const double lambdaSpline);
+     static long double h_YWI_AY_composanteY(const SplineMatrices &matrices, const QList<Event *> &events,  const std::vector<double>& vecH, const std::pair<Matrix2D, std::vector<double> > &decomp_matB, const std::pair<Matrix2D, std::vector<double> > &decomp_QTQ, const Matrix2D &matB, const double lambdaSpline);
+     static long double h_YWI_AY_composanteZ(const SplineMatrices &matrices, const QList<Event *> &events,  const std::vector<double>& vecH, const std::pair<Matrix2D, std::vector<double> > &decomp_matB, const std::pair<Matrix2D, std::vector<double> > &decomp_QTQ, const Matrix2D &matB, const double lambdaSpline);
 
      long double h_YWI_AY_composanteX_decomp(const SplineMatrices& matrices, const QList<Event *> &events, const double lambdaSpline, const std::vector< double> &vecH);
      long double h_YWI_AY_composanteY_decomp(const SplineMatrices& matrices, const QList<Event *> &events, const double lambdaSpline, const std::vector< double> &vecH);
      long double h_YWI_AY_composanteZ_decomp(const SplineMatrices& matrices, const QList<Event *> &events, const double lambdaSpline, const std::vector< double> &vecH);
 
 
-     double h_lambda (const SplineMatrices &matrices, const int nb_noeuds, const  double &lambdaSpline);
+     static double h_lambda (const SplineMatrices &matrices, const int nb_noeuds, const  double &lambdaSpline);
      double h_theta (const QList<Event *> &events);
-     double h_theta_Event (const Event * e);
+     static double h_theta_Event (const Event * e);
 
      qsizetype mFirstEventIndex; // Utile pour VG global, correspond au premier Event qui n'est pas un Bound
      double h_VG_old (const QList<Event *> _events);
@@ -107,7 +107,7 @@ private:
      double Var_residual_spline;
      double var_Y;
 
-     double S02_lambda_WI (const SplineMatrices &matrices, const int nb_noeuds);
+     static double S02_lambda_WI (const SplineMatrices &matrices, const int nb_noeuds);
      // Obsolete double S02_lambda_old (const SplineMatrices &matrices, const int nb_noeuds);
 
 
@@ -148,11 +148,11 @@ private:
     SplineMatrices prepareCalculSpline_WI(const QList<Event *> & sortedEvents, const std::vector<double> &vecH);
     //SplineMatrices prepareCalculSpline_W_Vg0(const QList<Event *> & sortedEvents, std::vector< double> &vecH);
 
-    SplineResults calculSpline(const SplineMatrices &matrices, const std::vector<double> &vecY, const double lambdaSpline, const std::vector<double> &vecH);
+    static SplineResults calculSpline(const SplineMatrices &matrices, const std::vector<double> &vecY, const double lambdaSpline, const std::vector<double> &vecH);
 
-    SplineResults calculSplineX(const SplineMatrices &matrices, const QList<Event *> &events, const std::vector<double> &vecH, const std::pair<Matrix2D, std::vector<double> > &decomp, const Matrix2D matB, const double lambdaSpline);
-    SplineResults calculSplineY(const SplineMatrices &matrices, const QList<Event *> &events, const std::vector<double> &vecH, const std::pair<Matrix2D, std::vector<double> >& decomp, const Matrix2D matB, const double lambdaSpline);
-    SplineResults calculSplineZ(const SplineMatrices &matrices, const QList<Event *> &events, const std::vector<double> &vecH, const std::pair<Matrix2D, std::vector<double> >& decomp, const Matrix2D matB, const double lambdaSpline);
+    static SplineResults calculSplineX(const SplineMatrices &matrices, const QList<Event *> &events, const std::vector<double> &vecH, const std::pair<Matrix2D, std::vector<double> > &decomp, const Matrix2D matB, const double lambdaSpline);
+    static SplineResults calculSplineY(const SplineMatrices &matrices, const QList<Event *> &events, const std::vector<double> &vecH, const std::pair<Matrix2D, std::vector<double> >& decomp, const Matrix2D matB, const double lambdaSpline);
+    static SplineResults calculSplineZ(const SplineMatrices &matrices, const QList<Event *> &events, const std::vector<double> &vecH, const std::pair<Matrix2D, std::vector<double> >& decomp, const Matrix2D matB, const double lambdaSpline);
 
    // std::vector<long double> calculMatInfluence(const SplineMatrices& matrices, const std::pair<std::vector<std::vector<long double> >, std::vector<long double> > &decomp, const int nbBandes, const double lambdaSpline);
    // std::vector<long double> calculMatInfluence0(const SplineMatrices& matrices, const std::vector<std::vector<long double>> &matB , const int nbBandes, const double lambdaSpline);

@@ -167,10 +167,10 @@ void GraphViewResults::setCurrentX(type_data min, type_data max)
 void GraphViewResults::zoom(type_data min, type_data max)
 {
     mGraph->zoomX(min, max);
-    const auto graphInfo = mGraph->getInfo();
+  //  const auto graphInfo = mGraph->getInfo();
     // Force le rafraichissement de l'indication Min = ... / Max = ...
-    if (!graphInfo.isEmpty())
-        qApp->processEvents();
+  //  if (!graphInfo.isEmpty())
+   //     qApp->processEvents();
 
     updateLayout();
 

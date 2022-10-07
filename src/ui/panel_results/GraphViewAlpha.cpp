@@ -179,7 +179,7 @@ void GraphViewAlpha::generateCurves(const graph_t typeGraph, const QVector<varia
         mTitle = tr("Lambda Spline Acceptation");
 
         generateAcceptCurves(mChains, &(mModel->mLambdaSpline));
-        mGraph->repaint();
+       // mGraph->repaint();
     }
 
     // -------------------------------------------------
@@ -241,7 +241,7 @@ void GraphViewAlpha::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         mGraph->setTipYLab("Log10 Lambda");
 
         mGraph->setYAxisMode(GraphView::eMinMaxHidden);
-        mGraph->showInfos(true);
+        mGraph->showInfos(false);
         mGraph->autoAdjustYScale(true);
     }
     /* -----------------------Third tab : Acceptance rate.-------------------------

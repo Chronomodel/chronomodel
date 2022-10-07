@@ -39,7 +39,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "MultiCalibrationDrawing.h"
 #include "GraphView.h"
-#include "AppSettings.h"
 #include "GraphViewResults.h"
 
 #include <QMouseEvent>
@@ -104,7 +103,7 @@ void MultiCalibrationDrawing::setGraphList(QList<GraphView*> &list)
 
     mScrollArea->updateGeometry();
     mGraphWidget->updateGeometry();
-    updateLayout();
+   // updateLayout();
 
 }
 
@@ -161,13 +160,15 @@ void MultiCalibrationDrawing::updateLayout()
 {
     if (mListBar.isEmpty())
         return;
+
     QFontMetrics fm (font());
     const bool axisVisible = (mGraphHeight >= GraphViewResults::mHeightForVisibleAxis);
     const int marginBottom = (axisVisible ? int (fm.ascent() * 2.2) : int (fm.ascent() * 0.5));
     int y = 0;
     int i = 0;
     const int graphShift = 5; // the same name and the same value as MultiCalibrationView::exportFullImage()
-qDebug()<<"MultiCalibrationDrawing::updateLayout()";
+
+    //qDebug()<<"MultiCalibrationDrawing::updateLayout()";
 
     for (auto&& graph: mListCalibGraph) {
         if (mListAxisVisible.at(i))
@@ -182,7 +183,7 @@ qDebug()<<"MultiCalibrationDrawing::updateLayout()";
         if (!graph->hasCurve()) {
             graph->showInfos(true);
             graph->setNothingMessage( graph->getInfo(' ')  + " -> Not computable" );
-            graph->setGeometry(ColoredBar::mWidth + graphShift, y, width() - ColoredBar::mWidth - graphShift, mGraphHeight );
+            graph->setGeometry(ColoredBar::mWidth + graphShift, y, std::max(0, width() - ColoredBar::mWidth - graphShift), mGraphHeight );
             graph->setVisible(true);
 
          } else {           
@@ -199,7 +200,7 @@ qDebug()<<"MultiCalibrationDrawing::updateLayout()";
 
             graph->setFont(font());
             graph->setTipXLab("t");
-            graph->setGeometry(ColoredBar::mWidth + graphShift, y, width() - ColoredBar::mWidth - graphShift, mGraphHeight );
+            graph->setGeometry(ColoredBar::mWidth + graphShift, y, std::max(0, width() - ColoredBar::mWidth - graphShift), mGraphHeight );
             graph->setVisible(true);
          }
          y += mGraphHeight;
@@ -230,14 +231,14 @@ QPixmap MultiCalibrationDrawing::grab()
 void MultiCalibrationDrawing::setGraphHeight(const int & height)
 {
     mGraphHeight = height;
-    updateLayout();
+    //updateLayout();
 }
 
 
 void MultiCalibrationDrawing::forceRefresh()
 {
     const bool axisVisible = (mGraphHeight >= GraphViewResults::mHeightForVisibleAxis);
-    const int marginBottom =(axisVisible ? int (fontMetrics().ascent() * 2.2) : int (fontMetrics().ascent() * 0.5));
+    const int marginBottom = (axisVisible ? int (fontMetrics().ascent() * 2.2) : int (fontMetrics().ascent() * 0.5));
 
     int y = 0;
     int i = 0;
@@ -247,7 +248,7 @@ void MultiCalibrationDrawing::forceRefresh()
 
          if (!graph->hasCurve()) {
             QLabel noCalib (tr("No Calibration"), this);
-            noCalib.setGeometry(ColoredBar::mWidth +5, y, width() - ColoredBar::mWidth - fontMetrics().boundingRect(noCalib.text()).width(), mGraphHeight);
+            noCalib.setGeometry(ColoredBar::mWidth +5, y, std::max(0, width() - ColoredBar::mWidth - fontMetrics().boundingRect(noCalib.text()).width()), mGraphHeight);
 
          } else {
              graph->showXAxisValues(axisVisible);
