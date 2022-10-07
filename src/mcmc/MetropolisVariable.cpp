@@ -478,7 +478,7 @@ void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
             continue;
 
         QVector<double> results;
-        const int n = trace.size();
+        const long long n = trace.size();
 
         double mean, variance;
         mean_variance_Knuth(trace, mean, variance);

@@ -59,9 +59,9 @@ public:
     double fixedValue() const;
     double formatedFixedValue() const;
 
-    void updateValues(const double &tmin, const double &tmax, const double &step);
+    void updateValues(const double tmin, const double tmax, const double step);
 
-    virtual void updateTheta(const double &min, const double &max);
+    virtual void updateTheta(const double tmin, const double tmax);
 
 
 public:

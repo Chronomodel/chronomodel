@@ -92,8 +92,8 @@ QString MCMCLoopMain::calibrate()
 
         dates.reserve(nbDates);
         for (Event* ev : events) {
-            int num_dates = ev->mDates.size();
-            for (int j = 0; j<num_dates; ++j) {
+            unsigned long num_dates = ev->mDates.size();
+            for (unsigned long j = 0; j<num_dates; ++j) {
                 Date* date = &ev->mDates[j];
                 dates.push_back(date);
             }

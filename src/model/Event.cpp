@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -339,6 +339,62 @@ void Event::setCurveCsvDataToJsonEvent(QJsonObject& event, const QMap<QString, d
     }
 }
 
+QString Event::curveDescriptionFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType, CurveSettings::VariableType variableType )
+{
+    QString curveDescription = "";
+    double xIncDepth = event.value(STATE_EVENT_X_INC_DEPTH).toDouble();
+    double s_XA95Depth = event.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble();
+    double yDec = event.value(STATE_EVENT_Y_DEC).toDouble();
+    double s_Y = event.value(STATE_EVENT_SY).toDouble();
+    double zField = event.value(STATE_EVENT_Z_F).toDouble();
+    double s_ZField = event.value(STATE_EVENT_SZ_SF).toDouble();
+
+    switch (processType) {
+    case CurveSettings::eProcessTypeVector:
+        curveDescription += QObject::tr(" [ Inclination : %1 ±  %2").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
+        curveDescription += QObject::tr(" - Declination : %1").arg(stringForLocal(yDec));
+        curveDescription += QObject::tr(" - Field : %1 ±  %2 ]").arg(stringForLocal(zField), stringForLocal(s_ZField));
+        break;
+    case CurveSettings::eProcessType2D:
+        curveDescription += QObject::tr(" [ X : %1 ±  %2").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
+        curveDescription += QObject::tr(" - Y : %1 ±  %2 ]").arg(stringForLocal(yDec), stringForLocal(s_Y));
+        break;
+    case CurveSettings::eProcessType3D:
+        curveDescription += QObject::tr(" [ X : %1 ±  %2").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
+        curveDescription += QObject::tr(" - Y : %1 ±  %2").arg(stringForLocal(yDec), stringForLocal(s_Y));
+        curveDescription += QObject::tr(" - Z : %1 ±  %2 ]").arg(stringForLocal(zField), stringForLocal(s_ZField));
+        break;
+    case CurveSettings::eProcessTypeSpherical:
+        curveDescription += QObject::tr(" [ Inclination : %1 ±  %2").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
+        curveDescription += QObject::tr(" - Declination : %1 ]").arg(stringForLocal(yDec));
+        break;
+    default:
+        switch (variableType) {
+        case CurveSettings::eVariableTypeDepth:
+            curveDescription += QObject::tr(" [ Depth : %1 ±  %2 ]").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
+            break;
+        case CurveSettings::eVariableTypeField:
+            curveDescription += line(textGreen(QObject::tr(" [ Field : %1 ±  %2 ]").arg(stringForLocal(zField), stringForLocal(s_ZField))));
+            break;
+        case CurveSettings::eVariableTypeInclination:
+            curveDescription += QObject::tr(" [ Inclination : %1 ±  %2 ]").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
+            break;
+        case CurveSettings::eVariableTypeDeclination:
+            curveDescription += QObject::tr(" [ Declination : %1 ; Inclination %2 ±  %3 ]").arg(stringForLocal(yDec), stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
+            break;
+        case CurveSettings::eVariableTypeOther:
+            curveDescription += QObject::tr("[  Measure : %1 ±  %2 ]").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
+            break;
+        default:
+            break;
+        }
+
+        break;
+    }
+    return curveDescription;
+}
+
+
 // Properties
 Event::Type Event::type() const
 {
@@ -355,7 +411,7 @@ void Event::reset()
     mThetaNode = HUGE_VAL;//__builtin_inf();//INFINITY;
 }
 
-bool Event::getThetaMinPossible(const Event* originEvent, QString& circularEventName,  QList<Event*> &startEvents, QString& linkStr)
+bool Event::getThetaMinPossible(const Event* originEvent, QString& circularEventName, const QList<Event*> &startEvents, QString& linkStr)
 {
     QList<Event*> newStartEvents = startEvents;
     newStartEvents.append(this);
@@ -471,11 +527,11 @@ bool Event::getThetaMinPossible(const Event* originEvent, QString& circularEvent
  * @param startEvents
  * @return
  */
-bool Event::getThetaMaxPossible(const Event* originEvent, QString& circularEventName,  QList<Event*> &startEvents)
+bool Event::getThetaMaxPossible(const Event* originEvent, QString &circularEventName,  const QList<Event *> &startEvents)
 {
 #ifdef DEBUG
     QString startList;
-    for (Event*& e : startEvents)
+    for (const Event* e : startEvents)
         startList += e->mName + "->";
 #endif
 
@@ -491,7 +547,7 @@ bool Event::getThetaMaxPossible(const Event* originEvent, QString& circularEvent
     // list of phase under
     bool noPhaseFwd (true);
     if (!mPhases.isEmpty())
-        for (auto&& phase : mPhases)
+        for (const auto& phase : mPhases)
             noPhaseFwd = noPhaseFwd && (phase->mConstraintsFwd.isEmpty());
 
     //--
@@ -511,7 +567,7 @@ bool Event::getThetaMaxPossible(const Event* originEvent, QString& circularEvent
     else {
         // Check constraints in Events Scene
         if (!mConstraintsFwd.isEmpty())
-            for (auto&& constFwd : mConstraintsFwd) {
+            for (const auto& constFwd : mConstraintsFwd) {
                 if (constFwd->mEventTo != originEvent ) {
                 //if (!newStartEvents.contains (constFwd->mEventTo)) {
                    // qDebug() << " mConstraintsFwd" << constFwd->mEventTo->mName;
@@ -531,11 +587,11 @@ bool Event::getThetaMaxPossible(const Event* originEvent, QString& circularEvent
 
         if (!noPhaseFwd) {
             // Check constraints in Phases Scene
-            for (auto&& phase : mPhases) {
+            for (const auto& phase : mPhases) {
                 if (!phase->mConstraintsFwd.isEmpty()) {
-                    for (auto&& phaseFwd : phase->mConstraintsFwd) {
+                    for (const auto& phaseFwd : phase->mConstraintsFwd) {
 
-                        for (auto&& eventPhaseFwd : phaseFwd->mPhaseTo->mEvents) {
+                        for (const auto& eventPhaseFwd : phaseFwd->mPhaseTo->mEvents) {
                             if (!newStartEvents.contains (eventPhaseFwd)) {
                                 const bool _ok = eventPhaseFwd->getThetaMaxPossible ( originEvent, circularEventName, newStartEvents);
                                 if (!_ok) {
@@ -544,7 +600,7 @@ bool Event::getThetaMaxPossible(const Event* originEvent, QString& circularEvent
                                 }
 
 
-                            } //else {
+                            }
                             if (eventPhaseFwd == originEvent ) {
                                 circularEventName = " (" + phase->mName + ")" + serieStr + eventPhaseFwd->mName + " (" + phaseFwd->mPhaseTo->mName + ") !";
                                 return false;
@@ -581,7 +637,7 @@ bool Event::getThetaMaxPossible(const Event* originEvent, QString& circularEvent
 }
 
 
-double Event::getThetaMinRecursive(const double defaultValue, const QList<Event*> startEvents)
+double Event::getThetaMinRecursive(const double defaultValue, const QList<Event*> &startEvents)
 {
      //qDebug()<<"rentre dans getThetaMinRecursive()"<< mName;
     // if the Event is initiated, constraints was controled previously
@@ -599,7 +655,7 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event*
     // list of phase under
     bool noPhaseBwd = true;
     if (!mPhases.isEmpty())
-        for (auto&& phase : mPhases) {
+        for (const auto& phase : mPhases) {
             noPhaseBwd = noPhaseBwd && (phase->mConstraintsBwd.isEmpty());
         }
 
@@ -612,7 +668,7 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event*
     newStartEvents.append(this);
 
     double maxPhases = defaultValue;
-    for (auto&& phase : mPhases) {
+    for (const auto& phase : mPhases) {
         if (phase->mTauType != Phase::eTauUnknown) {
             double thetaMax = defaultValue;
             for (auto&& event : phase->mEvents) {
@@ -686,7 +742,7 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event*
 
 }
 
-double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event*> startEvents)
+double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event *> &startEvents)
 {
     // if the Event is initialized, constraints was controled previously
     if (mInitialized) {
@@ -705,7 +761,7 @@ double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event*
     // list of phase under
     bool noPhaseFwd = true;
     if (!mPhases.isEmpty()) {
-        for (auto&& phase : mPhases) {
+        for (const auto& phase : mPhases) {
             noPhaseFwd = noPhaseFwd && (phase->mConstraintsFwd.isEmpty());
         }
     }
@@ -719,10 +775,10 @@ double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event*
     newStartEvents.append(this);
 
     double minPhases = defaultValue;
-    for (auto&& phase :mPhases) {
+    for (const auto& phase :mPhases) {
         if (phase->mTauType != Phase::eTauUnknown) {
             double thetaMin = defaultValue;
-            for (auto&& event : phase->mEvents) {
+            for (const auto& event : phase->mEvents) {
                 //if (!startEvents.contains(event)) {
                     //thetaMin = std::min(thetaMin, event->getThetaMaxRecursive(defaultValue, newStartEvents));
                // if (event != this) {
@@ -755,7 +811,7 @@ double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event*
     else {
         double minTheta = defaultValue;
         if (!mConstraintsFwd.isEmpty())
-            for (auto& constFwd : mConstraintsFwd) {
+            for (const auto& constFwd : mConstraintsFwd) {
                 if (!startEvents.contains(constFwd->mEventTo)) {
                     minTheta = std::min(minTheta, (constFwd->mEventTo)->getThetaMaxRecursive(defaultValue, newStartEvents));
                 }
@@ -765,12 +821,12 @@ double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event*
         double minPhasesFwd = defaultValue;
         if (!noPhaseFwd) {
 
-            for (auto&& phase : mPhases) {
+            for (const auto& phase : mPhases) {
                  if (!phase->mConstraintsFwd.isEmpty()) {
                     double minThetaFwd = defaultValue;
-                    for (auto&& phaseFwd : phase->mConstraintsFwd) {
+                    for (const auto& phaseFwd : phase->mConstraintsFwd) {
 
-                        for (auto&& eventPhaseFwd : phaseFwd->mPhaseTo->mEvents) {
+                        for (const auto& eventPhaseFwd : phaseFwd->mPhaseTo->mEvents) {
                             if (!newStartEvents.contains(eventPhaseFwd))
                                 minThetaFwd = std::min(minThetaFwd, eventPhaseFwd->getThetaMaxRecursive(defaultValue, newStartEvents));
                         }
@@ -800,7 +856,7 @@ double Event::getThetaMin(double defaultValue)
 
     // Max des thetas des faits en contrainte directe antérieure, ils sont déjà initialiés
     double maxThetaBwd = defaultValue;
-    for (auto&& constBwd : mConstraintsBwd) {
+    for (const auto& constBwd : mConstraintsBwd) {
             double thetaf (constBwd->mEventFrom->mTheta.mX);
             maxThetaBwd = std::max(maxThetaBwd, thetaf);
     }
@@ -812,10 +868,10 @@ double Event::getThetaMin(double defaultValue)
      */
     double min3 = defaultValue;
 
-    for (auto&& phase : mPhases) {
+    for (const auto& phase : mPhases) {
         if (phase->mTauType != Phase::eTauUnknown) {
             double thetaMax = defaultValue;
-            for (auto&& event : phase->mEvents) {
+            for (const auto& event : phase->mEvents) {
                 if (event != this)
                     thetaMax = std::max(event->mTheta.mX, thetaMax);
             }
@@ -825,7 +881,7 @@ double Event::getThetaMin(double defaultValue)
 
     // Contraintes des phases précédentes
     double maxPhasePrev = defaultValue;
-    for (auto&& phase : mPhases) {
+    for (const auto& phase : mPhases) {
         const double thetaMax = phase->getMaxThetaPrevPhases(defaultValue);
         maxPhasePrev = std::max(maxPhasePrev, thetaMax);
     }
@@ -845,7 +901,7 @@ double Event::getThetaMax(double defaultValue)
 
     // Min des thetas des faits en contrainte directe et qui nous suivent
     double maxThetaFwd = defaultValue;
-    for (auto&& cFwd : mConstraintsFwd) {
+    for (const auto& cFwd : mConstraintsFwd) {
             maxThetaFwd = std::min(maxThetaFwd, cFwd->mEventTo->mTheta.mX);
     }
 
@@ -855,10 +911,10 @@ double Event::getThetaMax(double defaultValue)
      * (on utilise la valeur courante de la durée pour cela puisqu'elle est échantillonnée)
      */
     double max3 = defaultValue;
-    for (auto&& phase : mPhases) {
+    for (const auto& phase : mPhases) {
         if (phase->mTauType != Phase::eTauUnknown) {
             double thetaMin = defaultValue;
-             for (auto&& event : phase->mEvents) {
+             for (const auto& event : phase->mEvents) {
                 if (event != this)
                     thetaMin = std::min(event->mTheta.mX, thetaMin);
             }
@@ -878,7 +934,7 @@ double Event::getThetaMax(double defaultValue)
     return max;
 }
 
-void Event::updateTheta(const double& tmin, const double& tmax)
+void Event::updateTheta(const double tmin, const double tmax)
 {
     const double min = getThetaMin(tmin);
     const double max = getThetaMax(tmax);

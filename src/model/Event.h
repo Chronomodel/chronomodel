@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -40,8 +40,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define EVENT_H
 
 #include "MHVariable.h"
-#include "StateKeys.h"
+//#include "StateKeys.h"
 #include "Date.h"
+#include "CurveSettings.h"
 
 #include <QMap>
 #include <QColor>
@@ -72,7 +73,8 @@ public:
 
     void reset();
     
-    static void setCurveCsvDataToJsonEvent(QJsonObject& event, const QMap<QString, double>& CurveData);
+    static void setCurveCsvDataToJsonEvent(QJsonObject &event, const QMap<QString, double> &CurveData);
+    static QString curveDescriptionFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType = CurveSettings::eProcessTypeNone, CurveSettings::VariableType variableType = CurveSettings::eVariableTypeOther);
 
     /// Functions used within the MCMC process ( not in the init part!) :
     double getThetaMin(double defaultValue);
@@ -80,15 +82,15 @@ public:
 
 
     ///  Functions used within the init MCMC process
-    bool getThetaMinPossible(const Event* originEvent, QString& circularEventName,  QList<Event*>& startEvents, QString& linkStr);
-    bool getThetaMaxPossible(const Event* originEvent, QString& circularEventName,  QList<Event*>& startEvents);
+    bool getThetaMinPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents, QString &linkStr);
+    bool getThetaMaxPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents);
 
-    double getThetaMinRecursive(const double defaultValue, const QList<Event*> startEvents= QList<Event*>());
-    double getThetaMaxRecursive(const double defaultValue, const QList<Event*> startEvents = QList<Event*>());
+    double getThetaMinRecursive(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
+    double getThetaMaxRecursive(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
 
-    virtual void updateTheta(const double& min, const double& max);
+    virtual void updateTheta(const double tmin, const double tmax);
 
-    void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
+    void generateHistos(const QList<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
 
 public:
     Type mType;

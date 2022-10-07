@@ -822,7 +822,7 @@ QPair<double, double> transitionRangeFromTraces(const QVector<double>& trace1, c
  * @param description a simple text
  * @return
  */
-QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const QVector<double>& traceBegin, const double thresh, const QString description)
+QPair<double, double> gapRangeFromTraces(const QVector<double> &traceEnd, const QVector<double> &traceBegin, const double thresh, const QString description)
 {
     (void) description;
 #ifdef DEBUG
@@ -835,7 +835,7 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const 
     // limit of precision, to accelerate the calculus, we set the same as RChronoModel
     const double epsilonStep = 0.1/100.;
 
-    const int  n = traceBegin.size();
+    const auto  n = traceBegin.size();
 
     if ( (thresh > 0.f) && (n > 0) && (traceEnd.size() == n) ) {
 
@@ -852,7 +852,7 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const 
 
         // 1 - map with relation Alpha to Beta
         std::multimap<double, double> alphaBeta;
-        for (int i=0; i<traceBegin.size(); ++i)
+        for (auto i=0; i<traceBegin.size(); ++i)
             alphaBeta.insert(std::pair<double, double>(traceAlpha.at(i),traceBeta.at(i)) );
 
         // keep the beta trace in the same position of the Alpha, so we need to sort them with there values of alpha
@@ -874,8 +874,8 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const 
             // We must decrease of 1 from the original formula because the array begin at 0
             const double ha( ((double)traceBeta.size()-1.) * aEpsilon);
 
-            const int haInf( floor(ha) );
-            const int haSup( ceil(ha) );
+            const long long haInf( floor(ha) );
+            const long long haSup( ceil(ha) );
 
             if ((haSup > (int)traceBeta.size()) || (haInf > (int)traceBeta.size()))
                 return range;
@@ -886,15 +886,15 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const 
             const double a = traceBeta.at(haInf) + ( (ha-(double)haInf)*(traceBeta.at(haSup)-traceBeta.at(haInf)) );
 
             // 3 - Copy only value of beta with alpha smaller than a(epsilon)!
-            const int alphaIdx(haSup < n ? haSup : n-1 );//( ha == haInf ? haInf : haSup );//( ha == haSup ? haSup : haInf );// //
+            const long long alphaIdx(haSup < n ? haSup : n-1 );//( ha == haInf ? haInf : haSup );//( ha == haSup ? haSup : haInf );// //
 
-            const int remainingElemt ( alphaIdx );
+            const long long remainingElemt ( alphaIdx );
             alphaUnder.resize(remainingElemt);   // allocate space
 
             // traceAlpha is sorted with the value alpha join
             auto it = std::copy( traceAlpha.begin(), traceAlpha.begin() + alphaIdx, alphaUnder.begin() );
 
-            const int alphaUnderSize = (int) std::distance(alphaUnder.begin(),it);
+            const long long alphaUnderSize = (long long) std::distance(alphaUnder.begin(), it);
 
             alphaUnder.resize(alphaUnderSize);  // shrink container to new size
 
@@ -907,15 +907,16 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const 
             // Linear intertpolation like in R quantile( type=7)
 
             const double hb( ((double)alphaUnder.size()-1.)* bEpsilon );
-            const int hbInf( floor(hb) );
-            const int hbSup( ceil(hb) );
+            const long long hbInf( floor(hb) );
+            const long long hbSup( ceil(hb) );
 
-            if ((hbSup > (int)alphaUnder.size()) || (hbInf > (int)alphaUnder.size()))
+            if ((hbSup > alphaUnder.size()) || (hbInf > alphaUnder.size()))
                 return range;
+            
             if ((hbInf < 0) || (hbSup <0))
                 return range;
 
-            const double b = alphaUnder.at(hbInf) + ( (hb-(double)hbInf)*(alphaUnder.at(hbSup)-alphaUnder.at(hbInf)) );
+            const double b = alphaUnder.at(hbInf) + ( ((double)hb -(double)hbInf)*(alphaUnder.at(hbSup)-alphaUnder.at(hbInf)) );
 
             // 6 - keep the longest length
 
@@ -1369,7 +1370,7 @@ Matrix2D transpose(const Matrix2D &matrix, const int nbBandes)
 }
 
 
-Matrix2D multiMatParDiag(const Matrix2D& matrix, const std::vector<double>& diag, size_t nbBandes)
+Matrix2D multiMatParDiag(const Matrix2D &matrix, const std::vector<double> &diag, size_t nbBandes)
 {
     const int dim = matrix.size();
     Matrix2D result = initMatrix2D(dim, dim);
@@ -1389,7 +1390,7 @@ Matrix2D multiMatParDiag(const Matrix2D& matrix, const std::vector<double>& diag
     return result;
 }
 
-Matrix2D multiDiagParMat(const std::vector<double>& diag, const Matrix2D& matrix, const int nbBandes)
+Matrix2D multiDiagParMat(const std::vector<double> &diag, const Matrix2D &matrix, const int nbBandes)
 {
     const int dim = matrix.size();
     Matrix2D result = initMatrix2D(dim, dim);
@@ -1417,16 +1418,16 @@ Matrix2D multiDiagParMat(const std::vector<double>& diag, const Matrix2D& matrix
  * @param nbBandes = k1+k2+1
  * @return
  */
-std::vector<double> multiMatParVec(const Matrix2D& matrix, const std::vector<double>& vec, const int nbBandes)
+std::vector<double> multiMatParVec(const Matrix2D &matrix, const std::vector<double> &vec, const int nbBandes)
 {
     const int dim = vec.size();
     std::vector<double> result;
-    const int k = floor((nbBandes-1)/2); // calcul du nombre de bandes
+    const int  k = floor((nbBandes-1)/2); // calcul du nombre de bandes
     double sum;
     for (int i = 0; i < dim; ++i) {
         sum = 0.;
-        int j1 = std::max(0, i - k);
-        int j2 = std::min(dim-1, i + k);
+        int  j1 = std::max(0, i - k);
+        int  j2 = std::min(dim-1, i + k);
         const double* matrix_i = begin(matrix[i]);
         for (int j = j1; j <= j2; ++j) {
             sum += matrix_i[j] * vec[j];
@@ -1443,16 +1444,16 @@ std::vector<double> multiMatParVec(const Matrix2D& matrix, const std::vector<dou
  * @param nbBandes2 The total Bandwidth = k1+k2 of Band matrix 2
  * @return
  */
-Matrix2D addMatEtMat0(const Matrix2D& matrix1, const Matrix2D& matrix2)
+Matrix2D addMatEtMat0(const Matrix2D &matrix1, const Matrix2D &matrix2)
 {
-    const int dim = matrix1.size();
+    const unsigned long dim = matrix1.size();
 
     Matrix2D result = matrix1;
 
-    int i = 0;
+    unsigned long i = 0;
     for (auto&& result_i : result) {
          const double* matrix2_i = begin(matrix2[i]);
-         for (int j = 0; j < dim; ++j) {
+         for (unsigned long j = 0; j < dim; ++j) {
             result_i[j] +=  matrix2_i[j];
         }
         i++;
@@ -1461,7 +1462,7 @@ Matrix2D addMatEtMat0(const Matrix2D& matrix1, const Matrix2D& matrix2)
     return result;
 }
 
-Matrix2D addMatEtMat(const Matrix2D& matrix1, const Matrix2D& matrix2, const int nbBandes2)
+Matrix2D addMatEtMat(const Matrix2D &matrix1, const Matrix2D &matrix2, const int nbBandes2)
 {
     const int dim = matrix1.size();
     const int k = floor((nbBandes2-1)/2); // calcul du nombre de bandes
@@ -1484,10 +1485,10 @@ Matrix2D addMatEtMat(const Matrix2D& matrix1, const Matrix2D& matrix2, const int
 
 Matrix2D addIdentityToMat(const Matrix2D& matrix)
 {
-    const int dim = matrix.size();
+    const unsigned long dim = matrix.size();
     Matrix2D result = matrix;
 
-    for (int i = 0; i < dim; ++i)
+    for (unsigned long i = 0; i < dim; ++i)
         result[i][i] += 1.;
 
     return result;
@@ -1516,17 +1517,17 @@ Matrix2D multiConstParMat(const Matrix2D& matrix, const double c, const int nbBa
  */
 Matrix2D multiMatParMat0(const Matrix2D& matrix1, const Matrix2D& matrix2)
 {
-    const int n = matrix1.size();
+    const unsigned long n = matrix1.size();
     Matrix2D result = initMatrix2D(n, n);
     const double* itMat1;
     double sum;
 
-    for (int i = 0; i < n; ++i) {
+    for (unsigned long i = 0; i < n; ++i) {
         itMat1 = begin(matrix1[i]);
 
-        for (int j = 0; j < n; ++j) {
+        for (unsigned long j = 0; j < n; ++j) {
            sum = 0;
-            for (int k = 0; k < n; ++k) {
+            for (unsigned long k = 0; k < n; ++k) {
                 sum += (*(itMat1 + k)) * matrix2[k][j];
 
             }
@@ -1860,19 +1861,19 @@ double sumAllVector(const std::vector<double>& vector)
 
 Matrix2D cofactor0(const Matrix2D& matrix)
 {
-    const int n = matrix.size();
+    const unsigned long n = matrix.size();
     Matrix2D result = initMatrix2D(n, n);
     Matrix2D matMinorTmp = initMatrix2D(n-1, n-1);
     long double det;
-    int i1, k1;
-    for (int j=0; j<n; j++) {
-        for (int i=0; i<n; i++) {
+    unsigned long i1, k1;
+    for (unsigned long j=0; j<n; j++) {
+        for (unsigned long i=0; i<n; i++) {
             i1 = 0;
-            for (int k=0; k<n; k++) {
+            for (unsigned long k=0; k<n; k++) {
                 if (k == i)
                     continue;
                 k1 = 0;
-                for (int l=0; l<n; l++) {
+                for (unsigned long l=0; l<n; l++) {
                     if (l == j)
                         continue;
                     matMinorTmp[i1][k1] = matrix[k][l];
@@ -1896,19 +1897,19 @@ Matrix2D cofactor0(const Matrix2D& matrix)
  */
 Matrix2D comatrice0(const Matrix2D& matrix)
 {
-    const int n = matrix.size();
+    const unsigned long n = matrix.size();
     Matrix2D result = initMatrix2D(n, n);
     Matrix2D matMinorTmp = initMatrix2D(n-1, n-1);
     double det;
-    int i1, k1;
-    for (int j=0; j<n; j++) {
-        for (int i=0; i<n; i++) {
+    unsigned long i1, k1;
+    for (unsigned long j=0; j<n; j++) {
+        for (unsigned long i=0; i<n; i++) {
             i1 = 0;
-            for (int k=0; k<n; k++) {
+            for (unsigned long k=0; k<n; k++) {
                 if (k == i)
                     continue;
                 k1 = 0;
-                for (int l=0; l<n; l++) {
+                for (unsigned long l=0; l<n; l++) {
                     if (l == j)
                         continue;
                     matMinorTmp[i1][k1] = matrix[k][l];
@@ -1933,22 +1934,22 @@ Matrix2D comatrice0(const Matrix2D& matrix)
 
 Matrix2D choleskyLL0(const Matrix2D &matrix)
 {
-    const int n = matrix.size();
+    const unsigned long n = matrix.size();
 
     Matrix2D L = initMatrix2D(n, n);
     double sum;
 
-    for (int i=0; i<n; i++) {
+    for (unsigned long i=0; i<n; i++) {
         sum = matrix[i][i];
-        for (int k=0; k<i; k++)
+        for (unsigned long k=0; k<i; k++)
             sum -= pow(L[i][k], 2.);
 
         L[i][i] = sqrt(sum);
 
-        for (int j=i+1; j<n; j++) {
+        for (unsigned long j=i+1; j<n; j++) {
             sum = matrix[i][j];
 
-            for (int k=0; k<j-1; k++)
+            for (unsigned long k=0; k<j-1; k++)
                 sum -=  L[j][k] * L[i][k];
 
             L[j][i] = sum / L[i][i];
@@ -1966,22 +1967,22 @@ Matrix2D choleskyLL0(const Matrix2D &matrix)
 std::pair<Matrix2D, std::vector<double> > choleskyLDLT(const Matrix2D& matrix)
 {
     // fonction à controler
-    const int n = matrix.size();
+    const unsigned long n = matrix.size();
 
     Matrix2D L = initMatrix2D(n, n);
     std::vector<double> D = initVector(n);
 
-    for (int i=0; i<n; i++) {
+    for (unsigned long i=0; i<n; i++) {
             L[i][i] = 1;
-            for (int j=0; j<i; j++) {
+            for (unsigned long j=0; j<i; j++) {
                 L[i][j] = matrix[i][j];
-                for (int k=0; k<j; k++) {
+                for (unsigned long k=0; k<j; k++) {
                    L[i][j] -=  L[i][k] * L[j][k] *D.at(k);
                 }
                 L[i][j] /= D.at(j);
             }
             D[i] = matrix[i][i];
-            for (int j=0; j<i; j++)
+            for (unsigned long j=0; j<i; j++)
                 D[i] -=  D.at(j) * pow(L[i][j], 2.);
       }
 
@@ -2441,12 +2442,12 @@ Matrix2D Strassen::multiply(const Matrix2D& A, const Matrix2D& B)
  */
 std::pair<Matrix2D, Matrix2D > decompositionLU0(const Matrix2D& A)
 {
-   const unsigned n = A.size();
+   const unsigned long n = A.size();
 
     Matrix2D L = initMatrix2D(n, n);
     Matrix2D U = initMatrix2D(n, n);
 
-    unsigned i, j , k;
+    unsigned long i, j , k;
 
     for (i = 0; i < n; i++) {
         // Upper triangle
@@ -2593,16 +2594,16 @@ void vmadd(const std::vector<double>& a, const std::vector<double>& b, double s,
 // !!! m is allocated here !!!
 void compute_householder_factor(Matrix2D& A, std::vector<double>& v)
 {
-  int n = v.size();
+  unsigned long n = v.size();
   A = initMatrix2D(n, n);
-  for (int i = 0; i < n; i++) {
+  for (unsigned long i = 0; i < n; i++) {
       auto A_i = A[i];
       auto v_i = -2. * v[i];
-      for (int j = 0; j < n; j++)
+      for (unsigned long j = 0; j < n; j++)
           A_i[j] =  v_i * v[j];
   }
 
-  for (int i = 0; i < n; i++)
+  for (unsigned long i = 0; i < n; i++)
     A[i][i] += 1.;
 }
 
@@ -2617,17 +2618,17 @@ std::vector<double> extract_column(Matrix2D& A, const int c)
 }
 
 // compute minor
-Matrix2D compute_minor(const Matrix2D& A, const int d)
+Matrix2D compute_minor(const Matrix2D& A, const unsigned long d)
 {
-    const int n = A.size();
+    const unsigned long n = A.size();
     Matrix2D M = initMatrix2D(n, n);
 
-    for (int i = 0; i < d; i++)
+    for (unsigned long i = 0; i < d; i++)
       M[i][i] = 1.;
 
-    for (int i = d; i < n; i++) {
+    for (unsigned long i = d; i < n; i++) {
         auto A_i = A[i];
-        for (int j = d; j < n; j++)
+        for (unsigned long j = d; j < n; j++)
             M[i][j] = A_i[j];
     }
 

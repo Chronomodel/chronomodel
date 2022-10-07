@@ -189,10 +189,10 @@ public:
 
     QColor getEventColor() const;
 
-    double getTminRefCurve() const {return mTminRefCurve;}
-    double getTmaxRefCurve() const {return mTmaxRefCurve;}
-    void setTminRefCurve(const double tmin) { mTminRefCurve = tmin;}
-    void setTmaxRefCurve(const double tmax) { mTmaxRefCurve = tmax;}
+    inline double getTminRefCurve() const {return mTminRefCurve;}
+    inline double getTmaxRefCurve() const {return mTmaxRefCurve;}
+    inline void setTminRefCurve(const double tmin) { mTminRefCurve = tmin;}
+    inline void setTmaxRefCurve(const double tmax) { mTmaxRefCurve = tmax;}
 
     double getFormatedTminRefCurve() const;
     double getFormatedTmaxRefCurve() const;
@@ -209,7 +209,7 @@ public:
     void updateSigmaShrinkage(Event* event);
     void updateSigmaJeffreys(Event* event);
     void updateSigmaReParam(Event* event);
-    void updateWiggle();
+    inline void updateWiggle() { mWiggle.mX = mTi.mX + mDelta;};
 
     void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
 

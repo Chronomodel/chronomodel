@@ -1,6 +1,5 @@
 /* ---------------------------------------------------------------------
-
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -40,8 +39,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef MCMCSETTINGS_H
 #define MCMCSETTINGS_H
 
-#include "StateKeys.h"
-
 #include <QJsonObject>
 #include <QList>
 
@@ -50,7 +47,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define MCMC_NUM_RUN_DEFAULT 100000
 #define MCMC_NUM_BURN_DEFAULT 1000
 #define MCMC_MAX_ADAPT_BATCHES_DEFAULT 200
-#define MCMC_ITER_PER_BATCH_DEFAULT 50
+#define MCMC_ITER_PER_BATCH_DEFAULT 100
 #define MCMC_THINNING_INTERVAL_DEFAULT 10
 
 #define MCMC_MIXING_DEFAULT 0.99

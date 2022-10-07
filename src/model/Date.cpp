@@ -1438,7 +1438,7 @@ QPixmap Date::generateCalibThumb()
 
 
         QMap<double, double> calib = normalize_map(getMapDataInRange(getRawCalibMap(), tmin, tmax));
-        qDebug()<<"generateCalibThumb mName "<<mCalibration->mName<<mCalibration->mCurve.size()<<calib.size();
+        qDebug()<<"[Date::generateCalibThumb] mName "<<mCalibration->mName<<mCalibration->mCurve.size()<<calib.size();
         if (calib.isEmpty())
             return QPixmap();
 
@@ -1486,6 +1486,7 @@ QPixmap Date::generateCalibThumb()
         QPainter p;
         p.begin(&thumb);
         //p.setRenderHint(QPainter::SmoothPixmapTransform);//don't work on pixmap
+        graph.showInfos(false);
         graph.repaint();
         graph.render(&p);
         p.end();
@@ -1742,10 +1743,12 @@ void Date::updateSigmaReParam(Event* event)
     mSigmaTi.tryUpdate(sqrt(V2), rapport);
 }
 
-void Date::updateWiggle()
+/*
+ * void Date::updateWiggle()
 {
     mWiggle.mX = mTi.mX + mDelta;
 }
+*/
 
 // CSV dates
 Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)

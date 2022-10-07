@@ -38,10 +38,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "Bound.h"
-//#include "StdUtilities.h"
+
 #include "QtUtilities.h"
-//#include "GraphView.h"
-//#include "Generator.h"
 
 #include <QObject>
 
@@ -54,7 +52,7 @@ mFixed(0.)
 }
 
 // JSON
-Bound Bound::fromJson(const QJsonObject& json)
+Bound Bound::fromJson(const QJsonObject &json)
 {
     Bound event;
 
@@ -149,7 +147,7 @@ double Bound::formatedFixedValue() const
 }
 
 
-void Bound::updateValues(const double& tmin, const double& tmax, const double& step)
+void Bound::updateValues(const double tmin, const double tmax, const double step)
 {
     mValues.clear();
 
@@ -162,12 +160,15 @@ void Bound::updateValues(const double& tmin, const double& tmax, const double& s
     mValues[mFixed] = 1.;
 
     if (mValues.size() == 0) { // ???
-        for (double t=tmin; t<=tmax; t+=step)
+        t=tmin;
+        while ( t<=tmax) {
             mValues[t] = 0.;
+            t+=step;
+        }
     }
 }
 
-void Bound::updateTheta(const double& tmin, const double& tmax)
+void Bound::updateTheta(const double tmin, const double tmax)
 {
     (void) tmin;
     (void) tmax;

@@ -39,16 +39,19 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ChronoApp.h"
 #include "MainController.h"
-#include "StdUtilities.h"
-#include "CurveUtilities.h"
-#include "fftw3.h"
+//#include "StdUtilities.h"
+//#include "CurveUtilities.h"
+//#include "fftw3.h"
 
 #include <QtWidgets>
+#include <cstdio>
 #include <iostream>
 #include <cmath>
 #include <errno.h>
 #include <fenv.h>
 #include <stdlib.h>
+//#include <omp.h>
+#include <stdio.h>
 
 #include <vector>
 
@@ -99,6 +102,8 @@ int main(int argc, char *argv[])
 
 #endif
 
+//#pragma omp parallel
+//    std::cout <<"Hello from thread %d, nthreads %d\n"<< omp_get_thread_num()<< omp_get_num_threads() << std::endl;
   // QFont guiFont = QGuiApplication::font();
     ChronoApp a(argc, argv);
 
