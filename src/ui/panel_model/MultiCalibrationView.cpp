@@ -47,6 +47,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 //#include "Bound.h"
 #include "GraphViewResults.h"
 #include "CurveSettings.h"
+#include "PluginAbstract.h"
+//#include "CalibrationCurve.h"
 
 #include <QPainter>
 #include <QJsonArray>
@@ -962,8 +964,7 @@ void MultiCalibrationView::exportResults()
         const QString currentPath = MainWindow::getInstance()->getCurrentPath();
         const QString filePath = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                         tr("Export to file..."),
-                                                        currentPath,
-                                                       tr("Directory"));
+                                                        currentPath, "CSV (*.csv)");
 
         if (!filePath.isEmpty()) {
 
