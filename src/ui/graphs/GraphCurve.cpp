@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2021
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -69,11 +69,11 @@ void GraphCurve::setPen(QPen pen)
 
 /** Generate Typical curves for Chronomodel
  * */
-GraphCurve densityCurve(const QMap<double, double>& data,
-                                                  const QString& name,
-                                                  const QColor& lineColor,
-                                                  const Qt::PenStyle penStyle,
-                                                  const QBrush& brush)
+GraphCurve densityCurve( const QMap<double, double>& data,
+                         const QString& name,
+                         const QColor& lineColor,
+                         const Qt::PenStyle penStyle,
+                         const QBrush& brush)
 {
     GraphCurve curve;
     curve.mName = name;
@@ -84,15 +84,16 @@ GraphCurve densityCurve(const QMap<double, double>& data,
         if (penStyle == Qt::CustomDashLine)
             curve.mPen.setDashPattern(QList<qreal>{5, 5});
         curve.mBrush = brush;
-        curve.mIsRectFromZero = true; // for Unif-typo. calibs., invisible for others!
+        curve.mIsRectFromZero = false; // for Unif-typo. calibs. and curveActivityUnifTheo, invisible for others!
     }
     return curve;
 }
-GraphCurve GCurve(const QMap<double, double>& data,
-                                                  const QString& name,
-                                                  const QColor& lineColor,
-                                                  const Qt::PenStyle penStyle,
-                                                  const QBrush& brush)
+
+GraphCurve GCurve( const QMap<double, double>& data,
+                   const QString& name,
+                   const QColor& lineColor,
+                   const Qt::PenStyle penStyle,
+                   const QBrush& brush)
 {
     GraphCurve curve;
     curve.mName = name; // This is the name of the columns when exporting the graphs
@@ -108,7 +109,7 @@ GraphCurve GCurve(const QMap<double, double>& data,
     return curve;
 }
 
-GraphCurve HPDCurve(QMap<double, double> &data, const QString& name, const QColor& color)
+GraphCurve HPDCurve(QMap<double, double> &data, const QString &name, const QColor &color)
 {
     GraphCurve curve;
     curve.mName = name;
@@ -120,7 +121,7 @@ GraphCurve HPDCurve(QMap<double, double> &data, const QString& name, const QColo
     return curve;
 }
 
-GraphCurve topLineSection(const std::pair<double, double> &section, const QString& name, const QColor& color)
+GraphCurve topLineSection(const std::pair<double, double> &section, const QString &name, const QColor &color)
 {
     GraphCurve curve;
     curve.mName = name;
@@ -133,7 +134,7 @@ GraphCurve topLineSection(const std::pair<double, double> &section, const QStrin
     return curve;
 }
 
-GraphCurve horizontalSection(const std::pair<double, double> &section, const QString& name, const QColor& color, const QBrush& brush)
+GraphCurve horizontalSection(const std::pair<double, double> &section, const QString &name, const QColor &color, const QBrush &brush)
 {
     GraphCurve curve;
     curve.mName = name;
@@ -149,7 +150,7 @@ GraphCurve horizontalSection(const std::pair<double, double> &section, const QSt
     return curve;
 }
 
-GraphCurve horizontalLine(const double yValue, const QString& name, const QColor& color,
+GraphCurve horizontalLine(const double yValue, const QString &name, const QColor &color,
                                                     const Qt::PenStyle penStyle)
 {
     GraphCurve curve;
@@ -163,11 +164,11 @@ GraphCurve horizontalLine(const double yValue, const QString& name, const QColor
     return curve;
 }
 
-GraphCurve shapeCurve(const QMap<double, double>& dataInf, const QMap<double, double>& dataSup,
-                                                  const QString& name,
-                                                  const QColor& lineColor,
+GraphCurve shapeCurve(const QMap<double, double> &dataInf, const QMap<double, double> &dataSup,
+                                                  const QString &name,
+                                                  const QColor &lineColor,
                                                   const Qt::PenStyle penStyle,
-                                                  const QBrush& brush)
+                                                  const QBrush &brush)
 {
     GraphCurve curve;
     curve.mName = name;

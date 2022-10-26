@@ -39,9 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ChronoApp.h"
 #include "MainController.h"
-//#include "StdUtilities.h"
-//#include "CurveUtilities.h"
-//#include "fftw3.h"
+
 
 #include <QtWidgets>
 #include <cstdio>
@@ -50,9 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <errno.h>
 #include <fenv.h>
 #include <stdlib.h>
-//#include <omp.h>
 #include <stdio.h>
-
 #include <vector>
 
 // STDC FENV_ACCESS ON // not supported with Clang
@@ -102,6 +98,8 @@ int main(int argc, char *argv[])
 
 #endif
 
+    QVersionNumber version(VERSION_NUMBER);  // 1.2.3
+
 //#pragma omp parallel
 //    std::cout <<"Hello from thread %d, nthreads %d\n"<< omp_get_thread_num()<< omp_get_num_threads() << std::endl;
   // QFont guiFont = QGuiApplication::font();
@@ -109,7 +107,7 @@ int main(int argc, char *argv[])
 
     a.setApplicationName("ChronoModel");
     a.setApplicationDisplayName("ChronoModel");
-    a.setApplicationVersion("3.1.9");//VERSION_NUMBER);  // must match value in Chronomodel.pro
+    a.setApplicationVersion(version.toString());  // must match value in Chronomodel.pro
     a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));

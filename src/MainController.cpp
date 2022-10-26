@@ -44,10 +44,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 MainController::MainController(const QString& filePath)
 {
+    QVersionNumber version (VERSION_NUMBER);
     Painting::init();
     PluginManager::loadPlugins();
     QCoreApplication::setApplicationName("ChronoModel");
-    QCoreApplication::setApplicationVersion("3.1.9"); // must match value in Chronomodel.pro
+    QCoreApplication::setApplicationVersion (version.toString());//("3.1.9"); // must match value in Chronomodel.pro
     QCoreApplication::setOrganizationDomain("http://www.chronomodel.com");
     QCoreApplication::setOrganizationName("CNRS");
 
