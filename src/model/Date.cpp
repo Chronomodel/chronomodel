@@ -712,7 +712,8 @@ void Date::calibrate(const ProjectSettings& settings, Project *project, bool tru
         QVector<double> calibrationTemp;
         QVector<double> repartitionTemp;
 
-        const double nbRefPts = 1. + round((mTmaxRefCurve - mTminRefCurve) / settings.mStep);
+        const int nbStep = floor((mTmaxRefCurve - mTminRefCurve) / settings.mStep);
+
         long double v = getLikelihood(mTminRefCurve);
         calibrationTemp.append(v);
         repartitionTemp.append(0.);
@@ -740,10 +741,9 @@ void Date::calibrate(const ProjectSettings& settings, Project *project, bool tru
         long double lastV;
         long double rep;
 
-        for (int i = 1; i <= nbRefPts; ++i) {
-//            progress->setValue(i);
+        for (int i = 1; i <= nbStep; ++i) {
 
-            t = mTminRefCurve + double (i) * settings.mStep;
+            t = mTminRefCurve + i * settings.mStep;
             lastV = v;
             v = getLikelihood(t);
 
@@ -755,11 +755,10 @@ void Date::calibrate(const ProjectSettings& settings, Project *project, bool tru
             repartitionTemp.append(double (rep));
             lastRepVal = rep;
         }
-//        progress->close();
- //       delete progress;
-        /* ------------------------------------------------------------------
-         *  Restrict the calib and repartition vectors to where data are
-         * ------------------------------------------------------------------ */
+
+        /*
+         *  Restrict the calibration and distribution vectors to the locations of the data.
+         */
 
         if (repartitionTemp.last() > 0.) {
             if (truncate) {
