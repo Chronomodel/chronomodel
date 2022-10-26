@@ -439,24 +439,34 @@ bool MCMCLoopMain::update()
     const double tminPeriod = mModel->mSettings.mTmin;
     const double tmaxPeriod = mModel->mSettings.mTmax;
 
-    //--------------------- Update Event -----------------------------------------
+    // --------------------------------------------------------------
+    //  A - Update ti Dates
+    // --------------------------------------------------------------
 
-    for (auto&& event : mModel->mEvents) {
+    for (auto& event : mModel->mEvents) {
         for (auto&& date : event->mDates )   {
-            date.updateDelta(event);
-            date.updateTheta(event);
-            //date.updateSigmaJeffreys(event);
-            date.updateSigmaShrinkage(event);
-            //date.updateSigmaReParam(event);
-            date.updateWiggle();
+            date.updateDate(event);
         }
-        //--------------------- Update Events -----------------------------------------
-#ifdef TEST
-      //  event->mTheta.mX = 0.;
-#else
-        event->updateTheta(tminPeriod, tmaxPeriod);
-#endif
+    }
 
+ /* plus lent
+  *   std::vector<std::thread> tab_th_updateDate;
+    for (Event*& event : mModel->mEvents) {
+        for (auto&& date : event->mDates) {
+            tab_th_updateDate.push_back( std::thread ([&event, &date] () {date.updateDate(event);} )  );
+        }
+    }
+    for (auto& th : tab_th_updateDate) {
+        th.join();
+    }
+*/
+
+    // --------------------------------------------------------------
+    //  B - Update theta Events
+    // --------------------------------------------------------------
+    for (auto&& event : mModel->mEvents) {
+
+        event->updateTheta(tminPeriod, tmaxPeriod);
 
         //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
         for (auto&& phInEv : event->mPhases)
@@ -465,10 +475,10 @@ bool MCMCLoopMain::update()
 
 
 
-
-    //--------------------- Update Phases constraints -----------------------------------------
-    for (auto&& phConst : mModel->mPhaseConstraints )
-        phConst->updateGamma();
+    // --------------------------------------------------------------
+    //  C - Update Phases constraints
+    // --------------------------------------------------------------
+    std::for_each(PAR mModel->mPhaseConstraints.begin(), mModel->mPhaseConstraints.end(), [] (PhaseConstraint* pc) {pc->updateGamma();});
 
 
    return true;

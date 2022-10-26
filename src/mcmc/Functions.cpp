@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Functions.h"
 #include "Generator.h"
 #include "QtUtilities.h"
+#include "AppSettings.h"
 
 #include <QDebug>
 #include <QApplication>
@@ -210,7 +211,7 @@ double std_Knuth(const std::vector<double> &data)
 
 }
 
-double std_Knuth(const std::vector<int>& data)
+double std_Knuth(const std::vector<int> &data)
 {
     int n = 0;
     double mean = 0.;
@@ -230,7 +231,7 @@ double std_Knuth(const std::vector<int>& data)
 
 }
 
-void mean_variance_Knuth(const std::vector<double>& data, double& mean, double& variance)
+void mean_variance_Knuth(const std::vector<double> &data, double &mean, double &variance)
 {
     int n = 0;
     variance = 0.;
@@ -608,10 +609,10 @@ Quartiles quartilesForRepartition(const QVector<double>& repartition, const doub
  * @param description
  * @return
  */
-QPair<double, double> credibilityForTrace(const QVector<double>& trace, double thresh, double& exactThresholdResult,const  QString description)
+std::pair<double, double> credibilityForTrace(const QVector<double>& trace, double thresh, double& exactThresholdResult, const  QString description)
 {
     (void) description;
-    QPair<double, double> credibility(0.,0.);
+    std::pair<double, double> credibility(0.,0.);
     exactThresholdResult = 0.;
     size_t n = trace.size();
     if (thresh > 0 && n > 0) {
@@ -646,10 +647,10 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, double t
 }
 
 // Used in generateTempo for credibility
-QPair<double, double> credibilityForTrace(const QVector<int>& trace, double thresh, double& exactThresholdResult, const QString description)
+std::pair<double, double> credibilityForTrace(const QVector<int>& trace, double thresh, double& exactThresholdResult, const QString description)
 {
     (void) description;
-    QPair<double, double> credibility(0.,0.);
+    std::pair<double, double> credibility(0.,0.);
     exactThresholdResult = 0.;
     const int n = trace.size();
     if (thresh > 0 && n > 0) {
@@ -692,10 +693,10 @@ QPair<double, double> credibilityForTrace(const QVector<int>& trace, double thre
  * @param description  compute type 7 R quantile
  * @return
  */
-QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh, const QString description)
+std::pair<double, double> timeRangeFromTraces(const QVector<double> &trace1, const QVector<double> &trace2, const double thresh, const QString description)
 {
     (void) description;
-    QPair<double, double> range(- INFINITY, +INFINITY);
+    std::pair<double, double> range(- INFINITY, +INFINITY);
 #ifdef DEBUG
     QElapsedTimer startTime;
     startTime.start();
@@ -808,7 +809,7 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
  * @return
  */
 
-QPair<double, double> transitionRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh, const QString description)
+std::pair<double, double> transitionRangeFromTraces(const QVector<double>& trace1, const QVector<double> &trace2, const double thresh, const QString description)
 {
     return timeRangeFromTraces(trace1, trace2, thresh, description);
 }
@@ -822,7 +823,7 @@ QPair<double, double> transitionRangeFromTraces(const QVector<double>& trace1, c
  * @param description a simple text
  * @return
  */
-QPair<double, double> gapRangeFromTraces(const QVector<double> &traceEnd, const QVector<double> &traceBegin, const double thresh, const QString description)
+std::pair<double, double> gapRangeFromTraces(const QVector<double> &traceEnd, const QVector<double> &traceBegin, const double thresh, const QString description)
 {
     (void) description;
 #ifdef DEBUG
@@ -830,7 +831,7 @@ QPair<double, double> gapRangeFromTraces(const QVector<double> &traceEnd, const 
     startTime.start();
 #endif
 
-    QPair<double, double> range = QPair<double, double>(- INFINITY, + INFINITY);
+    std::pair<double, double> range = std::pair<double, double>(- INFINITY, + INFINITY);
 
     // limit of precision, to accelerate the calculus, we set the same as RChronoModel
     const double epsilonStep = 0.1/100.;

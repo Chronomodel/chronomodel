@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -375,43 +375,42 @@ void CalibrationView::updateGraphs()
 
             QMap<double, double> hpd (create_HPD(subData, thresh));
 
-            GraphCurve hpdCurve;
-            hpdCurve.mName = "Calibration HPD";
-            hpdCurve.mPen = brushColor;
-            hpdCurve.mBrush = brushColor;
-            hpdCurve.mIsRectFromZero = true;
+            if (!hpd.isEmpty()) {
+                GraphCurve hpdCurve;
+                hpdCurve.mName = "Calibration HPD";
+                hpdCurve.mPen = brushColor;
+                hpdCurve.mBrush = brushColor;
+                hpdCurve.mIsRectFromZero = true;
 
-            hpdCurve.mData = normalize_map(hpd, map_max_value(calibMap));
-            mCalibGraph->addCurve(hpdCurve);
+                hpdCurve.mData = normalize_map(hpd, map_max_value(calibMap));
+                mCalibGraph->addCurve(hpdCurve);
 
-            // update max inside the display period
-            QMap<type_data, type_data> subDisplayCalib = calibCurve.mData;
-            subDisplayCalib = getMapDataInRange(subDisplayCalib, mTminDisplay, mTmaxDisplay);
-            type_data yMax = map_max_value(subDisplayCalib);
+                // update max inside the display period
+                QMap<type_data, type_data> subDisplayCalib = calibCurve.mData;
+                subDisplayCalib = getMapDataInRange(subDisplayCalib, mTminDisplay, mTmaxDisplay);
+                type_data yMax = map_max_value(subDisplayCalib);
 
-            if (!wiggleCalibMap.isEmpty()) {
-                QMap<type_data, type_data> subDisplayWiggle = getMapDataInRange(calibWiggleCurve.mData, mTminDisplay, mTmaxDisplay);
-                yMax = std::max( yMax, map_max_value(subDisplayWiggle));
-            }
+                if (!wiggleCalibMap.isEmpty()) {
+                    QMap<type_data, type_data> subDisplayWiggle = getMapDataInRange(calibWiggleCurve.mData, mTminDisplay, mTmaxDisplay);
+                    yMax = std::max( yMax, map_max_value(subDisplayWiggle));
+                }
 
 
-            mCalibGraph->setRangeY(0., yMax);
+                mCalibGraph->setRangeY(0., yMax);
 
-            mCalibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
-            mCalibGraph->setFormatFunctX(nullptr);
-            mCalibGraph->setFormatFunctY(nullptr);
-
+                mCalibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+                mCalibGraph->setFormatFunctX(nullptr);
+                mCalibGraph->setFormatFunctY(nullptr);
+             }
             // ------------------------------------------------------------
             //  Display numerical results
             // ------------------------------------------------------------
             QString resultsStr;
 
             DensityAnalysis results;
-            results.funcAnalysis = analyseFunction(subData);
-
 
             if (!subData.isEmpty()) {
-
+                results.funcAnalysis = analyseFunction(subData);
                 resultsStr += FunctionStatToString(results.funcAnalysis);
 
                 /* with the calibration we don't need the statistic on the trace*/
@@ -423,12 +422,12 @@ void CalibrationView::updateGraphs()
                  *  resultsStr += densityAnalysisToString(results,"<br>", false);
                */
 
-             }
-            const double realThresh = map_area(hpd) / map_area(subData);
+                const double realThresh = map_area(hpd) / map_area(subData);
 
-            resultsStr +=  "<br> HPD (" + stringForLocal(100. * realThresh) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false) ;
+                resultsStr +=  "<br> HPD (" + stringForLocal(100. * realThresh) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false) ;
 
-            mResultsText->setText(resultsStr);
+                mResultsText->setText(resultsStr);
+            }
 
         } else {
             GraphZone zone;
@@ -439,6 +438,7 @@ void CalibrationView::updateGraphs()
             zone.mText = tr("Individual calibration not digitally computable ...");
             mCalibGraph->addZone(zone);
         }
+
         mDrawing->setCalibGraph(mCalibGraph);
         // ------------------------------------------------------------
         //  Reference curve from plugin

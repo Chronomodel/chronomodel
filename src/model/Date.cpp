@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -44,14 +44,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "StdUtilities.h"
 #include "PluginManager.h"
 #include "PluginUniform.h"
-#include "../PluginAbstract.h"
-#include "Painting.h"
+//#include "../PluginAbstract.h"
+//#include "Painting.h"
 #include "QtUtilities.h"
 #include "ProjectSettings.h"
-#include "ModelUtilities.h"
+//#include "ModelUtilities.h"
 #include "Project.h"
 #include "MainWindow.h"
 #include "GraphCurve.h"
+#include "GraphView.h"
 
 #if USE_FFT
 #include "fftw3.h"
@@ -1436,14 +1437,15 @@ QPixmap Date::generateCalibThumb()
         const double tmin = mSettings.mTmin;
         const double tmax = mSettings.mTmax;
 
+        const QMap<double, double> &calib = normalize_map(getMapDataInRange(getRawCalibMap(), tmin, tmax));
 
-        QMap<double, double> calib = normalize_map(getMapDataInRange(getRawCalibMap(), tmin, tmax));
-        qDebug()<<"[Date::generateCalibThumb] mName "<<mCalibration->mName<<mCalibration->mCurve.size()<<calib.size();
+        qDebug()<<"[Date::generateCalibThumb] mName "<< mCalibration->mName << mCalibration->mCurve.size() << calib.size();
         if (calib.isEmpty())
             return QPixmap();
 
         const QColor color = mPlugin->getColor();
-        const GraphCurve curve = densityCurve(calib, "Calibration", mPlugin->getColor(), Qt::SolidLine, color);
+        GraphCurve curve = densityCurve(calib, "Calibration", mPlugin->getColor(), Qt::SolidLine, color);
+        curve.mIsRectFromZero = true; // When then ref curve is shorter than the study period
 
         GraphView graph;
 
@@ -1503,31 +1505,6 @@ QPixmap Date::generateCalibThumb()
 double Date::getLikelihoodFromCalib(const double &t) const
 {
     return interpolate_value_from_curve(t, mCalibration->mCurve, mCalibration->mTmin, mCalibration->mTmax);
-
-   /* const double tmin (mCalibration->mTmin);
-    const double tmax (mCalibration->mTmax);
-
-    // We need at least two points to interpolate
-    if (mCalibration->mCurve.size() < 2 || t < tmin || t > tmax)
-        return 0.;
-
-    const double prop = (t - tmin) / (tmax - tmin);
-    const double idx = prop * (mCalibration->mCurve.size() - 1); // tricky : if (tmax - tmin) = 2000, then calib size is 2001 !
-    const int idxUnder = (int)floor(idx);
-    const int idxUpper = (int)ceil(idx);//idxUnder + 1;
-
-    if (idxUnder == idxUpper) {
-        return mCalibration->mCurve[idxUnder];
-
-    } else if (mCalibration->mCurve[idxUnder] != 0. && mCalibration->mCurve[idxUpper] != 0.) {
-        // Important for gate: no interpolation around gates
-        return interpolate((double) idx, (double)idxUnder, (double)idxUpper, mCalibration->mCurve[idxUnder], mCalibration->mCurve[idxUpper]);
-
-    } else {
-        return 0.;
-    }
-    */
-
 }
 
 double Date::getLikelihoodFromWiggleCalib(const double &t) const
@@ -1564,35 +1541,21 @@ double Date::getLikelihoodFromWiggleCalib(const double &t) const
         return interpolate_value_from_curve(t, mWiggleCalibration->mCurve, mWiggleCalibration->mTmin, mWiggleCalibration->mTmax);
     }
 
-/*
-    const double tmin (mWiggleCalibration->mTmin);
-    const double tmax (mWiggleCalibration->mTmax);
-
-    // We need at least two points to interpolate
-    if (mWiggleCalibration->mCurve.size() < 2 || t < tmin || t > tmax)
-        return 0.;
-
-    const double prop = (t - tmin) / (tmax - tmin);
-    const double idx = prop * (mWiggleCalibration->mCurve.size() - 1); // tricky : if (tmax - tmin) = 2000, then calib size is 2001 !
-    const int idxUnder = (int)floor(idx);
-    const int idxUpper = (int)ceil(idx);//idxUnder + 1;
-
-    if (idxUnder == idxUpper) {
-        return mWiggleCalibration->mCurve[idxUnder];
-
-    } else if (mWiggleCalibration->mCurve[idxUnder] != 0. && mWiggleCalibration->mCurve[idxUpper] != 0.) {
-        // Important for gate: no interpolation around gates
-        return interpolate((double) idx, (double)idxUnder, (double)idxUpper, mWiggleCalibration->mCurve[idxUnder], mWiggleCalibration->mCurve[idxUpper]);
-    } else {
-        return 0. ;
-    }
-    */
 }
 
-void Date::updateTheta(Event* event)
+void Date::updateDate(Event* event)
+{
+    updateDelta(event);
+    updateTi(event);
+    updateSigmaShrinkage(event);
+    updateWiggle();
+}
+
+void Date::updateTi(Event *event)
 {
     (this->*updateti) (event);
 }
+
 /**
  * @brief TDate::initDelta Init the wiggle shift
  */
@@ -1624,7 +1587,7 @@ void Date::initDelta(Event*)
     mWiggle.mLastAccepts.clear();
 }
 
-void Date::updateDelta(Event* event)
+void Date::updateDelta(Event* &event)
 {
     const double lambdai = event->mTheta.mX - mTi.mX;
     
@@ -1637,7 +1600,7 @@ void Date::updateDelta(Event* event)
             break;
         
         case eDeltaGaussian: {
-           // const double lambdai = event->mTheta.mX - mTheta.mX;
+
             const double w = ( 1/(mSigmaTi.mX * mSigmaTi.mX) ) + ( 1/(mDeltaError * mDeltaError) );
             const double deltaAvg = (lambdai / (mSigmaTi.mX * mSigmaTi.mX) + mDeltaAverage / (mDeltaError * mDeltaError)) / w;
             const double x = Generator::gaussByBoxMuller(0, 1);
@@ -1661,7 +1624,6 @@ void Date::updateSigmaJeffreys(Event* event)
     // ------------------------------------------------------------------------------------------
     const double lambda = pow(mTi.mX - (event->mTheta.mX - mDelta), 2) / 2.;
 
-   
     const double a (.0001); //precision
     const double b (pow(mSettings.mTmax - mSettings.mTmin, 2.));
 
@@ -1682,7 +1644,7 @@ void Date::updateSigmaJeffreys(Event* event)
     mSigmaTi.tryUpdate(sqrt(V2), rapport);
 }
 
-void Date::updateSigmaShrinkage(Event* event)
+void Date::updateSigmaShrinkage(Event* &event)
 {
     // ------------------------------------------------------------------------------------------
     //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
@@ -1743,12 +1705,6 @@ void Date::updateSigmaReParam(Event* event)
     mSigmaTi.tryUpdate(sqrt(V2), rapport);
 }
 
-/*
- * void Date::updateWiggle()
-{
-    mWiggle.mX = mTi.mX + mDelta;
-}
-*/
 
 // CSV dates
 Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
@@ -1819,22 +1775,27 @@ QStringList Date::toCSV(const QLocale &csvLocale) const
     csv << mName;
     csv << mPlugin->toCSV(mData, csvLocale);
 
-    if (mDeltaType == eDeltaNone) {
+    switch (mDeltaType) {
+    case eDeltaNone:
         csv << "none";
-
-    } else if (mDeltaType == eDeltaFixed) {
+        break;
+    case eDeltaFixed:
         csv << "fixed";
         csv << csvLocale.toString(mDeltaFixed);
-
-    } else if (mDeltaType == eDeltaRange) {
+        break;
+    case eDeltaRange:
         csv << "range";
         csv << csvLocale.toString(mDeltaMin);
         csv << csvLocale.toString(mDeltaMax);
-
-    } else if (mDeltaType == eDeltaGaussian) {
+        break;
+    case eDeltaGaussian:
         csv << "gaussian";
         csv << csvLocale.toString(mDeltaAverage);
         csv << csvLocale.toString(mDeltaError);
+        break;
+    default:
+
+        break;
     }
 
     return csv;
@@ -1895,7 +1856,7 @@ void Date::autoSetTiSampler(const bool bSet)
  * @brief MH proposal = prior distribution
  *
  */
-void Date::fMHSymetric(Event* event)
+void Date::fMHSymetric(Event *event)
 {
 //eMHSymetric:
 
@@ -1920,9 +1881,8 @@ void Date::fMHSymetric(Event* event)
  * @brief identic as fMHSymetric but use getLikelyhoodArg, when plugin offer it
  *
  */
-void Date::fMHSymetricWithArg(Event* event)
+void Date::fMHSymetricWithArg(Event *event)
 {
-
     const double tiNew = Generator::gaussByBoxMuller(event->mTheta.mX - mDelta, mSigmaTi.mX);
 
     QPair<long double, long double> argOld, argNew;
@@ -1989,7 +1949,7 @@ double Date::fProposalDensity(const double t, const double t0)
  *  @brief MH proposal = Distribution of Calibrated date, ti is defined on set R (real numbers)
  *  @brief simulation according to uniform shrinkage with s parameter
  */
-void Date::fInversion(Event* event)
+void Date::fInversion(Event *event)
 {
     const double u1 = Generator::randomUniform();
     const double level (mMixingLevel);
@@ -2040,7 +2000,7 @@ void Date::fInversion(Event* event)
     mTi.tryUpdate(tiNew, rapport1 * rapport2 * rapport3);
 }
 
-void Date::fInversionWithArg(Event* event)
+void Date::fInversionWithArg(Event *event)
 {
     const double u1 = Generator::randomUniform();
     const double level (mMixingLevel);
@@ -2062,22 +2022,7 @@ void Date::fInversionWithArg(Event* event)
         const double s = (tmax-tmin)/2.;
 
         tiNew = Generator::gaussByBoxMuller(t0, s);
-        /*
-         // -- double shrinkage
-         double u2 = Generator::randomUniform();
-         double t0 =(tmax+tmin)/2;
-         double s = (tmax-tmin)/2;
 
-         double tPrim= s* ( (1-u2)/u2 ); // simulation according to uniform shrinkage with s parameter
-
-         double u3 = Generator::randomUniform();
-         if (u3<0.5f) {
-         tiNew= t0 + tPrim;
-         }
-         else {
-         tiNew= t0 - tPrim;
-         }
-         */
     }
 
 
@@ -2106,7 +2051,7 @@ void Date::fMHSymGaussAdapt(Event* event)
     const double tiNew = Generator::gaussByBoxMuller(mTi.mX, mTi.mSigmaMH);
     double rapport = getLikelihood(tiNew) / getLikelihood(mTi.mX);
     rapport *= exp((-0.5/(mSigmaTi.mX * mSigmaTi.mX)) * (   pow(tiNew - (event->mTheta.mX - mDelta), 2)
-                                                                  - pow(mTi.mX - (event->mTheta.mX - mDelta), 2)
+                                                            - pow(mTi.mX - (event->mTheta.mX - mDelta), 2)
                                                                  ));
 
     mTi.tryUpdate(tiNew, rapport);
@@ -2118,7 +2063,7 @@ void Date::fMHSymGaussAdapt(Event* event)
  *
  * @brief identic as fMHSymGaussAdapt but use getLikelyhoodArg, when plugin offer it
  */
-void Date::fMHSymGaussAdaptWithArg(Event* event)
+void Date::fMHSymGaussAdaptWithArg(Event *event)
 {
     const double tiNew = Generator::gaussByBoxMuller(mTi.mX, mTi.mSigmaMH);
 

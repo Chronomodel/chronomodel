@@ -60,7 +60,7 @@ typedef struct SplineMatrices
 
 typedef struct SplineResults
 {
-    Matrix2D matB;
+    //Matrix2D matB;
     Matrix2D matL;
     std::vector<double> matD;
     

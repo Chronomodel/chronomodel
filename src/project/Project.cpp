@@ -74,19 +74,17 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <iostream>
 //#include <exception>
 #include <QtWidgets>
-#include <QThread>
+//#include <QThread>
 #include <QJsonObject>
 #include <QFile>
 
 
 Project::Project():
-mName(tr("ChronoModel Project")),
-//mProjectFileDir(""),
-//mProjectFileName(QObject::tr("Untitled")),
-mDesignIsChanged(true),
-mStructureIsChanged(true),
-mItemsIsMoved(true),
-mNoResults(true)
+    mName(tr("ChronoModel Project")),
+    mDesignIsChanged(true),
+    mStructureIsChanged(true),
+    mItemsIsMoved(true),
+    mNoResults(true)
 {
     mState = emptyState();
     mLastSavedState = mState;
@@ -192,15 +190,7 @@ QJsonObject Project::emptyState()
     return state;
 }
 
-QJsonObject Project::state() const
-{
-    return mState;
-}
 
-QJsonObject* Project::state_ptr()
-{
-    return &mState;
-}
 /**
  * @brief Project::pushProjectState used to store action in Undo-Redo Command
  * @param state
@@ -1251,9 +1241,9 @@ bool Project::saveProjectToFile()
 #ifdef DEBUG
      else {
         //qDebug() << "Nothing new to save in project model";
-#endif
-    }
 
+    }
+#endif
     if (file_cal.open(QIODevice::WriteOnly)) {
 
         QDataStream out(&file_cal);

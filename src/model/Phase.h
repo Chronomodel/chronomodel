@@ -77,7 +77,7 @@ public:
     double getMinThetaNextPhases(const double tmax);
     double getMaxThetaPrevPhases(const double tmin);
 
-    QPair<double,double> getFormatedTimeRange() const;
+    std::pair<double, double> getFormatedTimeRange() const;
 
     void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
 
@@ -101,7 +101,7 @@ public:
     MetropolisVariable mAlpha;
     MetropolisVariable mBeta;
 
-    QPair<double,double> mTimeRange;
+    std::pair<double,double> mTimeRange;
 
     MetropolisVariable mDuration;
     QString mDurationCredibility;
@@ -113,9 +113,8 @@ public:
     QMap<double, double> mActivity;
     QMap<double, double> mActivityInf;
     QMap<double, double> mActivitySup;
-    QMap<double, double> mActivityUnifMean;
-   // QMap<double, double> mActivityUnifInf;
-   // QMap<double, double> mActivityUnifSup;
+    QMap<double, double> mActivityUnifTheo;
+
 
     // Raw curve without date format
 
@@ -126,9 +125,8 @@ public:
     QMap<double, double> mRawActivity;
     QMap<double, double> mRawActivityInf;
     QMap<double, double> mRawActivitySup;
-    QMap<double, double> mRawActivityUnifMean;
-    //QMap<double, double> mRawActivityUnifInf;
-    //QMap<double, double> mRawActivityUnifSup;
+    QMap<double, double> mRawActivityUnifTheo;
+
     std::unordered_map<std::string, TValueStack> mActivityValueStack;
 
     MetropolisVariable mTau;

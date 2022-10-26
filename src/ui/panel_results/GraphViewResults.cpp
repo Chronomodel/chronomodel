@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -38,11 +38,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "GraphViewResults.h"
-#include "Button.h"
+//#include "Button.h"
 #include "Painting.h"
-#include "QtUtilities.h"
+//#include "QtUtilities.h"
 #include "MainWindow.h"
 #include "MHVariable.h"
+#include "AppSettings.h"
+
 #include <QtWidgets>
 #include <QtSvg>
 #include <QMessageBox>

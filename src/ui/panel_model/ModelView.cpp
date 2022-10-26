@@ -43,13 +43,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PhaseItem.h"
 #include "CurveSettingsView.h"
 #include "Event.h"
-#include "Bound.h"
+//#include "Bound.h"
 #include "Painting.h"
 #include "Button.h"
 #include "Label.h"
-#include "LineEdit.h"
+//#include "LineEdit.h"
 #include "ImportDataView.h"
 #include "EventPropertiesView.h"
+#include "PluginAbstract.h"
 #include "SceneGlobalView.h"
 #include "ScrollCompressor.h"
 #include "CalibrationView.h"
@@ -116,7 +117,7 @@ mCurveSettingsVisible(false)
 
   // mButModifyPeriod->setStyleSheet("QPushButton:active {background-color: rgb(230, 230, 230); border: none;}  "); // bug QT 5.15
     //ButCurve = new SwitchWidget(this);
-    mButCurve = new Button(tr("Functional Link :"), mTopWrapper);
+    mButCurve = new Button(tr("Curve Building :"), mTopWrapper);
     mButCurve->setToolTip(tr("Define curve parameters"));
     mButCurve->setFlatHorizontal();
     mButCurve->setCheckable(true);
@@ -370,8 +371,8 @@ void ModelView::setProject(Project* project)
     //Unselect all Item in all scene
     mProject->unselectedAllInState();
 
-    mEventsScene->createSceneFromState();
-    mPhasesScene->createSceneFromState();
+    //mEventsScene->createSceneFromState();
+    //mPhasesScene->createSceneFromState();
     applyAppSettings();
 }
 
@@ -738,7 +739,7 @@ void ModelView::updateCurveButton()
     QJsonObject state = mProject->state();
 
     const CurveSettings cs = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
-    mButCurve->setText(tr("Functional Link : ") + cs.processText());
+    mButCurve->setText(tr("Curve Building : ") + cs.processText());
 }
 
 /**

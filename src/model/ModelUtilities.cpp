@@ -447,7 +447,7 @@ QString ModelUtilities::phaseResultsText(const Phase* p, const bool forCSV)
     text += QObject::tr("End (posterior distrib.)") + nl;
     text += p->mBeta.resultsString(nl, "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, forCSV);
 
-    if (p->mTimeRange != QPair<double,double>()) {
+    if (p->mTimeRange != std::pair<double,double>(- INFINITY, +INFINITY)) {
         text += nl + nl;
         // we suppose it's the same mThreshohdUsed than alpha
         if (forCSV) {
@@ -530,7 +530,7 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p, const bo
         break;
     }
 
-    if (p->mTransitionRange != QPair<double,double>()) {
+    if (p->mTransitionRange != std::pair<double, double>(-INFINITY, INFINITY)) {
         text += nl;
         // we suppose it's the same mThreshohdUsed than alpha
         if (forCSV) {
@@ -722,7 +722,7 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
 
     i = 0;
     for (auto &&pPhase : model->mPhases) {
-        log += line(textPurple(QObject::tr("Phase ( %1 / %2 ) : %3 ( %4 events, %5 const. back., %6 const. fwd.)").arg(QString::number(i+1), QString::number(model->mPhases.size()), pPhase->mName,
+        log += line(textOrange(QObject::tr("Phase ( %1 / %2 ) : %3 ( %4 events, %5 const. back., %6 const. fwd.)").arg(QString::number(i+1), QString::number(model->mPhases.size()), pPhase->mName,
                                                                                                               QString::number(pPhase->mEvents.size()),
                                                                                                               QString::number(pPhase->mConstraintsBwd.size()),
                                                                                                               QString::number(pPhase->mConstraintsFwd.size()))
@@ -766,7 +766,7 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
         log += line(textBold(textGreen( QObject::tr("Curve Parameters"))));
         switch(model->mCurveSettings.mProcessType) {
         case CurveSettings::eProcessTypeNone :
-            log += line(textBold(textGreen( QObject::tr(" - No functionnal link") )));
+            log += line(textBold(textGreen( QObject::tr(" - No Curve") )));
             break;
         case CurveSettings::eProcessTypeUnivarie :
             log += textGreen( QObject::tr(" - Process : Univariate on "));
@@ -958,10 +958,10 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
         for (auto& phase : model->mPhases) {
             ++i;
             HTMLText += "<br>";
-            HTMLText += line(textPurple(QObject::tr("Phase ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mPhases.size()), phase->mName)));
-            HTMLText += line(textPurple(QObject::tr(" - Begin : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mX), DateUtils::getAppSettingsFormatStr())));
-            HTMLText += line(textPurple(QObject::tr(" - End : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mX), DateUtils::getAppSettingsFormatStr())));
-            HTMLText += line(textPurple(QObject::tr(" - Tau : %1").arg(stringForLocal(phase->mTau.mX))));
+            HTMLText += line(textOrange(QObject::tr("Phase ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mPhases.size()), phase->mName)));
+            HTMLText += line(textOrange(QObject::tr(" - Begin : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mX), DateUtils::getAppSettingsFormatStr())));
+            HTMLText += line(textOrange(QObject::tr(" - End : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mX), DateUtils::getAppSettingsFormatStr())));
+            HTMLText += line(textOrange(QObject::tr(" - Tau : %1").arg(stringForLocal(phase->mTau.mX))));
         }
     }
 
@@ -1231,42 +1231,42 @@ QString ModelUtilities::VgResultsHTML(const Event* e)
 
 QString ModelUtilities::phaseResultsHTML(const Phase* p)
 {
-    QString text = line(textBold(textPurple(QObject::tr("Phase : %1").arg(p->mName))));
-    text += line(textPurple(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
+    QString text = line(textBold(textOrange(QObject::tr("Phase : %1").arg(p->mName))));
+    text += line(textOrange(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
 
     text += "<br>";
-    text += line(textBold(textPurple(QObject::tr("Begin (posterior distrib.)"))));
-    text += line(textPurple(p->mAlpha.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false)));
+    text += line(textBold(textOrange(QObject::tr("Begin (posterior distrib.)"))));
+    text += line(textOrange(p->mAlpha.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false)));
 
     text += "<br>";
-    text += line(textBold(textPurple(QObject::tr("End (posterior distrib.)"))));
-    text += line(textPurple(p->mBeta.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false)));
+    text += line(textBold(textOrange(QObject::tr("End (posterior distrib.)"))));
+    text += line(textOrange(p->mBeta.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false)));
 
-    if (p->mTimeRange != QPair<double, double>()) {
+    if (p->mTimeRange != std::pair<double, double>(- INFINITY, +INFINITY)) {
         text += "<br>";
         // we suppose it's the same mThreshohdUsed than alpha
         const QString result = QObject::tr("Phase Time Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(p->mAlpha.mThresholdUsed),
                                                                                             stringForLocal(p->getFormatedTimeRange().first),
                                                                                             stringForLocal(p->getFormatedTimeRange().second),
                                                                                             DateUtils::getAppSettingsFormatStr());
-        text += line(textBold(textPurple(result)));
+        text += line(textBold(textOrange(result)));
     }
 /*
     text += "<br>";
-    text += line(textBold(textPurple(QObject::tr("Duration (posterior distrib.)"))));
-    text += line(textPurple(p->mDuration.resultsString("<br>", QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr, false)));
+    text += line(textBold(textOrange(QObject::tr("Duration (posterior distrib.)"))));
+    text += line(textOrange(p->mDuration.resultsString("<br>", QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr, false)));
 */
     return text;
 }
 
 QString ModelUtilities::durationResultsHTML(const Phase* p)
 {
-   QString text = line(textBold(textPurple(QObject::tr("Phase : %1").arg(p->mName))));
-   text += line(textPurple(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
+   QString text = line(textBold(textOrange(QObject::tr("Phase : %1").arg(p->mName))));
+   text += line(textOrange(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
 
    text += "<br>";
-   text += line(textBold(textPurple(QObject::tr("Duration (posterior distrib.)"))));
-   text += line(textPurple(p->mDuration.resultsString("<br>", QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr, false)));
+   text += line(textBold(textOrange(QObject::tr("Duration (posterior distrib.)"))));
+   text += line(textOrange(p->mDuration.resultsString("<br>", QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr, false)));
 
    return text;
 }
@@ -1274,8 +1274,8 @@ QString ModelUtilities::durationResultsHTML(const Phase* p)
 QString ModelUtilities::tempoResultsHTML(const Phase* p)
 {
     Q_ASSERT(p);
-    QString text = line(textBold(textPurple(QObject::tr("Phase : %1").arg(p->mName))));
-    text += line(textPurple(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
+    QString text = line(textBold(textOrange(QObject::tr("Phase : %1").arg(p->mName))));
+    text += line(textOrange(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
 
     return text;
 }
@@ -1283,43 +1283,43 @@ QString ModelUtilities::tempoResultsHTML(const Phase* p)
 QString ModelUtilities::activityResultsHTML(const Phase* p)
 {
     Q_ASSERT(p);
-    QString text = line(textBold(textPurple(QObject::tr("Phase : %1").arg(p->mName))));
-    text += line(textPurple(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
+    QString text = line(textBold(textOrange(QObject::tr("Phase : %1").arg(p->mName))));
+    text += line(textOrange(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
 
     text += "<br>";
-    text += line(textBold(textPurple(QObject::tr("Activity"))));
+    text += line(textBold(textOrange(QObject::tr("Activity"))));
 
     double t1 = DateUtils::convertToAppSettingsFormat(p->mActivityValueStack.at("t_min").mValue);
     double t2 = DateUtils::convertToAppSettingsFormat(p->mActivityValueStack.at("t_max").mValue);
 
     if (t1>t2)
         std::swap(t1, t2);
-    text += line(textPurple("<i>" + QObject::tr("Trace Stat.")  + "</i>"));
-    text += line(textPurple("Theta min = " + stringForLocal(t1) + " " + DateUtils::getAppSettingsFormatStr()));
-    text += line(textPurple("Theta max = " + stringForLocal(t2) + " " + DateUtils::getAppSettingsFormatStr()));
+    text += line(textOrange("<i>" + QObject::tr("Trace Stat.")  + "</i>"));
+    text += line(textOrange("Theta min = " + stringForLocal(t1) + " " + DateUtils::getAppSettingsFormatStr()));
+    text += line(textOrange("Theta max = " + stringForLocal(t2) + " " + DateUtils::getAppSettingsFormatStr()));
 
-    t1 = DateUtils::convertToAppSettingsFormat(p->mActivityValueStack.at("minQ25").mValue);
-    t2 = DateUtils::convertToAppSettingsFormat(p->mActivityValueStack.at("maxQ975").mValue);
+    t1 = DateUtils::convertToAppSettingsFormat(p->mActivityValueStack.at("min95").mValue);
+    t2 = DateUtils::convertToAppSettingsFormat(p->mActivityValueStack.at("max95").mValue);
     if (t1>t2)
         std::swap(t1, t2);
-    text += line(textPurple("Min Q<sub>2,5</sub> = " + stringForLocal(t1) + " " + DateUtils::getAppSettingsFormatStr()));
-    text += line(textPurple("Max Q<sub>97,5</sub> = " + stringForLocal(t2) + " " + DateUtils::getAppSettingsFormatStr()));
+    double threshold = p->mActivityValueStack.at("threshold").mValue;
+    text += line(textOrange("Activity Interval" + QString(" ( %1 %) [").arg(threshold) + stringForLocal(t1) + " ; " + stringForLocal(t2) + "] " + DateUtils::getAppSettingsFormatStr()) );
 
     text += "<hr>";
-    text += line(textBold(textPurple(QObject::tr("Unif. Predict."))));
-    t1 = DateUtils::convertToAppSettingsFormat(p->mActivityValueStack.at("t_min_R").mValue);
-    t2 = DateUtils::convertToAppSettingsFormat(p->mActivityValueStack.at("t_max_R").mValue);
+    text += line(textBold(textOrange(QObject::tr("Unif. Predict."))));
+    t1 = DateUtils::convertToAppSettingsFormat(p->mActivityValueStack.at("a_Unif").mValue);
+    t2 = DateUtils::convertToAppSettingsFormat(p->mActivityValueStack.at("b_Unif").mValue);
 
     if (t1>t2)
         std::swap(t1, t2);
-    text += line(textPurple("Unif. Theta min = " + stringForLocal(t1) + " " + DateUtils::getAppSettingsFormatStr()));
-    text += line(textPurple("Unif. Theta max = " + stringForLocal(t2) + " " + DateUtils::getAppSettingsFormatStr()));
+    text += line(textOrange("Unif. Theta min = " + stringForLocal(t1) + " " + DateUtils::getAppSettingsFormatStr()));
+    text += line(textOrange("Unif. Theta max = " + stringForLocal(t2) + " " + DateUtils::getAppSettingsFormatStr()));
 
     QString textValue = stringForLocal(p->mActivityValueStack.at("R_etendue").mValue);
-    text += line(textPurple("Unif. Span = " + textValue ));
+    text += line(textOrange("Unif. Span = " + textValue ));
 
     textValue = stringForLocal(p->mActivityValueStack.at("Significance Score").mValue);
-    text += line(textPurple("Significance Score = " + textValue));
+    text += line(textOrange("Significance Score = " + textValue));
 
     return text;
 }

@@ -41,10 +41,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define DATE_H
 
 #include "MHVariable.h"
-#include "StateKeys.h"
+//#include "StateKeys.h"
 #include "../project/ProjectSettings.h"
-//#include "PluginAbstract.h"
-//#include "CalibrationCurve.h"
 
 #include <QMap>
 #include <QJsonObject>
@@ -73,8 +71,6 @@ public:
     MHVariable mWiggle;
     double mDelta;
 
-   // samplingFunctiono updateti;
-
     double mTminRefCurve;
     double mTmaxRefCurve;
 };
@@ -89,12 +85,7 @@ public:
         eSingleDate = 0,
         eCombination = 1
     };
-/*    enum DataMethod{
-        eMHSymetric = 0,
-        eInversion = 1,
-        eMHSymGaussAdapt = 2
-    };
-*/
+
     enum DeltaType{
         eDeltaNone = -1,
         eDeltaFixed = 0,
@@ -102,7 +93,7 @@ public:
         eDeltaRange = 2
     };
 
-    MHVariable mTi;//mTheta; // theta i de la date
+    MHVariable mTi;// t i de la date
     MHVariable mSigmaTi; // sigma i de la date (par rapport au fait)
     MHVariable mWiggle;
     double mDelta;
@@ -116,7 +107,6 @@ public:
     QJsonObject mData;
     OriginType mOrigin;
     PluginAbstract* mPlugin;
-    //DataMethod mMethod;
     bool mIsValid;
 
     DeltaType mDeltaType;
@@ -135,7 +125,6 @@ public:
     QMap<double, double> mCalibHPD;
     ProjectSettings mSettings;
 
-    //QList<TDate> mSubDates;
     QJsonArray mSubDates;
     double mMixingLevel;
 
@@ -202,26 +191,26 @@ public:
 
     void initDelta(Event* event);
 
-    void updateTheta(Event* event);
+    void updateDate(Event *event);
+
+    void updateTi(Event* event);
     void autoSetTiSampler(const bool bSet);
 
-    void updateDelta(Event* event);
-    void updateSigmaShrinkage(Event* event);
+    void updateDelta(Event *&event);
+    void updateSigmaShrinkage(Event *&event);
     void updateSigmaJeffreys(Event* event);
     void updateSigmaReParam(Event* event);
     inline void updateWiggle() { mWiggle.mX = mTi.mX + mDelta;};
 
     void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
 
-
-
     double fProposalDensity(const double t, const double t0);
 
     void fMHSymetric(Event* event);
     void fInversion(Event* event);
-    void fMHSymGaussAdapt(Event* event);
+    void fMHSymGaussAdapt(Event *event);
 
-    void fMHSymetricWithArg(Event* event);
+    void fMHSymetricWithArg(Event *event);
     void fMHSymGaussAdaptWithArg(Event* event);
     void fInversionWithArg(Event* event);
 

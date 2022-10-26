@@ -45,6 +45,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <iostream>
 #include <fenv.h>
 #include <QObject>
+#include <thread>
 
 using namespace std;
 
@@ -460,14 +461,18 @@ QMap<double, double> vector_to_map(const QVector<double>& data, const double min
         map.insert(min, data.at(0));
 
     else {
-        const int nbPts = 1 + int (round((max - min) / step)); // step is not usefull, it's must be data.size/(max-min+1)
-        double t;
-        for (int i = 0; i<nbPts; ++i) {
-            t = min + i * step;
+        map.insert(min, data.at(0));
+        //const int nbPts = 1 + int (round((max - min) / step)); // step is not usefull, it's must be data.size/(max-min+1)
+
+        const int nbPts = int ((max - min) / step);
+
+        for (int i = 1; i< nbPts; ++i) {
+            double t = min + i * step;
 
             if (i < data.size())
                 map.insert(t, data.at(i));
         }
+        map.insert(max, data.last());
     }
 
     return map;
@@ -708,134 +713,18 @@ double interpolate_value_from_curve(const double x, const std::vector<double>& c
     @param threshold is in percent
  */
 
-// Osolete -> BUG
-const std::map<double, double> create_HPD_old(const QMap<double, double>& density, const double threshold)
-{
-    std::map<double, double> result;
-
-    if (density.size() < 2)  // in case of only one value (e.g. a bound fixed) or no value
-        return result;
-
-
-    const long double areaTot = map_area(density);
-
-    std::map<double, double> aMapStd = density.toStdMap();
-    if (areaTot==threshold) {
-        result = aMapStd;
-        return result;
-
-    } else {
-        try {
-            std::multimap<double, double> inverted;
-            std::multimap<double, double>::const_iterator cIter = aMapStd.cbegin();
-
-            while (cIter != aMapStd.cend()) {
-                 const double t = cIter->first;
-                 const double v = cIter->second;
-                 result[t] = 0.; // important to init all the possible value
-
-                inverted.insert({v, t});
-                 ++cIter;
-            }
-
-            typedef std::multimap<double, double>::iterator iter_type;
-            std::reverse_iterator<iter_type> iterInverted (inverted.rbegin());
-
-
-            double area = 0.;
-            double areaAdd = 0;
-
-            const double areaSearched = areaTot * threshold / 100.;
-            double t, tPrev, tNext, v, vPrev, vNext;
-            std::map<double, double> ::iterator iterMap;
-
-            while (std::next(iterInverted) != inverted.rend()) {
-                iterInverted++;
-                t = iterInverted->second;
-                v = iterInverted->first;
-                iterMap = aMapStd.find(t);
-
-                //    This part of code fix the case of irregular QMap when the step between keys are not the same
-
-                if (iterMap->first == t) { // meaning : find(t) find the good key else iterMap = end()
-
-                    if ( iterMap != aMapStd.begin()) { // meaning : iterMap is not the first item
-                        tPrev = std::prev(iterMap)->first;
-                        vPrev = std::prev(iterMap)->second;
-                        if (vPrev >= v ) {
-                            areaAdd = (v + vPrev)/2. * (t - tPrev);
-                            //area += (v + vPrev)/2. * (t - tPrev);
-                            // we need to save a surface, so we need to save 4 values
-                            if ( (area+areaAdd) < areaSearched) {
-                                result[t] = v;
-                                result[tPrev] = vPrev;
-                                area += areaAdd;
-            qDebug()<<"t="<<t<<"result prev = "<<vPrev<<" "<<tPrev<<" area="<<area;
-                            }
-                        }
-                    }
-                    double map_a = map_area(result);
-                    if (std::abs(map_a -area) > 1E-9) {
-                        qDebug()<<"map area="<<map_a <<" area="<<area;
-                    }
-qDebug()<<"map area = "<<map_a;
-                    if (iterMap != aMapStd.end() ) {
-                        vNext = std::next(iterMap)->second;
-                        tNext = std::next(iterMap)->first;
-                        if (vNext >= v) { // tNext n'est pas déjà compté
-
-                            areaAdd = (v + vNext)/2. *(tNext - t);
-                            //area += (v + vNext)/2. *(tNext - t);
-                            // we need to save a surface, so we need to save 4 values
-                            if ( (area + areaAdd) < areaSearched) {
-                                result[t] = v;
-                                result[tNext] = vNext;
-                                area += areaAdd;
-            qDebug()<<"t="<<t<<  "result next  = "<<vNext<<" "<<tNext<<" area="<<area;
-                            }
-
-                        }
-                    }
-                     map_a = map_area(result);
-                    if (std::abs(map_a -area) > 1E-9) {
-                        qDebug()<<"map area="<<map_a <<" area="<<area;
-                    }
-qDebug()<<"map area = "<<map_a;
-                }
-
-                if (std::next(iterInverted) != inverted.rend() &&  (std::prev(iterInverted)->first == v) ) {
-                     result[t] = v;
-
-                } else { if (area < areaSearched)
-                            result[t] = v;
-
-                        else
-                if (area >= areaSearched) {
-                            return result;
-                        }
-
-                }
-            }
-            return result;
-       }
-       catch (std::exception const & e) {
-            qDebug()<< "in stdUtilities::create_HPD() Error"<<e.what();
-            return aMapStd;
-       }
-
-
-    }
-}
 
 const std::map<double, double> create_HPD(const QMap<double, double>& density, const double threshold)
 {
     std::map<double, double> result;
 
     if (density.size() < 2) { // in case of only one value (e.g. a bound fixed) or no value
+        if (density.size() < 1) { // in case of only one value (e.g. a bound fixed) or no value
+            return result;
+        }
         result[density.firstKey()] = 1.;
         return result;
     }
-
 
     const long double areaTot = map_area(density);
 
@@ -913,13 +802,13 @@ const std::map<double, double> create_HPD(const QMap<double, double>& density, c
                 const double t = aMapStd.begin()->first;
                 const double v = aMapStd.begin()->second;
                 result[t]= v;
-                qDebug()<< "[stdUtilities] create_HPD() one solution for "<<t;
+                qDebug()<< "[stdUtilities] create_HPD() one solution for "<< t;
             }
             return result;
 
        }
        catch (std::exception const & e) {
-            qDebug()<< "[stdUtilities] create_HPD() Error"<<e.what();
+            qDebug()<< "[stdUtilities] create_HPD() Error " << e.what();
             return aMapStd;
        }
 
@@ -1315,4 +1204,40 @@ double findOnOppositeCurve (const double x, const std::vector<double> Gx)
 
     return 1. - interpolate( one_X, (double)minIdx, (double)maxIdx, Gx[minIdx], Gx[maxIdx]);
 
+}
+
+#pragma mark Chronometer
+Chronometer::Chronometer():
+    _comment ("Chronometer"),
+    _start (std::chrono::high_resolution_clock::now())
+{
+}
+
+Chronometer::Chronometer(std::string comment):
+    _comment (comment),
+    _start (std::chrono::high_resolution_clock::now())
+{
+}
+
+Chronometer::~Chronometer()
+{
+}
+
+void Chronometer::display()
+{
+    auto d = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - _start);
+
+    std::thread th_display ([] (std::string _comment, std::chrono::duration<long long, micro> du) {
+        if ( du == std::chrono::steady_clock::duration::zero() )
+            std::cout << _comment << " -> The internal clock did not tick.\n";
+        else
+            std::cout << _comment <<" " << du.count() << " µs \n";
+    }, _comment, d);
+    th_display.detach();
+
+}
+
+std::chrono::microseconds Chronometer::eval()
+{
+    return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - _start);
 }

@@ -1556,19 +1556,18 @@ void GraphView::drawShape(GraphCurve &curve, QPainter& painter)
  * @brief Export a density with locale setting and separator and specific step
  * @todo Maybe we can use QString QLocale::createSeparatedList(const QStringList & list) const
  */
-void GraphView::exportCurrentDensities(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step) const
+void GraphView::exportCurrentDensities(const QString &defaultPath, const QLocale locale, const QString &csvSep, double step) const
 {
     if (step<=0)
         step=1;
 
-    QString filter = tr("CSV (*.csv)");
-    QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
+    const QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                     tr("Save graph data as..."),
-                                                    defaultPath,
-                                                    filter);
+                                                    defaultPath, "CSV (*.csv)");
+
     QFile file(filename);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-        qDebug()<<"GraphView::exportCurrentDensityCurves"<<" nbCurve to export"<<mCurves.size();
+        qDebug() << "GraphView::exportCurrentDensityCurves"<<" nbCurve to export" << mCurves.size();
 
         QList<QStringList> rows;
         QStringList list;
@@ -1720,11 +1719,9 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
     if (step <= 0.)
         step = 1.;
 
-    QString filter = tr("CSV (*.csv)");
-    QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
+    const QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                     tr("Save graph data as..."),
-                                                    defaultPath,
-                                                    filter);
+                                                    defaultPath, "CSV (*.csv)");
     QFile file(filename);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
         qDebug()<<"GraphView::exportCurrentCurve";
@@ -1839,11 +1836,9 @@ void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale 
     if (step <= 0)
         step = 1;
 
-    QString filter = tr("CSV (*.csv)");
-    QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
+    const QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                     tr("Save Reference Curve as..."),
-                                                    defaultPath,
-                                                    filter);
+                                                    defaultPath, "CSV (*.csv)");
     QFile file(filename);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
         qDebug()<<"GraphView::exportReferenceCurves";

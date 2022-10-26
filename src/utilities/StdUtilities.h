@@ -47,15 +47,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <algorithm>
 #include <math.h>
 #include <iterator>
+#include <iostream>
 
 #include <QMap>
 #include <QVector>
 #include <QList>
 #include <QDebug>
 
-#ifdef DEBUG
-#include <iostream>
-#endif
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846 //usefull to Windows
@@ -355,12 +353,7 @@ float map_area(const QMap<float, float>& map);
 double map_area(const QMap<int, double>& density);
 double map_area(const std::map<double, double>& density);
 
-// const std::map<double, double> create_HPD(const QMap<double, double> &aMap, const double threshold); // Pour Qt5
-const std::map<double, double> create_HPD_old(const QMap<double, double>& density, const double threshold = 95.); // Osolete -> BUG
 const std::map<double, double> create_HPD(const QMap<double, double>& density, const double threshold = 95.);
-
-
-//const std::map<int, double> create_HPD(const QMap<int, double>& density, const double threshold = 95.);
 
 QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmin, const double tmax, const int nbPts);
 
@@ -374,4 +367,26 @@ std::vector<double> binomialeCurveByLog(const int n, const double alpha= .05, co
 std::vector<double> inverseCurve(const std::vector<double> Rp, const int x_frac = 500);
 
 double findOnOppositeCurve (const double x, const std::vector<double> Gx);
+
+
+
+class Chronometer
+{
+private:
+    std::string _comment;
+    std::chrono::time_point<std::chrono::high_resolution_clock> _start;
+
+public:
+    Chronometer();
+    explicit Chronometer(std::string comment);
+
+
+    virtual ~Chronometer();
+
+    void display();
+    std::chrono::microseconds eval();
+};
+
+
+
 #endif

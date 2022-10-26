@@ -38,13 +38,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "DateUtils.h"
-#include "MainWindow.h"
+
 #include "QtUtilities.h"
+#include "AppSettings.h"
 
 #include <cmath>
 #include <QLocale>
 
-double DateUtils::convertToFormat(const double &valueToFormat, const FormatDate &format)
+double DateUtils::convertToFormat(const double valueToFormat, const FormatDate format)
 {
     switch (format) {
         case eCalBP:
@@ -74,7 +75,7 @@ double DateUtils::convertToFormat(const double &valueToFormat, const FormatDate 
             break;
     }
 }
-double DateUtils::convertFromFormat(const double &formatedValue, const FormatDate &format)
+double DateUtils::convertFromFormat(const double formatedValue, const FormatDate format)
 {
     switch (format) {
         case eCalBP:
@@ -158,7 +159,7 @@ QString DateUtils::convertToAppSettingsFormatStr(const double valueToFormat, con
          return stringForLocal(convertToAppSettingsFormat(valueToFormat));
 }
 
-double DateUtils::convertToAppSettingsFormat(const double& valueToFormat)
+double DateUtils::convertToAppSettingsFormat(const double &valueToFormat)
 {
     return DateUtils::convertToFormat(valueToFormat, AppSettings::mFormatDate); //getAppSettingsFormat() = AppSettings::mFormatDate
 }
@@ -175,9 +176,44 @@ double DateUtils::convertFromAppSettingsFormat(const double &formattedValue)
 
 QMap<double, double> DateUtils::convertMapToAppSettingsFormat(const QMap<double, double> &mapToFormat)
 {
-   QMap<double, double> mapResult;
+    QMap<double, double> mapResult;
+    switch (AppSettings::mFormatDate) {
+        case eCalBP:
+            for (QMap<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+                mapResult.insert(1950. - value.key(), value.value());
+            break;
+        case eCalB2K:
+             for (QMap<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+                 mapResult.insert(2000. - value.key(), value.value());
+            break;
+        case eDatBP:
+            for (QMap<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+                mapResult.insert(value.key() + 1950., value.value());
+            break;
+        case eDatB2K:
+            for (QMap<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+                mapResult.insert(value.key() + 2000., value.value());
+            break;
+        case eKa:
+            for (QMap<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+                mapResult.insert((2. - value.key())*1e+03, value.value());
+        break;
+        case eMa:
+            for (QMap<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+                mapResult.insert(- value.key()*1e+06, value.value());
+        break;
+
+        case eBCAD:
+        case eBCECE:
+        case eNumeric:
+        default:
+            return QMap<double, double>(mapToFormat);
+        break;
+    }
+
+/*   QMap<double, double> mapResult;
    for (QMap<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
        mapResult.insert(convertToFormat(value.key(), AppSettings::mFormatDate), value.value());
-
+*/
    return mapResult;
 }

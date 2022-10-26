@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -40,16 +40,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef METROPOLISVARIABLE_H
 #define METROPOLISVARIABLE_H
 
-#include "MCMCLoop.h"
+//#include "MCMCLoop.h"
 #include "Functions.h"
-#include "ProjectSettings.h"
+//#include "ProjectSettings.h"
 #include "DateUtils.h"
+#include "MCMCSettings.h"
 
 #include <QMap>
 #include <QVector>
 #include <QList>
 #include <QDataStream>
 #include <QObject>
+#include <QList>
 
 class TValueStack
 {
@@ -112,6 +114,7 @@ public:
     // Trace for run part as a vector
     QVector<double> fullRunTrace(const QList<ChainSpecs>& chains);
     QVector<double> fullRunRawTrace(const QList<ChainSpecs>& chains);
+    QList<double>::Iterator findIter_element(const long unsigned iter, const QList<ChainSpecs>& chains, const int chainIndex ) const;
 
     // Trace for run part of the chain as a vector
     QVector<double> runRawTraceForChain(const QList<ChainSpecs>& chains, const int index);
@@ -186,7 +189,8 @@ public:
     QList<QVector<double> > mCorrelations;
 
     QMap<double, double> mHPD;
-    QPair<double, double> mCredibility;
+    //QPair<double, double> mCredibility;
+    std::pair<double, double> mCredibility;
 
     double mExactCredibilityThreshold;
 

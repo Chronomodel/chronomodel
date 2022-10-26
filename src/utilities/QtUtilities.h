@@ -40,8 +40,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef QTUTILITIES_H
 #define QTUTILITIES_H
 
-#include "AppSettings.h"
-#include "AxisTool.h"
+//#include "AppSettings.h"
+//#include "AxisTool.h"
 
 #include <QStringList>
 #include <QColor>
@@ -78,6 +78,7 @@ QString textBlack(const QString& str);
 QString textRed(const QString& str);
 QString textGreen(const QString& str);
 QString textBlue(const QString& str);
+QString textOrange(const QString& str);
 QString textPurple(const QString& str);
 QString textColor(const QString &str, const QColor &color);
 QString textBackgroundColor(const QString &str, const QColor &color);
@@ -152,6 +153,7 @@ QMap<T, V> getMapDataInRange(const QMap<T, V> &data, const T subMin, const  T su
                 V subDataLast = subData.last();
                 subData[subMax] = interpolate( subMax, (T)subData.lastKey(), tAfterSubMax, subDataLast, vAfterSubMax );
             }
+
         } else if (data.size()==2 && data.firstKey()<=subMin && data.lastKey()>=subMax) {
             subData.insert(subMin, data.first());
             subData.insert(subMax, data.last());

@@ -51,6 +51,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "HelpWidget.h"
 #include "QtUtilities.h"
 #include "PluginManager.h"
+#include "Generator.h"
 
 #include <QtWidgets>
 #include <QProgressDialog>
@@ -208,7 +209,7 @@ void EventsScene::showHelp(bool show)
 
 void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool storeUndoCommand)
 {
-    qDebug()<<"EventsScene::sendUpdateProject";
+    qDebug()<<"[EventsScene::sendUpdateProject] start";
 
     QJsonObject statePrev = mProject->state();
     QJsonObject stateNext = statePrev;
@@ -226,7 +227,7 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
 
  //   if (statePrev != stateNext) {
 
-        qDebug()<<"EventsScene::sendUpdateProject stateChange";
+        qDebug()<<"[EventsScene::sendUpdateProject] stateChange";
         if (storeUndoCommand)
             mProject->pushProjectState(stateNext, reason, notify);
         //else
@@ -252,7 +253,7 @@ void EventsScene::setShowAllThumbs(const bool show)
     for (QList<AbstractItem*>::iterator cIter = mItems.begin(); cIter != mItems.end(); ++cIter) {
         bool selectedPhase = false;
         QJsonArray phases = dynamic_cast<EventItem*>(*cIter)->getPhases();
-        for (const QJsonValue phase : phases) {
+        for (const QJsonValue& phase : phases) {
                 if ((selectedPhase == false) && (phase.toObject().value(STATE_IS_SELECTED).toBool() == true)) {
                         selectedPhase = true;
                       //  qDebug()<<"EventsScene::setShowAllThumbs Phase Selected: "<<phase.toObject().value(STATE_NAME).toString();
@@ -338,7 +339,7 @@ void EventsScene::createSceneFromState()
     progress->setLabelText(tr("Create event items"));
 
     for (QJsonArray::const_iterator citer = eventsInState.constBegin(); citer != eventsInState.constEnd(); ++citer) {
-        const QJsonObject event = (*citer).toObject();
+        const QJsonObject& event = (*citer).toObject();
         ++i;
 
         progress->setValue(i);
@@ -738,13 +739,13 @@ void EventsScene::clean()
  */
 void EventsScene::updateStateSelectionFromItem()
 {
-    qDebug()<<"EventsScene::updateStateSelectionFromItem";
+    qDebug()<<"[EventsScene::updateStateSelectionFromItem] Start";
     int nbOfSelectedEvent = 0;
     QJsonArray updatedEvents = QJsonArray();
 
-  //  selectedItems().clear();
     if (!mUpdatingItems) {
         bool modified = false;
+        bool movedItem = false;
         EventItem* curItem = currentEvent();
         QJsonObject currentEvent = QJsonObject();
 
@@ -768,6 +769,9 @@ void EventsScene::updateStateSelectionFromItem()
             if (nextEvent != prevEvent)
                 modified = true;
 
+            if (nextEvent.value("item_x").toInt() != prevEvent.value("item_x").toInt() || nextEvent.value("item_y").toInt() != prevEvent.value("item_y").toInt() )
+                movedItem = true;
+
             updatedEvents.append(std::move(nextEvent));
 
             if (isCurrent)
@@ -780,7 +784,11 @@ void EventsScene::updateStateSelectionFromItem()
 
         if (modified ) {
             mProject->mState[STATE_EVENTS] = updatedEvents;
-           sendUpdateProject(tr("events selection : no undo, no view update!"), false, false);//  bool notify = true, bool storeUndoCommand = false
+
+            if (movedItem) {
+                sendUpdateProject(tr("item moved"), false, false);
+        }
+        else   sendUpdateProject(tr("events selection : no undo, no view update!"), false, false);//  bool notify = true, bool storeUndoCommand = false
             // refresh the show and hide Event in the phases Scenes
            if (nbOfSelectedEvent == 0)
                 emit noSelection();
@@ -944,7 +952,6 @@ EventItem* EventsScene::currentEvent() const
 
 AbstractItem* EventsScene::collidingItem(const QGraphicsItem* item)
 {
-    //for (int i = 0; i < mItems.size(); ++i) {
     for (auto && it : mItems) {
         bool isBound = (dynamic_cast<EventKnownItem*>(it) != nullptr);
         if (item != it && !isBound && item->collidesWithItem(it))

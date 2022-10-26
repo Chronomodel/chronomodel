@@ -71,6 +71,8 @@ mLevel(0)
     // Item initial position :
     mItemX = 0.;
     mItemY = 0.;
+
+    mTimeRange = std::make_pair(- INFINITY, +INFINITY);
 }
 
 Phase::Phase(const Phase& phase)
@@ -185,16 +187,16 @@ QJsonObject Phase::toJson() const
 
 // --------------------------------------------------------------------------------
 
-QPair<double,double> Phase::getFormatedTimeRange() const
+std::pair<double,double> Phase::getFormatedTimeRange() const
 {
     const double t1 = DateUtils::convertToAppSettingsFormat(mTimeRange.first);
     const double t2 = DateUtils::convertToAppSettingsFormat(mTimeRange.second);
 
     if (t1<t2)
-        return QPair<double,double>(t1,t2);
+        return std::pair<double,double>(t1, t2);
 
     else
-        return QPair<double,double>(t2,t1);
+        return std::pair<double,double>(t2, t1);
 
 }
 

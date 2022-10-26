@@ -40,7 +40,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define EVENT_H
 
 #include "MHVariable.h"
-//#include "StateKeys.h"
 #include "Date.h"
 #include "CurveSettings.h"
 

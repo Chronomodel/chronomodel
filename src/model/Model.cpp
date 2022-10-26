@@ -160,10 +160,8 @@ void Model::updateFormatSettings()
         phase->mActivityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityInf);
         phase->mActivitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivitySup);
 
-        phase->mActivityUnifMean = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifMean);
-/*        phase->mActivityUnifInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifInf);
-        phase->mActivityUnifSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifSup);
-*/
+        phase->mActivityUnifTheo = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifTheo);
+
     }
 }
 
@@ -474,8 +472,8 @@ void Model::generateResultsLog()
     for (const auto& pPhase : mPhases) {
         log += ModelUtilities::phaseResultsHTML(pPhase);
         log += "<br>";
-        log += line(textBold(textPurple(QObject::tr("Duration (posterior distrib.)"))));
-        log += line(textPurple(pPhase->mDuration.resultsString("<br>", QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr, false)));
+        log += line(textBold(textOrange(QObject::tr("Duration (posterior distrib.)"))));
+        log += line(textOrange(pPhase->mDuration.resultsString("<br>", QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr, false)));
 
        /*  QString tempoStr = ModelUtilities::tempoResultsHTML(pPhase);
          tempoStr.remove(1, 41);
@@ -1002,7 +1000,7 @@ void Model::setHActivity(const double h)
 {
     if (mFFTLength != h) {
         if (!mPhases.isEmpty()) {
-            generateActivity(mFFTLength, h);
+            generateActivity(mFFTLength, h, mThreshold);
             mHActivity = h;
 
             emit newCalculus();
@@ -1028,6 +1026,7 @@ void Model::setThreshold(const double threshold)
 
         thCred.join();
         thHPD.join();
+        generateActivity(mFFTLength, mHActivity, threshold);
         setThresholdToAllModel(threshold);
 
         emit newCalculus();
@@ -1105,13 +1104,14 @@ void Model::updateDensities(int fftLen, double bandwidth, double threshold)
 
     generateCredibility(threshold);
     generateHPD(threshold);
+    setThresholdToAllModel(threshold);
 
     if (!mPhases.isEmpty()) {
-         generateTempoAndActivity(fftLen, mHActivity);
+         generateTempoAndActivity(fftLen, mHActivity, threshold);
     }
     generateNumericalResults(mChains);
 
-    setThresholdToAllModel(threshold);
+
     mBandwidth = bandwidth;
     mFFTLength = fftLen;
 
@@ -1210,6 +1210,9 @@ void Model::generateCredibility(const double &thresh)
 #endif
     if (mThreshold == thresh)
         return;
+
+#define USE_THREAD_CRED
+#ifdef USE_THREAD_CRED
     std::thread thEvents ([this] (double thresh)
     {
         for (const auto& pEvent : mEvents) {
@@ -1231,14 +1234,14 @@ void Model::generateCredibility(const double &thresh)
 
     std::thread thPhases ([this] (double thresh)
     {
-        for (const auto& pPhase :mPhases) {
+        for (const auto& phase :mPhases) {
             // if there is only one Event in the phase, there is no Duration
-            pPhase->mAlpha.generateCredibility(mChains, thresh);
-            pPhase->mBeta.generateCredibility(mChains, thresh);
+            phase->mAlpha.generateCredibility(mChains, thresh);
+            phase->mBeta.generateCredibility(mChains, thresh);
             //  pPhase->mTau.generateCredibility(mChains, thresh);
-            pPhase->mDuration.generateCredibility(mChains, thresh);
-            pPhase->mTimeRange = timeRangeFromTraces( pPhase->mAlpha.fullRunRawTrace(mChains),
-                                                      pPhase->mBeta.fullRunRawTrace(mChains), thresh, "Time Range for Phase : " + pPhase->mName);
+            phase->mDuration.generateCredibility(mChains, thresh);
+            phase->mTimeRange = timeRangeFromTraces( phase->mAlpha.fullRunRawTrace(mChains),
+                                                      phase->mBeta.fullRunRawTrace(mChains), thresh, "Time Range for Phase : " + phase->mName);
         }
     } , thresh);
 
@@ -1252,23 +1255,61 @@ void Model::generateCredibility(const double &thresh)
             phaseConstraint->mGapRange = gapRangeFromTraces(phaseFrom->mBeta.fullRunRawTrace(mChains),
                                                             phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Gap Range : "+ phaseFrom->mName+ " to "+ phaseTo->mName);
 
-            qDebug()<<"Gap Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
-
             phaseConstraint->mTransitionRange = transitionRangeFromTraces(phaseFrom->mBeta.fullRunRawTrace(mChains),
                                                                           phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Transition Range : "+ phaseFrom->mName+ " to "+ phaseTo->mName);
 
-            qDebug()<<"Transition Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
         }
     } , thresh);
 
     thEvents.join();
     thPhases.join();
     thPhasesConst.join();
+#else
+    for (const auto& pEvent : mEvents) {
+        bool isFixedBound = false;
+        if (pEvent->type() == Event::eBound)
+            isFixedBound = true;
 
+        if (!isFixedBound) {
+            pEvent->mTheta.generateCredibility(mChains, thresh);
+
+            for (auto&& date : pEvent->mDates )  {
+                date.mTi.generateCredibility(mChains, thresh);
+                date.mSigmaTi.generateCredibility(mChains, thresh);
+            }
+        }
+
+    }
+
+    for (const auto& phase :mPhases) {
+        // if there is only one Event in the phase, there is no Duration
+        phase->mAlpha.generateCredibility(mChains, thresh);
+        phase->mBeta.generateCredibility(mChains, thresh);
+        //  pPhase->mTau.generateCredibility(mChains, thresh);
+        phase->mDuration.generateCredibility(mChains, thresh);
+        phase->mTimeRange = timeRangeFromTraces( phase->mAlpha.fullRunRawTrace(mChains),
+                                                  phase->mBeta.fullRunRawTrace(mChains), thresh, "Time Range for Phase : " + phase->mName);
+    }
+
+    for (const auto& phaseConstraint : mPhaseConstraints) {
+
+        Phase* phaseFrom = phaseConstraint->mPhaseFrom;
+        Phase* phaseTo  = phaseConstraint->mPhaseTo;
+
+        phaseConstraint->mGapRange = gapRangeFromTraces(phaseFrom->mBeta.fullRunRawTrace(mChains),
+                                                        phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Gap Range : "+ phaseFrom->mName+ " to "+ phaseTo->mName);
+
+        qDebug()<<"Gap Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
+
+        phaseConstraint->mTransitionRange = transitionRangeFromTraces(phaseFrom->mBeta.fullRunRawTrace(mChains),
+                                                                      phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Transition Range : "+ phaseFrom->mName+ " to "+ phaseTo->mName);
+
+    }
+#endif
 //    delete progressGap;
 #ifdef DEBUG
 
-    qDebug() <<  "=> Model::generateCredibility done in " + DHMS(t.elapsed());
+    qDebug() <<  "[Model::generateCredibility] done in " + DHMS(t.elapsed());
 #endif
 
 }
@@ -1279,49 +1320,14 @@ void Model::generateHPD(const double thresh)
     QElapsedTimer t;
     t.start();
 #endif
-/*
-    QList<Event*>::iterator iterEvent = mEvents.begin();
-    while (iterEvent!=mEvents.end()) {
-        bool isFixedBound = false;
 
-        if ((*iterEvent)->type() == Event::eBound) {
-                 isFixedBound = true;
-        }
-
-        if (!isFixedBound) {
-            (*iterEvent)->mTheta.generateHPD(thresh);
-#ifdef DEBUG
-            if ((*iterEvent)->mTheta.mHPD.isEmpty())
-    qDebug() <<  "=> [Model] generateHPD() mTheta.mHPD.isEmpty()) " + (*iterEvent)->mName ;
-#endif
-            for (int j = 0; j<(*iterEvent)->mDates.size(); ++j) {
-                Date& date = (*iterEvent)->mDates[j];
-                date.mTi.generateHPD(thresh);
-                date.mSigmaTi.generateHPD(thresh);
-            }
-        }
-        ++iterEvent;
-    }
-
-    QList<Phase*>::iterator iterPhase = mPhases.begin();
-    while (iterPhase!=mPhases.end()) {
-       // if there is only one Event in the phase, there is no Duration
-       (*iterPhase)->mAlpha.generateHPD(thresh);
-       (*iterPhase)->mBeta.generateHPD(thresh);
-       (*iterPhase)->mDuration.generateHPD(thresh);
-        ++iterPhase;
-    }
-*/
 //- use thread
     std::thread thEvents ([this] (double thresh)
     {
         for (const auto& ev : mEvents) {
             if (ev->type() != Event::eBound) {
                 ev->mTheta.generateHPD(thresh);
-    #ifdef DEBUG
-                if (ev->mTheta.mHPD.isEmpty())
-        qDebug() <<  "=> [Model] generateHPD() mTheta.mHPD.isEmpty()) " + ev->mName ;
-    #endif
+
                 for (int j = 0; j<ev->mDates.size(); ++j) {
                     Date& date = ev->mDates[j];
                     date.mTi.generateHPD(thresh);
@@ -1358,13 +1364,13 @@ void Model::generateHPD(const double thresh)
     thPhases.join();
 
 #ifdef DEBUG
-    qDebug() <<  "=> Model::generateHPD done in " + DHMS(t.elapsed()) ;
+    qDebug() <<  "[Model::generateHPD] done in " + DHMS(t.elapsed()) ;
 #endif
 
 }
 
 //#define UNIT_TEST
-void Model::generateTempoAndActivity(size_t gridLength, double h)
+void Model::generateTempoAndActivity(size_t gridLength, double h, const double threshold)
 {
 #ifdef DEBUG
    // qDebug()<<"Model::generateTempoAndActivity() "<<mSettings.mTmin<<mSettings.mTmax;
@@ -1376,7 +1382,7 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
     int activityToDo = 0;
     int tempoToDo = 0;
     for (const auto& phase : mPhases) {
-        if (phase->mRawActivity.isEmpty() || gridLength != mFFTLength || h != mHActivity)
+        if (phase->mRawActivity.isEmpty() || gridLength != mFFTLength || h != mHActivity || threshold != mThreshold)
             ++activityToDo;
 
         if (phase->mRawTempo.isEmpty() || gridLength != mFFTLength)
@@ -1387,7 +1393,7 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
         return;
 
     } else if (activityToDo > 0 && tempoToDo == 0) {
-        generateActivity(gridLength, h);
+        generateActivity(gridLength, h, threshold);
         return;
     }
 
@@ -1397,79 +1403,125 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
             phase->mActivityValueStack["R_etendue"] = TValueStack("R_etendue", mSettings.mTmax - mSettings.mTmin);
             phase->mActivityValueStack["t_min"] = TValueStack("t_min", mSettings.mTmin);
             phase->mActivityValueStack["t_max"] = TValueStack("t_max", mSettings.mTmax);
-            phase->mActivityValueStack["t_min_R"] = TValueStack("t_min_R", mSettings.mTmin);
-            phase->mActivityValueStack["t_max_R"] = TValueStack("t_max_R", mSettings.mTmax);
-            phase->mActivityValueStack["minQ25"] = TValueStack("minQ25", mSettings.mTmin);
-            phase->mActivityValueStack["maxQ975"] = TValueStack("maxQ975", mSettings.mTmax);
+            phase->mActivityValueStack["a_Unif"] = TValueStack("a_Unif", mSettings.mTmin);
+            phase->mActivityValueStack["b_Unif"] = TValueStack("b_Unif", mSettings.mTmax);
+            phase->mActivityValueStack["min95"] = TValueStack("min95", mSettings.mTmin);
+            phase->mActivityValueStack["max95"] = TValueStack("max95", mSettings.mTmax);
             continue;
         }
-
+        phase->mActivityValueStack["threshold"] = TValueStack("threshold", threshold);
         // Curves for error binomial
         const double n = phase->mEvents.size();
-        phase->mRawActivityUnifMean.clear();
-       /* phase->mRawActivityUnifInf.clear();
-        phase->mRawActivityUnifSup.clear();*/
+        phase->mRawActivityUnifTheo.clear();
 
-        if (!mBinomiale_Gx.contains(n)){
-            const std::vector<double> Rq = binomialeCurveByLog(n); //  Détermine la courbe x = r (q)
+        if (!mBinomiale_Gx.contains(n) || threshold != mThreshold) {
+            const std::vector<double> Rq = binomialeCurveByLog(n, 1.- threshold/100.); //  Détermine la courbe x = r (q)
             mBinomiale_Gx[n] = inverseCurve(Rq); // Pour qActivity, détermine la courbe p = g (x)
         }
 
-        const std::vector<double>& Gx = mBinomiale_Gx[n];
+        const std::vector<double> &Gx = mBinomiale_Gx[n];
+
+        // Description des données
+        std::vector<double> concaAllTrace;
+
+        for (const auto& ev : phase->mEvents) {
+            const auto &rawtrace = ev->mTheta.fullRunRawTrace(mChains);
+            concaAllTrace.resize(concaAllTrace.size() + rawtrace.size());
+            std::copy_backward( rawtrace.begin(), rawtrace.end(), concaAllTrace.end() );
+        }
+
+        auto minmaxAll = std::minmax_element(concaAllTrace.begin(), concaAllTrace.end());
+        const double t_min_data = *minmaxAll.first;
+        const double t_max_data = *minmaxAll.second;
+        phase->mActivityValueStack["t_min"] = TValueStack("t_min", t_min_data);
+        phase->mActivityValueStack["t_max"] = TValueStack("t_max", t_max_data);
 
 
+        std::pair<double, double> credDuration;
+        if (phase->mDuration.mThresholdUsed != threshold) {
+            double exactCredibilityThreshold;
+            credDuration = credibilityForTrace(phase->mDuration.fullRunTrace(mChains), threshold, exactCredibilityThreshold);
+
+        } else {
+            credDuration = phase->mDuration.mCredibility;
+        }
+
+        auto &d_min_creDuration = credDuration.first;
+        auto &d_max_creDuration = credDuration.second;
+
+        // Creation de la trace concatenée, des scénari qui vérifie, intervalle de date "durée" comprise entre
+        // un minimum (t_min_creDuration) et un maximum (t_max_creDuration)
         // Create concatened trace for Mean and Variance estimation needed for uniform predict
 
         std::vector<double> concaTrace;
 
-        double t_min_R = +INFINITY;
-        double t_max_R = -INFINITY;
+        // tableau de toutes les traces des Events
+        std::list<QList<double>::Iterator> lRawEvents;
+        auto durationRawTrace = phase->mDuration.fullRunRawTrace(mChains);
+        auto durationIter = durationRawTrace.begin();
 
-        for (const auto& ev : phase->mEvents) {
-            const auto rawtrace = ev->mTheta.fullRunRawTrace(mChains);
-            const Quartiles Q95 = quantilesType(rawtrace, 7, 0.025);
-            t_min_R = std::min(t_min_R, Q95.Q1);
-            t_max_R = std::max(t_max_R, Q95.Q3);
+        int chainIdx = 0;
 
-            concaTrace.resize(concaTrace.size() + rawtrace.size());
-            std::copy_backward( rawtrace.begin(), rawtrace.end(), concaTrace.end() );
+        for (auto chain : mChains) {
+            int realyAccepted = chain.mRealyAccepted;
+            lRawEvents.clear();
+            for ( auto event : phase->mEvents) {
+                lRawEvents.push_back(event->mTheta.findIter_element(0, mChains, chainIdx) );
+            }
+
+            for (int iter = 0; iter < realyAccepted; ++iter) {
+                //test durée dans intevalle
+                if (d_min_creDuration <= *durationIter && *durationIter <= d_max_creDuration) {
+                    for (auto idxTh : lRawEvents)
+                        concaTrace.push_back(*(idxTh + iter));
+                }
+                durationIter++;
+            }
+            chainIdx++;
         }
+
+        auto minmax95 = std::minmax_element(concaTrace.begin(), concaTrace.end());
+        double min95 = *minmax95.first;
+        double max95 = *minmax95.second;
+
+       // qDebug()<<"[Model::generateTempoAndActivity] min95 ; max95 : " <<phase->mName<< min95 << max95;
+
+
 
         const double nr = concaTrace.size();
 
-        const double t_min_data = *std::min_element(concaTrace.begin(), concaTrace.end());
-        const double t_max_data = *std::max_element(concaTrace.begin(), concaTrace.end());
+        if (min95 == max95) { // hapen when there is only one bound in the phase ???
 
-        if (t_min_data == t_max_data) { // hapen when there is only one bound in the phase ???
-
-           qDebug()<<"Model::generateTempoAndActivity() tmin == tmax : " <<phase->mName;
+           qDebug()<<"[Model::generateTempoAndActivity] tmin == tmax : " <<phase->mName;
             phase->mRawTempo[t_min_data] = 1;
             phase->mRawTempo[mSettings.mTmax] = 1;
 
             phase->mRawActivity[t_min_data] = 1;
             // Convertion in the good Date format
+
+    /*        Chronometer hdl ("handle");
             auto handle_ConvertTempo = std::async(std::launch::async, DateUtils::convertMapToAppSettingsFormat, phase->mRawTempo);
             auto handle_ConvertActivity = std::async(std::launch::async, DateUtils::convertMapToAppSettingsFormat, phase->mRawActivity);
 
-            // phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
-            // phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
-
             phase->mTempo = handle_ConvertTempo.get();
             phase->mActivity = handle_ConvertActivity.get();
+            hdl.display();
+*/
+
+            phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
+            phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
 
             phase->mActivityValueStack["Significance Score"] = TValueStack("Significance Score", 0);
             phase->mActivityValueStack["R_etendue"] = TValueStack("R_etendue", 0);
-            phase->mActivityValueStack["t_min"] = TValueStack("t_min", t_min_data);
-            phase->mActivityValueStack["t_max"] = TValueStack("t_max", t_max_data);
-            phase->mActivityValueStack["t_min_R"] = TValueStack("t_min_R", 0);
-            phase->mActivityValueStack["t_max_R"] = TValueStack("t_max_R", 0);
-            phase->mActivityValueStack["minQ25"] = TValueStack("minQ25", 0);
-            phase->mActivityValueStack["maxQ975"] = TValueStack("maxQ975", 0);
+            phase->mActivityValueStack["a_Unif"] = TValueStack("a_Unif", 0);
+            phase->mActivityValueStack["b_Unif"] = TValueStack("b_Unif", 0);
+            phase->mActivityValueStack["min95"] = TValueStack("min95", min95);
+            phase->mActivityValueStack["max95"] = TValueStack("max95", max95);
             continue;
 
         } else {
-            phase->mActivityValueStack["minQ25"] = TValueStack("minQ25", t_min_R);
-            phase->mActivityValueStack["maxQ975"] = TValueStack("minQ975", t_max_R);
+            phase->mActivityValueStack["min95"] = TValueStack("min95", min95);
+            phase->mActivityValueStack["max95"] = TValueStack("max95", max95);
         }
 
 
@@ -1477,31 +1529,47 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
         //const double R_etendue = (n+1)/(n-1)/(1.+ mu*sqrt(2./(double)((n-1)*(n+2))) )*(t_max_data-t_min_data);
         const double gamma =  (n>=500 ? 1. : gammaActivity[(int)n]);
 
-        const double R_etendue = (t_max_R - t_min_R)/gamma;
+        const double R_etendue =  (max95 - min95)/gamma;
 
         // prevent h=0 and h >R_etendue;
         h = std::min( std::max(mSettings.mStep, h),  R_etendue) ;
+        const double h_2 = h/2.;
 
         const double fUnif = h / R_etendue;
 
-        const double mid_R = (t_max_R + t_min_R)/2.;
+        const double mid_R =  (max95 + min95)/2.;
 
         const double ActivityUnif = fUnif * n / h; //  remplace -> fUnif * n / std::min(h, R_etendue);
 
         const double half_etendue = R_etendue/2. ; //h /2.;
 
-        t_min_R = mid_R - half_etendue;
-        t_max_R = mid_R + half_etendue;
-        phase->mActivityValueStack["t_min_R"] = TValueStack("t_min_R", t_min_R);
-        phase->mActivityValueStack["t_max_R"] = TValueStack("t_max_R", t_max_R);
 
-        phase->mRawActivityUnifMean.insert(t_min_R,  ActivityUnif);
-        phase->mRawActivityUnifMean.insert(t_max_R,  ActivityUnif);
+        // Recentrage de a_Unif et b_Unif
+        // Variable pour courbe Unif Théo
+
+        const double a_Unif = mid_R - half_etendue;
+        const double b_Unif = mid_R + half_etendue;
+
+        // L'unif théorique est défini par le trapéze correspondant à l'unif modifié par la fenètre mobile
+        const double a_Unif_minus_h_2 = a_Unif - h_2;
+        const double a_Unif_plus_h_2 = a_Unif + h_2;
+
+        const double b_Unif_minus_h_2 = b_Unif - h_2;
+        const double b_Unif_plus_h_2 = b_Unif + h_2;
+
+        phase->mActivityValueStack["a_Unif"] = TValueStack("a_Unif", a_Unif);
+        phase->mActivityValueStack["b_Unif"] = TValueStack("b_Unif", b_Unif);
+
+
+        phase->mRawActivityUnifTheo.insert(a_Unif_minus_h_2,  0.);
+        phase->mRawActivityUnifTheo.insert(a_Unif_plus_h_2,  ActivityUnif);
+        phase->mRawActivityUnifTheo.insert(b_Unif_minus_h_2,  ActivityUnif);
+        phase->mRawActivityUnifTheo.insert(b_Unif_plus_h_2,  0.);
 
 
 #ifdef DEBUG
         if (t_max_data > mSettings.mTmax) {
-            qWarning("Model::generateTempoAndActivity() tmax>mSettings.mTmax force tmax = mSettings.mTmax");
+            qWarning("[Model::generateTempoAndActivity()] tmax>mSettings.mTmax force tmax = mSettings.mTmax");
             //t_max_data = mSettings.mTmax;
         }
 
@@ -1518,9 +1586,9 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
          }
 
          // overlaps
-         const double h_2 = h/2.;
-         const double t_min = std::max(t_min_data - h_2, mSettings.mTmin);
-         const double t_max = std::min(t_max_data + h_2, mSettings.mTmax);
+
+         const double t_min = std::max(min95 - h_2, mSettings.mTmin);
+         const double t_max = std::min(max95 + h_2, mSettings.mTmax);
         // Loop
          std::vector<int> niActivity (gridLength);
          std::vector<int> niTempo (gridLength);
@@ -1550,10 +1618,10 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
         std::transform (niTempo.begin()+1, niTempo.end(), niTempo.begin(), niTempo.begin()+1, std::plus<double>());
 
        } catch (std::exception& e) {
-        qWarning()<< "Model::generateTempoAndActivity exception caught: " << e.what() << '\n';
+        qWarning()<< "[Model::generateTempoAndActivity] exception caught: " << e.what() << '\n';
 
        } catch(...) {
-        qWarning() << "Model::generateTempoAndActivity Caught Exception!\n";
+        qWarning() << "[Model::generateTempoAndActivity] Caught Exception!\n";
 
        }
 
@@ -1595,7 +1663,7 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
 
 #ifdef DEBUG
             if (QSup < QInf) {
-                qDebug()<<"generateTempoAndActivity() QSup < QInf f="<<fA<< " QSup="<<QSup<<" QInf="<<QInf;
+                qDebug()<<"[Model::generateTempoAndActivity() ]QSup < QInf f="<<fA<< " QSup="<<QSup<<" QInf="<<QInf;
             }
 #endif
 
@@ -1615,10 +1683,26 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
             ++niT;
 
             t = t_min + nbIt * delta_t;
-            if ((t_min_R <= t) && (t <= t_max_R)) {
+
+            if ((a_Unif_minus_h_2 <= t) && (t < a_Unif_plus_h_2)) {
                 /* Delta(h) = somme sur theta de ( max(Aunif - Ainf) - min(Aunif, Asup) ) / nbre de theta de la grille, nbre de pas de la grille
                  */
-                UnifScore += (std::max(ActivityUnif, QInf) - std::min(ActivityUnif, QSup))/gridLength; // ??? à revoir avec Ph L
+                const double dUnif = ActivityUnif * (t - a_Unif_minus_h_2)/(a_Unif_plus_h_2 - a_Unif_minus_h_2);
+                UnifScore += (std::max(dUnif, QInf) - std::min(dUnif, QSup))/gridLength;
+
+
+            }
+            else if ((a_Unif_plus_h_2 <= t) && (t <= b_Unif_minus_h_2)) {
+                /* Delta(h) = somme sur theta de ( max(Aunif - Ainf) - min(Aunif, Asup) ) / nbre de theta de la grille, nbre de pas de la grille
+                 */
+                UnifScore += (std::max(ActivityUnif, QInf) - std::min(ActivityUnif, QSup))/gridLength;
+
+
+            } else if ((b_Unif_minus_h_2 < t) && (t <= b_Unif_plus_h_2)) {
+                /* Delta(h) = somme sur theta de ( max(Aunif - Ainf) - min(Aunif, Asup) ) / nbre de theta de la grille, nbre de pas de la grille
+                 */
+                const double dUnif = ActivityUnif * (b_Unif_plus_h_2 - t)/(b_Unif_plus_h_2 - b_Unif_minus_h_2);
+                UnifScore += (std::max(dUnif, QInf) - std::min(dUnif, QSup)) / gridLength;
 
 
             }
@@ -1628,14 +1712,21 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
 
         phase->mActivityValueStack["Significance Score"] = TValueStack("Significance Score", UnifScore);
         phase->mActivityValueStack["R_etendue"] = TValueStack("R_etendue", R_etendue);
-        phase->mActivityValueStack["t_min"] = TValueStack("t_min", t_min_data);
-        phase->mActivityValueStack["t_max"] = TValueStack("t_max", t_max_data);
 
         phase->mRawActivity = vector_to_map(espA, t_min, t_max, delta_t);
         phase->mRawActivityInf = vector_to_map(infA, t_min, t_max, delta_t);
         phase->mRawActivitySup = vector_to_map(supA, t_min, t_max, delta_t);
+        // Ajout de l'enveloppe au deçà de t_min, jusqu'à a_Unif_minus_h_2
 
-        if ( t_max  <= mSettings.mTmax) {
+        const double t_min_display = std::max(a_Unif_minus_h_2, mSettings.mTmin);
+        const double t_max_display = std::min(b_Unif_plus_h_2, mSettings.mTmax);
+        phase->mRawActivitySup.insert(t_min_display, phase->mRawActivitySup.first());
+        phase->mRawActivitySup.insert(t_max_display, phase->mRawActivitySup.last());
+
+        phase->mRawActivityInf.insert(t_min_display, phase->mRawActivityInf.first());
+        phase->mRawActivityInf.insert(t_max_display, phase->mRawActivityInf.last());
+
+   /*     if ( t_max  <= mSettings.mTmax) {
             phase->mRawActivity.last() = 0.;
             phase->mRawActivityInf.last() = 0.;
             phase->mRawActivitySup.last() = 0.;
@@ -1647,32 +1738,19 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
             phase->mRawActivitySup.first() = 0.;
 
         }
-        /*
-        // Convertion in the good Date format
-        auto handle_ConvertTempo = std::async(std::launch::async, DateUtils::convertMapToAppSettingsFormat, phase->mRawTempo);
-        auto handle_ConvertActivity = std::async(std::launch::async, DateUtils::convertMapToAppSettingsFormat, phase->mRawActivity);
+   */
 
-        // phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
-        // phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
-
-        phase->mTempo = handle_ConvertTempo.get();
-        phase->mActivity = handle_ConvertActivity.get();
-        */
-
-        auto handle_mActivity = std::async(std::launch::async, DateUtils::convertMapToAppSettingsFormat, phase->mRawActivity);
+ /*       auto handle_mActivity = std::async(std::launch::async, DateUtils::convertMapToAppSettingsFormat, phase->mRawActivity);
         auto handle_mActivityInf = std::async(std::launch::async, DateUtils::convertMapToAppSettingsFormat, phase->mRawActivityInf);
         auto handle_mActivitySup = std::async(std::launch::async, DateUtils::convertMapToAppSettingsFormat, phase->mRawActivitySup);
-        auto handle_mActivityUnifMean = std::async(std::launch::async, DateUtils::convertMapToAppSettingsFormat, phase->mRawActivityUnifMean);
-
-
-        /*
+        auto handle_mActivityUnifTheo = std::async(std::launch::async, DateUtils::convertMapToAppSettingsFormat, phase->mRawActivityUnifTheo);
+*/
+// Ici plus lent que les threads
         phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
         phase->mActivityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityInf);
         phase->mActivitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivitySup);
-        phase->mActivityUnifMean = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifMean);
-        */
-
-
+        phase->mActivityUnifTheo = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifTheo);
+//
 
         phase->mRawTempo = vector_to_map(espT, t_min, t_max, delta_t);
         phase->mRawTempoInf = vector_to_map(infT, t_min, t_max, delta_t);
@@ -1701,15 +1779,15 @@ void Model::generateTempoAndActivity(size_t gridLength, double h)
         phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
 
         // On  laisse le temps de faire les tempo
-        phase->mActivity = handle_mActivity.get();
+ /*       phase->mActivity = handle_mActivity.get();
         phase->mActivityInf = handle_mActivityInf.get();
         phase->mActivitySup = handle_mActivitySup.get();
-        phase->mActivityUnifMean = handle_mActivityUnifMean.get();
-
+        phase->mActivityUnifTheo = handle_mActivityUnifTheo.get();
+*/
      } // Loop End on phase
 
 #ifdef DEBUG
-    qDebug() <<  QString("=> Model::generateTempoAndActivity() done in " + DHMS(tClock.elapsed()));
+    qDebug() <<  QString("[Model::generateTempoAndActivity()] done in " + DHMS(tClock.elapsed()));
 
 #endif
 
@@ -2069,7 +2147,7 @@ void Model::generateActivityBinomialeCurve(const int n, std::vector<double>& C1x
  * @param gridLenth
  * @param h defined in year, if h<0 then h= delta_t \f$ \delta_t = (t_max - t_min + 4h )/(gridLenth) \f$
  */
-void Model::generateActivity(size_t gridLength, double h)
+void Model::generateActivity(size_t gridLength, double h, const double threshold)
 {
 #ifdef DEBUG
    // qDebug()<<"Model::generateActivity() "<<mSettings.mTmin<<mSettings.mTmax;
@@ -2080,7 +2158,7 @@ void Model::generateActivity(size_t gridLength, double h)
 // Avoid to redo calculation, when mActivity exist, it happen when the control is changed
     int activityToDo = 0;
     for (const auto& phase : mPhases) {
-        if (phase->mRawActivity.isEmpty() || gridLength != mFFTLength || h != mHActivity)
+        if (phase->mRawActivity.isEmpty() || gridLength != mFFTLength || h != mHActivity || threshold != mThreshold)
             ++activityToDo;
     }
 
@@ -2092,24 +2170,71 @@ void Model::generateActivity(size_t gridLength, double h)
 
 
     for (const auto& phase : mPhases) {
+        phase->mActivityValueStack["threshold"] = TValueStack("threshold", threshold);
+
         if (phase->mEvents.size() < 2)
             continue;
 
         // Curves for error binomial
         const double n = phase->mEvents.size();
-        phase->mRawActivityUnifMean.clear();
+        phase->mRawActivityUnifTheo.clear();
 
+        if (!mBinomiale_Gx.contains(n) || threshold != mThreshold) {
+            const std::vector<double> Rq = binomialeCurveByLog(n, 1. - threshold/100.); //  Détermine la courbe x = r (q)
+            mBinomiale_Gx[n] = inverseCurve(Rq); // Pour qActivity, détermine la courbe p = g (x)
+        }
         const std::vector<double>& Gx = mBinomiale_Gx[n];
 
+        QPair<double, double> credDuration;
+        if (phase->mDuration.mThresholdUsed != threshold) {
+            double exactCredibilityThreshold;
+            credDuration = credibilityForTrace(phase->mDuration.fullRunTrace(mChains), threshold, exactCredibilityThreshold);
+
+        } else {
+            credDuration = phase->mDuration.mCredibility;
+        }
+
+        auto &d_min_creDuration = credDuration.first;
+        auto &d_max_creDuration = credDuration.second;
+
+        // Creation de la trace concatenée, des scénari qui vérifie, intervalle de date "durée" comprise entre
+        // un minimum (t_min_creDuration) et un maximum (t_max_creDuration)
         // Create concatened trace for Mean and Variance estimation needed for uniform predict
 
         std::vector<double> concaTrace;
 
-        for (const auto& ev : phase->mEvents) {
-            const auto rawtrace = ev->mTheta.fullRunRawTrace(mChains);
-            concaTrace.resize(concaTrace.size() + rawtrace.size());
-            std::copy_backward( rawtrace.begin(), rawtrace.end(), concaTrace.end() );
+        // tableau de toutes les traces des Events
+        std::list<QList<double>::Iterator> lRawEvents;
+        auto durationRawTrace = phase->mDuration.fullRunRawTrace(mChains);
+        auto durationIter = durationRawTrace.begin();
+
+        int chainIdx = 0;
+
+        for (auto chain : mChains) {
+            int realyAccepted = chain.mRealyAccepted;
+            lRawEvents.clear();
+            // tableau des pointeurs sur chaque Event des premieres itérations acceptées
+            for ( auto event : phase->mEvents) {
+                lRawEvents.push_back(event->mTheta.findIter_element(0, mChains, chainIdx) );
+            }
+
+            for (int iter = 0; iter < realyAccepted; ++iter) {
+                //test durée dans intevalle
+                if (d_min_creDuration <= *durationIter && *durationIter <= d_max_creDuration) {
+
+                    for (auto idxTh : lRawEvents) {
+                        concaTrace.push_back(*(idxTh + iter));
+                    }
+                }
+                durationIter++;
+            }
+            chainIdx++;
         }
+
+        auto minmax95 = std::minmax_element(concaTrace.begin(), concaTrace.end());
+        double min95 = *minmax95.first;
+        double max95 = *minmax95.second;
+
         const double nr = concaTrace.size();
 
         // Do not change, it is the same sampling.
@@ -2117,9 +2242,13 @@ void Model::generateActivity(size_t gridLength, double h)
         const double t_min_data = phase->mActivityValueStack["t_min"].mValue;
         const double t_max_data = phase->mActivityValueStack["t_max"].mValue;
 
+        phase->mActivityValueStack["min95"] = TValueStack("min95", min95);
+        phase->mActivityValueStack["max95"] = TValueStack("max95", max95);
+
+
+
         const double R_etendue = phase->mActivityValueStack["R_etendue"].mValue;
-        const double t_min_R = phase->mActivityValueStack["t_min_R"].mValue;
-        const double t_max_R = phase->mActivityValueStack["t_max_R"].mValue;
+
 
         // Prevent h = 0 and h > R_etendue;
         h = inRange(mSettings.mStep, h, R_etendue );
@@ -2127,19 +2256,10 @@ void Model::generateActivity(size_t gridLength, double h)
         const double fUnif = h / R_etendue;
 
         const double ActivityUnif = fUnif * n / h;
-
-        phase->mRawActivityUnifMean.insert(t_min_R,  ActivityUnif);
-        phase->mRawActivityUnifMean.insert(t_max_R,  ActivityUnif);
-
-        //double unifInf, unifSup;
-       // if (n*qUnif*(1-qUnif) > 10.) {
-        // cas approximation gaussienne // inutile avec binomialeCurveByLog, testé avec n=5000
-     /*   if (pow(1-qUnif, n) <= 0) { // over Range in binimialConfidence95()
-                unifInf = (n / M_m) - 1.96 * sqrt(n / M_m) * ((1./ h) - (1. / M_m)) ;
-                unifSup = (n / M_m) + 1.96 * sqrt(n / M_m) * ((1./ h) - (1. / M_m)) ;
-
-        } else {
-        */
+        // Recentrage de a_Unif et b_Unif
+        // Variable pour courbe Unif Théo
+        const double a_Unif = phase->mActivityValueStack["a_Unif"].mValue;
+        const double b_Unif = phase->mActivityValueStack["b_Unif"].mValue;
 
 
         /// Look for the maximum span containing values \f$ x=2 \f$
@@ -2175,17 +2295,30 @@ void Model::generateActivity(size_t gridLength, double h)
 
          // overlaps
          const double h_2 = h/2.;
-         const double t_min = std::max(t_min_data - h_2, mSettings.mTmin);
-         const double t_max = std::min(t_max_data + h_2, mSettings.mTmax);
+
+         const double t_min = std::max(min95 - h_2, mSettings.mTmin);
+         const double t_max = std::min(max95 + h_2, mSettings.mTmax);
+
+
+         // L'uniforme théorique est défini par le trapéze correspondant à l'unif modifié par la fenètre mobile
+         const double a_Unif_minus_h_2 = a_Unif - h_2;
+         const double a_Unif_plus_h_2 = a_Unif + h_2;
+         const double b_Unif_minus_h_2 = b_Unif - h_2;
+         const double b_Unif_plus_h_2 = b_Unif + h_2;
+
+         phase->mRawActivityUnifTheo.insert(a_Unif_minus_h_2,  0.);
+         phase->mRawActivityUnifTheo.insert(a_Unif_plus_h_2,  ActivityUnif);
+         phase->mRawActivityUnifTheo.insert(b_Unif_minus_h_2,  ActivityUnif);
+         phase->mRawActivityUnifTheo.insert(b_Unif_plus_h_2,  0.);
+
+
         // Loop
          std::vector<int> NiTot (gridLength);
    try {
-        int idxGridMin, idxGridMax;
-
         for (const auto& t : concaTrace) {
 
-            idxGridMin = inRange(0, (int) ceil((t - h_2 - t_min) / delta_t), (int)gridLength-1) ;
-            idxGridMax = inRange(0, (int) ceil((t + h_2 - t_min) / delta_t), (int)gridLength-1) ;
+            int idxGridMin = inRange(0, (int) ceil((t - h_2 - t_min) / delta_t), (int)gridLength-1) ;
+            int idxGridMax = inRange(0, (int) ceil((t + h_2 - t_min) / delta_t), (int)gridLength-1) ;
 
             if (idxGridMax == idxGridMin) {
                 ++*(NiTot.begin()+idxGridMin);
@@ -2203,6 +2336,9 @@ void Model::generateActivity(size_t gridLength, double h)
         qWarning() << "Model::generateActivity Caught Exception!\n";
 
        }
+
+
+
        ///# Calculation of the mean and variance
         QVector<double> inf;
         QVector<double> sup;
@@ -2231,8 +2367,27 @@ void Model::generateActivity(size_t gridLength, double h)
 #endif
 
             t = t_min + nbIt * delta_t;
-            if ((t_min_R <= t) && (t <= t_max_R)) {
+            if ((a_Unif_minus_h_2 <= t) && (t < a_Unif_plus_h_2)) {
+                /* Delta(h) = somme sur theta de ( max(Aunif - Ainf) - min(Aunif, Asup) ) / nbre de theta de la grille, nbre de pas de la grille
+                 */
+                const double dUnif = ActivityUnif * (t - a_Unif_minus_h_2)/(a_Unif_plus_h_2 - a_Unif_minus_h_2);
+                UnifScore += (std::max(dUnif, QInf) - std::min(dUnif, QSup))/gridLength;
+
+
+            }
+            else if ((a_Unif_plus_h_2 <= t) && (t <= b_Unif_minus_h_2)) {
+                /* Delta(h) = somme sur theta de ( max(Aunif - Ainf) - min(Aunif, Asup) ) / nbre de theta de la grille, nbre de pas de la grille
+                 */
                 UnifScore += (std::max(ActivityUnif, QInf) - std::min(ActivityUnif, QSup))/gridLength;
+
+
+            } else if ((b_Unif_minus_h_2 < t) && (t <= b_Unif_plus_h_2)) {
+                /* Delta(h) = somme sur theta de ( max(Aunif - Ainf) - min(Aunif, Asup) ) / nbre de theta de la grille, nbre de pas de la grille
+                 */
+                const double dUnif = ActivityUnif * (b_Unif_plus_h_2 - t)/(b_Unif_plus_h_2 - b_Unif_minus_h_2);
+                UnifScore += (std::max(dUnif, QInf) - std::min(dUnif, QSup)) / gridLength;
+
+
             }
             nbIt++;
         }
@@ -2243,26 +2398,22 @@ void Model::generateActivity(size_t gridLength, double h)
         phase->mRawActivityInf = vector_to_map(inf, t_min, t_max, delta_t);
         phase->mRawActivitySup = vector_to_map(sup, t_min, t_max, delta_t);
 
-        if ( t_max <= mSettings.mTmax) {
-            phase->mRawActivity.last() = 0.;
-            phase->mRawActivityInf.last() = 0.;
-            phase->mRawActivitySup.last() = 0.;
-        }
+        // Ajout de l'enveloppe au deçà de t_min, jusqu'à a_Unif_minus_h_2
 
-        if (t_min >= mSettings.mTmin) {
-            phase->mRawActivity.first() = 0.;
-            phase->mRawActivityInf.first() = 0.;
-            phase->mRawActivitySup.first() = 0.;
-        }
+        const double t_min_display = std::max(a_Unif_minus_h_2, mSettings.mTmin);
+        const double t_max_display = std::min(b_Unif_plus_h_2, mSettings.mTmax);
+        phase->mRawActivitySup.insert(t_min_display, phase->mRawActivitySup.first());
+        phase->mRawActivitySup.insert(t_max_display, phase->mRawActivitySup.last());
+
+        phase->mRawActivityInf.insert(t_min_display, phase->mRawActivityInf.first());
+        phase->mRawActivityInf.insert(t_max_display, phase->mRawActivityInf.last());
 
         phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
         phase->mActivityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityInf);
         phase->mActivitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivitySup);
 
-        phase->mActivityUnifMean = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifMean);
-        /*phase->mActivityUnifInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifInf);
-        phase->mActivityUnifSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifSup);
-*/
+        phase->mActivityUnifTheo = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifTheo);
+
 
      } // Loop End on phase
 
@@ -2317,31 +2468,29 @@ void Model::clearCredibilityAndHPD()
     while (iterEvent!=mEvents.end()) {
         for (auto&& date : (*iterEvent)->mDates) {
             date.mTi.mHPD.clear();
-            date.mTi.mCredibility = QPair<double, double>();
+            date.mTi.mCredibility = std::pair<double, double>();
             date.mSigmaTi.mHPD.clear();
-            date.mSigmaTi.mCredibility= QPair<double, double>();
+            date.mSigmaTi.mCredibility= std::pair<double, double>();
         }
         (*iterEvent)->mTheta.mHPD.clear();
-        (*iterEvent)->mTheta.mCredibility = QPair<double, double>();
+        (*iterEvent)->mTheta.mCredibility = std::pair<double, double>();
         ++iterEvent;
     }
     QList<Phase*>::iterator iterPhase = mPhases.begin();
     while (iterPhase!=mPhases.end()) {
         (*iterPhase)->mAlpha.mHPD.clear();
-        (*iterPhase)->mAlpha.mCredibility = QPair<double, double>();
-        //(*iterPhase)->mAlpha.mThresholdOld = 0;
+        (*iterPhase)->mAlpha.mCredibility = std::pair<double, double>();
 
         (*iterPhase)->mBeta.mHPD.clear();
-        (*iterPhase)->mBeta.mCredibility = QPair<double, double>();
-        //(*iterPhase)->mBeta.mThresholdOld = 0;
+        (*iterPhase)->mBeta.mCredibility = std::pair<double, double>();
 
         //(*iterPhase)->mTau.mHPD.clear();
        // (*iterPhase)->mTau.mCredibility = QPair<double, double>();
 
         (*iterPhase)->mDuration.mHPD.clear();
-        (*iterPhase)->mDuration.mCredibility = QPair<double, double>();
+        (*iterPhase)->mDuration.mCredibility = std::pair<double, double>();
         //(*iterPhase)->mDuration.mThresholdOld = 0;
-        (*iterPhase)->mTimeRange = QPair<double, double>();
+        (*iterPhase)->mTimeRange = std::pair<double, double>();
         ++iterPhase;
     }
 }
@@ -2369,10 +2518,8 @@ void Model::clearTraces()
         ph->mRawActivityInf.clear();
         ph->mRawActivitySup.clear();
 
-        ph->mRawActivityUnifMean.clear();
-        /*ph->mRawActivityUnifInf.clear();
-        ph->mRawActivityUnifSup.clear();
-        */
+        ph->mRawActivityUnifTheo.clear();
+
     }
 }
 
@@ -2672,7 +2819,7 @@ void Model::reduceEventsTheta(QList<Event *> &lEvent)
         e->mTheta.mX = reduceTime( e->mTheta.mX );
 }
 
-long double Model::reduceTime(double t)
+long double Model::reduceTime(double t) const
 {
     const double tmin = mSettings.mTmin;
     const double tmax = mSettings.mTmax;

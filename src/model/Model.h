@@ -90,7 +90,7 @@ public:
     QString initializeTheta();
 
     void reduceEventsTheta(QList<Event *> &lEvent);
-    long double reduceTime(double t);
+    long double reduceTime(double t) const;
     long double yearTime(double reduceTime);
 
     virtual void saveToFile(QDataStream* out);
@@ -116,10 +116,10 @@ public:
     // Trace and Posterior density needed for this :
     virtual void generateNumericalResults(const QList<ChainSpecs>& chains);
 
-    void generateTempoAndActivity(size_t gridLenth, double h);
+    void generateTempoAndActivity(size_t gridLenth, double h, const double threshold);
     void generateTempo(size_t gridLength);
 
-    void generateActivity(size_t gridLenth, double h);
+    void generateActivity(size_t gridLenth, double h, const double threshold);
     void generateActivityBinomialeCurve(const int n, std::vector<double>& C1x, std::vector<double>& C2x, const double alpha = .05);
 
     virtual void clearTraces();

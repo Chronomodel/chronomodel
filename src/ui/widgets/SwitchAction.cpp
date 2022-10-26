@@ -104,18 +104,13 @@ void SwitchWidget::paintEvent(QPaintEvent* e)
     f1.setPointSizeF(8);
     painter.setFont(f1);
     //QFontMetrics fm1(f1);
-    QString text1 = tr("Functional Link");
+    QString text1 = tr("Curve Building");
     //int text1W = fm1.horizontalAdvance(text1);
     
     QFont f2(font());
     f2.setPointSizeF(14);
     f2.setWeight(QFont::Bold);
     painter.setFont(f2);
-    //QFontMetrics fm2(f2);
-   // QString text2 = mToggled ? "CURVE" : "PHASES";
-   // int text2W = fm2.horizontalAdvance(text2);
-    
-    //int textW = text1W + text2W;;
     
     painter.setFont(f1);
     painter.drawText(r.adjusted(0, 5, 0, -2*r.height()/3 + 2), Qt::AlignHCenter | Qt::AlignVCenter, text1);

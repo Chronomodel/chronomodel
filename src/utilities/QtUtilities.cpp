@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -49,6 +49,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtSvg>
 #include <algorithm>
 
+/**
+ * @brief DHMS
+ * @param elapsedTime in msec
+ * @return
+ */
 QString DHMS( quint64 elapsedTime)
 {
     if (elapsedTime == 0)
@@ -92,7 +97,7 @@ QString DHMS( quint64 elapsedTime)
     else if (minute == 1)
         str += QString("1 minute ");
 
-    // If we have more than one hour, we do not display below the minute
+    // If we have more than one hour, we do not display below the second
     if (hour >= 1)
         return str;
 
@@ -258,13 +263,13 @@ QString intListToString(const QList<int>& intList, const QString& separator)
     return list.join(separator);
 }
 
-QString unsignedListToString(const QList<unsigned>& intList, const QString& separator)
+QString unsignedListToString(const QList<unsigned> &intList, const QString &separator)
 {
     QStringList list = unsignedListToStringList(intList);
     return list.join(separator);
 }
 
-QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogTitle, const QString& defaultPath)
+QFileInfo saveWidgetAsImage(QObject* wid, const QRect &r, const QString &dialogTitle, const QString &defaultPath)
 {
     QFileInfo fileInfo;
 
@@ -279,10 +284,8 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
     }
 
     const QString filter = QObject::tr("Image (*.png);;Photo (*.jpg);; Windows Bitmap (*.bmp);;Scalable Vector Graphics (*.svg)");
-    const QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
-                                                    dialogTitle,
-                                                    defaultPath,
-                                                    filter);
+    const QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(), dialogTitle, defaultPath, filter);
+
     if (!fileName.isEmpty()) {
         fileInfo = QFileInfo(fileName);
         const QString fileExtension = fileInfo.suffix();
@@ -424,18 +427,18 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
     return fileInfo;
 }
 
-bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName)
+bool saveWidgetAsSVG(QWidget* widget, const QRect &r, const QString &fileName)
 {
     const QFontMetrics fm(widget->font());
 
     const int heightText= fm.descent() + fm.ascent() + 10;
 
-    const  QRect viewBox = QRect( 0, 0,r.width(), r.height() + heightText );
+    const QRect viewBox = QRect( 0, 0,r.width(), r.height() + heightText );
     QSvgGenerator svgGenFile;
     svgGenFile.setFileName(fileName);
     svgGenFile.setViewBox(viewBox);
 
-    svgGenFile.setDescription(QObject::tr("SVG widget drawing "));
+    svgGenFile.setDescription(QObject::tr("SVG widget drawing"));
 
     QPainter p;
     p.begin(&svgGenFile);
@@ -487,9 +490,14 @@ QString textBlue(const QString& str)
     return "<span style=\"color: blue;\">" + str + "</span>";
 }
 
-QString textPurple(const QString& str)
+QString textOrange(const QString& str)
 {
     return "<span style=\"color: #C95805;\">" + str + "</span>";
+}
+
+QString textPurple(const QString& str)
+{
+    return "<span style=\"color: #7C1190;\">" + str + "</span>";
 }
 
 QString textColor(const QString &str,const QColor &color)

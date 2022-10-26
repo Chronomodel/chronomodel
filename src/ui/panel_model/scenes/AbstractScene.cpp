@@ -259,9 +259,10 @@ void AbstractScene::itemReleased(AbstractItem* item, QGraphicsSceneMouseEvent* e
             AbstractItem* colliding = collidingItem(item);
             if (colliding)
                 mergeItems(item, colliding);
-        } else
+        } else {
+            qDebug()<<"[AbstractScene::itemReleased] sendUpdateProject(Item moved)";
             sendUpdateProject(tr("Item moved"), true, true);//  bool notify = true, bool storeUndoCommand = true
-
+        }
         // Ajust Scene rect to minimal (and also fix the scene rect)
         // After doing this, the scene no longer stetches when moving items!
         // It is possible to reset it by calling setSceneRect(QRectF()),
@@ -269,16 +270,16 @@ void AbstractScene::itemReleased(AbstractItem* item, QGraphicsSceneMouseEvent* e
 
         //setSceneRect(specialItemsBoundingRect().adjusted(-30, -30, 30, 30));
 
-        adjustSceneRect();
+        //adjustSceneRect();
 
-        update();
+       // update();
     }
 }
 
 QRectF AbstractScene::specialItemsBoundingRect(QRectF r) const
 {
     QRectF rect = r;
-    for (auto item : mItems) {
+    for (const auto& item : mItems) {
         const QRectF bRect = item->boundingRect();
         QRectF r(item->scenePos().x() - bRect.width()/2,
                  item->scenePos().y() - bRect.height()/2,

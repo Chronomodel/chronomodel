@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -40,13 +40,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef PROJECT_H
 #define PROJECT_H
 
-//#include "AppSettings.h"
 #include "ProjectSettings.h"
-#include "MCMCSettings.h"
-#include "MCMCLoopMain.h"
 #include "Model.h"
-#include "StateKeys.h"
-#include "CalibrationCurve.h"
 
 #include <QObject>
 #include <QList>
@@ -88,18 +83,18 @@ public:
         ExtractEventsFromPhase,
     };
 
-    void initState(const QString& reason);
+    void initState(const QString &reason);
 
     // This is the function to call when the project state is to be modified.
     // An undo command is created and a StateEvent is fired asynchronously.
     // The project state will be modified and the view notified (if required)
-    bool pushProjectState(const QJsonObject& state, const QString& reason, bool notify);
-    void checkStateModification(const QJsonObject& stateNew,const QJsonObject& stateOld);
+    bool pushProjectState(const QJsonObject &state, const QString &reason, bool notify);
+    void checkStateModification(const QJsonObject &stateNew,const QJsonObject &stateOld);
     bool structureIsChanged();
     bool designIsChanged();
     // Sends a StateEvent asynchronously.
     // Called by "SetProjectState" undo/redo commands.
-    void sendUpdateState(const QJsonObject& state, const QString& reason, bool notify);
+    void sendUpdateState(const QJsonObject &state, const QString &reason, bool notify);
 
     // Event handler for events of type "StateEvent".
     // Updates the project state by calling updateState() and send a notification (if required).
@@ -107,19 +102,20 @@ public:
 
     // Update the project state directly.
     // This is not async! so be careful when calling this from views with notify = true
-    void updateState(const QJsonObject& state, const QString& reason, bool notify);
+    void updateState(const QJsonObject &state, const QString &reason, bool notify);
 
     // Special events for selection... too bad!
    // void sendEventsSelectionChanged(); // not used
 
     static QJsonObject emptyState();
-    QJsonObject state() const;
-    QJsonObject* state_ptr();
 
+    inline QJsonObject state() const { return mState;}
 
-    bool load(const QString& path);
-    bool saveAs(const QString& dialogTitle);
-    bool askToSave(const QString& saveDialogTitle);
+    QJsonObject* state_ptr() { return &mState;}
+
+    bool load(const QString &path);
+    bool saveAs(const QString &dialogTitle);
+    bool askToSave(const QString &saveDialogTitle);
     bool saveProjectToFile();
 
     bool recenterProject();
@@ -129,10 +125,10 @@ public:
      * @brief setNoResults : set to disable the saving the file *.res
      * @param noResults
      */
-    void setNoResults( const bool& noResults) { mNoResults = noResults;}
+    void setNoResults( const bool noResults) { mNoResults = noResults;}
     bool withResults() {return (!mNoResults) && mModel;}
 
-    bool setSettings(const ProjectSettings& settings);
+    bool setSettings(const ProjectSettings &settings);
 
     bool studyPeriodIsValid();
     void showStudyPeriodWarning();
@@ -142,50 +138,50 @@ public:
     // ---------------------------
     void restoreMCMCSettings();
 
-    void addEvent(QJsonObject event, const QString& reason);
-    int getUnusedEventId(const QJsonArray& events);
-    void updateEvent(const QJsonObject& event, const QString& reason);
+    void addEvent(QJsonObject event, const QString &reason);
+    int getUnusedEventId(const QJsonArray &events);
+    void updateEvent(const QJsonObject &event, const QString &reason);
     void mergeEvents(int eventFromId, int eventToId);
-    void deleteSelectedTrashedEvents(const QList<int>& ids);
+    void deleteSelectedTrashedEvents(const QList<int> &ids);
 
     Date createDateFromPlugin(PluginAbstract* plugin);
-    Date createDateFromData(const QString& pluginName, const QStringList& dataStr);
+    Date createDateFromData(const QString &pluginName, const QStringList &dataStr);
     void addDate(int eventId, QJsonObject date);
-    int getUnusedDateId(const QJsonArray& dates) const;
+    int getUnusedDateId(const QJsonArray &dates) const;
     void updateDate(int eventId, int dateId);
-    void deleteDates(int eventId, const QList<int>& dateIndexes);
+    void deleteDates(int eventId, const QList<int> &dateIndexes);
     void recycleDates(int eventId);
     void deleteSelectedTrashedDates(const QList<int>& ids);
     QJsonObject checkDatesCompatibility(QJsonObject state, bool &isCorrected);
     QJsonObject checkValidDates(const QJsonObject& state);
 
     void unselectedAllInState();
-    void updateSelectedEventsColor(const QColor& color);
+    void updateSelectedEventsColor(const QColor &color);
     void updateSelectedEventsMethod(MHVariable::SamplerProposal sp);
-    void updateSelectedEventsDataMethod(MHVariable::SamplerProposal sp, const QString& pluginId);
-    void updateAllDataInSelectedEvents(const QHash<QString, QVariant>& groupedAction);
+    void updateSelectedEventsDataMethod(MHVariable::SamplerProposal sp, const QString &pluginId);
+    void updateAllDataInSelectedEvents(const QHash<QString, QVariant> &groupedAction);
 
     void selectAllEvents();
     bool selectEventsFromSelectedPhases();
     bool selectedEventsWithString(const QString str);
 
-    void updatePhase(const QJsonObject& phaseIn);
-    int getUnusedPhaseId(const QJsonArray& phases);
+    void updatePhase(const QJsonObject &phaseIn);
+    int getUnusedPhaseId(const QJsonArray &phases);
     void mergePhases(int phaseFromId, int phaseToId);
     void updatePhaseEvents(const int phaseId, ActionOnModel action);
     QJsonObject getPhasesWithId(const int id);
 
     void createEventConstraint(const int idFrom, const int idTo);
     void deleteEventConstraint(int constraintId);
-    bool isEventConstraintAllowed(const QJsonObject& eventFrom, const QJsonObject& eventTo);
+    bool isEventConstraintAllowed(const QJsonObject &eventFrom, const QJsonObject &eventTo);
     void updateEventConstraint(int constraintId);
-    int getUnusedEventConstraintId(const QJsonArray& constraints);
+    int getUnusedEventConstraintId(const QJsonArray &constraints);
 
     void createPhaseConstraint(int phaseFromId, int phaseToId);
     void deletePhaseConstraint(int constraintId);
-    bool isPhaseConstraintAllowed(const QJsonObject& phaseFrom, const QJsonObject& phaseTo);
+    bool isPhaseConstraintAllowed(const QJsonObject &phaseFrom, const QJsonObject &phaseTo);
     void updatePhaseConstraint(const int constraintId);
-    int getUnusedPhaseConstraintId(const QJsonArray& constraints);
+    int getUnusedPhaseConstraintId(const QJsonArray &constraints);
 
     void clearModel();
     void createEvent(qreal x, qreal y);
@@ -213,15 +209,15 @@ public slots:
 
     void deleteSelectedPhases();
 
-    void combineDates(const int eventId, const QList<int>& dateIds);
+    void combineDates(const int eventId, const QList<int> &dateIds);
     void splitDate(const int eventId, const int dateId);
 
 signals:
     void noResult();
     void projectStateChanged();
-    void currentEventChanged(const QJsonObject& event);
+    void currentEventChanged(const QJsonObject &event);
 
-    void eyedPhasesModified(const QMap<int, bool>& eyedPhases);
+    void eyedPhasesModified(const QMap<int, bool> &eyedPhases);
 
     void mcmcStarted();
     void mcmcFinished(Model* model);

@@ -281,7 +281,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
              *   Display envelope Uniform
              * ------------------------------------------------------------*/
 
-            GraphCurve curveActivityUnifMean = densityCurve(mPhase->mActivityUnifMean,
+            GraphCurve curveActivityUnifTheo = densityCurve(mPhase->mActivityUnifTheo,
                                                             "Post Distrib Unif Mean",
                                                             Qt::darkGray, Qt::SolidLine);
 
@@ -292,9 +292,9 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
             mGraph->addCurve(curveActivityEnv);
             mGraph->addCurve(curveActivity);
 
-            mGraph->addCurve(curveActivityUnifMean);
+            mGraph->addCurve(curveActivityUnifTheo);
 
-            const type_data yMax = std:: max(map_max_value(mPhase->mActivitySup), map_max_value(mPhase->mActivityUnifMean));
+            const type_data yMax = std:: max(map_max_value(mPhase->mActivitySup), map_max_value(mPhase->mActivityUnifTheo));
 
             mGraph->setRangeY(0., yMax);
 

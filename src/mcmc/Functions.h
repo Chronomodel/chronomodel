@@ -112,14 +112,14 @@ TraceStat traceStatistic(const QVector<type_data> &trace);
 QVector<double> calculRepartition (const QVector<double>& calib);
 QVector<double> calculRepartition (const QMap<double, double> &calib);
 Quartiles quartilesForRepartition(const QVector<double> &repartition, const double tmin, const double step);
-QPair<double, double> credibilityForTrace(const QVector<double>& trace, double thresh, double& exactThresholdResult, const QString description = "Credibility computation");
-QPair<double, double> credibilityForTrace(const QVector<int>& trace, double thresh, double& exactThresholdResult, const QString description = "Credibility computation");
-QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh, const QString description ="Time Range Computation");
+std::pair<double, double> credibilityForTrace(const QVector<double> &trace, double thresh, double &exactThresholdResult, const QString description = "Credibility computation");
+std::pair<double, double> credibilityForTrace(const QVector<int> &trace, double thresh, double &exactThresholdResult, const QString description = "Credibility computation");
+std::pair<double, double> timeRangeFromTraces(const QVector<double> &trace1, const QVector<double> &trace2, const double thresh, const QString description ="Time Range Computation");
 
 
-QPair<double, double> gapRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh, const QString description ="Gap Range Computation");
+std::pair<double, double> gapRangeFromTraces(const QVector<double> &trace1, const QVector<double> &trace2, const double thresh, const QString description ="Gap Range Computation");
 
-QPair<double, double> transitionRangeFromTraces(const QVector<double> &trace1, const QVector<double> &trace2, const double thresh, const QString description ="Gap Range Computation");
+std::pair<double, double> transitionRangeFromTraces(const QVector<double> &trace1, const QVector<double> &trace2, const double thresh, const QString description ="Gap Range Computation");
 
 QString intervalText(const QPair<double, QPair<double, double> >& interval, DateConversion conversionFunc = nullptr, const bool forCSV = false);
 QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString& unit = QString(), DateConversion conversionFunc = nullptr, const bool forCSV =false);

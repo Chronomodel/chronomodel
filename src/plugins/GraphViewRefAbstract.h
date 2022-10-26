@@ -48,6 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MainWindow.h"
 #include "Project.h"
 #include "Painting.h"
+#include "GraphView.h"
 
 #include <QWidget>
 

@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef DATEUTILS_H
 #define DATEUTILS_H
 
+
 #include <QString>
 #include <QMap>
 
@@ -62,9 +63,7 @@ public:
         eMa = 7
     };
 
-
     static QString dateFormatToString(const FormatDate format);
-
 
     /**
      * @brief convert native values (classic BC/AD) to their prefered display date format (Cal B2k, ...)
@@ -73,14 +72,13 @@ public:
     static QString convertToAppSettingsFormatStr(const double valueToFormat, const bool forCSV = false);
     static QMap<double, double> convertMapToAppSettingsFormat(const QMap<double,double> &mapToFormat);
 
-
-    static double convertToFormat(const double &valueToFormat, const FormatDate &format);
-    static double convertFromFormat(const double &formattedValue, const FormatDate &format);
+    static double convertToFormat(const double valueToFormat, const FormatDate format);
+    static double convertFromFormat(const double formattedValue, const FormatDate format);
     /**
      * @brief convert formatted values (Cal B2k, Cal BP, ...) to native value (classic BC/AD)
      */
     static double convertFromAppSettingsFormat(const double &formattedValue);
-    static QString convertFromAppSettingsFormatStr(const double formattedValue);
+    inline QString convertFromAppSettingsFormatStr(const double formattedValue);
 
     static FormatDate getAppSettingsFormat();
     static QString getAppSettingsFormatStr();

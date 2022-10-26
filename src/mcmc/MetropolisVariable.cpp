@@ -69,8 +69,8 @@ mtmaxUsed(0.)
     mRawTrace = new QVector<double>();
     mFormatedTrace = new QVector<double>();
 
-    mCredibility = QPair<double, double>();
-    mHPD = QMap<double, double>();
+    mCredibility = std::make_pair(- INFINITY, +INFINITY);
+   // mHPD = QMap<double, double>();
    // QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
 }
 
@@ -456,9 +456,9 @@ void MetropolisVariable::generateHPD(const double threshold)
 void MetropolisVariable::generateCredibility(const QList<ChainSpecs> &chains, double threshold)
 {
     if (!mHisto.isEmpty())
-        mCredibility = credibilityForTrace(fullRunTrace(chains), threshold, mExactCredibilityThreshold,"Compute credibility for "+getName());
+        mCredibility = credibilityForTrace(fullRunTrace(chains), threshold, mExactCredibilityThreshold);//, "Compute credibility for "+getName());
     else
-        mCredibility = QPair<double,double>();
+        mCredibility = std::pair<double, double>(-INFINITY, INFINITY);
 
 }
 
@@ -560,6 +560,17 @@ QVector<double> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs>& c
         shift += traceSize;
     }
     return QVector<double>(trace.begin(), trace.end());
+}
+
+QList<double>::Iterator MetropolisVariable::findIter_element(const long unsigned iter, const QList<ChainSpecs>& chains, const int chainIndex ) const
+{
+    int shift = 0;
+    for (int i = 0; i < chainIndex; ++i) {
+        shift += 1 + chains[i].mIterPerBurn + (chains[i].mBatchIndex * chains[i].mIterPerBatch) + chains[i].mRealyAccepted;
+    }
+    shift += 1 + chains[chainIndex].mIterPerBurn +  (chains[chainIndex].mBatchIndex * chains[chainIndex].mIterPerBatch);
+    return mRawTrace->begin() + shift + iter;
+
 }
 
 /**
@@ -703,7 +714,7 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
         result += tr("Probabilities") + nl;
 
             // the mCredibility is already in the time scale, we don't need to convert
-            if (mCredibility != QPair<double, double>()) {
+            if (mCredibility != std::pair<double, double>()) {
                 result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForCSV(mExactCredibilityThreshold * 100.),
                                                                                        stringForCSV(mCredibility.first),
                                                                                        stringForCSV(mCredibility.second),
@@ -716,7 +727,7 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
         result += "<i>"+ tr("Probabilities") + " </i>"+ nl;
 
             // the mCredibility is already in the time scale, we don't need to convert
-            if (mCredibility != QPair<double, double>())
+            if (mCredibility != std::pair<double, double>())
                 result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(mExactCredibilityThreshold * 100.),
                                                                                        stringForLocal(mCredibility.first),
                                                                                        stringForLocal(mCredibility.second),
