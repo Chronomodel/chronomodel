@@ -807,7 +807,7 @@ void Date::calibrate(const ProjectSettings& settings, Project *project, bool tru
         // If the calibration curve changes, the wiggle curve must be recalculated.
         if (mWiggleCalibration != nullptr)  {
             const QString toFind ("WID::" + mUUID);
-            QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
+            QMap<QString, CalibrationCurve>::ConstIterator it = project->mCalibCurves.constFind(toFind);
             project->mCalibCurves.erase(it);
         }
     }

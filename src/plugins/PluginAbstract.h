@@ -386,17 +386,6 @@ public:
 
 };
 
-//----------------------------------------------------
-//  Pour les plugins
-//----------------------------------------------------
-/*#define PluginAbstract_iid "chronomodel.PluginAbstract"
-Q_DECLARE_INTERFACE(PluginAbstract, PluginAbstract_iid)
-
-#if defined(DATATION_LIBRARY)
-#  define DATATION_SHARED_EXPORT Q_DECL_EXPORT
-#else
-#  define DATATION_SHARED_EXPORT Q_DECL_IMPORT
-#endif*/
 
 #define DATATION_SHARED_EXPORT
 
