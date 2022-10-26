@@ -98,8 +98,8 @@ void PluginRefCurveSettingsView::updateRefsList()
     while (iter.hasNext()) {
         iter.next();
         QListWidgetItem* item = new QListWidgetItem(iter.key());
-        const RefCurve& curve = mPlugin->mRefCurves[iter.key().toLower()];
-        if(curve.mDataMean.isEmpty())
+        const RefCurve &curve = mPlugin->mRefCurves[iter.key().toLower()];
+        if (curve.mDataMean.isEmpty())
             item->setForeground(Qt::red);
 
         mRefCurvesList->addItem(item);
@@ -109,6 +109,15 @@ void PluginRefCurveSettingsView::updateRefsList()
 void PluginRefCurveSettingsView::updateFilesInFolder()
 {
     QString calibPath = mPlugin->getRefsPath();
+    QDir cPath (calibPath);
+    // Creation of the plugin file directory, if it does not exist
+    if (!cPath.exists()) {
+        cPath.mkpath(calibPath);
+    }
+    if (!cPath.exists()) {
+        QMessageBox::warning(qApp->activeWindow(), tr("Error"), tr("Impossible to create the plugin path %1").arg(calibPath)) ;
+        return;
+    }
    // Delete removed curves
     QMapIterator<QString, QString> iter(mFilesOrg);
     iter = QMapIterator<QString, QString>(mFilesOrg);
