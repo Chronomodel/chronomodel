@@ -50,6 +50,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 #include <math.h>
+#include <thread>
 
 
 ModelCurve::ModelCurve():Model()
@@ -313,7 +314,7 @@ PosteriorMeanGComposante ModelCurve::buildCurveAndMap(const int nbPtsX, const in
         unsigned i0 = 0; // tIdx étant croissant, i0 permet de faire la recherche à l'indice du temps précedent
         for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
             t = (double)idxT * stepT + mSettings.mTmin ;
-            valeurs_G_VarG_GP_GS(t, splineXYZ, g, varG, gp, gs, i0);
+            valeurs_G_VarG_GP_GS(t, splineXYZ, g, varG, gp, gs, i0, *this);
 
             // -- Calcul Mean
             prevMeanG = *itVecG;
@@ -572,15 +573,15 @@ void ModelCurve::clearCredibilityAndHPD()
     for (Event*& event : mEvents) {
         if (event->type() != Event::eBound) {
             event->mVG.mHPD.clear();
-            event->mVG.mCredibility = QPair<double, double>();
+            event->mVG.mCredibility = std::pair<double, double>();
         }
     }
     
     mLambdaSpline.mHPD.clear();
-    mLambdaSpline.mCredibility = QPair<double, double>();
+    mLambdaSpline.mCredibility = std::pair<double, double>();
 
     mS02Vg.mHPD.clear();
-    mS02Vg.mCredibility = QPair<double, double>();
+    mS02Vg.mCredibility = std::pair<double, double>();
 }
 
 void ModelCurve::clearTraces()
@@ -637,19 +638,19 @@ QList<PosteriorMeanGComposante> ModelCurve::getChainsMeanGComposanteZ()
     return composantes;
 }
 
-void ModelCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante &spline, double& G, double& varG, double& GP, double& GS, unsigned& i0)
+void ModelCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante &spline, double& G, double& varG, double& GP, double& GS, unsigned& i0, const Model &model)
 {
     const unsigned long n = spline.vecThetaEvents.size();
-    const double tReduce =  reduceTime(t);
-    const double t1 = reduceTime(spline.vecThetaEvents.at(0));
-    const double tn = reduceTime(spline.vecThetaEvents.at(n-1));
+    const double tReduce =  model.reduceTime(t);
+    const double t1 = model.reduceTime(spline.vecThetaEvents.at(0));
+    const double tn = model.reduceTime(spline.vecThetaEvents.at(n-1));
     GP = 0.;
     GS = 0.;
     double h;
 
      // The first derivative is always constant outside the interval [t1,tn].
      if (tReduce < t1) {
-         const double t2 = reduceTime(spline.vecThetaEvents.at(1));
+         const double t2 = model.reduceTime(spline.vecThetaEvents.at(1));
 
          // ValeurGPrime
          GP = (spline.vecG.at(1) - spline.vecG.at(0)) / (t2 - t1);
@@ -666,7 +667,7 @@ void ModelCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante
 
      } else if (tReduce >= tn) {
 
-         const double tn1 = reduceTime(spline.vecThetaEvents.at(n-2));
+         const double tn1 = model.reduceTime(spline.vecThetaEvents.at(n-2));
 
          // valeurErrG
          varG = spline.vecVarG.at(n-1);
@@ -685,8 +686,8 @@ void ModelCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante
      } else {
         double err1, err2;
          for (; i0 < n-1; ++i0) {
-             const double ti1 = reduceTime(spline.vecThetaEvents.at(i0));
-             const double ti2 = reduceTime(spline.vecThetaEvents.at(i0 + 1));
+             const double ti1 = model.reduceTime(spline.vecThetaEvents.at(i0));
+             const double ti2 = model.reduceTime(spline.vecThetaEvents.at(i0 + 1));
              h = ti2 - ti1;
 
              if ((tReduce >= ti1) && (tReduce < ti2)) {
@@ -720,8 +721,8 @@ void ModelCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante
      }
 
      // Value slope correction
-     GP /=(mSettings.mTmax - mSettings.mTmin);
-     GS /= pow(mSettings.mTmax - mSettings.mTmin, 2.);
+     GP /=(model.mSettings.mTmax - model.mSettings.mTmin);
+     GS /= pow(model.mSettings.mTmax - model.mSettings.mTmin, 2.);
 }
 
 void ModelCurve::valeurs_G_varG_on_i(const MCMCSplineComposante& spline, double& G, double& varG, unsigned long &i)
@@ -942,11 +943,11 @@ void ModelCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline &spline, C
     unsigned i0 = 0; // tIdx étant croissant, i0 permet de faire la recherche à l'indice du temps précedent
     for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
         t = (double)idxT * stepT + mSettings.mTmin ;
-        valeurs_G_VarG_GP_GS(t, spline.splineX, gx, varGx, gpx, gsx, i0);
-        valeurs_G_VarG_GP_GS(t, spline.splineY, gy, varGy, gpy, gsy, i0);
+        valeurs_G_VarG_GP_GS(t, spline.splineX, gx, varGx, gpx, gsx, i0, *this);
+        valeurs_G_VarG_GP_GS(t, spline.splineY, gy, varGy, gpy, gsy, i0, *this);
 
        // if (hasZ)
-            valeurs_G_VarG_GP_GS(t, spline.splineZ, gz, varGz, gpz, gsz, i0);
+            valeurs_G_VarG_GP_GS(t, spline.splineZ, gz, varGz, gpz, gsz, i0, *this);
 
         // Conversion IDF
         if (curveType == CurveSettings::eProcessTypeVector ||  curveType == CurveSettings::eProcessTypeSpherical) {
@@ -1243,7 +1244,7 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSplin
     unsigned i0 = 0; // tIdx étant croissant, i0 permet de faire la recherche à l'indice du temps précedent
     for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
         t = (double)idxT * stepT + mSettings.mTmin ;
-        valeurs_G_VarG_GP_GS(t, splineComposante, g, varG, gp, gs, i0);
+        valeurs_G_VarG_GP_GS(t, splineComposante, g, varG, gp, gs, i0, *this);
 
        /*const auto variableType = mCurveSettings.mVariableType;
 

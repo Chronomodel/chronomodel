@@ -37,8 +37,8 @@
 # knowledge of the CeCILL V2.1 license and that you accept its terms.
 # --------------------------------------------------------------------- */
 
-# DEFINES += VERSION_NUMBER=\\\"2.0.10\\\"
-VERSION = 3.1.9
+DEFINES += VERSION_NUMBER="3,2,0"
+VERSION = 3.2.0
  #VERSION_NUMBER # must match value in src/main.cpp and mainControler and Chronomodel.rc (for windows)
 #PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_
@@ -115,15 +115,12 @@ macx{
 
         QMAKESPEC = macx-clang
 
-
-#QMAKE_LFLAGS += -lomp
-#QMAKE_CXXFLAGS += -Xpreprocessor -fopenmp
-
         QMAKE_MAC_SDK = macosx
         message("QMAKE_MAC_SDK = $$QMAKE_MAC_SDK")
 
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
-        QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14 # OS X 10.9 	Mavericks oct 2013  # essai sinon 10.14
+        #QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14 # OS X 10.9 	Mavericks oct 2013  # essai sinon 10.14
+        QMAKE_MACOSX_DEPLOYMENT_TARGET = 11 # depuis le 2022-10-11
 	# Define a set of resources to deploy inside the bundle :
 	RESOURCES_FILES.path = Contents/Resources
         # RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib // used for older version <3.1.6
@@ -187,13 +184,13 @@ macx{
 	# this is to include fftw.h in the code :
 	INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac
 
-#INCLUDEPATH += $$_PRO_FILE_PWD_/lib/openMP/mac_12
+
 	# Link the application with FFTW library
 	# If no dylib are present, static libs (.a) are used => that's why we moved .dylib files in a "dylib" folder.
         #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
         LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3
 
-#LIBS += -L"$$_PRO_FILE_PWD_/lib/openMP/mac_12/dylib" -llibomp.dylib # Pour openMP
+
 
 	# If we were deploying FFTW as a dynamic library, we should :
 	# - Move all files from "lib/FFTW/mac/dylib" to "lib/FFTW/mac"
@@ -224,8 +221,34 @@ unix:!macx{
 	INCLUDEPATH += lib/FFTW
         LIBS += -lfftw3
 }
+#########################################
+# OPENMP
+#########################################
+USE_OPENMP=0
+
+macx{
+     equals(USE_OPENMP, 1) {
+                             message("-------------------------------------------")
+                             message("use OpenMP")
+                             DEFINES += USE_OPENMP #   DEFINES += "USE_FFT=$${USE_FFT}"
+                             QMAKE_LFLAGS += -lomp
+
+                             QMAKE_CXXFLAGS +=  -Xpreprocessor -fopenmp
+
+                             INCLUDEPATH += "$$_PRO_FILE_PWD_/lib/openMP/macOS11"
+                             LIBS += -L"$$_PRO_FILE_PWD_/lib/openMP/macOS11" -lomp # Pour openMP.dylib
+
+                             OPENMP_FILES.files += $$$$_PRO_FILE_PWD_/lib/openMP/macOS11/libomp.dylib
+                             QMAKE_BUNDLE_DATA += OPENMP_FILES
+                             message("-------------------------------------------")
+    }
+}
+
 
 #########################################
+message("INCLUDEPATH : $$INCLUDEPATH")
+message("LIBS : $$LIBS")
+
 # TRANSLATIONS
 #########################################
 TRANSLATIONS = translations/Chronomodel_fr.ts \
