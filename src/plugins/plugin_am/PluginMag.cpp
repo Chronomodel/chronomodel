@@ -655,10 +655,7 @@ QString PluginMag::getRefExt() const
 
 QString PluginMag::getRefsPath() const
 {
-    QStringList dataPath = QStandardPaths::standardLocations(QStandardPaths::AppLocalDataLocation);
-    QString path  =  dataPath[0]; // "/Library/Application Support/CNRS/ChronoModel"
-    QString calibPath = path + "/Calib/AM";
-    return calibPath;
+    return AppPluginLibrary() + "/Calib/AM";
 }
 
 RefCurve PluginMag::loadRefFile(QFileInfo refFile)

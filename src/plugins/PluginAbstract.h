@@ -41,7 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define PLUGINABSTRACT_H
 
 #include "Date.h"
-#include "GraphView.h"
+//#include "GraphView.h"
 #include "ProjectSettings.h"
 #include "RefCurve.h"
 #include "Generator.h"
@@ -57,6 +57,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QTextStream>
 #include <QPair>
 #include <QLocale>
+#include <QStandardPaths>
 
 class ParamMCMC;
 class GraphView;
@@ -372,6 +373,15 @@ public:
     GraphViewRefAbstract* mRefGraph;
     QColor mColor;
 
+    static QString AppPluginLibrary()
+    {
+#ifdef Q_OS_MAC
+        return QStandardPaths::standardLocations(QStandardPaths::GenericDataLocation).at(0) + QString("/CNRS/ChronoModel");
+#else
+        return QStandardPaths::standardLocations(QStandardPaths::GenericDataLocation).at(0) + QString("/CNRS/ChronoModel");
+#endif
+
+    }
 
 
 };

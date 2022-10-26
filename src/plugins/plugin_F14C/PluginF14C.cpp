@@ -201,12 +201,7 @@ QString PluginF14C::getRefExt() const
 
 QString PluginF14C::getRefsPath() const
 {
-
-    QStringList dataPath = QStandardPaths::standardLocations(QStandardPaths::AppLocalDataLocation); //QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
-    QString path  =  dataPath[0]; // "/Users/dufresne/Library/Application Support/CNRS/ChronoModel"
-
-    QString calibPath = path + "/Calib/F14C";
-    return calibPath;
+    return AppPluginLibrary() + "/Calib/F14C";
 }
 
 /** Convention; the last comment before data must show the data format. So we must find the cells separator (coma or space) and the year Unit (BC/AD or BP)
@@ -218,7 +213,6 @@ RefCurve PluginF14C::loadRefFile(QFileInfo refFile)
 
 // Default time in BP, data in 14C age, data column is 1
     bool timeInBP (true);
-    //bool timeInBC (false);
     bool dataInF14C (false);
     bool dataInAge (true);
     int ageColumn (1);
@@ -230,131 +224,139 @@ RefCurve PluginF14C::loadRefFile(QFileInfo refFile)
         const QLocale locale = QLocale(QLocale::English);
         QTextStream stream(&file);
         bool firstLine = true;
+        try {
 
-        while (!stream.atEnd()) {
-            QString line = stream.readLine();
-  
-            if (isComment(line)) {
-                
-                
-                if (line.contains("BC", Qt::CaseInsensitive) || line.contains("BP", Qt::CaseInsensitive) || line.contains("Year", Qt::CaseInsensitive) ||  line.contains("age", Qt::CaseInsensitive) || line.contains("F14", Qt::CaseInsensitive) ) {
-                    if (line.contains(',')) {
-                        dataSep = ',';
-                    } else {
-                       dataSep = char(9);
-                    }
-                }
-                QStringList values = line.split(dataSep);
-                
-                if (values.at(0).contains("BP", Qt::CaseInsensitive) ) {
-                   // timeInBC = false;
-                    timeInBP = true;
-                    
-                } else if (values.at(0).contains("BC", Qt::CaseInsensitive)  || values.at(0).contains("year", Qt::CaseInsensitive)) {
-                   // timeInBC = true;
-                    timeInBP = false;
-                }
-                
-                if (line.contains("F14", Qt::CaseInsensitive)) {
-                    dataInF14C = true;
-                    dataInAge = false;
-         
-                    for (int i = 0; i < values.size(); ++i) {
-                        if ( values[i].contains("F14", Qt::CaseInsensitive)) {
-                            F14Column = i;
-                            continue;
+            while (!stream.atEnd()) {
+                QString line = stream.readLine();
+
+                if (isComment(line)) {
+
+
+                    if (line.contains("BC", Qt::CaseInsensitive) || line.contains("BP", Qt::CaseInsensitive) || line.contains("Year", Qt::CaseInsensitive) ||  line.contains("age", Qt::CaseInsensitive) || line.contains("F14", Qt::CaseInsensitive) ) {
+                        if (line.contains(',')) {
+                            dataSep = ',';
+                        } else {
+                            dataSep = char(9);
                         }
                     }
-                } else if (line.contains("age", Qt::CaseInsensitive)) {
-                    dataInF14C = false;
-                    dataInAge = true;
-  
-                    for (int i = 0; i < values.size(); ++i) {
-                        if ( values[i].contains("age", Qt::CaseInsensitive)) {
-                            ageColumn = i;
-                            continue;
+                    QStringList values = line.split(dataSep);
+
+                    if (values.at(0).contains("BP", Qt::CaseInsensitive) ) {
+                        timeInBP = true;
+
+                    } else if (values.at(0).contains("BC", Qt::CaseInsensitive)  || values.at(0).contains("year", Qt::CaseInsensitive)) {
+                          timeInBP = false;
+
+                    } else if (values.at(0).contains("AD", Qt::CaseInsensitive)  || values.at(0).contains("year", Qt::CaseInsensitive)) {
+                        timeInBP = false;
+                    }
+
+                    if (line.contains("F14", Qt::CaseInsensitive)) {
+                        dataInF14C = true;
+                        dataInAge = false;
+
+                        for (int i = 0; i < values.size(); ++i) {
+                            if ( values[i].contains("F14", Qt::CaseInsensitive)) {
+                                F14Column = i;
+                                continue;
+                            }
+                        }
+                    } else if (line.contains("age", Qt::CaseInsensitive)) {
+                        dataInF14C = false;
+                        dataInAge = true;
+
+                        for (int i = 0; i < values.size(); ++i) {
+                            if ( values[i].contains("age", Qt::CaseInsensitive)) {
+                                ageColumn = i;
+                                continue;
+                            }
                         }
                     }
-               }
-             
-                
-               
-            }
-            
-            int dataColumn(1);
-            if (dataInF14C)
-                dataColumn = F14Column;
-            else if (dataInAge)
-                dataColumn = ageColumn;
-       
-            
-            if (!isComment(line)) {
 
-                QStringList values = line.split(dataSep);
-                
-                if (values.size() >= 3) {
-                    bool ok = true;
 
-                    double t = locale.toDouble(values.at(0), &ok);
-                    if (!ok)
-                        continue;
-                    if (timeInBP)
-                        t = 1950 - t;
-                    
-// must convert all in F14C
-                    double g = locale.toDouble(values.at(dataColumn), &ok);
-                    if(!ok)
-                        continue;
-                    
-                    double e = locale.toDouble(values.at(dataColumn+1), &ok);
-                    if (!ok)
-                        continue;
-                    if (!dataInF14C) {// data is BP Age
-                        e = errCRAtoErrF14C(e, g);
-                        g = CRAtoF14C(g);
+
+                }
+
+                int dataColumn(1);
+                if (dataInF14C)
+                    dataColumn = F14Column;
+                else if (dataInAge)
+                    dataColumn = ageColumn;
+
+
+                if (!isComment(line)) {
+
+                    QStringList values = line.split(dataSep);
+
+                    if (values.size() >= 3) {
+                        bool ok = true;
+
+                        double t = locale.toDouble(values.at(0), &ok);
+                        if (!ok)
+                            continue;
+                        if (timeInBP)
+                            t = 1950 - t;
+
+                        // must convert all in F14C
+                        double g = dataColumn < values.size() ? locale.toDouble(values.at(dataColumn), &ok) : ok = false;
+                        if(!ok)
+                            continue;
+
+                        double e = dataColumn+1 < values.size() ? locale.toDouble(values.at(dataColumn+1), &ok): ok = false;
+                        if (!ok)
+                            continue;
+
+                        if (!dataInF14C) {// data is BP Age
+                            e = errCRAtoErrF14C(e, g);
+                            g = CRAtoF14C(g);
+                        }
+
+                        double gSup = g + 1.96 * e;
+                        if(!ok)
+                            continue;
+                        double gInf = g - 1.96 * e;
+                        if (!ok)
+                            continue;
+
+                        curve.mDataMean[t] = g;
+                        curve.mDataError[t] = e;
+                        curve.mDataSup[t] = gSup;
+                        curve.mDataInf[t] = gInf;
+
+                        if (firstLine) {
+                            curve.mDataMeanMin = g;
+                            curve.mDataMeanMax = g;
+
+                            curve.mDataErrorMin = e;
+                            curve.mDataErrorMax = e;
+
+                            curve.mDataSupMin = gSup;
+                            curve.mDataSupMax = gSup;
+
+                            curve.mDataInfMin = gInf;
+                            curve.mDataInfMax = gInf;
+
+                        } else {
+                            curve.mDataMeanMin = qMin(curve.mDataMeanMin, g);
+                            curve.mDataMeanMax = qMax(curve.mDataMeanMax, g);
+
+                            curve.mDataErrorMin = qMin(curve.mDataErrorMin, e);
+                            curve.mDataErrorMax = qMax(curve.mDataErrorMax, e);
+
+                            curve.mDataSupMin = qMin(curve.mDataSupMin, gSup);
+                            curve.mDataSupMax = qMax(curve.mDataSupMax, gSup);
+
+                            curve.mDataInfMin = qMin(curve.mDataInfMin, gInf);
+                            curve.mDataInfMax = qMax(curve.mDataInfMax, gInf);
+                        }
+                        firstLine = false;
                     }
-
-                    double gSup = g + 1.96 * e;
-                    if(!ok)
-                        continue;
-                    double gInf = g - 1.96 * e;
-                    if (!ok)
-                        continue;
-
-                    curve.mDataMean[t] = g;
-                    curve.mDataError[t] = e;
-                    curve.mDataSup[t] = gSup;
-                    curve.mDataInf[t] = gInf;
-
-                    if (firstLine) {
-                        curve.mDataMeanMin = g;
-                        curve.mDataMeanMax = g;
-
-                        curve.mDataErrorMin = e;
-                        curve.mDataErrorMax = e;
-
-                        curve.mDataSupMin = gSup;
-                        curve.mDataSupMax = gSup;
-
-                        curve.mDataInfMin = gInf;
-                        curve.mDataInfMax = gInf;
-
-                    } else {
-                        curve.mDataMeanMin = qMin(curve.mDataMeanMin, g);
-                        curve.mDataMeanMax = qMax(curve.mDataMeanMax, g);
-
-                        curve.mDataErrorMin = qMin(curve.mDataErrorMin, e);
-                        curve.mDataErrorMax = qMax(curve.mDataErrorMax, e);
-
-                        curve.mDataSupMin = qMin(curve.mDataSupMin, gSup);
-                        curve.mDataSupMax = qMax(curve.mDataSupMax, gSup);
-
-                        curve.mDataInfMin = qMin(curve.mDataInfMin, gInf);
-                        curve.mDataInfMax = qMax(curve.mDataInfMax, gInf);
-                    }
-                    firstLine = false;
                 }
             }
+
+        } catch (...) {
+            file.close();
+            curve.mDataMean.clear();
         }
         file.close();
 
@@ -380,7 +382,7 @@ double PluginF14C::getRefErrorAt(const QJsonObject& data, const double& t)
     return getRefCurveErrorAt(curveName, t);
 }
 
-QPair<double,double> PluginF14C::getTminTmaxRefsCurve(const QJsonObject& data) const
+QPair<double,double> PluginF14C::getTminTmaxRefsCurve(const QJsonObject &data) const
 {
     double tmin (-INFINITY);
     double tmax (INFINITY);
@@ -390,7 +392,7 @@ QPair<double,double> PluginF14C::getTminTmaxRefsCurve(const QJsonObject& data) c
        tmin = mRefCurves.value(ref_curve).mTmin;
        tmax = mRefCurves.value(ref_curve).mTmax;
     }
-    return QPair<double,double>(tmin, tmax);
+    return QPair<double, double>(tmin, tmax);
 }
 
 //Settings / Input Form / RefView

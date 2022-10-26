@@ -302,15 +302,16 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                 /* 5000 pts are used on vertical measurement
                  * because the y scale auto adjusts depending on x zoom.
                  * => the visible part of the measurement may be very reduced ! */
-                const double step = (yMax - yMin) / 5000.;
+                const double step = (yMax - yMin) / 4999.;
                 QMap<double, double> measureCurve;
-                double t;
-
-                for (int i = 0; i<5000; i++) {
-                    t = yMin + i*step;
-                    measureCurve[t] = exp(-0.5 * pow((t - age) / error, 2.));
+                measureCurve[yMin] = 0.;
+                for (int i = 1; i< 4999; i++) {
+                    double y = yMin + i*step;
+                    measureCurve[y] = exp(-0.5 * pow((y - age) / error, 2.));
 
                 }
+                measureCurve[yMax] = 0.;
+
                 measureCurve = normalize_map(measureCurve);
 
                 curveMeasure.mData = measureCurve;

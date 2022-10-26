@@ -40,9 +40,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AppSettingsDialog.h"
 #include "AppSettingsDialogItemDelegate.h"
 #include "PluginSettingsViewAbstract.h"
-#include "Painting.h"
-#include "Label.h"
-#include "Button.h"
+//#include "Painting.h"
+//#include "Label.h"
+//#include "Button.h"
 #include "AppSettings.h"
 
 #include <QtWidgets>

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -37,14 +37,15 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#include "PluginGauss.h"
 #if USE_PLUGIN_GAUSS
+#include "PluginGauss.h"
 
 #include "StdUtilities.h"
 #include "QtUtilities.h"
 #include "PluginGaussForm.h"
 #include "PluginGaussRefView.h"
 #include "PluginGaussSettingsView.h"
+
 #include <cstdlib>
 #include <iostream>
 #include <QJsonObject>
@@ -309,23 +310,8 @@ QString PluginGauss::getRefExt() const
 
 QString PluginGauss::getRefsPath() const
 {
-    //http://doc.qt.io/qt-5/qstandardpaths.html#details
-   QStringList dataPath = QStandardPaths::standardLocations(QStandardPaths::AppLocalDataLocation); //QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
-   QString path  =  dataPath[0]; // "/Users/dufresne/Library/Application Support/CNRS/ChronoModel"
-/*
-#ifdef Q_OS_MAC
-    QString path  =  qApp->applicationDirPath();
-    QDir dir(path);
-    dir.cdUp();
-    path = dir.absolutePath() + "/Resources";
-#else
-    //http://doc.qt.io/qt-5/qstandardpaths.html#details
-    QStringList dataPath = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
-    QString path  =  dataPath[0];
-#endif
-*/
-    QString calibPath = path + "/Calib/Gauss";
-    return calibPath;
+    qDebug()<< "[PluginGauss::getRefsPath()] " << AppPluginLibrary() + "/Calib/Gauss";
+    return AppPluginLibrary() + "/Calib/Gauss";
 }
 
 /**

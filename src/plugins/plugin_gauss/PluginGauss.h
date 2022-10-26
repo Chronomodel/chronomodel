@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #if USE_PLUGIN_GAUSS
 
-#include "../PluginAbstract.h"
+#include "PluginAbstract.h"
 
 #define DATE_GAUSS_AGE_STR "age"
 #define DATE_GAUSS_ERROR_STR "error"

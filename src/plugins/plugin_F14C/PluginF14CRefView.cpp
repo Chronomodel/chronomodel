@@ -226,13 +226,14 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
               * => the visible part of the measurement may be very reduced ! */
              const double step = (yMax - yMin) / 5000.;
              QMap<double, double> measureCurve;
-             double t;
 
-             for (int i = 0; i<5000; i++) {
-                 t = yMin + i*step;
-                 measureCurve[t] = exp(-0.5 * pow((t - age) / error, 2.));
+             measureCurve[yMin] = 0.;
+             for (int i = 1; i<5000; i++) {
+                 double y = yMin + i*step;
+                 measureCurve[y] = exp(-0.5 * pow((y - age) / error, 2.));
 
              }
+             measureCurve[yMax] = 0.;
              measureCurve = normalize_map(measureCurve);
              curveMeasure.mData = measureCurve;
              mGraph->addCurve(curveMeasure);
