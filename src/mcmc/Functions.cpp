@@ -99,6 +99,7 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
     type_data  x , y;
     type_data variance = 0;
     for (;citer != aFunction.cend(); ++citer) {
+
         x = citer.key();
         y = citer.value();
         y_sum +=  y;
@@ -107,15 +108,20 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
         mean +=  (y / y_sum) * (x - mean_prev);
         variance += y * (x - mean_prev) * (x - mean);
 
-        // find max
+        // Find max
         if (max <= y) {
             max = y;
+            // Tray detection
             if (prev_y == y) {
+                if (uniformXValues.isEmpty()) {
+                    uniformXValues.append(std::prev(citer).key()); // Adding prev_x
+                }
                 uniformXValues.append(x);
-                int middleIndex = floor(uniformXValues.size()/2);
-                mode = uniformXValues.at(middleIndex);
+               // Arbitrary the mode is in the middle of the tray
+                mode = (uniformXValues.first() + uniformXValues.last())/2.;
+
             } else {
-                uniformXValues.clear();
+                uniformXValues.clear(); // If necessary, end of tray
                 mode = x;
             }
         }
