@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -46,7 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 ChronoApp::ChronoApp(int& argc, char** argv):QApplication(argc, argv)
 {
 #ifdef DEBUG
-    std::cout<<"start ChronoApp";
+    std::cout<<"start ChronoApp"<<"\n";
 #endif
 }
 

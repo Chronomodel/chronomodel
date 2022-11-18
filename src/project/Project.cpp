@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "Project.h"
+#include "CalibrationCurve.h"
 #include "MainWindow.h"
 #include "Model.h"
 #include "ModelCurve.h"
@@ -50,18 +51,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "EventConstraint.h"
 #include "ConstraintDialog.h"
 
-#include "Phase.h"
+//#include "Phase.h"
 #include "PhaseConstraint.h"
 #include "PhaseDialog.h"
 
 #include "DateDialog.h"
 #include "Date.h"
-#include "../PluginAbstract.h"
-#include "../PluginFormAbstract.h"
+#include "PluginAbstract.h"
+#include "PluginFormAbstract.h"
 #include "TrashDialog.h"
-#include "ImportDataView.h"
+//#include "ImportDataView.h"
 
-#include "ModelUtilities.h"
+//#include "ModelUtilities.h"
 #include "QtUtilities.h"
 
 #include "MCMCLoopMain.h"
@@ -80,11 +81,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 Project::Project():
-    mName(tr("ChronoModel Project")),
-    mDesignIsChanged(true),
-    mStructureIsChanged(true),
-    mItemsIsMoved(true),
-    mNoResults(true)
+    mName (tr("ChronoModel Project")),
+    mLoop (nullptr),
+    mDesignIsChanged (true),
+    mStructureIsChanged (true),
+    mItemsIsMoved (true),
+    mNoResults (true)
 {
     mState = emptyState();
     mLastSavedState = mState;
@@ -111,6 +113,7 @@ Project::Project():
     mReasonChangeStructure << "Event constraint deleted" << "Event constraint created" << "Event(s) deleted";
     mReasonChangeStructure << "Event created" << "Bound created" << "Event method updated" ;
     mReasonChangeStructure << "Event(s) restored";
+    mReasonChangeStructure << "Event Node updated";
     mReasonChangeStructure << "Update selected event method";
 
     mReasonChangeStructure << "Phase created" << "Phase(s) deleted";
@@ -211,7 +214,7 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
         mStructureIsChanged = false;
         mDesignIsChanged = false;
         mItemsIsMoved = false;
-        qDebug()<<"Project::pushProjectState "<<reason<<notify;
+        qDebug()<<"[Project::pushProjectState] "<< reason << notify;
         if (mReasonChangeStructure.contains(reason))
             mStructureIsChanged = true;
 
@@ -360,6 +363,7 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
 
                // Check EVENTS STRUCTURE
                if ( eventsNew.at(i).toObject().value(STATE_EVENT_TYPE) != eventsOld.at(i).toObject().value(STATE_EVENT_TYPE) ||
+                    eventsNew.at(i).toObject().value(STATE_EVENT_POINT_TYPE) != eventsOld.at(i).toObject().value(STATE_EVENT_POINT_TYPE) ||
                    eventsNew.at(i).toObject().value(STATE_EVENT_SAMPLER) != eventsOld.at(i).toObject().value(STATE_EVENT_SAMPLER) ||
                    eventsNew.at(i).toObject().value(STATE_EVENT_PHASE_IDS) != eventsOld.at(i).toObject().value(STATE_EVENT_PHASE_IDS) ||
 
@@ -492,15 +496,14 @@ bool Project::event(QEvent* e)
 
 }
 
-void Project::updateState(const QJsonObject& state, const QString& reason, bool notify)
+void Project::updateState(const QJsonObject &state, const QString& reason, bool notify)
 {
     //qDebug() << " ---  Receiving : " << reason;
     mState = state; //std::move(state);
+    if (reason == NEW_PROJECT_REASON)
+       showStudyPeriodWarning();
+
     if (notify) {
-
-         if (reason == NEW_PROJECT_REASON)
-            showStudyPeriodWarning();
-
         emit projectStateChanged();
     }
 }
@@ -699,7 +702,7 @@ bool Project::load(const QString& path)
                                         in >> descript;
                                         CalibrationCurve cal;
                                         in >> cal;
-                                        mCalibCurves.insert(descript,cal);
+                                        mCalibCurves.insert(descript, cal);
                                     }
 
                                  }
@@ -2045,6 +2048,10 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
             event.remove("SInt");
 
         }
+        // since v3.2.1
+        if (event.find(STATE_EVENT_POINT_TYPE) == event.end()) {
+            event[STATE_EVENT_POINT_TYPE] = Event::PointType::ePoint;
+        }
 
         QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
         for (int j = 0; j < dates.size(); ++j) {
@@ -3211,7 +3218,7 @@ void Project::clearModel()
      emit noResult();
 }
 
-bool Project::isCurve() const{
+bool Project::isCurve() const {
     const QJsonObject CurveSettings = mState.value(STATE_CURVE).toObject();
     return (!CurveSettings.isEmpty() && CurveSettings.value(STATE_CURVE_PROCESS_TYPE).toInt() != CurveSettings::eProcessTypeNone);
 
@@ -3257,8 +3264,8 @@ void Project::runCurve()
     // ------------------------------------------------------------------------------------------
     clearModel();
     mModel = new ModelCurve();
-    mModel->setProject(this);
-    mModel->fromJson(mState);
+    mModel->setProject (this);
+    mModel->fromJson (mState);
     
     // ------------------------------------------------------------------------------------------
     //  Check if the model is valid
@@ -3266,8 +3273,8 @@ void Project::runCurve()
     bool modelOk = false;
     try {
         modelOk = mModel->isValid();
-    } catch(QString error) {
-        QMessageBox message(QMessageBox::Warning,
+    } catch (QString error) {
+        QMessageBox message (QMessageBox::Warning,
             tr("Your model is not valid"),
             error,
             QMessageBox::Ok,
@@ -3281,8 +3288,8 @@ void Project::runCurve()
     // ------------------------------------------------------------------------------------------
     //  Start MCMC for Curve
     // ------------------------------------------------------------------------------------------
-    MCMCLoopCurve loop((ModelCurve*)mModel, this);
-    MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint);
+    MCMCLoopCurve loop ((ModelCurve*)mModel, this);
+    MCMCProgressDialog dialog (&loop, qApp->activeWindow(), Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint);
 
     /* --------------------------------------------------------------------
       The dialog startMCMC() method starts the loop and the dialog.

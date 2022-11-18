@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
 
     //qInstallMessageHandler(customMessageHandler);
 #ifdef DEBUG
-    std::cout<<"in main filePath ="<<filePath.toStdString();
+   // std::cout<<"in main filePath ="<<filePath.toStdString()<<"\t";
 #endif
     MainController* c = new MainController(filePath);
     (void) c;

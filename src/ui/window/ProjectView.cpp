@@ -41,10 +41,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ProjectView.h"
 #include "ModelView.h"
 #include "ResultsView.h"
-//#include "Painting.h"
 #include "AppSettings.h"
 
-// Constructor / Destructor / Init
 ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
 {
 setMouseTracking(true);

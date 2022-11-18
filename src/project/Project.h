@@ -235,6 +235,7 @@ public:
     //QString mProjectFileName;
 
     Model* mModel;
+    MCMCLoop *mLoop; //public QThread
 
     QMap<QString, CalibrationCurve> mCalibCurves;
     QTimer* mAutoSaveTimer;

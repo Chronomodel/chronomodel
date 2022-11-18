@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -38,7 +38,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "PluginRefCurveSettingsView.h"
-#include "ColorPicker.h"
+//#include "ColorPicker.h"
+//#include "PluginAbstract.h"
 
 #include <QApplication>
 #include <QGridLayout>
@@ -46,11 +47,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QFileDialog>
 
 
+
 PluginRefCurveSettingsView::PluginRefCurveSettingsView(PluginAbstract* plugin, QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mPlugin(plugin)
 {
     mRefCurvesLab = new QLabel(tr("Available reference curves") + " :" , this);
     mRefCurvesLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mRefCurvesLab->setToolTip(PluginAbstract::AppPluginLibrary());
+
     mRefCurvesList = new QListWidget(this);
     mRefCurvesList->setSelectionBehavior(QAbstractItemView::SelectRows);
     mRefCurvesList->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -58,8 +62,8 @@ mPlugin(plugin)
 
     mAddRefCurveBut = new QPushButton(tr("Add"), this);
     mDeleteRefCurveBut = new QPushButton(tr("Delete"), this);
-    mOpenBut = new QPushButton(tr("Open"), this);
-    mOpenBut->setVisible(false);
+//    mOpenBut = new QPushButton(tr("Open"), this);
+ //   mOpenBut->setVisible(false);
 
     connect(mAddRefCurveBut, &QPushButton::clicked, this, &PluginRefCurveSettingsView::addRefCurve);
     connect(mDeleteRefCurveBut, &QPushButton::clicked, this, &PluginRefCurveSettingsView::deleteRefCurve);
@@ -71,7 +75,7 @@ mPlugin(plugin)
     layout->addWidget(mRefCurvesList, 1, 0, 1, 2);
     layout->addWidget(mAddRefCurveBut, 2, 0);
     layout->addWidget(mDeleteRefCurveBut, 2, 1);
-    //layout->addWidget(mOpenBut, 2, 2);
+
     setLayout(layout);
 
     // Store the list of existing files
@@ -93,6 +97,8 @@ PluginRefCurveSettingsView::~PluginRefCurveSettingsView(){
 
 void PluginRefCurveSettingsView::updateRefsList()
 {
+    mRefCurvesLab->setToolTip(mPlugin->getRefsPath());
+
     mRefCurvesList->clear();
     QMapIterator<QString, QString> iter(mFilesNew);
     while (iter.hasNext()) {
@@ -206,5 +212,5 @@ void PluginRefCurveSettingsView::updateSelection()
 {
     QList<QListWidgetItem*> selectedItems = mRefCurvesList->selectedItems();
     mDeleteRefCurveBut->setEnabled(selectedItems.size() > 0);
-    mOpenBut->setEnabled(selectedItems.size() > 0);
+   // mOpenBut->setEnabled(selectedItems.size() > 0);
 }

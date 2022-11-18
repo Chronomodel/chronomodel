@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #if USE_PLUGIN_GAUSS
 #include "PluginGauss.h"
 
-#include "StdUtilities.h"
+//#include "StdUtilities.h"
 #include "QtUtilities.h"
 #include "PluginGaussForm.h"
 #include "PluginGaussRefView.h"

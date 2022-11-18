@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #if USE_PLUGIN_GAUSS
 
-#include "../GraphViewRefAbstract.h"
+#include "GraphViewRefAbstract.h"
 
 class PluginGauss;
 class GraphView;
