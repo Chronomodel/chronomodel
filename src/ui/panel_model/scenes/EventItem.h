@@ -41,6 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define EVENTITEM_H
 
 #include "AbstractItem.h"
+#include "CurveSettings.h"
 
 class EventsScene;
 
@@ -69,6 +70,7 @@ public:
     void redrawEvent();
 
     bool withSelectedDate() const;
+    bool isCurveNode() const;
 
     void mousePressEvent(QGraphicsSceneMouseEvent* e);
 
@@ -90,8 +92,9 @@ protected:
     QSize mSize;
     QJsonObject mSettings;
     bool mWithSelectedPhase;
-    bool mShowAllThumbs;
+    bool mThumbVisible;
 
+    const qreal mNodeSkin;
 protected:
     qreal mPhasesHeight;
     qreal mCurveLineHeight;

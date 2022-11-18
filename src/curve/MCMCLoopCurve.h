@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -82,7 +82,11 @@ protected:
     
 private:
 
+    QList<Event *> mPointEvent;
+    QList<Event *> mNodeEvent;
+
 // pour comparaison
+    bool update_321();
     bool update_320();
     bool update_319();
     bool update_318();
@@ -172,7 +176,8 @@ private:
      inline t_prob h_VG_Event(const Event * e, double S02_Vg) const;
 
      t_prob h_S02_Vg(const QList<Event *> &events, double S02_Vg) const;
-
+     t_prob rate_h_S02_Vg_test(const QList<Event *> &events, double S02_Vg, double try_S02) const;
+     t_prob rate_h_S02_Vg(const QList<Event *> &pointEvents, double S02_Vg, double try_S02) const;
 
 
 
@@ -192,8 +197,8 @@ private:
 
      std::vector<double> createDiagWInv(const QList<Event *> &events);
 
-     double minimalThetaDifference(QList<Event *>& lEvents);
-     double minimalThetaReducedDifference(QList<Event *> &lEvents);
+     double minimalThetaDifference(QList<Event *> &events);
+     double minimalThetaReducedDifference(QList<Event *> &events);
 
      void spreadEventsTheta(QList<Event *> &events, double minStep = 1e-6); // not used
 

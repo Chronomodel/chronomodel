@@ -1794,11 +1794,19 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
             for (auto& c : mCurves) {
                 if (c.mVisible) {
                     if (c.isSingleCurve()) {
-                        list<<locale.toString(interpolateValueInQMap(x, c.mData), 'g', 15); // for example G
+                        if (c.mData.firstKey()<= x && x<= c.mData.lastKey())
+                            list<<locale.toString(interpolateValueInQMap(x, c.mData), 'g', 15); // for example G
+                        else
+                            list<< "NaN";
 
                     } else if (c.isShapeData()) {
-                        list<<locale.toString(interpolateValueInQMap(x, c.mShape.first), 'g', 15);
-                        list<<locale.toString(interpolateValueInQMap(x, c.mShape.second), 'g', 15); // for example env G
+                        if (c.mShape.first.firstKey()<= x && x<= c.mShape.first.lastKey()) {
+                            list<<locale.toString(interpolateValueInQMap(x, c.mShape.first), 'g', 15);
+                            list<<locale.toString(interpolateValueInQMap(x, c.mShape.second), 'g', 15); // for example env G
+                        } else {
+                            list<< "NaN";
+                            list<< "NaN";
+                        }
                     }
                 }
             }

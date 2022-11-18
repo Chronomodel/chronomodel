@@ -50,6 +50,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QJsonObject>
 #include <QColor>
 
+class Model;
 class Event;
 
 class Phase
@@ -62,8 +63,9 @@ public:
         eZOnly = 2
     };
 
-    Phase();
-    Phase(const Phase& phase);
+    Phase (const Model* model = nullptr);
+    Phase (const Phase& phase);
+    explicit Phase (const QJsonObject& json, const Model* model = nullptr);
     Phase& operator=(const Phase& phase);
     void copyFrom(const Phase& phase);
     virtual ~Phase();
@@ -80,6 +82,7 @@ public:
     std::pair<double, double> getFormatedTimeRange() const;
 
     void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
+    void generateActivity(size_t gridLength, double h, const double threshold);
 
     void updateAll(const double tminPeriod, const double tmaxPeriod);
     void memoAll();
@@ -90,6 +93,7 @@ public:
 
 public:
     int mId;
+    const Model *mModel;
 
     QString mName; //must be public, to be setting by dialogbox
     QColor mColor;
@@ -101,7 +105,7 @@ public:
     MetropolisVariable mAlpha;
     MetropolisVariable mBeta;
 
-    std::pair<double,double> mTimeRange;
+    std::pair<double, double> mTimeRange;
 
     MetropolisVariable mDuration;
     QString mDurationCredibility;
@@ -127,7 +131,7 @@ public:
     QMap<double, double> mRawActivitySup;
     QMap<double, double> mRawActivityUnifTheo;
 
-    std::unordered_map<std::string, TValueStack> mActivityValueStack;
+    std::unordered_map<std::string, TValueStack> mValueStack;
 
     MetropolisVariable mTau;
     TauType mTauType;

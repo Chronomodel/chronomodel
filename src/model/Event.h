@@ -47,6 +47,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QColor>
 #include <QJsonObject>
 
+class Model;
 class Phase;
 class EventConstraint;
 
@@ -59,8 +60,14 @@ public:
         eBound = 1     /* The Bound type */
     };
 
-    Event();
-    Event(const Event& event);
+    enum PointType {
+        ePoint = 0,   /*  The classic type of Event with VG!=0 */
+        eNode = 1     /* The Node type with VG=0*/
+    };
+
+    Event (const Model * model = nullptr);
+    Event (const Event& event);
+    explicit Event (const QJsonObject& json, const Model *model);
     Event& operator=(const Event& event);
     virtual void copyFrom(const Event& event);
     virtual ~Event();
@@ -74,6 +81,7 @@ public:
     
     static void setCurveCsvDataToJsonEvent(QJsonObject &event, const QMap<QString, double> &CurveData);
     static QString curveDescriptionFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType = CurveSettings::eProcessTypeNone, CurveSettings::VariableType variableType = CurveSettings::eVariableTypeOther);
+    static QList<double> curveParametersFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType = CurveSettings::eProcessTypeNone, CurveSettings::VariableType variableType = CurveSettings::eVariableTypeOther);
 
     /// Functions used within the MCMC process ( not in the init part!) :
     double getThetaMin(double defaultValue);
@@ -94,6 +102,7 @@ public:
 public:
     Type mType;
     int mId;
+    const Model *mModel;
 
     QString mName; //must be public, to be defined by dialogbox
     QColor mColor;
@@ -123,13 +132,14 @@ public:
     double mThetaNode;
     int mLevel; // Used to init mcmc
     
-    double mMixingLevel;
+    //double mMixingLevel; // obsolete, only used for date
     
     // --------------------------------------------------------
     //  Curve
     // --------------------------------------------------------
     
     // Values entered by the user
+    PointType mPointType;
     double mXIncDepth; //mYInc;
     double mYDec;
     double mZField; // mYInt;

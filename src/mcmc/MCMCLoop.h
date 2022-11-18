@@ -67,6 +67,7 @@ public:
     };
     
     MCMCLoop();
+    MCMCLoop (Project *project);
     virtual ~MCMCLoop();
 
     void setMCMCSettings(const MCMCSettings& settings);
@@ -95,7 +96,7 @@ protected:
 
 public:
     QString mAbortedReason;
-    Project* mProject;
+    Project *mProject;
 };
 
 #endif

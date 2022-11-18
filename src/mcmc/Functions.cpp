@@ -63,8 +63,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 /**
  * @brief Product a FunctionStat from a QMap
  * @todo Handle empty function case and null density case (pi = 0)
- * @todo use Welford's online algorithm
- * https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
  *
  *  Calculate the variance based on equations (15) and (16) on
  *  page 216 of "The Art of Computer Programming, Volume 2",
@@ -72,11 +70,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
  *  Publishing Company, 1973.
 */
 
-//https://fanf2.user.srcf.net/hermes/doc/antiforgery/stats.pdf
-FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
+FunctionStat analyseFunction(const QMap<type_data, type_data> & fun)
 {
     FunctionStat result;
-    if (aFunction.isEmpty()) {
+    if (fun.isEmpty()) {
         result.max = (type_data)0.;
         result.mode = (type_data)0.;
         result.mean = (type_data)0.;
@@ -91,14 +88,21 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
     type_data prev_y (0.);
     QList<type_data> uniformXValues;
 
-    QMap<type_data,type_data>::const_iterator citer = aFunction.cbegin();
+    QMap<type_data,type_data>::const_iterator citer = fun.cbegin();
 
     type_data y_sum = 0;
     type_data mean = 0;
     type_data mean_prev;
-    type_data  x , y;
+    type_data x;
+    type_data y = citer.value();
     type_data variance = 0;
-    for (;citer != aFunction.cend(); ++citer) {
+
+    // suppression des premiers zéro qui gene le calcul de moyenne
+    for (;citer != fun.cend() && y == 0; ++citer) {
+        y = citer.value();
+    }
+
+    for (;citer != fun.cend(); ++citer) {
 
         x = citer.key();
         y = citer.value();
@@ -134,9 +138,9 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &aFunction)
     result.std = sqrt(variance);
     result.mean = std::move(mean);
 
-    const double step = (aFunction.lastKey() - aFunction.firstKey()) / (double)(aFunction.size() - 1);
-    QVector<double> subRepart = calculRepartition(aFunction);
-    result.quartiles = quartilesForRepartition(subRepart, aFunction.firstKey(), step);
+    const double step = (fun.lastKey() - fun.firstKey()) / (double)(fun.size() - 1);
+    QVector<double> subRepart = calculRepartition(fun);
+    result.quartiles = quartilesForRepartition(subRepart, fun.firstKey(), step);
 
     return result;
 }

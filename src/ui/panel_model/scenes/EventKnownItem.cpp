@@ -38,30 +38,24 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "EventKnownItem.h"
-#include "Phase.h"
-#include "Event.h"
+
 #include "EventsScene.h"
 #include "Painting.h"
 #include "QtUtilities.h"
 #include "Painting.h"
 #include "GraphView.h"
 #include "Bound.h"
-#include "StdUtilities.h"
 #include "Project.h"
 
 #include <QtWidgets>
 
 
 EventKnownItem::EventKnownItem(EventsScene* eventsScene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):EventItem(eventsScene, event, settings, parent),
-    mThumbH(20),
-    mThumbVisible(true)
+    mThumbH (20)
 {
-    mScene = static_cast<AbstractScene*>(eventsScene);
-
-    mTitleHeight = 25;
     mEltsHeight = 60;
-
-    setEvent(event, settings);
+    mSize = QSize(230, 136);
+    EventKnownItem::setEvent(event, settings);
 }
 
 EventKnownItem::~EventKnownItem()
@@ -71,8 +65,6 @@ EventKnownItem::~EventKnownItem()
 
 void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
 {
-   // prepareGeometryChange();
-
     mData = event;
 
     // ----------------------------------------------
@@ -81,11 +73,7 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     setSelected(mData.value(STATE_IS_SELECTED).toBool());
     setPos(mData.value(STATE_ITEM_X).toDouble(),
            mData.value(STATE_ITEM_Y).toDouble());
-    // ----------------------------------------------
-    //  Check if item should be greyed out
-    // ----------------------------------------------
-    //updateGreyedOut();
-    mGreyedOut = false;
+
     // ----------------------------------------------
     //  Recreate thumb
     // ----------------------------------------------
@@ -95,10 +83,7 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
 
     Bound bound ;
     bound = Bound::fromJson(event);
-    // if Fixed Bound with fixed value in study period or uniform Bound with bound.mUniformStart<bound.mUniformEnd
-   /* if(  ( (bound.mKnownType==EventKnown::eFixed) && (tmin<=bound.mFixed) && (bound.mFixed<=tmax) )
-      || ( (bound.mKnownType==EventKnown::eUniform) &&
-           (bound.mUniformStart<bound.mUniformEnd)  && (bound.mUniformStart< tmax) && (bound.mUniformEnd>tmin)     )) */
+
     if ( (tmin<=bound.mFixed) && (bound.mFixed<=tmax) ) {
         bound.updateValues(tmin, tmax, step);
 
@@ -127,24 +112,10 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
 
         //---------------------
 
-        /*GraphCurve curve;
-        curve.mName = "Bound";
-        curve.mBrush = Painting::mainColorLight;
-        curve.mPen = QPen(Painting::mainColorLight, 2.);
-
-        curve.mType = GraphCurve::eHorizontalSections;
-        qreal tLower;
-        qreal tUpper;
-
-        tLower = bound.mFixed;
-        tUpper = tLower;
-        curve.mSections.push_back(qMakePair(tLower,tUpper));
-
-        */
         const GraphCurve curve = horizontalSection(qMakePair(bound.mFixed, bound.mFixed),"Bound", Painting::mainColorLight, QBrush(Painting::mainColorLight));
 
         graph->addCurve(curve);
-        //---------------------
+
 
         mThumb = QImage(graph->size(),QImage::Format_ARGB32_Premultiplied);
         graph->render(&mThumb);
@@ -162,22 +133,19 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
 
     const int nbLines = getNumberCurveLines(curveSettings);
     mCurveTextHeight = (nbLines>0 ? nbLines*mCurveLineHeight: 0);
+
+    const qreal h = mTitleHeight + mThumbH + mPhasesHeight + 2*AbstractItem::mEltsMargin + mCurveTextHeight + 55. + (isCurveNode()? 2*mNodeSkin + 4.: 0.);
+
+    mSize = QSize(230 + (isCurveNode()? 2*mNodeSkin + 4.: 0.), h);
+
 }
 
 QRectF EventKnownItem::boundingRect() const
 {
-    // the size is independant of the size name
-   // int nbLines = getNumberCurveLines();
-   // mCurveTextHeight = (nbLines>0 ? nbLines*mCurveLineHeight + AbstractItem::mEltsMargin: 0);
-    qreal h = mTitleHeight + mThumbH + mPhasesHeight + 2*AbstractItem::mEltsMargin + mCurveTextHeight;
-    h += 55.;
-
-    const qreal w = 230;
-
-    return QRectF(-w/2, -h/2, w, h);
+    return QRectF(-mSize.width()/2 - 10, -mSize.height()/2 - 10, mSize.width() + 20, mSize.height() + 20);
 }
 
-void EventKnownItem::setDatesVisible(bool visible)
+void EventKnownItem::setDatesVisible(const bool visible)
 {
     mThumbVisible = visible;
 }
@@ -189,7 +157,8 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
 
     painter->setRenderHint(QPainter::Antialiasing);
 
-    QRectF rect = boundingRect();
+    const QRectF rectTotal = QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
+    const QRectF rect = isCurveNode() ? rectTotal.adjusted(mNodeSkin + 2., mNodeSkin+2., -mNodeSkin-2., -mNodeSkin-2.) : rectTotal;
 
     const QColor eventColor = QColor(mData.value(STATE_COLOR_RED).toInt(),
                                mData.value(STATE_COLOR_GREEN).toInt(),
@@ -201,19 +170,15 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
         painter->drawEllipse(rect.adjusted(1, 1, -1, -1));
     }
 
-    // w is the same value fixed in DateItem::boundingRect()
     const qreal w = AbstractItem::mItemWidth - 2*(AbstractItem::mBorderWidth + AbstractItem::mEltsMargin);
 
     const qreal side = (rect.width() - w )/2.;
-    const qreal top = 10;//25.;
+    const qreal top = 10;
 
-    QRectF nameRect(rect.x() + side, rect.y() + top, rect.width() - 2*side, mTitleHeight);
-    QRectF thumbRect(rect.x() + side, rect.y() + top + AbstractItem::mEltsMargin + mTitleHeight, w, mThumbH);
+    const QRectF nameRect(rect.x() + side, rect.y() + top, rect.width() - 2*side, mTitleHeight);
+    const QRectF thumbRect(rect.x() + side, rect.y() + top + AbstractItem::mEltsMargin + mTitleHeight, w, mThumbH);
 
-    if (mGreyedOut) //setting with setGreyedOut() just above
-        painter->setOpacity(0.1);
-    else
-        painter->setOpacity(1.);
+    painter->setOpacity(mGreyedOut ? 0.35 : 1.);
 
     // The elliptic item box
     painter->setPen(Qt::NoPen);
@@ -251,10 +216,11 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     // Phases
     QJsonObject state = mScene->getProject()->mState;
     CurveSettings curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
-    //int nbLines = getNumberCurveLines(curveSettings);
 
     QRectF curveRect(rect.x() + side, rect.y() + top + 3*mEltsMargin + mTitleHeight + mThumbH, rect.width() - 2*side,  mCurveTextHeight);
-    paintBoxCurveParameter(painter, curveRect, curveSettings);
+
+    if (mThumbVisible)
+        paintBoxCurveParameter(painter, curveRect, curveSettings);
 
     // Phases
     font.setPixelSize(12);
@@ -266,6 +232,11 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
 
     // Border
     painter->setBrush(Qt::NoBrush);
+    if (isCurveNode() && curveRect.height()>0) {
+        painter->setPen(QPen(Painting::mainColorDark, 7.));
+        painter->drawEllipse(rectTotal);
+    }
+
     if (mMergeable) {
         painter->setPen(QPen(Qt::white, 5.));
         painter->drawEllipse(rect.adjusted(1, 1, -1, -1));

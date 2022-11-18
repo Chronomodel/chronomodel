@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -40,13 +40,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef EVENTPROPERTIESVIEW_H
 #define EVENTPROPERTIESVIEW_H
 
+#include <QCheckBox>
 #include <QWidget>
 #include <QJsonObject>
 
-#include "CurveSettings.h"
+//#include "CurveSettings.h"
 
-//class Event;
-//class TDate;
 class Label;
 class LineEdit;
 
@@ -101,9 +100,11 @@ private slots:
     void updateIndex(int index);
 
     // Curve
+    void updateCurveNode(bool isNode);
     void updateEventXInc();
     void updateEventYDec();
     void updateEventZF();
+
 
     void updateEventSXInc();
     void updateEventSYDec();
@@ -172,6 +173,8 @@ private:
     int mComboBoxHeight;
 
     CurveWidget* mCurveWidget;
+
+    QCheckBox* mCurveNodeCB;
 
     QLabel* mX_IncLab;
     QLineEdit* mX_IncEdit;

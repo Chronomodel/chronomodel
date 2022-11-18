@@ -868,7 +868,27 @@ void MainWindow::rebuildExportCurve()
     ModelCurve* curveModel = dynamic_cast<ModelCurve*>(mProject->mModel);
     switch (curveModel->mCurveSettings.mProcessType) {
     case CurveSettings::eProcessTypeUnivarie:
-        compoList.append("X");
+        switch (curveModel->mCurveSettings.mVariableType) {
+        case CurveSettings::eVariableTypeOther:
+            compoList.append("Measure");
+            break;
+        case CurveSettings::eVariableTypeInclination:
+            compoList.append("Inc");
+            break;
+        case CurveSettings::eVariableTypeDeclination:
+            compoList.append("Dec");
+            break;
+        case CurveSettings::eVariableTypeField:
+            compoList.append("Depth");
+            break;
+        case CurveSettings::eVariableTypeDepth:
+            compoList.append("Depth");
+            break;
+        default:
+            compoList.append("X");
+            break;
+        }
+
         break;
     case CurveSettings::eProcessTypeSpherical:
         compoList.append({"Inc", "Dec"});
@@ -1240,7 +1260,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
 
     }
         */
-std::cout<<path.toStdString();
+std::cout<<"[MainWindow::readSettings] path: " <<path.toStdString();
 
     if (path != "") {
        /* const QString dir = AppSettings::mLastDir;

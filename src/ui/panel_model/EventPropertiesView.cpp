@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2021
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -38,7 +38,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "EventPropertiesView.h"
-#include "Label.h"
+
+//#include "Label.h"
 #include "LineEdit.h"
 #include "ColorPicker.h"
 #include "Event.h"
@@ -49,7 +50,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Painting.h"
 #include "MainWindow.h"
 #include "Project.h"
-#include "../PluginAbstract.h"
+#include "PluginAbstract.h"
 #include "PluginManager.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
@@ -57,6 +58,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginOptionsDialog.h"
 #include "CurveSettings.h"
 #include "CurveWidget.h"
+
 #include <QtWidgets>
 
 
@@ -99,6 +101,10 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     // field curve parameter
 
     mCurveWidget = new CurveWidget(mTopView);
+
+    mCurveNodeCB = new QCheckBox(tr("Node"), mCurveWidget);
+    mCurveNodeCB->setFixedWidth(15);
+    connect(mCurveNodeCB, &QCheckBox::toggled, this, &EventPropertiesView::updateCurveNode);
     
     mX_IncLab = new QLabel(tr("Inclination"), mCurveWidget);
     mX_IncLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -111,7 +117,6 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mY_DecEdit = new LineEdit(mCurveWidget);
     mZ_IntEdit = new LineEdit(mCurveWidget);
 
-    
     connect(mX_IncEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventXInc);
     connect(mY_DecEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYDec);
     connect(mZ_IntEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventZF);
@@ -289,7 +294,7 @@ void EventPropertiesView::updateIndex(int index)
 
 void EventPropertiesView::updateEvent()
 {
-    qDebug()<<"EventPropertiesView::updateEvent";
+    qDebug()<<"[EventPropertiesView::updateEvent]";
 
     if (mEvent.isEmpty()) {
         mTopView->setVisible(false);
@@ -338,7 +343,10 @@ void EventPropertiesView::updateEvent()
             showZEdit = settings.showZ();
             showYErr = settings.showYErr();
         }
-        
+        Event::PointType tyPts = Event::PointType (mEvent.value(STATE_EVENT_POINT_TYPE).toInt());
+        mCurveNodeCB->setVisible(mCurveEnabled);
+        mCurveNodeCB->setChecked(tyPts == Event::eNode);
+
         mX_IncLab->setVisible(showXEdit);
         mX_IncEdit->setVisible(showXEdit);
 
@@ -489,18 +497,18 @@ void EventPropertiesView::updateKnownFixed(const QString& text)
 }
 
 // Curve
-
-/*
-void EventPropertiesView::setCurveSettings(const CurveSettings::ProcessType processType)
+void EventPropertiesView::updateCurveNode(bool isNode)
 {
-    mCurveEnabled = (processType != CurveSettings::eProcessTypeNone);
-    //mCurveProcessType = processType;
-    updateEvent();
+    QJsonObject event = mEvent;
+
+    const QJsonObject state = MainWindow::getInstance()->getProject()->mState;
+    const CurveSettings settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+
+    event[STATE_EVENT_POINT_TYPE] = isNode ? Event::PointType::eNode : Event::PointType::ePoint;
+
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Node updated"));
 }
-*/
 
-
-// Curve
 void EventPropertiesView::updateEventXInc()
 {
     QJsonObject event = mEvent;
@@ -839,6 +847,8 @@ void EventPropertiesView::updateLayout()
     int CurveHeight = 0;
 
     if (withCurve) {
+        auto curveWidgetWidth = mCurveWidget->width()<0 ? width() - 2*margin : mCurveWidget->width();
+
         int lines = 1;
         if (curveSettings.showYErr()) {
             ++lines;
@@ -852,20 +862,23 @@ void EventPropertiesView::updateLayout()
         int dx = margin;
         int dy = margin;
         const int labW = 80;
-        const  int YshiftLabel = (mLineEditHeight - mX_IncLab->height())/2;
+        const int YshiftLabel = (mLineEditHeight - mX_IncLab->height())/2;
+        mCurveNodeCB->setFixedWidth(labW);
+        const int curveNodeCBWidth = mCurveNodeCB->width();
 
         int editW;
         if ( curveSettings.showX()) {
-            if (curveSettings.showY() && !curveSettings.showYErr()) {
-                editW = (mCurveWidget->width() - 9*margin - 3*labW) / 3;
+            if (curveSettings.showY() && !curveSettings.showYErr() ) {
+                editW = (curveWidgetWidth - 10*margin - 3*labW - curveNodeCBWidth) / 3;
 
             } else {
-                editW = (mCurveWidget->width() - 5*margin - 2*labW) / 2;
+                editW = (curveWidgetWidth - 6*margin - 2*labW - curveNodeCBWidth) / 2;
             }
 
             /* if (curveSettings.showDeclination()) {
                 editW = (width() - 9*margin - 3*labW) / 3;
             }*/
+
 
             mX_IncLab->setGeometry(dx, dy - YshiftLabel, labW, mLineEditHeight);
             mX_IncEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
@@ -874,15 +887,17 @@ void EventPropertiesView::updateLayout()
 
             if (curveSettings.showY() && !curveSettings.showYErr())  {
                 mY_DecLab->setGeometry(dx += editW + margin, dy - YshiftLabel, labW, mLineEditHeight);
-                mY_DecEdit->setGeometry(dx + labW + margin, dy, editW, mLineEditHeight);
-            }
+                mY_DecEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
+            } 
+
+            mCurveNodeCB->setGeometry(dx += editW + margin, dy, mCurveNodeCB->width(), mLineEditHeight);
 
             dy += mLineEditHeight + margin;
         }
 
         if (curveSettings.showYErr()) {
             dx = margin;
-            editW = (mCurveWidget->width() - 5*margin - 2*labW) / 2;
+            editW = (mCurveWidget->width() - 6*margin - 2*labW - curveNodeCBWidth) / 2;
 
             mY_DecLab->setGeometry(dx, dy - YshiftLabel, labW, mLineEditHeight);
             mY_DecEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
@@ -894,7 +909,7 @@ void EventPropertiesView::updateLayout()
 
         if (curveSettings.showZ()) {
             dx = margin;
-            editW = (mCurveWidget->width() - 5*margin - 2*labW) / 2;
+            editW = (curveWidgetWidth - 6*margin - 2*labW - curveNodeCBWidth) / 2;
 
             mZ_IntLab->setGeometry(dx, dy - YshiftLabel, labW, mLineEditHeight);
             mZ_IntEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);

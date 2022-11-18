@@ -485,9 +485,6 @@ void MultiCalibrationView::updateGraphList()
                 QString eventName (ev.value(STATE_NAME).toString());
 
 
-
-
-
                 listAxisVisible.append(true);
                 if (&ev != preEvent) {
                     if (curveModel) {
@@ -956,7 +953,6 @@ void MultiCalibrationView::copyText()
 void MultiCalibrationView::exportResults()
 {
         const QString csvSep = AppSettings::mCSVCellSeparator;
-        //const int precision = AppSettings::mPrecision;
         QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
 
         csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
@@ -968,19 +964,15 @@ void MultiCalibrationView::exportResults()
 
         if (!filePath.isEmpty()) {
 
+            const QJsonObject state = mProject->state();
+            const bool isCurve = mProject->isCurve();
+            const CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
+            const CurveSettings::VariableType variableType = static_cast<CurveSettings::VariableType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_VARIABLE_TYPE).toInt());
 
-            // copy tabs ------------------------------------------
-            //const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
-            //const QString projectName = tr("Project filename : %1").arg(MainWindow::getInstance()->getNameProject()) + "<br>";
-
-
-        // _____________
-            // update Results from selected Event in JSON
-            QJsonObject state = mProject->state();
             const QJsonArray events = state.value(STATE_EVENTS).toArray();
             QVector<QJsonObject> selectedEvents;
 
-            for (auto&& ev : events) {
+            for (auto &&ev : events) {
                QJsonObject jsonEv = ev.toObject();
                 if (jsonEv.value(STATE_IS_SELECTED).toBool())
                     selectedEvents.append(jsonEv);
@@ -991,41 +983,114 @@ void MultiCalibrationView::exportResults()
 
             QList<QStringList> stats ;
             QStringList header;
-            header << "Event"<<"Data type" << "Data Name" <<"Data Description"<<"MAP"<< "Mean"<<"Std";
-            header <<"Q1" <<"Q2" << "Q3"<<"HPD total %";//<<"HPD begin 1"<<"HPD end 1"<<"HPD % 1"<<"HPD begin 2"<<"HPD end 2"<<"HPD % 2";
-            //stats.append(header);
+            header << "Event";
+            if (isCurve) {
+                switch (processType) {
+                case CurveSettings::eProcessTypeVector:
+                    header << "Inclination";
+                    header << "alpha95";
+                    header << "Declination";
+                    header << "Field";
+                    header << "F Error";
+                    break;
+                case CurveSettings::eProcessType2D:
+                    header << "X";
+                    header << "X Error";
+                    header << "Y";
+                    header << "Y Error";
+                    break;
+                case CurveSettings::eProcessType3D:
+                    header << "X";
+                    header << "X Error";
+                    header << "Y";
+                    header << "Y Error";
+                    header << "Z";
+                    header << "Z Error";break;
+                case CurveSettings::eProcessTypeSpherical:
+                    header << "Inclination";
+                    header << "alpha95";
+                    header << "Declination";
+                    break;
+                default:
+                    switch (variableType) {
+                    case CurveSettings::eVariableTypeDepth:
+                        header << "Depth";
+                        header << "Depth Error";
+                        break;
+                    case CurveSettings::eVariableTypeField:
+                        header << "Field";
+                        header << "Field Error";
+                        break;
+                    case CurveSettings::eVariableTypeInclination:
+                        header << "Inclination";
+                        header << "alpha95";break;
+                    case CurveSettings::eVariableTypeDeclination:
+                        header << "Declination";
+                        header << "alpha95";
+                        header << "Inclination";
+
+                        break;
+                    case CurveSettings::eVariableTypeOther:
+                        header << "Measure";
+                        header << "Error";
+                        break;
+                    default:
+                        break;
+                    }
+
+                    break;
+                }
+            }
+            header <<"Data type" << "Data Name" << "Data Description" << "MAP" << "Mean" << "Std";
+            header <<"Q1" <<"Q2" << "Q3"<<"HPD total %";
+
             int maxHpd = 2;
-            for (auto& ev : selectedEvents) {
+            QList<double> curveParam;
+            for (auto &&ev : selectedEvents) {
 
                 // Insert the Event's Name only if different to the previous Event's name
 
                 const QString eventName (ev.value(STATE_NAME).toString());
+                QStringList curveParamList;
+                if (isCurve) {
+                    curveParam = Event::curveParametersFromJsonEvent(ev, processType, variableType);
+                    for (auto param : curveParam) {
+                        curveParamList.append(locale().toString(param));
+                    }
+                }
 
 
                 if ( Event::Type (ev.value(STATE_EVENT_TYPE).toInt()) == Event::eBound) {
                     const double bound = ev.value(STATE_EVENT_KNOWN_FIXED).toDouble();
                     QStringList statLine;
-                    statLine<<eventName<<"Bound"<< locale().toString(bound) + " BC/AD";
+                    statLine<<eventName;
+                    if (isCurve) {
+                        statLine.append(curveParamList);
+                    }
+                    statLine<<"Bound"<< locale().toString(bound) + " BC/AD";
                     stats.append(statLine);
 
                 } else {
                     const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
 
-                     for (auto date : dates) {
+                     for (const auto &date : dates) {
                         const QJsonObject jdate = date.toObject();
 
                         Date d (jdate);
                         QStringList statLine;
-                        statLine<<eventName<<d.mPlugin->getName()<< d.mName <<d.getDesc();
+                        statLine << eventName;
+                        if (isCurve) {
+                            statLine.append(curveParamList);
+                        }
+                        statLine << d.mPlugin->getName() << d.mName << d.getDesc();
 
-                        const bool isUnif (d.mPlugin->getName() == "Unif");
+                        const bool isUnif = false;// (d.mPlugin->getName() == "Unif");
                         if (d.mIsValid && !d.mCalibration->mCurve.isEmpty() && !isUnif) {
 
-                            d.autoSetTiSampler(true); // needed if calibration is not done
-
+                           // d.autoSetTiSampler(true); // needed if calibration is not done
                             QMap<double, double> calibMap = d.getFormatedCalibMap();
-                            // hpd is calculate only on the study Period
 
+                            // hpd is calculate only on the study Period
                             QMap<double, double>  subData = calibMap;
                             subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
@@ -1042,10 +1107,10 @@ void MultiCalibrationView::exportResults()
 
                                 const double realThresh = map_area(hpd) / map_area(subData);
 
-                                QString hpdStr = getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, true);
+                                QString hpdStr = getHPDText(hpd, realThresh * 100., DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, true);
                                 int nh = int(hpdStr.count(AppSettings::mCSVCellSeparator));
-                                maxHpd = std::max(maxHpd, nh);//int(hpdStr.count(AppSettings::mCSVCellSeparator)));
-                                statLine<< csvLocal.toString(100. *realThresh, 'f',1) << hpdStr;
+                                maxHpd = std::max(maxHpd, nh);
+                                statLine<< csvLocal.toString(100. *realThresh, 'f', 1) << hpdStr;
 
                             }
 

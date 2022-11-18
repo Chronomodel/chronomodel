@@ -40,11 +40,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef CURVESETTINGS_H
 #define CURVESETTINGS_H
 
-#include "StateKeys.h"
+//#include "StateKeys.h"
 #include <QJsonObject>
 #include <QString>
 
-//#define Curve_ENABLED_DEFAULT false
 #define CURVE_PROCESS_TYPE_DEFAULT CurveSettings::eProcessTypeNone
 #define CURVE_VARIABLE_TYPE_DEFAULT CurveSettings::eVariableTypeInclination
 #define CURVE_USE_ERR_MESURE_DEFAULT true

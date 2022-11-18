@@ -498,13 +498,46 @@ QString ModelUtilities::activityResultsText(const Phase* p, const bool forCSV)
 {
     const QString nl = "\r";
 
+    Q_ASSERT(p);
     QString text = QObject::tr("Phase : %1").arg(p->mName) + nl ;
-    text += QObject::tr("Number of Events : %1").arg(p->mEvents.size()) + nl;
+    text += QObject::tr("Number of Events : %1").arg(p->mEvents.size()) + nl ;
 
-    text += QObject::tr("Duration (posterior distrib.)") + nl;
-    text += p->mDuration.resultsString(nl, QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr , forCSV);
+    text += QObject::tr("Activity") + nl ;
+
+    double t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("t_min").mValue);
+    double t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("t_max").mValue);
+
+    if (t1>t2)
+        std::swap(t1, t2);
+    text += QObject::tr("Trace Stat.")  + nl ;
+    text += "Theta min = " + stringForLocal(t1) + " " + DateUtils::getAppSettingsFormatStr() + nl ;
+    text += "Theta max = " + stringForLocal(t2) + " " + DateUtils::getAppSettingsFormatStr() + nl ;
+
+    t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("min95").mValue);
+    t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("max95").mValue);
+    if (t1>t2)
+        std::swap(t1, t2);
+    double threshold = p->mValueStack.at("Activity threshold").mValue;
+    text += "Phase Time Range" + QString(" ( %1 %) [").arg(threshold) + stringForLocal(t1) + " ; " + stringForLocal(t2) + "] " + DateUtils::getAppSettingsFormatStr() + nl ;
+
+    text += "<hr>";
+    text += line(textBold(textOrange(QObject::tr("Unif. Predict."))));
+    t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("a_Unif").mValue);
+    t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("b_Unif").mValue);
+
+    if (t1>t2)
+        std::swap(t1, t2);
+    text += "Unif. Theta min = " + stringForLocal(t1) + " " + DateUtils::getAppSettingsFormatStr() + nl ;
+    text += "Unif. Theta max = " + stringForLocal(t2) + " " + DateUtils::getAppSettingsFormatStr() + nl ;
+
+    QString textValue = stringForLocal(p->mValueStack.at("R_etendue").mValue);
+    text += "Unif. Span = " + textValue  + nl ;
+
+    textValue = stringForLocal(p->mValueStack.at("Significance Score").mValue, true);
+    text += "Significance Score"  + QString(" ( %1 %) =").arg(threshold) + textValue + nl ;
 
     return text;
+
 }
 
 QString ModelUtilities::constraintResultsText(const PhaseConstraint* p, const bool forCSV)
@@ -788,7 +821,6 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
                  log += line(textGreen( QObject::tr("Any Measurement")));
                 break;
             }
-
             break;
 
         case CurveSettings::eProcessType2D :
@@ -849,16 +881,14 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
 QString ModelUtilities::getMCMCSettingsLog(const Model* model)
 {
     QString log;
-   // log += "<hr>";
-    log += QObject::tr("Number of chain %1").arg(QString::number(model->mMCMCSettings.mNumChains)) +"<br>";
+
+    log += QObject::tr("Number of chain %1").arg(QString::number(model->mMCMCSettings.mNumChains)) + "<br>";
     log += QObject::tr("Number of burn-in iterations : %1").arg(QString::number(model->mMCMCSettings.mIterPerBurn)) + "<br>";
     log += QObject::tr("Number of Max batches : %1").arg(QString::number(model->mMCMCSettings.mMaxBatches)) + "<br>";
     log += QObject::tr("Number of iterations per batches : %1").arg(QString::number(model->mMCMCSettings.mIterPerBatch)) + "<br>";
     log += QObject::tr("Number of running iterations : %1").arg(QString::number(model->mMCMCSettings.mIterPerAquisition)) + "<br>";
     log += QObject::tr("Thinning Interval : %1").arg(QString::number(model->mMCMCSettings.mThinningInterval)) + "<br>";
     log += QObject::tr("Mixing level : %1").arg(QString::number(model->mMCMCSettings.mMixingLevel)) + "<br>";
-
-
 
     return log;
 }
@@ -984,13 +1014,13 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
         HTMLText += textBold(textGreen(QObject::tr("Curve"))) ;
         HTMLText += "<hr>";
         HTMLText +=  line(textGreen(QObject::tr("Log10 Smoothing : %1").arg(QLocale().toString(log10(model->mLambdaSpline.mX), 'G', 2))));
-        if (model->mLambdaSpline.mLastAccepts.size()>2  && model->mLambdaSpline.mSamplerProposal!= MHVariable::eFixe) {
+        if (model->mLambdaSpline.mLastAccepts.size() > 2  && model->mLambdaSpline.mSamplerProposal!= MHVariable::eFixe) {
             HTMLText += line(textGreen(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(model->mLambdaSpline.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(model->mLambdaSpline.mSamplerProposal))));
             HTMLText +=  line(textGreen(QObject::tr(" - Sigma_MH on Smoothing : %1").arg(stringForLocal(model->mLambdaSpline.mSigmaMH))));
         }
         HTMLText += "<hr>";
         HTMLText +=  line(textGreen(QObject::tr("sqrt S02 Vg : %1").arg(QLocale().toString(log10(model->mS02Vg.mX), 'G', 2))));
-        if (model->mS02Vg.mLastAccepts.size()>2) {
+        if (model->mS02Vg.mLastAccepts.size() > 2) {
             HTMLText += line(textGreen(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(model->mS02Vg.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(model->mS02Vg.mSamplerProposal))));
             HTMLText +=  line(textGreen(QObject::tr(" - Sigma_MH on S02 Vg : %1").arg(stringForLocal(model->mS02Vg.mSigmaMH))));
         }
@@ -1022,7 +1052,7 @@ QString ModelUtilities::modelStateDescriptionText(const ModelCurve *model, QStri
             text += QObject::tr("Event ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), event->mName);
             text += QObject::tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(event->mTheta.mX), DateUtils::getAppSettingsFormatStr());
 
-            if (event->mTheta.mLastAccepts.size()>2 && event->mTheta.mSamplerProposal!= MHVariable::eFixe) {
+            if (event->mTheta.mLastAccepts.size() > 2 && event->mTheta.mSamplerProposal!= MHVariable::eFixe) {
                 text += QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(event->mTheta.getCurrentAcceptRate()*100.), MHVariable::getSamplerProposalText(event->mTheta.mSamplerProposal));
                 text += QObject::tr(" - Sigma_MH on Theta : %1").arg(stringForLocal(event->mTheta.mSigmaMH));
             }
@@ -1032,7 +1062,7 @@ QString ModelUtilities::modelStateDescriptionText(const ModelCurve *model, QStri
 
         if (curveModel) {
             text += QObject::tr(" - Variance on G : %1").arg(stringForLocal(event->mVG.mX));
-            if (event->mVG.mLastAccepts.size()>2  && event->mVG.mSamplerProposal!= MHVariable::eFixe) {
+            if (event->mVG.mLastAccepts.size() > 2  && event->mVG.mSamplerProposal!= MHVariable::eFixe) {
                 text += QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(event->mVG.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(event->mVG.mSamplerProposal));
             }
             text += QObject::tr(" - Sigma_MH on Variance on G : %1").arg(stringForLocal(event->mVG.mSigmaMH));
@@ -1068,7 +1098,7 @@ QString ModelUtilities::modelStateDescriptionText(const ModelCurve *model, QStri
             text += QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j), QString::number(event->mDates.size()), date.mName);
             text += QObject::tr(" - ti : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(date.mTi.mX), DateUtils::getAppSettingsFormatStr());
             if (date.mTi.mSamplerProposal == MHVariable::eMHSymGaussAdapt) {
-                if (date.mTi.mLastAccepts.size()>2) {
+                if (date.mTi.mLastAccepts.size() > 2) {
                     text += QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(date.mTi.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(date.mTi.mSamplerProposal));
                 }
                 text += QObject::tr(" - Sigma_MH on ti : %1").arg(stringForLocal(date.mTi.mSigmaMH));
@@ -1076,7 +1106,7 @@ QString ModelUtilities::modelStateDescriptionText(const ModelCurve *model, QStri
             }
 
             text += QObject::tr(" - Sigma_i : %1").arg(stringForLocal(date.mSigmaTi.mX));
-            if (date.mSigmaTi.mLastAccepts.size()>2) {
+            if (date.mSigmaTi.mLastAccepts.size() > 2) {
                 text += QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(date.mSigmaTi.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(date.mSigmaTi.mSamplerProposal));
             }
             text += QObject::tr(" - Sigma_MH on Sigma_i : %1").arg(stringForLocal(date.mSigmaTi.mSigmaMH));
@@ -1282,15 +1312,14 @@ QString ModelUtilities::tempoResultsHTML(const Phase* p)
 
 QString ModelUtilities::activityResultsHTML(const Phase* p)
 {
-    Q_ASSERT(p);
     QString text = line(textBold(textOrange(QObject::tr("Phase : %1").arg(p->mName))));
     text += line(textOrange(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
 
     text += "<br>";
     text += line(textBold(textOrange(QObject::tr("Activity"))));
 
-    double t1 = DateUtils::convertToAppSettingsFormat(p->mActivityValueStack.at("t_min").mValue);
-    double t2 = DateUtils::convertToAppSettingsFormat(p->mActivityValueStack.at("t_max").mValue);
+    double t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("t_min").mValue);
+    double t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("t_max").mValue);
 
     if (t1>t2)
         std::swap(t1, t2);
@@ -1298,28 +1327,29 @@ QString ModelUtilities::activityResultsHTML(const Phase* p)
     text += line(textOrange("Theta min = " + stringForLocal(t1) + " " + DateUtils::getAppSettingsFormatStr()));
     text += line(textOrange("Theta max = " + stringForLocal(t2) + " " + DateUtils::getAppSettingsFormatStr()));
 
-    t1 = DateUtils::convertToAppSettingsFormat(p->mActivityValueStack.at("min95").mValue);
-    t2 = DateUtils::convertToAppSettingsFormat(p->mActivityValueStack.at("max95").mValue);
+    t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("min95").mValue);
+    t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("max95").mValue);
     if (t1>t2)
         std::swap(t1, t2);
-    double threshold = p->mActivityValueStack.at("threshold").mValue;
-    text += line(textOrange("Activity Interval" + QString(" ( %1 %) [").arg(threshold) + stringForLocal(t1) + " ; " + stringForLocal(t2) + "] " + DateUtils::getAppSettingsFormatStr()) );
+    double threshold = p->mValueStack.at("Activity threshold").mValue;
+    text += line(textOrange("Phase Time Range" + QString(" ( %1 %) [").arg(threshold) + stringForLocal(t1) + " ; " + stringForLocal(t2) + "] " + DateUtils::getAppSettingsFormatStr()) );
 
     text += "<hr>";
     text += line(textBold(textOrange(QObject::tr("Unif. Predict."))));
-    t1 = DateUtils::convertToAppSettingsFormat(p->mActivityValueStack.at("a_Unif").mValue);
-    t2 = DateUtils::convertToAppSettingsFormat(p->mActivityValueStack.at("b_Unif").mValue);
+    t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("a_Unif").mValue);
+    t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("b_Unif").mValue);
 
     if (t1>t2)
         std::swap(t1, t2);
     text += line(textOrange("Unif. Theta min = " + stringForLocal(t1) + " " + DateUtils::getAppSettingsFormatStr()));
     text += line(textOrange("Unif. Theta max = " + stringForLocal(t2) + " " + DateUtils::getAppSettingsFormatStr()));
 
-    QString textValue = stringForLocal(p->mActivityValueStack.at("R_etendue").mValue);
+    QString textValue = stringForLocal(p->mValueStack.at("R_etendue").mValue);
     text += line(textOrange("Unif. Span = " + textValue ));
 
-    textValue = stringForLocal(p->mActivityValueStack.at("Significance Score").mValue);
-    text += line(textOrange("Significance Score = " + textValue));
+    text += line("");
+    textValue = stringForLocal(p->mValueStack.at("Significance Score").mValue, true);
+    text += line(textOrange("Significance Score"  + QString(" ( %1 %) =").arg(threshold) + textValue));
 
     return text;
 }
@@ -1354,7 +1384,7 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
         text += line(textGreen(result));
     }
 
-    if (p->mGapRange != QPair<double,double>()) {
+    if (p->mGapRange != QPair<double, double>()) {
         QString result;
         if (std::isinf(p->getFormatedGapRange().first) || std::isinf(p->getFormatedGapRange().second))
            result = textGreen(QObject::tr("No Gap") );
@@ -1390,7 +1420,7 @@ QString ModelUtilities::curveResultsHTML(const ModelCurve* model)
         float rate;
 
         int i = 0;
-        for (auto& ch : model->mChains) {
+        for (const auto &ch : model->mChains) {
             const unsigned positvIter= ch.mRealyAccepted;
             totalPositvIter += positvIter;
             const unsigned requiredCurveChain = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
@@ -1432,7 +1462,7 @@ QString ModelUtilities::S02ResultsHTML(const ModelCurve* model)
  * @return -1 if there is solution under Study Period; 0 if all solution is inside Study Period;
  *  +1 if there is solution over Study Period; +2 if there is both solution under and over the Study Period
  */
-short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double>& hpd, const Model* model)
+short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const Model* model)
 {
     QMap<double, double>::const_iterator iter(hpd.constBegin());
     short answer = 0;
@@ -1459,10 +1489,10 @@ short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double>& hpd, cons
     return answer;
 }
 
-void sampleInCumulatedRepartition( Event* event, const ProjectSettings &settings, const double min, const double max)
+void sampleInCumulatedRepartition (Event* event, const ProjectSettings &settings, const double min, const double max)
 {
 
-    // Création de la cumulé de répartition de date
+    // Creation of the cumulative date distribution
     // 1 - Search for tmin and tmax, distribution curves, identical to the calibration.
     double unionTmin (+INFINITY);
     double unionTmax (-INFINITY);
@@ -1500,13 +1530,13 @@ void sampleInCumulatedRepartition( Event* event, const ProjectSettings &settings
 
 #ifdef DEBUG
         if (event->mTheta.mX == max)
-            qDebug() << "sampleInCumulatedRepartition max<unionTmin and (event->mTheta.mX == max)";
+            qDebug() << "[sampleInCumulatedRepartition] max<unionTmin and (event->mTheta.mX == max)";
 #endif
     } else {
         unionTmin = std::max(unionTmin, min);
         unionTmax = std::min(unionTmax, max);
 
-        // 3 - Création de la cumulé des courbes de répartition dans l'intervalle
+        // 3 - Creation of the cumulative distribution curves in the interval
         QVector<double> unionRepartition (0);
         double tWhile (unionTmin);
         double sumWhile (0.);
@@ -1530,14 +1560,14 @@ void sampleInCumulatedRepartition( Event* event, const ProjectSettings &settings
 
         const double maxRepartition (unionRepartition.last());
         const double minRepartition (unionRepartition.first());
-        if ( (minRepartition!=0. || maxRepartition!= 0.) &&
-             (unionRepartition.size()>1)) {
+        if ( (minRepartition != 0. || maxRepartition != 0.) &&
+             (unionRepartition.size() > 1)) {
 
             const double idx = vector_interpolate_idx_for_value(Generator::randomUniform()*(maxRepartition-minRepartition) + minRepartition, unionRepartition);
             event->mTheta.mX = unionTmin + idx * unionStep;
 #ifdef DEBUG
         if (event->mTheta.mX == min || event->mTheta.mX == max)
-            qDebug() << "sampleInCumulatedRepartition event->mTheta.mX == min || event->mTheta.mX == max";
+            qDebug() << "[sampleInCumulatedRepartition] event->mTheta.mX == min || event->mTheta.mX == max";
 #endif
 
         } else {

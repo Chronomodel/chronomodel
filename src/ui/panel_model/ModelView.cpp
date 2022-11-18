@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -43,11 +43,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PhaseItem.h"
 #include "CurveSettingsView.h"
 #include "Event.h"
-//#include "Bound.h"
 #include "Painting.h"
 #include "Button.h"
 #include "Label.h"
-//#include "LineEdit.h"
 #include "ImportDataView.h"
 #include "EventPropertiesView.h"
 #include "PluginAbstract.h"
@@ -62,10 +60,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MainWindow.h"
 #include "Project.h"
 #include "QtUtilities.h"
-#include "StdUtilities.h"
+//#include "StdUtilities.h"
 #include "StudyPeriodDialog.h"
-#include "DateUtils.h"
-#include "PluginManager.h"
+//#include "DateUtils.h"
+//#include "PluginManager.h"
 
 #include <QtWidgets>
 #include <QtSvg>
@@ -372,8 +370,11 @@ void ModelView::setProject(Project* project)
     mProject->unselectedAllInState();
 
     //mEventsScene->createSceneFromState();
-    //mPhasesScene->createSceneFromState();
-    applyAppSettings();
+   // mPhasesScene->createSceneFromState();
+
+    mPhasesScene->updateSceneFromState();
+
+    applyAppSettings(); // do phase->update()
 }
 
 void ModelView::connectScenes()
@@ -381,9 +382,9 @@ void ModelView::connectScenes()
     connect(mButNewEvent, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ModelView::createEventInPlace);
     connect(mButNewEventKnown, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ModelView::createEventKnownInPlace);
    // connect(mButDeleteEvent, &Button::clicked, mProject, &Project::deleteSelectedEvents);
-    connect(mButDeleteEvent,  static_cast<void (Button::*)(bool)> (&Button::clicked), mEventsScene, &EventsScene::deleteSelectedItems);
+    connect(mButDeleteEvent, static_cast<void (Button::*)(bool)> (&Button::clicked), mEventsScene, &EventsScene::deleteSelectedItems);
 
-    connect(mButRecycleEvent,  static_cast<void (Button::*)(bool)> (&Button::clicked), mProject, &Project::recycleEvents);
+    connect(mButRecycleEvent, static_cast<void (Button::*)(bool)> (&Button::clicked), mProject, &Project::recycleEvents);
     connect(mButEventsGlobalView, &Button::toggled, mEventsOverview, &SceneGlobalView::setVisible);
     connect(mButEventsGlobalView, &Button::toggled, mEventsSearchEdit, &QLineEdit::setVisible);
     connect(mEventsSearchEdit, &QLineEdit::returnPressed, this, &ModelView::searchEvent);
@@ -509,45 +510,7 @@ void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
     //mButModifyPeriod ->setGeometry((mTopWrapper->width() - fontMetrics().boundingRect(mButModifyPeriod->text()).width()) /2 - 2*mMargin, (mTopWrapper->height() - topButtonHeight)/2, fontMetrics().boundingRect(mButModifyPeriod->text()).width() + 4*mMargin, topButtonHeight );
 
 }
-/*
-void ModelView::createProject()
-{
-    showCalibration(false);
 
-    QJsonObject state = mProject->state();
-
-    // debug
-
-    const QJsonArray eventsInState = state.value(STATE_EVENTS).toArray();
-    QJsonObject date0 = eventsInState.at(0).toObject() .value(STATE_EVENT_DATES).toArray().at(0).toObject();
-       qDebug()<<"ModelView::createProject date0"<<date0.value(STATE_NAME).toString()<<date0.value(STATE_DATE_VALID).toBool();
-
-
-
-    //
-    const ProjectSettings settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
-
-    mTmin = settings.mTmin;
-    mTmax = settings.mTmax;
-
-    adaptStudyPeriodButton(settings.mTmin, settings.mTmax);
-
-    mProject->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
-    mProject->mState[STATE_SETTINGS_TMAX] = settings.mTmax;
-    mProject->mState[STATE_SETTINGS_STEP] = settings.mStep;
-
-    mProject->mState[STATE_SETTINGS_STEP_FORCED] = settings.mStepForced;
-
-    setSettingsValid(settings.mTmin < settings.mTmax);
-
-    //Unselect all Item in all scene
-    mProject->unselectedAllInState();
-
-    mEventsScene->createSceneFromState();
-    mPhasesScene->createSceneFromState();
-
-}
-*/
 void ModelView::updateProject()
 {
     QJsonObject state = mProject->state();
@@ -556,12 +519,11 @@ void ModelView::updateProject()
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
 
-    //ButCurve->setToggled(mProject->isCurve());
     adaptStudyPeriodButton(settings.mTmin, settings.mTmax);
     updateCurveButton();
 
     setSettingsValid(settings.mTmin < settings.mTmax);
- //   qDebug() <<"ModelView::updateProject mEventsScene->updateSceneFromState();";
+
     mEventsScene->updateSceneFromState();
 
     mPhasesScene->updateSceneFromState();
@@ -694,7 +656,7 @@ void ModelView::calibrateAll(ProjectSettings newS)
                     Date d (date.toObject());
                     d.autoSetTiSampler(true);
                     // date.mCalibration->mCurve.clear();
-                    d.calibrate(newS, mProject);
+                    d.calibrate(newS, mProject, true);
                     //d.calibrate(mProject);
                     ++position;
                     progress->setValue(position);
@@ -1191,8 +1153,12 @@ void ModelView::applyAppSettings()
     // ------
 
    for (auto&& item : mEventsScene->getItemsList()) {
-        static_cast<EventItem*>(item)->redrawEvent();
-        static_cast<EventItem*>(item)->update();
+        EventItem* itm = static_cast<EventItem*>(item);
+        if (Event::Type (itm->mData.value(STATE_EVENT_TYPE).toInt()) == Event::eDefault ) {
+            itm->redrawEvent();
+        }
+        itm->update();
+
     }
 
     // ------
@@ -1403,7 +1369,7 @@ void ModelView::updateCalibration(const QJsonObject& date)
     if (!date.isEmpty() ) {
         Date d (date);
         if (d.mCalibration == nullptr)
-            d.calibrate(d.mSettings, mProject);
+            d.calibrate(ProjectSettings::fromJson(mProject->state().value(STATE_SETTINGS).toObject()), mProject, true);
 
         // A date has been double-clicked => update CalibrationView only if the date is not null
         if (mEventPropertiesView->isVisible() && mEventPropertiesView->isCalibChecked())

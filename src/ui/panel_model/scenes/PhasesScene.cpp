@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -44,6 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MainWindow.h"
 #include "Project.h"
 #include "QtUtilities.h"
+
 #include <QtWidgets>
 
 
@@ -184,14 +185,24 @@ void PhasesScene::sendUpdateProject(const QString& reason, bool notify, bool sto
      // ------------------------------------------------------
      //  Delete items not in current state
      // ------------------------------------------------------
-    clear();
+     mUpdatingItems = true;
+
+     // ------------------------------------------------------
+     //  Delete all items
+     // ------------------------------------------------------
+     if (mItems.size()>0) {
+         clearSelection();
+         clear();
+         mItems.clear();
+      }
+    //clear();
     // this item is delete with clear, but we need it. this is herited from AbstracScene
     mTempArrow = new ArrowTmpItem();
     addItem(mTempArrow);
     mTempArrow->setVisible(false);
     mTempArrow->setZValue(0);
 
-    clearSelection();
+   // clearSelection();
      // ------------------------------------------------------
      //  Create phase items
      // ------------------------------------------------------
@@ -227,13 +238,18 @@ void PhasesScene::sendUpdateProject(const QString& reason, bool notify, bool sto
 
      mUpdatingItems = false;
 
-     adjustSceneRect();
-     adaptItemsForZoom(mZoom);
+    // adjustSceneRect();
+    // adaptItemsForZoom(mZoom);
  }
 
 
 void PhasesScene::updateSceneFromState()
 {
+#ifdef DEBUG
+qDebug()<<"[PhasesScene::updateSceneFromState] Start";
+    QElapsedTimer startTime;
+    startTime.start();
+#endif
     const QJsonObject state = mProject->state();
     QJsonArray phases = state.value(STATE_PHASES).toArray();
     QJsonArray constraints = state.value(STATE_PHASES_CONSTRAINTS).toArray();
@@ -307,7 +323,7 @@ void PhasesScene::updateSceneFromState()
 
             // usefull, changing the selected item force to update the state ??
             clearSelection();
-            phaseItem->setSelected(true);
+        //    phaseItem->setSelected(true);
 
             // Note : setting an event in (0, 0) tells the scene that this item is new!
             // Thus the scene will move it randomly around currently viewed center point).
@@ -393,11 +409,15 @@ void PhasesScene::updateSceneFromState()
     // Nothing has been triggered so far because of the mUpdatingItems flag, so we need to trigger it now!
     // As well, creating an item changes the selection because we want the newly created item to be selected.
     if (hasDeleted || hasCreated)
-        updateStateSelectionFromItem();
+       updateStateSelectionFromItem();
+
+    //sendUpdateProject(tr("phases selection updated : phases marked as selected"), true, true);
 
     adjustSceneRect();
     adaptItemsForZoom(mZoom);
-
+#ifdef DEBUG
+    qDebug()<<"[PhasesScene::updateSceneFromState] finish in "<< DHMS(startTime.elapsed());
+#endif
 }
 
 void PhasesScene::clean()
@@ -441,7 +461,7 @@ void PhasesScene::clean()
  */
 void PhasesScene::updateStateSelectionFromItem()
 {
-    qDebug()<<"PhasesScene::updateStateSelectionFromItem";
+    qDebug()<<"[PhasesScene::updateStateSelectionFromItem]";
     if (!mUpdatingItems) {
         bool modified = false;
         bool oneSelection = false;
@@ -449,7 +469,7 @@ void PhasesScene::updateStateSelectionFromItem()
 
         for (int i=0; i<mItems.size(); ++i) {
             PhaseItem* item = static_cast<PhaseItem*>(mItems.at(i));
-
+//qDebug()<< " select"<< item->isSelected() <<mItems.at(i)->mData.value("is_selected").toBool();
             // without selected update
             const QJsonObject prevPhase = item->getPhase();
 
@@ -470,7 +490,7 @@ void PhasesScene::updateStateSelectionFromItem()
 
 #ifdef DEBUG
             if (modified)
-                qDebug()<<"PhasesScene::updateStateSelectionFromItem "<<nextPhase.value(STATE_NAME).toString()<<selected<<isCurrent;
+                qDebug()<<"[PhasesScene::updateStateSelectionFromItem] "<< nextPhase.value(STATE_NAME).toString()<<selected<<isCurrent;
 #endif
 
 
@@ -481,7 +501,7 @@ void PhasesScene::updateStateSelectionFromItem()
 
             // refresh the thumbs in the Events scene
             if (!oneSelection) {// selectedItems().size() == 0) {
-                qDebug()<<"PhasesScene::updateStateSelectionFromItem emit : no phase";
+                qDebug()<<"[PhasesScene::updateStateSelectionFromItem] emit : no phase";
                 emit noSelection();
             } else
                 emit phasesAreSelected();

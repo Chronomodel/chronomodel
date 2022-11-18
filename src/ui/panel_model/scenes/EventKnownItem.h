@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -41,7 +41,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define EVENTKNOWNITEM_H
 
 #include "EventItem.h"
-#include "Event.h"
 
 class EventKnownItem : public EventItem
 {
@@ -52,7 +51,7 @@ public:
     virtual QRectF boundingRect() const;
 
     void setEvent(const QJsonObject& event, const QJsonObject& settings);
-    void setDatesVisible(bool visible);
+    void setDatesVisible(const bool visible);
 
 protected:
     virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
@@ -63,7 +62,7 @@ protected:
 private:
     QImage mThumb;
     qreal mThumbH;
-    bool mThumbVisible;
+
 
 };
 

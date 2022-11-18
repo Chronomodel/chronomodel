@@ -577,9 +577,11 @@ QString stringForGraph(const double valueToFormat)
 
 QString stringForLocal(const double valueToFormat, const bool forcePrecision)
 {
-    (void) forcePrecision;
     char fmt = 'f';
     QLocale locale = QLocale();
+
+    if (forcePrecision)
+        return locale.toString(valueToFormat, fmt, 9);
 
     const int precision = AppSettings::mPrecision;
 
@@ -592,14 +594,17 @@ QString stringForLocal(const double valueToFormat, const bool forcePrecision)
 
 QString stringForCSV(const double valueToFormat, const bool forcePrecision)
 {
-    (void) forcePrecision;
     char fmt = 'f';
+    QLocale locale = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+
+    if (forcePrecision)
+        return locale.toString(valueToFormat, fmt, 9);
+
     if (std::abs(valueToFormat)>1E+06)
         fmt = 'G';
 
     const int precision = AppSettings::mPrecision;
 
-    QLocale locale = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
     locale.setNumberOptions(QLocale::OmitGroupSeparator);
     return locale.toString(valueToFormat, fmt, precision);
 

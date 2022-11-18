@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "GraphViewPhase.h"
+
 #include "GraphView.h"
 #include "Phase.h"
 #include "Painting.h"
@@ -45,8 +46,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "DateUtils.h"
 #include "ModelUtilities.h"
-#include "MainWindow.h"
-#include "Button.h"
+//#include "MainWindow.h"
+//#include "Button.h"
 #include <QtWidgets>
 
 // Constructor / Destructor
@@ -271,6 +272,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
             GraphCurve curveActivity = densityCurve( mPhase->mActivity,
                                                      "Post Distrib All Chains",
                                                      color, Qt::SolidLine);
+            curveActivity.mIsRectFromZero = true;
             auto brushColor = color;
             brushColor.setAlpha(30);
 
@@ -285,7 +287,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
                                                             "Post Distrib Unif Mean",
                                                             Qt::darkGray, Qt::SolidLine);
 
-            mGraph->setInfo(QString("Significance Score = %1").arg(stringForLocal(mPhase->mActivityValueStack.at("Significance Score").mValue)) );
+            mGraph->setInfo(QString("Significance Score ( %1 %) = %2").arg(stringForLocal(mPhase->mValueStack.at("Activity threshold").mValue), stringForLocal(mPhase->mValueStack.at("Significance Score").mValue, true)) );
 
             mGraph->setOverArrow(GraphView::eBothOverflow);
 
@@ -477,7 +479,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
         }
         else if (mShowVariableList.contains(eTempo)) {
-            // With variable eTemp there is no choice of "chain", it must be "all chains"
+            // With variable eTempo there is no choice of "chain", it must be "all chains"
             const GraphCurve* tempo = mGraph->getCurve("Post Distrib All Chains");
 
             if ( tempo && !tempo->mData.isEmpty()) {
@@ -507,7 +509,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 //mGraph->setCurveVisible("Post Distrib Activity Unif Env All Chains", showError && showActivityUnif);
 
                 mGraph->setTipXLab("t");
-                mGraph->setTipYLab("");
+                mGraph->setTipYLab("A");
 
                 mGraph->autoAdjustYScale(true);
             }

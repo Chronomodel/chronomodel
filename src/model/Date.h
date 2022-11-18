@@ -41,8 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define DATE_H
 
 #include "MHVariable.h"
-//#include "StateKeys.h"
-#include "../project/ProjectSettings.h"
+#include "ProjectSettings.h"
 
 #include <QMap>
 #include <QJsonObject>
@@ -93,6 +92,7 @@ public:
         eDeltaRange = 2
     };
 
+    const Event* mEvent;
     MHVariable mTi;// t i de la date
     MHVariable mSigmaTi; // sigma i de la date (par rapport au fait)
     MHVariable mWiggle;
@@ -123,7 +123,7 @@ public:
     CalibrationCurve* mWiggleCalibration;
 
     QMap<double, double> mCalibHPD;
-    ProjectSettings mSettings;
+   // ProjectSettings mSettings; // obsolete, we can have it via mEvent->mModel->mSettings
 
     QJsonArray mSubDates;
     double mMixingLevel;
@@ -131,9 +131,9 @@ public:
 
 public:
 
-    Date();
+    Date (const Event* event = nullptr);
     virtual ~Date();
-    Date(const QJsonObject &json);
+    Date(const QJsonObject &json, const Event* event = nullptr);
     Date(PluginAbstract* plugin);
     Date(const Date& date);
     Date& operator=(const Date& date);
@@ -156,8 +156,11 @@ public:
     PluginAbstract* getPlugin() const {return mPlugin;}
 
     void reset();
-    void calibrate(const ProjectSettings & settings, Project *project, bool truncate=true);
-    void calibrateWiggle(const ProjectSettings & settings, Project *project);
+    void calibrate(Project *project, bool truncate = true);
+    void calibrate(const ProjectSettings settings, Project *project, bool truncate); // used for item
+
+    void calibrateWiggle(const ProjectSettings settings, Project *project);
+    void calibrateWiggle(Project *project);
 
     double getLikelihoodFromCalib(const double &t) const;
     double getLikelihoodFromWiggleCalib(const double &t) const;
@@ -173,8 +176,8 @@ public:
 
     QVector<double> getFormatedRepartition() const;
 
-    QPixmap generateCalibThumb();
-    QPixmap generateUnifThumb();
+    QPixmap generateCalibThumb(ProjectSettings settings);
+    QPixmap generateUnifThumb(ProjectSettings settings);
 
     QColor getEventColor() const;
 

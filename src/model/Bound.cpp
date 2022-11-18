@@ -43,97 +43,125 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QObject>
 
-Bound::Bound():Event(),
-mFixed(0.)
+Bound::Bound(const Model *model):
+    Event (model),
+    mFixed (0.)
 {
-    Event::mType = eBound;
-    Event::mTheta.mSamplerProposal= MHVariable::eFixe;
-    Event::mTheta.mSigmaMH = 0.;
+    mType = eBound;
+    mPointType = ePoint;
+    mTheta.mSamplerProposal= MHVariable::eFixe;
+    mTheta.mSigmaMH = 0.;
 }
+
+Bound::Bound(const QJsonObject& json, const Model* model):
+    Event (model)
+{
+    mType = Type (json[STATE_EVENT_TYPE].toInt());
+    mId = json[STATE_ID].toInt();
+    mName =  json[STATE_NAME].toString();
+    mColor = QColor(json[STATE_COLOR_RED].toInt(),
+                           json[STATE_COLOR_GREEN].toInt(),
+                           json[STATE_COLOR_BLUE].toInt());
+    //event.Event::mMethod = Event::eFixe;
+    mTheta.mSamplerProposal= MHVariable::eFixe;
+    mItemX = json[STATE_ITEM_X].toDouble();
+    mItemY = json[STATE_ITEM_Y].toDouble();
+    mIsSelected = json[STATE_IS_SELECTED].toBool();
+    mIsCurrent = json[STATE_IS_CURRENT].toBool();
+
+    if (json.contains(STATE_EVENT_KNOWN_FIXED))
+        mFixed = json[STATE_EVENT_KNOWN_FIXED].toDouble();
+
+    else
+        mFixed = 0.;
+
+    mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
+
+    mPointType = PointType (json.value(STATE_EVENT_POINT_TYPE).toInt());
+
+    mXIncDepth = json.value(STATE_EVENT_X_INC_DEPTH).toDouble();
+    mYDec = json.value(STATE_EVENT_Y_DEC).toDouble();
+    mZField = json.value(STATE_EVENT_Z_F).toDouble();
+
+    mS_XA95Depth = json.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble();
+    mS_Y = json.value(STATE_EVENT_SY).toDouble();
+    mS_ZField = json.value(STATE_EVENT_SZ_SF).toDouble();
+
+    mVG.mSamplerProposal = MHVariable::eMHAdaptGauss;
+}
+
 
 // JSON
 Bound Bound::fromJson(const QJsonObject &json)
 {
-    Bound event;
+    Bound bound;
 
-    event.Event::mType = Type (json[STATE_EVENT_TYPE].toInt());
-    event.Event::mId = json[STATE_ID].toInt();
-    event.Event::mName =  json[STATE_NAME].toString();
-    event.Event::mColor = QColor(json[STATE_COLOR_RED].toInt(),
+    bound.mType = Type (json[STATE_EVENT_TYPE].toInt());
+    bound.mId = json[STATE_ID].toInt();
+    bound.mName =  json[STATE_NAME].toString();
+    bound.mColor = QColor(json[STATE_COLOR_RED].toInt(),
                            json[STATE_COLOR_GREEN].toInt(),
                            json[STATE_COLOR_BLUE].toInt());
     //event.Event::mMethod = Event::eFixe;
-    event.mTheta.mSamplerProposal= MHVariable::eFixe;
-    event.Event::mItemX = json[STATE_ITEM_X].toDouble();
-    event.Event::mItemY = json[STATE_ITEM_Y].toDouble();
-    event.Event::mIsSelected = json[STATE_IS_SELECTED].toBool();
-    event.Event::mIsCurrent = json[STATE_IS_CURRENT].toBool();
+    bound.mTheta.mSamplerProposal= MHVariable::eFixe;
+    bound.mItemX = json[STATE_ITEM_X].toDouble();
+    bound.mItemY = json[STATE_ITEM_Y].toDouble();
+    bound.mIsSelected = json[STATE_IS_SELECTED].toBool();
+    bound.mIsCurrent = json[STATE_IS_CURRENT].toBool();
 
     if (json.contains(STATE_EVENT_KNOWN_FIXED))
-        event.mFixed = json[STATE_EVENT_KNOWN_FIXED].toDouble();
+        bound.mFixed = json[STATE_EVENT_KNOWN_FIXED].toDouble();
 
     else
-        event.mFixed = 0.;
+        bound.mFixed = 0.;
 
-    event.Event::mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
+    bound.mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
 
-    event.Event::mXIncDepth = json.value(STATE_EVENT_X_INC_DEPTH).toDouble();
-    event.Event::mYDec = json.value(STATE_EVENT_Y_DEC).toDouble();
-    event.Event::mZField = json.value(STATE_EVENT_Z_F).toDouble();
+    bound.mPointType = PointType (json.value(STATE_EVENT_POINT_TYPE).toInt());
+    bound.mXIncDepth = json.value(STATE_EVENT_X_INC_DEPTH).toDouble();
+    bound.mYDec = json.value(STATE_EVENT_Y_DEC).toDouble();
+    bound.mZField = json.value(STATE_EVENT_Z_F).toDouble();
 
-    event.Event::mS_XA95Depth = json.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble();
-    event.Event::mS_Y = json.value(STATE_EVENT_SY).toDouble();
-    event.Event::mS_ZField = json.value(STATE_EVENT_SZ_SF).toDouble();
+    bound.mS_XA95Depth = json.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble();
+    bound.mS_Y = json.value(STATE_EVENT_SY).toDouble();
+    bound.mS_ZField = json.value(STATE_EVENT_SZ_SF).toDouble();
 
-    event.mVG.mSamplerProposal= MHVariable::eMHAdaptGauss;
-    return event;
+    bound.mVG.mSamplerProposal= MHVariable::eMHAdaptGauss;
+    return bound;
 }
 
 QJsonObject Bound::toJson() const
 {
-    QJsonObject event;
+    QJsonObject json;
 
-    event[STATE_EVENT_TYPE] = Event::mType;
-    event[STATE_ID] = Event::mId;
+    json[STATE_EVENT_TYPE] = mType;
+    json[STATE_ID] = mId;
 
-    event[STATE_NAME] = Event::mName;
+    json[STATE_NAME] = mName;
 
-    event[STATE_COLOR_RED] = Event::mColor.red();
-    event[STATE_COLOR_GREEN] = Event::mColor.green();
-    event[STATE_COLOR_BLUE] = Event::mColor.blue();
+    json[STATE_COLOR_RED] = mColor.red();
+    json[STATE_COLOR_GREEN] = mColor.green();
+    json[STATE_COLOR_BLUE] = mColor.blue();
 
-    event[STATE_EVENT_SAMPLER] = MHVariable::eFixe;
-    event[STATE_ITEM_X] = Event::mItemX;
-    event[STATE_ITEM_Y] = Event::mItemY;
-    event[STATE_IS_SELECTED] = Event::mIsSelected;
-    event[STATE_IS_CURRENT] = Event::mIsCurrent;
+    json[STATE_EVENT_SAMPLER] = MHVariable::eFixe;
+    json[STATE_ITEM_X] = mItemX;
+    json[STATE_ITEM_Y] = mItemY;
+    json[STATE_IS_SELECTED] = mIsSelected;
+    json[STATE_IS_CURRENT] = mIsCurrent;
 
-    event[STATE_EVENT_KNOWN_FIXED] = mFixed;
+    json[STATE_EVENT_KNOWN_FIXED] = mFixed;
 
-    event[STATE_EVENT_X_INC_DEPTH] = Event::mXIncDepth;
-    event[STATE_EVENT_Y_DEC] = Event::mYDec;
-    event[STATE_EVENT_Z_F] = Event::mZField;
+    json[STATE_EVENT_POINT_TYPE] = mPointType;
+    json[STATE_EVENT_X_INC_DEPTH] = mXIncDepth;
+    json[STATE_EVENT_Y_DEC] = mYDec;
+    json[STATE_EVENT_Z_F] = mZField;
 
-    event[STATE_EVENT_SX_ALPHA95_SDEPTH] = Event::mS_XA95Depth;
-    event[STATE_EVENT_SY] = Event::mS_Y;
-    event[STATE_EVENT_SZ_SF] = Event::mS_ZField;
-    return event;
+    json[STATE_EVENT_SX_ALPHA95_SDEPTH] = mS_XA95Depth;
+    json[STATE_EVENT_SY] = mS_Y;
+    json[STATE_EVENT_SZ_SF] = mS_ZField;
+    return json;
 }
 
-/*
- * EventKnown& EventKnown::operator=(const EventKnown& event)
-{
-    copyFrom(event);
-    return *this;
-}
-
-void EventKnown::copyFrom(const EventKnown& event)
-{
-    Event::copyFrom(event);
-    mFixed = event.mFixed;
-    mValues = event.mValues;
-}
-*/
 void Bound::setFixedValue(const double& value) {mFixed = value;}
 
 double Bound::fixedValue() const
@@ -154,7 +182,7 @@ void Bound::updateValues(const double tmin, const double tmax, const double step
     double t = tmin;
     while (t <= tmax) {
         mValues[t] = 0.;
-        t +=step;
+        t += step;
     }
 
     mValues[mFixed] = 1.;
@@ -163,7 +191,7 @@ void Bound::updateValues(const double tmin, const double tmax, const double step
         t=tmin;
         while ( t<=tmax) {
             mValues[t] = 0.;
-            t+=step;
+            t += step;
         }
     }
 }
@@ -172,5 +200,5 @@ void Bound::updateTheta(const double tmin, const double tmax)
 {
     (void) tmin;
     (void) tmax;
-    mTheta.tryUpdate(mFixed, 1.);
+    mTheta.tryUpdate(mFixed, 2.);
 }

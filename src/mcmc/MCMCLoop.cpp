@@ -47,19 +47,28 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QTime>
 
 MCMCLoop::MCMCLoop():
-mChainIndex(0),
-mState(eBurning),
-mProject(nullptr)
+    mChainIndex (0),
+    mState (eBurning),
+    mProject (nullptr)
 {
 
+}
+
+MCMCLoop::MCMCLoop(Project *project):
+    mChainIndex (0),
+    mState (eBurning),
+    mProject (project)
+{
+    mProject->mLoop = this;
 }
 
 MCMCLoop::~MCMCLoop()
 {
+    mProject->mLoop = nullptr;
     mProject = nullptr;
 }
 
-void MCMCLoop::setMCMCSettings(const MCMCSettings& s)
+void MCMCLoop::setMCMCSettings(const MCMCSettings &s)
 {
     mChains.clear();
     for (auto i=0; i<s.mNumChains; ++i) {
@@ -178,7 +187,7 @@ void MCMCLoop::run()
 #ifdef DEBUG
         mProject->mModel->mChains[mChainIndex].mInitElapsedTime = mChains[mChainIndex].mInitElapsedTime;// only to take the time
         QString dirPath = "../../../../..";//QFileInfo(".").absolutePath() ;
-        QFile file(dirPath + "/Last_Project_Initialization.html");
+        QFile file(dirPath + "/Last_Project_Initialization_DEBUG.html");
 
         const QString projectName = tr("Project filename : %1").arg(mProject->mName);
         if (file.open(QFile::WriteOnly | QFile::Truncate)) {
@@ -284,6 +293,10 @@ void MCMCLoop::run()
         }
         // Fix Total iteration if adaptation break before the end
         estimatedTotalIter -= (chain.mMaxBatchs-chain.mBatchIndex)*chain.mIterPerBatch;
+        interTime = adaptTime.elapsed() * (double)(estimatedTotalIter - iterDone)/ (double)(chain.mIterPerBatch*chain.mBatchIndex);
+
+        emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()) + " : " + "Adapting ; Estimated time left " + DHMS(interTime)));
+
 
         mProject->mModel->mLogAdapt += "<hr>";
         mProject->mModel->mLogAdapt += line(textBold(tr("ADAPTATION FOR CHAIN %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))) );
@@ -355,12 +368,12 @@ void MCMCLoop::run()
             ++chain.mAquisitionIterIndex;
             ++chain.mTotalIter;
 
-            if (!(chain.mAquisitionIterIndex % chain.mIterPerBatch)) {
+         //   if (!(chain.mAquisitionIterIndex % chain.mIterPerBatch)) {
 
                 interTime = aquisitionTime.elapsed() * (double) (estimatedTotalIter - iterDone) / (double) chain.mAquisitionIterIndex;
 
                 emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()) + " : Aquisition ; Estimated time left " + DHMS(interTime)));
-            }
+         //   }
 
 
             emit stepProgressed(chain.mAquisitionIterIndex);

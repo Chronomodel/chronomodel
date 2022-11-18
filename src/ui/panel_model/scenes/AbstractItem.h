@@ -41,7 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define ABSTRACTITEM_H
 
 #include "AbstractScene.h"
-#include "CurveSettings.h"
+//#include "CurveSettings.h"
 
 #include <QGraphicsObject>
 #include <QJsonObject>

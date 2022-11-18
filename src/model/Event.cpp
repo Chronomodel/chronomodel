@@ -39,7 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "Event.h"
 
-
+#include "Model.h"
 #include "Date.h"
 #include "Phase.h"
 
@@ -57,15 +57,17 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QDebug>
 #include <QJsonObject>
 
-Event::Event():
-mType(eDefault),
-mId(0),
-mName("no Event Name"),
-//mMethod(Event::eDoubleExp),
-mIsCurrent(false),
-mIsSelected(false),
-mInitialized(false),
-mLevel(0)
+Event::Event(const Model *model):
+    mType (eDefault),
+    mId (0),
+    mModel (model),
+    mName ("no Event Name"),
+    mIsCurrent (false),
+    //mMethod(Event::eDoubleExp),
+    mIsSelected (false),
+    mInitialized (false),
+    mLevel (0),
+    mPointType (ePoint)
 {
     mTheta.mSupport = MetropolisVariable::eBounded;
     mTheta.mFormat = DateUtils::eUnknown;
@@ -105,6 +107,53 @@ mLevel(0)
     mVG.mSupport = MetropolisVariable::eRp;
     mVG.mFormat = DateUtils::eNumeric;
     mVG.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
+}
+Event::Event (const QJsonObject& json, const Model *model):
+    mModel (model)
+{
+    mType = Type (json.value(STATE_EVENT_TYPE).toInt());
+    mId = json.value(STATE_ID).toInt();
+    mName = json.value(STATE_NAME).toString();
+    mColor = QColor(json.value(STATE_COLOR_RED).toInt(),
+                          json.value(STATE_COLOR_GREEN).toInt(),
+                          json.value(STATE_COLOR_BLUE).toInt());
+    //event.mMethod = Method (json.value(STATE_EVENT_METHOD).toInt());
+    mItemX = json.value(STATE_ITEM_X).toDouble();
+    mItemY = json.value(STATE_ITEM_Y).toDouble();
+    mIsSelected = json.value(STATE_IS_SELECTED).toBool();
+    mIsCurrent = json.value(STATE_IS_CURRENT).toBool();
+
+    mTheta.mSamplerProposal = MHVariable::SamplerProposal (json.value(STATE_EVENT_SAMPLER).toInt());
+    mTheta.setName("Theta of Event : " + mName);
+
+    mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
+
+    mPointType = PointType (json.value(STATE_EVENT_POINT_TYPE).toInt());
+    mXIncDepth = json.value(STATE_EVENT_X_INC_DEPTH).toDouble();
+    mYDec = json.value(STATE_EVENT_Y_DEC).toDouble();
+    mZField = json.value(STATE_EVENT_Z_F).toDouble();
+
+    mS_XA95Depth = json.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble();
+    mS_Y = json.value(STATE_EVENT_SY).toDouble();
+    mS_ZField = json.value(STATE_EVENT_SZ_SF).toDouble();
+
+    const QJsonArray dates = json.value(STATE_EVENT_DATES).toArray();
+    Date dat (this);
+    for (auto&& date : dates) {
+        dat.fromJson(date.toObject());
+        dat.autoSetTiSampler(true); // must be after fromJson()
+     /*   if (model != nullptr)
+            dat.mMixingLevel = model->mMCMCSettings.mMixingLevel;
+        else
+            dat.mMixingLevel = 0.9;*/
+
+        if (!dat.isNull())
+            mDates.append(dat);
+        else
+            throw QObject::tr("ERROR : data could not be created with plugin %1").arg(date.toObject().value(STATE_DATE_PLUGIN_ID).toString());
+
+    }
 
 }
 
@@ -159,7 +208,7 @@ void Event::copyFrom(const Event& event)
     mConstraintsFwd = event.mConstraintsFwd;
     mConstraintsBwd = event.mConstraintsBwd;
 
-    mMixingLevel = event.mMixingLevel;
+    //mMixingLevel = event.mMixingLevel;
     
     // Valeurs entrées par l'utilisateur
     mXIncDepth = event.mXIncDepth;
@@ -214,6 +263,7 @@ Event::~Event()
 
 
 // JSON
+
 Event Event::fromJson(const QJsonObject& json)
 {
     Event event = Event();
@@ -230,10 +280,11 @@ Event Event::fromJson(const QJsonObject& json)
     event.mIsCurrent = json.value(STATE_IS_CURRENT).toBool();
 
     event.mTheta.mSamplerProposal = MHVariable::SamplerProposal (json.value(STATE_EVENT_SAMPLER).toInt());
-    event.mTheta.setName("Theta of Event : "+event.mName);
+    event.mTheta.setName("Theta of Event : "+ event.mName);
 
     event.mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
 
+    event.mPointType = PointType (json.value(STATE_EVENT_POINT_TYPE).toInt());
     event.mXIncDepth = json.value(STATE_EVENT_X_INC_DEPTH).toDouble();
     event.mYDec = json.value(STATE_EVENT_Y_DEC).toDouble();
     event.mZField = json.value(STATE_EVENT_Z_F).toDouble();
@@ -247,7 +298,7 @@ Event Event::fromJson(const QJsonObject& json)
     for (auto&& date : dates) {
         dat.fromJson(date.toObject());
         dat.autoSetTiSampler(true); // must be after fromJson()
-        dat.mMixingLevel = event.mMixingLevel;
+        //dat.mMixingLevel = event.mMixingLevel;
 
         if (!dat.isNull())
             event.mDates.append(dat);
@@ -255,14 +306,10 @@ Event Event::fromJson(const QJsonObject& json)
             throw QObject::tr("ERROR : data could not be created with plugin %1").arg(date.toObject().value(STATE_DATE_PLUGIN_ID).toString());
 
     }
-    /*event.mVG = MHVariable();
-    // MHVariable mVG;
-     mVG.mSupport = MetropolisVariable::eRp;
-     mVG.mFormat = DateUtils::eNumeric;
-     mVG.mSamplerProposal = MHVariable::eMHAdaptGauss;
-     */
+
     return event;
 }
+
 
 QJsonObject Event::toJson() const
 {
@@ -280,6 +327,7 @@ QJsonObject Event::toJson() const
     event[STATE_IS_SELECTED] = mIsSelected;
     event[STATE_IS_CURRENT] = mIsCurrent;
 
+    event[STATE_EVENT_POINT_TYPE] = mPointType;
     event[STATE_EVENT_X_INC_DEPTH] = mXIncDepth;
     event[STATE_EVENT_Y_DEC] = mYDec;
     event[STATE_EVENT_Z_F] = mZField;
@@ -394,6 +442,57 @@ QString Event::curveDescriptionFromJsonEvent(QJsonObject &event, CurveSettings::
     return curveDescription;
 }
 
+QList<double> Event::curveParametersFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType, CurveSettings::VariableType variableType)
+{
+    QList<double> curveParameters;
+    double xIncDepth = event.value(STATE_EVENT_X_INC_DEPTH).toDouble();
+    double s_XA95Depth = event.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble();
+    double yDec = event.value(STATE_EVENT_Y_DEC).toDouble();
+    double s_Y = event.value(STATE_EVENT_SY).toDouble();
+    double zField = event.value(STATE_EVENT_Z_F).toDouble();
+    double s_ZField = event.value(STATE_EVENT_SZ_SF).toDouble();
+
+    switch (processType) {
+    case CurveSettings::eProcessTypeNone:
+        return curveParameters;
+        break;
+    case CurveSettings::eProcessTypeVector:
+        curveParameters.append({xIncDepth, s_XA95Depth, yDec, zField, s_ZField});
+        break;
+    case CurveSettings::eProcessType2D:
+        curveParameters.append({xIncDepth, s_XA95Depth, yDec, s_Y});
+        break;
+    case CurveSettings::eProcessType3D:
+        curveParameters.append({xIncDepth, s_XA95Depth, yDec, s_Y, zField, s_ZField});
+        break;
+    case CurveSettings::eProcessTypeSpherical:
+        curveParameters.append({xIncDepth, s_XA95Depth, yDec});
+        break;
+    default:
+        switch (variableType) {
+        case CurveSettings::eVariableTypeDepth:
+            curveParameters.append({xIncDepth, s_XA95Depth});
+            break;
+        case CurveSettings::eVariableTypeField:
+            curveParameters.append({zField, s_ZField});
+            break;
+        case CurveSettings::eVariableTypeInclination:
+            curveParameters.append({xIncDepth, s_XA95Depth});
+            break;
+        case CurveSettings::eVariableTypeDeclination:
+            curveParameters.append({yDec, xIncDepth, s_XA95Depth});
+            break;
+        case CurveSettings::eVariableTypeOther:
+            curveParameters.append({xIncDepth, s_XA95Depth});
+            break;
+        default:
+            break;
+        }
+
+        break;
+    }
+    return curveParameters;
+}
 
 // Properties
 Event::Type Event::type() const

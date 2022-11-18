@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -46,8 +46,8 @@ class Bound: public Event
 {
 public:
 
-    Bound();
-    //explicit EventKnown(const QJsonObject& json);
+    Bound(const Model *model = nullptr);
+    explicit Bound(const QJsonObject& json, const Model *model = nullptr);
 
     static Bound fromJson(const QJsonObject& json);
     virtual QJsonObject toJson() const;

@@ -38,6 +38,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "Phase.h"
+
+#include "Model.h"
 #include "Event.h"
 #include "PhaseConstraint.h"
 #include "Generator.h"
@@ -45,16 +47,17 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QtWidgets>
 
-Phase::Phase():
-mId(0),
-mName("no Phase Name"),
-mTauType(Phase::eTauUnknown),
-mTauFixed(0.),
-mTauMin(0.),
-mTauMax(0.),
-mIsSelected(false),
-mIsCurrent(false),
-mLevel(0)
+Phase::Phase(const Model* model):
+    mId (0),
+    mModel (model),
+    mName ("no Phase Name"),
+    mTauType (Phase::eTauUnknown),
+    mTauFixed (0.),
+    mTauMin (0.),
+    mTauMax (0.),
+    mIsSelected (false),
+    mIsCurrent (false),
+    mLevel (0)
 {
     mColor = randomColor();
     mAlpha.mSupport = MetropolisVariable::eBounded;
@@ -80,6 +83,31 @@ Phase::Phase(const Phase& phase)
     copyFrom(phase);
 }
 
+Phase::Phase (const QJsonObject& json, const Model* model):
+    mId (json.value(STATE_ID).toInt()),
+    mModel (model),
+    mName (json.value(STATE_NAME).toString()),
+    mTauType ((Phase::TauType)json.value(STATE_PHASE_TAU_TYPE).toInt()),
+    mTauFixed (json.value(STATE_PHASE_TAU_FIXED).toDouble()),
+    mTauMin (json.value(STATE_PHASE_TAU_MIN).toDouble()),
+    mTauMax (json.value(STATE_PHASE_TAU_MAX).toDouble()),
+    mIsSelected (json.value(STATE_IS_SELECTED).toBool()),
+    mIsCurrent (json.value(STATE_IS_CURRENT).toBool()),
+    mLevel (0)
+
+{
+   mColor = QColor(json.value(STATE_COLOR_RED).toInt(), json.value(STATE_COLOR_GREEN).toInt(), json.value(STATE_COLOR_BLUE).toInt());
+
+   mItemX = json.value(STATE_ITEM_X).toDouble();
+   mItemY = json.value(STATE_ITEM_Y).toDouble();
+
+   mAlpha.setName("Begin of Phase : " + mName);
+   mBeta.setName("End of Phase : " + mName);
+   // mTau.setName("Tau of Phase : " + p.mName);
+   mDuration.setName("Duration of Phase : " + mName);
+
+}
+
 Phase& Phase::operator=(const Phase& phase)
 {
     copyFrom(phase);
@@ -89,6 +117,7 @@ Phase& Phase::operator=(const Phase& phase)
 void Phase::copyFrom(const Phase& phase)
 {
     mId = phase.mId;
+    mModel = phase.mModel;
     mName = phase.mName;
     mColor = phase.mColor;
 
@@ -140,7 +169,7 @@ Phase::~Phase()
 /**
  * @todo Check the copy of the color if mJson is not set
  */
-Phase Phase::fromJson(const QJsonObject& json)
+Phase Phase::fromJson(const QJsonObject &json)
 {
     Phase p;
     p.mId = json.value(STATE_ID).toInt();
@@ -158,7 +187,7 @@ Phase Phase::fromJson(const QJsonObject& json)
 
     p.mAlpha.setName("Begin of Phase : "+p.mName);
     p.mBeta.setName("End of Phase : "+p.mName);
-    p.mTau.setName("Tau of Phase : " + p.mName);
+   // p.mTau.setName("Tau of Phase : " + p.mName);
     p.mDuration.setName("Duration of Phase : "+p.mName);
 
     return p;
@@ -488,4 +517,284 @@ void Phase::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, co
          //   mTau.generateHistos(chains, fftLen, bandwidth);
         mDuration.generateHistos(chains, fftLen, bandwidth);
   //  }
+}
+
+void Phase::generateActivity(size_t gridLength, double h, const double threshold)
+{
+#ifdef DEBUG
+    QElapsedTimer tClock;
+    tClock.start();
+#endif
+
+    // Avoid to redo calculation, when mActivity exist, it happen when the control is changed
+    if (!mRawActivity.isEmpty() && gridLength == mValueStack.at("Activity gridLength").mValue && h == mValueStack.at("Activity h").mValue && threshold == mValueStack.at("Activity threshold").mValue)
+       return;
+
+    mValueStack["Activity gridLength"] = TValueStack("Activity gridLength", gridLength);
+    mValueStack["Activity h"] = TValueStack("Activity h", h);
+    mValueStack["Activity threshold"] = TValueStack("Activity threshold", threshold);
+
+    auto s = &mModel->mSettings;
+    if (mEvents.size() < 2) {
+
+        mValueStack["Significance Score"] = TValueStack("Significance Score", 0);
+        mValueStack["R_etendue"] = TValueStack("R_etendue", s->mTmax - s->mTmin);
+        mValueStack["t_min"] = TValueStack("t_min", s->mTmin);
+        mValueStack["t_max"] = TValueStack("t_max", s->mTmax);
+        mValueStack["a_Unif"] = TValueStack("a_Unif", s->mTmin);
+        mValueStack["b_Unif"] = TValueStack("b_Unif", s->mTmax);
+        mValueStack["min95"] = TValueStack("min95", s->mTmin);
+        mValueStack["max95"] = TValueStack("max95", s->mTmax);
+        return;
+    }
+
+    // Curves for error binomial
+    const int n = mEvents.size();
+    mRawActivityUnifTheo.clear();
+
+    const std::vector<double>& Gx = mModel->mBinomiale_Gx.at(n);
+
+    //---- timeRange
+    std::pair<double, double> timeRange = mTimeRange;
+    if (timeRange.first == timeRange.second) {
+        timeRange = timeRangeFromTraces( mAlpha.fullRunRawTrace(mModel->mChains),
+                                         mBeta.fullRunRawTrace(mModel->mChains), threshold, "Time Range for Phase : " + mName);
+
+    }
+
+    const double TR_min = timeRange.first;
+    const double TR_max = timeRange.second;
+    std::vector<double> concaTrace;
+
+    for (const auto& ev : mEvents) {
+        const auto &rawtrace = ev->mTheta.fullRunRawTrace(mModel->mChains);
+
+        std::copy_if(rawtrace.begin(), rawtrace.end(),
+                     std::back_inserter(concaTrace),
+                     [TR_min, TR_max](double x) { return (TR_min<= x && x<= TR_max); });
+
+    }
+
+
+    auto minmax95 = std::minmax_element(concaTrace.begin(), concaTrace.end());
+    double min95 = *minmax95.first;
+    double max95 = *minmax95.second;
+
+    if (min95 == max95) { // hapen when there is only one bound in the phase ???
+
+        qDebug()<<"[Phase::generateActivity] tmin == tmax : " << mName;
+
+        mRawActivity[min95] = 1;
+        // Convertion in the good Date format
+
+        mActivity = DateUtils::convertMapToAppSettingsFormat(mRawActivity);
+
+        mValueStack["Significance Score"] = TValueStack("Significance Score", 0);
+        mValueStack["R_etendue"] = TValueStack("R_etendue", 0);
+        mValueStack["a_Unif"] = TValueStack("a_Unif", 0);
+        mValueStack["b_Unif"] = TValueStack("b_Unif", 0);
+        mValueStack["min95"] = TValueStack("min95", min95);
+        mValueStack["max95"] = TValueStack("max95", max95);
+        return;
+
+    } else {
+        mValueStack["min95"] = TValueStack("min95", min95);
+        mValueStack["max95"] = TValueStack("max95", max95);
+
+    }
+    const double nr = concaTrace.size();
+
+    // const double mu = -2;
+    //const double R_etendue = (n+1)/(n-1)/(1.+ mu*sqrt(2./(double)((n-1)*(n+2))) )*(t_max_data-t_min_data);
+    const double gamma =  (n>=500 ? 1. : gammaActivity[(int)n]);
+
+    const double R_etendue =  (max95 - min95)/gamma;
+
+    // prevent h=0 and h >R_etendue;
+    h = std::min( std::max(s->mStep, h),  R_etendue) ;
+    const double h_2 = h/2.;
+
+    const double fUnif = h / R_etendue;
+
+    const double mid_R =  (max95 + min95)/2.;
+
+    const double ActivityUnif = fUnif * n / h; //  remplace -> fUnif * n / std::min(h, R_etendue);
+
+    const double half_etendue = R_etendue/2. ;
+
+
+    // Recentrage de a_Unif et b_Unif
+    // Variable pour courbe Unif Théo
+
+    const double a_Unif = mid_R - half_etendue;
+    const double b_Unif = mid_R + half_etendue;
+
+    // L'unif théorique est défini par le trapéze correspondant à l'unif modifié par la fenètre mobile
+    const double a_Unif_minus_h_2 = a_Unif - h_2;
+    const double a_Unif_plus_h_2 = a_Unif + h_2;
+
+    const double b_Unif_minus_h_2 = b_Unif - h_2;
+    const double b_Unif_plus_h_2 = b_Unif + h_2;
+
+    mValueStack["a_Unif"] = TValueStack("a_Unif", a_Unif);
+    mValueStack["b_Unif"] = TValueStack("b_Unif", b_Unif);
+    mValueStack["R_etendue"] = TValueStack("R_etendue", R_etendue);
+
+    if (a_Unif_minus_h_2 < s->mTmin)
+        mRawActivityUnifTheo.insert(s->mTmin,  interpolate(s->mTmin, a_Unif_minus_h_2, a_Unif_plus_h_2, 0., ActivityUnif));
+    else
+        mRawActivityUnifTheo.insert(a_Unif_minus_h_2,  0.);
+
+    mRawActivityUnifTheo.insert(a_Unif_plus_h_2,  ActivityUnif);
+    mRawActivityUnifTheo.insert(b_Unif_minus_h_2,  ActivityUnif);
+
+    if (b_Unif_plus_h_2 > s->mTmax)
+        mRawActivityUnifTheo.insert(s->mTmax,  interpolate(s->mTmax, b_Unif_minus_h_2, b_Unif_plus_h_2, ActivityUnif, 0.));
+    else
+        mRawActivityUnifTheo.insert(b_Unif_plus_h_2,  0.);
+
+    /// Look for the maximum span containing values \f$ x=2 \f$
+
+    if (min95 == max95) {
+        qDebug()<<"[Phase::generateActivity] min95 == max95 : " << mName;
+        mRawActivity[min95] = 1;
+
+        // Convertion in the good Date format
+        mActivity = DateUtils::convertMapToAppSettingsFormat( mRawActivity);
+
+        return;
+    }
+
+
+#ifdef DEBUG
+    if (max95 > s->mTmax) {
+        qWarning("[Phase::generateActivity] max95 > mSettings.mTmax force max95 = mSettings.mTmax");
+    }
+
+#endif
+
+    const double t_min_grid = std::max(min95 - h_2, s->mTmin);
+    const double t_max_grid = std::min(max95 + h_2, s->mTmax);
+
+    /// \f$ \delta_t_min = (max95 - min95)/(gridLength-1) \f$
+    /*   const double delta_t_min = (t_max_grid - t_min_grid) / double(gridLength-1);
+        if (h < delta_t_min) {
+             h = delta_t_min;
+         }
+         */
+    /// \f$ \delta_t = (max95 - min95 + h)/(gridLenth-1) \f$
+    const double delta_t = (t_max_grid - t_min_grid) / double(gridLength-1);
+
+
+    // overlaps
+
+
+    // Loop
+    std::vector<int> NiTot (gridLength);
+    try {
+        for (const auto& t : concaTrace) {
+
+            int idxGridMin = inRange(0, (int) floor((t - t_min_grid - h_2) / delta_t), (int)gridLength-1) ;
+            int idxGridMax = inRange(0, (int) floor((t - t_min_grid + h_2) / delta_t), (int)gridLength-1) ;
+
+            if (idxGridMax == idxGridMin) {
+                ++*(NiTot.begin()+idxGridMin);
+            } else {
+                for (auto&& ni = NiTot.begin() + idxGridMin; ni != NiTot.begin() + idxGridMax + 1; ++ni) {
+                    ++*ni ;
+                }
+            }
+        }
+
+    } catch (std::exception& e) {
+        qWarning()<< "[Phase::generateActivity ] exception caught: " << e.what() << '\n';
+
+    } catch(...) {
+        qWarning() << "[Phase::generateActivity] Caught Exception!\n";
+
+    }
+
+
+
+    ///# Calculation of the mean and variance
+    QVector<double> inf;
+    QVector<double> sup;
+    QVector<double> esp;
+
+    double UnifScore = 0.;
+    int nbIt = 0;
+
+    for (const auto& ni : NiTot) {
+
+        const double fA = ni / nr;
+        const double eA =  fA * n / h;
+        esp.append(eA);
+
+        const double QSup = interpolate_value_from_curve(fA, Gx, 0, 1.)* n / h;
+        sup.append(QSup);
+
+        const double QInf = findOnOppositeCurve(fA, Gx)* n / h;
+        inf.append(QInf);
+
+#ifdef DEBUG
+        if (QSup < QInf) {
+            qDebug()<<"[Model::generateActivity] QSup < QInf ; f= "<<fA<< " ; QSup = "<<QSup<<" ; QInf = "<<QInf;
+        }
+#endif
+        // Calcul du score
+        /* Delta(h) = somme sur theta de ( max(Aunif - Ainf) - min(Aunif, Asup) ) / nbre de theta de la grille, nbre de pas de la grille
+             */
+        // La grille est définie entre min95-h/2 et max95+h/2 avec gridlength case
+        const double t = nbIt * delta_t + t_min_grid ;
+        if ((a_Unif_minus_h_2 <= t) && (t < a_Unif_plus_h_2)) {
+            const double dUnif =  interpolateValueInQMap(t, mRawActivityUnifTheo);
+            UnifScore += (std::max(dUnif, QInf) - std::min(dUnif, QSup))/gridLength;
+
+        }
+        else if ((a_Unif_plus_h_2 <= t) && (t <= b_Unif_minus_h_2)) {
+            UnifScore += (std::max(ActivityUnif, QInf) - std::min(ActivityUnif, QSup))/gridLength;
+
+        } else if ((b_Unif_minus_h_2 < t) && (t <= b_Unif_plus_h_2)) {
+            const double dUnif =  interpolateValueInQMap(t, mRawActivityUnifTheo);
+            UnifScore += (std::max(dUnif, QInf) - std::min(dUnif, QSup)) / gridLength;
+        }
+        nbIt++;
+    }
+
+    mValueStack["Significance Score"] = TValueStack("Significance Score", UnifScore);
+
+    mRawActivity = vector_to_map(esp, t_min_grid, t_max_grid, delta_t);
+    mRawActivityInf = vector_to_map(inf, t_min_grid, t_max_grid, delta_t);
+    mRawActivitySup = vector_to_map(sup, t_min_grid, t_max_grid, delta_t);
+
+    // Prolongation de l'enveloppe au deçà de t_min, jusqu'à a_Unif_minus_h_2
+
+    const double t_min_display = std::max(a_Unif_minus_h_2, s->mTmin);
+    const double t_max_display = std::min(b_Unif_plus_h_2, s->mTmax);
+
+    const double QSup = interpolate_value_from_curve(0., Gx, 0, 1.)* n / h;
+    const double QInf = findOnOppositeCurve(0., Gx)* n / h;
+
+    mRawActivitySup.insert(t_min_grid, QSup );
+    mRawActivitySup.insert(t_max_grid, QSup );
+    mRawActivitySup.insert(t_min_display, QSup );
+    mRawActivitySup.insert(t_max_display, QSup );
+
+    mRawActivityInf.insert(t_min_grid, QInf);
+    mRawActivityInf.insert(t_max_grid, QInf);
+    mRawActivityInf.insert(t_min_display, QInf);
+    mRawActivityInf.insert(t_max_display, QInf);
+
+    mActivity = DateUtils::convertMapToAppSettingsFormat(mRawActivity);
+    mActivityInf = DateUtils::convertMapToAppSettingsFormat(mRawActivityInf);
+    mActivitySup = DateUtils::convertMapToAppSettingsFormat(mRawActivitySup);
+
+    mActivityUnifTheo = DateUtils::convertMapToAppSettingsFormat(mRawActivityUnifTheo);
+
+
+#ifdef DEBUG
+    qDebug() <<  QString("[Phase::generateActivity] done in " + DHMS(tClock.elapsed()));
+
+#endif
+
 }

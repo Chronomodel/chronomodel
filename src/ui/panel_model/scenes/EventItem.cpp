@@ -38,27 +38,27 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "EventItem.h"
-#include "Event.h"
-#include "Phase.h"
+
 #include "Date.h"
 #include "Painting.h"
 #include "DateItem.h"
 #include "QtUtilities.h"
 #include "Painting.h"
-#include "MainWindow.h"
 #include "Project.h"
 #include "ArrowTmpItem.h"
 #include "CurveSettings.h"
 #include "qlocale.h"
 
 EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):AbstractItem(scene, parent),
-    mWithSelectedPhase(false),
-    mShowAllThumbs(true),
+    mWithSelectedPhase (false),
+    mThumbVisible (true),
+    mNodeSkin (7.),
     mPhasesHeight (20)
 {
+    mScene = static_cast<AbstractScene*>(scene);
     mTitleHeight = 20;
     mEltsHeight =  DateItem::mTitleHeight +  DateItem::mEltsHeight ;
-
+    mGreyedOut = false;
 
     QFont font;
     font.setPixelSize(12);
@@ -71,8 +71,8 @@ EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonOb
 
     mCurveLineHeight =  fm.height();
 
-    EventItem::setEvent(event, settings);
-    mScene = static_cast<AbstractScene*>(scene);
+    if (Event::Type (event.value(STATE_EVENT_TYPE).toInt()) == Event::eDefault )
+        EventItem::setEvent(event, settings);
 
 }
 
@@ -163,8 +163,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
             dateItems.removeAt(i);
         }
         dateItems.clear();
-//        dateItems = childItems();
-//qDebug()<<dateItems.size();
+
         mData[STATE_EVENT_DATES] = QJsonArray();
         // ----------------------------------------------
         //  Re-create Date Items
@@ -173,18 +172,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
             event.value(STATE_COLOR_GREEN).toInt(),
             event.value(STATE_COLOR_BLUE).toInt());
 
- /*       QProgressDialog *progress = new QProgressDialog(QTranslator::tr("Calibration generation") + " : "+ event.value(STATE_NAME).toString(), QTranslator::tr("Wait") , 1, 10);
-       progress->blockSignals(true);
-        progress->setWindowModality(Qt::WindowModal);
-        progress->setCancelButton(nullptr);
-        progress->setMinimumDuration(0);
-        progress->setMinimum(0);
-        progress->setMaximum(dates.size());
-        progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
-*/
         for (int i = 0; i < dates.size(); ++i) {
-
-//           progress->setValue(i);
             const QJsonObject date = dates.at(i).toObject();
 
             try {
@@ -208,10 +196,6 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     mData = event;
     mSettings = settings;
 
-//QList<QGraphicsItem*>    dateItems = childItems();
-//qDebug()<<dateItems.size();
-
-
     resizeEventItem();
     repositionDateItems();
 
@@ -221,13 +205,18 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     // update(); // Done by prepareGeometryChange() at the begining of the function
 }
 
+bool EventItem::isCurveNode() const
+{
+   return Event::PointType (mData.value(STATE_EVENT_POINT_TYPE).toInt()) == Event::eNode ;
+}
+
 /**
  ** @brief looking for selected dateItem in the QGraphicsScene
  */
 bool EventItem::withSelectedDate() const
 {
     const QList<QGraphicsItem*> datesItemsList = childItems();
-    foreach (const QGraphicsItem* date, datesItemsList) {
+    for (const QGraphicsItem* date : datesItemsList) {
         if (date->isSelected())
             return true;
     }
@@ -238,8 +227,8 @@ void EventItem::setGreyedOut(const bool greyedOut)
 {
     mGreyedOut = greyedOut;
     QList<QGraphicsItem*> children = childItems();
-    for (int i = 0; i < children.size(); ++i){
-        static_cast<DateItem*>(children.at(i))->setGreyedOut(greyedOut);
+    for (auto &c : children){
+        static_cast<DateItem*>(c)->setGreyedOut(greyedOut);
     }
     update();
 }
@@ -251,8 +240,8 @@ void EventItem::updateGreyedOut()
     const QJsonArray phases = state.value(STATE_PHASES).toArray();
     QStringList selectedPhasesIds;
 
-    for (int i=0; i<phases.size(); ++i) {
-        QJsonObject phase = phases.at(i).toObject();
+    for (const auto &&p : phases) {
+        QJsonObject phase = p.toObject();
         const bool isSelected = phase.value(STATE_IS_SELECTED).toBool();
         if (isSelected)
             selectedPhasesIds.append(QString::number(phase.value(STATE_ID).toInt()));
@@ -275,6 +264,7 @@ void EventItem::updateGreyedOut()
 
 void EventItem::setDatesVisible(bool visible)
 {
+    mThumbVisible = visible;
     QList<QGraphicsItem*> dateItems = childItems();
     for (auto&& item : dateItems)
         item->setVisible(visible);
@@ -336,8 +326,8 @@ void EventItem::resizeEventItem()
 {
     prepareGeometryChange();
     
-    qreal y =  mTitleHeight + AbstractItem::mEltsMargin;
-    qreal h = mEltsHeight + AbstractItem::mEltsMargin;
+    const qreal y = mTitleHeight + AbstractItem::mEltsMargin;
+    const qreal h = mEltsHeight + AbstractItem::mEltsMargin;
 
     qreal eventHeight = y + (childItems().count() * h);
     //qDebug() << "resizeEventItem dates count : " << dates.count();
@@ -351,15 +341,20 @@ void EventItem::resizeEventItem()
 
     eventHeight += mCurveTextHeight + mPhasesHeight + (nbLines>0 ? 3*AbstractItem::mEltsMargin : 2*AbstractItem::mEltsMargin);
     
-    mSize = QSize(AbstractItem::mItemWidth, eventHeight);
-}
+    eventHeight += (isCurveNode()? 2*mNodeSkin + 4.: 0.);
+
+    mSize = QSize(AbstractItem::mItemWidth + (isCurveNode()? 2*mNodeSkin + 4.: 0.), eventHeight);
+ }
 
 void EventItem::repositionDateItems()
 {
     const QList<QGraphicsItem*> datesItemsList = childItems();
     
     int i = 0;
-    qreal y = boundingRect().y() + mTitleHeight + AbstractItem::mEltsMargin;
+    const QRectF rectTotal = QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
+    const QRectF rect = isCurveNode() ? rectTotal.adjusted(mNodeSkin + 2., mNodeSkin+2., -mNodeSkin-2., -mNodeSkin-2.) : rectTotal;
+
+    qreal y = rect.y() + mTitleHeight + AbstractItem::mEltsMargin;
     qreal h = mEltsHeight + AbstractItem::mEltsMargin;
     
     for (QGraphicsItem* item: datesItemsList) {
@@ -381,7 +376,8 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->save();
     painter->setRenderHint(QPainter::Antialiasing);
 
-    QRectF rect = boundingRect();
+    const QRectF rectTotal = QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
+    const QRectF rect = isCurveNode() ? rectTotal.adjusted(mNodeSkin + 2., mNodeSkin+2., -mNodeSkin-2., -mNodeSkin-2.) : rectTotal;
 
     QColor eventColor = QColor(mData.value(STATE_COLOR_RED).toInt(),
        mData.value(STATE_COLOR_GREEN).toInt(),
@@ -408,8 +404,8 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     const qreal hMarge = AbstractItem::mEltsMargin;
 
     QRectF curveRect(rect.x() + hMarge, rect.y() + rect.height() - mCurveTextHeight - mPhasesHeight - 2*vMarge, rect.width() - 2*hMarge, mCurveTextHeight);
-
-    paintBoxCurveParameter(painter, curveRect, curveSettings);
+    if (mThumbVisible)
+        paintBoxCurveParameter(painter, curveRect, curveSettings);
 
     // Phases
     QRectF phasesRect(rect.x() + hMarge , rect.y() + rect.height() - mPhasesHeight -vMarge, rect.width() - 2*hMarge, mPhasesHeight);
@@ -437,11 +433,14 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->setPen(frontColor);
     painter->drawText(tr, Qt::AlignCenter, name);
 
-    // restore Opacity from GreyedOut
-    painter->setOpacity(1.);
+    // it's a curve Node
+    painter->setBrush(Qt::NoBrush);
+    if (isCurveNode() && curveRect.height()>0) {
+        painter->setPen(QPen(Painting::mainColorDark, 7.));
+        painter->drawRoundedRect(rectTotal, 4, 4);
+    }
 
     // Border
-    painter->setBrush(Qt::NoBrush);
     if (mMergeable) {
         painter->setPen(QPen(Qt::white, 5.));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
@@ -469,8 +468,8 @@ QJsonArray EventItem::getPhases() const
     const QStringList eventPhaseIds = eventPhaseIdsStr.split(",");
 
     QJsonArray phases = QJsonArray();
-    for (int i = 0; i < allPhases.size(); ++i) {
-        QJsonObject phase = allPhases.at(i).toObject();
+    for (const auto &&p : allPhases) {
+        QJsonObject phase = p.toObject();
         QString phaseId = QString::number(phase.value(STATE_ID).toInt());
         if (eventPhaseIds.contains(phaseId))
             phases.append(phase);
@@ -481,7 +480,7 @@ QJsonArray EventItem::getPhases() const
 // Geometry
 QRectF EventItem::boundingRect() const
 {
-  return QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
+  return QRectF(-mSize.width()/2 - 10, -mSize.height()/2 - 10, mSize.width() + 20, mSize.height() + 20);
 }
 
 int EventItem::getNumberCurveLines(CurveSettings& cs) const
@@ -640,15 +639,9 @@ void EventItem::paintBoxPhases (QPainter *painter, QRectF rectBox)
     const int numPhases = phases.size();
 
     if (numPhases == 0) {
-
-        //painter->fillRect(phasesRect, QColor(0, 0, 0, 180));
-      //  painter->setBrush(QColor(0, 0, 0, 180));
-      //  painter->drawRoundedRect(phasesRect, 4, 4);
         painter->setPen(QColor(200, 200, 200));
 
         QString noPhase = tr("No Phase");
-        // QFont ftAdapt = AbstractItem::adjustFont(font, noPhase, phasesRect);
-       // painter->setFont(font);//ftAdapt);
         painter->drawText(rectBox, Qt::AlignCenter, noPhase);
 
     } else {
@@ -667,12 +660,6 @@ void EventItem::paintBoxPhases (QPainter *painter, QRectF rectBox)
 
         }
     }
-
-    //item box
-/*    painter->setPen(QColor(0, 0, 0));
-    painter->setBrush(Qt::NoBrush);
-    painter->drawRoundedRect(phasesRect, 4, 4);*/
-
-    painter->setFont(memoFont);
+   painter->setFont(memoFont);
 
 }

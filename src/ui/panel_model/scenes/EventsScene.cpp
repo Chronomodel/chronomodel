@@ -389,9 +389,10 @@ void EventsScene::updateSceneFromState()
 {
 
 #ifdef DEBUG
-qDebug()<<"[EventsScene::updateSceneFromState] Start";
+    qDebug()<<"[EventsScene::updateSceneFromState] Start";
     QElapsedTimer startTime;
     startTime.start();
+    Chronometer ch ("EventsScene::updateSceneFromState");
 #endif
 
     if (mProject->mState.value(STATE_EVENTS).toArray().isEmpty() && mProject->mState.value(STATE_PHASES).toArray().isEmpty() && mItems.isEmpty())
@@ -536,6 +537,7 @@ qDebug()<<"[EventsScene::updateSceneFromState] Start";
                  //   qDebug() << "EventsScene::updateScene Event changed : id = " << event.value(STATE_ID).toInt()<< event.value(STATE_NAME).toString();
 
                     oldItem->setEvent(event, settings);
+                    oldItem->mGreyedOut = (EventItem*) cIterOld->mGreyedOut;
                 }
              }
 
@@ -679,11 +681,8 @@ qDebug()<<"[EventsScene::updateSceneFromState] Start";
 
 
  #ifdef DEBUG
-     QTime timeDiff(0,0,0,1);
-     timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
-
-    qDebug()<<"[EventsScene::updateScene] finish at " + timeDiff.toString("hh:mm:ss.zzz");
-
+   ch.display();
+    qDebug()<<"[EventsScene::updateSceneFromState] finish in " << DHMS(startTime.elapsed());
  #endif
 }
 
@@ -1663,48 +1662,7 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
           //      return (QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>>());
           //  }
         }
-           /* QMap<QString, double> CurveValues;
-            if (!date.isNull()) {
-                dates << qMakePair(eventName, date);
-                acceptedRows.append(csvRow);
 
-                if (dataStr.size() >= 14) {
-                    CurveValues.insert(STATE_EVENT_X_INC_DEPTH, csvLocal.toDouble(dataStr.at(13)));
-                } else {
-                    CurveValues.insert(STATE_EVENT_X_INC_DEPTH, 0);
-                }
-                if (dataStr.size() >= 15) {
-                    CurveValues.insert(STATE_EVENT_SX_ALPHA95_SDEPTH, csvLocal.toDouble(dataStr.at(14)));
-                } else {
-                    CurveValues.insert(STATE_EVENT_SX_ALPHA95_SDEPTH, 0);
-                }
-                if (dataStr.size() >= 16) {
-                    CurveValues.insert(STATE_EVENT_Y_DEC, csvLocal.toDouble(dataStr.at(15)));
-                } else {
-                    CurveValues.insert(STATE_EVENT_Y_DEC, 0);
-                }
-                if (dataStr.size() >= 17) {
-                    CurveValues.insert(STATE_EVENT_SY, csvLocal.toDouble(dataStr.at(16)));
-                } else {
-                    CurveValues.insert(STATE_EVENT_SY, 0);
-                }
-                if (dataStr.size() >= 18) {
-                    CurveValues.insert(STATE_EVENT_Z_F, csvLocal.toDouble(dataStr.at(17)));
-                } else {
-                    CurveValues.insert(STATE_EVENT_Z_F, 0);
-                }
-
-                if (dataStr.size() >= 19) {
-                    CurveValues.insert(STATE_EVENT_SZ_SF, csvLocal.toDouble(dataStr.at(18)));
-                } else {
-                    CurveValues.insert(STATE_EVENT_SZ_SF, 0);
-                }
-
-
-                curveValues << CurveValues;
-            } else {
-               rejectedRows.append(csvRow);
-            }*/
 
             QMap<QString, double> CurveValues;
             if (!date.mData.isEmpty()) {
@@ -1741,7 +1699,6 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
                 } else {
                     CurveValues.insert(STATE_EVENT_SZ_SF, 0);
                 }
-
 
                 curveValues << CurveValues;
 

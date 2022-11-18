@@ -38,6 +38,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "MCMCLoopMain.h"
+
+#include "Project.h"
 #include "Bound.h"
 #include "Functions.h"
 #include "Generator.h"
@@ -45,7 +47,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Date.h"
 #include "ModelUtilities.h"
 #include "QtUtilities.h"
-#include "../PluginAbstract.h"
+//#include "PluginAbstract.h"
 #include "CalibrationCurve.h"
 
 #include <vector>
@@ -62,10 +64,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class Model;
 class Project;
 
-MCMCLoopMain::MCMCLoopMain(Model* model, Project* project):MCMCLoop(),
-mModel(model)
+MCMCLoopMain::MCMCLoopMain(Model* model, Project* project):MCMCLoop(project),
+    mModel(model)
 {
-    MCMCLoop::mProject = project;
     if (mModel)
         setMCMCSettings(mModel->mMCMCSettings);
 
@@ -74,7 +75,6 @@ mModel(model)
 MCMCLoopMain::~MCMCLoopMain()
 {
     mModel = nullptr;
-    mProject = nullptr;
 }
 
 QString MCMCLoopMain::calibrate()
@@ -109,7 +109,7 @@ QString MCMCLoopMain::calibrate()
         for (auto&& date : dates) {
               if (date->mCalibration) {
                 if (date->mCalibration->mCurve.isEmpty())
-                    date->calibrate(mModel->mSettings, mProject);
+                    date->calibrate(mProject);
                   //date->calibrate(mProject);
                 } else
                     return (tr("Invalid Model -> No Calibration on Data %1").arg(date->mName));
@@ -568,8 +568,11 @@ void MCMCLoopMain::finalize()
     // This is very slow : it is for this reason that the results display may be long to appear at the end of MCMC calculation.
     /** @todo Find a way to make it faster !
      */
+
+    emit setMessage(tr("Computing posterior distributions and numerical results - Correlations"));
     mModel->generateCorrelations(mChains);
 
+    emit setMessage(tr("Computing posterior distributions and numerical results - Densities"));
     mModel->initDensities();
 
     // This should not be done here because it uses resultsView parameters

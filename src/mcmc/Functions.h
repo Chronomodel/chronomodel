@@ -82,7 +82,7 @@ struct DensityAnalysis
    // type_data xmax;
 };
 
-FunctionStat analyseFunction(const QMap<type_data, type_data>& aFunction);
+FunctionStat analyseFunction(const QMap<type_data, type_data> &fun);
 
 QString FunctionStatToString(const FunctionStat& analysis, const QString &nl = "<br>", const bool forCSV = false);
 QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& nl = "<br>", const bool forCSV = false);

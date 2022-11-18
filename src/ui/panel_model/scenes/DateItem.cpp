@@ -69,11 +69,11 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
 
     // Date::fromJson doesn't create mCalibration
     Date d (date);
-    ProjectSettings s = ProjectSettings::fromJson(settings);
+    const ProjectSettings s = ProjectSettings::fromJson(settings);
 
-    d.mSettings.mTmin = s.mTmin;
-    d.mSettings.mTmax = s.mTmax;
-    d.mSettings.mStep = s.mStep;
+  //  d.mSettings.mTmin = s.mTmin;
+  //  d.mSettings.mTmax = s.mTmax;
+  //  d.mSettings.mStep = s.mStep;
 //blockSignals(true);
     if (d.mPlugin!= nullptr) {
         if (!d.mIsValid)
@@ -84,17 +84,17 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
                 //d.calibrate(EventsScene->getProject());
 
             // Date::calibrate() Controls the validity of the calibration and wiggle curves
-                d.calibrate(s, EventsScene->getProject());
+                d.calibrate(s, EventsScene->getProject(), true);
 
             if (d.mPlugin->getName() == "Unif" && d.mOrigin == Date::eSingleDate)
-                mCalibThumb = d.generateUnifThumb();
+                mCalibThumb = d.generateUnifThumb(s);
 
              /* Can happen when there is trouble with the ref curve, for example with un Undo after
               * removing a refCurve
               */
 
             else if (d.mCalibration && !d.mCalibration->mCurve.isEmpty()) {
-               mCalibThumb = d.generateCalibThumb();
+               mCalibThumb = d.generateCalibThumb(s);
 
             } else
                 mCalibThumb = QPixmap();

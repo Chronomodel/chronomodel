@@ -97,6 +97,9 @@ void ModelCurve::fromJson(const QJsonObject& json)
 
         if (mCurveSettings.mVarianceType == CurveSettings::eModeFixed)
             event->mVG.mSamplerProposal = MHVariable::eFixe;
+
+        else if (event->mPointType == Event::eNode)
+            event->mVG.mSamplerProposal = MHVariable::eFixe;
         else
             event->mVG.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
@@ -524,28 +527,28 @@ void ModelCurve::generateHPD(const double thresh)
 {
     Model::generateHPD(thresh);
 
-    std::thread thEvents ([this] (double threshold)
-    {
+   // std::thread thEvents ([this] (double threshold)
+  //  {
         for (Event*& event : mEvents) {
             if (event->type() != Event::eBound) {
-                event->mVG.generateHPD(threshold);
+                event->mVG.generateHPD(thresh);
             }
-        }
-    } , thresh);
+        };
+  //  } , thresh);
 
-    std::thread thLambda ([this] (double threshold)
-    {
-        mLambdaSpline.generateHPD(threshold);
-    } , thresh);
+  //  std::thread thLambda ([this] (double threshold)
+  //  {
+        mLambdaSpline.generateHPD(thresh);
+  //  } , thresh);
 
-    std::thread thS02 ([this] (double threshold)
-    {
-        mS02Vg.generateHPD(threshold);
-    } , thresh);
+  //  std::thread thS02 ([this] (double threshold)
+  //  {
+        mS02Vg.generateHPD(thresh);
+  //  } , thresh);
 
-    thEvents.join();
-    thLambda.join();
-    thS02.join();
+  //  thEvents.join();
+  //  thLambda.join();
+  //  thS02.join();
 }
 
 void ModelCurve::clearPosteriorDensities()

@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef MODEL_H
 #define MODEL_H
 
+#include "MCMCLoop.h"
 #include "ProjectSettings.h"
 #include "AppSettings.h"
 #include "MCMCSettings.h"
@@ -58,7 +59,7 @@ class Model: public QObject
 {
     Q_OBJECT
 public:
-    Model();
+    Model(QObject * parent = nullptr);
     virtual ~Model();
 
     void generateModelLog();
@@ -116,10 +117,14 @@ public:
     // Trace and Posterior density needed for this :
     virtual void generateNumericalResults(const QList<ChainSpecs>& chains);
 
-    void generateTempoAndActivity(size_t gridLenth, double h, const double threshold);
+    void generateTempoAndActivity(size_t gridLenth, double h, const double threshold); // Obsolete
+
+    void generateTempo_old(size_t gridLength);
     void generateTempo(size_t gridLength);
 
-    void generateActivity(size_t gridLenth, double h, const double threshold);
+    void generateActivity_old(size_t gridLenth, double h, const double threshold);
+
+    void generateActivity(const size_t gridLenth, const double h, const double threshold);
     void generateActivityBinomialeCurve(const int n, std::vector<double>& C1x, std::vector<double>& C2x, const double alpha = .05);
 
     virtual void clearTraces();
@@ -133,10 +138,12 @@ public:
 public:
     ProjectSettings mSettings;
     Project *mProject;
+
     MCMCSettings mMCMCSettings;
 
     QList<Event*> mEvents;
     QList<Phase*> mPhases;
+
     QList<EventConstraint*> mEventConstraints;
     QList<PhaseConstraint*> mPhaseConstraints;
 

@@ -690,16 +690,17 @@ double interpolate_value_from_curve(const double x, const std::vector<double>& c
     }
 
     const double prop = (x - Xmin) / (Xmax - Xmin);
-    const double idx = prop * (curve.size() - 1); // tricky : if (Xmax - Xmin) = 2000, then calib size is 2001 !
-    const int idxUnder = (int)floor(idx);
-    const int idxUpper = (int)ceil(idx);//idxUnder + 1;
+    const double px = prop * (curve.size() - 1); // tricky : if (Xmax - Xmin) = 2000, then calib size is 2001 !
+    const double idxUnder = floor(px);
+    const double idxUpper = ceil(px);//idxUnder + 1;
 
     if (idxUnder == idxUpper) {
         return curve[idxUnder];
 
-    } else if (curve[idxUnder] != 0. && curve[idxUpper] != 0.) {
+   // } else if (curve[idxUnder] != 0. && curve[idxUpper] != 0.) {
+    } else if (curve[idxUpper] != 0.) {
         // Important for gate: no interpolation around gates
-        return interpolate( idx, (double)idxUnder, (double)idxUpper, curve[idxUnder], curve[idxUpper]);
+        return interpolate( px, idxUnder, idxUpper, curve[(int)idxUnder], curve[(int)idxUpper]);
 
     } else {
         return 0.;
@@ -943,12 +944,12 @@ double map_area_threshold(const std::map<double, double>& density, const double 
         const double t = cIter->first;
         if (lastV >= threshold && v >= threshold) {
             srcArea += (lastV+v)/2. * (t-lastT);
+
+            if (srcArea > areaMax)
+                return 2.;
         }
         lastV = v;
         lastT = t;
-
-        if (srcArea > areaMax)
-            return 2.;
 
         ++cIter;
     }
@@ -956,7 +957,7 @@ double map_area_threshold(const std::map<double, double>& density, const double 
     return srcArea;
 }
 
-double map_area(const QMap<double, double>& map)
+double map_area(const QMap<double, double> &map)
 {
     if (map.size()<2)
         return 0.0;
@@ -971,7 +972,7 @@ double map_area(const QMap<double, double>& map)
         const double v = cIter.value();
         const double t = cIter.key();
         if (lastV>0 && v>0) {
-            srcArea += (lastV+v)/2 * (t-lastT);
+            srcArea += (lastV+v)/2. * (t-lastT);
          }
         lastV = v;
         lastT = t;
@@ -983,7 +984,7 @@ double map_area(const QMap<double, double>& map)
     return srcArea;
 }
 
-float map_area(const QMap<float, float>& map)
+float map_area(const QMap<float, float> &map)
 {
     if (map.size()<2)
         return 0.f;
@@ -1008,7 +1009,7 @@ float map_area(const QMap<float, float>& map)
     return srcArea;
 }
 
-double map_area(const std::map<double, double>& density)
+double map_area(const std::map<double, double> &density)
 {
     if (density.size()<2)
         return 0.0;
@@ -1168,7 +1169,7 @@ std::vector<double> binomialeCurveByLog(const int n, const double alpha, const i
  Pour qActivity, détermine la courbe p = g (x)  en inversant x = r (p) ; p une fréquence entre 0 et 1
  taille x_frac+1
  */
-std::vector<double> inverseCurve(const std::vector<double> Rq, const int x_frac)
+std::vector<double> inverseCurve(const std::vector<double> &Rq, const int x_frac)
 {
     double x, p;
     const double p_frac = Rq.size()-1;
@@ -1192,18 +1193,21 @@ std::vector<double> inverseCurve(const std::vector<double> Rq, const int x_frac)
 }
 
 
-double findOnOppositeCurve (const double x, const std::vector<double> Gx)
+double findOnOppositeCurve (const double x, const std::vector<double> &Gx)
 {
+
     const double x_frac = Gx.size() - 1;
     const double one_X = (1 - x)*x_frac;
-    const unsigned long minIdx = std::max((unsigned long)0, (unsigned long) std::floor(one_X) );
+    return 1. - interpolate_value_from_curve( one_X, Gx, 0, x_frac);
+
+ /*   const unsigned long minIdx = std::max((unsigned long)0, (unsigned long) std::floor(one_X) );
     const unsigned long maxIdx = std::min((unsigned long)Gx.size() - 1, (unsigned long)std::ceil(one_X) );
 
     if (minIdx == maxIdx)
         return 1. -  Gx[minIdx];
+   return 1. - interpolate( one_X, (double)minIdx, (double)maxIdx, Gx[minIdx], Gx[maxIdx]);
 
-    return 1. - interpolate( one_X, (double)minIdx, (double)maxIdx, Gx[minIdx], Gx[maxIdx]);
-
+   */
 }
 
 #pragma mark Chronometer
@@ -1229,9 +1233,9 @@ void Chronometer::display()
 
     std::thread th_display ([] (std::string _comment, std::chrono::duration<long long, micro> du) {
         if ( du == std::chrono::steady_clock::duration::zero() )
-            std::cout << _comment << " -> The internal clock did not tick.\n";
+            std::cout << " " << _comment << " -> The internal clock did not tick.\n";
         else
-            std::cout << _comment <<" " << du.count() << " µs \n";
+            std::cout << " " << _comment <<" " << du.count() << " µs \n";
     }, _comment, d);
     th_display.detach();
 

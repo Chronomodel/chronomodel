@@ -81,7 +81,7 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     mVariableTypeInput->addItem(tr("Declination"));
     mVariableTypeInput->addItem(tr("Field"));
     mVariableTypeInput->addItem(tr("Depth"));
-    mVariableTypeInput->addItem(tr("Any Measure"));
+    mVariableTypeInput->addItem(tr("Any Measurement"));
     
     mThresholdLabel = new QLabel(tr("Minimal Rate of Change"), this);
     mThresholdInput = new QLineEdit(this);

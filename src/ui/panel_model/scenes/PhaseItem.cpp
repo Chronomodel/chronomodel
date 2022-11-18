@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -38,14 +38,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "PhaseItem.h"
+
 #include "PhasesScene.h"
-#include "Event.h"
-#include "Date.h"
-#include "Painting.h"
 #include "QtUtilities.h"
 #include "MainWindow.h"
 #include "Project.h"
 #include "ArrowTmpItem.h"
+
 #include <QtWidgets>
 
 PhaseItem::PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsItem* parent):AbstractItem(scene, parent),
@@ -268,18 +267,20 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->drawRoundedRect(r, 1, 1);
             painter->fillRect(r, eventColor);
             painter->setPen(QPen(getContrastedColor(eventColor), 1));
-
-            painter->drawText(r, Qt::AlignCenter, eventName);
+            if (mControlsVisible)
+                painter->drawText(r, Qt::AlignCenter, eventName);
             r.adjust(-1, -1, +1, +1);
         }
         else if (isSelected || showAlldata) {
                 painter->fillRect(r, eventColor);
-                painter->drawText(r, Qt::AlignCenter, eventName);
+                if (mControlsVisible)
+                    painter->drawText(r, Qt::AlignCenter, eventName);
 
         } else {
             painter->setOpacity(0.2);
             painter->fillRect(r, eventColor);
-            painter->drawText(r, Qt::AlignCenter, eventName);
+            if (mControlsVisible)
+                painter->drawText(r, Qt::AlignCenter, eventName);
             painter->setOpacity(1);
         }
 

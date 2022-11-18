@@ -91,8 +91,8 @@ bool constraintIsCircular( QJsonArray constraints, const int FromId, const int T
 QString removeZeroAtRight(QString str); // use StdUtilities::eraseZeroAtLeft()
 //QString stringWithAppSettings(const double valueToFormat, const bool forcePrecision = false);
 QString stringForGraph(const double valueToFormat);
-QString stringForLocal(const double valueToFormat, const bool forcePrecision = true);
-QString stringForCSV(const double valueToFormat, const bool forcePrecision = true);
+QString stringForLocal(const double valueToFormat, const bool forcePrecision = false);
+QString stringForCSV(const double valueToFormat, const bool forcePrecision = false);
 
 bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep, const bool withDateFormat = false);
 bool saveAsCsv(const QList<QStringList>& data, const QString& title = QObject::tr("Save as..."));

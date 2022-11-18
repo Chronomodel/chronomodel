@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -39,15 +39,19 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "Constraint.h"
 
-Constraint::Constraint(QObject *parent): QObject( parent ),
-mId(-1),
-mFromId(0),
-mToId(0)
+#include "StateKeys.h"
+
+Constraint::Constraint(QObject *parent):
+    QObject( parent ),
+    mId(-1),
+    mFromId(0),
+    mToId(0)
 {
 
 }
 
-Constraint::Constraint(const Constraint& ec, QObject *parent): QObject( parent )
+Constraint::Constraint(const Constraint& ec, QObject *parent):
+    QObject( parent )
 {
     copyFrom(ec);
 }

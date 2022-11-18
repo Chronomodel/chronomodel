@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AbstractItem.h"
 #include "ArrowTmpItem.h"
 #include "StateKeys.h"
-#include "Painting.h"
+//#include "Painting.h"
 
 #include <QtWidgets>
 

@@ -40,8 +40,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef CONSTRAINT_H
 #define CONSTRAINT_H
 
-#include "StateKeys.h"
-
 #include <QJsonObject>
 #include <QObject>
 

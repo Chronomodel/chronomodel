@@ -101,11 +101,17 @@ T interpolateValueInQMap(const U& key, const QMap<U, T>& map)
         return map.last();
 
     } else {
-        auto lIter =  map.lowerBound(key);
-        auto uIter = lIter;
-        uIter++;
+        const auto uIter =  map.upperBound(key) ;
+        const auto lIter = std::prev(uIter);
+      //  uIter++;
+   /*     auto i = lIter.value();
+        auto ii = uIter.value();
+
+        auto ia = lIter.key();
+        auto iia = uIter.key();
+*/
         return interpolate(key, lIter.key(), uIter.key(), lIter.value(), uIter.value());
-    }
+}
 
  /*
     typename QMap<U, T>::iterator UIter = map.upperBound(key);
@@ -364,9 +370,9 @@ inline double diff_erf(double a, double b, double mu = 0., double sigma = 1.) {
 // Fonction utilisée pour la courbe d'activité
 std::vector<double> binomialeCurveByLog(const int n, const double alpha= .05, const int q_frac = 500);
 
-std::vector<double> inverseCurve(const std::vector<double> Rp, const int x_frac = 500);
+std::vector<double> inverseCurve(const std::vector<double> &Rp, const int x_frac = 500);
 
-double findOnOppositeCurve (const double x, const std::vector<double> Gx);
+double findOnOppositeCurve (const double x, const std::vector<double> &Gx);
 
 
 

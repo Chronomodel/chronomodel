@@ -3070,10 +3070,10 @@ void ResultsView::updateOptionsWidget()
         int nbObject = 0;
 
         if (mMainVariable == GraphViewResults::eActivity) {
-            mThreshLab->hide();
-            mThreshLab->setFixedHeight(0);
-            mThresholdEdit->hide();
-            mThresholdEdit->setFixedHeight(0);
+            mThreshLab->show();
+            mThreshLab->setFixedHeight(20);
+            mThresholdEdit->show();
+            mThresholdEdit->setFixedHeight(20);
 
             mCredibilityCheck->hide();
             mCredibilityCheck->setFixedHeight(0);
