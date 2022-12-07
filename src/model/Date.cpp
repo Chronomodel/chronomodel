@@ -296,7 +296,12 @@ void Date::copyFrom(const Date& date)
 {
     mEvent = date.mEvent;
     mTi = date.mTi;
+    mTi.mSupport = date.mTi.mSupport;
+    mTi.mSamplerProposal = date.mTi.mSamplerProposal;
+
     mSigmaTi = date.mSigmaTi;
+    mSigmaTi.mSupport = date.mSigmaTi.mSupport;
+    mSigmaTi.mSamplerProposal = date.mSigmaTi.mSamplerProposal;
     mWiggle = date.mWiggle;
     mDelta = date.mDelta;
 
@@ -470,7 +475,10 @@ void Date::fromJson(const QJsonObject& json)
     mTi.setName("Theta of date : "+ mName);
     mTi.mSamplerProposal = (MHVariable::SamplerProposal)json.value(STATE_DATE_SAMPLER).toInt();
 
-    mSigmaTi.mSamplerProposal = MHVariable::eMHSymGaussAdapt;
+    if ((MHVariable::SamplerProposal)json.value(STATE_DATE_SAMPLER).toInt() == MHVariable::eFixe)
+        mSigmaTi.mSamplerProposal = MHVariable::eFixe;
+    else
+        mSigmaTi.mSamplerProposal = MHVariable::eMHSymGaussAdapt;
     mSigmaTi.setName("Sigma of date : "+ mName);
 
 
@@ -729,7 +737,7 @@ void Date::calibrate(const ProjectSettings settings, Project *project, bool trun
 
         long double v = getLikelihood(mTminRefCurve);
         calibrationTemp.append(v);
-        repartitionTemp.append(0.);
+        repartitionTemp.append(v); //ici
         long double lastRepVal = v;
 /* Ne PAS mettre de progressDialog dans cette fonction car il crée un appel à EventItem::SetEvent() qui renvoie un updateProject() et reboucle
  */
@@ -1564,6 +1572,15 @@ void Date::updateDate(Event* event)
     updateWiggle();
 }
 
+void Date::updateFixedDate(Event* event)
+{
+   // mDelta = 0.;
+    //mTi.tryUpdate(event->mTheta.mX, 2.);
+   // mSigmaTi.tryUpdate(0., 2.);
+   // mWiggle.mX = mTi.mX + mDelta;
+
+}
+
 void Date::updateTi(Event *event)
 {
     (this->*updateti) (event);
@@ -1721,7 +1738,7 @@ void Date::updateSigmaReParam(Event* event)
 
 
 // CSV dates
-Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
+Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale, const ProjectSettings settings)
 {
     Date date;
     const QString pluginName = dataStr.first();
@@ -1773,7 +1790,7 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
             }
 
         }
-        date.mIsValid = plugin->isDateValid(date.mData, date.mEvent->mModel->mSettings);
+        date.mIsValid = plugin->isDateValid(date.mData, settings);
         date.mUUID = QString::fromStdString(Generator::UUID());
     }
 

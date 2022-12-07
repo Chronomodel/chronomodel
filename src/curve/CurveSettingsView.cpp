@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2021
+Copyright or © or Copr. CNRS	2020 - 2022
 
 Authors :
 	Philippe LANOS
@@ -38,9 +38,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "CurveSettingsView.h"
+
 #include "Project.h"
 #include "Painting.h"
 #include "QtUtilities.h"
+
 #include <QtWidgets>
 #include <QVariant>
 
@@ -60,8 +62,7 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     mDescriptionLabel = new QLabel(tr("These parameters give you controls over the way curves are built. MCMC (Bayesian) can be activated for event time, VG or global lambda spline factor, etc. "), this);
     mDescriptionLabel->setAlignment(Qt::AlignCenter);
     mDescriptionLabel->setWordWrap(true);
-    //QFont descFont;
-    //mDescriptionLabel->setFont(titleFont);
+
     palette = mDescriptionLabel->palette();
     palette.setColor(QPalette::WindowText, Qt::gray);
     mDescriptionLabel->setPalette(palette);
@@ -89,31 +90,33 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     mUseErrMesureLabel = new QLabel(tr("Use Measurement Err."), this);
     mUseErrMesureInput = new QCheckBox(this);
     
-    mTimeTypeLabel = new QLabel(tr("Time Type"), this);
+    mTimeTypeLabel = new QLabel(tr("Event Date"), this);
     mTimeTypeInput = new QComboBox(this);
     mTimeTypeInput->addItem(tr("Fixed"));
     mTimeTypeInput->addItem(tr("Bayesian"));
-    
-    mVarianceTypeLabel = new QLabel(tr("Variance"), this);
-    mVarianceTypeInput = new QComboBox(this);
-    mVarianceTypeInput->addItem(tr("Fixed"));
-    mVarianceTypeInput->addItem(tr("Bayesian"));
-    
-    mUseVarianceIndividualLabel = new QLabel(tr("Variance Individual"), this);
-    mUseVarianceIndividualInput = new QCheckBox(this);
-    
-    mVarianceFixedLabel = new QLabel(tr("Variance Value"), this);
-    mVarianceFixedInput = new QLineEdit(this);
     
     mLambdaSplineTypeLabel = new QLabel(tr("Smoothing"), this);
     mLambdaSplineTypeInput = new QComboBox(this);
     mLambdaSplineTypeInput->addItem(tr("Fixed"));
     mLambdaSplineTypeInput->addItem(tr("Bayesian"));
-    
-    mLambdaSplineLabel = new QLabel(tr("Smoothing Value"), this);
+    mLambdaSplineTypeInput->addItem(tr("Interpolation (λ=0)"));
+
+    mLambdaSplineLabel = new QLabel(tr("log 10 Smoothing Value"), this);
     mLambdaSplineInput = new QLineEdit(this);
+    mLambdaSplineInput->setText("-6");
+
+    mVarianceTypeLabel = new QLabel(tr("Std gi"), this);
+    mVarianceTypeInput = new QComboBox(this);
+    mVarianceTypeInput->addItem(tr("Fixed"));
+    mVarianceTypeInput->addItem(tr("Bayesian"));
     
+    mUseVarianceIndividualLabel = new QLabel(tr("Individual Std gi"), this);
+    mUseVarianceIndividualInput = new QCheckBox(this);
     
+    mVarianceFixedLabel = new QLabel(tr("Std gi = Global Value"), this);
+    mVarianceFixedInput = new QLineEdit(this);
+    
+
     
     QGridLayout* grid = new QGridLayout();
     grid->setContentsMargins(0, 0, 0, 0);
@@ -137,12 +140,12 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     grid->addWidget(mTimeTypeLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mTimeTypeInput, row, 1);
     
-    /*grid->addWidget(mUseTimeBayesianEventLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mUseTimeBayesianEventInput, row, 1);
-    
-    grid->addWidget(mUseTimeBayesianConstraintLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mUseTimeBayesianConstraintInput, row, 1);*/
-    
+    grid->addWidget(mLambdaSplineTypeLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mLambdaSplineTypeInput, row, 1);
+
+    grid->addWidget(mLambdaSplineLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mLambdaSplineInput, row, 1);
+
     grid->addWidget(mVarianceTypeLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mVarianceTypeInput, row, 1);
     
@@ -151,12 +154,7 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     
     grid->addWidget(mVarianceFixedLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mVarianceFixedInput, row, 1);
-    
-    grid->addWidget(mLambdaSplineTypeLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mLambdaSplineTypeInput, row, 1);
-    
-    grid->addWidget(mLambdaSplineLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mLambdaSplineInput, row, 1);
+
     
     QVBoxLayout* vlayout = new QVBoxLayout();
     //vlayout->setMargin(20);
@@ -292,16 +290,21 @@ void CurveSettingsView::setSettings(const CurveSettings& settings)
 
 
     mUseVarianceIndividualInput->setChecked(settings.mUseVarianceIndividual);
-    mVarianceFixedInput->setText(stringForLocal(settings.mVarianceFixed));
+    mVarianceFixedInput->setText(stringForLocal(sqrt(settings.mVarianceFixed)));
     
     if (settings.mLambdaSplineType == CurveSettings::eModeFixed) {
         mLambdaSplineTypeInput->setCurrentIndex(0);
+        mLambdaSplineInput->setText(stringForLocal(log10(settings.mLambdaSpline)));
 
     } else if (settings.mLambdaSplineType == CurveSettings::eModeBayesian) {
         mLambdaSplineTypeInput->setCurrentIndex(1);
+
+    } else if (settings.mLambdaSplineType == CurveSettings::eInterpolation) {
+        mLambdaSplineTypeInput->setCurrentIndex(2);
+        mLambdaSplineInput->setText("0");
     }
     
-    mLambdaSplineInput->setText(stringForLocal(settings.mLambdaSpline));
+
     
     mProcessTypeInput->blockSignals(false);
     mVariableTypeInput->blockSignals(false);
@@ -382,18 +385,22 @@ CurveSettings CurveSettingsView::getSettings()
         settings.mVarianceType = CurveSettings::eModeBayesian;
     }
         
-    settings.mUseVarianceIndividual = mUseVarianceIndividualInput->isChecked();
-    settings.mVarianceFixed = locale().toDouble(mVarianceFixedInput->text());
+    settings.mUseVarianceIndividual = mUseVarianceIndividualInput->isChecked() && (mVarianceTypeInput->currentIndex() == 1) ;
+    settings.mVarianceFixed = pow(locale().toDouble(mVarianceFixedInput->text()), 2.);
 
 
     if (mLambdaSplineTypeInput->currentIndex() == 0) {
         settings.mLambdaSplineType = CurveSettings::eModeFixed;
+        settings.mLambdaSpline = locale().toDouble(mLambdaSplineInput->text());
 
     } else if (mLambdaSplineTypeInput->currentIndex() == 1) {
         settings.mLambdaSplineType = CurveSettings::eModeBayesian;
+
+    } else if (mLambdaSplineTypeInput->currentIndex() == 2) {
+        settings.mLambdaSplineType = CurveSettings::eInterpolation;
+        settings.mLambdaSpline = 0;
+
     }
-    
-    settings.mLambdaSpline = locale().toDouble(mLambdaSplineInput->text());
     
     return settings;
 }
@@ -472,19 +479,22 @@ void CurveSettingsView::updateVisibilities()
         mThresholdLabel->setVisible(showThreshold);
         mThresholdInput->setVisible(showThreshold);
 
-        mVarianceTypeLabel->setVisible(true);
-        mVarianceTypeInput->setVisible(true);
-        const bool varianceFixed = (mVarianceTypeInput->currentText() == "Fixed");
-        mVarianceFixedLabel->setVisible(varianceFixed);
-        mVarianceFixedInput->setVisible(varianceFixed);
-        mUseVarianceIndividualLabel->setVisible(!varianceFixed);
-        mUseVarianceIndividualInput->setVisible(!varianceFixed);
-
         mLambdaSplineTypeLabel->setVisible(true);
         mLambdaSplineTypeInput->setVisible(true);
         const bool lambdaSplineFixed = (mLambdaSplineTypeInput->currentText() == "Fixed");
+        const bool lambdaSplineInterpol = (mLambdaSplineTypeInput->currentIndex() == 2);
         mLambdaSplineLabel->setVisible(lambdaSplineFixed);
         mLambdaSplineInput->setVisible(lambdaSplineFixed);
+
+        mVarianceTypeLabel->setVisible(!lambdaSplineInterpol);
+        mVarianceTypeInput->setVisible(!lambdaSplineInterpol);
+        const bool varianceFixed = (mVarianceTypeInput->currentText() == "Fixed");
+        mVarianceFixedLabel->setVisible(!lambdaSplineInterpol && varianceFixed);
+        mVarianceFixedInput->setVisible(!lambdaSplineInterpol && varianceFixed);
+
+        mUseVarianceIndividualLabel->setVisible(!lambdaSplineInterpol && varianceFixed);
+        mUseVarianceIndividualInput->setVisible(!lambdaSplineInterpol && varianceFixed);
+
     }
     
 }

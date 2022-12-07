@@ -46,9 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "EventConstraint.h"
 #include "PhaseConstraint.h"
 #include "Generator.h"
-//#include "StdUtilities.h"
 #include "Bound.h"
-//#include "ModelUtilities.h"
 #include "QtUtilities.h"
 
 #include <QString>
@@ -99,14 +97,13 @@ Event::Event(const Model *model):
 
     // Valeurs utilisée pour les calculs
     mThetaReduced = 0.;
-    mY = 0.;
     mSy = 0.;
     mW = 0.;
 
-   // MHVariable mVG;
-    mVG.mSupport = MetropolisVariable::eRp;
-    mVG.mFormat = DateUtils::eNumeric;
-    mVG.mSamplerProposal = MHVariable::eMHAdaptGauss;
+   // MHVariable mVg;
+    mVg.mSupport = MetropolisVariable::eRp;
+    mVg.mFormat = DateUtils::eNumeric;
+    mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
 }
 Event::Event (const QJsonObject& json, const Model *model):
@@ -127,6 +124,7 @@ Event::Event (const QJsonObject& json, const Model *model):
     mTheta.mSamplerProposal = MHVariable::SamplerProposal (json.value(STATE_EVENT_SAMPLER).toInt());
     mTheta.setName("Theta of Event : " + mName);
 
+    mVg.setName("VG of Event : " + mName);
     mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
 
     mPointType = PointType (json.value(STATE_EVENT_POINT_TYPE).toInt());
@@ -226,14 +224,13 @@ void Event::copyFrom(const Event& event)
 
     // Valeurs utilisée pour les calculs
     mThetaReduced = event.mThetaReduced;
-    mY = event.mY;
     mSy = event.mSy;
     mW = event.mW;
 
-    mVG = event.mVG;
-    mVG.mSupport = event.mVG.mSupport;
-    mVG.mFormat = event.mVG.mFormat;
-    mVG.mSamplerProposal = event.mVG.mSamplerProposal;
+    mVg = event.mVg;
+    mVg.mSupport = event.mVg.mSupport;
+    mVg.mFormat = event.mVg.mFormat;
+    mVg.mSamplerProposal = event.mVg.mSamplerProposal;
 
 }
 
@@ -258,7 +255,7 @@ Event::~Event()
     if (!mConstraintsBwd.isEmpty())
         mConstraintsBwd.clear();
 
-    mVG.reset();
+    mVg.reset();
 }
 
 
@@ -504,7 +501,7 @@ Event::Type Event::type() const
 void Event::reset()
 {
     mTheta.reset();
-    mVG.reset();
+    mVg.reset();
     mInitialized = false;
     mNodeInitialized = false;
     mThetaNode = HUGE_VAL;//__builtin_inf();//INFINITY;
@@ -1129,11 +1126,11 @@ void Event::updateW()
 {
     try {
 #ifdef DEBUG
-        if ((mVG.mX + mSy * mSy) < 1e-20) {
-            qDebug()<< "[Event] updateW() mVG.mX + mSy * mSy < 1e-20";
+        if ((mVg.mX + mSy * mSy) < 1e-20) {
+            qDebug()<< "[Event] updateW() mVg.mX + mSy * mSy < 1e-20";
         }
 #endif
-        mW = 1. / (mVG.mX + mSy * mSy);
+        mW = 1. / (mVg.mX + mSy * mSy);
 
 #ifdef DEBUG
         if (mW < 1e-20) {

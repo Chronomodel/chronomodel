@@ -38,12 +38,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "GraphViewAbstract.h"
-//#include "StdUtilities.h"
+
 #include <cmath>
 #include <QDebug>
-
-
-// Constructor / Destructor
 
 GraphViewAbstract::GraphViewAbstract():
     mCurrentMinX(-HUGE_VAL), mCurrentMaxX(HUGE_VAL),
@@ -162,19 +159,19 @@ qreal GraphViewAbstract:: getXForValue(const type_data& aValue, const bool& aCon
 type_data GraphViewAbstract::getValueForX(const qreal& x, const bool& aConstainResult)
 {
     const qreal rigthBlank (5.); // the same name and the same value as AxisTool::updateValues() if AxisTool::mIsHorizontal
-    const qreal lXFromSide = x - mMarginLeft;
-    return valueForProportion(type_data(lXFromSide), 0., std::max(0.,  mGraphWidth - rigthBlank), mCurrentMinX, mCurrentMaxX, aConstainResult);
+    const qreal xFromSide = x - mMarginLeft;
+    return valueForProportion(type_data(xFromSide), 0., std::max(0.,  mGraphWidth - rigthBlank), mCurrentMinX, mCurrentMaxX, aConstainResult);
 }
 
 #define TOPBLANK 10
 qreal GraphViewAbstract::getYForValue(const type_data& aValue, const bool& aConstainResult)
 {
-    const type_data lYFromBase = valueForProportion(aValue, mMinY, mMaxY, 0., std::max(0., type_data (mGraphHeight) - TOPBLANK), aConstainResult);
-    return mGraphHeight + mMarginTop - qreal(lYFromBase) ;
+    const type_data yFromBase = valueForProportion(aValue, mMinY, mMaxY, 0., std::max(0., type_data (mGraphHeight) - TOPBLANK), aConstainResult);
+    return mGraphHeight + mMarginTop - qreal(yFromBase) ;
 }
 
 type_data GraphViewAbstract::getValueForY(const qreal& y, const bool& aConstainResult)
 {
-    const qreal lYFromBase = mMarginTop + mGraphHeight - y;
-    return valueForProportion( type_data (lYFromBase), 0., std::max(0., type_data (mGraphHeight) - TOPBLANK), mMinY, mMaxY, aConstainResult);
+    const qreal yFromBase = mMarginTop + mGraphHeight - y;
+    return valueForProportion( type_data (yFromBase), 0., std::max(0., type_data (mGraphHeight) - TOPBLANK), mMinY, mMaxY, aConstainResult);
 }

@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef RESULTSWRAPPER_H
 #define RESULTSWRAPPER_H
 
-#include "MCMCLoopMain.h"
+#include "MCMCLoopChrono.h"
 #include "AxisTool.h"
 #include "GraphViewResults.h"
 #include "AppSettings.h"
@@ -144,7 +144,11 @@ protected:
     // ------------------------------------------------
     //  Utilities
     // ------------------------------------------------
-    inline bool isPostDistribGraph();
+    inline bool isPostDistribGraph()
+    {
+        return (mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+    }
+
     inline bool xScaleRepresentsTime();
     inline double sliderToZoom(const int coef);
     inline int zoomToSlider(const double &zoom);

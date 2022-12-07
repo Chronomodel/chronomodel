@@ -39,20 +39,29 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "Functions.h"
 #include "Generator.h"
+#include "MCMCLoop.h"
 #include "QtUtilities.h"
 #include "AppSettings.h"
+#include "QtWidgets/qmessagebox.h"
+
 
 #include <QDebug>
 #include <QApplication>
+#include <QThread>
+
 #include <iostream>
 #include <set>
 #include <map>
 #include <QTime>
 #include <QElapsedTimer>
+#include <chrono>
+
+
 
 #include <errno.h>      /* errno, EDOM */
 #include <fenv.h>
 #include <exception>
+#include <thread>
 
 // -----------------------------------------------------------------
 //  sumP = Sum (pi)
@@ -78,7 +87,15 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> & fun)
         result.mode = (type_data)0.;
         result.mean = (type_data)0.;
         result.std = (type_data)(-1.);
-        qDebug() << "WARNING : in analyseFunction() aFunction isEmpty !! ";
+        qDebug() << "[Function::analyseFunction] WARNING : No data !!";
+        return result;
+
+    } else if (fun.size() == 1) {
+        result.max = fun.firstKey();
+        result.mode = fun.firstKey();
+        result.mean = fun.firstKey();
+        result.std = fun.firstKey();
+        qDebug() << "[Function::analyseFunction] WARNING : only one data !! ";
         return result;
     }
 
@@ -430,6 +447,20 @@ const std::pair<double, double> linear_regression(const std::vector<double>& dat
 TraceStat traceStatistic(const QVector<type_data>& trace)
 {
     TraceStat result;
+    if (trace.size()==1) {
+        result.mean = trace.at(0);
+        result.std = 0.; // unbiais
+
+        result.min = trace.at(0);
+        result.max = trace.at(0);
+
+        result.quartiles.Q1 = trace.at(0);
+        result.quartiles.Q2 = trace.at(0);
+        result.quartiles.Q3 = trace.at(0);
+
+        return result;
+    }
+
     int n = 0;
     type_data mean = 0.;
     type_data variance = 0.;
@@ -595,9 +626,9 @@ Quartiles quartilesForRepartition(const QVector<double>& repartition, const doub
 {
     Quartiles quartiles;
     if (repartition.size()<5) {
-        quartiles.Q1 = 0.;
+        quartiles.Q1 = tmin;
         quartiles.Q2 = tmin;
-        quartiles.Q3 = 0.;
+        quartiles.Q3 = tmin;
         return quartiles;
     }
     const double q1index = vector_interpolate_idx_for_value(0.25, repartition);
@@ -625,6 +656,13 @@ std::pair<double, double> credibilityForTrace(const QVector<double>& trace, doub
     std::pair<double, double> credibility(0.,0.);
     exactThresholdResult = 0.;
     size_t n = trace.size();
+
+    if (n == 1) {
+        credibility.first = trace[0];
+        credibility.second = trace[0];
+        return credibility;
+    }
+
     if (thresh > 0 && n > 0) {
         double threshold = inRange(0.0, thresh, 100.0);
         QVector<double> sorted (trace);
@@ -663,6 +701,12 @@ std::pair<double, double> credibilityForTrace(const QVector<int>& trace, double 
     std::pair<double, double> credibility(0.,0.);
     exactThresholdResult = 0.;
     const int n = trace.size();
+    if (n == 1) {
+        credibility.first = trace[0];
+        credibility.second = trace[0];
+        return credibility;
+    }
+
     if (thresh > 0 && n > 0) {
         double threshold = inRange(0.0, thresh, 100.0);
         QVector<int> sorted (trace);
@@ -1172,10 +1216,10 @@ void resizeMatrix(std::vector<std::vector<double>> &matrix,  size_t rows, size_t
 void resizeLongMatrix(Matrix2D & matrix,  size_t rows, size_t cols)
 {
     Matrix2D resMatrix ( rows );
-    std::valarray<double>* itRes = begin(resMatrix);
-    std::valarray<double>* it = begin(matrix);
+    std::valarray<Matrix2D::value_type::value_type>* itRes = begin(resMatrix);
+    std::valarray<Matrix2D::value_type::value_type>* it = begin(matrix);
     for ( ; it != end(matrix) && itRes != end(resMatrix) ; ++it, ++itRes) {
-        *itRes = std::valarray<double>  ( (*it)[std::slice(0, cols, 1)] );
+        *itRes = std::valarray<Matrix2D::value_type::value_type>  ( (*it)[std::slice(0, cols, 1)] );
     }
     matrix = resMatrix;
  /*
@@ -1186,26 +1230,27 @@ void resizeLongMatrix(Matrix2D & matrix,  size_t rows, size_t cols)
     */
 }
 
-Matrix2D seedMatrix(const Matrix2D &matrix, size_t shift)
+Matrix2D seedMatrix(const Matrix2D matrix, size_t shift)
 {
-    if (shift == 0)
+    if (shift == 0) {
         return matrix;
+    }
     size_t n = matrix[0].size() - 2*shift;
     Matrix2D resMatrix ( n );
     auto itRes = begin(resMatrix);
     for ( auto it = begin(matrix)+shift; it != end(matrix)-shift; ++it) {
         //*itRes = std::valarray<long double>  ( begin(*it) +shift, end(*it)-shift );
-        *itRes = std::valarray<double>  ( (*it)[std::slice(shift, n, 1)] );
+        *itRes = std::valarray<Matrix2D::value_type::value_type>  ( (*it)[std::slice(shift, n, 1)] );
         ++itRes;
     }
     return resMatrix;
 }
 
-double determinant(const Matrix2D &matrix, size_t shift)
+Matrix2D::value_type::value_type determinant(const Matrix2D &matrix, size_t shift)
 {
- //https://askcodez.com/matrice-de-determinant-de-lalgorithme-de-c.html
+
     size_t n = matrix.size();
-    double det;
+    Matrix2D::value_type::value_type det;
 
     if (n - 2*shift == 1) {
           det = matrix[shift][shift];
@@ -1214,7 +1259,12 @@ double determinant(const Matrix2D &matrix, size_t shift)
         det = matrix[shift][shift] * matrix[1+shift][1+shift] - matrix[1+shift][shift] * matrix[shift][1+shift];
 
     } else {
-        Matrix2D matrix2 = seedMatrix(matrix, shift);
+        Matrix2D matrix2;
+        if (shift == 0)
+            matrix2 = matrix;
+        else
+            matrix2 = seedMatrix(matrix, shift);
+
         n = matrix2.size();
 
         Matrix2D matTmp = initMatrix2D(n-1, n-1);
@@ -1252,10 +1302,10 @@ double determinant(const Matrix2D &matrix, size_t shift)
  * @param shift
  * @return
  */
-double determinant_gauss(const Matrix2D &matrix, size_t shift)
+Matrix2D::value_type::value_type determinant_gauss(const Matrix2D &matrix, size_t shift)
 {
     size_t n = matrix.size();
-    double det;
+    Matrix2D::value_type::value_type det;
 
     if (n - 2*shift == 1) {
           det = matrix[shift][shift];
@@ -1294,7 +1344,7 @@ double determinant_gauss(const Matrix2D &matrix, size_t shift)
     for ( j=0; j<n-1; j++)    {
 
       size_t  rankMax,rank;
-      double  coeffMax;
+      Matrix2D::value_type::value_type  coeffMax;
 
       // ( etape 1 )
       rankMax = j;
@@ -1310,7 +1360,7 @@ double determinant_gauss(const Matrix2D &matrix, size_t shift)
       }
       // ( etape 2 )
       if (rankMax != j)  {
-        double tmp;
+        Matrix2D::value_type::value_type tmp;
         for (i=j; i<n; i++) {
           tmp = matTmp[j][i];
           matTmp[j][i] = matTmp[rankMax][i];
@@ -1321,7 +1371,7 @@ double determinant_gauss(const Matrix2D &matrix, size_t shift)
 
       det *= coeffMax;
       // ( etape 3 )
-      double coeff;
+      Matrix2D::value_type::value_type coeff;
       for (rank=j+1; rank<n; rank++) {
         coeff = matTmp[rank][j]/coeffMax;
         for ( i=j; i<n; i++)  {
@@ -1350,7 +1400,7 @@ Matrix2D transpose0(const Matrix2D &A)
    Matrix2D TA  = initMatrix2D(n, n);
 
    auto Ai = begin(A);
-   const double * Aij;
+   const Matrix2D::value_type::value_type* Aij;
    size_t i, j;
    for ( i = 0 ; Ai != end(A); Ai++, i++)
        for (j= 0, Aij = begin(*Ai) ; Aij != end(*Ai); Aij++, j++)
@@ -1381,34 +1431,34 @@ Matrix2D transpose(const Matrix2D &matrix, const int nbBandes)
 }
 
 
-Matrix2D multiMatParDiag(const Matrix2D &matrix, const std::vector<double> &diag, size_t nbBandes)
+Matrix2D multiMatParDiag(const Matrix2D &matrix, const MatrixDiag &diag, size_t nbBandes)
 {
     const int dim = matrix.size();
     Matrix2D result = initMatrix2D(dim, dim);
     const int k = floor((nbBandes-1)/2); // calcul du nombre de bandes
 
     int i = 0;
-    for (auto matrix_i : matrix) {
+    for (auto& matrix_i : matrix) {
         int j1 = std::max(0, i - k);
         int j2 = std::min(dim-1, i + k);
 
-        double* result_i = begin(result[i]);
+        auto* result_i = begin(result[i]);
         for (int j = j1; j <= j2; ++j) {
-            result_i[j] = matrix_i[j] * diag.at(j);
+            result_i[j] = matrix_i[j] * diag[j];
         }
         i++;
     }
     return result;
 }
 
-Matrix2D multiDiagParMat(const std::vector<double> &diag, const Matrix2D &matrix, const int nbBandes)
+Matrix2D multiDiagParMat(const MatrixDiag &diag, const Matrix2D &matrix, const int nbBandes)
 {
     const int dim = matrix.size();
     Matrix2D result = initMatrix2D(dim, dim);
     const int k = floor((nbBandes-1)/2); // calcul du nombre de bandes
 
     int i = 0;
-    for (auto matrix_i : matrix) {
+    for (auto& matrix_i : matrix) {
         int j1 = std::max(0, i - k);
         int j2 = std::min(dim-1, i + k);
 
@@ -1439,12 +1489,31 @@ std::vector<double> multiMatParVec(const Matrix2D &matrix, const std::vector<dou
         sum = 0.;
         int  j1 = std::max(0, i - k);
         int  j2 = std::min(dim-1, i + k);
-        const double* matrix_i = begin(matrix[i]);
+        const Matrix2D::value_type::value_type* matrix_i = begin(matrix[i]);
         for (int j = j1; j <= j2; ++j) {
             sum += matrix_i[j] * vec[j];
         }
         result.push_back(sum);
     }
+    return result;
+}
+
+
+Matrix2D addMatEtMat0(const Matrix2D &matrix1, const Matrix2D &matrix2)
+{
+    const size_t dim = matrix1.size();
+
+    Matrix2D result = matrix1;
+
+    size_t i = 0;
+    for (auto&& result_i : result) {
+         const Matrix2D::value_type::value_type* matrix2_i = begin(matrix2[i]);
+         for (size_t j = 0; j < dim; ++j) {
+            result_i[j] +=  matrix2_i[j];
+        }
+        i++;
+    }
+
     return result;
 }
 
@@ -1455,24 +1524,6 @@ std::vector<double> multiMatParVec(const Matrix2D &matrix, const std::vector<dou
  * @param nbBandes2 The total Bandwidth = k1+k2 of Band matrix 2
  * @return
  */
-Matrix2D addMatEtMat0(const Matrix2D &matrix1, const Matrix2D &matrix2)
-{
-    const unsigned long dim = matrix1.size();
-
-    Matrix2D result = matrix1;
-
-    unsigned long i = 0;
-    for (auto&& result_i : result) {
-         const double* matrix2_i = begin(matrix2[i]);
-         for (unsigned long j = 0; j < dim; ++j) {
-            result_i[j] +=  matrix2_i[j];
-        }
-        i++;
-    }
-
-    return result;
-}
-
 Matrix2D addMatEtMat(const Matrix2D &matrix1, const Matrix2D &matrix2, const int nbBandes2)
 {
     const int dim = matrix1.size();
@@ -1483,7 +1534,7 @@ Matrix2D addMatEtMat(const Matrix2D &matrix1, const Matrix2D &matrix2, const int
     int i = 0;
 
     for (auto&& result_i : result) {
-        const double* matrix2_i = begin(matrix2[i]);
+        const Matrix2D::value_type::value_type* matrix2_i = begin(matrix2[i]);
         int j1 = std::max(0, i - k);
         int j2 = std::min(dim-1, i + k);
          for (int j = j1; j <= j2; ++j) {
@@ -1496,10 +1547,10 @@ Matrix2D addMatEtMat(const Matrix2D &matrix1, const Matrix2D &matrix2, const int
 
 Matrix2D addIdentityToMat(const Matrix2D& matrix)
 {
-    const unsigned long dim = matrix.size();
+    const auto dim = matrix.size();
     Matrix2D result = matrix;
 
-    for (unsigned long i = 0; i < dim; ++i)
+    for (size_t i = 0; i < dim; ++i)
         result[i][i] += 1.;
 
     return result;
@@ -1528,17 +1579,17 @@ Matrix2D multiConstParMat(const Matrix2D& matrix, const double c, const int nbBa
  */
 Matrix2D multiMatParMat0(const Matrix2D& matrix1, const Matrix2D& matrix2)
 {
-    const unsigned long n = matrix1.size();
+    const size_t n = matrix1.size();
     Matrix2D result = initMatrix2D(n, n);
-    const double* itMat1;
-    double sum;
+    const Matrix2D::value_type::value_type* itMat1;
+    Matrix2D::value_type::value_type sum;
 
-    for (unsigned long i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         itMat1 = begin(matrix1[i]);
 
-        for (unsigned long j = 0; j < n; ++j) {
+        for (size_t j = 0; j < n; ++j) {
            sum = 0;
-            for (unsigned long k = 0; k < n; ++k) {
+            for (size_t k = 0; k < n; ++k) {
                 sum += (*(itMat1 + k)) * matrix2[k][j];
 
             }
@@ -1569,7 +1620,7 @@ Matrix2D multiplyMatrix_Naive(const Matrix2D& a, const Matrix2D& b)
         for (size_t j = 0; j < b_col; j++) {
             ci[j] = std::inner_product(begin(a[i]), begin(a[i]) + a_col,
                                        begin(b),
-                                       0., std::plus<double>(), [ j](const double a_, const std::valarray<double> b_)
+                                       0., std::plus<Matrix2D::value_type::value_type>(), [ j](const Matrix2D::value_type::value_type a_, const std::valarray<Matrix2D::value_type::value_type> b_)
             { return a_ * b_[j];} );
 
 
@@ -1591,29 +1642,29 @@ Matrix2D multiplyMatrix_Naive(const Matrix2D& a, const Matrix2D& b)
 Matrix2D multiMatParMat(const Matrix2D& matrix1, const Matrix2D& matrix2, const int nbBandes1, const int nbBandes2)
 {
     const int dim = matrix1.size();
-       Matrix2D result = initMatrix2D(dim, dim);
+    Matrix2D result = initMatrix2D(dim, dim);
 
-       const int bande1 = floor((nbBandes1-1)/2);
-       const int bande2 = floor((nbBandes2-1)/2);
-       const int bandeRes = bande1 + bande2 +1;
+    const int bande1 = floor((nbBandes1-1)/2);
+    const int bande2 = floor((nbBandes2-1)/2);
+    const int bandeRes = bande1 + bande2 +1;
 
-       for (int i = 0; i < dim ; ++i) {
-           int j1 = std::max(0, i -  bandeRes);
-           int j2 = std::min(dim, i + bandeRes);
+    for (int i = 0; i < dim ; ++i) {
+        int j1 = std::max(0, i -  bandeRes);
+        int j2 = std::min(dim, i + bandeRes);
 
-           int k1 = std::max(0, i - bandeRes);
-           int k2 = std::min(dim, i + bandeRes);
-           auto* itMat1 = begin(matrix1[i]);
+        int k1 = std::max(0, i - bandeRes);
+        int k2 = std::min(dim, i + bandeRes);
+        auto* itMat1 = begin(matrix1[i]);
 
-           for (int j = j1; j < j2; ++j) {
-               double sum = 0;
-               for (int k = k1; k < k2; ++k) {
-                   sum += itMat1[k] * matrix2[k][j];
-               }
-               result[i][j] = sum;
-           }
-       }
-       return result;
+        for (int j = j1; j < j2; ++j) {
+            t_matrix sum = 0.L;
+            for (int k = k1; k < k2; ++k) {
+                sum += itMat1[k] * matrix2[k][j];
+            }
+            result[i][j] = sum;
+        }
+    }
+    return result;
 }
 
 
@@ -1684,7 +1735,7 @@ Matrix2D multiplyMatrix_Winograd(const Matrix2D& a, const Matrix2D& b)
     Matrix2D c = initMatrix2D(a_row, b_col);
 
     for (size_t j = 0; j < a_row; j++) {
-      double* cj = begin(c[j]);
+      Matrix2D::value_type::value_type* cj = begin(c[j]);
       for (size_t k = 0; k < b_col; k++) {
           cj[k] = 0;
           for (size_t t = 0; t < b_col; t++) {
@@ -1716,7 +1767,7 @@ Matrix2D inverseMatSym0(const Matrix2D& matrix, const int shift)
     int n = matrix.size();
     Matrix2D matInv2 = comatrice0(matrix2);
 
-    const double det = determinant(matrix2);
+    const auto det = determinant(matrix2);
     if (det == 0) {
            throw std::runtime_error("inverseMatSym0 det == 0");
        }
@@ -1739,30 +1790,32 @@ Matrix2D inverseMatSym0(const Matrix2D& matrix, const int shift)
 **** Attention : il y a une faute dans le bouquin de Green...!      ****
 **/
 // inverse_Mat_sym dans RenCurve
-Matrix2D inverseMatSym_origin(const Matrix2D &matrixLE,  const std::vector<double> &matrixDE, const int nbBandes, const int shift)
+Matrix2D inverseMatSym_origin(const std::pair<Matrix2D, MatrixDiag> &decomp, const int nbBandes, const int shift)
 {
-    int dim = matrixLE.size();
+    auto &L = decomp.first;
+    auto &matrixDE = decomp.second;
+    int dim = L.size();
     Matrix2D matInv = initMatrix2D(dim, dim);
     int bande = floor((nbBandes-1)/2);
 
     matInv[dim-1-shift][dim-1-shift] = 1. / matrixDE[dim-1-shift];
 
     if (dim >= 4) {
-        matInv[dim-2-shift][dim-1-shift] = -matrixLE[dim-1-shift][dim-2-shift] * matInv[dim-1-shift][dim-1-shift];
-        matInv[dim-2-shift][dim-2-shift] = (1. / matrixDE[dim-2-shift]) - matrixLE[dim-1-shift][dim-2-shift] * matInv[dim-2-shift][dim-1-shift];
+        matInv[dim-2-shift][dim-1-shift] = -L[dim-1-shift][dim-2-shift] * matInv[dim-1-shift][dim-1-shift];
+        matInv[dim-2-shift][dim-2-shift] = (1. / matrixDE[dim-2-shift]) - L[dim-1-shift][dim-2-shift] * matInv[dim-2-shift][dim-1-shift];
     }
 
     // shift : décalage qui permet d'éliminer les premières et dernières lignes et colonnes
     // La boucle suivante n'est executée que si dim >=5
     for (int i = dim-3-shift; i>=shift; --i) {
-        matInv[i][i+2] = -matrixLE[i+1][i] * matInv[i+1][i+2] - matrixLE[i+2][i] * matInv[i+2][i+2];
-        matInv[i][i+1] = -matrixLE[i+1][i] * matInv[i+1][i+1] - matrixLE[i+2][i] * matInv[i+1][i+2];
-        matInv[i][i] = (1. / matrixDE[i]) - matrixLE[i+1][i] * matInv[i][i+1] - matrixLE[i+2][i] * matInv[i][i+2];
+        matInv[i][i+2] = -L[i+1][i] * matInv[i+1][i+2] - L[i+2][i] * matInv[i+2][i+2];
+        matInv[i][i+1] = -L[i+1][i] * matInv[i+1][i+1] - L[i+2][i] * matInv[i+1][i+2];
+        matInv[i][i] = (1. / matrixDE[i]) - L[i+1][i] * matInv[i][i+1] - L[i+2][i] * matInv[i][i+2];
 
         if (bande >= 3)  {
             for (int k=3; k<=bande; ++k) {
                 if (i+k < (dim - shift))  {
-                    matInv[i][i+k] = -matrixLE[i+1][i] * matInv[i+1][i+k] - matrixLE[i+2][i] * matInv[i+2][i+k];
+                    matInv[i][i+k] = -L[i+1][i] * matInv[i+1][i+k] - L[i+2][i] * matInv[i+2][i+k];
                 }
             }
         }
@@ -1781,15 +1834,15 @@ Matrix2D inverseMatSym_origin(const Matrix2D &matrixLE,  const std::vector<doubl
 
 
 
-Matrix2D inverseMatSym(const Matrix2D& matrixLE, const std::vector<double>& matrixDE, const int nbBandes, const int shift)
+Matrix2D inverseMatSym(const Matrix2D& matrixLE, const MatrixDiag &matrixDE, const int nbBandes, const int shift)
 {
     const int dim = matrixLE.size();
     Matrix2D matInv = initMatrix2D(dim, dim);
     const int bande = floor((nbBandes-1)/2);
 
-    matInv[dim-1-shift][dim-1-shift] = 1. / matrixDE.at(dim-1-shift);
+    matInv[dim-1-shift][dim-1-shift] = 1. / matrixDE[dim-1-shift];
     matInv[dim-2-shift][dim-1-shift] = -matrixLE[dim-1-shift][dim-2-shift] * matInv[dim-1-shift][dim-1-shift];
-    matInv[dim-2-shift][dim-2-shift] = (1. / matrixDE.at(dim-2-shift)) - matrixLE[dim-1-shift][dim-2-shift] * matInv[dim-2-shift][dim-1-shift];
+    matInv[dim-2-shift][dim-2-shift] = (1. / matrixDE[dim-2-shift]) - matrixLE[dim-1-shift][dim-2-shift] * matInv[dim-2-shift][dim-1-shift];
 
     if (bande >= 3) {
         for (int i = dim-3-shift; i >= shift; --i) {
@@ -1854,6 +1907,7 @@ Matrix2D inverseMatSym(const Matrix2D& matrixLE, const std::vector<double>& matr
 
 /* Never used !!!
  */
+
 double sumAllMatrix(const std::vector<std::vector<double>>& matrix)
 {
     double sum = 0.;
@@ -1862,6 +1916,20 @@ double sumAllMatrix(const std::vector<std::vector<double>>& matrix)
     }
     return sum;
 }
+
+t_matrix sumAllMatrix(const Matrix2D &m)
+{
+    t_matrix som = 0;
+    size_t n = m.size();
+    for (size_t j = 0; j < n; ++j)
+        for (size_t k = 0; k < n; ++k)
+            som += m[j][k];
+
+    return som;
+}
+
+
+
 
 /* Never used !!!
  */
@@ -1875,7 +1943,7 @@ Matrix2D cofactor0(const Matrix2D& matrix)
     const unsigned long n = matrix.size();
     Matrix2D result = initMatrix2D(n, n);
     Matrix2D matMinorTmp = initMatrix2D(n-1, n-1);
-    long double det;
+    Matrix2D::value_type::value_type det;
     unsigned long i1, k1;
     for (unsigned long j=0; j<n; j++) {
         for (unsigned long i=0; i<n; i++) {
@@ -1911,7 +1979,7 @@ Matrix2D comatrice0(const Matrix2D& matrix)
     const unsigned long n = matrix.size();
     Matrix2D result = initMatrix2D(n, n);
     Matrix2D matMinorTmp = initMatrix2D(n-1, n-1);
-    double det;
+    Matrix2D::value_type::value_type det;
     unsigned long i1, k1;
     for (unsigned long j=0; j<n; j++) {
         for (unsigned long i=0; i<n; i++) {
@@ -1945,22 +2013,22 @@ Matrix2D comatrice0(const Matrix2D& matrix)
 
 Matrix2D choleskyLL0(const Matrix2D &matrix)
 {
-    const unsigned long n = matrix.size();
+    const size_t n = matrix.size();
 
     Matrix2D L = initMatrix2D(n, n);
-    double sum;
+    Matrix2D::value_type::value_type sum;
 
-    for (unsigned long i=0; i<n; i++) {
+    for (size_t i=0; i<n; i++) {
         sum = matrix[i][i];
-        for (unsigned long k=0; k<i; k++)
+        for (size_t k=0; k<i; k++)
             sum -= pow(L[i][k], 2.);
 
         L[i][i] = sqrt(sum);
 
-        for (unsigned long j=i+1; j<n; j++) {
+        for (size_t j=i+1; j<n; j++) {
             sum = matrix[i][j];
 
-            for (unsigned long k=0; k<j-1; k++)
+            for (size_t k=0; k<j-1; k++)
                 sum -=  L[j][k] * L[i][k];
 
             L[j][i] = sum / L[i][i];
@@ -1975,62 +2043,61 @@ Matrix2D choleskyLL0(const Matrix2D &matrix)
  * @param matrix
  * @return pair of 2 matrix
  */
-std::pair<Matrix2D, std::vector<double> > choleskyLDLT(const Matrix2D& matrix)
+std::pair<Matrix2D, MatrixDiag> choleskyLDLT(const Matrix2D &matrix)
 {
-    // fonction à controler
-    const unsigned long n = matrix.size();
+
+    const size_t n = matrix.size();
 
     Matrix2D L = initMatrix2D(n, n);
-    std::vector<double> D = initVector(n);
+    MatrixDiag D = MatrixDiag (n, 0);
 
-    for (unsigned long i=0; i<n; i++) {
+    for (size_t i=0; i<n; i++) {
             L[i][i] = 1;
-            for (unsigned long j=0; j<i; j++) {
+            for (size_t j=0; j<i; j++) {
                 L[i][j] = matrix[i][j];
-                for (unsigned long k=0; k<j; k++) {
-                   L[i][j] -=  L[i][k] * L[j][k] *D.at(k);
+                for (size_t k=0; k<j; k++) {
+                   L[i][j] -=  L[i][k] * L[j][k] *D[k];
                 }
-                L[i][j] /= D.at(j);
+                L[i][j] /= D[j];
             }
             D[i] = matrix[i][i];
-            for (unsigned long j=0; j<i; j++)
-                D[i] -=  D.at(j) * pow(L[i][j], 2.);
+            for (size_t j=0; j<i; j++)
+                D[i] -=  D[j] * pow(L[i][j], 2.);
       }
 
-    return std::pair<Matrix2D, std::vector< double>>(L, D);
+    return std::pair<Matrix2D, MatrixDiag>(L, D);
 }
 
-std::pair<Matrix2D, std::vector<double> > choleskyLDLT(const Matrix2D& matrix, const int shift)
+std::pair<Matrix2D, MatrixDiag > choleskyLDLT(const Matrix2D &matrix, const int shift)
 {
     const int n = matrix.size();
 
     Matrix2D L = initMatrix2D(n, n);
-    std::vector<double> D (n);
+    MatrixDiag D = MatrixDiag (n, 0.);
 
     for (int i = shift; i < n-shift; i++) {
-            L[i][i] = 1;
+            L[i][i] = (t_matrix) (1.);
             for (int j = shift; j < std::min(i, n-shift); j++) {
                 L[i][j] = matrix[i][j];
                 for (int k = shift; k< std::min(j, n-shift); k++) {
-                   L[i][j] -=  L[i][k] * L[j][k] *D.at(k);
+                   L[i][j] -=  L[i][k] * L[j][k] *D[k];
                 }
                 L[i][j] /= D[j];
             }
             D[i] = matrix[i][i];
             for (int j = shift; j< std::min(i, n-shift); j++)
-                D[i] -=  D[j] * pow(L[i][j], 2.);
+                D[i] -=  D[j] * powl(L[i][j], 2.L);
       }
 
-    return std::pair<Matrix2D, std::vector< double>>(L, D);
+    return std::pair<Matrix2D, MatrixDiag>(L, D);
 }
 
-std::pair<Matrix2D, std::vector<double> > choleskyLDLT(const Matrix2D& matrix, const int nbBandes, const int shift)
+std::pair<Matrix2D, MatrixDiag > choleskyLDLT(const Matrix2D &matrix, const int nbBandes, const int shift)
 {
-    // fonction à controler
     const int n = matrix.size();
 
     Matrix2D L = initMatrix2D(n, n);
-    std::vector<double> D (n);
+    MatrixDiag D (n);
 
     for (int i = shift; i < n-shift; i++) {
             L[i][i] = 1;
@@ -2038,7 +2105,7 @@ std::pair<Matrix2D, std::vector<double> > choleskyLDLT(const Matrix2D& matrix, c
                if (abs(i - j) <= nbBandes) {
                    L[i][j] = matrix[i][j];
                    for (int k = shift; k< std::min(j, n-shift); k++) {
-                       L[i][j] -=  L[i][k] * L[j][k] *D.at(k);
+                       L[i][j] -=  L[i][k] * L[j][k] *D[k];
                    }
                    L[i][j] /= D[j];
                }
@@ -2049,17 +2116,21 @@ std::pair<Matrix2D, std::vector<double> > choleskyLDLT(const Matrix2D& matrix, c
                     D[i] -=  D[j] * pow(L[i][j], 2.);
       }
 
-    return std::pair<Matrix2D, std::vector< double>>(L, D);
+    return std::pair<Matrix2D, MatrixDiag>(L, D);
 }
 
 
-std::pair<Matrix2D, std::vector<double> > choleskyLDLT_Dsup0(const Matrix2D& matrix, const int nbBandes, const int shift)
-{
-    // fonction à controler
-    const int n = matrix.size();
 
+std::pair<Matrix2D, MatrixDiag> choleskyLDLT_Dsup0(const Matrix2D& matrix, const int nbBandes, const int shift)
+{
+    const int n = matrix.size();
+#ifdef DEBUG
+    t_matrix det = determinant_gauss(matrix, shift);
+    if (det == 0)
+        qDebug() << "[ Function] choleskyLDLT_Dsup0 : singular matrix, not regular : determinant =" << (double) det;
+#endif
     Matrix2D L = initMatrix2D(n, n);
-    std::vector<double> D = initVector(n);
+    MatrixDiag D =  MatrixDiag (n, 0);
 
     for (int i = shift; i < n-shift; i++) {
             L[i][i] = 1;
@@ -2067,7 +2138,7 @@ std::pair<Matrix2D, std::vector<double> > choleskyLDLT_Dsup0(const Matrix2D& mat
                if (abs(i - j) <= nbBandes) {
                    L[i][j] = matrix[i][j];
                    for (int k = shift; k< std::min(j, n-shift); k++) {
-                       L[i][j] -=  L[i][k] * L[j][k] *D.at(k);
+                       L[i][j] -=  L[i][k] * L[j][k] *D[k];
                    }
                    L[i][j] /= D[j];
                }
@@ -2079,14 +2150,15 @@ std::pair<Matrix2D, std::vector<double> > choleskyLDLT_Dsup0(const Matrix2D& mat
             }
 
       }
-
+#ifdef DEBUG
     for (int i = shift; i < n-shift; i++) {
         if (D[i] < 0) {
-            qDebug() << "Function::choleskyLDLT_Dsup0 : D <0 change to 0"<< D[i];
+            qDebug() << "[ Function] choleskyLDLT_Dsup0 : D <0 change to 0"<< (double)D[i];
             D[i] = 0;
         }
     }
-    return std::pair<Matrix2D, std::vector< double>>(L, D);
+#endif
+    return std::pair<Matrix2D, MatrixDiag>(L, D);
 }
 
 /**
@@ -2102,14 +2174,14 @@ std::pair<Matrix2D, std::vector<double> > choleskyLDLT_Dsup0(const Matrix2D& mat
 */
 
 //  link to check  https://mxncalc.com/fr/cholesky-decomposition-calculator
-std::pair<Matrix2D, std::vector<double>> decompositionCholesky(const Matrix2D& matrix, const int nbBandes, const int shift)
+std::pair<Matrix2D, MatrixDiag> decompositionCholesky(const Matrix2D &matrix, const int nbBandes, const int shift)
 {
     errno = 0;
       //if (math_errhandling & MATH_ERREXCEPT) feclearexcept(FE_ALL_EXCEPT);
 
     const int dim = matrix.size();
     Matrix2D matL = initMatrix2D(dim, dim);
-    std::vector< double> matD (dim);
+    MatrixDiag matD (dim);
 
     if (dim - 2*shift == 1) { // cas des splines avec 3 points
         matD[1] = matrix[1][1];;
@@ -2131,33 +2203,40 @@ std::pair<Matrix2D, std::vector<double>> decompositionCholesky(const Matrix2D& m
                 /*   avec bande */
                 for (int j = shift+1; j < i; ++j) {
                     if (abs(i - j) <= nbBandes) {
-                        double sum = 0.;
+                        Matrix2D::value_type::value_type _sum = 0.;
                         for (int k = shift; k < j; ++k) {
                             if (abs(i - k) <= nbBandes) {
-                                sum += matL[i][k] * matD.at(k) * matL[j][k];
+                                _sum += matL[i][k] * matD[k] * matL[j][k];
                             }
                         }
-                        matL[i][j] = (matrix[i][j] - sum) / matD.at(j);
+                        matL[i][j] = (matrix[i][j] - _sum) / matD[j];
                     }
                 }
 
-                double sum = 0.;
+                t_matrix sum = 0.;
                 for (int k = shift; k < i; ++k) {
                     if (abs(i - k) <= nbBandes) {
                         sum += std::pow(matL[i][k], 2.) * matD[k];
                     }
                 }
 
+                matD[i] = matrix[i][i] - sum; // doit être non-nul;
 
-                matD[i] = matrix[i][i] - sum; // doit être positif
-#ifdef DEBUG
+
+
                 if (matD[i] <= 0) {
-                    qDebug() << "[Function] decompositionCholesky : matD ="<< matD[i]<< " <=0 change to 0";
-                    matD[i] = 0;
-                }
-                if (matD[i] >= 1.E20) {
-                    qDebug() << "[Function] decompositionCholesky : matD[i] ="<< matD[i]<< " >= 1.E+20 ";
+                    QThread *tt = QThread::currentThread();
+                    auto mcmcLoop = static_cast<MCMCLoop*>(tt);
+                    mcmcLoop->mAbortedReason = "Error : [Function::decompositionCholesky]  matD <= 0";//.arg(QString::number((double)matD[i]));
 
+                 //   mcmc->exit();
+                 //   mcmc->quit();
+                    mcmcLoop->terminate();
+
+                }
+#ifdef DEBUG
+                if (matD[i] >= 1.E20) {
+                    qDebug() << "[Function::decompositionCholesky]  matD[i] ="<< (double)matD[i]<< " >= 1.E+20 ";
                 }
 #endif
             }
@@ -2176,44 +2255,49 @@ std::pair<Matrix2D, std::vector<double>> decompositionCholesky(const Matrix2D& m
             // 0 X X 1 0
             // 0 0 0 0 0
 
+        } catch(const char*e) {
+            qCritical() << "[Function::decompositionCholesky] " << e;
+
         } catch(...) {
-            qDebug() << "[Function] decompositionCholesky : Caught Exception!\n";
+            qCritical() << "[Function::decompositionCholesky]  Caught Exception!\n";
+
         }
     }
 
-   //std::pair<Matrix2D, std::vector<double>> tmp =  choleskyLDLT_Dsup0(matrix, nbBandes, shift);
-    return std::pair<Matrix2D, std::vector<double>>(matL, matD);
+    return std::pair<Matrix2D, MatrixDiag>(matL, matD);
 }
 
-std::vector<double> resolutionSystemeLineaireCholesky(const Matrix2D &matL, const std::vector<double> &matD, const std::vector<double> &vecQtY)
+std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, MatrixDiag> &decomp, const std::vector<double> &vecQtY)
 {
-    const int n = matD.size();
+    const Matrix2D &L = decomp.first;
+    const MatrixDiag &D = decomp.second;
+    const int n = D.size();
     std::vector<double> vecGamma (n);
     std::vector<double> vecU (n);
     std::vector<double> vecNu (n);
 
     if (n > 3 ) {
         vecU[1] = vecQtY[1];
-        vecU[2] = vecQtY[2] - matL[2][1] * vecU[1];
+        vecU[2] = vecQtY[2] - L[2][1] * vecU[1];
 
         for (int i = 3; i < n-1; ++i) {
-            vecU[i] = vecQtY[i] - matL[i][i-1] * vecU[i-1] - matL[i][i-2] * vecU[i-2]; // pHd : Attention utilisation des variables déjà modifiées
+            vecU[i] = vecQtY[i] - L[i][i-1] * vecU[i-1] - L[i][i-2] * vecU[i-2]; // pHd : Attention utilisation des variables déjà modifiées
         }
 
         for (int i = 1; i < n-1; ++i) {
-            vecNu[i] = vecU[i] / matD[i];
+            vecNu[i] = vecU[i] / D[i];
         }
 
         vecGamma[n-2] = vecNu.at(n-2);
-        vecGamma[n-3] = vecNu.at(n-3) - matL[n-2][n-3] * vecGamma[n-2];
+        vecGamma[n-3] = vecNu.at(n-3) - L[n-2][n-3] * vecGamma[n-2];
 
         for (int i = n-4; i > 0; --i) {
-            vecGamma[i] = vecNu[i] - matL[i+1][i] * vecGamma[i+1] - matL[i+2][i] * vecGamma[i+2]; // pHd : Attention utilisation des variables déjà modifiées
+            vecGamma[i] = vecNu[i] - L[i+1][i] * vecGamma[i+1] - L[i+2][i] * vecGamma[i+2]; // pHd : Attention utilisation des variables déjà modifiées
         }
 
     } else {
         // cas n = 3
-        vecGamma[1] = vecQtY[1] / matD[1];
+        vecGamma[1] = vecQtY[1] / D[1];
     }
 
     return vecGamma;
@@ -2226,19 +2310,19 @@ std::vector<double> resolutionSystemeLineaireCholesky(const Matrix2D &matL, cons
  * @param B square matrix NxN
  * @return one square matrix NxN
  */
-Matrix2D Strassen::sub(const Matrix2D &  A, const Matrix2D& B)
+Matrix2D Strassen::sub(const Matrix2D &A, const Matrix2D &B)
 {
     const int n = A.size();
 
     Matrix2D C  = initMatrix2D(n, n);
 
-    std::valarray< double>* ci = begin(C);
-    double* cij;
+    auto* ci = begin(C);
+    t_matrix* cij;
 
-    const std::valarray<double>* ai = begin(A);
-    const std::valarray<double>* bi = begin(B);
-    const double* aij;
-    const double* bij;
+    const auto* ai = begin(A);
+    const auto* bi = begin(B);
+    const t_matrix* aij;
+    const t_matrix* bij;
 
     for ( ; ai != end(A); ++ai, ++bi) {
         cij = begin(*ci);
@@ -2264,13 +2348,13 @@ Matrix2D Strassen::add(const Matrix2D& A, const Matrix2D& B)
 
    Matrix2D C = initMatrix2D(n, n);
 
-   std::valarray<double>* ci = begin(C);
-   double* cij;
+   Matrix2D::value_type* ci = begin(C);
+   Matrix2D::value_type::value_type* cij;
 
-   const std::valarray<double>* ai = begin(A);
-   const std::valarray<double>* bi = begin(B);
-   const double* aij;
-   const double* bij;
+   const Matrix2D::value_type* ai = begin(A);
+   const Matrix2D::value_type* bi = begin(B);
+   const Matrix2D::value_type::value_type* aij;
+   const Matrix2D::value_type::value_type* bij;
 
    for ( ; ai != end(A); ++ai, ++bi) {
        cij = begin(*ci);
@@ -2312,7 +2396,7 @@ void Strassen::join(const Matrix2D& C,  Matrix2D& P, int iB, int jB)
  * @param B square matrix size NxN
  * @return square matrix size NxN
  */
-Matrix2D Strassen::multiply(const Matrix2D& A, const Matrix2D& B)
+Matrix2D Strassen::multiply(const Matrix2D &A, const Matrix2D &B)
 {
     const int n = A.size();
     Matrix2D R;
@@ -2346,16 +2430,15 @@ Matrix2D Strassen::multiply(const Matrix2D& A, const Matrix2D& B)
 
         const int n1 = floor(nP2/2);
 
-        Matrix2D A11 = initMatrix2D(n1, n1);// (n1, std::vector<long double>(n1, 0.));
-        Matrix2D A12 = initMatrix2D(n1, n1);//(n1, std::vector<long double>(n1, 0.));
-        Matrix2D A21 = initMatrix2D(n1, n1);//(n1, std::vector<long double>(n1, 0.));
-        Matrix2D A22 = initMatrix2D(n1, n1);//(n1, std::vector<long double>(n1, 0.));
+        Matrix2D A11 = initMatrix2D(n1, n1);
+        Matrix2D A12 = initMatrix2D(n1, n1);
+        Matrix2D A21 = initMatrix2D(n1, n1);
+        Matrix2D A22 = initMatrix2D(n1, n1);
 
-        Matrix2D B11 = initMatrix2D(n1, n1);//(n1, std::vector<long double>(n1, 0.));
-        Matrix2D B12 = initMatrix2D(n1, n1);//(n1, std::vector<long double>(n1, 0.));
-        Matrix2D B21 = initMatrix2D(n1, n1);//(n1, std::vector<long double>(n1, 0.));
-        Matrix2D B22 = initMatrix2D(n1, n1);//(n1, std::vector<long double>(n1, 0.));
-
+        Matrix2D B11 = initMatrix2D(n1, n1);
+        Matrix2D B12 = initMatrix2D(n1, n1);
+        Matrix2D B21 = initMatrix2D(n1, n1);
+        Matrix2D B22 = initMatrix2D(n1, n1);
 
 
         /** Dividing matrix A into 4 halves **/
@@ -2486,6 +2569,55 @@ std::pair<Matrix2D, Matrix2D > decompositionLU0(const Matrix2D& A)
     return std::pair<Matrix2D, Matrix2D>(L, U);
 }
 
+std::pair<Matrix2D, Matrix2D> Doolittle_LU(const Matrix2D A)
+{
+    const int n = (int) A.size();
+    Matrix2D L = initMatrix2D(n, n);
+    Matrix2D U = initMatrix2D(n, n);
+    // Decomposing matrix into Upper and Lower
+    // triangular matrix
+    for (int i = 0; i < n; i++) {
+        // Upper Triangular
+        for (int k = i; k < n; k++) {
+            // Summation of L(i, j) * U(j, k)
+            t_matrix sum = 0;
+            for (int j = 0; j < i; j++)
+                sum += (L[i][j] * U[j][k]);
+
+            // Evaluating U(i, k)
+            U[i][k] = A[i][k] - sum;
+        }
+
+        // Lower Triangular
+        for (int k = i; k < n; k++) {
+            if (i == k)
+                L[i][i] = 1; // Diagonal as 1
+            else {
+                // Summation of L(k, j) * U(j, i)
+                t_matrix sum = 0;
+                for (int j = 0; j < i; j++)
+                    sum += (L[k][j] * U[j][i]);
+
+                // Evaluating L(k, i)
+                L[k][i] = (A[k][i] - sum) / U[i][i];
+
+            }
+
+        }
+
+    }
+
+    return std::pair<Matrix2D, Matrix2D>(L, U);
+}
+
+std::pair<Matrix2D, MatrixDiag> LU_to_LD(const std::pair<Matrix2D, Matrix2D> LU)
+{
+    MatrixDiag D;
+    for (size_t i =0; i< LU.second.size(); i++) {
+        D.push_back(LU.second[i][i]);
+    }
+    return std::pair<Matrix2D, MatrixDiag>(LU.first, D);
+}
 //https://en.wikipedia.org/wiki/QR_decomposition#Example
 // faster than que householderQR
 std::pair<Matrix2D, Matrix2D > decompositionQR(const Matrix2D& A)
@@ -2498,7 +2630,7 @@ std::pair<Matrix2D, Matrix2D > decompositionQR(const Matrix2D& A)
    for (int i=0; i<n; i++)
        Mat_H[i][i] = 1;
 
-   std::vector<double> Vec_V (n);
+   std::vector<Matrix2D::value_type::value_type> Vec_V (n);
 
 
      // si matrice Mat carrée avec diml=dimc, faire k=1 to dimc-1
@@ -2511,7 +2643,7 @@ std::pair<Matrix2D, Matrix2D > decompositionQR(const Matrix2D& A)
    auto Mat = A;
    for (int k = 0 ; k<n-1; k++) {
 
-       double a2 = 0.;
+       Matrix2D::value_type::value_type a2 = 0.;
        for (int i = k; i<n; i++)
            a2 += pow(A[i][k], 2.);
 
@@ -2536,7 +2668,7 @@ std::pair<Matrix2D, Matrix2D > decompositionQR(const Matrix2D& A)
            for (int i=k; i<n; i++)
                som += Vec_V[i] * Mat[i][j];
 
-           double c = som/beta;
+           Matrix2D::value_type::value_type c = som/beta;
 
            for (int i=k; i<n; i++)
                Mat[i][j] -= c*Vec_V[i];
@@ -2548,7 +2680,7 @@ std::pair<Matrix2D, Matrix2D > decompositionQR(const Matrix2D& A)
            for (int i=k; i<n; i++)
                som += Vec_V[i] * Mat_H[i][j];
 
-           double c = som/beta;
+           Matrix2D::value_type::value_type c = som/beta;
 
            for (int i=k; i<n; i++)
                Mat_H[i][j] -= c*Vec_V[i];

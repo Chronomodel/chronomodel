@@ -88,29 +88,42 @@ void ModelCurve::fromJson(const QJsonObject& json)
     }
 
     for (Event*& event: mEvents) {
-        if (event->type() ==  Event::eBound ||
-            mCurveSettings.mTimeType == CurveSettings::eModeFixed)
+        if (event->type() ==  Event::eBound)
                event->mTheta.mSamplerProposal = MHVariable::eFixe;
 
-        else if (event->type() ==  Event::eDefault)
-                event->mTheta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+        else if (event->type() ==  Event::eDefault) {
+                if (mCurveSettings.mTimeType == CurveSettings::eModeFixed) {
+                    event->mTheta.mSamplerProposal = MHVariable::eFixe;
+                    for (Date &d : event->mDates) {
+                        d.mTi.mSamplerProposal = MHVariable::eFixe;
+                        d.mSigmaTi.mSamplerProposal = MHVariable::eFixe;
+                    }
+                } else
+                    event->mTheta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
+        }
 
         if (mCurveSettings.mVarianceType == CurveSettings::eModeFixed)
-            event->mVG.mSamplerProposal = MHVariable::eFixe;
+            event->mVg.mSamplerProposal = MHVariable::eFixe;
 
         else if (event->mPointType == Event::eNode)
-            event->mVG.mSamplerProposal = MHVariable::eFixe;
+            event->mVg.mSamplerProposal = MHVariable::eFixe;
         else
-            event->mVG.mSamplerProposal = MHVariable::eMHAdaptGauss;
+            event->mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
     }
 
+    mLambdaSpline.setName( "lambdaSpline");
     if (mCurveSettings.mLambdaSplineType == CurveSettings::eModeFixed)
         mLambdaSpline.mSamplerProposal = MHVariable::eFixe;
     else
         mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
-    mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    mS02Vg.setName("S02Vg");
+    if (mCurveSettings.mVarianceType == CurveSettings::eModeFixed)
+        mS02Vg.mSamplerProposal = MHVariable::eFixe;
+    else
+        mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
 }
 
@@ -131,7 +144,7 @@ void ModelCurve::saveToFile(QDataStream *out)
     // -----------------------------------------------------
 
     for (Event*& event : mEvents)
-        *out << event->mVG;
+        *out << event->mVg;
 
     *out << mLambdaSpline;
     *out << mS02Vg;
@@ -162,7 +175,7 @@ void ModelCurve::restoreFromFile(QDataStream* in)
     *----------------------------------------------------- */
 
     for (auto&& e : mEvents)
-        *in >> e->mVG;
+        *in >> e->mVg;
 
     /* -----------------------------------------------------
     *   Read curve data
@@ -468,8 +481,8 @@ void ModelCurve::generatePosteriorDensities(const QList<ChainSpecs> &chains, int
     Model::generatePosteriorDensities(chains, fftLen, bandwidth);
 
     for (Event* &event : mEvents) {
-        event->mVG.updateFormatedTrace();
-        event->mVG.generateHistos(chains, fftLen, bandwidth);
+        event->mVg.updateFormatedTrace();
+        event->mVg.generateHistos(chains, fftLen, bandwidth);
     }
 
     mLambdaSpline.updateFormatedTrace();
@@ -483,19 +496,24 @@ void ModelCurve::generateCorrelations(const QList<ChainSpecs> &chains)
 {
     Model::generateCorrelations(chains);
     for (auto&& event : mEvents )
-        event->mVG.generateCorrelations(chains);
+        if (event->mVg.mSamplerProposal != MHVariable::eFixe)
+            event->mVg.generateCorrelations(chains);
 
-    mLambdaSpline.generateCorrelations(chains);
-    mS02Vg.generateCorrelations(chains);
+    if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
+        mLambdaSpline.generateCorrelations(chains);
+
+    if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
+        mS02Vg.generateCorrelations(chains);
 }
 
 void ModelCurve::generateNumericalResults(const QList<ChainSpecs> &chains)
 {
     Model::generateNumericalResults(chains);
-    for (Event*& event : mEvents)
-        event->mVG.generateNumericalResults(chains);
-
+    for (Event*& event : mEvents) {
+        event->mVg.generateNumericalResults(chains);
+    }
     mLambdaSpline.generateNumericalResults(chains);
+
     mS02Vg.generateNumericalResults(chains);
 }
 
@@ -504,7 +522,7 @@ void ModelCurve::clearThreshold()
     Model::clearThreshold();
    // mThreshold = -1.;
     for (Event*& event : mEvents)
-        event->mVG.mThresholdUsed = -1.;
+        event->mVg.mThresholdUsed = -1.;
 
     mLambdaSpline.mThresholdUsed = -1.;
     mS02Vg.mThresholdUsed = -1.;
@@ -515,9 +533,8 @@ void ModelCurve::generateCredibility(const double& thresh)
     Model::generateCredibility(thresh);
 
     for (Event*& event : mEvents) {
-        event->mVG.generateCredibility(mChains, thresh);
+        event->mVg.generateCredibility(mChains, thresh);
     }
-
     mLambdaSpline.generateCredibility(mChains, thresh);
 
     mS02Vg.generateCredibility(mChains, thresh);
@@ -527,28 +544,19 @@ void ModelCurve::generateHPD(const double thresh)
 {
     Model::generateHPD(thresh);
 
-   // std::thread thEvents ([this] (double threshold)
-  //  {
-        for (Event*& event : mEvents) {
-            if (event->type() != Event::eBound) {
-                event->mVG.generateHPD(thresh);
-            }
-        };
-  //  } , thresh);
+    for (Event*& event : mEvents) {
+        if (event->type() != Event::eBound) {
+            if (event->mVg.mSamplerProposal != MHVariable::eFixe)
+                event->mVg.generateHPD(thresh);
+        }
+    };
 
-  //  std::thread thLambda ([this] (double threshold)
-  //  {
+    if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
         mLambdaSpline.generateHPD(thresh);
-  //  } , thresh);
 
-  //  std::thread thS02 ([this] (double threshold)
-  //  {
+    if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
         mS02Vg.generateHPD(thresh);
-  //  } , thresh);
 
-  //  thEvents.join();
-  //  thLambda.join();
-  //  thS02.join();
 }
 
 void ModelCurve::clearPosteriorDensities()
@@ -557,8 +565,8 @@ void ModelCurve::clearPosteriorDensities()
     
     for (Event*& event : mEvents) {
         if (event->type() != Event::eBound) {
-            event->mVG.mHisto.clear();
-            event->mVG.mChainsHistos.clear();
+            event->mVg.mHisto.clear();
+            event->mVg.mChainsHistos.clear();
         }
     }
     
@@ -575,8 +583,8 @@ void ModelCurve::clearCredibilityAndHPD()
     
     for (Event*& event : mEvents) {
         if (event->type() != Event::eBound) {
-            event->mVG.mHPD.clear();
-            event->mVG.mCredibility = std::pair<double, double>();
+            event->mVg.mHPD.clear();
+            event->mVg.mCredibility = std::pair<double, double>();
         }
     }
     
@@ -591,7 +599,7 @@ void ModelCurve::clearTraces()
 {
     Model::clearTraces();
   /*  for (Event*& event : mEvents)
-        event->mVG.reset();
+        event->mVg.reset();
 */
     mLambdaSpline.reset();
     mS02Vg.reset();
@@ -603,7 +611,7 @@ void ModelCurve::setThresholdToAllModel(const double threshold)
     Model::setThresholdToAllModel(threshold);
     
     for (Event*& event : mEvents)
-        event->mVG.mThresholdUsed = mThreshold;
+        event->mVg.mThresholdUsed = mThreshold;
 
     mLambdaSpline.mThresholdUsed = mThreshold;
     mS02Vg.mThresholdUsed = mThreshold;
@@ -644,16 +652,16 @@ QList<PosteriorMeanGComposante> ModelCurve::getChainsMeanGComposanteZ()
 void ModelCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante &spline, double& G, double& varG, double& GP, double& GS, unsigned& i0, const Model &model)
 {
     const unsigned long n = spline.vecThetaEvents.size();
-    const double tReduce =  model.reduceTime(t);
-    const double t1 = model.reduceTime(spline.vecThetaEvents.at(0));
-    const double tn = model.reduceTime(spline.vecThetaEvents.at(n-1));
+    const t_reduceTime tReduce =  model.reduceTime(t);
+    const t_reduceTime t1 = model.reduceTime(spline.vecThetaEvents.at(0));
+    const t_reduceTime tn = model.reduceTime(spline.vecThetaEvents.at(n-1));
     GP = 0.;
     GS = 0.;
     double h;
 
      // The first derivative is always constant outside the interval [t1,tn].
      if (tReduce < t1) {
-         const double t2 = model.reduceTime(spline.vecThetaEvents.at(1));
+         const t_reduceTime t2 = model.reduceTime(spline.vecThetaEvents.at(1));
 
          // ValeurGPrime
          GP = (spline.vecG.at(1) - spline.vecG.at(0)) / (t2 - t1);
@@ -670,7 +678,7 @@ void ModelCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante
 
      } else if (tReduce >= tn) {
 
-         const double tn1 = model.reduceTime(spline.vecThetaEvents.at(n-2));
+         const t_reduceTime tn1 = model.reduceTime(spline.vecThetaEvents.at(n-2));
 
          // valeurErrG
          varG = spline.vecVarG.at(n-1);
@@ -689,8 +697,8 @@ void ModelCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante
      } else {
         double err1, err2;
          for (; i0 < n-1; ++i0) {
-             const double ti1 = model.reduceTime(spline.vecThetaEvents.at(i0));
-             const double ti2 = model.reduceTime(spline.vecThetaEvents.at(i0 + 1));
+             const t_reduceTime ti1 = model.reduceTime(spline.vecThetaEvents.at(i0));
+             const t_reduceTime ti2 = model.reduceTime(spline.vecThetaEvents.at(i0 + 1));
              h = ti2 - ti1;
 
              if ((tReduce >= ti1) && (tReduce < ti2)) {
@@ -741,10 +749,10 @@ void ModelCurve::valeurs_G_varG_on_i(const MCMCSplineComposante& spline, double&
 
     } else if ((i > 0) && (i < n-1)) {
 
-        const double tReduce =  reduceTime(spline.vecThetaEvents.at(i)); //(t - tmin) / (tmax - tmin);
+        const t_reduceTime tReduce =  reduceTime(spline.vecThetaEvents.at(i)); //(t - tmin) / (tmax - tmin);
 
-        const double ti1 = reduceTime(spline.vecThetaEvents.at(i));
-        const double ti2 = reduceTime(spline.vecThetaEvents.at(i + 1));
+        const t_reduceTime ti1 = reduceTime(spline.vecThetaEvents.at(i));
+        const t_reduceTime ti2 = reduceTime(spline.vecThetaEvents.at(i + 1));
         const double h = ti2 - ti1;
         const double gi1 = spline.vecG.at(i);
 

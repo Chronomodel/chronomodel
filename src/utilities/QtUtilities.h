@@ -106,13 +106,17 @@ bool saveAsCsv(const QList<QStringList>& data, const QString& title = QObject::t
 template <typename T, typename V>
 QMap<T, V> getMapDataInRange(const QMap<T, V> &data, const T subMin, const  T subMax)
 {
-#ifdef DEBUG
-  //  if (data.size() == 0)
-  //      qDebug()<<"QtUtilities::getMapDataInRange data.size() == 0";
-
-#endif
     if (data.size() == 0)
         return data;
+
+    if (data.size() == 1) {
+        if (data.firstKey()>=subMin && data.firstKey()<= subMax) {
+            return data;
+        }
+        else
+            return QMap<T, V> ();
+    }
+
 
     T tBeforeSubMin;
     V vBeforeSubMin;

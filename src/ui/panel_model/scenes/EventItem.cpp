@@ -352,7 +352,7 @@ void EventItem::repositionDateItems()
     
     int i = 0;
     const QRectF rectTotal = QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
-    const QRectF rect = isCurveNode() ? rectTotal.adjusted(mNodeSkin + 2., mNodeSkin+2., -mNodeSkin-2., -mNodeSkin-2.) : rectTotal;
+    const QRectF rect = isCurveNode() ? rectTotal.adjusted(mNodeSkin + 1., mNodeSkin + 1., -mNodeSkin -1., -mNodeSkin - 1.) : rectTotal;
 
     qreal y = rect.y() + mTitleHeight + AbstractItem::mEltsMargin;
     qreal h = mEltsHeight + AbstractItem::mEltsMargin;
@@ -377,7 +377,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->setRenderHint(QPainter::Antialiasing);
 
     const QRectF rectTotal = QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
-    const QRectF rect = isCurveNode() ? rectTotal.adjusted(mNodeSkin + 2., mNodeSkin+2., -mNodeSkin-2., -mNodeSkin-2.) : rectTotal;
+    const QRectF rect = isCurveNode() ? rectTotal.adjusted(mNodeSkin + 1., mNodeSkin + 1., -mNodeSkin - 1., -mNodeSkin - 1.) : rectTotal;
 
     QColor eventColor = QColor(mData.value(STATE_COLOR_RED).toInt(),
        mData.value(STATE_COLOR_GREEN).toInt(),
@@ -436,7 +436,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     // it's a curve Node
     painter->setBrush(Qt::NoBrush);
     if (isCurveNode() && curveRect.height()>0) {
-        painter->setPen(QPen(Painting::mainColorDark, 7.));
+        painter->setPen(QPen(Painting::mainColorDark, 2.5));
         painter->drawRoundedRect(rectTotal, 4, 4);
     }
 
@@ -594,7 +594,7 @@ void EventItem::paintBoxCurveParameter (QPainter* painter, QRectF rectBox, Curve
 
         } else {
             if (cs.mVariableType == CurveSettings::eVariableTypeOther ) {
-                QString text1 = QObject::tr("Measure") + " = " + QLocale().toString (mData.value(STATE_EVENT_X_INC_DEPTH).toDouble());
+                QString text1 = QObject::tr("Y value") + " = " + QLocale().toString (mData.value(STATE_EVENT_X_INC_DEPTH).toDouble());
                 text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble());
                 painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
 

@@ -145,7 +145,7 @@ public:
     void fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
 
-    static Date fromCSV(const QStringList &dataStr, const QLocale& csvLocale);
+    static Date fromCSV(const QStringList &dataStr, const QLocale& csvLocale, const ProjectSettings settings);
     QStringList toCSV(const QLocale& csvLocale) const;
 
     long double getLikelihood(const double& t) const;
@@ -195,6 +195,7 @@ public:
     void initDelta(Event* event);
 
     void updateDate(Event *event);
+    void updateFixedDate(Event* event);
 
     void updateTi(Event* event);
     void autoSetTiSampler(const bool bSet);

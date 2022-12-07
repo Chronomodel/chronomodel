@@ -40,9 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef METROPOLISVARIABLE_H
 #define METROPOLISVARIABLE_H
 
-//#include "MCMCLoop.h"
 #include "Functions.h"
-//#include "ProjectSettings.h"
 #include "DateUtils.h"
 #include "MCMCSettings.h"
 
@@ -81,7 +79,7 @@ public:
     virtual void reserve( const int reserve);
 
     void setFormat(const DateUtils::FormatDate fm);
-    QString getName() {return mName;}
+    inline QString getName() {return mName;}
     void setName(const QString name) {mName = name;}
     // -----
     //  These functions are time consuming!
@@ -177,7 +175,7 @@ public:
     DateUtils::FormatDate mFormat;
 
     // Posterior density results.
-    // mHisto is calcuated using all run parts of all chains traces.
+    // mHisto is calculated using all run parts of all chains traces.
     // mChainsHistos constains posterior densities for each chain, computed using only the "run" part of the trace.
     // This needs to be re-calculated each time we change fftLength or bandwidth.
     // See generateHistos() for more.
@@ -189,7 +187,7 @@ public:
     QList<QVector<double> > mCorrelations;
 
     QMap<double, double> mHPD;
-    //QPair<double, double> mCredibility;
+
     std::pair<double, double> mCredibility;
 
     double mExactCredibilityThreshold;

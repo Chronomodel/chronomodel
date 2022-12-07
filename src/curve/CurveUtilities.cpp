@@ -50,7 +50,7 @@ std::vector<double> calculVecH(const std::vector<double>& vec)
     return result;
 }*/
 
-std::vector<double> calculVecH(const std::vector<double>& vec)
+std::vector<t_reduceTime> calculVecH(const std::vector<t_reduceTime>& vec)
 {
     // 2 codes possible
     /*
@@ -78,7 +78,7 @@ Matrix2D calculMatR(const std::vector<double>& vec)
     // 0 0 0 0 0
 
     // vecH est de dimension n-1
-    std::vector<double> vecH = calculVecH(vec);
+    std::vector<t_reduceTime> vecH = calculVecH(vec);
     const unsigned long n = vec.size();
 
     // matR est de dimension n-2 x n-2, mais contenue dans une matrice nxn
@@ -105,7 +105,7 @@ Matrix2D calculMatR(const std::vector<double>& vec)
     return matR;
 }
 
-Matrix2D calculMatQ(const std::vector<double>& vec)
+Matrix2D calculMatQ(const std::vector<t_reduceTime>& vec)
 {
     // Calcul de la matrice Q, de dimension n x (n-2) contenue dans une matrice n x n
     // Les 1ère et dernière colonnes sont nulles
@@ -117,7 +117,7 @@ Matrix2D calculMatQ(const std::vector<double>& vec)
     // 0 0 0 X 0
 
     // vecH est de dimension n-1
-    std::vector<double> vecH = calculVecH(vec);
+    std::vector<t_reduceTime> vecH = calculVecH(vec);
     const long unsigned n = vec.size();
 
     // matQ est de dimension n x n-2, mais contenue dans une matrice nxn

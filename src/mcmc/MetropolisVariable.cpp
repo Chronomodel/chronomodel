@@ -298,6 +298,16 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
     mtmaxUsed = tmax;
     mtminUsed = tmin;
 
+    QMap<double, double> result;
+
+    if (dataSrc.size() == 1) {
+        // value. It can appear with a fixed variable
+        result.insert(dataSrc.at(0), 1.) ;
+        qDebug()<<"[MetropolisVariable::generateHisto] One Value = "<< (dataSrc.at(0))<<mName;
+        return result;
+    }
+
+
     const int inputSize = fftLen;
     const int outputSize = 2 * (inputSize / 2 + 1);
 
@@ -313,7 +323,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
         sigma = std::min(sigma,(quartiles.Q3 - quartiles.Q1)/2.);
     }
 
-    QMap<double, double> result;
+
 
     if (sigma == 0) {
         qDebug()<<"MetropolisVariable::generateHisto sigma == 0"<<mName;
@@ -580,6 +590,9 @@ QList<double>::Iterator MetropolisVariable::findIter_element(const long unsigned
  */
 QVector<double> MetropolisVariable::fullRunRawTrace(const QList<ChainSpecs>& chains)
 {
+    if (mRawTrace->size() == 1) // Cas des variables fixes
+        return *mRawTrace;
+
     // calcul reserve space
     int reserveSize = 0;
 
@@ -608,6 +621,8 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<ChainSpecs>& chains
 {
     if (mFormatedTrace->isEmpty())
         return QVector<double>();
+    else if (mFormatedTrace->size() == 1) // Cas des variables fixes
+        return *mFormatedTrace;
 
     // Calcul reserve space
     int reserveSize = 0;
@@ -645,6 +660,9 @@ QVector<double> MetropolisVariable::runRawTraceForChain(const QList<ChainSpecs> 
         //qDebug() << "in MetropolisVariable::runRawTraceForChain -> mRawTrace empty";
         return QVector<double>() ;
 
+    } else if (mRawTrace->size() == 1) {// Cas des variables fixes
+        return *mRawTrace;
+
     } else {
 
         int shift = 0;
@@ -673,7 +691,11 @@ QVector<double> MetropolisVariable::runFormatedTraceForChain(const QList<ChainSp
     if (mFormatedTrace->empty()) {
         //qDebug() << "in MetropolisVariable::runFormatedTraceForChain -> mFormatedTrace empty";
         return QVector<double>(0);//trace ;
-    }  else  {
+
+    } else if (mFormatedTrace->size() == 1) { // Cas des variables fixes
+        return *mFormatedTrace;
+
+    } else  {
 
         int shift = 0;
         for (auto i = 0; i<chains.size(); ++i)  {

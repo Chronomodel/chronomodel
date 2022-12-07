@@ -133,19 +133,19 @@ public :
     void setLineColor(const QColor& lineColor)  { mPen.setColor(lineColor);}
 };
 
-GraphCurve densityCurve(const QMap<double, double> &data,
+GraphCurve densityCurve(const QMap<double, double> data,
                                 const QString& name,
                                 const QColor& lineColor,
                                 const Qt::PenStyle penStyle = Qt::SolidLine,
                                 const QBrush& brush = Qt::NoBrush) ;
 
-GraphCurve GCurve(const QMap<double, double> &data,
+GraphCurve GCurve(const QMap<double, double> data,
                                 const QString& name,
                                 const QColor& lineColor,
                                 const Qt::PenStyle penStyle = Qt::SolidLine,
                                 const QBrush& brush = Qt::NoBrush) ;
 
-GraphCurve HPDCurve (QMap<double, double>& data,
+GraphCurve HPDCurve (QMap<double, double> data,
                      const QString& name, const QColor& color) ;
 
 GraphCurve topLineSection (const std::pair<double, double>& section,

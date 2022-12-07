@@ -65,8 +65,6 @@ GraphViewPhase::~GraphViewPhase()
     mPhase = nullptr;
 }
 
-
-
 void GraphViewPhase::setPhase(Phase* phase)
 {
     Q_ASSERT(phase);
@@ -77,7 +75,6 @@ void GraphViewPhase::setPhase(Phase* phase)
     setItemColor(mPhase->mColor);
 
 }
-
 
 void GraphViewPhase::paintEvent(QPaintEvent* e)
 {
@@ -147,32 +144,41 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         mGraph->mLegendY = "";
         mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
         mGraph->setFormatFunctY(nullptr);
-         mGraph->setYAxisMode(GraphView::eMinMaxHidden);
+        mGraph->setYAxisMode(GraphView::eMinMaxHidden);
 
         mTitle = tr("Phase : %1").arg(mPhase->mName);
-        QMap<double,double> &alpha = mPhase->mAlpha.fullHisto();
-        QMap<double,double> &beta = mPhase->mBeta.fullHisto();
+        QMap<double, double> &alpha = mPhase->mAlpha.mHisto;
+        QMap<double, double> &beta = mPhase->mBeta.mHisto;
+
+        QMap<double, double> &alphaHPD = mPhase->mAlpha.mHPD;
+        QMap<double, double> &betaHPD = mPhase->mBeta.mHPD;
         /*
          * Detection of one Bound used as boundary != is xor
          * If there is two Bound, the both are egal to 1, thus nothing to do
          */
-        if ((alpha.size()==1) != (beta.size()==1)) {
-            if (alpha.size() == 1)
-                alpha[alpha.firstKey()] = map_max_value(beta) * 2.;
-            else
-                beta[beta.firstKey()] = map_max_value(alpha) * 2.;
+        const bool alphaIsBound = (alpha.size()==1);
+        const bool betaIsBound = (beta.size()==1);
+        double normPdf = 1.;
+        if (alphaIsBound) {
+            normPdf = map_max_value(beta);
+            alpha[alpha.firstKey()] =  normPdf;
+            alphaHPD[alphaHPD.firstKey()] = normPdf;
 
+        } else if (betaIsBound) {
+            normPdf = map_max_value(alpha);
+            beta[beta.firstKey()] = normPdf;
+            betaHPD[betaHPD.firstKey()] = normPdf;
         }
 
-        const GraphCurve curveBegin = densityCurve(alpha, "Post Distrib Begin All Chains", color, Qt::DotLine);
+        const GraphCurve &curveBegin = densityCurve(alpha, "Post Distrib Begin All Chains", color, Qt::DotLine);
         const QColor colorEnd = mPhase->mColor.darker(170);
 
 
-        const GraphCurve curveEnd = densityCurve(beta, "Post Distrib End All Chains", colorEnd, Qt::DashLine);
+        const GraphCurve &curveEnd = densityCurve(beta, "Post Distrib End All Chains", colorEnd, Qt::DashLine);
         color.setAlpha(255); // set mBrush to fill
-        const GraphCurve curveBeginHPD = HPDCurve(mPhase->mAlpha.mHPD, "HPD Begin All Chains", color);
+        const GraphCurve &curveBeginHPD = HPDCurve(alphaHPD, "HPD Begin All Chains", color);
 
-        const GraphCurve curveEndHPD = HPDCurve(mPhase->mBeta.mHPD, "HPD End All Chains", colorEnd);
+        const GraphCurve &curveEndHPD = HPDCurve(betaHPD, "HPD End All Chains", colorEnd);
 
         mGraph->addCurve(curveBegin);
         mGraph->addCurve(curveEnd);
@@ -198,13 +204,24 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
 
         if (!mPhase->mAlpha.mChainsHistos.isEmpty())
             for (auto i=0; i<mChains.size(); ++i) {
-                GraphCurve curveBegin = densityCurve(mPhase->mAlpha.histoForChain(i),
-                                                             "Post Distrib Begin Chain " + QString::number(i),
-                                                             Painting::chainColors.at(i), Qt::DotLine);
+                QMap<double, double> &alpha_i = mPhase->mAlpha.mChainsHistos[i];
+                QMap<double, double> &beta_i = mPhase->mBeta.mChainsHistos[i];
+                if (alphaIsBound) {
+                    normPdf = map_max_value(beta);
+                    alpha_i[alpha_i.firstKey()] =  normPdf;
 
-                GraphCurve curveEnd = densityCurve(mPhase->mBeta.histoForChain(i),
-                                                            "Post Distrib End Chain " + QString::number(i),
-                                                            Painting::chainColors.at(i).darker(170), Qt::DashLine);
+                } else if (betaIsBound) {
+                    normPdf = map_max_value(alpha);
+                    beta_i[beta_i.firstKey()] = normPdf;
+                  }
+
+                const GraphCurve &curveBegin = densityCurve(alpha_i,
+                                                     "Post Distrib Begin Chain " + QString::number(i),
+                                                     Painting::chainColors.at(i), Qt::DotLine);
+
+                const GraphCurve &curveEnd = densityCurve(beta_i,
+                                                   "Post Distrib End Chain " + QString::number(i),
+                                                   Painting::chainColors.at(i).darker(170), Qt::DashLine);
                 mGraph->addCurve(curveBegin);
                 mGraph->addCurve(curveEnd);
             }
@@ -233,7 +250,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
 
             auto brushColor = color;
             brushColor.setAlpha(30);
-            GraphCurve curveTempoEnv = shapeCurve(mPhase->mTempoInf, mPhase->mTempoSup,
+            const GraphCurve &curveTempoEnv = shapeCurve(mPhase->mTempoInf, mPhase->mTempoSup,
                                                   "Post Distrib Tempo Env All Chains",
                                                   color, Qt::CustomDashLine, brushColor);
 
@@ -276,14 +293,14 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
             auto brushColor = color;
             brushColor.setAlpha(30);
 
-            GraphCurve curveActivityEnv = shapeCurve(mPhase->mActivityInf, mPhase->mActivitySup,
+            const GraphCurve &curveActivityEnv = shapeCurve(mPhase->mActivityInf, mPhase->mActivitySup,
                                                      "Post Distrib Env All Chains",
                                                      color, Qt::CustomDashLine, brushColor);
             /* ------------------------------------------------------------
              *   Display envelope Uniform
              * ------------------------------------------------------------*/
 
-            GraphCurve curveActivityUnifTheo = densityCurve(mPhase->mActivityUnifTheo,
+            const GraphCurve &curveActivityUnifTheo = densityCurve(mPhase->mActivityUnifTheo,
                                                             "Post Distrib Unif Mean",
                                                             Qt::darkGray, Qt::SolidLine);
 
@@ -320,10 +337,9 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         mGraph->setFormatFunctY(nullptr);
         mGraph->setYAxisMode(GraphView::eMinMaxHidden);
         mTitle = tr("Phase Duration : %1").arg(mPhase->mName);
-        GraphCurve curveDuration;
 
         if (mPhase->mDuration.fullHisto().size() > 1) {
-            curveDuration = densityCurve(mPhase->mDuration.fullHisto(), "Post Distrib All Chains", color);
+            const GraphCurve &curveDuration = densityCurve(mPhase->mDuration.fullHisto(), "Post Distrib All Chains", color);
 
             mGraph->setRangeX(0., ceil(curveDuration.mData.lastKey()));
             color.setAlpha(255);
@@ -351,7 +367,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
 
         if (!mPhase->mDuration.mChainsHistos.isEmpty())
             for (int i = 0; i < mChains.size(); ++i) {
-                GraphCurve curveDuration = densityCurve(mPhase->mDuration.histoForChain(i),
+                const GraphCurve &curveDuration = densityCurve(mPhase->mDuration.histoForChain(i),
                                                              "Post Distrib Chain " + QString::number(i),
                                                              Painting::chainColors.at(i), Qt::DotLine);
 
@@ -506,7 +522,6 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 // envelope Uniform
                 const bool showActivityUnif = mShowVariableList.contains(eActivityUnif);
                 mGraph->setCurveVisible("Post Distrib Unif Mean", showActivityUnif);
-                //mGraph->setCurveVisible("Post Distrib Activity Unif Env All Chains", showError && showActivityUnif);
 
                 mGraph->setTipXLab("t");
                 mGraph->setTipYLab("A");

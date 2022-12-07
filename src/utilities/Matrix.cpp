@@ -64,27 +64,53 @@ QDataStream &operator>>( QDataStream &stream, CurveMap &map )
 
 Matrix2D initMatrix2D(size_t rows, size_t cols)
 {
-   return std::valarray(std::valarray<double>(cols), rows) ;
+   return std::valarray(std::valarray<t_matrix>(cols), rows) ;
 }
 
 #pragma mark Usefull to debug
 void showMatrix(const Matrix2D&  m, const std::string& str)
 {
   std::cout << str << "\n";
+  std::cout <<"{"<<"\n";
   for(unsigned long i = 0; i < m.size(); i++) {
+      std::cout <<"{";
     for (unsigned long j = 0; j < m[0].size(); j++) {
-      printf(" %8.5f", m[i][j]);
+        if (std::is_same<Matrix2D::value_type::value_type, long double>::value == true) {
+            printf(" %20.65Lf ", m[i][j]);
+        }
+        else if (std::is_same<Matrix2D::value_type::value_type, double>::value == true) {
+            printf(" %20.65f ", m[i][j]);
+        }
+        if (j<m[0].size()-1)
+            std::cout<<", ";
     }
-    printf("\n");
+    printf(" },\n");
   }
+    std::cout <<"}"<<"\n";
   printf("\n");
 }
 
-void showVector(const std::vector<double>&  m, const std::string& str)
+void showMatrix(const MatrixDiag& m, const std::string& str)
+{
+  Matrix2D tmp = initMatrix2D(m.size(), m.size());
+
+  for(unsigned long i = 0; i < m.size(); i++) {
+      tmp[i][i] = m[i];
+  }
+  showMatrix(tmp, str);
+}
+
+void showVector(const std::vector<t_matrix> &m, const std::string& str)
 {
  std::cout << str << "\n";
  for(unsigned long i = 0; i < m.size(); i++) {
-     printf(" %8.5f", m[i]);
+     if (std::is_same<t_matrix, long double>::value == true) {
+         printf(" %20.65Lf ", m[i]);
+     }
+     else if (std::is_same<t_matrix, double>::value == true) {
+         printf(" %8.65f ", m[i]);
+     }
+
    printf("\n");
  }
  printf("\n");

@@ -41,14 +41,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphView.h"
 #include "ModelCurve.h"
 #include "Painting.h"
-#include "StdUtilities.h"
-#include "QtUtilities.h"
 #include "DateUtils.h"
 #include "ModelUtilities.h"
-#include "MainWindow.h"
-#include <QtWidgets>
 
-// Constructor / Destructor
+#include <QtWidgets>
 
 GraphViewS02::GraphViewS02(QWidget *parent):GraphViewResults(parent),
 mModel(nullptr)
@@ -110,24 +106,21 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variabl
         mGraph->setBackgroundColor(QColor(230, 230, 230));
         mGraph->setOverArrow(GraphView::eBothOverflow);
         
-        mTitle = tr("S02 Vg");
+        mTitle = tr("Shrinkage param.");
 
         // ------------------------------------
         //  Post distrib All Chains
         // ------------------------------------
 
-        GraphCurve curvePostDistrib;
-        curvePostDistrib.mName = "Post Distrib All Chains";
-        curvePostDistrib.mData = mModel->mS02Vg.fullHisto();
-        curvePostDistrib.mPen = QPen(color, 1, Qt::SolidLine);
-        curvePostDistrib.mBrush = Qt::NoBrush;
-
+        const GraphCurve &curvePostDistrib = densityCurve(mModel->mS02Vg.fullHisto(),
+                                                          "Post Distrib All Chains",
+                                                          color);
         mGraph->addCurve(curvePostDistrib);
 
         // ------------------------------------
         //  HPD All Chains
         // ------------------------------------
-        GraphCurve curveHPD = HPDCurve(mModel->mS02Vg.mHPD, "HPD All Chains", color);
+        const GraphCurve &curveHPD = HPDCurve(mModel->mS02Vg.mHPD, "HPD All Chains", color);
         mGraph->addCurve(curveHPD);
 
         // ------------------------------------
@@ -135,23 +128,24 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variabl
         // ------------------------------------
         if (!mModel->mS02Vg.mChainsHistos.isEmpty()) {
             for (qsizetype i=0; i<mChains.size(); ++i)  {
-                GraphCurve curvePostDistribChain = densityCurve(mModel->mS02Vg.histoForChain(i),
-                                                                        "Post Distrib Chain " + QString::number(i),
-                                                                        Painting::chainColors.at(i),
-                                                                        Qt::SolidLine,
-                                                                        Qt::NoBrush);
+                const GraphCurve &curvePostDistribChain = densityCurve(mModel->mS02Vg.histoForChain(i),
+                                                                       "Post Distrib Chain " + QString::number(i),
+                                                                       Painting::chainColors.at(i),
+                                                                       Qt::SolidLine,
+                                                                       Qt::NoBrush);
                 mGraph->addCurve(curvePostDistribChain);
             }
         }
-        
+
         // ------------------------------------
         //  Theta Credibility
         // ------------------------------------
-        GraphCurve curveCred = topLineSection(mModel->mS02Vg.mCredibility,
-                                                    "Credibility All Chains",
-                                                    color);
+        const GraphCurve &curveCred = topLineSection(mModel->mS02Vg.mCredibility,
+                                                     "Credibility All Chains",
+                                                     color);
         mGraph->addCurve(curveCred);
         mGraph->autoAdjustYScale(true);
+
     }
     // -------------------------------------------------
     //  History plots
@@ -160,9 +154,11 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variabl
         mGraph->mLegendX = "Iterations";
         mGraph->setTipYLab("S02");
         mGraph->setFormatFunctX(nullptr);
-        mTitle = tr("S02 Vg Trace");
-
-        generateTraceCurves(mChains, &(mModel->mS02Vg));
+        mTitle = tr("Shrinkage param. Trace");
+        if (mModel->mS02Vg.mSamplerProposal != MHVariable::eFixe)
+            generateTraceCurves(mChains, &(mModel->mS02Vg));
+        else
+            mGraph->resetNothingMessage();
     }
     // -------------------------------------------------
     //  Acceptance rate
@@ -171,10 +167,13 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variabl
         mGraph->mLegendX = "Iterations";
         mGraph->setTipYLab("Rate");
         mGraph->setFormatFunctX(nullptr);
-        mTitle = tr("S02 Vg Acceptation");
+        mTitle = tr("Shrinkage param. Acceptation");
+        if (mModel->mS02Vg.mSamplerProposal != MHVariable::eFixe)
+            generateAcceptCurves(mChains, &(mModel->mS02Vg));
+         else
+            mGraph->resetNothingMessage();
 
-        generateAcceptCurves(mChains, &(mModel->mS02Vg));
-        mGraph->repaint();
+        //mGraph->repaint();
     }
 
     // -------------------------------------------------
@@ -183,13 +182,16 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variabl
     else if (typeGraph == eCorrel) {
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(nullptr);
-        mTitle = tr("S02 Vg Autocorrelation");
-
-        generateCorrelCurves(mChains, &(mModel->mS02Vg));
-        mGraph->setXScaleDivision(10, 10);
+        mTitle = tr("Shrinkage param. Autocorrelation");
+        if (mModel->mS02Vg.mSamplerProposal != MHVariable::eFixe) {
+            generateCorrelCurves(mChains, &(mModel->mS02Vg));
+            mGraph->setXScaleDivision(10, 10);
+        }
+        else
+            mGraph->resetNothingMessage();
 
     } else  {
-        mTitle = tr("S02 Vg");
+        mTitle = tr("Shrinkage param.");
         mGraph->resetNothingMessage();
     }
 }
@@ -208,7 +210,7 @@ void GraphViewS02::updateCurvesToShow(bool showAllChains, const QList<bool>& sho
             mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList.at(i));
         }
         
-        mGraph->setTipXLab("sqrt S02 Vg");
+        mGraph->setTipXLab("sqrt Shrinkage param.");
         mGraph->setYAxisMode(GraphView::eHidden);
         mGraph->showInfos(false);
         mGraph->clearInfos();
@@ -230,7 +232,7 @@ void GraphViewS02::updateCurvesToShow(bool showAllChains, const QList<bool>& sho
         }
 
         mGraph->setTipXLab(tr("Iteration"));
-        mGraph->setTipYLab("sqrt S02 Vg");
+        mGraph->setTipYLab("sqrt Shrinkage param.");
 
         mGraph->setYAxisMode(GraphView::eMinMaxHidden);
         mGraph->showInfos(false);
@@ -256,7 +258,6 @@ void GraphViewS02::updateCurvesToShow(bool showAllChains, const QList<bool>& sho
         mGraph->autoAdjustYScale(false);
         mGraph->setRangeY(0, 100); // do repaintGraph() !!
     }
-
 
       /* ----------------------fourth tab : Autocorrelation--------------------------
        *  Possible curves :

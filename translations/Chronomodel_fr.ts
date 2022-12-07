@@ -1466,64 +1466,64 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     </message>
 </context>
 <context>
-    <name>MCMCLoopMain</name>
+    <name>MCMCLoopChrono</name>
     <message>
-        <location filename="../src/mcmc/MCMCLoopMain.cpp" line="106"/>
+        <location filename="../src/mcmc/MCMCLoopChrono.cpp" line="106"/>
         <source>Calibrating...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoopMain.cpp" line="115"/>
+        <location filename="../src/mcmc/MCMCLoopChrono.cpp" line="115"/>
         <source>Invalid Model -&gt; No Calibration on Data %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoopMain.cpp" line="129"/>
+        <location filename="../src/mcmc/MCMCLoopChrono.cpp" line="129"/>
         <source>Invalid model</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoopMain.cpp" line="198"/>
+        <location filename="../src/mcmc/MCMCLoopChrono.cpp" line="198"/>
         <source>Initializing Phase Gaps...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoopMain.cpp" line="209"/>
+        <location filename="../src/mcmc/MCMCLoopChrono.cpp" line="209"/>
         <source>Initializing Phase Durations...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoopMain.cpp" line="247"/>
+        <location filename="../src/mcmc/MCMCLoopChrono.cpp" line="247"/>
         <source>Initializing Events...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoopMain.cpp" line="258"/>
+        <location filename="../src/mcmc/MCMCLoopChrono.cpp" line="258"/>
         <source>Warning : Find Circular Constraint Path %1  %2 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoopMain.cpp" line="271"/>
+        <location filename="../src/mcmc/MCMCLoopChrono.cpp" line="271"/>
         <source>Warning : Find Circular constraint with %1  bad path  %2 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoopMain.cpp" line="280"/>
+        <location filename="../src/mcmc/MCMCLoopChrono.cpp" line="280"/>
         <source>-----Error Init for event : %1 : min = %2 : max = %3-------</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoopMain.cpp" line="284"/>
+        <location filename="../src/mcmc/MCMCLoopChrono.cpp" line="284"/>
         <source>Error Init for event : %1 : min = %2 : max = %3-------</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoopMain.cpp" line="385"/>
+        <location filename="../src/mcmc/MCMCLoopChrono.cpp" line="385"/>
         <source>Initializing Variances...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoopMain.cpp" line="411"/>
+        <location filename="../src/mcmc/MCMCLoopChrono.cpp" line="411"/>
         <source>Initializing Phases...</source>
         <translation type="unfinished"></translation>
     </message>

@@ -118,6 +118,7 @@ public:
 };
 
 void sampleInCumulatedRepartition (Event *event, const ProjectSettings& settings, const double min, const double max);
+void sampleInCumulatedRepartition_thetaFixe (Event *event, const ProjectSettings& settings);
 
 // These 2 global functions are used to sort events and phases lists in result view
 

@@ -214,7 +214,6 @@ void MCMCLoop::run()
         burningTime.start();
 
         qint64 interTime;
-
         while (chain.mBurnIterIndex < chain.mIterPerBurn) {
             if (isInterruptionRequested()) {
                 mAbortedReason = ABORTED_BY_USER;

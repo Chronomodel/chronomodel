@@ -1551,7 +1551,7 @@ QList<Date> EventsScene::decodeDataDrop_old(QGraphicsSceneDragDropEvent* e)
         const int csvRow = dataStr.takeFirst().toInt();
 
         const QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
-        Date date = Date::fromCSV(dataStr, csvLocal);
+        Date date = Date::fromCSV(dataStr, csvLocal, mSettings);
 
         if (!date.isNull()) {
             dates << date;
@@ -1653,58 +1653,54 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
             acceptedRows.append(csvRow);
 
         } else if (plugin) {
+            date = Date::fromCSV(dataStr, csvLocal, mSettings);
+            dates << qMakePair(eventName, date);
+            acceptedRows.append(csvRow);
 
-           //  {
-                date = Date::fromCSV(dataStr, csvLocal);
-                dates << qMakePair(eventName, date);
-                acceptedRows.append(csvRow);
-          //  } else {
-          //      return (QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>>());
-          //  }
         }
 
 
-            QMap<QString, double> CurveValues;
-            if (!date.mData.isEmpty()) {
+        QMap<QString, double> CurveValues;
+        if (!date.mData.isEmpty()) {
 
 
-                if (dataStr.size() >= 14) {
-                    CurveValues.insert(STATE_EVENT_X_INC_DEPTH, csvLocal.toDouble(dataStr.at(13)));
-                } else {
-                    CurveValues.insert(STATE_EVENT_X_INC_DEPTH, 0);
-                }
-                if (dataStr.size() >= 15) {
-                    CurveValues.insert(STATE_EVENT_SX_ALPHA95_SDEPTH, csvLocal.toDouble(dataStr.at(14)));
-                } else {
-                    CurveValues.insert(STATE_EVENT_SX_ALPHA95_SDEPTH, 0);
-                }
-                if (dataStr.size() >= 16) {
-                    CurveValues.insert(STATE_EVENT_Y_DEC, csvLocal.toDouble(dataStr.at(15)));
-                } else {
-                    CurveValues.insert(STATE_EVENT_Y_DEC, 0);
-                }
-                if (dataStr.size() >= 17) {
-                    CurveValues.insert(STATE_EVENT_SY, csvLocal.toDouble(dataStr.at(16)));
-                } else {
-                    CurveValues.insert(STATE_EVENT_SY, 0);
-                }
-                if (dataStr.size() >= 18) {
-                    CurveValues.insert(STATE_EVENT_Z_F, csvLocal.toDouble(dataStr.at(17)));
-                } else {
-                    CurveValues.insert(STATE_EVENT_Z_F, 0);
-                }
-
-                if (dataStr.size() >= 19) {
-                    CurveValues.insert(STATE_EVENT_SZ_SF, csvLocal.toDouble(dataStr.at(18)));
-                } else {
-                    CurveValues.insert(STATE_EVENT_SZ_SF, 0);
-                }
-
-                curveValues << CurveValues;
-
+            if (dataStr.size() >= 14) {
+                CurveValues.insert(STATE_EVENT_X_INC_DEPTH, csvLocal.toDouble(dataStr.at(13)));
             } else {
-                rejectedRows.append(csvRow);
+                CurveValues.insert(STATE_EVENT_X_INC_DEPTH, 0);
             }
+            if (dataStr.size() >= 15) {
+                CurveValues.insert(STATE_EVENT_SX_ALPHA95_SDEPTH, csvLocal.toDouble(dataStr.at(14)));
+            } else {
+                CurveValues.insert(STATE_EVENT_SX_ALPHA95_SDEPTH, 0);
+            }
+            if (dataStr.size() >= 16) {
+                CurveValues.insert(STATE_EVENT_Y_DEC, csvLocal.toDouble(dataStr.at(15)));
+            } else {
+                CurveValues.insert(STATE_EVENT_Y_DEC, 0);
+            }
+            if (dataStr.size() >= 17) {
+                CurveValues.insert(STATE_EVENT_SY, csvLocal.toDouble(dataStr.at(16)));
+            } else {
+                CurveValues.insert(STATE_EVENT_SY, 0);
+            }
+            if (dataStr.size() >= 18) {
+                CurveValues.insert(STATE_EVENT_Z_F, csvLocal.toDouble(dataStr.at(17)));
+            } else {
+                CurveValues.insert(STATE_EVENT_Z_F, 0);
+            }
+
+            if (dataStr.size() >= 19) {
+                CurveValues.insert(STATE_EVENT_SZ_SF, csvLocal.toDouble(dataStr.at(18)));
+            } else {
+                CurveValues.insert(STATE_EVENT_SZ_SF, 0);
+            }
+
+            curveValues << CurveValues;
+
+        } else {
+            rejectedRows.append(csvRow);
+        }
 
 
     }

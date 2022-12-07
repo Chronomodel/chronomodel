@@ -43,7 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphViewDate.h"
 #include "GraphViewEvent.h"
 #include "GraphViewPhase.h"
-#include "GraphViewAlpha.h"
+#include "GraphViewLambda.h"
 #include "GraphViewCurve.h"
 #include "GraphViewS02.h"
 
@@ -61,7 +61,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "LineEdit.h"
 #include "CheckBox.h"
 #include "RadioButton.h"
-//#include "Painting.h"
 
 #include "MainWindow.h"
 #include "Project.h"
@@ -70,8 +69,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "StdUtilities.h"
 #include "ModelUtilities.h"
 #include "DoubleValidator.h"
-
-//#include "../PluginAbstract.h"
 
 #include "AppSettings.h"
 
@@ -177,7 +174,7 @@ mMaximunNumberOfVisibleGraph(0)
     mDataSigmaRadio = new RadioButton(tr("Std ti"));
     mDataSigmaRadio->setFixedHeight(h);
     
-    mEventVGRadio = new RadioButton(tr("Std G"));
+    mEventVGRadio = new RadioButton(tr("Std gi"));
     mEventVGRadio->setFixedHeight(h);
 
     mDataCalibCheck = new CheckBox(tr("Individual Calib. Dates"));
@@ -259,7 +256,7 @@ mMaximunNumberOfVisibleGraph(0)
     phasesGroupLayout->addWidget(mTempoRadio);
     phasesGroupLayout->setSpacing(10);
     phasesGroupLayout->addWidget(mActivityRadio);
-  //  phasesGroupLayout->setSpacing(10);
+
     phasesGroupLayout->addLayout(phasesUnfoldGroupLayout);
 
     phasesGroupLayout->addWidget(mDurationRadio);
@@ -271,36 +268,36 @@ mMaximunNumberOfVisibleGraph(0)
     // -----------------------------------------------------------------
     mCurvesGroup = new QWidget();
     
-    mCurveGRadio = new RadioButton(tr("G Curve"), mCurvesGroup);
+    mCurveGRadio = new RadioButton(tr("Mean Curve"), mCurvesGroup);
     mCurveGRadio->setFixedHeight(h);
     mCurveGRadio->setChecked(true);
     
-    mCurveErrorCheck = new CheckBox(tr("Error envelope"), mCurvesGroup);
+    mCurveErrorCheck = new CheckBox(tr("Error (at 95%)"), mCurvesGroup);
     mCurveErrorCheck->setFixedHeight(h);
     mCurveErrorCheck->setChecked(true);
     
-    mCurveMapCheck = new CheckBox(tr("Curve Map"), mCurvesGroup);
+    mCurveMapCheck = new CheckBox(tr("Density Plot"), mCurvesGroup);
     mCurveMapCheck->setFixedHeight(h);
     mCurveMapCheck->setChecked(true);
 
-    mCurveEventsPointsCheck = new CheckBox(tr("Events Mean"), mCurvesGroup);
+    mCurveEventsPointsCheck = new CheckBox(tr("Event Dates (HPD)"), mCurvesGroup);
     mCurveEventsPointsCheck->setFixedHeight(h);
     mCurveEventsPointsCheck->setChecked(true);
 
-    mCurveDataPointsCheck = new CheckBox(tr("Data Mean"), mCurvesGroup);
+    mCurveDataPointsCheck = new CheckBox(tr("Data Values"), mCurvesGroup);
     mCurveDataPointsCheck->setFixedHeight(h);
     mCurveDataPointsCheck->setChecked(true);
 
-    mCurveGPRadio = new RadioButton(tr("G Var. Rate"), mCurvesGroup);
+    mCurveGPRadio = new RadioButton(tr("Curve Var. Rate"), mCurvesGroup);
     mCurveGPRadio->setFixedHeight(h);
     
-    mCurveGSRadio = new RadioButton(tr("G Acceleration"), mCurvesGroup);
+    mCurveGSRadio = new RadioButton(tr("Curve Acceleration"), mCurvesGroup);
     mCurveGSRadio->setFixedHeight(h);
     
-    mLambdaRadio = new RadioButton(tr("Lambda"), mCurvesGroup);
+    mLambdaRadio = new RadioButton(tr("Smoothing"), mCurvesGroup);
     mLambdaRadio->setFixedHeight(h);
     
-    mS02VgRadio = new RadioButton(tr("S02 Vg"), mCurvesGroup);
+    mS02VgRadio = new RadioButton(tr("Shrinkage Param."), mCurvesGroup);
     mS02VgRadio->setFixedHeight(h);
 
     mCurveStatCheck = new CheckBox(tr("Show Stat."));
@@ -1303,13 +1300,8 @@ void ResultsView::updateMainVariable()
                 }
             }
 
-        } else if (mDataSigmaRadio->isChecked()) {
-            mMainVariable = GraphViewResults::eSigma;
 
-        }else  if (mDurationRadio->isChecked()) {
-            mMainVariable = GraphViewResults::eDuration;
-
-        } else if (mTempoRadio->isChecked()) {
+        }  else if (mTempoRadio->isChecked()) {
             mMainVariable = GraphViewResults::eTempo;
 
             if (mPhasesEventsUnfoldCheck->isChecked()) {
@@ -1325,6 +1317,7 @@ void ResultsView::updateMainVariable()
                         mCurrentVariableList.append(GraphViewResults::eDataWiggle);*/
                 }
               }
+
 
         } else  if (mActivityRadio->isChecked()) {
             mMainVariable = GraphViewResults::eActivity;
@@ -1342,6 +1335,10 @@ void ResultsView::updateMainVariable()
                         mCurrentVariableList.append(GraphViewResults::eDataWiggle);*/
                 }
             }
+
+        } else  if (mDurationRadio->isChecked()) {
+            mMainVariable = GraphViewResults::eDuration;
+
         }
 
     } else if (mGraphListTab->currentName() == tr("Curves")) {
@@ -1799,7 +1796,7 @@ void ResultsView::createByCurveGraph()
     QWidget* widget = mCurveScrollArea->widget();
 
     if (mLambdaRadio->isChecked())  {
-        GraphViewAlpha* graphAlpha = new GraphViewAlpha(widget);
+        GraphViewLambda* graphAlpha = new GraphViewLambda(widget);
         graphAlpha->setSettings(mModel->mSettings);
         graphAlpha->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
         graphAlpha->setGraphsFont(mFontBut->font());
@@ -1807,7 +1804,7 @@ void ResultsView::createByCurveGraph()
         graphAlpha->changeXScaleDivision(mMajorScale, mMinorCountScale);
         graphAlpha->setMarginLeft(mMarginLeft);
         graphAlpha->setMarginRight(mMarginRight);
-        graphAlpha->setTitle(tr("Lambda Spline"));
+        graphAlpha->setTitle(tr("Smoothing"));
         graphAlpha->setModel(model);
 
         mByCurveGraphs.append(graphAlpha);
@@ -1823,7 +1820,7 @@ void ResultsView::createByCurveGraph()
         graphS02->changeXScaleDivision(mMajorScale, mMinorCountScale);
         graphS02->setMarginLeft(mMarginLeft);
         graphS02->setMarginRight(mMarginRight);
-        graphS02->setTitle(tr("S02 Vg"));
+        graphS02->setTitle(tr("Shrinkage param."));
         graphS02->setModel(model);
 
         mByCurveGraphs.append(graphS02);
@@ -2295,7 +2292,9 @@ void ResultsView::generateCurves()
     for (GraphViewResults*& graph : listGraphs) {
         graph->generateCurves(GraphViewResults::graph_t(mCurrentTypeGraph), mCurrentVariableList, mModel);
     }
-    
+
+   // std::for_each(PAR listGraphs.begin(), listGraphs.end(), [this] (GraphViewResults* g) {g->generateCurves(GraphViewResults::graph_t(mCurrentTypeGraph), mCurrentVariableList, mModel);} );
+
     updateCurvesToShow();
     updateGraphsMinMax();
     updateScales();
@@ -2470,9 +2469,6 @@ void ResultsView::updateCurvesToShow()
                    showVariableList.append(GraphViewResults::eThetaEvent);
                    if (mPhasesDatesUnfoldCheck->isChecked()) {
                        showVariableList.append(GraphViewResults::eDataTi);
-                       //if (mDataCalibCheck->isChecked()) showVariableList.append(GraphViewResults::eDataCalibrate);
-                       //if (mWiggleCheck->isChecked()) showVariableList.append(GraphViewResults::eDataWiggle);
-
                    }
                }
         } else if (mTempoRadio->isChecked()) {
@@ -2485,8 +2481,7 @@ void ResultsView::updateCurvesToShow()
                 showVariableList.append(GraphViewResults::eThetaEvent);
                 if (mPhasesDatesUnfoldCheck->isChecked()) {
                     showVariableList.append(GraphViewResults::eDataTi);
-                    //if (mDataCalibCheck->isChecked()) showVariableList.append(GraphViewResults::eDataCalibrate);
-                    //if (mWiggleCheck->isChecked()) showVariableList.append(GraphViewResults::eDataWiggle);
+
 
                 }
             }
@@ -2502,8 +2497,7 @@ void ResultsView::updateCurvesToShow()
                 showVariableList.append(GraphViewResults::eThetaEvent);
                 if (mPhasesDatesUnfoldCheck->isChecked()) {
                     showVariableList.append(GraphViewResults::eDataTi);
-                    //if (mDataCalibCheck->isChecked()) showVariableList.append(GraphViewResults::eDataCalibrate);
-                    //if (mWiggleCheck->isChecked()) showVariableList.append(GraphViewResults::eDataWiggle);
+
 
                 }
             }
@@ -2516,8 +2510,6 @@ void ResultsView::updateCurvesToShow()
     //  All others
     // --------------------------------------------------------
     else { // it's curves !!
-        //if (mDataCalibCheck->isChecked()) showVariableList.append(GraphViewResults::eDataCalibrate);
-        //if (mWiggleCheck->isChecked()) showVariableList.append(GraphViewResults::eDataWiggle);
 
     }
     const bool showStat = mStatCheck->isChecked();
@@ -3207,10 +3199,7 @@ void ResultsView::updateOptionsWidget()
 
 #pragma mark Utilities
 
-bool ResultsView::isPostDistribGraph()
-{
-    return (mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-}
+
 
 bool ResultsView::xScaleRepresentsTime()
 {

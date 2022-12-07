@@ -51,7 +51,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "EventConstraint.h"
 #include "ConstraintDialog.h"
 
-//#include "Phase.h"
 #include "PhaseConstraint.h"
 #include "PhaseDialog.h"
 
@@ -60,12 +59,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginAbstract.h"
 #include "PluginFormAbstract.h"
 #include "TrashDialog.h"
-//#include "ImportDataView.h"
 
-//#include "ModelUtilities.h"
 #include "QtUtilities.h"
 
-#include "MCMCLoopMain.h"
+#include "MCMCLoopChrono.h"
 #include "MCMCLoopCurve.h"
 #include "MCMCProgressDialog.h"
 
@@ -3165,7 +3162,7 @@ void Project::runChronomodel()
         message.exec();
     }
     if (modelOk) {
-        MCMCLoopMain loop(mModel, this);
+        MCMCLoopChrono loop(mModel, this);
         MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint);
 
         /* --------------------------------------------------------------------

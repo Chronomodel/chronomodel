@@ -93,6 +93,8 @@ protected:
     QList<ChainSpecs> mChains;
     int mChainIndex;
     State mState;
+   // typedef bool (*MCMCLoop::samplingLoop)();
+    //samplingLoop updateLoop;
 
 public:
     QString mAbortedReason;

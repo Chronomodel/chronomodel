@@ -498,11 +498,7 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     mItemColor = itemColor;
 }
 
-/*void GraphViewResults::setItemTitle(const QString& itemTitle)
-{
-    mItemTitle = itemTitle;
-}
-*/
+
 void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
                                            MetropolisVariable* variable,
                                            const QString& name)
@@ -518,20 +514,20 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
         curve.mPen.setColor(Painting::chainColors.at(i));
         mGraph->addCurve(curve);
 
-        const Quartiles& quartiles = variable->mChainsResults.at(i).traceAnalysis.quartiles;
+        const Quartiles &quartiles = variable->mChainsResults.at(i).traceAnalysis.quartiles;
 
         QColor colBorder = QColor(Qt::darkBlue).darker(100);
         colBorder.setAlpha(100);
         QColor colMediane = QColor(Qt::darkBlue).darker(120);
         colMediane.setAlpha(100);
 
-        const GraphCurve curveQ3 = horizontalLine(quartiles.Q3, prefix + "Q3 " + QString::number(i), colBorder);
+        const GraphCurve &curveQ3 = horizontalLine(quartiles.Q3, prefix + "Q3 " + QString::number(i), colBorder);
         mGraph->addCurve(curveQ3);
 
-        const GraphCurve curveQ2 = horizontalLine(quartiles.Q2, prefix + "Q2 " + QString::number(i), colMediane);
+        const GraphCurve &curveQ2 = horizontalLine(quartiles.Q2, prefix + "Q2 " + QString::number(i), colMediane);
         mGraph->addCurve(curveQ2);
 
-        const GraphCurve curveQ1 = horizontalLine(quartiles.Q1, prefix + "Q1 " + QString::number(i), colBorder);
+        const GraphCurve &curveQ1 = horizontalLine(quartiles.Q1, prefix + "Q1 " + QString::number(i), colBorder);
         mGraph->addCurve(curveQ1);
     }
 }
@@ -570,11 +566,11 @@ void GraphViewResults::generateCorrelCurves(const QList<ChainSpecs> &chains,
         const double n = variable->runRawTraceForChain(mChains, i).size();
         const double limit = 1.96 / sqrt(n);
 
-        const GraphCurve curveLimitLower = horizontalLine(-limit, "Correl Limit Lower " + QString::number(i),
+        const GraphCurve &curveLimitLower = horizontalLine(-limit, "Correl Limit Lower " + QString::number(i),
                                                             Qt::red,
                                                             Qt::DotLine);
 
-        const GraphCurve curveLimitUpper = horizontalLine(limit, "Correl Limit Upper " + QString::number(i),
+        const GraphCurve &curveLimitUpper = horizontalLine(limit, "Correl Limit Upper " + QString::number(i),
                                                             Qt::red,
                                                             Qt::DotLine);
         mGraph->addCurve(curveLimitLower);

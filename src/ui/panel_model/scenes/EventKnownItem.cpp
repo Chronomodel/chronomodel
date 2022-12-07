@@ -136,7 +136,7 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
 
     const qreal h = mTitleHeight + mThumbH + mPhasesHeight + 2*AbstractItem::mEltsMargin + mCurveTextHeight + 55. + (isCurveNode()? 2*mNodeSkin + 4.: 0.);
 
-    mSize = QSize(230 + (isCurveNode()? 2*mNodeSkin + 4.: 0.), h);
+    mSize = QSize(230 + (isCurveNode()? 2*mNodeSkin + 2.: 0.), h);
 
 }
 
@@ -158,7 +158,7 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     painter->setRenderHint(QPainter::Antialiasing);
 
     const QRectF rectTotal = QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
-    const QRectF rect = isCurveNode() ? rectTotal.adjusted(mNodeSkin + 2., mNodeSkin+2., -mNodeSkin-2., -mNodeSkin-2.) : rectTotal;
+    const QRectF rect = isCurveNode() ? rectTotal.adjusted(mNodeSkin + 1., mNodeSkin + 1., -mNodeSkin - 1., -mNodeSkin - 1.) : rectTotal;
 
     const QColor eventColor = QColor(mData.value(STATE_COLOR_RED).toInt(),
                                mData.value(STATE_COLOR_GREEN).toInt(),
@@ -233,7 +233,7 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     // Border
     painter->setBrush(Qt::NoBrush);
     if (isCurveNode() && curveRect.height()>0) {
-        painter->setPen(QPen(Painting::mainColorDark, 7.));
+        painter->setPen(QPen(Painting::mainColorDark, 2.5));
         painter->drawEllipse(rectTotal);
     }
 

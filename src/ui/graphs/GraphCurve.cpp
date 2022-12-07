@@ -69,7 +69,7 @@ void GraphCurve::setPen(QPen pen)
 
 /** Generate Typical curves for Chronomodel
  * */
-GraphCurve densityCurve( const QMap<double, double>& data,
+GraphCurve densityCurve( const QMap<double, double> data,
                          const QString& name,
                          const QColor& lineColor,
                          const Qt::PenStyle penStyle,
@@ -89,7 +89,7 @@ GraphCurve densityCurve( const QMap<double, double>& data,
     return curve;
 }
 
-GraphCurve GCurve( const QMap<double, double>& data,
+GraphCurve GCurve(const QMap<double, double> data,
                    const QString& name,
                    const QColor& lineColor,
                    const Qt::PenStyle penStyle,
@@ -98,7 +98,7 @@ GraphCurve GCurve( const QMap<double, double>& data,
     GraphCurve curve;
     curve.mName = name; // This is the name of the columns when exporting the graphs
     if (!data.isEmpty()) {
-        curve.mData = data;
+        curve.mData = std::move(data);
         curve.mPen = QPen(lineColor, 1, penStyle);
 
         if (penStyle == Qt::CustomDashLine)
@@ -109,11 +109,11 @@ GraphCurve GCurve( const QMap<double, double>& data,
     return curve;
 }
 
-GraphCurve HPDCurve(QMap<double, double> &data, const QString &name, const QColor &color)
+GraphCurve HPDCurve(QMap<double, double> data, const QString &name, const QColor &color)
 {
     GraphCurve curve;
     curve.mName = name;
-    curve.mData = data;
+    curve.mData = std::move(data);
     curve.mPen = Qt::NoPen;
     curve.mBrush = QBrush(color);
     curve.mIsRectFromZero = true;
@@ -141,10 +141,7 @@ GraphCurve horizontalSection(const std::pair<double, double> &section, const QSt
     curve.mSections.push_back(section);
     curve.mBrush = brush;
     curve.mPen = QPen(QBrush(color), 2.);
-    //curve.mPen.setColor(color);
-    //curve.mPen.setWidth(3);
-    //curve.mPen = QPen(Painting::mainColorLight, 2.);
-    curve.mType = GraphCurve::eHorizontalSections;
+      curve.mType = GraphCurve::eHorizontalSections;
     curve.mIsRectFromZero = true;
 
     return curve;

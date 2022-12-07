@@ -329,17 +329,20 @@ double Phase::getMaxThetaPrevPhases(const double tmin)
 
 // --------------------------------------------------------------------------------
 
-void Phase::updateAll(const double tminPeriod, const double tmaxPeriod)
+void Phase::update_AlphaBeta(const double tminPeriod, const double tmaxPeriod)
 {
-    //static bool initalized = false; // What is it??
+    mAlpha.mX = getMinThetaEvents(tminPeriod);
+    mBeta.mX = getMaxThetaEvents(tmaxPeriod);
+    mDuration.mX = mBeta.mX - mAlpha.mX;
+}
 
+void Phase::update_All(const double tminPeriod, const double tmaxPeriod)
+{
     mAlpha.mX = getMinThetaEvents(tminPeriod);
     mBeta.mX = getMaxThetaEvents(tmaxPeriod);
     mDuration.mX = mBeta.mX - mAlpha.mX;
 
-    updateTau(tminPeriod, tmaxPeriod);
-
-    //initalized = true;
+    update_Tau(tminPeriod, tmaxPeriod);
 }
 
 QString Phase::getTauTypeText() const
@@ -426,14 +429,11 @@ if (isnan(P2+som)) {
     return(std::move(P2+som) );
 
 }
-void Phase::updateTau(const double tminPeriod, const double tmaxPeriod)
+void Phase::update_Tau(const double tminPeriod, const double tmaxPeriod)
 {
     if (mTauType == eTauFixed && mTauFixed != 0.) {
         mTau.mX = mTauFixed;
 
-  /*  } else if (mTauType == eTauRange && mTauMax > mTauMin) {
-        mTau.mX = Generator::randomUniform(qMax(mTauMin, mBeta.mX - mAlpha.mX), mTauMax);
-*/
    } else if (mTauType == eZOnly) {
             // Modif PhD 2022
             // model definition
@@ -449,8 +449,6 @@ void Phase::updateTau(const double tminPeriod, const double tmaxPeriod)
             // solve equation F(x)-u=0
             const double FbMax = intFx(R, n, Rp, s);
             //double Fb = 1.0 - u;  // pour mémoire
-
-
 
                 // Newton
 
@@ -477,22 +475,10 @@ void Phase::updateTau(const double tminPeriod, const double tmaxPeriod)
 
             }
 
-
-
-         //  mTau.mX = std::move(xd);
-
-       /*  if (xn<mTau.mX) {
-               qDebug()<<"-----------precision------> U = "<< u << " R = "<< R <<  "xd = "<<xn <<  "xn = "<< xn <<" s = "<< s;
-          }
- */ // } else
-
-
             mTau.mX = std::move(xn);
 
         }
-   /* else if (mTauType == eTauUnknown) {
-        // Nothing to do!
-    }*/
+
 }
 
 void Phase::memoAll()
@@ -502,6 +488,7 @@ void Phase::memoAll()
    // if (mTauType == eZOnly)
      //   mTau.memo();
     mDuration.memo();
+
 #ifdef DEBUG
     if (mBeta.mX - mAlpha.mX < 0.)
         qDebug()<<"in Phase::memoAll : "<<mName<<" Warning mBeta.mX - mAlpha.mX<0";
@@ -566,19 +553,27 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     const double TR_max = timeRange.second;
     std::vector<double> concaTrace;
 
+    double min95 = +INFINITY;
+    double max95 = -INFINITY;
     for (const auto& ev : mEvents) {
-        const auto &rawtrace = ev->mTheta.fullRunRawTrace(mModel->mChains);
+        if (ev->mTheta.mSamplerProposal != MHVariable::eFixe) {
+            const auto &rawtrace = ev->mTheta.fullRunRawTrace(mModel->mChains);
 
-        std::copy_if(rawtrace.begin(), rawtrace.end(),
-                     std::back_inserter(concaTrace),
-                     [TR_min, TR_max](double x) { return (TR_min<= x && x<= TR_max); });
+            std::copy_if(rawtrace.begin(), rawtrace.end(),
+                         std::back_inserter(concaTrace),
+                         [TR_min, TR_max](double x) { return (TR_min<= x && x<= TR_max); });
+        } else {
+            min95 = std::min( min95, ev->mTheta.mRawTrace->at(0));
+            max95 = std::max( max95, ev->mTheta.mRawTrace->at(0));
+        }
 
     }
 
-
-    auto minmax95 = std::minmax_element(concaTrace.begin(), concaTrace.end());
-    double min95 = *minmax95.first;
-    double max95 = *minmax95.second;
+    if (!concaTrace.empty()) {
+        const auto &minmax95 = std::minmax_element(concaTrace.begin(), concaTrace.end());
+        min95 = std::min( min95, *minmax95.first);
+        max95 = std::max( max95, *minmax95.second);
+    }
 
     if (min95 == max95) { // hapen when there is only one bound in the phase ???
 
@@ -602,7 +597,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
         mValueStack["max95"] = TValueStack("max95", max95);
 
     }
-    const double nr = concaTrace.size();
+
 
     // const double mu = -2;
     //const double R_etendue = (n+1)/(n-1)/(1.+ mu*sqrt(2./(double)((n-1)*(n+2))) )*(t_max_data-t_min_data);
@@ -629,7 +624,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     const double a_Unif = mid_R - half_etendue;
     const double b_Unif = mid_R + half_etendue;
 
-    // L'unif théorique est défini par le trapéze correspondant à l'unif modifié par la fenètre mobile
+    // L'unif théorique est définie par le trapéze correspondant à l'unif modifié par la fenètre mobile
     const double a_Unif_minus_h_2 = a_Unif - h_2;
     const double a_Unif_plus_h_2 = a_Unif + h_2;
 
@@ -688,7 +683,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
     // overlaps
 
-
+    double nr = concaTrace.size();
     // Loop
     std::vector<int> NiTot (gridLength);
     try {
@@ -703,6 +698,26 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
                 for (auto&& ni = NiTot.begin() + idxGridMin; ni != NiTot.begin() + idxGridMax + 1; ++ni) {
                     ++*ni ;
                 }
+            }
+        }
+
+        // Ajout artificiel des events et bornes fixes
+        const int nRealyAccepted = std::accumulate(mModel->mChains.begin(), mModel->mChains.end(), 0, [] (int sum, ChainSpecs c) {return sum + c.mRealyAccepted;});
+        for (const auto& ev : mEvents) {
+            if (ev->mTheta.mSamplerProposal == MHVariable::eFixe) {
+                auto t = ev->mTheta.mRawTrace->at(0);
+                int idxGridMin = inRange(0, (int) floor((t - t_min_grid - h_2) / delta_t), (int)gridLength-1) ;
+                int idxGridMax = inRange(0, (int) floor((t - t_min_grid + h_2) / delta_t), (int)gridLength-1) ;
+
+                if (idxGridMax == idxGridMin) {
+                    *(NiTot.begin()+idxGridMin) += nRealyAccepted;
+
+                } else {
+                    for (auto&& ni = NiTot.begin() + idxGridMin; ni != NiTot.begin() + idxGridMax + 1; ++ni) {
+                        *ni += nRealyAccepted;
+                    }
+                }
+                nr += nRealyAccepted;
             }
         }
 

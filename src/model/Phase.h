@@ -84,12 +84,13 @@ public:
     void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
     void generateActivity(size_t gridLength, double h, const double threshold);
 
-    void updateAll(const double tminPeriod, const double tmaxPeriod);
+    void update_AlphaBeta(const double tminPeriod, const double tmaxPeriod);
+    void update_All(const double tminPeriod, const double tmaxPeriod);
     void memoAll();
 
     QString getTauTypeText() const;
     void initTau(const double tminPeriod, const double tmaxPeriod);
-    void updateTau(const double tminPeriod, const double tmaxPeriod);
+    void update_Tau(const double tminPeriod, const double tmaxPeriod);
 
 public:
     int mId;

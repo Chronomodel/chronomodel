@@ -193,7 +193,6 @@ T map_max_value(const QMap<U, T>& aMap)
 {
     QMapIterator<U, T> iter(aMap);
     T max = iter.hasNext() ?  iter.next().value()  :  T(0) ;
-
     while (iter.hasNext()) {
         iter.next();
         max = qMax(max, iter.value());
@@ -206,7 +205,6 @@ T map_min_value(const QMap<U, T>& aMap)
 {
     QMapIterator<U, T> iter(aMap);
     T min = iter.hasNext() ?  iter.next().value()  :  T(0) ;
-
     while (iter.hasNext()) {
         iter.next();
         min = qMin(min, iter.value());
@@ -219,7 +217,6 @@ T multimap_max_value(const QMultiMap<U, T>& aMap)
 {
     QMultiMapIterator<U, T> iter(aMap);
     T max = iter.hasNext() ?  iter.next().value()  :  T(0) ;
-
     while (iter.hasNext()) {
         iter.next();
         max = qMax(max, iter.value());
@@ -230,9 +227,8 @@ T multimap_max_value(const QMultiMap<U, T>& aMap)
 template <class U, class T>
 T multimap_min_value(const QMultiMap<U, T>& aMap)
 {
-    QMultiMapIterator<U, T> iter(aMap);
-    T min = iter.hasNext() ?  iter.next().value()  :  T(0) ;
-
+   QMultiMapIterator<U, T> iter(aMap);
+    T min = iter.value();
     while (iter.hasNext()) {
         iter.next();
         min = qMin(min, iter.value());

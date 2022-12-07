@@ -81,6 +81,7 @@ public:
     {
         eModeFixed = 'F',
         eModeBayesian = 'B',
+        eInterpolation = 'I'
     };
     
     CurveSettings();

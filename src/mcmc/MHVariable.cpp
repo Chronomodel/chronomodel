@@ -125,6 +125,8 @@ MHVariable::~MHVariable()
  */
 bool MHVariable::tryUpdate(const double x, const double rapport)
 {
+   // if (mSamplerProposal == MHVariable::eFixe) return true;
+
     if (mLastAccepts.size() >= mLastAcceptsLength)
         mLastAccepts.removeAt(0);
 
@@ -268,13 +270,11 @@ QVector<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains,
 {
     QVector<double> accept(0);
     int shift = 0;
-    //const int reserveSize = (int) ceil(chains.at(index).mNumBurnIter + (chains.at(index).mBatchIndex * chains.at(index).mNumBatchIter) + chains.at(index).mIterPerAquisition / chains.at(index).mThinningInterval);
     const int reserveSize = (int) ceil(chains.at(index).mIterPerBurn + (chains.at(index).mBatchIndex * chains.at(index).mIterPerBatch) + chains.at(index).mRealyAccepted);
     accept.reserve(reserveSize);
 
     for (int i = 0; i < chains.size(); ++i) {
         // We add 1 for the init
-        //const int chainSize = 1 +chains.at(i).mNumBurnIter + (chains.at(i).mBatchIndex * chains.at(i).mNumBatchIter) + chains.at(i).mIterPerAquisition / chains.at(i).mThinningInterval;
         const int chainSize = 1 +chains.at(i).mIterPerBurn + (chains.at(i).mBatchIndex * chains.at(i).mIterPerBatch) + chains.at(i).mRealyAccepted;
 
         if (i == index) {
@@ -319,8 +319,9 @@ void MHVariable::generateGlobalRunAcceptation(const QList<ChainSpecs> &chains)
 
 void MHVariable::generateNumericalResults(const QList<ChainSpecs> &chains)
 {
-    MetropolisVariable::generateNumericalResults(chains);
-    generateGlobalRunAcceptation(chains);
+
+        MetropolisVariable::generateNumericalResults(chains);
+        generateGlobalRunAcceptation(chains);
 }
 
 QString MHVariable::resultsString(const QString& nl, const QString& noResultMessage, const QString& unit, DateConversion formatFunc, const bool forCSV) const
@@ -335,8 +336,7 @@ QString MHVariable::resultsString(const QString& nl, const QString& noResultMess
              result += nl + tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(stringForLocal(mGlobalAcceptation*100.), getSamplerProposalText(mSamplerProposal));
 
     } else {
-        // result = tr("Fixed value : %1").arg(stringForLocal(mX)); //mResults.traceAnalysis.mean
-        result = tr("Fixed value : %1").arg(stringForLocal(mResults.traceAnalysis.mean)); // for VG mX is Variance and we need std G
+        result = tr("Fixed value : %1").arg(stringForLocal(mFormatedTrace->at(0))); // for VG mX is Variance and we need Std gi
     }
     return result;
 }

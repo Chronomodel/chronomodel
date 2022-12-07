@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Date.h"
 #include "Project.h"
 #include "Bound.h"
-//#include "MCMCLoopMain.h"
+//#include "MCMCLoopChrono.h"
 //#include "MCMCProgressDialog.h"
 
 #include "ModelUtilities.h"
@@ -1183,13 +1183,14 @@ void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
     std::thread thEvents ([this] (QList<ChainSpecs> chains)
     {
         for (const auto& event : mEvents) {
-            event->mTheta.generateNumericalResults(chains);
+            if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+                event->mTheta.generateNumericalResults(chains);
 
-            for (auto&& date : event->mDates) {
-                date.mTi.generateNumericalResults(chains);
-                date.mSigmaTi.generateNumericalResults(chains);
+                for (auto&& date : event->mDates) {
+                    date.mTi.generateNumericalResults(chains);
+                    date.mSigmaTi.generateNumericalResults(chains);
+                }
             }
-
         }
     } , chains);
 
@@ -1247,15 +1248,11 @@ void Model::generateCredibility(const double &thresh)
 #ifdef USE_THREAD_CRED
     std::thread thEvents ([this] (double thresh)
     {
-        for (const auto& pEvent : mEvents) {
-            bool isFixedBound = false;
-            if (pEvent->type() == Event::eBound)
-                isFixedBound = true;
+        for (const auto& event : mEvents) {
+             if (event->type() != Event::eBound) {
+                event->mTheta.generateCredibility(mChains, thresh);
 
-            if (!isFixedBound) {
-                pEvent->mTheta.generateCredibility(mChains, thresh);
-
-                for (auto&& date : pEvent->mDates )  {
+                for (auto&& date : event->mDates )  {
                     date.mTi.generateCredibility(mChains, thresh);
                     date.mSigmaTi.generateCredibility(mChains, thresh);
                 }
@@ -1273,7 +1270,7 @@ void Model::generateCredibility(const double &thresh)
             //  pPhase->mTau.generateCredibility(mChains, thresh);
             phase->mDuration.generateCredibility(mChains, thresh);
             phase->mTimeRange = timeRangeFromTraces( phase->mAlpha.fullRunRawTrace(mChains),
-                                                      phase->mBeta.fullRunRawTrace(mChains), thresh, "Time Range for Phase : " + phase->mName);
+                                                     phase->mBeta.fullRunRawTrace(mChains), thresh, "Time Range for Phase : " + phase->mName);
         }
     } , thresh);
 
@@ -1338,7 +1335,7 @@ void Model::generateCredibility(const double &thresh)
 
     }
 #endif
-//    delete progressGap;
+
 #ifdef DEBUG
 
     qDebug() <<  "[Model::generateCredibility] done in " + DHMS(t.elapsed());
@@ -1353,47 +1350,25 @@ void Model::generateHPD(const double thresh)
     t.start();
 #endif
 
-//- use thread // trés long
-  //  std::thread thEvents ([this] (double thresh)
-   // {
-        for (const auto& ev : mEvents) {
-            if (ev->type() != Event::eBound) {
-                ev->mTheta.generateHPD(thresh);
+    for (const auto& event : mEvents) {
+        if (event->type() != Event::eBound || (event->mTheta.mSamplerProposal != MHVariable::eFixe)) {
+            event->mTheta.generateHPD(thresh);
 
-                for (int j = 0; j<ev->mDates.size(); ++j) {
-                    Date& date = ev->mDates[j];
-                    date.mTi.generateHPD(thresh);
-                    date.mSigmaTi.generateHPD(thresh);
-                }
+            for (int j = 0; j<event->mDates.size(); ++j) {
+                Date& date = event->mDates[j];
+                date.mTi.generateHPD(thresh);
+                date.mSigmaTi.generateHPD(thresh);
             }
-        };
-  //  } , thresh);
+        }
+    };
 
- //   std::thread thPhases ([this] (double thresh)
- //   {
-        for (const auto& ph : mPhases) {
-            std::thread thAlpha ([ph] (double thresh)
-            {
-                ph->mAlpha.generateHPD(thresh);
-            }, thresh);
-            std::thread thBeta ([ph] (double thresh)
-            {
-                ph->mBeta.generateHPD(thresh);
-            }, thresh);
-            std::thread thDuration ([ph] (double thresh)
-            {
-                ph->mDuration.generateHPD(thresh);
-            }, thresh);
+    for (const auto& ph : mPhases) {
+        ph->mAlpha.generateHPD(thresh);
+        ph->mBeta.generateHPD(thresh);
+        ph->mDuration.generateHPD(thresh);
 
-            thAlpha.join();
-            thBeta.join();
-            thDuration.join();
+    };
 
-        };
- //   } , thresh);
-
-  //  thEvents.join();
-  //  thPhases.join();
 
 #ifdef DEBUG
     qDebug() <<  "[Model::generateHPD] done in " + DHMS(t.elapsed()) ;
@@ -2549,10 +2524,10 @@ void Model::generateActivity_old(size_t gridLength, double h, const double thres
         }
 
        } catch (std::exception& e) {
-        qWarning()<< "Model::generateActivity exception caught: " << e.what() << '\n';
+        qWarning()<< "[Model::generateActivity] exception caught: " << e.what() << '\n';
 
        } catch(...) {
-        qWarning() << "Model::generateActivity Caught Exception!\n";
+        qWarning() << "[Model::generateActivity] Caught Exception!\n";
 
        }
 
@@ -3026,24 +3001,18 @@ bool Model::hasSelectedPhases()
     return std::any_of(mPhases.begin(), mPhases.end(), [](Phase * p){return p->mIsSelected;});
 }
 
-void Model::reduceEventsTheta(QList<Event *> &lEvent)
-{
-    for (const auto& e : lEvent)
-        e->mTheta.mX = reduceTime( e->mTheta.mX );
-}
-
-long double Model::reduceTime(double t) const
+t_reduceTime Model::reduceTime(double t) const
 {
     const double tmin = mSettings.mTmin;
     const double tmax = mSettings.mTmax;
-    return (long double) (t - tmin) / (tmax - tmin);
+    return (t - tmin) / (tmax - tmin);
 }
 
-long double Model::yearTime(double reduceTime)
+double Model::yearTime(t_reduceTime reduceTime)
 {
     const double tmin = mSettings.mTmin;
     const double tmax = mSettings.mTmax;
-    return (long double)  reduceTime * (tmax - tmin) + tmin ;
+    return reduceTime * (tmax - tmin) + tmin ;
 }
 
 QString Model::initializeTheta()

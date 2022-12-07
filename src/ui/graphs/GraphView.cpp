@@ -263,7 +263,7 @@ void GraphView::adjustYScale()
                     yMax = qMax(yMax, map_max_value(subData));
 
 
-                } else {
+                } else if (!curve.mData.empty()) {
                     QMap<qreal, qreal> subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
                     yMin = qMin(yMin, map_min_value(subData));
                     yMax = qMax(yMax, map_max_value(subData));
@@ -544,8 +544,6 @@ void GraphView::setFormatFunctY(DateConversion f)
 void GraphView::addCurve(const GraphCurve& curve)
 {
     mCurves.append(curve);
-  //  adjustYScale();
-  //  repaintGraph(false);
 }
 
 void GraphView::removeCurve(const QString& name)
@@ -556,14 +554,12 @@ void GraphView::removeCurve(const QString& name)
             break;
         }
     }
-//    adjustYScale();
-//    repaintGraph(false);
 }
 
 void GraphView::removeAllCurves()
 {
     mCurves.clear();
-    adjustYScale();
+    //adjustYScale();
     repaintGraph(false);
 }
 
@@ -1422,8 +1418,6 @@ void GraphView::drawCurves(QPainter& painter)
 
 void GraphView::drawMap(GraphCurve& curve, QPainter& painter)
 {
-    double tReal;
-    double yReal;
     const double minY = curve.mMap.minY();
     const double maxY = curve.mMap.maxY();
     const double minX = curve.mMap.minX();
@@ -1431,31 +1425,25 @@ void GraphView::drawMap(GraphCurve& curve, QPainter& painter)
     const double maxVal = curve.mMap.max_value;
     const double minVal = curve.mMap.min_value;
 
-    qreal rectXSize = (getXForValue(maxX, false) - getXForValue(minX, false) ) / (curve.mMap.column()-1); // Phd echange ici
-    qreal rectYSize = (getYForValue(minY, false) - getYForValue(maxY, false) ) / (curve.mMap.row()-1)  ;
+    const qreal rectXSize = (getXForValue(maxX, false) - getXForValue(minX, false) ) / (curve.mMap.column()-1);
+    const qreal rectYSize = (getYForValue(minY, false) - getYForValue(maxY, false) ) / (curve.mMap.row()-1)  ;
     QPen rectPen;
-    rectPen.setStyle(Qt::NoPen);//SolidLine);// NoPen);
+    rectPen.setStyle(Qt::NoPen);
 
-    /*const double val99 = .099*(maxVal-minVal)+minVal;
-    const double val95 = .075*(maxVal-minVal)+minVal;
-    const double val50 = .025*(maxVal-minVal)+minVal;
-    const double val25 = .010*(maxVal-minVal)+minVal;
-    */
     QColor col;
-    double val, alp;
-    qreal xtop, xbottom, ytop, ybottom;
+
     painter.setRenderHint(QPainter::Antialiasing);
-    xtop = getXForValue(minX, false);
+    qreal xtop = getXForValue(minX, false) - rectXSize/2.;
 
     for (unsigned c1 = 1 ; c1 < curve.mMap.column(); c1++) {
-        tReal = c1*(maxX-minX)/(curve.mMap.column()-1) + minX;
-        xbottom =  getXForValue(tReal, false) + rectXSize/2.;
-        ytop = getYForValue(minY, false);
+        const double tReal = c1*(maxX-minX)/(curve.mMap.column()-1) + minX;
+        qreal xbottom =  getXForValue(tReal, false) + rectXSize/2.;
+        double ytop = getYForValue(minY, false) + rectYSize/2.;
 
         for (unsigned r = 1 ; r < curve.mMap.row(); r++) {
-            val = curve.mMap.at(c1, r);
-            yReal = r*(maxY-minY)/(curve.mMap.row()-1) + minY;
-            ybottom = getYForValue(yReal, false) - rectYSize/2.;
+            const double val = curve.mMap.at(c1, r);
+            const qreal yReal = r*(maxY-minY)/(curve.mMap.row()-1) + minY;
+            qreal ybottom = getYForValue(yReal, false) - rectYSize/2.;
 
             if ( val > minVal) {
 #ifdef DEBUG
@@ -1475,20 +1463,19 @@ void GraphView::drawMap(GraphCurve& curve, QPainter& painter)
                     */
                 } else {
 #endif
-                    alp = (val - minVal)/ (maxVal - minVal);
+                    const double alp = (val - minVal)/ (maxVal - minVal);
 #ifdef DEBUG
                     if (alp > 1)
-                        qDebug()<<"GRaphView::drawMap alpha> 1 ??";
+                        qDebug()<<"[GraphView::drawMap] alpha> 1 ??";
                     if (sqrt(alp) > 1)
-                        qDebug()<<"GRaphView::drawMap sqrt(alpha)> 1 ??";
+                        qDebug()<<"[GraphView::drawMap] sqrt(alpha)> 1 ??";
 #endif
                     col = QColor(curve.mPen.color());
                     col.setAlphaF(sqrt(alp));
 #ifdef DEBUG
                 }
 #endif
-                //rectPen.setColor(col);
-                // https://doc.qt.io/qt-6/qrectf.html
+
                 painter.setPen(Qt::NoPen);
                 painter.setBrush(col);
 
@@ -1509,29 +1496,56 @@ void GraphView::drawShape(GraphCurve &curve, QPainter& painter)
     if (curve.mShape.first.isEmpty())
         return;
 
-    QMap<double, double>::Iterator iterCurveInf = curve.mShape.first.begin();
-    //const auto curveSup = curve.mShape.second;
+    if ( curve.mShape.first.lastKey()<= mAxisToolX.mStartVal
+         || curve.mShape.first.firstKey()>= mAxisToolX.mEndVal)
+        return;
+
     QPainterPath path;
-    const type_data valueX = iterCurveInf.key();
-    const type_data valueY = iterCurveInf.value();
+    QPainterPath pathSecond;
+    QMap<double, double>::Iterator iFirst = curve.mShape.first.begin();
+    QMap<double, double>::Iterator iSecond = curve.mShape.second.begin();
 
-    const auto firstX = getXForValue(valueX, true);
-    const auto firstY = getYForValue(valueY, true);
-    path.moveTo(firstX, firstY);
 
-    while (iterCurveInf != curve.mShape.first.end()) {
-        path.lineTo(getXForValue(iterCurveInf.key(), true), getYForValue(iterCurveInf.value(), true));
-        ++iterCurveInf;
+    if ( mAxisToolX.mStartVal< curve.mShape.first.firstKey() ) {
+        const double yF = interpolateValueInQMap(curve.mShape.first.firstKey(), curve.mShape.first);
+        path.moveTo(getXForValue(curve.mShape.first.firstKey(), true), getYForValue(yF, true));
+
+        const double yS = interpolateValueInQMap(curve.mShape.second.firstKey(), curve.mShape.second);
+        pathSecond.moveTo(getXForValue(curve.mShape.second.firstKey(), true), getYForValue(yS, true));
+
+    } else if (mAxisToolX.mStartVal< curve.mShape.first.firstKey() ) {
+         // The point does not exist, mStartVal does not exist in the table, it must be interpolated
+        const double yF = interpolateValueInQMap(mAxisToolX.mStartVal, curve.mShape.first);
+        path.moveTo(getXForValue(mAxisToolX.mStartVal, true), getYForValue(yF, true));
+
+        const double yS = interpolateValueInQMap(mAxisToolX.mStartVal, curve.mShape.second);
+        pathSecond.moveTo(getXForValue(mAxisToolX.mStartVal, true), getYForValue(yS, true));
     }
 
-    QMap<double, double>::Iterator iterCurveSup = curve.mShape.second.end();
-    do {
-        --iterCurveSup;
-        path.lineTo(getXForValue(iterCurveSup.key(), true), getYForValue(iterCurveSup.value(), true));
+    const QPointF &pFirst = path.currentPosition();
 
-    }  while (iterCurveSup != curve.mShape.second.begin()) ;
+    while (iFirst != curve.mShape.first.end() && iFirst.key()<= mAxisToolX.mEndVal) {
+        path.lineTo(getXForValue(iFirst.key(), true), getYForValue(iFirst.value(), true));
+        ++iFirst;
 
-    path.lineTo(firstX, firstY);
+        pathSecond.lineTo(getXForValue(iSecond.key(), true), getYForValue(iSecond.value(), true));
+        ++iSecond;
+    }
+
+    // The point does not exist, mEndVal does not exist in the table, it must be interpolated
+    if ( iFirst != curve.mShape.first.end()
+         && curve.mShape.first.lastKey()> mAxisToolX.mEndVal) {
+        const double yF = interpolateValueInQMap(mAxisToolX.mEndVal, curve.mShape.first);
+        path.lineTo(getXForValue(mAxisToolX.mEndVal, true), getYForValue(yF, true));
+
+        const double yS = interpolateValueInQMap(mAxisToolX.mEndVal, curve.mShape.second);
+        pathSecond.lineTo(getXForValue(mAxisToolX.mEndVal, true), getYForValue(yS, true));
+    }
+
+    path.lineTo(pathSecond.currentPosition());
+
+    path.addPath(pathSecond.toReversed());
+    path.lineTo(pFirst);
 
     painter.setPen(curve.mPen);
 
@@ -1546,7 +1560,7 @@ void GraphView::drawShape(GraphCurve &curve, QPainter& painter)
 
     QPen pen = curve.mPen;
     pen.setWidth(pen.width() * mThickness);
-    //painter.setPen(pen);
+
     painter.strokePath(path, pen);
 
 }

@@ -39,7 +39,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "EventPropertiesView.h"
 
-//#include "Label.h"
 #include "LineEdit.h"
 #include "ColorPicker.h"
 #include "Event.h"
@@ -822,6 +821,7 @@ void EventPropertiesView::updateLayout()
     QJsonObject state = MainWindow::getInstance()->getProject()->mState;
     const CurveSettings curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
     const bool withCurve = (curveSettings.mProcessType != CurveSettings::eProcessTypeNone);
+    const bool withNode = (curveSettings.mLambdaSplineType != CurveSettings::eInterpolation) && (curveSettings.mVarianceType != CurveSettings::eModeFixed);
 
     mButtonWidth = 50; //int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = 50; //int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
@@ -863,7 +863,14 @@ void EventPropertiesView::updateLayout()
         int dy = margin;
         const int labW = 80;
         const int YshiftLabel = (mLineEditHeight - mX_IncLab->height())/2;
-        mCurveNodeCB->setFixedWidth(labW);
+        if (withNode) {
+            mCurveNodeCB->setVisible(false);
+            mCurveNodeCB->setFixedWidth(0);
+
+        } else {
+            mCurveNodeCB->setVisible(true);
+            mCurveNodeCB->setFixedWidth(labW);
+        }
         const int curveNodeCBWidth = mCurveNodeCB->width();
 
         int editW;
@@ -875,11 +882,6 @@ void EventPropertiesView::updateLayout()
                 editW = (curveWidgetWidth - 6*margin - 2*labW - curveNodeCBWidth) / 2;
             }
 
-            /* if (curveSettings.showDeclination()) {
-                editW = (width() - 9*margin - 3*labW) / 3;
-            }*/
-
-
             mX_IncLab->setGeometry(dx, dy - YshiftLabel, labW, mLineEditHeight);
             mX_IncEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
             mS_X_IncLab->setGeometry(dx += editW + margin, dy - YshiftLabel, labW, mLineEditHeight);
@@ -890,7 +892,8 @@ void EventPropertiesView::updateLayout()
                 mY_DecEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
             } 
 
-            mCurveNodeCB->setGeometry(dx += editW + margin, dy, mCurveNodeCB->width(), mLineEditHeight);
+            if (withNode)
+                mCurveNodeCB->setGeometry(dx += editW + margin, dy, mCurveNodeCB->width(), mLineEditHeight);
 
             dy += mLineEditHeight + margin;
         }

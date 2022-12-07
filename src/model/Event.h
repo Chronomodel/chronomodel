@@ -65,41 +65,6 @@ public:
         eNode = 1     /* The Node type with VG=0*/
     };
 
-    Event (const Model * model = nullptr);
-    Event (const Event& event);
-    explicit Event (const QJsonObject& json, const Model *model);
-    Event& operator=(const Event& event);
-    virtual void copyFrom(const Event& event);
-    virtual ~Event();
-
-    static Event fromJson(const QJsonObject& json);
-    virtual QJsonObject toJson() const;
-
-    Type type() const;
-
-    void reset();
-    
-    static void setCurveCsvDataToJsonEvent(QJsonObject &event, const QMap<QString, double> &CurveData);
-    static QString curveDescriptionFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType = CurveSettings::eProcessTypeNone, CurveSettings::VariableType variableType = CurveSettings::eVariableTypeOther);
-    static QList<double> curveParametersFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType = CurveSettings::eProcessTypeNone, CurveSettings::VariableType variableType = CurveSettings::eVariableTypeOther);
-
-    /// Functions used within the MCMC process ( not in the init part!) :
-    double getThetaMin(double defaultValue);
-    double getThetaMax(double defaultValue);
-
-
-    ///  Functions used within the init MCMC process
-    bool getThetaMinPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents, QString &linkStr);
-    bool getThetaMaxPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents);
-
-    double getThetaMinRecursive(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
-    double getThetaMaxRecursive(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
-
-    virtual void updateTheta(const double tmin, const double tmax);
-
-    void generateHistos(const QList<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
-
-public:
     Type mType;
     int mId;
     const Model *mModel;
@@ -131,38 +96,73 @@ public:
     bool mNodeInitialized;
     double mThetaNode;
     int mLevel; // Used to init mcmc
-    
-    //double mMixingLevel; // obsolete, only used for date
-    
+
     // --------------------------------------------------------
     //  Curve
     // --------------------------------------------------------
-    
+
     // Values entered by the user
     PointType mPointType;
-    double mXIncDepth; //mYInc;
+    double mXIncDepth;
     double mYDec;
-    double mZField; // mYInt;
+    double mZField;
 
-    double mS_XA95Depth; // mSInc;
-    double mS_Y; //mSDec;
-    double mS_ZField; //  mSInt;
-    
+    double mS_XA95Depth;
+    double mS_Y;
+    double mS_ZField;
+
     // Prepared (projected) values
     double mYx;
     double mYy;
     double mYz;
-    
+
     // Values used for the calculations
-    double mThetaReduced;
-    double mY;
+    t_reduceTime mThetaReduced;
+
     double mSy;
     double mW;
+
+    MHVariable mVg; // sigma G de l'event (par rapport à G(t) qu'on cherche à estimer)
+
+#pragma mark function
+
+    Event (const Model * model = nullptr);
+    Event (const Event& event);
+    explicit Event (const QJsonObject& json, const Model *model);
+    virtual ~Event();
+
+    Event& operator=(const Event& event);
+    virtual void copyFrom(const Event& event);
+
+    static Event fromJson(const QJsonObject& json);
+    virtual QJsonObject toJson() const;
+
+    Type type() const;
+
+    void reset();
     
-    MHVariable mVG; // sigma G de l'event (par rapport à G(t) qu'on cherche à estimer)
-    
-    // A chaque mise à jour de VG, on doit aussi mettre w à jour :
+    static void setCurveCsvDataToJsonEvent(QJsonObject &event, const QMap<QString, double> &CurveData);
+    static QString curveDescriptionFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType = CurveSettings::eProcessTypeNone, CurveSettings::VariableType variableType = CurveSettings::eVariableTypeOther);
+    static QList<double> curveParametersFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType = CurveSettings::eProcessTypeNone, CurveSettings::VariableType variableType = CurveSettings::eVariableTypeOther);
+
+    /// Functions used within the MCMC process ( not in the init part!) :
+    double getThetaMin(double defaultValue);
+    double getThetaMax(double defaultValue);
+
+
+    ///  Functions used within the init MCMC process
+    bool getThetaMinPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents, QString &linkStr);
+    bool getThetaMaxPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents);
+
+    double getThetaMinRecursive(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
+    double getThetaMaxRecursive(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
+
+    virtual void updateTheta(const double tmin, const double tmax);
+
+    void generateHistos(const QList<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
+
     void updateW();
+
 };
 
 #endif

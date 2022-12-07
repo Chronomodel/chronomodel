@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef PROJECTVIEW_H
 #define PROJECTVIEW_H
 
-#include "MCMCLoopMain.h"
+#include "MCMCLoopChrono.h"
 #include "AppSettings.h"
 #include "Project.h"
 #include "Tabs.h"

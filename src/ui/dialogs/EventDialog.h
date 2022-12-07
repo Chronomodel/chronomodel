@@ -1,7 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
-
+Copyright or © or Copr. CNRS	2014 - 2022
 Authors :
 	Philippe LANOS
 	Helori LANOS
@@ -41,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define EVENTDIALOG_H
 
 #include <QDialog>
-#include "Event.h"
+//#include "Event.h"
 
 class QLabel;
 class LineEdit;
@@ -52,16 +51,20 @@ class ColorPicker;
 class EventDialog: public QDialog
 {
     Q_OBJECT
+
+    LineEdit* mNameEdit;
+    ColorPicker* mColorPicker;
+
+#pragma mark Function
 public:
     EventDialog(QWidget* parent, const QString& title, Qt::WindowFlags flags =  Qt::WindowType::Widget);
     ~EventDialog();
 
+
     QString getName() const;
     QColor getColor() const;
 
-public:
-    LineEdit* mNameEdit;
-    ColorPicker* mColorPicker;
+
 };
 
 #endif

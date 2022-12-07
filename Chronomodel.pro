@@ -221,29 +221,6 @@ unix:!macx{
 	INCLUDEPATH += lib/FFTW
         LIBS += -lfftw3
 }
-#########################################
-# OPENMP
-#########################################
-USE_OPENMP=0
-
-macx{
-     equals(USE_OPENMP, 1) {
-                             message("-------------------------------------------")
-                             message("use OpenMP")
-                             DEFINES += USE_OPENMP #   DEFINES += "USE_FFT=$${USE_FFT}"
-                             QMAKE_LFLAGS += -lomp
-
-                             QMAKE_CXXFLAGS +=  -Xpreprocessor -fopenmp
-
-                             INCLUDEPATH += "$$_PRO_FILE_PWD_/lib/openMP/macOS11"
-                             LIBS += -L"$$_PRO_FILE_PWD_/lib/openMP/macOS11" -lomp # Pour openMP.dylib
-
-                             OPENMP_FILES.files += $$$$_PRO_FILE_PWD_/lib/openMP/macOS11/libomp.dylib
-                             QMAKE_BUNDLE_DATA += OPENMP_FILES
-                             message("-------------------------------------------")
-    }
-}
-
 
 #########################################
 message("INCLUDEPATH : $$INCLUDEPATH")
@@ -308,7 +285,8 @@ HEADERS += src/curve/CurveUtilities.h
 HEADERS += src/mcmc/Functions.h
 HEADERS += src/mcmc/Generator.h
 HEADERS += src/mcmc/MCMCLoop.h
-HEADERS += src/mcmc/MCMCLoopMain.h
+HEADERS += \
+    src/mcmc/MCMCLoopChrono.h
 HEADERS += src/mcmc/MCMCSettings.h
 HEADERS += src/mcmc/MetropolisVariable.h
 HEADERS += src/mcmc/MHVariable.h
@@ -420,7 +398,8 @@ HEADERS += src/ui/panel_model/scenes/EventsScene.h
 HEADERS += src/ui/panel_model/scenes/PhaseItem.h
 HEADERS += src/ui/panel_model/scenes/PhasesScene.h
 
-HEADERS += src/ui/panel_results/GraphViewAlpha.h
+HEADERS += \
+    src/ui/panel_results/GraphViewLambda.h
 HEADERS += src/ui/panel_results/GraphViewCurve.h
 HEADERS += src/ui/panel_results/GraphViewDate.h
 HEADERS += src/ui/panel_results/GraphViewEvent.h
@@ -476,7 +455,8 @@ SOURCES += src/curve/CurveUtilities.cpp
 SOURCES += src/mcmc/Functions.cpp
 SOURCES += src/mcmc/Generator.cpp
 SOURCES += src/mcmc/MCMCLoop.cpp
-SOURCES += src/mcmc/MCMCLoopMain.cpp
+SOURCES += \
+    src/mcmc/MCMCLoopChrono.cpp
 SOURCES += src/mcmc/MCMCSettings.cpp
 SOURCES += src/mcmc/MetropolisVariable.cpp
 SOURCES += src/mcmc/MHVariable.cpp
@@ -580,7 +560,8 @@ SOURCES += src/ui/panel_model/scenes/EventsScene.cpp
 SOURCES += src/ui/panel_model/scenes/PhaseItem.cpp
 SOURCES += src/ui/panel_model/scenes/PhasesScene.cpp
 
-SOURCES += src/ui/panel_results/GraphViewAlpha.cpp
+SOURCES += \
+    src/ui/panel_results/GraphViewLambda.cpp
 SOURCES += src/ui/panel_results/GraphViewCurve.cpp
 SOURCES += src/ui/panel_results/GraphViewDate.cpp
 SOURCES += src/ui/panel_results/GraphViewEvent.cpp

@@ -296,7 +296,7 @@ void MainWindow::createActions()
     mSelectEventsNameAction = new QAction(tr("Select All Events with string"), this);
     connect(mSelectEventsNameAction, &QAction::triggered, this, &MainWindow::selectEventWithString);
 
-    mExportCurveAction = new QAction(tr("Rebuild and Export Curve and Map"), this);
+    mExportCurveAction = new QAction(tr("Rescale Curve and its Density"), this);
     connect(mExportCurveAction, &QAction::triggered, this, &MainWindow::rebuildExportCurve);
     //-----------------------------------------------------------------
     // Help/About Menu

@@ -87,12 +87,11 @@ public:
     bool isValid();
     void clear();
 
-    void initNodeEvents(); // use in MCMCLoopMain::initialize()
+    void initNodeEvents(); // use in MCMCLoopChrono::initialize()
     QString initializeTheta();
 
-    void reduceEventsTheta(QList<Event *> &lEvent);
-    long double reduceTime(double t) const;
-    long double yearTime(double reduceTime);
+    t_reduceTime reduceTime(double t) const;
+    double yearTime(t_reduceTime reduceTime);
 
     virtual void saveToFile(QDataStream* out);
     virtual void restoreFromFile(QDataStream* in);
