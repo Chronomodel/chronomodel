@@ -85,10 +85,10 @@ double DateUtils::convertFromFormat(const double formatedValue, const FormatDate
             return 2000. - formatedValue;
             break;
         case eDatBP:
-            return formatedValue + 1950.;
+            return formatedValue - 1950.;
             break;
         case eDatB2K:
-            return formatedValue + 2000.;
+            return formatedValue - 2000.;
             break;
         case eKa:
             return (2. - formatedValue)*1e+03;
@@ -188,11 +188,11 @@ QMap<double, double> DateUtils::convertMapToAppSettingsFormat(const QMap<double,
             break;
         case eDatBP:
             for (QMap<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
-                mapResult.insert(value.key() + 1950., value.value());
+                mapResult.insert(value.key() - 1950., value.value());
             break;
         case eDatB2K:
             for (QMap<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
-                mapResult.insert(value.key() + 2000., value.value());
+                mapResult.insert(value.key() - 2000., value.value());
             break;
         case eKa:
             for (QMap<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
