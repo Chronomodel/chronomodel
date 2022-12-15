@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "Project.h"
+
 #include "CalibrationCurve.h"
 #include "MainWindow.h"
 #include "Model.h"
@@ -61,6 +62,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "TrashDialog.h"
 
 #include "QtUtilities.h"
+#include "Generator.h"
 
 #include "MCMCLoopChrono.h"
 #include "MCMCLoopCurve.h"
@@ -69,13 +71,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "SetProjectState.h"
 #include "StateEvent.h"
 
-#include <iostream>
-//#include <exception>
 #include <QtWidgets>
-//#include <QThread>
 #include <QJsonObject>
 #include <QFile>
 
+#include <iostream>
 
 Project::Project():
     mName (tr("ChronoModel Project")),

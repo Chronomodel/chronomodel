@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -38,9 +38,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "ProjectSettings.h"
+
 #include "DateUtils.h"
+#include "StateKeys.h"
+
 #include <QObject>
 #include <QVariant>
+
 #include <cmath>
 
 ProjectSettings::ProjectSettings():
@@ -135,8 +139,8 @@ double ProjectSettings::getStep(const double tmin, const double tmax)
         const double maxPts (52000.); //must be upper than linearUntil
         const double lambda = - log((maxPts - linearUntil)/maxPts) / linearUntil;
         const double nbPts = maxPts * (1. - exp(-lambda * diff));
-        const double step = diff / nbPts;
-        return step;
+
+        return diff / nbPts;
     }
 }
 

@@ -111,10 +111,10 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     mVarianceTypeInput->addItem(tr("Bayesian"));
     
     mUseVarianceIndividualLabel = new QLabel(tr("Individual Std gi"), this);
-    mUseVarianceIndividualInput = new QCheckBox(this);
+    mUseVarianceIndividualCB = new QCheckBox(this);
     
-    mVarianceFixedLabel = new QLabel(tr("Std gi = Global Value"), this);
-    mVarianceFixedInput = new QLineEdit(this);
+    mVarianceValueLabel = new QLabel(tr("Std gi = Global Value"), this);
+    mVarianceValueInput = new QLineEdit(this);
     
 
     
@@ -150,10 +150,10 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     grid->addWidget(mVarianceTypeInput, row, 1);
     
     grid->addWidget(mUseVarianceIndividualLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mUseVarianceIndividualInput, row, 1);
+    grid->addWidget(mUseVarianceIndividualCB, row, 1);
     
-    grid->addWidget(mVarianceFixedLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mVarianceFixedInput, row, 1);
+    grid->addWidget(mVarianceValueLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mVarianceValueInput, row, 1);
 
     
     QVBoxLayout* vlayout = new QVBoxLayout();
@@ -184,12 +184,13 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
     
     connect(mVariableTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
-    
-    connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
-    
+
     connect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
     
-    
+    connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
+
+    connect(mUseVarianceIndividualCB, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::updateVisibilities);
+
     
     connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
     
@@ -203,9 +204,9 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     
     connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
     
-    connect(mUseVarianceIndividualInput, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::save);
+    connect(mUseVarianceIndividualCB, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::save);
     
-    connect(mVarianceFixedInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
+    connect(mVarianceValueInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
     
     connect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
     
@@ -225,8 +226,8 @@ void CurveSettingsView::setSettings(const CurveSettings& settings)
     mUseErrMesureInput->blockSignals(true);
     mTimeTypeInput->blockSignals(true);
     mVarianceTypeInput->blockSignals(true);
-    mUseVarianceIndividualInput->blockSignals(true);
-    mVarianceFixedInput->blockSignals(true);
+    mUseVarianceIndividualCB->blockSignals(true);
+    mVarianceValueInput->blockSignals(true);
     mLambdaSplineTypeInput->blockSignals(true);
     mLambdaSplineInput->blockSignals(true);
 
@@ -289,8 +290,8 @@ void CurveSettingsView::setSettings(const CurveSettings& settings)
     mThresholdInput->setText(stringForLocal(settings.mThreshold));
 
 
-    mUseVarianceIndividualInput->setChecked(settings.mUseVarianceIndividual);
-    mVarianceFixedInput->setText(stringForLocal(sqrt(settings.mVarianceFixed)));
+    mUseVarianceIndividualCB->setChecked(settings.mUseVarianceIndividual);
+    mVarianceValueInput->setText(stringForLocal(sqrt(settings.mVarianceFixed)));
     
     if (settings.mLambdaSplineType == CurveSettings::eModeFixed) {
         mLambdaSplineTypeInput->setCurrentIndex(0);
@@ -312,8 +313,8 @@ void CurveSettingsView::setSettings(const CurveSettings& settings)
     mUseErrMesureInput->blockSignals(false);
     mTimeTypeInput->blockSignals(false);
     mVarianceTypeInput->blockSignals(false);
-    mUseVarianceIndividualInput->blockSignals(false);
-    mVarianceFixedInput->blockSignals(false);
+    mUseVarianceIndividualCB->blockSignals(false);
+    mVarianceValueInput->blockSignals(false);
     mLambdaSplineTypeInput->blockSignals(false);
     mLambdaSplineInput->blockSignals(false);
 
@@ -385,13 +386,13 @@ CurveSettings CurveSettingsView::getSettings()
         settings.mVarianceType = CurveSettings::eModeBayesian;
     }
         
-    settings.mUseVarianceIndividual = mUseVarianceIndividualInput->isChecked() && (mVarianceTypeInput->currentIndex() == 1) ;
-    settings.mVarianceFixed = pow(locale().toDouble(mVarianceFixedInput->text()), 2.);
+    settings.mUseVarianceIndividual = mUseVarianceIndividualCB->isChecked() && (mVarianceTypeInput->currentIndex() == 1) ;
+    settings.mVarianceFixed = pow(locale().toDouble(mVarianceValueInput->text()), 2.);
 
 
     if (mLambdaSplineTypeInput->currentIndex() == 0) {
         settings.mLambdaSplineType = CurveSettings::eModeFixed;
-        settings.mLambdaSpline = locale().toDouble(mLambdaSplineInput->text());
+        settings.mLambdaSpline = pow(10., locale().toDouble(mLambdaSplineInput->text()));
 
     } else if (mLambdaSplineTypeInput->currentIndex() == 1) {
         settings.mLambdaSplineType = CurveSettings::eModeBayesian;
@@ -452,11 +453,11 @@ void CurveSettingsView::updateVisibilities()
         mVarianceTypeLabel->setVisible(false);
         mVarianceTypeInput->setVisible(false);
 
-        mVarianceFixedLabel->setVisible(false);
-        mVarianceFixedInput->setVisible(false);
+        mVarianceValueLabel->setVisible(false);
+        mVarianceValueInput->setVisible(false);
 
         mUseVarianceIndividualLabel->setVisible(false);
-        mUseVarianceIndividualInput->setVisible(false);
+        mUseVarianceIndividualCB->setVisible(false);
 
         mLambdaSplineTypeLabel->setVisible(false);
         mLambdaSplineTypeInput->setVisible(false);
@@ -489,11 +490,14 @@ void CurveSettingsView::updateVisibilities()
         mVarianceTypeLabel->setVisible(!lambdaSplineInterpol);
         mVarianceTypeInput->setVisible(!lambdaSplineInterpol);
         const bool varianceFixed = (mVarianceTypeInput->currentText() == "Fixed");
-        mVarianceFixedLabel->setVisible(!lambdaSplineInterpol && varianceFixed);
-        mVarianceFixedInput->setVisible(!lambdaSplineInterpol && varianceFixed);
 
-        mUseVarianceIndividualLabel->setVisible(!lambdaSplineInterpol && varianceFixed);
-        mUseVarianceIndividualInput->setVisible(!lambdaSplineInterpol && varianceFixed);
+        mUseVarianceIndividualLabel->setVisible(!lambdaSplineInterpol && !varianceFixed);
+        mUseVarianceIndividualCB->setVisible(!lambdaSplineInterpol && !varianceFixed);
+
+        const bool varianceIndividual = mUseVarianceIndividualCB->isChecked();
+        mVarianceValueLabel->setVisible(!lambdaSplineInterpol && varianceFixed && !varianceIndividual);
+        mVarianceValueInput->setVisible(!lambdaSplineInterpol && varianceFixed && !varianceIndividual);
+
 
     }
     

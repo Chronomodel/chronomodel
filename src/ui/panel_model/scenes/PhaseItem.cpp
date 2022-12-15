@@ -222,11 +222,11 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     matLeastOneEventSelected = false;
     mOneEventSelectedOnScene = false;
     
-    const QJsonObject state = MainWindow::getInstance()->getProject()->state();
-    const QJsonArray allEvents = state.value(STATE_EVENTS).toArray();
+    const QJsonObject &state = MainWindow::getInstance()->getProject()->state();
+    const QJsonArray &allEvents = state.value(STATE_EVENTS).toArray();
 
     for (int i=0; i<allEvents.size(); ++i) {
-       const QJsonObject event = allEvents.at(i).toObject();
+       const QJsonObject &event = allEvents.at(i).toObject();
        const bool isSelected = ( event.value(STATE_IS_SELECTED).toBool() || event.value(STATE_IS_CURRENT).toBool() );
        mOneEventSelectedOnScene = (mOneEventSelectedOnScene || isSelected);
     }
@@ -241,52 +241,50 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
 
    for (int j=0; j<sortedEvents.size(); ++j) {
-      int i = sortedEvents[j].first;
-        const QJsonObject event = events.at(i).toObject();
-        const QColor eventColor(event.value(STATE_COLOR_RED).toInt(),
-                          event.value(STATE_COLOR_GREEN).toInt(),
-                          event.value(STATE_COLOR_BLUE).toInt());
-        const bool isSelected = ( event.value(STATE_IS_SELECTED).toBool() || event.value(STATE_IS_CURRENT).toBool() );
-       
-        if (j > 0)
-            r.adjust(0, dy, 0, dy);
+       int i = sortedEvents[j].first;
+       const QJsonObject &event = events.at(i).toObject();
+       const QColor eventColor(event.value(STATE_COLOR_RED).toInt(),
+                               event.value(STATE_COLOR_GREEN).toInt(),
+                               event.value(STATE_COLOR_BLUE).toInt());
 
-        painter->setPen(getContrastedColor(eventColor));
-        QString eventName = event.value(STATE_NAME).toString();
+       const bool isSelected = ( event.value(STATE_IS_SELECTED).toBool() || event.value(STATE_IS_CURRENT).toBool() );
+       const bool isBound = event.value(STATE_EVENT_TYPE).toInt() == Event::eBound;
+       if (j > 0)
+           r.adjust(0, dy, 0, dy);
 
-        const QFontMetrics fmAdjust (font);
-        eventName = fmAdjust.elidedText(eventName, Qt::ElideRight, int (r.width() - 5));
-        painter->setFont(font);
+       painter->setPen(getContrastedColor(eventColor));
 
-        // magnify and highlight selected events
-        if (isSelected) {
-            matLeastOneEventSelected = true;
+       painter->setFont(font);
 
-            painter->setPen(QPen(fontColor, 3.));
-            r.adjust(1, 1, -1, -1);
-            painter->drawRoundedRect(r, 1, 1);
-            painter->fillRect(r, eventColor);
-            painter->setPen(QPen(getContrastedColor(eventColor), 1));
-            if (mControlsVisible)
-                painter->drawText(r, Qt::AlignCenter, eventName);
-            r.adjust(-1, -1, +1, +1);
-        }
-        else if (isSelected || showAlldata) {
-                painter->fillRect(r, eventColor);
-                if (mControlsVisible)
-                    painter->drawText(r, Qt::AlignCenter, eventName);
+       painter->save();
 
-        } else {
-            painter->setOpacity(0.2);
-            painter->fillRect(r, eventColor);
-            if (mControlsVisible)
-                painter->drawText(r, Qt::AlignCenter, eventName);
-            painter->setOpacity(1);
-        }
+       painter->setBrush(eventColor);
+       if (isSelected)
+           matLeastOneEventSelected = true;
 
+       painter->setPen(QPen(getContrastedColor(eventColor), 1));
+
+       if (!isSelected & !showAlldata) {
+           painter->setOpacity(0.2);
+       }
+
+       if (isBound)
+           painter->drawRoundedRect(r, r.width()/7, r.height()/2);
+       else
+           painter->drawRoundedRect(r, 1, 1);
+
+       painter->setPen(QPen(getContrastedColor(eventColor), 1));
+
+       if (mControlsVisible) {
+           const QFontMetrics fmAdjust (font);
+           const QString eventName = fmAdjust.elidedText(event.value(STATE_NAME).toString(), Qt::ElideRight, int (r.width() - 5));
+           painter->drawText(r, Qt::AlignCenter, eventName);
+       }
+
+       painter->restore();
     }
 
-  //
+
     if (mControlsVisible && mControlsEnabled) {
         // insert button
         const QRectF inRect = insertRect();

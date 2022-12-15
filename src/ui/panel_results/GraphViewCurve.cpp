@@ -47,7 +47,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QtWidgets>
 
-// Constructor / Destructor
 
 GraphViewCurve::GraphViewCurve(QWidget *parent):GraphViewResults(parent)
 {
@@ -100,7 +99,6 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
     mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
     mGraph->setFormatFunctX(nullptr);
     mGraph->setBackgroundColor(QColor(230, 230, 230));
-    //mGraph->reserveCurves(5);
     
     QString resultsText;
     QString resultsHTML;

@@ -38,11 +38,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "DateItem.h"
+
+#include "CalibrationCurve.h"
 #include "Date.h"
-#include "Painting.h"
 #include "EventItem.h"
 #include "Project.h"
 #include "PluginAbstract.h"
+
+#include <QtCore>
+#include <QtGui>
+#include <QtWidgets>
 
 int DateItem::mTitleHeight (20);
 int DateItem:: mEltsHeight (40);
@@ -71,17 +76,11 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
     Date d (date);
     const ProjectSettings s = ProjectSettings::fromJson(settings);
 
-  //  d.mSettings.mTmin = s.mTmin;
-  //  d.mSettings.mTmax = s.mTmax;
-  //  d.mSettings.mStep = s.mStep;
-//blockSignals(true);
-    if (d.mPlugin!= nullptr) {
+     if (d.mPlugin!= nullptr) {
         if (!d.mIsValid)
             mCalibThumb = QPixmap();
 
         else {
-            // if (d.mCalibration == nullptr || d.getDesc() != d.mCalibration->mDescription)
-                //d.calibrate(EventsScene->getProject());
 
             // Date::calibrate() Controls the validity of the calibration and wiggle curves
                 d.calibrate(s, EventsScene->getProject(), true);

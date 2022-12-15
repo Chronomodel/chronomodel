@@ -97,10 +97,10 @@ private:
     QComboBox* mVarianceTypeInput;
     
     QLabel* mUseVarianceIndividualLabel;
-    QCheckBox* mUseVarianceIndividualInput;
+    QCheckBox* mUseVarianceIndividualCB;
     
-    QLabel* mVarianceFixedLabel;
-    QLineEdit* mVarianceFixedInput;
+    QLabel* mVarianceValueLabel;
+    QLineEdit* mVarianceValueInput;
     
     QLabel* mLambdaSplineTypeLabel;
     QComboBox* mLambdaSplineTypeInput;

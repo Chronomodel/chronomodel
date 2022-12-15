@@ -38,36 +38,51 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "CurveUtilities.h"
+
 #include <algorithm>
 #include <iostream>
-/*
-std::vector<double> calculVecH(const std::vector<double>& vec)
-{
-    std::vector<double> result;
-    for (unsigned long i = 0; i < (vec.size() - 1); ++i) {
-        result.push_back(vec[i + 1] - vec[i]);
-    }
-    return result;
-}*/
 
+
+inline decltype(Event::mThetaReduced) diffX (Event* e0, Event*e1) {return (e1->mThetaReduced - e0->mThetaReduced);}
+
+
+std::vector<t_reduceTime> calculVecH(const QList<Event *> &event)
+{
+    std::vector<double> result (event.size()-1);
+    std::transform(event.begin(), event.end()-1, event.begin()+1 , result.begin(), diffX);
+
+#ifdef DEBUG
+    int i =0;
+    for (auto &&r :result) {
+        if (r <= 1.E-10) {
+            qDebug()<< "[CurveUtilities::calculVecH] diff Theta r <= 1.E-10 "<< (double)event.at(i)->mThetaReduced<< (double)event.at(i+1)->mThetaReduced;
+
+        }
+        ++i;
+    }
+#endif
+    return result;
+}
+
+/*
 std::vector<t_reduceTime> calculVecH(const std::vector<t_reduceTime>& vec)
 {
     // 2 codes possible
-    /*
-    std::vector<double> result(vec.size() - 1);
-    std::transform(vec.begin(), vec.end()-1, vec.begin()+1,  result.begin(),  [](int v, int v1) {return v1-v; } );
-    */
 
-    std::vector<double>result(vec.size());
+    //std::vector<double> result(vec.size() - 1);
+    //std::transform(vec.begin(), vec.end()-1, vec.begin()+1,  result.begin(),  [](int v, int v1) {return v1-v; } );
+
+
+    std::vector<t_reduceTime>result(vec.size());
     std::adjacent_difference (vec.begin(), vec.end(), result.begin());
     result.erase(result.begin());
 
     return result;
 }
-
+*/
 // --------------- Function with list of double value
 
-Matrix2D calculMatR(const std::vector<double>& vec)
+Matrix2D calculMatR(const std::vector<t_reduceTime> &rVecH)
 {
     // Calcul de la matrice R, de dimension (n-2) x (n-2) contenue dans une matrice n x n
     // Par exemple pour n = 5 :
@@ -78,8 +93,8 @@ Matrix2D calculMatR(const std::vector<double>& vec)
     // 0 0 0 0 0
 
     // vecH est de dimension n-1
-    std::vector<t_reduceTime> vecH = calculVecH(vec);
-    const unsigned long n = vec.size();
+    //const std::vector<t_reduceTime> rVecH = calculVecH(vec);
+    const unsigned long n = rVecH.size() +1;
 
     // matR est de dimension n-2 x n-2, mais contenue dans une matrice nxn
     Matrix2D matR = initMatrix2D(n, n);
@@ -95,17 +110,18 @@ Matrix2D calculMatR(const std::vector<double>& vec)
     }
     */
     for ( unsigned long i = 1; i < n-2; ++i) {
-        matR[i][i] = (vecH[i-1] + vecH[i]) / 3.;
-        matR[i][i+1] = vecH[i] / 6.;
-        matR[i+1][i] = vecH[i] / 6.;
+        matR[i][i] = (rVecH[i-1] + rVecH[i]) / 3.;
+        matR[i][i+1] = rVecH[i] / 6.;
+        matR[i+1][i] = rVecH[i] / 6.;
     }
     // Si on est en n-2 (dernière itération), on ne calcule pas les valeurs de part et d'autre de la diagonale (termes symétriques)
-   matR[n-2][n-2] = (vecH[n-2-1] + vecH[n-2]) / 3.;
+   matR[n-2][n-2] = (rVecH[n-2-1] + rVecH[n-2]) / 3.;
 
     return matR;
 }
 
-Matrix2D calculMatQ(const std::vector<t_reduceTime>& vec)
+// Dans RenCurve procedure Calcul_Mat_Q_Qt_R ligne 55
+Matrix2D calculMatQ(const std::vector<t_reduceTime>& rVecH)
 {
     // Calcul de la matrice Q, de dimension n x (n-2) contenue dans une matrice n x n
     // Les 1ère et dernière colonnes sont nulles
@@ -117,26 +133,45 @@ Matrix2D calculMatQ(const std::vector<t_reduceTime>& vec)
     // 0 0 0 X 0
 
     // vecH est de dimension n-1
-    std::vector<t_reduceTime> vecH = calculVecH(vec);
-    const long unsigned n = vec.size();
+    const unsigned n = rVecH.size()+1;
 
     // matQ est de dimension n x n-2, mais contenue dans une matrice nxn
     Matrix2D matQ = initMatrix2D(n, n);
     // On parcourt n-2 valeurs :
-   /* for (unsigned i = 1; i < vecH.size(); ++i) {
-        matQ[i-1][i] = 1. / vecH[i-1];
-        matQ[i][i] = -((1./vecH[i-1]) + (1./vecH[i]));
-        matQ[i+1][i] = 1. / vecH[i];
-    }*/
+    for (unsigned i = 1; i < n-1; ++i) {
+        matQ[i-1][i] = 1. / rVecH[i-1];
+        matQ[i][i] = -((1./rVecH[i-1]) + (1./rVecH[i]));
+        matQ[i+1][i] = 1. / rVecH[i];
 
-    for (unsigned long i = 1; i < vecH.size(); ++i) {
-            matQ[i-1][i] = 1. / vecH[i-1];
-            matQ[i+1][i] = 1. / vecH[i];
-            matQ[i][i] = -(matQ[i-1][i] + matQ[i+1][i]);
-        }
+#ifdef DEBUG
+        if (rVecH.at(i)<=0)
+            throw "calculMatQ vecH <=0 ";
+#endif
+    }
+    // pHd : ici la vrai forme est une matrice de dimension n x (n-2), de bande k=1; les termes diagonaux sont négatifs
+    // Les 1ère et dernière colonnes sont nulles
+    // Par exemple pour n = 5 :
+    // 0 +X  0  0 0
+    // 0 -X +a  0 0
+    // 0 +a -X +b 0
+    // 0  0 +b -X 0
+    // 0  0  0 +X 0
+
 
 
     return matQ;
+}
+/**
+ * La création de la matrice diagonale des erreurs est nécessaire à chaque mise à jour de :
+ * - Theta event : qui peut engendrer un nouvel ordonnancement des events (definitionNoeuds)
+ * - VG event : qui intervient directement dans le calcul de W
+ */
+std::vector<double> createDiagWInv(const QList<Event*> &events)
+{
+    std::vector<double> diagWInv (events.size());
+    std::transform(events.begin(), events.end(), diagWInv.begin(), [](Event* ev) {return 1/ev->mW;});
+
+    return diagWInv;
 }
 
 #pragma mark Init vectors et matrix
@@ -353,229 +388,6 @@ void conversionID (PosteriorMeanG& G)
 }
 
 // Obsolete
-std::vector<double> CurveUtilities::definitionNoeuds(const std::vector<double> &tabPts, const double minStep)
-{
-   // display(tabPts);
-
-    std::vector<double> result (tabPts);
-    std::sort(result.begin(), result.end());
-    
-    // Espacement possible ?
-    if ((result[result.size() - 1] - result.at(0)) < (result.size() - 1) * minStep) {
-        qCritical("Pas assez de place pour écarter les points");
-        exit(0);
-    }
-    
-    //display(result);
-    
-    // Il faut au moins 3 points
-    if (result.size() >= 3) {
-        // 0 veut dire qu'on n'a pas détecté d'égalité :
-        std::size_t startIndex = 0;
-        std::size_t endIndex = 0;
-        double value ;
-        double lastValue;
-        for (std::size_t i = 1; i<result.size(); ++i) {
-            value = result.at(i);
-            lastValue = result.at(i - 1);
-            
-            // Si l'écart n'est pas suffisant entre la valeur courante et la précedente,
-            // alors on mémorise l'index précédent comme le début d'une égalité
-            // (à condition de ne pas être déjà dans une égalité)
-            if ((value - lastValue < minStep) && (startIndex == 0)) {
-                // La valeur à l'index 0 ne pourra pas être déplacée vers la gauche !
-                // S'il y a égalité dès le départ, on considère qu'elle commence à l'index 1.
-                startIndex = (i == 1) ? 1 : (i-1);
-            }
-            
-            //std::cout << "i = " << i << " | value = " << value << " | lastValue = " << lastValue << " | startIndex = " << startIndex << std::endl;
-            
-            // Si on est à la fin du tableau et dans un cas d'égalité,
-            // alors on s'assure d'avoir suffisamment d'espace disponible
-            // en incluant autant de points précédents que nécessaire dans l'égalité.
-            if ((i == result.size() - 1) && (startIndex != 0)) {
-                endIndex = i-1;
-                for (std::size_t j = startIndex; j >= 1; j--) {
-                    const double delta = value - result.at(j-1);
-                    const double deltaMin = minStep * (i - j + 1);
-
-                    if (delta >= deltaMin) {
-                        startIndex = j;
-                        qWarning("=> Egalité finale | startIndex = %d | endIndex = %d" ,(int)startIndex , (int)endIndex );
-                        break;
-                    }
-                }
-            }
-            
-            // Si l'écart entre la valeur courante et la précédente est suffisant
-            // ET que l'on était dans un cas d'égalité (pour les valeurs précédentes),
-            // alors il se peut qu'on ait la place de les espacer.
-            if ((value - lastValue >= minStep) && (startIndex != 0)) {
-                const double startValue = result.at(startIndex-1);
-                const double delta = (value - startValue);
-                const double deltaMin = minStep * (i - startIndex + 1);
-                
-                qWarning("=> Vérification de l'espace disponible | delta = %f  | deltaMin = %f ",delta ,deltaMin);
-                
-                if (delta >= deltaMin) {
-                    endIndex = i-1;
-                }
-            }
-            
-            if (endIndex != 0) {
-                qWarning( "=> On espace les valeurs entre les bornes %f et %f", result[startIndex - 1], result[i]);
-                
-                // On a la place d'espacer les valeurs !
-                // - La borne inférieure ne peut pas bouger (en startIndex-1)
-                // - La borne supérieure ne peut pas bouger (en endIndex)
-                // => On espace les valeurs intermédiaires (de startIndex à endIndex-1) du minimum nécessaire
-                const double startSpread = result.at(endIndex) - result.at(startIndex);
-                for (std::size_t j = startIndex; j <= endIndex; j++) {
-                    // !!! pHd : Ici on risque de décaller toutes les valeurs vers la droite,
-                    // on peut finir par avoir la dernière décallée de (endIndex-startIndex)*minStep
-                    if (result.at(j) - result.at(j-1) < minStep) {
-                        result[j] = result.at(j-1) + minStep;
-                    }
-                }
-
-
-                // En espaçant les valeurs vers la droite, on a "décentré" l'égalité.
-                // => On redécale tous les points de l'égalité vers la gauche pour les recentrer :
-                double endSpread = result.at(endIndex) - result.at(startIndex);
-                double shiftBack = (endSpread - startSpread) / 2;
-                
-                // => On doit prendre garde à ne pas trop se rappocher le la borne de gauche :
-                if ((result.at(startIndex)  - shiftBack) - result.at(startIndex-1) < minStep) {
-                    shiftBack = result.at(startIndex) - (result.at(startIndex-1) + minStep);
-                }
-                
-                // On doit décaler suffisamment vers la gauche pour ne pas être trop près de la borne de droite :
-                if (result.at(endIndex + 1) - (result.at(endIndex) - shiftBack) < minStep) {
-                    shiftBack = result.at(endIndex) - (result.at(endIndex + 1) - minStep);
-                }
-                /*for (unsigned long j=startIndex; j<=endIndex; j++) {
-                    result[j] -= shiftBack;
-                }*/
-                std::transform(result.begin() + startIndex, result.begin() + endIndex, result.begin() + startIndex, [&shiftBack](double v){return v-shiftBack;});
-                // On marque la fin de l'égalité
-                startIndex = 0;
-                endIndex = 0;
-            }
-        }
-    }
-    
-    return result;
-    
-    /*
-    bool hasEquality = false;
-    bool equalityEnded = false;
-    vector<double>::iterator equalityStartIterator;
-    vector<double>::iterator equalityEndIterator;
-    double equalityStartValue;
-    double equalityEndValue;
-    
-    for (vector<double>::iterator it=result.begin(); it!=result.end(); ++it)
-    {
-        double val = *it;
-        double nextVal = NULL;
-        
-        ++it;
-        if(it != result.end()){
-            nextVal = *it;
-            if(nextVal - val < minStep){
-                // On a une égalité
-                if(!hasEquality == true){
-                    // C'est le début d'une nouvelle égalité
-                    hasEquality = true;
-                    // On se souvient de la borne inférieure
-                    --it;
-                    equalityStartIterator = it;
-                    if(it != result.begin()){
-                        --it;
-                        equalityStartValue = *it;
-                        ++it;
-                    }else{
-                        equalityStartValue = *it;
-                    }
-                    ++it;
-                }else{
-                    // On avait déjà une égalité. On attend juste d'en trouver la fin
-                }
-            }else{
-                // On a pas égalité
-                if(hasEquality == true){
-                    // On a atteint la fin de l'égalite
-                    // TODO : On vérifie si on a la place d'écarter les valeurs
-                    // Si oui, alors on écarte les pts lors de cette itération
-                    // Si non, on fait rentrer la valeur courante dans l'égalité et on continue à parcourir les pts jusqu'à avoir l'espace suffisant pour écarter les points en égalité
-                    equalityEnded = true;
-                    equalityEndIterator = it;
-                    equalityEndValue = *it;
-                }
-            }
-        }else{
-            if(hasEquality == true){
-                // On a atteint la fin sur une égalite : on garde la dernière borne, puis on espace les éléments
-                equalityEnded = true;
-                equalityEndIterator = it-1;
-                equalityEndValue = *(it-1);
-            }
-        }
-        --it;
-        
-        // Do the shift if necessary
-        if(equalityEnded){
-            cout << ' ' << *equalityStartIterator << ' ' << *equalityEndIterator;
-            
-            ResolT = ---
-            
-            t0 ---------- t1 --- t2 - t3 - t4 -- t5
-            
-            t0 ----- t1 --- t2 --- t3 --- t4 --- t5
-            
-            double start; // valeur de t1
-            double end; // valeur de t6
-            
-            
-            deltaCravate = t5 - t2;
-            deltaDispo = t6 - t1;
-            deltaTotal = 3 * minStep;
-            deltaCumul = 0;
-            
-            for(t = t2 à t5)
-            {
-                
-                
-                t'2 = t2 - 3 * minStep / 2;
-                t'3 = t2 - 1 * minStep / 2;
-                t'4 = t2 + 1 * minStep / 2;
-                t'5 = t2 + 3 * minStep / 2;
-                
-                deltaT = (1 + random()) * minStep;
-                
-                t = deltaCumul + deltaT;
-                deltaCumul += deltaT;
-                
-                
-                
-                
-                delta2 = minStep * (1 + random());
-                t2 += delta2;
-                deltaTotal += delta2;
-            }
-            
-            
-            hasEquality = false;
-            equalityEnded = false;
-        }
-    }
-    
-    for (vector<double>::iterator it=result.begin(); it!=result.end(); ++it)
-        cout << ' ' << *it;
-    */
-    return result;
-}
-
 
 QDataStream &operator<<( QDataStream& stream, const MCMCSplineComposante& splineComposante )
 {

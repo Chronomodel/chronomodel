@@ -39,8 +39,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef CurveUTILITIES_H
 #define CurveUTILITIES_H
 
-#include "Functions.h"
+//#include "Functions.h"
 #include "Matrix.h"
+#include "Event.h"
 
 #include <vector>
 #include <string>
@@ -61,9 +62,6 @@ typedef struct SplineMatrices
 
 typedef struct SplineResults
 {
-   // Matrix2D matL;
-   // MatrixDiag matD;
-    
     std::vector<double> vecG;
     std::vector<double> vecGamma;
     
@@ -103,7 +101,7 @@ typedef struct PosteriorMeanGComposante
     // intra spline error
     std::vector<double> vecVarErrG;
 
-    // spline map
+    // spline density
     CurveMap mapG;
     
 } PosteriorMeanGComposante;
@@ -122,9 +120,14 @@ typedef struct PosteriorMeanG
 QDataStream &operator<<( QDataStream &stream, const PosteriorMeanG& pMeanG );
 QDataStream &operator>>( QDataStream &stream, PosteriorMeanG& pMeanG );
 
-std::vector<t_reduceTime> calculVecH(const std::vector<t_reduceTime> &vec);
-Matrix2D calculMatR(const std::vector<double>& vec);
-Matrix2D calculMatQ(const std::vector<t_reduceTime> &vec);
+std::vector<t_reduceTime> calculVecH(const QList<Event *> &event);
+//std::vector<t_reduceTime> calculVecH(const std::vector<t_reduceTime> &vec); // Obsolete
+
+Matrix2D calculMatR(const std::vector<t_reduceTime>& rVecH);
+Matrix2D calculMatQ(const std::vector<t_reduceTime> &rVecH);
+
+std::vector<double> createDiagWInv(const QList<Event *> &events);
+
 
 void conversionIDF(PosteriorMeanG& G);
 PosteriorMeanG conversionIDF(const std::vector<double> &vecGx, const std::vector<double> &vecGy, const std::vector<double> &vecGz, const std::vector<double> &vecGxErr, const std::vector<double> &vecGyErr, const std::vector<double> &vecGzErr);

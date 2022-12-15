@@ -668,11 +668,11 @@ std::pair<double, double> credibilityForTrace(const QVector<double>& trace, doub
         QVector<double> sorted (trace);
         std::sort(sorted.begin(),sorted.end());
 
-        size_t numToRemove = (size_t)floor(n * (1. - threshold / 100.));
+        const size_t numToRemove = (size_t)floor(n * (1. - threshold / 100.));
         exactThresholdResult = ((double)n - (double)numToRemove) / (double)n;
 
         double lmin = 0.;
-        int foundJ = 0;
+        size_t foundJ = 0;
 
         for (size_t j=0; j<=numToRemove; ++j) {
             const double l = sorted.at((n - 1) - numToRemove + j) - sorted.at(j);
@@ -700,7 +700,7 @@ std::pair<double, double> credibilityForTrace(const QVector<int>& trace, double 
     (void) description;
     std::pair<double, double> credibility(0.,0.);
     exactThresholdResult = 0.;
-    const int n = trace.size();
+    const size_t n = trace.size();
     if (n == 1) {
         credibility.first = trace[0];
         credibility.second = trace[0];
@@ -712,13 +712,13 @@ std::pair<double, double> credibilityForTrace(const QVector<int>& trace, double 
         QVector<int> sorted (trace);
         std::sort(sorted.begin(),sorted.end());
 
-        unsigned numToRemove = (unsigned)floor(n * (1. - threshold / 100.));
+        size_t numToRemove = (size_t)floor(n * (1. - threshold / 100.));
         exactThresholdResult = ((double)n - (double)numToRemove) / (double)n;
 
         double lmin (0.);
-        int foundJ (0);
+        size_t foundJ (0);
 
-        for (unsigned j=0; j<=numToRemove; ++j) {
+        for (size_t j=0; j<=numToRemove; ++j) {
             const double l = sorted.at((n - 1) - numToRemove + j) - sorted.at(j);
             if ((lmin == 0.) || (l < lmin)) {
                 foundJ = j;
@@ -760,7 +760,7 @@ std::pair<double, double> timeRangeFromTraces(const QVector<double> &trace1, con
 
     // if thresh is equal 0 then return an QPair=(-INFINITY,+INFINITY)
 
-    unsigned n = trace1.size();
+    const size_t n = trace1.size();
 
     if ( (thresh > 0) && (n > 0) && ((unsigned)trace2.size() == n) ) {
 

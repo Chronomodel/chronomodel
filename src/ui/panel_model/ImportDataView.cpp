@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -39,11 +39,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ImportDataView.h"
 #include "PluginManager.h"
-#include "../PluginAbstract.h"
+#include "PluginAbstract.h"
 #include "QtUtilities.h"
 #include "HelpWidget.h"
 #include "Button.h"
-#include "Label.h"
 #include "MainWindow.h"
 #include "Project.h"
 #include "CurveSettings.h"
@@ -114,6 +113,8 @@ Event name 12;GAUSS;date 2;1000;50;equation;0,01;-1;-1000;fixed;20;;;;;;;;;;
 Event name 13;GAUSS;date 2;1000;50;equation;0,01;-1;-1000;range;10;15;;;;;;;;;
 // Event name;methode;dating name/code;date t1;date t2;;;;;;;;;;;;;;;;
 Event name 14;UNIF;date archéo ;300;500;;;;;;;;;;;;;;;;
+// Bound
+Bound name;Bound;1800;;;;;;;;;;;;0;2;0;0;0;0
  * @return
  */
 void ImportDataView::browse()

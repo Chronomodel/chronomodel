@@ -53,23 +53,20 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ScrollCompressor.h"
 #include "CalibrationView.h"
 #include "MultiCalibrationView.h"
-#include "SwitchAction.h"
-
+#include "CalibrationCurve.h"
 
 #include "HelpWidget.h"
 #include "MainWindow.h"
 #include "Project.h"
 #include "QtUtilities.h"
-//#include "StdUtilities.h"
 #include "StudyPeriodDialog.h"
-//#include "DateUtils.h"
-//#include "PluginManager.h"
 
 #include <QtWidgets>
 #include <QtSvg>
 #include <QPropertyAnimation>
 #include <QSequentialAnimationGroup>
 #include <QRectF>
+
 #include <assert.h>
 
 ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),

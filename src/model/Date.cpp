@@ -39,6 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "Date.h"
 
+#include "CalibrationCurve.h"
 #include "Generator.h"
 #include "StdUtilities.h"
 #include "PluginManager.h"
@@ -58,6 +59,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QDebug>
 
+/*
 Dato::Dato():
     mName("No Named Dato")
 {
@@ -71,7 +73,7 @@ void Dato::fromJson(const QJsonObject& json)
     //Q_ASSERT(&json);
  //   mId = json.value(STATE_ID).toInt();
     mName = json.value(STATE_NAME).toString();
- /*   mColor = QColor(json.value(STATE_COLOR_RED).toInt(),
+    mColor = QColor(json.value(STATE_COLOR_RED).toInt(),
                     json.value(STATE_COLOR_GREEN).toInt(),
                     json.value(STATE_COLOR_BLUE).toInt());
 
@@ -180,10 +182,10 @@ void Dato::fromJson(const QJsonObject& json)
     } else {
         mWiggleCalibration = nullptr;
     }
-*/
+
 }
 
-
+*/
 
 
 Date::Date(const Event *event):
@@ -452,26 +454,12 @@ void Date::fromJson(const QJsonObject& json)
                     tmax = std::max(sd.mCalibration->mTmax, tmax);
                 }
 
-
-            /*    } else {
-                     //toFind = d.toObject().value(STATE_DATE_UUID).toString();
-               }
-            */
-             /*   auto djson = d.toObject();
-                    QPair<double, double> tminTmax = mPlugin->getTminTmaxRefsCurve( djson.value(STATE_DATE_DATA).toObject());// d.toObject());
-                    tmin = std::max(tminTmax.first, tmin);
-                    tmax = std::min(tminTmax.second, tmax);
-              */
-
-
-
             }
             mTminRefCurve = tmin;
             mTmaxRefCurve = tmax;
         }
     }
 
-    //mTheta.mProposal = ModelUtilities::getDataMethodText(mMethod);
     mTi.setName("Theta of date : "+ mName);
     mTi.mSamplerProposal = (MHVariable::SamplerProposal)json.value(STATE_DATE_SAMPLER).toInt();
 

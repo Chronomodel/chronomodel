@@ -244,14 +244,14 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
             mTitle = tr("Phase Tempo : %1").arg(mPhase->mName);
 
             GraphCurve curveTempo = densityCurve(mPhase->mTempo,
-                                                 "Post Distrib Tempo All Chains",
+                                                 "Post Distrib All Chains",
                                                  color.darker(), Qt::SolidLine);
             curveTempo.mIsRectFromZero = false;
 
             auto brushColor = color;
             brushColor.setAlpha(30);
             const GraphCurve &curveTempoEnv = shapeCurve(mPhase->mTempoInf, mPhase->mTempoSup,
-                                                  "Post Distrib Tempo Env All Chains",
+                                                  "Post Distrib Env All Chains",
                                                   color, Qt::CustomDashLine, brushColor);
 
             mGraph->addCurve(curveTempoEnv);

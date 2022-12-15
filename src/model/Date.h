@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -57,6 +57,7 @@ class CalibrationCurve;
 
 class Project;
 
+/*
 class Dato
 {
 public:
@@ -73,7 +74,7 @@ public:
     double mTminRefCurve;
     double mTmaxRefCurve;
 };
-
+*/
 
 
 class Date

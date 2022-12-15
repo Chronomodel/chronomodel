@@ -1637,7 +1637,7 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
 
 
         if (pluginName.contains("bound", Qt::CaseInsensitive)) {
-            QStringList dataTmp = dataStr.mid(1,dataStr.size()-1);
+            QStringList dataTmp = dataStr.mid(1, dataStr.size() - 1);
             date.mName = eventName;
             date.mPlugin = nullptr;
             date.mTi.mSamplerProposal = MHVariable::eMHSymetric; //set but not used

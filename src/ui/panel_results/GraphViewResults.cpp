@@ -60,11 +60,6 @@ mCurrentTypeGraph(ePostDistrib),
 mCurrentVariableList(QVector<variable_t>(eThetaEvent)),
 mShowAllChains(true),
 mShowVariableList(eThetaEvent),
-  /*
-mShowCredibility(false),
-mShowCalib(false),
-mShowWiggle(false),
-  */
 mShowNumResults(false),
 mIsSelected(false),
 mShowSelectedRect(true),
@@ -95,7 +90,7 @@ mGraphFont(font())
     mGraph->showYAxisSubTicks(true);
     mGraph->showYAxisValues(true);
 
-    mGraph->setXAxisMode(GraphView::eAllTicks);
+    //mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eMinMax);
 
     mGraph->setMargins(50, 10, 5, mGraphFont.pointSize() * 2.2); // make setMarginRight seMarginLeft ...

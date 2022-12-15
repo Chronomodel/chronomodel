@@ -52,9 +52,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginAbstract.h"
 #include "PluginManager.h"
 #include "StdUtilities.h"
-#include "QtUtilities.h"
-#include "ModelUtilities.h"
-#include "PluginOptionsDialog.h"
+//#include "QtUtilities.h"
+//#include "ModelUtilities.h"
+//#include "PluginOptionsDialog.h"
 #include "CurveSettings.h"
 #include "CurveWidget.h"
 
@@ -823,13 +823,13 @@ void EventPropertiesView::updateLayout()
     const bool withCurve = (curveSettings.mProcessType != CurveSettings::eProcessTypeNone);
     const bool withNode = (curveSettings.mLambdaSplineType != CurveSettings::eInterpolation) && (curveSettings.mVarianceType != CurveSettings::eModeFixed);
 
-    mButtonWidth = 50; //int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
-    mButtonHeigth = 50; //int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
-    mLineEditHeight = 25; //int (0.5 * AppSettings::heigthUnit());
-    mComboBoxHeight = 25; //int (0.7 * AppSettings::heigthUnit());
+    mButtonWidth = 50;
+    mButtonHeigth = 50;
+    mLineEditHeight = 25;
+    mComboBoxHeight = 25;
 
     QFontMetrics fm (font());
-    const int margin = 10; //(int (0.2 * AppSettings::widthUnit()));
+    const int margin = 10;
 
     int shiftMax (qMax(fm.boundingRect(mNameLab->text()).width(), qMax(fm.boundingRect(mColorLab->text()).width(), fm.boundingRect(mMethodLab->text()).width() )) );
     shiftMax = shiftMax + 2*margin;
@@ -864,12 +864,12 @@ void EventPropertiesView::updateLayout()
         const int labW = 80;
         const int YshiftLabel = (mLineEditHeight - mX_IncLab->height())/2;
         if (withNode) {
-            mCurveNodeCB->setVisible(false);
-            mCurveNodeCB->setFixedWidth(0);
-
-        } else {
             mCurveNodeCB->setVisible(true);
             mCurveNodeCB->setFixedWidth(labW);
+
+        } else {
+            mCurveNodeCB->setVisible(false);
+            mCurveNodeCB->setFixedWidth(0);
         }
         const int curveNodeCBWidth = mCurveNodeCB->width();
 

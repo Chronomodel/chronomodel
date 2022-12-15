@@ -89,7 +89,7 @@ mUnitFunctionY(nullptr)
     mAxisToolX.mShowArrow = true;
     mAxisToolY.mIsHorizontal = false;
     mAxisToolX.mShowArrow = true;
-    mAxisToolY.mShowSubs = false;
+    mAxisToolY.mShowSubs = true; // false
 
     mTipRect.setTop(0);
     mTipRect.setLeft(0);
@@ -305,7 +305,6 @@ void GraphView::zoomX(const type_data min, const type_data max)
         mAxisToolX.updateValues(width(), 10., min, max);
         
         adjustYScale();
-        // qDebug()<<  "[GraphView] zoomX"   <<  mMinY<< " "<<mMaxY;
         repaintGraph(true);
 
     }
@@ -331,7 +330,6 @@ void GraphView::changeXScaleDivision (const double &major, const int & minor)
 void GraphView::setBackgroundColor(const QColor &color)
 {
     mBackgroundColor = color;
-   // repaintGraph(true);
 }
 
 QColor GraphView::getBackgroundColor() const
@@ -342,59 +340,27 @@ QColor GraphView::getBackgroundColor() const
 void GraphView::addInfo(const QString& info)
 {
     mInfos << info;
-   // if (mShowInfos)
-     //   repaintGraph(false);
 }
 
 void GraphView::clearInfos()
 {
     mInfos.clear();
-  //  if (mShowInfos)
-    //    repaintGraph(false);
-}
+ }
 
 void GraphView::showInfos(bool show)
 {
     mShowInfos = show;
-   // repaintGraph(true);
-}
+ }
 
 void GraphView::setNothingMessage(const QString& message)
 {
     mNothingMessage = message;
-   // repaintGraph(true);
 }
 
 void GraphView::resetNothingMessage()
 {
     mNothingMessage = tr("Nothing to display");
-  //  repaintGraph(true);
-}
-/*
-void GraphView::setRendering(GraphView::Rendering render)
-{
-    mRendering = render;
-    repaintGraph(true);
-}
-
-GraphView::Rendering GraphView::getRendering()
-{
-    return mRendering;
-}
-*/
-/*
-void GraphView::showXAxisLine(bool show)     { if (mXAxisLine != show) {mXAxisLine = show; repaintGraph(true);} }
-void GraphView::showXAxisArrow(bool show)    { if (mXAxisArrow != show) {mXAxisArrow = show; repaintGraph(true);} }
-void GraphView::showXAxisTicks(bool show)    { if (mXAxisTicks != show) {mXAxisTicks = show; repaintGraph(true);} }
-void GraphView::showXAxisSubTicks(bool show) { if (mXAxisSubTicks != show) {mXAxisSubTicks = show; repaintGraph(true);} }
-void GraphView::showXAxisValues(bool show)   { if (mXAxisValues != show) {mXAxisValues = show; repaintGraph(true);} }
-
-void GraphView::showYAxisLine(bool show)     { if (mYAxisLine != show) {mYAxisLine = show; repaintGraph(true);} }
-void GraphView::showYAxisArrow(bool show)    { if (mYAxisArrow != show) {mYAxisArrow = show; repaintGraph(true);} }
-void GraphView::showYAxisTicks(bool show)    { if (mYAxisTicks != show) {mYAxisTicks = show; repaintGraph(true);} }
-void GraphView::showYAxisSubTicks(bool show) { if (mYAxisSubTicks != show) {mYAxisSubTicks = show; repaintGraph(true);} }
-void GraphView::showYAxisValues(bool show)   { if (mYAxisValues != show) {mYAxisValues = show; repaintGraph(true);} }
-*/
+ }
 
 // Just Setter no action
 void GraphView::showXAxisLine(bool show)     { mXAxisLine = show;}
@@ -452,36 +418,7 @@ void GraphView::setYAxisMode(AxisMode mode)
             break;
         }
 
-  /*
-        if (mYAxisMode == eMinMax) {
-            showYAxisValues(false);
-            showYAxisTicks(false);
-            showYAxisSubTicks(false);
-            mYAxisArrow = false;
-            mAxisToolY.mShowText = true;
-
-        } else  if (mYAxisMode == eMinMaxHidden) {
-            showYAxisValues(false);
-            showYAxisTicks(false);
-            showYAxisSubTicks(false);
-            mYAxisArrow = false;
-            mAxisToolY.mShowText = false;
-
-        } else  if (mYAxisMode == eHidden) {
-            showYAxisValues(false);
-            showYAxisTicks(false);
-            showYAxisSubTicks(false);
-            mYAxisArrow = false;
-
-        } else { // eMainTicksOnly = 3,       eAllTicks = 4
-            showYAxisValues(true);
-            showYAxisTicks(true);
-            showYAxisSubTicks(true);
-            mYAxisArrow = false;
-            mAxisToolY.mShowText = false;
-        }
- */
-    }
+     }
 }
 
 /**
@@ -606,13 +543,11 @@ int GraphView::numCurves() const
 void GraphView::addZone(const GraphZone& zone)
 {
     mZones.append(zone);
-   // repaintGraph(false);
 }
 
 void GraphView::removeAllZones()
 {
     mZones.clear();
-   // repaintGraph(false);
 }
 
 //  Mouse events & Tool Tip
@@ -632,7 +567,6 @@ void GraphView::leaveEvent(QEvent* e)
 
 void GraphView::mouseMoveEvent(QMouseEvent* e)
 {
-    //mRendering = eHD;
     qreal x = e->pos().x();
     qreal y = e->pos().y();
 
@@ -659,9 +593,9 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
         mTipRect.setWidth(mTipWidth);
         mTipRect.setHeight(mTipHeight);
 
-        mTipX = getValueForX(e->position().x() );//+ 1.);
+        mTipX = getValueForX(e->position().x() );
 
-        mTipY = getValueForY(e->position().y());//+0.5);
+        mTipY = getValueForY(e->position().y());
 
         update(old_rect.adjusted(-20, -20, 20, 20).toRect());
 
@@ -1332,7 +1266,12 @@ void GraphView::drawCurves(QPainter& painter)
                            qreal y = getYForValue(valueY, false);
 
                             if (isFirst) {
-                                path.moveTo(x, y);
+                                if (curve.mIsRectFromZero) {
+                                    path.moveTo(x, getYForValue(0., false));
+                                    path.lineTo(x, y);
+                                } else
+                                    path.moveTo(x, y);
+
                                 isFirst=false;
 
                             } else {
