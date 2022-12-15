@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -114,22 +114,9 @@ private:
 
 
 protected:
-  //  void paintEvent(QPaintEvent*);
     void mouseMoveEvent(QMouseEvent* e);
     void resizeEvent(QResizeEvent* e);
 
- //   void paintEvent(QPaintEvent *);
-    /* override {
-        const QColor color (49, 112, 176, 40);
-        QFont font (QFont().family(), 30, QFont::Medium, false);
-
-        QPainter p (this);
-        p.setFont(font);
-        p.fillRect(rect(), color);
-        p.setPen(color.darker());
-        p.drawText(rect(), Qt::AlignCenter | Qt::TextWordWrap, QObject::tr("Selected"));
-        p.end();
-    }*/
 };
 
 #endif // MULTICALIBRATIONDRAWING_H

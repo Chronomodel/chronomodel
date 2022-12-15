@@ -39,16 +39,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "MultiCalibrationView.h"
 
+#include "CalibrationCurve.h"
 #include "Project.h"
 #include "DoubleValidator.h"
 #include "Painting.h"
 #include "QtUtilities.h"
 #include "MainWindow.h"
-//#include "Bound.h"
 #include "GraphViewResults.h"
 #include "CurveSettings.h"
 #include "PluginAbstract.h"
-//#include "CalibrationCurve.h"
 
 #include <QPainter>
 #include <QJsonArray>
@@ -99,6 +98,15 @@ mCurveColor(Painting::mainColorDark)
     mStatClipBut->setIconOnly(true);
     mStatClipBut->setChecked(false);
     mStatClipBut->setCheckable(true);
+
+    mScatterClipBut= new Button(tr("Scatter"), this);
+    mScatterClipBut->setIcon(QIcon(":stats_w.png"));
+    mScatterClipBut->setFlatVertical();
+    mScatterClipBut->setToolTip(tr("Show Scatter plot for selected dates"));
+    mScatterClipBut->setIconOnly(true);
+    mScatterClipBut->setChecked(false);
+    mScatterClipBut->setCheckable(true);
+
 
     mExportResults = new Button(tr("CSV"), this);
     mExportResults->setFlatVertical();
@@ -212,6 +220,8 @@ mCurveColor(Painting::mainColorDark)
     connect(mImageSaveBut, &Button::clicked, this, &MultiCalibrationView::exportFullImage);
     connect(mImageClipBut, &Button::clicked, this, &MultiCalibrationView::copyImage);
     connect(mStatClipBut, &Button::clicked, this, &MultiCalibrationView::showStat);
+    connect(mScatterClipBut, &Button::clicked, this, &MultiCalibrationView::showScatter);
+
     connect(mExportResults, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &MultiCalibrationView::exportResults);
 
     connect(mGraphHeightEdit, &QLineEdit::textEdited, this, &MultiCalibrationView::updateGraphsSize);
@@ -281,7 +291,7 @@ void MultiCalibrationView::updateLayout()
     const int x0 = graphWidth;
     const int margin = int(0.1 * mButtonWidth);
     const int xm = x0 + margin;
-//qDebug()<<"MultiCalibrationView::updateLayout()";
+
     const int textHeight = int (1.2 * (fontMetrics().descent() + fontMetrics().ascent()) );
     const int verticalSpacer = int (0.3 * AppSettings::heigthUnit());
     mMarginRight = int (1.5 * floor(fontMetrics().boundingRect(mEndEdit->text()).width()/2) + 5);
@@ -295,6 +305,8 @@ void MultiCalibrationView::updateLayout()
     mImageClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
     y += mImageClipBut->height();
     mStatClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
+    y += mStatClipBut->height() + 5;
+    mScatterClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
     y += mStatClipBut->height() + 5;
 
     mExportResults->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
@@ -350,10 +362,14 @@ void MultiCalibrationView::updateLayout()
     } else {
         mStatArea->hide();
         //mDrawing->show();
-        mDrawing->setGraphHeight(mGraphHeight);
-        mDrawing->setGeometry(0, 0, graphWidth, yPosBottomBar0);
+      //  mDrawing->setGraphHeight(mGraphHeight);
+      /*  if (mScatterClipBut->isChecked())
+            mDrawing->setGeometry(0, 0, graphWidth, mGraphHeight/3);
+        else
+        */
+            mDrawing->setGeometry(0, 0, graphWidth, yPosBottomBar0);
+
         mDrawing->updateLayout();
-        //mDrawing->setGraphHeight(mGraphHeight);
         mDrawing->show();
 
     }
@@ -362,8 +378,31 @@ void MultiCalibrationView::updateLayout()
 
 void MultiCalibrationView::updateGraphList()
 {
-    QJsonObject state = mProject->state();
 
+    mDrawing->setVisible(true);
+    mStatArea->setVisible(false);
+    const bool drawScatterPlot = mScatterClipBut->isChecked();
+
+    mDrawing->~MultiCalibrationDrawing();
+
+    if (drawScatterPlot)
+        mDrawing = scatterPlot(mThreshold);
+
+    else
+        mDrawing = multiCalibrationPlot(mThreshold);
+
+    mDrawing->show();
+    mDrawing->setVisible(true);
+    updateLayout();
+
+
+    updateScroll();
+
+}
+
+MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double thres)
+{
+    const QJsonObject state = mProject->state();
     mSettings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
     mTminDisplay = mSettings.getTminFormated() ;
@@ -407,11 +446,9 @@ void MultiCalibrationView::updateGraphList()
 
     for (QJsonObject& ev : selectedEvents) {
         QString curveDescription = curveModel ? Event::curveDescriptionFromJsonEvent(ev, processType, variableType): "";
-        
+
         if (ev.value(STATE_EVENT_TYPE).toInt() == Event::eBound) {
 
-          //  Bound *bound = new Bound();
-           // *bound = Bound::fromJson(ev);
             const double fixedValue = ev.value(STATE_EVENT_KNOWN_FIXED).toDouble();
             const double tFixedFormated = DateUtils::convertToAppSettingsFormat( fixedValue);
 
@@ -444,6 +481,9 @@ void MultiCalibrationView::updateGraphList()
             calibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
             calibGraph->setOverArrow(GraphView::eNone);
 
+            calibGraph->setYAxisMode(GraphView::eHidden);
+            calibGraph->showYAxisLine(false);
+
             graphList.append(calibGraph);
             listAxisVisible.append(true);
 
@@ -451,8 +491,7 @@ void MultiCalibrationView::updateGraphList()
                                   ev.value(STATE_COLOR_GREEN).toInt(),
                                   ev.value(STATE_COLOR_BLUE).toInt());
             colorList.append(color);
-           // delete bound;
-           // bound = nullptr;
+
 
         } else {
             const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
@@ -504,44 +543,44 @@ void MultiCalibrationView::updateGraphList()
                 calibGraph->showInfos(true);
 
                 if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mCurve.isEmpty()) {
-                        // hpd is calculate only on the study Period
-                        QMap<type_data, type_data> subData = calibCurve.mData;
-                        subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+                    // hpd is calculate only on the study Period
+                    QMap<type_data, type_data> subData = calibCurve.mData;
+                    subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
-                        QMap<type_data, type_data> hpd (create_HPD(subData, mThreshold));
+                    QMap<type_data, type_data> hpd (create_HPD(subData, mThreshold));
 
-                        GraphCurve hpdCurve;
-                        hpdCurve.mName = "Calibration HPD";
-                        hpdCurve.mPen = brushColor;
-                        hpdCurve.mBrush = brushColor;
-                        hpdCurve.mType = GraphCurve::CurveType::eQMapData;
-                        //hpdCurve.mIsHisto = false;
-                        hpdCurve.mIsRectFromZero = true;
-                        hpdCurve.mData = hpd;
-                        calibGraph->addCurve(hpdCurve);
+                    GraphCurve hpdCurve;
+                    hpdCurve.mName = "Calibration HPD";
+                    hpdCurve.mPen = brushColor;
+                    hpdCurve.mBrush = brushColor;
+                    hpdCurve.mType = GraphCurve::CurveType::eQMapData;
+                    //hpdCurve.mIsHisto = false;
+                    hpdCurve.mIsRectFromZero = true;
+                    hpdCurve.mData = hpd;
+                    calibGraph->addCurve(hpdCurve);
 
-                        // update max inside the display period
-                        QMap<type_data, type_data> subDisplay = calibCurve.mData;
-                        subDisplay = getMapDataInRange(subDisplay, mTminDisplay, mTmaxDisplay);
+                    // update max inside the display period
+                    QMap<type_data, type_data> subDisplay = calibCurve.mData;
+                    subDisplay = getMapDataInRange(subDisplay, mTminDisplay, mTmaxDisplay);
 
-                        const type_data yMax = map_max_value(subDisplay);
+                    const type_data yMax = map_max_value(subDisplay);
 
-                        calibGraph->setRangeY(0., 1. * yMax);
+                    calibGraph->setRangeY(0., 1. * yMax);
 
-                        calibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
-                        calibGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
-                        calibGraph->setFormatFunctY(nullptr);
+                    calibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+                    calibGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
+                    calibGraph->setFormatFunctY(nullptr);
 
-                        calibGraph->setMarginRight(mMarginRight);
-                        calibGraph->setMarginLeft(mMarginLeft);
+                    calibGraph->setMarginRight(mMarginRight);
+                    calibGraph->setMarginLeft(mMarginLeft);
 
-                        calibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
-                        calibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
-                        calibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
+                    calibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
+                    calibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
+                    calibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
 
-                        //calibGraph->setRendering(GraphView::eHD);
+                    //calibGraph->setRendering(GraphView::eHD);
 
-        }
+                }
 
                 graphList.append(calibGraph);
                 QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
@@ -553,24 +592,359 @@ void MultiCalibrationView::updateGraphList()
 
         }
    }
-   mDrawing->showMarker();
+
+   MultiCalibrationDrawing* multiDraw = new MultiCalibrationDrawing(this);
+
+   multiDraw->showMarker();
    updateGraphsSize(mGraphHeightEdit->text());
-   mDrawing->setEventsColorList(colorList);
-   mDrawing->setListAxisVisible(listAxisVisible);
+   multiDraw->setEventsColorList(colorList);
+   multiDraw->setListAxisVisible(listAxisVisible);
 
-   mDrawing->setGraphList(graphList); // must be after setEventsColorList() and setListAxisVisible()
+   multiDraw->setGraphList(graphList); // must be after setEventsColorList() and setListAxisVisible()
 
-
-   if (mStatClipBut->isChecked())
-       showStat();
-
-   updateScroll();
-   //update();
+   return std::move(multiDraw);
 }
+
+MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
+{
+    const QJsonObject state = mProject->state();
+
+    mSettings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+
+    mTminDisplay = mSettings.getTminFormated() ;
+    mTmaxDisplay = mSettings.getTmaxFormated();
+
+    // setText doesn't emit signal textEdited, when the text is changed programmatically
+    mStartEdit->setText(locale().toString(mTminDisplay));
+    mEndEdit->setText(locale().toString(mTmaxDisplay));
+    mHPDEdit->setText(locale().toString(mThreshold));
+
+    QColor penColor = mCurveColor;
+    QColor brushColor = mCurveColor;
+    brushColor.setAlpha(170);
+
+    QList<GraphView*> graphList;
+
+    QList<QColor> colorList;
+    QList<bool> listAxisVisible;
+    const QJsonArray events = state.value(STATE_EVENTS).toArray();
+
+    bool curveModel = mProject->isCurve();
+
+    QVector<QJsonObject> selectedEvents;
+
+    CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
+    CurveSettings::VariableType variableType = static_cast<CurveSettings::VariableType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_VARIABLE_TYPE).toInt());
+
+    for (auto&& ev : events) {
+       QJsonObject jsonEv = ev.toObject();
+       if (jsonEv.value(STATE_IS_SELECTED).toBool())
+            selectedEvents.append(jsonEv);
+    }
+
+
+    // choix fabrique une , deux ou trois courbes
+
+    GraphView* graph1 = new GraphView(this);
+    graph1->showInfos(true);
+
+    graph1->mLegendX = DateUtils::getAppSettingsFormatStr();
+    graph1->setFormatFunctX(nullptr);
+    graph1->setFormatFunctY(nullptr);
+
+    graph1->setRangeX(mTminDisplay, mTmaxDisplay);
+    graph1->setCurrentX(mTminDisplay, mTmaxDisplay);
+    graph1->changeXScaleDivision(mMajorScale, mMinorScale);
+    graph1->setOverArrow(GraphView::eNone);
+    graph1->setTipXLab("t");
+
+    graph1->autoAdjustYScale(true);
+
+    graph1->setYAxisMode(GraphView::eAllTicks);
+    graph1->showYAxisSubTicks(true);
+
+    graph1->setTipYLab("X");
+    listAxisVisible.push_back(true);
+
+    GraphView* graph2 = new GraphView(this);
+    graph2->showInfos(true);
+
+    graph2->mLegendX = DateUtils::getAppSettingsFormatStr();
+    graph2->setFormatFunctX(nullptr);
+    graph2->setFormatFunctY(nullptr);
+
+    graph2->setRangeX(mTminDisplay, mTmaxDisplay);
+    graph2->setCurrentX(mTminDisplay, mTmaxDisplay);
+    graph2->changeXScaleDivision(mMajorScale, mMinorScale);
+    graph2->setOverArrow(GraphView::eNone);
+    graph2->setTipXLab("t");
+
+    graph2->autoAdjustYScale(true);
+
+    graph2->setYAxisMode(GraphView::eAllTicks);
+    graph2->setTipYLab("Y");
+    listAxisVisible.push_back(true);
+
+    GraphView* graph3 = new GraphView(this);
+    graph3->showInfos(true);
+
+    graph3->mLegendX = DateUtils::getAppSettingsFormatStr();
+    graph3->setFormatFunctX(nullptr);
+    graph3->setFormatFunctY(nullptr);
+
+    graph3->setRangeX(mTminDisplay, mTmaxDisplay);
+    graph3->setCurrentX(mTminDisplay, mTmaxDisplay);
+    graph3->changeXScaleDivision(mMajorScale, mMinorScale);
+    graph3->setOverArrow(GraphView::eNone);
+    graph3->setTipXLab("t");
+
+    graph3->autoAdjustYScale(true);
+
+    graph3->setYAxisMode(GraphView::eAllTicks);
+    graph3->setTipYLab("Z");
+    // colorList.push_back(QColor(Qt::white));
+    listAxisVisible.push_back(true);
+
+    GraphCurve curveDataPointsX, curveDataPointsY, curveDataPointsZ;
+    CurveRefPts ptsX, ptsY, ptsZ;
+    QColor color;
+
+    curveDataPointsX.mName = tr("Ref Points");
+    curveDataPointsX.mPen = QPen(Qt::black, 1, Qt::SolidLine);
+    curveDataPointsX.mBrush = Qt::black;
+    curveDataPointsX.mIsRectFromZero = false;
+    curveDataPointsX.mType = GraphCurve::eRefPoints;
+
+    curveDataPointsY.mName = tr("Ref Points");
+    curveDataPointsY.mPen = QPen(Qt::black, 1, Qt::SolidLine);
+    curveDataPointsY.mBrush = Qt::black;
+    curveDataPointsY.mIsRectFromZero = false;
+    curveDataPointsY.mType = GraphCurve::eRefPoints;
+
+    curveDataPointsZ.mName = tr("Ref Points");
+    curveDataPointsZ.mPen = QPen(Qt::black, 1, Qt::SolidLine);
+    curveDataPointsZ.mBrush = Qt::black;
+    curveDataPointsZ.mIsRectFromZero = false;
+    curveDataPointsZ.mType = GraphCurve::eRefPoints;
+
+    double X, errX, Y, errY, Z, errZ, tmin, tmax;
+    for (auto& sEvent : selectedEvents) {
+        double xIncDepth = sEvent.value(STATE_EVENT_X_INC_DEPTH).toDouble();
+        double s_XA95Depth = sEvent.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble();
+        double yDec = sEvent.value(STATE_EVENT_Y_DEC).toDouble();
+        double s_Y = sEvent.value(STATE_EVENT_SY).toDouble();
+        double zField = sEvent.value(STATE_EVENT_Z_F).toDouble();
+        double s_ZField = sEvent.value(STATE_EVENT_SZ_SF).toDouble();
+
+        color = QColor(sEvent.value(STATE_COLOR_RED).toInt(),
+                       sEvent.value(STATE_COLOR_GREEN).toInt(),
+                       sEvent.value(STATE_COLOR_BLUE).toInt());
+        switch (processType) {
+        case CurveSettings::eProcessTypeUnivarie:
+            switch (variableType) {
+            case CurveSettings::eVariableTypeDepth:
+                X = xIncDepth;
+                errX = s_XA95Depth;
+                break;
+            case CurveSettings::eVariableTypeField:
+                X = zField;
+                errX = s_ZField;
+                break;
+            case CurveSettings::eVariableTypeInclination:
+                X = xIncDepth;
+                errX = s_XA95Depth;
+                break;
+            case CurveSettings::eVariableTypeDeclination:
+                X = yDec;
+                errX = s_XA95Depth/ cos(xIncDepth/180*3.14 );
+                break;
+            case CurveSettings::eVariableTypeOther:
+                X = xIncDepth;
+                errX = s_XA95Depth;
+                break;
+            default:
+                break;
+            }
+            break;
+        case CurveSettings::eProcessType2D:
+            X = xIncDepth;
+            errX = s_XA95Depth;
+            Y = yDec;
+            errY = s_Y;
+            break;
+        case CurveSettings::eProcessType3D:
+            X = xIncDepth;
+            errX = s_XA95Depth;
+            Y = yDec;
+            errY = s_Y;
+            Z = zField;
+            errZ = s_ZField;
+            break;
+        default:
+            X = xIncDepth;
+            errX = s_XA95Depth;
+            Y = yDec;
+            errY = s_XA95Depth / cos(xIncDepth * M_PI /180.);
+            Z = zField;
+            errZ = s_ZField;
+
+            break;
+        }
+
+
+        if ( Event::Type (sEvent.value(STATE_EVENT_TYPE).toInt()) == Event::eBound) {
+            const double bound = sEvent.value(STATE_EVENT_KNOWN_FIXED).toDouble();
+            tmin = bound;
+            tmax = bound;
+
+            ptsX.Xmin = DateUtils::convertToAppSettingsFormat(tmin);
+            ptsX.Xmax = DateUtils::convertToAppSettingsFormat(tmax);
+
+            if (ptsX.Xmin > ptsX.Xmax)
+                std::swap(ptsX.Xmin, ptsX.Xmax);
+            ptsX.Ymin = X - errX;
+            ptsX.Ymax = X + errX;
+            ptsX.color = color;
+            ptsX.type = CurveRefPts::eCross;
+            curveDataPointsX.mRefPoints.push_back(ptsX);
+
+            ptsY = ptsX;
+            ptsY.Ymin = Y - errY;
+            ptsY.Ymax = Y + errY;
+            curveDataPointsY.mRefPoints.push_back(ptsY);
+
+            ptsZ = ptsX;
+            ptsZ.Ymin = Z - errZ;
+            ptsZ.Ymax = Z + errZ;
+            curveDataPointsZ.mRefPoints.push_back(ptsZ);
+
+        } else {
+
+            const QJsonArray dates = sEvent.value(STATE_EVENT_DATES).toArray();
+
+            for (auto&& date : dates) {
+                const QJsonObject jdate = date.toObject();
+
+                Date d (jdate);
+
+                if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mCurve.isEmpty()) {
+
+                    const bool isUnif (d.mPlugin->getName() == "Unif");
+
+
+                    d.autoSetTiSampler(true); // needed if calibration is not done
+
+                    QMap<double, double> calibMap = d.getFormatedCalibMap();
+                    // hpd is calculate only on the study Period
+
+                    QMap<double, double>  subData = calibMap;
+                    subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+
+                    if (!subData.isEmpty()) {
+
+                        // hpd results
+
+                        QMap<type_data, type_data> hpd (create_HPD(subData, mThreshold));
+
+                        QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(hpd, 100);
+
+                        for (const auto& h : intervals) {
+                            tmin = h.second.first;
+                            tmax = h.second.second;
+
+                            ptsX.Xmin = tmin;
+                            ptsX.Xmax = tmax;
+
+                            if (ptsX.Xmin > ptsX.Xmax)
+                                std::swap(ptsX.Xmin, ptsX.Xmax);
+
+                            ptsX.Ymin = X - errX;
+                            ptsX.Ymax = X + errX;
+                            ptsX.color = color;
+                            ptsX.type = CurveRefPts::eCross;
+                            curveDataPointsX.mRefPoints.push_back(ptsX);
+
+                            ptsY = ptsX;
+                            ptsY.Ymin = Y - errY;
+                            ptsY.Ymax = Y + errY;
+                            curveDataPointsY.mRefPoints.push_back(ptsY);
+
+                            ptsZ = ptsX;
+                            ptsZ.Ymin = Z - errZ;
+                            ptsZ.Ymax = Z + errZ;
+                            curveDataPointsZ.mRefPoints.push_back(ptsZ);
+                        }
+                    }
+
+
+                }
+            }
+        }
+
+    }
+
+    graph1->autoAdjustYScale(true);
+
+    graph1->setYAxisMode(GraphView::eAllTicks);
+    graph1->showYAxisSubTicks(true);
+
+    switch (processType) {
+    case CurveSettings::eProcessTypeUnivarie:
+        graph1->addCurve(curveDataPointsX);
+        graphList.append(graph1);
+        break;
+    case CurveSettings::eProcessTypeSpherical:
+    case CurveSettings::eProcessType2D:
+        graph1->addCurve(curveDataPointsX);
+        graphList.append(graph1);
+
+        graph2->addCurve(curveDataPointsY);
+        graphList.append(graph2);
+
+        break;
+    case CurveSettings::eProcessTypeVector:
+    case CurveSettings::eProcessType3D:
+        graph1->addCurve(curveDataPointsX);
+        graphList.append(graph1);
+
+        graph2->addCurve(curveDataPointsY);
+        graphList.append(graph2);
+
+        graph3->addCurve(curveDataPointsZ);
+        graphList.append(graph3);
+        break;
+    default:
+        graph1->addCurve(curveDataPointsX);
+        graphList.append(graph1);
+
+        graph2->addCurve(curveDataPointsY);
+        graphList.append(graph2);
+
+        graph3->addCurve(curveDataPointsZ);
+        graphList.append(graph3);
+        break;
+    }
+
+    MultiCalibrationDrawing* scatterPlot = new MultiCalibrationDrawing(this);
+
+    // must be put at the end to print the points above
+
+    scatterPlot->showMarker();
+    scatterPlot->setEventsColorList(colorList);
+    scatterPlot->setListAxisVisible(listAxisVisible);
+
+    scatterPlot->setGraphList(graphList); // must be after setEventsColorList() and setListAxisVisible()
+
+
+    scatterPlot->setGraphHeight(3*mGraphHeight);
+
+    return std::move(scatterPlot);
+
+}
+
 
 void MultiCalibrationView::updateMultiCalib()
 {
-    qDebug()<<"MultiCalibrationView::updateMultiCalib()";
     updateGraphList();
 }
 
@@ -618,7 +992,11 @@ void MultiCalibrationView::updateGraphsSize(const QString &sizeStr)
     } else
         return;
 
-    mDrawing->setGraphHeight(mGraphHeight);
+    if (mScatterClipBut->isChecked())
+        mDrawing->setGraphHeight(3*mGraphHeight);
+    else
+        mDrawing->setGraphHeight(mGraphHeight);
+   // mDrawing->setGraphHeight(mGraphHeight);
 
 }
 
@@ -628,7 +1006,11 @@ void MultiCalibrationView::updateYZoom(const double prop)
 
     mGraphHeight = int ( prop * origin /50 * 100 );
 
-    mDrawing->setGraphHeight(mGraphHeight);
+    if (mScatterClipBut->isChecked())
+        mDrawing->setGraphHeight(3*mGraphHeight);
+    else
+        mDrawing->setGraphHeight(mGraphHeight);
+
     QString sizeText = QLocale().toString(mGraphHeight / origin * 100, 'f', 0);
     mGraphHeightEdit->blockSignals(true);
     mGraphHeightEdit->setText(sizeText);
@@ -744,12 +1126,11 @@ void MultiCalibrationView::updateScaleX()
 
 void MultiCalibrationView::updateGraphsZoom()
 {
-
+    //The same Name and same Value as in MultiCalibrationView::exportFullImage()
     mMarginRight = int (1.5 * floor(fontMetrics().boundingRect(mEndEdit->text()).width()/2) + 5);
-    mMarginLeft = int (1.5 * floor(fontMetrics().boundingRect(mStartEdit->text()).width()/2) + 5);
 
     QList<GraphView*> *graphList = mDrawing->getGraphList();
-
+    int maxYLength = 0;
     for (GraphView* gr : *graphList) {
 
         if (gr->hasCurve()) {
@@ -759,21 +1140,38 @@ void MultiCalibrationView::updateGraphsZoom()
 
             // update max inside the display period (mTminDisplay, mTmaxDisplay)
             // Bound doesn't have curve named "Calibration", this curve name is "Bound"
+
             GraphCurve* calibCurve = gr->getCurve("Calibration");
             if (!calibCurve)
                 calibCurve = gr->getCurve("Bound");
 
-            QMap<type_data, type_data> subDisplay = calibCurve->mData;
-            subDisplay = getMapDataInRange(subDisplay, mTminDisplay, mTmaxDisplay);
 
-            type_data yMax = map_max_value(subDisplay);
-            if (yMax == 0.)
-                yMax = 1;
+            else {
+                QMap<type_data, type_data> subDisplay = calibCurve->mData;
+                subDisplay = getMapDataInRange(subDisplay, mTminDisplay, mTmaxDisplay);
 
-            gr->setRangeY(0., 1. * yMax);
+                type_data yMax = map_max_value(subDisplay);
+                if (yMax == 0.)
+                    yMax = 1;
 
-            gr->setMarginRight(mMarginRight);
-            gr->setMarginLeft(mMarginLeft);
+                gr->setRangeY(0., yMax);
+            }
+
+            if (!calibCurve) {
+                calibCurve = gr->getCurve("Ref Points");
+                double yMin = calibCurve->mRefPoints[0].Ymin;
+                double yMax = calibCurve->mRefPoints[0].Ymax;
+
+                for (auto refP : calibCurve->mRefPoints) {
+                    yMin = std::min(yMin, refP.Ymin);
+                    yMax = std::max(yMax, refP.Ymax);
+                    maxYLength = std::max(maxYLength, fontMetrics().boundingRect(QString::number(refP.Ymin)).width());
+                }
+                auto spanY = (yMax - yMin)/10;
+                gr->setRangeY(trunc((yMin-spanY)/10)*10, trunc((yMax+spanY)/10)*10);
+            }
+
+
 
             // ------------------------------------------------------------
             //  Show zones if calibrated data are outside study period
@@ -798,10 +1196,18 @@ void MultiCalibrationView::updateGraphsZoom()
                 gr->addZone(zone);
             }
 
-            gr->forceRefresh();
+
         }
     }
 
+    for (GraphView* gr : *graphList) {
+        if (gr->hasCurve()) {
+            mMarginLeft = 1.5 * maxYLength + 10;
+            gr->setMarginRight(mMarginRight);
+            gr->setMarginLeft(mMarginLeft);
+        }
+        gr->forceRefresh();
+    }
 }
 
 void MultiCalibrationView::exportImage()
@@ -1255,4 +1661,11 @@ void MultiCalibrationView::showStat()
     }
 
    updateLayout();
+}
+
+void MultiCalibrationView::showScatter()
+{
+    updateGraphList();
+   // updateLayout();
+
 }
