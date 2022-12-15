@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef PLUGINFORMABSTRACT_H
 #define PLUGINFORMABSTRACT_H
 
-#include "Date.h"
+//#include "Date.h"
 
 #include <QString>
 #include <QGroupBox>
@@ -52,6 +52,10 @@ class PluginFormAbstract: public QGroupBox
 {
     Q_OBJECT
 public:
+    PluginAbstract* mPlugin;
+    QString mError;
+
+
     PluginFormAbstract(PluginAbstract* plugin, const QString& title, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget):QGroupBox(/*title, */parent),
     mPlugin(plugin)
     {
@@ -72,9 +76,6 @@ signals:
    void OkEnabled(bool enabled) ;
    void sizeChanged();
 
-public:
-    PluginAbstract* mPlugin;
-    QString mError;
 
 
 

@@ -44,8 +44,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 //#include "GraphView.h"
 #include "ProjectSettings.h"
 #include "RefCurve.h"
-#include "Generator.h"
-#include "CalibrationCurve.h"
+//#include "Generator.h"
+//#include "CalibrationCurve.h"
+#include "StateKeys.h"
 //#include "PluginFormAbstract.h"
 
 #include <QObject>

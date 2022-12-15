@@ -65,7 +65,7 @@ signals:
     void OkEnabled(bool enabled) ;
 
 protected slots:
-    void errorIsValid(QString str);
+    void valuesAreValid(QString str);
 
 private:
     QLabel* mMinLab;

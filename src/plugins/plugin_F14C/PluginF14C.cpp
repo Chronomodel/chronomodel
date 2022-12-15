@@ -45,10 +45,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginF14CForm.h"
 #include "PluginF14CRefView.h"
 #include "PluginF14CSettingsView.h"
-#include <cstdlib>
-#include <iostream>
+#include "Generator.h"
+
 #include <QJsonObject>
 #include <QtWidgets>
+
+#include <cstdlib>
+#include <iostream>
+
 
 
 PluginF14C::PluginF14C()

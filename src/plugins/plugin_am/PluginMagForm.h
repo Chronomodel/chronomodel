@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef PLUGINMAGFORM_H
 #define PLUGINMAGFORM_H
 
+#include "QtGui/qvalidator.h"
 #if USE_PLUGIN_AM
 
 #include "../PluginFormAbstract.h"
@@ -62,24 +63,18 @@ public:
     QJsonObject getData();
 
     bool isValid();
-/*    bool isValidD();
-    bool isValidDD();
-    bool isValidF();
-    bool isValidIF();*/
 
 signals:
-    void OkEnabled(bool enabled = true) ;
+   // void OkEnabled(bool enabled = true) ;
 
 protected slots:
     void updateOptions();
     void errorIsValid(QString str);
-  /*  void errorIsValididf(QString str);
-    void errorIsValidif(QString str);
-    void errorIsValidii(QString str);
-    void errorIsValidff(QString str);*/
+
     void incIsValid(QString str);
     void decIsValid(QString str);
-  //  void iterationValid(QString str);
+
+    void allIsValid();
 
 private:
     QRadioButton* mIncRadio;
@@ -110,6 +105,12 @@ private:
     QComboBox* mRefICombo;
     QComboBox* mRefDCombo;
     QComboBox* mRefFCombo;
+
+    QDoubleValidator* m9090Validator = new QDoubleValidator(-90., 90., 3);
+    QDoubleValidator* m90270Validator = new QDoubleValidator(-90., 270., 3);
+    QDoubleValidator* mRplusValidator;
+    QIntValidator* mZplusValidator;
+
 
 };
 

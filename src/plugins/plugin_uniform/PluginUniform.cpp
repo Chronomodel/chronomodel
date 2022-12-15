@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -42,11 +42,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "PluginUniformForm.h"
 #include "PluginUniformRefView.h"
+#include "Generator.h"
+
+#include <QJsonObject>
+#include <QtWidgets>
 
 #include <cstdlib>
 #include <iostream>
-#include <QJsonObject>
-#include <QtWidgets>
+
 
 PluginUniform::PluginUniform()
 {

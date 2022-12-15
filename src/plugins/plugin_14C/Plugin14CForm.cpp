@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -42,7 +42,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "Plugin14C.h"
 
-#include "AppSettings.h"
 #include <QJsonObject>
 #include <QtWidgets>
 
@@ -62,10 +61,15 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     mAverageEdit = new QLineEdit(this);
     mAverageEdit->setText("0");
     mAverageEdit->setAlignment(Qt::AlignHCenter);
+    QDoubleValidator* RValidator = new QDoubleValidator();
+    mAverageEdit->setValidator(RValidator);
 
     mErrorEdit = new QLineEdit(this);
     mErrorEdit->setText("50");
     mErrorEdit->setAlignment(Qt::AlignHCenter);
+    QDoubleValidator* RplusValidator = new QDoubleValidator();
+    RplusValidator->setBottom(0.0);
+    mErrorEdit->setValidator(RplusValidator);
     connect(mErrorEdit, &QLineEdit::textChanged, this, &Plugin14CForm::errorIsValid);
 
     mREdit = new QLineEdit(this);
@@ -75,6 +79,7 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     mRErrorEdit = new QLineEdit(this);
     mRErrorEdit->setText("0");
     mRErrorEdit->setAlignment(Qt::AlignHCenter);
+    mRErrorEdit->setValidator(RValidator);
 
     mRefCombo = new QComboBox(this);
     QStringList refCurves = plugin14C->getRefsNames();

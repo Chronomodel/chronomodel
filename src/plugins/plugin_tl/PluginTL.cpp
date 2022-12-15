@@ -43,10 +43,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "StdUtilities.h"
 #include "PluginTLForm.h"
 #include "PluginTLRefView.h"
-#include <cstdlib>
-#include <iostream>
+#include "Generator.h"
+
 #include <QJsonObject>
 #include <QtWidgets>
+
+#include <cstdlib>
+#include <iostream>
+
 
 
 PluginTL::PluginTL()

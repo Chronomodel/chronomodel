@@ -64,13 +64,15 @@ public:
     bool isValid();
 
 signals:
-    void OkEnabled(bool enabled) ;
+   // void OkEnabled(bool enabled) ;
 
 
 protected slots:
     void updateVisibleElements();
     void errorIsValid(QString str);
     void equationIsValid();
+
+    void validOK();
 
 private:
     QLabel* mAverageLab;

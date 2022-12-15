@@ -62,6 +62,13 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     connect(mIFRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: updateOptions);
     connect(mIDFRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: updateOptions);
 
+    connect(mIncRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: allIsValid);
+    connect(mDecRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: allIsValid);
+    connect(mFieldRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: allIsValid);
+    connect(mIDRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: allIsValid);
+    connect(mIFRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: allIsValid);
+    connect(mIDFRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: allIsValid);
+
     mIncLab = new QLabel(tr("Inclination"), this);
     mDecLab = new QLabel(tr("Declination"), this);
     mAlpha95Lab = new QLabel(tr("Alpha 95"), this);
@@ -71,36 +78,51 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     mMCMCIterationLab = new QLabel(tr("Iteration"), this);
 
     //------------------------------------------------------------------------------------//
+    mRplusValidator = new QDoubleValidator ();
+    mRplusValidator->setBottom(0.);
+    mZplusValidator = new QIntValidator();
+    mZplusValidator->setBottom(0);
+
     mIncEdit = new QLineEdit(this);
     mIncEdit->setAlignment(Qt::AlignHCenter);
     mIncEdit->setToolTip(tr("inclination is >=-90 and <=90"));
-    connect(mIncEdit, &QLineEdit::textChanged, this, &PluginMagForm::incIsValid);
+    mIncEdit->setValidator(m9090Validator);
+    connect(mIncEdit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
 
     mDecEdit = new QLineEdit(this);
     mDecEdit->setAlignment(Qt::AlignHCenter);
     mDecEdit->setToolTip(tr("declination is >=-90 and <=270"));
-    connect(mDecEdit, &QLineEdit::textChanged, this, &PluginMagForm::decIsValid);
+    mDecEdit->setValidator(m90270Validator);
+    connect(mDecEdit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
+
 
     mAlpha95Edit = new QLineEdit(this);
     mAlpha95Edit->setAlignment(Qt::AlignHCenter);
     mAlpha95Edit->setToolTip(tr("Alpha95 is > 0"));
-    connect(mAlpha95Edit, &QLineEdit::textChanged, this, &PluginMagForm::errorIsValid);
+    mAlpha95Edit->setValidator(mRplusValidator);
+    connect(mAlpha95Edit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
 
     // --------------------------------------------------------------------------------------- //
     mFieldEdit = new QLineEdit(this);
     mFieldEdit ->setAlignment(Qt::AlignHCenter);
-    mFieldEdit ->setToolTip(tr("declination is >=-90 and <=270"));
-    connect(mFieldEdit, &QLineEdit::textChanged, this, &PluginMagForm::errorIsValid);
+    mFieldEdit ->setToolTip(tr("Field is >0"));
+    mFieldEdit->setValidator(mRplusValidator);
+    connect(mFieldEdit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
 
     mFieldErrorEdit = new QLineEdit(this);
     mFieldErrorEdit ->setAlignment(Qt::AlignHCenter);
     mFieldErrorEdit ->setToolTip(tr("error >0"));
-    connect(mFieldErrorEdit, &QLineEdit::textChanged, this, &PluginMagForm::errorIsValid);
+    mFieldErrorEdit->setValidator(mRplusValidator);
+    connect(mFieldErrorEdit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
+
+
 
     mMCMCIterationEdit = new QLineEdit(this);
     mMCMCIterationEdit->setAlignment(Qt::AlignHCenter);
     mMCMCIterationEdit->setToolTip(tr("iteration is > 0"));
-    connect(mMCMCIterationEdit, &QLineEdit::textChanged, this, &PluginMagForm::errorIsValid);
+    mMCMCIterationEdit->setValidator(mZplusValidator);
+
+    connect(mMCMCIterationEdit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
 
     mRefILab = new QLabel(tr("Curve I"), this);
 
@@ -136,23 +158,6 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     mMCMCIterationEdit->setText("500");
 
     mIDRadio->setChecked(true);
-
-   /* mRefICombo->setCurrentIndex(mRefICombo->findText("_i.ref",Qt::MatchEndsWith));
-    mRefDCombo->setCurrentIndex(mRefDCombo->findText("_d.ref",Qt::MatchEndsWith));
-    mRefFCombo->setCurrentIndex(mRefFCombo->findText("_f.ref",Qt::MatchEndsWith));
-*/
- /*   mIncEdit->setVisible(true);
-    mDecEdit->setVisible(true);
-    mAlpha95Edit->setVisible(true);
-
-    mFieldEdit ->setVisible(true);
-    mFieldErrorEdit->setVisible(true);
-
-    mMCMCIterationEdit->setVisible(true);
-    mRefICombo->setVisible(true);
-    mRefDCombo->setVisible(true);
-    mRefFCombo->setVisible(true);
-*/
 
    QGridLayout* grid = new QGridLayout();
    grid->setContentsMargins(0, 5, 0, 0);
@@ -258,7 +263,7 @@ void PluginMagForm::setData(const QJsonObject& data, bool isCombined)
 QJsonObject PluginMagForm::getData()
 {
     QJsonObject data;
-    const QLocale locale = QLocale();
+    const QLocale locale;
 
     ProcessTypeAM pta = ProcessTypeAM::eNone;
     if (mIncRadio->isChecked())
@@ -281,9 +286,9 @@ QJsonObject PluginMagForm::getData()
     const double error_f = locale.toDouble(mFieldErrorEdit->text());
 
     const double iteration_mcmc = locale.toDouble(mMCMCIterationEdit->text());
-    QString refI_curve = mRefICombo->currentText();
-    QString refD_curve = mRefDCombo->currentText();
-    QString refF_curve = mRefFCombo->currentText();
+    const QString refI_curve = mRefICombo->currentText();
+    const QString refD_curve = mRefDCombo->currentText();
+    const QString refF_curve = mRefFCombo->currentText();
 
     data.insert(DATE_AM_PROCESS_TYPE_STR, pta);
 
@@ -305,63 +310,17 @@ QJsonObject PluginMagForm::getData()
 void PluginMagForm::errorIsValid(QString str)
 {
     bool ok;
-    QLocale locale;
-    double value = locale.toDouble(str, &ok);
+    const QLocale locale;
+    const double value = locale.toDouble(str, &ok);
 
     emit PluginFormAbstract::OkEnabled(ok && (value>0) );
 }
 
-/*
-void PluginMagForm::errorIsValididf(QString str)
-{
-    bool ok;
-    QLocale locale;
-    double value = locale.toDouble(str, &ok);
-
-    emit PluginFormAbstract::OkEnabled(ok && (value>0) );
-}
-
-void PluginMagForm::errorIsValidif(QString str)
-{
-    bool ok;
-    QLocale locale;
-    double value = locale.toDouble(str, &ok);
-
-    emit PluginFormAbstract::OkEnabled(ok && (value>0) );
-}
-
-void PluginMagForm::errorIsValidii(QString str)
-{
-    bool ok;
-    QLocale locale;
-    double value = locale.toDouble(str, &ok);
-
-    emit PluginFormAbstract::OkEnabled(ok && (value>0) );
-}
-
-void PluginMagForm::errorIsValidff(QString str)
-{
-    bool ok;
-    QLocale locale;
-    double value = locale.toDouble(str, &ok);
-
-    emit PluginFormAbstract::OkEnabled(ok && (value>0) );
-}
-
-void PluginMagForm::iterationValid(QString str)
-{
-    bool ok;
-    QLocale locale;
-    double value = locale.toDouble(str, &ok);
-
-    emit PluginFormAbstract::OkEnabled(ok && (value>0) );
-}
-*/
 void PluginMagForm::incIsValid(QString str)
 {
     bool ok;
-    QLocale locale;
-    double value = locale.toDouble(str, &ok);
+    const QLocale locale;
+    const double value = locale.toDouble(str, &ok);
 
     emit PluginFormAbstract::OkEnabled(ok && (value>=-90) && (value<=90) );
 }
@@ -369,8 +328,8 @@ void PluginMagForm::incIsValid(QString str)
 void PluginMagForm::decIsValid(QString str)
 {
     bool ok;
-    QLocale locale;
-    double value = locale.toDouble(str, &ok);
+    const QLocale locale;
+    const double value = locale.toDouble(str, &ok);
 
     emit PluginFormAbstract::OkEnabled(ok && (value>=-90) && (value<=270) );
 }
@@ -378,74 +337,17 @@ void PluginMagForm::decIsValid(QString str)
 
 bool PluginMagForm::isValid()
 {
- /*   const ProcessTypeAM pta = static_cast<ProcessTypeAM> (date.mData.value(DATE_AM_PROCESS_TYPE_STR).toInt());
-
-    QString ref_curve;
-    switch (pta) {
-    case eInc:
-        ref_curve = date.mData.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
-        break;
-    case eDec:
-        ref_curve = date.mData.value(DATE_AM_REF_CURVED_STR).toString().toLower();
-        break;
-    case eField:
-        ref_curve = date.mData.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
-        break;
-    case eID:
-        mIDRadio->setChecked(true);
-        break;
-    case eIF:
-        mIFRadio->setChecked(true);
-        break;
-    case eIDF:
-        mIDFRadio->setChecked(true);
-        break;
-
-    default:
-        break;
-    }
-
-    if (refCurve.isEmpty())
-        mError = tr("Ref. curve is empty!");
-    return !refCurve.isEmpty();
-*/
-return true;
+    return true;
 }
 
-/*
-bool PluginMagForm::isValidD()
-{
-    QString refCurve = mRefDCombo->currentText();
-    if (refCurve.isEmpty())
-        mError = tr("Ref. curve is empty!");
-    return !refCurve.isEmpty();
-}
 
-bool PluginMagForm::isValidF()
-{
-    QString refCurve = mRefFCombo->currentText();
-    if (refCurve.isEmpty())
-        mError = tr("Ref. curve is empty!");
-    return !refCurve.isEmpty();
-}
-*/
 
 void PluginMagForm::updateOptions()
 {
-   /* mIncEdit->setVisible(true);
-    mDecEdit->setVisible(true);
-    mAlpha95Edit->setVisible(true);
-
-    mFieldEdit ->setVisible(true);
-    mFieldErrorEdit ->setVisible(true);*/
-
-
-   /* mRefICombo->setVisible(true);
-    mRefDCombo->setVisible(true);
-    mRefFCombo->setVisible(true);*/
 
     const bool showInc = mIncRadio->isChecked() || mIDRadio->isChecked() || mDecRadio->isChecked() ||
-            mIFRadio->isChecked() || mIDFRadio->isChecked();
+                         mIFRadio->isChecked() || mIDFRadio->isChecked();
+
     mIncLab->setVisible(showInc);
     mIncEdit->setVisible(showInc);
 
@@ -479,4 +381,72 @@ void PluginMagForm::updateOptions()
 
 }
 
+void PluginMagForm::allIsValid()
+{
+    bool allOK;
+    int pos;
+    QString incText = mIncEdit->text();
+    QString decText = mDecEdit->text();
+    QString alpha95Text = mAlpha95Edit->text();
+    QString fieldText = mFieldEdit->text();
+    QString error_fText = mFieldErrorEdit->text();
+
+    QString iteration_mcmcText = mMCMCIterationEdit->text();
+
+    ProcessTypeAM pta = ProcessTypeAM::eNone;
+    if (mIncRadio->isChecked())
+        pta = eInc;
+    else if (mDecRadio->isChecked())
+        pta = eDec;
+    else if (mFieldRadio->isChecked())
+        pta = eField;
+    else if (mIDRadio->isChecked())
+        pta = eID;
+    else if (mIFRadio->isChecked())
+        pta = eIF;
+    else if (mIDFRadio->isChecked())
+        pta = eIDF;
+
+    switch (pta) {
+    case eInc:
+       allOK = (m9090Validator->validate(incText, pos) == QValidator::Acceptable)
+               && (mRplusValidator->validate(alpha95Text, pos) == QValidator::Acceptable);
+       break;
+    case eDec:
+        allOK = (m9090Validator->validate(incText, pos) == QValidator::Acceptable)
+                && (mRplusValidator->validate(alpha95Text, pos) == QValidator::Acceptable)
+                && (m90270Validator->validate(decText, pos) == QValidator::Acceptable) ;
+        break;
+    case eField:
+        allOK = (mRplusValidator->validate(fieldText, pos) == QValidator::Acceptable)
+                && (mRplusValidator->validate(error_fText, pos) == QValidator::Acceptable);
+        break;
+    case eID:
+        allOK = (m9090Validator->validate(incText, pos) == QValidator::Acceptable)
+                && (mRplusValidator->validate(alpha95Text, pos) == QValidator::Acceptable)
+                && (m90270Validator->validate(decText, pos) == QValidator::Acceptable)
+                && (mZplusValidator->validate(iteration_mcmcText, pos) == QValidator::Acceptable);
+        break;
+    case eIF:
+        allOK = (m9090Validator->validate(incText, pos) == QValidator::Acceptable)
+                && (mRplusValidator->validate(alpha95Text, pos) == QValidator::Acceptable)
+                && (mRplusValidator->validate(fieldText, pos) == QValidator::Acceptable)
+                && (mRplusValidator->validate(error_fText, pos) == QValidator::Acceptable)
+                && (mZplusValidator->validate(iteration_mcmcText, pos) == QValidator::Acceptable);
+        break;
+    case eIDF:
+        allOK = (m9090Validator->validate(incText, pos) == QValidator::Acceptable)
+                && (m90270Validator->validate(decText, pos) == QValidator::Acceptable)
+                && (mRplusValidator->validate(alpha95Text, pos) == QValidator::Acceptable)
+                && (mRplusValidator->validate(fieldText, pos) == QValidator::Acceptable)
+                && (mRplusValidator->validate(error_fText, pos) == QValidator::Acceptable)
+                && (mZplusValidator->validate(iteration_mcmcText, pos) == QValidator::Acceptable);
+        break;
+    default:
+        allOK = false;
+        break;
+    }
+
+    emit PluginFormAbstract::OkEnabled(allOK );
+}
 #endif

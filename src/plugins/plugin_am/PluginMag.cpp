@@ -46,14 +46,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginMagRefView.h"
 #include "PluginMagSettingsView.h"
 #include "Generator.h"
-#include "Functions.h"
-#include <cstdlib>
-#include <iostream>
+//#include "Functions.h"
+
 #include <QJsonObject>
 #include <QtWidgets>
 #include <QMessageBox>
 #include <QVector>
 
+#include <cstdlib>
+#include <iostream>
 
 PluginMag::PluginMag()
 {
@@ -71,7 +72,6 @@ PluginMag::~PluginMag()
 // Likelihood
 long double PluginMag::getLikelihood(const double& t, const QJsonObject& data)
 {
-    //QPair<long double, long double > result = getLikelihoodArg(t, data);
     return Likelihood(t, data);
 }
 

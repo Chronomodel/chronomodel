@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -45,6 +45,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Plugin14CForm.h"
 #include "Plugin14CRefView.h"
 #include "Plugin14CSettingsView.h"
+#include "Generator.h"
+
 #include <cstdlib>
 #include <iostream>
 #include <QJsonObject>
@@ -258,11 +260,9 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
                 QStringList values = line.split(dataSep);
                 
                 if (values.at(0).contains("BP", Qt::CaseInsensitive) ) {
-                    //timeInBC = false;
                     timeInBP = true;
                     
                 } else if (values.at(0).contains("BC", Qt::CaseInsensitive)  || values.at(0).contains("year", Qt::CaseInsensitive)) {
-                    //timeInBC = true;
                     timeInBP = false;
                 }
                 
@@ -376,86 +376,6 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
     }
     return curve;
 }
-
-//RefCurve Plugin14C::loadRefFile_old(QFileInfo refFile)
-//{
-//    RefCurve curve;
-//    curve.mName = refFile.fileName().toLower();
-//
-//    QFile file(refFile.absoluteFilePath());
-//    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-//        const QLocale locale = QLocale(QLocale::English);
-//        QTextStream stream(&file);
-//        bool firstLine = true;
-//
-//        while (!stream.atEnd()) {
-//            QString line = stream.readLine();
-//            if (!isComment(line)) {
-//                QStringList values = line.split(",");
-//                if (values.size() >= 3) {
-//                    bool ok = true;
-//
-//                    int t = 1950 - locale.toInt(values.at(0),&ok);
-//                    if(!ok)
-//                        continue;
-//                    double g = locale.toDouble(values.at(1),&ok);
-//                    if(!ok) continue;
-//                    double e = locale.toDouble(values.at(2),&ok);
-//                    if(!ok)
-//                        continue;
-//
-//                    double gSup = g + 1.96 * e;
-//                    if(!ok)
-//                        continue;
-//                    double gInf = g - 1.96 * e;
-//                    if(!ok)
-//                        continue;
-//
-//                    curve.mDataMean[t] = g;
-//                    curve.mDataError[t] = e;
-//                    curve.mDataSup[t] = gSup;
-//                    curve.mDataInf[t] = gInf;
-//
-//                    if (firstLine) {
-//                        curve.mDataMeanMin = g;
-//                        curve.mDataMeanMax = g;
-//
-//                        curve.mDataErrorMin = e;
-//                        curve.mDataErrorMax = e;
-//
-//                        curve.mDataSupMin = gSup;
-//                        curve.mDataSupMax = gSup;
-//
-//                        curve.mDataInfMin = gInf;
-//                        curve.mDataInfMax = gInf;
-//
-//                    } else {
-//                        curve.mDataMeanMin = qMin(curve.mDataMeanMin, g);
-//                        curve.mDataMeanMax = qMax(curve.mDataMeanMax, g);
-//
-//                        curve.mDataErrorMin = qMin(curve.mDataErrorMin, e);
-//                        curve.mDataErrorMax = qMax(curve.mDataErrorMax, e);
-//
-//                        curve.mDataSupMin = qMin(curve.mDataSupMin, gSup);
-//                        curve.mDataSupMax = qMax(curve.mDataSupMax, gSup);
-//
-//                        curve.mDataInfMin = qMin(curve.mDataInfMin, gInf);
-//                        curve.mDataInfMax = qMax(curve.mDataInfMax, gInf);
-//                    }
-//                    firstLine = false;
-//                }
-//            }
-//        }
-//        file.close();
-//
-//        // invalid file ?
-//        if (!curve.mDataMean.isEmpty()) {
-//            curve.mTmin = curve.mDataMean.firstKey();
-//            curve.mTmax = curve.mDataMean.lastKey();
-//        }
-//    }
-//    return curve;
-//}
 
 // References Values & Errors
 double Plugin14C::getRefValueAt(const QJsonObject& data, const double& t)

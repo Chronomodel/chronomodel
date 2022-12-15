@@ -42,7 +42,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "PluginF14C.h"
 
-#include "AppSettings.h"
 #include <QJsonObject>
 #include <QtWidgets>
 
@@ -60,10 +59,16 @@ PluginF14CForm::PluginF14CForm(PluginF14C* plugin, QWidget* parent, Qt::WindowFl
     mAverageEdit = new QLineEdit(this);
     mAverageEdit->setText("1");
     mAverageEdit->setAlignment(Qt::AlignHCenter);
+    QDoubleValidator* RValidator = new QDoubleValidator();
+    mAverageEdit->setValidator(RValidator);
 
     mErrorEdit = new QLineEdit(this);
     mErrorEdit->setText("1");
     mErrorEdit->setAlignment(Qt::AlignHCenter);
+    QDoubleValidator* RplusValidator = new QDoubleValidator();
+    RplusValidator->setBottom(0.0);
+    mErrorEdit->setValidator(RplusValidator);
+
     connect(mErrorEdit, &QLineEdit::textChanged, this, &PluginF14CForm::errorIsValid);
 
     mRefCombo = new QComboBox(this);

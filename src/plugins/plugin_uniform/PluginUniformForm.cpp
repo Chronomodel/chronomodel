@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -53,13 +53,16 @@ PluginUniformForm::PluginUniformForm(PluginUniform* plugin, QWidget* parent, Qt:
     mMinEdit = new QLineEdit(this);
     mMinEdit->setAlignment(Qt::AlignHCenter);
     mMinEdit->setText("0");
+    QIntValidator* positiveValidator = new QIntValidator(this);
+    mMinEdit->setValidator(positiveValidator);
 
     mMaxEdit = new QLineEdit(this);
     mMaxEdit->setAlignment(Qt::AlignHCenter);
     mMaxEdit->setText("100");
+    mMaxEdit->setValidator(positiveValidator);
 
-    connect(mMinEdit, &QLineEdit::textChanged, this, &PluginUniformForm::errorIsValid);
-    connect(mMaxEdit, &QLineEdit::textChanged, this, &PluginUniformForm::errorIsValid);
+    connect(mMinEdit, &QLineEdit::textChanged, this, &PluginUniformForm::valuesAreValid);
+    connect(mMaxEdit, &QLineEdit::textChanged, this, &PluginUniformForm::valuesAreValid);
 
     QGridLayout* grid = new QGridLayout();
     grid->setContentsMargins(0, 5, 0, 0);
@@ -81,7 +84,7 @@ PluginUniformForm::~PluginUniformForm()
 void PluginUniformForm::setData(const QJsonObject& data, bool isCombined)
 {
     (void) isCombined;
-    QLocale locale=QLocale();
+    const QLocale locale;
     const double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
     const double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
 
@@ -93,7 +96,7 @@ void PluginUniformForm::setData(const QJsonObject& data, bool isCombined)
 QJsonObject PluginUniformForm::getData()
 {
     QJsonObject data;
-    QLocale locale = QLocale();
+    const QLocale locale;
 
     const double min = round(locale.toDouble(mMinEdit->text()));
     const double max = round(locale.toDouble(mMaxEdit->text()));
@@ -104,11 +107,11 @@ QJsonObject PluginUniformForm::getData()
     return data;
 }
 
-void PluginUniformForm::errorIsValid(QString str)
+void PluginUniformForm::valuesAreValid(QString str)
 {
     (void) str;
     bool oka, okb;
-    QLocale locale;
+    const QLocale locale;
     const double a = locale.toDouble(mMinEdit->text(), &oka);
     const double b = locale.toDouble(mMaxEdit->text(), &okb);
 
@@ -117,11 +120,11 @@ void PluginUniformForm::errorIsValid(QString str)
 
 bool PluginUniformForm::isValid()
 {
-    QLocale locale = QLocale();
+    const QLocale locale;
     const double min = round(locale.toDouble(mMinEdit->text()));
     const double max = round(locale.toDouble(mMaxEdit->text()));
     if (min >= max)
-        mError = tr("Forbidden : lower date must be > upper date");
+        mError = tr("Forbidden : lower date must be < upper date");
     return min < max;
 }
 

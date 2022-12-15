@@ -40,16 +40,17 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #if USE_PLUGIN_GAUSS
 #include "PluginGauss.h"
 
-//#include "StdUtilities.h"
 #include "QtUtilities.h"
 #include "PluginGaussForm.h"
 #include "PluginGaussRefView.h"
 #include "PluginGaussSettingsView.h"
+#include "Generator.h"
+
+#include <QJsonObject>
+#include <QtWidgets>
 
 #include <cstdlib>
 #include <iostream>
-#include <QJsonObject>
-#include <QtWidgets>
 #include <stdio.h>
 
 PluginGauss::PluginGauss()
