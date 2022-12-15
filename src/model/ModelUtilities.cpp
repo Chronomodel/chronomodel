@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -37,6 +37,8 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 #include "ModelUtilities.h"
+
+#include "CalibrationCurve.h"
 #include "EventConstraint.h"
 #include "PhaseConstraint.h"
 #include "ModelCurve.h"
@@ -46,10 +48,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "Generator.h"
 
+#include <QObject>
+
 #include <string>
 #include <utility>
 
-#include <QObject>
 
 bool sortEvents(Event* e1, Event* e2) {return (e1->mItemY < e2->mItemY);}
 bool sortPhases(Phase* p1, Phase* p2) {return (p1->mItemY < p2->mItemY);}
@@ -325,6 +328,7 @@ QVector<Event*> ModelUtilities::unsortEvents(const QList<Event*>& events)
     return results;
 }
 
+#pragma mark Results Text
 QString ModelUtilities::dateResultsText(const Date* d, const Model* model, const bool forCSV)
 {
     Q_ASSERT(d);
@@ -385,22 +389,13 @@ QString ModelUtilities::eventResultsText(const Event* e, bool withDates, const M
         text += QObject::tr("Posterior Bound Date") + nl;
         text += e->mTheta.resultsString( nl, "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, forCSV);
 
-        if (!e->mVg.mAllAccepts->isEmpty()) {
-           text +=  nl;
-           text += QObject::tr("Posterior Std gi") + nl;
-           text += e->mVg.resultsString("<br>", "", nullptr, nullptr, false) + nl;
-       }
         text += nl+"----------------------"+nl;
     }
     else  {
         text += QObject::tr("Event : %1").arg(e->mName) + nl;
         text += QObject::tr("Posterior Event Date") + nl;
         text += e->mTheta.resultsString( nl,"", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, forCSV);
-        if (!e->mVg.mAllAccepts->isEmpty()) {
-           text +=  nl;
-           text += QObject::tr("Posterior Std gi") + nl;
-           text += e->mVg.resultsString("<br>", "", nullptr, nullptr, false) + nl;
-       }
+
         if (withDates) {
             text += nl + nl;
             text += "----------------------"+nl;
@@ -418,19 +413,16 @@ QString ModelUtilities::VgResultsText(const Event* e)
     QString text;
     const QString nl = "\r";
 
-  //  if (!e->mVg.mAllAccepts->isEmpty()) {
-        if (e->mType == Event::eBound) {
-            text += QObject::tr("Bound : %1").arg(e->mName);
-        } else  {
-            text += QObject::tr("Event : %1").arg(e->mName);
-        }
+    if (e->mType == Event::eBound) {
+        text += QObject::tr("Bound : %1").arg(e->mName);
+    } else  {
+        text += QObject::tr("Event : %1").arg(e->mName);
+    }
 
-        //text +=  nl;
-        text += QObject::tr("Posterior Std gi") + nl;
-        text += e->mVg.resultsString("<br>", "", nullptr, nullptr, false) + nl;
+    text += QObject::tr("Posterior Std gi") + nl;
+    text += e->mVg.resultsString("<br>", "", nullptr, nullptr, false) + nl;
 
-        text += nl+"----------------------"+nl;
-   // }
+    text += nl+"----------------------"+nl;
 
     return text;
 }
@@ -500,6 +492,7 @@ QString ModelUtilities::tempoResultsText(const Phase* p)
 
 QString ModelUtilities::activityResultsText(const Phase* p, const bool forCSV)
 {
+    (void) forCSV;
     const QString nl = "\r";
 
     Q_ASSERT(p);
@@ -507,7 +500,10 @@ QString ModelUtilities::activityResultsText(const Phase* p, const bool forCSV)
     text += QObject::tr("Number of Events : %1").arg(p->mEvents.size()) + nl ;
 
     text += QObject::tr("Activity") + nl ;
-
+    if (p->mEvents.size()<2) {
+        text += QObject::tr("No Stat.") + nl ;
+        return text;
+    }
     double t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("t_min").mValue);
     double t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("t_max").mValue);
 
@@ -525,7 +521,7 @@ QString ModelUtilities::activityResultsText(const Phase* p, const bool forCSV)
     text += "Phase Time Range" + QString(" ( %1 %) [").arg(threshold) + stringForLocal(t1) + " ; " + stringForLocal(t2) + "] " + DateUtils::getAppSettingsFormatStr() + nl ;
 
     text += "<hr>";
-    text += line(textBold(textOrange(QObject::tr("Unif. Predict."))));
+    text += line(textBold(textOrange(QObject::tr("Unif. distrib."))));
     t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("a_Unif").mValue);
     t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("b_Unif").mValue);
 
@@ -539,6 +535,11 @@ QString ModelUtilities::activityResultsText(const Phase* p, const bool forCSV)
 
     textValue = stringForLocal(p->mValueStack.at("Significance Score").mValue, true);
     text += "Significance Score"  + QString(" ( %1 %) =").arg(threshold) + textValue + nl ;
+
+
+    textValue = stringForLocal(p->mValueStack.at("max Activity").mValue, true);
+    text += "max Activity"  + QString(" = %1").arg(p->mValueStack.at("max Activity").mValue) + nl ;
+    text += "mode Activity"  + QString(" = %1").arg(DateUtils::convertToAppSettingsFormat(p->mValueStack.at("mode Activity").mValue)) + nl ;
 
     return text;
 
@@ -911,6 +912,7 @@ QString ModelUtilities::getMCMCSettingsLog(const Model* model)
     return log;
 }
 
+#pragma mark Results HTML
 QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QString stateDescript)
 {
     bool curveModel = model->mProject->isCurve();
@@ -1242,23 +1244,13 @@ QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, c
         text += line(textBold(textRed(QObject::tr("Bound : %1").arg(e->mName)))) + "<br>";
         text += line(textBold(textRed(QObject::tr("Posterior Bound Date"))));
         text += line(textRed(e->mTheta.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false)));
-/*
-        if (!e->mVg.mAllAccepts->isEmpty()) {
-           text +=  "<br>";
-           text += line(textBold(textGreen(QObject::tr("Posterior Std gi"))));
-           text += line(textGreen(e->mVg.resultsString("<br>", "", nullptr, nullptr, false)));
-       }*/
+
     }
     else {
         text += line(textBold(textBlue(QObject::tr("Event : %1").arg(e->mName)))) + "<br>";
         text += line(textBold(textBlue(QObject::tr("Posterior Event Date"))));
         text += line(textBlue(e->mTheta.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false)));
 
- /*       if (!e->mVg.mAllAccepts->isEmpty()) {
-           text +=  "<br>";
-           text += line(textBold(textGreen(QObject::tr("Posterior Std gi"))));
-           text += line(textGreen(e->mVg.resultsString("<br>", "", nullptr, nullptr, false)));
-       }*/
 
         if (withDates) {
             for (auto&& date : e->mDates)
@@ -1279,7 +1271,8 @@ QString ModelUtilities::VgResultsHTML(const Event* e)
     } else {
         text += line(textBold(textBlue(QObject::tr("Event : %1").arg(e->mName))));
     }
-   if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
+
+    if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
             text = line(textBold(textGreen(QObject::tr("Std gi"))));
             text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mRawTrace->at(0)))));
 
@@ -1312,11 +1305,7 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
                                                                                             DateUtils::getAppSettingsFormatStr());
         text += line(textBold(textOrange(result)));
     }
-/*
-    text += "<br>";
-    text += line(textBold(textOrange(QObject::tr("Duration (posterior distrib.)"))));
-    text += line(textOrange(p->mDuration.resultsString("<br>", QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr, false)));
-*/
+
     return text;
 }
 
@@ -1348,6 +1337,10 @@ QString ModelUtilities::activityResultsHTML(const Phase* p)
 
     text += "<br>";
     text += line(textBold(textOrange(QObject::tr("Activity"))));
+    if (p->mEvents.size()<2) {
+        text += line(textOrange("<i>" + QObject::tr("No Stat.")  + "</i>"));
+        return text;
+    }
 
     double t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("t_min").mValue);
     double t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("t_max").mValue);
@@ -1362,11 +1355,11 @@ QString ModelUtilities::activityResultsHTML(const Phase* p)
     t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("max95").mValue);
     if (t1>t2)
         std::swap(t1, t2);
-    double threshold = p->mValueStack.at("Activity threshold").mValue;
+    const double threshold = p->mValueStack.at("Activity threshold").mValue;
     text += line(textOrange("Phase Time Range" + QString(" ( %1 %) [").arg(threshold) + stringForLocal(t1) + " ; " + stringForLocal(t2) + "] " + DateUtils::getAppSettingsFormatStr()) );
 
     text += "<hr>";
-    text += line(textBold(textOrange(QObject::tr("Unif. Predict."))));
+    text += line(textBold(textOrange(QObject::tr("Unif. distrib."))));
     t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("a_Unif").mValue);
     t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("b_Unif").mValue);
 
@@ -1379,8 +1372,15 @@ QString ModelUtilities::activityResultsHTML(const Phase* p)
     text += line(textOrange("Unif. Span = " + textValue ));
 
     text += line("");
+    text += "<br>";
     textValue = stringForLocal(p->mValueStack.at("Significance Score").mValue, true);
-    text += line(textOrange("Significance Score"  + QString(" ( %1 %) =").arg(threshold) + textValue));
+    text += line(textOrange("Significance Score"  + QString(" ( %1 %) = ").arg(threshold) + textValue));
+
+    text += line("");
+    //textValue = stringForLocal(p->mValueStack.at("max Activity").mValue, true);
+    text += line(textOrange("max Activity"  + QString(" = %1").arg(p->mValueStack.at("max Activity").mValue) ));
+    text += line(textOrange("mode Activity"  + QString(" = %1").arg(DateUtils::convertToAppSettingsFormat(p->mValueStack.at("mode Activity").mValue)) + " " + DateUtils::getAppSettingsFormatStr() )) ;
+
 
     return text;
 }

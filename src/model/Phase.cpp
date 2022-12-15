@@ -511,6 +511,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 #ifdef DEBUG
     QElapsedTimer tClock;
     tClock.start();
+   // gridLength = 1000;
 #endif
 
     // Avoid to redo calculation, when mActivity exist, it happen when the control is changed
@@ -520,10 +521,11 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     mValueStack["Activity gridLength"] = TValueStack("Activity gridLength", gridLength);
     mValueStack["Activity h"] = TValueStack("Activity h", h);
     mValueStack["Activity threshold"] = TValueStack("Activity threshold", threshold);
+    mValueStack["max Activity"] = TValueStack("max Activity", 0.);
+    mValueStack["mode Activity"] = TValueStack("mode Activity", 0.);
 
     auto s = &mModel->mSettings;
     if (mEvents.size() < 2) {
-
         mValueStack["Significance Score"] = TValueStack("Significance Score", 0);
         mValueStack["R_etendue"] = TValueStack("R_etendue", s->mTmax - s->mTmin);
         mValueStack["t_min"] = TValueStack("t_min", s->mTmin);
@@ -684,21 +686,23 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     // overlaps
 
     double nr = concaTrace.size();
+    const int maxGrid = (int)gridLength-1;
     // Loop
     std::vector<int> NiTot (gridLength);
     try {
         for (const auto& t : concaTrace) {
 
-            int idxGridMin = inRange(0, (int) floor((t - t_min_grid - h_2) / delta_t), (int)gridLength-1) ;
-            int idxGridMax = inRange(0, (int) floor((t - t_min_grid + h_2) / delta_t), (int)gridLength-1) ;
+            int idxGridMin = inRange(0, (int) ceil((t - t_min_grid - h_2) / delta_t), maxGrid) ;
 
-            if (idxGridMax == idxGridMin) {
-                ++*(NiTot.begin()+idxGridMin);
-            } else {
-                for (auto&& ni = NiTot.begin() + idxGridMin; ni != NiTot.begin() + idxGridMax + 1; ++ni) {
-                    ++*ni ;
-                }
+            if ((t - t_min_grid - h_2) / delta_t == (double) idxGridMin && (t - t_min_grid - h_2)>0) {
+                ++idxGridMin;
             }
+            int idxGridMax = inRange(0, (int) floor((t - t_min_grid + h_2) / delta_t), maxGrid) ;
+
+            for (auto&& ni = NiTot.begin() + idxGridMin; ni != NiTot.begin() + idxGridMax +1; ++ni) {
+                ++*ni ;
+            }
+
         }
 
         // Ajout artificiel des events et bornes fixes
@@ -706,8 +710,18 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
         for (const auto& ev : mEvents) {
             if (ev->mTheta.mSamplerProposal == MHVariable::eFixe) {
                 auto t = ev->mTheta.mRawTrace->at(0);
-                int idxGridMin = inRange(0, (int) floor((t - t_min_grid - h_2) / delta_t), (int)gridLength-1) ;
-                int idxGridMax = inRange(0, (int) floor((t - t_min_grid + h_2) / delta_t), (int)gridLength-1) ;
+                int idxGridMin = inRange(0, (int) ceil((t - t_min_grid + h_2) / delta_t), maxGrid) ;
+
+                if ((t - t_min_grid - h_2) / delta_t == (double) idxGridMin && (t - t_min_grid - h_2)>0) {
+                    ++idxGridMin;
+                }
+
+                int idxGridMax = inRange(0, (int) floor((t - t_min_grid - h_2) / delta_t), maxGrid) ;
+
+                if ((t - t_min_grid + h_2) / delta_t == (double) idxGridMax && idxGridMax>0) {
+                    --idxGridMax;
+                }
+
 
                 if (idxGridMax == idxGridMin) {
                     *(NiTot.begin()+idxGridMin) += nRealyAccepted;
@@ -722,29 +736,44 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
         }
 
     } catch (std::exception& e) {
-        qWarning()<< "[Phase::generateActivity ] exception caught: " << e.what() << '\n';
+        qWarning()<< "[Phase::generateActivity] exception caught: " << e.what() << '\n';
 
     } catch(...) {
         qWarning() << "[Phase::generateActivity] Caught Exception!\n";
 
     }
 
+#ifdef DEBUG
+       double somNi =std::accumulate(NiTot.begin(), NiTot.end(), 0.);
+       qWarning() << "[Phase::generateActivity] somNi =" << somNi<< "\n";
+#endif
 
 
     ///# Calculation of the mean and variance
     QVector<double> inf;
     QVector<double> sup;
     QVector<double> esp;
+    double maxActivity = 0;
+    double modeActivity = t_min_grid;
 
     double UnifScore = 0.;
     int nbIt = 0;
-
+#ifdef DEBUG
+    double somActivity = 0;
+#endif
     for (const auto& ni : NiTot) {
 
         const double fA = ni / nr;
         const double eA =  fA * n / h;
         esp.append(eA);
+        if (eA > maxActivity) {
+            maxActivity =  eA;
+            modeActivity = (nbIt * delta_t) + t_min_grid;
+        }
 
+#ifdef DEBUG
+       somActivity += eA;
+#endif
         const double QSup = interpolate_value_from_curve(fA, Gx, 0, 1.)* n / h;
         sup.append(QSup);
 
@@ -776,13 +805,18 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
         nbIt++;
     }
 
+#ifdef DEBUG
+    qDebug()<<"[Model::generateActivity] somme Activity = "<< somActivity << " ; Phase = "<< mName <<"\n";
+#endif
     mValueStack["Significance Score"] = TValueStack("Significance Score", UnifScore);
+    mValueStack["max Activity"] = TValueStack("max Activity", maxActivity);
+    mValueStack["mode Activity"] = TValueStack("mode Activity", modeActivity);
 
     mRawActivity = vector_to_map(esp, t_min_grid, t_max_grid, delta_t);
     mRawActivityInf = vector_to_map(inf, t_min_grid, t_max_grid, delta_t);
     mRawActivitySup = vector_to_map(sup, t_min_grid, t_max_grid, delta_t);
 
-    // Prolongation de l'enveloppe au deçà de t_min, jusqu'à a_Unif_minus_h_2
+    // Prolongation de l'enveloppe au desous de t_min, jusqu'à a_Unif_minus_h_2
 
     const double t_min_display = std::max(a_Unif_minus_h_2, s->mTmin);
     const double t_max_display = std::min(b_Unif_plus_h_2, s->mTmax);
