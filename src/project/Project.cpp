@@ -1,6 +1,5 @@
 /* ---------------------------------------------------------------------
-
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -238,12 +237,10 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
         else if (mDesignIsChanged)
             emit projectDesignChanged(mModel);
 
-}
+    }
 
         updateState(state, reason, notify);
         return true;
-
-  //  return false;
 
 }
 
@@ -1974,11 +1971,12 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
 
     if (state.find(STATE_CURVE) != state.end()) {
         curveSetJSon = state.value(STATE_CURVE).toObject();
-        cs= CurveSettings::fromJson(curveSetJSon);
+        cs = CurveSettings::fromJson(curveSetJSon);
 
     } else {
         cs = CurveSettings();
         cs.mProcessType = CurveSettings::eProcessTypeNone;
+        state[STATE_CURVE] = cs.toJson();
     }
 
 
