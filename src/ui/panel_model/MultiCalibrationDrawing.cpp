@@ -88,7 +88,7 @@ MultiCalibrationDrawing::~MultiCalibrationDrawing()
 }
 
 
-void MultiCalibrationDrawing::setGraphList(QList<GraphView*> &list)
+void MultiCalibrationDrawing::setGraphList(QList<GraphViewAbstract*> &list)
 {
     if (!mListCalibGraph.isEmpty()) {
         for(auto&& graph : mListCalibGraph)
@@ -156,46 +156,85 @@ void MultiCalibrationDrawing::updateLayout()
 
     QFontMetrics fm (font());
     const bool axisVisible = (mGraphHeight >= GraphViewResults::mHeightForVisibleAxis);
-    const int marginBottom = (axisVisible ? int (fm.ascent() * 2.2) : int (fm.ascent() * 0.5));
+    //const int marginBottom = (axisVisible ? int (fm.ascent() * 2.2) : int (fm.ascent() * 0.5));
     int y = 0;
-    int i = 0;
+    int graphNo = 0;
+    int barNo = 0;
     const int graphShift = 5; // the same name and the same value as MultiCalibrationView::exportFullImage()
+   // bool newTitle = false;
+    for (auto&& graphAbstract: mListCalibGraph) {
 
-    for (auto&& graph: mListCalibGraph) {
-        if (withBar) {
-            if (mListAxisVisible.at(i))
-                mListBar[i]->setGeometry(5, y, barWidth, mGraphHeight - marginBottom);
-            else
-                mListBar[i]->setGeometry(5, y, barWidth, mGraphHeight);
+        GraphView* graph = dynamic_cast<GraphView*>(graphAbstract);
+        GraphTitle* graphTitle = dynamic_cast<GraphTitle*>(graphAbstract);
 
-            mListBar[i]->setVisible(true);
+        if (graphTitle) {
+            /*if (graphTitle->isTitle() && newTitle) {
+                y += graphTitle->height() /2.;
+                newTitle = false;
+            }*/
+            graphTitle->setGeometry(barWidth + graphShift, y, std::max(0, width() - barWidth - 2*graphShift), graphTitle->height() );
+            graphTitle->setVisible(true);
+
+            if (withBar) {
+                mListBar[barNo]->setGeometry(graphShift, y, barWidth, graphTitle->height());
+                mListBar[barNo]->setVisible(true);
+                ++barNo;
+            }
+
+            y += graphTitle->height();// + (graphTitle->isTitle()? 2: 0);
+
+        } else if (graph) {
+           // newTitle = true;
+            const int marginBottom = (axisVisible && mListAxisVisible[graphNo] ? int (fm.ascent() * 2.2) : int (fm.height()/2));
+            if (withBar) {
+                /* Si il y a des bars, il doit y avoir autant de bar que de graph et de title
+                 */
+               /* if (axisVisible && mListAxisVisible[graphNo])
+                    mListBar[barNo]->setGeometry(graphShift, y, barWidth, mGraphHeight + marginBottom);
+                else */
+                    mListBar[barNo]->setGeometry(graphShift, y, barWidth, mGraphHeight);
+
+                mListBar[barNo]->setVisible(true);
+                ++barNo;
+            }
+
+
+            graph->showXAxisValues(axisVisible && mListAxisVisible[graphNo]);
+
+            if (!graph->hasCurve()) {
+                graph->showInfos(true);
+                graph->setNothingMessage( graph->getInfo(' ')  + " -> Not computable" );
+                graph->setGeometry(barWidth + graphShift, y, std::max(0, width() - barWidth - graphShift), mGraphHeight);
+                graph->setVisible(true);
+
+            } else {
+                graph->showXAxisSubTicks(true);
+
+                // usefull for bound, because there is no curve named "Calibration"
+                if (graph->getCurve("Calibration"))
+                    graph->setOverArrow(GraphView::eBothOverflow);
+
+                else
+                    graph->setOverArrow(GraphView::eNone);
+
+                graph->setFont(font());
+                graph->setTipXLab("t");
+                graph->setGraphHeight(mGraphHeight);
+                graph->setMarginTop(0);
+               // if (axisVisible && mListAxisVisible[graphNo])
+                graph->setMarginBottom(marginBottom);
+              //  else
+                //    graph->setMarginBottom(int (fm.ascent() * 0.5));
+
+                graph->setGeometry(barWidth + graphShift, y, std::max(0, width() - barWidth - 2*graphShift), mGraphHeight );
+                graph->setVisible(true);
+            }
+            y += mGraphHeight;
+            ++graphNo;
         }
 
-        graph->showXAxisValues(axisVisible && mListAxisVisible[i]);
 
-        if (!graph->hasCurve()) {
-            graph->showInfos(true);
-            graph->setNothingMessage( graph->getInfo(' ')  + " -> Not computable" );
-            graph->setGeometry(barWidth + graphShift, y, std::max(0, width() - barWidth - graphShift), mGraphHeight );
-            graph->setVisible(true);
 
-         } else {           
-            graph->showXAxisSubTicks(true);
-            graph->setMarginBottom(marginBottom);
-            // usefull for bound, because there is no curve named "Calibration"
-            if (graph->getCurve("Calibration"))
-                graph->setOverArrow(GraphView::eBothOverflow);
-
-            else
-                graph->setOverArrow(GraphView::eNone);
-
-            graph->setFont(font());
-            graph->setTipXLab("t");
-            graph->setGeometry(barWidth + graphShift, y, std::max(0, width() - barWidth - graphShift), mGraphHeight );
-            graph->setVisible(true);
-         }
-         y += mGraphHeight;
-         ++i;
     }
 
     mGraphWidget->resize(width(), y); // Don't use setGeometry() only resize()
@@ -205,6 +244,17 @@ void MultiCalibrationDrawing::updateLayout()
     else
         hideMarker();
 
+}
+
+QList<GraphView*> MultiCalibrationDrawing::getGraphViewList() const
+{
+    QList<GraphView*> graphList;
+    for (auto gr : mListCalibGraph) {
+        GraphView* grView = dynamic_cast<GraphView*>(gr);
+        if (grView)
+            graphList.append(grView);
+    }
+    return graphList;
 }
 
 void MultiCalibrationDrawing::resizeEvent(QResizeEvent* e)
@@ -233,7 +283,8 @@ void MultiCalibrationDrawing::forceRefresh()
     int y = 0;
     int i = 0;
 
-    for (auto&& graph: mListCalibGraph) {
+    const auto graphList = getGraphViewList();
+    for (auto&& graph: graphList) {
         mListBar[i]->setGeometry(5, y, ColoredBar::mWidth, mGraphHeight - marginBottom);
 
          if (!graph->hasCurve()) {

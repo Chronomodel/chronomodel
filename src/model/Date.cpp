@@ -389,7 +389,6 @@ void Date::fromJson(const QJsonObject& json)
 
     QString pluginId = json.value(STATE_DATE_PLUGIN_ID).toString();
     mPlugin = PluginManager::getPluginFromId(pluginId);
-    //mMethod = (DataMethod)json.value(STATE_DATE_METHOD).toInt();
 
     mIsValid = json.value(STATE_DATE_VALID).toBool();
 
@@ -404,14 +403,11 @@ void Date::fromJson(const QJsonObject& json)
     mIsSelected = false;
      
     Project* project = MainWindow::getInstance()->getProject();
-   // mSettings = ProjectSettings::fromJson(project->mState.value(STATE_SETTINGS).toObject()); // ProjectSettings::fromJson is static
+    mSettings = ProjectSettings::fromJson(project->mState.value(STATE_SETTINGS).toObject()); // ProjectSettings::fromJson is static
     mSubDates = json.value(STATE_DATE_SUB_DATES).toArray();
 
-    if (mEvent == nullptr)
-        mMixingLevel = project->mState.value(STATE_MCMC_MIXING).toDouble();
+    mMixingLevel = project->mState.value(STATE_MCMC_MIXING).toDouble();
 
-    else
-        mMixingLevel =  mEvent->mModel->mMCMCSettings.mMixingLevel;
 
     if (mPlugin == nullptr)
         throw QObject::tr("Data could not be loaded : invalid plugin : %1").arg(pluginId);
@@ -450,6 +446,7 @@ void Date::fromJson(const QJsonObject& json)
                      */
                     sd.fromJson(d.toObject());
                     sd.calibrate(project);
+
                     tmin = std::min(sd.mCalibration->mTmin, tmin);
                     tmax = std::max(sd.mCalibration->mTmax, tmax);
                 }
@@ -533,7 +530,7 @@ long double Date::getLikelihood(const double& t) const
         } else if (mOrigin == eCombination) { 
             // If needed run the wiggle calculation
             if (mCalibration==nullptr || mCalibration->mCurve.isEmpty()) {
-                return mPlugin->getLikelihoodCombine(t, mSubDates, mEvent->mModel->mSettings.mStep);
+                return mPlugin->getLikelihoodCombine(t, mSubDates, mSettings.mStep);
 
             } else {
                 return getLikelihoodFromCalib(t);
@@ -557,7 +554,8 @@ QPair<long double, long double> Date::getLikelihoodArg(const double& t) const
             
         }  else if (mOrigin == eCombination) {
                      if (mCalibration->mCurve.isEmpty()) {
-                         return QPair<long double, long double>(log(mPlugin->getLikelihoodCombine(t, mSubDates, mEvent->mModel->mSettings.mStep)), 1.l);
+                         return QPair<long double, long double>(log(mPlugin->getLikelihoodCombine(t, mSubDates, mSettings.mStep)), 1.l);
+
                      } else {
                          return QPair<long double, long double>(log(getLikelihoodFromCalib(t)), 1.l);
                      }
@@ -658,11 +656,6 @@ void Date::reset()
 }
 
 
-void Date::calibrate(Project *project, bool truncate)
-{
-  calibrate(mEvent->mModel->mSettings, project, truncate);
-}
-
 /**
  * @brief TDate::calibrate
  * Function that calculates the calibrated density and updates the wiggle density if necessary
@@ -727,21 +720,6 @@ void Date::calibrate(const ProjectSettings settings, Project *project, bool trun
         calibrationTemp.append(v);
         repartitionTemp.append(v); //ici
         long double lastRepVal = v;
-/* Ne PAS mettre de progressDialog dans cette fonction car il crée un appel à EventItem::SetEvent() qui renvoie un updateProject() et reboucle
- */
-
- /* Warning: If the progress dialog is modal (see QProgressDialog::QProgressDialog()), setValue() calls QCoreApplication::processEvents(),
- * so take care that this does not cause undesirable re-entrancy in your code. For example, don't use a QProgressDialog inside a paintEvent()!
- *
-           QProgressDialog *progress = new QProgressDialog(QTranslator::tr("Calibration generation") + " : "+ mName, QTranslator::tr("Wait") , 1, 10);
-          progress->blockSignals(true);
-           progress->setWindowModality(Qt::WindowModal);
-           progress->setCancelButton(nullptr);
-           progress->setMinimumDuration(5);
-           progress->setMinimum(0);
-           progress->setMaximum(nbRefPts);
-           progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
-*/
 
         /* We use long double type because
          * after several sums, the repartition can be in the double type range
@@ -833,11 +811,6 @@ void Date::calibrate(const ProjectSettings settings, Project *project, bool trun
 
 }
 
-
-void Date::calibrateWiggle(Project *project)
-{
-    calibrateWiggle(mEvent->mModel->mSettings, project);
-}
 
 /**
  * @brief TDate::calibrateWiggle Function that calculates the wiggle density according to the defined wiggle type
@@ -1211,7 +1184,6 @@ const QMap<double, double> Date::getFormatedCalibToShow() const
 
     QMap<double, double> calib = getRawCalibMap();
 
-
     if (mCalibration->mRepartition.last() > 0.) {
         double tminCal, tmaxCal;
         QVector<double> curve;
@@ -1240,6 +1212,8 @@ const QMap<double, double> Date::getFormatedCalibToShow() const
         calib = vector_to_map(mCalibration->mCurve, mCalibration->mTmin, mCalibration->mTmax, mCalibration->mStep);
     }
 
+    calib[calib.firstKey()] = 0.;
+    calib[calib.lastKey()] = 0.;
     return DateUtils::convertMapToAppSettingsFormat(calib);
 }
 
@@ -1297,9 +1271,9 @@ const QMap<double, double> Date::getFormatedWiggleCalibToShow() const
     curve = mWiggleCalibration->mCurve.mid(minIdx, (maxIdx - minIdx) + 1);
     curve = equal_areas(curve, mWiggleCalibration->mStep, 1.);
     calib = vector_to_map(curve, tminCal, tmaxCal, mWiggleCalibration->mStep );
-   // calib = normalize_map(calib);
 
-
+    calib[calib.firstKey()] = 0.;
+    calib[calib.lastKey()] = 0.;
 
     return DateUtils::convertMapToAppSettingsFormat(std::move(calib));
 }
@@ -1520,13 +1494,13 @@ double Date::getLikelihoodFromWiggleCalib(const double &t) const
 {
     // test si mWiggleCalibration existe, sinon calcul de la valeur
     if (mWiggleCalibration == nullptr || mWiggleCalibration->mCurve.isEmpty()) {
-        ProjectSettings settings = mEvent->mModel->mSettings;
+
         if (mDeltaType == eDeltaRange) {
             long double d = mPlugin->getLikelihood(t, mData);
             long double r (mDeltaMin);
             while (r < mDeltaMax) {
                 d += mPlugin->getLikelihood(t + r, mData);
-                r += settings.mStep;
+                r += mSettings.mStep;
             }
             return d;
 
@@ -1535,7 +1509,7 @@ double Date::getLikelihoodFromWiggleCalib(const double &t) const
             long double r (-5*mDeltaError);
             while (r < (5*mDeltaError)) {
                 d += mPlugin->getLikelihood(t + mDeltaAverage + r, mData) * expl((-0.5l) * powl(r, 2.l) / powl(mDeltaError, 2.l)) /sqrt(mDeltaError);
-                r += settings.mStep;
+                r += mSettings.mStep;
             }
             return d;
 
@@ -1558,15 +1532,6 @@ void Date::updateDate(Event* event)
     updateTi(event);
     updateSigmaShrinkage(event);
     updateWiggle();
-}
-
-void Date::updateFixedDate(Event* event)
-{
-   // mDelta = 0.;
-    //mTi.tryUpdate(event->mTheta.mX, 2.);
-   // mSigmaTi.tryUpdate(0., 2.);
-   // mWiggle.mX = mTi.mX + mDelta;
-
 }
 
 void Date::updateTi(Event *event)
@@ -1641,10 +1606,9 @@ void Date::updateSigmaJeffreys(Event* event)
     //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
     // ------------------------------------------------------------------------------------------
     const double lambda = pow(mTi.mX - (event->mTheta.mX - mDelta), 2) / 2.;
-    ProjectSettings settings = mEvent->mModel->mSettings;
 
     const double a (.0001); //precision
-    const double b (pow(settings.mTmax - settings.mTmin, 2.));
+    const double b (pow(mSettings.mTmax - mSettings.mTmin, 2.));
 
     const double V1 = mSigmaTi.mX * mSigmaTi.mX;
 
@@ -1922,9 +1886,8 @@ void Date::fMHSymetricWithArg(Event *event)
 double Date::fProposalDensity(const double t, const double t0)
 {
     (void) t0;
-     ProjectSettings settings = mEvent->mModel->mSettings;
-    const double tmin (settings.mTmin);
-    const double tmax (settings.mTmax);
+    const double tmin (mSettings.mTmin);
+    const double tmax (mSettings.mTmax);
     const double level (mMixingLevel);
     double q1 (0.);
 
@@ -1971,12 +1934,11 @@ double Date::fProposalDensity(const double t, const double t0)
  */
 void Date::fInversion(Event *event)
 {
-    ProjectSettings settings = mEvent->mModel->mSettings;
     const double u1 = Generator::randomUniform();
     const double level (mMixingLevel);
     double tiNew;
-    const double tmin (settings.mTmin);
-    const double tmax (settings.mTmax);
+    const double tmin (mSettings.mTmin);
+    const double tmax (mSettings.mTmax);
 
     const double tminCalib = mCalibration->mTmin;
 
@@ -2023,12 +1985,11 @@ void Date::fInversion(Event *event)
 
 void Date::fInversionWithArg(Event *event)
 {
-    ProjectSettings settings = mEvent->mModel->mSettings;
     const double u1 = Generator::randomUniform();
     const double level (mMixingLevel);
     double tiNew;
-    const double tmin = settings.mTmin;
-    const double tmax = settings.mTmax;
+    const double tmin = mSettings.mTmin;
+    const double tmax = mSettings.mTmax;
 
     const double tminCalib = mCalibration->mTmin;
 

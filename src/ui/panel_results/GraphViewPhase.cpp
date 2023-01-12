@@ -57,7 +57,6 @@ mPhase(nullptr)
 {
     setMainColor(Painting::borderDark);
     mGraph->setBackgroundColor(QColor(210, 210, 210));
-
 }
 
 GraphViewPhase::~GraphViewPhase()
@@ -70,10 +69,7 @@ void GraphViewPhase::setPhase(Phase* phase)
     Q_ASSERT(phase);
 
     mPhase = phase;
-    //setItemTitle(tr("Phase : %1").arg(mPhase->mName));
-
     setItemColor(mPhase->mColor);
-
 }
 
 void GraphViewPhase::paintEvent(QPaintEvent* e)
@@ -269,9 +265,6 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
             const GraphZone zoneMax (mSettings.getTmaxFormated(), INFINITY);
             mGraph->addZone(zoneMax);
 
-           // const type_data yMax = map_max_value(mPhase->mTempoSup);
-
-           // mGraph->setRangeY(0., yMax);
         } else
             mGraph->resetNothingMessage();
 
@@ -503,10 +496,6 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 mGraph->setCurveVisible("Post Distrib All Chains", true);
                 mGraph->setCurveVisible("Post Distrib Env All Chains", showError);
 
-                mGraph->setTipXLab("t");
-                mGraph->setTipYLab("");
-
-                mGraph->autoAdjustYScale(true);
             }
 
         }

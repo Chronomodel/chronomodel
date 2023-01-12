@@ -88,5 +88,6 @@
         <file alias="export_csv.png">resources/export_csv.png</file>
         <file alias="clipboard_graph.png">resources/clipboard_graph.png</file>
         <file alias="chronomodel_bash.png">resources/chronomodel_bash.png</file>
+        <file alias="curve_data_graph_w.png">resources/curve_data_graph_w.png</file>
     </qresource>
 </RCC>

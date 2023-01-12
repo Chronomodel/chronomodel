@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,10 +40,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef PROJECTVIEW_BASH_H
 #define PROJECTVIEW_BASH_H
 
-#include "MCMCLoopMain.h"
 #include "AppSettings.h"
 #include "Project.h"
-//#include "Tabs.h"
+
 
 #include <QWidget>
 #include <QTableWidget>
@@ -51,12 +50,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QTextEdit>
 
 class QStackedWidget;
-//class QTextEdit;
-class QTabWidget;
-//class QVBoxLayout;
 
-//class ModelView;
-//class ResultsView;
+class QTabWidget;
+
 class Event;
 
 class ProjectView: public QWidget

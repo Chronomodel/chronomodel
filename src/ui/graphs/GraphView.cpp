@@ -51,9 +51,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 class ProjectSettings;
 
-// Constructor / Destructor
-
-GraphView::GraphView(QWidget *parent):QWidget(parent),
+GraphView::GraphView(QWidget *parent):
 mStepMinWidth(3), // define when the minor scale on axis can appear
 mXAxisLine(true),
 mXAxisArrow(true),
@@ -68,7 +66,6 @@ mYAxisValues(true),
 mXAxisMode(eAllTicks),
 mYAxisMode(eAllTicks),
 mOverflowArrowMode(eNone),
-//mRendering(eSD),
 mAutoAdjustYScale(false),
 mShowInfos(false),
 mBackgroundColor(Qt::white),
@@ -84,7 +81,7 @@ mUseTip(true),
 mUnitFunctionX(nullptr),
 mUnitFunctionY(nullptr)
 {
-
+    GraphViewAbstract::setParent(parent);
     mAxisToolX.mIsHorizontal = true;
     mAxisToolX.mShowArrow = true;
     mAxisToolY.mIsHorizontal = false;
@@ -106,7 +103,7 @@ mUnitFunctionY(nullptr)
 
 }
 
-GraphView::GraphView(const GraphView& graph, QWidget *parent):QWidget(parent),
+GraphView::GraphView(const GraphView& graph, QWidget *parent):
 mStepMinWidth(graph.mStepMinWidth), // define minorCount scale on axis
 mXAxisLine(graph.mXAxisLine),
 mXAxisArrow(graph.mXAxisArrow),
@@ -137,6 +134,7 @@ mUseTip(graph.mUseTip),
 mUnitFunctionX(nullptr),
 mUnitFunctionY(nullptr)
 {
+    GraphViewAbstract::setParent(parent);
     mCurrentMinX = graph.mCurrentMinX;
     mCurrentMaxX = graph.mCurrentMaxX;
 
@@ -282,7 +280,7 @@ void GraphView::adjustYScale()
 
              }
         }
-        if (yMax > yMin) {
+        if (yMax >= yMin) {
             if (mAxisToolY.mMinMaxOnly || !mYAxisTicks)
                 setRangeY(yMin, yMax);
 
@@ -775,8 +773,48 @@ void GraphView::paintToDevice(QPaintDevice* device)
     p.fillRect(rect(), mBackgroundColor);
 
     QFont font = p.font();
-   // font.setPointSizeF(font.pointSizeF());// - 2.);
- //   p.setFont(font);
+
+    /* ----------------------------------------------------
+     *  Horizontal axis
+     * ----------------------------------------------------*/
+     QPen pen = QPen(Qt::black, 1);
+     pen.setWidth(pen.width() * mThickness);
+     p.setPen(pen);
+     if (!mLegendX.isEmpty() && mXAxisValues) {
+          QRectF tr(mMarginLeft, mGraphHeight + mMarginTop - mMarginBottom, mGraphWidth, mMarginBottom);
+          p.setPen(Qt::black);
+          p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, mLegendX);
+     }
+
+    mAxisToolX.mShowArrow = mXAxisArrow;
+    mAxisToolX.mShowSubs = mXAxisTicks;
+    mAxisToolX.mShowSubSubs = mXAxisSubTicks;
+    mAxisToolX.mShowText = mXAxisValues;
+
+    mAxisToolX.updateValues(int (mGraphWidth), int (mStepMinWidth), mCurrentMinX, mCurrentMaxX);
+    mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight , mGraphWidth , mMarginBottom), -1.,mUnitFunctionX);
+
+    /* ----------------------------------------------------
+     *  Vertical axis
+     * ----------------------------------------------------*/
+    adjustYScale();
+
+    if (mYAxisLine) {
+        mAxisToolY.mShowArrow = mYAxisArrow;
+        mAxisToolY.mShowSubs = mYAxisTicks;
+        mAxisToolY.mShowSubSubs = mYAxisSubTicks;
+
+        if (mAutoAdjustYScale && mYAxisMode == eHidden && mShowInfos) {
+            const QString minMaxText = QString(tr( "Min = %1  /  Max = %2")).arg(stringForLocal(mMinY), stringForLocal(mMaxY));
+            mInfos.clear();
+            mInfos.append(minMaxText);
+        }
+
+        mAxisToolY.updateValues(int (mGraphHeight), int (mStepMinWidth), mMinY, mMaxY);
+        mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), -1., mUnitFunctionY);
+
+     }
+
 
     /* ---------------------- Zones --------------------------*/
 
@@ -880,49 +918,13 @@ void GraphView::paintToDevice(QPaintDevice* device)
      * ----------------------------------------------------*/
       drawCurves(p);
 
-    /* ----------------------------------------------------
-     *  Horizontal axis
-     * ----------------------------------------------------*/
-     QPen pen = QPen(Qt::black, 1);
-     pen.setWidth(pen.width() * mThickness);
-     p.setPen(pen);
-     if (!mLegendX.isEmpty() && mXAxisValues) {
-          QRectF tr(mMarginLeft, mGraphHeight + mMarginTop - mMarginBottom, mGraphWidth, mMarginBottom);
-          p.setPen(Qt::black);
-          p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, mLegendX);
-     }
 
-    mAxisToolX.mShowArrow = mXAxisArrow;
-    mAxisToolX.mShowSubs = mXAxisTicks;
-    mAxisToolX.mShowSubSubs = mXAxisSubTicks;
-    mAxisToolX.mShowText = mXAxisValues;
-
-    mAxisToolX.updateValues(int (mGraphWidth), int (mStepMinWidth), mCurrentMinX, mCurrentMaxX);
-    mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight , mGraphWidth , mMarginBottom), -1.,mUnitFunctionX);
-
-    /* ----------------------------------------------------
-     *  Vertical axis
-     * ----------------------------------------------------*/
-    if (mYAxisLine) {
-        mAxisToolY.mShowArrow = mYAxisArrow;
-        mAxisToolY.mShowSubs = mYAxisTicks;
-        mAxisToolY.mShowSubSubs = mYAxisSubTicks;
-
-        if (mAutoAdjustYScale && mYAxisMode != eHidden && mShowInfos) {
-            const QString minMaxText = QString(tr( "Min = %1  /  Max = %2")).arg(stringForLocal(mMinY), stringForLocal(mMaxY));
-            mInfos.clear();
-            mInfos.append(minMaxText);
-        }
-
-        mAxisToolY.updateValues(int (mGraphHeight), int (mStepMinWidth), mMinY, mMaxY);
-        mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), -1., mUnitFunctionY);
-
-     }
     /* ----------------------------------------------------
      *  Graph specific infos at the top right
      * ----------------------------------------------------*/
     // Used by Multicalibration
-   if (mShowInfos && mYAxisMode == eHidden) {
+   //if (mShowInfos && mYAxisMode == eHidden) {
+   if (mShowInfos) {
         QFontMetrics fm (font);
         p.setFont(font);
         p.setPen(Painting::borderDark);
@@ -967,10 +969,6 @@ void GraphView::drawCurves(QPainter& painter)
             if (curve.isRefPoints()) {
                 if (curve.mRefPoints.empty())
                     continue;
-               // QMap<type_data, type_data> subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
-
-              //  if (subData.isEmpty())
-              //      continue;
 
                 auto iterRefPts = curve.mRefPoints.cbegin();
 
@@ -1011,16 +1009,21 @@ void GraphView::drawCurves(QPainter& painter)
                                                         refPointsPen.widthF()*2., refPointsPen.widthF()*2.));
                         }
                         else if (iterRefPts->type == CurveRefPts::eLine) {
-                            qreal penWidth = std::max(2., pen.widthF());
+                            const qreal penWidth = std::max(2., pen.widthF());
                             refPointsPen.setWidthF(penWidth);
 
-                            qreal yPlot = getYForValue(ymoy, true);
+                            const qreal yPlot = getYForValue(ymoy, true);
                             qreal xMinPlot = getXForValue(xmin);
                             qreal xMaxPlot = getXForValue(xmax);
+                            if (xMaxPlot - xMinPlot < 2*penWidth) {
+                                const qreal xMean = (xMaxPlot+xMinPlot)/2.;
+                                xMinPlot = xMean - penWidth;
+                                xMaxPlot = xMean + penWidth;
+                            }
 
                             // Draw a line with a border color background
                             QRectF border (xMinPlot - 1, yPlot - (1+penWidth)/2., xMaxPlot - xMinPlot + 1, penWidth +1 );
-                            painter.setBrush(refPointsPen.brush());// Qt::NoBrush);
+                            painter.setBrush(refPointsPen.brush());
                             painter.setPen(QPen(getBackgroundColor(), 1));
                             painter.drawRect(border);
                             /* drax only a line
@@ -1928,4 +1931,212 @@ QString GraphView::getInfo(char sep)
 bool GraphView::isShow()
 {
     return mShowInfos;
+}
+
+
+#pragma mark GraphTitle
+/**
+ * @brief GraphTitle::GraphTitle
+ * @param parent
+ * Le subTitle is in italic
+ */
+GraphTitle::GraphTitle(QWidget *parent):
+    mTitle("myTitle"),
+    mSubTitle(""),
+    mBackgroundColor(Qt::white),
+    mTitleBarColor(Qt::white),
+    mAutoAdjustTitleHeight(true),
+    mAutoAdjustSubTitleHeight(true)
+{
+    GraphViewAbstract::setParent(parent);
+    mMarginTop = 0;
+    mMarginBottom = 0;
+    mMarginLeft = 0;
+
+
+    QFont boldFont (font());
+    boldFont.setBold(true);
+    mTitleHeight = QFontMetrics(boldFont).height();
+
+    QFont itaFont (font());
+    itaFont.setItalic(true);
+    mSubTitleHeight = QFontMetrics(itaFont).height();
+
+}
+
+/**
+ * @brief GraphTitle::GraphTitle just a title bar, with margin on top and bottom
+ * @param title
+ * @param parent
+ */
+GraphTitle:: GraphTitle(QString title, QWidget* parent):
+    mTitle(title),
+    mSubTitle(""),
+    mBackgroundColor(Qt::white),
+    mTitleBarColor(Qt::white),
+    mAutoAdjustTitleHeight(true),
+    mAutoAdjustSubTitleHeight(true)
+{
+    GraphViewAbstract::setParent(parent);
+
+    QFont boldFont (font());
+    boldFont.setBold(true);
+    mTitleHeight = QFontMetrics(boldFont).height();
+
+    mMarginTop = mTitleHeight/2.;
+    mMarginBottom = mTitleHeight/2.;
+    mMarginLeft = mTitleHeight/2.;
+
+    QFont itaFont (font());
+    itaFont.setItalic(true);
+    mSubTitleHeight = QFontMetrics(itaFont).height();
+}
+
+GraphTitle::GraphTitle(QString title, QColor titleBarColor, QWidget* parent):
+    mTitle(title),
+    mSubTitle(""),
+    mBackgroundColor(Qt::white),
+    mTitleBarColor(titleBarColor),
+    mAutoAdjustTitleHeight(true),
+    mAutoAdjustSubTitleHeight(true)
+{
+    GraphViewAbstract::setParent(parent);
+
+    QFont boldFont (font());
+    boldFont.setBold(true);
+    mTitleHeight = QFontMetrics(boldFont).height();
+
+    mMarginTop = mTitleHeight/2.;
+    mMarginBottom = 0;
+    mMarginLeft = 20;
+
+    QFont itaFont (font());
+    itaFont.setItalic(true);
+    mSubTitleHeight = QFontMetrics(itaFont).height();
+}
+
+GraphTitle::GraphTitle(QString title, QString subTitle, QWidget* parent):
+    mTitle(title),
+    mSubTitle(subTitle),
+    mBackgroundColor(Qt::white),
+    mTitleBarColor(Qt::white),
+    mAutoAdjustTitleHeight(true),
+    mAutoAdjustSubTitleHeight(true)
+{
+    GraphViewAbstract::setParent(parent);
+
+    QFont boldFont (font());
+    boldFont.setBold(true);
+    mTitleHeight = QFontMetrics(boldFont).height();
+
+    mMarginTop =  mTitleHeight/2.;
+    mMarginBottom = 0;
+    mMarginLeft = 20;
+
+    QFont itaFont (font());
+    itaFont.setItalic(true);
+    mSubTitleHeight = QFontMetrics(itaFont).height();
+
+}
+
+GraphTitle::GraphTitle(QString title, QString subTitle, QColor backGround, QWidget* parent):
+    mTitle(title),
+    mSubTitle(subTitle),
+    mBackgroundColor(backGround),
+    mTitleBarColor(backGround)
+{
+    GraphViewAbstract::setParent(parent);
+
+    QFont boldFont (font());
+    boldFont.setBold(true);
+    mTitleHeight = QFontMetrics(boldFont).height();
+
+    mMarginTop =  mTitleHeight/2. ;
+    mMarginBottom = 0;
+    mMarginLeft = 20;
+
+    QFont itaFont (font());
+    itaFont.setItalic(true);
+    mSubTitleHeight = QFontMetrics(itaFont).height();
+}
+
+GraphTitle::~GraphTitle()
+{
+
+}
+
+qreal GraphTitle::height()
+{
+    if (!mTitle.text().isEmpty()) {
+        if (!mSubTitle.text().isEmpty())
+            return mTitleHeight + mSubTitleHeight + mMarginTop + mMarginBottom;
+        else
+            return mTitleHeight + mMarginTop + mMarginBottom;
+
+    } else if (!mSubTitle.text().isEmpty()) {
+        return mSubTitleHeight + mMarginTop + mMarginBottom;
+
+    } else
+        return 0.;
+}
+
+void GraphTitle::paintEvent(QPaintEvent*)
+{
+    QPainter p(this);
+    const qreal w = parentWidget()->width();
+
+    if (!mTitle.text().isEmpty()) {
+
+        if (!mSubTitle.text().isEmpty()) {
+            p.fillRect(0, 0, w , height(), mBackgroundColor);
+
+            p.setPen(Qt::black);
+            QFont boldFont (font());
+            boldFont.setBold(true);
+            p.setFont(boldFont);
+            qreal fontShift = QFontMetrics(boldFont).height()/2.;
+            p.drawStaticText(mMarginLeft, mTitleHeight/2. - fontShift + mMarginTop, mTitle);
+
+            QFont itaFont (font());
+            itaFont.setItalic(true);
+            p.setFont(itaFont);
+            fontShift = QFontMetrics(itaFont).height()/2.;
+            p.drawStaticText(mMarginLeft, mTitleHeight + mSubTitleHeight/2. - fontShift + mMarginTop, mSubTitle);
+
+            p.setPen(mTitleBarColor);
+            p.drawRect(0, 0, w , height());
+
+        } else {
+            p.fillRect(0, 0, w , height(), mBackgroundColor);
+
+            p.setPen(Qt::black);
+            QFont boldFont (font());
+            boldFont.setBold(true);
+            p.setFont(boldFont);
+            const qreal fontShift = QFontMetrics(boldFont).height()/2.;
+            p.drawStaticText(mMarginLeft, mTitleHeight/2. - fontShift + mMarginTop, mTitle);
+
+            p.setPen(mTitleBarColor);
+            p.drawRect(0, 0, w , height());
+
+        }
+
+    } else if (!mSubTitle.text().isEmpty()) {
+        p.fillRect(0, 0, w , height(), mBackgroundColor);
+
+        p.setPen(Qt::black);
+        QFont itaFont (font());
+        itaFont.setItalic(true);
+        p.setFont(itaFont);
+        const qreal fontShift = QFontMetrics(itaFont).height()/2.;
+        p.drawStaticText(mMarginLeft, mSubTitleHeight/2. - fontShift + mMarginTop, mSubTitle);
+
+    }
+
+}
+
+void GraphTitle::repaintGraph(const bool aAlsoPaintBackground)
+{
+    (void) aAlsoPaintBackground;
+    update();
 }

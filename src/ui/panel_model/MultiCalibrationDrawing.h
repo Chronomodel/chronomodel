@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -76,9 +76,12 @@ public:
     ~MultiCalibrationDrawing();
     virtual QPixmap grab();
 
-    void setGraphList(QList<GraphView*> &list);
+   // void setGraphList(QList<GraphView*> &list); GraphViewAbstract
+    void setGraphList(QList<GraphViewAbstract*> &list);
     void setEventsColorList(QList<QColor> &colorList);
-    QList<GraphView*> *getGraphList() {return &mListCalibGraph;}
+    //QList<GraphView*> *getGraphList() {return &mListCalibGraph;}
+    QList<GraphViewAbstract*> *getGraphList() {return &mListCalibGraph;}
+    QList<GraphView*> getGraphViewList() const ;
 
     void setListAxisVisible(QList<bool> &list) { mListAxisVisible = list;};
 
@@ -94,7 +97,9 @@ public:
 
 private:
 
-    QList<GraphView*> mListCalibGraph;
+    //QList<GraphView*> mListCalibGraph;
+    QList<GraphViewAbstract*> mListCalibGraph;
+
     QList<QColor> mListEventsColor;
     QList<ColoredBar*> mListBar;
     QList<bool> mListAxisVisible;

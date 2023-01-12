@@ -400,6 +400,7 @@ void GraphViewResults::updateLayout()
 {
      // Define the rigth margin, according to the max on the scale
     QFont fontTitle (mGraphFont);
+    fontTitle.setBold(true);
     fontTitle.setPointSizeF(mGraphFont.pointSizeF() * 1.1);
     QFontMetricsF fmTitle (fontTitle);
     mTopShift = int (2 * fmTitle.height()) ;
@@ -409,20 +410,20 @@ void GraphViewResults::updateLayout()
 
     if (mShowNumResults) {
         mGraph->setGeometry(graphRect.adjusted(0, 0, int (-width()/3. -1), 0 ));
-        mStatArea->setGeometry(graphRect.adjusted(int (width()*2./3. + 2.), int (-mTopShift + 2 ), -2, -2));
+        mStatArea->setGeometry(graphRect.adjusted(int (width()*2./3. + 2.), int (-mTopShift + 2 ), -4, -2));
 
     } else
         mGraph->setGeometry(graphRect);
 
     const bool axisVisible = (height() >= mHeightForVisibleAxis);
 
-    if ((mGraph->hasCurve())) {
+    if (mGraph->hasCurve()) {
         mGraph->showXAxisValues(axisVisible);
         mGraph->setMarginBottom(axisVisible ? fm.ascent()* 2.0 : fm.ascent());
     }
- //qApp->processEvents();
+
     update();
-    //paintEvent(NULL);
+
 }
 
 void GraphViewResults::mousePressEvent(QMouseEvent *event)
@@ -438,16 +439,17 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     // write mTitle above the graph
     QFont fontTitle(mGraphFont);
     fontTitle.setPointSizeF(mGraphFont.pointSizeF()*1.1);
+    fontTitle.setBold(true);
     QFontMetrics fmTitle(fontTitle);
 
     QPainter p(this);
-    //p.begin(this);
+
     p.fillRect(rect(), mGraph->getBackgroundColor());
     p.setFont(fontTitle);
 
     p.setPen(Qt::black);
 
-    p.drawText(QRectF( 2 * AppSettings::widthUnit(), 0, fmTitle.boundingRect(mTitle).width(), mTopShift), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
+    p.drawText(QRectF( 2 * AppSettings::widthUnit(), 0, fmTitle.horizontalAdvance(mTitle), mTopShift), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
 
     p.setFont(QFont(mGraphFont.family(), mGraphFont.pointSize(), -1 , true));
 
@@ -459,9 +461,9 @@ void GraphViewResults::paintEvent(QPaintEvent* )
    if (!graphInfo.isEmpty()) {
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 8, 0))
         if (mShowNumResults)
-             p.drawText(QRectF(width()*2/3. - fmTitle.boundingRect(graphInfo).width() - 3 * AppSettings::widthUnit(),  mTopShift - fmTitle.capHeight()-fmTitle.descent(), fmTitle.boundingRect(graphInfo).width(), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
+             p.drawText(QRectF(width()*2/3. - fmTitle.horizontalAdvance(graphInfo) - 3 * AppSettings::widthUnit(),  mTopShift - fmTitle.capHeight()-fmTitle.descent(), fmTitle.horizontalAdvance(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
          else
-            p.drawText(QRectF(width() - fmTitle.boundingRect(graphInfo).width() - 3 * AppSettings::widthUnit(), mTopShift - fmTitle.capHeight()-fmTitle.descent() , fmTitle.boundingRect(graphInfo).width(), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
+            p.drawText(QRectF(width() - fmTitle.horizontalAdvance(graphInfo) - 3 * AppSettings::widthUnit(), mTopShift - fmTitle.capHeight()-fmTitle.descent() , fmTitle.horizontalAdvance(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
 #else
        if (mShowNumResults)
             p.drawText(QRectF(width()*2/3. - fmTitle.width(graphInfo) - 3 * AppSettings::widthUnit(),  mTopShift - fmTitle.ascent()-fmTitle.descent(), fmTitle.width(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);

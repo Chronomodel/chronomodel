@@ -581,7 +581,7 @@ QString stringForLocal(const double valueToFormat, const bool forcePrecision)
     QLocale locale = QLocale();
 
     if (forcePrecision)
-        return locale.toString(valueToFormat, fmt, 9);
+        return locale.toString(valueToFormat, fmt, 19);
 
     const int precision = AppSettings::mPrecision;
 

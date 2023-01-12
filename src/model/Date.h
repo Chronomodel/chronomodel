@@ -124,7 +124,7 @@ public:
     CalibrationCurve* mWiggleCalibration;
 
     QMap<double, double> mCalibHPD;
-   // ProjectSettings mSettings; // obsolete, we can have it via mEvent->mModel->mSettings
+    ProjectSettings mSettings;
 
     QJsonArray mSubDates;
     double mMixingLevel;
@@ -157,11 +157,12 @@ public:
     PluginAbstract* getPlugin() const {return mPlugin;}
 
     void reset();
-    void calibrate(Project *project, bool truncate = true);
+
     void calibrate(const ProjectSettings settings, Project *project, bool truncate); // used for item
+    inline void calibrate(Project *project, bool truncate = true) {calibrate(mSettings, project, truncate);};
 
     void calibrateWiggle(const ProjectSettings settings, Project *project);
-    void calibrateWiggle(Project *project);
+    inline void calibrateWiggle(Project *project) {calibrateWiggle(mSettings, project);};
 
     double getLikelihoodFromCalib(const double &t) const;
     double getLikelihoodFromWiggleCalib(const double &t) const;
@@ -196,7 +197,6 @@ public:
     void initDelta(Event* event);
 
     void updateDate(Event *event);
-    void updateFixedDate(Event* event);
 
     void updateTi(Event* event);
     void autoSetTiSampler(const bool bSet);

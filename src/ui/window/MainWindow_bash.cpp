@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -38,15 +38,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "MainWindow_bash.h"
+
 #include "Project.h"
 #include "ProjectView_bash.h"
-#include "PluginAbstract.h"
 #include "AboutDialog.h"
 #include "AppSettingsDialog.h"
-#include "PluginManager.h"
-#include "ModelUtilities.h"
 #include "QtUtilities.h"
-#include "SwitchAction.h"
+#include "CalibrationCurve.h"
 
 #include <QtWidgets>
 #include <QLocale>
@@ -56,7 +54,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 // Constructor / Destructor
 MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
 {
-   // setWindowTitle("ChronoModel");
 #ifdef DEBUG
     setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + " DEBUG Mode ");
 #else
@@ -594,37 +591,7 @@ void MainWindow::openProject()
 
 }
 
-/*
-void MainWindow::insertProject()
-{
-    const QString currentPath = getCurrentPath();
-    QString path = QFileDialog::getOpenFileName(this,
-                                                      tr("Insert File"),
-                                                      currentPath,
-                                                      tr("Chronomodel Project (*.chr)"));
 
-    if (!path.isEmpty()) {
-
-        statusBar()->showMessage(tr("Insert project : %1").arg(path));
-
-        const QFileInfo info(path);
-        setCurrentPath(info.absolutePath());
-
-
-        // look MainWindows::readSetting()
-        if (mProject->insert(path)) {
-
-        // Create mEventsScene and mPhasesScenes
-            mProjectView->updateProject();
-
-         }
-
-        //mUndoStack->clear();
-        statusBar()->showMessage(tr("Ready"));
-    }
-
-}
-*/
 
 void MainWindow::connectProject()
 {
@@ -642,17 +609,8 @@ void MainWindow::connectProject()
 
 void MainWindow::disconnectProject()
 {
-    //disconnect(mProject, &Project::noResult, this, &MainWindow::noResult);
     disconnect(mProject, &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
-   // disconnect(mProject, &Project::projectStateChanged, this, &MainWindow::updateProject);
-   // disconnect(mProject, &Project::projectStructureChanged, this, &MainWindow::noResult);
-
-   // disconnect(mMCMCSettingsAction, &QAction::triggered, mProject, &Project::mcmcSettings);
-   // disconnect(mResetMCMCAction, &QAction::triggered, mProject, &Project::resetMCMC);
-   // disconnect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
     disconnect(mRunAction, &QAction::triggered, mProject, &Project::run);
-
-   // connect(mCurveAction, &QAction::triggered, this, &MainWindow::toggleCurve);
 }
 
 void MainWindow::closeProject()
@@ -704,7 +662,7 @@ void MainWindow::saveProject()
         mBash[STATE_APP_VERSION] = QApplication::applicationVersion();
 
         QJsonArray mList ;
-        QJsonArray seeds;
+      //  QJsonArray seeds;
         for (int i = 0; i<mProjectView->mTable->rowCount(); ++i) {
             auto itemText = mProjectView->mTable->item(i, 0)->text();
             mList.append (QJsonValue::fromVariant(itemText));
@@ -716,7 +674,7 @@ void MainWindow::saveProject()
 
         if (file_chb.open(QIODevice::ReadWrite | QIODevice::Text)) {
 #ifdef DEBUG
-            qDebug() << "Mainwindows::saveProject() Project Bash saved to : " << path;
+            qDebug() << "[Mainwindows::saveProject] Project Bash saved to : " << path;
 #endif
             file_chb.write (textDoc);
 
@@ -727,17 +685,8 @@ void MainWindow::saveProject()
 
     }
 
+}
 
-    //mProject->save();
-   // updateWindowTitle();
-}
-/*
-void MainWindow::saveProjectAs()
-{
-    mProject->saveAs(tr("Save current project as..."));
-    updateWindowTitle();
-}
-*/
 void MainWindow::updateWindowTitle()
 {
 #ifdef DEBUG
@@ -751,6 +700,7 @@ void MainWindow::updateWindowTitle()
 
 void MainWindow::toggleCurve(bool checked)
 {
+    (void) checked;
     //mProjectView->toggleCurve(checked);
 }
 
@@ -858,66 +808,7 @@ void MainWindow::setLanguage(QAction* action)
 }
 
 // Grouped Actions
-/*
 
-
-void MainWindow::changeDatesMethod()
-{
-    if (!mProject)
-        return;
-
-    QStringList opts;
-    const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
-    for (int i=0; i<plugins.size(); ++i)
-        opts.append(plugins[i]->getName());
-
-    bool ok;
-    QString pluginName = QInputDialog::getItem(qApp->activeWindow(),
-                                             tr("Change Data Method"),
-                                             tr("For what type of data do you want to change the method ?"),
-                                             opts, 0, false, &ok);
-    if (ok) {
-        opts.clear();
-        opts.append(MHVariable::getSamplerProposalText(MHVariable::eMHSymetric));
-        opts.append(MHVariable::getSamplerProposalText(MHVariable::eInversion));
-        opts.append(MHVariable::getSamplerProposalText(MHVariable::eMHSymGaussAdapt));
-
-        QString methodStr = QInputDialog::getItem(qApp->activeWindow(),
-                                                  tr("Change Data Method"),
-                                                  tr("Change MCMC method of data in selected events") + " :",
-                                                  opts, 0, false, &ok);
-        if (ok && !methodStr.isEmpty()) {
-            MHVariable::SamplerProposal method = MHVariable::getSamplerProposalFromText(methodStr);
-            PluginAbstract* plugin =PluginManager::getPluginFromName(pluginName);
-            QString pluginId = plugin->getId();
-            mProject->updateSelectedEventsDataMethod(method, pluginId);
-        }
-    }
-}
-
-void MainWindow::doGroupedAction()
-{
-    if (!mProject)
-        return;
-
-    QAction* act = qobject_cast<QAction*>(sender());
-    QVariant groupedActionVariant = act->data();
-    QHash<QString, QVariant> groupedAction = groupedActionVariant.toHash();
-
-    if (groupedAction["inputType"] == "combo") {
-        bool ok;
-        QString curve = QInputDialog::getItem(qApp->activeWindow(),
-                                               groupedAction["title"].toString(),
-                                               groupedAction["label"].toString(),
-                                               groupedAction["items"].toStringList(),
-                                               0, false, &ok);
-        if (ok && !curve.isEmpty()) {
-            groupedAction["value"] = curve;
-            mProject->updateAllDataInSelectedEvents(groupedAction);
-        }
-    }
-}
-*/
 
 // Events
 /**
@@ -1028,7 +919,7 @@ void MainWindow::calibrateAll()
                     Date d (date.toObject());
                     d.autoSetTiSampler(true);
 
-                    d.calibrate(s, mProject);
+                    d.calibrate(s, mProject, true);
 
                     ++position;
                     progress->setValue(position);
@@ -1066,7 +957,7 @@ void MainWindow::runModel()
 
         }
         try {
-            mProject->load(path);
+            mProject->load(path, true);
             AppSettings::mAutoSave = true; // usefull to disable savebox in run()
             mProjectView->mLog->append("    Calibration");
             mProjectView->repaint();

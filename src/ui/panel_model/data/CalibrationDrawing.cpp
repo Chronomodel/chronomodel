@@ -1,6 +1,5 @@
 /* ---------------------------------------------------------------------
-
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -50,7 +49,6 @@ CalibrationDrawing::CalibrationDrawing(QWidget *parent) : QWidget(parent),
     mCalibGraph (nullptr),
     mVerticalSpacer (5),
     mFont (parent->font())
-
 {
     setMouseTracking(true);
     mTitle = new QLabel(this);
@@ -63,7 +61,6 @@ CalibrationDrawing::CalibrationDrawing(QWidget *parent) : QWidget(parent),
 
     mMarkerX = new Marker(this);
     mMarkerY = new Marker(this);
-
 }
 
 CalibrationDrawing::~CalibrationDrawing()
@@ -96,8 +93,8 @@ void CalibrationDrawing::showMarker()
 void CalibrationDrawing::setRefGraph(GraphViewRefAbstract* refGraph)
 {
     Q_ASSERT(refGraph);
-      mRefGraphView = refGraph;
-   //   if (mRefGraphView) {
+    if (refGraph) {
+        mRefGraphView = refGraph;
         mRefGraphView->setParent(this);
         mRefGraphView->setMouseTracking(true);
         if (mRefGraphView->mGraph) {
@@ -105,8 +102,8 @@ void CalibrationDrawing::setRefGraph(GraphViewRefAbstract* refGraph)
             mRefGraphView->mGraph->setTipXLab("t Ref");
             mRefGraphView->update();
         }
-//      }
-  setMouseTracking(true);
+    }
+    setMouseTracking(true);
 }
 
 void CalibrationDrawing::setCalibGraph(GraphView* calibGraph)
@@ -115,7 +112,6 @@ void CalibrationDrawing::setCalibGraph(GraphView* calibGraph)
     mCalibGraph->setParent(this);
     mCalibGraph->setMouseTracking(true);
     mCalibGraph->setTipXLab("t Calib");
-
 }
 
 void CalibrationDrawing::paintEvent(QPaintEvent* e)
@@ -139,12 +135,12 @@ void CalibrationDrawing::updateLayout()
 
     if (!mCalibGraph->hasCurve()) {
         QLabel noCalib ("No Calibration", this);
-        noCalib.setGeometry(0, mVerticalSpacer, fm.boundingRect(noCalib.text()).width(), fm.height());
+        noCalib.setGeometry(0, mVerticalSpacer, fm.horizontalAdvance(noCalib.text()), fm.height());
         return;
     }
 
     const type_data max = mCalibGraph->maximumX();
-    const int marginRight = int (floor(fm.boundingRect(stringForGraph(max)).width()/2));
+    const int marginRight = int (floor(fm.horizontalAdvance(stringForGraph(max))/2));
 
 
     QFont topFont(mFont);
@@ -154,8 +150,8 @@ void CalibrationDrawing::updateLayout()
     QFontMetrics fmTop(topFont);
     mTitle->setFont(topFont);
 
-    const int titlePosition = ((width() - fmTop.boundingRect(mTitle->text()).width() - 6) /2) + 3;
-    mTitle->setGeometry(titlePosition, mVerticalSpacer, fmTop.boundingRect(mTitle->text()).width() + 3, fmTop.height());
+    const int titlePosition = ((width() - fmTop.horizontalAdvance(mTitle->text()) - 6) /2) + 3;
+    mTitle->setGeometry(titlePosition, mVerticalSpacer, fmTop.horizontalAdvance(mTitle->text()) + 3, fmTop.height());
 
     QFont titleFont(mFont);
     titleFont.setBold(true);
@@ -163,7 +159,7 @@ void CalibrationDrawing::updateLayout()
     QFontMetrics fmTitle(titleFont);
 
     mRefTitle->setFont(titleFont);
-    mRefTitle->setGeometry(20,  mTitle->y() + mTitle->height() + mVerticalSpacer, fmTitle.boundingRect(mRefTitle->text()).width(), fmTitle.height());
+    mRefTitle->setGeometry(20,  mTitle->y() + mTitle->height() + mVerticalSpacer, fmTitle.horizontalAdvance(mRefTitle->text()), fmTitle.height());
 
     mCalibTitle->setFont(titleFont);
 
@@ -174,7 +170,7 @@ void CalibrationDrawing::updateLayout()
     const int refH = totalGraph * 2/3; // it's a divide by integer, The direction of the operation is important
     const int calibH = totalGraph - refH ;
 
-    mRefComment->setGeometry(30,  mRefTitle->y() + mRefTitle->height() + mVerticalSpacer, fm.boundingRect(mRefComment->text()).width(), fm.height());
+    mRefComment->setGeometry(30,  mRefTitle->y() + mRefTitle->height() + mVerticalSpacer, fm.horizontalAdvance(mRefComment->text()), fm.height());
 
     if (mRefGraphView) {
         /* must be before setGeometry, because setGeometry is connected to resize.
@@ -190,19 +186,19 @@ void CalibrationDrawing::updateLayout()
             mRefGraphView->mGraph->setMarginBottom(fm .ascent() * 2.2);
         }
 
-        mCalibTitle->setGeometry(20,  mRefGraphView->y() + mRefGraphView->height() + mVerticalSpacer, fmTitle.boundingRect(mCalibTitle->text()).width(), fmTitle.height());
+        mCalibTitle->setGeometry(20,  mRefGraphView->y() + mRefGraphView->height() + mVerticalSpacer, fmTitle.horizontalAdvance(mCalibTitle->text()), fmTitle.height());
 
     } else
-        mCalibTitle->setGeometry(20,  mTitle->y() + mTitle->height() + mVerticalSpacer + refH, fmTitle.boundingRect(mCalibTitle->text()).width(), fmTitle.height());
+        mCalibTitle->setGeometry(20,  mTitle->y() + mTitle->height() + mVerticalSpacer + refH, fmTitle.horizontalAdvance(mCalibTitle->text()), fmTitle.height());
 
-    mCalibComment->setGeometry(30,  mCalibTitle->y() + mCalibTitle->height() + mVerticalSpacer, fm.boundingRect(mCalibComment->text()).width(), fm.height());
+    mCalibComment->setGeometry(30,  mCalibTitle->y() + mCalibTitle->height() + mVerticalSpacer, fm.horizontalAdvance(mCalibComment->text()), fm.height());
 
     mCalibGraph->setFont(mFont);
     mCalibGraph->setGeometry(0, mCalibComment->y() + mCalibComment->height() + mVerticalSpacer, width(), calibH);
     mCalibGraph->setMarginRight(marginRight);
     mCalibGraph->setMarginBottom(fm.ascent() * 2.2);
     mCalibGraph->setYAxisMode(GraphView::eMinMaxHidden);
-    mCalibGraph->autoAdjustYScale(true);
+   // mCalibGraph->autoAdjustYScale(true); //ici
 
     if (mMouseOverCurve) {
         showMarker();

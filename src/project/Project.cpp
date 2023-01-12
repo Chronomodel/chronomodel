@@ -502,20 +502,15 @@ void Project::updateState(const QJsonObject &state, const QString& reason, bool 
     }
 }
 
-/*
-void Project::sendEventsSelectionChanged()
-{
-#ifdef DEBUG
-    //qDebug() << "(+++) Sending events selection : use marked events";
-#endif
-    QEvent* e = new QEvent(QEvent::Type (1001));
-    //QCoreApplication::postEvent(this, e, Qt::NormalEventPriority);
-    QGuiApplication::postEvent(this, e, Qt::NormalEventPriority);
-}
-*/
-// Project File Management
 
-bool Project::load(const QString& path)
+// Project File Management
+/**
+ * @brief Project::load
+ * @param path
+ * @param force used for chronomodel_bash, all versions are accepted, but all calibrations are rebuilt
+ * @return
+ */
+bool Project::load(const QString& path, bool force)
 {
     bool newerProject = false;
     bool olderProject = false;
@@ -619,7 +614,7 @@ bool Project::load(const QString& path)
 
                     }
 
-                    if (olderProject) {
+                    if (olderProject && force == false) {
                         QMessageBox message(QMessageBox::Warning,
                                             tr("Project version doesn't match"),
                                             "This project has been saved with a older version of ChronoModel :\r\r- Project version : " + projectVersionStr + "\r- Current version : " + appVersionStr + "\r\rSome incompatible data may be missing and you may encounter problems running the model.\r\rLoading the project will update and overwrite the existing file. Do you really want to continue ?",
@@ -659,7 +654,7 @@ bool Project::load(const QString& path)
             QString caliPath = path + ".cal";
             QFileInfo calfi(caliPath);
 
-            if (calfi.isFile() && !isCorrected) {
+            if (calfi.isFile() && !isCorrected && force == false) {
                 // load Calibration Curve
                 QFile calFile(caliPath);
                 if (calFile.open(QIODevice::ReadOnly)) {

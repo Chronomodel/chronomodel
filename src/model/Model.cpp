@@ -2313,6 +2313,8 @@ void Model::generateActivity(const size_t gridLength, const double h, const doub
     for (const auto& phase : mPhases) {
         // Curves for error binomial
         const int n = phase->mEvents.size();
+        if (n<2)
+            continue;
         if (!mBinomiale_Gx.contains(n) || threshold != mThreshold) {
             const std::vector<double> Rq = binomialeCurveByLog(n, 1. - threshold/100.); //  Détermine la courbe x = r (q)
             mBinomiale_Gx[n] = inverseCurve(Rq); // Pour qActivity, détermine la courbe p = g (x)

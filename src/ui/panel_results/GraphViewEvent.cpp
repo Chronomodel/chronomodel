@@ -1,6 +1,5 @@
 /* ---------------------------------------------------------------------
-
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -41,17 +40,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphView.h"
 #include "Event.h"
 #include "Bound.h"
-//#include "StdUtilities.h"
-//#include "QtUtilities.h"
+
 #include "ModelUtilities.h"
 #include "Painting.h"
-//#include "MainWindow.h"
 
 
 #include <QtWidgets>
 
 
-// Constructor / Destructor
 
 GraphViewEvent::GraphViewEvent(QWidget *parent):GraphViewResults(parent),
 mEvent(nullptr)
@@ -69,8 +65,6 @@ void GraphViewEvent::setEvent(Event* event)
 {
     Q_ASSERT(event);
     mEvent = event;
-    //QString eventTitle = ( (mEvent->mType == Event::eDefault) ? tr("Event : %1").arg(mEvent->mName) : tr("Bound : %1").arg(mEvent->mName) ) ;
-    //setItemTitle(eventTitle);
     setItemColor(mEvent->mColor);
     update();
 }
@@ -108,7 +102,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
     defaultPen.setWidthF(1);
     defaultPen.setStyle(Qt::SolidLine);
 
-    QColor color = mEvent->mColor;
+    const QColor color = mEvent->mColor;
 
     QString resultsText = tr("Nothing to Display");
     QString resultsHTML = tr("Nothing to Display");
@@ -411,7 +405,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      * ------------------------------------------------  */
     else if ( (mCurrentTypeGraph == eTrace) &&
               ( (mShowVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe ) ||
-                ( mShowVariableList.contains(eThetaEvent) && mEvent->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss)
+                ( mShowVariableList.contains(eThetaEvent) && mEvent->mTheta.mSamplerProposal != MHVariable::eFixe)
               )
              ) {
              // We visualize only one chain (radio button)
@@ -463,7 +457,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      * ------------------------------------------------   */
     else if ( (mCurrentTypeGraph == eCorrel) &&
               ( (mShowVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe ) ||
-                ( mShowVariableList.contains(eThetaEvent) && mEvent->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss)
+                ( mShowVariableList.contains(eThetaEvent) && mEvent->mTheta.mSamplerProposal != MHVariable::eFixe)
               )
             ) {
             for (int i = 0; i < mShowChainList.size(); ++i) {

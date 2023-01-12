@@ -79,7 +79,7 @@ void showMatrix(const Matrix2D&  m, const std::string& str)
             printf(" %20.65Lf ", m[i][j]);
         }
         else if (std::is_same<Matrix2D::value_type::value_type, double>::value == true) {
-            printf(" %20.65f ", m[i][j]);
+            printf(" %20.65f ",(double) m[i][j]);
         }
         if (j<m[0].size()-1)
             std::cout<<", ";
@@ -108,7 +108,7 @@ void showVector(const std::vector<t_matrix> &m, const std::string& str)
          printf(" %20.65Lf ", m[i]);
      }
      else if (std::is_same<t_matrix, double>::value == true) {
-         printf(" %8.65f ", m[i]);
+         printf(" %8.65f ",(double) m[i]);
      }
 
    printf("\n");

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -103,18 +103,13 @@ int main(int argc, char *argv[])
 
     a.setApplicationName("ChronoModel"); // Must be ChronoModel to find the calibration curves
     a.setApplicationDisplayName("ChronoModel_bash");
-    a.setApplicationVersion("3.1.6");//VERSION_NUMBER);  // must match value in Chronomodel.pro
+    a.setApplicationVersion("3.2.1");//VERSION_NUMBER);  // must match value in Chronomodel.pro
     //a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel_bash.icns"));
      
     QString filePath = "";
-   /* for (int i = 0; i<argc; ++i) {
-        QString arg(argv[i]);
-        if (arg.contains(".chr", Qt::CaseInsensitive))
-            filePath = arg;
-    }
-  */
+
     QLocale::Language newLanguage = QLocale::system().language();
     QLocale::Country newCountry= QLocale::system().country();
     QLocale locale = QLocale(newLanguage, newCountry);

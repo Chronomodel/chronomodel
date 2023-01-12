@@ -113,7 +113,7 @@ public:
 
     QJsonObject* state_ptr() { return &mState;}
 
-    bool load(const QString &path);
+    bool load(const QString &path, bool force = false);
     bool saveAs(const QString &dialogTitle);
     bool askToSave(const QString &saveDialogTitle);
     bool saveProjectToFile();
@@ -231,8 +231,6 @@ public:
     QJsonObject mLastSavedState;
 
     QString mName;
-   // QString mProjectFileDir;
-    //QString mProjectFileName;
 
     Model* mModel;
     MCMCLoop *mLoop; //public QThread

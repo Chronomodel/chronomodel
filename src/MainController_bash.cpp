@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2021
 
 Authors :
 	Philippe LANOS
@@ -47,7 +47,7 @@ MainController::MainController(const QString& filePath)
     Painting::init();
     PluginManager::loadPlugins();
     QCoreApplication::setApplicationName("ChronoModel_bash");
-    QCoreApplication::setApplicationVersion("3.1.6"); // must match value in Chronomodel.pro
+    QCoreApplication::setApplicationVersion("3.2.1"); // must match value in Chronomodel.pro
    // QCoreApplication::setOrganizationDomain("http://www.chronomodel.com");
     QCoreApplication::setOrganizationName("CNRS");
 

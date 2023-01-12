@@ -672,7 +672,7 @@ QString ModelUtilities::lambdaResultsText(const ModelCurve* model)
 
 
     } else {
-        text = QObject::tr("Stat on the log10 of Smoothing Value") + nl;
+        text = QObject::tr("Stat. on the log10 of Smoothing Value") + nl;
         text += model->mLambdaSpline.resultsString("<br>", "", nullptr, nullptr, false);
     }
     return text;
@@ -697,12 +697,14 @@ QString ModelUtilities::S02ResultsText(const ModelCurve* model)
 // HTML Output
 QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
 {
-    bool curveModel = model->mProject->isCurve();
+    const bool curveModel = model->mProject->isCurve();
 
     QString log;
     // Study period
     QLocale locale = QLocale();
     log += line(textBold(textBlack(QObject::tr("Prior Study Period : [ %1 : %2 ] %3").arg(locale.toString(model->mSettings.getTminFormated()), locale.toString(model->mSettings.getTmaxFormated()), DateUtils::getAppSettingsFormatStr() ))));
+    log += line(textOrange(QObject::tr("Number of Phase  : %1").arg(QString::number(model->mPhases.size()))));
+    log += line(textBlue(QObject::tr("Number of Event  : %1").arg(QString::number(model->mEvents.size()))));
     log += "<hr>";
 
     int i = 0;
@@ -781,7 +783,7 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
                                + "<br>" + QObject::tr("- Type : %1").arg(pPhase->getTauTypeText())));
         log += "<br>";
 
-        log += textBlue(QObject::tr("Event")) + " : ";
+        log += textBlue(QObject::tr("Events")) + " : ";
         for (auto &&pEvent : pPhase->mEvents)
             log += textBlue(pEvent->mName) + " - ";
 

@@ -41,7 +41,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define MAINWINDOW_BASH_H
 
 #include "Singleton.h"
-#include "AppSettings.h"
 
 #include <QMainWindow>
 

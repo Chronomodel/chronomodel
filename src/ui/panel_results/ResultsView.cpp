@@ -141,6 +141,7 @@ mMaximunNumberOfVisibleGraph(0)
 
     mCurveScrollArea = new QScrollArea(this);
     mCurveScrollArea->QScrollArea::setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
     mCurveScrollArea->setMouseTracking(true);
     QWidget* curveWidget = new QWidget();
     curveWidget->setMouseTracking(true);
@@ -1092,37 +1093,34 @@ void ResultsView::updateMarkerGeometry(const int x)
 
 void ResultsView::updateLayout()
 {    
-    const int leftWidth = width() - mOptionsW;// - mSbe;
-    const int tabsH = mGraphTypeTabs->tabHeight();
-
-    int graphWidth = leftWidth;
-    if (mStatCheck->isChecked() || mPhasesStatCheck->isChecked() || mCurveStatCheck->isChecked()) {
-        graphWidth = (2./3.) * leftWidth;
-    }
+    // --------------------------------------------------------
+    //  Right layout
+    // --------------------------------------------------------
+    mOptionsScroll->setGeometry(width() - mOptionsW - mMargin/2, 0, mOptionsW, height());
 
     // ----------------------------------------------------------
     //  Left layout
     // ----------------------------------------------------------
+    const int leftWidth = width() - mOptionsScroll->width() - 2*mMargin;
+    const int tabsH = mGraphTypeTabs->tabHeight();
+
+    int graphWidth = leftWidth;  // to adjust the ruler length
+    if (mStatCheck->isChecked() || mPhasesStatCheck->isChecked() || mCurveStatCheck->isChecked()) {
+        graphWidth = (2./3.) * leftWidth;
+    }
+
     mGraphTypeTabs->setGeometry(mMargin, mMargin, leftWidth, tabsH);
-    mRuler->setGeometry(0, mMargin + tabsH, graphWidth, Ruler::sHeight);
+    mRuler->setGeometry(mMargin, mMargin + tabsH, graphWidth, Ruler::sHeight);
 
     const int stackH = height() - mMargin - tabsH - Ruler::sHeight;
-    QRect graphScrollGeometry(0, mMargin + tabsH + Ruler::sHeight, leftWidth, stackH);
+    const QRect graphScrollGeometry(mMargin, mMargin + tabsH + Ruler::sHeight, leftWidth, stackH);
 
     mEventsScrollArea->setGeometry(graphScrollGeometry);
     mPhasesScrollArea->setGeometry(graphScrollGeometry);
     mCurveScrollArea->setGeometry(graphScrollGeometry);
 
-
     updateGraphsLayout();
     updateMarkerGeometry(mMarker->pos().x());
-
-
-    // --------------------------------------------------------
-    //  Right layout
-    // --------------------------------------------------------
-    mOptionsScroll->setGeometry(leftWidth - mMargin/2, 0, mOptionsW, height());
-
 }
 
 
@@ -1168,12 +1166,14 @@ void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewRes
     if (mGraphListTab->currentIndex() == 2 )
         coefDisplay = 3;
 
-    if (widget) {
-        widget->resize(width() - mOptionsW, graphs.size() * mGraphHeight * coefDisplay);
+    // Rq: Le widget doit être plus petit que le scrollArea pour ne pas bouger horizontalement!,
+    //par contre le graph à l'interieur du widget peut avoir la même taille
+    if (widget) {                
+        widget->resize(scrollArea->width()-2, graphs.size() * mGraphHeight * coefDisplay);
 
         int i = 0;
         for (auto&& g : graphs) {
-            g->setGeometry(0, (i++) * mGraphHeight*coefDisplay, widget->width() , mGraphHeight * coefDisplay);
+            g->setGeometry(0, (i++) * mGraphHeight*coefDisplay, scrollArea->width(), mGraphHeight * coefDisplay);
             g->setVisible(true);
             g->update();
         }

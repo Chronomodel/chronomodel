@@ -597,13 +597,16 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     } else {
         mValueStack["min95"] = TValueStack("min95", min95);
         mValueStack["max95"] = TValueStack("max95", max95);
-
+        double moyen, varian;
+        mean_variance_Knuth(concaTrace, moyen, varian);
+std::cout<<"[Phase::generateActivity] trace : moyen= " << moyen <<" variance="<<varian;
     }
 
 
     // const double mu = -2;
     //const double R_etendue = (n+1)/(n-1)/(1.+ mu*sqrt(2./(double)((n-1)*(n+2))) )*(t_max_data-t_min_data);
-    const double gamma =  (n>=500 ? 1. : gammaActivity[(int)n]);
+    //const double gamma =  (n>=500 ? 1. : gammaActivity[(int)n]);
+const double gamma = 1.;// ici
 
     const double R_etendue =  (max95 - min95)/gamma;
 
@@ -626,6 +629,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     const double a_Unif = mid_R - half_etendue;
     const double b_Unif = mid_R + half_etendue;
 
+
     // L'unif théorique est définie par le trapéze correspondant à l'unif modifié par la fenètre mobile
     const double a_Unif_minus_h_2 = a_Unif - h_2;
     const double a_Unif_plus_h_2 = a_Unif + h_2;
@@ -637,17 +641,17 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     mValueStack["b_Unif"] = TValueStack("b_Unif", b_Unif);
     mValueStack["R_etendue"] = TValueStack("R_etendue", R_etendue);
 
-    if (a_Unif_minus_h_2 < s->mTmin)
-        mRawActivityUnifTheo.insert(s->mTmin,  interpolate(s->mTmin, a_Unif_minus_h_2, a_Unif_plus_h_2, 0., ActivityUnif));
-    else
+  //  if (a_Unif_minus_h_2 < s->mTmin)
+  //      mRawActivityUnifTheo.insert(s->mTmin,  interpolate(s->mTmin, a_Unif_minus_h_2, a_Unif_plus_h_2, 0., ActivityUnif));
+  //  else
         mRawActivityUnifTheo.insert(a_Unif_minus_h_2,  0.);
 
     mRawActivityUnifTheo.insert(a_Unif_plus_h_2,  ActivityUnif);
     mRawActivityUnifTheo.insert(b_Unif_minus_h_2,  ActivityUnif);
 
-    if (b_Unif_plus_h_2 > s->mTmax)
-        mRawActivityUnifTheo.insert(s->mTmax,  interpolate(s->mTmax, b_Unif_minus_h_2, b_Unif_plus_h_2, ActivityUnif, 0.));
-    else
+ //   if (b_Unif_plus_h_2 > s->mTmax)
+  //      mRawActivityUnifTheo.insert(s->mTmax,  interpolate(s->mTmax, b_Unif_minus_h_2, b_Unif_plus_h_2, ActivityUnif, 0.));
+  //  else
         mRawActivityUnifTheo.insert(b_Unif_plus_h_2,  0.);
 
     /// Look for the maximum span containing values \f$ x=2 \f$
@@ -697,7 +701,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
             if ((t - t_min_grid - h_2) / delta_t == (double) idxGridMin && (t - t_min_grid - h_2)>0) {
                 ++idxGridMin;
             }
-            int idxGridMax = inRange(0, (int) floor((t - t_min_grid + h_2) / delta_t), maxGrid) ;
+            const int idxGridMax = inRange(0, (int) floor((t - t_min_grid + h_2) / delta_t), maxGrid) ;
 
             for (auto&& ni = NiTot.begin() + idxGridMin; ni != NiTot.begin() + idxGridMax +1; ++ni) {
                 ++*ni ;
@@ -710,13 +714,13 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
         for (const auto& ev : mEvents) {
             if (ev->mTheta.mSamplerProposal == MHVariable::eFixe) {
                 auto t = ev->mTheta.mRawTrace->at(0);
-                int idxGridMin = inRange(0, (int) ceil((t - t_min_grid + h_2) / delta_t), maxGrid) ;
+                int idxGridMin = inRange(0, (int) ceil((t - t_min_grid - h_2) / delta_t), maxGrid) ;
 
                 if ((t - t_min_grid - h_2) / delta_t == (double) idxGridMin && (t - t_min_grid - h_2)>0) {
                     ++idxGridMin;
                 }
 
-                int idxGridMax = inRange(0, (int) floor((t - t_min_grid - h_2) / delta_t), maxGrid) ;
+                int idxGridMax = inRange(0, (int) floor((t - t_min_grid + h_2) / delta_t), maxGrid) ;
 
                 if ((t - t_min_grid + h_2) / delta_t == (double) idxGridMax && idxGridMax>0) {
                     --idxGridMax;
@@ -790,18 +794,25 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
              */
         // La grille est définie entre min95-h/2 et max95+h/2 avec gridlength case
         const double t = nbIt * delta_t + t_min_grid ;
+        UnifScore += std::pow((ActivityUnif - eA)/gridLength, 2.);
+
+        /*
         if ((a_Unif_minus_h_2 <= t) && (t < a_Unif_plus_h_2)) {
             const double dUnif =  interpolateValueInQMap(t, mRawActivityUnifTheo);
-            UnifScore += (std::max(dUnif, QInf) - std::min(dUnif, QSup))/gridLength;
+            //UnifScore += (std::max(dUnif, QInf) - std::min(dUnif, QSup))/gridLength;
+            UnifScore += std::pow((dUnif - eA)/gridLength, 2.);
 
         }
         else if ((a_Unif_plus_h_2 <= t) && (t <= b_Unif_minus_h_2)) {
-            UnifScore += (std::max(ActivityUnif, QInf) - std::min(ActivityUnif, QSup))/gridLength;
+            //UnifScore += (std::max(ActivityUnif, QInf) - std::min(ActivityUnif, QSup))/gridLength;
+            UnifScore += std::pow((ActivityUnif - eA)/gridLength, 2.);
 
         } else if ((b_Unif_minus_h_2 < t) && (t <= b_Unif_plus_h_2)) {
             const double dUnif =  interpolateValueInQMap(t, mRawActivityUnifTheo);
-            UnifScore += (std::max(dUnif, QInf) - std::min(dUnif, QSup)) / gridLength;
+            //UnifScore += (std::max(dUnif, QInf) - std::min(dUnif, QSup)) / gridLength;
+            UnifScore += std::pow((dUnif - eA)/gridLength, 2.);
         }
+        */
         nbIt++;
     }
 

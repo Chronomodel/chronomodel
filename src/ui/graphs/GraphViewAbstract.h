@@ -40,13 +40,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef GRAPHVIEWABSTRACT_H
 #define GRAPHVIEWABSTRACT_H
 
+#include <QWidget>
 #include <qglobal.h>
 #include <QPainterPath>
 
 typedef double type_data;
 
-class GraphViewAbstract
+class GraphViewAbstract:public QWidget
 {
+    Q_OBJECT
 public:
     GraphViewAbstract();
     virtual ~GraphViewAbstract();
@@ -70,6 +72,8 @@ public:
     qreal marginBottom() const;
 
  #pragma mark Setters
+    void setParent(QWidget *parent) {this->QWidget::setParent(parent);}
+
     void setPrevParameter();
 
     virtual void setRangeX(const type_data &aMinX, const type_data &aMaxX);
@@ -80,6 +84,8 @@ public:
     void setMaximumX(const type_data &aMaxX);
     void setMinimumY(const type_data &aMinY);
     void setMaximumY(const type_data &aMaxY);
+
+    void setGraphHeight(const qreal h) {mGraphHeight = h;};
 
     void setMarginLeft(const qreal &aMarginLeft);
     void setMarginRight(const qreal &aMarginRight);

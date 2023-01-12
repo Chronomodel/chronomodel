@@ -159,8 +159,8 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
                 QRectF tr(xo, yo, w, h);
 
                 if (valueFormatFunc) {
-                    p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter,stringForGraph(valueFormatFunc(mStartVal)));
-                    p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter,stringForGraph(valueFormatFunc(mEndVal)));
+                    p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, stringForGraph(valueFormatFunc(mStartVal)));
+                    p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, stringForGraph(valueFormatFunc(mEndVal)));
 
                 } else {
                     p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, stringForGraph(mStartVal));
@@ -172,15 +172,15 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
             if ( mShowSubs && (mEndVal - mStartVal != HUGE_VAL) && (mEndVal > mStartVal) && (mMajorScale > 0)) {
 
                 // look for the text increment
-                const QString textMin =(valueFormatFunc ? stringForGraph(valueFormatFunc(mStartVal)) : stringForGraph(mStartVal) );
-                const int textMinWidth =  fm.boundingRect(textMin).width() ;
+                const QString textMin = (valueFormatFunc ? stringForGraph(valueFormatFunc(mStartVal)) : stringForGraph(mStartVal) );
+                const int textMinWidth =  fm.horizontalAdvance(textMin) ;
 
                 const QString textMax =(valueFormatFunc ?stringForGraph(valueFormatFunc(mEndVal)) : stringForGraph(mEndVal) );
-                const int textMaxWidth =  fm.boundingRect(textMax).width() ;
+                const int textMaxWidth =  fm.horizontalAdvance(textMax) ;
 
-                const double nbPossibleText = std::abs(getXForValue(mStartVal) -getXForValue(mEndVal)) / (std::max(textMinWidth, textMaxWidth) + 5.);
+                const double nbPossibleText = std::abs(getXForValue(mStartVal) - getXForValue(mEndVal)) / (std::max(textMinWidth, textMaxWidth) + 5.);
 
-                const double nbTheoText = std::abs(getXForValue(mStartVal) -getXForValue(mEndVal)) / std::abs(getXForValue(mStartVal) - getXForValue(mStartVal + mMajorScale));
+                const double nbTheoText = std::abs(getXForValue(mStartVal) - getXForValue(mEndVal)) / std::abs(getXForValue(mStartVal) - getXForValue(mStartVal + mMajorScale));
 
                 if (nbTheoText > nbPossibleText)
                     mTextInc = int (std::ceil(nbTheoText/nbPossibleText));
@@ -194,9 +194,9 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
                 qreal xPrev = 0.;
 
                 size_t maxCount = size_t(floor((mEndVal-mStartVal)/mMajorScale));
-                qreal v; // variable used in loop
+                //qreal v; // variable used in loop
                 for (size_t count = 0; count <= maxCount; ++count) {
-                    v = mStartVal + (count * mMajorScale);
+                    const qreal v = mStartVal + (count * mMajorScale);
                     const qreal x = getXForValue(v) + xo;
                     linesPos.append(x);
                     ++textInc;
@@ -248,7 +248,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
 
         if (mShowArrow) { // the arrow is over the rectangle of heigthSize
 
-            QPolygonF triangle (std::initializer_list<QPointF>({ QPointF(xov, yov - h),
+            const QPolygonF triangle (std::initializer_list<QPointF>({ QPointF(xov, yov - h),
                                                                  QPointF(xov - graduationSize*.65, yov - h + graduationSize*.65),
                                                                  QPointF(xov + graduationSize*.65, yov - h + graduationSize*.65) }));
 
@@ -271,13 +271,13 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
 
                  const QString textStarVal = (valueFormatFunc ? stringForLocal(valueFormatFunc(mStartVal)) : stringForGraph(mStartVal) );
                  const QString textEndVal = (valueFormatFunc ? stringForLocal(valueFormatFunc(mEndVal)) : stringForGraph(mEndVal) );
-                 w = qMax( fm.boundingRect(textStarVal).width(), fm.boundingRect(textEndVal).width() );
-                 const int xText = int ((xov - graduationSize -w) *2.  / 3.);
+                 const int wText = qMax( fm.horizontalAdvance(textStarVal), fm.horizontalAdvance(textEndVal) );
+                 const int xText = int ((xov - graduationSize - wText) *2.  / 3.);
                  qreal y = yov - getYForValue(mStartVal) - textHeight/2. ;
-                  p.drawText(xText, y, w, textHeight, Qt::AlignRight | Qt::AlignBottom, textStarVal);
+                  p.drawText(xText, y, wText, textHeight, Qt::AlignRight | Qt::AlignBottom, textStarVal);
 
                   y = yov - getYForValue(mEndVal) - textHeight/2. ;
-                  p.drawText(xText, y, w, textHeight, Qt::AlignRight | Qt::AlignVCenter, textEndVal);
+                  p.drawText(xText, y, wText, textHeight, Qt::AlignRight | Qt::AlignVCenter, textEndVal);
 
             }
         } else  {
@@ -287,10 +287,10 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
                 int textInc = 1;
                 qreal prevTextHeight = 0.;
 
-                size_t maxCount = size_t(floor((mEndVal-mStartVal)/mMajorScale));
-                qreal v; // variable used in loop
+                const size_t maxCount = size_t(floor((mEndVal-mStartVal)/mMajorScale));
+
                 for (size_t count = 1; count <= maxCount; ++count) {
-                    v = mStartVal + (count * mMajorScale);
+                    const qreal v = mStartVal + (count * mMajorScale);
                     const qreal y = getYForValue(v) + yov;
                     const int textHeight =  fm.height() ;
                     const qreal ty = y - textHeight/2.;
@@ -311,8 +311,8 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
 
                 textInc = mTextInc - 1;
 
-                for (size_t count = 1; count <= maxCount; ++count) {
-                    v = mStartVal + (count * mMajorScale);
+                for (size_t count = 0; count <= maxCount; ++count) {
+                    const qreal v = mStartVal + (count * mMajorScale);
                     const qreal y = yov - getYForValue(v) ;
 
                     p.drawLine(QLineF(xov, y, xov - graduationSize, y));
@@ -320,12 +320,12 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
                     ++textInc;
 
                     if ( textInc == mTextInc) {
-                        const QString text =(valueFormatFunc ?stringForGraph(valueFormatFunc(v)) : stringForGraph(v) );
+                        const QString text = (valueFormatFunc ?stringForGraph(valueFormatFunc(v)) : stringForGraph(v) );
                         const int textHeight =  fm.height() ;
-                        w =  fm.boundingRect(text).width();
-                        const int xText = int ((xov - graduationSize -w) *2. / 3.);
+                        const int wText =  fm.horizontalAdvance(text);
+                        const int xText = int ((xov - graduationSize - wText) *2. / 3.);
                         const int yText = int (y - textHeight/2.) ;
-                        p.drawText(xText, yText, w, textHeight, Qt::AlignRight | Qt::AlignBottom, text);
+                        p.drawText(xText, yText, wText, textHeight, Qt::AlignRight | Qt::AlignBottom, text);
 
                         textInc = 0;
 
@@ -371,11 +371,18 @@ void AxisWidget::paintEvent(QPaintEvent*)
  */
 void Scale::findOptimal(const double & a, const double & b, const int & nOptimal)
 {
-    double e (b - a);
+    if ( a == b) {
+        min = a - 1;
+        max = b + 1;
+        mark = .2;
+        return;
+    }
+
+    const double e (b - a);
     double u = floor(log10(e));
     u = std::pow(10., u);
 
-    double fract[4] = { 1. , 2. , 5. , 10. };
+    const double fract[4] = { 1. , 2. , 5. , 10. };
 
     double diff (std::max(u, e));
     mark = diff;
@@ -389,7 +396,18 @@ void Scale::findOptimal(const double & a, const double & b, const int & nOptimal
         }
     }
 
-    min = std::floor(a/ mark) * mark;
-    max = min + std::ceil( (b - min) / mark ) * mark;
+    if (a == 0.)
+        min = 0.;
+    else if ( std::floor(a/ mark) * mark > a)
+        min = std::floor(a/ mark) * mark - mark;
+    else
+        min = std::floor(a/ mark) * mark;
+
+    if (b == 0.)
+        max = 0.;
+    else if (min + std::ceil( (b - min) / mark ) * mark < b)
+        max = min + std::ceil( (b - min) / mark ) * mark + mark;
+    else
+        max = min + std::ceil( (b - min) / mark ) * mark;
 
 }

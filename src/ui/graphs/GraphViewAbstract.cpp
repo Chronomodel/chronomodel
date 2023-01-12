@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -159,11 +159,11 @@ qreal GraphViewAbstract:: getXForValue(const type_data& aValue, const bool& aCon
 type_data GraphViewAbstract::getValueForX(const qreal& x, const bool& aConstainResult)
 {
     const qreal rigthBlank (5.); // the same name and the same value as AxisTool::updateValues() if AxisTool::mIsHorizontal
-    const qreal xFromSide = x - mMarginLeft;
+    const qreal xFromSide (x - mMarginLeft);
     return valueForProportion(type_data(xFromSide), 0., std::max(0.,  mGraphWidth - rigthBlank), mCurrentMinX, mCurrentMaxX, aConstainResult);
 }
 
-#define TOPBLANK 10
+#define TOPBLANK 1
 qreal GraphViewAbstract::getYForValue(const type_data& aValue, const bool& aConstainResult)
 {
     const type_data yFromBase = valueForProportion(aValue, mMinY, mMaxY, 0., std::max(0., type_data (mGraphHeight) - TOPBLANK), aConstainResult);

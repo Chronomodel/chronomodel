@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -193,12 +193,10 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
              graphCurveG95Inf.mPen.setColor(QColor(180, 180, 180));
              mGraph->addCurve(graphCurveG95Inf);
 
-             // Display reference curve name
-             // mGraph->addInfo(tr("Ref")+" : " + ref_curve);
 
              /* ----------------------------------------------
-         *  Measure curve
-         * ---------------------------------------------- */
+              *  Measure curve
+              * ---------------------------------------------- */
              yMin = qMin(yMin, age - error * 3);
              yMax = qMax(yMax, age + error * 3);
 
@@ -238,51 +236,10 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
              curveMeasure.mData = measureCurve;
              mGraph->addCurve(curveMeasure);
 
-             // Infos to write :
-          //   QString info = tr("Age BP : %1  ± %2").arg(locale().toString(age), locale().toString(error));
 
              /* ----------------------------------------------
-         *  Delta R curve
-         * ---------------------------------------------- */
-             /*      if (delta_r != 0. && delta_r_error != 0.) {
-            // Apply reservoir effect
-            age = (age - delta_r);
-            error = sqrt(error * error + delta_r_error * delta_r_error);
-
-            yMin = qMin(yMin, age - error * 3);
-            yMax = qMax(yMax, age + error * 3);
-
-            GraphCurve curveDeltaR;
-            curveDeltaR.mName = "Delta R";
-
-            penColor = mMeasureColor;
-            brushColor = mMeasureColor;
-            brushColor.setAlpha(50);
-
-            curveDeltaR.mPen = penColor;
-            curveDeltaR.mBrush = brushColor;
-
-            curveDeltaR.mIsVertical = true;
-            curveDeltaR.mIsHisto = false;
-
-
-            step = (yMax - yMin) / 5000.;
-            QMap<double, double> deltaRCurve;
-            for (double t = yMin; t<yMax; t += step) {
-                const double v = exp(-0.5 * pow((age - t) / error, 2.));
-                deltaRCurve[t] = v;
-                //curveDeltaR.mData[t] = v;
-            }
-            deltaRCurve = normalize_map(deltaRCurve);
-            curveDeltaR.mData = deltaRCurve;
-            mGraph->addCurve(curveDeltaR);
-
-            info += tr(", ΔR : %1  ± %2").arg(locale().toString(delta_r), locale().toString(delta_r_error));
-        }
-*/
-             /* ----------------------------------------------
-         *  Sub-dates curves (combination)
-         * ---------------------------------------------- */
+              *  Sub-dates curves (combination)
+              * ---------------------------------------------- */
 
              for (auto && subDate: date.mSubDates) {
                  QJsonObject d = subDate.toObject();
@@ -315,15 +272,11 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
                  mGraph->addCurve(curveSubMeasure);
              }
 
-             /* ----------------------------------------------
-         *  Textual info
-         * ---------------------------------------------- */
 
-             // mGraph->addInfo(info);
 
              /* ----------------------------------------------
-         *  Error on measure (horizontal lines)
-         * ---------------------------------------------- */
+              *  Error on measure (horizontal lines)
+              * ---------------------------------------------- */
 
              GraphCurve curveMeasureAvg;
              curveMeasureAvg.mName = "MeasureAvg";
@@ -364,16 +317,7 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
 
          for (auto&&d : date.mSubDates ) {
              Date sd (d.toObject());
-           /*  QString toFind = sd.mUUID;
 
-             Project* project = MainWindow::getInstance()->getProject();
-             QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
-             if ( it != project->mCalibCurves.end())
-                 sd.mCalibration = & it.value();
-             else {
-                 sd.calibrate(settings, project);
-             }
-    */
              if (!date.isNull() && date.mIsValid) {
                  const double t3 = sd.getFormatedTminCalib();
                  const double t4 = sd.getFormatedTmaxCalib();

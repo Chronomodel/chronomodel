@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -37,17 +37,14 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#include "MainWindow_bash.h"
 #include "ProjectView_bash.h"
-//#include "ModelView.h"
-//#include "ResultsView.h"
-#include "Painting.h"
-#include "AppSettings.h"
+#include <QDir>
+#include <QFileDialog>
+
 
 // Constructor / Destructor / Init
 ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
 {
-    //setMouseTracking(true);
     setScreenDefinition();
 
     mTable = new QTableWidget(this);
@@ -62,8 +59,8 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     mTable->setFixedWidth(width()/2);
     mTable->setGeometry(QRect(width()/4, 50, width()/2, height()));
 
-    auto x1 = mTable->pos().x();
-    x1 = x1 /2 - 75;
+  //  auto x1 = mTable->pos().x();
+  //  x1 = x1 /2 - 75;
     mAddButton->setGeometry(QRect(0, 0, 150, 0));
     mRemoveButton->setGeometry(QRect(10, mAddButton->pos().y()+mAddButton->height() + 10, 150, 0));
 
@@ -78,46 +75,20 @@ ProjectView::~ProjectView()
 void ProjectView::setScreenDefinition()
 {
     /* find screen definition */
-    QScreen *screen;
+  /*  QScreen *screen;
 
-  /*  int numScreen = QApplication::desktop()->screenNumber(this));
-
-    if (numScreen>0) {
-        screen = QApplication::screens().at(numScreen);
-
-    } else {
-        screen =  QGuiApplication::primaryScreen();
-      //  numScreen = 0;
-    }
-    */
     screen =  QGuiApplication::primaryScreen();
     //qreal mm_per_cm = 10;
 
     qreal cm_per_in = 2.54;
- // look for screen definition
-//        qDebug()<<"ProjectView::resizeEvent()"<< screen->name() <<" number="<<numScreen <<"logical Dots="<<screen->logicalDotsPerInch()<<"devicePixelRatio="<<screen->devicePixelRatio()<<"availableVirtualGeometry()="<<screen->availableVirtualGeometry()<<" unitX ="<<screen->logicalDotsPerInch() / cm_per_in;
-//        qDebug()<<"ProjectView::resizeEvent()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< QApplication::desktop()->width();
-//        qDebug()<<"ProjectView::resizeEvent() screen setWidthUnit"<< screen->physicalDotsPerInchX() / cm_per_in;
-//        qDebug()<<"ProjectView::resizeEvent() screen setHeigthUnit"<< screen->physicalDotsPerInchY() / cm_per_in;
 
-            int unitX = int(screen->logicalDotsPerInch() / cm_per_in);
-            AppSettings::setWidthUnit( unitX);
+    int unitX = int(screen->logicalDotsPerInch() / cm_per_in);
+    AppSettings::setWidthUnit( unitX);
 
-            int unitY = int(screen->logicalDotsPerInch() / cm_per_in);
-            AppSettings::setHeigthUnit( unitY);
+    int unitY = int(screen->logicalDotsPerInch() / cm_per_in);
+    AppSettings::setHeigthUnit( unitY);
 
-
-
-   /*const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
-
-    mLogModelEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
-    mLogMCMCEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
-    mLogResultsEdit->resize( width() - AppSettings::widthUnit() , logTabHusefull );
-
-*/
-
-    //int unitY = int(screen->physicalDotsPerInchY() / cm_per_in);
-    AppSettings::setHeigthUnit(unitY);
+    AppSettings::setHeigthUnit(unitY);*/
 }
 
 void ProjectView::resizeEvent(QResizeEvent* e)
@@ -142,7 +113,7 @@ void ProjectView::resizeEvent(QResizeEvent* e)
 void ProjectView::tableAdd()
 {
     const QString currentPath = QDir::homePath();
-    QString path = QFileDialog::getOpenFileName(this,
+    const QString path = QFileDialog::getOpenFileName(this,
                                                       tr("Open File"),
                                                       currentPath,
                                                       tr("Chronomodel Project (*.chr)"));
@@ -165,14 +136,5 @@ void ProjectView::tableRemove()
 void ProjectView::applyFilesSettings(Model* model)
 {
     (void) model;
-    // Rebuild all calibration curve
-
-  //  QJsonObject state = mProject->state();//mModelView->getProject()->state();
-  //  ProjectSettings s = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
-   // bool calibrate = mModelView->findCalibrateMissing();
-   // if (calibrate)
- //       calibrateAll(s);
-
-   // applySettings(model);
 }
 

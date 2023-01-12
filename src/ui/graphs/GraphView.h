@@ -44,7 +44,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphCurve.h"
 #include "GraphZone.h"
 #include "AxisTool.h"
-//#include "Ruler.h"
 #include "DateUtils.h"
 
 #include <QWidget>
@@ -55,15 +54,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QFileInfo>
 
 
-class GraphView: public QWidget, public GraphViewAbstract
+class GraphView: public GraphViewAbstract
 {
     Q_OBJECT
 public:
-/*    enum Rendering
-    {
-        eSD = 0,
-        eHD = 1
-    };*/
+
     enum AxisMode
     {
         eHidden = 0,
@@ -81,7 +76,7 @@ public:
     };
     GraphView(QWidget* parent = nullptr);
     explicit GraphView(const GraphView &graph, QWidget *parent= nullptr);
-    void setParent(QWidget *parent) {this->QWidget::setParent(parent);}
+
     void copyFrom(const GraphView &graph);
     virtual ~GraphView();
 
@@ -235,7 +230,7 @@ protected:
 
     QString mNothingMessage;
 
-    QColor	mBackgroundColor;
+    QColor mBackgroundColor;
     int mThickness;
     int mOpacity;
     bool mCanControlOpacity;
@@ -266,6 +261,58 @@ private:
      DateConversion mUnitFunctionX;
      DateConversion mUnitFunctionY;
 
+};
+
+
+
+class GraphTitle: public GraphViewAbstract
+{
+    Q_OBJECT
+protected:
+    qreal mTitleHeight;
+    qreal mSubTitleHeight;
+
+    QStaticText mTitle;
+    QStaticText mSubTitle;
+    QColor mBackgroundColor;
+    QColor mTitleBarColor;
+
+    bool mAutoAdjustTitleHeight;
+    bool mAutoAdjustSubTitleHeight;
+
+public:
+    GraphTitle(QWidget* parent = nullptr);
+    virtual ~GraphTitle();
+
+    explicit GraphTitle(QString title, QWidget* parent = nullptr);
+    explicit GraphTitle(QString title, QColor titleBarColor, QWidget* parent);
+
+    explicit GraphTitle(QString title, QString subTitle, QWidget* parent = nullptr);
+    explicit GraphTitle(QString title, QString subTitle, QColor backGround, QWidget* parent = nullptr);
+
+    void paintEvent(QPaintEvent*);
+    void repaintGraph(const bool aAlsoPaintBackground);
+
+    void setTitle(const QString& title) {mTitle.setText(title);};
+    void setSubTitle(const QString& subTitle) {mSubTitle.setText(subTitle);};
+    void setBackGroundColor(const QColor& color) {mBackgroundColor = color;};
+    void setTitleBarColor(const QColor& color) {mTitleBarColor = color;};
+
+    void setTitleHeight(const qreal h) {mTitleHeight = h;; mAutoAdjustTitleHeight = false;};
+    qreal titleHeight() {return mTitleHeight;};
+
+    void setSubTitleHeight(const qreal h) {mSubTitleHeight = h; mAutoAdjustSubTitleHeight = false;};
+    qreal subTitleHeight() {return mSubTitleHeight;};
+
+    void setAutoAdjustTitleHeight(bool adjust) {mAutoAdjustTitleHeight = adjust;};
+    void setAutoAdjustSubTitleHeight(bool adjust) {mAutoAdjustSubTitleHeight = adjust;};
+    bool autoAdjustTitleHeight() {return mAutoAdjustTitleHeight;};
+    bool autoAdjustSubTitleHeight() {return mAutoAdjustSubTitleHeight;};
+
+    qreal height();
+
+    bool isTitle() const {return !mTitle.text().isEmpty();};
+    bool withTitle() const {return !mSubTitle.text().isEmpty();};
 };
 
 #endif

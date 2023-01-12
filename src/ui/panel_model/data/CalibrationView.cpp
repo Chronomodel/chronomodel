@@ -271,6 +271,9 @@ void CalibrationView::setDate(const Date& d)
 
         updateScroll();
 
+        mDrawing->setRefGraph( mRefGraphView);
+        mDrawing->updateLayout();
+        update();
     }
     catch(QString error) {
         QMessageBox message(QMessageBox::Critical,
@@ -280,9 +283,7 @@ void CalibrationView::setDate(const Date& d)
                             qApp->activeWindow());
         message.exec();
     }
-    mDrawing->setRefGraph( mRefGraphView);
-    mDrawing->updateLayout();
-    update();
+
 }
 
 void CalibrationView::updateGraphs()
@@ -325,40 +326,33 @@ void CalibrationView::updateGraphs()
         brushColor.setAlpha(100);
 
         // Fill under distrib. of calibrated date only if Unif-typo :
-        const bool isUnif (mDate.mPlugin->getName() == "Unif");
+        //const bool isUnif (mDate.mPlugin->getName() == "Unif");
 
         // Fill HPD only if not Unif :
         mResultsText->clear();
 
-        QMap<double, double> calibMap;
+       QMap<double, double> calibMap;
         if (mDate.mIsValid)
-            calibMap = mDate.getFormatedCalibToShow();//getFormatedCalibMap();
-         
+            calibMap = mDate.getFormatedCalibToShow();
+
         QMap<double, double> wiggleCalibMap;
         if (mDate.mDeltaType != Date::eDeltaNone)
-             wiggleCalibMap =  mDate.getFormatedWiggleCalibToShow();
+            wiggleCalibMap =  mDate.getFormatedWiggleCalibToShow();
 
+        if (mDate.mIsValid) {
 
-        if (!calibMap.isEmpty()) {
+            const GraphCurve &calibCurve = densityCurve(calibMap, "Calibration", penColor);
 
-            GraphCurve calibCurve;
-            calibCurve.mName = "Calibration";
-            calibCurve.mPen.setColor(penColor);
-            calibCurve.mData = calibMap;
-            calibCurve.mIsRectFromZero = isUnif;
-            calibCurve.mBrush = isUnif ? QBrush(brushColor) : QBrush(Qt::NoBrush);
             QFontMetrics fm (mCalibGraph->font());
             mCalibGraph->addCurve(calibCurve);
             mCalibGraph->setMarginBottom(fm.ascent() * 2.2);
 
             GraphCurve calibWiggleCurve;
-            if (!wiggleCalibMap.isEmpty()) { 
-                calibWiggleCurve.mName = "Wiggle";
-                calibWiggleCurve.mPen.setColor(Qt::red);
-                // to have both densities at the same height
-                calibWiggleCurve.mData = normalize_map(wiggleCalibMap, map_max_value(calibMap));
-                calibWiggleCurve.mIsRectFromZero = false;
-                calibWiggleCurve.mBrush = QBrush(Qt::NoBrush);
+            //if (!wiggleCalibMap.isEmpty()) {
+            if (mDate.mDeltaType != Date::eDeltaNone) {
+                const QMap<double, double> &calibWiggle = normalize_map(wiggleCalibMap, map_max_value(calibCurve.mData));
+                calibWiggleCurve = densityCurve(calibWiggle, "Wiggle", Qt::red);
+
                 mCalibGraph->addCurve(calibWiggleCurve);
             }
 
@@ -373,7 +367,7 @@ void CalibrationView::updateGraphs()
             subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
 
-            QMap<double, double> hpd (create_HPD(subData, thresh));
+            const QMap<double, double> hpd (create_HPD(subData, thresh));
 
             if (!hpd.isEmpty()) {
                 GraphCurve hpdCurve;
@@ -721,7 +715,7 @@ void CalibrationView::updateLayout()
 
     const int buttonWidth = mDisplayStudyBut->width();
 
-    const int labelWidth = std::min( fontMetrics().boundingRect("-1000000").width() , (graphWidth - buttonWidth) /5);
+    const int labelWidth = std::min( fontMetrics().horizontalAdvance("-1000000") , (graphWidth - buttonWidth) /5);
     const int editWidth = labelWidth;
     const int marginBottomBar = (graphWidth- 5.*labelWidth - buttonWidth)/7.;
 
