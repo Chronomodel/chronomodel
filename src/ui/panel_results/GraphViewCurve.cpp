@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -370,7 +370,14 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
     const bool showDataPoints = showVariableList.contains(eGDatesPts);
     const bool showGP = showVariableList.contains(eGP);
     const bool showGS = showVariableList.contains(eGS);
+    const bool autoAdjustY = true;
     
+    mGraph->autoAdjustYScale(autoAdjustY);
+    if (autoAdjustY == false) {
+        const double Ymin = -1000;
+        const double Ymax = +1000;
+        mGraph->setRangeY(Ymin, Ymax);
+    }
     mGraph->setCurveVisible("Map", mShowAllChains && showMap);
 
     mGraph->setCurveVisible("G", mShowAllChains && showG); 
@@ -384,12 +391,11 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
     mGraph->setCurveVisible("G Second", mShowAllChains && showGS);
     
     for (int i = 0; i < mShowChainList.size(); ++i) {
+
         mGraph->setCurveVisible(QString("Map Chain ") + QString::number(i), mShowChainList.at(i) && showMap);
 
         mGraph->setCurveVisible(QString("G Chain ") + QString::number(i), mShowChainList.at(i) && showG);
         mGraph->setCurveVisible(QString("G Env Chain ") + QString::number(i), mShowChainList.at(i) && showGError && showG);
-        //mGraph->setCurveVisible(QString("G Sup Chain ") + QString::number(i), mShowChainList.at(i) && showGError && showG);
-
 
         mGraph->setCurveVisible(QString("G Prime Chain ") + QString::number(i), mShowChainList.at(i) && showGP);
 

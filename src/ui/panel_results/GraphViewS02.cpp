@@ -205,6 +205,7 @@ void GraphViewS02::updateCurvesToShow(bool showAllChains, const QList<bool>& sho
         
         mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
         mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
+        mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
 
         for (qsizetype i = 0; i<mShowChainList.size(); ++i) {
             mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList.at(i));

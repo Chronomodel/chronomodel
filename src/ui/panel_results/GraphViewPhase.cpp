@@ -297,7 +297,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
                                                             "Post Distrib Unif Mean",
                                                             Qt::darkGray, Qt::SolidLine);
 
-            mGraph->setInfo(QString("Significance Score ( %1 %) = %2").arg(stringForLocal(mPhase->mValueStack.at("Activity_Threshold").mValue), stringForLocal(mPhase->mValueStack.at("Significance Score").mValue, true)) );
+            mGraph->setInfo(QString("Significance Score ( %1 %) = %2").arg(stringForLocal(mPhase->mValueStack.at("Activity_Threshold").mValue), stringForLocal(mPhase->mValueStack.at("Activity_Significance_Score").mValue, true)) );
 
             mGraph->setOverArrow(GraphView::eBothOverflow);
 
@@ -444,8 +444,9 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      * ------------------------------------------------
      */
     if (mCurrentTypeGraph == ePostDistrib) {
+
         if (mShowVariableList.contains(eBeginEnd)) {
-            const bool showCredibility = true;
+            const bool showCredibility = mShowVariableList.contains(eCredibility);
 
 
             mGraph->setCurveVisible("Post Distrib Begin All Chains", mShowAllChains);
@@ -473,7 +474,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             const GraphCurve* duration = mGraph->getCurve("Post Distrib All Chains");
 
             if ( duration && !duration->mData.isEmpty()) {
-                const bool showCredibility = true;
+                const bool showCredibility = mShowVariableList.contains(eCredibility);
                 mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
                 mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
                 mGraph->setCurveVisible("Credibility All Chains", showCredibility && mShowAllChains);

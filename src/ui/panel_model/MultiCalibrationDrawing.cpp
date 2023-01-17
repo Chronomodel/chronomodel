@@ -198,7 +198,6 @@ void MultiCalibrationDrawing::updateLayout()
                 ++barNo;
             }
 
-
             graph->showXAxisValues(axisVisible && mListAxisVisible[graphNo]);
 
             if (!graph->hasCurve()) {
@@ -219,12 +218,7 @@ void MultiCalibrationDrawing::updateLayout()
 
                 graph->setFont(font());
                 graph->setTipXLab("t");
-                graph->setGraphHeight(mGraphHeight);
-                graph->setMarginTop(0);
-               // if (axisVisible && mListAxisVisible[graphNo])
                 graph->setMarginBottom(marginBottom);
-              //  else
-                //    graph->setMarginBottom(int (fm.ascent() * 0.5));
 
                 graph->setGeometry(barWidth + graphShift, y, std::max(0, width() - barWidth - 2*graphShift), mGraphHeight );
                 graph->setVisible(true);
@@ -232,8 +226,6 @@ void MultiCalibrationDrawing::updateLayout()
             y += mGraphHeight;
             ++graphNo;
         }
-
-
 
     }
 

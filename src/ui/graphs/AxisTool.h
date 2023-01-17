@@ -40,7 +40,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef AXISTOOL_H
 #define AXISTOOL_H
 
-#include "StdUtilities.h"
 #include "DateUtils.h"
 
 #include <QVector>

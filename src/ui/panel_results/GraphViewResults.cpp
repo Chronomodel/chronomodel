@@ -412,8 +412,9 @@ void GraphViewResults::updateLayout()
         mGraph->setGeometry(graphRect.adjusted(0, 0, int (-width()/3. -1), 0 ));
         mStatArea->setGeometry(graphRect.adjusted(int (width()*2./3. + 2.), int (-mTopShift + 2 ), -4, -2));
 
-    } else
+    } else {
         mGraph->setGeometry(graphRect);
+    }
 
     const bool axisVisible = (height() >= mHeightForVisibleAxis);
 

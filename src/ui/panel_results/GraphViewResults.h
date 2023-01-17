@@ -123,6 +123,7 @@ public:
         eBeginEnd,
         eThetaEvent,
         eDataTi, eDataCalibrate, eDataWiggle,
+        eCredibility,
         eSigma ,
         eVg,
 

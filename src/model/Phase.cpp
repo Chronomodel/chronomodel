@@ -540,7 +540,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
     const auto s = &mModel->mSettings;
     if (mEvents.size() < 2) {
-        mValueStack["Significance Score"] = TValueStack("Significance Score", 0);
+        mValueStack["Activity_Significance_Score"] = TValueStack("Activity_Significance_Score", 0);
         mValueStack["R_etendue"] = TValueStack("R_etendue", s->mTmax - s->mTmin);
         mValueStack["t_min"] = TValueStack("t_min", s->mTmin);
         mValueStack["t_max"] = TValueStack("t_max", s->mTmax);
@@ -600,7 +600,8 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
         const auto &minmax95 = std::minmax_element(concaTrace.begin(), concaTrace.end());
         min95 = std::min( min95, *minmax95.first);
         max95 = std::max( max95, *minmax95.second);
-    }
+    } else
+        return;
 
     if (min95 == max95) { // hapen when there is only one bound in the phase ???
 
@@ -611,7 +612,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
         mActivity = DateUtils::convertMapToAppSettingsFormat(mRawActivity);
 
-        mValueStack["Significance Score"] = TValueStack("Significance Score", 0);
+        mValueStack["Activity_Significance_Score"] = TValueStack("Activity_Significance_Score", 0);
         mValueStack["R_etendue"] = TValueStack("R_etendue", 0);
         mValueStack["a_Unif"] = TValueStack("a_Unif", 0);
         mValueStack["b_Unif"] = TValueStack("b_Unif", 0);
@@ -863,7 +864,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 #ifdef DEBUG
     qDebug()<<"[Model::generateActivity] somme Activity = "<< somActivity << " ; Phase = "<< mName <<"\n";
 #endif
-    mValueStack["Significance Score"] = TValueStack("Significance Score", UnifScore);
+    mValueStack["Activity_Significance_Score"] = TValueStack("Activity_Significance_Score", UnifScore);
     mValueStack["Activity_max"] = TValueStack("Activity_max", maxActivity);
     mValueStack["Activity_mode"] = TValueStack("Activity_mode", modeActivity);
 

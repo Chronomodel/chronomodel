@@ -557,7 +557,7 @@ QString ModelUtilities::activityResultsText(const Phase* p, const bool forCSV)
     QString textValue = stringForLocal(p->mValueStack.at("R_etendue").mValue);
     text += "Unif. Span = " + textValue  + nl ;
 */
-    QString textValue = stringForLocal(p->mValueStack.at("Significance Score").mValue, true);
+    QString textValue = stringForLocal(p->mValueStack.at("Activity_Significance_Score").mValue, true);
     text += "Significance Score"  + QString(" ( %1 %) =").arg(threshold) + textValue + nl ;
 
 
@@ -1398,7 +1398,7 @@ QString ModelUtilities::activityResultsHTML(const Phase* p)
     text += "<br>";
     text += line(textBold(textOrange(QObject::tr("h Estimation"))));
 
-    QString textValue = stringForLocal(p->mValueStack.at("Significance Score").mValue, true);
+    QString textValue = stringForLocal(p->mValueStack.at("Activity_Significance_Score").mValue, true);
     const double threshold = p->mValueStack.at("Activity_Threshold").mValue;
     const auto hActi = p->mValueStack.at("Activity_h").mValue;
     text += line(textOrange("Significance Score"  + QString(" ( %1 %) = ").arg(threshold) + textValue + QString(" with h = %1").arg(hActi)));

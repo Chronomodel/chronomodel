@@ -2411,6 +2411,8 @@ void ResultsView::updateCurvesToShow()
         showVariableList.append(GraphViewResults::eS02Vg);
 
     } else if (mGraphListTab->currentName() == tr("Events")) {
+        if (mCredibilityCheck->isChecked())
+            showVariableList.append(GraphViewResults::eCredibility);
         if (mEventThetaRadio->isChecked()) {
             showVariableList.append(GraphViewResults::eThetaEvent);
             if (mEventsDatesUnfoldCheck->isChecked()) {
@@ -2430,6 +2432,8 @@ void ResultsView::updateCurvesToShow()
     else if (mGraphListTab->currentName() == tr("Phases")) {
         if (mBeginEndRadio->isChecked()) {
                showVariableList.append(GraphViewResults::eBeginEnd);
+               if (mCredibilityCheck->isChecked())
+                   showVariableList.append(GraphViewResults::eCredibility);
                if (mPhasesEventsUnfoldCheck->isChecked()) {
                    showVariableList.append(GraphViewResults::eThetaEvent);
                    if (mPhasesDatesUnfoldCheck->isChecked()) {
@@ -2443,6 +2447,8 @@ void ResultsView::updateCurvesToShow()
 
 
             if (mPhasesEventsUnfoldCheck->isChecked()) {
+                if (mCredibilityCheck->isChecked())
+                    showVariableList.append(GraphViewResults::eCredibility);
                 showVariableList.append(GraphViewResults::eThetaEvent);
                 if (mPhasesDatesUnfoldCheck->isChecked()) {
                     showVariableList.append(GraphViewResults::eDataTi);
@@ -2459,6 +2465,8 @@ void ResultsView::updateCurvesToShow()
                showVariableList.append(GraphViewResults::eActivityUnif);
 
             if (mPhasesEventsUnfoldCheck->isChecked()) {
+                if (mCredibilityCheck->isChecked())
+                    showVariableList.append(GraphViewResults::eCredibility);
                 showVariableList.append(GraphViewResults::eThetaEvent);
                 if (mPhasesDatesUnfoldCheck->isChecked()) {
                     showVariableList.append(GraphViewResults::eDataTi);
@@ -2468,6 +2476,8 @@ void ResultsView::updateCurvesToShow()
             }
 
         } else if (mDurationRadio->isChecked()) {
+            if (mCredibilityCheck->isChecked())
+                showVariableList.append(GraphViewResults::eCredibility);
             showVariableList.append(GraphViewResults::eDuration);
         }
     }

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -38,7 +38,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "GraphView.h"
-//#include "Ruler.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
 #include "DateUtils.h"
@@ -946,7 +945,7 @@ void GraphView::drawCurves(QPainter& painter)
     /* -------------------------- Curves ---------------------------*/
     painter.save();
     // Draw curves inside axis only (not in margins!)
-    painter.setClipRect(int (mMarginLeft), int (mMarginTop), int(mGraphWidth), int (mGraphHeight));
+    //painter.setClipRect(int (mMarginLeft), int (mMarginTop), int(mGraphWidth), int (mGraphHeight));
 
     for (auto& curve : mCurves) {
         if (curve.mVisible) {
@@ -976,7 +975,7 @@ void GraphView::drawCurves(QPainter& painter)
                 while (iterRefPts != curve.mRefPoints.cend()) {
                     type_data xmin = iterRefPts->Xmin;
                     type_data xmax = iterRefPts->Xmax;
-                    if (xmin >= mCurrentMinX && xmax <= mCurrentMaxX) {
+                    if (xmax >= mCurrentMinX && xmin <= mCurrentMaxX) {
                         type_data xmoy = (xmax + xmin) / 2.;
 
                         type_data ymin = iterRefPts->Ymin;
@@ -1026,14 +1025,6 @@ void GraphView::drawCurves(QPainter& painter)
                             painter.setBrush(refPointsPen.brush());
                             painter.setPen(QPen(getBackgroundColor(), 1));
                             painter.drawRect(border);
-                            /* drax only a line
-                            pathPoint.moveTo( xMinPlot, yPlot );
-                            pathPoint.lineTo( xMaxPlot, yPlot );
-
-                            painter.setBrush(refPointsPen.brush());
-                            painter.setPen(refPointsPen);
-                            painter.strokePath(pathPoint, refPointsPen);
-                            */
 
 
                         }
@@ -1089,8 +1080,8 @@ void GraphView::drawCurves(QPainter& painter)
                 painter.fillPath(path, brush);
                 painter.strokePath(path, pen);
 
-            } else if (curve.isTopLineSections()) {
-                const qreal y1 = mMarginTop + curve.mPen.width();
+            } else if (curve.isTopLineSections()) { // Used for credibility, phase time range
+                const qreal y1 =  mMarginTop - curve.mPen.width();
 
                 for (auto& section : curve.mSections ) {
                     const type_data s1 = section.first;
@@ -1375,17 +1366,32 @@ void GraphView::drawMap(GraphCurve& curve, QPainter& painter)
     QColor col;
 
     painter.setRenderHint(QPainter::Antialiasing);
-    qreal xtop = getXForValue(minX, false) - rectXSize/2.;
+    qreal xtop;
+    //if (minX <= mCurrentMinX)
+        xtop = getXForValue(minX, true);
+   // else
+   //     xtop = getXForValue(minX, true) - rectXSize/2.;
 
     for (unsigned c1 = 1 ; c1 < curve.mMap.column(); c1++) {
         const double tReal = c1*(maxX-minX)/(curve.mMap.column()-1) + minX;
-        qreal xbottom =  getXForValue(tReal, false) + rectXSize/2.;
-        double ytop = getYForValue(minY, false) + rectYSize/2.;
+        qreal xbottom;// = getXForValue(tReal, true) + rectXSize/2.;
+        if (tReal <= mCurrentMinX || c1 == (curve.mMap.column()-1) )
+            xbottom = getXForValue(tReal, true);
+        else
+            xbottom = getXForValue(tReal, true) + rectXSize/2.;
+
+        if (tReal< mCurrentMinX || mCurrentMaxX< tReal) {
+            xtop = xbottom;
+            continue;
+        }
+
+
+        double ytop = getYForValue(minY, true) + rectYSize/2.;
 
         for (unsigned r = 1 ; r < curve.mMap.row(); r++) {
             const double val = curve.mMap.at(c1, r);
             const qreal yReal = r*(maxY-minY)/(curve.mMap.row()-1) + minY;
-            qreal ybottom = getYForValue(yReal, false) - rectYSize/2.;
+            qreal ybottom = getYForValue(yReal, true) - rectYSize/2.;
 
             if ( val > minVal) {
 #ifdef DEBUG
@@ -1438,35 +1444,39 @@ void GraphView::drawShape(GraphCurve &curve, QPainter& painter)
     if (curve.mShape.first.isEmpty())
         return;
 
-    if ( curve.mShape.first.lastKey()<= mAxisToolX.mStartVal
-         || curve.mShape.first.firstKey()>= mAxisToolX.mEndVal)
+    if ( curve.mShape.first.lastKey()<= mCurrentMinX || curve.mShape.first.firstKey()>= mCurrentMaxX)
         return;
 
     QPainterPath path;
     QPainterPath pathSecond;
-    QMap<double, double>::Iterator iFirst = curve.mShape.first.begin();
-    QMap<double, double>::Iterator iSecond = curve.mShape.second.begin();
 
 
-    if ( mAxisToolX.mStartVal< curve.mShape.first.firstKey() ) {
-        const double yF = interpolateValueInQMap(curve.mShape.first.firstKey(), curve.mShape.first);
+    if ( mCurrentMinX<= curve.mShape.first.firstKey() && mCurrentMinX< curve.mShape.first.lastKey()) {
+        const double yF = curve.mShape.first.first();
         path.moveTo(getXForValue(curve.mShape.first.firstKey(), true), getYForValue(yF, true));
 
-        const double yS = interpolateValueInQMap(curve.mShape.second.firstKey(), curve.mShape.second);
+        const double yS = curve.mShape.second.first();
         pathSecond.moveTo(getXForValue(curve.mShape.second.firstKey(), true), getYForValue(yS, true));
 
-    } else if (mAxisToolX.mStartVal< curve.mShape.first.firstKey() ) {
+    } else if (curve.mShape.first.firstKey()<mCurrentMinX && mCurrentMinX< curve.mShape.first.lastKey() ) {
          // The point does not exist, mStartVal does not exist in the table, it must be interpolated
-        const double yF = interpolateValueInQMap(mAxisToolX.mStartVal, curve.mShape.first);
-        path.moveTo(getXForValue(mAxisToolX.mStartVal, true), getYForValue(yF, true));
+        const double yF = interpolateValueInQMap(mCurrentMinX, curve.mShape.first);
+        path.moveTo(getXForValue(mCurrentMinX, true), getYForValue(yF, true));
 
-        const double yS = interpolateValueInQMap(mAxisToolX.mStartVal, curve.mShape.second);
-        pathSecond.moveTo(getXForValue(mAxisToolX.mStartVal, true), getYForValue(yS, true));
+        const double yS = interpolateValueInQMap(mCurrentMinX, curve.mShape.second);
+        pathSecond.moveTo(getXForValue(mCurrentMinX, true), getYForValue(yS, true));
     }
 
     const QPointF &pFirst = path.currentPosition();
+    QMap<double, double>::Iterator iFirst = curve.mShape.first.begin();
+    QMap<double, double>::Iterator iSecond = curve.mShape.second.begin();
 
-    while (iFirst != curve.mShape.first.end() && iFirst.key()<= mAxisToolX.mEndVal) {
+    while (iFirst != curve.mShape.first.end() && iFirst.key()< mCurrentMinX) {
+        ++iFirst;
+        ++iSecond;
+    }
+
+    while (iFirst != curve.mShape.first.end() && mCurrentMinX<=iFirst.key() && iFirst.key()<= mCurrentMaxX) {
         path.lineTo(getXForValue(iFirst.key(), true), getYForValue(iFirst.value(), true));
         ++iFirst;
 
@@ -1475,13 +1485,12 @@ void GraphView::drawShape(GraphCurve &curve, QPainter& painter)
     }
 
     // The point does not exist, mEndVal does not exist in the table, it must be interpolated
-    if ( iFirst != curve.mShape.first.end()
-         && curve.mShape.first.lastKey()> mAxisToolX.mEndVal) {
-        const double yF = interpolateValueInQMap(mAxisToolX.mEndVal, curve.mShape.first);
-        path.lineTo(getXForValue(mAxisToolX.mEndVal, true), getYForValue(yF, true));
+    if ( iFirst != curve.mShape.first.end() && curve.mShape.first.lastKey()>= mCurrentMaxX) {
+        const double yF = interpolateValueInQMap(mCurrentMaxX, curve.mShape.first);
+        path.lineTo(getXForValue(mCurrentMaxX, true), getYForValue(yF, true));
 
-        const double yS = interpolateValueInQMap(mAxisToolX.mEndVal, curve.mShape.second);
-        pathSecond.lineTo(getXForValue(mAxisToolX.mEndVal, true), getYForValue(yS, true));
+        const double yS = interpolateValueInQMap(mCurrentMaxX, curve.mShape.second);
+        pathSecond.lineTo(getXForValue(mCurrentMaxX, true), getYForValue(yS, true));
     }
 
     path.lineTo(pathSecond.currentPosition());

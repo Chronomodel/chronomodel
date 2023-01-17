@@ -225,10 +225,8 @@ void MetropolisVariable::updateFormatedTrace()
     if (!mRawTrace)
         return;
 
-    //mFormatedTrace->clear();
     if (mRawTrace->size() == 0)
        return;
-
 
     if (mFormat == DateUtils::eNumeric)
         mFormatedTrace = mRawTrace; // it's the same pointer, if you delete mFormatedTrace, you delete mRawTrace
@@ -238,7 +236,14 @@ void MetropolisVariable::updateFormatedTrace()
 
     else {
         mFormatedTrace->resize(mRawTrace->size());
-        std::transform(mRawTrace->cbegin(), mRawTrace->cend(), mFormatedTrace->begin(), [this](const double i){return DateUtils::convertToFormat(i,this->mFormat);});
+        std::transform(mRawTrace->cbegin(), mRawTrace->cend(), mFormatedTrace->begin(), [this](const double i){return DateUtils::convertToFormat(i, this->mFormat);});
+        double t1 = DateUtils::convertToFormat(mCredibility.first, this->mFormat);
+        double t2 = DateUtils::convertToFormat(mCredibility.second, this->mFormat);
+        if (t1>t2)
+            std::swap(t1, t2);
+        mCredibility.first = t1;
+        mCredibility.second = t2;
+
     }
 
 }

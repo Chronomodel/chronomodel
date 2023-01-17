@@ -350,7 +350,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         if (mShowVariableList.contains(eThetaEvent)) {
             mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
             mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
-            mGraph->setCurveVisible("Credibility All Chains", mShowAllChains);
+            mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
 
             for (int i = 0; i < mShowChainList.size(); ++i)
                 mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList.at(i));

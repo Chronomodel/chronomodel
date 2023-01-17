@@ -72,10 +72,10 @@ qreal AxisTool::getXForValue(const qreal &value)
     return valueForProportion(value, qreal (mStartVal), qreal (mEndVal), 0., std::max(0., mTotalPix - rigthBlank), true);
 }
 
+#define TOPBLANK 1
 qreal AxisTool::getYForValue(const qreal &value)
 {
-    const qreal blank = 10.;
-    return valueForProportion(value, qreal (mStartVal), qreal (mEndVal), 0., std::max(0., mTotalPix-blank), true);
+    return valueForProportion(value, mStartVal, mEndVal, 0., std::max(0., qreal(mTotalPix - TOPBLANK)), true);
 }
 
 void AxisTool::updateValues(const int &totalPix, const int &minDeltaPix, const qreal &minVal, const qreal &maxVal)

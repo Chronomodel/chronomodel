@@ -162,6 +162,10 @@ QMap<T, V> getMapDataInRange(const QMap<T, V> &data, const T subMin, const  T su
             subData.insert(subMin, data.first());
             subData.insert(subMax, data.last());
 
+        } else if (data.firstKey()<=subMin && data.lastKey()>=subMax) {
+            subData[subMin] =  interpolateValueInQMap(subMin, data);
+            subData[subMax] =  interpolateValueInQMap(subMax, data);
+
         }
         return subData;
     }

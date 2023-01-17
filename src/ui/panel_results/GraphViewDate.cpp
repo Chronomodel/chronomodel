@@ -361,12 +361,12 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
          */
         if (variableList.contains(eDataTi)) {
 
-            const bool showCredibility = true;
+            //const bool showCredibility = true;
             const bool showCalib = variableList.contains(eDataCalibrate);
             const bool showWiggle = variableList.contains(eDataWiggle);
             mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
             mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
-            mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && showCredibility);
+            mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
             mGraph->setCurveVisible("Calibration", showCalib);
             mGraph->setCurveVisible("Wiggle", showWiggle);
             for (int i=0; i<mShowChainList.size(); ++i)

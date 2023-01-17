@@ -674,6 +674,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graph3->showYAxisSubTicks(true);
             graph3->setTipYLab("Z");
 
+            graph3->setMarginTop(graph3->fontMetrics().height()/2.);
 
         case CurveSettings::eProcessTypeSpherical:
         case CurveSettings::eProcessType2D:
@@ -701,6 +702,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graph2->setYAxisMode(GraphView::eAllTicks);
             graph2->showYAxisSubTicks(true);
             graph2->setTipYLab("Y");
+            graph2->setMarginTop(graph2->fontMetrics().height()/2.);
 
         case CurveSettings::eProcessTypeNone:
         case CurveSettings::eProcessTypeUnivarie:
@@ -730,14 +732,10 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graph1->showYAxisSubTicks(true);
 
             graph1->setTipYLab("X");
+            graph1->setMarginTop(graph1->fontMetrics().height()/2.);
+
         break;
     }
-
-
-
-
-
-
 
 
 
