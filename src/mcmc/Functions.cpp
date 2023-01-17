@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "AppSettings.h"
 #include "QtWidgets/qmessagebox.h"
+#include "StdUtilities.h"
 
 
 #include <QDebug>

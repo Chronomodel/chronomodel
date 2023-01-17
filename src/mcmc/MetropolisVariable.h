@@ -190,6 +190,7 @@ public:
 
     std::pair<double, double> mCredibility;
 
+    double mCredibilityThresholdUsed;
     double mExactCredibilityThreshold;
 
     DensityAnalysis mResults;

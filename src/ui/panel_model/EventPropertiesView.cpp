@@ -831,7 +831,7 @@ void EventPropertiesView::updateLayout()
     QFontMetrics fm (font());
     const int margin = 10;
 
-    int shiftMax (qMax(fm.boundingRect(mNameLab->text()).width(), qMax(fm.boundingRect(mColorLab->text()).width(), fm.boundingRect(mMethodLab->text()).width() )) );
+    int shiftMax (qMax(fm.horizontalAdvance(mNameLab->text()), qMax(fm.horizontalAdvance(mColorLab->text()), fm.horizontalAdvance(mMethodLab->text()) )) );
     shiftMax = shiftMax + 2*margin;
     const int editWidth  = width() - shiftMax;
     const int labeltWidth = width() - editWidth - 2*margin;

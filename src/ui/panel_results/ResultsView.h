@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -409,6 +409,9 @@ private:
     QLabel* mThreshLab;
     CheckBox* mCredibilityCheck;
     LineEdit* mThresholdEdit;
+
+    QLabel* mRangeThreshLab;
+    LineEdit* mRangeThresholdEdit; // Used with Activity
     Label* mFFTLenLab;
     QComboBox* mFFTLenCombo;
     Label* mBandwidthLab;

@@ -52,6 +52,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "PluginManager.h"
 #include "Generator.h"
+#include "StdUtilities.h"
 
 #include <QtWidgets>
 #include <QProgressDialog>
@@ -423,7 +424,7 @@ void EventsScene::updateSceneFromState()
         progress->setWindowModality(Qt::WindowModal);
         progress->setCancelButton(nullptr);
 
-        progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width()  * 1.5));
+        progress->setMinimumWidth(int (progress->fontMetrics().horizontalAdvance(progress->labelText()) * 1.5));
     }
 
     QList<int> events_ids_inNewState;

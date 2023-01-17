@@ -41,6 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ModelUtilities.h"
 //#include "Project.h"
 #include "QtUtilities.h"
+#include "StdUtilities.h"
 #include <MainWindow.h>
 
 #include <QFile>

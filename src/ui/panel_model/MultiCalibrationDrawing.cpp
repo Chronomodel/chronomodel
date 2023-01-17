@@ -289,7 +289,7 @@ void MultiCalibrationDrawing::forceRefresh()
 
          if (!graph->hasCurve()) {
             QLabel noCalib (tr("No Calibration"), this);
-            noCalib.setGeometry(ColoredBar::mWidth +5, y, std::max(0, width() - ColoredBar::mWidth - fontMetrics().boundingRect(noCalib.text()).width()), mGraphHeight);
+            noCalib.setGeometry(ColoredBar::mWidth +5, y, std::max(0, width() - ColoredBar::mWidth - fontMetrics().horizontalAdvance(noCalib.text())), mGraphHeight);
 
          } else {
              graph->showXAxisValues(axisVisible);

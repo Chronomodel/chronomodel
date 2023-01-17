@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -305,7 +305,6 @@ mMaximunNumberOfVisibleGraph(0)
     mCurveStatCheck->setFixedHeight(h);
     mCurveStatCheck->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
 
-
     QVBoxLayout* curveGroupLayout = new QVBoxLayout();
 
     QVBoxLayout* curveOptionGroupLayout = new QVBoxLayout();
@@ -327,7 +326,6 @@ mMaximunNumberOfVisibleGraph(0)
     curveGroupLayout->addWidget(mCurveStatCheck);
 
     mCurvesGroup->setLayout(curveGroupLayout);
-   // mCurvesGroup->resize(8 * h, mOptionsW);
 
     // -----------------------------------------------------------------
     //  Connections
@@ -653,6 +651,19 @@ mMaximunNumberOfVisibleGraph(0)
     mThresholdEdit->setValidator(percentValidator);
     mThresholdEdit->setFixedHeight(16);
 
+    // Used with Activity
+    mRangeThreshLab = new QLabel(tr("Time Range Level (%)"), mDensityOptsGroup);
+    mRangeThreshLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+
+    mRangeThresholdEdit = new LineEdit(mDensityOptsGroup);
+   // DoubleValidator* percentValidator = new DoubleValidator();
+   // percentValidator->setBottom(0.0);
+   // percentValidator->setTop(100.0);
+    //percentValidator->setDecimals(1);
+    mRangeThresholdEdit->setValidator(percentValidator);
+    mRangeThresholdEdit->setFixedHeight(16);
+
+
     mFFTLenLab = new Label(tr("Grid Length"), mDensityOptsGroup);
     mFFTLenLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
@@ -685,40 +696,46 @@ mMaximunNumberOfVisibleGraph(0)
     connect(mFFTLenCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::applyFFTLength);
     connect(mBandwidthSpin, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &ResultsView::applyBandwidth);
     connect(mThresholdEdit, &LineEdit::editingFinished, this, &ResultsView::applyThreshold);
+
+    connect(mRangeThresholdEdit, &LineEdit::editingFinished, this, &ResultsView::applyHActivity);
     connect(mHActivityEdit, &LineEdit::editingFinished, this, &ResultsView::applyHActivity);
 
-  //  QHBoxLayout* densityLayout0 = new QHBoxLayout();
-  //  densityLayout0->setContentsMargins(0, 0, 0, 0);
-  //  densityLayout0->addWidget(mCredibilityCheck);
-
     QHBoxLayout* densityLayout1 = new QHBoxLayout();
-   // densityLayout1->setContentsMargins(0, 0, 0, 0);
-    densityLayout1->addWidget(mThreshLab);
-    densityLayout1->addWidget(mThresholdEdit);
+    densityLayout1->addWidget(mRangeThreshLab);
+    densityLayout1->addWidget(mRangeThresholdEdit);
 
     QHBoxLayout* densityLayout2 = new QHBoxLayout();
-   // densityLayout2->setContentsMargins(0, 0, 0, 0);
-    densityLayout2->addWidget(mFFTLenLab);
-    densityLayout2->addWidget(mFFTLenCombo);
+   // densityLayout1->setContentsMargins(0, 0, 0, 0);
+    densityLayout2->addWidget(mThreshLab);
+    densityLayout2->addWidget(mThresholdEdit);
 
     QHBoxLayout* densityLayout3 = new QHBoxLayout();
-  //  densityLayout3->setContentsMargins(0, 0, 0, 0);
-    densityLayout3->addWidget(mBandwidthLab);
-    densityLayout3->addWidget(mBandwidthSpin);
+  //  densityLayout4->setContentsMargins(0, 0, 0, 0);
+    densityLayout3->addWidget(mHActivityLab);
+    densityLayout3->addWidget(mHActivityEdit);
 
     QHBoxLayout* densityLayout4 = new QHBoxLayout();
-  //  densityLayout4->setContentsMargins(0, 0, 0, 0);
-    densityLayout4->addWidget(mHActivityLab);
-    densityLayout4->addWidget(mHActivityEdit);
+   // densityLayout2->setContentsMargins(0, 0, 0, 0);
+    densityLayout4->addWidget(mFFTLenLab);
+    densityLayout4->addWidget(mFFTLenCombo);
+
+    QHBoxLayout* densityLayout5 = new QHBoxLayout();
+  //  densityLayout3->setContentsMargins(0, 0, 0, 0);
+    densityLayout5->addWidget(mBandwidthLab);
+    densityLayout5->addWidget(mBandwidthSpin);
+
+   // spanLayout->setContentsMargins(10, 10, 10, 10);
+   // spanLayout->setSpacing(5);
     
     QVBoxLayout* densityLayout = new QVBoxLayout();
     densityLayout->setContentsMargins(10, 0, 0, 0);
-    densityLayout->setSpacing(0);
+    densityLayout->setSpacing(5);
     densityLayout->addWidget(mCredibilityCheck);
     densityLayout->addLayout(densityLayout1);
     densityLayout->addLayout(densityLayout2);
     densityLayout->addLayout(densityLayout3);
     densityLayout->addLayout(densityLayout4);
+    densityLayout->addLayout(densityLayout5);
 
     mDensityOptsGroup->setLayout(densityLayout);
 
@@ -739,7 +756,7 @@ mMaximunNumberOfVisibleGraph(0)
     // ------------------------------------
     //  Tab Page
     // ------------------------------------
-    const qreal layoutWidth = mOptionsW;//-2*mMargin;
+    const qreal layoutWidth = mOptionsW;
     const qreal internSpacing = 2;
 
     mPageWidget = new QWidget();
@@ -951,64 +968,9 @@ void ResultsView::clearResults()
 void ResultsView::updateModel(Model* model)
 {
     (void) model;
-    /*
-    if (mModel == nullptr) {
-        disconnect(mModel, &Model::newCalculus, this, &ResultsView::generateCurves);
-    }
-
-    mModel = model;
-    connect(mModel, &Model::newCalculus, this, &ResultsView::generateCurves);
-
-    Scale xScale;
-    xScale.findOptimal(mModel->mSettings.mTmin, mModel->mSettings.mTmax, 7);
-    mMajorScale = xScale.mark;
-    mMinorCountScale = 4;
-
-    mRuler->setRange(mModel->mSettings.getTminFormated(), mModel->mSettings.getTmaxFormated());
-    mRuler->setCurrent(mModel->mSettings.getTminFormated(), mModel->mSettings.getTmaxFormated());
-    mRuler->setScaleDivision(mMajorScale, mMinorCountScale);
-
-    QLocale locale = QLocale();
-    mMajorScaleEdit->setText(locale.toString(mMajorScale));
-    mMinorScaleEdit->setText(locale.toString(mMinorCountScale));
-
-    mHasPhases = (mModel->mPhases.size() > 0);
-
-    // ----------------------------------------------------
-    //  Create Chains option controls (radio and checkboxes under "MCMC Chains")
-    // ----------------------------------------------------
-    createChainsControls();
-    mAllChainsCheck->setChecked(true);
-
-    mCurrentTypeGraph = GraphViewResults::ePostDistrib;
-    mCurrentVariableList.clear();
-    if (isCurve()) {
-        mMainVariable = GraphViewResults::eG;
-        mCurveGRadio->setChecked(true);
-        mGraphListTab->setTab(2, false);
-
-    } else if (mHasPhases) {
-        mMainVariable = GraphViewResults::eBeginEnd;
-        mGraphListTab->setTab(1, false);
-
-    } else {
-        mMainVariable = GraphViewResults::eThetaEvent;
-        mGraphListTab->setTab(0, false);
-    }
-    updateMainVariable();
-    mCurrentVariableList.append(mMainVariable);
-    mFFTLenCombo->setCurrentText(stringForLocal(mModel->getFFTLength()));
-    mBandwidthSpin->setValue(mModel->getBandwidth());
-    mThresholdEdit->setText(stringForLocal(mModel->getThreshold()));
-    mHActivityEdit->setText(stringForLocal(mModel->mHActivity));
-    
-   // applyStudyPeriod();
-   // updateOptionsWidget();
-*/
     createGraphs();
     updateLayout();
-    
- //   showStats(mStatCheck->isChecked());
+
 }
 
 void ResultsView::initModel(Model* model)
@@ -1058,10 +1020,13 @@ void ResultsView::initModel(Model* model)
     }
     updateMainVariable();
     mCurrentVariableList.append(mMainVariable);
-    mFFTLenCombo->setCurrentText(stringForLocal(mModel->getFFTLength()));
-    mBandwidthSpin->setValue(mModel->getBandwidth());
+    mRangeThresholdEdit->setText(stringForLocal(95.));
     mThresholdEdit->setText(stringForLocal(mModel->getThreshold()));
     mHActivityEdit->setText(stringForLocal(mModel->mHActivity));
+
+    mFFTLenCombo->setCurrentText(stringForLocal(mModel->getFFTLength()));
+    mBandwidthSpin->setValue(mModel->getBandwidth());
+
 
     applyStudyPeriod();
     updateOptionsWidget();
@@ -1487,8 +1452,8 @@ void ResultsView::toggleDisplayDistrib()
         if (showDensityOptions) {
 
             mDensityOptsGroup->setFixedHeight( mCredibilityCheck->height() + mThresholdEdit->height() + mFFTLenCombo->height()
-                                              + mBandwidthSpin->height() + mHActivityEdit->height()
-                                               + 10* internSpan);
+                                              + mBandwidthSpin->height() + mHActivityEdit->height() + mRangeThresholdEdit->height()
+                                               + 12* internSpan);
 
             widHeigth += mDensityOptsTitle->height() + mDensityOptsGroup->height();
 
@@ -3062,6 +3027,11 @@ void ResultsView::updateOptionsWidget()
         int nbObject = 0;
 
         if (mMainVariable == GraphViewResults::eActivity) {
+            mRangeThreshLab->show();
+            mRangeThreshLab->setFixedHeight(20);
+            mRangeThresholdEdit->show();
+            mRangeThresholdEdit->setFixedHeight(20);
+
             mThreshLab->show();
             mThreshLab->setFixedHeight(20);
             mThresholdEdit->show();
@@ -3080,9 +3050,14 @@ void ResultsView::updateOptionsWidget()
             mHActivityEdit->show();
             mHActivityEdit->setFixedHeight(20);
 
-            nbObject += 1;
+            nbObject += 3;
 
         } else if (mMainVariable == GraphViewResults::eTempo) {
+            mRangeThreshLab->hide();
+            mRangeThreshLab->setFixedHeight(0);
+            mRangeThresholdEdit->hide();
+            mRangeThresholdEdit->setFixedHeight(0);
+
             mThreshLab->hide();
             mThreshLab->setFixedHeight(0);
             mThresholdEdit->hide();
@@ -3104,6 +3079,11 @@ void ResultsView::updateOptionsWidget()
             //nbObject += 0;
 
         } else {
+            mRangeThreshLab->hide();
+            mRangeThreshLab->setFixedHeight(0);
+            mRangeThresholdEdit->hide();
+            mRangeThresholdEdit->setFixedHeight(0);
+
             mThreshLab->show();
             mThreshLab->setFixedHeight(20);
             mThresholdEdit->show();
@@ -3131,7 +3111,7 @@ void ResultsView::updateOptionsWidget()
         if (showDensityOptions) {
 
             mDensityOptsGroup->setFixedHeight( mCredibilityCheck->height() + mThresholdEdit->height() + mFFTLenCombo->height()
-                                              + mBandwidthSpin->height() + mHActivityEdit->height()
+                                               + mBandwidthSpin->height() + mHActivityEdit->height() + mRangeThresholdEdit->height()
                                                + (nbObject+1)* internSpan);
 
             widHeigth += mDensityOptsTitle->height() + mDensityOptsGroup->height() + 4*internSpan;
@@ -3560,7 +3540,8 @@ void ResultsView::applyFFTLength()
 void ResultsView::applyHActivity()
 {
     const double h = locale().toDouble(mHActivityEdit->text());
-    mModel->setHActivity(h);
+    const double rangePercent = locale().toDouble(mRangeThresholdEdit->text());
+    mModel->setHActivity(h, rangePercent);
 }
 void ResultsView::applyBandwidth()
 {
@@ -4077,9 +4058,9 @@ void ResultsView::exportFullImage()
         axisLegend->setFont(font());
         QFontMetrics fm(font());
         if (mStatCheck->isChecked())
-            axisLegend->setGeometry(fm.boundingRect(legend).width(), curWid->height() - axeHeight - legendHeight, int (curWid->width()*2./3. - 10), legendHeight);
+            axisLegend->setGeometry(fm.horizontalAdvance(legend), curWid->height() - axeHeight - legendHeight, int (curWid->width()*2./3. - 10), legendHeight);
         else
-            axisLegend->setGeometry(int (curWid->width() - fm.boundingRect(legend).width() - mMarginRight), curWid->height() - axeHeight - legendHeight, fm.boundingRect(legend).width() , legendHeight);
+            axisLegend->setGeometry(int (curWid->width() - fm.horizontalAdvance(legend) - mMarginRight), curWid->height() - axeHeight - legendHeight, fm.horizontalAdvance(legend) , legendHeight);
 
         axisLegend->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
         axisLegend->raise();

@@ -121,5 +121,5 @@ void HelpWidget::resizeEvent(QResizeEvent*)
 {
     QFontMetrics metrics(mFont);
     mHyperLink->setFont(mFont);
-    mHyperLink->setGeometry(5, height() - 2*mFont.pointSize() -5, width() - metrics.boundingRect("More..").width() -5, 2*mFont.pointSize());
+    mHyperLink->setGeometry(5, height() - 2*mFont.pointSize() -5, width() - metrics.horizontalAdvance("More..") -5, 2*mFont.pointSize());
 }

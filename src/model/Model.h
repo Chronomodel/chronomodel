@@ -116,14 +116,10 @@ public:
     // Trace and Posterior density needed for this :
     virtual void generateNumericalResults(const QList<ChainSpecs>& chains);
 
-    void generateTempoAndActivity(size_t gridLenth, double h, const double threshold); // Obsolete
-
     void generateTempo_old(size_t gridLength);
     void generateTempo(size_t gridLength);
 
-    void generateActivity_old(size_t gridLenth, double h, const double threshold);
-
-    void generateActivity(const size_t gridLenth, const double h, const double threshold);
+    void generateActivity(const size_t gridLenth, const double h, const double threshold, const double rangePercent = 95.);
     void generateActivityBinomialeCurve(const int n, std::vector<double>& C1x, std::vector<double>& C2x, const double alpha = .05);
 
     virtual void clearTraces();
@@ -158,7 +154,7 @@ public:
     int mNumberOfDates;
 
 
-    double mThreshold;
+    double mThreshold; // used for TimeRange + Credibility + transition Range + GapRange
     double mBandwidth;
     size_t mFFTLength;
     double mHActivity;
@@ -170,7 +166,7 @@ public slots:
     void setThreshold(const double threshold);
     void setBandwidth(const double bandwidth);
     void setFFTLength(size_t FFTLength);
-    void setHActivity(const double h);
+    void setHActivity(const double h, const double rangePercent);
 
 signals:
     void newCalculus();

@@ -465,10 +465,13 @@ void MetropolisVariable::generateHPD(const double threshold)
 
 void MetropolisVariable::generateCredibility(const QList<ChainSpecs> &chains, double threshold)
 {
-    if (!mHisto.isEmpty())
-        mCredibility = credibilityForTrace(fullRunTrace(chains), threshold, mExactCredibilityThreshold);//, "Compute credibility for "+getName());
-    else
+    if (mHisto.isEmpty())  {
         mCredibility = std::pair<double, double>(-INFINITY, INFINITY);
+
+    } else if (mCredibilityThresholdUsed != threshold) {
+        mCredibility = credibilityForTrace(fullRunTrace(chains), threshold, mExactCredibilityThreshold);//, "Compute credibility for "+getName());
+        mCredibilityThresholdUsed = threshold;
+    }
 
 }
 

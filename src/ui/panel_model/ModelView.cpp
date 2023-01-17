@@ -567,7 +567,7 @@ bool ModelView::findCalibrateMissing()
         progress->setMinimumDuration(4);
         progress->setMinimum(0);
 
-        progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
+        progress->setMinimumWidth(int (progress->fontMetrics().horizontalAdvance(progress->labelText()) * 1.5));
 
         int position = 0;
         for (auto& ev : events)
@@ -636,7 +636,7 @@ void ModelView::calibrateAll(ProjectSettings newS)
         progress->setMinimumDuration(4);
         progress->setMinimum(0);
         //progress->setMinimumWidth(7 * AppSettings::widthUnit());
-        progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
+        progress->setMinimumWidth(int (progress->fontMetrics().horizontalAdvance(progress->labelText()) * 1.5));
 
         int position(0);
         for (auto& ev : events)
@@ -1197,11 +1197,11 @@ void ModelView::updateLayout()
         leftTitle = tr("Calibrated Data View");
     }
     mLeftPanelTitle->setText(leftTitle);
-    mLeftPanelTitle->setGeometry(margin, 0, fm.boundingRect(leftTitle).width() + 10, mTopRect.height());
+    mLeftPanelTitle->setGeometry(margin, 0, fm.horizontalAdvance(leftTitle) + 10, mTopRect.height());
         
     // Label right
     updateRightPanelTitle();
-    int labw = fm.boundingRect(mRightPanelTitle->text()).width() + 10;
+    int labw = fm.horizontalAdvance(mRightPanelTitle->text()) + 10;
     mRightPanelTitle->setGeometry(std::max(0, width() - labw - margin), 0, labw, mTopRect.height());
 
     // Center buttons

@@ -513,15 +513,39 @@ QString ModelUtilities::activityResultsText(const Phase* p, const bool forCSV)
     text += "Theta min = " + stringForLocal(t1) + " " + DateUtils::getAppSettingsFormatStr() + nl ;
     text += "Theta max = " + stringForLocal(t2) + " " + DateUtils::getAppSettingsFormatStr() + nl ;
 
-    t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("min95").mValue);
-    t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("max95").mValue);
+   /* t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_min95").mValue);
+    t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_max95").mValue);
     if (t1>t2)
         std::swap(t1, t2);
-    double threshold = p->mValueStack.at("Activity threshold").mValue;
-    text += "Phase Time Range" + QString(" ( %1 %) [").arg(threshold) + stringForLocal(t1) + " ; " + stringForLocal(t2) + "] " + DateUtils::getAppSettingsFormatStr() + nl ;
+        */
+    double threshold = p->mValueStack.at("Activity_Threshold").mValue;
+
+    if (p->mTimeRange != std::pair<double,double>(- INFINITY, +INFINITY)) {
+        text += nl + nl;
+        // we suppose it's the same mThreshohdUsed than alpha
+        if (forCSV) {
+            text += QObject::tr("Activity Range") + QString(" ( %1 %) : [ %2 : %3 ] %4").arg(stringForCSV(p->mAlpha.mThresholdUsed, true),
+                                                                                                stringForCSV(p->getFormatedTimeRange().first, true),
+                                                                                                stringForCSV(p->getFormatedTimeRange().second, true),
+                                                                                                DateUtils::getAppSettingsFormatStr());
+
+        } else {
+            text += QObject::tr("Activity Range") + QString(" ( %1 %) : [ %2 : %3 ] %4").arg(stringForLocal(p->mAlpha.mThresholdUsed, false),
+                                                                                                stringForLocal(p->getFormatedTimeRange().first, false),
+                                                                                                stringForLocal(p->getFormatedTimeRange().second, false),
+                                                                                                DateUtils::getAppSettingsFormatStr());
+
+        }
+
+
+    }
+
+    //text += "Phase Time Range" + QString(" ( %1 %) [").arg(threshold) + stringForLocal(t1) + " ; " + stringForLocal(t2) + "] " + DateUtils::getAppSettingsFormatStr() + nl ;
+    text += "Phase Time Range Theta mean = " + stringForLocal(DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_mean95").mValue)) + " " + DateUtils::getAppSettingsFormatStr() + nl ;
+    text += "Phase Time Range Theta std = " + stringForLocal(p->mValueStack.at("Activity_std95").mValue) + " " + DateUtils::getAppSettingsFormatStr() + nl ;
 
     text += "<hr>";
-    text += line(textBold(textOrange(QObject::tr("Unif. distrib."))));
+   /* text += line(textBold(textOrange(QObject::tr("Unif. distrib."))));
     t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("a_Unif").mValue);
     t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("b_Unif").mValue);
 
@@ -532,14 +556,14 @@ QString ModelUtilities::activityResultsText(const Phase* p, const bool forCSV)
 
     QString textValue = stringForLocal(p->mValueStack.at("R_etendue").mValue);
     text += "Unif. Span = " + textValue  + nl ;
-
-    textValue = stringForLocal(p->mValueStack.at("Significance Score").mValue, true);
+*/
+    QString textValue = stringForLocal(p->mValueStack.at("Significance Score").mValue, true);
     text += "Significance Score"  + QString(" ( %1 %) =").arg(threshold) + textValue + nl ;
 
 
-    textValue = stringForLocal(p->mValueStack.at("max Activity").mValue, true);
-    text += "max Activity"  + QString(" = %1").arg(p->mValueStack.at("max Activity").mValue) + nl ;
-    text += "mode Activity"  + QString(" = %1").arg(DateUtils::convertToAppSettingsFormat(p->mValueStack.at("mode Activity").mValue)) + nl ;
+    textValue = stringForLocal(p->mValueStack.at("Activity_max").mValue, true);
+    text += "max Activity"  + QString(" = %1").arg(p->mValueStack.at("Activity_max").mValue) + nl ;
+    text += "mode Activity"  + QString(" = %1").arg(DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_mode").mValue)) + nl ;
 
     return text;
 
@@ -1338,7 +1362,7 @@ QString ModelUtilities::activityResultsHTML(const Phase* p)
     text += line(textOrange(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
 
     text += "<br>";
-    text += line(textBold(textOrange(QObject::tr("Activity"))));
+
     if (p->mEvents.size()<2) {
         text += line(textOrange("<i>" + QObject::tr("No Stat.")  + "</i>"));
         return text;
@@ -1353,36 +1377,39 @@ QString ModelUtilities::activityResultsHTML(const Phase* p)
     text += line(textOrange("Theta min = " + stringForLocal(t1) + " " + DateUtils::getAppSettingsFormatStr()));
     text += line(textOrange("Theta max = " + stringForLocal(t2) + " " + DateUtils::getAppSettingsFormatStr()));
 
-    t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("min95").mValue);
-    t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("max95").mValue);
-    if (t1>t2)
-        std::swap(t1, t2);
-    const double threshold = p->mValueStack.at("Activity threshold").mValue;
-    text += line(textOrange("Phase Time Range" + QString(" ( %1 %) [").arg(threshold) + stringForLocal(t1) + " ; " + stringForLocal(t2) + "] " + DateUtils::getAppSettingsFormatStr()) );
-
     text += "<hr>";
-    text += line(textBold(textOrange(QObject::tr("Unif. distrib."))));
-    t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("a_Unif").mValue);
-    t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("b_Unif").mValue);
+    text += "<br>";
+    text += line(textBold(textOrange(QObject::tr("Activity"))));
+    t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_TimeRange_min").mValue);
+    t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_TimeRange_max").mValue);
 
     if (t1>t2)
         std::swap(t1, t2);
-    text += line(textOrange("Unif. Theta min = " + stringForLocal(t1) + " " + DateUtils::getAppSettingsFormatStr()));
-    text += line(textOrange("Unif. Theta max = " + stringForLocal(t2) + " " + DateUtils::getAppSettingsFormatStr()));
 
-    QString textValue = stringForLocal(p->mValueStack.at("R_etendue").mValue);
-    text += line(textOrange("Unif. Span = " + textValue ));
+    text += line(textOrange(QObject::tr("Activity Time Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg( stringForLocal(p->mValueStack.at("Activity_TimeRange_Level").mValue),
+                                                                                        stringForLocal(t1),
+                                                                                        stringForLocal(t2),
+                                                                                        DateUtils::getAppSettingsFormatStr())));
 
-    text += line("");
+    text += line(textOrange("Activity Span = " + stringForLocal(t2-t1) ));
+    text += line(textOrange("Activity Theta mean = " + stringForLocal(DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_mean95").mValue)) + " " + DateUtils::getAppSettingsFormatStr()));
+    text += line(textOrange("Activity Theta std = " + stringForLocal(p->mValueStack.at("Activity_std95").mValue) ));
+
     text += "<br>";
-    textValue = stringForLocal(p->mValueStack.at("Significance Score").mValue, true);
-    text += line(textOrange("Significance Score"  + QString(" ( %1 %) = ").arg(threshold) + textValue));
+    text += line(textBold(textOrange(QObject::tr("h Estimation"))));
 
-    text += line("");
-    //textValue = stringForLocal(p->mValueStack.at("max Activity").mValue, true);
-    text += line(textOrange("max Activity"  + QString(" = %1").arg(p->mValueStack.at("max Activity").mValue) ));
-    text += line(textOrange("mode Activity"  + QString(" = %1").arg(DateUtils::convertToAppSettingsFormat(p->mValueStack.at("mode Activity").mValue)) + " " + DateUtils::getAppSettingsFormatStr() )) ;
+    QString textValue = stringForLocal(p->mValueStack.at("Significance Score").mValue, true);
+    const double threshold = p->mValueStack.at("Activity_Threshold").mValue;
+    const auto hActi = p->mValueStack.at("Activity_h").mValue;
+    text += line(textOrange("Significance Score"  + QString(" ( %1 %) = ").arg(threshold) + textValue + QString(" with h = %1").arg(hActi)));
 
+    text += line(""); 
+    text += line(textOrange("Activity max"  + QString(" = %1").arg(p->mValueStack.at("Activity_max").mValue) ));
+    text += line(textOrange("Activity mode"  + QString(" = %1").arg(DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_mode").mValue)) + " " + DateUtils::getAppSettingsFormatStr() )) ;
+
+    const double hUnif = (3.686*p->mValueStack.at("Activity_std95").mValue)/pow(p->mEvents.size(), 1./5.);
+    text += "<br>";
+    text += line(textOrange("Optimal h Unif = " + stringForLocal(hUnif)));
 
     return text;
 }

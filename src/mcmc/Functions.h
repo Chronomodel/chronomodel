@@ -39,7 +39,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
-#include "StdUtilities.h"
 #include "DateUtils.h"
 #include "Matrix.h"
 

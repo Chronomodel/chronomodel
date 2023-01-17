@@ -63,6 +63,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define M_PIl 3.14159265358979323846264338327950288419716939937510L //usefull in long double
 #endif
 
+#ifndef M_SQRT2PI
+#define M_SQRT2PI 2.5066282746310005024157652848110452530069867406099383166299235763 //sqrt(2*pi)
+#endif
+
 typedef QString (*FormatFunc)(const double, const bool forcePrecision);
 
 const double gammaActivity[] = {1.,-1.,0.00501257,0.0589032,0.140868,0.222072,0.294314,0.356635,0.410058,0.455966,0.495647,0.530184,0.560456,0.587174,
@@ -85,7 +89,7 @@ double safeLog(const double& x, int n = 5);
 void checkFloatingPointException(const QString& infos = QString());
 
 template <typename T, typename V>
-V interpolate(const T& x, const T& x1, const T& x2, const V& y1, const V& y2)
+inline V interpolate(const T& x, const T& x1, const T& x2, const V& y1, const V& y2)
 {
     Q_ASSERT(x1!=x2);
     return (y1 + (y2 - y1) * V((x - x1) / (x2 - x1)) );
@@ -361,6 +365,18 @@ QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmi
 
 inline double diff_erf(double a, double b, double mu = 0., double sigma = 1.) {
     return 0.5*(erf((b-mu)/(sigma*M_SQRT2)) - erf((a-mu)/(sigma*M_SQRT2)));
+}
+
+/**
+ * @brief N compute Normal law = Gauss law
+ * @param x
+ * @param mean
+ * @param stddev
+ * @return
+ */
+template<typename T>
+inline T N(T x, T mean = 0, T stddev = 1) {
+    return exp(-pow(x - mean, 2)/(2*pow(stddev, 2)))/(stddev*M_SQRT2PI);
 }
 
 // Fonction utilisée pour la courbe d'activité

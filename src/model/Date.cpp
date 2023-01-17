@@ -59,133 +59,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QDebug>
 
-/*
-Dato::Dato():
-    mName("No Named Dato")
-{
-
-}
-Dato::~Dato()
-{}
-
-void Dato::fromJson(const QJsonObject& json)
-{
-    //Q_ASSERT(&json);
- //   mId = json.value(STATE_ID).toInt();
-    mName = json.value(STATE_NAME).toString();
-    mColor = QColor(json.value(STATE_COLOR_RED).toInt(),
-                    json.value(STATE_COLOR_GREEN).toInt(),
-                    json.value(STATE_COLOR_BLUE).toInt());
-
-
-
-    mUUID = json.value(STATE_DATE_UUID).toString();
-
-    if (mUUID.isEmpty())
-        mUUID = QString::fromStdString( Generator::UUID());
-
-    // Copy plugin specific values for this data :
-    mData = json.value(STATE_DATE_DATA).toObject();
-    mOrigin = (OriginType)json.value(STATE_DATE_ORIGIN).toInt();
-
-    QString pluginId = json.value(STATE_DATE_PLUGIN_ID).toString();
-    mPlugin = PluginManager::getPluginFromId(pluginId);
-    mMethod = (DataMethod)json.value(STATE_DATE_METHOD).toInt();
-    mIsValid = json.value(STATE_DATE_VALID).toBool();
-
-    mDeltaType = (DeltaType)json.value(STATE_DATE_DELTA_TYPE).toInt();
-    mDeltaFixed = json.value(STATE_DATE_DELTA_FIXED).toDouble();
-    mDeltaMin = json.value(STATE_DATE_DELTA_MIN).toDouble();
-    mDeltaMax = json.value(STATE_DATE_DELTA_MAX).toDouble();
-    mDeltaAverage = json.value(STATE_DATE_DELTA_AVERAGE).toDouble();
-    mDeltaError = json.value(STATE_DATE_DELTA_ERROR).toDouble();
-
-    mIsCurrent = false;
-    mIsSelected = false;
-
-    Project* project = MainWindow::getInstance()->getProject();
-    mSettings = ProjectSettings::fromJson(project->mState.value(STATE_SETTINGS).toObject()); // ProjectSettings::fromJson is static
-    mSubDates = json.value(STATE_DATE_SUB_DATES).toArray();
-
-    mMixingLevel = project->mState.value(STATE_MCMC_MIXING).toDouble();
-
-    if (mPlugin == nullptr)
-        throw QObject::tr("Data could not be loaded : invalid plugin : %1").arg(pluginId);
-
-    else  {
-        if (mOrigin == eSingleDate) {
-            QPair<double, double> tminTmax = mPlugin->getTminTmaxRefsCurve(mData);
-            mTminRefCurve = tminTmax.first;
-            mTmaxRefCurve = tminTmax.second;
-
-        } else if (mOrigin == eCombination) {
-            double tmin (+INFINITY);
-            double tmax (-INFINITY);
-            TDate sd;
-            for (auto&& d : mSubDates ) {
-
-                const bool hasWiggle (d.toObject().value(STATE_DATE_DELTA_TYPE).toInt() != TDate::eDeltaNone);
-                QString toFind;
-                if (hasWiggle) {
-                    toFind = "WID::" + d.toObject().value(STATE_DATE_UUID).toString();
-
-                } else {
-                     toFind = d.toObject().value(STATE_DATE_UUID).toString();
-                }
-
-                QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
-
-                if ( it != project->mCalibCurves.end()) {
-                    CalibrationCurve* d_mCalibration = & it.value();
-                    tmin = std::min(d_mCalibration->mTmin, tmin);
-                    tmax = std::max(d_mCalibration->mTmax, tmax);
-
-                } else {
-
-                    sd.fromJson(d.toObject());
-                    sd.calibrate(mSettings, project);
-                    tmin = std::min(sd.mCalibration->mTmin, tmin);
-                    tmax = std::max(sd.mCalibration->mTmax, tmax);
-                }
-
-
-
-
-
-
-            }
-            mTminRefCurve = tmin;
-            mTmaxRefCurve = tmax;
-        }
-    }
-
-    mTheta.mProposal = ModelUtilities::getDataMethodText(mMethod);
-    mTheta.setName("Theta of date : "+ mName);
-    mSigma.mProposal = ModelUtilities::getDataMethodText(TDate::eMHSymGaussAdapt);
-    mSigma.setName("Sigma of date : "+ mName);
-
-
-
-    QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (mUUID);
-    if ( it != project->mCalibCurves.end()) {
-        mCalibration = & it.value();
-
-     } else {
-        mCalibration = nullptr;
-     }
-
-    QString toFind = "WID::" + mUUID;
-    it = project->mCalibCurves.find (toFind);
-    if ( it != project->mCalibCurves.end()) {
-        mWiggleCalibration = & it.value();
-
-    } else {
-        mWiggleCalibration = nullptr;
-    }
-
-}
-
-*/
 
 
 Date::Date(const Event *event):
@@ -1873,7 +1746,7 @@ void Date::fMHSymetricWithArg(Event *event)
     argOld = getLikelihoodArg(mTi.mX);
     argNew = getLikelihoodArg(tiNew);
 
-    const long double rapport=sqrt(argOld.first/argNew.first)*exp(argNew.second-argOld.second);
+    const long double rapport = sqrt(argOld.first/argNew.first)*exp(argNew.second-argOld.second);
 
     mTi.tryUpdate(tiNew, (double)rapport);
 

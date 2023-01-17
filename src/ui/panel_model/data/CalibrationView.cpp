@@ -331,16 +331,8 @@ void CalibrationView::updateGraphs()
         // Fill HPD only if not Unif :
         mResultsText->clear();
 
-       QMap<double, double> calibMap;
-        if (mDate.mIsValid)
-            calibMap = mDate.getFormatedCalibToShow();
-
-        QMap<double, double> wiggleCalibMap;
-        if (mDate.mDeltaType != Date::eDeltaNone)
-            wiggleCalibMap =  mDate.getFormatedWiggleCalibToShow();
-
         if (mDate.mIsValid) {
-
+            const QMap<double, double> &calibMap = mDate.getFormatedCalibToShow();
             const GraphCurve &calibCurve = densityCurve(calibMap, "Calibration", penColor);
 
             QFontMetrics fm (mCalibGraph->font());
@@ -350,6 +342,7 @@ void CalibrationView::updateGraphs()
             GraphCurve calibWiggleCurve;
             //if (!wiggleCalibMap.isEmpty()) {
             if (mDate.mDeltaType != Date::eDeltaNone) {
+                const QMap<double, double> &wiggleCalibMap =  mDate.getFormatedWiggleCalibToShow();
                 const QMap<double, double> &calibWiggle = normalize_map(wiggleCalibMap, map_max_value(calibCurve.mData));
                 calibWiggleCurve = densityCurve(calibWiggle, "Wiggle", Qt::red);
 
@@ -384,11 +377,10 @@ void CalibrationView::updateGraphs()
                 subDisplayCalib = getMapDataInRange(subDisplayCalib, mTminDisplay, mTmaxDisplay);
                 type_data yMax = map_max_value(subDisplayCalib);
 
-                if (!wiggleCalibMap.isEmpty()) {
+                if (mDate.mDeltaType != Date::eDeltaNone) {
                     QMap<type_data, type_data> subDisplayWiggle = getMapDataInRange(calibWiggleCurve.mData, mTminDisplay, mTmaxDisplay);
                     yMax = std::max( yMax, map_max_value(subDisplayWiggle));
                 }
-
 
                 mCalibGraph->setRangeY(0., yMax);
 
@@ -511,10 +503,9 @@ void CalibrationView::updateScaleX()
     bool isNumber = true;
     double aNumber = locale().toDouble(str, &isNumber);
 
-    QFont adaptedFont (font());
-
-    qreal textSize = fontMetrics().boundingRect(str).width()  + fontMetrics().boundingRect("0").width();
+    qreal textSize = fontMetrics().horizontalAdvance(str)  + fontMetrics().horizontalAdvance("0");
     if (textSize > mMajorScaleEdit->width()) {
+        QFont adaptedFont (font());
         const qreal fontRate = textSize / mMajorScaleEdit->width();
         const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
         adaptedFont.setPointSizeF(ptSiz);
@@ -533,10 +524,9 @@ void CalibrationView::updateScaleX()
 
     str = mMinorScaleEdit->text();
 
-    adaptedFont = font();
-
-    textSize = fontMetrics().boundingRect(str).width()  + fontMetrics().boundingRect("0").width();
+    textSize = fontMetrics().horizontalAdvance(str)  + fontMetrics().horizontalAdvance("0");
     if (textSize > mMinorScaleEdit->width()) {
+        QFont adaptedFont (font());
         const qreal fontRate = textSize / mMinorScaleEdit->width();
         const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
         adaptedFont.setPointSizeF(ptSiz);
@@ -578,9 +568,10 @@ void CalibrationView::updateScroll()
         if (std::isinf(-mTminDisplay) || std::isinf(mTmaxDisplay) || mTminDisplay>mTmaxDisplay )
             return;
 
-    QFont adaptedFont (font());
-    qreal textSize = fontMetrics().boundingRect(mStartEdit->text()).width()  + fontMetrics().boundingRect("0").width();
+
+    qreal textSize = fontMetrics().horizontalAdvance(mStartEdit->text())  + fontMetrics().horizontalAdvance("0");
     if (textSize > mStartEdit->width() ) {
+        QFont adaptedFont (font());
         const qreal fontRate = textSize / mStartEdit->width() ;
         const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
         adaptedFont.setPointSizeF(ptSiz);
@@ -589,9 +580,9 @@ void CalibrationView::updateScroll()
     else
         mStartEdit->setFont(font());
 
-    adaptedFont = font();
-    textSize = fontMetrics().boundingRect(mEndEdit->text()).width() + fontMetrics().boundingRect("0").width();
+    textSize = fontMetrics().horizontalAdvance(mEndEdit->text()) + fontMetrics().horizontalAdvance("0");
     if (textSize > mEndEdit->width() ) {
+        QFont adaptedFont (font());
         const qreal fontRate = textSize / mEndEdit->width();
         const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
         adaptedFont.setPointSizeF(ptSiz);
