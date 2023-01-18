@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -42,9 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MCMCLoop.h"
 #include "QtUtilities.h"
 #include "AppSettings.h"
-#include "QtWidgets/qmessagebox.h"
 #include "StdUtilities.h"
-
 
 #include <QDebug>
 #include <QApplication>
@@ -962,9 +960,9 @@ std::pair<double, double> gapRangeFromTraces(const QVector<double> &traceEnd, co
 
             // Linear intertpolation like in R quantile( type=7)
 
-            const double hb( ((double)alphaUnder.size()-1.)* bEpsilon );
-            const long long hbInf( floor(hb) );
-            const long long hbSup( ceil(hb) );
+            const size_t hb( ((double)alphaUnder.size()-1.)* bEpsilon );
+            const size_t hbInf( floor(hb) );
+            const size_t hbSup( ceil(hb) );
 
             if ((hbSup > alphaUnder.size()) || (hbInf > alphaUnder.size()))
                 return range;

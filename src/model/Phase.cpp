@@ -678,17 +678,11 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     mValueStack["b_Unif"] = TValueStack("b_Unif", b_Unif);
     mValueStack["R_etendue"] = TValueStack("R_etendue", R_etendue);
 
-  //  if (a_Unif_minus_h_2 < s->mTmin)
-  //      mRawActivityUnifTheo.insert(s->mTmin,  interpolate(s->mTmin, a_Unif_minus_h_2, a_Unif_plus_h_2, 0., ActivityUnif));
-  //  else
     mRawActivityUnifTheo.insert(a_Unif_minus_h_2,  0.);
 
     mRawActivityUnifTheo.insert(a_Unif_plus_h_2,  ActivityUnif);
     mRawActivityUnifTheo.insert(b_Unif_minus_h_2,  ActivityUnif);
 
- //   if (b_Unif_plus_h_2 > s->mTmax)
-  //      mRawActivityUnifTheo.insert(s->mTmax,  interpolate(s->mTmax, b_Unif_minus_h_2, b_Unif_plus_h_2, ActivityUnif, 0.));
-  //  else
     mRawActivityUnifTheo.insert(b_Unif_plus_h_2,  0.);
 
     /// Look for the maximum span containing values \f$ x=2 \f$
@@ -716,11 +710,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
 
     /// \f$ \delta_t_min = (max95 - min95)/(gridLength-1) \f$
-    /*   const double delta_t_min = (t_max_grid - t_min_grid) / double(gridLength-1);
-        if (h < delta_t_min) {
-             h = delta_t_min;
-         }
-         */
+
     /// \f$ \delta_t = (max95 - min95 + h)/(gridLenth-1) \f$
     const double delta_t = (t_max_grid - t_min_grid) / double(gridLength-1);
 
@@ -855,7 +845,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
          qDebug()<<" t= "<<t<<" add="<< addUnif;
          */
 
-        UnifScore += std::max(dUnif, QInf) - std::min(dUnif, QSup) / gridLength;
+        UnifScore += std::max(dUnif, QInf) - std::min(dUnif, QSup) ;
        // UnifScore += std::pow(dUnif - eA, 2.) / gridLength; // pour test
 
         nbIt++;
@@ -864,7 +854,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 #ifdef DEBUG
     qDebug()<<"[Model::generateActivity] somme Activity = "<< somActivity << " ; Phase = "<< mName <<"\n";
 #endif
-    mValueStack["Activity_Significance_Score"] = TValueStack("Activity_Significance_Score", UnifScore);
+    mValueStack["Activity_Significance_Score"] = TValueStack("Activity_Significance_Score", UnifScore/ (double)gridLength);
     mValueStack["Activity_max"] = TValueStack("Activity_max", maxActivity);
     mValueStack["Activity_mode"] = TValueStack("Activity_mode", modeActivity);
 

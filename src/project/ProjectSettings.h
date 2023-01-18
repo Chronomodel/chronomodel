@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,9 +40,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef PROJECTSETTINGS_H
 #define PROJECTSETTINGS_H
 
+#include "QtCore/qstring.h"
 #include <QString>
 #include <QJsonObject>
-//#include "StateKeys.h"
 
 #define STATE_SETTINGS_TMIN_DEF 0
 #define STATE_SETTINGS_TMAX_DEF 0

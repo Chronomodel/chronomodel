@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -42,6 +42,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ProjectSettings.h"
 #include "Model.h"
+#include "QtCore/qstring.h"
+#include "QtCore/qtmetamacros.h"
 
 #include <QObject>
 #include <QList>

@@ -73,11 +73,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 #include <QJsonObject>
 #include <QFile>
+#include <QTimer>
 
 #include <iostream>
 
 Project::Project():
-    mName (tr("ChronoModel Project")),
+    mName ("ChronoModel Project"),
     mLoop (nullptr),
     mDesignIsChanged (true),
     mStructureIsChanged (true),

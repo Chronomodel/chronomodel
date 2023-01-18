@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -38,14 +38,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "AboutDialog.h"
-#include "Painting.h"
 #include <QtWidgets>
 
 
 AboutDialog::AboutDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags)
 {
 
-    const QString text = "About " + qApp->applicationName() + " Version: " + qApp->applicationVersion();
+    const QString text = "About " + qGuiApp->applicationDisplayName()+ " Version: " + qApp->applicationVersion();
     setWindowTitle(text);
 
 #ifdef Q_OS_MAC
