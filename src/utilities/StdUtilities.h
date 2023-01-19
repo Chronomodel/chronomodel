@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef STDUTILITIES_H
 #define STDUTILITIES_H
 
+#include <chrono>
 #include <vector>
 #include <map>
 #include <random>
