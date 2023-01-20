@@ -4,8 +4,8 @@ PROJECT
 
 ChronoModel Project
 "http://www.chronomodel.com"
-version 2.0
-2018-12-11
+version 3.2.1
+2023-01-20
 
 ————————————————————————————————————————————————————————————————————————
 CREDITS
@@ -13,7 +13,7 @@ CREDITS
 Copyright ©2018 CNRS
 used under the terms:
 CeCILL FREE SOFTWARE LICENSE AGREEMENT
-Version 2.1 dated 2013-06-21
+Version 3.2.1 dated 2023-01-20
 "http://www.cecill.info"
 
 This software use C subroutine library from the FFTW project
