@@ -418,7 +418,7 @@ private:
     QDoubleSpinBox* mBandwidthSpin;
     Button* mUpdateDisplay;
 
-    Label* mHActivityLab;
+    QLabel* mHActivityLab;
     LineEdit* mHActivityEdit;
 
     // ------------------------------------

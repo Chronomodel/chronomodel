@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -107,8 +107,8 @@ DateItem::~DateItem()
 {
     mEventsScene= nullptr;
   //  mDate.~QJsonObject(); // Don't delete the JSON, we need it when we delete an event.
-    mColor.~QColor();
-    mCalibThumb.~QPixmap();
+   // mColor.~QColor();
+   // mCalibThumb.~QPixmap();
 }
 
 const QJsonObject& DateItem::date() const

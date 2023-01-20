@@ -688,7 +688,7 @@ mMaximunNumberOfVisibleGraph(0)
     mBandwidthSpin->setDecimals(2);
     mBandwidthSpin->setFixedHeight(20);
 
-    mHActivityLab = new Label(tr("Activity Bandwidth"), mDensityOptsGroup);
+    mHActivityLab = new QLabel(tr("Activity Bandwidth"), mDensityOptsGroup);
     mHActivityEdit = new LineEdit(mDensityOptsGroup);
     mHActivityEdit->setFixedHeight(16);
     
