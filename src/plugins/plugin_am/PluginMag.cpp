@@ -946,7 +946,7 @@ bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& sett
         valid = measureIsValidForCurve(incl, ref_curve, data, settings);
 
         ref_curve = data.value(DATE_AM_REF_CURVED_STR).toString().toLower();
-        valid = measureIsValidForCurve(decl, ref_curve, data, settings) * valid;
+        valid = measureIsValidForCurve(decl, ref_curve, data, settings) && valid;
 
         break;
     case eIF:
@@ -954,7 +954,7 @@ bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& sett
         valid = measureIsValidForCurve(incl, ref_curve, data, settings);
 
         ref_curve = data.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
-        valid = measureIsValidForCurve(field, ref_curve, data, settings) * valid;
+        valid = measureIsValidForCurve(field, ref_curve, data, settings) && valid;
 
         return valid;
         break;
@@ -963,10 +963,10 @@ bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& sett
         valid = measureIsValidForCurve(incl, ref_curve, data, settings);
 
         ref_curve = data.value(DATE_AM_REF_CURVED_STR).toString().toLower();
-        valid = measureIsValidForCurve(decl, ref_curve, data, settings) * valid;
+        valid = measureIsValidForCurve(decl, ref_curve, data, settings) && valid;
 
         ref_curve = data.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
-        valid = measureIsValidForCurve(field, ref_curve, data, settings) * valid;
+        valid = measureIsValidForCurve(field, ref_curve, data, settings) && valid;
 
         break;
 

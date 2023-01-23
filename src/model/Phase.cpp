@@ -845,7 +845,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
          qDebug()<<" t= "<<t<<" add="<< addUnif;
          */
 
-        UnifScore += std::max(dUnif, QInf) - std::min(dUnif, QSup) ;
+        UnifScore += std::max(dUnif, QInf) - std::min(dUnif, QSup);
        // UnifScore += std::pow(dUnif - eA, 2.) / gridLength; // pour test
 
         nbIt++;
@@ -854,7 +854,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 #ifdef DEBUG
     qDebug()<<"[Model::generateActivity] somme Activity = "<< somActivity << " ; Phase = "<< mName <<"\n";
 #endif
-    mValueStack["Activity_Significance_Score"] = TValueStack("Activity_Significance_Score", UnifScore/ (double)gridLength);
+    mValueStack["Activity_Significance_Score"] = TValueStack("Activity_Significance_Score", UnifScore/(double) gridLength);
     mValueStack["Activity_max"] = TValueStack("Activity_max", maxActivity);
     mValueStack["Activity_mode"] = TValueStack("Activity_mode", modeActivity);
 

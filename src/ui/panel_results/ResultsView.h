@@ -427,13 +427,13 @@ private:
 
     QLabel* mRangeThreshLab;
     LineEdit* mRangeThresholdEdit; // Used with Activity
-    Label* mFFTLenLab;
+    QLabel* mFFTLenLab;
     QComboBox* mFFTLenCombo;
-    Label* mBandwidthLab;
+    QLabel* mBandwidthLab;
     QDoubleSpinBox* mBandwidthSpin;
     Button* mUpdateDisplay;
 
-    Label* mHActivityLab;
+    QLabel* mHActivityLab;
     LineEdit* mHActivityEdit;
 
     // ------------------------------------

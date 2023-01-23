@@ -712,7 +712,7 @@ mMaximunNumberOfVisibleGraph(0)
     mRangeThresholdEdit->setFixedHeight(16);
 
 
-    mFFTLenLab = new Label(tr("Grid Length"), mDensityOptsGroup);
+    mFFTLenLab = new QLabel(tr("Grid Length"), mDensityOptsGroup);
     mFFTLenLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mFFTLenCombo = new QComboBox(mDensityOptsGroup);
@@ -729,14 +729,14 @@ mMaximunNumberOfVisibleGraph(0)
     mFFTLenCombo->setFixedHeight(16);
     mFFTLenCombo->setCurrentIndex(5);
 
-    mBandwidthLab = new Label(tr("FFTW Bandwidth"), mDensityOptsGroup);
+    mBandwidthLab = new QLabel(tr("FFTW Bandwidth"), mDensityOptsGroup);
     mBandwidthLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mBandwidthSpin = new QDoubleSpinBox(mDensityOptsGroup);
     mBandwidthSpin->setDecimals(2);
     mBandwidthSpin->setFixedHeight(20);
 
-    mHActivityLab = new Label(tr("Activity Bandwidth"), mDensityOptsGroup);
+    mHActivityLab = new QLabel(tr("Activity Bandwidth"), mDensityOptsGroup);
     mHActivityEdit = new LineEdit(mDensityOptsGroup);
     mHActivityEdit->setFixedHeight(16);
     
