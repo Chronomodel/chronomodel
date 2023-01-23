@@ -113,6 +113,7 @@ public:
     void setOverArrow(OverflowDataArrowMode mode) { mOverflowArrowMode = mode;}
 
     void autoAdjustYScale(bool active);
+    inline bool autoAdjustY() {return mAutoAdjustYScale;};
     void adjustYScale();
     //void adjustYToMaxValue(const qreal& marginProp = 0.);
     //void adjustYToMinMaxValue();

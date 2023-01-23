@@ -93,11 +93,11 @@ mCurrentTypeGraph(GraphViewResults::ePostDistrib),
 mCurrentVariableList(GraphViewResults::eThetaEvent),
 mMainVariable(GraphViewResults::eThetaEvent),
 mHasPhases(false),
-mResultZoomX(1.),
-mResultMinX(0.),
-mResultMaxX(0.),
-mResultCurrentMinX(0.),
-mResultCurrentMaxX(0.),
+mResultZoomT(1.),
+mResultMinT(0.),
+mResultMaxT(0.),
+mResultCurrentMinT(0.),
+mResultCurrentMaxT(0.),
 
 mMajorScale(100),
 mMinorCountScale(4),
@@ -409,15 +409,15 @@ mMaximunNumberOfVisibleGraph(0)
     mSpanLab->setFixedHeight(h);
     //mSpanLab->setAdjustText(false);
 
-    mCurrentXMinEdit = new LineEdit(mSpanGroup);
-    mCurrentXMinEdit->setFixedHeight(h);
-    mCurrentXMinEdit->setToolTip(tr("Enter a minimal value to display the curves"));
+    mCurrentTMinEdit = new LineEdit(mSpanGroup);
+    mCurrentTMinEdit->setFixedHeight(h);
+    mCurrentTMinEdit->setToolTip(tr("Enter a minimal value to display the curves"));
 
-    mCurrentXMaxEdit = new LineEdit(mSpanGroup);
-    mCurrentXMaxEdit->setFixedHeight(h);
-    mCurrentXMaxEdit->setToolTip(tr("Enter a maximal value to display the curves"));
+    mCurrentTMaxEdit = new LineEdit(mSpanGroup);
+    mCurrentTMaxEdit->setFixedHeight(h);
+    mCurrentTMaxEdit->setToolTip(tr("Enter a maximal value to display the curves"));
 
-    mXLab = new QLabel(tr("X"), mSpanGroup);
+    mXLab = new QLabel(tr("time"), mSpanGroup);
     mXLab->setFixedHeight(h);
     mXLab->setAlignment(Qt::AlignCenter);
     //mXLab->setAdjustText(false);
@@ -428,13 +428,13 @@ mMaximunNumberOfVisibleGraph(0)
     mXSlider->setTickInterval(1);
     mXSlider->setValue(0);
 
-    mXSpin = new QDoubleSpinBox(mSpanGroup);
-    mXSpin->setFixedHeight(h);
-    mXSpin->setRange(pow(10., double (mXSlider->minimum()/100.)),pow(10., double (mXSlider->maximum()/100.)));
-    mXSpin->setSingleStep(.01);
-    mXSpin->setDecimals(3);
-    mXSpin->setValue(sliderToZoom(mXSlider->value()));
-    mXSpin->setToolTip(tr("Enter zoom value to magnify the curves on X span"));
+    mTimeSpin = new QDoubleSpinBox(mSpanGroup);
+    mTimeSpin->setFixedHeight(h);
+    mTimeSpin->setRange(pow(10., double (mXSlider->minimum()/100.)),pow(10., double (mXSlider->maximum()/100.)));
+    mTimeSpin->setSingleStep(.01);
+    mTimeSpin->setDecimals(3);
+    mTimeSpin->setValue(sliderToZoom(mXSlider->value()));
+    mTimeSpin->setToolTip(tr("Enter zoom value to magnify the curves on X span"));
 
     mMajorScaleLab = new QLabel(tr("Major Interval"), mSpanGroup);
     mMajorScaleLab->setFixedHeight(h);
@@ -455,12 +455,12 @@ mMaximunNumberOfVisibleGraph(0)
     mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves, upper than 1"));
 
     connect(mDisplayStudyBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::applyStudyPeriod);
-    connect(mCurrentXMinEdit, &LineEdit::editingFinished, this, &ResultsView::applyXRange);
-    connect(mCurrentXMaxEdit, &LineEdit::editingFinished, this, &ResultsView::applyXRange);
-    connect(mXSlider, &QSlider::valueChanged, this, &ResultsView::applyXSlider);
-    connect(mXSpin, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &ResultsView::applyXSpin);
-    connect(mMajorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &ResultsView::applyXScale);
-    connect(mMinorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &ResultsView::applyXScale);
+    connect(mCurrentTMinEdit, &LineEdit::editingFinished, this, &ResultsView::applyTimeRange);
+    connect(mCurrentTMaxEdit, &LineEdit::editingFinished, this, &ResultsView::applyTimeRange);
+    connect(mXSlider, &QSlider::valueChanged, this, &ResultsView::applyTimeSlider);
+    connect(mTimeSpin, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &ResultsView::applyTimeSpin);
+    connect(mMajorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &ResultsView::applyZoomScale);
+    connect(mMinorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &ResultsView::applyZoomScale);
 
     QHBoxLayout* spanLayout0 = new QHBoxLayout();
     spanLayout0->setContentsMargins(0, 0, 0, 0);
@@ -468,15 +468,15 @@ mMaximunNumberOfVisibleGraph(0)
 
     QHBoxLayout* spanLayout1 = new QHBoxLayout();
     spanLayout1->setContentsMargins(0, 0, 0, 0);
-    spanLayout1->addWidget(mCurrentXMinEdit);
+    spanLayout1->addWidget(mCurrentTMinEdit);
     spanLayout1->addWidget(mSpanLab);
-    spanLayout1->addWidget(mCurrentXMaxEdit);
+    spanLayout1->addWidget(mCurrentTMaxEdit);
 
     QHBoxLayout* spanLayout2 = new QHBoxLayout();
     spanLayout2->setContentsMargins(0, 0, 0, 0);
     spanLayout2->addWidget(mXLab);
     spanLayout2->addWidget(mXSlider);
-    spanLayout2->addWidget(mXSpin);
+    spanLayout2->addWidget(mTimeSpin);
 
     QHBoxLayout* spanLayout3 = new QHBoxLayout();
     spanLayout3->setContentsMargins(0, 0, 0, 0);
@@ -500,6 +500,53 @@ mMaximunNumberOfVisibleGraph(0)
     mSpanGroup->setLayout(spanLayout);
 
     // ------------------------------------
+    //  Display / X Options
+    // ------------------------------------
+    mXOptionGroup  = new QWidget();
+    h = 20;
+
+    mXOptionTitle = new Label(tr("X Options"), mDisplayWidget);
+    mXOptionTitle->setFixedHeight(25);
+    mXOptionTitle->setIsTitle(true);
+
+    mXOptionBut = new Button(tr("Optimal X Display"), mXOptionGroup);
+    mXOptionBut->setFixedHeight(25);
+    mXOptionBut->setToolTip(tr("Restore view with the study period span"));
+
+    mXOptionLab = new QLabel(tr("X"), mXOptionGroup);
+    mXOptionLab->setFixedHeight(h);
+    //mSpanLab->setAdjustText(false);
+
+    mCurrentXMinEdit = new LineEdit(mXOptionGroup);
+    mCurrentXMinEdit->setFixedHeight(h);
+    mCurrentXMinEdit->setToolTip(tr("Enter a minimal value to display the curves"));
+
+    mCurrentXMaxEdit = new LineEdit(mXOptionGroup);
+    mCurrentXMaxEdit->setFixedHeight(h);
+    mCurrentXMaxEdit->setToolTip(tr("Enter a maximal value to display the curves"));
+
+    connect(mCurrentXMinEdit, &LineEdit::editingFinished, this, &ResultsView::updateCurvesToShow);
+    connect(mCurrentXMaxEdit, &LineEdit::editingFinished, this, &ResultsView::updateCurvesToShow);
+
+    QHBoxLayout* XOptionLayout0 = new QHBoxLayout();
+    XOptionLayout0->setContentsMargins(0, 0, 0, 0);
+    XOptionLayout0->addWidget(mXOptionBut);
+
+    QHBoxLayout* XOptionLayout1 = new QHBoxLayout();
+    XOptionLayout1->setContentsMargins(0, 0, 0, 0);
+    XOptionLayout1->addWidget(mCurrentXMinEdit);
+    XOptionLayout1->addWidget(mXOptionLab);
+    XOptionLayout1->addWidget(mCurrentXMaxEdit);
+
+    QVBoxLayout* XOptionLayout = new QVBoxLayout();
+    //XOptionLayout->setContentsMargins(10, 10, 5, 5);
+    //XOptionLayout->setSpacing(5);
+    XOptionLayout->addLayout(XOptionLayout0);
+    XOptionLayout->addLayout(XOptionLayout1);
+
+    mXOptionGroup->setLayout(XOptionLayout);
+
+    // ------------------------------------
     //  Display / Graphic Options
     // ------------------------------------
     mGraphicTitle = new Label(tr("Graphic Options"), mDisplayWidget);
@@ -508,19 +555,18 @@ mMaximunNumberOfVisibleGraph(0)
 
     mGraphicGroup = new QWidget();
 
-    mYLab = new QLabel(tr("Y"), mGraphicGroup);
-    mYLab->setAlignment(Qt::AlignCenter);
-    //mYLab->setAdjustText(false);
+    mZoomLab = new QLabel(tr("Zoom"), mGraphicGroup);
+    mZoomLab->setAlignment(Qt::AlignCenter);
 
-    mYSlider = new QSlider(Qt::Horizontal, mGraphicGroup);
-    mYSlider->setRange(10, 1000);
-    mYSlider->setTickInterval(1);
-    mYSlider->setValue(100);
+    mZoomSlider = new QSlider(Qt::Horizontal, mGraphicGroup);
+    mZoomSlider->setRange(10, 1000);
+    mZoomSlider->setTickInterval(1);
+    mZoomSlider->setValue(100);
 
-    mYSpin = new QSpinBox(mGraphicGroup);
-    mYSpin->setRange(mYSlider->minimum(), mYSlider->maximum());
-    mYSpin->setValue(mYSlider->value());
-    mYSpin->setToolTip(tr("Enter zoom value to magnify the curves on Y scale"));
+    mZoomSpin = new QSpinBox(mGraphicGroup);
+    mZoomSpin->setRange(mZoomSlider->minimum(), mZoomSlider->maximum());
+    mZoomSpin->setValue(mZoomSlider->value());
+    mZoomSpin->setToolTip(tr("Enter zoom value to magnify the curves on Y scale"));
 
     mLabFont = new QLabel(tr("Font"), mGraphicGroup);
     mLabFont->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
@@ -559,17 +605,17 @@ mMaximunNumberOfVisibleGraph(0)
     mOpacityCombo->setToolTip(tr("Select to change the opacity of the drawing"));
     mOpacityCombo->setCurrentIndex(5);
 
-    connect(mYSlider, &QSlider::valueChanged, this, &ResultsView::applyYSlider);
-    connect(mYSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::applyYSpin);
+    connect(mZoomSlider, &QSlider::valueChanged, this, &ResultsView::applyZoomSlider);
+    connect(mZoomSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::applyZoomSpin);
     connect(mFontBut, &QPushButton::clicked, this, &ResultsView::applyFont);
     connect(mThicknessCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::applyThickness);
     connect(mOpacityCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::applyOpacity);
 
     QHBoxLayout* graphicLayout1 = new QHBoxLayout();
     graphicLayout1->setContentsMargins(0, 0, 0, 0);
-    graphicLayout1->addWidget(mYLab);
-    graphicLayout1->addWidget(mYSlider);
-    graphicLayout1->addWidget(mYSpin);
+    graphicLayout1->addWidget(mZoomLab);
+    graphicLayout1->addWidget(mZoomSlider);
+    graphicLayout1->addWidget(mZoomSpin);
 
     QHBoxLayout* graphicLayout2 = new QHBoxLayout();
     graphicLayout2->setContentsMargins(0, 0, 0, 0);
@@ -601,6 +647,8 @@ mMaximunNumberOfVisibleGraph(0)
     displayLayout->setSpacing(0);
     displayLayout->addWidget(mSpanTitle);
     displayLayout->addWidget(mSpanGroup);
+    displayLayout->addWidget(mXOptionTitle);
+    displayLayout->addWidget(mXOptionGroup);
     displayLayout->addWidget(mGraphicTitle);
     displayLayout->addWidget(mGraphicGroup);
     mDisplayWidget->setLayout(displayLayout);
@@ -982,9 +1030,9 @@ void ResultsView::initModel(Model* model)
     mModel = model;
     connect(mModel, &Model::newCalculus, this, &ResultsView::generateCurves);
 
-    Scale xScale;
-    xScale.findOptimal(mModel->mSettings.mTmin, mModel->mSettings.mTmax, 7);
-    mMajorScale = xScale.mark;
+    Scale timeScale;
+    timeScale.findOptimal(mModel->mSettings.mTmin, mModel->mSettings.mTmax, 7);
+    mMajorScale = timeScale.mark;
     mMinorCountScale = 4;
 
     mRuler->setRange(mModel->mSettings.getTminFormated(), mModel->mSettings.getTmaxFormated());
@@ -1006,9 +1054,18 @@ void ResultsView::initModel(Model* model)
     mCurrentTypeGraph = GraphViewResults::ePostDistrib;
     mCurrentVariableList.clear();
     if (isCurve()) {
+        const ModelCurve* modelCurve = static_cast<const ModelCurve*> (model);
         mMainVariable = GraphViewResults::eG;
         mCurveGRadio->setChecked(true);
         mGraphListTab->setTab(2, false);
+
+        Scale XScale;
+        XScale.findOptimal(modelCurve->mPosteriorMeanG.gx.vecG.front(), modelCurve->mPosteriorMeanG.gx.vecG.back(), 7);
+        mResultCurrentMinX = XScale.min;
+        mResultCurrentMaxX = XScale.max;
+
+        mCurrentXMinEdit->setText(locale.toString(mResultCurrentMinX));
+        mCurrentXMaxEdit->setText(locale.toString(mResultCurrentMaxX));
 
     } else if (mHasPhases) {
         mMainVariable = GraphViewResults::eBeginEnd;
@@ -1405,10 +1462,22 @@ void ResultsView::toggleDisplayDistrib()
         mDisplayStudyBut->setVisible(true);
         widHeigth += mDisplayStudyBut->height() + internSpan;
 
-        mDisplayWidget-> setFixedHeight(widHeigth);
+
         if (widFrom != mDisplayWidget)
             mOptionsLayout->replaceWidget(widFrom, mDisplayWidget);
 
+        if (isCurve() && ( mMainVariable == GraphViewResults::eG ||
+                           mMainVariable == GraphViewResults::eGP ||
+                           mMainVariable == GraphViewResults::eGS)) {
+            mXOptionTitle->setVisible(true);
+            mXOptionGroup->setVisible(true);
+            mDisplayWidget-> setFixedHeight(widHeigth + mXOptionGroup->height() + mXOptionTitle->height());
+
+        } else {
+            mXOptionTitle->setVisible(false);
+            mXOptionGroup->setVisible(false);
+            mDisplayWidget-> setFixedHeight(widHeigth);
+        }
 
     } else { // Tab Distrib. Option
         mDisplayWidget->setVisible(false);
@@ -2270,46 +2339,46 @@ void ResultsView::updateGraphsMinMax()
     QList<GraphViewResults*> listGraphs = currentGraphs(false);
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
         if (mMainVariable == GraphViewResults::eSigma) {
-            mResultMinX = 0.;
-            mResultMaxX = getGraphsMax(listGraphs, "Post Distrib", 100.);
+            mResultMinT = 0.;
+            mResultMaxT = getGraphsMax(listGraphs, "Post Distrib", 100.);
 
         } else if (mMainVariable == GraphViewResults::eDuration) {
-            mResultMinX = 0.;
-            mResultMaxX = getGraphsMax(listGraphs, "Post Distrib All Chains", 100.);
+            mResultMinT = 0.;
+            mResultMaxT = getGraphsMax(listGraphs, "Post Distrib All Chains", 100.);
 
         }else if (mMainVariable == GraphViewResults::eVg) {
-            mResultMinX = 0;
-            mResultMaxX = getGraphsMax(listGraphs, "Post Distrib All Chains", 100.);
+            mResultMinT = 0;
+            mResultMaxT = getGraphsMax(listGraphs, "Post Distrib All Chains", 100.);
 
         } else if (mMainVariable == GraphViewResults::eLambda) {
-            mResultMinX = getGraphsMin(listGraphs, "Lambda", -20.);
-            mResultMaxX = getGraphsMax(listGraphs, "Lambda", 10.);
+            mResultMinT = getGraphsMin(listGraphs, "Lambda", -20.);
+            mResultMaxT = getGraphsMax(listGraphs, "Lambda", 10.);
 
         } else if (mMainVariable == GraphViewResults::eS02Vg) {
-            mResultMinX = 0;
-            mResultMaxX = getGraphsMax(listGraphs, "Post Distrib All Chains", 100.);
+            mResultMinT = 0;
+            mResultMaxT = getGraphsMax(listGraphs, "Post Distrib All Chains", 100.);
 
         } else {
-            //auto span = (mModel->mSettings.getTmaxFormated() - mModel->mSettings.getTminFormated())/2. * mXSpin->minimum();
-            mResultMinX = mModel->mSettings.getTminFormated();
-            mResultMaxX = mModel->mSettings.getTmaxFormated();
+            //auto span = (mModel->mSettings.getTmaxFormated() - mModel->mSettings.getTminFormated())/2. * mTimeSpin->minimum();
+            mResultMinT = mModel->mSettings.getTminFormated();
+            mResultMaxT = mModel->mSettings.getTmaxFormated();
         }
 
      } else if ((mCurrentTypeGraph == GraphViewResults::eTrace) || (mCurrentTypeGraph == GraphViewResults::eAccept)) {
             for (qsizetype i = 0; i<mChainRadios.size(); ++i) {
                 if (mChainRadios.at(i)->isChecked()) {
                     const ChainSpecs& chain = mModel->mChains.at(i);
-                    mResultMinX = 0;
+                    mResultMinT = 0;
                     const int adaptSize = chain.mBatchIndex * chain.mIterPerBatch;
                     const int runSize = chain.mRealyAccepted;
-                    mResultMaxX = 1 + adaptSize + runSize;
+                    mResultMaxT = 1 + adaptSize + runSize;
                     break;
                 }
             }
 
     } else if (mCurrentTypeGraph == GraphViewResults::eCorrel) {
-        mResultMinX = 0.;
-        mResultMaxX = 40;
+        mResultMinT = 0.;
+        mResultMaxT = 40;
 
     }
 }
@@ -2401,7 +2470,19 @@ void ResultsView::updateCurvesToShow()
         for (GraphViewResults*& graph : listGraphs) {
             GraphViewCurve* graphCurve = static_cast<GraphViewCurve*>(graph);
             graphCurve->setShowNumericalResults(showStat);
-            graphCurve->updateCurvesToShowForG(showAllChains, showChainList, showVariableList);
+
+            QString minStr = mCurrentXMinEdit->text();
+            bool minIsNumber = true;
+            mResultCurrentMinX = locale().toDouble(minStr, &minIsNumber);
+
+            QString maxStr = mCurrentXMaxEdit->text();
+            bool maxIsNumber = true;
+            mResultCurrentMaxX = locale().toDouble(maxStr, &maxIsNumber);
+
+            if (minIsNumber && maxIsNumber) {
+                graphCurve->updateCurvesToShowForG(showAllChains, showChainList, showVariableList, mResultCurrentMinX, mResultCurrentMaxX);
+                graphCurve->update();
+            }
         }
 
     } else if ((mGraphListTab->currentName() == tr("Curves")) && mLambdaRadio->isChecked() && !mS02VgRadio->isChecked()) {
@@ -2501,12 +2582,12 @@ void ResultsView::updateCurvesToShow()
 /**
  *  @brief
  *  This method does the following :
- *  - Defines [mResultMinX, mResultMaxX]
- *  - Defines [mResultCurrentMinX, mResultCurrentMaxX] (based on saved zoom if any)
- *  - Computes mResultZoomX
+ *  - Defines [mResultMinT, mResultMaxT]
+ *  - Defines [mResultCurrentMinT, mResultCurrentMaxT] (based on saved zoom if any)
+ *  - Computes mResultZoomT
  *  - Set Ruler Areas
  *  - Set Ruler and graphs range and zoom
- *  - Update mXMinEdit, mXMaxEdit, mXSlider, mXSpin, mMajorScaleEdit, mMinorScaleEdit
+ *  - Update mXMinEdit, mXMaxEdit, mXSlider, mTimeSpin, mMajorScaleEdit, mMinorScaleEdit
  */
 void ResultsView::updateScales()
 {
@@ -2517,7 +2598,7 @@ void ResultsView::updateScales()
     const ProjectSettings s = mModel->mSettings;
 
     // ------------------------------------------------------------------
-    //  Define mResultCurrentMinX and mResultCurrentMaxX
+    //  Define mResultCurrentMinT and mResultCurrentMaxT
     //  + Restore last zoom values if any
     // ------------------------------------------------------------------
 
@@ -2538,12 +2619,12 @@ void ResultsView::updateScales()
             // Min and max may be inverted due to formatting, so we use std::minmax
             std::pair<double, double> currentMinMax = std::minmax(tMinFormatted, tMaxFormatted);
 
-            mResultCurrentMinX = currentMinMax.first;
-            mResultCurrentMaxX = currentMinMax.second;
+            mResultCurrentMinT = currentMinMax.first;
+            mResultCurrentMaxT = currentMinMax.second;
 
         } else {
-            mResultCurrentMinX = tMin;
-            mResultCurrentMaxX = tMax;
+            mResultCurrentMinT = tMin;
+            mResultCurrentMaxT = tMax;
         }
 
     } else {
@@ -2551,20 +2632,20 @@ void ResultsView::updateScales()
             for (int i = 0; i<mChainRadios.size(); ++i) {
                 if (mChainRadios.at(i)->isChecked()) {
                     const ChainSpecs& chain = mModel->mChains.at(i);
-                    mResultCurrentMinX = 0;
+                    mResultCurrentMinT = 0;
                     const int adaptSize = chain.mBatchIndex * chain.mIterPerBatch;
                     const int runSize = chain.mRealyAccepted;
-                    mResultCurrentMaxX = 1 + chain.mIterPerBurn + adaptSize + runSize;
+                    mResultCurrentMaxT = 1 + chain.mIterPerBurn + adaptSize + runSize;
                     break;
                 }
             }
         } else if (mCurrentTypeGraph == GraphViewResults::eCorrel) {
-            mResultCurrentMinX = 0;
-            mResultCurrentMaxX = 40;
+            mResultCurrentMinT = 0;
+            mResultCurrentMaxT = 40;
 
         } else {
-            mResultCurrentMinX = mResultMinX;
-            mResultCurrentMaxX = mResultMaxX;
+            mResultCurrentMinT = mResultMinT;
+            mResultCurrentMaxT = mResultMaxT;
         }
 
 
@@ -2584,16 +2665,16 @@ void ResultsView::updateScales()
         // All other cases (default behavior)
         else {
             Scale xScale;
-            xScale.findOptimal(mResultCurrentMinX, mResultCurrentMaxX, 10);
+            xScale.findOptimal(mResultCurrentMinT, mResultCurrentMaxT, 10);
             mMajorScale = xScale.mark;
             mMinorCountScale = 10;
         }
     }
 
     // ------------------------------------------------------------------
-    //  Compute mResultZoomX
+    //  Compute mResultZoomT
     // ------------------------------------------------------------------
-    mResultZoomX = (mResultMaxX - mResultMinX) / (mResultCurrentMaxX - mResultCurrentMinX);
+    mResultZoomT = (mResultMaxT - mResultMinT) / (mResultCurrentMaxT - mResultCurrentMinT);
 
     // ------------------------------------------------------------------
     //  Set Ruler Areas (Burn, Adapt, Run)
@@ -2603,13 +2684,13 @@ void ResultsView::updateScales()
     if ( xScaleRepresentsTime() ) {
         // The X zoom uses a log scale on the spin box and can be controlled by the linear slider
          mXSlider->setRange(-100, 100);
-         mXSpin->setRange(sliderToZoom(-100), sliderToZoom(100));
-         mXSpin->setSingleStep(.01);
-         mXSpin->setDecimals(3);
+         mTimeSpin->setRange(sliderToZoom(-100), sliderToZoom(100));
+         mTimeSpin->setSingleStep(.01);
+         mTimeSpin->setDecimals(3);
 
          // The Ruler range is much wider based on the minimal zoom
-         const double tCenter = (mResultCurrentMinX + mResultCurrentMaxX) / 2.;
-         const double tSpan = mResultCurrentMaxX - mResultCurrentMinX;
+         const double tCenter = (mResultCurrentMinT + mResultCurrentMaxT) / 2.;
+         const double tSpan = mResultCurrentMaxT - mResultCurrentMinT;
          const double tRangeMin = tCenter - ((tSpan/2.) / sliderToZoom(mXSlider->minimum()));
          const double tRangeMax = tCenter + ((tSpan/2.) / sliderToZoom(mXSlider->minimum()));
 
@@ -2624,12 +2705,12 @@ void ResultsView::updateScales()
 
                 // The X zoom uses a log scale on the spin box and can be controlled by the linear slider
                 mXSlider->setRange(-100, 100);
-                mXSpin->setRange(sliderToZoom(-100), sliderToZoom(100));
-                mXSpin->setSingleStep(.01);
-                mXSpin->setDecimals(3);
+                mTimeSpin->setRange(sliderToZoom(-100), sliderToZoom(100));
+                mTimeSpin->setSingleStep(.01);
+                mTimeSpin->setDecimals(3);
 
                 // The Ruler range is much wider based on the minimal zoom
-                const double tRangeMax = mResultMaxX / sliderToZoom(mXSlider->minimum());
+                const double tRangeMax = mResultMaxT / sliderToZoom(mXSlider->minimum());
 
                 mRuler->setRange(0, tRangeMax);
                 mRuler->setFormatFunctX(nullptr);
@@ -2641,13 +2722,13 @@ void ResultsView::updateScales()
 
                 // The X zoom uses a log scale on the spin box and can be controlled by the linear slider
                 mXSlider->setRange(-100, 100);
-                mXSpin->setRange(sliderToZoom(-100), sliderToZoom(100));
-                mXSpin->setSingleStep(.01);
-                mXSpin->setDecimals(3);
+                mTimeSpin->setRange(sliderToZoom(-100), sliderToZoom(100));
+                mTimeSpin->setSingleStep(.01);
+                mTimeSpin->setDecimals(3);
 
                 // The Ruler range is much wider based on the minimal zoom
-                const double tCenter = (mResultCurrentMinX + mResultCurrentMaxX) / 2.;
-                const double tSpan = mResultCurrentMaxX - mResultCurrentMinX;
+                const double tCenter = (mResultCurrentMinT + mResultCurrentMaxT) / 2.;
+                const double tSpan = mResultCurrentMaxT - mResultCurrentMinT;
                 const double tRangeMin = tCenter - ((tSpan/2.) / sliderToZoom(mXSlider->minimum()));
                 const double tRangeMax = tCenter + ((tSpan/2.) / sliderToZoom(mXSlider->minimum()));
 
@@ -2666,43 +2747,43 @@ void ResultsView::updateScales()
         const ChainSpecs& chain = mModel->mChains.at(idSelect);
         const int adaptSize = chain.mBatchIndex * chain.mIterPerBatch;
         const int runSize = chain.mRealyAccepted;
-        mResultMaxX = 1 +  chain.mIterPerBurn + adaptSize + runSize;
+        mResultMaxT = 1 +  chain.mIterPerBurn + adaptSize + runSize;
         // The min is always 0
-        mResultMinX = 0.;
+        mResultMinT = 0.;
 
         mRuler->addArea(0., 1+ chain.mIterPerBurn, QColor(235, 115, 100));
         mRuler->addArea(1+ chain.mIterPerBurn, 1+chain.mIterPerBurn + adaptSize, QColor(250, 180, 90));
-        mRuler->addArea(1+ chain.mIterPerBurn + adaptSize, mResultMaxX, QColor(130, 205, 110));
+        mRuler->addArea(1+ chain.mIterPerBurn + adaptSize, mResultMaxT, QColor(130, 205, 110));
         // The Ruler range is set exactly to the min and max (impossible to scroll outside)
-        mRuler->setRange(mResultMinX, mResultMaxX);
+        mRuler->setRange(mResultMinT, mResultMaxT);
         mRuler->setFormatFunctX(nullptr);
 
 
         // The zoom slider and spin are linear.
         // The number of zoom levels depends on the number of iterations (by a factor 100)
         // e.g. 400 iterations => 4 levels
-        const int zoomLevels = (int) mResultMaxX / 100;
+        const int zoomLevels = (int) mResultMaxT / 100;
         mXSlider->setRange(1, zoomLevels);
-        mXSpin->setRange(1, zoomLevels);
-        mXSpin->setSingleStep(1.);
-        mXSpin->setDecimals(0);
+        mTimeSpin->setRange(1, zoomLevels);
+        mTimeSpin->setSingleStep(1.);
+        mTimeSpin->setDecimals(0);
 
         // find new minY and maxY
 
 
     } else if ( mCurrentTypeGraph == GraphViewResults::eCorrel) {
         // The x axis represents h, always in [0, 40]
-        mResultMinX = 0.;
-        mResultMaxX = 40.;
+        mResultMinT = 0.;
+        mResultMaxT = 40.;
 
         // The zoom slider and spin are linear.
         // Always 5 zoom levels
         mXSlider->setRange(1, 5);
-        mXSpin->setRange(1, 5);
-        mXSpin->setSingleStep(1.);
-        mXSpin->setDecimals(0);
+        mTimeSpin->setRange(1, 5);
+        mTimeSpin->setSingleStep(1.);
+        mTimeSpin->setDecimals(0);
 
-        mRuler->setRange(mResultMinX, mResultMaxX);
+        mRuler->setRange(mResultMinT, mResultMaxT);
         mRuler->setFormatFunctX(nullptr);
     }
 
@@ -2710,7 +2791,7 @@ void ResultsView::updateScales()
     // ------------------------------------------------------------------
     //  Apply to Ruler
     // ------------------------------------------------------------------
-    mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
+    mRuler->setCurrent(mResultCurrentMinT, mResultCurrentMaxT);
     mRuler->setScaleDivision(mMajorScale, mMinorCountScale);
 
     // -------------------------------------------------------
@@ -2719,18 +2800,18 @@ void ResultsView::updateScales()
     QList<GraphViewResults*> graphs = currentGraphs(false);
     for (GraphViewResults*& graph : graphs) {
         graph->setRange(mRuler->mMin, mRuler->mMax);
-        graph->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
+        graph->setCurrentX(mResultCurrentMinT, mResultCurrentMaxT);
         graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
-        graph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
+        graph->zoom(mResultCurrentMinT, mResultCurrentMaxT);
     }
 
     // -------------------------------------------------------
     //  Set options UI components values
     // -------------------------------------------------------
-    setXRange();
-    setXSlider(zoomToSlider(mResultZoomX));
-    setXSpin(mResultZoomX);
-    setXScale();
+    setTimeRange();
+    setTimeSlider(zoomToSlider(mResultZoomT));
+    setTimeSpin(mResultZoomT);
+    setTimeScale();
 
 }
 
@@ -2991,7 +3072,20 @@ void ResultsView::updateOptionsWidget()
         mDisplayStudyBut->setVisible(true);
         widHeigth += mDisplayStudyBut->height() + internSpan;
 
-        mDisplayWidget-> setFixedHeight(widHeigth);
+       // mDisplayWidget-> setFixedHeight(widHeigth);
+
+        if (isCurve() && ( mMainVariable == GraphViewResults::eG ||
+                           mMainVariable == GraphViewResults::eGP ||
+                           mMainVariable == GraphViewResults::eGS)) {
+            mXOptionTitle->setVisible(true);
+            mXOptionGroup->setVisible(true);
+            mDisplayWidget-> setFixedHeight(widHeigth + mXOptionGroup->height() + mXOptionTitle->height());
+
+        } else {
+            mXOptionTitle->setVisible(false);
+            mXOptionGroup->setVisible(false);
+            mDisplayWidget-> setFixedHeight(widHeigth);
+        }
 
         optionWidgetHeigth += mDisplayWidget->height();
 
@@ -3216,20 +3310,20 @@ void ResultsView::updateGraphsHeight()
 {
     const double min = 2 * AppSettings::heigthUnit();
     const double origin = GraphViewResults::mHeightForVisibleAxis;
-    const double prop = mYSpin->value() / 100.;
+    const double prop = mZoomSpin->value() / 100.;
     mGraphHeight = min + prop * (origin - min);
     updateGraphsLayout();
 }
 
-void ResultsView::updateZoomX()
+void ResultsView::updateZoomT()
 {
     // Pick the value from th spin or the slider
-    const double zoom = mXSpin->value();
+    const double zoom = mTimeSpin->value();
 
-    mResultZoomX = 1./zoom;
+    mResultZoomT = 1./zoom;
 
-    const double tCenter = (mResultCurrentMaxX + mResultCurrentMinX)/2.;
-    const double span = (mResultMaxX - mResultMinX)* (1./ zoom);
+    const double tCenter = (mResultCurrentMaxT + mResultCurrentMinT)/2.;
+    const double span = (mResultMaxT - mResultMinT)* (1./ zoom);
 
     double curMin = tCenter - span/2.;
     double curMax = tCenter + span/2.;
@@ -3243,17 +3337,17 @@ void ResultsView::updateZoomX()
         curMin = curMax - span;
     }
 
-    mResultCurrentMinX = curMin; //std::max(curMin, mResultMinX);
-    mResultCurrentMaxX = curMax; //std::min(curMax, mResultMaxX);;
+    mResultCurrentMinT = curMin; //std::max(curMin, mResultMinT);
+    mResultCurrentMaxT = curMax; //std::min(curMax, mResultMaxT);;
 
-    mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
+    mRuler->setCurrent(mResultCurrentMinT, mResultCurrentMaxT);
 
-    setXRange();
+    setTimeRange();
 
-    updateGraphsZoomX();
+    updateGraphsZoomT();
 }
 
-void ResultsView::updateGraphsZoomX()
+void ResultsView::updateGraphsZoomT()
 {
     // ------------------------------------------------------
     //  Update graphs zoom and scale
@@ -3261,7 +3355,7 @@ void ResultsView::updateGraphsZoomX()
     QList<GraphViewResults*> graphs = currentGraphs(false);
     for (GraphViewResults*& graph : graphs) {
         graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
-        graph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
+        graph->zoom(mResultCurrentMinT, mResultCurrentMaxT);
     }
 
     // ------------------------------------------------------
@@ -3270,15 +3364,15 @@ void ResultsView::updateGraphsZoomX()
     QPair<GraphViewResults::variable_t, GraphViewResults::graph_t> key(mMainVariable, mCurrentTypeGraph);
 
     if (xScaleRepresentsTime()) {
-        const double minFormatted = DateUtils::convertFromAppSettingsFormat(mResultCurrentMinX);
-        const double maxFormatted = DateUtils::convertFromAppSettingsFormat(mResultCurrentMaxX);
+        const double minFormatted = DateUtils::convertFromAppSettingsFormat(mResultCurrentMinT);
+        const double maxFormatted = DateUtils::convertFromAppSettingsFormat(mResultCurrentMaxT);
 
         std::pair<double, double> resultMinMax = std::minmax(minFormatted, maxFormatted);
 
         mZooms[key] = QPair<double, double>(resultMinMax.first, resultMinMax.second);
 
     } else {
-        mZooms[key] = QPair<double, double>(mResultCurrentMinX, mResultCurrentMaxX);
+        mZooms[key] = QPair<double, double>(mResultCurrentMinT, mResultCurrentMaxT);
     }
 
     mScales[key] = QPair<double, int>(mMajorScale, mMinorCountScale);
@@ -3286,35 +3380,35 @@ void ResultsView::updateGraphsZoomX()
 
 #pragma mark Controls setters
 
-void ResultsView::setXRange()
+void ResultsView::setTimeRange()
 {
     QLocale locale = QLocale();
 
-    mCurrentXMinEdit->blockSignals(true);
-    mCurrentXMaxEdit->blockSignals(true);
+    mCurrentTMinEdit->blockSignals(true);
+    mCurrentTMaxEdit->blockSignals(true);
 
-    mCurrentXMinEdit->setText(locale.toString(mResultCurrentMinX, 'f', 0));
-    mCurrentXMaxEdit->setText(locale.toString(mResultCurrentMaxX, 'f', 0));
+    mCurrentTMinEdit->setText(locale.toString(mResultCurrentMinT, 'f', 0));
+    mCurrentTMaxEdit->setText(locale.toString(mResultCurrentMaxT, 'f', 0));
 
-    mCurrentXMinEdit->blockSignals(false);
-    mCurrentXMaxEdit->blockSignals(false);
+    mCurrentTMinEdit->blockSignals(false);
+    mCurrentTMaxEdit->blockSignals(false);
 }
 
-void ResultsView::setXSpin(const double value)
+void ResultsView::setTimeSpin(const double value)
 {
-    mXSpin->blockSignals(true);
-    mXSpin->setValue(value);
-    mXSpin->blockSignals(false);
+    mTimeSpin->blockSignals(true);
+    mTimeSpin->setValue(value);
+    mTimeSpin->blockSignals(false);
 }
 
-void ResultsView::setXSlider(const int value)
+void ResultsView::setTimeSlider(const int value)
 {
     mXSlider->blockSignals(true);
     mXSlider->setValue(value);
     mXSlider->blockSignals(false);
 }
 
-void ResultsView::setXScale()
+void ResultsView::setTimeScale()
 {
     //mMinorScaleEdit->blockSignals(true);
     //mMajorScaleEdit->blockSignals(true);
@@ -3333,8 +3427,8 @@ void ResultsView::applyRuler(const double min, const double max)
 {
     if (xScaleRepresentsTime() ||
             mMainVariable == GraphViewResults::eLambda) {
-        mResultCurrentMinX = min;
-        mResultCurrentMaxX = max;
+        mResultCurrentMinT = min;
+        mResultCurrentMaxT = max;
 
     } else {
         if (mCurrentTypeGraph == GraphViewResults::ePostDistrib &&
@@ -3342,39 +3436,39 @@ void ResultsView::applyRuler(const double min, const double max)
              mMainVariable == GraphViewResults::eDuration ||
              mMainVariable == GraphViewResults::eVg  ||
              mMainVariable == GraphViewResults::eS02Vg ) ) {
-                mResultCurrentMinX = std::max(min, mResultMinX);
-                mResultCurrentMaxX = max;
+                mResultCurrentMinT = std::max(min, mResultMinT);
+                mResultCurrentMaxT = max;
 
             } else {
-                mResultCurrentMinX = min; //std::max(min, mResultMinX);
-                mResultCurrentMaxX = max;//std::min(max, mResultMaxX);
+                mResultCurrentMinT = min; //std::max(min, mResultMinT);
+                mResultCurrentMaxT = max;//std::min(max, mResultMaxT);
             }
 
     }
-    setXRange();
-    updateGraphsZoomX();
+    setTimeRange();
+    updateGraphsZoomT();
 }
 
 void ResultsView::applyStudyPeriod()
 {
     if (xScaleRepresentsTime()) {
-      mResultCurrentMinX = mModel->mSettings.getTminFormated();
-      mResultCurrentMaxX = mModel->mSettings.getTmaxFormated();
+      mResultCurrentMinT = mModel->mSettings.getTminFormated();
+      mResultCurrentMaxT = mModel->mSettings.getTmaxFormated();
 
     } else if ( mMainVariable == GraphViewResults::eSigma ||
                 mMainVariable == GraphViewResults::eDuration ||
                 mMainVariable == GraphViewResults::eVg  ||
                 mMainVariable == GraphViewResults::eS02Vg ) {
-        mResultCurrentMinX = 0.;
-        mResultCurrentMaxX = mResultMaxX;
+        mResultCurrentMinT = 0.;
+        mResultCurrentMaxT = mResultMaxT;
 
     } else if ( mMainVariable == GraphViewResults::eLambda) {
-        mResultCurrentMinX = mResultMinX;
-        mResultCurrentMaxX = mResultMaxX;
+        mResultCurrentMinT = mResultMinT;
+        mResultCurrentMaxT = mResultMaxT;
 
     } else if (mCurrentTypeGraph == GraphViewResults::eCorrel) {
-        mResultCurrentMinX = 0;
-        mResultCurrentMaxX = 40;
+        mResultCurrentMinT = 0;
+        mResultCurrentMaxT = 40;
 
     } else if ( mCurrentTypeGraph == GraphViewResults::eTrace ||
                 mCurrentTypeGraph == GraphViewResults::eAccept) {
@@ -3388,82 +3482,82 @@ void ResultsView::applyStudyPeriod()
         const int adaptSize = chain.mBatchIndex * chain.mIterPerBatch;
         const int runSize = chain.mRealyAccepted;
         // The min is always 0
-        mResultCurrentMinX = 0.;
-        mResultCurrentMaxX = 1 +  chain.mIterPerBurn + adaptSize + runSize;
+        mResultCurrentMinT = 0.;
+        mResultCurrentMaxT = 1 +  chain.mIterPerBurn + adaptSize + runSize;
 
     }
         
     if (xScaleRepresentsTime()) {
-        //auto span = (mModel->mSettings.getTmaxFormated() - mModel->mSettings.getTminFormated())/2. * mXSpin->minimum();
-        //mResultMinX = mModel->mSettings.getTminFormated() - span ;
-        //mResultMaxX = mModel->mSettings.getTmaxFormated() + span ;
+        //auto span = (mModel->mSettings.getTmaxFormated() - mModel->mSettings.getTminFormated())/2. * mTimeSpin->minimum();
+        //mResultMinT = mModel->mSettings.getTminFormated() - span ;
+        //mResultMaxT = mModel->mSettings.getTmaxFormated() + span ;
 
-        mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
+        mResultZoomT = (mResultMaxT - mResultMinT)/(mResultCurrentMaxT - mResultCurrentMinT);
 
     } else
-        mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
+        mResultZoomT = (mResultMaxT - mResultMinT)/(mResultCurrentMaxT - mResultCurrentMinT);
 
     Scale Xscale;
-    Xscale.findOptimal(mResultCurrentMinX, mResultCurrentMaxX, 10);
+    Xscale.findOptimal(mResultCurrentMinT, mResultCurrentMaxT, 10);
 
     mMajorScale = Xscale.mark;
     mMinorCountScale = Xscale.tip;
 
     mRuler->setScaleDivision(Xscale);
-    mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
+    mRuler->setCurrent(mResultCurrentMinT, mResultCurrentMaxT);
 
-    updateGraphsZoomX();
+    updateGraphsZoomT();
 
-    setXRange();
-    setXSlider(zoomToSlider(mResultZoomX));
-    setXSpin(mResultZoomX);
-    setXScale();
+    setTimeRange();
+    setTimeSlider(zoomToSlider(mResultZoomT));
+    setTimeSpin(mResultZoomT);
+    setTimeScale();
 
 }
 
-void ResultsView::applyXRange()
+void ResultsView::applyTimeRange()
 {
     // --------------------------------------------------
     //  Find new current min & max (check range validity !)
-    //  Update mResultZoomX
+    //  Update mResultZoomT
     // --------------------------------------------------
-    QString minStr = mCurrentXMinEdit->text();
+    QString minStr = mCurrentTMinEdit->text();
     bool minIsNumber = true;
     double min = locale().toDouble(minStr, &minIsNumber);
 
-    QString maxStr = mCurrentXMaxEdit->text();
+    QString maxStr = mCurrentTMaxEdit->text();
     bool maxIsNumber = true;
     double max = locale().toDouble(maxStr, &maxIsNumber);
 
-    if (minIsNumber && maxIsNumber && ((min != mResultCurrentMinX) || (max != mResultCurrentMaxX))) {
-        mResultCurrentMinX = std::max(min, mRuler->mMin);
-        mResultCurrentMaxX = std::min(max, mRuler->mMax);
+    if (minIsNumber && maxIsNumber && ((min != mResultCurrentMinT) || (max != mResultCurrentMaxT))) {
+        mResultCurrentMinT = std::max(min, mRuler->mMin);
+        mResultCurrentMaxT = std::min(max, mRuler->mMax);
 
-        mResultZoomX = (mResultMaxX - mResultMinX)/ (mResultCurrentMaxX - mResultCurrentMinX);
+        mResultZoomT = (mResultMaxT - mResultMinT)/ (mResultCurrentMaxT - mResultCurrentMinT);
 
-        mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
+        mRuler->setCurrent(mResultCurrentMinT, mResultCurrentMaxT);
 
-        updateGraphsZoomX();
+        updateGraphsZoomT();
 
-        setXRange();
-        setXSlider(zoomToSlider(mResultZoomX));
-        setXSpin(mResultZoomX);
+        setTimeRange();
+        setTimeSlider(zoomToSlider(mResultZoomT));
+        setTimeSpin(mResultZoomT);
     }
 }
 
-void ResultsView::applyXSlider(int value)
+void ResultsView::applyTimeSlider(int value)
 {
-    setXSpin(sliderToZoom(value));
-    updateZoomX();
+    setTimeSpin(sliderToZoom(value));
+    updateZoomT();
 }
 
-void ResultsView::applyXSpin(double value)
+void ResultsView::applyTimeSpin(double value)
 {
-    setXSlider(zoomToSlider(value));
-    updateZoomX();
+    setTimeSlider(zoomToSlider(value));
+    updateZoomT();
 }
 
-void ResultsView::applyXScale()
+void ResultsView::applyZoomScale()
 {
     QString majorStr = mMajorScaleEdit->text();
     bool isMajorNumber = true;
@@ -3491,20 +3585,20 @@ void ResultsView::applyXScale()
     mScales[key] = QPair<double, int>(mMajorScale, mMinorCountScale);
 }
 
-void ResultsView::applyYSlider(int value)
+void ResultsView::applyZoomSlider(int value)
 {
-    mYSpin->blockSignals(true);
-    mYSpin->setValue(value);
-    mYSpin->blockSignals(false);
+    mZoomSpin->blockSignals(true);
+    mZoomSpin->setValue(value);
+    mZoomSpin->blockSignals(false);
 
     updateGraphsHeight();
 }
 
-void ResultsView::applyYSpin(int value)
+void ResultsView::applyZoomSpin(int value)
 {
-    mYSlider->blockSignals(true);
-    mYSlider->setValue(value);
-    mYSlider->blockSignals(false);
+    mZoomSlider->blockSignals(true);
+    mZoomSlider->setValue(value);
+    mZoomSlider->blockSignals(false);
 
     updateGraphsHeight();
 }
@@ -4030,11 +4124,11 @@ void ResultsView::exportFullImage()
 
         if (mStatCheck->isChecked()) {
             axisWidget->setGeometry(0, curWid->height() - axeHeight, int (curWid->width()*2./3.), axeHeight);
-            axisWidget->updateValues(int (curWid->width()*2./3. - axisWidget->mMarginLeft - axisWidget->mMarginRight), 50, mResultCurrentMinX, mResultCurrentMaxX);
+            axisWidget->updateValues(int (curWid->width()*2./3. - axisWidget->mMarginLeft - axisWidget->mMarginRight), 50, mResultCurrentMinT, mResultCurrentMaxT);
 
         } else {
             axisWidget->setGeometry(0, curWid->height() - axeHeight, curWid->width(), axeHeight);
-            axisWidget->updateValues(int (curWid->width() - axisWidget->mMarginLeft - axisWidget->mMarginRight), 50, mResultCurrentMinX, mResultCurrentMaxX);
+            axisWidget->updateValues(int (curWid->width() - axisWidget->mMarginLeft - axisWidget->mMarginRight), 50, mResultCurrentMinT, mResultCurrentMaxT);
         }
 
         axisWidget->mShowText = true;

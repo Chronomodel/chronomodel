@@ -59,7 +59,7 @@ public:
     void setDataPoints(const QVector<CurveRefPts>& rfPts) { mDataPoints = rfPts;};
     
     void generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList, const Model *model = nullptr);
-    void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, const QVector<variable_t>& showVariableList);
+    void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, const QVector<variable_t>& showVariableList, const double Ymin = 0, const double Ymax = 1.);
 
 protected:
     void paintEvent(QPaintEvent* e);

@@ -1173,7 +1173,7 @@ std::vector<double> inverseCurve(const std::vector<double> &Rq, const int x_frac
 {
     double x, p;
     const double p_frac = Rq.size()-1;
-    unsigned long j;
+    double j;
     std::vector<double> Gx;
     for (int i = 0; i<= x_frac; ++i) {
         x = (double)(i) / x_frac;

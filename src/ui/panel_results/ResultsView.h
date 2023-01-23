@@ -136,10 +136,10 @@ protected:
     //  Span options
     // ------------------------------------------------
     GraphViewResults::variable_t getMainVariable() const;
-    void setXRange();
-    void setXSlider(const int value);
-    void setXSpin(const double value);
-    void setXScale();
+    void setTimeRange();
+    void setTimeSlider(const int value);
+    void setTimeSpin(const double value);
+    void setTimeScale();
 
     // ------------------------------------------------
     //  Utilities
@@ -156,8 +156,8 @@ protected:
     // ------------------------------------------------
     //  Controls actions helpers
     // ------------------------------------------------
-    void updateZoomX();
-    void updateGraphsZoomX();
+    void updateZoomT();
+    void updateGraphsZoomT();
     void updateGraphsHeight();
 
     // ------------------------------------------------
@@ -209,14 +209,14 @@ private slots:
 
     // Span options
     void applyStudyPeriod();
-    void applyXRange();
-    void applyXSlider(int value);
-    void applyXSpin(double value);
-    void applyXScale();
+    void applyTimeRange();
+    void applyTimeSlider(int value);
+    void applyTimeSpin(double value);
+    void applyZoomScale();
 
     // Graphic options
-    void applyYSlider(int value);
-    void applyYSpin(int value);
+    void applyZoomSlider(int value);
+    void applyZoomSpin(int value);
     void applyFont();
     void applyThickness(const int value);
     void applyOpacity(const int value);
@@ -354,16 +354,18 @@ private:
     // Adjust the zoom on the study period
     Button* mDisplayStudyBut;
 
-    // Force the min X and max X
+    // Force the min T and max T
     QLabel* mSpanLab;
-    LineEdit* mCurrentXMinEdit;
-    LineEdit* mCurrentXMaxEdit;
+    LineEdit* mCurrentTMinEdit;
+    LineEdit* mCurrentTMaxEdit;
+
+
 
     // On the X Axis scale : choose to see the whole graph at once,
     // or zoom on it adjusting the "XScale"
     QLabel* mXLab;
     QSlider* mXSlider;
-    QDoubleSpinBox* mXSpin;
+    QDoubleSpinBox* mTimeSpin;
 
     // On the X Axis scale : choose the major interval between 2 displayed values
     QLabel* mMajorScaleLab;
@@ -374,14 +376,27 @@ private:
     LineEdit* mMinorScaleEdit;
 
     // ------------------------------------
+    //  Display / X Options
+    // ------------------------------------
+    QWidget* mXOptionGroup;
+    Label* mXOptionTitle;
+
+    // Adjust the zoom on the study period
+    Button* mXOptionBut;
+
+    // Force the min T and max T
+    QLabel* mXOptionLab;
+    LineEdit* mCurrentXMinEdit;
+    LineEdit* mCurrentXMaxEdit;
+    // ------------------------------------
     //  Graphic Options
     // ------------------------------------
     QWidget* mGraphicGroup;
     Label* mGraphicTitle;
 
-    QLabel* mYLab;
-    QSlider* mYSlider;
-    QSpinBox* mYSpin;
+    QLabel* mZoomLab;
+    QSlider* mZoomSlider;
+    QSpinBox* mZoomSpin;
 
     Button* mFontBut;
     QComboBox* mThicknessCombo;
@@ -456,14 +471,22 @@ private:
     bool mHasPhases;
 
     // ----------------------------------------
+    //  Time Span / Zoom Variables
+    // ----------------------------------------
+    double mResultZoomT;
+    double mResultMinT;
+    double mResultMaxT;
+    double mResultCurrentMinT;
+    double mResultCurrentMaxT;
+    // ----------------------------------------
     //  X Span / Zoom Variables
     // ----------------------------------------
-    double mResultZoomX;
-    double mResultMinX;
-    double mResultMaxX;
+    //double mResultZoomX;
+    //double mResultMinX;
+    //double mResultMaxX;
     double mResultCurrentMinX;
     double mResultCurrentMaxX;
-    
+
     // ----------------------------------------
     //  X Scale ticks intervals
     // ----------------------------------------

@@ -95,7 +95,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
     mGraph->setOverArrow(GraphView::eNone);
     mGraph->setTipXLab("t");
     mGraph->setYAxisMode(GraphView::eAllTicks);
-    mGraph->autoAdjustYScale(true);
+    mGraph->autoAdjustYScale(false);
     mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
     mGraph->setFormatFunctX(nullptr);
     mGraph->setBackgroundColor(QColor(230, 230, 230));
@@ -357,7 +357,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
 
 }
 
-void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, const QVector<variable_t>& showVariableList)
+void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, const QVector<variable_t>& showVariableList, const double Ymin, const double Ymax)
 {
     // From GraphViewResults::updateCurvesToShow
     mShowAllChains = showAllChains;
@@ -370,13 +370,11 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
     const bool showDataPoints = showVariableList.contains(eGDatesPts);
     const bool showGP = showVariableList.contains(eGP);
     const bool showGS = showVariableList.contains(eGS);
-    const bool autoAdjustY = true;
-    
-    mGraph->autoAdjustYScale(autoAdjustY);
-    if (autoAdjustY == false) {
-        const double Ymin = -1000;
-        const double Ymax = +1000;
+
+    if (!mGraph->autoAdjustY()) {
         mGraph->setRangeY(Ymin, Ymax);
+qDebug()<<Ymin<<Ymax;
+        //mGraph->setRangeY(-1000, 1000);
     }
     mGraph->setCurveVisible("Map", mShowAllChains && showMap);
 
