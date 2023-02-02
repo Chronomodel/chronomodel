@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -42,8 +42,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "AppSettings.h"
 
-#include <cmath>
 #include <QLocale>
+#include <cmath>
+
 
 double DateUtils::convertToFormat(const double valueToFormat, const FormatDate format)
 {
@@ -85,10 +86,10 @@ double DateUtils::convertFromFormat(const double formatedValue, const FormatDate
             return 2000. - formatedValue;
             break;
         case eDatBP:
-            return formatedValue - 1950.;
+            return formatedValue + 1950.;
             break;
         case eDatB2K:
-            return formatedValue - 2000.;
+            return formatedValue + 2000.;
             break;
         case eKa:
             return (2. - formatedValue)*1e+03;

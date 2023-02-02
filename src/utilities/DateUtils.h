@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -39,7 +39,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #ifndef DATEUTILS_H
 #define DATEUTILS_H
-
 
 #include <QString>
 #include <QMap>
@@ -80,8 +79,8 @@ public:
     static double convertFromAppSettingsFormat(const double &formattedValue);
     inline QString convertFromAppSettingsFormatStr(const double formattedValue);
 
-    static FormatDate getAppSettingsFormat();
-    static QString getAppSettingsFormatStr();
+    static FormatDate getAppSettingsFormat() ;
+    static QString getAppSettingsFormatStr()  ;
 
 };
 
