@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -53,7 +53,6 @@ PluginGaussRefView::PluginGaussRefView(QWidget* parent):GraphViewRefAbstract(par
     mGraph = new GraphView(this);
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eAllTicks);
-    //mGraph->setRendering(GraphView::eHD);
     mGraph->autoAdjustYScale(true);
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("x");
@@ -118,7 +117,6 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             curve.mName = "Reference";
             curve.mPen.setColor(Painting::mainColorDark);
 
-
             double yMin = tminDisplay;
             double yMax = tmaxDisplay;
 
@@ -132,7 +130,6 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                     stepDisplay = stepDisplay/1000.;
 
                 double t = 0;
-                //for (double t = tminDisplay; t<=tmaxDisplay; t += stepDisplay) {
                 const int imax = (tmaxDisplay - tminDisplay +1) / stepDisplay;
                 for (int i = 0; i<= imax; i++) {
                     t = tminDisplay + i*stepDisplay;
@@ -227,60 +224,25 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                     t = iPt.key();
                     tDisplay = DateUtils::convertToAppSettingsFormat(t);
 
+                    error = plugin->getRefErrorAt(date.mData, t, mode) * 1.96;
+
+                    curveG[tDisplay] = iPt.value();
+                    curveG95Sup[tDisplay] = iPt.value() + error;
+                    curveG95Inf[tDisplay] = iPt.value() - error;
+
                     if (tDisplay>=tminDisplay && tDisplay<=tmaxDisplay) {
-                        error = plugin->getRefErrorAt(date.mData, t, mode) * 1.96;
-
-                        curveG[tDisplay] = iPt.value();
-                        curveG95Sup[tDisplay] = iPt.value() + error;
-                        curveG95Inf[tDisplay] = iPt.value() - error;
-
                         yMin = qMin(yMin, curveG95Inf.value(tDisplay));
                         yMax = qMax(yMax, curveG95Sup.value(tDisplay));
                     }
+
                 }
-                /*
-                if (tmaxDisplay>curve.mDataMean.firstKey() && tmaxDisplay<curve.mDataMean.lastKey()) {
-                     QMap<double, double>::const_iterator iter = curve.mDataMean.lowerBound(tmaxDisplay);
-                     double v;
-                     if (iter != curve.mDataError.constBegin()) {
-                         const double t_upper = iter.key();
-                         const double v_upper = iter.value();
-                         --iter;
-                         const double t_under = iter.key();
-                         const double v_under = iter.value();
 
-                         v = interpolate(tmaxDisplay, t_under, t_upper, v_under, v_upper);
-                     } else
-                         v = iter.value();
+                const GraphCurve &curveGEnv = shapeCurve(curveG95Inf, curveG95Sup, "G Env",
+                                                 QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30));
+                mGraph->addCurve(curveGEnv);
 
-                     const double error = plugin->getRefErrorAt(date.mData, tmaxDisplay, mode) * 1.96;
-
-                     curveG[tmaxDisplay] = v;
-                     curveG95Sup[tmaxDisplay] = v + error;
-                     curveG95Inf[tmaxDisplay] = v - error;
-
-                     yMin = qMin(yMin, curveG95Inf.value(tmaxDisplay));
-                     yMax = qMax(yMax, curveG95Sup.value(tmaxDisplay));
-                }
-                */
-                GraphCurve graphCurveG95Sup;
-                graphCurveG95Sup.mName = "G95Sup";
-                graphCurveG95Sup.mData = curveG95Sup;
-                graphCurveG95Sup.mPen.setColor(QColor(180, 180, 180));
-                mGraph->addCurve(graphCurveG95Sup);
-
-                GraphCurve graphCurveG95Inf;
-                graphCurveG95Inf.mName = "G95Inf";
-                graphCurveG95Inf.mData = curveG95Inf;
-                graphCurveG95Inf.mPen.setColor(QColor(180, 180, 180));
-                mGraph->addCurve(graphCurveG95Inf);
-
-                GraphCurve graphCurveG;
-                graphCurveG.mName = "G";
-                graphCurveG.mData = curveG;
-                graphCurveG.mPen.setColor(Qt::blue);
+                const GraphCurve &graphCurveG = FunctionCurve(curveG, "G", Painting::mainColorDark );
                 mGraph->addCurve(graphCurveG);
-
             }
 
             if (mode != DATE_GAUSS_MODE_NONE) {
@@ -306,7 +268,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                 QMap<double, double> measureCurve;
                 measureCurve[yMin] = 0.;
                 for (int i = 1; i< 4999; i++) {
-                    double y = yMin + i*step;
+                    const double y = yMin + i*step;
                     measureCurve[y] = exp(-0.5 * pow((y - age) / error, 2.));
 
                 }
@@ -359,16 +321,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
 
         for (auto&& d : date.mSubDates ) {
             Date sd (d.toObject());
-        /*    QString toFind = sd.mUUID;
-            
-            Project* project = MainWindow::getInstance()->getProject();
-            QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
-            if ( it != project->mCalibCurves.end())
-                sd.mCalibration = & it.value();
-            else {
-                sd.calibrate(settings, project);
-            }
-            */
+
             if (!sd.isNull() && sd.mIsValid) {
                 const double t3 = sd.getFormatedTminCalib();
                 const double t4 = sd.getFormatedTmaxCalib();

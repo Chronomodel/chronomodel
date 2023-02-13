@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -44,7 +44,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphView.h"
 #include "StdUtilities.h"
 #include "Painting.h"
-#include "GraphViewResults.h"
 
 #include <QtWidgets>
 
@@ -189,13 +188,14 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
             for ( QMap<double, double>::const_iterator &&iPt = curve.mDataMean.cbegin();  iPt!=curve.mDataMean.cend(); ++iPt) {
                 const double t (iPt.key());
                 const double tDisplay = DateUtils::convertToAppSettingsFormat(t);
+
+                const double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
+
+                curveG[tDisplay] = iPt.value();
+                curveG95Sup[tDisplay] = iPt.value() + error;
+                curveG95Inf[tDisplay] = iPt.value() - error;
+
                 if (tDisplay>tminDisplay && tDisplay<tmaxDisplay) {
-                    const double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
-
-                    curveG[tDisplay] = iPt.value();
-                    curveG95Sup[tDisplay] = iPt.value() + error;
-                    curveG95Inf[tDisplay] = iPt.value() - error;
-
                    yMin = qMin(yMin, curveG95Inf.value(tDisplay));
                    yMax = qMax(yMax, curveG95Sup.value(tDisplay));
                 }
@@ -204,32 +204,17 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
             mGraph->setRangeX(tminDisplay,tmaxDisplay);
             mGraph->setCurrentX(tminDisplay, tmaxDisplay);
 
-            GraphCurve graphCurveG; // = FunctionCurve( curveG, "G", Painting::mainColorDark);
-            graphCurveG.mName = "G";
-            graphCurveG.mData = curveG;
-            graphCurveG.mPen.setColor(Painting::mainColorDark);
-
+            const GraphCurve &graphCurveG = FunctionCurve(curveG, "G", Painting::mainColorDark );
             mGraph->addCurve(graphCurveG);
 
-            GraphCurve graphCurveG95Sup;
-            graphCurveG95Sup.mName = "G95Sup";
-            graphCurveG95Sup.mData = curveG95Sup;
-            graphCurveG95Sup.mPen.setColor(QColor(180, 180, 180));
-            mGraph->addCurve(graphCurveG95Sup);
-
-            GraphCurve graphCurveG95Inf;
-            graphCurveG95Inf.mName = "G95Inf";
-            graphCurveG95Inf.mData = curveG95Inf;
-            graphCurveG95Inf.mPen.setColor(QColor(180, 180, 180));
-            mGraph->addCurve(graphCurveG95Inf);
-
-
+            const GraphCurve &curveGEnv = shapeCurve(curveG95Inf, curveG95Sup, "G Env",
+                                             QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30));
+            mGraph->addCurve(curveGEnv);
             /* ----------------------------------------------
              *  Measure curve
              * ---------------------------------------------- */
             double error (0.);
             double avg (0.);
-
 
             switch (pta) {
             case eInc:
@@ -281,15 +266,18 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
              * because the y scale auto adjusts depending on x zoom.
              * => the visible part of the measurement may be very reduced !
              */
-            const double step = (yMax - yMin) / 5000.;
+            const double step = (yMax - yMin) / 4999.;
             QMap<double,double> measureCurve;
-            double t;
 
+            measureCurve[yMin] = 0.;
+            for (int i = 1; i< 4999; i++) {
+                const double y = yMin + i*step;
+                measureCurve[y] = exp(-0.5 * pow((y - avg) / error, 2.));
 
-            for (int i = 0; i<5000; i++) {
-                t = yMin + i*step;
-                measureCurve[t] = exp(-0.5 * pow((t - avg) / error, 2.));
             }
+            measureCurve[yMax] = 0.;
+
+
             measureCurve = normalize_map(measureCurve);
             curveMeasure.mData = measureCurve;
             mGraph->addCurve(curveMeasure);

@@ -49,7 +49,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 PluginF14CRefView::PluginF14CRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
-    mMeasureColor = QColor(Qt::black);
+    mMeasureColor = QColor(56, 120, 50);//QColor(Qt::black);
     mGraph = new GraphView(this);
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eAllTicks);
@@ -161,13 +161,14 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
              for ( QMap<double, double>::const_iterator &&iPt = curve.mDataMean.cbegin();  iPt!=curve.mDataMean.cend(); ++iPt) {
                  const double t (iPt.key());
                  const double tDisplay = DateUtils::convertToAppSettingsFormat(t);
-                 if (tDisplay>tminDisplay && tDisplay<tmaxDisplay) {
-                     const double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
 
-                     curveG[tDisplay] = iPt.value();
-                     curveG95Sup[tDisplay] = iPt.value() + error;
-                     curveG95Inf[tDisplay] = iPt.value() - error;
+                 const double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
 
+                 curveG[tDisplay] = iPt.value();
+                 curveG95Sup[tDisplay] = iPt.value() + error;
+                 curveG95Inf[tDisplay] = iPt.value() - error;
+
+                 if (tDisplay > tminDisplay && tDisplay < tmaxDisplay) {
                      yMin = qMin(yMin, curveG95Inf.value(tDisplay));
                      yMax = qMax(yMax, curveG95Sup.value(tDisplay));
                  }
@@ -175,25 +176,12 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
              mGraph->setRangeX(tminDisplay,tmaxDisplay);
              mGraph->setCurrentX(tminDisplay, tmaxDisplay);
 
-             GraphCurve graphCurveG;
-             graphCurveG.mName = "G";
-             graphCurveG.mData = curveG;
-             graphCurveG.mPen.setColor(Painting::mainColorDark);
+             const GraphCurve &graphCurveG = FunctionCurve(curveG, "G", Painting::mainColorDark );
              mGraph->addCurve(graphCurveG);
 
-             GraphCurve graphCurveG95Sup;
-             graphCurveG95Sup.mName = "G95Sup";
-             graphCurveG95Sup.mData = curveG95Sup;
-             graphCurveG95Sup.mPen.setColor(QColor(180, 180, 180));
-             mGraph->addCurve(graphCurveG95Sup);
-
-             GraphCurve graphCurveG95Inf;
-             graphCurveG95Inf.mName = "G95Inf";
-             graphCurveG95Inf.mData = curveG95Inf;
-             graphCurveG95Inf.mPen.setColor(QColor(180, 180, 180));
-             mGraph->addCurve(graphCurveG95Inf);
-
-
+             const GraphCurve &curveGEnv = shapeCurve(curveG95Inf, curveG95Sup, "G Env",
+                                              QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30));
+             mGraph->addCurve(curveGEnv);
              /* ----------------------------------------------
               *  Measure curve
               * ---------------------------------------------- */
@@ -206,13 +194,7 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
              QColor penColor(mMeasureColor);
              QColor brushColor(mMeasureColor);
 
-             // Lower opacity in case of delta r not null
-             /*    if (delta_r != 0. && delta_r_error != 0.) {
-            penColor.setAlpha(100);
-            brushColor.setAlpha(15);
-
-        } else {
- */           penColor.setAlpha(255);
+             penColor.setAlpha(255);
              brushColor.setAlpha(50);
              //       }
              curveMeasure.mPen = penColor;
@@ -222,12 +204,12 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
              /* 5000 pts are used on vertical measurement
               * because the y scale auto adjusts depending on x zoom.
               * => the visible part of the measurement may be very reduced ! */
-             const double step = (yMax - yMin) / 5000.;
+             const double step = (yMax - yMin) / 4999.;
              QMap<double, double> measureCurve;
 
              measureCurve[yMin] = 0.;
-             for (int i = 1; i<5000; i++) {
-                 double y = yMin + i*step;
+             for (int i = 1; i<4999; i++) {
+                 const double y = yMin + i*step;
                  measureCurve[y] = exp(-0.5 * pow((y - age) / error, 2.));
 
              }
@@ -241,13 +223,13 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
               *  Sub-dates curves (combination)
               * ---------------------------------------------- */
 
-             for (auto && subDate: date.mSubDates) {
+             for (auto &&subDate: date.mSubDates) {
                  QJsonObject d = subDate.toObject();
                  GraphCurve curveSubMeasure;
                  curveSubMeasure.mName = "Sub-Measurement : " + d.value(STATE_NAME).toString();// QString::number(i);
 
-                 double sub_age = d.value(STATE_DATE_DATA).toObject().value(DATE_F14C_FRACTION_STR).toDouble();
-                 double sub_error = d.value(STATE_DATE_DATA).toObject().value(DATE_F14C_ERROR_STR).toDouble();
+                 const double sub_age = d.value(STATE_DATE_DATA).toObject().value(DATE_F14C_FRACTION_STR).toDouble();
+                 const double sub_error = d.value(STATE_DATE_DATA).toObject().value(DATE_F14C_ERROR_STR).toDouble();
 
                  yMin = qMin(yMin, sub_age - sub_error * 3);
                  yMax = qMax(yMax, sub_age + sub_error * 3);
@@ -261,15 +243,22 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
                  curveSubMeasure.mBrush = brushColor;
                  curveSubMeasure.mType = GraphCurve::CurveType::eVerticalQMap;
 
-                 const double step = (yMax - yMin) / 1000.;
+                 const double step = (yMax - yMin) / 999.;
+
                  QMap<double, double> subCurve;
-                 for (double t = yMin; t<yMax; t += step) {
-                     const double v = exp(-0.5 * pow((sub_age - t) / sub_error, 2.));
-                     subCurve.insert(t, v);
+                 subCurve.insert(yMin, 0);
+                 for (int i = 0; i< 999; i++) {
+                     double y = yMin + i*step;
+                     double v = exp(-0.5 * pow((sub_age - y) / sub_error, 2.));
+                     subCurve.insert(y, v);
                  }
+                 subCurve.insert(yMax, 0);
                  subCurve = normalize_map(subCurve);
                  curveSubMeasure.mData = subCurve;
                  mGraph->addCurve(curveSubMeasure);
+
+
+
              }
 
 

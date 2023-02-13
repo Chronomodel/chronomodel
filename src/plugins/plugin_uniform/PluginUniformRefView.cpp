@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,7 +40,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginUniformRefView.h"
 #if USE_PLUGIN_UNIFORM
 
-#include "PluginUniform.h"
 #include "GraphView.h"
 #include "Painting.h"
 #include "StdUtilities.h"
@@ -53,7 +52,6 @@ PluginUniformRefView::PluginUniformRefView(QWidget* parent):GraphViewRefAbstract
     mGraph = new GraphView(this);
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eAllTicks);
-    //mGraph->setRendering(GraphView::eHD);
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("age");
     mGraph->autoAdjustYScale(true);
@@ -98,8 +96,6 @@ void PluginUniformRefView::setDate(const Date& date, const ProjectSettings& sett
         mGraph->showInfos(true);
         mGraph->setFormatFunctX(nullptr);
 
-       
-             
         /* ----------------------------------------------
          *  Reference curve
          * ---------------------------------------------- */
@@ -109,7 +105,6 @@ void PluginUniformRefView::setDate(const Date& date, const ProjectSettings& sett
 
         GraphCurve gCurve;
         gCurve.mName = date.mName;
-
 
         QColor curveColor(QColor(100, 50, 140) );
         gCurve.mPen.setColor(curveColor);
@@ -141,14 +136,7 @@ void PluginUniformRefView::setDate(const Date& date, const ProjectSettings& sett
 
         for (auto&& d : date.mSubDates ) {
             Date sd (d.toObject());
-         /*   QString toFind = sd.mUUID;
-            
-            Project* project = MainWindow::getInstance()->getProject();
-            QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
-            if ( it != project->mCalibCurves.end())
-                sd.mCalibration = & it.value();
-           */
-            
+
             if (!sd.isNull() && sd.mIsValid) {
                 const double t3 = sd.getFormatedTminCalib();
                 const double t4 = sd.getFormatedTmaxCalib();

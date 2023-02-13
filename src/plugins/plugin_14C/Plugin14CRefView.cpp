@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -49,11 +49,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 Plugin14CRefView::Plugin14CRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
-    mMeasureColor = QColor(Qt::black);
+    mMeasureColor = QColor(56, 120, 50);//QColor(Qt::black);
     mGraph = new GraphView(this);
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eAllTicks);
-    //mGraph->setRendering(GraphView::eHD);
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("age");
     mGraph->autoAdjustYScale(true);
@@ -163,13 +162,14 @@ void Plugin14CRefView::setDate(const Date &date, const ProjectSettings& settings
              for ( QMap<double, double>::const_iterator &&iPt = curve.mDataMean.cbegin();  iPt!=curve.mDataMean.cend(); ++iPt) {
                  const double t (iPt.key());
                  const double tDisplay = DateUtils::convertToAppSettingsFormat(t);
+
+                 const double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
+
+                 curveG[tDisplay] = iPt.value();
+                 curveG95Sup[tDisplay] = iPt.value() + error;
+                 curveG95Inf[tDisplay] = iPt.value() - error;
+
                  if (tDisplay>tminDisplay && tDisplay<tmaxDisplay) {
-                     const double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
-
-                     curveG[tDisplay] = iPt.value();
-                     curveG95Sup[tDisplay] = iPt.value() + error;
-                     curveG95Inf[tDisplay] = iPt.value() - error;
-
                      yMin = qMin(yMin, curveG95Inf.value(tDisplay));
                      yMax = qMax(yMax, curveG95Sup.value(tDisplay));
                  }
@@ -177,33 +177,19 @@ void Plugin14CRefView::setDate(const Date &date, const ProjectSettings& settings
              mGraph->setRangeX(tminDisplay,tmaxDisplay);
              mGraph->setCurrentX(tminDisplay, tmaxDisplay);
 
-             GraphCurve graphCurveG;
-             graphCurveG.mName = "G";
-             graphCurveG.mData = curveG;
-             graphCurveG.mPen.setColor(Painting::mainColorDark);
-             //graphCurveG.mIsHisto = false;
+             const GraphCurve &graphCurveG = FunctionCurve(curveG, "G", Painting::mainColorDark );
              mGraph->addCurve(graphCurveG);
 
-             GraphCurve graphCurveG95Sup;
-             graphCurveG95Sup.mName = "G95Sup";
-             graphCurveG95Sup.mData = curveG95Sup;
-             graphCurveG95Sup.mPen.setColor(QColor(180, 180, 180));
-             //graphCurveG95Sup.mIsHisto = false;
-             mGraph->addCurve(graphCurveG95Sup);
 
-             GraphCurve graphCurveG95Inf;
-             graphCurveG95Inf.mName = "G95Inf";
-             graphCurveG95Inf.mData = curveG95Inf;
-             graphCurveG95Inf.mPen.setColor(QColor(180, 180, 180));
-             //graphCurveG95Inf.mIsHisto = false;
-             mGraph->addCurve(graphCurveG95Inf);
-
+             const GraphCurve &curveGEnv = shapeCurve(curveG95Inf, curveG95Sup, "G Env",
+                                              QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30));
+             mGraph->addCurve(curveGEnv);
              // Display reference curve name
              // mGraph->addInfo(tr("Ref")+" : " + ref_curve);
 
              /* ----------------------------------------------
-         *  Measure curve
-         * ---------------------------------------------- */
+              *  Measure curve
+              * ---------------------------------------------- */
              yMin = qMin(yMin, age - error * 3);
              yMax = qMax(yMax, age + error * 3);
 
@@ -236,7 +222,7 @@ void Plugin14CRefView::setDate(const Date &date, const ProjectSettings& settings
 
              measureCurve[yMin] = 0.;
              for (int i = 1; i< 4999; i++) {
-                 double y = yMin + i*step;
+                 const double y = yMin + i*step;
                  measureCurve[y] = exp(-0.5 * pow((y - age) / error, 2.));
 
              }
@@ -271,8 +257,6 @@ void Plugin14CRefView::setDate(const Date &date, const ProjectSettings& settings
                  curveDeltaR.mBrush = brushColor;
 
                  curveDeltaR.mType = GraphCurve::CurveType::eVerticalQMap;
-                 //curveDeltaR.mIsVertical = true;
-                 //curveDeltaR.mIsHisto = false;
 
                  /* 5000 pts are used on vertical measurement
                   * because the y scale auto adjusts depending on x zoom.

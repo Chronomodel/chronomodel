@@ -39,13 +39,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "GraphViewCurve.h"
 
-#include "Bound.h"
 #include "GraphView.h"
 #include "ModelCurve.h"
 #include "Painting.h"
 #include "DateUtils.h"
 #include "ModelUtilities.h"
-#include "StdUtilities.h"
 
 #include <QtWidgets>
 
@@ -118,9 +116,6 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
     const double step = (mComposanteG.mapG.maxX() - mComposanteG.mapG.minX()) / (mComposanteG.mapG._column -1);
     const double tmin = mComposanteG.mapG.minX();
 
-  //  const bool displayY = modelCurve->displayY();
-  //  const bool displayZ = modelCurve->displayZ();
-
     if (mCurrentVariableList.contains(eG)) {
         GraphCurve curveEventsPoints;
         curveEventsPoints.mName = "Events Points";
@@ -130,8 +125,6 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         curveEventsPoints.mIsRectFromZero = false;
 
         curveEventsPoints.mType = GraphCurve::eRefPoints;
-
-
 
         // intallation des points de ref
         CurveRefPts ref;

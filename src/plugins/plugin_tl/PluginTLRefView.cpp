@@ -148,15 +148,17 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
                 /* 5000 pts are used on vertical measurement
                  * because the y scale auto adjusts depending on x zoom.
                  * => the visible part of the measurement may be very reduced ! */
-                const double step = (yMax - yMin) / 5000.;
-                QMap<double, double> measureCurve;
-                double t;
 
-                for (int i = 0; i<5000; i++) {
-                    t = yMin + i*step;
-                    measureCurve[t] = exp(-0.5 * pow((t - age) / error, 2.));
+                const double step = (yMax - yMin) / 4999.;
+                QMap<double,double> measureCurve;
+
+                measureCurve[yMin] = 0.;
+                for (int i = 1; i< 4999; i++) {
+                    const double y = yMin + i*step;
+                    measureCurve[y] = exp(-0.5 * pow((y - age) / error, 2.));
 
                 }
+                measureCurve[yMax] = 0.;
 
                 measureCurve = normalize_map(measureCurve);
                 curveMeasure.mData = measureCurve;
@@ -171,21 +173,18 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
                 curveMeasureAvg.mPen.setColor(mMeasureColor);
                 curveMeasureAvg.mPen.setStyle(Qt::SolidLine);
                 curveMeasure.mType = GraphCurve::CurveType::eHorizontalLine;
-                //curveMeasureAvg.mIsHorizontalLine = true;
 
                 GraphCurve curveMeasureSup;
                 curveMeasureSup.mName = "MeasureSup";
                 curveMeasureSup.mPen.setColor(mMeasureColor);
                 curveMeasureSup.mPen.setStyle(Qt::DashLine);
-                curveMeasureSup.mType = GraphCurve::CurveType::eHorizontalLine;
-                //curveMeasureSup.mIsHorizontalLine = true;
+                curveMeasureSup.mType = GraphCurve::CurveType::eHorizontalLine;      
 
                 GraphCurve curveMeasureInf;
                 curveMeasureInf.mName = "MeasureInf";
                 curveMeasureInf.mPen.setColor(mMeasureColor);
                 curveMeasureInf.mPen.setStyle(Qt::DashLine);
                 curveMeasureInf.mType = GraphCurve::CurveType::eHorizontalLine;
-                //curveMeasureInf.mIsHorizontalLine = true;
 
                 curveMeasureAvg.mHorizontalValue = age;
                 curveMeasureSup.mHorizontalValue = age + error;
@@ -208,13 +207,6 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
 
         for (auto&& d : date.mSubDates ) {
             Date sd (d.toObject());
-           /* QString toFind = sd.mUUID;
-            
-            Project* project = MainWindow::getInstance()->getProject();
-            QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
-            if ( it != project->mCalibCurves.end())
-                sd.mCalibration = & it.value();
-           */
             
             if (!sd.isNull() && sd.mIsValid) {
                 const double t3 = sd.getFormatedTminCalib();
