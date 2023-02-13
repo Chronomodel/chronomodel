@@ -1112,13 +1112,13 @@ void Event::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, co
     else {
         Bound* ek = dynamic_cast<Bound*>(this);
             // Nothing todo : this is just a Dirac !
-            ek->mTheta.mHisto.clear();
+            ek->mTheta.mFormatedHisto.clear();
             ek->mTheta.mChainsHistos.clear();
 
-            ek->mTheta.mHisto.insert(ek->mFixed,1);
+            ek->mTheta.mFormatedHisto.insert(ek->mFixed,1);
             //generate fictifious chains
             for (int i =0 ;i<chains.size(); ++i)
-                ek->mTheta.mChainsHistos.append(ek->mTheta.mHisto);
+                ek->mTheta.mChainsHistos.append(ek->mTheta.mFormatedHisto);
     }
 }
 

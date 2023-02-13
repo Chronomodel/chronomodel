@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -53,9 +53,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphCurve.h"
 #include "GraphView.h"
 
-#if USE_FFT
 #include "fftw3.h"
-#endif
+
 
 #include <QDebug>
 
@@ -63,7 +62,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 Date::Date(const Event *event):
     mEvent (event),
-    mName("No Named Date")
+    mName("No Named Date"),
+    mMixingLevel(0.99)
 {
     mColor = Qt::blue;
     mOrigin = eSingleDate;
@@ -279,7 +279,7 @@ void Date::fromJson(const QJsonObject& json)
     mSettings = ProjectSettings::fromJson(project->mState.value(STATE_SETTINGS).toObject()); // ProjectSettings::fromJson is static
     mSubDates = json.value(STATE_DATE_SUB_DATES).toArray();
 
-    mMixingLevel = project->mState.value(STATE_MCMC_MIXING).toDouble();
+    mMixingLevel = project->mState.value(STATE_MCMC).toObject().value(STATE_MCMC_MIXING).toDouble();
 
 
     if (mPlugin == nullptr)

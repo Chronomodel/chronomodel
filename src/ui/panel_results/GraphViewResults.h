@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ProjectSettings.h"
 #include "MCMCSettings.h"
-//#include "MCMCLoop.h"
+
 #include "GraphView.h"
 
 #include <QWidget>
@@ -54,7 +54,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QEvent>
 
 class Button;
-//class QPropertyAnimation;
 
 class MHVariable;
 class MetropolisVariable;
@@ -199,6 +198,7 @@ public:
     void setMainColor(const QColor& color);
    // void toggle(const QRect& geometry); //useless
     void setTitle(const QString& title);
+    inline QString title() const {return mTitle;};
 
     void setMarginLeft (qreal &m);
     void setMarginRight (qreal &m);
@@ -252,6 +252,10 @@ public:
     //virtual void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
     virtual void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QVector<variable_t> & showVariableList);
 
+
+    inline void changeYScaleDivision(const Scale &sc) const {mGraph->setYScaleDivision(sc);};
+    inline void changeYScaleDivision(const double major, const int minor) const {mGraph->setYScaleDivision(major, minor);};
+
 public slots:
     void setRange(type_data min, type_data max);
     void setCurrentX(type_data min, type_data max);
@@ -264,8 +268,8 @@ public slots:
     void imageToClipboard();
     void resultsToClipboard();
     void saveGraphData() const; // must be accessible by ResultsView
-    void changeXScaleDivision(const Scale &sc) {mGraph->changeXScaleDivision(sc);};//; update();}
-    void changeXScaleDivision(const double &major, const int &minor) {mGraph->changeXScaleDivision(major, minor);}; //update();}
+    void changeXScaleDivision(const Scale &sc) {mGraph->changeXScaleDivision(sc);};
+    void changeXScaleDivision(const double &major, const int &minor) {mGraph->changeXScaleDivision(major, minor);};
 
 protected:
 

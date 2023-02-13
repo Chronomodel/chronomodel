@@ -967,7 +967,7 @@ void MainWindow::runModel()
             mProject->run();
             mProjectView->mLog->append("    End Run, time elapsed "+ DHMS(startTime.elapsed()));
             mProject->setNoResults(false);
-             mProjectView->repaint();
+            mProjectView->repaint();
             mProjectView->mLog->append("    Start Saving");
             mProject->save();
             mProjectView->mLog->append(textGreen("    End Saving") );

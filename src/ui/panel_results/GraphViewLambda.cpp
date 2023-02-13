@@ -122,7 +122,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QVector<vari
         // ------------------------------------
         //  HPD All Chains
         // ------------------------------------
-        const GraphCurve &curveHPD = HPDCurve(mModel->mLambdaSpline.mHPD, "HPD All Chains", color);
+        const GraphCurve &curveHPD = HPDCurve(mModel->mLambdaSpline.mFormatedHPD, "HPD All Chains", color);
         mGraph->addCurve(curveHPD);
 
         // ------------------------------------
@@ -142,7 +142,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QVector<vari
         // ------------------------------------
         //  Theta Credibility
         // ------------------------------------
-        const GraphCurve &curveCred = topLineSection(mModel->mLambdaSpline.mCredibility,
+        const GraphCurve &curveCred = topLineSection(mModel->mLambdaSpline.mFormatedCredibility,
                                                      "Credibility All Chains",
                                                      color);
         mGraph->addCurve(curveCred);

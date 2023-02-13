@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -68,7 +68,7 @@ protected:
     // Variable for update function
     double tminPeriod;
     double tmaxPeriod;
-    bool hasY, hasZ;
+    bool mComputeY, mComputeZ;
     t_prob current_ln_h_YWI_2, current_ln_h_YWI_3, current_ln_h_YWI_1_2,current_h_theta, current_h_lambda, current_h_VG;
 
     SplineMatrices current_splineMatrices, current_matriceWI;

@@ -75,21 +75,21 @@ MHVariable::MHVariable( const MHVariable& origin):MHVariable()
 
     mX = origin.mX;
     mRawTrace = new QVector<double>(origin.mRawTrace->size());
-    std::copy(origin.mRawTrace->begin(),origin.mRawTrace->end(),mRawTrace->begin());
+    std::copy(origin.mRawTrace->begin(), origin.mRawTrace->end(), mRawTrace->begin());
 
     mFormatedTrace = new QVector<double>(origin.mFormatedTrace->size());
-    std::copy(origin.mFormatedTrace->begin(),origin.mFormatedTrace->end(),mFormatedTrace->begin());
+    std::copy(origin.mFormatedTrace->begin(), origin.mFormatedTrace->end(), mFormatedTrace->begin());
 
     mSupport = origin.mSupport;
     mFormat = origin.mFormat;
 
-    mHisto = origin.mHisto;
+    mFormatedHisto = origin.mFormatedHisto;
     mChainsHistos = origin.mChainsHistos;
 
     mCorrelations = origin.mCorrelations;
 
-    mHPD = origin.mHPD;
-    mCredibility = origin.mCredibility;
+    mFormatedHPD = origin.mFormatedHPD;
+    mFormatedCredibility = origin.mFormatedCredibility;
 
     mExactCredibilityThreshold = origin.mExactCredibilityThreshold;
 
@@ -193,21 +193,21 @@ MHVariable& MHVariable::copy(MHVariable const& origin)
 {
     mX = origin.mX;
     mRawTrace->resize(origin.mRawTrace->size());
-    std::copy(origin.mRawTrace->begin(),origin.mRawTrace->end(),mRawTrace->begin());
+    std::copy(origin.mRawTrace->begin(), origin.mRawTrace->end(), mRawTrace->begin());
 
     mFormatedTrace->resize(origin.mFormatedTrace->size());
-    std::copy(origin.mFormatedTrace->begin(),origin.mFormatedTrace->end(),mFormatedTrace->begin());
+    std::copy(origin.mFormatedTrace->begin(), origin.mFormatedTrace->end(), mFormatedTrace->begin());
 
     mSupport = origin.mSupport;
     mFormat = origin.mFormat;
 
-    mHisto = origin.mHisto;
+    mFormatedHisto = origin.mFormatedHisto;
     mChainsHistos = origin.mChainsHistos;
 
     mCorrelations = origin.mCorrelations;
 
-    mHPD = origin.mHPD;
-    mCredibility = origin.mCredibility;
+    mFormatedHPD = origin.mFormatedHPD;
+    mFormatedCredibility = origin.mFormatedCredibility;
 
     mExactCredibilityThreshold = origin.mExactCredibilityThreshold;
 

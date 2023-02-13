@@ -120,7 +120,7 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variabl
         // ------------------------------------
         //  HPD All Chains
         // ------------------------------------
-        const GraphCurve &curveHPD = HPDCurve(mModel->mS02Vg.mHPD, "HPD All Chains", color);
+        const GraphCurve &curveHPD = HPDCurve(mModel->mS02Vg.mFormatedHPD, "HPD All Chains", color);
         mGraph->addCurve(curveHPD);
 
         // ------------------------------------
@@ -140,7 +140,7 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variabl
         // ------------------------------------
         //  Theta Credibility
         // ------------------------------------
-        const GraphCurve &curveCred = topLineSection(mModel->mS02Vg.mCredibility,
+        const GraphCurve &curveCred = topLineSection(mModel->mS02Vg.mFormatedCredibility,
                                                      "Credibility All Chains",
                                                      color);
         mGraph->addCurve(curveCred);

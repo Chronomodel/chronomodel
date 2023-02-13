@@ -204,7 +204,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
             mGraph->setRangeX(tminDisplay,tmaxDisplay);
             mGraph->setCurrentX(tminDisplay, tmaxDisplay);
 
-            GraphCurve graphCurveG; // = GCurve( curveG, "G", Painting::mainColorDark);
+            GraphCurve graphCurveG; // = FunctionCurve( curveG, "G", Painting::mainColorDark);
             graphCurveG.mName = "G";
             graphCurveG.mData = curveG;
             graphCurveG.mPen.setColor(Painting::mainColorDark);

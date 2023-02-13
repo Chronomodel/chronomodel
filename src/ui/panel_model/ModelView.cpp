@@ -54,6 +54,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CalibrationView.h"
 #include "MultiCalibrationView.h"
 #include "CalibrationCurve.h"
+#include "AppSettings.h"
 
 #include "HelpWidget.h"
 #include "MainWindow.h"
@@ -70,18 +71,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <assert.h>
 
 ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-mEventsScene(nullptr),
-mCurSearchIdx(0),
-mPhasesScene(nullptr),
-mCurrentRightWidget(nullptr),
-mTmin(0.),
-mTmax(2000.),
-mProject(nullptr),
-mSplitProp(0.6),
-mHandlerW ( int (0.25 *AppSettings::widthUnit())),
-mIsSplitting(false),
-mCalibVisible(false),
-mCurveSettingsVisible(false)
+    mEventsScene(nullptr),
+    mCurSearchIdx(0),
+    mPhasesScene(nullptr),
+    mCurrentRightWidget(nullptr),
+    mTmin(0.),
+    mTmax(2000.),
+    mProject(nullptr),
+    mSplitProp(0.6),
+    mHandlerW ( int (0.25 *AppSettings::widthUnit())),
+    mIsSplitting(false),
+    mCalibVisible(false),
+    mCurveSettingsVisible(false)
 {
     setMouseTracking(true);
     //setFont(AppSettings::font());

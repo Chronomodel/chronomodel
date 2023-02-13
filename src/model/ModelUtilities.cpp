@@ -340,7 +340,7 @@ QString ModelUtilities::dateResultsText(const Date* d, const Model* model, const
 
     if (d->mTi.mSamplerProposal != MHVariable::eFixe && model) {
 
-        short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTi.mHPD, model);
+        short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTi.mFormatedHPD, model);
         switch (position) {
         case -1:
             text += QObject::tr("Solutions exist under study period");
@@ -1230,7 +1230,7 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
 
     if (d->mTi.mSamplerProposal != MHVariable::eFixe && model) {
 
-        short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTi.mHPD, model);
+        short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTi.mFormatedHPD, model);
         switch (position) {
         case -1:
             text += line( textBold(textRed(QObject::tr("Solutions exist before study period") )) );

@@ -82,29 +82,29 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-mModel(nullptr),
+    mModel(nullptr),
 
-mMargin(5),
-mOptionsW(250),
-mMarginLeft(40),
-mMarginRight(40),
+    mMargin(5),
+    mOptionsW(250),
+    mMarginLeft(40),
+    mMarginRight(40),
 
-mCurrentTypeGraph(GraphViewResults::ePostDistrib),
-mCurrentVariableList(GraphViewResults::eThetaEvent),
-mMainVariable(GraphViewResults::eThetaEvent),
-mHasPhases(false),
-mResultZoomT(1.),
-mResultMinT(0.),
-mResultMaxT(0.),
-mResultCurrentMinT(0.),
-mResultCurrentMaxT(0.),
+    mCurrentTypeGraph(GraphViewResults::ePostDistrib),
+    mCurrentVariableList(GraphViewResults::eThetaEvent),
+    mMainVariable(GraphViewResults::eThetaEvent),
+    mHasPhases(false),
+    mResultZoomT(1.),
+    mResultMinT(0.),
+    mResultMaxT(0.),
+    mResultCurrentMinT(0.),
+    mResultCurrentMaxT(0.),
 
-mMajorScale(100),
-mMinorCountScale(4),
+    mMajorScale(100),
+    mMinorCountScale(4),
 
-mCurrentPage(0),
-mGraphsPerPage(APP_SETTINGS_DEFAULT_SHEET),
-mMaximunNumberOfVisibleGraph(0)
+    mCurrentPage(0),
+    mGraphsPerPage(APP_SETTINGS_DEFAULT_SHEET),
+    mMaximunNumberOfVisibleGraph(0)
 {
     setMouseTracking(true);
 
@@ -397,7 +397,7 @@ mMaximunNumberOfVisibleGraph(0)
     mSpanGroup  = new QWidget();
     h = 20;
 
-    mSpanTitle = new Label(tr("Span Options"), mDisplayWidget);
+    mSpanTitle = new Label(tr("Time Scale"), mDisplayWidget);
     mSpanTitle->setFixedHeight(25);
     mSpanTitle->setIsTitle(true);
 
@@ -420,7 +420,6 @@ mMaximunNumberOfVisibleGraph(0)
     mXLab = new QLabel(tr("time"), mSpanGroup);
     mXLab->setFixedHeight(h);
     mXLab->setAlignment(Qt::AlignCenter);
-    //mXLab->setAdjustText(false);
 
     mXSlider = new QSlider(Qt::Horizontal, mSpanGroup);
     mXSlider->setFixedHeight(h);
@@ -505,7 +504,7 @@ mMaximunNumberOfVisibleGraph(0)
     mXOptionGroup  = new QWidget();
     h = 20;
 
-    mXOptionTitle = new Label(tr("X Options"), mDisplayWidget);
+    mXOptionTitle = new Label(tr("X Scale"), mDisplayWidget);
     mXOptionTitle->setFixedHeight(25);
     mXOptionTitle->setIsTitle(true);
 
@@ -525,26 +524,123 @@ mMaximunNumberOfVisibleGraph(0)
     mCurrentXMaxEdit->setFixedHeight(h);
     mCurrentXMaxEdit->setToolTip(tr("Enter a maximal value to display the curves"));
 
-    connect(mCurrentXMinEdit, &LineEdit::editingFinished, this, &ResultsView::updateCurvesToShow);
-    connect(mCurrentXMaxEdit, &LineEdit::editingFinished, this, &ResultsView::updateCurvesToShow);
+    connect(mXOptionBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::findOptimalX);
+    connect(mCurrentXMinEdit, &LineEdit::editingFinished, this, &ResultsView::applyXRange);
+    connect(mCurrentXMaxEdit, &LineEdit::editingFinished, this, &ResultsView::applyXRange);
 
     QHBoxLayout* XOptionLayout0 = new QHBoxLayout();
-    XOptionLayout0->setContentsMargins(0, 0, 0, 0);
+    XOptionLayout0->setContentsMargins(5, 0, 5, 0);
     XOptionLayout0->addWidget(mXOptionBut);
 
     QHBoxLayout* XOptionLayout1 = new QHBoxLayout();
-    XOptionLayout1->setContentsMargins(0, 0, 0, 0);
+    XOptionLayout1->setContentsMargins(5, 0, 5, 0);
     XOptionLayout1->addWidget(mCurrentXMinEdit);
     XOptionLayout1->addWidget(mXOptionLab);
     XOptionLayout1->addWidget(mCurrentXMaxEdit);
 
     QVBoxLayout* XOptionLayout = new QVBoxLayout();
-    //XOptionLayout->setContentsMargins(10, 10, 5, 5);
-    //XOptionLayout->setSpacing(5);
+    XOptionLayout->setContentsMargins(5, 5, 5, 5);
+    XOptionLayout->setSpacing(5);
     XOptionLayout->addLayout(XOptionLayout0);
     XOptionLayout->addLayout(XOptionLayout1);
 
     mXOptionGroup->setLayout(XOptionLayout);
+
+    // ------------------------------------
+    //  Display / Y Options
+    // ------------------------------------
+    mYOptionGroup  = new QWidget();
+    h = 20;
+
+    mYOptionTitle = new Label(tr("Y Scale"), mDisplayWidget);
+    mYOptionTitle->setFixedHeight(25);
+    mYOptionTitle->setIsTitle(true);
+
+    mYOptionBut = new Button(tr("Optimal Y Display"), mYOptionGroup);
+    mYOptionBut->setFixedHeight(25);
+    mYOptionBut->setToolTip(tr("Optimize Y scale"));
+
+    mYOptionLab = new QLabel(tr("Y"), mYOptionGroup);
+    mYOptionLab->setFixedHeight(h);
+    //mSpanLab->setAdjustText(false);
+
+    mCurrentYMinEdit = new LineEdit(mYOptionGroup);
+    mCurrentYMinEdit->setFixedHeight(h);
+    mCurrentYMinEdit->setToolTip(tr("Enter a minimal value to display the curves"));
+
+    mCurrentYMaxEdit = new LineEdit(mYOptionGroup);
+    mCurrentYMaxEdit->setFixedHeight(h);
+    mCurrentYMaxEdit->setToolTip(tr("Enter a maximal value to display the curves"));
+
+    connect(mYOptionBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::findOptimalY);
+    connect(mCurrentYMinEdit, &LineEdit::editingFinished, this, &ResultsView::applyYRange);
+    connect(mCurrentYMaxEdit, &LineEdit::editingFinished, this, &ResultsView::applyYRange);
+
+    QHBoxLayout* YOptionLayout0 = new QHBoxLayout();
+    YOptionLayout0->setContentsMargins(5, 0, 5, 0);
+    YOptionLayout0->addWidget(mYOptionBut);
+
+    QHBoxLayout* YOptionLayout1 = new QHBoxLayout();
+    YOptionLayout1->setContentsMargins(5, 0, 5, 0);
+    YOptionLayout1->addWidget(mCurrentYMinEdit);
+    YOptionLayout1->addWidget(mYOptionLab);
+    YOptionLayout1->addWidget(mCurrentYMaxEdit);
+
+    QVBoxLayout* YOptionLayout = new QVBoxLayout();
+    YOptionLayout->setContentsMargins(5, 5, 5, 5);
+    YOptionLayout->setSpacing(5);
+    YOptionLayout->addLayout(YOptionLayout0);
+    YOptionLayout->addLayout(YOptionLayout1);
+
+    mYOptionGroup->setLayout(YOptionLayout);
+
+    // ------------------------------------
+    //  Display / Z Options
+    // ------------------------------------
+    mZOptionGroup  = new QWidget();
+    h = 20;
+
+    mZOptionTitle = new Label(tr("Z Scale"), mDisplayWidget);
+    mZOptionTitle->setFixedHeight(25);
+    mZOptionTitle->setIsTitle(true);
+
+    mZOptionBut = new Button(tr("Optimal Z Display"), mZOptionGroup);
+    mZOptionBut->setFixedHeight(25);
+    mZOptionBut->setToolTip(tr("Optimize Z scale"));
+
+    mZOptionLab = new QLabel(tr("Z"), mZOptionGroup);
+    mZOptionLab->setFixedHeight(h);
+    //mSpanLab->setAdjustText(false);
+
+    mCurrentZMinEdit = new LineEdit(mZOptionGroup);
+    mCurrentZMinEdit->setFixedHeight(h);
+    mCurrentZMinEdit->setToolTip(tr("Enter a minimal value to display the curves"));
+
+    mCurrentZMaxEdit = new LineEdit(mZOptionGroup);
+    mCurrentZMaxEdit->setFixedHeight(h);
+    mCurrentZMaxEdit->setToolTip(tr("Enter a maximal value to display the curves"));
+
+    connect(mZOptionBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::findOptimalZ);
+    connect(mCurrentZMinEdit, &LineEdit::editingFinished, this, &ResultsView::applyZRange);
+    connect(mCurrentZMaxEdit, &LineEdit::editingFinished, this, &ResultsView::applyZRange);
+
+    QHBoxLayout* ZOptionLayout0 = new QHBoxLayout();
+    ZOptionLayout0->setContentsMargins(5, 0, 5, 0);
+    ZOptionLayout0->addWidget(mZOptionBut);
+
+    QHBoxLayout* ZOptionLayout1 = new QHBoxLayout();
+    ZOptionLayout1->setContentsMargins(5, 0, 5, 0);
+    ZOptionLayout1->addWidget(mCurrentZMinEdit);
+    ZOptionLayout1->addWidget(mZOptionLab);
+    ZOptionLayout1->addWidget(mCurrentZMaxEdit);
+
+    QVBoxLayout* ZOptionLayout = new QVBoxLayout();
+    ZOptionLayout->setContentsMargins(5, 5, 5, 5);
+    XOptionLayout->setSpacing(5);
+    ZOptionLayout->addLayout(ZOptionLayout0);
+    ZOptionLayout->addLayout(ZOptionLayout1);
+
+    mZOptionGroup->setLayout(ZOptionLayout);
 
     // ------------------------------------
     //  Display / Graphic Options
@@ -647,8 +743,14 @@ mMaximunNumberOfVisibleGraph(0)
     displayLayout->setSpacing(0);
     displayLayout->addWidget(mSpanTitle);
     displayLayout->addWidget(mSpanGroup);
+
     displayLayout->addWidget(mXOptionTitle);
     displayLayout->addWidget(mXOptionGroup);
+    displayLayout->addWidget(mYOptionTitle);
+    displayLayout->addWidget(mYOptionGroup);
+    displayLayout->addWidget(mZOptionTitle);
+    displayLayout->addWidget(mZOptionGroup);
+
     displayLayout->addWidget(mGraphicTitle);
     displayLayout->addWidget(mGraphicGroup);
     mDisplayWidget->setLayout(displayLayout);
@@ -1029,9 +1131,10 @@ void ResultsView::initModel(Model* model)
 
     mModel = model;
     connect(mModel, &Model::newCalculus, this, &ResultsView::generateCurves);
+    //connect(mModel, &Model::newCalculus, this, &ResultsView::updateModel);
 
     Scale timeScale;
-    timeScale.findOptimal(mModel->mSettings.mTmin, mModel->mSettings.mTmax, 7);
+    timeScale.findOptimalMark(mModel->mSettings.getTminFormated(), mModel->mSettings.getTmaxFormated(), 7);
     mMajorScale = timeScale.mark;
     mMinorCountScale = 4;
 
@@ -1063,9 +1166,31 @@ void ResultsView::initModel(Model* model)
         XScale.findOptimal(modelCurve->mPosteriorMeanG.gx.vecG.front(), modelCurve->mPosteriorMeanG.gx.vecG.back(), 7);
         mResultCurrentMinX = XScale.min;
         mResultCurrentMaxX = XScale.max;
+        applyXRange();
 
-        mCurrentXMinEdit->setText(locale.toString(mResultCurrentMinX));
-        mCurrentXMaxEdit->setText(locale.toString(mResultCurrentMaxX));
+        mXOptionTitle->setText(mModel->getCurvesLongName().at(0) + " " + tr("Scale"));
+        mXOptionLab->setText(mModel->getCurvesName().at(0));
+        mXOptionBut->setText(tr("Optimal") + " " + mModel->getCurvesName().at(0) + " " + tr("Display"));
+
+        if (mModel->displayY() && !modelCurve->mPosteriorMeanG.gy.vecG.empty() ) {
+            XScale.findOptimal(modelCurve->mPosteriorMeanG.gy.vecG.front(), modelCurve->mPosteriorMeanG.gy.vecG.back(), 7);
+            mResultCurrentMinY = XScale.min;
+            mResultCurrentMaxY = XScale.max;
+            applyYRange();
+            mYOptionTitle->setText(mModel->getCurvesLongName().at(1) + " " + tr("Scale"));
+            mYOptionLab->setText(mModel->getCurvesName().at(1));
+            mYOptionBut->setText(tr("Optimal") + " " + mModel->getCurvesName().at(1) + " " + tr("Display"));
+
+            if (mModel->displayZ() && !modelCurve->mPosteriorMeanG.gz.vecG.empty() ) {
+                XScale.findOptimal(modelCurve->mPosteriorMeanG.gz.vecG.front(), modelCurve->mPosteriorMeanG.gz.vecG.back(), 7);
+                mResultCurrentMinZ = XScale.min;
+                mResultCurrentMaxZ = XScale.max;
+                applyZRange();
+                mZOptionTitle->setText(mModel->getCurvesLongName().at(2) + " " + tr("Scale"));
+                mZOptionLab->setText(mModel->getCurvesName().at(2));
+                mZOptionBut->setText(tr("Optimal") + " " + mModel->getCurvesName().at(2) + " " + tr("Display"));
+            }
+        }
 
     } else if (mHasPhases) {
         mMainVariable = GraphViewResults::eBeginEnd;
@@ -1083,7 +1208,6 @@ void ResultsView::initModel(Model* model)
 
     mFFTLenCombo->setCurrentText(stringForLocal(mModel->getFFTLength()));
     mBandwidthSpin->setValue(mModel->getBandwidth());
-
 
     applyStudyPeriod();
     updateOptionsWidget();
@@ -1436,6 +1560,9 @@ void ResultsView::toggleDisplayDistrib()
         mDisplayDistribTab->setTabVisible(1, true);
     }
 
+    const bool displayX = mModel->displayX();
+    const bool displayY = mModel->displayY();
+    const bool displayZ = mModel->displayZ();
     // Search for the visible widget
     QWidget* widFrom = nullptr;
     int widHeigth = 0;
@@ -1469,13 +1596,27 @@ void ResultsView::toggleDisplayDistrib()
         if (isCurve() && ( mMainVariable == GraphViewResults::eG ||
                            mMainVariable == GraphViewResults::eGP ||
                            mMainVariable == GraphViewResults::eGS)) {
-            mXOptionTitle->setVisible(true);
-            mXOptionGroup->setVisible(true);
-            mDisplayWidget-> setFixedHeight(widHeigth + mXOptionGroup->height() + mXOptionTitle->height());
+            mXOptionTitle->setVisible(displayX);
+            mXOptionGroup->setVisible(displayX);
+            widHeigth += displayX ? mXOptionGroup->height() + mXOptionTitle->height() : 0.;
+
+            mYOptionTitle->setVisible(displayY);
+            mYOptionGroup->setVisible(displayY);
+            widHeigth += displayY ?mYOptionGroup->height() + mYOptionTitle->height() : 0.;
+
+            mZOptionTitle->setVisible(displayZ);
+            mZOptionGroup->setVisible(displayZ);
+            mDisplayWidget->setFixedHeight(widHeigth + (displayZ ? mZOptionGroup->height() + mZOptionTitle->height(): 0.)) ;
 
         } else {
             mXOptionTitle->setVisible(false);
             mXOptionGroup->setVisible(false);
+
+            mYOptionTitle->setVisible(false);
+            mYOptionGroup->setVisible(false);
+
+            mYOptionTitle->setVisible(false);
+            mYOptionGroup->setVisible(false);
             mDisplayWidget-> setFixedHeight(widHeigth);
         }
 
@@ -1645,14 +1786,14 @@ void ResultsView::updateTotalGraphs()
 
         } else {
             if (!mModel->mEvents.isEmpty() && isCurve()) {
-                ModelCurve* model = modelCurve();
+               /* ModelCurve* model = modelCurve();
                 bool hasY = (model->mCurveSettings.mProcessType != CurveSettings::eProcessTypeNone && model->mCurveSettings.mProcessType != CurveSettings::eProcessTypeUnivarie) ;
                 bool hasZ = (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
                              model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D);
-
+                */
                 ++totalGraphs;
-                if (hasY) ++totalGraphs;
-                if (hasZ) ++totalGraphs;
+                if (mModel->displayY()) ++totalGraphs;
+                if (mModel->displayZ()) ++totalGraphs;
             }
         }
     }
@@ -1862,9 +2003,8 @@ void ResultsView::createByCurveGraph()
         connect(graphS02, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
 
     } else  {
-        const bool hasY = (model->mCurveSettings.mProcessType != CurveSettings::eProcessTypeNone && model->mCurveSettings.mProcessType != CurveSettings::eProcessTypeUnivarie) ;
-        const bool hasZ = (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
-                     model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D);
+        const bool displayY = model->displayY();
+        const bool displayZ = model->displayZ();
 
         // insert refpoints for X
       //  const double thresh = 68.4; //80;
@@ -1874,12 +2014,15 @@ void ResultsView::createByCurveGraph()
         std::vector<int> dataPerEvent;
         std::vector<int> hpdPerEvent;
         if (mMainVariable == GraphViewResults::eG) {
+
+
+            // Creation des points de ref
             for (const auto& event : modelCurve()->mEvents) {
                 CurveRefPts evPts;
                 CurveRefPts dPts;
                  double verr;
                 // Set Y
-                if (!hasY) {
+                if (!displayY) {
                     switch (model->mCurveSettings.mVariableType) {
                     case CurveSettings::eVariableTypeInclination :
                         evPts.Ymax = event->mXIncDepth + event->mS_XA95Depth;
@@ -1917,11 +2060,7 @@ void ResultsView::createByCurveGraph()
 
                     for (const auto& date: event->mDates) {
 
-                        QMap<double, double> calibMap = date.getRawCalibMap();
-
-                        QMap<type_data, type_data> hpd (create_HPD(calibMap, event->mTheta.mThresholdUsed));
-
-                        QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(hpd, 100);
+                        const QList<QPair<double, QPair<double, double> > > intervals = date.mTi.mRawHPDintervals;
                         dataPerEvent.push_back(intervals.size());
                         for (const auto& h : intervals) {
                             dPts.Xmin = h.second.first;
@@ -1936,18 +2075,11 @@ void ResultsView::createByCurveGraph()
 
                     }
 
-
-                    //event->mTheta.mHPD;
-
-                    /* The Results are in mFormatDate, but Xmean must be in not formated format.
-                 * Because the convertion is done within GraphViewCurve::generateCurves
-                 */
-
-                    QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(event->mTheta.mHPD, 100.);
+                    const QList<QPair<double, QPair<double, double> > > intervals = event->mTheta.mRawHPDintervals;
                     hpdPerEvent.push_back(intervals.size());
                     for (const auto& h : intervals) {
-                        evPts.Xmin = DateUtils::convertFromFormat( h.second.first, AppSettings::mFormatDate);
-                        evPts.Xmax = DateUtils::convertFromFormat( h.second.second, AppSettings::mFormatDate);
+                        evPts.Xmin =  h.second.first;
+                        evPts.Xmax =  h.second.second;
                         evPts.Ymin = evPts.Ymin;
                         evPts.Ymax = evPts.Ymax;
                         evPts.color = event->mColor;
@@ -1955,7 +2087,6 @@ void ResultsView::createByCurveGraph()
                         // memo Data Points
                         eventsPts.append(evPts);
                     }
-
 
 
 
@@ -1979,7 +2110,7 @@ void ResultsView::createByCurveGraph()
                 }
 
             }
-
+            // Fin de creation des points de ref
          }
 
         GraphViewCurve* graphX = new GraphViewCurve(widget);
@@ -1996,91 +2127,21 @@ void ResultsView::createByCurveGraph()
         QString resultsHTML = ModelUtilities::curveResultsHTML(model);
         graphX->setNumericalResults(resultsHTML, resultsText);
 
-        if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie ) {
-            switch (model->mCurveSettings.mVariableType) {
-                 case CurveSettings::eVariableTypeInclination :
-                      if (mMainVariable == GraphViewResults::eGP) {
-                         graphX->setTitle(tr("Incl. Var. Rate"));
+        const QStringList curveLongName = mModel->getCurvesLongName();
+        const QString varRateText = tr("Var. Rate");
+        const QString accelarationText = tr("Acceleration");
 
-                      } else if (mMainVariable == GraphViewResults::eGS) {
-                          graphX->setTitle(tr("Inclination Acceleration"));
+        const QString curveTitleX = curveLongName.at(0) ;
 
-                       } else {
-                          graphX->setTitle(tr("Inclination"));
-                      }
-                      break;
+        if (mMainVariable == GraphViewResults::eGP) {
+           graphX->setTitle(curveTitleX + " " + varRateText);
 
-                 case CurveSettings::eVariableTypeDeclination :
-                       if (mMainVariable == GraphViewResults::eGP) {
-                          graphX->setTitle(tr("Decl. Var. Rate"));
 
-                       } else if (mMainVariable == GraphViewResults::eGS) {
-                           graphX->setTitle(tr("Declination Acceleration"));
+        } else if (mMainVariable == GraphViewResults::eGS) {
+            graphX->setTitle(curveTitleX + " " + accelarationText);
 
-                        } else {
-                           graphX->setTitle(tr("Declination"));
-                       }
-                       break;
-
-                 case CurveSettings::eVariableTypeField:
-                      if (mMainVariable == GraphViewResults::eGP) {
-                         graphX->setTitle(tr("Field Var. Rate"));
-
-                      } else if (mMainVariable == GraphViewResults::eGS) {
-                          graphX->setTitle(tr("Field Acceleration"));
-
-                       } else {
-                          graphX->setTitle(tr("Field"));
-                      }
-                      break;
-
-                 case CurveSettings::eVariableTypeDepth:
-                      if (mMainVariable == GraphViewResults::eGP) {
-                         graphX->setTitle(tr("Depth Var. Rate"));
-
-                      } else if (mMainVariable == GraphViewResults::eGS) {
-                          graphX->setTitle(tr("Depth Acceleration"));
-
-                       } else {
-                          graphX->setTitle(tr("Depth"));
-                      }
-                      break;
-
-                 case CurveSettings::eVariableTypeOther:
-                       if (mMainVariable == GraphViewResults::eGP) {
-                          graphX->setTitle(tr("Var. Rate"));
-
-                       } else if (mMainVariable == GraphViewResults::eGS) {
-                           graphX->setTitle(tr("Acceleration"));
-
-                        } else {
-                           graphX->setTitle(tr("Measure"));
-                       }
-                       break;
-            }
-
-        } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical ||
-                   model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector) {
-            if (mMainVariable == GraphViewResults::eGP) {
-               graphX->setTitle(tr("dX"));
-
-            } else if (mMainVariable == GraphViewResults::eGS) {
-                graphX->setTitle(tr("X Acceleration"));
-
-             } else {
-                graphX->setTitle(tr("Inclination"));
-            }
-
-        } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D  || model->mCurveSettings.mProcessType == CurveSettings::eProcessType2D) {
-            if (mMainVariable == GraphViewResults::eGP) {
-               graphX->setTitle(tr("dX"));
-
-            } else if (mMainVariable == GraphViewResults::eGS) {
-                graphX->setTitle(tr("X Acceleration"));
-
-             } else {
-                graphX->setTitle(tr("X"));
-            }
+         } else {
+            graphX->setTitle(curveTitleX);
         }
 
         graphX->setComposanteG(modelCurve()->mPosteriorMeanG.gx);
@@ -2091,14 +2152,15 @@ void ResultsView::createByCurveGraph()
         if (mMainVariable == GraphViewResults::eG) {
             graphX->setEventsPoints(eventsPts);
             graphX->setDataPoints(dataPts);
-         }
+        }
 
         mByCurveGraphs.append(graphX);
 
         connect(graphX, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
 
         
-        if (hasY) {
+        if (displayY) {
+
             GraphViewCurve* graphY = new GraphViewCurve(widget);
             graphY->setSettings(mModel->mSettings);
             graphY->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
@@ -2108,29 +2170,16 @@ void ResultsView::createByCurveGraph()
             graphY->setMarginLeft(mMarginLeft);
             graphY->setMarginRight(mMarginRight);
 
-            if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical ||
-                               model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector) {
+            const QString curveTitleY = curveLongName.at(1) ;
 
-                if (mMainVariable == GraphViewResults::eGP) {
-                    graphY->setTitle(tr("dY"));
+            if (mMainVariable == GraphViewResults::eGP) {
+               graphY->setTitle(curveTitleY + " " + varRateText);
 
-                } else if (mMainVariable == GraphViewResults::eGS) {
-                    graphY->setTitle(tr("Y Acceleration"));
+            } else if (mMainVariable == GraphViewResults::eGS) {
+                graphY->setTitle(curveTitleY + " " + accelarationText);
 
-                } else {
-                    graphY->setTitle(tr("Declination"));
-                }
-
-            } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D ||
-                       model->mCurveSettings.mProcessType == CurveSettings::eProcessType2D) {
-
-                if (mMainVariable == GraphViewResults::eGP) {
-                    graphY->setTitle(tr("dY"));
-                } else if (mMainVariable == GraphViewResults::eGS) {
-                    graphY->setTitle(tr("Y Acceleration"));
-                } else {
-                    graphY->setTitle(tr("Y"));
-                }
+            } else {
+                graphY->setTitle(curveTitleY);
             }
 
             graphY->setComposanteG(modelCurve()->mPosteriorMeanG.gy);
@@ -2165,7 +2214,7 @@ void ResultsView::createByCurveGraph()
                             iDataPts++;
                         }
                     } catch (...) {
-                        qDebug() << "ResultView::createByCurveGraph pg graphY";
+                        qDebug() << "[ResultView::createByCurveGraph] pb graphY";
                     }
 
                     ++i;
@@ -2178,7 +2227,7 @@ void ResultsView::createByCurveGraph()
             connect(graphY, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
         }
         
-        if (hasZ) {
+        if (displayZ) {
             GraphViewCurve* graphZ = new GraphViewCurve(widget);
             graphZ->setSettings(mModel->mSettings);
             graphZ->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
@@ -2188,12 +2237,25 @@ void ResultsView::createByCurveGraph()
             graphZ->setMarginLeft(mMarginLeft);
             graphZ->setMarginRight(mMarginRight);
 
+            const QString curveTitleZ = curveLongName.at(2) ;
+
+            if (mMainVariable == GraphViewResults::eGP) {
+               graphZ->setTitle(curveTitleZ + " " + varRateText);
+
+            } else if (mMainVariable == GraphViewResults::eGS) {
+                graphZ->setTitle(curveTitleZ + " " + accelarationText);
+
+            } else {
+                graphZ->setTitle(curveTitleZ);
+            }
+
+/*
             if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ) {
                 if (mMainVariable == GraphViewResults::eGP) {
-                    graphZ->setTitle(tr("dZ"));
+                    graphZ->setTitle(tr("dField"));
 
                 } else if (mMainVariable == GraphViewResults::eGS) {
-                    graphZ->setTitle(tr("Z Acceleration"));
+                    graphZ->setTitle(tr("Field Acceleration"));
 
                 } else {
                     graphZ->setTitle(tr("Field"));
@@ -2211,7 +2273,7 @@ void ResultsView::createByCurveGraph()
                     graphZ->setTitle(tr("Z"));
                 }
             }
-
+*/
             graphZ->setComposanteG(modelCurve()->mPosteriorMeanG.gz);
             graphZ->setComposanteGChains(modelCurve()->getChainsMeanGComposanteZ());
 
@@ -2390,7 +2452,7 @@ double ResultsView::getGraphsMax(const QList<GraphViewResults*>& graphs, const Q
     for (const auto& graphWrapper : graphs) {
         const QList<GraphCurve> curves = graphWrapper->getGraph()->getCurves();
         for (const auto& curve : curves) {
-              if (curve.mName.contains(title) && (curve.mVisible == true)) {
+              if (!curve.mData.isEmpty() && curve.mName.contains(title) && (curve.mVisible == true)) {
                 max = ceil(std::max(max, curve.mData.lastKey()));
             }
         }
@@ -2406,7 +2468,7 @@ double ResultsView::getGraphsMin(const QList<GraphViewResults*>& graphs, const Q
     for (const auto& graphWrapper : graphs) {
         const QList<GraphCurve> curves = graphWrapper->getGraph()->getCurves();
         for (const auto& curve : curves) {
-            if (curve.mName.contains(title) && (curve.mVisible == true)) {
+            if (!curve.mData.isEmpty() && curve.mName.contains(title) && (curve.mVisible == true)) {
                 min = floor(std::min(min, curve.mData.firstKey()));
             }
         }
@@ -2424,7 +2486,7 @@ void ResultsView::updateCurvesToShow()
     // --------------------------------------------------------
     //  Gather selected chain options
     // --------------------------------------------------------
-    bool showAllChains = mAllChainsCheck->isChecked();
+    const bool showAllChains = mAllChainsCheck->isChecked();
 
     // --------------------------------------------------------
     //  showChainList is a list of booleans describing which chains are visible or not.
@@ -2468,27 +2530,66 @@ void ResultsView::updateCurvesToShow()
         //  Update Graphs with selected options
         // --------------------------------------------------------
         for (GraphViewResults*& graph : listGraphs) {
+
             GraphViewCurve* graphCurve = static_cast<GraphViewCurve*>(graph);
             graphCurve->setShowNumericalResults(showStat);
 
-            QString minStr = mCurrentXMinEdit->text();
-            bool minIsNumber = true;
-            mResultCurrentMinX = locale().toDouble(minStr, &minIsNumber);
+            QString graphName = mModel->getCurvesLongName().at(0);
+            const QString varRateText = tr("Var. Rate");
+            const QString accelarationText = tr("Acceleration");
 
-            QString maxStr = mCurrentXMaxEdit->text();
-            bool maxIsNumber = true;
-            mResultCurrentMaxX = locale().toDouble(maxStr, &maxIsNumber);
+            if (mCurveGPRadio->isChecked())
+                graphName = graphName + " " + varRateText;
+            else if (mCurveGSRadio->isChecked())
+                graphName = graphName + " " + accelarationText;
 
-            if (minIsNumber && maxIsNumber) {
-                graphCurve->updateCurvesToShowForG(showAllChains, showChainList, showVariableList, mResultCurrentMinX, mResultCurrentMaxX);
-                graphCurve->update();
+            if (graph->title() == graphName) {
+                Scale scaleX;
+                scaleX.findOptimalMark(mResultCurrentMinX, mResultCurrentMaxX, 10);
+                graphCurve->updateCurvesToShowForG(showAllChains, showChainList, showVariableList, scaleX);
             }
+
+            if (mModel->displayY() ) {
+                graphName = mModel->getCurvesLongName().at(1);
+                if (mCurveGPRadio->isChecked())
+                    graphName = graphName + " " + varRateText;
+                else if (mCurveGSRadio->isChecked())
+                    graphName = graphName + " " + accelarationText;
+
+                if (graph->title() == graphName) {
+                    Scale scaleY;
+                    scaleY.findOptimalMark(mResultCurrentMinY, mResultCurrentMaxY, 10);
+                    graphCurve->updateCurvesToShowForG(showAllChains, showChainList, showVariableList, scaleY);
+                }
+
+                if (mModel->displayZ()) {
+                    graphName = mModel->getCurvesLongName().at(2);
+                    if (mCurveGPRadio->isChecked())
+                        graphName = graphName + " " + varRateText;
+                    else if (mCurveGSRadio->isChecked())
+                        graphName = graphName + " " + accelarationText;
+
+                    if (graph->title() == graphName) {
+                        Scale scaleZ;
+                        scaleZ.findOptimalMark(mResultCurrentMinZ, mResultCurrentMaxZ, 10);
+                        graphCurve->updateCurvesToShowForG(showAllChains, showChainList, showVariableList, scaleZ);
+                    }
+
+                }
+            }
+            graphCurve->update();
+
         }
+        return;
 
     } else if ((mGraphListTab->currentName() == tr("Curves")) && mLambdaRadio->isChecked() && !mS02VgRadio->isChecked()) {
+        if (mCredibilityCheck->isChecked())
+            showVariableList.append(GraphViewResults::eCredibility);
         showVariableList.append(GraphViewResults::eLambda);
 
     } else if ((mGraphListTab->currentName() == tr("Curves")) && !mLambdaRadio->isChecked() && mS02VgRadio->isChecked()) {
+        if (mCredibilityCheck->isChecked())
+            showVariableList.append(GraphViewResults::eCredibility);
         showVariableList.append(GraphViewResults::eS02Vg);
 
     } else if (mGraphListTab->currentName() == tr("Events")) {
@@ -2503,9 +2604,13 @@ void ResultsView::updateCurvesToShow()
 
             }
         } else if (mDataSigmaRadio->isChecked()) {
+            if (mCredibilityCheck->isChecked())
+                showVariableList.append(GraphViewResults::eCredibility);
             showVariableList.append(GraphViewResults::eSigma);
 
         } else if (mEventVGRadio->isChecked()) {
+            if (mCredibilityCheck->isChecked())
+                showVariableList.append(GraphViewResults::eCredibility);
             showVariableList.append(GraphViewResults::eVg);
         }
 
@@ -2665,7 +2770,7 @@ void ResultsView::updateScales()
         // All other cases (default behavior)
         else {
             Scale xScale;
-            xScale.findOptimal(mResultCurrentMinT, mResultCurrentMaxT, 10);
+            xScale.findOptimalMark(mResultCurrentMinT, mResultCurrentMaxT, 10);
             mMajorScale = xScale.mark;
             mMinorCountScale = 10;
         }
@@ -2812,6 +2917,58 @@ void ResultsView::updateScales()
     setTimeSlider(zoomToSlider(mResultZoomT));
     setTimeSpin(mResultZoomT);
     setTimeScale();
+
+    // -------------------------------------------------------
+    // X option
+    // -------------------------------------------------------
+    if (mModel->displayX()) {
+        if (mZoomsX.find(key) != mZoomsX.end()) {
+            const double XMin = mZoomsX.value(key).first;
+            const double XMax = mZoomsX.value(key).second;
+
+            mResultCurrentMinX = XMin;
+            mResultCurrentMaxX = XMax;
+            setXRange();
+            updateCurvesToShow();
+
+        } else {
+            findOptimalX();
+        }
+    }
+    // -------------------------------------------------------
+    // Y option
+    // -------------------------------------------------------
+    if (mModel->displayY()) {
+        if (mZoomsY.find(key) != mZoomsY.end()) {
+            const double YMin = mZoomsY.value(key).first;
+            const double YMax = mZoomsY.value(key).second;
+
+            mResultCurrentMinY = YMin;
+            mResultCurrentMaxY = YMax;
+            setYRange();
+            updateCurvesToShow();
+
+        } else {
+            findOptimalY();
+        }
+        // -------------------------------------------------------
+        // Z option
+        // -------------------------------------------------------
+        if (mModel->displayZ()) {
+            if (mZoomsZ.find(key) != mZoomsZ.end()) {
+                const double ZMin = mZoomsZ.value(key).first;
+                const double ZMax = mZoomsZ.value(key).second;
+
+                mResultCurrentMinZ = ZMin;
+                mResultCurrentMaxZ = ZMax;
+                setZRange();
+                updateCurvesToShow();
+
+            } else {
+                findOptimalZ();
+            }
+        }
+    }
 
 }
 
@@ -3066,28 +3223,49 @@ void ResultsView::updateOptionsWidget()
 
         const qreal h = mDisplayStudyBut->height();
 
-        widHeigth = 11*h + 6*internSpan;
+        widHeigth = 11*h + 13*internSpan;
+        /* 11*h = spanOptionTitle + studyPeriodButton + span + slider + majorInterval + minorCount
+         *        + GraphicOptionsTitle + ZoomSlider + Font + Thickness + Opacity
+         */
+
 
         mDisplayStudyBut->setText(xScaleRepresentsTime() ? tr("Study Period Display") : tr("Fit Display"));
         mDisplayStudyBut->setVisible(true);
         widHeigth += mDisplayStudyBut->height() + internSpan;
 
-       // mDisplayWidget-> setFixedHeight(widHeigth);
+        const bool displayX = mModel ? mModel->displayX() : false;
+        const bool displayY = mModel ? mModel->displayY() : false;
+        const bool displayZ = mModel ? mModel->displayZ() : false;
 
         if (isCurve() && ( mMainVariable == GraphViewResults::eG ||
                            mMainVariable == GraphViewResults::eGP ||
                            mMainVariable == GraphViewResults::eGS)) {
-            mXOptionTitle->setVisible(true);
-            mXOptionGroup->setVisible(true);
-            mDisplayWidget-> setFixedHeight(widHeigth + mXOptionGroup->height() + mXOptionTitle->height());
+            mXOptionTitle->setVisible(displayX);
+            mXOptionGroup->setVisible(displayX);
+            widHeigth += displayX ? 2*h + 2*internSpan : 0.;// mXOptionGroup->height() + mXOptionTitle->height() + internSpan: 0.;
+
+            mYOptionTitle->setVisible(displayY);
+            mYOptionGroup->setVisible(displayY);
+            widHeigth += displayY ? 2*h + 2*internSpan : 0.;//mYOptionGroup->height() + mYOptionTitle->height() + internSpan: 0.;
+
+            mZOptionTitle->setVisible(displayZ);
+            mZOptionGroup->setVisible(displayZ);
+            widHeigth += displayZ ? 2*h + 3*internSpan : 0.;//mZOptionGroup->height() + mZOptionTitle->height() + internSpan: 0.;
+            mDisplayWidget->setFixedHeight(widHeigth);
 
         } else {
             mXOptionTitle->setVisible(false);
             mXOptionGroup->setVisible(false);
+
+            mYOptionTitle->setVisible(false);
+            mYOptionGroup->setVisible(false);
+
+            mZOptionTitle->setVisible(false);
+            mZOptionGroup->setVisible(false);
             mDisplayWidget-> setFixedHeight(widHeigth);
         }
 
-        optionWidgetHeigth += mDisplayWidget->height();
+        optionWidgetHeigth += widHeigth; //mDisplayWidget->height();
 
     } else {
         mDisplayWidget->hide();
@@ -3228,7 +3406,7 @@ void ResultsView::updateOptionsWidget()
         optionWidgetHeigth += mDistribWidget->height();
     }
 
-    optionWidgetHeigth += 40; // ???
+    optionWidgetHeigth += 35;//40; // ???
 
     // -------------------------------------------------------------------------------------
     //  Page / Save
@@ -3498,7 +3676,7 @@ void ResultsView::applyStudyPeriod()
         mResultZoomT = (mResultMaxT - mResultMinT)/(mResultCurrentMaxT - mResultCurrentMinT);
 
     Scale Xscale;
-    Xscale.findOptimal(mResultCurrentMinT, mResultCurrentMaxT, 10);
+    Xscale.findOptimalMark(mResultCurrentMinT, mResultCurrentMaxT, 10);
 
     mMajorScale = Xscale.mark;
     mMinorCountScale = Xscale.tip;
@@ -3555,6 +3733,180 @@ void ResultsView::applyTimeSpin(double value)
 {
     setTimeSlider(zoomToSlider(value));
     updateZoomT();
+}
+
+# pragma mark curve Zoom
+void ResultsView::applyXRange()
+{
+    bool minIsNumber = true;
+    const double minX = locale().toDouble(mCurrentXMinEdit->text(), &minIsNumber);
+
+    bool maxIsNumber = true;
+    const double maxX = locale().toDouble(mCurrentXMaxEdit->text(), &maxIsNumber);
+    if (minIsNumber && maxIsNumber && minX< maxX) {
+        mResultCurrentMinX = minX;
+        mResultCurrentMaxX = maxX;
+        setXRange();
+
+        updateCurvesToShow();
+    }
+
+}
+
+void ResultsView::applyYRange()
+{
+    bool minIsNumber = true;
+    const double minY = locale().toDouble(mCurrentYMinEdit->text(), &minIsNumber);
+
+    bool maxIsNumber = true;
+    const double maxY = locale().toDouble(mCurrentYMaxEdit->text(), &maxIsNumber);
+    if (minIsNumber && maxIsNumber && minY< maxY) {
+        mResultCurrentMinY = minY;
+        mResultCurrentMaxY = maxY;
+        setYRange();
+
+        updateCurvesToShow();
+    }
+
+}
+
+void ResultsView::applyZRange()
+{
+    bool minIsNumber = true;
+    const double minZ = locale().toDouble(mCurrentZMinEdit->text(), &minIsNumber);
+
+    bool maxIsNumber = true;
+    const double maxZ = locale().toDouble(mCurrentZMaxEdit->text(), &maxIsNumber);
+    if (minIsNumber && maxIsNumber && minZ< maxZ) {
+        mResultCurrentMinZ = minZ;
+        mResultCurrentMaxZ = maxZ;
+        setZRange();
+
+        updateCurvesToShow();
+    }
+
+}
+
+
+void ResultsView::findOptimalX()
+{
+    const ModelCurve* modelCurve = static_cast<const ModelCurve*> (mModel);
+    const std::vector<double>* vec = nullptr;
+
+    if (mCurveGRadio->isChecked())
+        vec = &modelCurve->mPosteriorMeanG.gx.vecG;
+    else if (mCurveGPRadio->isChecked())
+        vec = &modelCurve->mPosteriorMeanG.gx.vecGP;
+    else
+        vec = &modelCurve->mPosteriorMeanG.gx.vecGS;
+
+    auto minMax = std::minmax_element(vec->begin(), vec->end());
+    Scale XScale;
+    XScale.findOptimal(*minMax.first, *minMax.second, 7);
+
+    mResultCurrentMinX = XScale.min;
+    mResultCurrentMaxX = XScale.max;
+
+    setXRange();
+
+    updateCurvesToShow();
+
+}
+
+void ResultsView::findOptimalY()
+{
+    const ModelCurve* modelCurve = static_cast<const ModelCurve*> (mModel);
+    const std::vector<double>* vec = nullptr;
+
+    if (mCurveGRadio->isChecked())
+        vec = &modelCurve->mPosteriorMeanG.gy.vecG;
+    else if (mCurveGPRadio->isChecked())
+        vec = &modelCurve->mPosteriorMeanG.gy.vecGP;
+    else
+        vec = &modelCurve->mPosteriorMeanG.gy.vecGS;
+
+    auto minMax = std::minmax_element(vec->begin(), vec->end());
+    Scale XScale;
+    XScale.findOptimal(*minMax.first, *minMax.second, 7);
+    mResultCurrentMinY = XScale.min;
+    mResultCurrentMaxY = XScale.max;
+    setYRange();
+
+    updateCurvesToShow();
+}
+
+void ResultsView::findOptimalZ()
+{
+    const ModelCurve* modelCurve = static_cast<const ModelCurve*> (mModel);
+
+    const std::vector<double>* vec = nullptr;
+
+    if (mCurveGRadio->isChecked())
+        vec = &modelCurve->mPosteriorMeanG.gz.vecG;
+    else if (mCurveGPRadio->isChecked())
+        vec = &modelCurve->mPosteriorMeanG.gz.vecGP;
+    else
+        vec = &modelCurve->mPosteriorMeanG.gz.vecGS;
+
+    auto minMax = std::minmax_element(vec->begin(), vec->end());
+    Scale XScale;
+    XScale.findOptimal(*minMax.first, *minMax.second, 7);
+    mResultCurrentMinZ = XScale.min;
+    mResultCurrentMaxZ = XScale.max;
+
+    setZRange();
+    updateCurvesToShow();
+}
+
+void ResultsView::setXRange()
+{
+    QLocale locale = QLocale();
+
+    mCurrentXMinEdit->blockSignals(true);
+    mCurrentXMaxEdit->blockSignals(true);
+
+    mCurrentXMinEdit->setText(locale.toString(mResultCurrentMinX));
+    mCurrentXMaxEdit->setText(locale.toString(mResultCurrentMaxX));
+
+    mCurrentXMinEdit->blockSignals(false);
+    mCurrentXMaxEdit->blockSignals(false);
+
+    QPair<GraphViewResults::variable_t, GraphViewResults::graph_t> key(mMainVariable, mCurrentTypeGraph);
+    mZoomsX[key] = QPair<double, double>(mResultCurrentMinX, mResultCurrentMaxX);
+}
+
+void ResultsView::setYRange()
+{
+    QLocale locale = QLocale();
+
+    mCurrentYMinEdit->blockSignals(true);
+    mCurrentYMaxEdit->blockSignals(true);
+
+    mCurrentYMinEdit->setText(locale.toString(mResultCurrentMinY));
+    mCurrentYMaxEdit->setText(locale.toString(mResultCurrentMaxY));
+
+    mCurrentYMinEdit->blockSignals(false);
+    mCurrentYMaxEdit->blockSignals(false);
+
+    QPair<GraphViewResults::variable_t, GraphViewResults::graph_t> key(mMainVariable, mCurrentTypeGraph);
+    mZoomsY[key] = QPair<double, double>(mResultCurrentMinY, mResultCurrentMaxY);
+}
+
+void ResultsView::setZRange()
+{
+    QLocale locale = QLocale();
+
+    mCurrentZMinEdit->blockSignals(true);
+    mCurrentZMaxEdit->blockSignals(true);
+
+    mCurrentZMinEdit->setText(locale.toString(mResultCurrentMinZ));
+    mCurrentZMaxEdit->setText(locale.toString(mResultCurrentMaxZ));
+
+    mCurrentZMinEdit->blockSignals(false);
+    mCurrentZMaxEdit->blockSignals(false);
+
+    QPair<GraphViewResults::variable_t, GraphViewResults::graph_t> key(mMainVariable, mCurrentTypeGraph);
+    mZoomsZ[key] = QPair<double, double>(mResultCurrentMinZ, mResultCurrentMaxZ);
 }
 
 void ResultsView::applyZoomScale()
@@ -3705,19 +4057,7 @@ void ResultsView::showStats(bool show)
 // Obsolete
 void ResultsView::togglePageSave()
 {
-    // Search for the visible widget
- /*   QWidget* widFrom = nullptr;
-    if (mSaveSelectWidget->isVisible())
-        widFrom = mSaveSelectWidget;
 
-    else if (mSaveAllWidget->isVisible())
-        widFrom = mSaveAllWidget;
-
-    else if (mPageWidget->isVisible())
-        widFrom = mPageWidget;
-
-    if (widFrom!= nullptr) {
-*/
         // Exchange with the widget corresponding to the requested tab
         if (mPageSaveTab->currentName() == tr("Page") ) { // Tab = Page
             // -------------------------------------------------------------------------------------

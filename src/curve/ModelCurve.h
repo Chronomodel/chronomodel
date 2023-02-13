@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -50,7 +50,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class ModelCurve: public Model
 {
 public:
-    ModelCurve();
+    ModelCurve(QObject *parent = nullptr);
+    explicit ModelCurve(const QJsonObject& json, QObject *parent = nullptr);
     virtual ~ModelCurve();
     
     virtual void saveToFile(QDataStream *out);
@@ -73,6 +74,8 @@ public:
     void clearPosteriorDensities();
     void clearCredibilityAndHPD();
     void clearTraces();
+
+    virtual void updateFormatSettings();
     
     virtual void setThresholdToAllModel(const double threshold);
     

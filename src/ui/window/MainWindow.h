@@ -109,6 +109,8 @@ public slots:
     void about();
     void appSettings();
     void setAppSettings();
+    void updateAppSettings();
+
     void setAppFilesSettings();
     void openManual();
     void openWebsite();

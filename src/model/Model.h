@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,11 +40,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef MODEL_H
 #define MODEL_H
 
-#include "MCMCLoop.h"
 #include "ProjectSettings.h"
-#include "AppSettings.h"
 #include "MCMCSettings.h"
-#include "MHVariable.h"
 #include "Event.h"
 #include "Phase.h"
 #include "EventConstraint.h"
@@ -59,7 +56,43 @@ class Model: public QObject
 {
     Q_OBJECT
 public:
+    ProjectSettings mSettings;
+    Project *mProject;
+
+    MCMCSettings mMCMCSettings;
+
+    QList<Event*> mEvents;
+    QList<Phase*> mPhases;
+
+    QList<EventConstraint*> mEventConstraints;
+    QList<PhaseConstraint*> mPhaseConstraints;
+
+    QList<ChainSpecs> mChains;
+
+    QString mLogModel;
+    QString mLogInit;
+    QString mLogAdapt;
+    QString mLogResults;
+
+    int mNumberOfPhases;
+    int mNumberOfEvents;
+    int mNumberOfDates;
+
+
+    double mThreshold; // used for TimeRange + Credibility + transition Range + GapRange
+    double mBandwidth;
+    size_t mFFTLength;
+    double mHActivity;
+    // Stockage des courbes binomiales en fonction de n
+    std::unordered_map<int, std::vector<double>> mBinomiale_Gx;
+
+protected:
+    QStringList mCurveName;
+    QStringList mCurveLongName;
+
+public:
     Model(QObject * parent = nullptr);
+    explicit Model(const QJsonObject& json, QObject * parent = nullptr);
     virtual ~Model();
 
     void generateModelLog();
@@ -76,7 +109,13 @@ public:
     QList<QStringList> getPhaseTrace(int phaseIdx, const QLocale locale, const bool withDateFormat = false);
     QList<QStringList> getEventsTraces(const QLocale locale, const bool withDateFormat = false);
 
-    void updateFormatSettings();
+    inline QStringList getCurvesName () const {return mCurveName;}
+    inline QStringList getCurvesLongName () const {return mCurveLongName;}
+    inline bool displayX () const {return !mCurveName.isEmpty();}
+    inline bool displayY () const {return mCurveName.size()>1;}
+    inline bool displayZ () const {return mCurveName.size()>2;}
+
+    virtual void updateFormatSettings();
     void updateDesignFromJson();
 
     virtual QJsonObject toJson() const;
@@ -130,36 +169,6 @@ public:
     bool hasSelectedEvents();
     bool hasSelectedPhases();
 
-public:
-    ProjectSettings mSettings;
-    Project *mProject;
-
-    MCMCSettings mMCMCSettings;
-
-    QList<Event*> mEvents;
-    QList<Phase*> mPhases;
-
-    QList<EventConstraint*> mEventConstraints;
-    QList<PhaseConstraint*> mPhaseConstraints;
-
-    QList<ChainSpecs> mChains;
-
-    QString mLogModel;
-    QString mLogInit;
-    QString mLogAdapt;
-    QString mLogResults;
-
-    int mNumberOfPhases;
-    int mNumberOfEvents;
-    int mNumberOfDates;
-
-
-    double mThreshold; // used for TimeRange + Credibility + transition Range + GapRange
-    double mBandwidth;
-    size_t mFFTLength;
-    double mHActivity;
-    // Stockage des courbes binomiales en fonction de n
-    std::unordered_map<int, std::vector<double>> mBinomiale_Gx;
 
 
 public slots:

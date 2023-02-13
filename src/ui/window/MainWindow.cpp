@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -38,13 +38,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "MainWindow.h"
+#include "ModelCurve.h"
 #include "Project.h"
 #include "ProjectView.h"
 #include "PluginAbstract.h"
 #include "AboutDialog.h"
 #include "AppSettingsDialog.h"
 #include "PluginManager.h"
-#include "ModelUtilities.h"
 #include "SwitchAction.h"
 #include "RebuildCurveDialog.h"
 
@@ -507,7 +507,7 @@ void MainWindow::newProject()
             connectProject();
 
             // Apply app settings to the project
-            mProject->setAppSettings();
+            mProject->setAppSettingsAutoSave();
 
             // Send the project to the views
             mProjectView->setProject(mProject);
@@ -556,8 +556,8 @@ void MainWindow::openProject()
         mProject = new Project();
         connectProject();
 
-        //setAppSettings(): just update mAutoSaveTimer
-        mProject->setAppSettings();
+        //setAppSettingsAutoSave(): just update mAutoSaveTimer
+        mProject->setAppSettingsAutoSave();
         const QFileInfo info(path);
         setCurrentPath(info.absolutePath());
 
@@ -719,7 +719,7 @@ void MainWindow::toggleCurve(bool checked)
     mProjectView->toggleCurve(checked);
 }
 
-// Settings & About
+#pragma mark Settings & About
 void MainWindow::about()
 {
     AboutDialog dialog(qApp->activeWindow());
@@ -731,7 +731,7 @@ void MainWindow::appSettings()
     AppSettingsDialog dialog(qApp->activeWindow());
 
     dialog.setSettings();
-    connect(&dialog, &AppSettingsDialog::settingsChanged, this, &MainWindow::setAppSettings);
+    connect(&dialog, &AppSettingsDialog::settingsChanged, this, &MainWindow::updateAppSettings);
     connect(&dialog, &AppSettingsDialog::settingsFilesChanged, this, &MainWindow::setAppFilesSettings);
     dialog.exec();
 
@@ -742,7 +742,7 @@ void MainWindow::setAppFilesSettings()
     QLocale::Language newLanguage = AppSettings::mLanguage;
     QLocale::Country newCountry= AppSettings::mCountry;
 
-    QLocale newLoc = QLocale(newLanguage,newCountry);
+    QLocale newLoc = QLocale(newLanguage, newCountry);
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
     //statusBar()->showMessage(tr("Language") + " : " + QLocale::languageToString(QLocale().language()));
@@ -753,7 +753,7 @@ void MainWindow::setAppFilesSettings()
     QToolTip::setFont(tooltipFont);
 
     if (mProject) {
-        mProject->setAppSettings();
+        mProject->setAppSettingsAutoSave();
         mProjectView->applyFilesSettings(mProject->mModel);
     }
     writeSettings();
@@ -776,7 +776,29 @@ void MainWindow::setAppSettings()
     QToolTip::setFont(tooltipFont);
 
     if (mProject) {
-        mProject->setAppSettings();
+        mProject->setAppSettingsAutoSave();
+    }
+    writeSettings();
+}
+
+void MainWindow::updateAppSettings()
+{
+    QLocale::Language newLanguage = AppSettings::mLanguage;
+    QLocale::Country newCountry= AppSettings::mCountry;
+
+    QLocale newLoc = QLocale(newLanguage, newCountry);
+    newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
+    QLocale::setDefault(newLoc);
+
+    setFont(qApp->font());
+
+    QFont tooltipFont(font());
+    tooltipFont.setItalic(true);
+
+    QToolTip::setFont(tooltipFont);
+
+    if (mProject) {
+        mProject->setAppSettingsAutoSave();
         mProjectView->updateMultiCalibration();
         mProjectView->applySettings(mProject->mModel);
 
@@ -864,63 +886,27 @@ void MainWindow::rebuildExportCurve()
     if (!mProject || !mProject->isCurve() || !mProject->mModel)
         return;
 
-    QStringList compoList;
+
+    /*ComputeY is different from displayY,
+     * for example for the vector case, you have to compute on the 3 components, but display only 2*/
+
     ModelCurve* curveModel = dynamic_cast<ModelCurve*>(mProject->mModel);
-    switch (curveModel->mCurveSettings.mProcessType) {
-    case CurveSettings::eProcessTypeUnivarie:
-        switch (curveModel->mCurveSettings.mVariableType) {
-        case CurveSettings::eVariableTypeOther:
-            compoList.append("Measure");
-            break;
-        case CurveSettings::eVariableTypeInclination:
-            compoList.append("Inc");
-            break;
-        case CurveSettings::eVariableTypeDeclination:
-            compoList.append("Dec");
-            break;
-        case CurveSettings::eVariableTypeField:
-            compoList.append("Depth");
-            break;
-        case CurveSettings::eVariableTypeDepth:
-            compoList.append("Depth");
-            break;
-        default:
-            compoList.append("X");
-            break;
-        }
 
-        break;
-    case CurveSettings::eProcessTypeSpherical:
-        compoList.append({"Inc", "Dec"});
-        break;
-    case CurveSettings::eProcessType2D:
-        compoList.append({"X", "Y"});
-        break;
-    case CurveSettings::eProcessTypeVector:
-        compoList.append({"Inc", "Dec", "Field"});
-        break;
-    case CurveSettings::eProcessType3D:
-        compoList.append({"X", "Y", "Z"});
-        break;
-    default:
-        break;
-    }
-
-    const bool hasY = (curveModel->mCurveSettings.mProcessType != CurveSettings::eProcessTypeUnivarie);
-    const bool hasZ = (curveModel->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
+    const bool computeY = (curveModel->mCurveSettings.mProcessType != CurveSettings::eProcessTypeUnivarie);
+    const bool computeZ = (curveModel->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
                        curveModel->mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical ||
                        curveModel->mCurveSettings.mProcessType == CurveSettings::eProcessType3D);
 
     // Setting actual minmax value
     std::vector<std::pair<double, double>> tabMinMax;
     tabMinMax.push_back(curveModel->mPosteriorMeanG.gx.mapG.rangeY);
-    if (hasY)
+    if (computeY)
         tabMinMax.push_back(curveModel->mPosteriorMeanG.gy.mapG.rangeY);
-    if (hasZ)
+    if (computeZ)
         tabMinMax.push_back(curveModel->mPosteriorMeanG.gz.mapG.rangeY);
 
     std::pair<unsigned, unsigned> mapSizeXY = std::pair<unsigned, unsigned> {curveModel->mPosteriorMeanG.gx.mapG._column, curveModel->mPosteriorMeanG.gx.mapG._row};
-    RebuildCurveDialog qDialog = RebuildCurveDialog(compoList, &tabMinMax, mapSizeXY);
+    RebuildCurveDialog qDialog = RebuildCurveDialog(curveModel->getCurvesName(), &tabMinMax, mapSizeXY);
 
 
     if (qDialog.exec() && (qDialog.doCurve() || qDialog.doMap())) {
@@ -928,66 +914,47 @@ void MainWindow::rebuildExportCurve()
         auto newMapSizeXY = qDialog.getMapSize();
         const int XGrid = newMapSizeXY.first;
         const int YGrid = newMapSizeXY.second;
-       tabMinMax = qDialog.getYTabMinMax();
+        tabMinMax = qDialog.getYTabMinMax();
 
-       ModelCurve* modelCurve = static_cast<ModelCurve*>(mProject->mModel);
-       //QString compo = qDialog.compo();
-      // const char chCompo = compo.toStdString().front();
+        ModelCurve* modelCurve = static_cast<ModelCurve*>(mProject->mModel);
 
-  /*     auto postCompoG = modelCurve->buildCurveAndMap(XGrid, YGrid, chCompo, qDialog.doMap(), qDialog.getYMin(), qDialog.getYMax());
-       // Setting new mean on composant
-       switch (chCompo) {
-       case 'X':
-           modelCurve->mPosteriorMeanG.gx = postCompoG;
-           break;
-       case 'Y':
-           modelCurve->mPosteriorMeanG.gy = postCompoG;
-           break;
-       case 'Z':
-           modelCurve->mPosteriorMeanG.gz = postCompoG;
-           break;
-       default:
-           break;
-       }
-  */
-       // ____
+        // ____
 
-       auto runTrace = modelCurve->fullRunSplineTrace(modelCurve->mChains);
+        auto runTrace = modelCurve->fullRunSplineTrace(modelCurve->mChains);
 
-       // init Posterior MeanG and map
+        // init Posterior MeanG and map
 
+        PosteriorMeanGComposante clearCompo;
+        clearCompo.mapG = CurveMap (YGrid, XGrid); // Attention invesion ->explicit CurveMap(unsigned row, unsigned col)
+        clearCompo.mapG.setRangeX(curveModel->mSettings.mTmin, curveModel->mSettings.mTmax);
 
-       PosteriorMeanGComposante clearCompo;
-       clearCompo.mapG = CurveMap (YGrid, XGrid); // Attention invesion ->explicit CurveMap(unsigned row, unsigned col)
-       clearCompo.mapG.setRangeX(curveModel->mSettings.mTmin, curveModel->mSettings.mTmax);
+        clearCompo.mapG.min_value = +INFINITY;
+        clearCompo.mapG.max_value = 0;
 
-       clearCompo.mapG.min_value = +INFINITY;
-       clearCompo.mapG.max_value = 0;
+        clearCompo.vecG = std::vector<double> (XGrid);
+        clearCompo.vecGP = std::vector<double> (XGrid);
+        clearCompo.vecGS = std::vector<double> (XGrid);
+        clearCompo.vecVarG = std::vector<double> (XGrid);
+        clearCompo.vecVarianceG = std::vector<double> (XGrid);
+        clearCompo.vecVarErrG = std::vector<double> (XGrid);
 
-       clearCompo.vecG = std::vector<double> (XGrid);
-       clearCompo.vecGP = std::vector<double> (XGrid);
-       clearCompo.vecGS = std::vector<double> (XGrid);
-       clearCompo.vecVarG = std::vector<double> (XGrid);
-       clearCompo.vecVarianceG = std::vector<double> (XGrid);
-       clearCompo.vecVarErrG = std::vector<double> (XGrid);
+        PosteriorMeanG clearMeanG;
+        clearMeanG.gx = clearCompo;
+        clearMeanG.gx.mapG.setRangeY(tabMinMax[0].first, tabMinMax[0].second);
 
-       PosteriorMeanG clearMeanG;
-       clearMeanG.gx = clearCompo;
-       clearMeanG.gx.mapG.setRangeY(tabMinMax[0].first, tabMinMax[0].second);
+        if (computeY) {
+            clearMeanG.gy = clearCompo;
+            clearMeanG.gy.mapG.setRangeY(tabMinMax[1].first, tabMinMax[1].second);
+            if (computeZ) {
+                clearMeanG.gz = clearCompo;
+                clearMeanG.gz.mapG.setRangeY(tabMinMax[2].first, tabMinMax[2].second);
+            }
+        }
 
-       if ( hasY) {
-           clearMeanG.gy = clearCompo;
-           clearMeanG.gy.mapG.setRangeY(tabMinMax[1].first, tabMinMax[1].second);
-           if (hasZ) {
-               clearMeanG.gz = clearCompo;
-               clearMeanG.gz.mapG.setRangeY(tabMinMax[2].first, tabMinMax[2].second);
-           }
-       }
+        modelCurve->mPosteriorMeanG = clearMeanG;
 
-       modelCurve->mPosteriorMeanG = clearMeanG;
-
-       int totalIterAccepted = 1;
-       if (!hasY) {
+        int totalIterAccepted = 1;
+        if (!computeY) {
             for (auto &splineXYZ : runTrace) {
                 modelCurve->memo_PosteriorG(modelCurve->mPosteriorMeanG.gx, splineXYZ.splineX,  totalIterAccepted++ );
             }
@@ -997,40 +964,18 @@ void MainWindow::rebuildExportCurve()
                 modelCurve->memo_PosteriorG_3D(modelCurve->mPosteriorMeanG, splineXYZ, modelCurve->mCurveSettings.mProcessType,  totalIterAccepted++ );
             }
         }
-       // update min-value
-      // auto mini = *std::min_element(begin(modelCurve->mPosteriorMeanG.gx.mapG.data), end(modelCurve->mPosteriorMeanG.gx.mapG.data));
 
-       modelCurve->mPosteriorMeanG.gx.mapG.min_value =  *std::min_element(begin(modelCurve->mPosteriorMeanG.gx.mapG.data), end(modelCurve->mPosteriorMeanG.gx.mapG.data));
+        modelCurve->mPosteriorMeanG.gx.mapG.min_value =  *std::min_element(begin(modelCurve->mPosteriorMeanG.gx.mapG.data), end(modelCurve->mPosteriorMeanG.gx.mapG.data));
 
-       if (hasY) {
-           modelCurve->mPosteriorMeanG.gy.mapG.min_value = *std::min_element(begin(modelCurve->mPosteriorMeanG.gy.mapG.data), end(modelCurve->mPosteriorMeanG.gy.mapG.data));
+        if (computeY) {
+            modelCurve->mPosteriorMeanG.gy.mapG.min_value = *std::min_element(begin(modelCurve->mPosteriorMeanG.gy.mapG.data), end(modelCurve->mPosteriorMeanG.gy.mapG.data));
 
-           if (hasZ) {
-               modelCurve->mPosteriorMeanG.gz.mapG.min_value = *std::min_element(begin(modelCurve->mPosteriorMeanG.gz.mapG.data), end(modelCurve->mPosteriorMeanG.gz.mapG.data));
-           }
-       }
-       // update ResultView
-       mProjectView->updateResults();
-/*
-       if (qDialog.doCurve()) {
-           modelCurve->exportMeanGComposanteToReferenceCurves(postCompoG, MainWindow::getInstance()->getCurrentPath(), csvLocale, AppSettings::mCSVCellSeparator);
-
-       }
-       if (qDialog.doMap()) {
-           const QString filter = tr("CSV (*.csv)");
-           const QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
-                                                           tr("Save Map Curve as..."),
-                                                           MainWindow::getInstance()->getCurrentPath(),
-                                                           filter);
-           QFile file(filename);
-
-           if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-               modelCurve->saveMapToFile(&file, AppSettings::mCSVCellSeparator, postCompoG.mapG);
-
-               file.close();
-           }
-       }
-*/
+            if (computeZ) {
+                modelCurve->mPosteriorMeanG.gz.mapG.min_value = *std::min_element(begin(modelCurve->mPosteriorMeanG.gz.mapG.data), end(modelCurve->mPosteriorMeanG.gz.mapG.data));
+            }
+        }
+        // update ResultView
+        mProjectView->updateResults();
 
     } else {
         return;
@@ -1225,7 +1170,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
                 if (mProject->withResults())
                     mcmcFinished(mProject->mModel); //do initDensities()
 
-                mProject->setAppSettings();
+                mProject->setAppSettingsAutoSave();
 
                 mProjectView->setProject(mProject);
 
@@ -1237,64 +1182,9 @@ void MainWindow::readSettings(const QString& defaultFilePath)
                     mViewResultsAction -> setEnabled(true);
                     mViewResultsAction -> setChecked(true); // Just check the Result Button after computation and mResultsView is show after
 
-                    mProject->mModel->updateFormatSettings();
+                    //mProject->mModel->updateFormatSettings(); // mcmcFinished(mProject->mModel);
                  }
 
-            }
-        }
-    }
-
-    QString path = "";
-
-
-  /*  if (defaultFilePath !="" ) {
-        path = defaultFilePath;
-
-    } else
-
-        if (AppSettings::mOpenLastProjectAtLaunch) {
-        const QString dir = AppSettings::mLastDir;
-        const QString filename = AppSettings::mLastFile;
-        if ((dir != "") & (filename !=""))
-            path = dir + "/" + filename;
-
-    }
-        */
-std::cout<<"[MainWindow::readSettings] path: " <<path.toStdString();
-
-    if (path != "") {
-       /* const QString dir = AppSettings::mLastDir;
-        const QString filename = AppSettings::mLastFile;
-         path = dir + "/" + filename;
-         */
-        QFileInfo fileInfo(path);
-
-        // look MainWindows::openProject
-        if (fileInfo.isFile()) {
-            mProject = new Project();
-            if (mProject->load(path)) {
-                activateInterface(true);
-                updateWindowTitle();
-                connectProject();
-                if ( !mProject->mModel->mChains.isEmpty())
-                    mcmcFinished(mProject->mModel); //do initDensities()
-
-                mProject->setAppSettings();
-
-                mProjectView->setProject(mProject);
-
-                mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true);
-                // to do, it'is done in project load
-                if (mProject->mModel!=nullptr && !mProject->mModel->mChains.isEmpty()) {
-                    // pushProjectState find mStructurelsChanged on true and emit NoResult()
-                //    mProject->mStructureIsChanged = false;
-                //    mProject->setNoResults(false);
-                    mViewLogAction -> setEnabled(true);
-                    mViewResultsAction -> setEnabled(true);
-                    mViewResultsAction -> setChecked(true); // Just check the Result Button after computation and mResultsView is show after
-
-                    mProject->mModel->updateFormatSettings();
-                 }
             }
         }
     }
@@ -1395,7 +1285,7 @@ void MainWindow::mcmcFinished(Model* model)
 
     // Should be elsewhere ?
     mProject->setNoResults(false); // set to be able to save the file *.res
-    model->updateFormatSettings();
+  //  model->updateFormatSettings();
 
     // Just check the Result Button (the view will be shown by ProjectView::initResults below)
     mViewResultsAction->setChecked(true);

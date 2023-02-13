@@ -52,9 +52,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginAbstract.h"
 #include "PluginManager.h"
 #include "StdUtilities.h"
-//#include "QtUtilities.h"
-//#include "ModelUtilities.h"
-//#include "PluginOptionsDialog.h"
+#include "AppSettings.h"
+
 #include "CurveSettings.h"
 #include "CurveWidget.h"
 

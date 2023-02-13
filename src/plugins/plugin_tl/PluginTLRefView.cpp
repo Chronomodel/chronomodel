@@ -116,7 +116,7 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
                 refCurve[tminDisplay] = ref_year - DateUtils::convertFromAppSettingsFormat(tminDisplay);
                 refCurve[tmaxDisplay] = ref_year - DateUtils::convertFromAppSettingsFormat(tmaxDisplay);
                 curve.mData =refCurve;
-                curve.mType = GraphCurve::CurveType::eQMapData;
+                //curve.mType = GraphCurve::CurveType::eDensityData;
                 mGraph->addCurve(curve);
 
                 // ----------------------------------------------

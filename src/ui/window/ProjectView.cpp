@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -36,9 +36,9 @@ same conditions as regards security.
 The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
+#include "ProjectView.h"
 
 #include "MainWindow.h"
-#include "ProjectView.h"
 #include "ModelView.h"
 #include "ResultsView.h"
 #include "AppSettings.h"

@@ -40,9 +40,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef PROJECT_H
 #define PROJECT_H
 
+#include "MCMCLoop.h"
 #include "ProjectSettings.h"
 #include "Model.h"
-#include "QtCore/qstring.h"
 #include "QtCore/qtmetamacros.h"
 
 #include <QObject>
@@ -66,7 +66,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 class Date;
 class Event;
-//class EventKnown;
 class Phase;
 class EventConstraint;
 class PhaseConstraint;
@@ -203,7 +202,7 @@ public slots:
     void runChronomodel();
     void runCurve();
 
-    void setAppSettings();
+    void setAppSettingsAutoSave();
 
     void deleteSelectedEvents();
     void recycleEvents();

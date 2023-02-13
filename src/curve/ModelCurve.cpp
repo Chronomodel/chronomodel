@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -38,11 +38,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "ModelCurve.h"
+
 #include "ModelUtilities.h"
-//#include "Project.h"
 #include "QtUtilities.h"
 #include "StdUtilities.h"
-#include <MainWindow.h>
+#include "MainWindow.h"
 
 #include <QFile>
 #include <QFileDialog>
@@ -54,7 +54,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <thread>
 
 
-ModelCurve::ModelCurve():Model()
+ModelCurve::ModelCurve(QObject *parent):Model(parent)
 {
     mLambdaSpline.mSupport = MetropolisVariable::eR;
     mLambdaSpline.mFormat = DateUtils::eNumeric;
@@ -63,6 +63,61 @@ ModelCurve::ModelCurve():Model()
     mS02Vg.mSupport = MetropolisVariable::eR;
     mS02Vg.mFormat = DateUtils::eNumeric;
     mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+}
+
+ModelCurve::ModelCurve(const QJsonObject& json, QObject *parent):Model(json, parent)
+{
+    mLambdaSpline.mSupport = MetropolisVariable::eR;
+    mLambdaSpline.mFormat = DateUtils::eNumeric;
+    mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
+    mS02Vg.mSupport = MetropolisVariable::eR;
+    mS02Vg.mFormat = DateUtils::eNumeric;
+    mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
+    if (json.contains(STATE_CURVE)) {
+        const QJsonObject settings = json.value(STATE_CURVE).toObject();
+        mCurveSettings = CurveSettings::fromJson(settings);
+    }
+
+    for (Event*& event: mEvents) {
+        if (event->type() ==  Event::eBound)
+               event->mTheta.mSamplerProposal = MHVariable::eFixe;
+
+        else if (event->type() ==  Event::eDefault) {
+                if (mCurveSettings.mTimeType == CurveSettings::eModeFixed) {
+                    event->mTheta.mSamplerProposal = MHVariable::eFixe;
+                    for (Date &d : event->mDates) {
+                        d.mTi.mSamplerProposal = MHVariable::eFixe;
+                        d.mSigmaTi.mSamplerProposal = MHVariable::eFixe;
+                    }
+                } else
+                    event->mTheta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
+        }
+
+        if (mCurveSettings.mVarianceType == CurveSettings::eModeFixed)
+            event->mVg.mSamplerProposal = MHVariable::eFixe;
+
+        else if (event->mPointType == Event::eNode)
+            event->mVg.mSamplerProposal = MHVariable::eFixe;
+        else
+            event->mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
+    }
+
+    mLambdaSpline.setName( "lambdaSpline");
+    if (mCurveSettings.mLambdaSplineType == CurveSettings::eModeFixed)
+        mLambdaSpline.mSamplerProposal = MHVariable::eFixe;
+    else
+        mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
+    mS02Vg.setName("S02Vg");
+    if (mCurveSettings.mVarianceType == CurveSettings::eModeFixed)
+        mS02Vg.mSamplerProposal = MHVariable::eFixe;
+    else
+        mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
 }
 
 ModelCurve::~ModelCurve()
@@ -169,7 +224,7 @@ void ModelCurve::restoreFromFile(QDataStream* in)
 
     Model::restoreFromFile(in);
 
-    generateCorrelations(mChains);
+   // generateCorrelations(mChains);
 
     /* -----------------------------------------------------
     *  Read events VG
@@ -466,7 +521,18 @@ void ModelCurve::saveMapToFile(QFile *file, const QString csvSep, const CurveMap
 
 }
 
-void  ModelCurve::generateResultsLog()
+void ModelCurve::updateFormatSettings()
+{
+    Model::updateFormatSettings();
+
+    for (Event* &event : mEvents)
+        event->mVg.setFormat(DateUtils::eNumeric);
+
+    mLambdaSpline.setFormat(DateUtils::eNumeric);
+    mS02Vg.setFormat(DateUtils::eNumeric);
+}
+
+void ModelCurve::generateResultsLog()
 {
     Model::generateResultsLog();
 
@@ -482,14 +548,20 @@ void ModelCurve::generatePosteriorDensities(const QList<ChainSpecs> &chains, int
     Model::generatePosteriorDensities(chains, fftLen, bandwidth);
 
     for (Event* &event : mEvents) {
-        event->mVg.updateFormatedTrace();
+        //event->mVg.setFormat(DateUtils::eNumeric);
+        // event->mVg.updateFormatedTrace();
+        //event->mVg.updateFormatedCredibility();
         event->mVg.generateHistos(chains, fftLen, bandwidth);
     }
 
-    mLambdaSpline.updateFormatedTrace();
+    //mLambdaSpline.setFormat(DateUtils::eNumeric);
+    //mLambdaSpline.updateFormatedTrace();
+    //mLambdaSpline.updateFormatedCredibility();
     mLambdaSpline.generateHistos(chains, fftLen, bandwidth);
 
-    mS02Vg.updateFormatedTrace();
+    //mS02Vg.setFormat(DateUtils::eNumeric);
+    //mS02Vg.updateFormatedTrace();
+    //mS02Vg.updateFormatedCredibility();
     mS02Vg.generateHistos(chains, fftLen, bandwidth);
 }
 
@@ -521,7 +593,7 @@ void ModelCurve::generateNumericalResults(const QList<ChainSpecs> &chains)
 void ModelCurve::clearThreshold()
 {
     Model::clearThreshold();
-   // mThreshold = -1.;
+
     for (Event*& event : mEvents)
         event->mVg.mThresholdUsed = -1.;
 
@@ -566,15 +638,15 @@ void ModelCurve::clearPosteriorDensities()
     
     for (Event*& event : mEvents) {
         if (event->type() != Event::eBound) {
-            event->mVg.mHisto.clear();
+            event->mVg.mFormatedHisto.clear();
             event->mVg.mChainsHistos.clear();
         }
     }
     
-    mLambdaSpline.mHisto.clear();
+    mLambdaSpline.mFormatedHisto.clear();
     mLambdaSpline.mChainsHistos.clear();
 
-    mS02Vg.mHisto.clear();
+    mS02Vg.mFormatedHisto.clear();
     mS02Vg.mChainsHistos.clear();
 }
 
@@ -584,16 +656,16 @@ void ModelCurve::clearCredibilityAndHPD()
     
     for (Event*& event : mEvents) {
         if (event->type() != Event::eBound) {
-            event->mVg.mHPD.clear();
-            event->mVg.mCredibility = std::pair<double, double>();
+            event->mVg.mFormatedHPD.clear();
+            event->mVg.mFormatedCredibility = std::pair<double, double>(1, -1);
         }
     }
     
-    mLambdaSpline.mHPD.clear();
-    mLambdaSpline.mCredibility = std::pair<double, double>();
+    mLambdaSpline.mFormatedHPD.clear();
+    mLambdaSpline.mFormatedCredibility = std::pair<double, double>(1, -1);
 
-    mS02Vg.mHPD.clear();
-    mS02Vg.mCredibility = std::pair<double, double>();
+    mS02Vg.mFormatedHPD.clear();
+    mS02Vg.mFormatedCredibility = std::pair<double, double>(1, -1);
 }
 
 void ModelCurve::clearTraces()
@@ -869,7 +941,7 @@ std::vector<MCMCSpline> ModelCurve::fullRunSplineTrace(const QList<ChainSpecs>& 
 void ModelCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted)
 {
     const double deg = 180. / M_PI ;
-    const bool hasZ = (mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
+    const bool computeZ = (mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
                        mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical ||
                        mCurveSettings.mProcessType == CurveSettings::eProcessType3D);
 
@@ -1112,7 +1184,7 @@ void ModelCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline &spline, C
         }
 
 
-        if (hasZ) {
+        if (computeZ) {
 
             // -- Calcul Mean on ZF
             prevMeanG_ZF = *itVecG_ZF;

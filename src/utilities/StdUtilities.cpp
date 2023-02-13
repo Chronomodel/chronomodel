@@ -803,13 +803,13 @@ const std::map<double, double> create_HPD(const QMap<double, double>& density, c
                 const double t = aMapStd.begin()->first;
                 const double v = aMapStd.begin()->second;
                 result[t]= v;
-                qDebug()<< "[stdUtilities] create_HPD() one solution for "<< t;
+                qDebug()<< "[stdUtilities::create_HPD] one solution for "<< t;
             }
             return result;
 
        }
        catch (std::exception const & e) {
-            qDebug()<< "[stdUtilities] create_HPD() Error " << e.what();
+            qDebug()<< "[stdUtilities::create_HPD] Error " << e.what();
             return aMapStd;
        }
 

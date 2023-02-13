@@ -40,10 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef RESULTSWRAPPER_H
 #define RESULTSWRAPPER_H
 
-#include "MCMCLoopChrono.h"
-#include "AxisTool.h"
 #include "GraphViewResults.h"
-#include "AppSettings.h"
 
 #include <QVBoxLayout>
 #include <QTabWidget>
@@ -104,7 +101,7 @@ protected:
     // ------------------------------------------------
     //  Graphs UI
     // ------------------------------------------------
-    void createGraphs();
+
     void createByEventsGraphs();
     void createByPhasesGraphs();
     //void createByTempoGraphs();
@@ -182,7 +179,9 @@ private slots:
     //  Graphs / Curves / Controls
     // ------------------------------------------------
     void updateMainVariable();
+    void createGraphs();
     void generateCurves();
+
     void updateCurvesToShow();
     void updateScales();
     void updateOptionsWidget();
@@ -200,12 +199,9 @@ private slots:
 
     void applyGraphTypeTab();
     void applyGraphListTab();
-  //  void applyDisplayTab();
-   // void applyPageSavingTab();
-    
+
     void applyCurrentVariable();
-   // void applyUnfoldEvents();
-   // void applyUnfoldDates();
+
 
     // Span options
     void applyStudyPeriod();
@@ -213,6 +209,19 @@ private slots:
     void applyTimeSlider(int value);
     void applyTimeSpin(double value);
     void applyZoomScale();
+
+    // X, Y, Z options
+    void applyXRange();
+    void applyYRange();
+    void applyZRange();
+
+    void findOptimalX();
+    void findOptimalY();
+    void findOptimalZ();
+
+    void setXRange();
+    void setYRange();
+    void setZRange();
 
     // Graphic options
     void applyZoomSlider(int value);
@@ -348,6 +357,10 @@ private:
     // ---------------------------------------------------------------------
     //  Span options : UI components to manipulate X axis scale
     // ---------------------------------------------------------------------
+
+    // ------------------------------------
+    //  Display / Time Options
+    // ------------------------------------
     QWidget* mSpanGroup;
     Label* mSpanTitle;
 
@@ -358,8 +371,6 @@ private:
     QLabel* mSpanLab;
     LineEdit* mCurrentTMinEdit;
     LineEdit* mCurrentTMaxEdit;
-
-
 
     // On the X Axis scale : choose to see the whole graph at once,
     // or zoom on it adjusting the "XScale"
@@ -381,13 +392,38 @@ private:
     QWidget* mXOptionGroup;
     Label* mXOptionTitle;
 
-    // Adjust the zoom on the study period
+    // Adjust the X scale
     Button* mXOptionBut;
 
-    // Force the min T and max T
     QLabel* mXOptionLab;
     LineEdit* mCurrentXMinEdit;
     LineEdit* mCurrentXMaxEdit;
+
+    // ------------------------------------
+    //  Display / Y Options
+    // ------------------------------------
+    QWidget* mYOptionGroup;
+    Label* mYOptionTitle;
+
+    // Adjust the X scale
+    Button* mYOptionBut;
+
+    QLabel* mYOptionLab;
+    LineEdit* mCurrentYMinEdit;
+    LineEdit* mCurrentYMaxEdit;
+
+    // ------------------------------------
+    //  Display / Z Options
+    // ------------------------------------
+    QWidget* mZOptionGroup;
+    Label* mZOptionTitle;
+
+    // Adjust the Z scale
+    Button* mZOptionBut;
+
+    QLabel* mZOptionLab;
+    LineEdit* mCurrentZMinEdit;
+    LineEdit* mCurrentZMaxEdit;
     // ------------------------------------
     //  Graphic Options
     // ------------------------------------
@@ -471,27 +507,37 @@ private:
     bool mHasPhases;
 
     // ----------------------------------------
-    //  Time Span / Zoom Variables
+    //  Time Span Variables
     // ----------------------------------------
     double mResultZoomT;
     double mResultMinT;
     double mResultMaxT;
     double mResultCurrentMinT;
     double mResultCurrentMaxT;
+
     // ----------------------------------------
-    //  X Span / Zoom Variables
+    //  Time Scale ticks intervals
     // ----------------------------------------
-    //double mResultZoomX;
-    //double mResultMinX;
-    //double mResultMaxX;
+    double mMajorScale;
+    int mMinorCountScale;
+
+    // ----------------------------------------
+    //  X Span  Variables / First curve
+    // ----------------------------------------
     double mResultCurrentMinX;
     double mResultCurrentMaxX;
 
     // ----------------------------------------
-    //  X Scale ticks intervals
+    //  Y Span  Variables / Second Curve
     // ----------------------------------------
-    double mMajorScale;
-    int mMinorCountScale;
+    double mResultCurrentMinY;
+    double mResultCurrentMaxY;
+
+    // ----------------------------------------
+    //  Z Span  Variables / Third curve
+    // ----------------------------------------
+    double mResultCurrentMinZ;
+    double mResultCurrentMaxZ;
 
     // ----------------------------------------
     //  Pagination variables
@@ -503,6 +549,10 @@ private:
     // ------------------------------------
     QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, double>> mZooms;
     QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, int>> mScales;
+
+    QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, double>> mZoomsX;
+    QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, double>> mZoomsY;
+    QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, double>> mZoomsZ;
 };
 
 #endif

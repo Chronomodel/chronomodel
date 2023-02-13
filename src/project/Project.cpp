@@ -69,6 +69,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "SetProjectState.h"
 #include "StateEvent.h"
+#include "AppSettings.h"
 
 #include <QtWidgets>
 #include <QJsonObject>
@@ -557,13 +558,13 @@ bool Project::load(const QString& path, bool force)
                 mModel->clear();
 
             QJsonObject loadingState = jsonDoc.object();
-
+            QStringList projectVersionList;
             if (loadingState.contains(STATE_APP_VERSION)) {
-                QString projectVersionStr = loadingState.value(STATE_APP_VERSION).toString();
-                QStringList projectVersionList = projectVersionStr.split(".");
+                const QString projectVersionStr = loadingState.value(STATE_APP_VERSION).toString();
+                projectVersionList = projectVersionStr.split(".");
 
-                QString appVersionStr = QApplication::applicationVersion();
-                QStringList appVersionList = appVersionStr.split(".");
+                const QString appVersionStr = QApplication::applicationVersion();
+                const QStringList appVersionList = appVersionStr.split(".");
 
                 if (loadingState.value(STATE_SETTINGS).isNull()) {
                     QJsonObject settings;
@@ -736,6 +737,11 @@ bool Project::load(const QString& path, bool force)
             clearModel();
 
             /* -------------------- Load results -------------------- */
+            /* Changement du fichier *.res dés la version 3.2.2; disparition de la sauvegarde de mFormat dans les MetropolisVariable */
+           /* if (projectVersionList[0].toInt() <= 3 && projectVersionList[1].toInt() <= 2 && projectVersionList[2].toInt() < 2)
+                return true;
+           */
+
             QString dataPath = path + ".res";
 
             QFile dataFile;
@@ -1201,7 +1207,7 @@ bool Project::saveProjectToFile()
 
      if (mLastSavedState != mState) {
         // création d'une copie du dernier resultat avec succés
-        if (mNoResults && file_res.exists() && file_cal.exists()) {
+     /*   if (mNoResults && file_res.exists() && file_cal.exists()) {
 
             file_chr.copy(path + "_bak");
 
@@ -1209,7 +1215,7 @@ bool Project::saveProjectToFile()
 
             file_res.copy(path + ".res_bak");
         }
-
+     */
 
         if (file_chr.open(QIODevice::ReadWrite | QIODevice::Text)) {
 
@@ -1259,7 +1265,7 @@ bool Project::saveProjectToFile()
 
     if (!mNoResults && !mModel->mEvents.empty()) {
 
-        qDebug() << "[Project::saveProjectToFile] Saving project results in "<<AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res";
+        qDebug() << "[Project::saveProjectToFile] Saving project results in "<< AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res";
 
         mModel->setProject(this);
 
@@ -1355,7 +1361,7 @@ bool Project::setSettings(const ProjectSettings& settings)
     }
 }
 
-void Project::setAppSettings()
+void Project::setAppSettingsAutoSave()
 {
     mAutoSaveTimer->setInterval(AppSettings::mAutoSaveDelay * 1000);
     if(mAutoSaveTimer->isActive() && !AppSettings::mAutoSave)
@@ -3140,9 +3146,9 @@ void Project::runChronomodel()
     emit mcmcStarted();
 
     clearModel();
-    mModel = new Model ();
+    mModel = new Model(mState);
     mModel->setProject(this);
-    mModel->fromJson(mState);
+    //mModel->fromJson(mState);
     bool modelOk = false;
     try {
         // Check if model structure is valid
@@ -3179,7 +3185,9 @@ void Project::runChronomodel()
             if (loop.mAbortedReason.isEmpty()) {
                 //Memo of the init variable state to show in Log view
                 //mModel->mLogInit = loop.getChainsLog() + loop.getInitLog();
-                emit mcmcFinished(mModel);
+                // emit mcmcFinished(mModel);
+                mcmcFinished(mModel);
+
             } else {
                 if (loop.mAbortedReason != ABORTED_BY_USER) {
                     QMessageBox message(QMessageBox::Warning,
@@ -3254,9 +3262,9 @@ void Project::runCurve()
     //  using the project state
     // ------------------------------------------------------------------------------------------
     clearModel();
-    mModel = new ModelCurve();
+    mModel = new ModelCurve(mState);
     mModel->setProject (this);
-    mModel->fromJson (mState);
+    //mModel->fromJson (mState);
     
     // ------------------------------------------------------------------------------------------
     //  Check if the model is valid
@@ -3302,6 +3310,7 @@ void Project::runCurve()
             //mModel->mLogInit = loop.getChainsLog() + loop.getInitLog();
             dialog.setFinishedState();
             emit mcmcFinished(mModel);
+            //mcmcFinished(mModel);
 
         } else {
             if (loop.mAbortedReason != ABORTED_BY_USER) {

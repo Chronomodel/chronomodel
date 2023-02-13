@@ -143,11 +143,11 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         mGraph->setYAxisMode(GraphView::eMinMaxHidden);
 
         mTitle = tr("Phase : %1").arg(mPhase->mName);
-        QMap<double, double> &alpha = mPhase->mAlpha.mHisto;
-        QMap<double, double> &beta = mPhase->mBeta.mHisto;
+        QMap<double, double> &alpha = mPhase->mAlpha.mFormatedHisto;
+        QMap<double, double> &beta = mPhase->mBeta.mFormatedHisto;
 
-        QMap<double, double> &alphaHPD = mPhase->mAlpha.mHPD;
-        QMap<double, double> &betaHPD = mPhase->mBeta.mHPD;
+        QMap<double, double> &alphaHPD = mPhase->mAlpha.mFormatedHPD;
+        QMap<double, double> &betaHPD = mPhase->mBeta.mFormatedHPD;
         /*
          * Detection of one Bound used as boundary != is xor
          * If there is two Bound, the both are egal to 1, thus nothing to do
@@ -185,7 +185,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
 
         mGraph->setOverArrow(GraphView::eBothOverflow);
 
-        GraphCurve curveTimeRange = topLineSection(mPhase->getFormatedTimeRange(), "Time Range", color);
+        const GraphCurve &curveTimeRange = topLineSection(mPhase->getFormatedTimeRange(), "Time Range", color);
         mGraph->addCurve(curveTimeRange);
 
         /* ------------------------------------------------------------
@@ -336,7 +336,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
 
             mGraph->setRangeX(0., ceil(curveDuration.mData.lastKey()));
             color.setAlpha(255);
-            GraphCurve curveDurationHPD = HPDCurve(mPhase->mDuration.mHPD, "HPD All Chains", color);
+            GraphCurve curveDurationHPD = HPDCurve(mPhase->mDuration.mFormatedHPD, "HPD All Chains", color);
             mGraph->setCanControlOpacity(true);
             mGraph->addCurve(curveDurationHPD);
             mGraph->setFormatFunctX(nullptr);
@@ -349,7 +349,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
              *  Theta Credibility
              * ------------------------------------
              */
-            GraphCurve curveCred = topLineSection(mPhase->mDuration.mCredibility,
+            GraphCurve curveCred = topLineSection(mPhase->mDuration.mFormatedCredibility,
                                                             "Credibility All Chains",
                                                             color);
             mGraph->addCurve(curveCred);

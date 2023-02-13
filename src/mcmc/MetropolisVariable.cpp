@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -38,14 +38,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "MetropolisVariable.h"
+
 #include "StdUtilities.h"
 #include "QtUtilities.h"
 #include "Functions.h"
 #include "DateUtils.h"
 
-#if USE_FFT
 #include "fftw3.h"
-#endif
 
 #include <QDebug>
 #include <algorithm>
@@ -69,8 +68,9 @@ mtmaxUsed(0.)
     mRawTrace = new QVector<double>();
     mFormatedTrace = new QVector<double>();
 
-    mCredibility = std::make_pair(- INFINITY, +INFINITY);
-   // mHPD = QMap<double, double>();
+    mRawCredibility = std::pair<double, double>(1, -1);
+    mFormatedCredibility = std::pair<double, double>(1, -1);
+   // mFormatedHPD = QMap<double, double>();
    // QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
 }
 
@@ -79,21 +79,22 @@ MetropolisVariable::MetropolisVariable(const MetropolisVariable &origin):Metropo
 {
     mX = origin.mX;
     mRawTrace = new QVector<double>(origin.mRawTrace->size());
-    std::copy(origin.mRawTrace->begin(),origin.mRawTrace->end(),mRawTrace->begin());
+    std::copy(origin.mRawTrace->begin(), origin.mRawTrace->end(), mRawTrace->begin());
 
     mFormatedTrace= new QVector<double>(origin.mFormatedTrace->size());
-    std::copy(origin.mFormatedTrace->begin(),origin.mFormatedTrace->end(),mFormatedTrace->begin());
+    std::copy(origin.mFormatedTrace->begin(), origin.mFormatedTrace->end(), mFormatedTrace->begin());
 
     mSupport = origin.mSupport;
     mFormat = origin.mFormat;
 
-    mHisto = origin.mHisto;
+    mFormatedHisto = origin.mFormatedHisto;
     mChainsHistos = origin.mChainsHistos;
 
     mCorrelations = origin.mCorrelations;
 
-    mHPD = origin.mHPD;
-    mCredibility = origin.mCredibility;
+    mFormatedHPD = origin.mFormatedHPD;
+    mRawCredibility = origin.mRawCredibility;
+    mFormatedCredibility = origin.mFormatedCredibility;
 
     mExactCredibilityThreshold = origin.mExactCredibilityThreshold;
 
@@ -119,7 +120,7 @@ MetropolisVariable::~MetropolisVariable()
 {
     mRawTrace->clear();
     mFormatedTrace->clear();
-    mHPD.clear();
+    mFormatedHPD.clear();
   //  QObject::disconnect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
 
 }
@@ -137,13 +138,14 @@ MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable & ori
     mSupport = origin.mSupport;
     mFormat = origin.mFormat;
 
-    mHisto = origin.mHisto;
+    mFormatedHisto = origin.mFormatedHisto;
     mChainsHistos = origin.mChainsHistos;
 
     mCorrelations = origin.mCorrelations;
 
-    mHPD = origin.mHPD;
-    mCredibility = origin.mCredibility;
+    mFormatedHPD = origin.mFormatedHPD;
+    mRawCredibility = origin.mRawCredibility;
+    mFormatedCredibility = origin.mFormatedCredibility;
 
     mExactCredibilityThreshold = origin.mExactCredibilityThreshold;
 
@@ -192,14 +194,18 @@ void MetropolisVariable::reset()
         mRawTrace = new QVector<double>();
         mFormatedTrace = new QVector<double>();
     }
-    mHisto.clear();
+    mFormatedHisto.clear();
     mChainsHistos.clear();
 
     mCorrelations.clear();
 
-    mHPD.clear();
+    mFormatedHPD.clear();
 
     mChainsResults.clear();
+
+
+    mRawCredibility = std::pair<double, double>(1, -1);
+    mFormatedCredibility = std::pair<double, double>(1, -1);
 }
 
 void MetropolisVariable::reserve( const int reserve)
@@ -211,16 +217,19 @@ void MetropolisVariable::reserve( const int reserve)
 void MetropolisVariable::setFormat(const DateUtils::FormatDate fm)
 {
     if (fm != mFormat || mFormatedTrace->size() != mRawTrace->size()) {
-        mFormat = fm;
-        updateFormatedTrace();
+        updateFormatedTrace(fm);
     }
+    //if (fm != mFormat || mFormatedCredibility == std::pair<double, double>(1, -1)) {
+        updateFormatedCredibility(fm);
+    //}
+    mFormat = fm;
 }
 
 /**
  * @brief MetropolisVariable::updateFormatedTrace, it's a slot that transforms or creates mFormatedTrace
  * according to mFormat.
  */
-void MetropolisVariable::updateFormatedTrace()
+void MetropolisVariable::updateFormatedTrace(const DateUtils::FormatDate fm)
 {
     if (!mRawTrace)
         return;
@@ -228,26 +237,35 @@ void MetropolisVariable::updateFormatedTrace()
     if (mRawTrace->size() == 0)
        return;
 
-    if (mFormat == DateUtils::eNumeric)
-        mFormatedTrace = mRawTrace; // it's the same pointer, if you delete mFormatedTrace, you delete mRawTrace
-        /* mFormatedTrace->resize(mRawTrace->size());
-         * std::copy(mRawTrace->cbegin(), mRawTrace->cend(), mFormatedTrace->begin());
-         */
-
-    else {
+    if (fm == DateUtils::eNumeric) {
         mFormatedTrace->resize(mRawTrace->size());
-        std::transform(mRawTrace->cbegin(), mRawTrace->cend(), mFormatedTrace->begin(), [this](const double i){return DateUtils::convertToFormat(i, this->mFormat);});
-        double t1 = DateUtils::convertToFormat(mCredibility.first, this->mFormat);
-        double t2 = DateUtils::convertToFormat(mCredibility.second, this->mFormat);
-        if (t1>t2)
-            std::swap(t1, t2);
-        mCredibility.first = t1;
-        mCredibility.second = t2;
+        std::copy(mRawTrace->cbegin(), mRawTrace->cend(), mFormatedTrace->begin());
 
+    //mFormatedTrace = mRawTrace// it's the same pointer, if you delete mFormatedTrace, you delete mRawTrace. If you change the format you change the value of mRawTrace
+
+    } else {
+        mFormatedTrace->resize(mRawTrace->size());
+        std::transform(mRawTrace->cbegin(), mRawTrace->cend(), mFormatedTrace->begin(), [&fm](const double i) {return DateUtils::convertToFormat(i, fm);});
     }
+    return;
 
 }
 
+void MetropolisVariable::updateFormatedCredibility(const DateUtils::FormatDate fm)
+{
+   if (fm != DateUtils::eNumeric) {
+        double t1 = DateUtils::convertToAppSettingsFormat(mRawCredibility.first);
+        double t2 = DateUtils::convertToAppSettingsFormat(mRawCredibility.second);
+        if (t1>t2)
+            std::swap(t1, t2);
+        mFormatedCredibility.first = t1;
+        mFormatedCredibility.second = t2;
+
+    } else {
+        mFormatedCredibility.first = mRawCredibility.first;
+        mFormatedCredibility.second = mRawCredibility.second;
+    }
+}
 /**
  @param[in] dataSrc is the trace, with for example one million data
  @remarks Produce a density with the area equal to 1. The smoothing is done with Hsilvermann method.
@@ -418,8 +436,8 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
 
 void MetropolisVariable::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
-    const QVector<double> subFullTrace (fullRunTrace(chains));
-    mHisto = generateHisto(subFullTrace, fftLen, bandwidth, tmin, tmax);
+    const QVector<double> subFullTrace (fullRunFormatedTrace(chains));
+    mFormatedHisto = generateHisto(subFullTrace, fftLen, bandwidth, tmin, tmax);
 
     mChainsHistos.clear();
     for (int i=0; i<chains.size(); ++i) {
@@ -444,25 +462,38 @@ bool MetropolisVariable::HistoWithParameter(const int fftLen, const double bandw
 
 void MetropolisVariable::generateHPD(const double threshold)
 {
-    if (!mHisto.isEmpty())  {
+    if (!mFormatedHisto.isEmpty())  {
         const double thresh = qBound(0.0, threshold, 100.0);
         if (thresh == 100.) {
-            mHPD = mHisto;
+            mFormatedHPD = mFormatedHisto;
             return;
         }
         //threshold = (threshold < 0 ? threshold = 0.0 : threshold);
         if (thresh == 0.) {
-            mHPD.clear();
+            mFormatedHPD.clear();
             return;
         }
-        mHPD = QMap<double, double>(create_HPD(mHisto, thresh));
+        mFormatedHPD = QMap<double, double>(create_HPD(mFormatedHisto, thresh));
 
+        mRawHPDintervals.clear();
+        const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mFormatedHPD, thresh);
+        for (const auto& h : intervals) {
+            double tmin = DateUtils::convertFromAppSettingsFormat(h.second.first);
+            double tmax = DateUtils::convertFromAppSettingsFormat(h.second.second);
+            if (tmin>tmax)
+                std::swap(tmin, tmax);
+            if (!mRawHPDintervals.isEmpty() && mRawHPDintervals.at(0).second.second<tmin)
+                mRawHPDintervals.push_back(std::make_pair(h.first, std::make_pair(tmin, tmax)));
+            else
+                mRawHPDintervals.push_front(std::make_pair(h.first, std::make_pair(tmin, tmax)));
+
+        }
     }
     else {
         // This can happen on phase duration, if only one event inside.
         // alpha = beta => duration is always null !
         // We don't display the phase duration but we print the numerical HPD result.
-        mHPD = QMap<double, double>();
+        mFormatedHPD = QMap<double, double>();
 
         qDebug() << "WARNING : Cannot generate HPD on empty histo in MetropolisVariable::generateHPD";
     }
@@ -470,12 +501,11 @@ void MetropolisVariable::generateHPD(const double threshold)
 
 void MetropolisVariable::generateCredibility(const QList<ChainSpecs> &chains, double threshold)
 {
-    if (mHisto.isEmpty())  {
-        mCredibility = std::pair<double, double>(-INFINITY, INFINITY);
+    if (mRawTrace->isEmpty())  {
+        mRawCredibility = std::pair<double, double>(1, -1);
 
-    } else if (mCredibilityThresholdUsed != threshold) {
-        mCredibility = credibilityForTrace(fullRunTrace(chains), threshold, mExactCredibilityThreshold);//, "Compute credibility for "+getName());
-        mCredibilityThresholdUsed = threshold;
+    } else if (mThresholdUsed != threshold) {
+        mRawCredibility = credibilityForTrace(fullRunRawTrace(chains), threshold, mExactCredibilityThreshold);//, "Compute credibility for "+getName());
     }
 
 }
@@ -496,15 +526,15 @@ void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
             continue;
 
         QVector<double> results;
-        const long long n = trace.size();
+        const auto n = trace.size();
 
         double mean, variance;
         mean_variance_Knuth(trace, mean, variance);
-        variance *= trace.size();
+        variance *= (double)trace.size();
 
         // Correlation for this chain
-
-        for (int h = 0; h <= hmax; ++h) {
+        results.append(1.); // force the first to exactly 1.
+        for (int h = 1; h <= hmax; ++h) {
             sH = 0.;
             QVector<double>::const_iterator iter_H = trace.cbegin() + h;
             for (QVector<double>::const_iterator iter = trace.cbegin(); iter != trace.cbegin() + (n-h); ++iter)
@@ -522,10 +552,10 @@ void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
 void MetropolisVariable::generateNumericalResults(const QList<ChainSpecs> &chains)
 {
     // Results for chain concatenation
-    mResults.funcAnalysis = analyseFunction(mHisto);
-    auto statTrace = traceStatistic(fullRunTrace(chains));
+    mResults.funcAnalysis = analyseFunction(mFormatedHisto);
+    auto statTrace = traceStatistic(fullRunFormatedTrace(chains));
 
-    mResults.traceAnalysis = std::move(statTrace); //squartilesForTrace(fullRunTrace(chains)); // fullRunTrace is the formated Traces
+    mResults.traceAnalysis = std::move(statTrace); //squartilesForTrace(fullRunFormatedTrace(chains)); // fullRunFormatedTrace is the formated Traces
 
     // Results for individual chains
     mChainsResults.clear();
@@ -541,7 +571,7 @@ void MetropolisVariable::generateNumericalResults(const QList<ChainSpecs> &chain
 // Getters (no calculs)
 QMap<double, double> &MetropolisVariable::fullHisto()
 {
-    return mHisto;
+    return mFormatedHisto;
 }
 
 QMap<double, double> &MetropolisVariable::histoForChain(const int index)
@@ -625,7 +655,7 @@ QVector<double> MetropolisVariable::fullRunRawTrace(const QList<ChainSpecs>& cha
     return trace;
 }
 
-QVector<double> MetropolisVariable::fullRunTrace(const QList<ChainSpecs>& chains)
+QVector<double> MetropolisVariable::fullRunFormatedTrace(const QList<ChainSpecs>& chains)
 {
     if (mFormatedTrace->isEmpty())
         return QVector<double>();
@@ -735,7 +765,7 @@ QVector<double> MetropolisVariable::correlationForChain(const int index)
 
 QString MetropolisVariable::resultsString(const QString& nl, const QString& noResultMessage, const QString& unit, DateConversion conversionFunc, const bool forCSV) const
 {
-    if (mHisto.isEmpty())
+    if (mFormatedHisto.isEmpty())
         return noResultMessage;
 
     QString result = densityAnalysisToString(mResults, nl, forCSV) + nl;
@@ -743,27 +773,27 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
     if (forCSV) {
         result += tr("Probabilities") + nl;
 
-            // the mCredibility is already in the time scale, we don't need to convert
-            if (mCredibility != std::pair<double, double>()) {
+            // the mFormatedCredibility is already in the time scale, we don't need to convert
+            if (mFormatedCredibility != std::pair<double, double>(1, -1)) {
                 result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForCSV(mExactCredibilityThreshold * 100.),
-                                                                                       stringForCSV(mCredibility.first),
-                                                                                       stringForCSV(mCredibility.second),
+                                                                                       stringForCSV(mFormatedCredibility.first),
+                                                                                       stringForCSV(mFormatedCredibility.second),
                                                                                        unit) + nl;
-                if (!mHPD.isEmpty())
-                    result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForCSV(mThresholdUsed), getHPDText(mHPD, mThresholdUsed, unit, conversionFunc, true)) + nl;
+                if (!mFormatedHPD.isEmpty())
+                    result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForCSV(mThresholdUsed), getHPDText(mFormatedHPD, mThresholdUsed, unit, conversionFunc, true)) + nl;
 
            }
    } else {
         result += "<i>"+ tr("Probabilities") + " </i>"+ nl;
 
-            // the mCredibility is already in the time scale, we don't need to convert
-            if (mCredibility != std::pair<double, double>())
+            // the mFormatedCredibility is already in the time scale, we don't need to convert
+            if (mFormatedCredibility != std::pair<double, double>(1, -1))
                 result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(mExactCredibilityThreshold * 100.),
-                                                                                       stringForLocal(mCredibility.first),
-                                                                                       stringForLocal(mCredibility.second),
+                                                                                       stringForLocal(mFormatedCredibility.first),
+                                                                                       stringForLocal(mFormatedCredibility.second),
                                                                                        unit) + nl;
-            if (!mHPD.isEmpty())
-                result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForLocal(mThresholdUsed), getHPDText(mHPD, mThresholdUsed, unit, conversionFunc, false)) + nl;
+            if (!mFormatedHPD.isEmpty())
+                result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForLocal(mThresholdUsed), getHPDText(mFormatedHPD, mThresholdUsed, unit, conversionFunc, false)) + nl;
 
   }
    return result;
@@ -791,10 +821,10 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
         list << locale.toString(mResults.funcAnalysis.quartiles.Q3, 'f', precision);
 
         list << locale.toString(mExactCredibilityThreshold * 100., 'f', 2);
-        list << locale.toString(mCredibility.first, 'f', precision);
-        list << locale.toString(mCredibility.second, 'f', precision);
+        list << locale.toString(mFormatedCredibility.first, 'f', precision);
+        list << locale.toString(mFormatedCredibility.second, 'f', precision);
 
-        const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThresholdUsed);
+        const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mFormatedHPD, mThresholdUsed);
 
         for (auto&& interval : intervals) {
             list << locale.toString(interval.first, 'f', 2);
@@ -812,13 +842,13 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.traceAnalysis.quartiles.Q2), 'f', precision);
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.traceAnalysis.quartiles.Q3), 'f', precision);
         list << locale.toString(mExactCredibilityThreshold * 100., 'f', 2);
-        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mCredibility.first), 'f', precision);
-        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mCredibility.second), 'f', precision);
+        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mFormatedCredibility.first), 'f', precision);
+        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mFormatedCredibility.second), 'f', precision);
         // Statistic Results on Density
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.funcAnalysis.mode), 'f', precision);
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.funcAnalysis.mean), 'f', precision);
         list << locale.toString(mResults.funcAnalysis.std, 'f', precision);
-        const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThresholdUsed);
+        const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mFormatedHPD, mThresholdUsed);
 
         for (auto&& interval : intervals) {
             list << locale.toString(interval.first, 'f', 2);
@@ -850,15 +880,13 @@ QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
           break;
     }
 
-    switch (data.mFormat) {
-
+   switch (data.mFormat) { // useless, only for compatibility
        case DateUtils::eUnknown : stream << qint16(-2);
         break;
        case DateUtils::eNumeric : stream << qint16(-1);
           break;
        case DateUtils::eBCAD : stream << qint16(0);
           break;
-
        case DateUtils::eCalBP : stream << qint16(1);
           break;
        case DateUtils::eCalB2K : stream << qint16(2);
@@ -869,7 +897,6 @@ QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
           break;
        case DateUtils::eBCECE : stream << qint16(5);
           break;
-
        case  DateUtils::eKa : stream << qint16(6);
           break;
        case DateUtils::eMa : stream << qint16(7);
@@ -908,8 +935,8 @@ QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
    }
 
     qint16 formatDate;
-    stream >> formatDate;
-    switch (formatDate) {
+    stream >> formatDate; // to keep compatibility
+ /*   switch (formatDate) {
       case -2 : data.mFormat = DateUtils::eUnknown;
        break;
       case -1 : data.mFormat = DateUtils::eNumeric;
@@ -932,6 +959,8 @@ QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
       case 7 : data.mFormat = DateUtils::eMa;
         break;
    }
+*/
+    data.mFormat = DateUtils::eUnknown; // to keep compatibility and force updateFormat
 
     quint32 siz;
     double v;
@@ -952,7 +981,7 @@ QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
         data.mFormatedTrace->clear();
     else
         data.mFormatedTrace = new QVector<double>();
-    data.updateFormatedTrace();
+   // data.updateFormatedTrace();
 
     return stream;
 

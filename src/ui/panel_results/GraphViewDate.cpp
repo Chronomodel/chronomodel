@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -38,20 +38,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "GraphViewDate.h"
+
 #include "GraphView.h"
 #include "Date.h"
-#include "Event.h"
 #include "Painting.h"
-#include "StdUtilities.h"
-#include "QtUtilities.h"
 #include "ModelUtilities.h"
+
 #include <QtWidgets>
-#include "../PluginAbstract.h"
-#include "../GraphViewRefAbstract.h"
 
-
-
-// Constructor / Destructor
 
 GraphViewDate::GraphViewDate(QWidget *parent):GraphViewResults(parent),
 mDate(nullptr),
@@ -167,7 +161,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
                 }
 
             // HPD All Chains
-            const GraphCurve &curveHPD = HPDCurve(mDate->mTi.mHPD,
+            const GraphCurve &curveHPD = HPDCurve(mDate->mTi.mFormatedHPD,
                                                    "HPD All Chains",
                                                     color);
             mGraph->addCurve(curveHPD);
@@ -191,7 +185,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
             mGraph->addCurve(curveWiggle);
 
             // Credibility (must be the last created curve because uses yMax!
-            GraphCurve curveCred = topLineSection(mDate->mTi.mCredibility,
+            GraphCurve curveCred = topLineSection(mDate->mTi.mFormatedCredibility,
                                                             "Credibility All Chains",
                                                             color);
             mGraph->addCurve(curveCred);
@@ -253,11 +247,15 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
                     mGraph->addCurve(curvePostDistribChain);
                 }
             // HPD All Chains
-            const GraphCurve &curveHPD = HPDCurve(mDate->mSigmaTi.mHPD,
+            const GraphCurve &curveHPD = HPDCurve(mDate->mSigmaTi.mFormatedHPD,
                                                    "HPD All Chains",
                                                     color);
             mGraph->addCurve(curveHPD);
-
+            // Credibility (must be the last created curve because uses yMax!
+            GraphCurve curveCred = topLineSection(mDate->mSigmaTi.mFormatedCredibility,
+                                                            "Credibility All Chains",
+                                                            color);
+            mGraph->addCurve(curveCred);
             mGraph->setYAxisMode(GraphView::eHidden);
         }
 
@@ -391,6 +389,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
                 mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
 
             mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
+            mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
 
             mGraph->setTipXLab(tr("sigma"));
             mGraph->setYAxisMode(GraphView::eHidden);
