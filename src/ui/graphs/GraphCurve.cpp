@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 GraphCurve::GraphCurve():
-mType(eQMapData),
+mType(eDensityData),
 mPen(Qt::black, 1),
 mBrush(Qt::NoBrush),
 mIsRectFromZero(false),
@@ -89,7 +89,7 @@ GraphCurve densityCurve( const QMap<double, double> data,
     return curve;
 }
 
-GraphCurve GCurve(const QMap<double, double> data,
+GraphCurve FunctionCurve(const QMap<double, double> data,
                    const QString& name,
                    const QColor& lineColor,
                    const Qt::PenStyle penStyle,
@@ -97,6 +97,7 @@ GraphCurve GCurve(const QMap<double, double> data,
 {
     GraphCurve curve;
     curve.mName = name; // This is the name of the columns when exporting the graphs
+    curve.mType = GraphCurve::eFunctionData;
     if (!data.isEmpty()) {
         curve.mData = std::move(data);
         curve.mPen = QPen(lineColor, 1, penStyle);

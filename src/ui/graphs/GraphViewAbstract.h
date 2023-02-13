@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -96,10 +96,10 @@ public:
 protected:
 	virtual void repaintGraph(const bool aAlsoPaintBackground) = 0;
 
-    virtual qreal getXForValue(const type_data &aValue, const bool &aConstainResult = true);
-    virtual type_data getValueForX(const qreal &x, const bool &aConstainResult = true);
-    virtual qreal getYForValue(const type_data &aValue, const bool &aConstainResult = true);
-    virtual type_data getValueForY(const qreal &y, const bool &aConstainResult = true);
+    virtual qreal getXForValue(const type_data aValue, const bool aConstainResult = true) const;
+    virtual type_data getValueForX(const qreal x, const bool aConstainResult = true) const;
+    virtual qreal getYForValue(const type_data aValue, const bool aConstainResult = true) const;
+    virtual type_data getValueForY(const qreal y, const bool aConstainResult = true) const;
 
 protected:
     QPainterPath mPainterPath;

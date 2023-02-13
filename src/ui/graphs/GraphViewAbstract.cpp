@@ -97,7 +97,7 @@ void GraphViewAbstract::setRangeY(const type_data &aMinY, const type_data &aMaxY
             //qDebug() << "Warning : setting min == max for graph y scale : " << aMinY;
         }
         else if (mMinY > mMaxY) {
-            qDebug() << "ERROR : setting min > max for graph y scale : [" << mMinY << "; " << mMaxY << "]";
+            qDebug() << " [GraphViewAbstract::setRangeY] ERROR : setting min > max for graph y scale : [" << mMinY << "; " << mMaxY << "]";
         } else {
             mMinY = aMinY;
             mMaxY = aMaxY;
@@ -150,28 +150,28 @@ bool GraphViewAbstract::parameterChange() const
  * @param aConstainResult
  * @return
  */
-qreal GraphViewAbstract:: getXForValue(const type_data& aValue, const bool& aConstainResult)
+qreal GraphViewAbstract:: getXForValue(const type_data value, const bool constainResult) const
 {
     const qreal rigthBlank (5.); // the same name and the same value as AxisTool::updateValues()
-    return mMarginLeft + valueForProportion(aValue, mCurrentMinX, mCurrentMaxX, 0., std::max(0.,  mGraphWidth - rigthBlank) , aConstainResult);
+    return mMarginLeft + valueForProportion(value, mCurrentMinX, mCurrentMaxX, 0., std::max(0.,  mGraphWidth - rigthBlank) , constainResult);
 }
 
-type_data GraphViewAbstract::getValueForX(const qreal& x, const bool& aConstainResult)
+type_data GraphViewAbstract::getValueForX(const qreal x, const bool constainResult) const
 {
     const qreal rigthBlank (5.); // the same name and the same value as AxisTool::updateValues() if AxisTool::mIsHorizontal
     const qreal xFromSide (x - mMarginLeft);
-    return valueForProportion(type_data(xFromSide), 0., std::max(0.,  mGraphWidth - rigthBlank), mCurrentMinX, mCurrentMaxX, aConstainResult);
+    return valueForProportion(type_data(xFromSide), 0., std::max(0.,  mGraphWidth - rigthBlank), mCurrentMinX, mCurrentMaxX, constainResult);
 }
 
 #define TOPBLANK 1
-qreal GraphViewAbstract::getYForValue(const type_data& aValue, const bool& aConstainResult)
+qreal GraphViewAbstract::getYForValue(const type_data aValue, const bool constainResult) const
 {
-    const type_data yFromBase = valueForProportion(aValue, mMinY, mMaxY, 0., std::max(0., type_data (mGraphHeight) - TOPBLANK), aConstainResult);
+    const type_data yFromBase = valueForProportion(aValue, mMinY, mMaxY, 0., std::max(0., type_data (mGraphHeight) - TOPBLANK), constainResult);
     return mGraphHeight + mMarginTop - qreal(yFromBase) ;
 }
 
-type_data GraphViewAbstract::getValueForY(const qreal& y, const bool& aConstainResult)
+type_data GraphViewAbstract::getValueForY(const qreal y, const bool constainResult) const
 {
     const qreal yFromBase = mMarginTop + mGraphHeight - y;
-    return valueForProportion( type_data (yFromBase), 0., std::max(0., type_data (mGraphHeight) - TOPBLANK), mMinY, mMaxY, aConstainResult);
+    return valueForProportion( type_data (yFromBase), 0., std::max(0., type_data (mGraphHeight) - TOPBLANK), mMinY, mMaxY, constainResult);
 }

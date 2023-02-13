@@ -39,7 +39,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "CalibrationView.h"
 
-#include "Ruler.h"
 #include "Date.h"
 #include "Event.h"
 #include "Marker.h"
@@ -57,6 +56,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ModelUtilities.h"
 #include "QtUtilities.h"
 #include "DoubleValidator.h"
+#include "AppSettings.h"
 
 #include "CalibrationDrawing.h"
 
@@ -70,14 +70,12 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mMajorScale (100),
     mMinorScale (4)
 {
-
     mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
 
     mDrawing = new CalibrationDrawing(this);
     mDrawing->setMouseTracking(true);
     setMouseTracking(true);
-
 
     mImageSaveBut = new Button(tr("Save"), this);
     mImageSaveBut->setIcon(QIcon(":picture_save.png"));
@@ -212,8 +210,11 @@ void CalibrationView::applyAppSettings()
     mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
 
-    if (isVisible())
+    //if (isVisible()) {
+    if (width()> 0 ) {
+        updateGraphs();
         repaint();
+    }
 }
 
 void CalibrationView::applyStudyPeriod()

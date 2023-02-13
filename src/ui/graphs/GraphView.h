@@ -52,6 +52,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QColor>
 #include <QPixmap>
 #include <QFileInfo>
+#include <QPainterPath>
 
 
 class GraphView: public GraphViewAbstract
@@ -74,6 +75,8 @@ public:
         eUnderMin = 2,
         eOverMax = 3
     };
+
+
     GraphView(QWidget* parent = nullptr);
     explicit GraphView(const GraphView &graph, QWidget *parent= nullptr);
 
@@ -115,8 +118,6 @@ public:
     void autoAdjustYScale(bool active);
     inline bool autoAdjustY() {return mAutoAdjustYScale;};
     void adjustYScale();
-    //void adjustYToMaxValue(const qreal& marginProp = 0.);
-    //void adjustYToMinMaxValue();
 
    // void setRendering(Rendering render);
    // Rendering getRendering();
@@ -187,9 +188,13 @@ protected:
 
     void updateGraphSize(qreal w, qreal h);
 
+    QPainterPath makePath (const QMap<double, double> &map, const bool showBorder) const;
+
     void drawCurves(QPainter& painter);
     void drawMap(GraphCurve &curve, QPainter& painter);
+    QPainterPath makeSubShape(QMap<double, double> mapInf, QMap<double, double> mapSup) const;
     void drawShape(GraphCurve &curve, QPainter& painter);
+    void drawDensity(GraphCurve &curve, QPainter& painter);
 
     void resizeEvent(QResizeEvent* event);
 

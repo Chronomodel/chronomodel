@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2021
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -41,8 +41,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define GRAPHVIEWCURVE_H
 
 #include "GraphViewResults.h"
-#include "ModelCurve.h"
 #include "GraphCurve.h"
+#include "CurveUtilities.h"
 
 class GraphViewCurve: public GraphViewResults
 {
@@ -55,11 +55,11 @@ public:
     void setComposanteGChains(const QList<PosteriorMeanGComposante>& composanteChains);
 
     void setEvents(const QList<Event*>& events);
-    void setEventsPoints(const QVector<CurveRefPts>& rfPts) { mEventsPoints = rfPts;};
-    void setDataPoints(const QVector<CurveRefPts>& rfPts) { mDataPoints = rfPts;};
+    inline void setEventsPoints(const QVector<CurveRefPts>& rfPts) { mEventsPoints = rfPts;};
+    inline void setDataPoints(const QVector<CurveRefPts>& rfPts) { mDataPoints = rfPts;};
     
     void generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList, const Model *model = nullptr);
-    void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, const QVector<variable_t>& showVariableList, const double Ymin = 0, const double Ymax = 1.);
+    void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, const QVector<variable_t>& showVariableList, const Scale scale);
 
 protected:
     void paintEvent(QPaintEvent* e);

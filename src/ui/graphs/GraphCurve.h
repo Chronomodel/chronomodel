@@ -77,7 +77,7 @@ public:
     enum CurveType
     {
         eHisto,
-        eQMapData,
+        eDensityData,
         eQVectorData,
         eHorizontalLine,
         eVerticalLine,
@@ -85,8 +85,9 @@ public:
         eTopLineSections,
         eVerticalQMap,
         eRefPoints,
-        eCurveMap,
-        eShapeData
+        eMapData,
+        eShapeData,
+        eFunctionData
 
     };
 
@@ -123,10 +124,11 @@ public :
     inline bool isTopLineSections() const {return mType == eTopLineSections;}
     inline bool isVertical() const {return mType == eVerticalQMap;}
 
-    inline bool isSingleCurve() const {return mType == eQMapData;}
+    inline bool isDensityCurve() const {return mType == eDensityData;}
     inline bool isRefPoints() const {return mType == eRefPoints;}
-    inline bool isCurveMap() const {return mType == eCurveMap;}
-    inline bool isShapeData() const {return mType == eShapeData;}
+    inline bool isCurveMap() const {return mType == eMapData;}
+    inline bool isShape() const {return mType == eShapeData;}
+    inline bool isFunction() const {return mType == eFunctionData;}
 
     void setBrush(const QBrush& brush)  { mBrush = brush;}
     void setPenStyle(const Qt::PenStyle& penStyle)  { mPen.setStyle(penStyle);}
@@ -139,7 +141,7 @@ GraphCurve densityCurve(const QMap<double, double> data,
                                 const Qt::PenStyle penStyle = Qt::SolidLine,
                                 const QBrush& brush = Qt::NoBrush) ;
 
-GraphCurve GCurve(const QMap<double, double> data,
+GraphCurve FunctionCurve(const QMap<double, double> data,
                                 const QString& name,
                                 const QColor& lineColor,
                                 const Qt::PenStyle penStyle = Qt::SolidLine,

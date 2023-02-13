@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -56,9 +56,10 @@ struct Scale
     int tip ; // Minor Interval count
 
     Scale():min(0), max(1000), mark(100), tip(4){}
-    explicit Scale(double n, double x, double m, int t ) : min(n), max(x), mark(m), tip (t) {}
+    explicit Scale(double a, double b, double m, int t=4 ) : min(a), max(b), mark(m), tip (t) {}
 
-    void findOptimal(const double &a, const double &b, const int &nOptimal);
+    void findOptimal(const double a, const double b, const int nOptimal);
+    void findOptimalMark(const double a, const double b, const int nOptimal);
 };
 
 /**

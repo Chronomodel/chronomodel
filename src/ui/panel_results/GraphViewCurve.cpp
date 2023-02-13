@@ -39,11 +39,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "GraphViewCurve.h"
 
+#include "Bound.h"
 #include "GraphView.h"
 #include "ModelCurve.h"
 #include "Painting.h"
 #include "DateUtils.h"
 #include "ModelUtilities.h"
+#include "StdUtilities.h"
 
 #include <QtWidgets>
 
@@ -52,6 +54,8 @@ GraphViewCurve::GraphViewCurve(QWidget *parent):GraphViewResults(parent)
 {
     setMainColor(Painting::borderDark);
     mGraph->setBackgroundColor(QColor(210, 210, 210));
+    mGraph->autoAdjustYScale(false);
+    mGraph->setYAxisMode(GraphView::eAllTicks);
 }
 
 GraphViewCurve::~GraphViewCurve()
@@ -92,7 +96,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
     mGraph->removeAllZones();
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
-    mGraph->setOverArrow(GraphView::eNone);
+    mGraph->setOverArrow(GraphView::eBothOverflow);
     mGraph->setTipXLab("t");
     mGraph->setYAxisMode(GraphView::eAllTicks);
     mGraph->autoAdjustYScale(false);
@@ -114,9 +118,12 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
     const double step = (mComposanteG.mapG.maxX() - mComposanteG.mapG.minX()) / (mComposanteG.mapG._column -1);
     const double tmin = mComposanteG.mapG.minX();
 
+  //  const bool displayY = modelCurve->displayY();
+  //  const bool displayZ = modelCurve->displayZ();
+
     if (mCurrentVariableList.contains(eG)) {
         GraphCurve curveEventsPoints;
-        curveEventsPoints.mName = tr("Events Points");
+        curveEventsPoints.mName = "Events Points";
 
         curveEventsPoints.mPen = QPen(Qt::black, 1, Qt::SolidLine);
         curveEventsPoints.mBrush = Qt::black;
@@ -124,6 +131,9 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
 
         curveEventsPoints.mType = GraphCurve::eRefPoints;
 
+
+
+        // intallation des points de ref
         CurveRefPts ref;
         for (auto& ePts : mEventsPoints) {
             ref.Xmin = DateUtils::convertToAppSettingsFormat(ePts.Xmin);
@@ -138,8 +148,9 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             curveEventsPoints.mRefPoints.push_back(ref);
         }
 
+
         GraphCurve curveDataPoints;
-        curveDataPoints.mName = tr("Data Points");
+        curveDataPoints.mName = "Data Points";
 
         curveDataPoints.mPen = QPen(Qt::black, 1, Qt::SolidLine);
         curveDataPoints.mBrush = Qt::black;
@@ -160,15 +171,15 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             curveDataPoints.mRefPoints.push_back(ref);
 
         }
-
+        // fin installation
 
         GraphCurve curveMap;
-        curveMap.mName = tr("Map");
+        curveMap.mName = "Map";
         curveMap.mPen = QPen(Qt::black, 1, Qt::SolidLine);
         curveMap.mBrush = Qt::NoBrush;
         curveMap.mIsRectFromZero = false;
 
-        curveMap.mType = GraphCurve::eCurveMap;
+        curveMap.mType = GraphCurve::eMapData;
         curveMap.mMap = mComposanteG.mapG;
         const double tminFormated = DateUtils::convertToAppSettingsFormat(mComposanteG.mapG.minX());
         const double tmaxFormated = DateUtils::convertToAppSettingsFormat(mComposanteG.mapG.maxX());
@@ -202,12 +213,12 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         for (unsigned i = 0; i < mComposanteGChains.size(); ++i) {
 
             GraphCurve curveMapChain;
-            curveMapChain.mName = QString("Map Chain ") + QString::number(i);
+            curveMapChain.mName = "Map Chain " + QString::number(i);
             curveMapChain.mPen = QPen(Painting::chainColors[i], 1, Qt::SolidLine);
             curveMapChain.mBrush = Qt::NoBrush;
             curveMapChain.mIsRectFromZero = false;
 
-            curveMapChain.mType = GraphCurve::eCurveMap;
+            curveMapChain.mType = GraphCurve::eMapData;
             curveMapChain.mMap = mComposanteGChains.at(i).mapG;
 
             if (tmaxFormated > tminFormated) {
@@ -260,7 +271,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             }
         }
 
-        const GraphCurve curveG = GCurve(G_Data, "G", QColor(119, 95, 49) ); // This is the name of the columns when exporting the graphs
+        const GraphCurve curveG = FunctionCurve(G_Data, "G", QColor(119, 95, 49) ); // This is the name of the columns when exporting the graphs
         const QColor envColor (119, 95, 49 , 30);
 
         const GraphCurve curveGEnv = shapeCurve(curveGInf_Data, curveGSup_Data, "G Env",
@@ -274,7 +285,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         QColor envColor_i;
         for (int i = 0; i<mComposanteGChains.size(); ++i) {
 
-            const GraphCurve curveG_i = GCurve(curveG_Data_i[i], "G Chain " + QString::number(i),
+            const GraphCurve curveG_i = FunctionCurve(curveG_Data_i[i], "G Chain " + QString::number(i),
                                                Painting::chainColors[i]);
             mGraph->addCurve(curveG_i);
 
@@ -292,6 +303,8 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         // must be put at the end to print the points above
         mGraph->addCurve(curveEventsPoints);
         mGraph->addCurve(curveDataPoints);
+
+        mGraph->setTipYLab("G");
     }
 
     else if (mCurrentVariableList.contains(eGP)) {
@@ -303,7 +316,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         for (size_t idx = 0; idx < mComposanteG.vecG.size() ; ++idx) {
             GP_Data.insert(DateUtils::convertToAppSettingsFormat(idx*step + tmin), mComposanteG.vecGP[idx]);
         }
-        GraphCurve curveGP = GCurve(GP_Data, "G Prime", QColor(119, 95, 49));
+        GraphCurve curveGP = FunctionCurve(GP_Data, "G Prime", QColor(119, 95, 49));
 
         mGraph->addCurve(curveGP);
 
@@ -314,10 +327,13 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             for (size_t idx = 0; idx < mComposanteGChains[i].vecGP.size() ; ++idx) {
                 GP_Data_i.insert( DateUtils::convertToAppSettingsFormat(idx*step + tmin), mComposanteGChains[i].vecGP[idx]);
             }
-            const GraphCurve curveGPChain = GCurve(GP_Data_i, QString("G Prime Chain ") + QString::number(i), Painting::chainColors[i]);
+            const GraphCurve curveGPChain = FunctionCurve(GP_Data_i, QString("G Prime Chain ") + QString::number(i), Painting::chainColors[i]);
             mGraph->addCurve(curveGPChain);
 
         }
+        mGraph->setTipYLab("Rate");
+        mGraph->setYAxisMode(GraphView::eAllTicks);
+        mGraph->autoAdjustYScale(false);
 
 
     } else if (mCurrentVariableList.contains(eGS)) {
@@ -326,7 +342,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         for (size_t idx = 0; idx < mComposanteG.vecGS.size() ; ++idx) {
             GS_Data.insert( DateUtils::convertToAppSettingsFormat(idx*step + tmin), mComposanteG.vecGS.at(idx));
         }
-        const GraphCurve curveGS = GCurve(GS_Data, QString("G Second"), QColor(119, 95, 49));
+        const GraphCurve curveGS = FunctionCurve(GS_Data, QString("G Second"), QColor(119, 95, 49));
         mGraph->addCurve(curveGS);
 
         for (unsigned i = 0; i < mComposanteGChains.size(); ++i) {
@@ -335,16 +351,17 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             for (size_t idx = 0; idx < mComposanteGChains[i].vecGS.size() ; ++idx) {
                 GS_Data_i.insert( DateUtils::convertToAppSettingsFormat(idx*step + tmin), mComposanteGChains[i].vecGS.at(idx));
             }
-            const GraphCurve curveGSChain = GCurve(GS_Data_i, QString("G Second Chain ") + QString::number(i), Painting::chainColors[i]);
+            const GraphCurve curveGSChain = FunctionCurve(GS_Data_i, QString("G Second Chain ") + QString::number(i), Painting::chainColors[i]);
             mGraph->addCurve(curveGSChain);
 
         }
+        mGraph->setTipYLab("Acc.");
 
     }
 
     /* ------------------------------------------------------------
-    *   Add zones outside study period
-    * ------------------------------------------------------------*/
+     *   Add zones outside study period
+     * ------------------------------------------------------------*/
 
     const GraphZone zoneMin (-INFINITY, mSettings.getTminFormated());
     mGraph->addZone(zoneMin);
@@ -353,15 +370,15 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
     mGraph->addZone(zoneMax);
 
     mGraph->setTipXLab(tr("t"));
-    mGraph->setTipYLab("Y");
 
 }
 
-void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, const QVector<variable_t>& showVariableList, const double Ymin, const double Ymax)
+void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, const QVector<variable_t>& showVariableList, const Scale scale)
 {
     // From GraphViewResults::updateCurvesToShow
     mShowAllChains = showAllChains;
     mShowChainList = showChainList;
+    mShowVariableList = showVariableList;
     
     const bool showG = showVariableList.contains(eG);
     const bool showGError = showVariableList.contains(eGError);
@@ -371,11 +388,12 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
     const bool showGP = showVariableList.contains(eGP);
     const bool showGS = showVariableList.contains(eGS);
 
-    if (!mGraph->autoAdjustY()) {
-        mGraph->setRangeY(Ymin, Ymax);
-qDebug()<<Ymin<<Ymax;
-        //mGraph->setRangeY(-1000, 1000);
+     if (!mGraph->autoAdjustY()) {
+        mGraph->setRangeY(scale.min, scale.max);
+        mGraph->setYScaleDivision(scale);
+        qDebug()<<"[GraphViewCurve::updateCurvesToShowForG] scale.mark="<< scale.mark;
     }
+
     mGraph->setCurveVisible("Map", mShowAllChains && showMap);
 
     mGraph->setCurveVisible("G", mShowAllChains && showG); 

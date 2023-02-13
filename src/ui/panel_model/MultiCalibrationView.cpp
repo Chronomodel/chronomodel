@@ -48,6 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphViewResults.h"
 #include "CurveSettings.h"
 #include "PluginAbstract.h"
+#include "AppSettings.h"
 
 #include <QPainter>
 #include <QJsonArray>
@@ -556,7 +557,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                     hpdCurve.mName = "Calibration HPD";
                     hpdCurve.mPen = brushColor;
                     hpdCurve.mBrush = brushColor;
-                    hpdCurve.mType = GraphCurve::CurveType::eQMapData;
+                    //hpdCurve.mType = GraphCurve::CurveType::eDensityData; //it's default
 
                     hpdCurve.mIsRectFromZero = true;
                     hpdCurve.mData = hpd;
