@@ -48,7 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 PluginUniformRefView::PluginUniformRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
-    mMeasureColor = QColor(56, 120, 50);
+    mMeasureColor = QColor(98, 113, 123, 240);
     mGraph = new GraphView(this);
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eAllTicks);

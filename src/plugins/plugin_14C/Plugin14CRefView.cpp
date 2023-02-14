@@ -49,7 +49,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 Plugin14CRefView::Plugin14CRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
-    mMeasureColor = QColor(56, 120, 50);//QColor(Qt::black);
+    mMeasureColor = QColor(98, 113, 123, 240);//QColor(Qt::black);
     mGraph = new GraphView(this);
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eAllTicks);
