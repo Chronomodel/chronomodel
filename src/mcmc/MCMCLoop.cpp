@@ -139,7 +139,7 @@ void MCMCLoop::run()
      mProject->mModel->mLogInit += line(tr("List of used chain seeds (to be copied for re-use in MCMC Settings) : ") + seeds.join(";"));
 
 
-     // copie la liste des pointeurs, pour garder l'ordre initiale ders Events;
+     // copie la liste des pointeurs, pour garder l'ordre initiale des Events;
      // le mécanisme d'initialisation pour les courbes modifie cette liste, hors il faut la réablir pour les chaines suivantes
      std::vector<Event*> initListEvents (mProject->mModel->mEvents.size());
      std::copy(mProject->mModel->mEvents.begin(), mProject->mModel->mEvents.end(), initListEvents.begin() );
@@ -147,23 +147,22 @@ void MCMCLoop::run()
     unsigned estimatedTotalIter = mChains.size() *(mChains.at(0).mIterPerBurn + mChains.at(0).mIterPerBatch*mChains.at(0).mMaxBatchs + mChains.at(0).mIterPerAquisition);
     unsigned iterDone = 0;
     for (mChainIndex = 0; mChainIndex < mChains.size(); ++mChainIndex) {
-        if (mChainIndex > 0) {
+      /*  if (mChainIndex > 0) {
             // rétablissement de l'ordre des Events, indispensable en cas de calcul de courbe. Car le update modifie l'ordre des events
             std::copy(initListEvents.begin(), initListEvents.end(), mProject->mModel->mEvents.begin() );
         }
-
+      */
         log += "<hr>";
 
         ChainSpecs& chain = mChains[mChainIndex];
         Generator::initGenerator(chain.mSeed);
 
-        //----------------------- Initialising --------------------------------------
+        //----------------------- Initialization --------------------------------------
 
         if (isInterruptionRequested()) {
             mAbortedReason = ABORTED_BY_USER;
             return;
         }
-
 
         emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))  + " : " + tr("Initialising MCMC"), 0, 0);
 
@@ -183,6 +182,7 @@ void MCMCLoop::run()
         mProject->mModel->mLogInit += line("Seed : " + QString::number(chain.mSeed));
 
         mProject->mModel->mLogInit += ModelUtilities:: modelStateDescriptionHTML(static_cast<ModelCurve*>(mProject->mModel) );
+        /*
 // Save mLogInit for debug
 #ifdef DEBUG
         mProject->mModel->mChains[mChainIndex].mInitElapsedTime = mChains[mChainIndex].mInitElapsedTime;// only to take the time
@@ -205,7 +205,8 @@ void MCMCLoop::run()
         }
         file.close();
 #endif
-        //----------------------- Burn-in --------------------------------------
+*/
+        //----------------------- Burnin --------------------------------------
 
         emit stepChanged(tr("Chain : %1 / %2").arg(QString::number(mChainIndex + 1), QString::number(mChains.size()))  + " : " + tr("Burn-in"), 0, chain.mIterPerBurn);
         mState = eBurning;
@@ -241,7 +242,7 @@ void MCMCLoop::run()
         chain.burnElapsedTime = burningTime.elapsed();
         burningTime.~QElapsedTimer();
 
-        //----------------------- Adapting --------------------------------------
+        //----------------------- Adaptation --------------------------------------
 
         emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))  + " : " + tr("Adapting"), 0, chain.mMaxBatchs * chain.mIterPerBatch);
         mState = eAdapting;
@@ -381,7 +382,8 @@ void MCMCLoop::run()
         aquisitionTime.~QElapsedTimer();
         mProject->mModel->mLogResults += line(tr("Acquisition time elapsed %1").arg(DHMS(chain.mAcquisitionElapsedTime)));
 
-
+        // rétablissement de l'ordre des Events, indispensable en cas de calcul de courbe. Car le update modifie l'ordre des events et utile pour la sauvegarde de ChronoModel_Bash
+        std::copy(initListEvents.begin(), initListEvents.end(), mProject->mModel->mEvents.begin() );
     }
 
     mProject->mModel->mChains = mChains;

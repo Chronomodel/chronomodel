@@ -43,6 +43,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CurveUtilities.h"
 #include "fftw3.h"
 
+#include "QtCore/qlogging.h"
+#include "QtCore/qstring.h"
+
 #include <QtWidgets>
 #include <iostream>
 #include <cmath>
@@ -103,7 +106,7 @@ int main(int argc, char *argv[])
 
     a.setApplicationName("ChronoModel"); // Must be ChronoModel to find the calibration curves
     a.setApplicationDisplayName("ChronoModel_bash");
-    a.setApplicationVersion("3.2.1");//VERSION_NUMBER);  // must match value in Chronomodel.pro
+    a.setApplicationVersion("3.2.2");//VERSION_NUMBER);  // must match value in Chronomodel.pro
     //a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel_bash.icns"));

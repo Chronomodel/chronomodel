@@ -2193,7 +2193,7 @@ void Model::saveToFile(QDataStream *out)
         *out << quint32 (ch.mTotalIter);
     }
     // -----------------------------------------------------
-    //  Write phases data
+    //  Writing phase data
     // -----------------------------------------------------
     for (Phase*& phase : mPhases) {
         *out << phase->mAlpha;
@@ -2202,13 +2202,13 @@ void Model::saveToFile(QDataStream *out)
         *out << phase->mDuration;
     }
     // -----------------------------------------------------
-    //  Write events data
-    // -----------------------------------------------------
+    //  Writing event data
+    // -----------------------------------------------------for (const auto& e:mEvents)
     for (Event*& event : mEvents)
         *out << event->mTheta;
 
     // -----------------------------------------------------
-    //  Write dates data
+    //  Writing date data
     // -----------------------------------------------------
     for (Event*& event : mEvents) {
         if (event->mType == Event::eDefault ) {
@@ -2291,7 +2291,7 @@ void Model::restoreFromFile(QDataStream *in)
     *in >> QDataStreamVersion;
     in->setVersion(QDataStreamVersion);
 
-    if (in->version()!= QDataStream::Qt_6_1)
+    if (in->version()!= QDataStream::Qt_6_4)
             return;
 
     QString appliVersion;
@@ -2338,7 +2338,7 @@ void Model::restoreFromFile(QDataStream *in)
         //  Read phases data
         // -----------------------------------------------------
 
-        for (const auto& p : mPhases) {
+        for (Phase* &p : mPhases) {
                *in >> p->mAlpha;
                *in >> p->mBeta;
                *in >> p->mTau;
@@ -2348,14 +2348,14 @@ void Model::restoreFromFile(QDataStream *in)
         //  Read events data
         // -----------------------------------------------------
 
-        for (const auto& e:mEvents)
+        for (Event* &e : mEvents)
             *in >> e->mTheta;
 
         // -----------------------------------------------------
         //  Read dates data
         // -----------------------------------------------------
 
-        for (const auto& event : mEvents) {
+        for (Event*& event : mEvents) {
             if (event->mType == Event::eDefault )
                  for (auto&& d : event->mDates) {
                     *in >> d.mTi;
@@ -2404,8 +2404,6 @@ void Model::restoreFromFile(QDataStream *in)
 
                      if (d.mWiggleCalibration == nullptr || d.mWiggleCalibration->mCurve.isEmpty()) {
                          qDebug()<<"[Model::restoreFromFile] mWiggleCalibration vide";
-                         qDebug()<<"[Model::restoreFromFile] mWiggleCalibration vide";
-                         qDebug()<<"[Model::restoreFromFile] mWiggleCalibration vide";
 
                      } else {
                          d.mWiggleCalibration = & (mProject->mCalibCurves[toFind]);
@@ -2418,7 +2416,7 @@ void Model::restoreFromFile(QDataStream *in)
         *in >> mLogAdapt;
         *in >> mLogResults;
 
-        //generateCorrelations(mChains);
+        generateCorrelations(mChains);
        // generatePosteriorDensities(mChains, 1024, 1);
        // generateNumericalResults(mChains);
 

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef MAINWINDOW_BASH_H
 #define MAINWINDOW_BASH_H
 
+#include "Project.h"
 #include "Singleton.h"
 
 #include <QMainWindow>
@@ -113,7 +114,7 @@ public slots:
     void openWebsite();
     void showHelp(bool);
     void setLanguage(QAction* action);
-    void mcmcFinished(Model*) {};
+    void mcmcFinished(Model* model) { mProject->mModel = model; };
     void noResult() {};
  //   void updateProject();
     void toggleCurve(bool checked);
