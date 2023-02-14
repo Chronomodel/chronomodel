@@ -1469,8 +1469,22 @@ QString ModelUtilities::curveResultsHTML(const ModelCurve* model)
     //text += "<br>";
     text += line(textGreen(QObject::tr(" - Number of Ref. points = %1").arg(model->mEvents.size())));
 
-    text += line(textGreen(QObject::tr("- Mean of the log10 of Lambda Spline = %1").arg(stringForLocal(model->mLambdaSpline.mResults.funcAnalysis.mean))));
-    text += line(textGreen(QObject::tr("- Mean of the sqrt of S02 Vg = %1").arg(stringForLocal(model->mS02Vg.mResults.funcAnalysis.mean))));
+    if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe  && model->mCurveSettings.mLambdaSplineType != CurveSettings::eInterpolation) {
+        text += line(textGreen(QObject::tr("Lambda Spline; Fixed value = %1").arg(QString::number(pow(10, model->mLambdaSpline.mRawTrace->at(0))))));
+
+    } else if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe && model->mCurveSettings.mLambdaSplineType == CurveSettings::eInterpolation) {
+        text += line(textGreen(QObject::tr("- Lambda Spline; Interpolation Fixed value = %1").arg(QString::number(0))));
+
+    }else {
+        text += line(textGreen(QObject::tr("- Mean of the log10 of Lambda Spline = %1").arg(stringForLocal(model->mLambdaSpline.mResults.funcAnalysis.mean))));
+    }
+
+    if (model->mS02Vg.mSamplerProposal == MHVariable::eFixe) {
+        text += line(textGreen(QObject::tr("- S02 Vg; Fixed value = %1").arg(QString::number(pow( model->mS02Vg.mRawTrace->at(0), 2.)))));
+
+    } else {
+        text += line(textGreen(QObject::tr("- Mean of the sqrt of S02 Vg = %1").arg(stringForLocal(model->mS02Vg.mResults.funcAnalysis.mean))));
+    }
 
     if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth) {
          text += "<br>" + line( textBold(textGreen(QObject::tr("Positive curves accepted with Threshold : %1").arg(stringForLocal(model->mCurveSettings.mThreshold)))));
