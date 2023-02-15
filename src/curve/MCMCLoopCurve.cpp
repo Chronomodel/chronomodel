@@ -2579,13 +2579,6 @@ void MCMCLoopCurve::finalize()
 
     emit setMessage(tr("Computing posterior distributions and numerical results - Densities and curves"));
     mModel->initDensities();
-    // mModel->generatePosteriorDensities(mChains, 1024, 1);
-
-    // Generate numerical results of :
-    // - MHVariables (global acceptation)
-    // - MetropolisVariable : analysis of Posterior densities and quartiles from traces.
-    // This also should be done in results view...
-    // mModel->generateNumericalResults(mChains);
 
     // ----------------------------------------
     // Curve specific :

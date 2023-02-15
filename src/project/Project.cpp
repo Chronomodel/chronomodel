@@ -3264,7 +3264,6 @@ void Project::runCurve()
     clearModel();
     mModel = new ModelCurve(mState);
     mModel->setProject (this);
-    //mModel->fromJson (mState);
     
     // ------------------------------------------------------------------------------------------
     //  Check if the model is valid

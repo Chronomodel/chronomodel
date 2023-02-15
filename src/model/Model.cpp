@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "Model.h"
+
 #include "CalibrationCurve.h"
 #include "Date.h"
 #include "Project.h"
@@ -2203,7 +2204,7 @@ void Model::saveToFile(QDataStream *out)
     }
     // -----------------------------------------------------
     //  Writing event data
-    // -----------------------------------------------------for (const auto& e:mEvents)
+    // -----------------------------------------------------
     for (Event*& event : mEvents)
         *out << event->mTheta;
 

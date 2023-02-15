@@ -60,7 +60,7 @@ ModelCurve::ModelCurve(QObject *parent):Model(parent)
     mLambdaSpline.mFormat = DateUtils::eNumeric;
     mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
-    mS02Vg.mSupport = MetropolisVariable::eR;
+    mS02Vg.mSupport = MetropolisVariable::eRp;
     mS02Vg.mFormat = DateUtils::eNumeric;
     mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 }
@@ -71,7 +71,7 @@ ModelCurve::ModelCurve(const QJsonObject& json, QObject *parent):Model(json, par
     mLambdaSpline.mFormat = DateUtils::eNumeric;
     mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
-    mS02Vg.mSupport = MetropolisVariable::eR;
+    mS02Vg.mSupport = MetropolisVariable::eRp;
     mS02Vg.mFormat = DateUtils::eNumeric;
     mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
@@ -548,20 +548,11 @@ void ModelCurve::generatePosteriorDensities(const QList<ChainSpecs> &chains, int
     Model::generatePosteriorDensities(chains, fftLen, bandwidth);
 
     for (Event* &event : mEvents) {
-        //event->mVg.setFormat(DateUtils::eNumeric);
-        // event->mVg.updateFormatedTrace();
-        //event->mVg.updateFormatedCredibility();
         event->mVg.generateHistos(chains, fftLen, bandwidth);
     }
 
-    //mLambdaSpline.setFormat(DateUtils::eNumeric);
-    //mLambdaSpline.updateFormatedTrace();
-    //mLambdaSpline.updateFormatedCredibility();
     mLambdaSpline.generateHistos(chains, fftLen, bandwidth);
 
-    //mS02Vg.setFormat(DateUtils::eNumeric);
-    //mS02Vg.updateFormatedTrace();
-    //mS02Vg.updateFormatedCredibility();
     mS02Vg.generateHistos(chains, fftLen, bandwidth);
 }
 
