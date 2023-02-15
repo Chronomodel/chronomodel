@@ -55,10 +55,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "fftw3.h"
 
-
 #include <QDebug>
-
-
 
 Date::Date(const Event *event):
     mEvent (event),
@@ -189,7 +186,7 @@ void Date::copyFrom(const Date& date)
     mData = date.mData;
     mOrigin = date.mOrigin;
     mPlugin = date.mPlugin;
-    //mMethod = date.mMethod;
+
     mIsValid = date.mIsValid;
 
     mDeltaType = date.mDeltaType;
@@ -206,7 +203,7 @@ void Date::copyFrom(const Date& date)
     mWiggleCalibration = date.mWiggleCalibration;
 
     mCalibHPD = date.mCalibHPD;
-   // mSettings = date.mSettings;
+    mSettings = date.mSettings;
 
     mSubDates = date.mSubDates;
     mMixingLevel = date.mMixingLevel;
