@@ -44,15 +44,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <qglobal.h>
 #include <QPainterPath>
 
+#define BLANK_SPACE_ON_TOP 5. //Space used to draw the credibility bar
+#define BLANK_SPACE_ON_RIGHT 5.
+
 typedef double type_data;
 
 class GraphViewAbstract:public QWidget
 {
     Q_OBJECT
+
 public:
     GraphViewAbstract();
     virtual ~GraphViewAbstract();
-
 
 #pragma mark Getters
     bool parameterChange() const;

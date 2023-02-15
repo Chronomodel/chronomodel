@@ -1837,32 +1837,32 @@ bool MCMCLoopCurve::adapt(const int batchIndex)
         for (auto& date : event->mDates) {
             //--------------------- Adapt Sigma MH de t_i -----------------------------------------
             if (date.mTi.mSamplerProposal == MHVariable::eMHSymGaussAdapt)
-                noAdapt *= date.mTi.adapt(taux_min, taux_max, delta);
+                noAdapt &= date.mTi.adapt(taux_min, taux_max, delta);
 
             //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
-            noAdapt *= date.mSigmaTi.adapt(taux_min, taux_max, delta);
+            noAdapt &= date.mSigmaTi.adapt(taux_min, taux_max, delta);
 
         }
 
         //--------------------- Adapt Sigma MH de Theta Event -----------------------------------------
         if ((event->mType != Event::eBound) && ( event->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss) )
-            noAdapt *= event->mTheta.adapt(taux_min, taux_max, delta);
+            noAdapt &= event->mTheta.adapt(taux_min, taux_max, delta);
 
 
         //--------------------- Adapt Sigma MH de VG  -----------------------------------------
         if ((event->mType != Event::eBound) && ( event->mVg.mSamplerProposal == MHVariable::eMHAdaptGauss) )
-            noAdapt *= event->mVg.adapt(taux_min, taux_max, delta);
+            noAdapt &= event->mVg.adapt(taux_min, taux_max, delta);
 
 
     }
 
     //--------------------- Adapt Sigma MH de S02 Vg -----------------------------------------
     if (mModel->mS02Vg.mSamplerProposal == MHVariable::eMHAdaptGauss)
-        noAdapt *= mModel->mS02Vg.adapt(taux_min, taux_max, delta);
+        noAdapt &= mModel->mS02Vg.adapt(taux_min, taux_max, delta);
 
     //--------------------- Adapt Sigma MH de Lambda Spline -----------------------------------------
     if (mModel->mLambdaSpline.mSamplerProposal == MHVariable::eMHAdaptGauss)
-        noAdapt *= mModel->mLambdaSpline.adapt(taux_min, taux_max, delta);
+        noAdapt &= mModel->mLambdaSpline.adapt(taux_min, taux_max, delta);
 
     return noAdapt;
 }

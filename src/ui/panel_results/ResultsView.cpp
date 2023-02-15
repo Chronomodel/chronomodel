@@ -1962,7 +1962,11 @@ void ResultsView::createByCurveGraph()
         return;
 
     ModelCurve* model = modelCurve();
-    
+    // ----------------------------------------------------------------------
+    // Show all events unless at least one is selected
+    // ----------------------------------------------------------------------
+    bool showAllEvents = ! mModel->hasSelectedEvents();
+
     // ----------------------------------------------------------------------
     //  Disconnect and delete existing graphs
     // ----------------------------------------------------------------------
@@ -2018,6 +2022,7 @@ void ResultsView::createByCurveGraph()
 
             // Creation des points de ref
             for (const auto& event : modelCurve()->mEvents) {
+                if (event->mIsSelected || showAllEvents) {
                 CurveRefPts evPts;
                 CurveRefPts dPts;
                  double verr;
@@ -2108,7 +2113,7 @@ void ResultsView::createByCurveGraph()
                     hpdPerEvent.push_back(1);
                     dataPerEvent.push_back(1);
                 }
-
+              }
             }
             // Fin de creation des points de ref
          }
@@ -2193,31 +2198,33 @@ void ResultsView::createByCurveGraph()
                 int iDataPts = 0;
                 int iEventPts = -1;
                 for (const auto& event : modelCurve()->mEvents) {
-                    for (int j = 0 ; j< hpdPerEvent[i]; j++) {
-                        iEventPts++;
-                        if ( model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D ||
-                             model->mCurveSettings.mProcessType == CurveSettings::eProcessType2D ) {
-                            eventsPts[iEventPts].Ymin = event->mYDec - 1.96*event->mS_Y;
-                            eventsPts[iEventPts].Ymax = event->mYDec + 1.96*event->mS_Y;
+                    if (event->mIsSelected || showAllEvents) {
+                        for (int j = 0 ; j< hpdPerEvent[i]; j++) {
+                            iEventPts++;
+                            if ( model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D ||
+                                 model->mCurveSettings.mProcessType == CurveSettings::eProcessType2D ) {
+                                eventsPts[iEventPts].Ymin = event->mYDec - 1.96*event->mS_Y;
+                                eventsPts[iEventPts].Ymax = event->mYDec + 1.96*event->mS_Y;
 
-                        } else {
-                            eventsPts[iEventPts].Ymin = event-> mYDec - event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
-                            eventsPts[iEventPts].Ymax = event-> mYDec + event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
+                            } else {
+                                eventsPts[iEventPts].Ymin = event-> mYDec - event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
+                                eventsPts[iEventPts].Ymax = event-> mYDec + event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
+                            }
+
                         }
 
-                    }
-
-                    try {
-                        for (int j = 0 ; j< dataPerEvent[i]; j++) {
-                            dataPts[iDataPts].Ymin = eventsPts.at(iEventPts).Ymin;
-                            dataPts[iDataPts].Ymax = eventsPts.at(iEventPts).Ymax;
-                            iDataPts++;
+                        try {
+                            for (int j = 0 ; j< dataPerEvent[i]; j++) {
+                                dataPts[iDataPts].Ymin = eventsPts.at(iEventPts).Ymin;
+                                dataPts[iDataPts].Ymax = eventsPts.at(iEventPts).Ymax;
+                                iDataPts++;
+                            }
+                        } catch (...) {
+                            qDebug() << "[ResultView::createByCurveGraph] pb graphY";
                         }
-                    } catch (...) {
-                        qDebug() << "[ResultView::createByCurveGraph] pb graphY";
-                    }
 
-                    ++i;
+                        ++i;
+                    }
                 }
                 graphY->setEventsPoints(eventsPts);
                 graphY->setDataPoints(dataPts);
@@ -2283,17 +2290,19 @@ void ResultsView::createByCurveGraph()
                 int iDataPts = 0;
                 int iEventPts = -1;
                 for (const auto& event : modelCurve()->mEvents) {
-                    for (int j = 0 ; j< hpdPerEvent[i]; j++) {
-                        iEventPts++;
-                        eventsPts[iEventPts].Ymin = event->mZField - 1.96*event->mS_ZField;
-                        eventsPts[iEventPts].Ymax = event->mZField + 1.96*event->mS_ZField;
-                     }
-                     for (int j =0 ; j< dataPerEvent[i]; j++) {
-                        dataPts[iDataPts].Ymin = eventsPts.at(iEventPts).Ymin;
-                        dataPts[iDataPts].Ymax = eventsPts.at(iEventPts).Ymax;
-                        iDataPts++;
+                    if (event->mIsSelected || showAllEvents) {
+                        for (int j = 0 ; j< hpdPerEvent[i]; j++) {
+                            iEventPts++;
+                            eventsPts[iEventPts].Ymin = event->mZField - 1.96*event->mS_ZField;
+                            eventsPts[iEventPts].Ymax = event->mZField + 1.96*event->mS_ZField;
+                        }
+                        for (int j =0 ; j< dataPerEvent[i]; j++) {
+                            dataPts[iDataPts].Ymin = eventsPts.at(iEventPts).Ymin;
+                            dataPts[iDataPts].Ymax = eventsPts.at(iEventPts).Ymax;
+                            iDataPts++;
+                        }
+                        ++i;
                     }
-                    ++i;
                 }
                 graphZ->setEventsPoints(eventsPts);
                 graphZ->setDataPoints(dataPts);

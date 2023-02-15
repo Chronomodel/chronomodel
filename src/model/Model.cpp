@@ -1540,14 +1540,13 @@ void Model::generateHPD(const double thresh)
                 date.mSigmaTi.generateHPD(thresh);
             }
         }
-    };
+    }
 
     for (const auto& ph : mPhases) {
         ph->mAlpha.generateHPD(thresh);
         ph->mBeta.generateHPD(thresh);
         ph->mDuration.generateHPD(thresh);
-
-    };
+    }
 
 
 #ifdef DEBUG
@@ -1569,12 +1568,6 @@ void Model::generateTempo(size_t gridLength)
     tClock.start();
 #endif
 
-/*    int tempoToDo = 0;
-    for (const auto& phase : mPhases) {
-      if (phase->mRawTempo.isEmpty() || gridLength != mFFTLength)
-            ++tempoToDo;
-    }
-*/
     for (const auto& phase : mPhases) {
         const int n = phase->mEvents.size();
 
@@ -1593,10 +1586,7 @@ void Model::generateTempo(size_t gridLength)
         phase->mValueStack["t_min"] = TValueStack("t_min", t_min_data);
         phase->mValueStack["t_max"] = TValueStack("t_max", t_max_data);
 
-
         const double nr = concaAllTrace.size();
-
-
 
 #ifdef DEBUG
         if (t_max_data > mSettings.mTmax) {

@@ -135,8 +135,9 @@ public:
     static double randomUniform(const double &min = 0., const double &max = 1.) ;
     static int randomUniformInt(const int& min = 0, const int& max = 1);
 
-    static double gaussByDoubleExp(const double mean, const double sigma, const double min, const double max) ;
-    static double gaussByBoxMuller(const double &mean, const double &sigma) ;
+    static double gaussByDoubleExp (const double mean, const double sigma, const double min, const double max) ;
+    static double gaussByBoxMuller (const double mean, const double sigma);
+    static double shrinkage (const double variance, const double shrinkage); // à controler
 
     static double xorshift64star(void);
     static uint64_t xorshift64starSeed;

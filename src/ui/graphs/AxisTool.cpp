@@ -45,7 +45,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 #include <iostream>
 
-
 AxisTool::AxisTool():
 mIsHorizontal(true),
 mShowSubs(true),
@@ -67,14 +66,13 @@ mAxisColor(0, 0, 0)
  */
 qreal AxisTool::getXForValue(const qreal &value)
 {
-    const qreal rigthBlank = 5.; // the same name and the same value as AxisTool::updateValues()
-    return valueForProportion(value, qreal (mStartVal), qreal (mEndVal), 0., std::max(0., mTotalPix - rigthBlank), true);
+    return valueForProportion(value, qreal (mStartVal), qreal (mEndVal), 0., std::max(0., mTotalPix - BLANK_SPACE_ON_RIGHT), true);
 }
 
-#define TOPBLANK 1
+
 qreal AxisTool::getYForValue(const qreal &value)
 {
-    return valueForProportion(value, mStartVal, mEndVal, 0., std::max(0., qreal(mTotalPix - TOPBLANK)), true);
+    return valueForProportion(value, mStartVal, mEndVal, 0., std::max(0., qreal(mTotalPix - BLANK_SPACE_ON_TOP)), true);
 }
 
 void AxisTool::updateValues(const int &totalPix, const int &minDeltaPix, const qreal &minVal, const qreal &maxVal)
@@ -271,7 +269,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
             qreal y = yov;
             p.drawLine(QLineF(xov, y, xov - graduationSize, y));
 
-            y = yov - r.height() + TOPBLANK;
+            y = yov - r.height() + BLANK_SPACE_ON_TOP;
             p.drawLine(QLineF(xov, y, xov - graduationSize, y));
         }
 

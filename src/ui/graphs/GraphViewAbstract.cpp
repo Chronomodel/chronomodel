@@ -150,28 +150,26 @@ bool GraphViewAbstract::parameterChange() const
  * @param aConstainResult
  * @return
  */
-qreal GraphViewAbstract:: getXForValue(const type_data value, const bool constainResult) const
+qreal GraphViewAbstract::getXForValue(const type_data value, const bool constainResult) const
 {
-    const qreal rigthBlank (5.); // the same name and the same value as AxisTool::updateValues()
-    return mMarginLeft + valueForProportion(value, mCurrentMinX, mCurrentMaxX, 0., std::max(0.,  mGraphWidth - rigthBlank) , constainResult);
+    return mMarginLeft + valueForProportion(value, mCurrentMinX, mCurrentMaxX, 0., std::max(0.,  mGraphWidth - BLANK_SPACE_ON_RIGHT) , constainResult);
 }
 
 type_data GraphViewAbstract::getValueForX(const qreal x, const bool constainResult) const
 {
-    const qreal rigthBlank (5.); // the same name and the same value as AxisTool::updateValues() if AxisTool::mIsHorizontal
     const qreal xFromSide (x - mMarginLeft);
-    return valueForProportion(type_data(xFromSide), 0., std::max(0.,  mGraphWidth - rigthBlank), mCurrentMinX, mCurrentMaxX, constainResult);
+    return valueForProportion(type_data(xFromSide), 0., std::max(0.,  mGraphWidth - BLANK_SPACE_ON_RIGHT), mCurrentMinX, mCurrentMaxX, constainResult);
 }
 
-#define TOPBLANK 1
+
 qreal GraphViewAbstract::getYForValue(const type_data aValue, const bool constainResult) const
 {
-    const type_data yFromBase = valueForProportion(aValue, mMinY, mMaxY, 0., std::max(0., type_data (mGraphHeight) - TOPBLANK), constainResult);
+    const type_data yFromBase = valueForProportion(aValue, mMinY, mMaxY, 0., std::max(0., type_data (mGraphHeight) - BLANK_SPACE_ON_TOP), constainResult);
     return mGraphHeight + mMarginTop - qreal(yFromBase) ;
 }
 
 type_data GraphViewAbstract::getValueForY(const qreal y, const bool constainResult) const
 {
     const qreal yFromBase = mMarginTop + mGraphHeight - y;
-    return valueForProportion( type_data (yFromBase), 0., std::max(0., type_data (mGraphHeight) - TOPBLANK), mMinY, mMaxY, constainResult);
+    return valueForProportion( type_data (yFromBase), 0., std::max(0., type_data (mGraphHeight) - BLANK_SPACE_ON_TOP), mMinY, mMaxY, constainResult);
 }

@@ -167,6 +167,7 @@ bool MHVariable::adapt (const double coef_min, const double coef_max, const doub
         noAdapted = false;
         const double sign = (acceptRate <= coef_min) ? -1. : 1.;
         mSigmaMH *= pow(10., sign * delta);
+        //qDebug()<<"[MHVariable::adapt] "<<this->getName();
     }
     return noAdapted;
 }

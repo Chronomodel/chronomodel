@@ -233,9 +233,16 @@ double Generator::boxMuller()
     //checkFloatingPointException("boxMuller");
 }
 
-double Generator::gaussByBoxMuller(const double& mean, const double& sigma)
+double Generator::gaussByBoxMuller(const double mean, const double sigma)
 {
     return mean + boxMuller() * sigma;
+}
+
+double Generator::shrinkage(const double variance, const double shrinkage)// à controler
+{
+   double x = std::sqrt(shrinkage) * boxMuller() + std::sqrt(1 - shrinkage) * boxMuller();
+
+    return x * std::sqrt(variance);
 }
 
 /** https://en.wikipedia.org/wiki/Xorshift

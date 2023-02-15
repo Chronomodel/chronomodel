@@ -861,6 +861,8 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
                 break;
             case CurveSettings::eVariableTypeDepth :
                  log += line(textGreen( QObject::tr("Depth")));
+                 log += line(textGreen(QObject::tr(" - Minimal Rate : %1").arg(stringForLocal(model->mCurveSettings.mThreshold))));
+
                 break;
             case CurveSettings::eVariableTypeOther :
                  log += line(textGreen( QObject::tr("Any Measurement")));
@@ -986,8 +988,6 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
 
             if (model->mCurveSettings.mProcessType != CurveSettings::eProcessTypeNone) {
                 if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie) {
-                    if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth)
-                        HTMLText += line(textGreen(QObject::tr(" - Depth thresHold : %1").arg(stringForLocal(model->mCurveSettings.mThreshold))));
 
                     HTMLText += line(textGreen(QObject::tr(" - G : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
 
@@ -1128,9 +1128,6 @@ QString ModelUtilities::modelStateDescriptionText(const ModelCurve *model, QStri
             }
 
             if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie) {
-                if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth)
-                    text += QObject::tr(" - Depth thresHold : %1").arg(stringForLocal(model->mCurveSettings.mThreshold));
-
                 text += QObject::tr(" - G : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)));
 
             } else {

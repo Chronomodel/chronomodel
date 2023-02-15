@@ -65,7 +65,10 @@ Date::Date(const Event *event):
     mColor = Qt::blue;
     mOrigin = eSingleDate;
     mPlugin = nullptr;
+    mTi.setName("Ti of Date : " + mName);
     mTi.mSupport = MetropolisVariable::eR;
+
+    mSigmaTi.setName("SigmaTi of Date : " + mName);
     mSigmaTi.mSupport = MetropolisVariable::eRp;
     mWiggle.mSupport = MetropolisVariable::eR;
 
@@ -119,9 +122,12 @@ void Date::init()
     mColor = Qt::blue;
     mOrigin = eSingleDate;
     mPlugin = nullptr;
+
+    mTi.setName("Ti of Date : " + mName);
     mTi.mSupport = MetropolisVariable::eR;
     mTi.mSamplerProposal = MHVariable::eMHSymetric;
 
+    mSigmaTi.setName("SigmaTi of Date : " + mName);
     mSigmaTi.mSupport = MetropolisVariable::eRp;
     mWiggle.mSupport = MetropolisVariable::eR;
 
@@ -167,20 +173,23 @@ void Date::copyFrom(const Date& date)
 {
     mEvent = date.mEvent;
     mTi = date.mTi;
-    mTi.mSupport = date.mTi.mSupport;
-    mTi.mSamplerProposal = date.mTi.mSamplerProposal;
-
-    mSigmaTi = date.mSigmaTi;
-    mSigmaTi.mSupport = date.mSigmaTi.mSupport;
-    mSigmaTi.mSamplerProposal = date.mSigmaTi.mSamplerProposal;
-    mWiggle = date.mWiggle;
-    mDelta = date.mDelta;
 
     mId = date.mId;
     mUUID = date.mUUID;
 
     mName = date.mName;
     mColor = date.mColor;
+
+    mTi.setName("Ti of Date : " + date.mName);
+    mTi.mSupport = date.mTi.mSupport;
+    mTi.mSamplerProposal = date.mTi.mSamplerProposal;
+
+    mSigmaTi = date.mSigmaTi;
+    mSigmaTi.setName("SigmaTi of Date : " + date.mName);
+    mSigmaTi.mSupport = date.mSigmaTi.mSupport;
+    mSigmaTi.mSamplerProposal = date.mSigmaTi.mSamplerProposal;
+    mWiggle = date.mWiggle;
+    mDelta = date.mDelta;
 
     mData = date.mData;
     mOrigin = date.mOrigin;
@@ -1506,7 +1515,7 @@ void Date::updateSigmaShrinkage(Event* &event)
 
     const double V1 = mSigmaTi.mX * mSigmaTi.mX;
     const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigmaTi.mSigmaMH);
-    const double V2 = pow(10, logV2);
+    double V2 = pow(10, logV2);
 
     double rapport  = -1.;
     if (logV2 >= logVMin && logV2 <= logVMax) {
@@ -1522,6 +1531,25 @@ void Date::updateSigmaShrinkage(Event* &event)
  #endif
 
     mSigmaTi.tryUpdate(sqrt(V2), rapport);
+
+/*
+    const double V1 = mSigmaTi.mX * mSigmaTi.mX;
+    //double z = distribution(generator);
+    //std::normal_distribution<double> distribution(0.0, 1.0);
+    const double z1 = Generator::gaussByBoxMuller(0., 1.);
+    const double z2 = Generator::gaussByBoxMuller(0., 1.);
+    double variance = event->mS02;
+        double shrinkage = 0.5;
+        double x = std::sqrt(shrinkage) * z1 + std::sqrt(1 - shrinkage) * z2;
+
+     double   V2 = pow(x * std::sqrt(variance), 2.);
+
+        const double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
+        const double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1.);
+     double   rapport = x1 * sqrt(V1/V2) * x2;// * V2 / V1 ; // (V2 / V1) est le jacobien!
+
+    mSigmaTi.tryUpdate(sqrt(V2), rapport);
+*/
 }
 
 void Date::updateSigmaReParam(Event* event)

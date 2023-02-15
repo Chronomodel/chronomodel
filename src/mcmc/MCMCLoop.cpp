@@ -285,7 +285,7 @@ void MCMCLoop::run()
 
             emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()) + " : " + "Adapting ; Estimated time left " + DHMS(interTime)));
 
-
+qDebug()<<"[MCMCLoop::run] mBatchIndex -------"<< chain.mBatchIndex<<" ------------";
             if (adapt(chain.mBatchIndex))
                     break;
 
@@ -301,7 +301,7 @@ void MCMCLoop::run()
         mProject->mModel->mLogAdapt += "<hr>";
         mProject->mModel->mLogAdapt += line(textBold(tr("ADAPTATION FOR CHAIN %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))) );
 
-        if (chain.mBatchIndex * chain.mIterPerBatch < chain.mMaxBatchs * chain.mIterPerBatch) {
+        if (chain.mBatchIndex < chain.mMaxBatchs) {
             mProject->mModel->mLogAdapt += line("Adapt OK at batch : " + QString::number(chain.mBatchIndex) + "/" + QString::number(chain.mMaxBatchs));
 
         } else {
