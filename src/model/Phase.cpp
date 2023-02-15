@@ -106,9 +106,20 @@ Phase::Phase (const QJsonObject& json, const Model* model):
    mItemY = json.value(STATE_ITEM_Y).toDouble();
 
    mAlpha.setName("Begin of Phase : " + mName);
+   mAlpha.mSupport = MetropolisVariable::eBounded;
+   mAlpha.mFormat = DateUtils::eUnknown;
+
    mBeta.setName("End of Phase : " + mName);
+   mBeta.mSupport = MetropolisVariable::eBounded;
+   mBeta.mFormat = DateUtils::eUnknown;
+
    // mTau.setName("Tau of Phase : " + p.mName);
+   mTau.mSupport = MetropolisVariable::eRp;
+   mTau.mFormat = DateUtils::eNumeric;
+
    mDuration.setName("Duration of Phase : " + mName);
+   mDuration.mSupport = MetropolisVariable::eRp;
+   mDuration.mFormat = DateUtils::eNumeric;
 
    mValueStack["Activity_TimeRange_Level"] = TValueStack("Activity_TimeRange_Level", 0.);
    mValueStack["Activity_TimeRange_min"] = TValueStack("Activity_TimeRange_min", 0);

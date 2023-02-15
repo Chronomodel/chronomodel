@@ -125,6 +125,10 @@ Event::Event (const QJsonObject& json, const Model *model):
     mTheta.setName("Theta of Event : " + mName);
 
     mVg.setName("VG of Event : " + mName);
+    mVg.mSupport = MetropolisVariable::eRp;
+    mVg.mFormat = DateUtils::eNumeric;
+    mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
     mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
 
     mPointType = PointType (json.value(STATE_EVENT_POINT_TYPE).toInt());
@@ -137,20 +141,14 @@ Event::Event (const QJsonObject& json, const Model *model):
     mS_ZField = json.value(STATE_EVENT_SZ_SF).toDouble();
 
     const QJsonArray dates = json.value(STATE_EVENT_DATES).toArray();
-    Date dat (this);
     for (auto&& date : dates) {
-        dat.fromJson(date.toObject());
+        Date dat (date.toObject(), this);
         dat.autoSetTiSampler(true); // must be after fromJson()
-     /*   if (model != nullptr)
-            dat.mMixingLevel = model->mMCMCSettings.mMixingLevel;
-        else
-            dat.mMixingLevel = 0.9;*/
 
         if (!dat.isNull())
             mDates.append(dat);
         else
             throw QObject::tr("ERROR : data could not be created with plugin %1").arg(date.toObject().value(STATE_DATE_PLUGIN_ID).toString());
-
     }
 
 }

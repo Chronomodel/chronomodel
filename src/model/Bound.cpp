@@ -88,6 +88,8 @@ Bound::Bound(const QJsonObject& json, const Model* model):
     mS_Y = json.value(STATE_EVENT_SY).toDouble();
     mS_ZField = json.value(STATE_EVENT_SZ_SF).toDouble();
 
+    mVg.mSupport = MetropolisVariable::eRp;
+    mVg.mFormat = DateUtils::eNumeric;
     mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 }
 
@@ -127,7 +129,10 @@ Bound Bound::fromJson(const QJsonObject &json)
     bound.mS_Y = json.value(STATE_EVENT_SY).toDouble();
     bound.mS_ZField = json.value(STATE_EVENT_SZ_SF).toDouble();
 
-    bound.mVg.mSamplerProposal= MHVariable::eMHAdaptGauss;
+
+    bound.mVg.mSupport = MetropolisVariable::eRp;
+    bound.mVg.mFormat = DateUtils::eNumeric;
+    bound.mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
     return bound;
 }
 

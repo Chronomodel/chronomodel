@@ -103,6 +103,7 @@ Date::Date(const QJsonObject& json, const Event *event):
     mEvent (event)
 
 {
+    init();
     fromJson(json);
 }
 
@@ -130,8 +131,6 @@ void Date::init()
 
     mId = -1;
     mUUID = QString("NONE");
-    //mMethod = eMHSymetric;
-    //updateti = fMHSymetric;
 
     mIsValid = true;
     mDelta = 0.;
@@ -238,8 +237,6 @@ QColor Date::getEventColor() const
 
 void Date::fromJson(const QJsonObject& json)
 {
-    //Q_ASSERT(&json);
-
     mId = json.value(STATE_ID).toInt();
     mName = json.value(STATE_NAME).toString();
     mColor = QColor(json.value(STATE_COLOR_RED).toInt(),
