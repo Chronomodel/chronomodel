@@ -39,12 +39,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ChronoApp.h"
 #include "MainController_bash.h"
-#include "StdUtilities.h"
-#include "CurveUtilities.h"
-#include "fftw3.h"
+//#include "StdUtilities.h"
+//#include "CurveUtilities.h"
+//#include "fftw3.h"
 
 #include "QtCore/qlogging.h"
-#include "QtCore/qstring.h"
+//#include "QtCore/qstring.h"
 
 #include <QtWidgets>
 #include <iostream>

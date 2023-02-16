@@ -41,7 +41,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginManager.h"
 #include "MainWindow.h"
 #include "Painting.h"
-#include "QtCore/qstring.h"
 
 
 MainController::MainController(const QString& filePath)
@@ -49,7 +48,7 @@ MainController::MainController(const QString& filePath)
     Painting::init();
     PluginManager::loadPlugins();
     QCoreApplication::setApplicationName("ChronoModel_bash");
-    QCoreApplication::setApplicationVersion("3.2.1"); // must match value in Chronomodel.pro
+    QCoreApplication::setApplicationVersion("3.2.2"); // must match value in Chronomodel.pro
    // QCoreApplication::setOrganizationDomain("http://www.chronomodel.com");
     QCoreApplication::setOrganizationName("CNRS");
 
