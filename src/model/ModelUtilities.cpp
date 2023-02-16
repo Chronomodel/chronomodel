@@ -956,15 +956,21 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
         if (event->type() == Event::eBound) {
              const Bound* bound = dynamic_cast<const Bound*>(event);
             if (bound) {
-                HTMLText += line(textRed(QObject::tr("Bound ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), bound->mName)));
-                HTMLText += line(textRed(QObject::tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(bound->mTheta.mX), DateUtils::getAppSettingsFormatStr())));
+                HTMLText += line(textBold(textRed(QObject::tr("Bound ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), bound->mName))));
+                HTMLText += line(textBold(textRed(QObject::tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(bound->mTheta.mX), DateUtils::getAppSettingsFormatStr()))));
             }
 
         }  else {
-            HTMLText += line(textBlue(QObject::tr("Event ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), event->mName)));
-            HTMLText += line(textBlue(QObject::tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(event->mTheta.mX), DateUtils::getAppSettingsFormatStr()))); 
+            HTMLText += line(textBold(textBlue(QObject::tr("Event ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), event->mName))));
+            HTMLText += line(textBold(textBlue(QObject::tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(event->mTheta.mX), DateUtils::getAppSettingsFormatStr()))));
             if (event->mTheta.mLastAccepts.size()>2 && event->mTheta.mSamplerProposal!= MHVariable::eFixe) {
-                HTMLText += line(textBlue(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(event->mTheta.getCurrentAcceptRate()*100.), MHVariable::getSamplerProposalText(event->mTheta.mSamplerProposal))));
+                const auto acceptRate = event->mTheta.getCurrentAcceptRate();
+                const auto samplerType = event->mTheta.mSamplerProposal;
+                if (acceptRate > 0.46 &&  acceptRate < 0.42 && samplerType == MHVariable::eMHAdaptGauss)
+                    HTMLText += line(textBlue(QObject::tr("     Current Acceptance Rate : ") + textRed(stringForLocal(acceptRate*100.)) +" % (" + MHVariable::getSamplerProposalText(samplerType)) + ")");
+                else
+                    HTMLText += line(textBlue(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(acceptRate*100.), MHVariable::getSamplerProposalText(samplerType))));
+
                 HTMLText += line(textBlue(QObject::tr(" - Sigma_MH on Theta : %1").arg(stringForLocal(event->mTheta.mSigmaMH))));
             }
 
@@ -974,7 +980,14 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
         if (curveModel) {
             HTMLText += line(textGreen(QObject::tr(" - Std gi : %1").arg(stringForLocal(sqrt(event->mVg.mX)))));
             if (event->mVg.mLastAccepts.size()>2  && event->mVg.mSamplerProposal!= MHVariable::eFixe) {
-                HTMLText += line(textGreen(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(event->mVg.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(event->mVg.mSamplerProposal))));
+                const auto acceptRate = event->mVg.getCurrentAcceptRate();
+                const auto samplerType = event->mVg.mSamplerProposal;
+                if (acceptRate < 0.46 &&  acceptRate > 0.42 )
+                    HTMLText += line(textBlue(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(acceptRate*100.), MHVariable::getSamplerProposalText(samplerType))));
+                else
+                    HTMLText += line(textGreen(QObject::tr("     Current Acceptance Rate : ") + textRed(stringForLocal(acceptRate*100.)) +" % (" + MHVariable::getSamplerProposalText(samplerType)) + ")");
+
+                //HTMLText += line(textGreen(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(event->mVg.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(event->mVg.mSamplerProposal))));
                 HTMLText += line(textGreen(QObject::tr(" - Sigma_MH on Std gi : %1").arg(stringForLocal(event->mVg.mSigmaMH))));
             }
 
@@ -1005,18 +1018,32 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
             ++j;
             HTMLText += "<br>";
 
-            HTMLText += line(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j), QString::number(event->mDates.size()), date.mName)));
+            HTMLText += line(textBold(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j), QString::number(event->mDates.size()), date.mName))));
             HTMLText += line(textBlack(QObject::tr(" - ti : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(date.mTi.mX), DateUtils::getAppSettingsFormatStr())));
             if (date.mTi.mSamplerProposal == MHVariable::eMHSymGaussAdapt) {
                 if (date.mTi.mLastAccepts.size()>2) {
-                    HTMLText += line(textBlack(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(date.mTi.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(date.mTi.mSamplerProposal))));
+                    const auto acceptRate = date.mTi.getCurrentAcceptRate();
+                    const auto samplerType = date.mTi.mSamplerProposal;
+                    if (acceptRate < 0.46 &&  acceptRate > 0.42 )
+                        HTMLText += line(textBlack(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(acceptRate*100.), MHVariable::getSamplerProposalText(samplerType))));
+                    else
+                        HTMLText += line(textBlack(QObject::tr("     Current Acceptance Rate : ") + textRed(stringForLocal(acceptRate*100.)) +" % (" + MHVariable::getSamplerProposalText(samplerType)) + ")");
+
+                   // HTMLText += line(textBlack(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(date.mTi.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(date.mTi.mSamplerProposal))));
                 }
                 HTMLText += line(textBlack(QObject::tr(" - Sigma_MH on ti : %1").arg(stringForLocal(date.mTi.mSigmaMH))));
             }
 
             HTMLText += line(textBlack(QObject::tr(" - Sigma_i : %1").arg(stringForLocal(date.mSigmaTi.mX))));
             if (date.mSigmaTi.mLastAccepts.size()>2) {
-                HTMLText += line(textBlack(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(date.mSigmaTi.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(date.mSigmaTi.mSamplerProposal))));
+                const auto acceptRate = date.mSigmaTi.getCurrentAcceptRate();
+                const auto samplerType = date.mSigmaTi.mSamplerProposal;
+                if (acceptRate < 0.46 &&  acceptRate > 0.42 )
+                    HTMLText += line(textBlack(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(acceptRate*100.), MHVariable::getSamplerProposalText(samplerType))));
+                else
+                    HTMLText += line(textBlack(QObject::tr("     Current Acceptance Rate : ") + textRed(stringForLocal(acceptRate*100.)) +" % (" + MHVariable::getSamplerProposalText(samplerType)) + ")");
+
+               // HTMLText += line(textBlack(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(date.mSigmaTi.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(date.mSigmaTi.mSamplerProposal))));
             }
             HTMLText += line(textBlack(QObject::tr(" - Sigma_MH on Sigma_i : %1").arg(stringForLocal(date.mSigmaTi.mSigmaMH))));
             if (date.mDeltaType != Date::eDeltaNone)
@@ -1034,7 +1061,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
         for (auto& phase : model->mPhases) {
             ++i;
             HTMLText += "<br>";
-            HTMLText += line(textOrange(QObject::tr("Phase ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mPhases.size()), phase->mName)));
+            HTMLText += line(textBold(textOrange(QObject::tr("Phase ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mPhases.size()), phase->mName))));
             HTMLText += line(textOrange(QObject::tr(" - Begin : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mX), DateUtils::getAppSettingsFormatStr())));
             HTMLText += line(textOrange(QObject::tr(" - End : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mX), DateUtils::getAppSettingsFormatStr())));
             HTMLText += line(textOrange(QObject::tr(" - Tau : %1").arg(stringForLocal(phase->mTau.mX))));
@@ -1065,14 +1092,28 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
         } else {
             HTMLText +=  line(textGreen(QObject::tr("Log10 Smoothing : %1").arg(QLocale().toString(log10(model->mLambdaSpline.mX), 'G', 2))));
             if (model->mLambdaSpline.mLastAccepts.size() > 2) {
-                HTMLText += line(textGreen(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(model->mLambdaSpline.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(model->mLambdaSpline.mSamplerProposal))));
+                const auto acceptRate = model->mLambdaSpline.getCurrentAcceptRate();
+                const auto samplerType = model->mLambdaSpline.mSamplerProposal;
+                if (acceptRate < 0.46 &&  acceptRate > 0.42 )
+                    HTMLText += line(textGreen(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(acceptRate*100.), MHVariable::getSamplerProposalText(samplerType))));
+                else
+                    HTMLText += line(textGreen(QObject::tr("     Current Acceptance Rate : ") + textRed(stringForLocal(acceptRate*100.)) +" % (" + MHVariable::getSamplerProposalText(samplerType)) + ")");
+
+               // HTMLText += line(textGreen(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(model->mLambdaSpline.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(model->mLambdaSpline.mSamplerProposal))));
                 HTMLText +=  line(textGreen(QObject::tr(" - Sigma_MH on Smoothing : %1").arg(stringForLocal(model->mLambdaSpline.mSigmaMH))));
             }
         }
         HTMLText += "<hr>";
         HTMLText +=  line(textGreen(QObject::tr("sqrt Shrinkage param. : %1").arg(QLocale().toString(sqrt(model->mS02Vg.mX), 'G', 2))));
         if (model->mS02Vg.mLastAccepts.size() > 2) {
-            HTMLText += line(textGreen(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(model->mS02Vg.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(model->mS02Vg.mSamplerProposal))));
+            const auto acceptRate = model->mS02Vg.getCurrentAcceptRate();
+            const auto samplerType = model->mS02Vg.mSamplerProposal;
+            if (acceptRate < 0.46 &&  acceptRate > 0.42 )
+                HTMLText += line(textGreen(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(acceptRate*100.), MHVariable::getSamplerProposalText(samplerType))));
+            else
+                HTMLText += line(textGreen(QObject::tr("     Current Acceptance Rate : ") + textRed(stringForLocal(acceptRate*100.)) +" % (" + MHVariable::getSamplerProposalText(samplerType)) + ")");
+
+           // HTMLText += line(textGreen(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(model->mS02Vg.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(model->mS02Vg.mSamplerProposal))));
             HTMLText +=  line(textGreen(QObject::tr(" - Sigma_MH on Shrinkage param. : %1").arg(stringForLocal(model->mS02Vg.mSigmaMH))));
         }
     }
@@ -1113,8 +1154,8 @@ QString ModelUtilities::modelStateDescriptionText(const ModelCurve *model, QStri
 
         if (curveModel) {
             text += QObject::tr(" - Std gi : %1").arg(stringForLocal(sqrt(event->mVg.mX)));
-            if (event->mVg.mLastAccepts.size() > 2  && event->mVg.mSamplerProposal!= MHVariable::eFixe) {
-                text += QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(event->mVg.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(event->mVg.mSamplerProposal));
+            if (event->mVg.mLastAccepts.size() > 2  && event->mVg.mSamplerProposal!= MHVariable::eFixe) {               
+               text += QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(event->mVg.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(event->mVg.mSamplerProposal));
             }
             text += QObject::tr(" - Sigma_MH on Std gi : %1").arg(stringForLocal(event->mVg.mSigmaMH));
 
@@ -1146,7 +1187,7 @@ QString ModelUtilities::modelStateDescriptionText(const ModelCurve *model, QStri
             text += QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j), QString::number(event->mDates.size()), date.mName);
             text += QObject::tr(" - ti : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(date.mTi.mX), DateUtils::getAppSettingsFormatStr());
             if (date.mTi.mSamplerProposal == MHVariable::eMHSymGaussAdapt) {
-                if (date.mTi.mLastAccepts.size() > 2) {
+                if (date.mTi.mLastAccepts.size() > 2) {                  
                     text += QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(date.mTi.getCurrentAcceptRate() *100.), MHVariable::getSamplerProposalText(date.mTi.mSamplerProposal));
                 }
                 text += QObject::tr(" - Sigma_MH on ti : %1").arg(stringForLocal(date.mTi.mSigmaMH));
