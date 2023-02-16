@@ -800,18 +800,10 @@ void ModelCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante
      GS /= pow(model.mSettings.mTmax - model.mSettings.mTmin, 2.);
 }
 
-void ModelCurve::valeurs_G_varG_on_i(const MCMCSplineComposante& spline, double& G, double& varG, unsigned long &i)
+void ModelCurve::valeurs_G_varG_on_i(const MCMCSplineComposante &spline, double &G, double &varG, unsigned long &i)
 {
     const double n = spline.vecThetaEvents.size();
-    if (i < 0 || i > n-1) {
-        G = 0;
-        varG = 0;
-
-    } else if (i == 0 || i == n-1) {
-        G = spline.vecG.at(i);
-        varG = spline.vecVarG.at(i);
-
-    } else if ((i > 0) && (i < n-1)) {
+    if ((i > 0) && (i < n-1)) {
 
         const t_reduceTime tReduce =  reduceTime(spline.vecThetaEvents.at(i)); //(t - tmin) / (tmax - tmin);
 
@@ -825,8 +817,13 @@ void ModelCurve::valeurs_G_varG_on_i(const MCMCSplineComposante& spline, double&
 
         varG = spline.vecVarG.at(i);
 
+    } else if (i == 0 || i == n-1) {
+        G = spline.vecG.at(i);
+        varG = spline.vecVarG.at(i);
 
-
+    } else  {
+        G = 0;
+        varG = 0;
     }
 
 }
