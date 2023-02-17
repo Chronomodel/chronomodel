@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -47,7 +47,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginAbstract.h"
 #include "QtUtilities.h"
 #include "Generator.h"
-#include "qtextdocumentfragment.h"
 
 #include <QObject>
 
