@@ -21,7 +21,7 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={pf}\{#MyAppName}
+DefaultDirName={commonpf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 LicenseFile="license.rtf"
@@ -46,8 +46,8 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
                                                                               
 [Files]
 ;Source: "..\..\build\release\chronomodel.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\..\build-Chronomodel-Desktop_Qt_6_2_4_MinGW_64_bit-Release\build\release\chronomodel.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "additionnal_files\QT_6_2_4\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\..\..\build-Chronomodel-Desktop_Qt_6_4_2_MinGW_64_bit-Release\build\release\chronomodel.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "additionnal_files\QT_6_4_2\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Source: "additionnal_files\fftw3\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ;Source: "..\Calib\*"; DestDir: "{localappdata}\CNRS\ChronoModel\Calib\"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files

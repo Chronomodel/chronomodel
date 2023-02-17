@@ -63,3 +63,8 @@ compilation_WindowsOS.txt
 fabrique_win.bat
 *.json
 *.Release
+deploy/windows/Chronomodel_Bash_installer_v321_minGW_64bit.iss
+deploy/windows/Chronomodel_installer_v321_minGW_64bit.iss
+deploy/windows/Chronomodel_Bash_installer_v321_minGW_64bit.iss
+Chronomodel_bash.pro.user.86f4acf
+Chronomodel_bash.pro.user
