@@ -967,8 +967,8 @@ std::pair<double, double> gapRangeFromTraces(const QVector<double> &traceEnd, co
             if ((hbSup > alphaUnder.size()) || (hbInf > alphaUnder.size()))
                 return range;
             
-            if ((hbInf < 0) || (hbSup <0))
-                return range;
+            //if ((hbInf < 0) || (hbSup <0)) // impossible
+            //    return range;
 
             const double b = alphaUnder.at(hbInf) + ( ((double)hb -(double)hbInf)*(alphaUnder.at(hbSup)-alphaUnder.at(hbInf)) );
 
