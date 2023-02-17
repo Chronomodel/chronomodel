@@ -41,7 +41,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "Date.h"
 #include "Event.h"
-#include "Marker.h"
 #include "PluginAbstract.h"
 #include "GraphViewRefAbstract.h"
 #include "MainWindow.h"

@@ -38,16 +38,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "DateDialog.h"
-#include "../PluginFormAbstract.h"
-#include "Collapsible.h"
-#include "RadioButton.h"
+
+#include "PluginFormAbstract.h"
 #include "Label.h"
 #include "HelpWidget.h"
-#include "LineEdit.h"
-#include "Painting.h"
 #include "ModelUtilities.h"
-#include "PluginManager.h"
-#include "../PluginAbstract.h"
+#include "PluginAbstract.h"
+
 #include <QtWidgets>
 
 
@@ -253,6 +250,9 @@ void DateDialog::setForm(PluginFormAbstract* form)
                 break;
             case 2 :
                 spTest = MHVariable::eMHSymGaussAdapt;
+                break;
+            default :
+                spTest = MHVariable::eInversion;
                 break;
             }
 

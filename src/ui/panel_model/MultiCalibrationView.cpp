@@ -640,9 +640,9 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
     }
 
 
-    GraphView* graph1;
-    GraphView* graph2;
-    GraphView* graph3;
+    GraphView* graph1 = nullptr;
+    GraphView* graph2 = nullptr;
+    GraphView* graph3 = nullptr;
 
     GraphCurve curveDataPointsX, curveDataPointsY, curveDataPointsZ;
     CurveRefPts ptsX, ptsY, ptsZ;
@@ -777,20 +777,30 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                 errX = s_XA95Depth;
                 break;
             default:
+                X = 0.;
+                errX = 0.;
                 break;
             }
+            Y = 0.;
+            errY = 0.;
+            Z = 0.;
+            errZ = 0.;
             break;
         case CurveSettings::eProcessTypeSpherical:
             X = xIncDepth;
             errX = s_XA95Depth;
             Y = yDec;
             errY = s_XA95Depth/ cos(xIncDepth/180*3.14 );
+            Z = 0.;
+            errZ = 0.;
             break;
         case CurveSettings::eProcessType2D:
             X = xIncDepth;
             errX = s_XA95Depth;
             Y = yDec;
             errY = s_Y;
+            Z = 0.;
+            errZ = 0.;
             break;
         case CurveSettings::eProcessTypeVector:
             X = xIncDepth;
@@ -811,6 +821,10 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
         default:
             X = - sEvent.value(STATE_ITEM_Y).toDouble();
             errX = 0.;
+            Y = 0.;
+            errY = 0.;
+            Z = 0.;
+            errZ = 0.;
             break;
         }
 

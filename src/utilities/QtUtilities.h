@@ -115,11 +115,11 @@ QMap<T, V> getMapDataInRange(const QMap<T, V> &data, const T subMin, const  T su
     }
 
 
-    T tBeforeSubMin;
-    V vBeforeSubMin;
+    T tBeforeSubMin (0);
+    V vBeforeSubMin (0);
     bool pointBeforeSubMin =false;
-    T tAfterSubMax;
-    V vAfterSubMax;
+    T tAfterSubMax (0);
+    V vAfterSubMax (0);
     bool pointAfterSubMax =false;
     const T min = data.firstKey();
     const T max = data.lastKey();

@@ -395,8 +395,8 @@ void Scale::findOptimal(const double a, const double b, const int nOptimal)
     double diff (std::max(u, e));
     mark = diff;
 
-    for (int i = 0; i<5; ++i) {
-        const double stp = u/fract[i];
+   for (const double f : fract) {
+        const double stp = u/f;
 
         if (std::abs(nOptimal - e/stp) < diff) {
             diff = nOptimal - e/stp;
@@ -412,12 +412,12 @@ void Scale::findOptimal(const double a, const double b, const int nOptimal)
     diff = std::max(u, mark);
     tip = fract[0];
 
-    for (int i = 0; i<5; ++i) {
-        const double stp = u/fract[i];
+    for (const double f : fract) {
+        const double stp = u/f;
 
         if (std::abs(nOptimal - mark/stp) < diff) {
             diff = nOptimal - mark/stp;
-            tip = fract[i];
+            tip = f;
         }
     }
 
@@ -457,8 +457,8 @@ void Scale::findOptimalMark(const double a, const double b, const int nOptimal)
     double diff (std::max(u, e));
     mark = diff;
 
-    for (int i = 0; i<5; ++i) {
-        const double stp = u/fract[i];
+    for (const double f : fract) {
+        const double stp = u/f;
 
         if (std::abs(nOptimal - e/stp) < diff) {
             diff = nOptimal - e/stp;

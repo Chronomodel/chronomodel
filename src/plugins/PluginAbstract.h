@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2021
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -41,14 +41,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define PLUGINABSTRACT_H
 
 #include "Date.h"
-//#include "GraphView.h"
 #include "ProjectSettings.h"
 #include "RefCurve.h"
-//#include "Generator.h"
-//#include "CalibrationCurve.h"
 #include "StateKeys.h"
 #include "StdUtilities.h"
-//#include "PluginFormAbstract.h"
 
 #include <QObject>
 #include <QJsonObject>

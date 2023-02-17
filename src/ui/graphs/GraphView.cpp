@@ -1931,7 +1931,8 @@ void GraphView::drawDensity(GraphCurve &curve, QPainter& painter)
     type_data valueX = iter.key();
     type_data valueY = iter.value();
     type_data last_valueY = 0.;
-    type_data last_x, last_y;
+    type_data last_x (0);
+    type_data last_y (0);
 
     QPainterPath path;
     path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
