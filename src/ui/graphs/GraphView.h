@@ -130,7 +130,8 @@ public:
     // Manage Curves
 
     void addCurve(const GraphCurve& curve);
-    bool hasCurve() {return ((mCurves.size() != 0) || (mZones.size() != 0)) ;}
+    inline bool hasCurve() {return ((mCurves.size() != 0) || (mZones.size() != 0)) ;}
+
     void removeCurve(const QString& name);
     void removeAllCurves();
     void reserveCurves(const int size);
@@ -139,7 +140,12 @@ public:
     const QList<GraphCurve>& getCurves() const;
     int numCurves() const;
 
-
+    inline bool hasPoints() const {return (refPoints.size() != 0) ;}
+    inline CurveRefPts* getRefPoint (int i) {return &refPoints[i];}
+    void setPoints(const std::vector<CurveRefPts> refPts) {refPoints = refPts;};
+    void addPoint(const CurveRefPts refPt) {refPoints.push_back(refPt);};
+    inline void insertPoints(const std::vector<CurveRefPts> refPts) {refPoints.insert(refPoints.end(), refPts.begin(), refPts.end());};
+    void setPointsVisible(const QString &name, const bool visible);
 
     void addZone(const GraphZone& zone);
     void removeAllZones();
@@ -255,6 +261,7 @@ protected:
     QList<GraphCurve> mCurves;
     QList<GraphZone> mZones;
 
+
     QPainter mPrevPainter;
 
     qreal mBottomSpacer;
@@ -262,6 +269,7 @@ protected:
 public:
     QString mLegendX;
     QString mLegendY;
+    std::vector<CurveRefPts> refPoints;
 
 private:
      DateConversion mUnitFunctionX;

@@ -200,7 +200,7 @@ void MultiCalibrationDrawing::updateLayout()
 
             graph->showXAxisValues(axisVisible && mListAxisVisible[graphNo]);
 
-            if (!graph->hasCurve()) {
+            if (!graph->hasCurve() && !graph->hasPoints()) {
                 graph->showInfos(true);
                 graph->setNothingMessage( graph->getInfo(' ')  + " -> Not computable" );
                 graph->setGeometry(barWidth + graphShift, y, std::max(0, width() - barWidth - graphShift), mGraphHeight);

@@ -154,16 +154,23 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
          */
         const bool alphaIsBound = (alpha.size()==1);
         const bool betaIsBound = (beta.size()==1);
-        double normPdf = 1.;
-        if (alphaIsBound) {
-            normPdf = map_max_value(beta);
+
+        if (alphaIsBound && !betaIsBound) {
+            const double normPdf = map_max_value(beta);
             alpha[alpha.firstKey()] =  normPdf;
             alphaHPD[alphaHPD.firstKey()] = normPdf;
 
-        } else if (betaIsBound) {
-            normPdf = map_max_value(alpha);
+        } else if (betaIsBound && !alphaIsBound) {
+            const double normPdf = map_max_value(alpha);
             beta[beta.firstKey()] = normPdf;
             betaHPD[betaHPD.firstKey()] = normPdf;
+
+        } else if (alphaIsBound && betaIsBound) {
+            alpha[alpha.firstKey()] =  1.;
+            alphaHPD[alphaHPD.firstKey()] = 1.;
+
+            beta[beta.firstKey()] = 1.;
+            betaHPD[betaHPD.firstKey()] = 1.;
         }
 
         const GraphCurve &curveBegin = densityCurve(alpha, "Post Distrib Begin All Chains", color, Qt::DotLine);
@@ -199,16 +206,14 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         mGraph->addZone(zoneMax);
 
         if (!mPhase->mAlpha.mChainsHistos.isEmpty())
-            for (auto i=0; i<mChains.size(); ++i) {
+            for (auto i = 0; i<mChains.size(); ++i) {
                 QMap<double, double> &alpha_i = mPhase->mAlpha.mChainsHistos[i];
                 QMap<double, double> &beta_i = mPhase->mBeta.mChainsHistos[i];
-                if (alphaIsBound) {
-                    normPdf = map_max_value(beta);
-                    alpha_i[alpha_i.firstKey()] =  normPdf;
+                if (alphaIsBound && !betaIsBound) {
+                    alpha_i[alpha_i.firstKey()] =  map_max_value(beta_i);
 
-                } else if (betaIsBound) {
-                    normPdf = map_max_value(alpha);
-                    beta_i[beta_i.firstKey()] = normPdf;
+                } else if (betaIsBound && !alphaIsBound) {
+                    beta_i[beta_i.firstKey()] = map_max_value(alpha_i);
                   }
 
                 const GraphCurve &curveBegin = densityCurve(alpha_i,
@@ -382,7 +387,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
     else if (typeGraph == eTrace && mCurrentVariableList.contains(eBeginEnd)) {
         mGraph->mLegendX = tr("Iterations");
         mGraph->setFormatFunctX(nullptr);
-        mGraph->setFormatFunctY(nullptr);//DateUtils::convertToAppSettingsFormat);
+        mGraph->setFormatFunctY(nullptr);
         mGraph->setYAxisMode(GraphView::eMinMax);
         mTitle = tr("Phase : %1").arg(mPhase->mName);
 

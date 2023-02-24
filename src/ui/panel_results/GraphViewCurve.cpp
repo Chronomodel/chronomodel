@@ -117,15 +117,15 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
     const double tmin = mComposanteG.mapG.minX();
 
     if (mCurrentVariableList.contains(eG)) {
-        GraphCurve curveEventsPoints;
-        curveEventsPoints.mName = "Events Points";
+        std::vector<CurveRefPts> curveEventsPoints;
+        /*curveEventsPoints.mName = "Events Points";
 
         curveEventsPoints.mPen = QPen(Qt::black, 1, Qt::SolidLine);
         curveEventsPoints.mBrush = Qt::black;
         curveEventsPoints.mIsRectFromZero = false;
 
         curveEventsPoints.mType = GraphCurve::eRefPoints;
-
+*/
         // intallation des points de ref
         CurveRefPts ref;
         for (auto& ePts : mEventsPoints) {
@@ -138,19 +138,21 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             ref.Ymax = ePts.Ymax;
             ref.type = CurveRefPts::eLine;
             ref.color = ePts.color;
-            curveEventsPoints.mRefPoints.push_back(ref);
+            ref.pen = QPen(Qt::black, 1, Qt::SolidLine);
+            ref.brush = Qt::black;
+            ref.name = "Events Points";
+            curveEventsPoints.push_back(ref);
         }
 
-
-        GraphCurve curveDataPoints;
-        curveDataPoints.mName = "Data Points";
+        std::vector<CurveRefPts> curveDataPoints;
+        /* curveDataPoints.mName = "Data Points";
 
         curveDataPoints.mPen = QPen(Qt::black, 1, Qt::SolidLine);
         curveDataPoints.mBrush = Qt::black;
         curveDataPoints.mIsRectFromZero = false;
 
         curveDataPoints.mType = GraphCurve::eRefPoints;
-
+        */
         for (auto& dPts : mDataPoints) {
             ref.Xmin = DateUtils::convertToAppSettingsFormat(dPts.Xmin);
             ref.Xmax = DateUtils::convertToAppSettingsFormat(dPts.Xmax);
@@ -161,7 +163,8 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             ref.Ymax = dPts.Ymax;
             ref.type = CurveRefPts::eCross;
             ref.color = dPts.color;
-            curveDataPoints.mRefPoints.push_back(ref);
+            ref.name = "Data Points";
+            curveDataPoints.push_back(ref);
 
         }
         // fin installation
@@ -268,7 +271,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         const QColor envColor (119, 95, 49 , 30);
 
         const GraphCurve curveGEnv = shapeCurve(curveGInf_Data, curveGSup_Data, "G Env",
-                                         QColor(119, 95, 49), Qt::DashLine, envColor);
+                                         QColor(119, 95, 49), Qt::CustomDashLine, envColor);
 
         mGraph->addCurve(curveMap); // to be draw in first
 
@@ -294,8 +297,8 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             mGraph->addCurve(cMapC);
         }
         // must be put at the end to print the points above
-        mGraph->addCurve(curveEventsPoints);
-        mGraph->addCurve(curveDataPoints);
+        mGraph->setPoints(curveEventsPoints);
+        mGraph->insertPoints(curveDataPoints);
 
         mGraph->setTipYLab("G");
     }
@@ -392,8 +395,8 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
     mGraph->setCurveVisible("G", mShowAllChains && showG); 
     mGraph->setCurveVisible("G Env", mShowAllChains && showGError && showG);
 
-    mGraph->setCurveVisible("Events Points", showEventsPoints);
-    mGraph->setCurveVisible("Data Points", showDataPoints);
+    mGraph->setPointsVisible("Events Points", showEventsPoints);
+    mGraph->setPointsVisible("Data Points", showDataPoints);
     mGraph->setCurveVisible("G Prime", mShowAllChains && showGP);
     mGraph->setCurveVisible("G Prime Zero", showGP);
 
@@ -410,4 +413,7 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
 
         mGraph->setCurveVisible(QString("G Second Chain ") + QString::number(i), mShowChainList.at(i) && showGS);
     }
+
+  //  mGraph->adjustYScale();
+    //mGraph->repaintGraph(false);
 }

@@ -246,25 +246,29 @@ void GraphView::adjustYScale()
                     && !curve.isVerticalLine() && !curve.isHorizontalSections()) {
 
                 if (curve.isVectorData()) {
-                    QVector<qreal> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, qreal (0.), qreal (curve.mDataVector.size()));
-                    yMin = qMin(yMin, vector_min_value(subData));
-                    yMax = qMax(yMax, vector_max_value(subData));
+                    const QVector<qreal> &subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, qreal (0.), qreal (curve.mDataVector.size()));
+                    if (!subData.empty()) {
+                        yMin = qMin(yMin, vector_min_value(subData));
+                        yMax = qMax(yMax, vector_max_value(subData));
+                    }
 
 
                 } else if (curve.isShape()) {
-                    const auto curveInf = curve.mShape.first;
-                    const auto curveSup = curve.mShape.second;
-                    QMap<qreal, qreal> subData = getMapDataInRange(curveInf, mCurrentMinX, mCurrentMaxX);
-                    yMin = qMin(yMin, map_min_value(subData));
+                    const auto &curveInf = curve.mShape.first;
+                    const auto &curveSup = curve.mShape.second;
+                    const QMap<qreal, qreal> &subDataInf = getMapDataInRange(curveInf, mCurrentMinX, mCurrentMaxX);
+                    if (!subDataInf.empty()) yMin = qMin(yMin, map_min_value(subDataInf));
 
-                    subData = getMapDataInRange(curveSup, mCurrentMinX, mCurrentMaxX);
-                    yMax = qMax(yMax, map_max_value(subData));
+                    const QMap<qreal, qreal> &subDataSup = getMapDataInRange(curveSup, mCurrentMinX, mCurrentMaxX);
+                    if (!subDataSup.empty()) yMax = qMax(yMax, map_max_value(subDataSup));
 
 
                 } else if (!curve.mData.empty()) {
-                    QMap<qreal, qreal> subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
-                    yMin = qMin(yMin, map_min_value(subData));
-                    yMax = qMax(yMax, map_max_value(subData));
+                    const QMap<qreal, qreal> &subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
+                    if (!subData.empty()) {
+                        yMin = qMin(yMin, map_min_value(subData));
+                        yMax = qMax(yMax, map_max_value(subData));
+                    }
 
                 }
                 // map
@@ -273,18 +277,26 @@ void GraphView::adjustYScale()
                     yMax = qMax(yMax, curve.mMap.rangeY.second);
                 }
 
-                for (auto rf : curve.mRefPoints) {
-                    yMin = qMin(yMin, rf.Ymin);
-                    yMax = qMax(yMax, rf.Ymax);
-                }
-
              }
         }
+
+        for (auto rf : refPoints) {
+            yMin = qMin(yMin, rf.Ymin);
+            yMax = qMax(yMax, rf.Ymax);
+        }
+
         if (yMax >= yMin) {
-            if (mAxisToolY.mMinMaxOnly || !mYAxisTicks)
+            if (mAxisToolY.mMinMaxOnly || !mYAxisTicks) {
+                if (yMax == yMin) {
+                    if (yMax>0) {
+                        yMin = 0.;
+                    } else {
+                        yMax = 0.;
+                    }
+                }
                 setRangeY(yMin, yMax);
 
-            else {
+            } else {
                 Scale yScale;
                 yScale.findOptimal(yMin, yMax, 7);
                 setRangeY(yScale.min, yScale.max);
@@ -377,7 +389,7 @@ void GraphView::showYAxisValues(bool show)   { mYAxisValues = show;}
 void GraphView::setXAxisMode(AxisMode mode)
 {
    mXAxisMode = mode;
-        mAxisToolX.mShowText = (mXAxisMode!=eHidden);
+        mAxisToolX.mShowText = (mXAxisMode != eHidden);
 }
 
 void GraphView::setYAxisMode(AxisMode mode)
@@ -427,7 +439,7 @@ void GraphView::autoAdjustYScale(bool active)
     mAutoAdjustYScale = active;
 }
 
-void GraphView::setGraphFont(const QFont& font)
+void GraphView::setGraphFont(const QFont &font)
 {
     setFont(font);
     repaintGraph(true);
@@ -476,12 +488,12 @@ void GraphView::setFormatFunctY(DateConversion f)
  Curves & Zones
  ------------------------------------------------------ */
 
-void GraphView::addCurve(const GraphCurve& curve)
+void GraphView::addCurve(const GraphCurve &curve)
 {
     mCurves.append(curve);
 }
 
-void GraphView::removeCurve(const QString& name)
+void GraphView::removeCurve(const QString &name)
 {
     for (int i=0; i<mCurves.size(); ++i) {
         if (mCurves.at(i).mName == name) {
@@ -503,7 +515,7 @@ void GraphView::reserveCurves(const int size)
     mCurves.reserve(size);
 }
 
-void GraphView::setCurveVisible(const QString& name, const bool visible)
+void GraphView::setCurveVisible(const QString &name, const bool visible)
 {
     bool modified = false;
     for (auto && curve : mCurves) {
@@ -513,13 +525,14 @@ void GraphView::setCurveVisible(const QString& name, const bool visible)
             break;
         }
     }
-    if (modified) {
+  /*  if (modified) {
         adjustYScale();
         repaintGraph(false);
     }
+    */
 }
 
-GraphCurve* GraphView::getCurve(const QString& name)
+GraphCurve* GraphView::getCurve(const QString &name)
 {
     for (auto&& curve : mCurves)
         if (curve.mName == name)
@@ -538,7 +551,7 @@ int GraphView::numCurves() const
     return mCurves.size();
 }
 
-void GraphView::addZone(const GraphZone& zone)
+void GraphView::addZone(const GraphZone &zone)
 {
     mZones.append(zone);
 }
@@ -546,6 +559,23 @@ void GraphView::addZone(const GraphZone& zone)
 void GraphView::removeAllZones()
 {
     mZones.clear();
+}
+
+
+void GraphView::setPointsVisible(const QString &name, const bool visible)
+{
+  //  bool modified = false;
+    for (auto&& ref : refPoints) {
+        if (ref.name == name) {
+            ref.setVisible(visible);// .mVisible = visible;
+  //          modified = true;
+      //      break;
+        }
+    }
+  /*  if (modified) {
+        adjustYScale();
+        repaintGraph(false);
+    }*/
 }
 
 //  Mouse events & Tool Tip
@@ -608,12 +638,12 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
     e->ignore();
 }
 
-void GraphView::setTipXLab(const QString& lab)
+void GraphView::setTipXLab(const QString &lab)
 {
     mTipXLab = lab =="" ? "":  lab + " = ";
 }
 
-void GraphView::setTipYLab(const QString& lab)
+void GraphView::setTipYLab(const QString &lab)
 {
     mTipYLab = lab =="" ? "":  lab + " = ";
 }
@@ -673,7 +703,7 @@ void GraphView::paintEvent(QPaintEvent* )
     /* ----------------------------------------------------
      *  Nothing to draw !
      * ----------------------------------------------------*/
-    if (mCurves.size() == 0 && mZones.size() == 0) {
+    if (mCurves.size() == 0 && mZones.size() == 0 && refPoints.size() == 0) {
         QPainter p(this);
         p.setFont(font());
         p.fillRect(0, 0, width(), height(), mBackgroundColor);
@@ -693,7 +723,7 @@ void GraphView::paintEvent(QPaintEvent* )
         return;
     }
     updateGraphSize(width(), height());
-    if ((mGraphWidth<=0) || (mGraphHeight<=0))
+    if ((mGraphWidth <= 0) || (mGraphHeight <= 0))
         return;
 
     mBufferBack = QPixmap();
@@ -708,7 +738,7 @@ void GraphView::paintEvent(QPaintEvent* )
      * ----------------------------------------------------*/
     if (mTipVisible && (!mTipXLab.isEmpty() || !mTipYLab.isEmpty())) {
         QPainterPath tipPath;
-        if (mTipRect.width()<2) {
+        if (mTipRect.width() < 2) {
             mTipRect.setLeft(20);
             mTipRect.setTop(20);
 
@@ -945,7 +975,7 @@ QPainterPath GraphView::makePath (const QMap<double, double> &map, const bool sh
     if (map.isEmpty())
         return path;
 
-    if ( map.lastKey()<= mCurrentMinX || map.firstKey()>= mCurrentMaxX)
+    if ( map.lastKey() <= mCurrentMinX || map.firstKey() >= mCurrentMaxX)
         return path;
 
 
@@ -1019,47 +1049,22 @@ QPainterPath GraphView::makePath (const QMap<double, double> &map, const bool sh
     // *****
 
     decltype(iFirst) lastGoodIter; // repere le dernier point visible
-   // decltype(iFirst) lastMoveIter;
     bool movePoint = false;
 
 
     if (showBorder) {
         while (iFirst != map.end()) {
             if ( mCurrentMinX<=iFirst.key() && iFirst.key()<= mCurrentMaxX ) {
-               // if (showBorder || (mMinY <= iFirst.value()  && iFirst.value()<= mMaxY)   ) {
-               //     if (movePoint)
-              //          path.moveTo(getXForValue(iFirst.key(), true), getYForValue(iFirst.value(), true));
-              //      else {
-                       // path.lineTo(getXForValue(iFirst.key(), true), getYForValue(iFirst.value(), true));
+
                         if (mMinY <= iFirst.value()  && iFirst.value()<= mMaxY  ) {
                             path.lineTo(getXForValue(iFirst.key(), true), getYForValue(iFirst.value(), true));
                             lastGoodIter = iFirst;
                         } else {
                             path.moveTo(getXForValue(iFirst.key(), true), getYForValue(iFirst.value(), true));
                         }
-               //     }
-               //     movePoint = false;
 
-              //  } else {
-              //      movePoint = true;
-                    //       lastMoveIter = iFirst;
-
-              //  }
-            }
-      /*      auto  eCount = path.elementCount();
-            int iLastLine = eCount;
-            for (int i=eCount ; i>0; i--) {
-                if (path.elementAt(i).isMoveTo())
-                   iLastLine--;
-                else
-                    break;
             }
 
-            QPainterPath pp;
-            for (int i=0 ; i<iLastLine; i++) {
-                pp.addPath(path.)
-            }
-*/
             ++iFirst;
         }
         --iFirst;
@@ -1107,9 +1112,7 @@ QPainterPath GraphView::makePath (const QMap<double, double> &map, const bool sh
 
 
     if (lastGoodIter != iFirst) {
-    //if (false) {
-       // path.moveTo(getXForValue(lastGoodIter.key(), true), getYForValue(lastGoodIter.value(), true));
-        // ******* 7 cas
+          // ******* 7 cas
         auto iNext = std::next(lastGoodIter);
         qreal xNext, yNext;
         if ( iNext != map.end()) {
@@ -1190,7 +1193,7 @@ void GraphView::drawCurves(QPainter& painter)
             }
 
             painter.setBrush(brush);
-
+/*
             if (curve.isRefPoints()) {
                 if (curve.mRefPoints.empty())
                     continue;
@@ -1245,7 +1248,7 @@ void GraphView::drawCurves(QPainter& painter)
                             }
 
                             // Draw a line with a border color background
-                            QRectF border (xMinPlot - 1, yPlot - (1+penWidth)/2., xMaxPlot - xMinPlot + 1, penWidth +1 );
+                            const QRectF border (xMinPlot - 1, yPlot - (1+penWidth)/2., xMaxPlot - xMinPlot + 1, penWidth +1 );
                             painter.setBrush(refPointsPen.brush());
                             painter.setPen(QPen(getBackgroundColor(), 1));
                             painter.drawRect(border);
@@ -1270,7 +1273,11 @@ void GraphView::drawCurves(QPainter& painter)
                 }
 
 
-            } else if (curve.isHorizontalLine()) {
+            } else
+            */
+
+
+            if (curve.isHorizontalLine()) {
                 const qreal y = getYForValue(curve.mHorizontalValue);
                 path.moveTo(mMarginLeft, y);
                 path.lineTo(mMarginLeft + mGraphWidth, y);
@@ -1423,190 +1430,92 @@ void GraphView::drawCurves(QPainter& painter)
                     }
                     painter.drawPath(path);
 
-                } /* else {
-
-                     if (!curve.mIsRectFromZero) {
-                         path = makePath(curve.mData, false);
-
-                     } else {
-
-                         // ****
-
-                         QMap<type_data, type_data> subData = curve.mData;
-                         subData = getMapDataInRange(subData, mCurrentMinX, mCurrentMaxX);
-
-                         if (subData.isEmpty())
-                             continue;
-
-                         QMap<type_data, type_data> lightMap;
-
-                         if (subData.size() > mGraphWidth) { //always used in the items thumbnails
-                             int valuesPerPixel = (int)subData.size() /int(mGraphWidth);
-                             if (valuesPerPixel == 0)
-                                 valuesPerPixel = 1;
-                             QMap<type_data, type_data>::const_iterator iter = subData.cbegin();
-                             int index (0);
-
-                             while (iter != subData.cend()) {
-                                 if ((index % valuesPerPixel) == 0)
-                                     lightMap[iter.key()] = iter.value();
-                                 ++index;
-                                 ++iter;
-                             }
-                         } else
-                             lightMap = subData;
-
-                         // Draw
-
-                         QMap<type_data, type_data>::Iterator iter(lightMap.begin());
-
-
-                         type_data valueX = iter.key();
-                         type_data valueY= iter.value();
-                         while( valueY< mMinY) {
-                             // iter.next();
-                             ++iter;
-                             valueY= iter.value();
-                         }
-
-                         last_valueY = 0.;
-
-                         // Detect square signal front-end without null value at the begin of the QMap
-                         // e.g calibration of Unif-typo-ref
-                         //if (iter.hasNext()) {
-                         if (std::distance(iter, lightMap.end())> 2) {
-                             //if (valueY == (iter.peekNext()).value()) {
-                             //auto iter_next = std::next(iter);
-
-                             if (valueY == std::next(iter).value()) {
-                                 if (valueX >= mCurrentMinX && valueX <= mCurrentMaxX) {
-                                     path.moveTo( getXForValue(valueX), getYForValue(type_data (0), true) );
-                                     path.lineTo( getXForValue(valueX), getYForValue(valueY, true) );
-                                 }
-                             }
-                         }
-
-                         // iter.toFront();
-                         bool isFirst=true;
-
-                         if (curve.mBrush != Qt::NoBrush) {
-                             isFirst=false;
-                             last_x = getXForValue(valueX, true);
-                             last_y = getYForValue(type_data (0.), false);
-                         }
-
-                         valueX = iter.key();
-                         valueY = iter.value();
-
-                         while (std::distance(iter, lightMap.end())> 1 && valueX >= mCurrentMinX && valueX <= mCurrentMaxX && valueY >= mMinY && valueY <= mMaxY ) {
-                             //iter.next();
-
-
-                             if (valueX >= mCurrentMinX && valueX <= mCurrentMaxX && valueY >= mMinY && valueY <= mMaxY ) {
-                                 const qreal x = getXForValue(valueX, true);
-                                 const qreal y = getYForValue(valueY, false);
-
-                                 if (isFirst) {
-                                     if (curve.mIsRectFromZero) {
-                                         path.moveTo(x, getYForValue(0., false));
-                                         path.lineTo(x, y);
-                                     } else
-                                         path.moveTo(x, y);
-
-                                     isFirst=false;
-
-                                 } else {
-
-                                     if (curve.isHisto()) {
-                                         // histo bars must be centered around x value :
-                                         const qreal dx2 = (x - last_x)/2.;
-                                         path.lineTo(x - dx2, last_y);
-                                         path.lineTo(x - dx2, y);
-
-                                     } else if (curve.mIsRectFromZero) {
-
-                                         if (last_valueY != 0 && valueY != 0) {
-                                             path.lineTo(x, y);
-
-                                         } else if (last_valueY == 0 && valueY != 0) {
-                                             // Draw a front end of a square signal some 0 at the begin and at the end
-                                             // e.i plot the HPD surface
-                                             path.lineTo(x, last_y);
-                                             path.lineTo(x, y);
-
-                                         } else if (last_valueY != 0 && valueY == 0) {
-                                             // Draw a back end of a square signal some 0 at the begin and at the end
-                                             // e.i plot the HPD surface
-                                             path.lineTo(last_x, last_y);
-                                             path.lineTo(last_x, y);
-                                         }
-
-
-                                     } else
-                                         path.lineTo(x, y);
-
-
-                                 }
-                                 last_x = x;
-                                 last_y = y;
-
-                                 last_valueY = valueY;
-                                 // }
-
-
-                                 //iter.next();
-                                 ++iter;
-                                 valueX = iter.key();
-                                 valueY = iter.value();
-
-
-                             }
-
-                             if (path.elementCount()  == 1) { //there is only one value
-                                 path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
-                                 last_x = getXForValue(curve.mData.firstKey(), true);
-                                 last_y = getYForValue(type_data (0.), false);
-                                 path.lineTo(last_x, last_y);
-                             }
-
-                             // Detect square signal back-end without null value at the end of the QMap
-                             // e.i calibration of Unif-typo-ref
-
-                             if (curve.mIsRectFromZero && lightMap.size()>1) {
-
-                                 QMap<type_data, type_data>::Iterator lastIter(std::prev(lightMap.end()));
-                                 //lastIter.toBack();
-                                 // lastIter.previous();
-                                 if ( lastIter.value() == std::prev(lastIter).value() ) {
-                                     type_data x = lastIter.key();
-                                     if ( x > mCurrentMinX && x < mCurrentMaxX)
-                                         path.lineTo(getXForValue(x, true), getYForValue(0, true) );
-                                 }
-
-                                 if ( lastIter.value() == std::prev(lastIter).value() ) {
-                                     type_data x = lastIter.key();
-                                     if ( x > mCurrentMinX && x < mCurrentMaxX)
-                                         path.lineTo(getXForValue(x, true), getYForValue(0, true) );
-                                 }
-                             }
-
-
-                             if (curve.mIsRectFromZero && (curve.mBrush != Qt::NoBrush) ) {
-                                 // Close the path on the left side
-                                 path.lineTo(last_x, getYForValue(type_data (0.), true));
-
-                                 painter.setPen(curve.mPen);
-                                 painter.fillPath(path, brush);
-                                 painter.strokePath(path, pen);
-
-                             } else
-                                 painter.drawPath(path);
-
-                         }
-                     }
                 }
-        */    }
+            }
         }
+    }
+
+    for (auto& refPoint : refPoints) {
+        if (refPoint.isVisible()) {
+            QPen pen = refPoint.pen;
+            pen.setWidth(pen.width() * mThickness);
+            painter.setPen(pen);
+
+            QBrush brush = refPoint.brush;
+          //  auto iterRefPts = curve.mRefPoints.cbegin();
+
+        //    while (iterRefPts != curve.mRefPoints.cend()) {
+            type_data xmin = refPoint.Xmin;
+            type_data xmax = refPoint.Xmax;
+            type_data ymin = refPoint.Ymin;
+            type_data ymax = refPoint.Ymax;
+            if (xmax >= mCurrentMinX && xmin <= mCurrentMaxX && ymax >= mMinY && ymin <= mMaxY) {
+                type_data xmoy = (xmax + xmin) / 2.;
+                type_data ymoy = (ymax + ymin) / 2.;
+
+                QPen refPointsPen = pen;
+                refPointsPen.setColor(refPoint.color);
+                refPointsPen.setBrush(refPoint.color);
+                refPointsPen.setWidthF(pen.widthF());
+                QPainterPath pathPoint;
+                if (refPoint.type == CurveRefPts::eCross) {
+                    refPointsPen.setWidthF(std::max(2., pen.widthF()));
+                    qreal yPlot = getYForValue(ymoy, true);
+
+                    qreal xPlot = getXForValue(xmoy);
+                    qreal xMinPlot = getXForValue(xmin);
+                    qreal xMaxPlot = getXForValue(xmax);
+
+                    pathPoint.moveTo( xMinPlot, yPlot );
+                    pathPoint.lineTo( xMaxPlot, yPlot );
+
+                    pathPoint.moveTo( xPlot, getYForValue(ymin, true) );
+                    pathPoint.lineTo( xPlot, getYForValue(ymax, true) );
+                    painter.strokePath(pathPoint, refPointsPen);
+
+                    painter.setBrush(refPointsPen.brush());
+                    painter.setPen(refPointsPen);
+                    painter.drawEllipse(QRectF( xPlot - refPointsPen.widthF(), yPlot - refPointsPen.widthF(),
+                                                refPointsPen.widthF()*2., refPointsPen.widthF()*2.));
+                }
+                else if (refPoint.type == CurveRefPts::eLine) {
+                    const qreal penWidth = std::max(2., pen.widthF());
+                    refPointsPen.setWidthF(penWidth);
+
+                    const qreal yPlot = getYForValue(ymoy, true);
+                    qreal xMinPlot = getXForValue(xmin);
+                    qreal xMaxPlot = getXForValue(xmax);
+                    if (xMaxPlot - xMinPlot < 2*penWidth) {
+                        const qreal xMean = (xMaxPlot+xMinPlot)/2.;
+                        xMinPlot = xMean - penWidth;
+                        xMaxPlot = xMean + penWidth;
+                    }
+
+                    // Draw a line with a border color background
+                    const QRectF border (xMinPlot - 1, yPlot - (1+penWidth)/2., xMaxPlot - xMinPlot + 1, penWidth +1 );
+                    painter.setBrush(refPointsPen.brush());
+                    painter.setPen(QPen(getBackgroundColor(), 1));
+                    painter.drawRect(border);
+
+
+                }
+                else if (refPoint.type == CurveRefPts::eDotLine) {
+
+                    pathPoint.moveTo( getXForValue(xmin), getYForValue(ymoy, true) );
+                    pathPoint.lineTo( getXForValue(xmax), getYForValue(ymoy, true) );
+
+                    refPointsPen.setWidthF(std::max(2., pen.widthF()));
+                    refPointsPen.setStyle(Qt::DotLine);
+                    painter.setBrush(refPointsPen.brush());
+                    painter.setPen(refPointsPen);
+                    painter.strokePath(pathPoint, refPointsPen);
+
+                }
+            }
+
+               // ++iterRefPts;
+        }
+
     }
     painter.restore();
 
@@ -1634,7 +1543,7 @@ void GraphView::drawMap(GraphCurve& curve, QPainter& painter)
 
     for (unsigned c1 = 1 ; c1 < curve.mMap.column(); c1++) {
         const double tReal = c1*(maxX-minX)/(curve.mMap.column()-1) + minX;
-        qreal xbottom;// = getXForValue(tReal, true) + rectXSize/2.;
+        qreal xbottom;
         if (tReal <= mCurrentMinX || c1 == (curve.mMap.column()-1) )
             xbottom = getXForValue(tReal, true);
         else
