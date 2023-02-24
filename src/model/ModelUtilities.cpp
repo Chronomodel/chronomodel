@@ -1103,8 +1103,8 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
             if (event->mTheta.mLastAccepts.size()>2 && event->mTheta.mSamplerProposal!= MHVariable::eFixe) {
                 const auto acceptRate = event->mTheta.getCurrentAcceptRate();
                 const auto samplerType = event->mTheta.mSamplerProposal;
-                if (acceptRate > 0.46 &&  acceptRate < 0.42 && samplerType == MHVariable::eMHAdaptGauss)
-                    HTMLText += line(textBlue(QObject::tr("     Current Acceptance Rate : ") + textBold(textRed(stringForLocal(acceptRate*100.) + " % ("))  + MHVariable::getSamplerProposalText(samplerType)) + ")");
+                if (samplerType == MHVariable::eMHAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
+                    HTMLText += line(textBlue(QObject::tr("     Current Acceptance Rate : ") + textBold(textRed(stringForLocal(acceptRate*100.) + " %"))  + " (" + MHVariable::getSamplerProposalText(samplerType)) + ")");
                 else
                     HTMLText += line(textBlue(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(acceptRate*100.), MHVariable::getSamplerProposalText(samplerType))));
 
@@ -1641,15 +1641,16 @@ void sampleInCumulatedRepartition (Event* event, const ProjectSettings &settings
 
     // Calibrated outside the constraints
     // This case must be dissociated in two, the density is on the right or the density is on the left, thus favouring one of the sides.
+    // std::max(unionStep, (unionTmax - unionTmin)/3.) prevent (unionTmax - unionTmin) = 0 with DoubleExp
 
     if (unionTmax < min) {
-        event->mTheta.mX = Generator::gaussByDoubleExp((unionTmax + unionTmin)/2., (unionTmax - unionTmin)/3., min, max);
+        event->mTheta.mX = Generator::gaussByDoubleExp((unionTmax + unionTmin)/2., std::max(unionStep, (unionTmax - unionTmin)/3.), min, max);
 #ifdef DEBUG
         if (event->mTheta.mX == min)
             qDebug() << "sampleInCumulatedRepartition unionTmax< min and (event->mTheta.mX == min)";
 #endif
     } else if (max < unionTmin) {
-        event->mTheta.mX = Generator::gaussByDoubleExp((unionTmax + unionTmin)/2., (unionTmax - unionTmin)/3., min, max);
+        event->mTheta.mX = Generator::gaussByDoubleExp((unionTmax + unionTmin)/2., std::max(unionStep, (unionTmax - unionTmin)/3.), min, max);
 
 #ifdef DEBUG
         if (event->mTheta.mX == max)

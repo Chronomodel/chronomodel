@@ -105,18 +105,18 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     errno = 0;
     if ((min >= max) || (sigma == 0)) {
         if ((min >= max) && (sigma != 0))
-            throw QObject::tr("DOUBLE EXP ERROR : min = %1 , max = %2").arg(QString::number(min), QString::number(max));
+            throw QObject::tr("[Generator::gaussByDoubleExp]: min = %1 , max = %2").arg(QString::number(min), QString::number(max));
 
 #ifdef DEBUG
         else
-            qDebug() << "DOUBLE EXP WARNING : min == max";
+            qDebug() << "[Generator::gaussByDoubleExp] WARNING : min == max";
 #endif
 
         if ((sigma == 0) && (min <= max))
-            throw QObject::tr("DOUBLE EXP ERROR : sigma == 0, mean = %1").arg(QString::number(mean)) ;
+            throw QObject::tr("[Generator::gaussByDoubleExp] sigma == 0, mean = %1").arg(QString::number(mean)) ;
 #ifdef DEBUG
         else
-            qDebug() << "DOUBLE EXP WARNING : sigma == 0";
+            qDebug() << "[Generator::gaussByDoubleExp] WARNING : sigma == 0";
 #endif
 
         return min;

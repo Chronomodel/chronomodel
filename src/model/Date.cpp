@@ -624,7 +624,7 @@ void Date::calibrate(const ProjectSettings settings, Project *project, bool trun
          */
 
         if (repartitionTemp.last() > 0.) {
-            if (truncate) {
+            if (truncate && repartitionTemp.size()>10) {
                 const double threshold (0.00001);
                 const int minIdx = int (floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp)));
                 const int maxIdx = int (ceil(vector_interpolate_idx_for_value((1. - threshold) * lastRepVal, repartitionTemp)));
@@ -1067,13 +1067,13 @@ const QMap<double, double> Date::getFormatedCalibToShow() const
 
         int minIdx = 0;
         for (auto& v : mCalibration->mCurve) {
-            if (v >threshold) break;
+            if (v >=threshold) break;
             minIdx++;
         }
 
         int maxIdx = mCalibration->mCurve.size()-1;
         for (auto itv = mCalibration->mCurve.rbegin(); itv!= mCalibration->mCurve.rend(); itv++) {
-            if (*itv >threshold) break;
+            if (*itv >=threshold) break;
             maxIdx--;
         }
 
@@ -1088,8 +1088,8 @@ const QMap<double, double> Date::getFormatedCalibToShow() const
         calib = vector_to_map(mCalibration->mCurve, mCalibration->mTmin, mCalibration->mTmax, mCalibration->mStep);
     }
 
-    calib[calib.firstKey()] = 0.;
-    calib[calib.lastKey()] = 0.;
+    calib[calib.firstKey() - mCalibration->mStep] = 0.;
+    calib[calib.lastKey() + mCalibration->mStep] = 0.;
     return DateUtils::convertMapToAppSettingsFormat(calib);
 }
 

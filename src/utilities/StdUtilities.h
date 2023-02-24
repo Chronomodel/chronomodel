@@ -178,10 +178,10 @@ T vector_max_value(const QVector<T>& aVector)
 }
 
 template <class T>
-T vector_min_value(const QVector<T>& aVector)
+T vector_min_value(const QVector<T>& vector)
 {
-    typename QVector<T>::const_iterator it = std::min_element(aVector.cbegin(), aVector.cend());
-    if (it != aVector.cend())
+    typename QVector<T>::const_iterator it = std::min_element(vector.cbegin(), vector.cend());
+    if (it != vector.cend())
         return *it;
     return T(0);
 }
@@ -194,56 +194,59 @@ T vector_min_value(const QVector<T>& aVector)
 }
 
 template <class U, class T>
-T map_max_value(const QMap<U, T>& aMap)
+T map_max_value(const QMap<U, T> &map)
 {
-    QMapIterator<U, T> iter(aMap);
-    T max = iter.hasNext() ?  iter.next().value()  :  T(0) ;
-    while (iter.hasNext()) {
-        iter.next();
-        max = qMax(max, iter.value());
+    typename QMap<U, T>::const_iterator i = map.cbegin();
+    typename QMap<U, T>::const_iterator biggest = i;
+    ++i;
+
+    for (; i != map.end(); ++i)
+        if (*i > *biggest )  biggest = i;
+
+    return *biggest;
+}
+
+template <class U, class T>
+T map_min_value(const QMap<U, T> &map)
+{
+    typename QMap<U, T>::const_iterator i = map.cbegin();
+    typename QMap<U, T>::const_iterator smallest = i;
+    ++i;
+
+    for (; i != map.end(); ++i)
+        if (*i < *smallest )  smallest = i;
+
+    return *smallest;
+
+}
+
+template <class U, class T>
+T multimap_max_value(const QMultiMap<U, T> &map)
+{
+    typename QMultiMap<U, T>::const_iterator i = map.cbegin();
+    T max = i.value();
+    while (std::next(i) != map.end()) {
+        i++;
+        max = std::max(max, i.value());
     }
     return max;
 }
 
 template <class U, class T>
-T map_min_value(const QMap<U, T>& aMap)
+T multimap_min_value(const QMultiMap<U, T> &map)
 {
-    QMapIterator<U, T> iter(aMap);
-    T min = iter.hasNext() ?  iter.next().value()  :  T(0) ;
-    while (iter.hasNext()) {
-        iter.next();
-        min = qMin(min, iter.value());
-    }
-    return min;
-}
-
-template <class U, class T>
-T multimap_max_value(const QMultiMap<U, T>& aMap)
-{
-    QMultiMapIterator<U, T> iter(aMap);
-    T max = iter.hasNext() ?  iter.next().value()  :  T(0) ;
-    while (iter.hasNext()) {
-        iter.next();
-        max = qMax(max, iter.value());
-    }
-    return max;
-}
-
-template <class U, class T>
-T multimap_min_value(const QMultiMap<U, T>& aMap)
-{
-   QMultiMapIterator<U, T> iter(aMap);
-    T min = iter.value();
-    while (iter.hasNext()) {
-        iter.next();
-        min = qMin(min, iter.value());
+    typename QMultiMap<U, T>::const_iterator i = map.cbegin();
+    T min = i.value();
+    while (std::next(i) != map.end()) {
+        i++;
+        min = std::min(min, i.value());
     }
     return min;
 }
 // --------------------------------
 // can replace with std::accumulate(vector.begin(), vector.end(), T(0))
 template<typename T>
-T sum(const QVector<T>& vector)
+T sum(const QVector<T> &vector)
 {
     T s = 0;
    /* std::for_each(vector.begin(), vector.end(), [&s](T& v){
@@ -256,20 +259,20 @@ T sum(const QVector<T>& vector)
 }
 
 template<typename T>
-T sum2(const QVector<T>& vector)
+T sum2(const QVector<T> &vector)
 {
     T sum = 0;
     /*std::for_each(vector.cbegin(), vector.cend(), [&sum](T& v){
         sum += v * v;
     });*/
-    for (const auto& v : vector) {
+    for (const auto &v : vector) {
         sum += v * v;
     }
     return sum;
 }
 
 template<typename T>
-T sumShifted(const QVector<T>& vector, const T& shift)
+T sumShifted(const QVector<T> &vector, const T &shift)
 {
     T sum = 0;
     /*std::for_each(vector.cbegin(), vector.cend(), [&sum, &shift](T& v){
@@ -282,7 +285,7 @@ T sumShifted(const QVector<T>& vector, const T& shift)
 }
 
 template<typename T>
-T sum2Shifted(const QVector<T>& vector, const T& shift)
+T sum2Shifted(const QVector<T> &vector, const T &shift)
 {
     T sum = 0;
     /*std::for_each(vector.cbegin(), vector.cend(), [&sum, &shift](T& v){
@@ -296,9 +299,9 @@ T sum2Shifted(const QVector<T>& vector, const T& shift)
 }
 
 template <typename T>
-T mean(const QVector<T>& vector)
+T mean(const QVector<T> &vector)
 {
-    return sum(vector)/vector.size();
+    return sum(vector)/ T(vector.size());
 }
 
 /**
@@ -315,13 +318,13 @@ T sinc(const T x, const T L=1)
 }
 // --------------------------------
 template<typename T>
-QMap<T, T> normalize_map(const QMap<T, T>& aMap, const T max = 1)
+QMap<T, T> normalize_map(const QMap<T, T> &map, const T max = 1)
 {
-    T max_value = map_max_value(aMap);
+    T max_value = map_max_value(map);
 
     QMap<T, T> result;
     // can be done with std::generate !!
-    for( typename QMap<T, T>::const_iterator it = aMap.begin(); it != aMap.end(); ++it)
+    for( typename QMap<T, T>::const_iterator it = map.begin(); it != map.end(); ++it)
         result[it.key()] = (it.value() / max_value)*max;
 
     return result;
