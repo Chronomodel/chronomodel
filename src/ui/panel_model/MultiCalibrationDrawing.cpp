@@ -200,7 +200,7 @@ void MultiCalibrationDrawing::updateLayout()
 
             graph->showXAxisValues(axisVisible && mListAxisVisible[graphNo]);
 
-            if (!graph->hasCurve() && !graph->hasPoints()) {
+            if (!graph->has_curves() && !graph->has_points()) {
                 graph->showInfos(true);
                 graph->setNothingMessage( graph->getInfo(' ')  + " -> Not computable" );
                 graph->setGeometry(barWidth + graphShift, y, std::max(0, width() - barWidth - graphShift), mGraphHeight);
@@ -279,7 +279,7 @@ void MultiCalibrationDrawing::forceRefresh()
     for (auto&& graph: graphList) {
         mListBar[i]->setGeometry(5, y, ColoredBar::mWidth, mGraphHeight - marginBottom);
 
-         if (!graph->hasCurve()) {
+         if (!graph->has_curves()) {
             QLabel noCalib (tr("No Calibration"), this);
             noCalib.setGeometry(ColoredBar::mWidth +5, y, std::max(0, width() - ColoredBar::mWidth - fontMetrics().horizontalAdvance(noCalib.text())), mGraphHeight);
 

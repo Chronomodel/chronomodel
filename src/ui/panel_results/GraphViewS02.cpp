@@ -81,7 +81,7 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variabl
     GraphViewResults::generateCurves(typeGraph, variableList, model);
     
     mGraph->removeAllCurves();
-    mGraph->removeAllZones();
+    mGraph->remove_all_zones();
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
     mGraph->setOverArrow(GraphView::eNone);
@@ -115,13 +115,13 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variabl
         const GraphCurve &curvePostDistrib = densityCurve(mModel->mS02Vg.fullHisto(),
                                                           "Post Distrib All Chains",
                                                           color);
-        mGraph->addCurve(curvePostDistrib);
+        mGraph->add_curve(curvePostDistrib);
 
         // ------------------------------------
         //  HPD All Chains
         // ------------------------------------
         const GraphCurve &curveHPD = HPDCurve(mModel->mS02Vg.mFormatedHPD, "HPD All Chains", color);
-        mGraph->addCurve(curveHPD);
+        mGraph->add_curve(curveHPD);
 
         // ------------------------------------
         //  Post Distrib Chain i
@@ -133,7 +133,7 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variabl
                                                                        Painting::chainColors.at(i),
                                                                        Qt::SolidLine,
                                                                        Qt::NoBrush);
-                mGraph->addCurve(curvePostDistribChain);
+                mGraph->add_curve(curvePostDistribChain);
             }
         }
 
@@ -143,7 +143,7 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variabl
         const GraphCurve &curveCred = topLineSection(mModel->mS02Vg.mFormatedCredibility,
                                                      "Credibility All Chains",
                                                      color);
-        mGraph->addCurve(curveCred);
+        mGraph->add_curve(curveCred);
         mGraph->autoAdjustYScale(true);
 
     }

@@ -94,7 +94,7 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         mGraph->setCurrentX(tminDisplay, tmaxDisplay);
 
         mGraph->removeAllCurves();
-        mGraph->removeAllZones();
+        mGraph->remove_all_zones();
         mGraph->clearInfos();
         mGraph->showInfos(true);
         mGraph->setFormatFunctX(nullptr);
@@ -117,7 +117,7 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
                 refCurve[tmaxDisplay] = ref_year - DateUtils::convertFromAppSettingsFormat(tmaxDisplay);
                 curve.mData =refCurve;
                 //curve.mType = GraphCurve::CurveType::eDensityData;
-                mGraph->addCurve(curve);
+                mGraph->add_curve(curve);
 
                 // ----------------------------------------------
 
@@ -162,7 +162,7 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
 
                 measureCurve = normalize_map(measureCurve);
                 curveMeasure.mData = measureCurve;
-                mGraph->addCurve(curveMeasure);
+                mGraph->add_curve(curveMeasure);
 
                 /* ----------------------------------------------
                  *  Error on measure
@@ -190,9 +190,9 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
                 curveMeasureSup.mHorizontalValue = age + error;
                 curveMeasureInf.mHorizontalValue = age - error;
 
-                mGraph->addCurve(curveMeasureAvg);
-                mGraph->addCurve(curveMeasureSup);
-                mGraph->addCurve(curveMeasureInf);
+                mGraph->add_curve(curveMeasureAvg);
+                mGraph->add_curve(curveMeasureSup);
+                mGraph->add_curve(curveMeasureInf);
 
             // Y scale and RangeY are define in graphView::zommX()
 

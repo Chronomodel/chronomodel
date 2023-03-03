@@ -129,8 +129,8 @@ public:
 
     // Manage Curves
 
-    void addCurve(const GraphCurve& curve);
-    inline bool hasCurve() {return ((mCurves.size() != 0) || (mZones.size() != 0)) ;}
+    void add_curve(const GraphCurve& curve);
+    inline bool has_curves() {return ((mCurves.size() != 0) || (mZones.size() != 0)) ;}
 
     void removeCurve(const QString& name);
     void removeAllCurves();
@@ -140,15 +140,15 @@ public:
     const QList<GraphCurve>& getCurves() const;
     int numCurves() const;
 
-    inline bool hasPoints() const {return (refPoints.size() != 0) ;}
-    inline CurveRefPts* getRefPoint (int i) {return &refPoints[i];}
-    void setPoints(const std::vector<CurveRefPts> refPts) {refPoints = refPts;};
-    void addPoint(const CurveRefPts refPt) {refPoints.push_back(refPt);};
-    inline void insertPoints(const std::vector<CurveRefPts> refPts) {refPoints.insert(refPoints.end(), refPts.begin(), refPts.end());};
-    void setPointsVisible(const QString &name, const bool visible);
+    inline bool has_points() const {return (refPoints.size() != 0) ;}
+    inline CurveRefPts* get_refPoint(int i) {return &refPoints[i];}
+    void set_points(const std::vector<CurveRefPts> refPts) {refPoints = refPts;};
+    void add_point(const CurveRefPts refPt) {refPoints.push_back(refPt);};
+    inline void insert_points(const std::vector<CurveRefPts> refPts) {refPoints.insert(refPoints.end(), refPts.begin(), refPts.end());};
+    void set_points_visible(const QString &name, const bool visible);
 
-    void addZone(const GraphZone& zone);
-    void removeAllZones();
+    void add_zone(const GraphZone& zone);
+    void remove_all_zones();
 
     // Set value formatting functions
     void setFormatFunctX(DateConversion f);

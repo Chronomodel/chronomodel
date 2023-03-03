@@ -174,7 +174,7 @@ public:
 
             gCurve.mData = calib;
             gCurve.mType = GraphCurve::CurveType::eDensityData;
-            mGraph->addCurve(gCurve);
+            mGraph->add_curve(gCurve);
             mGraph->setRangeX(tminDisplay, tmaxDisplay);
             mGraph->setCurrentX(tminDisplay, tmaxDisplay);
         }

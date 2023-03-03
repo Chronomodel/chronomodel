@@ -91,7 +91,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
     mGraph->removeAllCurves();
     mGraph->reserveCurves(9);
 
-    mGraph->removeAllZones();
+    mGraph->remove_all_zones();
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
 
@@ -183,27 +183,27 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
 
         const GraphCurve &curveEndHPD = HPDCurve(betaHPD, "HPD End All Chains", colorEnd);
 
-        mGraph->addCurve(curveBegin);
-        mGraph->addCurve(curveEnd);
+        mGraph->add_curve(curveBegin);
+        mGraph->add_curve(curveEnd);
 
 
-        mGraph->addCurve(curveBeginHPD);
-        mGraph->addCurve(curveEndHPD);
+        mGraph->add_curve(curveBeginHPD);
+        mGraph->add_curve(curveEndHPD);
 
         mGraph->setOverArrow(GraphView::eBothOverflow);
 
         const GraphCurve &curveTimeRange = topLineSection(mPhase->getFormatedTimeRange(), "Time Range", color);
-        mGraph->addCurve(curveTimeRange);
+        mGraph->add_curve(curveTimeRange);
 
         /* ------------------------------------------------------------
         *   Add zones Outside Study Period
         * ------------------------------------------------------------*/
 
         const GraphZone zoneMin (-INFINITY, mSettings.getTminFormated());
-        mGraph->addZone(zoneMin);
+        mGraph->add_zone(zoneMin);
 
         const GraphZone zoneMax (mSettings.getTmaxFormated(), INFINITY);
-        mGraph->addZone(zoneMax);
+        mGraph->add_zone(zoneMax);
 
         if (!mPhase->mAlpha.mChainsHistos.isEmpty())
             for (auto i = 0; i<mChains.size(); ++i) {
@@ -223,8 +223,8 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
                 const GraphCurve &curveEnd = densityCurve(beta_i,
                                                    "Post Distrib End Chain " + QString::number(i),
                                                    Painting::chainColors.at(i).darker(170), Qt::DashLine);
-                mGraph->addCurve(curveBegin);
-                mGraph->addCurve(curveEnd);
+                mGraph->add_curve(curveBegin);
+                mGraph->add_curve(curveEnd);
             }
 
 
@@ -255,8 +255,8 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
                                                   "Post Distrib Env All Chains",
                                                   color, Qt::CustomDashLine, brushColor);
 
-            mGraph->addCurve(curveTempoEnv);
-            mGraph->addCurve(curveTempo);
+            mGraph->add_curve(curveTempoEnv);
+            mGraph->add_curve(curveTempo);
 
             mGraph->setOverArrow(GraphView::eBothOverflow);
 
@@ -265,10 +265,10 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         * ------------------------------------------------------------*/
 
             const GraphZone zoneMin (-INFINITY, mSettings.getTminFormated());
-            mGraph->addZone(zoneMin);
+            mGraph->add_zone(zoneMin);
 
             const GraphZone zoneMax (mSettings.getTmaxFormated(), INFINITY);
-            mGraph->addZone(zoneMax);
+            mGraph->add_zone(zoneMax);
 
         } else
             mGraph->resetNothingMessage();
@@ -306,10 +306,10 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
 
             mGraph->setOverArrow(GraphView::eBothOverflow);
 
-            mGraph->addCurve(curveActivityEnv);
-            mGraph->addCurve(curveActivity);
+            mGraph->add_curve(curveActivityEnv);
+            mGraph->add_curve(curveActivity);
 
-            mGraph->addCurve(curveActivityUnifTheo);
+            mGraph->add_curve(curveActivityUnifTheo);
 
             const type_data yMax = std:: max(map_max_value(mPhase->mActivitySup), map_max_value(mPhase->mActivityUnifTheo));
 
@@ -320,10 +320,10 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         * ------------------------------------------------------------*/
 
             const GraphZone zoneMin (-INFINITY, mSettings.getTminFormated());
-            mGraph->addZone(zoneMin);
+            mGraph->add_zone(zoneMin);
 
             const GraphZone zoneMax (mSettings.getTmaxFormated(), INFINITY);
-            mGraph->addZone(zoneMax);
+            mGraph->add_zone(zoneMax);
 
         } else
             mGraph->resetNothingMessage();
@@ -343,11 +343,11 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
             color.setAlpha(255);
             GraphCurve curveDurationHPD = HPDCurve(mPhase->mDuration.mFormatedHPD, "HPD All Chains", color);
             mGraph->setCanControlOpacity(true);
-            mGraph->addCurve(curveDurationHPD);
+            mGraph->add_curve(curveDurationHPD);
             mGraph->setFormatFunctX(nullptr);
             mGraph->setFormatFunctY(nullptr);
 
-            mGraph->addCurve(curveDuration);
+            mGraph->add_curve(curveDuration);
 
 
             /* ------------------------------------
@@ -357,7 +357,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
             GraphCurve curveCred = topLineSection(mPhase->mDuration.mFormatedCredibility,
                                                             "Credibility All Chains",
                                                             color);
-            mGraph->addCurve(curveCred);
+            mGraph->add_curve(curveCred);
 
         } else
             mGraph->resetNothingMessage();
@@ -369,7 +369,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
                                                              "Post Distrib Chain " + QString::number(i),
                                                              Painting::chainColors.at(i), Qt::DotLine);
 
-                mGraph->addCurve(curveDuration);
+                mGraph->add_curve(curveDuration);
             }
 
     }

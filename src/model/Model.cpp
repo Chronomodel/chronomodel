@@ -57,8 +57,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <thread>
 
-
-// Constructor...
 Model::Model(QObject *parent):
     QObject(parent),
     mProject(nullptr),

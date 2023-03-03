@@ -114,7 +114,7 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
 
         const GraphCurve curve = horizontalSection(qMakePair(bound.mFixed, bound.mFixed),"Bound", Painting::mainColorLight, QBrush(Painting::mainColorLight));
 
-        graph->addCurve(curve);
+        graph->add_curve(curve);
 
 
         mThumb = QImage(graph->size(),QImage::Format_ARGB32_Premultiplied);

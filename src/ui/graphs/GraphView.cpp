@@ -280,7 +280,7 @@ void GraphView::adjustYScale()
              }
         }
 
-        for (auto rf : refPoints) {
+        for (auto& rf : refPoints) {
             yMin = qMin(yMin, rf.Ymin);
             yMax = qMax(yMax, rf.Ymax);
         }
@@ -488,7 +488,7 @@ void GraphView::setFormatFunctY(DateConversion f)
  Curves & Zones
  ------------------------------------------------------ */
 
-void GraphView::addCurve(const GraphCurve &curve)
+void GraphView::add_curve(const GraphCurve &curve)
 {
     mCurves.append(curve);
 }
@@ -506,7 +506,6 @@ void GraphView::removeCurve(const QString &name)
 void GraphView::removeAllCurves()
 {
     mCurves.clear();
-    //adjustYScale();
     repaintGraph(false);
 }
 
@@ -517,11 +516,11 @@ void GraphView::reserveCurves(const int size)
 
 void GraphView::setCurveVisible(const QString &name, const bool visible)
 {
-    bool modified = false;
+   // bool modified = false;
     for (auto && curve : mCurves) {
         if (curve.mName == name && curve.mVisible != visible) {
             curve.mVisible = visible;
-            modified = true;
+   //         modified = true;
             break;
         }
     }
@@ -551,18 +550,18 @@ int GraphView::numCurves() const
     return mCurves.size();
 }
 
-void GraphView::addZone(const GraphZone &zone)
+void GraphView::add_zone(const GraphZone &zone)
 {
     mZones.append(zone);
 }
 
-void GraphView::removeAllZones()
+void GraphView::remove_all_zones()
 {
     mZones.clear();
 }
 
 
-void GraphView::setPointsVisible(const QString &name, const bool visible)
+void GraphView::set_points_visible(const QString &name, const bool visible)
 {
   //  bool modified = false;
     for (auto&& ref : refPoints) {

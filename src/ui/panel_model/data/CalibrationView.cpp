@@ -289,7 +289,7 @@ void CalibrationView::setDate(const Date& d)
 void CalibrationView::updateGraphs()
 {
     mCalibGraph->removeAllCurves();
-    mCalibGraph->removeAllZones();
+    mCalibGraph->remove_all_zones();
 
      if (!mDate.isNull() ) {
         mCalibGraph->setRangeX (mTminDisplay, mTmaxDisplay);
@@ -306,7 +306,7 @@ void CalibrationView::updateGraphs()
             zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(75);
             zone.mText = tr("Outside study period");
-            mCalibGraph->addZone(zone);
+            mCalibGraph->add_zone(zone);
         }
         if (mTmaxDisplay > mSettings.getTmaxFormated()) {
             GraphZone zone;
@@ -315,7 +315,7 @@ void CalibrationView::updateGraphs()
             zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(75);
             zone.mText = tr("Outside study period");
-            mCalibGraph->addZone(zone);
+            mCalibGraph->add_zone(zone);
         }
 
         /* ------------------------------------------------------------
@@ -336,7 +336,7 @@ void CalibrationView::updateGraphs()
             const GraphCurve &calibCurve = densityCurve(calibMap, "Calibration", penColor);
 
             QFontMetrics fm (mCalibGraph->font());
-            mCalibGraph->addCurve(calibCurve);
+            mCalibGraph->add_curve(calibCurve);
             mCalibGraph->setMarginBottom(fm.ascent() * 2.2);
 
             GraphCurve calibWiggleCurve;
@@ -346,7 +346,7 @@ void CalibrationView::updateGraphs()
                 const QMap<double, double> &calibWiggle = normalize_map(wiggleCalibMap, map_max_value(calibCurve.mData));
                 calibWiggleCurve = densityCurve(calibWiggle, "Wiggle", Qt::red);
 
-                mCalibGraph->addCurve(calibWiggleCurve);
+                mCalibGraph->add_curve(calibWiggleCurve);
             }
 
             QString input = mHPDEdit->text();
@@ -370,7 +370,7 @@ void CalibrationView::updateGraphs()
                 hpdCurve.mIsRectFromZero = true;
 
                 hpdCurve.mData = normalize_map(hpd, map_max_value(calibMap));
-                mCalibGraph->addCurve(hpdCurve);
+                mCalibGraph->add_curve(hpdCurve);
 
                 // update max inside the display period
                 QMap<type_data, type_data> subDisplayCalib = calibCurve.mData;
@@ -422,7 +422,7 @@ void CalibrationView::updateGraphs()
             zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(35);
             zone.mText = tr("Individual calibration not digitally computable ...");
-            mCalibGraph->addZone(zone);
+            mCalibGraph->add_zone(zone);
         }
 
         mDrawing->setCalibGraph(mCalibGraph);
@@ -676,7 +676,7 @@ void CalibrationView::paintEvent(QPaintEvent* e)
 
 void CalibrationView::updateLayout()
 {
-    if (!mCalibGraph->hasCurve()) {
+    if (!mCalibGraph->has_curves()) {
         mDrawing->setGeometry(mButtonWidth, 0, 0, 0);
         return;
     }

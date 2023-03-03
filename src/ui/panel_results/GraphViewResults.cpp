@@ -418,7 +418,7 @@ void GraphViewResults::updateLayout()
 
     const bool axisVisible = (height() >= mHeightForVisibleAxis);
 
-    if (mGraph->hasCurve()) {
+    if (mGraph->has_curves()) {
         mGraph->showXAxisValues(axisVisible);
         mGraph->setMarginBottom(axisVisible ? fm.ascent()* 2.0 : fm.ascent());
     }
@@ -510,7 +510,7 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
         curve.mName = prefix + "Trace " + QString::number(i);
         curve.mDataVector = variable->fullTraceForChain(chains, i);
         curve.mPen.setColor(Painting::chainColors.at(i));
-        mGraph->addCurve(curve);
+        mGraph->add_curve(curve);
 
         const Quartiles &quartiles = variable->mChainsResults.at(i).traceAnalysis.quartiles;
 
@@ -520,13 +520,13 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
         colMediane.setAlpha(100);
 
         const GraphCurve &curveQ3 = horizontalLine(quartiles.Q3, prefix + "Q3 " + QString::number(i), colBorder);
-        mGraph->addCurve(curveQ3);
+        mGraph->add_curve(curveQ3);
 
         const GraphCurve &curveQ2 = horizontalLine(quartiles.Q2, prefix + "Q2 " + QString::number(i), colMediane);
-        mGraph->addCurve(curveQ2);
+        mGraph->add_curve(curveQ2);
 
         const GraphCurve &curveQ1 = horizontalLine(quartiles.Q1, prefix + "Q1 " + QString::number(i), colBorder);
-        mGraph->addCurve(curveQ1);
+        mGraph->add_curve(curveQ1);
     }
 }
 
@@ -540,9 +540,9 @@ void GraphViewResults::generateAcceptCurves(const QList<ChainSpecs> &chains,
         curve.mType = GraphCurve::eQVectorData;
         curve.mDataVector = variable->acceptationForChain(chains, i);
         curve.mPen.setColor(Painting::chainColors.at(i));
-        mGraph->addCurve(curve);
+        mGraph->add_curve(curve);
     }
-    mGraph->addCurve(horizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
+    mGraph->add_curve(horizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
 }
 
 void GraphViewResults::generateCorrelCurves(const QList<ChainSpecs> &chains,
@@ -558,7 +558,7 @@ void GraphViewResults::generateCorrelCurves(const QList<ChainSpecs> &chains,
             continue;
 
         curve.mPen.setColor(Painting::chainColors.at(i));
-        mGraph->addCurve(curve);
+        mGraph->add_curve(curve);
 
         //to do, we only need the totalIter number?
         const double n = variable->runRawTraceForChain(mChains, i).size();
@@ -571,8 +571,8 @@ void GraphViewResults::generateCorrelCurves(const QList<ChainSpecs> &chains,
         const GraphCurve &curveLimitUpper = horizontalLine(limit, "Correl Limit Upper " + QString::number(i),
                                                             Qt::red,
                                                             Qt::DotLine);
-        mGraph->addCurve(curveLimitLower);
-        mGraph->addCurve(curveLimitUpper);
+        mGraph->add_curve(curveLimitLower);
+        mGraph->add_curve(curveLimitUpper);
     }
 }
 

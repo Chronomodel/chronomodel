@@ -645,7 +645,8 @@ void Date::calibrate(const ProjectSettings settings, Project *project, bool trun
               } else {
                 tminCal = mTminRefCurve;
                 tmaxCal = mTminRefCurve;
-
+                mCalibration->mCurve = calibrationTemp;
+                mCalibration->mRepartition = repartitionTemp;
             }
             // Stretch repartition curve so it goes from 0 to 1
             mCalibration->mRepartition = stretch_vector(mCalibration->mRepartition, 0., 1.);
@@ -1255,7 +1256,7 @@ QPixmap Date::generateUnifThumb(ProjectSettings settings)
 
             const GraphCurve curve = horizontalSection(qMakePair(tminDisplay, tmaxDisplay), "Calibration", color, QBrush(color));
 
-            graph.addCurve(curve);
+            graph.add_curve(curve);
 
             // Drawing the wiggle
             if (mDeltaType != eDeltaNone) {
@@ -1263,7 +1264,7 @@ QPixmap Date::generateUnifThumb(ProjectSettings settings)
                 QMap<double, double> calibWiggle = normalize_map(getMapDataInRange(getRawWiggleCalibMap(), tmin, tmax));
                 GraphCurve curveWiggle = densityCurve(calibWiggle, "Wiggle", Qt::red);
 
-                graph.addCurve(curveWiggle);
+                graph.add_curve(curveWiggle);
             }
             graph.repaint();
 
@@ -1308,7 +1309,7 @@ QPixmap Date::generateCalibThumb(ProjectSettings settings)
 
         GraphView graph;
 
-        graph.addCurve(curve);
+        graph.add_curve(curve);
         
         // Drawing the wiggle
         if (mDeltaType != eDeltaNone) {
@@ -1317,7 +1318,7 @@ QPixmap Date::generateCalibThumb(ProjectSettings settings)
 
             GraphCurve curveWiggle = densityCurve(calibWiggle, "Wiggle", Qt::blue, Qt::SolidLine, QBrush(Qt::NoBrush));
 
-            graph.addCurve(curveWiggle);
+            graph.add_curve(curveWiggle);
         }
         
         

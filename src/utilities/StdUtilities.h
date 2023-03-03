@@ -320,12 +320,15 @@ T sinc(const T x, const T L=1)
 template<typename T>
 QMap<T, T> normalize_map(const QMap<T, T> &map, const T max = 1)
 {
-    T max_value = map_max_value(map);
-
     QMap<T, T> result;
-    // can be done with std::generate !!
-    for( typename QMap<T, T>::const_iterator it = map.begin(); it != map.end(); ++it)
-        result[it.key()] = (it.value() / max_value)*max;
+    if (!map.isEmpty()) {
+        T max_value = map_max_value(map);
+
+        // can be done with std::generate !!
+        for( typename QMap<T, T>::const_iterator it = map.begin(); it != map.end(); ++it)
+            result[it.key()] = (it.value() / max_value)*max;
+
+    }
 
     return result;
 }

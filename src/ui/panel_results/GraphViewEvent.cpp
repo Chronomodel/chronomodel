@@ -91,7 +91,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
     mGraph->removeAllCurves();
     mGraph->reserveCurves(6);
 
-    mGraph->removeAllZones();
+    mGraph->remove_all_zones();
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
 
@@ -165,14 +165,14 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
                 qreal tLower = bound->formatedFixedValue();
                 qreal tUpper = tLower;
                 curveLineBound.mSections.push_back(qMakePair(tLower,tUpper));
-                mGraph->addCurve(curveLineBound);
+                mGraph->add_curve(curveLineBound);
 
                 // generate theorical curves
                 for (int i=0; i<mChains.size(); ++i) {
                     curveLineBound.mName = "Post Distrib Chain " + QString::number(i);
                     curveLineBound.mPen.setColor(Painting::chainColors.at(i));
 
-                    mGraph->addCurve(curveLineBound);
+                    mGraph->add_curve(curveLineBound);
                 }
 
             } else {
@@ -185,13 +185,13 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
                 const GraphCurve &curvePostDistrib = densityCurve(mEvent->mTheta.mFormatedHisto,
                                                                        "Post Distrib All Chains",
                                                                        color);
-                mGraph->addCurve(curvePostDistrib);
+                mGraph->add_curve(curvePostDistrib);
 
                 // HPD All Chains
                 const GraphCurve &curveHPD = HPDCurve(mEvent->mTheta.mFormatedHPD,
                                                        "HPD All Chains",
                                                        color);
-                mGraph->addCurve(curveHPD);
+                mGraph->add_curve(curveHPD);
 
                 /* ------------------------------------
                  *  Post Distrib Chain i
@@ -204,7 +204,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
                                                                                 Painting::chainColors.at(i),
                                                                                 Qt::SolidLine,
                                                                                 Qt::NoBrush);
-                        mGraph->addCurve(curvePostDistribChain);
+                        mGraph->add_curve(curvePostDistribChain);
                     }
 
                 /* ------------------------------------
@@ -214,17 +214,17 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
                 const GraphCurve &curveCred = topLineSection(mEvent->mTheta.mFormatedCredibility,
                                                                 "Credibility All Chains",
                                                                 color);
-                mGraph->addCurve(curveCred);
+                mGraph->add_curve(curveCred);
             }
             /* ------------------------------------------------------------
             *   Add zones outside study period
             * ------------------------------------------------------------*/
 
             const GraphZone zoneMin (-INFINITY, mSettings.getTminFormated());
-            mGraph->addZone(zoneMin);
+            mGraph->add_zone(zoneMin);
 
             const GraphZone zoneMax (mSettings.getTmaxFormated(), INFINITY);
-            mGraph->addZone(zoneMax);
+            mGraph->add_zone(zoneMax);
         }
 
 
@@ -248,13 +248,13 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
                                                         "Post Distrib Date " + QString::number(i) + " All Chains",
                                                         color);
 
-                mGraph->addCurve(curve);
+                mGraph->add_curve(curve);
                 if (!date.mSigmaTi.mChainsHistos.isEmpty())
                     for (int j=0; j<mChains.size(); ++j) {
                         const GraphCurve &curveChain = densityCurve(date.mSigmaTi.histoForChain(j),
                                                                      "Post Distrib Date " + QString::number(i) + " Chain " + QString::number(j),
                                                                      Painting::chainColors.at(j));
-                        mGraph->addCurve(curveChain);
+                        mGraph->add_curve(curveChain);
                     }
 
                 ++i;
@@ -268,18 +268,18 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
 
             const GraphCurve &curve = densityCurve(mEvent->mVg.fullHisto(), "Post Distrib All Chains", color);
 
-            mGraph->addCurve(curve);
+            mGraph->add_curve(curve);
             
             if (!mEvent->mVg.mChainsHistos.isEmpty()) {
                 for (int j = 0; j<mChains.size(); ++j) {
                     const GraphCurve &curveChain = densityCurve(mEvent->mVg.histoForChain(j), "Post Distrib Chain " + QString::number(j), Painting::chainColors.at(j));
-                    mGraph->addCurve(curveChain);
+                    mGraph->add_curve(curveChain);
                 }
             }
 
             // HPD All Chains
             const GraphCurve &curveHPD = HPDCurve(mEvent->mVg.mFormatedHPD, "HPD All Chains", color);
-            mGraph->addCurve(curveHPD);
+            mGraph->add_curve(curveHPD);
 
             /* ------------------------------------
              *  Theta Credibility
@@ -288,7 +288,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
             const GraphCurve &curveCred = topLineSection(mEvent->mVg.mFormatedCredibility,
                                                             "Credibility All Chains",
                                                             color);
-            mGraph->addCurve(curveCred);
+            mGraph->add_curve(curveCred);
         }
     }
     // ----------------------------------------------------------------------

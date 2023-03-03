@@ -91,7 +91,7 @@ void PluginUniformRefView::setDate(const Date& date, const ProjectSettings& sett
         mGraph->setCurrentX(tminDisplay, tmaxDisplay);
 
         mGraph->removeAllCurves();
-        mGraph->removeAllZones();
+        mGraph->remove_all_zones();
         mGraph->clearInfos();
         mGraph->showInfos(true);
         mGraph->setFormatFunctX(nullptr);
@@ -118,7 +118,7 @@ void PluginUniformRefView::setDate(const Date& date, const ProjectSettings& sett
 
         gCurve.mData = calib;
 
-        mGraph->addCurve(gCurve);
+        mGraph->add_curve(gCurve);
         mGraph->setRangeX(tminDisplay, tmaxDisplay);
         mGraph->setCurrentX(tminDisplay, tmaxDisplay);
 
