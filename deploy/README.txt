@@ -4,8 +4,8 @@ PROJECT
 
 ChronoModel Project
 "http://www.chronomodel.com"
-version 3.2.1
-2023-01-20
+version 3.2.2
+2023-02-17
 
 ————————————————————————————————————————————————————————————————————————
 CREDITS
