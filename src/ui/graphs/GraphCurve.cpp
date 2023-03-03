@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -38,8 +38,21 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "GraphCurve.h"
+
 #include <cmath>
 
+CurveRefPts::CurveRefPts():
+    type(CurveRefPts::eCross),
+    pen(Qt::black, 1),
+    brush(Qt::NoBrush)
+{
+
+}
+
+CurveRefPts::~CurveRefPts()
+{
+
+}
 
 GraphCurve::GraphCurve():
 mType(eDensityData),
@@ -64,6 +77,7 @@ GraphCurve::~GraphCurve()
 void GraphCurve::setPen(QPen pen)
 {
     mPen = pen;
+    //mPen.setDashPattern(QList<qreal>{pen.widthF(), pen.widthF()});
 }
 
 
@@ -175,8 +189,14 @@ GraphCurve shapeCurve(const QMap<double, double> &dataInf, const QMap<double, do
     curve.mShape = std::make_pair(dataInf, dataSup);
     curve.mPen = QPen(lineColor, 1, penStyle);
 
-    if (penStyle == Qt::CustomDashLine)
-        curve.mPen.setDashPattern(QList<qreal>{5, 5});
+    if (penStyle == Qt::CustomDashLine) {
+        //curve.mPen.setDashPattern(QList<qreal>{5, 5});
+        QList<qreal> dashes;
+        qreal space = 5;
+        dashes << 5 << space << 5 << space << 9 << space<< 27 << space << 9 << space;
+        curve.mPen.setDashPattern(dashes);
+    }
+
     curve.mBrush = brush;
     curve.mIsRectFromZero = false; // for Unif-typo. calibs., invisible for others!
 

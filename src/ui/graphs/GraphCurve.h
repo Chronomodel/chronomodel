@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -64,6 +64,20 @@ public:
     double Xmin, Xmax;
     double Ymin, Ymax;
     QColor color;
+    QPen pen;
+    QBrush brush;
+    QString name;
+
+protected:
+    bool mVisible;
+
+public:
+    explicit CurveRefPts();
+    virtual ~CurveRefPts();
+
+    inline bool isVisible() const {return mVisible;};
+    inline void setVisible(const bool visible) {mVisible = visible;};
+
 };
 
 class GraphCurve
@@ -108,7 +122,7 @@ public:
 
     std::vector<QPair<type_data, type_data> > mSections;
 
-    std::vector<CurveRefPts> mRefPoints;
+    //std::vector<CurveRefPts> mRefPoints;
 
     std::pair<QMap<type_data, type_data>, QMap<type_data, type_data>> mShape;
 

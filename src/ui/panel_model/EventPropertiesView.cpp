@@ -606,7 +606,7 @@ void EventPropertiesView::updateKnownGraph()
     qreal tUpper = tLower;
 
     curve.mSections.push_back(qMakePair(tLower, tUpper));
-    mKnownGraph->addCurve(curve);
+    mKnownGraph->add_curve(curve);
     QFontMetrics fm (mKnownGraph->font());
     mKnownGraph->setMarginBottom(fm.ascent() + 10. );
 

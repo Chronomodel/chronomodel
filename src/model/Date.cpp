@@ -624,7 +624,7 @@ void Date::calibrate(const ProjectSettings settings, Project *project, bool trun
          */
 
         if (repartitionTemp.last() > 0.) {
-            if (truncate) {
+            if (truncate && repartitionTemp.size()>10) {
                 const double threshold (0.00001);
                 const int minIdx = int (floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp)));
                 const int maxIdx = int (ceil(vector_interpolate_idx_for_value((1. - threshold) * lastRepVal, repartitionTemp)));
@@ -645,7 +645,8 @@ void Date::calibrate(const ProjectSettings settings, Project *project, bool trun
               } else {
                 tminCal = mTminRefCurve;
                 tmaxCal = mTminRefCurve;
-
+                mCalibration->mCurve = calibrationTemp;
+                mCalibration->mRepartition = repartitionTemp;
             }
             // Stretch repartition curve so it goes from 0 to 1
             mCalibration->mRepartition = stretch_vector(mCalibration->mRepartition, 0., 1.);
@@ -1067,13 +1068,13 @@ const QMap<double, double> Date::getFormatedCalibToShow() const
 
         int minIdx = 0;
         for (auto& v : mCalibration->mCurve) {
-            if (v >threshold) break;
+            if (v >=threshold) break;
             minIdx++;
         }
 
         int maxIdx = mCalibration->mCurve.size()-1;
         for (auto itv = mCalibration->mCurve.rbegin(); itv!= mCalibration->mCurve.rend(); itv++) {
-            if (*itv >threshold) break;
+            if (*itv >=threshold) break;
             maxIdx--;
         }
 
@@ -1088,8 +1089,8 @@ const QMap<double, double> Date::getFormatedCalibToShow() const
         calib = vector_to_map(mCalibration->mCurve, mCalibration->mTmin, mCalibration->mTmax, mCalibration->mStep);
     }
 
-    calib[calib.firstKey()] = 0.;
-    calib[calib.lastKey()] = 0.;
+    calib[calib.firstKey() - mCalibration->mStep] = 0.;
+    calib[calib.lastKey() + mCalibration->mStep] = 0.;
     return DateUtils::convertMapToAppSettingsFormat(calib);
 }
 
@@ -1255,7 +1256,7 @@ QPixmap Date::generateUnifThumb(ProjectSettings settings)
 
             const GraphCurve curve = horizontalSection(qMakePair(tminDisplay, tmaxDisplay), "Calibration", color, QBrush(color));
 
-            graph.addCurve(curve);
+            graph.add_curve(curve);
 
             // Drawing the wiggle
             if (mDeltaType != eDeltaNone) {
@@ -1263,7 +1264,7 @@ QPixmap Date::generateUnifThumb(ProjectSettings settings)
                 QMap<double, double> calibWiggle = normalize_map(getMapDataInRange(getRawWiggleCalibMap(), tmin, tmax));
                 GraphCurve curveWiggle = densityCurve(calibWiggle, "Wiggle", Qt::red);
 
-                graph.addCurve(curveWiggle);
+                graph.add_curve(curveWiggle);
             }
             graph.repaint();
 
@@ -1308,7 +1309,7 @@ QPixmap Date::generateCalibThumb(ProjectSettings settings)
 
         GraphView graph;
 
-        graph.addCurve(curve);
+        graph.add_curve(curve);
         
         // Drawing the wiggle
         if (mDeltaType != eDeltaNone) {
@@ -1317,7 +1318,7 @@ QPixmap Date::generateCalibThumb(ProjectSettings settings)
 
             GraphCurve curveWiggle = densityCurve(calibWiggle, "Wiggle", Qt::blue, Qt::SolidLine, QBrush(Qt::NoBrush));
 
-            graph.addCurve(curveWiggle);
+            graph.add_curve(curveWiggle);
         }
         
         

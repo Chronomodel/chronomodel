@@ -469,7 +469,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
 
             calibGraph->setRangeY(0., 1.);
 
-            calibGraph->addCurve(calibCurve);
+            calibGraph->add_curve(calibCurve);
 
             calibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             calibGraph->setFormatFunctX(nullptr);
@@ -505,7 +505,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                  if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mCurve.isEmpty()) {
                     calibCurve = densityCurve(d.getFormatedCalibToShow(), "Calibration", penColor);
 
-                    calibGraph->addCurve(calibCurve);
+                    calibGraph->add_curve(calibCurve);
 
                     // Drawing the wiggle
                     if (d.mDeltaType !=  Date::eDeltaNone) {
@@ -514,7 +514,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
 
                         const GraphCurve curveWiggle = densityCurve(calibWiggle, "Wiggle", Qt::red);
 
-                        calibGraph->addCurve(curveWiggle);
+                        calibGraph->add_curve(curveWiggle);
 
                        // const QMap<type_data, type_data> subDisplay = getMapDataInRange(calibWiggle, mTminDisplay, mTmaxDisplay);
                        // yMax = map_max_value(subDisplay);
@@ -561,7 +561,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
 
                     hpdCurve.mIsRectFromZero = true;
                     hpdCurve.mData = hpd;
-                    calibGraph->addCurve(hpdCurve);
+                    calibGraph->add_curve(hpdCurve);
 
                     // update max inside the display period , it's done with updateGraphZoom()
                   /*  const QMap<type_data, type_data> subDisplay = getMapDataInRange(calibCurve.mData, mTminDisplay, mTmaxDisplay);
@@ -644,18 +644,18 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
     GraphView* graph2 = nullptr;
     GraphView* graph3 = nullptr;
 
-    GraphCurve curveDataPointsX, curveDataPointsY, curveDataPointsZ;
+    std::vector<CurveRefPts> curveDataPointsX, curveDataPointsY, curveDataPointsZ;
     CurveRefPts ptsX, ptsY, ptsZ;
 
     switch (processType) {
         case CurveSettings::eProcessType3D:
         case CurveSettings::eProcessTypeVector:
-            curveDataPointsZ.mName = tr("Ref Points");
+            /*curveDataPointsZ.mName = tr("Ref Points");
             curveDataPointsZ.mPen = QPen(Qt::black, 1, Qt::SolidLine);
             curveDataPointsZ.mBrush = Qt::black;
             curveDataPointsZ.mIsRectFromZero = false;
             curveDataPointsZ.mType = GraphCurve::eRefPoints;
-
+            */
             graph3 = new GraphView(this);
             graph3->showInfos(true);
 
@@ -676,15 +676,16 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graph3->setTipYLab("Z");
 
             graph3->setMarginTop(graph3->fontMetrics().height()/2.);
+           // graph3->setMarginBottom(graph3->fontMetrics().height());
 
         case CurveSettings::eProcessTypeSpherical:
         case CurveSettings::eProcessType2D:
-            curveDataPointsY.mName = tr("Ref Points");
+            /*curveDataPointsY.mName = tr("Ref Points");
             curveDataPointsY.mPen = QPen(Qt::black, 1, Qt::SolidLine);
             curveDataPointsY.mBrush = Qt::black;
             curveDataPointsY.mIsRectFromZero = false;
             curveDataPointsY.mType = GraphCurve::eRefPoints;
-
+            */
             graph2 = new GraphView(this);
             graph2->showInfos(true);
 
@@ -708,12 +709,12 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
         case CurveSettings::eProcessTypeNone:
         case CurveSettings::eProcessTypeUnivarie:
         default:
-            curveDataPointsX.mName = tr("Ref Points");
+            /*curveDataPointsX.mName = tr("Ref Points");
             curveDataPointsX.mPen = QPen(Qt::black, 1, Qt::SolidLine);
             curveDataPointsX.mBrush = Qt::black;
             curveDataPointsX.mIsRectFromZero = false;
             curveDataPointsX.mType = GraphCurve::eRefPoints;
-
+            */
             graph1 = new GraphView(this);
             graph1->showInfos(true);
 
@@ -843,17 +844,31 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             ptsX.Ymax = X + errX;
             ptsX.color = color;
             ptsX.type = CurveRefPts::eCross;
-            curveDataPointsX.mRefPoints.push_back(ptsX);
+
+            ptsX.pen = QPen(Qt::black, 1, Qt::SolidLine);
+            ptsX.brush = Qt::black;
+            ptsX.name = "Ref Points";
+            ptsX.setVisible(true);
+            //curveDataPointsX.mIsRectFromZero = false;
+            //ptsX.mType = GraphCurve::eRefPoints;
+            curveDataPointsX.push_back(ptsX);
 
             ptsY = ptsX;
             ptsY.Ymin = (Y - errY);
             ptsY.Ymax = Y + errY;
-            curveDataPointsY.mRefPoints.push_back(ptsY);
+
+            ptsY.pen = QPen(Qt::black, 1, Qt::SolidLine);
+            ptsY.brush = Qt::black;
+            ptsY.setVisible(true);
+            curveDataPointsY.push_back(ptsY);
 
             ptsZ = ptsX;
             ptsZ.Ymin = Z - errZ;
             ptsZ.Ymax = Z + errZ;
-            curveDataPointsZ.mRefPoints.push_back(ptsZ);
+            ptsZ.pen = QPen(Qt::black, 1, Qt::SolidLine);
+            ptsZ.brush = Qt::black;
+            ptsZ.setVisible(true);
+            curveDataPointsZ.push_back(ptsZ);
 
         } else {
 
@@ -893,17 +908,29 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             ptsX.Ymax = X + errX;
                             ptsX.color = color;
                             ptsX.type = CurveRefPts::eCross;
-                            curveDataPointsX.mRefPoints.push_back(ptsX);
+                            ptsX.pen = QPen(Qt::black, 1, Qt::SolidLine);
+                            ptsX.brush = Qt::black;
+                            ptsX.name = "Ref Points";
+                            ptsX.setVisible(true);
+                            curveDataPointsX.push_back(ptsX);
 
                             ptsY = ptsX;
                             ptsY.Ymin = (Y - errY);
                             ptsY.Ymax = Y + errY;
-                            curveDataPointsY.mRefPoints.push_back(ptsY);
+                            ptsY.pen = QPen(Qt::black, 1, Qt::SolidLine);
+                            ptsY.brush = Qt::black;
+                            ptsY.name = "Ref Points";
+                            ptsY.setVisible(true);
+                            curveDataPointsY.push_back(ptsY);
 
                             ptsZ = ptsX;
                             ptsZ.Ymin = Z - errZ;
                             ptsZ.Ymax = Z + errZ;
-                            curveDataPointsZ.mRefPoints.push_back(ptsZ);
+                            ptsZ.pen = QPen(Qt::black, 1, Qt::SolidLine);
+                            ptsZ.brush = Qt::black;
+                            ptsZ.name = "Ref Points";
+                            ptsZ.setVisible(true);
+                            curveDataPointsZ.push_back(ptsZ);
                         }
                     }
 
@@ -942,7 +969,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             break;
         }
 
-        graph1->addCurve(curveDataPointsX);
+        graph1->set_points(curveDataPointsX);
         graph1->setYAxisMode(GraphView::eAllTicks);
         graph1->showYAxisSubTicks(true);
         graphList.append(graph1);
@@ -952,14 +979,14 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
     case CurveSettings::eProcessTypeSpherical:
         graphList.append(new GraphTitle("Inclination", this));
 
-        graph1->addCurve(curveDataPointsX);
+        graph1->set_points(curveDataPointsX);
         graph1->setTipYLab("I");
         graph1->showYAxisSubTicks(true);  
         graphList.append(graph1);
         listAxisVisible.push_back(true);
 
         graphList.append(new GraphTitle("Declination", this));
-        graph2->addCurve(curveDataPointsY);
+        graph2->set_points(curveDataPointsY);
         graph2->setTipYLab("D");
         graphList.append(graph2);
         listAxisVisible.push_back(true);
@@ -968,13 +995,13 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
     case CurveSettings::eProcessType2D:
         graphList.append(new GraphTitle("X", this));
 
-        graph1->addCurve(curveDataPointsX);
+        graph1->set_points(curveDataPointsX);
         graph1->setTipYLab("X");
         graphList.append(graph1);
         listAxisVisible.push_back(true);
 
         graphList.append(new GraphTitle("Y", this));
-        graph2->addCurve(curveDataPointsY);
+        graph2->set_points(curveDataPointsY);
         graph2->setTipYLab("Y");
         graphList.append(graph2);
         listAxisVisible.push_back(true);
@@ -983,20 +1010,20 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
     case CurveSettings::eProcessTypeVector:
         graphList.append(new GraphTitle("Inclination", this));
 
-        graph1->addCurve(curveDataPointsX);
+        graph1->set_points(curveDataPointsX);
         graph1->setTipYLab("I");
         graphList.append(graph1);
         listAxisVisible.push_back(true);
 
         graphList.append(new GraphTitle("Declination", this));
 
-        graph2->addCurve(curveDataPointsY);
+        graph2->set_points(curveDataPointsY);
         graph2->setTipYLab("D");
         graphList.append(graph2);
         listAxisVisible.push_back(true);
 
         graphList.append(new GraphTitle("Field", this));
-        graph3->addCurve(curveDataPointsZ);
+        graph3->set_points(curveDataPointsZ);
         graph3->setTipYLab("F");
         graphList.append(graph3);
         listAxisVisible.push_back(true);
@@ -1005,21 +1032,21 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
     case CurveSettings::eProcessType3D:
         graphList.append(new GraphTitle("X", this));
 
-        graph1->addCurve(curveDataPointsX);
+        graph1->set_points(curveDataPointsX);
         graph1->setTipYLab("X");
         graphList.append(graph1);
         listAxisVisible.push_back(true);
 
         graphList.append(new GraphTitle("Y", this));
 
-        graph2->addCurve(curveDataPointsY);
+        graph2->set_points(curveDataPointsY);
         graph2->setTipYLab("Y");
         graphList.append(graph2);
         listAxisVisible.push_back(true);
 
         graphList.append(new GraphTitle("Z", this));
 
-        graph3->addCurve(curveDataPointsZ);
+        graph3->set_points(curveDataPointsZ);
         graph3->setTipYLab("Z");
         graphList.append(graph3);
         listAxisVisible.push_back(true);
@@ -1030,7 +1057,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
         graph1->setTipYLab("");
         graph1->showInfos(false);
 
-        graph1->addCurve(curveDataPointsX);
+        graph1->set_points(curveDataPointsX);
         graphList.append(graph1);
         listAxisVisible.push_back(true);
 
@@ -1235,7 +1262,7 @@ void MultiCalibrationView::updateScaleX()
         QList<GraphView*> graphList = mDrawing->getGraphViewList();
 
         for (GraphView* gr : graphList) {
-            if (!gr->hasCurve())
+            if (!gr->has_curves())
                 continue;
             gr->changeXScaleDivision(mMajorScale, mMinorScale);
         }
@@ -1255,7 +1282,7 @@ void MultiCalibrationView::updateGraphsZoom()
     qreal maxYLength = 0;
     for (GraphView* gr : graphList) {
 
-        if (gr->hasCurve()) {
+        if (gr->has_curves()) {
 
             gr->setRangeX(mTminDisplay, mTmaxDisplay);
             gr->setCurrentX(mTminDisplay, mTmaxDisplay);
@@ -1284,12 +1311,12 @@ void MultiCalibrationView::updateGraphsZoom()
                 gr->setRangeY(0., yMax);
             }
 
-            if (!calibCurve) {
+            if (gr->has_points()) {
                 calibCurve = gr->getCurve("Ref Points");
-                double yMin = calibCurve->mRefPoints[0].Ymin;
-                double yMax = calibCurve->mRefPoints[0].Ymax;
+                double yMin = gr->refPoints.at(0).Ymin;
+                double yMax = gr->refPoints.at(0).Ymax;
 
-                for (auto refP : calibCurve->mRefPoints) {
+                for (auto refP : gr->refPoints) {
                     yMin = std::min(yMin, refP.Ymin);
                     yMax = std::max(yMax, refP.Ymax);
                 }
@@ -1314,7 +1341,7 @@ void MultiCalibrationView::updateGraphsZoom()
             // ------------------------------------------------------------
             //  Show zones if calibrated data are outside study period
             // ------------------------------------------------------------
-           gr->removeAllZones();
+           gr->remove_all_zones();
            if (mTminDisplay < mSettings.getTminFormated()) {
                 GraphZone zone;
                 zone.mXStart = mTminDisplay;
@@ -1322,7 +1349,7 @@ void MultiCalibrationView::updateGraphsZoom()
                 zone.mColor = QColor(217, 163, 69);
                 zone.mColor.setAlpha(75);
                 zone.mText = tr("Outside study period");
-                gr->addZone(zone);
+                gr->add_zone(zone);
             }
            if (mTmaxDisplay > mSettings.getTmaxFormated()) {
                 GraphZone zone;
@@ -1331,7 +1358,7 @@ void MultiCalibrationView::updateGraphsZoom()
                 zone.mColor = QColor(217, 163, 69);
                 zone.mColor.setAlpha(75);
                 zone.mText = tr("Outside study period");
-                gr->addZone(zone);
+                gr->add_zone(zone);
             }
 
 
@@ -1348,7 +1375,7 @@ void MultiCalibrationView::updateGraphsZoom()
         GraphTitle* gt = dynamic_cast<GraphTitle*>(gr);
 
         if (gv) {
-            if (gv->hasCurve()) {
+            if (gv->has_curves()) {
                 gv->setMarginRight(mMarginRight);
                 gv->setMarginLeft(mMarginLeft);
             }
@@ -1482,7 +1509,7 @@ void MultiCalibrationView::changeCurveColor()
         QList<GraphView*> graphList = mDrawing->getGraphViewList();
 
         for (GraphView* gr : graphList) {
-            if (gr->hasCurve()) {
+            if (gr->has_curves()) {
                 GraphCurve* calibCurve = gr->getCurve("Calibration");
                 if (!calibCurve)
                     calibCurve = gr->getCurve("Bound");

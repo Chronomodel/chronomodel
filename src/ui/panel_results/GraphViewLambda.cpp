@@ -81,7 +81,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QVector<vari
     GraphViewResults::generateCurves(typeGraph, variableList, model);
     
     mGraph->removeAllCurves();
-    mGraph->removeAllZones();
+    mGraph->remove_all_zones();
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
     mGraph->setOverArrow(GraphView::eNone);
@@ -117,13 +117,13 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QVector<vari
                                                           "Post Distrib All Chains",
                                                           color);
 
-        mGraph->addCurve(curvePostDistrib);
+        mGraph->add_curve(curvePostDistrib);
 
         // ------------------------------------
         //  HPD All Chains
         // ------------------------------------
         const GraphCurve &curveHPD = HPDCurve(mModel->mLambdaSpline.mFormatedHPD, "HPD All Chains", color);
-        mGraph->addCurve(curveHPD);
+        mGraph->add_curve(curveHPD);
 
         // ------------------------------------
         //  Post Distrib Chain i
@@ -135,7 +135,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QVector<vari
                                                                    Painting::chainColors.at(i),
                                                                    Qt::SolidLine,
                                                                    Qt::NoBrush);
-            mGraph->addCurve(curvePostDistribChain);
+            mGraph->add_curve(curvePostDistribChain);
         }
 
         
@@ -145,7 +145,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QVector<vari
         const GraphCurve &curveCred = topLineSection(mModel->mLambdaSpline.mFormatedCredibility,
                                                      "Credibility All Chains",
                                                      color);
-        mGraph->addCurve(curveCred);
+        mGraph->add_curve(curveCred);
         mGraph->autoAdjustYScale(true);
 
     }

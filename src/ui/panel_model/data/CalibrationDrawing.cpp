@@ -133,7 +133,7 @@ void CalibrationDrawing::updateLayout()
     if (!mCalibGraph)
         return;
 
-    if (!mCalibGraph->hasCurve()) {
+    if (!mCalibGraph->has_curves()) {
         QLabel noCalib ("No Calibration", this);
         noCalib.setGeometry(0, mVerticalSpacer, fm.horizontalAdvance(noCalib.text()), fm.height());
         return;

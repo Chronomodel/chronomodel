@@ -92,7 +92,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
     mGraph->removeAllCurves();
     mGraph->reserveCurves(6);
 
-    mGraph->removeAllZones();
+    mGraph->remove_all_zones();
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
     mGraph->setOverArrow(GraphView::eNone);
@@ -147,7 +147,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
                                                          Qt::SolidLine,
                                                          Qt::NoBrush);
 
-            mGraph->addCurve(curvePostDistrib);
+            mGraph->add_curve(curvePostDistrib);
 
             // Post Distrib Chain i
             if (!mDate->mTi.mChainsHistos.isEmpty())
@@ -157,14 +157,14 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
                                                                             Painting::chainColors.at(i),
                                                                             Qt::SolidLine,
                                                                             Qt::NoBrush);
-                    mGraph->addCurve(curvePostDistribChain);
+                    mGraph->add_curve(curvePostDistribChain);
                 }
 
             // HPD All Chains
             const GraphCurve &curveHPD = HPDCurve(mDate->mTi.mFormatedHPD,
                                                    "HPD All Chains",
                                                     color);
-            mGraph->addCurve(curveHPD);
+            mGraph->add_curve(curveHPD);
 
             // Calibration
             const QMap<double,double> &formatedCalib = mDate->getFormatedCalibToShow();//getFormatedCalibMap();
@@ -174,7 +174,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
                                                          QColor(150, 150, 150),
                                                          Qt::SolidLine,
                                                          Qt::NoBrush);
-            mGraph->addCurve(curveCalib);
+            mGraph->add_curve(curveCalib);
 
             // Wiggle
             const GraphCurve &curveWiggle = densityCurve(mDate->mWiggle.fullHisto(),
@@ -182,13 +182,13 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
                                                           mColor,
                                                           Qt::DashLine,
                                                           Qt::NoBrush);
-            mGraph->addCurve(curveWiggle);
+            mGraph->add_curve(curveWiggle);
 
             // Credibility (must be the last created curve because uses yMax!
             GraphCurve curveCred = topLineSection(mDate->mTi.mFormatedCredibility,
                                                             "Credibility All Chains",
                                                             color);
-            mGraph->addCurve(curveCred);
+            mGraph->add_curve(curveCred);
 
             // ------------------------------------------------------------
             //  Add zones outside study period
@@ -200,7 +200,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
             zoneMin.mColor = QColor(217, 163, 69);
             zoneMin.mColor.setAlpha(35);
             zoneMin.mText = tr("Outside study period");
-            mGraph->addZone(zoneMin);
+            mGraph->add_zone(zoneMin);
 
             GraphZone zoneMax;
             zoneMax.mXStart = mSettings.getTmaxFormated();
@@ -208,7 +208,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
             zoneMax.mColor = QColor(217, 163, 69);
             zoneMax.mColor.setAlpha(35);
             zoneMax.mText = tr("Outside study period");
-            mGraph->addZone(zoneMax);
+            mGraph->add_zone(zoneMax);
 
             mGraph->setYAxisMode(GraphView::eHidden);
         }
@@ -234,7 +234,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
                                                                color,
                                                                Qt::SolidLine,
                                                                Qt::NoBrush);
-            mGraph->addCurve(curvePostDistrib);
+            mGraph->add_curve(curvePostDistrib);
 
             // Post Distrib Chain i
             if (!mDate->mSigmaTi.mChainsHistos.isEmpty())
@@ -244,18 +244,18 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
                                                                             Painting::chainColors.at(i),
                                                                             Qt::SolidLine,
                                                                             Qt::NoBrush);
-                    mGraph->addCurve(curvePostDistribChain);
+                    mGraph->add_curve(curvePostDistribChain);
                 }
             // HPD All Chains
             const GraphCurve &curveHPD = HPDCurve(mDate->mSigmaTi.mFormatedHPD,
                                                    "HPD All Chains",
                                                     color);
-            mGraph->addCurve(curveHPD);
+            mGraph->add_curve(curveHPD);
             // Credibility (must be the last created curve because uses yMax!
             GraphCurve curveCred = topLineSection(mDate->mSigmaTi.mFormatedCredibility,
                                                             "Credibility All Chains",
                                                             color);
-            mGraph->addCurve(curveCred);
+            mGraph->add_curve(curveCred);
             mGraph->setYAxisMode(GraphView::eHidden);
         }
 

@@ -57,8 +57,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <thread>
 
-
-// Constructor...
 Model::Model(QObject *parent):
     QObject(parent),
     mProject(nullptr),
@@ -1581,8 +1579,13 @@ void Model::generateTempo(size_t gridLength)
         }
 
         auto minmaxAll = std::minmax_element(concaAllTrace.begin(), concaAllTrace.end());
-        const double t_min_data = *minmaxAll.first;
-        const double t_max_data = *minmaxAll.second;
+        double t_min_data = *minmaxAll.first;
+        double t_max_data = *minmaxAll.second;
+        // cas d'une borne seule dans la phase
+        if (t_min_data >= t_max_data) {
+            t_min_data = mSettings.mTmin;
+            t_max_data = mSettings.mTmax;
+        }
         phase->mValueStack["t_min"] = TValueStack("t_min", t_min_data);
         phase->mValueStack["t_max"] = TValueStack("t_max", t_max_data);
 
@@ -1629,9 +1632,6 @@ void Model::generateTempo(size_t gridLength)
         QVector<double> espT;
         double pT, eT, vT, infpT;
 
-       // auto niT = niTempo.begin();
-
-        //double t;
         for (const auto& niT : niTempo) {
 
             // Compute Tempo

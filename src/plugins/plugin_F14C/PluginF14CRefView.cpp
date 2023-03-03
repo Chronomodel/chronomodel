@@ -94,7 +94,7 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
          mGraph->setCurrentX(tminDisplay, tmaxDisplay);
 
          mGraph->removeAllCurves();
-         mGraph->removeAllZones();
+         mGraph->remove_all_zones();
          mGraph->clearInfos();
          mGraph->showInfos(true);
          mGraph->setFormatFunctX(nullptr);
@@ -121,7 +121,7 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
                  zone.mXStart = tminDisplay;
                  zone.mXEnd = tmaxDisplay;
                  zone.mText = tr("No reference data");
-                 mGraph->addZone(zone);
+                 mGraph->add_zone(zone);
                  return;
              }
 
@@ -132,7 +132,7 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
                  zone.mXStart = tminDisplay;
                  zone.mXEnd = tminRef;
                  zone.mText = tr("Outside reference area");
-                 mGraph->addZone(zone);
+                 mGraph->add_zone(zone);
              }
 
              if (tmaxRef < tmaxDisplay) {
@@ -142,7 +142,7 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
                  zone.mXStart = tmaxRef;
                  zone.mXEnd = tmaxDisplay;
                  zone.mText = tr("Outside reference area");
-                 mGraph->addZone(zone);
+                 mGraph->add_zone(zone);
              }
 
              const double t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
@@ -176,11 +176,11 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
              mGraph->setCurrentX(tminDisplay, tmaxDisplay);
 
              const GraphCurve &graphCurveG = FunctionCurve(curveG, "G", Painting::mainColorDark );
-             mGraph->addCurve(graphCurveG);
+             mGraph->add_curve(graphCurveG);
 
              const GraphCurve &curveGEnv = shapeCurve(curveG95Inf, curveG95Sup, "G Env",
                                               QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30));
-             mGraph->addCurve(curveGEnv);
+             mGraph->add_curve(curveGEnv);
              /* ----------------------------------------------
               *  Measure curve
               * ---------------------------------------------- */
@@ -215,7 +215,7 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
              measureCurve[yMax] = 0.;
              measureCurve = normalize_map(measureCurve);
              curveMeasure.mData = measureCurve;
-             mGraph->addCurve(curveMeasure);
+             mGraph->add_curve(curveMeasure);
 
 
              /* ----------------------------------------------
@@ -254,7 +254,7 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
                  subCurve.insert(yMax, 0);
                  subCurve = normalize_map(subCurve);
                  curveSubMeasure.mData = subCurve;
-                 mGraph->addCurve(curveSubMeasure);
+                 mGraph->add_curve(curveSubMeasure);
 
 
 
@@ -288,9 +288,9 @@ void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& setting
              curveMeasureSup.mHorizontalValue = age + error;
              curveMeasureInf.mHorizontalValue = age - error;
 
-             mGraph->addCurve(curveMeasureAvg);
-             mGraph->addCurve(curveMeasureSup);
-             mGraph->addCurve(curveMeasureInf);
+             mGraph->add_curve(curveMeasureAvg);
+             mGraph->add_curve(curveMeasureSup);
+             mGraph->add_curve(curveMeasureInf);
 
              //Y scale and RangeY are define in graphView::zommX()
 

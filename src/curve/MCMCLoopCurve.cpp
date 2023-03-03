@@ -545,9 +545,10 @@ QString MCMCLoopCurve::initialize_time()
 
         }
 
-    }  catch (...) {
-        qWarning() <<"Init theta event, ti,  ???";
-        mAbortedReason = QString("Error in Init theta event, ti,  ???");
+    }  catch (const QString e) {
+        qWarning() <<"Init theta event, ti,  ???"<<e;
+        //mAbortedReason = QString("Error in Init theta event, ti,  ???");
+        mAbortedReason = e;
         return mAbortedReason;
     }
 
@@ -849,11 +850,13 @@ QString MCMCLoopCurve::initialize_321()
         minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mYx, x);});
         maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mYx, x);});
 
-
-        double maxVarY = *std::max_element(mModel->mSpline.splineX.vecVarG.begin(), mModel->mSpline.splineX.vecVarG.end());
-        double spanY_X =  0;
-        minY = minY - 1.96*sqrt(maxVarY) - spanY_X;
-        maxY = maxY + 1.96*sqrt(maxVarY) + spanY_X;
+        int i = 0;
+        for (auto g : mModel->mSpline.splineX.vecG) {
+            const auto e = 1.96*sqrt(mModel->mSpline.splineX.vecVarG.at(i));
+            minY = std::min(minY, g - e);
+            maxY = std::max(maxY, g + e);
+            i++;
+        }
 
         clearMeanG.gx.mapG.setRangeY(minY, maxY);
 
@@ -863,13 +866,18 @@ QString MCMCLoopCurve::initialize_321()
             minY = +INFINITY;
             maxY = -INFINITY;
 
-            minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mYy, x);});
-            maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mYy, x);});
+            minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double y, Event* e) {return std::min(e->mYy, y);});
+            maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double y, Event* e) {return std::max(e->mYy, y);});
 
-            maxVarY = *std::max_element(mModel->mSpline.splineY.vecVarG.begin(), mModel->mSpline.splineY.vecVarG.end());
-            spanY_X = 0;
-            minY = minY - 1.96*sqrt(maxVarY) - spanY_X;
-            maxY = maxY + 1.96*sqrt(maxVarY) + spanY_X;
+
+            int i = 0;
+            for (auto g : mModel->mSpline.splineY.vecG) {
+                const auto e = 1.96*sqrt(mModel->mSpline.splineY.vecVarG.at(i));
+                minY = std::min(minY, g - e);
+                maxY = std::max(maxY, g + e);
+                i++;
+            }
+
 
             clearMeanG.gy.mapG.setRangeY(minY, maxY);
 
@@ -879,15 +887,16 @@ QString MCMCLoopCurve::initialize_321()
                 minY = +INFINITY;
                 maxY = -INFINITY;
 
-                maxVarY = *std::max_element(mModel->mSpline.splineZ.vecVarG.begin(), mModel->mSpline.splineZ.vecVarG.end());
+                minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double z, Event* e) {return std::min(e->mYz, z);});
+                maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double z, Event* e) {return std::max(e->mYz, z);});
 
-                minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mYz, x);});
-                maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mYz, x);});
-
-
-                spanY_X = 0;
-                minY = minY - 1.96*sqrt(maxVarY) - spanY_X;
-                maxY = maxY + 1.96*sqrt(maxVarY) + spanY_X;
+                int i = 0;
+                for (auto g : mModel->mSpline.splineZ.vecG) {
+                    const auto e = 1.96*sqrt(mModel->mSpline.splineZ.vecVarG.at(i));
+                    minY = std::min(minY, g - e);
+                    maxY = std::max(maxY, g + e);
+                    i++;
+                }
 
                 clearMeanG.gz.mapG.setRangeY(minY, maxY);
             }

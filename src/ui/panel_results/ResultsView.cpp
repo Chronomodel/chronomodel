@@ -3802,16 +3802,36 @@ void ResultsView::findOptimalX()
     const ModelCurve* modelCurve = static_cast<const ModelCurve*> (mModel);
     const std::vector<double>* vec = nullptr;
 
-    if (mCurveGRadio->isChecked())
-        vec = &modelCurve->mPosteriorMeanG.gx.vecG;
-    else if (mCurveGPRadio->isChecked())
-        vec = &modelCurve->mPosteriorMeanG.gx.vecGP;
-    else
-        vec = &modelCurve->mPosteriorMeanG.gx.vecGS;
-
-    auto minMax = std::minmax_element(vec->begin(), vec->end());
     Scale XScale;
-    XScale.findOptimal(*minMax.first, *minMax.second, 7);
+    if (mCurveGRadio->isChecked()) {
+        vec = &modelCurve->mPosteriorMeanG.gx.vecG;
+        const std::vector<double>* vecVar = &modelCurve->mPosteriorMeanG.gx.vecVarG;
+
+        double minY = +INFINITY;
+        double maxY = -INFINITY;
+        minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mXIncDepth, x);});
+        maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mXIncDepth, x);});
+        int i = 0;
+        for (auto g : *vec) {
+            const auto e = 1.96*sqrt(vecVar->at(i));
+            minY = std::min(minY, g - e);
+            maxY = std::max(maxY, g + e);
+            i++;
+        }
+
+        XScale.findOptimal(minY, maxY, 7);
+
+    } else {
+        if (mCurveGPRadio->isChecked())
+            vec = &modelCurve->mPosteriorMeanG.gx.vecGP;
+        else
+            vec = &modelCurve->mPosteriorMeanG.gx.vecGS;
+
+        const auto minMax = std::minmax_element(vec->begin(), vec->end());
+
+        XScale.findOptimal(*minMax.first, *minMax.second, 7);
+    }
+
 
     mResultCurrentMinX = XScale.min;
     mResultCurrentMaxX = XScale.max;
@@ -3827,16 +3847,37 @@ void ResultsView::findOptimalY()
     const ModelCurve* modelCurve = static_cast<const ModelCurve*> (mModel);
     const std::vector<double>* vec = nullptr;
 
-    if (mCurveGRadio->isChecked())
-        vec = &modelCurve->mPosteriorMeanG.gy.vecG;
-    else if (mCurveGPRadio->isChecked())
-        vec = &modelCurve->mPosteriorMeanG.gy.vecGP;
-    else
-        vec = &modelCurve->mPosteriorMeanG.gy.vecGS;
-
-    auto minMax = std::minmax_element(vec->begin(), vec->end());
     Scale XScale;
-    XScale.findOptimal(*minMax.first, *minMax.second, 7);
+    if (mCurveGRadio->isChecked()) {
+        vec = &modelCurve->mPosteriorMeanG.gy.vecG;
+        const std::vector<double>* vecVar = &modelCurve->mPosteriorMeanG.gy.vecVarG;
+
+        double minY = +INFINITY;
+        double maxY = -INFINITY;
+        minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mYDec, x);});
+        maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mYDec, x);});
+        int i = 0;
+        for (auto g : *vec) {
+            const auto e = 1.96*sqrt(vecVar->at(i));
+            minY = std::min(minY, g - e);
+            maxY = std::max(maxY, g + e);
+            i++;
+        }
+
+        XScale.findOptimal(minY, maxY, 7);
+
+    } else {
+        if (mCurveGPRadio->isChecked())
+            vec = &modelCurve->mPosteriorMeanG.gy.vecGP;
+        else
+            vec = &modelCurve->mPosteriorMeanG.gy.vecGS;
+
+        const auto minMax = std::minmax_element(vec->begin(), vec->end());
+
+        XScale.findOptimal(*minMax.first, *minMax.second, 7);
+    }
+
+
     mResultCurrentMinY = XScale.min;
     mResultCurrentMaxY = XScale.max;
     setYRange();
@@ -3849,17 +3890,36 @@ void ResultsView::findOptimalZ()
     const ModelCurve* modelCurve = static_cast<const ModelCurve*> (mModel);
 
     const std::vector<double>* vec = nullptr;
-
-    if (mCurveGRadio->isChecked())
-        vec = &modelCurve->mPosteriorMeanG.gz.vecG;
-    else if (mCurveGPRadio->isChecked())
-        vec = &modelCurve->mPosteriorMeanG.gz.vecGP;
-    else
-        vec = &modelCurve->mPosteriorMeanG.gz.vecGS;
-
-    auto minMax = std::minmax_element(vec->begin(), vec->end());
     Scale XScale;
-    XScale.findOptimal(*minMax.first, *minMax.second, 7);
+    if (mCurveGRadio->isChecked()) {
+        vec = &modelCurve->mPosteriorMeanG.gz.vecG;
+        const std::vector<double>* vecVar = &modelCurve->mPosteriorMeanG.gz.vecVarG;
+
+        double minY = +INFINITY;
+        double maxY = -INFINITY;
+        minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mZField, x);});
+        maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mZField, x);});
+        int i = 0;
+        for (auto g : *vec) {
+            const auto e = 1.96*sqrt(vecVar->at(i));
+            minY = std::min(minY, g - e);
+            maxY = std::max(maxY, g + e);
+            i++;
+        }
+
+        XScale.findOptimal(minY, maxY, 7);
+
+    } else {
+        if (mCurveGPRadio->isChecked())
+            vec = &modelCurve->mPosteriorMeanG.gz.vecGP;
+        else
+            vec = &modelCurve->mPosteriorMeanG.gz.vecGS;
+
+        const auto minMax = std::minmax_element(vec->begin(), vec->end());
+
+        XScale.findOptimal(*minMax.first, *minMax.second, 7);
+    }
+
     mResultCurrentMinZ = XScale.min;
     mResultCurrentMaxZ = XScale.max;
 
