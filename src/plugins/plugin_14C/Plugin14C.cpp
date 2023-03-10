@@ -175,7 +175,7 @@ QStringList Plugin14C::csvColumns() const
     return cols;
 }
 
-int Plugin14C::csvMinColumns() const
+qsizetype Plugin14C::csvMinColumns() const
 {
     return csvColumns().count() - 2;
 }

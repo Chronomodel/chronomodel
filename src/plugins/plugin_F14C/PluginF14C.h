@@ -78,8 +78,8 @@ public:
     MHVariable::SamplerProposal getDataMethod() const;
     QList<MHVariable::SamplerProposal> allowedDataMethods() const;
     QStringList csvColumns() const;
-    int csvMinColumns() const;
-    int csvOptionalColumns() const {return 2;} // Corresponding to  "ΔR" and "ΔR Error"
+    qsizetype csvMinColumns() const;
+    qsizetype csvOptionalColumns() const {return 2;} // Corresponding to  "ΔR" and "ΔR Error"
     QJsonObject fromCSV(const QStringList& list, const QLocale& csvLocale) ;
     QStringList toCSV(const QJsonObject& data, const QLocale& csvLocale) const;
     QString getDateDesc(const Date* date) const;

@@ -53,9 +53,18 @@ mGammaMax(1)
 
 }
 
-PhaseConstraint::PhaseConstraint(const PhaseConstraint& pc):Constraint()
+PhaseConstraint::PhaseConstraint(const PhaseConstraint& pc):
+    Constraint()
 {
-    copyFrom(pc);
+    mGamma = pc.mGamma;
+
+    mPhaseFrom = pc.mPhaseFrom;
+    mPhaseTo = pc.mPhaseTo;
+
+    mGammaType = pc.mGammaType;
+    mGammaFixed = pc.mGammaFixed;
+    mGammaMin = pc.mGammaMin;
+    mGammaMax = pc.mGammaMax;
 }
 
 PhaseConstraint& PhaseConstraint::operator=(const PhaseConstraint& pc)

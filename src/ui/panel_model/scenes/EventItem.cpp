@@ -638,7 +638,7 @@ void EventItem::paintBoxPhases (QPainter *painter, QRectF rectBox)
     font.setItalic(false);
     painter->setFont(font);
     const QJsonArray phases = getPhases();
-    const int numPhases = phases.size();
+    const auto numPhases = phases.size();
 
     if (numPhases == 0) {
         painter->setPen(QColor(200, 200, 200));

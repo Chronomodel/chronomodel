@@ -84,7 +84,7 @@ public:
     QList<MHVariable::SamplerProposal> allowedDataMethods() const;
     QString csvHelp() const;
     QStringList csvColumns() const;
-    int csvMinColumns() const;
+    qsizetype csvMinColumns() const;
     QJsonObject fromCSV(const QStringList& list, const QLocale &csvLocale);
     QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale) const;
     QString getDateDesc(const Date* date) const;

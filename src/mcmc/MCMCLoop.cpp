@@ -244,7 +244,8 @@ void MCMCLoop::run()
 
         //----------------------- Adaptation --------------------------------------
 
-        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))  + " : " + tr("Adapting"), 0, chain.mMaxBatchs * chain.mIterPerBatch);
+        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))  + " : " + + "Adapting ; Estimated time left " + DHMS(interTime), 0, chain.mMaxBatchs * chain.mIterPerBatch);
+        emit stepProgressed(0);
         mState = eAdapting;
 
         QElapsedTimer adaptTime;
@@ -316,7 +317,8 @@ void MCMCLoop::run()
 
         //----------------------- Aquisition --------------------------------------
 
-        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size())) + " : " + tr("Aquisition"), 0, chain.mIterPerAquisition);
+        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size())) + " : Aquisition ; Estimated time left " + DHMS(interTime), 0, chain.mIterPerAquisition);
+        emit stepProgressed(0);
         mState = eAquisition;
         QElapsedTimer aquisitionTime;
         aquisitionTime.start();

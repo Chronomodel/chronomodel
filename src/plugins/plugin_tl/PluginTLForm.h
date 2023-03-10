@@ -62,7 +62,7 @@ public:
     bool isValid();
 
 signals:
-    void OkEnabled(bool enabled) ;
+    //void OkEnabled(bool enabled) ;
 
 protected slots:
     void errorIsValid(QString str);

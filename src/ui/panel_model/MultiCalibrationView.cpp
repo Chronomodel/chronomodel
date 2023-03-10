@@ -633,8 +633,8 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
     CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
     CurveSettings::VariableType variableType = static_cast<CurveSettings::VariableType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_VARIABLE_TYPE).toInt());
 
-    for (auto&& ev : events) {
-       QJsonObject jsonEv = ev.toObject();
+    for (const auto&& ev : events) {
+       const QJsonObject jsonEv = ev.toObject();
        if (jsonEv.value(STATE_IS_SELECTED).toBool())
             selectedEvents.append(jsonEv);
     }
@@ -650,12 +650,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
     switch (processType) {
         case CurveSettings::eProcessType3D:
         case CurveSettings::eProcessTypeVector:
-            /*curveDataPointsZ.mName = tr("Ref Points");
-            curveDataPointsZ.mPen = QPen(Qt::black, 1, Qt::SolidLine);
-            curveDataPointsZ.mBrush = Qt::black;
-            curveDataPointsZ.mIsRectFromZero = false;
-            curveDataPointsZ.mType = GraphCurve::eRefPoints;
-            */
+
             graph3 = new GraphView(this);
             graph3->showInfos(true);
 
@@ -680,12 +675,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
         case CurveSettings::eProcessTypeSpherical:
         case CurveSettings::eProcessType2D:
-            /*curveDataPointsY.mName = tr("Ref Points");
-            curveDataPointsY.mPen = QPen(Qt::black, 1, Qt::SolidLine);
-            curveDataPointsY.mBrush = Qt::black;
-            curveDataPointsY.mIsRectFromZero = false;
-            curveDataPointsY.mType = GraphCurve::eRefPoints;
-            */
+
             graph2 = new GraphView(this);
             graph2->showInfos(true);
 
@@ -709,12 +699,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
         case CurveSettings::eProcessTypeNone:
         case CurveSettings::eProcessTypeUnivarie:
         default:
-            /*curveDataPointsX.mName = tr("Ref Points");
-            curveDataPointsX.mPen = QPen(Qt::black, 1, Qt::SolidLine);
-            curveDataPointsX.mBrush = Qt::black;
-            curveDataPointsX.mIsRectFromZero = false;
-            curveDataPointsX.mType = GraphCurve::eRefPoints;
-            */
+
             graph1 = new GraphView(this);
             graph1->showInfos(true);
 
@@ -742,7 +727,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
 
     double X, errX, Y, errY, Z, errZ, tmin, tmax;
-    for (auto& sEvent : selectedEvents) {
+    for (const auto& sEvent : selectedEvents) {
         const double xIncDepth = sEvent.value(STATE_EVENT_X_INC_DEPTH).toDouble();
         const double s_XA95Depth = sEvent.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble();
         const double yDec = sEvent.value(STATE_EVENT_Y_DEC).toDouble();
@@ -753,17 +738,17 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
         const QColor color (sEvent.value(STATE_COLOR_RED).toInt(),
                        sEvent.value(STATE_COLOR_GREEN).toInt(),
                        sEvent.value(STATE_COLOR_BLUE).toInt());
-
+        // Same calcul within ResultsView::createByCurveGraph()
         switch (processType) {
         case CurveSettings::eProcessTypeUnivarie:
             switch (variableType) {
             case CurveSettings::eVariableTypeDepth:
                 X = xIncDepth;
-                errX = s_XA95Depth;
+                errX = 1.96*s_XA95Depth;
                 break;
             case CurveSettings::eVariableTypeField:
                 X = zField;
-                errX = s_ZField;
+                errX = 1.96*s_ZField;
                 break;
             case CurveSettings::eVariableTypeInclination:
                 X = xIncDepth;
@@ -775,7 +760,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                 break;
             case CurveSettings::eVariableTypeOther:
                 X = xIncDepth;
-                errX = s_XA95Depth;
+                errX = 1.96*s_XA95Depth;
                 break;
             default:
                 X = 0.;
@@ -791,7 +776,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             X = xIncDepth;
             errX = s_XA95Depth;
             Y = yDec;
-            errY = s_XA95Depth/ cos(xIncDepth/180*3.14 );
+            errY = s_XA95Depth/ cos(xIncDepth/180.*M_PI );
             Z = 0.;
             errZ = 0.;
             break;
@@ -807,7 +792,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             X = xIncDepth;
             errX = s_XA95Depth;
             Y = yDec;
-            errY = s_XA95Depth/ cos(xIncDepth/180*3.14 );
+            errY = s_XA95Depth/ cos(xIncDepth/180.*M_PI );
             Z = zField;
             errZ = s_ZField;
             break;
@@ -849,8 +834,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             ptsX.brush = Qt::black;
             ptsX.name = "Ref Points";
             ptsX.setVisible(true);
-            //curveDataPointsX.mIsRectFromZero = false;
-            //ptsX.mType = GraphCurve::eRefPoints;
+
             curveDataPointsX.push_back(ptsX);
 
             ptsY = ptsX;
@@ -874,7 +858,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
             const QJsonArray &dates = sEvent.value(STATE_EVENT_DATES).toArray();
 
-            for (auto&& date : dates) {
+            for (const auto&& date : dates) {
                 Date d (date.toObject());
 
                 if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mCurve.isEmpty()) {
@@ -1291,11 +1275,13 @@ void MultiCalibrationView::updateGraphsZoom()
             // Bound doesn't have curve named "Calibration", this curve name is "Bound"
 
             GraphCurve* calibCurve = gr->getCurve("Calibration");
-            if (!calibCurve)
-                calibCurve = gr->getCurve("Bound");
+          //  if (!calibCurve)
+            //    calibCurve = gr->getCurve("Bound");
 
 
-            else {
+          //  else {
+           if (calibCurve)
+           {
                 const QMap<type_data, type_data> subDisplay = getMapDataInRange(calibCurve->mData, mTminDisplay, mTmaxDisplay);
 
                 type_data yMax = map_max_value(subDisplay);
@@ -1312,11 +1298,11 @@ void MultiCalibrationView::updateGraphsZoom()
             }
 
             if (gr->has_points()) {
-                calibCurve = gr->getCurve("Ref Points");
+                //calibCurve = gr->getCurve("Ref Points");
                 double yMin = gr->refPoints.at(0).Ymin;
                 double yMax = gr->refPoints.at(0).Ymax;
 
-                for (auto refP : gr->refPoints) {
+                for (const auto& refP : gr->refPoints) {
                     yMin = std::min(yMin, refP.Ymin);
                     yMax = std::max(yMax, refP.Ymax);
                 }

@@ -1600,7 +1600,7 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale, const P
         date.mData = plugin->fromCSV(dataTmp, csvLocale);
 
         if (plugin->wiggleAllowed()) {
-            int firstColNum = plugin->csvMinColumns() + plugin->csvOptionalColumns();
+            qsizetype firstColNum = plugin->csvMinColumns() + plugin->csvOptionalColumns();
             if (dataTmp.size() >= firstColNum + 2) {
                 QString deltaType = dataTmp.at(firstColNum);
                 QString delta1 = dataTmp.at(firstColNum + 1);

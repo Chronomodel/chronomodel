@@ -53,7 +53,9 @@ Constraint::Constraint(QObject *parent):
 Constraint::Constraint(const Constraint& ec, QObject *parent):
     QObject( parent )
 {
-    copyFrom(ec);
+    mId = ec.mId;
+    mFromId = ec.mFromId;
+    mToId = ec.mToId;
 }
 
 Constraint& Constraint::operator=(const Constraint& ec)

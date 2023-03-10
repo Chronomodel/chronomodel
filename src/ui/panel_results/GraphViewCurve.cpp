@@ -118,14 +118,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
 
     if (mCurrentVariableList.contains(eG)) {
         std::vector<CurveRefPts> curveEventsPoints;
-        /*curveEventsPoints.mName = "Events Points";
 
-        curveEventsPoints.mPen = QPen(Qt::black, 1, Qt::SolidLine);
-        curveEventsPoints.mBrush = Qt::black;
-        curveEventsPoints.mIsRectFromZero = false;
-
-        curveEventsPoints.mType = GraphCurve::eRefPoints;
-*/
         // intallation des points de ref
         CurveRefPts ref;
         for (auto& ePts : mEventsPoints) {
@@ -136,7 +129,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
 
             ref.Ymin = ePts.Ymin;
             ref.Ymax = ePts.Ymax;
-            ref.type = CurveRefPts::eLine;
+            ref.type = ePts.type;
             ref.color = ePts.color;
             ref.pen = QPen(Qt::black, 1, Qt::SolidLine);
             ref.brush = Qt::black;
@@ -145,14 +138,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         }
 
         std::vector<CurveRefPts> curveDataPoints;
-        /* curveDataPoints.mName = "Data Points";
 
-        curveDataPoints.mPen = QPen(Qt::black, 1, Qt::SolidLine);
-        curveDataPoints.mBrush = Qt::black;
-        curveDataPoints.mIsRectFromZero = false;
-
-        curveDataPoints.mType = GraphCurve::eRefPoints;
-        */
         for (auto& dPts : mDataPoints) {
             ref.Xmin = DateUtils::convertToAppSettingsFormat(dPts.Xmin);
             ref.Xmax = DateUtils::convertToAppSettingsFormat(dPts.Xmax);
@@ -161,7 +147,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
 
             ref.Ymin = dPts.Ymin;
             ref.Ymax = dPts.Ymax;
-            ref.type = CurveRefPts::eCross;
+            ref.type = dPts.type;
             ref.color = dPts.color;
             ref.name = "Data Points";
             curveDataPoints.push_back(ref);

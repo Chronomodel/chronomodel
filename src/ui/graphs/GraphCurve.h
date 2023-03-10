@@ -57,7 +57,9 @@ public:
         eCross = 'C',
         ePoint = 'P',
         eLine = 'L',
-        eDotLine = 'D'
+        eDotLine = 'D',
+        eDotLineCross = 'T',
+        eRoundLine = 'R' //For Bound
     };
 
     PointType type;

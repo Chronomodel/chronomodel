@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,9 +40,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef GENERATOR_H
 #define GENERATOR_H
 
-#include "random"
 #include <chrono>
 #include <algorithm>
+#include <random>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846264338327950288419716939937510582
@@ -51,19 +51,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 static std::default_random_engine CharGenerator (int(std::chrono::system_clock::now().time_since_epoch().count()));
 
 struct randomChar {
-    int _a,_b;
+    int _a, _b;
     std::uniform_int_distribution<int> CharDistribution;
     randomChar() {
         _a = 97;
         _b = 122;
         CharDistribution.param(std::uniform_int_distribution<int>::param_type(97, 122));
     }
-  
+
     
     void reset () { CharDistribution.reset(); }
     
     int operator()() {return CharDistribution(CharGenerator);}
-
 } ;
 
 

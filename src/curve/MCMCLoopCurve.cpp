@@ -1488,7 +1488,7 @@ bool MCMCLoopCurve::update_321()
                         ev->updateW();
                     }
 
-                    rate = 0.;
+                    //rate = 0.;
                     if (try_value_log >= logMin && try_value_log <= logMax) {
 
                         // Calcul du rapport : try_matrices utilise les temps reduits, elle est affectée par le changement de Vg

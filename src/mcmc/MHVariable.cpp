@@ -301,45 +301,46 @@ void MHVariable::generateGlobalRunAcceptation(const QList<ChainSpecs> &chains)
     double accepted = 0.;
     double acceptsLength = 0.;
     int shift = 0;
+    if (mAllAccepts->isEmpty()) {
+        mGlobalAcceptation = 0.;
 
-    for (auto&& chain : chains) {
-        const int burnAdaptSize = 1 + chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
-        const int runSize = chain.mIterPerAquisition;
-        shift += burnAdaptSize;
-        for (int j=shift; (j<shift + runSize) && (j<mAllAccepts->size()); ++j) {
-            if (mAllAccepts->at(j))
-                ++accepted;
+    } else {
+        for (auto&& chain : chains) {
+            const int burnAdaptSize = 1 + chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
+            const int runSize = chain.mIterPerAquisition;
+            shift += burnAdaptSize;
+            for (int j=shift; (j<shift + runSize) && (j<mAllAccepts->size()); ++j) {
+                if (mAllAccepts->at(j))
+                    ++accepted;
+            }
+            shift += runSize;
+            acceptsLength += runSize;
         }
-        shift += runSize;
-        acceptsLength += runSize;
-    }
 
-    mGlobalAcceptation = accepted / acceptsLength;
+        mGlobalAcceptation = accepted / acceptsLength;
+    }
 }
 
 
 void MHVariable::generateNumericalResults(const QList<ChainSpecs> &chains)
 {
-
-        MetropolisVariable::generateNumericalResults(chains);
-        generateGlobalRunAcceptation(chains);
+    MetropolisVariable::generateNumericalResults(chains);
+    generateGlobalRunAcceptation(chains);
 }
 
-QString MHVariable::resultsString(const QString& nl, const QString& noResultMessage, const QString& unit, DateConversion formatFunc, const bool forCSV) const
+QString MHVariable::resultsString(const QString &nl, const QString &noResultMessage, const QString &unit, DateConversion formatFunc, const bool forCSV) const
 {
-    QString result;
-    if (mSamplerProposal != MHVariable::eFixe) {
-        result = MetropolisVariable::resultsString(nl, noResultMessage, unit, formatFunc, forCSV);
-        if (forCSV)
-             result += nl + tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(stringForCSV(mGlobalAcceptation*100.), getSamplerProposalText(mSamplerProposal));
 
-        else
-             result += nl + tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(stringForLocal(mGlobalAcceptation*100.), getSamplerProposalText(mSamplerProposal));
+    if (mSamplerProposal != MHVariable::eFixe) {
+        const QString result = MetropolisVariable::resultsString(nl, noResultMessage, unit, formatFunc, forCSV);
+        const QString globalTxt = forCSV ? stringForCSV(mGlobalAcceptation*100.) : stringForLocal(mGlobalAcceptation*100.);
+
+        return result + nl + tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(globalTxt, getSamplerProposalText(mSamplerProposal));
 
     } else {
-        result = tr("Fixed value : %1").arg(stringForLocal(mFormatedTrace->at(0))); // for VG mX is Variance and we need Std gi
+        return tr("Fixed value : %1").arg(stringForLocal(mFormatedTrace->at(0))); // for VG mX is Variance and we need Std gi
     }
-    return result;
+
 }
 
 

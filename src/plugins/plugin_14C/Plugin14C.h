@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -79,8 +79,8 @@ public:
     virtual QList<MHVariable::SamplerProposal> allowedDataMethods() const;
 
     QStringList csvColumns() const;
-    int csvMinColumns() const;
-    int csvOptionalColumns() const {return 2;} // Corresponding to  "ΔR" and "ΔR Error"
+    qsizetype csvMinColumns() const;
+    qsizetype csvOptionalColumns() const {return 2;} // Corresponding to  "ΔR" and "ΔR Error"
     QJsonObject fromCSV(const QStringList& list, const QLocale& csvLocale) ;
     QStringList toCSV(const QJsonObject& data, const QLocale& csvLocale) const;
     QString getDateDesc(const Date* date) const;

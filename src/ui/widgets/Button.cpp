@@ -102,7 +102,7 @@ Button::~Button()
 void Button::keyPressEvent(QKeyEvent* event)
 {
     QPushButton::keyPressEvent(event);
-    emit click();
+   // emit click();
 }
 
 void Button::setFlatVertical()

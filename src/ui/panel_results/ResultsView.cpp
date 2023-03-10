@@ -1125,13 +1125,8 @@ void ResultsView::updateModel(Model* model)
 
 void ResultsView::initModel(Model* model)
 {
-    if (mModel == nullptr) {
-        disconnect(mModel, &Model::newCalculus, this, &ResultsView::generateCurves);
-    }
-
     mModel = model;
     connect(mModel, &Model::newCalculus, this, &ResultsView::generateCurves);
-    //connect(mModel, &Model::newCalculus, this, &ResultsView::updateModel);
 
     Scale timeScale;
     timeScale.findOptimalMark(mModel->mSettings.getTminFormated(), mModel->mSettings.getTmaxFormated(), 7);
@@ -2019,101 +2014,146 @@ void ResultsView::createByCurveGraph()
         std::vector<int> hpdPerEvent;
         if (mMainVariable == GraphViewResults::eG) {
 
-
+            //Same calcul within MultiCalibrationView::scatterPlot(const double thres)
             // Creation des points de ref
             for (const auto& event : modelCurve()->mEvents) {
                 if (event->mIsSelected || showAllEvents) {
-                CurveRefPts evPts;
-                CurveRefPts dPts;
-                 double verr;
-                // Set Y
-                if (!displayY) {
-                    switch (model->mCurveSettings.mVariableType) {
-                    case CurveSettings::eVariableTypeInclination :
-                        evPts.Ymax = event->mXIncDepth + event->mS_XA95Depth;
-                        evPts.Ymin = event->mXIncDepth - event->mS_XA95Depth;
-                        break;
-                    case CurveSettings::eVariableTypeDeclination :
-                        verr = event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
-                        evPts.Ymin = event->mYDec - verr;
-                        evPts.Ymax = event->mYDec + verr;
-                        break;
-                    case CurveSettings::eVariableTypeField :
-                        evPts.Ymin = event->mZField - 1.96*event->mS_ZField;
-                        evPts.Ymax = event->mZField + 1.96*event->mS_ZField;
-                        break;
-                    case CurveSettings::eVariableTypeDepth :
-                        evPts.Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
-                        evPts.Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
-                        break;
-                    case CurveSettings::eVariableTypeOther :
-                        evPts.Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
-                        evPts.Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
-                        break;
-                    }
-
-                } else {
-                    //must be inclination or X
-                    evPts.Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
-                    evPts.Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
-                }
-                evPts.color = event->mColor;
-
-                // Set X = time
-
-                if (event->mType == Event::eDefault) {
-
-                    for (const auto& date: event->mDates) {
-
-                        const QList<QPair<double, QPair<double, double> > > intervals = date.mTi.mRawHPDintervals;
-                        dataPerEvent.push_back(intervals.size());
-                        for (const auto& h : intervals) {
-                            dPts.Xmin = h.second.first;
-                            dPts.Xmax = h.second.second;
-                            dPts.Ymin = evPts.Ymin;
-                            dPts.Ymax = evPts.Ymax;
-                            dPts.color = event->mColor;
-
-                            // memo Data Points
-                            dataPts.append(dPts);
+                    CurveRefPts evPts;
+                    CurveRefPts dPts;
+                    double verr;
+                    // Set Y
+                    if (!displayY) {
+                        switch (model->mCurveSettings.mVariableType) {
+                        case CurveSettings::eVariableTypeInclination :
+                            evPts.Ymax = event->mXIncDepth + event->mS_XA95Depth;
+                            evPts.Ymin = event->mXIncDepth - event->mS_XA95Depth;
+                            break;
+                        case CurveSettings::eVariableTypeDeclination :
+                            verr = event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
+                            evPts.Ymin = event->mYDec - verr;
+                            evPts.Ymax = event->mYDec + verr;
+                            break;
+                        case CurveSettings::eVariableTypeField :
+                            evPts.Ymin = event->mZField - 1.96*event->mS_ZField;
+                            evPts.Ymax = event->mZField + 1.96*event->mS_ZField;
+                            break;
+                        case CurveSettings::eVariableTypeDepth :
+                            evPts.Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
+                            evPts.Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
+                            break;
+                        case CurveSettings::eVariableTypeOther :
+                            evPts.Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
+                            evPts.Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
+                            break;
                         }
 
+                    } else {
+                        //must be inclination or X
+                        evPts.Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
+                        evPts.Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
                     }
+                    evPts.color = event->mColor;
 
-                    const QList<QPair<double, QPair<double, double> > > intervals = event->mTheta.mRawHPDintervals;
-                    hpdPerEvent.push_back(intervals.size());
-                    for (const auto& h : intervals) {
-                        evPts.Xmin =  h.second.first;
-                        evPts.Xmax =  h.second.second;
-                        evPts.Ymin = evPts.Ymin;
-                        evPts.Ymax = evPts.Ymax;
+                    // Set X = time
+
+                    if (event->mType == Event::eDefault) {
+                        int nb_dataPts = 0;
+                        for (const auto& date: event->mDates) {
+
+                            const QList<QPair<double, QPair<double, double> > > &intervals = date.mTi.mRawHPDintervals;
+
+                            if (intervals.size() > 1) {
+                               // dataPerEvent.push_back(intervals.size() + 1);
+                                for (const auto& h : intervals) {
+                                    dPts.Xmin = h.second.first;
+                                    dPts.Xmax = h.second.second;
+                                    dPts.Ymin = evPts.Ymin;
+                                    dPts.Ymax = evPts.Ymax;
+                                    dPts.color = event->mColor;
+                                    dPts.type = CurveRefPts::eLine;
+                                    // memo Data Points
+                                    nb_dataPts++;
+                                    dataPts.append(dPts);
+                                }
+                                dPts.Xmin = intervals.first().second.first;
+                                dPts.Xmax = intervals.last().second.second;
+                                dPts.Ymin = evPts.Ymin;
+                                dPts.Ymax = evPts.Ymax;
+                                dPts.color = event->mColor;
+                                dPts.type = CurveRefPts::eDotLineCross;
+                                // memo Data Points
+                                nb_dataPts++;
+                                dataPts.append(dPts);
+
+
+                            } else if (intervals.size() == 1) {
+                                //dataPerEvent.push_back(1);
+                                dPts.Xmin = intervals.first().second.first;
+                                dPts.Xmax = intervals.last().second.second;
+                                dPts.Ymin = evPts.Ymin;
+                                dPts.Ymax = evPts.Ymax;
+                                dPts.color = event->mColor;
+                                dPts.type = CurveRefPts::eCross;
+                                // memo Data Points
+                                nb_dataPts++;
+                                dataPts.append(dPts);
+                            }
+
+                        }
+                        dataPerEvent.push_back(nb_dataPts);
+
+                        const QList<QPair<double, QPair<double, double> > > &intervals = event->mTheta.mRawHPDintervals;
+
+                        for (const auto& h : intervals) {
+                            evPts.Xmin =  h.second.first;
+                            evPts.Xmax =  h.second.second;
+                            evPts.Ymin = evPts.Ymin;
+                            evPts.Ymax = evPts.Ymax;
+                            evPts.color = event->mColor;
+                            evPts.type = CurveRefPts::eLine;
+                            // memo Data Points
+                            eventsPts.append(evPts);
+                        }
+
+                        if (intervals.size() > 1) {
+                            evPts.Xmin = intervals.first().second.first;
+                            evPts.Xmax = intervals.last().second.second;
+                            evPts.Ymin = evPts.Ymin;
+                            evPts.Ymax = evPts.Ymax;
+                            evPts.color = event->mColor;
+                            evPts.type = CurveRefPts::eDotLine;
+                            // memo Data Points
+                            eventsPts.append(evPts);
+
+                            hpdPerEvent.push_back(intervals.size() + 1);
+
+                        } else if (intervals.size() == 1) {
+                            hpdPerEvent.push_back(1);
+                        }
+
+
+                    } else {
+
+                        evPts.Xmin = static_cast<Bound*>(event)->mFixed;
+                        evPts.Xmax = static_cast<Bound*>(event)->mFixed;
+                        evPts.type = CurveRefPts::ePoint;
                         evPts.color = event->mColor;
 
+                        dPts.Xmin = evPts.Xmin;//event->mTheta.mX; // always the same value
+                        dPts.Xmax = evPts.Xmax;
+
+                        dPts.Ymin = evPts.Ymin;
+                        dPts.Ymax = evPts.Ymax;
+                        dPts.color = event->mColor;
+                        dPts.type = CurveRefPts::eRoundLine;
+
                         // memo Data Points
+                        dataPts.append(dPts);
                         eventsPts.append(evPts);
+                        hpdPerEvent.push_back(1);
+                        dataPerEvent.push_back(1);
                     }
-
-
-
-                } else {
-
-                    evPts.Xmin = static_cast<Bound*>(event)->mFixed;
-                    evPts.Xmax = static_cast<Bound*>(event)->mFixed;
-
-                    dPts.Xmin = evPts.Xmin;//event->mTheta.mX; // always the same value
-                    dPts.Xmax = evPts.Xmax;
-
-                    dPts.Ymin = evPts.Ymin;
-                    dPts.Ymax = evPts.Ymax;
-                    dPts.color = event->mColor;
-
-                    // memo Data Points
-                    dataPts.append(dPts);
-                    eventsPts.append(evPts);
-                    hpdPerEvent.push_back(1);
-                    dataPerEvent.push_back(1);
                 }
-              }
             }
             // Fin de creation des points de ref
          }
@@ -2256,31 +2296,7 @@ void ResultsView::createByCurveGraph()
                 graphZ->setTitle(curveTitleZ);
             }
 
-/*
-            if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ) {
-                if (mMainVariable == GraphViewResults::eGP) {
-                    graphZ->setTitle(tr("dField"));
 
-                } else if (mMainVariable == GraphViewResults::eGS) {
-                    graphZ->setTitle(tr("Field Acceleration"));
-
-                } else {
-                    graphZ->setTitle(tr("Field"));
-                }
-            
-            } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D ) {
-
-                if (mMainVariable == GraphViewResults::eGP) {
-                    graphZ->setTitle(tr("dZ"));
-
-                } else if (mMainVariable == GraphViewResults::eGS) {
-                    graphZ->setTitle(tr("Z Acceleration"));
-
-                } else {
-                    graphZ->setTitle(tr("Z"));
-                }
-            }
-*/
             graphZ->setComposanteG(modelCurve()->mPosteriorMeanG.gz);
             graphZ->setComposanteGChains(modelCurve()->getChainsMeanGComposanteZ());
 
@@ -2291,11 +2307,13 @@ void ResultsView::createByCurveGraph()
                 int iEventPts = -1;
                 for (const auto& event : modelCurve()->mEvents) {
                     if (event->mIsSelected || showAllEvents) {
-                        for (int j = 0 ; j< hpdPerEvent[i]; j++) {
-                            iEventPts++;
-                            eventsPts[iEventPts].Ymin = event->mZField - 1.96*event->mS_ZField;
-                            eventsPts[iEventPts].Ymax = event->mZField + 1.96*event->mS_ZField;
-                        }
+                        //if (hpdPerEvent.size() > 1) {
+                            for (int j = 0 ; j< hpdPerEvent[i]; j++) {
+                                iEventPts++;
+                                eventsPts[iEventPts].Ymin = event->mZField - 1.96*event->mS_ZField;
+                                eventsPts[iEventPts].Ymax = event->mZField + 1.96*event->mS_ZField;
+                            }
+                       // }
                         for (int j =0 ; j< dataPerEvent[i]; j++) {
                             dataPts[iDataPts].Ymin = eventsPts.at(iEventPts).Ymin;
                             dataPts[iDataPts].Ymax = eventsPts.at(iEventPts).Ymax;

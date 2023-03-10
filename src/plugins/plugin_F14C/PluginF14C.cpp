@@ -165,7 +165,7 @@ QStringList PluginF14C::csvColumns() const
     return cols;
 }
 
-int PluginF14C::csvMinColumns() const
+qsizetype PluginF14C::csvMinColumns() const
 {
     return csvColumns().count() - 2;
 }

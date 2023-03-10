@@ -552,6 +552,7 @@ void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
 void MetropolisVariable::generateNumericalResults(const QList<ChainSpecs> &chains)
 {
     // Results for chain concatenation
+    if (mFormatedHisto.isEmpty())  return;
     mResults.funcAnalysis = analyseFunction(mFormatedHisto);
     auto statTrace = traceStatistic(fullRunFormatedTrace(chains));
 

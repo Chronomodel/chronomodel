@@ -241,7 +241,7 @@ QStringList PluginGauss::csvColumns() const
     return cols;
 }
 
-int PluginGauss::csvMinColumns() const{
+qsizetype PluginGauss::csvMinColumns() const{
     return csvColumns().count() - 3;
 }
 

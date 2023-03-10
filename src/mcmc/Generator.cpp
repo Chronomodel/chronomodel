@@ -82,7 +82,8 @@ unsigned Generator::createSeed()
     //std::random_device rd;
     //return rd();
 
-    return rand() % 1000;
+    //return rand() % 1000;
+    return arc4random() % 1000;
 }
 
 

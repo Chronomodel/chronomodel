@@ -160,8 +160,8 @@ public:
     virtual QList<MHVariable::SamplerProposal> allowedDataMethods() const = 0;
     virtual QString csvHelp() const{return QString();}
     virtual QStringList csvColumns() const{return QStringList();}
-    virtual int csvMinColumns() const {return csvColumns().size();}
-    virtual int csvOptionalColumns() const {return 0;}
+    virtual qsizetype csvMinColumns() const {return csvColumns().size();}
+    virtual qsizetype csvOptionalColumns() const {return 0;}
     virtual QJsonObject fromCSV(const QStringList& list,const QLocale& csvLocale) = 0;
     virtual QStringList toCSV(const QJsonObject& data,const QLocale& csvLocale) const = 0;
 

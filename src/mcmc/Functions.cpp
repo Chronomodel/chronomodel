@@ -791,21 +791,21 @@ std::pair<double, double> timeRangeFromTraces(const QVector<double> &trace1, con
             // We must decrease of 1 because the array begin at 0
             const double ha( (traceAlpha.size()-1)*epsilon);
 
-            const int haInf ( floor(ha) );
-            const int haSup ( ceil(ha) );
+            const size_t haInf ( floor(ha) );
+            const size_t haSup ( ceil(ha) );
 
             const double a = traceAlpha.at(haInf) + ( (ha-haInf)*(traceAlpha.at(haSup)-traceAlpha.at(haInf)) );
 
             // 3 - copy only value of beta with alpha greater than a(epsilon)
-            const int alphaIdx = ha==haInf ? haInf:haSup;
+            const size_t alphaIdx = ha==haInf ? haInf:haSup;
 
-            const int remainingElemt =  n - alphaIdx;
+            const size_t remainingElemt =  n - alphaIdx;
             betaUpper.resize(remainingElemt);   // allocate space
 
             // traceBeta is sorted with the value alpha join
             auto it = std::copy( traceBeta.begin()+ alphaIdx, traceBeta.end(), betaUpper.begin() );
 
-            const int betaUpperSize = (int) std::distance(betaUpper.begin(), it);
+            const size_t betaUpperSize = (size_t) std::distance(betaUpper.begin(), it);
 
             betaUpper.resize(betaUpperSize);  // shrink container to new size
 

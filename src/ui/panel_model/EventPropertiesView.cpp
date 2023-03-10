@@ -892,7 +892,7 @@ void EventPropertiesView::updateLayout()
             } 
 
             if (withNode)
-                mCurveNodeCB->setGeometry(dx += editW + margin, dy, mCurveNodeCB->width(), mLineEditHeight);
+                mCurveNodeCB->setGeometry(dx + editW + margin, dy, mCurveNodeCB->width(), mLineEditHeight);
 
             dy += mLineEditHeight + margin;
         }

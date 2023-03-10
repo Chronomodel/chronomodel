@@ -337,8 +337,11 @@ qDebug()<<"[PhasesScene::updateSceneFromState] Start";
                     QGraphicsView* gview = gviews[0];
                     QPointF pt = gview->mapToScene(gview->width()/2, gview->height()/2);
 
-                    phaseItem->setPos(pt.x() + rand() % posDelta - posDelta/2,
-                                      pt.y() + rand() % posDelta - posDelta/2);
+                   // phaseItem->setPos(pt.x() + rand() % posDelta - posDelta/2,
+                   //                   pt.y() + rand() % posDelta - posDelta/2);
+
+                    phaseItem->setPos(pt.x() + arc4random() % posDelta - posDelta/2,
+                                      pt.y() + arc4random() % posDelta - posDelta/2);
 
                 }
 

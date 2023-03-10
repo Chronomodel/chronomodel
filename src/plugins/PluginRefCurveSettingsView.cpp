@@ -146,15 +146,15 @@ void PluginRefCurveSettingsView::updateFilesInFolder()
         // The file name already existed, but we have a new path : replace it !
         if (mFilesOrg.contains(iter.key()) && iter.value() != mFilesOrg.value(iter.key())) {
             if (QMessageBox::question(qApp->activeWindow(), tr("Warning"), tr("Do you really want to replace existing %1").arg(iter.key())) == QMessageBox::Yes) {
-                QString filepath = calibPath + "/" + iter.key();
-
+                const QString filepath = calibPath + "/" + iter.key();
+                mFilesOrg[iter.key()] = filepath;
             }
         }
         // The file does not exist : copy it.
-        if (!mFilesOrg.contains(iter.key())) {
-            QString filepath = calibPath + "/" + iter.key();
+        else if (!mFilesOrg.contains(iter.key())) {
+            const QString filepath = calibPath + "/" + iter.key();
             if (QFile::copy(iter.value(), filepath))
-                mFilesOrg.insert(iter.key(),iter.value());
+                mFilesOrg.insert(iter.key(), iter.value());
 
         }
     }

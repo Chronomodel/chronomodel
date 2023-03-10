@@ -118,8 +118,6 @@ protected:
 public:
     bool mUseMargin;
 
-signals:
-      void click();
 };
 
 #endif
