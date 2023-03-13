@@ -52,9 +52,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QDebug>
 #include <QObject>
 
-
-//int matherr(struct exception *e);
-
 // Mersenne Twister 19937 generator
 std::mt19937 Generator::sEngine(0);
 std::uniform_real_distribution<double> Generator::sDoubleDistribution(0.0, 1.0);
@@ -83,15 +80,20 @@ unsigned Generator::createSeed()
     //return rd();
 
     //return rand() % 1000;
-    return arc4random() % 1000;
+    //return arc4random() % 1000; // invalide for Windows os
+
+    // Seed with a real random value, if available
+    std::random_device r;
+
+    // Choose a random mean between 1 and 6
+    std::mt19937 gen(r());
+    std::uniform_int_distribution<int> uniform_dist(1, 1000);
+    return uniform_dist(gen);
 }
 
 
 double Generator::randomUniform(const double& min, const double& max)
 {
-    //const double r = min + sDoubleDistribution(sEngine) * (max - min);
-    //const double r = min + xorshift64star() * (max - min);
-
     return min + sDoubleDistribution(sEngine) * (max - min);
     // return min + xorshift64star() * (max - min);
 }

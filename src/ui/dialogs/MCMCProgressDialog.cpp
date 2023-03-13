@@ -42,8 +42,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AppSettings.h"
 
 #include <QtWidgets>
-//#include <Winbase>
 
+// to prevent windows to stop for energy
+// https://learn.microsoft.com/fr-fr/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate?redirectedfrom=MSDN
+
+#ifdef _WIN32
+#include "winbase.h"
+#endif
 
 MCMCProgressDialog::MCMCProgressDialog(MCMCLoop* loop, QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags),
 mLoop(loop)
@@ -88,7 +93,9 @@ MCMCProgressDialog::~MCMCProgressDialog()
 
 int MCMCProgressDialog::startMCMC()
 {
-   // SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED); //https://learn.microsoft.com/fr-fr/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate?redirectedfrom=MSDN
+#ifdef _WIN32
+    SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED); //https://learn.microsoft.com/fr-fr/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate?redirectedfrom=MSDN
+#endif
     mLoop->start(QThread::QThread::HighestPriority);// TimeCriticalPriority);// NormalPriority);
     return exec();
 }
