@@ -187,11 +187,12 @@ void MultiCalibrationDrawing::updateLayout()
            // newTitle = true;
             const int marginBottom = (axisVisible && mListAxisVisible[graphNo] ? int (fm.ascent() * 2.2) : int (fm.height()/2));
             if (withBar) {
-                /* Si il y a des bars, il doit y avoir autant de bar que de graph et de title
+                /* Si il y a des bars, il doit y avoir autant de bar que de graph et de title,
+                 * La bar est plus courte pour les graphs qui ont un axe visible
                  */
-               /* if (axisVisible && mListAxisVisible[graphNo])
-                    mListBar[barNo]->setGeometry(graphShift, y, barWidth, mGraphHeight + marginBottom);
-                else */
+                if (axisVisible && mListAxisVisible[graphNo])
+                    mListBar[barNo]->setGeometry(graphShift, y, barWidth, mGraphHeight - marginBottom);
+                else
                     mListBar[barNo]->setGeometry(graphShift, y, barWidth, mGraphHeight);
 
                 mListBar[barNo]->setVisible(true);
@@ -261,7 +262,7 @@ QPixmap MultiCalibrationDrawing::grab()
 }
 
 
-void MultiCalibrationDrawing::setGraphHeight(const int & height)
+void MultiCalibrationDrawing::setGraphHeight(int height)
 {
     mGraphHeight = height;
 }

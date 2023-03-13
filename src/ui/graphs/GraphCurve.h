@@ -59,6 +59,7 @@ public:
         eLine = 'L',
         eDotLine = 'D',
         eDotLineCross = 'T',
+        eCustomDashLineCross ='U',
         eRoundLine = 'R' //For Bound
     };
 

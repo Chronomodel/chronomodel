@@ -878,6 +878,53 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
                         const QList<QPair<double, QPair<double, double> > > &intervals = intervalsForHpd(hpd, 100);
 
+                        CurveRefPts::PointType typePts;
+                        if (intervals.size() == 1) {
+                            typePts = CurveRefPts::eCross;
+
+                        } else {
+                            tmin = intervals.first().second.first;
+                            tmax = intervals.last().second.second;
+
+                            typePts = CurveRefPts::eDotLineCross;
+                            ptsX.Xmin = tmin;
+                            ptsX.Xmax = tmax;
+
+                            if (ptsX.Xmin > ptsX.Xmax)
+                                std::swap(ptsX.Xmin, ptsX.Xmax);
+
+                            ptsX.Ymin = X - errX;
+                            ptsX.Ymax = X + errX;
+                            ptsX.color = color;
+                            ptsX.type = typePts;
+                            ptsX.pen = QPen(Qt::black, 1, Qt::SolidLine);
+                            ptsX.brush = Qt::black;
+                            ptsX.name = "Ref Points";
+                            ptsX.setVisible(true);
+                            curveDataPointsX.push_back(ptsX);
+
+                            ptsY = ptsX;
+                            ptsY.Ymin = (Y - errY);
+                            ptsY.Ymax = Y + errY;
+                            ptsY.pen = QPen(Qt::black, 1, Qt::SolidLine);
+                            ptsY.brush = Qt::black;
+                            ptsY.name = "Ref Points";
+                            ptsY.setVisible(true);
+                            curveDataPointsY.push_back(ptsY);
+
+                            ptsZ = ptsX;
+                            ptsZ.Ymin = Z - errZ;
+                            ptsZ.Ymax = Z + errZ;
+                            ptsZ.pen = QPen(Qt::black, 1, Qt::SolidLine);
+                            ptsZ.brush = Qt::black;
+                            ptsZ.name = "Ref Points";
+                            ptsZ.setVisible(true);
+                            curveDataPointsZ.push_back(ptsZ);
+
+                            // to trace HPD
+                            typePts = CurveRefPts::eLine;
+                        }
+                        // Trace HPD
                         for (const auto& h : intervals) {
                             tmin = h.second.first;
                             tmax = h.second.second;
@@ -891,7 +938,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             ptsX.Ymin = X - errX;
                             ptsX.Ymax = X + errX;
                             ptsX.color = color;
-                            ptsX.type = CurveRefPts::eCross;
+                            ptsX.type = typePts;
                             ptsX.pen = QPen(Qt::black, 1, Qt::SolidLine);
                             ptsX.brush = Qt::black;
                             ptsX.name = "Ref Points";
@@ -916,6 +963,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             ptsZ.setVisible(true);
                             curveDataPointsZ.push_back(ptsZ);
                         }
+
                     }
 
 
@@ -1115,10 +1163,10 @@ void MultiCalibrationView::updateHPDGraphs(const QString &thres)
 void MultiCalibrationView::updateGraphsSize(const QString &sizeStr)
 {
     bool ok;
-    double val = locale().toDouble(sizeStr, &ok);
+    const double val = locale().toDouble(sizeStr, &ok);
     if (ok) {
         const double origin = GraphViewResults::mHeightForVisibleAxis;//Same value in ResultsView::applyAppSettings()
-        const double prop (val / 100.);
+        const double prop = val / 100.;
         mGraphHeight = int ( prop * origin );
 
     } else
@@ -1246,7 +1294,7 @@ void MultiCalibrationView::updateScaleX()
         QList<GraphView*> graphList = mDrawing->getGraphViewList();
 
         for (GraphView* gr : graphList) {
-            if (!gr->has_curves())
+            if (!gr->has_curves() && !gr->has_points())
                 continue;
             gr->changeXScaleDivision(mMajorScale, mMinorScale);
         }
@@ -1266,7 +1314,7 @@ void MultiCalibrationView::updateGraphsZoom()
     qreal maxYLength = 0;
     for (GraphView* gr : graphList) {
 
-        if (gr->has_curves()) {
+        if (gr->has_curves() || gr->has_points()) {
 
             gr->setRangeX(mTminDisplay, mTmaxDisplay);
             gr->setCurrentX(mTminDisplay, mTmaxDisplay);
@@ -1280,8 +1328,7 @@ void MultiCalibrationView::updateGraphsZoom()
 
 
           //  else {
-           if (calibCurve)
-           {
+           if (calibCurve) {
                 const QMap<type_data, type_data> subDisplay = getMapDataInRange(calibCurve->mData, mTminDisplay, mTmaxDisplay);
 
                 type_data yMax = map_max_value(subDisplay);
@@ -1361,7 +1408,7 @@ void MultiCalibrationView::updateGraphsZoom()
         GraphTitle* gt = dynamic_cast<GraphTitle*>(gr);
 
         if (gv) {
-            if (gv->has_curves()) {
+            if (gv->has_curves() || gv->has_points()) {
                 gv->setMarginRight(mMarginRight);
                 gv->setMarginLeft(mMarginLeft);
             }

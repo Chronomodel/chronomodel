@@ -1195,19 +1195,10 @@ std::vector<double> inverseCurve(const std::vector<double> &Rq, const int x_frac
 
 double findOnOppositeCurve (const double x, const std::vector<double> &Gx)
 {
-
     const double x_frac = Gx.size() - 1;
     const double one_X = (1 - x)*x_frac;
     return 1. - interpolate_value_from_curve( one_X, Gx, 0, x_frac);
 
- /*   const unsigned long minIdx = std::max((unsigned long)0, (unsigned long) std::floor(one_X) );
-    const unsigned long maxIdx = std::min((unsigned long)Gx.size() - 1, (unsigned long)std::ceil(one_X) );
-
-    if (minIdx == maxIdx)
-        return 1. -  Gx[minIdx];
-   return 1. - interpolate( one_X, (double)minIdx, (double)maxIdx, Gx[minIdx], Gx[maxIdx]);
-
-   */
 }
 
 #pragma mark Chronometer

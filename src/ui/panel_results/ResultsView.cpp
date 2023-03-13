@@ -285,7 +285,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     mCurveEventsPointsCheck->setFixedHeight(h);
     mCurveEventsPointsCheck->setChecked(true);
 
-    mCurveDataPointsCheck = new CheckBox(tr("Data Values"), mCurvesGroup);
+    mCurveDataPointsCheck = new CheckBox(tr("Ind. Calib. Dates"), mCurvesGroup);
     mCurveDataPointsCheck->setFixedHeight(h);
     mCurveDataPointsCheck->setChecked(true);
 
@@ -2059,8 +2059,24 @@ void ResultsView::createByCurveGraph()
                     if (event->mType == Event::eDefault) {
                         int nb_dataPts = 0;
                         for (const auto& date: event->mDates) {
+                            // --- Calibration Date
 
-                            const QList<QPair<double, QPair<double, double> > > &intervals = date.mTi.mRawHPDintervals;
+                            const QMap<double, double> &calibMap = date.getRawCalibMap();
+                            // hpd is calculate only on the study Period
+
+                            //const QMap<double, double> &subData = getMapDataInRange(calibMap, mModel->mSettings.getTminFormated(), mModel->mSettings.getTmaxFormated());
+
+                            //if (!subData.isEmpty()) {
+
+                                // hpd results
+
+                            const QMap<double, double> hpd (create_HPD(calibMap, date.mTi.mThresholdUsed));
+
+                            const QList<QPair<double, QPair<double, double> > > &intervals = intervalsForHpd(hpd, 100);
+
+                            // ---
+                          // -- Post Distrib of Ti
+                           // const QList<QPair<double, QPair<double, double> > > &intervals = date.mTi.mRawHPDintervals;
 
                             if (intervals.size() > 1) {
                                // dataPerEvent.push_back(intervals.size() + 1);

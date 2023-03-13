@@ -274,7 +274,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             envColor_i  = Painting::chainColors[i];
             envColor_i.setAlpha(30);
             const GraphCurve curveGEnv_i = shapeCurve(curveGInf_Data_i[i], curveGSup_Data_i[i], "G Env Chain " + QString::number(i),
-                                             Painting::chainColors[i], Qt::DashLine, envColor_i);
+                                             Painting::chainColors[i], Qt::CustomDashLine, envColor_i);
             mGraph->add_curve(curveGEnv_i);
 
         }

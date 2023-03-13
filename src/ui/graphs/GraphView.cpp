@@ -1362,8 +1362,8 @@ void GraphView::drawCurves(QPainter& painter)
             type_data ymin = refPoint.Ymin;
             type_data ymax = refPoint.Ymax;
             if (xmax >= mCurrentMinX && xmin <= mCurrentMaxX && ymax >= mMinY && ymin <= mMaxY) {
-                type_data xmoy = (xmax + xmin) / 2.;
-                type_data ymoy = (ymax + ymin) / 2.;
+                const type_data xmoy = (xmax + xmin) / 2.;
+                const type_data ymoy = (ymax + ymin) / 2.;
 
                 QPen refPointsPen = pen;
                 refPointsPen.setColor(refPoint.color);
@@ -1431,6 +1431,24 @@ void GraphView::drawCurves(QPainter& painter)
                     pathPoint.moveTo( xMinPlot, yPlot);
                     pathPoint.lineTo( xMaxPlot, yPlot);
 
+                    refPointsPen.setWidthF(penWidth - 1.);
+                    refPointsPen.setStyle(Qt::DotLine);
+
+                    painter.setBrush(refPointsPen.brush());
+                    painter.setPen(refPointsPen);
+                    painter.strokePath(pathPoint, refPointsPen);
+
+                    pathPoint.clear();
+                    refPointsPen.setStyle(Qt::SolidLine);
+                    refPointsPen.setWidthF(penWidth);
+                    pathPoint.moveTo( xPlot, getYForValue(ymin, true));
+                    pathPoint.lineTo( xPlot, getYForValue(ymax, true));
+                    painter.strokePath(pathPoint, refPointsPen);
+                    break;
+                case CurveRefPts::eCustomDashLineCross:
+                    pathPoint.moveTo( xMinPlot, yPlot);
+                    pathPoint.lineTo( xMaxPlot, yPlot);
+
                     refPointsPen.setWidthF(pen.widthF());
                     refPointsPen.setStyle(Qt::CustomDashLine);
                     refPointsPen.setDashPattern(QList<qreal>{5, 5});
@@ -1445,7 +1463,6 @@ void GraphView::drawCurves(QPainter& painter)
                     pathPoint.lineTo( xPlot, getYForValue(ymax, true));
                     painter.strokePath(pathPoint, refPointsPen);
                     break;
-
                 case CurveRefPts::eRoundLine:
                     pathPoint.addEllipse(xPlot - rayPlot, yPlot - rayPlot, rayPlot*2., rayPlot*2.);
 

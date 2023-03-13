@@ -40,7 +40,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MCMCProgressDialog.h"
 #include "MCMCLoop.h"
 #include "AppSettings.h"
+
 #include <QtWidgets>
+//#include <Winbase>
 
 
 MCMCProgressDialog::MCMCProgressDialog(MCMCLoop* loop, QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags),
@@ -86,7 +88,8 @@ MCMCProgressDialog::~MCMCProgressDialog()
 
 int MCMCProgressDialog::startMCMC()
 {
-    mLoop->start(QThread::QThread::TimeCriticalPriority);//HighPriority);// NormalPriority);
+   // SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED); //https://learn.microsoft.com/fr-fr/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate?redirectedfrom=MSDN
+    mLoop->start(QThread::QThread::HighestPriority);// TimeCriticalPriority);// NormalPriority);
     return exec();
 }
 
