@@ -1419,9 +1419,9 @@ void GraphView::drawCurves(QPainter& painter)
                     pathPoint.lineTo( xMaxPlot, yPlot );
 
                     refPointsPen.setWidthF(penWidth);
-                    //refPointsPen.setStyle(Qt::DotLine);
-                    refPointsPen.setStyle(Qt::CustomDashLine);
-                    refPointsPen.setDashPattern(QList<qreal>{5, 5});
+                    refPointsPen.setStyle(Qt::DotLine);
+                    //refPointsPen.setStyle(Qt::CustomDashLine);
+                    //refPointsPen.setDashPattern(QList<qreal>{1, 1});
                     painter.setBrush(refPointsPen.brush());
                     painter.setPen(refPointsPen);
                     painter.strokePath(pathPoint, refPointsPen);

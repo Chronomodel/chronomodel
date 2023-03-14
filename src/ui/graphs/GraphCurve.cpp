@@ -190,7 +190,7 @@ GraphCurve shapeCurve(const QMap<double, double> &dataInf, const QMap<double, do
     curve.mPen = QPen(lineColor, 1, penStyle);
 
     if (penStyle == Qt::CustomDashLine) {
-        curve.mPen.setDashPattern(QList<qreal>{5, 5});
+        curve.mPen.setDashPattern(QList<qreal>{2, 2});
         /*QList<qreal> dashes;
         qreal space = 5;
         dashes << 5 << space << 5 << space << 9 << space<< 27 << space << 9 << space;

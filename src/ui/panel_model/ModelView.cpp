@@ -916,48 +916,58 @@ void ModelView::hideProperties()
 void ModelView::showMultiCalib()
 {
     //updateLayout();
-    mAnimationHide->setStartValue(mRightRect);
-    mAnimationHide->setEndValue(mRightHiddenRect);
+    const bool showAnim = mEventsScene->getItemsList().size() < 21;
+    if (showAnim) {
+        mAnimationHide->setStartValue(mRightRect);
+        mAnimationHide->setEndValue(mRightHiddenRect);
+    }
     if (mButMultiCalib->isChecked() && mButMultiCalib->isEnabled()) {
         mPhasesGlobalZoom->hide();
         if (mButProperties->isChecked()) {
             // hide mEventPropertiesView
-            mAnimationHide->setTargetObject(mEventPropertiesView);
-            mAnimationHide->start();
-
+            if (showAnim) {
+                mAnimationHide->setTargetObject(mEventPropertiesView);
+                mAnimationHide->start();
+            }
             mButProperties->setChecked(false);
 
         }  else  if (mButCurve->isChecked()) {
             // hide mCurveSettingsView
-            mAnimationHide->setTargetObject(mCurveSettingsView);
-            mAnimationHide->start();
+            if (showAnim) {
+                mAnimationHide->setTargetObject(mCurveSettingsView);
+                mAnimationHide->start();
+            }
 
             mButCurve->setChecked(false);
 
         } else  if (mButImport->isChecked()) {
             // hide mCurveSettingsView
-            mAnimationHide->setTargetObject(mImportDataView);
-            mAnimationHide->start();
+            if (showAnim) {
+                mAnimationHide->setTargetObject(mImportDataView);
+                mAnimationHide->start();
+            }
 
             mButImport->setChecked(false);
 
         }
         mMultiCalibrationView->updateGraphList();
         mMultiCalibrationView->setVisible(true);
+        if (showAnim) {
+            mAnimationShow->setStartValue(mRightHiddenRect);
+            mAnimationShow->setEndValue(mRightRect);
 
-        mAnimationShow->setStartValue(mRightHiddenRect);
-        mAnimationShow->setEndValue(mRightRect);
+            // mMultiCalibrationView->raise();
 
-       // mMultiCalibrationView->raise();
-
-        mAnimationShow->setTargetObject(mMultiCalibrationView);
-        mAnimationShow->start();
-
+            mAnimationShow->setTargetObject(mMultiCalibrationView);
+            mAnimationShow->start();
+        }
      } else {
-             mAnimationHide->setTargetObject(mMultiCalibrationView);
-             mAnimationHide->start();
-             if (mButPhasesGlobaliew->isChecked())
-                 mPhasesGlobalView->show();
+        if (showAnim) {
+            mAnimationHide->setTargetObject(mMultiCalibrationView);
+            mAnimationHide->start();
+        }
+        if (mButPhasesGlobaliew->isChecked())
+            mPhasesGlobalView->show();
     }
     updateLayout();
 }
