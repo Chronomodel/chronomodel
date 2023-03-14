@@ -1329,13 +1329,20 @@ void MultiCalibrationView::updateGraphsZoom()
 
           //  else {
            if (calibCurve) {
-                const QMap<type_data, type_data> subDisplay = getMapDataInRange(calibCurve->mData, mTminDisplay, mTmaxDisplay);
+               type_data yMax;
+                const QMap<type_data, type_data> &subDisplay = getMapDataInRange(calibCurve->mData, mTminDisplay, mTmaxDisplay);
+                if (subDisplay.isEmpty()) {
+                    yMax = 0;
+                } else {
+                    yMax = map_max_value(subDisplay);
+                }
 
-                type_data yMax = map_max_value(subDisplay);
                 GraphCurve* wiggleCurve = gr->getCurve("Wiggle");
                 if (wiggleCurve) {
-                    const QMap<type_data, type_data> subDisplayWiggle = getMapDataInRange(wiggleCurve->mData, mTminDisplay, mTmaxDisplay);
-                    yMax = std::max(yMax, map_max_value(subDisplayWiggle));
+                    const QMap<type_data, type_data> &subDisplayWiggle = getMapDataInRange(wiggleCurve->mData, mTminDisplay, mTmaxDisplay);
+                    if (!subDisplayWiggle.isEmpty()) {
+                        yMax = std::max(yMax, map_max_value(subDisplayWiggle));
+                    }
                 }
 
                 if (yMax == 0.)
@@ -1345,7 +1352,7 @@ void MultiCalibrationView::updateGraphsZoom()
             }
 
             if (gr->has_points()) {
-                //calibCurve = gr->getCurve("Ref Points");
+
                 double yMin = gr->refPoints.at(0).Ymin;
                 double yMax = gr->refPoints.at(0).Ymax;
 
