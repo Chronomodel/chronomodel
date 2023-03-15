@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "MCMCLoop.h"
+
 #include "Generator.h"
 #include "Project.h"
 #include "QtCore/qcoreapplication.h"
@@ -46,6 +47,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QDebug>
 #include <QTime>
+
+#include <QtWidgets>
+//#include "qfilesystemmodel.h"
+#ifdef _WIN32
+#include "winbase.h"
+#endif
 
 MCMCLoop::MCMCLoop():
     mChainIndex (0),
@@ -215,7 +222,7 @@ void MCMCLoop::run()
         QElapsedTimer burningTime;
         burningTime.start();
 
-        qint64 interTime;
+        qint64 interTime = 0;
         while (chain.mBurnIterIndex < chain.mIterPerBurn) {
             if (isInterruptionRequested()) {
                 mAbortedReason = ABORTED_BY_USER;
@@ -224,7 +231,11 @@ void MCMCLoop::run()
 
             try {
                 this->update();
+#ifdef _WIN32
+//    SetThreadExecutionState( ES_AWAYMODE_REQUIRED); //https://learn.microsoft.com/fr-fr/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate?redirectedfrom=MSDN
+    SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED);
 
+#endif
             } catch (QString error) {
                 mAbortedReason = error;
                 return;
@@ -268,7 +279,9 @@ void MCMCLoop::run()
 
                 try {
                     this->update();
-
+#ifdef _WIN32
+    SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED); //https://learn.microsoft.com/fr-fr/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate?redirectedfrom=MSDN
+#endif
 
                 } catch (QString error) {
                     mAbortedReason = error;
@@ -342,7 +355,9 @@ void MCMCLoop::run()
 
             try {
                 OkToMemo =  this->update();
-
+#ifdef _WIN32
+    SetThreadExecutionState( ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED); //https://learn.microsoft.com/fr-fr/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate?redirectedfrom=MSDN
+#endif
             } catch (QString error) {
                 mAbortedReason = error;
                 return;
@@ -395,7 +410,9 @@ void MCMCLoop::run()
     //-----------------------------------------------------------------------
 
     emit stepChanged(tr("Computing posterior distributions and numerical results (HPD, credibility, ...)"), 0, 0);
-
+#ifdef _WIN32
+    SetThreadExecutionState(ES_CONTINUOUS);
+#endif
     try {
         this->finalize();
 
