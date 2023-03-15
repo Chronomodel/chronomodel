@@ -72,6 +72,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <chrono>
 
 
+#ifdef _WIN32
+#include <QtWidgets>
+#include "winbase.h"
+#endif
+
 MCMCLoopCurve::MCMCLoopCurve(ModelCurve* model, Project* project):MCMCLoop(project),
     mModel(model)
 {
@@ -1258,7 +1263,9 @@ bool MCMCLoopCurve::update_321()
              * -------------------------------------------------------------- */
             try {
                 for (Event*& event : initListEvents) {
-
+#ifdef _WIN32
+    SetThreadExecutionState( ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED); //https://learn.microsoft.com/fr-fr/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate?redirectedfrom=MSDN
+#endif
                     if (event->mType == Event::eDefault) {
                         const double min = event->getThetaMin(tminPeriod);
                         const double max = event->getThetaMax(tmaxPeriod);

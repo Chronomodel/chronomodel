@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -53,6 +53,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define PAR
 #endif
 
+#ifdef _WIN32
+//#include <winbase.h>
+#endif
+
 class Project;
 
 class MCMCLoop : public QThread
@@ -93,8 +97,6 @@ protected:
     QList<ChainSpecs> mChains;
     int mChainIndex;
     State mState;
-   // typedef bool (*MCMCLoop::samplingLoop)();
-    //samplingLoop updateLoop;
 
 public:
     QString mAbortedReason;
