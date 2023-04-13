@@ -644,7 +644,7 @@ void Date::calibrate(const ProjectSettings settings, Project *project, bool trun
                  */
               } else {
                 tminCal = mTminRefCurve;
-                tmaxCal = mTminRefCurve;
+                tmaxCal = mTmaxRefCurve;
                 mCalibration->mCurve = calibrationTemp;
                 mCalibration->mRepartition = repartitionTemp;
             }
