@@ -89,7 +89,9 @@ public:
     QList<EventConstraint*> mConstraintsBwd;
 
     MHVariable mTheta;
-    double mS02;
+
+    MHVariable mS02;
+
     double mAShrinkage;
     bool mInitialized;
 
@@ -158,6 +160,9 @@ public:
     double getThetaMaxRecursive(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
 
     virtual void updateTheta(const double tmin, const double tmax);
+
+    void updateS02();
+    double h_S02(const double S02);
 
     void generateHistos(const QList<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
 

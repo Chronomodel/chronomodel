@@ -357,7 +357,14 @@ QString ModelUtilities::modelStateDescriptionText(const ModelCurve* model, QStri
                 text += QObject::tr(" - Sigma_MH on Theta : %1").arg(stringForLocal(event->mTheta.mSigmaMH));
             }
 
-            text += QObject::tr(" - S02 : %1").arg(stringForLocal(event->mS02));
+            text += QObject::tr(" - S02 :");
+            if (event->mS02.mLastAccepts.size() > 2 && event->mS02.mSamplerProposal!= MHVariable::eFixe) {
+                text += QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(event->mS02.getCurrentAcceptRate()*100.), MHVariable::getSamplerProposalText(event->mS02.mSamplerProposal));
+                text += QObject::tr(" - Sigma_MH on Theta : %1").arg(stringForLocal(event->mS02.mSigmaMH));
+
+            } else {
+                text += QObject::tr(" - fixe value : %1").arg(stringForLocal(event->mS02.mX));
+            }
         }
 
         if (curveModel) {
@@ -1111,7 +1118,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
                 HTMLText += line(textBlue(QObject::tr(" - Sigma_MH on Theta : %1").arg(stringForLocal(event->mTheta.mSigmaMH))));
             }
 
-            HTMLText += line(textBlue(QObject::tr(" - S02 : %1").arg(stringForLocal(event->mS02))));
+            HTMLText += line(textBlue(QObject::tr(" - S02 : %1").arg(stringForLocal(event->mS02.mX))));
         }
 
         if (curveModel) {

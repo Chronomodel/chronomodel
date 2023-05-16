@@ -113,7 +113,7 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> & fun)
     type_data y = citer.value();
     type_data variance = 0;
 
-    // suppression des premiers zéro qui gene le calcul de moyenne
+    // suppression des premiers zéro qui genent le calcul de moyenne
     for (;citer != fun.cend() && y == 0; ++citer) {
         y = citer.value();
     }
@@ -924,7 +924,7 @@ std::pair<double, double> gapRangeFromTraces(const QVector<double> &traceEnd, co
 
             const double aEpsilon = 1. - epsilon;
 
-            // Linear intertpolation according to R quantile( type=7)
+            // Linear interpolation according to R quantile( type=7)
             // We must decrease of 1 from the original formula because the array begin at 0
             const double ha( ((double)traceBeta.size()-1.) * aEpsilon);
 
@@ -958,7 +958,7 @@ std::pair<double, double> gapRangeFromTraces(const QVector<double> &traceEnd, co
            // 5 - Calcul b
             const double bEpsilon( (gamma-epsilon)/(1.-epsilon) );
 
-            // Linear intertpolation like in R quantile( type=7)
+            // Linear interpolation like in R quantile( type=7)
 
             const size_t hb( ((double)alphaUnder.size()-1.)* bEpsilon );
             const size_t hbInf( floor(hb) );
@@ -1231,23 +1231,38 @@ void resizeLongMatrix(Matrix2D & matrix,  size_t rows, size_t cols)
 
 Matrix2D seedMatrix(const Matrix2D matrix, size_t shift)
 {
-    if (shift == 0) {
+    if (shift == 0)
         return matrix;
-    }
+
     size_t n = matrix[0].size() - 2*shift;
     Matrix2D resMatrix ( n );
     auto itRes = begin(resMatrix);
     for ( auto it = begin(matrix)+shift; it != end(matrix)-shift; ++it) {
-        //*itRes = std::valarray<long double>  ( begin(*it) +shift, end(*it)-shift );
         *itRes = std::valarray<Matrix2D::value_type::value_type>  ( (*it)[std::slice(shift, n, 1)] );
         ++itRes;
     }
     return resMatrix;
 }
 
+Matrix2D remove_bands_Matrix(const Matrix2D &matrix, size_t shift)
+{
+    if (shift == 0)
+        return matrix;
+
+    size_t nb_col = matrix[0].size();
+    size_t nb_row = nb_col - 2*shift;
+    Matrix2D resMatrix ( nb_col );
+    auto itRes = begin(resMatrix);
+    for ( auto it = begin(matrix); it != end(matrix); ++it) {
+        *itRes = std::valarray<Matrix2D::value_type::value_type>  ( (*it)[std::slice(1, nb_row, 1)] );
+        ++itRes;
+    }
+    return resMatrix;
+}
+
+
 Matrix2D::value_type::value_type determinant(const Matrix2D &matrix, size_t shift)
 {
-
     size_t n = matrix.size();
     Matrix2D::value_type::value_type det;
 
@@ -1392,11 +1407,12 @@ Matrix2D::value_type::value_type determinant_gauss(const Matrix2D &matrix, size_
       //-----
     return (det);
 }
-// On suppose une matrice carrée N*N
+// On suppose une matrice quelconque M*N
 Matrix2D transpose0(const Matrix2D &A)
 {
    size_t n = A.size();
-   Matrix2D TA  = initMatrix2D(n, n);
+   size_t m = A[0].size();
+   Matrix2D TA  = initMatrix2D(m, n);
 
    auto Ai = begin(A);
    const Matrix2D::value_type::value_type* Aij;
@@ -1409,6 +1425,7 @@ Matrix2D transpose0(const Matrix2D &A)
 
 }
 
+// On suppose une matrice carrée N*N
 Matrix2D transpose(const Matrix2D &matrix, const int nbBandes)
 {
     const int dim = matrix.size();
@@ -1576,7 +1593,8 @@ Matrix2D multiConstParMat(const Matrix2D& matrix, const double c, const int nbBa
 /*
  * Naive implementation
  */
-Matrix2D multiMatParMat0(const Matrix2D& matrix1, const Matrix2D& matrix2)
+/* for square matrix
+ * Matrix2D multiMatParMat0(const Matrix2D& matrix1, const Matrix2D& matrix2)
 {
     const size_t n = matrix1.size();
     Matrix2D result = initMatrix2D(n, n);
@@ -1596,7 +1614,72 @@ Matrix2D multiMatParMat0(const Matrix2D& matrix1, const Matrix2D& matrix2)
         }
     }
     return result;
+}*/
+Matrix2D multiMatParMat0(const Matrix2D& matrix1, const Matrix2D& matrix2)
+{
+    const int nl1 = matrix1.size();
+    //const int nc1 = matrix1[0].size();
+    const int nl2 = matrix2.size();
+    const int nc2 = matrix2[0].size();
+    // nc1 doit etre égal à nl2
+    Matrix2D result = initMatrix2D(nl1, nc2);
+    const long double* itMat1;// = begin(matrix1[0]);
+    long double sum;
+
+    for (int i = 0; i < nl1; ++i) {
+        itMat1 = begin(matrix1[i]);
+
+        for (int j = 0; j < nc2; ++j) {
+            sum = 0;
+            for (int k = 0; k < nl2; ++k) {
+                sum += (*(itMat1 + k)) * matrix2[k][j];
+
+            }
+            result[i][j] = sum;
+        }
+    }
+    return result;
 }
+
+Matrix2D multiConstParMat0(const Matrix2D &matrix, const double c)
+{
+    const int n = matrix.size() ;
+    Matrix2D result = initMatrix2D(n, n)  ;//matrix;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            result[i][j] = c * matrix[i][j];
+        }
+    }
+
+    return result;
+}
+
+
+Matrix2D addDiagToMat( const MatrixDiag &diag, Matrix2D matrix)
+{
+    const int dim = matrix.size();
+    Matrix2D result = matrix;
+    for (int i = 0; i < dim; ++i)
+        result[i][i] += diag[i];
+
+    return result;
+}
+
+
+Matrix2D soustractMatToIdentity(const Matrix2D& matrix)
+{
+    const int dim = matrix.size();
+    Matrix2D result = matrix;
+    for (auto &&r_i : result)
+        for (auto &&r_ij : r_i)
+            r_ij *= -1.;
+
+    for (int i = 0; i < dim; ++i)
+        result[i][i] += 1.;
+
+    return result;
+}
+
 
 /*
  * Naive implementation with lambda function optimization
@@ -2222,7 +2305,7 @@ std::pair<Matrix2D, MatrixDiag> decompositionCholesky(const Matrix2D &matrix, co
                 matD[i] = matrix[i][i] - sum; // doit être non-nul;
 
 
-
+/*
                 if (matD[i] <= 0) {
                     QThread *tt = QThread::currentThread();
                     auto mcmcLoop = static_cast<MCMCLoop*>(tt);
@@ -2233,11 +2316,13 @@ std::pair<Matrix2D, MatrixDiag> decompositionCholesky(const Matrix2D &matrix, co
                     mcmcLoop->terminate();
 
                 }
+
 #ifdef DEBUG
                 if (matD[i] >= 1.E20) {
                     qDebug() << "[Function::decompositionCholesky]  matD[i] ="<< (double)matD[i]<< " >= 1.E+20 ";
                 }
 #endif
+*/
             }
 
             // matL : Par exemple pour n = 5 et shift =0:
@@ -2724,7 +2809,7 @@ void vmadd(const std::vector<double>& a, const std::vector<double>& b, double s,
 {
   if (c.size() != a.size() or c.size() != b.size()) {
       std::cout<<a.size() << b.size()<< c.size();
-    std::cerr << "[vmadd]: vector sizes don't match\n";
+      std::cerr << "[vmadd]: vector sizes don't match\n";
     return;
   }
 

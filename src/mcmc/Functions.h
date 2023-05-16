@@ -141,6 +141,7 @@ Matrix2D::value_type::value_type determinant(const Matrix2D& matrix, size_t shif
 Matrix2D::value_type::value_type determinant_gauss(const Matrix2D &matrix, size_t shift = 0);
 
 Matrix2D seedMatrix(const Matrix2D matrix, size_t shift = 0);
+Matrix2D remove_bands_Matrix(const Matrix2D &matrix, size_t shift = 0);
 
 Matrix2D transpose0(const Matrix2D &matrix);
 Matrix2D transpose(const Matrix2D& matrix, const int nbDiag);
@@ -151,13 +152,18 @@ Matrix2D multiDiagParMat(const MatrixDiag &diag, const Matrix2D &matrix, const i
 std::vector<double> multiMatParVec(const Matrix2D &matrix, const std::vector<double> &vec, const int nbBandes);
 
 
-Matrix2D addMatEtMat0(const Matrix2D& matrix1, const Matrix2D& matrix2);
-Matrix2D addMatEtMat(const Matrix2D &matrix1, const Matrix2D& matrix2, const int nbBandes);
-Matrix2D addIdentityToMat(const Matrix2D & matrix);
-Matrix2D multiConstParMat(const Matrix2D & matrix, const double c, const int nbBandes);
+Matrix2D addMatEtMat0(const Matrix2D &matrix1, const Matrix2D &matrix2);
+Matrix2D addMatEtMat(const Matrix2D &matrix1, const Matrix2D &matrix2, const int nbBandes);
+Matrix2D addIdentityToMat(const Matrix2D &matrix);
+Matrix2D multiConstParMat(const Matrix2D &matrix, const double c, const int nbBandes);
+Matrix2D multiConstParMat0(const Matrix2D &matrix, const double c);
 
 Matrix2D multiMatParMat0(const Matrix2D &matrix1, const Matrix2D &matrix2);
-Matrix2D multiMatParMat(const Matrix2D& matrix1, const Matrix2D& matrix2, const int nbBandes1, const int nbBandes2);
+Matrix2D multiMatParMat(const Matrix2D &matrix1, const Matrix2D &matrix2, const int nbBandes1, const int nbBandes2);
+
+Matrix2D addDiagToMat(const MatrixDiag &diag, Matrix2D matrix);
+
+Matrix2D soustractMatToIdentity(const Matrix2D &matrix);
 
 Matrix2D multiplyMatrix_Naive(const Matrix2D& a, const Matrix2D& b);
 Matrix2D multiplyMatrix_Winograd(const Matrix2D &a, const Matrix2D &b);
@@ -223,13 +229,13 @@ inline double rounddouble(const double f,const int prec)
 }
 
 template <typename T>
-bool isOdd( T value )
+inline bool isOdd( T value )
 {
     return (value % 2!= 0 ? true : false);
 }
 
 template <typename T>
-bool isEven( T value )
+inline bool isEven( T value )
 {
     return (value % 2 == 0 ? true : false);
 }

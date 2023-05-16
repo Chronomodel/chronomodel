@@ -250,16 +250,16 @@ QJsonObject PluginGauss::fromCSV(const QStringList& list, const QLocale& csvLoca
     QJsonObject json;
     if (list.size() >= csvMinColumns()) {
         json.insert(DATE_GAUSS_AGE_STR, csvLocale.toDouble(list.at(1)));
-        double error = csvLocale.toDouble(list.at(2));
+        const double error = csvLocale.toDouble(list.at(2));
         if (error == 0.)
             return QJsonObject();
         json.insert(DATE_GAUSS_ERROR_STR, error);
 
-        if ( (list.at(3) == "equation") && (list.size() >= csvMinColumns() + 3) ) {
+        if ( (list.at(3).toLower() == "equation") && (list.size() >= csvMinColumns() + 3) ) {
             json.insert(DATE_GAUSS_MODE_STR, QString(DATE_GAUSS_MODE_EQ));
-            double a = csvLocale.toDouble(list.at(4));
-            double b = csvLocale.toDouble(list.at(5));
-            double c = csvLocale.toDouble(list.at(6));
+            const double a = csvLocale.toDouble(list.at(4));
+            const double b = csvLocale.toDouble(list.at(5));
+            const double c = csvLocale.toDouble(list.at(6));
             if ( (a==0.) && (b== 0.))  {// this solution is forbiden
                 return QJsonObject();
 
@@ -269,7 +269,7 @@ QJsonObject PluginGauss::fromCSV(const QStringList& list, const QLocale& csvLoca
                 json.insert(DATE_GAUSS_C_STR, c);
             }
 
-        } else if (list.at(3) == "none" || list.at(3) == "") {
+        } else if (list.at(3).toLower() == "none" || list.at(3) == "") {
             json.insert(DATE_GAUSS_MODE_STR, QString(DATE_GAUSS_MODE_NONE));
 
         } else {
@@ -459,7 +459,7 @@ double PluginGauss::getRefErrorAt(const QJsonObject& data, const double& t, cons
     return e;
 }
 
-QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) const
+QPair<double, double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) const
 {
     double tmin = 0.;
     double tmax = 0.;
@@ -590,8 +590,23 @@ QJsonObject PluginGauss::checkValuesCompatibility(const QJsonObject& values)
 // Date Validity
 bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
 {
-    QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
-    bool valid = true;
+    const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
+
+    const auto tminMax = getTminTmaxRefsCurve(data);
+    const double new_step = (tminMax.second - tminMax.first)/5.;
+    bool valid =  settings.mStep <= new_step;
+    if (!valid) {
+        QMessageBox message(QMessageBox::Critical,
+                            qApp->applicationName() + " " + qApp->applicationVersion(),
+                            QString("PluginGauss: invalid Age = %1 and Error = %2 \n Definition of the calibration curve insufficient, decrease the step below %3").arg( QString::number(data.value(DATE_GAUSS_AGE_STR).toDouble()),
+                                                                                                                  QString::number(data.value(DATE_GAUSS_ERROR_STR).toDouble()),
+                                                                                                                  QString::number(new_step)    ),
+                            QMessageBox::Ok,
+                            qApp->activeWindow());
+        message.exec();
+    }
+
+
     long double v = 0.l;
     long double lastV = 0.l;
     if (mode == DATE_GAUSS_MODE_CURVE) {
@@ -601,24 +616,26 @@ bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& se
         const RefCurve& curve = mRefCurves.value(ref_curve);
         valid = false;
         double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
-        if (age>curve.mDataInfMin && age < curve.mDataSupMax)
+        if (age > curve.mDataInfMin && age < curve.mDataSupMax)
             valid = true;
 
         else {
             double t = curve.mTmin;
             long double repartition = 0.l;
-            while (valid==false && t<=curve.mTmax) {
+            while (valid == false && t <= curve.mTmax) {
                 v = static_cast<long double> (getLikelihood(t, data));
                 // we have to check this calculs
                 //because the repartition can be smaller than the calibration
-                if (lastV>0.l && v>0.l)
+                if (lastV>0.l && v>0.l) {
                     repartition += static_cast<long double>(settings.mStep) * (lastV + v) / 2.l;
 
+                }
                 lastV = v;
 
                 valid = ( double (repartition) > 0.);
                 t += settings.mStep;
             }
+
         }
     }
     return valid;

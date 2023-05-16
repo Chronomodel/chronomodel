@@ -57,26 +57,6 @@ class CalibrationCurve;
 
 class Project;
 
-/*
-class Dato
-{
-public:
-    Dato();
-
-    void fromJson(const QJsonObject& json);
-    virtual ~Dato();
-    QString mName;
-    MHVariable mTi; //mTheta; // theta i de la date
-    MHVariable mSigma; // sigma i de la date (par rapport au fait)
-    MHVariable mWiggle;
-    double mDelta;
-
-    double mTminRefCurve;
-    double mTmaxRefCurve;
-};
-*/
-
-
 class Date
 {
 
@@ -150,10 +130,10 @@ public:
     QStringList toCSV(const QLocale& csvLocale) const;
 
     long double getLikelihood(const double& t) const;
-    QPair<long double, long double> getLikelihoodArg(const double& t) const;
+    QPair<long double, long double> getLikelihoodArg(const double t) const;
     QString getDesc() const;
     QString getWiggleDesc() const;
-    static QString getWiggleDesc(const QJsonObject& json); // used in CalibrationView
+    static QString getWiggleDesc(const QJsonObject &json); // used in CalibrationView
     PluginAbstract* getPlugin() const {return mPlugin;}
 
     void reset();

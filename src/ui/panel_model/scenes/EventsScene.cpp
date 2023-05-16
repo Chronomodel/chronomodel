@@ -549,11 +549,20 @@ void EventsScene::updateSceneFromState()
             // CREATE ITEM
                 Event::Type type = Event::Type (event.value(STATE_EVENT_TYPE).toInt());
                 EventItem* newItem = nullptr;
+                try {
+                    if (type == Event::eDefault)
+                        newItem = new EventItem(this, event, settings);
+                    else //if(type == Event::eBound)
+                        newItem = new EventKnownItem(this, event, settings);
 
-                if (type == Event::eDefault)
-                    newItem = new EventItem(this, event, settings);
-                else //if(type == Event::eBound)
-                    newItem = new EventKnownItem(this, event, settings);
+                } catch(QString error){
+                    QMessageBox message(QMessageBox::Critical,
+                                        qApp->applicationName() + " " + qApp->applicationVersion(),
+                                        QObject::tr("Error : %1").arg(error),
+                                        QMessageBox::Ok,
+                                        qApp->activeWindow());
+                    message.exec();
+                }
 
                 mItems.append(newItem);
                 addItem(newItem);
@@ -588,6 +597,8 @@ void EventsScene::updateSceneFromState()
                 //qDebug() << "EventsScene::updateScene Event created : id = " << event.value(STATE_ID).toInt() <<event[STATE_ITEM_X].toDouble()<<event[STATE_ITEM_Y].toDouble();//<< event.value(STATE_NAME).toString()<<", type : " << type;
 
             }
+
+
 
         }
 

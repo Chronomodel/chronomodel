@@ -109,9 +109,20 @@ QString MCMCLoopChrono::calibrate()
               if (date->mCalibration) {
                 if (date->mCalibration->mCurve.isEmpty())
                     date->calibrate(mProject);
-                  //date->calibrate(mProject);
-                } else
-                    return (tr("Invalid Model -> No Calibration on Data %1").arg(date->mName));
+
+                if (date->mCalibration->mCurve.size() < 5) {
+                    const double new_step = date->mCalibration->mStep/5.;
+                    date->mCalibration->mCurve.clear();
+                    date->mCalibration->mRepartition.clear();
+                    date->mCalibration = nullptr;
+
+                    QString mes = tr("Definition of the calibration curve insufficient for the Event %1 \r Decrease the study period step to %2").arg(date->mName, QString::number(new_step));
+                    return (mes);
+
+                }
+
+              } else
+                  return (tr("Invalid Model -> No Calibration on Data %1").arg(date->mName));
 
 
             if (isInterruptionRequested())
@@ -143,6 +154,11 @@ void MCMCLoopChrono::initVariablesForChain()
 
         event->mTheta.mLastAccepts.reserve(acceptBufferLen);
         event->mTheta.mLastAcceptsLength = acceptBufferLen;
+
+        event->mS02.reset();
+        event->mS02.reserve(initReserve);
+        event->mS02.mLastAccepts.reserve(acceptBufferLen);
+        event->mS02.mLastAcceptsLength = acceptBufferLen;
 
         // event->mTheta.mAllAccepts.clear(); //don't clean, avalable for cumulate chain
 
@@ -179,7 +195,6 @@ void MCMCLoopChrono::initVariablesForChain()
 
 QString MCMCLoopChrono::initialize()
 {
-    //QList<Event*>& events (mModel->mEvents);
     QList<Phase*>& phases (mModel->mPhases);
     QList<PhaseConstraint*>& phasesConstraints (mModel->mPhaseConstraints);
 
@@ -190,8 +205,10 @@ QString MCMCLoopChrono::initialize()
         return ABORTED_BY_USER;
 
     // ---------------------- Reset Events ---------------------------
-    for (auto&& ev : mModel->mEvents)
+    for (auto&& ev : mModel->mEvents) {
         ev->mInitialized = false;
+        //ev->mS02.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    }
 
     // -------------------------- Init gamma ------------------------------
     emit stepChanged(tr("Initializing Phase Gaps..."), 0, phasesConstraints.size());
@@ -358,11 +375,14 @@ QString MCMCLoopChrono::initialize()
             }
 
             // 4 - Init S02 of each Event
-            uEvent->mS02 = (uEvent->mDates.size() / s02_sum); //unsortedEvents.at(i)->mDates.size() / s02_sum;// /100;
-            qDebug()<<"MCMCLoopChrono::Init"<<uEvent->mName <<" mS02="<<uEvent->mS02;
+            uEvent->mS02.mX = (uEvent->mDates.size() / s02_sum); //unsortedEvents.at(i)->mDates.size() / s02_sum;// /100;
+            uEvent->mS02.mLastAccepts.clear();
+            uEvent->mS02.tryUpdate(uEvent->mS02.mX, 2.);
+
+            qDebug()<<"MCMCLoopChrono::Init"<<uEvent->mName <<" mS02="<<uEvent->mS02.mX;
             
             // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
-            uEvent->mTheta.mSigmaMH = sqrt(uEvent->mS02);
+            uEvent->mTheta.mSigmaMH = sqrt(uEvent->mS02.mX);
             uEvent->mAShrinkage = 1.;
 
             // 6- Clear mLastAccepts array
@@ -476,6 +496,8 @@ bool MCMCLoopChrono::update()
     for (auto&& event : mModel->mEvents) {
 
         event->updateTheta(tminPeriod, tmaxPeriod);
+        if (event->mS02.mSamplerProposal != MHVariable::eFixe)
+            event->updateS02();
 
         //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
         //for (auto&& phInEv : event->mPhases)
@@ -538,6 +560,9 @@ bool MCMCLoopChrono::adapt(const int batchIndex) //original code
        if ((event->mType != Event::eBound) && ( event->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss) )
            noAdapt = event->mTheta.adapt(taux_min, taux_max, delta) && noAdapt;
 
+       if ( event->mS02.mSamplerProposal == MHVariable::eMHAdaptGauss)
+            noAdapt = event->mS02.adapt(taux_min, taux_max, delta) && noAdapt;
+
     }
 
 
@@ -551,6 +576,12 @@ void MCMCLoopChrono::memo()
         //--------------------- Memo Events -----------------------------------------
         event->mTheta.memo();
         event->mTheta.saveCurrentAcceptRate();
+
+        if (event->mS02.mSamplerProposal != MHVariable::eFixe) {
+            event->mS02.memo();
+            event->mS02.saveCurrentAcceptRate();
+        }
+
 
         for (auto&& date : event->mDates )   {
             //--------------------- Memo Dates -----------------------------------------

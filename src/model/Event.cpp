@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -70,6 +70,15 @@ Event::Event(const Model *model):
     mTheta.mSupport = MetropolisVariable::eBounded;
     mTheta.mFormat = DateUtils::eUnknown;
     mTheta.mSamplerProposal = MHVariable::eDoubleExp;
+
+    mS02.mSupport = MetropolisVariable::eRpStar;
+    mS02.mFormat = DateUtils::eNumeric;
+
+#ifdef S02_BAYESIAN
+    mS02.mSamplerProposal = MHVariable::eMHAdaptGauss;
+#else
+    mS02.mSamplerProposal = MHVariable::eFixe;
+#endif
 
     // Item initial position :
     mItemX = 0.;
@@ -185,7 +194,11 @@ void Event::copyFrom(const Event& event)
     mTheta.mFormat = event.mTheta.mFormat;
     mTheta.mSamplerProposal = event.mTheta.mSamplerProposal;
 
-    mS02 = event.mS02;
+    mS02.mX = event.mS02.mX;
+    mS02.mSupport = event.mS02.mSupport;
+    mS02.mFormat = event.mS02.mFormat;
+    mS02.mSamplerProposal = event.mS02.mSamplerProposal;
+
     mAShrinkage = event.mAShrinkage;
 
     mItemX = event.mItemX;
@@ -276,6 +289,10 @@ Event Event::fromJson(const QJsonObject& json)
 
     event.mTheta.mSamplerProposal = MHVariable::SamplerProposal (json.value(STATE_EVENT_SAMPLER).toInt());
     event.mTheta.setName("Theta of Event : "+ event.mName);
+
+    //event.mS02.mSamplerProposal = MHVariable::SamplerProposal (json.value(STATE_EVENT_SAMPLER).toInt());
+    event.mS02.setName("S02 of Event : "+ event.mName);
+    event.mS02.mSupport = MHVariable::eRpStar;
 
     event.mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
 
@@ -1059,8 +1076,9 @@ void Event::updateTheta(const double tmin, const double tmax)
         case MHVariable::eDoubleExp:
         {
             try{
-                const double theta = Generator::gaussByDoubleExp(theta_avg, sigma, min, max);
-                mTheta.tryUpdate(theta, 1.);
+                //const double theta = Generator::gaussByDoubleExp(theta_avg, sigma, min, max);
+                //mTheta.tryUpdate(theta, 1.);
+                mTheta.tryUpdate(mDates[0].mTi.mX, 1); // pour test Prates
             }
             catch(QString error){
                 throw QObject::tr("Error for event : %1 : %2").arg(mName, error);
@@ -1145,3 +1163,54 @@ void Event::updateW()
     }
 
 }
+
+void Event::updateS02()
+{
+    try {
+        const double logVMin = -6.;
+        const double logVMax = 100.;
+
+        const double logV2 = Generator::gaussByBoxMuller(log10(mS02.mX) , mS02.mSigmaMH);
+        const double V2 = pow(10, logV2);
+
+        double rapport  = 0.;
+        if (logV2 >= logVMin && logV2 <= logVMax) {
+            const double current_h = h_S02(mS02.mX);
+            const double try_h = h_S02(V2);
+            rapport = (try_h / current_h) * (V2 / mS02.mX) ; // (V2 / V1) est le jacobien!
+
+        }
+#ifdef DEBUG
+        else {
+            //       qDebug()<<"void Event::updateS02() rapport rejet";
+        }
+#endif
+
+        mS02.tryUpdate(V2, rapport);
+       // qDebug()<<"SO2 ="<< mS02.mX<<" rapport = "<<rapport;
+    }  catch (...) {
+        qWarning() <<"S02() mW = 0";
+    }
+
+}
+
+
+double Event::h_S02(const double S02)
+{
+
+    const double alp = 1. ;
+
+    const double bet = 1. ;
+
+    const double prior =   pow((1./S02), alp + 1) * exp(-bet/S02);
+    const int a = 1 ;
+
+    double prod_h = 1.;
+    for (auto& d : mDates) {
+        prod_h *= pow((S02/(S02 + pow(d.mSigmaTi.mX, 2))), a + 1) / S02;
+    }
+
+    return prior* prod_h;
+
+}
+

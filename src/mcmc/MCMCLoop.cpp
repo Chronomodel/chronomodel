@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -49,7 +49,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QTime>
 
 #include <QtWidgets>
-//#include "qfilesystemmodel.h"
+
 #ifdef _WIN32
 #include "winbase.h"
 #endif
@@ -79,7 +79,7 @@ MCMCLoop::~MCMCLoop()
 void MCMCLoop::setMCMCSettings(const MCMCSettings &s)
 {
     mChains.clear();
-    for (auto i=0; i<s.mNumChains; ++i) {
+    for (int i=0; i<s.mNumChains; ++i) {
         ChainSpecs chain;
 
         if (i < s.mSeeds.size())
@@ -247,7 +247,7 @@ void MCMCLoop::run()
 
             ++iterDone;
             interTime = burningTime.elapsed() * (double)(estimatedTotalIter - iterDone) / (double)chain.mBurnIterIndex;
-            emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()) + " : " + "Burning ; Total Estimated time left " + DHMS(interTime)));
+            emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()) + " : " + "Burn-in ; Total Estimated time left " + DHMS(interTime)));
 
             emit stepProgressed(chain.mBurnIterIndex);
         }

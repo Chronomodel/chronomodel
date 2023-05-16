@@ -2223,15 +2223,6 @@ void Project::updateDate(int eventId, int dateIndex)
                         events[i] = event;
                         state[STATE_EVENTS] = events;
 
-                        /* QJsonObject stateNext = mState;
-                        QJsonObject settingsJson = stateNext.value(STATE_SETTINGS).toObject();
-                        ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
-
-                         Date d (date);
-                        d.calibrate(settings, this);
-                        */
-
-
                         pushProjectState(state, "Date from dialog", true);
 
                     } else {
@@ -3123,13 +3114,14 @@ void Project::runChronomodel()
         messageBox.setIcon(QMessageBox::Warning);
         //http://doc.qt.io/qt-5/qmessagebox.html#setWindowTitle
         //Sets the title of the message box to title. On OS X, the window title is ignored (as required by the OS X Guidelines).
+
         messageBox.setWindowTitle(tr("Risk on computation"));
         messageBox.setText(tr("The model contains at least one date whose calibration is not digitally computable. \r\rDo you really want to continue ?"));
-        QAbstractButton *IStop = messageBox.addButton(tr("Stop, check the data"), QMessageBox::NoRole);
-       // messageBox.addButton(tr("I agree to continue"), QMessageBox::YesRole);
+        QAbstractButton *stopButton = messageBox.addButton(tr("Stop, check the data"), QMessageBox::NoRole);
+        messageBox.addButton(tr("I agree to continue"), QMessageBox::YesRole);
 
         messageBox.exec();
-        if (messageBox.clickedButton() == IStop)
+        if (messageBox.clickedButton() == stopButton)
           return;
     }
 
@@ -3234,8 +3226,9 @@ void Project::runCurve()
         messageBox.setMinimumWidth(10 * AppSettings::widthUnit());
         messageBox.setIcon(QMessageBox::Warning);
         messageBox.setWindowTitle(tr("Your data seems to be invalid"));
-        messageBox.setText(tr("The model contains at least one date whose calibration is not digitally computable. \r\rDo you really want to continue ?"));
+        messageBox.setText(tr("The model contains at least one date whose calibration is not digitally computable. \r\rDo you really want to continue ?"));      
         QAbstractButton *stopButton = messageBox.addButton(tr("Cancel"), QMessageBox::NoRole);
+        messageBox.addButton(tr("I agree to continue"), QMessageBox::YesRole);
         messageBox.exec();
         
         if (messageBox.clickedButton() == stopButton){

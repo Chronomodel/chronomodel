@@ -405,7 +405,7 @@ long double Date::getLikelihood(const double& t) const
             
         } else if (mOrigin == eCombination) { 
             // If needed run the wiggle calculation
-            if (mCalibration==nullptr || mCalibration->mCurve.isEmpty()) {
+            if (mCalibration == nullptr || mCalibration->mCurve.isEmpty()) {
                 return mPlugin->getLikelihoodCombine(t, mSubDates, mSettings.mStep);
 
             } else {
@@ -422,7 +422,7 @@ long double Date::getLikelihood(const double& t) const
 
 }
 
-QPair<long double, long double> Date::getLikelihoodArg(const double& t) const
+QPair<long double, long double> Date::getLikelihoodArg(const double t) const
 {
     if (mPlugin)
         if (mOrigin == eSingleDate) {
@@ -642,7 +642,7 @@ void Date::calibrate(const ProjectSettings settings, Project *project, bool trun
                  * By doing this, calib and repartition are stored on a restricted number of data
                  * instead of storing them on the whole reference curve's period (as done for calibrationTemp & repartitionTemp above).
                  */
-              } else {
+            } else {
                 tminCal = mTminRefCurve;
                 tmaxCal = mTmaxRefCurve;
                 mCalibration->mCurve = calibrationTemp;
@@ -1521,7 +1521,7 @@ void Date::updateSigmaShrinkage(Event* &event)
     double rapport  = -1.;
     if (logV2 >= logVMin && logV2 <= logVMax) {
         const double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
-        const double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1.);
+        const double x2 = pow((event->mS02.mX + V1) / (event->mS02.mX + V2), event->mAShrinkage + 1.);
         rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1 ; // (V2 / V1) est le jacobien!
 
     }
@@ -1571,7 +1571,7 @@ void Date::updateSigmaReParam(Event* event)
     double rapport (0.);
     if (V2 > VMin ) {
         const double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
-        const double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1.);
+        const double x2 = pow((event->mS02.mX + V1) / (event->mS02.mX + V2), event->mAShrinkage + 1.);
         
         rapport = x1 * sqrt(V1/V2) * x2 * pow(V2 / V1, 2.); // (V2 / V1) est le jacobien!
 

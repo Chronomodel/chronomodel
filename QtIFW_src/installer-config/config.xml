@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+	<Name>ChronoModel</Name>
+        <Version>3.2.2</Version>
+        <Title>ChronoModel_Installer</Title>
+	<Publisher>ChronoModel Team</Publisher>
+	<ProductUrl>http://chronomodel.com</ProductUrl>
+        <TargetDir>@ApplicationsDir</TargetDir>
+       
+        <!--@TargetDir@/-->
+        <InstallerApplicationIcon>installericon</InstallerApplicationIcon>
+            <!--Logo>Chronomodel.png</Logo-->
+         <Logo>Chronomodel.png</Logo>
+        <MaintenanceToolName>Chronomodel_uninstaller</MaintenanceToolName>
+
+        <Background>Chronomodel.png</Background>
+        <StartMenuDir>ChronoModel</StartMenuDir> <!--Only available on Windows.-->
+        if (installer.value("os") === "win") {
+            component.addOperation("CreateShortcut", "@TargetDir@/Chronomodel.exe", "@StartMenuDir@/Chronomodel.lnk");
+        }
+</Installer>

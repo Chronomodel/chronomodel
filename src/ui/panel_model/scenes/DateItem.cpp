@@ -83,7 +83,24 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
         else {
 
             // Date::calibrate() Controls the validity of the calibration and wiggle curves
-                d.calibrate(s, EventsScene->getProject(), true);
+            d.calibrate(s, EventsScene->getProject(), true);
+
+            if (d.mCalibration->mCurve.size() < 5) {
+                date[STATE_DATE_VALID] = false;
+                mCalibThumb = QPixmap();
+                const double newStep = d.mCalibration->mStep/5.;
+                QString mes = tr("Definition of the calibration curve insufficient for the Event %1 \r Decrease the study period step to %2").arg(d.mName, QString::number(newStep));
+                //throw mes;
+                QMessageBox message(QMessageBox::Critical,
+                                    qApp->applicationName() + " " + qApp->applicationVersion(),
+                                    mes,
+                                    QMessageBox::Ok,
+                                    qApp->activeWindow());
+                message.exec();
+                d.mCalibration->mCurve.clear();
+                d.mCalibration->mRepartition.clear();
+                d.mCalibration = nullptr;
+            }
 
             if (d.mPlugin->getName() == "Unif" && d.mOrigin == Date::eSingleDate)
                 mCalibThumb = d.generateUnifThumb(s);

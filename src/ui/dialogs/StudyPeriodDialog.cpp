@@ -85,9 +85,9 @@ mButH(25)
     mStepLab     = new QLabel(tr("Resolution in years"), mAdvancedWidget);
 
     mStepSpin = new QDoubleSpinBox(mAdvancedWidget);
-    mStepSpin -> setRange(0.01, 10000);
-    mStepSpin -> setSingleStep(0.01);
-    mStepSpin -> setDecimals(2);
+    mStepSpin -> setRange(0.001, 10000);
+    mStepSpin -> setSingleStep(0.001);
+    mStepSpin -> setDecimals(4);
 
     QGridLayout* advGrid = new QGridLayout();
     advGrid->setContentsMargins(0, 0, 0, 0);

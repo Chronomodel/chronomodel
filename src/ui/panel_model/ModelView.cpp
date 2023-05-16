@@ -653,9 +653,8 @@ void ModelView::calibrateAll(ProjectSettings newS)
                 for (auto&& date : listDates) {
                     Date d (date.toObject());
                     d.autoSetTiSampler(true);
-                    // date.mCalibration->mCurve.clear();
                     d.calibrate(newS, mProject, true);
-                    //d.calibrate(mProject);
+
                     ++position;
                     progress->setValue(position);
                 }

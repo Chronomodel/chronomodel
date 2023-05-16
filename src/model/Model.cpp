@@ -267,6 +267,7 @@ void Model::updateFormatSettings()
 
     for (const auto& event : mEvents) {
         event->mTheta.setFormat(appSetFormat);
+        event->mS02.setFormat(DateUtils::eNumeric);
 
         for (auto&& date : event->mDates) {
             date.mTi.setFormat(appSetFormat);
@@ -1134,8 +1135,12 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 #endif
 
     for (const auto& event : mEvents ) {
-        //event->mTheta.generateCorrelations(chains);
-        std::thread thTheta ([event] (QList<ChainSpecs> ch) {event->mTheta.generateCorrelations(ch);}, chains);
+        event->mTheta.generateCorrelations(chains);
+        //std::thread thTheta ([event] (QList<ChainSpecs> ch) {event->mTheta.generateCorrelations(ch);}, chains);
+
+        if (event->mS02.mSamplerProposal != MHVariable::eFixe)
+            event->mS02.generateCorrelations(chains);
+
 
         for (auto&& date : event->mDates ) {
             date.mTi.generateCorrelations(chains);
@@ -1143,17 +1148,17 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
            /* std::thread thTi ([date] (QList<ChainSpecs> ch) {date.mTi.generateCorrelations(ch);}, chains);
             std::thread thSigmaTi ([*date] (QList<ChainSpecs> ch) {date.mSigmaTi.generateCorrelations(ch);}, chains);*/
         }
-        thTheta.join();
+        //thTheta.join();
     }
 
     for (const auto& phase : mPhases ) {
-       /* phase->mAlpha.generateCorrelations(chains);
-        phase->mBeta.generateCorrelations(chains);*/
+        phase->mAlpha.generateCorrelations(chains);
+        phase->mBeta.generateCorrelations(chains);
 
-        std::thread thAlpha ([phase] (QList<ChainSpecs> ch) {phase->mAlpha.generateCorrelations(ch);}, chains);
+        /*std::thread thAlpha ([phase] (QList<ChainSpecs> ch) {phase->mAlpha.generateCorrelations(ch);}, chains);
         std::thread thBeta ([phase] (QList<ChainSpecs> ch) {phase->mBeta.generateCorrelations(ch);}, chains);
         thAlpha.join();
-        thBeta.join();
+        thBeta.join();*/
 
         //phase->mTau.generateCorrelations(chains); // ??? à voir avec PhL, est-ce utile ?
     }
@@ -1336,10 +1341,11 @@ void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftL
     const double tmax = mSettings.getTmaxFormated();
 
     for (const auto& event : mEvents) {
-                event->mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+        event->mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+        event->mS02.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 
-                for (auto&& d : event->mDates)
-                    d.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+        for (auto&& d : event->mDates)
+            d.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
     }
 
     for (const auto& phase : mPhases)
@@ -1356,11 +1362,17 @@ void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
     QElapsedTimer t;
     t.start();
 #endif
+
+#define NO_USE_THREAD_CRED
+#ifdef USE_THREAD_CRED
     std::thread thEvents ([this] (QList<ChainSpecs> chains)
     {
         for (const auto& event : mEvents) {
             if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
                 event->mTheta.generateNumericalResults(chains);
+
+                if (event->mS02.mSamplerProposal != MHVariable::eFixe)
+                    event->mS02.generateNumericalResults(chains);
 
                 for (auto&& date : event->mDates) {
                     date.mTi.generateNumericalResults(chains);
@@ -1382,9 +1394,34 @@ void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
 
     thEvents.join();
     thPhases.join();
+#else
+
+    for (const auto& event : mEvents) {
+         if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+            event->mTheta.generateNumericalResults(chains);
+
+            if (event->mS02.mSamplerProposal != MHVariable::eFixe)
+                event->mS02.generateNumericalResults(chains);
+
+            for (auto&& date : event->mDates) {
+                date.mTi.generateNumericalResults(chains);
+                date.mSigmaTi.generateNumericalResults(chains);
+            }
+         }
+    }
+
+
+    for (const auto& phase : mPhases) {
+         phase->mAlpha.generateNumericalResults(chains);
+         phase->mBeta.generateNumericalResults(chains);
+         // phase->mTau.generateNumericalResults(chains);
+         phase->mDuration.generateNumericalResults(chains);
+    }
+
+
+#endif
 
 #ifdef DEBUG
-
     qDebug() <<  "=> Model::generateNumericalResults done in " + DHMS(t.elapsed()) ;
 #endif
 }
@@ -1395,6 +1432,7 @@ void Model::clearThreshold()
 
     for (const auto& event : mEvents) {
         event->mTheta.mThresholdUsed = -1.;
+        event->mS02.mThresholdUsed = -1.;
 
         for (auto&& date : event->mDates) {
             date.mTi.mThresholdUsed = -1.;
@@ -1480,6 +1518,9 @@ void Model::generateCredibility(const double &thresh)
         if (!isFixedBound) {
             pEvent->mTheta.generateCredibility(mChains, thresh);
 
+            if (pEvent->mS02.mSamplerProposal != MHVariable::eFixe)
+                pEvent->mS02.generateCredibility(mChains, thresh);
+
             for (auto&& date : pEvent->mDates )  {
                 date.mTi.generateCredibility(mChains, thresh);
                 date.mSigmaTi.generateCredibility(mChains, thresh);
@@ -1531,6 +1572,9 @@ void Model::generateHPD(const double thresh)
     for (const auto& event : mEvents) {
         if (event->type() != Event::eBound || (event->mTheta.mSamplerProposal != MHVariable::eFixe)) {
             event->mTheta.generateHPD(thresh);
+
+            if (event->mS02.mSamplerProposal != MHVariable::eFixe)
+                event->mS02.generateHPD(thresh);
 
             for (int j = 0; j<event->mDates.size(); ++j) {
                 Date& date = event->mDates[j];
@@ -1895,7 +1939,7 @@ void Model::generateTempo_old(size_t gridLength)
 void Model::clearPosteriorDensities()
 {
     QList<Event*>::iterator iterEvent = mEvents.begin();
-    while (iterEvent!=mEvents.end()) {
+    while (iterEvent != mEvents.end()) {
         for (auto&& date : (*iterEvent)->mDates) {
             date.mTi.mFormatedHisto.clear();
             date.mSigmaTi.mFormatedHisto.clear();
@@ -1905,11 +1949,14 @@ void Model::clearPosteriorDensities()
         (*iterEvent)->mTheta.mFormatedHisto.clear();
         (*iterEvent)->mTheta.mChainsHistos.clear();
 
+        (*iterEvent)->mS02.mFormatedHisto.clear();
+        (*iterEvent)->mS02.mChainsHistos.clear();
+
         ++iterEvent;
     }
 
     QList<Phase*>::iterator iterPhase = mPhases.begin();
-    while (iterPhase!=mPhases.end()) {
+    while (iterPhase != mPhases.end()) {
         (*iterPhase)->mAlpha.mFormatedHisto.clear();
         (*iterPhase)->mBeta.mFormatedHisto.clear();
        // (*iterPhase)->mTau.mFormatedHisto.clear();

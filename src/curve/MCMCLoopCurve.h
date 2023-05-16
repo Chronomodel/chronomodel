@@ -99,9 +99,11 @@ protected:
     QString initialize_time();
     QString initialize_321();
     QString initialize_interpolate();
+    QString initialize_Komlan();
 
     bool update_321();
     bool update_interpolate();
+    bool update_Komlan();
     bool (MCMCLoopCurve::*updateLoop)();
 
 protected:
@@ -257,6 +259,24 @@ private:
 
     void memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSplineComposante &splineComposante, const int realyAccepted);
 
+#pragma mark import_Komlan
+
+    double rate_h_lambda_K(const MCMCSpline &s, const double current_lambda, const double try_lambda, const Matrix2D &K);
+    double S02_lambda_WIK (const Matrix2D &K, const int nb_noeuds);
+    double h_lambda_Komlan(const Matrix2D &K, const Matrix2D &K_new, const int nb_noeuds, const double &lambdaSpline);
+    MatrixDiag createDiagWInv_Vg0(const QList<Event*>& lEvents);
+
+    SplineMatrices prepareCalculSpline_W_Vg0(const QList<Event *> &sortedEvents, std::vector<double> &vecH);
+    MCMCSpline samplingSpline_multi(QList<Event *> &lEvents, const Matrix2D &RR_1, const Matrix2D &Q, std::vector<double> &vecfx,  bool doSortAndSpreadTheta, SplineMatrices matrices);
+    std::vector<double> splines_prior(const Matrix2D &KK, std::vector<double> &g, std::vector<double> &g_new);
+    inline double Signe_Number(const double &a);
+    double Prior_F (const Matrix2D& K, const Matrix2D& K_new, const MCMCSpline &s,  const double lambdaSpline);
+    std::vector<double> multiMatByVectCol0_KK(const Matrix2D &KKK, const std::vector<double> &gg);
+    double log_p(const double &x, const int &n);
+
+    double h_exp_fX_theta (Event* e, const MCMCSpline &s, unsigned idx);
+    std::vector<double> sampling_spline (QList<Event *> &lEvents, SplineMatrices matrices);
+    double h_S02_Vg_K(const QList<Event *> events, double S02_Vg, double try_Vg);
 
 };
 

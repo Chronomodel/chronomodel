@@ -392,7 +392,10 @@ CurveSettings CurveSettingsView::getSettings()
 
     if (mLambdaSplineTypeInput->currentIndex() == 0) {
         settings.mLambdaSplineType = CurveSettings::eModeFixed;
-        settings.mLambdaSpline = pow(10., locale().toDouble(mLambdaSplineInput->text()));
+        if (locale().toDouble(mLambdaSplineInput->text())>10)
+            settings.mLambdaSpline = pow(10., 10.);
+        else
+            settings.mLambdaSpline = pow(10., locale().toDouble(mLambdaSplineInput->text()));
 
     } else if (mLambdaSplineTypeInput->currentIndex() == 1) {
         settings.mLambdaSplineType = CurveSettings::eModeBayesian;

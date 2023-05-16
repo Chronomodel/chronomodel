@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<Package>
+    <DisplayName>Calib</DisplayName>
+    <Description>Curves for Calibration</Description>
+    <Version>3.2.2</Version>
+    <ReleaseDate>2023-02-17</ReleaseDate>
+    <Default>true</Default>
+    <Script>installscript.qs</Script>
+    <Licenses>
+        <License name="CeCILL FREE SOFTWARE LICENSE AGREEMENT Version 2.1 dated 2013-06-21" file="Licence_CeCILL_V2.1-en.html"/>
+    </Licenses>
+ 
+</Package>

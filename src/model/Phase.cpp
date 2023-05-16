@@ -550,7 +550,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     mValueStack["Activity_TimeRange_Level"] = TValueStack("Activity_TimeRange_Level", 0.);
 
     const auto s = &mModel->mSettings;
-    if (mEvents.size() < 2) {
+    if (mEvents.size() < 1) {
         mValueStack["Activity_Significance_Score"] = TValueStack("Activity_Significance_Score", 0);
         mValueStack["R_etendue"] = TValueStack("R_etendue", s->mTmax - s->mTmin);
         mValueStack["t_min"] = TValueStack("t_min", s->mTmin);
@@ -593,6 +593,9 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
     double min95 = +INFINITY;
     double max95 = -INFINITY;
+    // Ajout artificiel des events et bornes fixes
+    const int nRealyAccepted = std::accumulate(mModel->mChains.begin(), mModel->mChains.end(), 0, [] (int sum, ChainSpecs c) {return sum + c.mRealyAccepted;});
+
     for (const auto& ev : mEvents) {
         if (ev->mTheta.mSamplerProposal != MHVariable::eFixe) {
             const auto &rawtrace = ev->mTheta.fullRunRawTrace(mModel->mChains);
@@ -601,18 +604,25 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
                          std::back_inserter(concaTrace),
                          [TimeRange_min, TimeRange_max](double x) { return (TimeRange_min<= x && x<= TimeRange_max); });
         } else {
-            min95 = std::min( min95, ev->mTheta.mRawTrace->at(0));
-            max95 = std::max( max95, ev->mTheta.mRawTrace->at(0));
+            //min95 = std::min( min95, ev->mTheta.mRawTrace->at(0));
+            //max95 = std::max( max95, ev->mTheta.mRawTrace->at(0));
+            const size_t begin_size = concaTrace.size();
+            concaTrace.resize(concaTrace.size() + nRealyAccepted);
+            std::fill_n( concaTrace.begin()+begin_size, nRealyAccepted, ev->mTheta.mRawTrace->at(0));
         }
 
     }
+    const auto &minmax95 = std::minmax_element(concaTrace.begin(), concaTrace.end());
+    min95 = *minmax95.first;
+    max95 = *minmax95.second;
 
-    if (!concaTrace.empty()) {
+   /* if (!concaTrace.empty()) {
         const auto &minmax95 = std::minmax_element(concaTrace.begin(), concaTrace.end());
         min95 = std::min( min95, *minmax95.first);
         max95 = std::max( max95, *minmax95.second);
     } else
         return;
+        */
 
     if (min95 == max95) { // hapen when there is only one bound in the phase ???
 
@@ -625,8 +635,8 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
         mValueStack["Activity_Significance_Score"] = TValueStack("Activity_Significance_Score", 0);
         mValueStack["R_etendue"] = TValueStack("R_etendue", 0);
-        mValueStack["a_Unif"] = TValueStack("a_Unif", 0);
-        mValueStack["b_Unif"] = TValueStack("b_Unif", 0);
+        mValueStack["a_Unif"] = TValueStack("a_Unif", min95);
+        mValueStack["b_Unif"] = TValueStack("b_Unif", max95);
         mValueStack["Activity_min95"] = TValueStack("Activity_min95", min95);
         mValueStack["Activity_max95"] = TValueStack("Activity_max95", max95);
         mValueStack["Activity_mean95"] = TValueStack("Activity_mean95", min95);
@@ -748,8 +758,8 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
         }
 
         // Ajout artificiel des events et bornes fixes
-        const int nRealyAccepted = std::accumulate(mModel->mChains.begin(), mModel->mChains.end(), 0, [] (int sum, ChainSpecs c) {return sum + c.mRealyAccepted;});
-        for (const auto& ev : mEvents) {
+       // const int nRealyAccepted = std::accumulate(mModel->mChains.begin(), mModel->mChains.end(), 0, [] (int sum, ChainSpecs c) {return sum + c.mRealyAccepted;});
+       /* for (const auto& ev : mEvents) {
             if (ev->mTheta.mSamplerProposal == MHVariable::eFixe) {
                 auto t = ev->mTheta.mRawTrace->at(0);
                 int idxGridMin = inRange(0, (int) ceil((t - t_min_grid - h_2) / delta_t), maxGrid) ;
@@ -775,7 +785,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
                 }
                 nr += nRealyAccepted;
             }
-        }
+        } */
 
     } catch (std::exception& e) {
         qWarning()<< "[Phase::generateActivity] exception caught: " << e.what() << '\n';
@@ -830,7 +840,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
         // Calcul du score
         /* Delta(h) = somme sur theta de ( max(Aunif - Ainf) - min(Aunif, Asup) ) / nbre de theta de la grille, nbre de pas de la grille
              */
-        // La grille est définie entre min95-h/2 et max95+h/2 avec gridlength case
+        // La grille est définie entre min95-h/2-step et max95+h/2+step avec gridlength case
         const double t = nbIt * delta_t + t_min_grid ;
 
         double dUnif;
@@ -851,13 +861,11 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
         //std::cout<<"N(dUnif)"<<nd;
         //const double addUnif = exp(-0.5*pow((dUnif - eA)/(QSup-QInf), 2.)); // /(gridLength));
        // UnifScore +=  exp(-0.5*pow((dUnif - eA)/(QSup-QInf), 2.))/(gridLength); //N(dUnif, eA, QSup-QInf)/gridLength;//
-       /* const double addUnif = std::abs(std::max(dUnif, QInf) - std::min(dUnif, QSup)) / gridLength;
+        const double addUnif = std::max(dUnif, QInf) - std::min(dUnif, QSup);
         if (addUnif>0)
-         qDebug()<<" t= "<<t<<" add="<< addUnif;
-         */
+            qDebug()<<" t= "<<t<<" add="<< addUnif;
 
         UnifScore += std::max(dUnif, QInf) - std::min(dUnif, QSup);
-       // UnifScore += std::pow(dUnif - eA, 2.) / gridLength; // pour test
 
         nbIt++;
     }
