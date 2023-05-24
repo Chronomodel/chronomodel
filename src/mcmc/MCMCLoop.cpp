@@ -171,6 +171,7 @@ void MCMCLoop::run()
             mAbortedReason = ABORTED_BY_USER;
             return;
         }
+        mState = eInit;
 
         emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))  + " : " + tr("Initialising MCMC"), 0, 0);
 
@@ -364,9 +365,11 @@ void MCMCLoop::run()
             }
 
             if (thinningIdx == chain.mThinningInterval) {
+   qDebug()<<"Chaine = "<< mChainIndex << thinningIdx << OkToMemo << chain.mRealyAccepted;
                 thinningIdx = 1;
 
                 if (OkToMemo) {
+
                     this->memo();
                      ++chain.mRealyAccepted;
                 }

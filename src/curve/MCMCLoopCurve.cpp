@@ -263,8 +263,8 @@ QString MCMCLoopCurve::initialize()
     if (mCurveSettings.mLambdaSplineType == CurveSettings::eInterpolation)
         return initialize_interpolate();
     else
-    //    return initialize_321();
-    return initialize_Komlan();
+        return initialize_321();
+    //return initialize_Komlan();
 
 }
 
@@ -629,7 +629,7 @@ QString MCMCLoopCurve::initialize_321()
             else
                 mPointEvent.push_back(ev);
 
-            //ev->mS02.mSamplerProposal = MHVariable::eMHAdaptGauss;
+            //ev->mS02.mSamplerProposal = MHVariable::eMHAdaptGauss; // not yet integrate within update_321
         }
     } else {
         for (Event* ev : allEvents)
@@ -2003,10 +2003,10 @@ bool MCMCLoopCurve::update_321()
         mModel->mSpline = currentSpline(mModel->mEvents, false, current_vecH, current_splineMatrices);
 
         // G.2 - test GPrime positive
-        if (mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth)
+        if (mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth ) {
             return hasPositiveGPrimePlusConst(mModel->mSpline.splineX, mCurveSettings.mThreshold); // si dy > mCurveSettings.mThreshold = pas d'acceptation
 
-        else
+        } else
             return true;
 
 
@@ -3389,10 +3389,25 @@ void MCMCLoopCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSp
 
     }
     int tIdx = 0;
-    for (auto& vVarG : vecVarG) {
+    if (updateLoop == &MCMCLoopCurve::update_Komlan) {
+        for (auto& vVarG : vecVarG) {
+
+#ifdef CODE_KOMLAN
+        vVarG = vecVarianceG.at(tIdx)/ n;
+#else
         vVarG = vecVarianceG.at(tIdx)/ n + vecVarErrG.at(tIdx);
+#endif
         ++tIdx;
+        }
+
+    } else {
+        for (auto& vVarG : vecVarG) {
+            vVarG = vecVarianceG.at(tIdx)/ n + vecVarErrG.at(tIdx);
+            ++tIdx;
+        }
     }
+
+
 }
 
 void MCMCLoopCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline spline, CurveSettings::ProcessType &curveType, const int realyAccepted, ModelCurve &model)
@@ -5655,6 +5670,9 @@ bool  MCMCLoopCurve::hasPositiveGPrimeByDet (const MCMCSplineComposante &splineC
         double t1_res = (-bDelta - sqrt(delta)) / (2*aDelta);
         double t2_res = (-bDelta + sqrt(delta)) / (2*aDelta);
 
+        if (t1_res > t2_res)
+            std::swap(t1_res, t2_res);
+
         if (a < 0) {
             return false;
 
@@ -5769,28 +5787,35 @@ bool MCMCLoopCurve::hasPositiveGPrimePlusConst(const MCMCSplineComposante& splin
     decltype(splineComposante.vecGamma)::const_iterator iVecGamma = splineComposante.vecGamma.cbegin();
     decltype(splineComposante.vecG)::const_iterator iVecG = splineComposante.vecG.cbegin();
 
+   // Calcul dérivé avant les thetas
+    const t_reduceTime t0 = mModel->reduceTime(splineComposante.vecThetaEvents.at(0));
+    const t_reduceTime t1 = mModel->reduceTime(splineComposante.vecThetaEvents.at(1));
+    double gPrime = (splineComposante.vecG.at(1) - splineComposante.vecG.at(0)) / (t1 - t0);
+    gPrime -= (t1 - t0) * splineComposante.vecGamma.at(1) / 6.;
+    if (gPrime < dy_threshold)
+        return false;
+     // Calcul dérivé avant les thetas
+
+    const size_t n = splineComposante.vecThetaEvents.size();
+    const t_reduceTime tn = mModel->reduceTime(splineComposante.vecThetaEvents.at(n-1));
+    const t_reduceTime tn_1 = mModel->reduceTime(splineComposante.vecThetaEvents.at(n-2));
+    gPrime = (splineComposante.vecG.at(n-1) - splineComposante.vecG.at(n-2)) / (tn - tn_1);
+    gPrime += (tn - tn_1) * splineComposante.vecGamma.at(n-2) / 6.;
+    if (gPrime < dy_threshold)
+        return false;
+
+//
     for (unsigned long i= 0; i< splineComposante.vecThetaEvents.size()-1; i++) {
 
-        const double t_i = mModel->reduceTime(*iVecThetaEvents);
+        const t_reduceTime t_i = mModel->reduceTime(*iVecThetaEvents);
         ++iVecThetaEvents;
-        const double t_i1 = mModel->reduceTime(*iVecThetaEvents);
+        const t_reduceTime t_i1 = mModel->reduceTime(*iVecThetaEvents);
 
-        const double hi = t_i1 - t_i;
+        const t_reduceTime hi = t_i1 - t_i;
 
         const double gamma_i = *iVecGamma;
         ++iVecGamma;
         const double gamma_i1 = *iVecGamma;
-
-        /*
-        const double t_i = mModel->reduceTime(splineComposante.vecThetaEvents[i]);
-        const double t_i1 = mModel->reduceTime(splineComposante.vecThetaEvents[i+1]);
-
-        const double gamma_i = splineComposante.vecGamma[i];
-        const double gamma_i1 = splineComposante.vecGamma[i+1];
-
-        const double g_i = splineComposante.vecG[i];
-        const double g_i1 = splineComposante.vecG[i+1];
-        */
 
         const double g_i = *iVecG;
         ++iVecG;
@@ -5815,20 +5840,22 @@ bool MCMCLoopCurve::hasPositiveGPrimePlusConst(const MCMCSplineComposante& splin
            Gpi1 = aDelta*pow(t_i1, 2.) + bDelta*t_i1 + cDelta;
            yVertex_new =  - pow(bDelta, 2.)/ (4.*aDelta) + cDelta+dY ;
         */
+       // const double t0_res = -bDelta / (2.*aDelta);
 
-        const double delta = pow(bDelta, 2.) - 4*aDelta*(cDelta + dY);
+        double delta = pow(bDelta, 2.) - 4*aDelta*(cDelta + dY);
 
 
-        if (delta < 0) { // No solution
-            if (aDelta < 0)
+        if (delta <= 0) { // No solution; la courbe est toujours positive ou négative
+            if (aDelta < 0) // convexe
                 return false;
-            else
+            else           // concave
                 continue;
         }
 
 
-        double t1_res = (-bDelta - sqrt(delta)) / (2*aDelta);
-        double t2_res = (-bDelta + sqrt(delta)) / (2*aDelta);
+        double t1_res = (-bDelta - sqrt(delta)) / (2.*aDelta);
+        double t2_res = (-bDelta + sqrt(delta)) / (2.*aDelta);
+
 
         if (t1_res > t2_res)
             std::swap(t1_res, t2_res);
@@ -5842,6 +5869,9 @@ bool MCMCLoopCurve::hasPositiveGPrimePlusConst(const MCMCSplineComposante& splin
             if ( !( t1_res < t_i && t_i1 < t2_res) )
                 return false;
         }
+
+
+
 
     }
 

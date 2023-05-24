@@ -65,9 +65,10 @@ class MCMCLoop : public QThread
 public:
     enum State
     {
-        eBurning = 0,
-        eAdapting = 1,
-        eAquisition = 2
+        eInit = 0,
+        eBurning = 1,
+        eAdapting = 2,
+        eAquisition = 3
     };
     
     MCMCLoop();
