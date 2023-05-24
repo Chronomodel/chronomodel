@@ -139,7 +139,7 @@ void ModelCurve::fromJson(const QJsonObject& json)
     Model::fromJson(json);
     
     if (json.contains(STATE_CURVE)) {
-        const QJsonObject settings = json.value(STATE_CURVE).toObject();
+        const QJsonObject &settings = json.value(STATE_CURVE).toObject();
         mCurveSettings = CurveSettings::fromJson(settings);
     }
 

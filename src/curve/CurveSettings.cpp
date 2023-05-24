@@ -59,6 +59,29 @@ mLambdaSpline(CURVE_ALPHA_LISSAGE_DEFAULT)
     
 }
 
+CurveSettings::CurveSettings(const QJsonObject& json)
+{
+    mProcessType = json.contains(STATE_CURVE_PROCESS_TYPE) ? CurveSettings::ProcessType (json.value(STATE_CURVE_PROCESS_TYPE).toInt()) : CURVE_PROCESS_TYPE_DEFAULT;
+
+    mVariableType = json.contains(STATE_CURVE_VARIABLE_TYPE) ? CurveSettings::VariableType (json.value(STATE_CURVE_VARIABLE_TYPE).toInt()) : CURVE_VARIABLE_TYPE_DEFAULT;
+    mThreshold  = json.contains(STATE_CURVE_THRESHOLD) ? json.value(STATE_CURVE_THRESHOLD).toDouble() : 0.;
+
+    mUseErrMesure = json.contains(STATE_CURVE_USE_ERR_MESURE) ? json.value(STATE_CURVE_USE_ERR_MESURE).toBool() : CURVE_USE_ERR_MESURE_DEFAULT;
+
+    mTimeType = json.contains(STATE_CURVE_TIME_TYPE) ? CurveSettings::ProcessMode (json.value(STATE_CURVE_TIME_TYPE).toInt()) : CURVE_TIME_TYPE_DEFAULT;
+
+    mVarianceType = json.contains(STATE_CURVE_VARIANCE_TYPE) ? CurveSettings::ProcessMode (json.value(STATE_CURVE_VARIANCE_TYPE).toInt()) : CURVE_VARIANCE_TYPE_DEFAULT;
+
+    mUseVarianceIndividual = json.contains(STATE_CURVE_USE_VARIANCE_INDIVIDUAL) ? json.value(STATE_CURVE_USE_VARIANCE_INDIVIDUAL).toBool() : CURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT;
+
+    mVarianceFixed = json.contains(STATE_CURVE_VARIANCE_FIXED) ? json.value(STATE_CURVE_VARIANCE_FIXED).toDouble() : CURVE_VARIANCE_FIXED_DEFAULT;
+
+    mLambdaSplineType = json.contains(STATE_CURVE_COEFF_LISSAGE_TYPE) ? CurveSettings::ProcessMode (json.value(STATE_CURVE_COEFF_LISSAGE_TYPE).toInt()) : CURVE_COEFF_LISSAGE_TYPE_DEFAULT;
+
+    mLambdaSpline = json.contains(STATE_CURVE_ALPHA_LISSAGE) ? json.value(STATE_CURVE_ALPHA_LISSAGE).toDouble() : CURVE_ALPHA_LISSAGE_DEFAULT;
+
+}
+
 CurveSettings::CurveSettings(const CurveSettings& s)
 {
     copyFrom(s);
@@ -293,7 +316,21 @@ QString CurveSettings::processText() const
         return QString("None");
         break;
     case eProcessTypeUnivarie:
-        return QString("Univariate");
+        if ( mVariableType == CurveSettings::eVariableTypeInclination) {
+              return QObject::tr("Inclination");
+
+        } else if (  mVariableType == CurveSettings::eVariableTypeDeclination) {
+              return QObject::tr("Declination");
+
+        } else if (  mVariableType == CurveSettings::eVariableTypeDepth) {
+              return QObject::tr("Depth");
+
+        } else  if (mVariableType == CurveSettings::eVariableTypeOther) {
+              return QObject::tr("Measure");
+
+        } else  if ( mVariableType == CurveSettings::eVariableTypeField) {
+              return QObject::tr("Field");
+        }
         break;
     case eProcessType2D:
         return QString("2D");
@@ -310,4 +347,6 @@ QString CurveSettings::processText() const
     default:
         return QString("Error");
     }
+
+    return QString("None");
 }

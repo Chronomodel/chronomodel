@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,7 +40,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef CURVESETTINGS_H
 #define CURVESETTINGS_H
 
-//#include "StateKeys.h"
 #include <QJsonObject>
 #include <QString>
 
@@ -85,7 +84,9 @@ public:
     };
     
     CurveSettings();
-    CurveSettings(const CurveSettings& s);
+    CurveSettings(const CurveSettings& s); //
+    CurveSettings(const QJsonObject& json);
+
     CurveSettings& operator=(const CurveSettings& s);
     bool operator!=( CurveSettings const& s) const ;
     bool operator==(CurveSettings const & s) const;

@@ -697,7 +697,7 @@ void ModelView::updateCurveButton()
 {
     QJsonObject state = mProject->state();
 
-    const CurveSettings cs = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+    const CurveSettings cs (state.value(STATE_CURVE).toObject());
     mButCurve->setText(tr("Curve Building : ") + cs.processText());
 }
 
@@ -1525,7 +1525,7 @@ void ModelView::showCurveSettings(bool show)
         if (mProject) {
 
             // Save the "enabled" state of Curve in project settings
-            QJsonObject state = mProject->mState;
+         /*   QJsonObject state = mProject->mState;
             CurveSettings settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
             // settings.mEnabled = toggle;
            // const bool isCurve = (settings.mProcessType != CurveSettings::eProcessTypeNone);
@@ -1535,7 +1535,7 @@ void ModelView::showCurveSettings(bool show)
             // Update the Curve settings view with the project's values
             mCurveSettingsView->setSettings(settings);
             mProject->pushProjectState(state, CURVE_SETTINGS_UPDATED_REASON, true);
-
+*/
             // Tell the event properties view if it should display Curve parameters
             //mEventPropertiesView->setCurveSettings(isCurve, settings.mProcessType);
 

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -49,7 +49,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CurveSettings.h"
 #include "qlocale.h"
 
-EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& projectSettings, QGraphicsItem* parent):AbstractItem(scene, parent),
+EventItem::EventItem(EventsScene* scene, const QJsonObject &event, const QJsonObject &projectSettings, QGraphicsItem* parent):AbstractItem(scene, parent),
     mProjectSettings(projectSettings),
     mWithSelectedPhase (false),
     mThumbVisible (true),
@@ -122,7 +122,7 @@ QJsonObject& EventItem::getData()
     return mData;
 }
 
-void EventItem::setEvent(const QJsonObject& event, const QJsonObject& projectSettings)
+void EventItem::setEvent(const QJsonObject &event, const QJsonObject &projectSettings)
 {
     prepareGeometryChange();
 
@@ -204,7 +204,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& projectSet
 bool EventItem::isCurveNode() const
 {
     const QJsonObject &state = mScene->getProject()->mState;
-    const CurveSettings &curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+    const CurveSettings curveSettings (state.value(STATE_CURVE).toObject());
     const bool withNode = (curveSettings.mLambdaSplineType != CurveSettings::eInterpolation)
                          && (curveSettings.mVarianceType == CurveSettings::eModeBayesian)
                          && (curveSettings.mUseVarianceIndividual);
@@ -335,7 +335,7 @@ void EventItem::resizeEventItem()
     //qDebug() << "resizeEventItem dates count : " << dates.count();
 
     const QJsonObject &state = mScene->getProject()->mState;
-    CurveSettings curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+    const CurveSettings &curveSettings (state.value(STATE_CURVE).toObject());
 
     const int nbLines = getNumberCurveLines(curveSettings);
 
@@ -485,7 +485,7 @@ QRectF EventItem::boundingRect() const
   return QRectF(-mSize.width()/2 - 10, -mSize.height()/2 - 10, mSize.width() + 20, mSize.height() + 20);
 }
 
-int EventItem::getNumberCurveLines(CurveSettings& cs) const
+int EventItem::getNumberCurveLines(const CurveSettings& cs) const
 {
     switch (cs.mProcessType) {
     case CurveSettings::eProcessTypeNone:
@@ -510,7 +510,7 @@ int EventItem::getNumberCurveLines(CurveSettings& cs) const
     return -1;
 }
 
-void EventItem::paintBoxCurveParameter (QPainter* painter, QRectF rectBox, CurveSettings& cs )
+void EventItem::paintBoxCurveParameter (QPainter* painter, QRectF rectBox, const CurveSettings &cs )
 {
     const int nbLines = getNumberCurveLines(cs);
     if (nbLines>0) {
@@ -596,7 +596,7 @@ void EventItem::paintBoxCurveParameter (QPainter* painter, QRectF rectBox, Curve
 
         } else {
             if (cs.mVariableType == CurveSettings::eVariableTypeOther ) {
-                QString text1 = QObject::tr("Y value") + " = " + QLocale().toString (mData.value(STATE_EVENT_X_INC_DEPTH).toDouble());
+                QString text1 = QObject::tr("Measure") + " = " + QLocale().toString (mData.value(STATE_EVENT_X_INC_DEPTH).toDouble());
                 text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble());
                 painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
 

@@ -61,6 +61,7 @@ public:
     CurveSettings getSettings();
     
     void setProject(Project *project);
+    void setConnections(const bool doConnections);
 
 signals:
     void newProcess(QString str);

@@ -179,8 +179,8 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     
     setLayout(hlayout);
     
-    updateVisibilities();
-    
+    //updateVisibilities();
+   /*
     connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
     
     connect(mVariableTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
@@ -211,6 +211,7 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     connect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
     
     connect(mLambdaSplineInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
+*/
 }
 
 CurveSettingsView::~CurveSettingsView()
@@ -218,18 +219,77 @@ CurveSettingsView::~CurveSettingsView()
     
 }
 
+void CurveSettingsView::setConnections(const bool doConnections)
+{
+    if (doConnections) {
+        connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
+
+        connect(mVariableTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
+
+        connect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
+
+        connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
+
+        connect(mUseVarianceIndividualCB, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::updateVisibilities);
+
+
+        connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
+
+        connect(mVariableTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
+
+        connect(mThresholdInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
+
+        connect(mUseErrMesureInput, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::save);
+
+        connect(mTimeTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
+
+        connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
+
+        connect(mUseVarianceIndividualCB, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::save);
+
+        connect(mVarianceValueInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
+
+        connect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
+
+        connect(mLambdaSplineInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
+
+    } else {
+        disconnect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
+
+        disconnect(mVariableTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
+
+        disconnect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
+
+        disconnect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
+
+        disconnect(mUseVarianceIndividualCB, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::updateVisibilities);
+
+
+        disconnect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
+
+        disconnect(mVariableTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
+
+        disconnect(mThresholdInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
+
+        disconnect(mUseErrMesureInput, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::save);
+
+        disconnect(mTimeTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
+
+        disconnect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
+
+        disconnect(mUseVarianceIndividualCB, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::save);
+
+        disconnect(mVarianceValueInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
+
+        disconnect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
+
+        disconnect(mLambdaSplineInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
+    }
+
+}
+
 void CurveSettingsView::setSettings(const CurveSettings& settings)
 {
-    mProcessTypeInput->blockSignals(true);
-    mVariableTypeInput->blockSignals(true);
-    mThresholdInput->blockSignals(true);
-    mUseErrMesureInput->blockSignals(true);
-    mTimeTypeInput->blockSignals(true);
-    mVarianceTypeInput->blockSignals(true);
-    mUseVarianceIndividualCB->blockSignals(true);
-    mVarianceValueInput->blockSignals(true);
-    mLambdaSplineTypeInput->blockSignals(true);
-    mLambdaSplineInput->blockSignals(true);
 
     switch (settings.mProcessType) {
     case CurveSettings::eProcessTypeNone:
@@ -305,19 +365,6 @@ void CurveSettingsView::setSettings(const CurveSettings& settings)
         mLambdaSplineInput->setText("0");
     }
     
-
-    
-    mProcessTypeInput->blockSignals(false);
-    mVariableTypeInput->blockSignals(false);
-    mThresholdInput->blockSignals(false);
-    mUseErrMesureInput->blockSignals(false);
-    mTimeTypeInput->blockSignals(false);
-    mVarianceTypeInput->blockSignals(false);
-    mUseVarianceIndividualCB->blockSignals(false);
-    mVarianceValueInput->blockSignals(false);
-    mLambdaSplineTypeInput->blockSignals(false);
-    mLambdaSplineInput->blockSignals(false);
-
     updateVisibilities();
 }
 
@@ -411,15 +458,16 @@ CurveSettings CurveSettingsView::getSettings()
 
 void CurveSettingsView::setProject(Project *project)
 {
+    if (mProject != nullptr)
+        setConnections(false);
+
     mProject = project;
-    blockSignals(true);
 
-
-    CurveSettings curveSettings;
-    curveSettings.fromJson(mProject->mState.value(STATE_CURVE).toObject());
+    const CurveSettings curveSettings (mProject->mState.value(STATE_CURVE).toObject());
 
     setSettings(curveSettings);
-    blockSignals(false);
+
+    setConnections(true);
 }
 
 void CurveSettingsView::reset()

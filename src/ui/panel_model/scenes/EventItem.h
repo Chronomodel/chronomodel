@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -54,7 +54,7 @@ public:
     virtual void setGreyedOut(const bool greyedOut);
 
     void setWithSelectedPhase(const bool selected) {mWithSelectedPhase = selected;}
-    bool withSelectedPhase() { return mWithSelectedPhase;}
+    inline bool withSelectedPhase() { return mWithSelectedPhase;}
 
     QJsonObject& getData();
     virtual void setEvent(const QJsonObject& event, const QJsonObject& projectSettings);
@@ -62,9 +62,9 @@ public:
     virtual QRectF boundingRect() const;
     void handleDrop(QGraphicsSceneDragDropEvent* e);
     QJsonArray getPhases() const;
-    QJsonObject getSettings() const {return mProjectSettings;}
+    inline QJsonObject getSettings() const {return mProjectSettings;}
 
-    virtual void updateItemPosition(const QPointF& pos);
+    virtual void updateItemPosition(const QPointF &pos);
 
     virtual void setDatesVisible(bool visible);
     void redrawEvent();
@@ -80,8 +80,8 @@ protected:
 
     void updateGreyedOut();
 
-    int getNumberCurveLines(CurveSettings& cs) const;
-    void paintBoxCurveParameter (QPainter *painter, QRectF rectBox, CurveSettings& cs);
+    int getNumberCurveLines(const CurveSettings &cs) const;
+    void paintBoxCurveParameter (QPainter *painter, QRectF rectBox, const CurveSettings &cs);
 
     void paintBoxPhases (QPainter *painter, QRectF rectBox);
 
