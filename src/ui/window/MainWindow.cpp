@@ -921,7 +921,7 @@ void MainWindow::rebuildExportCurve()
 
         // ____
 
-        auto runTrace = modelCurve->fullRunSplineTrace(modelCurve->mChains);
+        const auto &runTrace = modelCurve->fullRunSplineTrace(modelCurve->mChains);
 
         // init Posterior MeanG and map
 
@@ -939,42 +939,87 @@ void MainWindow::rebuildExportCurve()
         clearCompo.vecVarianceG = std::vector<double> (XGrid);
         clearCompo.vecVarErrG = std::vector<double> (XGrid);
 
-        PosteriorMeanG clearMeanG;
-        clearMeanG.gx = clearCompo;
-        clearMeanG.gx.mapG.setRangeY(tabMinMax[0].first, tabMinMax[0].second);
+        PosteriorMeanG meanG;
+        meanG.gx = clearCompo;
+        meanG.gx.mapG.setRangeY(tabMinMax[0].first, tabMinMax[0].second);
 
         if (computeY) {
-            clearMeanG.gy = clearCompo;
-            clearMeanG.gy.mapG.setRangeY(tabMinMax[1].first, tabMinMax[1].second);
+            meanG.gy = clearCompo;
+            meanG.gy.mapG.setRangeY(tabMinMax[1].first, tabMinMax[1].second);
             if (computeZ) {
-                clearMeanG.gz = clearCompo;
-                clearMeanG.gz.mapG.setRangeY(tabMinMax[2].first, tabMinMax[2].second);
+                meanG.gz = clearCompo;
+                meanG.gz.mapG.setRangeY(tabMinMax[2].first, tabMinMax[2].second);
             }
         }
 
-        modelCurve->mPosteriorMeanG = clearMeanG;
+
 
         int totalIterAccepted = 1;
         if (!computeY) {
             for (auto &splineXYZ : runTrace) {
-                modelCurve->memo_PosteriorG(modelCurve->mPosteriorMeanG.gx, splineXYZ.splineX,  totalIterAccepted++ );
+                modelCurve->memo_PosteriorG(meanG.gx, splineXYZ.splineX,  totalIterAccepted++ );
             }
 
         } else {
             for (auto &splineXYZ : runTrace) {
-                modelCurve->memo_PosteriorG_3D(modelCurve->mPosteriorMeanG, splineXYZ, modelCurve->mCurveSettings.mProcessType,  totalIterAccepted++ );
+                modelCurve->memo_PosteriorG_3D(meanG, splineXYZ, modelCurve->mCurveSettings.mProcessType,  totalIterAccepted++ );
             }
         }
 
-        modelCurve->mPosteriorMeanG.gx.mapG.min_value =  *std::min_element(begin(modelCurve->mPosteriorMeanG.gx.mapG.data), end(modelCurve->mPosteriorMeanG.gx.mapG.data));
+        meanG.gx.mapG.min_value =  *std::min_element(begin(meanG.gx.mapG.data), end(meanG.gx.mapG.data));
 
         if (computeY) {
-            modelCurve->mPosteriorMeanG.gy.mapG.min_value = *std::min_element(begin(modelCurve->mPosteriorMeanG.gy.mapG.data), end(modelCurve->mPosteriorMeanG.gy.mapG.data));
+            meanG.gy.mapG.min_value = *std::min_element(begin(meanG.gy.mapG.data), end(meanG.gy.mapG.data));
 
             if (computeZ) {
-                modelCurve->mPosteriorMeanG.gz.mapG.min_value = *std::min_element(begin(modelCurve->mPosteriorMeanG.gz.mapG.data), end(modelCurve->mPosteriorMeanG.gz.mapG.data));
+                meanG.gz.mapG.min_value = *std::min_element(begin(meanG.gz.mapG.data), end(meanG.gz.mapG.data));
             }
         }
+        modelCurve->mPosteriorMeanG = std::move(meanG);
+
+        // update mPosteriorMeanGByChain
+        for (auto i = 0; i<modelCurve->mChains.size(); i++) {
+            const auto &runTraceByChain = modelCurve->runSplineTraceForChain(modelCurve->mChains, i);
+            PosteriorMeanG meanGByChain;
+            meanGByChain.gx = clearCompo;
+            meanGByChain.gx.mapG.setRangeY(tabMinMax[0].first, tabMinMax[0].second);
+
+            if (computeY) {
+                meanGByChain.gy = clearCompo;
+                meanGByChain.gy.mapG.setRangeY(tabMinMax[1].first, tabMinMax[1].second);
+                if (computeZ) {
+                    meanGByChain.gz = clearCompo;
+                    meanGByChain.gz.mapG.setRangeY(tabMinMax[2].first, tabMinMax[2].second);
+                }
+            }
+
+            //modelCurve->mPosteriorMeanG = clearMeanG;
+
+            int totalIterAccepted = 1;
+            if (!computeY) {
+                for (auto &splineXYZ : runTrace) {
+                    modelCurve->memo_PosteriorG(meanGByChain.gx, splineXYZ.splineX,  totalIterAccepted++ );
+                }
+
+            } else {
+                for (auto &splineXYZ : runTrace) {
+                    modelCurve->memo_PosteriorG_3D(meanGByChain, splineXYZ, modelCurve->mCurveSettings.mProcessType,  totalIterAccepted++ );
+                }
+            }
+
+            meanGByChain.gx.mapG.min_value =  *std::min_element(begin(meanGByChain.gx.mapG.data), end(meanGByChain.gx.mapG.data));
+
+            if (computeY) {
+                meanGByChain.gy.mapG.min_value = *std::min_element(begin(meanGByChain.gy.mapG.data), end(meanGByChain.gy.mapG.data));
+
+                if (computeZ) {
+                    meanGByChain.gz.mapG.min_value = *std::min_element(begin(meanGByChain.gz.mapG.data), end(meanGByChain.gz.mapG.data));
+                }
+            }
+
+            modelCurve->mPosteriorMeanGByChain[i] = std::move(meanGByChain);
+        }
+
         // update ResultView
         mProjectView->updateResults();
 

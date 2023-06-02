@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -39,6 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
+
 #include "DateUtils.h"
 #include "Matrix.h"
 
@@ -167,7 +168,7 @@ Matrix2D soustractMatToIdentity(const Matrix2D &matrix);
 
 Matrix2D multiplyMatrix_Naive(const Matrix2D& a, const Matrix2D& b);
 Matrix2D multiplyMatrix_Winograd(const Matrix2D &a, const Matrix2D &b);
-Matrix2D multiplyMatrixBanded_Winograd(const Matrix2D &a, const Matrix2D &b,  int bandwidth = 0);
+Matrix2D multiplyMatrixBanded_Winograd(const Matrix2D &a, const Matrix2D &b,  const int bandwidth = 0);
 
 Matrix2D inverseMatSym0(const Matrix2D& matrix, const int shift = 0);
 Matrix2D inverseMatSym(const Matrix2D & matrix1, const MatrixDiag &matrix2, const int nbBandes, const int shift);

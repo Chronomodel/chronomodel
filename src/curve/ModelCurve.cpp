@@ -54,7 +54,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <thread>
 
 
-ModelCurve::ModelCurve(QObject *parent):Model(parent)
+ModelCurve::ModelCurve(QObject *parent):
+    Model(parent)
 {
     mLambdaSpline.mSupport = MetropolisVariable::eR;
     mLambdaSpline.mFormat = DateUtils::eNumeric;
@@ -65,7 +66,8 @@ ModelCurve::ModelCurve(QObject *parent):Model(parent)
     mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 }
 
-ModelCurve::ModelCurve(const QJsonObject& json, QObject *parent):Model(json, parent)
+ModelCurve::ModelCurve(const QJsonObject& json, QObject *parent):
+    Model(json, parent)
 {
     mLambdaSpline.mSupport = MetropolisVariable::eR;
     mLambdaSpline.mFormat = DateUtils::eNumeric;
@@ -81,10 +83,10 @@ ModelCurve::ModelCurve(const QJsonObject& json, QObject *parent):Model(json, par
     }
 
     for (Event*& event: mEvents) {
-        if (event->type() ==  Event::eBound)
+        if (event->type() == Event::eBound)
                event->mTheta.mSamplerProposal = MHVariable::eFixe;
 
-        else if (event->type() ==  Event::eDefault) {
+        else if (event->type() == Event::eDefault) {
                 if (mCurveSettings.mTimeType == CurveSettings::eModeFixed) {
                     event->mTheta.mSamplerProposal = MHVariable::eFixe;
                     for (Date &d : event->mDates) {
@@ -681,7 +683,80 @@ void ModelCurve::setThresholdToAllModel(const double threshold)
     mS02Vg.mThresholdUsed = mThreshold;
 }
 
+#pragma mark Loop
+void ModelCurve::memo_accept(const unsigned i_chain)
+{
+    Model::memo_accept(i_chain);
 
+    /* --------------------------------------------------------------
+     *  D -  Memo S02 Vg
+     * -------------------------------------------------------------- */
+    if (mS02Vg.mSamplerProposal != MHVariable::eFixe) {
+        mS02Vg.memo_accept(i_chain);
+
+    }
+    /* --------------------------------------------------------------
+     *  E -  Memo Vg
+     * -------------------------------------------------------------- */
+    for (auto&& event : mEvents) {
+        if (event->mVg.mSamplerProposal != MHVariable::eFixe) {
+            event->mVg.memo_accept(i_chain);
+        }
+    }
+
+    /* --------------------------------------------------------------
+     * F - Memo Lambda
+     * -------------------------------------------------------------- */
+    // On stocke le log10 de Lambda Spline pour afficher les résultats a posteriori
+    if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe) {
+        mLambdaSpline.memo_accept(i_chain);
+    }
+
+
+}
+
+/**
+ * Idem Chronomodel + initialisation des variables aléatoires VG (events) et Lambda Spline (global)
+ * TODO : initialisation des résultats g(t), g'(t), g"(t)
+ */
+void ModelCurve::initVariablesForChain()
+{
+    Model::initVariablesForChain();
+    // today we have the same acceptBufferLen for every chain
+    const int acceptBufferLen =  mChains.at(0).mIterPerBatch;
+    int initReserve = 0;
+
+    for (auto& c: mChains) {
+        initReserve += ( 1 + (c.mMaxBatchs*c.mIterPerBatch) + c.mIterPerBurn + (c.mIterPerAquisition/c.mThinningInterval) );
+    }
+
+    for (Event*& event : mEvents) {
+        event->mVg.reset();
+        event->mVg.reserve(initReserve);
+        event->mVg.mAllAccepts.resize(mChains.size());
+        event->mVg.mLastAccepts.reserve(acceptBufferLen);
+        event->mVg.mLastAcceptsLength = acceptBufferLen;
+    }
+
+    mLambdaSpline.reset();
+    mLambdaSpline.reserve(initReserve);
+    mLambdaSpline.mAllAccepts.resize(mChains.size());
+    mLambdaSpline.mLastAccepts.reserve(acceptBufferLen);
+    mLambdaSpline.mLastAcceptsLength = acceptBufferLen;
+
+    mS02Vg.reset();
+    mS02Vg.reserve(initReserve);
+    mS02Vg.mAllAccepts.resize(mChains.size());
+    mS02Vg.mLastAccepts.reserve(acceptBufferLen);
+    mS02Vg.mLastAcceptsLength = acceptBufferLen;
+
+    // Ré-initialisation du stockage des splines
+    mSplinesTrace.clear();
+
+    // Ré-initialisation des résultats
+    mPosteriorMeanGByChain.clear();
+
+}
 
 QList<PosteriorMeanGComposante> ModelCurve::getChainsMeanGComposanteX()
 {
@@ -914,8 +989,8 @@ std::vector<MCMCSpline> ModelCurve::fullRunSplineTrace(const QList<ChainSpecs>& 
 
     for (const ChainSpecs& chain : chains) {
         // we add 1 for the init
-        const int burnAdaptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch);
-        const int runTraceSize = chain.mRealyAccepted;
+        const int burnAdaptSize = 0;//1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch);
+        const int runTraceSize = chain.mRealyAccepted; // there is only accepted curves
         const int firstRunPosition = shift + burnAdaptSize;
         std::copy(mSplinesTrace.begin() + firstRunPosition , mSplinesTrace.begin() + firstRunPosition + runTraceSize , splineRunTrace.begin() + shiftTrace);
 
@@ -925,8 +1000,26 @@ std::vector<MCMCSpline> ModelCurve::fullRunSplineTrace(const QList<ChainSpecs>& 
     return splineRunTrace;
 }
 
+std::vector<MCMCSpline> ModelCurve::runSplineTraceForChain(const QList<ChainSpecs>& chains, const int index)
+{
+    int shift = 0;
 
-void ModelCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted)
+    for (auto i = 0; i<chains.size(); i++) {
+        const auto &chain = chains.at(i);
+        // we add 1 for the init
+        //const int burnAdaptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch);
+        const int burnAdaptSize = 0; // there is only accepted curves
+        const int runTraceSize = chain.mRealyAccepted;
+        const int firstRunPosition = shift + burnAdaptSize;
+        if (i == index) {
+            return std::vector<MCMCSpline> (mSplinesTrace.begin() + firstRunPosition , mSplinesTrace.begin() + firstRunPosition + runTraceSize);
+        }
+        shift = firstRunPosition + runTraceSize;
+    }
+    return std::vector<MCMCSpline> ();
+}
+
+void ModelCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted)
 {
     const double deg = 180. / M_PI ;
     const bool computeZ = (mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
@@ -1263,7 +1356,7 @@ void ModelCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline &spline, C
     }
 }
 
-void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSplineComposante& splineComposante, const int realyAccepted)
+void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCMCSplineComposante& splineComposante, const int realyAccepted)
 {
     CurveMap& curveMap = postGCompo.mapG;
     const int nbPtsX = curveMap.column();

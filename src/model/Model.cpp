@@ -1262,6 +1262,87 @@ int Model::getFFTLength() const
     return mFFTLength;
 }
 
+#pragma mark Loop
+void Model::memo_accept(const unsigned i_chain)
+{
+    for (const auto& event : mEvents) {
+       //--------------------- Memo Events -----------------------------------------
+       event->mTheta.memo_accept(i_chain);
+
+
+       if (event->mS02.mSamplerProposal != MHVariable::eFixe) {
+            event->mS02.memo_accept(i_chain);
+       }
+
+       //--------------------- Memo Dates -----------------------------------------
+       for (auto&& date : event->mDates )   {
+            date.mTi.memo_accept(i_chain);
+            date.mSigmaTi.memo_accept(i_chain);
+            date.mWiggle.memo_accept(i_chain);
+
+       }
+
+    }
+}
+
+void Model::initVariablesForChain()
+{
+    // today we have the same acceptBufferLen for every chain
+    const int acceptBufferLen =  mChains[0].mIterPerBatch;
+    int initReserve = 0;
+
+    for (auto&& c: mChains)
+       initReserve += ( 1 + (c.mMaxBatchs*c.mIterPerBatch) + c.mIterPerBurn + (c.mIterPerAquisition/c.mThinningInterval) );
+
+    for (auto&& event : mEvents) {
+       event->mTheta.reset();
+       event->mTheta.reserve(initReserve);
+       event->mTheta.mAllAccepts.resize(mChains.size());
+       event->mTheta.mLastAccepts.reserve(acceptBufferLen);
+       event->mTheta.mLastAcceptsLength = acceptBufferLen;
+
+       event->mS02.reset();
+       event->mS02.reserve(initReserve);
+       event->mS02.mAllAccepts.resize(mChains.size());
+       event->mS02.mLastAccepts.reserve(acceptBufferLen);
+       event->mS02.mLastAcceptsLength = acceptBufferLen;
+
+       // event->mTheta.mAllAccepts.clear(); //don't clean, avalable for cumulate chain
+
+       for (auto&& date : event->mDates) {
+            date.mTi.reset();
+            date.mTi.reserve(initReserve);
+            date.mTi.mAllAccepts.resize(mChains.size());
+            date.mTi.mLastAccepts.reserve(acceptBufferLen);
+            date.mTi.mLastAcceptsLength = acceptBufferLen;
+
+            date.mSigmaTi.reset();
+            date.mSigmaTi.reserve(initReserve);
+            date.mSigmaTi.mAllAccepts.resize(mChains.size());
+            date.mSigmaTi.mLastAccepts.reserve(acceptBufferLen);
+            date.mSigmaTi.mLastAcceptsLength = acceptBufferLen;
+
+            date.mWiggle.reset();
+            date.mWiggle.reserve(initReserve);
+            date.mWiggle.mAllAccepts.resize(mChains.size());
+            date.mWiggle.mLastAccepts.reserve(acceptBufferLen);
+            date.mWiggle.mLastAcceptsLength = acceptBufferLen;
+       }
+    }
+
+    for (auto&& phase : mPhases) {
+       phase->mAlpha.reset();
+       phase->mBeta.reset();
+       //phase->mTau.reset();
+       phase->mDuration.reset();
+
+       phase->mAlpha.mRawTrace->reserve(initReserve);
+       phase->mBeta.mRawTrace->reserve(initReserve);
+       //phase->mTau.mRawTrace->reserve(initReserve);
+       phase->mDuration.mRawTrace->reserve(initReserve);
+    }
+}
+
 #pragma mark Densities
 
 void Model::initNodeEvents()
@@ -2242,9 +2323,10 @@ void Model::saveToFile(QDataStream *out)
     // -----------------------------------------------------
     //  Writing event data
     // -----------------------------------------------------
-    for (Event*& event : mEvents)
+    for (Event*& event : mEvents){
         *out << event->mTheta;
-
+        *out << event->mS02;
+    }
     // -----------------------------------------------------
     //  Writing date data
     // -----------------------------------------------------
@@ -2386,9 +2468,10 @@ void Model::restoreFromFile(QDataStream *in)
         //  Read events data
         // -----------------------------------------------------
 
-        for (Event* &e : mEvents)
+        for (Event* &e : mEvents) {
             *in >> e->mTheta;
-
+            *in >> e->mS02; // since 2023-06-01 v3.2.3
+        }
         // -----------------------------------------------------
         //  Read dates data
         // -----------------------------------------------------
@@ -2440,7 +2523,7 @@ void Model::restoreFromFile(QDataStream *in)
 
                      const QString toFind ("WID::"+ d.mUUID);
 
-                     if (d.mWiggleCalibration == nullptr || d.mWiggleCalibration->mCurve.isEmpty()) {
+                     if (d.mWiggleCalibration == nullptr || d.mWiggleCalibration->mVector.isEmpty()) {
                          qDebug()<<"[Model::restoreFromFile] mWiggleCalibration vide";
 
                      } else {

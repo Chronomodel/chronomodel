@@ -360,7 +360,7 @@ void CalibrationView::updateGraphs()
             subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
 
-            const QMap<double, double> hpd (create_HPD(subData, thresh));
+            const QMap<double, double> hpd (create_HPD2(subData, thresh));
 
             if (!hpd.isEmpty()) {
                 GraphCurve hpdCurve;

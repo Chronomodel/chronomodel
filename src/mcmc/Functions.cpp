@@ -1643,10 +1643,10 @@ Matrix2D multiMatParMat0(const Matrix2D& matrix1, const Matrix2D& matrix2)
 
 Matrix2D multiConstParMat0(const Matrix2D &matrix, const double c)
 {
-    const int n = matrix.size() ;
+    const auto n = matrix.size() ;
     Matrix2D result = initMatrix2D(n, n)  ;//matrix;
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
+    for (auto i = 0; i < n; i++) {
+        for (auto j = 0; j < n; j++) {
             result[i][j] = c * matrix[i][j];
         }
     }
@@ -1657,9 +1657,9 @@ Matrix2D multiConstParMat0(const Matrix2D &matrix, const double c)
 
 Matrix2D addDiagToMat( const MatrixDiag &diag, Matrix2D matrix)
 {
-    const int dim = matrix.size();
+    const size_t dim = matrix.size();
     Matrix2D result = matrix;
-    for (int i = 0; i < dim; ++i)
+    for (size_t i = 0; i < dim; ++i)
         result[i][i] += diag[i];
 
     return result;
@@ -1668,13 +1668,13 @@ Matrix2D addDiagToMat( const MatrixDiag &diag, Matrix2D matrix)
 
 Matrix2D soustractMatToIdentity(const Matrix2D& matrix)
 {
-    const int dim = matrix.size();
+    const size_t dim = matrix.size();
     Matrix2D result = matrix;
     for (auto &&r_i : result)
         for (auto &&r_ij : r_i)
             r_ij *= -1.;
 
-    for (int i = 0; i < dim; ++i)
+    for (size_t i = 0; i < dim; ++i)
         result[i][i] += 1.;
 
     return result;
@@ -1758,7 +1758,7 @@ Matrix2D multiMatParMat(const Matrix2D& matrix1, const Matrix2D& matrix2, const 
  * A band matrix with Bandwidth=0 is a diagonal matrix
  * faster than schoolbook algorithm
  */
-Matrix2D multiplyMatrixBanded_Winograd(const Matrix2D& a, const Matrix2D& b,  int bandwidth)
+Matrix2D multiplyMatrixBanded_Winograd(const Matrix2D& a, const Matrix2D& b, const int bandwidth)
 {
 #ifdef DEBUG
     const size_t a_row = a.size();
@@ -1773,15 +1773,15 @@ Matrix2D multiplyMatrixBanded_Winograd(const Matrix2D& a, const Matrix2D& b,  in
     Matrix2D c = initMatrix2D(n, n);
 
     for (int i = 0; i < n-bandwidth; ++i) {
-        int j1 = std::max(0, i - bandwidth -1);
-        int j2 = std::min(n, i + bandwidth +1);
-        int k1 = std::max(0, i - bandwidth -1);
-        int k2 = std::min(n, i + bandwidth +1);
+        size_t j1 = std::max(0, i - bandwidth -1);
+        size_t j2 = std::min(n, i + bandwidth +1);
+        size_t k1 = std::max(0, i - bandwidth -1);
+        size_t k2 = std::min(n, i + bandwidth +1);
 
-        for (int j = j1; j < j2; j++) {
+        for (size_t j = j1; j < j2; j++) {
             auto cj = begin(c[j]);
 
-            for (int k = k1; k < k2; k++) {
+            for (size_t k = k1; k < k2; k++) {
                 cj[k] = 0;
                 for (int t = 0; t < n; t++) {
                     cj[k] += a[j][t] * b[t][k];
@@ -1820,7 +1820,7 @@ Matrix2D multiplyMatrix_Winograd(const Matrix2D& a, const Matrix2D& b)
       Matrix2D::value_type::value_type* cj = begin(c[j]);
       for (size_t k = 0; k < b_col; k++) {
           cj[k] = 0;
-          for (size_t t = 0; t < b_col; t++) {
+          for (size_t t = 0; t < b_row; t++) {
               cj[k] += a[j][t] * b[t][k];
           }
       }
@@ -2152,22 +2152,22 @@ std::pair<Matrix2D, MatrixDiag> choleskyLDLT(const Matrix2D &matrix)
 
 std::pair<Matrix2D, MatrixDiag > choleskyLDLT(const Matrix2D &matrix, const int shift)
 {
-    const int n = matrix.size();
+    const size_t n = matrix.size();
 
     Matrix2D L = initMatrix2D(n, n);
     MatrixDiag D = MatrixDiag (n, 0.);
 
-    for (int i = shift; i < n-shift; i++) {
+    for (size_t i = shift; i < n-shift; i++) {
             L[i][i] = (t_matrix) (1.);
-            for (int j = shift; j < std::min(i, n-shift); j++) {
+            for (size_t j = shift; j < std::min(i, n-shift); j++) {
                 L[i][j] = matrix[i][j];
-                for (int k = shift; k< std::min(j, n-shift); k++) {
+                for (size_t k = shift; k< std::min(j, n-shift); k++) {
                    L[i][j] -=  L[i][k] * L[j][k] *D[k];
                 }
                 L[i][j] /= D[j];
             }
             D[i] = matrix[i][i];
-            for (int j = shift; j< std::min(i, n-shift); j++)
+            for (size_t j = shift; j< std::min(i, n-shift); j++)
                 D[i] -=  D[j] * powl(L[i][j], 2.L);
       }
 

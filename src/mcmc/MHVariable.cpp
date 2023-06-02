@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -38,7 +38,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "MHVariable.h"
-#include "StdUtilities.h"
 #include "QtUtilities.h"
 #include "Generator.h"
 
@@ -56,28 +55,28 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 /** Default constructor */
 MHVariable::MHVariable():
-mLastAcceptsLength(0),
-mGlobalAcceptation(0),
-mHistoryAcceptRateMH(nullptr)
+    mLastAcceptsLength(0),
+    mGlobalAcceptationPerCent(.0),
+    mHistoryAcceptRateMH(nullptr)
 {
   /*mAllAccepts = new (std::nothrow) QVector<bool>();
   mHistoryAcceptRateMH = new (std::nothrow) QVector<double>();*/
-  mAllAccepts = new QVector<bool>();
+    mAllAccepts.clear();
   mHistoryAcceptRateMH = new QVector<double>();
 
 }
 
 /** Copy constructor */
 
-MHVariable::MHVariable( const MHVariable& origin):MHVariable()
-{
-   // MetropolisVariable(origin);
+MHVariable::MHVariable( const MHVariable& origin):
+    MHVariable()
 
+{
     mX = origin.mX;
-    mRawTrace = new QVector<double>(origin.mRawTrace->size());
+    mRawTrace->resize(origin.mRawTrace->size());
     std::copy(origin.mRawTrace->begin(), origin.mRawTrace->end(), mRawTrace->begin());
 
-    mFormatedTrace = new QVector<double>(origin.mFormatedTrace->size());
+    mFormatedTrace->resize(origin.mFormatedTrace->size());
     std::copy(origin.mFormatedTrace->begin(), origin.mFormatedTrace->end(), mFormatedTrace->begin());
 
     mSupport = origin.mSupport;
@@ -103,13 +102,13 @@ MHVariable::MHVariable( const MHVariable& origin):MHVariable()
     mtminUsed = origin.mtminUsed;
     mtmaxUsed = origin.mtmaxUsed;
 
-    mAllAccepts = new QVector<bool>(origin.mAllAccepts->size());
+    mAllAccepts.clear();
     mHistoryAcceptRateMH = new QVector<double>(origin.mHistoryAcceptRateMH->size());
 }
 
 MHVariable::~MHVariable()
 {
-    delete mAllAccepts;
+    //delete mAllAccepts;
     delete mHistoryAcceptRateMH;
 
     // mRawTrace and mFormatedTrace are destroye by the MetropolisVariable destructor
@@ -144,11 +143,12 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
 #endif
     }
 
-    if (accepted)
+    if (accepted) {
         mX = x;
-
+        //++mAllAccepts;
+    }
     mLastAccepts.append(accepted);
-    mAllAccepts->append(accepted);
+
     return accepted;
 
 }
@@ -177,22 +177,23 @@ void MHVariable::reset()
     MetropolisVariable::reset();
 
     mLastAccepts.clear();
-    mAllAccepts->clear();// mAllAccepts.clear(); //don't clean, avalable for cumulate chain
+    mAllAccepts.clear();// mAllAccepts.clear(); //don't clean, avalable for cumulate chain
 
     mLastAccepts.squeeze();
-    mAllAccepts->squeeze();
+    //mAllAccepts->squeeze();
 }
 
 void MHVariable::reserve(const int reserve)
 {
     MetropolisVariable::reserve(reserve);
-    mAllAccepts->reserve(reserve);
+    //mAllAccepts->reserve(reserve);
     mHistoryAcceptRateMH->reserve(reserve);
 }
 
 MHVariable& MHVariable::copy(MHVariable const& origin)
 {
     mX = origin.mX;
+    //mRawTrace = origin.mRawTrace;
     mRawTrace->resize(origin.mRawTrace->size());
     std::copy(origin.mRawTrace->begin(), origin.mRawTrace->end(), mRawTrace->begin());
 
@@ -226,13 +227,17 @@ MHVariable& MHVariable::copy(MHVariable const& origin)
     mLastAccepts = origin.mLastAccepts;
     mLastAcceptsLength = origin.mLastAcceptsLength;
 
-    mAllAccepts->resize(origin.mAllAccepts->size());
-    std::copy(origin.mAllAccepts->begin(),origin.mAllAccepts->end(),mAllAccepts->begin());
+    mAllAccepts = origin.mAllAccepts; //->resize(origin.mAllAccepts->size());
+    //std::copy(origin.mAllAccepts->begin(), origin.mAllAccepts->end(), mAllAccepts->begin());
 
-    mGlobalAcceptation = origin.mGlobalAcceptation;
+    //mAllAccepts = origin.mAllAccepts;
+
+    mGlobalAcceptationPerCent = origin.mGlobalAcceptationPerCent;
+
+    //mHistoryAcceptRateMH = origin.mHistoryAcceptRateMH;
 
     mHistoryAcceptRateMH->resize(origin.mHistoryAcceptRateMH->size());
-    std::copy(origin.mHistoryAcceptRateMH->begin(),origin.mHistoryAcceptRateMH->end(),mHistoryAcceptRateMH->begin());
+    std::copy(origin.mHistoryAcceptRateMH->begin(), origin.mHistoryAcceptRateMH->end(), mHistoryAcceptRateMH->begin());
 
     mSamplerProposal = origin.mSamplerProposal;
 
@@ -298,7 +303,16 @@ QVector<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains,
 
 void MHVariable::generateGlobalRunAcceptation(const QList<ChainSpecs> &chains)
 {
-    double accepted = 0.;
+    auto iterAquisition = 0;//std::accumulate(chains.begin(), chains.end(), 0, [](ChainSpecs chain){return  chain.mIterPerAquisition;});
+
+    mGlobalAcceptationPerCent = 0;
+    for (qsizetype i = 0 ; i<chains.size(); i++) {
+        iterAquisition += chains.at(i).mIterPerAquisition;
+        mGlobalAcceptationPerCent += mAllAccepts.at(i);
+    }
+
+    mGlobalAcceptationPerCent = mGlobalAcceptationPerCent / (double) iterAquisition * 100.;
+  /*  double accepted = 0.;
     double acceptsLength = 0.;
     int shift = 0;
     if (mAllAccepts->isEmpty()) {
@@ -318,7 +332,8 @@ void MHVariable::generateGlobalRunAcceptation(const QList<ChainSpecs> &chains)
         }
 
         mGlobalAcceptation = accepted / acceptsLength;
-    }
+
+    }*/
 }
 
 
@@ -333,7 +348,7 @@ QString MHVariable::resultsString(const QString &nl, const QString &noResultMess
 
     if (mSamplerProposal != MHVariable::eFixe) {
         const QString result = MetropolisVariable::resultsString(nl, noResultMessage, unit, formatFunc, forCSV);
-        const QString globalTxt = forCSV ? stringForCSV(mGlobalAcceptation*100.) : stringForLocal(mGlobalAcceptation*100.);
+        const QString globalTxt = forCSV ? stringForCSV(mGlobalAcceptationPerCent) : stringForLocal(mGlobalAcceptationPerCent);
 
         return result + nl + tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(globalTxt, getSamplerProposalText(mSamplerProposal));
 
@@ -408,7 +423,8 @@ QDataStream &operator<<( QDataStream &stream, const MHVariable &data )
     stream << dynamic_cast<const MetropolisVariable&>(data);
 
     /* owned by MHVariable*/
-    stream << *(data.mAllAccepts);
+    //stream << *(data.mAllAccepts);
+    stream << data.mAllAccepts;
     stream << *(data.mHistoryAcceptRateMH);
     stream << data.mLastAccepts;
 
@@ -422,11 +438,16 @@ QDataStream &operator>>( QDataStream &stream, MHVariable &data )
 {
     /* herited from MetropolisVariable*/
     stream >> dynamic_cast<MetropolisVariable&>(data);
-    if (data.mAllAccepts)
-        data.mAllAccepts->clear();
+    data.mAllAccepts.clear();
+    stream >> data.mAllAccepts;
+    /*if (!data.mAllAccepts.empty())
+        data.mAllAccepts.clear();
     else
         data.mAllAccepts = new QVector<bool>();
-    stream >> *(data.mAllAccepts);
+    stream >> *(data.mAllAccepts);*/
+
+
+    //stream >> data.mAllAccepts;
 
     if (data.mHistoryAcceptRateMH)
         data.mHistoryAcceptRateMH->clear();

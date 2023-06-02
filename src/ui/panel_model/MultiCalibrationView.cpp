@@ -502,7 +502,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                 GraphCurve calibCurve;
                 GraphView* calibGraph = new GraphView(this);
                 //type_data yMax = 0.;
-                 if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mCurve.isEmpty()) {
+                 if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.isEmpty()) {
                     calibCurve = densityCurve(d.getFormatedCalibToShow(), "Calibration", penColor);
 
                     calibGraph->add_curve(calibCurve);
@@ -547,11 +547,11 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                 preEvent =  &ev ;
 
 
-                if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mCurve.isEmpty()) {
+                if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.isEmpty()) {
                     // hpd is calculate only on the study Period
                     const QMap<type_data, type_data> &subData = getMapDataInRange(calibCurve.mData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
-                    QMap<type_data, type_data> hpd (create_HPD(subData, thres));
+                    QMap<type_data, type_data> hpd (create_HPD2(subData, thres));
 
                     GraphCurve hpdCurve;
                     hpdCurve.mName = "Calibration HPD";
@@ -861,7 +861,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             for (const auto&& date : dates) {
                 Date d (date.toObject());
 
-                if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mCurve.isEmpty()) {
+                if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.isEmpty()) {
 
                     d.autoSetTiSampler(true); // needed if calibration is not done
 
@@ -874,7 +874,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
                         // hpd results
 
-                        const QMap<type_data, type_data> hpd (create_HPD(subData, thres));
+                        const QMap<type_data, type_data> hpd (create_HPD2(subData, thres));
 
                         const QList<QPair<double, QPair<double, double> > > &intervals = intervalsForHpd(hpd, 100);
 
@@ -1148,7 +1148,7 @@ void MultiCalibrationView::updateHPDGraphs(const QString &thres)
                 QMap<type_data, type_data> subData = calibCurve->mData;
                 subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
-                QMap<type_data, type_data> hpd (create_HPD(subData, mThreshold));
+                QMap<type_data, type_data> hpd (create_HPD2(subData, mThreshold));
 
                 GraphCurve* hpdCurve = gr->getCurve("Calibration HPD");
                 hpdCurve->mData = hpd;
@@ -1291,7 +1291,7 @@ void MultiCalibrationView::updateScaleX()
 
     if (isNumber && aNumber>=1) {
         mMinorScale =  int (aNumber);
-        QList<GraphView*> graphList = mDrawing->getGraphViewList();
+        const QList<GraphView*> &graphList = mDrawing->getGraphViewList();
 
         for (GraphView* gr : graphList) {
             if (!gr->has_curves() && !gr->has_points())
@@ -1310,7 +1310,7 @@ void MultiCalibrationView::updateGraphsZoom()
     //The same Name and same Value as in MultiCalibrationView::exportFullImage()
     mMarginRight = int (1.5 * floor(fm.horizontalAdvance(stringForGraph(mTmaxDisplay))/2) + 5);
 
-    QList<GraphView*> graphList = mDrawing->getGraphViewList();
+    const QList<GraphView*> &graphList = mDrawing->getGraphViewList();
     qreal maxYLength = 0;
     for (GraphView* gr : graphList) {
 
@@ -1712,14 +1712,14 @@ void MultiCalibrationView::exportResults()
                         statLine << d.mPlugin->getName() << d.mName << d.getDesc();
 
                         const bool isUnif = false;// (d.mPlugin->getName() == "Unif");
-                        if (d.mIsValid && !d.mCalibration->mCurve.isEmpty() && !isUnif) {
+                        if (d.mIsValid && !d.mCalibration->mVector.isEmpty() && !isUnif) {
 
                            // d.autoSetTiSampler(true); // needed if calibration is not done
-                            QMap<double, double> calibMap = d.getFormatedCalibMap();
+                            const QMap<double, double> &calibMap = d.getFormatedCalibMap();
 
                             // hpd is calculate only on the study Period
-                            QMap<double, double>  subData = calibMap;
-                            subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+                            //QMap<double, double>  subData = calibMap;
+                            QMap<double, double> subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
                             DensityAnalysis results;
                             results.funcAnalysis = analyseFunction(subData);
@@ -1730,7 +1730,7 @@ void MultiCalibrationView::exportResults()
                                 statLine<< csvLocal.toString(results.funcAnalysis.quartiles.Q1) << csvLocal.toString(results.funcAnalysis.quartiles.Q2) << csvLocal.toString(results.funcAnalysis.quartiles.Q3);
                                 // hpd results
 
-                                QMap<type_data, type_data> hpd (create_HPD(subData, mThreshold));
+                                QMap<type_data, type_data> hpd (create_HPD2(subData, mThreshold));
 
                                 const double realThresh = map_area(hpd) / map_area(subData);
 
@@ -1830,7 +1830,7 @@ void MultiCalibrationView::showStat()
 
                    resultsStr += "<br><strong>"+ d.mName + "</strong> (" + d.mPlugin->getName() + ")" +"<br> <i>" + d.getDesc() + "</i><br> ";
 
-                 if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mCurve.isEmpty()) {
+                 if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.isEmpty()) {
 
 
                        const bool isUnif (d.mPlugin->getName() == "Unif");
@@ -1854,7 +1854,7 @@ void MultiCalibrationView::showStat()
 
                                // hpd results
 
-                               QMap<type_data, type_data> hpd (create_HPD(subData, mThreshold));
+                               QMap<type_data, type_data> hpd (create_HPD2(subData, mThreshold));
 
                                const double realThresh = map_area(hpd) / map_area(subData);
 

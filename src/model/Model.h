@@ -169,7 +169,9 @@ public:
     bool hasSelectedEvents();
     bool hasSelectedPhases();
 
-
+#pragma mark Loop
+    virtual void memo_accept(const unsigned i_chain);
+    virtual void initVariablesForChain();
 
 public slots:
     void setThreshold(const double threshold);

@@ -131,12 +131,13 @@ QString MCMCLoopCurve::calibrate()
         int i = 0;
         for (auto&& date : dates) {
             if (date->mCalibration) {
-                if (date->mCalibration->mCurve.isEmpty())
+                if (date->mCalibration->mVector.isEmpty())
                     date->calibrate(mProject);
 
-                if (date->mCalibration->mCurve.size() < 5) {
+                if (date->mCalibration->mVector.size() < 6) {
                     const double new_step = date->mCalibration->mStep /5.;
-                    date->mCalibration->mCurve.clear();
+                    date->mCalibration->mVector.clear();
+                    date->mCalibration->mMap.clear();
                     date->mCalibration->mRepartition.clear();
                     date->mCalibration = nullptr;
 
@@ -165,85 +166,7 @@ QString MCMCLoopCurve::calibrate()
     return tr("Invalid model");
 }
 
-/**
- * Idem Chronomodel + initialisation des variables aléatoires VG (events) et Lambda Spline (global)
- * TODO : initialisation des résultats g(t), g'(t), g"(t)
- */
-void MCMCLoopCurve::initVariablesForChain()
-{
-    // today we have the same acceptBufferLen for every chain
-    const int acceptBufferLen =  mChains.at(0).mIterPerBatch;
-    int initReserve (0);
-    
-    for (auto& c: mChains) {
-        initReserve += ( 1 + (c.mMaxBatchs*c.mIterPerBatch) + c.mIterPerBurn + (c.mIterPerAquisition/c.mThinningInterval) );
-    }
-    
-    for (Event*& event : mModel->mEvents) {
-        
-        event->mTheta.reset();
-        event->mTheta.reserve(initReserve);
-        event->mTheta.mLastAccepts.reserve(acceptBufferLen);
-        event->mTheta.mLastAcceptsLength = acceptBufferLen;
-        
-        event->mS02.reset();
-        event->mS02.reserve(initReserve);
-        event->mS02.mLastAccepts.reserve(acceptBufferLen);
-        event->mS02.mLastAcceptsLength = acceptBufferLen;
 
-        event->mVg.reset();
-        event->mVg.reserve(initReserve);
-        event->mVg.mLastAccepts.reserve(acceptBufferLen);
-        event->mVg.mLastAcceptsLength = acceptBufferLen;
-
-        // event->mTheta.mAllAccepts.clear(); //don't clean, avalable for cumulate chain
-
-        for (Date& date : event->mDates) {
-            date.mTi.reset();
-            date.mTi.reserve(initReserve);
-            date.mTi.mLastAccepts.reserve(acceptBufferLen);
-            date.mTi.mLastAcceptsLength = acceptBufferLen;
-
-            date.mSigmaTi.reset();
-            date.mSigmaTi.reserve(initReserve);
-            date.mSigmaTi.mLastAccepts.reserve(acceptBufferLen);
-            date.mSigmaTi.mLastAcceptsLength = acceptBufferLen;
-
-            date.mWiggle.reset();
-            date.mWiggle.reserve(initReserve);
-            date.mWiggle.mLastAccepts.reserve(acceptBufferLen);
-            date.mWiggle.mLastAcceptsLength = acceptBufferLen;
-        }
-    }
-
-    for (auto&& phase : mModel->mPhases) {
-        phase->mAlpha.reset();
-        phase->mBeta.reset();
-        //phase->mTau.reset();
-        phase->mDuration.reset();
-
-        phase->mAlpha.mRawTrace->reserve(initReserve);
-        phase->mBeta.mRawTrace->reserve(initReserve);
-        //phase->mTau.mRawTrace->reserve(initReserve);
-        phase->mDuration.mRawTrace->reserve(initReserve);
-    }
-    mModel->mLambdaSpline.reset();
-    mModel->mLambdaSpline.reserve(initReserve);
-    mModel->mLambdaSpline.mLastAccepts.reserve(acceptBufferLen);
-    mModel->mLambdaSpline.mLastAcceptsLength = acceptBufferLen;
-    
-    mModel->mS02Vg.reset();
-    mModel->mS02Vg.reserve(initReserve);
-    mModel->mS02Vg.mLastAccepts.reserve(acceptBufferLen);
-    mModel->mS02Vg.mLastAcceptsLength = acceptBufferLen;
-
-    // Ré-initialisation du stockage des splines
-    mModel->mSplinesTrace.clear();
-
-    // Ré-initialisation des résultats
-    mModel->mPosteriorMeanGByChain.clear();
-
-}
 
 /**
  * Idem MCMCLoopChrono + initialisation de VG (events) et Lambda Spline (global)
@@ -283,6 +206,8 @@ QString MCMCLoopCurve::initialize_time()
     // ---------------------- Reset Events ---------------------------
     for (Event* ev : allEvents) {
         ev->mInitialized = false;
+        ev->mS02.mSamplerProposal = MHVariable::eFixe;
+        // ev->mS02.mSamplerProposal = MHVariable::eMHAdaptGauss; // not yet integrate within update_321
     }
     // -------------------------- Init gamma ------------------------------
     emit stepChanged(tr("Initializing Phase Gaps..."), 0, phasesConstraints.size());
@@ -378,7 +303,7 @@ QString MCMCLoopCurve::initialize_time()
             
             for (Event* uEvent : unsortedEvents) {
                 if (uEvent->mType == Event::eDefault) {
-                    
+
                     mModel->initNodeEvents(); // Doit être réinitialisé pour toute recherche getThetaMinRecursive et getThetaMaxRecursive
                     QString circularEventName = "";
                     
@@ -417,10 +342,10 @@ QString MCMCLoopCurve::initialize_time()
                     for (Date& date : uEvent->mDates) {
                         
                         // 1 - Init ti
-                        double sigma;
+
                         // modif du 2021-06-16 pHd
-                        const FunctionStat &data = analyseFunction(vector_to_map(date.mCalibration->mCurve, date.mCalibration->mTmin, date.mCalibration->mTmax, date.mCalibration->mStep));
-                        sigma = double (data.std);
+                        const FunctionStat &data = analyseFunction(date.mCalibration->mMap);
+                        double sigma = double (data.std);
                         //
                         if (!date.mCalibration->mRepartition.isEmpty()) {
                             const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mCalibration->mRepartition);
@@ -486,7 +411,8 @@ QString MCMCLoopCurve::initialize_time()
                     uEvent->mTheta.mLastAccepts.clear();
                     //unsortedEvents.at(i)->mTheta.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
                     uEvent->mTheta.tryUpdate(uEvent->mTheta.mX, 2.);
-                    
+
+
                 }
                 
                 if (isInterruptionRequested())
@@ -544,6 +470,7 @@ QString MCMCLoopCurve::initialize_time()
                 // 4 - Init S02 of each Event
                 uEvent->mS02.mX = 0;
                 uEvent->mS02.mLastAccepts.clear();
+                uEvent->mS02.mSamplerProposal = MHVariable::eFixe;
 
                 // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
                 uEvent->mTheta.mSigmaMH = 1;
@@ -552,6 +479,7 @@ QString MCMCLoopCurve::initialize_time()
                 // 6- Clear mLastAccepts  array
                 uEvent->mTheta.mLastAccepts.clear();
                 //uEvent->mTheta.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+
 
                 if (isInterruptionRequested())
                     return ABORTED_BY_USER;
@@ -3062,8 +2990,11 @@ void MCMCLoopCurve::memo()
             event->mTheta.memo();
             event->mTheta.saveCurrentAcceptRate();
 
-            event->mS02.memo();
-            event->mS02.saveCurrentAcceptRate();
+
+            if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+                event->mS02.memo();
+                event->mS02.saveCurrentAcceptRate();
+            }
 
             for (auto&& date : event->mDates )   {
                 date.mTi.memo();
@@ -3111,10 +3042,7 @@ void MCMCLoopCurve::memo()
         mModel->mLambdaSpline.saveCurrentAcceptRate();
     }
 
-    /* --------------------------------------------------------------
-     *  G - Memo  mModel->mSpline
-     * -------------------------------------------------------------- */
-    mModel->mSplinesTrace.push_back(mModel->mSpline);
+
 
     // Search map size
     if ( mState == State::eBurning ||
@@ -3244,6 +3172,10 @@ void MCMCLoopCurve::memo()
     if (mState != State::eAquisition)
         return;
 
+    /* --------------------------------------------------------------
+     *  G - Memo  mModel->mSpline
+     * -------------------------------------------------------------- */
+    mModel->mSplinesTrace.push_back(mModel->mSpline);
 
     //--------------------- Create posteriorGMean and map and memo -----------------------------------------
 
@@ -3272,6 +3204,7 @@ void MCMCLoopCurve::memo()
     }
 
 }
+
 
 /* C'est le même algorithme que ModelCurve::buildCurveAndMap()
  */
@@ -3751,18 +3684,82 @@ void MCMCLoopCurve::finalize()
     startTime.start();
 #endif
     // il faut la derniere iter
-    if (mTh_memoCurve.joinable())
+ /*   if (mTh_memoCurve.joinable())
         mTh_memoCurve.join();
-
+*/
 #pragma omp parallel for
-    for (int i = 0; i < mChains.size(); ++i) {
+
+ /*   for (int i = 0; i < mChains.size(); ++i) {
         ChainSpecs &chain = mChains[i];
         if (chain.mRealyAccepted == 0) {
             mAbortedReason = QString(tr("Warning : NO POSITIVE curve available with chain n° %1, current seed to change %2").arg (QString::number(i+1), QString::number(chain.mSeed)));
             throw mAbortedReason;
         }
-
     }
+*/
+
+    // Suppression des traces des chaines sans courbes acceptées
+
+    int back_position = mModel->mLambdaSpline.mRawTrace->size();
+    for (auto i = mChains.size()-1; i>-1; --i) {
+        ChainSpecs &chain = mChains[i];
+        // we add 1 for the init
+        const int initBurnAdaptAcceptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch) + chain.mRealyAccepted;
+
+        const int front_position = back_position - initBurnAdaptAcceptSize;
+        if (chain.mRealyAccepted == 0) {
+            emit setMessage((tr("Warning : NO POSITIVE curve available with chain n° %1, current seed to change %2").arg (QString::number(i+1), QString::number(chain.mSeed))));
+
+            mChains.remove(i);
+
+            mModel->mPosteriorMeanGByChain.erase(mModel->mPosteriorMeanGByChain.begin() + i);
+
+           //mModel->mSplinesTrace.erase(mModel->mSplinesTrace.begin() + position, mModel->mSplinesTrace.end()); //il y a seulement les courbes acceptées
+
+            mModel->mLambdaSpline.mRawTrace->erase(mModel->mLambdaSpline.mRawTrace->cbegin() + front_position, mModel->mLambdaSpline.mRawTrace->cbegin() + back_position);
+            mModel->mLambdaSpline.mHistoryAcceptRateMH->erase(mModel->mLambdaSpline.mHistoryAcceptRateMH->cbegin() + front_position, mModel->mLambdaSpline.mHistoryAcceptRateMH->cbegin() + back_position);
+            mModel->mLambdaSpline.mAllAccepts.remove(i);
+
+            mModel->mS02Vg.mRawTrace->erase(mModel->mS02Vg.mRawTrace->cbegin() + front_position, mModel->mS02Vg.mRawTrace->cbegin() + back_position);
+            mModel->mS02Vg.mHistoryAcceptRateMH->erase(mModel->mS02Vg.mHistoryAcceptRateMH->cbegin() + front_position, mModel->mS02Vg.mHistoryAcceptRateMH->cbegin() + back_position);
+            mModel->mS02Vg.mAllAccepts.remove(i);
+
+            for (auto ev : mModel->mEvents) {
+                ev->mTheta.mRawTrace->erase(ev->mTheta.mRawTrace->cbegin() + front_position, ev->mTheta.mRawTrace->cbegin() + back_position);
+                ev->mTheta.mHistoryAcceptRateMH->erase(ev->mTheta.mHistoryAcceptRateMH->cbegin() + front_position, ev->mTheta.mHistoryAcceptRateMH->cbegin() + back_position);
+                ev->mTheta.mAllAccepts.remove(i);
+
+                ev->mVg.mRawTrace->erase(ev->mVg.mRawTrace->cbegin() + front_position, ev->mVg.mRawTrace->cbegin() + back_position);
+                ev->mVg.mHistoryAcceptRateMH->erase(ev->mVg.mHistoryAcceptRateMH->cbegin() + front_position, ev->mVg.mHistoryAcceptRateMH->cbegin() + back_position);
+                ev->mVg.mAllAccepts.remove(i);
+
+                if (!ev->mS02.mRawTrace->empty()) {
+                    ev->mS02.mRawTrace->erase(ev->mS02.mRawTrace->cbegin() + front_position, ev->mS02.mRawTrace->cbegin() + back_position);
+                    ev->mS02.mHistoryAcceptRateMH->erase(ev->mS02.mHistoryAcceptRateMH->cbegin() + front_position, ev->mS02.mHistoryAcceptRateMH->cbegin() + back_position);
+                    ev->mS02.mAllAccepts.remove(i);
+                }
+
+                for (auto &d : ev->mDates) {
+                    d.mTi.mRawTrace->erase(d.mTi.mRawTrace->cbegin() + front_position, d.mTi.mRawTrace->cbegin() + back_position);
+                    d.mTi.mHistoryAcceptRateMH->erase(d.mTi.mHistoryAcceptRateMH->cbegin() + front_position, d.mTi.mHistoryAcceptRateMH->cbegin() + back_position);
+                    d.mTi.mAllAccepts.remove(i);
+
+                    d.mSigmaTi.mRawTrace->erase(d.mSigmaTi.mRawTrace->cbegin() + front_position, d.mSigmaTi.mRawTrace->cbegin() + back_position);
+                    d.mSigmaTi.mHistoryAcceptRateMH->erase(d.mSigmaTi.mHistoryAcceptRateMH->cbegin() + front_position, d.mSigmaTi.mHistoryAcceptRateMH->cbegin() + back_position);
+                    d.mSigmaTi.mAllAccepts.remove(i);
+
+                    d.mWiggle.mRawTrace->erase(d.mWiggle.mRawTrace->cbegin() + front_position, d.mWiggle.mRawTrace->cbegin() + back_position);
+                    d.mWiggle.mAllAccepts.remove(i);
+                }
+            }
+        }
+        back_position = front_position ;
+    }
+    if (mChains.isEmpty()) {
+        mAbortedReason = QString(tr("Warning : NO POSITIVE curve available "));
+        throw mAbortedReason;
+    }
+
     // This is not a copy of all data!
     // Chains only contains description of what happened in the chain (numIter, numBatch adapt, ...)
     // Real data are inside mModel members (mEvents, mPhases, ...)
@@ -3814,17 +3811,17 @@ void MCMCLoopCurve::finalize()
         mModel->mPosteriorMeanG = mModel->mPosteriorMeanGByChain[0];
 
     } else {
-        auto mini = *std::min_element(begin(mModel->mPosteriorMeanG.gx.mapG.data), end(mModel->mPosteriorMeanG.gx.mapG.data));
+        const auto minix = *std::min_element(begin(mModel->mPosteriorMeanG.gx.mapG.data), end(mModel->mPosteriorMeanG.gx.mapG.data));
 
-        mModel->mPosteriorMeanG.gx.mapG.min_value = mini;
+        mModel->mPosteriorMeanG.gx.mapG.min_value = minix;
 
         if (mComputeY) {
-            auto mini = *std::min_element(begin(mModel->mPosteriorMeanG.gy.mapG.data), end(mModel->mPosteriorMeanG.gy.mapG.data));
-            mModel->mPosteriorMeanG.gy.mapG.min_value = mini;
+            const auto miniy = *std::min_element(begin(mModel->mPosteriorMeanG.gy.mapG.data), end(mModel->mPosteriorMeanG.gy.mapG.data));
+            mModel->mPosteriorMeanG.gy.mapG.min_value = miniy;
 
             if (mComputeZ) {
-                mini = *std::min_element(begin(mModel->mPosteriorMeanG.gz.mapG.data), end(mModel->mPosteriorMeanG.gz.mapG.data));
-                mModel->mPosteriorMeanG.gz.mapG.min_value = mini;
+                const auto miniz = *std::min_element(begin(mModel->mPosteriorMeanG.gz.mapG.data), end(mModel->mPosteriorMeanG.gz.mapG.data));
+                mModel->mPosteriorMeanG.gz.mapG.min_value = miniz;
 
             }
         }

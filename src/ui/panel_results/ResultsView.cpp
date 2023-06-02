@@ -2061,7 +2061,7 @@ void ResultsView::createByCurveGraph()
                         for (const auto& date: event->mDates) {
                             // --- Calibration Date
 
-                            const QMap<double, double> &calibMap = date.getRawCalibMap();
+                            QMap<double, double> calibMap = date.getRawCalibMap();
                             // hpd is calculate only on the study Period
 
                             //const QMap<double, double> &subData = getMapDataInRange(calibMap, mModel->mSettings.getTminFormated(), mModel->mSettings.getTmaxFormated());
@@ -2070,7 +2070,7 @@ void ResultsView::createByCurveGraph()
 
                                 // hpd results
 
-                            const QMap<double, double> hpd (create_HPD(calibMap, date.mTi.mThresholdUsed));
+                            const QMap<double, double> hpd (create_HPD2(calibMap, date.mTi.mThresholdUsed));
 
                             const QList<QPair<double, QPair<double, double> > > &intervals = intervalsForHpd(hpd, 100);
 

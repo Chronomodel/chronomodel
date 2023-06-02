@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -153,8 +153,8 @@ public:
     const QMap<double, double> getFormatedCalibToShow() const;
     const QMap<double, double> getFormatedWiggleCalibToShow() const;
 
-    const QMap<double, double> getRawCalibMap() const;
-    const QMap<double, double> getRawWiggleCalibMap() const;
+    const QMap<double, double> &getRawCalibMap() const ;
+    inline const QMap<double, double> &getRawWiggleCalibMap() const;
 
     QVector<double> getFormatedRepartition() const;
 

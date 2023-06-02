@@ -107,16 +107,17 @@ QString MCMCLoopChrono::calibrate()
         int i = 0;
         for (auto&& date : dates) {
               if (date->mCalibration) {
-                if (date->mCalibration->mCurve.isEmpty())
+                if (date->mCalibration->mVector.isEmpty())
                     date->calibrate(mProject);
 
-                if (date->mCalibration->mCurve.size() < 5) {
+                if (date->mCalibration->mVector.size() < 5) {
                     const double new_step = date->mCalibration->mStep/5.;
-                    date->mCalibration->mCurve.clear();
+                    date->mCalibration->mVector.clear();
+                    date->mCalibration->mMap.clear();
                     date->mCalibration->mRepartition.clear();
                     date->mCalibration = nullptr;
 
-                    QString mes = tr("Definition of the calibration curve insufficient for the Event %1 \r Decrease the study period step to %2").arg(date->mName, QString::number(new_step));
+                    const QString mes = tr("Definition of the calibration curve insufficient for the Event %1 \r Decrease the study period step to %2").arg(date->mName, QString::number(new_step));
                     return (mes);
 
                 }
@@ -139,59 +140,6 @@ QString MCMCLoopChrono::calibrate()
     return tr("Invalid model");
 }
 
-void MCMCLoopChrono::initVariablesForChain()
-{
-    // today we have the same acceptBufferLen for every chain
-    const int acceptBufferLen =  mChains[0].mIterPerBatch;
-    int initReserve = 0;
-
-    for (auto&& c: mChains)
-       initReserve += ( 1 + (c.mMaxBatchs*c.mIterPerBatch) + c.mIterPerBurn + (c.mIterPerAquisition/c.mThinningInterval) );
-
-    for (auto&& event : mModel->mEvents) {
-        event->mTheta.reset();
-        event->mTheta.reserve(initReserve);
-
-        event->mTheta.mLastAccepts.reserve(acceptBufferLen);
-        event->mTheta.mLastAcceptsLength = acceptBufferLen;
-
-        event->mS02.reset();
-        event->mS02.reserve(initReserve);
-        event->mS02.mLastAccepts.reserve(acceptBufferLen);
-        event->mS02.mLastAcceptsLength = acceptBufferLen;
-
-        // event->mTheta.mAllAccepts.clear(); //don't clean, avalable for cumulate chain
-
-        for (auto&& date : event->mDates) {
-            date.mTi.reset();
-            date.mTi.reserve(initReserve);
-            date.mTi.mLastAccepts.reserve(acceptBufferLen);
-            date.mTi.mLastAcceptsLength = acceptBufferLen;
-
-            date.mSigmaTi.reset();
-            date.mSigmaTi.reserve(initReserve);
-            date.mSigmaTi.mLastAccepts.reserve(acceptBufferLen);
-            date.mSigmaTi.mLastAcceptsLength = acceptBufferLen;
-
-            date.mWiggle.reset();
-            date.mWiggle.reserve(initReserve);
-            date.mWiggle.mLastAccepts.reserve(acceptBufferLen);
-            date.mWiggle.mLastAcceptsLength = acceptBufferLen;
-        }
-    }
-
-    for (auto&& phase : mModel->mPhases) {
-        phase->mAlpha.reset();
-        phase->mBeta.reset();
-        //phase->mTau.reset();
-        phase->mDuration.reset();
-
-        phase->mAlpha.mRawTrace->reserve(initReserve);
-        phase->mBeta.mRawTrace->reserve(initReserve);
-        //phase->mTau.mRawTrace->reserve(initReserve);
-        phase->mDuration.mRawTrace->reserve(initReserve);
-   }
-}
 
 QString MCMCLoopChrono::initialize()
 {
@@ -207,7 +155,8 @@ QString MCMCLoopChrono::initialize()
     // ---------------------- Reset Events ---------------------------
     for (auto&& ev : mModel->mEvents) {
         ev->mInitialized = false;
-        //ev->mS02.mSamplerProposal = MHVariable::eMHAdaptGauss;
+        ev->mS02.mSamplerProposal = MHVariable::eFixe;
+       // ev->mS02.mSamplerProposal = MHVariable::eMHAdaptGauss; // not yet integrate within update_321
     }
 
     // -------------------------- Init gamma ------------------------------
@@ -329,7 +278,8 @@ QString MCMCLoopChrono::initialize()
                 // 1 - Init ti
                 double sigma;
                 // modif du 2021-06-16 pHd
-                const FunctionStat &data = analyseFunction(vector_to_map(date.mCalibration->mCurve, date.mCalibration->mTmin, date.mCalibration->mTmax, date.mCalibration->mStep));
+                //const FunctionStat &data = analyseFunction(vector_to_map(date.mCalibration->mCurve, date.mCalibration->mTmin, date.mCalibration->mTmax, date.mCalibration->mStep));
+                const FunctionStat &data = analyseFunction(date.mCalibration->mMap);
                 sigma = double (data.std);
                 //
                 if (!date.mCalibration->mRepartition.isEmpty()) {
@@ -390,9 +340,7 @@ QString MCMCLoopChrono::initialize()
             //unsortedEvents.at(i)->mTheta.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
             uEvent->mTheta.tryUpdate(uEvent->mTheta.mX, 2.);
 
-            // 7 - Memo
-            uEvent->mVg.mAllAccepts->clear();
-            uEvent->mVg.mLastAccepts.clear();
+
         }
 
         if (isInterruptionRequested())
@@ -601,6 +549,7 @@ void MCMCLoopChrono::memo()
 
 
 }
+
 
 void MCMCLoopChrono::finalize()
 {

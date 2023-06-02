@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -42,10 +42,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QString>
 #include <QMap>
-#include "MCMCSettings.h"
-#include "PluginAbstract.h"
 
-//class PluginAbstract;
+#include "PluginAbstract.h"
 
 class CalibrationCurve
 {
@@ -60,13 +58,13 @@ public:
     CalibrationCurve (CalibrationCurve&& other) noexcept : /* noexcept needed to enable optimizations in containers */
         mName (other.mName),
         mDescription (other.mDescription),
- //       mMethod (other.mMethod),
- //       mMCMCSetting (other.mMCMCSetting),
+
         mPluginId (other.mPluginId),
 
         mPlugin (other.mPlugin),
         mRepartition(other.mRepartition),
-        mCurve (other.mCurve),
+        mVector (other.mVector),
+        mMap (other.mMap),
         mTmin (other.mTmin),
         mTmax (other.mTmax),
         mStep (other.mStep)
@@ -74,7 +72,9 @@ public:
         other.mName = nullptr;
         other.mDescription = nullptr;
         other.mRepartition.clear();
-        other.mCurve.clear();
+        other.mVector.clear();
+        other.mMap.clear();
+
         other.mPluginId = nullptr;
         other.mPlugin = nullptr;
     }
@@ -99,12 +99,15 @@ public:
         mPlugin = other.mPlugin;
 
         mDescription = other.mDescription;
-//        mMethod = other.mMethod;
+
         mRepartition.resize(other.mRepartition.size());
         std::copy(other.mRepartition.begin(), other.mRepartition.end(), mRepartition.begin());
-        mCurve .resize(other.mCurve.size());
-        std::copy(other.mCurve.begin(),other.mCurve.end(), mCurve.begin());
+
+        mVector.resize(other.mVector.size());
+        std::copy(other.mVector.begin(),other.mVector.end(), mVector.begin());
         
+        mMap = std::move(other.mMap);
+
         mTmin = other.mTmin;
         mTmax = other.mTmax;
         mStep = other.mStep;
@@ -113,7 +116,8 @@ public:
         other.mDescription = nullptr;
 
         other.mRepartition.clear();
-        other.mCurve.clear();
+        other.mVector.clear();
+        other.mMap.clear();
 
         other.mPluginId = nullptr;
         other.mPlugin = nullptr;
@@ -129,16 +133,14 @@ public:
     QString mName;
     QString mDescription;
 
-//    Method mMethod;
 
-    // Parameter refere to the Method
-//    MCMCSettings mMCMCSetting;
 
     QString mPluginId;
     PluginAbstract* mPlugin;
 
     QVector<double> mRepartition;
-    QVector<double> mCurve;
+    QVector<double> mVector;
+    QMap<double, double> mMap; // c'est la même chose que mVector, mais dans une QMap. Pour faciliter l'accés
 
     double mTmin;
     double mTmax;

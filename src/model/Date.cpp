@@ -405,7 +405,7 @@ long double Date::getLikelihood(const double& t) const
             
         } else if (mOrigin == eCombination) { 
             // If needed run the wiggle calculation
-            if (mCalibration == nullptr || mCalibration->mCurve.isEmpty()) {
+            if (mCalibration == nullptr || mCalibration->mVector.isEmpty()) {
                 return mPlugin->getLikelihoodCombine(t, mSubDates, mSettings.mStep);
 
             } else {
@@ -429,7 +429,7 @@ QPair<long double, long double> Date::getLikelihoodArg(const double t) const
             return mPlugin->getLikelihoodArg(t, mData);
             
         }  else if (mOrigin == eCombination) {
-                     if (mCalibration->mCurve.isEmpty()) {
+                     if (mCalibration->mVector.isEmpty()) {
                          return QPair<long double, long double>(log(mPlugin->getLikelihoodCombine(t, mSubDates, mSettings.mStep)), 1.l);
 
                      } else {
@@ -633,7 +633,7 @@ void Date::calibrate(const ProjectSettings settings, Project *project, bool trun
                 tmaxCal = mTminRefCurve + maxIdx * settings.mStep;
 
                 // Truncate both functions where data live
-                mCalibration->mCurve = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
+                mCalibration->mVector = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
                 mCalibration->mRepartition = repartitionTemp.mid(minIdx, (maxIdx - minIdx) + 1);
 
                 /* NOTE ABOUT THIS APPROMIATION :
@@ -645,14 +645,15 @@ void Date::calibrate(const ProjectSettings settings, Project *project, bool trun
             } else {
                 tminCal = mTminRefCurve;
                 tmaxCal = mTmaxRefCurve;
-                mCalibration->mCurve = calibrationTemp;
+                mCalibration->mVector = calibrationTemp;
                 mCalibration->mRepartition = repartitionTemp;
             }
             // Stretch repartition curve so it goes from 0 to 1
             mCalibration->mRepartition = stretch_vector(mCalibration->mRepartition, 0., 1.);
 
             // Approximation : even if the calib has been truncated, we consider its area to be = 1
-            mCalibration->mCurve = equal_areas(mCalibration->mCurve, settings.mStep, 1.);
+            mCalibration->mVector = equal_areas(mCalibration->mVector, settings.mStep, 1.);
+
 
         }
         /* ------------------------------------------------------------------
@@ -668,6 +669,8 @@ void Date::calibrate(const ProjectSettings settings, Project *project, bool trun
 
         mCalibration->mTmin = tminCal;
         mCalibration->mTmax = tmaxCal;
+        mCalibration->mMap = vector_to_map(mCalibration->mVector, mCalibration->mTmin, mCalibration->mTmax, mCalibration->mStep);
+
         // If the calibration curve changes, the wiggle curve must be recalculated.
         if (mWiggleCalibration != nullptr)  {
             const QString toFind ("WID::" + mUUID);
@@ -760,7 +763,7 @@ void Date::calibrateWiggle(const ProjectSettings settings, Project *project)
     switch (mDeltaType) {
         case eDeltaFixed:
         {
-                mWiggleCalibration->mCurve = calibrationTemp;
+                mWiggleCalibration->mVector = calibrationTemp;
                 mWiggleCalibration->mTmin = minRefCurve + mDeltaFixed;
                 mWiggleCalibration->mTmax = maxRefCurve + mDeltaFixed;
             }
@@ -872,7 +875,7 @@ void Date::calibrateWiggle(const ProjectSettings settings, Project *project)
 
 
 
-        mWiggleCalibration->mCurve = equal_areas(curve, settings.mStep, 1.);
+        mWiggleCalibration->mVector = equal_areas(curve, settings.mStep, 1.);
 
         mWiggleCalibration->mTmin = minRefCurve - (double)(3*paddingSize +inputSize/2)* settings.mStep + (mDeltaMin+mDeltaMax)/2.;
         mWiggleCalibration->mTmax = mWiggleCalibration->mTmin + curve.size()* settings.mStep;
@@ -947,7 +950,7 @@ void Date::calibrateWiggle(const ProjectSettings settings, Project *project)
 
 
 
-            mWiggleCalibration->mCurve = equal_areas(curve, settings.mStep, 1.);
+            mWiggleCalibration->mVector = equal_areas(curve, settings.mStep, 1.);
 
             mWiggleCalibration->mTmin = minRefCurve - paddingSize* settings.mStep + mDeltaAverage;
             mWiggleCalibration->mTmax = minRefCurve + curve.size()* settings.mStep+ mDeltaAverage;
@@ -962,7 +965,7 @@ void Date::calibrateWiggle(const ProjectSettings settings, Project *project)
             break;
             
         default:
-            mWiggleCalibration->mCurve = calibrationTemp;
+            mWiggleCalibration->mVector = calibrationTemp;
             mWiggleCalibration->mTmin = minRefCurve ;
             mWiggleCalibration->mTmax = maxRefCurve ;
             break;
@@ -970,7 +973,7 @@ void Date::calibrateWiggle(const ProjectSettings settings, Project *project)
     
    // mWiggleCalibration->mCurve = equal_areas(mWiggleCalibration->mCurve, settings.mStep, 1.);
 
-    mWiggleCalibration->mRepartition = mWiggleCalibration->mCurve;
+    mWiggleCalibration->mRepartition = mWiggleCalibration->mVector;
     /* We use long double type because
      after several sums, the repartition can be in the double type range
     */
@@ -1008,43 +1011,47 @@ void Date::calibrateWiggle(const ProjectSettings settings, Project *project)
         const double tmaxCal = mWiggleCalibration->mTmin + maxIdx * settings.mStep;
 
         // Truncate both functions where data live
-        mWiggleCalibration->mCurve = mWiggleCalibration->mCurve.mid(minIdx, (maxIdx - minIdx) + 1);
+        mWiggleCalibration->mVector = mWiggleCalibration->mVector.mid(minIdx, (maxIdx - minIdx) + 1);
         mWiggleCalibration->mRepartition = mWiggleCalibration->mRepartition.mid(minIdx, (maxIdx - minIdx) + 1);
 
         // Stretch repartition curve so it goes from 0 to 1
         mWiggleCalibration->mRepartition = stretch_vector(mWiggleCalibration->mRepartition, 0., 1.);
 
         // Approximation : even if the calib has been truncated, we consider its area to be = 1
-        mWiggleCalibration->mCurve = equal_areas(mWiggleCalibration->mCurve, settings.mStep, 1.);
+        mWiggleCalibration->mVector = equal_areas(mWiggleCalibration->mVector, settings.mStep, 1.);
 
         mWiggleCalibration->mTmin = tminCal;
         mWiggleCalibration->mTmax = tmaxCal;
 
-
     }
+
+    mWiggleCalibration->mMap = vector_to_map(mWiggleCalibration->mVector, mWiggleCalibration->mTmin, mWiggleCalibration->mTmax, mWiggleCalibration->mStep);
 
      //  qDebug()<<"TDate::mWiggleCalibration in project "<<project->mCalibCurves[toFind].mDescription;
 }
 
-const QMap<double, double> Date::getRawCalibMap() const
+
+const QMap<double, double> &Date::getRawCalibMap() const
 {
-    return vector_to_map(mCalibration->mCurve, mCalibration->mTmin, mCalibration->mTmax, mCalibration->mStep);
+    return mCalibration->mMap;
 }
 
 const QMap<double, double> Date::getFormatedCalibMap() const
 {
-    if (mCalibration->mCurve.isEmpty())
+    if (mCalibration->mVector.isEmpty())
         return QMap<double, double>();
 
-    QMap<double, double> calib = vector_to_map(mCalibration->mCurve, mCalibration->mTmin, mCalibration->mTmax, mCalibration->mStep);
+   /* QMap<double, double> &calib = mCalibration->mMap; //vector_to_map(mCalibration->mCurve, mCalibration->mTmin, mCalibration->mTmax, mCalibration->mStep);
 
-    QMap<double, double> formatedCalib;
+    QMap<double, double> formatedCalib = DateUtils::convertMapToAppSettingsFormat(calib);
     QMap<double, double>::const_iterator iter = calib.cbegin();
     while (iter!= calib.constEnd()) {
         formatedCalib.insert(DateUtils::convertToAppSettingsFormat(iter.key()), iter.value());
         ++iter;
     }
     return formatedCalib;
+  */
+    return DateUtils::convertMapToAppSettingsFormat(mCalibration->mMap);
 
 }
 
@@ -1056,7 +1063,7 @@ const QMap<double, double> Date::getFormatedCalibMap() const
 
 const QMap<double, double> Date::getFormatedCalibToShow() const
 {
-    if (mCalibration->mCurve.isEmpty())
+    if (mCalibration->mVector.isEmpty())
         return QMap<double, double>();
 
     QMap<double, double> calib = getRawCalibMap();
@@ -1064,16 +1071,16 @@ const QMap<double, double> Date::getFormatedCalibToShow() const
     if (mCalibration->mRepartition.last() > 0.) {
         double tminCal, tmaxCal;
         QVector<double> curve;
-        const double threshold  = 0.01 * (*std::max_element(mCalibration->mCurve.begin(), mCalibration->mCurve.end()));
+        const double threshold  = 0.01 * (*std::max_element(mCalibration->mVector.begin(), mCalibration->mVector.end()));
 
         int minIdx = 0;
-        for (auto& v : mCalibration->mCurve) {
+        for (auto& v : mCalibration->mVector) {
             if (v >=threshold) break;
             minIdx++;
         }
 
-        int maxIdx = mCalibration->mCurve.size()-1;
-        for (auto itv = mCalibration->mCurve.rbegin(); itv!= mCalibration->mCurve.rend(); itv++) {
+        auto maxIdx = mCalibration->mVector.size()-1;
+        for (auto itv = mCalibration->mVector.rbegin(); itv!= mCalibration->mVector.rend(); itv++) {
             if (*itv >=threshold) break;
             maxIdx--;
         }
@@ -1081,12 +1088,12 @@ const QMap<double, double> Date::getFormatedCalibToShow() const
         tminCal = mCalibration->mTmin + minIdx * mCalibration->mStep;
         tmaxCal = mCalibration->mTmin + maxIdx * mCalibration->mStep;
 
-        curve = mCalibration->mCurve.mid(minIdx, (maxIdx - minIdx) + 1);
+        curve = mCalibration->mVector.mid(minIdx, (maxIdx - minIdx) + 1);
         curve = equal_areas(curve, mCalibration->mStep, 1.);
         calib = vector_to_map(curve, tminCal, tmaxCal, mCalibration->mStep );
 
     } else {
-        calib = vector_to_map(mCalibration->mCurve, mCalibration->mTmin, mCalibration->mTmax, mCalibration->mStep);
+        calib = mCalibration->mMap;
     }
 
     calib[calib.firstKey() - mCalibration->mStep] = 0.;
@@ -1094,17 +1101,17 @@ const QMap<double, double> Date::getFormatedCalibToShow() const
     return DateUtils::convertMapToAppSettingsFormat(calib);
 }
 
-const QMap<double, double> Date::getRawWiggleCalibMap() const
+inline const QMap<double, double> &Date::getRawWiggleCalibMap() const
 {
-    return vector_to_map(mWiggleCalibration->mCurve, mWiggleCalibration->mTmin, mWiggleCalibration->mTmax, mWiggleCalibration->mStep);
+    return mWiggleCalibration->mMap;
 }
 
 const QMap<double, double> Date::getFormatedWiggleCalibMap() const
 {
-    if (mWiggleCalibration == nullptr || mWiggleCalibration->mCurve.isEmpty())
+    if (mWiggleCalibration == nullptr || mWiggleCalibration->mVector.isEmpty())
         return QMap<double, double>();
 
-    QMap<double, double> calib = vector_to_map(mWiggleCalibration->mCurve, mWiggleCalibration->mTmin, mWiggleCalibration->mTmax, mWiggleCalibration->mStep);
+  /*  QMap<double, double> calib = mWiggleCalibration->mMap;//vector_to_map(mWiggleCalibration->mCurve, mWiggleCalibration->mTmin, mWiggleCalibration->mTmax, mWiggleCalibration->mStep);
 
     QMap<double, double> formatedWiggleCalib;
     QMap<double, double>::const_iterator iter = calib.cbegin();
@@ -1113,14 +1120,15 @@ const QMap<double, double> Date::getFormatedWiggleCalibMap() const
         ++iter;
     }
     return formatedWiggleCalib;
-
+  */
+    return DateUtils::convertMapToAppSettingsFormat(mWiggleCalibration->mMap);
 }
 
 
 
 const QMap<double, double> Date::getFormatedWiggleCalibToShow() const
 {
-    if (mWiggleCalibration == nullptr || mWiggleCalibration->mCurve.isEmpty())
+    if (mWiggleCalibration == nullptr || mWiggleCalibration->mVector.isEmpty())
         return QMap<double, double>();
 
     QMap<double, double> calib = getRawWiggleCalibMap();
@@ -1128,16 +1136,16 @@ const QMap<double, double> Date::getFormatedWiggleCalibToShow() const
 
     double tminCal, tmaxCal;
     QVector<double> curve;
-    const double threshold  = 0.01 * (*std::max_element(mWiggleCalibration->mCurve.begin(), mWiggleCalibration->mCurve.end()));
+    const double threshold  = 0.01 * (*std::max_element(mWiggleCalibration->mVector.begin(), mWiggleCalibration->mVector.end()));
 
     int minIdx = 0;
-    for (auto& v : mWiggleCalibration->mCurve) {
+    for (auto& v : mWiggleCalibration->mVector) {
         if (v >threshold) break;
         minIdx++;
     }
 
-    int maxIdx = mWiggleCalibration->mCurve.size()-1;
-    for (auto itv = mWiggleCalibration->mCurve.rbegin(); itv!= mWiggleCalibration->mCurve.rend(); itv++) {
+    auto maxIdx = mWiggleCalibration->mVector.size()-1;
+    for (auto itv = mWiggleCalibration->mVector.rbegin(); itv!= mWiggleCalibration->mVector.rend(); itv++) {
         if (*itv >threshold) break;
         maxIdx--;
     }
@@ -1145,7 +1153,7 @@ const QMap<double, double> Date::getFormatedWiggleCalibToShow() const
     tminCal = mWiggleCalibration->mTmin + minIdx * mWiggleCalibration->mStep;
     tmaxCal = mWiggleCalibration->mTmin + maxIdx * mWiggleCalibration->mStep;
 
-    curve = mWiggleCalibration->mCurve.mid(minIdx, (maxIdx - minIdx) + 1);
+    curve = mWiggleCalibration->mVector.mid(minIdx, (maxIdx - minIdx) + 1);
     curve = equal_areas(curve, mWiggleCalibration->mStep, 1.);
     calib = vector_to_map(curve, tminCal, tmaxCal, mWiggleCalibration->mStep );
 
@@ -1299,7 +1307,7 @@ QPixmap Date::generateCalibThumb(ProjectSettings settings)
 
         const QMap<double, double> &calib = normalize_map(getMapDataInRange(getRawCalibMap(), tmin, tmax));
 
-        qDebug()<<"[Date::generateCalibThumb] mName "<< mCalibration->mName << mCalibration->mCurve.size() << calib.size();
+        qDebug()<<"[Date::generateCalibThumb] mName "<< mCalibration->mName << mCalibration->mVector.size() << calib.size();
         if (calib.isEmpty())
             return QPixmap();
 
@@ -1364,13 +1372,13 @@ QPixmap Date::generateCalibThumb(ProjectSettings settings)
 
 double Date::getLikelihoodFromCalib(const double &t) const
 {
-    return interpolate_value_from_curve(t, mCalibration->mCurve, mCalibration->mTmin, mCalibration->mTmax);
+    return interpolate_value_from_curve(t, mCalibration->mVector, mCalibration->mTmin, mCalibration->mTmax);
 }
 
 double Date::getLikelihoodFromWiggleCalib(const double &t) const
 {
     // test si mWiggleCalibration existe, sinon calcul de la valeur
-    if (mWiggleCalibration == nullptr || mWiggleCalibration->mCurve.isEmpty()) {
+    if (mWiggleCalibration == nullptr || mWiggleCalibration->mVector.isEmpty()) {
 
         if (mDeltaType == eDeltaRange) {
             long double d = mPlugin->getLikelihood(t, mData);
@@ -1398,7 +1406,7 @@ double Date::getLikelihoodFromWiggleCalib(const double &t) const
         }
 
     } else {
-        return interpolate_value_from_curve(t, mWiggleCalibration->mCurve, mWiggleCalibration->mTmin, mWiggleCalibration->mTmax);
+        return interpolate_value_from_curve(t, mWiggleCalibration->mVector, mWiggleCalibration->mTmin, mWiggleCalibration->mTmax);
     }
 
 }

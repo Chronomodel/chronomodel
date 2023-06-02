@@ -51,18 +51,19 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <assert.h>
 
 /** Default constructor */
-MetropolisVariable::MetropolisVariable(QObject *parent):QObject(parent),
-mX(0.),
-mRawTrace(nullptr),
-mFormatedTrace(nullptr),
-mSupport(eR),
-mFormat(DateUtils::eNumeric),
-mExactCredibilityThreshold(0.),
-mfftLenUsed(-1),
-mBandwidthUsed(-1.),
-mThresholdUsed(-1.),
-mtminUsed(0.),
-mtmaxUsed(0.)
+MetropolisVariable::MetropolisVariable(QObject *parent):
+    QObject(parent),
+    mX (0.),
+    mRawTrace (nullptr),
+    mFormatedTrace (nullptr),
+    mSupport (eR),
+    mFormat (DateUtils::eNumeric),
+    mExactCredibilityThreshold (0.),
+    mfftLenUsed (-1),
+    mBandwidthUsed (-1.),
+    mThresholdUsed (-1.),
+    mtminUsed (0.),
+    mtmaxUsed (0.)
 {
     // will not throw exception,(std::nothrow) in C++ Programmin Language B. Stroustrup Section 19.4.5
     mRawTrace = new QVector<double>();
@@ -75,13 +76,14 @@ mtmaxUsed(0.)
 }
 
 /** Copy constructor */
-MetropolisVariable::MetropolisVariable(const MetropolisVariable &origin):MetropolisVariable()
+MetropolisVariable::MetropolisVariable(const MetropolisVariable &origin):
+    MetropolisVariable()
 {
     mX = origin.mX;
-    mRawTrace = new QVector<double>(origin.mRawTrace->size());
+    mRawTrace->resize(origin.mRawTrace->size());
     std::copy(origin.mRawTrace->begin(), origin.mRawTrace->end(), mRawTrace->begin());
 
-    mFormatedTrace= new QVector<double>(origin.mFormatedTrace->size());
+    mFormatedTrace->resize(origin.mFormatedTrace->size());
     std::copy(origin.mFormatedTrace->begin(), origin.mFormatedTrace->end(), mFormatedTrace->begin());
 
     mSupport = origin.mSupport;
@@ -165,14 +167,6 @@ MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable & ori
 }
 
 /** Move assignment operator */
-/*MetropolisVariable& MetropolisVariable::operator=(MetropolisVariable && origin)
-{
-    reset();
-    MetropolisVariable tmp(origin);
-    *this = std::move(tmp);
-    origin.~MetropolisVariable();
-    return *this;
-}*/
 
 void MetropolisVariable::memo(double* valueToSave)
 {
@@ -202,7 +196,6 @@ void MetropolisVariable::reset()
     mFormatedHPD.clear();
 
     mChainsResults.clear();
-
 
     mRawCredibility = std::pair<double, double>(1, -1);
     mFormatedCredibility = std::pair<double, double>(1, -1);
@@ -473,7 +466,7 @@ void MetropolisVariable::generateHPD(const double threshold)
             mFormatedHPD.clear();
             return;
         }
-        mFormatedHPD = QMap<double, double>(create_HPD(mFormatedHisto, thresh));
+        mFormatedHPD = QMap<double, double>(create_HPD2(mFormatedHisto, thresh));
 
         mRawHPDintervals.clear();
         const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mFormatedHPD, thresh);
@@ -590,10 +583,6 @@ QMap<double, double> &MetropolisVariable::histoForChain(const int index)
  */
 QVector<double> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs>& chains, const int index)
 {
-   // const int reserveSize = (int) ceil( chains.at(index).mNumBurnIter + (chains.at(index).mBatchIndex * chains.at(index).mNumBatchIter) + (chains.at(index).mIterPerAquisition /chains.at(index).mThinningInterval ) );
-   // trace.reserve(reserveSize);
-
-    //QVector<float> trace(reserveSize);
     std::vector<double> trace;
     int shift = 0;
 

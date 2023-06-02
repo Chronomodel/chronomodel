@@ -1136,7 +1136,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
 
             // Recherche indice de l'event dans la liste de spline, car les events sont réordonnés
             int thetaIdx;
-            const MCMCSpline& spline =  model->mSplinesTrace.back();
+            const MCMCSpline& spline =  model->mSpline;
             for (thetaIdx=0; thetaIdx < model->mEvents.size(); thetaIdx++) {
                 if ( spline.splineX.vecThetaEvents.at(thetaIdx) == event->mTheta.mX)
                     break;
@@ -1628,7 +1628,7 @@ void sampleInCumulatedRepartition (Event* event, const ProjectSettings &settings
     double unionTmax (-INFINITY);
     double unionStep (settings.mStep);
     for (auto&& d : event->mDates) {
-        if (d.mCalibration != nullptr && !d.mCalibration->mCurve.isEmpty() ) {
+        if (d.mCalibration != nullptr && !d.mCalibration->mVector.isEmpty() ) {
             unionTmin = std::min(unionTmin, d.mCalibration->mTmin);
             unionTmax = std::max(unionTmax, d.mCalibration->mTmax);
             unionStep = std::min(unionStep, d.mCalibration->mStep);
@@ -1716,7 +1716,7 @@ void sampleInCumulatedRepartition_thetaFixe (Event *event, const ProjectSettings
     double unionTmax (-INFINITY);
     double unionStep (settings.mStep);
     for (auto&& d : event->mDates) {
-        if (d.mCalibration != nullptr && !d.mCalibration->mCurve.isEmpty() ) {
+        if (d.mCalibration != nullptr && !d.mCalibration->mVector.isEmpty() ) {
             unionTmin = std::min(unionTmin, d.mCalibration->mTmin);
             unionTmax = std::max(unionTmax, d.mCalibration->mTmax);
             unionStep = std::min(unionStep, d.mCalibration->mStep);

@@ -83,8 +83,8 @@ public:
     QList<PosteriorMeanGComposante> getChainsMeanGComposanteY();
     QList<PosteriorMeanGComposante> getChainsMeanGComposanteZ();
 
-    void memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
-    void memo_PosteriorG(PosteriorMeanGComposante &postGCompo, MCMCSplineComposante &splineComposante, const int realyAccepted);
+    void memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
+    void memo_PosteriorG(PosteriorMeanGComposante &postGCompo, const MCMCSplineComposante &splineComposante, const int realyAccepted);
 
 public:
     CurveSettings mCurveSettings;
@@ -104,6 +104,11 @@ public:
     void exportMeanGComposanteToReferenceCurves(const PosteriorMeanGComposante pMeanCompoXYZ, const QString& defaultPath, QLocale csvLocale, const QString& csvSep) const;
 
     std::vector<MCMCSpline> fullRunSplineTrace(const QList<ChainSpecs> &chains);
+    std::vector<MCMCSpline> runSplineTraceForChain(const QList<ChainSpecs>& chains, const int index);
+
+#pragma mark Loop
+    void memo_accept(const unsigned i_chain);
+    void initVariablesForChain();
 
 private:
     static void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante &spline,  double& G,  double& VarG,  double& GP,  double& GS, unsigned& i0, const Model &model);

@@ -253,10 +253,10 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             }
         }
 
-        const GraphCurve curveG = FunctionCurve(G_Data, "G", QColor(119, 95, 49) ); // This is the name of the columns when exporting the graphs
+        const GraphCurve &curveG = FunctionCurve(G_Data, "G", QColor(119, 95, 49) ); // This is the name of the columns when exporting the graphs
         const QColor envColor (119, 95, 49 , 30);
 
-        const GraphCurve curveGEnv = shapeCurve(curveGInf_Data, curveGSup_Data, "G Env",
+        const GraphCurve &curveGEnv = shapeCurve(curveGInf_Data, curveGSup_Data, "G Env",
                                          QColor(119, 95, 49), Qt::CustomDashLine, envColor);
 
         mGraph->add_curve(curveMap); // to be draw in first
@@ -267,13 +267,13 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         QColor envColor_i;
         for (int i = 0; i<mComposanteGChains.size(); ++i) {
 
-            const GraphCurve curveG_i = FunctionCurve(curveG_Data_i[i], "G Chain " + QString::number(i),
+            const GraphCurve &curveG_i = FunctionCurve(curveG_Data_i[i], "G Chain " + QString::number(i),
                                                Painting::chainColors[i]);
             mGraph->add_curve(curveG_i);
 
             envColor_i  = Painting::chainColors[i];
             envColor_i.setAlpha(30);
-            const GraphCurve curveGEnv_i = shapeCurve(curveGInf_Data_i[i], curveGSup_Data_i[i], "G Env Chain " + QString::number(i),
+            const GraphCurve &curveGEnv_i = shapeCurve(curveGInf_Data_i[i], curveGSup_Data_i[i], "G Env Chain " + QString::number(i),
                                              Painting::chainColors[i], Qt::CustomDashLine, envColor_i);
             mGraph->add_curve(curveGEnv_i);
 
@@ -295,10 +295,10 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         mGraph->add_curve(curveGPZero);
 
         QMap<type_data, type_data> GP_Data ;
-        for (size_t idx = 0; idx < mComposanteG.vecG.size() ; ++idx) {
+        for (size_t idx = 0; idx < mComposanteG.vecGP.size() ; ++idx) {
             GP_Data.insert(DateUtils::convertToAppSettingsFormat(idx*step + tmin), mComposanteG.vecGP[idx]);
         }
-        GraphCurve curveGP = FunctionCurve(GP_Data, "G Prime", QColor(119, 95, 49));
+        const GraphCurve &curveGP = FunctionCurve(GP_Data, "G Prime", QColor(119, 95, 49));
 
         mGraph->add_curve(curveGP);
 
@@ -309,7 +309,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             for (size_t idx = 0; idx < mComposanteGChains[i].vecGP.size() ; ++idx) {
                 GP_Data_i.insert( DateUtils::convertToAppSettingsFormat(idx*step + tmin), mComposanteGChains[i].vecGP[idx]);
             }
-            const GraphCurve curveGPChain = FunctionCurve(GP_Data_i, QString("G Prime Chain ") + QString::number(i), Painting::chainColors[i]);
+            const GraphCurve &curveGPChain = FunctionCurve(GP_Data_i, QString("G Prime Chain ") + QString::number(i), Painting::chainColors[i]);
             mGraph->add_curve(curveGPChain);
 
         }
@@ -324,7 +324,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         for (size_t idx = 0; idx < mComposanteG.vecGS.size() ; ++idx) {
             GS_Data.insert( DateUtils::convertToAppSettingsFormat(idx*step + tmin), mComposanteG.vecGS.at(idx));
         }
-        const GraphCurve curveGS = FunctionCurve(GS_Data, QString("G Second"), QColor(119, 95, 49));
+        const GraphCurve &curveGS = FunctionCurve(GS_Data, QString("G Second"), QColor(119, 95, 49));
         mGraph->add_curve(curveGS);
 
         for (unsigned i = 0; i < mComposanteGChains.size(); ++i) {
@@ -333,7 +333,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
             for (size_t idx = 0; idx < mComposanteGChains[i].vecGS.size() ; ++idx) {
                 GS_Data_i.insert( DateUtils::convertToAppSettingsFormat(idx*step + tmin), mComposanteGChains[i].vecGS.at(idx));
             }
-            const GraphCurve curveGSChain = FunctionCurve(GS_Data_i, QString("G Second Chain ") + QString::number(i), Painting::chainColors[i]);
+            const GraphCurve &curveGSChain = FunctionCurve(GS_Data_i, QString("G Second Chain ") + QString::number(i), Painting::chainColors[i]);
             mGraph->add_curve(curveGSChain);
 
         }

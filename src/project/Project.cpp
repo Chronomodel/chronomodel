@@ -2620,7 +2620,7 @@ void Project::deleteSelectedPhases()
     QJsonArray phases_constraints = mState.value(STATE_PHASES_CONSTRAINTS).toArray();
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
 
-    for (int i=phases.size()-1; i>=0; --i) {
+    for (auto i=phases.size()-1; i>=0; --i) {
         const QJsonObject phase = phases.at(i).toObject();
         if (phase.value(STATE_IS_SELECTED).toBool()) {
             const int phase_id = phase.value(STATE_ID).toInt();

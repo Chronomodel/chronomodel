@@ -136,7 +136,8 @@ void MCMCLoop::run()
     //----------------------- Chains --------------------------------------
 
     // initVariableForChain() reserve memory space
-    initVariablesForChain();
+
+    mProject->mModel->initVariablesForChain();
 
     mProject->mModel->mLogInit += ModelUtilities::getMCMCSettingsLog(mProject->mModel);
 
@@ -177,12 +178,12 @@ void MCMCLoop::run()
 
         QElapsedTimer initTime;
         initTime.start();
-        mAbortedReason = this->initialize();
+        mAbortedReason = initialize();
 
         if (!mAbortedReason.isEmpty())
             return;
 
-        this->memo();
+        memo();
         chain.mInitElapsedTime = initTime.elapsed();
         initTime.~QElapsedTimer();
 
@@ -231,7 +232,7 @@ void MCMCLoop::run()
             }
 
             try {
-                this->update();
+                update();
 #ifdef _WIN32
 //    SetThreadExecutionState( ES_AWAYMODE_REQUIRED); //https://learn.microsoft.com/fr-fr/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate?redirectedfrom=MSDN
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED);
@@ -242,7 +243,7 @@ void MCMCLoop::run()
                 return;
             }
 
-            this->memo();
+            memo();
             ++chain.mBurnIterIndex;
             ++chain.mTotalIter;
 
@@ -279,7 +280,7 @@ void MCMCLoop::run()
                 }
 
                 try {
-                    this->update();
+                    update();
 #ifdef _WIN32
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED); //https://learn.microsoft.com/fr-fr/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate?redirectedfrom=MSDN
 #endif
@@ -288,7 +289,7 @@ void MCMCLoop::run()
                     mAbortedReason = error;
                     return;
                 }
-                this->memo();
+                memo();
                 ++chain.mBatchIterIndex;
                 ++chain.mTotalIter;
 
@@ -355,7 +356,7 @@ void MCMCLoop::run()
 
 
             try {
-                OkToMemo =  this->update();
+                OkToMemo =  update();
 #ifdef _WIN32
     SetThreadExecutionState( ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED); //https://learn.microsoft.com/fr-fr/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate?redirectedfrom=MSDN
 #endif
@@ -365,14 +366,15 @@ void MCMCLoop::run()
             }
 
             if (thinningIdx == chain.mThinningInterval) {
-   qDebug()<<"Chaine = "<< mChainIndex << thinningIdx << OkToMemo << chain.mRealyAccepted;
+
                 thinningIdx = 1;
 
                 if (OkToMemo) {
-
-                    this->memo();
+                    memo();
                      ++chain.mRealyAccepted;
                 }
+
+                mProject->mModel->memo_accept(mChainIndex);
 
             } else {
                     thinningIdx++;

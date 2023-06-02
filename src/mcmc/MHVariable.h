@@ -73,6 +73,7 @@ public:
 
     bool tryUpdate(const double x, const double rapportToTry);
     bool adapt (const double coef_min = 0.42, const double coef_max = 0.46, const double delta = 0.01);
+    inline void memo_accept(const unsigned i_chain) {if (mLastAccepts.last()) ++mAllAccepts[i_chain];}
 
     QVector<double> acceptationForChain(const QList<ChainSpecs>& chains, int index);
     void generateGlobalRunAcceptation(const QList<ChainSpecs>& chains);
@@ -100,10 +101,10 @@ public:
     // sur les parties acquisition uniquement.
     // A stocker dans le fichier résultats .res !
 
-    QVector<bool>* mAllAccepts;
-
+    // QVector<bool>* mAllAccepts;
+    QVector<long long> mAllAccepts;
     // Computed at the end as numerical result :
-    double mGlobalAcceptation;
+    double mGlobalAcceptationPerCent;
 
     // Buffer contenant tous les taux d'acceptation calculés (1 par batch)
     // On en affiche des sous-parties (correspondant aux chaines) dans la vue des résultats

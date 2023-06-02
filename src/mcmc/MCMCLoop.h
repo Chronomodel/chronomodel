@@ -86,11 +86,12 @@ signals:
 
 protected:
     virtual QString calibrate() = 0;
-    virtual void initVariablesForChain() = 0;
+    //virtual void initVariablesForChain() = 0;
     virtual QString initialize() = 0;
 
     virtual bool update() = 0;
     virtual void memo() = 0;
+    //virtual void memo_accept(const unsigned int i_chain) = 0;
     virtual void finalize() = 0;
     virtual bool adapt(const int batchIndex) = 0;
 

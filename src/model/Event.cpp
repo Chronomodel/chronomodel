@@ -1076,9 +1076,9 @@ void Event::updateTheta(const double tmin, const double tmax)
         case MHVariable::eDoubleExp:
         {
             try{
-                //const double theta = Generator::gaussByDoubleExp(theta_avg, sigma, min, max);
-                //mTheta.tryUpdate(theta, 1.);
-                mTheta.tryUpdate(mDates[0].mTi.mX, 1); // pour test Prates
+                const double theta = Generator::gaussByDoubleExp(theta_avg, sigma, min, max);
+                mTheta.tryUpdate(theta, 1.);
+
             }
             catch(QString error){
                 throw QObject::tr("Error for event : %1 : %2").arg(mName, error);

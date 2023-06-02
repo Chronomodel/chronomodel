@@ -85,7 +85,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
             // Date::calibrate() Controls the validity of the calibration and wiggle curves
             d.calibrate(s, EventsScene->getProject(), true);
 
-            if (d.mCalibration->mCurve.size() < 5) {
+            if (d.mCalibration->mVector.size() < 6) {
                 date[STATE_DATE_VALID] = false;
                 mCalibThumb = QPixmap();
                 const double newStep = d.mCalibration->mStep/5.;
@@ -97,7 +97,8 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
                                     QMessageBox::Ok,
                                     qApp->activeWindow());
                 message.exec();
-                d.mCalibration->mCurve.clear();
+                d.mCalibration->mVector.clear();
+                d.mCalibration->mMap.clear();
                 d.mCalibration->mRepartition.clear();
                 d.mCalibration = nullptr;
             }
@@ -109,7 +110,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
               * removing a refCurve
               */
 
-            else if (d.mCalibration && !d.mCalibration->mCurve.isEmpty()) {
+            else if (d.mCalibration && !d.mCalibration->mVector.isEmpty()) {
                mCalibThumb = d.generateCalibThumb(s);
 
             } else

@@ -212,9 +212,5 @@ QMap<double, double> DateUtils::convertMapToAppSettingsFormat(const QMap<double,
         break;
     }
 
-/*   QMap<double, double> mapResult;
-   for (QMap<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
-       mapResult.insert(convertToFormat(value.key(), AppSettings::mFormatDate), value.value());
-*/
    return mapResult;
 }

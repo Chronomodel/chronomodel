@@ -473,7 +473,7 @@ void EventsScene::updateSceneFromState()
     //  Delete EventItems not in current state
     // ------------------------------------------------------
     bool hasDeleted = false;
-    for (int i = indexItemToRemove.size()-1; i >= 0; --i) {
+    for (auto i = indexItemToRemove.size()-1; i >= 0; --i) {
         QJsonObject& event = mItems[indexItemToRemove.at(i)]->mData;
         Event::Type type = Event::Type (event.value(STATE_EVENT_TYPE).toInt());
 
@@ -483,8 +483,8 @@ void EventsScene::updateSceneFromState()
                  EventItem* eventItem = (EventItem*)mItems[indexItemToRemove.at(i)];
                 QList<QGraphicsItem*> dateItems = eventItem->childItems();
 
-                int dateItemsSize = dateItems.size() -1;
-                for (int j = dateItemsSize; j >= 0; --j) {
+                const auto dateItemsSize = dateItems.size() -1;
+                for (auto j = dateItemsSize; j >= 0; --j) {
                     removeItem(dateItems.at(j));
                     delete dateItems[j];
                 }
@@ -607,7 +607,7 @@ void EventsScene::updateSceneFromState()
     // ------------------------------------------------------
     //  Delete constraints not in current state
     // ------------------------------------------------------
-    for (int i = mConstraintItems.size()-1; i >= 0; --i) {
+    for (auto i = mConstraintItems.size()-1; i >= 0; --i) {
         ArrowItem* constraintItem = mConstraintItems[i];
         QJsonObject& constraint = constraintItem->data();
 
@@ -705,13 +705,13 @@ void EventsScene::clean()
     // ------------------------------------------------------
     //  Delete all items
     // ------------------------------------------------------
-    const int itemsSize = mItems.size() - 1;
-    for (int i = itemsSize; i >= 0; --i) {
+    const auto itemsSize = mItems.size() - 1;
+    for (auto i = itemsSize; i >= 0; --i) {
         EventItem* eventItem = (EventItem*)mItems[i];
 
             QList<QGraphicsItem*> dateItems = eventItem->childItems();
-            const int dateItemsSize = dateItems.size() -1;
-            for (int j = dateItemsSize; j >= 0; --j) {
+            const auto dateItemsSize = dateItems.size() -1;
+            for (auto j = dateItemsSize; j >= 0; --j) {
                 delete dateItems.first(); // delete the object
                 dateItems.removeFirst(); // remove the pointer
             }

@@ -403,7 +403,7 @@ void ImportDataView::exportDates()
 void ImportDataView::removeCsvRows(QList<int> rows)
 {
     sortIntList(rows);
-    for (int i = rows.size()-1; i >= 0; --i) {
+    for (auto i = rows.size()-1; i >= 0; --i) {
         for (int c = 0; c < mTable->columnCount(); ++c) {
             QTableWidgetItem* item = mTable->item(rows.at(i), c);
             if (item)
@@ -416,7 +416,7 @@ void ImportDataView::removeCsvRows(QList<int> rows)
 void ImportDataView::errorCsvRows(QList<int> rows)
 {
     sortIntList(rows);
-    for (int i = rows.size()-1; i >= 0; --i) {
+    for (auto i = rows.size()-1; i >= 0; --i) {
         for (int c = 0; c < mTable->columnCount(); ++c) {
             QTableWidgetItem* item = mTable->item(rows.at(i), c);
             if (item)

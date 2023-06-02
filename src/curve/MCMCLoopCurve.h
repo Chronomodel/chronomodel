@@ -69,7 +69,7 @@ protected:
     double tminPeriod;
     double tmaxPeriod;
     bool mComputeY, mComputeZ;
-    t_prob current_ln_h_YWI_2, current_ln_h_YWI_3, current_ln_h_YWI_1_2,current_h_theta, current_h_lambda, current_h_VG;
+    t_prob current_ln_h_YWI_2, current_ln_h_YWI_3, current_ln_h_YWI_1_2, current_h_theta, current_h_lambda, current_h_VG;
 
     SplineMatrices current_splineMatrices, current_matriceWI;
     SplineResults current_spline;
@@ -91,8 +91,8 @@ protected:
  #pragma mark function
     void orderEventsByThetaReduced(QList<Event *> &event);
     void spreadEventsThetaReduced0(QList<Event *> &sortedEvents, t_reduceTime spreadSpan = 0.);
-    std::thread::id mTh_id_memoCurve;
-    std::thread mTh_memoCurve;
+    //std::thread::id mTh_id_memoCurve;
+    //std::thread mTh_memoCurve;
 
     static void memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline spline, CurveSettings::ProcessType &curveType, const int realyAccepted, ModelCurve &model);
 
@@ -109,12 +109,14 @@ protected:
 protected:
 
     virtual QString calibrate();
-    virtual void initVariablesForChain();
+   // virtual void initVariablesForChain();
     virtual QString initialize();
     virtual bool update();
     virtual bool adapt(const int batchIndex);
     virtual void memo();
+    //virtual void memo_accept(const unsigned i_chain);
     virtual void finalize();
+    
     
 private:
 
