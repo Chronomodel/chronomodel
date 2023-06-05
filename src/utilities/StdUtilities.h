@@ -360,7 +360,7 @@ double interpolate_value_from_curve(const double t, const QVector<double>& curve
 double interpolate_value_from_curve(const double x, const std::vector<double>& curve,const double Xmin, const double Xmax);
 
 //double map_area_threshold(const std::map<double, double>& density, const double threshold, const double areaMax = 1.);
-double map_area_threshold(const std::map<double, double>& density, std::map<double, double>::const_iterator prev_iter, const double prev_area, const double threshold, const double areaMax = 1.);
+double map_area_threshold(const std::map<double, double>& density, const double prev_area, const double threshold, const double areaMax = 1.);
 
 double map_area(const QMap<double, double>& map);
 float map_area(const QMap<float, float>& map);

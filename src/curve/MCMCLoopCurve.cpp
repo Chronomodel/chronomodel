@@ -3856,7 +3856,7 @@ double MCMCLoopCurve::Calcul_Variance_Rice (const QList<Event *> &events) const
 
 double MCMCLoopCurve::valeurG(const double t, const MCMCSplineComposante& spline, unsigned long &i0) const
 {
-    const unsigned n = spline.vecThetaEvents.size();
+    const auto n = spline.vecThetaEvents.size();
     const auto tReduce = mModel->reduceTime(t);
     const auto t1 = mModel->reduceTime(spline.vecThetaEvents.at(0));
     const auto tn = mModel->reduceTime(spline.vecThetaEvents.at(n-1));

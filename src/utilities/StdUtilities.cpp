@@ -894,7 +894,7 @@ const std::map<double, double> create_HPD(const QMap<double, double>& density, c
                 //prev_iter = iter;
                 ++iter;
                  qDebug()<<"create_HPD rentre "<<iter->first<<iter->second;
-                prev_area =  map_area_threshold(aMapStd, prev_iter, prev_area, iter->first, areaSearched);
+                prev_area =  map_area_threshold(aMapStd, prev_area, iter->first, areaSearched);
                 prev_iter = iter;
                 qDebug()<<"iter"<<iter->first<<prev_area;
             }
@@ -1046,7 +1046,7 @@ const std::map<int, double> create_HPD(const QMap<int, double>& density, const d
  * @param areaMax
  * @return
  */
-double map_area_threshold(const std::map<double, double>& density, std::map<double, double>::const_iterator prev_iter, const double prev_area, const double threshold, const double areaMax)
+double map_area_threshold(const std::map<double, double>& density, const double prev_area, const double threshold, const double areaMax)
 {
     if (density.size()<2)
         return 0.0;
