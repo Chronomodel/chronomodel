@@ -182,13 +182,14 @@ macx{
 	# The generated XCode project will locate FFTW files in the project directory and statically link against it.
 
 	# this is to include fftw.h in the code :
-	INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac
+	# INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac
+    INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac
 
 
 	# Link the application with FFTW library
 	# If no dylib are present, static libs (.a) are used => that's why we moved .dylib files in a "dylib" folder.
-        #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
-        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3
+        LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac" -lfftw3
+        #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3
 
 
 
