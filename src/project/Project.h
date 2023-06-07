@@ -110,7 +110,7 @@ public:
 
     static QJsonObject emptyState();
 
-    inline QJsonObject state() const { return mState;}
+    inline const QJsonObject &state() const { return mState;}
 
     QJsonObject* state_ptr() { return &mState;}
 
@@ -216,7 +216,7 @@ public slots:
 signals:
     void noResult();
     void projectStateChanged();
-    void currentEventChanged(const QJsonObject &event);
+    void currentEventChanged(QJsonObject *event);
 
     void eyedPhasesModified(const QMap<int, bool> &eyedPhases);
 
@@ -234,7 +234,7 @@ public:
     QString mName;
 
     Model* mModel;
-    MCMCLoop *mLoop; //public QThread
+    MCMCLoop* mLoop; //public QThread
 
     QMap<QString, CalibrationCurve> mCalibCurves;
     QTimer* mAutoSaveTimer;

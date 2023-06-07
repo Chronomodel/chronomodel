@@ -49,7 +49,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CurveSettings.h"
 #include "qlocale.h"
 
-EventItem::EventItem(EventsScene* scene, const QJsonObject &event, const QJsonObject &projectSettings, QGraphicsItem* parent):AbstractItem(scene, parent),
+EventItem::EventItem(EventsScene* scene, const QJsonObject &event, const QJsonObject &projectSettings, QGraphicsItem* parent):
+    AbstractItem(scene, parent),
     mProjectSettings(projectSettings),
     mWithSelectedPhase (false),
     mThumbVisible (true),
@@ -117,7 +118,7 @@ void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 }
 
 //Event Managment
-QJsonObject& EventItem::getData()
+const QJsonObject& EventItem::getData()
 {
     return mData;
 }
@@ -278,6 +279,7 @@ void EventItem::updateItemPosition(const QPointF& pos)
 {
     mData[STATE_ITEM_X] = double (pos.x());
     mData[STATE_ITEM_Y] = double (pos.y());
+    mScene->sendUpdateProject("item moved", true, false);
 }
 
 void EventItem::dropEvent(QGraphicsSceneDragDropEvent* e)
@@ -299,7 +301,7 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
     QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
     
     QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> droppedData = scene->decodeDataDrop(e);
-    QList<QPair<QString, Date>> datesDragged = droppedData.first;
+    const QList<QPair<QString, Date>> &datesDragged = droppedData.first;
     //QList<QMap<QString, double>> curveData = droppedData.second;
 
     for (int i = 0; i < datesDragged.size(); ++i) {
@@ -510,7 +512,7 @@ int EventItem::getNumberCurveLines(const CurveSettings& cs) const
     return -1;
 }
 
-void EventItem::paintBoxCurveParameter (QPainter* painter, QRectF rectBox, const CurveSettings &cs )
+void EventItem::paintBoxCurveParameter (QPainter* painter, const QRectF &rectBox, const CurveSettings &cs )
 {
     const int nbLines = getNumberCurveLines(cs);
     if (nbLines>0) {
@@ -628,7 +630,7 @@ void EventItem::paintBoxCurveParameter (QPainter* painter, QRectF rectBox, const
 
 }
 
-void EventItem::paintBoxPhases (QPainter *painter, QRectF rectBox)
+void EventItem::paintBoxPhases (QPainter *painter, const QRectF &rectBox)
 {
     QFont font, memoFont;
     memoFont = painter->font();

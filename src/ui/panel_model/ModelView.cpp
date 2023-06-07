@@ -70,7 +70,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <assert.h>
 
-ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
+ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):
+    QWidget(parent, flags),
     mEventsScene(nullptr),
     mCurSearchIdx(0),
     mPhasesScene(nullptr),
@@ -416,7 +417,7 @@ void ModelView::connectScenes()
 
     connect(mButMultiCalib,   static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ModelView::showMultiCalib);
     mMultiCalibrationView->setProject(mProject);
-    connect(mProject, &Project::projectStateChanged, this, &ModelView::updateMultiCalibration);
+    connect(mProject, &Project::projectStateChanged, this, &ModelView::updateMultiCalibrationAndEventProperties);
 
     connect(mButCurve, &Button::toggled, MainWindow::getInstance(), &MainWindow::toggleCurve);
 }
@@ -492,7 +493,8 @@ void ModelView::resetInterface()
     mMultiCalibrationView->setProject(mProject);
     mMultiCalibrationView->setEventsList(QList<Event*> ());
 
-    mEventPropertiesView->setEvent(QJsonObject());
+    mEventPropertiesView->setEvent(nullptr);//QJsonObject());
+
    // hideProperties();
     updateLayout();
 }
@@ -511,8 +513,8 @@ void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
 
 void ModelView::updateProject()
 {
-    QJsonObject state = mProject->state();
-    const ProjectSettings settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+    const QJsonObject &state = mProject->state();
+    const ProjectSettings &settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
@@ -531,28 +533,18 @@ void ModelView::updateProject()
     // false : ne pas envoyer de notification pour updater l'état du projet,
     // puisque c'est justement ce que l'on fait ici!
      // DONE BY UPDATEPROJECT ????
-/*
-    const QJsonObject& event = mEventPropertiesView->getEvent();
-    if (!event.isEmpty()) {
-        const QJsonArray events = state.value(STATE_EVENTS).toArray();
-        for (int i = 0; i < events.size(); ++i) {
-            const QJsonObject evt = events.at(i).toObject();
-            if (evt.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
-                if (evt != event)
-                    mEventPropertiesView->setEvent(evt);
-            }
-        }
-    }
-    */
+    if (mButProperties->isChecked() && mButProperties->isEnabled())
+        mEventPropertiesView->updateEvent();
+
     updateLayout();
 }
 
 bool ModelView::findCalibrateMissing()
 {
     bool calibMissing = false;
-    QJsonObject state = mProject->state();
+    const QJsonObject &state = mProject->state();
 
-    QJsonArray Qevents = state.value(STATE_EVENTS).toArray();
+    const QJsonArray &Qevents = state.value(STATE_EVENTS).toArray();
 
     /* If the Events Scene isEmpty (i.e. when the project is created)
     * There is no date to calibrate
@@ -617,7 +609,7 @@ bool ModelView::findCalibrateMissing()
 
 void ModelView::calibrateAll(ProjectSettings newS)
 {
-    QJsonObject state = mProject->state();
+    const QJsonObject &state = mProject->state();
 
     QJsonArray Qevents = state.value(STATE_EVENTS).toArray();
 
@@ -805,8 +797,6 @@ void ModelView::createPhaseInPlace()
  */
 void ModelView::showProperties()
 {
-    // Why now ?!
-  //  updateLayout();
     mAnimationHide->setStartValue(mRightRect);
     mAnimationHide->setEndValue(mRightHiddenRect);
 
@@ -852,6 +842,15 @@ void ModelView::showProperties()
 
 
         // show Properties View
+       for (auto item : mEventsScene->selectedItems()) {
+           EventItem* itm = dynamic_cast<EventItem*>(item);
+           if (itm != nullptr ) {
+                 mEventPropertiesView->setEvent(&itm->mData);
+                 break;
+           }
+       }
+
+
         mEventPropertiesView->updateEvent();
         mEventPropertiesView->show();
 
@@ -885,10 +884,9 @@ void ModelView::showProperties()
         mAnimationShow->setTargetObject(mPhasesView);
         mAnimationShow->start();
 
-
+        mEventPropertiesView->hide();
      }
 
-    //updateLayout();
 }
 
 void ModelView::hideProperties()
@@ -904,6 +902,7 @@ void ModelView::hideProperties()
        mAnimationHide->setStartValue(mRightRect);
        mAnimationHide->setEndValue(mRightHiddenRect);
        mAnimationHide->start();
+       mEventPropertiesView->hide();
   }
 
 }
@@ -971,7 +970,7 @@ void ModelView::showMultiCalib()
     updateLayout();
 }
 
-void ModelView::updateMultiCalibration()
+void ModelView::updateMultiCalibrationAndEventProperties()
 {
     if (mButMultiCalib->isChecked())
         mMultiCalibrationView->updateMultiCalib();
@@ -1035,9 +1034,9 @@ void ModelView::eventsAreSelected()
         mPhasesScene->eventsSelected();
 }
 
-void ModelView::togglePropeties()
+void ModelView::togglePropeties(AbstractItem* item)
 {
-    qDebug()<<"ModelView::togglePropeties()";
+    qDebug()<<"[ModelView::togglePropeties]";
     //eventsAreSelected();
 
     mButNewEventKnown->setDisabled(true);
@@ -1053,6 +1052,7 @@ void ModelView::togglePropeties()
     mButProperties->setChecked(true);
     mButProperties->update();
       //  updateLayout();
+    mEventPropertiesView->setEvent(&item->mData);
     showProperties();
 
 }
@@ -1169,7 +1169,7 @@ void ModelView::applyAppSettings()
     }
 
     // ------
-    mEventPropertiesView->applyAppSettings();
+   // mEventPropertiesView->applyAppSettings();
 
     for (auto&& item : mPhasesScene->getItemsList()) {
         static_cast<PhaseItem*>(item)->redrawPhase();
@@ -1178,10 +1178,10 @@ void ModelView::applyAppSettings()
 
     // ------
     mCalibrationView->applyAppSettings();
+
     mMultiCalibrationView->applyAppSettings();
 
     adaptStudyPeriodButton(mTmin, mTmax);
-
 
     updateLayout();
 }
@@ -1371,7 +1371,7 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
  */
 void ModelView::updateCalibration(const QJsonObject& date)
 {
-    qDebug() <<" ModelView::updateCalibration mUUID" << date.value(STATE_DATE_UUID).toString();
+    qDebug() <<"[ModelView::updateCalibration] mUUID" << date.value(STATE_DATE_UUID).toString();
     // Control and calibration if necessary
     if (!date.isEmpty() ) {
         Date d (date);
@@ -1391,7 +1391,7 @@ void ModelView::showCalibration(bool show)
 {
    updateLayout();
    if (show) {
-       mEventPropertiesView->updateEvent();
+       mEventPropertiesView->updateEvent(); //connect to DatesList::handleItemIsChanged() emit calibRequested(date);
 
        mCalibrationView->setVisible(true);
        mCalibrationView->repaint();

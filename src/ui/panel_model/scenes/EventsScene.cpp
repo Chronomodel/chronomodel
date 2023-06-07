@@ -147,8 +147,8 @@ void EventsScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
 
 void EventsScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
 {
-    QJsonObject& eventFrom = dynamic_cast<EventItem*>(itemFrom)->getData();
-    QJsonObject& eventTo = dynamic_cast<EventItem*>(itemTo)->getData();
+    const QJsonObject& eventFrom = dynamic_cast<EventItem*>(itemFrom)->getData();
+    const QJsonObject& eventTo = dynamic_cast<EventItem*>(itemTo)->getData();
 
     mProject->mergeEvents(eventFrom.value(STATE_ID).toInt(),
                                               eventTo.value(STATE_ID).toInt());
@@ -396,19 +396,20 @@ void EventsScene::updateSceneFromState()
     startTime.start();
     Chronometer ch ("EventsScene::updateSceneFromState");
 #endif
+    const QJsonObject &state = mProject->state();
 
     if (mProject->mState.value(STATE_EVENTS).toArray().isEmpty() && mProject->mState.value(STATE_PHASES).toArray().isEmpty() && mItems.isEmpty())
         return;
 
-    QJsonObject state = mProject->state();
-    const QJsonArray eventsInNewState = state.value(STATE_EVENTS).toArray();
-    const QJsonArray constraints = state.value(STATE_EVENTS_CONSTRAINTS).toArray();
+
+    const QJsonArray &eventsInNewState = state.value(STATE_EVENTS).toArray();
+    const QJsonArray &constraints = state.value(STATE_EVENTS_CONSTRAINTS).toArray();
 
     // case of newProject
 
 
-    QJsonObject settings = state.value(STATE_SETTINGS).toObject();
-    QJsonObject curveSettings = state.value(STATE_CURVE).toObject();
+    const QJsonObject &settings = state.value(STATE_SETTINGS).toObject();
+    const QJsonObject &curveSettings = state.value(STATE_CURVE).toObject();
 
     QProgressDialog* progress = nullptr;
     bool displayProgress = false;
@@ -519,7 +520,7 @@ void EventsScene::updateSceneFromState()
 
     for (auto&& citer : eventsInNewState) {
         const QJsonObject event = citer.toObject();
- //       qDebug()<<"updateSceneFromState event:"<<event.value(STATE_NAME).toString()<<event.value(STATE_ID).toInt();
+
         ++i;
         if (displayProgress)
             progress->setValue(i);
@@ -529,14 +530,13 @@ void EventsScene::updateSceneFromState()
         for (auto&& cIterOld : mItems) {
             EventItem* oldItem = (EventItem*) cIterOld;
             const QJsonObject OldItemEvent = oldItem->getData();
-//qDebug()<<"updateSceneFromState à comparer avec OldItemEvent:"<<OldItemEvent.value(STATE_NAME).toString()<< OldItemEvent.value(STATE_ID).toInt();
 
             if ( OldItemEvent.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
 
                 itemUnkown = false;
                 if ((event != OldItemEvent) || settingsChanged) {
                     // UPDATE ITEM
-                 //   qDebug() << "EventsScene::updateScene Event changed : id = " << event.value(STATE_ID).toInt()<< event.value(STATE_NAME).toString();
+                 //   qDebug() << "[EventsScene::updateSceneFromState] Event changed : id = " << event.value(STATE_ID).toInt() << event.value(STATE_NAME).toString();
 
                     oldItem->setEvent(event, settings);
                     oldItem->mGreyedOut = (EventItem*) cIterOld->mGreyedOut;
@@ -673,13 +673,13 @@ void EventsScene::updateSceneFromState()
     mUpdatingItems = false;
 
     EventItem* lastCurItem = currentEvent();
-    QJsonObject currentEventLast =QJsonObject() ;
+    QJsonObject currentEventLast = QJsonObject() ;
     if (lastCurItem)
             currentEventLast = lastCurItem->getData();
 
-    if (currentEventLast != currentEventPrev)
+   /* if (currentEventLast != currentEventPrev)
         emit mProject->currentEventChanged(currentEventLast);
-
+*/
     // Deleting an item that was selected involves changing the selection (and updating properties view)
     // Nothing has been triggered so far because of the mUpdatingItems flag, so we need to trigger it now!
     // As well, creating an item changes the selection because we want the newly created item to be selected.
@@ -808,14 +808,13 @@ void EventsScene::updateStateSelectionFromItem()
                 emit eventsAreSelected();
 
             // refresh the Event propreties view
-
+/*
            if (selectedItems().size() >= 1)
                 emit mProject->currentEventChanged(currentEvent); // connect to EventPropertiesView::setEvent
             else {
-                    QJsonObject itemEmpty;
-                    emit mProject->currentEventChanged( itemEmpty);
+                emit mProject->currentEventChanged( QJsonObject());
             }
-
+*/
         }
     }
 }
@@ -878,8 +877,8 @@ void EventsScene::updateSelectedEventsFromPhases()
 void EventsScene::adaptItemsForZoom(const double prop)
 {
     mZoom = prop;
-    for (int i=0; i<mItems.size(); ++i) {
-        EventItem* item = dynamic_cast<EventItem*>(mItems[i]);
+    for (auto &mIt : mItems) {
+        EventItem* item = dynamic_cast<EventItem*>(mIt);
         if (item)
                 item->setDatesVisible(mZoom > 0.3);
     }
@@ -887,16 +886,15 @@ void EventsScene::adaptItemsForZoom(const double prop)
 
 void EventsScene::centerOnEvent(int eventId)
 {
-    for (int i = 0; i<mItems.size(); ++i) {
-        EventItem* item = dynamic_cast<EventItem*>(mItems[i]);
+    for (auto &mIt : mItems) {
+        EventItem* item = dynamic_cast<EventItem*>(mIt);
         if (item) {
-            QJsonObject& event = item->getData();
+            const QJsonObject& event = item->getData();
             if ((event.value(STATE_ID).toInt() == eventId) && (views().size() > 0)) {
-                views()[0]->centerOn(item);
-                clearSelection();
-                selectedItems().append(item);
-                item->setSelected(true);
-                break;
+                    views().at(0)->centerOn(mIt);
+                    clearSelection();
+                    mIt->setSelected(true);
+                    break;
             }
         }
     }
@@ -908,16 +906,6 @@ AbstractItem* EventsScene::currentItem()
     if (!selItems.isEmpty()) {
         AbstractItem* absItem = dynamic_cast<AbstractItem*>(selItems.first());
 
-#ifdef DEBUG
-/*
-        EventItem* evtItem = dynamic_cast<EventItem*>(absItem);
-        if (evtItem)
-            qDebug() << "EventsScene::currentItem() selected items is Event " << dynamic_cast<EventItem*>(evtItem)->getEvent().value("name");
-        else if (dynamic_cast<DateItem*>(absItem))
-                qDebug() << "EventsScene::currentItem() selected items is date : " << dynamic_cast<DateItem*>(absItem)->mDate.value("name");
-        else  qDebug() << "EventsScene::currentItem() selected items : " << absItem;
-*/
-#endif
         return absItem;
     } else
         return nullptr;
@@ -927,19 +915,19 @@ AbstractItem* EventsScene::currentItem()
 EventItem* EventsScene::currentEvent() const
 {
     QList<QGraphicsItem*> selItems = selectedItems();
-    EventItem* cEvt = nullptr;
+    //EventItem* cEvt = nullptr;
     if (selItems.size() == 0)
-        return cEvt;
+        return nullptr;
 
-    QGraphicsItem* it = nullptr;
-    foreach (it , selItems) {
+    for (auto it : selItems) {
         EventItem* tmpItem = dynamic_cast< EventItem*>(it);
         if (tmpItem)
             return tmpItem;
     }
+    /*
     if (cEvt) {
 #ifdef DEBUG
-        QJsonObject& e = cEvt->getData();
+        const QJsonObject &e = cEvt->getData();
         qDebug() << "EventsScene::currentEvent() selected Event : " << e.value("name");
 #endif
         return cEvt;
@@ -949,7 +937,7 @@ EventItem* EventsScene::currentEvent() const
                 if (tmpItem) {
                     cEvt = dynamic_cast< EventItem*>(tmpItem->parentItem());
 #ifdef DEBUG
-                    QJsonObject& e = cEvt->getData();
+                    const QJsonObject &e = cEvt->getData();
                     qDebug() << "EventsScene::currentEvent() selected Event from date : " << e.value("name");
 #endif
                     return cEvt;
@@ -958,7 +946,8 @@ EventItem* EventsScene::currentEvent() const
 
             return nullptr;
     }
-
+*/
+    return nullptr;
 }
 
 
@@ -1143,30 +1132,28 @@ void EventsScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 
 bool EventsScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
 {
-    Q_UNUSED(e);
+    (void)e;
     qDebug() << "EventsScene::itemClicked";
 
     EventItem* eventClicked = dynamic_cast< EventItem*>(item);
     EventItem* current = currentEvent();
 
     // if mDrawingArrow is true, an Event is already selected and we can create a Constraint.
-    if (eventClicked ) {
-        if (current) {
-            if (eventClicked != current) {
+    if (eventClicked && current && (eventClicked != current)) {
                 // create constraint if possible
                 if (mDrawingArrow && constraintAllowed(current, eventClicked)) {
                         createConstraint(current, eventClicked);
                         mTempArrow->setVisible(false);
-                        mDrawingArrow=false;
-                       // updateStateSelectionFromItem();
+                        mDrawingArrow = false;
+
                         sendUpdateProject("Event constraint created", true, true);
                         return true;
 
                 }
 
-            }
 
-        }
+
+
 
     }
     //updateStateSelectionFromItem(); // emit sendUpdateProject
@@ -1179,7 +1166,7 @@ bool EventsScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
 void EventsScene::itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
 {
     AbstractScene::itemDoubleClicked(item, e);
-    emit eventDoubleClicked();
+    emit eventDoubleClicked(item);
 }
 
 void EventsScene::constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e)

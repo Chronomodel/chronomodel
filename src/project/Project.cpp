@@ -146,12 +146,11 @@ Project::~Project()
 void Project::initState(const QString& reason)
 {
     (void) reason;
-    const QJsonObject state = emptyState();
 
     // Do no call pushProjectState here because we don't want to store this state in the UndoStack
     // This is called when closing a project or openning a new one,
     // so the undoStack has just been cleared and we want to keep it empty at project start!
-    mState = state;
+    mState = emptyState();
 }
 
 QJsonObject Project::emptyState()
@@ -170,23 +169,12 @@ QJsonObject Project::emptyState()
 
     state[STATE_MCMC] = mcmc;
 
-    QJsonArray events;
-    state[STATE_EVENTS] = events;
-
-    QJsonArray phases;
-    state[STATE_PHASES] = phases;
-
-    QJsonArray events_constraints;
-    state[STATE_EVENTS_CONSTRAINTS] = events_constraints;
-
-    QJsonArray phases_constraints;
-    state[STATE_PHASES_CONSTRAINTS] = phases_constraints;
-
-    QJsonArray dates_trash;
-    state[STATE_DATES_TRASH] = dates_trash;
-
-    QJsonArray events_trash;
-    state[STATE_EVENTS_TRASH] = events_trash;
+    state[STATE_EVENTS] = QJsonArray();
+    state[STATE_PHASES] = QJsonArray();
+    state[STATE_EVENTS_CONSTRAINTS] = QJsonArray();
+    state[STATE_PHASES_CONSTRAINTS] = QJsonArray();
+    state[STATE_DATES_TRASH] = QJsonArray();
+    state[STATE_EVENTS_TRASH] = QJsonArray();
 
     return state;
 }
@@ -202,7 +190,6 @@ QJsonObject Project::emptyState()
  */
 bool Project::pushProjectState(const QJsonObject& state, const QString& reason, bool notify)
 {
-
     if (reason != NEW_PROJECT_REASON && reason != PROJECT_LOADED_REASON) {
         SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
         //command->setText("pushProjectState " + command->actionText());
@@ -234,9 +221,8 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
 
             emit projectStructureChanged(true); // connected to MainWindows::noResults
             return true;
-        }
 
-        else if (mDesignIsChanged)
+        } else if (mDesignIsChanged)
             emit projectDesignChanged(mModel);
 
     }
@@ -249,18 +235,17 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
 
 void Project::sendUpdateState(const QJsonObject& state, const QString& reason, bool notify)
 {
-
     qDebug()<<"[Project::sendUpdateState] "<<reason<<notify;
 
     /* The event must be allocated on the heap since the post event queue will take ownership of the event
      * and delete it once it has been posted.
      * It is not safe to access the event after it has been posted.*/
-    //StateEvent* event = new StateEvent(state, reason, notify);
+
     QGuiApplication::postEvent(this, new StateEvent(state, reason, notify), Qt::HighEventPriority);//Qt::NormalEventPriority);
 
 }
 
-void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObject& stateOld)
+void Project::checkStateModification(const QJsonObject &stateNew,const QJsonObject &stateOld)
 {
     mDesignIsChanged = false;
     mStructureIsChanged = false;
@@ -300,12 +285,12 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
                    mDesignIsChanged = true;
 
                if ( phaseNew.at(i).toObject().value(STATE_ITEM_X) != phaseOld.at(i).toObject().value(STATE_ITEM_X) ||
-                   phaseNew.at(i).toObject().value(STATE_ITEM_Y) != phaseOld.at(i).toObject().value(STATE_ITEM_Y) ) {
+                    phaseNew.at(i).toObject().value(STATE_ITEM_Y) != phaseOld.at(i).toObject().value(STATE_ITEM_Y) ) {
                    mItemsIsMoved = true;
                }
                // Check color of Phases
-               const QColor newPhaseColor = QColor(phaseNew.at(i).toObject().value(STATE_COLOR_RED).toInt(),phaseNew.at(i).toObject().value(STATE_COLOR_GREEN).toInt(),phaseNew.at(i).toObject().value(STATE_COLOR_BLUE ).toInt());
-               const QColor oldPhaseColor = QColor(phaseOld.at(i).toObject().value(STATE_COLOR_RED).toInt(),phaseOld.at(i).toObject().value(STATE_COLOR_GREEN).toInt(),phaseOld.at(i).toObject().value(STATE_COLOR_BLUE ).toInt());
+               const QColor newPhaseColor = QColor(phaseNew.at(i).toObject().value(STATE_COLOR_RED).toInt(),phaseNew.at(i).toObject().value(STATE_COLOR_GREEN).toInt(), phaseNew.at(i).toObject().value(STATE_COLOR_BLUE ).toInt());
+               const QColor oldPhaseColor = QColor(phaseOld.at(i).toObject().value(STATE_COLOR_RED).toInt(),phaseOld.at(i).toObject().value(STATE_COLOR_GREEN).toInt(), phaseOld.at(i).toObject().value(STATE_COLOR_BLUE ).toInt());
                if (newPhaseColor != oldPhaseColor)
                    mDesignIsChanged = true;
 
@@ -321,8 +306,8 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
         }
 
         // Check phases constraintes modification
-        const QJsonArray phasesConstNew = stateNew.value(STATE_PHASES_CONSTRAINTS).toArray();
-        const QJsonArray phasesConstOld = stateOld.value(STATE_PHASES_CONSTRAINTS).toArray();
+        const QJsonArray &phasesConstNew = stateNew.value(STATE_PHASES_CONSTRAINTS).toArray();
+        const QJsonArray &phasesConstOld = stateOld.value(STATE_PHASES_CONSTRAINTS).toArray();
 
         if ( phasesConstNew.size()!=phasesConstOld.size()) {
             mStructureIsChanged = true;
@@ -335,35 +320,40 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
 
          // Check Event and date modification
         const QJsonArray eventsNew = stateNew.value(STATE_EVENTS).toArray();
-        const QJsonArray eventsOld = stateOld.value(STATE_EVENTS).toArray();
-        if ( eventsNew.size()!=eventsOld.size()) {
+        const QJsonArray &eventsOld = stateOld.value(STATE_EVENTS).toArray();
+
+        if ( eventsNew.size() != eventsOld.size()) {
             mDesignIsChanged = true;
             mStructureIsChanged = true;
             return;
+
         } else {
-            for (int i = 0; i<eventsNew.size(); ++i){
+            auto ev_old = eventsOld.begin();
+            for (const auto &ev_new :eventsNew) {
+               const auto &ev_new_obj = ev_new.toObject();
+               const auto &ev_old_obj = ev_old->toObject();
                 // Check DESIGN
                // Check name of Event
-               if (eventsNew.at(i).toObject().value(STATE_NAME) != eventsOld.at(i).toObject().value(STATE_NAME))
+               if (ev_new_obj.value(STATE_NAME) != ev_old_obj.value(STATE_NAME))
                    mDesignIsChanged = true;
 
-               if ( eventsNew.at(i).toObject().value(STATE_ITEM_X) != eventsOld.at(i).toObject().value(STATE_ITEM_X) ||
-                    eventsNew.at(i).toObject().value(STATE_ITEM_Y) != eventsOld.at(i).toObject().value(STATE_ITEM_Y) ) {
+               if ( ev_new_obj.value(STATE_ITEM_X) != ev_old_obj.value(STATE_ITEM_X) ||
+                    ev_new_obj.value(STATE_ITEM_Y) != ev_old_obj.value(STATE_ITEM_Y) ) {
                    mItemsIsMoved = true;
                }
                // Check color of Event
-               QColor newEventsColor=QColor(eventsNew.at(i).toObject().value(STATE_COLOR_RED).toInt(),eventsNew.at(i).toObject().value(STATE_COLOR_GREEN).toInt(),eventsNew.at(i).toObject().value(STATE_COLOR_BLUE ).toInt());
-               QColor oldEventsColor=QColor(eventsOld.at(i).toObject().value(STATE_COLOR_RED).toInt(),eventsOld.at(i).toObject().value(STATE_COLOR_GREEN).toInt(),eventsOld.at(i).toObject().value(STATE_COLOR_BLUE ).toInt());
+               QColor newEventsColor = QColor(ev_new_obj.value(STATE_COLOR_RED).toInt(), ev_new_obj.value(STATE_COLOR_GREEN).toInt(), ev_new_obj.value(STATE_COLOR_BLUE ).toInt());
+               QColor oldEventsColor = QColor(ev_old_obj.value(STATE_COLOR_RED).toInt(), ev_old_obj.value(STATE_COLOR_GREEN).toInt(), ev_old_obj.value(STATE_COLOR_BLUE ).toInt());
                if (newEventsColor != oldEventsColor)
                    mDesignIsChanged = true;
 
                // Check EVENTS STRUCTURE
-               if ( eventsNew.at(i).toObject().value(STATE_EVENT_TYPE) != eventsOld.at(i).toObject().value(STATE_EVENT_TYPE) ||
-                    eventsNew.at(i).toObject().value(STATE_EVENT_POINT_TYPE) != eventsOld.at(i).toObject().value(STATE_EVENT_POINT_TYPE) ||
-                   eventsNew.at(i).toObject().value(STATE_EVENT_SAMPLER) != eventsOld.at(i).toObject().value(STATE_EVENT_SAMPLER) ||
-                   eventsNew.at(i).toObject().value(STATE_EVENT_PHASE_IDS) != eventsOld.at(i).toObject().value(STATE_EVENT_PHASE_IDS) ||
+               if ( ev_new_obj.value(STATE_EVENT_TYPE) != ev_old_obj.value(STATE_EVENT_TYPE) ||
+                    ev_new_obj.value(STATE_EVENT_POINT_TYPE) != ev_old_obj.value(STATE_EVENT_POINT_TYPE) ||
+                    ev_new_obj.value(STATE_EVENT_SAMPLER) != ev_old_obj.value(STATE_EVENT_SAMPLER) ||
+                    ev_new_obj.value(STATE_EVENT_PHASE_IDS) != ev_old_obj.value(STATE_EVENT_PHASE_IDS) ||
 
-                   eventsNew.at(i).toObject().value(STATE_EVENT_KNOWN_FIXED) != eventsOld.at(i).toObject().value(STATE_EVENT_KNOWN_FIXED) )
+                   ev_new_obj.value(STATE_EVENT_KNOWN_FIXED) != ev_old_obj.value(STATE_EVENT_KNOWN_FIXED) )
 
                {
                    mStructureIsChanged = true;
@@ -371,43 +361,47 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
                }
 
                // Check dates inside Event
-               QJsonArray datesNew = eventsNew.at(i).toObject().value(STATE_EVENT_DATES).toArray();
-               QJsonArray datesOld = eventsOld.at(i).toObject().value(STATE_EVENT_DATES).toArray();
+               const QJsonArray &datesNew = ev_new_obj.value(STATE_EVENT_DATES).toArray();
+               const QJsonArray &datesOld = ev_old_obj.value(STATE_EVENT_DATES).toArray();
                if ( datesNew.size() != datesOld.size()) {
                    mStructureIsChanged = true;
                    return;
                } else {
-                   for (int j = 0; j<datesNew.size(); ++j) {
+                   auto date_old = datesOld.begin();
+                   for (const auto &date_new : datesNew) {
+                       const auto &date_new_obj = date_new.toObject();
+                       const auto &date_old_obj = date_old->toObject();
                         // Check name of Date
-                        if (datesNew.at(j).toObject().value(STATE_NAME) != datesOld.at(j).toObject().value(STATE_NAME))
+                        if (date_new_obj.value(STATE_NAME) != date_old_obj.value(STATE_NAME))
                             mDesignIsChanged = true;
 
                         // No color in date JSON
                         // Check DATES STRUCTURE
-                        if ( datesNew.at(j).toObject().value(STATE_DATE_DATA) != datesOld.at(j).toObject().value(STATE_DATE_DATA) ||
-                            datesNew.at(j).toObject().value(STATE_DATE_UUID) != datesOld.at(j).toObject().value(STATE_DATE_UUID) ||
-                            datesNew.at(j).toObject().value(STATE_DATE_PLUGIN_ID) != datesOld.at(j).toObject().value(STATE_DATE_PLUGIN_ID) ||
-                            datesNew.at(j).toObject().value(STATE_DATE_VALID) != datesOld.at(j).toObject().value(STATE_DATE_VALID) ||
-                            datesNew.at(j).toObject().value(STATE_DATE_DELTA_TYPE).toInt() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_TYPE).toInt() ||
-                            datesNew.at(j).toObject().value(STATE_DATE_DELTA_FIXED).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_FIXED).toDouble() ||
-                            datesNew.at(j).toObject().value(STATE_DATE_DELTA_MIN).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_MIN).toDouble() ||
-                            datesNew.at(j).toObject().value(STATE_DATE_DELTA_MAX).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_MAX).toDouble() ||
-                            datesNew.at(j).toObject().value(STATE_DATE_DELTA_AVERAGE).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_AVERAGE).toDouble() ||
-                            datesNew.at(j).toObject().value(STATE_DATE_DELTA_ERROR).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_ERROR).toDouble() ||
-                            datesNew.at(j).toObject().value(STATE_DATE_SUB_DATES) != datesOld.at(j).toObject().value(STATE_DATE_SUB_DATES) ) {
+                        if ( date_new_obj.value(STATE_DATE_DATA) != date_old_obj.value(STATE_DATE_DATA) ||
+                            date_new_obj.value(STATE_DATE_UUID) != date_old_obj.value(STATE_DATE_UUID) ||
+                            date_new_obj.value(STATE_DATE_PLUGIN_ID) != date_old_obj.value(STATE_DATE_PLUGIN_ID) ||
+                            date_new_obj.value(STATE_DATE_VALID) != date_old_obj.value(STATE_DATE_VALID) ||
+                            date_new_obj.value(STATE_DATE_DELTA_TYPE).toInt() != date_old_obj.value(STATE_DATE_DELTA_TYPE).toInt() ||
+                            date_new_obj.value(STATE_DATE_DELTA_FIXED).toDouble() != date_old_obj.value(STATE_DATE_DELTA_FIXED).toDouble() ||
+                            date_new_obj.value(STATE_DATE_DELTA_MIN).toDouble() != date_old_obj.value(STATE_DATE_DELTA_MIN).toDouble() ||
+                            date_new_obj.value(STATE_DATE_DELTA_MAX).toDouble() != date_old_obj.value(STATE_DATE_DELTA_MAX).toDouble() ||
+                            date_new_obj.value(STATE_DATE_DELTA_AVERAGE).toDouble() != date_old_obj.value(STATE_DATE_DELTA_AVERAGE).toDouble() ||
+                            date_new_obj.value(STATE_DATE_DELTA_ERROR).toDouble() != date_old_obj.value(STATE_DATE_DELTA_ERROR).toDouble() ||
+                            date_new_obj.value(STATE_DATE_SUB_DATES) != date_old_obj.value(STATE_DATE_SUB_DATES) ) {
 
                             mStructureIsChanged = true;
                             return;
                         }
+                        ++date_old;
                      }
                 }
-
+               ++ev_old;
             }
 
         }
         // Check events  constraintes modification
-        const QJsonArray eventsConstNew = stateNew.value(STATE_EVENTS_CONSTRAINTS).toArray();
-        const QJsonArray eventsConstOld = stateOld.value(STATE_EVENTS_CONSTRAINTS).toArray();
+        const QJsonArray &eventsConstNew = stateNew.value(STATE_EVENTS_CONSTRAINTS).toArray();
+        const QJsonArray &eventsConstOld = stateOld.value(STATE_EVENTS_CONSTRAINTS).toArray();
 
         if ( eventsConstNew.size() != eventsConstOld.size()) {
             mStructureIsChanged = true;
@@ -492,7 +486,7 @@ bool Project::event(QEvent* e)
 
 }
 
-void Project::updateState(const QJsonObject &state, const QString& reason, bool notify)
+void Project::updateState(const QJsonObject &state, const QString &reason, bool notify)
 {
     //qDebug() << " ---  Receiving : " << reason;
     mState = state; //std::move(state);
@@ -500,7 +494,7 @@ void Project::updateState(const QJsonObject &state, const QString& reason, bool 
        showStudyPeriodWarning();
 
     if (notify) {
-        emit projectStateChanged();
+        emit projectStateChanged(); // connect to updateMultiCalibration() et MainWindows::updateProject
     }
 }
 
@@ -512,7 +506,7 @@ void Project::updateState(const QJsonObject &state, const QString& reason, bool 
  * @param force used for chronomodel_bash, all versions are accepted, but all calibrations are rebuilt
  * @return
  */
-bool Project::load(const QString& path, bool force)
+bool Project::load(const QString &path, bool force)
 {
     bool newerProject = false;
     bool olderProject = false;
@@ -1577,19 +1571,16 @@ void Project::deleteSelectedEvents()
             new_events_constraints.append(constraint);
     }
 
-
     stateNext[STATE_EVENTS] = new_events_list;
     stateNext[STATE_EVENTS_CONSTRAINTS] = new_events_constraints;
     stateNext[STATE_EVENTS_TRASH] = events_trash;
 
     pushProjectState(stateNext, "Event(s) deleted", true);
 
-   // mState = stateNext;
-
     // send to clear the propertiesView
-    const QJsonObject itemEmpty ;
-    emit currentEventChanged(itemEmpty); // connect to EventPropertiesView::setEvent
-
+  /*  const QJsonObject itemEmpty ;
+    emit currentEventChanged(itemEmpty); */ // connect to EventPropertiesView::setEvent
+     emit currentEventChanged(nullptr);
 
     clearModel();
     MainWindow::getInstance() -> setResultsEnabled(false);
@@ -1677,7 +1668,7 @@ void Project::recycleEvents()
     }
 }
 
-void Project::updateEvent(const QJsonObject& event, const QString& reason)
+void Project::updateEvent(const QJsonObject &event, const QString &reason)
 {
     QJsonObject stateNext = mState;
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
@@ -2215,7 +2206,7 @@ void Project::updateDate(int eventId, int dateIndex)
                         date[STATE_DATE_DELTA_ERROR] = dialog.getDeltaError();
 
                         PluginAbstract* plugin = PluginManager::getPluginFromId(date.value(STATE_DATE_PLUGIN_ID).toString());
-                        bool valid = plugin->isDateValid(date.value(STATE_DATE_DATA).toObject(), settings);
+                        const bool valid = plugin->isDateValid(date.value(STATE_DATE_DATA).toObject(), settings);
                         date[STATE_DATE_VALID] = valid;
 
                         dates[dateIndex] = date;
@@ -2443,7 +2434,7 @@ void Project::combineDates(const int eventId, const QList<int>& dateIds)
                 QJsonObject date = dates[j].toObject();*/
            
             events[i] = event;
-            emit currentEventChanged(event);
+            //emit currentEventChanged(event);
             stateNext[STATE_EVENTS] = events;
             
             pushProjectState(stateNext, "Dates combined", true);

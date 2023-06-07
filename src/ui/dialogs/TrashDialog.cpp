@@ -106,13 +106,12 @@ mType(type)
 
     // ----------
 
-    Project* project = MainWindow::getInstance()->getProject();
-
+    const QJsonObject &state = MainWindow::getInstance()->getState();
     if (mType == eDate) {
-        const QJsonObject state = project->state();
-        const ProjectSettings settings = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
 
-        QJsonArray dates = state[STATE_DATES_TRASH].toArray();
+        const ProjectSettings &settings = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
+
+        const QJsonArray &dates = state[STATE_DATES_TRASH].toArray();
 
         for (int i = 0; i<dates.size(); ++i) {
             try {
@@ -152,8 +151,7 @@ mType(type)
             }
         }
     } else if (mType == eEvent) {
-        QJsonObject state = project->state();
-        QJsonArray events = state[STATE_EVENTS_TRASH].toArray();
+        const QJsonArray &events = state[STATE_EVENTS_TRASH].toArray();
 
         for (int i=0; i<events.size(); ++i) {
             QJsonObject event = events[i].toObject();

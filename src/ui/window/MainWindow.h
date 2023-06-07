@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,10 +40,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "Singleton.h"
-//#include "AppSettings.h"
-
 #include <QMainWindow>
+
+#include "Project.h"
+#include "Singleton.h"
 
 class QMenu;
 class QAction;
@@ -54,7 +54,7 @@ class QUndoStack;
 class QUndoView;
 class QDockWidget;
 class ProjectView;
-class Project;
+
 class Event;
 class Model;
 
@@ -68,8 +68,9 @@ public:
     ~MainWindow();
 
     Project* getProject();
-    QJsonObject getState() const;
+    QJsonObject &getState() const;
 
+    inline void updateEvent(const QJsonObject &event, const QString &reason) {mProject->updateEvent(event, reason);};
     QUndoStack* getUndoStack();
     QString getCurrentPath() const;
     void setCurrentPath(const QString& path);

@@ -656,19 +656,11 @@ QJsonObject PluginGauss::mergeDates(const QJsonArray& dates)
     if (dates.size() > 1) {
 
         QStringList names;
-        // wiggle existence test
-    /*    bool withWiggle (false);
-        for (auto && d : dates) {
-             const QJsonObject dateData = d.toObject().value(STATE_DATE_DATA).toObject();
-             withWiggle = withWiggle || (dateData.value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);
-        }
-*/
+
         // ----------
         double min (-INFINITY);
         double max (+INFINITY);
-     /*   Project* project = MainWindow::getInstance()->getProject();
-        QString toFind;
-*/
+
         // il faut ajouter le décallage induit par le wiggle si il existe dWiggleMin, dWiggleMax
         double dWiggleMin = 0.;
         double dWiggleMax = 0.;

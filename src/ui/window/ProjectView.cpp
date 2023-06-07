@@ -229,8 +229,8 @@ void ProjectView::applyFilesSettings(Model* model)
 {
     // Rebuild all calibration curve
 
-    QJsonObject state = mModelView->getProject()->state();
-    ProjectSettings s = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+    const QJsonObject &state = mModelView->getProject()->state();
+    const ProjectSettings &s = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
     bool calibrate = mModelView->findCalibrateMissing();
     if (calibrate)
         mModelView->calibrateAll(s);
@@ -260,9 +260,9 @@ void ProjectView::applySettings(Model* model)
     }
 }
 
-void ProjectView::updateMultiCalibration()
+void ProjectView::updateMultiCalibrationAndEventProperties()
 {
-    mModelView->updateMultiCalibration();
+    mModelView->updateMultiCalibrationAndEventProperties();
 }
 
 /**

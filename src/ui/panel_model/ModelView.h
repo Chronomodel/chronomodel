@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef MODELVIEW_H
 #define MODELVIEW_H
 
+#include "AbstractItem.h"
 #include <QWidget>
 #include <QLineEdit>
 
@@ -96,7 +97,7 @@ public slots:
     void modifyPeriod();
     void updateCurveButton();
 
-    void updateMultiCalibration();
+    void updateMultiCalibrationAndEventProperties();
 
     void eventsAreSelected(); //connect with EventAreSelected
     //void phasesAreSelected();
@@ -106,7 +107,7 @@ public slots:
     void showCurveSettings(bool show);
     void updateRightPanelTitle();
 
-    void togglePropeties();
+    void togglePropeties(AbstractItem *item);
     void showProperties();
     void hideProperties();
     void showImport();

@@ -209,7 +209,6 @@ void CalibrationView::applyAppSettings()
     mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
 
-    //if (isVisible()) {
     if (width()> 0 ) {
         updateGraphs();
         repaint();
@@ -233,9 +232,8 @@ void CalibrationView::setDate(const QJsonObject& date)
 
 void CalibrationView::setDate(const Date& d)
 {
-    Project* project = MainWindow::getInstance()->getProject();
-    const QJsonObject state = project->state();
-    const QJsonObject settings = state.value(STATE_SETTINGS).toObject();
+    const QJsonObject &state = MainWindow::getInstance()->getState();
+    const QJsonObject &settings = state.value(STATE_SETTINGS).toObject();
     mSettings = ProjectSettings::fromJson(settings);
 
     if (mRefGraphView) {
@@ -248,7 +246,7 @@ void CalibrationView::setDate(const Date& d)
         mDate = d;
 
         mDrawing->setTitle(mDate.mName + " (" + mDate.mPlugin->getName() + ")");
-        qDebug() << "CalibrationView::setDate mUUID "<<mDate.mName << mDate.mUUID;
+        qDebug() << "[CalibrationView::setDate] mUUID "<<mDate.mName << mDate.mUUID;
         const double t1 = mSettings.getTminFormated();
         const double t2 = mSettings.getTmaxFormated();
         if (mDate.mIsValid) {
@@ -562,7 +560,7 @@ void CalibrationView::updateScroll()
     else
         mTmaxDisplay = mSettings.getTmaxFormated();
 
-    qDebug()<<"CalibrationView::updateScroll()"<<mTminDisplay<<mTmaxDisplay;
+    qDebug()<<"[CalibrationView::updateScroll] "<< mTminDisplay << mTmaxDisplay;
         // usefull when we set mStartEdit and mEndEdit at the begin of the display,
         // after a call to setDate
         if (std::isinf(-mTminDisplay) || std::isinf(mTmaxDisplay) || mTminDisplay>mTmaxDisplay )

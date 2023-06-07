@@ -385,11 +385,11 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 QJsonArray PhaseItem::getEvents() const
 {
     QString phaseId = QString::number(mData.value(STATE_ID).toInt());
-    QJsonObject state = MainWindow::getInstance()->getProject()->state();
-    QJsonArray allEvents = state.value(STATE_EVENTS).toArray();
+    const QJsonObject &state = MainWindow::getInstance()->getProject()->state();
+    const QJsonArray &allEvents = state.value(STATE_EVENTS).toArray();
     QJsonArray events;
-    for (int i = 0; i < allEvents.size(); ++i) {
-        QJsonObject event = allEvents.at(i).toObject();
+    for (const auto &ev : allEvents) {
+        QJsonObject event = ev.toObject();
         QString phasesIdsStr = event.value(STATE_EVENT_PHASE_IDS).toString();
         QStringList phasesIds = phasesIdsStr.split(",");
         if (phasesIds.contains(phaseId))

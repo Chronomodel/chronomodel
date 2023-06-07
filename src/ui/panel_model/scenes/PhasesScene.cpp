@@ -247,6 +247,10 @@ qDebug()<<"[PhasesScene::updateSceneFromState] Start";
     QElapsedTimer startTime;
     startTime.start();
 #endif
+
+    if (mProject->mState.value(STATE_PHASES).toArray().isEmpty() && mProject->mState.value(STATE_PHASES).toArray().isEmpty() && mItems.isEmpty())
+             return;
+
     const QJsonObject &state = mProject->state();
     const QJsonArray &phases = state.value(STATE_PHASES).toArray();
     const QJsonArray &constraints = state.value(STATE_PHASES_CONSTRAINTS).toArray();

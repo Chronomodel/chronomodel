@@ -115,8 +115,7 @@ void ArrowItem::updatePosition()
 {
     prepareGeometryChange();
 
-    Project* project = MainWindow::getInstance()->getProject();
-    QJsonObject state = project->state();
+    const QJsonObject &state = MainWindow::getInstance()->getState();
 
     const int fromId = mData.value(STATE_CONSTRAINT_BWD_ID).toInt();
     const int toId = mData.value(STATE_CONSTRAINT_FWD_ID).toInt();
@@ -125,18 +124,18 @@ void ArrowItem::updatePosition()
     QJsonObject to;
 
     if (mType == eEvent) {
-        const QJsonArray events = state.value(STATE_EVENTS).toArray();
+        const QJsonArray &events = state.value(STATE_EVENTS).toArray();
         for (int i=0; i<events.size(); ++i) {
-            const QJsonObject event = events.at(i).toObject();
+            const QJsonObject &event = events.at(i).toObject();
             if (event.value(STATE_ID).toInt() == fromId)
                 from = event;
             if (event.value(STATE_ID).toInt() == toId)
                 to = event;
         }
     } else {
-        const QJsonArray phases = state.value(STATE_PHASES).toArray();
+        const QJsonArray &phases = state.value(STATE_PHASES).toArray();
         for (int i=0; i<phases.size(); ++i) {
-            const QJsonObject phase = phases.at(i).toObject();
+            const QJsonObject &phase = phases.at(i).toObject();
             if (phase.value(STATE_ID).toInt() == fromId)
                 from = phase;
             if (phase.value(STATE_ID).toInt() == toId)

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -41,7 +41,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define ABSTRACTITEM_H
 
 #include "AbstractScene.h"
-//#include "CurveSettings.h"
 
 #include <QGraphicsObject>
 #include <QJsonObject>
@@ -59,7 +58,7 @@ public:
     void setSelectedInData(const bool selected);
     void setCurrentInData(const bool current);
 
-    static QFont adjustFont(const QFont &ft, const  QString & str, const QRectF &r);
+    static QFont adjustFont(const QFont &ft, const QString &str, const QRectF &r);
 
 
 protected:
@@ -70,7 +69,7 @@ protected:
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* e);
     virtual void hoverEnterEvent(QGraphicsSceneHoverEvent* e);
     virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent* e);
-    virtual QVariant itemChange(GraphicsItemChange change, const QVariant& value);
+    virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 
 
 public:

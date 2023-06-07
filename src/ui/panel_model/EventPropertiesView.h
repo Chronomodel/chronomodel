@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,11 +40,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef EVENTPROPERTIESVIEW_H
 #define EVENTPROPERTIESVIEW_H
 
+
 #include <QCheckBox>
 #include <QWidget>
 #include <QJsonObject>
 
-//#include "CurveSettings.h"
+#include "Button.h"
 
 class Label;
 class LineEdit;
@@ -57,7 +58,7 @@ class QRadioButton;
 
 class ColorPicker;
 class DatesList;
-class Button;
+
 class RadioButton;
 class GraphView;
 
@@ -74,16 +75,15 @@ public:
     void updateEvent();
     const QJsonObject& getEvent() const;
 
-    void setCalibChecked(bool checked);
-    bool isCalibChecked() const;
+    inline void setCalibChecked(bool checked) { mCalibBut->setChecked(checked);}
+    inline bool isCalibChecked() const {return mCalibBut->isChecked();};
     bool hasEvent() const;
     bool hasBound() const;
     bool hasEventWithDates() const;
 
-    // void setCurveSettings(const CurveSettings::ProcessType processType);
 
 public slots:
-    void setEvent(const QJsonObject& event);
+    void setEvent(QJsonObject *event);
     void applyAppSettings();
 
 protected:
@@ -133,7 +133,7 @@ signals:
 
 private:
     int minimumHeight;
-    QJsonObject mEvent;
+    QJsonObject *mEvent;
     int mCurrentDateIdx;
 
     QWidget* mTopView;

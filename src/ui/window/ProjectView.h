@@ -75,7 +75,7 @@ public:
    // void setFont(const QFont &font);
     void newPeriod();
 
-    void updateMultiCalibration();
+    void updateMultiCalibrationAndEventProperties();
     void eventsAreSelected();
 
 public slots:

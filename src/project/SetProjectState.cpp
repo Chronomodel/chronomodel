@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,23 +40,19 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "SetProjectState.h"
 #include "Project.h"
 
-SetProjectState::SetProjectState(Project* project,
-                                 const QJsonObject& prevState,
-                                 const QJsonObject& nextState,
-                                 const QString& reason,
-                                 bool notify):
-mProject(project),
-mPrevState(prevState),
-mNextState(nextState),
-mReason(reason),
-mNotify(notify)
+SetProjectState::SetProjectState(Project* project, const QJsonObject& prevState, const QJsonObject& nextState, const QString& reason, bool notify):
+    mProject(project),
+    mPrevState(prevState),
+    mNextState(nextState),
+    mReason(reason),
+    mNotify(notify)
 {
     // Activate this to show undo/redo actions title in the UndoStack list view
     // However, this will also display action names in the main toolbar undo/redo buttons,
     // Resizing them every time... (actually, this is the only reason to disable the line below!)
     setText(mReason);
-
 }
+
 SetProjectState:: ~SetProjectState()
 {
     mProject = nullptr;
@@ -77,7 +73,7 @@ void SetProjectState::undo()
 
 void SetProjectState::redo()
 {
-    mProject->checkStateModification(mNextState,mProject->mState);
+    mProject->checkStateModification(mNextState, mProject->mState);
     mProject->sendUpdateState(mNextState, mReason, mNotify);
 
     if (mProject->structureIsChanged() )

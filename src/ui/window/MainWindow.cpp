@@ -137,10 +137,11 @@ Project* MainWindow::getProject()
     return mProject;
 }
 
-QJsonObject MainWindow::getState() const
+QJsonObject &MainWindow::getState() const
 {
     return mProject->mState;
 }
+
 QString MainWindow::getNameProject() const
 {
     return mProject->mName;
@@ -800,7 +801,7 @@ void MainWindow::updateAppSettings()
 
     if (mProject) {
         mProject->setAppSettingsAutoSave();
-        mProjectView->updateMultiCalibration();
+        mProjectView->updateMultiCalibrationAndEventProperties();
         mProjectView->applySettings(mProject->mModel);
 
     }

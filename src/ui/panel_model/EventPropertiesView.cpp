@@ -61,8 +61,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 
-EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-
+EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):
+    QWidget(parent, flags),
     mButtonWidth  (int (1.3 * AppSettings::widthUnit()) * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE),
     mButtonHeigth  (int (1.3 * AppSettings::heigthUnit()) * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE),
     mLineEditHeight  (int (0.5 * AppSettings::heigthUnit())),
@@ -249,7 +249,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     boundLayout->addStretch();
     mBoundView->setLayout(boundLayout);
 
-    mEvent = QJsonObject();
+    mEvent = nullptr;//QJsonObject();
     mTopView->setVisible(false);
     mEventView->setVisible(false);
     mBoundView->setVisible(false);
@@ -259,15 +259,14 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 
 EventPropertiesView::~EventPropertiesView()
 {
-
 }
 
-// Event Managment
-void EventPropertiesView::setEvent(const QJsonObject& event)
+# pragma mark Event Managment
+void EventPropertiesView::setEvent(QJsonObject* event)
 {
-    // if set Event come becaus we use Project::updateDate(), we are on the same Event
+    // if set Event come because we use Project::updateDate(), we are on the same Event
     // so we are on the EventPropertiesView not on the EventScene
-    if (mEvent[STATE_ID] != event[STATE_ID]) {
+    if (mEvent != nullptr && mEvent->value(STATE_ID) != event->value(STATE_ID)) {
         mCalibBut->setChecked(false);
     }
     
@@ -275,7 +274,7 @@ void EventPropertiesView::setEvent(const QJsonObject& event)
     mEvent = event;
     
     // Select the first date if the list is not empty
-    const QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
+    const QJsonArray &dates = mEvent->value(STATE_EVENT_DATES).toArray();
     bool hasDates = (dates.size() > 0);
     if (hasDates) {
         mCurrentDateIdx = 0;
@@ -294,17 +293,18 @@ void EventPropertiesView::updateEvent()
 {
     qDebug()<<"[EventPropertiesView::updateEvent]";
 
-    if (mEvent.isEmpty()) {
+    if (mEvent == nullptr ||  mEvent->isEmpty()) {
         mTopView->setVisible(false);
         mEventView->setVisible(false);
         mBoundView->setVisible(false);
+        return;
 
     } else {
-        Event::Type type = Event::Type (mEvent.value(STATE_EVENT_TYPE).toInt());
-        const QString name = mEvent.value(STATE_NAME).toString();
-        const QColor color(mEvent.value(STATE_COLOR_RED).toInt(),
-                     mEvent.value(STATE_COLOR_GREEN).toInt(),
-                     mEvent.value(STATE_COLOR_BLUE).toInt());
+        Event::Type type = Event::Type (mEvent->value(STATE_EVENT_TYPE).toInt());
+        const QString name = mEvent->value(STATE_NAME).toString();
+        const QColor color(mEvent->value(STATE_COLOR_RED).toInt(),
+                           mEvent->value(STATE_COLOR_GREEN).toInt(),
+                           mEvent->value(STATE_COLOR_BLUE).toInt());
 
         if (name != mNameEdit->text())
             mNameEdit->setText(name);
@@ -314,8 +314,8 @@ void EventPropertiesView::updateEvent()
         // Curve
         
         // The Curve settings may have changed since the last time the event property view has been opened
-        const QJsonObject state = MainWindow::getInstance()->getProject()->mState;
-        const CurveSettings settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+        const QJsonObject &state = MainWindow::getInstance()->getState();
+        const CurveSettings &settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
         mCurveEnabled = (settings.mProcessType != CurveSettings::eProcessTypeNone);
 
         //mCurveEnabled = settings.mEnabled;
@@ -341,7 +341,7 @@ void EventPropertiesView::updateEvent()
             showZEdit = settings.showZ();
             showYErr = settings.showYErr();
         }
-        Event::PointType tyPts = Event::PointType (mEvent.value(STATE_EVENT_POINT_TYPE).toInt());
+        Event::PointType tyPts = Event::PointType (mEvent->value(STATE_EVENT_POINT_TYPE).toInt());
         mCurveNodeCB->setVisible(mCurveEnabled);
         mCurveNodeCB->setChecked(tyPts == Event::eNode);
 
@@ -353,12 +353,12 @@ void EventPropertiesView::updateEvent()
         if (showXEdit) {
             mX_IncLab->setText(settings.XLabel());
             if (settings.mVariableType == CurveSettings::eVariableTypeField) {
-                mX_IncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Z_F).toDouble()));
-                mS_X_IncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_SZ_SF).toDouble()));
+                mX_IncEdit->setText(locale().toString(mEvent->value(STATE_EVENT_Z_F).toDouble()));
+                mS_X_IncEdit->setText(locale().toString(mEvent->value(STATE_EVENT_SZ_SF).toDouble()));
 
             } else {
-                mX_IncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_X_INC_DEPTH).toDouble()));
-                mS_X_IncEdit->setText(locale().toString(mEvent.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble()));
+                mX_IncEdit->setText(locale().toString(mEvent->value(STATE_EVENT_X_INC_DEPTH).toDouble()));
+                mS_X_IncEdit->setText(locale().toString(mEvent->value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble()));
             }
         }
         
@@ -368,7 +368,7 @@ void EventPropertiesView::updateEvent()
 
         if (showYEdit) {
             mY_DecLab->setText(settings.YLabel());
-            mY_DecEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Y_DEC).toDouble()));
+            mY_DecEdit->setText(locale().toString(mEvent->value(STATE_EVENT_Y_DEC).toDouble()));
         }
 
         mS_Y_Lab->setVisible(showYErr);
@@ -376,7 +376,7 @@ void EventPropertiesView::updateEvent()
 
         if (showYErr) {
             mS_Y_Lab->setText(tr("Error"));
-            mS_Y_Edit->setText(locale().toString(mEvent.value(STATE_EVENT_SY).toDouble()));
+            mS_Y_Edit->setText(locale().toString(mEvent->value(STATE_EVENT_SY).toDouble()));
         }
 
         mZ_IntLab->setVisible(showZEdit);
@@ -387,8 +387,8 @@ void EventPropertiesView::updateEvent()
         
         if (showZEdit) {
             mZ_IntLab->setText(settings.ZLabel());
-            mZ_IntEdit->setText(locale().toString(mEvent.value(STATE_EVENT_Z_F).toDouble()));
-            mS_Z_IntEdit->setText(locale().toString(mEvent.value(STATE_EVENT_SZ_SF).toDouble()));
+            mZ_IntEdit->setText(locale().toString(mEvent->value(STATE_EVENT_Z_F).toDouble()));
+            mS_Z_IntEdit->setText(locale().toString(mEvent->value(STATE_EVENT_SZ_SF).toDouble()));
         }
 
         
@@ -398,24 +398,24 @@ void EventPropertiesView::updateEvent()
         mBoundView->setVisible(type == Event::eBound);
 
         if (type == Event::eDefault) {
-            mMethodCombo->setCurrentIndex(mEvent.value(STATE_EVENT_SAMPLER).toInt());
+            mMethodCombo->setCurrentIndex(mEvent->value(STATE_EVENT_SAMPLER).toInt());
             
-            if (mEvent.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eDoubleExp)
+            if (mEvent->value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eDoubleExp)
                 mMethodCombo->setCurrentIndex(0);
 
-            else if (mEvent.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eBoxMuller)
+            else if (mEvent->value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eBoxMuller)
                     mMethodCombo->setCurrentIndex(1);
 
-            else if (mEvent.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eMHAdaptGauss)
+            else if (mEvent->value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eMHAdaptGauss)
                 mMethodCombo->setCurrentIndex(2);
 
 
-        //       qDebug() << "EventPropertiesView::updateEvent mEvent mOrigin"  << mEvent.value(STATE_EVENT_DATES).toArray().at(0).toObject().value(STATE_DATE_ORIGIN).toInt();
-           mDatesList->setEvent(mEvent);
+            //       qDebug() << "[EventPropertiesView::updateEvent] mEvent mOrigin"  << mEvent.value(STATE_EVENT_DATES).toArray().at(0).toObject().value(STATE_DATE_ORIGIN).toInt();
+            mDatesList->setEvent(*mEvent);
             if (mCurrentDateIdx >= 0)
-                mDatesList->setCurrentRow(mCurrentDateIdx);
+                mDatesList->setCurrentRow(mCurrentDateIdx); //connect to DatesList::handleItemIsChanged() emit calibRequested(date);
 
-            const QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
+            const QJsonArray &dates = mEvent->value(STATE_EVENT_DATES).toArray();
            
             const bool hasDates = (dates.size() > 0);
             if (hasDates && mCurrentDateIdx >= 0) {
@@ -431,7 +431,7 @@ void EventPropertiesView::updateEvent()
             }
 
         } else if (type == Event::eBound) {
-            mKnownFixedEdit -> setText(locale().toString(mEvent.value(STATE_EVENT_KNOWN_FIXED).toDouble()));
+            mKnownFixedEdit -> setText(locale().toString(mEvent->value(STATE_EVENT_KNOWN_FIXED).toDouble()));
             updateKnownGraph();
         }
     }
@@ -442,24 +442,24 @@ void EventPropertiesView::updateEvent()
 
 const QJsonObject& EventPropertiesView::getEvent() const
 {
-    return mEvent;
+    return *mEvent;
 }
 
 
 void EventPropertiesView::updateEventName()
 {
-    QJsonObject event = mEvent;
+    QJsonObject event = *mEvent;
     event[STATE_NAME] = mNameEdit->text();
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event name updated"));
+    MainWindow::getInstance()->updateEvent(event, tr("Event name updated"));
 }
 
 void EventPropertiesView::updateEventColor(const QColor &color)
 {
-    QJsonObject event = mEvent;
+    QJsonObject event = *mEvent;
     event[STATE_COLOR_RED] = color.red();
     event[STATE_COLOR_GREEN] = color.green();
     event[STATE_COLOR_BLUE] = color.blue();
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event color updated"));
+    MainWindow::getInstance()->updateEvent(event, tr("Event color updated"));
 }
 
 void EventPropertiesView::updateEventMethod(int index)
@@ -476,9 +476,9 @@ void EventPropertiesView::updateEventMethod(int index)
         sp = MHVariable::eMHAdaptGauss;
         break;
     }
-    QJsonObject event = mEvent;
+    QJsonObject event = *mEvent;
     event[STATE_EVENT_SAMPLER] = sp;
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event method updated"));
+    MainWindow::getInstance()->updateEvent(event, tr("Event method updated"));
 }
 
 // Event Known Properties
@@ -487,32 +487,32 @@ void EventPropertiesView::updateKnownFixed(const QString& text)
 {
     bool ok;
     double fixedValue = locale().toDouble(text, &ok);
-    if ( ok == false || fixedValue == mEvent[STATE_EVENT_KNOWN_FIXED])
+    if ( ok == false || fixedValue == mEvent->value(STATE_EVENT_KNOWN_FIXED).toDouble())
         return;
-    QJsonObject event = mEvent;
+    QJsonObject event = *mEvent;
     event[STATE_EVENT_KNOWN_FIXED] = fixedValue;
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound fixed value updated"));
+    MainWindow::getInstance()->updateEvent(event, tr("Bound fixed value updated"));
 }
 
 // Curve
 void EventPropertiesView::updateCurveNode(bool isNode)
 {
-    QJsonObject event = mEvent;
+    QJsonObject event = *mEvent;
 
-    const QJsonObject state = MainWindow::getInstance()->getProject()->mState;
-    const CurveSettings settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+   // const QJsonObject &state = MainWindow::getInstance()->getState();
+   // const CurveSettings &settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
 
     event[STATE_EVENT_POINT_TYPE] = isNode ? Event::PointType::eNode : Event::PointType::ePoint;
 
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Node updated"));
+    MainWindow::getInstance()->updateEvent(event, tr("Event Node updated"));
 }
 
 void EventPropertiesView::updateEventXInc()
 {
-    QJsonObject event = mEvent;
+    QJsonObject event = *mEvent;
 
-    const QJsonObject state = MainWindow::getInstance()->getProject()->mState;
-    const CurveSettings settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+    const QJsonObject &state = MainWindow::getInstance()->getState();
+    const CurveSettings &settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
 
     if (settings.mProcessType == CurveSettings::eProcessTypeUnivarie && (settings.mVariableType == CurveSettings::eVariableTypeField)) {
         event[STATE_EVENT_Z_F] = locale().toDouble(mX_IncEdit->text());
@@ -520,27 +520,27 @@ void EventPropertiesView::updateEventXInc()
     } else
         event[STATE_EVENT_X_INC_DEPTH] = locale().toDouble(mX_IncEdit->text());
 
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event X-Inc updated"));
+    MainWindow::getInstance()->updateEvent(event, tr("Event X-Inc updated"));
 }
 
 void EventPropertiesView::updateEventYDec()
 {
-    QJsonObject event = mEvent;
+    QJsonObject event = *mEvent;
     event[STATE_EVENT_Y_DEC] = locale().toDouble(mY_DecEdit->text());
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Y-Dec updated"));
+    MainWindow::getInstance()->updateEvent(event, tr("Event Y-Dec updated"));
 }
 
 void EventPropertiesView::updateEventZF()
 {
-    QJsonObject event = mEvent;
+    QJsonObject event = *mEvent;
     event[STATE_EVENT_Z_F] = locale().toDouble(mZ_IntEdit->text());
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event Z-F updated"));
+    MainWindow::getInstance()->updateEvent(event, tr("Event Z-F updated"));
 }
 
 void EventPropertiesView::updateEventSXInc()
 {
-    QJsonObject event = mEvent;
-    const QJsonObject state = MainWindow::getInstance()->getProject()->mState;
+    QJsonObject event = *mEvent;
+    const QJsonObject &state = MainWindow::getInstance()->getState();
     const CurveSettings settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
     if (settings.mProcessType == CurveSettings::eProcessTypeUnivarie && (settings.mVariableType == CurveSettings::eVariableTypeField)) {
         event[STATE_EVENT_SZ_SF] = locale().toDouble(mS_X_IncEdit->text());
@@ -548,36 +548,35 @@ void EventPropertiesView::updateEventSXInc()
     } else
         event[STATE_EVENT_SX_ALPHA95_SDEPTH] = locale().toDouble(mS_X_IncEdit->text());
 
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S X-Inc updated"));
+    MainWindow::getInstance()->updateEvent(event, tr("Event S X-Inc updated"));
 }
 
 void EventPropertiesView::updateEventSYDec()
 {
-    QJsonObject event = mEvent;
+    QJsonObject event = *mEvent;
     event[STATE_EVENT_SY] = locale().toDouble(mS_Y_Edit->text());
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S Y updated"));
+    MainWindow::getInstance()->updateEvent(event, tr("Event S Y updated"));
 }
 
 void EventPropertiesView::updateEventSZF()
 {
-    QJsonObject event = mEvent;
+    QJsonObject event = *mEvent;
     event[STATE_EVENT_SZ_SF] = locale().toDouble(mS_Z_IntEdit->text());
 
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event S Z-F updated"));
+    MainWindow::getInstance()->updateEvent(event, tr("Event S Z-F updated"));
 }
 
 void EventPropertiesView::updateKnownGraph()
 {
     mKnownGraph->removeAllCurves();
 
-    Project* project = MainWindow::getInstance()->getProject();
-    QJsonObject state = project->state();
-    const QJsonObject settings = state.value(STATE_SETTINGS).toObject();
+    const QJsonObject &state = MainWindow::getInstance()->getState();
+    const QJsonObject &settings = state.value(STATE_SETTINGS).toObject();
     const double tmin = settings.value(STATE_SETTINGS_TMIN).toDouble();
     const double tmax = settings.value(STATE_SETTINGS_TMAX).toDouble();
     const double step = settings.value(STATE_SETTINGS_STEP).toDouble();
-    Bound bound;
-    bound = Bound::fromJson(mEvent);
+
+    Bound bound = Bound::fromJson(*mEvent);
 
     if ( (tmin>bound.mFixed) || (bound.mFixed>tmax) )
         return;
@@ -620,7 +619,7 @@ void EventPropertiesView::updateKnownGraph()
 
 void EventPropertiesView::createDate()
 {
-    if (!mEvent.isEmpty()) {
+    if (!mEvent->isEmpty()) {
         Button* but = dynamic_cast<Button*>(sender());
         if (but) {
             Project* project = MainWindow::getInstance()->getProject();
@@ -631,7 +630,7 @@ void EventPropertiesView::createDate()
                     Date date = project->createDateFromPlugin(plugins.at(i));
                     //date.mUUID =QString::fromStdString(Generator::UUID()); // Add UUID since version 2.1.3
                     if (!date.isNull())
-                        project->addDate(mEvent.value(STATE_ID).toInt(), date.toJson());
+                        project->addDate(mEvent->value(STATE_ID).toInt(), date.toJson());
                 }
             }
         }
@@ -645,12 +644,12 @@ void EventPropertiesView::deleteSelectedDates()
     for (int i = 0; i<items.size(); ++i)
         indexes.push_back(mDatesList->row(items[i]));
 
-    MainWindow::getInstance()->getProject()->deleteDates(mEvent.value(STATE_ID).toInt(), indexes);
+    MainWindow::getInstance()->getProject()->deleteDates(mEvent->value(STATE_ID).toInt(), indexes);
 }
 
 void EventPropertiesView::recycleDates()
 {
-    MainWindow::getInstance()->getProject()->recycleDates(mEvent.value(STATE_ID).toInt());
+    MainWindow::getInstance()->getProject()->recycleDates(mEvent->value(STATE_ID).toInt());
 }
 
 // Merge / Split
@@ -659,7 +658,7 @@ void EventPropertiesView::updateCombineAvailability()
     bool mergeable (false);
     bool splittable (false);
 
-    QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
+    QJsonArray dates = mEvent->value(STATE_EVENT_DATES).toArray();
     QList<QListWidgetItem*> items = mDatesList->selectedItems();
 
     if (items.size() == 1) {
@@ -712,30 +711,30 @@ void EventPropertiesView::updateCombineAvailability()
 
 void EventPropertiesView::sendCombineSelectedDates()
 {
-    QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
+    QJsonArray dates = mEvent->value(STATE_EVENT_DATES).toArray();
     QList<QListWidgetItem*> items = mDatesList->selectedItems();
     QList<int> dateIds;
 
     for (int i = 0; i<items.size(); ++i) {
         const int idx = mDatesList->row(items.at(i));
         if (idx < dates.size()) {
-            QJsonObject date = dates.at(idx).toObject();
+            const QJsonObject &date = dates.at(idx).toObject();
             dateIds.push_back(date.value(STATE_ID).toInt());
         }
     }
-    emit combineDatesRequested(mEvent.value(STATE_ID).toInt(), dateIds);
+    emit combineDatesRequested(mEvent->value(STATE_ID).toInt(), dateIds);
 }
 
 void EventPropertiesView::sendSplitDate()
 {
-    QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
+    const QJsonArray &dates = mEvent->value(STATE_EVENT_DATES).toArray();
     QList<QListWidgetItem*> items = mDatesList->selectedItems();
     if (items.size() > 0) {
         int idx = mDatesList->row(items[0]);
         if (idx < dates.size()) {
-            QJsonObject date = dates.at(idx).toObject();
+            const QJsonObject &date = dates.at(idx).toObject();
             int dateId = date.value(STATE_ID).toInt();
-            emit splitDateRequested(mEvent.value(STATE_ID).toInt(), dateId);
+            emit splitDateRequested(mEvent->value(STATE_ID).toInt(), dateId);
         }
     }
 }
@@ -762,22 +761,26 @@ void EventPropertiesView::paintEvent(QPaintEvent* e)
     (void) e;
     QWidget::paintEvent(e);
     QPainter p(this);
-    //p.fillRect(rect(), palette().color(QPalette::Window));
-    Event::Type type = Event::Type (mEvent.value(STATE_EVENT_TYPE).toInt());
-    if (type == Event::eBound)
-       p.fillRect(rect(), palette().color(QPalette::Window));
-    else
-        p.fillRect(0, mTopView->height(), width(), height() - mTopView->y(), Painting::borderDark);
-    // behind plugin button
 
-    if (mEvent.isEmpty()) {
+    if (mEvent == nullptr || mEvent->isEmpty()) {
         QFont font = p.font();
         font.setBold(true);
         font.setPointSize(20);
         p.setFont(font);
         p.setPen(QColor(150, 150, 150));
         p.drawText(rect(), Qt::AlignCenter, tr("No event selected !"));
+        return;
     }
+
+
+    Event::Type type = Event::Type (mEvent->value(STATE_EVENT_TYPE).toInt());
+    if (type == Event::eBound)
+       p.fillRect(rect(), palette().color(QPalette::Window));
+    else
+        p.fillRect(0, mTopView->height(), width(), height() - mTopView->y(), Painting::borderDark);
+    // behind plugin button
+
+
 
 }
 
@@ -814,11 +817,11 @@ void EventPropertiesView::applyAppSettings()
 
 void EventPropertiesView::updateLayout()
 {
-    if (mEvent.empty())
+    if (mEvent == nullptr || mEvent->empty())
         return;
 
-    QJsonObject state = MainWindow::getInstance()->getProject()->mState;
-    const CurveSettings curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+    const QJsonObject &state = MainWindow::getInstance()->getState();
+    const CurveSettings &curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
     const bool withCurve = (curveSettings.mProcessType != CurveSettings::eProcessTypeNone);
     const bool withNode = (curveSettings.mLambdaSplineType != CurveSettings::eInterpolation) && (curveSettings.mVarianceType != CurveSettings::eModeFixed);
 
@@ -1005,29 +1008,20 @@ void EventPropertiesView::updateButton() {
     mDeleteBut->update();
 }
 
-void EventPropertiesView::setCalibChecked(bool checked)
-{
-    mCalibBut->setChecked(checked);
-}
-
-bool EventPropertiesView::isCalibChecked() const
-{
-    return mCalibBut->isChecked();
-}
 
 bool EventPropertiesView::hasEvent() const
 {
-    if (!mEvent.isEmpty()) {
-        Event::Type type = Event::Type (mEvent.value(STATE_EVENT_TYPE).toInt());
-        return (type == Event::eDefault);
+    if (!mEvent->isEmpty()) {
+            Event::Type type = Event::Type (mEvent->value(STATE_EVENT_TYPE).toInt());
+            return (type == Event::eDefault);
     }
     return false;
 }
 
 bool EventPropertiesView::hasBound() const
 {
-    if (!mEvent.isEmpty()) {
-        Event::Type type = Event::Type (mEvent.value(STATE_EVENT_TYPE).toInt());
+    if (!mEvent->isEmpty()) {
+            Event::Type type = Event::Type (mEvent->value(STATE_EVENT_TYPE).toInt());
         return (type == Event::eBound);
     }
     return false;
@@ -1035,11 +1029,11 @@ bool EventPropertiesView::hasBound() const
 
 bool EventPropertiesView::hasEventWithDates() const
 {
-    if (!mEvent.isEmpty()) {
-        Event::Type type = Event::Type (mEvent.value(STATE_EVENT_TYPE).toInt());
+    if (!mEvent->isEmpty()) {
+        Event::Type type = Event::Type (mEvent->value(STATE_EVENT_TYPE).toInt());
         if (type == Event::eDefault) {
-            const QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
-            return (dates.size() > 0);
+                const QJsonArray dates = mEvent->value(STATE_EVENT_DATES).toArray();
+                return (dates.size() > 0);
         }
     }
     return false;

@@ -52,7 +52,7 @@ class QGraphicsItemAnimation;
 class QTimeLine;
 
 class DateItem;
-//class TDate;
+
 class HelpWidget;
 
 
@@ -126,7 +126,7 @@ signals:
     void csvDataLineDropAccepted(QList<int> rows);
     void csvDataLineDropRejected(QList<int> rows);
     void eventClicked();
-    void eventDoubleClicked();
+    void eventDoubleClicked(AbstractItem* item);
     void noSelection();
     void eventsAreSelected();
     void eventsAreModified(const QString& reason, bool notify, bool storeUndoCommand);

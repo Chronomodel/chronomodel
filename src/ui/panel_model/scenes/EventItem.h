@@ -48,7 +48,7 @@ class EventsScene;
 class EventItem : public AbstractItem
 {
 public:
-    EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& projectSettings, QGraphicsItem* parent = nullptr);
+    EventItem(EventsScene* scene, const QJsonObject &event, const QJsonObject &projectSettings, QGraphicsItem* parent = nullptr);
     virtual ~EventItem();
 
     virtual void setGreyedOut(const bool greyedOut);
@@ -56,13 +56,13 @@ public:
     void setWithSelectedPhase(const bool selected) {mWithSelectedPhase = selected;}
     inline bool withSelectedPhase() { return mWithSelectedPhase;}
 
-    QJsonObject& getData();
+    const QJsonObject &getData();
     virtual void setEvent(const QJsonObject& event, const QJsonObject& projectSettings);
 
     virtual QRectF boundingRect() const;
     void handleDrop(QGraphicsSceneDragDropEvent* e);
     QJsonArray getPhases() const;
-    inline QJsonObject getSettings() const {return mProjectSettings;}
+    inline const QJsonObject &getSettings() const {return mProjectSettings;}
 
     virtual void updateItemPosition(const QPointF &pos);
 
@@ -81,9 +81,9 @@ protected:
     void updateGreyedOut();
 
     int getNumberCurveLines(const CurveSettings &cs) const;
-    void paintBoxCurveParameter (QPainter *painter, QRectF rectBox, const CurveSettings &cs);
+    void paintBoxCurveParameter (QPainter *painter, const QRectF &rectBox, const CurveSettings &cs);
 
-    void paintBoxPhases (QPainter *painter, QRectF rectBox);
+    void paintBoxPhases (QPainter *painter, const QRectF &rectBox);
 
     void resizeEventItem();
     void repositionDateItems();

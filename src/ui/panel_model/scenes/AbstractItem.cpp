@@ -124,6 +124,8 @@ void AbstractItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
         QPointF ptBefore = scenePos();
         ptBefore = QPointF(round(ptBefore.rx()/delta) * delta, round(ptBefore.ry()/delta) * delta);
         setPos(ptBefore);
+        mData["item_x"] = ptBefore.x();
+        mData["item_y"] = ptBefore.y();
         e->setPos(ptBefore);
     }
     mScene->itemReleased(this, e);

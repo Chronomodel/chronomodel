@@ -79,8 +79,8 @@ public:
     const double& operator()(unsigned c, unsigned r)  const { return data[_row*c + r];} //Get
     double* ptr_at(unsigned c, unsigned r) {return (begin(data) + (_row*c + r));}
 
-    unsigned row() {return _row;}
-    unsigned column() {return _column;}
+    unsigned row() const {return _row;}
+    unsigned column() const {return _column;}
 
     double minX() const {return rangeX.first;}
     double maxX() const {return rangeX.second;}
@@ -102,6 +102,7 @@ Matrix2D initMatrix2D(size_t rows, size_t cols);
 QDataStream &operator<<( QDataStream &stream, const CurveMap &map );
 QDataStream &operator>>( QDataStream &stream, CurveMap &map );
 
+#pragma mark Usefull to debug
 void showMatrix(const Matrix2D &m, const std::string &str="");
 void showMatrix(const MatrixDiag &m, const std::string &str="");
 
