@@ -164,7 +164,7 @@ QString PluginUniform::getDateDesc(const Date* date) const
     return result;
 }
 
-bool PluginUniform::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
+bool PluginUniform::isDateValid(const QJsonObject& data, const StudyPeriodSettings& settings)
 {
     (void) data;
     (void) settings;

@@ -43,7 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AbstractScene.h"
 #include "EventItem.h"
 #include "Date.h"
-#include "ProjectSettings.h"
+#include "StudyPeriodSettings.h"
 #include "CurveSettings.h"
 
 #include <QWheelEvent>
@@ -135,7 +135,7 @@ private:
     HelpWidget* mHelpView;
     QTimer* mHelpTimer;
     
-    ProjectSettings mSettings;
+    StudyPeriodSettings mSettings;
     CurveSettings mCurveSettings;
 
 //    QGraphicsItemAnimation* mDatesAnim;

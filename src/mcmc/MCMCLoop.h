@@ -41,6 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define MCMCLOOP_H
 
 #include "MCMCSettings.h"
+#include "Model.h"
 
 #include <QThread>
 
@@ -85,17 +86,22 @@ signals:
     void setMessage(QString message);
 
 protected:
+    // Variable for update function
+    double tminPeriod;
+    double tmaxPeriod;
+    CurveSettings mCurveSettings;
+
     virtual QString calibrate() = 0;
     //virtual void initVariablesForChain() = 0;
     virtual QString initialize() = 0;
 
+    QString initialize_time(Model* model);
     virtual bool update() = 0;
     virtual void memo() = 0;
     //virtual void memo_accept(const unsigned int i_chain) = 0;
     virtual void finalize() = 0;
     virtual bool adapt(const int batchIndex) = 0;
 
-protected:
     QList<ChainSpecs> mChains;
     int mChainIndex;
     State mState;

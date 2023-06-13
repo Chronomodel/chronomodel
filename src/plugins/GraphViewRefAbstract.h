@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef GRAPHVIEWREFABSTRACT_H
 #define GRAPHVIEWREFABSTRACT_H
 
-#include "ProjectSettings.h"
+#include "StudyPeriodSettings.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
 #include "Date.h"
@@ -103,7 +103,7 @@ public:
     }
 
 
-    virtual void setDate(const Date& date, const ProjectSettings& settings)
+    virtual void setDate(const Date& date, const StudyPeriodSettings& settings)
     {
         mSettings = settings;
 
@@ -126,7 +126,7 @@ public:
         mTmaxRef = date.getTmaxRefCurve();
     }
     
-    void drawSubDates(const QJsonArray& subDates, const ProjectSettings& settings, const double tminDisplay, const double tmaxDisplay)
+    void drawSubDates(const QJsonArray& subDates, const StudyPeriodSettings& settings, const double tminDisplay, const double tmaxDisplay)
     {
         mSettings = settings;
         mGraph->removeAllCurves();
@@ -203,7 +203,7 @@ public slots:
     void changeXScaleDivision (const double &major, const int & minor) {mGraph->changeXScaleDivision(major, minor);}
 
 protected:
-    ProjectSettings mSettings;
+    StudyPeriodSettings mSettings;
     QColor mMeasureColor;
     DateConversion mFormatFuncX;
 

@@ -44,7 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QJsonObject>
 
 #include "Date.h"
-#include "ProjectSettings.h"
+#include "StudyPeriodSettings.h"
 #include "GraphView.h"
 
 class GraphViewRefAbstract;
@@ -101,7 +101,7 @@ signals:
 
 public:
     Date mDate;
-    ProjectSettings mSettings;
+    StudyPeriodSettings mSettings;
 
 private:
 

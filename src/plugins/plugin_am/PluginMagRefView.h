@@ -56,7 +56,7 @@ public:
     explicit PluginMagRefView(QWidget* parent = 0);
     virtual ~PluginMagRefView();
 
-    void setDate(const Date& d, const ProjectSettings& settings);
+    void setDate(const Date& d, const StudyPeriodSettings& settings);
 
 public slots:
     void zoomX(const double min, const double max);

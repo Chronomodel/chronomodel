@@ -266,6 +266,9 @@ void EventPropertiesView::setEvent(QJsonObject* event)
 {
     // if set Event come because we use Project::updateDate(), we are on the same Event
     // so we are on the EventPropertiesView not on the EventScene
+    if (event == nullptr)
+        return;
+
     if (mEvent != nullptr && mEvent->value(STATE_ID) != event->value(STATE_ID)) {
         mCalibBut->setChecked(false);
     }
@@ -274,9 +277,7 @@ void EventPropertiesView::setEvent(QJsonObject* event)
     mEvent = event;
     
     // Select the first date if the list is not empty
-    const QJsonArray &dates = mEvent->value(STATE_EVENT_DATES).toArray();
-    bool hasDates = (dates.size() > 0);
-    if (hasDates) {
+    if (mEvent->value(STATE_EVENT_DATES).toArray().size() > 0) {
         mCurrentDateIdx = 0;
     }
     
@@ -746,10 +747,10 @@ void EventPropertiesView::sendSplitDate()
 void EventPropertiesView::keyPressEvent(QKeyEvent* e)
 {
     if ((e->key() == Qt::Key_Escape) && mCalibBut->isChecked())
-        emit mCalibBut->click();
+        mCalibBut->click();
 
     else if ((e->key() == Qt::Key_C) && !mCalibBut->isChecked())
-        emit mCalibBut->click();
+        mCalibBut->click();
 
     QWidget::keyPressEvent(e);
 

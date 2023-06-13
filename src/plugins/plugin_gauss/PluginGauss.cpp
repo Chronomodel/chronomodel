@@ -588,7 +588,7 @@ QJsonObject PluginGauss::checkValuesCompatibility(const QJsonObject& values)
 }
 
 // Date Validity
-bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
+bool PluginGauss::isDateValid(const QJsonObject& data, const StudyPeriodSettings& settings)
 {
     const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
 

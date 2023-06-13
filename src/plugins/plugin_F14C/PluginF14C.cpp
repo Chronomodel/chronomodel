@@ -438,7 +438,7 @@ QJsonObject PluginF14C::checkValuesCompatibility(const QJsonObject& values)
 }
 
 // Date Validity
-bool PluginF14C::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
+bool PluginF14C::isDateValid(const QJsonObject& data, const StudyPeriodSettings& settings)
 {
     const QString ref_curve = data.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
     bool valid = false;

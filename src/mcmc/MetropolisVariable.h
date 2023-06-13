@@ -166,17 +166,80 @@ public:
     QVector<double> fullTraceForChain(const QList<ChainSpecs> &chains,const int index);
 
     // Trace for run part as a vector
-    QVector<double> fullRunFormatedTrace(const QList<ChainSpecs>& chains);
-    QVector<double> fullRunRawTrace(const QList<ChainSpecs>& chains);
-    QList<double>::Iterator findIter_element(const long unsigned iter, const QList<ChainSpecs>& chains, const int chainIndex ) const;
+    template <template<typename...> class C, typename T>
+    C<T> full_run_trace(C<T>* trace, const QList<ChainSpecs> &chains)
+    {
+        if (trace->isEmpty())
+            return C<T>(0);
+
+        else if (trace->size() == 1) // Cas des variables fixes
+            return C<T>(*trace);
+
+        // Calcul reserve space
+        int reserveSize = 0;
+
+        for (const ChainSpecs& chain : chains)
+            reserveSize += chain.mRealyAccepted;
+
+        C<T> result(reserveSize);
+
+        int shift = 0;
+        int shiftTrace = 0;
+
+        for (const ChainSpecs& chain : chains) {
+            // we add 1 for the init
+            const int burnAdaptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch);
+            const int runTraceSize = chain.mRealyAccepted;
+            const int firstRunPosition = shift + burnAdaptSize;
+            std::copy(trace->begin() + firstRunPosition , trace->begin() + firstRunPosition + runTraceSize , result.begin() + shiftTrace);
+
+            shiftTrace += runTraceSize;
+            shift = firstRunPosition +runTraceSize;
+        }
+        return result;
+    }
+
+    inline QVector<double> fullRunFormatedTrace(const QList<ChainSpecs> &chains) {return full_run_trace(mFormatedTrace, chains);}
+    inline QVector<double> fullRunRawTrace(const QList<ChainSpecs> &chains) {return full_run_trace(mRawTrace, chains);}
+
+    QList<double>::Iterator findIter_element(const long unsigned iter, const QList<ChainSpecs> &chains, const int chainIndex ) const;
 
     // Trace for run part of the chain as a vector
-    QVector<double> runRawTraceForChain(const QList<ChainSpecs>& chains, const int index);
-    QVector<double> runFormatedTraceForChain(const QList<ChainSpecs>& chains, const int index);
+
+    template <typename T>
+    QVector<T> run_trace_for_chain(QVector<T>* trace, const QList<ChainSpecs>& chains, const int index) {
+
+        if (trace->empty()) {
+            return QVector<T>(0);
+
+        } else if (trace->size() == 1) { // Cas des variables fixes
+            return QVector<T>(*trace);
+
+        } else  {
+
+            int shift = 0;
+            QVector<T> result;
+            for (auto i = 0; i<chains.size(); ++i)  {
+                const ChainSpecs &chain = chains.at(i);
+                // We add 1 for the init
+                const int burnAdaptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch);
+                const int traceSize = chain.mRealyAccepted;
+
+                if (i == index) {
+                    result.resize(traceSize);
+                    std::copy(trace->begin() + shift + burnAdaptSize , trace->begin() + shift + burnAdaptSize + traceSize , result.begin());
+                    break;
+                }
+                shift += traceSize + burnAdaptSize ;
+            }
+            return result;
+        }
+    }
+
+    inline QVector<double> runRawTraceForChain(const QList<ChainSpecs> &chains, const int index) {return run_trace_for_chain(mRawTrace, chains, index); };
+    inline QVector<double> runFormatedTraceForChain(const QList<ChainSpecs> &chains, const int index) {return run_trace_for_chain(mRawTrace, chains, index); };
 
     QVector<double> correlationForChain(const int index);
-
-    // -----
 
     virtual QString resultsString(const QString& nl = "<br>",
                                   const QString& noResultMessage = QObject::tr("No result to display"),
@@ -187,17 +250,6 @@ public:
     QStringList getResultsList(const QLocale locale, const int precision = 0, const bool withDateFormat = true);
 
 
-    /* obsolete change with the operator& << and >>
-     * QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data );
-     *
-     * QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data );
-    */
-     /*   void saveToStreamOfQByteArray(QDataStream *out);
-        void saveToStream(QDataStream &out);
-
-        void loadFromStreamOfQByteArray(QDataStream *in);
-        void loadFromStream(QDataStream &in);
-*/
 //public slots:
       void updateFormatedTrace(const DateUtils::FormatDate fm);
 
@@ -205,10 +257,6 @@ private:
     void generateBufferForHisto(double* input, const QVector<double> &dataSrc, const int numPts, const double a, const double b);
     QMap<double, double> bufferToMap(const double* buffer);
 
-
-
-signals:
-   // void formatChanged(); // unused
 
 
 };

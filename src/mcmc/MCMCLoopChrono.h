@@ -51,18 +51,21 @@ class MCMCLoopChrono: public MCMCLoop
 public:
     MCMCLoopChrono(Model* model, Project* project);
     ~MCMCLoopChrono();
+    Model* mModel;
 
 protected:
+    QString initialize_time0();
+
     virtual QString calibrate();
-    //virtual void initVariablesForChain();
+
+    virtual QString initialize0();
     virtual QString initialize();
+
     virtual bool update();
     virtual bool adapt(const int batchIndex);
     virtual void memo();
     virtual void finalize();
 
-public:
-    Model* mModel;
 
 };
 

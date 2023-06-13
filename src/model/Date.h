@@ -41,7 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define DATE_H
 
 #include "MHVariable.h"
-#include "ProjectSettings.h"
+#include "StudyPeriodSettings.h"
 
 #include <QMap>
 #include <QJsonObject>
@@ -104,7 +104,7 @@ public:
     CalibrationCurve* mWiggleCalibration;
 
     QMap<double, double> mCalibHPD;
-    ProjectSettings mSettings;
+    StudyPeriodSettings mSettings;
 
     QJsonArray mSubDates;
     double mMixingLevel;
@@ -126,7 +126,7 @@ public:
     void fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
 
-    static Date fromCSV(const QStringList &dataStr, const QLocale& csvLocale, const ProjectSettings settings);
+    static Date fromCSV(const QStringList &dataStr, const QLocale& csvLocale, const StudyPeriodSettings settings);
     QStringList toCSV(const QLocale& csvLocale) const;
 
     long double getLikelihood(const double& t) const;
@@ -138,10 +138,10 @@ public:
 
     void reset();
 
-    void calibrate(const ProjectSettings settings, Project *project, bool truncate); // used for item
+    void calibrate(const StudyPeriodSettings settings, Project *project, bool truncate); // used for item
     inline void calibrate(Project *project, bool truncate = true) {calibrate(mSettings, project, truncate);};
 
-    void calibrateWiggle(const ProjectSettings settings, Project *project);
+    void calibrateWiggle(const StudyPeriodSettings settings, Project *project);
     inline void calibrateWiggle(Project *project) {calibrateWiggle(mSettings, project);};
 
     double getLikelihoodFromCalib(const double &t) const;
@@ -158,8 +158,8 @@ public:
 
     QVector<double> getFormatedRepartition() const;
 
-    QPixmap generateCalibThumb(ProjectSettings settings);
-    QPixmap generateUnifThumb(ProjectSettings settings);
+    QPixmap generateCalibThumb(StudyPeriodSettings settings);
+    QPixmap generateUnifThumb(StudyPeriodSettings settings);
 
     QColor getEventColor() const;
 

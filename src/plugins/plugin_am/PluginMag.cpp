@@ -910,7 +910,7 @@ PluginSettingsViewAbstract* PluginMag::getSettingsView()
 }
 
 //Date validity
-bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
+bool PluginMag::isDateValid(const QJsonObject& data, const StudyPeriodSettings& settings)
 {
     qDebug() <<"PluginMag::isDateValid for="<< data.value(STATE_NAME).toString();
     // check valid curve
@@ -979,7 +979,7 @@ return valid;
 
 }
 
-bool PluginMag::measureIsValidForCurve(const double m, const QString& ref, const QJsonObject& data, const ProjectSettings& settings)
+bool PluginMag::measureIsValidForCurve(const double m, const QString& ref, const QJsonObject& data, const StudyPeriodSettings& settings)
 {
     const RefCurve& curve = mRefCurves.value(ref);
     bool valid = false;

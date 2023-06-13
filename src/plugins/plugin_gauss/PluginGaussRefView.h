@@ -56,7 +56,7 @@ public:
     explicit PluginGaussRefView(QWidget* parent = nullptr);
     virtual ~PluginGaussRefView();
 
-    void setDate(const Date& d, const ProjectSettings& settings);
+    void setDate(const Date& d, const StudyPeriodSettings& settings);
 
 public slots:
     void zoomX(const double min, const double max);

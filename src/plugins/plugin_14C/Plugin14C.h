@@ -93,7 +93,7 @@ public:
     QList<QHash<QString, QVariant>> getGroupedActions();
 
     QJsonObject checkValuesCompatibility(const QJsonObject& values);
-    bool isDateValid(const QJsonObject& data, const ProjectSettings& settings);
+    bool isDateValid(const QJsonObject& data, const StudyPeriodSettings& settings);
 
     bool areDatesMergeable(const QJsonArray& dates);
     QJsonObject mergeDates(const QJsonArray& dates);

@@ -63,12 +63,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class Model;
 class Project;
 
-MCMCLoopChrono::MCMCLoopChrono(Model* model, Project* project):MCMCLoop(project),
-    mModel(model)
+MCMCLoopChrono::MCMCLoopChrono(Model* model, Project* project):
+    MCMCLoop(project)
 {
+    mModel = model;
     if (mModel)
         setMCMCSettings(mModel->mMCMCSettings);
 
+    mCurveSettings.mTimeType = CurveSettings::eModeBayesian;
 }
 
 MCMCLoopChrono::~MCMCLoopChrono()
@@ -143,6 +145,11 @@ QString MCMCLoopChrono::calibrate()
 
 QString MCMCLoopChrono::initialize()
 {
+    return initialize_time(mModel);
+}
+
+QString MCMCLoopChrono::initialize0()
+{
     QList<Phase*>& phases (mModel->mPhases);
     QList<PhaseConstraint*>& phasesConstraints (mModel->mPhaseConstraints);
 
@@ -162,48 +169,65 @@ QString MCMCLoopChrono::initialize()
     // -------------------------- Init gamma ------------------------------
     emit stepChanged(tr("Initializing Phase Gaps..."), 0, phasesConstraints.size());
     int i = 0;
-    for (auto&& phC : phasesConstraints) {
-        phC->initGamma();
-        if (isInterruptionRequested())
-            return ABORTED_BY_USER;
-        ++i;
-        emit stepProgressed(i);
+    try {
+        for (auto&& phC : phasesConstraints) {
+            phC->initGamma();
+            if (isInterruptionRequested())
+                return ABORTED_BY_USER;
+            ++i;
+            emit stepProgressed(i);
+        }
+    }  catch (...) {
+        qWarning() <<"Init Gamma ???";
+        mAbortedReason = QString("Error in Init Gamma ???");
+        return mAbortedReason;
     }
 
     // ----------------------- Init tau -----------------------------------------
     emit stepChanged(tr("Initializing Phase Durations..."), 0, phases.size());
     i = 0;
-    for (auto&& ph : phases) {
-        ph->initTau(tminPeriod, tmaxPeriod);
+    try {
+        for (auto&& ph : phases) {
+            ph->initTau(tminPeriod, tmaxPeriod);
 
-        if (isInterruptionRequested())
-            return ABORTED_BY_USER;
-        ++i;
-        emit stepProgressed(i);
+            if (isInterruptionRequested())
+                return ABORTED_BY_USER;
+            ++i;
+            emit stepProgressed(i);
+        }
+    }  catch (...) {
+        qWarning() <<"Init Tau ???";
+        mAbortedReason = QString("Error in Init Tau ???");
+        return mAbortedReason;
     }
 
     /* -------------- Init Bounds --------------
     * => Init borne :
     *  - si valeur fixe, facile!
     * ---------------------------------------------------------------- */
+    try {
+        for (Event* ev : mModel->mEvents) {
 
-    for (Event* ev : mModel->mEvents) {
+            if (ev->type() == Event::eBound) {
+                Bound* bound = dynamic_cast<Bound*>(ev);
 
-        if (ev->type() == Event::eBound) {
-            Bound* bound = dynamic_cast<Bound*>(ev);
-
-            if (bound) {
-                bound->mTheta.mX = bound->mFixed;
-                bound->mTheta.memo();
-                bound->mTheta.mLastAccepts.clear();
-                bound->mTheta.tryUpdate(bound->mTheta.mX, 2.);
-
-                bound->mInitialized = true;
+                if (bound) {
+                    bound->mTheta.mX = bound->mFixed;
+                    bound->mThetaReduced = mModel->reduceTime(bound->mTheta.mX);
+                    bound->mTheta.memo();
+                    bound->mTheta.mLastAccepts.clear();
+                    //bound->mTheta.tryUpdate(bound->mTheta.mX, 2.);
+                    bound->mTheta.memo(); // non sauvegarder dans Loop.memo()
+                    bound->mInitialized = true;
+                }
+                bound = nullptr;
             }
-            bound = nullptr;
         }
+    }  catch (...) {
+        qWarning() <<"Init Bound ???";
+        mAbortedReason = QString("Error in Init Bound ???");
+        return mAbortedReason;
     }
-
     // ----------------------------------------------------------------
     //  Init theta event, ti, ...
     // ----------------------------------------------------------------
@@ -285,8 +309,7 @@ QString MCMCLoopChrono::initialize()
                 if (!date.mCalibration->mRepartition.isEmpty()) {
                     const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mCalibration->mRepartition);
                     date.mTi.mX = date.mCalibration->mTmin + idx * date.mCalibration->mStep;
-                  //  qDebug()<<"MCMCLoopChrono::Init"<<date.mName <<" mTheta.mx="<<QString::number(date.mTheta.mX, 'g', 15)<<date.mCalibration->mTmin<<date.mCalibration->mStep;
-                  //  qDebug()<<"MCMCLoopChrono::Init"<<date.mName <<" sigma="<<sigma;
+
 
                 } else { // in the case of mRepartion curve is null, we must init ti outside the study period
                        // For instance we use a gaussian random sampling
@@ -406,8 +429,7 @@ QString MCMCLoopChrono::initialize()
 
 bool MCMCLoopChrono::update()
 {
-    const double tminPeriod = mModel->mSettings.mTmin;
-    const double tmaxPeriod = mModel->mSettings.mTmax;
+
     /* --------------------------------------------------------------
      *  A - Update ti Dates
      *  B - Update Theta Events
@@ -448,13 +470,11 @@ bool MCMCLoopChrono::update()
             event->updateS02();
 
         //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
-        //for (auto&& phInEv : event->mPhases)
-          //  phInEv->updateAll(tminPeriod, tmaxPeriod);
         /* --------------------------------------------------------------
          * C.1 - Update Alpha, Beta & Duration Phases
          * -------------------------------------------------------------- */
         //  Update Phases -set mAlpha and mBeta ; they coud be used by the Event in the other Phase ----------------------------------------
-        std::for_each(PAR event->mPhases.begin(), event->mPhases.end(), [tminPeriod, tmaxPeriod] (Phase* p) {p->update_AlphaBeta (tminPeriod, tmaxPeriod);});
+        std::for_each(PAR event->mPhases.begin(), event->mPhases.end(), [this] (Phase* p) {p->update_AlphaBeta (tminPeriod, tmaxPeriod);});
 
     }
 
@@ -462,7 +482,7 @@ bool MCMCLoopChrono::update()
     /* --------------------------------------------------------------
      *  C.2 - Update Tau Phases
      * -------------------------------------------------------------- */
-    std::for_each(PAR mModel->mPhases.begin(), mModel->mPhases.end(), [tminPeriod, tmaxPeriod] (Phase* p) {p->update_Tau (tminPeriod, tmaxPeriod);});
+    std::for_each(PAR mModel->mPhases.begin(), mModel->mPhases.end(), [this] (Phase* p) {p->update_Tau (tminPeriod, tmaxPeriod);});
 
 
     /* --------------------------------------------------------------

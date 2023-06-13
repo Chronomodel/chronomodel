@@ -46,7 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginUniform.h"
 
 #include "QtUtilities.h"
-#include "ProjectSettings.h"
+#include "StudyPeriodSettings.h"
 
 #include "Project.h"
 #include "MainWindow.h"
@@ -279,7 +279,7 @@ void Date::fromJson(const QJsonObject& json)
     mIsSelected = false;
      
     Project* project = MainWindow::getInstance()->getProject();
-    mSettings = ProjectSettings::fromJson(project->mState.value(STATE_SETTINGS).toObject()); // ProjectSettings::fromJson is static
+    mSettings = StudyPeriodSettings::fromJson(project->mState.value(STATE_SETTINGS).toObject()); // StudyPeriodSettings::fromJson is static
     mSubDates = json.value(STATE_DATE_SUB_DATES).toArray();
 
     mMixingLevel = project->mState.value(STATE_MCMC).toObject().value(STATE_MCMC_MIXING).toDouble();
@@ -323,8 +323,10 @@ void Date::fromJson(const QJsonObject& json)
                     sd.fromJson(d.toObject());
                     sd.calibrate(project);
 
-                    tmin = std::min(sd.mCalibration->mTmin, tmin);
-                    tmax = std::max(sd.mCalibration->mTmax, tmax);
+                    if (sd.mCalibration) {
+                        tmin = std::min(sd.mCalibration->mTmin, tmin);
+                        tmax = std::max(sd.mCalibration->mTmax, tmax);
+                    }
                 }
 
             }
@@ -540,7 +542,7 @@ void Date::reset()
  * @param truncate Restrict the calib and repartition vectors to where data are
  */
 
-void Date::calibrate(const ProjectSettings settings, Project *project, bool truncate)
+void Date::calibrate(const StudyPeriodSettings settings, Project *project, bool truncate)
 {
   // Check if the ref curve is in the plugin list
 
@@ -697,7 +699,7 @@ void Date::calibrate(const ProjectSettings settings, Project *project, bool trun
  * @param settings
  * @param project
  */
-void Date::calibrateWiggle(const ProjectSettings settings, Project *project)
+void Date::calibrateWiggle(const StudyPeriodSettings settings, Project *project)
 {
   // Check if the ref curve is in the plugin list
       if (mDeltaType == Date::eDeltaNone) {
@@ -1213,7 +1215,7 @@ void Date::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, con
 
 }
 
-QPixmap Date::generateUnifThumb(ProjectSettings settings)
+QPixmap Date::generateUnifThumb(StudyPeriodSettings settings)
 {
     if (mIsValid){
         //  No need to draw the graph on a large size
@@ -1295,7 +1297,7 @@ QPixmap Date::generateUnifThumb(ProjectSettings settings)
  * @brief Uses the calibration curve already calculated to update the thumbnail.
  * @return
  */
-QPixmap Date::generateCalibThumb(ProjectSettings settings)
+QPixmap Date::generateCalibThumb(StudyPeriodSettings settings)
 {
     if (mIsValid) {
         //  No need to draw the graph on a large size
@@ -1594,7 +1596,7 @@ void Date::updateSigmaReParam(Event* event)
 
 
 // CSV dates
-Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale, const ProjectSettings settings)
+Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale, const StudyPeriodSettings settings)
 {
     Date date;
     const QString pluginName = dataStr.first();

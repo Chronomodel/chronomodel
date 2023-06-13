@@ -67,8 +67,8 @@ public:
     ~StudyPeriodDialog();
 
     void setStep(double step, bool forced, double suggested);
-    void setSettings(const ProjectSettings& s);
-    ProjectSettings getSettings() const;
+    void setSettings(const StudyPeriodSettings& s);
+    StudyPeriodSettings getSettings() const;
     double step() const;
     bool forced() const;
 

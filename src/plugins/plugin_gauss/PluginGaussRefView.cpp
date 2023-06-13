@@ -64,7 +64,7 @@ PluginGaussRefView::~PluginGaussRefView()
 
 }
 
-void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settings)
+void PluginGaussRefView::setDate(const Date& date, const StudyPeriodSettings& settings)
 {
     GraphViewRefAbstract::setDate(date, settings);
     

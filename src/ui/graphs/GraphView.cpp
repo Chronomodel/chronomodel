@@ -49,7 +49,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtSvg>
 #include <QLocale>
 
-class ProjectSettings;
+class StudyPeriodSettings;
 
 GraphView::GraphView(QWidget *parent):
 mStepMinWidth(3), // define when the minor scale on axis can appear

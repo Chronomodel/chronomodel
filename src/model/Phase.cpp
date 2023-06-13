@@ -744,48 +744,18 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     try {
         for (const auto& t : concaTrace) {
 
-            int idxGridMin = inRange(0, (int) ceil((t - t_min_grid - h_2) / delta_t), maxGrid) ;
+            int idxGridMin = std::clamp(0, (int) ceil((t - t_min_grid - h_2) / delta_t), maxGrid) ;
 
             if ((t - t_min_grid - h_2) / delta_t == (double) idxGridMin && (t - t_min_grid - h_2)>0) {
                 ++idxGridMin;
             }
-            const int idxGridMax = inRange(0, (int) floor((t - t_min_grid + h_2) / delta_t), maxGrid) ;
+            const int idxGridMax = std::clamp(0, (int) floor((t - t_min_grid + h_2) / delta_t), maxGrid) ;
 
             for (auto&& ni = NiTot.begin() + idxGridMin; ni != NiTot.begin() + idxGridMax +1; ++ni) {
                 ++*ni ;
             }
 
         }
-
-        // Ajout artificiel des events et bornes fixes
-       // const int nRealyAccepted = std::accumulate(mModel->mChains.begin(), mModel->mChains.end(), 0, [] (int sum, ChainSpecs c) {return sum + c.mRealyAccepted;});
-       /* for (const auto& ev : mEvents) {
-            if (ev->mTheta.mSamplerProposal == MHVariable::eFixe) {
-                auto t = ev->mTheta.mRawTrace->at(0);
-                int idxGridMin = inRange(0, (int) ceil((t - t_min_grid - h_2) / delta_t), maxGrid) ;
-
-                if ((t - t_min_grid - h_2) / delta_t == (double) idxGridMin && (t - t_min_grid - h_2)>0) {
-                    ++idxGridMin;
-                }
-
-                int idxGridMax = inRange(0, (int) floor((t - t_min_grid + h_2) / delta_t), maxGrid) ;
-
-                if ((t - t_min_grid + h_2) / delta_t == (double) idxGridMax && idxGridMax>0) {
-                    --idxGridMax;
-                }
-
-
-                if (idxGridMax == idxGridMin) {
-                    *(NiTot.begin()+idxGridMin) += nRealyAccepted;
-
-                } else {
-                    for (auto&& ni = NiTot.begin() + idxGridMin; ni != NiTot.begin() + idxGridMax + 1; ++ni) {
-                        *ni += nRealyAccepted;
-                    }
-                }
-                nr += nRealyAccepted;
-            }
-        } */
 
     } catch (std::exception& e) {
         qWarning()<< "[Phase::generateActivity] exception caught: " << e.what() << '\n';

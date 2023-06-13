@@ -85,7 +85,7 @@ Model::Model(const QJsonObject& json, QObject * parent):
     // same code as fromJSON
     if (json.contains(STATE_SETTINGS)) {
         const QJsonObject settings = json.value(STATE_SETTINGS).toObject();
-        mSettings = ProjectSettings::fromJson(settings);
+        mSettings = StudyPeriodSettings::fromJson(settings);
     }
 
     if (json.contains(STATE_MCMC)) {
@@ -303,7 +303,7 @@ void Model::fromJson(const QJsonObject& json)
 {
     if (json.contains(STATE_SETTINGS)) {
         const QJsonObject settings = json.value(STATE_SETTINGS).toObject();
-        mSettings = ProjectSettings::fromJson(settings);
+        mSettings = StudyPeriodSettings::fromJson(settings);
     }
 
     if (json.contains(STATE_MCMC)) {
@@ -1267,12 +1267,13 @@ void Model::memo_accept(const unsigned i_chain)
 {
     for (const auto& event : mEvents) {
        //--------------------- Memo Events -----------------------------------------
-       event->mTheta.memo_accept(i_chain);
+       if (event->mTheta.mSamplerProposal != MHVariable::eFixe)
+            event->mTheta.memo_accept(i_chain);
 
 
-       if (event->mS02.mSamplerProposal != MHVariable::eFixe) {
+       if (event->mS02.mSamplerProposal != MHVariable::eFixe)
             event->mS02.memo_accept(i_chain);
-       }
+
 
        //--------------------- Memo Dates -----------------------------------------
        for (auto&& date : event->mDates )   {

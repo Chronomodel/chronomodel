@@ -102,15 +102,11 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
     mGraph->setFormatFunctX(nullptr);
     mGraph->setBackgroundColor(QColor(230, 230, 230));
     
-    QString resultsText;
-    QString resultsHTML;
+    const QString resultsText = ModelUtilities::curveResultsText(modelCurve);
+    const QString resultsHTML = ModelUtilities::curveResultsHTML(modelCurve);
 
-    resultsText = ModelUtilities::curveResultsText(modelCurve);
-    resultsHTML = ModelUtilities::curveResultsHTML(modelCurve);
 
     setNumericalResults(resultsHTML, resultsText);
-
-    double t;
 
     // We use the parameter saved with the map
     const double step = (mComposanteG.mapG.maxX() - mComposanteG.mapG.minX()) / (mComposanteG.mapG._column -1);
@@ -120,8 +116,9 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         std::vector<CurveRefPts> curveEventsPoints;
 
         // intallation des points de ref
-        CurveRefPts ref;
+
         for (auto& ePts : mEventsPoints) {
+            CurveRefPts ref;
             ref.Xmin = DateUtils::convertToAppSettingsFormat(ePts.Xmin);
             ref.Xmax = DateUtils::convertToAppSettingsFormat(ePts.Xmax);
             if (ref.Xmin > ref.Xmax)
@@ -140,6 +137,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         std::vector<CurveRefPts> curveDataPoints;
 
         for (auto& dPts : mDataPoints) {
+            CurveRefPts ref;
             ref.Xmin = DateUtils::convertToAppSettingsFormat(dPts.Xmin);
             ref.Xmax = DateUtils::convertToAppSettingsFormat(dPts.Xmax);
             if (ref.Xmin > ref.Xmax)
@@ -235,7 +233,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
 
         for (size_t idx = 0; idx < mComposanteG.vecG.size() ; ++idx) {
 
-            t = DateUtils::convertToAppSettingsFormat(idx*step + tmin);
+            const double t = DateUtils::convertToAppSettingsFormat(idx*step + tmin);
 
             G_Data.insert(t, mComposanteG.vecG[idx]);
             // 95% envelope  https://en.wikipedia.org/wiki/1.96
@@ -400,6 +398,4 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
         mGraph->setCurveVisible(QString("G Second Chain ") + QString::number(i), mShowChainList.at(i) && showGS);
     }
 
-  //  mGraph->adjustYScale();
-    //mGraph->repaintGraph(false);
 }

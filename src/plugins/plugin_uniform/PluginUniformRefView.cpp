@@ -63,7 +63,7 @@ PluginUniformRefView::~PluginUniformRefView()
 
 }
 
-void PluginUniformRefView::setDate(const Date& date, const ProjectSettings& settings)
+void PluginUniformRefView::setDate(const Date& date, const StudyPeriodSettings& settings)
 {
     GraphViewRefAbstract::setDate(date, settings);
     

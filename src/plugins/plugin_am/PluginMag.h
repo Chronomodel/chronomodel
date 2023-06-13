@@ -115,7 +115,7 @@ public:
     virtual void deleteGraphViewRef(GraphViewRefAbstract* graph);
     PluginSettingsViewAbstract* getSettingsView();
 
-    bool isDateValid(const QJsonObject& data, const ProjectSettings& settings);
+    bool isDateValid(const QJsonObject& data, const StudyPeriodSettings& settings);
 
     // ---------------------
     QString getRefExt() const;
@@ -128,7 +128,7 @@ public:
     QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
 
 private:
-    bool measureIsValidForCurve(const double m, const QString &ref, const QJsonObject &data, const ProjectSettings &settings);
+    bool measureIsValidForCurve(const double m, const QString &ref, const QJsonObject &data, const StudyPeriodSettings &settings);
 };
 
 #endif

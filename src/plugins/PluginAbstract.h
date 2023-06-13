@@ -41,7 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define PLUGINABSTRACT_H
 
 #include "Date.h"
-#include "ProjectSettings.h"
+#include "StudyPeriodSettings.h"
 #include "RefCurve.h"
 #include "StateKeys.h"
 #include "StdUtilities.h"
@@ -190,13 +190,13 @@ public:
     // Function to check if data values are ok : depending on the application version, plugin data values may change.
     // eg. : a new parameter may be added to 14C plugin, ...
     virtual QJsonObject checkValuesCompatibility(const QJsonObject& values){return values;}
-    virtual bool isDateValid(const QJsonObject& data, const ProjectSettings& settings)
+    virtual bool isDateValid(const QJsonObject& data, const StudyPeriodSettings& settings)
     {
         (void)data;
         (void) settings;
         return true;
     }
-    virtual bool isCombineValid(const QJsonObject& data, const ProjectSettings& settings)
+    virtual bool isCombineValid(const QJsonObject& data, const StudyPeriodSettings& settings)
    {
        //Q_ASSERT(&data);
        //Q_ASSERT(&settings);

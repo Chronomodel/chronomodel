@@ -264,7 +264,7 @@ signals:
 
 public:
     // mModel gives access to :
-    // - mModel->mSettings (ProjectSettings)
+    // - mModel->mSettings (StudyPeriodSettings)
     // - mModel->mMCMCSettings (MCMCSettings)
     // - mModel->mChains (QList<ChainSpecs>)
     Model* mModel;

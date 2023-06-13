@@ -522,7 +522,7 @@ QMap<float, float> vector_to_map(const QVector<float>& data, const float min, co
  */
 double vector_interpolate_idx_for_value(const double value, const QVector<double>& vector)
 {
-    int idxInf (0);
+    int idxInf = 0;
     int idxSup = vector.size() - 1;
 
     if (value<vector.first())
@@ -708,7 +708,7 @@ double interpolate_value_from_curve(const double x, const std::vector<double>& c
 
 }
 
-// ne teste pas la limite debut fin density, on supose un pas régulier
+// Ne teste pas la limite debut fin density, on supose un pas régulier, utilisé avec create_HPD2()
 double surface_on_theta (std::map<double, double>::const_iterator iter_on_theta)
 {
     const auto &prev_iter = std::prev(iter_on_theta);

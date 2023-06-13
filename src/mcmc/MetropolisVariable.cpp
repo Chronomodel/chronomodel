@@ -285,20 +285,20 @@ void MetropolisVariable::generateBufferForHisto(double *input, const QVector<dou
 
         const double contrib_under = (idx_upper - idx) / denum;
         const double contrib_upper = (idx - idx_under) / denum;
-
+#ifdef DEBUG
         if (std::isinf(contrib_under) || std::isinf(contrib_upper))
             qDebug() << "FFT input : infinity contrib!";
 
         if (idx_under < 0 || idx_under >= numPts || idx_upper < 0 || idx_upper > numPts)
             qDebug() << "FFT input : Wrong index";
-
+#endif
         if (idx_under < numPts)
             input[(int)idx_under] += contrib_under;
 
         if (idx_upper < numPts) // This is to handle the case when matching the last point index !
             input[(int)idx_upper] += contrib_upper;
     }
-    //return input;
+
 }
 
 /**
@@ -547,17 +547,14 @@ void MetropolisVariable::generateNumericalResults(const QList<ChainSpecs> &chain
     // Results for chain concatenation
     if (mFormatedHisto.isEmpty())  return;
     mResults.funcAnalysis = analyseFunction(mFormatedHisto);
-    auto statTrace = traceStatistic(fullRunFormatedTrace(chains));
-
-    mResults.traceAnalysis = std::move(statTrace); //squartilesForTrace(fullRunFormatedTrace(chains)); // fullRunFormatedTrace is the formated Traces
+    mResults.traceAnalysis = traceStatistic(fullRunFormatedTrace(chains)); // fullRunFormatedTrace is the formated Traces
 
     // Results for individual chains
     mChainsResults.clear();
     for (auto i = 0; i<mChainsHistos.size(); ++i) {
         DensityAnalysis result;
         result.funcAnalysis = analyseFunction(mChainsHistos.at(i));
-        statTrace = traceStatistic(runFormatedTraceForChain(chains, i));
-        result.traceAnalysis =  std::move(statTrace); //quartilesForTrace(runFormatedTraceForChain(chains, i));
+        result.traceAnalysis =  traceStatistic(runFormatedTraceForChain(chains, i)); //quartilesForTrace(runFormatedTraceForChain(chains, i));
         mChainsResults.append(result);
     }
 }
@@ -575,30 +572,6 @@ QMap<double, double> &MetropolisVariable::histoForChain(const int index)
     return mChainsHistos[index];
 }
 
-/**
- * @brief MetropolisVariable::fullTraceForChain
- * @param chains QList of the ChainSpecs in the Model
- * @param index
- * @return The complet trace (Burn-in, adaptation, acquire) corresponding to chain n°index
- */
-QVector<double> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs>& chains, const int index)
-{
-    std::vector<double> trace;
-    int shift = 0;
-
-    for (int i = 0; i<chains.size(); ++i) {
-        // We add 1 for the init
-        const unsigned long traceSize = 1 + chains.at(i).mIterPerBurn + (chains.at(i).mBatchIndex * chains.at(i).mIterPerBatch ) + chains.at(i).mRealyAccepted;
-        trace.resize(traceSize);
-        if (i == index) {
-            std::copy(mFormatedTrace->begin()+shift, mFormatedTrace->begin()+shift+traceSize, trace.begin());
-            //trace = mFormatedTrace.mid(shift , traceSize);
-            break;
-        }
-        shift += traceSize;
-    }
-    return QVector<double>(trace.begin(), trace.end());
-}
 
 QList<double>::Iterator MetropolisVariable::findIter_element(const long unsigned iter, const QList<ChainSpecs>& chains, const int chainIndex ) const
 {
@@ -611,11 +584,39 @@ QList<double>::Iterator MetropolisVariable::findIter_element(const long unsigned
 
 }
 
+
+
+/**
+ * @brief MetropolisVariable::fullTraceForChain
+ * @param chains QList of the ChainSpecs in the Model
+ * @param index
+ * @return The complet trace (Burn-in, adaptation, acquire) corresponding to chain n°index
+ */
+QVector<double> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs>& chains, const int index)
+{
+    QVector<double> trace;
+    int shift = 0;
+
+    for (int i = 0; i<chains.size(); ++i) {
+        // We add 1 for the init
+        const unsigned long traceSize = 1 + chains.at(i).mIterPerBurn + (chains.at(i).mBatchIndex * chains.at(i).mIterPerBatch ) + chains.at(i).mRealyAccepted;
+        trace.resize(traceSize);
+        if (i == index) {
+            std::copy(mFormatedTrace->begin()+shift, mFormatedTrace->begin()+shift+traceSize, trace.begin());
+            break;
+        }
+        shift += traceSize;
+    }
+    return trace;
+}
+
+
 /**
  * @brief MetropolisVariable::fullRunRawTrace use by timeRangeFromTraces() and gapRangeFromTraces()
  * @param chains
  * @return
  */
+/*
 QVector<double> MetropolisVariable::fullRunRawTrace(const QList<ChainSpecs>& chains)
 {
     if (mRawTrace->size() == 1) // Cas des variables fixes
@@ -675,74 +676,7 @@ QVector<double> MetropolisVariable::fullRunFormatedTrace(const QList<ChainSpecs>
     }
     return trace;
 }
-/**
- * @brief MetropolisVariable::runTraceForChain
- * @param chains
- * @param index the number of the Trace to extract
- * @return a QVector containing juste the acquisition Trace for one chaine n° index
- */
-QVector<double> MetropolisVariable::runRawTraceForChain(const QList<ChainSpecs> &chains, const int index)
-{
-
-    if (mRawTrace->isEmpty()) {
-        //qDebug() << "in MetropolisVariable::runRawTraceForChain -> mRawTrace empty";
-        return QVector<double>() ;
-
-    } else if (mRawTrace->size() == 1) {// Cas des variables fixes
-        return *mRawTrace;
-
-    } else {
-
-        int shift = 0;
-        std::vector<double> trace;
-
-        for (int i = 0; i<chains.size(); ++i) {
-            const ChainSpecs& chain = chains.at(i);
-            // We add 1 for the init
-            const int burnAdaptSize = 1 + int(chain.mIterPerBurn + chain.mBatchIndex * chain.mIterPerBatch);
-            const int traceSize = chain.mRealyAccepted; //int(chain.mIterPerAquisition / chain.mThinningInterval);
-
-            if (i == index) {
-                trace.resize(traceSize);
-                std::copy(mRawTrace->begin()+shift+ burnAdaptSize, mRawTrace->begin()+shift+ burnAdaptSize +traceSize, trace.begin());
-                break;
-            }
-            shift += burnAdaptSize + traceSize;
-        }
-        return QVector<double>(trace.begin(), trace.end());
-    }
-}
-
-QVector<double> MetropolisVariable::runFormatedTraceForChain(const QList<ChainSpecs> &chains, const int index)
-{
-    std::vector<double> trace;
-    if (mFormatedTrace->empty()) {
-        //qDebug() << "in MetropolisVariable::runFormatedTraceForChain -> mFormatedTrace empty";
-        return QVector<double>(0);//trace ;
-
-    } else if (mFormatedTrace->size() == 1) { // Cas des variables fixes
-        return *mFormatedTrace;
-
-    } else  {
-
-        int shift = 0;
-        for (auto i = 0; i<chains.size(); ++i)  {
-            const ChainSpecs& chain = chains.at(i);
-            // We add 1 for the init
-            const int burnAdaptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch);
-            const int traceSize = chain.mRealyAccepted; //int (chain.mIterPerAquisition / chain.mThinningInterval);
-
-            if (i == index) {
-                trace.resize(traceSize);
-                std::copy(mFormatedTrace->begin()+shift+ burnAdaptSize , mFormatedTrace->begin() +shift + burnAdaptSize +traceSize , trace.begin());
-                break;
-            }
-            shift += traceSize + burnAdaptSize ;
-        }
-        return QVector<double>(trace.begin(), trace.end());
-    }
-}
-
+*/
 
 QVector<double> MetropolisVariable::correlationForChain(const int index)
 {

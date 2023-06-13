@@ -48,7 +48,7 @@ class EventsScene;
 class EventItem : public AbstractItem
 {
 public:
-    EventItem(EventsScene* scene, const QJsonObject &event, const QJsonObject &projectSettings, QGraphicsItem* parent = nullptr);
+    EventItem(EventsScene* scene, const QJsonObject &event, const QJsonObject &StudyPeriodSettings, QGraphicsItem* parent = nullptr);
     virtual ~EventItem();
 
     virtual void setGreyedOut(const bool greyedOut);
@@ -57,12 +57,12 @@ public:
     inline bool withSelectedPhase() { return mWithSelectedPhase;}
 
     const QJsonObject &getData();
-    virtual void setEvent(const QJsonObject& event, const QJsonObject& projectSettings);
+    virtual void setEvent(const QJsonObject& event, const QJsonObject& StudyPeriodSettings);
 
     virtual QRectF boundingRect() const;
     void handleDrop(QGraphicsSceneDragDropEvent* e);
     QJsonArray getPhases() const;
-    inline const QJsonObject &getSettings() const {return mProjectSettings;}
+    inline const QJsonObject &getSettings() const {return mStudyPeriodSettings;}
 
     virtual void updateItemPosition(const QPointF &pos);
 
@@ -90,7 +90,7 @@ protected:
     
 protected:
     QSize mSize;
-    QJsonObject mProjectSettings;
+    QJsonObject mStudyPeriodSettings;
     bool mWithSelectedPhase;
     bool mThumbVisible;
 

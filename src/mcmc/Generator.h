@@ -40,15 +40,17 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef GENERATOR_H
 #define GENERATOR_H
 
-#include <chrono>
 #include <algorithm>
 #include <random>
 
 #ifndef M_PI
-#define M_PI 3.14159265358979323846264338327950288419716939937510582
+template<class T>
+constexpr T M_PI = T(3.14159265358979323846264338327950288419716939937510582L); // variable template
 #endif
 
-static std::default_random_engine CharGenerator (int(std::chrono::system_clock::now().time_since_epoch().count()));
+//static std::default_random_engine CharGenerator (int(std::chrono::system_clock::now().time_since_epoch().count()));
+
+
 
 struct randomChar {
     int _a, _b;
@@ -62,7 +64,7 @@ struct randomChar {
     
     void reset () { CharDistribution.reset(); }
     
-    int operator()() {return CharDistribution(CharGenerator);}
+    int operator()() ;//{return CharDistribution(CharGenerator);}
 } ;
 
 

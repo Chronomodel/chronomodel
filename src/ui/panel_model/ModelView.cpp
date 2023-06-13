@@ -358,7 +358,7 @@ void ModelView::setProject(Project* project)
 
     showCalibration(false);
 
-    const ProjectSettings settings = ProjectSettings::fromJson(mProject->mState[STATE_SETTINGS].toObject());
+    const StudyPeriodSettings settings = StudyPeriodSettings::fromJson(mProject->mState[STATE_SETTINGS].toObject());
 
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
@@ -514,7 +514,7 @@ void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
 void ModelView::updateProject()
 {
     const QJsonObject &state = mProject->state();
-    const ProjectSettings &settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+    const StudyPeriodSettings &settings = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
@@ -607,7 +607,7 @@ bool ModelView::findCalibrateMissing()
     return calibMissing;
 }
 
-void ModelView::calibrateAll(ProjectSettings newS)
+void ModelView::calibrateAll(StudyPeriodSettings newS)
 {
     const QJsonObject &state = mProject->state();
 
@@ -660,13 +660,13 @@ void ModelView::calibrateAll(ProjectSettings newS)
 void ModelView::modifyPeriod()
 {
     QJsonObject state = mProject->state();
-    ProjectSettings s = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+    StudyPeriodSettings s = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
     StudyPeriodDialog dialog(qApp->activeWindow());
     dialog.setSettings(s);
 
     if (dialog.exec() == QDialog::Accepted) {
-        ProjectSettings newS = dialog.getSettings();
+        StudyPeriodSettings newS = dialog.getSettings();
         if (s != newS) {
           ModelView::calibrateAll(newS);
 
@@ -1376,7 +1376,7 @@ void ModelView::updateCalibration(const QJsonObject& date)
     if (!date.isEmpty() ) {
         Date d (date);
         if (d.mCalibration == nullptr)
-            d.calibrate(ProjectSettings::fromJson(mProject->state().value(STATE_SETTINGS).toObject()), mProject, true);
+            d.calibrate(StudyPeriodSettings::fromJson(mProject->state().value(STATE_SETTINGS).toObject()), mProject, true);
 
         // A date has been double-clicked => update CalibrationView only if the date is not null
         if (mEventPropertiesView->isVisible() && mEventPropertiesView->isCalibChecked())

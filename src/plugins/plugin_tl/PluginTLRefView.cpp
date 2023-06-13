@@ -65,7 +65,7 @@ PluginTLRefView::~PluginTLRefView()
 
 }
 
-void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
+void PluginTLRefView::setDate(const Date& date, const StudyPeriodSettings& settings)
 {
     GraphViewRefAbstract::setDate(date, settings);
     

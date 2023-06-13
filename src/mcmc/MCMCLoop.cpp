@@ -39,6 +39,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "MCMCLoop.h"
 
+#include "Bound.h"
+#include "CalibrationCurve.h"
 #include "Generator.h"
 #include "Project.h"
 #include "QtCore/qcoreapplication.h"
@@ -107,6 +109,357 @@ const QList<ChainSpecs> &MCMCLoop::chains() const
 {
     return mChains;
 }
+
+
+QString MCMCLoop::initialize_time(Model* model)
+{
+    tminPeriod = model->mSettings.mTmin;
+    tmaxPeriod = model->mSettings.mTmax;
+
+    QList<Event*>& allEvents (model->mEvents);
+    QList<Phase*>& phases (model->mPhases);
+    QList<PhaseConstraint*>& phasesConstraints (model->mPhaseConstraints);
+
+    if (isInterruptionRequested())
+        return ABORTED_BY_USER;
+    // initialisation des bornes
+    // ---------------------- Reset Events ---------------------------
+    for (Event* ev : allEvents) {
+        ev->mInitialized = false;
+        ev->mS02.mSamplerProposal = MHVariable::eFixe;
+        // ev->mS02.mSamplerProposal = MHVariable::eMHAdaptGauss; // not yet integrate within update_321
+    }
+    // -------------------------- Init gamma ------------------------------
+    emit stepChanged(tr("Initializing Phase Gaps..."), 0, phasesConstraints.size());
+    int i = 0;
+    try {
+        for (auto&& phC : phasesConstraints) {
+            phC->initGamma();
+            if (isInterruptionRequested())
+                return ABORTED_BY_USER;
+            ++i;
+            emit stepProgressed(i);
+        }
+    }  catch (...) {
+        qWarning() <<"Init Gamma ???";
+        mAbortedReason = QString("Error in Init Gamma ???");
+        return mAbortedReason;
+    }
+
+    // -------------------------- Init tau -----------------------------------------
+    emit stepChanged(tr("Initializing Phase Durations..."), 0, phases.size());
+    i = 0;
+    try {
+        for (auto&& ph : phases) {
+            ph->initTau(tminPeriod, tmaxPeriod);
+
+            if (isInterruptionRequested())
+                return ABORTED_BY_USER;
+            ++i;
+            emit stepProgressed(i);
+        }
+    }  catch (...) {
+        qWarning() <<"Init Tau ???";
+        mAbortedReason = QString("Error in Init Tau ???");
+        return mAbortedReason;
+    }
+    // --------------------------  Init Bounds --------------
+    try {
+        for (Event* ev : allEvents) {
+            if (ev->mType == Event::eBound) {
+                Bound* bound = dynamic_cast<Bound*>(ev);
+
+                if (bound) {
+                    bound->mTheta.mX = bound->mFixed;
+                    bound->mThetaReduced = model->reduceTime(bound->mTheta.mX);
+                    bound->mTheta.mLastAccepts.clear();
+                    bound->mTheta.memo(); // non sauvegarder dans Loop.memo()
+                    bound->mInitialized = true;
+
+                }
+                bound = nullptr;
+            }
+        }
+
+    }  catch (...) {
+        qWarning() <<"Init Bound ???";
+        mAbortedReason = QString("Error in Init Bound ???");
+        return mAbortedReason;
+    }
+    /* ----------------------------------------------------------------
+     *  Init theta event, ti, ...
+     * ---------------------------------------------------------------- */
+
+    QVector<Event*> unsortedEvents = ModelUtilities::unsortEvents(allEvents);
+
+    emit stepChanged(tr("Initializing Events..."), 0, unsortedEvents.size());
+    try {
+
+        // Check Strati constraint
+        for (Event* ev : unsortedEvents) {
+            model->initNodeEvents();
+            QString circularEventName = "";
+            QList<Event*> startEvents = QList<Event*>();
+
+            const bool ok (ev->getThetaMaxPossible (ev, circularEventName, startEvents));
+            if (!ok) {
+                mAbortedReason = QString(tr("Warning : Find Circular Constraint Path %1  %2 ")).arg (ev->mName, circularEventName);
+                return mAbortedReason;
+            }
+
+            // Controle la cohérence des contraintes strati-temporelle et des valeurs de profondeurs
+            if (mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth ) {
+                for (auto&& eForWard : ev->mConstraintsFwd) {
+                    const bool notOk (ev->mXIncDepth > eForWard->mEventTo->mXIncDepth);
+                    if (notOk) {
+                        mAbortedReason = QString(tr("Warning: chronological constraint not in accordance with the stratigraphy: %1 - %2 path, control depth value!")).arg (ev->mName, eForWard->mEventTo->mName);
+                        return mAbortedReason;
+                    }
+                }
+            }
+        }
+        int i = 0;
+        if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
+
+            for (Event* uEvent : unsortedEvents) {
+                if (uEvent->mType == Event::eDefault) {
+
+                    model->initNodeEvents(); // Doit être réinitialisé pour toute recherche getThetaMinRecursive et getThetaMaxRecursive
+                    QString circularEventName = "";
+
+                    const double min = uEvent->getThetaMinRecursive (tminPeriod);
+
+                    // ?? Comment circularEventName peut-il être pas vide ?
+                    if (!circularEventName.isEmpty()) {
+                        mAbortedReason = QString(tr("Warning : Find Circular constraint with %1  bad path  %2 ")).arg(uEvent->mName, circularEventName);
+                        return mAbortedReason;
+                    }
+
+                    model->initNodeEvents();
+                    const double max = uEvent->getThetaMaxRecursive(tmaxPeriod);
+#ifdef DEBUG
+                    if (min >= max)
+                        qDebug() << tr("-----Error Init for event : %1 : min = %2 : max = %3-------").arg(uEvent->mName, QString::number(min, 'f', 30), QString::number(max, 'f', 30));
+#endif
+                    if (min >= max) {
+                        mAbortedReason = QString(tr("Error Init for event : %1 : min = %2 : max = %3-------").arg(uEvent->mName, QString::number(min, 'f', 30), QString::number(max, 'f', 30)));
+                        return mAbortedReason;
+                    }
+                    // ----------------------------------------------------------------
+                    // Curve init Theta event :
+                    // On initialise les theta près des dates ti
+                    // ----------------------------------------------------------------
+
+                    sampleInCumulatedRepartition(uEvent, model->mSettings, min, max);
+
+                    uEvent->mThetaReduced = model->reduceTime(uEvent->mTheta.mX);
+                    uEvent->mInitialized = true;
+
+                    // ----------------------------------------------------------------
+
+                    double s02_sum = 0.;
+
+                    for (Date& date : uEvent->mDates) {
+
+                        // 1 - Init ti
+
+                        // modif du 2021-06-16 pHd
+                        const FunctionStat &data = analyseFunction(date.mCalibration->mMap);
+                        double sigma = double (data.std);
+                        //
+                        if (!date.mCalibration->mRepartition.isEmpty()) {
+                            const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mCalibration->mRepartition);
+                            date.mTi.mX = date.mCalibration->mTmin + idx * date.mCalibration->mStep;
+                            // modif du 2021-06-16 pHd
+
+                        } else { // in the case of mRepartion curve is null, we must init ti outside the study period
+                            // For instance we use a gaussian random sampling
+                            sigma = tmaxPeriod - tminPeriod;
+                            qDebug()<<"mRepartion curve is null for"<< date.mName;
+                            const double u = Generator::gaussByBoxMuller(0., sigma);
+                            if (u<0)
+                                date.mTi.mX = tminPeriod + u;
+                            else
+                                date.mTi.mX = tmaxPeriod + u;
+
+                            if (date.mTi.mSamplerProposal == MHVariable::eInversion) {
+                                qDebug()<<"Automatic sampling method exchange eInversion to eMHSymetric for"<< date.mName;
+                                date.mTi.mSamplerProposal = MHVariable::eMHSymetric;
+                                date.autoSetTiSampler(true);
+                            }
+
+                        }
+
+                        // 2 - Init Delta Wiggle matching and Clear mLastAccepts array
+                        date.initDelta(uEvent);
+                        date.mWiggle.mLastAccepts.clear();
+                        //date.mWiggle.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                        date.mWiggle.tryUpdate(date.mWiggle.mX, 2.);
+
+                        // 3 - Init sigma MH adaptatif of each Data ti
+                        date.mTi.mSigmaMH = sigma;
+
+                        // 4 - Clear mLastAccepts array and set this init at 100%
+                        date.mTi.mLastAccepts.clear();
+                        //date.mTheta.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                        date.mTi.tryUpdate(date.mTi.mX, 2.);
+
+                        // 5 - Init Sigma_i and its Sigma_MH
+                        date.mSigmaTi.mX = std::abs(date.mTi.mX - (uEvent->mTheta.mX - date.mDelta));
+
+                        if (date.mSigmaTi.mX <= 1E-6) {
+                            date.mSigmaTi.mX = 1E-6; // Add control the 2015/06/15 with PhL
+                            //log += line(date.mName + textBold("Sigma indiv. <=1E-6 set to 1E-6"));
+                        }
+                        date.mSigmaTi.mSigmaMH = 1.;//1.27;  //1.;
+
+                        date.mSigmaTi.mLastAccepts.clear();
+                        date.mSigmaTi.tryUpdate(date.mSigmaTi.mX, 2.);
+
+                        // intermediary calculus for the harmonic average
+                        s02_sum += 1. / (sigma * sigma);
+                    }
+
+                    // 4 - Init S02 of each Event
+                    uEvent->mS02.mX = uEvent->mDates.size() / s02_sum;
+
+                    // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
+                    uEvent->mTheta.mSigmaMH = sqrt(uEvent->mS02.mX);
+                    uEvent->mAShrinkage = 1.;
+
+                    // 6- Clear mLastAccepts  array
+                    uEvent->mTheta.mLastAccepts.clear();
+                    //unsortedEvents.at(i)->mTheta.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                    uEvent->mTheta.tryUpdate(uEvent->mTheta.mX, 2.);
+
+
+                }
+
+                if (isInterruptionRequested())
+                    return ABORTED_BY_USER;
+
+                emit stepProgressed(i++);
+
+            }
+
+        } else {
+            for (Event* uEvent : unsortedEvents) {
+                // ----------------------------------------------------------------
+                // Curve init Theta event :
+                // On initialise les theta près des dates ti
+                // ----------------------------------------------------------------
+                if (uEvent->mType == Event::eDefault)
+                    sampleInCumulatedRepartition_thetaFixe(uEvent, model->mSettings);
+                else
+                    uEvent->mTheta.mX = static_cast<Bound*>(uEvent)->mFixed;
+                // nous devons sauvegarder la valeur ici car dans loop.memo(), les variables fixes ne sont pas memorisées.
+                // Pourtant, il faut récupèrer la valeur pour les affichages et les stats
+                uEvent->mTheta.memo();
+
+                uEvent->mThetaReduced = model->reduceTime(uEvent->mTheta.mX);
+                uEvent->mInitialized = true;
+                uEvent->mTheta.mSamplerProposal = MHVariable::eFixe;
+
+                for (auto&& date : uEvent->mDates) {
+                    date.mTi.mSamplerProposal = MHVariable::eFixe;
+                    date.mTi.mX = uEvent->mTheta.mX;
+                    date.mTi.memo();
+
+                    // 2 - Init Delta Wiggle matching and Clear mLastAccepts array
+                    date.initDelta(uEvent);
+                    date.mWiggle.mLastAccepts.clear();
+                    //date.mWiggle.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+
+                    // 3 - Init sigma MH adaptatif of each Data ti
+                    date.mTi.mSigmaMH = 1;
+
+                    // 4 - Clear mLastAccepts array and set this init at 100%
+                    date.mTi.mLastAccepts.clear();
+                    //date.mTheta.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+
+                    // 5 - Init Sigma_i and its Sigma_MH
+                    date.mSigmaTi.mSamplerProposal = MHVariable::eFixe;
+                    date.mSigmaTi.mX = 0;
+                    date.mSigmaTi.memo();
+
+                    date.mSigmaTi.mSigmaMH = 1.;
+
+                    date.mSigmaTi.mLastAccepts.clear();
+                }
+
+                // 4 - Init S02 of each Event
+                uEvent->mS02.mX = 0;
+                uEvent->mS02.mLastAccepts.clear();
+                uEvent->mS02.mSamplerProposal = MHVariable::eFixe;
+
+                // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
+                uEvent->mTheta.mSigmaMH = 1;
+                uEvent->mAShrinkage = 1.;
+
+                // 6- Clear mLastAccepts  array
+                uEvent->mTheta.mLastAccepts.clear();
+                //uEvent->mTheta.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+
+
+                if (isInterruptionRequested())
+                    return ABORTED_BY_USER;
+
+                emit stepProgressed(i++);
+
+            }
+            // Check strati constraints .
+            for (Event* ev : model->mEvents) {
+                const double min = ev->getThetaMin(tminPeriod);
+                const double max = ev->getThetaMax(tmaxPeriod);
+                if (min >= max) {
+                    throw QObject::tr("Error for event theta fixed: %1 : min = %2 : max = %3").arg(ev->mName, QString::number(min), QString::number(max));
+                }
+            }
+
+
+        }
+
+    }  catch (const QString e) {
+        qWarning() <<"Init theta event, ti,  ???"<<e;
+        //mAbortedReason = QString("Error in Init theta event, ti,  ???");
+        mAbortedReason = e;
+        return mAbortedReason;
+    }
+
+
+    // --------------------------- Init alpha and beta phases ----------------------
+    emit stepChanged(tr("Initializing Phases..."), 0, phases.size());
+    try {
+        i = 0;
+        for (auto&& phase : phases ) {
+
+            // tau is still initalize
+
+            double tmp = phase->mEvents[0]->mTheta.mX;
+            // All Event must be Initialized
+            std::for_each(PAR phase->mEvents.begin(), phase->mEvents.end(), [&tmp] (Event* ev){tmp = std::min(ev->mTheta.mX, tmp);});
+            phase->mAlpha.mX = tmp;
+
+            tmp = phase->mEvents[0]->mTheta.mX;
+            std::for_each(PAR phase->mEvents.begin(), phase->mEvents.end(), [&tmp] (Event* ev){tmp = std::max(ev->mTheta.mX, tmp);});
+            phase->mBeta.mX = tmp;
+
+            phase->mDuration.mX = phase->mBeta.mX - phase->mAlpha.mX;
+
+            if (isInterruptionRequested())
+                return ABORTED_BY_USER;
+
+            emit stepProgressed(++i);
+        }
+
+    }  catch (...) {
+        mAbortedReason = QString("Init alpha and beta phases  ???");
+        return mAbortedReason;
+    }
+    return QString();
+}
+
+
 
 void MCMCLoop::run()
 {

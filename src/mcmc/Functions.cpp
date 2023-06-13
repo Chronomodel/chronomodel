@@ -39,7 +39,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "Functions.h"
 #include "Generator.h"
-#include "MCMCLoop.h"
 #include "QtUtilities.h"
 #include "AppSettings.h"
 #include "StdUtilities.h"
@@ -54,7 +53,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QTime>
 #include <QElapsedTimer>
 #include <chrono>
-
+#include <experimental/algorithm>
 
 
 #include <errno.h>      /* errno, EDOM */
@@ -446,7 +445,7 @@ const std::pair<double, double> linear_regression(const std::vector<double>& dat
 TraceStat traceStatistic(const QVector<type_data>& trace)
 {
     TraceStat result;
-    if (trace.size()==1) {
+    if (trace.size() == 1) {
         result.mean = trace.at(0);
         result.std = 0.; // unbiais
 
@@ -663,7 +662,7 @@ std::pair<double, double> credibilityForTrace(const QVector<double>& trace, doub
     }
 
     if (thresh > 0 && n > 0) {
-        double threshold = inRange(0.0, thresh, 100.0);
+        double threshold = std::clamp(0.0, thresh, 100.0);
         QVector<double> sorted (trace);
         std::sort(sorted.begin(),sorted.end());
 
@@ -707,7 +706,7 @@ std::pair<double, double> credibilityForTrace(const QVector<int>& trace, double 
     }
 
     if (thresh > 0 && n > 0) {
-        double threshold = inRange(0.0, thresh, 100.0);
+        double threshold = std::clamp(0.0, thresh, 100.0);
         QVector<int> sorted (trace);
         std::sort(sorted.begin(),sorted.end());
 

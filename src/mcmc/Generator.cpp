@@ -53,8 +53,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QObject>
 
 // Mersenne Twister 19937 generator
-std::mt19937 Generator::sEngine(0);
-std::uniform_real_distribution<double> Generator::sDoubleDistribution(0.0, 1.0);
+std::mt19937 Generator::sEngine (0);
+std::uniform_real_distribution<double> Generator::sDoubleDistribution (0.0, 1.0);
+
+std::default_random_engine CharGenerator (int(std::chrono::system_clock::now().time_since_epoch().count()));
+
+int randomChar::operator()() {
+    return CharDistribution(CharGenerator);
+}
 
 c_UUID Generator::UUID;
 

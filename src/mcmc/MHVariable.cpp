@@ -59,9 +59,7 @@ MHVariable::MHVariable():
     mGlobalAcceptationPerCent(.0),
     mHistoryAcceptRateMH(nullptr)
 {
-  /*mAllAccepts = new (std::nothrow) QVector<bool>();
-  mHistoryAcceptRateMH = new (std::nothrow) QVector<double>();*/
-    mAllAccepts.clear();
+  mAllAccepts.clear();
   mHistoryAcceptRateMH = new QVector<double>();
 
 }
@@ -124,8 +122,6 @@ MHVariable::~MHVariable()
  */
 bool MHVariable::tryUpdate(const double x, const double rapport)
 {
-   // if (mSamplerProposal == MHVariable::eFixe) return true;
-
     if (mLastAccepts.size() >= mLastAcceptsLength)
         mLastAccepts.removeAt(0);
 

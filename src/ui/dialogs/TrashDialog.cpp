@@ -109,7 +109,7 @@ mType(type)
     const QJsonObject &state = MainWindow::getInstance()->getState();
     if (mType == eDate) {
 
-        const ProjectSettings &settings = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
+        const StudyPeriodSettings &settings = StudyPeriodSettings::fromJson(state[STATE_SETTINGS].toObject());
 
         const QJsonArray &dates = state[STATE_DATES_TRASH].toArray();
 

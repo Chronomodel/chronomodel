@@ -186,12 +186,13 @@ T vector_min_value(const QVector<T>& vector)
     return T(0);
 }
 
- template<typename T>
+/* template<typename T> replace with std::clamp()
  inline const T inRange(const T minimum, const T value ,const T maximum)
 {
     // see qBound in qglobal
     return std::max(minimum, std::min(maximum, value));
 }
+*/
 
 template <class U, class T>
 T map_max_value(const QMap<U, T> &map)
@@ -330,7 +331,7 @@ QMap<T, T> normalize_map(const QMap<T, T> &map, const T max = 1)
 
     }
 
-    return result;
+    return std::move(result);
 }
 
 QVector<double> normalize_vector(const QVector<double>& aVector);

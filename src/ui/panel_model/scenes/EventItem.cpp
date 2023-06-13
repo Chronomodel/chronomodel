@@ -49,9 +49,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CurveSettings.h"
 #include "qlocale.h"
 
-EventItem::EventItem(EventsScene* scene, const QJsonObject &event, const QJsonObject &projectSettings, QGraphicsItem* parent):
+EventItem::EventItem(EventsScene* scene, const QJsonObject &event, const QJsonObject &StudyPeriodSettings, QGraphicsItem* parent):
     AbstractItem(scene, parent),
-    mProjectSettings(projectSettings),
+    mStudyPeriodSettings(StudyPeriodSettings),
     mWithSelectedPhase (false),
     mThumbVisible (true),
     mNodeSkin (7.),
@@ -74,7 +74,7 @@ EventItem::EventItem(EventsScene* scene, const QJsonObject &event, const QJsonOb
     mCurveLineHeight =  fm.height();
 
     if (Event::Type (event.value(STATE_EVENT_TYPE).toInt()) == Event::eDefault )
-        EventItem::setEvent(event, projectSettings);
+        EventItem::setEvent(event, StudyPeriodSettings);
 
 }
 
@@ -123,7 +123,7 @@ const QJsonObject& EventItem::getData()
     return mData;
 }
 
-void EventItem::setEvent(const QJsonObject &event, const QJsonObject &projectSettings)
+void EventItem::setEvent(const QJsonObject &event, const QJsonObject &StudyPeriodSettings)
 {
     prepareGeometryChange();
 
@@ -152,7 +152,7 @@ void EventItem::setEvent(const QJsonObject &event, const QJsonObject &projectSet
     //  Dates
     // ----------------------------------------------
     const QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
-    if (event.value(STATE_EVENT_DATES).toArray() != mData.value(STATE_EVENT_DATES).toArray() || mProjectSettings != projectSettings) {
+    if (event.value(STATE_EVENT_DATES).toArray() != mData.value(STATE_EVENT_DATES).toArray() || mStudyPeriodSettings != StudyPeriodSettings) {
         // ----------------------------------------------
         //  Delete Date Items
         // ----------------------------------------------
@@ -178,7 +178,7 @@ void EventItem::setEvent(const QJsonObject &event, const QJsonObject &projectSet
             const QJsonObject date = dates.at(i).toObject();
 
             try {
-                DateItem* dateItem = new DateItem((EventsScene*) (mScene), date, color, projectSettings);
+                DateItem* dateItem = new DateItem((EventsScene*) (mScene), date, color, StudyPeriodSettings);
                 dateItem->setParentItem(this);
                 dateItem->setGreyedOut(mGreyedOut);
             }
@@ -195,7 +195,7 @@ void EventItem::setEvent(const QJsonObject &event, const QJsonObject &projectSet
     }
 
     mData = event;
-    mProjectSettings = projectSettings;
+    mStudyPeriodSettings = StudyPeriodSettings;
 
     resizeEventItem();
     repositionDateItems();

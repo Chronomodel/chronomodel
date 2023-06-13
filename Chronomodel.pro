@@ -177,18 +177,19 @@ DEFINES += "USE_PLUGIN_F14C=$${USE_PLUGIN_F14C}"
 macx{
 	# IMPORTANT NOTE :
 	# We use FFTW 3.2.2 on Mac to support Mac OS X versions from 10.7.
-	# (Using FFTW 3.3.4 is available for mac 10.9+)
 	# We provide FFTW.3.2.2.dmg if you want to install it on your system, but this is not necessary!
 	# The generated XCode project will locate FFTW files in the project directory and statically link against it.
 
 	# this is to include fftw.h in the code :
 	# INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac
-    INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac
+        INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac
+        # INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac
 
 
 	# Link the application with FFTW library
 	# If no dylib are present, static libs (.a) are used => that's why we moved .dylib files in a "dylib" folder.
-        LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac" -lfftw3
+        LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac" -lfftw3
+        #LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac" -lfftw3
         #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3
 
 
@@ -207,19 +208,19 @@ macx{
 }
 
 win32{
-        INCLUDEPATH += lib/FFTW
+        INCLUDEPATH += lib/fftw-3.2.2
         contains(QT_ARCH, i386) {
             message("32-bit")
-            LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3-3
+            LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.2.2/win32" -lfftw3-3
 
         } else { # to compile with a x64 machine
             message("64-bit")
-            LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win64" -lfftw3-3
+            LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.2.2/win64" -lfftw3-3
         }
 }
 #linux :
 unix:!macx{
-	INCLUDEPATH += lib/FFTW
+        INCLUDEPATH += lib/fftw-3.2.2
         LIBS += -lfftw3
 }
 
@@ -350,7 +351,8 @@ equals(USE_PLUGIN_F14C, 1){
 
 HEADERS += src/project/PluginManager.h
 HEADERS += src/project/Project.h
-HEADERS += src/project/ProjectSettings.h
+HEADERS += \
+    src/project/StudyPeriodSettings.h
 HEADERS += src/project/SetProjectState.h
 HEADERS += src/project/StateEvent.h
 
@@ -516,7 +518,8 @@ equals(USE_PLUGIN_F14C, 1) {
 
 SOURCES += src/project/PluginManager.cpp
 SOURCES += src/project/Project.cpp
-SOURCES += src/project/ProjectSettings.cpp
+SOURCES += \
+    src/project/StudyPeriodSettings.cpp
 SOURCES += src/project/SetProjectState.cpp
 SOURCES += src/project/StateEvent.cpp
 

@@ -64,7 +64,7 @@ PluginMagRefView::~PluginMagRefView()
 
 }
 
-void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings)
+void PluginMagRefView::setDate(const Date& date, const StudyPeriodSettings& settings)
 {
     GraphViewRefAbstract::setDate(date, settings);
 

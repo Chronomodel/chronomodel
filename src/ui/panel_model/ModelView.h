@@ -54,7 +54,7 @@ class QPropertyAnimation;
 class QGraphicsScene;
 
 class Project;
-class ProjectSettings;
+class StudyPeriodSettings;
 class ModelToolsView;
 class EventsScene;
 class PhasesScene;
@@ -82,7 +82,7 @@ public:
     void setProject(Project* project);
     Project* getProject() const;
 
-    void calibrateAll(ProjectSettings newS);
+    void calibrateAll(StudyPeriodSettings newS);
     bool findCalibrateMissing();
 
     void resetInterface();

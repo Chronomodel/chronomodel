@@ -1619,7 +1619,7 @@ short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double> &hpd, cons
     return answer;
 }
 
-void sampleInCumulatedRepartition (Event* event, const ProjectSettings &settings, const double min, const double max)
+void sampleInCumulatedRepartition (Event* event, const StudyPeriodSettings &settings, const double min, const double max)
 {
 
     // Creation of the cumulative date distribution
@@ -1707,7 +1707,7 @@ void sampleInCumulatedRepartition (Event* event, const ProjectSettings &settings
     }
 }
 
-void sampleInCumulatedRepartition_thetaFixe (Event *event, const ProjectSettings& settings)
+void sampleInCumulatedRepartition_thetaFixe (Event *event, const StudyPeriodSettings& settings)
 {
 
     // Creation of the cumulative date distribution

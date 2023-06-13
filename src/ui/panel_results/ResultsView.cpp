@@ -1227,7 +1227,7 @@ void ResultsView::resizeEvent(QResizeEvent* e)
 
 void ResultsView::updateMarkerGeometry(const int x)
 {
-    const int markerXPos = inRange(0, x, mRuler->x() + mRuler->width());
+    const int markerXPos = std::clamp(0, x, mRuler->x() + mRuler->width());
     mMarker->setGeometry(markerXPos, mGraphTypeTabs->height() + mMargin, mMarker->thickness(), height() - mGraphTypeTabs->height() - mMargin);
     update(markerXPos -5, mGraphTypeTabs->height() + mMargin, 10, mGraphTypeTabs->height() + mMargin);
 }
@@ -2743,7 +2743,7 @@ void ResultsView::updateScales()
         return;
     }
 
-    const ProjectSettings s = mModel->mSettings;
+    const StudyPeriodSettings s = mModel->mSettings;
 
     // ------------------------------------------------------------------
     //  Define mResultCurrentMinT and mResultCurrentMaxT

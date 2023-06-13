@@ -376,7 +376,7 @@ void MultiCalibrationView::updateLayout()
 void MultiCalibrationView::updateGraphList()
 {
     const QJsonObject &state = mProject->state();
-    mSettings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+    mSettings = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
     mTminDisplay = mSettings.getTminFormated() ;
     mTmaxDisplay = mSettings.getTmaxFormated();
@@ -408,7 +408,7 @@ void MultiCalibrationView::updateGraphList()
 MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double thres)
 {
     const QJsonObject state = mProject->state();
-    mSettings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+    mSettings = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
     mTminDisplay = mSettings.getTminFormated() ;
     mTmaxDisplay = mSettings.getTmaxFormated();
@@ -609,7 +609,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 {
     const QJsonObject &state = mProject->state();
 
-    mSettings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+    mSettings = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
     mTminDisplay = mSettings.getTminFormated() ;
     mTmaxDisplay = mSettings.getTmaxFormated();

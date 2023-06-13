@@ -53,7 +53,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ColorPicker.h"
 #include "ScrollCompressor.h"
 
-#include "ProjectSettings.h"
+#include "StudyPeriodSettings.h"
 
 class MultiCalibrationView: public QWidget
 {
@@ -108,7 +108,7 @@ signals:
 
 public:
     QList<Event*> mEventsList;
-    ProjectSettings mSettings;
+    StudyPeriodSettings mSettings;
     Project *mProject;
 
 private:

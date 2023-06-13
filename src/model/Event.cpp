@@ -1214,3 +1214,12 @@ double Event::h_S02(const double S02)
 
 }
 
+// Prepared (projected) values
+decltype(Event::mYx) get_Yx(Event* e)
+{return e->mYx;};
+
+decltype(Event::mYy) get_Yy(Event* e)
+{return e->mYy;};
+
+decltype(Event::mYz) get_Yz(Event* e)
+{return e->mYz;};

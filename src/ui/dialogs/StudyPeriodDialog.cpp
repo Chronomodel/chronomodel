@@ -129,7 +129,7 @@ StudyPeriodDialog::~StudyPeriodDialog()
 {
 }
 
-void StudyPeriodDialog::setSettings(const ProjectSettings& s)
+void StudyPeriodDialog::setSettings(const StudyPeriodSettings& s)
 {
     mMinEdit->setText(locale().toString(s.mTmin));
     mMaxEdit->setText(locale().toString(s.mTmax));
@@ -150,9 +150,9 @@ void StudyPeriodDialog::setStep(double step, bool forced, double suggested)
     mStepSpin    -> setValue(step);
 }
 
-ProjectSettings StudyPeriodDialog::getSettings() const
+StudyPeriodSettings StudyPeriodDialog::getSettings() const
 {
-    ProjectSettings s = ProjectSettings();
+    StudyPeriodSettings s = StudyPeriodSettings();
     s.mTmin = locale().toDouble(mMinEdit->text());
     s.mTmax = locale().toDouble(mMaxEdit->text());
     if (mForcedCheck->isChecked())

@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef MODEL_H
 #define MODEL_H
 
-#include "ProjectSettings.h"
+#include "StudyPeriodSettings.h"
 #include "MCMCSettings.h"
 #include "Event.h"
 #include "Phase.h"
@@ -56,7 +56,7 @@ class Model: public QObject
 {
     Q_OBJECT
 public:
-    ProjectSettings mSettings;
+    StudyPeriodSettings mSettings;
     Project *mProject;
 
     MCMCSettings mMCMCSettings;

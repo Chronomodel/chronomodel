@@ -56,7 +56,7 @@ public:
     explicit Plugin14CRefView(QWidget* parent = nullptr);
     virtual ~Plugin14CRefView();
 
-    void setDate(const Date& date, const ProjectSettings& settings);
+    void setDate(const Date& date, const StudyPeriodSettings& settings);
 
 public slots:
     void zoomX(const double min, const double max);

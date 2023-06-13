@@ -402,7 +402,7 @@ void ImportDataView::exportDates()
 
 void ImportDataView::removeCsvRows(QList<int> rows)
 {
-    sortIntList(rows);
+    std::ranges::sort(rows);
     for (auto i = rows.size()-1; i >= 0; --i) {
         for (int c = 0; c < mTable->columnCount(); ++c) {
             QTableWidgetItem* item = mTable->item(rows.at(i), c);
@@ -415,7 +415,7 @@ void ImportDataView::removeCsvRows(QList<int> rows)
 
 void ImportDataView::errorCsvRows(QList<int> rows)
 {
-    sortIntList(rows);
+    std::ranges::sort(rows);
     for (auto i = rows.size()-1; i >= 0; --i) {
         for (int c = 0; c < mTable->columnCount(); ++c) {
             QTableWidgetItem* item = mTable->item(rows.at(i), c);
@@ -436,9 +436,9 @@ void ImportDataView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
 
-    int m (5);
-    int butH (25);
-    int helpH = mHelp->heightForWidth(width() - 2*m);
+    const int m (5);
+    const int butH (25);
+    const int helpH = mHelp->heightForWidth(width() - 2*m);
 
     mBrowseBut->setGeometry(m, m, (width() - 3*m)/2, butH);
     mExportBut->setGeometry(2*m + (width() - 3*m)/2, m, (width() - 3*m)/2, butH);
@@ -479,7 +479,7 @@ QMimeData* ImportDataTable::mimeData(const QList<QTableWidgetItem *> &items) con
 
     const QString csvSep = AppSettings::mCSVCellSeparator;
 
-    foreach (QTableWidgetItem* item, items) {
+    for (QTableWidgetItem* item : items) {
         if (item) {
             if (item->row() != row) {
                 if (!itemStr.empty())
@@ -489,11 +489,11 @@ QMimeData* ImportDataTable::mimeData(const QList<QTableWidgetItem *> &items) con
                 row = item->row();
                 itemStr << QString::number(row);
 
-                QString evenName = verticalHeaderItem(row)->text();
+                const QString evenName = verticalHeaderItem(row)->text();
                 itemStr << evenName;
 
             }
-            QString text = item->text();
+            const QString text = item->text();
             itemStr << text;
         }
     }
@@ -509,11 +509,11 @@ void ImportDataTable::updateTableHeaders()
     QList<QTableWidgetItem*> items = selectedItems();
     QString pluginName;
     QString verticalHeader;
-    for (int i = 0; i<items.size(); ++i) {
-        QString curPluginName = item(items[i]->row(), 0)->text();
+    for (QTableWidgetItem* it : items) {
+        const QString &curPluginName = item(it->row(), 0)->text();
         if (pluginName.isEmpty()) {
             pluginName = curPluginName;
-            verticalHeader = verticalHeaderItem(items[i]->row())->text();
+            verticalHeader = verticalHeaderItem(it->row())->text();
 
         } else if (pluginName != curPluginName) {
             pluginName = QString();
@@ -526,7 +526,7 @@ void ImportDataTable::updateTableHeaders()
 
     if (!pluginName.isEmpty() && (verticalHeader!="TITLE")  && (verticalHeader!="STRUCTURE") && (!pluginName.contains("bound", Qt::CaseInsensitive))) {
         PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
-        if (plugin!=nullptr) {
+        if (plugin != nullptr) {
             headers << "Method";
             headers << plugin->csvColumns();
             if (plugin->wiggleAllowed()) {
@@ -586,7 +586,7 @@ void ImportDataTable::updateTableHeaders()
             }
         }
 
-    } else if ((verticalHeader!="TITLE")  || (verticalHeader!="STRUCTURE")) {
+    } else if ((verticalHeader != "TITLE")  || (verticalHeader != "STRUCTURE")) {
         QStringList cols;
         cols << "Info";
         for (int i = 1; i < numCols; i++)

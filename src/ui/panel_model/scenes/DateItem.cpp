@@ -74,7 +74,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
 
     // Date::fromJson doesn't create mCalibration
     Date d (date);
-    const ProjectSettings s = ProjectSettings::fromJson(settings);
+    const StudyPeriodSettings s = StudyPeriodSettings::fromJson(settings);
 
      if (d.mPlugin!= nullptr) {
         if (!d.mIsValid)

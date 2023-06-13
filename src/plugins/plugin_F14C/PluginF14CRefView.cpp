@@ -65,7 +65,7 @@ PluginF14CRefView::~PluginF14CRefView()
 
 }
 
-void PluginF14CRefView::setDate(const Date& date, const ProjectSettings& settings)
+void PluginF14CRefView::setDate(const Date& date, const StudyPeriodSettings& settings)
 {
      GraphViewRefAbstract::setDate(date, settings);
 

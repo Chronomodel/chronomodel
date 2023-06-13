@@ -136,7 +136,7 @@ void GraphViewResults::updateCurvesToShow(bool showAllChains, const QVector<bool
 }
 
 
-void GraphViewResults::setSettings(const ProjectSettings& settings)
+void GraphViewResults::setSettings(const StudyPeriodSettings& settings)
 {
     mSettings = settings;
 }

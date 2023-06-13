@@ -137,7 +137,7 @@ bool intLessThan(const int& v1, const int& v2)
 void sortIntList(QList<int>& list)
 {
    // qSort(list.begin(), list.end(), intLessThan);// http://doc.qt.io/qt-5/qtalgorithms-obsolete.html#qSort
-    std::sort(list.begin(),list.end(), intLessThan);
+    std::sort(list.begin(), list.end(), intLessThan);
 }
 
 
@@ -500,7 +500,7 @@ QString textPurple(const QString& str)
     return "<span style=\"color: #7C1190;\">" + str + "</span>";
 }
 
-QString textColor(const QString &str,const QColor &color)
+QString textColor(const QString &str, const QColor &color)
 {
     int red, green, blue;
     color.getRgb(&red, &green, &blue);

@@ -159,8 +159,8 @@ QJsonObject Project::emptyState()
 
     state[STATE_APP_VERSION] = qApp->applicationVersion();
 
-    ProjectSettings projectSettings;
-    QJsonObject settings = projectSettings.toJson();
+    StudyPeriodSettings StudyPeriodSettings;
+    QJsonObject settings = StudyPeriodSettings.toJson();
     state[STATE_SETTINGS] = settings;
 
     MCMCSettings mcmcSettings;
@@ -1333,7 +1333,7 @@ bool Project::recenterProject()
      Project Settings
  --------------------------------------------------------------------
         Settings   */
-bool Project::setSettings(const ProjectSettings& settings)
+bool Project::setSettings(const StudyPeriodSettings& settings)
 {
     if (settings.mTmin >= settings.mTmax) {
         QMessageBox message(QMessageBox::Critical, tr("Inconsistent values"), tr("Start Date must be lower than End Date !"), QMessageBox::Ok, qApp->activeWindow());
@@ -1619,7 +1619,7 @@ void Project::recycleEvents()
         QJsonArray new_events_trash;
 
         QJsonObject settingsJson = stateNext.value(STATE_SETTINGS).toObject();
-        ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
+        StudyPeriodSettings settings = StudyPeriodSettings::fromJson(settingsJson);
 
         for (int i = 0; i < indexes.size(); ++i) {
             QJsonObject event = events_trash.at(indexes[i]).toObject();
@@ -1927,7 +1927,7 @@ void Project::addDate(int eventId, QJsonObject date)
 
     // Validate the date before adding it to the correct event and pushing the state
     QJsonObject settingsJson = stateNext[STATE_SETTINGS].toObject();
-    ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
+    StudyPeriodSettings settings = StudyPeriodSettings::fromJson(settingsJson);
     PluginAbstract* plugin = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
     bool valid = plugin->isDateValid(date[STATE_DATE_DATA].toObject(), settings);
     date[STATE_DATE_VALID] = valid;
@@ -2168,7 +2168,7 @@ void Project::updateDate(int eventId, int dateIndex)
     QJsonObject state = mState;
 
     QJsonObject settingsJson = state.value(STATE_SETTINGS).toObject();
-    ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
+    StudyPeriodSettings settings = StudyPeriodSettings::fromJson(settingsJson);
 
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
 
@@ -2300,7 +2300,7 @@ void Project::recycleDates(int eventId)
                     QJsonObject date = dates_trash.takeAt(indexes.at(i)).toObject();
                     // Validate the date before adding it to the correct event and pushing the state
                     QJsonObject settingsJson = stateNext[STATE_SETTINGS].toObject();
-                    ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
+                    StudyPeriodSettings settings = StudyPeriodSettings::fromJson(settingsJson);
                     PluginAbstract* plugin = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
                     bool valid = plugin->isDateValid(date[STATE_DATE_DATA].toObject(), settings);
                     date[STATE_DATE_VALID] = valid;
@@ -2327,7 +2327,7 @@ QJsonObject Project::checkValidDates(const QJsonObject& stateToCheck)
     QJsonObject state = stateToCheck;
 
     QJsonObject settingsJson = state.value(STATE_SETTINGS).toObject();
-    ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
+    StudyPeriodSettings settings = StudyPeriodSettings::fromJson(settingsJson);
 
     QJsonArray events = state.value(STATE_EVENTS).toArray();
     for (int i = 0; i < events.size(); ++i) {
@@ -2376,7 +2376,7 @@ void Project::combineDates(const int eventId, const QList<int>& dateIds)
 {
     QJsonObject stateNext = mState;
     QJsonObject settingsJson = stateNext.value(STATE_SETTINGS).toObject();
-    ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
+    StudyPeriodSettings settings = StudyPeriodSettings::fromJson(settingsJson);
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
 
     for (int i=0; i<events.size(); ++i) {
@@ -2448,7 +2448,7 @@ void Project::splitDate(const int eventId, const int dateId)
 {
     QJsonObject stateNext = mState;
     QJsonObject settingsJson = stateNext.value(STATE_SETTINGS).toObject();
-    ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
+    StudyPeriodSettings settings = StudyPeriodSettings::fromJson(settingsJson);
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
 
     for (int i=0; i<events.size(); ++i) {
@@ -3168,8 +3168,8 @@ void Project::runChronomodel()
             if (loop.mAbortedReason.isEmpty()) {
                 //Memo of the init variable state to show in Log view
                 //mModel->mLogInit = loop.getChainsLog() + loop.getInitLog();
-                // emit mcmcFinished(mModel);
-                mcmcFinished(mModel);
+                emit mcmcFinished(mModel);
+
 
             } else {
                 if (loop.mAbortedReason != ABORTED_BY_USER) {

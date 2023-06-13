@@ -230,7 +230,7 @@ void ProjectView::applyFilesSettings(Model* model)
     // Rebuild all calibration curve
 
     const QJsonObject &state = mModelView->getProject()->state();
-    const ProjectSettings &s = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+    const StudyPeriodSettings &s = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
     bool calibrate = mModelView->findCalibrateMissing();
     if (calibrate)
         mModelView->calibrateAll(s);

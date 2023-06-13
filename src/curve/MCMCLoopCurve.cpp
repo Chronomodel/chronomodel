@@ -77,10 +77,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "winbase.h"
 #endif
 
-MCMCLoopCurve::MCMCLoopCurve(ModelCurve* model, Project* project):MCMCLoop(project),
-    mModel(model)
+MCMCLoopCurve::MCMCLoopCurve(ModelCurve* model, Project* project):
+    MCMCLoop(project)
 {
-   if (mModel){
+    mModel = model;
+    if (mModel) {
         setMCMCSettings(mModel->mMCMCSettings);
     }
     
@@ -174,7 +175,7 @@ QString MCMCLoopCurve::calibrate()
 
 QString MCMCLoopCurve::initialize()
 {
-    QString initTime = initialize_time();
+    QString initTime = initialize_time(mModel);
     if (initTime != QString())
         return initTime;
 
@@ -191,7 +192,7 @@ QString MCMCLoopCurve::initialize()
 
 }
 
-QString MCMCLoopCurve::initialize_time()
+QString MCMCLoopCurve::initialize_time0()
 {
     tminPeriod = mModel->mSettings.mTmin;
     tmaxPeriod = mModel->mSettings.mTmax;
@@ -2263,10 +2264,13 @@ bool MCMCLoopCurve::update_Komlan()
 
                         if ( event->mTheta.mLastAccepts.last() == true) {
                             // Pour l'itération suivante :
+#ifndef CODE_KOMLAN
                             current_h_YWI = std::move(try_h_YWI);
                             current_vecH = std::move(try_vecH);
-                            current_matrices = std::move(try_matrices);
                             current_h_lambda = std::move(try_h_lambda);
+#endif
+                            current_matrices = std::move(try_matrices);
+
 
                         }
 
@@ -3279,8 +3283,8 @@ void MCMCLoopCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSp
          */
         //const double k = 3.; // Le nombre de fois sigma G, pour le calcul de la densité (gx - k*stdG - ymin)
 
-        const int idxYErrMin = inRange( 0, int((gx - 3.*stdG - ymin) / stepY), nbPtsY-1);
-        const int idxYErrMax = inRange( 0, int((gx + 3.*stdG - ymin) / stepY), nbPtsY-1);
+        const int idxYErrMin = std::clamp( 0, int((gx - 3.*stdG - ymin) / stepY), nbPtsY-1);
+        const int idxYErrMax = std::clamp( 0, int((gx + 3.*stdG - ymin) / stepY), nbPtsY-1);
 
         if (idxYErrMin == idxYErrMax && idxYErrMin > 0 && idxYErrMax < nbPtsY-1) {
 #ifdef DEBUG
@@ -3481,8 +3485,8 @@ void MCMCLoopCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline spline,
         /* il faut utiliser un pas de grille et le coefficient dans la grille dans l'intervalle [a,b] pour N(mu, sigma) est égale à la différence 1/2*(erf((b-mu)/(sigma*sqrt(2)) - erf((a-mu)/(sigma*sqrt(2))
          * https://en.wikipedia.org/wiki/Error_function
          */
-        idxYErrMin = inRange( 0, int((gx - k*stdGx - ymin_XInc) / stepY_XInc), nbPtsY_XInc-1);
-        idxYErrMax = inRange( 0, int((gx + k*stdGx - ymin_XInc) / stepY_XInc), nbPtsY_XInc-1);
+        idxYErrMin = std::clamp( 0, int((gx - k*stdGx - ymin_XInc) / stepY_XInc), nbPtsY_XInc-1);
+        idxYErrMax = std::clamp( 0, int((gx + k*stdGx - ymin_XInc) / stepY_XInc), nbPtsY_XInc-1);
 
         if (idxYErrMin == idxYErrMax && idxYErrMin > 0 && idxYErrMax < nbPtsY_XInc-1) {
 #ifdef DEBUG
@@ -3546,8 +3550,8 @@ void MCMCLoopCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline spline,
         /* Il faut utiliser un pas de grille et le coefficient dans la grille dans l'intervalle [a,b] pour N(mu, sigma) est égale à la différence 1/2*(erf((b-mu)/(sigma*sqrt(2)) - erf((a-mu)/(sigma*sqrt(2))
         * https://en.wikipedia.org/wiki/Error_function
         */
-        idxYErrMin = inRange( 0, int((gy - k*stdGy - ymin_YDec) / stepY_YDec), nbPtsY_YDec -1);
-        idxYErrMax = inRange( 0, int((gy + k*stdGy - ymin_YDec) / stepY_YDec), nbPtsY_YDec -1);
+        idxYErrMin = std::clamp( 0, int((gy - k*stdGy - ymin_YDec) / stepY_YDec), nbPtsY_YDec -1);
+        idxYErrMax = std::clamp( 0, int((gy + k*stdGy - ymin_YDec) / stepY_YDec), nbPtsY_YDec -1);
 
         if (idxYErrMin == idxYErrMax && idxYErrMin > 0 && idxYErrMax < nbPtsY_YDec-1) {
 #ifdef DEBUG
@@ -3614,8 +3618,8 @@ void MCMCLoopCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline spline,
             /* il faut utiliser un pas de grille et le coefficient dans la grille dans l'intervalle [a,b] pour N(mu, sigma) est égale à la différence 1/2*(erf((b-mu)/(sigma*sqrt(2)) - erf((a-mu)/(sigma*sqrt(2))
              * https://en.wikipedia.org/wiki/Error_function
              */
-            idxYErrMin = inRange( 0, int((gz - k*stdGz - ymin_ZF) / stepY_ZF), nbPtsY_ZF-1);
-            idxYErrMax = inRange( 0, int((gz + k*stdGz - ymin_ZF) / stepY_ZF), nbPtsY_ZF-1);
+            idxYErrMin = std::clamp( 0, int((gz - k*stdGz - ymin_ZF) / stepY_ZF), nbPtsY_ZF-1);
+            idxYErrMax = std::clamp( 0, int((gz + k*stdGz - ymin_ZF) / stepY_ZF), nbPtsY_ZF-1);
 
             if (idxYErrMin == idxYErrMax && idxYErrMin > 0 && idxYErrMax < nbPtsY_ZF-1) {
 #ifdef DEBUG
@@ -5116,201 +5120,6 @@ SplineMatrices MCMCLoopCurve::prepareCalculSpline_WI(const QList<Event *> &sorte
  * @return SplineResults
  */
 
-/*
- * MatB doit rester en copie
- */
-
-SplineResults MCMCLoopCurve::doSplineX(const SplineMatrices& matrices, const QList<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline)
-{
-    SplineResults spline;
-    try {
-        // calcul de: R + alpha * Qt * W-1 * Q = Mat_B
-        // Mat_B : matrice carrée (n-2) x (n-2) de bande 5 qui change avec alpha et Diag_W_1
-        /*    std::vector<std::vector<double>> matB = matrices.matR; //matR;
-              const double alpha = mModel->mLambdaSpline.mX;
-              if (alpha != 0) {
-                  std::vector<std::vector<double>> tmp = multiConstParMat(matrices.matQTW_1Q, alpha, 5);
-                  matB = addMatEtMat(matrices.matR, tmp, 5);
-               }
-
-               // Decomposition_Cholesky de matB en matL et matD
-               // Si alpha global: calcul de Mat_B = R + alpha * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
-               std::pair<std::vector<std::vector<double>>, std::vector<double>> decomp = decompositionCholesky(matB, 5, 1);
-
-
-        */
-
-        // Calcul des vecteurs G et Gamma en fonction de Y
-        const size_t n = events.size();
-
-        std::vector<double> vecG;
-        std::vector<double> vecQtY;
-
-        // VecQtY doit être de taille n, donc il faut mettre un zéro au début et à la fin
-        vecQtY.push_back(0.);
-        for (size_t i = 1; i < n-1; ++i) {
-            const double term1 = (events[i+1]->mYx - events[i]->mYx) / vecH[i];
-            const double term2 = (events[i]->mYx - events[i-1]->mYx) / vecH[i-1];
-            vecQtY.push_back(term1 - term2);
-        }
-        vecQtY.push_back(0.);
-
-        // Calcul du vecteur Gamma
-        const decltype(SplineResults::vecGamma) &vecGamma = resolutionSystemeLineaireCholesky(decomp, vecQtY);//, 5, 1);
-
-        // Calcul du vecteur g = Y - lamnbda * W-1 * Q * gamma
-        if (lambdaSpline != 0) {
-            const std::vector<double> &vecTmp2 = multiMatParVec(matrices.matQ, vecGamma, 3);
-            const MatrixDiag &diagWInv = matrices.diagWInv;
-
-            for (unsigned i = 0; i < n; ++i) {
-                vecG.push_back( events[i]->mYx - lambdaSpline * diagWInv[i] * vecTmp2[i]) ;
-            }
-
-        } else {
-            vecG.resize(n);
-            std::transform(events.begin(), events.end(), vecG.begin(), [](Event* ev) {return ev->mYx;});
-        }
-
-#ifdef DEBUG
-        if (std::accumulate(vecG.begin(), vecG.end(), 0., [](double sum, auto m) {return sum + (m == 0? 0: 1);}) == 0.) {
-            qDebug() <<"[MCMCLoopCurve] doSplineX() vecG NULL";
-        }
-        // Check all term are null
-        if (std::accumulate(vecGamma.begin(), vecGamma.end(), 0., [](double sum, auto m) {return sum + (m == 0? 0: 1);}) == 0.) {
-            qDebug() <<"[MCMCLoopCurve] doSplineX() vecGamma NULL";
-        }
-#endif
-
-        spline.vecG = std::move(vecG);
-        spline.vecGamma = std::move(vecGamma);
-
-    } catch(...) {
-        qCritical() << "[MCMCLoopCurve::doSplineX] : Caught Exception!\n";
-    }
-
-    return spline;
-}
-
-/*
- *  Identique à doSpline() mais spécialisé pour la composante Y
- * MatB doit rester en copie
- */
-
-SplineResults MCMCLoopCurve::doSplineY(const SplineMatrices& matrices, const QList<Event *> &events, const std::vector<t_reduceTime>& vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
-{
-    SplineResults spline;
-    try {
-
-        // Calcul des vecteurs G et Gamma en fonction de Y
-        const size_t n = events.size();
-
-        std::vector< double> vecQtY;
-        vecQtY.push_back(0.);
-        for (size_t i = 1; i < n-1; ++i) {
-            const double term1 = (events[i+1]->mYy - events[i]->mYy) / vecH[i];
-            const double term2 = (events[i]->mYy - events[i-1]->mYy) / vecH[i-1];
-            vecQtY.push_back(term1 - term2);
-        }
-        vecQtY.push_back(0.);
-
-        // Calcul du vecteur Gamma
-        const decltype(SplineResults::vecGamma) vecGamma = resolutionSystemeLineaireCholesky(decomp, vecQtY);//, 5, 1);
-
-        // Calcul du vecteur g = Y - alpha * W-1 * Q * gamma
-        std::vector< double> vecG;
-        if (lambdaSpline != 0) {
-            const std::vector<double> &vecTmp2 = multiMatParVec(matrices.matQ, vecGamma, 3);
-            const decltype(matrices.diagWInv)& diagWInv = matrices.diagWInv;
-            for (unsigned i = 0; i < n; ++i) {
-                vecG.push_back(events[i]->mYy - lambdaSpline * diagWInv[i] * vecTmp2[i]);
-            }
-
-        } else {
-            vecG.resize(n);
-            std::transform(events.begin(), events.end(), vecG.begin(), [](Event* ev) {return ev->mYy;});
-        }
-
-#ifdef DEBUG
-        if (std::accumulate(vecG.begin(), vecG.end(), 0., [](double sum, auto m) {return sum + (m == 0? 0: 1);}) == 0.)  {
-            qDebug() <<"[MCMCLoopCurve::doSplineY] vecG NULL";
-        }
-        if (std::accumulate(vecGamma.begin(), vecGamma.end(), 0., [](double sum, auto m) {return sum + (m == 0? 0: 1);}) == 0.)  {
-            qDebug() <<"[MCMCLoopCurve::doSplineY] vecGamma NULL";
-        }
-#endif
-
-        spline.vecG = std::move(vecG);
-        spline.vecGamma = std::move(vecGamma);
-       // spline.matL = std::move(matL);
-      //  spline.matD = std::move(matD);
-
-    } catch(...) {
-        qCritical() << "[MCMCLoopCurve::doSpline] Caught Exception!\n";
-    }
-
-    return spline;
-}
-
-/*
- * Identique à doSpline() mais spécialisé pour la composante Z
- * MatB doit rester en copie
- */
-SplineResults MCMCLoopCurve::doSplineZ(const SplineMatrices &matrices, const QList<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline)
-{
-    SplineResults spline;
-    try {
-
-        // Calcul des vecteurs G et Gamma en fonction de Y
-        const size_t n = events.size();
-
-        // Calcul du vecteur Vec_QtY, de dimension (n-2)
-        std::vector<double> vecQtY;
-
-        vecQtY.push_back(0.);
-        for (size_t i = 1; i < n-1; ++i) {
-            const double term1 = (events[i+1]->mYz - events[i]->mYz) / vecH[i];
-            const double term2 = (events[i]->mYz - events[i-1]->mYz) / vecH[i-1];
-            vecQtY.push_back(term1 - term2);
-        }
-        vecQtY.push_back(0.);
-
-        // Calcul du vecteur Gamma
-        const decltype(SplineResults::vecGamma) vecGamma = resolutionSystemeLineaireCholesky(decomp, vecQtY);//, 5, 1);
-
-        // Calcul du vecteur g = Y - lambda * W-1 * Q * gamma
-        std::vector<double> vecG;
-        if (lambdaSpline != 0) {
-            const std::vector<double> &vecTmp2 = multiMatParVec(matrices.matQ, vecGamma, 3);
-            const MatrixDiag &diagWInv = matrices.diagWInv;
-            for (unsigned i = 0; i < n; ++i) {
-                vecG.push_back( events[i]->mYz - lambdaSpline * diagWInv[i] * vecTmp2[i]);
-            }
-
-        } else {
-            vecG.resize(n);
-            std::transform(events.begin(), events.end(), vecG.begin(), [](Event* ev) {return ev->mYz;});
-        }
-
-#ifdef DEBUG
-        if (std::accumulate(vecG.begin(), vecG.end(), 0., [](double sum, auto m) {return sum + (m == 0? 0: 1);}) == 0.)  {
-            qDebug() <<"[MCMCLoopCurve::doSplineZ] vecG NULL";
-        }
-        if (std::accumulate(vecGamma.begin(), vecGamma.end(), 0., [](double sum, auto m) {return sum + (m == 0? 0: 1);}) == 0.)  {
-            qDebug() <<"[MCMCLoopCurve::doSplineZ] vecGamma NULL";
-        }
-#endif
-
-        spline.vecG = std::move(vecG);
-        spline.vecGamma = std::move(vecGamma);
-
-    } catch(...) {
-        qCritical() << "[MCMCLoopCurve::doSpline] Caught Exception!\n";
-    }
-
-    return spline;
-}
-
 /**
  Cette procedure calcule la matrice inverse de B:
  B = R + lambda * Qt * W-1 * Q
@@ -6144,7 +5953,7 @@ std::vector<double> MCMCLoopCurve::multiMatByVectCol0_KK(const  Matrix2D &KKK, c
 
         sum = 0;
         for (int k = 0; k < nc2; ++k) {
-            int u = Signe_Number(KKK[i][k]) * Signe_Number(gg[k]) ;
+            const int u = Signe_Number(KKK[i][k]) * Signe_Number(gg[k]) ;
 
             sum += u * pow(nl1, log_p(abs(KKK[i][k]), nl1) + log_p(abs(gg[k]), nl1)) ; //(*(itMat1 + k)) * gg[k];
         }

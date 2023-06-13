@@ -41,7 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define PROJECT_H
 
 #include "MCMCLoop.h"
-#include "ProjectSettings.h"
+#include "StudyPeriodSettings.h"
 #include "Model.h"
 #include "QtCore/qtmetamacros.h"
 
@@ -129,7 +129,7 @@ public:
     void setNoResults( const bool noResults) { mNoResults = noResults;}
     bool withResults() {return (!mNoResults) && mModel;}
 
-    bool setSettings(const ProjectSettings &settings);
+    bool setSettings(const StudyPeriodSettings &settings);
 
     bool studyPeriodIsValid();
     void showStudyPeriodWarning();

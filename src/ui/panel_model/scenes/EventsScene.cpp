@@ -313,7 +313,7 @@ void EventsScene::createSceneFromState()
 
     progress->setMinimumWidth(int (progress->fontMetrics().horizontalAdvance(progress->labelText()) * 1.5));
 
-    mSettings = ProjectSettings::fromJson(settings);
+    mSettings = StudyPeriodSettings::fromJson(settings);
     mCurveSettings = CurveSettings::fromJson(CurveSettings);
 
     mUpdatingItems = true;
@@ -443,7 +443,7 @@ void EventsScene::updateSceneFromState()
     // ------------------------------------------------------
     bool settingsChanged = false;
 
-    ProjectSettings s = ProjectSettings::fromJson(settings);
+    StudyPeriodSettings s = StudyPeriodSettings::fromJson(settings);
     if (mSettings != s) {
         settingsChanged = true;
         mSettings = s;

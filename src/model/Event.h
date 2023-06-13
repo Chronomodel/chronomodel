@@ -170,4 +170,9 @@ public:
 
 };
 
+
+// Prepared (projected) values
+decltype(Event::mYx) get_Yx(Event* e) ;
+decltype(Event::mYy) get_Yy(Event* e) ;
+decltype(Event::mYz) get_Yz(Event* e) ;
 #endif

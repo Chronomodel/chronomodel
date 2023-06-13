@@ -444,6 +444,7 @@ QPair<int, double> gammaQuartile(const QVector<T> &trace, const int quartileType
  * @param p is the confidence must be between [0 , 1]
  * @return Q1(confidance) Q2(50%) Q3(1-confidance)
  */
+/*
 template <typename T>
 Quartiles quantilesType(const std::vector<T>& trace, const int quartileType, const double p)
 {
@@ -486,13 +487,13 @@ Quartiles quantilesType(const std::vector<T>& trace, const int quartileType, con
 
     return Q;
 }
+*/
 
-// It is easier to redo the function for the QVector type. Otherwise you have to build a std::vector by copy
-template <typename T>
-Quartiles quantilesType(const QVector<T>& trace, const int quartileType, const double p)
+template <template<typename...> class C, typename T>
+Quartiles quantilesType(const C<T>& trace, const int quartileType, const double p)
 {
     Quartiles Q;
-    QVector<T> traceSorted (trace);
+    C<T> traceSorted (trace);
 
     QPair<int, double> parQ1 = gammaQuartile(trace, quartileType, p); // first is j and second is gamma
     QPair<int, double> parQ2 = gammaQuartile(trace, quartileType, 0.5);

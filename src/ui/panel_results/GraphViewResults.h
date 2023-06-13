@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef GRAPHVIEWRESULTS_H
 #define GRAPHVIEWRESULTS_H
 
-#include "ProjectSettings.h"
+#include "StudyPeriodSettings.h"
 #include "MCMCSettings.h"
 
 #include "GraphView.h"
@@ -167,7 +167,7 @@ protected:
     bool mIsSelected;
     bool mShowSelectedRect;
 
-    ProjectSettings mSettings;
+    StudyPeriodSettings mSettings;
     MCMCSettings mMCMCSettings;
     QList<ChainSpecs> mChains;
 
@@ -192,7 +192,7 @@ public:
 
     virtual void mousePressEvent(QMouseEvent *event);
 
-    void setSettings(const ProjectSettings& settings);
+    void setSettings(const StudyPeriodSettings& settings);
     void setMCMCSettings(const MCMCSettings& mcmc, const QList<ChainSpecs>& chains);
 
     void setMainColor(const QColor& color);

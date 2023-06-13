@@ -234,7 +234,7 @@ void CalibrationView::setDate(const Date& d)
 {
     const QJsonObject &state = MainWindow::getInstance()->getState();
     const QJsonObject &settings = state.value(STATE_SETTINGS).toObject();
-    mSettings = ProjectSettings::fromJson(settings);
+    mSettings = StudyPeriodSettings::fromJson(settings);
 
     if (mRefGraphView) {
          if (mDate.mPlugin)
@@ -373,15 +373,17 @@ void CalibrationView::updateGraphs()
                 // update max inside the display period
                 QMap<type_data, type_data> subDisplayCalib = calibCurve.mData;
                 subDisplayCalib = getMapDataInRange(subDisplayCalib, mTminDisplay, mTmaxDisplay);
-                type_data yMax = map_max_value(subDisplayCalib);
+                if (!subDisplayCalib.isEmpty()) {
 
-                if (mDate.mDeltaType != Date::eDeltaNone) {
-                    QMap<type_data, type_data> subDisplayWiggle = getMapDataInRange(calibWiggleCurve.mData, mTminDisplay, mTmaxDisplay);
-                    yMax = std::max( yMax, map_max_value(subDisplayWiggle));
+                    type_data yMax = map_max_value(subDisplayCalib);
+
+                    if (mDate.mDeltaType != Date::eDeltaNone) {
+                        QMap<type_data, type_data> subDisplayWiggle = getMapDataInRange(calibWiggleCurve.mData, mTminDisplay, mTmaxDisplay);
+                        yMax = std::max( yMax, map_max_value(subDisplayWiggle));
+                    }
+
+                    mCalibGraph->setRangeY(0., yMax);
                 }
-
-                mCalibGraph->setRangeY(0., yMax);
-
                 mCalibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
                 mCalibGraph->setFormatFunctX(nullptr);
                 mCalibGraph->setFormatFunctY(nullptr);
@@ -439,7 +441,7 @@ void CalibrationView::updateGraphs()
             mRefGraphView->setVisible(true);
 
             mRefGraphView->setFormatFunctX(DateUtils::convertFromAppSettingsFormat); // must be before setDate, because setDate use it
-            ProjectSettings tmpSettings;
+            StudyPeriodSettings tmpSettings;
             const double maxDisplayInRaw = DateUtils::convertFromAppSettingsFormat(mTmaxDisplay);
             const double minDisplayInRaw = DateUtils::convertFromAppSettingsFormat(mTminDisplay);
             tmpSettings.mTmax = qMax(minDisplayInRaw, maxDisplayInRaw);
