@@ -93,7 +93,7 @@ MainWindow::MainWindow(QWidget* aParent):
     mUndoDock->setWidget(mUndoView);
     mUndoDock->setAllowedAreas(Qt::RightDockWidgetArea);
     addDockWidget(Qt::RightDockWidgetArea, mUndoDock);
-    mUndoDock->setVisible(true);
+    mUndoDock->setVisible(false); // toggle to see the undo-list
 
     createActions();
     createMenus();
