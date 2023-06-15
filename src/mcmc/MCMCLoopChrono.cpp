@@ -542,31 +542,32 @@ void MCMCLoopChrono::memo()
 {
     for (const auto& event : mModel->mEvents) {
         //--------------------- Memo Events -----------------------------------------
-        event->mTheta.memo();
-        event->mTheta.saveCurrentAcceptRate();
+        if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+            event->mTheta.memo();
+            event->mTheta.saveCurrentAcceptRate();
+            for (auto&& date : event->mDates )   {
+                //--------------------- Memo Dates -----------------------------------------
+                date.mTi.memo();
+                date.mSigmaTi.memo();
+                date.mWiggle.memo();
 
-        if (event->mS02.mSamplerProposal != MHVariable::eFixe) {
-            event->mS02.memo();
-            event->mS02.saveCurrentAcceptRate();
+                date.mTi.saveCurrentAcceptRate();
+                date.mSigmaTi.saveCurrentAcceptRate();
+            }
+
+            if (event->mS02.mSamplerProposal != MHVariable::eFixe) {
+                event->mS02.memo();
+                event->mS02.saveCurrentAcceptRate();
+            }
+
         }
 
-
-        for (auto&& date : event->mDates )   {
-            //--------------------- Memo Dates -----------------------------------------
-            date.mTi.memo();
-            date.mSigmaTi.memo();
-            date.mWiggle.memo();
-
-            date.mTi.saveCurrentAcceptRate();
-            date.mSigmaTi.saveCurrentAcceptRate();
-        }
 
     }
 
     //--------------------- Memo Phases -----------------------------------------
     for (const auto& ph : mModel->mPhases)
             ph->memoAll();
-
 
 }
 

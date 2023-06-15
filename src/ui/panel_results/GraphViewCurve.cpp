@@ -252,7 +252,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         }
 
         const GraphCurve &curveG = FunctionCurve(G_Data, "G", QColor(119, 95, 49) ); // This is the name of the columns when exporting the graphs
-        const QColor envColor (119, 95, 49 , 30);
+        const QColor envColor (119, 95, 49 , 60);
 
         const GraphCurve &curveGEnv = shapeCurve(curveGInf_Data, curveGSup_Data, "G Env",
                                          QColor(119, 95, 49), Qt::CustomDashLine, envColor);
@@ -277,8 +277,8 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
 
         }
 
-        for (auto&& cMapC: curveMapChains) {
-            mGraph->add_curve(cMapC);
+        for (auto&& c: curveMapChains) {
+            mGraph->add_curve(c);
         }
         // must be put at the end to print the points above
         mGraph->set_points(curveEventsPoints);

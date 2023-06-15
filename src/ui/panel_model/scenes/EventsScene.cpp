@@ -231,9 +231,9 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
 
         qDebug()<<"[EventsScene::sendUpdateProject] stateChange";
         if (storeUndoCommand)
-            mProject->pushProjectState(stateNext, reason, notify);
-        //else
-        mProject->sendUpdateState(stateNext, reason, notify);
+            mProject->pushProjectState(stateNext, reason, notify); //
+        else
+            mProject->sendUpdateState(stateNext, reason, notify);
  //   }
 }
 void EventsScene::noHide()
@@ -788,33 +788,22 @@ void EventsScene::updateStateSelectionFromItem()
 
             if (isCurrent)
                 currentEvent = curItem->getData();
-#ifdef DEBUG
-         //   if (modified)
-         //       qDebug()<<"EventsScene::updateStateSelectionFromItem "<<nextEvent.value(STATE_NAME).toString()<<selected<<isCurrent;
-#endif
+
          }
 
         if (modified ) {
             mProject->mState[STATE_EVENTS] = updatedEvents;
 
             if (movedItem) {
-                sendUpdateProject(tr("item moved"), false, false);
+                sendUpdateProject(tr("item moved"), false, true);
         }
-        else   sendUpdateProject(tr("events selection : no undo, no view update!"), false, false);//  bool notify = true, bool storeUndoCommand = false
+        else   sendUpdateProject(tr("events selection"), false, false);//  bool notify = true, bool storeUndoCommand = false
             // refresh the show and hide Event in the phases Scenes
            if (nbOfSelectedEvent == 0)
                 emit noSelection();
            else
                 emit eventsAreSelected();
 
-            // refresh the Event propreties view
-/*
-           if (selectedItems().size() >= 1)
-                emit mProject->currentEventChanged(currentEvent); // connect to EventPropertiesView::setEvent
-            else {
-                emit mProject->currentEventChanged( QJsonObject());
-            }
-*/
         }
     }
 }

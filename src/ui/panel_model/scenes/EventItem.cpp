@@ -277,9 +277,9 @@ void EventItem::setDatesVisible(bool visible)
 // Events
 void EventItem::updateItemPosition(const QPointF& pos)
 {
-    mData[STATE_ITEM_X] = double (pos.x());
-    mData[STATE_ITEM_Y] = double (pos.y());
-    mScene->sendUpdateProject("item moved", true, false);
+    mData[STATE_ITEM_X] = pos.x();
+    mData[STATE_ITEM_Y] = pos.y();
+   // mScene->sendUpdateProject("item moved", true, true); //storeUndoCommand = true
 }
 
 void EventItem::dropEvent(QGraphicsSceneDragDropEvent* e)

@@ -92,8 +92,11 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> & fun)
         result.max = fun.firstKey();
         result.mode = fun.firstKey();
         result.mean = fun.firstKey();
-        result.std = fun.firstKey();
-        qDebug() << "[Function::analyseFunction] WARNING : only one data !! ";
+        result.std = 0.;
+        //qDebug() << "[Function::analyseFunction] WARNING : only one data !! ";
+        result.quartiles.Q1 = fun.firstKey();
+        result.quartiles.Q2 = fun.firstKey();
+        result.quartiles.Q3 = fun.firstKey();
         return result;
     }
 
@@ -658,6 +661,7 @@ std::pair<double, double> credibilityForTrace(const QVector<double>& trace, doub
     if (n == 1) {
         credibility.first = trace[0];
         credibility.second = trace[0];
+        exactThresholdResult = 1.;
         return credibility;
     }
 
@@ -685,7 +689,7 @@ std::pair<double, double> credibilityForTrace(const QVector<double>& trace, doub
 
     if (credibility.first == credibility.second) {
         //It means : there is only one value
-        exactThresholdResult = 1;
+        exactThresholdResult = 1.;
         //return QPair<double, double>();
     }
 
@@ -1042,6 +1046,14 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
 
     if (hpd.isEmpty())
         return intervals;
+
+    if (hpd.size() == 1) {
+        QPair<double, QPair<double, double> > inter;
+        inter.first = 100.;
+        inter.second = QPair<double, double> (hpd.firstKey(), hpd.lastKey());
+        intervals.append(inter);
+        return intervals;
+    }
 
     QMapIterator<double, double> it(hpd);
     bool inInterval = false;

@@ -506,11 +506,6 @@ QList<double> Event::curveParametersFromJsonEvent(QJsonObject &event, CurveSetti
     return curveParameters;
 }
 
-// Properties
-Event::Type Event::type() const
-{
-    return mType;
-}
 
 // MCMC
 void Event::reset()
@@ -534,7 +529,7 @@ bool Event::getThetaMinPossible(const Event* originEvent, QString& circularEvent
     QString serieStr  (" ➡︎ ");
 
     QString startList;
-    for (Event* e : newStartEvents)
+    for (const Event* e : newStartEvents)
         startList += e->mName + linkStr;
 
     //qDebug() << mName << "startList" << startList;
@@ -545,7 +540,7 @@ bool Event::getThetaMinPossible(const Event* originEvent, QString& circularEvent
     // list of phase under
     bool noPhaseBwd (true);
     if (!mPhases.isEmpty())
-        for (auto&& phase : mPhases)
+        for (const Phase* phase : mPhases)
             noPhaseBwd = noPhaseBwd && (phase->mConstraintsBwd.isEmpty());
 
     //--

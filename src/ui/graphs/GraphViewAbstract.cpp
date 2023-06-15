@@ -96,13 +96,15 @@ void GraphViewAbstract::setRangeY(const type_data &aMinY, const type_data &aMaxY
             mMaxY = aMaxY + type_data (1.);
             //qDebug() << "Warning : setting min == max for graph y scale : " << aMinY;
         }
+#ifdef DEBUG
         else if (mMinY > mMaxY) {
             qDebug() << " [GraphViewAbstract::setRangeY] ERROR : setting min > max for graph y scale : [" << mMinY << "; " << mMaxY << "]";
-        } else {
+        }
+#endif
+        else {
             mMinY = aMinY;
             mMaxY = aMaxY;
         }
-       // repaintGraph(true);
     }
 }
 

@@ -183,8 +183,8 @@ public slots:
     void exportCurrentDensities(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step = 1.) const;
     void exportCurrentVectorCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, bool writeInRows, int offset = 0) const;
 
-    void exportCurrentCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step = 1.) const;
-    void exportReferenceCurves(const QString& defaultPath, const QLocale locale = QLocale::English, const QString& csvSep = ",", double step = 1.) const;
+    void exportCurrentCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step = 1., QString graph_title = "") const;
+    void exportReferenceCurves(const QString& defaultPath, const QLocale locale = QLocale::English, const QString& csvSep = ",", double step = 1., QString filename = "") const;
 
     void changeXScaleDivision (const Scale& sc);
     void changeXScaleDivision (const double& major, const int& minor);

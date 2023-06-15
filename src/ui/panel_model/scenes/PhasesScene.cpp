@@ -579,11 +579,11 @@ bool PhasesScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
                     sendUpdateProject("Phase constraint created", true, true);
 
               }
-        } else {
+        } /* else {
             //phaseClicked->setSelected(true);
           //  updateStateSelectionFromItem();
           //  sendUpdateProject("Item selected", true, false);//  bool notify = true, bool storeUndoCommand = false
-        }
+        } */
 
 
     } else {

@@ -315,10 +315,10 @@ void GraphViewResults::saveGraphData() const
         mGraph->exportCurrentVectorCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
 
     else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eTempo))
-        mGraph->exportCurrentCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
+        mGraph->exportCurrentCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep, mTitle);
 
     else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eActivity))
-        mGraph->exportCurrentCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
+        mGraph->exportCurrentCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep, mTitle);
 
     // All visible curves are saved in the same file, the credibility bar is not save
     else if (mCurrentTypeGraph == ePostDistrib && !mShowVariableList.contains(eG))
@@ -336,7 +336,7 @@ void GraphViewResults::saveGraphData() const
             mGraph->exportReferenceCurves (MainWindow::getInstance()->getCurrentPath(), QLocale::English, ",",  mSettings.mStep);
 
         else if (messageBox.clickedButton() == dataButton) { // Export raw Data, the step is not 1 is map.column()
-            mGraph->exportCurrentCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, 0);// mSettings.mStep);
+            mGraph->exportCurrentCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, 0, mTitle);
         }
         else return;
     }

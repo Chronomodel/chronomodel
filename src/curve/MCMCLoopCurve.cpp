@@ -2995,7 +2995,7 @@ void MCMCLoopCurve::memo()
             event->mTheta.saveCurrentAcceptRate();
 
 
-            if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+            if (event->mS02.mSamplerProposal != MHVariable::eFixe) {
                 event->mS02.memo();
                 event->mS02.saveCurrentAcceptRate();
             }
@@ -3009,6 +3009,7 @@ void MCMCLoopCurve::memo()
                 date.mSigmaTi.saveCurrentAcceptRate();
             }
         }
+
     }
 
     /* --------------------------------------------------------------
@@ -3771,8 +3772,6 @@ void MCMCLoopCurve::finalize()
 
     // This is called here because it is calculated only once and will never change afterwards
     // This is very slow : it is for this reason that the results display may be long to appear at the end of MCMC calculation.
-    /** @todo Find a way to make it faster !
-                     */
 
     emit setMessage(tr("Computing posterior distributions and numerical results - Correlations"));
     mModel->generateCorrelations(mChains);
@@ -3792,16 +3791,13 @@ void MCMCLoopCurve::finalize()
     // find the min in the map, can't be done when we do the map
 
     for (auto& pmc : mModel->mPosteriorMeanGByChain) {
-        auto mini = *std::min_element(begin(pmc.gx.mapG.data), end(pmc.gx.mapG.data));
-        pmc.gx.mapG.min_value = mini;
+        pmc.gx.mapG.min_value = *std::min_element(begin(pmc.gx.mapG.data), end(pmc.gx.mapG.data));
 
         if (mComputeY) {
-            mini = *std::min_element(begin(pmc.gy.mapG.data), end(pmc.gy.mapG.data));
-            pmc.gy.mapG.min_value = mini;
+            pmc.gy.mapG.min_value = *std::min_element(begin(pmc.gy.mapG.data), end(pmc.gy.mapG.data));
 
             if (mComputeZ) {
-                mini = *std::min_element(begin(pmc.gz.mapG.data), end(pmc.gz.mapG.data));
-                pmc.gz.mapG.min_value = mini;
+                pmc.gz.mapG.min_value = *std::min_element(begin(pmc.gz.mapG.data), end(pmc.gz.mapG.data));
 
             }
         }
@@ -3815,17 +3811,14 @@ void MCMCLoopCurve::finalize()
         mModel->mPosteriorMeanG = mModel->mPosteriorMeanGByChain[0];
 
     } else {
-        const auto minix = *std::min_element(begin(mModel->mPosteriorMeanG.gx.mapG.data), end(mModel->mPosteriorMeanG.gx.mapG.data));
+        mModel->mPosteriorMeanG.gx.mapG.min_value = *std::min_element(begin(mModel->mPosteriorMeanG.gx.mapG.data), end(mModel->mPosteriorMeanG.gx.mapG.data));
 
-        mModel->mPosteriorMeanG.gx.mapG.min_value = minix;
 
         if (mComputeY) {
-            const auto miniy = *std::min_element(begin(mModel->mPosteriorMeanG.gy.mapG.data), end(mModel->mPosteriorMeanG.gy.mapG.data));
-            mModel->mPosteriorMeanG.gy.mapG.min_value = miniy;
+            mModel->mPosteriorMeanG.gy.mapG.min_value = *std::min_element(begin(mModel->mPosteriorMeanG.gy.mapG.data), end(mModel->mPosteriorMeanG.gy.mapG.data));
 
             if (mComputeZ) {
-                const auto miniz = *std::min_element(begin(mModel->mPosteriorMeanG.gz.mapG.data), end(mModel->mPosteriorMeanG.gz.mapG.data));
-                mModel->mPosteriorMeanG.gz.mapG.min_value = miniz;
+                mModel->mPosteriorMeanG.gz.mapG.min_value = *std::min_element(begin(mModel->mPosteriorMeanG.gz.mapG.data), end(mModel->mPosteriorMeanG.gz.mapG.data));
 
             }
         }
@@ -3835,8 +3828,6 @@ void MCMCLoopCurve::finalize()
 
 #ifdef DEBUG
     QTime endTime = QTime::currentTime();
-
-    qDebug()<<"ModelCurve computed";
     qDebug()<<tr("[MCMCLoopCurve::finalize] finish at %1").arg(endTime.toString("hh:mm:ss.zzz")) ;
     qDebug()<<tr("Total time elapsed %1").arg(QString(DHMS(startTime.elapsed())));
 #endif

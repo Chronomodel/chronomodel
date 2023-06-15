@@ -1261,8 +1261,8 @@ QPixmap Date::generateUnifThumb(StudyPeriodSettings settings)
 
             const QColor color = mPlugin->getColor();
 
-            const double tminDisplay = qBound(tmin, tLower, tmax);
-            const double tmaxDisplay = qBound(tmin, tUpper, tmax);
+            const double tminDisplay = std::clamp(tmin, tLower, tmax);
+            const double tmaxDisplay = std::clamp(tmin, tUpper, tmax);
 
             const GraphCurve curve = horizontalSection(qMakePair(tminDisplay, tmaxDisplay), "Calibration", color, QBrush(color));
 

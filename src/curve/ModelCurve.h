@@ -55,9 +55,8 @@ public:
     virtual ~ModelCurve();
     
     virtual void saveToFile(QDataStream *out);
-    virtual void restoreFromFile(QDataStream *in);
-
-    void saveMapToFile(QFile *file, const QString csvSep, const CurveMap &map);
+    virtual void restoreFromFile(QDataStream *in) {return restoreFromFile_v323(in);};
+    void restoreFromFile_v323(QDataStream* in);
 
     virtual QJsonObject toJson() const;
     virtual void fromJson( const QJsonObject& json);
@@ -67,7 +66,7 @@ public:
     void generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth);
     virtual void generateCorrelations(const QList<ChainSpecs> &chains);
     void generateNumericalResults(const QList<ChainSpecs> &chains);
-    virtual void generateCredibility(const double &thresh);
+    virtual void generateCredibility(const double thresh);
     void generateHPD(const double thresh);
     
     virtual void clearThreshold();
@@ -85,6 +84,9 @@ public:
 
     void memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
     void memo_PosteriorG(PosteriorMeanGComposante &postGCompo, const MCMCSplineComposante &splineComposante, const int realyAccepted);
+
+public slots:
+    void saveMapToFile(QFile *file, const QString csvSep, const CurveMap &map);
 
 public:
     CurveSettings mCurveSettings;

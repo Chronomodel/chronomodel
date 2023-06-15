@@ -55,7 +55,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <iostream>
 
 // Constructor / Destructor
-MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
+MainWindow::MainWindow(QWidget* aParent):
+    QMainWindow(aParent),
+    undo_action(false),
+    redo_action(false)
 {
 #ifdef DEBUG
     setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + " DEBUG Mode ");
@@ -83,13 +86,14 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     mUndoStack = new QUndoStack();
     mUndoStack->setUndoLimit(1000);
 
+    // special view of the undo-redo stack
     mUndoView = new QUndoView(mUndoStack);
     mUndoView->setEmptyLabel(tr("Initial state"));
     mUndoDock = new QDockWidget(this);
     mUndoDock->setWidget(mUndoView);
     mUndoDock->setAllowedAreas(Qt::RightDockWidgetArea);
     addDockWidget(Qt::RightDockWidgetArea, mUndoDock);
-    mUndoDock->setVisible(false);
+    mUndoDock->setVisible(true);
 
     createActions();
     createMenus();
@@ -204,20 +208,21 @@ void MainWindow::createActions()
     mProjectSaveAsAction = new QAction(QIcon(":save_p.png"), tr("Save as..."), this);
     mProjectSaveAsAction->setStatusTip(tr("Change the current project on an other name or on an other place"));
 
-    mProjectExportAction = new QAction(QIcon(":export.png"), tr("Export"), this);
-    mProjectExportAction->setVisible(false);
-
     mUndoAction = mUndoStack->createUndoAction(this);
     mUndoAction->setShortcuts(QKeySequence::Undo);
     mUndoAction->setIcon(QIcon(":undo_p.png"));
     mUndoAction->setText(tr("Undo"));
     mUndoAction->setToolTip(tr("Undo"));
 
+    connect(mUndoAction, &QAction::triggered, this, &MainWindow::toggleUndo);
+
     mRedoAction = mUndoStack->createRedoAction(this);
     mRedoAction->setShortcuts(QKeySequence::Redo);
     mRedoAction->setIcon(QIcon(":redo_p.png"));
     mRedoAction->setText(tr("Redo"));
     mRedoAction->setToolTip(tr("Redo"));
+
+    connect(mRedoAction, &QAction::triggered, this, &MainWindow::toggleRedo);
 
     mUndoViewAction = mUndoDock->toggleViewAction();
     mUndoViewAction->setText(tr("Show Undo Stack"));
@@ -357,7 +362,7 @@ void MainWindow::createMenus()
 
     mProjectMenu->addSeparator();
 
-    mProjectMenu->addAction(mProjectExportAction);
+    //mProjectMenu->addAction(mProjectExportAction);
     mProjectMenu->setFont(ft);
 
     //-----------------------------------------------------------------
@@ -435,7 +440,7 @@ void MainWindow::createToolBars()
     mToolBar->addAction(mNewProjectAction);
     mToolBar->addAction(mOpenProjectAction);
     mToolBar->addAction(mProjectSaveAction);
-    mToolBar->addAction(mProjectExportAction);
+    //mToolBar->addAction(mProjectExportAction);
 
     mToolBar->addAction(mUndoAction);
     mToolBar->addAction(mRedoAction);
@@ -620,12 +625,12 @@ void MainWindow::connectProject()
     connect(mProject, &Project::noResult, this, &MainWindow::noResult);
     connect(mProject, &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
     connect(mProject, &Project::projectStateChanged, this, &MainWindow::updateProject);
-    connect(mProject, &Project::projectStructureChanged, this, &MainWindow::noResult);
+
 
   //  connect(mCurveAction, &QAction::toggled, this, &MainWindow::toggleCurve);
     connect(mMCMCSettingsAction, &QAction::triggered, mProject, &Project::mcmcSettings);
     connect(mResetMCMCAction, &QAction::triggered, mProject, &Project::resetMCMC);
-    connect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
+    //connect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
     connect(mRunAction, &QAction::triggered, mProject, &Project::run);
 }
 
@@ -634,11 +639,11 @@ void MainWindow::disconnectProject()
     disconnect(mProject, &Project::noResult, this, &MainWindow::noResult);
     disconnect(mProject, &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
     disconnect(mProject, &Project::projectStateChanged, this, &MainWindow::updateProject);
-    disconnect(mProject, &Project::projectStructureChanged, this, &MainWindow::noResult);
+
 
     disconnect(mMCMCSettingsAction, &QAction::triggered, mProject, &Project::mcmcSettings);
     disconnect(mResetMCMCAction, &QAction::triggered, mProject, &Project::resetMCMC);
-    disconnect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
+  //  disconnect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
     disconnect(mRunAction, &QAction::triggered, mProject, &Project::run);
 
    // connect(mCurveAction, &QAction::triggered, this, &MainWindow::toggleCurve);
@@ -697,7 +702,7 @@ void MainWindow::updateWindowTitle()
 
 void MainWindow::updateProject()
 {
-    qDebug()<<"MainWindow::updateProject()";
+    qDebug()<<"[MainWindow::updateProject]";
     mUndoAction->setText(tr("Undo"));
     QString stackText = "";
     if (mUndoStack->count()>1)
@@ -1256,7 +1261,7 @@ void MainWindow::activateInterface(bool activate)
 
     mProjectSaveAction->setEnabled(activate);
     mProjectSaveAsAction->setEnabled(activate);
-    mProjectExportAction->setEnabled(activate);
+    //mProjectExportAction->setEnabled(activate);
 
     mCurveAction->setEnabled(activate);
     mViewModelAction->setEnabled(activate);

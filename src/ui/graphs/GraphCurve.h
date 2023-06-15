@@ -108,7 +108,6 @@ public:
 
     };
 
-//private:
     CurveType mType;
     QMap<type_data, type_data> mData;
     CurveMap mMap;
@@ -124,8 +123,6 @@ public:
     type_data mVerticalValue;
 
     std::vector<QPair<type_data, type_data> > mSections;
-
-    //std::vector<CurveRefPts> mRefPoints;
 
     std::pair<QMap<type_data, type_data>, QMap<type_data, type_data>> mShape;
 
@@ -153,37 +150,37 @@ public :
 };
 
 GraphCurve densityCurve(const QMap<double, double> data,
-                                const QString& name,
-                                const QColor& lineColor,
+                                const QString &name,
+                                const QColor &lineColor,
                                 const Qt::PenStyle penStyle = Qt::SolidLine,
                                 const QBrush& brush = Qt::NoBrush) ;
 
 GraphCurve FunctionCurve(const QMap<double, double> data,
-                                const QString& name,
-                                const QColor& lineColor,
+                                const QString &name,
+                                const QColor &lineColor,
                                 const Qt::PenStyle penStyle = Qt::SolidLine,
                                 const QBrush& brush = Qt::NoBrush) ;
 
 GraphCurve HPDCurve (QMap<double, double> data,
-                     const QString& name, const QColor& color) ;
+                     const QString &name, const QColor &color) ;
 
-GraphCurve topLineSection (const std::pair<double, double>& section,
-                           const QString& name,
-                           const QColor& color) ;
+GraphCurve topLineSection (const std::pair<double, double> &section,
+                           const QString &name,
+                           const QColor &color) ;
 
 GraphCurve horizontalSection (const std::pair<double, double>& section,
-                              const QString& name,
-                              const QColor& color = Painting::mainColorLight,
-                              const QBrush& brush = Qt::NoBrush) ;
+                              const QString &name,
+                              const QColor &color = Painting::mainColorLight,
+                              const QBrush &brush = Qt::NoBrush) ;
 
 GraphCurve horizontalLine (const double yValue,
-                           const QString& name,
-                           const QColor& color,
+                           const QString &name,
+                           const QColor &color,
                            const Qt::PenStyle penStyle = Qt::SolidLine) ;
 
-GraphCurve shapeCurve (const QMap<double, double>& dataInf, const QMap<double, double>& dataSup,
-                       const QString& name, const QColor& lineColor, const Qt::PenStyle penStyle,
-                       const QBrush& brush) ;
+GraphCurve shapeCurve (const QMap<double, double> &dataInf, const QMap<double, double> &dataSup,
+                       const QString &name, const QColor &lineColor, const Qt::PenStyle penStyle,
+                       const QBrush &brush) ;
 
 
 

@@ -1423,7 +1423,7 @@ void ModelView::mouseReleaseEvent(QMouseEvent* e)
 void ModelView::mouseMoveEvent(QMouseEvent* e)
 {
     if (mIsSplitting) {
-        qreal x = qBound(200, e->pos().x(), width() - 450);
+        qreal x = std::clamp(200, e->pos().x(), width() - 450);
 
         mSplitProp = x / (width() - mHandlerW/2);
         mHandlerRect.moveTo(int(x + mHandlerW/2), mTopRect.height());

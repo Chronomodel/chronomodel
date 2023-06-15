@@ -133,12 +133,12 @@ Matrix2D calculMatQ(const std::vector<t_reduceTime>& rVecH)
     // 0 0 0 X 0
 
     // vecH est de dimension n-1
-    const auto n = rVecH.size()+1;
+    const size_t n = rVecH.size() + 1;
 
     // matQ est de dimension n x n-2, mais contenue dans une matrice nxn
     Matrix2D matQ = initMatrix2D(n, n);
     // On parcourt n-2 valeurs :
-    for (auto i = 1; i < n-1; ++i) {
+    for (size_t i = 1; i < n-1; ++i) {
         matQ[i-1][i] = 1. / rVecH[i-1];
         matQ[i][i] = -((1./rVecH[i-1]) + (1./rVecH[i]));
         matQ[i+1][i] = 1. / rVecH[i];

@@ -133,7 +133,9 @@ public:
     double yearTime(t_reduceTime reduceTime);
 
     virtual void saveToFile(QDataStream* out);
-    virtual void restoreFromFile(QDataStream* in);
+    virtual void restoreFromFile(QDataStream* in) {return restoreFromFile_v323(in);};
+
+    void restoreFromFile_v323(QDataStream* in);
 
     // Only trace needed for this :
     virtual void generateCorrelations(const QList<ChainSpecs>& chains);
@@ -150,12 +152,11 @@ public:
     virtual void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double bandwidth);
     // Trace and Posterior density needed for this :
 
-    virtual void generateCredibility(const double& threshold);
+    virtual void generateCredibility(const double threshold);
     virtual void generateHPD(const double threshold);
     // Trace and Posterior density needed for this :
     virtual void generateNumericalResults(const QList<ChainSpecs>& chains);
 
-    void generateTempo_old(size_t gridLength);
     void generateTempo(size_t gridLength);
 
     void generateActivity(const size_t gridLenth, const double h, const double threshold, const double rangePercent = 95.);

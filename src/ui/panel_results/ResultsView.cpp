@@ -4510,15 +4510,45 @@ void ResultsView::exportResults()
             QList<QStringList> eventsTraces = mModel->getEventsTraces(csvLocal, false);
             saveCsvTo(eventsTraces, dirPath + "/Chain_all_Events.csv", csvSep, false);
 
-            // Saving Curve Map
+            // --------------   Saving Curve Map
             if (mModel->mProject->isCurve()) {
-                file.setFileName(dirPath + "/Curve_Map.csv");
+                // first Map
+                const auto list_names = mModel->getCurvesName();
+
+                file.setFileName(dirPath + "/"+list_names.at(0) + "_Curve_Map.csv");
 
                 if (file.open(QFile::WriteOnly | QFile::Truncate)) {
                     modelCurve()->saveMapToFile(&file, csvSep, modelCurve()->mPosteriorMeanG.gx.mapG);
 
-                    file.close();
                 }
+
+                if (mModel->displayY()) {
+                    file.setFileName(dirPath + "/"+list_names.at(1) + "_Curve_Map.csv");
+
+                    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+                        modelCurve()->saveMapToFile(&file, csvSep, modelCurve()->mPosteriorMeanG.gy.mapG);
+                        file.close();
+                    }
+
+                    if (mModel->displayZ()) {
+                        file.setFileName(dirPath + "/"+list_names.at(2) + "_Curve_Map.csv");
+
+                        if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+                            modelCurve()->saveMapToFile(&file, csvSep, modelCurve()->mPosteriorMeanG.gz.mapG);
+                            file.close();
+                        }
+                    }
+
+                }
+
+                // --------------   Saving Curve Ref
+                int i = 0;
+                for (auto&& graph : mByCurveGraphs) {
+                    graph->getGraph()->exportReferenceCurves ("", QLocale::English, ",",  mModel->mSettings.mStep, dirPath + "/"+list_names.at(i) + "_ref.csv" );
+                    i++;
+                }
+
+
             }
         }
     }

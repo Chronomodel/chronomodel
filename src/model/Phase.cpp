@@ -513,7 +513,7 @@ void Phase::memoAll()
 
 #ifdef DEBUG
     if (mBeta.mX - mAlpha.mX < 0.)
-        qDebug()<<"in Phase::memoAll : "<<mName<<" Warning mBeta.mX - mAlpha.mX<0";
+        qDebug()<<"[Phase::memoAll] : "<<mName<<" Warning mBeta.mX - mAlpha.mX<0";
 #endif
 }
 
@@ -624,7 +624,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
         return;
         */
 
-    if (min95 == max95) { // hapen when there is only one bound in the phase ???
+    if (min95 == max95) { // happen when there is only one bound in the phase ???
 
         qDebug()<<"[Phase::generateActivity] tmin == tmax : " << mName;
 

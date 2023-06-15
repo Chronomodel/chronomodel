@@ -236,10 +236,8 @@ void GraphView::adjustYScale()
             const GraphCurve& curve = mCurves.at(curveIndex);
             
             if (curve.mVisible && curve.isVertical()) { // used for the measurement in the calibration process
-                yMax = qMax(yMax, curve.mData.lastKey());
-                yMin = qMin(yMin, curve.mData.firstKey());
-
-
+                yMin = std::min(yMin, curve.mData.firstKey());
+                yMax = std::max(yMax, curve.mData.lastKey());
             }
 
             if (curve.mVisible && !curve.isVertical() && !curve.isHorizontalLine()
@@ -248,8 +246,8 @@ void GraphView::adjustYScale()
                 if (curve.isVectorData()) {
                     const QVector<qreal> &subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, qreal (0.), qreal (curve.mDataVector.size()));
                     if (!subData.empty()) {
-                        yMin = qMin(yMin, vector_min_value(subData));
-                        yMax = qMax(yMax, vector_max_value(subData));
+                        yMin = std::min(yMin, range_min_value(subData));
+                        yMax = std::max(yMax, range_max_value(subData));
                     }
 
 
@@ -257,32 +255,32 @@ void GraphView::adjustYScale()
                     const auto &curveInf = curve.mShape.first;
                     const auto &curveSup = curve.mShape.second;
                     const QMap<qreal, qreal> &subDataInf = getMapDataInRange(curveInf, mCurrentMinX, mCurrentMaxX);
-                    if (!subDataInf.empty()) yMin = qMin(yMin, map_min_value(subDataInf));
+                    if (!subDataInf.empty()) yMin = std::min(yMin, map_min_value(subDataInf));
 
                     const QMap<qreal, qreal> &subDataSup = getMapDataInRange(curveSup, mCurrentMinX, mCurrentMaxX);
-                    if (!subDataSup.empty()) yMax = qMax(yMax, map_max_value(subDataSup));
+                    if (!subDataSup.empty()) yMax = std::max(yMax, map_max_value(subDataSup));
 
 
                 } else if (!curve.mData.empty()) {
                     const QMap<qreal, qreal> &subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
                     if (!subData.empty()) {
-                        yMin = qMin(yMin, map_min_value(subData));
-                        yMax = qMax(yMax, map_max_value(subData));
+                        yMin = std::min(yMin, map_min_value(subData));
+                        yMax = std::max(yMax, map_max_value(subData));
                     }
 
                 }
                 // map
                 if (curve.mMap.data.size() > 0) {
-                    yMin = qMin(yMin, curve.mMap.rangeY.first);
-                    yMax = qMax(yMax, curve.mMap.rangeY.second);
+                    yMin = std::min(yMin, curve.mMap.rangeY.first);
+                    yMax = std::max(yMax, curve.mMap.rangeY.second);
                 }
 
              }
         }
 
         for (auto& rf : refPoints) {
-            yMin = qMin(yMin, rf.Ymin);
-            yMax = qMax(yMax, rf.Ymax);
+            yMin = std::min(yMin, rf.Ymin);
+            yMax = std::max(yMax, rf.Ymax);
         }
 
         if (yMax >= yMin) {
@@ -1259,7 +1257,7 @@ void GraphView::drawCurves(QPainter& painter)
                     qreal x = mMarginLeft + valueX * 100.;
                     qreal y = getYForValue(valueY, false);
 
-                    y = qBound(mMarginTop, y, mMarginTop + mGraphHeight);
+                    y = std::clamp(mMarginTop, y, mMarginTop + mGraphHeight);
 
                     if (index == 0) {
                         path.lineTo(x, y);
@@ -2046,8 +2044,8 @@ void GraphView::drawDensity(GraphCurve &curve, QPainter& painter)
  */
 void GraphView::exportCurrentDensities(const QString &defaultPath, const QLocale locale, const QString &csvSep, double step) const
 {
-    if (step<=0)
-        step=1;
+    if (step <= 0)
+        step = 1;
 
     const QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                     tr("Save graph data as..."),
@@ -2149,19 +2147,21 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
         int rowsCount = rows.count();
         QStringList emptyColumn;
 
-        qDebug()<<"GraphView::exportCurrentVectorCurves"<<" nbCurve to export"<<mCurves.size();
-        for (int idCurve=0; idCurve<mCurves.size(); ++idCurve) {
-            if ( !mCurves[idCurve].mVisible || mCurves[idCurve].mDataVector.empty() ) continue;
+        qDebug()<<"[GraphView::exportCurrentVectorCurves] "<<" nbCurve to export"<<mCurves.size();
 
-            const QVector<type_data>& data = mCurves[idCurve].mDataVector;
+        for (auto&& c : mCurves ) {
+            if ( !c.mVisible || c.mDataVector.empty() )
+                continue;
+
+            const QVector<type_data>& data = c.mDataVector;
             // the new DataVector is longer than the last, we need to expand the size of rows
             if (data.size()>rowsCount-2) {
-                abscissesWritten=false;
+                abscissesWritten = false;
                 rowsCount = rows.count();
             }
 
             if (!abscissesWritten) {
-                for (int i=offset+rowsCount; i<data.size()+1; ++i) {
+                for (int i = offset+rowsCount; i<data.size()+1; ++i) {
                     // we add 1 to the line number, because the index of vector start to 0-> false now 0 is the init
                     rows.append(QStringList(locale.toString(i-rowsCount+1))+emptyColumn);
 
@@ -2173,7 +2173,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
             emptyColumn<<"";
 
             if (abscissesWritten) {
-                    rows[0] << mCurves[idCurve].mName;
+                    rows[0] << c.mName;
                     for (int i=offset; i<data.size(); ++i)
                         rows[i-offset+1]<< locale.toString(data[i],'g', 15);
 
@@ -2190,29 +2190,31 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
 
             for (int i=0; i<iter2.value().size(); ++i)
                 list << locale.toString(iter2.value().at(i),'g', 15);
+
             rows.append(list);
         }
 
         QTextStream output(&file);
-        for (int i=0; i<rows.size(); ++i)  {
-            output << rows.at(i).join(csvSep);
+        for (const auto& r : rows) {
+            output << r.join(csvSep);
             output << "\n";
         }
         file.close();
     }
 }
 
-void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step) const
+void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step, QString graph_title) const
 {
-    if (step <= 0.)
-        step = 1.;
+    if (graph_title != "")
+        graph_title += "_";
 
     const QString fiName = MainWindow::getInstance()->getNameProject();
-    const QString defaultFilename = defaultPath + "/"+ fiName.mid(0, fiName.size()-4) + "_graph_data.csv";
+    const QString defaultFilename = defaultPath + "/"+ fiName.mid(0, fiName.size()-4) +"_"+ graph_title +"graph_data.csv";
 
     const QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                     tr("Save graph data as..."),
                                                     defaultFilename, "CSV (*.csv)");
+
     if (filename.isEmpty())
         return;
 
@@ -2257,8 +2259,18 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
             return;
 
         //rows<<list;
-        const int nbData = ceil(xMax - xMin)/ step + 1;
-        rows.reserve(nbData +1);
+        int nbData = 0 ;
+        if (step <= 0.) {
+            for (auto& c : mCurves)
+                if (c.mVisible)
+                    nbData = std::max(nbData, (int) c.mData.count());
+
+            step = ceil(xMax - xMin)/ (nbData - 1);
+
+        } else
+            nbData = ceil(xMax - xMin)/ step + 1;
+
+        rows.reserve(nbData + 1); // the header
 
         // 1 -Create the header
         list << "X Axis";
@@ -2333,18 +2345,20 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
  * @param csvSep
  * @param step
  */
-void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step) const
+void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step, QString filename) const
 {
     if (step <= 0)
         step = 1;
 
-    const QString fiName = MainWindow::getInstance()->getNameProject();
-//qDebug()<<"GraphView::exportReferenceCurves : "<<fiName;
-    const QString defaultFilename = defaultPath + "/"+ fiName.mid(0, fiName.size()-4) + "_ref.csv";    //defaultPath + "/"+ info.baseName() + "_ref.csv";
-qDebug()<<"GraphView::exportReferenceCurves : "<<defaultFilename;
-    const QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
-                                                    tr("Save Reference Curve as..."),
-                                                    defaultFilename, "CSV (*.csv)");
+    if (filename == "") {
+        const QString fiName = MainWindow::getInstance()->getNameProject();
+
+        const QString defaultFilename = defaultPath + "/"+ fiName.mid(0, fiName.size()-4) + "_ref.csv";    //defaultPath + "/"+ info.baseName() + "_ref.csv";
+        qDebug()<<"GraphView::exportReferenceCurves : "<<defaultFilename;
+        filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                tr("Save Reference Curve as..."),
+                                                defaultFilename, "CSV (*.csv)");
+    }
     if (filename.isEmpty())
         return;
 

@@ -188,18 +188,21 @@ QJsonObject Project::emptyState()
  * @param force
  * @return
  */
-bool Project::pushProjectState(const QJsonObject& state, const QString& reason, bool notify)
+bool Project::pushProjectState(const QJsonObject &state, const QString &reason, bool notify)
 {
-    if (reason != NEW_PROJECT_REASON && reason != PROJECT_LOADED_REASON) {
+
+    if (reason == NEW_PROJECT_REASON || reason == PROJECT_LOADED_REASON ) {
         SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
-        //command->setText("pushProjectState " + command->actionText());
         MainWindow::getInstance()->getUndoStack()->push(command);
+        // Pushes cmd on the stack or merges it with the most recently executed command.
+        //In either case, executes cmd by calling its redo() function
 
     } else {
         mStructureIsChanged = false;
         mDesignIsChanged = false;
         mItemsIsMoved = false;
         qDebug()<<"[Project::pushProjectState] "<< reason << notify;
+
         if (mReasonChangeStructure.contains(reason))
             mStructureIsChanged = true;
 
@@ -210,32 +213,52 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
             mItemsIsMoved = true;
 
         else
-            this->checkStateModification(state, mState);
+            checkStateModification(state, mState);
+
+      /*  if (!MainWindow::getInstance()->undo_action && !MainWindow::getInstance()->redo_action ) {
+            SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
+
+            MainWindow::getInstance()->getUndoStack()->push(command);
+            //MainWindow::getInstance()->undo_redo_action = false;
+
+        } else if (MainWindow::getInstance()->undo_action) {
+
+            MainWindow::getInstance()->getUndoStack()->undo();
+            MainWindow::getInstance()->undo_action = false;
+            MainWindow::getInstance()->redo_action = false;
+            emit noResult();
+
+        } else if (MainWindow::getInstance()->redo_action) {
+
+            MainWindow::getInstance()->getUndoStack()->redo();
+            MainWindow::getInstance()->redo_action = false;
+            MainWindow::getInstance()->undo_action = false;
+            emit noResult();
+
+        }
+ */
+        SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
+        MainWindow::getInstance()->getUndoStack()->push(command);
 
 
         if (mStructureIsChanged && (reason != PROJECT_LOADED_REASON) ) {
-            SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
-            MainWindow::getInstance()->getUndoStack()->push(command);
-            // updateState(state, reason, notify);
             mState = state;
-
-            emit projectStructureChanged(true); // connected to MainWindows::noResults
+            emit noResult(); // connected to MainWindows::noResults
             return true;
 
-        } else if (mDesignIsChanged)
-            emit projectDesignChanged(mModel);
+        }
 
     }
 
-        updateState(state, reason, notify);
-        return true;
+    updateState(state, reason, notify);
+    return true;
 
 }
 
 
-void Project::sendUpdateState(const QJsonObject& state, const QString& reason, bool notify)
+void Project::sendUpdateState(const QJsonObject &state, const QString &reason, bool notify)
 {
-    qDebug()<<"[Project::sendUpdateState] "<<reason<<notify;
+    qDebug()<<"[Project::sendUpdateState QGuiApplication::postEvent] "<< reason << notify;
 
     /* The event must be allocated on the heap since the post event queue will take ownership of the event
      * and delete it once it has been posted.
@@ -245,11 +268,12 @@ void Project::sendUpdateState(const QJsonObject& state, const QString& reason, b
 
 }
 
-void Project::checkStateModification(const QJsonObject &stateNew,const QJsonObject &stateOld)
+void Project::checkStateModification(const QJsonObject &stateNew, const QJsonObject &stateOld)
 {
     mDesignIsChanged = false;
     mStructureIsChanged = false;
     mItemsIsMoved = false;
+
     if (stateOld.isEmpty() && !stateNew.isEmpty())  {
         mDesignIsChanged = true;
         mStructureIsChanged = true;
@@ -309,7 +333,7 @@ void Project::checkStateModification(const QJsonObject &stateNew,const QJsonObje
         const QJsonArray &phasesConstNew = stateNew.value(STATE_PHASES_CONSTRAINTS).toArray();
         const QJsonArray &phasesConstOld = stateOld.value(STATE_PHASES_CONSTRAINTS).toArray();
 
-        if ( phasesConstNew.size()!=phasesConstOld.size()) {
+        if ( phasesConstNew.size() != phasesConstOld.size()) {
             mStructureIsChanged = true;
             return;
         } else if (phasesConstNew != phasesConstOld) {
@@ -488,7 +512,7 @@ bool Project::event(QEvent* e)
 
 void Project::updateState(const QJsonObject &state, const QString &reason, bool notify)
 {
-    //qDebug() << " ---  Receiving : " << reason;
+    qDebug() << " [Project::updateState] ---  reason = " << reason << " notify= " << notify;
     mState = state; //std::move(state);
     if (reason == NEW_PROJECT_REASON)
        showStudyPeriodWarning();
@@ -780,20 +804,17 @@ bool Project::load(const QString &path, bool force)
                         QFile file(dataPath);
                         if (file.exists() && file.open(QIODevice::ReadOnly)){
 
-                        //    if ( file.size()!=0 /* uncompressedData.size()!=0*/ ) {
-                     //           QDataStream in(&uncompressedData, QIODevice::ReadOnly);
                         QDataStream in(&file);
 
                         mModel->restoreFromFile(&in);
                         file.close();
-                        // file.remove(); // delete the temporary file with uncompressed data
-
+                        mModel->generateCorrelations(mModel->mChains);
 
                         setNoResults(false);
 
                      } else {
                             setNoResults(true);
-                        }
+                     }
 
                     } catch (const std::exception & e) {
                         QMessageBox message(QMessageBox::Critical,
@@ -1578,9 +1599,7 @@ void Project::deleteSelectedEvents()
     pushProjectState(stateNext, "Event(s) deleted", true);
 
     // send to clear the propertiesView
-  /*  const QJsonObject itemEmpty ;
-    emit currentEventChanged(itemEmpty); */ // connect to EventPropertiesView::setEvent
-     emit currentEventChanged(nullptr);
+    emit currentEventChanged(nullptr);
 
     clearModel();
     MainWindow::getInstance() -> setResultsEnabled(false);
@@ -3003,83 +3022,7 @@ int Project::getUnusedPhaseConstraintId(const QJsonArray& constraints)
 }
 
 
-// -------
-// Export
-void Project::exportAsText()
-{
-    /*QString currentDir = MainWindow::getInstance()->getCurrentPath();
 
-    QString path = QFileDialog::getExistingDirectory(qApp->activeWindow(), tr("Location"), currentDir);
-    if(!path.isEmpty())
-    {
-        MainWindow::getInstance()->setCurrentPath(path);
-
-        QString folderBaseName = mName.simplified().toLower().replace(" ", "_");
-        QString folderName = folderBaseName;
-        int index = 1;
-        while(QFileInfo::exists(path + "/" + folderName))
-        {
-            folderName = folderBaseName + " (" + QString::number(index) + ")";
-            ++index;
-        }
-        QDir dir(path);
-        if(dir.mkdir(folderName))
-        {
-            dir = QDir(path + "/" + folderName);
-
-            QString descFileName = "description.txt";
-            QFile descFile(dir.absoluteFilePath(descFileName));
-            if(descFile.open(QIODevice::ReadWrite | QIODevice::Text))
-            {
-                QTextStream stream(&descFile);
-
-                stream << "Project name : " << mName << endl;
-
-                stream << endl << "****************************************" << endl;
-                stream << "EVENTS" << endl;
-                stream << "****************************************" << endl;
-
-                for(int i=0; i<mEvents.size(); ++i)
-                {
-                    Event* event = mEvents[i];
-                    stream << endl << "++++++++++++++++++++++++++++++++++++++++" << endl;
-                    stream << "EVENT : " << endl;
-                    stream << "- Name : " << event->mName << endl;
-                    stream << "- Method : " << ModelUtilities::getEventMethodText(event->mMethod) << endl;
-                    stream << "- Num data : " << QString::number(event->mDates.size()) << endl;
-                    stream << "- Num phases : " << QString::number(event->mPhases.size()) << endl;
-                    stream << "++++++++++++++++++++++++++++++++++++++++" << endl;
-
-                    for(int j=0; j<event->mDates.size(); ++j)
-                    {
-                        Date* date = (Date*) event->mDates[j];
-                        stream << "DATA : " << endl;
-                        stream << "- Name : " << date->mName << endl;
-                        stream << "- Type : " << date->mPlugin->getName() << endl;
-                        stream << "---------------" << endl;
-                    }
-                }
-
-                stream << endl << "****************************************" << endl;
-                stream << "PHASES" << endl;
-                stream << "****************************************" << endl;
-
-                for(int i=0; i<mPhases.size(); ++i)
-                {
-                    Phase* phase = mPhases[i];
-                    stream << endl << "++++++++++++++++++++++++++++++++++++++++" << endl;
-                    stream << "PHASE : " << endl;
-                    stream << "- Name : " << phase->mName << endl;
-                    stream << "- Num events : " << QString::number(phase->mEvents.size()) << endl;
-                    stream << "++++++++++++++++++++++++++++++++++++++++" << endl;
-                }
-            }
-        }
-    }*/
-
-    /*QMessageBox message(QMessageBox::Critical, tr("TODO"), tr("create readable textual representation of XML project file"), QMessageBox::Ok, qApp->activeWindow(), Qt::Sheet);
-    message.exec();*/
-}
 
 // --------------------------------------------------------------------
 //     Project Run
@@ -3201,7 +3144,7 @@ void Project::clearModel()
 }
 
 bool Project::isCurve() const {
-    const QJsonObject CurveSettings = mState.value(STATE_CURVE).toObject();
+    const QJsonObject &CurveSettings = mState.value(STATE_CURVE).toObject();
     return (!CurveSettings.isEmpty() && CurveSettings.value(STATE_CURVE_PROCESS_TYPE).toInt() != CurveSettings::eProcessTypeNone);
 
 }

@@ -108,91 +108,24 @@ T interpolateValueInQMap(const U& key, const QMap<U, T>& map)
     } else {
         const auto uIter =  map.upperBound(key) ;
         const auto lIter = std::prev(uIter);
-      //  uIter++;
-   /*     auto i = lIter.value();
-        auto ii = uIter.value();
 
-        auto ia = lIter.key();
-        auto iia = uIter.key();
-*/
         return interpolate(key, lIter.key(), uIter.key(), lIter.value(), uIter.value());
+    }
+
 }
 
- /*
-    typename QMap<U, T>::iterator UIter = map.upperBound(key);
-    T valueUpper = UIter.value();
-    T keyUpper = UIter.key();
-    typename QMap<U, T>::iterator lIter (--UIter);
-
-    if (UIter == map.begin()) {
-        return map.first();
-    } else if (UIter)
-
-
-    if (key <= keyUnder)
-        return valueUnder;
-
-    else if (lIter != map.end()) {
-        typename QMap<U, T>::iterator UIter (++lIter);
-        if (UIter != map.end()) {
-            T valueUpper = lIter.value();
-            T keyUpper = lIter.key();
-            return interpolate(key, keyUnder, keyUpper, valueUnder, valueUpper);
-         } else {
-
-        }
-
-
-
-    }  else
-        return map.last();
-*/
-}
-
-
-template <class T>
-T list_max_value(const QList<T>& aList)
+template <template<typename...> class C, class T>
+T range_max_value(const C<T>& range)
 {
-    typename QList<T>::const_iterator it = std::max_element(aList.cbegin(), aList.cend());
-    if (it != aList.cend())
-        return *it;
-    return T(0);
+    return *std::ranges::max_element(range.begin(), range.end());
 }
 
-template <class T>
-T list_min_value(const QList<T>& aList)
+template <template<typename...> class C, class T>
+T range_min_value(const C<T>& range)
 {
-    typename QList<T>::const_iterator it = std::min_element(aList.cbegin(), aList.cend());
-    if (it != aList.cend())
-        return *it;
-    return T(0);
+    return *std::ranges::min_element(range.begin(), range.end());
 }
 
-template <class T>
-T vector_max_value(const QVector<T>& aVector)
-{
-    typename QVector<T>::const_iterator it = std::max_element(aVector.cbegin(), aVector.cend());
-    if (it != aVector.cend())
-        return *it;
-    return T(0);
-}
-
-template <class T>
-T vector_min_value(const QVector<T>& vector)
-{
-    typename QVector<T>::const_iterator it = std::min_element(vector.cbegin(), vector.cend());
-    if (it != vector.cend())
-        return *it;
-    return T(0);
-}
-
-/* template<typename T> replace with std::clamp()
- inline const T inRange(const T minimum, const T value ,const T maximum)
-{
-    // see qBound in qglobal
-    return std::max(minimum, std::min(maximum, value));
-}
-*/
 
 template <class U, class T>
 T map_max_value(const QMap<U, T> &map)
@@ -201,7 +134,7 @@ T map_max_value(const QMap<U, T> &map)
     typename QMap<U, T>::const_iterator biggest = i;
     ++i;
 
-    for (; i != map.end(); ++i)
+    for (; i != map.cend(); ++i)
         if (*i > *biggest )  biggest = i;
 
     return *biggest;
@@ -214,7 +147,7 @@ T map_min_value(const QMap<U, T> &map)
     typename QMap<U, T>::const_iterator smallest = i;
     ++i;
 
-    for (; i != map.end(); ++i)
+    for (; i != map.cend(); ++i)
         if (*i < *smallest )  smallest = i;
 
     return *smallest;
@@ -226,7 +159,7 @@ T multimap_max_value(const QMultiMap<U, T> &map)
 {
     typename QMultiMap<U, T>::const_iterator i = map.cbegin();
     T max = i.value();
-    while (std::next(i) != map.end()) {
+    while (std::next(i) != map.cend()) {
         i++;
         max = std::max(max, i.value());
     }
@@ -238,7 +171,7 @@ T multimap_min_value(const QMultiMap<U, T> &map)
 {
     typename QMultiMap<U, T>::const_iterator i = map.cbegin();
     T min = i.value();
-    while (std::next(i) != map.end()) {
+    while (std::next(i) != map.cend()) {
         i++;
         min = std::min(min, i.value());
     }
@@ -306,7 +239,7 @@ T mean(const QVector<T> &vector)
 }
 
 /**
- * @brief normalized sinc function
+ * @brief normalized sinc function, used with fftw
  * @param L the length of the gate
  */
 template <typename T>
@@ -317,7 +250,8 @@ T sinc(const T x, const T L=1)
     else
         return (sin( x * L) / x );
 }
-// --------------------------------
+
+
 template<typename T>
 QMap<T, T> normalize_map(const QMap<T, T> &map, const T max = 1)
 {
@@ -331,7 +265,7 @@ QMap<T, T> normalize_map(const QMap<T, T> &map, const T max = 1)
 
     }
 
-    return std::move(result);
+    return result;
 }
 
 QVector<double> normalize_vector(const QVector<double>& aVector);

@@ -302,7 +302,8 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
                                                             "Post Distrib Unif Mean",
                                                             Qt::darkGray, Qt::SolidLine);
 
-            mGraph->setInfo(QString("Significance Score ( %1 %) = %2").arg(stringForLocal(mPhase->mValueStack.at("Activity_Threshold").mValue), stringForLocal(mPhase->mValueStack.at("Activity_Significance_Score").mValue, true)) );
+            if (mPhase->mValueStack.contains("Activity_Threshold") && mPhase->mValueStack.contains("Activity_Significance_Score") )
+                mGraph->setInfo(QString("Significance Score ( %1 %) = %2").arg(stringForLocal(mPhase->mValueStack.at("Activity_Threshold").mValue), stringForLocal(mPhase->mValueStack.at("Activity_Significance_Score").mValue, true)) );
 
             mGraph->setOverArrow(GraphView::eBothOverflow);
 

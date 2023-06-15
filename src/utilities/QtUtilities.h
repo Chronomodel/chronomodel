@@ -101,7 +101,7 @@ bool saveAsCsv(const QList<QStringList>& data, const QString& title = QObject::t
  * @return return a QMap with only data inside the range [subMin; subMax]. We must evaluate missing data for the extremum if necessarry
  */
 template <typename T, typename V>
-QMap<T, V> getMapDataInRange(const QMap<T, V> &data, const T subMin, const  T subMax)
+QMap<T, V> getMapDataInRange(const QMap<T, V> data, const T subMin, const  T subMax)
 {
     if (data.size() == 0)
         return data;
@@ -155,7 +155,7 @@ QMap<T, V> getMapDataInRange(const QMap<T, V> &data, const T subMin, const  T su
                 subData[subMax] = interpolate( subMax, (T)subData.lastKey(), tAfterSubMax, subDataLast, vAfterSubMax );
             }
 
-        } else if (data.size()==2 && data.firstKey()<=subMin && data.lastKey()>=subMax) {
+        } else if (data.size() == 2 && data.firstKey() <= subMin && data.lastKey() >= subMax) {
             subData.insert(subMin, data.first());
             subData.insert(subMax, data.last());
 

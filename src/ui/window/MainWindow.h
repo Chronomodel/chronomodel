@@ -72,6 +72,10 @@ public:
 
     inline void updateEvent(const QJsonObject &event, const QString &reason) {mProject->updateEvent(event, reason);};
     QUndoStack* getUndoStack();
+
+    bool undo_action;
+    bool redo_action;
+
     QString getCurrentPath() const;
     void setCurrentPath(const QString& path);
 
@@ -111,6 +115,9 @@ public slots:
     void appSettings();
     void setAppSettings();
     void updateAppSettings();
+
+    void toggleUndo() {undo_action = !undo_action;};
+    void toggleRedo() {redo_action = !redo_action;};
 
     void setAppFilesSettings();
     void openManual();
@@ -167,7 +174,7 @@ private:
 
     QAction* mProjectSaveAction;
     QAction* mProjectSaveAsAction;
-    QAction* mProjectExportAction;
+   // QAction* mProjectExportAction;
 
     QAction* mMCMCSettingsAction;
     QAction* mRunAction;

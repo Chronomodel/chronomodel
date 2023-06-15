@@ -56,13 +56,13 @@ class Event
 {
 public:
     enum Type {
-        eDefault = 0,   /*  The classic type of Event with variance */
-        eBound = 1     /* The Bound type */
+        eDefault = 0,  /*  The classic/default type of Event with mS02*/
+        eBound = 1     /* The Bound type, with no mS02 */
     };
 
     enum PointType {
-        ePoint = 0,   /*  The classic type of Event with VG!=0 */
-        eNode = 1     /* The Node type with VG=0*/
+        ePoint = 0,   /*  The classic type of Event with mVg != 0 */
+        eNode = 1     /* The Node type with mVg = 0 */
     };
 
     Type mType;
@@ -126,7 +126,7 @@ public:
 
     MHVariable mVg; // sigma G de l'event (par rapport à G(t) qu'on cherche à estimer)
 
-#pragma mark function
+#pragma mark Functions
 
     Event (const Model * model = nullptr);
     Event (const Event& event);
@@ -139,7 +139,7 @@ public:
     static Event fromJson(const QJsonObject& json);
     virtual QJsonObject toJson() const;
 
-    Type type() const;
+    inline Type type() const { return mType;}
 
     void reset();
     
@@ -147,12 +147,14 @@ public:
     static QString curveDescriptionFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType = CurveSettings::eProcessTypeNone, CurveSettings::VariableType variableType = CurveSettings::eVariableTypeOther);
     static QList<double> curveParametersFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType = CurveSettings::eProcessTypeNone, CurveSettings::VariableType variableType = CurveSettings::eVariableTypeOther);
 
-    /// Functions used within the MCMC process ( not in the init part!) :
+ #pragma mark Functions used within the MCMC process ( not in the init part!)
+
     double getThetaMin(double defaultValue);
     double getThetaMax(double defaultValue);
 
 
-    ///  Functions used within the init MCMC process
+#pragma mark  Functions used within the init MCMC process
+
     bool getThetaMinPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents, QString &linkStr);
     bool getThetaMaxPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents);
 

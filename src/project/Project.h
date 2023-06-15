@@ -63,6 +63,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define DATE_MOVE_TO_EVENT_REASON "Date moved to event"
 #define NEW_EVEN_BY_CSV_DRAG_REASON "New Event by CSV drag"
 
+#define PROJECT_UNDO_REDO_REASON "Undo-Redo action"
 
 class Date;
 class Event;
@@ -196,7 +197,6 @@ public slots:
 
     void mcmcSettings();
     void resetMCMC();
-    void exportAsText();
     
     void run();
     void runChronomodel();
@@ -223,8 +223,6 @@ signals:
     void mcmcStarted();
     void mcmcFinished(Model* model);
 
-    void projectStructureChanged(bool structureChanged);
-    void projectDesignChanged(bool designIsChanged);
     void projectItemsIsMoved(bool itemsIsMoved);
 
 public:

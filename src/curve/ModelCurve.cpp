@@ -221,12 +221,10 @@ void ModelCurve::saveToFile(QDataStream *out)
 /** @Brief Read the .res file, it's the result of the saved computation
 *
 * */
-void ModelCurve::restoreFromFile(QDataStream* in)
+void ModelCurve::restoreFromFile_v323(QDataStream* in)
 {
 
-    Model::restoreFromFile(in);
-
-   // generateCorrelations(mChains);
+    Model::restoreFromFile_v323(in);
 
     /* -----------------------------------------------------
     *  Read events VG
@@ -255,7 +253,6 @@ void ModelCurve::restoreFromFile(QDataStream* in)
     for (auto& pMByChain : mPosteriorMeanGByChain)
         *in >> pMByChain;
 
-    generateCorrelations(mChains);
 }
 
 /* C' était le même algorithme que MCMCCurve::memo_PosteriorG()
@@ -520,7 +517,7 @@ void ModelCurve::saveMapToFile(QFile *file, const QString csvSep, const CurveMap
             output << "\r";
         }
     }
-
+    file->close();
 }
 
 void ModelCurve::updateFormatSettings()
@@ -560,6 +557,11 @@ void ModelCurve::generatePosteriorDensities(const QList<ChainSpecs> &chains, int
 
 void ModelCurve::generateCorrelations(const QList<ChainSpecs> &chains)
 {
+#ifdef DEBUG
+    qDebug()<<"[ModelCurve::generateCorrelations] in progress";
+    QElapsedTimer t;
+    t.start();
+#endif
     Model::generateCorrelations(chains);
     for (auto&& event : mEvents )
         if (event->mVg.mSamplerProposal != MHVariable::eFixe)
@@ -570,6 +572,10 @@ void ModelCurve::generateCorrelations(const QList<ChainSpecs> &chains)
 
     if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
         mS02Vg.generateCorrelations(chains);
+
+#ifdef DEBUG
+    qDebug() <<  "=> [ModelCurve::generateCorrelations] done in " + DHMS(t.elapsed());
+#endif
 }
 
 void ModelCurve::generateNumericalResults(const QList<ChainSpecs> &chains)
@@ -594,8 +600,13 @@ void ModelCurve::clearThreshold()
     mS02Vg.mThresholdUsed = -1.;
 }
 
-void ModelCurve::generateCredibility(const double& thresh)
+void ModelCurve::generateCredibility(const double thresh)
 {
+#ifdef DEBUG
+    qDebug()<<QString("[ModelCurve::generateCredibility] Treshold = %1 %; in progress").arg(thresh);
+    QElapsedTimer t;
+    t.start();
+#endif
     Model::generateCredibility(thresh);
 
     for (Event*& event : mEvents) {
@@ -604,6 +615,10 @@ void ModelCurve::generateCredibility(const double& thresh)
     mLambdaSpline.generateCredibility(mChains, thresh);
 
     mS02Vg.generateCredibility(mChains, thresh);
+
+#ifdef DEBUG
+    qDebug() <<  "[ModelCurve::generateCredibility] done in " + DHMS(t.elapsed()) ;
+#endif
 }
 
 void ModelCurve::generateHPD(const double thresh)

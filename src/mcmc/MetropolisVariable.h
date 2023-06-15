@@ -237,7 +237,7 @@ public:
     }
 
     inline QVector<double> runRawTraceForChain(const QList<ChainSpecs> &chains, const int index) {return run_trace_for_chain(mRawTrace, chains, index); };
-    inline QVector<double> runFormatedTraceForChain(const QList<ChainSpecs> &chains, const int index) {return run_trace_for_chain(mRawTrace, chains, index); };
+    inline QVector<double> runFormatedTraceForChain(const QList<ChainSpecs> &chains, const int index) {return run_trace_for_chain(mFormatedTrace, chains, index); };
 
     QVector<double> correlationForChain(const int index);
 

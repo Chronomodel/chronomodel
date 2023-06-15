@@ -154,6 +154,8 @@ void AbstractItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
     QGraphicsItem::mouseMoveEvent(e);
     mMoving = !(ptInit==pos());
 
+mScene->sendUpdateProject(tr("item moved"), false, true);
+
 //qDebug() <<"AbstractItem::mouseMoveEvent() mMoving="<<mMoving;
   //  if (e->pos().x()==0 || e->pos().y()==0)
  //qDebug()<<"AbstractItem::mouseMoveEvent() mData"<<this->mData.value(STATE_ITEM_X).toDouble()<<mData.value(STATE_ITEM_Y).toDouble();
@@ -207,6 +209,7 @@ QVariant AbstractItem::itemChange(GraphicsItemChange change, const QVariant& val
 
       //  qDebug()<<"AbstractItem::itemChange() ItemPositionHasChanged "<<value.toPointF()<<"pos()"<<pos();
         updateItemPosition(value.toPointF());
+
     } /*
     else if (change == ItemSelectedHasChanged || change == ItemSelectedChange) {
 

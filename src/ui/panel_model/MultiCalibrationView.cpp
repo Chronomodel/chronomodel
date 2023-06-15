@@ -55,13 +55,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QLocale>
 
 MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-mMajorScale (100),
-mMinorScale (4),
-mTminDisplay(-HUGE_VAL),
-mTmaxDisplay(HUGE_VAL),
-mThreshold(95),
-mGraphHeight(GraphViewResults::mHeightForVisibleAxis),
-mCurveColor(Painting::mainColorDark)
+    mDrawing(nullptr),
+    mMajorScale (100),
+    mMinorScale (4),
+    mTminDisplay(-HUGE_VAL),
+    mTmaxDisplay(HUGE_VAL),
+    mThreshold(95),
+    mGraphHeight(GraphViewResults::mHeightForVisibleAxis),
+    mCurveColor(Painting::mainColorDark)
+
 {
     mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
@@ -388,7 +390,8 @@ void MultiCalibrationView::updateGraphList()
     mDrawing->setVisible(true);
     mStatArea->setVisible(false);
 
-    mDrawing->~MultiCalibrationDrawing();
+    if (mDrawing)
+        mDrawing->~MultiCalibrationDrawing();
 
     if (mScatterClipBut->isChecked())
         mDrawing = scatterPlot(mThreshold);
@@ -511,13 +514,9 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                     if (d.mDeltaType !=  Date::eDeltaNone) {
 
                         const QMap<double, double> &calibWiggle = normalize_map(d.getFormatedWiggleCalibToShow(), map_max_value(calibCurve.mData));
-
-                        const GraphCurve curveWiggle = densityCurve(calibWiggle, "Wiggle", Qt::red);
+                        const GraphCurve &curveWiggle = densityCurve(calibWiggle, "Wiggle", Qt::red);
 
                         calibGraph->add_curve(curveWiggle);
-
-                       // const QMap<type_data, type_data> subDisplay = getMapDataInRange(calibWiggle, mTminDisplay, mTmaxDisplay);
-                       // yMax = map_max_value(subDisplay);
                     }
 
                 }
@@ -596,7 +595,10 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
    MultiCalibrationDrawing* multiDraw = new MultiCalibrationDrawing(this);
 
    multiDraw->showMarker();
-   updateGraphsSize(mGraphHeightEdit->text());
+   //updateGraphsSize(mGraphHeightEdit->text());
+   mGraphHeightEdit->blockSignals(true);
+   mGraphHeightEdit->setText(mGraphHeightEdit->text());
+   mGraphHeightEdit->blockSignals(false);
    multiDraw->setEventsColorList(colorList);
    multiDraw->setListAxisVisible(listAxisVisible);
 
@@ -1165,9 +1167,11 @@ void MultiCalibrationView::updateGraphsSize(const QString &sizeStr)
     bool ok;
     const double val = locale().toDouble(sizeStr, &ok);
     if (ok) {
-        const double origin = GraphViewResults::mHeightForVisibleAxis;//Same value in ResultsView::applyAppSettings()
-        const double prop = val / 100.;
+        const double origin = GraphViewResults::mHeightForVisibleAxis; //Same value in ResultsView::applyAppSettings()
+        const double prop =  val / 100.;
+
         mGraphHeight = int ( prop * origin );
+        mYZoom->setProp(prop /2., false);
 
     } else
         return;
@@ -1177,14 +1181,16 @@ void MultiCalibrationView::updateGraphsSize(const QString &sizeStr)
     else
         mDrawing->setGraphHeight(mGraphHeight);
 
+    if (mDrawing)
+        mDrawing->updateLayout();
 
 }
 
 void MultiCalibrationView::updateYZoom(const double prop)
 {
-    const double origin = GraphViewResults::mHeightForVisibleAxis;//Same value in ResultsView::applyAppSettings()
+    const double origin = GraphViewResults::mHeightForVisibleAxis; //Same value in ResultsView::applyAppSettings()
 
-    mGraphHeight = int ( prop * origin /50 * 100 );
+    mGraphHeight = int ( prop * origin * 2);
 
     if (mScatterClipBut->isChecked())
         mDrawing->setGraphHeight(3*mGraphHeight);
@@ -1195,7 +1201,8 @@ void MultiCalibrationView::updateYZoom(const double prop)
     mGraphHeightEdit->blockSignals(true);
     mGraphHeightEdit->setText(sizeText);
     mGraphHeightEdit->blockSignals(false);
-    mDrawing->updateLayout();
+    if (mDrawing)
+        mDrawing->updateLayout();
 }
 
 void MultiCalibrationView::updateScroll()

@@ -730,7 +730,7 @@ const std::map<double, double> create_HPD2(const QMap<double, double>& density, 
     std::map<double, double> result;
 
     if (density.size() < 2) { // in case of only one value (e.g. a bound fixed) or no value
-        if (density.size() < 1) { // in case of only one value (e.g. a bound fixed) or no value
+        if (density.size() < 1) { // in case of  no value
             return result;
         }
         result[density.firstKey()] = 1.;

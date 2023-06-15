@@ -332,6 +332,7 @@ QString MCMCLoop::initialize_time(Model* model)
                     //unsortedEvents.at(i)->mTheta.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
                     uEvent->mTheta.tryUpdate(uEvent->mTheta.mX, 2.);
 
+                    uEvent->mS02.memo();
 
                 }
 
@@ -391,6 +392,7 @@ QString MCMCLoop::initialize_time(Model* model)
                 uEvent->mS02.mX = 0;
                 uEvent->mS02.mLastAccepts.clear();
                 uEvent->mS02.mSamplerProposal = MHVariable::eFixe;
+                uEvent->mS02.memo();
 
                 // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
                 uEvent->mTheta.mSigmaMH = 1;

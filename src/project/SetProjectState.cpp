@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "SetProjectState.h"
 #include "Project.h"
 
-SetProjectState::SetProjectState(Project* project, const QJsonObject& prevState, const QJsonObject& nextState, const QString& reason, bool notify):
+SetProjectState::SetProjectState(Project* project, const QJsonObject &prevState, const QJsonObject &nextState, const QString &reason, bool notify):
     mProject(project),
     mPrevState(prevState),
     mNextState(nextState),
@@ -60,25 +60,20 @@ SetProjectState:: ~SetProjectState()
 
 void SetProjectState::undo()
 {
-    mProject->checkStateModification(mPrevState, mProject->mState);
-    mProject->sendUpdateState(mPrevState, mReason, mNotify);
-
-    if (mProject->structureIsChanged() )
-        emit mProject->projectStructureChanged(true);
-
-    if (mProject->designIsChanged() )
-        emit mProject->projectDesignChanged(true);
-
+    qDebug()<<"[SetProjectState::undo] notify=" << mNotify << " reason=" << mReason;
+    mProject->mState = mPrevState;
+    emit mProject->currentEventChanged(nullptr);
+    emit mProject->noResult();
+    emit mProject->projectStateChanged();
 }
 
+
+// come from Project::pushProjectState() with the command MainWindow::getInstance()->getUndoStack()->push(command);
 void SetProjectState::redo()
 {
-    mProject->checkStateModification(mNextState, mProject->mState);
-    mProject->sendUpdateState(mNextState, mReason, mNotify);
+    qDebug()<<"[SetProjectState::redo] notify=" << mNotify << " reason=" << mReason;
+    mProject->mState = mNextState;
+    emit mProject->projectStateChanged();
 
-    if (mProject->structureIsChanged() )
-        emit mProject->projectStructureChanged(true);
 
-    if (mProject->designIsChanged() )
-        emit mProject->projectDesignChanged(true);
 }
