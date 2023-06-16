@@ -89,7 +89,7 @@ private slots:
     void updateHPDGraphs(const QString & thres);
 
     void updateGraphsSize(const QString & sizeStr);
-    void updateYZoom(const double prop);
+    void updateYZoom(const double prop = 100);
 
     void updateGraphsZoom();
     void updateScroll();

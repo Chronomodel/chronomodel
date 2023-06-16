@@ -61,7 +61,7 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mTminDisplay(-HUGE_VAL),
     mTmaxDisplay(HUGE_VAL),
     mThreshold(95),
-    mGraphHeight(GraphViewResults::mHeightForVisibleAxis),
+    mGraphHeight(120),
     mCurveColor(Painting::mainColorDark)
 
 {
