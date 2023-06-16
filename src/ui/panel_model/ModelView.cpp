@@ -514,6 +514,8 @@ void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
 void ModelView::updateProject()
 {
     const QJsonObject &state = mProject->state();
+    if (!mProject)// || mProject->mState.size() == 0)
+        return;
     const StudyPeriodSettings &settings = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
     mTmin = settings.mTmin;

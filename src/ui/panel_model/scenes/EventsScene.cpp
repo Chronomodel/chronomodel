@@ -211,7 +211,7 @@ void EventsScene::showHelp(bool show)
 
 void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool storeUndoCommand)
 {
-    qDebug()<<"[EventsScene::sendUpdateProject] start";
+    //qDebug()<<"[EventsScene::sendUpdateProject] start";
 
     QJsonObject statePrev = mProject->state();
     QJsonObject stateNext = statePrev;
@@ -227,23 +227,22 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
 
     stateNext[STATE_EVENTS] = events;
 
- //   if (statePrev != stateNext) {
 
-        qDebug()<<"[EventsScene::sendUpdateProject] stateChange";
-        if (storeUndoCommand)
-            mProject->pushProjectState(stateNext, reason, notify); //
-        else
-            mProject->sendUpdateState(stateNext, reason, notify);
- //   }
+    //qDebug()<<"[EventsScene::sendUpdateProject] stateChange";
+    if (storeUndoCommand)
+         mProject->pushProjectState(stateNext, reason, notify);
+    else
+         mProject->sendUpdateState(stateNext, reason, notify);
+
 }
 void EventsScene::noHide()
 {
-    qDebug()<<"EventsScene::noHide";
+    qDebug()<<"[EventsScene::noHide]";
     setShowAllThumbs(true);
 }
 void EventsScene::phasesSelected()
 {
-    qDebug()<<"EventsScene::phasesSelected";
+    qDebug()<<"[EventsScene::phasesSelected]";
    setShowAllThumbs(false);
 }
 
@@ -389,18 +388,59 @@ void EventsScene::createSceneFromState()
  */
 void EventsScene::updateSceneFromState()
 {
-
 #ifdef DEBUG
-    qDebug()<<"[EventsScene::updateSceneFromState] Start";
+   // qDebug()<<"[EventsScene::updateSceneFromState] Start";
     QElapsedTimer startTime;
     startTime.start();
-    Chronometer ch ("EventsScene::updateSceneFromState");
+    //Chronometer ch ("EventsScene::updateSceneFromState");
 #endif
     const QJsonObject &state = mProject->state();
 
     if (mProject->mState.value(STATE_EVENTS).toArray().isEmpty() && mProject->mState.value(STATE_PHASES).toArray().isEmpty() && mItems.isEmpty())
         return;
 
+    if (mProject->mState.value(STATE_EVENTS).toArray().isEmpty() && !mItems.isEmpty()) {
+        // ------------------------------------------------------
+        //  Delete EventItems
+        // ------------------------------------------------------
+
+        for (auto i = mItems.size()-1; i >= 0; --i) {
+            QJsonObject& event = mItems[i]->mData;
+            Event::Type type = Event::Type (event.value(STATE_EVENT_TYPE).toInt());
+
+            if (type == Event::eDefault) {
+                        EventItem* eventItem = (EventItem*)mItems[i];
+                        QList<QGraphicsItem*> dateItems = eventItem->childItems();
+
+                        const auto dateItemsSize = dateItems.size() -1;
+                        for (auto j = dateItemsSize; j >= 0; --j) {
+                            removeItem(dateItems.at(j));
+                            delete dateItems[j];
+                        }
+                        delete eventItem;
+            } else if (type == Event::eBound) {
+                        EventKnownItem* eventItem = (EventKnownItem*)mItems[i];
+
+                        delete eventItem;
+            }
+            //qDebug() << "EventsScene::updateScene Event deleted : " << event.value(STATE_ID).toInt();
+
+            mItems.removeAt(i);
+
+
+        }
+        // ------------------------------------------------------
+        //  Delete constraints
+        // ------------------------------------------------------
+        for (auto i = mConstraintItems.size()-1; i >= 0; --i) {
+            ArrowItem* constraintItem = mConstraintItems[i];
+            removeItem(constraintItem);
+            mConstraintItems.removeOne(constraintItem);
+            delete constraintItem;
+
+        }
+        return;
+    }
 
     const QJsonArray &eventsInNewState = state.value(STATE_EVENTS).toArray();
     const QJsonArray &constraints = state.value(STATE_EVENTS_CONSTRAINTS).toArray();
@@ -686,7 +726,7 @@ void EventsScene::updateSceneFromState()
     if (hasDeleted || hasCreated)
         updateStateSelectionFromItem();
 
-    adjustSceneRect();
+    //adjustSceneRect();
     adaptItemsForZoom(mZoom);
 
    if (displayProgress)
@@ -694,7 +734,7 @@ void EventsScene::updateSceneFromState()
 
 
  #ifdef DEBUG
-   ch.display();
+  // ch.display();
     qDebug()<<"[EventsScene::updateSceneFromState] finish in " << DHMS(startTime.elapsed());
  #endif
 }

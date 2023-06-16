@@ -192,7 +192,8 @@ bool Project::pushProjectState(const QJsonObject &state, const QString &reason, 
 {
 
     if (reason == NEW_PROJECT_REASON || reason == PROJECT_LOADED_REASON ) {
-        SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
+       // SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
+        SetProjectState* command = new SetProjectState(this, QJsonObject(), state, reason, notify);
         MainWindow::getInstance()->getUndoStack()->push(command);
         // Pushes cmd on the stack or merges it with the most recently executed command.
         //In either case, executes cmd by calling its redo() function

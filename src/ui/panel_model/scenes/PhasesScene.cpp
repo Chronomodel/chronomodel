@@ -248,9 +248,32 @@ qDebug()<<"[PhasesScene::updateSceneFromState] Start";
     startTime.start();
 #endif
 
-    if (mProject->mState.value(STATE_PHASES).toArray().isEmpty() && mProject->mState.value(STATE_PHASES).toArray().isEmpty() && mItems.isEmpty())
+    if (mProject->mState.value(STATE_EVENTS).toArray().isEmpty() && mProject->mState.value(STATE_PHASES).toArray().isEmpty() && mItems.isEmpty())
              return;
 
+    if (mProject->mState.value(STATE_PHASES).toArray().isEmpty() && mItems.isEmpty()) {
+             // ------------------------------------------------------
+             //  Delete items not in current state
+             // ------------------------------------------------------
+             for (int i = mItems.size()-1; i >= 0; --i) {
+                 PhaseItem* item = (PhaseItem*)mItems[i];
+                 mItems.removeAt(i);
+                 // This is a QObject : call deleteLater instead of delete
+                 item->deleteLater();
+             }
+
+             // ------------------------------------------------------
+             //  Delete constraints not in current state
+             // ------------------------------------------------------
+             for (int i = mConstraintItems.size()-1; i >= 0; --i) {
+                 ArrowItem* constraintItem = mConstraintItems[i];
+                 removeItem(constraintItem);
+                 mConstraintItems.removeOne(constraintItem);
+                 delete constraintItem;
+             }
+
+             return;
+    }
     const QJsonObject &state = mProject->state();
     const QJsonArray &phases = state.value(STATE_PHASES).toArray();
     const QJsonArray &constraints = state.value(STATE_PHASES_CONSTRAINTS).toArray();
@@ -296,7 +319,7 @@ qDebug()<<"[PhasesScene::updateSceneFromState] Start";
         const QJsonObject phase = p.toObject();
 
         bool itemExists = false;
-        for (int j=0; j<mItems.size(); ++j) {
+        for (int j = 0; j<mItems.size(); ++j) {
             PhaseItem* item = (PhaseItem*)mItems[j];
             const QJsonObject itemPhase = item->getPhase();
             if (itemPhase.value(STATE_ID).toInt() == phase.value(STATE_ID).toInt()) {
@@ -414,9 +437,7 @@ qDebug()<<"[PhasesScene::updateSceneFromState] Start";
     if (hasDeleted || hasCreated)
        updateStateSelectionFromItem();
 
-    //sendUpdateProject(tr("phases selection updated : phases marked as selected"), true, true);
-
-    adjustSceneRect();
+    //adjustSceneRect();
     adaptItemsForZoom(mZoom);
 #ifdef DEBUG
     qDebug()<<"[PhasesScene::updateSceneFromState] finish in "<< DHMS(startTime.elapsed());
@@ -500,7 +521,7 @@ void PhasesScene::updateStateSelectionFromItem()
         }
 
         if (modified) {
-           sendUpdateProject(tr("phases selection updated : phases marked as selected"), true, true);
+           sendUpdateProject(tr("Phases selection"), true, true);
 
             // refresh the thumbs in the Events scene
             if (!oneSelection) {// selectedItems().size() == 0) {

@@ -75,5 +75,4 @@ void SetProjectState::redo()
     mProject->mState = mNextState;
     emit mProject->projectStateChanged();
 
-
 }
