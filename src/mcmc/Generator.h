@@ -49,7 +49,9 @@ constexpr T M_PI = T(3.14159265358979323846264338327950288419716939937510582L); 
 #endif
 
 //static std::default_random_engine CharGenerator (int(std::chrono::system_clock::now().time_since_epoch().count()));
-
+#ifdef _WIN32
+#include <chrono>
+#endif
 
 
 struct randomChar {
