@@ -4,13 +4,13 @@ PROJECT
 
 ChronoModel Project
 "http://www.chronomodel.com"
-version 3.0
-2021-07-07
+version 3.2.3
+2023-06-16
 
 ————————————————————————————————————————————————————————————————————————
 CREDITS
 ————————————————————————————————————————————————————————————————————————
-Copyright ©2021 CNRS
+Copyright ©2023 CNRS
 used under the terms:
 CeCILL FREE SOFTWARE LICENSE AGREEMENT
 Version 2.1 dated 2013-06-21
@@ -36,7 +36,7 @@ ChronoModel was originally written by:
 
 The current maintainer is:
 
-	Philippe DUFRESNE (2015-2021)
+	Philippe DUFRESNE (2015-2023)
 
 ————————————————————————————————————————————————————————————————————————
 CONTRIBUTORS

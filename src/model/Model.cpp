@@ -2229,6 +2229,7 @@ void Model::restoreFromFile_v323(QDataStream *in)
 
     for (Event* &e : mEvents) {
         *in >> e->mTheta;
+        e->mS02.mSamplerProposal = MHVariable::eFixe;
         *in >> e->mS02; // since 2023-06-01 v3.2.3
     }
     // -----------------------------------------------------

@@ -92,7 +92,7 @@ mWiggleEnabled(false)
     mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eInversion));
     mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eMHSymGaussAdapt));
 
-    mWiggleLab = new Label(tr("Wiggle Matching"), mAdvancedWidget);
+    mWiggleLab = new QLabel(tr("Wiggle Matching"), mAdvancedWidget);
 
     mDeltaNoneRadio = new QRadioButton(tr("None"), mAdvancedWidget);
     mDeltaFixedRadio = new QRadioButton(tr("Fixed"), mAdvancedWidget);

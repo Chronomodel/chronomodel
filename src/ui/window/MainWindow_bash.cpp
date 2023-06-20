@@ -197,112 +197,19 @@ void MainWindow::createActions()
     mProjectSaveAction = new QAction(QIcon(":save_p.png"), tr("&Save"), this);
     mProjectSaveAction->setShortcuts(QKeySequence::Save);
     mProjectSaveAction->setStatusTip(tr("Save the current project in the same place with the same name"));
-/*
-    mProjectSaveAsAction = new QAction(QIcon(":save_p.png"), tr("Save as..."), this);
-    mProjectSaveAsAction->setStatusTip(tr("Change the current project on an other name or on an other place"));
 
-    mProjectExportAction = new QAction(QIcon(":export.png"), tr("Export"), this);
-    mProjectExportAction->setVisible(false);
-
-    mUndoAction = mUndoStack->createUndoAction(this);
-    mUndoAction->setShortcuts(QKeySequence::Undo);
-    mUndoAction->setIcon(QIcon(":undo_p.png"));
-    mUndoAction->setText(tr("Undo"));
-    mUndoAction->setToolTip(tr("Undo"));
-
-    mRedoAction = mUndoStack->createRedoAction(this);
-    mRedoAction->setShortcuts(QKeySequence::Redo);
-    mRedoAction->setIcon(QIcon(":redo_p.png"));
-    mRedoAction->setText(tr("Redo"));
-    mRedoAction->setToolTip(tr("Redo"));
-
-    mUndoViewAction = mUndoDock->toggleViewAction();
-    mUndoViewAction->setText(tr("Show Undo Stack"));
-*/
-/*    mSelectAllAction = new QAction( tr("&Select All Events"), this);
-    mSelectAllAction->setShortcuts(QKeySequence::SelectAll);
-    mSelectAllAction->setStatusTip(tr("Select All Events"));
-    connect(mSelectAllAction, &QAction::triggered, this, &MainWindow::selectAllEvents);
-*/
 
     //-----------------------------------------------------------------
     // MCMC Actions
     //-----------------------------------------------------------------
-/*    mMCMCSettingsAction = new QAction(QIcon(":settings_p.png"), tr("MCMC"), this);
-    mMCMCSettingsAction->setToolTip(tr("Change MCMC Settings"));
-*/
+
     mRunAction = new QAction(QIcon(":run_p.png"), tr("Run"), this);
     //runAction->setIcon(qApp->style()->standardIcon(QStyle::SP_MediaPlay));
     mRunAction->setIconText(tr("Run"));
     mRunAction->setIconVisibleInMenu(true);
     mRunAction->setToolTip(tr("Run Model"));
 
-  //  mResetMCMCAction = new QAction(tr("Reset Events and Data methods"), this);
 
-    //-----------------------------------------------------------------
-    // View Actions
-    //-----------------------------------------------------------------
-/*    mCurveAction = new SwitchAction(this);
-    mCurveAction->setCheckable(true);
-    mCurveAction->setChecked(false);
-
-    mViewModelAction = new QAction(QIcon(":model_p.png"), tr("Model"), this);
-    mViewModelAction->setCheckable(true);
-
-    mViewResultsAction = new QAction(QIcon(":results_p.png"), tr("Results"), this);
-    mViewResultsAction->setCheckable(true);
-    mViewResultsAction->setEnabled(false);
-
-    mViewLogAction = new QAction(QIcon(":log_p.png"), tr("Log"), this);
-    mViewLogAction->setCheckable(true);
-    mViewLogAction->setEnabled(false);
-
-    mViewGroup = new QActionGroup(this);
-    mViewGroup->addAction(mViewModelAction);
-    mViewGroup->addAction(mViewResultsAction);
-    mViewGroup->addAction(mViewLogAction);
-    mViewModelAction->setChecked(true);
-
-    //-----------------------------------------------------------------
-    //  Dates Actions (Plugins specific)
-    //-----------------------------------------------------------------
-    const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
-    for (int i=0; i<plugins.size(); ++i) {
-        QList<QHash<QString, QVariant>> groupedActions = plugins.at(i)->getGroupedActions();
-        for (int j=0; j<groupedActions.size(); ++j) {
-            QAction* act = new QAction(groupedActions[j]["title"].toString(), this);
-            act->setData(QVariant(groupedActions[j]));
-            connect(act, &QAction::triggered, this, &MainWindow::doGroupedAction);
-            mDatesActions.append(act);
-        }
-    }
-
-    //-----------------------------------------------------------------
-    //  Grouped actions
-    //-----------------------------------------------------------------
-    mEventsColorAction = new QAction(tr("Selected Events: Change Colour"), this);
-    connect(mEventsColorAction, &QAction::triggered, this, &MainWindow::changeEventsColor);
-
-    mEventsMethodAction = new QAction(tr("Selected Events: Change Method"), this);
-    connect(mEventsMethodAction, &QAction::triggered, this, &MainWindow::changeEventsMethod);
-
-    mDatesMethodAction = new QAction(tr("Selected Events: Change Data Method"), this);
-    connect(mDatesMethodAction, &QAction::triggered, this, &MainWindow::changeDatesMethod);
-
-    mSelectEventsAction = new QAction(tr("Select All Events of the Selected Phases"), this);
-    connect(mSelectEventsAction, &QAction::triggered, this, &MainWindow::selectEventInSelectedPhases);
-
-    mSelectEventsNameAction = new QAction(tr("Select All Events with string"), this);
-    connect(mSelectEventsNameAction, &QAction::triggered, this, &MainWindow::selectEventWithString);
-    //-----------------------------------------------------------------
-    // Help/About Menu
-    //-----------------------------------------------------------------
-    mAboutAct = new QAction(QIcon(":light.png"), tr("About"), this);
-    connect(mAboutAct, &QAction::triggered, this, &MainWindow::about);
-
-    mAboutQtAct = new QAction(QIcon(":qt.png"), tr("About Qt"), this);
-    connect(mAboutQtAct, &QAction::triggered, qApp, QApplication::aboutQt);
-*/
     mHelpAction = new QAction(QIcon(":help_p.png"), tr("Help"), this);
     mHelpAction->setCheckable(true);
     connect(mHelpAction, &QAction::triggered, this, &MainWindow::showHelp);
@@ -883,7 +790,7 @@ void MainWindow::calibrateAll()
 {
     QJsonObject state = mProject->state();
 
-    ProjectSettings s = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+    StudyPeriodSettings s = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
     QJsonArray Qevents = state.value(STATE_EVENTS).toArray();
 
     /* If the Events Scene isEmpty (i.e. when the project is created)
