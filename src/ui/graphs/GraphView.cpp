@@ -2258,7 +2258,6 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
         if (std::isinf(xMin) || std::isinf(xMax))
             return;
 
-        //rows<<list;
         int nbData = 0 ;
         if (step <= 0.) {
             for (auto& c : mCurves)
@@ -2277,9 +2276,12 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
         for (auto& c : mCurves) {
             if (c.mVisible) {
                 if (c.isDensityCurve())
+                    list << c.mName;
+
+                else if (c.isFunction())
                     list << c.mName; // for example G
 
-                if (c.isShape()) {
+                else if (c.isShape()) {
                     list<<c.mName + " Inf";
                     list<<c.mName + " Sup"; // for example env G
                 }
@@ -2300,6 +2302,12 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
             for (auto& c : mCurves) {
                 if (c.mVisible) {
                     if (c.isDensityCurve()) {
+                        if (c.mData.firstKey()<= x && x<= c.mData.lastKey())
+                            list<<locale.toString(interpolateValueInQMap(x, c.mData), 'g', 15); // for example G
+                        else
+                            list<< "NaN";
+
+                    } else if (c.isFunction()) {
                         if (c.mData.firstKey()<= x && x<= c.mData.lastKey())
                             list<<locale.toString(interpolateValueInQMap(x, c.mData), 'g', 15); // for example G
                         else

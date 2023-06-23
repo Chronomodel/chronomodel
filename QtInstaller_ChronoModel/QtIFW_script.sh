@@ -1,5 +1,6 @@
 #!/bin/bash
 # ne pas mettre de blanc autour de =
+# penser à faire Ch_copy_library.sh avant
 #_____________________________________
 
 clear
