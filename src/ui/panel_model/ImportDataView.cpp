@@ -241,7 +241,10 @@ void ImportDataView::browse()
                     } else if (values.size() > 2) {
                         // Display the line only if we have a plugin to import it !
                         const QString EventName = values.at(0);
-                        const QString pluginName = values.at(1);
+                        QString pluginName = values.at(1);
+                        if (pluginName.toLower() =="c14")
+                            pluginName = "14c";
+
                         if (pluginNames.contains(pluginName, Qt::CaseInsensitive)) {
                             headers << EventName;
                             data << values;
