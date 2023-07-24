@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,13 +40,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AbstractItem.h"
 #include "ArrowTmpItem.h"
 #include "StateKeys.h"
-//#include "Painting.h"
 
 #include <QtWidgets>
 
- int AbstractItem::mBorderWidth  (2);
- int AbstractItem::mEltsMargin  (4);
- int AbstractItem::mItemWidth (180);
+int AbstractItem::mBorderWidth  (2);
+int AbstractItem::mEltsMargin  (4);
+int AbstractItem::mItemWidth (180);
+int AbstractItem::mTitleHeight (20);
 
 AbstractItem::AbstractItem(AbstractScene* scene, QGraphicsItem* parent):QGraphicsObject(parent),
     mScene(scene),
@@ -128,9 +128,11 @@ void AbstractItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
         mData["item_y"] = ptBefore.y();
         e->setPos(ptBefore);
     }
-    mScene->itemReleased(this, e);
-    // Must be changed AFTER "itemReleased" because used by this function :
-    mMoving = false;
+    if (mMoving) {
+        mScene->itemReleased(this, e);
+        // Must be changed AFTER "itemReleased" because used by this function :
+        mMoving = false;
+    }
     QGraphicsItem::mouseReleaseEvent(e);
 }
 
@@ -147,14 +149,14 @@ void AbstractItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
         QPointF ptBefore = pos();
         qreal delta (mScene->deltaGrid());
         ptBefore = QPointF(round(ptBefore.rx()/delta) * delta, floor(ptBefore.ry()/ delta) * delta);
-        setPos(ptBefore);
+       // setPos(ptBefore);
         e->setPos(ptBefore);
     }
 
-    QGraphicsItem::mouseMoveEvent(e);
-    mMoving = !(ptInit==pos());
+    QGraphicsItem::mouseMoveEvent(e); // move the graphic item, and change this position
+    mMoving = !(ptInit == pos());
 
-mScene->sendUpdateProject(tr("item moved"), false, true);
+//mScene->sendUpdateProject(tr("item moved"), false, true); // ici
 
 //qDebug() <<"AbstractItem::mouseMoveEvent() mMoving="<<mMoving;
   //  if (e->pos().x()==0 || e->pos().y()==0)

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -48,17 +48,17 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 
 PhaseItem::PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsItem* parent):AbstractItem(scene, parent),
-mControlsVisible(false),
-mControlsEnabled(false),
-matLeastOneEventSelected(false),
-mOneEventSelectedOnScene(false)
+    mControlsVisible(false),
+    mControlsEnabled(false),
+    matLeastOneEventSelected(false),
+    mOneEventSelectedOnScene(false)
 {
-     setPhase(phase);
+    setPhase(phase);
     inPix = new QPixmap(":insert_event.png");
     exPix = new QPixmap(":extract_event.png");
 
-     mTitleHeight = 25;
-     mEltsHeight = 25;
+    mTitleHeight = 25;
+    mEltsHeight = 25;
 }
 
 PhaseItem::~PhaseItem()

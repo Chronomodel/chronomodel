@@ -58,7 +58,6 @@ EventItem::EventItem(EventsScene* scene, const QJsonObject &event, const QJsonOb
     mPhasesHeight (20)
 {
     mScene = static_cast<AbstractScene*>(scene);
-    mTitleHeight = 20;
     mEltsHeight =  DateItem::mTitleHeight +  DateItem::mEltsHeight ;
     mGreyedOut = false;
 
@@ -101,7 +100,7 @@ EventItem::~EventItem()
  */
 void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-     EventsScene* itemScene = dynamic_cast<EventsScene*>(mScene);
+    EventsScene* itemScene = dynamic_cast<EventsScene*>(mScene);
 
     if ((this != itemScene->currentEvent()) && (!itemScene->mDrawingArrow) && (e->modifiers() != Qt::ControlModifier)) {// && (!itemScene->mSelectKeyIsDown)) {
         itemScene->clearSelection();

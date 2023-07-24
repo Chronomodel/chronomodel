@@ -76,11 +76,12 @@ public:
     static int mBorderWidth;
     static int mEltsMargin;
     static int mItemWidth;
-    QJsonObject mData;
+    static int mTitleHeight;
 
+    QJsonObject mData;
     AbstractScene* mScene;
 
-    int mTitleHeight;
+
     int mEltsHeight;
 
     bool mMoving; // used in AbstractScene::itemReleased() to merge item like eventItem and phaseItem

@@ -674,8 +674,9 @@ void EventsScene::updateSceneFromState()
             progress->setValue(i);
 
         bool itemExists = false;
-        for (int j = 0; j < mConstraintItems.size(); ++j) {
-            QJsonObject constraintItem = mConstraintItems.at(j)->data();
+        //for (int j = 0; j < mConstraintItems.size(); ++j) {
+        for (auto &mConstItem : mConstraintItems) {
+            QJsonObject constraintItem = mConstItem->data();
 
 
             if (constraintItem.value(STATE_ID).toInt() == constraint.value(STATE_ID).toInt()) {
@@ -683,11 +684,11 @@ void EventsScene::updateSceneFromState()
                 // in case of UNDO command check and update position
                 const int fromId = constraintItem.value(STATE_CONSTRAINT_BWD_ID).toInt();
                 const int toId = constraintItem.value(STATE_CONSTRAINT_FWD_ID).toInt();
-                EventItem* eventFrom = mConstraintItems.at(j)->findEventItemWithJsonId(fromId);
-                EventItem* eventTo = mConstraintItems.at(j)->findEventItemWithJsonId(toId);
+                EventItem* eventFrom = mConstItem->findEventItemWithJsonId(fromId);
+                EventItem* eventTo = mConstItem->findEventItemWithJsonId(toId);
                 // control if all event still exist
                 if (eventFrom && eventTo)
-                    mConstraintItems.at(j)->updatePosition();
+                    mConstItem->updatePosition();
 
                 itemExists = true;
                 if (constraint != constraintItem) {
@@ -695,7 +696,7 @@ void EventsScene::updateSceneFromState()
 #ifdef DEBUG
                     //qDebug() << "EventsScene::updateScene Constraint updated : id = " << constraint.value(STATE_ID).toInt();
 #endif
-                    mConstraintItems[j]->setData(constraint);
+                    mConstItem->setData(constraint);
                 }
             }
         }
@@ -724,7 +725,7 @@ void EventsScene::updateSceneFromState()
     // Nothing has been triggered so far because of the mUpdatingItems flag, so we need to trigger it now!
     // As well, creating an item changes the selection because we want the newly created item to be selected.
     if (hasDeleted || hasCreated)
-        updateStateSelectionFromItem();
+  //      updateStateSelectionFromItem(); // modify mState and emit pushState
 
     //adjustSceneRect();
     adaptItemsForZoom(mZoom);
@@ -735,7 +736,7 @@ void EventsScene::updateSceneFromState()
 
  #ifdef DEBUG
   // ch.display();
-    qDebug()<<"[EventsScene::updateSceneFromState] finish in " << DHMS(startTime.elapsed());
+  //  qDebug()<<"[EventsScene::updateSceneFromState] finish in " << DHMS(startTime.elapsed());
  #endif
 }
 
@@ -934,8 +935,8 @@ AbstractItem* EventsScene::currentItem()
     QList<QGraphicsItem*> selItems = selectedItems();
     if (!selItems.isEmpty()) {
         AbstractItem* absItem = dynamic_cast<AbstractItem*>(selItems.first());
-
         return absItem;
+
     } else
         return nullptr;
 
@@ -944,7 +945,7 @@ AbstractItem* EventsScene::currentItem()
 EventItem* EventsScene::currentEvent() const
 {
     QList<QGraphicsItem*> selItems = selectedItems();
-    //EventItem* cEvt = nullptr;
+
     if (selItems.size() == 0)
         return nullptr;
 
@@ -953,29 +954,7 @@ EventItem* EventsScene::currentEvent() const
         if (tmpItem)
             return tmpItem;
     }
-    /*
-    if (cEvt) {
-#ifdef DEBUG
-        const QJsonObject &e = cEvt->getData();
-        qDebug() << "EventsScene::currentEvent() selected Event : " << e.value("name");
-#endif
-        return cEvt;
-    } else {
-            foreach (it , selItems) {
-                DateItem* tmpItem = dynamic_cast<DateItem*>(it);
-                if (tmpItem) {
-                    cEvt = dynamic_cast< EventItem*>(tmpItem->parentItem());
-#ifdef DEBUG
-                    const QJsonObject &e = cEvt->getData();
-                    qDebug() << "EventsScene::currentEvent() selected Event from date : " << e.value("name");
-#endif
-                    return cEvt;
-                }
-            }
 
-            return nullptr;
-    }
-*/
     return nullptr;
 }
 
@@ -983,7 +962,7 @@ EventItem* EventsScene::currentEvent() const
 AbstractItem* EventsScene::collidingItem(const QGraphicsItem* item)
 {
     for (auto && it : mItems) {
-        bool isBound = (dynamic_cast<EventKnownItem*>(it) != nullptr);
+        const bool isBound = (dynamic_cast<EventKnownItem*>(it) != nullptr);
         if (item != it && !isBound && item->collidesWithItem(it))
             return it;
     }
@@ -1061,13 +1040,13 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
 
             dateItem->setParentItem(hoveredEventItem);
 
-            for (int i(0); !(isRemove && isAdd) && (i<events.size()) ; ++i) {
+            for (int i = 0; !(isRemove && isAdd) && (i<events.size()) ; ++i) {
                 QJsonObject event = events.at(i).toObject();
 
                 // remove dateToRemove from previous event :
                 if (event.value(STATE_ID).toInt() == prevEvent.value(STATE_ID).toInt()) {
                     QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
-                    for (int j (0); j<dates.size(); ++j) {
+                    for (int j = 0; j<dates.size(); ++j) {
                         qDebug()<<"dates j"<<dates.at(j)<<" "<<dateToRemove;
                         if (dates.at(j).toObject() == dateToRemove) {
                             dates.removeAt(j);
@@ -1076,11 +1055,12 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
                         }
                     }
                     event[STATE_EVENT_DATES] = dates;
-                    // new code
-                    prevEventItem->mData = event;
-                    if (dates.size() != prevEventItem->childItems().size())
-                        qDebug()<<"EventsScene::dateReleased() (dates.size() != prevEventItem->childItems().size())";
 
+                    prevEventItem->mData = event;
+#ifdef DEBUG
+                    if (dates.size() != prevEventItem->childItems().size())
+                        qDebug()<<"[EventsScene::dateReleased] (dates.size() != prevEventItem->childItems().size())";
+#endif
                     prevEventItem->redrawEvent();
                 }
                 // add dateToAdd to next event : and update mDate[STATE_ID] of the dateItem itself
@@ -1090,11 +1070,12 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
                     dateItem->mDate[STATE_ID] = dateToAdd[STATE_ID];
                     dates.append(dateToAdd);
                     event[STATE_EVENT_DATES] = dates;
-                    // new code
-                    hoveredEventItem->mData = event;
 
+                    hoveredEventItem->mData = event;
+#ifdef DEBUG
                     if (dates.size() != hoveredEventItem->childItems().size())
-                        qDebug()<<"EventsScene::dateReleased() (dates.size() != hoveredEventItem->childItems().size())";
+                        qDebug()<<"[EventsScene::dateReleased] (dates.size() != hoveredEventItem->childItems().size())";
+#endif
                     // redrawEvent is done in DateItem Release
                     isAdd = true;
                 }
@@ -1113,8 +1094,6 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
     } else
         return nullptr;
 
-
-//qDebug()<<"EventsScene::dateReleased() "<<prevEventItem->mData.value(STATE_ITEM_X).toDouble()<<prevEventItem->mData.value(STATE_ITEM_Y).toDouble();
 }
 
 /* ----------------------------------------------------------------------------------------
@@ -1162,7 +1141,7 @@ void EventsScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 bool EventsScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
 {
     (void)e;
-    qDebug() << "EventsScene::itemClicked";
+    qDebug() << "[EventsScene::itemClicked]";
 
     EventItem* eventClicked = dynamic_cast< EventItem*>(item);
     EventItem* current = currentEvent();
@@ -1220,17 +1199,15 @@ void EventsScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e
  */
 void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
 {
-    //qDebug() << "EventsScene::keyPressEvent: " << keyEvent->modifiers() << keyEvent->key();
-
     if (keyEvent->isAutoRepeat())
         keyEvent->ignore();
 
    if (selectedItems().count() == 0) {
-        qDebug() << "EventsScene::keyPressEvent No item selected";
+        qDebug() << "[EventsScene::keyPressEvent] No item selected";
         emit noSelection();
 
     } else {
-       qDebug() << "EventsScene::keyPressEvent emit selectionChanged() ";
+       qDebug() << "[EventsScene::keyPressEvent] emit selectionChanged() ";
        emit selectionChanged();
     }
 
@@ -1240,7 +1217,7 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
     // spotting the  Alt key
     } else if (keyEvent->modifiers() == Qt::AltModifier && selectedItems().count()==1) {
 
-        qDebug() << "EventsScene::keyPressEvent You Press: "<< "Qt::Key_Alt";
+        qDebug() << "[EventsScene::keyPressEvent] You Press: "<< "Qt::Key_Alt";
         mAltIsDown = true;
 
         // Control if an Event is still selected
@@ -1268,17 +1245,17 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
 #ifdef Q_OS_MAC
     else if (keyEvent->modifiers() == Qt::ControlModifier)  {
         mSelectKeyIsDown = true;
-        qDebug() << "EventsScene::keyPressEvent You Press: "<< "Qt::ControlModifier";
+        qDebug() << "[EventsScene::keyPressEvent] You Press: "<< "Qt::ControlModifier";
 
     }
     else if (keyEvent->modifiers() == Qt::MetaModifier)  {
         mSelectKeyIsDown = true;
-        qDebug() << "EventsScene::keyPressEvent You Press: "<< "Qt::MetaModifier";
+        qDebug() << "[EventsScene::keyPressEvent] You Press: "<< "Qt::MetaModifier";
 
                 }
     else if (keyEvent->key() == Qt::Key_Shift)  {
         mSelectKeyIsDown = true;
-        qDebug() << "EventsScene::keyPressEvent You Press: "<< "Qt::Key_Shift";
+        qDebug() << "[EventsScene::keyPressEvent] You Press: "<< "Qt::Key_Shift";
     }
 
 #endif
@@ -1299,7 +1276,7 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
 void EventsScene::keyReleaseEvent(QKeyEvent* keyEvent)
 {
     if (keyEvent->key() == Qt::Key_Alt) {
-       // qDebug() << "EventsScene::keyReleaseEvent You Released: "<<"Qt::Key_Alt";
+       // qDebug() << "[EventsScene::keyReleaseEvent] You Released: "<<"Qt::Key_Alt";
         mDrawingArrow = false;
         mAltIsDown = false;
         //mSelectKeyIsDown = false;

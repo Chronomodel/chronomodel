@@ -173,9 +173,10 @@ void PhasesScene::sendUpdateProject(const QString& reason, bool notify, bool sto
        mProject->sendUpdateState(stateNext, reason, notify);
     }
 }
- void PhasesScene::createSceneFromState()
+
+void PhasesScene::createSceneFromState()
  {
-     qDebug()<<"PhasesScene::createSceneFromState()";
+     qDebug()<<"[PhasesScene::createSceneFromState]";
 
      const QJsonObject state = mProject->state();
      const QJsonArray phases = state.value(STATE_PHASES).toArray();
@@ -439,6 +440,10 @@ qDebug()<<"[PhasesScene::updateSceneFromState] Start";
 
     //adjustSceneRect();
     adaptItemsForZoom(mZoom);
+
+    adjustSceneRect();
+    //setSceneRect(specialItemsBoundingRect().adjusted(-30, -30, 30, 30));
+
 #ifdef DEBUG
     qDebug()<<"[PhasesScene::updateSceneFromState] finish in "<< DHMS(startTime.elapsed());
 #endif

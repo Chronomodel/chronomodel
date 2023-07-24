@@ -348,7 +348,7 @@ void AbstractScene::keyReleaseEvent(QKeyEvent* keyEvent)
 
 
     if (keyEvent->key() == Qt::Key_Alt) {
-            // qDebug() << "AbstractScene::keyReleaseEvent You Released: "<<"Qt::Key_Alt";
+            // qDebug() << "[AbstractScene::keyReleaseEvent] You Released: "<<"Qt::Key_Alt";
              mDrawingArrow = false;
              mAltIsDown = false;
              mSelectKeyIsDown = false;

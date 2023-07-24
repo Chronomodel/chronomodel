@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -39,26 +39,23 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ArrowItem.h"
 #include "EventItem.h"
-#include "EventConstraint.h"
 #include "MainWindow.h"
-#include "Project.h"
-#include "Painting.h"
 #include <QtWidgets>
 #include <math.h>
 
 
 ArrowItem::ArrowItem(AbstractScene* scene, Type type, const QJsonObject& constraint, QGraphicsItem* parent):QGraphicsItem(parent),
-mType(type),
-mScene(scene),
-mXStart(0),
-mYStart(0),
-mXEnd(0.),
-mYEnd(0.),
-mBubbleWidth(10.),
-mBubbleHeight(10.),
-mEditing(false),
-mShowDelete(false),
-mGreyedOut(false)
+    mType(type),
+    mScene(scene),
+    mXStart(0),
+    mYStart(0),
+    mXEnd(0.),
+    mYEnd(0.),
+    mBubbleWidth(10.),
+    mBubbleHeight(10.),
+    mEditing(false),
+    mShowDelete(false),
+    mGreyedOut(false)
 {
     setZValue(-1.);
     setAcceptHoverEvents(true);
@@ -67,7 +64,8 @@ mGreyedOut(false)
             QGraphicsItem::ItemSendsScenePositionChanges |
             QGraphicsItem::ItemSendsGeometryChanges);
 
-    setData(constraint);
+    //setData(constraint);
+    mData = constraint;
    /* QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect();
     shadow->setColor(Qt::black);
     shadow->setBlurRadius(30);
@@ -125,8 +123,8 @@ void ArrowItem::updatePosition()
 
     if (mType == eEvent) {
         const QJsonArray &events = state.value(STATE_EVENTS).toArray();
-        for (int i=0; i<events.size(); ++i) {
-            const QJsonObject &event = events.at(i).toObject();
+        for (const auto& ev : events) {
+            const QJsonObject &event = ev.toObject();
             if (event.value(STATE_ID).toInt() == fromId)
                 from = event;
             if (event.value(STATE_ID).toInt() == toId)
@@ -134,8 +132,8 @@ void ArrowItem::updatePosition()
         }
     } else {
         const QJsonArray &phases = state.value(STATE_PHASES).toArray();
-        for (int i=0; i<phases.size(); ++i) {
-            const QJsonObject &phase = phases.at(i).toObject();
+        for (const auto ph : phases ) {
+            const QJsonObject &phase = ph.toObject();
             if (phase.value(STATE_ID).toInt() == fromId)
                 from = phase;
             if (phase.value(STATE_ID).toInt() == toId)
@@ -152,14 +150,12 @@ void ArrowItem::updatePosition()
 
 void ArrowItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
 {
-    //qDebug()<<"ArrowItem::mouseDoubleClickEvent";
     QGraphicsItem::mouseDoubleClickEvent(e);
     mScene->constraintDoubleClicked(this, e);
 }
 
 void ArrowItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-   //  qDebug()<<"ArrowItem::mousePressEvent";
     QGraphicsItem::mousePressEvent(e);
     const QRectF r = getBubbleRect(getBubbleText());
     if (r.contains(e->pos()))
