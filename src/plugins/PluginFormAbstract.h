@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,8 +40,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef PLUGINFORMABSTRACT_H
 #define PLUGINFORMABSTRACT_H
 
-//#include "Date.h"
-
 #include <QString>
 #include <QGroupBox>
 
@@ -75,8 +73,6 @@ public:
 signals:
    void OkEnabled(bool enabled) ;
    void sizeChanged();
-
-
 
 
 };

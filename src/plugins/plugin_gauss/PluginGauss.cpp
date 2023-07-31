@@ -591,8 +591,8 @@ QJsonObject PluginGauss::checkValuesCompatibility(const QJsonObject& values)
 bool PluginGauss::isDateValid(const QJsonObject& data, const StudyPeriodSettings& settings)
 {
     const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
-
-    const auto tminMax = getTminTmaxRefsCurve(data);
+    bool valid = true;
+   /* const auto tminMax = getTminTmaxRefsCurve(data);
     const double new_step = (tminMax.second - tminMax.first)/5.;
     bool valid =  settings.mStep <= new_step;
     if (!valid) {
@@ -605,7 +605,7 @@ bool PluginGauss::isDateValid(const QJsonObject& data, const StudyPeriodSettings
                             qApp->activeWindow());
         message.exec();
     }
-
+*/
 
     long double v = 0.l;
     long double lastV = 0.l;
