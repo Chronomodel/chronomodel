@@ -119,7 +119,7 @@ QString MCMCLoopChrono::calibrate()
                     date->mCalibration->mRepartition.clear();
                     date->mCalibration = nullptr;
 
-                    const QString mes = tr("Definition of the calibration curve insufficient for the Event %1 \r Decrease the study period step to %2").arg(date->mName, QString::number(new_step));
+                    const QString mes = tr("Insufficient resolution for the Event %1 \r Decrease the step in the study period box to %2").arg(date->mName, QString::number(new_step));
                     return (mes);
 
                 }

@@ -89,7 +89,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
                 date[STATE_DATE_VALID] = false;
                 mCalibThumb = QPixmap();
                 const double newStep = d.mCalibration->mStep/5.;
-                QString mes = tr("Definition of the calibration curve insufficient for the Event %1 \r Decrease the study period step to %2").arg(d.mName, QString::number(newStep));
+                QString mes = tr("Insufficient resolution for the Event %1 \r Decrease the step in the study period box to %2").arg(d.mName, QString::number(newStep));
                 //throw mes;
                 QMessageBox message(QMessageBox::Critical,
                                     qApp->applicationName() + " " + qApp->applicationVersion(),
@@ -101,6 +101,13 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
                 d.mCalibration->mMap.clear();
                 d.mCalibration->mRepartition.clear();
                 d.mCalibration = nullptr;
+
+                if(d.mWiggleCalibration) {
+                    d.mWiggleCalibration->mVector.clear();
+                    d.mWiggleCalibration->mMap.clear();
+                    d.mWiggleCalibration->mRepartition.clear();
+                    d.mWiggleCalibration = nullptr;
+                }
             }
 
             if (d.mPlugin->getName() == "Unif" && d.mOrigin == Date::eSingleDate)
