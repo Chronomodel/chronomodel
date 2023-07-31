@@ -688,14 +688,14 @@ void Date::calibrate(const StudyPeriodSettings priod_settings, Project *project,
         mCalibration->mTmax = tmaxCal;
         mCalibration->mMap = vector_to_map(mCalibration->mVector, mCalibration->mTmin, mCalibration->mTmax, mCalibration->mStep);
 
-        // If the calibration curve changes, the wiggle curve must be recalculated.
-        if (mWiggleCalibration != nullptr)  {
-            const QString toFind ("WID::" + mUUID);
-            QMap<QString, CalibrationCurve>::ConstIterator it = project->mCalibCurves.constFind(toFind);
-            project->mCalibCurves.erase(it);
-        }
     }
 
+    // If the calibration curve changes, the wiggle curve must be recalculated.
+    if (mWiggleCalibration != nullptr)  {
+        const QString toFind ("WID::" + mUUID);
+        QMap<QString, CalibrationCurve>::ConstIterator it = project->mCalibCurves.constFind(toFind);
+        project->mCalibCurves.erase(it);
+    }
 
     /* WIGGLE CALIBRATION CURVE */
     if (mDeltaType != eDeltaNone) {

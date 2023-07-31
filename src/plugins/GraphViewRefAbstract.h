@@ -152,7 +152,7 @@ public:
             Project* project = MainWindow::getInstance()->getProject();
 
             QString toFind;
-            if (sd.mDeltaType != Date::eDeltaNone) {
+            if (sd.mDeltaType == Date::eDeltaNone) {
                 toFind = sd.mUUID;
 
             } else {
