@@ -53,13 +53,13 @@ PluginUniformForm::PluginUniformForm(PluginUniform* plugin, QWidget* parent, Qt:
     mMinEdit = new QLineEdit(this);
     mMinEdit->setAlignment(Qt::AlignHCenter);
     mMinEdit->setText("0");
-    QIntValidator* positiveValidator = new QIntValidator(this);
-    mMinEdit->setValidator(positiveValidator);
+    //QIntValidator* positiveValidator = new QIntValidator(this);
+    //mMinEdit->setValidator(positiveValidator);
 
     mMaxEdit = new QLineEdit(this);
     mMaxEdit->setAlignment(Qt::AlignHCenter);
     mMaxEdit->setText("100");
-    mMaxEdit->setValidator(positiveValidator);
+    //mMaxEdit->setValidator(positiveValidator);
 
     connect(mMinEdit, &QLineEdit::textChanged, this, &PluginUniformForm::valuesAreValid);
     connect(mMaxEdit, &QLineEdit::textChanged, this, &PluginUniformForm::valuesAreValid);
@@ -98,8 +98,8 @@ QJsonObject PluginUniformForm::getData()
     QJsonObject data;
     const QLocale locale;
 
-    const double min = round(locale.toDouble(mMinEdit->text()));
-    const double max = round(locale.toDouble(mMaxEdit->text()));
+    const double min = locale.toDouble(mMinEdit->text());
+    const double max = locale.toDouble(mMaxEdit->text());
 
     data.insert(DATE_UNIFORM_MIN_STR, min);
     data.insert(DATE_UNIFORM_MAX_STR, max);
@@ -121,8 +121,8 @@ void PluginUniformForm::valuesAreValid(QString str)
 bool PluginUniformForm::isValid()
 {
     const QLocale locale;
-    const double min = round(locale.toDouble(mMinEdit->text()));
-    const double max = round(locale.toDouble(mMaxEdit->text()));
+    const double min = locale.toDouble(mMinEdit->text());
+    const double max = locale.toDouble(mMaxEdit->text());
     if (min >= max)
         mError = tr("Forbidden : lower date must be < upper date");
     return min < max;

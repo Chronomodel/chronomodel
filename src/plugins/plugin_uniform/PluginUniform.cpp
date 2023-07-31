@@ -98,6 +98,7 @@ QList<MHVariable::SamplerProposal> PluginUniform::allowedDataMethods() const
 {
     QList<MHVariable::SamplerProposal> methods;
     methods.append(MHVariable::eMHSymetric);
+    methods.append(MHVariable::eInversion); // since version v3.2.4
     methods.append(MHVariable::eMHSymGaussAdapt);
     return methods;
 }
