@@ -102,7 +102,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
                 d.mCalibration->mRepartition.clear();
                 d.mCalibration = nullptr;
 
-                if(d.mWiggleCalibration) {
+                if (d.mWiggleCalibration) {
                     d.mWiggleCalibration->mVector.clear();
                     d.mWiggleCalibration->mMap.clear();
                     d.mWiggleCalibration->mRepartition.clear();

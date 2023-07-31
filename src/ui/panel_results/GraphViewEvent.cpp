@@ -50,7 +50,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 GraphViewEvent::GraphViewEvent(QWidget *parent):GraphViewResults(parent),
-mEvent(nullptr)
+    mEvent(nullptr)
 {
     setMainColor(QColor(100, 100, 100));
     mGraph->setBackgroundColor(QColor(230, 230, 230));

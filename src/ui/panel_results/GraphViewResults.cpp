@@ -38,9 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "GraphViewResults.h"
-//#include "Button.h"
 #include "Painting.h"
-//#include "QtUtilities.h"
 #include "MainWindow.h"
 #include "MHVariable.h"
 #include "AppSettings.h"
@@ -56,18 +54,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 int GraphViewResults::mHeightForVisibleAxis = int (4 * AppSettings::heigthUnit()); //look ResultsView::applyAppSettings()
 
 GraphViewResults::GraphViewResults(QWidget *parent):QWidget(parent),
-mCurrentTypeGraph(ePostDistrib),
-mCurrentVariableList(QVector<variable_t>(eThetaEvent)),
-mShowAllChains(true),
-mShowVariableList(eThetaEvent),
-mShowNumResults(false),
-mIsSelected(false),
-mShowSelectedRect(true),
-mMainColor(Painting::borderDark),
-mMargin(5),
-mLineH(20),
-mTopShift(0),
-mGraphFont(font())
+    mCurrentTypeGraph(ePostDistrib),
+    mCurrentVariableList(QVector<variable_t>(eThetaEvent)),
+    mShowAllChains(true),
+    mShowVariableList(eThetaEvent),
+    mShowNumResults(false),
+    mIsSelected(false),
+    mShowSelectedRect(true),
+    mMainColor(Painting::borderDark),
+    mMargin(5),
+    mLineH(20),
+    mTopShift(0),
+    mGraphFont(font())
 {
     setGeometry(QRect(0, 0, parentWidget()->width(), 20 * AppSettings::heigthUnit()));
     setMouseTracking(true);

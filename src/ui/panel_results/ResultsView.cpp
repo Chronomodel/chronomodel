@@ -1102,7 +1102,6 @@ void ResultsView::setProject(Project* project)
      * => The previous nor the new results can be displayed so we must start by clearing the results view! */
 
     clearResults();
-    //updateModel(project->mModel);
     initModel(project->mModel);
     connect(project, &Project::mcmcStarted, this, &ResultsView::clearResults);
 }
@@ -1781,11 +1780,6 @@ void ResultsView::updateTotalGraphs()
 
         } else {
             if (!mModel->mEvents.isEmpty() && isCurve()) {
-               /* ModelCurve* model = modelCurve();
-                bool hasY = (model->mCurveSettings.mProcessType != CurveSettings::eProcessTypeNone && model->mCurveSettings.mProcessType != CurveSettings::eProcessTypeUnivarie) ;
-                bool hasZ = (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
-                             model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D);
-                */
                 ++totalGraphs;
                 if (mModel->displayY()) ++totalGraphs;
                 if (mModel->displayZ()) ++totalGraphs;
@@ -1833,7 +1827,6 @@ void ResultsView::createByEventsGraphs()
                 graph->setMarginRight(mMarginRight);
 
                 mByEventsGraphs.append(graph);
-                //connect(graph, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
                 connect(graph, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
 
 
@@ -1857,7 +1850,6 @@ void ResultsView::createByEventsGraphs()
                         graph->setMarginRight(mMarginRight);
 
                         mByEventsGraphs.append(graph);
-                        //connect(graph, &GraphViewResults::selected, this, &ResultsView::togglePageSave);
                         connect(graph, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
                     }
                     ++graphIndex;

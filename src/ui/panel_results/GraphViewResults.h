@@ -153,16 +153,11 @@ protected:
     QString mResultsText;
 
     QColor mItemColor;
-   // QString mItemTitle;
 
     bool mShowAllChains;
     QList<bool> mShowChainList;
     QVector<variable_t> mShowVariableList;
-  /*  bool mShowCredibility;
 
-    bool mShowCalib;
-    bool mShowWiggle;
-    */
     bool mShowNumResults;
     bool mIsSelected;
     bool mShowSelectedRect;
@@ -177,10 +172,7 @@ protected:
 
     qreal mMargin;
     qreal mLineH;
-   // qreal mGraphLeft;
     int mTopShift;
-
-
 
     QFont mGraphFont;
     //-----
