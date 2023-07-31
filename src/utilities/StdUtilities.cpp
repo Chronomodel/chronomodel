@@ -464,13 +464,10 @@ QMap<double, double> vector_to_map(const QVector<double>& data, const double min
         map.insert(min, data.at(0));
         //const int nbPts = 1 + int (round((max - min) / step)); // step is not usefull, it's must be data.size/(max-min+1)
 
-        const int nbPts = int ((max - min) / step);
+        const int nbPts = data.size() - 1;//int ((max - min) / step);
 
         for (int i = 1; i< nbPts; ++i) {
-            double t = min + i * step;
-
-            if (i < data.size())
-                map.insert(t, data.at(i));
+            map.insert(min + i * step, data.at(i));
         }
         map.insert(max, data.last());
     }
@@ -758,14 +755,16 @@ const std::map<double, double> create_HPD2(const QMap<double, double>& density, 
 
             std::multimap<double, std::map<double, double>::const_iterator> ::const_reverse_iterator riter = inverted.crbegin();
 
+            const auto iter_on_last_mapStd_value = std::prev(mapStd.cend());
             double area = 0.;
             while (area < areaSearched && riter!= inverted.crend()) {
-                //qDebug()<<"create_HPD rentre "<<riter->first;
+               // qDebug()<<"create_HPD rentre seuil "<<riter->first;
 
-                if (riter->second != mapStd.cend() && riter->second != mapStd.cbegin())
+                if (riter->second != iter_on_last_mapStd_value && riter->second != mapStd.cbegin()) {
                     area += surface_on_theta(riter->second);
+                   // qDebug()<<"riter theta"<<riter->second->first<<" seuil"<<riter->first<<area;
 
-                else if (riter->second != mapStd.cend()) { // donc c'est le debut
+                } else if (riter->second != iter_on_last_mapStd_value) { // donc c'est le debut
                     const auto &next_iter = std::next(riter->second);
                     area += (3.*riter->first + next_iter->second) * (next_iter->first - riter->second->first) /8.;
 
@@ -781,13 +780,12 @@ const std::map<double, double> create_HPD2(const QMap<double, double>& density, 
                 ++riter;
             }
 
+            if (riter == inverted.crend())
+                --riter;
 
-            if (riter == inverted.crend()) {
-                result = mapStd;
-                return result;
-            }
-            // ------------------Creation de result
             const double threshSearched = riter->first;
+
+            // ------------------Creation de result
 
             std::map<double, double> ::iterator iterMap = mapStd.begin();
             while (iterMap != mapStd.end()) {
@@ -818,263 +816,6 @@ const std::map<double, double> create_HPD2(const QMap<double, double>& density, 
 
 
     }
-}
-
-/**
-    @brief  This function make a QMap which are a copy of the QMap aMap to obtain an percent of area
-    @brief  to define a area we need at least 2 value in the map
-    @param threshold is in percent
- */
-
-
-const std::map<double, double> create_HPD(const QMap<double, double>& density, const double threshold)
-{
-    std::map<double, double> result;
-
-    if (density.size() < 2) { // in case of only one value (e.g. a bound fixed) or no value
-        if (density.size() < 1) { // in case of only one value (e.g. a bound fixed) or no value
-            return result;
-        }
-        result[density.firstKey()] = 1.;
-        return result;
-    }
-
-    const long double areaTot = map_area(density);
-
-    std::map<double, double> aMapStd = density.toStdMap();
-    if (areaTot==threshold) {
-        result = aMapStd;
-        return result;
-
-    } else {
-        try {
-            std::multimap<double, double> inverted;
-            std::multimap<double, double>::const_iterator cIter = aMapStd.cbegin();
-
-            while (cIter != aMapStd.cend()) {
-                 const double t = cIter->first;
-                 const double v = cIter->second;
-                 result[t] = 0;
-
-                inverted.insert({v, t});
-                 ++cIter;
-            }
-
-            //typedef std::multimap<double, double>::iterator iter_type;
-           // std::reverse_iterator<iter_type> iterInverted (inverted.rbegin());
-
-            const double areaSearched = areaTot * threshold / 100.;
-            //double t;
-            //std::map<double, double> ::iterator iterMap;
-
-            // recherche rapide pour approximer le seuil
-          /*  double vSeuil= 0;
-            while (iterInverted != inverted.rend() || area>=areaSearched) {
-                iterInverted++;
-                t = iterInverted->second;
-                tPrev = std::prev(iterMap)->first;
-                v = iterInverted->first;
-                area += v * (t-tPrev);
-                vSeuil = v;
-            }*/
-            // nous avons un seuil mini, il faut le remonter
-
-           /*
-            while (iterMap != aMapStd.end()) {
-                if (iterMap->second <= vSeuil)
-                    iterMap->second = 0;
-                else result[iterMap->first]=iterMap->second;
-                iterMap++;
-            }
-*/
-            std::multimap<double, double> ::const_iterator iter = inverted.cbegin();
-            std::multimap<double, double> ::const_iterator prev_iter = iter;
-            double prev_area = 0.;
-            do {
-                //prev_iter = iter;
-                ++iter;
-                 qDebug()<<"create_HPD rentre "<<iter->first<<iter->second;
-                prev_area =  map_area_threshold(aMapStd, prev_area, iter->first, areaSearched);
-                prev_iter = iter;
-                qDebug()<<"iter"<<iter->first<<prev_area;
-            }
-            while (prev_area > areaSearched && iter!=std::prev(inverted.cend())) ;
-
-
-            // Creation de result
-            const double threshSearched = iter->first;
-
-            std::map<double, double> ::iterator iterMap = aMapStd.begin();
-            while (iterMap != aMapStd.end()) {
-                const double t = iterMap->first;
-                const double v = iterMap->second;
-
-                if (v >= threshSearched)
-                    result[t] = v;
-                else
-                    result[t] = 0;
-
-                iterMap++;
-            }
-// test si result est vide, signifie qu'on a une valeur constante
-            if (result.empty()) {
-                const double t = aMapStd.begin()->first;
-                const double v = aMapStd.begin()->second;
-                result[t]= v;
-                qDebug()<< "[stdUtilities::create_HPD] one solution for "<< t;
-            }
-            return result;
-
-       }
-       catch (std::exception const & e) {
-            qDebug()<< "[stdUtilities::create_HPD] Error " << e.what();
-            return aMapStd;
-       }
-
-
-    }
-}
-
-/*
-const std::map<int, double> create_HPD(const QMap<int, double>& density, const double threshold)
-{
-    std::map<int, double> result;
-
-    if (density.size() < 2)  // in case of only one value (e.g. a bound fixed) or no value
-        return result;
-
-
-    long double areaTot = map_area(density);
-
-
-    std::map<int, double> densityStd = density.toStdMap();
-    if (areaTot == threshold) {
-        result = densityStd;
-        return result;
-
-    } else {
-        try {
-            std::multimap<double, int> inverted;
-
-            for (const auto& d : densityStd) {
-                result[d.first] = 0.; // important to init all the possible value
-
-               inverted.insert(std::pair<double, int>(d.second, d.first));
-            }
-
-            typedef std::multimap<double, int>::iterator iter_type;
-            std::reverse_iterator<iter_type> iterInverted (inverted.rbegin());
-
-
-            long double area = 0.;
-            long double areaSearched = areaTot * threshold / 100.;
-
-            iterInverted++;
-        //--------------------
-            while (std::next(iterInverted) != inverted.rend()) {
-                iterInverted++;
-                double t = iterInverted->second;//.value();
-                const double v = iterInverted->first;//.key();
-
-                std::map<int, double> ::iterator iterMap = densityStd.find(t);
-
-                //    This part of code fix the case of irregular QMap when the step between keys are not the same
-
-                if (iterMap->first == t) { // meaning : find(t) find the good key else iterMap = end()
-
-                    if ( iterMap != densityStd.begin() && iterMap != densityStd.end()) { // meaning : iterMap is not the first item
-
-                        const double vPrev = std::prev(iterMap)->second;
-                        if (vPrev >= v ) {
-                            const double tPrev = std::prev(iterMap)->first;
-                            area += (long double)(v + vPrev)/2 * (long double)(t - tPrev);
-                            // we need to save a surface, so we need to save 4 values
-                            if (area < areaSearched) {
-                                result[t] = v;
-                                result[tPrev] = vPrev;
-                            }
-                        }
-                    }
-
-                    if (iterMap != densityStd.end() ) {
-                        const double vNext = std::next(iterMap)->second;
-                        if (vNext > v) {
-                            const double tNext = std::next(iterMap)->first;
-
-                            area += (long double)(v + vNext)/2. * (long double)(tNext - t);
-                            // we need to save a surface, so we need to save 4 values
-                            if (area < areaSearched) {
-                                result[t] = v;
-                                result[tNext] = vNext;
-                            }
-
-                        }
-                    }
-
-                }
-
-                if (std::next(iterInverted) != inverted.rend() &&  (std::prev(iterInverted)->first==v) ) {
-                     result[t] = v;
-
-                } else {
-                        if (area < areaSearched)
-                            result[t] = v;
-
-                        else if (area >= areaSearched)
-                            return result;
-
-                }
-            }
-
-            return result;
-       }
-       catch (std::exception const & e) {
-            qDebug()<< "in stdUtilities::create_HPD() int Error"<<e.what();
-            return densityStd;
-       }
-
-
-    }
-}
-*/
-/**
- * @brief map_area_threshold
- * Calculates the area of the density having a value greater than the threshold and knowing a maximum target area.
- * Returns 2, if the area is greater than the target area.
- * @param density
- * @param threshold
- * @param areaMax
- * @return
- */
-double map_area_threshold(const std::map<double, double>& density, const double prev_area, const double threshold, const double areaMax)
-{
-    if (density.size()<2)
-        return 0.0;
-
-    std::map<double, double>::const_iterator iter = density.cbegin();
-    double srcArea = prev_area;
-
-    double lastV = iter->second;
-    double lastT = iter->first;
-    qDebug()<<"map_area_threshold rentre "<<lastV<<lastT;
-    //++cIter;
-    do  {
-        ++iter;
-        const double v = iter->second;
-        const double t = iter->first;
-        if (lastV >= threshold && v >= threshold) {
-            srcArea += (lastV+v)/2. * (t-lastT);
-
-            if (srcArea > areaMax)
-                return 2.;
-        }
-        lastV = v;
-        lastT = t;
-        qDebug()<<"map_area_threshold icic iter"<<v<<t;
-       // ++cIter;
-    } while (iter != density.cend());
-
-    return srcArea;
 }
 
 double map_area(const QMap<double, double> &map)

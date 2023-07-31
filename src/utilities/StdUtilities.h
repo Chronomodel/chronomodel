@@ -294,9 +294,6 @@ float vector_interpolate_idx_for_value(const float value, const QVector<float>& 
 double interpolate_value_from_curve(const double t, const QVector<double>& curve,const double curveTmin, const double curveTmax);
 double interpolate_value_from_curve(const double x, const std::vector<double>& curve,const double Xmin, const double Xmax);
 
-//double map_area_threshold(const std::map<double, double>& density, const double threshold, const double areaMax = 1.);
-double map_area_threshold(const std::map<double, double>& density, const double prev_area, const double threshold, const double areaMax = 1.);
-
 double map_area(const QMap<double, double>& map);
 float map_area(const QMap<float, float>& map);
 double map_area(const QMap<int, double>& density);
@@ -304,8 +301,6 @@ double map_area(const std::map<double, double>& density);
 
 inline double surface_on_theta (std::map<double, double>::const_iterator iter_on_theta );
 const std::map<double, double> create_HPD2(const QMap<double, double>& density, const double threshold = 95.);
-
-const std::map<double, double> create_HPD(const QMap<double, double>& density, const double threshold = 95.);
 
 QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmin, const double tmax, const int nbPts);
 

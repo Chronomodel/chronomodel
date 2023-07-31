@@ -138,7 +138,7 @@ public:
 
     void reset();
 
-    void calibrate(const StudyPeriodSettings settings, Project *project, bool truncate); // used for item
+    void calibrate(const StudyPeriodSettings priod_settings, Project *project, bool truncate); // used for item
     inline void calibrate(Project *project, bool truncate = true) {calibrate(mSettings, project, truncate);};
 
     void calibrateWiggle(const StudyPeriodSettings settings, Project *project);

@@ -542,7 +542,7 @@ void Date::reset()
  * @param truncate Restrict the calib and repartition vectors to where data are
  */
 
-void Date::calibrate(const StudyPeriodSettings settings, Project *project, bool truncate)
+void Date::calibrate(const StudyPeriodSettings priod_settings, Project *project, bool truncate)
 {
   // Check if the ref curve is in the plugin list
 
@@ -564,7 +564,7 @@ void Date::calibrate(const StudyPeriodSettings settings, Project *project, bool 
 
     } else if ( it->mDescription == getDesc() ) {
         // Controls whether the curve has already been calculated using the description
-        calibrateWiggle(settings, project);
+        calibrateWiggle(priod_settings, project);
 
         return;
     }
@@ -574,12 +574,20 @@ void Date::calibrate(const StudyPeriodSettings settings, Project *project, bool 
     mCalibration = & (project->mCalibCurves[mUUID]);
     mCalibration -> mDescription = getDesc();
 
-    mCalibration->mStep = settings.mStep;
+    mCalibration->mStep = priod_settings.mStep;
     mCalibration->mPluginId = mPlugin->getId();
     mCalibration->mPlugin = mPlugin;
     mCalibration->mName = mName;
 
     mCalibHPD.clear();
+    mCalibration->mMap.clear();
+    mCalibration->mVector.clear();
+
+    // Impossible to calibrate because the plugin could not return any calib curve definition period.
+    // This may be due to invalid ref curve files or to polynomial equations with only imaginary solutions (See Gauss Plugin...)
+    if (mTmaxRefCurve <= mTminRefCurve)
+        return;
+
 
     double tminCal;
     double tmaxCal;
@@ -588,11 +596,18 @@ void Date::calibrate(const StudyPeriodSettings settings, Project *project, bool 
      *  Calibrate on the whole calibration period (= ref curve definition domain)
      * -------------------------------------------------- */
 
-    if (mTmaxRefCurve > mTminRefCurve) {
+
+    int nb_step_frac = 0;
+
+    //if (mTmaxRefCurve > mTminRefCurve) {
+    while (mCalibration->mVector.size() < 6 && nb_step_frac < 20) {
+        ++nb_step_frac;
+        mCalibration->mStep = mCalibration->mStep / (double)nb_step_frac;
+        const int nbStep = floor((mTmaxRefCurve - mTminRefCurve) / mCalibration->mStep);
+
         QVector<double> calibrationTemp;
         QVector<double> repartitionTemp;
 
-        const int nbStep = floor((mTmaxRefCurve - mTminRefCurve) / settings.mStep);
 
         long double v = getLikelihood(mTminRefCurve);
         calibrationTemp.append(v);
@@ -608,14 +623,14 @@ void Date::calibrate(const StudyPeriodSettings settings, Project *project, bool 
 
         for (int i = 1; i <= nbStep; ++i) {
 
-            t = mTminRefCurve + i * settings.mStep;
+            t = mTminRefCurve + i * mCalibration->mStep;
             lastV = v;
             v = getLikelihood(t);
 
             calibrationTemp.append(double(v));
             rep = lastRepVal;
             if (v != 0.l && lastV != 0.l)
-                rep = lastRepVal + (long double) (settings.mStep) * (lastV + v) / 2.l;
+                rep = lastRepVal + (long double) (mCalibration->mStep) * (lastV + v) / 2.l;
 
             repartitionTemp.append(double (rep));
             lastRepVal = rep;
@@ -626,13 +641,13 @@ void Date::calibrate(const StudyPeriodSettings settings, Project *project, bool 
          */
 
         if (repartitionTemp.last() > 0.) {
-            if (truncate && repartitionTemp.size()>10) {
+            if (truncate && repartitionTemp.size() > 10) {
                 const double threshold (0.00001);
                 const int minIdx = int (floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp)));
                 const int maxIdx = int (ceil(vector_interpolate_idx_for_value((1. - threshold) * lastRepVal, repartitionTemp)));
 
-                tminCal = mTminRefCurve + minIdx * settings.mStep;
-                tmaxCal = mTminRefCurve + maxIdx * settings.mStep;
+                tminCal = mTminRefCurve + minIdx * mCalibration->mStep;
+                tmaxCal = mTminRefCurve + maxIdx * mCalibration->mStep;
 
                 // Truncate both functions where data live
                 mCalibration->mVector = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
@@ -654,7 +669,7 @@ void Date::calibrate(const StudyPeriodSettings settings, Project *project, bool 
             mCalibration->mRepartition = stretch_vector(mCalibration->mRepartition, 0., 1.);
 
             // Approximation : even if the calib has been truncated, we consider its area to be = 1
-            mCalibration->mVector = equal_areas(mCalibration->mVector, settings.mStep, 1.);
+            mCalibration->mVector = equal_areas(mCalibration->mVector, mCalibration->mStep, 1.);
 
 
         }
@@ -679,10 +694,6 @@ void Date::calibrate(const StudyPeriodSettings settings, Project *project, bool 
             QMap<QString, CalibrationCurve>::ConstIterator it = project->mCalibCurves.constFind(toFind);
             project->mCalibCurves.erase(it);
         }
-    }
-    else {
-        // Impossible to calibrate because the plugin could not return any calib curve definition period.
-        // This may be due to invalid ref curve files or to polynomial equations with only imaginary solutions (See Gauss Plugin...)
     }
 
 
