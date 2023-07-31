@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -63,15 +63,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):
     QWidget(parent, flags),
-    mButtonWidth  (int (1.3 * AppSettings::widthUnit()) * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE),
-    mButtonHeigth  (int (1.3 * AppSettings::heigthUnit()) * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE),
-    mLineEditHeight  (int (0.5 * AppSettings::heigthUnit())),
-    mComboBoxHeight (int (0.7 * AppSettings::heigthUnit())),
+    mButtonWidth  (50),
+    mButtonHeigth  (50),
+    mLineEditHeight  (25),
+    mComboBoxHeight (25),
     mCurveEnabled(false)
 
 {
     minimumHeight = 0;
-    // qDebug() << "EventPropertiesView::EventPropertiesView mButtonWidth="<< mButtonWidth;
+
     // ------------- commun with defautlt Event and Bound ----------
     mTopView = new QWidget(this);
 
@@ -119,6 +119,10 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     connect(mY_DecEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYDec);
     connect(mZ_IntEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventZF);
     
+    QDoubleValidator* positiveValidator = new QDoubleValidator(this);
+    positiveValidator->setBottom(0.);
+    //
+
     mS_X_IncLab = new QLabel(tr("Error"), mCurveWidget);
     mS_X_IncLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mS_Y_Lab = new QLabel(tr("Error"), mCurveWidget);
@@ -127,8 +131,13 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mS_Z_IntLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     
     mS_X_IncEdit = new LineEdit(mCurveWidget);
+    mS_X_IncEdit->setValidator(positiveValidator);
+
     mS_Y_Edit = new LineEdit(mCurveWidget);
+    mS_Y_Edit->setValidator(positiveValidator);
+
     mS_Z_IntEdit = new LineEdit(mCurveWidget);
+    mS_Z_IntEdit->setValidator(positiveValidator);
     
     connect(mS_X_IncEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSXInc);
     connect(mS_Y_Edit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSYDec);
@@ -146,21 +155,21 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 
     // -------------
 
-    const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
+    const QList<PluginAbstract*> &plugins = PluginManager::getPlugins();
 
-    for (int i = 0; i<plugins.size(); ++i) {
+    for (auto p : plugins) {
 
-        Button* button = new Button(plugins.at(i)->getName(), mEventView);
-        button->setIcon(plugins.at(i)->getIcon());
+        Button* button = new Button(p->getName(), mEventView);
+        button->setIcon(p->getIcon());
         button->setFlatVertical();
         button->setIconOnly(false);
-        button->setToolTip(tr("Insert %1 Data").arg(plugins.at(i)->getName()) );
+        button->setToolTip(tr("Insert %1 Data").arg(p->getName()) );
 
         connect(button, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &EventPropertiesView::createDate);
 
         minimumHeight += button->height();
 
-        if (plugins.at(i)->doesCalibration())
+        if (p->doesCalibration())
             mPluginButs1.append(button);
         else
             mPluginButs2.append(button);
@@ -793,10 +802,6 @@ void EventPropertiesView::resizeEvent(QResizeEvent* e)
 
 void EventPropertiesView::applyAppSettings()
 {
-    mButtonWidth = 50; //int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
-    mButtonHeigth = 50; //int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
-    mLineEditHeight = 25; //int (0.5 * AppSettings::heigthUnit());
-    mComboBoxHeight = 25; //int(0.7 * AppSettings::heigthUnit());
     minimumHeight += mEventView->height();
 
     minimumHeight = 0;
@@ -824,12 +829,9 @@ void EventPropertiesView::updateLayout()
     const QJsonObject &state = MainWindow::getInstance()->getState();
     const CurveSettings &curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
     const bool withCurve = (curveSettings.mProcessType != CurveSettings::eProcessTypeNone);
-    const bool withNode = (curveSettings.mLambdaSplineType != CurveSettings::eInterpolation) && (curveSettings.mVarianceType != CurveSettings::eModeFixed);
+    const bool withNode = (curveSettings.mLambdaSplineType != CurveSettings::eInterpolation) && (curveSettings.mVarianceType != CurveSettings::eModeFixed)
+                          && (curveSettings.mUseVarianceIndividual == true);
 
-    mButtonWidth = 50;
-    mButtonHeigth = 50;
-    mLineEditHeight = 25;
-    mComboBoxHeight = 25;
 
     QFontMetrics fm (font());
     const int margin = 10;
