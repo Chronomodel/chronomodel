@@ -132,6 +132,8 @@ Event::Event (const QJsonObject& json, const Model *model):
 
     mTheta.mSamplerProposal = MHVariable::SamplerProposal (json.value(STATE_EVENT_SAMPLER).toInt());
     mTheta.setName("Theta of Event : " + mName);
+    mTheta.mSupport = MetropolisVariable::eBounded;
+    mTheta.mFormat = DateUtils::eUnknown;
 
     mVg.setName("VG of Event : " + mName);
     mVg.mSupport = MetropolisVariable::eRp;
