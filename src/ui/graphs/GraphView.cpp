@@ -52,34 +52,34 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class StudyPeriodSettings;
 
 GraphView::GraphView(QWidget *parent):
-mStepMinWidth(3), // define when the minor scale on axis can appear
-mXAxisLine(true),
-mXAxisArrow(true),
-mXAxisTicks(true),
-mXAxisSubTicks(true),
-mXAxisValues(true),
-mYAxisLine(true),
-mYAxisArrow(false),
-mYAxisTicks(true),
-mYAxisSubTicks(true),
-mYAxisValues(true),
-mXAxisMode(eAllTicks),
-mYAxisMode(eAllTicks),
-mOverflowArrowMode(eNone),
-mAutoAdjustYScale(false),
-mShowInfos(false),
-mBackgroundColor(Qt::white),
-mThickness(1),
-mOpacity(100),
-mCanControlOpacity(false),
-mTipX(0.),
-mTipY(0.),
-mTipWidth(110.),
-mTipHeight(40.),
-mTipVisible(false),
-mUseTip(true),
-mUnitFunctionX(nullptr),
-mUnitFunctionY(nullptr)
+    mStepMinWidth(3), // define when the minor scale on axis can appear
+    mXAxisLine(true),
+    mXAxisArrow(true),
+    mXAxisTicks(true),
+    mXAxisSubTicks(true),
+    mXAxisValues(true),
+    mYAxisLine(true),
+    mYAxisArrow(false),
+    mYAxisTicks(true),
+    mYAxisSubTicks(true),
+    mYAxisValues(true),
+    mXAxisMode(eAllTicks),
+    mYAxisMode(eAllTicks),
+    mOverflowArrowMode(eNone),
+    mAutoAdjustYScale(false),
+    mShowInfos(false),
+    mBackgroundColor(Qt::white),
+    mThickness(1),
+    mOpacity(100),
+    mCanControlOpacity(false),
+    mTipX(0.),
+    mTipY(0.),
+    mTipWidth(110.),
+    mTipHeight(40.),
+    mTipVisible(false),
+    mUseTip(true),
+    mUnitFunctionX(nullptr),
+    mUnitFunctionY(nullptr)
 {
     GraphViewAbstract::setParent(parent);
     mAxisToolX.mIsHorizontal = true;
@@ -264,10 +264,10 @@ void GraphView::adjustYScale()
                 } else if (!curve.mData.empty()) {
                     const QMap<qreal, qreal> &subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
                     if (!subData.empty()) {
-                        yMin = std::min(yMin, map_min_value(subData));
+                       // yMin = std::min(yMin, map_min_value(subData));
                         yMax = std::max(yMax, map_max_value(subData));
                     }
-
+                    yMin = 0.;//
                 }
                 // map
                 if (curve.mMap.data.size() > 0) {
@@ -1168,7 +1168,7 @@ void GraphView::drawCurves(QPainter& painter)
 {
     if ((mGraphWidth<=0) || (mGraphHeight<=0))
         return;
-    /* -------------------------- Curves ---------------------------*/
+
     painter.save();
     // Draw curves inside axis only (not in margins!)
     //painter.setClipRect(int (mMarginLeft), int (mMarginTop), int(mGraphWidth), int (mGraphHeight));
@@ -1907,27 +1907,28 @@ void GraphView::drawDensity(GraphCurve &curve, QPainter& painter)
     type_data valueX = iter.key();
     type_data valueY = iter.value();
     type_data last_valueY = 0.;
-    type_data last_x (0);
-    type_data last_y (0);
+    type_data last_x = getXForValue(valueX);//(0);
+    type_data last_y = getYForValue(type_data (0), true) ;//(0);
 
     QPainterPath path;
-    path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
+    //path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
+    path.moveTo(last_x, last_y);
     // Detect square signal front-end without null value at the begin of the QMap
     // e.g calibration of Unif-typo-ref
     if (iter.hasNext()) {
         if (valueY == (iter.peekNext()).value()) {
-            if (valueX >= mCurrentMinX && valueX <= mCurrentMaxX) {
+          //  if (valueX >= mCurrentMinX && valueX <= mCurrentMaxX) {
                 path.moveTo( getXForValue(valueX), getYForValue(type_data (0), true) );
                 path.lineTo( getXForValue(valueX), getYForValue(valueY, true) );
-            }
+          //  }
         }
     }
 
     iter.toFront();
-    bool isFirst=true;
+    bool isFirst = true;
 
     if (curve.mBrush != Qt::NoBrush) {
-        isFirst=false;
+        isFirst = false;
         last_x = getXForValue(valueX, true);
         last_y = getYForValue(type_data (0.), false);
     }
@@ -1936,7 +1937,7 @@ void GraphView::drawDensity(GraphCurve &curve, QPainter& painter)
         valueX = iter.key();
         valueY = iter.value();
 
-        if (valueX >= mCurrentMinX && valueX <= mCurrentMaxX) {
+       // if (valueX >= mCurrentMinX && valueX <= mCurrentMaxX) {
             qreal x = getXForValue(valueX, true);
             qreal y = getYForValue(valueY, false);
 
@@ -1988,7 +1989,7 @@ void GraphView::drawDensity(GraphCurve &curve, QPainter& painter)
             last_y = y;
 
             last_valueY = valueY;
-        }
+       // }
     }
 
 

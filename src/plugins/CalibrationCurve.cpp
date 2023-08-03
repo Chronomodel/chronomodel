@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -43,10 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 CalibrationCurve::CalibrationCurve():
 mName(QString("unkown")),
 mDescription(QString("undefined"))
-//mMethod(CalibrationCurve::Method::eFromRef)
 {
-    // Parameter refere to the Method
-    //mMCMCSetting = MCMCSettings();
     mPluginId = "";
     mPlugin = nullptr;
     mRepartition = QVector< double>();
@@ -60,7 +57,6 @@ mDescription(QString("undefined"))
 CalibrationCurve::CalibrationCurve(const CalibrationCurve& other)
 {
     mName = other.mName;
-    //mMCMCSetting =other.mMCMCSetting;
     mPluginId = other.mPluginId;
     mPlugin = other.mPlugin;
 
@@ -73,7 +69,6 @@ CalibrationCurve::CalibrationCurve(const CalibrationCurve& other)
     std::copy(other.mVector.begin(), other.mVector.end(), mVector.begin());
 
     mMap = other.mMap;
-   // std::copy(other.mCalibration.begin(), other.mCalibration.end(), mCalibration.begin());
 
     mTmin = other.mTmin;
     mTmax = other.mTmax;

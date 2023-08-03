@@ -55,13 +55,13 @@ CurveRefPts::~CurveRefPts()
 }
 
 GraphCurve::GraphCurve():
-mType(eDensityData),
-mPen(Qt::black, 1),
-mBrush(Qt::NoBrush),
-mIsRectFromZero(false),
-mHorizontalValue(type_data(0)),
-mVerticalValue(type_data(0)),
-mVisible(true)
+    mType(eDensityData),
+    mPen(Qt::black, 1),
+    mBrush(Qt::NoBrush),
+    mIsRectFromZero(false),
+    mHorizontalValue(type_data(0)),
+    mVerticalValue(type_data(0)),
+    mVisible(true)
 {
 
 }
