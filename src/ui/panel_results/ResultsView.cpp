@@ -2461,14 +2461,14 @@ void ResultsView::updateGraphsMinMax()
             mResultMaxT = mModel->mSettings.getTmaxFormated();
         }
 
-     } else if ((mCurrentTypeGraph == GraphViewResults::eTrace) || (mCurrentTypeGraph == GraphViewResults::eAccept)) {
+    } else if ((mCurrentTypeGraph == GraphViewResults::eTrace) || (mCurrentTypeGraph == GraphViewResults::eAccept)) {
             for (qsizetype i = 0; i<mChainRadios.size(); ++i) {
                 if (mChainRadios.at(i)->isChecked()) {
                     const ChainSpecs& chain = mModel->mChains.at(i);
                     mResultMinT = 0;
                     const int adaptSize = chain.mBatchIndex * chain.mIterPerBatch;
                     const int runSize = chain.mRealyAccepted;
-                    mResultMaxT = 1 + adaptSize + runSize;
+                    mResultMaxT = 1 + chain.mIterPerBurn + adaptSize + runSize;
                     break;
                 }
             }
