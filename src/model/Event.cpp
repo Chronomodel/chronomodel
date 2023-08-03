@@ -61,7 +61,6 @@ Event::Event(const Model *model):
     mModel (model),
     mName ("no Event Name"),
     mIsCurrent (false),
-    //mMethod(Event::eDoubleExp),
     mIsSelected (false),
     mInitialized (false),
     mLevel (0),
@@ -115,6 +114,7 @@ Event::Event(const Model *model):
     mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
 }
+
 Event::Event (const QJsonObject& json, const Model *model):
     mModel (model)
 {
