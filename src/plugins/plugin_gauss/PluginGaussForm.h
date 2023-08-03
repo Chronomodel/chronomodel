@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #if USE_PLUGIN_GAUSS
 
-#include "../PluginFormAbstract.h"
+#include "PluginFormAbstract.h"
 
 class PluginGauss;
 class QLineEdit;
@@ -62,9 +62,6 @@ public:
     QJsonObject getData();
 
     bool isValid();
-
-signals:
-   // void OkEnabled(bool enabled) ;
 
 
 protected slots:

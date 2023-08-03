@@ -68,9 +68,9 @@ PluginGauss::~PluginGauss()
 // Likelihood
 long double PluginGauss::getLikelihood(const double& t, const QJsonObject& data)
 {
-  QPair<long double, long double > result = getLikelihoodArg(t, data);
+    const QPair<long double, long double > result = getLikelihoodArg(t, data);
 
-   return expl(result.second) / sqrt(result.first);
+    return expl(result.second) / sqrt(result.first);
 }
 
 QPair<long double, long double> PluginGauss::getLikelihoodArg(const double& t, const QJsonObject& data)

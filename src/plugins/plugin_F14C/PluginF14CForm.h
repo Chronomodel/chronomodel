@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,8 +40,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef PLUGINF14CFORM_H
 #define PLUGINF14CFORM_H
 
-#if USE_PLUGIN_F14C
 
+#if USE_PLUGIN_F14C
+#include <QValidator>
 #include "../PluginFormAbstract.h"
 
 class PluginF14C;
@@ -66,18 +67,19 @@ signals:
 
 protected slots:
     void errorIsValid(QString str);
+    void valueIsValid(QString str);
 
 private:
     QLabel* mAverageLab;
     QLabel* mErrorLab;
-//    QLabel* mRLab;
-//    QLabel* mRErrorLab;
+
     QLabel* mRefLab;
 
     QLineEdit* mAverageEdit;
     QLineEdit* mErrorEdit;
-//    QLineEdit* mREdit;
-//    QLineEdit* mRErrorEdit;
+    QDoubleValidator* mRValidator;
+    QDoubleValidator* mRplusValidator;
+
     QComboBox* mRefCombo;
 
     static QString mSelectedRefCurve;

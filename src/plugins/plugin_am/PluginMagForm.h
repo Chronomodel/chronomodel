@@ -40,10 +40,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef PLUGINMAGFORM_H
 #define PLUGINMAGFORM_H
 
-#include "QtGui/qvalidator.h"
 #if USE_PLUGIN_AM
 
-#include "../PluginFormAbstract.h"
+#include <QValidator>
+
+#include "PluginFormAbstract.h"
 
 class PluginMag;
 class QLineEdit;
@@ -64,15 +65,8 @@ public:
 
     bool isValid();
 
-signals:
-   // void OkEnabled(bool enabled = true) ;
-
 protected slots:
     void updateOptions();
-    void errorIsValid(QString str);
-
-    void incIsValid(QString str);
-    void decIsValid(QString str);
 
     void allIsValid();
 
@@ -106,10 +100,8 @@ private:
     QComboBox* mRefDCombo;
     QComboBox* mRefFCombo;
 
-    QDoubleValidator* m9090Validator = new QDoubleValidator(-90., 90., 3);
-    QDoubleValidator* m90270Validator = new QDoubleValidator(-90., 270., 3);
-    QDoubleValidator* mRplusValidator;
-    QIntValidator* mZplusValidator;
+   // QDoubleValidator *m9090Validator, *m90270Validator, *mRplusValidator;
+    //QIntValidator* mZplusValidator;
 
 
 };

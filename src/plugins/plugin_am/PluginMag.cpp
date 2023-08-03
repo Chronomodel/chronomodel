@@ -46,7 +46,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginMagRefView.h"
 #include "PluginMagSettingsView.h"
 #include "Generator.h"
-//#include "Functions.h"
 
 #include <QJsonObject>
 #include <QtWidgets>
@@ -77,6 +76,7 @@ long double PluginMag::getLikelihood(const double& t, const QJsonObject& data)
 
 QPair<long double, long double> PluginMag::getLikelihoodArg(const double& t, const QJsonObject& data)
 {
+    (void) data;
     return qMakePair<long double, long double> (0, 0);
 }
 
@@ -495,7 +495,6 @@ QStringList PluginMag::csvColumns() const
 {
     QStringList cols;
     cols << "Data Name"
-        //<< "type (inclination | declination | intensity)"
         << "type"
         << "Inclination value"
         << "Declination value"
@@ -610,7 +609,6 @@ QStringList PluginMag::toCSV(const QJsonObject& data, const QLocale& csvLocale) 
 
     const ProcessTypeAM pta = static_cast<ProcessTypeAM> (data.value(DATE_AM_PROCESS_TYPE_STR).toInt());
 
-  //  QString ref_curve;
     switch (pta) {
     case eInc:
         list << "inclination";

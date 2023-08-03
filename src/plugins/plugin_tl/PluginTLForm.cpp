@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -47,11 +47,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 PluginTLForm::PluginTLForm(PluginTL* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("TL Measurements"), parent, flags)
 {
-   // PluginTL* pluginTL = (PluginTL*)mPlugin;
-
     mAverageLab = new QLabel(tr("Age"), this);
     mErrorLab = new QLabel(tr("Error (sd)"), this);
-    mYearLab = new QLabel(tr("Ref. year"), this);
+    mYearLab = new QLabel(tr("Ref. year (BC/AD)"), this);
 
     mAverageEdit = new QLineEdit(this);
     mAverageEdit->setAlignment(Qt::AlignHCenter);
@@ -95,10 +93,10 @@ PluginTLForm::~PluginTLForm()
 void PluginTLForm::setData(const QJsonObject& data, bool isCombined)
 {
     (void) isCombined;
-    QLocale locale=QLocale();
-    double a = data.value(DATE_TL_AGE_STR).toDouble();
-    double e = data.value(DATE_TL_ERROR_STR).toDouble();
-    double y = data.value(DATE_TL_REF_YEAR_STR).toDouble();
+    QLocale locale = QLocale();
+    const double a = data.value(DATE_TL_AGE_STR).toDouble();
+    const double e = data.value(DATE_TL_ERROR_STR).toDouble();
+    const double y = data.value(DATE_TL_REF_YEAR_STR).toDouble();
 
     mAverageEdit->setText(locale.toString(a));
     mErrorEdit->setText(locale.toString(e));
@@ -109,9 +107,9 @@ QJsonObject PluginTLForm::getData()
 {
     QJsonObject data;
 
-    double a = locale().toDouble(mAverageEdit->text());
-    double e = locale().toDouble(mErrorEdit->text());
-    double y = locale().toDouble(mYearEdit->text());
+    const double a = locale().toDouble(mAverageEdit->text());
+    const double e = locale().toDouble(mErrorEdit->text());
+    const double y = locale().toDouble(mYearEdit->text());
 
     data.insert(DATE_TL_AGE_STR, a);
     data.insert(DATE_TL_ERROR_STR, e);
@@ -122,11 +120,8 @@ QJsonObject PluginTLForm::getData()
 
 void PluginTLForm::errorIsValid(QString str)
 {
-    bool ok;
-    double value = locale().toDouble(str,&ok);
-
-    emit PluginFormAbstract::OkEnabled(ok && (value>0) );
-
+    (void) str;
+    emit PluginFormAbstract::OkEnabled(mErrorEdit->hasAcceptableInput());
 }
 
 bool PluginTLForm::isValid()

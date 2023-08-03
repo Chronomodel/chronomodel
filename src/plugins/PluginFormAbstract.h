@@ -55,7 +55,7 @@ public:
 
 
     PluginFormAbstract(PluginAbstract* plugin, const QString& title, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget):QGroupBox(/*title, */parent),
-    mPlugin(plugin)
+        mPlugin(plugin)
     {
         (void) title;
         (void) flags;

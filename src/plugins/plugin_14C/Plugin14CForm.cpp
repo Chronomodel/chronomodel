@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -49,9 +49,6 @@ QString Plugin14CForm::mSelectedRefCurve = QString();
 
 Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("14C Measurements"), parent, flags)
 {
-    Plugin14C* plugin14C = static_cast<Plugin14C*> (mPlugin);
-
-
     mAverageLab = new QLabel(tr("Age (BP)"), this);
     mErrorLab = new QLabel(tr("Error (sd)"), this);
     mRLab = new QLabel(tr("Reservoir Effect (ΔR)"), this);
@@ -68,7 +65,7 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     mErrorEdit->setText("50");
     mErrorEdit->setAlignment(Qt::AlignHCenter);
     QDoubleValidator* RplusValidator = new QDoubleValidator();
-    RplusValidator->setBottom(0.0);
+    RplusValidator->setBottom(0.000001);
     mErrorEdit->setValidator(RplusValidator);
     connect(mErrorEdit, &QLineEdit::textChanged, this, &Plugin14CForm::errorIsValid);
 
@@ -82,7 +79,7 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     mRErrorEdit->setValidator(RValidator);
 
     mRefCombo = new QComboBox(this);
-    QStringList refCurves = plugin14C->getRefsNames();
+    QStringList refCurves = mPlugin->getRefsNames();
     for (int i = 0; i<refCurves.size(); ++i)
         mRefCombo->addItem(refCurves.at(i));
 
@@ -164,16 +161,15 @@ QJsonObject Plugin14CForm::getData()
 
 void Plugin14CForm::errorIsValid(QString str)
 {
-    bool ok;
-    const QLocale locale;
-    double value = locale.toDouble(str,&ok);
-    emit PluginFormAbstract::OkEnabled(ok && (value>0) );
+    (void) str;
+    emit PluginFormAbstract::OkEnabled(mErrorEdit->hasAcceptableInput());
+
 }
 
 bool Plugin14CForm::isValid()
 {
     const QString refCurve = mRefCombo->currentText();
-    if(refCurve.isEmpty())
+    if (refCurve.isEmpty())
         mError = tr("Ref. curve is empty!");
     return !refCurve.isEmpty();
 }

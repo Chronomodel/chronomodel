@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #if USE_PLUGIN_TL
 
-#include "../PluginFormAbstract.h"
+#include "PluginFormAbstract.h"
 
 class PluginTL;
 class QLabel;
@@ -60,9 +60,6 @@ public:
     virtual QJsonObject getData();
 
     bool isValid();
-
-signals:
-    //void OkEnabled(bool enabled) ;
 
 protected slots:
     void errorIsValid(QString str);

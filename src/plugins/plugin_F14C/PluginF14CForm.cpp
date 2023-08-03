@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -51,7 +51,6 @@ PluginF14CForm::PluginF14CForm(PluginF14C* plugin, QWidget* parent, Qt::WindowFl
 {
     PluginF14C* PluginF14C = static_cast<class PluginF14C*> (mPlugin);
 
-
     mAverageLab = new QLabel(tr("F14C"), this);
     mErrorLab = new QLabel(tr("Error (sd)"), this);
     mRefLab = new QLabel(tr("Reference curve"), this);
@@ -59,16 +58,20 @@ PluginF14CForm::PluginF14CForm(PluginF14C* plugin, QWidget* parent, Qt::WindowFl
     mAverageEdit = new QLineEdit(this);
     mAverageEdit->setText("1");
     mAverageEdit->setAlignment(Qt::AlignHCenter);
-    QDoubleValidator* RValidator = new QDoubleValidator();
-    mAverageEdit->setValidator(RValidator);
+    mRValidator = new QDoubleValidator(0., 10., -1, this);
+    mAverageEdit->setValidator(mRValidator);
 
     mErrorEdit = new QLineEdit(this);
-    mErrorEdit->setText("1");
+    QLocale locale;
+    mErrorEdit->setText(locale.toString(0.1));
     mErrorEdit->setAlignment(Qt::AlignHCenter);
-    QDoubleValidator* RplusValidator = new QDoubleValidator();
-    RplusValidator->setBottom(0.0);
-    mErrorEdit->setValidator(RplusValidator);
+    mRplusValidator = new QDoubleValidator(this);
+    mRplusValidator->setBottom(0.0);
+    mRplusValidator->setTop(10.0);
+    mErrorEdit->setValidator(mRplusValidator);
 
+
+    connect(mAverageEdit, &QLineEdit::textChanged, this, &PluginF14CForm::valueIsValid);
     connect(mErrorEdit, &QLineEdit::textChanged, this, &PluginF14CForm::errorIsValid);
 
     mRefCombo = new QComboBox(this);
@@ -111,7 +114,7 @@ void PluginF14CForm::setData(const QJsonObject& data, bool isCombined)
         emit PluginFormAbstract::OkEnabled(true );
 
     } else {
-        const QLocale locale=QLocale();
+        const QLocale locale = QLocale();
         const double a = data.value(DATE_F14C_FRACTION_STR).toDouble();
         const double e = data.value(DATE_F14C_ERROR_STR).toDouble();
         const QString c = data.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
@@ -146,16 +149,21 @@ QJsonObject PluginF14CForm::getData()
 
 void PluginF14CForm::errorIsValid(QString str)
 {
-    bool ok;
-    const QLocale locale;
-    double value = locale.toDouble(str,&ok);
-    emit PluginFormAbstract::OkEnabled(ok && (value>0) );
+    (void) str;
+    emit PluginFormAbstract::OkEnabled(mErrorEdit->hasAcceptableInput());
+
+}
+
+void PluginF14CForm::valueIsValid(QString str)
+{
+    (void) str;
+    emit PluginFormAbstract::OkEnabled(mAverageEdit->hasAcceptableInput());
 }
 
 bool PluginF14CForm::isValid()
 {
     const QString refCurve = mRefCombo->currentText();
-    if(refCurve.isEmpty())
+    if (refCurve.isEmpty())
         mError = tr("Ref. curve is empty!");
     return !refCurve.isEmpty();
 }

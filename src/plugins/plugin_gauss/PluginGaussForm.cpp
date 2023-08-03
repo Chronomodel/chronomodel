@@ -42,8 +42,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #if USE_PLUGIN_GAUSS
 #include "PluginGauss.h"
 
-#include "DoubleValidator.h"
-
 #include <QJsonObject>
 #include <QtWidgets>
 
@@ -54,19 +52,24 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
     mErrorLab = new QLabel(tr("Error (sd)"), this);
     mCalibLab = new QLabel(tr("Calibration"), this);
 
+    QDoubleValidator* validator_R = new QDoubleValidator();
+    validator_R->setLocale(QLocale());
+
+    QDoubleValidator* validator_Rplus = new QDoubleValidator();
+    validator_Rplus->setBottom(0.0000001);
+    validator_Rplus->setLocale(QLocale());
+
     mAverageEdit = new QLineEdit(this);
-    mAverageEdit->setAlignment(Qt::AlignHCenter);
-    QDoubleValidator* RValidator = new QDoubleValidator();
-    mAverageEdit->setValidator(RValidator);
+    mAverageEdit->setAlignment(Qt::AlignHCenter);  
+    mAverageEdit->setValidator(validator_R);
 
     mErrorEdit = new QLineEdit(this);
     mErrorEdit->setAlignment(Qt::AlignHCenter);
-    QDoubleValidator* RplusValidator = new QDoubleValidator();
-    RplusValidator->setBottom(0.0);
-    mErrorEdit->setValidator(RplusValidator);
+    mErrorEdit->setValidator(validator_Rplus);
 
     connect(mErrorEdit, &QLineEdit::textChanged, this, &PluginGaussForm::errorIsValid);
-    connect(mErrorEdit, &QLineEdit::editingFinished, this, &PluginGaussForm::validOK);
+    connect(mAverageEdit, &QLineEdit::textChanged, this, &PluginGaussForm::isValid);
+   //connect(mErrorEdit, &QLineEdit::editingFinished, this, &PluginGaussForm::validOK);
 
     mAverageEdit->setText("0");
     mErrorEdit->setText("50");
@@ -239,11 +242,8 @@ QJsonObject PluginGaussForm::getData()
 
 void PluginGaussForm::errorIsValid(QString str)
 {
-    bool ok;
-    const QLocale locale;
-    const double value = locale.toDouble(str,&ok);
-
-    emit PluginFormAbstract::OkEnabled(ok && (value>0) );
+    (void) str;
+    emit PluginFormAbstract::OkEnabled(  mErrorEdit->hasAcceptableInput());
 }
 
 void PluginGaussForm::equationIsValid()
@@ -266,10 +266,7 @@ void PluginGaussForm::equationIsValid()
 
 void PluginGaussForm::validOK()
 {
-    bool ok;
-    const QLocale locale;
-    const double erroValue = locale.toDouble(mErrorEdit->text(), &ok);
-    ok = ok && (erroValue>0);
+    bool ok = mErrorEdit->hasAcceptableInput() &&  mAverageEdit->hasAcceptableInput();
     if (ok && mEquationRadio->isChecked()) {
         bool oka,okb;
         const QLocale locale;

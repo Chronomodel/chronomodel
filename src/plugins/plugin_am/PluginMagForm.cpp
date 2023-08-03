@@ -47,7 +47,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("AM Measurements"), parent, flags)
 {
-
     mIncRadio = new QRadioButton(tr("Inclination (I)"));
     mDecRadio = new QRadioButton(tr("Declination (D)"));
     mFieldRadio = new QRadioButton(tr("Field (F)"));
@@ -78,74 +77,80 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     mMCMCIterationLab = new QLabel(tr("Iteration"), this);
 
     //------------------------------------------------------------------------------------//
-    mRplusValidator = new QDoubleValidator ();
-    mRplusValidator->setBottom(0.);
-    mZplusValidator = new QIntValidator();
-    mZplusValidator->setBottom(0);
+
+    QDoubleValidator* validator_90to90 = new QDoubleValidator (-90., 90., 3);
+    validator_90to90->setLocale(QLocale());
+
+    QDoubleValidator* validator90to270 = new QDoubleValidator (-90., 270., 3);
+    validator90to270->setLocale(QLocale());
+
+    QDoubleValidator* validatorRplus = new QDoubleValidator (this);
+    validatorRplus->setBottom(0.0001);
+    validatorRplus->setLocale(QLocale());
+
+    QIntValidator* validatorZplus = new QIntValidator(this);
+    validatorZplus->setLocale(QLocale());
+    validatorZplus->setBottom(1);
 
     mIncEdit = new QLineEdit(this);
     mIncEdit->setAlignment(Qt::AlignHCenter);
-    mIncEdit->setToolTip(tr("inclination is >=-90 and <=90"));
-    mIncEdit->setValidator(m9090Validator);
+    mIncEdit->setToolTip(tr("Inclination is >=-90 and <=90"));
+    mIncEdit->setValidator(validator_90to90);
     connect(mIncEdit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
 
     mDecEdit = new QLineEdit(this);
     mDecEdit->setAlignment(Qt::AlignHCenter);
-    mDecEdit->setToolTip(tr("declination is >=-90 and <=270"));
-    mDecEdit->setValidator(m90270Validator);
+    mDecEdit->setToolTip(tr("Declination is >=-90 and <=270"));
+    mDecEdit->setValidator(validator90to270);
     connect(mDecEdit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
-
 
     mAlpha95Edit = new QLineEdit(this);
     mAlpha95Edit->setAlignment(Qt::AlignHCenter);
     mAlpha95Edit->setToolTip(tr("Alpha95 is > 0"));
-    mAlpha95Edit->setValidator(mRplusValidator);
+    mAlpha95Edit->setValidator(validatorRplus);
     connect(mAlpha95Edit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
 
     // --------------------------------------------------------------------------------------- //
     mFieldEdit = new QLineEdit(this);
     mFieldEdit ->setAlignment(Qt::AlignHCenter);
     mFieldEdit ->setToolTip(tr("Field is >0"));
-    mFieldEdit->setValidator(mRplusValidator);
+    mFieldEdit->setValidator(validatorRplus);
     connect(mFieldEdit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
 
     mFieldErrorEdit = new QLineEdit(this);
     mFieldErrorEdit ->setAlignment(Qt::AlignHCenter);
     mFieldErrorEdit ->setToolTip(tr("error >0"));
-    mFieldErrorEdit->setValidator(mRplusValidator);
+    mFieldErrorEdit->setValidator(validatorRplus);
     connect(mFieldErrorEdit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
-
-
 
     mMCMCIterationEdit = new QLineEdit(this);
     mMCMCIterationEdit->setAlignment(Qt::AlignHCenter);
     mMCMCIterationEdit->setToolTip(tr("iteration is > 0"));
-    mMCMCIterationEdit->setValidator(mZplusValidator);
+    mMCMCIterationEdit->setValidator(validatorZplus);
 
     connect(mMCMCIterationEdit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
 
     mRefILab = new QLabel(tr("Curve I"), this);
-
     mRefICombo = new QComboBox(this);
-    QStringList refICurves = plugin->getRefsNames();
-    for (int i = 0; i<refICurves.size(); ++i) {
-        if(refICurves[i].contains("_i.ref"))
-            mRefICombo->addItem(refICurves[i]);
-    }
 
     mRefDLab = new QLabel(tr("Curve D"), this);
     mRefDCombo = new QComboBox(this);
-    QStringList refDCurves = plugin->getRefsNames();
-    for (int i = 0; i<refDCurves.size(); ++i) {
-        if(refICurves[i].contains("_d.ref"))
-            mRefDCombo->addItem(refDCurves[i]);
-    }
+
     mRefFLab = new QLabel(tr("Curve F"), this);
     mRefFCombo = new QComboBox(this);
-    QStringList refFCurves = plugin->getRefsNames();
-    for (int i = 0; i<refFCurves.size(); ++i) {
-        if(refICurves[i].contains("_f.ref"))
-            mRefFCombo->addItem(refFCurves[i]);
+
+    const QStringList refCurves = plugin->getRefsNames();
+
+    for (auto &curve : refCurves) {
+        if (curve.contains("_i.ref"))
+            mRefICombo->addItem(curve);
+
+        if (curve.contains("_d.ref"))
+            mRefDCombo->addItem(curve);
+
+        if (curve.contains("_f.ref"))
+            mRefFCombo->addItem(curve);
+
     }
 
     mIncEdit->setText("65"); // Inclinaison pour la direction
@@ -159,45 +164,43 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
 
     mIDRadio->setChecked(true);
 
-   QGridLayout* grid = new QGridLayout();
-   grid->setContentsMargins(0, 5, 0, 0);
+    QGridLayout* grid = new QGridLayout();
+    grid->setContentsMargins(0, 5, 0, 0);
 
-   grid->addWidget(mIncRadio, 0, 1);
-   grid->addWidget(mDecRadio, 1, 1);
-   grid->addWidget(mFieldRadio, 2, 1);
+    grid->addWidget(mIncRadio, 0, 1);
+    grid->addWidget(mDecRadio, 1, 1);
+    grid->addWidget(mFieldRadio, 2, 1);
 
-   grid->addWidget(mIDRadio, 0, 5);
-   grid->addWidget(mIFRadio, 1, 5);
-   grid->addWidget(mIDFRadio, 2, 5);
+    grid->addWidget(mIDRadio, 0, 5);
+    grid->addWidget(mIFRadio, 1, 5);
+    grid->addWidget(mIDFRadio, 2, 5);
 
-   grid->addWidget(mIncLab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
-   grid->addWidget(mIncEdit, 6, 1);
-   grid->addWidget(mRefILab, 6, 4, Qt::AlignRight | Qt::AlignVCenter);
-   grid->addWidget(mRefICombo, 6, 5);
+    grid->addWidget(mIncLab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mIncEdit, 6, 1);
+    grid->addWidget(mRefILab, 6, 4, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mRefICombo, 6, 5);
 
+    grid->addWidget(mDecLab, 7, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mDecEdit, 7, 1);
+    grid->addWidget(mRefDLab, 7, 4, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mRefDCombo, 7, 5);
 
-   grid->addWidget(mDecLab, 7, 0, Qt::AlignRight | Qt::AlignVCenter);
-   grid->addWidget(mDecEdit, 7, 1);
-   grid->addWidget(mRefDLab, 7, 4, Qt::AlignRight | Qt::AlignVCenter);
-   grid->addWidget(mRefDCombo, 7, 5);
+    grid->addWidget(mFieldLab, 8, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mFieldEdit, 8, 1);
+    grid->addWidget(mRefFLab, 8, 4, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mRefFCombo, 8, 5);
 
-   grid->addWidget(mFieldLab, 8, 0, Qt::AlignRight | Qt::AlignVCenter);
-   grid->addWidget(mFieldEdit, 8, 1);
-   grid->addWidget(mRefFLab, 8, 4, Qt::AlignRight | Qt::AlignVCenter);
-   grid->addWidget(mRefFCombo, 8, 5);
+    grid->addWidget(mAlpha95Lab, 9, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mAlpha95Edit, 9, 1);
 
-   grid->addWidget(mAlpha95Lab, 9, 0, Qt::AlignRight | Qt::AlignVCenter);
-   grid->addWidget(mAlpha95Edit, 9, 1);
+    grid->addWidget(mFieldErrorLab, 10, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mFieldErrorEdit, 10, 1);
 
-   grid->addWidget(mFieldErrorLab, 10, 0, Qt::AlignRight | Qt::AlignVCenter);
-   grid->addWidget(mFieldErrorEdit, 10, 1);
+    grid->addWidget(mMCMCIterationLab, 12, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mMCMCIterationEdit, 12, 1);
+    setLayout(grid);
 
-
-   grid->addWidget(mMCMCIterationLab, 12, 0, Qt::AlignRight | Qt::AlignVCenter);
-   grid->addWidget(mMCMCIterationEdit, 12, 1);
-   setLayout(grid);
-
-   updateOptions();
+    updateOptions();
 }
 
 PluginMagForm::~PluginMagForm()
@@ -307,44 +310,13 @@ QJsonObject PluginMagForm::getData()
     return data;
 }
 
-void PluginMagForm::errorIsValid(QString str)
-{
-    bool ok;
-    const QLocale locale;
-    const double value = locale.toDouble(str, &ok);
-
-    emit PluginFormAbstract::OkEnabled(ok && (value>0) );
-}
-
-void PluginMagForm::incIsValid(QString str)
-{
-    bool ok;
-    const QLocale locale;
-    const double value = locale.toDouble(str, &ok);
-
-    emit PluginFormAbstract::OkEnabled(ok && (value>=-90) && (value<=90) );
-}
-
-void PluginMagForm::decIsValid(QString str)
-{
-    bool ok;
-    const QLocale locale;
-    const double value = locale.toDouble(str, &ok);
-
-    emit PluginFormAbstract::OkEnabled(ok && (value>=-90) && (value<=270) );
-}
-
-
 bool PluginMagForm::isValid()
 {
     return true;
 }
 
-
-
 void PluginMagForm::updateOptions()
 {
-
     const bool showInc = mIncRadio->isChecked() || mIDRadio->isChecked() || mDecRadio->isChecked() ||
                          mIFRadio->isChecked() || mIDFRadio->isChecked();
 
@@ -384,68 +356,33 @@ void PluginMagForm::updateOptions()
 void PluginMagForm::allIsValid()
 {
     bool allOK;
-    int pos;
-    QString incText = mIncEdit->text();
-    QString decText = mDecEdit->text();
-    QString alpha95Text = mAlpha95Edit->text();
-    QString fieldText = mFieldEdit->text();
-    QString error_fText = mFieldErrorEdit->text();
 
-    QString iteration_mcmcText = mMCMCIterationEdit->text();
-
-    ProcessTypeAM pta = ProcessTypeAM::eNone;
     if (mIncRadio->isChecked())
-        pta = eInc;
-    else if (mDecRadio->isChecked())
-        pta = eDec;
-    else if (mFieldRadio->isChecked())
-        pta = eField;
-    else if (mIDRadio->isChecked())
-        pta = eID;
-    else if (mIFRadio->isChecked())
-        pta = eIF;
-    else if (mIDFRadio->isChecked())
-        pta = eIDF;
+        allOK =  mIncEdit->hasAcceptableInput() && mAlpha95Edit->hasAcceptableInput();
 
-    switch (pta) {
-    case eInc:
-       allOK = (m9090Validator->validate(incText, pos) == QValidator::Acceptable)
-               && (mRplusValidator->validate(alpha95Text, pos) == QValidator::Acceptable);
-       break;
-    case eDec:
-        allOK = (m9090Validator->validate(incText, pos) == QValidator::Acceptable)
-                && (mRplusValidator->validate(alpha95Text, pos) == QValidator::Acceptable)
-                && (m90270Validator->validate(decText, pos) == QValidator::Acceptable) ;
-        break;
-    case eField:
-        allOK = (mRplusValidator->validate(fieldText, pos) == QValidator::Acceptable)
-                && (mRplusValidator->validate(error_fText, pos) == QValidator::Acceptable);
-        break;
-    case eID:
-        allOK = (m9090Validator->validate(incText, pos) == QValidator::Acceptable)
-                && (mRplusValidator->validate(alpha95Text, pos) == QValidator::Acceptable)
-                && (m90270Validator->validate(decText, pos) == QValidator::Acceptable)
-                && (mZplusValidator->validate(iteration_mcmcText, pos) == QValidator::Acceptable);
-        break;
-    case eIF:
-        allOK = (m9090Validator->validate(incText, pos) == QValidator::Acceptable)
-                && (mRplusValidator->validate(alpha95Text, pos) == QValidator::Acceptable)
-                && (mRplusValidator->validate(fieldText, pos) == QValidator::Acceptable)
-                && (mRplusValidator->validate(error_fText, pos) == QValidator::Acceptable)
-                && (mZplusValidator->validate(iteration_mcmcText, pos) == QValidator::Acceptable);
-        break;
-    case eIDF:
-        allOK = (m9090Validator->validate(incText, pos) == QValidator::Acceptable)
-                && (m90270Validator->validate(decText, pos) == QValidator::Acceptable)
-                && (mRplusValidator->validate(alpha95Text, pos) == QValidator::Acceptable)
-                && (mRplusValidator->validate(fieldText, pos) == QValidator::Acceptable)
-                && (mRplusValidator->validate(error_fText, pos) == QValidator::Acceptable)
-                && (mZplusValidator->validate(iteration_mcmcText, pos) == QValidator::Acceptable);
-        break;
-    default:
+    else if (mDecRadio->isChecked())
+        allOK =  mIncEdit->hasAcceptableInput() && mAlpha95Edit->hasAcceptableInput() && mDecEdit->hasAcceptableInput() ;
+
+    else if (mFieldRadio->isChecked())
+        allOK = mFieldEdit->hasAcceptableInput() && mFieldErrorEdit->hasAcceptableInput();
+
+    else if (mIDRadio->isChecked())
+        allOK = mIncEdit->hasAcceptableInput() && mAlpha95Edit->hasAcceptableInput()
+                && mDecEdit->hasAcceptableInput() && mMCMCIterationEdit->hasAcceptableInput();
+
+    else if (mIFRadio->isChecked())
+        allOK = mIncEdit->hasAcceptableInput() && mAlpha95Edit->hasAcceptableInput()
+                && mFieldEdit->hasAcceptableInput() && mFieldErrorEdit->hasAcceptableInput()
+                && mMCMCIterationEdit->hasAcceptableInput();
+
+    else if (mIDFRadio->isChecked())
+        allOK = mIncEdit->hasAcceptableInput() && mAlpha95Edit->hasAcceptableInput() && mDecEdit->hasAcceptableInput()
+                && mFieldEdit->hasAcceptableInput() && mFieldErrorEdit->hasAcceptableInput()
+                && mMCMCIterationEdit->hasAcceptableInput();
+
+    else
         allOK = false;
-        break;
-    }
+
 
     emit PluginFormAbstract::OkEnabled(allOK );
 }
