@@ -162,6 +162,7 @@ USE_PLUGIN_14C = 1
 USE_PLUGIN_TL = 1
 USE_PLUGIN_AM = 1
 USE_PLUGIN_F14C = 1
+USE_PLUGIN_CSV = 1
 
 DEFINES += "USE_PLUGIN_UNIFORM=$${USE_PLUGIN_UNIFORM}"
 DEFINES += "USE_PLUGIN_GAUSS=$${USE_PLUGIN_GAUSS}"
@@ -169,6 +170,7 @@ DEFINES += "USE_PLUGIN_14C=$${USE_PLUGIN_14C}"
 DEFINES += "USE_PLUGIN_TL=$${USE_PLUGIN_TL}"
 DEFINES += "USE_PLUGIN_AM=$${USE_PLUGIN_AM}"
 DEFINES += "USE_PLUGIN_F14C=$${USE_PLUGIN_F14C}"
+DEFINES += "USE_PLUGIN_CSV=$${USE_PLUGIN_CSV}"
 
 #########################################
 # FFTW
@@ -250,6 +252,7 @@ INCLUDEPATH += src/plugins/plugin_gauss/
 INCLUDEPATH += src/plugins/plugin_tl/
 INCLUDEPATH += src/plugins/plugin_uniform/
 INCLUDEPATH += src/plugins/plugin_F14C/
+INCLUDEPATH += src/plugins/plugin_CSV/
 INCLUDEPATH += src/project/
 INCLUDEPATH += src/curve/
 INCLUDEPATH += src/ui/
@@ -347,6 +350,12 @@ equals(USE_PLUGIN_F14C, 1){
     HEADERS += src/plugins/plugin_F14C/PluginF14CForm.h
     HEADERS += src/plugins/plugin_F14C/PluginF14CRefView.h
     HEADERS += src/plugins/plugin_F14C/PluginF14CSettingsView.h
+}
+equals(USE_PLUGIN_CSV, 1){
+        HEADERS += src/plugins/plugin_CSV/PluginCSV.h
+        HEADERS += src/plugins/plugin_CSV/PluginCSVForm.h
+        HEADERS += src/plugins/plugin_CSV/PluginCSVRefView.h
+    HEADERS += src/plugins/plugin_CSV/PluginCSVSettingsView.h
 }
 
 HEADERS += src/project/PluginManager.h
@@ -515,7 +524,12 @@ equals(USE_PLUGIN_F14C, 1) {
     SOURCES += src/plugins/plugin_F14C/PluginF14CRefView.cpp
     SOURCES += src/plugins/plugin_F14C/PluginF14CSettingsView.cpp
 }
-
+equals(USE_PLUGIN_CSV, 1) {
+    SOURCES += src/plugins/plugin_CSV/PluginCSV.cpp
+    SOURCES += src/plugins/plugin_CSV/PluginCSVForm.cpp
+    SOURCES += src/plugins/plugin_CSV/PluginCSVRefView.cpp
+    SOURCES += src/plugins/plugin_CSV/PluginCSVSettingsView.cpp
+}
 SOURCES += src/project/PluginManager.cpp
 SOURCES += src/project/Project.cpp
 SOURCES += \
