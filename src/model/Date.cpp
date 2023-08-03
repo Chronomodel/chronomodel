@@ -599,33 +599,31 @@ void Date::calibrate(const StudyPeriodSettings priod_settings, Project *project,
 
     int nb_step_frac = 0;
 
-    //if (mTmaxRefCurve > mTminRefCurve) {
     while (mCalibration->mVector.size() < 6 && nb_step_frac < 20) {
         ++nb_step_frac;
-        mCalibration->mStep = mCalibration->mStep / (double)nb_step_frac;
+        mCalibration->mStep = priod_settings.mStep / (double)nb_step_frac;
         const int nbStep = floor((mTmaxRefCurve - mTminRefCurve) / mCalibration->mStep);
 
         QVector<double> calibrationTemp;
         QVector<double> repartitionTemp;
 
 
-        long double v = getLikelihood(mTminRefCurve);
-        calibrationTemp.append(v);
-        repartitionTemp.append(v); //ici
-        long double lastRepVal = v;
+        const long double v0 = getLikelihood(mTminRefCurve);
+        calibrationTemp.append(v0);
+        repartitionTemp.append(v0); //ici
+        long double lastRepVal = v0;
 
         /* We use long double type because
          * after several sums, the repartition can be in the double type range
         */
-        double t;
-        long double lastV;
+        //double t;
+        long double lastV = v0;
         long double rep;
 
         for (int i = 1; i <= nbStep; ++i) {
 
-            t = mTminRefCurve + i * mCalibration->mStep;
-            lastV = v;
-            v = getLikelihood(t);
+            const double t = mTminRefCurve + i * mCalibration->mStep;
+            const long double v = getLikelihood(t);
 
             calibrationTemp.append(double(v));
             rep = lastRepVal;
@@ -634,6 +632,7 @@ void Date::calibrate(const StudyPeriodSettings priod_settings, Project *project,
 
             repartitionTemp.append(double (rep));
             lastRepVal = rep;
+            lastV = v;
         }
 
         /*
@@ -671,6 +670,9 @@ void Date::calibrate(const StudyPeriodSettings priod_settings, Project *project,
             // Approximation : even if the calib has been truncated, we consider its area to be = 1
             mCalibration->mVector = equal_areas(mCalibration->mVector, mCalibration->mStep, 1.);
 
+            mCalibration->mTmin = tminCal;
+            mCalibration->mTmax = tmaxCal;
+            mCalibration->mMap = vector_to_map(mCalibration->mVector, mCalibration->mTmin, mCalibration->mTmax, mCalibration->mStep);
 
         }
         /* ------------------------------------------------------------------
@@ -679,14 +681,11 @@ void Date::calibrate(const StudyPeriodSettings priod_settings, Project *project,
          *  => lastRepVal = 0, and impossible to truncate using it....
          *  => So,
          * ------------------------------------------------------------------ */
-        else  {
-            tminCal = mTminRefCurve;
-            tmaxCal = mTmaxRefCurve;
-        }
 
-        mCalibration->mTmin = tminCal;
-        mCalibration->mTmax = tmaxCal;
-        mCalibration->mMap = vector_to_map(mCalibration->mVector, mCalibration->mTmin, mCalibration->mTmax, mCalibration->mStep);
+        else  {
+            mCalibration->mTmin = mTminRefCurve;
+            mCalibration->mTmax = mTmaxRefCurve;
+        }
 
     }
 
@@ -712,8 +711,8 @@ void Date::calibrate(const StudyPeriodSettings priod_settings, Project *project,
  */
 void Date::calibrateWiggle(const StudyPeriodSettings settings, Project *project)
 {
-  // Check if the ref curve is in the plugin list
-      if (mDeltaType == Date::eDeltaNone) {
+    // Check if the ref curve is in the plugin list
+    if (mDeltaType == Date::eDeltaNone) {
         mWiggleCalibration = nullptr;
         return;
     }
@@ -741,9 +740,9 @@ void Date::calibrateWiggle(const StudyPeriodSettings settings, Project *project)
         
     
     
-  // Update of the new calibration curve, on the whole reference curve
+    // Update of the new calibration curve, on the whole reference curve
     QVector<double> calibrationTemp;
-    QPair<double, double> tminTmax = mPlugin->getTminTmaxRefsCurve(mData);
+    const QPair<double, double> tminTmax = mPlugin->getTminTmaxRefsCurve(mData);
     const double minRefCurve = tminTmax.first;
     const double maxRefCurve = tminTmax.second;
 
@@ -752,13 +751,11 @@ void Date::calibrateWiggle(const StudyPeriodSettings settings, Project *project)
 
     /* We use long double type because
      * after several sums, the repartition can be in the double type range
-    */
-    double t;
+     */
     for (int i = 1; i <= nbRefPts; ++i) {
-        t = minRefCurve + double (i) * settings.mStep;
+        const double t = minRefCurve + double (i) * settings.mStep;
         calibrationTemp.append(double(getLikelihood(t)));
     }
-
 
     mWiggleCalibration = & (project->mCalibCurves[toFind]);
 
@@ -775,7 +772,7 @@ void Date::calibrateWiggle(const StudyPeriodSettings settings, Project *project)
      * -------------------------------------------------- */
     switch (mDeltaType) {
         case eDeltaFixed:
-        {
+            {
                 mWiggleCalibration->mVector = calibrationTemp;
                 mWiggleCalibration->mTmin = minRefCurve + mDeltaFixed;
                 mWiggleCalibration->mTmax = maxRefCurve + mDeltaFixed;
@@ -861,23 +858,23 @@ void Date::calibrateWiggle(const StudyPeriodSettings settings, Project *project)
         fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, outputComplex, outputReal, FFTW_ESTIMATE);
         fftw_execute(plan_output);
 
-/*
- * This code corresponds to the theoretical formula in Fourier space.
- * But it does not work with uniform densities, because it does not handle the padding correctly.
- * The problem also exists for densities with a very small support .
+        /*
+         * This code corresponds to the theoretical formula in Fourier space.
+         * But it does not work with uniform densities, because it does not handle the padding correctly.
+         * The problem also exists for densities with a very small support .
 
-   double factor;
-        for (int i(0); i<NComplex; ++i) {
+         double factor;
+         for (int i(0); i<NComplex; ++i) {
 
             factor = sinc((double)i, L/(double)inputSize );
 
             outputComplex[i][0] = inputComplex[i][0]* factor;
             outputComplex[i][1] = inputComplex[i][1]* factor;
-        }
+         }
 
-        fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, outputComplex, outputReal, FFTW_ESTIMATE);
-        fftw_execute(plan_output);
-*/
+         fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, outputComplex, outputReal, FFTW_ESTIMATE);
+         fftw_execute(plan_output);
+         */
 
 
         QVector<double> curve;
@@ -926,7 +923,7 @@ void Date::calibrateWiggle(const StudyPeriodSettings settings, Project *project)
             inputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
             
 
-            // on peut utiliser std::copy
+            // we could use std::copy
             for (int i  = 0; i< paddingSize; i++) {
                 inputReal[i] = 0;
             }
@@ -1040,7 +1037,7 @@ void Date::calibrateWiggle(const StudyPeriodSettings settings, Project *project)
 
     mWiggleCalibration->mMap = vector_to_map(mWiggleCalibration->mVector, mWiggleCalibration->mTmin, mWiggleCalibration->mTmax, mWiggleCalibration->mStep);
 
-     //  qDebug()<<"TDate::mWiggleCalibration in project "<<project->mCalibCurves[toFind].mDescription;
+     //  qDebug()<<"[Date::mWiggleCalibration] in project "<<project->mCalibCurves[toFind].mDescription;
 }
 
 
@@ -1925,13 +1922,12 @@ void Date::fInversionWithArg(Event *event)
 
     }
 
-
     QPair<long double, long double> argOld, argNew;
 
     argOld = getLikelihoodArg(mTi.mX);
     argNew = getLikelihoodArg(tiNew);
 
-    const long double logGRapport = argNew.second-argOld.second;
+    const long double logGRapport = argNew.second - argOld.second;
     const long double logHRapport = (-0.5l/powl(mSigmaTi.mX, 2.)) * (  powl(tiNew - (event->mTheta.mX - mDelta), 2.) - powl(mTi.mX - (event->mTheta.mX - mDelta), 2.) ); // modif 2020-09-28
 
     const long double rapport = sqrt(argOld.first/argNew.first) * exp(logGRapport+logHRapport);
