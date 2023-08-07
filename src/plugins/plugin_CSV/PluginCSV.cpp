@@ -265,7 +265,9 @@ RefCurve PluginCSV::loadRefFile(QFileInfo refFile)
                 ch = fgetc (pFile);
                 if (ch == QChar::LineFeed || ch == QChar::CarriageReturn)
                     break;
-                line.append(ch);
+                if (ch != EOF)
+                    line.append(ch);
+
             } while (ch != EOF);
 
             if (!isComment(line)) {
@@ -487,7 +489,7 @@ QJsonObject PluginCSV::mergeDates(const QJsonArray& dates)
             max = std::min(tminTmax.second + dWiggleMax, max);
         }
 
-        if ((max - min) <= 100.) {
+        if ((max - min) <= 1.) {
             result["error"] = tr("Combine is not possible, not enough coincident densities; numeric issue");
             return result;
         }
