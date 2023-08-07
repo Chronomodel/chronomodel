@@ -98,7 +98,7 @@ mWiggleEnabled(false)
     mDeltaFixedRadio = new QRadioButton(tr("Fixed"), mAdvancedWidget);
     mDeltaRangeRadio = new QRadioButton(tr("Range"), mAdvancedWidget);
     mDeltaGaussRadio = new QRadioButton(tr("Gaussian"), mAdvancedWidget);
-    mDeltaFixedRadio->setChecked(true);
+    mDeltaNoneRadio->setChecked(true);
 
     connect(mDeltaNoneRadio, &QRadioButton::toggled, this, &DateDialog::updateVisibleControls);
     connect(mDeltaFixedRadio, &QRadioButton::toggled, this, &DateDialog::updateVisibleControls);
