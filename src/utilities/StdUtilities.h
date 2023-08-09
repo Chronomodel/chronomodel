@@ -90,10 +90,12 @@ double safeLog(const double& x, int n = 5);
 void checkFloatingPointException(const QString& infos = QString());
 
 template <typename T, typename V>
-inline V interpolate(const T& x, const T& x1, const T& x2, const V& y1, const V& y2)
+inline V interpolate(const T& x, const T& x0, const T& x1, const V& y0, const V& y1)
 {
-    Q_ASSERT(x1!=x2);
-    return (y1 + (y2 - y1) * V((x - x1) / (x2 - x1)) );
+    Q_ASSERT(x0!=x1);
+    //return (y1 + (y2 - y1) * V((x - x1) / (x2 - x1)) ); // schoolbook code
+
+    return std::lerp(y0, y1, V((x - x0) / (x1 - x0)));
 }
 
 template <typename T, typename U>
@@ -135,6 +137,24 @@ T map_max_value(const QMap<U, T> &map)
     ++i;
 
     for (; i != map.cend(); ++i)
+        if (*i > *biggest )  biggest = i;
+
+    return *biggest;
+}
+
+
+template <class U, class T>
+T map_max_value(const QMap<U, T> &map, U min, U max)
+{
+    if (map.firstKey()>max || map.lastKey()<min)
+        return -INFINITY;
+
+    typename QMap<U, T>::const_iterator i = map.cbegin();
+    typename QMap<U, T>::const_iterator biggest = i;
+    while (i.key()<min)
+        ++i;
+
+    for (; i != map.cend() && i.key()<=max; ++i)
         if (*i > *biggest )  biggest = i;
 
     return *biggest;
