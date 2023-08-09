@@ -73,6 +73,7 @@ void SetProjectState::redo()
 {
     qDebug()<<"[SetProjectState::redo] notify=" << mNotify << " reason=" << mReason;
     mProject->mState = mNextState;
-    emit mProject->projectStateChanged();
+    if (mNotify)
+        emit mProject->projectStateChanged();
 
 }

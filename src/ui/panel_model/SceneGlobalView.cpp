@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -43,9 +43,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 SceneGlobalView::SceneGlobalView(QGraphicsScene* scene, QGraphicsView* view, QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-mScene(scene),
-mView(view),
-mIsDragging(false)
+    mScene(scene),
+    mView(view),
+    mIsDragging(false)
 {
     this->setGeometry(parentWidget()->rect());
 }
@@ -107,7 +107,7 @@ void SceneGlobalView::paintEvent(QPaintEvent* e)
         propH = (propH > 1) ? 1 : propH;
 
         const QTransform m = mView->transform();
-        QRectF targetVisibleRect(targetRect.x() + targetRect.width() * propX * m.m11(),
+        const QRectF targetVisibleRect(targetRect.x() + targetRect.width() * propX * m.m11(),
                                  targetRect.y() + targetRect.height() * propY * m.m22(),
                                  targetRect.width() * propW,
                                  targetRect.height() * propH);
@@ -134,11 +134,11 @@ void SceneGlobalView::paintEvent(QPaintEvent* e)
 
 QRectF SceneGlobalView::getTargetRect()
 {
-    const int w (width());
-    const int h (height());
+    const int w  = width();
+    const int h = height();
 
     QRectF sceneRect = mScene->sceneRect();
-    QTransform matrix = mView->transform();
+    const QTransform matrix = mView->transform();
     sceneRect.setWidth(sceneRect.width() * matrix.m11());
     sceneRect.setHeight(sceneRect.height() * matrix.m22());
 
@@ -153,7 +153,7 @@ QRectF SceneGlobalView::getTargetRect()
         targetSize.setWidth(h * sceneProp);
     }
 
-    QRectF targetRect((w - targetSize.width()) / 2,
+    const QRectF targetRect((w - targetSize.width()) / 2,
                       (h - targetSize.height()) / 2,
                       targetSize.width(),
                       targetSize.height());
@@ -181,14 +181,14 @@ void SceneGlobalView::mouseMoveEvent(QMouseEvent* e)
 
 void SceneGlobalView::setPosition(const QPoint& pos)
 {
-    QRectF targetRect = getTargetRect();
+    const QRectF targetRect = getTargetRect();
 
     if (targetRect.contains(pos)) {
-        double propX = double (pos.x() - targetRect.x()) / targetRect.width();
-        double propY = double (pos.y() - targetRect.y()) / targetRect.height();
+        const double propX = double (pos.x() - targetRect.x()) / targetRect.width();
+        const double propY = double (pos.y() - targetRect.y()) / targetRect.height();
 
-        QRectF sceneRect = mScene->sceneRect();
-        QPointF scenePos(sceneRect.x() + sceneRect.width() * propX,
+        const QRectF sceneRect = mScene->sceneRect();
+        const QPointF scenePos(sceneRect.x() + sceneRect.width() * propX,
                          sceneRect.y() + sceneRect.height() * propY);
 
         mView->centerOn(scenePos);

@@ -260,13 +260,17 @@ void GraphView::adjustYScale()
                     const QMap<qreal, qreal> &subDataSup = getMapDataInRange(curveSup, mCurrentMinX, mCurrentMaxX);
                     if (!subDataSup.empty()) yMax = std::max(yMax, map_max_value(subDataSup));
 
+                  //  auto yMax2 = std::max(yMax, map_max_value(subDataSup, mCurrentMinX, mCurrentMaxX));
 
                 } else if (!curve.mData.empty()) {
-                    const QMap<qreal, qreal> &subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
+                    yMax = std::max(yMax, map_max_value(curve.mData, mCurrentMinX, mCurrentMaxX));
+                    /*const QMap<qreal, qreal> &subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
                     if (!subData.empty()) {
                        // yMin = std::min(yMin, map_min_value(subData));
                         yMax = std::max(yMax, map_max_value(subData));
                     }
+                    */
+
                     yMin = 0.;//
                 }
                 // map
@@ -1257,7 +1261,7 @@ void GraphView::drawCurves(QPainter& painter)
                     qreal x = mMarginLeft + valueX * 100.;
                     qreal y = getYForValue(valueY, false);
 
-                    y = std::clamp(mMarginTop, y, mMarginTop + mGraphHeight);
+                    y = std::clamp(y, mMarginTop, mMarginTop + mGraphHeight);
 
                     if (index == 0) {
                         path.lineTo(x, y);

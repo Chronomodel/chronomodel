@@ -40,7 +40,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ArrowItem.h"
 #include "EventItem.h"
 #include "MainWindow.h"
+
 #include <QtWidgets>
+
 #include <math.h>
 
 
@@ -64,8 +66,8 @@ ArrowItem::ArrowItem(AbstractScene* scene, Type type, const QJsonObject& constra
             QGraphicsItem::ItemSendsScenePositionChanges |
             QGraphicsItem::ItemSendsGeometryChanges);
 
-    //setData(constraint);
-    mData = constraint;
+    setData(constraint); // init position
+    //mData = constraint;
    /* QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect();
     shadow->setColor(Qt::black);
     shadow->setBlurRadius(30);
@@ -132,7 +134,7 @@ void ArrowItem::updatePosition()
         }
     } else {
         const QJsonArray &phases = state.value(STATE_PHASES).toArray();
-        for (const auto ph : phases ) {
+        for (const auto &ph : phases ) {
             const QJsonObject &phase = ph.toObject();
             if (phase.value(STATE_ID).toInt() == fromId)
                 from = phase;

@@ -144,7 +144,7 @@ inline T valueForProportion(const T &value, const T &valMin, const T &valMax, co
     T v2 = Pmin + (value - valMin) * (Pmax - Pmin) / (valMax - valMin);
 
     if (resultInBounds)
-        return std::clamp(Pmin, v2, Pmax);
+        return std::clamp(v2, Pmin, Pmax);
 
     return v2;
 }
