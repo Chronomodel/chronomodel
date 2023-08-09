@@ -1226,7 +1226,7 @@ void ResultsView::resizeEvent(QResizeEvent* e)
 
 void ResultsView::updateMarkerGeometry(const int x)
 {
-    const int markerXPos = std::clamp(0, x, mRuler->x() + mRuler->width());
+    const int markerXPos = std::clamp( x, 0, mRuler->x() + mRuler->width());
     mMarker->setGeometry(markerXPos, mGraphTypeTabs->height() + mMargin, mMarker->thickness(), height() - mGraphTypeTabs->height() - mMargin);
     update(markerXPos -5, mGraphTypeTabs->height() + mMargin, 10, mGraphTypeTabs->height() + mMargin);
 }
@@ -1282,20 +1282,6 @@ void ResultsView::updateGraphsLayout()
     }
 
 }
-
-
-void safe_update_graph(std::mutex &mutex_g, GraphViewResults* g)
-{
-    const std::lock_guard<std::mutex> lock(mutex_g);
-    //std::thread ([](GraphViewResults* gv) {
-                                            g->setVisible(true);
-                                            g->update();
-   //                                        }, g );
-
-    // g_mutex is automatically released when lock
-    // goes out of scope
-}
-
 
 void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewResults*> graphs)
 {

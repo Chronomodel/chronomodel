@@ -141,7 +141,7 @@ void MultiCalibrationDrawing::showMarker()
 
 void MultiCalibrationDrawing::mouseMoveEvent(QMouseEvent* e)
 {
-    const int x ( std::clamp(0, e->pos().x(), width()) );
+    const int x ( std::clamp(e->pos().x(), 0, width()) );
     mMarkerX->move(x, 0);
 
     /*

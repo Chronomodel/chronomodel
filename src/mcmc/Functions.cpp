@@ -666,7 +666,7 @@ std::pair<double, double> credibilityForTrace(const QVector<double>& trace, doub
     }
 
     if (thresh > 0 && n > 0) {
-        double threshold = std::clamp(0.0, thresh, 100.0);
+        double threshold = std::clamp(thresh, 0.0, 100.0);
         QVector<double> sorted (trace);
         std::sort(sorted.begin(),sorted.end());
 
@@ -710,7 +710,7 @@ std::pair<double, double> credibilityForTrace(const QVector<int>& trace, double 
     }
 
     if (thresh > 0 && n > 0) {
-        double threshold = std::clamp(0.0, thresh, 100.0);
+        double threshold = std::clamp(thresh, 0.0, 100.0);
         QVector<int> sorted (trace);
         std::sort(sorted.begin(),sorted.end());
 

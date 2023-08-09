@@ -222,10 +222,9 @@ void CalibrationDrawing::setMouseTracking(bool enable)
 
 void CalibrationDrawing::mouseMoveEvent(QMouseEvent* e)
 {
+    const int x = std::clamp(e->pos().x(), 0, width());
 
-    const int x = std::clamp(0, e->pos().x(), width());
-
-    const int y = std::clamp(0, e->pos().y(), height());
+    const int y = std::clamp(e->pos().y(), 0, height());
 
     // draw the red cross lines
     if (( mRefGraphView && mRefGraphView->geometry().contains(x, y))

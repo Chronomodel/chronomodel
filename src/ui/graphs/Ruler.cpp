@@ -263,14 +263,12 @@ void Ruler::setZoom(double &prop)
 
 void Ruler::updateScroll()
 {
-    //qDebug()<<"Ruler::updateScroll() mCurrentMin"<< mCurrentMin<<" mCurrentMax"<<mCurrentMax;
-    //if(mZoomProp != 1)
     if ( (mCurrentMax - mCurrentMin) != (mMax - mMin)) {
         double delta = mCurrentMax - mCurrentMin;
         double deltaStart = (mMax - mMin)-delta;
 
         mCurrentMin = mMin + deltaStart * (double (mScrollBar->value()) / double (mScrollBar->maximum()));
-        mCurrentMin = floor( std::clamp(mMin, mCurrentMin, mMax) );
+        mCurrentMin = floor( std::clamp(mCurrentMin, mMin, mMax) );
         mCurrentMax = mCurrentMin + delta;
 
     }

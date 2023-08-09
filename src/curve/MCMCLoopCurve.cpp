@@ -3284,8 +3284,8 @@ void MCMCLoopCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSp
          */
         //const double k = 3.; // Le nombre de fois sigma G, pour le calcul de la densité (gx - k*stdG - ymin)
 
-        const int idxYErrMin = std::clamp( 0, int((gx - 3.*stdG - ymin) / stepY), nbPtsY-1);
-        const int idxYErrMax = std::clamp( 0, int((gx + 3.*stdG - ymin) / stepY), nbPtsY-1);
+        const int idxYErrMin = std::clamp( int((gx - 3.*stdG - ymin) / stepY), 0, nbPtsY-1);
+        const int idxYErrMax = std::clamp( int((gx + 3.*stdG - ymin) / stepY), 0, nbPtsY-1);
 
         if (idxYErrMin == idxYErrMax && idxYErrMin > 0 && idxYErrMax < nbPtsY-1) {
 #ifdef DEBUG
@@ -3486,8 +3486,8 @@ void MCMCLoopCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline spline,
         /* il faut utiliser un pas de grille et le coefficient dans la grille dans l'intervalle [a,b] pour N(mu, sigma) est égale à la différence 1/2*(erf((b-mu)/(sigma*sqrt(2)) - erf((a-mu)/(sigma*sqrt(2))
          * https://en.wikipedia.org/wiki/Error_function
          */
-        idxYErrMin = std::clamp( 0, int((gx - k*stdGx - ymin_XInc) / stepY_XInc), nbPtsY_XInc-1);
-        idxYErrMax = std::clamp( 0, int((gx + k*stdGx - ymin_XInc) / stepY_XInc), nbPtsY_XInc-1);
+        idxYErrMin = std::clamp( int((gx - k*stdGx - ymin_XInc) / stepY_XInc), 0, nbPtsY_XInc-1);
+        idxYErrMax = std::clamp( int((gx + k*stdGx - ymin_XInc) / stepY_XInc), 0, nbPtsY_XInc-1);
 
         if (idxYErrMin == idxYErrMax && idxYErrMin > 0 && idxYErrMax < nbPtsY_XInc-1) {
 #ifdef DEBUG
@@ -3551,8 +3551,8 @@ void MCMCLoopCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline spline,
         /* Il faut utiliser un pas de grille et le coefficient dans la grille dans l'intervalle [a,b] pour N(mu, sigma) est égale à la différence 1/2*(erf((b-mu)/(sigma*sqrt(2)) - erf((a-mu)/(sigma*sqrt(2))
         * https://en.wikipedia.org/wiki/Error_function
         */
-        idxYErrMin = std::clamp( 0, int((gy - k*stdGy - ymin_YDec) / stepY_YDec), nbPtsY_YDec -1);
-        idxYErrMax = std::clamp( 0, int((gy + k*stdGy - ymin_YDec) / stepY_YDec), nbPtsY_YDec -1);
+        idxYErrMin = std::clamp( int((gy - k*stdGy - ymin_YDec) / stepY_YDec), 0, nbPtsY_YDec -1);
+        idxYErrMax = std::clamp( int((gy + k*stdGy - ymin_YDec) / stepY_YDec), 0, nbPtsY_YDec -1);
 
         if (idxYErrMin == idxYErrMax && idxYErrMin > 0 && idxYErrMax < nbPtsY_YDec-1) {
 #ifdef DEBUG
@@ -3619,8 +3619,8 @@ void MCMCLoopCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline spline,
             /* il faut utiliser un pas de grille et le coefficient dans la grille dans l'intervalle [a,b] pour N(mu, sigma) est égale à la différence 1/2*(erf((b-mu)/(sigma*sqrt(2)) - erf((a-mu)/(sigma*sqrt(2))
              * https://en.wikipedia.org/wiki/Error_function
              */
-            idxYErrMin = std::clamp( 0, int((gz - k*stdGz - ymin_ZF) / stepY_ZF), nbPtsY_ZF-1);
-            idxYErrMax = std::clamp( 0, int((gz + k*stdGz - ymin_ZF) / stepY_ZF), nbPtsY_ZF-1);
+            idxYErrMin = std::clamp( int((gz - k*stdGz - ymin_ZF) / stepY_ZF), 0, nbPtsY_ZF-1);
+            idxYErrMax = std::clamp( int((gz + k*stdGz - ymin_ZF) / stepY_ZF), 0, nbPtsY_ZF-1);
 
             if (idxYErrMin == idxYErrMax && idxYErrMin > 0 && idxYErrMax < nbPtsY_ZF-1) {
 #ifdef DEBUG

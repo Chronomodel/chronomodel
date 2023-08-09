@@ -454,7 +454,7 @@ bool MetropolisVariable::HistoWithParameter(const int fftLen, const double bandw
 void MetropolisVariable::generateHPD(const double threshold)
 {
     if (!mFormatedHisto.isEmpty())  {
-        const double thresh = std::clamp(0.0, threshold, 100.0);
+        const double thresh = std::clamp(threshold, 0.0, 100.0);
         if (thresh == 100.) {
             mFormatedHPD = mFormatedHisto;
             return;

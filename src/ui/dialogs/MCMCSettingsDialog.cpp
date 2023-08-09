@@ -211,9 +211,9 @@ MCMCSettings MCMCSettingsDialog::getSettings()
     settings.mIterPerBatch = qMax(UN,  mIterPerBatchEdit->text().toInt());
 
     settings.mIterPerAquisition = qMax(10, mNumIterEdit->text().toInt());
-    settings.mThinningInterval = std::clamp(UN, mDownSamplingEdit->text().toInt(), int (floor(settings.mIterPerAquisition/10)) );
+    settings.mThinningInterval = std::clamp(mDownSamplingEdit->text().toInt(), UN, int (floor(settings.mIterPerAquisition/10)) );
 
-    settings.mMixingLevel = std::clamp(0.0001, mLoc.toDouble(mLevelEdit->text()),0.9999);
+    settings.mMixingLevel = std::clamp(mLoc.toDouble(mLevelEdit->text()), 0.0001, 0.9999);
 
     settings.mSeeds = stringListToUnsignedList(mSeedsEdit->text(), ";");
 

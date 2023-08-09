@@ -179,11 +179,11 @@ QVector<T> getVectorDataInRange(const QVector<T>& data, const T subMin,const T s
     if (subMin != min || subMax != max)  {
         QVector<T> subData;
         subData.reserve(data.size());
-        int idxStart = (int) floor(data.size() * (subMin - min) / (max - min));
-        int idxEnd = (int) floor(data.size() * (subMax - min) / (max - min));
+        qsizetype idxStart = (qsizetype) floor(data.size() * (subMin - min) / (max - min));
+        qsizetype idxEnd = (qsizetype) floor(data.size() * (subMax - min) / (max - min));
 
-        idxStart = qMax(0, idxStart);
-        idxEnd = qMin(idxEnd, data.size()-1);
+        idxStart = std::max((qsizetype)0, idxStart);
+        idxEnd = std::min(idxEnd, data.size()-1);
         // we can use mid()
         for (int i=idxStart; i<=idxEnd; ++i)
                 subData.append(data[i]);
