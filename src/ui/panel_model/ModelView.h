@@ -42,6 +42,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "AbstractItem.h"
 #include "EventsScene.h"
+#include "PhasesScene.h"
+
 #include <QWidget>
 #include <QLineEdit>
 
@@ -57,7 +59,7 @@ class QGraphicsScene;
 class Project;
 class StudyPeriodSettings;
 class ModelToolsView;
-class PhasesScene;
+
 class CurveSettingsView;
 class Event;
 class PhasesList;
@@ -184,7 +186,8 @@ public:
     void readSettings();
     void writeSettings();
 
-    void setShowAllThumbs(bool show) {mEventsScene->setShowAllThumbs(show);};
+    void setShowAllThumbs(bool show) { mEventsScene->setShowAllThumbs(show);
+        mPhasesScene->setShowAllEvents(show);};
 
 public slots:
     void updateProject();

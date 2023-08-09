@@ -355,12 +355,15 @@ void ModelView::setProject(Project* project)
     }
 
     // if there is no phase, we must show all events
-    const QJsonArray phases = mProject->state().value(STATE_PHASES).toArray();
-    if (phases.size() == 0 )
-        mEventsScene->setShowAllThumbs(true);
+    //const QJsonArray phases = mProject->state().value(STATE_PHASES).toArray();
+    // if (phases.size() == 0 )
+    mEventsScene->setShowAllThumbs(true);
+    mPhasesScene->setShowAllEvents(true);
 
-    showCalibration(false);
-
+    mCalibrationView->setVisible(false);
+    mCalibrationView->resetDate();
+    //showCalibration(false);
+    hideProperties();
     const StudyPeriodSettings settings = StudyPeriodSettings::fromJson(mProject->mState[STATE_SETTINGS].toObject());
 
     mTmin = settings.mTmin;
@@ -374,6 +377,9 @@ void ModelView::setProject(Project* project)
     mEventsScene->createSceneFromState();
     mPhasesScene->createSceneFromState();
 
+    mEventPropertiesView->initEvent();
+
+    mMultiCalibrationView->setEventsList(QList<Event*> ());
     applyAppSettings(); // do phase->update()
 }
 
@@ -524,7 +530,7 @@ void ModelView::resetInterface()
     mMultiCalibrationView->setProject(mProject);
     mMultiCalibrationView->setEventsList(QList<Event*> ());
 
-    mEventPropertiesView->setEvent(nullptr);
+    mEventPropertiesView->initEvent();
 
    // hideProperties();
     updateLayout();

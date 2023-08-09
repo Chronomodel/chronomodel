@@ -2450,12 +2450,8 @@ void Project::combineDates(const int eventId, const QList<int>& dateIds)
             }
 
             event[STATE_EVENT_DATES] = dates;
-            
-           /* for (int j(0); j<dates.size(); ++j)
-                QJsonObject date = dates[j].toObject();*/
-           
+
             events[i] = event;
-            //emit currentEventChanged(event);
             stateNext[STATE_EVENTS] = events;
             
             pushProjectState(stateNext, "Dates combined", true);

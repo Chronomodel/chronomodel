@@ -209,7 +209,7 @@ void CalibrationView::applyAppSettings()
     mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
 
-    if (width()> 0 ) {
+    if ( isVisible() && width()> 0 ) {
         updateGraphs();
         repaint();
     }
@@ -289,7 +289,7 @@ void CalibrationView::updateGraphs()
     mCalibGraph->removeAllCurves();
     mCalibGraph->remove_all_zones();
 
-     if (!mDate.isNull() ) {
+    if (!mDate.isNull()) {
         mCalibGraph->setRangeX (mTminDisplay, mTmaxDisplay);
         mCalibGraph->setCurrentX (mTminDisplay, mTmaxDisplay);
         mCalibGraph->changeXScaleDivision (mMajorScale, mMinorScale);
@@ -488,7 +488,6 @@ void CalibrationView::updateGraphs()
         mDrawing->updateLayout();
 
     }
-
     updateLayout();
 }
 

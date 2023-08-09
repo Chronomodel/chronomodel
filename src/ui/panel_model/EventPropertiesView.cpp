@@ -52,7 +52,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginAbstract.h"
 #include "PluginManager.h"
 #include "StdUtilities.h"
-#include "AppSettings.h"
 
 #include "CurveSettings.h"
 #include "CurveWidget.h"
@@ -292,6 +291,19 @@ void EventPropertiesView::setEvent(QJsonObject* event)
     
     if (rect().width() > 0)
         updateEvent();
+}
+
+void EventPropertiesView::initEvent(QJsonObject* event)
+{
+    // Assign the local event
+    mEvent = event;
+    mCalibBut->setChecked(false);
+
+    // Select the first date if the list is not empty
+    if (event!=nullptr && mEvent->value(STATE_EVENT_DATES).toArray().size() > 0) {
+        mCurrentDateIdx = 0;
+    }
+
 }
 
 void EventPropertiesView::updateIndex(int index)

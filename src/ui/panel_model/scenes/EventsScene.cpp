@@ -705,9 +705,6 @@ void EventsScene::updateSceneFromState()
     if (lastCurItem)
         currentEventLast = lastCurItem->getData();
 
-   /* if (currentEventLast != currentEventPrev)
-        emit mProject->currentEventChanged(currentEventLast);
-*/
     // Deleting an item that was selected involves changing the selection (and updating properties view)
     // Nothing has been triggered so far because of the mUpdatingItems flag, so we need to trigger it now!
     // As well, creating an item changes the selection because we want the newly created item to be selected.
