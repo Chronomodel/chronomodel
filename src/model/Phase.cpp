@@ -744,12 +744,12 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     try {
         for (const auto& t : concaTrace) {
 
-            int idxGridMin = std::clamp(0, (int) ceil((t - t_min_grid - h_2) / delta_t), maxGrid) ;
+            int idxGridMin = std::clamp((int) ceil((t - t_min_grid - h_2) / delta_t), 0, maxGrid) ;
 
             if ((t - t_min_grid - h_2) / delta_t == (double) idxGridMin && (t - t_min_grid - h_2)>0) {
                 ++idxGridMin;
             }
-            const int idxGridMax = std::clamp(0, (int) floor((t - t_min_grid + h_2) / delta_t), maxGrid) ;
+            const int idxGridMax = std::clamp((int) floor((t - t_min_grid + h_2) / delta_t), 0, maxGrid) ;
 
             for (auto&& ni = NiTot.begin() + idxGridMin; ni != NiTot.begin() + idxGridMax +1; ++ni) {
                 ++*ni ;

@@ -133,7 +133,7 @@ public:
     explicit Event (const QJsonObject& json, const Model *model);
     virtual ~Event();
 
-    Event& operator=(const Event& event);
+  //  Event& operator=(const Event& event);
     virtual void copyFrom(const Event& event);
 
     static Event fromJson(const QJsonObject& json);

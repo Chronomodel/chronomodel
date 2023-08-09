@@ -169,11 +169,12 @@ Event::Event(const Event& event)
     Event::copyFrom(event);
 }
 
-Event& Event::operator=(const Event& event)
+/*Event& Event::operator=(const Event& event)
 {
     copyFrom(event);
     return *this;
 }
+*/
 /**
  * @todo Check the copy of the color if mJson is not set
  */
@@ -308,8 +309,9 @@ Event Event::fromJson(const QJsonObject& json)
     event.mS_ZField = json.value(STATE_EVENT_SZ_SF).toDouble();
 
     const QJsonArray dates = json.value(STATE_EVENT_DATES).toArray();
-    Date dat;
+    //Date dat;
     for (auto&& date : dates) {
+        Date dat;
         dat.fromJson(date.toObject());
         dat.autoSetTiSampler(true); // must be after fromJson()
         //dat.mMixingLevel = event.mMixingLevel;
@@ -351,18 +353,17 @@ QJsonObject Event::toJson() const
 
     QString eventIdsStr;
     if (mPhasesIds.size() > 0) {
-        //QStringList eventIds;
         QVector<QString> eventIds;
-        for (int i=0; i<mPhasesIds.size(); ++i)
-            eventIds.append(QString::number(mPhasesIds.at(i)));
+        for (auto &pId : mPhasesIds)
+            eventIds.append(QString::number(pId));
         eventIdsStr = eventIds.join(",");
     }
     event[STATE_EVENT_PHASE_IDS] = eventIdsStr;
 
     QJsonArray dates;
-    for (int i = 0; i<mDates.size(); ++i) {
-        QJsonObject date = mDates.at(i).toJson();
-        dates.append(date);
+    for (auto & d : mDates) {
+        //QJsonObject date = d.toJson();
+        dates.append(d.toJson());
     }
     event[STATE_EVENT_DATES] = dates;
 
@@ -782,7 +783,7 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event*
             for (auto&& event : phase->mEvents) {
 
                 // On recherche la valeur de theta la plus grande de la phase et on soustrait Tau, il ne faut pas faire de récursif
-                // On ne tient pas compte des theta non initailisés. Ils se mettront en place quand sera leur tour
+                // On ne tient pas compte des theta non initialisés. Ils se mettront en place quand sera leur tour
                 if (!startEvents.contains(event)) {
                    if (event->mInitialized) {
                        thetaMax = std::max(thetaMax, event-> mTheta.mX);
@@ -842,8 +843,8 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event*
             }
         }
         mNodeInitialized = true;
-        mThetaNode = std::max(maxTheta, maxPhases);
-        mThetaNode = std::max(maxPhasesBwd, mThetaNode);
+       // mThetaNode = std::max(maxTheta, maxPhases);
+        mThetaNode = std::max({maxTheta, maxPhases,  maxPhasesBwd});
         return mThetaNode;
     }
 
