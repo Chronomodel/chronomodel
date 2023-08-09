@@ -439,18 +439,18 @@ void Project::checkStateModification(const QJsonObject &stateNew, const QJsonObj
 
 }
 
-void Project::unselectedAllInState()
+void Project::unselectedAllInState(QJsonObject &state)
 {
-    QJsonArray phases = mState.value(STATE_PHASES).toArray();
+    QJsonArray phases = state.value(STATE_PHASES).toArray();
     for (QJsonArray::iterator iPhase = phases.begin(); iPhase != phases.end(); ++iPhase) {
         QJsonObject p = iPhase->toObject();
         p[STATE_IS_CURRENT] = false;
         p[STATE_IS_SELECTED] = false;
         *iPhase = p;
     }
-    mState[STATE_PHASES] = phases;
+    state[STATE_PHASES] = phases;
 
-    QJsonArray events = mState.value(STATE_EVENTS).toArray();
+    QJsonArray events = state.value(STATE_EVENTS).toArray();
     for (QJsonArray::iterator iEvent = events.begin(); iEvent != events.end(); ++iEvent) {
         QJsonObject e =iEvent->toObject();
         e[STATE_IS_CURRENT] = false;
@@ -465,7 +465,7 @@ void Project::unselectedAllInState()
         e[STATE_EVENT_DATES] = dates;
         *iEvent = e;
     }
-    mState[STATE_EVENTS] = events;
+    state[STATE_EVENTS] = events;
 
     qDebug()<<"[Project::unselectedAllInState] end";
 
@@ -664,7 +664,7 @@ bool Project::load(const QString &path, bool force)
             mLastSavedState = mState;
 
             qDebug() << "[Project::load]  unselectedAllInState";
-            unselectedAllInState(); // modify mState
+            unselectedAllInState(mState); // modify mState
 
             // If a version update is to be done :
            // QJsonObject state = mState;
@@ -853,7 +853,7 @@ bool Project::save()
 }
 
 
-bool Project::insert(const QString& path)
+bool Project::insert(const QString& path, QJsonObject &return_state)
 {
     bool newerProject = false;
     bool olderProject = false;
@@ -872,7 +872,7 @@ bool Project::insert(const QString& path)
     }
     QFile file(path);
 
-    qDebug() << "[Project::insert] Loading project file : " << path;
+    qDebug() << "[Project::insert] Insert project file : " << path;
 
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QFileInfo info(path);
@@ -964,7 +964,7 @@ bool Project::insert(const QString& path)
            double minXPhase(HUGE_VAL), maxXPhase(- HUGE_VAL), minYPhase(HUGE_VAL), maxYPhase(- HUGE_VAL);
            int  maxIDEvent(0), maxIDPhase(0), maxIDEventConstraint(0), maxIDPhaseConstraint(0);
 
-           const QJsonArray phases = mState.value(STATE_PHASES).toArray();
+           const QJsonArray &phases = mState.value(STATE_PHASES).toArray();
 
            if (phases.isEmpty()) {
                //minXPhase = 0;
@@ -993,7 +993,7 @@ bool Project::insert(const QString& path)
 
            }
 
-           const QJsonArray events = mState.value(STATE_EVENTS).toArray();
+           const QJsonArray &events = mState.value(STATE_EVENTS).toArray();
            if (events.isEmpty()) {
                //minXEvent = 0;
                maxXEvent = 0;
@@ -1002,19 +1002,19 @@ bool Project::insert(const QString& path)
 
            } else {
                for (auto&& eventJSON : events) {
-                   QJsonObject event = eventJSON.toObject();
-                   minXEvent =std::min(minXEvent, event.value(STATE_ITEM_X).toDouble());
-                   maxXEvent =std::max(maxXEvent, event.value(STATE_ITEM_X).toDouble());
+                   const QJsonObject &event = eventJSON.toObject();
+                   minXEvent = std::min(minXEvent, event.value(STATE_ITEM_X).toDouble());
+                   maxXEvent = std::max(maxXEvent, event.value(STATE_ITEM_X).toDouble());
 
-                   minYEvent =std::min(minYEvent, event.value(STATE_ITEM_Y).toDouble());
-                   maxYEvent =std::max(maxYEvent, event.value(STATE_ITEM_Y).toDouble());
-                   maxIDEvent =std::max(maxIDEvent, event.value(STATE_ID).toInt());
+                   minYEvent = std::min(minYEvent, event.value(STATE_ITEM_Y).toDouble());
+                   maxYEvent = std::max(maxYEvent, event.value(STATE_ITEM_Y).toDouble());
+                   maxIDEvent = std::max(maxIDEvent, event.value(STATE_ID).toInt());
                }
                maxIDEvent += 1;
 
-               const QJsonArray eventConstraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
+               const QJsonArray &eventConstraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
                for (auto&& eventConsJSON : eventConstraints) {
-                   QJsonObject eventCons = eventConsJSON.toObject();
+                   const QJsonObject &eventCons = eventConsJSON.toObject();
                    maxIDEventConstraint =std::max(maxIDEventConstraint, eventCons.value(STATE_ID).toInt());
                }
                maxIDEventConstraint += 1;
@@ -1023,7 +1023,7 @@ bool Project::insert(const QString& path)
            // 2- find min X and  min -max Y in the imported project
            double minXEventNew (HUGE_VAL);
            double minYEventNew (HUGE_VAL), maxYEventNew (-HUGE_VAL);
-           const QJsonArray eventsNew = loadedState.value(STATE_EVENTS).toArray();
+           const QJsonArray &eventsNew = loadedState.value(STATE_EVENTS).toArray();
            if (eventsNew.isEmpty()) {
                minXEventNew = 0;
 
@@ -1032,7 +1032,7 @@ bool Project::insert(const QString& path)
 
            } else {
                for (auto&& eventJSON : eventsNew) {
-                   QJsonObject event = eventJSON.toObject();
+                   const QJsonObject &event = eventJSON.toObject();
                    minXEventNew =std::min(minXEventNew, event.value(STATE_ITEM_X).toDouble());
 
                    minYEventNew =std::min(minYEventNew, event.value(STATE_ITEM_Y).toDouble());
@@ -1051,7 +1051,7 @@ bool Project::insert(const QString& path)
 
            } else {
                for (auto&& phaseJSON : phasesNew) {
-                   QJsonObject phase = phaseJSON.toObject();
+                   const QJsonObject &phase = phaseJSON.toObject();
                    minXPhaseNew =std::min(minXPhaseNew, phase.value(STATE_ITEM_X).toDouble());
 
                    minYPhaseNew =std::min(minYPhaseNew, phase.value(STATE_ITEM_Y).toDouble());
@@ -1061,8 +1061,9 @@ bool Project::insert(const QString& path)
             }
           // 3 - Shift the new loadedState
 
-           QJsonObject newState = loadedState;
-           QJsonArray newPhases = newState.value(STATE_PHASES).toArray();
+           QJsonObject new_state = loadedState;
+
+           QJsonArray newPhases = new_state.value(STATE_PHASES).toArray();
            for (auto&& phaseJSON : newPhases) {
                QJsonObject phase = phaseJSON.toObject();
                // set on the right+ + mItemWidth(150.) in AbstractItem.h
@@ -1073,9 +1074,9 @@ bool Project::insert(const QString& path)
 
                phaseJSON = phase;
            }
-           newState[STATE_PHASES] = newPhases;
+           new_state[STATE_PHASES] = newPhases;
 
-           QJsonArray newPhaseConstraints = newState.value(STATE_PHASES_CONSTRAINTS).toArray();
+           QJsonArray newPhaseConstraints = new_state.value(STATE_PHASES_CONSTRAINTS).toArray();
            for (auto&& phaseConsJSON : newPhaseConstraints) {
                QJsonObject phaseCons = phaseConsJSON.toObject();
                phaseCons[STATE_ID] = phaseCons[STATE_ID].toInt() + maxIDPhaseConstraint;
@@ -1084,9 +1085,9 @@ bool Project::insert(const QString& path)
 
                phaseConsJSON = phaseCons;
            }
-           newState[STATE_PHASES_CONSTRAINTS] = newPhaseConstraints;
+           new_state[STATE_PHASES_CONSTRAINTS] = newPhaseConstraints;
 
-           QJsonArray newEvents = newState.value(STATE_EVENTS).toArray();
+           QJsonArray newEvents = new_state.value(STATE_EVENTS).toArray();
            for (auto&& eventJSON : newEvents) {
               QJsonObject event = eventJSON.toObject();
               // set on the right + mItemWidth(150.) in AbstractItem.h
@@ -1103,9 +1104,9 @@ bool Project::insert(const QString& path)
 
               eventJSON = event;
            }
-           newState[STATE_EVENTS] = newEvents;
+           new_state[STATE_EVENTS] = newEvents;
 
-           QJsonArray newEventConstraints = newState.value(STATE_EVENTS_CONSTRAINTS).toArray();
+           QJsonArray newEventConstraints = new_state.value(STATE_EVENTS_CONSTRAINTS).toArray();
            for (auto&& eventConsJSON : newEventConstraints) {
                QJsonObject eventCons = eventConsJSON.toObject();
                eventCons[STATE_ID] = eventCons.value(STATE_ID).toInt() + maxIDEventConstraint;
@@ -1116,37 +1117,37 @@ bool Project::insert(const QString& path)
               eventConsJSON = eventCons;
            }
 
-           newState[STATE_EVENTS_CONSTRAINTS] = newEventConstraints;
+           new_state[STATE_EVENTS_CONSTRAINTS] = newEventConstraints;
 
            // 4 - Adding the new loadedState after mState
-           QJsonObject stateNext = mState;
+           return_state = mState;
 
            QJsonArray nextPhases = mState.value(STATE_PHASES).toArray();
            for (auto&& phaseJSON : newPhases)
                nextPhases.append(phaseJSON.toObject());
-           stateNext[STATE_PHASES] = nextPhases;
+           return_state[STATE_PHASES] = nextPhases;
 
            QJsonArray nextPhaseConstraints = mState.value(STATE_PHASES_CONSTRAINTS).toArray();
            for (auto&& phaseConsJSON : newPhaseConstraints)
                nextPhaseConstraints.append(phaseConsJSON.toObject());
-           stateNext[STATE_PHASES_CONSTRAINTS] = nextPhaseConstraints;
+           return_state[STATE_PHASES_CONSTRAINTS] = nextPhaseConstraints;
 
            QJsonArray nextEvents = mState.value(STATE_EVENTS).toArray();
            for (auto&& eventJSON : newEvents)
                nextEvents.append(eventJSON.toObject());
 
-           stateNext[STATE_EVENTS] = nextEvents;
+           return_state[STATE_EVENTS] = nextEvents;
 
            QJsonArray nextEventConstraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
            for (auto&& eventConsJSON : newEventConstraints)
                nextEventConstraints.append(eventConsJSON.toObject());
-           stateNext[STATE_EVENTS_CONSTRAINTS] = nextEventConstraints;
+           return_state[STATE_EVENTS_CONSTRAINTS] = nextEventConstraints;
+
+           unselectedAllInState(return_state); // modify mState
 
            clearModel();
-           pushProjectState(stateNext, INSERT_PROJECT_REASON, true);
 
            qDebug() << "[Project::insert]  unselectedAllInState";
-           unselectedAllInState(); // modify mState
            return true;
         }
     }

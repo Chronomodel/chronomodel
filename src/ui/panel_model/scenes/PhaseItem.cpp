@@ -53,12 +53,14 @@ PhaseItem::PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsIt
     matLeastOneEventSelected(false),
     mOneEventSelectedOnScene(false)
 {
-    setPhase(phase);
+
     inPix = new QPixmap(":insert_event.png");
     exPix = new QPixmap(":extract_event.png");
 
     mTitleHeight = 25;
     mEltsHeight = 25;
+
+    setPhase(phase);
 }
 
 PhaseItem::~PhaseItem()
@@ -73,6 +75,7 @@ QJsonObject& PhaseItem::getPhase()
 
 void PhaseItem::setPhase(const QJsonObject& phase)
 {
+    prepareGeometryChange();
     mData = phase;
 
     setSelected(mData.value(STATE_IS_SELECTED).toBool() || mData.value(STATE_IS_CURRENT).toBool() );
@@ -82,12 +85,12 @@ void PhaseItem::setPhase(const QJsonObject& phase)
     // ----------------------------------------------------
     //  Calculate item size
     // ----------------------------------------------------
-    const int w (mItemWidth);
+    const int w = mItemWidth;
     int h = mTitleHeight + 2*mBorderWidth + 2*mEltsMargin;
 
     const QJsonArray events = getEvents();
     if (events.size() > 0)
-        h += events.size() * (mEltsHeight + mEltsMargin);// - mEltsMargin;
+        h += events.size() * (mEltsHeight + mEltsMargin);
 
 
     const QString tauStr = getTauString();
@@ -129,7 +132,7 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
   if (mControlsVisible) {
 
         if (insertRect().contains(e->pos())) {
-            //qDebug() << "PhaseItem::mousePressEvent-> insertRect clicked";
+            //qDebug() << "[PhaseItem::mousePressEvent]-> insertRect clicked";
             e->accept();
             mScene->getProject()->updatePhaseEvents(mData.value(STATE_ID).toInt(), Project::InsertEventsToPhase);
             return;
@@ -193,7 +196,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->setRenderHints(painter->renderHints() | QPainter::SmoothPixmapTransform | QPainter::Antialiasing );
 
     QRectF rect = boundingRect();
-    int rounded (10);
+    int rounded = 10;
 
     const QColor phaseColor = QColor(mData.value(STATE_COLOR_RED).toInt(),
                                mData.value(STATE_COLOR_GREEN).toInt(),
@@ -225,8 +228,8 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     const QJsonObject &state = MainWindow::getInstance()->getProject()->state();
     const QJsonArray &allEvents = state.value(STATE_EVENTS).toArray();
 
-    for (int i=0; i<allEvents.size(); ++i) {
-       const QJsonObject &event = allEvents.at(i).toObject();
+    for (auto ev :allEvents) {
+       const QJsonObject &event = ev.toObject();
        const bool isSelected = ( event.value(STATE_IS_SELECTED).toBool() || event.value(STATE_IS_CURRENT).toBool() );
        mOneEventSelectedOnScene = (mOneEventSelectedOnScene || isSelected);
     }
@@ -413,30 +416,30 @@ QString PhaseItem::getTauString() const
 
 QRectF PhaseItem::checkRect() const
 {
-    QRectF rect = boundingRect();
-    QRectF r(rect.x() + mBorderWidth + mEltsMargin,
+    const QRectF rect = boundingRect();
+    return QRectF (rect.x() + mBorderWidth + mEltsMargin,
              rect.y() + mBorderWidth + mEltsMargin,
              mTitleHeight,
              mTitleHeight);
-    return r;
+
 }
 
 QRectF PhaseItem::extractRect() const
 {
-    QRectF rect = boundingRect();
-    QRectF r(rect.x() + mBorderWidth + mEltsMargin + mEltsMargin + mTitleHeight,
+    const QRectF rect = boundingRect();
+    return QRectF (rect.x() + mBorderWidth + mEltsMargin + mEltsMargin + mTitleHeight,
              rect.y() + mBorderWidth + mEltsMargin,
              mTitleHeight,
              mTitleHeight);
-    return r;
+
 }
 
 QRectF PhaseItem::insertRect() const
 {
-    QRectF rect = boundingRect();
-    QRectF r(rect.x() + mBorderWidth + mEltsMargin,
+    const QRectF rect = boundingRect();
+    return QRectF (rect.x() + mBorderWidth + mEltsMargin,
              rect.y() + mBorderWidth + mEltsMargin,
              mTitleHeight,
              mTitleHeight);
-    return r;
+
 }

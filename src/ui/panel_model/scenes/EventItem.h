@@ -47,6 +47,19 @@ class EventsScene;
 
 class EventItem : public AbstractItem
 {
+
+protected:
+    QSize mSize;
+    QJsonObject mStudyPeriodSettings;
+    bool mWithSelectedPhase;
+    bool mThumbVisible;
+
+    const qreal mNodeSkin;
+
+    qreal mPhasesHeight;
+    qreal mCurveLineHeight;
+    qreal mCurveTextHeight;
+
 public:
     EventItem(EventsScene* scene, const QJsonObject &event, const QJsonObject &StudyPeriodSettings, QGraphicsItem* parent = nullptr);
     virtual ~EventItem();
@@ -74,11 +87,13 @@ public:
 
     void mousePressEvent(QGraphicsSceneMouseEvent* e);
 
+     void updateGreyedOut();
+
 protected:
     virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
     virtual void dropEvent(QGraphicsSceneDragDropEvent* e);
 
-    void updateGreyedOut();
+
 
     int getNumberCurveLines(const CurveSettings &cs) const;
     void paintBoxCurveParameter (QPainter *painter, const QRectF &rectBox, const CurveSettings &cs);
@@ -88,17 +103,7 @@ protected:
     void resizeEventItem();
     void repositionDateItems();
     
-protected:
-    QSize mSize;
-    QJsonObject mStudyPeriodSettings;
-    bool mWithSelectedPhase;
-    bool mThumbVisible;
 
-    const qreal mNodeSkin;
-protected:
-    qreal mPhasesHeight;
-    qreal mCurveLineHeight;
-    qreal mCurveTextHeight;
 
 
 };

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -41,22 +41,21 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AbstractItem.h"
 #include "ArrowItem.h"
 #include "ArrowTmpItem.h"
-#include "AppSettings.h"
 #include "StateKeys.h"
 
 #include <QtWidgets>
 
 AbstractScene::AbstractScene(QGraphicsView* view, QObject* parent):QGraphicsScene(parent),
-mDrawingArrow(false),
-mSelectKeyIsDown(false),
-mShowGrid(false),
-mProject(nullptr),
-mView(view),
-mUpdatingItems(false),
-mAltIsDown(false),
-mShowAllThumbs(true),
-mZoom(1.),
-mDeltaGrid ( AbstractItem::mItemWidth /4.) // 150 is the width of the Event and phase Item
+    mDrawingArrow(false),
+    mSelectKeyIsDown(false),
+    mShowGrid(false),
+    mProject(nullptr),
+    mView(view),
+    mUpdatingItems(false),
+    mAltIsDown(false),
+    mShowAllThumbs(true),
+    mZoom(1.),
+    mDeltaGrid ( AbstractItem::mItemWidth /4.) // 150 is the width of the Event and phase Item
 {
     mTempArrow = new ArrowTmpItem();
     addItem(mTempArrow);
@@ -94,27 +93,26 @@ void AbstractScene::updateConstraintsPos(AbstractItem* movedItem, const QPointF&
         mTempArrow->setFrom(curItem->pos().x(), curItem->pos().y());
 
     if (movedItem) {
-        int itemId = movedItem->mData[STATE_ID].toInt();
-        double itemX = movedItem->mData[STATE_ITEM_X].toDouble();
-        double itemY = movedItem->mData[STATE_ITEM_Y].toDouble();
+        const int itemId = movedItem->mData[STATE_ID].toInt();
+        const double itemX = movedItem->mData[STATE_ITEM_X].toDouble();
+        const double itemY = movedItem->mData[STATE_ITEM_Y].toDouble();
 
         //qDebug() << "---------";
         //qDebug() << "Moving event id : " << itemId;
 
-        for (int i(0); i<mConstraintItems.size(); ++i) {
-            QJsonObject cData = mConstraintItems[i]->data();
+        for (auto & ci : mConstraintItems) {
+            const QJsonObject &cData = ci->data();
 
-            //int cId = cData[STATE_ID].toInt();
             int bwdId = cData[STATE_CONSTRAINT_BWD_ID].toInt();
             int fwdId = cData[STATE_CONSTRAINT_FWD_ID].toInt();
 
             if (bwdId == itemId) {
                 //qDebug() << "Backward const. id : " << cId << " (link: "<<bwdId<<" -> "<< fwdId <<", setFrom: " << itemX << ", " << itemY << ")";
-                mConstraintItems[i]->setFrom(itemX, itemY);
+                ci->setFrom(itemX, itemY);
             }
             else if (fwdId == itemId) {
                 //qDebug() << "Forward const. id : " << cId << " (link: "<<bwdId<<" -> "<< fwdId <<", setTo: " << itemX << ", " << itemY << ")";
-                mConstraintItems[i]->setTo(itemX, itemY);
+                ci->setTo(itemX, itemY);
             }
 
         }
@@ -172,7 +170,7 @@ void AbstractScene::itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEve
 void AbstractScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 {
     Q_UNUSED(e);
-    qDebug() << "AbstractScene::itemEntered";
+    qDebug() << "[AbstractScene::itemEntered]";
     AbstractItem* current = currentItem();
 
     if (mDrawingArrow && current && item && (item != current)) {
@@ -182,11 +180,11 @@ void AbstractScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
         if (constraintAllowed(current, item)) {
             mTempArrow->setState(ArrowTmpItem::eAllowed);
             mTempArrow->setLocked(true);
-            qDebug() << "AbstractScene::itemEntered constraintAllowed==true";
+            qDebug() << "[AbstractScene::itemEntered] constraintAllowed == true";
         } else {
             mTempArrow->setState(ArrowTmpItem::eForbidden);
             mTempArrow->setLocked(true);
-            qDebug() << "AbstractScene::itemEntered constraintAllowed==false";
+            qDebug() << "[AbstractScene::itemEntered] constraintAllowed == false";
         }
     }
 
@@ -244,7 +242,8 @@ void AbstractScene::itemMoved(AbstractItem* item, QPointF newPos, bool merging)
 void AbstractScene::adjustSceneRect()
 {
     // Ajust Scene rect to minimal
-    setSceneRect(specialItemsBoundingRect().adjusted(-30, -30, 30, 30));
+    setSceneRect(itemsBoundingRect().adjusted(-30, -30, 30, 30));
+   // setSceneRect(specialItemsBoundingRect().adjusted(-30, -30, 30, 30));
     update(sceneRect());
 }
 
@@ -276,6 +275,7 @@ void AbstractScene::itemReleased(AbstractItem* item, QGraphicsSceneMouseEvent* e
     }
 }
 
+// Obsolete
 QRectF AbstractScene::specialItemsBoundingRect(QRectF r) const
 {
     QRectF rect = r;
@@ -333,7 +333,7 @@ void AbstractScene::keyPressEvent(QKeyEvent* keyEvent)
     else if (keyEvent->key() == Qt::Key_Shift)
         mSelectKeyIsDown = true;
   /*  else if (keyEvent->modifiers() == Qt::ControlModifier) {
-        qDebug() << "AbstractScene::keyPressEvent You Press: "<< "Qt::ControlModifier";
+        qDebug() << "[AbstractScene::keyPressEvent] You Press: "<< "Qt::ControlModifier";
     }*/
     else
         keyEvent->ignore();
@@ -346,7 +346,6 @@ void AbstractScene::keyReleaseEvent(QKeyEvent* keyEvent)
     if (keyEvent->isAutoRepeat() )
         keyEvent->ignore();
 
-
     if (keyEvent->key() == Qt::Key_Alt) {
             // qDebug() << "[AbstractScene::keyReleaseEvent] You Released: "<<"Qt::Key_Alt";
              mDrawingArrow = false;
@@ -357,7 +356,6 @@ void AbstractScene::keyReleaseEvent(QKeyEvent* keyEvent)
     }
 
 }
-
 
 void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
 {

@@ -605,14 +605,13 @@ void MainWindow::insertProject()
         const QFileInfo info(path);
         setCurrentPath(info.absolutePath());
 
-
         // look MainWindows::readSetting()
-        if (mProject->insert(path)) {
+        QJsonObject new_state;
+        if (mProject->insert(path, new_state)) {
+            mProjectView->setShowAllThumbs(true);
+            mProject->pushProjectState(new_state, INSERT_PROJECT_REASON, true);
 
-        // Create mEventsScene and mPhasesScenes
-            mProjectView->updateProject();
-
-         }
+        }
 
         //mUndoStack->clear();
         statusBar()->showMessage(tr("Ready"));
@@ -646,7 +645,6 @@ void MainWindow::disconnectProject()
   //  disconnect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
     disconnect(mRunAction, &QAction::triggered, mProject, &Project::run);
 
-   // connect(mCurveAction, &QAction::triggered, this, &MainWindow::toggleCurve);
 }
 
 void MainWindow::closeProject()
@@ -1214,7 +1212,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
 
                 mProjectView->setProject(mProject);
 
-                mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true);
+                mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, false); // notify false, sinon do updatProject and redo update()
                 // to do, it'is done in project load
                 //if (! mProject->mModel->mChains.isEmpty()) {
                 if (mProject->withResults()) {

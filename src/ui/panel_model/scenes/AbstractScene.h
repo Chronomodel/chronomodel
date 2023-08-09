@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -51,14 +51,33 @@ class Project;
 class AbstractScene: public QGraphicsScene
 {
     Q_OBJECT
+protected:
+    Project* mProject;
+    QGraphicsView* mView;
+    QList<AbstractItem*> mItems;
+    QList<ArrowItem*> mConstraintItems;
+
+    bool mUpdatingItems;
+    bool mAltIsDown;
+
+    bool mShowAllThumbs;
+
+    double mZoom;
+
+    AbstractItem* mCurrentItem;
+    qreal mDeltaGrid;
+
 public:
+    bool mDrawingArrow;
+    ArrowTmpItem* mTempArrow;
+    bool mSelectKeyIsDown; // used to add item in selection
+    bool mShowGrid;
+
     AbstractScene(QGraphicsView* view, QObject* parent = nullptr);
     virtual ~AbstractScene();
 
     QRectF specialItemsBoundingRect(QRectF r = QRectF()) const;
     void adjustSceneRect();
-    bool mDrawingArrow;
-    ArrowTmpItem* mTempArrow;
 
     void setProject(Project *project);
     Project* getProject() const;
@@ -66,8 +85,7 @@ public:
     QList<AbstractItem*> getItemsList() const  {return mItems;}
     bool showAllThumbs() const { return mShowAllThumbs;}
 
-    bool mSelectKeyIsDown; // used to add item in selection
-    bool mShowGrid;
+
     qreal deltaGrid() const {return mDeltaGrid;}
 
 public slots:
@@ -106,21 +124,7 @@ protected:
 
     void drawBackground(QPainter* painter, const QRectF& rect);
 
-protected:
-    Project* mProject;
-    QGraphicsView* mView;
-    QList<AbstractItem*> mItems;
-    QList<ArrowItem*> mConstraintItems;
 
-    bool mUpdatingItems;
-    bool mAltIsDown;
-
-    bool mShowAllThumbs;
-
-    double mZoom;
-
-    AbstractItem* mCurrentItem;
-    qreal mDeltaGrid;
 
 signals:
     void projectUpdated();

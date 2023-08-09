@@ -40,9 +40,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef PROJECTVIEW_H
 #define PROJECTVIEW_H
 
-#include "MCMCLoopChrono.h"
-#include "AppSettings.h"
 #include "Project.h"
+#include "ModelView.h"
 #include "Tabs.h"
 
 #include <QWidget>
@@ -52,7 +51,6 @@ class QTextEdit;
 class QTabWidget;
 class QVBoxLayout;
 
-class ModelView;
 class ResultsView;
 class Event;
 
@@ -77,6 +75,8 @@ public:
 
     void updateMultiCalibrationAndEventProperties();
     void eventsAreSelected();
+
+    void setShowAllThumbs(bool show) {mModelView->setShowAllThumbs(show);}
 
 public slots:
     void initResults(Model*);

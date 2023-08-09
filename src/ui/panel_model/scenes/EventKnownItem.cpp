@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -65,8 +65,9 @@ EventKnownItem::~EventKnownItem()
 
 void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
 {
-    mData = event;
+    prepareGeometryChange();
 
+    mData = event;
     // ----------------------------------------------
     //  Update item position and selection
     // ----------------------------------------------
@@ -138,6 +139,7 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
 
     mSize = QSize(230 + (isCurveNode()? 2*mNodeSkin + 2.: 0.), h);
 
+    update();
 }
 
 QRectF EventKnownItem::boundingRect() const

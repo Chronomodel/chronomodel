@@ -152,9 +152,9 @@ void AbstractItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
        // setPos(ptBefore);
         e->setPos(ptBefore);
     }
-
+    mMoving = true;
     QGraphicsItem::mouseMoveEvent(e); // move the graphic item, and change this position
-    mMoving = !(ptInit == pos());
+    //mMoving = !(ptInit == pos());
 
 //mScene->sendUpdateProject(tr("item moved"), false, true); // ici
 

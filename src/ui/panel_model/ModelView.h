@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -41,6 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define MODELVIEW_H
 
 #include "AbstractItem.h"
+#include "EventsScene.h"
 #include <QWidget>
 #include <QLineEdit>
 
@@ -56,7 +57,6 @@ class QGraphicsScene;
 class Project;
 class StudyPeriodSettings;
 class ModelToolsView;
-class EventsScene;
 class PhasesScene;
 class CurveSettingsView;
 class Event;
@@ -75,6 +75,99 @@ class SwitchWidget;
 class ModelView: public QWidget
 {
     Q_OBJECT
+private:
+    QWidget* mTopWrapper;
+    QWidget* mLeftWrapper;
+    QWidget* mRightWrapper;
+
+    // ------
+
+    EventsScene* mEventsScene;
+    QGraphicsView* mEventsView;
+
+    QLineEdit* mEventsSearchEdit;
+    SceneGlobalView* mEventsGlobalView;
+
+    ScrollCompressor* mEventsGlobalZoom;
+
+    QString mLastSearch;
+    QVector<int> mSearchIds;
+    int mCurSearchIdx;
+
+    Button* mButNewEvent;
+    Button* mButNewEventKnown;
+    Button* mButDeleteEvent;
+    Button* mButRecycleEvent;
+    Button* mButExportEvents;
+    Button* mButEventsGlobalView;
+    Button* mButEventsGrid;
+    Button* mButProperties;
+    Button* mButMultiCalib;
+    Button* mButImport;
+
+    // ------
+
+    ImportDataView* mImportDataView;
+    EventPropertiesView* mEventPropertiesView;
+
+    CurveSettingsView* mCurveSettingsView;
+
+    PhasesScene* mPhasesScene;
+    QGraphicsView* mPhasesView;
+
+    SceneGlobalView* mPhasesGlobalView;
+    ScrollCompressor* mPhasesGlobalZoom;
+
+    Button* mButNewPhase;
+    Button* mButDeletePhase;
+    Button* mButExportPhases;
+    Button* mButPhasesGlobaliew;
+    Button* mButPhasesGrid;
+
+    QPropertyAnimation* mAnimationHide;
+    QPropertyAnimation* mAnimationShow;
+
+    QWidget* mCurrentRightWidget;
+
+    // ------
+
+    CalibrationView* mCalibrationView;
+    MultiCalibrationView* mMultiCalibrationView;
+
+
+    QPropertyAnimation* mAnimationCalib;
+
+    // ------
+    double mTmin;
+    double mTmax;
+
+    QPushButton* mButModifyPeriod;
+    Button* mButCurve;
+
+    Label* mLeftPanelTitle;
+    Label* mRightPanelTitle;
+
+    QRect mTopRect;
+    QRect mHandlerRect;
+
+    QRect mLeftRect;
+    QRect mLeftHiddenRect;
+
+    QRect mRightRect;
+    QRect mRightHiddenRect;
+
+    Project* mProject;
+
+    int mMargin;
+    int mToolbarH;
+    int mButtonWidth;
+    int mButtonHeigth;
+    double mSplitProp;
+    int mHandlerW;
+    bool mIsSplitting;
+    bool mCalibVisible;
+    bool mCurveSettingsVisible;
+
 public:
     ModelView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~ModelView();
@@ -91,6 +184,7 @@ public:
     void readSettings();
     void writeSettings();
 
+    void setShowAllThumbs(bool show) {mEventsScene->setShowAllThumbs(show);};
 
 public slots:
     void updateProject();
@@ -149,102 +243,7 @@ protected:
 private:
     void exportSceneImage(QGraphicsScene* scene);
 
-private:
-    QWidget* mTopWrapper;
-    QWidget* mLeftWrapper;
-    QWidget* mRightWrapper;
 
-    // ------
-
-    EventsScene* mEventsScene;
-    QGraphicsView* mEventsView;
-
-    SceneGlobalView* mEventsOverview;
-    ScrollCompressor* mEventsGlobalZoom;
-
-    QLineEdit* mEventsSearchEdit;
-    QString mLastSearch;
-    QVector<int> mSearchIds;
-    int mCurSearchIdx;
-
-    Button* mButNewEvent;
-    Button* mButNewEventKnown;
-    Button* mButDeleteEvent;
-    Button* mButRecycleEvent;
-    Button* mButExportEvents;
-    Button* mButEventsGlobalView;
-    Button* mButEventsGrid;
-    Button* mButProperties;
-    Button* mButMultiCalib;
-    Button* mButImport;
-
-    // ------
-
-    ImportDataView* mImportDataView;
-    EventPropertiesView* mEventPropertiesView;
-
-    CurveSettingsView* mCurveSettingsView;
-
-    PhasesScene* mPhasesScene;
-    QGraphicsView* mPhasesView;
-
-    SceneGlobalView* mPhasesGlobalView;
-    ScrollCompressor* mPhasesGlobalZoom;
-
-    Button* mButNewPhase;
-    Button* mButDeletePhase;
-    Button* mButExportPhases;
-    Button* mButPhasesGlobaliew;
-    Button* mButPhasesGrid;
-
-    QPropertyAnimation* mAnimationHide;
-    QPropertyAnimation* mAnimationShow;
-
-    QWidget* mCurrentRightWidget;
-
-    // ------
-
-    CalibrationView* mCalibrationView;
-    MultiCalibrationView* mMultiCalibrationView;
-
-
-    QPropertyAnimation* mAnimationCalib;
-
-    // ------
-    double mTmin;
-    double mTmax;
-
-    //Button* mButModifyPeriod;
-    QPushButton* mButModifyPeriod;
-    //SwitchWidget* ButCurve;
-    Button* mButCurve;
-
-    Label* mLeftPanelTitle;
-    Label* mRightPanelTitle;
-
-    QRect mTopRect;
-    QRect mHandlerRect;
-
-    QRect mLeftRect;
-    QRect mLeftHiddenRect;
-
-    QRect mRightRect;
-    QRect mRightHiddenRect;
-
-
-
-private:
-    Project* mProject;
-
-    int mMargin;
-    int mToolbarH;
-    int mButtonWidth;
-    int mButtonHeigth;
-    double mSplitProp;
-    int mHandlerW;
-    bool mIsSplitting;
-    bool mCalibVisible;
-    bool mCurveSettingsVisible;
 };
 
 #endif

@@ -76,13 +76,11 @@ public slots:
 
     void createSceneFromState();
     void updateSceneFromState();
-    //void updateSelection(bool sendNotification = true, bool force = false);
+
     void updateStateSelectionFromItem();
     void updateHelp();
 
    virtual  void deleteSelectedItems();
-    //void updateSelectedEventsFromPhases();
-    //void updateGreyedOutEvents(const QMap<int, bool>& eyedPhases);
 
 public:
     void itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);

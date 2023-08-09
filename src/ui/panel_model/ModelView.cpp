@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "ModelView.h"
+#include "DateItem.h"
 #include "EventsScene.h"
 #include "PhasesScene.h"
 #include "PhaseItem.h"
@@ -55,6 +56,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MultiCalibrationView.h"
 #include "CalibrationCurve.h"
 #include "AppSettings.h"
+#include "Generator.h"
 
 #include "HelpWidget.h"
 #include "MainWindow.h"
@@ -149,8 +151,8 @@ ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):
     mEventsView->setInteractive(true);
     mEventsView->setDragMode(QGraphicsView::RubberBandDrag);
 
-    mEventsOverview = new SceneGlobalView(mEventsScene, mEventsView, mLeftWrapper);
-    mEventsOverview->setVisible(false);
+    mEventsGlobalView = new SceneGlobalView(mEventsScene, mEventsView, mLeftWrapper);
+    mEventsGlobalView->setVisible(false);
 
     mEventsSearchEdit = new QLineEdit(mLeftWrapper);
     mEventsSearchEdit->setVisible(false);
@@ -159,7 +161,7 @@ ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):
 
 
     mEventsSearchEdit->setGeometry(mEventsView->x() + 5, 5, radarW, searchH);
-    mEventsOverview->setGeometry(mEventsView->x() + 5, mEventsSearchEdit->y() + mEventsSearchEdit->height(), radarW, radarH);
+    mEventsGlobalView->setGeometry(mEventsView->x() + 5, mEventsSearchEdit->y() + mEventsSearchEdit->height(), radarW, radarH);
 
     mButNewEvent = new Button(tr("New Event"), mLeftWrapper);
     mButNewEvent->setToolTip(tr("Create a new Event"));
@@ -325,7 +327,6 @@ ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):
 
     // ---- update and paint with the appSettingsFont
 
-    //toggleCurve(false);
     applyAppSettings();
 }
 
@@ -340,8 +341,10 @@ void ModelView::setProject(Project* project)
 
     const bool projectExist = (mProject ? true : false);
     mProject = project;
+
     mPhasesScene->setProject(mProject);
     mEventsScene->setProject(mProject);
+
     mCurveSettingsView->setProject(mProject);
 
     if (mProject && !projectExist) {
@@ -366,14 +369,42 @@ void ModelView::setProject(Project* project)
     setSettingsValid(settings.mTmin < settings.mTmax);
 
     //Unselect all Item in all scene
-    mProject->unselectedAllInState();
+    mProject->unselectedAllInState(mProject->mState);
 
-    //mEventsScene->createSceneFromState();
-   // mPhasesScene->createSceneFromState();
-
-    mPhasesScene->updateSceneFromState();
+    mEventsScene->createSceneFromState();
+    mPhasesScene->createSceneFromState();
 
     applyAppSettings(); // do phase->update()
+}
+
+void ModelView::updateProject()
+{
+    const QJsonObject &state = mProject->state();
+    if (!mProject)// || mProject->mState.size() == 0)
+        return;
+    const StudyPeriodSettings &settings = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+
+    mTmin = settings.mTmin;
+    mTmax = settings.mTmax;
+
+    adaptStudyPeriodButton(settings.mTmin, settings.mTmax);
+    updateCurveButton();
+
+    setSettingsValid(settings.mTmin < settings.mTmax);
+
+    mEventsScene->updateSceneFromState();
+   // mEventsGlobalView->update();
+    mPhasesScene->updateSceneFromState();
+
+    // Les sélections dans les scènes doivent être mises à jour après que
+    // LES 2 SCENES aient été updatées
+    // false : ne pas envoyer de notification pour updater l'état du projet,
+    // puisque c'est justement ce que l'on fait ici!
+    // DONE BY UPDATEPROJECT ????
+    if (mButProperties->isChecked() && mButProperties->isEnabled())
+        mEventPropertiesView->updateEvent();
+
+    updateLayout();
 }
 
 void ModelView::connectScenes()
@@ -384,7 +415,7 @@ void ModelView::connectScenes()
     connect(mButDeleteEvent, static_cast<void (Button::*)(bool)> (&Button::clicked), mEventsScene, &EventsScene::deleteSelectedItems);
 
     connect(mButRecycleEvent, static_cast<void (Button::*)(bool)> (&Button::clicked), mProject, &Project::recycleEvents);
-    connect(mButEventsGlobalView, &Button::toggled, mEventsOverview, &SceneGlobalView::setVisible);
+    connect(mButEventsGlobalView, &Button::toggled, mEventsGlobalView, &SceneGlobalView::setVisible);
     connect(mButEventsGlobalView, &Button::toggled, mEventsSearchEdit, &QLineEdit::setVisible);
     connect(mEventsSearchEdit, &QLineEdit::returnPressed, this, &ModelView::searchEvent);
     connect(mEventsGlobalZoom, &ScrollCompressor::valueChanged, this, &ModelView::updateEventsZoom);
@@ -429,7 +460,7 @@ void ModelView::disconnectScenes()
     disconnect(mButDeleteEvent,  static_cast<void (Button::*)(bool)> (&Button::clicked), mEventsScene, &EventsScene::deleteSelectedItems);
 
     disconnect(mButRecycleEvent, &Button::clicked, mProject, &Project::recycleEvents);
-    disconnect(mButEventsGlobalView, &Button::toggled, mEventsOverview, &SceneGlobalView::setVisible);
+    disconnect(mButEventsGlobalView, &Button::toggled, mEventsGlobalView, &SceneGlobalView::setVisible);
     disconnect(mButEventsGlobalView, &Button::toggled, mEventsSearchEdit, &QLineEdit::setVisible);
     disconnect(mEventsSearchEdit, &QLineEdit::returnPressed, this, &ModelView::searchEvent);
     disconnect(mEventsGlobalZoom, &ScrollCompressor::valueChanged, this, &ModelView::updateEventsZoom);
@@ -493,7 +524,7 @@ void ModelView::resetInterface()
     mMultiCalibrationView->setProject(mProject);
     mMultiCalibrationView->setEventsList(QList<Event*> ());
 
-    mEventPropertiesView->setEvent(nullptr);//QJsonObject());
+    mEventPropertiesView->setEvent(nullptr);
 
    // hideProperties();
     updateLayout();
@@ -511,35 +542,7 @@ void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
 
 }
 
-void ModelView::updateProject()
-{
-    const QJsonObject &state = mProject->state();
-    if (!mProject)// || mProject->mState.size() == 0)
-        return;
-    const StudyPeriodSettings &settings = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
-    mTmin = settings.mTmin;
-    mTmax = settings.mTmax;
-
-    adaptStudyPeriodButton(settings.mTmin, settings.mTmax);
-    updateCurveButton();
-
-    setSettingsValid(settings.mTmin < settings.mTmax);
-
-    mEventsScene->updateSceneFromState();
-
-    mPhasesScene->updateSceneFromState();
-
-    // Les sélections dans les scènes doivent être mises à jour après que
-    // LES 2 SCENES aient été updatées
-    // false : ne pas envoyer de notification pour updater l'état du projet,
-    // puisque c'est justement ce que l'on fait ici!
-     // DONE BY UPDATEPROJECT ????
-    if (mButProperties->isChecked() && mButProperties->isEnabled())
-        mEventPropertiesView->updateEvent();
-
-    updateLayout();
-}
 
 bool ModelView::findCalibrateMissing()
 {
@@ -769,30 +772,25 @@ void ModelView::searchEvent()
 
 }
 
+// Event::setEvent recognizes pos().isnull() as a new EventItem and randomizes the position
 void ModelView::createEventInPlace()
 {
-    QRectF viewRect = mEventsView->rect();
-    QPointF visiblePos = mEventsView->mapToScene( int (viewRect.x()), int (viewRect.y()));
-
-    mProject->createEvent(visiblePos.x() + viewRect.width()/2., visiblePos.y() + viewRect.height()/2.);
+    mProject->createEvent(0, 0);
 }
 
 void ModelView::createEventKnownInPlace()
 {
-    QRectF viewRect = mEventsView->rect();
-    QPointF visiblePos = mEventsView->mapToScene( int (viewRect.x()), int (viewRect.y()));
-
-    mProject->createEventKnown(visiblePos.x() + viewRect.width()/2., visiblePos.y() + viewRect.height()/2.);
+    mProject->createEventKnown(0, 0);
 }
-
 
 void ModelView::createPhaseInPlace()
 {
-    QRectF viewRect = mPhasesView->rect();
-    QPointF visiblePos = mPhasesView->mapToScene( int (viewRect.x()), int (viewRect.y()));
+    const QRectF viewRect = mPhasesView->rect();
+    const QPointF visiblePos = mPhasesView->mapToScene( int (viewRect.x()), int (viewRect.y()));
 
     mProject->createPhase(visiblePos.x() + viewRect.width()/2., visiblePos.y() + viewRect.height()/2.);
 }
+
 /**
  * @brief ModelView::showProperties is done to work with ModelView::showMultiCalib()
  * Both manage button to keep only one of them checked or any of them
@@ -1016,7 +1014,7 @@ void ModelView::showImport()
  */
 void ModelView::eventsAreSelected()
 {
-    qDebug()<<"ModelView::eventsAreSelected()";
+    qDebug()<<"[ModelView::eventsAreSelected]";
     if (!mButProperties->isEnabled()) {
         mButNewEventKnown->setDisabled(true);
         mButNewEvent->setDisabled(true);
@@ -1061,7 +1059,7 @@ void ModelView::togglePropeties(AbstractItem* item)
 
 void ModelView::noEventSelected()
 {
-    qDebug()<<"ModelView::noEventSelected()";
+    qDebug()<<"[ModelView::noEventSelected]";
     mButNewEventKnown->setDisabled(false);
     mButNewEvent->setDisabled(false);
 
@@ -1256,8 +1254,16 @@ void ModelView::updateLayout()
     else
         mEventsView ->setGeometry(mLeftRect.adjusted(mButtonWidth -1, -1, +1, +1));
 
-    mEventsSearchEdit->setGeometry(mEventsView->x() + 5, 5, radarW, searchH);
-    mEventsOverview->setGeometry(mEventsView->x() + 5, mEventsSearchEdit->y() + mEventsSearchEdit->height(), radarW, radarH);
+   // if (mButEventsGlobalView->isChecked()) {
+     //   mEventsSearchEdit->show();
+        mEventsSearchEdit->setGeometry(mEventsView->x() + 5, 5, radarW, searchH);
+    //    mEventsGlobalView->show();
+        mEventsGlobalView->setGeometry(mEventsView->x() + 5, mEventsSearchEdit->y() + mEventsSearchEdit->height(), radarW, radarH);
+
+  /*  } else {
+        mEventsSearchEdit->hide();
+        mEventsGlobalView->hide();
+    }*/
 
     mButNewEvent      ->setGeometry(0, 0, mButtonWidth, mButtonHeigth);
     mButNewEventKnown ->setGeometry(0, mButtonHeigth, mButtonWidth, mButtonHeigth);
@@ -1425,7 +1431,7 @@ void ModelView::mouseReleaseEvent(QMouseEvent* e)
 void ModelView::mouseMoveEvent(QMouseEvent* e)
 {
     if (mIsSplitting) {
-        qreal x = std::clamp(200, e->pos().x(), width() - 450);
+        const qreal x = std::clamp(e->pos().x(), 200, width() - 450);
 
         mSplitProp = x / (width() - mHandlerW/2);
         mHandlerRect.moveTo(int(x + mHandlerW/2), mTopRect.height());

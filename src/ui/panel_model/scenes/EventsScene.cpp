@@ -52,7 +52,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "PluginManager.h"
 #include "Generator.h"
-#include "StdUtilities.h"
 #include "AppSettings.h"
 
 #include <QtWidgets>
@@ -80,10 +79,10 @@ EventsScene::~EventsScene()
 
 EventItem* EventsScene::findEventItemWithJsonId(const int id)
 {
-    foreach(AbstractItem* it, mItems) {
+    for (AbstractItem* it: mItems) {
         EventItem* ev = static_cast<EventItem*>(it);
         const QJsonObject evJson = ev->getData();
-        if (evJson.value(STATE_ID)== id)
+        if (evJson.value(STATE_ID) == id)
             return ev;
     }
     return nullptr;
@@ -97,7 +96,7 @@ EventItem* EventsScene::findEventItemWithJsonId(const int id)
  */
 void EventsScene::deleteSelectedItems()
 {
-   qDebug()<<"EventsScene::deleteSelectedItems";
+   qDebug()<<"[EventsScene::deleteSelectedItems]";
    mProject->deleteSelectedEvents();
    emit noSelection();
 }
@@ -118,7 +117,7 @@ bool EventsScene::constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo
         // If the constraint already exist, impossible to create another identical one.
         if (constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == eventFromId && constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == eventToId) {
             constraintAllowed = false;
-            qDebug() << "EventsScene::constraintAllowed: not Allowed " ;
+            qDebug() << "[EventsScene::constraintAllowed] not Allowed " ;
         }
         // Impossible to have 2 constraints with oposite directions, between 2 events.
         else if (constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == eventToId && constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == eventFromId) {
@@ -129,7 +128,7 @@ bool EventsScene::constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo
     }
     if (constraintAllowed && constraintIsCircular(constraints, eventFromId, eventToId)) {
         constraintAllowed = false;
-        qDebug() << "EventsScene::constraintAllowed: not Allowed Circular" ;
+        qDebug() << "[EventsScene::constraintAllowed] not Allowed Circular" ;
     }
     return constraintAllowed;
 }
@@ -138,7 +137,7 @@ void EventsScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
 {
     const QJsonObject eventFrom = dynamic_cast<EventItem*>(itemFrom)->getData();
     const QJsonObject eventTo = dynamic_cast<EventItem*>(itemTo)->getData();
-    qDebug()<<"EventsScene::createConstraint"<<eventFrom.value(STATE_NAME)<<eventTo.value(STATE_NAME);
+    qDebug()<<"[EventsScene::createConstraint]"<<eventFrom.value(STATE_NAME)<<eventTo.value(STATE_NAME);
 
     mProject->createEventConstraint(eventFrom.value(STATE_ID).toInt(),
                                     eventTo.value(STATE_ID).toInt());
@@ -224,9 +223,7 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
          events.append(((EventItem*)mItems.at(i))->getData());
     }
 
-
     stateNext[STATE_EVENTS] = events;
-
 
     //qDebug()<<"[EventsScene::sendUpdateProject] stateChange";
     if (storeUndoCommand)
@@ -240,6 +237,7 @@ void EventsScene::noHide()
     qDebug()<<"[EventsScene::noHide]";
     setShowAllThumbs(true);
 }
+
 void EventsScene::phasesSelected()
 {
     qDebug()<<"[EventsScene::phasesSelected]";
@@ -302,8 +300,6 @@ void EventsScene::createSceneFromState()
 
     const QJsonObject CurveSettings = state.value(STATE_CURVE).toObject();
 
-
-
      //http://doc.qt.io/qt-5/qprogressdialog.html#minimumDuration-prop
 
     QProgressDialog* progress = new QProgressDialog("Create event items","Wait" , 1, eventsInState.size());//,qApp->activeWindow(), Qt::Window);
@@ -340,7 +336,7 @@ void EventsScene::createSceneFromState()
     progress->setLabelText(tr("Create event items"));
 
     for (QJsonArray::const_iterator citer = eventsInState.constBegin(); citer != eventsInState.constEnd(); ++citer) {
-        const QJsonObject& event = (*citer).toObject();
+        const QJsonObject& event = citer->toObject();
         ++i;
 
         progress->setValue(i);
@@ -354,7 +350,7 @@ void EventsScene::createSceneFromState()
             newItem = new EventKnownItem(this, event, settings);
 
         mItems.append(newItem);
-        qDebug()<<"createSceneFromState Create mItems:"<<event.value(STATE_NAME).toString();
+        qDebug()<<"[EventsScene::createSceneFromState] Create mItems:"<<event.value(STATE_NAME).toString();
         addItem(newItem);
 
         }
@@ -366,8 +362,10 @@ void EventsScene::createSceneFromState()
 
     progress->setLabelText(tr("Create constraint items"));
     progress->setMaximum(constraints.size());
-    for (int i = 0; i < constraints.size(); ++i) {
-        const QJsonObject constraint = constraints.at(i).toObject();
+    i = 0;
+    for (auto &c : constraints) {
+        i++;
+        const QJsonObject &constraint = c.toObject();
         progress->setValue(i);
         ArrowItem* constraintItem = new ArrowItem(this, ArrowItem::eEvent, constraint);
         mConstraintItems.append(constraintItem);
@@ -377,6 +375,9 @@ void EventsScene::createSceneFromState()
     mUpdatingItems = false;
 
     delete progress;
+
+    adjustSceneRect();
+    update();
  #ifdef DEBUG
     qDebug()<<tr("[EventsScene::createScene] finish in %1").arg(QString(DHMS(startTime.elapsed())));
  #endif
@@ -423,7 +424,7 @@ void EventsScene::updateSceneFromState()
 
                         delete eventItem;
             }
-            //qDebug() << "EventsScene::updateScene Event deleted : " << event.value(STATE_ID).toInt();
+            //qDebug() << "[EventsScene::updateScene] Event deleted : " << event.value(STATE_ID).toInt();
 
             mItems.removeAt(i);
 
@@ -446,7 +447,6 @@ void EventsScene::updateSceneFromState()
     const QJsonArray &constraints = state.value(STATE_EVENTS_CONSTRAINTS).toArray();
 
     // case of newProject
-
 
     const QJsonObject &settings = state.value(STATE_SETTINGS).toObject();
     const QJsonObject &curveSettings = state.value(STATE_CURVE).toObject();
@@ -513,7 +513,7 @@ void EventsScene::updateSceneFromState()
     // ------------------------------------------------------
     //  Delete EventItems not in current state
     // ------------------------------------------------------
-    bool hasDeleted = false;
+  //  bool hasDeleted = false;
     for (auto i = indexItemToRemove.size()-1; i >= 0; --i) {
         QJsonObject& event = mItems[indexItemToRemove.at(i)]->mData;
         Event::Type type = Event::Type (event.value(STATE_EVENT_TYPE).toInt());
@@ -538,7 +538,7 @@ void EventsScene::updateSceneFromState()
             //qDebug() << "EventsScene::updateScene Event deleted : " << event.value(STATE_ID).toInt();
 
             mItems.removeAt(indexItemToRemove.at(i));
-            hasDeleted = true;
+          //  hasDeleted = true;
 
             // This does not break the code but is commented to match PhasesScene implementation
             //removeItem(eventItem);
@@ -548,7 +548,7 @@ void EventsScene::updateSceneFromState()
         }
     }
 
-    bool hasCreated = false;
+  //  bool hasCreated = false;
 
     // ------------------------------------------------------
     //  Create / Update event items
@@ -559,7 +559,7 @@ void EventsScene::updateSceneFromState()
     }
 
     for (auto&& citer : eventsInNewState) {
-        const QJsonObject event = citer.toObject();
+        const QJsonObject &event = citer.toObject();
 
         ++i;
         if (displayProgress)
@@ -568,19 +568,19 @@ void EventsScene::updateSceneFromState()
         bool itemUnkown = true;
 
         for (auto&& cIterOld : mItems) {
-            EventItem* oldItem = (EventItem*) cIterOld;
+            EventItem* oldItem = dynamic_cast<EventItem*> (cIterOld);
             const QJsonObject OldItemEvent = oldItem->getData();
+            oldItem->updateGreyedOut();
 
             if ( OldItemEvent.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
-
-                itemUnkown = false;
-                if ((event != OldItemEvent) || settingsChanged) {
+               itemUnkown = false;
+               if ((event != OldItemEvent) || settingsChanged) {
                     // UPDATE ITEM
-                 //   qDebug() << "[EventsScene::updateSceneFromState] Event changed : id = " << event.value(STATE_ID).toInt() << event.value(STATE_NAME).toString();
+                    //   qDebug() << "[EventsScene::updateSceneFromState] Event changed : id = " << event.value(STATE_ID).toInt() << event.value(STATE_NAME).toString();
 
                     oldItem->setEvent(event, settings);
-                    oldItem->mGreyedOut = (EventItem*) cIterOld->mGreyedOut;
-                }
+
+               }
              }
 
             oldItem = nullptr;
@@ -595,6 +595,24 @@ void EventsScene::updateSceneFromState()
                     else //if(type == Event::eBound)
                         newItem = new EventKnownItem(this, event, settings);
 
+                    newItem->setGreyedOut(false);
+                    // is pos() is null, it's a new Event
+                    if (newItem->pos().isNull()) {
+                        QList<QGraphicsView*> gviews = views();
+
+                        if (gviews.size() > 0) {
+                            const QGraphicsView* gview = gviews[0];
+                            const QPointF pt = gview->mapToScene(gview->width()/2, gview->height()/2);
+                            const int randCoef = 3;
+                            const qreal shift_x = randCoef * Generator::randomUniform(-DateItem:: mEltsHeight, DateItem:: mEltsHeight);
+                            const qreal shift_y = randCoef * Generator::randomUniform(-DateItem:: mEltsHeight, DateItem:: mEltsHeight);
+
+                            newItem->setPos(pt.x() + shift_x, pt.y() + shift_y);
+
+                        }
+
+                    }
+
                 } catch(QString error){
                     QMessageBox message(QMessageBox::Critical,
                                         qApp->applicationName() + " " + qApp->applicationVersion(),
@@ -606,39 +624,8 @@ void EventsScene::updateSceneFromState()
 
                 mItems.append(newItem);
                 addItem(newItem);
-                hasCreated = true;
-
-                // Note : setting an event in (0, 0) tells the scene that this item is new! don't work when updateScene come from Undo Action
-                // Thus the scene will move it randomly around the currently viewed center point.
-                QPointF pos = newItem->pos();
-                if (pos.isNull()) {
-                    // Usefull to add some dates inside the last created Event!
-                    clearSelection();
-                    newItem->setSelected(true);
-
-                    QList<QGraphicsView*> gviews = views();
-
-                    if (gviews.size() > 0) {
-                        QGraphicsView* gview = gviews[0];
-                        QPointF pt = gview->mapToScene(gview->width()/2, gview->height()/2);
-                        const int posDelta (100);
- #ifdef Q_OS_MAC
-                        newItem->setPos(pt.x() + arc4random() % posDelta - posDelta/2,
-                                          pt.y() + arc4random() % posDelta - posDelta/2);
- #else
-                        newItem->setPos(pt.x() + rand() % posDelta - posDelta/2,
-                                          pt.y() + rand() % posDelta - posDelta/2);
-
- #endif
-                    }
-
                 newItem = nullptr;
-
-                //qDebug() << "EventsScene::updateScene Event created : id = " << event.value(STATE_ID).toInt() <<event[STATE_ITEM_X].toDouble()<<event[STATE_ITEM_Y].toDouble();//<< event.value(STATE_NAME).toString()<<", type : " << type;
-
-            }
-
-
+              //  hasCreated = true;
 
         }
 
@@ -651,13 +638,14 @@ void EventsScene::updateSceneFromState()
         ArrowItem* constraintItem = mConstraintItems[i];
         QJsonObject& constraint = constraintItem->data();
 
-        if (!constraints_ids.contains(constraint.value(STATE_ID).toInt())) {
+        if (constraintItem->data().isEmpty() || !constraints_ids.contains(constraint.value(STATE_ID).toInt())) {
 #ifdef DEBUG
-            //qDebug() << "EventsScene::updateScene Event Constraint deleted : " << constraint.value(STATE_ID).toInt();
+            qDebug() << "[EventsScene::updateScene] Event Constraint deleted : " << constraint.value(STATE_ID).toInt();
 #endif
             removeItem(constraintItem);
             mConstraintItems.removeOne(constraintItem);
-            delete constraintItem;
+            //delete constraintItem;
+            constraintItem = nullptr;
         }
     }
 
@@ -674,10 +662,9 @@ void EventsScene::updateSceneFromState()
             progress->setValue(i);
 
         bool itemExists = false;
-        //for (int j = 0; j < mConstraintItems.size(); ++j) {
+
         for (auto &mConstItem : mConstraintItems) {
             QJsonObject constraintItem = mConstItem->data();
-
 
             if (constraintItem.value(STATE_ID).toInt() == constraint.value(STATE_ID).toInt()) {
 
@@ -694,7 +681,7 @@ void EventsScene::updateSceneFromState()
                 if (constraint != constraintItem) {
                     // UPDATE ITEM
 #ifdef DEBUG
-                    //qDebug() << "EventsScene::updateScene Constraint updated : id = " << constraint.value(STATE_ID).toInt();
+                    qDebug() << "[EventsScene::updateScene] Constraint updated : id = " << constraint.value(STATE_ID).toInt();
 #endif
                     mConstItem->setData(constraint);
                 }
@@ -706,7 +693,7 @@ void EventsScene::updateSceneFromState()
             mConstraintItems.append(constraintItem);
             addItem(constraintItem);
 #ifdef DEBUG
-            //qDebug() << "EventsScene::updateScene Constraint created : id = " << constraint.value(STATE_ID).toInt();
+            qDebug() << "[EventsScene::updateScene] Constraint created : id = " << constraint.value(STATE_ID).toInt();
 #endif
         }
     }
@@ -716,7 +703,7 @@ void EventsScene::updateSceneFromState()
     EventItem* lastCurItem = currentEvent();
     QJsonObject currentEventLast = QJsonObject() ;
     if (lastCurItem)
-            currentEventLast = lastCurItem->getData();
+        currentEventLast = lastCurItem->getData();
 
    /* if (currentEventLast != currentEventPrev)
         emit mProject->currentEventChanged(currentEventLast);
@@ -724,11 +711,14 @@ void EventsScene::updateSceneFromState()
     // Deleting an item that was selected involves changing the selection (and updating properties view)
     // Nothing has been triggered so far because of the mUpdatingItems flag, so we need to trigger it now!
     // As well, creating an item changes the selection because we want the newly created item to be selected.
-    if (hasDeleted || hasCreated)
+   // if (hasDeleted || hasCreated)
   //      updateStateSelectionFromItem(); // modify mState and emit pushState
 
-    //adjustSceneRect();
-    adaptItemsForZoom(mZoom);
+            //       setSceneRect(specialItemsBoundingRect().adjusted(-30, -30, 30, 30));
+   // setSceneRect(itemsBoundingRect());
+    adjustSceneRect();
+
+    //adaptItemsForZoom(mZoom);
 
    if (displayProgress)
        delete progress;
@@ -756,10 +746,7 @@ void EventsScene::clean()
                 delete dateItems.first(); // delete the object
                 dateItems.removeFirst(); // remove the pointer
             }
-  //      }
-#ifdef DEBUG
-        //qDebug() << "Event deleted : " << event[STATE_ID].toInt();
-#endif
+
         mItems.removeAt(i);
 
         // This does not break the code but is commented to match PhasesScene implementation
@@ -783,6 +770,8 @@ void EventsScene::clean()
     // ------------------------------------------------------
     //  Reset scene rect
     // ------------------------------------------------------
+    clear();
+    setSceneRect(QRectF());
     update(sceneRect());
 }
 
@@ -904,6 +893,7 @@ void EventsScene::updateSelectedEventsFromPhases()
     //updateScene();
 }
 */
+
 void EventsScene::adaptItemsForZoom(const double prop)
 {
     mZoom = prop;
@@ -977,7 +967,7 @@ void EventsScene::dateMoved(const DateItem* dateItem)
     qDebug()<<"EventsScene::dateMoved";
     static EventItem* lastEntered = nullptr;
     EventItem* hoveredEventItem = dynamic_cast<EventItem*>(collidingItem(dateItem));
-    EventItem* prevEventItem =dynamic_cast<EventItem*>(dateItem->parentItem());
+    EventItem* prevEventItem = dynamic_cast<EventItem*>(dateItem->parentItem());
 
     if (hoveredEventItem && (hoveredEventItem != prevEventItem)) {
         const QJsonObject& event = hoveredEventItem->getData();
@@ -1295,7 +1285,7 @@ void EventsScene::keyReleaseEvent(QKeyEvent* keyEvent)
     }
 #endif
 #ifdef Q_OS_MAC
-   else if ((QApplication::keyboardModifiers() == Qt::ControlModifier)) {
+    else if ((QApplication::keyboardModifiers() == Qt::ControlModifier)) {
        // qDebug() << "EventsScene::keyReleaseEvent You Released: "<<"Qt::ControlModifier";
         mDrawingArrow = false;
         //mAltIsDown = false;

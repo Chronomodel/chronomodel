@@ -41,8 +41,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define PHASEITEM_H
 
 #include "AbstractItem.h"
-#include "PhasesScene.h"
-#include "Phase.h"
 
 bool sortEvents(QPair<int, int> e1, QPair<int, int> e2);
 

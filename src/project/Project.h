@@ -121,7 +121,7 @@ public:
     bool saveProjectToFile();
 
     bool recenterProject();
-    bool insert(const QString& path);
+    bool insert(const QString& path, QJsonObject &return_state);
 
     /**
      * @brief setNoResults : set to disable the saving the file *.res
@@ -157,7 +157,7 @@ public:
     QJsonObject checkDatesCompatibility(QJsonObject state, bool &isCorrected);
     QJsonObject checkValidDates(const QJsonObject& state);
 
-    void unselectedAllInState();
+    void unselectedAllInState(QJsonObject &state);
     void updateSelectedEventsColor(const QColor &color);
     void updateSelectedEventsMethod(MHVariable::SamplerProposal sp);
     void updateSelectedEventsDataMethod(MHVariable::SamplerProposal sp, const QString &pluginId);

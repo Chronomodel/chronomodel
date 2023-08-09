@@ -198,7 +198,7 @@ void EventItem::setEvent(const QJsonObject &event, const QJsonObject &StudyPerio
 
     resizeEventItem();
     repositionDateItems();
-
+    update();
 }
 
 bool EventItem::isCurveNode() const
@@ -262,6 +262,12 @@ void EventItem::updateGreyedOut()
         }
     }
     setOpacity(mGreyedOut ? 0.3 : 1);
+
+    QList<QGraphicsItem*> dateItems = childItems();
+    for (auto&& item : dateItems) {
+        DateItem *di = (DateItem*) item;
+        di->setGreyedOut(mGreyedOut);
+    }
 }
 
 void EventItem::setDatesVisible(bool visible)
@@ -536,7 +542,102 @@ void EventItem::paintBoxCurveParameter (QPainter* painter, const QRectF &rectBox
         painter->setFont(font);
         painter->setPen(CURVE_COLOR_TEXT);
 
-        if ( cs.mProcessType == CurveSettings::eProcessType3D) {
+        QString text1, text2, text3;
+
+        switch (cs.mProcessType) {
+        case CurveSettings::eProcessType3D :
+            text1 = QObject::tr("X") + " = ";
+            text1 += QLocale().toString (mData.value(STATE_EVENT_X_INC_DEPTH).toDouble());
+            text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble());
+            painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
+
+            text2 = QObject::tr("Y") + " = ";
+            text2 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
+            text2 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SY).toDouble());
+
+            painter->drawText(QRectF(lineX, lineY + mCurveLineHeight, lineW, mCurveLineHeight), Qt::AlignCenter, text2);
+
+            text3 = QObject::tr("Z") + " = ";
+            text3 += QLocale().toString(mData.value(STATE_EVENT_Z_F).toDouble());
+            text3 += " ± " + QLocale().toString(mData.value(STATE_EVENT_SZ_SF).toDouble());
+            painter->drawText(QRectF(lineX, lineY + 2*mCurveLineHeight, lineW, mCurveLineHeight), Qt::AlignCenter, text3);
+            break;
+
+        case CurveSettings::eProcessType2D :
+            text1 = "X = ";
+            text1 += QLocale().toString (mData.value(STATE_EVENT_X_INC_DEPTH).toDouble());
+            text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble(), 'g', 3);
+            painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
+
+            text2 = "Y = ";
+            text2 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
+            text2 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SY).toDouble());
+            painter->drawText(QRectF(lineX, lineY + mCurveLineHeight, lineW, mCurveLineHeight), Qt::AlignCenter, text2);
+            break;
+
+        case CurveSettings::eProcessTypeSpherical :
+            text1 =  QObject::tr("Inc") + " = ";
+            text1 += QLocale().toString (mData.value(STATE_EVENT_X_INC_DEPTH).toDouble());
+            text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble(), 'g', 3);
+
+            text1 += " "+ QObject::tr("Dec") + " = ";
+            text1 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
+
+            painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
+            break;
+
+        case CurveSettings::eProcessTypeVector :
+            text1 =  QObject::tr("Inc") + " = ";
+            text1 += QLocale().toString (mData.value(STATE_EVENT_X_INC_DEPTH).toDouble());
+            text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble(), 'g', 3);
+
+            text1 += " "+ QObject::tr("Dec") + " = ";
+            text1 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
+
+            painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
+
+            text2 = QObject::tr("Field") + " = ";
+            text2 += QLocale().toString(mData.value(STATE_EVENT_Z_F).toDouble());
+            text2 += " ± " + QLocale().toString(mData.value(STATE_EVENT_SZ_SF).toDouble());
+            painter->drawText(QRectF(lineX, lineY + mCurveLineHeight, lineW, mCurveLineHeight), Qt::AlignCenter, text2);
+            break;
+
+        default:
+            switch (cs.mVariableType) {
+            case CurveSettings::eVariableTypeOther :
+                text1 = QObject::tr("Measure") + " = " + QLocale().toString (mData.value(STATE_EVENT_X_INC_DEPTH).toDouble());
+                text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble());
+                painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
+                break;
+
+            case CurveSettings::eVariableTypeDepth :
+                text1 = QObject::tr("Depth") + " = " + QLocale().toString (mData.value(STATE_EVENT_X_INC_DEPTH).toDouble());
+                text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble());
+                painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
+                break;
+
+            case CurveSettings::eVariableTypeField :
+                text1 = QObject::tr("Field") + " = " + QLocale().toString (mData.value(STATE_EVENT_Z_F).toDouble());
+                text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SZ_SF).toDouble());
+                painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
+                break;
+
+            default:
+                text1 =  QObject::tr("Inc") + " = ";
+                text1 += QLocale().toString (mData.value(STATE_EVENT_X_INC_DEPTH).toDouble());
+                text1 += " ± " + QLocale().toString (mData.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble(), 'g', 3);
+
+                if (cs.mVariableType == CurveSettings::eVariableTypeDeclination) {
+                    text1 += " "+ QObject::tr("Dec") + " = ";
+                    text1 += QLocale().toString(mData.value(STATE_EVENT_Y_DEC).toDouble());
+                }
+                painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
+                break;
+            }
+            break;
+        }
+
+       /* if ( cs.mProcessType == CurveSettings::eProcessType3D) {
             QString text1;
 
             text1 += QObject::tr("X") + " = ";
@@ -623,6 +724,7 @@ void EventItem::paintBoxCurveParameter (QPainter* painter, const QRectF &rectBox
                     painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
                 }
         }
+        */
 
     }
 
@@ -644,8 +746,7 @@ void EventItem::paintBoxPhases (QPainter *painter, const QRectF &rectBox)
     if (numPhases == 0) {
         painter->setPen(QColor(200, 200, 200));
 
-        QString noPhase = tr("No Phase");
-        painter->drawText(rectBox, Qt::AlignCenter, noPhase);
+        painter->drawText(rectBox, Qt::AlignCenter, tr("No Phase"));
 
     } else {
         const qreal w = (rectBox.width() - (numPhases-1)*mEltsMargin) / numPhases;
@@ -653,11 +754,12 @@ void EventItem::paintBoxPhases (QPainter *painter, const QRectF &rectBox)
         for (int i = 0; i < numPhases; ++i) {
             dx = i*(w + mEltsMargin);
             const QJsonObject phase = phases.at(i).toObject();
+            painter->setPen(QColor(0, 0, 0));
 
             const QColor c(phase.value(STATE_COLOR_RED).toInt(),
                            phase.value(STATE_COLOR_GREEN).toInt(),
                            phase.value(STATE_COLOR_BLUE).toInt());
-            painter->setPen(QColor(0, 0, 0));
+
             painter->setBrush(c);
             painter->drawRoundedRect( (rectBox.x() + dx),  (rectBox.y()), (w),  (rectBox.height()), 4, 4);
 
