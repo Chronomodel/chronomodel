@@ -81,8 +81,8 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
              const double t3 = date.getFormatedTminCalib();
              const double t4 = date.getFormatedTmaxCalib();
 
-             tminDisplay = qMin(t1,qMin(t2,t3));
-             tmaxDisplay = qMax(t1,qMax(t2,t4));
+             tminDisplay = qMin(t1, qMin(t2,t3));
+             tmaxDisplay = qMax(t1, qMax(t2,t4));
 
          } else {
              tminDisplay = qMin(t1, t2);
@@ -147,7 +147,8 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
                  mGraph->add_zone(zone);
              }
 
-             const double t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
+             const double t0 = std::max(std::min(DateUtils::convertFromAppSettingsFormat(tminDisplay), DateUtils::convertFromAppSettingsFormat(tmaxDisplay)), tminRef);
+            // const double t0 = std::max({tminDisplay, tminRef});
              double yMin = plugin->getRefValueAt(date.mData, t0);
              double yMax (yMin);
 

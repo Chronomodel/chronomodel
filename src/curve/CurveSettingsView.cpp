@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2020 - 2022
+Copyright or © or Copr. CNRS	2020 - 2023
 
 Authors :
 	Philippe LANOS

@@ -121,8 +121,8 @@ void PluginTLRefView::setDate(const Date& date, const StudyPeriodSettings& setti
 
                 // ----------------------------------------------
 
-                double yMin ( map_min_value(curve.mData) );
-                double yMax ( map_max_value(curve.mData) );
+                double yMin = map_min_value(curve.mData).value();
+                double yMax = map_max_value(curve.mData).value();
 
                 yMin = qMin(yMin, age - error * 3);
                 yMax = qMax(yMax, age + error * 3);

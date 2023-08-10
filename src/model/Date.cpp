@@ -641,9 +641,9 @@ void Date::calibrate(const StudyPeriodSettings priod_settings, Project *project,
 
         if (repartitionTemp.last() > 0.) {
             if (truncate && repartitionTemp.size() > 10) {
-                const double threshold (0.00001);
-                const int minIdx = int (floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp)));
-                const int maxIdx = int (ceil(vector_interpolate_idx_for_value((1. - threshold) * lastRepVal, repartitionTemp)));
+                const double threshold = 0.00001;
+                const int minIdx = int (floor(vector_interpolate_idx_for_value(double(threshold * lastRepVal), repartitionTemp)));
+                const int maxIdx = int (ceil(vector_interpolate_idx_for_value(double ((1. - threshold) * lastRepVal), repartitionTemp)));
 
                 tminCal = mTminRefCurve + minIdx * mCalibration->mStep;
                 tmaxCal = mTminRefCurve + maxIdx * mCalibration->mStep;
@@ -665,7 +665,7 @@ void Date::calibrate(const StudyPeriodSettings priod_settings, Project *project,
                 mCalibration->mRepartition = repartitionTemp;
             }
             // Stretch repartition curve so it goes from 0 to 1
-            mCalibration->mRepartition = stretch_vector(mCalibration->mRepartition, 0., 1.);
+            mCalibration->mRepartition = stretch_vector(mCalibration->mRepartition, (double)0., (double)1.);
 
             // Approximation : even if the calib has been truncated, we consider its area to be = 1
             mCalibration->mVector = equal_areas(mCalibration->mVector, mCalibration->mStep, 1.);
@@ -1013,9 +1013,9 @@ void Date::calibrateWiggle(const StudyPeriodSettings settings, Project *project)
      * ------------------------------------------------------------------ */
     if (mWiggleCalibration->mRepartition.last() > 0.) {
 
-        const double threshold (0.00001);
-        const int minIdx = int (floor(vector_interpolate_idx_for_value(threshold * lastRep, mWiggleCalibration->mRepartition)));
-        const int maxIdx = int (ceil(vector_interpolate_idx_for_value((1. - threshold) * lastRep, mWiggleCalibration->mRepartition)));
+        const double threshold = 0.00001;
+        const int minIdx = int (floor(vector_interpolate_idx_for_value(double(threshold * lastRep), mWiggleCalibration->mRepartition)));
+        const int maxIdx = int (ceil(vector_interpolate_idx_for_value(double((1. - threshold) * lastRep), mWiggleCalibration->mRepartition)));
 
         const double tminCal = mWiggleCalibration->mTmin + minIdx * settings.mStep;
         const double tmaxCal = mWiggleCalibration->mTmin + maxIdx * settings.mStep;
