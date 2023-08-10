@@ -287,6 +287,7 @@ protected:
     qreal mSubTitleHeight;
 
     QStaticText mTitle;
+    QStaticText mCommentTitle;
     QStaticText mSubTitle;
     QColor mBackgroundColor;
     QColor mTitleBarColor;
@@ -303,6 +304,8 @@ public:
 
     explicit GraphTitle(QString title, QString subTitle, QWidget* parent = nullptr);
     explicit GraphTitle(QString title, QString subTitle, QColor backGround, QWidget* parent = nullptr);
+
+    explicit GraphTitle(QString title, QString commentTitle, QString subTitle, QWidget* parent = nullptr);
 
     void paintEvent(QPaintEvent*);
     void repaintGraph(const bool aAlsoPaintBackground);

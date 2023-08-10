@@ -63,11 +63,11 @@ public:
 
     ~MultiCalibrationView();
 
-    void setEventsList(const QList<Event*> &list) {mEventsList = list;}
+    void setEventsList(const QList<Event*> &list) { mEventsList = list;}
     void setProject(Project *project) {mProject = project;}
 
     void updateGraphList();
-    void initScale (const double &majorScale, const int &minorScale) { mMajorScale= majorScale; mMinorScale = minorScale;}
+    void initScale (const double &majorScale, const int minorScale) { mMajorScale= majorScale; mMinorScale = minorScale;}
     void initScale (const Scale &s) { mMajorScale = s.mark; mMinorScale = s.tip;}
 
 

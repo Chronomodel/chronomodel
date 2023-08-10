@@ -427,9 +427,9 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
 
     QVector<QJsonObject> selectedEvents;
 
-    // const bool curveModel = mProject->isCurve();
-    // CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
-    // CurveSettings::VariableType variableType = static_cast<CurveSettings::VariableType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_VARIABLE_TYPE).toInt());
+     const bool curveModel = mProject->isCurve();
+     CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
+     CurveSettings::VariableType variableType = static_cast<CurveSettings::VariableType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_VARIABLE_TYPE).toInt());
 
     for (auto&& ev : events) {
        QJsonObject jsonEv = ev.toObject();
@@ -449,29 +449,23 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                               ev.value(STATE_COLOR_GREEN).toInt(),
                               ev.value(STATE_COLOR_BLUE).toInt());
 
+        const QString curveDescription = curveModel ? Event::curveDescriptionFromJsonEvent(ev, processType, variableType): "";
+
         if (ev.value(STATE_EVENT_TYPE).toInt() == Event::eBound) {
 
             const double fixedValue = ev.value(STATE_EVENT_KNOWN_FIXED).toDouble();
             const double tFixedFormated = DateUtils::convertToAppSettingsFormat( fixedValue);
 
-            const GraphCurve &calibCurve = horizontalSection( qMakePair(tFixedFormated, tFixedFormated), "Bound", penColor, QBrush(brushColor));
-
-            GraphView* calibGraph = new GraphView(this);
-            const QString boundName (ev.value(STATE_NAME).toString());
-          /*  if (curveModel) {
-                QString curveDescription = curveModel ? Event::curveDescriptionFromJsonEvent(ev, processType, variableType): "";
-                GraphTitle* titleGraph = new GraphTitle(tr("Bound : %1").arg(boundName) , curveDescription, this);
-                titleGraph->setTitleBarColor(color);
-                graphList.append(titleGraph);
-
-            } else { */
-            graphList.append(new GraphTitle(tr("Bound : %1").arg(boundName), this));
+            const QString boundName = ev.value(STATE_NAME).toString();
+            const QString valueStr = locale().toString(tFixedFormated) + " " + DateUtils::getAppSettingsFormatStr();
+            graphList.append(new GraphTitle(tr("Bound : %1").arg(boundName),  curveDescription, QString("Fixed value : %1 ").arg(valueStr), this));
             colorList.append(color);
 
-           // }
 
+            GraphView* calibGraph = new GraphView(this);
             calibGraph->setRangeY(0., 1.);
 
+            const GraphCurve &calibCurve = horizontalSection( qMakePair(tFixedFormated, tFixedFormated), "Bound", penColor, QBrush(brushColor));
             calibGraph->add_curve(calibCurve);
 
             calibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
@@ -504,7 +498,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
 
                 GraphCurve calibCurve;
                 GraphView* calibGraph = new GraphView(this);
-                //type_data yMax = 0.;
+
                  if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.isEmpty()) {
                     calibCurve = densityCurve(d.getFormatedCalibToShow(), "Calibration", penColor);
 
@@ -513,7 +507,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                     // Drawing the wiggle
                     if (d.mDeltaType !=  Date::eDeltaNone) {
 
-                        const QMap<double, double> &calibWiggle = normalize_map(d.getFormatedWiggleCalibToShow(), map_max_value(calibCurve.mData));
+                        const QMap<double, double> &calibWiggle = normalize_map(d.getFormatedWiggleCalibToShow(), map_max_value(calibCurve.mData).value());
                         const GraphCurve &curveWiggle = densityCurve(calibWiggle, "Wiggle", Qt::red);
 
                         calibGraph->add_curve(curveWiggle);
@@ -526,16 +520,9 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
 
                 listAxisVisible.append(true);
                 if (&ev != preEvent) {
-
-                  /*  if (curveModel) {
-                        graphList.append(new GraphTitle(tr("%1 %2").arg(eventName, curveDescription), "", color, this));
-
-                    } else { */
-                        graphList.append(new GraphTitle(tr("Event : %1").arg(eventName), d.mName, this));
-
-                  //  }
-
+                    graphList.append(new GraphTitle(tr("Event : %1").arg(eventName), curveDescription, d.mName, this));
                     colorList.append(color);
+
                 } else {
                     graphList.append(new GraphTitle("", d.mName, this));
                     colorList.append(color);
@@ -546,7 +533,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                 preEvent =  &ev ;
 
 
-                if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.isEmpty()) {
+                if (d.mIsValid && d.mCalibration != nullptr && !d.mCalibration->mVector.isEmpty()) {
                     // hpd is calculate only on the study Period
                     const QMap<type_data, type_data> &subData = getMapDataInRange(calibCurve.mData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
@@ -563,10 +550,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                     calibGraph->add_curve(hpdCurve);
 
                     // update max inside the display period , it's done with updateGraphZoom()
-                  /*  const QMap<type_data, type_data> subDisplay = getMapDataInRange(calibCurve.mData, mTminDisplay, mTmaxDisplay);
-                    yMax = std::max(yMax, map_max_value(subDisplay));
-                    calibGraph->setRangeY(0., yMax);
-                  */
+
                     calibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
                     calibGraph->setFormatFunctX(nullptr);
                     calibGraph->setFormatFunctY(nullptr);
@@ -1341,14 +1325,14 @@ void MultiCalibrationView::updateGraphsZoom()
                 if (subDisplay.isEmpty()) {
                     yMax = 0;
                 } else {
-                    yMax = map_max_value(subDisplay);
+                    yMax = map_max_value(subDisplay).value();
                 }
 
                 GraphCurve* wiggleCurve = gr->getCurve("Wiggle");
                 if (wiggleCurve) {
                     const QMap<type_data, type_data> &subDisplayWiggle = getMapDataInRange(wiggleCurve->mData, mTminDisplay, mTmaxDisplay);
                     if (!subDisplayWiggle.isEmpty()) {
-                        yMax = std::max(yMax, map_max_value(subDisplayWiggle));
+                        yMax = std::max(yMax, map_max_value(subDisplayWiggle).value());
                     }
                 }
 
@@ -1804,7 +1788,7 @@ void MultiCalibrationView::showStat()
        mResultText = "";
        for (auto& ev : selectedEvents) {
 
-           QString curveDescription = curveModel ? Event::curveDescriptionFromJsonEvent(ev, processType, variableType): "";
+           const QString curveDescription = curveModel ? Event::curveDescriptionFromJsonEvent(ev, processType, variableType): "";
 
            // Insert the Event's Name only if different to the previous Event's name
            QString eventName (ev.value(STATE_NAME).toString() + " " + curveDescription);
@@ -1846,7 +1830,7 @@ void MultiCalibrationView::showStat()
                        if (!isUnif) {
                            d.autoSetTiSampler(true); // needed if calibration is not done
 
-                           QMap<double, double> calibMap = d.getFormatedCalibMap();
+                           const QMap<double, double> &calibMap = d.getFormatedCalibMap();
                            // hpd is calculate only on the study Period
 
                            QMap<double, double>  subData = calibMap;

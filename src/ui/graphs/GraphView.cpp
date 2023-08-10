@@ -255,21 +255,21 @@ void GraphView::adjustYScale()
                     const auto &curveInf = curve.mShape.first;
                     const auto &curveSup = curve.mShape.second;
                     const QMap<qreal, qreal> &subDataInf = getMapDataInRange(curveInf, mCurrentMinX, mCurrentMaxX);
-                    if (!subDataInf.empty()) yMin = std::min(yMin, map_min_value(subDataInf));
+                    if (!subDataInf.empty()) yMin = std::min(yMin, map_min_value(subDataInf).value());
 
                     const QMap<qreal, qreal> &subDataSup = getMapDataInRange(curveSup, mCurrentMinX, mCurrentMaxX);
-                    if (!subDataSup.empty()) yMax = std::max(yMax, map_max_value(subDataSup));
+                    if (!subDataSup.empty()) yMax = std::max(yMax, map_max_value(subDataSup).value());
 
                   //  auto yMax2 = std::max(yMax, map_max_value(subDataSup, mCurrentMinX, mCurrentMaxX));
 
                 } else if (!curve.mData.empty()) {
-                    yMax = std::max(yMax, map_max_value(curve.mData, mCurrentMinX, mCurrentMaxX));
+                    yMax = std::max(yMax, map_max_value(curve.mData, mCurrentMinX, mCurrentMaxX).value());
                     /*const QMap<qreal, qreal> &subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
                     if (!subData.empty()) {
                        // yMin = std::min(yMin, map_min_value(subData));
                         yMax = std::max(yMax, map_max_value(subData));
                     }
-                    */
+*/
 
                     yMin = 0.;//
                 }
@@ -2515,6 +2515,7 @@ bool GraphView::isShow()
  */
 GraphTitle::GraphTitle(QWidget *parent):
     mTitle("myTitle"),
+    mCommentTitle(""),
     mSubTitle(""),
     mBackgroundColor(Qt::white),
     mTitleBarColor(Qt::white),
@@ -2525,7 +2526,6 @@ GraphTitle::GraphTitle(QWidget *parent):
     mMarginTop = 0;
     mMarginBottom = 0;
     mMarginLeft = 0;
-
 
     QFont boldFont (font());
     boldFont.setBold(true);
@@ -2544,6 +2544,7 @@ GraphTitle::GraphTitle(QWidget *parent):
  */
 GraphTitle:: GraphTitle(QString title, QWidget* parent):
     mTitle(title),
+    mCommentTitle(""),
     mSubTitle(""),
     mBackgroundColor(Qt::white),
     mTitleBarColor(Qt::white),
@@ -2567,6 +2568,7 @@ GraphTitle:: GraphTitle(QString title, QWidget* parent):
 
 GraphTitle::GraphTitle(QString title, QColor titleBarColor, QWidget* parent):
     mTitle(title),
+    mCommentTitle(""),
     mSubTitle(""),
     mBackgroundColor(Qt::white),
     mTitleBarColor(titleBarColor),
@@ -2590,6 +2592,7 @@ GraphTitle::GraphTitle(QString title, QColor titleBarColor, QWidget* parent):
 
 GraphTitle::GraphTitle(QString title, QString subTitle, QWidget* parent):
     mTitle(title),
+    mCommentTitle(""),
     mSubTitle(subTitle),
     mBackgroundColor(Qt::white),
     mTitleBarColor(Qt::white),
@@ -2633,6 +2636,29 @@ GraphTitle::GraphTitle(QString title, QString subTitle, QColor backGround, QWidg
     mSubTitleHeight = QFontMetrics(itaFont).height();
 }
 
+GraphTitle::GraphTitle(QString title, QString commentTitle, QString subTitle, QWidget* parent):
+    mTitle(title),
+    mCommentTitle(commentTitle),
+    mSubTitle(subTitle),
+    mBackgroundColor(Qt::white),
+    mTitleBarColor(Qt::white)
+{
+    GraphViewAbstract::setParent(parent);
+
+    QFont boldFont (font());
+    boldFont.setBold(true);
+    mTitleHeight = QFontMetrics(boldFont).height();
+
+    mMarginTop =  mTitleHeight/2. ;
+    mMarginBottom = 0;
+    mMarginLeft = 20;
+
+    QFont itaFont (font());
+    itaFont.setItalic(true);
+    mSubTitleHeight = QFontMetrics(itaFont).height();
+}
+
+
 GraphTitle::~GraphTitle()
 {
 
@@ -2666,12 +2692,21 @@ void GraphTitle::paintEvent(QPaintEvent*)
             p.setPen(Qt::black);
             QFont boldFont (font());
             boldFont.setBold(true);
-            p.setFont(boldFont);
-            qreal fontShift = QFontMetrics(boldFont).height()/2.;
-            p.drawStaticText(mMarginLeft, mTitleHeight/2. - fontShift + mMarginTop, mTitle);
 
             QFont itaFont (font());
             itaFont.setItalic(true);
+
+            p.setFont(boldFont);
+            qreal fontShift = QFontMetrics(boldFont).height()/2.;
+            p.drawStaticText(mMarginLeft, mTitleHeight/2. - fontShift + mMarginTop, mTitle);
+            const int shift = QFontMetrics(boldFont).horizontalAdvance(mTitle.text());
+
+            if (!mCommentTitle.text().isEmpty()) {
+                p.setFont(itaFont);
+                p.drawStaticText(mMarginLeft + shift, mTitleHeight/2. - fontShift + mMarginTop, mCommentTitle);
+
+            }
+
             p.setFont(itaFont);
             fontShift = QFontMetrics(itaFont).height()/2.;
             p.drawStaticText(mMarginLeft, mTitleHeight + mSubTitleHeight/2. - fontShift + mMarginTop, mSubTitle);

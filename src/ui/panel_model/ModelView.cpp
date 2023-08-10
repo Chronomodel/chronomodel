@@ -345,7 +345,11 @@ void ModelView::setProject(Project* project)
     mPhasesScene->setProject(mProject);
     mEventsScene->setProject(mProject);
 
-    mCurveSettingsView->setProject(mProject);
+    if (mProject->isCurve()) {
+        mCurveSettingsView->setProject(mProject);
+    }
+
+    updateCurveButton();
 
     if (mProject && !projectExist) {
         connectScenes();
@@ -380,6 +384,7 @@ void ModelView::setProject(Project* project)
     mEventPropertiesView->initEvent();
 
     mMultiCalibrationView->setEventsList(QList<Event*> ());
+    mMultiCalibrationView->updateGraphList();
     applyAppSettings(); // do phase->update()
 }
 
