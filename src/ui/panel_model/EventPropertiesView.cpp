@@ -600,7 +600,7 @@ void EventPropertiesView::updateKnownGraph()
 
     Bound bound = Bound::fromJson(*mEvent);
 
-    if ( (tmin>bound.mFixed) || (bound.mFixed>tmax) )
+    if ( (tmin > bound.mFixed) || (bound.mFixed > tmax) )
         return;
 
     bound.updateValues(tmin, tmax,step );
@@ -609,7 +609,7 @@ void EventPropertiesView::updateKnownGraph()
 
     mKnownGraph->setCurrentX(tmin,tmax);
 
-    double max = map_max_value(bound.mValues);
+    double max = map_max_value(bound.mValues).value();
     max = (max == 0.) ? 1. : max;
     mKnownGraph->setRangeY(0, max);
     mKnownGraph->showYAxisValues(false);

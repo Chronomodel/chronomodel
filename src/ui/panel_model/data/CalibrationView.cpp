@@ -131,8 +131,8 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mEndEdit->setText("1000");
 
     mDisplayStudyBut = new Button(tr("Study Period Display"), this);
-    //mDisplayStudyBut->setFixedHeight(25);
     mDisplayStudyBut->setToolTip(tr("Restore view with the study period span"));
+    mDisplayStudyBut->setMinimumWidth(fontMetrics().horizontalAdvance(mDisplayStudyBut->text()) + 10);
 
 
     mMajorScaleLab = new Label(tr("Maj. Int"), this);
@@ -341,7 +341,7 @@ void CalibrationView::updateGraphs()
             //if (!wiggleCalibMap.isEmpty()) {
             if (mDate.mDeltaType != Date::eDeltaNone) {
                 const QMap<double, double> &wiggleCalibMap =  mDate.getFormatedWiggleCalibToShow();
-                const QMap<double, double> &calibWiggle = normalize_map(wiggleCalibMap, map_max_value(calibCurve.mData));
+                const QMap<double, double> &calibWiggle = normalize_map(wiggleCalibMap, map_max_value(calibCurve.mData).value());
                 calibWiggleCurve = densityCurve(calibWiggle, "Wiggle", Qt::red);
 
                 mCalibGraph->add_curve(calibWiggleCurve);
@@ -367,7 +367,7 @@ void CalibrationView::updateGraphs()
                 hpdCurve.mBrush = brushColor;
                 hpdCurve.mIsRectFromZero = true;
 
-                hpdCurve.mData = normalize_map(hpd, map_max_value(calibMap));
+                hpdCurve.mData = normalize_map(hpd, map_max_value(calibMap).value());
                 mCalibGraph->add_curve(hpdCurve);
 
                 // update max inside the display period
@@ -375,11 +375,11 @@ void CalibrationView::updateGraphs()
                 subDisplayCalib = getMapDataInRange(subDisplayCalib, mTminDisplay, mTmaxDisplay);
                 if (!subDisplayCalib.isEmpty()) {
 
-                    type_data yMax = map_max_value(subDisplayCalib);
+                    type_data yMax = map_max_value(subDisplayCalib).value();
 
                     if (mDate.mDeltaType != Date::eDeltaNone) {
                         QMap<type_data, type_data> subDisplayWiggle = getMapDataInRange(calibWiggleCurve.mData, mTminDisplay, mTmaxDisplay);
-                        yMax = std::max( yMax, map_max_value(subDisplayWiggle));
+                        yMax = std::max( yMax, map_max_value(subDisplayWiggle).value());
                     }
 
                     mCalibGraph->setRangeY(0., yMax);
@@ -703,7 +703,7 @@ void CalibrationView::updateLayout()
     const int yPosBottomBar0 = mDrawing->y() + mDrawing->height();
     const int yPosBottomBar1 = yPosBottomBar0 + textHeight + 2;
 
-    const int buttonWidth = mDisplayStudyBut->width();
+    const int buttonWidth =   mDisplayStudyBut->width();
 
     const int labelWidth = std::min( fontMetrics().horizontalAdvance("-1000000") , (graphWidth - buttonWidth) /5);
     const int editWidth = labelWidth;

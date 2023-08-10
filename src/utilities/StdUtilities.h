@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -89,6 +89,44 @@ double safeLog(const double& x, int n = 5);
 
 void checkFloatingPointException(const QString& infos = QString());
 
+
+QVector<double> normalize_vector(const QVector<double> &vector);
+QVector<float> normalize_vector(const QVector<float> &vector);
+
+QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const QMap<double, double>& mapWithTargetArea);
+QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const QMap<float, float>& mapWithTargetArea);
+QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const double targetArea);
+QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const float targetArea);
+
+QVector<double> equal_areas(const QVector<double>& data, const double step, const double area);
+QVector<float> equal_areas(const QVector<float>& data, const float step, const float area);
+
+
+QMap<float, float> vector_to_map(const QVector<float>& data, const float min, const float max, const float step);
+QMap<double, double> vector_to_map(const QVector<double>& data, const double min, const double max, const double step);
+QMap<double, double> vector_to_map(const QVector<int> &data, const double min, const double max, const double step);
+
+/*double vector_interpolate_idx_for_value(const double value, const QVector<double>& vector);
+double vector_interpolate_idx_for_value(const double value, const std::vector<double>& vector);
+float vector_interpolate_idx_for_value(const float value, const QVector<float>& vector);
+*/
+
+double interpolate_value_from_curve(const double t, const QVector<double>& curve,const double curveTmin, const double curveTmax);
+double interpolate_value_from_curve(const double x, const std::vector<double>& curve,const double Xmin, const double Xmax);
+
+double map_area(const QMap<double, double>& map);
+float map_area(const QMap<float, float>& map);
+double map_area(const QMap<int, double>& density);
+double map_area(const std::map<double, double> &map);
+
+inline double surface_on_theta (std::map<double, double>::const_iterator iter_on_theta );
+const std::map<double, double> create_HPD2(const QMap<double, double>& density, const double threshold = 95.);
+
+QVector<double> vector_to_histo(const QVector<double> &vector, const double tmin, const double tmax, const int nbPts);
+
+
+#pragma mark Template Function
+
 template <typename T, typename V>
 inline V interpolate(const T& x, const T& x0, const T& x1, const V& y0, const V& y1)
 {
@@ -96,6 +134,52 @@ inline V interpolate(const T& x, const T& x0, const T& x1, const V& y0, const V&
     //return (y1 + (y2 - y1) * V((x - x1) / (x2 - x1)) ); // schoolbook code
 
     return std::lerp(y0, y1, V((x - x0) / (x1 - x0)));
+}
+
+/**
+ * @brief This only works for strictly increasing functions!
+ * @return interpolated index for a given value. If the value is smaller than all vector values, 0 is returned. If the value is greater than all vector values, (vector.size() - 1) is returned.
+ */
+template <template<typename...> class Container, class T >
+T vector_interpolate_idx_for_value(const T value, const Container<T> &vector)
+{
+    int idxInf = 0;
+    int idxSup = vector.size() - 1;
+
+    if (value < vector.first())
+        return T (idxInf);
+
+    if  (value > vector.last())
+        return  T (idxSup);
+
+    // Dichotomie, we can't use indexOf because we don't know the step between each value in the Qvector
+
+    if (idxSup > idxInf) {
+        do {
+            const int idxMid = idxInf + int (floor((idxSup - idxInf) / 2.));
+            const T valueMid = vector.at(idxMid);
+
+            if (value < valueMid)
+                idxSup = idxMid;
+            else
+                idxInf = idxMid;
+
+        } while (idxSup - idxInf > 1);
+
+        const T valueInf = vector.at(idxInf);
+        const T valueSup = vector.at(idxSup);
+
+        T prop = 0.;
+        // prevent valueSup=valueInf because in this case prop = NaN
+        if (valueSup > valueInf)
+            prop = (value - valueInf) / (valueSup - valueInf);
+
+        const T idx = T (idxInf) + prop;
+
+        return idx;
+    }
+
+    return T (0);
 }
 
 template <typename T, typename U>
@@ -130,7 +214,7 @@ T range_min_value(const C<T>& range)
 
 
 template <class U, class T>
-T map_max_value(const QMap<U, T> &map)
+typename QMap<U, T>::const_iterator map_max_value(const QMap<U, T> &map)
 {
     typename QMap<U, T>::const_iterator i = map.cbegin();
     typename QMap<U, T>::const_iterator biggest = i;
@@ -139,38 +223,48 @@ T map_max_value(const QMap<U, T> &map)
     for (; i != map.cend(); ++i)
         if (*i > *biggest )  biggest = i;
 
-    return *biggest;
+    return biggest;
 }
 
-
+/**
+ * @brief We assume that min and max are in the values of the map
+ * @param map
+ * @param min
+ * @param max
+ * @return Returns a pointer to the element with the largest value
+ */
 template <class U, class T>
-T map_max_value(const QMap<U, T> &map, U min, U max)
+typename QMap<U, T>::const_iterator map_max_value(const QMap<U, T> &map, U min, U max)
 {
-    if (map.firstKey()>max || map.lastKey()<min)
-        return -INFINITY;
-
     typename QMap<U, T>::const_iterator i = map.cbegin();
-    typename QMap<U, T>::const_iterator biggest = i;
+
     while (i.key()<min)
         ++i;
 
+    typename QMap<U, T>::const_iterator biggest = i;
     for (; i != map.cend() && i.key()<=max; ++i)
         if (*i > *biggest )  biggest = i;
 
-    return *biggest;
+    return biggest;
 }
 
+/**
+ * @brief We assume that min and max are in the values of the map
+ * @param map
+ * @param min
+ * @param max
+ * @return Returns a pointer to the element with the smallest value
+ */
 template <class U, class T>
-T map_min_value(const QMap<U, T> &map)
+typename QMap<U, T>::const_iterator map_min_value(const QMap<U, T> &map)
 {
     typename QMap<U, T>::const_iterator i = map.cbegin();
-    typename QMap<U, T>::const_iterator smallest = i;
-    ++i;
 
+    typename QMap<U, T>::const_iterator smallest = i;
     for (; i != map.cend(); ++i)
         if (*i < *smallest )  smallest = i;
 
-    return *smallest;
+    return smallest;
 
 }
 
@@ -225,8 +319,8 @@ T sum2(const QVector<T> &vector)
     return sum;
 }
 
-template<typename T>
-T sumShifted(const QVector<T> &vector, const T &shift)
+template <template<typename...> class Container, class T >
+T sumShifted(const Container<T> &vector, const T &shift)
 {
     T sum = 0;
     /*std::for_each(vector.cbegin(), vector.cend(), [&sum, &shift](T& v){
@@ -238,8 +332,8 @@ T sumShifted(const QVector<T> &vector, const T &shift)
     return sum;
 }
 
-template<typename T>
-T sum2Shifted(const QVector<T> &vector, const T &shift)
+template <template<typename...> class Container, class T >
+T sum2Shifted(const Container<T> &vector, const T &shift)
 {
     T sum = 0;
     /*std::for_each(vector.cbegin(), vector.cend(), [&sum, &shift](T& v){
@@ -252,8 +346,8 @@ T sum2Shifted(const QVector<T> &vector, const T &shift)
     return sum;
 }
 
-template <typename T>
-T mean(const QVector<T> &vector)
+template <template<typename...> class Container, class T >
+T mean(const Container<T> &vector)
 {
     return sum(vector)/ T(vector.size());
 }
@@ -272,15 +366,16 @@ T sinc(const T x, const T L=1)
 }
 
 
-template<typename T>
-QMap<T, T> normalize_map(const QMap<T, T> &map, const T max = 1)
+
+template <template<typename...> class Container, class T >
+Container<T, T> normalize_map(const Container<T, T> &map, const T max = 1)
 {
-    QMap<T, T> result;
+    Container<T, T> result;
     if (!map.isEmpty()) {
-        T max_value = map_max_value(map);
+        const T max_value = map_max_value(map).value();
 
         // can be done with std::generate !!
-        for( typename QMap<T, T>::const_iterator it = map.begin(); it != map.end(); ++it)
+        for( typename Container<T, T>::const_iterator it = map.begin(); it != map.end(); ++it)
             result[it.key()] = (it.value() / max_value)*max;
 
     }
@@ -288,41 +383,31 @@ QMap<T, T> normalize_map(const QMap<T, T> &map, const T max = 1)
     return result;
 }
 
-QVector<double> normalize_vector(const QVector<double>& aVector);
-QVector<float> normalize_vector(const QVector<float>& aVector);
+/**
+ @brief This function transforms a Container (template class, ex:QVector) turning its minimum value to "from" and its maximum value is "to" and adjusting other values accordingly
+ **/
+template <template<typename...> class Container, class T >
+Container<T> stretch_vector(const Container<T> &vector, const T from, const T to)
+{
+    Container<T> histo;
+    typename Container<T>::const_iterator it = vector.begin(); // here the template class is a container::const_iterator
+    if (it != vector.end()) {
+        const std::pair<typename Container<T>::const_iterator, typename Container<T>::const_iterator> min_max = std::minmax_element(vector.begin(), vector.end());
+        const T min = *min_max.first;
+        const T max = *min_max.second;
 
-QVector<double> stretch_vector(const QVector<double>& aVector, const double from, const double to);
-QVector<float> stretch_vector(const QVector<float>& aVector, const float from, const float to);
+        if (min < max) {
+            for (const auto& val : vector)
+                histo.push_back(from + (to - from) * (val - min) / (max - min));
 
-QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const QMap<double, double>& mapWithTargetArea);
-QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const QMap<float, float>& mapWithTargetArea);
-QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const double targetArea);
-QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const float targetArea);
+        } else // Just 1 value... set it to "from" (setting it to "to" could also be done though...)
+            histo.push_back(to);
 
-QVector<double> equal_areas(const QVector<double>& data, const double step, const double area);
-QVector<float> equal_areas(const QVector<float>& data, const float step, const float area);
+    }
+    return histo;
+}
 
 
-QMap<float, float> vector_to_map(const QVector<float>& data, const float min, const float max, const float step);
-QMap<double, double> vector_to_map(const QVector<double>& data, const double min, const double max, const double step);
-QMap<double, double> vector_to_map(const QVector<int> &data, const double min, const double max, const double step);
-
-double vector_interpolate_idx_for_value(const double value, const QVector<double>& vector);
-double vector_interpolate_idx_for_value(const double value, const std::vector<double>& vector);
-float vector_interpolate_idx_for_value(const float value, const QVector<float>& vector);
-
-double interpolate_value_from_curve(const double t, const QVector<double>& curve,const double curveTmin, const double curveTmax);
-double interpolate_value_from_curve(const double x, const std::vector<double>& curve,const double Xmin, const double Xmax);
-
-double map_area(const QMap<double, double>& map);
-float map_area(const QMap<float, float>& map);
-double map_area(const QMap<int, double>& density);
-double map_area(const std::map<double, double>& density);
-
-inline double surface_on_theta (std::map<double, double>::const_iterator iter_on_theta );
-const std::map<double, double> create_HPD2(const QMap<double, double>& density, const double threshold = 95.);
-
-QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmin, const double tmax, const int nbPts);
 
 inline double diff_erf(double a, double b, double mu = 0., double sigma = 1.) {
     return 0.5*(erf((b-mu)/(sigma*M_SQRT2)) - erf((a-mu)/(sigma*M_SQRT2)));

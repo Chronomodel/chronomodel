@@ -180,28 +180,28 @@ void checkFloatingPointException(const QString& infos)
 /**
  @brief This function transforms a QVector turning its maximum value is 1 and adjusting other values accordingly
  **/
-QVector<double> normalize_vector(const QVector<double>& aVector)
+QVector<double> normalize_vector(const QVector<double> &vector)
 {
     QVector<double> histo;
 
-    QVector<double>::const_iterator it = max_element(aVector.begin(), aVector.end());
-    if (it != aVector.end()) {
+    QVector<double>::const_iterator it = max_element(vector.begin(), vector.end());
+    if (it != vector.end()) {
         const double max_value = *it;
 
-        for (const auto& value : aVector)
+        for (const auto& value : vector)
             histo.push_back(value/max_value);
     }
     return histo;
 }
 
-QVector<float> normalize_vector(const QVector<float>& aVector)
+QVector<float> normalize_vector(const QVector<float>& vector)
 {
     QVector<float> histo;
 
-    QVector<float>::const_iterator it = max_element(aVector.begin(), aVector.end());
-    if (it != aVector.end()){
+    QVector<float>::const_iterator it = max_element(vector.begin(), vector.end());
+    if (it != vector.end()){
         float max_value = *it;
-        for (QVector<float>::const_iterator it = aVector.begin(); it != aVector.end(); ++it)
+        for (QVector<float>::const_iterator it = vector.begin(); it != vector.end(); ++it)
             histo.push_back((*it)/max_value);
 
     }
@@ -211,17 +211,18 @@ QVector<float> normalize_vector(const QVector<float>& aVector)
 /**
  @brief This function transforms a QVector turning its minimum value to "from" and its maximum value is "to" and adjusting other values accordingly
  **/
-QVector<double> stretch_vector(const QVector<double>& aVector, const double from, const double to)
+/*
+QVector<double> stretch_vector(const QVector<double> &vector, const double from, const double to)
 {
     QVector<double> histo;
-    QVector<double>::const_iterator it = aVector.constBegin();
-    if (it != aVector.constEnd()) {
-        const double min = *(min_element(aVector.constBegin(), aVector.constEnd()));
-        const double max = *(max_element(aVector.constBegin(), aVector.constEnd()));
+    QVector<double>::const_iterator it = vector.constBegin();
+    if (it != vector.constEnd()) {
+        const std::pair<QVector<double>::const_iterator, QVector<double>::const_iterator> min_max = std::minmax_element(begin(vector), end(vector));
+        const double min = *min_max.first;
+        const double max = *min_max.second;
 
         if (min < max) {
-            //for (QVector<double>::const_iterator it = aVector.constBegin(); it != aVector.constEnd(); ++it)
-            for (const auto& val : aVector)
+            for (const auto& val : vector)
                 histo.push_back(from + (to - from) * (val - min) / (max - min));
 
         } else // Just 1 value... set it to "from" (setting it to "to" could also be done though...)
@@ -230,16 +231,17 @@ QVector<double> stretch_vector(const QVector<double>& aVector, const double from
     }
     return histo;
 }
-QVector<float> stretch_vector(const QVector<float>& aVector, const float from, const float to)
+
+QVector<float> stretch_vector(const QVector<float>& vector, const float from, const float to)
 {
     QVector<float> histo;
-    QVector<float>::const_iterator it = aVector.constBegin();
-    if (it != aVector.constEnd()) {
-        const float min = *(min_element(aVector.constBegin(), aVector.constEnd()));
-        const float max = *(max_element(aVector.constBegin(), aVector.constEnd()));
+    QVector<float>::const_iterator it = vector.constBegin();
+    if (it != vector.constEnd()) {
+        const float min = *(min_element(vector.constBegin(), vector.constEnd()));
+        const float max = *(max_element(vector.constBegin(), vector.constEnd()));
 
         if (min < max) {
-            for (QVector<float>::const_iterator it = aVector.constBegin(); it != aVector.constEnd(); ++it)
+            for (QVector<float>::const_iterator it = vector.constBegin(); it != vector.constEnd(); ++it)
                 histo.push_back(from + (to - from) * (*it - min) / (max - min));
 
         } else {
@@ -249,6 +251,7 @@ QVector<float> stretch_vector(const QVector<float>& aVector, const float from, c
     }
     return histo;
 }
+*/
 
 QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const QMap<double, double>& mapWithTargetArea)
 {
@@ -513,132 +516,6 @@ QMap<float, float> vector_to_map(const QVector<float>& data, const float min, co
     }
     return map;
 }
-/**
- * @brief This works only for strictly increasing functions!
- * @return interpolated index for a the given value. If value is lower than all vector values, then 0 is returned. If value is upper than all vector values, then (vector.size() - 1) is returned.
- */
-double vector_interpolate_idx_for_value(const double value, const QVector<double>& vector)
-{
-    int idxInf = 0;
-    int idxSup = vector.size() - 1;
-
-    if (value<vector.first())
-        return double (idxInf);
-
-    if (value>vector.last())
-        return double (idxSup);
-
-    // Dichotomie, we can't use indexOf because we don't know the step between each value in the Qvector
-
-    if (idxSup > idxInf) {
-        do
-        {
-            const int idxMid = idxInf + int (floor((idxSup - idxInf) / 2.));
-            const double valueMid = vector.at(idxMid);
-
-            if (value < valueMid)
-                idxSup = idxMid;
-            else
-                idxInf = idxMid;
-
-        } while (idxSup - idxInf > 1);
-
-        const double valueInf = vector.at(idxInf);
-        const double valueSup = vector.at(idxSup);
-
-        double prop = 0.;
-        // prevent valueSup=valueInf because in this case prop = NaN
-        if (valueSup>valueInf)
-            prop = (value - valueInf) / (valueSup - valueInf);
-
-        const double idx = double (idxInf) + prop;
-
-        return idx;
-    }
-
-    return 0;
-}
-double vector_interpolate_idx_for_value(const double value, const std::vector<double>& vector)
-{
-    double idxInf = 0.;
-    double idxSup = vector.size() - 1;
-
-    if (value < vector.front())
-        return idxInf;
-
-    if (value > vector.back())
-        return idxSup;
-
-    // Dichotomie, we can't use indexOf because we don't know the step between each value in the Qvector
-
-    if (idxSup > idxInf) {
-        do
-        {
-            const int idxMid = (int)idxInf + int (floor((idxSup - idxInf) / 2.));
-            const double valueMid = vector.at(idxMid);
-
-            if (value < valueMid)
-                idxSup = idxMid;
-            else
-                idxInf = idxMid;
-
-        } while (idxSup - idxInf > 1);
-
-        const double valueInf = vector.at(idxInf);
-        const double valueSup = vector.at(idxSup);
-
-        double prop = 0.;
-        // prevent valueSup=valueInf because in this case prop = NaN
-        if (valueSup > valueInf)
-            prop = (value - valueInf) / (valueSup - valueInf);
-
-        const double idx = double (idxInf) + prop;
-
-        return idx;
-    }
-
-    return 0;
-}
-float vector_interpolate_idx_for_value(const float value, const QVector<float>& vector)
-{
-    int idxInf = 0;
-    int idxSup = vector.size() - 1;
-
-    if (value<vector.first())
-        return float (idxInf);
-
-    if  (value>vector.last())
-        return  float (idxSup);
-
-    // Dichotomie, we can't use indexOf because we don't know the step between each value in the Qvector
-
-    if (idxSup > idxInf) {
-        do {
-            const int idxMid = idxInf + int (floor((idxSup - idxInf) / 2.));
-            const float valueMid = vector.at(idxMid);
-
-            if (value < valueMid)
-                idxSup = idxMid;
-            else
-                idxInf = idxMid;
-
-        } while (idxSup - idxInf > 1);
-
-        const float valueInf = vector.at(idxInf);
-        const float valueSup = vector.at(idxSup);
-
-        float prop = 0.f;
-        // prevent valueSup=valueInf because in this case prop = NaN
-        if (valueSup>valueInf)
-            prop = (value - valueInf) / (valueSup - valueInf);
-
-        const float idx = float (idxInf) + prop;
-
-        return idx;
-    }
-
-    return 0.f;
-}
 
 /**
  * @brief interpolate_value_from_curve Allows you to find the value associated with a time in a curve.
@@ -676,7 +553,7 @@ double interpolate_value_from_curve(const double t, const QVector<double> & curv
 
 }
 
-double interpolate_value_from_curve(const double x, const std::vector<double>& curve,const double Xmin, const double Xmax)
+double interpolate_value_from_curve(const double x, const std::vector<double>& curve, const double Xmin, const double Xmax)
 {
      // We need at least two points to interpolate
     if (curve.size() < 2 || x <= Xmin) {
@@ -712,6 +589,7 @@ double surface_on_theta (std::map<double, double>::const_iterator iter_on_theta)
     const auto &next_iter = std::next(iter_on_theta);
     auto surface = (3.*iter_on_theta->second + prev_iter->second) * (iter_on_theta->first - prev_iter->first) / 8.;
     surface += (3.*iter_on_theta->second + next_iter->second) * (next_iter->first - iter_on_theta->first) /8.;
+
     return surface;
 
 }
@@ -820,20 +698,50 @@ const std::map<double, double> create_HPD2(const QMap<double, double>& density, 
 
 double map_area(const QMap<double, double> &map)
 {
-    if (map.size()<2)
+    return map_area(map.toStdMap());
+}
+
+float map_area(const QMap<float, float> &map)
+{
+    if (map.size() < 2)
+        return 0.f;
+
+    QMap<float, float>::const_iterator iter = map.cbegin();
+    float area = 0.f;
+
+    float lastV = iter.value();
+    float lastT = iter.key();
+
+    while (iter != map.cend()) {
+        const float v = iter.value();
+        const float t = iter.key();
+        if (lastV>0 && v>0)
+            area += (lastV+v)/2.f * (t-lastT);
+
+        lastV = v;
+        lastT = t;
+        ++iter;
+    }
+
+    return area;
+}
+
+double map_area(const std::map<double, double> &map)
+{
+    if (map.size() < 2)
         return 0.0;
 
-    QMap<double, double>::const_iterator iter = map.cbegin();
-    double srcArea = 0.;
+    std::map<double, double>::const_iterator iter = map.cbegin();
+    double area = 0.;
 
-    double lastV = iter.value();
-    double lastT = iter.key();
+    double lastV = iter->second;
+    double lastT = iter->first;
     ++iter;
     while (iter != map.cend())  {
-        const double v = iter.value();
-        const double t = iter.key();
+        const double v = iter->second;
+        const double t = iter->first;
         if (lastV>0 && v>0) {
-            srcArea += (lastV+v)/2. * (t-lastT);
+            area += (lastV+v)/2. * (t-lastT);
         }
         lastV = v;
         lastT = t;
@@ -842,59 +750,7 @@ double map_area(const QMap<double, double> &map)
         ++iter;
     }
 
-    return srcArea;
-}
-
-float map_area(const QMap<float, float> &map)
-{
-    if (map.size()<2)
-        return 0.f;
-
-    QMap<float, float>::const_iterator cIter = map.cbegin();
-    float srcArea = 0.f;
-
-    float lastV = cIter.value();
-    float lastT = cIter.key();
-
-    while (cIter != map.cend()) {
-        const float v = cIter.value();
-        const float t = cIter.key();
-        if (lastV>0 && v>0)
-            srcArea += (lastV+v)/2 * (t-lastT);
-
-        lastV = v;
-        lastT = t;
-        ++cIter;
-    }
-
-    return srcArea;
-}
-
-double map_area(const std::map<double, double> &density)
-{
-    if (density.size()<2)
-        return 0.0;
-
-    std::map<double, double>::const_iterator cIter = density.cbegin();
-    double srcArea = 0.;
-
-    double lastV = cIter->second;
-    double lastT = cIter->first;
-    ++cIter;
-    while (cIter != density.cend())  {
-        const double v = cIter->second;
-        const double t = cIter->first;
-        if (lastV>0 && v>0) {
-            srcArea += (lastV+v)/2. * (t-lastT);
-        }
-        lastV = v;
-        lastT = t;
-
-
-        ++cIter;
-    }
-
-    return srcArea;
+    return area;
 }
 
 
@@ -903,17 +759,16 @@ double map_area(const QMap<int, double>& density)
     return std::accumulate(density.constBegin(), density.constEnd(), 0., [](double sum, auto m){return sum + m;  });
 }
 
-QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmin, const double tmax, const int nbPts)
+QVector<double> vector_to_histo(const QVector<double> &vector, const double tmin, const double tmax, const int nbPts)
 {
-
     QVector<double> histo;
     histo.reserve(nbPts);
     histo.fill(0., nbPts);
     const double delta = (tmax - tmin) / (nbPts - 1);
 
-    const double denum = dataScr.size();
+    const double denum = vector.size();
 
-    for (QVector<double>::const_iterator iter = dataScr.cbegin(); iter != dataScr.cend(); ++iter) {
+    for (QVector<double>::const_iterator iter = vector.cbegin(); iter != vector.cend(); ++iter) {
         const double t = *iter;
 
         const double idx = (t - tmin) / delta;
