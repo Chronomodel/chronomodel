@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -48,36 +48,36 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <cmath>
 
 StudyPeriodSettings::StudyPeriodSettings():
-mTmin(0.),
-mTmax(0.),
-mStep(1.),
-mStepForced(false)
+    mTmin(0.),
+    mTmax(0.),
+    mStep(1.),
+    mStepForced(false)
 {
 
 }
 
-StudyPeriodSettings::StudyPeriodSettings(const StudyPeriodSettings& s)
+StudyPeriodSettings::StudyPeriodSettings(const StudyPeriodSettings &s)
 {
     copyFrom(s);
 }
 
-StudyPeriodSettings& StudyPeriodSettings::operator=(const StudyPeriodSettings& s)
+StudyPeriodSettings& StudyPeriodSettings::operator=(const StudyPeriodSettings &s)
 {
     copyFrom(s);
     return *this;
 }
 
-bool StudyPeriodSettings::operator!=(StudyPeriodSettings const& s) const
+bool StudyPeriodSettings::operator!=(StudyPeriodSettings const &s) const
 {
     return !isEqual(s);
 }
 
-bool StudyPeriodSettings::operator==( StudyPeriodSettings const& s) const
+bool StudyPeriodSettings::operator==( StudyPeriodSettings const &s) const
 {
     return isEqual(s);
 }
 
-bool StudyPeriodSettings::isEqual(StudyPeriodSettings const& s) const
+bool StudyPeriodSettings::isEqual(StudyPeriodSettings const &s) const
 {
     if (s.mTmin != mTmin ||
        s.mTmax != mTmax ||
@@ -88,7 +88,7 @@ bool StudyPeriodSettings::isEqual(StudyPeriodSettings const& s) const
         return true;
 }
 
-void StudyPeriodSettings::copyFrom(const StudyPeriodSettings& s)
+void StudyPeriodSettings::copyFrom(const StudyPeriodSettings &s)
 {
     mTmin = s.mTmin;
     mTmax = s.mTmax;

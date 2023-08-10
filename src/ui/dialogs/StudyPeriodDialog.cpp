@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -38,28 +38,25 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "StudyPeriodDialog.h"
-#include "Collapsible.h"
-#include "HelpWidget.h"
 #include "LineEdit.h"
-#include "Painting.h"
-#include "ModelUtilities.h"
+
 #include <QtWidgets>
 
 
 StudyPeriodDialog::StudyPeriodDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags),
-mMargin(5),
-mLineH(20),
-mButW(80),
-mButH(25)
+    mMargin(5),
+    mLineH(20),
+    mButW(80),
+    mButH(25)
 {
    setWindowTitle(tr("Study Period Settings"));
    //setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
 
     // -----------
-   mMinLab = new QLabel(tr("Start"), this);
+   mMinLab = new QLabel(tr("Start (BC/AD)"), this);
    mMinEdit = new LineEdit(this);
 
-   mMaxLab = new QLabel(tr("End"), this);
+   mMaxLab = new QLabel(tr("End (BC/AD)"), this);
    mMaxEdit = new LineEdit(this);
 
    QGridLayout* grid = new QGridLayout();
@@ -129,7 +126,7 @@ StudyPeriodDialog::~StudyPeriodDialog()
 {
 }
 
-void StudyPeriodDialog::setSettings(const StudyPeriodSettings& s)
+void StudyPeriodDialog::setSettings(const StudyPeriodSettings &s)
 {
     mMinEdit->setText(locale().toString(s.mTmin));
     mMaxEdit->setText(locale().toString(s.mTmax));
