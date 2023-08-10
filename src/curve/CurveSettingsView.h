@@ -58,7 +58,7 @@ public:
     virtual ~CurveSettingsView();
 
     void setSettings(const CurveSettings& settings);
-    CurveSettings getSettings();
+    CurveSettings getSettings() const;
     
     void setProject(Project *project);
     void setConnections(const bool doConnections);

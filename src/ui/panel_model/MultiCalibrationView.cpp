@@ -448,7 +448,6 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
         const QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
                               ev.value(STATE_COLOR_GREEN).toInt(),
                               ev.value(STATE_COLOR_BLUE).toInt());
-
         const QString curveDescription = curveModel ? Event::curveDescriptionFromJsonEvent(ev, processType, variableType): "";
 
         if (ev.value(STATE_EVENT_TYPE).toInt() == Event::eBound) {

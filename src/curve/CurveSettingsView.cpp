@@ -368,7 +368,7 @@ void CurveSettingsView::setSettings(const CurveSettings& settings)
     updateVisibilities();
 }
 
-CurveSettings CurveSettingsView::getSettings()
+CurveSettings CurveSettingsView::getSettings() const
 {
     CurveSettings settings;
 
@@ -478,9 +478,9 @@ void CurveSettingsView::reset()
 
 void CurveSettingsView::save()
 {
-    CurveSettings curveSettings = getSettings();
+    //const CurveSettings &curveSettings = getSettings();
     QJsonObject stateNext = mProject->mState;
-    stateNext[STATE_CURVE] = curveSettings.toJson();
+    stateNext[STATE_CURVE] = getSettings().toJson();
     mProject->pushProjectState(stateNext, CURVE_SETTINGS_UPDATED_REASON, true);
     emit newProcess(mProcessTypeInput->currentText());
 }
