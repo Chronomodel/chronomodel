@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -122,7 +122,6 @@ long double PluginMag::Likelihood(const double& t, const QJsonObject& data)
         errorI = alpha95 / 2.448l;
         mesureDecl = decl;
         errorD = alpha95 / (2.448l * cosl(incl * M_PIl / 180.l));
-
         break;
     case eIF:
         mesureIncl = incl;
@@ -524,7 +523,9 @@ QJsonObject PluginMag::checkValuesCompatibility(const QJsonObject& values)
 
     result[DATE_AM_REF_CURVEI_STR] = result.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
     result[DATE_AM_REF_CURVED_STR] = result.value(DATE_AM_REF_CURVED_STR).toString().toLower();
-    result[DATE_AM_REF_CURVED_STR] = result.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
+    result[DATE_AM_REF_CURVEF_STR] = result.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
+
+    result[DATE_AM_ITERATION_STR] = 500;
     return result;
 }
 
@@ -595,8 +596,10 @@ QJsonObject PluginMag::fromCSV(const QStringList& list,const QLocale &csvLocale)
         json.insert(DATE_AM_ERROR_F_STR, valError_f);
 
         json.insert(DATE_AM_REF_CURVEI_STR, list.at(7).toLower());
-        json.insert(DATE_AM_REF_CURVEI_STR, list.at(8).toLower());
-        json.insert(DATE_AM_REF_CURVEI_STR, list.at(9).toLower());
+        json.insert(DATE_AM_REF_CURVED_STR, list.at(8).toLower());
+        json.insert(DATE_AM_REF_CURVEF_STR, list.at(9).toLower());
+
+        json.insert(DATE_AM_ITERATION_STR, 500);
 
 
     }

@@ -288,7 +288,7 @@ QJsonObject PluginMagForm::getData()
     const double field = locale.toDouble(mFieldEdit->text());
     const double error_f = locale.toDouble(mFieldErrorEdit->text());
 
-    const double iteration_mcmc = locale.toDouble(mMCMCIterationEdit->text());
+    const int iteration_mcmc = locale.toInt(mMCMCIterationEdit->text());
     const QString refI_curve = mRefICombo->currentText();
     const QString refD_curve = mRefDCombo->currentText();
     const QString refF_curve = mRefFCombo->currentText();
@@ -323,8 +323,10 @@ void PluginMagForm::updateOptions()
     mIncLab->setVisible(showInc);
     mIncEdit->setVisible(showInc);
 
-    mRefILab->setVisible(showInc);
-    mRefICombo->setVisible(showInc);
+    const bool showRefInc = mIncRadio->isChecked() || mIDRadio->isChecked() ||
+                         mIFRadio->isChecked() || mIDFRadio->isChecked();
+    mRefILab->setVisible(showRefInc);
+    mRefICombo->setVisible(showRefInc);
 
     const bool showDec = mDecRadio->isChecked() || mIDRadio->isChecked() || mIDFRadio->isChecked();
     mDecLab->setVisible(showDec);
