@@ -330,15 +330,15 @@ void CalibrationView::updateGraphs()
         mResultsText->clear();
 
         if (mDate.mIsValid) {
-            const QMap<double, double> &calibMap = mDate.getFormatedCalibToShow();
-            const GraphCurve &calibCurve = densityCurve(calibMap, "Calibration", penColor);
+            const QMap<double, double> &calibToShow = mDate.getFormatedCalibToShow();
+            const GraphCurve &calibCurve = densityCurve(calibToShow, "Calibration", penColor);
 
             QFontMetrics fm (mCalibGraph->font());
             mCalibGraph->add_curve(calibCurve);
             mCalibGraph->setMarginBottom(fm.ascent() * 2.2);
 
             GraphCurve calibWiggleCurve;
-            //if (!wiggleCalibMap.isEmpty()) {
+
             if (mDate.mDeltaType != Date::eDeltaNone) {
                 const QMap<double, double> &wiggleCalibMap =  mDate.getFormatedWiggleCalibToShow();
                 const QMap<double, double> &calibWiggle = normalize_map(wiggleCalibMap, map_max_value(calibCurve.mData).value());
@@ -354,11 +354,10 @@ void CalibrationView::updateGraphs()
             // hpd results
             const double thresh = std::clamp(locale().toDouble(input), 0., 100.);
             // do QMap<type_data, type_data> mData; to calcul HPD on study Period
-            QMap<type_data, type_data> subData = mDate.getFormatedCalibMap();
-            subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+            const QMap<type_data, type_data> &periodCalib = getMapDataInRange(mDate.getFormatedCalibMap(), mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
 
-            const QMap<double, double> hpd (create_HPD2(subData, thresh));
+            const QMap<double, double> hpd (create_HPD2(periodCalib, thresh));
 
             if (!hpd.isEmpty()) {
                 GraphCurve hpdCurve;
@@ -367,23 +366,30 @@ void CalibrationView::updateGraphs()
                 hpdCurve.mBrush = brushColor;
                 hpdCurve.mIsRectFromZero = true;
 
-                hpdCurve.mData = normalize_map(hpd, map_max_value(calibMap).value());
-                mCalibGraph->add_curve(hpdCurve);
+                //hpdCurve.mData = normalize_map(hpd, map_max_value(calibMap).value());
+               // mCalibGraph->add_curve(hpdCurve);
 
                 // update max inside the display period
-                QMap<type_data, type_data> subDisplayCalib = calibCurve.mData;
-                subDisplayCalib = getMapDataInRange(subDisplayCalib, mTminDisplay, mTmaxDisplay);
-                if (!subDisplayCalib.isEmpty()) {
+                type_data yMax = 0;
+                QMap<type_data, type_data> displayCalib = getMapDataInRange(calibCurve.mData, mTminDisplay, mTmaxDisplay);
+                if (!displayCalib.isEmpty()) {
 
-                    type_data yMax = map_max_value(subDisplayCalib).value();
+                    yMax = map_max_value(displayCalib).value();
 
                     if (mDate.mDeltaType != Date::eDeltaNone) {
-                        QMap<type_data, type_data> subDisplayWiggle = getMapDataInRange(calibWiggleCurve.mData, mTminDisplay, mTmaxDisplay);
-                        yMax = std::max( yMax, map_max_value(subDisplayWiggle).value());
+                        //QMap<type_data, type_data> displayWiggle = getMapDataInRange(calibWiggleCurve.mData, mTminDisplay, mTmaxDisplay);
+                        yMax = std::max( yMax, map_max_value(calibWiggleCurve.mData, mTminDisplay, mTmaxDisplay).value());
                     }
 
                     mCalibGraph->setRangeY(0., yMax);
                 }
+
+                QMap<type_data, type_data> displayHpd = getMapDataInRange(hpd, mTminDisplay, mTmaxDisplay);
+
+                hpdCurve.mData = normalize_map(displayHpd, yMax);
+                mCalibGraph->add_curve(hpdCurve);
+
+
                 mCalibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
                 mCalibGraph->setFormatFunctX(nullptr);
                 mCalibGraph->setFormatFunctY(nullptr);
@@ -395,8 +401,8 @@ void CalibrationView::updateGraphs()
 
             DensityAnalysis results;
 
-            if (!subData.isEmpty()) {
-                results.funcAnalysis = analyseFunction(subData);
+            if (!periodCalib.isEmpty()) {
+                results.funcAnalysis = analyseFunction(periodCalib);
                 resultsStr += FunctionStatToString(results.funcAnalysis);
 
                 /* with the calibration we don't need the statistic on the trace*/
@@ -408,7 +414,7 @@ void CalibrationView::updateGraphs()
                  *  resultsStr += densityAnalysisToString(results,"<br>", false);
                */
 
-                const double realThresh = map_area(hpd) / map_area(subData);
+                const double realThresh = map_area(hpd) / map_area(periodCalib);
 
                 resultsStr +=  "<br> HPD (" + stringForLocal(100. * realThresh) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false) ;
 
@@ -470,7 +476,7 @@ void CalibrationView::updateGraphs()
                     if (d.toObject().value(STATE_DATE_DELTA_TYPE).toInt() == Date::eDeltaNone)
                         subDatesName.append(d.toObject().value(STATE_NAME).toString());
                     else
-                        subDatesName.append(d.toObject().value(STATE_NAME).toString() + " " +Date::getWiggleDesc(d.toObject()));
+                        subDatesName.append(d.toObject().value(STATE_NAME).toString() + " " + Date::getWiggleDesc(d.toObject()));
                 }
 
                 mDrawing->setRefComment(subDatesName.join(" ; "));
