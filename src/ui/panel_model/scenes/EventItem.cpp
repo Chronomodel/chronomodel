@@ -307,7 +307,6 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
     
     QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> droppedData = scene->decodeDataDrop(e);
     const QList<QPair<QString, Date>> &datesDragged = droppedData.first;
-    //QList<QMap<QString, double>> curveData = droppedData.second;
 
     for (int i = 0; i < datesDragged.size(); ++i) {
         QJsonObject date = datesDragged.at(i).second.toJson();
@@ -317,8 +316,6 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
         dates.append(date);
     }
     event[STATE_EVENT_DATES] = dates;
-    
-    //Event::setCurveCsvDataToJsonEvent(event, curveData.at(0));
 
     project->updateEvent(event, QObject::tr("Dates added to event (CSV drag)"));
     scene->updateStateSelectionFromItem();

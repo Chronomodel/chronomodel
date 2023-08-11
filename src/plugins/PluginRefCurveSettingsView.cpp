@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -38,8 +38,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "PluginRefCurveSettingsView.h"
-//#include "ColorPicker.h"
-//#include "PluginAbstract.h"
 
 #include <QApplication>
 #include <QGridLayout>
@@ -168,13 +166,24 @@ void PluginRefCurveSettingsView::addRefCurve(){
                                                 "",
                                                 tr("Reference curve (*.%1)").arg(mPlugin->getRefExt() ));
 
-    if (!path.isEmpty()) {
-        QFileInfo fileInfo(path);
-        mFilesNew.insert(fileInfo.fileName(), fileInfo.absoluteFilePath());
-        updateFilesInFolder();
-        updateRefsList();
 
-        emit listRefCurveChanged();
+    QFileInfo fileInfo(path);
+    if (!path.isEmpty()) {
+        if (fileInfo.fileName().contains(';') || fileInfo.fileName().contains(',')) {
+            QMessageBox message(QMessageBox::Critical,
+                                qApp->applicationName() + " " + qApp->applicationVersion(),
+                                QObject::tr("File names must not contain any \",\" or \";\" "),
+                                QMessageBox::Ok,
+                                qApp->activeWindow());
+            message.exec();
+
+        } else {
+            mFilesNew.insert(fileInfo.fileName(), fileInfo.absoluteFilePath());
+            updateFilesInFolder();
+            updateRefsList();
+
+            emit listRefCurveChanged();
+        }
     }
 }
 

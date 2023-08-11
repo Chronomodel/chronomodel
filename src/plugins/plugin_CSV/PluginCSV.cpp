@@ -195,21 +195,23 @@ QStringList PluginCSV::csvColumns() const
 }
 
 qsizetype PluginCSV::csvMinColumns() const{
-    return csvColumns().count() - 3;
+    return csvColumns().count() - 2;
 }
 
-QJsonObject PluginCSV::fromCSV(const QStringList& list, const QLocale& csvLocale)
+QJsonObject PluginCSV::fromCSV(const QStringList &list, const QLocale &csvLocale)
 {
+    (void) csvLocale;
     QJsonObject json;
     if (list.size() >= csvMinColumns()) {
-        json.insert(DATE_CSV_CURVE_STR, list.at(3));
+        json.insert(DATE_CSV_CURVE_STR, list.at(1));
     }
 
     return json;
 }
 
-QStringList PluginCSV::toCSV(const QJsonObject& data, const QLocale& csvLocale) const
+QStringList PluginCSV::toCSV(const QJsonObject &data, const QLocale &csvLocale) const
 {
+    (void) csvLocale;
     QStringList list;
     list << data.value(DATE_CSV_CURVE_STR).toString();
 
@@ -247,7 +249,6 @@ RefCurve PluginCSV::loadRefFile(QFileInfo refFile)
     curve.mName = refFile.fileName().toLower();
 
     std::vector<double> data_curve;
-   // QFile file(refFile.absoluteFilePath());
 
     FILE * pFile;
     pFile = fopen (refFile.absoluteFilePath().toLocal8Bit(),"r");
@@ -326,37 +327,19 @@ RefCurve PluginCSV::loadRefFile(QFileInfo refFile)
 }
 
 // Reference Values & Errors
-double PluginCSV::getRefValueAt(const QJsonObject& data, const double& t)
+double PluginCSV::getRefValueAt(const QJsonObject &data, const double &t)
 {
-    //const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
-    double v = 0;
-
-  /*  if (mode == DATE_GAUSS_MODE_NONE) {
-        v = t;
-    } else if (mode == DATE_GAUSS_MODE_EQ) {
-        const double a = data.value(DATE_GAUSS_A_STR).toDouble();
-        const double b = data.value(DATE_GAUSS_B_STR).toDouble();
-        const double c = data.value(DATE_GAUSS_C_STR).toDouble();
-
-        v = a * t * t + b * t + c;
-
-    } else if (mode == DATE_GAUSS_MODE_CURVE) {
-        const QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
-        v = getRefCurveValueAt(ref_curve, t);
-    }
-*/
-    return v;
+    (void)  data;
+    (void) t;
+    return 0.;
 }
 
-double PluginCSV::getRefErrorAt(const QJsonObject& data, const double& t, const QString mode)
+double PluginCSV::getRefErrorAt(const QJsonObject &data, const double &t, const QString mode)
 {
-    double e = 0.;
-
- /*   if (mode == DATE_GAUSS_MODE_CURVE) {
-        QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
-        e = getRefCurveErrorAt(ref_curve, t);
-    }*/
-    return e;
+    (void)  data;
+    (void) t;
+    (void) mode;
+    return 0.;
 }
 
 QPair<double, double> PluginCSV::getTminTmaxRefsCurve(const QJsonObject& data) const
