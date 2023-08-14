@@ -336,6 +336,8 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
 
     FILE * pFile;
     pFile = fopen (refFile.absoluteFilePath().toLocal8Bit(),"r");
+    double prev_t = -INFINITY;
+    double delta_t = INFINITY;
 
     if (pFile != nullptr) {
     //if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -363,6 +365,8 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
                     const double t = locale.toDouble(values.at(0), &ok);
                     if (!ok)
                         continue;
+
+                    delta_t = std::min(delta_t, abs(t-prev_t));
 
                     const double g = locale.toDouble(values.at(1), &ok);
                     if (!ok)
@@ -412,11 +416,13 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
                         curve.mDataInfMax = qMax(curve.mDataInfMax, gInf);
                     }
                     firstLine = false;
+                    prev_t = t;
                 }
             }
         }
         fclose(pFile);
 
+        curve.mMinStep = delta_t;
         // invalid file ?
         if (!curve.mDataMean.isEmpty()) {
             curve.mTmin = curve.mDataMean.firstKey();
@@ -537,6 +543,17 @@ QPair<double, double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data)
         }
     }
     return QPair<double,double>(tmin, tmax);
+}
+
+double PluginGauss::getMinStepRefsCurve(const QJsonObject &data) const
+{
+    const QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
+
+    if (mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
+        return mRefCurves.value(ref_curve).mMinStep;
+    } else {
+        return INFINITY;
+    }
 }
 
 // ------------------------------------------------------------------

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -39,7 +39,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "RefCurve.h"
 
-RefCurve::RefCurve()
+RefCurve::RefCurve():
+    mMinStep (INFINITY)
 {
 
 }

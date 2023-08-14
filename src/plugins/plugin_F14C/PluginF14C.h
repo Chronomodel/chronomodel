@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #if USE_PLUGIN_F14C
 
-#include "../PluginAbstract.h"
+#include "PluginAbstract.h"
 
 #define DATE_F14C_FRACTION_STR "fraction"
 #define DATE_F14C_ERROR_STR "error"
@@ -54,8 +54,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class DATATION_SHARED_EXPORT PluginF14C : public PluginAbstract
 {
     Q_OBJECT
-    //Q_PLUGIN_METADATA(IID "chronomodel.PluginAbstract.PluginF14C")
-    //Q_INTERFACES(PluginAbstract)
+
 public:
     PluginF14C();
     virtual ~PluginF14C();
@@ -103,10 +102,11 @@ public:
     QString getRefsPath() const;
     RefCurve loadRefFile(QFileInfo refFile);
 
-    double getRefValueAt(const QJsonObject& data, const double& t);
-    double getRefErrorAt(const QJsonObject& data, const double& t);
+    double getRefValueAt(const QJsonObject &data, const double &t);
+    double getRefErrorAt(const QJsonObject &data, const double &t);
 
-    QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
+    QPair<double, double> getTminTmaxRefsCurve(const QJsonObject &data) const;
+    double getMinStepRefsCurve(const QJsonObject &data) const;
 };
 
 // define in Plugin14C.h

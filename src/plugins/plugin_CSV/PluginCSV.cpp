@@ -303,7 +303,7 @@ RefCurve PluginCSV::loadRefFile(QFileInfo refFile)
             const double t = step*(i-2) + tmin;
             curve.mDataMean[t] = data_curve.at(i);
         }
-
+        curve.mMinStep = step;
         // invalid file ?
       /*  if (!curve.mDataMean.isEmpty()) {
             curve.mTmin = curve.mDataMean.firstKey();
@@ -326,6 +326,17 @@ RefCurve PluginCSV::loadRefFile(QFileInfo refFile)
     return curve;
 }
 
+double PluginCSV::getMinStepRefsCurve(const QJsonObject &data) const
+{
+    const QString ref_curve = data.value(DATE_CSV_CURVE_STR).toString().toLower();
+
+    if (mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
+        return mRefCurves.value(ref_curve).mMinStep;
+
+    } else {
+        return INFINITY;
+    }
+}
 // Reference Values & Errors
 double PluginCSV::getRefValueAt(const QJsonObject &data, const double &t)
 {

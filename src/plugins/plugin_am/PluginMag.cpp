@@ -487,6 +487,27 @@ QJsonObject PluginMag::checkValuesCompatibility(const QJsonObject &values)
     return result;
 }
 
+
+/**
+ * @brief PluginMag::fromCSV
+ * @param list
+ * @param csvLocale
+ * @return
+ * @example:
+ * #Event name; plugin=AM; dating name/code; method; Inclination; Declination; α_95;Field; Field_error; MCMC_Iter; Inclination_ref_curve; Declination_ref_curve; Field_ref_curve;wiggle type;wiggle param a;wiggle param b;;;;;;X_Inc_Depth;Err X- apha95- Err depth;Y_Declinaison;Err Y;Z_Field;Err Z_Err F
+ * my Event Inc ;AM;my Inclination;inclination;60;0;3;65;2;bulgaria_i.ref;bulgaria_d.ref;bulgaria_f.ref;none
+ * my Event Dec ;AM;my Declination;declination;60;5,7;2,5;0;0;gal2002sph2014_i.ref;bulgaria_d.ref;bulgaria_f.ref;none
+ * my Event Field;AM;my Field;field;0;0;0;47,5;4,5;;;bulgaria_f.ref;none
+ * my Event Inc2 ;AM;my Inclination;inclination;60;0;3;65;2;bulgaria_i.ref;;;none
+ * my Event Dec 2;AM;my Declination;declination;60;5,7;2,5;0;0;;bulgaria_d.ref;;none
+ * my Event Field2;AM;my Intensity;field;60;0;0;47,5;4,5;;;bulgaria_f.ref;none
+ * my Event incl-decl;AM;my Direction;incl-decl;60;5,7;3;65;2;bulgaria_i.ref;bulgaria_d.ref;bulgaria_f.ref;none
+ * my Event incl-field;AM;my Vector IF;incl-field;60;5,7;2,5;5,7;2;bulgaria_i.ref;bulgaria_d.ref;bulgaria_f.ref;none
+ * my Event incl-decl-field;AM;my Vector IDF;incl-decl-field;60;5,7;2,5;47,5;2,3;bulgaria_i.ref;bulgaria_d.ref;bulgaria_f.ref;none
+ * my Event 1;AM;my Direction ID;incl-decl;60;5,7;3;65;2;501;bulgaria_i.ref;bulgaria_d.ref;bulgaria_f.ref;none
+ * my Event 1;AM;my Vector IF;incl-field;60;5,7;2,5;47,5;4,5;502;bulgaria_i.ref;bulgaria_d.ref;bulgaria_f.ref;none
+ * my Event 1;AM;my Vector IDF;incl-decl-field;60;5,7;2,5;47,5;4,5;503;bulgaria_i.ref;bulgaria_d.ref;bulgaria_f.ref;none
+ */
 QJsonObject PluginMag::fromCSV(const QStringList &list,const QLocale &csvLocale)
 {
     QJsonObject json;
@@ -629,6 +650,8 @@ RefCurve PluginMag::loadRefFile(QFileInfo refFile)
         QLocale locale = QLocale(QLocale::English);
         QTextStream stream(&file);
         bool firstLine = true;
+        double prev_t = -INFINITY;
+        double delta_t = INFINITY;
 
         while (!stream.atEnd()) {
             QString line = stream.readLine();
@@ -642,6 +665,8 @@ RefCurve PluginMag::loadRefFile(QFileInfo refFile)
                 QStringList values = line.split(",");
                 if (values.size() >= 3) {
                     const int t = locale.toInt(values.at(0),&ok);
+
+                    delta_t = std::min(delta_t, abs(t-prev_t));
 
                     const double g = locale.toDouble(values.at(1), &ok);
                     if (!ok)
@@ -688,11 +713,13 @@ RefCurve PluginMag::loadRefFile(QFileInfo refFile)
                         curve.mDataInfMax = qMax(curve.mDataInfMax, gInf);
                     }
                     firstLine = false;
+                    prev_t = t;
                 }
             }
         }
         file.close();
 
+        curve.mMinStep = delta_t;
         // invalid file ?
         if (!curve.mDataMean.isEmpty()) {
             curve.mTmin = curve.mDataMean.firstKey();
@@ -847,6 +874,7 @@ QPair<double,double> PluginMag::getTminTmaxRefsCurve(const QJsonObject& data) co
 
     return QPair<double,double>(tmin, tmax);
 }
+
 
 //Settings / Input Form / RefView
 GraphViewRefAbstract* PluginMag::getGraphViewRef()

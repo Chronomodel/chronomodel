@@ -41,7 +41,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #if USE_PLUGIN_F14C
 
 #include "QtUtilities.h"
-#include "StdUtilities.h"
 #include "PluginF14CForm.h"
 #include "PluginF14CRefView.h"
 #include "PluginF14CSettingsView.h"
@@ -161,7 +160,7 @@ QString PluginF14C::getDateRefCurveName(const Date* date)
 QStringList PluginF14C::csvColumns() const
 {
     QStringList cols;
-    cols << "Data Name" << "F14C" << "Error (sd)" << "Ref. curve";// << "ΔR" << "ΔR Error";
+    cols << "Data Name" << "F14C" << "Error (sd)" << "Ref. curve";
     return cols;
 }
 
@@ -170,6 +169,13 @@ qsizetype PluginF14C::csvMinColumns() const
     return csvColumns().count() - 2;
 }
 
+/**
+ * @brief PluginF14C::fromCSV
+ * @param list
+ * @param csvLocale
+ * @return
+ * @example:
+ */
 QJsonObject PluginF14C::fromCSV(const QStringList& list, const QLocale &csvLocale)
 {
     QJsonObject json;
@@ -228,6 +234,9 @@ RefCurve PluginF14C::loadRefFile(QFileInfo refFile)
         const QLocale locale = QLocale(QLocale::English);
         QTextStream stream(&file);
         bool firstLine = true;
+        double prev_t = -INFINITY;
+        double delta_t = INFINITY;
+
         try {
 
             while (!stream.atEnd()) {
@@ -301,6 +310,7 @@ RefCurve PluginF14C::loadRefFile(QFileInfo refFile)
                         if (timeInBP)
                             t = 1950 - t;
 
+                        delta_t = std::min(delta_t, abs(t-prev_t));
                         // must convert all in F14C
                         double g = dataColumn < values.size() ? locale.toDouble(values.at(dataColumn), &ok) : ok = false;
                         if(!ok)
@@ -354,6 +364,7 @@ RefCurve PluginF14C::loadRefFile(QFileInfo refFile)
                             curve.mDataInfMax = qMax(curve.mDataInfMax, gInf);
                         }
                         firstLine = false;
+                        prev_t = t;
                     }
                 }
             }
@@ -364,6 +375,7 @@ RefCurve PluginF14C::loadRefFile(QFileInfo refFile)
         }
         file.close();
 
+        curve.mMinStep = delta_t;
         // invalid file ?
         if (!curve.mDataMean.isEmpty()) {
             curve.mTmin = curve.mDataMean.firstKey();
@@ -386,7 +398,7 @@ double PluginF14C::getRefErrorAt(const QJsonObject& data, const double& t)
     return getRefCurveErrorAt(curveName, t);
 }
 
-QPair<double,double> PluginF14C::getTminTmaxRefsCurve(const QJsonObject &data) const
+QPair<double, double> PluginF14C::getTminTmaxRefsCurve(const QJsonObject &data) const
 {
     double tmin (-INFINITY);
     double tmax (INFINITY);
@@ -398,6 +410,18 @@ QPair<double,double> PluginF14C::getTminTmaxRefsCurve(const QJsonObject &data) c
     }
     return QPair<double, double>(tmin, tmax);
 }
+
+double PluginF14C::getMinStepRefsCurve(const QJsonObject &data) const
+{
+    const QString ref_curve = data.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
+
+    if (mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
+       return mRefCurves.value(ref_curve).mMinStep;
+    } else {
+       return INFINITY;
+    }
+}
+
 
 //Settings / Input Form / RefView
 GraphViewRefAbstract* PluginF14C::getGraphViewRef()

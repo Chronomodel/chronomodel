@@ -223,8 +223,9 @@ public:
     /* -------------------------------
      * The following is for plugins using ref curves :
      * ------------------------------- */
-    virtual QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const = 0;
+    virtual QPair<double, double> getTminTmaxRefsCurve(const QJsonObject &data) const = 0;
 
+    virtual double getMinStepRefsCurve(const QJsonObject &data) const {(void) data; return INFINITY;};
     /*
      * For the majority of the plugins, i.e. having a calibration curve,
      * the wiggles densities are on the same support as the calibrated densities,

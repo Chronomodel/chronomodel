@@ -70,7 +70,7 @@ public:
     QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);
     
     QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
-
+    double getMinStepRefsCurve(const QJsonObject &data) const;
     //QPair<double,double> getTminTmaxRefsCurveCombine(const QJsonArray& subData);
    // long double getLikelihoodCombine  (const double& t, const QJsonArray& subData);
     

@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #if USE_PLUGIN_14C
 
-#include "../PluginAbstract.h"
+#include "PluginAbstract.h"
 
 #define DATE_14C_AGE_STR "age"
 #define DATE_14C_ERROR_STR "error"
@@ -108,6 +108,7 @@ public:
     double getRefErrorAt(const QJsonObject& data, const double& t);
 
     QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
+    double getMinStepRefsCurve(const QJsonObject &data) const;
 };
 
 template <typename T>

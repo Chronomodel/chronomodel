@@ -229,7 +229,7 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
     RefCurve curve;
     curve.mName = refFile.fileName().toLower();
 
-// Default time in BP, data in 14C age, data column is 1
+    // Default time in BP, data in 14C age, data column is 1
     bool timeInBP (true);
     //bool timeInBC (false);
     bool dataInF14C (false);
@@ -243,6 +243,8 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
         const QLocale locale = QLocale(QLocale::English);
         QTextStream stream(&file);
         bool firstLine = true;
+        double prev_t = -INFINITY;
+        double delta_t = INFINITY;
 
         while (!stream.atEnd()) {
             QString line = stream.readLine();
@@ -310,8 +312,9 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
                         continue;
                     if (timeInBP)
                         t = 1950 - t;
-                    
-// must convert all in 14C
+
+                    delta_t = std::min(delta_t, abs(t-prev_t));
+                    // must convert all in 14C
                     double g = locale.toDouble(values.at(dataColumn), &ok);
                     if(!ok)
                         continue;
@@ -363,11 +366,13 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
                         curve.mDataInfMax = qMax(curve.mDataInfMax, gInf);
                     }
                     firstLine = false;
+                    prev_t = t;
                 }
             }
         }
         file.close();
 
+        curve.mMinStep = delta_t;
         // invalid file ?
         if (!curve.mDataMean.isEmpty()) {
             curve.mTmin = curve.mDataMean.firstKey();
@@ -401,6 +406,17 @@ QPair<double,double> Plugin14C::getTminTmaxRefsCurve(const QJsonObject& data) co
        tmax = mRefCurves.value(ref_curve).mTmax;
     }
     return QPair<double, double>(tmin, tmax);
+}
+
+double Plugin14C::getMinStepRefsCurve(const QJsonObject &data) const
+{
+    const QString ref_curve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
+
+    if (mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
+       return mRefCurves.value(ref_curve).mMinStep;
+    } else {
+       return INFINITY;
+    }
 }
 
 //Settings / Input Form / RefView

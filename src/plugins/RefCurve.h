@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -59,6 +59,8 @@ public:
 
     double mTmin;
     double mTmax;
+
+    double mMinStep;
 
     double mDataMeanMin;
     double mDataMeanMax;

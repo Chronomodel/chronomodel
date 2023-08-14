@@ -546,13 +546,14 @@ void Date::calibrate(const StudyPeriodSettings priod_settings, Project *project,
 {
   // Check if the ref curve is in the plugin list
 
+    double refMinStep = INFINITY;
     if (mOrigin == eSingleDate) {
         const QStringList refsNames = mPlugin->getRefsNames();
         const QString dateRefName = mPlugin->getDateRefCurveName(this);
 
         if (!dateRefName.isEmpty() && !refsNames.contains(dateRefName) )
             return;
-
+        refMinStep = mPlugin->getMinStepRefsCurve(mData);
     }
 
     // add the calibration
@@ -574,7 +575,8 @@ void Date::calibrate(const StudyPeriodSettings priod_settings, Project *project,
     mCalibration = & (project->mCalibCurves[mUUID]);
     mCalibration -> mDescription = getDesc();
 
-    mCalibration->mStep = priod_settings.mStep;
+    refMinStep = std::min(priod_settings.mStep, refMinStep);
+    mCalibration->mStep = refMinStep;
     mCalibration->mPluginId = mPlugin->getId();
     mCalibration->mPlugin = mPlugin;
     mCalibration->mName = mName;
@@ -601,7 +603,7 @@ void Date::calibrate(const StudyPeriodSettings priod_settings, Project *project,
 
     while (mCalibration->mVector.size() < 6 && nb_step_frac < 20) {
         ++nb_step_frac;
-        mCalibration->mStep = priod_settings.mStep / (double)nb_step_frac;
+        mCalibration->mStep = refMinStep / (double)nb_step_frac;
         const int nbStep = floor((mTmaxRefCurve - mTminRefCurve) / mCalibration->mStep);
 
         QVector<double> calibrationTemp;
