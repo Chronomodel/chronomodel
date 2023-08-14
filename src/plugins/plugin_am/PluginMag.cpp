@@ -77,22 +77,20 @@ long double PluginMag::getLikelihood(const double& t, const QJsonObject& data)
 QPair<long double, long double> PluginMag::getLikelihoodArg(const double& t, const QJsonObject& data)
 {
     (void) data;
+    (void) t;
     return qMakePair<long double, long double> (0, 0);
 }
 
 long double PluginMag::Likelihood(const double& t, const QJsonObject& data)
 {
     // Lecture des données
-
-    const long double alpha95 = static_cast<long double> (data.value(DATE_AM_ALPHA95_STR).toDouble());
     const long double incl = static_cast<long double> (data.value(DATE_AM_INC_STR).toDouble());
     const long double decl = static_cast<long double> (data.value(DATE_AM_DEC_STR).toDouble());
+    const long double alpha95 = static_cast<long double> (data.value(DATE_AM_ALPHA95_STR).toDouble());
     const long double field = static_cast<long double> (data.value(DATE_AM_FIELD_STR).toDouble());
     const long double error_f = static_cast<long double> (data.value(DATE_AM_ERROR_F_STR).toDouble());
 
     const double iteration_mcmc = data.value(DATE_AM_ITERATION_STR).toDouble();
-
-    //QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
 
     // La partie des calculs de l'étalonnage
     long double mesureIncl (0.l);
@@ -325,117 +323,70 @@ QString PluginMag::getDateDesc(const Date* date) const
 
         const QJsonObject data = date->mData;
 
-        const double alpha95 = data.value(DATE_AM_ALPHA95_STR).toDouble();
         const double incl = data.value(DATE_AM_INC_STR).toDouble();
         const double decl = data.value(DATE_AM_DEC_STR).toDouble();
+        const double alpha95 = data.value(DATE_AM_ALPHA95_STR).toDouble();
+
         const double field = data.value(DATE_AM_FIELD_STR).toDouble();
         const double error_f = data.value(DATE_AM_ERROR_F_STR).toDouble();
+
         const double iteration_mcmc = data.value(DATE_AM_ITERATION_STR).toDouble();
 
         const ProcessTypeAM pta = static_cast<ProcessTypeAM> (date->mData.value(DATE_AM_PROCESS_TYPE_STR).toInt());
 
-        QString ref_curve;
-        switch (pta) {
-        case eInc:
-            ref_curve = date->mData.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
-            break;
-        case eDec:
-            ref_curve = date->mData.value(DATE_AM_REF_CURVED_STR).toString().toLower();
-            break;
-        case eField:
-            ref_curve = date->mData.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
-            break;
-      /*  case eID:
-            mIDRadio->setChecked(true);
-            break;
-        case eIF:
-            mIFRadio->setChecked(true);
-            break;
-        case eIDF:
-            mIDFRadio->setChecked(true);
-            break;
-            */
-        default:
-            break;
-        }
+        QString ref_curve_i = date->mData.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
+        if (!mRefCurves.contains(ref_curve_i) || mRefCurves[ref_curve_i].mDataMean.isEmpty())
+           ref_curve_i = tr("ERROR -> Unknown curve : %1").arg(ref_curve_i);
+
+
+        QString ref_curve_d = date->mData.value(DATE_AM_REF_CURVED_STR).toString().toLower();
+        if (!mRefCurves.contains(ref_curve_d) || mRefCurves[ref_curve_d].mDataMean.isEmpty())
+           ref_curve_d = tr("ERROR -> Unknown curve : %1").arg(ref_curve_d);
+
+        QString ref_curve_f = date->mData.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
+        if (!mRefCurves.contains(ref_curve_f) || mRefCurves[ref_curve_f].mDataMean.isEmpty())
+           ref_curve_f = tr("ERROR -> Unknown curve : %1").arg(ref_curve_f);
+
 
         switch (pta) {
         case eInc:
-            result += QObject::tr("Inclination : %1").arg(locale.toString(incl));
-                        // this is the html form, but not reconized in the DatesListItemDelegate
-                       // result += "; " + QString("α<SUB>95</SUB>") + " : " + locale.toString(alpha);
-            result += " : " + QObject::tr("α 95 = %1").arg(locale.toString(alpha95));
-            if (mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty())
-                result += " : " + tr("Ref. curve = %1").arg(ref_curve);
-            else
-                result += " = " + tr("ERROR -> Ref. curve : %1").arg(ref_curve);
+            result += tr("Inclination : %1; α 95 = %2").arg(locale.toString(incl), locale.toString(alpha95));
+            result += " : " + ref_curve_i;
             break;
 
         case eDec:
-            result += QObject::tr("Declination : %1").arg(locale.toString(decl));
-            result += " : " + QObject::tr("Inclination = %1").arg(locale.toString(incl));
-            result += " : " + QObject::tr("α 95 = %1").arg(locale.toString(alpha95));
-            if (mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty())
-                result += " : " + tr("Ref. curve = %1").arg(ref_curve);
-            else
-                result += " = " + tr("ERROR -> Ref. curve : %1").arg(ref_curve);
+            result += tr("Declination : %1; Inclination : %2; α 95 : %3").arg(locale.toString(decl), locale.toString(incl)), locale.toString(alpha95);
+            result += " : " + ref_curve_d;
             break;
 
         case eField:
-            result += QObject::tr("Field = %1").arg(locale.toString(field));
-            result += " : " + QObject::tr("Error = %1").arg(locale.toString(error_f));
-            if (mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty())
-                result += " : " + tr("Ref. curve = %1").arg(ref_curve);
-            else
-                result += " = " + tr("ERROR -> Ref. curve : %1").arg(ref_curve);
+            result += tr("Field : %1; F Error : %2").arg(locale.toString(field), locale.toString(error_f));
+            result += " : " + ref_curve_f;
             break;
 
         case eID:
-            result += "MCMC ID = (" + QObject::tr(" %1").arg(locale.toString(incl)) ;
-             result += " ;" + QObject::tr(" %1").arg(locale.toString(decl)) + ")";
-             result += " ; " + QObject::tr("Alpha95 = %1").arg(locale.toString(alpha95));
-
-             if (tr("%1").arg(ref_curve)==tr("bulgaria_i.ref")) {
-                 result += " ; Curve =" + tr("Bulgaria");
-             } else {
-                 result += " ; Curve = " + tr("GAL2002sph2014");
-             }
-             result += " ; " + QObject::tr("Iteration = %1").arg(locale.toString(iteration_mcmc));
+            result += tr("MCMC ID = (%1; %2; α 95 : %3)").arg(locale.toString(incl), locale.toString(decl), locale.toString(alpha95)) ;
+            result += tr("; (%1 | %2)").arg(ref_curve_i, ref_curve_d);
+            result += tr("; (Iter : %1)").arg(locale.toString(iteration_mcmc));
             break;
 
         case eIF:
-            result += "MCMC IF = (" + QObject::tr(" %1").arg(locale.toString(incl));
-            result += ";" + QObject::tr(" %1").arg(locale.toString(field)) + ")";
-            result += " ; (ErrorF, Alpha95) =  (" + QObject::tr(" %1").arg(locale.toString(error_f));
-            result += " ; " + QObject::tr(" %1").arg(locale.toString(alpha95)) + ")";
-            if (tr("%1").arg(ref_curve)==tr("bulgaria_i.ref")){
-                result += " ; Curve =" + tr("Bulgaria");
-
-            } else {
-                result += " ; Curve = " + tr("GAL2002sph2014");
-            }
-           result += " ; " + QObject::tr("Iteration = %1").arg(locale.toString(iteration_mcmc));
+            result += tr("MCMC IF = (%1; %2)").arg(locale.toString(incl), locale.toString(field));
+            result += tr("; (α 95; F Error) =  (%1; %2)").arg(locale.toString(alpha95), locale.toString(error_f));
+            result += tr("; (%1 | %2)").arg(ref_curve_i, ref_curve_f);
+            result += tr("; (Iter : %1)").arg(locale.toString(iteration_mcmc));
             break;
 
         case eIDF:
-            result += "MCMC IDF = (" + QObject::tr(" %1").arg(locale.toString(incl));
-            result += " ;" + QObject::tr(" %1").arg(locale.toString(decl));
-            result += " ;" + QObject::tr(" %1").arg(locale.toString(field)) + ")";
-            result += " ; (ErrorF; alpha95) = (" + QObject::tr(" %1").arg(locale.toString(error_f));
-            result += " ;" + QObject::tr(" %1").arg(locale.toString(alpha95)) + ")";
-            if (tr("%1").arg(ref_curve)==tr("bulgaria_i.ref")) {
-                result += " ; Curve =" + tr("Bulgaria");
-
-            } else {
-                result += " ; Curve = " + tr("GAL2002sph2014");
-            }
-            result += " ; " + QObject::tr("Iteration = %1").arg(locale.toString(iteration_mcmc));
+            result += tr("MCMC IDF = (%1; %2; %3)").arg(locale.toString(incl), locale.toString(decl), locale.toString(field));
+            result += tr(" ; (α 95; F Error) = (%1; %2)").arg(locale.toString(alpha95), locale.toString(error_f));
+            result += tr("; (%1 | %2 | %3)").arg(ref_curve_i, ref_curve_d, ref_curve_f);
+            result += tr("; (Iter : %1)").arg(locale.toString(iteration_mcmc));
             break;
 
         default:
             break;
         }
-
 
 
     } else {
@@ -469,16 +420,17 @@ QString PluginMag::getDateRefCurveName(const Date* date)
     case eField:
         ref_curve = date->mData.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
         break;
-  /*  case eID:
-        mIDRadio->setChecked(true);
+    case eID:
+        ref_curve = date->mData.value(DATE_AM_REF_CURVEI_STR).toString().toLower()+ " | "; ref_curve = date->mData.value(DATE_AM_REF_CURVED_STR).toString().toLower();
         break;
     case eIF:
-        mIFRadio->setChecked(true);
+        ref_curve = date->mData.value(DATE_AM_REF_CURVEI_STR).toString().toLower()+ " | "; ref_curve = date->mData.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
         break;
     case eIDF:
-        mIDFRadio->setChecked(true);
+        ref_curve = date->mData.value(DATE_AM_REF_CURVEI_STR).toString().toLower()+ " | "; ref_curve = date->mData.value(DATE_AM_REF_CURVED_STR).toString().toLower()
+                    + " | "; ref_curve = date->mData.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
         break;
-        */
+
     default:
         ref_curve = "";
         break;
@@ -497,9 +449,13 @@ QStringList PluginMag::csvColumns() const
         << "type"
         << "Inclination value"
         << "Declination value"
-        << "Intensity value"
-        << "Error (sd) or α 95"
-        << "Ref. curve";
+        << "α 95"
+        << "Field value"
+        << "Field Error (sd)"
+        << "Iteration"
+        << "Inclination Ref. curve"
+        << "Declination Ref. curve"
+        << "Field Ref. curve";
     return cols;
 }
 
@@ -510,7 +466,7 @@ PluginFormAbstract* PluginMag::getForm()
     return form;
 }
 //Convert old project versions
-QJsonObject PluginMag::checkValuesCompatibility(const QJsonObject& values)
+QJsonObject PluginMag::checkValuesCompatibility(const QJsonObject &values)
 {
     QJsonObject result = values;
 
@@ -518,55 +474,58 @@ QJsonObject PluginMag::checkValuesCompatibility(const QJsonObject& values)
     result[DATE_AM_INC_STR] = result.value(DATE_AM_INC_STR).toDouble();
     result[DATE_AM_DEC_STR] = result.value(DATE_AM_DEC_STR).toDouble();
     result[DATE_AM_ALPHA95_STR] = result.value(DATE_AM_ALPHA95_STR).toDouble();
+
     result[DATE_AM_FIELD_STR] = result.value(DATE_AM_FIELD_STR).toDouble();
     result[DATE_AM_ERROR_F_STR] = result.value(DATE_AM_ERROR_F_STR).toDouble();
+
+    result[DATE_AM_ITERATION_STR] = result.value(DATE_AM_ITERATION_STR).toInt(500);
 
     result[DATE_AM_REF_CURVEI_STR] = result.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
     result[DATE_AM_REF_CURVED_STR] = result.value(DATE_AM_REF_CURVED_STR).toString().toLower();
     result[DATE_AM_REF_CURVEF_STR] = result.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
 
-    result[DATE_AM_ITERATION_STR] = 500;
     return result;
 }
 
-QJsonObject PluginMag::fromCSV(const QStringList& list,const QLocale &csvLocale)
+QJsonObject PluginMag::fromCSV(const QStringList &list,const QLocale &csvLocale)
 {
     QJsonObject json;
     if (list.size() >= csvMinColumns()) {
-        
-// checks the validity interval
-        const QString name = list.at(0);
-        const double valInc (csvLocale.toDouble(list.at(2)));
-        const double valDec (csvLocale.toDouble(list.at(3)));
-        const double valAlpha95 (csvLocale.toDouble(list.at(4)));
 
-        const double valIntensity (csvLocale.toDouble(list.at(5)));
+        // checks the validity interval
+        const QString name = list.at(0);
+        const double valInc = csvLocale.toDouble(list.at(2));
+        const double valDec = csvLocale.toDouble(list.at(3));
+        const double valAlpha95 = csvLocale.toDouble(list.at(4));
+
+        const double valField = csvLocale.toDouble(list.at(5));
         const double valError_f = csvLocale.toDouble(list.at(6));
+        const double valIter = csvLocale.toDouble(list.at(7));
          
         if ((list.at(1) == "inclination" || list.at(1) == "declination") && (valInc>90 || valInc < -90)) {
-            QMessageBox message(QMessageBox::Warning, tr("Invalide value for Field"), tr(" %1 : Inclination must be >=-90 and <=90").arg(name) ,  QMessageBox::Ok, qApp->activeWindow());
+            QMessageBox message(QMessageBox::Warning, tr("Invalide value for Field"), tr(" %1 : must be >=-90 and <=90").arg(name) ,  QMessageBox::Ok, qApp->activeWindow());
             message.exec();
             return json;
 
         } else  if (list.at(1) == "declination" && (valDec>270 || valDec < -90) ) {
-            QMessageBox message(QMessageBox::Warning, tr("Invalide value for declination"), tr(" %1 : Declination must be >=-90 and <=270").arg(name) ,  QMessageBox::Ok, qApp->activeWindow());
+            QMessageBox message(QMessageBox::Warning, tr("Invalide value for declination"), tr(" %1 : must be >=-90 and <=270").arg(name) ,  QMessageBox::Ok, qApp->activeWindow());
             message.exec();
             return json;
 
-        } else if (list.at(1) == "intensity" && valIntensity <=0 ) {
-            QMessageBox message(QMessageBox::Warning, tr("Invalide value for Intensity"), tr(" %1 : Intensity must be >0").arg(name) ,  QMessageBox::Ok, qApp->activeWindow());
+        } else if (list.at(1) == "field" && valField <=0 ) {
+            QMessageBox message(QMessageBox::Warning, tr("Invalide value for Field"), tr(" %1 : must be >0").arg(name) ,  QMessageBox::Ok, qApp->activeWindow());
             message.exec();
             return json;
 
-        } else if ( valError_f <=0 ) {
-            QMessageBox message(QMessageBox::Warning, tr("Invalide value for error"), tr(" %1 : Alpha95 must be >0").arg(name) ,  QMessageBox::Ok, qApp->activeWindow());
+        } else if ( valError_f <= 0 ) {
+            QMessageBox message(QMessageBox::Warning, tr("Invalide value for F Error"), tr(" %1 : must be >0").arg(name) ,  QMessageBox::Ok, qApp->activeWindow());
             message.exec();
             return json;
         }
 
         ProcessTypeAM pta = eNone;
 
-        const QString typeStr = list.at(1);
+        const QString typeStr = list.at(1).toLower();
 
         if (typeStr == "inclination") {
             pta = eInc;
@@ -592,21 +551,20 @@ QJsonObject PluginMag::fromCSV(const QStringList& list,const QLocale &csvLocale)
         json.insert(DATE_AM_DEC_STR, valDec);
         json.insert(DATE_AM_ALPHA95_STR, valAlpha95);
 
-        json.insert(DATE_AM_FIELD_STR, valIntensity);
+        json.insert(DATE_AM_FIELD_STR, valField);
         json.insert(DATE_AM_ERROR_F_STR, valError_f);
+        json.insert(DATE_AM_ITERATION_STR, valIter);
 
-        json.insert(DATE_AM_REF_CURVEI_STR, list.at(7).toLower());
-        json.insert(DATE_AM_REF_CURVED_STR, list.at(8).toLower());
-        json.insert(DATE_AM_REF_CURVEF_STR, list.at(9).toLower());
-
-        json.insert(DATE_AM_ITERATION_STR, 500);
+        json.insert(DATE_AM_REF_CURVEI_STR, list.at(8).toLower());
+        json.insert(DATE_AM_REF_CURVED_STR, list.at(9).toLower());
+        json.insert(DATE_AM_REF_CURVEF_STR, list.at(10).toLower());
 
 
     }
     return json;
 }
 
-QStringList PluginMag::toCSV(const QJsonObject& data, const QLocale& csvLocale) const
+QStringList PluginMag::toCSV(const QJsonObject &data, const QLocale &csvLocale) const
 {
     QStringList list;
 
@@ -641,6 +599,7 @@ QStringList PluginMag::toCSV(const QJsonObject& data, const QLocale& csvLocale) 
     list << csvLocale.toString(data.value(DATE_AM_ALPHA95_STR).toDouble());
     list << csvLocale.toString(data.value(DATE_AM_FIELD_STR).toDouble());
     list << csvLocale.toString(data.value(DATE_AM_ERROR_F_STR).toDouble());
+    list << csvLocale.toString(data.value(DATE_AM_ITERATION_STR).toInt(500));
 
     list << data.value(DATE_AM_REF_CURVEI_STR).toString();
     list << data.value(DATE_AM_REF_CURVED_STR).toString();

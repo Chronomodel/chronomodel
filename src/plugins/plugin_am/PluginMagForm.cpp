@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -208,7 +208,7 @@ PluginMagForm::~PluginMagForm()
 
 }
 
-void PluginMagForm::setData(const QJsonObject& data, bool isCombined)
+void PluginMagForm::setData(const QJsonObject &data, bool isCombined)
 {
     if (isCombined)
         return;
@@ -352,6 +352,9 @@ void PluginMagForm::updateOptions()
     const bool showIter = mIDRadio->isChecked() || mIFRadio->isChecked() || mIDFRadio->isChecked();
     mMCMCIterationLab->setVisible(showIter);
     mMCMCIterationEdit->setVisible(showIter);
+
+    adjustSize();
+    emit sizeChanged();
 
 }
 
