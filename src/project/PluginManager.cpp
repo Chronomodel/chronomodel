@@ -45,7 +45,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginUniform.h"
 #include "PluginGauss.h"
 #include "PluginF14C.h"
-#include "PluginCSV.h"
+#include "PluginDensity.h"
 
 #include <QDebug>
 
@@ -98,14 +98,14 @@ void PluginManager::loadPlugins()
     mPlugins.append(pluginF14C);
 #endif
 
-#if USE_PLUGIN_CSV
-    PluginAbstract* pluginCSV = new PluginCSV();
-    mPlugins.append(pluginCSV);
+#if USE_PLUGIN_DENSITY
+    PluginAbstract* pluginDensity = new PluginDensity();
+    mPlugins.append(pluginDensity);
 #endif
 }
 
 
-PluginAbstract* PluginManager::getPluginFromId(const QString& pluginId)
+PluginAbstract* PluginManager::getPluginFromId(const QString &pluginId)
 {
     for (auto &pl : mPlugins)
         if (pl->getId() == pluginId)

@@ -41,12 +41,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define ABSTRACTSCENE_H
 
 #include <QGraphicsScene>
-
 class AbstractItem;
 class ArrowItem;
 class ArrowTmpItem;
 class Project;
-
 
 class AbstractScene: public QGraphicsScene
 {

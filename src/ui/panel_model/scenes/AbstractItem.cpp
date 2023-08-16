@@ -144,25 +144,14 @@ void AbstractItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
 
 void AbstractItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 {
-    auto ptInit = pos();
     if (mScene->mShowGrid) {
         QPointF ptBefore = pos();
         qreal delta (mScene->deltaGrid());
         ptBefore = QPointF(round(ptBefore.rx()/delta) * delta, floor(ptBefore.ry()/ delta) * delta);
-       // setPos(ptBefore);
         e->setPos(ptBefore);
     }
     mMoving = true;
     QGraphicsItem::mouseMoveEvent(e); // move the graphic item, and change this position
-    //mMoving = !(ptInit == pos());
-
-//mScene->sendUpdateProject(tr("item moved"), false, true); // ici
-
-//qDebug() <<"AbstractItem::mouseMoveEvent() mMoving="<<mMoving;
-  //  if (e->pos().x()==0 || e->pos().y()==0)
- //qDebug()<<"AbstractItem::mouseMoveEvent() mData"<<this->mData.value(STATE_ITEM_X).toDouble()<<mData.value(STATE_ITEM_Y).toDouble();
- //()<<"AbstractItem::mouseMoveEvent() e->pos3"<<e->pos()<<e->scenePos()<<pos();
-
 
 }
 
