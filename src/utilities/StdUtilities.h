@@ -237,15 +237,23 @@ template <class U, class T>
 typename QMap<U, T>::const_iterator map_max_value(const QMap<U, T> &map, U min, U max)
 {
     typename QMap<U, T>::const_iterator i = map.cbegin();
+    if (map.lastKey()<min)
+        return i;
 
-    while (i.key()<min)
-        ++i;
+    else if (map.firstKey()>max)
+        return i;
 
-    typename QMap<U, T>::const_iterator biggest = i;
-    for (; i != map.cend() && i.key()<=max; ++i)
-        if (*i > *biggest )  biggest = i;
+    else {
+        while (i.key()<min)
+            ++i;
 
-    return biggest;
+        typename QMap<U, T>::const_iterator biggest = i;
+        for (; i != map.cend() && i.key()<=max; ++i)
+            if (*i > *biggest )  biggest = i;
+
+        return biggest;
+    }
+
 }
 
 /**
