@@ -37,19 +37,19 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#include "PluginCSVSettingsView.h"
-#if USE_PLUGIN_CSV
+#include "PluginDensitySettingsView.h"
+#if USE_PLUGIN_DENSITY
 
-#include "PluginCSV.h"
+#include "PluginDensity.h"
 #include "PluginRefCurveSettingsView.h"
 
 #include <QtWidgets>
 
 
-PluginCSVSettingsView::PluginCSVSettingsView(PluginCSV* plugin, QWidget* parent, Qt::WindowFlags flags):PluginSettingsViewAbstract(plugin, parent, flags)
+PluginDensitySettingsView::PluginDensitySettingsView(PluginDensity* plugin, QWidget* parent, Qt::WindowFlags flags):PluginSettingsViewAbstract(plugin, parent, flags)
 {
     mRefView = new PluginRefCurveSettingsView(plugin);
-    connect(mRefView, &PluginRefCurveSettingsView::listRefCurveChanged, this, &PluginCSVSettingsView::calibrationNeeded);
+    connect(mRefView, &PluginRefCurveSettingsView::listRefCurveChanged, this, &PluginDensitySettingsView::calibrationNeeded);
 
     QVBoxLayout* layout = new QVBoxLayout();
     layout->setContentsMargins(0, 0, 0, 0);
@@ -57,7 +57,7 @@ PluginCSVSettingsView::PluginCSVSettingsView(PluginCSV* plugin, QWidget* parent,
     setLayout(layout);
 }
 
-PluginCSVSettingsView::~PluginCSVSettingsView()
+PluginDensitySettingsView::~PluginDensitySettingsView()
 {
 
 }

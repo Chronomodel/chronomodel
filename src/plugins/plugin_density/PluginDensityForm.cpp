@@ -37,43 +37,77 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef PLUGINCSVFORM_H
-#define PLUGINCSVFORM_H
+#include "PluginDensityForm.h"
 
-#if USE_PLUGIN_CSV
+#if USE_PLUGIN_DENSITY
+#include "PluginDensity.h"
 
-#include "PluginFormAbstract.h"
-#include "PluginCSV.h"
-
-class QLineEdit;
-class QLabel;
-
-class QComboBox;
+#include <QJsonObject>
+#include <QtWidgets>
 
 
-class PluginCSVForm: public PluginFormAbstract
+PluginDensityForm::PluginDensityForm(PluginDensity* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("CSV density file"), parent, flags)
 {
-    Q_OBJECT
-public:
-    PluginCSVForm(PluginCSV* plugin, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
-    virtual ~PluginCSVForm();
+    mCurveCombo = new QComboBox(this);
+    const QStringList &refCurves = plugin->getRefsNames();
+    for (auto & curve : refCurves)
+         mCurveCombo->addItem(curve);
 
-    void setData(const QJsonObject& data, bool isCombined);
-    QJsonObject getData();
+    QGridLayout* grid = new QGridLayout();
+    grid->addWidget(mCurveCombo, 1, 1);
 
-    bool isValid();
+    setLayout(grid);
+
+    updateVisibleElements();
+}
+
+PluginDensityForm::~PluginDensityForm()
+{
+
+}
+
+void PluginDensityForm::setData(const QJsonObject& data, bool isCombined)
+{
+
+    if ( isCombined) {
+        emit PluginFormAbstract::OkEnabled(true );
+        
+    } else {
+        const QString curve = data.value(DATE_DENSITY_CURVE_STR).toString();
+        mCurveCombo->setCurrentText(curve);
+    }
 
 
-protected slots:
-    void updateVisibleElements();
 
-    void validOK();
+    updateVisibleElements();
+}
 
-private:
+void PluginDensityForm::updateVisibleElements()
+{
+    mCurveCombo->setVisible(true);
 
-    QComboBox* mCurveCombo;
-    int mComboH;
-};
+}
 
-#endif
+QJsonObject PluginDensityForm::getData()
+{
+    QJsonObject data;
+
+    const QString curve = mCurveCombo->currentText();
+    data.insert(DATE_DENSITY_CURVE_STR, curve);
+    return data;
+}
+
+
+
+void PluginDensityForm::validOK()
+{
+    emit PluginFormAbstract::OkEnabled(true);
+
+}
+
+bool PluginDensityForm::isValid()
+{
+    return true;
+}
+
 #endif

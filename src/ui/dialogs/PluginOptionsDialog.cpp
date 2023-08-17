@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -39,19 +39,17 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "PluginOptionsDialog.h"
 #include "Button.h"
-#include "LineEdit.h"
 #include "Label.h"
-#include "CheckBox.h"
-#include "Painting.h"
 #include "PluginManager.h"
 #include "Plugin14C.h"
+
 #include <QtWidgets>
 
 /**
  * @todo transform this dialog with autocharging plugin
  */
 PluginOptionsDialog::PluginOptionsDialog(QWidget* parent, Qt::WindowFlags flags):
-QDialog(parent, flags)
+    QDialog(parent, flags)
 {
     setWindowTitle(tr("Data Options"));
 
@@ -65,8 +63,6 @@ QDialog(parent, flags)
     QStringList refCurves = plugin14C->getRefsNames();
     for (int i = 0; i<refCurves.size(); ++i)
         mC14RefCombo->addItem(refCurves[i]);
-
-   // QString defCurve = QString("intcal13.14c").toLower();
 
     mOkBut = new Button(tr("OK"), this);
     mCancelBut = new Button(tr("Cancel"), this);

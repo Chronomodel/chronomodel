@@ -40,9 +40,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AppSettingsDialog.h"
 #include "AppSettingsDialogItemDelegate.h"
 #include "PluginSettingsViewAbstract.h"
-//#include "Painting.h"
-//#include "Label.h"
-//#include "Button.h"
 #include "AppSettings.h"
 
 #include <QtWidgets>
@@ -54,14 +51,14 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     // -----------------------------
     //  General View
     // -----------------------------
-     mGeneralView = new QWidget();
+    mGeneralView = new QWidget();
 
     mLangHelpLab = new QLabel(tr("Language is used to define how number input should be typed (using comma or dot as decimal separator). This is not related to the application translation which is not available yet!"), this);
 
     mLangHelpLab->setAlignment(Qt::AlignCenter);
     mLangHelpLab->setWordWrap(true);
 
-    mLanguageLab = new QLabel(tr("Language"), this);
+    mLanguageLab = new QLabel(tr("Keyboard Language"), this);
     mLanguageCombo = new QComboBox(this);
 //    QList<QLocale> allLocales = QLocale::matchingLocales(QLocale::AnyLanguage, QLocale::AnyScript, QLocale::AnyCountry);
 
@@ -338,22 +335,7 @@ void AppSettingsDialog::changeSettings()
     QLocale newLoc = QLocale(newLanguage, newCountry);
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
-
-   // emit settingsChanged(s);
 }
-
-/*
-void AppSettingsDialog::fontButtonClicked()
-{
-    bool ok;
-    const QFont font = QFontDialog::getFont(&ok, mFont, this);
-    if (ok) {
-        mFont = font;
-        mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
-       // qApp->setFont(mFont);
-   }
-}
-*/
 
 /**
  * @brief AppSettingsDialog::buttonClicked Corresponding to the restore Default Button
@@ -361,16 +343,11 @@ void AppSettingsDialog::fontButtonClicked()
  */
 void AppSettingsDialog::buttonClicked(QAbstractButton* button)
 {
-     (void) button;
-    //mFont = QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE);
-    //mFont = qApp->font();
+    (void) button;
 
-
-    //mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
     mIconSize->setValue(APP_SETTINGS_DEFAULT_ICON_SIZE);
 
     mLanguageCombo->setCurrentText(QLocale::languageToString(QLocale::system().language()));
-    //mCountryCombo->setCurrentText(QLocale::countryToString(QLocale::system().country()));
 
     mAutoSaveCheck->setChecked(APP_SETTINGS_DEFAULT_AUTO_SAVE);
     mAutoSaveDelayEdit->setText(locale().toString(APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC / 60));
@@ -390,13 +367,5 @@ void AppSettingsDialog::buttonClicked(QAbstractButton* button)
     mImageQuality->setValue(APP_SETTINGS_DEFAULT_IMAGE_QUALITY);
     mFormatDate->setCurrentIndex(int (APP_SETTINGS_DEFAULT_FORMATDATE));
     mPrecision->setValue(APP_SETTINGS_DEFAULT_PRECISION);
-  //  mNbSheet->setValue(APP_SETTINGS_DEFAULT_SHEET);
 
-    //AppSettings s = getSettings();
-
-   /* if (filesChanged)
-        emit settingsFilesChanged(s);
-    else
-        emit settingsChanged(s);
-*/
 }

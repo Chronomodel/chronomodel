@@ -45,7 +45,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 class MHVariable: public MetropolisVariable
 {
-
 public:
     enum SamplerProposal{
         // Event

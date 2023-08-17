@@ -37,17 +37,17 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#include "PluginCSVRefView.h"
-#if USE_PLUGIN_CSV
+#include "PluginDensityRefView.h"
+#if USE_PLUGIN_DENSITY
 
-#include "PluginCSV.h"
+#include "PluginDensity.h"
 #include "GraphView.h"
 #include "StdUtilities.h"
 #include "Painting.h"
 
 #include <QtWidgets>
 
-PluginCSVRefView::PluginCSVRefView(QWidget* parent):GraphViewRefAbstract(parent)
+PluginDensityRefView::PluginDensityRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
     mMeasureColor = QColor(98, 113, 123, 240);
     mGraph = new GraphView(this);
@@ -59,12 +59,12 @@ PluginCSVRefView::PluginCSVRefView(QWidget* parent):GraphViewRefAbstract(parent)
 
 }
 
-PluginCSVRefView::~PluginCSVRefView()
+PluginDensityRefView::~PluginDensityRefView()
 {
 
 }
 
-void PluginCSVRefView::setDate(const Date& date, const StudyPeriodSettings& settings)
+void PluginDensityRefView::setDate(const Date& date, const StudyPeriodSettings& settings)
 {
     GraphViewRefAbstract::setDate(date, settings);
 
@@ -100,7 +100,7 @@ void PluginCSVRefView::setDate(const Date& date, const StudyPeriodSettings& sett
         if (!date.isNull()) {
 
             //const QString mode = date.mData.value(DATE_GAUSS_MODE_STR).toString();
-            const QString ref_curve = date.mData.value(DATE_CSV_CURVE_STR).toString();
+            const QString ref_curve = date.mData.value(DATE_DENSITY_CURVE_STR).toString();
 
             /* ----------------------------------------------
              *  Reference curve
@@ -116,7 +116,7 @@ void PluginCSVRefView::setDate(const Date& date, const StudyPeriodSettings& sett
             double yMin = tminDisplay;
             double yMax = tmaxDisplay;
 
-                PluginCSV* plugin = static_cast<PluginCSV*> (date.mPlugin);
+                PluginDensity* plugin = static_cast<PluginDensity*> (date.mPlugin);
 
                 const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
 
@@ -233,17 +233,17 @@ void PluginCSVRefView::setDate(const Date& date, const StudyPeriodSettings& sett
     }
 }
 
-void PluginCSVRefView::zoomX(const double min, const double max)
+void PluginDensityRefView::zoomX(const double min, const double max)
 {
     mGraph->zoomX(min, max);
 }
 
-void PluginCSVRefView::setMarginRight(const int margin)
+void PluginDensityRefView::setMarginRight(const int margin)
 {
     mGraph->setMarginRight(margin);
 }
 
-void PluginCSVRefView::resizeEvent(QResizeEvent* e)
+void PluginDensityRefView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
     mGraph->setGeometry(0, 0, width(), height());

@@ -161,7 +161,7 @@ mUnitFunctionY(nullptr)
     mCurves = graph.mCurves;
     mZones = graph.mZones;
 
-   mBufferBack = QPixmap();
+   //mBufferBack = QPixmap();
 }
 
 void GraphView::copyFrom(const GraphView& graph)
@@ -217,7 +217,7 @@ void GraphView::copyFrom(const GraphView& graph)
     mCurves = graph.mCurves;
     mZones = graph.mZones;
 
-    mBufferBack = graph.mBufferBack;
+    //mBufferBack = graph.mBufferBack;
 }
 
 GraphView::~GraphView()
@@ -649,21 +649,22 @@ void GraphView::setTipYLab(const QString &lab)
     mTipYLab = lab =="" ? "":  lab + " = ";
 }
 
-void GraphView::resizeEvent(QResizeEvent* event)
+void GraphView::resizeEvent(QResizeEvent* )
 {
-    (void)event;
-
+    if (width() == 0 || height() == 0)
+        return;
+/*
     if (!mBufferBack.isNull()) {
         const qreal sx = qreal(rect().width()) / qreal (mBufferBack.rect().width());
         const qreal sy = qreal (rect().height()) / qreal (mBufferBack.rect().height());
 
-        if (sx>.5 || sy>.5) {
+        if (sx>1. || sy>1.) {
             mBufferBack = QPixmap(width(), height());
             updateGraphSize(width(), height());
             paintToDevice(&mBufferBack);
 
-        } else {
-         mBufferBack = mBufferBack.transformed(QTransform::fromScale(sx, sy), Qt::SmoothTransformation);
+        } else {// l'image est trop deformée, c'est moche !!
+            mBufferBack = mBufferBack.transformed(QTransform::fromScale(sx, sy), Qt::SmoothTransformation);
         }
 
     }
@@ -672,7 +673,7 @@ void GraphView::resizeEvent(QResizeEvent* event)
         updateGraphSize(width(), height());
         paintToDevice(&mBufferBack);
     }
-
+*/
     repaintGraph(true);
 }
 
@@ -692,9 +693,10 @@ void GraphView::updateGraphSize(qreal w, qreal h)
 
 void GraphView::repaintGraph(const bool aAlsoPaintBackground)
 {
-    if (aAlsoPaintBackground) {
+    (void) aAlsoPaintBackground;
+  /*  if (aAlsoPaintBackground) {
         mBufferBack = QPixmap();
-    }
+    } */
     update();
 }
 
@@ -717,22 +719,23 @@ void GraphView::paintEvent(QPaintEvent* )
     /* resize build mBufferBack, so we don't need to
      * rebuid a graph. We need it in the resizeEvent
      * */
-    if (!mBufferBack.isNull() && !mTipVisible) {
+  /*  if (!mBufferBack.isNull() && !mTipVisible) {
         QPainter p(this);
         p.setRenderHints(QPainter::Antialiasing);
         p.drawPixmap(mBufferBack.rect(), mBufferBack, rect());
         return;
     }
+*/
     updateGraphSize(width(), height());
     if ((mGraphWidth <= 0) || (mGraphHeight <= 0))
         return;
 
-    mBufferBack = QPixmap();
+  //  mBufferBack = QPixmap();
     paintToDevice(this);
 
     QPainter p(this);
     p.setRenderHints(QPainter::Antialiasing);
-    p.drawPixmap(mBufferBack.rect(), mBufferBack, rect());
+  //  p.drawPixmap(mBufferBack.rect(), mBufferBack, rect());
 
     /* ----------------------------------------------------
      *  Tool Tip (above all) Draw horizontal and vertical red line

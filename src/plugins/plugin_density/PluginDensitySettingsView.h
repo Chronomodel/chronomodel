@@ -37,33 +37,25 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef PLUGINCSVREFVIEW_H
-#define PLUGINCSVREFVIEW_H
+#ifndef PLUGINDENSITYSETTINGSVIEW_H
+#define PLUGINDENSITYSETTINGSVIEW_H
 
-#if USE_PLUGIN_CSV
+#if USE_PLUGIN_DENSITY
 
-#include "GraphViewRefAbstract.h"
+#include "PluginSettingsViewAbstract.h"
+#include "PluginDensity.h"
 
-class PluginCSV;
-class GraphView;
-class QVBoxLayout;
+class PluginRefCurveSettingsView;
 
-
-class PluginCSVRefView: public GraphViewRefAbstract
+class PluginDensitySettingsView: public PluginSettingsViewAbstract
 {
     Q_OBJECT
 public:
-    explicit PluginCSVRefView(QWidget* parent = nullptr);
-    virtual ~PluginCSVRefView();
+    PluginDensitySettingsView(PluginDensity* plugin, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
+    virtual ~PluginDensitySettingsView();
 
-    void setDate(const Date& d, const StudyPeriodSettings& settings);
-
-public slots:
-    void zoomX(const double min, const double max);
-    void setMarginRight(const int margin);
 protected:
-    void resizeEvent(QResizeEvent* e);
-
+    PluginRefCurveSettingsView* mRefView;
 };
 
 #endif

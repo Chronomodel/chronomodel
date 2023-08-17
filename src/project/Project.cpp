@@ -2089,12 +2089,7 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
                 isCorrected = true;
             }
 
-            /*    enum DataMethod{
-                    eMHSymetric = 0,
-                    eInversion = 1,
-                    eMHSymGaussAdapt = 2
-                };
-            */
+
             if (date.find(STATE_DATE_METHOD) != date.end()) { // since version 3.0
                 switch (date.value(STATE_DATE_METHOD).toInt()) {
                 case 0 :

@@ -202,7 +202,7 @@ protected:
     void drawShape(GraphCurve &curve, QPainter& painter);
     void drawDensity(GraphCurve &curve, QPainter& painter);
 
-    void resizeEvent(QResizeEvent* event);
+    void resizeEvent(QResizeEvent*);
 
     void paintEvent(QPaintEvent*);
     void repaintGraph(const bool aAlsoPaintBackground);
@@ -211,7 +211,7 @@ protected:
     void mouseMoveEvent(QMouseEvent* e);
 
 protected:
-    QPixmap	mBufferBack;
+   // QPixmap	mBufferBack;// déforme trop l'image
 
     AxisTool mAxisToolX;
     AxisTool mAxisToolY;

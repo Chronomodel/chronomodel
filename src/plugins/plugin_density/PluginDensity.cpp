@@ -37,13 +37,13 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#if USE_PLUGIN_CSV
-#include "PluginCSV.h"
+#if USE_PLUGIN_DENSITY
+#include "PluginDensity.h"
 
 #include "QtUtilities.h"
-#include "PluginCSVForm.h"
-#include "PluginCSVRefView.h"
-#include "PluginCSVSettingsView.h"
+#include "PluginDensityForm.h"
+#include "PluginDensityRefView.h"
+#include "PluginDensitySettingsView.h"
 #include "Generator.h"
 
 #include <QJsonObject>
@@ -53,87 +53,63 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <iostream>
 #include <stdio.h>
 
-PluginCSV::PluginCSV()
+PluginDensity::PluginDensity()
 {
     mColor = QColor(217, 37, 37);
     loadRefDatas();
 }
 
-PluginCSV::~PluginCSV()
+PluginDensity::~PluginDensity()
 {
     if (mRefGraph)
         delete mRefGraph;
 }
 
 // Likelihood
-long double PluginCSV::getLikelihood(const double& t, const QJsonObject& data)
+long double PluginDensity::getLikelihood(const double &t, const QJsonObject &data)
 {
-    const QString ref_curve = data.value(DATE_CSV_CURVE_STR).toString().toLower();
+    const QString ref_curve = data.value(DATE_DENSITY_CURVE_STR).toString().toLower();
     const long double v = getRefCurveValueAt(ref_curve, t);
 
    return v;
 }
 
-QPair<long double, long double> PluginCSV::getLikelihoodArg(const double& t, const QJsonObject& data)
+QPair<long double, long double> PluginDensity::getLikelihoodArg(const double &t, const QJsonObject &data)
 {
     
-    // inherits the first data propeties as plug-in and method...
-   /*
-        const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
-        const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
-        const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
 
-        //long double exponent;
-
-        const double refError = getRefErrorAt(data, t, mode);
-        const long double variance = static_cast<long double>(refError * refError + error * error);
-
-        double refValue;
-
-        if (mode == DATE_GAUSS_MODE_CURVE) {
-            const QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
-            refValue = getRefCurveValueAt(ref_curve, t);
-
-        } else {
-            refValue = getRefValueAt(data, t);
-        }
-
-        const long double exponent = -0.5l * powl(static_cast<long double>(age - refValue), 2.l) / variance;
-
-        return qMakePair(variance, exponent);
-*/
-   const QString ref_curve = data.value(DATE_CSV_CURVE_STR).toString().toLower();
+   const QString ref_curve = data.value(DATE_DENSITY_CURVE_STR).toString().toLower();
    const long double v = getRefCurveValueAt(ref_curve, t);
    return qMakePair(1., log(v));
 }
     
 // Properties
-QString PluginCSV::getName() const
+QString PluginDensity::getName() const
 {
-    return QString("CSV");
+    return QString("Density");
 }
 
-QIcon PluginCSV::getIcon() const
+QIcon PluginDensity::getIcon() const
 {
     return QIcon(":/csv.png");
 }
 
-bool PluginCSV::doesCalibration() const
+bool PluginDensity::doesCalibration() const
 {
     return true;
 }
 
-bool PluginCSV::wiggleAllowed() const
+bool PluginDensity::wiggleAllowed() const
 {
     return true;
 }
 
-MHVariable::SamplerProposal PluginCSV::getDataMethod() const
+MHVariable::SamplerProposal PluginDensity::getDataMethod() const
 {
     return MHVariable::eMHSymGaussAdapt;
 }
 
-QList<MHVariable::SamplerProposal> PluginCSV::allowedDataMethods() const
+QList<MHVariable::SamplerProposal> PluginDensity::allowedDataMethods() const
 {
     QList<MHVariable::SamplerProposal> methods;
     methods.append(MHVariable::eMHSymetric);
@@ -142,7 +118,7 @@ QList<MHVariable::SamplerProposal> PluginCSV::allowedDataMethods() const
     return methods;
 }
 
-QString PluginCSV::getDateDesc(const Date* date) const
+QString PluginDensity::getDateDesc(const Date* date) const
 {
     Q_ASSERT(date);
     QString result;
@@ -151,7 +127,7 @@ QString PluginCSV::getDateDesc(const Date* date) const
 
         const QJsonObject &data = date->mData;
 
-        const QString ref_curve = data[DATE_CSV_CURVE_STR].toString().toLower();
+        const QString ref_curve = data[DATE_DENSITY_CURVE_STR].toString().toLower();
         if (mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty())
             result += " " + tr("Ref. curve : %1").arg(ref_curve);
         else
@@ -172,68 +148,77 @@ QString PluginCSV::getDateDesc(const Date* date) const
 
 }
 
-QString PluginCSV::getDateRefCurveName(const Date* date)
+QString PluginDensity::getDateRefCurveName(const Date* date)
 {
     Q_ASSERT(date);
     const QJsonObject &data = date->mData;
 
-    return data[DATE_CSV_CURVE_STR].toString().toLower();
+    return data[DATE_DENSITY_CURVE_STR].toString().toLower();
 
 }
 
 // CSV
-QString PluginCSV::csvHelp() const
+QString PluginDensity::csvHelp() const
 {
     return "CSV file name";
 }
 
-QStringList PluginCSV::csvColumns() const
+QStringList PluginDensity::csvColumns() const
 {
     QStringList cols;
     cols << "Data Name"  << "File name" ;
     return cols;
 }
 
-qsizetype PluginCSV::csvMinColumns() const{
+qsizetype PluginDensity::csvMinColumns() const{
     return csvColumns().count() - 2;
 }
 
-QJsonObject PluginCSV::fromCSV(const QStringList &list, const QLocale &csvLocale)
+/**
+ * @brief PluginDensity::fromCSV
+ * @param list
+ * @param csvLocale
+ * @return
+ * @example
+ * No name; Density; New Data; gate [20 :: 40].csv;none
+ * Density; Density; lognorm; lognorm(3 :: 2) _0to20 50pts.csv;none
+ */
+QJsonObject PluginDensity::fromCSV(const QStringList &list, const QLocale &csvLocale)
 {
     (void) csvLocale;
     QJsonObject json;
     if (list.size() >= csvMinColumns()) {
-        json.insert(DATE_CSV_CURVE_STR, list.at(1));
+        json.insert(DATE_DENSITY_CURVE_STR, list.at(1));
     }
 
     return json;
 }
 
-QStringList PluginCSV::toCSV(const QJsonObject &data, const QLocale &csvLocale) const
+QStringList PluginDensity::toCSV(const QJsonObject &data, const QLocale &csvLocale) const
 {
     (void) csvLocale;
     QStringList list;
-    list << data.value(DATE_CSV_CURVE_STR).toString();
+    list << data.value(DATE_DENSITY_CURVE_STR).toString();
 
     return list;
 }
 
 // ------------------------------------------------------------------
 
-// Reference Curves (files)
-QString PluginCSV::getRefExt() const
+// Density Curves (files)
+QString PluginDensity::getRefExt() const
 {
     return "csv";
 }
 
-QString PluginCSV::getRefsPath() const
+QString PluginDensity::getRefsPath() const
 {
-    qDebug()<< "[PluginCSV::getRefsPath()] " << AppPluginLibrary() + "/Calib/CSV";
-    return AppPluginLibrary() + "/Calib/CSV";
+    qDebug()<< "[PluginDensity::getRefsPath()] " << AppPluginLibrary() + "/Calib/Density";
+    return AppPluginLibrary() + "/Calib/Density";
 }
 
 /**
- * @brief PluginCSV::loadRefFile the reference curve must be in english CSV mode_t
+ * @brief PluginDENSITY::loadRefFile the reference curve must be in english CSV mode_t
  * it's mean decimal separator is dot and value separator is coma
  * @param refFile
  * @return
@@ -243,7 +228,7 @@ QString PluginCSV::getRefsPath() const
  * tmax
  * values in column, the step is define with the number of values step = (tmax-tmin)/nbre + 1
  */
-RefCurve PluginCSV::loadRefFile(QFileInfo refFile)
+RefCurve PluginDensity::loadRefFile(QFileInfo refFile)
 {
     RefCurve curve;
     curve.mName = refFile.fileName().toLower();
@@ -326,9 +311,9 @@ RefCurve PluginCSV::loadRefFile(QFileInfo refFile)
     return curve;
 }
 
-double PluginCSV::getMinStepRefsCurve(const QJsonObject &data) const
+double PluginDensity::getMinStepRefsCurve(const QJsonObject &data) const
 {
-    const QString ref_curve = data.value(DATE_CSV_CURVE_STR).toString().toLower();
+    const QString ref_curve = data.value(DATE_DENSITY_CURVE_STR).toString().toLower();
 
     if (mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
         return mRefCurves.value(ref_curve).mMinStep;
@@ -338,14 +323,14 @@ double PluginCSV::getMinStepRefsCurve(const QJsonObject &data) const
     }
 }
 // Reference Values & Errors
-double PluginCSV::getRefValueAt(const QJsonObject &data, const double &t)
+double PluginDensity::getRefValueAt(const QJsonObject &data, const double &t)
 {
     (void)  data;
     (void) t;
     return 0.;
 }
 
-double PluginCSV::getRefErrorAt(const QJsonObject &data, const double &t, const QString mode)
+double PluginDensity::getRefErrorAt(const QJsonObject &data, const double &t, const QString mode)
 {
     (void)  data;
     (void) t;
@@ -353,13 +338,13 @@ double PluginCSV::getRefErrorAt(const QJsonObject &data, const double &t, const 
     return 0.;
 }
 
-QPair<double, double> PluginCSV::getTminTmaxRefsCurve(const QJsonObject& data) const
+QPair<double, double> PluginDensity::getTminTmaxRefsCurve(const QJsonObject &data) const
 {
     double tmin = 0.;
     double tmax = 0.;
 
 
-    QString ref_curve = data.value(DATE_CSV_CURVE_STR).toString().toLower();
+    const QString ref_curve = data.value(DATE_DENSITY_CURVE_STR).toString().toLower();
 #ifdef DEBUG
     if (mRefCurves.contains(ref_curve) && !mRefCurves.value(ref_curve).mDataMean.isEmpty()) {
 #endif
@@ -368,7 +353,7 @@ QPair<double, double> PluginCSV::getTminTmaxRefsCurve(const QJsonObject& data) c
 #ifdef DEBUG
 
     } else
-            qDebug() << "[PluginCSV::getTminTmaxRefsCurve] no ref curve";
+            qDebug() << "[PluginDENSITY::getTminTmaxRefsCurve] no ref curve";
 #endif
 
     return QPair<double,double>(tmin, tmax);
@@ -377,71 +362,59 @@ QPair<double, double> PluginCSV::getTminTmaxRefsCurve(const QJsonObject& data) c
 // ------------------------------------------------------------------
 
 // Settings / Input Form / RefView
-GraphViewRefAbstract* PluginCSV::getGraphViewRef()
+GraphViewRefAbstract* PluginDensity::getGraphViewRef()
 {
-   mRefGraph = new PluginCSVRefView();
+   mRefGraph = new PluginDensityRefView();
 
    return mRefGraph;
 }
-void PluginCSV::deleteGraphViewRef(GraphViewRefAbstract* graph)
+void PluginDensity::deleteGraphViewRef(GraphViewRefAbstract* graph)
 {
     if (graph)
-        delete static_cast<PluginCSVRefView*>(graph);
+        delete static_cast<PluginDensityRefView*>(graph);
 
     graph = nullptr;
     mRefGraph = nullptr;
 }
-PluginSettingsViewAbstract* PluginCSV::getSettingsView()
+
+PluginSettingsViewAbstract* PluginDensity::getSettingsView()
 {
-    return new PluginCSVSettingsView(this);
+    return new PluginDensitySettingsView(this);
 }
 
-PluginFormAbstract* PluginCSV::getForm()
+PluginFormAbstract* PluginDensity::getForm()
 {
-    PluginCSVForm* form = new PluginCSVForm(this);
+    PluginDensityForm* form = new PluginDensityForm(this);
     return form;
 }
 
 // ------------------------------------------------------------------
 
 // Convert old project versions
-QJsonObject PluginCSV::checkValuesCompatibility(const QJsonObject& values)
+QJsonObject PluginDensity::checkValuesCompatibility(const QJsonObject &values)
 {
     QJsonObject result = values;
-    /*
-    if (!values.contains(DATE_GAUSS_MODE_STR)) {
-        result.insert(DATE_GAUSS_MODE_STR, QString(DATE_GAUSS_MODE_EQ));
-    }
-    //force type double
-    result[DATE_GAUSS_AGE_STR] = result.value(DATE_GAUSS_AGE_STR).toDouble();
-    result[DATE_GAUSS_ERROR_STR] = result.value(DATE_GAUSS_ERROR_STR).toDouble();
-
-    result[DATE_GAUSS_A_STR] = result.value(DATE_GAUSS_A_STR).toDouble();
-    result[DATE_GAUSS_B_STR] = result.value(DATE_GAUSS_B_STR).toDouble();
-    result[DATE_GAUSS_C_STR] = result.value(DATE_GAUSS_C_STR).toDouble();
-*/
-    result[DATE_CSV_CURVE_STR] = result.value(DATE_CSV_CURVE_STR).toString().toLower();
+    result[DATE_DENSITY_CURVE_STR] = result.value(DATE_DENSITY_CURVE_STR).toString().toLower();
 
     return result;
 }
 
 // Date Validity
-bool PluginCSV::isDateValid(const QJsonObject& data, const StudyPeriodSettings& settings)
-{
-    bool valid = true;
-
-    return valid;
-}
-
-// Combine / Split
-bool PluginCSV::areDatesMergeable(const QJsonArray& )
+bool PluginDensity::isDateValid(const QJsonObject &, const StudyPeriodSettings &)
 {
     return true;
 }
+
+// Combine / Split
+bool PluginDensity::areDatesMergeable(const QJsonArray& )
+{
+    return true;
+}
+
 /**
  * @brief Combine several CSV densities
  **/
-QJsonObject PluginCSV::mergeDates(const QJsonArray& dates)
+QJsonObject PluginDensity::mergeDates(const QJsonArray &dates)
 {
     QJsonObject result;
     const double k = 10.;
@@ -498,7 +471,7 @@ QJsonObject PluginCSV::mergeDates(const QJsonArray& dates)
 
         QJsonObject mergedData;
 
-        mergedData[DATE_CSV_CURVE_STR] = DATE_CSV_CURVE_STR;
+        mergedData[DATE_DENSITY_CURVE_STR] = DATE_DENSITY_CURVE_STR;
 
 
         result[STATE_DATE_DATA] = mergedData;

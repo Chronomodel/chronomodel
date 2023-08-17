@@ -63,9 +63,10 @@ public :
 
 };
 
-class MetropolisVariable: public QObject
+class MetropolisVariable
+//: public QObject
 {
-    Q_OBJECT
+   // Q_OBJECT
 public:
     enum Support
     {
@@ -104,7 +105,6 @@ public:
     std::pair<double, double> mRawCredibility;
     std::pair<double, double> mFormatedCredibility;
 
-    //double mCredibilityThresholdUsed;
     double mExactCredibilityThreshold;
 
     DensityAnalysis mResults;
@@ -122,10 +122,10 @@ private:
     QString mName;
 public:
     MetropolisVariable(QObject *parent = nullptr);
-    explicit MetropolisVariable(const MetropolisVariable& origin);
+    explicit MetropolisVariable(const MetropolisVariable &origin);
 
     virtual ~MetropolisVariable();
-    MetropolisVariable& operator=(const MetropolisVariable & origin);
+    MetropolisVariable& operator=(const MetropolisVariable &origin);
 
 
     void memo(double *valueToSave = nullptr);
@@ -250,7 +250,6 @@ public:
     QStringList getResultsList(const QLocale locale, const int precision = 0, const bool withDateFormat = true);
 
 
-//public slots:
       void updateFormatedTrace(const DateUtils::FormatDate fm);
 
 private:

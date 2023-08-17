@@ -52,7 +52,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 /** Default constructor */
 MetropolisVariable::MetropolisVariable(QObject *parent):
-    QObject(parent),
+    //QObject(parent),
     mX (0.),
     mRawTrace (nullptr),
     mFormatedTrace (nullptr),
@@ -627,29 +627,29 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
     QString result = densityAnalysisToString(mResults, nl, forCSV) + nl;
 
     if (forCSV) {
-        result += tr("Probabilities") + nl;
+        result += QObject::tr("Probabilities") + nl;
 
             // the mFormatedCredibility is already in the time scale, we don't need to convert
             if (mFormatedCredibility != std::pair<double, double>(1, -1)) {
-                result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForCSV(mExactCredibilityThreshold * 100.),
+                result += QObject::tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForCSV(mExactCredibilityThreshold * 100.),
                                                                                        stringForCSV(mFormatedCredibility.first),
                                                                                        stringForCSV(mFormatedCredibility.second),
                                                                                        unit) + nl;
                 if (!mFormatedHPD.isEmpty())
-                    result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForCSV(mThresholdUsed), getHPDText(mFormatedHPD, mThresholdUsed, unit, conversionFunc, true)) + nl;
+                    result += QObject::tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForCSV(mThresholdUsed), getHPDText(mFormatedHPD, mThresholdUsed, unit, conversionFunc, true)) + nl;
 
            }
    } else {
-        result += "<i>"+ tr("Probabilities") + " </i>"+ nl;
+        result += "<i>"+ QObject::tr("Probabilities") + " </i>"+ nl;
 
             // the mFormatedCredibility is already in the time scale, we don't need to convert
             if (mFormatedCredibility != std::pair<double, double>(1, -1))
-                result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(mExactCredibilityThreshold * 100.),
+                result += QObject::tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(mExactCredibilityThreshold * 100.),
                                                                                        stringForLocal(mFormatedCredibility.first),
                                                                                        stringForLocal(mFormatedCredibility.second),
                                                                                        unit) + nl;
             if (!mFormatedHPD.isEmpty())
-                result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForLocal(mThresholdUsed), getHPDText(mFormatedHPD, mThresholdUsed, unit, conversionFunc, false)) + nl;
+                result += QObject::tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForLocal(mThresholdUsed), getHPDText(mFormatedHPD, mThresholdUsed, unit, conversionFunc, false)) + nl;
 
   }
    return result;

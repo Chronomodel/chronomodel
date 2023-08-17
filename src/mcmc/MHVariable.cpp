@@ -346,10 +346,10 @@ QString MHVariable::resultsString(const QString &nl, const QString &noResultMess
         const QString result = MetropolisVariable::resultsString(nl, noResultMessage, unit, formatFunc, forCSV);
         const QString globalTxt = forCSV ? stringForCSV(mGlobalAcceptationPerCent) : stringForLocal(mGlobalAcceptationPerCent);
 
-        return result + nl + tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(globalTxt, getSamplerProposalText(mSamplerProposal));
+        return result + nl + QObject::tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(globalTxt, getSamplerProposalText(mSamplerProposal));
 
     } else {
-        return tr("Fixed value : %1").arg(stringForLocal(mFormatedTrace->at(0))); // for VG mX is Variance and we need Std gi
+        return QObject::tr("Fixed value : %1").arg(stringForLocal(mFormatedTrace->at(0))); // for VG mX is Variance and we need Std gi
     }
 
 }

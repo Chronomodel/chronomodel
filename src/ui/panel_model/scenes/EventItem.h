@@ -47,7 +47,7 @@ class EventsScene;
 
 class EventItem : public AbstractItem
 {
-
+    Q_OBJECT
 protected:
     QSize mSize;
     QJsonObject mStudyPeriodSettings;

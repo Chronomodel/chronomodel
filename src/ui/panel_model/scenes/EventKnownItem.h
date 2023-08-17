@@ -44,13 +44,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 class EventKnownItem : public EventItem
 {
+    Q_OBJECT
 public:
-    EventKnownItem(EventsScene* eventsScene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent = 0);
+    EventKnownItem(EventsScene* eventsScene, const QJsonObject &event, const QJsonObject &settings, QGraphicsItem* parent = 0);
     virtual ~EventKnownItem();
 
     virtual QRectF boundingRect() const;
 
-    void setEvent(const QJsonObject& event, const QJsonObject& settings);
+    void setEvent(const QJsonObject &event, const QJsonObject &settings);
     void setDatesVisible(const bool visible);
 
 protected:
