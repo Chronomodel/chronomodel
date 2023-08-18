@@ -214,8 +214,12 @@ T range_min_value(const C<T>& range)
 
 
 template <class U, class T>
-typename QMap<U, T>::const_iterator map_max_value(const QMap<U, T> &map)
+typename QMap<U, T>::const_iterator map_max(const QMap<U, T> &map)
 {
+    /** return std::max_element(map.toStdMap().begin(), map.toStdMap().end(),
+                              [](const QMap<U, T>& p1, const QMap<U, T>& p2) {
+                                  return p1.values() < p2.values(); });
+    */
     typename QMap<U, T>::const_iterator i = map.cbegin();
     typename QMap<U, T>::const_iterator biggest = i;
     ++i;
@@ -224,6 +228,7 @@ typename QMap<U, T>::const_iterator map_max_value(const QMap<U, T> &map)
         if (*i > *biggest )  biggest = i;
 
     return biggest;
+
 }
 
 /**
@@ -234,7 +239,7 @@ typename QMap<U, T>::const_iterator map_max_value(const QMap<U, T> &map)
  * @return Returns a pointer to the element with the largest value
  */
 template <class U, class T>
-typename QMap<U, T>::const_iterator map_max_value(const QMap<U, T> &map, U min, U max)
+typename QMap<U, T>::const_iterator map_max(const QMap<U, T> &map, U min, U max)
 {
     typename QMap<U, T>::const_iterator i = map.cbegin();
     if (map.lastKey()<min)
@@ -264,8 +269,12 @@ typename QMap<U, T>::const_iterator map_max_value(const QMap<U, T> &map, U min, 
  * @return Returns a pointer to the element with the smallest value
  */
 template <class U, class T>
-typename QMap<U, T>::const_iterator map_min_value(const QMap<U, T> &map)
+typename QMap<U, T>::const_iterator map_min(const QMap<U, T> &map)
 {
+    /* return std::min_element(map.begin(), map.end(),
+                            [](const QMap<U, T>& p1, const QMap<U, T>& p2) {
+                                return p1.values() < p2.values(); });
+    */
     typename QMap<U, T>::const_iterator i = map.cbegin();
 
     typename QMap<U, T>::const_iterator smallest = i;
@@ -276,6 +285,35 @@ typename QMap<U, T>::const_iterator map_min_value(const QMap<U, T> &map)
 
 }
 
+/**
+ * @brief We assume that min and max are in the values of the map
+ * @param map
+ * @param min
+ * @param max
+ * @return Returns a pointer to the element with the largest value
+ */
+template <class U, class T>
+typename QMap<U, T>::const_iterator map_min(const QMap<U, T> &map, U min, U max)
+{
+    typename QMap<U, T>::const_iterator i = map.cbegin();
+    if (map.lastKey()<min)
+        return i;
+
+    else if (map.firstKey()>max)
+        return i;
+
+    else {
+        while (i.key()<min)
+            ++i;
+
+        typename QMap<U, T>::const_iterator smallest = i;
+        for (; i != map.cend() && i.key()<=max; ++i)
+            if (*i < *smallest )  smallest = i;
+
+        return smallest;
+    }
+
+}
 template <class U, class T>
 T multimap_max_value(const QMultiMap<U, T> &map)
 {
@@ -380,7 +418,7 @@ Container<T, T> normalize_map(const Container<T, T> &map, const T max = 1)
 {
     Container<T, T> result;
     if (!map.isEmpty()) {
-        const T max_value = map_max_value(map).value();
+        const T max_value = map_max(map).value();
 
         // can be done with std::generate !!
         for( typename Container<T, T>::const_iterator it = map.begin(); it != map.end(); ++it)

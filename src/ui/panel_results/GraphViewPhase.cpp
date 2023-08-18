@@ -156,12 +156,12 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
         const bool betaIsBound = (beta.size()==1);
 
         if (alphaIsBound && !betaIsBound) {
-            const double normPdf = map_max_value(beta).value();
+            const double normPdf = map_max(beta).value();
             alpha[alpha.firstKey()] =  normPdf;
             alphaHPD[alphaHPD.firstKey()] = normPdf;
 
         } else if (betaIsBound && !alphaIsBound) {
-            const double normPdf = map_max_value(alpha).value();
+            const double normPdf = map_max(alpha).value();
             beta[beta.firstKey()] = normPdf;
             betaHPD[betaHPD.firstKey()] = normPdf;
 
@@ -210,10 +210,10 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
                 QMap<double, double> &alpha_i = mPhase->mAlpha.mChainsHistos[i];
                 QMap<double, double> &beta_i = mPhase->mBeta.mChainsHistos[i];
                 if (alphaIsBound && !betaIsBound) {
-                    alpha_i[alpha_i.firstKey()] =  map_max_value(beta_i).value();
+                    alpha_i[alpha_i.firstKey()] =  map_max(beta_i).value();
 
                 } else if (betaIsBound && !alphaIsBound) {
-                    beta_i[beta_i.firstKey()] = map_max_value(alpha_i).value();
+                    beta_i[beta_i.firstKey()] = map_max(alpha_i).value();
                 }
 
                 const GraphCurve &curveBegin = densityCurve(alpha_i,
@@ -312,7 +312,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
 
             mGraph->add_curve(curveActivityUnifTheo);
 
-            const type_data yMax = std:: max(map_max_value(mPhase->mActivitySup).value(), map_max_value(mPhase->mActivityUnifTheo).value());
+            const type_data yMax = std:: max(map_max(mPhase->mActivitySup).value(), map_max(mPhase->mActivityUnifTheo).value());
 
             mGraph->setRangeY(0., yMax);
 

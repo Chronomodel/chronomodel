@@ -255,15 +255,16 @@ void GraphView::adjustYScale()
                     const auto &curveInf = curve.mShape.first;
                     const auto &curveSup = curve.mShape.second;
                     const QMap<qreal, qreal> &subDataInf = getMapDataInRange(curveInf, mCurrentMinX, mCurrentMaxX);
-                    if (!subDataInf.empty()) yMin = std::min(yMin, map_min_value(subDataInf).value());
+                    if (!subDataInf.empty()) yMin = std::min(yMin, map_min(subDataInf).value());
 
                     const QMap<qreal, qreal> &subDataSup = getMapDataInRange(curveSup, mCurrentMinX, mCurrentMaxX);
-                    if (!subDataSup.empty()) yMax = std::max(yMax, map_max_value(subDataSup).value());
+                    if (!subDataSup.empty()) yMax = std::max(yMax, map_max(subDataSup).value());
 
                   //  auto yMax2 = std::max(yMax, map_max_value(subDataSup, mCurrentMinX, mCurrentMaxX));
 
                 } else if (!curve.mData.empty()) {
-                    yMax = std::max(yMax, map_max_value(curve.mData, mCurrentMinX, mCurrentMaxX).value());
+                    yMax = std::max(yMax, map_max(curve.mData, mCurrentMinX, mCurrentMaxX).value());
+                    yMin = std::min(yMax, map_min(curve.mData, mCurrentMinX, mCurrentMaxX).value());
                     /*const QMap<qreal, qreal> &subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
                     if (!subData.empty()) {
                        // yMin = std::min(yMin, map_min_value(subData));
@@ -271,7 +272,7 @@ void GraphView::adjustYScale()
                     }
 */
 
-                    yMin = 0.;//
+                    //yMin = 0.;//
                 }
                 // map
                 if (curve.mMap.data.size() > 0) {

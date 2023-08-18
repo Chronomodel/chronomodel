@@ -117,8 +117,8 @@ void PluginGaussRefView::setDate(const Date& date, const StudyPeriodSettings& se
             curve.mName = "Reference";
             curve.mPen.setColor(Painting::mainColorDark);
 
-            double yMin = tminDisplay;
-            double yMax = tmaxDisplay;
+            //double yMin = tminDisplay;
+            //double yMax = tmaxDisplay;
 
             if (mode == DATE_GAUSS_MODE_NONE) {
               // nothing to do
@@ -139,8 +139,9 @@ void PluginGaussRefView::setDate(const Date& date, const StudyPeriodSettings& se
                 curve.mData = refCurve;
                 mGraph->add_curve(curve);
 
-              yMin = qMin( refCurve.first(), refCurve.last());
+              /* yMin = qMin( refCurve.first(), refCurve.last());
               yMax = qMax( refCurve.first(), refCurve.last());
+              */
                 // Y scale and RangeY are define in graphView::zommX()
 
 
@@ -181,10 +182,10 @@ void PluginGaussRefView::setDate(const Date& date, const StudyPeriodSettings& se
                     mGraph->add_zone(zone);
                 }
 
-                const double t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
+                /*const double t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
                 yMin = plugin->getRefValueAt(date.mData, t0);
                 yMax = yMin;
-
+                */
                 QMap<double, double> curveG;
                 QMap<double, double> curveG95Sup;
                 QMap<double, double> curveG95Inf;
@@ -215,8 +216,8 @@ void PluginGaussRefView::setDate(const Date& date, const StudyPeriodSettings& se
                      curveG95Sup[tminDisplay] = v + error;
                      curveG95Inf[tminDisplay] = v - error;
 
-                     yMin = qMin(yMin, curveG95Inf.value(tminDisplay));
-                     yMax = qMax(yMax, curveG95Sup.value(tminDisplay));
+                    // yMin = qMin(yMin, curveG95Inf.value(tminDisplay));
+                    // yMax = qMax(yMax, curveG95Sup.value(tminDisplay));
                 }
 
                 double t, tDisplay, error;
@@ -230,10 +231,11 @@ void PluginGaussRefView::setDate(const Date& date, const StudyPeriodSettings& se
                     curveG95Sup[tDisplay] = iPt.value() + error;
                     curveG95Inf[tDisplay] = iPt.value() - error;
 
-                    if (tDisplay>=tminDisplay && tDisplay<=tmaxDisplay) {
+                   /* if (tDisplay>=tminDisplay && tDisplay<=tmaxDisplay) {
                         yMin = qMin(yMin, curveG95Inf.value(tDisplay));
                         yMax = qMax(yMax, curveG95Sup.value(tDisplay));
                     }
+                   */
 
                 }
 
@@ -246,8 +248,8 @@ void PluginGaussRefView::setDate(const Date& date, const StudyPeriodSettings& se
             }
 
             if (mode != DATE_GAUSS_MODE_NONE) {
-                yMin = qMin(yMin, age - error * 3);
-                yMax = qMax(yMax, age + error * 3);
+                const double yMin = age - error * 4.;
+                const double yMax = age + error * 4.;
 
                 /* ----------------------------------------------
                  *  Measure curve

@@ -145,16 +145,29 @@ void PluginF14CRefView::setDate(const Date& date, const StudyPeriodSettings& set
                  mGraph->add_zone(zone);
              }
 
-             const double t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
+             //const double t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
+             //double yMin = plugin->getRefValueAt(date.mData, t0);
+             //double yMax (yMin);
+
+             /*double t0 = DateUtils::convertFromAppSettingsFormat(std::max(tminDisplay, tminRef));
+             double t1 = DateUtils::convertFromAppSettingsFormat(std::min(tmaxDisplay, tmaxRef));
+
+             if (t1 < t0)
+                 std::swap(t1, t0);
+
              double yMin = plugin->getRefValueAt(date.mData, t0);
-             double yMax (yMin);
+             double yMax = plugin->getRefValueAt(date.mData, t1);
+
+             if (yMax<yMin)
+                 std::swap(yMax, yMin);
+            */
 
              QMap<double, double> curveG;
              QMap<double, double> curveG95Sup;
              QMap<double, double> curveG95Inf;
 
              /*
-         * We need to skim the real map to fit with the real value of the calibration curve
+            * We need to skim the real map to fit with the real value of the calibration curve
          * The graphView function does the interpolation between the real point
          */
              for ( QMap<double, double>::const_iterator &&iPt = curve.mDataMean.cbegin();  iPt!=curve.mDataMean.cend(); ++iPt) {
@@ -167,10 +180,10 @@ void PluginF14CRefView::setDate(const Date& date, const StudyPeriodSettings& set
                  curveG95Sup[tDisplay] = iPt.value() + error;
                  curveG95Inf[tDisplay] = iPt.value() - error;
 
-                 if (tDisplay > tminDisplay && tDisplay < tmaxDisplay) {
+                 /*if (tDisplay > tminDisplay && tDisplay < tmaxDisplay) {
                      yMin = qMin(yMin, curveG95Inf.value(tDisplay));
                      yMax = qMax(yMax, curveG95Sup.value(tDisplay));
-                 }
+                 }*/
              }
              mGraph->setRangeX(tminDisplay,tmaxDisplay);
              mGraph->setCurrentX(tminDisplay, tmaxDisplay);
@@ -184,8 +197,8 @@ void PluginF14CRefView::setDate(const Date& date, const StudyPeriodSettings& set
              /* ----------------------------------------------
               *  Measure curve
               * ---------------------------------------------- */
-             yMin = qMin(yMin, age - error * 3);
-             yMax = qMax(yMax, age + error * 3);
+            double yMin = age - error * 4.;
+            double yMax = age + error * 4.;
 
              GraphCurve curveMeasure;
              curveMeasure.mName = "Measurement";

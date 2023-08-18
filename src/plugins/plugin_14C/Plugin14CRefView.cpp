@@ -71,8 +71,8 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
 
      if (date.mOrigin == Date::eSingleDate) {
 
-         double tminDisplay;
-         double tmaxDisplay;
+         double tminDisplay_formated_effective;
+         double tmaxDisplay_formated_effective;
 
          const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
          const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
@@ -81,17 +81,17 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
              const double t3 = date.getFormatedTminCalib();
              const double t4 = date.getFormatedTmaxCalib();
 
-             tminDisplay = qMin(t1, qMin(t2,t3));
-             tmaxDisplay = qMax(t1, qMax(t2,t4));
+             tminDisplay_formated_effective = qMin(t1, qMin(t2, t3));
+             tmaxDisplay_formated_effective = qMax(t1, qMax(t2, t4));
 
          } else {
-             tminDisplay = qMin(t1, t2);
-             tmaxDisplay = qMax(t1, t2);
+             tminDisplay_formated_effective = qMin(t1, t2);
+             tmaxDisplay_formated_effective = qMax(t1, t2);
          }
 
 
-         mGraph->setRangeX(tminDisplay, tmaxDisplay);
-         mGraph->setCurrentX(tminDisplay, tmaxDisplay);
+         mGraph->setRangeX(tminDisplay_formated_effective, tmaxDisplay_formated_effective);
+         mGraph->setCurrentX(tminDisplay_formated_effective, tmaxDisplay_formated_effective);
 
          mGraph->removeAllCurves();
          mGraph->remove_all_zones();
@@ -110,56 +110,63 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
               *  Reference curve
               * ---------------------------------------------- */
 
-             const double tminRef = date.getFormatedTminRefCurve();
-             const double tmaxRef = date.getFormatedTmaxRefCurve();
+            const double tminRef_formated = date.getFormatedTminRefCurve();
+            const double tmaxRef_formated = date.getFormatedTmaxRefCurve();
 
-             Plugin14C* plugin = static_cast<Plugin14C* >(date.mPlugin);
-             const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
+            Plugin14C* plugin = static_cast<Plugin14C* >(date.mPlugin);
+            const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
 
-             if (curve.mDataMean.isEmpty()) {
-                 GraphZone zone;
-                 zone.mColor = Qt::gray;
-                 zone.mColor.setAlpha(75);
-                 zone.mXStart = tminDisplay;
-                 zone.mXEnd = tmaxDisplay;
-                 zone.mText = tr("No reference data");
-                 mGraph->add_zone(zone);
-                 return;
-             }
+            if (curve.mDataMean.isEmpty()) {
+                GraphZone zone;
+                zone.mColor = Qt::gray;
+                zone.mColor.setAlpha(75);
+                zone.mXStart = tminDisplay_formated_effective;
+                zone.mXEnd = tmaxDisplay_formated_effective;
+                zone.mText = tr("No reference data");
+                mGraph->add_zone(zone);
+                return;
+            }
 
-             if (tminDisplay < tminRef) {
-                 GraphZone zone;
-                 zone.mColor = QColor(217, 163, 69);
-                 zone.mColor.setAlpha(75);
-                 zone.mXStart = tminDisplay;
-                 zone.mXEnd = tminRef;
-                 zone.mText = tr("Outside reference area");
-                 mGraph->add_zone(zone);
-             }
+            if (tminDisplay_formated_effective < tminRef_formated) {
+                GraphZone zone;
+                zone.mColor = QColor(217, 163, 69);
+                zone.mColor.setAlpha(75);
+                zone.mXStart = tminDisplay_formated_effective;
+                zone.mXEnd = tminRef_formated;
+                zone.mText = tr("Outside reference area");
+                mGraph->add_zone(zone);
+            }
 
-             if (tmaxRef < tmaxDisplay) {
-                 GraphZone zone;
-                 zone.mColor = QColor(217, 163, 69);
-                 zone.mColor.setAlpha(75);
-                 zone.mXStart = tmaxRef;
-                 zone.mXEnd = tmaxDisplay;
-                 zone.mText = tr("Outside reference area");
-                 mGraph->add_zone(zone);
-             }
+            if (tmaxRef_formated < tmaxDisplay_formated_effective) {
+                GraphZone zone;
+                zone.mColor = QColor(217, 163, 69);
+                zone.mColor.setAlpha(75);
+                zone.mXStart = tmaxRef_formated;
+                zone.mXEnd = tmaxDisplay_formated_effective;
+                zone.mText = tr("Outside reference area");
+                mGraph->add_zone(zone);
+            }
 
-             const double t0 = std::max(std::min(DateUtils::convertFromAppSettingsFormat(tminDisplay), DateUtils::convertFromAppSettingsFormat(tmaxDisplay)), tminRef);
-            // const double t0 = std::max({tminDisplay, tminRef});
-             double yMin = plugin->getRefValueAt(date.mData, t0);
-             double yMax (yMin);
+            /*double t0 = DateUtils::convertFromAppSettingsFormat(std::max(tminDisplay_formated_effective, tminRef_formated));
+            double t1 = DateUtils::convertFromAppSettingsFormat(std::min(tmaxDisplay_formated_effective, tmaxRef_formated));
 
-             QMap<double, double> curveG;
-             QMap<double, double> curveG95Sup;
-             QMap<double, double> curveG95Inf;
+            if (t1 < t0)
+                 std::swap(t1, t0);
+
+            double yMin = plugin->getRefValueAt(date.mData, t0);
+            double yMax = plugin->getRefValueAt(date.mData, t1);
+
+            if (yMax<yMin)
+                 std::swap(yMax, yMin);
+            */
+            QMap<double, double> curveG;
+            QMap<double, double> curveG95Sup;
+            QMap<double, double> curveG95Inf;
 
              /*
-         * We need to skim the real map to fit with the real value of the calibration curve
-         * The graphView function does the interpolation between the real point
-         */
+              * We need to skim the real map to fit with the real value of the calibration curve
+              * The graphView function does the interpolation between the real point
+              */
              for ( QMap<double, double>::const_iterator &&iPt = curve.mDataMean.cbegin();  iPt!=curve.mDataMean.cend(); ++iPt) {
                  const double t (iPt.key());
                  const double tDisplay = DateUtils::convertToAppSettingsFormat(t);
@@ -170,13 +177,13 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
                  curveG95Sup[tDisplay] = iPt.value() + error;
                  curveG95Inf[tDisplay] = iPt.value() - error;
 
-                 if (tDisplay>tminDisplay && tDisplay<tmaxDisplay) {
+                 /*if (tDisplay > tminDisplay_formated_effective && tDisplay < tmaxDisplay_formated_effective) {
                      yMin = qMin(yMin, curveG95Inf.value(tDisplay));
                      yMax = qMax(yMax, curveG95Sup.value(tDisplay));
-                 }
+                 }*/
              }
-             mGraph->setRangeX(tminDisplay,tmaxDisplay);
-             mGraph->setCurrentX(tminDisplay, tmaxDisplay);
+             mGraph->setRangeX(tminDisplay_formated_effective, tmaxDisplay_formated_effective);
+             mGraph->setCurrentX(tminDisplay_formated_effective, tmaxDisplay_formated_effective);
 
              const GraphCurve &graphCurveG = FunctionCurve(curveG, "G", Painting::mainColorDark );
              mGraph->add_curve(graphCurveG);
@@ -191,14 +198,14 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
              /* ----------------------------------------------
               *  Measure curve
               * ---------------------------------------------- */
-             yMin = qMin(yMin, age - error * 3);
-             yMax = qMax(yMax, age + error * 3);
 
-             GraphCurve curveMeasure;
-             curveMeasure.mName = "Measurement";
+            double yMin = age - error * 3.;
+            double yMax = age + error * 3.;
+            GraphCurve curveMeasure;
+            curveMeasure.mName = "Measurement";
 
-             QColor penColor(mMeasureColor);
-             QColor brushColor(mMeasureColor);
+            QColor penColor(mMeasureColor);
+            QColor brushColor(mMeasureColor);
 
              // Lower opacity in case of delta r not null
              if (delta_r != 0. && delta_r_error != 0.) {
@@ -234,7 +241,7 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
              mGraph->add_curve(curveMeasure);
 
              // Infos to write :
-             QString info = tr("Age BP : %1  ± %2").arg(locale().toString(age), locale().toString(error));
+             //QString info = tr("Age BP : %1  ± %2").arg(locale().toString(age), locale().toString(error));
 
              /* ----------------------------------------------
               *  Delta R curve
@@ -244,8 +251,8 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
                  age = (age - delta_r);
                  error = sqrt(error * error + delta_r_error * delta_r_error);
 
-                 yMin = qMin(yMin, age - error * 3);
-                 yMax = qMax(yMax, age + error * 3);
+                 yMin = qMin(yMin, age - error * 3.);
+                 yMax = qMax(yMax, age + error * 3.);
 
                  GraphCurve curveDeltaR;
                  curveDeltaR.mName = "Delta R";
@@ -276,7 +283,7 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
                  curveDeltaR.mData = deltaRCurve;
                  mGraph->add_curve(curveDeltaR);
 
-                 info += tr(", ΔR : %1  ± %2").arg(locale().toString(delta_r), locale().toString(delta_r_error));
+                // info += tr(", ΔR : %1  ± %2").arg(locale().toString(delta_r), locale().toString(delta_r_error));
              }
 
              /* ----------------------------------------------

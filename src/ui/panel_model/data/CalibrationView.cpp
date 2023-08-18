@@ -44,15 +44,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginAbstract.h"
 #include "GraphViewRefAbstract.h"
 #include "MainWindow.h"
-#include "Project.h"
 #include "GraphView.h"
-#include "CheckBox.h"
 #include "LineEdit.h"
 #include "Button.h"
 #include "StdUtilities.h"
 #include "Painting.h"
 #include "Label.h"
-#include "ModelUtilities.h"
 #include "QtUtilities.h"
 #include "DoubleValidator.h"
 #include "AppSettings.h"
@@ -341,7 +338,7 @@ void CalibrationView::updateGraphs()
 
             if (mDate.mDeltaType != Date::eDeltaNone) {
                 const QMap<double, double> &wiggleCalibMap =  mDate.getFormatedWiggleCalibToShow();
-                const QMap<double, double> &calibWiggle = normalize_map(wiggleCalibMap, map_max_value(calibCurve.mData).value());
+                const QMap<double, double> &calibWiggle = normalize_map(wiggleCalibMap, map_max(calibCurve.mData).value());
                 calibWiggleCurve = densityCurve(calibWiggle, "Wiggle", Qt::red);
 
                 mCalibGraph->add_curve(calibWiggleCurve);
@@ -374,11 +371,11 @@ void CalibrationView::updateGraphs()
                 QMap<type_data, type_data> displayCalib = getMapDataInRange(calibCurve.mData, mTminDisplay, mTmaxDisplay);
                 if (!displayCalib.isEmpty()) {
 
-                    yMax = map_max_value(displayCalib).value();
+                    yMax = map_max(displayCalib).value();
 
                     if (mDate.mDeltaType != Date::eDeltaNone) {
                         //QMap<type_data, type_data> displayWiggle = getMapDataInRange(calibWiggleCurve.mData, mTminDisplay, mTmaxDisplay);
-                        yMax = std::max( yMax, map_max_value(calibWiggleCurve.mData, mTminDisplay, mTmaxDisplay).value());
+                        yMax = std::max( yMax, map_max(calibWiggleCurve.mData, mTminDisplay, mTmaxDisplay).value());
                     }
 
                     mCalibGraph->setRangeY(0., yMax);

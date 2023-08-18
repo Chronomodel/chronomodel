@@ -506,7 +506,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                     // Drawing the wiggle
                     if (d.mDeltaType !=  Date::eDeltaNone) {
 
-                        const QMap<double, double> &calibWiggle = normalize_map(d.getFormatedWiggleCalibToShow(), map_max_value(calibCurve.mData).value());
+                        const QMap<double, double> &calibWiggle = normalize_map(d.getFormatedWiggleCalibToShow(), map_max(calibCurve.mData).value());
                         const GraphCurve &curveWiggle = densityCurve(calibWiggle, "Wiggle", Qt::red);
 
                         calibGraph->add_curve(curveWiggle);
@@ -1324,14 +1324,14 @@ void MultiCalibrationView::updateGraphsZoom()
                 if (subDisplay.isEmpty()) {
                     yMax = 0;
                 } else {
-                    yMax = map_max_value(subDisplay).value();
+                    yMax = map_max(subDisplay).value();
                 }
 
                 GraphCurve* wiggleCurve = gr->getCurve("Wiggle");
                 if (wiggleCurve) {
                     const QMap<type_data, type_data> &subDisplayWiggle = getMapDataInRange(wiggleCurve->mData, mTminDisplay, mTmaxDisplay);
                     if (!subDisplayWiggle.isEmpty()) {
-                        yMax = std::max(yMax, map_max_value(subDisplayWiggle).value());
+                        yMax = std::max(yMax, map_max(subDisplayWiggle).value());
                     }
                 }
 

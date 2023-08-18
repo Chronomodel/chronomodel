@@ -603,13 +603,13 @@ void EventPropertiesView::updateKnownGraph()
     if ( (tmin > bound.mFixed) || (bound.mFixed > tmax) )
         return;
 
-    bound.updateValues(tmin, tmax,step );
+    bound.updateValues(tmin, tmax, step);
 
-    mKnownGraph->setRangeX(tmin,tmax);
+    mKnownGraph->setRangeX(tmin, tmax);
 
-    mKnownGraph->setCurrentX(tmin,tmax);
+    mKnownGraph->setCurrentX(tmin, tmax);
 
-    double max = map_max_value(bound.mValues).value();
+    double max = map_max(bound.mValues).value();
     max = (max == 0.) ? 1. : max;
     mKnownGraph->setRangeY(0, max);
     mKnownGraph->showYAxisValues(false);
