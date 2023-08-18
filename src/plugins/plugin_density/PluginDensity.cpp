@@ -91,7 +91,7 @@ QString PluginDensity::getName() const
 
 QIcon PluginDensity::getIcon() const
 {
-    return QIcon(":/csv.png");
+    return QIcon(":/density_w.png");
 }
 
 bool PluginDensity::doesCalibration() const

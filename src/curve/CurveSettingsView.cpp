@@ -80,7 +80,7 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     mVariableTypeInput = new QComboBox(this);
     mVariableTypeInput->addItem(tr("Inclination"));
     mVariableTypeInput->addItem(tr("Declination"));
-    mVariableTypeInput->addItem(tr("Field"));
+    mVariableTypeInput->addItem(tr("Field Intensity"));
     mVariableTypeInput->addItem(tr("Depth"));
     mVariableTypeInput->addItem(tr("Any Measurement"));
     

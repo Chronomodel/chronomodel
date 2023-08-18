@@ -192,7 +192,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     // ---------------
 
     mCalibBut = new Button(tr("Calibrate"), mEventView);
-    mCalibBut->setIcon(QIcon(":results_w.png"));
+    mCalibBut->setIcon(QIcon(":calib.png"));
     mCalibBut->setFlatVertical();
     mCalibBut->setCheckable(true);
     mCalibBut->setToolTip(tr("Calibrate"));

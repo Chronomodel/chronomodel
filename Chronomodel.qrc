@@ -3,7 +3,6 @@
         <file alias="Chronomodel_fr.qm">translations/Chronomodel_fr.qm</file>
         <file alias="Chronomodel_en.qm">translations/Chronomodel_en.qm</file>
         <file alias="chronomodel.png">resources/chronomodel.png</file>
-        <file alias="grid.png">resources/grid.png</file>
         <file alias="save_p.png">resources/save_p.png</file>
         <file alias="open_p.png">resources/open_p.png</file>
         <file alias="new_p.png">resources/new_p.png</file>
@@ -31,12 +30,10 @@
         <file alias="text.png">resources/text.png</file>
         <file alias="data.png">resources/data.png</file>
         <file alias="picture_save.png">resources/picture_save.png</file>
-        <file alias="e_w.png">resources/e_w.png</file>
         <file alias="bound.png">resources/bound.png</file>
         <file alias="bound_w.png">resources/bound_w.png</file>
         <file alias="uniform.png">resources/uniform.png</file>
         <file alias="uniform_w.png">resources/uniform_w.png</file>
-        <file alias="gauss.png">resources/gauss.png</file>
         <file alias="gauss_w.png">resources/gauss_w.png</file>
         <file alias="TL.png">resources/TL.png</file>
         <file alias="TL_w.png">resources/TL_w.png</file>
@@ -65,7 +62,6 @@
         <file alias="settings.png">resources/settings.png</file>
         <file alias="model.png">resources/model.png</file>
         <file alias="run.png">resources/run.png</file>
-        <file alias="results.png">resources/results.png</file>
         <file alias="help.png">resources/help.png</file>
         <file alias="web.png">resources/web.png</file>
         <file alias="settings_w.png">resources/settings_w.png</file>
@@ -89,5 +85,7 @@
         <file alias="clipboard_graph.png">resources/clipboard_graph.png</file>
         <file alias="chronomodel_bash.png">resources/chronomodel_bash.png</file>
         <file alias="curve_data_graph_w.png">resources/curve_data_graph_w.png</file>
+        <file alias="density_w.png">resources/Density_w.png</file>
+        <file alias="calib.png">resources/calib_w.png</file>
     </qresource>
 </RCC>

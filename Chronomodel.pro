@@ -162,7 +162,7 @@ USE_PLUGIN_14C = 1
 USE_PLUGIN_TL = 1
 USE_PLUGIN_AM = 1
 USE_PLUGIN_F14C = 1
-USE_PLUGIN_CSV = 1
+USE_PLUGIN_DENSITY = 1
 
 DEFINES += "USE_PLUGIN_UNIFORM=$${USE_PLUGIN_UNIFORM}"
 DEFINES += "USE_PLUGIN_GAUSS=$${USE_PLUGIN_GAUSS}"
@@ -170,7 +170,7 @@ DEFINES += "USE_PLUGIN_14C=$${USE_PLUGIN_14C}"
 DEFINES += "USE_PLUGIN_TL=$${USE_PLUGIN_TL}"
 DEFINES += "USE_PLUGIN_AM=$${USE_PLUGIN_AM}"
 DEFINES += "USE_PLUGIN_F14C=$${USE_PLUGIN_F14C}"
-DEFINES += "USE_PLUGIN_CSV=$${USE_PLUGIN_CSV}"
+DEFINES += "USE_PLUGIN_DENSITY=$${USE_PLUGIN_DENSITY}"
 
 #########################################
 # FFTW
@@ -252,7 +252,7 @@ INCLUDEPATH += src/plugins/plugin_gauss/
 INCLUDEPATH += src/plugins/plugin_tl/
 INCLUDEPATH += src/plugins/plugin_uniform/
 INCLUDEPATH += src/plugins/plugin_F14C/
-INCLUDEPATH += src/plugins/plugin_CSV/
+INCLUDEPATH += src/plugins/plugin_density/
 INCLUDEPATH += src/project/
 INCLUDEPATH += src/curve/
 INCLUDEPATH += src/ui/
@@ -351,11 +351,15 @@ equals(USE_PLUGIN_F14C, 1){
     HEADERS += src/plugins/plugin_F14C/PluginF14CRefView.h
     HEADERS += src/plugins/plugin_F14C/PluginF14CSettingsView.h
 }
-equals(USE_PLUGIN_CSV, 1){
-        HEADERS += src/plugins/plugin_CSV/PluginCSV.h
-        HEADERS += src/plugins/plugin_CSV/PluginCSVForm.h
-        HEADERS += src/plugins/plugin_CSV/PluginCSVRefView.h
-    HEADERS += src/plugins/plugin_CSV/PluginCSVSettingsView.h
+equals(USE_PLUGIN_DENSITY, 1){
+        HEADERS += \
+        src/plugins/plugin_density/PluginDensity.h
+        HEADERS += \
+        src/plugins/plugin_density/PluginDensityForm.h
+        HEADERS += \
+        src/plugins/plugin_density/PluginDensityRefView.h
+    HEADERS += \
+    src/plugins/plugin_density/PluginDensitySettingsView.h
 }
 
 HEADERS += src/project/PluginManager.h
@@ -524,11 +528,15 @@ equals(USE_PLUGIN_F14C, 1) {
     SOURCES += src/plugins/plugin_F14C/PluginF14CRefView.cpp
     SOURCES += src/plugins/plugin_F14C/PluginF14CSettingsView.cpp
 }
-equals(USE_PLUGIN_CSV, 1) {
-    SOURCES += src/plugins/plugin_CSV/PluginCSV.cpp
-    SOURCES += src/plugins/plugin_CSV/PluginCSVForm.cpp
-    SOURCES += src/plugins/plugin_CSV/PluginCSVRefView.cpp
-    SOURCES += src/plugins/plugin_CSV/PluginCSVSettingsView.cpp
+equals(USE_PLUGIN_DENSITY, 1) {
+    SOURCES += \
+    src/plugins/plugin_density/PluginDensity.cpp
+    SOURCES += \
+    src/plugins/plugin_density/PluginDensityForm.cpp
+    SOURCES += \
+    src/plugins/plugin_density/PluginDensityRefView.cpp
+    SOURCES += \
+    src/plugins/plugin_density/PluginDensitySettingsView.cpp
 }
 SOURCES += src/project/PluginManager.cpp
 SOURCES += src/project/Project.cpp
