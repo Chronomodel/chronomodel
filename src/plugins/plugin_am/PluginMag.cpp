@@ -466,24 +466,106 @@ PluginFormAbstract* PluginMag::getForm()
     return form;
 }
 //Convert old project versions
+/**
+ * @brief PluginMag::checkValuesCompatibility
+ * @param values
+ * @return
+ */
+/**  data JSON version 2
+ *   "data": {
+                "dec": 150,
+                "error": 1,
+                "inc": 60,
+                "intensity": 50,
+                "is_dec": true,
+                "is_inc": false,
+                "is_int": false,
+                "ref_curve": "gal2002sph2014_d.ref"
+            },
+  ** data JSON version 3
+  **  "data": {
+                "alpha95": 1,
+                "dec": 5.4,
+                "error_f": 2,
+                "field": 65,
+                "inc": 65,
+                "iteration_mcmc": 500,
+                "process_type": 4,
+                "refD_curve": "gal2002sph2014_d.ref",
+                "refF_curve": "gwh2013uni_f.ref",
+                "refI_curve": "gal2002sph2014_i.ref"
+              },
+*/
 QJsonObject PluginMag::checkValuesCompatibility(const QJsonObject &values)
 {
     QJsonObject result = values;
 
-    //force type double
-    result[DATE_AM_INC_STR] = result.value(DATE_AM_INC_STR).toDouble();
-    result[DATE_AM_DEC_STR] = result.value(DATE_AM_DEC_STR).toDouble();
-    result[DATE_AM_ALPHA95_STR] = result.value(DATE_AM_ALPHA95_STR).toDouble();
+    if (!result.contains(DATE_AM_PROCESS_TYPE_STR)) {
 
-    result[DATE_AM_FIELD_STR] = result.value(DATE_AM_FIELD_STR).toDouble();
-    result[DATE_AM_ERROR_F_STR] = result.value(DATE_AM_ERROR_F_STR).toDouble();
 
-    result[DATE_AM_ITERATION_STR] = result.value(DATE_AM_ITERATION_STR).toInt(500);
+        ProcessTypeAM pta = eNone;
 
-    result[DATE_AM_REF_CURVEI_STR] = result.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
-    result[DATE_AM_REF_CURVED_STR] = result.value(DATE_AM_REF_CURVED_STR).toString().toLower();
-    result[DATE_AM_REF_CURVEF_STR] = result.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
 
+        if (result.value("is_inc").toBool()) {
+                pta = eInc;
+                result[DATE_AM_INC_STR] = result.value("inc").toDouble();
+                result[DATE_AM_DEC_STR] = result.value("dec").toDouble();
+                result[DATE_AM_ALPHA95_STR] = result.value("error").toDouble();
+                result[DATE_AM_REF_CURVEI_STR] = result.value("ref_curve").toString().toLower();
+                result[DATE_AM_REF_CURVED_STR] = "";
+
+                result[DATE_AM_FIELD_STR] = result.value("intensity").toDouble();
+                result[DATE_AM_ERROR_F_STR] = 0.;
+                result[DATE_AM_REF_CURVEF_STR] = "";
+
+        } else if (result.value("is_dec").toBool()) {
+                pta = eDec;
+                result[DATE_AM_INC_STR] = result.value("inc").toDouble();
+                result[DATE_AM_DEC_STR] = result.value("dec").toDouble();
+                result[DATE_AM_ALPHA95_STR] = result.value("error").toDouble();
+                result[DATE_AM_REF_CURVEI_STR] = "";
+                result[DATE_AM_REF_CURVED_STR] = result.value("ref_curve").toString().toLower();
+
+                result[DATE_AM_FIELD_STR] = result.value("intensity").toDouble();
+                result[DATE_AM_ERROR_F_STR] = 0.;
+                result[DATE_AM_REF_CURVEF_STR] = "";
+
+        } else if (result.value("is_int").toBool()) {
+                pta = eField;
+                result[DATE_AM_INC_STR] = result.value("inc").toDouble();
+                result[DATE_AM_DEC_STR] = result.value("dec").toDouble();
+                result[DATE_AM_ALPHA95_STR] = 0.;
+                result[DATE_AM_REF_CURVEI_STR] = "";
+                result[DATE_AM_REF_CURVED_STR] = "";
+
+                result[DATE_AM_FIELD_STR] = result.value("intensity").toDouble();
+                result[DATE_AM_ERROR_F_STR] = result.value("error").toDouble();
+                result[DATE_AM_REF_CURVEF_STR] = result.value("ref_curve").toString().toLower();
+        }
+
+        result.insert(DATE_AM_PROCESS_TYPE_STR, pta);
+        result.insert(DATE_AM_ITERATION_STR, 500);
+
+        result.remove("error");
+        result.remove("intensity");
+        result.remove("ref_curve");
+
+    } else {
+
+        // Version 3 : force type double
+        result[DATE_AM_INC_STR] = result.value(DATE_AM_INC_STR).toDouble();
+        result[DATE_AM_DEC_STR] = result.value(DATE_AM_DEC_STR).toDouble();
+        result[DATE_AM_ALPHA95_STR] = result.value(DATE_AM_ALPHA95_STR).toDouble();
+
+        result[DATE_AM_FIELD_STR] = result.value(DATE_AM_FIELD_STR).toDouble();
+        result[DATE_AM_ERROR_F_STR] = result.value(DATE_AM_ERROR_F_STR).toDouble();
+
+        result[DATE_AM_ITERATION_STR] = result.value(DATE_AM_ITERATION_STR).toInt(500);
+
+        result[DATE_AM_REF_CURVEI_STR] = result.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
+        result[DATE_AM_REF_CURVED_STR] = result.value(DATE_AM_REF_CURVED_STR).toString().toLower();
+        result[DATE_AM_REF_CURVEF_STR] = result.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
+    }
     return result;
 }
 
