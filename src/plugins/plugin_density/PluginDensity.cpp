@@ -290,11 +290,9 @@ RefCurve PluginDensity::loadRefFile(QFileInfo refFile)
             curve.mDataMean[t] = data_curve.at(i);
         }
         curve.mMinStep = step;
-        // invalid file ?
-      /*  if (!curve.mDataMean.isEmpty()) {
-            curve.mTmin = curve.mDataMean.firstKey();
-            curve.mTmax = curve.mDataMean.lastKey();
-        }*/
+
+        qDebug()<<"[pluginDensity::loadRefFile]:: normalization";
+        curve.mDataMean = equal_areas(curve.mDataMean, 1.);
     }
 
     curve.mDataMeanMin = 0.;
