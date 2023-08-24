@@ -2019,7 +2019,8 @@ bool MCMCLoopCurve::update_Komlan()
 #ifdef CODE_KOMLAN
         // Variable du MH de la spline
 
-        double current_value, current_h, current_h_lambda, current_h_YWI, current_h_VG;
+        double current_value, current_h,  current_h_YWI = 1, current_h_VG; //current_h_lambda,
+
 
         SplineMatrices current_matrices, current_matriceWI;
         SplineResults current_spline;
@@ -2118,7 +2119,11 @@ bool MCMCLoopCurve::update_Komlan()
                  *  => on effectue donc la mise à jour directement ici, sans passer par une fonction
                  *  de la classe event (qui n'a pas accès aux autres events)
                  * ---------------------------------------------------------------------- */
+#ifdef CODE_KOMLAN
                 unsigned e_idx = 0;
+#else
+                unsigned e_idx = 0;
+#endif
                 for (Event*& event : initListEvents) {
                     if (event->mType == Event::eDefault) {
 
@@ -2133,23 +2138,14 @@ bool MCMCLoopCurve::update_Komlan()
                         // On stocke l'ancienne valeur :
                         current_value = event->mTheta.mX;
 
-#ifdef CODE_KOMLAN \
-    //  auto K =  calcul_QR_1Qt(current_matrices) ; // = K
-                        //    auto current_decompK = decompositionCholesky(K, K.size(), 0) ;
+#ifdef CODE_KOMLAN
 
                         std::vector<long double> current_detPlus (current_decompK.second);
                         std::sort(current_detPlus.begin(), current_detPlus.end(), [] (double i,double j) { return (i>j);});
                         current_detPlus.resize(current_detPlus.size() - 2);
 
-                        //  current_h_lambda = h_lambda_Komlan(K, mModel->mEvents.size(), mModel->mLambdaSpline.mX);
 
-                        //current_h_YWI = h_exp_fX_theta(event, mModel->mSpline, e_idx) ;
-
-                        // const double current_fTKf = Prior_F(K, mModel->mSpline, mModel->mLambdaSpline.mX);
-
-                        //  current_h = current_h_lambda * current_fTKf;
-
-#else \
+#else
     //current_h_YWI = h_exp_fX_theta(event, mModel->mSpline, e_idx) ;
 
                         current_h_theta = h_theta_Event(event);
@@ -2719,7 +2715,7 @@ bool MCMCLoopCurve::update_Komlan()
             }
         }
 
-        mModel->mSpline = samplingSpline_multi(mModel->mEvents, matRInv, Q, try_spl,  false, current_matrices);
+        mModel->mSpline = samplingSpline_multi(mModel->mEvents, matRInv, Q, try_spl, current_matrices);
 
 // mModel->mSpline = samplingSpline(mModel->mEvents, matRInv, QT, K,false, current_matrices) ;
 
@@ -5836,7 +5832,7 @@ SplineMatrices MCMCLoopCurve::prepareCalculSpline_W_Vg0(const QList<Event *>& so
 }
 
 
-MCMCSpline MCMCLoopCurve::samplingSpline_multi(QList<Event *> &lEvents, const Matrix2D &RR_1, const Matrix2D &Q, std::vector<double> &vecfx,  bool doSortAndSpreadTheta, SplineMatrices matrices)
+MCMCSpline MCMCLoopCurve::samplingSpline_multi(QList<Event *> &lEvents, const Matrix2D &RR_1, const Matrix2D &Q, std::vector<double> &vecfx, SplineMatrices matrices)
 {
     MCMCSpline spline;
 

@@ -67,7 +67,7 @@ void GraphViewDate::setDate(Date* date)
     update();
 }
 
-void GraphViewDate::setColor(const QColor& color)
+void GraphViewDate::setColor(const QColor &color)
 {
     mColor = color;
     setItemColor(mColor);
@@ -102,19 +102,16 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
     defaultPen.setWidthF(1);
     defaultPen.setStyle(Qt::SolidLine);
 
-    QString resultsText = tr("Nothing to Display");
     QString resultsHTML = tr("Nothing to Display");
 
     if (variableList.contains(eDataTi)) {
-        resultsText = ModelUtilities::dateResultsText(mDate);
         resultsHTML = ModelUtilities::dateResultsHTML(mDate);
 
     } else if (variableList.contains(eSigma)) {
-        resultsText = ModelUtilities::sigmaTiResultsText(mDate);
         resultsHTML = ModelUtilities::sigmaTiResultsHTML(mDate);
     }
 
-    setNumericalResults(resultsHTML, resultsText);
+    setNumericalResults(resultsHTML);
 
      /* ------------------------------------------------
      *  First tab : Posterior distrib.

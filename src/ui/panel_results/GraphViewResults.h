@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef GRAPHVIEWRESULTS_H
 #define GRAPHVIEWRESULTS_H
 
+#include "ModelUtilities.h"
 #include "StudyPeriodSettings.h"
 #include "MCMCSettings.h"
 
@@ -150,8 +151,6 @@ protected:
 
     QString mTitle;
 
-    QString mResultsText;
-
     QColor mItemColor;
 
     bool mShowAllChains;
@@ -184,65 +183,60 @@ public:
 
     virtual void mousePressEvent(QMouseEvent *event);
 
-    void setSettings(const StudyPeriodSettings& settings);
-    void setMCMCSettings(const MCMCSettings& mcmc, const QList<ChainSpecs>& chains);
+    void setSettings(const StudyPeriodSettings &settings);
+    void setMCMCSettings(const MCMCSettings &mcmc, const QList<ChainSpecs> &chains);
 
-    void setMainColor(const QColor& color);
+    void setMainColor(const QColor &color);
    // void toggle(const QRect& geometry); //useless
-    void setTitle(const QString& title);
+    void setTitle(const QString &title);
     inline QString title() const {return mTitle;};
 
     void setMarginLeft (qreal &m);
     void setMarginRight (qreal &m);
 
    // void setRendering(GraphView::Rendering render);
-    virtual void setGraphsFont(const QFont& font);
+    virtual void setGraphsFont(const QFont &font);
     void setGraphsThickness(int value);
     void setGraphsOpacity(int value);
 
-    void setItemColor(const QColor& itemColor);
+    void setItemColor(const QColor &itemColor);
   //  void setItemTitle(const QString& itemTitle);
 
     bool isSelected() const  { return mIsSelected;}
-    void setSelected( const bool&  selected) {
+    void setSelected( const bool selected) {
             mIsSelected = selected;
     }
 
-    void showSelectedRect(const bool & show) {
+    void showSelectedRect(const bool show) {
         mShowSelectedRect = show;
     }
 
     void setShowNumericalResults(const bool show);
-
 
     GraphView* getGraph() const { return mGraph; }
     QVector<variable_t> getCurrentVariables() const { return mCurrentVariableList; }
     graph_t getCurrentType() const { return mCurrentTypeGraph; }
     
    // GraphView::Rendering getRendering() const  { return mGraph->getRendering(); }
-    QString getResultsText() const {return mResultsText;}
+    QString getResultsText() const {return HTML_to_text(mStatArea->toHtml());}
     QString getTextAreaToHtml() const { return mStatArea->toHtml();}
     QString getTextAreaToPlainText() const { return mStatArea->toPlainText();}
 
 
-    void generateTraceCurves(const QList<ChainSpecs>& chains,
-                             MetropolisVariable* variable,
-                             const QString& name = QString());
+    void generateTraceCurves(const QList<ChainSpecs> &chains, MetropolisVariable* variable, const QString& name = QString());
 
-    void generateAcceptCurves(const QList<ChainSpecs>& chains,
-                              MHVariable* variable);
+    void generateAcceptCurves(const QList<ChainSpecs> &chains, MHVariable* variable);
 
-    void generateCorrelCurves(const QList<ChainSpecs>& chains,
-                              MHVariable* variable);
+    void generateCorrelCurves(const QList<ChainSpecs> &chains, MHVariable* variable);
 
     // This method is used to recreate all curves in mGraph.
     // It is vitual because we want a different behavior in sub-classes (GraphViewDate, GraphViewEvent and GraphViewPhase)
-    virtual void generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList, const Model* model = nullptr);
+    virtual void generateCurves(const graph_t typeGraph, const QVector<variable_t> &variableList, const Model* model = nullptr);
 
     // This method is used to update visible existing curves in mGraph.
     // It is vitual because we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
     //virtual void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
-    virtual void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QVector<variable_t> & showVariableList);
+    virtual void updateCurvesToShow(bool showAllChains, const QList<bool> &showChainList, const QVector<variable_t> &showVariableList);
 
 
     inline void changeYScaleDivision(const Scale &sc) const {mGraph->setYScaleDivision(sc);};
@@ -254,7 +248,7 @@ public slots:
 
     void zoom(type_data min, type_data max);
     void showNumericalResults(const bool show);
-    void setNumericalResults(const QString& resultsHTML, const QString& resultsText);
+    void setNumericalResults(const QString &resultsHTML);
 
     void saveAsImage();
     void imageToClipboard();

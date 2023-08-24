@@ -640,7 +640,7 @@ void Model::generateResultsLog()
         log += ModelUtilities::phaseResultsHTML(pPhase);
         log += "<br>";
         log += line(textBold(textOrange(QObject::tr("Duration (posterior distrib.)"))));
-        log += line(textOrange(pPhase->mDuration.resultsString("<br>", QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr, false)));
+        log += line(textOrange(pPhase->mDuration.resultsString(QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr)));
 
        /*  QString tempoStr = ModelUtilities::tempoResultsHTML(pPhase);
          tempoStr.remove(1, 41);

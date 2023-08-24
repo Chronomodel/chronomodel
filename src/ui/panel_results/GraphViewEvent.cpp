@@ -104,18 +104,15 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
 
     const QColor color = mEvent->mColor;
 
-    QString resultsText = tr("Nothing to Display");
     QString resultsHTML = tr("Nothing to Display");
     if (mCurrentVariableList.contains(eVg)) {
-        resultsText = ModelUtilities::VgResultsText(mEvent);
         resultsHTML = ModelUtilities::VgResultsHTML(mEvent);
 
     } else if (mCurrentVariableList.contains(eThetaEvent)) {
-        resultsText = ModelUtilities::eventResultsText(mEvent, false);
         resultsHTML = ModelUtilities::eventResultsHTML(mEvent, false);
     }
 
-    setNumericalResults(resultsHTML, resultsText);
+    setNumericalResults(resultsHTML);
 
     bool isFixedBound = false;
     Bound* bound = nullptr;

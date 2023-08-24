@@ -393,7 +393,7 @@ QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const floa
     return result;
 }
 
-QVector<double> equal_areas(const QVector<double>& data, const double step, const double area)
+QVector<double> equal_areas(const QVector<double> &data, const double step, const double area)
 {
     if(data.isEmpty())
         return QVector<double>();

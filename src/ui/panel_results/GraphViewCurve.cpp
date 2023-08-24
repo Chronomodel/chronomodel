@@ -86,7 +86,7 @@ void GraphViewCurve::resizeEvent(QResizeEvent* )
     updateLayout();
 }
 
-void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList, const Model* model)
+void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<variable_t> &variableList, const Model* model)
 {
     GraphViewResults::generateCurves(typeGraph, variableList);
     const ModelCurve* modelCurve = static_cast<const ModelCurve*> (model);
@@ -102,11 +102,8 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
     mGraph->setFormatFunctX(nullptr);
     mGraph->setBackgroundColor(QColor(230, 230, 230));
     
-    const QString resultsText = ModelUtilities::curveResultsText(modelCurve);
-    const QString resultsHTML = ModelUtilities::curveResultsHTML(modelCurve);
-
-
-    setNumericalResults(resultsHTML, resultsText);
+    const QString &resultsHTML = ModelUtilities::curveResultsHTML(modelCurve);
+    setNumericalResults(resultsHTML);
 
     // We use the parameter saved with the map
     const double step = (mComposanteG.mapG.maxX() - mComposanteG.mapG.minX()) / (mComposanteG.mapG._column -1);

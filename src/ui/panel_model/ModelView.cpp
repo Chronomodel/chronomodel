@@ -56,7 +56,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MultiCalibrationView.h"
 #include "CalibrationCurve.h"
 #include "AppSettings.h"
-#include "Generator.h"
 
 #include "HelpWidget.h"
 #include "MainWindow.h"
@@ -123,11 +122,8 @@ ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):
     mButCurve->setIconOnly(false);
 
     adaptStudyPeriodButton(mTmin, mTmax);
-    //connect(mButModifyPeriod,  static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &ModelView::modifyPeriod);
-    // connect(mButModifyPeriod,  &Button::clicked, this, &ModelView::modifyPeriod);
     connect(mButModifyPeriod,  &QPushButton::clicked, this, &ModelView::modifyPeriod);
 
-   // connect(mButCurve, static_cast<void (Button::*)(bool)>(&Button::toggled), this, &ModelView::showCurveSettings);
     connect(mButCurve, &Button::toggled, this, &ModelView::showCurveSettings);
 
     mLeftPanelTitle = new Label(tr("Events Scene"), mTopWrapper);
@@ -1224,7 +1220,7 @@ void ModelView::updateLayout()
 
     // Center buttons
     mButModifyPeriod->setGeometry(width()/2 - 251, 2, 300, mTopRect.height() - 4);
-    mButCurve->setGeometry(mButModifyPeriod->x() + mButModifyPeriod->width() + 2, 5, 200, mTopRect.height() - 10);
+    mButCurve->setGeometry(mButModifyPeriod->x() + mButModifyPeriod->width() + 2, 5, 300, mTopRect.height() - 10);
 
 
     //-------------- Top Flag
@@ -1262,16 +1258,8 @@ void ModelView::updateLayout()
     else
         mEventsView ->setGeometry(mLeftRect.adjusted(mButtonWidth -1, -1, +1, +1));
 
-   // if (mButEventsGlobalView->isChecked()) {
-     //   mEventsSearchEdit->show();
-        mEventsSearchEdit->setGeometry(mEventsView->x() + 5, 5, radarW, searchH);
-    //    mEventsGlobalView->show();
-        mEventsGlobalView->setGeometry(mEventsView->x() + 5, mEventsSearchEdit->y() + mEventsSearchEdit->height(), radarW, radarH);
-
-  /*  } else {
-        mEventsSearchEdit->hide();
-        mEventsGlobalView->hide();
-    }*/
+    mEventsSearchEdit->setGeometry(mEventsView->x() + 5, 5, radarW, searchH);
+    mEventsGlobalView->setGeometry(mEventsView->x() + 5, mEventsSearchEdit->y() + mEventsSearchEdit->height(), radarW, radarH);
 
     mButNewEvent      ->setGeometry(0, 0, mButtonWidth, mButtonHeigth);
     mButNewEventKnown ->setGeometry(0, mButtonHeigth, mButtonWidth, mButtonHeigth);
@@ -1299,8 +1287,7 @@ void ModelView::updateLayout()
             mCalibrationView->setGeometry(0, 0, 0, 0);
     }
     // ----------
-    if (mButProperties->isChecked() || mButMultiCalib->isChecked()
-            || mButCurve->isChecked()) {
+    if (mButProperties->isChecked() || mButMultiCalib->isChecked() || mButCurve->isChecked()) {
 
         mPhasesView->hide();
         mPhasesGlobalView->hide();
@@ -1322,7 +1309,7 @@ void ModelView::updateLayout()
             mPhasesGlobalView->setGeometry(5, 5, radarW, radarH);
         }
         mButNewPhase->show();
-        mButNewPhase->setGeometry(mPhasesView->width() -2, 0              , mButtonWidth, mButtonHeigth);
+        mButNewPhase->setGeometry(mPhasesView->width() -2, 0, mButtonWidth, mButtonHeigth);
 
         mButDeletePhase->show();
         mButDeletePhase->setGeometry(mPhasesView->width() -2, mButtonHeigth  , mButtonWidth, mButtonHeigth);

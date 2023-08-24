@@ -78,13 +78,12 @@ public:
     void generateGlobalRunAcceptation(const QList<ChainSpecs>& chains);
 
     void generateNumericalResults(const QList<ChainSpecs>& chains);
-    QString resultsString(const QString& nl = "<br>",
-                          const QString& noResultMessage = QObject::tr("No result to display"),
-                          const QString& unit = QString(),
-                          DateConversion formatFunc = nullptr, const bool forCSV = false) const;
+    QString resultsString(const QString &noResultMessage = QObject::tr("No result to display"),
+                          const QString &unit = QString(),
+                          DateConversion formatFunc = nullptr) const;
 
     static QString getSamplerProposalText(const MHVariable::SamplerProposal sp);
-    static MHVariable::SamplerProposal getSamplerProposalFromText(const QString& text);
+    static MHVariable::SamplerProposal getSamplerProposalFromText(const QString &text);
 
 public:
     double mSigmaMH;

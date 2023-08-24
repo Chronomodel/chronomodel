@@ -2180,9 +2180,8 @@ void ResultsView::createByCurveGraph()
         graphX->setMarginRight(mMarginRight);
 
 
-        QString resultsText = ModelUtilities::curveResultsText(model);
         QString resultsHTML = ModelUtilities::curveResultsHTML(model);
-        graphX->setNumericalResults(resultsHTML, resultsText);
+        graphX->setNumericalResults(resultsHTML);
 
         const QStringList curveLongName = mModel->getCurvesLongName();
         const QString varRateText = tr("Var. Rate");

@@ -93,9 +93,9 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QVector<vari
 
     QColor color = Qt::blue;
 
-    QString resultsText = ModelUtilities::lambdaResultsText(mModel);
+    //QString resultsText = ModelUtilities::lambdaResultsText(mModel);
     QString resultsHTML = ModelUtilities::lambdaResultsHTML(mModel);
-    setNumericalResults(resultsHTML, resultsText);
+    setNumericalResults(resultsHTML);
 
     // ------------------------------------------------
     //  First tab : Posterior distrib

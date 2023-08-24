@@ -93,9 +93,9 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variabl
 
     QColor color = Qt::blue;
 
-    QString resultsText = ModelUtilities::S02ResultsText(mModel);
+    //QString resultsText = ModelUtilities::S02ResultsText(mModel);
     QString resultsHTML = ModelUtilities::S02ResultsHTML(mModel);
-    setNumericalResults(resultsHTML, resultsText);
+    setNumericalResults(resultsHTML);
     // ------------------------------------------------
     //  First tab : Posterior distrib
     // ------------------------------------------------

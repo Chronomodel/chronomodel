@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -269,7 +269,7 @@ void GraphViewResults::imageToClipboard()
 void GraphViewResults::resultsToClipboard()
 {
     QClipboard* clipboard = QApplication::clipboard();
-    clipboard->setText(mResultsText);
+    clipboard->setText( mStatArea->toPlainText());
 }
 /**
  * @brief Export data from the visible curves, there is two kinds of data in a graphView: mData, QMap type and mDataVector, QVector type
@@ -340,9 +340,8 @@ void GraphViewResults::saveGraphData() const
     }
 }
 
-void GraphViewResults::setNumericalResults (const QString& resultsHTML, const QString& resultsText)
+void GraphViewResults::setNumericalResults (const QString &resultsHTML)
 {
-    mResultsText = resultsText;
     mStatArea->setHtml(resultsHTML);
 }
 

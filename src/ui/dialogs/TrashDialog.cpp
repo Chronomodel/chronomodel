@@ -131,7 +131,7 @@ mType(type)
                     item->setData(0x0102, d.mPlugin->getId());
                     item->setData(0x0103, d.getDesc());
                     item->setData(0x0104, d.mId);
-                    item->setData(0x0105, d.getWiggleDesc());//ModelUtilities::getDeltaText(d));
+                    item->setData(0x0105, d.getWiggleDesc());
                     item->setData(0x0106, MHVariable::getSamplerProposalText(d.mTi.mSamplerProposal));
                     item->setData(0x0107, d.mIsValid);
                     item->setData(0x0108, date.value(STATE_DATE_SUB_DATES).toArray().size() > 0);

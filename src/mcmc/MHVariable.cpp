@@ -339,14 +339,14 @@ void MHVariable::generateNumericalResults(const QList<ChainSpecs> &chains)
     generateGlobalRunAcceptation(chains);
 }
 
-QString MHVariable::resultsString(const QString &nl, const QString &noResultMessage, const QString &unit, DateConversion formatFunc, const bool forCSV) const
+QString MHVariable::resultsString(const QString &noResultMessage, const QString &unit, DateConversion formatFunc) const
 {
 
     if (mSamplerProposal != MHVariable::eFixe) {
-        const QString result = MetropolisVariable::resultsString(nl, noResultMessage, unit, formatFunc, forCSV);
-        const QString globalTxt = forCSV ? stringForCSV(mGlobalAcceptationPerCent) : stringForLocal(mGlobalAcceptationPerCent);
+        const QString result = MetropolisVariable::resultsString(noResultMessage, unit, formatFunc);
+        const QString globalTxt = stringForLocal(mGlobalAcceptationPerCent);
 
-        return result + nl + QObject::tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(globalTxt, getSamplerProposalText(mSamplerProposal));
+        return result + "<br>" + QObject::tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(globalTxt, getSamplerProposalText(mSamplerProposal));
 
     } else {
         return QObject::tr("Fixed value : %1").arg(stringForLocal(mFormatedTrace->at(0))); // for VG mX is Variance and we need Std gi

@@ -84,8 +84,8 @@ struct DensityAnalysis
 
 FunctionStat analyseFunction(const QMap<type_data, type_data> &fun);
 
-QString FunctionStatToString(const FunctionStat& analysis, const QString &nl = "<br>", const bool forCSV = false);
-QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& nl = "<br>", const bool forCSV = false);
+QString FunctionStatToString(const FunctionStat& analysis);
+QString densityAnalysisToString(const DensityAnalysis& analysis);
 
 // Standard Deviation of a vector of data
 type_data std_Koening(const QVector<type_data> &data);

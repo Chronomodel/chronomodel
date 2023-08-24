@@ -415,7 +415,7 @@ void CalibrationView::updateGraphs()
 
                 resultsStr +=  "<br> HPD (" + stringForLocal(100. * realThresh) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false) ;
 
-                mResultsText->setText(resultsStr);
+                mResultsText->setHtml(resultsStr);
             }
 
         } else {

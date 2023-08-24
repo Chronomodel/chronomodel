@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -38,20 +38,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "DatesList.h"
-#include "Phase.h"
 #include "Date.h"
 #include "Event.h"
 #include "MainWindow.h"
 #include "Project.h"
-#include "../PluginAbstract.h"
+#include "PluginAbstract.h"
 #include "DatesListItemDelegate.h"
-#include "ModelUtilities.h"
-#include "Button.h"
+
 #include <QtWidgets>
 
 
 DatesList::DatesList(QWidget* parent):QListWidget(parent),
-mUpdatingSelection(false)
+    mUpdatingSelection(false)
 {
     setDragDropMode(QAbstractItemView::InternalMove);
     setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -71,7 +69,7 @@ DatesList::~DatesList()
 
 }
 
-void DatesList::setEvent(const QJsonObject& event)
+void DatesList::setEvent(const QJsonObject &event)
 {
     mEvent = event;
 
@@ -79,8 +77,8 @@ void DatesList::setEvent(const QJsonObject& event)
 
     if (!mEvent.isEmpty()) {
         QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
-        for (int i = 0; i<dates.size(); ++i) {
-            QJsonObject date = dates[i].toObject();
+        for (auto&& d : dates) {
+            QJsonObject date = d.toObject();
 
             try {
                 Date d (date);
@@ -99,13 +97,12 @@ void DatesList::setEvent(const QJsonObject& event)
                     item->setData(0x0102, d.mPlugin->getId());
                     item->setData(0x0103, d.getDesc());
                     item->setData(0x0104, d.mId);
-                    item->setData(0x0105, d.getWiggleDesc()); //ModelUtilities::getDeltaText(d));
+                    item->setData(0x0105, d.getWiggleDesc());
                     item->setData(0x0106, MHVariable::getSamplerProposalText(d.mTi.mSamplerProposal));
                     item->setData(0x0107, d.mIsValid);
                     item->setData(0x0108, date.value(STATE_DATE_SUB_DATES).toArray().size() > 0);
                     item->setData(0x0109, d.mOrigin);
                     item->setData(0x0110, d.mUUID);
-                    //item->setData(0x0111, d.getWiggleDesc());
                     
                     addItem(item);
                 }

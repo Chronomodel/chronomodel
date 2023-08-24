@@ -330,7 +330,7 @@ private:
     MatrixDiag createDiagWInv_Vg0(const QList<Event*>& lEvents);
 
     SplineMatrices prepareCalculSpline_W_Vg0(const QList<Event *> &sortedEvents, std::vector<double> &vecH);
-    MCMCSpline samplingSpline_multi(QList<Event *> &lEvents, const Matrix2D &RR_1, const Matrix2D &Q, std::vector<double> &vecfx,  bool doSortAndSpreadTheta, SplineMatrices matrices);
+    MCMCSpline samplingSpline_multi(QList<Event *> &lEvents, const Matrix2D &RR_1, const Matrix2D &Q, std::vector<double> &vecfx, SplineMatrices matrices);
     std::vector<double> splines_prior(const Matrix2D &KK, std::vector<double> &g, std::vector<double> &g_new);
     inline double Signe_Number(const double &a);
     double Prior_F (const Matrix2D& K, const Matrix2D& K_new, const MCMCSpline &s,  const double lambdaSpline);

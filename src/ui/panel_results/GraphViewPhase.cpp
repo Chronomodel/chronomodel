@@ -101,25 +101,20 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<varia
 
     QColor color = mPhase->mColor;
 
-    QString resultsText = tr("Nothing to Display");
     QString resultsHTML = tr("Nothing to Display");
     if (mCurrentVariableList.contains(eBeginEnd)) {
-        resultsText = ModelUtilities::phaseResultsText(mPhase);
         resultsHTML = ModelUtilities::phaseResultsHTML(mPhase);
 
     } else if (mCurrentVariableList.contains(eTempo)) {
-        resultsText = ModelUtilities::tempoResultsText(mPhase);
         resultsHTML = ModelUtilities::tempoResultsHTML(mPhase);
 
     } else if (mCurrentVariableList.contains(eDuration)) {
-        resultsText = ModelUtilities::durationResultsText(mPhase);
         resultsHTML = ModelUtilities::durationResultsHTML(mPhase);
 
     } else if (mCurrentVariableList.contains(eActivity)) {
-        resultsText = ModelUtilities::activityResultsText(mPhase);
         resultsHTML = ModelUtilities::activityResultsHTML(mPhase);
     }
-    setNumericalResults(resultsHTML, resultsText);
+    setNumericalResults(resultsHTML);
 
     mGraph->setOverArrow(GraphView::eNone);
 

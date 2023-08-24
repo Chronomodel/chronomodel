@@ -241,11 +241,9 @@ public:
 
     QVector<double> correlationForChain(const int index);
 
-    virtual QString resultsString(const QString& nl = "<br>",
-                                  const QString& noResultMessage = QObject::tr("No result to display"),
-                                  const QString& unit = QString(),
-                                  DateConversion formatFunc = nullptr,
-                                  const bool forCSV = false) const;
+    virtual QString resultsString(const QString &noResultMessage = QObject::tr("No result to display"),
+                                  const QString &unit = QString(),
+                                  DateConversion formatFunc = nullptr) const;
 
     QStringList getResultsList(const QLocale locale, const int precision = 0, const bool withDateFormat = true);
 
