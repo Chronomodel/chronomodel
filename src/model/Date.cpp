@@ -1384,7 +1384,8 @@ QPixmap Date::generateCalibThumb(StudyPeriodSettings settings)
 
 double Date::getLikelihoodFromCalib(const double &t) const
 {
-    return interpolate_value_from_curve(t, mCalibration->mVector, mCalibration->mTmin, mCalibration->mTmax);
+    //return interpolate_value_from_curve(t, mCalibration->mVector, mCalibration->mTmin, mCalibration->mTmax);
+    return mCalibration->interpolate(t);
 }
 
 double Date::getLikelihoodFromWiggleCalib(const double &t) const
@@ -1418,7 +1419,8 @@ double Date::getLikelihoodFromWiggleCalib(const double &t) const
         }
 
     } else {
-        return interpolate_value_from_curve(t, mWiggleCalibration->mVector, mWiggleCalibration->mTmin, mWiggleCalibration->mTmax);
+        //return interpolate_value_from_curve(t, mWiggleCalibration->mVector, mWiggleCalibration->mTmin, mWiggleCalibration->mTmax);
+        return mWiggleCalibration->interpolate(t);
     }
 
 }

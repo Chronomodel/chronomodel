@@ -69,7 +69,7 @@ PluginF14C::~PluginF14C()
 }
 
 // Likelihood
-QPair<long double, long double> PluginF14C::getLikelihoodArg(const double& t, const QJsonObject& data)
+QPair<long double, long double> PluginF14C::getLikelihoodArg(const double t, const QJsonObject &data)
 {
     double age = data.value(DATE_F14C_FRACTION_STR).toDouble();
     double error = data.value(DATE_F14C_ERROR_STR).toDouble();
@@ -82,7 +82,7 @@ QPair<long double, long double> PluginF14C::getLikelihoodArg(const double& t, co
     return qMakePair(variance, exponent);
 }
 
-long double PluginF14C::getLikelihood(const double& t, const QJsonObject& data)
+long double PluginF14C::getLikelihood(const double t, const QJsonObject& data)
 {
     QPair<long double, long double > result = getLikelihoodArg(t, data);
     long double back = expl(result.second) / sqrtl(result.first) ;

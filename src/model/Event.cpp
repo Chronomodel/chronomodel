@@ -402,7 +402,7 @@ void Event::setCurveCsvDataToJsonEvent(QJsonObject& event, const QMap<QString, d
     }
 }
 
-QString Event::curveDescriptionFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType, CurveSettings::VariableType variableType )
+QString Event::curveDescriptionFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType)
 {
     QString curveDescription = "";
     double xIncDepth = event.value(STATE_EVENT_X_INC_DEPTH).toDouble();
@@ -413,51 +413,57 @@ QString Event::curveDescriptionFromJsonEvent(QJsonObject &event, CurveSettings::
     double s_ZField = event.value(STATE_EVENT_SZ_SF).toDouble();
 
     switch (processType) {
-    case CurveSettings::eProcessTypeVector:
-        curveDescription += QObject::tr(" [ Inclination : %1 ±  %2").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
-        curveDescription += QObject::tr(" - Declination : %1").arg(stringForLocal(yDec));
-        curveDescription += QObject::tr(" - Field : %1 ±  %2 ]").arg(stringForLocal(zField), stringForLocal(s_ZField));
-        break;
-    case CurveSettings::eProcessType2D:
-        curveDescription += QObject::tr(" [ X : %1 ±  %2").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
-        curveDescription += QObject::tr(" - Y : %1 ±  %2 ]").arg(stringForLocal(yDec), stringForLocal(s_Y));
-        break;
-    case CurveSettings::eProcessType3D:
-        curveDescription += QObject::tr(" [ X : %1 ±  %2").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
-        curveDescription += QObject::tr(" - Y : %1 ±  %2").arg(stringForLocal(yDec), stringForLocal(s_Y));
-        curveDescription += QObject::tr(" - Z : %1 ±  %2 ]").arg(stringForLocal(zField), stringForLocal(s_ZField));
-        break;
-    case CurveSettings::eProcessTypeSpherical:
-        curveDescription += QObject::tr(" [ Inclination : %1 ±  %2").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
-        curveDescription += QObject::tr(" - Declination : %1 ]").arg(stringForLocal(yDec));
-        break;
-    default:
-        switch (variableType) {
-        case CurveSettings::eVariableTypeDepth:
-            curveDescription += QObject::tr(" [ Depth : %1 ±  %2 ]").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
-            break;
-        case CurveSettings::eVariableTypeField:
-            curveDescription += line(textGreen(QObject::tr(" [ Field : %1 ±  %2 ]").arg(stringForLocal(zField), stringForLocal(s_ZField))));
-            break;
-        case CurveSettings::eVariableTypeInclination:
-            curveDescription += QObject::tr(" [ Inclination : %1 ±  %2 ]").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
-            break;
-        case CurveSettings::eVariableTypeDeclination:
-            curveDescription += QObject::tr(" [ Declination : %1 ; Inclination %2 ±  %3 ]").arg(stringForLocal(yDec), stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
-            break;
-        case CurveSettings::eVariableTypeOther:
+        case CurveSettings::eProcess_Univariate:
             curveDescription += QObject::tr("[  Measure : %1 ±  %2 ]").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
             break;
+        case CurveSettings::eProcess_Depth:
+            curveDescription += QObject::tr(" [ Depth : %1 ±  %2 ]").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
+            break;
+
+        case CurveSettings::eProcess_Inclination:
+            curveDescription += QObject::tr(" [ Inclination : %1 ±  %2 ]").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
+            break;
+        case CurveSettings::eProcess_Declination:
+            curveDescription += QObject::tr(" [ Declination : %1 ; Inclination %2 ±  %3 ]").arg(stringForLocal(yDec), stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
+            break;
+        case CurveSettings::eProcess_Field:
+            curveDescription += line(textGreen(QObject::tr(" [ Field : %1 ±  %2 ]").arg(stringForLocal(zField), stringForLocal(s_ZField))));
+            break;
+
+        case CurveSettings::eProcess_2D:
+            curveDescription += QObject::tr(" [ X : %1 ±  %2").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
+            curveDescription += QObject::tr(" - Y : %1 ±  %2 ]").arg(stringForLocal(yDec), stringForLocal(s_Y));
+            break;
+        case CurveSettings::eProcess_3D:
+            curveDescription += QObject::tr(" [ X : %1 ±  %2").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
+            curveDescription += QObject::tr(" - Y : %1 ±  %2").arg(stringForLocal(yDec), stringForLocal(s_Y));
+            curveDescription += QObject::tr(" - Z : %1 ±  %2 ]").arg(stringForLocal(zField), stringForLocal(s_ZField));
+            break;
+
+        case CurveSettings::eProcess_Unknwon_Dec:
+            curveDescription += QObject::tr(" [ Inclination : %1 ±  %2").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
+            curveDescription += QObject::tr(" - Field : %1 ±  %2 ]").arg(stringForLocal(zField), stringForLocal(s_ZField));
+            break;
+        case CurveSettings::eProcess_Spherical:
+            curveDescription += QObject::tr(" [ Inclination : %1 ±  %2").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
+            curveDescription += QObject::tr(" - Declination : %1 ]").arg(stringForLocal(yDec));
+            break;
+
+        case CurveSettings::eProcess_Vector:
+            curveDescription += QObject::tr(" [ Inclination : %1 ±  %2").arg(stringForLocal(xIncDepth), stringForLocal(s_XA95Depth));
+            curveDescription += QObject::tr(" - Declination : %1").arg(stringForLocal(yDec));
+            curveDescription += QObject::tr(" - Field : %1 ±  %2 ]").arg(stringForLocal(zField), stringForLocal(s_ZField));
+            break;
+
+        case CurveSettings::eProcess_None:
         default:
             break;
-        }
 
-        break;
     }
     return curveDescription;
 }
 
-QList<double> Event::curveParametersFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType, CurveSettings::VariableType variableType)
+QList<double> Event::curveParametersFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType)
 {
     QList<double> curveParameters;
     double xIncDepth = event.value(STATE_EVENT_X_INC_DEPTH).toDouble();
@@ -468,42 +474,41 @@ QList<double> Event::curveParametersFromJsonEvent(QJsonObject &event, CurveSetti
     double s_ZField = event.value(STATE_EVENT_SZ_SF).toDouble();
 
     switch (processType) {
-    case CurveSettings::eProcessTypeNone:
-        return curveParameters;
+    case CurveSettings::eProcess_Univariate:
+        curveParameters.append({xIncDepth, s_XA95Depth});
         break;
-    case CurveSettings::eProcessTypeVector:
-        curveParameters.append({xIncDepth, s_XA95Depth, yDec, zField, s_ZField});
+    case CurveSettings::eProcess_Depth:
+        curveParameters.append({xIncDepth, s_XA95Depth});
         break;
-    case CurveSettings::eProcessType2D:
+    case CurveSettings::eProcess_Inclination:
+        curveParameters.append({xIncDepth, s_XA95Depth});
+        break;
+    case CurveSettings::eProcess_Declination:
+        curveParameters.append({yDec, xIncDepth, s_XA95Depth});
+        break;
+    case CurveSettings::eProcess_Field:
+        curveParameters.append({zField, s_ZField});
+        break;
+    case CurveSettings::eProcess_2D:
         curveParameters.append({xIncDepth, s_XA95Depth, yDec, s_Y});
         break;
-    case CurveSettings::eProcessType3D:
+    case CurveSettings::eProcess_3D:
         curveParameters.append({xIncDepth, s_XA95Depth, yDec, s_Y, zField, s_ZField});
         break;
-    case CurveSettings::eProcessTypeSpherical:
+
+    case CurveSettings::eProcess_Spherical:
         curveParameters.append({xIncDepth, s_XA95Depth, yDec});
         break;
-    default:
-        switch (variableType) {
-        case CurveSettings::eVariableTypeDepth:
-            curveParameters.append({xIncDepth, s_XA95Depth});
-            break;
-        case CurveSettings::eVariableTypeField:
-            curveParameters.append({zField, s_ZField});
-            break;
-        case CurveSettings::eVariableTypeInclination:
-            curveParameters.append({xIncDepth, s_XA95Depth});
-            break;
-        case CurveSettings::eVariableTypeDeclination:
-            curveParameters.append({yDec, xIncDepth, s_XA95Depth});
-            break;
-        case CurveSettings::eVariableTypeOther:
-            curveParameters.append({xIncDepth, s_XA95Depth});
-            break;
-        default:
-            break;
-        }
+    case CurveSettings::eProcess_Unknwon_Dec:
+        curveParameters.append({xIncDepth, s_XA95Depth, zField, s_ZField});
+        break;
 
+    case CurveSettings::eProcess_Vector:
+        curveParameters.append({xIncDepth, s_XA95Depth, yDec, zField, s_ZField});
+        break;
+
+    case CurveSettings::eProcess_None:
+    default:
         break;
     }
     return curveParameters;

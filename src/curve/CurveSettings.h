@@ -43,7 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QJsonObject>
 #include <QString>
 
-#define CURVE_PROCESS_TYPE_DEFAULT CurveSettings::eProcessTypeNone
+#define CURVE_PROCESS_TYPE_DEFAULT CurveSettings::eProcess_None
 #define CURVE_VARIABLE_TYPE_DEFAULT CurveSettings::eVariableTypeInclination
 #define CURVE_USE_ERR_MESURE_DEFAULT true
 #define CURVE_TIME_TYPE_DEFAULT CurveSettings::eModeBayesian
@@ -59,21 +59,21 @@ class CurveSettings
 public:
     enum ProcessType
     {
-        eProcessTypeNone = 'N',
-        eProcessTypeUnivarie = 'U',
-        eProcessTypeSpherical = 'S',
-        eProcessType2D = '2',
-        eProcessTypeVector = 'V',
-        eProcessType3D = '3'
-    };
+        eProcess_None = 'N',
+        eProcess_Univariate = 'U',
+        eProcess_2D = '2',
+        eProcess_3D = '3',
 
-    enum VariableType // Type_var_cmt
-    {
-        eVariableTypeInclination = 'I',
-        eVariableTypeDeclination = 'D',
-        eVariableTypeField = 'F',
-        eVariableTypeDepth = 'P',
-        eVariableTypeOther = 'A'
+        eProcess_Depth = 'P',
+
+        eProcess_Inclination = 'I',
+        eProcess_Declination = 'D',
+        eProcess_Field = 'F',
+
+        eProcess_Spherical = 'S',
+        eProcess_Unknwon_Dec = 'K',
+        eProcess_Vector = 'V'
+
     };
 
     enum ProcessMode
@@ -84,18 +84,18 @@ public:
     };
     
     CurveSettings();
-    CurveSettings(const CurveSettings& s); //
-    CurveSettings(const QJsonObject& json);
+    CurveSettings(const CurveSettings &s);
+    CurveSettings(const QJsonObject &json);
 
-    CurveSettings& operator=(const CurveSettings& s);
-    bool operator!=( CurveSettings const& s) const ;
-    bool operator==(CurveSettings const & s) const;
+    CurveSettings& operator=(const CurveSettings &s);
+    bool operator!=( CurveSettings const &s) const ;
+    bool operator==(CurveSettings const &s) const;
    // bool operator==(const CurveSettings& ls, const CurveSettings& rs);
-    void copyFrom(const CurveSettings& s);
-    bool isEqual(const CurveSettings& s) const ;
+    void copyFrom(const CurveSettings &s);
+    bool isEqual(const CurveSettings &s) const ;
     ~CurveSettings();
 
-    static CurveSettings fromJson(const QJsonObject& json);
+    static CurveSettings fromJson(const QJsonObject &json);
     static CurveSettings getDefault();
     void restoreDefault();
     QJsonObject toJson() const;
@@ -109,13 +109,17 @@ public:
     QString YLabel() const;
     QString ZLabel() const;
 
+    QString X_short_name() const;
+    QString Y_short_name() const;
+    QString Z_short_name() const;
+
     QString processText() const;
     
 public:
    // bool mEnabled;
     
     ProcessType mProcessType; // Type de traitement
-    VariableType mVariableType; // Type de variable étudiée
+   // VariableType mVariableType; // Type de variable étudiée
     double mThreshold; // Seuil de la vitesse de croissance
 
     bool mUseErrMesure; // bool_err_mes

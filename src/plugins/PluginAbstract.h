@@ -62,7 +62,6 @@ class GraphView;
 class PluginFormAbstract;
 class GraphViewRefAbstract;
 class PluginSettingsViewAbstract;
-//class CalibibrationCurve;
 
 
 struct GroupedAction{
@@ -85,15 +84,15 @@ public:
     virtual ~PluginAbstract(){}
 
     virtual bool withLikelihoodArg() {return false;}
-    virtual long double getLikelihood(const double& t, const QJsonObject& data) = 0;
-    virtual QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data)
+    virtual long double getLikelihood(const double t, const QJsonObject &data) = 0;
+    virtual QPair<long double, long double > getLikelihoodArg(const double t, const QJsonObject &data)
     {
         (void) t;
         (void) data;
         return QPair<long double, long double>();
     }
     
-    long double getLikelihoodCombine  (const double& t, const QJsonArray& subDateArray, const double step)
+    long double getLikelihoodCombine  (const double t, const QJsonArray &subDateArray, const double step)
     {
         long double produit = 1.l;
         Date date;
@@ -105,7 +104,7 @@ public:
 
             int deltaType = subDateJSon.value(STATE_DATE_DELTA_TYPE).toInt();
 
-            if ( wiggleAllowed()==true ) {
+            if ( wiggleAllowed() == true ) {
                  switch (deltaType) {
                     case Date::eDeltaNone:
                         produit *= getLikelihood(t, data );
@@ -162,16 +161,16 @@ public:
     virtual QStringList csvColumns() const{return QStringList();}
     virtual qsizetype csvMinColumns() const {return csvColumns().size();}
     virtual qsizetype csvOptionalColumns() const {return 0;}
-    virtual QJsonObject fromCSV(const QStringList& list,const QLocale& csvLocale) = 0;
-    virtual QStringList toCSV(const QJsonObject& data,const QLocale& csvLocale) const = 0;
+    virtual QJsonObject fromCSV(const QStringList &list,const QLocale &csvLocale) = 0;
+    virtual QStringList toCSV(const QJsonObject &data,const QLocale &csvLocale) const = 0;
 
     /**
      * @brief getDateDesc is the description of the Data showing in the properties of Event, in the list of data
      */
     virtual QString getDateDesc(const Date* date) const = 0;
     virtual QString getDateRefCurveName(const Date* ) {return QString();}
-    virtual bool areDatesMergeable(const QJsonArray& dates) { (void) dates; return false;}
-    virtual QJsonObject mergeDates(const QJsonArray& dates)
+    virtual bool areDatesMergeable(const QJsonArray &dates) { (void) dates; return false;}
+    virtual QJsonObject mergeDates(const QJsonArray &dates)
     {
         (void) dates;
         QJsonObject ret;
@@ -291,31 +290,29 @@ public:
     }
 
     // curveName must be in lower Case
-    double getRefCurveValueAt(const QString& curveName, const double& t)
+    double getRefCurveValueAt(const QString &curveName, const double t)
     {
         long double value = 0.;
         if (mRefCurves.constFind(curveName) != mRefCurves.constEnd()) {
             const RefCurve& curve = mRefCurves.value(curveName);
 
             if (t >= curve.mTmin && t <= curve.mTmax) {
-               // This actually return the iterator with the nearest greater key !!!
+                // This actually return the iterator with the nearest greater key !!!
                 QMap<double, double>::const_iterator iter = curve.mDataMean.lowerBound(t);
-               if (iter != curve.mDataMean.constBegin())  {
-                    const double t_upper = iter.key();
-                    const double v_upper = iter.value();
+                if (iter != curve.mDataMean.constBegin())  {
+                        const double t_upper = iter.key();
+                        const double v_upper = iter.value();
 
-                    --iter;
-                    const double t_under = iter.key();
-                    const double v_under = iter.value();
+                        --iter;
+                        const double t_under = iter.key();
+                        const double v_under = iter.value();
 
-                    value = interpolate(t, t_under, t_upper, v_under, v_upper);
-               }
-               else {
-                   value = iter.value();
-               }
+                        value = interpolate(t, t_under, t_upper, v_under, v_upper);
+                } else {
+                        value = iter.value();
+                }
             }
             else { // onExtension depreciated
-                //value = interpolate(t, curve.mTmin, curve.mTmax, curve.mDataMean[curve.mTmin], curve.mDataMean[curve.mTmax]);
                 value = (curve.mDataSupMax + curve.mDataInfMin )/2.;
             }
 
@@ -323,7 +320,7 @@ public:
         return value;
     }
 
-    double getRefCurveErrorAt(const QString& curveName, const double& t)
+    double getRefCurveErrorAt(const QString &curveName, const double t)
     {
         double error = 0.;
         if (mRefCurves.constFind(curveName) != mRefCurves.constEnd()) {

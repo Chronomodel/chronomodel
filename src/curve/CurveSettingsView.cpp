@@ -70,20 +70,21 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     mProcessTypeLabel = new QLabel(tr("Process") , this);
     mProcessTypeInput = new QComboBox(this);
     mProcessTypeInput->addItem(tr("None"));
-    mProcessTypeInput->addItem(tr("Univariate"));
-    mProcessTypeInput->addItem(tr("2D"));
-    mProcessTypeInput->addItem(tr("Spherical"));
-    mProcessTypeInput->addItem(tr("Vector"));
-    mProcessTypeInput->addItem(tr("3D"));
-    
-    mVariableTypeLabel = new QLabel(tr("Variable"), this);
-    mVariableTypeInput = new QComboBox(this);
-    mVariableTypeInput->addItem(tr("Inclination"));
-    mVariableTypeInput->addItem(tr("Declination"));
-    mVariableTypeInput->addItem(tr("Field Intensity"));
-    mVariableTypeInput->addItem(tr("Depth"));
-    mVariableTypeInput->addItem(tr("Any Measurement"));
-    
+    mProcessTypeInput->addItem(tr("Univariate (1D)"));
+    mProcessTypeInput->addItem(tr("Bi-variate (2D)"));
+    mProcessTypeInput->addItem(tr("Tri-variate (3D)"));
+
+    mProcessTypeInput->insertSeparator(4);
+    mProcessTypeInput->addItem(tr("Depth"));
+    mProcessTypeInput->insertSeparator(6);
+
+    mProcessTypeInput->addItem(tr("Inclination"));
+    mProcessTypeInput->addItem(tr("Declination"));
+    mProcessTypeInput->addItem(tr("Field Intensity"));
+    mProcessTypeInput->addItem(tr("Spherical (I, D)"));
+    mProcessTypeInput->addItem(tr("Unknown Dec (I, F)"));
+    mProcessTypeInput->addItem(tr("Vector (I, D, F)"));
+
     mThresholdLabel = new QLabel(tr("Minimal Rate of Change"), this);
     mThresholdInput = new QLineEdit(this);
 
@@ -115,9 +116,7 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     
     mVarianceValueLabel = new QLabel(tr("Std gi = Global Value"), this);
     mVarianceValueInput = new QLineEdit(this);
-    
 
-    
     QGridLayout* grid = new QGridLayout();
     grid->setContentsMargins(0, 0, 0, 0);
     grid->setHorizontalSpacing(10);
@@ -126,9 +125,6 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     
     grid->addWidget(mProcessTypeLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mProcessTypeInput, row, 1);
-
-    grid->addWidget(mVariableTypeLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mVariableTypeInput, row, 1);
 
     grid->addWidget(mThresholdLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mThresholdInput, row, 1);
@@ -178,40 +174,7 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     hlayout->addStretch();
     
     setLayout(hlayout);
-    
-    //updateVisibilities();
-   /*
-    connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
-    
-    connect(mVariableTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
 
-    connect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
-    
-    connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
-
-    connect(mUseVarianceIndividualCB, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::updateVisibilities);
-
-    
-    connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
-    
-    connect(mVariableTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
-
-    connect(mThresholdInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
-    
-    connect(mUseErrMesureInput, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::save);
-    
-    connect(mTimeTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
-    
-    connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
-    
-    connect(mUseVarianceIndividualCB, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::save);
-    
-    connect(mVarianceValueInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
-    
-    connect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
-    
-    connect(mLambdaSplineInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
-*/
 }
 
 CurveSettingsView::~CurveSettingsView()
@@ -222,9 +185,8 @@ CurveSettingsView::~CurveSettingsView()
 void CurveSettingsView::setConnections(const bool doConnections)
 {
     if (doConnections) {
+        // updateVisibilities
         connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
-
-        connect(mVariableTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
 
         connect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
 
@@ -232,10 +194,8 @@ void CurveSettingsView::setConnections(const bool doConnections)
 
         connect(mUseVarianceIndividualCB, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::updateVisibilities);
 
-
+        // Save
         connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
-
-        connect(mVariableTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
 
         connect(mThresholdInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
 
@@ -254,9 +214,8 @@ void CurveSettingsView::setConnections(const bool doConnections)
         connect(mLambdaSplineInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
 
     } else {
+        // updateVisibilities
         disconnect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
-
-        disconnect(mVariableTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
 
         disconnect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
 
@@ -264,10 +223,8 @@ void CurveSettingsView::setConnections(const bool doConnections)
 
         disconnect(mUseVarianceIndividualCB, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::updateVisibilities);
 
-
+        // Save
         disconnect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
-
-        disconnect(mVariableTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
 
         disconnect(mThresholdInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
 
@@ -288,49 +245,45 @@ void CurveSettingsView::setConnections(const bool doConnections)
 
 }
 
-void CurveSettingsView::setSettings(const CurveSettings& settings)
+void CurveSettingsView::setSettings(const CurveSettings &settings)
 {
-
+    // Separators must be counted :index 4 and 6
     switch (settings.mProcessType) {
-    case CurveSettings::eProcessTypeNone:
-        mProcessTypeInput->setCurrentIndex(0);
-        break;
-    case CurveSettings::eProcessTypeUnivarie:
-        mProcessTypeInput->setCurrentIndex(1);
-        break;
-    case CurveSettings::eProcessType2D:
-        mProcessTypeInput->setCurrentIndex(2);
-        break;
-    case CurveSettings::eProcessTypeSpherical:
-        mProcessTypeInput->setCurrentIndex(3);
-        break;
-    case CurveSettings::eProcessTypeVector:
-        mProcessTypeInput->setCurrentIndex(4);
-        break;
-    case CurveSettings::eProcessType3D:
-        mProcessTypeInput->setCurrentIndex(5);
-        break;
-
+        case CurveSettings::eProcess_None:
+            mProcessTypeInput->setCurrentIndex(0);
+            break;
+        case CurveSettings::eProcess_Univariate:
+            mProcessTypeInput->setCurrentIndex(1);
+            break;
+        case CurveSettings::eProcess_2D:
+            mProcessTypeInput->setCurrentIndex(2);
+            break;
+        case CurveSettings::eProcess_3D:
+            mProcessTypeInput->setCurrentIndex(3);
+            break;
+        case CurveSettings::eProcess_Depth:
+            mProcessTypeInput->setCurrentIndex(5);
+            break;
+        case CurveSettings::eProcess_Inclination:
+            mProcessTypeInput->setCurrentIndex(7);
+            break;
+        case CurveSettings::eProcess_Declination:
+            mProcessTypeInput->setCurrentIndex(8);
+            break;
+        case CurveSettings::eProcess_Field:
+            mProcessTypeInput->setCurrentIndex(9);
+            break;
+        case CurveSettings::eProcess_Spherical:
+            mProcessTypeInput->setCurrentIndex(10);
+            break;
+        case CurveSettings::eProcess_Unknwon_Dec:
+            mProcessTypeInput->setCurrentIndex(11);
+            break;
+        case CurveSettings::eProcess_Vector:
+            mProcessTypeInput->setCurrentIndex(12);
+            break;
     }
 
-    switch (settings.mVariableType) {
-    case CurveSettings::eVariableTypeInclination:
-        mVariableTypeInput->setCurrentIndex(0);
-        break;
-    case CurveSettings::eVariableTypeDeclination:
-        mVariableTypeInput->setCurrentIndex(1);
-        break;
-    case CurveSettings::eVariableTypeField:
-        mVariableTypeInput->setCurrentIndex(2);
-        break;
-    case CurveSettings::eVariableTypeDepth:
-        mVariableTypeInput->setCurrentIndex(3);
-        break;
-    case CurveSettings::eVariableTypeOther:
-        mVariableTypeInput->setCurrentIndex(4);
-        break;
-    }
-    
     
     mUseErrMesureInput->setChecked(settings.mUseErrMesure);
     
@@ -371,85 +324,91 @@ void CurveSettingsView::setSettings(const CurveSettings& settings)
 CurveSettings CurveSettingsView::getSettings() const
 {
     CurveSettings settings;
-
-    if (mProcessTypeInput->currentIndex() == 0) {
-        settings.mProcessType = CurveSettings::eProcessTypeNone;
-
-    } else if (mProcessTypeInput->currentIndex() == 1) {
-        settings.mProcessType = CurveSettings::eProcessTypeUnivarie;
-
-        switch (mVariableTypeInput->currentIndex()) {
-        case 0:
-            settings.mVariableType = CurveSettings::eVariableTypeInclination;
-            break;
+    // Separators must be counted : index 4 and 6
+    switch (mProcessTypeInput->currentIndex()) {
         case 1:
-            settings.mVariableType = CurveSettings::eVariableTypeDeclination;
+            settings.mProcessType = CurveSettings::eProcess_Univariate;
             break;
         case 2:
-            settings.mVariableType = CurveSettings::eVariableTypeField;
+            settings.mProcessType = CurveSettings::eProcess_2D;
             break;
         case 3:
-            settings.mVariableType = CurveSettings::eVariableTypeDepth;
-            settings.mThreshold = locale().toDouble(mThresholdInput->text());
+            settings.mProcessType = CurveSettings::eProcess_3D;
             break;
-        case 4:
-            settings.mVariableType = CurveSettings::eVariableTypeOther;
+        case 5:
+            settings.mProcessType = CurveSettings::eProcess_Depth;
+            break;
+        case 7:
+            settings.mProcessType = CurveSettings::eProcess_Inclination;
+            break;
+        case 8:
+            settings.mProcessType = CurveSettings::eProcess_Declination;
+            break;
+        case 9:
+            settings.mProcessType = CurveSettings::eProcess_Field;
+            break;
+        case 10:
+            settings.mProcessType = CurveSettings::eProcess_Spherical;
+            break;
+        case 11:
+            settings.mProcessType = CurveSettings::eProcess_Unknwon_Dec;
+            break;
+        case 12:
+            settings.mProcessType = CurveSettings::eProcess_Vector;
             break;
 
-        }
-
-    } else if (mProcessTypeInput->currentIndex() == 2) {
-        settings.mProcessType = CurveSettings::eProcessType2D;
-        settings.mVariableType = CurveSettings::eVariableTypeInclination;
-
-    } else if (mProcessTypeInput->currentIndex() == 3) {
-        settings.mProcessType = CurveSettings::eProcessTypeSpherical;
-        settings.mVariableType = CurveSettings::eVariableTypeInclination;
-
-    } else if (mProcessTypeInput->currentIndex() == 4) {
-        settings.mProcessType = CurveSettings::eProcessTypeVector;
-        settings.mVariableType = CurveSettings::eVariableTypeInclination;
-
-    } else if (mProcessTypeInput->currentIndex() == 5) {
-        settings.mProcessType = CurveSettings::eProcessType3D;
-        settings.mVariableType = CurveSettings::eVariableTypeOther;
+        case 0:
+        default:
+            settings.mProcessType = CurveSettings::eProcess_None;
+            break;
     }
-    
-
     
     settings.mUseErrMesure = mUseErrMesureInput->isChecked();
     
-    if (mTimeTypeInput->currentIndex() == 0) {
+    switch (mTimeTypeInput->currentIndex()) {
+    case 0:
         settings.mTimeType = CurveSettings::eModeFixed;
+        break;
 
-    } else if (mTimeTypeInput->currentIndex() == 1) {
+    case 1:
+    default:
         settings.mTimeType = CurveSettings::eModeBayesian;
+        break;
     }
-    
-    if (mVarianceTypeInput->currentIndex() == 0) {
-        settings.mVarianceType = CurveSettings::eModeFixed;
 
-    } else if (mVarianceTypeInput->currentIndex() == 1) {
+    switch (mVarianceTypeInput->currentIndex()) {
+    case 0:
+        settings.mVarianceType = CurveSettings::eModeFixed;
+        break;
+
+    case 1:
+    default:
         settings.mVarianceType = CurveSettings::eModeBayesian;
+        break;
     }
-        
+
     settings.mUseVarianceIndividual = mUseVarianceIndividualCB->isChecked() && (mVarianceTypeInput->currentIndex() == 1) ;
     settings.mVarianceFixed = pow(locale().toDouble(mVarianceValueInput->text()), 2.);
 
 
-    if (mLambdaSplineTypeInput->currentIndex() == 0) {
+    switch (mLambdaSplineTypeInput->currentIndex()) {
+    case 0:
         settings.mLambdaSplineType = CurveSettings::eModeFixed;
         if (locale().toDouble(mLambdaSplineInput->text())>10)
             settings.mLambdaSpline = pow(10., 10.);
         else
             settings.mLambdaSpline = pow(10., locale().toDouble(mLambdaSplineInput->text()));
+        break;
 
-    } else if (mLambdaSplineTypeInput->currentIndex() == 1) {
-        settings.mLambdaSplineType = CurveSettings::eModeBayesian;
-
-    } else if (mLambdaSplineTypeInput->currentIndex() == 2) {
+    case 2:
         settings.mLambdaSplineType = CurveSettings::eInterpolation;
         settings.mLambdaSpline = 0;
+        break;
+
+    case 1:
+    default:
+        settings.mLambdaSplineType = CurveSettings::eModeBayesian;
+        break;
 
     }
     
@@ -495,9 +454,6 @@ void CurveSettingsView::updateVisibilities()
         mTimeTypeLabel->setVisible(false);
         mTimeTypeInput->setVisible(false);
 
-        mVariableTypeLabel->setVisible(false);
-        mVariableTypeInput->setVisible(false);
-
         mThresholdLabel->setVisible(false);
         mThresholdInput->setVisible(false);
 
@@ -523,11 +479,7 @@ void CurveSettingsView::updateVisibilities()
         mTimeTypeLabel->setVisible(true);
         mTimeTypeInput->setVisible(true);
 
-        const bool variableTypeRequired = (mProcessTypeInput->currentText() == "Univariate");
-        mVariableTypeLabel->setVisible(variableTypeRequired);
-        mVariableTypeInput->setVisible(variableTypeRequired);
-
-        const bool showThreshold = (mVariableTypeInput->currentText() == "Depth");
+        const bool showThreshold = (mProcessTypeInput->currentIndex() ==  5);//"Depth");
         mThresholdLabel->setVisible(showThreshold);
         mThresholdInput->setVisible(showThreshold);
 

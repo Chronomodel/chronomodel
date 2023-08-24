@@ -122,7 +122,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     positiveValidator->setBottom(0.);
     //
 
-    mS_X_IncLab = new QLabel(tr("Error"), mCurveWidget);
+    mS_X_IncLab = new QLabel("Error", mCurveWidget);
     mS_X_IncLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mS_Y_Lab = new QLabel(tr("Error"), mCurveWidget);
     mS_Y_Lab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -168,10 +168,8 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 
         minimumHeight += button->height();
 
-        if (p->doesCalibration())
-            mPluginButs1.append(button);
-        else
-            mPluginButs2.append(button);
+        mPluginButs.append(button);
+
     }
 
     mDeleteBut = new Button(tr("Delete"), mEventView);
@@ -338,10 +336,7 @@ void EventPropertiesView::updateEvent()
         // The Curve settings may have changed since the last time the event property view has been opened
         const QJsonObject &state = MainWindow::getInstance()->getState();
         const CurveSettings &settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
-        mCurveEnabled = (settings.mProcessType != CurveSettings::eProcessTypeNone);
-
-        //mCurveEnabled = settings.mEnabled;
-        //mCurveProcessType = settings.mProcessType;
+        mCurveEnabled = (settings.mProcessType != CurveSettings::eProcess_None);
         
         mMethodLab->setVisible(type == Event::eDefault);
         mMethodCombo->setVisible( !mCurveEnabled && (type == Event::eDefault));
@@ -352,14 +347,14 @@ void EventPropertiesView::updateEvent()
         bool showXEdit, showYEdit, showZEdit, showYErr;
 
         if (!mCurveEnabled) {
-             showXEdit = false;
-             showYEdit = false;
-             showZEdit = false;
-             showYErr = false;
+            showXEdit = false;
+            showYEdit = false;
+            showZEdit = false;
+            showYErr = false;
 
         } else {
             showXEdit = settings.showX();
-            showYEdit = settings.showY();
+            showYEdit = settings.showY() || settings.mProcessType == CurveSettings::eProcess_Declination;
             showZEdit = settings.showZ();
             showYErr = settings.showYErr();
         }
@@ -371,14 +366,23 @@ void EventPropertiesView::updateEvent()
         mX_IncEdit->setVisible(showXEdit);
 
         mS_X_IncLab->setVisible(showXEdit);
+        mS_X_IncLab->setText(XerrorLabel());
+
         mS_X_IncEdit->setVisible(showXEdit);
         if (showXEdit) {
-            mX_IncLab->setText(settings.XLabel());
-            if (settings.mVariableType == CurveSettings::eVariableTypeField) {
+
+            if (settings.mProcessType == CurveSettings::eProcess_Declination) {
+                mX_IncLab->setText(tr("Inclination"));
+                mX_IncEdit->setText(locale().toString(mEvent->value(STATE_EVENT_X_INC_DEPTH).toDouble()));
+                mS_X_IncEdit->setText(locale().toString(mEvent->value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble()));
+
+            } else if (settings.mProcessType == CurveSettings::eProcess_Field) {
+                mX_IncLab->setText(settings.XLabel());
                 mX_IncEdit->setText(locale().toString(mEvent->value(STATE_EVENT_Z_F).toDouble()));
                 mS_X_IncEdit->setText(locale().toString(mEvent->value(STATE_EVENT_SZ_SF).toDouble()));
 
             } else {
+                mX_IncLab->setText(settings.XLabel());
                 mX_IncEdit->setText(locale().toString(mEvent->value(STATE_EVENT_X_INC_DEPTH).toDouble()));
                 mS_X_IncEdit->setText(locale().toString(mEvent->value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble()));
             }
@@ -389,7 +393,11 @@ void EventPropertiesView::updateEvent()
         mY_DecEdit->setVisible(showYEdit);
 
         if (showYEdit) {
-            mY_DecLab->setText(settings.YLabel());
+            if (settings.mProcessType == CurveSettings::eProcess_Declination) {
+                mY_DecLab->setText(settings.XLabel());
+            } else {
+                mY_DecLab->setText(settings.YLabel());
+            }
             mY_DecEdit->setText(locale().toString(mEvent->value(STATE_EVENT_Y_DEC).toDouble()));
         }
 
@@ -536,7 +544,7 @@ void EventPropertiesView::updateEventXInc()
     const QJsonObject &state = MainWindow::getInstance()->getState();
     const CurveSettings &settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
 
-    if (settings.mProcessType == CurveSettings::eProcessTypeUnivarie && (settings.mVariableType == CurveSettings::eVariableTypeField)) {
+    if (settings.mProcessType == CurveSettings::eProcess_Field) {
         event[STATE_EVENT_Z_F] = locale().toDouble(mX_IncEdit->text());
 
     } else
@@ -564,7 +572,7 @@ void EventPropertiesView::updateEventSXInc()
     QJsonObject event = *mEvent;
     const QJsonObject &state = MainWindow::getInstance()->getState();
     const CurveSettings settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
-    if (settings.mProcessType == CurveSettings::eProcessTypeUnivarie && (settings.mVariableType == CurveSettings::eVariableTypeField)) {
+    if (settings.mProcessType ==  CurveSettings::eProcess_Field) {
         event[STATE_EVENT_SZ_SF] = locale().toDouble(mS_X_IncEdit->text());
 
     } else
@@ -817,12 +825,7 @@ void EventPropertiesView::applyAppSettings()
     minimumHeight += mEventView->height();
 
     minimumHeight = 0;
-    for (auto &&but : mPluginButs1) {
-        but->resize(mButtonWidth, mButtonHeigth);
-        minimumHeight += but->height();
-    }
-
-    for (auto &&but : mPluginButs2) {
+    for (auto &&but : mPluginButs) {
         but->resize(mButtonWidth, mButtonHeigth);
         minimumHeight += but->height();
     }
@@ -833,14 +836,32 @@ void EventPropertiesView::applyAppSettings()
         updateLayout();
 }
 
+QString EventPropertiesView::XerrorLabel() const
+{
+    const QJsonObject &state = MainWindow::getInstance()->getState();
+    const CurveSettings curveSettings (state.value(STATE_CURVE).toObject());
+    switch (curveSettings.mProcessType) {
+    case CurveSettings::eProcess_Inclination:
+    case CurveSettings::eProcess_Declination:
+    case CurveSettings::eProcess_Spherical:
+    case CurveSettings::eProcess_Unknwon_Dec:
+    case CurveSettings::eProcess_Vector:
+        return tr("Alpha95");
+        break;
+    default:
+        return tr("Error");
+        break;
+    }
+}
+
 void EventPropertiesView::updateLayout()
 {
-    if (mEvent == nullptr || mEvent->empty())
+    if (mEvent == nullptr || mEvent->empty() || width()<1)
         return;
 
     const QJsonObject &state = MainWindow::getInstance()->getState();
-    const CurveSettings &curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
-    const bool withCurve = (curveSettings.mProcessType != CurveSettings::eProcessTypeNone);
+    const CurveSettings curveSettings (state.value(STATE_CURVE).toObject());
+    const bool withCurve = curveSettings.mProcessType != CurveSettings::eProcess_None;
     const bool withNode = (curveSettings.mLambdaSplineType != CurveSettings::eInterpolation) && (curveSettings.mVarianceType != CurveSettings::eModeFixed)
                           && (curveSettings.mUseVarianceIndividual == true);
 
@@ -892,11 +913,11 @@ void EventPropertiesView::updateLayout()
 
         int editW;
         if ( curveSettings.showX()) {
-            if (curveSettings.showY() && !curveSettings.showYErr() ) {
-                editW = (curveWidgetWidth - 10*margin - 3*labW - curveNodeCBWidth) / 3;
+            if ((curveSettings.showY() || curveSettings.mProcessType == CurveSettings::eProcess_Declination) && !curveSettings.showYErr() ) {
+                editW = std::max(0, (curveWidgetWidth - 8*margin - 3*labW - curveNodeCBWidth) / 3);
 
             } else {
-                editW = (curveWidgetWidth - 6*margin - 2*labW - curveNodeCBWidth) / 2;
+                editW = std::max(0, (curveWidgetWidth - 6*margin - 2*labW - curveNodeCBWidth) / 2);
             }
 
             mX_IncLab->setGeometry(dx, dy - YshiftLabel, labW, mLineEditHeight);
@@ -904,7 +925,7 @@ void EventPropertiesView::updateLayout()
             mS_X_IncLab->setGeometry(dx += editW + margin, dy - YshiftLabel, labW, mLineEditHeight);
             mS_X_IncEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
 
-            if (curveSettings.showY() && !curveSettings.showYErr())  {
+            if ((curveSettings.showY() || curveSettings.mProcessType == CurveSettings::eProcess_Declination) && !curveSettings.showYErr())  {
                 mY_DecLab->setGeometry(dx += editW + margin, dy - YshiftLabel, labW, mLineEditHeight);
                 mY_DecEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
             } 
@@ -977,15 +998,7 @@ void EventPropertiesView::updateLayout()
         int x = listRect.width();
         int y = 0;
 
-        // Plugin with calibration,
-         for (auto&& plugBut : mPluginButs1) {
-            plugBut->setGeometry(x, y, mButtonWidth, butPluginHeigth);
-            y += butPluginHeigth;
-        }
-
-        // plugin without calibration
-
-        for (auto&& plugBut : mPluginButs2) {
+         for (auto&& plugBut : mPluginButs) {
             plugBut->setGeometry(x, y, mButtonWidth, butPluginHeigth);
             y += butPluginHeigth;
         }

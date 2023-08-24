@@ -69,19 +69,19 @@ PluginMag::~PluginMag()
 
 
 // Likelihood
-long double PluginMag::getLikelihood(const double& t, const QJsonObject& data)
+long double PluginMag::getLikelihood(const double t, const QJsonObject &data)
 {
     return Likelihood(t, data);
 }
 
-QPair<long double, long double> PluginMag::getLikelihoodArg(const double& t, const QJsonObject& data)
+QPair<long double, long double> PluginMag::getLikelihoodArg(const double t, const QJsonObject &data)
 {
     (void) data;
     (void) t;
     return qMakePair<long double, long double> (0, 0);
 }
 
-long double PluginMag::Likelihood(const double& t, const QJsonObject& data)
+long double PluginMag::Likelihood(const double t, const QJsonObject &data)
 {
     // Lecture des données
     const long double incl = static_cast<long double> (data.value(DATE_AM_INC_STR).toDouble());
@@ -489,7 +489,7 @@ PluginFormAbstract* PluginMag::getForm()
                 "error_f": 2,
                 "field": 65,
                 "inc": 65,
-                "iteration_mcmc": 500,
+                "integration_steps": 500,
                 "process_type": 4,
                 "refD_curve": "gal2002sph2014_d.ref",
                 "refF_curve": "gwh2013uni_f.ref",

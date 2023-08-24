@@ -149,7 +149,7 @@ void PluginGaussRefView::setDate(const Date& date, const StudyPeriodSettings& se
             } else if (mode == DATE_GAUSS_MODE_CURVE) {
                 PluginGauss* plugin = static_cast<PluginGauss*> (date.mPlugin);
 
-                const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
+                const RefCurve &curve = plugin->mRefCurves.value(ref_curve);
 
                 if (curve.mDataMean.isEmpty()) {
                     GraphZone zone;
@@ -196,7 +196,7 @@ void PluginGaussRefView::setDate(const Date& date, const StudyPeriodSettings& se
 
                 if (tminDisplay>curve.mDataMean.firstKey() && tminDisplay<curve.mDataMean.lastKey()) {
                     // This actually return the iterator with the nearest greater key !!!
-                     QMap<double, double>::const_iterator iter = curve.mDataMean.lowerBound(tminDisplay);
+                    /* QMap<double, double>::const_iterator iter = curve.mDataMean.lowerBound(tminDisplay);
                      // the higher value must be mTmax.
                      double v;
                      if (iter != curve.mDataError.constBegin()) {
@@ -209,15 +209,14 @@ void PluginGaussRefView::setDate(const Date& date, const StudyPeriodSettings& se
                          v = interpolate(tminDisplay, t_under, t_upper, v_under, v_upper);
                      } else
                          v = iter.value();
-
+                     */
+                     double v = curve.interpolate_mean(tminDisplay);
                      const double error = plugin->getRefErrorAt(date.mData, tminDisplay, mode) * 1.96;
 
                      curveG[tminDisplay] = v;
                      curveG95Sup[tminDisplay] = v + error;
                      curveG95Inf[tminDisplay] = v - error;
 
-                    // yMin = qMin(yMin, curveG95Inf.value(tminDisplay));
-                    // yMax = qMax(yMax, curveG95Sup.value(tminDisplay));
                 }
 
                 double t, tDisplay, error;
@@ -230,12 +229,6 @@ void PluginGaussRefView::setDate(const Date& date, const StudyPeriodSettings& se
                     curveG[tDisplay] = iPt.value();
                     curveG95Sup[tDisplay] = iPt.value() + error;
                     curveG95Inf[tDisplay] = iPt.value() - error;
-
-                   /* if (tDisplay>=tminDisplay && tDisplay<=tmaxDisplay) {
-                        yMin = qMin(yMin, curveG95Inf.value(tDisplay));
-                        yMax = qMax(yMax, curveG95Sup.value(tDisplay));
-                    }
-                   */
 
                 }
 

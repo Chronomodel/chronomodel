@@ -1999,36 +1999,54 @@ void ResultsView::createByCurveGraph()
                     CurveRefPts evPts;
                     CurveRefPts dPts;
                     double verr;
-                    // Set Y
-                    if (!displayY) {
-                        switch (model->mCurveSettings.mVariableType) {
-                        case CurveSettings::eVariableTypeInclination :
-                            evPts.Ymax = event->mXIncDepth + event->mS_XA95Depth;
-                            evPts.Ymin = event->mXIncDepth - event->mS_XA95Depth;
-                            break;
-                        case CurveSettings::eVariableTypeDeclination :
-                            verr = event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
-                            evPts.Ymin = event->mYDec - verr;
-                            evPts.Ymax = event->mYDec + verr;
-                            break;
-                        case CurveSettings::eVariableTypeField :
-                            evPts.Ymin = event->mZField - 1.96*event->mS_ZField;
-                            evPts.Ymax = event->mZField + 1.96*event->mS_ZField;
-                            break;
-                        case CurveSettings::eVariableTypeDepth :
-                            evPts.Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
-                            evPts.Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
-                            break;
-                        case CurveSettings::eVariableTypeOther :
-                            evPts.Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
-                            evPts.Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
-                            break;
-                        }
+                    // Set Y for graph X
+                   // if (!displayY) {
+                        switch (model->mCurveSettings.mProcessType) {
 
-                    } else {
-                        //must be inclination or X
-                        evPts.Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
-                        evPts.Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
+                            case CurveSettings::eProcess_Declination :
+                                verr = event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
+                                evPts.Ymin = event->mYDec - verr;
+                                evPts.Ymax = event->mYDec + verr;
+                                break;
+                            case CurveSettings::eProcess_Field :
+                                evPts.Ymin = event->mZField - 1.96*event->mS_ZField;
+                                evPts.Ymax = event->mZField + 1.96*event->mS_ZField;
+                                break;
+                            case CurveSettings::eProcess_Depth :
+                                evPts.Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
+                                evPts.Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
+                                break;
+
+                            case CurveSettings::eProcess_3D:
+                            case CurveSettings::eProcess_2D:
+                            case CurveSettings::eProcess_Univariate :
+                            case CurveSettings::eProcess_Inclination :
+                            case CurveSettings::eProcess_Spherical:
+                            case CurveSettings::eProcess_Vector:
+                            case CurveSettings::eProcess_Unknwon_Dec:
+                                evPts.Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
+                                evPts.Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
+                                break;
+
+                            case CurveSettings::eProcess_None:
+                            default:
+                                break;
+
+
+                   /* } else {
+                        switch (model->mCurveSettings.mProcessType) {
+                            case CurveSettings::eProcess_Inclination :
+                                evPts.Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
+                                evPts.Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
+                                break;
+                            case CurveSettings::eProcess_Unknwon_Dec:
+                                verr = event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
+                                evPts.Ymin = event->mYDec - verr;
+                                evPts.Ymax = event->mYDec + verr;
+                                break;
+                            default:
+                                break;
+                            }*/
                     }
                     evPts.color = event->mColor;
 
@@ -2235,10 +2253,14 @@ void ResultsView::createByCurveGraph()
                     if (event->mIsSelected || showAllEvents) {
                         for (int j = 0 ; j< hpdPerEvent[i]; j++) {
                             iEventPts++;
-                            if ( model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D ||
-                                 model->mCurveSettings.mProcessType == CurveSettings::eProcessType2D ) {
+                            if ( model->mCurveSettings.mProcessType == CurveSettings::eProcess_3D ||
+                                 model->mCurveSettings.mProcessType == CurveSettings::eProcess_2D ) {
                                 eventsPts[iEventPts].Ymin = event->mYDec - 1.96*event->mS_Y;
                                 eventsPts[iEventPts].Ymax = event->mYDec + 1.96*event->mS_Y;
+
+                            } else if ( model->mCurveSettings.mProcessType == CurveSettings::eProcess_Unknwon_Dec ) {
+                                eventsPts[iEventPts].Ymin = event->mZField - 1.96*event->mS_ZField;
+                                eventsPts[iEventPts].Ymax = event->mZField + 1.96*event->mS_ZField;
 
                             } else {
                                 eventsPts[iEventPts].Ymin = event-> mYDec - event->mS_XA95Depth / cos(event->mXIncDepth * M_PI /180.);
@@ -2308,7 +2330,7 @@ void ResultsView::createByCurveGraph()
                                 eventsPts[iEventPts].Ymax = event->mZField + 1.96*event->mS_ZField;
                             }
                        // }
-                        for (int j =0 ; j< dataPerEvent[i]; j++) {
+                        for (int j = 0 ; j< dataPerEvent[i]; j++) {
                             dataPts[iDataPts].Ymin = eventsPts.at(iEventPts).Ymin;
                             dataPts[iDataPts].Ymax = eventsPts.at(iEventPts).Ymax;
                             iDataPts++;

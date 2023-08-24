@@ -525,7 +525,7 @@ QMap<float, float> vector_to_map(const QVector<float>& data, const float min, co
  * @param curveTmax Time corresponding to index curve.size()-1
  * @return
  */
-double interpolate_value_from_curve(const double t, const QVector<double> & curve,const double curveTmin, const double curveTmax)
+double interpolate_value_from_curve(const double t, const QVector<double> &curve,const double curveTmin, const double curveTmax)
 {
      // We need at least two points to interpolate
     if (curve.size() < 2 || t <= curveTmin) {
@@ -600,7 +600,7 @@ double surface_on_theta (std::map<double, double>::const_iterator iter_on_theta)
  * @param threshold en percent
  * @return
  */
-const std::map<double, double> create_HPD2(const QMap<double, double>& density, const double threshold)
+const std::map<double, double> create_HPD2(const QMap<double, double> &density, const double threshold)
 {
     std::map<double, double> result;
 

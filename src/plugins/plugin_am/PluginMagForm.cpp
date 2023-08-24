@@ -74,7 +74,7 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     mFieldLab =  new QLabel(tr("Field"), this);
     mFieldErrorLab=  new QLabel(tr("Error F"), this);
 
-    mMCMCIterationLab = new QLabel(tr("Iterations"), this);
+    mMCMCIterationLab = new QLabel(tr("Integration Step"), this);
 
     //------------------------------------------------------------------------------------//
 

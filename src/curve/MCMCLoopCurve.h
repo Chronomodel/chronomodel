@@ -66,7 +66,7 @@ public:
 protected:
     // Variable for update function
 
-    bool mComputeY, mComputeZ;
+
     t_prob current_ln_h_YWI_2, current_ln_h_YWI_3, current_ln_h_YWI_1_2, current_h_theta, current_h_lambda, current_h_VG;
 
     SplineMatrices current_splineMatrices, current_matriceWI;
@@ -86,7 +86,16 @@ protected:
 
     std::vector<Event*> initListEvents;
 
- #pragma mark function
+private:
+    QList<Event *> mPointEvent;
+    QList<Event *> mNodeEvent;
+    qsizetype mFirstEventIndex; // Utile pour VG global, correspond au premier Event qui n'est pas un Bound
+    double Var_residual_spline;
+    double var_Y;
+
+#pragma mark function
+protected:
+
     void orderEventsByThetaReduced(QList<Event *> &event);
     void spreadEventsThetaReduced0(QList<Event *> &sortedEvents, t_reduceTime spreadSpan = 0.);
     //std::thread::id mTh_id_memoCurve;
@@ -118,10 +127,6 @@ protected:
     
     
 private:
-
-    QList<Event *> mPointEvent;
-    QList<Event *> mNodeEvent;
-
 
     static t_prob h_YWI_AY(const SplineMatrices& matrices, const QList<Event *> &events, const  double lambdaSpline, const std::vector< t_reduceTime> &vecH, const bool hasY = false, const bool hasZ = false);
 
@@ -192,7 +197,6 @@ private:
      t_prob h_theta (const QList<Event *> &events) const;
      static double h_theta_Event (const Event * e);
 
-     qsizetype mFirstEventIndex; // Utile pour VG global, correspond au premier Event qui n'est pas un Bound    
 
      inline t_prob h_VG_Event(const Event * e, double S02_Vg) const;
 
@@ -204,8 +208,7 @@ private:
      double S02_Vg_Yy(QList<Event *> &events, SplineMatrices &matricesWI, std::vector<t_reduceTime> &vecH, const double lambdaSpline);
      double S02_Vg_Yz(QList<Event *> &events, SplineMatrices &matricesWI, std::vector<t_reduceTime> &vecH, const double lambdaSpline);
 
-     double Var_residual_spline;
-     double var_Y;
+
 
      static double S02_lambda_WI(const SplineMatrices &matrices, const int nb_noeuds);
 

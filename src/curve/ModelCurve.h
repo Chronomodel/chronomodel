@@ -50,8 +50,22 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class ModelCurve: public Model
 {
 public:
+    CurveSettings mCurveSettings;
+
+    MHVariable mLambdaSpline;
+    MHVariable mS02Vg;
+    MCMCSpline mSpline; // valeurs courrantes de la spline
+
+    std::vector<MCMCSpline> mSplinesTrace; // memo des valeurs aux noeuds
+
+    PosteriorMeanG mPosteriorMeanG; // valeurs en tout t
+    std::vector<PosteriorMeanG> mPosteriorMeanGByChain; // valeurs en tout t par chaine
+
+    bool compute_Y, compute_Z, compute_X_only;
+
+public:
     ModelCurve(QObject *parent = nullptr);
-    explicit ModelCurve(const QJsonObject& json, QObject *parent = nullptr);
+    explicit ModelCurve(const QJsonObject &json, QObject *parent = nullptr);
     virtual ~ModelCurve();
     
     virtual void saveToFile(QDataStream *out);
@@ -59,7 +73,7 @@ public:
     void restoreFromFile_v323(QDataStream* in);
 
     virtual QJsonObject toJson() const;
-    virtual void fromJson( const QJsonObject& json);
+    virtual void fromJson( const QJsonObject &json);
     
     virtual void generateResultsLog();
 
@@ -89,21 +103,10 @@ public slots:
     void saveMapToFile(QFile *file, const QString csvSep, const CurveMap &map);
 
 public:
-    CurveSettings mCurveSettings;
-    
-    MHVariable mLambdaSpline;
-    MHVariable mS02Vg;
-    MCMCSpline mSpline; // valeurs courrantes de la spline
-
-    std::vector<MCMCSpline> mSplinesTrace; // memo des valeurs aux noeuds
-    
-    PosteriorMeanG mPosteriorMeanG; // valeurs en tout t
-    std::vector<PosteriorMeanG> mPosteriorMeanGByChain; // valeurs en tout t par chaine
-
 
     PosteriorMeanGComposante buildCurveAndMap(const int nbPtsX, const int nbPtsY, const char charComp = 'X', const bool doMap = false, const double mapYMin = 0, double mapYMax = 0);
     // same as void GraphView::exportReferenceCurves()
-    void exportMeanGComposanteToReferenceCurves(const PosteriorMeanGComposante pMeanCompoXYZ, const QString& defaultPath, QLocale csvLocale, const QString& csvSep) const;
+    void exportMeanGComposanteToReferenceCurves(const PosteriorMeanGComposante pMeanCompoXYZ, const QString &defaultPath, QLocale csvLocale, const QString &csvSep) const;
 
     std::vector<MCMCSpline> fullRunSplineTrace(const QList<ChainSpecs> &chains);
     std::vector<MCMCSpline> runSplineTraceForChain(const QList<ChainSpecs>& chains, const int index);
@@ -113,8 +116,10 @@ public:
     void initVariablesForChain();
 
 private:
-    static void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante &spline,  double& G,  double& VarG,  double& GP,  double& GS, unsigned& i0, const Model &model);
-    void valeurs_G_varG_on_i(const MCMCSplineComposante &spline, double& G, double& varG, unsigned long &i);
+    void settings_from_Json( const QJsonObject &json);
+
+    static void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante &spline,  double &G,  double &VarG,  double &GP,  double &GS, unsigned &i0, const Model &model);
+    void valeurs_G_varG_on_i(const MCMCSplineComposante &spline, double &G, double &varG, unsigned long &i);
 
     friend class MCMCLoopCurve;
 

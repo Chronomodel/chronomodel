@@ -1975,7 +1975,7 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
 {
     isCorrected = false;
     QJsonArray events = state.value(STATE_EVENTS).toArray();
- //   QJsonArray phases = state.value(STATE_PHASES).toArray();
+
     QJsonObject curveSetJSon;
     CurveSettings cs;
 
@@ -1989,7 +1989,7 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
 
     } else {
         cs = CurveSettings();
-        cs.mProcessType = CurveSettings::eProcessTypeNone;
+        cs.mProcessType = CurveSettings::eProcess_None;
         state[STATE_CURVE] = cs.toJson();
     }
 
@@ -2039,8 +2039,8 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
             event.remove("YDec");
         }
         if (event.find("YInt") != event.end()) {
-            if (cs.mProcessType == CurveSettings::eProcessTypeUnivarie &&
-                       (cs.mVariableType == CurveSettings::eVariableTypeDepth || cs.mVariableType == CurveSettings::eVariableTypeOther ))
+            if ( cs.mProcessType == CurveSettings::eProcess_Univariate ||
+                 cs.mProcessType == CurveSettings::eProcess_Depth )
                  event[STATE_EVENT_X_INC_DEPTH] = event.value("YInt").toDouble();
             else
                 event[STATE_EVENT_Z_F] = event.value("YInt").toDouble();
@@ -2048,8 +2048,8 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
             event.remove("YInt");
         }
         if (event.find("SInt") != event.end()) {
-            if (cs.mProcessType == CurveSettings::eProcessTypeUnivarie &&
-                    (cs.mVariableType == CurveSettings::eVariableTypeDepth || cs.mVariableType == CurveSettings::eVariableTypeOther ))
+            if ( cs.mProcessType == CurveSettings::eProcess_Univariate ||
+                 cs.mProcessType == CurveSettings::eProcess_Depth )
                  event[STATE_EVENT_SX_ALPHA95_SDEPTH] = event.value("SInt").toDouble();
             else
                 event[STATE_EVENT_SZ_SF] = event.value("SInt").toDouble();
@@ -3138,7 +3138,7 @@ void Project::clearModel()
 
 bool Project::isCurve() const {
     const QJsonObject &CurveSettings = mState.value(STATE_CURVE).toObject();
-    return (!CurveSettings.isEmpty() && CurveSettings.value(STATE_CURVE_PROCESS_TYPE).toInt() != CurveSettings::eProcessTypeNone);
+    return (!CurveSettings.isEmpty() && CurveSettings.value(STATE_CURVE_PROCESS_TYPE).toInt() != CurveSettings::eProcess_None);
 
 }
 

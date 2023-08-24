@@ -73,6 +73,11 @@ void PluginManager::loadPlugins()
     mPlugins.append(plugin14C);
 #endif
 
+#if USE_PLUGIN_F14C
+    PluginAbstract* pluginF14C = new PluginF14C();
+    mPlugins.append(pluginF14C);
+#endif
+
 #if USE_PLUGIN_AM
     PluginAbstract* pluginMag = new PluginMag();
     mPlugins.append(pluginMag);
@@ -83,19 +88,14 @@ void PluginManager::loadPlugins()
     mPlugins.append(pluginTL);
 #endif
 
-#if USE_PLUGIN_UNIFORM
-    PluginAbstract* pluginUniform = new PluginUniform();
-    mPlugins.append(pluginUniform);
-#endif
-
 #if USE_PLUGIN_GAUSS
     PluginAbstract* pluginGauss = new PluginGauss();
     mPlugins.append(pluginGauss);
 #endif
-    
-#if USE_PLUGIN_F14C
-    PluginAbstract* pluginF14C = new PluginF14C();
-    mPlugins.append(pluginF14C);
+
+#if USE_PLUGIN_UNIFORM
+    PluginAbstract* pluginUniform = new PluginUniform();
+    mPlugins.append(pluginUniform);
 #endif
 
 #if USE_PLUGIN_DENSITY

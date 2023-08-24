@@ -429,7 +429,6 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
 
      const bool curveModel = mProject->isCurve();
      CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
-     CurveSettings::VariableType variableType = static_cast<CurveSettings::VariableType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_VARIABLE_TYPE).toInt());
 
     for (auto&& ev : events) {
        QJsonObject jsonEv = ev.toObject();
@@ -448,7 +447,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
         const QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
                               ev.value(STATE_COLOR_GREEN).toInt(),
                               ev.value(STATE_COLOR_BLUE).toInt());
-        const QString curveDescription = curveModel ? Event::curveDescriptionFromJsonEvent(ev, processType, variableType): "";
+        const QString curveDescription = curveModel ? Event::curveDescriptionFromJsonEvent(ev, processType): "";
 
         if (ev.value(STATE_EVENT_TYPE).toInt() == Event::eBound) {
 
@@ -615,8 +614,8 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
     QVector<QJsonObject> selectedEvents;
 
-    CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
-    CurveSettings::VariableType variableType = static_cast<CurveSettings::VariableType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_VARIABLE_TYPE).toInt());
+    CurveSettings cs (state.value(STATE_CURVE).toObject());
+    CurveSettings::ProcessType processType = cs.mProcessType;//static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
 
     for (const auto&& ev : events) {
        const QJsonObject jsonEv = ev.toObject();
@@ -633,8 +632,8 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
     CurveRefPts ptsX, ptsY, ptsZ;
 
     switch (processType) {
-        case CurveSettings::eProcessType3D:
-        case CurveSettings::eProcessTypeVector:
+        case CurveSettings::eProcess_3D:
+        case CurveSettings::eProcess_Vector:
 
             graph3 = new GraphView(this);
             graph3->showInfos(true);
@@ -653,13 +652,14 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
             graph3->setYAxisMode(GraphView::eAllTicks);
             graph3->showYAxisSubTicks(true);
-            graph3->setTipYLab("Z");
+            graph3->setTipYLab(cs.Z_short_name());
 
             graph3->setMarginTop(graph3->fontMetrics().height()/2.);
            // graph3->setMarginBottom(graph3->fontMetrics().height());
 
-        case CurveSettings::eProcessTypeSpherical:
-        case CurveSettings::eProcessType2D:
+        case CurveSettings::eProcess_Spherical:
+        case CurveSettings::eProcess_Unknwon_Dec:
+        case CurveSettings::eProcess_2D:
 
             graph2 = new GraphView(this);
             graph2->showInfos(true);
@@ -678,11 +678,15 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
             graph2->setYAxisMode(GraphView::eAllTicks);
             graph2->showYAxisSubTicks(true);
-            graph2->setTipYLab("Y");
+            graph2->setTipYLab(cs.Y_short_name());
             graph2->setMarginTop(graph2->fontMetrics().height()/2.);
 
-        case CurveSettings::eProcessTypeNone:
-        case CurveSettings::eProcessTypeUnivarie:
+        case CurveSettings::eProcess_None:
+        case CurveSettings::eProcess_Univariate:
+        case CurveSettings::eProcess_Depth:
+        case CurveSettings::eProcess_Inclination:
+        case CurveSettings::eProcess_Declination:
+        case CurveSettings::eProcess_Field:
         default:
 
             graph1 = new GraphView(this);
@@ -703,7 +707,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graph1->setYAxisMode(GraphView::eAllTicks);
             graph1->showYAxisSubTicks(true);
 
-            graph1->setTipYLab("X");
+            graph1->setTipYLab(cs.X_short_name());
             graph1->setMarginTop(graph1->fontMetrics().height()/2.);
 
         break;
@@ -725,91 +729,110 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                        sEvent.value(STATE_COLOR_BLUE).toInt());
         // Same calcul within ResultsView::createByCurveGraph()
         switch (processType) {
-        case CurveSettings::eProcessTypeUnivarie:
-            switch (variableType) {
-            case CurveSettings::eVariableTypeDepth:
+            case CurveSettings::eProcess_Univariate:
                 X = xIncDepth;
                 errX = 1.96*s_XA95Depth;
+                Y = 0.;
+                errY = 0.;
+                Z = 0.;
+                errZ = 0.;
                 break;
-            case CurveSettings::eVariableTypeField:
+            case CurveSettings::eProcess_Depth:
+                X = xIncDepth;
+                errX = 1.96*s_XA95Depth;
+                Y = 0.;
+                errY = 0.;
+                Z = 0.;
+                errZ = 0.;
+                break;
+            case CurveSettings::eProcess_Field:
                 X = zField;
                 errX = 1.96*s_ZField;
+                Y = 0.;
+                errY = 0.;
+                Z = 0.;
+                errZ = 0.;
                 break;
-            case CurveSettings::eVariableTypeInclination:
+            case CurveSettings::eProcess_Inclination:
                 X = xIncDepth;
                 errX = s_XA95Depth;
+                Y = 0.;
+                errY = 0.;
+                Z = 0.;
+                errZ = 0.;
                 break;
-            case CurveSettings::eVariableTypeDeclination:
+            case CurveSettings::eProcess_Declination:
                 X = yDec;
                 errX = s_XA95Depth/ cos(xIncDepth/180*3.14 );
+                Y = 0.;
+                errY = 0.;
+                Z = 0.;
+                errZ = 0.;
                 break;
-            case CurveSettings::eVariableTypeOther:
+
+            case CurveSettings::eProcess_Unknwon_Dec:
                 X = xIncDepth;
-                errX = 1.96*s_XA95Depth;
+                errX = s_XA95Depth;
+                Y = zField;
+                errY = s_ZField;
+                Z = 0.;
+                errZ = 0.;
+                break;
+
+            case CurveSettings::eProcess_2D:
+                X = xIncDepth;
+                errX = s_XA95Depth;
+                Y = yDec;
+                errY = s_Y;
+                Z = 0.;
+                errZ = 0.;
+                break;
+            case CurveSettings::eProcess_Spherical:
+                X = xIncDepth;
+                errX = s_XA95Depth;
+                Y = yDec;
+                errY = s_XA95Depth/ cos(xIncDepth/180.*M_PI );
+                Z = 0.;
+                errZ = 0.;
+                break;
+
+            case CurveSettings::eProcess_Vector:
+                X = xIncDepth;
+                errX = s_XA95Depth;
+                Y = yDec;
+                errY = s_XA95Depth/ cos(xIncDepth/180.*M_PI );
+                Z = zField;
+                errZ = s_ZField;
+                break;
+            case CurveSettings::eProcess_3D:
+                X = xIncDepth;
+                errX = s_XA95Depth;
+                Y = yDec;
+                errY = s_Y;
+                Z = zField;
+                errZ = s_ZField;
                 break;
             default:
-                X = 0.;
+                X = - sEvent.value(STATE_ITEM_Y).toDouble();
                 errX = 0.;
+                Y = 0.;
+                errY = 0.;
+                Z = 0.;
+                errZ = 0.;
                 break;
-            }
-            Y = 0.;
-            errY = 0.;
-            Z = 0.;
-            errZ = 0.;
-            break;
-        case CurveSettings::eProcessTypeSpherical:
-            X = xIncDepth;
-            errX = s_XA95Depth;
-            Y = yDec;
-            errY = s_XA95Depth/ cos(xIncDepth/180.*M_PI );
-            Z = 0.;
-            errZ = 0.;
-            break;
-        case CurveSettings::eProcessType2D:
-            X = xIncDepth;
-            errX = s_XA95Depth;
-            Y = yDec;
-            errY = s_Y;
-            Z = 0.;
-            errZ = 0.;
-            break;
-        case CurveSettings::eProcessTypeVector:
-            X = xIncDepth;
-            errX = s_XA95Depth;
-            Y = yDec;
-            errY = s_XA95Depth/ cos(xIncDepth/180.*M_PI );
-            Z = zField;
-            errZ = s_ZField;
-            break;
-        case CurveSettings::eProcessType3D:
-            X = xIncDepth;
-            errX = s_XA95Depth;
-            Y = yDec;
-            errY = s_Y;
-            Z = zField;
-            errZ = s_ZField;
-            break;
-        default:
-            X = - sEvent.value(STATE_ITEM_Y).toDouble();
-            errX = 0.;
-            Y = 0.;
-            errY = 0.;
-            Z = 0.;
-            errZ = 0.;
-            break;
         }
 
 
         if ( Event::Type (sEvent.value(STATE_EVENT_TYPE).toInt()) == Event::eBound) {
             const double bound = sEvent.value(STATE_EVENT_KNOWN_FIXED).toDouble();
             tmin = bound;
-            tmax = bound;
+            //tmax = bound;
 
             ptsX.Xmin = DateUtils::convertToAppSettingsFormat(tmin);
-            ptsX.Xmax = DateUtils::convertToAppSettingsFormat(tmax);
+            ptsX.Xmax = ptsX.Xmin;//DateUtils::convertToAppSettingsFormat(tmax);
 
-            if (ptsX.Xmin > ptsX.Xmax)
-                std::swap(ptsX.Xmin, ptsX.Xmax);
+            //if (ptsX.Xmin > ptsX.Xmax)
+              //  std::swap(ptsX.Xmin, ptsX.Xmax);
             ptsX.Ymin = X - errX;
             ptsX.Ymax = X + errX;
             ptsX.color = color;
@@ -823,7 +846,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             curveDataPointsX.push_back(ptsX);
 
             ptsY = ptsX;
-            ptsY.Ymin = (Y - errY);
+            ptsY.Ymin = Y - errY;
             ptsY.Ymax = Y + errY;
 
             ptsY.pen = QPen(Qt::black, 1, Qt::SolidLine);
@@ -889,7 +912,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             curveDataPointsX.push_back(ptsX);
 
                             ptsY = ptsX;
-                            ptsY.Ymin = (Y - errY);
+                            ptsY.Ymin = Y - errY;
                             ptsY.Ymax = Y + errY;
                             ptsY.pen = QPen(Qt::black, 1, Qt::SolidLine);
                             ptsY.brush = Qt::black;
@@ -931,7 +954,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             curveDataPointsX.push_back(ptsX);
 
                             ptsY = ptsX;
-                            ptsY.Ymin = (Y - errY);
+                            ptsY.Ymin = Y - errY;
                             ptsY.Ymax = Y + errY;
                             ptsY.pen = QPen(Qt::black, 1, Qt::SolidLine);
                             ptsY.brush = Qt::black;
@@ -960,7 +983,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
 
     switch (processType) {
-    case CurveSettings::eProcessTypeUnivarie:
+ /*   case CurveSettings::eProcessTypeUnivarie:
         switch (variableType) {
         case CurveSettings::eVariableTypeDepth:
             graphList.append(new GraphTitle("Depth", this));
@@ -985,99 +1008,35 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
         default:
             break;
         }
+*/
 
+    case CurveSettings::eProcess_Vector:
+    case CurveSettings::eProcess_3D:
+        graphList.append(new GraphTitle(cs.ZLabel(), this));
+
+        graph3->set_points(curveDataPointsZ);
+        graph3->setTipYLab(cs.Z_short_name());
+        graphList.append(graph3);
+        listAxisVisible.push_back(true);
+
+    case CurveSettings::eProcess_Spherical:
+    case CurveSettings::eProcess_Unknwon_Dec:
+    case CurveSettings::eProcess_2D:
+        graphList.append(new GraphTitle(cs.YLabel(), this));
+        graph2->set_points(curveDataPointsY);
+        graph2->setTipYLab(cs.Y_short_name());
+        graphList.append(graph2);
+        listAxisVisible.push_back(true);
+
+    default:
+        graphList.append(new GraphTitle(cs.XLabel(), this));
+        graph1->setTipYLab(cs.X_short_name());
         graph1->set_points(curveDataPointsX);
         graph1->setYAxisMode(GraphView::eAllTicks);
         graph1->showYAxisSubTicks(true);
         graphList.append(graph1);
 
         listAxisVisible.push_back(true);
-        break;
-    case CurveSettings::eProcessTypeSpherical:
-        graphList.append(new GraphTitle("Inclination", this));
-
-        graph1->set_points(curveDataPointsX);
-        graph1->setTipYLab("I");
-        graph1->showYAxisSubTicks(true);  
-        graphList.append(graph1);
-        listAxisVisible.push_back(true);
-
-        graphList.append(new GraphTitle("Declination", this));
-        graph2->set_points(curveDataPointsY);
-        graph2->setTipYLab("D");
-        graphList.append(graph2);
-        listAxisVisible.push_back(true);
-
-        break;
-    case CurveSettings::eProcessType2D:
-        graphList.append(new GraphTitle("X", this));
-
-        graph1->set_points(curveDataPointsX);
-        graph1->setTipYLab("X");
-        graphList.append(graph1);
-        listAxisVisible.push_back(true);
-
-        graphList.append(new GraphTitle("Y", this));
-        graph2->set_points(curveDataPointsY);
-        graph2->setTipYLab("Y");
-        graphList.append(graph2);
-        listAxisVisible.push_back(true);
-
-        break;
-    case CurveSettings::eProcessTypeVector:
-        graphList.append(new GraphTitle("Inclination", this));
-
-        graph1->set_points(curveDataPointsX);
-        graph1->setTipYLab("I");
-        graphList.append(graph1);
-        listAxisVisible.push_back(true);
-
-        graphList.append(new GraphTitle("Declination", this));
-
-        graph2->set_points(curveDataPointsY);
-        graph2->setTipYLab("D");
-        graphList.append(graph2);
-        listAxisVisible.push_back(true);
-
-        graphList.append(new GraphTitle("Field", this));
-        graph3->set_points(curveDataPointsZ);
-        graph3->setTipYLab("F");
-        graphList.append(graph3);
-        listAxisVisible.push_back(true);
-
-        break;
-    case CurveSettings::eProcessType3D:
-        graphList.append(new GraphTitle("X", this));
-
-        graph1->set_points(curveDataPointsX);
-        graph1->setTipYLab("X");
-        graphList.append(graph1);
-        listAxisVisible.push_back(true);
-
-        graphList.append(new GraphTitle("Y", this));
-
-        graph2->set_points(curveDataPointsY);
-        graph2->setTipYLab("Y");
-        graphList.append(graph2);
-        listAxisVisible.push_back(true);
-
-        graphList.append(new GraphTitle("Z", this));
-
-        graph3->set_points(curveDataPointsZ);
-        graph3->setTipYLab("Z");
-        graphList.append(graph3);
-        listAxisVisible.push_back(true);
-        break;
-    default:
-        graph1->showYAxisLine(false);
-        graph1->showYAxisSubTicks(false);
-        graph1->setTipYLab("");
-        graph1->showInfos(false);
-
-        graph1->set_points(curveDataPointsX);
-        graphList.append(graph1);
-        listAxisVisible.push_back(true);
-
         break;
     }
 
@@ -1090,7 +1049,6 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
     scatterPlot->setListAxisVisible(listAxisVisible);
 
     scatterPlot->setGraphList(graphList); // must be after setEventsColorList() and setListAxisVisible()
-
 
     scatterPlot->setGraphHeight(3*mGraphHeight);
 
@@ -1584,7 +1542,6 @@ void MultiCalibrationView::exportResults()
             const QJsonObject state = mProject->state();
             const bool isCurve = mProject->isCurve();
             const CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
-            const CurveSettings::VariableType variableType = static_cast<CurveSettings::VariableType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_VARIABLE_TYPE).toInt());
 
             const QJsonArray events = state.value(STATE_EVENTS).toArray();
             QVector<QJsonObject> selectedEvents;
@@ -1603,59 +1560,62 @@ void MultiCalibrationView::exportResults()
             header << "Event";
             if (isCurve) {
                 switch (processType) {
-                case CurveSettings::eProcessTypeVector:
-                    header << "Inclination";
-                    header << "alpha95";
-                    header << "Declination";
-                    header << "Field";
-                    header << "F Error";
-                    break;
-                case CurveSettings::eProcessType2D:
-                    header << "X";
-                    header << "X Error";
-                    header << "Y";
-                    header << "Y Error";
-                    break;
-                case CurveSettings::eProcessType3D:
-                    header << "X";
-                    header << "X Error";
-                    header << "Y";
-                    header << "Y Error";
-                    header << "Z";
-                    header << "Z Error";break;
-                case CurveSettings::eProcessTypeSpherical:
-                    header << "Inclination";
-                    header << "alpha95";
-                    header << "Declination";
-                    break;
-                default:
-                    switch (variableType) {
-                    case CurveSettings::eVariableTypeDepth:
-                        header << "Depth";
-                        header << "Depth Error";
-                        break;
-                    case CurveSettings::eVariableTypeField:
-                        header << "Field";
-                        header << "Field Error";
-                        break;
-                    case CurveSettings::eVariableTypeInclination:
-                        header << "Inclination";
-                        header << "alpha95";break;
-                    case CurveSettings::eVariableTypeDeclination:
-                        header << "Declination";
-                        header << "alpha95";
-                        header << "Inclination";
+                    case CurveSettings::eProcess_Vector:
+                         header << "Inclination";
+                         header << "alpha95";
+                         header << "Declination";
+                         header << "Field";
+                         header << "F Error";
+                         break;
+                    case CurveSettings::eProcess_2D:
+                         header << "X";
+                         header << "X Error";
+                         header << "Y";
+                         header << "Y Error";
+                         break;
+                    case CurveSettings::eProcess_3D:
+                         header << "X";
+                         header << "X Error";
+                         header << "Y";
+                         header << "Y Error";
+                         header << "Z";
+                         header << "Z Error";
+                         break;
+                    case CurveSettings::eProcess_Unknwon_Dec:
+                         header << "Inclination";
+                         header << "alpha95";
+                         header << "Field";
+                         header << "F Error";
+                         break;
+                    case CurveSettings::eProcess_Spherical:
+                         header << "Inclination";
+                         header << "alpha95";
+                         header << "Declination";
+                         break;
 
-                        break;
-                    case CurveSettings::eVariableTypeOther:
-                        header << "Measure";
-                        header << "Error";
-                        break;
+                    case CurveSettings::eProcess_Depth:
+                         header << "Depth";
+                         header << "Depth Error";
+                         break;
+                    case CurveSettings::eProcess_Field:
+                         header << "Field";
+                         header << "Field Error";
+                         break;
+                    case CurveSettings::eProcess_Inclination:
+                         header << "Inclination";
+                         header << "alpha95";
+                         break;
+                    case CurveSettings::eProcess_Declination:
+                         header << "Declination";
+                         header << "alpha95";
+                         header << "Inclination";
+                         break;
+                    case CurveSettings::eProcess_Univariate:
+                         header << "Measure";
+                         header << "Error";
+                         break;
                     default:
-                        break;
-                    }
-
-                    break;
+                         break;
                 }
             }
             header <<"Data type" << "Data Name" << "Data Description" << "MAP" << "Mean" << "Std";
@@ -1670,7 +1630,7 @@ void MultiCalibrationView::exportResults()
                 const QString eventName (ev.value(STATE_NAME).toString());
                 QStringList curveParamList;
                 if (isCurve) {
-                    curveParam = Event::curveParametersFromJsonEvent(ev, processType, variableType);
+                    curveParam = Event::curveParametersFromJsonEvent(ev, processType);
                     for (auto param : curveParam) {
                         curveParamList.append(locale().toString(param));
                     }
@@ -1772,8 +1732,6 @@ void MultiCalibrationView::showStat()
 
        bool curveModel = mProject->isCurve();
        CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
-       CurveSettings::VariableType variableType = static_cast<CurveSettings::VariableType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_VARIABLE_TYPE).toInt());
-
 
        for (auto&& ev : events) {
           QJsonObject jsonEv = ev.toObject();
@@ -1787,7 +1745,7 @@ void MultiCalibrationView::showStat()
        mResultText = "";
        for (auto& ev : selectedEvents) {
 
-           const QString curveDescription = curveModel ? Event::curveDescriptionFromJsonEvent(ev, processType, variableType): "";
+           const QString curveDescription = curveModel ? Event::curveDescriptionFromJsonEvent(ev, processType): "";
 
            // Insert the Event's Name only if different to the previous Event's name
            QString eventName (ev.value(STATE_NAME).toString() + " " + curveDescription);

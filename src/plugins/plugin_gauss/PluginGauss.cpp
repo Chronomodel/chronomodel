@@ -66,14 +66,14 @@ PluginGauss::~PluginGauss()
 }
 
 // Likelihood
-long double PluginGauss::getLikelihood(const double& t, const QJsonObject& data)
+long double PluginGauss::getLikelihood(const double t, const QJsonObject &data)
 {
     const QPair<long double, long double > result = getLikelihoodArg(t, data);
 
     return expl(result.second) / sqrt(result.first);
 }
 
-QPair<long double, long double> PluginGauss::getLikelihoodArg(const double& t, const QJsonObject& data)
+QPair<long double, long double> PluginGauss::getLikelihoodArg(const double t, const QJsonObject &data)
 {
     
     // inherits the first data propeties as plug-in and method...
@@ -81,8 +81,6 @@ QPair<long double, long double> PluginGauss::getLikelihoodArg(const double& t, c
         const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
         const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
         const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
-
-        //long double exponent;
 
         const double refError = getRefErrorAt(data, t, mode);
         const long double variance = static_cast<long double>(refError * refError + error * error);
@@ -433,7 +431,7 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
 }
 
 // Reference Values & Errors
-double PluginGauss::getRefValueAt(const QJsonObject& data, const double& t)
+double PluginGauss::getRefValueAt(const QJsonObject &data, const double t)
 {
     const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
     double v = 0;
@@ -454,7 +452,7 @@ double PluginGauss::getRefValueAt(const QJsonObject& data, const double& t)
     return v;
 }
 
-double PluginGauss::getRefErrorAt(const QJsonObject& data, const double& t, const QString mode)
+double PluginGauss::getRefErrorAt(const QJsonObject &data, const double t, const QString mode)
 {
     double e = 0.;
 
@@ -465,7 +463,7 @@ double PluginGauss::getRefErrorAt(const QJsonObject& data, const double& t, cons
     return e;
 }
 
-QPair<double, double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) const
+QPair<double, double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject &data) const
 {
     double tmin = 0.;
     double tmax = 0.;

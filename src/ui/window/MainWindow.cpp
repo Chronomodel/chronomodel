@@ -885,17 +885,13 @@ void MainWindow::rebuildExportCurve()
 
     ModelCurve* curveModel = dynamic_cast<ModelCurve*>(mProject->mModel);
 
-    const bool computeY = (curveModel->mCurveSettings.mProcessType != CurveSettings::eProcessTypeUnivarie);
-    const bool computeZ = (curveModel->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
-                       curveModel->mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical ||
-                       curveModel->mCurveSettings.mProcessType == CurveSettings::eProcessType3D);
 
     // Setting actual minmax value
     std::vector<std::pair<double, double>> tabMinMax;
     tabMinMax.push_back(curveModel->mPosteriorMeanG.gx.mapG.rangeY);
-    if (computeY)
+    if (curveModel->compute_Y)
         tabMinMax.push_back(curveModel->mPosteriorMeanG.gy.mapG.rangeY);
-    if (computeZ)
+    if (curveModel->compute_Z)
         tabMinMax.push_back(curveModel->mPosteriorMeanG.gz.mapG.rangeY);
 
     std::pair<unsigned, unsigned> mapSizeXY = std::pair<unsigned, unsigned> {curveModel->mPosteriorMeanG.gx.mapG._column, curveModel->mPosteriorMeanG.gx.mapG._row};
@@ -935,10 +931,10 @@ void MainWindow::rebuildExportCurve()
         meanG.gx = clearCompo;
         meanG.gx.mapG.setRangeY(tabMinMax[0].first, tabMinMax[0].second);
 
-        if (computeY) {
+        if (curveModel->compute_Y) {
             meanG.gy = clearCompo;
             meanG.gy.mapG.setRangeY(tabMinMax[1].first, tabMinMax[1].second);
-            if (computeZ) {
+            if (curveModel->compute_Z) {
                 meanG.gz = clearCompo;
                 meanG.gz.mapG.setRangeY(tabMinMax[2].first, tabMinMax[2].second);
             }
@@ -947,7 +943,7 @@ void MainWindow::rebuildExportCurve()
 
 
         int totalIterAccepted = 1;
-        if (!computeY) {
+        if (!curveModel->compute_Y) {
             for (auto &splineXYZ : runTrace) {
                 modelCurve->memo_PosteriorG(meanG.gx, splineXYZ.splineX,  totalIterAccepted++ );
             }
@@ -960,10 +956,10 @@ void MainWindow::rebuildExportCurve()
 
         meanG.gx.mapG.min_value =  *std::min_element(begin(meanG.gx.mapG.data), end(meanG.gx.mapG.data));
 
-        if (computeY) {
+        if (curveModel->compute_Y) {
             meanG.gy.mapG.min_value = *std::min_element(begin(meanG.gy.mapG.data), end(meanG.gy.mapG.data));
 
-            if (computeZ) {
+            if (curveModel->compute_Z) {
                 meanG.gz.mapG.min_value = *std::min_element(begin(meanG.gz.mapG.data), end(meanG.gz.mapG.data));
             }
         }
@@ -976,10 +972,10 @@ void MainWindow::rebuildExportCurve()
             meanGByChain.gx = clearCompo;
             meanGByChain.gx.mapG.setRangeY(tabMinMax[0].first, tabMinMax[0].second);
 
-            if (computeY) {
+            if (curveModel->compute_Y) {
                 meanGByChain.gy = clearCompo;
                 meanGByChain.gy.mapG.setRangeY(tabMinMax[1].first, tabMinMax[1].second);
-                if (computeZ) {
+                if (curveModel->compute_Z) {
                     meanGByChain.gz = clearCompo;
                     meanGByChain.gz.mapG.setRangeY(tabMinMax[2].first, tabMinMax[2].second);
                 }
@@ -988,7 +984,7 @@ void MainWindow::rebuildExportCurve()
             //modelCurve->mPosteriorMeanG = clearMeanG;
 
             int totalIterAccepted = 1;
-            if (!computeY) {
+            if (!curveModel->compute_Y) {
                 for (auto &splineXYZ : runTrace) {
                     modelCurve->memo_PosteriorG(meanGByChain.gx, splineXYZ.splineX,  totalIterAccepted++ );
                 }
@@ -1001,10 +997,10 @@ void MainWindow::rebuildExportCurve()
 
             meanGByChain.gx.mapG.min_value =  *std::min_element(begin(meanGByChain.gx.mapG.data), end(meanGByChain.gx.mapG.data));
 
-            if (computeY) {
+            if (curveModel->compute_Y) {
                 meanGByChain.gy.mapG.min_value = *std::min_element(begin(meanGByChain.gy.mapG.data), end(meanGByChain.gy.mapG.data));
 
-                if (computeZ) {
+                if (curveModel->compute_Z) {
                     meanGByChain.gz.mapG.min_value = *std::min_element(begin(meanGByChain.gz.mapG.data), end(meanGByChain.gz.mapG.data));
                 }
             }

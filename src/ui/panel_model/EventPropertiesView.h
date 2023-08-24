@@ -91,6 +91,7 @@ protected:
     void resizeEvent(QResizeEvent* e);
     void keyPressEvent(QKeyEvent* e);
     void updateLayout();
+    QString XerrorLabel() const;
 
 private slots:
 
@@ -150,8 +151,8 @@ private:
     QLabel* mMethodInfo;
 
     DatesList* mDatesList;
-    QList<Button*> mPluginButs1;
-    QList<Button*> mPluginButs2;
+    QList<Button*> mPluginButs;
+
     Button* mDeleteBut;
     Button* mRecycleBut;
 

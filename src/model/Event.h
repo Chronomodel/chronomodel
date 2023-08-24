@@ -144,8 +144,8 @@ public:
     void reset();
     
     static void setCurveCsvDataToJsonEvent(QJsonObject &event, const QMap<QString, double> &CurveData);
-    static QString curveDescriptionFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType = CurveSettings::eProcessTypeNone, CurveSettings::VariableType variableType = CurveSettings::eVariableTypeOther);
-    static QList<double> curveParametersFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType = CurveSettings::eProcessTypeNone, CurveSettings::VariableType variableType = CurveSettings::eVariableTypeOther);
+    static QString curveDescriptionFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType = CurveSettings::eProcess_None);
+    static QList<double> curveParametersFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType = CurveSettings::eProcess_None);
 
  #pragma mark Functions used within the MCMC process ( not in the init part!)
 

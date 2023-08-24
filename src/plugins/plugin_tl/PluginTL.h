@@ -62,12 +62,12 @@ public:
     
     bool withLikelihoodArg() {return true; }
     
-    long double getLikelihood(const double& t, const QJsonObject& data);
-    QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);
-    QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
+    long double getLikelihood(const double t, const QJsonObject &data);
+    QPair<long double, long double > getLikelihoodArg(const double t, const QJsonObject &data);
+    QPair<double,double> getTminTmaxRefsCurve(const QJsonObject &data) const;
     
-    bool areDatesMergeable(const QJsonArray& dates);
-    QJsonObject mergeDates(const QJsonArray& dates);
+    bool areDatesMergeable(const QJsonArray &dates);
+    QJsonObject mergeDates(const QJsonArray &dates);
    // long double getLikelihoodCombine(const double& t, const QJsonArray& data);
    // QPair<double,double> getTminTmaxRefsCurveCombine(const QJsonArray& subData);
 

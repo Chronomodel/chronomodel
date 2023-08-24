@@ -81,10 +81,7 @@ private:
     
     QLabel* mProcessTypeLabel;
     QComboBox* mProcessTypeInput;
-    
-    QLabel* mVariableTypeLabel;
-    QComboBox* mVariableTypeInput;
-    
+
     QLabel* mThresholdLabel;
     QLineEdit* mThresholdInput;
 

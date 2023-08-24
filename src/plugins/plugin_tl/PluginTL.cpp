@@ -64,7 +64,7 @@ PluginTL::~PluginTL()
         delete mRefGraph;
 }
 
-long double PluginTL::getLikelihood(const double& t, const QJsonObject& data)
+long double PluginTL::getLikelihood(const double t, const QJsonObject &data)
 {
     const double age = data.value(DATE_TL_AGE_STR).toDouble();
     const long double error = (long double)data.value(DATE_TL_ERROR_STR).toDouble();
@@ -75,7 +75,7 @@ long double PluginTL::getLikelihood(const double& t, const QJsonObject& data)
     return v;
 }
 
-QPair<long double, long double> PluginTL::getLikelihoodArg(const double& t, const QJsonObject& data)
+QPair<long double, long double> PluginTL::getLikelihoodArg(const double t, const QJsonObject &data)
 {
     QPair<long double, long double> result;
     const double age = data.value(DATE_TL_AGE_STR).toDouble();
@@ -135,7 +135,7 @@ PluginFormAbstract* PluginTL::getForm()
 }
 
 // Convert old project versions
-QJsonObject PluginTL::checkValuesCompatibility(const QJsonObject& values)
+QJsonObject PluginTL::checkValuesCompatibility(const QJsonObject &values)
 {
     QJsonObject result = values;
 
@@ -146,7 +146,7 @@ QJsonObject PluginTL::checkValuesCompatibility(const QJsonObject& values)
 
     return result;
 }
-QJsonObject PluginTL::fromCSV(const QStringList& list, const QLocale& csvLocale)
+QJsonObject PluginTL::fromCSV(const QStringList &list, const QLocale &csvLocale)
 {
     QJsonObject json;
     if (list.size() >= csvMinColumns()) {
@@ -160,7 +160,7 @@ QJsonObject PluginTL::fromCSV(const QStringList& list, const QLocale& csvLocale)
     return json;
 }
 
-QStringList PluginTL::toCSV(const QJsonObject& data, const QLocale& csvLocale) const
+QStringList PluginTL::toCSV(const QJsonObject &data, const QLocale &csvLocale) const
 {
     QStringList list;
     list << csvLocale.toString(data.value(DATE_TL_AGE_STR).toDouble());
@@ -194,7 +194,7 @@ QString PluginTL::getDateDesc(const Date* date) const
     return result;
 }
 
-QPair<double,double> PluginTL::getTminTmaxRefsCurve(const QJsonObject& data) const
+QPair<double,double> PluginTL::getTminTmaxRefsCurve(const QJsonObject &data) const
 {
     const double age = data.value(DATE_TL_AGE_STR).toDouble();
     const double error = data.value(DATE_TL_ERROR_STR).toDouble();
@@ -205,7 +205,7 @@ QPair<double,double> PluginTL::getTminTmaxRefsCurve(const QJsonObject& data) con
     double tmin = ref_year - age - k * error;
     double tmax = ref_year - age + k * error;
 
-    return QPair<double,double>(tmin, tmax);
+    return QPair<double, double>(tmin, tmax);
 }
 
 
@@ -240,7 +240,7 @@ bool PluginTL::areDatesMergeable(const QJsonArray& )
 /**
  * @brief Combine several TL
  **/
-QJsonObject PluginTL::mergeDates(const QJsonArray& dates)
+QJsonObject PluginTL::mergeDates(const QJsonArray &dates)
 {
     QJsonObject result;
     if (dates.size() > 1) {

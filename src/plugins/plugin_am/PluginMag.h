@@ -67,7 +67,7 @@ class PluginMagRefView;
 #define DATE_AM_DEC_STR "dec"
 #define DATE_AM_FIELD_STR "field"
 
-#define DATE_AM_ITERATION_STR "iteration_mcmc"
+#define DATE_AM_ITERATION_STR "integration_steps"
 
 #define DATE_AM_REF_CURVEI_STR "refI_curve"
 #define DATE_AM_REF_CURVED_STR "refD_curve"
@@ -77,20 +77,19 @@ class PluginMagRefView;
 class DATATION_SHARED_EXPORT PluginMag : public PluginAbstract
 {
     Q_OBJECT
-    //Q_PLUGIN_METADATA(IID "chronomodel.PluginAbstract.PluginMag")
-    //Q_INTERFACES(PluginAbstract)
+
 public:
     PluginMag();
     virtual ~PluginMag();
 
      // virtual function
-    long double getLikelihood(const double& t, const QJsonObject& data);
+    long double getLikelihood(const double t, const QJsonObject &data);
     bool withLikelihoodArg() {return false; }
-    QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);
-    long double Likelihood(const double& t, const QJsonObject& data);
+    QPair<long double, long double > getLikelihoodArg(const double t, const QJsonObject &data);
+    long double Likelihood(const double t, const QJsonObject &data);
 
-    bool areDatesMergeable(const QJsonArray& dates);
-    QJsonObject mergeDates(const QJsonArray& dates);
+    bool areDatesMergeable(const QJsonArray &dates);
+    QJsonObject mergeDates(const QJsonArray &dates);
     //long double getLikelihoodCombine(const double& t, const QJsonArray& data);
    // QPair<double,double> getTminTmaxRefsCurveCombine(const QJsonArray& subData);
 
@@ -105,7 +104,7 @@ public:
     QStringList csvColumns() const;
     QJsonObject fromCSV(const QStringList& list, const QLocale &csvLocale) ;
     QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale) const;
-    QJsonObject checkValuesCompatibility(const QJsonObject& values);
+    QJsonObject checkValuesCompatibility(const QJsonObject &values);
 
     QString getDateDesc(const Date* date) const;
     QString getDateRefCurveName(const Date* date) ;

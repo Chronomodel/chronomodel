@@ -40,6 +40,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef STDUTILITIES_H
 #define STDUTILITIES_H
 
+#include <RefCurve.h>
+
 #include <chrono>
 #include <vector>
 #include <map>
@@ -106,13 +108,9 @@ QMap<float, float> vector_to_map(const QVector<float>& data, const float min, co
 QMap<double, double> vector_to_map(const QVector<double>& data, const double min, const double max, const double step);
 QMap<double, double> vector_to_map(const QVector<int> &data, const double min, const double max, const double step);
 
-/*double vector_interpolate_idx_for_value(const double value, const QVector<double>& vector);
-double vector_interpolate_idx_for_value(const double value, const std::vector<double>& vector);
-float vector_interpolate_idx_for_value(const float value, const QVector<float>& vector);
-*/
 
-double interpolate_value_from_curve(const double t, const QVector<double>& curve,const double curveTmin, const double curveTmax);
-double interpolate_value_from_curve(const double x, const std::vector<double>& curve,const double Xmin, const double Xmax);
+double interpolate_value_from_curve(const double t, const QVector<double> &curve,const double curveTmin, const double curveTmax);
+double interpolate_value_from_curve(const double x, const std::vector<double> &curve,const double Xmin, const double Xmax);
 
 double map_area(const QMap<double, double>& map);
 float map_area(const QMap<float, float>& map);

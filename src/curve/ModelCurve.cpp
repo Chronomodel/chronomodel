@@ -66,7 +66,7 @@ ModelCurve::ModelCurve(QObject *parent):
     mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 }
 
-ModelCurve::ModelCurve(const QJsonObject& json, QObject *parent):
+ModelCurve::ModelCurve(const QJsonObject &json, QObject *parent):
     Model(json, parent)
 {
     mLambdaSpline.mSupport = MetropolisVariable::eR;
@@ -77,54 +77,12 @@ ModelCurve::ModelCurve(const QJsonObject& json, QObject *parent):
     mS02Vg.mFormat = DateUtils::eNumeric;
     mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
-    if (json.contains(STATE_CURVE)) {
-        const QJsonObject settings = json.value(STATE_CURVE).toObject();
-        mCurveSettings = CurveSettings::fromJson(settings);
-    }
-
-    for (Event*& event: mEvents) {
-        if (event->type() == Event::eBound)
-               event->mTheta.mSamplerProposal = MHVariable::eFixe;
-
-        else if (event->type() == Event::eDefault) {
-                if (mCurveSettings.mTimeType == CurveSettings::eModeFixed) {
-                    event->mTheta.mSamplerProposal = MHVariable::eFixe;
-                    for (Date &d : event->mDates) {
-                        d.mTi.mSamplerProposal = MHVariable::eFixe;
-                        d.mSigmaTi.mSamplerProposal = MHVariable::eFixe;
-                    }
-                } else
-                    event->mTheta.mSamplerProposal = MHVariable::eMHAdaptGauss;
-
-        }
-
-        if (mCurveSettings.mVarianceType == CurveSettings::eModeFixed)
-            event->mVg.mSamplerProposal = MHVariable::eFixe;
-
-        else if (event->mPointType == Event::eNode)
-            event->mVg.mSamplerProposal = MHVariable::eFixe;
-        else
-            event->mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
-
-    }
-
-    mLambdaSpline.setName( "lambdaSpline");
-    if (mCurveSettings.mLambdaSplineType == CurveSettings::eModeFixed)
-        mLambdaSpline.mSamplerProposal = MHVariable::eFixe;
-    else
-        mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
-
-    mS02Vg.setName("S02Vg");
-    if (mCurveSettings.mVarianceType == CurveSettings::eModeFixed)
-        mS02Vg.mSamplerProposal = MHVariable::eFixe;
-    else
-        mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    settings_from_Json(json);
 
 }
 
 ModelCurve::~ModelCurve()
 {
-
 }
 
 QJsonObject ModelCurve::toJson() const
@@ -136,16 +94,20 @@ QJsonObject ModelCurve::toJson() const
     return json;
 }
 
-void ModelCurve::fromJson(const QJsonObject& json)
+void ModelCurve::fromJson(const QJsonObject &json)
 {
     Model::fromJson(json);
-    
+    settings_from_Json(json);
+}
+
+void ModelCurve::settings_from_Json(const QJsonObject &json)
+{
     if (json.contains(STATE_CURVE)) {
         const QJsonObject &settings = json.value(STATE_CURVE).toObject();
         mCurveSettings = CurveSettings::fromJson(settings);
     }
 
-    for (Event*& event: mEvents) {
+    for (Event* &event: mEvents) {
         if (event->type() ==  Event::eBound)
                event->mTheta.mSamplerProposal = MHVariable::eFixe;
 
@@ -183,6 +145,19 @@ void ModelCurve::fromJson(const QJsonObject& json)
     else
         mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
+    compute_Z = mCurveSettings.mProcessType == CurveSettings::eProcess_Vector ||
+                mCurveSettings.mProcessType == CurveSettings::eProcess_Spherical ||
+                mCurveSettings.mProcessType == CurveSettings::eProcess_3D;
+
+    compute_Y = compute_Z ||
+                mCurveSettings.mProcessType == CurveSettings::eProcess_2D ||
+                mCurveSettings.mProcessType == CurveSettings::eProcess_Unknwon_Dec;
+
+    compute_X_only = mCurveSettings.mProcessType == CurveSettings::eProcess_Univariate ||
+                     mCurveSettings.mProcessType == CurveSettings::eProcess_Depth ||
+                     mCurveSettings.mProcessType == CurveSettings::eProcess_Inclination ||
+                     mCurveSettings.mProcessType == CurveSettings::eProcess_Declination ||
+                     mCurveSettings.mProcessType == CurveSettings::eProcess_Field;
 }
 
 // Date files read / write
@@ -1037,9 +1012,6 @@ std::vector<MCMCSpline> ModelCurve::runSplineTraceForChain(const QList<ChainSpec
 void ModelCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted)
 {
     const double deg = 180. / M_PI ;
-    const bool computeZ = (mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
-                       mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical ||
-                       mCurveSettings.mProcessType == CurveSettings::eProcessType3D);
 
     auto* curveMap_XInc = &postG.gx.mapG;
     auto* curveMap_YDec = &postG.gy.mapG;
@@ -1126,11 +1098,11 @@ void ModelCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spl
         valeurs_G_VarG_GP_GS(t, spline.splineX, gx, varGx, gpx, gsx, i0, *this);
         valeurs_G_VarG_GP_GS(t, spline.splineY, gy, varGy, gpy, gsy, i0, *this);
 
-       // if (hasZ)
+        //if (compute_Z)
             valeurs_G_VarG_GP_GS(t, spline.splineZ, gz, varGz, gpz, gsz, i0, *this);
 
         // Conversion IDF
-        if (curveType == CurveSettings::eProcessTypeVector ||  curveType == CurveSettings::eProcessTypeSpherical) {
+        if (curveType == CurveSettings::eProcess_Vector ||  curveType == CurveSettings::eProcess_Spherical) {
             const double F = sqrt(pow(gx, 2.) + pow(gy, 2.) + pow(gz, 2.));
             const double Inc = asin(gz / F);
             const double Dec = atan2(gy, gx);
@@ -1280,7 +1252,7 @@ void ModelCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spl
         }
 
 
-        if (computeZ) {
+        if (compute_Z) {
 
             // -- Calcul Mean on ZF
             prevMeanG_ZF = *itVecG_ZF;
@@ -1425,24 +1397,6 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCM
     for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
         t = (double)idxT * stepT + mSettings.mTmin ;
         valeurs_G_VarG_GP_GS(t, splineComposante, g, varG, gp, gs, i0, *this);
-
-       /*const auto variableType = mCurveSettings.mVariableType;
-
-        switch (variableType) {
-        case CurveSettings::eVariableTypeInclination:
-            gx = g;
-            varGx = varG;
-            break;
-        case CurveSettings::eVariableTypeDeclination:
-            gx = g;
-            varGx = varG;
-            break;
-        default:
-            gx = g;
-            varGx = varG;
-            break;
-        }
-*/
 
         // -- calcul Mean
         prevMeanG = *itVecG;

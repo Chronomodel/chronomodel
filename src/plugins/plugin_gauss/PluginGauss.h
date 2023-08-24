@@ -65,11 +65,11 @@ public:
     virtual ~PluginGauss();
 
     //virtual function
-    long double getLikelihood(const double& t, const QJsonObject& data);
+    long double getLikelihood(const double t, const QJsonObject& data);
     bool withLikelihoodArg() {return true; }
-    QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);
+    QPair<long double, long double > getLikelihoodArg(const double t, const QJsonObject &data);
     
-    QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
+    QPair<double,double> getTminTmaxRefsCurve(const QJsonObject &data) const;
     double getMinStepRefsCurve(const QJsonObject &data) const;
     //QPair<double,double> getTminTmaxRefsCurveCombine(const QJsonArray& subData);
    // long double getLikelihoodCombine  (const double& t, const QJsonArray& subData);
@@ -85,8 +85,8 @@ public:
     QString csvHelp() const;
     QStringList csvColumns() const;
     qsizetype csvMinColumns() const;
-    QJsonObject fromCSV(const QStringList& list, const QLocale &csvLocale);
-    QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale) const;
+    QJsonObject fromCSV(const QStringList &list, const QLocale &csvLocale);
+    QStringList toCSV(const QJsonObject &data, const QLocale &csvLocale) const;
     QString getDateDesc(const Date* date) const;
     QString getDateRefCurveName(const Date* date) ;
 
@@ -95,19 +95,19 @@ public:
     virtual void deleteGraphViewRef(GraphViewRefAbstract* graph);
     PluginSettingsViewAbstract* getSettingsView();
 
-    QJsonObject checkValuesCompatibility(const QJsonObject& values);
-    bool isDateValid(const QJsonObject& data, const StudyPeriodSettings& settings);
+    QJsonObject checkValuesCompatibility(const QJsonObject &values);
+    bool isDateValid(const QJsonObject &data, const StudyPeriodSettings &settings);
 
-    bool areDatesMergeable(const QJsonArray& dates);
-    QJsonObject mergeDates(const QJsonArray& dates);
+    bool areDatesMergeable(const QJsonArray &dates);
+    QJsonObject mergeDates(const QJsonArray &dates);
     // ---------------------
 
     QString getRefExt() const;
     QString getRefsPath() const;
     RefCurve loadRefFile(QFileInfo refFile);
 
-    double getRefValueAt(const QJsonObject& data, const double& t);
-    double getRefErrorAt(const QJsonObject& data, const double& t, const QString mode);
+    double getRefValueAt(const QJsonObject &data, const double t);
+    double getRefErrorAt(const QJsonObject &data, const double t, const QString mode);
 
 
 };

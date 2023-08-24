@@ -248,69 +248,28 @@ QVector<QVector<Phase*> > ModelUtilities::getAllPhasesBranches(const QList<Phase
     QVector<QVector<Phase*> > branches;
 
     QVector<Phase*> starts;
-    for (int i = 0; i < phases.size(); ++i) {
-        phases[i]->mLevel = 0;
-        if (phases[i]->mConstraintsBwd.size() == 0)
-            starts.append(phases[i]);
+    for (auto& p : phases) {
+        p->mLevel = 0;
+        if (p->mConstraintsBwd.size() == 0)
+            starts.append(p);
     }
     if (starts.size() == 0 && phases.size() != 0)
         throw QObject::tr("Circularity found in phases model !");
 
-    for (int i = 0; i < starts.size(); ++i) {
-        QVector<QVector<Phase*> > phaseBranches;
-        try {
-            phaseBranches = getBranchesFromPhase(starts[i], maxLength);
-        } catch (QString error){
+    try {
+            for (auto& s : starts) {
+                const QVector<QVector<Phase*> > &phaseBranches = getBranchesFromPhase(s, maxLength);
+                for (auto& pb : phaseBranches) {
+                    branches.append(pb);
+                }
+            }
+    } catch (QString error){
             throw std::move(error);
-        }
-        for (int j = 0; j < phaseBranches.size(); ++j)
-            branches.append(phaseBranches[j]);
     }
     return branches;
 }
 
 
-//Sort events by level
-// Obsolete
-/*
-QVector<Event*> ModelUtilities::sortEventsByLevel(const QList<Event*>& events)
-{
-    int numSorted = 0;
-    int curLevel = 0;
-    QVector<Event*> results;
-
-    while (numSorted < events.size()) {
-        for (int i = 0; i < events.size(); ++i) {
-            if (events[i]->mLevel == curLevel) {
-                results.append(events[i]);
-                ++numSorted;
-            }
-        }
-        ++curLevel;
-    }
-    return results;
-}
-*/
-/*
-// Obsolete
-QVector<Phase*> ModelUtilities::sortPhasesByLevel(const QList<Phase*>& phases)
-{
-    int numSorted = 0;
-    int curLevel = 0;
-    QVector<Phase*> results;
-
-    while (numSorted < phases.size()) {
-        for (int i = 0; i < phases.size(); ++i) {
-            if (phases[i]->mLevel == curLevel) {
-                results.append(phases[i]);
-                ++numSorted;
-            }
-        }
-        ++curLevel;
-    }
-    return results;
-}
-*/
 
 /**
  * @brief ModelUtilities::unsortEvents We adapte The modern version of the Fisher–Yates shuffle
@@ -321,8 +280,8 @@ QVector<Phase*> ModelUtilities::sortPhasesByLevel(const QList<Phase*>& phases)
  */
 QVector<Event*> ModelUtilities::unsortEvents(const QList<Event*>& events)
 {
-    QVector<Event*> results(events.toVector());
-   for (int i = results.size()-1; i > 0; --i){
+    QVector<Event*> results (events.toVector());
+    for (int i = results.size()-1; i > 0; --i){
         std::swap(results[i], results[Generator::randomUniformInt(0, i)]);
     }
     return results;
@@ -383,7 +342,7 @@ QString ModelUtilities::modelStateDescriptionText(const ModelCurve* model, QStri
                     break;
             }
 
-            if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie) {
+            if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Univariate) {
                 text += QObject::tr(" - G : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)));
 
             } else {
@@ -795,7 +754,7 @@ QString ModelUtilities::curveResultsText(const ModelCurve* model)
     text += QObject::tr("Stat on the sqrt of Shrinkage param.") + nl;
     text += model->mS02Vg.resultsString("<br>", "", nullptr, nullptr, false);
 
-    if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth) {
+    if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Depth) {
         text += nl + QObject::tr("Positive curves accepted with Threshold : %1").arg(stringForLocal(model->mCurveSettings.mThreshold));
 
         const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
@@ -909,43 +868,52 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
         }
 
         if (curveModel) {
-            if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector) {
-                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
-                log += line(textGreen(QObject::tr("- Declination : %1").arg(stringForLocal(pEvent->mYDec))));
+            switch (model->mCurveSettings.mProcessType) {
+            case CurveSettings::eProcess_Univariate:
+                log += line(textGreen(QObject::tr("- Measure : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
+                    break;
+            case CurveSettings::eProcess_Depth:
+                log += line(textGreen(QObject::tr("- Depth : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
+                break;
+            case CurveSettings::eProcess_Field:
                 log += line(textGreen(QObject::tr("- Field : %1 ±  %2").arg(stringForLocal(pEvent->mZField), stringForLocal(pEvent->mS_ZField))));
+                break;
+            case CurveSettings::eProcess_Inclination:
+                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
+                break;
+            case CurveSettings::eProcess_Declination:
+                log += line(textGreen(QObject::tr("- Declination : %1 ; Inclination %2 ±  %3").arg(stringForLocal(pEvent->mYDec), stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
+                break;
 
-            } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessType2D) {
+            case CurveSettings::eProcess_2D:
                 log += line(textGreen(QObject::tr("- X : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
                 log += line(textGreen(QObject::tr("- Y : %1 ±  %2").arg(stringForLocal(pEvent->mYDec), stringForLocal(pEvent->mS_Y))));
-
-            } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessType3D) {
+                break;
+            case CurveSettings::eProcess_3D:
                 log += line(textGreen(QObject::tr("- X : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
                 log += line(textGreen(QObject::tr("- Y : %1 ±  %2")).arg(stringForLocal(pEvent->mYDec), stringForLocal(pEvent->mS_Y)));
                 log += line(textGreen(QObject::tr("- Z : %1 ±  %2").arg(stringForLocal(pEvent->mZField), stringForLocal(pEvent->mS_ZField))));
+                break;
 
-            } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical) {
+            case CurveSettings::eProcess_Spherical:
                 log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
                 log += line(textGreen(QObject::tr("- Declination : %1").arg(stringForLocal(pEvent->mYDec))));
-
-            }  else  if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth) {
-                log += line(textGreen(QObject::tr("- Depth : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
-
-            } else if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeField) {
-                log += line(textGreen(QObject::tr("- Field : %1 ±  %2").arg(stringForLocal(pEvent->mZField), stringForLocal(pEvent->mS_ZField))));
-
-            } else if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeInclination) {
+                break;
+            case CurveSettings::eProcess_Unknwon_Dec:
                 log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
-
-            } else if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeDeclination) {
-                log += line(textGreen(QObject::tr("- Declination : %1 ; Inclination %2 ±  %3").arg(stringForLocal(pEvent->mYDec), stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
-
-            } else if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeOther) {
-                log += line(textGreen(QObject::tr("- Measure : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
-
+                    log += line(textGreen(QObject::tr("- Field : %1").arg(stringForLocal(pEvent->mYDec))));
+                break;
+            case CurveSettings::eProcess_Vector:
+                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Declination : %1").arg(stringForLocal(pEvent->mYDec))));
+                log += line(textGreen(QObject::tr("- Field : %1 ±  %2").arg(stringForLocal(pEvent->mZField), stringForLocal(pEvent->mS_ZField))));
+                break;
+            default:
+                break;
             }
 
         }
-        int j(0);
+        int j = 0;
         for (auto&& date : pEvent->mDates) {
             log += "<br>";
             log += line(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j+1), QString::number(pEvent->mDates.size()), date.mName)
@@ -1003,49 +971,10 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
 
     if (curveModel) {
         log += line(textBold(textGreen( QObject::tr("Curve Parameters"))));
-        switch(model->mCurveSettings.mProcessType) {
-        case CurveSettings::eProcessTypeNone :
-            log += line(textBold(textGreen( QObject::tr(" - No Curve") )));
-            break;
-        case CurveSettings::eProcessTypeUnivarie :
-            log += textGreen( QObject::tr(" - Process : Univariate on "));
+        log += line(textGreen( QObject::tr(" - Process : %1").arg(model->mCurveSettings.processText())));
+        if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Depth )
+            log += line(textGreen(QObject::tr(" - Minimal Rate : %1").arg(stringForLocal(model->mCurveSettings.mThreshold))));
 
-            switch(model->mCurveSettings.mVariableType) {
-            case CurveSettings::eVariableTypeInclination :
-                log += line(textGreen( QObject::tr("Inclination")));
-                break;
-            case CurveSettings::eVariableTypeDeclination :
-                log += line(textGreen( QObject::tr("Declination")));
-                break;
-            case CurveSettings::eVariableTypeField :
-                log += line(textGreen( QObject::tr("Field")));
-                break;
-            case CurveSettings::eVariableTypeDepth :
-                 log += line(textGreen( QObject::tr("Depth")));
-                 log += line(textGreen(QObject::tr(" - Minimal Rate : %1").arg(stringForLocal(model->mCurveSettings.mThreshold))));
-
-                break;
-            case CurveSettings::eVariableTypeOther :
-                 log += line(textGreen( QObject::tr("Any Measurement")));
-                break;
-            }
-            break;
-
-        case CurveSettings::eProcessType2D :
-            log += line(textGreen( QObject::tr(" - Process : 2D")));
-            break;
-        case CurveSettings::eProcessTypeSpherical :
-            log += line(textGreen( QObject::tr(" - Process : Spherical") ));
-            break;
-
-        case CurveSettings::eProcessTypeVector :
-            log += line(textGreen( QObject::tr(" - Process : Vector")));
-            break;
-
-        case CurveSettings::eProcessType3D :
-             log += line(textGreen( QObject::tr(" - Process : 3D")));
-            break;
-        }
 
         if (model->mCurveSettings.mUseErrMesure) {
             log += line(textGreen( QObject::tr(" - Use Measurement Error")));
@@ -1142,19 +1071,17 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
                     break;
             }
 
-            if (model->mCurveSettings.mProcessType != CurveSettings::eProcessTypeNone) {
-                if (model->mCurveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie) {
-
+            if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Univariate) {
                     HTMLText += line(textGreen(QObject::tr(" - G : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
 
-                } else {
-                    HTMLText += line(textGreen(QObject::tr(" - Gx : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
-                    if (spline.splineY.vecG.size() != 0)
-                        HTMLText += line(textGreen(QObject::tr(" - Gy : %1").arg(stringForLocal(spline.splineY.vecG.at(thetaIdx)))));
-                    if (spline.splineZ.vecG.size() != 0)
-                        HTMLText += line(textGreen(QObject::tr(" - Gz : %1").arg(stringForLocal(spline.splineZ.vecG.at(thetaIdx)))));
-                }
+            } else {
+                HTMLText += line(textGreen(QObject::tr(" - Gx : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
+                if (spline.splineY.vecG.size() != 0)
+                    HTMLText += line(textGreen(QObject::tr(" - Gy : %1").arg(stringForLocal(spline.splineY.vecG.at(thetaIdx)))));
+                if (spline.splineZ.vecG.size() != 0)
+                    HTMLText += line(textGreen(QObject::tr(" - Gz : %1").arg(stringForLocal(spline.splineZ.vecG.at(thetaIdx)))));
             }
+
         }
         int j = 0;
         for (auto& date : event->mDates) {
@@ -1526,7 +1453,7 @@ QString ModelUtilities::curveResultsHTML(const ModelCurve* model)
         text += line(textGreen(QObject::tr("- Mean of the sqrt of S02 Vg = %1").arg(stringForLocal(model->mS02Vg.mResults.funcAnalysis.mean))));
     }
 
-    if (model->mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth) {
+    if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Depth) {
          text += "<br>" + line( textBold(textGreen(QObject::tr("Positive curves accepted with Threshold : %1").arg(stringForLocal(model->mCurveSettings.mThreshold)))));
         const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
         unsigned totalPositvIter = 0;
@@ -1669,14 +1596,14 @@ void sampleInCumulatedRepartition (Event* event, const StudyPeriodSettings &sett
 
         // 3 - Creation of the cumulative distribution curves in the interval
         QVector<double> unionRepartition (0);
-        double tWhile (unionTmin);
-        double sumWhile (0.);
+        double tWhile = unionTmin;
+        double sumWhile = 0.;
 
         while (tWhile<= unionTmax) {
             sumWhile= 0.;
             for (auto&& d : event->mDates) {
-                sumWhile += interpolate_value_from_curve(tWhile, d.mCalibration->mRepartition, d.mCalibration->mTmin, d.mCalibration->mTmax);
-
+                //sumWhile += interpolate_value_from_curve(tWhile, d.mCalibration->mRepartition, d.mCalibration->mTmin, d.mCalibration->mTmax);
+               sumWhile += d.mCalibration->repartition_interpolate(tWhile);
             }
             unionRepartition.append(sumWhile);
             tWhile += unionStep;
@@ -1736,8 +1663,8 @@ void sampleInCumulatedRepartition_thetaFixe (Event *event, const StudyPeriodSett
         while (tWhile<= unionTmax) {
             sumWhile= 0.;
             for (auto&& d : event->mDates) {
-                sumWhile += interpolate_value_from_curve(tWhile, d.mCalibration->mRepartition, d.mCalibration->mTmin, d.mCalibration->mTmax);
-
+                //sumWhile += interpolate_value_from_curve(tWhile, d.mCalibration->mRepartition, d.mCalibration->mTmin, d.mCalibration->mTmax);
+                sumWhile += d.mCalibration->repartition_interpolate(tWhile);
             }
             unionRepartition.append(sumWhile);
             tWhile += unionStep;

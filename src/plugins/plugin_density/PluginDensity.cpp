@@ -66,21 +66,22 @@ PluginDensity::~PluginDensity()
 }
 
 // Likelihood
-long double PluginDensity::getLikelihood(const double &t, const QJsonObject &data)
+long double PluginDensity::getLikelihood(const double t, const QJsonObject &data)
 {
-    const QString ref_curve = data.value(DATE_DENSITY_CURVE_STR).toString().toLower();
-    const long double v = getRefCurveValueAt(ref_curve, t);
+    const QString curveName = data.value(DATE_DENSITY_CURVE_STR).toString().toLower();
+    if (mRefCurves.constFind(curveName) != mRefCurves.constEnd()) {
+        const RefCurve &curve = mRefCurves.value(curveName);
+        return curve.interpolate_mean(t);
+    } else {
+        return 0.;
+    }
 
-   return v;
 }
 
-QPair<long double, long double> PluginDensity::getLikelihoodArg(const double &t, const QJsonObject &data)
+QPair<long double, long double> PluginDensity::getLikelihoodArg(const double t, const QJsonObject &data)
 {
-    
-
-   const QString ref_curve = data.value(DATE_DENSITY_CURVE_STR).toString().toLower();
-   const long double v = getRefCurveValueAt(ref_curve, t);
-   return qMakePair(1., log(v));
+    const double value = getLikelihood(t, data);
+    return qMakePair(1., log(value));
 }
     
 // Properties

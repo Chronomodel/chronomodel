@@ -59,28 +59,22 @@ public:
     PluginF14C();
     virtual ~PluginF14C();
 
-    long double getLikelihood(const double& t, const QJsonObject& data);
+    long double getLikelihood(const double t, const QJsonObject &data);
     bool withLikelihoodArg() {return true; }
-    QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);
-//    long double getLikelihoodCombine(const double& t, const QJsonArray& data);
-//       QPair<long double, long double > getLikelihoodArgCombine(const double& t, const QJsonArray& data);
-//       
+    QPair<long double, long double > getLikelihoodArg(const double t, const QJsonObject &data);
 
-    
     // virtual function
     QString getName() const;
     QIcon getIcon() const;
     bool doesCalibration() const;
     bool wiggleAllowed() const;
-   // Date::DataMethod getDataMethod() const;
-    //QList<Date::DataMethod> allowedDataMethods() const;
     MHVariable::SamplerProposal getDataMethod() const;
     QList<MHVariable::SamplerProposal> allowedDataMethods() const;
     QStringList csvColumns() const;
     qsizetype csvMinColumns() const;
     qsizetype csvOptionalColumns() const {return 2;} // Corresponding to  "ΔR" and "ΔR Error"
-    QJsonObject fromCSV(const QStringList& list, const QLocale& csvLocale) ;
-    QStringList toCSV(const QJsonObject& data, const QLocale& csvLocale) const;
+    QJsonObject fromCSV(const QStringList &list, const QLocale &csvLocale) ;
+    QStringList toCSV(const QJsonObject &data, const QLocale &csvLocale) const;
     QString getDateDesc(const Date* date) const;
     QString getDateRefCurveName(const Date* date) ;
 
@@ -90,11 +84,11 @@ public:
     PluginSettingsViewAbstract* getSettingsView();
     QList<QHash<QString, QVariant>> getGroupedActions();
 
-    QJsonObject checkValuesCompatibility(const QJsonObject& values);
-    bool isDateValid(const QJsonObject& data, const StudyPeriodSettings& settings);
+    QJsonObject checkValuesCompatibility(const QJsonObject &values);
+    bool isDateValid(const QJsonObject &data, const StudyPeriodSettings &settings);
 
-    bool areDatesMergeable(const QJsonArray& dates);
-    QJsonObject mergeDates(const QJsonArray& dates);
+    bool areDatesMergeable(const QJsonArray &dates);
+    QJsonObject mergeDates(const QJsonArray &dates);
 
     // ---------------------
 

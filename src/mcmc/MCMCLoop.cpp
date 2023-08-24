@@ -208,7 +208,7 @@ QString MCMCLoop::initialize_time(Model* model)
             }
 
             // Controle la cohérence des contraintes strati-temporelle et des valeurs de profondeurs
-            if (mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth ) {
+            if (mCurveSettings.mProcessType == CurveSettings::eProcess_Depth ) {
                 for (auto&& eForWard : ev->mConstraintsFwd) {
                     const bool notOk (ev->mXIncDepth > eForWard->mEventTo->mXIncDepth);
                     if (notOk) {

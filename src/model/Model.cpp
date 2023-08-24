@@ -437,53 +437,39 @@ void Model::setProject( Project* project)
     }
 
     ModelCurve* curveModel = dynamic_cast<ModelCurve*>(mProject->mModel);
-    switch (curveModel->mCurveSettings.mProcessType) {
-    case CurveSettings::eProcessTypeUnivarie:
-        switch (curveModel->mCurveSettings.mVariableType) {
-        case CurveSettings::eVariableTypeOther:
-            mCurveName.append(tr("Measure"));
-            mCurveLongName.append(tr("Measurement"));
-            break;
-        case CurveSettings::eVariableTypeInclination:
-            mCurveName.append(tr("Inc"));
-            mCurveLongName.append(tr("Inclination"));
-            break;
-        case CurveSettings::eVariableTypeDeclination:
-            mCurveName.append(tr("Dec"));
-            mCurveLongName.append(tr("Declination"));
-            break;
-        case CurveSettings::eVariableTypeField:
-            mCurveName.append(tr("Field"));
-            mCurveLongName.append(tr("Field"));
-            break;
-        case CurveSettings::eVariableTypeDepth:
-            mCurveName.append(tr("Depth"));
-            mCurveLongName.append(tr("Depth"));
-            break;
-        default:
-            mCurveName.append("X");
-            mCurveLongName.append("X");
-            break;
-        }
 
+    const QString xLabel = curveModel->mCurveSettings.XLabel();
+    const QString yLabel = curveModel->mCurveSettings.YLabel();
+    const QString zLabel = curveModel->mCurveSettings.ZLabel();
+
+    const QString x_short_name = curveModel->mCurveSettings.X_short_name();
+    const QString y_short_name = curveModel->mCurveSettings.Y_short_name();
+    const QString z_short_name = curveModel->mCurveSettings.Z_short_name();
+
+    switch (curveModel->mCurveSettings.mProcessType) {
+
+    case CurveSettings::eProcess_2D:
+    case CurveSettings::eProcess_Spherical:
+    case CurveSettings::eProcess_Unknwon_Dec:
+        mCurveName.append({x_short_name, y_short_name});
+        mCurveLongName.append({xLabel, yLabel});
         break;
-    case CurveSettings::eProcessTypeSpherical:
-        mCurveName.append({tr("Inc"), tr("Dec")});
-        mCurveLongName.append({tr("Inclination"), tr("Declination")});
+
+    case CurveSettings::eProcess_3D:
+    case CurveSettings::eProcess_Vector:
+        mCurveName.append({x_short_name, y_short_name, z_short_name});
+        mCurveLongName.append({xLabel, yLabel, zLabel});
         break;
-    case CurveSettings::eProcessType2D:
-        mCurveName.append({"X", "Y"});
-        mCurveLongName.append({"X", "Y"});
-        break;
-    case CurveSettings::eProcessTypeVector:
-        mCurveName.append({tr("Inc"), tr("Dec"), tr("Field")});
-        mCurveLongName.append({tr("Inclination"), tr("Declination"), tr("Field")});
-        break;
-    case CurveSettings::eProcessType3D:
-        mCurveName.append({"X", "Y", "Z"});
-        mCurveLongName.append({"X", "Y", "Z"});
-        break;
+
+    case CurveSettings::eProcess_None:
+    case CurveSettings::eProcess_Univariate:
+    case CurveSettings::eProcess_Inclination:
+    case CurveSettings::eProcess_Declination:
+    case CurveSettings::eProcess_Field:
+    case CurveSettings::eProcess_Depth:
     default:
+        mCurveName.append(x_short_name);
+        mCurveLongName.append(xLabel);
         break;
     }
 
@@ -497,7 +483,7 @@ void Model::updateDesignFromJson()
 {
     if (!mProject)
         return;
-setProject(mProject); // update mCurveName
+    setProject(mProject); // update mCurveName
     const QJsonObject *state = mProject->state_ptr();
     const QJsonArray events = state->value(STATE_EVENTS).toArray();
     const QJsonArray phases = state->value(STATE_PHASES).toArray();

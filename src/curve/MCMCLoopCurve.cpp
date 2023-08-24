@@ -179,11 +179,6 @@ QString MCMCLoopCurve::initialize()
     if (initTime != QString())
         return initTime;
 
-    mComputeY = ( mCurveSettings.mProcessType != CurveSettings::eProcessTypeUnivarie);
-    mComputeZ = ( mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
-                        mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical ||
-                        mCurveSettings.mProcessType == CurveSettings::eProcessType3D);
-
     if (mCurveSettings.mLambdaSplineType == CurveSettings::eInterpolation)
         return initialize_interpolate();
     else
@@ -289,7 +284,7 @@ QString MCMCLoopCurve::initialize_time0()
             }
 
             // Controle la cohérence des contraintes strati-temporelle et des valeurs de profondeurs
-            if (mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth ) {
+            if (mCurveSettings.mProcessType == CurveSettings::eProcess_Depth ) {
                 for (auto&& eForWard : ev->mConstraintsFwd) {
                     const bool notOk (ev->mXIncDepth > eForWard->mEventTo->mXIncDepth);
                     if (notOk) {
@@ -614,13 +609,13 @@ QString MCMCLoopCurve::initialize_321()
             // S02_Vg_Yx() Utilise la valeur de lambda courant, sert à initialise S02_Vg
             const auto var_residu_X = S02_Vg_Yx(mModel->mEvents, matricesWI, vecH, mModel->mLambdaSpline.mX);
             //std::cout<<" var_residu_X = " << var_residu_X;
-            if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie) {
+            if (mModel->compute_X_only) {
                 Var_residual_spline = var_residu_X;
 
             } else {
                     const auto var_residu_Y = S02_Vg_Yy(mModel->mEvents, matricesWI, vecH, mModel->mLambdaSpline.mX);
 
-                    if ( mComputeZ) {
+                if (mModel->compute_Z) {
                         const auto var_residu_Z =  S02_Vg_Yz(mModel->mEvents, matricesWI, vecH, mModel->mLambdaSpline.mX);
 
                         Var_residual_spline = (var_residu_X + var_residu_Y + var_residu_Z)/3.;
@@ -751,11 +746,21 @@ QString MCMCLoopCurve::initialize_321()
 
     mModel->mS02Vg.mSigmaMH = 1.;
 
-    if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie) {
+    if (mModel->compute_X_only) {
         std::vector<double> vecY (mModel->mEvents.size());
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
 
         var_Y = pow(std_Knuth( vecY), 2);
+
+    } else if (mCurveSettings.mProcessType == CurveSettings::eProcess_Unknwon_Dec) { // à controler
+        std::vector< double> vecY (mModel->mEvents.size());
+        std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
+        var_Y = pow(std_Knuth( vecY), 2);
+
+        std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYy;});
+        var_Y += pow(std_Knuth( vecY), 2);
+
+        var_Y /= 2.;
 
     } else {
         std::vector< double> vecY (mModel->mEvents.size());
@@ -817,7 +822,7 @@ QString MCMCLoopCurve::initialize_321()
 
         clearMeanG.gx.mapG.setRangeY(minY, maxY);
 
-        if ( mComputeY) {
+        if (mModel->compute_Y) {
             clearMeanG.gy = clearCompo;
 
             minY = +INFINITY;
@@ -838,7 +843,7 @@ QString MCMCLoopCurve::initialize_321()
 
             clearMeanG.gy.mapG.setRangeY(minY, maxY);
 
-            if (mComputeZ) {
+            if (mModel->compute_Z) {
                 clearMeanG.gz = clearCompo;
 
                 minY = +INFINITY;
@@ -861,7 +866,7 @@ QString MCMCLoopCurve::initialize_321()
         }
 
         // Convertion IDF
-        if (mModel->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||  mModel->mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical) {
+        if (mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Vector ||  mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Spherical) {
 
             const double deg = 180. / M_PI ;
             // 1 - new extrenum
@@ -981,13 +986,13 @@ QString MCMCLoopCurve::initialize_Komlan()
             // S02_Vg_Yx() Utilise la valeur de lambda courant, sert à initialise S02_Vg
             const auto var_residu_X = S02_Vg_Yx(mModel->mEvents, matricesWI, vecH, mModel->mLambdaSpline.mX);
             //std::cout<<" var_residu_X = " << var_residu_X;
-            if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie) {
+            if (mModel->compute_X_only) {
                 Var_residual_spline = var_residu_X;
 
             } else {
                 const auto var_residu_Y = S02_Vg_Yy(mModel->mEvents, matricesWI, vecH, mModel->mLambdaSpline.mX);
 
-                if ( mComputeZ) {
+                if ( mModel->compute_Z) {
                     const auto var_residu_Z =  S02_Vg_Yz(mModel->mEvents, matricesWI, vecH, mModel->mLambdaSpline.mX);
 
                     Var_residual_spline = (var_residu_X + var_residu_Y + var_residu_Z)/3.;
@@ -1118,11 +1123,20 @@ QString MCMCLoopCurve::initialize_Komlan()
 
     mModel->mS02Vg.mSigmaMH = 1.;
 
-    if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie) {
+    if (mModel->compute_X_only) {
         std::vector<double> vecY (mModel->mEvents.size());
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
-
         var_Y = pow(std_Knuth( vecY), 2);
+
+    } else if (!mModel->compute_Z) {
+        std::vector<double> vecY (mModel->mEvents.size());
+        std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
+        var_Y = pow(std_Knuth( vecY), 2);
+
+        std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYy;});
+        var_Y += pow(std_Knuth( vecY), 2);
+
+        var_Y /= 2.;
 
     } else {
         std::vector< double> vecY (mModel->mEvents.size());
@@ -1184,7 +1198,7 @@ QString MCMCLoopCurve::initialize_Komlan()
 
         clearMeanG.gx.mapG.setRangeY(minY, maxY);
 
-        if ( mComputeY) {
+        if (mModel->compute_Y) {
             clearMeanG.gy = clearCompo;
 
             minY = +INFINITY;
@@ -1205,7 +1219,7 @@ QString MCMCLoopCurve::initialize_Komlan()
 
             clearMeanG.gy.mapG.setRangeY(minY, maxY);
 
-            if (mComputeZ) {
+            if (mModel->compute_Z) {
                 clearMeanG.gz = clearCompo;
 
                 minY = +INFINITY;
@@ -1228,7 +1242,7 @@ QString MCMCLoopCurve::initialize_Komlan()
         }
 
         // Convertion IDF
-        if (mModel->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||  mModel->mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical) {
+        if (mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Vector ||  mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Spherical) {
 
             const double deg = 180. / M_PI ;
             // 1 - new extrenum
@@ -1371,11 +1385,21 @@ QString MCMCLoopCurve::initialize_interpolate()
 
     mModel->mS02Vg.mSigmaMH = 1.;
 
-    if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie) {
+    if (mModel->compute_X_only) {
         std::vector<double> vecY (mModel->mEvents.size());
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
 
         var_Y = pow(std_Knuth( vecY), 2);
+
+    } else if (!mModel->compute_Z) {
+        std::vector< double> vecY (mModel->mEvents.size());
+        std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
+        var_Y = pow(std_Knuth( vecY), 2);
+
+        std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYy;});
+        var_Y += pow(std_Knuth( vecY), 2);
+
+        var_Y /= 2.;
 
     } else {
         std::vector< double> vecY (mModel->mEvents.size());
@@ -1435,7 +1459,7 @@ QString MCMCLoopCurve::initialize_interpolate()
 
         clearMeanG.gx.mapG.setRangeY(minY, maxY);
 
-        if ( mComputeY) {
+        if ( mModel->compute_Y) {
             clearMeanG.gy = clearCompo;
 
             minY = +INFINITY;
@@ -1451,7 +1475,7 @@ QString MCMCLoopCurve::initialize_interpolate()
 
             clearMeanG.gy.mapG.setRangeY(minY, maxY);
 
-            if (mComputeZ) {
+            if (mModel->compute_Z) {
                 clearMeanG.gz = clearCompo;
 
                 minY = +INFINITY;
@@ -1472,7 +1496,7 @@ QString MCMCLoopCurve::initialize_interpolate()
         }
 
         // Convertion IDF
-        if (mModel->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||  mModel->mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical) {
+        if (mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Vector ||  mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Spherical) {
 
             const double deg = 180. / M_PI ;
             // 1 - new extrenum
@@ -1534,7 +1558,7 @@ bool MCMCLoopCurve::update_321()
 
         //La partie h_YWI_3 = exp(ln_h_YWI_3) est placée dans le rapport MH
         current_ln_h_YWI_3 = mModel->mLambdaSpline.mX == 0 ? 0. :
-                                                             ln_h_YWI_3_update(current_splineMatrices, mModel->mEvents, current_vecH, current_decomp_matB, mModel->mLambdaSpline.mX, mComputeY, mComputeZ);
+                                 ln_h_YWI_3_update(current_splineMatrices, mModel->mEvents, current_vecH, current_decomp_matB, mModel->mLambdaSpline.mX, mModel->compute_Y, mModel->compute_Z);
 
         current_ln_h_YWI_1_2 = ln_h_YWI_1_2(current_decomp_QTQ, current_decomp_matB);
 
@@ -1619,7 +1643,7 @@ bool MCMCLoopCurve::update_321()
                             try_decomp_matB = decomp_matB(try_splineMatrices, mModel->mLambdaSpline.mX);
 
                             try_ln_h_YWI_1_2 = ln_h_YWI_1_2(try_decomp_QTQ, try_decomp_matB);
-                            try_ln_h_YWI_3 = ln_h_YWI_3_update(try_splineMatrices, mModel->mEvents, try_vecH, try_decomp_matB, mModel->mLambdaSpline.mX, mComputeY, mComputeZ);
+                            try_ln_h_YWI_3 = ln_h_YWI_3_update(try_splineMatrices, mModel->mEvents, try_vecH, try_decomp_matB, mModel->mLambdaSpline.mX, mModel->compute_Y, mModel->compute_Z);
 
                             if (mModel->mLambdaSpline.mSamplerProposal == MHVariable::eFixe)
                                 try_h_lambda = 1;
@@ -1762,7 +1786,7 @@ bool MCMCLoopCurve::update_321()
                             try_decomp_matB = decomp_matB(try_splineMatrices, mModel->mLambdaSpline.mX);
 
                             //try_ln_h_YWI_3 = mModel->mLambdaSpline.mX == 0 ? 0. :
-                            try_ln_h_YWI_3 = ln_h_YWI_3_update(try_splineMatrices, mModel->mEvents, current_vecH, try_decomp_matB, mModel->mLambdaSpline.mX, mComputeY, mComputeZ);
+                            try_ln_h_YWI_3 = ln_h_YWI_3_update(try_splineMatrices, mModel->mEvents, current_vecH, try_decomp_matB, mModel->mLambdaSpline.mX, mModel->compute_Y, mModel->compute_Z);
                             try_ln_h_YWI_2 = ln_h_YWI_2(try_decomp_matB);
                             try_h_VG = h_VG_Event(event, mModel->mS02Vg.mX);
 
@@ -1823,7 +1847,7 @@ bool MCMCLoopCurve::update_321()
                         try_decomp_matB = decomp_matB(try_splineMatrices, mModel->mLambdaSpline.mX);
 
                         try_ln_h_YWI_2 = ln_h_YWI_2(try_decomp_matB);
-                        try_ln_h_YWI_3 = mModel->mLambdaSpline.mX == 0 ? 0. : ln_h_YWI_3_update(try_splineMatrices, mModel->mEvents, current_vecH, try_decomp_matB, mModel->mLambdaSpline.mX, mComputeY, mComputeZ);
+                        try_ln_h_YWI_3 = mModel->mLambdaSpline.mX == 0 ? 0. : ln_h_YWI_3_update(try_splineMatrices, mModel->mEvents, current_vecH, try_decomp_matB, mModel->mLambdaSpline.mX, mModel->compute_Y, mModel->compute_Z);
 
                         try_h_VG = h_VG_Event(eventVGglobal, mModel->mS02Vg.mX);
 
@@ -1899,7 +1923,7 @@ bool MCMCLoopCurve::update_321()
 
                     try_h_lambda = h_lambda(current_splineMatrices, mModel->mEvents.size(), try_value) ;
                     try_decomp_matB = decomp_matB(current_splineMatrices, try_value);
-                    try_ln_h_YWI_3 = try_value == 0 ? 0. : ln_h_YWI_3_update(current_splineMatrices, mModel->mEvents, current_vecH, try_decomp_matB, try_value, mComputeY, mComputeZ);
+                    try_ln_h_YWI_3 = try_value == 0 ? 0. : ln_h_YWI_3_update(current_splineMatrices, mModel->mEvents, current_vecH, try_decomp_matB, try_value, mModel->compute_Y, mModel->compute_Z);
                     try_ln_h_YWI_2 = ln_h_YWI_2(try_decomp_matB);
 
                     const auto n = mModel->mEvents.size();
@@ -1932,7 +1956,7 @@ bool MCMCLoopCurve::update_321()
         mModel->mSpline = currentSpline(mModel->mEvents, false, current_vecH, current_splineMatrices);
 
         // G.2 - test GPrime positive
-        if (mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth ) {
+        if (mCurveSettings.mProcessType == CurveSettings::eProcess_Depth  ) {
             return hasPositiveGPrimePlusConst(mModel->mSpline.splineX, mCurveSettings.mThreshold); // si dy > mCurveSettings.mThreshold = pas d'acceptation
 
         } else
@@ -2705,7 +2729,7 @@ bool MCMCLoopCurve::update_Komlan()
 #endif
 
         // F.2 - test GPrime positive
-        if (mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth)
+        if (mCurveSettings.mProcessType == CurveSettings::eProcess_Depth )
             return hasPositiveGPrimePlusConst(mModel->mSpline.splineX, mCurveSettings.mThreshold); // si dy >mCurveSettings.mThreshold = pas d'acceptation
 
         else
@@ -2910,7 +2934,7 @@ bool MCMCLoopCurve::update_interpolate()
 
         // G.2 - test GPrime positive
         // si dy > mCurveSettings.mThreshold = pas d'acceptation
-        if (mCurveSettings.mVariableType == CurveSettings::eVariableTypeDepth)
+        if (mCurveSettings.mProcessType == CurveSettings::eProcess_Depth)
             return hasPositiveGPrimePlusConst(mModel->mSpline.splineX, mCurveSettings.mThreshold);
 
         else
@@ -3061,10 +3085,11 @@ void MCMCLoopCurve::memo()
         minY_X = meanG->gx.mapG.minY();
         maxY_X = meanG->gx.mapG.maxY();
 
-        if (mComputeY) {
+        if (mModel->compute_Y) {
             minY_Y = meanG->gy.mapG.minY();
             maxY_Y = meanG->gy.mapG.maxY();
-            if (mComputeZ) {
+
+            if (mModel->compute_Z) {
                 minY_Z = meanG->gz.mapG.minY();
                 maxY_Z = meanG->gz.mapG.maxY();
             }
@@ -3081,7 +3106,7 @@ void MCMCLoopCurve::memo()
         unsigned i0 = 0;
 
         // Convertion IDF
-        if (mModel->mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||  mModel->mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical) {
+        if (mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Vector ||  mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Spherical) {
             const double deg = 180. / M_PI ;
 
             for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
@@ -3117,12 +3142,12 @@ void MCMCLoopCurve::memo()
                 minY_X = std::min(gx_the - 1.96 * sqrt(varGx), minY_X);
                 maxY_X = std::max(gx_the + 1.96 * sqrt(varGx), maxY_X);
 
-                if (mComputeY) {
+                if (mModel->compute_Y) {
                     ModelCurve::valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineY, gy_the, varGy, gp, gs, i0, *mModel);
                     minY_Y = std::min(gy_the - 1.96 * sqrt(varGy), minY_Y);
                     maxY_Y = std::max(gy_the + 1.96 * sqrt(varGy), maxY_Y);
 
-                    if (mComputeZ) {
+                    if (mModel->compute_Z) {
                         ModelCurve::valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineZ, gz_the, varGz, gp, gs, i0, *mModel);
                         minY_Z = std::min(gz_the - 1.96 * sqrt(varGy), minY_Z);
                         maxY_Z = std::max(gz_the + 1.96 * sqrt(varGz), maxY_Z);
@@ -3146,7 +3171,7 @@ void MCMCLoopCurve::memo()
 
         chainG->gx.mapG.setRangeY(minY_X, maxY_X);
 
-        if (mComputeY) {
+        if (mModel->compute_Y) {
             if (mChainIndex == 0 ) {// do not change the Y range between several chain
                 minY_Y = std::min(minY_Y, meanG->gy.mapG.minY());
                 maxY_Y = std::max(maxY_Y, meanG->gy.mapG.maxY());
@@ -3158,7 +3183,7 @@ void MCMCLoopCurve::memo()
             }
             chainG->gy.mapG.setRangeY(minY_Y, maxY_Y);
 
-            if (mComputeZ) {
+            if (mModel->compute_Z) {
                 if (mChainIndex == 0 ) {// do not change the Y range between several chain
                     minY_Z = std::min(minY_Z, meanG->gz.mapG.minY());
                     maxY_Z = std::max(maxY_Z, meanG->gz.mapG.maxY());
@@ -3191,12 +3216,21 @@ void MCMCLoopCurve::memo()
     for (auto& c : mChains)
         totalIterAccepted += c.mRealyAccepted;
 
-    if (!mComputeY) {
+    if (mModel->compute_X_only) {
         memo_PosteriorG( mModel->mPosteriorMeanGByChain[mChainIndex].gx, mModel->mSpline.splineX, iterAccepted );
         if (mChains.size() > 1)
             memo_PosteriorG( mModel->mPosteriorMeanG.gx, mModel->mSpline.splineX, totalIterAccepted);
 
-    } else {
+    } else if (!mModel->compute_Z) {
+        memo_PosteriorG( mModel->mPosteriorMeanGByChain[mChainIndex].gx, mModel->mSpline.splineX, iterAccepted );
+        memo_PosteriorG( mModel->mPosteriorMeanGByChain[mChainIndex].gy, mModel->mSpline.splineY, iterAccepted );
+        if (mChains.size() > 1) {
+            memo_PosteriorG( mModel->mPosteriorMeanG.gx, mModel->mSpline.splineX, totalIterAccepted);
+            memo_PosteriorG( mModel->mPosteriorMeanG.gy, mModel->mSpline.splineY, totalIterAccepted);
+        }
+
+    }
+    else {
       /*  if (mTh_memoCurve.joinable())
             mTh_memoCurve.join();
 
@@ -3351,9 +3385,6 @@ void MCMCLoopCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSp
 void MCMCLoopCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline spline, CurveSettings::ProcessType &curveType, const int realyAccepted, ModelCurve &model)
 {
     const double deg = 180. / M_PI ;
-    const bool computeZ = (model.mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
-                       model.mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical ||
-                       model.mCurveSettings.mProcessType == CurveSettings::eProcessType3D);
 
     auto* curveMap_XInc = &postG.gx.mapG;
     auto* curveMap_YDec = &postG.gy.mapG;
@@ -3436,11 +3467,11 @@ void MCMCLoopCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline spline,
         ModelCurve::valeurs_G_VarG_GP_GS(t, spline.splineX, gx, varGx, gpx, gsx, i0, model);
         ModelCurve::valeurs_G_VarG_GP_GS(t, spline.splineY, gy, varGy, gpy, gsy, i0, model);
 
-        if (computeZ)
+        if (model.compute_Z)
             ModelCurve::valeurs_G_VarG_GP_GS(t, spline.splineZ, gz, varGz, gpz, gsz, i0, model);
 
         // Conversion IDF
-        if (curveType == CurveSettings::eProcessTypeVector ||  curveType == CurveSettings::eProcessTypeSpherical) {
+        if (curveType == CurveSettings::eProcess_Vector ||  curveType == CurveSettings::eProcess_Spherical) {
             const double F = sqrt(pow(gx, 2.) + pow(gy, 2.) + pow(gz, 2.));
             const double Inc = asin(gz / F);
             const double Dec = atan2(gy, gx);
@@ -3590,7 +3621,7 @@ void MCMCLoopCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline spline,
         }
 
 
-        if (computeZ) {
+        if (model.compute_Z) {
 
             // -- Calcul Mean on ZF
             prevMeanG_ZF = *itVecG_ZF;
@@ -3793,10 +3824,10 @@ void MCMCLoopCurve::finalize()
     for (auto& pmc : mModel->mPosteriorMeanGByChain) {
         pmc.gx.mapG.min_value = *std::min_element(begin(pmc.gx.mapG.data), end(pmc.gx.mapG.data));
 
-        if (mComputeY) {
+        if (mModel->compute_Y) {
             pmc.gy.mapG.min_value = *std::min_element(begin(pmc.gy.mapG.data), end(pmc.gy.mapG.data));
 
-            if (mComputeZ) {
+            if (mModel->compute_Z) {
                 pmc.gz.mapG.min_value = *std::min_element(begin(pmc.gz.mapG.data), end(pmc.gz.mapG.data));
 
             }
@@ -3814,10 +3845,10 @@ void MCMCLoopCurve::finalize()
         mModel->mPosteriorMeanG.gx.mapG.min_value = *std::min_element(begin(mModel->mPosteriorMeanG.gx.mapG.data), end(mModel->mPosteriorMeanG.gx.mapG.data));
 
 
-        if (mComputeY) {
+        if (mModel->compute_Y) {
             mModel->mPosteriorMeanG.gy.mapG.min_value = *std::min_element(begin(mModel->mPosteriorMeanG.gy.mapG.data), end(mModel->mPosteriorMeanG.gy.mapG.data));
 
-            if (mComputeZ) {
+            if (mModel->compute_Z) {
                 mModel->mPosteriorMeanG.gz.mapG.min_value = *std::min_element(begin(mModel->mPosteriorMeanG.gz.mapG.data), end(mModel->mPosteriorMeanG.gz.mapG.data));
 
             }
@@ -4013,71 +4044,89 @@ void MCMCLoopCurve::prepareEventsY(const QList<Event *> &events)
 void MCMCLoopCurve::prepareEventY(Event* const event  )
 {
     const double rad = M_PI / 180.;
-    if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeUnivarie) {
-        // Dans RenCurve, fichier U_cmt_lit_sauve
 
-        switch (mCurveSettings.mVariableType) {
-        case CurveSettings::eVariableTypeInclination:
-            event->mYx = event->mXIncDepth;
-            event->mSy = event->mS_XA95Depth; //ligne 348 : EctYij:= (1/sqrt(Kij))*Deg;
-            break;
-        case CurveSettings::eVariableTypeDeclination:
-            event->mYx = event->mYDec;
-            event->mSy = event->mS_XA95Depth / cos(event->mXIncDepth * rad); //ligne 364 : EctYij:=(1/(sqrt(Kij)*cos(Iij*rad)))*Deg;
-            break;
-        case CurveSettings::eVariableTypeField:
-            event->mYx = event->mZField;
-            event->mSy = event->mS_ZField;
-            break;
-        default:
+    switch (mCurveSettings.mProcessType) {
+        case CurveSettings::eProcess_Univariate:
+        case CurveSettings::eProcess_Depth:
+        case CurveSettings:: eProcess_Inclination:
             event->mYx = event->mXIncDepth;
             event->mSy = event->mS_XA95Depth;
+
+            event->mYy = 0;
+            event->mYz = 0;
             break;
-        }
 
-        // Not used in univariate, but set to zero especially for CSV exports:
-        event->mYy = 0;
-        event->mYz = 0;
+        case CurveSettings::eProcess_2D:
+            event->mZField = 100.; // To treat the 2D case, we use the 3D case by setting Yint = 100
+            event->mS_ZField = 0.;
 
-    } else if (mCurveSettings.mProcessType == CurveSettings::eProcessType2D) {
-        event->mZField = 100.; // To treat the 2D case, we use the 3D case by setting Yint = 100
-        event->mS_ZField = 0.;
+            event->mYx = event->mXIncDepth;
+            event->mYy = event->mYDec;
+            event->mYz = event->mZField;
 
-        event->mYx = event->mXIncDepth;
-        event->mYy = event->mYDec;
-        event->mYz = event->mZField;
+            event->mSy = sqrt( (pow(event->mS_Y, 2.) + pow(event->mS_XA95Depth, 2.)) /2.);
+            break;
 
-        event->mSy = sqrt( (pow(event->mS_Y, 2.) + pow(event->mS_XA95Depth, 2.)) /2.);
+        case CurveSettings::eProcess_3D:
+            event->mYx = event->mXIncDepth;
+            event->mYy = event->mYDec;
+            event->mYz = event->mZField;
 
-    } else if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical) {
-        event->mZField = 100.; // To treat the spherical case, we use the vector case by posing Yint = 100
-        event->mS_ZField = 0.;
+            event->mSy = sqrt( (pow(event->mS_ZField, 2.) + pow(event->mS_Y, 2.) + pow(event->mS_XA95Depth, 2.)) /3.);
+            break;
 
-        event->mYx = event->mZField * cos(event->mXIncDepth * rad) * cos(event->mYDec * rad);
-        event->mYy = event->mZField * cos(event->mXIncDepth * rad) * sin(event->mYDec * rad);
-        event->mYz = event->mZField * sin(event->mXIncDepth * rad);
+        case CurveSettings::eProcess_Declination:
+            event->mYx = event->mYDec;
+            event->mSy = event->mS_XA95Depth / cos(event->mXIncDepth * rad); //ligne 364 : EctYij:=(1/(sqrt(Kij)*cos(Iij*rad)))*Deg;
+            event->mYy = 0;
+            event->mYz = 0;
+            break;
 
-        const double sYInc = event->mS_XA95Depth *rad;// 2.4477;
-        event->mSy = event->mZField*sYInc; // ligne 537 : EctYij:= Fij/sqrt(Kij);
+        case CurveSettings::eProcess_Field:
+            event->mYx = event->mZField;
+            event->mSy = event->mS_ZField;
+            event->mYy = 0;
+            event->mYz = 0;
+            break;
 
-    } else if (mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector) {
+        case CurveSettings::eProcess_Spherical:
+            event->mZField = 100.; // To treat the spherical case, we use the vector case by posing Yint = 100
+            event->mS_ZField = 0.;
 
-        event->mYx = event->mZField * cos(event->mXIncDepth * rad) * cos(event->mYDec * rad);
-        event->mYy = event->mZField * cos(event->mXIncDepth * rad) * sin(event->mYDec * rad);
-        event->mYz = event->mZField * sin(event->mXIncDepth * rad);
+            event->mYx = event->mZField * cos(event->mXIncDepth * rad) * cos(event->mYDec * rad);
+            event->mYy = event->mZField * cos(event->mXIncDepth * rad) * sin(event->mYDec * rad);
+            event->mYz = event->mZField * sin(event->mXIncDepth * rad);
 
-        const double sYInc = event->mS_XA95Depth *rad;//2.4477 ;
-        event->mSy = sqrt( (pow(event->mS_ZField, 2.) + 2. * pow(event->mZField*sYInc, 2.) ) /3.); // ligne 520 : EctYij:=sqrt( ( sqr(EctFij) + (2*sqr(Fij)/Kij) )/3 );
+            event->mSy = event->mZField * event->mS_XA95Depth *rad /2.448; // ligne 537 : EctYij:= Fij/sqrt(Kij);
+            break;
 
-    } else if (mCurveSettings.mProcessType == CurveSettings::eProcessType3D) {
+        case CurveSettings::eProcess_Unknwon_Dec:
+            event->mYx = event->mXIncDepth;
+            event->mYy = event->mZField;
 
-        event->mYx = event->mXIncDepth;
-        event->mYy = event->mYDec;
-        event->mYz = event->mZField;
+            event->mSy = sqrt( (pow(event->mS_ZField, 2.) +  pow(event->mZField * event->mS_XA95Depth *rad /2.448, 2.) ) / 2.);
 
-        event->mSy = sqrt( (pow(event->mS_ZField, 2.) + pow(event->mS_Y, 2.) + pow(event->mS_XA95Depth, 2.)) /3.);
+            event->mYz = 0;
+            break;
 
+        case CurveSettings::eProcess_Vector:
+            event->mYx = event->mZField * cos(event->mXIncDepth * rad) * cos(event->mYDec * rad);
+            event->mYy = event->mZField * cos(event->mXIncDepth * rad) * sin(event->mYDec * rad);
+            event->mYz = event->mZField * sin(event->mXIncDepth * rad);
+
+            event->mSy = sqrt( (pow(event->mS_ZField, 2.) + 2. * pow(event->mZField * event->mS_XA95Depth *rad /2.448, 2.) ) /3.); // ligne 520 : EctYij:=sqrt( ( sqr(EctFij) + (2*sqr(Fij)/Kij) )/3 );
+            break;
+
+        case CurveSettings::eProcess_None:
+        default:
+            event->mYx = 0;
+            event->mYy = 0;
+            event->mYz = 0;
+
+            event->mSy = 0;
+            break;
     }
+
 
     if (!mCurveSettings.mUseErrMesure) {
         event->mSy = 0.;
@@ -5286,7 +5335,7 @@ MCMCSpline MCMCLoopCurve::currentSpline (QList<Event *> &events, bool doSortAndS
     spline.splineX = std::move(splineX);
 
 
-    if ( mComputeY) {
+    if ( mModel->compute_Y) {
 
         // doSpline utilise les Y des events
         // => On le calcule ici pour la seconde composante (y)
@@ -5304,7 +5353,7 @@ MCMCSpline MCMCLoopCurve::currentSpline (QList<Event *> &events, bool doSortAndS
         spline.splineY = std::move(splineY);
     }
 
-    if ( mComputeZ) {
+    if ( mModel->compute_Z) {
         // dans le future, ne sera pas utile pour le mode sphérique
         // doSpline utilise les Z des events
         // => On le calcule ici pour la troisième composante (z)
@@ -5394,7 +5443,7 @@ MCMCSpline MCMCLoopCurve::currentSpline_WI (QList<Event *> &events, bool doSortA
     spline.splineX = std::move(splineX);
 
 
-    if ( mComputeY) {
+    if ( mModel->compute_Y) {
 
         const SplineResults &sy = doSplineY(*pMatrices, events, _VecH, decomp, 0.); //matL et matB ne sont pas changés
 
@@ -5409,7 +5458,7 @@ MCMCSpline MCMCLoopCurve::currentSpline_WI (QList<Event *> &events, bool doSortA
         spline.splineY = std::move(splineY);
     }
 
-    if ( mComputeZ) {
+    if ( mModel->compute_Z) {
         // dans le future, ne sera pas utile pour le mode sphérique
         // doSpline utilise les Z des events
         // => On le calcule ici pour la troisième composante (z)

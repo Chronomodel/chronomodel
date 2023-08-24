@@ -48,6 +48,20 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class CalibrationCurve
 {
 public:
+    QString mName;
+    QString mDescription;
+
+    QString mPluginId;
+    PluginAbstract* mPlugin;
+
+    QVector<double> mRepartition;
+    QVector<double> mVector;
+    QMap<double, double> mMap; // c'est la même chose que mVector, mais dans une QMap. Pour faciliter l'accés
+
+    double mTmin;
+    double mTmax;
+    double mStep;
+public:
     /** Default constructor */
     CalibrationCurve();
 
@@ -94,7 +108,6 @@ public:
     CalibrationCurve& operator= (CalibrationCurve&& other) noexcept
     {
         mName = other.mName;
-//        mMCMCSetting =other.mMCMCSetting;
         mPluginId = other.mPluginId;
         mPlugin = other.mPlugin;
 
@@ -125,26 +138,60 @@ public:
         return *this;
     }
 
-/*    enum Method{
-        eFromRef = 0,
-        eFromMCMC = 1,
-    };
-*/
-    QString mName;
-    QString mDescription;
+    double interpolate(double t) const {
+        // We need at least two points to interpolate
+        if (mVector.size() < 2 || t <= mTmin) {
+            return mVector.first();
 
+        } else if (t >= mTmax) {
+            return mVector.last();
+        }
 
+        const double prop = (t - mTmin) / (mTmax - mTmin);
+        const double idx = prop * (mVector.size() - 1); // tricky : if (tmax - tmin) = 2000, then calib size is 2001 !
+        const int idxUnder = (int)floor(idx);
+        const int idxUpper = (int)ceil(idx);//idxUnder + 1;
 
-    QString mPluginId;
-    PluginAbstract* mPlugin;
+        if (idxUnder == idxUpper) {
+            return mVector[idxUnder];
 
-    QVector<double> mRepartition;
-    QVector<double> mVector;
-    QMap<double, double> mMap; // c'est la même chose que mVector, mais dans une QMap. Pour faciliter l'accés
+        } else if (mVector[idxUnder] != 0. && mVector[idxUpper] != 0.) {
+            // Important for gate: no interpolation around gates
 
-    double mTmin;
-    double mTmax;
-    double mStep;
+            return std::lerp(mVector[idxUnder], mVector[idxUpper], (idx - idxUnder) / (idxUpper - idxUnder));
+            //return interpolate( idx, (double)idxUnder, (double)idxUpper, mVector[idxUnder], mVector[idxUpper]);
+
+        } else {
+            return 0.;
+        }
+    }
+    double repartition_interpolate(double t) const {
+        // We need at least two points to interpolate
+        if (mRepartition.size() < 2 || t <= mTmin) {
+            return mRepartition.first();
+
+        } else if (t >= mTmax) {
+            return mRepartition.last();
+        }
+
+        const double prop = (t - mTmin) / (mTmax - mTmin);
+        const double idx = prop * (mRepartition.size() - 1); // tricky : if (tmax - tmin) = 2000, then calib size is 2001 !
+        const int idxUnder = (int)floor(idx);
+        const int idxUpper = (int)ceil(idx);//idxUnder + 1;
+
+        if (idxUnder == idxUpper) {
+            return mRepartition[idxUnder];
+
+        } else if (mRepartition[idxUnder] != 0. && mRepartition[idxUpper] != 0.) {
+            // Important for gate: no interpolation around gates
+
+            return std::lerp(mRepartition[idxUnder], mRepartition[idxUpper], (idx - idxUnder) / (idxUpper - idxUnder));
+            //return interpolate( idx, (double)idxUnder, (double)idxUpper, mVector[idxUnder], mVector[idxUpper]);
+
+        } else {
+            return 0.;
+        }
+    }
 };
 
 QDataStream &operator<<( QDataStream &stream, const CalibrationCurve &data );

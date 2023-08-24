@@ -55,9 +55,9 @@ public:
     virtual ~PluginDensity();
 
     //virtual function
-    long double getLikelihood(const double &t, const QJsonObject &data);
+    long double getLikelihood(const double t, const QJsonObject &data);
     bool withLikelihoodArg() {return true; }
-    QPair<long double, long double > getLikelihoodArg(const double &t, const QJsonObject &data);
+    QPair<long double, long double > getLikelihoodArg(const double t, const QJsonObject &data);
     
     QPair<double,double> getTminTmaxRefsCurve(const QJsonObject &data) const;
     double getMinStepRefsCurve(const QJsonObject &data) const;

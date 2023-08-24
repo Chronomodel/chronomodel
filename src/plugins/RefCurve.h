@@ -46,10 +46,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class RefCurve
 {
 public:
-    RefCurve();
-    virtual ~RefCurve();
-
-public:
     QString mName;
 
     QMap<double, double> mDataMean;
@@ -73,6 +69,13 @@ public:
 
     double mDataInfMin;
     double mDataInfMax;
+
+public:
+    RefCurve();
+    virtual ~RefCurve();
+    double interpolate_mean(const double t) const;
+
+
 };
 
 #endif

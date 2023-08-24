@@ -61,7 +61,7 @@ PluginUniform::~PluginUniform()
 
 }
 
-long double PluginUniform::getLikelihood(const double& t, const QJsonObject& data)
+long double PluginUniform::getLikelihood(const double t, const QJsonObject &data)
 {
     const double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
     const double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
@@ -117,7 +117,7 @@ PluginFormAbstract* PluginUniform::getForm()
     return form;
 }
 // Convert old project versions
-QJsonObject PluginUniform::checkValuesCompatibility(const QJsonObject& values)
+QJsonObject PluginUniform::checkValuesCompatibility(const QJsonObject &values)
 {
     QJsonObject result = values;
 
@@ -128,7 +128,7 @@ QJsonObject PluginUniform::checkValuesCompatibility(const QJsonObject& values)
     return result;
 }
 
-QJsonObject PluginUniform::fromCSV(const QStringList& list, const QLocale& csvLocale)
+QJsonObject PluginUniform::fromCSV(const QStringList &list, const QLocale &csvLocale)
 {
     QJsonObject json;
     if (list.size() >= csvMinColumns()) {
@@ -143,7 +143,7 @@ QJsonObject PluginUniform::fromCSV(const QStringList& list, const QLocale& csvLo
     return json;
 }
 
-QStringList PluginUniform::toCSV(const QJsonObject& data, const QLocale& csvLocale) const
+QStringList PluginUniform::toCSV(const QJsonObject &data, const QLocale &csvLocale) const
 {
     QStringList list;
     list << csvLocale.toString(data.value(DATE_UNIFORM_MIN_STR).toDouble());
@@ -165,11 +165,8 @@ QString PluginUniform::getDateDesc(const Date* date) const
     return result;
 }
 
-bool PluginUniform::isDateValid(const QJsonObject& data, const StudyPeriodSettings& settings)
+bool PluginUniform::isDateValid(const QJsonObject &, const StudyPeriodSettings &)
 {
-    (void) data;
-    (void) settings;
-
     return true;
  }
 // ------------------------------------------------------------------
@@ -193,7 +190,7 @@ PluginSettingsViewAbstract* PluginUniform::getSettingsView()
     return nullptr;
 }
 
-QPair<double,double> PluginUniform::getTminTmaxRefsCurve(const QJsonObject& data) const
+QPair<double,double> PluginUniform::getTminTmaxRefsCurve(const QJsonObject &data) const
 {
     const double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
     const double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
@@ -201,7 +198,7 @@ QPair<double,double> PluginUniform::getTminTmaxRefsCurve(const QJsonObject& data
 }
 
 
-long double PluginUniform::getLikelihoodCombine(const double& t, const QJsonArray& subData)
+long double PluginUniform::getLikelihoodCombine(const double t, const QJsonArray &subData)
 {
     double min (-INFINITY);
     double max (INFINITY);
