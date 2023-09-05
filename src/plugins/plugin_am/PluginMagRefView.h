@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #if USE_PLUGIN_AM
 
-#include "../GraphViewRefAbstract.h"
+#include "GraphViewRefAbstract.h"
 
 class PluginMag;
 class GraphView;
@@ -56,7 +56,7 @@ public:
     explicit PluginMagRefView(QWidget* parent = 0);
     virtual ~PluginMagRefView();
 
-    void setDate(const Date& d, const StudyPeriodSettings& settings);
+    void setDate(const Date &d, const StudyPeriodSettings &settings);
 
 public slots:
     void zoomX(const double min, const double max);
@@ -65,8 +65,21 @@ protected:
     void resizeEvent(QResizeEvent* e);
 
 private:
-   // GraphView* mGraph;
+    RefCurve combine_curve_ID(double incl, double decl, const double alpha95, const RefCurve &curve_I, const RefCurve &curve_D, double &mean_date) const;
+    RefCurve combine_curve_IF(const double incl, const double alpha95, const double field, const double error_f, const RefCurve &curve_I, const RefCurve &curve_D, double &mean_date) const;
+    RefCurve combine_curve_IDF(double incl, double decl, const double alpha95, double field, const double error_f, const RefCurve &curve_I, const RefCurve &curve_D, const RefCurve &curve_F, double &mean_date) const;
+
+    double compute_mean_ID(double incl, double decl, const double alpha95) const;
 };
+
+
+QMap<double, double> gaussian_filter(QMap<double, double> &map, const double sigma = 0.01);
+
+QMap<double, double> low_pass_filter(QMap<double, double> &map, const double Tc);
+
+double *hanning(int L, int N_fft);
+QMap<double, double> window_filter(QMap<double, double> &map, const double L);
+
 
 #endif
 #endif

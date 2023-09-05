@@ -93,190 +93,216 @@ long double PluginMag::Likelihood(const double t, const QJsonObject &data)
     const double iteration_mcmc = data.value(DATE_AM_ITERATION_STR).toDouble();
 
     // La partie des calculs de l'étalonnage
-    long double mesureIncl (0.l);
-    long double mesureDecl (0.l);
-    long double mesureField (0.l);
-    long double errorD (0.l);
-    long double errorI (0.l);
-    long double errorF (0.l);
+    //long double mesureIncl;
+    //long double mesureDecl;
+    //long double mesureField;
+    long double errorD;
+    long double errorI;
+    long double errorF;
+
+
+
+    // Lecture des différentes courbes d'étalonnage
+    const QString &refI_curve = data.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
+    const QString &refD_curve = data.value(DATE_AM_REF_CURVED_STR).toString().toLower();
+    const QString &refF_curve = data.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
+
+    // Déclaration des variables
+    long double vI;
+    long double I;
+    long double vD;
+    long double D;
+    long double vF;
+    long double F;
+    long double exponent = 0.;
+
+    long double refValueI;
+    long double refErrorI;
+    long double refValueD;
+    long double refErrorD;
+    long double refValueF;
+    long double refErrorF;
+    double w = 0;
+    long double rr;
+    long double si, si0;
+
     const ProcessTypeAM pta = static_cast<ProcessTypeAM> (data.value(DATE_AM_PROCESS_TYPE_STR).toInt());
 
     switch (pta) {
     case eInc:
-        mesureIncl = incl;
+        //mesureIncl = incl;
         errorI = alpha95 / 2.448l;
-        break;
-    case eDec:
-        mesureIncl = incl;
-        mesureDecl = decl;
-        errorD = alpha95 / (2.448l * cosl(incl * M_PIl / 180.l));
-        break;
-    case eField:
-        mesureField = field;
-        errorF = error_f;
-        break;
-    case eID:
-        mesureIncl = incl;
-        errorI = alpha95 / 2.448l;
-        mesureDecl = decl;
-        errorD = alpha95 / (2.448l * cosl(incl * M_PIl / 180.l));
-        break;
-    case eIF:
-        mesureIncl = incl;
-        errorI = alpha95 / 2.448l;
-        mesureField = field;
-        errorF = error_f;
-        break;
-    case eIDF:
-        mesureIncl = incl;
-        errorI = alpha95 / 2.448l;
-        mesureDecl = decl;
-        errorD = alpha95 / (2.448l * cosl(incl * M_PIl / 180.l));
-        mesureField = field;
-        errorF = error_f;
-        break;
-    default:
-        break;
-    }
 
-
-
-    // Lecture des diférentes courbes d'étalonnage
-    const QString refI_curve = data.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
-    const QString refD_curve = data.value(DATE_AM_REF_CURVED_STR).toString().toLower();
-    const QString refF_curve = data.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
-
-    // Déclaration des variables
-    long double vI (.0l);
-    long double I (.0l);
-    long double vD (.0l);
-    long double D (.0l);
-    long double vF (.0l);
-    long double F (.0l);
-    long double exponent  (0.l);
-
-    long double refValueI (0.l);
-    long double refErrorI (0.l);
-    long double refValueD (0.l);
-    long double refErrorD (0.l);
-    long double refValueF (0.l);
-    long double refErrorF (0.l);
-
-    if (pta == eInc){
         // Étalonnage  I
         refValueI = getRefCurveValueAt(refI_curve, t);
         refErrorI = getRefCurveErrorAt(refI_curve, t);
 
         vI = errorI*errorI + refErrorI*refErrorI;
-        I = -0.5l*powl((mesureIncl - refValueI), 2.l);
+        I = -0.5l*powl((incl - refValueI), 2.l);
 
-        exponent += expl(I/vI )/sqrtl(vI);
+        return expl(I/vI )/sqrtl(vI);
+        break;
 
-    }
-    else if (pta == eDec){
+    case eDec:
+        //mesureIncl = incl;
+        //mesureDecl = decl;
+        errorD = alpha95 / (2.448l * cosl(incl * rad));
+
         // Étalonnage D
-
         refValueD = getRefCurveValueAt(refD_curve, t);
         refErrorD = getRefCurveErrorAt(refD_curve, t);
 
         vD = errorD*errorD + refErrorD*refErrorD ;
-        D = -0.5l*powl((mesureDecl - refValueD), 2.l);
+        D = -0.5l*powl((decl - refValueD), 2.l);
 
+        return expl(D/vD )/sqrtl(vD);
+        break;
 
-        exponent += expl(D/vD )/sqrtl(vD);
-
-    }
-    else if (pta == eField){
+    case eField:
+        //mesureField = field;
+        errorF = error_f;
         // Étalonnage directionnel : I et D
         refValueF = getRefCurveValueAt(refF_curve, t);
         refErrorF = getRefCurveErrorAt(refF_curve, t);
 
         vF = errorF*errorF + refErrorF*refErrorF ;
-        F = -0.5l*powl((mesureField - refValueF), 2.l);
+        F = -0.5l*powl((field - refValueF), 2.l);
 
-        exponent += expl(F/vF )/sqrtl(vF);
-    }
-    else if(pta == eID){
+        return expl(F/vF )/sqrtl(vF);
+        break;
+
+    case eID:
+        //mesureIncl = incl;
+        errorI = alpha95 / 2.448l;
+        //mesureDecl = decl;
+        errorD = alpha95 / (2.448l * cosl(incl * rad));
+
         // Étalonnage directionnel : I et D
         refValueI = getRefCurveValueAt(refI_curve, t);
         refErrorI = getRefCurveErrorAt(refI_curve, t);
+
         refValueD = getRefCurveValueAt(refD_curve, t);
         refErrorD = getRefCurveErrorAt(refD_curve, t);
 
         vI = errorI*errorI + refErrorI*refErrorI;
-        I = -0.5l*powl((mesureIncl - refValueI), 2.l);
+        I = -0.5l*powl((incl - refValueI), 2.l);
         vD = errorD*errorD + refErrorD*refErrorD ;
-        D = -0.5l*powl((mesureDecl - refValueD), 2.l);
+        D = -0.5l*powl((decl - refValueD), 2.l);
 
         // Simulation des valeurs de sigmaID
-        QVector <double> sigmaID(iteration_mcmc);
+        /*QVector <double> sigmaID(iteration_mcmc);
         double w = 0;
-       for(int i=0; i < sigmaID.size(); ++i) {
+       for (int i=0; i < sigmaID.size(); ++i) {
                w += 1/iteration_mcmc;
              sigmaID[i] = errorI*errorI*((1. - w)/w);
-         }
-
-        long double rr = powl((cosl(mesureIncl*M_PIl/180.l)),2.l);
-        for(int j = 0; j < sigmaID.size(); ++j){
-          exponent += expl(I/(vI + sigmaID[j]) + D/(vD + sigmaID[j]/rr))/sqrtl((vI + sigmaID[j])*(vD + sigmaID[j]/rr));
         }
-    }
-    else if(pta == eIF){
+
+        long double rr = powl((cosl(mesureIncl * rad)), 2.l);
+        for (auto& sID : sigmaID){
+          exponent += expl(I/(vI + sID) + D/(vD + sID/rr))/sqrtl((vI + sID)*(vD + sID/rr));
+        }
+        */
+        // Code Optimization
+        rr = pow((cos(incl * rad)), 2.);
+        for (int i=0; i < iteration_mcmc; ++i) {
+            w += 1/iteration_mcmc;
+            si = errorI*errorI*((1. - w)/w);
+            exponent += expl(I/(vI + si) + D/(vD + si/rr))/sqrtl((vI + si)*(vD + si/rr));
+        }
+        return exponent;
+        break;
+
+    case eIF:
+        //mesureIncl = incl;
+        errorI = alpha95 / 2.448l;
+        //mesureField = field;
+        errorF = error_f;
         // Étalonnage vectoriel : I et F
         refValueI = getRefCurveValueAt(refI_curve, t);
         refErrorI = getRefCurveErrorAt(refI_curve, t);
+
         refValueF = getRefCurveValueAt(refF_curve, t);
         refErrorF = getRefCurveErrorAt(refF_curve, t);
 
         vI = errorI*errorI + refErrorI*refErrorI;
-        I = -0.5l*powl((mesureIncl - refValueI), 2.l);
+        I = -0.5l*powl((incl - refValueI), 2.l);
         vF = errorF*errorF + refErrorF*refErrorF ;
-        F = -0.5l*powl((mesureField - refValueF), 2.l);
+        F = -0.5l*powl((field - refValueF), 2.l);
         // Calcul de s0IF
-        long double s0IF = 0.5*(errorF*errorF + powl(errorI*mesureField*M_PIl/180.l,2.l));
+        si0 = 0.5*(errorF*errorF + powl(errorI*field * rad, 2.l));
         // Simulation des valeurs de sigmaIF
-        QVector <double> sigmaIF(iteration_mcmc);
+        /* QVector <double> sigmaIF(iteration_mcmc);
         double w =0;
-       for(int i=0; i < sigmaIF.size(); ++i) {
-              w += 1/iteration_mcmc;
-             sigmaIF[i] = s0IF*((1. - w)/w);
-         }
-       for(int j = 0; j < sigmaIF.size(); ++j){
-           exponent += expl(I/(vI + sigmaIF[j]/(mesureField*mesureField)) + F/(vF + sigmaIF[j]))/sqrtl((vI + sigmaIF[j]/(mesureField*mesureField))*(vF + sigmaIF[j]));
-       }
-    }
-    else if(pta == eIDF) {
-        // Étalonnage vectoriel : I, D et F
+        for (int i=0; i < sigmaIF.size(); ++i) {
+          w += 1/iteration_mcmc;
+          sigmaIF[i] = s0IF*((1. - w)/w);
+        }
+        for (auto& sIF : sigmaIF) {
+          exponent += expl(I/(vI + sIF/(mesureField*mesureField)) + F/(vF + sIF))/sqrtl((vI + sIF/(mesureField*mesureField))*(vF + sIF));
+        } */
+        // Code Optimization
+        for (int i=0; i < iteration_mcmc; ++i) {
+            w += 1/iteration_mcmc;
+            si = si0*((1. - w)/w);
+            exponent += expl(I/(vI + si/(field*field)) + F/(vF + si))/sqrtl((vI + si/(field*field))*(vF + si));
+        }
+        return exponent;
+        break;
+
+    case eIDF:
+        //mesureIncl = incl;
+        errorI = alpha95 / 2.448l;
+        //mesureDecl = decl;
+        errorD = alpha95 / (2.448l * cosl(incl * rad));
+        //mesureField = field;
+        errorF = error_f;
+
         refValueI = getRefCurveValueAt(refI_curve, t);
         refErrorI = getRefCurveErrorAt(refI_curve, t);
+
         refValueD = getRefCurveValueAt(refD_curve, t);
         refErrorD = getRefCurveErrorAt(refD_curve, t);
+
         refValueF = getRefCurveValueAt(refF_curve, t);
         refErrorF = getRefCurveErrorAt(refF_curve, t);
 
-        vI = errorI*errorI + refErrorI*refErrorI ;
-        I = -0.5l*powl((mesureIncl - refValueI), 2.l);
-        vD = errorD*errorD + refErrorD*refErrorD ;
-        D = -0.5l*powl((mesureDecl - refValueD), 2.l);
-        vF = errorF*errorF + refErrorF*refErrorF ;
-        F = -0.5l*powl((mesureField - refValueF), 2.l);
+        vI = errorI*errorI + refErrorI*refErrorI;
+        I = -0.5l*powl((incl - refValueI), 2.l);
 
-        long double rr = powl((mesureField * cosl(mesureIncl * M_PIl / 180.l)), 2);
-         // calcul de s0IDF
-        long double s0IDF = (errorF*errorF + 2.l*powl((errorI*mesureField*M_PIl/180.l), 2))/3;
+        vD = errorD*errorD + refErrorD*refErrorD ;
+        D = -0.5l*powl((decl - refValueD), 2.l);
+
+        vF = errorF*errorF + refErrorF*refErrorF ;
+        F = -0.5l*powl((field - refValueF), 2.l);
+
+
+        rr = powl((field * cosl(incl * rad)), 2);
+            // calcul de s0IDF
+        si0 = (errorF*errorF + 2.l*powl((errorI*field * rad), 2))/3;
+
         // Simulation des valeurs de sigmaIDF
-        QVector <long double> sigmaIDF(iteration_mcmc);
+        /*QVector <long double> sigmaIDF(iteration_mcmc);
         double w = 0;
-       for (int i=0; i < sigmaIDF.size(); ++i) {
+        for (int i=0; i < sigmaIDF.size(); ++i) {
              w += 1/iteration_mcmc;
              sigmaIDF[i] = s0IDF*((1. - w)/w);
-         }
-       for (int j = 0; j < sigmaIDF.size(); ++j){
-           exponent += expl(I/(vI + sigmaIDF[j]/(mesureField*mesureField)) + D/(vD + sigmaIDF[j]/rr)  + F/(vF + sigmaIDF[j]))/sqrtl((vI + sigmaIDF[j]/(mesureField*mesureField))*(vF + sigmaIDF[j])*(vD + sigmaIDF[j]/rr));
-       }
+        }
+        for (auto& sIDF : sigmaIDF) {
+             exponent += expl(I/(vI + sIDF/(mesureField*mesureField)) + D/(vD + sIDF/rr)  + F/(vF + sIDF))/sqrtl((vI + sIDF/(mesureField*mesureField))*(vF + sIDF)*(vD + sIDF/rr));
+        }*/
+        // Code Optimization
+        for (int i=0; i < iteration_mcmc; ++i) {
+            w += 1/iteration_mcmc;
+            si = si0*((1. - w)/w);
+            exponent += expl(I/(vI + si/(field*field)) + D/(vD + si/rr)  + F/(vF + si))/sqrtl((vI + si/(field*field))*(vF + si)*(vD + si/rr));
+        }
+        return exponent;
+        break;
+    default:
+        return 0.;
+        break;
     }
 
-    return exponent;
 }
 
 // Properties
@@ -365,20 +391,20 @@ QString PluginMag::getDateDesc(const Date* date) const
             break;
 
         case eID:
-            result += tr("MCMC ID = (%1; %2; α 95 : %3)").arg(locale.toString(incl), locale.toString(decl), locale.toString(alpha95)) ;
+            result += tr("ID = (%1; %2; α 95 : %3)").arg(locale.toString(incl), locale.toString(decl), locale.toString(alpha95)) ;
             result += tr("; (%1 | %2)").arg(ref_curve_i, ref_curve_d);
             result += tr("; (Iter : %1)").arg(locale.toString(iteration_mcmc));
             break;
 
         case eIF:
-            result += tr("MCMC IF = (%1; %2)").arg(locale.toString(incl), locale.toString(field));
+            result += tr("IF = (%1; %2)").arg(locale.toString(incl), locale.toString(field));
             result += tr("; (α 95; F Error) =  (%1; %2)").arg(locale.toString(alpha95), locale.toString(error_f));
             result += tr("; (%1 | %2)").arg(ref_curve_i, ref_curve_f);
             result += tr("; (Iter : %1)").arg(locale.toString(iteration_mcmc));
             break;
 
         case eIDF:
-            result += tr("MCMC IDF = (%1; %2; %3)").arg(locale.toString(incl), locale.toString(decl), locale.toString(field));
+            result += tr("IDF = (%1; %2; %3)").arg(locale.toString(incl), locale.toString(decl), locale.toString(field));
             result += tr(" ; (α 95; F Error) = (%1; %2)").arg(locale.toString(alpha95), locale.toString(error_f));
             result += tr("; (%1 | %2 | %3)").arg(ref_curve_i, ref_curve_d, ref_curve_f);
             result += tr("; (Iter : %1)").arg(locale.toString(iteration_mcmc));
@@ -812,7 +838,7 @@ RefCurve PluginMag::loadRefFile(QFileInfo refFile)
 }
 
 //Reference Values & Errors
-double PluginMag::getRefValueAt(const QJsonObject& data, const double& t)
+double PluginMag::getRefValueAt(const QJsonObject &data, const double t)
 {
     QString ref_curve;
     const ProcessTypeAM pta = static_cast<ProcessTypeAM> (data.value(DATE_AM_PROCESS_TYPE_STR).toInt());
@@ -843,7 +869,7 @@ double PluginMag::getRefValueAt(const QJsonObject& data, const double& t)
     return getRefCurveValueAt(ref_curve, t);
 }
 
-double PluginMag::getRefErrorAt(const QJsonObject& data, const double& t)
+double PluginMag::getRefErrorAt(const QJsonObject &data, const double t)
 {
     QString ref_curve;
     const ProcessTypeAM pta = static_cast<ProcessTypeAM> (data.value(DATE_AM_PROCESS_TYPE_STR).toInt());

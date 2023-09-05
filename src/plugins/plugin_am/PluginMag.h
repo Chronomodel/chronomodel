@@ -44,6 +44,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "../PluginAbstract.h"
 
+
+const long double rad = M_PIl/180.l;
+
 enum ProcessTypeAM
 {
     eCombine = -1,
@@ -121,8 +124,8 @@ public:
     QString getRefsPath() const;
     RefCurve loadRefFile(QFileInfo refFile);
 
-    double getRefValueAt(const QJsonObject& data, const double& t);
-    double getRefErrorAt(const QJsonObject& data, const double& t);
+    double getRefValueAt(const QJsonObject& data, const double t);
+    double getRefErrorAt(const QJsonObject& data, const double t);
 
     QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
 

@@ -44,8 +44,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphView.h"
 #include "StdUtilities.h"
 #include "Painting.h"
+#include "Generator.h"
+
+
+#include "fftw3.h"
 
 #include <QtWidgets>
+
+const int nb_iter = 10; // iter MCMC
+const int Ns = 10; // integration shrinkage
 
 PluginMagRefView::PluginMagRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
@@ -64,7 +71,7 @@ PluginMagRefView::~PluginMagRefView()
 
 }
 
-void PluginMagRefView::setDate(const Date& date, const StudyPeriodSettings& settings)
+void PluginMagRefView::setDate(const Date &date, const StudyPeriodSettings &settings)
 {
     GraphViewRefAbstract::setDate(date, settings);
 
@@ -74,6 +81,14 @@ void PluginMagRefView::setDate(const Date& date, const StudyPeriodSettings& sett
         double tmaxDisplay;
         const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
         const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
+
+        PluginMag* plugin = static_cast<PluginMag*>(date.mPlugin);
+        const QString &ref_curve_I = date.mData.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
+        const QString &ref_curve_D = date.mData.value(DATE_AM_REF_CURVED_STR).toString().toLower();
+        const QString &ref_curve_F = date.mData.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
+
+
+        RefCurve curve;
 
         if (!date.isNull() && date.mIsValid) {
             const double t3 = date.getFormatedTminCalib();
@@ -96,6 +111,7 @@ void PluginMagRefView::setDate(const Date& date, const StudyPeriodSettings& sett
         mGraph->showInfos(true);
         mGraph->setFormatFunctX(nullptr);
 
+        double ID_mean;
         if (!date.isNull()) {
 
             const double incl = date.mData.value(DATE_AM_INC_STR).toDouble();
@@ -107,33 +123,31 @@ void PluginMagRefView::setDate(const Date& date, const StudyPeriodSettings& sett
 
             const ProcessTypeAM pta = static_cast<ProcessTypeAM> (date.mData.value(DATE_AM_PROCESS_TYPE_STR).toInt());
 
-            QString ref_curve;
             switch (pta) {
-            case eInc:
-                ref_curve = date.mData.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
-                break;
-            case eDec:
-                ref_curve = date.mData.value(DATE_AM_REF_CURVED_STR).toString().toLower();
-                break;
-            case eField:
-                ref_curve = date.mData.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
-                break;
-          /*  case eID:
-                mIDRadio->setChecked(true);
-                break;
-            case eIF:
-                mIFRadio->setChecked(true);
-                break;
-            case eIDF:
-                mIDFRadio->setChecked(true);
-                break;
-                */
-            default:
-                break;
-            }
+                case eInc:
+                    curve = plugin->mRefCurves.value(ref_curve_I);
+                    break;
+                case eDec:
+                    curve = plugin->mRefCurves.value(ref_curve_D);
+                    break;
+                case eField:
+                    curve = plugin->mRefCurves.value(ref_curve_F);
+                    break;
 
-            if (ref_curve == "")
-                return;
+                // Combinaison
+                case eID:
+                    curve = combine_curve_ID(incl, decl, alpha95, plugin->mRefCurves.value(ref_curve_I), plugin->mRefCurves.value(ref_curve_D), ID_mean);
+                    break;
+                case eIF:
+                    curve = combine_curve_IF(incl, alpha95, field, error_f, plugin->mRefCurves.value(ref_curve_I), plugin->mRefCurves.value(ref_curve_F), ID_mean);
+                    break;
+                case eIDF:
+                    curve = combine_curve_IDF(incl, decl, alpha95, field, error_f, plugin->mRefCurves.value(ref_curve_I), plugin->mRefCurves.value(ref_curve_D), plugin->mRefCurves.value(ref_curve_F), ID_mean);
+                    break;
+
+                default:
+                    break;
+            }
 
             /* ----------------------------------------------
              *  Reference curve
@@ -141,9 +155,6 @@ void PluginMagRefView::setDate(const Date& date, const StudyPeriodSettings& sett
 
             double tminRef = date.getFormatedTminRefCurve();
             double tmaxRef = date.getFormatedTmaxRefCurve();
-
-            PluginMag* plugin = static_cast<PluginMag*>(date.mPlugin);
-            const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
 
             if (curve.mDataMean.isEmpty()) {
                 GraphZone zone;
@@ -189,7 +200,7 @@ void PluginMagRefView::setDate(const Date& date, const StudyPeriodSettings& sett
                 const double t (iPt.key());
                 const double tDisplay = DateUtils::convertToAppSettingsFormat(t);
 
-                const double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
+                const double error = curve.interpolate_error(t) * 1.96;
 
                 curveG[tDisplay] = iPt.value();
                 curveG95Sup[tDisplay] = iPt.value() + error;
@@ -229,16 +240,13 @@ void PluginMagRefView::setDate(const Date& date, const StudyPeriodSettings& sett
                 avg = field;
                 error = error_f;
                 break;
-          /*  case eID:
-                mIDRadio->setChecked(true);
-                break;
+
+            case eID:
             case eIF:
-                mIFRadio->setChecked(true);
-                break;
             case eIDF:
-                mIDFRadio->setChecked(true);
+                avg = ID_mean;
+                error = 0.;
                 break;
-                */
             default:
                 break;
             }
@@ -251,36 +259,37 @@ void PluginMagRefView::setDate(const Date& date, const StudyPeriodSettings& sett
             /* ----------------------------------------------
              *  Measure curve
              * ---------------------------------------------- */
+            if (pta==eInc || pta==eDec || pta==eField) {
+                GraphCurve curveMeasure;
+                curveMeasure.mName = "Measurement";
 
-            GraphCurve curveMeasure;
-            curveMeasure.mName = "Measurement";
+                curveMeasure.mPen.setColor(mMeasureColor);
+                QColor curveColor(mMeasureColor);
+                curveColor.setAlpha(50);
+                curveMeasure.mBrush = curveColor;
 
-            curveMeasure.mPen.setColor(mMeasureColor);
-            QColor curveColor(mMeasureColor);
-            curveColor.setAlpha(50);
-            curveMeasure.mBrush = curveColor;
+                curveMeasure.mType = GraphCurve::CurveType::eVerticalQMap;
 
-            curveMeasure.mType = GraphCurve::CurveType::eVerticalQMap;
-
-            /* 5000 pts are used on vertical measurement
+                /* 5000 pts are used on vertical measurement
              * because the y scale auto adjusts depending on x zoom.
              * => the visible part of the measurement may be very reduced !
              */
-            const double step = (yMax - yMin) / 4999.;
-            QMap<double,double> measureCurve;
+                const double step = (yMax - yMin) / 4999.;
+                QMap<double,double> measureCurve;
 
-            measureCurve[yMin] = 0.;
-            for (int i = 1; i< 4999; i++) {
-                const double y = yMin + i*step;
-                measureCurve[y] = exp(-0.5 * pow((y - avg) / error, 2.));
+                measureCurve[yMin] = 0.;
+                for (int i = 1; i< 4999; i++) {
+                   const double y = yMin + i*step;
+                   measureCurve[y] = exp(-0.5 * pow((y - avg) / error, 2.));
 
+                }
+                measureCurve[yMax] = 0.;
+
+
+                measureCurve = normalize_map(measureCurve);
+                curveMeasure.mData = measureCurve;
+                mGraph->add_curve(curveMeasure);
             }
-            measureCurve[yMax] = 0.;
-
-
-            measureCurve = normalize_map(measureCurve);
-            curveMeasure.mData = measureCurve;
-            mGraph->add_curve(curveMeasure);
 
 
             // ----------------------------------------------
@@ -305,13 +314,32 @@ void PluginMagRefView::setDate(const Date& date, const StudyPeriodSettings& sett
             curveMeasureInf.mPen.setStyle(Qt::DashLine);
             curveMeasureInf.mType = GraphCurve::CurveType::eHorizontalLine;
 
-            curveMeasureAvg.mHorizontalValue = avg;
-            curveMeasureSup.mHorizontalValue = avg + error;
-            curveMeasureInf.mHorizontalValue = avg - error;
+            switch (pta) {
+                case eInc:
+                case eDec:
+                case eField:
+                    curveMeasureAvg.mHorizontalValue = avg;
+                    curveMeasureSup.mHorizontalValue = avg + error;
+                    curveMeasureInf.mHorizontalValue = avg - error;
 
-            mGraph->add_curve(curveMeasureAvg);
-            mGraph->add_curve(curveMeasureSup);
-            mGraph->add_curve(curveMeasureInf);
+                    mGraph->add_curve(curveMeasureAvg);
+                    mGraph->add_curve(curveMeasureSup);
+                    mGraph->add_curve(curveMeasureInf);
+                break;
+                case eID:
+                case eIF:
+                case eIDF:
+                    curveMeasureAvg.mHorizontalValue = avg;
+                    curveMeasureSup.mHorizontalValue = error;
+
+                    mGraph->add_curve(curveMeasureAvg);
+                    mGraph->add_curve(curveMeasureSup);
+                 break;
+                default:
+                break;
+            }
+
+
             mGraph->setFormatFunctY(nullptr);
 
             // Y scale and RangeY are define in graphView::zommX()
@@ -359,6 +387,724 @@ void PluginMagRefView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
     mGraph->setGeometry(rect());
+}
+
+RefCurve PluginMagRefView::combine_curve_ID(double incl,  double decl, const double alpha95, const RefCurve &curve_I, const RefCurve &curve_D, double &mean_date) const
+{
+    RefCurve result;
+
+    // intervalle commun
+    const double min_ti = std::max(curve_I.mTmin, curve_D.mTmin);
+    const double max_ti = std::min(curve_I.mTmax, curve_D.mTmax);
+
+    if (min_ti>= max_ti)
+        return result;
+
+    double min_step = std::max(curve_I.mMinStep, curve_D.mMinStep);
+
+    int nb_pts = ceil((max_ti - min_ti)/min_step);
+    // correction du pas
+    min_step = (max_ti - min_ti) / nb_pts;
+    // ajout d'une case car nb_pts = (max_ti - min_ti)/min_step) +1
+    ++nb_pts;
+
+    incl = incl *rad;
+    decl = decl *rad;
+    const double s0xy = alpha95/140;
+
+    double mean = 0.;
+    double variance = 0.;
+    double previousMean = 0.;
+    double previousVariance = 0.;
+
+    mean_date = 0.;
+    double previousMean_date = 0.;
+
+    for (int var = 0; var < nb_pts; ++var) {
+        const double t = min_ti + var*min_step;
+
+        const double incl_t = curve_I.interpolate_mean(t) * rad;
+        const double decl_t = curve_D.interpolate_mean(t) *rad ;
+
+        const double x_t = sin(incl) * cos(incl_t) * cos(decl_t - decl) - cos(incl)*sin(incl_t);
+        const double y_t = cos(incl_t)*sin(decl_t - decl);
+
+        const double Sxy_t = curve_I.interpolate_error(t) * 2.448 / 140 ;
+        int iter_date = 0;
+
+        for (int iter = 0; iter < nb_iter; ++iter) {
+            // tirrage aléatoire autour du point à dater
+            const double xID = Generator::gaussByBoxMuller(0, s0xy);
+            const double yID = Generator::gaussByBoxMuller(0, s0xy);
+
+            // Calcul pour point de ref
+            const double xID1 = Generator::gaussByBoxMuller(0, s0xy);
+            const double yID1 = Generator::gaussByBoxMuller(0, s0xy);
+
+            const double d0 = sqrt(pow(xID-xID1 ,2) + pow(yID-yID1 ,2)) / rad;
+            ++iter_date;
+            previousMean_date = std::move(mean_date);
+            mean_date = previousMean_date + (d0 - previousMean_date) / iter_date;
+
+            // tirage aléatoire autour du point sur la courbe
+            const double xID_t = Generator::gaussByBoxMuller(x_t, Sxy_t);
+            const double yID_t = Generator::gaussByBoxMuller(y_t, Sxy_t);
+
+            const double d = sqrt(pow(xID-xID_t ,2) + pow(yID-yID_t ,2)) / rad;
+
+            previousMean = std::move(mean);
+            previousVariance = std::move(variance);
+            mean = previousMean + (d - previousMean) / (iter+1);
+            variance = previousVariance + ( d - previousMean)*( d - mean);
+
+        }
+        variance /= nb_iter;
+
+        result.mDataMean[t] = mean;
+        result.mDataError[t] = sqrt(variance);
+    }
+    result.mMinStep = min_step;
+    result.mTmin = min_ti;
+    result.mTmax = max_ti;
+
+    //result.mDataMean = window_filter(result.mDataMean, (max_ti-min_ti)/100);
+    //result.mDataError = window_filter(result.mDataError, (max_ti-min_ti)/100);
+
+    //result.mDataMean = gaussian_filter(result.mDataMean, (max_ti-min_ti)/100);
+    //result.mDataError = gaussian_filter(result.mDataError, (max_ti-min_ti)/100);
+
+    //result.mDataMean = low_pass_filter(result.mDataMean, 20.);
+    //result.mDataError = low_pass_filter(result.mDataError, 20);
+
+    return result;
+}
+
+RefCurve PluginMagRefView::combine_curve_IF(double incl, const double alpha95, const double field, const double error_f, const RefCurve &curve_I, const RefCurve &curve_F, double &mean_date) const
+{
+    RefCurve result;// intervalle commun
+
+    const double min_ti = std::max(curve_I.mTmin, curve_F.mTmin);
+    const double max_ti = std::min(curve_I.mTmax, curve_F.mTmax);
+
+    if (min_ti>= max_ti)
+        return result;
+
+    double min_step = std::max(curve_I.mMinStep, curve_F.mMinStep);
+
+    int nb_pts = ceil((max_ti - min_ti)/min_step);
+    // correction du pas
+    min_step = (max_ti - min_ti) / nb_pts;
+    // ajout d'une case car nb_pts = (max_ti - min_ti)/min_step) +1
+    ++nb_pts;
+
+    //incl = incl ;
+    const double sI = alpha95/2.448;
+
+    // Calcul de s0IF
+    double s0IF = 0.5*(pow(error_f, 2) + pow(sI*field*rad , 2.));
+
+    double w = 0.;
+
+    std::vector<double> sIF;
+    for (int i = 0; i < Ns; ++i) {
+        w += 1./(double)Ns;
+        sIF.push_back(s0IF * ((1-w)/w));
+    }
+
+
+    mean_date = 0.;
+    double previousMean_date = 0.;
+
+    for (int var = 0; var < nb_pts; ++var) {
+
+        double mean = 0.;
+        double variance = 0.;
+        double previousMean = 0.;
+        double previousVariance = 0.;
+
+        const double t = min_ti + var*min_step;
+
+        const double I_t = curve_I.interpolate_mean(t);
+        const double F_t = curve_F.interpolate_mean(t);
+
+        const double sI_t  = curve_I.interpolate_error(t);
+        const double sF_t  = curve_F.interpolate_error(t);
+
+        int iter_date = 0;
+
+        for (int iter = 0; iter < nb_iter; ++iter) {
+            // tirrage aléatoire autour du point à dater
+            const double I = Generator::gaussByBoxMuller(incl, sI);
+            const double F = Generator::gaussByBoxMuller(field, error_f);
+
+            // Calcul pour point de ref
+            const double I0 = Generator::gaussByBoxMuller(incl, sI);
+            const double F0 = Generator::gaussByBoxMuller(field, error_f);
+
+            double p1 = 0;
+            for (auto sif : sIF) {
+                const double sF1 = 2.*pow(error_f, 2) + sif;
+                const double sI1 = 2.*pow(sI, 2) + (sif / pow(F, 2.));
+
+                const double pIF1 = pow(F-F0, 2.)/sF1 + pow(I-I0, 2.)/sI1;
+                p1 += exp(-0.5*pIF1)/(sqrt(sF1) * sqrt(sI1)) ;
+
+            }
+
+            const double d0 = sqrt(-log(p1/(nb_pts*Ns)));
+
+            ++iter_date;
+            previousMean_date = std::move(mean_date);
+            mean_date = previousMean_date + (d0 - previousMean_date) / iter_date;
+
+            // tirage aléatoire autour du point sur la courbe
+            const double I0_t = Generator::gaussByBoxMuller(I_t, sI_t);
+            const double F0_t = Generator::gaussByBoxMuller(F_t, sF_t);
+
+            double p = 0;
+            for (auto sif : sIF) {
+                const double sF1 = pow(error_f, 2) + sif + pow(sF_t, 2.);
+                const double sI1 = pow(sI, 2) + (sif / pow(F, 2.))  + pow(sI_t, 2.);
+
+                const double pIF1 = pow(F-F0_t, 2.)/sF1 + pow((I-I0_t), 2.)/sI1;
+                p += exp(-0.5*pIF1)/(sqrt(sF1) * sqrt(sI1)) ;
+
+            }
+
+            const double d = sqrt(-log(p/(nb_pts*Ns)));
+
+
+            previousMean = std::move(mean);
+            previousVariance = std::move(variance);
+            mean = previousMean + (d - previousMean) / (iter+1);
+            variance = previousVariance + ( d - previousMean)*( d - mean);
+
+        }
+        variance /= nb_iter;
+
+        result.mDataMean[t] = mean;
+        result.mDataError[t] = sqrt(variance);
+    }
+
+
+    //result.mDataMean = gaussian_filter(result.mDataMean, (max_ti-min_ti)/100);
+    //result.mDataError = gaussian_filter(result.mDataError, (max_ti-min_ti)/100);
+
+    result.mMinStep = min_step;
+    result.mTmin = min_ti;
+    result.mTmax = max_ti;
+
+    return result;
+}
+
+
+RefCurve PluginMagRefView::combine_curve_IDF(double incl, double decl, const double alpha95, double field, const double error_f, const RefCurve &curve_I, const RefCurve &curve_D, const RefCurve &curve_F, double &mean_date) const
+{
+    RefCurve result;// intervalle commun
+
+    const double min_ti = std::max({curve_I.mTmin, curve_D.mTmin, curve_F.mTmin});
+    const double max_ti = std::min({curve_I.mTmax, curve_D.mTmax, curve_F.mTmax});
+
+    if (min_ti>= max_ti)
+        return result;
+
+    double min_step = std::max({curve_I.mMinStep, curve_D.mMinStep, curve_F.mMinStep});
+
+    int nb_pts = ceil((max_ti - min_ti)/min_step);
+    // correction du pas
+    min_step = (max_ti - min_ti) / nb_pts;
+    // ajout d'une case car nb_pts = (max_ti - min_ti)/min_step) +1
+    ++nb_pts;
+
+    const double sI = alpha95/2.448;
+    const double sD = alpha95/(2.448*cos(incl*rad));
+
+    const double s0IDF = (pow(error_f, 2.) + 2*pow(sI*field, 2.)) /3.;
+
+    mean_date = 0.; // calcul sur toute la courbe
+    double previousMean_date = 0.;
+
+    double w = 0.;
+
+    std::vector<double> sIDF;
+    for (int i = 0; i < Ns; ++i) {
+        w += 1./(double)Ns;
+        sIDF.push_back(s0IDF * ((1-w)/w));
+    }
+
+
+    for (int var = 0; var < nb_pts; ++var) {
+        double mean = 0.;
+        double variance = 0.;
+        double previousMean = 0.;
+        double previousVariance = 0.;
+
+
+        const double t = min_ti + var*min_step;
+
+        const double I_t = curve_I.interpolate_mean(t);
+        const double D_t = curve_D.interpolate_mean(t);
+        const double F_t = curve_F.interpolate_mean(t);
+
+        const double sI_t  = curve_I.interpolate_error(t);
+        const double sD_t  = curve_D.interpolate_error(t);
+        const double sF_t  = curve_F.interpolate_error(t);
+
+        int iter_date = 0;
+
+        for (int iter = 0; iter < nb_iter; ++iter) {
+
+            // tirage aléatoire autour du point à dater
+            const double I = Generator::gaussByBoxMuller(incl, sI);
+            const double D = Generator::gaussByBoxMuller(decl, sD);
+            const double F = Generator::gaussByBoxMuller(field, error_f);
+
+            // Calcul pour point de ref
+            const double I0 = Generator::gaussByBoxMuller(incl, sI);
+            const double D0 = Generator::gaussByBoxMuller(decl, sD);
+            const double F0 = Generator::gaussByBoxMuller(field, error_f);
+
+            double p1 = 0;
+            for (auto sidf : sIDF) {
+                const double sF11 = 2.*pow(error_f, 2.) + sidf;
+                const double sI11 = 2.*pow(sI, 2.) + (sidf / pow(field, 2.));
+                const double sD11 = 2.*pow(sD, 2.) + (sidf / (pow(field * cos(I*rad), 2.)));
+
+                const double pIDF1 = pow(F-F0, 2.)/sF11 + pow(I-I0, 2.)/sI11 + pow(D-D0, 2.)/sD11;
+                p1 += exp(-0.5*pIDF1)/(sqrt(sF11) * sqrt(sI11) * sqrt(sD11));
+            }
+
+            const double d0 = sqrt(-log(p1/(nb_pts*Ns)));
+
+            ++iter_date;
+            previousMean_date = std::move(mean_date);
+            mean_date = previousMean_date + (d0 - previousMean_date) / iter_date;
+
+            // tirage aléatoire autour du point sur la courbe
+            const double I0_t = Generator::gaussByBoxMuller(I_t, sI_t);
+            const double D0_t = Generator::gaussByBoxMuller(D_t, sD_t);
+            const double F0_t = Generator::gaussByBoxMuller(F_t, sF_t);
+
+            double p = 0;
+            for (auto& sidf : sIDF) {
+                const double sF1 = pow(error_f, 2.) + sidf + pow(sF_t, 2.);
+                const double sI1 = pow(sI, 2.) + (sidf / pow(field, 2.)) + pow(sI_t, 2.);
+                const double sD1 = pow(sD, 2.) + (sidf / (pow(field * cos(incl*rad), 2.))) + pow(sD_t, 2.);
+
+                const double pIDF1 = pow(F-F0_t, 2.)/sF1 + (pow(I-I0_t, 2.)/sI1 + pow(D-D0_t, 2.)/sD1);
+                p += exp(-0.5*pIDF1)/(sqrt(sF1) * sqrt(sI1) * sqrt(sD1)) ;
+            }
+
+            const double d = sqrt(-log(p/(nb_pts*Ns)));
+
+            previousMean = std::move(mean);
+            previousVariance = std::move(variance);
+            mean = previousMean + (d - previousMean) / (iter+1);
+            variance = previousVariance + ( d - previousMean)*( d - mean);
+
+        }
+        variance /= nb_iter;
+
+        result.mDataMean[t] = mean;
+        result.mDataError[t] = sqrt(variance);
+    }
+
+    //result.mDataMean = window_filter(result.mDataMean, (max_ti-min_ti)/100);
+    //result.mDataError = window_filter(result.mDataError, (max_ti-min_ti)/100);
+
+    //result.mDataMean = low_pass_filter(result.mDataMean, 20.);
+    //result.mDataError = low_pass_filter(result.mDataError, 20);
+
+    result.mMinStep = min_step;
+    result.mTmin = min_ti;
+    result.mTmax = max_ti;
+
+    return result;
+}
+
+/**
+ * @brief gaussian_filter, we assume a uniform step between values.
+ * @param map
+ * @param sigma, of the gaussian
+ * @return
+ */
+QMap<double, double> gaussian_filter(QMap<double, double> &map, const double sigma)
+{
+    std::vector<double> curve_input;
+
+    const double min = map.firstKey();
+    const double max = map.lastKey();
+
+    const double step = (max - min) / (map.size()-1);
+
+    for (auto [key, value] : map.asKeyValueRange()) {
+        //cout << key << ": " << value << Qt::endl;
+        curve_input.push_back(value);
+    }
+
+    /* ----- FFT -----
+             http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data
+            https://jperalta.wordpress.com/2006/12/12/using-fftw3/
+             */
+    qDebug() <<"filtre Gaussian";
+    //  data
+    const int inputSize = curve_input.size();
+
+    const double sigma_filter = sigma;// *(max - min)/ step;
+
+
+    const int gaussSize = std::max(inputSize, int(3*sigma));
+    const int paddingSize = 2*gaussSize;
+
+    const int N = gaussSize + 2*paddingSize;
+    const int NComplex = 2* (N/2)+1;
+
+    double *inputReal;
+    inputReal = new double [N];
+
+    fftw_complex *inputComplex;
+    inputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
+
+
+    // we could use std::copy
+    for (int i  = 0; i< paddingSize; i++) {
+        inputReal[i] = curve_input[0];
+    }
+    for (int i = 0; i< inputSize; i++) {
+        inputReal[i+paddingSize] = curve_input[i];
+    }
+    for (int i ( inputSize+paddingSize); i< N; i++) {
+        inputReal[i] = curve_input[N-1];
+    }
+    fftw_plan plan_input = fftw_plan_dft_r2c_1d(N, inputReal, inputComplex, FFTW_ESTIMATE);
+    fftw_execute(plan_input);
+
+    for (int i = 0; i < NComplex; ++i) {
+        const double s =  M_PI * (double)i / (double)N;
+        const double factor = exp(-2. * pow(s * sigma_filter, 2.));
+
+        inputComplex[i][0] *= factor;
+        inputComplex[i][1] *= factor;
+    }
+
+
+    double *outputReal;
+    outputReal = new double [N];
+
+
+    fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, inputComplex, outputReal, FFTW_ESTIMATE);
+    fftw_execute(plan_output);
+
+/*
+    for ( int i = 0; i < N ; i++) {
+        const double t = min - paddingSize* step + i* step;
+        results[t]= outputReal[i]/N;
+    }
+    */
+
+    QMap<double, double> results;
+    for ( int i = 0; i < inputSize; i++) {
+        const double t = min + i* step;
+        results[t] = outputReal[i + paddingSize]/N;
+    }
+
+    fftw_destroy_plan(plan_input);
+    fftw_destroy_plan(plan_output);
+    fftw_free(inputComplex);
+    delete [] inputReal;
+    delete [] outputReal;
+    fftw_cleanup();
+    return results;
+}
+
+/**
+ * @brief low_pass_filter, Since the signal exhibits a discontinuity,
+ * the filtered signal exhibits a significant disturbance at the extremities.
+ * (see Hanning filter)
+ * @param map
+ * @param Tc, Cut-off period, equal to 1/(cut-off frequency)
+ * @return
+ */
+
+QMap<double, double> low_pass_filter(QMap<double, double> &map, const double Tc)
+{
+    const double min = map.firstKey();
+    const double max = map.lastKey();
+
+    const double step = (max - min) / (map.size()-1);
+
+    /*for (auto [key, value] : map.asKeyValueRange()) {
+        //cout << key << ": " << value << Qt::endl;
+        curve_input.push_back(value);
+    }*/
+
+    /* ----- FFT -----
+     http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data
+     https://jperalta.wordpress.com/2006/12/12/using-fftw3/
+    */
+    qDebug() <<"[low_pass_filter] Tc ="<<Tc;
+
+    const int inputSize = map.size();
+    const int paddingSize = 1*inputSize;
+
+    const int N = inputSize + 2*paddingSize;
+
+    const int NComplex = 2* (N/2)+1;
+
+    double *inputReal;
+    inputReal = new double [N];
+
+    fftw_complex *inputComplex;
+    inputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
+
+    for (int i  = 0; i< paddingSize; i++) {
+        inputReal[i] = 0;
+    }
+    auto begin_map = map.begin();
+    for (int i = 0; i< inputSize; i++) {
+        inputReal[i+paddingSize] = begin_map++.value();
+    }
+    for (int i = inputSize+paddingSize; i< N; i++) {
+        inputReal[i] = 0;
+    }
+
+    fftw_plan plan_input = fftw_plan_dft_r2c_1d(N, inputReal, inputComplex, FFTW_ESTIMATE);
+    fftw_execute(plan_input);
+
+    const int n_cut = 3*(max-min)/(Tc *step); //3 = 2*padding +inputSize = 2*(1*inputSize) + inputsizeNComplex *
+    //qDebug()<<"n_cut"<<n_cut << "NComplex" << NComplex;
+
+    for (int i = 0; i < NComplex; ++i) {
+
+        if (i < n_cut) {
+            inputComplex[i][0] *= 1;
+            inputComplex[i][1] *= 1;
+
+        } else {
+            inputComplex[i][0] *= 0;
+            inputComplex[i][1] *= 0;
+        }
+    }
+
+
+    double *outputReal;
+    outputReal = new double [N];
+
+    fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, inputComplex, outputReal, FFTW_ESTIMATE);
+    fftw_execute(plan_output);
+
+    /*for ( int i = 0; i < N ; i++) {
+        const double t = min - paddingSize* step + i* step;
+        results[t]= outputReal[i]/N;
+    }*/
+
+    QMap<double, double> results;
+    for ( int i = 0; i < inputSize; i++) {
+        const double t = min + i* step;
+        results[t] = outputReal[i + paddingSize]/N;
+    }
+
+    fftw_destroy_plan(plan_input);
+    fftw_destroy_plan(plan_output);
+    fftw_free(inputComplex);
+    delete [] inputReal;
+    delete [] outputReal;
+    fftw_cleanup();
+
+    return results;
+}
+
+
+/*  function w = hanning(varargin)
+%   HANNING   Hanning window.
+%   HANNING(N) returns the N-point symmetric Hanning window in a column
+%   vector.  Note that the first and last zero-weighted window samples
+%   are not included.
+%
+%   HANNING(N,'symmetric') returns the same result as HANNING(N).
+%
+%   HANNING(N,'periodic') returns the N-point periodic Hanning window,
+%   and includes the first zero-weighted window sample.
+%
+%   NOTE: Use the HANN function to get a Hanning window which has the
+%          first and last zero-weighted samples.ep
+    itype = 1 --> periodic
+    itype = 0 --> symmetric
+    default itype=0 (symmetric)
+
+    Copyright 1988-2004 The MathWorks, Inc.
+%   $Revision: 1.11.4.3 $  $Date: 2007/12/14 15:05:04 $
+*/
+
+// https://en.wikipedia.org/wiki/Window_function#A_list_of_window_functions
+
+double *hanning(int L, int N_fft)
+{
+
+/*
+    for (i=0; i<N/2; i++) { // triangle Bartle
+        w[i] = 4.*(double)i/(double)N;
+    }
+    for (i=N/2; i<N; i++) {
+        w[i] = w[N-i];
+    }
+*/
+
+
+    /*
+     for (i=0; i<N; i++) { // Uniforme, donne la moyenne
+        w[i] = 1./(double(N));
+    }*/
+
+    double *inputHannReal;
+    inputHannReal = new double [N_fft];
+
+    const int start_L = (N_fft-L)/2;
+    for (int i  = 0; i< start_L; i++) {
+        inputHannReal[i] = 0;
+    }
+    for (int i = 0; i<= L/2; i++) {
+        const double z = 2.*M_PI*(double)i/(double)L;
+        inputHannReal[i+start_L] = 0.35875 - 0.48829*cos(z) + 0.14128*cos(2*z) + 0.01168*cos(3*z);
+
+    }
+    int middle = N_fft/2;
+    for (int i = 1; i<= L/2; i++) {
+        inputHannReal[i + start_L + (L/2)] = inputHannReal[middle-i];
+    }
+    for (int i = start_L + L + 1; i< N_fft; i++) {
+        inputHannReal[i] = 0;
+    }
+
+
+    return std::move(inputHannReal);
+}
+
+double *hamming(int L, int N_fft)
+{
+    double *input;
+    input = new double [N_fft];
+
+    const int start_L = (N_fft-L)/2;
+    for (int i  = 0; i< start_L; i++) {
+        input[i] = 0;
+    }
+    for (int i = 0; i<= L/2; i++) {
+        const double z = 2.*M_PI*(double)i/(double)L;
+        input[i+start_L] = 0.5 - 0.46*cos(z);
+
+    }
+    int middle = N_fft/2;
+    for (int i = 1; i<= L/2; i++) {
+        input[i + start_L + (L/2)] = input[middle-i];
+    }
+    for (int i = start_L + L + 1; i< N_fft; i++) {
+        input[i] = 0;
+    }
+
+    return std::move(input);
+}
+
+QMap<double, double> window_filter(QMap<double, double> &map, const double L)
+{
+
+    std::vector<double> curve_input;
+    QMap<double, double> results;
+
+    const double min = map.firstKey();
+    const double max = map.lastKey();
+
+    const double step = (max - min) / (map.size()-1);
+
+    for (auto [key, value] : map.asKeyValueRange()) {
+        //cout << key << ": " << value << Qt::endl;
+        curve_input.push_back(value);
+    }
+
+    /* ----- FFT -----
+             http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data
+            https://jperalta.wordpress.com/2006/12/12/using-fftw3/
+             */
+    qDebug() <<"filtre hanning";
+    //  data
+    const int inputSize = curve_input.size();
+
+    const int paddingSize = 2*inputSize;
+
+    const int N = inputSize + 1*paddingSize;
+    const int NComplex = 2* (N/2)+1;
+
+    double *inputReal;
+    inputReal = new double [N];
+
+    fftw_complex *inputComplex;
+    inputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
+
+
+    // we could use std::copy
+    for (int i  = 0; i< paddingSize; i++) {
+        inputReal[i] = 0;//curve_input[0];
+    }
+    for (int i = 0; i< inputSize; i++) {
+        inputReal[i+paddingSize] = curve_input[i];
+    }
+    for (int i = inputSize+paddingSize; i< N; i++) {
+        inputReal[i] = 0;//curve_input[inputSize-1];
+    }
+    fftw_plan plan_input = fftw_plan_dft_r2c_1d(N, inputReal, inputComplex, FFTW_ESTIMATE);
+    fftw_execute(plan_input);
+
+    //double* hannReal = hamming(L, N);
+    double* hannReal = hamming(L, N);
+    double somHann = 0.;
+    for (int i= 0; i<NComplex; ++i) {
+        somHann += hannReal[i];
+    }
+    fftw_complex *hannComplex;
+    hannComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
+    fftw_plan plan_hann = fftw_plan_dft_r2c_1d(N, hannReal, hannComplex, FFTW_ESTIMATE);
+    fftw_execute(plan_hann);
+
+
+    double *outputReal;
+    outputReal = new double [N];
+
+    fftw_complex *outputComplex;
+    outputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
+
+    for (int i = 0; i<NComplex; ++i) {
+        outputComplex[i][0] = hannComplex[i][0] * inputComplex[i][0] - hannComplex[i][1] * inputComplex[i][1];
+        outputComplex[i][1] = hannComplex[i][0] * inputComplex[i][1] + hannComplex[i][1] * inputComplex[i][0];
+    }
+
+    fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, outputComplex, outputReal, FFTW_ESTIMATE);
+    fftw_execute(plan_output);
+
+
+    const int shift_padding = (inputSize/2)*step;
+    qDebug()<<"debut datat inputSize="<<inputSize<<" shift_padding="<< shift_padding<< "N="<<N<< " somHanning"<<somHann;
+
+    //for ( int i = 0; i < N ; i++) {
+     //   qDebug()<<" i="<<i<<" out="<< outputReal[i];
+     //   qDebug()<< outputReal[i];
+    //}
+
+    for ( int i = 0; i < inputSize ; i++) {
+        const double t = min + i* step;
+        results[t]= outputReal[i+shift_padding]/(N*somHann);// *L);
+    }
+    fftw_destroy_plan(plan_input);
+    fftw_destroy_plan(plan_hann);
+    fftw_destroy_plan(plan_output);
+
+    fftw_free(inputComplex);
+
+    delete [] inputReal;
+    delete [] outputReal;
+    delete [] hannReal;
+
+    fftw_cleanup();
+    return results;
 }
 
 #endif
