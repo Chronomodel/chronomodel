@@ -1372,7 +1372,7 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
  * Calibration come from EventPropertiesView::updateCalibRequested
  * @param date
  */
-void ModelView::updateCalibration(const QJsonObject& date)
+void ModelView::updateCalibration(const QJsonObject &date)
 {
     qDebug() <<"[ModelView::updateCalibration] mUUID" << date.value(STATE_DATE_UUID).toString();
     // Control and calibration if necessary
@@ -1394,13 +1394,12 @@ void ModelView::showCalibration(bool show)
 {
    updateLayout();
    if (show) {
-       mEventPropertiesView->updateEvent(); //connect to DatesList::handleItemIsChanged() emit calibRequested(date);
-
-       mCalibrationView->setVisible(true);
-       mCalibrationView->repaint();
-       mCalibrationView->raise();
-       mAnimationCalib->setStartValue(mLeftHiddenRect);
-       mAnimationCalib->setEndValue(mLeftRect);
+        mEventPropertiesView->updateEvent(); //emit calibRequested(date);
+        mCalibrationView->setVisible(true);
+        mCalibrationView->repaint();
+        mCalibrationView->raise();
+        mAnimationCalib->setStartValue(mLeftHiddenRect);
+        mAnimationCalib->setEndValue(mLeftRect);
 
     } else {
         mAnimationCalib->setStartValue(mLeftRect);
@@ -1464,7 +1463,7 @@ void ModelView::readSettings()
     QSettings settings;
     settings.beginGroup("ModelView");
 
-    int panelIndex = settings.value("right_panel", 0).toInt();
+    const int panelIndex = settings.value("right_panel", 0).toInt();
 
     if (panelIndex == 1)
         mButProperties->setChecked(true);

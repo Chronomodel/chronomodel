@@ -448,8 +448,9 @@ void EventPropertiesView::updateEvent()
             const QJsonArray &dates = mEvent->value(STATE_EVENT_DATES).toArray();
            
             const bool hasDates = (dates.size() > 0);
+
             if (hasDates && mCurrentDateIdx >= 0) {
-                //emit updateCalibRequested(dates[mCurrentDateIdx].toObject());
+                emit updateCalibRequested(dates[mCurrentDateIdx].toObject());
                 mCalibBut->setEnabled(true);
                 mDeleteBut->setEnabled(true);
                 mRecycleBut->setEnabled(true);

@@ -61,7 +61,7 @@ DatesList::DatesList(QWidget* parent):QListWidget(parent),
     connect(this, &DatesList::itemClicked, this, &DatesList::handleItemClicked);
     connect(this, &DatesList::itemDoubleClicked, this, &DatesList::handleItemDoubleClicked);
     connect(this, &DatesList::itemSelectionChanged, this, &DatesList::forceAtLeastOneSelected);
-    connect(this, &DatesList::itemSelectionChanged, this, &DatesList::handleItemIsChanged);
+    //connect(this, &DatesList::itemSelectionChanged, this, &DatesList::handleItemIsChanged);
 }
 
 DatesList::~DatesList()
@@ -76,9 +76,9 @@ void DatesList::setEvent(const QJsonObject &event)
     clear();
 
     if (!mEvent.isEmpty()) {
-        QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+        const QJsonArray &dates = mEvent[STATE_EVENT_DATES].toArray();
         for (auto&& d : dates) {
-            QJsonObject date = d.toObject();
+            const QJsonObject &date = d.toObject();
 
             try {
                 Date d (date);
@@ -131,28 +131,29 @@ void DatesList::setEvent(const QJsonObject &event)
 void DatesList::handleItemClicked(QListWidgetItem* item)
 {
     int index = row(item);
-    QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+    const QJsonArray &dates = mEvent[STATE_EVENT_DATES].toArray();
     if (index < dates.size()) {
-        QJsonObject date = dates[index].toObject();
         emit indexChange(index);
-        emit calibRequested(date);
+        emit calibRequested(dates[index].toObject());
     }
 }
 
+/*
 void DatesList::handleItemIsChanged()
 {
-    QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+    const QJsonArray &dates = mEvent[STATE_EVENT_DATES].toArray();
     for (int i = 0; i <dates.size(); ++i ) {
         if (item(i)->isSelected() ) {
 
-            QJsonObject date = dates[i].toObject();
+            //const QJsonObject &date = dates[i].toObject();
             emit indexChange(i);
-            emit calibRequested(date);
+          //  emit calibRequested(dates[i].toObject());
             break;
         }
     }
 
 }
+*/
 
 void DatesList::handleItemDoubleClicked(QListWidgetItem* item)
 {
