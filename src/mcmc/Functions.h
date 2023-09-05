@@ -88,38 +88,40 @@ QString FunctionStatToString(const FunctionStat& analysis);
 QString densityAnalysisToString(const DensityAnalysis& analysis);
 
 // Standard Deviation of a vector of data
-type_data std_Koening(const QVector<type_data> &data);
-double std_Knuth(const QVector<double> &data);
+type_data std_Koening(const QList<type_data> &data);
+double std_Knuth(const QList<double> &data);
 double std_Knuth(const std::vector<double> &data);
 double std_Knuth(const std::vector<int> &data);
-void mean_variance_Knuth(const std::vector<double> &data, double& mean, double& variance);
-void mean_variance_Knuth(const QVector<double> &data, double& mean, double& variance);
+void mean_variance_Knuth(const std::vector<double> &data, double &mean, double &variance);
+void mean_variance_Knuth(const QList<double> &data, double &mean, double &variance);
 
-double std_unbiais_Knuth(const QVector<double> &data);
+double std_unbiais_Knuth(const QList<double> &data);
 double std_unbiais_Knuth(const std::vector<double> &data);
 double std_unbiais_Knuth(const std::vector<int> &data);
 void mean_std_unbiais_Knuth(const std::vector<int> &data, double& mean, double& std);
 
 double covariance(const std::vector<double>& dataX, const std::vector<double>& dataY);
 
+QList<double> autocorrelation_schoolbook(const QList<double> &trace, const int hmax=40);
+QList<double> autocorrelation_by_convol(const QList<double> &trace, const int hmax=40);
+
 const std::pair<double, double> linear_regression(const std::vector<double>& dataX, const std::vector<double>& dataY);
 
 double shrinkageUniform(const double s02);
 
-Quartiles quartilesForTrace(const QVector<type_data>& trace);
-TraceStat traceStatistic(const QVector<type_data> &trace);
+Quartiles quartilesForTrace(const QList<type_data> &trace);
+TraceStat traceStatistic(const QList<type_data> &trace);
 
-QVector<double> calculRepartition (const QVector<double>& calib);
-QVector<double> calculRepartition (const QMap<double, double> &calib);
-Quartiles quartilesForRepartition(const QVector<double> &repartition, const double tmin, const double step);
-std::pair<double, double> credibilityForTrace(const QVector<double> &trace, double thresh, double &exactThresholdResult, const QString description = "Credibility computation");
-std::pair<double, double> credibilityForTrace(const QVector<int> &trace, double thresh, double &exactThresholdResult, const QString description = "Credibility computation");
-std::pair<double, double> timeRangeFromTraces(const QVector<double> &trace1, const QVector<double> &trace2, const double thresh, const QString description ="Time Range Computation");
+QList<double> calculRepartition (const QList<double> &calib);
+QList<double> calculRepartition (const QMap<double, double> &calib);
+Quartiles quartilesForRepartition(const QList<double> &repartition, const double tmin, const double step);
+std::pair<double, double> credibilityForTrace(const QList<double> &trace, double thresh, double &exactThresholdResult, const QString description = "Credibility computation");
+std::pair<double, double> credibilityForTrace(const QList<int> &trace, double thresh, double &exactThresholdResult, const QString description = "Credibility computation");
+std::pair<double, double> timeRangeFromTraces(const QList<double> &trace1, const QList<double> &trace2, const double thresh, const QString description ="Time Range Computation");
 
+std::pair<double, double> gapRangeFromTraces(const QList<double> &trace1, const QList<double> &trace2, const double thresh, const QString description ="Gap Range Computation");
 
-std::pair<double, double> gapRangeFromTraces(const QVector<double> &trace1, const QVector<double> &trace2, const double thresh, const QString description ="Gap Range Computation");
-
-std::pair<double, double> transitionRangeFromTraces(const QVector<double> &trace1, const QVector<double> &trace2, const double thresh, const QString description ="Gap Range Computation");
+std::pair<double, double> transitionRangeFromTraces(const QList<double> &trace1, const QList<double> &trace2, const double thresh, const QString description ="Gap Range Computation");
 
 QString intervalText(const QPair<double, QPair<double, double> >& interval, DateConversion conversionFunc = nullptr, const bool forCSV = false);
 QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString& unit = QString(), DateConversion conversionFunc = nullptr, const bool forCSV =false);
@@ -176,7 +178,7 @@ Matrix2D inverseMatSym(const Matrix2D & matrix1, const MatrixDiag &matrix2, cons
 Matrix2D inverseMatSym_origin(const std::pair<Matrix2D, MatrixDiag> &decomp, const int nbBandes, const int shift);
 
 
-double sumAllMatrix(const std::vector<std::vector<double>>& matrix);
+double sumAllMatrix(const std::vector<std::vector<double>> &matrix);
 t_matrix sumAllMatrix(const Matrix2D &m);
 
 
@@ -200,24 +202,24 @@ std::pair<Matrix2D, MatrixDiag> LU_to_LD(const std::pair<Matrix2D, Matrix2D> LU)
 std::pair<Matrix2D, Matrix2D > decompositionQR(const Matrix2D& A);
 std::pair<Matrix2D, Matrix2D> householderQR(Matrix2D& A);
 
-std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, MatrixDiag> &decomp, const std::vector< double>& vecQtY);
+std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, MatrixDiag> &decomp, const std::vector< double> &vecQtY);
 
 struct Strassen
 { //https://www.sanfoundry.com/java-program-strassen-algorithm/
 
-    Matrix2D multiply (const Matrix2D& A, const Matrix2D& B);
+    Matrix2D multiply (const Matrix2D &A, const Matrix2D &B);
     Matrix2D sub(const Matrix2D &A, const Matrix2D &B);
-    Matrix2D add(const Matrix2D& A, const Matrix2D& B);
+    Matrix2D add(const Matrix2D &A, const Matrix2D &B);
 /** Funtion to split parent matrix into child matrices **/
 
-void split(const Matrix2D& P, Matrix2D &C, int iB, int jB) ;
+void split(const Matrix2D &P, Matrix2D &C, int iB, int jB) ;
 /** Funtion to join child matrices intp parent matrix **/
 
- void join(const Matrix2D& C, Matrix2D &P, int iB, int jB) ;
+ void join(const Matrix2D &C, Matrix2D &P, int iB, int jB) ;
 
 };
 
-inline double rounddouble(const double f,const int prec)
+inline double rounddouble(const double f, const int prec)
 {
     double result;
     if (prec > 0){
@@ -250,19 +252,19 @@ inline bool isEven( T value )
  * @param p
  * @return
  */
-template <typename T>
-QPair<int, double> gammaQuartile(const std::vector<T> &trace, const int quartileType, const double p)
+template <template<typename...> class C, typename T>
+QPair<int, T> gammaQuartile(const C<T> &trace, const int quartileType, const double p)
 {
     const int n (trace.size());
-    int j (0);
+    int j = 0;
     // We use jFloor which is the floor value of j but in the original double type
     // because when we cacul g in the 3 first cases we need the double format
-    double jFloor(0.);
+    T jFloor (0);
 
-    double m (0.);
-    double g (0.);
-    double gamma (0.);
-    double k (0.);
+    T m (0);
+    T g (0);
+    T gamma (0);
+    T k (0);
 
 
     switch (quartileType) {
@@ -273,9 +275,7 @@ QPair<int, double> gammaQuartile(const std::vector<T> &trace, const int quartile
         jFloor = floor((n * p) + m);
         j = (int)jFloor;
         g = n*p + m - jFloor;
-
         gamma = (g<1e-10 ? 0 : 1.) ;
- //qDebug()<<n<<p<<m<<jFloor<<j<<g<<gamma;
         break;
 
     case 2: // same probleme as type 1
@@ -344,8 +344,9 @@ QPair<int, double> gammaQuartile(const std::vector<T> &trace, const int quartile
 }
 
 // It is easier to redo the function for the QVector type. Otherwise you have to build a std::vector by copy
+/*
 template <typename T>
-QPair<int, double> gammaQuartile(const QVector<T> &trace, const int quartileType, const double p)
+QPair<int, double> gammaQuartile(const QList<T> &trace, const int quartileType, const double p)
 {
     const int n (trace.size());
     int j (0);
@@ -436,7 +437,7 @@ QPair<int, double> gammaQuartile(const QVector<T> &trace, const int quartileType
 
     return qMakePair(j, gamma);
 }
-
+ */
 
 /**
  * @brief Compute quartile according to a type defined in R software
@@ -444,51 +445,6 @@ QPair<int, double> gammaQuartile(const QVector<T> &trace, const int quartileType
  * @param p is the confidence must be between [0 , 1]
  * @return Q1(confidance) Q2(50%) Q3(1-confidance)
  */
-/*
-template <typename T>
-Quartiles quantilesType(const std::vector<T>& trace, const int quartileType, const double p)
-{
-    Quartiles Q;
-    std::vector<T> traceSorted (trace);
-
-
-    QPair<int, double> parQ1 = gammaQuartile(trace, quartileType, p); // first is j and second is gamma
-    QPair<int, double> parQ2 = gammaQuartile(trace, quartileType, 0.5);
-    QPair<int, double> parQ3 = gammaQuartile(trace, quartileType, 1-p);
-
-    std::sort(traceSorted.begin(), traceSorted.end());
-
-    // Q1 determination
-    if (parQ1.first <= 0)
-       Q.Q1 = (double)traceSorted.front();
-
-    else if (parQ1.first < (int)traceSorted.size())
-            Q.Q1 = (1.- parQ1.second)*(double)traceSorted.at(parQ1.first-1) + parQ1.second*(double)traceSorted.at(parQ1.first);
-    else
-        Q.Q1 = (double)traceSorted.back();
-
-    // Q2 determination
-    if (parQ2.first <= 0)
-       Q.Q2 = (double)traceSorted.front();
-
-    else if (parQ2.first < (int)traceSorted.size())
-            Q.Q2 = (1.- parQ2.second)*(double)traceSorted.at(parQ2.first-1) + parQ2.second*(double)traceSorted.at(parQ2.first);
-    else
-        Q.Q2 = (double)traceSorted.back();
-
-    // Q3 determination
-    if (parQ3.first <= 0)
-       Q.Q3 = (double)traceSorted.front();
-
-    else if (parQ3.first < (int)traceSorted.size())
-            Q.Q3 = (1.- parQ3.second)*(double)traceSorted.at(parQ3.first-1) + parQ3.second*(double)traceSorted.at(parQ3.first);
-    else
-        Q.Q3 = (double)traceSorted.back();
-
-    return Q;
-}
-*/
-
 template <template<typename...> class C, typename T>
 Quartiles quantilesType(const C<T>& trace, const int quartileType, const double p)
 {

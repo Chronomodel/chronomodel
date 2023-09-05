@@ -59,14 +59,12 @@ public :
     std::string mComment ;
 
     TValueStack():mName("name"), mValue(0.), mComment("comment") {};
-    explicit TValueStack(std::string name, double value = 0., std::string comment ="") :mName(name), mValue(value), mComment(comment) {};
+    explicit TValueStack(std::string name, double value = 0., std::string comment ="") : mName(name), mValue(value), mComment(comment) {};
 
 };
 
 class MetropolisVariable
-//: public QObject
 {
-   // Q_OBJECT
 public:
     enum Support
     {
@@ -78,8 +76,8 @@ public:
         eBounded = 5 // on bounded support
     };
     double mX;
-    QVector<double>* mRawTrace;
-    QVector<double>* mFormatedTrace;
+    QList<double>* mRawTrace;
+    QList<double>* mFormatedTrace;
 
 
     // if we use std::vector we can not use QDataStream to save,
@@ -121,7 +119,7 @@ public:
 private:
     QString mName;
 public:
-    MetropolisVariable(QObject *parent = nullptr);
+    MetropolisVariable();
     explicit MetropolisVariable(const MetropolisVariable &origin);
 
     virtual ~MetropolisVariable();
@@ -154,7 +152,7 @@ public:
     void updateFormatedCredibility(const DateUtils::FormatDate fm);
 
 
-    QMap<double, double> generateHisto(const QVector<double>& data, const int fftLen, const  double bandwidth, const double tmin = 0., const double tmax = 0.);
+    QMap<double, double> generateHisto(const QList<double> &data, const int fftLen, const  double bandwidth, const double tmin = 0., const double tmax = 0.);
 
     // -----
     // These functions do not make any calculation
@@ -163,7 +161,7 @@ public:
     QMap<double, double>& histoForChain(const int index);
 
     // Full trace for the chain (burn + adapt + run)
-    QVector<double> fullTraceForChain(const QList<ChainSpecs> &chains,const int index);
+    QList<double> fullTraceForChain(const QList<ChainSpecs> &chains,const int index);
 
     // Trace for run part as a vector
     template <template<typename...> class C, typename T>
@@ -207,18 +205,17 @@ public:
     // Trace for run part of the chain as a vector
 
     template <typename T>
-    QVector<T> run_trace_for_chain(QVector<T>* trace, const QList<ChainSpecs>& chains, const int index) {
+    QList<T> run_trace_for_chain(QList<T>* trace, const QList<ChainSpecs> &chains, const int index) {
 
         if (trace->empty()) {
-            return QVector<T>(0);
+            return QList<T>(0);
 
         } else if (trace->size() == 1) { // Cas des variables fixes
-            return QVector<T>(*trace);
+            return QList<T>(*trace);
 
         } else  {
 
             int shift = 0;
-            QVector<T> result;
             for (auto i = 0; i<chains.size(); ++i)  {
                 const ChainSpecs &chain = chains.at(i);
                 // We add 1 for the init
@@ -226,20 +223,19 @@ public:
                 const int traceSize = chain.mRealyAccepted;
 
                 if (i == index) {
-                    result.resize(traceSize);
-                    std::copy(trace->begin() + shift + burnAdaptSize , trace->begin() + shift + burnAdaptSize + traceSize , result.begin());
+                    return QList<T> (trace->begin() + shift + burnAdaptSize, trace->begin() + shift + burnAdaptSize + traceSize );
                     break;
                 }
                 shift += traceSize + burnAdaptSize ;
             }
-            return result;
+            return QList<T>(0);
         }
     }
 
-    inline QVector<double> runRawTraceForChain(const QList<ChainSpecs> &chains, const int index) {return run_trace_for_chain(mRawTrace, chains, index); };
-    inline QVector<double> runFormatedTraceForChain(const QList<ChainSpecs> &chains, const int index) {return run_trace_for_chain(mFormatedTrace, chains, index); };
+    inline QList<double> runRawTraceForChain(const QList<ChainSpecs> &chains, const int index) {return run_trace_for_chain(mRawTrace, chains, index); };
+    inline QList<double> runFormatedTraceForChain(const QList<ChainSpecs> &chains, const int index) {return run_trace_for_chain(mFormatedTrace, chains, index); };
 
-    QVector<double> correlationForChain(const int index);
+    QList<double> correlationForChain(const int index);
 
     virtual QString resultsString(const QString &noResultMessage = QObject::tr("No result to display"),
                                   const QString &unit = QString(),
@@ -247,11 +243,10 @@ public:
 
     QStringList getResultsList(const QLocale locale, const int precision = 0, const bool withDateFormat = true);
 
-
-      void updateFormatedTrace(const DateUtils::FormatDate fm);
+    void updateFormatedTrace(const DateUtils::FormatDate fm);
 
 private:
-    void generateBufferForHisto(double* input, const QVector<double> &dataSrc, const int numPts, const double a, const double b);
+    void generateBufferForHisto(double* input, const QList<double> &dataSrc, const int numPts, const double a, const double b);
     QMap<double, double> bufferToMap(const double* buffer);
 
 

@@ -62,7 +62,7 @@ public:
     static QVector<QVector<Phase*> > getBranchesFromPhase(Phase* start, const double maxLength);
     static QVector<QVector<Phase*> > getAllPhasesBranches(const QList<Phase*>& events, const double maxLength);
 
-    static QVector<Event*> unsortEvents(const QList<Event*>& events);
+    static QList<Event*> unsortEvents(const QList<Event*> &events);
     static QString modelDescriptionHTML(const ModelCurve* model);
     static QString getMCMCSettingsLog(const Model* model = nullptr);
     static QString modelStateDescriptionHTML(const ModelCurve *model = nullptr, QString stateDescript = "");

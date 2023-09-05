@@ -75,30 +75,30 @@ long double PluginGauss::getLikelihood(const double t, const QJsonObject &data)
 
 QPair<long double, long double> PluginGauss::getLikelihoodArg(const double t, const QJsonObject &data)
 {
-    
     // inherits the first data propeties as plug-in and method...
-   
-        const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
-        const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
-        const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
 
-        const double refError = getRefErrorAt(data, t, mode);
-        const long double variance = static_cast<long double>(refError * refError + error * error);
+    const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
+    const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
+    const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
 
-        double refValue;
+    double refError = 0.;
 
-        if (mode == DATE_GAUSS_MODE_CURVE) {
-            const QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
-            refValue = getRefCurveValueAt(ref_curve, t);
+    double refValue;
 
-        } else {
-            refValue = getRefValueAt(data, t);
-        }
+    if (mode == DATE_GAUSS_MODE_CURVE) {
+        const QString &ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
+        refValue = getRefCurveValueAt(ref_curve, t);
+        refError = getRefCurveErrorAt(ref_curve, t);
 
-        const long double exponent = -0.5l * powl(static_cast<long double>(age - refValue), 2.l) / variance;
-
-        return qMakePair(variance, exponent);
+    } else {
+        refValue = getRefValueAt(data, t);
     }
+
+    const long double variance = static_cast<long double>(refError * refError + error * error);
+    const long double exponent = -0.5l * powl(static_cast<long double>(age - refValue), 2.l) / variance;
+
+    return qMakePair(variance, exponent);
+}
     
 // Properties
 QString PluginGauss::getName() const
@@ -123,7 +123,7 @@ bool PluginGauss::wiggleAllowed() const
 
 MHVariable::SamplerProposal PluginGauss::getDataMethod() const
 {
-    return MHVariable::eMHSymGaussAdapt;
+    return MHVariable::eMHSymetric;
 }
 
 QList<MHVariable::SamplerProposal> PluginGauss::allowedDataMethods() const
@@ -433,34 +433,34 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
 // Reference Values & Errors
 double PluginGauss::getRefValueAt(const QJsonObject &data, const double t)
 {
-    const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
-    double v = 0;
+    const QString &mode = data.value(DATE_GAUSS_MODE_STR).toString();
 
     if (mode == DATE_GAUSS_MODE_NONE) {
-        v = t;
+        return t;
+
     } else if (mode == DATE_GAUSS_MODE_EQ) {
         const double a = data.value(DATE_GAUSS_A_STR).toDouble();
         const double b = data.value(DATE_GAUSS_B_STR).toDouble();
         const double c = data.value(DATE_GAUSS_C_STR).toDouble();
 
-        v = a * t * t + b * t + c;
+        return a * t * t + b * t + c;
 
     } else if (mode == DATE_GAUSS_MODE_CURVE) {
-        const QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
-        v = getRefCurveValueAt(ref_curve, t);
-    }
-    return v;
+        const QString &ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
+        return getRefCurveValueAt(ref_curve, t);
+
+    } else
+        return 0.;
 }
 
 double PluginGauss::getRefErrorAt(const QJsonObject &data, const double t, const QString mode)
 {
-    double e = 0.;
-
     if (mode == DATE_GAUSS_MODE_CURVE) {
-        QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
-        e = getRefCurveErrorAt(ref_curve, t);
-    }
-    return e;
+        const QString &ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
+        return getRefCurveErrorAt(ref_curve, t);
+
+    } else
+        return 0.;
 }
 
 QPair<double, double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject &data) const
@@ -470,7 +470,7 @@ QPair<double, double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject &data)
     const double k = 10.;
 
     if (data.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_CURVE) {
-        QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
+        const QString &ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
 #ifdef DEBUG
         if (mRefCurves.contains(ref_curve) && !mRefCurves.value(ref_curve).mDataMean.isEmpty()) {
 #endif
@@ -545,10 +545,11 @@ QPair<double, double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject &data)
 
 double PluginGauss::getMinStepRefsCurve(const QJsonObject &data) const
 {
-    const QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
+    const QString &ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
 
     if (mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
         return mRefCurves.value(ref_curve).mMinStep;
+
     } else {
         return INFINITY;
     }
@@ -683,22 +684,26 @@ QJsonObject PluginGauss::mergeDates(const QJsonArray& dates)
             names.append(d.toObject().value(STATE_NAME).toString());
             QPair<double, double> tminTmax = getTminTmaxRefsCurve(d.toObject().value(STATE_DATE_DATA).toObject());
             switch (d.toObject().value(STATE_DATE_DELTA_TYPE).toInt()) {
-            case Date::eDeltaNone:
-                dWiggleMin = 0.;
-                dWiggleMax = 0.;
-                break;
-            case Date::eDeltaFixed:
-                dWiggleMin = d.toObject().value(STATE_DATE_DELTA_FIXED).toDouble();
-                dWiggleMax = d.toObject().value(STATE_DATE_DELTA_FIXED).toDouble();
-                break;
-            case Date::eDeltaRange:
-                dWiggleMin = d.toObject().value(STATE_DATE_DELTA_MIN).toDouble();
-                dWiggleMax = d.toObject().value(STATE_DATE_DELTA_MAX).toDouble();
-                break;
-            case Date::eDeltaGaussian:
-                dWiggleMin = d.toObject().value(STATE_DATE_DELTA_AVERAGE).toDouble() - d.toObject().value(STATE_DATE_DELTA_ERROR).toDouble()*k;
-                dWiggleMax = d.toObject().value(STATE_DATE_DELTA_AVERAGE).toDouble() + d.toObject().value(STATE_DATE_DELTA_ERROR).toDouble()*k;
-                break;
+
+                case Date::eDeltaNone:
+                    dWiggleMin = 0.;
+                    dWiggleMax = 0.;
+                    break;
+
+                case Date::eDeltaFixed:
+                    dWiggleMin = d.toObject().value(STATE_DATE_DELTA_FIXED).toDouble();
+                    dWiggleMax = d.toObject().value(STATE_DATE_DELTA_FIXED).toDouble();
+                    break;
+
+                case Date::eDeltaRange:
+                    dWiggleMin = d.toObject().value(STATE_DATE_DELTA_MIN).toDouble();
+                    dWiggleMax = d.toObject().value(STATE_DATE_DELTA_MAX).toDouble();
+                    break;
+
+                case Date::eDeltaGaussian:
+                    dWiggleMin = d.toObject().value(STATE_DATE_DELTA_AVERAGE).toDouble() - d.toObject().value(STATE_DATE_DELTA_ERROR).toDouble()*k;
+                    dWiggleMax = d.toObject().value(STATE_DATE_DELTA_AVERAGE).toDouble() + d.toObject().value(STATE_DATE_DELTA_ERROR).toDouble()*k;
+                    break;
 
             }
 

@@ -772,134 +772,130 @@ void Date::calibrateWiggle(const StudyPeriodSettings settings, Project *project)
     /* --------------------------------------------------
      *  Calibrate on the whole calibration period (= ref curve definition domain)
      * -------------------------------------------------- */
+    QVector<double> curve;
     switch (mDeltaType) {
         case eDeltaFixed:
-            {
                 mWiggleCalibration->mVector = calibrationTemp;
                 mWiggleCalibration->mTmin = minRefCurve + mDeltaFixed;
                 mWiggleCalibration->mTmax = maxRefCurve + mDeltaFixed;
-            }
             break;
                 
                 
         case eDeltaRange:
         {
-        /* ----- FFT -----
-         http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data
-        https://jperalta.wordpress.com/2006/12/12/using-fftw3/
-        https://dsp.stackexchange.com/questions/22145/perform-convolution-in-frequency-domain-using-fftw
-         */
+            /* ----- FFT -----
+             * http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data
+             * https://jperalta.wordpress.com/2006/12/12/using-fftw3/
+             * https://dsp.stackexchange.com/questions/22145/perform-convolution-in-frequency-domain-using-fftw
+            */
 
-        const int inputSize (calibrationTemp.size());
+            const int inputSize = calibrationTemp.size();
 
-        const double L ((mDeltaMax-mDeltaMin+1) / settings.mStep);
+            const double L = (mDeltaMax-mDeltaMin+1) / settings.mStep;
 
-        const int gateSize (std::max(inputSize, int(L)) );
-        const int paddingSize (3*gateSize);
+            const int gateSize = std::max(inputSize, int(L)) ;
+            const int paddingSize = 3*gateSize;
 
-        const int N ( inputSize + 4*paddingSize);
-        const int NComplex (2* (N/2)+1);
+            const int N = inputSize + 4*paddingSize;
+            const int NComplex = 2* (N/2)+1;
 
-        double *inputReal;
-        inputReal = new double [N];
+            double *inputReal;
+            inputReal = new double [N];
 
-        fftw_complex *inputComplex;
-        inputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
+            fftw_complex *inputComplex;
+            inputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
 
-        for (int i (0); i< paddingSize; i++) {
-            inputReal[i] = 0.;
+            for (int i = 0; i< paddingSize; i++) {
+                inputReal[i] = 0.;
+            }
+            for (int i = 0; i< inputSize; i++) {
+                inputReal[i+paddingSize] = calibrationTemp[i];
+            }
+            for (int i = inputSize+paddingSize; i< N; i++) {
+                inputReal[i] = 0.;
+            }
+            fftw_plan plan_input = fftw_plan_dft_r2c_1d(N, inputReal, inputComplex, FFTW_ESTIMATE);
+            fftw_execute(plan_input);
+
+
+            // ---- gate
+            double *gateReal;
+            gateReal = new double [N];
+
+            fftw_complex *gateComplex;
+            gateComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
+
+
+            for (int i = 0; i< (N-L)/2; i++) {
+                gateReal[i] = 0.;
+            }
+            for (int i = (N-L)/2; i< ((N+L)/2); i++) {
+                gateReal[i] = 1.;
+            }
+            for (int i = (N+L)/2 ; i< N; i++) {
+                gateReal[i] = 0.;
+            }
+
+            fftw_plan plan_gate = fftw_plan_dft_r2c_1d(N, gateReal, gateComplex, FFTW_ESTIMATE);
+            fftw_execute(plan_gate);
+
+
+            /*
+             * The value of inputComplex[i=0] is a constant of the offset of the signal
+            */
+
+            double *outputReal;
+            outputReal = new double [N];
+
+            fftw_complex *outputComplex;
+            outputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
+
+
+            for (int i= 0; i<NComplex; ++i) {
+                outputComplex[i][0] = gateComplex[i][0] * inputComplex[i][0] - gateComplex[i][1] * inputComplex[i][1];
+                outputComplex[i][1] = gateComplex[i][0] * inputComplex[i][1] + gateComplex[i][1] * inputComplex[i][0];
+            }
+
+            fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, outputComplex, outputReal, FFTW_ESTIMATE);
+            fftw_execute(plan_output);
+
+            /*
+             * This code corresponds to the theoretical formula in Fourier space.
+             * But it does not work with uniform densities, because it does not handle the padding correctly.
+             * The problem also exists for densities with a very small support .
+
+             double factor;
+             for (int i(0); i<NComplex; ++i) {
+                 factor = sinc((double)i, L/(double)inputSize );
+
+                 outputComplex[i][0] = inputComplex[i][0]* factor;
+                 outputComplex[i][1] = inputComplex[i][1]* factor;
+             }
+
+              fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, outputComplex, outputReal, FFTW_ESTIMATE);
+              fftw_execute(plan_output);
+            */
+
+
+
+
+            for ( int i = 0; i < N ; i++) {
+                curve.append(outputReal[i]);
+            }
+
+            mWiggleCalibration->mVector = equal_areas(curve, settings.mStep, 1.);
+
+            mWiggleCalibration->mTmin = minRefCurve - (double)(3*paddingSize +inputSize/2)* settings.mStep + (mDeltaMin+mDeltaMax)/2.;
+            mWiggleCalibration->mTmax = mWiggleCalibration->mTmin + curve.size()* settings.mStep;
+
+            fftw_destroy_plan(plan_input);
+            fftw_destroy_plan(plan_output);
+            fftw_free(inputComplex);
+            delete [] inputReal;
+            delete [] outputReal;
+            fftw_cleanup();
         }
-        for (int i (0); i< inputSize; i++) {
-            inputReal[i+paddingSize] = calibrationTemp[i];
-        }
-        for (int i ( inputSize+paddingSize); i< N; i++) {
-            inputReal[i] = 0.;
-        }
-       fftw_plan plan_input = fftw_plan_dft_r2c_1d(N, inputReal, inputComplex, FFTW_ESTIMATE);
-       fftw_execute(plan_input);
-
-
-       // ---- gate
-       double *gateReal;
-       gateReal = new double [N];
-
-       fftw_complex *gateComplex;
-       gateComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
-
-
-       for (int i (0); i< (N-L)/2; i++) {
-           gateReal[i] = 0.;
-       }
-       for (int i ((N-L)/2); i< ((N+L)/2); i++) {
-           gateReal[i] = 1.;
-       }
-       for (int i ((N+L)/2); i< N; i++) {
-           gateReal[i] = 0.;
-       }
-
-      fftw_plan plan_gate = fftw_plan_dft_r2c_1d(N, gateReal, gateComplex, FFTW_ESTIMATE);
-      fftw_execute(plan_gate);
-
-
-       /*
-        * The value of inputComplex[i=0] is a constant of the offset of the signal
-        */
-
-        double *outputReal;
-        outputReal = new double [N];
-
-        fftw_complex *outputComplex;
-        outputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
-
-
-        for (int i= 0; i<NComplex; ++i) {
-            outputComplex[i][0] = gateComplex[i][0] * inputComplex[i][0] - gateComplex[i][1] * inputComplex[i][1];
-            outputComplex[i][1] = gateComplex[i][0] * inputComplex[i][1] + gateComplex[i][1] * inputComplex[i][0];
-        }
-
-        fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, outputComplex, outputReal, FFTW_ESTIMATE);
-        fftw_execute(plan_output);
-
-        /*
-         * This code corresponds to the theoretical formula in Fourier space.
-         * But it does not work with uniform densities, because it does not handle the padding correctly.
-         * The problem also exists for densities with a very small support .
-
-         double factor;
-         for (int i(0); i<NComplex; ++i) {
-
-            factor = sinc((double)i, L/(double)inputSize );
-
-            outputComplex[i][0] = inputComplex[i][0]* factor;
-            outputComplex[i][1] = inputComplex[i][1]* factor;
-         }
-
-         fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, outputComplex, outputReal, FFTW_ESTIMATE);
-         fftw_execute(plan_output);
-         */
-
-
-        QVector<double> curve;
-
-        for ( int i = 0; i < N ; i++) {
-            curve.append(outputReal[i]);
-        }
-
-
-
-        mWiggleCalibration->mVector = equal_areas(curve, settings.mStep, 1.);
-
-        mWiggleCalibration->mTmin = minRefCurve - (double)(3*paddingSize +inputSize/2)* settings.mStep + (mDeltaMin+mDeltaMax)/2.;
-        mWiggleCalibration->mTmax = mWiggleCalibration->mTmin + curve.size()* settings.mStep;
-
-        fftw_destroy_plan(plan_input);
-        fftw_destroy_plan(plan_output);
-        fftw_free(inputComplex);
-        delete [] inputReal;
-        delete [] outputReal;
-        fftw_cleanup();
-    }
-            break;
+        break;
             
         case eDeltaGaussian:
         {
@@ -907,7 +903,7 @@ void Date::calibrateWiggle(const StudyPeriodSettings settings, Project *project)
              http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data
             https://jperalta.wordpress.com/2006/12/12/using-fftw3/
              */
-            qDebug() <<"wiggle eDeltaGaussian";
+            qDebug() <<"[Date::calibrateWiggle] wiggle eDeltaGaussian";
             //  data
             const int inputSize (calibrationTemp.size());
 
@@ -953,8 +949,7 @@ void Date::calibrateWiggle(const StudyPeriodSettings settings, Project *project)
 
             fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, inputComplex, outputReal, FFTW_ESTIMATE);
             fftw_execute(plan_output);
-            
-            QVector<double> curve;
+
 
             for ( int i = 0; i < N ; i++) {
                 curve.append(outputReal[i]);

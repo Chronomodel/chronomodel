@@ -51,8 +51,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <assert.h>
 
 /** Default constructor */
-MetropolisVariable::MetropolisVariable(QObject *parent):
-    //QObject(parent),
+MetropolisVariable::MetropolisVariable():
     mX (0.),
     mRawTrace (nullptr),
     mFormatedTrace (nullptr),
@@ -185,8 +184,8 @@ void MetropolisVariable::reset()
         mFormatedTrace->squeeze();
 
     } else {
-        mRawTrace = new QVector<double>();
-        mFormatedTrace = new QVector<double>();
+        mRawTrace = new QList<double>();
+        mFormatedTrace = new QList<double>();
     }
     mFormatedHisto.clear();
     mChainsHistos.clear();
@@ -263,7 +262,7 @@ void MetropolisVariable::updateFormatedCredibility(const DateUtils::FormatDate f
  @param[in] dataSrc is the trace, with for example one million data
  @remarks Produce a density with the area equal to 1. The smoothing is done with Hsilvermann method.
  **/
-void MetropolisVariable::generateBufferForHisto(double *input, const QVector<double> &dataSrc, const int numPts, const double a, const double b)
+void MetropolisVariable::generateBufferForHisto(double *input, const QList<double> &dataSrc, const int numPts, const double a, const double b)
 {
     // Work with "double" precision here !
     // Otherwise, "denum" can be very large and lead to infinity contribs!
@@ -307,7 +306,7 @@ void MetropolisVariable::generateBufferForHisto(double *input, const QVector<dou
   @brief the FFTW function transform the area such that the area output is the area input multiplied by fftLen. So we have to corret it.
   The result is migth be not with regular step between value.
  **/
-QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& dataSrc, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+QMap<double, double> MetropolisVariable::generateHisto(const QList<double>& dataSrc, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
     mfftLenUsed = fftLen;
     mBandwidthUsed = bandwidth;
@@ -438,6 +437,7 @@ void MetropolisVariable::generateHistos(const QList<ChainSpecs>& chains, const i
         }
     }
 }
+
 void MetropolisVariable::memoHistoParameter(const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
     mfftLenUsed = fftLen;
@@ -467,7 +467,7 @@ void MetropolisVariable::generateHPD(const double threshold)
         mFormatedHPD = QMap<double, double>(create_HPD2(mFormatedHisto, thresh));
 
         mRawHPDintervals.clear();
-        const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mFormatedHPD, thresh);
+        const QList<QPair<double, QPair<double, double> > > &intervals = intervalsForHpd(mFormatedHPD, thresh);
         for (const auto& h : intervals) {
             double tmin = DateUtils::convertFromAppSettingsFormat(h.second.first);
             double tmax = DateUtils::convertFromAppSettingsFormat(h.second.second);
@@ -501,43 +501,29 @@ void MetropolisVariable::generateCredibility(const QList<ChainSpecs> &chains, do
 
 }
 
-void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
+void MetropolisVariable::generateCorrelations(const QList<ChainSpecs> &chains)
 {
     const int hmax = 40;
     if (!mCorrelations.isEmpty())
         mCorrelations.clear();
 
     mCorrelations.reserve(chains.size());
+    //Chronometer ch ("[MetropolisVariable::generateCorrelations]");
 
-    double sH = 0.;
     for (int c = 0; c<chains.size(); ++c) {
         // Return the acquisition part of the trace
-        const QVector<double> trace (runRawTraceForChain(chains, c));
+        const QList<double> &trace = runRawTraceForChain(chains, c);
         if (trace.size() < hmax)
             continue;
 
-        QVector<double> results;
-        const auto n = trace.size();
+        const QList<double> &results = autocorrelation_schoolbook(trace);
+        //QList<double> results = autocorrelation_by_convol(trace);
 
-        double mean, variance;
-        mean_variance_Knuth(trace, mean, variance);
-        variance *= (double)trace.size();
-
-        // Correlation for this chain
-        results.append(1.); // force the first to exactly 1.
-        for (int h = 1; h <= hmax; ++h) {
-            sH = 0.;
-            QVector<double>::const_iterator iter_H = trace.cbegin() + h;
-            for (QVector<double>::const_iterator iter = trace.cbegin(); iter != trace.cbegin() + (n-h); ++iter)
-                sH += (*iter - mean) * (*iter_H++ - mean);
-
-            results.append(sH / variance);
-        }
         // Correlation ajoutée à la liste (une courbe de corrélation par chaine)
-        results.squeeze();
         mCorrelations.append(results);
 
     }
+    //ch.display();
 }
 
 void MetropolisVariable::generateNumericalResults(const QList<ChainSpecs> &chains)
@@ -590,27 +576,25 @@ QList<double>::Iterator MetropolisVariable::findIter_element(const long unsigned
  * @param index
  * @return The complet trace (init, Burn-in, adaptation, acquire) corresponding to chain n°index
  */
-QVector<double> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs>& chains, const int index)
+QList<double> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs> &chains, const int index)
 {
-    QVector<double> trace;
     int shift = 0;
 
     for (int i = 0; i<chains.size(); ++i) {
         // We add 1 for the init
         const unsigned long traceSize = 1 + chains.at(i).mIterPerBurn + (chains.at(i).mBatchIndex * chains.at(i).mIterPerBatch ) + chains.at(i).mRealyAccepted;
-        trace.resize(traceSize);
         if (i == index) {
-            std::copy(mFormatedTrace->begin()+shift, mFormatedTrace->begin()+shift+traceSize, trace.begin());
+            return QList<double> (mFormatedTrace->begin()+shift, mFormatedTrace->begin()+shift+traceSize);
             break;
         }
         shift += traceSize;
     }
-    return trace;
+    return QList<double> (0);
 }
 
 
 
-QVector<double> MetropolisVariable::correlationForChain(const int index)
+QList<double> MetropolisVariable::correlationForChain(const int index)
 {
     if (index < mCorrelations.size())
         return mCorrelations.at(index);

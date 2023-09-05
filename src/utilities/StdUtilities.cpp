@@ -39,6 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "StdUtilities.h"
 //#include "AppSettings.h"
+#include <QtGlobal>
 
 #include <ctgmath>
 #include <cstdlib>
@@ -108,7 +109,7 @@ std::string removeZeroAtRight(std::string str)
 
 
 
-double safeExp(const double& x, int n)
+double safeExp(const double x, int n)
 {
     feclearexcept(FE_ALL_EXCEPT);
     double r = 0.;
@@ -134,7 +135,7 @@ double safeExp(const double& x, int n)
     return r;
 }
 
-double safeLog(const double& x, int n)
+double safeLog(const double x, int n)
 {
     feclearexcept(FE_ALL_EXCEPT);
     double r = 0.;
@@ -939,10 +940,13 @@ void Chronometer::display()
     auto d = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - _start);
 
     std::thread th_display ([] (std::string _comment, std::chrono::duration<long long, micro> du) {
-        if ( du == std::chrono::steady_clock::duration::zero() )
-            std::cout << " " << _comment << " -> The internal clock did not tick.\n";
-        else
-            std::cout << " " << _comment <<" " << du.count() << " µs \n";
+        if ( du == std::chrono::steady_clock::duration::zero() ) {
+            qWarning() << " " << QString().fromStdString(_comment) << " -> The internal clock did not tick.\n";
+
+        } else {
+            qWarning()<< "chrono "<< QString().fromStdString(_comment) <<" " << du.count() << " µs \n";
+
+        }
     }, _comment, d);
     th_display.detach();
 

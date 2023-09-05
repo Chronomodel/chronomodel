@@ -52,6 +52,8 @@ class Phase;
 class EventConstraint;
 
 
+#define S02_BAYESIAN
+
 class Event
 {
 public:
@@ -93,6 +95,7 @@ public:
     MHVariable mS02;
 
     double mAShrinkage;
+    double mS02harmonique;
     bool mInitialized;
 
     bool mNodeInitialized;
@@ -117,6 +120,11 @@ public:
     double mYx;
     double mYy;
     double mYz;
+
+    // Splines values
+    double mGx;
+    double mGy;
+    double mGz;
 
     // Values used for the calculations
     t_reduceTime mThetaReduced;

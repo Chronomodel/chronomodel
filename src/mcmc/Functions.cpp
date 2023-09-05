@@ -43,6 +43,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AppSettings.h"
 #include "StdUtilities.h"
 
+#include "fftw3.h"
+
 #include <QDebug>
 #include <QApplication>
 #include <QThread>
@@ -77,7 +79,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
  *  Publishing Company, 1973.
 */
 
-FunctionStat analyseFunction(const QMap<type_data, type_data> & fun)
+FunctionStat analyseFunction(const QMap<type_data, type_data> &fun)
 {
     FunctionStat result;
     if (fun.isEmpty()) {
@@ -157,7 +159,7 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> & fun)
     result.mean = std::move(mean);
 
     const double step = (fun.lastKey() - fun.firstKey()) / (double)(fun.size() - 1);
-    QVector<double> subRepart = calculRepartition(fun);
+    QList<double> subRepart = calculRepartition(fun);
     result.quartiles = quartilesForRepartition(subRepart, fun.firstKey(), step);
 
     return result;
@@ -169,7 +171,7 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> & fun)
  * @param data
  * @return
  */
-type_data std_Koening(const QVector<type_data> &data)
+type_data std_Koening(const QList<type_data> &data)
 {
     // Work with double precision here because sum2 might be big !
 
@@ -199,7 +201,7 @@ type_data std_Koening(const QVector<type_data> &data)
  * @param data
  * @return
  */
-double std_Knuth(const QVector<double> &data)
+double std_Knuth(const QList<double> &data)
 {
     unsigned n = 0;
     long double mean = 0.;
@@ -276,7 +278,7 @@ void mean_variance_Knuth(const std::vector<double> &data, double &mean, double &
     }
     variance /= n;
 }
-void mean_variance_Knuth(const QVector<double>& data, double& mean, double& variance)
+void mean_variance_Knuth(const QList<double> &data, double& mean, double& variance)
 {
     int n = 0;
     variance = 0.;
@@ -294,7 +296,7 @@ void mean_variance_Knuth(const QVector<double>& data, double& mean, double& vari
     variance /= n;
 }
 
-double std_unbiais_Knuth (const QVector<double> &data)
+double std_unbiais_Knuth (const QList<double> &data)
 {
     unsigned n = 0;
     double mean = 0.;
@@ -374,7 +376,7 @@ void mean_std_unbiais_Knuth(const std::vector<int>& data, double& mean, double& 
 }
 
 // dataX and dataY must have the same length
-double covariance(const std::vector<double>& dataX, const std::vector<double>& dataY)
+double covariance(const std::vector<double> &dataX, const std::vector<double> &dataY)
 {
     double meanx = 0.;
     double meany = 0.;
@@ -398,6 +400,114 @@ double covariance(const std::vector<double>& dataX, const std::vector<double>& d
    // sample_covar = C / (n - 1)
 }
 
+QList<double> autocorrelation_schoolbook(const QList<double> &trace, const int hmax)
+{
+    QList<double> results;
+    const auto n = trace.size();
+
+    double mean, variance;
+    mean_variance_Knuth(trace, mean, variance);
+    variance *= (double)trace.size();
+
+    results.append(1.); // force the first to exactly 1.
+    double sH = 0.;
+    for (int h = 1; h <= hmax; ++h) {
+        sH = 0.;
+        QList<double>::const_iterator iter_H = trace.cbegin() + h;
+        for (QList<double>::const_iterator iter = trace.cbegin(); iter != trace.cbegin() + (n-h); ++iter)
+            sH += (*iter - mean) * (*iter_H++ - mean);
+
+        results.append(sH / variance);
+    }
+
+    return results;
+
+}
+QList<double> autocorrelation_by_convol(const QList<double> &trace, const int hmax)
+{
+
+    double mean, variance;
+    mean_variance_Knuth(trace, mean, variance);
+    const int inputSize = trace.size();
+
+    const int paddingSize = ceil(inputSize/2) + 1; // Doit être supérieur à inptSize/2, sinon chevauchement des traces à convoler
+
+    const int N = inputSize + 2*paddingSize;
+    const int NComplex = 2* (N/2)+1;
+
+    double *inputReal;
+    inputReal = new double [N];
+    fftw_complex *inputComplex;
+    inputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
+
+    // we could use std::copy
+
+    for (int i  = 0; i< paddingSize; i++) {
+        inputReal[i] = 0;
+    }
+    for (int i = 0; i< inputSize; i++) {
+        inputReal[i+paddingSize] = trace[i] - mean;
+    }
+    for (int i = inputSize+paddingSize; i< N; i++) {
+        inputReal[i] = 0;
+    }
+
+    fftw_plan plan_input = fftw_plan_dft_r2c_1d(N, inputReal, inputComplex, FFTW_ESTIMATE);
+    fftw_execute(plan_input);
+
+    fftw_complex *outputComplex;
+    outputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
+    //
+    // FORMULE convolution g o f
+    //    for (int i= 1; i<NComplex; ++i) {
+    //        outputComplex[i][0] = gComplex[i][0] * fComplex[i][0] - gComplex[i][1] * fComplex[i][1];
+    //        outputComplex[i][1] = gComplex[i][0] * fComplex[i][1] + gComplex[i][1] * fComplex[i][0];
+    //    }
+
+    // remarque : mean = sqrt(inputComplex[0][0]^2 + inputComplex[0][1]^2)/inputSize
+    // ici img(inputComplex)= inputComplex[0][1] = 0 donc mean = real(inputComplex)/inputSize = inputComplex[0][0]/inputSize
+    // or ici nous avons fait la différence entre les valeurs de t et mean_t (input=t-mean) donc la valeur moyenne vaut zéro
+    //qDebug()<<" inputComplex0="<<sqrt(inputComplex[0][0] * inputComplex[0][0] + inputComplex[0][1] * inputComplex[0][1])/inputSize<<inputComplex[0][0]/inputSize << inputComplex[0][1];
+
+
+    //inputComplex[0][0]=0;
+    //inputT_Complex[0][0]=0;
+    // FORMULE convolution de l'auto-correlation g o g*
+    // Ici il s'agit de la formule pour convoler g par son conjugué complexe g*
+    // si A = a+ib  son conjugué B = A* = a-ib avec a=real(A) et b=img(A)
+
+    for (int i= 0; i<NComplex; ++i) {
+        outputComplex[i][0] = pow(inputComplex[i][0], 2.) + pow(inputComplex[i][1], 2.);
+        outputComplex[i][1] = - inputComplex[i][0] * inputComplex[i][1] + inputComplex[i][1] * inputComplex[i][0];
+    }
+
+    double *outputReal;
+    outputReal = new double [N];
+    fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, outputComplex, outputReal, FFTW_ESTIMATE);
+
+    fftw_execute(plan_output);
+
+    const double vmax = outputReal[0];
+    // La sortie de la convolution= autro-correlation donne /
+    // outputReal[0]=somme(input^2)
+    // comme nous avons fait input=t-mean; outputReal[0] vmax = somme((t-mean)^2) = variance* N
+    QList<double> results;
+    for ( int i = 0; i < hmax + 1; i++) {
+        results.push_back(outputReal[i] /vmax);
+    }
+    fftw_destroy_plan(plan_input);
+    fftw_destroy_plan(plan_output);
+
+    fftw_free(inputComplex);
+    fftw_free(outputComplex);
+
+    delete [] inputReal;
+    delete [] outputReal;
+
+    fftw_cleanup();
+    return results;
+}
+
 // dataX and dataY must have the same length
 /**
  * @brief linear_regression using knuth algorithm
@@ -405,7 +515,7 @@ double covariance(const std::vector<double>& dataX, const std::vector<double>& d
  * @param dataY
  * @return a, b coef and constant $$Y = a*t + b$$
  */
-const std::pair<double, double> linear_regression(const std::vector<double>& dataX, const std::vector<double>& dataY)
+const std::pair<double, double> linear_regression(const std::vector<double> &dataX, const std::vector<double>& dataY)
 {
     double mean_x = 0.;
     double mean_y = 0.;
@@ -445,7 +555,7 @@ const std::pair<double, double> linear_regression(const std::vector<double>& dat
  * @param trace
  * @return
  */
-TraceStat traceStatistic(const QVector<type_data>& trace)
+TraceStat traceStatistic(const QList<type_data> &trace)
 {
     TraceStat result;
     if (trace.size() == 1) {
@@ -544,15 +654,15 @@ QString densityAnalysisToString(const DensityAnalysis &analysis)
 }
 
 
-Quartiles quartilesForTrace(const QVector<type_data> &trace)
+Quartiles quartilesForTrace(const QList<type_data> &trace)
 {
     Quartiles quartiles = quantilesType(trace, 8, 0.25);
     return quartiles;
 }
 
-QVector<double> calculRepartition (const QVector<double>& calib)
+QList<double> calculRepartition(const QList<double> &calib)
 {
-    QVector<double> repartitionTemp;
+    QList<double> repartitionTemp;
 
     // we use long double type because
     // after several sums, the repartion can be in the double type range
@@ -570,7 +680,7 @@ QVector<double> calculRepartition (const QVector<double>& calib)
     return repartitionTemp;
 }
 
-QVector<double> calculRepartition (const QMap<double, double>  &calib)
+QList<double> calculRepartition(const QMap<double, double>  &calib)
 {
     QVector<double> repartitionTemp;
 
@@ -582,8 +692,8 @@ QVector<double> calculRepartition (const QMap<double, double>  &calib)
     long double lastRepVal (0.);
 
     while (it != calib.cend()) {
-        double v = it.value();
-        double t = it.key();
+        const double v = it.value();
+        const double t = it.key();
         long double rep = lastRepVal;
         if(v != 0. && lastV != 0.)
             rep = lastRepVal + (t-lastT)*(lastV + v) / 2.;
@@ -601,7 +711,7 @@ QVector<double> calculRepartition (const QMap<double, double>  &calib)
 
     return repartitionTemp;
 }
-Quartiles quartilesForRepartition(const QVector<double>& repartition, const double tmin, const double step)
+Quartiles quartilesForRepartition(const QList<double> &repartition, const double tmin, const double step)
 {
     Quartiles quartiles;
     if (repartition.size()<5) {
@@ -629,7 +739,7 @@ Quartiles quartilesForRepartition(const QVector<double>& repartition, const doub
  * @param description
  * @return
  */
-std::pair<double, double> credibilityForTrace(const QVector<double>& trace, double thresh, double& exactThresholdResult, const  QString description)
+std::pair<double, double> credibilityForTrace(const QList<double> &trace, double thresh, double& exactThresholdResult, const  QString description)
 {
     (void) description;
     std::pair<double, double> credibility(0.,0.);
@@ -645,7 +755,7 @@ std::pair<double, double> credibilityForTrace(const QVector<double>& trace, doub
 
     if (thresh > 0 && n > 0) {
         double threshold = std::clamp(thresh, 0.0, 100.0);
-        QVector<double> sorted (trace);
+        QList<double> sorted (trace);
         std::sort(sorted.begin(),sorted.end());
 
         const size_t numToRemove = (size_t)floor(n * (1. - threshold / 100.));
@@ -675,7 +785,7 @@ std::pair<double, double> credibilityForTrace(const QVector<double>& trace, doub
 }
 
 // Used in generateTempo for credibility
-std::pair<double, double> credibilityForTrace(const QVector<int>& trace, double thresh, double& exactThresholdResult, const QString description)
+std::pair<double, double> credibilityForTrace(const QList<int> &trace, double thresh, double& exactThresholdResult, const QString description)
 {
     (void) description;
     std::pair<double, double> credibility(0.,0.);
@@ -727,7 +837,7 @@ std::pair<double, double> credibilityForTrace(const QVector<int>& trace, double 
  * @param description  compute type 7 R quantile
  * @return
  */
-std::pair<double, double> timeRangeFromTraces(const QVector<double> &trace1, const QVector<double> &trace2, const double thresh, const QString description)
+std::pair<double, double> timeRangeFromTraces(const QList<double> &trace1, const QList<double> &trace2, const double thresh, const QString description)
 {
     (void) description;
     std::pair<double, double> range(- INFINITY, +INFINITY);
@@ -843,7 +953,7 @@ std::pair<double, double> timeRangeFromTraces(const QVector<double> &trace1, con
  * @return
  */
 
-std::pair<double, double> transitionRangeFromTraces(const QVector<double>& trace1, const QVector<double> &trace2, const double thresh, const QString description)
+std::pair<double, double> transitionRangeFromTraces(const QList<double> &trace1, const QList<double> &trace2, const double thresh, const QString description)
 {
     return timeRangeFromTraces(trace1, trace2, thresh, description);
 }
@@ -857,7 +967,7 @@ std::pair<double, double> transitionRangeFromTraces(const QVector<double>& trace
  * @param description a simple text
  * @return
  */
-std::pair<double, double> gapRangeFromTraces(const QVector<double> &traceEnd, const QVector<double> &traceBegin, const double thresh, const QString description)
+std::pair<double, double> gapRangeFromTraces(const QList<double> &traceEnd, const QList<double> &traceBegin, const double thresh, const QString description)
 {
     (void) description;
 #ifdef DEBUG

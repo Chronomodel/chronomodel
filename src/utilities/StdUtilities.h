@@ -86,35 +86,35 @@ const double gammaActivity[] = {1.,-1.,0.00501257,0.0589032,0.140868,0.222072,0.
 int compareStrings(const std::string &s1, const std::string &s2);
 std::string removeZeroAtRight(std::string str);
 
-double safeExp(const double& x, int n = 10);
-double safeLog(const double& x, int n = 5);
+double safeExp(const double x, int n = 10);
+double safeLog(const double x, int n = 5);
 
-void checkFloatingPointException(const QString& infos = QString());
+void checkFloatingPointException(const QString &infos = QString());
 
 
 QVector<double> normalize_vector(const QVector<double> &vector);
 QVector<float> normalize_vector(const QVector<float> &vector);
 
-QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const QMap<double, double>& mapWithTargetArea);
-QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const QMap<float, float>& mapWithTargetArea);
-QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const double targetArea);
-QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const float targetArea);
+QMap<double, double> equal_areas(const QMap<double, double> &mapToModify, const QMap<double, double> &mapWithTargetArea);
+QMap<float, float> equal_areas(const QMap<float, float> &mapToModify, const QMap<float, float> &mapWithTargetArea);
+QMap<double, double> equal_areas(const QMap<double, double> &mapToModify, const double targetArea);
+QMap<float, float> equal_areas(const QMap<float, float> &mapToModify, const float targetArea);
 
-QVector<double> equal_areas(const QVector<double>& data, const double step, const double area);
-QVector<float> equal_areas(const QVector<float>& data, const float step, const float area);
+QVector<double> equal_areas(const QVector<double> &data, const double step, const double area);
+QVector<float> equal_areas(const QVector<float> &data, const float step, const float area);
 
 
-QMap<float, float> vector_to_map(const QVector<float>& data, const float min, const float max, const float step);
-QMap<double, double> vector_to_map(const QVector<double>& data, const double min, const double max, const double step);
+QMap<float, float> vector_to_map(const QVector<float> &data, const float min, const float max, const float step);
+QMap<double, double> vector_to_map(const QVector<double> &data, const double min, const double max, const double step);
 QMap<double, double> vector_to_map(const QVector<int> &data, const double min, const double max, const double step);
 
+//There is also RefCurve::interpolate_mean()
+double interpolate_value_from_curve(const double t, const QVector<double> &curve, const double curveTmin, const double curveTmax);
+double interpolate_value_from_curve(const double x, const std::vector<double> &curve, const double Xmin, const double Xmax);
 
-double interpolate_value_from_curve(const double t, const QVector<double> &curve,const double curveTmin, const double curveTmax);
-double interpolate_value_from_curve(const double x, const std::vector<double> &curve,const double Xmin, const double Xmax);
-
-double map_area(const QMap<double, double>& map);
-float map_area(const QMap<float, float>& map);
-double map_area(const QMap<int, double>& density);
+double map_area(const QMap<double, double> &map);
+float map_area(const QMap<float, float> &map);
+double map_area(const QMap<int, double> &density);
 double map_area(const std::map<double, double> &map);
 
 inline double surface_on_theta (std::map<double, double>::const_iterator iter_on_theta );
@@ -469,7 +469,7 @@ inline T N(T x, T mean = 0, T stddev = 1) {
     return exp(-pow(x - mean, 2)/(2*pow(stddev, 2)))/(stddev*M_SQRT2PI);
 }
 
-// Fonction utilisée pour la courbe d'activité
+// Function used for activity curve
 std::vector<double> binomialeCurveByLog(const int n, const double alpha= .05, const int q_frac = 500);
 
 std::vector<double> inverseCurve(const std::vector<double> &Rp, const int x_frac = 500);

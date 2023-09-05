@@ -81,14 +81,14 @@ MCMCLoopChrono::~MCMCLoopChrono()
 QString MCMCLoopChrono::calibrate()
 {
     if (mModel) {
-        QList<Event*>& events = mModel->mEvents;
+        QList<Event*> &events = mModel->mEvents;
         events.reserve(mModel->mEvents.size());
         //----------------- Calibrate measurements --------------------------------------
 
         QList<Date*> dates;
         // find number of dates, to optimize memory space
         int nbDates = 0;
-        for (auto&&e : events)
+        for (auto&& e : events)
             nbDates += e->mDates.size();
 
         dates.reserve(nbDates);

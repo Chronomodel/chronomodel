@@ -74,6 +74,7 @@ public:
     RefCurve();
     virtual ~RefCurve();
     double interpolate_mean(const double t) const;
+    double interpolate_error(const double t) const;
 
 
 };

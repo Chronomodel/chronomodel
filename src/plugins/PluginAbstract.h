@@ -324,7 +324,7 @@ public:
     {
         double error = 0.;
         if (mRefCurves.constFind(curveName) != mRefCurves.constEnd()) {
-            const RefCurve& curve = mRefCurves.value(curveName);
+            const RefCurve &curve = mRefCurves.value(curveName);
 
             if (t >= curve.mTmin && t <= curve.mTmax) {
                // This actually return the iterator with the nearest greater key !!!

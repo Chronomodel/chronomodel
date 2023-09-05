@@ -72,3 +72,26 @@ double RefCurve::interpolate_mean(const double t) const
 
     return 0.;
 }
+
+double RefCurve::interpolate_error(const double t) const
+{
+    if (t >= mTmin && t <= mTmax) {
+        // This actually return the iterator with the nearest greater key !!!
+        QMap<double, double>::const_iterator iter = mDataError.lowerBound(t);
+        if (iter != mDataError.constBegin())  {
+            const double t_upper = iter.key();
+            const double v_upper = iter.value();
+
+            --iter;
+            const double t_under = iter.key();
+            const double v_under = iter.value();
+
+            return std::lerp(v_under, v_upper, (t - t_under) / (t_upper - t_under));
+        }
+        else {
+            return iter.value();
+        }
+    }
+
+    return 0.;
+}

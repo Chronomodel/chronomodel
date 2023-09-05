@@ -55,6 +55,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QDebug>
 #include <QJsonObject>
 
+
 Event::Event(const Model *model):
     mType (eDefault),
     mId (0),
@@ -164,7 +165,7 @@ Event::Event (const QJsonObject& json, const Model *model):
 
 }
 
-Event::Event(const Event& event)
+Event::Event(const Event &event)
 {
     Event::copyFrom(event);
 }
@@ -203,6 +204,7 @@ void Event::copyFrom(const Event& event)
     mS02.mSamplerProposal = event.mS02.mSamplerProposal;
 
     mAShrinkage = event.mAShrinkage;
+    mS02harmonique = event.mS02harmonique;
 
     mItemX = event.mItemX;
     mItemY = event.mItemY;
@@ -1170,7 +1172,7 @@ void Event::updateW()
 void Event::updateS02()
 {
     try {
-        const double logVMin = -6.;
+        const double logVMin = -100.;
         const double logVMax = 100.;
 
         const double logV2 = Generator::gaussByBoxMuller(log10(mS02.mX) , mS02.mSigmaMH);
@@ -1178,9 +1180,12 @@ void Event::updateS02()
 
         double rapport  = 0.;
         if (logV2 >= logVMin && logV2 <= logVMax) {
+
             const double current_h = h_S02(mS02.mX);
+
             const double try_h = h_S02(V2);
-            rapport = (try_h / current_h) * (V2 / mS02.mX) ; // (V2 / V1) est le jacobien!
+
+            rapport = (try_h / current_h) ; // (V2 / mS02.mX) ; // (V2 / V1) est le jacobien!
 
         }
 #ifdef DEBUG
@@ -1190,7 +1195,7 @@ void Event::updateS02()
 #endif
 
         mS02.tryUpdate(V2, rapport);
-       // qDebug()<<"SO2 ="<< mS02.mX<<" rapport = "<<rapport;
+        //qDebug()<<"SO2 ="<< mS02.mX<<" rapport = "<<rapport;
     }  catch (...) {
         qWarning() <<"S02() mW = 0";
     }
@@ -1200,20 +1205,26 @@ void Event::updateS02()
 
 double Event::h_S02(const double S02)
 {
+    const int alpha = 1 ;
 
-    const double alp = 1. ;
+    const double beta = 1.004680139*(1 - exp(- 0.0000847244 * pow(mS02harmonique, 2.373548593)));
 
-    const double bet = 1. ;
+    // const double beta = 1.;
 
-    const double prior =   pow((1./S02), alp + 1) * exp(-bet/S02);
+    const double prior = pow(1. / S02, alpha) * expl(- beta / S02);
+
     const int a = 1 ;
 
     double prod_h = 1.;
     for (auto& d : mDates) {
-        prod_h *= pow((S02/(S02 + pow(d.mSigmaTi.mX, 2))), a + 1) / S02;
-    }
 
-    return prior* prod_h;
+        prod_h *= pow((S02/(S02 + pow(d.mSigmaTi.mX, 2))), a + 1) / S02;
+
+    }
+    const double prod = prior * prod_h;
+    //  const double prod =  prod_h;
+
+    return  prod;
 
 }
 

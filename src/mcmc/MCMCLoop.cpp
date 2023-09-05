@@ -126,8 +126,13 @@ QString MCMCLoop::initialize_time(Model* model)
     // ---------------------- Reset Events ---------------------------
     for (Event* ev : allEvents) {
         ev->mInitialized = false;
+
+#ifdef  S02_BAYESIAN
+        ev->mS02.mSamplerProposal = MHVariable::eMHAdaptGauss;// not yet integrate within update_321
+
+# else
         ev->mS02.mSamplerProposal = MHVariable::eFixe;
-        // ev->mS02.mSamplerProposal = MHVariable::eMHAdaptGauss; // not yet integrate within update_321
+#endif
     }
     // -------------------------- Init gamma ------------------------------
     emit stepChanged(tr("Initializing Phase Gaps..."), 0, phasesConstraints.size());
@@ -322,6 +327,11 @@ QString MCMCLoop::initialize_time(Model* model)
 
                     // 4 - Init S02 of each Event
                     uEvent->mS02.mX = uEvent->mDates.size() / s02_sum;
+                     uEvent->mS02.mSigmaMH = 1.;
+
+                    uEvent->mS02harmonique = sqrt(uEvent->mDates.size() / s02_sum);
+                    uEvent->mS02.mLastAccepts.clear();
+                    uEvent->mS02.memo();
 
                     // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
                     uEvent->mTheta.mSigmaMH = sqrt(uEvent->mS02.mX);
@@ -332,7 +342,7 @@ QString MCMCLoop::initialize_time(Model* model)
                     //unsortedEvents.at(i)->mTheta.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
                     uEvent->mTheta.tryUpdate(uEvent->mTheta.mX, 2.);
 
-                    uEvent->mS02.memo();
+
 
                 }
 
@@ -391,7 +401,14 @@ QString MCMCLoop::initialize_time(Model* model)
                 // 4 - Init S02 of each Event
                 uEvent->mS02.mX = 0;
                 uEvent->mS02.mLastAccepts.clear();
+#ifdef  S02_BAYESIAN
+                uEvent->mS02.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
+# else
                 uEvent->mS02.mSamplerProposal = MHVariable::eFixe;
+#endif
+
+                //uEvent->mS02.mSamplerProposal = MHVariable::eFixe;
                 uEvent->mS02.memo();
 
                 // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)

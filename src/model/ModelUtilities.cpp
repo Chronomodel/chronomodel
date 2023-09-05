@@ -253,9 +253,9 @@ QVector<QVector<Phase*> > ModelUtilities::getAllPhasesBranches(const QList<Phase
  * @param events
  * @return
  */
-QVector<Event*> ModelUtilities::unsortEvents(const QList<Event*>& events)
+QList<Event*> ModelUtilities::unsortEvents(const QList<Event*> &events)
 {
-    QVector<Event*> results (events.toVector());
+    QList<Event*> results (events);
     for (int i = results.size()-1; i > 0; --i){
         std::swap(results[i], results[Generator::randomUniformInt(0, i)]);
     }
