@@ -45,8 +45,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QFileInfo>
 #include <QtCore/qdebug.h>
 
-bool colorIsDark(const QColor& color);
-void sortIntList(QList<int>& list);
+bool colorIsDark(const QColor &color);
+void sortIntList(QList<int> &list);
 
 QString DHMS(quint64 elapsedTime);
 
@@ -172,12 +172,12 @@ QMap<T, V> getMapDataInRange(const QMap<T, V> data, const T subMin, const  T sub
 }
 
 template <typename T>
-QVector<T> getVectorDataInRange(const QVector<T>& data, const T subMin,const T subMax, const T min, const T max)
+QList<T> getVectorDataInRange(const QList<T> &data, const T subMin,const T subMax, const T min, const T max)
 {
     Q_ASSERT(!data.isEmpty());
 
     if (subMin != min || subMax != max)  {
-        QVector<T> subData;
+        QList<T> subData;
         subData.reserve(data.size());
         qsizetype idxStart = (qsizetype) floor(data.size() * (subMin - min) / (max - min));
         qsizetype idxEnd = (qsizetype) floor(data.size() * (subMax - min) / (max - min));

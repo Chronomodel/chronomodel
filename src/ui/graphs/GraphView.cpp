@@ -233,54 +233,46 @@ void GraphView::adjustYScale()
         qreal yMin =  HUGE_VAL;
         
         for (int curveIndex=0; curveIndex<mCurves.size(); ++curveIndex) {
-            const GraphCurve& curve = mCurves.at(curveIndex);
+            const GraphCurve &curve = mCurves.at(curveIndex);
             
             if (curve.mVisible && curve.isVertical()) { // used for the measurement in the calibration process
                 yMin = std::min(yMin, curve.mData.firstKey());
                 yMax = std::max(yMax, curve.mData.lastKey());
             }
 
-            if (curve.mVisible && !curve.isVertical() && !curve.isHorizontalLine()
-                    && !curve.isVerticalLine() && !curve.isHorizontalSections()) {
+            if (curve.mVisible && !curve.isVertical() && !curve.isVerticalLine() && !curve.isHorizontalSections()) {
 
                 if (curve.isVectorData()) {
-                    const QVector<qreal> &subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, qreal (0.), qreal (curve.mDataVector.size()));
+                    const QList<qreal> &subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, qreal (0.), qreal (curve.mDataVector.size()));
                     if (!subData.empty()) {
                         yMin = std::min(yMin, range_min_value(subData));
                         yMax = std::max(yMax, range_max_value(subData));
                     }
 
-
                 } else if (curve.isShape()) {
                     const auto &curveInf = curve.mShape.first;
                     const auto &curveSup = curve.mShape.second;
                     const QMap<qreal, qreal> &subDataInf = getMapDataInRange(curveInf, mCurrentMinX, mCurrentMaxX);
-                    if (!subDataInf.empty()) yMin = std::min(yMin, map_min(subDataInf).value());
+                    if (!subDataInf.empty())
+                        yMin = std::min(yMin, map_min(subDataInf).value());
 
                     const QMap<qreal, qreal> &subDataSup = getMapDataInRange(curveSup, mCurrentMinX, mCurrentMaxX);
-                    if (!subDataSup.empty()) yMax = std::max(yMax, map_max(subDataSup).value());
-
-                  //  auto yMax2 = std::max(yMax, map_max_value(subDataSup, mCurrentMinX, mCurrentMaxX));
+                    if (!subDataSup.empty())
+                        yMax = std::max(yMax, map_max(subDataSup).value());
 
                 } else if (!curve.mData.empty()) {
                     yMax = std::max(yMax, map_max(curve.mData, mCurrentMinX, mCurrentMaxX).value());
                     yMin = std::min(yMax, map_min(curve.mData, mCurrentMinX, mCurrentMaxX).value());
-                    /*const QMap<qreal, qreal> &subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
-                    if (!subData.empty()) {
-                       // yMin = std::min(yMin, map_min_value(subData));
-                        yMax = std::max(yMax, map_max_value(subData));
-                    }
-*/
 
-                    //yMin = 0.;//
-                }
-                // map
-                if (curve.mMap.data.size() > 0) {
+                } else if (curve.mMap.data.size() > 0) {// map
                     yMin = std::min(yMin, curve.mMap.rangeY.first);
                     yMax = std::max(yMax, curve.mMap.rangeY.second);
-                }
 
-             }
+                }  else if (curve.isHorizontalLine()) {
+                    yMin = std::min(yMin, curve.mHorizontalValue);
+                    yMax = std::max(yMax, curve.mHorizontalValue);
+                }
+            }
         }
 
         for (auto& rf : refPoints) {

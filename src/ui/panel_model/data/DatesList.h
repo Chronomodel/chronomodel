@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -60,7 +60,6 @@ public:
 protected slots:
     void handleItemClicked(QListWidgetItem* item);
     void handleItemDoubleClicked(QListWidgetItem* item);
-    //void handleItemIsChanged();
     void forceAtLeastOneSelected();
 
 signals:

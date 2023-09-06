@@ -213,11 +213,10 @@ long double PluginMag::Likelihood(const double t, const QJsonObject &data)
         break;
 
     case eIF:
-        //mesureIncl = incl;
         errorI = alpha95 / 2.448l;
-        //mesureField = field;
         errorF = error_f;
-        // Étalonnage vectoriel : I et F
+
+        // Vector calibration: I and F
         refValueI = getRefCurveValueAt(refI_curve, t);
         refErrorI = getRefCurveErrorAt(refI_curve, t);
 
@@ -228,19 +227,10 @@ long double PluginMag::Likelihood(const double t, const QJsonObject &data)
         I = -0.5l*powl((incl - refValueI), 2.l);
         vF = errorF*errorF + refErrorF*refErrorF ;
         F = -0.5l*powl((field - refValueF), 2.l);
-        // Calcul de s0IF
+        // Calculation of s0IF
         si0 = 0.5*(errorF*errorF + powl(errorI*field * rad, 2.l));
-        // Simulation des valeurs de sigmaIF
-        /* QVector <double> sigmaIF(iteration_mcmc);
-        double w =0;
-        for (int i=0; i < sigmaIF.size(); ++i) {
-          w += 1/iteration_mcmc;
-          sigmaIF[i] = s0IF*((1. - w)/w);
-        }
-        for (auto& sIF : sigmaIF) {
-          exponent += expl(I/(vI + sIF/(mesureField*mesureField)) + F/(vF + sIF))/sqrtl((vI + sIF/(mesureField*mesureField))*(vF + sIF));
-        } */
-        // Code Optimization
+        // Simulation of sigmaIF values
+
         for (int i=0; i < iteration_mcmc; ++i) {
             w += 1/iteration_mcmc;
             si = si0*((1. - w)/w);
@@ -250,11 +240,8 @@ long double PluginMag::Likelihood(const double t, const QJsonObject &data)
         break;
 
     case eIDF:
-        //mesureIncl = incl;
         errorI = alpha95 / 2.448l;
-        //mesureDecl = decl;
         errorD = alpha95 / (2.448l * cosl(incl * rad));
-        //mesureField = field;
         errorF = error_f;
 
         refValueI = getRefCurveValueAt(refI_curve, t);
@@ -277,20 +264,10 @@ long double PluginMag::Likelihood(const double t, const QJsonObject &data)
 
 
         rr = powl((field * cosl(incl * rad)), 2);
-            // calcul de s0IDF
+        // calculation of s0IDF
         si0 = (errorF*errorF + 2.l*powl((errorI*field * rad), 2))/3;
 
-        // Simulation des valeurs de sigmaIDF
-        /*QVector <long double> sigmaIDF(iteration_mcmc);
-        double w = 0;
-        for (int i=0; i < sigmaIDF.size(); ++i) {
-             w += 1/iteration_mcmc;
-             sigmaIDF[i] = s0IDF*((1. - w)/w);
-        }
-        for (auto& sIDF : sigmaIDF) {
-             exponent += expl(I/(vI + sIDF/(mesureField*mesureField)) + D/(vD + sIDF/rr)  + F/(vF + sIDF))/sqrtl((vI + sIDF/(mesureField*mesureField))*(vF + sIDF)*(vD + sIDF/rr));
-        }*/
-        // Code Optimization
+        // Simulation of sigmaIDF values
         for (int i=0; i < iteration_mcmc; ++i) {
             w += 1/iteration_mcmc;
             si = si0*((1. - w)/w);
@@ -485,12 +462,12 @@ QStringList PluginMag::csvColumns() const
     return cols;
 }
 
-
 PluginFormAbstract* PluginMag::getForm()
 {
     PluginMagForm* form = new PluginMagForm(this);
     return form;
 }
+
 //Convert old project versions
 /**
  * @brief PluginMag::checkValuesCompatibility
@@ -659,19 +636,19 @@ QJsonObject PluginMag::fromCSV(const QStringList &list,const QLocale &csvLocale)
         if (typeStr == "inclination") {
             pta = eInc;
 
-        } else        if (typeStr == "declination") {
+        } else if (typeStr == "declination") {
             pta = eDec;
 
-        } else         if (typeStr == "field" || typeStr=="intensity") {
+        } else if (typeStr == "field" || typeStr=="intensity") {
             pta = eField;
 
-        } else         if (typeStr == "incl-decl") {
+        } else if (typeStr == "incl-decl") {
             pta = eID;
 
-        } else         if (typeStr == "incl-field") {
+        } else if (typeStr == "incl-field") {
             pta = eIF;
 
-        } else         if (typeStr == "incl-decl-field") {
+        } else if (typeStr == "incl-decl-field") {
             pta = eIDF;
         }
 
@@ -844,27 +821,17 @@ double PluginMag::getRefValueAt(const QJsonObject &data, const double t)
     const ProcessTypeAM pta = static_cast<ProcessTypeAM> (data.value(DATE_AM_PROCESS_TYPE_STR).toInt());
 
     switch (pta) {
-    case eInc:
-        ref_curve = data.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
-        break;
-    case eDec:
-        ref_curve = data.value(DATE_AM_REF_CURVED_STR).toString().toLower();
-        break;
-    case eField:
-        ref_curve = data.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
-        break;
-  /*  case eID:
-        mIDRadio->setChecked(true);
-        break;
-    case eIF:
-        mIFRadio->setChecked(true);
-        break;
-    case eIDF:
-        mIDFRadio->setChecked(true);
-        break;
-        */
-    default:
-        break;
+        case eInc:
+            ref_curve = data.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
+            break;
+        case eDec:
+            ref_curve = data.value(DATE_AM_REF_CURVED_STR).toString().toLower();
+            break;
+        case eField:
+            ref_curve = data.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
+            break;
+        default:
+            break;
     }
     return getRefCurveValueAt(ref_curve, t);
 }
@@ -875,28 +842,18 @@ double PluginMag::getRefErrorAt(const QJsonObject &data, const double t)
     const ProcessTypeAM pta = static_cast<ProcessTypeAM> (data.value(DATE_AM_PROCESS_TYPE_STR).toInt());
 
     switch (pta) {
-    case eInc:
-        ref_curve = data.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
-        break;
-    case eDec:
-        ref_curve = data.value(DATE_AM_REF_CURVED_STR).toString().toLower();
-        break;
-    case eField:
-        ref_curve = data.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
-        break;
-  /*  case eID:
-        mIDRadio->setChecked(true);
-        break;
-    case eIF:
-        mIFRadio->setChecked(true);
-        break;
-    case eIDF:
-        mIDFRadio->setChecked(true);
-        break;
-        */
-    default:
-        ref_curve = "";
-        break;
+        case eInc:
+            ref_curve = data.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
+            break;
+        case eDec:
+            ref_curve = data.value(DATE_AM_REF_CURVED_STR).toString().toLower();
+            break;
+        case eField:
+            ref_curve = data.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
+            break;
+        default:
+            ref_curve = "";
+            break;
     }
     return getRefCurveErrorAt(ref_curve, t);
 }
@@ -977,8 +934,6 @@ QPair<double,double> PluginMag::getTminTmaxRefsCurve(const QJsonObject& data) co
         tmax = 0;
         break;
     }
-    //QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
-
 
     return QPair<double,double>(tmin, tmax);
 }
@@ -1010,10 +965,6 @@ bool PluginMag::isDateValid(const QJsonObject& data, const StudyPeriodSettings& 
 {
     qDebug() <<"PluginMag::isDateValid for="<< data.value(STATE_NAME).toString();
     // check valid curve
-    /*QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
-    const bool is_vec = data.value(DATE_AM_IS_VEC_STR).toBool();
-    const bool is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
-    const bool is_int = data.value(DATE_AM_IS_INT_STR).toBool(); */
 
     const ProcessTypeAM pta = static_cast<ProcessTypeAM> (data.value(DATE_AM_PROCESS_TYPE_STR).toInt());
     double incl = data.value(DATE_AM_INC_STR).toDouble();
@@ -1023,51 +974,51 @@ bool PluginMag::isDateValid(const QJsonObject& data, const StudyPeriodSettings& 
 
     QString ref_curve;
     switch (pta) {
-    case eInc:
-        ref_curve = data.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
-        valid = measureIsValidForCurve(incl, ref_curve, data, settings);
-        break;
-    case eDec:
-        ref_curve = data.value(DATE_AM_REF_CURVED_STR).toString().toLower();
-        valid = measureIsValidForCurve(decl, ref_curve, data, settings);
-        break;
+        case eInc:
+            ref_curve = data.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
+            valid = measureIsValidForCurve(incl, ref_curve, data, settings);
+            break;
+        case eDec:
+            ref_curve = data.value(DATE_AM_REF_CURVED_STR).toString().toLower();
+            valid = measureIsValidForCurve(decl, ref_curve, data, settings);
+            break;
 
-    case eField:
-        ref_curve = data.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
-        valid = measureIsValidForCurve(field, ref_curve, data, settings);
-        break;
+        case eField:
+            ref_curve = data.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
+            valid = measureIsValidForCurve(field, ref_curve, data, settings);
+            break;
 
-    case eID:
-        ref_curve = data.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
-        valid = measureIsValidForCurve(incl, ref_curve, data, settings);
+        case eID:
+            ref_curve = data.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
+            valid = measureIsValidForCurve(incl, ref_curve, data, settings);
 
-        ref_curve = data.value(DATE_AM_REF_CURVED_STR).toString().toLower();
-        valid = measureIsValidForCurve(decl, ref_curve, data, settings) && valid;
+            ref_curve = data.value(DATE_AM_REF_CURVED_STR).toString().toLower();
+            valid = measureIsValidForCurve(decl, ref_curve, data, settings) && valid;
 
-        break;
-    case eIF:
-        ref_curve = data.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
-        valid = measureIsValidForCurve(incl, ref_curve, data, settings);
+            break;
+        case eIF:
+            ref_curve = data.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
+            valid = measureIsValidForCurve(incl, ref_curve, data, settings);
 
-        ref_curve = data.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
-        valid = measureIsValidForCurve(field, ref_curve, data, settings) && valid;
+            ref_curve = data.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
+            valid = measureIsValidForCurve(field, ref_curve, data, settings) && valid;
 
-        return valid;
-        break;
-    case eIDF:
-        ref_curve = data.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
-        valid = measureIsValidForCurve(incl, ref_curve, data, settings);
+            return valid;
+            break;
+        case eIDF:
+            ref_curve = data.value(DATE_AM_REF_CURVEI_STR).toString().toLower();
+            valid = measureIsValidForCurve(incl, ref_curve, data, settings);
 
-        ref_curve = data.value(DATE_AM_REF_CURVED_STR).toString().toLower();
-        valid = measureIsValidForCurve(decl, ref_curve, data, settings) && valid;
+            ref_curve = data.value(DATE_AM_REF_CURVED_STR).toString().toLower();
+            valid = measureIsValidForCurve(decl, ref_curve, data, settings) && valid;
 
-        ref_curve = data.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
-        valid = measureIsValidForCurve(field, ref_curve, data, settings) && valid;
+            ref_curve = data.value(DATE_AM_REF_CURVEF_STR).toString().toLower();
+            valid = measureIsValidForCurve(field, ref_curve, data, settings) && valid;
 
-        break;
+            break;
 
-    default:
-        break;
+        default:
+            break;
     }
 
 

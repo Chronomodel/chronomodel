@@ -62,7 +62,7 @@ public slots:
     void zoomX(const double min, const double max);
     void setMarginRight(const int margin);
 protected:
-    void resizeEvent(QResizeEvent* e);
+    void resizeEvent(QResizeEvent*);
 
 private:
     RefCurve combine_curve_ID(double incl, double decl, const double alpha95, const RefCurve &curve_I, const RefCurve &curve_D, double &mean_date) const;
@@ -79,6 +79,8 @@ QMap<double, double> low_pass_filter(QMap<double, double> &map, const double Tc)
 
 double *hanning(int L, int N_fft);
 QMap<double, double> window_filter(QMap<double, double> &map, const double L);
+
+QMap<double, double> window_filter_complex(QMap<double, double> &map, const double L);
 
 
 #endif

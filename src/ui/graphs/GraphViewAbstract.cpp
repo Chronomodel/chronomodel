@@ -76,19 +76,19 @@ qreal GraphViewAbstract::marginBottom() const {return mMarginBottom;}
 
 # pragma mark Setters -> No Action
 
-void GraphViewAbstract::setRangeX(const type_data &aMinX, const type_data &aMaxX)
+void GraphViewAbstract::setRangeX(const type_data aMinX, const type_data aMaxX)
 {
     mMinX = aMinX;
     mMaxX = aMaxX;
 }
 
-void GraphViewAbstract::setCurrentX(const type_data &aMinX, const type_data &aMaxX)
+void GraphViewAbstract::setCurrentX(const type_data aMinX, const type_data aMaxX)
 {
     mCurrentMinX = aMinX;
     mCurrentMaxX = aMaxX;
 }
 
-void GraphViewAbstract::setRangeY(const type_data &aMinY, const type_data &aMaxY)
+void GraphViewAbstract::setRangeY(const type_data aMinY, const type_data aMaxY)
 {
     if (aMinY != mMinY || aMaxY != mMaxY) {
         if (aMinY == aMaxY) {
@@ -108,16 +108,16 @@ void GraphViewAbstract::setRangeY(const type_data &aMinY, const type_data &aMaxY
     }
 }
 
-void GraphViewAbstract::setMinimumX(const type_data &aMinX)			{ if (mMinX != aMinX) mMinX = aMinX;}
-void GraphViewAbstract::setMaximumX(const type_data &aMaxX)			{ if (mMaxX != aMaxX) mMaxX = aMaxX;}
-void GraphViewAbstract::setMinimumY(const type_data &aMinY)			{ if (mMinY != aMinY) mMinY = aMinY;}
-void GraphViewAbstract::setMaximumY(const type_data &aMaxY)			{ if (mMaxY != aMaxY) mMaxY = aMaxY;}
+void GraphViewAbstract::setMinimumX(const type_data aMinX)			{ if (mMinX != aMinX) mMinX = aMinX;}
+void GraphViewAbstract::setMaximumX(const type_data aMaxX)			{ if (mMaxX != aMaxX) mMaxX = aMaxX;}
+void GraphViewAbstract::setMinimumY(const type_data aMinY)			{ if (mMinY != aMinY) mMinY = aMinY;}
+void GraphViewAbstract::setMaximumY(const type_data aMaxY)			{ if (mMaxY != aMaxY) mMaxY = aMaxY;}
 
-void GraphViewAbstract::setMarginLeft(const qreal &aMarginLeft)		{ if (mMarginLeft != aMarginLeft) mMarginLeft = aMarginLeft;}
-void GraphViewAbstract::setMarginRight(const qreal &aMarginRight)	{ if (mMarginRight != aMarginRight) mMarginRight = aMarginRight;}
-void GraphViewAbstract::setMarginTop(const qreal &aMarginTop)		{ if (mMarginTop != aMarginTop) mMarginTop = aMarginTop; }
-void GraphViewAbstract::setMarginBottom(const qreal &aMarginBottom)	{ if (mMarginBottom != aMarginBottom) mMarginBottom = aMarginBottom;}
-void GraphViewAbstract::setMargins(const qreal &aMarginLeft, const qreal &aMarginRight, const qreal &aMarginTop, const qreal &aMarginBottom)
+void GraphViewAbstract::setMarginLeft(const qreal aMarginLeft)		{ if (mMarginLeft != aMarginLeft) mMarginLeft = aMarginLeft;}
+void GraphViewAbstract::setMarginRight(const qreal aMarginRight)	{ if (mMarginRight != aMarginRight) mMarginRight = aMarginRight;}
+void GraphViewAbstract::setMarginTop(const qreal aMarginTop)		{ if (mMarginTop != aMarginTop) mMarginTop = aMarginTop; }
+void GraphViewAbstract::setMarginBottom(const qreal aMarginBottom)	{ if (mMarginBottom != aMarginBottom) mMarginBottom = aMarginBottom;}
+void GraphViewAbstract::setMargins(const qreal aMarginLeft, const qreal aMarginRight, const qreal aMarginTop, const qreal aMarginBottom)
 {
 	mMarginLeft = aMarginLeft;
 	mMarginRight = aMarginRight;

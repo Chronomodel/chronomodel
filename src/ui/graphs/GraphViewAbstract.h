@@ -79,22 +79,22 @@ public:
 
     void setPrevParameter();
 
-    virtual void setRangeX(const type_data &aMinX, const type_data &aMaxX);
-    virtual void setCurrentX(const type_data &aMinX, const type_data &aMaxX);
-    virtual void setRangeY(const type_data &aMinY, const type_data &aMaxY);
+    virtual void setRangeX(const type_data aMinX, const type_data aMaxX);
+    virtual void setCurrentX(const type_data aMinX, const type_data aMaxX);
+    virtual void setRangeY(const type_data aMinY, const type_data aMaxY);
 
-    void setMinimumX(const type_data &aMinX);
-    void setMaximumX(const type_data &aMaxX);
-    void setMinimumY(const type_data &aMinY);
-    void setMaximumY(const type_data &aMaxY);
+    void setMinimumX(const type_data aMinX);
+    void setMaximumX(const type_data aMaxX);
+    void setMinimumY(const type_data aMinY);
+    void setMaximumY(const type_data aMaxY);
 
     void setGraphHeight(const qreal h) {mGraphHeight = h;};
 
-    void setMarginLeft(const qreal &aMarginLeft);
-    void setMarginRight(const qreal &aMarginRight);
-    void setMarginTop(const qreal &aMarginTop);
-    void setMarginBottom(const qreal &aMarginBottom);
-    void setMargins(const qreal &aMarginLeft, const qreal &aMarginRight, const qreal &aMarginTop, const qreal &aMarginBottom);
+    void setMarginLeft(const qreal aMarginLeft);
+    void setMarginRight(const qreal aMarginRight);
+    void setMarginTop(const qreal aMarginTop);
+    void setMarginBottom(const qreal aMarginBottom);
+    void setMargins(const qreal aMarginLeft, const qreal aMarginRight, const qreal aMarginTop, const qreal aMarginBottom);
 
 protected:
 	virtual void repaintGraph(const bool aAlsoPaintBackground) = 0;
@@ -123,7 +123,6 @@ protected:
     type_data	mMinY;
     type_data	mMaxY;
 
-
     // previous parameter
     qreal		mPrevGraphWidth;
     qreal		mPrevGraphHeight;
@@ -139,14 +138,14 @@ protected:
 };
 
 template <typename T>
-inline T valueForProportion(const T &value, const T &valMin, const T &valMax, const T &Pmin, const T &Pmax, const bool &resultInBounds)
+inline T valueForProportion(const T value, const T valMin, const T valMax, const T Pmin, const T Pmax, const bool resultInBounds)
 {
-    T v2 = Pmin + (value - valMin) * (Pmax - Pmin) / (valMax - valMin);
+    const T v2 = Pmin + (value - valMin) * (Pmax - Pmin) / (valMax - valMin);
 
     if (resultInBounds)
         return std::clamp(v2, Pmin, Pmax);
-
-    return v2;
+    else
+        return v2;
 }
 
 

@@ -80,7 +80,7 @@ void GraphViewEvent::resizeEvent(QResizeEvent* )
     updateLayout();
 }
 
-void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variable_t> & variableList, const Model* model)
+void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variable_t> &variableList, const Model* model)
 {
     GraphViewResults::generateCurves(typeGraph, variableList, model);
 
@@ -165,7 +165,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
                 mGraph->add_curve(curveLineBound);
 
                 // generate theorical curves
-                for (int i=0; i<mChains.size(); ++i) {
+                for (int i = 0; i < mChains.size(); ++i) {
                     curveLineBound.mName = "Post Distrib Chain " + QString::number(i);
                     curveLineBound.mPen.setColor(Painting::chainColors.at(i));
 
