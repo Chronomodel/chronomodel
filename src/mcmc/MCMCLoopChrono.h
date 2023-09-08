@@ -58,7 +58,6 @@ protected:
 
     virtual QString calibrate();
 
-    virtual QString initialize0();
     virtual QString initialize();
 
     virtual bool update();

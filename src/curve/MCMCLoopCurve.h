@@ -353,7 +353,7 @@ private:
 
     double h_exp_fX_theta (Event* e, const MCMCSpline &s, unsigned idx);
     std::vector<double> sampling_spline (QList<Event *> &lEvents, SplineMatrices matrices);
-    t_prob h_S02_Vg_K(const QList<Event *> events, double S02_Vg, double try_Vg, const std::vector<double> sd);
+    t_prob h_S02_Vg_K(const std::vector<Event *> initListEvents, const QList<Event *> events, const double S02_Vg, const double try_Vg);
 
     std::pair<Matrix2D, std::vector<double>> decompositionCholeskyKK(const Matrix2D &matrix, const int nbBandes, const int shift);
 

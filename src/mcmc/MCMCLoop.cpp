@@ -128,7 +128,7 @@ QString MCMCLoop::initialize_time(Model* model)
         ev->mInitialized = false;
 
 #ifdef  S02_BAYESIAN
-        ev->mS02.mSamplerProposal = MHVariable::eMHAdaptGauss;// not yet integrate within update_321
+        //ev->mS02.mSamplerProposal = MHVariable::eMHAdaptGauss;// not yet integrate within update_321
 
 # else
         ev->mS02.mSamplerProposal = MHVariable::eFixe;
@@ -330,8 +330,10 @@ QString MCMCLoop::initialize_time(Model* model)
                      uEvent->mS02.mSigmaMH = 1.;
 
                     uEvent->mS02harmonique = sqrt(uEvent->mDates.size() / s02_sum);
+
                     uEvent->mS02.mLastAccepts.clear();
-                    uEvent->mS02.memo();
+                    uEvent->mS02.tryUpdate(uEvent->mS02.mX, 2.);
+                    //uEvent->mS02.memo();
 
                     // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
                     uEvent->mTheta.mSigmaMH = sqrt(uEvent->mS02.mX);
