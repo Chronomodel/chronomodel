@@ -83,5 +83,6 @@ QMap<double, double> window_filter(QMap<double, double> &map, const double L);
 QMap<double, double> window_filter_complex(QMap<double, double> &map, const double L);
 
 
+
 #endif
 #endif

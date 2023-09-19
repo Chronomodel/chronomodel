@@ -47,6 +47,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QVector>
 #include <cmath>
 
+#if PARALLEL
+#include <execution>
+#define PAR std::execution::par,
+#else
+#define PAR
+#endif
+
 typedef double type_data;
 
 struct Quartiles{

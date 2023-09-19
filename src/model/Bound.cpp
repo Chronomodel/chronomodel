@@ -51,10 +51,11 @@ Bound::Bound(const Model *model):
     mType = eBound;
     mPointType = ePoint;
     mTheta.mSamplerProposal= MHVariable::eFixe;
-    mTheta.mSigmaMH = 0.;
+    mTheta.mSigmaMH = 1.;
+    mS02.mSamplerProposal = MHVariable::eFixe;
 }
 
-Bound::Bound(const QJsonObject& json, const Model* model):
+Bound::Bound(const QJsonObject &json, const Model* model):
     Event (model)
 {
     mType = Type (json[STATE_EVENT_TYPE].toInt());
@@ -91,6 +92,8 @@ Bound::Bound(const QJsonObject& json, const Model* model):
     mVg.mSupport = MetropolisVariable::eRp;
     mVg.mFormat = DateUtils::eNumeric;
     mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
+    mS02.mSamplerProposal = MHVariable::eFixe;
 }
 
 
@@ -105,7 +108,7 @@ Bound Bound::fromJson(const QJsonObject &json)
     bound.mColor = QColor(json[STATE_COLOR_RED].toInt(),
                            json[STATE_COLOR_GREEN].toInt(),
                            json[STATE_COLOR_BLUE].toInt());
-    //event.Event::mMethod = Event::eFixe;
+
     bound.mTheta.mSamplerProposal= MHVariable::eFixe;
     bound.mItemX = json[STATE_ITEM_X].toDouble();
     bound.mItemY = json[STATE_ITEM_Y].toDouble();
@@ -129,10 +132,11 @@ Bound Bound::fromJson(const QJsonObject &json)
     bound.mS_Y = json.value(STATE_EVENT_SY).toDouble();
     bound.mS_ZField = json.value(STATE_EVENT_SZ_SF).toDouble();
 
-
     bound.mVg.mSupport = MetropolisVariable::eRp;
     bound.mVg.mFormat = DateUtils::eNumeric;
     bound.mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
+    bound.mS02.mSamplerProposal = MHVariable::eFixe;
     return bound;
 }
 
@@ -202,9 +206,7 @@ void Bound::updateValues(const double tmin, const double tmax, const double step
     }
 }
 
-void Bound::updateTheta(const double tmin, const double tmax)
+void Bound::updateTheta(const double , const double )
 {
-    (void) tmin;
-    (void) tmax;
     mTheta.tryUpdate(mFixed, 2.);
 }

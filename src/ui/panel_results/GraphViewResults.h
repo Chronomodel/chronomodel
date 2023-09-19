@@ -121,7 +121,7 @@ public:
     };
     enum variable_t{
         eBeginEnd,
-        eThetaEvent,
+        eThetaEvent, eS02,
         eDataTi, eDataCalibrate, eDataWiggle,
         eCredibility,
         eSigma ,

@@ -73,6 +73,7 @@ public:
     static QString sigmaTiResultsHTML(const Date* d);
 
     static QString eventResultsHTML(const Event* e, const bool withDates, const Model* model = nullptr);
+    static QString EventS02ResultsHTML(const Event* e);
     static QString VgResultsHTML(const Event* e);
 
     static QString phaseResultsHTML(const Phase* p);

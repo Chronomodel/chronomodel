@@ -314,7 +314,7 @@ private:
     CheckBox* mDataCalibCheck;
     CheckBox* mWiggleCheck;
     RadioButton* mDataSigmaRadio;
-
+    RadioButton* mS02Radio;
     RadioButton* mEventVGRadio;
 
     CheckBox* mStatCheck;

@@ -54,6 +54,9 @@ class EventConstraint;
 
 #define S02_BAYESIAN
 
+
+
+
 class Event
 {
 public:
@@ -181,8 +184,18 @@ public:
 };
 
 
-// Prepared (projected) values
-decltype(Event::mYx) get_Yx(Event* e) ;
-decltype(Event::mYy) get_Yy(Event* e) ;
-decltype(Event::mYz) get_Yz(Event* e) ;
+inline decltype(Event::mYx) get_Yx(Event* e) {return e->mYx;};
+inline decltype(Event::mYy) get_Yy(Event* e) {return e->mYy;};
+inline decltype(Event::mYz) get_Yz(Event* e) {return e->mYz;};
+
+inline decltype(Event::mGx) get_Gx(Event* e) {return e->mGx;};
+inline decltype(Event::mGy) get_Gy(Event* e) {return e->mGy;};
+inline decltype(Event::mGz) get_Gz(Event* e) {return e->mGz;};
+
+inline decltype(Event::mTheta.mX) get_Theta(Event* e) {return e->mTheta.mX;};
+inline decltype(Event::mThetaReduced) get_ThetaReduced(Event* e) {return e->mThetaReduced;};
+
+std::vector<double> get_ThetaVector(const QList<Event *> &events);
+std::vector<double> get_ThetaReducedVector(const QList<Event *> &events);
+
 #endif

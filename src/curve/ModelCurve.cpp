@@ -780,17 +780,17 @@ QList<PosteriorMeanGComposante> ModelCurve::getChainsMeanGComposanteZ()
 
 void ModelCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante &spline, double& G, double& varG, double& GP, double& GS, unsigned& i0, const Model &model)
 {
-    const unsigned long n = spline.vecThetaEvents.size();
+    const unsigned long n = spline.vecThetaReduced.size();
     const t_reduceTime tReduce =  model.reduceTime(t);
-    const t_reduceTime t1 = model.reduceTime(spline.vecThetaEvents.at(0));
-    const t_reduceTime tn = model.reduceTime(spline.vecThetaEvents.at(n-1));
+    const t_reduceTime t1 = spline.vecThetaReduced.at(0);
+    const t_reduceTime tn = spline.vecThetaReduced.at(n-1);
     GP = 0.;
     GS = 0.;
     double h;
 
      // The first derivative is always constant outside the interval [t1,tn].
      if (tReduce < t1) {
-         const t_reduceTime t2 = model.reduceTime(spline.vecThetaEvents.at(1));
+         const t_reduceTime t2 = spline.vecThetaReduced.at(1);
 
          // ValeurGPrime
          GP = (spline.vecG.at(1) - spline.vecG.at(0)) / (t2 - t1);
@@ -807,7 +807,7 @@ void ModelCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante
 
      } else if (tReduce >= tn) {
 
-         const t_reduceTime tn1 = model.reduceTime(spline.vecThetaEvents.at(n-2));
+         const t_reduceTime tn1 = spline.vecThetaReduced.at(n-2);
 
          // valeurErrG
          varG = spline.vecVarG.at(n-1);
@@ -826,8 +826,8 @@ void ModelCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante
      } else {
         double err1, err2;
          for (; i0 < n-1; ++i0) {
-             const t_reduceTime ti1 = model.reduceTime(spline.vecThetaEvents.at(i0));
-             const t_reduceTime ti2 = model.reduceTime(spline.vecThetaEvents.at(i0 + 1));
+             const t_reduceTime ti1 = spline.vecThetaReduced.at(i0);
+             const t_reduceTime ti2 = spline.vecThetaReduced.at(i0 + 1);
              h = ti2 - ti1;
 
              if ((tReduce >= ti1) && (tReduce < ti2)) {
@@ -867,13 +867,13 @@ void ModelCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante
 
 void ModelCurve::valeurs_G_varG_on_i(const MCMCSplineComposante &spline, double &G, double &varG, unsigned long &i)
 {
-    const double n = spline.vecThetaEvents.size();
+    const double n = spline.vecThetaReduced.size();
     if ((i > 0) && (i < n-1)) {
 
-        const t_reduceTime tReduce =  reduceTime(spline.vecThetaEvents.at(i)); //(t - tmin) / (tmax - tmin);
+        const t_reduceTime tReduce =  spline.vecThetaReduced.at(i); //(t - tmin) / (tmax - tmin);
 
-        const t_reduceTime ti1 = reduceTime(spline.vecThetaEvents.at(i));
-        const t_reduceTime ti2 = reduceTime(spline.vecThetaEvents.at(i + 1));
+        const t_reduceTime ti1 = spline.vecThetaReduced.at(i);
+        const t_reduceTime ti2 = spline.vecThetaReduced.at(i + 1);
         const double h = ti2 - ti1;
         const double gi1 = spline.vecG.at(i);
 

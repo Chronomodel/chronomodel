@@ -63,6 +63,7 @@ Event::Event(const Model *model):
     mName ("no Event Name"),
     mIsCurrent (false),
     mIsSelected (false),
+    mS02harmonique(0.),
     mInitialized (false),
     mLevel (0),
     mPointType (ePoint)
@@ -135,11 +136,18 @@ Event::Event (const QJsonObject& json, const Model *model):
     mTheta.setName("Theta of Event : " + mName);
     mTheta.mSupport = MetropolisVariable::eBounded;
     mTheta.mFormat = DateUtils::eUnknown;
+    mTheta.mSigmaMH = 1.;
 
     mVg.setName("VG of Event : " + mName);
     mVg.mSupport = MetropolisVariable::eRp;
     mVg.mFormat = DateUtils::eNumeric;
     mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
+#ifdef S02_BAYESIAN
+    mS02.mSamplerProposal = MHVariable::eMHAdaptGauss;
+#else
+    mS02.mSamplerProposal = MHVariable::eFixe;
+#endif
 
     mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
 
@@ -197,11 +205,13 @@ void Event::copyFrom(const Event& event)
     mTheta.mSupport = event.mTheta.mSupport;
     mTheta.mFormat = event.mTheta.mFormat;
     mTheta.mSamplerProposal = event.mTheta.mSamplerProposal;
+    mTheta.mSigmaMH = event.mTheta.mSigmaMH;
 
     mS02.mX = event.mS02.mX;
     mS02.mSupport = event.mS02.mSupport;
     mS02.mFormat = event.mS02.mFormat;
     mS02.mSamplerProposal = event.mS02.mSamplerProposal;
+    mS02.mSigmaMH = event.mS02.mSigmaMH;
 
     mAShrinkage = event.mAShrinkage;
     mS02harmonique = event.mS02harmonique;
@@ -295,9 +305,14 @@ Event Event::fromJson(const QJsonObject& json)
     event.mTheta.mSamplerProposal = MHVariable::SamplerProposal (json.value(STATE_EVENT_SAMPLER).toInt());
     event.mTheta.setName("Theta of Event : "+ event.mName);
 
-    //event.mS02.mSamplerProposal = MHVariable::SamplerProposal (json.value(STATE_EVENT_SAMPLER).toInt());
     event.mS02.setName("S02 of Event : "+ event.mName);
     event.mS02.mSupport = MHVariable::eRpStar;
+#ifdef S02_BAYESIAN
+    event.mS02.mSamplerProposal = MHVariable::eMHAdaptGauss;
+#else
+    event.mS02.mSamplerProposal = MHVariable::eFixe;
+#endif
+
 
     event.mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
 
@@ -340,6 +355,8 @@ QJsonObject Event::toJson() const
     event[STATE_COLOR_GREEN] = mColor.green();
     event[STATE_COLOR_BLUE] = mColor.blue();
     event[STATE_EVENT_SAMPLER] = mTheta.mSamplerProposal;
+    event[STATE_EVENT_SAMPLER] = mTheta.mSamplerProposal;
+
     event[STATE_ITEM_X] = mItemX;
     event[STATE_ITEM_Y] = mItemY;
     event[STATE_IS_SELECTED] = mIsSelected;
@@ -1190,14 +1207,14 @@ void Event::updateS02()
         }
 #ifdef DEBUG
         else {
-            //       qDebug()<<"void Event::updateS02() rapport rejet";
+            //       qDebug()<<"[Event::updateS02] rapport rejet";
         }
 #endif
 
         mS02.tryUpdate(V2, rapport);
         //qDebug()<<"SO2 ="<< mS02.mX<<" rapport = "<<rapport;
     }  catch (...) {
-        qWarning() <<"S02() mW = 0";
+        qWarning() <<"[Event::updateS02] mW = 0";
     }
 
 }
@@ -1209,31 +1226,37 @@ double Event::h_S02(const double S02)
 
     const double beta = 1.004680139*(1 - exp(- 0.0000847244 * pow(mS02harmonique, 2.373548593)));
 
-    // const double beta = 1.;
-
     const double prior = pow(1. / S02, alpha) * expl(- beta / S02);
 
     const int a = 1 ;
 
+    /* schoolbook algo
     double prod_h = 1.;
     for (auto& d : mDates) {
-
         prod_h *= pow((S02/(S02 + pow(d.mSigmaTi.mX, 2))), a + 1) / S02;
-
     }
-    const double prod = prior * prod_h;
-    //  const double prod =  prod_h;
+    */
 
-    return  prod;
+    const double prod_h = std::accumulate(mDates.begin(), mDates.end(), 1., [S02] (double prod, auto d){return prod * (pow((S02/(S02 + pow(d.mSigmaTi.mX, 2.))), a + 1) / S02);});
+
+    return prior * prod_h;
 
 }
 
-// Prepared (projected) values
-decltype(Event::mYx) get_Yx(Event* e)
-{return e->mYx;};
 
-decltype(Event::mYy) get_Yy(Event* e)
-{return e->mYy;};
 
-decltype(Event::mYz) get_Yz(Event* e)
-{return e->mYz;};
+std::vector<double> get_ThetaVector(const QList<Event *> &events)
+{
+    std::vector<double> vecT(events.size());
+    std::transform(PAR events.begin(), events.end(), vecT.begin(), [](Event* ev) {return ev->mTheta.mX;});
+
+    return vecT;
+}
+
+std::vector<double> get_ThetaReducedVector(const QList<Event *> &events)
+{
+    std::vector<double> vecT(events.size());
+    std::transform(PAR events.begin(), events.end(), vecT.begin(), [](Event* ev) {return ev->mThetaReduced;});
+
+    return vecT;
+}

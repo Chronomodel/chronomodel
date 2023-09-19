@@ -585,12 +585,14 @@ RefCurve PluginMagRefView::combine_curve_IF(double incl, const double alpha95, c
     }
 
 
+    //result.mDataMean = window_filter(result.mDataMean, (max_ti-min_ti)/200.);
+    //result.mDataError = window_filter(result.mDataError, (max_ti-min_ti)/200.);
 
-    //result.mDataMean = window_filter(result.mDataMean, (max_ti-min_ti)/100.);
-    //result.mDataError = window_filter(result.mDataError, (max_ti-min_ti)/100.);
+    //result.mDataMean = gaussian_filter(result.mDataMean, (max_ti-min_ti)/200);
+    //result.mDataError = gaussian_filter(result.mDataError, (max_ti-min_ti)/200);
 
-    result.mDataMean = gaussian_filter(result.mDataMean, (max_ti-min_ti)/100);
-    result.mDataError = gaussian_filter(result.mDataError, (max_ti-min_ti)/100);
+    //result.mDataMean = low_pass_filter(result.mDataMean, 100.);
+    //result.mDataError = low_pass_filter(result.mDataError, 100.);
 
     result.mMinStep = min_step;
     result.mTmin = min_ti;
@@ -1124,5 +1126,7 @@ QMap<double, double> window_filter(QMap<double, double> &map, const double L)
     fftw_cleanup();
     return results;
 }
+
+
 
 #endif

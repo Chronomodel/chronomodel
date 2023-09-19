@@ -16,7 +16,7 @@ CM_Setup.output = $$INSTALLER
 
 macx{
     message("MacOSX specific settings")
-    CM_Setup.commands = ../../Qt/Tools/QtInstallerFramework/4.5/bin/binarycreator -c $$PWD/config/config.xml -p $$PWD/packages ${QMAKE_FILE_OUT}
+    CM_Setup.commands = ../../../Qt/QtIFW-3.0.2/bin/binarycreator -c $$PWD/config/config.xml -p $$PWD/packages ${QMAKE_FILE_OUT}
 }
 
 # win settings

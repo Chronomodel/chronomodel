@@ -174,7 +174,10 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
 
     mDataSigmaRadio = new RadioButton(tr("Std ti"));
     mDataSigmaRadio->setFixedHeight(h);
-    
+#ifdef S02_BAYESIAN
+    mS02Radio = new RadioButton(tr("Event Shrinkage"));
+    mS02Radio->setFixedHeight(h);
+#endif
     mEventVGRadio = new RadioButton(tr("Std gi"));
     mEventVGRadio->setFixedHeight(h);
 
@@ -194,6 +197,9 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     resultsGroupLayout->setSpacing(15);
     resultsGroupLayout->addWidget(mEventThetaRadio);
     resultsGroupLayout->addWidget(mDataSigmaRadio);
+#ifdef S02_BAYESIAN
+    resultsGroupLayout->addWidget(mS02Radio);
+#endif
     resultsGroupLayout->addWidget(mEventVGRadio);
 
     resultsGroupLayout->addWidget(mEventsDatesUnfoldCheck);
@@ -298,7 +304,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     mLambdaRadio = new RadioButton(tr("Smoothing"), mCurvesGroup);
     mLambdaRadio->setFixedHeight(h);
     
-    mS02VgRadio = new RadioButton(tr("Shrinkage Param."), mCurvesGroup);
+    mS02VgRadio = new RadioButton(tr("Curve Shrinkage"), mCurvesGroup);
     mS02VgRadio->setFixedHeight(h);
 
     mCurveStatCheck = new CheckBox(tr("Show Stat."));
@@ -331,7 +337,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     //  Connections
     // -----------------------------------------------------------------
     connect(mEventThetaRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
-
+    connect(mS02Radio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
     connect(mEventsDatesUnfoldCheck, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
 
     connect(mDataSigmaRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
@@ -1403,7 +1409,10 @@ void ResultsView::updateMainVariable()
         } else if (mDataSigmaRadio->isChecked()) {
             mMainVariable = GraphViewResults::eSigma;
 
-        } else if (mEventVGRadio->isChecked()) {
+        } else if (mS02Radio->isChecked()) {
+            mMainVariable = GraphViewResults::eS02;
+
+        }else if (mEventVGRadio->isChecked()) {
             mMainVariable = GraphViewResults::eVg;
         }
 
@@ -1972,7 +1981,7 @@ void ResultsView::createByCurveGraph()
         graphS02->changeXScaleDivision(mMajorScale, mMinorCountScale);
         graphS02->setMarginLeft(mMarginLeft);
         graphS02->setMarginRight(mMarginRight);
-        graphS02->setTitle(tr("Shrinkage param."));
+        graphS02->setTitle(tr("Curve Shrinkage"));
         graphS02->setModel(model);
 
         mByCurveGraphs.append(graphS02);
@@ -2442,25 +2451,18 @@ void ResultsView::updateGraphsMinMax()
 {
     QList<GraphViewResults*> listGraphs = currentGraphs(false);
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
-        if (mMainVariable == GraphViewResults::eSigma) {
+        if (mMainVariable == GraphViewResults::eSigma ||
+            mMainVariable == GraphViewResults::eDuration ||
+            mMainVariable == GraphViewResults::eS02 ||
+            mMainVariable == GraphViewResults::eVg ||
+            mMainVariable == GraphViewResults::eS02Vg
+            ) {
             mResultMinT = 0.;
             mResultMaxT = getGraphsMax(listGraphs, "Post Distrib", 100.);
-
-        } else if (mMainVariable == GraphViewResults::eDuration) {
-            mResultMinT = 0.;
-            mResultMaxT = getGraphsMax(listGraphs, "Post Distrib All Chains", 100.);
-
-        }else if (mMainVariable == GraphViewResults::eVg) {
-            mResultMinT = 0;
-            mResultMaxT = getGraphsMax(listGraphs, "Post Distrib All Chains", 100.);
 
         } else if (mMainVariable == GraphViewResults::eLambda) {
             mResultMinT = getGraphsMin(listGraphs, "Lambda", -20.);
             mResultMaxT = getGraphsMax(listGraphs, "Lambda", 10.);
-
-        } else if (mMainVariable == GraphViewResults::eS02Vg) {
-            mResultMinT = 0;
-            mResultMaxT = getGraphsMax(listGraphs, "Post Distrib All Chains", 100.);
 
         } else {
             //auto span = (mModel->mSettings.getTmaxFormated() - mModel->mSettings.getTminFormated())/2. * mTimeSpin->minimum();
@@ -3068,7 +3070,12 @@ void ResultsView::updateOptionsWidget()
         //eventGroupLayout->setSpacing(15);
         eventGroupLayout->addWidget(mEventThetaRadio);
         eventGroupLayout->addWidget(mDataSigmaRadio);
+#ifdef S02_BAYESIAN
+        eventGroupLayout->addWidget(mS02Radio);
+        qreal totalH =  4*h;
+#else
         qreal totalH =  3*h;
+#endif
         if (isCurve()) {
             mEventVGRadio->show();
             eventGroupLayout->addWidget(mEventVGRadio);
@@ -3677,6 +3684,7 @@ void ResultsView::applyStudyPeriod()
 
     } else if ( mMainVariable == GraphViewResults::eSigma ||
                 mMainVariable == GraphViewResults::eDuration ||
+                mMainVariable == GraphViewResults::eS02  ||
                 mMainVariable == GraphViewResults::eVg  ||
                 mMainVariable == GraphViewResults::eS02Vg ) {
         mResultCurrentMinT = 0.;
@@ -4695,6 +4703,9 @@ GraphViewResults::variable_t ResultsView::getMainVariable() const
 
     if (mCurrentVariableList.contains(GraphViewResults::eThetaEvent))
         return GraphViewResults::eThetaEvent;
+    else if (mCurrentVariableList.contains(GraphViewResults::eS02))
+        return GraphViewResults::eS02;
+
     else if (mCurrentVariableList.contains(GraphViewResults::eSigma))
         return GraphViewResults::eSigma;
     else if (mCurrentVariableList.contains(GraphViewResults::eVg))

@@ -106,7 +106,7 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variabl
         mGraph->setBackgroundColor(QColor(230, 230, 230));
         mGraph->setOverArrow(GraphView::eBothOverflow);
         
-        mTitle = tr("Shrinkage param.");
+        mTitle = tr("Curve Shrinkage");
 
         // ------------------------------------
         //  Post distrib All Chains
@@ -154,7 +154,7 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variabl
         mGraph->mLegendX = "Iterations";
         mGraph->setTipYLab("S02");
         mGraph->setFormatFunctX(nullptr);
-        mTitle = tr("Shrinkage param. Trace");
+        mTitle = tr("Curve Shrinkage Trace");
         if (mModel->mS02Vg.mSamplerProposal != MHVariable::eFixe)
             generateTraceCurves(mChains, &(mModel->mS02Vg));
         else
@@ -167,7 +167,7 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variabl
         mGraph->mLegendX = "Iterations";
         mGraph->setTipYLab("Rate");
         mGraph->setFormatFunctX(nullptr);
-        mTitle = tr("Shrinkage param. Acceptation");
+        mTitle = tr("Curve Shrinkage Acceptation");
         if (mModel->mS02Vg.mSamplerProposal != MHVariable::eFixe)
             generateAcceptCurves(mChains, &(mModel->mS02Vg));
          else
@@ -182,7 +182,7 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variabl
     else if (typeGraph == eCorrel) {
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(nullptr);
-        mTitle = tr("Shrinkage param. Autocorrelation");
+        mTitle = tr("Curve Shrinkage Autocorrelation");
         if (mModel->mS02Vg.mSamplerProposal != MHVariable::eFixe) {
             generateCorrelCurves(mChains, &(mModel->mS02Vg));
             mGraph->setXScaleDivision(10, 10);
@@ -191,7 +191,7 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variabl
             mGraph->resetNothingMessage();
 
     } else  {
-        mTitle = tr("Shrinkage param.");
+        mTitle = tr("Curve Shrinkage");
         mGraph->resetNothingMessage();
     }
 }
@@ -211,7 +211,7 @@ void GraphViewS02::updateCurvesToShow(bool showAllChains, const QList<bool>& sho
             mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList.at(i));
         }
         
-        mGraph->setTipXLab("sqrt Shrinkage param.");
+        mGraph->setTipXLab("sqrt Curve Shrinkage");
         mGraph->setYAxisMode(GraphView::eHidden);
         mGraph->showInfos(false);
         mGraph->clearInfos();
@@ -233,7 +233,7 @@ void GraphViewS02::updateCurvesToShow(bool showAllChains, const QList<bool>& sho
         }
 
         mGraph->setTipXLab(tr("Iteration"));
-        mGraph->setTipYLab("sqrt Shrinkage param.");
+        mGraph->setTipYLab("sqrt Curve Shrinkage");
 
         mGraph->setYAxisMode(GraphView::eMinMaxHidden);
         mGraph->showInfos(false);

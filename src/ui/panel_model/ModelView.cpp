@@ -38,7 +38,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "ModelView.h"
-#include "DateItem.h"
 #include "EventsScene.h"
 #include "PhasesScene.h"
 #include "PhaseItem.h"
@@ -376,8 +375,7 @@ void ModelView::setProject(Project* project)
 
     mEventPropertiesView->initEvent();
 
-    mMultiCalibrationView->setEventsList(QList<Event*> ());
-    mMultiCalibrationView->updateGraphList();
+    //mMultiCalibrationView->updateGraphList();
     applyAppSettings(); // do phase->update()
 }
 
@@ -526,7 +524,6 @@ void ModelView::resetInterface()
     mCalibrationView->setDate(QJsonObject());
 
     mMultiCalibrationView->setProject(mProject);
-    mMultiCalibrationView->setEventsList(QList<Event*> ());
 
     mEventPropertiesView->initEvent();
 

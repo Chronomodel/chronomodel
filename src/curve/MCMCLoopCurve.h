@@ -235,90 +235,6 @@ private:
 
     std::map<int, double> mThetasMemo;
 
-    std::vector< double> getThetaEventVector(const QList<Event *> &events);
-
-    MCMCSpline currentSpline (QList<Event *> &events, bool doSortAndSpreadTheta = false, const std::vector<t_reduceTime> &vecH = std::vector<t_reduceTime>(), const SplineMatrices &matrices = SplineMatrices());
-    MCMCSpline currentSpline_WI (QList<Event *> &events, bool doSortAndSpreadTheta = false, const std::vector<t_reduceTime> &vecH = std::vector<t_reduceTime>(), const SplineMatrices &matrices = SplineMatrices());
-
-    SplineMatrices prepareCalculSpline(const QList<Event *> & sortedEvents, const std::vector<t_reduceTime> &vecH);
-    SplineMatrices prepareCalculSpline_WI(const QList<Event *> & sortedEvents, const std::vector<t_reduceTime> &vecH);
-
-    template< class Fun>
-    static SplineResults doSpline(Fun* get_param, const SplineMatrices &matrices, const QList<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
-    {
-         /*
-          * MatB doit rester en copie
-          */
-         SplineResults spline;
-         try {
-             // calcul de: R + alpha * Qt * W-1 * Q = Mat_B
-
-
-             // Calcul des vecteurs G et Gamma en fonction de Y
-             const size_t n = events.size();
-
-             std::vector<double> vecG;
-             std::vector<double> vecQtY;
-
-             // VecQtY doit être de taille n, donc il faut mettre un zéro au début et à la fin
-             vecQtY.push_back(0.);
-             for (size_t i = 1; i < n-1; ++i) {
-                 const double term1 = (get_param(events[i+1]) - get_param(events[i])) / vecH[i];
-                 const double term2 = (get_param(events[i]) - get_param(events[i-1])) / vecH[i-1];
-                 vecQtY.push_back(term1 - term2);
-             }
-             vecQtY.push_back(0.);
-
-             // Calcul du vecteur Gamma
-             const decltype(SplineResults::vecGamma) &vecGamma = resolutionSystemeLineaireCholesky(decomp, vecQtY);//, 5, 1);
-
-             // Calcul du vecteur g = Y - lamnbda * W-1 * Q * gamma
-             if (lambdaSpline != 0) {
-                 const std::vector<double> &vecTmp2 = multiMatParVec(matrices.matQ, vecGamma, 3);
-                 const MatrixDiag &diagWInv = matrices.diagWInv;
-
-                 for (unsigned i = 0; i < n; ++i) {
-                     vecG.push_back( get_param(events[i]) - lambdaSpline * diagWInv[i] * vecTmp2[i]) ;
-                 }
-
-             } else {
-                 vecG.resize(n);
-                 std::transform(events.begin(), events.end(), vecG.begin(), get_param);
-             }
-
-
-             spline.vecG = std::move(vecG);
-             spline.vecGamma = std::move(vecGamma);
-
-         } catch(...) {
-             qCritical() << "[MCMCLoopCurve::doSpline] : Caught Exception!\n";
-         }
-
-         return spline;
-    }
-
-    static SplineResults doSplineX(const SplineMatrices &matrices, const QList<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
-    {return doSpline(get_Yx, matrices, events, vecH, decomp, lambdaSpline);}
-
-    static SplineResults doSplineY(const SplineMatrices &matrices, const QList<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline)
-        {return doSpline(get_Yy, matrices, events, vecH, decomp, lambdaSpline);}
-
-    static SplineResults doSplineZ(const SplineMatrices &matrices, const QList<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag >& decomp, const double lambdaSpline)
-        {return doSpline(get_Yz, matrices, events, vecH, decomp, lambdaSpline);}
-
-    std::vector< double> doSplineError0(const SplineMatrices &matrices, const Matrix2D &matB, const double lambdaSpline);
-
-    std::vector<double> calculMatInfluence_origin(const SplineMatrices &matrices, const int nbBandes, const std::pair<Matrix2D, MatrixDiag >& decomp, const double lambdaSpline);
-    std::vector<double> doSplineError_origin(const SplineMatrices &matrices, const SplineResults &splines, const double lambdaSpline);
-    std::vector<double> calcul_spline_variance(const SplineMatrices &matrices, const QList<Event *> &events, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline);
-
-    double valeurG(const double t, const MCMCSplineComposante& spline, unsigned long &i0) const;
-    double valeurErrG(const double t, const MCMCSplineComposante& spline, unsigned& i0);
-    double valeurGPrime(const double t, const MCMCSplineComposante& spline, unsigned& i0);
-    double valeurGSeconde(const double t, const MCMCSplineComposante& spline);
-
-    void valeurs_G_ErrG_GP_GS(const double t, const MCMCSplineComposante& spline,  double& G,  double& ErrG, double& GP, double& GS, unsigned& i0);
-
    // double initLambdaSpline();
    // double initLambdaSplineByCV();
     double initLambdaSplineBy_h_YWI_AY();
@@ -335,13 +251,13 @@ private:
     double rate_h_lambda_K(const MCMCSpline &s, const double current_lambda, const double try_lambda, const Matrix2D &K);
     double S02_lambda_WIK (const Matrix2D &K, const int nb_noeuds);
     double h_lambda_Komlan(const Matrix2D &K, const Matrix2D &K_new, const int nb_noeuds, const double &lambdaSpline);
-    double rapport_Theta(const QList<Event*> &lEvents, const Matrix2D &K, const Matrix2D &K_new, const MCMCSpline &s, const double lambdaSpline);
+    double rapport_Theta(const std::function<double (Event *)> &fun, const QList<Event*> &lEvents, const Matrix2D &K, const Matrix2D &K_new, const double lambdaSpline);
 
     MatrixDiag createDiagWInv_Vg0(const QList<Event*>& lEvents);
 
     SplineMatrices prepareCalculSpline_W_Vg0(const QList<Event *> &sortedEvents, std::vector<double> &vecH);
     //MCMCSpline samplingSpline_multi(QList<Event *> &lEvents, const Matrix2D &RR_1, const Matrix2D &Q, std::vector<double> &vecfx, SplineMatrices matrices);
-    MCMCSpline samplingSpline_multi(QList<Event *> &lEvents, std::vector<Event *> &lEventsinit, std::vector<double> vecYx, std::vector<double> vecYstd, const Matrix2D &RR, const Matrix2D &RR_1, const Matrix2D &Q, const Matrix2D &QT, const Matrix2D &matK,  bool doSortAndSpreadTheta, SplineMatrices matrices);
+    MCMCSpline samplingSpline_multi(QList<Event *> &lEvents, std::vector<Event *> &lEventsinit, std::vector<double> vecYx, std::vector<double> vecYstd, const Matrix2D &RR, const Matrix2D &RR_1, const Matrix2D &Q, const Matrix2D &QT, const Matrix2D &matK);
     std::vector<double> multinormal_sampling (std::vector<double> &mu, const Matrix2D &a);
 
     std::vector<double> splines_prior(const Matrix2D &KK, std::vector<double> &g, std::vector<double> &g_new);

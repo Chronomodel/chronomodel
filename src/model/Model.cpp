@@ -641,10 +641,6 @@ void Model::generateResultsLog()
         log += "<br>";
         log += line(textBold(textOrange(QObject::tr("Duration (posterior distrib.)"))));
         log += line(textOrange(pPhase->mDuration.resultsString(QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr)));
-
-       /*  QString tempoStr = ModelUtilities::tempoResultsHTML(pPhase);
-         tempoStr.remove(1, 41);
-         log += tempoStr;*/
          log += "<hr>";
     }
 
@@ -654,7 +650,7 @@ void Model::generateResultsLog()
     }
     for (const auto& pEvent : mEvents) {
         log += ModelUtilities::eventResultsHTML(pEvent, true, this);
-        log += "<hr>";
+        log += "<hr>";        
     }
 
     mLogResults = log;
@@ -2300,6 +2296,18 @@ t_reduceTime Model::reduceTime(double t) const
     const double tmin = mSettings.mTmin;
     const double tmax = mSettings.mTmax;
     return (t - tmin) / (tmax - tmin);
+}
+
+std::vector<t_reduceTime> Model::reduceTime(const std::vector<double> &vec_t) const
+{
+    const double tmin = mSettings.mTmin;
+    const double tmax = mSettings.mTmax;
+
+    std::vector<t_reduceTime> res;
+    for (auto& t : vec_t)
+        res.push_back((t - tmin) / (tmax - tmin));
+
+    return res;
 }
 
 double Model::yearTime(t_reduceTime reduceTime)

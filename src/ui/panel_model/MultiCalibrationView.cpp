@@ -377,6 +377,7 @@ void MultiCalibrationView::updateLayout()
 
 void MultiCalibrationView::updateGraphList()
 {
+
     const QJsonObject &state = mProject->state();
     mSettings = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
@@ -614,7 +615,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
     QVector<QJsonObject> selectedEvents;
 
-    CurveSettings cs (state.value(STATE_CURVE).toObject());
+    const CurveSettings cs (state.value(STATE_CURVE).toObject());
     CurveSettings::ProcessType processType = cs.mProcessType;//static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
 
     for (const auto&& ev : events) {
@@ -714,6 +715,13 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
     }
 
 
+    QMap <double, double> poly_data_X;
+    QMap <double, double> poly_data_Y;
+    QMap <double, double> poly_data_Z;
+
+    QMap <double, double> poly_data_X_err;
+    QMap <double, double> poly_data_Y_err;
+    QMap <double, double> poly_data_Z_err;
 
     double X, errX, Y, errY, Z, errZ, tmin, tmax;
     for (const auto& sEvent : selectedEvents) {
@@ -781,9 +789,9 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
             case CurveSettings::eProcess_2D:
                 X = xIncDepth;
-                errX = s_XA95Depth;
+                errX = 1.96*s_XA95Depth;
                 Y = yDec;
-                errY = s_Y;
+                errY = 1.96*s_Y;
                 Z = 0.;
                 errZ = 0.;
                 break;
@@ -806,11 +814,11 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                 break;
             case CurveSettings::eProcess_3D:
                 X = xIncDepth;
-                errX = s_XA95Depth;
+                errX = 1.96*s_XA95Depth;
                 Y = yDec;
-                errY = s_Y;
+                errY = 1.96*s_Y;
                 Z = zField;
-                errZ = s_ZField;
+                errZ = 1.96*s_ZField;
                 break;
             default:
                 X = - sEvent.value(STATE_ITEM_Y).toDouble();
@@ -822,21 +830,18 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                 break;
         }
 
-
         if ( Event::Type (sEvent.value(STATE_EVENT_TYPE).toInt()) == Event::eBound) {
             const double bound = sEvent.value(STATE_EVENT_KNOWN_FIXED).toDouble();
-            tmin = bound;
-            //tmax = bound;
 
-            ptsX.Xmin = DateUtils::convertToAppSettingsFormat(tmin);
-            ptsX.Xmax = ptsX.Xmin;//DateUtils::convertToAppSettingsFormat(tmax);
+            ptsX.Xmin = DateUtils::convertToAppSettingsFormat(bound);
+            ptsX.Xmax = ptsX.Xmin;
 
             //if (ptsX.Xmin > ptsX.Xmax)
               //  std::swap(ptsX.Xmin, ptsX.Xmax);
             ptsX.Ymin = X - errX;
             ptsX.Ymax = X + errX;
             ptsX.color = color;
-            ptsX.type = CurveRefPts::eCross;
+            ptsX.type = CurveRefPts::eRoundLine;
 
             ptsX.pen = QPen(Qt::black, 1, Qt::SolidLine);
             ptsX.brush = Qt::black;
@@ -861,6 +866,34 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             ptsZ.brush = Qt::black;
             ptsZ.setVisible(true);
             curveDataPointsZ.push_back(ptsZ);
+
+            poly_data_X[bound] = X ;
+            poly_data_Y[bound] = Y ;
+            poly_data_Z[bound] = Z ;
+            switch (processType) {
+                case CurveSettings::eProcess_Inclination:
+                case CurveSettings::eProcess_Declination:
+                case CurveSettings::eProcess_Unknwon_Dec:
+                case CurveSettings::eProcess_Spherical:
+                case CurveSettings::eProcess_Vector:
+                    poly_data_X_err[bound] = errX ;
+                    poly_data_Y_err[bound] = errY ;
+                    poly_data_Z_err[bound] = errZ ;
+                    break;
+
+                case CurveSettings::eProcess_Univariate:
+                case CurveSettings::eProcess_Depth:
+                case CurveSettings::eProcess_Field:
+                case CurveSettings::eProcess_2D:
+                case CurveSettings::eProcess_3D:
+                default:
+                    poly_data_X_err[bound] = errX/1.96 ;
+                    poly_data_Y_err[bound] = errY/1.96 ;
+                    poly_data_Z_err[bound] = errZ/1.96 ;
+                    break;
+            }
+
+
 
         } else {
 
@@ -887,12 +920,40 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                         const QList<QPair<double, QPair<double, double> > > &intervals = intervalsForHpd(hpd, 100);
 
                         CurveRefPts::PointType typePts;
+                        tmin = intervals.first().second.first;
+                        tmax = intervals.last().second.second;
+
+                        poly_data_X[(tmin+tmax)/2.] = X ;
+                        poly_data_Y[(tmin+tmax)/2.] = Y ;
+                        poly_data_Z[(tmin+tmax)/2.] = Z ;
+                        switch (processType) {
+                            case CurveSettings::eProcess_Inclination:
+                            case CurveSettings::eProcess_Declination:
+                            case CurveSettings::eProcess_Unknwon_Dec:
+                            case CurveSettings::eProcess_Spherical:
+                            case CurveSettings::eProcess_Vector:
+                                poly_data_X_err[(tmin+tmax)/2.] = errX ;
+                                poly_data_Y_err[(tmin+tmax)/2.] = errY ;
+                                poly_data_Z_err[(tmin+tmax)/2.] = errZ ;
+                                break;
+
+                            case CurveSettings::eProcess_Univariate:
+                            case CurveSettings::eProcess_Depth:
+                            case CurveSettings::eProcess_Field:
+                            case CurveSettings::eProcess_2D:
+                            case CurveSettings::eProcess_3D:
+                            default:
+                                poly_data_X_err[(tmin+tmax)/2.] = errX/1.96 ;
+                                poly_data_Y_err[(tmin+tmax)/2.] = errY/1.96 ;
+                                poly_data_Z_err[(tmin+tmax)/2.] = errZ/1.96 ;
+                                break;
+                        }
+
+
                         if (intervals.size() == 1) {
                             typePts = CurveRefPts::eCross;
 
                         } else {
-                            tmin = intervals.first().second.first;
-                            tmax = intervals.last().second.second;
 
                             typePts = CurveRefPts::eDotLineCross;
                             ptsX.Xmin = tmin;
@@ -911,6 +972,9 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             ptsX.setVisible(true);
                             curveDataPointsX.push_back(ptsX);
 
+
+
+
                             ptsY = ptsX;
                             ptsY.Ymin = Y - errY;
                             ptsY.Ymax = Y + errY;
@@ -919,6 +983,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             ptsY.name = "Ref Points";
                             ptsY.setVisible(true);
                             curveDataPointsY.push_back(ptsY);
+
 
                             ptsZ = ptsX;
                             ptsZ.Ymin = Z - errZ;
@@ -962,6 +1027,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             ptsY.setVisible(true);
                             curveDataPointsY.push_back(ptsY);
 
+
                             ptsZ = ptsX;
                             ptsZ.Ymin = Z - errZ;
                             ptsZ.Ymax = Z + errZ;
@@ -970,6 +1036,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             ptsZ.name = "Ref Points";
                             ptsZ.setVisible(true);
                             curveDataPointsZ.push_back(ptsZ);
+
                         }
 
                     }
@@ -981,63 +1048,162 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
     }
 
+    //poly_data = QMap<double,double>({QPair<double, double>(0.,1.), QPair<double, double>(1.,2), QPair<double, double>(2.,5), QPair<double, double>(3.,10.), QPair<double, double>(4.,17.)});
+  /*  int min_deg = 1;
+    const auto coef_reg = polynom_regression_coef(poly_data_X, 1);
+    double mse = MSE(poly_data_X, coef_reg);
+    //double mse = Pearson_X_square(poly_data_X, coef_reg);
+    double prev_MSE = mse;
+    for (int deg = 2; deg<21; deg++) {
+        const auto coef_reg = polynom_regression_coef(poly_data_X, deg);
+        const double msei = MSE(poly_data_X, coef_reg);
+        //double msei = Pearson_X_square(poly_data_X, coef_reg);
+        qDebug()<<" deg ="<< deg << " mse="<<msei;
+        if (msei >= prev_MSE || isnan(msei)) {
+            break;
+
+        } else {
+            prev_MSE = msei;
+            min_deg = deg;
+        }
+
+    }
+
+    //min_deg = std::max(min_deg-1., 1.);
+    const auto coef_poly = polynom_regression_coef(poly_data_X, min_deg );
+    qDebug()<<" min_deg ="<< min_deg;
+
+    QMap<double, double> G_Poly;
+    const double tmin_poly = poly_data_X.firstKey();
+    const double tmax_poly = poly_data_X.lastKey();
+    const double step_poly = (tmax_poly-tmin_poly)/1000.;
+    for (int i = 0; i<1001; i++) {
+        double g = 0;
+        const double t = tmin_poly + i*step_poly;
+        int d = 0;
+        for (auto v : coef_poly) {
+            g += v*pow(t, d);
+            d++;
+        }
+        G_Poly[t] = g;
+    }
+   */
+
+    const double tmin_poly = poly_data_X.firstKey();
+    const double tmax_poly = poly_data_X.lastKey();
+    const double step_poly = (tmax_poly-tmin_poly)/1000.;
+    MCMCSpline spline;
 
     switch (processType) {
- /*   case CurveSettings::eProcessTypeUnivarie:
-        switch (variableType) {
-        case CurveSettings::eVariableTypeDepth:
-            graphList.append(new GraphTitle("Depth", this));
-            graph1->setTipYLab("D");
-            break;
-        case CurveSettings::eVariableTypeField:
-            graphList.append(new GraphTitle("Field", this));
-            graph1->setTipYLab("F");
-            break;
-        case CurveSettings::eVariableTypeInclination:
-            graphList.append(new GraphTitle("Inclination", this));
-            graph1->setTipYLab("I");
-            break;
-        case CurveSettings::eVariableTypeDeclination:
-            graphList.append(new GraphTitle("Declination", this));
-            graph1->setTipYLab("D");
-            break;
-        case CurveSettings::eVariableTypeOther:
-            graphList.append(new GraphTitle("Measurement", this));
-            graph1->setTipYLab("X");
-            break;
-        default:
-            break;
-        }
-*/
-
-    case CurveSettings::eProcess_Vector:
-    case CurveSettings::eProcess_3D:
-        graphList.append(new GraphTitle(cs.ZLabel(), this));
-
-        graph3->set_points(curveDataPointsZ);
-        graph3->setTipYLab(cs.Z_short_name());
-        graphList.append(graph3);
-        listAxisVisible.push_back(true);
-
-    case CurveSettings::eProcess_Spherical:
-    case CurveSettings::eProcess_Unknwon_Dec:
-    case CurveSettings::eProcess_2D:
-        graphList.append(new GraphTitle(cs.YLabel(), this));
-        graph2->set_points(curveDataPointsY);
-        graph2->setTipYLab(cs.Y_short_name());
-        graphList.append(graph2);
-        listAxisVisible.push_back(true);
-
-    default:
-        graphList.append(new GraphTitle(cs.XLabel(), this));
-        graph1->setTipYLab(cs.X_short_name());
-        graph1->set_points(curveDataPointsX);
-        graph1->setYAxisMode(GraphView::eAllTicks);
-        graph1->showYAxisSubTicks(true);
-        graphList.append(graph1);
-
-        listAxisVisible.push_back(true);
+    case CurveSettings::eProcess_Univariate:
+        spline = do_spline_composante(poly_data_X, poly_data_X_err, tmin_poly, tmax_poly, cs);
         break;
+    case CurveSettings::eProcess_2D:
+        spline = do_spline_composante(poly_data_X, poly_data_X_err, tmin_poly, tmax_poly, cs, poly_data_Y, poly_data_Y_err);
+        break;
+    case CurveSettings::eProcess_3D:
+        spline = do_spline_composante(poly_data_X, poly_data_X_err, tmin_poly, tmax_poly, cs, poly_data_Y, poly_data_Y_err, poly_data_Z, poly_data_Z_err);
+        break;
+    default:
+        break;
+    }
+
+
+    if (processType == CurveSettings::eProcess_Univariate || processType == CurveSettings::eProcess_2D || processType == CurveSettings::eProcess_3D) {
+
+        const auto &curves = composante_to_curve(spline.splineX, tmin_poly, tmax_poly, step_poly);
+
+        if (!isnan(curves[0][0]) && !isnan(curves[1][0]) && !isnan(curves[2][0])) {
+            const QMap<double, double> & G_Poly = curves[0];
+            const GraphCurve &curve_poly_X = FunctionCurve(G_Poly, "G", QColor(119, 95, 200) );
+            const QMap<double, double> & G_plus_Poly = curves[1];
+            const GraphCurve &curve_poly_X_plus = FunctionCurve(G_plus_Poly, "G", QColor(119, 95, 49) );
+
+            const QMap<double, double> &G_moins_Poly = curves[2];
+            const GraphCurve &curve_poly_X_moins = FunctionCurve(G_moins_Poly, "G", QColor(119, 95, 49) );
+
+            graph1->add_curve(curve_poly_X);
+            graph1->add_curve(curve_poly_X_plus);
+            graph1->add_curve(curve_poly_X_moins);
+        }
+
+    }
+
+    if ( processType == CurveSettings::eProcess_2D || processType == CurveSettings::eProcess_3D)  {
+        const double tmin_poly = poly_data_X.firstKey();
+        const double tmax_poly = poly_data_X.lastKey();
+        const double step_poly = (tmax_poly-tmin_poly)/1000.;
+
+        const auto &curves = composante_to_curve(spline.splineY, tmin_poly, tmax_poly, step_poly);
+
+        if (!isnan(curves[0][0]) && !isnan(curves[1][0]) && !isnan(curves[2][0])) {
+            const QMap<double, double> & G_Poly = curves[0];
+            const GraphCurve &curve_poly_X = FunctionCurve(G_Poly, "G", QColor(119, 95, 200) );
+            const QMap<double, double> & G_plus_Poly = curves[1];
+            const GraphCurve &curve_poly_X_plus = FunctionCurve(G_plus_Poly, "G", QColor(119, 95, 49) );
+
+            const QMap<double, double> &G_moins_Poly = curves[2];
+            const GraphCurve &curve_poly_X_moins = FunctionCurve(G_moins_Poly, "G", QColor(119, 95, 49) );
+
+            graph2->add_curve(curve_poly_X);
+            graph2->add_curve(curve_poly_X_plus);
+            graph2->add_curve(curve_poly_X_moins);
+        }
+
+    }
+
+    if ( processType == CurveSettings::eProcess_3D) {
+        const double tmin_poly = poly_data_X.firstKey();
+        const double tmax_poly = poly_data_X.lastKey();
+        const double step_poly = (tmax_poly-tmin_poly)/1000.;
+
+        const auto &curves = composante_to_curve(spline.splineZ, tmin_poly, tmax_poly, step_poly);
+
+        if (!isnan(curves[0][0]) && !isnan(curves[1][0]) && !isnan(curves[2][0])) {
+            const QMap<double, double> & G_Poly = curves[0];
+            const GraphCurve &curve_poly_X = FunctionCurve(G_Poly, "G", QColor(119, 95, 200) );
+            const QMap<double, double> & G_plus_Poly = curves[1];
+            const GraphCurve &curve_poly_X_plus = FunctionCurve(G_plus_Poly, "G", QColor(119, 95, 49) );
+
+            const QMap<double, double> &G_moins_Poly = curves[2];
+            const GraphCurve &curve_poly_X_moins = FunctionCurve(G_moins_Poly, "G", QColor(119, 95, 49) );
+
+            graph3->add_curve(curve_poly_X);
+            graph3->add_curve(curve_poly_X_plus);
+            graph3->add_curve(curve_poly_X_moins);
+        }
+
+    }
+
+    switch (processType) {
+        case CurveSettings::eProcess_Vector:
+        case CurveSettings::eProcess_3D:
+            graphList.append(new GraphTitle(cs.ZLabel(), this));
+
+            graph3->set_points(curveDataPointsZ);
+            graph3->setTipYLab(cs.Z_short_name());
+            graphList.append(graph3);
+            listAxisVisible.push_back(true);
+
+        case CurveSettings::eProcess_Spherical:
+        case CurveSettings::eProcess_Unknwon_Dec:
+        case CurveSettings::eProcess_2D:
+            graphList.append(new GraphTitle(cs.YLabel(), this));
+            graph2->set_points(curveDataPointsY);
+            graph2->setTipYLab(cs.Y_short_name());
+            graphList.append(graph2);
+            listAxisVisible.push_back(true);
+
+        default:
+            graphList.append(new GraphTitle(cs.XLabel(), this));
+            graph1->setTipYLab(cs.X_short_name());
+            graph1->set_points(curveDataPointsX);
+            graph1->setYAxisMode(GraphView::eAllTicks);
+            graph1->showYAxisSubTicks(true);
+            graphList.append(graph1);
+
+            listAxisVisible.push_back(true);
+            break;
     }
 
     MultiCalibrationDrawing* scatterPlot = new MultiCalibrationDrawing(this);

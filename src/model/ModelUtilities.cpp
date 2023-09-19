@@ -488,8 +488,21 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
 
                 HTMLText += line(textBlue(QObject::tr(" - Sigma_MH on Theta : %1").arg(stringForLocal(event->mTheta.mSigmaMH))));
             }
+#ifdef S02_BAYESIAN
+            HTMLText += line(textBold(textBlue(QObject::tr(" - Event Shrinkage : %1").arg(DateUtils::convertToAppSettingsFormatStr(event->mS02.mX)))));
+            if (event->mS02.mLastAccepts.size()>2 && event->mS02.mSamplerProposal!= MHVariable::eFixe) {
+                const auto acceptRate = event->mS02.getCurrentAcceptRate();
+                const auto samplerType = event->mS02.mSamplerProposal;
+                if (samplerType == MHVariable::eMHAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
+                    HTMLText += line(textBlue(QObject::tr("     Current Acceptance Rate : ") + textBold(textRed(stringForLocal(acceptRate*100.) + " %"))  + " (" + MHVariable::getSamplerProposalText(samplerType)) + ")");
+                else
+                    HTMLText += line(textBlue(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(acceptRate*100.), MHVariable::getSamplerProposalText(samplerType))));
 
-            HTMLText += line(textBlue(QObject::tr(" - S02 : %1").arg(stringForLocal(event->mS02.mX))));
+                HTMLText += line(textBlue(QObject::tr(" - Sigma_MH on S02 : %1").arg(stringForLocal(event->mS02.mSigmaMH))));
+            }
+#else
+            HTMLText += line(textBlue(QObject::tr(" - Event Shrinkage : %1").arg(stringForLocal(event->mS02.mX))));
+#endif
         }
 
         if (curveModel) {
@@ -509,7 +522,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
             int thetaIdx;
             const MCMCSpline& spline =  model->mSpline;
             for (thetaIdx = 0; thetaIdx < model->mEvents.size(); thetaIdx++) {
-                if ( spline.splineX.vecThetaEvents.at(thetaIdx) == event->mTheta.mX)
+                if ( spline.splineX.vecThetaReduced.at(thetaIdx) == model->reduceTime(event->mTheta.mX))
                     break;
             }
 
@@ -613,7 +626,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
             }
         }
         HTMLText += "<hr>";
-        HTMLText +=  line(textGreen(QObject::tr("sqrt Shrinkage param. : %1").arg(QLocale().toString(sqrt(model->mS02Vg.mX), 'G', 2))));
+        HTMLText +=  line(textGreen(QObject::tr("sqrt Curve Shrinkage : %1").arg(QLocale().toString(sqrt(model->mS02Vg.mX), 'G', 2))));
         if (model->mS02Vg.mLastAccepts.size() > 2) {
             const auto acceptRate = model->mS02Vg.getCurrentAcceptRate();
             const auto samplerType = model->mS02Vg.mSamplerProposal;
@@ -688,9 +701,25 @@ QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, c
 
 
         if (withDates) {
+            text += "<br>" +EventS02ResultsHTML(e);
             for (auto&& date : e->mDates)
                 text += "<br><br>" + dateResultsHTML(&(date), model);
         }
+    }
+    return text;
+}
+
+QString ModelUtilities::EventS02ResultsHTML(const Event* e)
+{
+    Q_ASSERT(e);
+    QString text;
+
+    if (e->mS02.mSamplerProposal == MHVariable::eFixe) {
+        text = line(textBold(textGreen(QObject::tr("S02 non Bayesian"))));
+
+    } else {
+        text += line(textBold(textGreen(QObject::tr("Posterior Event Shrinkage"))));
+        text += line(textGreen(e->mS02.resultsString("", nullptr, nullptr)));
     }
     return text;
 }
@@ -889,10 +918,10 @@ QString ModelUtilities::curveResultsHTML(const ModelCurve* model)
     }
 
     if (model->mS02Vg.mSamplerProposal == MHVariable::eFixe) {
-        text += line(textGreen(QObject::tr("- S02 Vg; Fixed value = %1").arg(QString::number(pow( model->mS02Vg.mRawTrace->at(0), 2.)))));
+        text += line(textGreen(QObject::tr("- Curve Shrinkage ; Fixed value = %1").arg(QString::number(pow( model->mS02Vg.mRawTrace->at(0), 2.)))));
 
     } else {
-        text += line(textGreen(QObject::tr("- Mean of the sqrt of S02 Vg = %1").arg(stringForLocal(model->mS02Vg.mResults.funcAnalysis.mean))));
+        text += line(textGreen(QObject::tr("- Mean of the sqrt of Curve Shrinkage = %1").arg(stringForLocal(model->mS02Vg.mResults.funcAnalysis.mean))));
     }
 
     if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Depth) {

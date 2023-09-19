@@ -53,6 +53,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 // STDC FENV_ACCESS ON // not supported with Clang
 
+
 void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
     Q_UNUSED(context);
@@ -101,7 +102,7 @@ int main(int argc, char *argv[])
     QVersionNumber version(VERSION_NUMBER);  // 1.2.3
 
 //#pragma omp parallel
-//    std::cout <<"Hello from thread %d, nthreads %d\n"<< omp_get_thread_num()<< omp_get_num_threads() << std::endl;
+  // std::cout <<"Hello from thread %d, nthreads %d\n"<< omp_get_thread_num()<< omp_get_num_threads() << std::endl;
   // QFont guiFont = QGuiApplication::font();
     ChronoApp a(argc, argv);
 

@@ -61,12 +61,12 @@ class Date
 {
 
 public:
-    enum OriginType{
+    enum OriginType {
         eSingleDate = 0,
         eCombination = 1
     };
 
-    enum DeltaType{
+    enum DeltaType {
         eDeltaNone = -1,
         eDeltaFixed = 0,
         eDeltaGaussian = 1,

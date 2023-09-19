@@ -306,7 +306,7 @@ void MetropolisVariable::generateBufferForHisto(double *input, const QList<doubl
   @brief the FFTW function transform the area such that the area output is the area input multiplied by fftLen. So we have to corret it.
   The result is migth be not with regular step between value.
  **/
-QMap<double, double> MetropolisVariable::generateHisto(const QList<double>& dataSrc, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+QMap<double, double> MetropolisVariable::generateHisto(const QList<double> &dataSrc, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
     mfftLenUsed = fftLen;
     mBandwidthUsed = bandwidth;
@@ -424,14 +424,15 @@ QMap<double, double> MetropolisVariable::generateHisto(const QList<double>& data
 }
 
 
-void MetropolisVariable::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+void MetropolisVariable::generateHistos(const QList<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
-    const QVector<double> &subFullTrace = fullRunFormatedTrace(chains);
+    Q_ASSERT_X(!mFormatedTrace->isEmpty(), "[MetropolisVariable::generateHistos]", "mFormatedTrace.isEmpty()");
+    const QList<double> &subFullTrace = fullRunFormatedTrace(chains);
     mFormatedHisto = generateHisto(subFullTrace, fftLen, bandwidth, tmin, tmax);
 
     mChainsHistos.clear();
     for (int i = 0; i<chains.size(); ++i) {
-        const QVector<double> &subTrace = runFormatedTraceForChain(chains, i);
+        const QList<double> &subTrace = runFormatedTraceForChain(chains, i);
         if (!subTrace.isEmpty()) {
             mChainsHistos.append(generateHisto(subTrace, fftLen, bandwidth, tmin, tmax) );
         }

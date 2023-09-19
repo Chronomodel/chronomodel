@@ -54,6 +54,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QFont>
 #include <iostream>
 
+
 // Constructor / Destructor
 MainWindow::MainWindow(QWidget* aParent):
     QMainWindow(aParent),

@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <RefCurve.h>
 
 #include <chrono>
+#include <valarray>
 #include <vector>
 #include <map>
 #include <random>
@@ -120,8 +121,12 @@ double map_area(const std::map<double, double> &map);
 inline double surface_on_theta (std::map<double, double>::const_iterator iter_on_theta );
 const std::map<double, double> create_HPD2(const QMap<double, double>& density, const double threshold = 95.);
 
-QVector<double> vector_to_histo(const QVector<double> &vector, const double tmin, const double tmax, const int nbPts);
+QList<double> vector_to_histo(const QVector<double> &vector, const double tmin, const double tmax, const int nbPts);
 
+
+std::valarray<double> polynom_regression_coef(QMap<double, double> &data,  int d);
+double MSE(const QMap<double, double> &data,  const std::valarray<double> polynom_coef);
+double Pearson_X_square(const QMap<double, double> &data,  const std::valarray<double> polynom_coef);
 
 #pragma mark Template Function
 

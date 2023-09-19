@@ -47,6 +47,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <fenv.h>
 #include <QObject>
 #include <thread>
+#include <valarray>
 
 using namespace std;
 
@@ -760,9 +761,9 @@ double map_area(const QMap<int, double>& density)
     return std::accumulate(density.constBegin(), density.constEnd(), 0., [](double sum, auto m){return sum + m;  });
 }
 
-QVector<double> vector_to_histo(const QVector<double> &vector, const double tmin, const double tmax, const int nbPts)
+QList<double> vector_to_histo(const QVector<double> &vector, const double tmin, const double tmax, const int nbPts)
 {
-    QVector<double> histo;
+    QList<double> histo;
     histo.reserve(nbPts);
     histo.fill(0., nbPts);
     const double delta = (tmax - tmin) / (nbPts - 1);
@@ -803,6 +804,72 @@ QVector<double> vector_to_histo(const QVector<double> &vector, const double tmin
 
     return histo;
 }
+
+/**
+ * @brief polynom_filter
+ * @param data value of X and Y
+ * @param d  degree polynomial
+ * @return d+1 coef of polynom
+ */
+std::valarray<double> polynom_regression_coef(QMap<double, double> &data,  int d)
+{
+
+    std::valarray<std::valarray<double>> c (std::valarray<double>(d+2), d+1);
+    for (int j=0; j<d+1; j++)
+        for (int k=0; k<d+1; k++) {
+             c[j][k] = 0;
+
+            for (auto [key, value] : data.asKeyValueRange()) {
+                c[j][k] += pow(key, j+k);
+            }
+
+        }
+    for (int j=0; j<d+1; j++) {
+        c[j][d+1] = 0.;
+
+        for (auto [key, value] : data.asKeyValueRange()) {
+             c[j][d+1] += value*pow(key, j);;
+        }
+    }
+
+    for (int k=0; k<d+1; k++)
+        for (int i=0; i<d+1; i++) {
+             if (i!=k) {
+                const double u = c[i][k]/c[k][k];
+                for (int j=k; j<d+2; j++) {
+                    c[i][j] -= u * c[k][j];
+                }
+             }
+        }
+
+    std::valarray<double> a(d+1);
+    for (int i=0; i<d+1; i++) {
+        a[i] = c[i][d+1]/c[i][i];
+       // qDebug()<<"[polynom_regresssion_coef] i="<< i<<" a="<< a[i];
+    }
+
+    return a;
+}
+
+/**
+ * @brief MSE mean squared error
+ * @param data
+ * @param polynom_coef
+ * @return
+ */
+double MSE(const QMap<double, double> &data,  const std::valarray<double> polynom_coef)
+{
+    double mse = 0;
+    for (auto [key, value] : data.asKeyValueRange()) {
+        double f = 0;
+        for (int i = 0 ; i< polynom_coef.size() ; i++)
+            f += polynom_coef[i] * pow(key, i);
+        mse += pow(value - f, 2.);
+    }
+    return mse/data.size();
+}
+
+
 
 
 /**
@@ -917,6 +984,8 @@ double findOnOppositeCurve (const double x, const std::vector<double> &Gx)
     return 1. - interpolate_value_from_curve( one_X, Gx, 0, x_frac);
 
 }
+
+
 
 #pragma mark Chronometer
 Chronometer::Chronometer():

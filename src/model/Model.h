@@ -130,6 +130,8 @@ public:
     QString initializeTheta();
 
     t_reduceTime reduceTime(double t) const;
+    std::vector<t_reduceTime> reduceTime(const std::vector<double> &vec_t) const;
+
     double yearTime(t_reduceTime reduceTime);
 
     virtual void saveToFile(QDataStream* out);

@@ -63,7 +63,6 @@ public:
 
     ~MultiCalibrationView();
 
-    void setEventsList(const QList<Event*> &list) { mEventsList = list;}
     void setProject(Project *project) {mProject = project;}
 
     void updateGraphList();
@@ -107,7 +106,6 @@ signals:
     void closed();
 
 public:
-    QList<Event*> mEventsList;
     StudyPeriodSettings mSettings;
     Project *mProject;
 

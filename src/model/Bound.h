@@ -61,7 +61,7 @@ public:
 
     void updateValues(const double tmin, const double tmax, const double step);
 
-    virtual void updateTheta(const double tmin, const double tmax);
+    virtual void updateTheta(const double, const double);
 
 
 public:
