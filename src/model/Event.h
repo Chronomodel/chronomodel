@@ -140,7 +140,7 @@ public:
 #pragma mark Functions
 
     Event (const Model * model = nullptr);
-    Event (const Event& event);
+   // Event (const Event& event); // Deprecated
     explicit Event (const QJsonObject& json, const Model *model);
     virtual ~Event();
 

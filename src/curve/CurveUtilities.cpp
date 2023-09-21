@@ -1354,7 +1354,7 @@ SplineResults do_spline(const std::vector<double> &vec_Y, const SplineMatrices &
                 const double g = vec_Y[i] - lambdaSpline * diagWInv[i] * vecTmp2[i];
                 vecG.push_back( g) ;
 #ifdef DEBUG
-                if (isnan(g)) {
+                if (std::isnan(g)) {
                     qDebug()<< " isnan(g)";
                 }
 #endif
@@ -1622,13 +1622,13 @@ double initLambdaSplineByCV(const std::vector< double> &vec_X, const std::vector
         const double cv = cross_validation(vec_X, test_matrices, vecH, lambda_loop);
         const double gcv = general_cross_validation(vec_X, test_matrices, vecH, lambda_loop);
 
-        if (!isnan(gcv) && !isinf(gcv)) {
+        if (!std::isnan(gcv) && !std::isinf(gcv)) {
             GCV.push_back(gcv);
             lambda_GCV.push_back(lambda_loop);
             //qDebug()<<" gcv="<<idxLambda<<GCV.back();
         }
 
-        if (!isnan(cv) && !isinf(cv)) {
+        if (!std::isnan(cv) && !std::isinf(cv)) {
             CV.push_back(cv);
             lambda_CV.push_back(lambda_loop);
             //qDebug()<<" cv="<<idxLambda<<CV.back();
@@ -1681,13 +1681,13 @@ double initLambdaSplineByCV_VgFixed(const std::vector< double> &vec_Y, const std
         const double cv = cross_validation(vec_Y, test_matrices, vecH, lambda_loop);
         const double gcv = general_cross_validation(vec_Y, test_matrices, vecH, lambda_loop);
 
-        if (!isnan(gcv) && !isinf(gcv)) {
+        if (!std::isnan(gcv) && !std::isinf(gcv)) {
             GCV.push_back(gcv);
             lambda_GCV.push_back(lambda_loop);
             //qDebug()<<" gcv="<<idxLambda<<GCV.back();
         }
 
-        if (!isnan(cv) && !isinf(cv)) {
+        if (!std::isnan(cv) && !std::isinf(cv)) {
             CV.push_back(cv);
             lambda_CV.push_back(lambda_loop);
             //qDebug()<<" cv="<<idxLambda<<CV.back();

@@ -1300,73 +1300,73 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoop.cpp" line="451"/>
+        <location filename="../src/mcmc/MCMCLoop.cpp" line="450"/>
         <source>Initializing Phases...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoop.cpp" line="501"/>
+        <location filename="../src/mcmc/MCMCLoop.cpp" line="500"/>
         <source>Calibrating data...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoop.cpp" line="521"/>
+        <location filename="../src/mcmc/MCMCLoop.cpp" line="520"/>
         <source>List of used chain seeds (to be copied for re-use in MCMC Settings) : </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoop.cpp" line="550"/>
-        <location filename="../src/mcmc/MCMCLoop.cpp" line="625"/>
-        <location filename="../src/mcmc/MCMCLoop.cpp" line="634"/>
-        <location filename="../src/mcmc/MCMCLoop.cpp" line="677"/>
-        <location filename="../src/mcmc/MCMCLoop.cpp" line="689"/>
+        <location filename="../src/mcmc/MCMCLoop.cpp" line="549"/>
+        <location filename="../src/mcmc/MCMCLoop.cpp" line="624"/>
+        <location filename="../src/mcmc/MCMCLoop.cpp" line="633"/>
+        <location filename="../src/mcmc/MCMCLoop.cpp" line="676"/>
+        <location filename="../src/mcmc/MCMCLoop.cpp" line="688"/>
         <location filename="../src/mcmc/MCMCLoop.cpp" line="710"/>
         <location filename="../src/mcmc/MCMCLoop.cpp" line="772"/>
         <source>Chain %1 / %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoop.cpp" line="550"/>
+        <location filename="../src/mcmc/MCMCLoop.cpp" line="549"/>
         <source>Initialising MCMC</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoop.cpp" line="564"/>
+        <location filename="../src/mcmc/MCMCLoop.cpp" line="563"/>
         <source>INIT CHAIN %1 / %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoop.cpp" line="594"/>
+        <location filename="../src/mcmc/MCMCLoop.cpp" line="593"/>
         <source>Chain : %1 / %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoop.cpp" line="594"/>
+        <location filename="../src/mcmc/MCMCLoop.cpp" line="593"/>
         <source>Burn-in</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoop.cpp" line="693"/>
+        <location filename="../src/mcmc/MCMCLoop.cpp" line="692"/>
         <source>ADAPTATION FOR CHAIN %1 / %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoop.cpp" line="780"/>
+        <location filename="../src/mcmc/MCMCLoop.cpp" line="781"/>
         <source>Acquisition time elapsed %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoop.cpp" line="790"/>
+        <location filename="../src/mcmc/MCMCLoop.cpp" line="791"/>
         <source>Computing posterior distributions and numerical results (HPD, credibility, ...)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoop.cpp" line="807"/>
+        <location filename="../src/mcmc/MCMCLoop.cpp" line="808"/>
         <source>finish at %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MCMCLoop.cpp" line="808"/>
+        <location filename="../src/mcmc/MCMCLoop.cpp" line="809"/>
         <source>Total time elapsed %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1518,12 +1518,12 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/curve/MCMCLoopCurve.cpp" line="5641"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="5642"/>
         <source>Not enought span between events theta</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/curve/MCMCLoopCurve.cpp" line="5646"/>
+        <location filename="../src/curve/MCMCLoopCurve.cpp" line="5647"/>
         <source>3 events minimum required</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3505,7 +3505,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     </message>
     <message>
         <location filename="../src/curve/MCMCLoopCurve.cpp" line="504"/>
-        <location filename="../src/mcmc/MCMCLoop.cpp" line="435"/>
+        <location filename="../src/mcmc/MCMCLoop.cpp" line="434"/>
         <source>Error for event theta fixed: %1 : min = %2 : max = %3</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3586,12 +3586,12 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MHVariable.cpp" line="349"/>
+        <location filename="../src/mcmc/MHVariable.cpp" line="347"/>
         <source>Acceptance rate (all acquire iterations) : %1 % (%2)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MHVariable.cpp" line="384"/>
+        <location filename="../src/mcmc/MHVariable.cpp" line="382"/>
         <source>Unknown</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3996,7 +3996,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mcmc/MHVariable.cpp" line="352"/>
+        <location filename="../src/mcmc/MHVariable.cpp" line="350"/>
         <location filename="../src/model/ModelUtilities.cpp" line="741"/>
         <location filename="../src/model/ModelUtilities.cpp" line="960"/>
         <location filename="../src/model/ModelUtilities.cpp" line="978"/>

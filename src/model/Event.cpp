@@ -173,11 +173,11 @@ Event::Event (const QJsonObject& json, const Model *model):
 
 }
 
-Event::Event(const Event &event)
+/*Event::Event(const Event &event)
 {
     Event::copyFrom(event);
 }
-
+*/
 /*Event& Event::operator=(const Event& event)
 {
     copyFrom(event);
