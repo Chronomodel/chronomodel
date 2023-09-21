@@ -588,8 +588,8 @@ RefCurve PluginMagRefView::combine_curve_IF(double incl, const double alpha95, c
     //result.mDataMean = window_filter(result.mDataMean, (max_ti-min_ti)/200.);
     //result.mDataError = window_filter(result.mDataError, (max_ti-min_ti)/200.);
 
-    //result.mDataMean = gaussian_filter(result.mDataMean, (max_ti-min_ti)/200);
-    //result.mDataError = gaussian_filter(result.mDataError, (max_ti-min_ti)/200);
+    result.mDataMean = gaussian_filter(result.mDataMean, (max_ti-min_ti)/500.);
+    result.mDataError = gaussian_filter(result.mDataError, (max_ti-min_ti)/500.);
 
     //result.mDataMean = low_pass_filter(result.mDataMean, 100.);
     //result.mDataError = low_pass_filter(result.mDataError, 100.);

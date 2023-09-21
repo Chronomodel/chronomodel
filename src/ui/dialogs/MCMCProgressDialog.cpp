@@ -97,7 +97,7 @@ int MCMCProgressDialog::startMCMC()
 #ifdef _WIN32
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED); //https://learn.microsoft.com/fr-fr/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate?redirectedfrom=MSDN
 #endif
-    mLoop->start(QThread::QThread::TimeCriticalPriority);// TimeCriticalPriority);// NormalPriority);HighestPriority
+    mLoop->start(QThread::QThread::NormalPriority);// TimeCriticalPriority);// NormalPriority);HighestPriority
     return exec();
 }
 

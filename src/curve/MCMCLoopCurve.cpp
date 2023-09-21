@@ -85,7 +85,7 @@ MCMCLoopCurve::MCMCLoopCurve(ModelCurve* model, Project* project):
         setMCMCSettings(mModel->mMCMCSettings);
     }
     
-    QJsonObject state = project->mState;
+    const QJsonObject &state = project->mState;
     mCurveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
 }
 
@@ -3952,7 +3952,8 @@ void MCMCLoopCurve::memo()
 
 
             if (event->mS02.mSamplerProposal != MHVariable::eFixe) {
-                event->mS02.memo();
+                double memoS02 = sqrt(event->mS02.mX);
+                event->mS02.memo(&memoS02);
                 event->mS02.saveCurrentAcceptRate();
             }
 
@@ -5290,8 +5291,9 @@ t_prob MCMCLoopCurve::h_VG_Event(const Event* e, double S02_Vg) const
  */
 t_prob MCMCLoopCurve::h_S02_Vg(const QList<Event *> &events, double S02_Vg) const
 {
-    const double alp = 1.;
-    const t_prob prior = pow(1./S02_Vg, alp+1.) * exp(-alp/S02_Vg);
+    //const double alp = 1.;
+    //const t_prob prior = pow(1./S02_Vg, alp+1.) * exp(-alp/S02_Vg);
+    const t_prob prior =  exp(-1/S02_Vg) / pow(S02_Vg, 2.);
     const int a = 1;
 
     if (mCurveSettings.mUseVarianceIndividual) {
@@ -6229,13 +6231,13 @@ SplineMatrices MCMCLoopCurve::prepareCalculSpline_W_Vg0(const QList<Event *>& so
 }
 
 
-MCMCSpline MCMCLoopCurve::samplingSpline_multi(QList<Event *> &lEvents, std::vector<Event *> &lEventsinit, std::vector<double> vecYx, std::vector<double> vecYstd, const Matrix2D &RR, const Matrix2D &RR_1, const Matrix2D &Q, const Matrix2D &QT, const Matrix2D &matK)
+MCMCSpline MCMCLoopCurve::samplingSpline_multi(QList<Event *> &events, std::vector<Event *> &lEventsinit, std::vector<double> vecYx, std::vector<double> vecYstd, const Matrix2D &RR, const Matrix2D &RR_1, const Matrix2D &Q, const Matrix2D &QT, const Matrix2D &matK)
 {
     MCMCSpline spline;
 
     // ---------------
     // Récupération des nœuds (événements)
-    const std::vector<double> &vecTheta = get_ThetaVector(lEvents);
+    const std::vector<double> &vecTheta = get_vector(get_Theta, events); //get_ThetaVector(lEvents);
 
     const int n = matK.size() ;
 
@@ -6318,7 +6320,7 @@ std::vector<double> MCMCLoopCurve::splines_prior(const Matrix2D &KK, std::vector
 
     const double lambda = mModel->mLambdaSpline.mX ;
 
-    auto KKlambda = multiConstParMat0(KK, lambda);
+    const auto &KKlambda = multiConstParMat0(KK, lambda);
 
     // auto kg = multiMatByVectCol0(KKlambda, g);
 
@@ -6405,7 +6407,7 @@ double MCMCLoopCurve::Prior_F (const Matrix2D& K, const Matrix2D& K_new, const M
 }
 
 
-std::vector<double> MCMCLoopCurve::multiMatByVectCol0_KK(const  Matrix2D &KKK, const std::vector<double> &gg)
+std::vector<double> MCMCLoopCurve::multiMatByVectCol0_KK(const Matrix2D &KKK, const std::vector<double> &gg)
 {
     const int nl1 = KKK.size();
     // const int nc1 = matrix[0].size();

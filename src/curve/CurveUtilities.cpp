@@ -620,24 +620,7 @@ SplineMatrices prepareCalculSpline(const QList<Event *> &sortedEvents, const std
 }
 
 
-
-
-
-/**
- * @brief MCMCLoopCurve::doSpline
- * fabrication de spline avec
- *      spline.vecG
- *      spline.vecGamma
- *
- * @param matrices
- * @param events
- * @param vecH
- * @param decomp
- * @param lambdaSpline
- *
- * @return SplineResults
- */
-SplineResults do_spline(const std::vector<double> &vec_Y, const SplineMatrices &matrices, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
+SplineResults do_spline(const std::function <double (Event*)> &fun, const SplineMatrices &matrices, const QList<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
 {
     /*
     * MatB doit rester en copie
@@ -646,8 +629,9 @@ SplineResults do_spline(const std::vector<double> &vec_Y, const SplineMatrices &
     try {
         // calcul de: R + alpha * Qt * W-1 * Q = Mat_B
 
+
         // Calcul des vecteurs G et Gamma en fonction de Y
-        const size_t n = vec_Y.size();
+        const size_t n = events.size();
 
         std::vector<double> vecG;
         std::vector<double> vecQtY;
@@ -655,30 +639,27 @@ SplineResults do_spline(const std::vector<double> &vec_Y, const SplineMatrices &
         // VecQtY doit être de taille n, donc il faut mettre un zéro au début et à la fin
         vecQtY.push_back(0.);
         for (size_t i = 1; i < n-1; ++i) {
-            const double term1 = (vec_Y[i+1] - vec_Y[i]) / vecH[i];
-            const double term2 = (vec_Y[i] - vec_Y[i-1]) / vecH[i-1];
+            const double term1 = (fun(events[i+1]) - fun(events[i])) / vecH[i];
+            const double term2 = (fun(events[i]) - fun(events[i-1])) / vecH[i-1];
             vecQtY.push_back(term1 - term2);
         }
         vecQtY.push_back(0.);
 
         // Calcul du vecteur Gamma
-        const decltype(SplineResults::vecGamma) &vecGamma = resolutionSystemeLineaireCholesky(decomp, vecQtY);
+        const decltype(SplineResults::vecGamma) &vecGamma = resolutionSystemeLineaireCholesky(decomp, vecQtY);//, 5, 1);
+
         // Calcul du vecteur g = Y - lamnbda * W-1 * Q * gamma
         if (lambdaSpline != 0) {
             const std::vector<double> &vecTmp2 = multiMatParVec(matrices.matQ, vecGamma, 3);
             const MatrixDiag &diagWInv = matrices.diagWInv;
 
             for (unsigned i = 0; i < n; ++i) {
-                const double g = vec_Y[i] - lambdaSpline * diagWInv[i] * vecTmp2[i];
-                vecG.push_back( g) ;
-                if (isnan(g)) {
-                    qDebug()<< " isnan(g)";
-                }
-
+                vecG.push_back( fun(events[i]) - lambdaSpline * diagWInv[i] * vecTmp2[i]) ;
             }
 
         } else {
-            vecG = vec_Y;
+            vecG.resize(n);
+            std::transform(events.begin(), events.end(), vecG.begin(), fun);
         }
 
 
@@ -686,12 +667,21 @@ SplineResults do_spline(const std::vector<double> &vec_Y, const SplineMatrices &
         spline.vecGamma = std::move(vecGamma);
 
     } catch(...) {
-        qCritical() << "[MCMCLoopCurve::do_Spline] : Caught Exception!\n";
+        qCritical() << "[MCMCLoopCurve::doSpline] : Caught Exception!\n";
     }
 
     return spline;
 }
 
+
+SplineResults doSplineX(const SplineMatrices &matrices, const QList<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
+{return do_spline(get_Yx, matrices, events, vecH, decomp, lambdaSpline);}
+
+SplineResults doSplineY(const SplineMatrices &matrices, const QList<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline)
+{return do_spline(get_Yy, matrices, events, vecH, decomp, lambdaSpline);}
+
+SplineResults doSplineZ(const SplineMatrices &matrices, const QList<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
+{return do_spline(get_Yz, matrices, events, vecH, decomp, lambdaSpline);}
 
 /**
  Cette procedure calcule la matrice inverse de B:
@@ -814,7 +804,7 @@ std::vector<double> calcul_spline_variance(const SplineMatrices& matrices, const
 MCMCSpline currentSpline (QList<Event *> &events, const std::vector<t_reduceTime> &vecH, const SplineMatrices &matrices, const double lambda, bool doY, bool doZ)
 {
 
-    const std::vector<double> &vec_theta_red = get_ThetaReducedVector(events);
+    const std::vector<double> &vec_theta_red = get_vector(get_ThetaReduced, events);
 
     // doSpline utilise les Y des events
     // => On le calcule ici pour la première composante (x)
@@ -919,7 +909,7 @@ MCMCSpline currentSpline_WI (QList<Event *> &events, bool doY, bool doZ, bool us
     const SplineMatrices &spline_matrices = prepareCalculSpline_WI(vecH);
 
 
-    const std::vector<double> &vec_theta_red = get_ThetaReducedVector(events);
+    const std::vector<double> &vec_theta_red = get_vector(get_ThetaReduced, events);
 
     // doSpline utilise les Y des events
     // => On le calcule ici pour la première composante (x)
@@ -1313,6 +1303,78 @@ std::vector<QMap<double, double>> composante_to_curve(MCMCSplineComposante splin
     }
     return std::vector<QMap<double, double>>({curve, curve_plus, curve_moins});
 }
+
+
+/**
+ * @brief MCMCLoopCurve::doSpline
+ * fabrication de spline avec
+ *      spline.vecG
+ *      spline.vecGamma
+ *
+ * @param matrices
+ * @param events
+ * @param vecH
+ * @param decomp
+ * @param lambdaSpline
+ *
+ * @return SplineResults
+ */
+SplineResults do_spline(const std::vector<double> &vec_Y, const SplineMatrices &matrices, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
+{
+    /*
+    * MatB doit rester en copie
+    */
+    SplineResults spline;
+    try {
+        // calcul de: R + alpha * Qt * W-1 * Q = Mat_B
+
+        // Calcul des vecteurs G et Gamma en fonction de Y
+        const size_t n = vec_Y.size();
+
+        std::vector<double> vecG;
+        std::vector<double> vecQtY;
+
+        // VecQtY doit être de taille n, donc il faut mettre un zéro au début et à la fin
+        vecQtY.push_back(0.);
+        for (size_t i = 1; i < n-1; ++i) {
+            const double term1 = (vec_Y[i+1] - vec_Y[i]) / vecH[i];
+            const double term2 = (vec_Y[i] - vec_Y[i-1]) / vecH[i-1];
+            vecQtY.push_back(term1 - term2);
+        }
+        vecQtY.push_back(0.);
+
+        // Calcul du vecteur Gamma
+        const decltype(SplineResults::vecGamma) &vecGamma = resolutionSystemeLineaireCholesky(decomp, vecQtY);
+        // Calcul du vecteur g = Y - lamnbda * W-1 * Q * gamma
+        if (lambdaSpline != 0) {
+            const std::vector<double> &vecTmp2 = multiMatParVec(matrices.matQ, vecGamma, 3);
+            const MatrixDiag &diagWInv = matrices.diagWInv;
+
+            for (unsigned i = 0; i < n; ++i) {
+                const double g = vec_Y[i] - lambdaSpline * diagWInv[i] * vecTmp2[i];
+                vecG.push_back( g) ;
+#ifdef DEBUG
+                if (isnan(g)) {
+                    qDebug()<< " isnan(g)";
+                }
+#endif
+            }
+
+        } else {
+            vecG = vec_Y;
+        }
+
+
+        spline.vecG = std::move(vecG);
+        spline.vecGamma = std::move(vecGamma);
+
+    } catch(...) {
+        qCritical() << "[do_Spline] : Caught Exception!\n";
+    }
+
+    return spline;
+}
+
 
 MCMCSpline do_spline_composante(const QMap<double, double> &data_X, const QMap<double, double> &data_X_err, double tmin, double tmax, const CurveSettings &cs, const QMap<double, double> &data_Y, const QMap<double, double> &data_Y_err, const QMap<double, double> &data_Z, const QMap<double, double> &data_Z_err)
 {

@@ -74,7 +74,7 @@ public:
     bool adapt (const double coef_min = 0.42, const double coef_max = 0.46, const double delta = 0.01);
     inline void memo_accept(const unsigned i_chain) {if (mLastAccepts.last()) ++mAllAccepts[i_chain];}
 
-    QVector<double> acceptationForChain(const QList<ChainSpecs>& chains, int index);
+    QList<double> acceptationForChain(const QList<ChainSpecs>& chains, int index);
     void generateGlobalRunAcceptation(const QList<ChainSpecs>& chains);
 
     void generateNumericalResults(const QList<ChainSpecs>& chains);
@@ -91,7 +91,7 @@ public:
     // Buffer glissant de la taille d'un batch pour calculer la courbe d'évolution
     // du taux d'acceptation chaine par chaine
 
-    QVector<bool> mLastAccepts;
+    QList<bool> mLastAccepts;
 
     int mLastAcceptsLength;
 
@@ -100,7 +100,7 @@ public:
     // A stocker dans le fichier résultats .res !
 
     // QVector<bool>* mAllAccepts;
-    QVector<long long> mAllAccepts;
+    QList<long long> mAllAccepts;
     // Computed at the end as numerical result :
     double mGlobalAcceptationPerCent;
 
@@ -108,7 +108,7 @@ public:
     // On en affiche des sous-parties (correspondant aux chaines) dans la vue des résultats
     // A stocker dans les résultats!
 
-    QVector<double>* mHistoryAcceptRateMH;
+    QList<double>* mHistoryAcceptRateMH;
 
     SamplerProposal mSamplerProposal;
 

@@ -756,9 +756,10 @@ double map_area(const std::map<double, double> &map)
 }
 
 
-double map_area(const QMap<int, double>& density)
+double map_area(const QMap<int, double> &density)
 {
-    return std::accumulate(density.constBegin(), density.constEnd(), 0., [](double sum, auto m){return sum + m;  });
+    //return std::accumulate(density.constBegin(), density.constEnd(), 0., [](double sum, auto m){return sum + m;  });
+    return std::accumulate(density.constBegin(), density.constEnd(), 0., std::plus<double>());
 }
 
 QList<double> vector_to_histo(const QVector<double> &vector, const double tmin, const double tmax, const int nbPts)

@@ -63,7 +63,7 @@ Event::Event(const Model *model):
     mName ("no Event Name"),
     mIsCurrent (false),
     mIsSelected (false),
-    mS02harmonique(0.),
+    mBetaS02(0.),
     mInitialized (false),
     mLevel (0),
     mPointType (ePoint)
@@ -214,7 +214,7 @@ void Event::copyFrom(const Event& event)
     mS02.mSigmaMH = event.mS02.mSigmaMH;
 
     mAShrinkage = event.mAShrinkage;
-    mS02harmonique = event.mS02harmonique;
+    mBetaS02 = event.mBetaS02;
 
     mItemX = event.mItemX;
     mItemY = event.mItemY;
@@ -1222,41 +1222,44 @@ void Event::updateS02()
 
 double Event::h_S02(const double S02)
 {
-    const int alpha = 1 ;
+     /* schoolbook algo*/
+ /*   const double alpha = 1. ;
 
     const double beta = 1.004680139*(1 - exp(- 0.0000847244 * pow(mS02harmonique, 2.373548593)));
 
     const double prior = pow(1. / S02, alpha) * expl(- beta / S02);
 
-    const int a = 1 ;
+    const double a = 1. ;
 
-    /* schoolbook algo
+
     double prod_h = 1.;
     for (auto& d : mDates) {
-        prod_h *= pow((S02/(S02 + pow(d.mSigmaTi.mX, 2))), a + 1) / S02;
+        prod_h *= pow((S02/(S02 + pow(d.mSigmaTi.mX, 2))), a + 1.) / S02;
     }
-    */
 
-    const double prod_h = std::accumulate(mDates.begin(), mDates.end(), 1., [S02] (double prod, auto d){return prod * (pow((S02/(S02 + pow(d.mSigmaTi.mX, 2.))), a + 1) / S02);});
+    // memory leak and slower !! ??
+    // const double prod_h (std::accumulate(mDates.begin(), mDates.end(), 1., [S02, a] (double prod, Date d){return prod * (pow((S02/(S02 + pow(d.mSigmaTi.mX, 2.))), a + 1.) / S02);}));
 
     return prior * prod_h;
+ */
+
+// Code optimization
+
+    //const double beta = 1.004680139*(1 - exp(- 0.0000847244 * pow(mS02harmonique, 2.373548593)));
+
+    double h = expl(- mBetaS02 / S02) / S02;
+
+    for (auto& d : mDates) {
+        h *= pow((S02/(S02 + pow(d.mSigmaTi.mX, 2))), 2.);
+    }
+   return std::move(h / pow(S02, mDates.size()));
+
 
 }
 
-
-
-std::vector<double> get_ThetaVector(const QList<Event *> &events)
+std::vector<double> get_vector(const std::function <double (Event*)> &fun, const QList<Event *> &events)
 {
-    std::vector<double> vecT(events.size());
-    std::transform(PAR events.begin(), events.end(), vecT.begin(), [](Event* ev) {return ev->mTheta.mX;});
-
-    return vecT;
-}
-
-std::vector<double> get_ThetaReducedVector(const QList<Event *> &events)
-{
-    std::vector<double> vecT(events.size());
-    std::transform(PAR events.begin(), events.end(), vecT.begin(), [](Event* ev) {return ev->mThetaReduced;});
-
-    return vecT;
+    std::vector<double> vec (events.size());
+    std::transform(events.begin(), events.end(), vec.begin(), fun);
+    return vec;
 }

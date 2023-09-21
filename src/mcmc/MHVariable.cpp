@@ -252,13 +252,11 @@ double MHVariable::getCurrentAcceptRate() const
     if (mLastAccepts.isEmpty())
         return 0.;
 
-   // double sum (0.);
-
-    const double sum = std::accumulate(mLastAccepts.begin(), mLastAccepts.end(), 0.,[](double s, double a){return s+(a ? 1. : 0.);}) / mLastAccepts.size(); //#include <numeric>
-
-    //sum = sum / (double)mLastAccepts.size();
-
+    /*const double sum = std::accumulate(mLastAccepts.begin(), mLastAccepts.end(), 0.,[](double s, double a){return s+(a ? 1. : 0.);}) / mLastAccepts.size(); //#include <numeric>
     return std::move(sum) ;
+*/
+
+    return std::count_if(mLastAccepts.begin(), mLastAccepts.end(), [](bool i) { return i; })/ (double) mLastAccepts.size();
 
 }
 
@@ -268,9 +266,9 @@ void MHVariable::saveCurrentAcceptRate()
     mHistoryAcceptRateMH->push_back(rate);
 }
 
-QVector<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains, int index)
+QList<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains, int index)
 {
-    QVector<double> accept(0);
+    QList<double> accept(0);
     int shift = 0;
     const int reserveSize = (int) ceil(chains.at(index).mIterPerBurn + (chains.at(index).mBatchIndex * chains.at(index).mIterPerBatch) + chains.at(index).mRealyAccepted);
     accept.reserve(reserveSize);
@@ -419,13 +417,12 @@ QDataStream &operator<<( QDataStream &stream, const MHVariable &data )
     stream << dynamic_cast<const MetropolisVariable&>(data);
 
     /* owned by MHVariable*/
-    //stream << *(data.mAllAccepts);
     stream << data.mAllAccepts;
     stream << *(data.mHistoryAcceptRateMH);
     stream << data.mLastAccepts;
 
-     //*out << this->mProposal; // it's a QString, already set
-     stream << data.mSigmaMH;
+    stream << data.mSigmaMH;
+    stream << data.mSamplerProposal;
 
     return stream;
 }
@@ -434,16 +431,9 @@ QDataStream &operator>>( QDataStream &stream, MHVariable &data )
 {
     /* herited from MetropolisVariable*/
     stream >> dynamic_cast<MetropolisVariable&>(data);
+
     data.mAllAccepts.clear();
     stream >> data.mAllAccepts;
-    /*if (!data.mAllAccepts.empty())
-        data.mAllAccepts.clear();
-    else
-        data.mAllAccepts = new QVector<bool>();
-    stream >> *(data.mAllAccepts);*/
-
-
-    //stream >> data.mAllAccepts;
 
     if (data.mHistoryAcceptRateMH)
         data.mHistoryAcceptRateMH->clear();
@@ -457,6 +447,7 @@ QDataStream &operator>>( QDataStream &stream, MHVariable &data )
     stream >> data.mLastAccepts;
 
     stream >> data.mSigmaMH;
+    stream >> data.mSamplerProposal;
 
     return stream;
 

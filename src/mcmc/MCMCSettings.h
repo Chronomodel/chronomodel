@@ -56,24 +56,24 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 struct ChainSpecs
 {
     unsigned mSeed;
-    int mIterPerBurn;
-    int mBurnIterIndex;
-    int mMaxBatchs;
-    int mIterPerBatch;
-    int mBatchIterIndex;
-    int mBatchIndex;
-    int mIterPerAquisition; //mNumRunIter;
-    int mAquisitionIterIndex; // mRunIterIndex;
-    int mTotalIter; // burn + adapt + run
-    int mThinningInterval;
+    int mIterPerBurn = MCMC_NUM_BURN_DEFAULT;
+    int mBurnIterIndex = 0;
+    int mMaxBatchs = MCMC_MAX_ADAPT_BATCHES_DEFAULT;
+    int mIterPerBatch = MCMC_ITER_PER_BATCH_DEFAULT;
+    int mBatchIterIndex = 0;
+    int mBatchIndex = 0;
+    int mIterPerAquisition = 0; //mNumRunIter;
+    int mAquisitionIterIndex = 0; // mRunIterIndex;
+    int mTotalIter = 0; // burn + adapt + run
+    int mThinningInterval = MCMC_THINNING_INTERVAL_DEFAULT;
 
-    int mRealyAccepted;
-    double mMixingLevel;
+    int mRealyAccepted = 0;
+    double mMixingLevel = MCMC_MIXING_DEFAULT;
 
-    qint64 mInitElapsedTime;
-    qint64 burnElapsedTime;
-    qint64 mAdaptElapsedTime;
-    qint64 mAcquisitionElapsedTime;
+    qint64 mInitElapsedTime = 0;
+    qint64 burnElapsedTime = 0;
+    qint64 mAdaptElapsedTime = 0;
+    qint64 mAcquisitionElapsedTime = 0;
 
 };
 

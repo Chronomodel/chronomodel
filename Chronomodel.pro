@@ -120,7 +120,7 @@ macx{
 
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
         #QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14 # OS X 10.9 	Mavericks oct 2013  # essai sinon 10.14
-        QMAKE_MACOSX_DEPLOYMENT_TARGET = 11 # depuis le 2022-10-11
+        QMAKE_MACOSX_DEPLOYMENT_TARGET = 13 # depuis le 2022-10-11
 	# Define a set of resources to deploy inside the bundle :
 	RESOURCES_FILES.path = Contents/Resources
         # RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib // used for older version <3.1.6
@@ -184,14 +184,14 @@ macx{
 
 	# this is to include fftw.h in the code :
 	# INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac
-        INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac
-        # INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac
+        #INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac
+         INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac # with intel and arm
 
 
 	# Link the application with FFTW library
 	# If no dylib are present, static libs (.a) are used => that's why we moved .dylib files in a "dylib" folder.
-        LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac" -lfftw3
-        #LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac" -lfftw3
+        #LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac" -lfftw3
+        LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac" -lfftw3
         #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3
 
 
@@ -233,7 +233,7 @@ message("LIBS : $$LIBS")
 # TRANSLATIONS
 #########################################
 TRANSLATIONS = translations/Chronomodel_fr.ts \
-				translations/Chronomodel_en.ts
+               translations/Chronomodel_en.ts
 
 # For Microsoft Visual Studio only
 CODECFORSRC = UTF-8
@@ -290,8 +290,7 @@ HEADERS += src/curve/CurveUtilities.h
 HEADERS += src/mcmc/Functions.h
 HEADERS += src/mcmc/Generator.h
 HEADERS += src/mcmc/MCMCLoop.h
-HEADERS += \
-    src/mcmc/MCMCLoopChrono.h
+HEADERS += src/mcmc/MCMCLoopChrono.h
 HEADERS += src/mcmc/MCMCSettings.h
 HEADERS += src/mcmc/MetropolisVariable.h
 HEADERS += src/mcmc/MHVariable.h
@@ -300,8 +299,7 @@ HEADERS += src/model/Constraint.h
 HEADERS += src/model/Date.h
 HEADERS += src/model/Event.h
 HEADERS += src/model/EventConstraint.h
-HEADERS += \
-    src/model/Bound.h
+HEADERS += src/model/Bound.h
 HEADERS += src/model/Model.h
 HEADERS += src/model/ModelUtilities.h
 HEADERS += src/model/Phase.h
@@ -325,19 +323,19 @@ equals(USE_PLUGIN_14C, 1){
 	HEADERS += src/plugins/plugin_14C/Plugin14C.h
 	HEADERS += src/plugins/plugin_14C/Plugin14CForm.h
 	HEADERS += src/plugins/plugin_14C/Plugin14CRefView.h
-    HEADERS += src/plugins/plugin_14C/Plugin14CSettingsView.h
+        HEADERS += src/plugins/plugin_14C/Plugin14CSettingsView.h
 }
 equals(USE_PLUGIN_GAUSS, 1){
 	HEADERS += src/plugins/plugin_gauss/PluginGauss.h
 	HEADERS += src/plugins/plugin_gauss/PluginGaussForm.h
 	HEADERS += src/plugins/plugin_gauss/PluginGaussRefView.h
-    HEADERS += src/plugins/plugin_gauss/PluginGaussSettingsView.h
+        HEADERS += src/plugins/plugin_gauss/PluginGaussSettingsView.h
 }
 equals(USE_PLUGIN_AM, 1){
 	HEADERS += src/plugins/plugin_am/PluginMag.h
 	HEADERS += src/plugins/plugin_am/PluginMagForm.h
 	HEADERS += src/plugins/plugin_am/PluginMagRefView.h
-    HEADERS += src/plugins/plugin_am/PluginMagSettingsView.h
+        HEADERS += src/plugins/plugin_am/PluginMagSettingsView.h
 }
 equals(USE_PLUGIN_UNIFORM, 1){
 	HEADERS += src/plugins/plugin_uniform/PluginUniform.h
@@ -352,20 +350,15 @@ equals(USE_PLUGIN_F14C, 1){
     HEADERS += src/plugins/plugin_F14C/PluginF14CSettingsView.h
 }
 equals(USE_PLUGIN_DENSITY, 1){
-        HEADERS += \
-        src/plugins/plugin_density/PluginDensity.h
-        HEADERS += \
-        src/plugins/plugin_density/PluginDensityForm.h
-        HEADERS += \
-        src/plugins/plugin_density/PluginDensityRefView.h
-    HEADERS += \
-    src/plugins/plugin_density/PluginDensitySettingsView.h
+        HEADERS += src/plugins/plugin_density/PluginDensity.h
+        HEADERS += src/plugins/plugin_density/PluginDensityForm.h
+        HEADERS += src/plugins/plugin_density/PluginDensityRefView.h
+        HEADERS += src/plugins/plugin_density/PluginDensitySettingsView.h
 }
 
 HEADERS += src/project/PluginManager.h
 HEADERS += src/project/Project.h
-HEADERS += \
-    src/project/StudyPeriodSettings.h
+HEADERS += src/project/StudyPeriodSettings.h
 HEADERS += src/project/SetProjectState.h
 HEADERS += src/project/StateEvent.h
 
@@ -414,8 +407,7 @@ HEADERS += src/ui/panel_model/scenes/EventsScene.h
 HEADERS += src/ui/panel_model/scenes/PhaseItem.h
 HEADERS += src/ui/panel_model/scenes/PhasesScene.h
 
-HEADERS += \
-    src/ui/panel_results/GraphViewLambda.h
+HEADERS += src/ui/panel_results/GraphViewLambda.h
 HEADERS += src/ui/panel_results/GraphViewCurve.h
 HEADERS += src/ui/panel_results/GraphViewDate.h
 HEADERS += src/ui/panel_results/GraphViewEvent.h
@@ -471,8 +463,7 @@ SOURCES += src/curve/CurveUtilities.cpp
 SOURCES += src/mcmc/Functions.cpp
 SOURCES += src/mcmc/Generator.cpp
 SOURCES += src/mcmc/MCMCLoop.cpp
-SOURCES += \
-    src/mcmc/MCMCLoopChrono.cpp
+SOURCES += src/mcmc/MCMCLoopChrono.cpp
 SOURCES += src/mcmc/MCMCSettings.cpp
 SOURCES += src/mcmc/MetropolisVariable.cpp
 SOURCES += src/mcmc/MHVariable.cpp
@@ -481,8 +472,7 @@ SOURCES += src/model/Constraint.cpp
 SOURCES += src/model/Date.cpp
 SOURCES += src/model/Event.cpp
 SOURCES += src/model/EventConstraint.cpp
-SOURCES += \
-    src/model/Bound.cpp
+SOURCES += src/model/Bound.cpp
 SOURCES += src/model/Model.cpp
 SOURCES += src/model/ModelUtilities.cpp
 SOURCES += src/model/Phase.cpp
@@ -529,19 +519,14 @@ equals(USE_PLUGIN_F14C, 1) {
     SOURCES += src/plugins/plugin_F14C/PluginF14CSettingsView.cpp
 }
 equals(USE_PLUGIN_DENSITY, 1) {
-    SOURCES += \
-    src/plugins/plugin_density/PluginDensity.cpp
-    SOURCES += \
-    src/plugins/plugin_density/PluginDensityForm.cpp
-    SOURCES += \
-    src/plugins/plugin_density/PluginDensityRefView.cpp
-    SOURCES += \
-    src/plugins/plugin_density/PluginDensitySettingsView.cpp
+    SOURCES +=src/plugins/plugin_density/PluginDensity.cpp
+    SOURCES += src/plugins/plugin_density/PluginDensityForm.cpp
+    SOURCES += src/plugins/plugin_density/PluginDensityRefView.cpp
+    SOURCES += src/plugins/plugin_density/PluginDensitySettingsView.cpp
 }
 SOURCES += src/project/PluginManager.cpp
 SOURCES += src/project/Project.cpp
-SOURCES += \
-    src/project/StudyPeriodSettings.cpp
+SOURCES += src/project/StudyPeriodSettings.cpp
 SOURCES += src/project/SetProjectState.cpp
 SOURCES += src/project/StateEvent.cpp
 
@@ -586,8 +571,7 @@ SOURCES += src/ui/panel_model/scenes/EventsScene.cpp
 SOURCES += src/ui/panel_model/scenes/PhaseItem.cpp
 SOURCES += src/ui/panel_model/scenes/PhasesScene.cpp
 
-SOURCES += \
-    src/ui/panel_results/GraphViewLambda.cpp
+SOURCES += src/ui/panel_results/GraphViewLambda.cpp
 SOURCES += src/ui/panel_results/GraphViewCurve.cpp
 SOURCES += src/ui/panel_results/GraphViewDate.cpp
 SOURCES += src/ui/panel_results/GraphViewEvent.cpp

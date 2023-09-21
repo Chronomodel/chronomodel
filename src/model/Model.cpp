@@ -598,7 +598,7 @@ QString Model::getInitLog() const{
     QString log;
     int i = 1;
     for (const auto& chain : mChains) {
-        log += line( tr("Elapsed init time %1 for chain %2").arg(DHMS(chain.mInitElapsedTime), QString::number(i)));
+        log += line( QObject::tr("Elapsed init time %1 for chain %2").arg(DHMS(chain.mInitElapsedTime), QString::number(i)));
         ++i;
     }
     return log + mLogInit;
@@ -608,7 +608,7 @@ QString Model::getAdaptLog() const{
     QString log;
     int i = 1;
     for (const auto& chain : mChains) {
-        log += line( tr("Elapsed adaptation time %1 for chain %2").arg(DHMS(chain.mAdaptElapsedTime), QString::number(i)));
+        log += line( QObject::tr("Elapsed adaptation time %1 for chain %2").arg(DHMS(chain.mAdaptElapsedTime), QString::number(i)));
         ++i;
     }
     return log + mLogAdapt;
@@ -632,7 +632,7 @@ void Model::generateResultsLog()
     QString log;
     int i = 1;
     for (const auto& chain : mChains) {
-        log += line( tr("Elapsed acquisition time %1 for chain %2").arg(DHMS(chain.mAcquisitionElapsedTime), QString::number(i)));
+        log += line( QObject::tr("Elapsed acquisition time %1 for chain %2").arg(DHMS(chain.mAcquisitionElapsedTime), QString::number(i)));
         ++i;
     }
     log += "<hr>";
@@ -890,14 +890,14 @@ bool Model::isValid()
         return false;
 
      } else if (curveModel && mEvents.size() < 3) {
-            throw tr("The model must contain at least 3 Events");
+            throw QObject::tr("The model must contain at least 3 Events");
             return false;
     }
 
     // 2 - The event must contain at least 1 data
     for (int i = 0; i < mEvents.size(); ++i) {
         if (mEvents.at(i)->type() == Event::eDefault && mEvents.at(i)->mDates.size() == 0) {
-                    throw tr("The event  \" %1 \" must contain at least 1 data").arg(mEvents.at(i)->mName);
+                    throw QObject::tr("The event  \" %1 \" must contain at least 1 data").arg(mEvents.at(i)->mName);
                     return false;
 
         }
@@ -906,7 +906,7 @@ bool Model::isValid()
     // 3 - The phase must contain at least 1 event
     for (const Phase* ph: mPhases) {
         if (ph->mEvents.size() == 0) {
-            throw tr("The phase \" %1 \" must contain at least 1 event").arg(ph->mName);
+            throw QObject::tr("The phase \" %1 \" must contain at least 1 event").arg(ph->mName);
             return false;
         }
     }
@@ -936,7 +936,7 @@ bool Model::isValid()
                 if (!branchEvents.contains(ev)) {
                     branchEvents.append(ev);
                 } else
-                    throw QString(tr("The event \" %1 \" cannot belong to several phases in a same branch!").arg(ev->mName));
+                    throw QString(QObject::tr("The event \" %1 \" cannot belong to several phases in a same branch!").arg(ev->mName));
             }
         }
     }
@@ -966,7 +966,7 @@ bool Model::isValid()
                 // Update bound interval
 
                 if (bound->mFixed < lower)
-                    throw QString(tr("The bound \" %1 \" has a fixed value inconsistent with previous bounds in chain!").arg(bound->mName));
+                    throw QString(QObject::tr("The bound \" %1 \" has a fixed value inconsistent with previous bounds in chain!").arg(bound->mName));
 
                 // --------------------
                 // Check bound interval upper value
@@ -980,7 +980,7 @@ bool Model::isValid()
                 }
                 // Update bound interval
                 if (bound->mFixed > upper)
-                    throw QString(tr("The bound \" %1 \" has a fixed value inconsistent with next bounds in chain!").arg(bound->mName));
+                    throw QString(QObject::tr("The bound \" %1 \" has a fixed value inconsistent with next bounds in chain!").arg(bound->mName));
 
             }
             event = nullptr;
@@ -1015,7 +1015,7 @@ bool Model::isValid()
             bound = nullptr;
         }
         if (gammaMin >= (upper - lower))
-            throw QString(tr("The constraint between phases \" %1 \" and \" %2 \" is not consistent with the bounds they contain!").arg(phaseFrom->mName, phaseTo->mName));
+            throw QString(QObject::tr("The constraint between phases \" %1 \" and \" %2 \" is not consistent with the bounds they contain!").arg(phaseFrom->mName, phaseTo->mName));
 
         phaseFrom = nullptr;
         phaseTo = nullptr;
@@ -1048,7 +1048,7 @@ bool Model::isValid()
             }
             if (boundFound){
                 if (tauMax < (max - min))
-                    throw QString(tr("The phase \" %1 \" has a duration inconsistent with the bounds it contains!").arg(phase->mName));
+                    throw QString(QObject::tr("The phase \" %1 \" has a duration inconsistent with the bounds it contains!").arg(phase->mName));
             }
         }
     }
@@ -1070,13 +1070,13 @@ bool Model::isValid()
                             if (!phaseFound) {
                                 for (const auto & evBwd : e->mConstraintsBwd) {
                                     if (evBwd->mEventFrom == event)
-                                        throw tr("The event %1  (in phase %2 ) is before the event %3 (in phase %4), BUT the phase %5 is after the phase %6 .\r=> Contradiction !").arg(event->mName, phase->mName, e->mName, p->mName, phase->mName, p->mName) ;
+                                        throw QObject::tr("The event %1  (in phase %2 ) is before the event %3 (in phase %4), BUT the phase %5 is after the phase %6 .\r=> Contradiction !").arg(event->mName, phase->mName, e->mName, p->mName, phase->mName, p->mName) ;
 
                                 }
                             } else {
                                 for (const auto &evFwd : e->mConstraintsFwd) {
                                     if (evFwd->mEventTo == event)
-                                        throw tr("The event %1 ( in phase %2 ) is after the event %3  ( in phase %4 ), BUT the phase %4 is before the phase .\r=> Contradiction !").arg(event->mName, phase->mName, e->mName, p->mName, phase->mName, p->mName);
+                                        throw QObject::tr("The event %1 ( in phase %2 ) is after the event %3  ( in phase %4 ), BUT the phase %4 is before the phase .\r=> Contradiction !").arg(event->mName, phase->mName, e->mName, p->mName, phase->mName, p->mName);
                                 }
                             }
                         }
@@ -1341,19 +1341,19 @@ void Model::updateDensities(int fftLen, double bandwidth, double threshold)
     clearPosteriorDensities();
 
     if (mProject->mLoop)
-        emit mProject->mLoop->setMessage(tr("Computing posterior distributions and numerical results - Credibility "));
+        emit mProject->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results - Credibility "));
     generateCredibility(threshold);
 
     updateFormatSettings(); // update formatedCredibility and formatedTrace
 
     if (mProject->mLoop)
-        emit mProject->mLoop->setMessage(tr("Computing posterior distributions and numerical results - Posterior Densities"));
+        emit mProject->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results - Posterior Densities"));
 
     generatePosteriorDensities(mChains, fftLen, bandwidth);
 
 
     if (mProject->mLoop)
-        emit mProject->mLoop->setMessage(tr("Computing posterior distributions and numerical results - HPD "));
+        emit mProject->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results - HPD "));
 
     generateHPD(threshold);
 
@@ -1362,18 +1362,18 @@ void Model::updateDensities(int fftLen, double bandwidth, double threshold)
 
     if (!mPhases.isEmpty()) {
         if (mProject->mLoop)
-            emit mProject->mLoop->setMessage(tr("Computing posterior distributions and numerical results - Tempo"));
+            emit mProject->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results - Tempo"));
          generateTempo(fftLen);
     }
 
     if (!mPhases.isEmpty()) {
         if (mProject->mLoop)
-            emit mProject->mLoop->setMessage(tr("Computing posterior distributions and numerical results - Activity"));
+            emit mProject->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results - Activity"));
          generateActivity(fftLen, mHActivity, threshold);
     }
 
     if (mProject->mLoop)
-        emit mProject->mLoop->setMessage(tr("Computing posterior distributions and numerical results - Numerical Results"));
+        emit mProject->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results - Numerical Results"));
     generateNumericalResults(mChains);
 
 
@@ -2212,6 +2212,140 @@ void Model::restoreFromFile_v323(QDataStream *in)
     for (Event* &e : mEvents) {
         *in >> e->mTheta;
         e->mS02.mSamplerProposal = MHVariable::eFixe;
+        *in >> e->mS02; // since 2023-06-01 v3.2.3
+    }
+    // -----------------------------------------------------
+    //  Read dates data
+    // -----------------------------------------------------
+
+    for (Event*& event : mEvents) {
+        if (event->mType == Event::eDefault )
+            for (auto&& d : event->mDates) {
+                *in >> d.mTi;
+                *in >> d.mSigmaTi;
+                if (d.mDeltaType != Date::eDeltaNone)
+                    *in >> d.mWiggle;
+
+                *in >> d.mDeltaFixed;
+                *in >> d.mDeltaMin;
+                *in >> d.mDeltaMax;
+                *in >> d.mDeltaAverage;
+                *in >> d.mDeltaError;
+
+                /* obsolete since 3.2.0
+                    qint32 tmpInt32;
+                    *in >> tmpInt32;
+                    d.mSettings.mTmin = int (tmpInt32);
+                    *in >> tmpInt32;
+                    d.mSettings.mTmax = int (tmpInt32);
+                    *in >> d.mSettings.mStep;
+                    quint8 btmp;
+                   * in >> btmp;
+                    d.mSettings.mStepForced =(btmp==1);
+                    */
+                // in >> d.mSubDates;
+                double tmp;
+                *in >> tmp;
+                d.setTminRefCurve(tmp);
+                *in >> tmp;
+                d.setTmaxRefCurve(tmp);
+
+                d.mCalibration = & (mProject->mCalibCurves[d.mUUID]);
+
+                quint32 tmpUint32;
+                *in >> tmpUint32;
+                double tmpKey;
+                double tmpValue;
+                for (quint32 i= 0; i<tmpUint32; i++) {
+                    *in >> tmpKey;
+                    *in >> tmpValue;
+                    d.mCalibHPD[tmpKey]= tmpValue;
+                }
+                //#ifdef DEBUG
+
+                const QString toFind ("WID::"+ d.mUUID);
+
+                if (d.mWiggleCalibration == nullptr || d.mWiggleCalibration->mVector.isEmpty()) {
+                    qDebug()<<"[Model::restoreFromFile] mWiggleCalibration vide";
+
+                } else {
+                    d.mWiggleCalibration = & (mProject->mCalibCurves[toFind]);
+                }
+                //#endif
+            }
+    }
+    *in >> mLogModel;
+    *in >> mLogInit;
+    *in >> mLogAdapt;
+    *in >> mLogResults;
+
+}
+
+void Model::restoreFromFile_v324(QDataStream *in)
+{
+    int QDataStreamVersion;
+    *in >> QDataStreamVersion;
+    in->setVersion(QDataStreamVersion);
+
+    if (in->version()!= QDataStream::Qt_6_4)
+        return;
+
+    QString appliVersion;
+    *in >> appliVersion;
+    // prepare the future
+    //QStringList projectVersionList = appliVersion.split(".");
+#ifdef DEBUG
+    if (appliVersion != qApp->applicationVersion())
+        qDebug()<<" Different Model version ="<<appliVersion<<" actual ="<<qApp->applicationVersion();
+
+#endif
+    // -----------------------------------------------------
+    //  Read info
+    // -----------------------------------------------------
+
+    quint32 tmp32;
+    *in >> tmp32;
+
+    mChains.clear();
+    mChains.reserve(int (tmp32));
+    for (quint32 i=0 ; i<tmp32; ++i) {
+        ChainSpecs ch;
+        *in >> ch.burnElapsedTime;
+        *in >> ch.mAdaptElapsedTime;
+        *in >> ch.mAcquisitionElapsedTime;
+
+        *in >> ch.mBatchIndex;
+        *in >> ch.mBatchIterIndex;
+        *in >> ch.mBurnIterIndex;
+        *in >> ch.mMaxBatchs;
+        *in >> ch.mMixingLevel;
+        *in >> ch.mIterPerBatch;
+        *in >> ch.mIterPerBurn;
+        *in >> ch.mIterPerAquisition;
+        *in >> ch.mAquisitionIterIndex;
+        *in >> ch.mSeed;
+        *in >> ch.mThinningInterval;
+        *in >> ch.mRealyAccepted;
+        *in >> ch.mTotalIter;
+        mChains.append(ch);
+    }
+
+    // -----------------------------------------------------
+    //  Read phases data
+    // -----------------------------------------------------
+
+    for (Phase* &p : mPhases) {
+        *in >> p->mAlpha;
+        *in >> p->mBeta;
+        *in >> p->mTau;
+        *in >> p->mDuration;
+    }
+    // -----------------------------------------------------
+    //  Read events data
+    // -----------------------------------------------------
+
+    for (Event* &e : mEvents) {
+        *in >> e->mTheta;
         *in >> e->mS02; // since 2023-06-01 v3.2.3
     }
     // -----------------------------------------------------

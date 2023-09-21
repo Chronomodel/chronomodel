@@ -797,7 +797,7 @@ QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
     if (data.mRawTrace)
         data.mRawTrace->clear();
     else
-        data.mRawTrace = new QVector<double>();
+        data.mRawTrace = new QList<double>();
     data.mRawTrace->reserve(siz);
 
     for (quint32 i = 0; i < siz; ++i) {
@@ -808,7 +808,7 @@ QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
     if (data.mFormatedTrace)
         data.mFormatedTrace->clear();
     else
-        data.mFormatedTrace = new QVector<double>();
+        data.mFormatedTrace = new QList<double>();
    // data.updateFormatedTrace();
 
     return stream;

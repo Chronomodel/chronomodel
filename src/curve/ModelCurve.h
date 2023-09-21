@@ -69,8 +69,9 @@ public:
     virtual ~ModelCurve();
     
     virtual void saveToFile(QDataStream *out);
-    virtual void restoreFromFile(QDataStream *in) {return restoreFromFile_v323(in);};
+    virtual void restoreFromFile(QDataStream *in) {return restoreFromFile_v324(in);};
     void restoreFromFile_v323(QDataStream* in);
+    void restoreFromFile_v324(QDataStream* in);
 
     virtual QJsonObject toJson() const;
     virtual void fromJson( const QJsonObject &json);

@@ -94,11 +94,11 @@ public:
     QList<EventConstraint*> mConstraintsBwd;
 
     MHVariable mTheta;
-
     MHVariable mS02;
 
     double mAShrinkage;
-    double mS02harmonique;
+    //double mS02harmonique;
+    double mBetaS02;
     bool mInitialized;
 
     bool mNodeInitialized;
@@ -184,18 +184,21 @@ public:
 };
 
 
-inline decltype(Event::mYx) get_Yx(Event* e) {return e->mYx;};
-inline decltype(Event::mYy) get_Yy(Event* e) {return e->mYy;};
-inline decltype(Event::mYz) get_Yz(Event* e) {return e->mYz;};
+inline double get_Yx(Event* e) {return e->mYx;};
+inline double get_Yy(Event* e) {return e->mYy;};
+inline double get_Yz(Event* e) {return e->mYz;};
 
-inline decltype(Event::mGx) get_Gx(Event* e) {return e->mGx;};
-inline decltype(Event::mGy) get_Gy(Event* e) {return e->mGy;};
-inline decltype(Event::mGz) get_Gz(Event* e) {return e->mGz;};
+inline double get_Gx(Event* e) {return e->mGx;};
+inline double get_Gy(Event* e) {return e->mGy;};
+inline double get_Gz(Event* e) {return e->mGz;};
 
-inline decltype(Event::mTheta.mX) get_Theta(Event* e) {return e->mTheta.mX;};
-inline decltype(Event::mThetaReduced) get_ThetaReduced(Event* e) {return e->mThetaReduced;};
+inline double get_Theta(Event* e) {return e->mTheta.mX;};
+inline double get_ThetaReduced(Event* e) {return e->mThetaReduced;};
 
-std::vector<double> get_ThetaVector(const QList<Event *> &events);
-std::vector<double> get_ThetaReducedVector(const QList<Event *> &events);
+//std::vector<double> get_ThetaVector(const QList<Event *> &events);
+//std::vector<double> get_ThetaReducedVector(const QList<Event *> &events);
+
+std::vector<double> get_vector(const std::function <double (Event*)> &fun, const QList<Event *> &events);
+
 
 #endif

@@ -230,6 +230,32 @@ void ModelCurve::restoreFromFile_v323(QDataStream* in)
 
 }
 
+void ModelCurve::restoreFromFile_v324(QDataStream* in)
+{
+    Model::restoreFromFile_v324(in);
+
+    for (auto&& e : mEvents)
+        *in >> e->mVg;
+
+    quint32 tmp32;
+    *in >> mLambdaSpline;
+
+    *in >> mS02Vg;
+
+    *in >> tmp32;
+    mSplinesTrace.resize(tmp32);
+    for (auto& splin : mSplinesTrace)
+        *in >> splin;
+
+    *in >> mPosteriorMeanG;
+
+    *in >> tmp32;
+    mPosteriorMeanGByChain.resize(tmp32);
+    for (auto& pMByChain : mPosteriorMeanGByChain)
+        *in >> pMByChain;
+
+}
+
 /* C' était le même algorithme que MCMCCurve::memo_PosteriorG()
  */
 /** @TODO
@@ -904,9 +930,9 @@ void ModelCurve::valeurs_G_varG_on_i(const MCMCSplineComposante &spline, double 
  */
 void ModelCurve::exportMeanGComposanteToReferenceCurves(const PosteriorMeanGComposante pMeanCompoXYZ, const QString& defaultPath, QLocale csvLocale, const QString& csvSep) const
 {
-    QString filter = tr("CSV (*.csv)");
+    QString filter = QObject::tr("CSV (*.csv)");
     QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
-                                                    tr("Save Ref. Curve as..."),
+                                                    QObject::tr("Save Ref. Curve as..."),
                                                     defaultPath,
                                                     filter);
     QFile file(filename);
@@ -949,7 +975,7 @@ void ModelCurve::exportMeanGComposanteToReferenceCurves(const PosteriorMeanGComp
 
         QTextStream output(&file);
         const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
-        const QString projectName = tr("Project filename : %1").arg(MainWindow::getInstance()->getNameProject());
+        const QString projectName = QObject::tr("Project filename : %1").arg(MainWindow::getInstance()->getNameProject());
 
         output << "# "+ version + "\r";
         output << "# "+ projectName + "\r";

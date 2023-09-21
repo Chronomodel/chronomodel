@@ -327,13 +327,14 @@ QString MCMCLoop::initialize_time(Model* model)
 
                     // 4 - Init S02 of each Event
                     uEvent->mS02.mX = uEvent->mDates.size() / s02_sum;
-                     uEvent->mS02.mSigmaMH = 1.;
+                    uEvent->mS02.mSigmaMH = 1.;
 
-                    uEvent->mS02harmonique = sqrt(uEvent->mDates.size() / s02_sum);
+                    const double S02_harmonique = sqrt(uEvent->mDates.size() / s02_sum);
+                    uEvent->mBetaS02 = 1.004680139*(1 - exp(- 0.0000847244 * pow(S02_harmonique, 2.373548593)));
 
                     uEvent->mS02.mLastAccepts.clear();
                     uEvent->mS02.tryUpdate(uEvent->mS02.mX, 2.);
-                    //uEvent->mS02.memo();
+
 
                     // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
                     uEvent->mTheta.mSigmaMH = sqrt(uEvent->mS02.mX);
@@ -343,8 +344,6 @@ QString MCMCLoop::initialize_time(Model* model)
                     uEvent->mTheta.mLastAccepts.clear();
                     //unsortedEvents.at(i)->mTheta.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
                     uEvent->mTheta.tryUpdate(uEvent->mTheta.mX, 2.);
-
-
 
                 }
 
@@ -410,7 +409,6 @@ QString MCMCLoop::initialize_time(Model* model)
                 uEvent->mS02.mSamplerProposal = MHVariable::eFixe;
 #endif
 
-                //uEvent->mS02.mSamplerProposal = MHVariable::eFixe;
                 uEvent->mS02.memo();
 
                 // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
@@ -706,6 +704,7 @@ void MCMCLoop::run()
         chain.mAdaptElapsedTime = adaptTime.elapsed();
         adaptTime.~QElapsedTimer();
 
+        const bool refresh_process (chain.mAdaptElapsedTime == 10000); // force refresh progress loop bar if the model is complex
         //----------------------- Aquisition --------------------------------------
 
         emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size())) + " : Aquisition ; Total Estimated time left " + DHMS(interTime), 0, chain.mIterPerAquisition);
@@ -766,12 +765,13 @@ void MCMCLoop::run()
             ++chain.mAquisitionIterIndex;
             ++chain.mTotalIter;
 
-         //   if (!(chain.mAquisitionIterIndex % chain.mIterPerBatch)) {
+            if (!(chain.mAquisitionIterIndex % chain.mIterPerBatch) || refresh_process) {
 
                 interTime = aquisitionTime.elapsed() * (double) (estimatedTotalIter - iterDone) / (double) chain.mAquisitionIterIndex;
 
                 emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()) + " : Aquisition ; Total Estimated time left " + DHMS(interTime)));
-         //   }
+                qApp->processEvents();
+            }
 
 
             emit stepProgressed(chain.mAquisitionIterIndex);

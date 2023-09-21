@@ -52,7 +52,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class Project;
 
 
-class Model: public QObject
+class Model :public QObject
 {
     Q_OBJECT
 public:
@@ -78,7 +78,6 @@ public:
     int mNumberOfEvents;
     int mNumberOfDates;
 
-
     double mThreshold; // used for TimeRange + Credibility + transition Range + GapRange
     double mBandwidth;
     size_t mFFTLength;
@@ -91,8 +90,8 @@ protected:
     QStringList mCurveLongName;
 
 public:
-    Model(QObject * parent = nullptr);
-    explicit Model(const QJsonObject& json, QObject * parent = nullptr);
+    Model(QObject* parent = nullptr);
+    explicit Model(const QJsonObject& json, QObject* parent = nullptr);
     virtual ~Model();
 
     void generateModelLog();
@@ -138,6 +137,7 @@ public:
     virtual void restoreFromFile(QDataStream* in) {return restoreFromFile_v323(in);};
 
     void restoreFromFile_v323(QDataStream* in);
+    void restoreFromFile_v324(QDataStream *in);
 
     // Only trace needed for this :
     virtual void generateCorrelations(const QList<ChainSpecs>& chains);

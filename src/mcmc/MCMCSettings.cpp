@@ -47,14 +47,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 MCMCSettings::MCMCSettings():
-mNumChains(MCMC_NUM_CHAINS_DEFAULT),
-mIterPerAquisition(MCMC_NUM_RUN_DEFAULT),
-mIterPerBurn(MCMC_NUM_BURN_DEFAULT),
-mMaxBatches(MCMC_MAX_ADAPT_BATCHES_DEFAULT),
-mIterPerBatch(MCMC_ITER_PER_BATCH_DEFAULT),
-mThinningInterval(MCMC_THINNING_INTERVAL_DEFAULT),
-mFinalBatchIndex(0),
-mMixingLevel(MCMC_MIXING_DEFAULT)
+    mNumChains(MCMC_NUM_CHAINS_DEFAULT),
+    mIterPerAquisition(MCMC_NUM_RUN_DEFAULT),
+    mIterPerBurn(MCMC_NUM_BURN_DEFAULT),
+    mMaxBatches(MCMC_MAX_ADAPT_BATCHES_DEFAULT),
+    mIterPerBatch(MCMC_ITER_PER_BATCH_DEFAULT),
+    mThinningInterval(MCMC_THINNING_INTERVAL_DEFAULT),
+    mFinalBatchIndex(0),
+    mMixingLevel(MCMC_MIXING_DEFAULT)
 {
 
 }
