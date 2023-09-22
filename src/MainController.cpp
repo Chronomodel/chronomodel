@@ -48,7 +48,7 @@ MainController::MainController(const QString& filePath)
     Painting::init();
     PluginManager::loadPlugins();
     QCoreApplication::setApplicationName("ChronoModel");
-    QCoreApplication::setApplicationVersion (version.toString());//("3.1.9"); // must match value in Chronomodel.pro
+    QCoreApplication::setApplicationVersion (version.toString());
     QCoreApplication::setOrganizationDomain("http://www.chronomodel.com");
     QCoreApplication::setOrganizationName("CNRS");
 

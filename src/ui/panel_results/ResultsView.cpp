@@ -337,7 +337,9 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     //  Connections
     // -----------------------------------------------------------------
     connect(mEventThetaRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
+#ifdef S02_BAYESIAN
     connect(mS02Radio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
+#endif
     connect(mEventsDatesUnfoldCheck, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
 
     connect(mDataSigmaRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
@@ -1408,10 +1410,10 @@ void ResultsView::updateMainVariable()
 
         } else if (mDataSigmaRadio->isChecked()) {
             mMainVariable = GraphViewResults::eSigma;
-
+#ifdef S02_BAYESIAN
         } else if (mS02Radio->isChecked()) {
             mMainVariable = GraphViewResults::eS02;
-
+#endif
         }else if (mEventVGRadio->isChecked()) {
             mMainVariable = GraphViewResults::eVg;
         }

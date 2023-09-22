@@ -314,7 +314,9 @@ private:
     CheckBox* mDataCalibCheck;
     CheckBox* mWiggleCheck;
     RadioButton* mDataSigmaRadio;
+#ifdef S02_BAYESIAN
     RadioButton* mS02Radio;
+#endif
     RadioButton* mEventVGRadio;
 
     CheckBox* mStatCheck;
