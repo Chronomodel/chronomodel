@@ -104,7 +104,6 @@ protected:
     static void memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline spline, CurveSettings::ProcessType &curveType, const int realyAccepted, ModelCurve &model);
 
     bool (MCMCLoopCurve::*updateLoop)();
-    QString initialize_time0();
 
     QString initialize_321();
     QString initialize_324();

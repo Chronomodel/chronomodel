@@ -127,7 +127,7 @@ QString MCMCLoop::initialize_time(Model* model)
     for (Event* ev : allEvents) {
         ev->mInitialized = false;
 
-#ifdef  S02_BAYESIAN
+#ifdef S02_BAYESIAN
         //ev->mS02.mSamplerProposal = MHVariable::eMHAdaptGauss;// not yet integrate within update_321
 
 # else

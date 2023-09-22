@@ -54,7 +54,6 @@ public:
     Model* mModel;
 
 protected:
-    QString initialize_time0();
 
     virtual QString calibrate();
 
