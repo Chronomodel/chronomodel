@@ -1499,8 +1499,8 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
                        addConstraint = true;
 
                 } else if (mProject->isEventConstraintAllowed(previousEvent, currentEvent)) {
-                        c.mFromId = currentEvent.value(STATE_ID).toInt();
-                        c.mToId = previousEvent.value(STATE_ID).toInt();
+                        c.mFromId = previousEvent.value(STATE_ID).toInt();
+                        c.mToId = currentEvent.value(STATE_ID).toInt();
                         addConstraint = true;
                 }
 
@@ -1518,7 +1518,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
         }
         previousEvent = currentEvent;
     } // for()
-// TODO : Prévoir une répartition uniforme des Events en augmentant l'écart lorsqu'il y a plusieurs dates
+
     project->pushProjectState(state, NEW_EVEN_BY_CSV_DRAG_REASON, true);
 }
 
