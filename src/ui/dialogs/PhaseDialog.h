@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -67,8 +67,6 @@ public:
 protected slots:
     void showAppropriateTauOptions(int typeIndex);
 
-//protected:
-//    void resizeEvent(QResizeEvent* event);
 
 public:
     QJsonObject mPhase;
@@ -77,26 +75,11 @@ public:
     QLabel* mColorLab;
     QLabel* mTauTypeLab;
     QLabel* mTauFixedLab;
-    //Label* mTauMinLab;
-    //Label* mTauMaxLab;
 
     LineEdit* mNameEdit;
     ColorPicker* mColorPicker;
     QComboBox* mTauTypeCombo;
     LineEdit* mTauFixedEdit;
-    //LineEdit* mTauMinEdit;
-    //LineEdit* mTauMaxEdit;
-
-//    Button* mOkBut;
-//    Button* mCancelBut;
-//    QDialogButtonBox* mOkBut;
-//    QDialogButtonBox* mCancelBut;
-
-//    int mMargin;
-//    int mLineH;
-//    int mComboH;
-//    int mButH;
-//    int mButW;
 
     QString mError;
 };

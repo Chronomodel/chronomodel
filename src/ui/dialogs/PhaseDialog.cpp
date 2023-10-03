@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -41,29 +41,24 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Phase.h"
 #include "ColorPicker.h"
 #include "LineEdit.h"
-#include "Label.h"
-//#include "Button.h"
+
 #include <QtWidgets>
 
 
 PhaseDialog::PhaseDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags)
 {
-    //QPalette Pal(palette());
+    setWindowTitle(tr("Create / Modify phase"));
 
-    // set black background
-    //Pal.setColor(QPalette::Window, Qt::gray);
-//    this->setAutoFillBackground(true);
-//    this->setPalette(Pal);
-    QString title (tr("Create / Modify phase"));
-    setWindowTitle(title);
-
-    mNameLab = new QLabel(tr("Phase name"), this);
+    mNameLab = new QLabel(tr("Phase Name"), this);
     mNameLab->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
-    mColorLab = new QLabel(tr("Phase colour"), this);
+
+    mColorLab = new QLabel(tr("Phase Color"), this);
     mColorLab->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
-    mTauTypeLab = new QLabel(tr("Max duration"), this);
+
+    mTauTypeLab = new QLabel(tr("Max Duration"), this);
     mTauTypeLab->setAlignment(Qt::AlignVCenter |Qt::AlignRight);
-    mTauFixedLab = new QLabel(tr("Max duration value") , this);
+
+    mTauFixedLab = new QLabel(tr("Max Duration Value") , this);
     mTauFixedLab->setAlignment(Qt::AlignVCenter |Qt::AlignRight);
 
     mNameEdit = new LineEdit(this);
@@ -73,11 +68,10 @@ PhaseDialog::PhaseDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
     mTauTypeCombo = new QComboBox(this);
     mTauTypeCombo->addItem(tr("Unknown"));
     mTauTypeCombo->addItem(tr("Known"));
-    mTauTypeCombo->addItem(tr("Span Uniform")); //z-only
+    mTauTypeCombo->addItem(tr("Uniform Span")); //z-only
 
     mTauFixedEdit = new LineEdit(this);
 
-    
     QDialogButtonBox* buttonBox = new QDialogButtonBox();
     buttonBox->addButton(tr("OK"), QDialogButtonBox::AcceptRole);
     buttonBox->addButton(tr("Cancel"), QDialogButtonBox::RejectRole);
@@ -88,8 +82,6 @@ PhaseDialog::PhaseDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
     connect(buttonBox, &QDialogButtonBox::accepted, this, &PhaseDialog::accept);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &PhaseDialog::reject);
 
-
-   // mComboH = mTauTypeCombo->height();
     QGridLayout* gridLayout = new QGridLayout();
     gridLayout->setContentsMargins(0, 0, 0, 0);
     gridLayout->addWidget(mNameLab, 0, 0);
@@ -101,19 +93,10 @@ PhaseDialog::PhaseDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
     gridLayout->addWidget(mTauFixedLab, 3, 0);
     gridLayout->addWidget(mTauFixedEdit, 3, 1);
 
-    QLabel* titleLab = new QLabel(title, this);
-    titleLab->setAlignment(Qt::AlignCenter);
-    
-   QFrame* separator = new QFrame();
-      separator->setFrameShape(QFrame::HLine);
-      separator->setFrameShadow(QFrame::Sunken);
-   
-   QVBoxLayout* layout = new QVBoxLayout();
-      layout->addWidget(titleLab);
-      layout->addWidget(separator);
-      layout->addLayout(gridLayout);
-      layout->addWidget(buttonBox);
-      setLayout(layout);
+    QVBoxLayout* layout = new QVBoxLayout();
+    layout->addLayout(gridLayout);
+    layout->addWidget(buttonBox);
+    setLayout(layout);
     
     Phase phase;
     setPhase(phase.toJson());
@@ -121,7 +104,6 @@ PhaseDialog::PhaseDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
 
 PhaseDialog::~PhaseDialog()
 {
-
 }
 
 void PhaseDialog::showAppropriateTauOptions(int typeIndex)
@@ -174,9 +156,9 @@ QJsonObject PhaseDialog::getPhase()
 bool PhaseDialog::isValid()
 {
     if (mTauTypeCombo->currentIndex() == 1) {
-        const int tau = mTauFixedEdit->text().toInt();
+        const double tau = mTauFixedEdit->text().toDouble();
         if (tau < 1) {
-            mError = tr("Phase fixed duration must be more than 1 !");
+            mError = tr("The fixed phase duration must be greater than 1!");
             return false;
         }
     }

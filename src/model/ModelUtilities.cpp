@@ -1090,8 +1090,8 @@ void sampleInCumulatedRepartition (Event* event, const StudyPeriodSettings &sett
          */
 
 
-        const double maxRepartition = unionRepartition.back();//.last();
-        const double minRepartition = unionRepartition.front();//first();
+        const double maxRepartition = unionRepartition.back();
+        const double minRepartition = unionRepartition.front();
         if ( (minRepartition != 0. || maxRepartition != 0.) &&
              (minRepartition != maxRepartition) &&
              (unionRepartition.size() > 1) ) {
