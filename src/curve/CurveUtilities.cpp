@@ -1352,12 +1352,14 @@ SplineResults do_spline(const std::vector<double> &vec_Y, const SplineMatrices &
 
             for (unsigned i = 0; i < n; ++i) {
                 const double g = vec_Y[i] - lambdaSpline * diagWInv[i] * vecTmp2[i];
-                vecG.push_back( g) ;
-#ifdef DEBUG
+
                 if (std::isnan(g)) {
                     qDebug()<< " isnan(g)";
+                    vecG.push_back( +INFINITY) ;
+                } else {
+                   vecG.push_back( g) ;
                 }
-#endif
+
             }
 
         } else {
