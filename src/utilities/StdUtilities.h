@@ -149,13 +149,13 @@ T vector_interpolate_idx_for_value(const T value, const Container<T> &vector)
     int idxInf = 0;
     int idxSup = vector.size() - 1;
 
-    if (value < vector.first())
+    if (value < vector.front())
         return T (idxInf);
 
-    if  (value > vector.last())
+    if  (value > vector.back())
         return  T (idxSup);
 
-    // Dichotomie, we can't use indexOf because we don't know the step between each value in the Qvector
+    // Dichotomie, we can't use indexOf because we don't know the step between each value in the QList
 
     if (idxSup > idxInf) {
         do {

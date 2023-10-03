@@ -184,7 +184,10 @@ public:
 
         } else if (mRepartition[idxUnder] != 0. && mRepartition[idxUpper] != 0.) {
             // Important for gate: no interpolation around gates
-
+#ifdef DEBUG
+            if (idxUnder< 0 || idxUpper>=mRepartition.size())
+                qDebug()<<"[repartition_interpolate] idxUnder<= 0 || idxUpper>=mRepartition.size()";
+#endif
             return std::lerp(mRepartition[idxUnder], mRepartition[idxUpper], (idx - idxUnder) / (idxUpper - idxUnder));
             //return interpolate( idx, (double)idxUnder, (double)idxUpper, mVector[idxUnder], mVector[idxUpper]);
 

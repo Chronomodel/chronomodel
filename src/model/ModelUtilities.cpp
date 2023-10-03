@@ -522,12 +522,15 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
             int thetaIdx;
             const MCMCSpline& spline =  model->mSpline;
             for (thetaIdx = 0; thetaIdx < model->mEvents.size(); thetaIdx++) {
-                if ( spline.splineX.vecThetaReduced.at(thetaIdx) == model->reduceTime(event->mTheta.mX))
+                if ( spline.splineX.vecThetaReduced.at(thetaIdx) == event->mThetaReduced) //model->reduceTime(event->mTheta.mX))
                     break;
             }
 
             if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Univariate) {
                     HTMLText += line(textGreen(QObject::tr(" - G : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
+
+            } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Depth) {
+                    HTMLText += line(textGreen(QObject::tr(" - Depth : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
 
             } else {
                 HTMLText += line(textGreen(QObject::tr(" - Gx : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
@@ -1066,7 +1069,7 @@ void sampleInCumulatedRepartition (Event* event, const StudyPeriodSettings &sett
         unionTmax = std::min(unionTmax, max);
 
         // 3 - Creation of the cumulative distribution curves in the interval
-        QVector<double> unionRepartition (0);
+        QList<double> unionRepartition (0);
         double tWhile = unionTmin;
         double sumWhile = 0.;
 
@@ -1076,7 +1079,7 @@ void sampleInCumulatedRepartition (Event* event, const StudyPeriodSettings &sett
                 //sumWhile += interpolate_value_from_curve(tWhile, d.mCalibration->mRepartition, d.mCalibration->mTmin, d.mCalibration->mTmax);
                sumWhile += d.mCalibration->repartition_interpolate(tWhile);
             }
-            unionRepartition.append(sumWhile);
+            unionRepartition.push_back(sumWhile);
             tWhile += unionStep;
 
         }
@@ -1087,18 +1090,32 @@ void sampleInCumulatedRepartition (Event* event, const StudyPeriodSettings &sett
          */
 
 
-        const double maxRepartition (unionRepartition.last());
-        const double minRepartition (unionRepartition.first());
+        const double maxRepartition = unionRepartition.back();//.last();
+        const double minRepartition = unionRepartition.front();//first();
         if ( (minRepartition != 0. || maxRepartition != 0.) &&
-             (unionRepartition.size() > 1)) {
-            const double idx = vector_interpolate_idx_for_value(Generator::randomUniform()*(maxRepartition-minRepartition) + minRepartition, unionRepartition);
-            event->mTheta.mX = unionTmin + idx * unionStep;
-#ifdef DEBUG
-        if (event->mTheta.mX == min || event->mTheta.mX == max)
-            qDebug() << "[sampleInCumulatedRepartition] event->mTheta.mX == min || event->mTheta.mX == max";
-#endif
+             (minRepartition != maxRepartition) &&
+             (unionRepartition.size() > 1) ) {
+            const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(minRepartition, maxRepartition), unionRepartition);
 
+#ifdef DEBUG
+            if (event->mTheta.mX == min || event->mTheta.mX == max)
+               qDebug() << "[sampleInCumulatedRepartition] event->mTheta.mX == min || event->mTheta.mX == max";
+            else if (event->mTheta.mX == unionTmin || event->mTheta.mX == unionTmax)
+               qDebug() << "[sampleInCumulatedRepartition] event->mTheta.mX == unionTmin || event->mTheta.mX == unionTmax";
+#endif
+            if (idx > 0) {
+               event->mTheta.mX = unionTmin + idx * unionStep;
+
+            } else {
+#ifdef DEBUG
+               qDebug() << "[sampleInCumulatedRepartition] Generator::randomUniform(min, max)";
+#endif
+               event->mTheta.mX = Generator::randomUniform(min, max);
+            }
         } else {
+#ifdef DEBUG
+               qDebug() << "[sampleInCumulatedRepartition] Generator::randomUniform(min, max)";
+#endif
             event->mTheta.mX = Generator::randomUniform(min, max);
         }
 
@@ -1127,7 +1144,7 @@ void sampleInCumulatedRepartition_thetaFixe (Event *event, const StudyPeriodSett
     }
 
     // 2 - Creation of the cumulative distribution curves in the interval
-        QVector<double> unionRepartition (0);
+        QList<double> unionRepartition (0);
         double tWhile (unionTmin);
         double sumWhile (0.);
 

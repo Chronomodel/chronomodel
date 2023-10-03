@@ -42,13 +42,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CalibrationCurve.h"
 #include "ModelCurve.h"
 #include "CurveUtilities.h"
-#include "Bound.h"
 #include "Functions.h"
 #include "Generator.h"
 #include "StdUtilities.h"
 #include "Date.h"
 #include "Project.h"
-#include "ModelUtilities.h"
 #include "Matrix.h"
 
 #ifdef DEBUG
@@ -3742,20 +3740,20 @@ void MCMCLoopCurve::memo()
 
     // 1 - initialisation à faire dans init()
 
-    int iterAccepted = mChains[mChainIndex].mRealyAccepted + 1;
+    int iterAccepted = mLoopChains[mChainIndex].mRealyAccepted + 1;
     int totalIterAccepted = 1;
-    for (auto& c : mChains)
+    for (auto& c : mLoopChains)
         totalIterAccepted += c.mRealyAccepted;
 
     if (mModel->compute_X_only) {
         memo_PosteriorG( mModel->mPosteriorMeanGByChain[mChainIndex].gx, mModel->mSpline.splineX, iterAccepted );
-        if (mChains.size() > 1)
+        if (mLoopChains.size() > 1)
             memo_PosteriorG( mModel->mPosteriorMeanG.gx, mModel->mSpline.splineX, totalIterAccepted);
 
     } else if (!mModel->compute_Z) {
         memo_PosteriorG( mModel->mPosteriorMeanGByChain[mChainIndex].gx, mModel->mSpline.splineX, iterAccepted );
         memo_PosteriorG( mModel->mPosteriorMeanGByChain[mChainIndex].gy, mModel->mSpline.splineY, iterAccepted );
-        if (mChains.size() > 1) {
+        if (mLoopChains.size() > 1) {
             memo_PosteriorG( mModel->mPosteriorMeanG.gx, mModel->mSpline.splineX, totalIterAccepted);
             memo_PosteriorG( mModel->mPosteriorMeanG.gy, mModel->mSpline.splineY, totalIterAccepted);
         }
@@ -3769,7 +3767,7 @@ void MCMCLoopCurve::memo()
 */
         memo_PosteriorG_3D( mModel->mPosteriorMeanGByChain[mChainIndex], mModel->mSpline, mCurveSettings.mProcessType, iterAccepted, *mModel );
 
-        if (mChains.size() > 1)
+        if (mLoopChains.size() > 1)
             memo_PosteriorG_3D( mModel->mPosteriorMeanG, mModel->mSpline, mCurveSettings.mProcessType, totalIterAccepted, *mModel);
     }
 
@@ -4268,8 +4266,8 @@ void MCMCLoopCurve::finalize()
     // Suppression des traces des chaines sans courbes acceptées
 
     int back_position = mModel->mLambdaSpline.mRawTrace->size();
-    for (auto i = mChains.size()-1; i>-1; --i) {
-        ChainSpecs &chain = mChains[i];
+    for (auto i = mLoopChains.size()-1; i>-1; --i) {
+        ChainSpecs &chain = mLoopChains[i];
         // we add 1 for the init
         const int initBurnAdaptAcceptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch) + chain.mRealyAccepted;
 
@@ -4277,7 +4275,7 @@ void MCMCLoopCurve::finalize()
         if (chain.mRealyAccepted == 0) {
             emit setMessage((tr("Warning : NO POSITIVE curve available with chain n° %1, current seed to change %2").arg (QString::number(i+1), QString::number(chain.mSeed))));
 
-            mChains.remove(i);
+            mLoopChains.remove(i);
 
             mModel->mPosteriorMeanGByChain.erase(mModel->mPosteriorMeanGByChain.begin() + i);
 
@@ -4322,7 +4320,7 @@ void MCMCLoopCurve::finalize()
         }
         back_position = front_position ;
     }
-    if (mChains.isEmpty()) {
+    if (mLoopChains.isEmpty()) {
         mAbortedReason = QString(tr("Warning : NO POSITIVE curve available "));
         throw mAbortedReason;
     }
@@ -4330,13 +4328,13 @@ void MCMCLoopCurve::finalize()
     // This is not a copy of all data!
     // Chains only contains description of what happened in the chain (numIter, numBatch adapt, ...)
     // Real data are inside mModel members (mEvents, mPhases, ...)
-    mModel->mChains = mChains;
+    mModel->mChains = mLoopChains;
 
     // This is called here because it is calculated only once and will never change afterwards
     // This is very slow : it is for this reason that the results display may be long to appear at the end of MCMC calculation.
 
     emit setMessage(tr("Computing posterior distributions and numerical results - Correlations"));
-    mModel->generateCorrelations(mChains);
+    mModel->generateCorrelations(mLoopChains);
 
     // This should not be done here because it uses resultsView parameters
     // ResultView will trigger it again when loading the model
@@ -4369,7 +4367,7 @@ void MCMCLoopCurve::finalize()
 
 
     // if there is one chain, the mPosteriorMeanG is the mPosteriorMeanGByChain[0]
-    if (mChains.size() == 1) {
+    if (mLoopChains.size() == 1) {
         mModel->mPosteriorMeanG = mModel->mPosteriorMeanGByChain[0];
 
     } else {

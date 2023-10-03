@@ -306,7 +306,7 @@ void MCMCLoopChrono::finalize()
     // This is not a copy of all data!
     // Chains only contain description of what happened in the chain (numIter, numBatch adapt, ...)
     // Real data are inside mModel members (mEvents, mPhases, ...)
-    mModel->mChains = mChains;
+    mModel->mChains = mLoopChains;
 
     // This is called here because it is calculated only once and will never change afterwards
     // This is very slow : it is for this reason that the results display may be long to appear at the end of MCMC calculation.
@@ -314,7 +314,7 @@ void MCMCLoopChrono::finalize()
      */
 
     emit setMessage(tr("Computing posterior distributions and numerical results - Correlations"));
-    mModel->generateCorrelations(mChains);
+    mModel->generateCorrelations(mModel->mChains);
 
     emit setMessage(tr("Computing posterior distributions and numerical results - Densities"));
     mModel->initDensities();

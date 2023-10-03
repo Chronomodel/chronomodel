@@ -102,7 +102,7 @@ protected:
     virtual void finalize() = 0;
     virtual bool adapt(const int batchIndex) = 0;
 
-    QList<ChainSpecs> mChains;
+    QList<ChainSpecs> mLoopChains;
     int mChainIndex;
     State mState;
 

@@ -98,13 +98,13 @@ unsigned Generator::createSeed()
 }
 
 
-double Generator::randomUniform(const double& min, const double& max)
+double Generator::randomUniform(const double min, const double max)
 {
     return min + sDoubleDistribution(sEngine) * (max - min);
     // return min + xorshift64star() * (max - min);
 }
 
-int Generator::randomUniformInt(const int& min, const int& max)
+int Generator::randomUniformInt(const int min, const int max)
 {
    return (int) round(randomUniform(min, max));
 }

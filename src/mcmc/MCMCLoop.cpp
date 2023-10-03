@@ -61,7 +61,7 @@ MCMCLoop::MCMCLoop():
     mState (eBurning),
     mProject (nullptr)
 {
-
+    mAbortedReason = QString();
 }
 
 MCMCLoop::MCMCLoop(Project *project):
@@ -70,6 +70,8 @@ MCMCLoop::MCMCLoop(Project *project):
     mProject (project)
 {
     mProject->mLoop = this;
+    mAbortedReason = QString();
+  //  setMCMCSettings(project->mModel->mMCMCSettings);
 }
 
 MCMCLoop::~MCMCLoop()
@@ -80,7 +82,7 @@ MCMCLoop::~MCMCLoop()
 
 void MCMCLoop::setMCMCSettings(const MCMCSettings &s)
 {
-    mChains.clear();
+    mLoopChains.clear();
     for (int i=0; i<s.mNumChains; ++i) {
         ChainSpecs chain;
 
@@ -101,13 +103,13 @@ void MCMCLoop::setMCMCSettings(const MCMCSettings &s)
         chain.mThinningInterval = s.mThinningInterval;
         chain.mRealyAccepted = 0;
         chain.mMixingLevel = s.mMixingLevel;
-        mChains.append(chain);
+        mLoopChains.append(chain);
     }
 }
 
 const QList<ChainSpecs> &MCMCLoop::chains() const
 {
-    return mChains;
+    return mLoopChains;
 }
 
 
@@ -195,9 +197,10 @@ QString MCMCLoop::initialize_time(Model* model)
      *  Init theta event, ti, ...
      * ---------------------------------------------------------------- */
 
-    QVector<Event*> unsortedEvents = ModelUtilities::unsortEvents(allEvents);
+    QList<Event*> unsortedEvents = ModelUtilities::unsortEvents(allEvents);
 
     emit stepChanged(tr("Initializing Events..."), 0, unsortedEvents.size());
+    qDebug()<<" mLoopChains seed = "<< mLoopChains[0].mSeed;
     try {
 
         // Check Strati constraint
@@ -271,6 +274,10 @@ QString MCMCLoop::initialize_time(Model* model)
                         // modif du 2021-06-16 pHd
                         const FunctionStat &data = analyseFunction(date.mCalibration->mMap);
                         double sigma = double (data.std);
+#ifdef DEBUG
+                        if (sigma == 0.)
+                            return "sigma == 0";
+#endif
                         //
                         if (!date.mCalibration->mRepartition.isEmpty()) {
                             const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mCalibration->mRepartition);
@@ -326,7 +333,7 @@ QString MCMCLoop::initialize_time(Model* model)
                     }
 
                     // 4 - Init S02 of each Event
-                    uEvent->mS02.mX = uEvent->mDates.size() / s02_sum;
+                    uEvent->mS02.mX = uEvent->mDates.size() / s02_sum; //apres ici au bout de 3
                     uEvent->mS02.mSigmaMH = 1.;
 
                     const double S02_harmonique = sqrt(uEvent->mDates.size() / s02_sum);
@@ -483,7 +490,7 @@ QString MCMCLoop::initialize_time(Model* model)
 void MCMCLoop::run()
 {
 #if DEBUG
-    qDebug()<<"MCMCLoop::run";
+    qDebug()<<"[MCMCLoop] run()";
 #endif
 
     QElapsedTimer startTime;
@@ -525,17 +532,13 @@ void MCMCLoop::run()
      std::vector<Event*> initListEvents (mProject->mModel->mEvents.size());
      std::copy(mProject->mModel->mEvents.begin(), mProject->mModel->mEvents.end(), initListEvents.begin() );
 
-    unsigned estimatedTotalIter = mChains.size() *(mChains.at(0).mIterPerBurn + mChains.at(0).mIterPerBatch*mChains.at(0).mMaxBatchs + mChains.at(0).mIterPerAquisition);
+    unsigned estimatedTotalIter = mLoopChains.size() *(mLoopChains.at(0).mIterPerBurn + mLoopChains.at(0).mIterPerBatch*mLoopChains.at(0).mMaxBatchs + mLoopChains.at(0).mIterPerAquisition);
     unsigned iterDone = 0;
-    for (mChainIndex = 0; mChainIndex < mChains.size(); ++mChainIndex) {
-      /*  if (mChainIndex > 0) {
-            // rétablissement de l'ordre des Events, indispensable en cas de calcul de courbe. Car le update modifie l'ordre des events
-            std::copy(initListEvents.begin(), initListEvents.end(), mProject->mModel->mEvents.begin() );
-        }
-      */
+    for (mChainIndex = 0; mChainIndex < mLoopChains.size(); ++mChainIndex) {
+
         log += "<hr>";
 
-        ChainSpecs& chain = mChains[mChainIndex];
+        ChainSpecs& chain = mLoopChains[mChainIndex];
         Generator::initGenerator(chain.mSeed);
 
         //----------------------- Initialization --------------------------------------
@@ -546,7 +549,7 @@ void MCMCLoop::run()
         }
         mState = eInit;
 
-        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))  + " : " + tr("Initialising MCMC"), 0, 0);
+        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()))  + " : " + tr("Initialising MCMC"), 0, 0);
 
         QElapsedTimer initTime;
         initTime.start();
@@ -560,9 +563,9 @@ void MCMCLoop::run()
         initTime.~QElapsedTimer();
 
         mProject->mModel->mLogInit += "<hr>";
-        mProject->mModel->mLogInit += line(textBold(tr("INIT CHAIN %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))));
+        mProject->mModel->mLogInit += line(textBold(tr("INIT CHAIN %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()))));
         mProject->mModel->mLogInit += line("Seed : " + QString::number(chain.mSeed));
-
+    qDebug()<<" mLogInit Seed :  "<< QString::number(chain.mSeed);
         mProject->mModel->mLogInit += ModelUtilities:: modelStateDescriptionHTML(static_cast<ModelCurve*>(mProject->mModel) );
         /*
 // Save mLogInit for debug
@@ -590,7 +593,7 @@ void MCMCLoop::run()
 */
         //----------------------- Burnin --------------------------------------
 
-        emit stepChanged(tr("Chain : %1 / %2").arg(QString::number(mChainIndex + 1), QString::number(mChains.size()))  + " : " + tr("Burn-in"), 0, chain.mIterPerBurn);
+        emit stepChanged(tr("Chain : %1 / %2").arg(QString::number(mChainIndex + 1), QString::number(mLoopChains.size()))  + " : " + tr("Burn-in"), 0, chain.mIterPerBurn);
         mState = eBurning;
 
         QElapsedTimer burningTime;
@@ -621,7 +624,7 @@ void MCMCLoop::run()
 
             ++iterDone;
             interTime = burningTime.elapsed() * (double)(estimatedTotalIter - iterDone) / (double)chain.mBurnIterIndex;
-            emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()) + " : " + "Burn-in ; Total Estimated time left " + DHMS(interTime)));
+            emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()) + " : " + "Burn-in ; Total Estimated time left " + DHMS(interTime)));
 
             emit stepProgressed(chain.mBurnIterIndex);
         }
@@ -630,7 +633,7 @@ void MCMCLoop::run()
 
         //----------------------- Adaptation --------------------------------------
 
-        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))  + " : " + + "Adapting ; Total Estimated time left " + DHMS(interTime), 0, chain.mMaxBatchs * chain.mIterPerBatch);
+        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()))  + " : " + + "Adapting ; Total Estimated time left " + DHMS(interTime), 0, chain.mMaxBatchs * chain.mIterPerBatch);
         emit stepProgressed(0);
         mState = eAdapting;
 
@@ -673,7 +676,7 @@ void MCMCLoop::run()
             iterDone += chain.mIterPerBatch;
             interTime = adaptTime.elapsed() * (double)(estimatedTotalIter - iterDone)/ (double)(chain.mIterPerBatch*chain.mBatchIndex);
 
-            emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()) + " : " + "Adapting ; Total Estimated time left " + DHMS(interTime)));
+            emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()) + " : " + "Adapting ; Total Estimated time left " + DHMS(interTime)));
 
             //qDebug()<<"[MCMCLoop::run] mBatchIndex -------"<< chain.mBatchIndex<<" ------------";
             if (adapt(chain.mBatchIndex))
@@ -685,11 +688,11 @@ void MCMCLoop::run()
         estimatedTotalIter -= (chain.mMaxBatchs-chain.mBatchIndex)*chain.mIterPerBatch;
         interTime = adaptTime.elapsed() * (double)(estimatedTotalIter - iterDone)/ (double)(chain.mIterPerBatch*chain.mBatchIndex);
 
-        emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()) + " : " + "Adapting ; Total Estimated time left " + DHMS(interTime)));
+        emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()) + " : " + "Adapting ; Total Estimated time left " + DHMS(interTime)));
 
 
         mProject->mModel->mLogAdapt += "<hr>";
-        mProject->mModel->mLogAdapt += line(textBold(tr("ADAPTATION FOR CHAIN %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))) );
+        mProject->mModel->mLogAdapt += line(textBold(tr("ADAPTATION FOR CHAIN %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()))) );
 
         if (chain.mBatchIndex < chain.mMaxBatchs) {
             mProject->mModel->mLogAdapt += line("Adapt OK at batch : " + QString::number(chain.mBatchIndex) + "/" + QString::number(chain.mMaxBatchs));
@@ -707,7 +710,7 @@ void MCMCLoop::run()
         const bool refresh_process (chain.mAdaptElapsedTime == 10000); // force refresh progress loop bar if the model is complex
         //----------------------- Aquisition --------------------------------------
 
-        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size())) + " : Aquisition ; Total Estimated time left " + DHMS(interTime), 0, chain.mIterPerAquisition);
+        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size())) + " : Aquisition ; Total Estimated time left " + DHMS(interTime), 0, chain.mIterPerAquisition);
         emit stepProgressed(0);
         mState = eAquisition;
         QElapsedTimer aquisitionTime;
@@ -769,7 +772,7 @@ void MCMCLoop::run()
 
                 interTime = aquisitionTime.elapsed() * (double) (estimatedTotalIter - iterDone) / (double) chain.mAquisitionIterIndex;
 
-                emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()) + " : Aquisition ; Total Estimated time left " + DHMS(interTime)));
+                emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()) + " : Aquisition ; Total Estimated time left " + DHMS(interTime)));
                 qApp->processEvents();
             }
 
@@ -784,7 +787,7 @@ void MCMCLoop::run()
         std::copy(initListEvents.begin(), initListEvents.end(), mProject->mModel->mEvents.begin() );
     }
 
-    mProject->mModel->mChains = mChains;
+    mProject->mModel->mChains = mLoopChains;
 
     //-----------------------------------------------------------------------
 
