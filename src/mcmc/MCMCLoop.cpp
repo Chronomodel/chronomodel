@@ -54,6 +54,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #ifdef _WIN32
 #include "winbase.h"
+#include "windows.h"
 #endif
 
 MCMCLoop::MCMCLoop():
@@ -71,7 +72,15 @@ MCMCLoop::MCMCLoop(Project *project):
 {
     mProject->mLoop = this;
     mAbortedReason = QString();
-  //  setMCMCSettings(project->mModel->mMCMCSettings);
+#ifdef _WIN32
+    DWORD process_id =GetCurrentProcessId();
+    HANDLE process_handle = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, process_id);
+    if (process_handle != NULL) {
+        SetPriorityClass(process_handle, NORMAL_PRIORITY_CLASS);
+        CloseHandle(process_handle);
+    }
+#endif
+
 }
 
 MCMCLoop::~MCMCLoop()

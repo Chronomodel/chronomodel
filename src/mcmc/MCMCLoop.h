@@ -54,9 +54,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define PAR
 #endif
 
-#ifdef _WIN32
-//#include <winbase.h>
-#endif
 
 class Project;
 
