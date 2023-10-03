@@ -37,8 +37,8 @@
 # knowledge of the CeCILL V2.1 license and that you accept its terms.
 # --------------------------------------------------------------------- */
 
-DEFINES += VERSION_NUMBER="3,2,5"
-VERSION = 3.2.5
+DEFINES += VERSION_NUMBER="3,2,6"
+VERSION = 3.2.6
  #VERSION_NUMBER # must match value in src/main.cpp and mainControler and Chronomodel.rc (for windows)
 #PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_
@@ -120,7 +120,7 @@ macx{
 
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
         #QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14 # OS X 10.9 	Mavericks oct 2013  # essai sinon 10.14
-        QMAKE_MACOSX_DEPLOYMENT_TARGET = 13 # depuis le 2022-10-11
+        QMAKE_MACOSX_DEPLOYMENT_TARGET = 12 # depuis le 2022-10-11
 	# Define a set of resources to deploy inside the bundle :
 	RESOURCES_FILES.path = Contents/Resources
         # RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib // used for older version <3.1.6
@@ -184,14 +184,16 @@ macx{
 
 	# this is to include fftw.h in the code :
 	# INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac
-        #INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac
-         INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac # with intel and arm
+        INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac # for macos 12
+        LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac" -lfftw3
 
+        #INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac # with intel and arm, for macos 13
+        #LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac" -lfftw3
 
 	# Link the application with FFTW library
 	# If no dylib are present, static libs (.a) are used => that's why we moved .dylib files in a "dylib" folder.
-        #LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac" -lfftw3
-        LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac" -lfftw3
+
+
         #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3
 
 
