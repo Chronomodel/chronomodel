@@ -1430,7 +1430,9 @@ void GraphView::drawCurves(QPainter& painter)
                     pathPoint.lineTo( xMaxPlot, yPlot);
 
                     refPointsPen.setWidthF(penWidth - 1.);
-                    refPointsPen.setStyle(Qt::DotLine);
+                    //refPointsPen.setStyle(Qt::DotLine);
+                    refPointsPen.setStyle(Qt::CustomDashLine);
+                    refPointsPen.setDashPattern(QList<qreal>{1, 5});
 
                     painter.setBrush(refPointsPen.brush());
                     painter.setPen(refPointsPen);
@@ -1443,6 +1445,7 @@ void GraphView::drawCurves(QPainter& painter)
                     pathPoint.lineTo( xPlot, getYForValue(ymax, true));
                     painter.strokePath(pathPoint, refPointsPen);
                     break;
+
                 case CurveRefPts::eCustomDashLineCross:
                     pathPoint.moveTo( xMinPlot, yPlot);
                     pathPoint.lineTo( xMaxPlot, yPlot);
@@ -1461,6 +1464,7 @@ void GraphView::drawCurves(QPainter& painter)
                     pathPoint.lineTo( xPlot, getYForValue(ymax, true));
                     painter.strokePath(pathPoint, refPointsPen);
                     break;
+
                 case CurveRefPts::eRoundLine:
                     pathPoint.addEllipse(xPlot - rayPlot, yPlot - rayPlot, rayPlot*2., rayPlot*2.);
 

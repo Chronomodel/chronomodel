@@ -46,7 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 int ColoredBar::mWidth = 15;
 
 ColoredBar::ColoredBar(QWidget *parent) : QWidget(parent),
-mColor (Qt::green)
+    mColor (Qt::green)
 {
 
 }
@@ -63,10 +63,10 @@ void ColoredBar::paintEvent(QPaintEvent *)
 
 
 MultiCalibrationDrawing::MultiCalibrationDrawing(QWidget *parent) : QWidget(parent),
-mVerticalSpacer (5),
-mGraphHeight (GraphViewResults::mHeightForVisibleAxis),
-mGraphFont (font()),
-mMouseOverCurve (true)
+    mVerticalSpacer (5),
+    mGraphHeight (GraphViewResults::mHeightForVisibleAxis),
+    mGraphFont (font()),
+    mMouseOverCurve (true)
 {
    setMouseTracking(true);
    mMarkerX = new Marker(this);

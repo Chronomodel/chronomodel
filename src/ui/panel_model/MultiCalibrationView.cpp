@@ -613,10 +613,10 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
     QList<bool> listAxisVisible;
     const QJsonArray &events = state.value(STATE_EVENTS).toArray();
 
-    QVector<QJsonObject> selectedEvents;
+    QList<QJsonObject> selectedEvents;
 
     const CurveSettings cs (state.value(STATE_CURVE).toObject());
-    CurveSettings::ProcessType processType = cs.mProcessType;//static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
+    CurveSettings::ProcessType processType = cs.mProcessType; //static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
 
     for (const auto&& ev : events) {
        const QJsonObject jsonEv = ev.toObject();
@@ -705,8 +705,8 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
             graph1->autoAdjustYScale(true);
 
-            graph1->setYAxisMode(GraphView::eAllTicks);
-            graph1->showYAxisSubTicks(true);
+            graph1->setYAxisMode( processType == CurveSettings::eProcess_None ? GraphView::eMinMaxHidden: GraphView::eAllTicks);
+            graph1->showYAxisSubTicks(processType != CurveSettings::eProcess_None);
 
             graph1->setTipYLab(cs.X_short_name());
             graph1->setMarginTop(graph1->fontMetrics().height()/2.);
@@ -1198,8 +1198,11 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graphList.append(new GraphTitle(cs.XLabel(), this));
             graph1->setTipYLab(cs.X_short_name());
             graph1->set_points(curveDataPointsX);
-            graph1->setYAxisMode(GraphView::eAllTicks);
-            graph1->showYAxisSubTicks(true);
+            //graph1->setYAxisMode(GraphView::eAllTicks);
+            //graph1->showYAxisSubTicks(true);
+
+            graph1->setYAxisMode( processType == CurveSettings::eProcess_None ? GraphView::eMinMaxHidden: GraphView::eAllTicks);
+            graph1->showYAxisSubTicks(processType != CurveSettings::eProcess_None);
             graphList.append(graph1);
 
             listAxisVisible.push_back(true);
