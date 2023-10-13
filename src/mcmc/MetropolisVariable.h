@@ -139,9 +139,9 @@ public:
     // -----
     void generateCorrelations(const QList<ChainSpecs> &chains);
 
-    void generateHistos(const QList<ChainSpecs> &chains, const int fftLen = 1024, const double bandwidth = 1.06, const double tmin = 0., const double tmax = 0.);
-    void memoHistoParameter(const int fftLen = 1024, const double bandwidth = 1.06, const double tmin = 0., const double tmax = 0.);
-    bool HistoWithParameter(const int fftLen = 1024, const double bandwidth = 1.06, const double tmin = 0., const double tmax = 0.);
+    void generateHistos(const QList<ChainSpecs> &chains, const int fftLen = 1024, const double bandwidth = 0.9, const double tmin = 0., const double tmax = 0.);
+    void memoHistoParameter(const int fftLen = 1024, const double bandwidth = 0.9, const double tmin = 0., const double tmax = 0.);
+    bool HistoWithParameter(const int fftLen = 1024, const double bandwidth = 0.9, const double tmin = 0., const double tmax = 0.);
 
     void generateHPD(const double threshold = 95);
     void generateCredibility(const QList<ChainSpecs>& chains, double threshold = 95.);

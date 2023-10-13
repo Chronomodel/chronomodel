@@ -305,6 +305,21 @@ void MetropolisVariable::generateBufferForHisto(double *input, const QList<doubl
   @param[in] dataSrc is the trace of the raw data
   @brief the FFTW function transform the area such that the area output is the area input multiplied by fftLen. So we have to corret it.
   The result is migth be not with regular step between value.
+  @article {sheather_density_2004,
+    title = {Density {Estimation}},
+    volume = {19},
+    issn = {0883-4237},
+    url = {https://projecteuclid.org/journals/statistical-science/volume-19/issue-4/Density-Estimation/10.1214/088342304000000297.full},
+    doi = {10.1214/088342304000000297},
+    abstract = {This paper provides a practical description of density estimation based on kernel methods. An important aim is to encourage practicing statisticians to apply these methods to data. As such, reference is made to implementations of these methods in R, S-PLUS and SAS},
+    number = {4},
+    urldate = {2023-10-09},
+    journal = {Statistical Science},
+    author = {Sheather, Simon J.},
+    month = nov,
+    year = {2004},
+ }
+
  **/
 QMap<double, double> MetropolisVariable::generateHisto(const QList<double> &dataSrc, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
@@ -326,18 +341,23 @@ QMap<double, double> MetropolisVariable::generateHisto(const QList<double> &data
     const int inputSize = fftLen;
     const int outputSize = 2 * (inputSize / 2 + 1);
 
-   double sigma = std_unbiais_Knuth(dataSrc);//std_Koening(dataSrc);//
+    double sigma = std_unbiais_Knuth(dataSrc);
 
    /* In the case of Vg and Vt (sigma_ti), there may be very large values that pull the mean.
     * It is preferable in this case, to evaluate an equivalent of the standard deviation using the quantiles at 15.85%, in the Gaussian case.
     */
 
 
-    if (mSupport == eRp || mSupport== eRpStar) {
-        const Quartiles quartiles = quantilesType(dataSrc, 8, 0.1585); //0.1585 = (1-0.683)/2.
-        sigma = std::min(sigma,(quartiles.Q3 - quartiles.Q1)/2.);
-    }
+   /* code version <3.2.6
+    * if (mSupport == eRp || mSupport== eRpStar) {
+        const Quartiles quartiles = quantilesType(dataSrc, 8, 0.1585);
+        sigma = std::min(sigma, (quartiles.Q3 - quartiles.Q1)/1.34);
+    }*/
 
+    // Density Estimation - Simon J. Sheather, Statistical Science 2004, Vol. 19, No. 4, 588–597 DOI 10.1214/088342304000000297
+    // Silverman’s rule of thumb. It is given by hSROT = 0.9An−1/5, where A = min{sample standard deviation, (sample interquartile range)/1.34}
+    const Quartiles quartiles = quantilesType(dataSrc, 8, 0.1585);
+    sigma = std::min(sigma, (quartiles.Q3 - quartiles.Q1)/1.34);
 
 
     if (sigma == 0) {
@@ -349,14 +369,14 @@ QMap<double, double> MetropolisVariable::generateHisto(const QList<double> &data
         return result;
     }
 
-     const double h = bandwidth * sigma * pow(dataSrc.size(), -1./5.);
+    const double h = bandwidth * sigma * pow(dataSrc.size(), -1./5.);
     const double a = range_min_value(dataSrc) - 4. * h;
-     const double b = range_max_value(dataSrc) + 4. * h;
+    const double b = range_max_value(dataSrc) + 4. * h;
 
-     double* input = (double*) fftw_malloc(inputSize * sizeof(double));
-     generateBufferForHisto(input, dataSrc, inputSize, a, b);
+    double* input = (double*) fftw_malloc(inputSize * sizeof(double));
+    generateBufferForHisto(input, dataSrc, inputSize, a, b);
 
-     double* output = (double*) fftw_malloc(outputSize * sizeof(double));
+    double* output = (double*) fftw_malloc(outputSize * sizeof(double));
 
     if (input != nullptr) {
         // ----- FFT -----
