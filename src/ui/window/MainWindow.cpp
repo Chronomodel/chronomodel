@@ -48,6 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginManager.h"
 #include "SwitchAction.h"
 #include "RebuildCurveDialog.h"
+#include "AppSettings.h"
 
 #include <QtWidgets>
 #include <QLocale>

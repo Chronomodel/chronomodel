@@ -94,6 +94,7 @@ public:
 
 
     void setColorState(ColorState state);
+    void setCheckState(const bool checkState);
     virtual void setCheckable(const bool checkable);
     virtual void setText(const QString &text);
     virtual void resizeEvent(QResizeEvent* e);

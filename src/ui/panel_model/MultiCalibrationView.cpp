@@ -40,7 +40,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MultiCalibrationView.h"
 
 #include "CalibrationCurve.h"
-#include "Project.h"
 #include "DoubleValidator.h"
 #include "Painting.h"
 #include "QtUtilities.h"
@@ -49,6 +48,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CurveSettings.h"
 #include "PluginAbstract.h"
 #include "AppSettings.h"
+
+#include "SilvermanDialog.h"
 
 #include <QPainter>
 #include <QJsonArray>
@@ -110,6 +111,13 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mScatterClipBut->setChecked(false);
     mScatterClipBut->setCheckable(true);
 
+    mFitClipBut = new Button(tr("Fit"), this);
+    mFitClipBut->setIcon(QIcon(":curve_data_graph_w.png"));
+    mFitClipBut->setFlatVertical();
+    mFitClipBut->setToolTip(tr("Show Fit plot for selected dates"));
+    mFitClipBut->setIconOnly(true);
+    mFitClipBut->setChecked(false);
+    mFitClipBut->setCheckable(true);
 
     mExportResults = new Button(tr("CSV"), this);
     mExportResults->setFlatVertical();
@@ -222,6 +230,7 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     connect(mImageClipBut, &Button::clicked, this, &MultiCalibrationView::copyImage);
     connect(mStatClipBut, &Button::clicked, this, &MultiCalibrationView::showStat);
     connect(mScatterClipBut, &Button::clicked, this, &MultiCalibrationView::showScatter);
+    connect(mFitClipBut, &Button::clicked, this, &MultiCalibrationView::showFit);
 
     connect(mExportResults, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &MultiCalibrationView::exportResults);
 
@@ -306,6 +315,8 @@ void MultiCalibrationView::updateLayout()
     y += mStatClipBut->height() + 5;
     mScatterClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
     y += mStatClipBut->height() + 5;
+    mFitClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
+    y += mFitClipBut->height() + 5;
 
     mExportResults->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
     y += mExportResults->height() + 5;
@@ -355,21 +366,46 @@ void MultiCalibrationView::updateLayout()
     if (mStatClipBut->isChecked()) {
         mStatArea->show();
         mStatArea->setGeometry(0, 0, graphWidth, yPosBottomBar0);
+
         mDrawing->hide();
+
         mColorClipBut->setEnabled(false);
         mScatterClipBut->setEnabled(false);
+        mFitClipBut->setEnabled(false);
+
+    } else if (mFitClipBut->isChecked()) {
+        mStatArea->hide();
+
+        mDrawing->setGeometry(0, 0, graphWidth, yPosBottomBar0);
+        mDrawing->updateLayout();
+        mDrawing->show();
+
+        mColorClipBut->setEnabled(false);
+        mStatClipBut->setEnabled(false);
+        mScatterClipBut->setEnabled(true);
+
+    } else if (mScatterClipBut->isChecked()) {
+        mStatArea->hide();
+
+        mDrawing->setGeometry(0, 0, graphWidth, yPosBottomBar0);
+        mDrawing->updateLayout();
+        mDrawing->show();
+
+        mColorClipBut->setEnabled(false);
+        mStatClipBut->setEnabled(false);
+        mFitClipBut->setEnabled(true);
 
     } else {
         mStatArea->hide();
-        mDrawing->setGeometry(0, 0, graphWidth, yPosBottomBar0);
 
+        mDrawing->setGeometry(0, 0, graphWidth, yPosBottomBar0);
         mDrawing->updateLayout();
         mDrawing->show();
+
+        mStatClipBut->setEnabled(true);
         mScatterClipBut->setEnabled(true);
-        if (mScatterClipBut->isChecked())
-            mColorClipBut->setEnabled(false);
-        else
-            mColorClipBut->setEnabled(true);
+        mFitClipBut->setEnabled(true);
+        mColorClipBut->setEnabled(true);
 
     }
 
@@ -377,7 +413,6 @@ void MultiCalibrationView::updateLayout()
 
 void MultiCalibrationView::updateGraphList()
 {
-
     const QJsonObject &state = mProject->state();
     mSettings = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
@@ -397,6 +432,9 @@ void MultiCalibrationView::updateGraphList()
     if (mScatterClipBut->isChecked())
         mDrawing = scatterPlot(mThreshold);
 
+    else if (mFitClipBut->isChecked())
+        mDrawing = fitPlot(mThreshold);
+
     else
         mDrawing = multiCalibrationPlot(mThreshold);
 
@@ -411,7 +449,7 @@ void MultiCalibrationView::updateGraphList()
 
 MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double thres)
 {
-    const QJsonObject state = mProject->state();
+    const QJsonObject &state = mProject->state();
     mSettings = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
     mTminDisplay = mSettings.getTminFormated() ;
@@ -426,10 +464,10 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
     QList<bool> listAxisVisible;
     const QJsonArray events = state.value(STATE_EVENTS).toArray();
 
-    QVector<QJsonObject> selectedEvents;
+    QList<QJsonObject> selectedEvents;
 
-     const bool curveModel = mProject->isCurve();
-     CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
+    const bool curveModel = mProject->isCurve();
+    CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
 
     for (auto&& ev : events) {
        QJsonObject jsonEv = ev.toObject();
@@ -490,7 +528,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
 
 
         } else {
-            const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
+            const QJsonArray &dates = ev.value(STATE_EVENT_DATES).toArray();
 
             for (auto&& date : dates) {
                 Date d (date.toObject());
@@ -656,7 +694,6 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graph3->setTipYLab(cs.Z_short_name());
 
             graph3->setMarginTop(graph3->fontMetrics().height()/2.);
-           // graph3->setMarginBottom(graph3->fontMetrics().height());
 
         case CurveSettings::eProcess_Spherical:
         case CurveSettings::eProcess_Unknwon_Dec:
@@ -1048,166 +1085,75 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
     }
 
-    //poly_data = QMap<double,double>({QPair<double, double>(0.,1.), QPair<double, double>(1.,2), QPair<double, double>(2.,5), QPair<double, double>(3.,10.), QPair<double, double>(4.,17.)});
-  /*  int min_deg = 1;
-    const auto coef_reg = polynom_regression_coef(poly_data_X, 1);
-    double mse = MSE(poly_data_X, coef_reg);
-    //double mse = Pearson_X_square(poly_data_X, coef_reg);
-    double prev_MSE = mse;
-    for (int deg = 2; deg<21; deg++) {
-        const auto coef_reg = polynom_regression_coef(poly_data_X, deg);
-        const double msei = MSE(poly_data_X, coef_reg);
-        //double msei = Pearson_X_square(poly_data_X, coef_reg);
-        qDebug()<<" deg ="<< deg << " mse="<<msei;
-        if (msei >= prev_MSE || isnan(msei)) {
-            break;
 
-        } else {
-            prev_MSE = msei;
-            min_deg = deg;
-        }
-
-    }
-
-    //min_deg = std::max(min_deg-1., 1.);
-    const auto coef_poly = polynom_regression_coef(poly_data_X, min_deg );
-    qDebug()<<" min_deg ="<< min_deg;
-
-    QMap<double, double> G_Poly;
-    const double tmin_poly = poly_data_X.firstKey();
-    const double tmax_poly = poly_data_X.lastKey();
-    const double step_poly = (tmax_poly-tmin_poly)/1000.;
-    for (int i = 0; i<1001; i++) {
-        double g = 0;
-        const double t = tmin_poly + i*step_poly;
-        int d = 0;
-        for (auto v : coef_poly) {
-            g += v*pow(t, d);
-            d++;
-        }
-        G_Poly[t] = g;
-    }
-   */
-
-    const double tmin_poly = poly_data_X.firstKey();
-    const double tmax_poly = poly_data_X.lastKey();
-    const double step_poly = (tmax_poly-tmin_poly)/1000.;
-    MCMCSpline spline;
-
-    switch (processType) {
-    case CurveSettings::eProcess_Univariate:
-        spline = do_spline_composante(poly_data_X, poly_data_X_err, tmin_poly, tmax_poly, cs);
-        break;
-    case CurveSettings::eProcess_2D:
-        spline = do_spline_composante(poly_data_X, poly_data_X_err, tmin_poly, tmax_poly, cs, poly_data_Y, poly_data_Y_err);
-        break;
-    case CurveSettings::eProcess_3D:
-        spline = do_spline_composante(poly_data_X, poly_data_X_err, tmin_poly, tmax_poly, cs, poly_data_Y, poly_data_Y_err, poly_data_Z, poly_data_Z_err);
-        break;
-    default:
-        break;
-    }
-
-
-    if (processType == CurveSettings::eProcess_Univariate || processType == CurveSettings::eProcess_2D || processType == CurveSettings::eProcess_3D) {
-
-        const auto &curves = composante_to_curve(spline.splineX, tmin_poly, tmax_poly, step_poly);
-
-        if (!isnan(curves[0][0]) && !isnan(curves[1][0]) && !isnan(curves[2][0])) {
-            const QMap<double, double> & G_Poly = curves[0];
-            const GraphCurve &curve_poly_X = FunctionCurve(G_Poly, "G", QColor(119, 95, 200) );
-            const QMap<double, double> & G_plus_Poly = curves[1];
-            const GraphCurve &curve_poly_X_plus = FunctionCurve(G_plus_Poly, "G", QColor(119, 95, 49) );
-
-            const QMap<double, double> &G_moins_Poly = curves[2];
-            const GraphCurve &curve_poly_X_moins = FunctionCurve(G_moins_Poly, "G", QColor(119, 95, 49) );
-
-            graph1->add_curve(curve_poly_X);
-            graph1->add_curve(curve_poly_X_plus);
-            graph1->add_curve(curve_poly_X_moins);
-        }
-
-    }
-
-    if ( processType == CurveSettings::eProcess_2D || processType == CurveSettings::eProcess_3D)  {
-        const double tmin_poly = poly_data_X.firstKey();
-        const double tmax_poly = poly_data_X.lastKey();
-        const double step_poly = (tmax_poly-tmin_poly)/1000.;
-
-        const auto &curves = composante_to_curve(spline.splineY, tmin_poly, tmax_poly, step_poly);
-
-        if (!isnan(curves[0][0]) && !isnan(curves[1][0]) && !isnan(curves[2][0])) {
-            const QMap<double, double> & G_Poly = curves[0];
-            const GraphCurve &curve_poly_X = FunctionCurve(G_Poly, "G", QColor(119, 95, 200) );
-            const QMap<double, double> & G_plus_Poly = curves[1];
-            const GraphCurve &curve_poly_X_plus = FunctionCurve(G_plus_Poly, "G", QColor(119, 95, 49) );
-
-            const QMap<double, double> &G_moins_Poly = curves[2];
-            const GraphCurve &curve_poly_X_moins = FunctionCurve(G_moins_Poly, "G", QColor(119, 95, 49) );
-
-            graph2->add_curve(curve_poly_X);
-            graph2->add_curve(curve_poly_X_plus);
-            graph2->add_curve(curve_poly_X_moins);
-        }
-
-    }
-
-    if ( processType == CurveSettings::eProcess_3D) {
-        const double tmin_poly = poly_data_X.firstKey();
-        const double tmax_poly = poly_data_X.lastKey();
-        const double step_poly = (tmax_poly-tmin_poly)/1000.;
-
-        const auto &curves = composante_to_curve(spline.splineZ, tmin_poly, tmax_poly, step_poly);
-
-        if (!isnan(curves[0][0]) && !isnan(curves[1][0]) && !isnan(curves[2][0])) {
-            const QMap<double, double> & G_Poly = curves[0];
-            const GraphCurve &curve_poly_X = FunctionCurve(G_Poly, "G", QColor(119, 95, 200) );
-            const QMap<double, double> & G_plus_Poly = curves[1];
-            const GraphCurve &curve_poly_X_plus = FunctionCurve(G_plus_Poly, "G", QColor(119, 95, 49) );
-
-            const QMap<double, double> &G_moins_Poly = curves[2];
-            const GraphCurve &curve_poly_X_moins = FunctionCurve(G_moins_Poly, "G", QColor(119, 95, 49) );
-
-            graph3->add_curve(curve_poly_X);
-            graph3->add_curve(curve_poly_X_plus);
-            graph3->add_curve(curve_poly_X_moins);
-        }
-
-    }
 
     switch (processType) {
         case CurveSettings::eProcess_Vector:
         case CurveSettings::eProcess_3D:
-            graphList.append(new GraphTitle(cs.ZLabel(), this));
+            //graphList.append(new GraphTitle(cs.ZLabel(), this));
 
             graph3->set_points(curveDataPointsZ);
             graph3->setTipYLab(cs.Z_short_name());
-            graphList.append(graph3);
-            listAxisVisible.push_back(true);
+            //graphList.append(graph3);
+            //listAxisVisible.push_back(true);
 
         case CurveSettings::eProcess_Spherical:
         case CurveSettings::eProcess_Unknwon_Dec:
         case CurveSettings::eProcess_2D:
-            graphList.append(new GraphTitle(cs.YLabel(), this));
+            //graphList.append(new GraphTitle(cs.YLabel(), this));
             graph2->set_points(curveDataPointsY);
             graph2->setTipYLab(cs.Y_short_name());
-            graphList.append(graph2);
-            listAxisVisible.push_back(true);
+            //graphList.append(graph2);
+            //listAxisVisible.push_back(true);
 
         default:
-            graphList.append(new GraphTitle(cs.XLabel(), this));
+            //graphList.append(new GraphTitle(cs.XLabel(), this));
             graph1->setTipYLab(cs.X_short_name());
             graph1->set_points(curveDataPointsX);
-            //graph1->setYAxisMode(GraphView::eAllTicks);
-            //graph1->showYAxisSubTicks(true);
 
             graph1->setYAxisMode( processType == CurveSettings::eProcess_None ? GraphView::eMinMaxHidden: GraphView::eAllTicks);
             graph1->showYAxisSubTicks(processType != CurveSettings::eProcess_None);
-            graphList.append(graph1);
+            //graphList.append(graph1);
 
-            listAxisVisible.push_back(true);
+            //listAxisVisible.push_back(true);
             break;
     }
+
+        // Print graphics in the right order
+        switch (processType) {
+        case CurveSettings::eProcess_Vector:
+        case CurveSettings::eProcess_3D:
+            graphList.append(new GraphTitle(cs.XLabel(), this));
+            graphList.append(graph1);
+            listAxisVisible.push_back(true);
+
+            graphList.append(new GraphTitle(cs.YLabel(), this));
+            graphList.append(graph2);
+            listAxisVisible.push_back(true);
+
+            graphList.append(new GraphTitle(cs.ZLabel(), this));
+            graphList.append(graph3);
+            listAxisVisible.push_back(true);
+            break;
+        case CurveSettings::eProcess_Spherical:
+        case CurveSettings::eProcess_Unknwon_Dec:
+        case CurveSettings::eProcess_2D:
+            graphList.append(new GraphTitle(cs.XLabel(), this));
+            graphList.append(graph1);
+            listAxisVisible.push_back(true);
+
+            graphList.append(new GraphTitle(cs.YLabel(), this));
+            graphList.append(graph2);
+            listAxisVisible.push_back(true);
+            break;
+        default:
+            graphList.append(new GraphTitle(cs.XLabel(), this));
+            graphList.append(graph1);
+            listAxisVisible.push_back(true);
+            break;
+        }
+
+
 
     MultiCalibrationDrawing* scatterPlot = new MultiCalibrationDrawing(this);
 
@@ -1225,6 +1171,690 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
 }
 
+
+MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
+{
+    const QJsonObject &state = mProject->state();
+
+    mSettings = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+
+    mTminDisplay = mSettings.getTminFormated() ;
+    mTmaxDisplay = mSettings.getTmaxFormated();
+
+    // setText doesn't emit signal textEdited, when the text is changed programmatically
+    mStartEdit->setText(locale().toString(mTminDisplay));
+    mEndEdit->setText(locale().toString(mTmaxDisplay));
+    mHPDEdit->setText(locale().toString(thres));
+
+    QColor brushColor = mCurveColor;
+    brushColor.setAlpha(170);
+
+    QList<GraphViewAbstract*> graphList;
+
+    QList<QColor> colorList;
+    QList<bool> listAxisVisible;
+    const QJsonArray &events = state.value(STATE_EVENTS).toArray();
+
+    QList<QJsonObject> selectedEvents;
+
+    const CurveSettings cs (state.value(STATE_CURVE).toObject());
+    CurveSettings::ProcessType processType = cs.mProcessType;
+
+    for (const auto&& ev : events) {
+        const QJsonObject jsonEv = ev.toObject();
+        if (jsonEv.value(STATE_IS_SELECTED).toBool())
+            selectedEvents.append(jsonEv);
+    }
+
+
+    GraphView* graph1 = nullptr;
+    GraphView* graph2 = nullptr;
+    GraphView* graph3 = nullptr;
+
+    std::vector<CurveRefPts> curveDataPointsX, curveDataPointsY, curveDataPointsZ;
+    CurveRefPts ptsX, ptsY, ptsZ;
+
+    switch (processType) {
+    case CurveSettings::eProcess_3D:
+    case CurveSettings::eProcess_Vector:
+
+            graph3 = new GraphView(this);
+            graph3->showInfos(true);
+
+            graph3->mLegendX = DateUtils::getAppSettingsFormatStr();
+            graph3->setFormatFunctX(nullptr);
+            graph3->setFormatFunctY(nullptr);
+
+            graph3->setRangeX(mTminDisplay, mTmaxDisplay);
+            graph3->setCurrentX(mTminDisplay, mTmaxDisplay);
+            graph3->changeXScaleDivision(mMajorScale, mMinorScale);
+            graph3->setOverArrow(GraphView::eNone);
+            graph3->setTipXLab("t");
+
+            graph3->autoAdjustYScale(true);
+
+            graph3->setYAxisMode(GraphView::eAllTicks);
+            graph3->showYAxisSubTicks(true);
+            graph3->setTipYLab(cs.Z_short_name());
+
+            graph3->setMarginTop(graph3->fontMetrics().height()/2.);
+
+
+    case CurveSettings::eProcess_Spherical:
+    case CurveSettings::eProcess_Unknwon_Dec:
+    case CurveSettings::eProcess_2D:
+
+            graph2 = new GraphView(this);
+            graph2->showInfos(true);
+
+            graph2->mLegendX = DateUtils::getAppSettingsFormatStr();
+            graph2->setFormatFunctX(nullptr);
+            graph2->setFormatFunctY(nullptr);
+
+            graph2->setRangeX(mTminDisplay, mTmaxDisplay);
+            graph2->setCurrentX(mTminDisplay, mTmaxDisplay);
+            graph2->changeXScaleDivision(mMajorScale, mMinorScale);
+            graph2->setOverArrow(GraphView::eNone);
+            graph2->setTipXLab("t");
+
+            graph2->autoAdjustYScale(true);
+
+            graph2->setYAxisMode(GraphView::eAllTicks);
+            graph2->showYAxisSubTicks(true);
+            graph2->setTipYLab(cs.Y_short_name());
+            graph2->setMarginTop(graph2->fontMetrics().height()/2.);
+
+    case CurveSettings::eProcess_None:
+    case CurveSettings::eProcess_Univariate:
+    case CurveSettings::eProcess_Depth:
+    case CurveSettings::eProcess_Inclination:
+    case CurveSettings::eProcess_Declination:
+    case CurveSettings::eProcess_Field:
+    default:
+
+            graph1 = new GraphView(this);
+            graph1->showInfos(true);
+
+            graph1->mLegendX = DateUtils::getAppSettingsFormatStr();
+            graph1->setFormatFunctX(nullptr);
+            graph1->setFormatFunctY(nullptr);
+
+            graph1->setRangeX(mTminDisplay, mTmaxDisplay);
+            graph1->setCurrentX(mTminDisplay, mTmaxDisplay);
+            graph1->changeXScaleDivision(mMajorScale, mMinorScale);
+            graph1->setOverArrow(GraphView::eNone);
+            graph1->setTipXLab("t");
+
+            graph1->autoAdjustYScale(true);
+
+            graph1->setYAxisMode( processType == CurveSettings::eProcess_None ? GraphView::eMinMaxHidden: GraphView::eAllTicks);
+            graph1->showYAxisSubTicks(processType != CurveSettings::eProcess_None);
+
+            graph1->setTipYLab(cs.X_short_name());
+            graph1->setMarginTop(graph1->fontMetrics().height()/2.);
+
+            break;
+    }
+
+   /* QMap <double, double> poly_data_X;
+    QMap <double, double> poly_data_Y;
+    QMap <double, double> poly_data_Z;
+    const double epsilon_step = 1E-6;
+
+    QMap <double, double> poly_data_X_err;
+    QMap <double, double> poly_data_Y_err;
+    QMap <double, double> poly_data_Z_err;
+    */
+    std::vector<double> vec_t;
+    std::vector<double> vec_X, vec_Y, vec_Z;
+    std::vector<double> vec_X_err, vec_Y_err, vec_Z_err;
+
+    double X, errX, Y, errY, Z, errZ, tmin, tmax;
+    for (const auto& sEvent : selectedEvents) {
+            const double xIncDepth = sEvent.value(STATE_EVENT_X_INC_DEPTH).toDouble();
+            const double s_XA95Depth = sEvent.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble();
+            const double yDec = sEvent.value(STATE_EVENT_Y_DEC).toDouble();
+            const double s_Y = sEvent.value(STATE_EVENT_SY).toDouble() ;
+            const double zField = sEvent.value(STATE_EVENT_Z_F).toDouble();
+            const double s_ZField = sEvent.value(STATE_EVENT_SZ_SF).toDouble();
+
+            const QColor color (sEvent.value(STATE_COLOR_RED).toInt(),
+                               sEvent.value(STATE_COLOR_GREEN).toInt(),
+                               sEvent.value(STATE_COLOR_BLUE).toInt());
+            // Same calcul within ResultsView::createByCurveGraph()
+            switch (processType) {
+            case CurveSettings::eProcess_Univariate:
+                X = xIncDepth;
+                errX = 1.96*s_XA95Depth;
+                Y = 0.;
+                errY = 0.;
+                Z = 0.;
+                errZ = 0.;
+                break;
+            case CurveSettings::eProcess_Depth:
+                X = xIncDepth;
+                errX = 1.96*s_XA95Depth;
+                Y = 0.;
+                errY = 0.;
+                Z = 0.;
+                errZ = 0.;
+                break;
+            case CurveSettings::eProcess_Field:
+                X = zField;
+                errX = 1.96*s_ZField;
+                Y = 0.;
+                errY = 0.;
+                Z = 0.;
+                errZ = 0.;
+                break;
+            case CurveSettings::eProcess_Inclination:
+                X = xIncDepth;
+                errX = s_XA95Depth;
+                Y = 0.;
+                errY = 0.;
+                Z = 0.;
+                errZ = 0.;
+                break;
+            case CurveSettings::eProcess_Declination:
+                X = yDec;
+                errX = s_XA95Depth/ cos(xIncDepth/180*3.14 );
+                Y = 0.;
+                errY = 0.;
+                Z = 0.;
+                errZ = 0.;
+                break;
+
+            case CurveSettings::eProcess_Unknwon_Dec:
+                X = xIncDepth;
+                errX = s_XA95Depth;
+                Y = zField;
+                errY = s_ZField;
+                Z = 0.;
+                errZ = 0.;
+                break;
+
+            case CurveSettings::eProcess_2D:
+                X = xIncDepth;
+                errX = 1.96*s_XA95Depth;
+                Y = yDec;
+                errY = 1.96*s_Y;
+                Z = 0.;
+                errZ = 0.;
+                break;
+            case CurveSettings::eProcess_Spherical:
+                X = xIncDepth;
+                errX = s_XA95Depth;
+                Y = yDec;
+                errY = s_XA95Depth/ cos(xIncDepth/180.*M_PI );
+                Z = 0.;
+                errZ = 0.;
+                break;
+
+            case CurveSettings::eProcess_Vector:
+                X = xIncDepth;
+                errX = s_XA95Depth;
+                Y = yDec;
+                errY = s_XA95Depth/ cos(xIncDepth/180.*M_PI );
+                Z = zField;
+                errZ = s_ZField;
+                break;
+            case CurveSettings::eProcess_3D:
+                X = xIncDepth;
+                errX = 1.96*s_XA95Depth;
+                Y = yDec;
+                errY = 1.96*s_Y;
+                Z = zField;
+                errZ = 1.96*s_ZField;
+                break;
+            default:
+                X = - sEvent.value(STATE_ITEM_Y).toDouble();
+                errX = 0.;
+                Y = 0.;
+                errY = 0.;
+                Z = 0.;
+                errZ = 0.;
+                break;
+            }
+
+            if ( Event::Type (sEvent.value(STATE_EVENT_TYPE).toInt()) == Event::eBound) {
+                const double bound = sEvent.value(STATE_EVENT_KNOWN_FIXED).toDouble();
+
+                ptsX.Xmin = DateUtils::convertToAppSettingsFormat(bound);
+                ptsX.Xmax = ptsX.Xmin;
+
+                ptsX.Ymin = X - errX;
+                ptsX.Ymax = X + errX;
+                ptsX.color = color;
+                ptsX.type = CurveRefPts::eRoundLine;
+
+                ptsX.pen = QPen(Qt::black, 1, Qt::SolidLine);
+                ptsX.brush = Qt::black;
+                ptsX.name = "Ref Points";
+                ptsX.setVisible(true);
+
+                curveDataPointsX.push_back(ptsX);
+
+                ptsY = ptsX;
+                ptsY.Ymin = Y - errY;
+                ptsY.Ymax = Y + errY;
+
+                ptsY.pen = QPen(Qt::black, 1, Qt::SolidLine);
+                ptsY.brush = Qt::black;
+                ptsY.setVisible(true);
+                curveDataPointsY.push_back(ptsY);
+
+                ptsZ = ptsX;
+                ptsZ.Ymin = Z - errZ;
+                ptsZ.Ymax = Z + errZ;
+                ptsZ.pen = QPen(Qt::black, 1, Qt::SolidLine);
+                ptsZ.brush = Qt::black;
+                ptsZ.setVisible(true);
+                curveDataPointsZ.push_back(ptsZ);
+
+                /*if (poly_data_X.find(bound) != poly_data_X.end()) {
+                   poly_data_X[bound+epsilon_step] = X ;
+                } else {
+                   poly_data_X[bound] = X ;
+                }
+                poly_data_Y[bound] = Y ;
+                poly_data_Z[bound] = Z ;*/
+                vec_t.push_back(bound);
+                vec_X.push_back(X);
+                vec_Y.push_back(Y);
+                vec_Z.push_back(Z);
+
+                switch (processType) {
+                    case CurveSettings::eProcess_Inclination:
+                    case CurveSettings::eProcess_Declination:
+                    case CurveSettings::eProcess_Unknwon_Dec:
+                    case CurveSettings::eProcess_Spherical:
+                    case CurveSettings::eProcess_Vector:
+                        vec_X_err.push_back(errX);
+                        vec_Y_err.push_back(errY);
+                        vec_Z_err.push_back(errZ);
+                        break;
+
+                    case CurveSettings::eProcess_Univariate:
+                    case CurveSettings::eProcess_Depth:
+                    case CurveSettings::eProcess_Field:
+                    case CurveSettings::eProcess_2D:
+                    case CurveSettings::eProcess_3D:
+                    default:                        
+                        vec_X_err.push_back(errX/1.96);
+                        vec_Y_err.push_back(errY/1.96);
+                        vec_Z_err.push_back(errZ/1.96);
+                        break;
+                }
+
+
+
+            } else {
+
+            const QJsonArray &dates = sEvent.value(STATE_EVENT_DATES).toArray();
+
+            for (const auto&& date : dates) {
+                Date d (date.toObject());
+
+                if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.isEmpty()) {
+
+                    d.autoSetTiSampler(true); // needed if calibration is not done
+
+                    const QMap<double, double> &calibMap = d.getFormatedCalibMap();
+                    // hpd is calculate only on the study Period
+
+                    const QMap<double, double> &subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+
+                    if (!subData.isEmpty()) {
+
+                        // hpd results
+
+                        const QMap<type_data, type_data> hpd (create_HPD2(subData, thres));
+
+                        const QList<QPair<double, QPair<double, double> > > &intervals = intervalsForHpd(hpd, 100);
+
+                        CurveRefPts::PointType typePts;
+                        tmin = intervals.first().second.first;
+                        tmax = intervals.last().second.second;
+                        const double tmid = (tmin+tmax)/2.;
+                        vec_t.push_back(tmid);
+                        vec_X.push_back(X);
+                        vec_Y.push_back(Y);
+                        vec_Z.push_back(Z);
+                        switch (processType) {
+                            case CurveSettings::eProcess_Inclination:
+                            case CurveSettings::eProcess_Declination:
+                            case CurveSettings::eProcess_Unknwon_Dec:
+                            case CurveSettings::eProcess_Spherical:
+                            case CurveSettings::eProcess_Vector:
+                            vec_X_err.push_back(errX);
+                            vec_Y_err.push_back(errY);
+                            vec_Z_err.push_back(errZ);
+                                break;
+
+                            case CurveSettings::eProcess_Univariate:
+                            case CurveSettings::eProcess_Depth:
+                            case CurveSettings::eProcess_Field:
+                            case CurveSettings::eProcess_2D:
+                            case CurveSettings::eProcess_3D:
+                            default:
+                                vec_X_err.push_back(errX/1.96);
+                                vec_Y_err.push_back(errY/1.96);
+                                vec_Z_err.push_back(errZ/1.96);
+                                break;
+                        }
+
+                        typePts = CurveRefPts::eCross;
+                        ptsX.Xmin = tmid;
+                        ptsX.Xmax = ptsX.Xmin;
+
+                        ptsX.Ymin = X - errX;
+                        ptsX.Ymax = X + errX;
+                        ptsX.color = color;
+                        ptsX.type = typePts;
+                        ptsX.pen = QPen(Qt::black, 1, Qt::SolidLine);
+                        ptsX.brush = Qt::black;
+                        ptsX.name = "Ref Points";
+                        ptsX.setVisible(true);
+                        curveDataPointsX.push_back(ptsX);
+
+                        ptsY = ptsX;
+                        ptsY.Ymin = Y - errY;
+                        ptsY.Ymax = Y + errY;
+                        ptsY.pen = QPen(Qt::black, 1, Qt::SolidLine);
+                        ptsY.brush = Qt::black;
+                        ptsY.name = "Ref Points";
+                        ptsY.setVisible(true);
+                        curveDataPointsY.push_back(ptsY);
+
+                        ptsZ = ptsX;
+                        ptsZ.Ymin = Z - errZ;
+                        ptsZ.Ymax = Z + errZ;
+                        ptsZ.pen = QPen(Qt::black, 1, Qt::SolidLine);
+                        ptsZ.brush = Qt::black;
+                        ptsZ.name = "Ref Points";
+                        ptsZ.setVisible(true);
+                        curveDataPointsZ.push_back(ptsZ);
+
+                    }
+
+
+                }
+            }
+            }
+
+    }
+
+    // interpolation polynomial
+    /*
+    //poly_data = QMap<double,double>({QPair<double, double>(0.,1.), QPair<double, double>(1.,2), QPair<double, double>(2.,5), QPair<double, double>(3.,10.), QPair<double, double>(4.,17.)});
+    int min_deg = 1;
+    const auto coef_reg = polynom_regression_coef(poly_data_X, 1);
+    double mse = MSE(poly_data_X, coef_reg);
+    //double mse = Pearson_X_square(poly_data_X, coef_reg);
+    double prev_MSE = mse;
+    for (int deg = 2; deg<21; deg++) {
+        const auto coef_reg = polynom_regression_coef(poly_data_X, deg);
+        const double msei = MSE(poly_data_X, coef_reg);
+        //double msei = Pearson_X_square(poly_data_X, coef_reg);
+        qDebug()<<" deg ="<< deg << " mse="<<msei;
+
+        if (msei < prev_MSE || isnan(msei)) {
+            prev_MSE = msei;
+            min_deg = deg;
+        }
+
+    }
+
+    //min_deg = std::max(min_deg-1., 1.);
+    const auto coef_poly = polynom_regression_coef(poly_data_X, min_deg );
+    qDebug()<<" min_deg ="<< min_deg;
+
+    QMap<double, double> G_Poly_regress;
+    const double tmin_poly = poly_data_X.firstKey();
+    const double tmax_poly = poly_data_X.lastKey();
+    const double step_poly = (tmax_poly-tmin_poly)/1000.;
+    for (int i = 0; i<1001; i++) {
+        double g = 0;
+        const double t = tmin_poly + i*step_poly;
+        int d = 0;
+        for (auto v : coef_poly) {
+            g += v*pow(t, d);
+            d++;
+        }
+        G_Poly_regress[t] = g;
+    }
+
+    // calcul var residuel
+    double var_res_regress = 0;
+    for (auto t_X : poly_data_X.asKeyValueRange()) {
+        double g = 0;
+        const double t = t_X.first;
+        int d = 0;
+        for (auto v : coef_poly) {
+            g += v*pow(t, d);
+            d++;
+        }
+        var_res_regress += pow(t_X.second - g, 2.);
+    }
+
+    var_res_regress /= poly_data_X.size()-1;
+    qDebug() << "var_res_regress" << var_res_regress <<sqrt(var_res_regress);
+*/
+    // -- fin interpolation linéaire
+
+    // On force le calcul de Silverman et en fixant le Vg = 0, qui n'existe pas dans son calcul
+    // plus haut on regarde si on utilise l'erreur sur mesure ou Vg fixe
+    //auto cs_tmp = cs;
+   // cs_tmp.mUseVarianceIndividual = false;
+   // cs_tmp.mVarianceType = CurveSettings::eModeFixed;
+   // if (cs.mVarianceType != CurveSettings::eModeFixed)
+   //     cs_tmp.mVarianceFixed = 0;
+
+    //const double tmin_poly = poly_data_X.firstKey();
+    //const double tmax_poly = poly_data_X.lastKey();
+
+    const double tmin_poly = mSettings.mTmin ;
+    const double tmax_poly = mSettings.mTmax;
+    const double step_poly = (tmax_poly-tmin_poly)/1000.;
+
+    // transfere des info de la boite SilvermanDialog via cs
+
+    CurveSettings cs_param (cs);
+    cs_param.mUseErrMesure = mSilverParam.use_error_measure;
+    cs_param.mLambdaSplineType = mSilverParam.lambda_fixed ? CurveSettings::eModeFixed : CurveSettings::eModeBayesian;
+    cs_param.mLambdaSpline = pow(10., mSilverParam.log_lambda_value);
+    cs_param.mVarianceType = mSilverParam.variance_fixed ? CurveSettings::eModeFixed : CurveSettings::eModeBayesian;
+    cs_param.mVarianceFixed = mSilverParam.variance_value;
+
+    const double rad = M_PI/180.;
+    if (!cs_param.mUseErrMesure) {
+        const double w_I = 1.;
+        vec_X_err = std::vector<double>(vec_X_err.size(), w_I);
+        vec_Y_err = std::vector<double>(vec_Y_err.size(), w_I);
+        vec_Z_err = std::vector<double>(vec_Z_err.size(), w_I);
+    } else {
+        if (processType == CurveSettings::eProcess_Spherical) {
+            auto e_d = begin(vec_Y_err);
+            for (auto e_i : vec_X_err) {
+                e_i = e_i *rad /2.448;
+                *e_d = e_i;
+                e_d++;
+            }
+        }
+    }
+
+    std::pair<MCMCSpline, std::pair<double, double>> do_spline_res;
+    switch (processType) {
+        case CurveSettings::eProcess_Univariate:
+        case CurveSettings::eProcess_Depth:
+                do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, cs_param);
+                break;
+        case CurveSettings::eProcess_2D:
+        case CurveSettings::eProcess_Spherical:
+                do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, cs_param, vec_Y, vec_Y_err);
+                break;
+        case CurveSettings::eProcess_3D:
+                do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, cs_param, vec_Y, vec_Y_err, vec_Z, vec_Z_err);
+                break;
+        default:
+                break;
+    }
+    MCMCSpline spline = do_spline_res.first;
+    std::pair<double, double> lambda_Vg = do_spline_res.second;
+    QString spline_info;
+    if (cs_param.mLambdaSplineType == CurveSettings::eModeBayesian ) {
+        spline_info +=  tr(" log10(Smoothing) = %1 ;").arg( QString::number(log10(lambda_Vg.first)));
+    } else {
+        spline_info +=  tr(" Fixed log10(Smoothing) = %1 ;").arg( QString::number(log10(lambda_Vg.first)));
+    }
+
+    if (cs_param.mUseErrMesure) {
+       spline_info +=  tr(" Global std Gi = %1").arg( QString::number(sqrt(lambda_Vg.second)));
+    } else {
+       if (cs_param.mVarianceType == CurveSettings::eModeBayesian ) {
+            spline_info +=  tr("\r Global std Gi = %1 ;").arg( QString::number(sqrt(lambda_Vg.second)));
+       } else {
+            spline_info +=  tr("\r Fixed std Gi = %1 ;").arg( QString::number(sqrt(lambda_Vg.second)));
+       }
+    }
+
+    if (processType == CurveSettings::eProcess_Univariate ||
+        processType == CurveSettings::eProcess_Depth ||
+        processType == CurveSettings::eProcess_2D ||
+        processType == CurveSettings::eProcess_Spherical ||
+        processType == CurveSettings::eProcess_3D) {
+
+            const auto &curves = composante_to_curve(spline.splineX, tmin_poly, tmax_poly, step_poly);
+
+            if (!isnan(curves[0][0]) && !isnan(curves[1][0]) && !isnan(curves[2][0])) {
+                //const QMap<double, double> & G_Poly = G_Poly_regress;
+                const QMap<double, double> & G_Poly = curves[0];// do_spline
+                const GraphCurve &curve_poly_X = FunctionCurve(G_Poly, "G", QColor(119, 95, 200) );
+                const QMap<double, double> & G_plus_Poly = curves[1];
+                const GraphCurve &curve_poly_X_plus = FunctionCurve(G_plus_Poly, "G", QColor(119, 95, 49) );
+
+                const QMap<double, double> &G_moins_Poly = curves[2];
+                const GraphCurve &curve_poly_X_moins = FunctionCurve(G_moins_Poly, "G", QColor(119, 95, 49) );
+
+                graph1->add_curve(curve_poly_X);
+                graph1->add_curve(curve_poly_X_plus);
+                graph1->add_curve(curve_poly_X_moins);
+            }
+    }
+
+    if (processType == CurveSettings::eProcess_2D ||
+        processType == CurveSettings::eProcess_Spherical ||
+        processType == CurveSettings::eProcess_3D)  {
+
+            const auto &curves = composante_to_curve(spline.splineY, tmin_poly, tmax_poly, step_poly);
+
+            if (!isnan(curves[0][0]) && !isnan(curves[1][0]) && !isnan(curves[2][0])) {
+                const QMap<double, double> & G_Poly = curves[0];
+                const GraphCurve &curve_poly_X = FunctionCurve(G_Poly, "G", QColor(119, 95, 200) );
+                const QMap<double, double> & G_plus_Poly = curves[1];
+                const GraphCurve &curve_poly_X_plus = FunctionCurve(G_plus_Poly, "G", QColor(119, 95, 49) );
+
+                const QMap<double, double> &G_moins_Poly = curves[2];
+                const GraphCurve &curve_poly_X_moins = FunctionCurve(G_moins_Poly, "G", QColor(119, 95, 49) );
+
+                graph2->add_curve(curve_poly_X);
+                graph2->add_curve(curve_poly_X_plus);
+                graph2->add_curve(curve_poly_X_moins);
+            }
+    }
+
+    if (processType == CurveSettings::eProcess_3D) {
+
+            const auto &curves = composante_to_curve(spline.splineZ, tmin_poly, tmax_poly, step_poly);
+
+            if (!isnan(curves[0][0]) && !isnan(curves[1][0]) && !isnan(curves[2][0])) {
+                const QMap<double, double> &G_Poly = curves[0];
+                const GraphCurve &curve_poly_X = FunctionCurve(G_Poly, "G", QColor(119, 95, 200) );
+                const QMap<double, double> &G_plus_Poly = curves[1];
+                const GraphCurve &curve_poly_X_plus = FunctionCurve(G_plus_Poly, "G", QColor(119, 95, 49) );
+
+                const QMap<double, double> &G_moins_Poly = curves[2];
+                const GraphCurve &curve_poly_X_moins = FunctionCurve(G_moins_Poly, "G", QColor(119, 95, 49) );
+
+                graph3->add_curve(curve_poly_X);
+                graph3->add_curve(curve_poly_X_plus);
+                graph3->add_curve(curve_poly_X_moins);
+            }
+
+    }
+
+    switch (processType) {
+        case CurveSettings::eProcess_Vector:
+        case CurveSettings::eProcess_3D:
+            graph3->set_points(curveDataPointsZ);
+            graph3->setTipYLab(cs.Z_short_name());
+
+        case CurveSettings::eProcess_Spherical:
+        case CurveSettings::eProcess_Unknwon_Dec:
+        case CurveSettings::eProcess_2D:
+            graph2->set_points(curveDataPointsY);
+            graph2->setTipYLab(cs.Y_short_name());
+
+        default:
+            graph1->setTipYLab(cs.X_short_name());
+            graph1->set_points(curveDataPointsX);
+            graph1->addInfo(spline_info);
+            graph1->showInfos(true);
+
+            graph1->setYAxisMode( processType == CurveSettings::eProcess_None ? GraphView::eMinMaxHidden: GraphView::eAllTicks);
+            graph1->showYAxisSubTicks(processType != CurveSettings::eProcess_None);
+            break;
+    }
+    // Print graphics in the right order
+    switch (processType) {
+        case CurveSettings::eProcess_Vector:
+        case CurveSettings::eProcess_3D:
+            graphList.append(new GraphTitle(cs.XLabel(), this));
+            graphList.append(graph1);
+            listAxisVisible.push_back(true);
+
+            graphList.append(new GraphTitle(cs.YLabel(), this));
+            graphList.append(graph2);
+            listAxisVisible.push_back(true);
+
+            graphList.append(new GraphTitle(cs.ZLabel(), this));
+            graphList.append(graph3);
+            listAxisVisible.push_back(true);
+            break;
+        case CurveSettings::eProcess_Spherical:
+        case CurveSettings::eProcess_Unknwon_Dec:
+        case CurveSettings::eProcess_2D:
+            graphList.append(new GraphTitle(cs.XLabel(), this));
+            graphList.append(graph1);
+            listAxisVisible.push_back(true);
+
+            graphList.append(new GraphTitle(cs.YLabel(), this));
+            graphList.append(graph2);
+            listAxisVisible.push_back(true);
+            break;
+        default:
+            graphList.append(new GraphTitle(cs.XLabel(), this));
+            graphList.append(graph1);
+            listAxisVisible.push_back(true);
+            break;
+        }
+
+
+    MultiCalibrationDrawing* fitPlot = new MultiCalibrationDrawing(this);
+
+    // must be put at the end to print the points above
+
+    fitPlot->showMarker();
+    fitPlot->setEventsColorList(colorList);
+    fitPlot->setListAxisVisible(listAxisVisible);
+
+    fitPlot->setGraphList(graphList); // must be after setEventsColorList() and setListAxisVisible()
+
+    fitPlot->setGraphHeight(3*mGraphHeight);
+
+    return std::move(fitPlot);
+
+}
 
 void MultiCalibrationView::updateMultiCalib()
 {
@@ -1246,6 +1876,12 @@ void MultiCalibrationView::updateHPDGraphs(const QString &thres)
     } else if (mScatterClipBut->isChecked()) {
         mDrawing->~MultiCalibrationDrawing();
         mDrawing = scatterPlot(mThreshold);
+        updateGraphsZoom(); // update Y scale
+        updateLayout();
+
+    } else if (mFitClipBut->isChecked()) {
+        mDrawing->~MultiCalibrationDrawing();
+        mDrawing = fitPlot(mThreshold);
         updateGraphsZoom(); // update Y scale
         updateLayout();
 
@@ -1286,7 +1922,7 @@ void MultiCalibrationView::updateGraphsSize(const QString &sizeStr)
     } else
         return;
 
-    if (mScatterClipBut->isChecked())
+    if (mScatterClipBut->isChecked() || mFitClipBut->isChecked())
         mDrawing->setGraphHeight(3*mGraphHeight);
     else
         mDrawing->setGraphHeight(mGraphHeight);
@@ -1302,12 +1938,12 @@ void MultiCalibrationView::updateYZoom(const double prop)
 
     mGraphHeight = int ( prop * origin * 2);
 
-    if (mScatterClipBut->isChecked())
+    if (mScatterClipBut->isChecked() || mFitClipBut->isChecked())
         mDrawing->setGraphHeight(3*mGraphHeight);
     else
         mDrawing->setGraphHeight(mGraphHeight);
 
-    QString sizeText = QLocale().toString(mGraphHeight / origin * 100, 'f', 0);
+    const QString sizeText = QLocale().toString(mGraphHeight / origin * 100, 'f', 0);
     mGraphHeightEdit->blockSignals(true);
     mGraphHeightEdit->setText(sizeText);
     mGraphHeightEdit->blockSignals(false);
@@ -1522,7 +2158,7 @@ void MultiCalibrationView::updateGraphsZoom()
         }
     }
 
-    if (mScatterClipBut->isChecked() && mProject->isCurve())
+    if ((mScatterClipBut->isChecked() || mFitClipBut->isChecked()) && mProject->isCurve())
         mMarginLeft = 1.5 * maxYLength + 10;
     else
         mMarginLeft = 1.3 * fm.horizontalAdvance(stringForGraph(mTminDisplay))/2. + 10;
@@ -1888,7 +2524,7 @@ void MultiCalibrationView::exportResults()
 
 void MultiCalibrationView::showStat()
 {
-   if (mStatClipBut ->isChecked()) {
+    if (mStatClipBut ->isChecked()) {
        mDrawing->setVisible(false);
        mStatArea->setVisible(true);
        mStatArea->setFont(font());
@@ -1959,8 +2595,9 @@ void MultiCalibrationView::showStat()
                            const QMap<double, double> &calibMap = d.getFormatedCalibMap();
                            // hpd is calculate only on the study Period
 
-                           QMap<double, double>  subData = calibMap;
-                           subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+                           //QMap<double, double>  subData = calibMap;
+                           //subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+                           QMap<double, double> subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
                            DensityAnalysis results;
                            results.funcAnalysis = analyseFunction(subData);
@@ -2003,7 +2640,22 @@ void MultiCalibrationView::showStat()
 
 void MultiCalibrationView::showScatter()
 {
+    if (mFitClipBut->isChecked())
+        mFitClipBut->setChecked(false);
     updateGraphList();
-   // updateLayout();
+}
 
+void MultiCalibrationView::showFit()
+{
+
+    if (mFitClipBut->isChecked()) {
+        SilvermanDialog silverWindows (&mSilverParam, this);
+        if (silverWindows.exec() == QDialog::Rejected) {
+            mFitClipBut->setCheckState(false);
+            return;
+        }
+        if (mScatterClipBut->isChecked())
+            mScatterClipBut->setChecked(false);
+    }
+    updateGraphList();
 }

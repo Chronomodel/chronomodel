@@ -46,13 +46,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QTextEdit>
 
 #include "Button.h"
-#include "Event.h"
 #include "Label.h"
 #include "LineEdit.h"
 #include "MultiCalibrationDrawing.h"
 #include "ColorPicker.h"
+#include "Project.h"
 #include "ScrollCompressor.h"
 
+
+#include "SilvermanDialog.h"
 #include "StudyPeriodSettings.h"
 
 class MultiCalibrationView: public QWidget
@@ -66,7 +68,7 @@ public:
     void setProject(Project *project) {mProject = project;}
 
     void updateGraphList();
-    void initScale (const double &majorScale, const int minorScale) { mMajorScale= majorScale; mMinorScale = minorScale;}
+    void initScale (const double majorScale, const int minorScale) { mMajorScale = majorScale; mMinorScale = minorScale;}
     void initScale (const Scale &s) { mMajorScale = s.mark; mMinorScale = s.tip;}
 
 
@@ -75,6 +77,7 @@ protected:
     void resizeEvent(QResizeEvent*);
     void updateLayout();
     MultiCalibrationDrawing* scatterPlot(const double thres);
+    MultiCalibrationDrawing* fitPlot(const double thres);
     MultiCalibrationDrawing* multiCalibrationPlot(const double thres);
 
 
@@ -85,9 +88,9 @@ public slots:
     void applyAppSettings();
 
 private slots:
-    void updateHPDGraphs(const QString & thres);
+    void updateHPDGraphs(const QString &thres);
 
-    void updateGraphsSize(const QString & sizeStr);
+    void updateGraphsSize(const QString &sizeStr);
     void updateYZoom(const double prop = 100);
 
     void updateGraphsZoom();
@@ -101,6 +104,7 @@ private slots:
     void changeCurveColor();
     void showStat();
     void showScatter();
+    void showFit();
 
 signals:
     void closed();
@@ -127,9 +131,9 @@ private:
     Button* mExportResults;
     Button* mColorClipBut;
     Button* mScatterClipBut;
+    Button* mFitClipBut;
     ColorPicker* mColorPicker;
 
-    //QFrame* frameSeparator;
 
     Label* mGraphHeightLab;
     LineEdit* mGraphHeightEdit;
@@ -161,6 +165,7 @@ private:
 
     QString mResultText;
 
+    SilvermanParam mSilverParam;
 };
 
 #endif // MULTICALIBRATIONVIEW_H

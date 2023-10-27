@@ -210,7 +210,7 @@ std::pair<Matrix2D, Matrix2D > decompositionQR(const Matrix2D& A);
 std::pair<Matrix2D, Matrix2D> householderQR(Matrix2D& A);
 
 std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, MatrixDiag> &decomp, const std::vector< double> &vecQtY);
-
+std::vector<long double> resolutionSystemeLineaireCholesky_long(const std::pair<Matrix2D, MatrixDiag> &decomp, const std::vector< double> &vecQtY);
 struct Strassen
 { //https://www.sanfoundry.com/java-program-strassen-algorithm/
 

@@ -165,6 +165,17 @@ void Button::resizeEvent(QResizeEvent* e)
 
     QPushButton::resizeEvent(e);
 }
+void Button::setCheckState(const bool checkState)
+{
+    blockSignals(true);
+    setChecked(checkState);
+    blockSignals(false);
+
+    if (!checkState)
+        setColorState(eWarning);
+    else
+        setColorState(eDefault);
+}
 
 void Button::setCheckable(const bool checkable)
 {

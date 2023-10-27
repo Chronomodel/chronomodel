@@ -156,12 +156,12 @@ void MultiCalibrationDrawing::updateLayout()
 
     QFontMetrics fm (font());
     const bool axisVisible = (mGraphHeight >= GraphViewResults::mHeightForVisibleAxis);
-    //const int marginBottom = (axisVisible ? int (fm.ascent() * 2.2) : int (fm.ascent() * 0.5));
+
     int y = 0;
     int graphNo = 0;
     int barNo = 0;
     const int graphShift = 5; // the same name and the same value as MultiCalibrationView::exportFullImage()
-   // bool newTitle = false;
+
     for (auto&& graphAbstract: mListCalibGraph) {
 
         GraphView* graph = dynamic_cast<GraphView*>(graphAbstract);

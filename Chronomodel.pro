@@ -276,6 +276,7 @@ INCLUDEPATH += src/utilities/
 
 HEADERS += src/MainController.h \
     src/ui/dialogs/RebuildCurveDialog.h \
+    src/ui/dialogs/SilvermanDialog.h \
     src/ui/panel_model/MultiCalibrationView.h \
     src/ui/panel_model/MultiCalibrationDrawing.h \
     src/utilities/Matrix.h
@@ -449,6 +450,7 @@ HEADERS += src/utilities/StdUtilities.h
 
 SOURCES += src/AppSettings.cpp \
     src/ui/dialogs/RebuildCurveDialog.cpp \
+    src/ui/dialogs/SilvermanDialog.cpp \
     src/ui/panel_model/MultiCalibrationView.cpp \
     src/ui/panel_model/MultiCalibrationDrawing.cpp \
     src/utilities/Matrix.cpp

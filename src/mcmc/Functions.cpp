@@ -2456,8 +2456,48 @@ std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, 
     const MatrixDiag &D = decomp.second;
     const int n = D.size();
     std::vector<double> vecGamma (n);
-    std::vector<double> vecU (n);
-    std::vector<double> vecNu (n);
+    std::vector<long double> vecU (n);
+    std::vector<long double> vecNu (n);
+
+    if (n > 3 ) {
+        vecU[1] = vecQtY[1];
+        vecU[2] = vecQtY[2] - L[2][1] * vecU[1];
+
+        for (int i = 3; i < n-1; ++i) {
+            vecU[i] = vecQtY[i] - L[i][i-1] * vecU[i-1] - L[i][i-2] * vecU[i-2]; // pHd : Attention utilisation des variables déjà modifiées
+        }
+
+        for (int i = 1; i < n-1; ++i) {
+            vecNu[i] = vecU[i] / D[i];
+        }
+
+        vecGamma[n-2] = vecNu.at(n-2);
+        if (std::isnan(vecGamma[n-2]))
+            vecGamma[n-2] = 0.;
+
+        vecGamma[n-3] = vecNu.at(n-3) - L[n-2][n-3] * vecGamma[n-2];
+        if (std::isnan(vecGamma[n-3]))
+            vecGamma[n-3] = 0.;
+
+        for (int i = n-4; i > 0; --i) {
+            vecGamma[i] = vecNu[i] - L[i+1][i] * vecGamma[i+1] - L[i+2][i] * vecGamma[i+2]; // pHd : Attention utilisation des variables déjà modifiées
+        }
+
+    } else {
+        // cas n = 3
+        vecGamma[1] = vecQtY[1] / D[1];
+    }
+
+    return vecGamma;
+}
+std::vector<long double> resolutionSystemeLineaireCholesky_long(const std::pair<Matrix2D, MatrixDiag> &decomp, const std::vector<double> &vecQtY)
+{
+    const Matrix2D &L = decomp.first;
+    const MatrixDiag &D = decomp.second;
+    const int n = D.size();
+    std::vector<long double> vecGamma (n);
+    std::vector<long double> vecU (n);
+    std::vector<long double> vecNu (n);
 
     if (n > 3 ) {
         vecU[1] = vecQtY[1];
@@ -2485,7 +2525,6 @@ std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, 
 
     return vecGamma;
 }
-
 
 /**
  * @brief Strassen::sub substraction of 2 square matrix NxN
