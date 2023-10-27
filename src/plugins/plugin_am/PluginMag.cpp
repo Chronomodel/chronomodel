@@ -40,7 +40,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginMag.h"
 #if USE_PLUGIN_AM
 
-#include "StdUtilities.h"
 #include "QtUtilities.h"
 #include "PluginMagForm.h"
 #include "PluginMagRefView.h"

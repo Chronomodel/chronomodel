@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -394,7 +394,7 @@ double Plugin14C::getRefErrorAt(const QJsonObject& data, const double& t)
     return getRefCurveErrorAt(curveName, t);
 }
 
-QPair<double,double> Plugin14C::getTminTmaxRefsCurve(const QJsonObject& data) const
+QPair<double,double> Plugin14C::getTminTmaxRefsCurve(const QJsonObject &data) const
 {
     double tmin (-INFINITY);
     double tmax (INFINITY);
@@ -413,6 +413,7 @@ double Plugin14C::getMinStepRefsCurve(const QJsonObject &data) const
 
     if (mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
        return mRefCurves.value(ref_curve).mMinStep;
+
     } else {
        return INFINITY;
     }

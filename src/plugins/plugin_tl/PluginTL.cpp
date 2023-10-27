@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,7 +40,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginTL.h"
 #if USE_PLUGIN_TL
 
-#include "StdUtilities.h"
 #include "PluginTLForm.h"
 #include "PluginTLRefView.h"
 #include "Generator.h"
@@ -208,7 +207,18 @@ QPair<double,double> PluginTL::getTminTmaxRefsCurve(const QJsonObject &data) con
     return QPair<double, double>(tmin, tmax);
 }
 
+double PluginTL::getMinStepRefsCurve(const QJsonObject &data) const
+{
+    const double age = data.value(DATE_TL_AGE_STR).toDouble();
+    const double error = data.value(DATE_TL_ERROR_STR).toDouble();
+    const double ref_year = data.value(DATE_TL_REF_YEAR_STR).toDouble();
 
+    const double tmin = ref_year - age - 2. * error;
+    const double tmax = ref_year - age + 2. * error;
+    return std::abs(tmax-tmin)/ 10.;
+
+
+}
 
 
 // ------------------------------------------------------------------

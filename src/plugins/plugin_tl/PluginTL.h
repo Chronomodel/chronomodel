@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #if USE_PLUGIN_TL
 
-#include "../PluginAbstract.h"
+#include <PluginAbstract.h>
 
 #define DATE_TL_AGE_STR "age"
 #define DATE_TL_ERROR_STR "error"
@@ -64,7 +64,8 @@ public:
     
     long double getLikelihood(const double t, const QJsonObject &data);
     QPair<long double, long double > getLikelihoodArg(const double t, const QJsonObject &data);
-    QPair<double,double> getTminTmaxRefsCurve(const QJsonObject &data) const;
+    QPair<double, double> getTminTmaxRefsCurve(const QJsonObject &data) const;
+    double getMinStepRefsCurve(const QJsonObject &data) const;
     
     bool areDatesMergeable(const QJsonArray &dates);
     QJsonObject mergeDates(const QJsonArray &dates);
@@ -76,11 +77,10 @@ public:
     MHVariable::SamplerProposal getDataMethod() const;
     QList<MHVariable::SamplerProposal> allowedDataMethods() const;
     QStringList csvColumns() const;
-    QJsonObject fromCSV(const QStringList& list, const QLocale &csvLocale);
-    QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale) const;
+    QJsonObject fromCSV(const QStringList &list, const QLocale &csvLocale);
+    QStringList toCSV(const QJsonObject &data, const QLocale &csvLocale) const;
     QString getDateDesc(const Date* date) const;
-    QJsonObject checkValuesCompatibility(const QJsonObject& values);
-
+    QJsonObject checkValuesCompatibility(const QJsonObject &values);
 
     PluginFormAbstract* getForm();
     GraphViewRefAbstract* getGraphViewRef();

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -417,6 +417,7 @@ double PluginF14C::getMinStepRefsCurve(const QJsonObject &data) const
 
     if (mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
        return mRefCurves.value(ref_curve).mMinStep;
+
     } else {
        return INFINITY;
     }
