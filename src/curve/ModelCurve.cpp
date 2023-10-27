@@ -386,7 +386,7 @@ PosteriorMeanGComposante ModelCurve::buildCurveAndMap(const int nbPtsX, const in
         unsigned i0 = 0; // tIdx étant croissant, i0 permet de faire la recherche à l'indice du temps précedent
         for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
             t = (double)idxT * stepT + mSettings.mTmin ;
-            valeurs_G_VarG_GP_GS(t, splineXYZ, g, varG, gp, gs, i0, *this);
+            valeurs_G_VarG_GP_GS(t, splineXYZ, g, varG, gp, gs, i0, mSettings.mTmin, mSettings.mTmax);
 
             // -- Calcul Mean
             prevMeanG = *itVecG;
@@ -803,7 +803,7 @@ QList<PosteriorMeanGComposante> ModelCurve::getChainsMeanGComposanteZ()
 
     return composantes;
 }
-
+/*
 void ModelCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante &spline, double& G, double& varG, double& GP, double& GS, unsigned& i0, const Model &model)
 {
     const unsigned long n = spline.vecThetaReduced.size();
@@ -872,7 +872,10 @@ void ModelCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante
                  err1 = sqrt(spline.vecVarG.at(i0));
                  err2 = sqrt(spline.vecVarG.at(i0 + 1));
                  varG = pow(err1 + ((tReduce-ti1) / (ti2-ti1)) * (err2 - err1) , 2.l);
-
+#ifdef DEBUG
+                 if (std::isnan(varG))
+                    qDebug()<< "[ModelCurve] varG is nan ??"<<ti1<<ti2;
+#endif
                  GP = ((gi2-gi1)/h) - (1./6.) * (tReduce-ti1) * (ti2-tReduce) * ((gamma2-gamma1)/h);
                  GP += (1./6.) * ((tReduce-ti1) - (ti2-tReduce)) * ( (1.+(tReduce-ti1)/h) * gamma2 + (1+(ti2-tReduce)/h) * gamma1 );
 
@@ -890,7 +893,7 @@ void ModelCurve::valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante
      GP /=(model.mSettings.mTmax - model.mSettings.mTmin);
      GS /= pow(model.mSettings.mTmax - model.mSettings.mTmin, 2.);
 }
-
+*/
 void ModelCurve::valeurs_G_varG_on_i(const MCMCSplineComposante &spline, double &G, double &varG, unsigned long &i)
 {
     const double n = spline.vecThetaReduced.size();
@@ -1121,11 +1124,11 @@ void ModelCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spl
     unsigned i0 = 0; // tIdx étant croissant, i0 permet de faire la recherche à l'indice du temps précedent
     for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
         t = (double)idxT * stepT + mSettings.mTmin ;
-        valeurs_G_VarG_GP_GS(t, spline.splineX, gx, varGx, gpx, gsx, i0, *this);
-        valeurs_G_VarG_GP_GS(t, spline.splineY, gy, varGy, gpy, gsy, i0, *this);
+        valeurs_G_VarG_GP_GS(t, spline.splineX, gx, varGx, gpx, gsx, i0, mSettings.mTmin, mSettings.mTmax);
+        valeurs_G_VarG_GP_GS(t, spline.splineY, gy, varGy, gpy, gsy, i0, mSettings.mTmin, mSettings.mTmax);
 
         //if (compute_Z)
-            valeurs_G_VarG_GP_GS(t, spline.splineZ, gz, varGz, gpz, gsz, i0, *this);
+            valeurs_G_VarG_GP_GS(t, spline.splineZ, gz, varGz, gpz, gsz, i0, mSettings.mTmin, mSettings.mTmax);
 
         // Conversion IDF
         if (curveType == CurveSettings::eProcess_Vector ||  curveType == CurveSettings::eProcess_Spherical) {
@@ -1422,7 +1425,7 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCM
     unsigned i0 = 0; // tIdx étant croissant, i0 permet de faire la recherche à l'indice du temps précedent
     for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
         t = (double)idxT * stepT + mSettings.mTmin ;
-        valeurs_G_VarG_GP_GS(t, splineComposante, g, varG, gp, gs, i0, *this);
+        valeurs_G_VarG_GP_GS(t, splineComposante, g, varG, gp, gs, i0, mSettings.mTmin, mSettings.mTmax);
 
         // -- calcul Mean
         prevMeanG = *itVecG;
