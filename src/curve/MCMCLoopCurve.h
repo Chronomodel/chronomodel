@@ -106,14 +106,13 @@ protected:
     bool (MCMCLoopCurve::*updateLoop)();
 
     QString initialize_321();
-    QString initialize_324();
+    QString initialize_400();
     QString initialize_interpolate();
     QString initialize_Komlan();
 
 
     bool update_321();
-    bool update_324();
-   // bool update_400();
+    bool update_400();
     bool update_interpolate();
 
     bool update_Komlan();
