@@ -485,35 +485,32 @@ void ModelCurve::saveMapToFile(QFile *file, const QString csvSep, const CurveMap
 
     // Header
     if (isDateFormat) {
-        output << "Date / Y"<< csvSep;
-        for (unsigned c = 0; c < map._row; ++c)  {
-            output << stringForCSV(map.minY() + c * stepY) << csvSep;
+        output << "Y / Date"<< csvSep;
+        for (unsigned c = 0; c < map._column; ++c)  {
+            output << stringForCSV(DateUtils::convertToAppSettingsFormat(map.minX() + c * stepX)) << csvSep;
         }
         output << "\r";
 
-        unsigned i = 0;
-        for (unsigned c = 0; c < map._column; ++c)  {
+        for (int r = map._row-1; r >-1 ; --r)  {
 
-            output << stringForCSV(DateUtils::convertToAppSettingsFormat(map.minX() + c * stepX))  << csvSep;
-            for (unsigned r = 0; r < map._row; ++r)  {
-                output << stringForCSV(mapG[i++]) << csvSep;
+            output << stringForCSV(map.minY() + r * stepY)  << csvSep;
+            for (unsigned c = 0; c < map._column; ++c)  {
+                output << stringForCSV(std::remove_const<const CurveMap>::type (map).at(c, r)) << csvSep;
             }
             output << "\r";
         }
     } else {
-        output << "Age / Y"<< csvSep;
-        for (unsigned c = 0; c < map._row; ++c)  {
-            output << stringForCSV(map.minY() + c * stepY) << csvSep;
+        output << "Y / Age"<< csvSep;
+        for (int c = map._column-1; c >-1; --c)  {
+            output << stringForCSV(DateUtils::convertToAppSettingsFormat(map.minX() + c * stepX)) << csvSep;
         }
         output << "\r";
 
-        //unsigned i = 0;
-        for (int c = map._column-1 ; c > -1; --c)  {
-            output << stringForCSV(DateUtils::convertToAppSettingsFormat(map.minX() + c * stepX))  << csvSep;
+        for (int r = map._row-1; r >-1 ; --r)  {
 
-            for (unsigned r = 0; r < map._row; ++r)  {
-                auto m = std::remove_const<const CurveMap>::type (map).at(c, r);
-                output << stringForCSV(m) << csvSep;
+            output << stringForCSV(map.minY() + r * stepY)  << csvSep;
+            for (int c = map._column-1; c >-1; --c)   {
+                output << stringForCSV(std::remove_const<const CurveMap>::type (map).at(c, r)) << csvSep;
             }
             output << "\r";
         }
