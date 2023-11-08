@@ -2828,16 +2828,16 @@ bool MCMCLoopCurve::update_Komlan()
 
                             const double rapport_detPlus = rapport_detK_plus(K,  try_K) ;
 
-                            rapport =  rapport_detPlus * try_fTKf * try_h_lambda ;
+                            rate =  rapport_detPlus * try_fTKf * try_h_lambda ;
 
                         } else {
-                            rapport = -1.;
+                            rate = -1.;
 
                         }
 
                         // restore Theta to used function tryUpdate
                         event->mTheta.mX = current_value;
-                        event->mTheta.tryUpdate(try_value, rapport);
+                        event->mTheta.tryUpdate(try_value, rate);
 
                         if ( event->mTheta.mLastAccepts.last() == true) {
                             // Pour l'itération suivante :
