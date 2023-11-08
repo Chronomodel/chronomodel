@@ -52,7 +52,7 @@ class Phase;
 class EventConstraint;
 
 
-#define NS02_BAYESIAN
+#define S02_BAYESIAN
 
 
 
@@ -94,7 +94,7 @@ public:
     QList<EventConstraint*> mConstraintsBwd;
 
     MHVariable mTheta;
-    MHVariable mS02;
+    MHVariable mS02Theta;
 
     double mAShrinkage;
     //double mS02harmonique;

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -41,15 +41,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Label.h"
 #include "LineEdit.h"
 #include "Button.h"
-#include "EventConstraint.h"
-#include "PhaseConstraint.h"
-#include "Button.h"
+#include "StateKeys.h"
+
 #include <QtWidgets>
 
 
 ConstraintDialog::ConstraintDialog(QWidget* parent, ConstraintDialog::Type type, Qt::WindowFlags flags):QDialog(parent, flags),
-mType(type),
-mDeleteRequested(false)
+    mType(type),
+    mDeleteRequested(false)
 {
     setWindowTitle(tr("Constraint"));
 
@@ -96,7 +95,7 @@ ConstraintDialog::~ConstraintDialog()
 
 }
 
-void ConstraintDialog::setConstraint(const QJsonObject& constraint)
+void ConstraintDialog::setConstraint(const QJsonObject &constraint)
 {
     mConstraint = constraint;
 

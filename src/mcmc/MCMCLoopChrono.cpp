@@ -189,7 +189,7 @@ bool MCMCLoopChrono::update()
         event->updateTheta(tminPeriod, tmaxPeriod);
 
 #ifdef S02_BAYESIAN
-        if (event->mS02.mSamplerProposal != MHVariable::eFixe)
+        if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
             event->updateS02();
 #endif
         //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
@@ -251,8 +251,8 @@ bool MCMCLoopChrono::adapt(const int batchIndex) //original code
        if ((event->mType != Event::eBound) && ( event->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss) )
            noAdapt = event->mTheta.adapt(taux_min, taux_max, delta) && noAdapt;
 
-       if ( event->mS02.mSamplerProposal == MHVariable::eMHAdaptGauss)
-            noAdapt = event->mS02.adapt(taux_min, taux_max, delta) && noAdapt;
+       if ( event->mS02Theta.mSamplerProposal == MHVariable::eMHAdaptGauss)
+            noAdapt = event->mS02Theta.adapt(taux_min, taux_max, delta) && noAdapt;
 
     }
 
@@ -278,9 +278,9 @@ void MCMCLoopChrono::memo()
                 date.mSigmaTi.saveCurrentAcceptRate();
             }
 
-            if (event->mS02.mSamplerProposal != MHVariable::eFixe) {
-                event->mS02.memo();
-                event->mS02.saveCurrentAcceptRate();
+            if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
+                event->mS02Theta.memo();
+                event->mS02Theta.saveCurrentAcceptRate();
             }
 
         }

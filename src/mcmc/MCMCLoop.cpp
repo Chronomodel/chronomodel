@@ -139,10 +139,10 @@ QString MCMCLoop::initialize_time(Model* model)
         ev->mInitialized = false;
 
 #ifdef S02_BAYESIAN
-        //ev->mS02.mSamplerProposal = MHVariable::eMHAdaptGauss;// not yet integrate within update_321
+        //ev->mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;// not yet integrate within update_321
 
 # else
-        ev->mS02.mSamplerProposal = MHVariable::eFixe;
+        ev->mS02Theta.mSamplerProposal = MHVariable::eFixe;
 #endif
     }
     // -------------------------- Init gamma ------------------------------
@@ -342,18 +342,18 @@ QString MCMCLoop::initialize_time(Model* model)
                     }
 
                     // 4 - Init S02 of each Event
-                    uEvent->mS02.mX = uEvent->mDates.size() / s02_sum; //apres ici au bout de 3
-                    uEvent->mS02.mSigmaMH = 1.;
+                    uEvent->mS02Theta.mX = uEvent->mDates.size() / s02_sum; //apres ici au bout de 3
+                    uEvent->mS02Theta.mSigmaMH = 1.;
 
                     const double S02_harmonique = sqrt(uEvent->mDates.size() / s02_sum);
                     uEvent->mBetaS02 = 1.004680139*(1 - exp(- 0.0000847244 * pow(S02_harmonique, 2.373548593)));
 
-                    uEvent->mS02.mLastAccepts.clear();
-                    uEvent->mS02.tryUpdate(uEvent->mS02.mX, 2.);
+                    uEvent->mS02Theta.mLastAccepts.clear();
+                    uEvent->mS02Theta.tryUpdate(uEvent->mS02Theta.mX, 2.);
 
 
                     // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
-                    uEvent->mTheta.mSigmaMH = sqrt(uEvent->mS02.mX);
+                    uEvent->mTheta.mSigmaMH = sqrt(uEvent->mS02Theta.mX);
                     uEvent->mAShrinkage = 1.;
 
                     // 6- Clear mLastAccepts  array
@@ -415,17 +415,12 @@ QString MCMCLoop::initialize_time(Model* model)
                     date.mSigmaTi.mLastAccepts.clear();
                 }
 
-                // 4 - Init S02 of each Event
-                uEvent->mS02.mX = 0;
-                uEvent->mS02.mLastAccepts.clear();
-#ifdef  S02_BAYESIAN
-                uEvent->mS02.mSamplerProposal = MHVariable::eMHAdaptGauss;
+                // 4 - Init S02 of each Event fixed
+                uEvent->mS02Theta.mX = 0;
+                uEvent->mS02Theta.mLastAccepts.clear();
+                uEvent->mS02Theta.mSamplerProposal = MHVariable::eFixe;
 
-# else
-                uEvent->mS02.mSamplerProposal = MHVariable::eFixe;
-#endif
-
-                uEvent->mS02.memo();
+                uEvent->mS02Theta.memo();
 
                 // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
                 uEvent->mTheta.mSigmaMH = 1;
@@ -434,7 +429,6 @@ QString MCMCLoop::initialize_time(Model* model)
                 // 6- Clear mLastAccepts  array
                 uEvent->mTheta.mLastAccepts.clear();
                 //uEvent->mTheta.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
-
 
                 if (isInterruptionRequested())
                     return ABORTED_BY_USER;

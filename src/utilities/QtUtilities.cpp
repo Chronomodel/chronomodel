@@ -612,7 +612,7 @@ QString stringForCSV(const double valueToFormat, const bool forcePrecision)
 
 
 // CSV File
-bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep, const bool withDateFormat)
+bool saveCsvTo(const QList<QStringList> &data, const QString &filePath, const QString &csvSep, const bool withDateFormat)
 {
     QFile file(filePath);
     if (file.open(QFile::WriteOnly | QFile::Truncate))  {
@@ -653,6 +653,32 @@ bool saveAsCsv(const QList<QStringList>& data, const QString& title)
         QTextStream output(&file);
         for (int i=0; i<data.size(); ++i)  {
             output << data.at(i).join(csvSep);
+            output << "\r";
+        }
+        file.close();
+        return true;
+    }
+    return false;
+}
+
+bool save_map_as_csv(const std::map<double, double> &map, const std::pair<QString, QString> &header, const QString title)
+{
+    const QString csvSep = AppSettings::mCSVCellSeparator;
+    QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+    csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
+
+    const QString currentPath = MainWindow::getInstance()->getCurrentPath();
+    const QString filter = "CSV (*.csv)";
+    const QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                    title,
+                                                    currentPath,
+                                                    filter);
+    QFile file(filename);
+    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+        QTextStream output(&file);
+        output << header.first + csvSep + header.second;
+        for (auto m : map)  {
+            output << csvLocal.toString(m.first) + csvSep + csvLocal.toString(m.second);
             output << "\r";
         }
         file.close();

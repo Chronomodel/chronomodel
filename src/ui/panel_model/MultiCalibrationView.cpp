@@ -112,7 +112,7 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mScatterClipBut->setCheckable(true);
 
     mFitClipBut = new Button(tr("Fit"), this);
-    mFitClipBut->setIcon(QIcon(":curve_data_graph_w.png"));
+    mFitClipBut->setIcon(QIcon(":curve_silver_graph_w.png"));
     mFitClipBut->setFlatVertical();
     mFitClipBut->setToolTip(tr("Show Fit plot for selected dates"));
     mFitClipBut->setIconOnly(true);
@@ -557,7 +557,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
 
                 listAxisVisible.append(true);
                 if (&ev != preEvent) {
-                    graphList.append(new GraphTitle(tr("Event : %1").arg(eventName), curveDescription, d.mName, this));
+                    graphList.append(new GraphTitle(tr("Event : %1 ").arg(eventName), curveDescription, d.mName, this));
                     colorList.append(color);
 
                 } else {
@@ -1296,15 +1296,6 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             break;
     }
 
-   /* QMap <double, double> poly_data_X;
-    QMap <double, double> poly_data_Y;
-    QMap <double, double> poly_data_Z;
-    const double epsilon_step = 1E-6;
-
-    QMap <double, double> poly_data_X_err;
-    QMap <double, double> poly_data_Y_err;
-    QMap <double, double> poly_data_Z_err;
-    */
     std::vector<double> vec_t;
     std::vector<double> vec_X, vec_Y, vec_Z;
     std::vector<double> vec_X_err, vec_Y_err, vec_Z_err;
@@ -1451,13 +1442,6 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                 ptsZ.setVisible(true);
                 curveDataPointsZ.push_back(ptsZ);
 
-                /*if (poly_data_X.find(bound) != poly_data_X.end()) {
-                   poly_data_X[bound+epsilon_step] = X ;
-                } else {
-                   poly_data_X[bound] = X ;
-                }
-                poly_data_Y[bound] = Y ;
-                poly_data_Z[bound] = Z ;*/
                 vec_t.push_back(bound);
                 vec_X.push_back(X);
                 vec_Y.push_back(Y);
@@ -1544,11 +1528,16 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                         }
 
                         typePts = CurveRefPts::eCross;
+
                         ptsX.Xmin = tmid;
                         ptsX.Xmax = ptsX.Xmin;
-
-                        ptsX.Ymin = X - errX;
-                        ptsX.Ymax = X + errX;
+                        if (mSilverParam.use_error_measure) {
+                            ptsX.Ymin = X - errX;
+                            ptsX.Ymax = X + errX;
+                        } else {
+                            ptsX.Ymin = X;
+                            ptsX.Ymax = X;
+                        }
                         ptsX.color = color;
                         ptsX.type = typePts;
                         ptsX.pen = QPen(Qt::black, 1, Qt::SolidLine);
@@ -1558,8 +1547,13 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                         curveDataPointsX.push_back(ptsX);
 
                         ptsY = ptsX;
-                        ptsY.Ymin = Y - errY;
-                        ptsY.Ymax = Y + errY;
+                        if (mSilverParam.use_error_measure) {
+                            ptsY.Ymin = Y - errY;
+                            ptsY.Ymax = Y + errY;
+                        } else {
+                            ptsY.Ymin = Y;
+                            ptsY.Ymax = Y ;
+                        }
                         ptsY.pen = QPen(Qt::black, 1, Qt::SolidLine);
                         ptsY.brush = Qt::black;
                         ptsY.name = "Ref Points";
@@ -1567,8 +1561,13 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                         curveDataPointsY.push_back(ptsY);
 
                         ptsZ = ptsX;
-                        ptsZ.Ymin = Z - errZ;
-                        ptsZ.Ymax = Z + errZ;
+                        if (mSilverParam.use_error_measure) {
+                            ptsZ.Ymin = Z - errZ;
+                            ptsZ.Ymax = Z + errZ;
+                        } else {
+                            ptsZ.Ymin = Z;
+                            ptsZ.Ymax = Z;
+                        }
                         ptsZ.pen = QPen(Qt::black, 1, Qt::SolidLine);
                         ptsZ.brush = Qt::black;
                         ptsZ.name = "Ref Points";
@@ -1584,95 +1583,61 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 
     }
 
-    // interpolation polynomial
-    /*
-    //poly_data = QMap<double,double>({QPair<double, double>(0.,1.), QPair<double, double>(1.,2), QPair<double, double>(2.,5), QPair<double, double>(3.,10.), QPair<double, double>(4.,17.)});
-    int min_deg = 1;
-    const auto coef_reg = polynom_regression_coef(poly_data_X, 1);
-    double mse = MSE(poly_data_X, coef_reg);
-    //double mse = Pearson_X_square(poly_data_X, coef_reg);
-    double prev_MSE = mse;
-    for (int deg = 2; deg<21; deg++) {
-        const auto coef_reg = polynom_regression_coef(poly_data_X, deg);
-        const double msei = MSE(poly_data_X, coef_reg);
-        //double msei = Pearson_X_square(poly_data_X, coef_reg);
-        qDebug()<<" deg ="<< deg << " mse="<<msei;
-
-        if (msei < prev_MSE || isnan(msei)) {
-            prev_MSE = msei;
-            min_deg = deg;
-        }
-
-    }
-
-    //min_deg = std::max(min_deg-1., 1.);
-    const auto coef_poly = polynom_regression_coef(poly_data_X, min_deg );
-    qDebug()<<" min_deg ="<< min_deg;
-
-    QMap<double, double> G_Poly_regress;
-    const double tmin_poly = poly_data_X.firstKey();
-    const double tmax_poly = poly_data_X.lastKey();
-    const double step_poly = (tmax_poly-tmin_poly)/1000.;
-    for (int i = 0; i<1001; i++) {
-        double g = 0;
-        const double t = tmin_poly + i*step_poly;
-        int d = 0;
-        for (auto v : coef_poly) {
-            g += v*pow(t, d);
-            d++;
-        }
-        G_Poly_regress[t] = g;
-    }
-
-    // calcul var residuel
-    double var_res_regress = 0;
-    for (auto t_X : poly_data_X.asKeyValueRange()) {
-        double g = 0;
-        const double t = t_X.first;
-        int d = 0;
-        for (auto v : coef_poly) {
-            g += v*pow(t, d);
-            d++;
-        }
-        var_res_regress += pow(t_X.second - g, 2.);
-    }
-
-    var_res_regress /= poly_data_X.size()-1;
-    qDebug() << "var_res_regress" << var_res_regress <<sqrt(var_res_regress);
-*/
-    // -- fin interpolation linéaire
-
-    // On force le calcul de Silverman et en fixant le Vg = 0, qui n'existe pas dans son calcul
-    // plus haut on regarde si on utilise l'erreur sur mesure ou Vg fixe
-    //auto cs_tmp = cs;
-   // cs_tmp.mUseVarianceIndividual = false;
-   // cs_tmp.mVarianceType = CurveSettings::eModeFixed;
-   // if (cs.mVarianceType != CurveSettings::eModeFixed)
-   //     cs_tmp.mVarianceFixed = 0;
-
-    //const double tmin_poly = poly_data_X.firstKey();
-    //const double tmax_poly = poly_data_X.lastKey();
 
     const double tmin_poly = mSettings.mTmin ;
     const double tmax_poly = mSettings.mTmax;
     const double step_poly = (tmax_poly-tmin_poly)/1000.;
 
+    MultiCalibrationDrawing* fitPlot = new MultiCalibrationDrawing(this);
     // transfere des info de la boite SilvermanDialog via cs
 
-    CurveSettings cs_param (cs);
-    cs_param.mUseErrMesure = mSilverParam.use_error_measure;
-    cs_param.mLambdaSplineType = mSilverParam.lambda_fixed ? CurveSettings::eModeFixed : CurveSettings::eModeBayesian;
-    cs_param.mLambdaSpline = pow(10., mSilverParam.log_lambda_value);
-    cs_param.mVarianceType = mSilverParam.variance_fixed ? CurveSettings::eModeFixed : CurveSettings::eModeBayesian;
-    cs_param.mVarianceFixed = mSilverParam.variance_value;
-
     const double rad = M_PI/180.;
-    if (!cs_param.mUseErrMesure) {
+    if (!mSilverParam.use_error_measure) {
         const double w_I = 1.;
         vec_X_err = std::vector<double>(vec_X_err.size(), w_I);
         vec_Y_err = std::vector<double>(vec_Y_err.size(), w_I);
         vec_Z_err = std::vector<double>(vec_Z_err.size(), w_I);
+
     } else {
+        // test null error forbidden
+        std::vector<double>::iterator it;
+        bool nullValue = false;
+        switch (processType) {
+        case CurveSettings::eProcess_3D:
+            it = std::find_if (vec_Z_err.begin(), vec_Z_err.end(), [](double i){return i == 0.;} );
+            if( it != vec_Z_err.end()) {
+                nullValue = true;
+                break;
+            }
+        case CurveSettings::eProcess_2D:
+        case CurveSettings::eProcess_Spherical:
+            it = std::find_if (vec_Y_err.begin(), vec_Y_err.end(), [](double i){return i == 0.;} );
+            if( it != vec_Y_err.end()) {
+                nullValue = true;
+                break;
+            }
+        case CurveSettings::eProcess_Univariate:
+        case CurveSettings::eProcess_Depth:
+            it = std::find_if (vec_X_err.begin(), vec_X_err.end(), [](double i){return i == 0.;} );
+            if( it != vec_X_err.end()) {
+                nullValue = true;
+                break;
+            }
+            break;
+
+        default:
+            break;
+        }
+        if (nullValue) {
+            QMessageBox message(QMessageBox::Warning,
+                                tr("Some errors are zero"),
+                                "The calculation cannot be performed with zero-measurement errors, weights cannot be zero !",
+                                QMessageBox::Ok,
+                                qApp->activeWindow());
+            message.exec();
+            return fitPlot;
+        }
+
         if (processType == CurveSettings::eProcess_Spherical) {
             auto e_d = begin(vec_Y_err);
             for (auto e_i : vec_X_err) {
@@ -1687,14 +1652,14 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
     switch (processType) {
         case CurveSettings::eProcess_Univariate:
         case CurveSettings::eProcess_Depth:
-                do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, cs_param);
+                do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam);
                 break;
         case CurveSettings::eProcess_2D:
         case CurveSettings::eProcess_Spherical:
-                do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, cs_param, vec_Y, vec_Y_err);
+                do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam, vec_Y, vec_Y_err);
                 break;
         case CurveSettings::eProcess_3D:
-                do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, cs_param, vec_Y, vec_Y_err, vec_Z, vec_Z_err);
+                do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam, vec_Y, vec_Y_err, vec_Z, vec_Z_err);
                 break;
         default:
                 break;
@@ -1702,21 +1667,14 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
     MCMCSpline spline = do_spline_res.first;
     std::pair<double, double> lambda_Vg = do_spline_res.second;
     QString spline_info;
-    if (cs_param.mLambdaSplineType == CurveSettings::eModeBayesian ) {
-        spline_info +=  tr(" log10(Smoothing) = %1 ;").arg( QString::number(log10(lambda_Vg.first)));
+    if (mSilverParam.lambda_fixed) {
+       spline_info +=  tr(" Fixed Smoothing = 10E%1 ;").arg( QString::number(log10(lambda_Vg.first)));
+
     } else {
-        spline_info +=  tr(" Fixed log10(Smoothing) = %1 ;").arg( QString::number(log10(lambda_Vg.first)));
+       spline_info +=  tr(" Smoothing = 10E%1 ;").arg( QString::number(log10(lambda_Vg.first)));
     }
 
-    if (cs_param.mUseErrMesure) {
-       spline_info +=  tr(" Global std Gi = %1").arg( QString::number(sqrt(lambda_Vg.second)));
-    } else {
-       if (cs_param.mVarianceType == CurveSettings::eModeBayesian ) {
-            spline_info +=  tr("\r Global std Gi = %1 ;").arg( QString::number(sqrt(lambda_Vg.second)));
-       } else {
-            spline_info +=  tr("\r Fixed std Gi = %1 ;").arg( QString::number(sqrt(lambda_Vg.second)));
-       }
-    }
+    spline_info +=  tr(" Estimated std g = %1").arg( QString::number(sqrt(lambda_Vg.second)));
 
     if (processType == CurveSettings::eProcess_Univariate ||
         processType == CurveSettings::eProcess_Depth ||
@@ -1727,18 +1685,13 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             const auto &curves = composante_to_curve(spline.splineX, tmin_poly, tmax_poly, step_poly);
 
             if (!isnan(curves[0][0]) && !isnan(curves[1][0]) && !isnan(curves[2][0])) {
-                //const QMap<double, double> & G_Poly = G_Poly_regress;
-                const QMap<double, double> & G_Poly = curves[0];// do_spline
-                const GraphCurve &curve_poly_X = FunctionCurve(G_Poly, "G", QColor(119, 95, 200) );
-                const QMap<double, double> & G_plus_Poly = curves[1];
-                const GraphCurve &curve_poly_X_plus = FunctionCurve(G_plus_Poly, "G", QColor(119, 95, 49) );
+                const GraphCurve &curve_G = FunctionCurve(curves[0], "G", QColor(119, 95, 200) );
+                const GraphCurve &curve_GEnv = shapeCurve(curves[2], curves[1], "G Env",
+                                                         QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30));
 
-                const QMap<double, double> &G_moins_Poly = curves[2];
-                const GraphCurve &curve_poly_X_moins = FunctionCurve(G_moins_Poly, "G", QColor(119, 95, 49) );
+                graph1->add_curve(curve_G);
+                graph1->add_curve(curve_GEnv);
 
-                graph1->add_curve(curve_poly_X);
-                graph1->add_curve(curve_poly_X_plus);
-                graph1->add_curve(curve_poly_X_moins);
             }
     }
 
@@ -1749,17 +1702,12 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             const auto &curves = composante_to_curve(spline.splineY, tmin_poly, tmax_poly, step_poly);
 
             if (!isnan(curves[0][0]) && !isnan(curves[1][0]) && !isnan(curves[2][0])) {
-                const QMap<double, double> & G_Poly = curves[0];
-                const GraphCurve &curve_poly_X = FunctionCurve(G_Poly, "G", QColor(119, 95, 200) );
-                const QMap<double, double> & G_plus_Poly = curves[1];
-                const GraphCurve &curve_poly_X_plus = FunctionCurve(G_plus_Poly, "G", QColor(119, 95, 49) );
+                const GraphCurve &curve_G = FunctionCurve(curves[0], "G", QColor(119, 95, 200) );
+                const GraphCurve &curve_GEnv = shapeCurve(curves[2], curves[1], "G Env",
+                                                          QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30));
 
-                const QMap<double, double> &G_moins_Poly = curves[2];
-                const GraphCurve &curve_poly_X_moins = FunctionCurve(G_moins_Poly, "G", QColor(119, 95, 49) );
-
-                graph2->add_curve(curve_poly_X);
-                graph2->add_curve(curve_poly_X_plus);
-                graph2->add_curve(curve_poly_X_moins);
+                graph2->add_curve(curve_G);
+                graph2->add_curve(curve_GEnv);
             }
     }
 
@@ -1768,17 +1716,13 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             const auto &curves = composante_to_curve(spline.splineZ, tmin_poly, tmax_poly, step_poly);
 
             if (!isnan(curves[0][0]) && !isnan(curves[1][0]) && !isnan(curves[2][0])) {
-                const QMap<double, double> &G_Poly = curves[0];
-                const GraphCurve &curve_poly_X = FunctionCurve(G_Poly, "G", QColor(119, 95, 200) );
-                const QMap<double, double> &G_plus_Poly = curves[1];
-                const GraphCurve &curve_poly_X_plus = FunctionCurve(G_plus_Poly, "G", QColor(119, 95, 49) );
 
-                const QMap<double, double> &G_moins_Poly = curves[2];
-                const GraphCurve &curve_poly_X_moins = FunctionCurve(G_moins_Poly, "G", QColor(119, 95, 49) );
+                const GraphCurve &curve_G = FunctionCurve(curves[0], "G", QColor(119, 95, 200) );
+                const GraphCurve &curve_GEnv = shapeCurve(curves[2], curves[1], "G Env",
+                                                          QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30));
 
-                graph3->add_curve(curve_poly_X);
-                graph3->add_curve(curve_poly_X_plus);
-                graph3->add_curve(curve_poly_X_moins);
+                graph3->add_curve(curve_G);
+                graph3->add_curve(curve_GEnv);
             }
 
     }
@@ -1839,8 +1783,6 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             break;
         }
 
-
-    MultiCalibrationDrawing* fitPlot = new MultiCalibrationDrawing(this);
 
     // must be put at the end to print the points above
 
@@ -2310,14 +2252,12 @@ void MultiCalibrationView::changeCurveColor()
                 if (calibCurve) {
                     calibCurve->mPen.setColor(mCurveColor);
 
-
                     GraphCurve* hpdCurve = gr->getCurve("Calibration HPD");
                     if (hpdCurve) {
                         hpdCurve->mPen.setColor(mCurveColor);
                         const QColor brushColor (mCurveColor.red(),mCurveColor.green(), mCurveColor.blue(), 100);
                         hpdCurve->mBrush = QBrush(brushColor);
                     }
-
 
                     gr->forceRefresh();
                 }
@@ -2330,195 +2270,209 @@ void MultiCalibrationView::copyText()
 {
     QApplication::clipboard()->setText(mResultText.replace("<br>", "\r"));
 }
+
 void MultiCalibrationView::exportResults()
 {
-        const QString csvSep = AppSettings::mCSVCellSeparator;
-        QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+    const QString csvSep = AppSettings::mCSVCellSeparator;
+    QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
 
-        csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
+    csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
 
-        const QString currentPath = MainWindow::getInstance()->getCurrentPath();
-        const QString filePath = QFileDialog::getSaveFileName(qApp->activeWindow(),
-                                                        tr("Export to file..."),
-                                                        currentPath, "CSV (*.csv)");
+    if (mFitClipBut->isChecked()) {
+        save_map_as_csv(mSilverParam.tab_GCV, std::make_pair("lambda", "GCV"), "Save GCV ...");
+        save_map_as_csv(mSilverParam.tab_CV, std::make_pair("lambda", "CV"), "Save CV ...");
+        // Export curves
+        const QList<GraphView*> graphList = mDrawing->getGraphViewList();
+        int i = 1;
+        for (GraphView* gr : graphList) {
+            if (gr->has_curves())
+                gr->exportCurrentCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, 0, tr("Save Silverman Fit %1").arg(QString::number(i++)));
+        }
 
-        if (!filePath.isEmpty()) {
+        return;
+    }
 
-            const QJsonObject state = mProject->state();
-            const bool isCurve = mProject->isCurve();
-            const CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
+    const QString currentPath = MainWindow::getInstance()->getCurrentPath();
+    const QString filePath = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                          tr("Export to file..."),
+                                                          currentPath, "CSV (*.csv)");
+    if (!filePath.isEmpty()) {
 
-            const QJsonArray events = state.value(STATE_EVENTS).toArray();
-            QVector<QJsonObject> selectedEvents;
+        const QJsonObject state = mProject->state();
+        const bool isCurve = mProject->isCurve();
+        const CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
 
-            for (auto &&ev : events) {
-               QJsonObject jsonEv = ev.toObject();
-                if (jsonEv.value(STATE_IS_SELECTED).toBool())
-                    selectedEvents.append(jsonEv);
+        const QJsonArray events = state.value(STATE_EVENTS).toArray();
+        QVector<QJsonObject> selectedEvents;
+
+        for (auto &&ev : events) {
+            QJsonObject jsonEv = ev.toObject();
+            if (jsonEv.value(STATE_IS_SELECTED).toBool())
+                selectedEvents.append(jsonEv);
+        }
+
+        // Sort Event by Position
+        std::sort(selectedEvents.begin(), selectedEvents.end(), [] (QJsonObject ev1, QJsonObject ev2) {return (ev1.value(STATE_ITEM_Y).toDouble() < ev2.value(STATE_ITEM_Y).toDouble());});
+
+        QList<QStringList> stats ;
+        QStringList header;
+        header << "Event";
+        if (isCurve) {
+            switch (processType) {
+            case CurveSettings::eProcess_Vector:
+                header << "Inclination";
+                header << "alpha95";
+                header << "Declination";
+                header << "Field";
+                header << "F Error";
+                break;
+            case CurveSettings::eProcess_2D:
+                header << "X";
+                header << "X Error";
+                header << "Y";
+                header << "Y Error";
+                break;
+            case CurveSettings::eProcess_3D:
+                header << "X";
+                header << "X Error";
+                header << "Y";
+                header << "Y Error";
+                header << "Z";
+                header << "Z Error";
+                break;
+            case CurveSettings::eProcess_Unknwon_Dec:
+                header << "Inclination";
+                header << "alpha95";
+                header << "Field";
+                header << "F Error";
+                break;
+            case CurveSettings::eProcess_Spherical:
+                header << "Inclination";
+                header << "alpha95";
+                header << "Declination";
+                break;
+
+            case CurveSettings::eProcess_Depth:
+                header << "Depth";
+                header << "Depth Error";
+                break;
+            case CurveSettings::eProcess_Field:
+                header << "Field";
+                header << "Field Error";
+                break;
+            case CurveSettings::eProcess_Inclination:
+                header << "Inclination";
+                header << "alpha95";
+                break;
+            case CurveSettings::eProcess_Declination:
+                header << "Declination";
+                header << "alpha95";
+                header << "Inclination";
+                break;
+            case CurveSettings::eProcess_Univariate:
+                header << "Measure";
+                header << "Error";
+                break;
+            default:
+                break;
             }
+        }
+        header <<"Data type" << "Data Name" << "Data Description" << "MAP" << "Mean" << "Std";
+        header <<"Q1" <<"Q2" << "Q3"<<"HPD total %";
 
-            // Sort Event by Position
-            std::sort(selectedEvents.begin(), selectedEvents.end(), [] (QJsonObject ev1, QJsonObject ev2) {return (ev1.value(STATE_ITEM_Y).toDouble() < ev2.value(STATE_ITEM_Y).toDouble());});
+        int maxHpd = 2;
+        QList<double> curveParam;
+        for (auto &&ev : selectedEvents) {
 
-            QList<QStringList> stats ;
-            QStringList header;
-            header << "Event";
+            // Insert the Event's Name only if different to the previous Event's name
+
+            const QString eventName (ev.value(STATE_NAME).toString());
+            QStringList curveParamList;
             if (isCurve) {
-                switch (processType) {
-                    case CurveSettings::eProcess_Vector:
-                         header << "Inclination";
-                         header << "alpha95";
-                         header << "Declination";
-                         header << "Field";
-                         header << "F Error";
-                         break;
-                    case CurveSettings::eProcess_2D:
-                         header << "X";
-                         header << "X Error";
-                         header << "Y";
-                         header << "Y Error";
-                         break;
-                    case CurveSettings::eProcess_3D:
-                         header << "X";
-                         header << "X Error";
-                         header << "Y";
-                         header << "Y Error";
-                         header << "Z";
-                         header << "Z Error";
-                         break;
-                    case CurveSettings::eProcess_Unknwon_Dec:
-                         header << "Inclination";
-                         header << "alpha95";
-                         header << "Field";
-                         header << "F Error";
-                         break;
-                    case CurveSettings::eProcess_Spherical:
-                         header << "Inclination";
-                         header << "alpha95";
-                         header << "Declination";
-                         break;
-
-                    case CurveSettings::eProcess_Depth:
-                         header << "Depth";
-                         header << "Depth Error";
-                         break;
-                    case CurveSettings::eProcess_Field:
-                         header << "Field";
-                         header << "Field Error";
-                         break;
-                    case CurveSettings::eProcess_Inclination:
-                         header << "Inclination";
-                         header << "alpha95";
-                         break;
-                    case CurveSettings::eProcess_Declination:
-                         header << "Declination";
-                         header << "alpha95";
-                         header << "Inclination";
-                         break;
-                    case CurveSettings::eProcess_Univariate:
-                         header << "Measure";
-                         header << "Error";
-                         break;
-                    default:
-                         break;
+                curveParam = Event::curveParametersFromJsonEvent(ev, processType);
+                for (auto param : curveParam) {
+                    curveParamList.append(locale().toString(param));
                 }
             }
-            header <<"Data type" << "Data Name" << "Data Description" << "MAP" << "Mean" << "Std";
-            header <<"Q1" <<"Q2" << "Q3"<<"HPD total %";
 
-            int maxHpd = 2;
-            QList<double> curveParam;
-            for (auto &&ev : selectedEvents) {
 
-                // Insert the Event's Name only if different to the previous Event's name
-
-                const QString eventName (ev.value(STATE_NAME).toString());
-                QStringList curveParamList;
+            if ( Event::Type (ev.value(STATE_EVENT_TYPE).toInt()) == Event::eBound) {
+                const double bound = ev.value(STATE_EVENT_KNOWN_FIXED).toDouble();
+                QStringList statLine;
+                statLine<<eventName;
                 if (isCurve) {
-                    curveParam = Event::curveParametersFromJsonEvent(ev, processType);
-                    for (auto param : curveParam) {
-                        curveParamList.append(locale().toString(param));
-                    }
+                    statLine.append(curveParamList);
                 }
+                statLine<<"Bound"<< locale().toString(bound) + " BC/AD";
+                stats.append(statLine);
 
+            } else {
+                const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
 
-                if ( Event::Type (ev.value(STATE_EVENT_TYPE).toInt()) == Event::eBound) {
-                    const double bound = ev.value(STATE_EVENT_KNOWN_FIXED).toDouble();
+                for (const auto &date : dates) {
+                    const QJsonObject jdate = date.toObject();
+
+                    Date d (jdate);
                     QStringList statLine;
-                    statLine<<eventName;
+                    statLine << eventName;
                     if (isCurve) {
                         statLine.append(curveParamList);
                     }
-                    statLine<<"Bound"<< locale().toString(bound) + " BC/AD";
-                    stats.append(statLine);
+                    statLine << d.mPlugin->getName() << d.mName << d.getDesc();
 
-                } else {
-                    const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
+                    const bool isUnif = false;// (d.mPlugin->getName() == "Unif");
+                    if (d.mIsValid && !d.mCalibration->mVector.isEmpty() && !isUnif) {
 
-                     for (const auto &date : dates) {
-                        const QJsonObject jdate = date.toObject();
+                        // d.autoSetTiSampler(true); // needed if calibration is not done
+                        const QMap<double, double> &calibMap = d.getFormatedCalibMap();
 
-                        Date d (jdate);
-                        QStringList statLine;
-                        statLine << eventName;
-                        if (isCurve) {
-                            statLine.append(curveParamList);
+                        // hpd is calculate only on the study Period
+                        //QMap<double, double>  subData = calibMap;
+                        QMap<double, double> subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+
+                        DensityAnalysis results;
+                        results.funcAnalysis = analyseFunction(subData);
+
+                        if (!subData.isEmpty()) {
+
+                            statLine<< csvLocal.toString(results.funcAnalysis.mode) << csvLocal.toString(results.funcAnalysis.mean) << csvLocal.toString(results.funcAnalysis.std);
+                            statLine<< csvLocal.toString(results.funcAnalysis.quartiles.Q1) << csvLocal.toString(results.funcAnalysis.quartiles.Q2) << csvLocal.toString(results.funcAnalysis.quartiles.Q3);
+                            // hpd results
+
+                            QMap<type_data, type_data> hpd (create_HPD2(subData, mThreshold));
+
+                            const double realThresh = map_area(hpd) / map_area(subData);
+
+                            QString hpdStr = getHPDText(hpd, realThresh * 100., DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, true);
+                            int nh = int(hpdStr.count(AppSettings::mCSVCellSeparator));
+                            maxHpd = std::max(maxHpd, nh);
+                            statLine<< csvLocal.toString(100. *realThresh, 'f', 1) << hpdStr;
+
                         }
-                        statLine << d.mPlugin->getName() << d.mName << d.getDesc();
 
-                        const bool isUnif = false;// (d.mPlugin->getName() == "Unif");
-                        if (d.mIsValid && !d.mCalibration->mVector.isEmpty() && !isUnif) {
+                    } else
+                        statLine<< "Stat Not Computable";
 
-                           // d.autoSetTiSampler(true); // needed if calibration is not done
-                            const QMap<double, double> &calibMap = d.getFormatedCalibMap();
-
-                            // hpd is calculate only on the study Period
-                            //QMap<double, double>  subData = calibMap;
-                            QMap<double, double> subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
-
-                            DensityAnalysis results;
-                            results.funcAnalysis = analyseFunction(subData);
-
-                            if (!subData.isEmpty()) {
-
-                                statLine<< csvLocal.toString(results.funcAnalysis.mode) << csvLocal.toString(results.funcAnalysis.mean) << csvLocal.toString(results.funcAnalysis.std);
-                                statLine<< csvLocal.toString(results.funcAnalysis.quartiles.Q1) << csvLocal.toString(results.funcAnalysis.quartiles.Q2) << csvLocal.toString(results.funcAnalysis.quartiles.Q3);
-                                // hpd results
-
-                                QMap<type_data, type_data> hpd (create_HPD2(subData, mThreshold));
-
-                                const double realThresh = map_area(hpd) / map_area(subData);
-
-                                QString hpdStr = getHPDText(hpd, realThresh * 100., DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, true);
-                                int nh = int(hpdStr.count(AppSettings::mCSVCellSeparator));
-                                maxHpd = std::max(maxHpd, nh);
-                                statLine<< csvLocal.toString(100. *realThresh, 'f', 1) << hpdStr;
-
-                            }
-
-                        } else
-                            statLine<< "Stat Not Computable";
-
-                      stats.append(statLine);
-                    }
-                 }
-
-
-           }
-            //
-            int nbHPD = (maxHpd + 1)/3;
-            for (int i = 0; i < nbHPD; ++i) {
-                header << "HPD" + QString::number(i + 1) + " begin";
-                header << "HPD" + QString::number(i + 1) + " end";
-                header << "HPD" + QString::number(i + 1) + " %";
+                    stats.append(statLine);
+                }
             }
-            stats.insert(0, header);
-        // _____________
-
-            saveCsvTo(stats, filePath, csvSep, true);
 
 
         }
+        //
+        int nbHPD = (maxHpd + 1)/3;
+        for (int i = 0; i < nbHPD; ++i) {
+            header << "HPD" + QString::number(i + 1) + " begin";
+            header << "HPD" + QString::number(i + 1) + " end";
+            header << "HPD" + QString::number(i + 1) + " %";
+        }
+        stats.insert(0, header);
+        // _____________
+
+        saveCsvTo(stats, filePath, csvSep, true);
+
+
+    }
 
 }
 
@@ -2641,13 +2595,12 @@ void MultiCalibrationView::showStat()
 void MultiCalibrationView::showScatter()
 {
     if (mFitClipBut->isChecked())
-        mFitClipBut->setChecked(false);
+        mFitClipBut->setCheckState(false);
     updateGraphList();
 }
 
 void MultiCalibrationView::showFit()
 {
-
     if (mFitClipBut->isChecked()) {
         SilvermanDialog silverWindows (&mSilverParam, this);
         if (silverWindows.exec() == QDialog::Rejected) {
@@ -2655,7 +2608,7 @@ void MultiCalibrationView::showFit()
             return;
         }
         if (mScatterClipBut->isChecked())
-            mScatterClipBut->setChecked(false);
+            mScatterClipBut->setCheckState(false);
     }
     updateGraphList();
 }

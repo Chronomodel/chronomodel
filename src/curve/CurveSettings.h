@@ -80,6 +80,7 @@ public:
     {
         eModeFixed = 'F',
         eModeBayesian = 'B',
+        eModeGlobal = 'G',
         eInterpolation = 'I'
     };
     

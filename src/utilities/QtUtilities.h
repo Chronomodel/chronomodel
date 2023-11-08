@@ -67,7 +67,7 @@ QFileInfo saveWidgetAsImage(QObject* widget, const QRect& r, const QString& dial
 bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName);
 
 bool isComment(const QString& str);
-QString prepareTooltipText(const QString& title, const QString& text);
+QString prepareTooltipText(const QString &title, const QString& text);
 
 QString line(const QString& str);
 QString textBold(const QString& str);
@@ -82,7 +82,7 @@ QString textBackgroundColor(const QString &str, const QColor &color);
 
 QColor randomColor();
 
-bool constraintIsCircular( QJsonArray constraints, const int FromId, const int ToId);
+bool constraintIsCircular(QJsonArray constraints, const int FromId, const int ToId);
 
 
 QString removeZeroAtRight(QString str); // use StdUtilities::eraseZeroAtLeft()
@@ -91,8 +91,9 @@ QString stringForGraph(const double valueToFormat);
 QString stringForLocal(const double valueToFormat, const bool forcePrecision = false);
 QString stringForCSV(const double valueToFormat, const bool forcePrecision = false);
 
-bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep, const bool withDateFormat = false);
-bool saveAsCsv(const QList<QStringList>& data, const QString& title = QObject::tr("Save as..."));
+bool saveCsvTo(const QList<QStringList> &data, const QString &filePath, const QString &csvSep, const bool withDateFormat = false);
+bool saveAsCsv(const QList<QStringList> &data, const QString &title = QObject::tr("Save as..."));
+bool save_map_as_csv(const std::map<double, double>& map, const std::pair<QString, QString> &header, const QString title = QObject::tr("Save as..."));
 
 /**
  * @brief getMapDataInRange

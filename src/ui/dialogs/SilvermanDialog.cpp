@@ -37,6 +37,7 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 #include "SilvermanDialog.h"
+
 #include "QtWidgets/qboxlayout.h"
 
 #include <QtWidgets>
@@ -45,49 +46,23 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 SilvermanDialog::SilvermanDialog(SilvermanParam *param, QWidget* parent, Qt::WindowFlags flags): QDialog(parent, flags),
     mParam(param)
 {
-    setWindowTitle(tr("Silverman Regression"));
+    setWindowTitle(tr("Cubic Spline Regression"));
     setModal(true);
-    mDescriptionLabel = new QLabel(tr("These parameters enable you to create a nonparametric regression curve, following the method described by Silverman ...  "), this);
+    mDescriptionLabel = new QLabel(tr("Non-parametric regression curve following the method described by Green & Silverman (1994), /r Time knots are fixed (no event model). /r Smoothing parameter, if not fixed, is estimated by cross-validation. \r Time constraints are not taken into account. \r Error envelop is estimated by unbiaised residual variance."), this);
     mDescriptionLabel->setAlignment(Qt::AlignCenter);
     mDescriptionLabel->setWordWrap(true);
 
-   /* mProcessTypeLabel = new QLabel(tr("Process") , this);
-    mProcessTypeInput = new QComboBox(this);
-    mProcessTypeInput->addItem(tr("None"));
-    mProcessTypeInput->addItem(tr("Univariate (1D)"));
-    mProcessTypeInput->addItem(tr("Bi-variate (2D)"));
-    mProcessTypeInput->addItem(tr("Tri-variate (3D)"));
-
-    mProcessTypeInput->insertSeparator(4);
-    mProcessTypeInput->addItem(tr("Depth"));
-    mProcessTypeInput->insertSeparator(6);
-
-    mProcessTypeInput->addItem(tr("Inclination"));
-    mProcessTypeInput->addItem(tr("Declination"));
-    mProcessTypeInput->addItem(tr("Field Intensity"));
-    mProcessTypeInput->addItem(tr("Spherical (I, D)"));
-    mProcessTypeInput->addItem(tr("Unknown Dec (I, F)"));
-    mProcessTypeInput->addItem(tr("Vector (I, D, F)"));
-*/
-    //mThresholdLabel = new QLabel(tr("Minimal Rate of Change"), this);
-    //mThresholdInput = new QLineEdit(this);
-
-    mUseErrMesureLabel = new QLabel(tr("Use Measurement Err."), this);
-    mUseErrMesureInput = new QCheckBox(this);
+    mUseErrMesureInput = new QCheckBox("Measurement Err. weighting", this);
     if (param->use_error_measure)
         mUseErrMesureInput->setCheckState(Qt::Checked);
     connect(mUseErrMesureInput, &QCheckBox::clicked, this, &SilvermanDialog::updateLayout);
 
-    /*mTimeTypeLabel = new QLabel(tr("Event Date"), this);
-    mTimeTypeInput = new QComboBox(this);
-    mTimeTypeInput->addItem(tr("Fixed"));
-    mTimeTypeInput->addItem(tr("Bayesian"));*/
 
     mLambdaTypeLabel = new QLabel(tr("Smoothing"), this);
     mLambdaTypeInput = new QComboBox(this);
-    mLambdaTypeInput->addItem(tr("Silvermann"));
+    mLambdaTypeInput->addItem(tr("Cross-Validation"));
     mLambdaTypeInput->addItem(tr("Fixed"));
-    //mLambdaSplineTypeInput->addItem(tr("Interpolation (λ=0)"));
+    //mLambdaSplineTypeInput->addItem(tr("Interpolation curve (λ=0)"));
 
     if (param->lambda_fixed)
         mLambdaTypeInput->setCurrentIndex(1);
@@ -95,23 +70,9 @@ SilvermanDialog::SilvermanDialog(SilvermanParam *param, QWidget* parent, Qt::Win
         mLambdaTypeInput->setCurrentIndex(0);
     connect(mLambdaTypeInput, &QComboBox::currentIndexChanged, this, &SilvermanDialog::updateLayout);
 
-    mLambdaLabel = new QLabel(tr("log10 Smoothing Value"), this);
+    mLambdaLabel = new QLabel(tr("Smoothing Value 10E"), this);
     mLambdaInput = new QLineEdit(this);
     mLambdaInput->setText(QString::number(param->log_lambda_value));
-
-    mStdGiTypeLabel = new QLabel(tr("Std gi"), this);
-    mStdGiTypeInput = new QComboBox(this);
-    mStdGiTypeInput->addItem(tr("Deducted"));
-    mStdGiTypeInput->addItem(tr("Fixed"));
-    if (param->variance_fixed)
-        mStdGiTypeInput->setCurrentIndex(1);
-    else
-        mStdGiTypeInput->setCurrentIndex(0);
-    connect(mStdGiTypeInput, &QComboBox::currentIndexChanged, this, &SilvermanDialog::updateLayout);
-
-    mStdGiValueLabel = new QLabel(tr("Std gi = Global Value"), this);
-    mStdGiValueInput = new QLineEdit(this);
-    mStdGiValueInput->setText(QString::number(sqrt(param->variance_value)));
 
     QDialogButtonBox* buttonBox = new QDialogButtonBox(this);
     buttonBox->addButton(tr("OK"), QDialogButtonBox::AcceptRole);
@@ -135,35 +96,11 @@ SilvermanDialog::SilvermanDialog(SilvermanParam *param, QWidget* parent, Qt::Win
     grid->addWidget(mLambdaLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mLambdaInput, row, 1);
 
-   // grid->addWidget(mProcessTypeLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-   // grid->addWidget(mProcessTypeInput, row, 1);
-
-    //grid->addWidget(mThresholdLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    //grid->addWidget(mThresholdInput, row, 1);
-
-    //grid->setVerticalSpacing(15);
-    grid->addWidget(mUseErrMesureLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mUseErrMesureInput, row, 1);
-
-    //grid->addWidget(mTimeTypeLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    //grid->addWidget(mTimeTypeInput, row, 1);
-
-
-    grid->addWidget(mStdGiTypeLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mStdGiTypeInput, row, 1);
-
-    //grid->addWidget(mUseVarianceIndividualLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    //grid->addWidget(mUseVarianceIndividualCB, row, 1);
-
-    grid->addWidget(mStdGiTypeLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mStdGiValueInput, row, 1);
+    grid->addWidget(mUseErrMesureInput, ++row, 1);
 
     updateLayout();
 
     QVBoxLayout* vlayout = new QVBoxLayout();
-    //vlayout->setMargin(20);
-   // vlayout->addSpacing(20);
-   // vlayout->addWidget(mTitleLabel);
     vlayout->addSpacing(20);
     vlayout->addWidget(mDescriptionLabel);
     vlayout->addSpacing(30);
@@ -172,7 +109,7 @@ SilvermanDialog::SilvermanDialog(SilvermanParam *param, QWidget* parent, Qt::Win
     vlayout->addStretch();
 
     QWidget* vlayoutWidget = new QWidget();
-    vlayoutWidget->setFixedWidth(400);
+   // vlayoutWidget->setFixedWidth(400);
     vlayoutWidget->setLayout(vlayout);
 
     QHBoxLayout* hlayout = new QHBoxLayout();
@@ -194,10 +131,7 @@ void SilvermanDialog::memo()
 {
     mParam->lambda_fixed = mLambdaTypeInput->currentIndex() == 1;
     mParam->log_lambda_value = locale().toDouble(mLambdaInput->text());
-
     mParam->use_error_measure = mUseErrMesureInput->isChecked();
-    mParam->variance_fixed = mStdGiTypeInput->currentIndex() == 1;
-    mParam->variance_value = pow(locale().toDouble(mStdGiValueInput->text()), 2.);
     close();
 }
 
@@ -205,11 +139,4 @@ void SilvermanDialog::updateLayout()
 {
     mLambdaInput->setVisible(mLambdaTypeInput->currentIndex() == 1);
     mLambdaLabel->setVisible(mLambdaTypeInput->currentIndex() == 1);
-
-
-    mStdGiTypeInput->setVisible( !mUseErrMesureInput->isChecked());
-    mStdGiTypeLabel->setVisible( !mUseErrMesureInput->isChecked());
-
-    mStdGiValueInput->setVisible(mStdGiTypeInput->currentIndex() == 1 && !mUseErrMesureInput->isChecked());
-    mStdGiValueLabel->setVisible(mStdGiTypeInput->currentIndex() == 1 && !mUseErrMesureInput->isChecked());
 }

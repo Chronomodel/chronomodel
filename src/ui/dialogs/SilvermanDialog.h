@@ -40,22 +40,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef SILVERMANDIALOG_H
 #define SILVERMANDIALOG_H
 
+#include "CurveUtilities.h"
+
 #include <QLabel>
 #include <QLineEdit>
 #include <QComboBox>
 #include <QCheckBox>
-
 #include <QDialog>
 
-struct SilvermanParam
-{
-    bool use_error_measure = true;
-    bool lambda_fixed = false;
-    double log_lambda_value = -6;
-    bool variance_fixed = false;
-    double variance_value = 0.;
-
-};
 
 class SilvermanDialog:public QDialog
 {
@@ -66,35 +58,16 @@ public:
     void memo();
     void updateLayout();
 
-    //QLabel* mTitleLabel;
     QLabel* mDescriptionLabel;
-
-   // QLabel* mProcessTypeLabel;
-    //QComboBox* mProcessTypeInput;
-
-    //QLabel* mThresholdLabel;
-    //QLineEdit* mThresholdInput;
-
-    QLabel* mUseErrMesureLabel;
-    QCheckBox* mUseErrMesureInput;
-
-    //QLabel* mTimeTypeLabel;
-    //QComboBox* mTimeTypeInput;
-
-    QLabel* mStdGiTypeLabel;
-    QComboBox* mStdGiTypeInput;
-
-    //QLabel* mUseVarianceIndividualLabel;
-    //QCheckBox* mUseVarianceIndividualCB;
-
-    QLabel* mStdGiValueLabel;
-    QLineEdit* mStdGiValueInput;
 
     QLabel* mLambdaTypeLabel;
     QComboBox* mLambdaTypeInput;
 
     QLabel* mLambdaLabel;
     QLineEdit* mLambdaInput;
+
+    QCheckBox* mUseErrMesureInput;
+
 
     SilvermanParam *mParam;
 };

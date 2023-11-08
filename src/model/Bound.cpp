@@ -52,7 +52,7 @@ Bound::Bound(const Model *model):
     mPointType = ePoint;
     mTheta.mSamplerProposal= MHVariable::eFixe;
     mTheta.mSigmaMH = 1.;
-    mS02.mSamplerProposal = MHVariable::eFixe;
+    mS02Theta.mSamplerProposal = MHVariable::eFixe;
 }
 
 Bound::Bound(const QJsonObject &json, const Model* model):
@@ -93,7 +93,7 @@ Bound::Bound(const QJsonObject &json, const Model* model):
     mVg.mFormat = DateUtils::eNumeric;
     mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
-    mS02.mSamplerProposal = MHVariable::eFixe;
+    mS02Theta.mSamplerProposal = MHVariable::eFixe;
 }
 
 
@@ -136,7 +136,7 @@ Bound Bound::fromJson(const QJsonObject &json)
     bound.mVg.mFormat = DateUtils::eNumeric;
     bound.mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
-    bound.mS02.mSamplerProposal = MHVariable::eFixe;
+    bound.mS02Theta.mSamplerProposal = MHVariable::eFixe;
     return bound;
 }
 

@@ -1259,33 +1259,26 @@ SplineMatrices prepare_calcul_spline(const std::vector<t_reduceTime> &vecH, cons
 
 std::vector<double> calcul_spline_variance(const SplineMatrices& matrices, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambda)
 {
-
     const std::vector<double> &matA = calculMatInfluence_origin(matrices, 1, decomp, lambda);
     std::vector<double> varG;
     const auto &diagW1 = matrices.diagWInv;
     unsigned int n = diagW1.size();
 
     for (unsigned int i = 0; i < n; ++i) {
-#ifdef DEBUG
-        const double& aii = matA[i];
-        // si Aii négatif ou nul, cela veut dire que la variance sur le point est anormalement trop grande,
-        // d'où une imprécision dans les calculs de Mat_B (Cf. calcul spline) et de mat_A
-        if (aii <= 0.) {
-            qDebug()<<"[MCMCLoopCurve] calcul_spline_variance() : Oups aii="<< aii <<"<= 0 change to 0" << "1/mW="<<(double)diagW1[i];
-            varG.push_back(0.);
-
-        } else {
-            varG.push_back(matA[i]  * diagW1[i]);
-        }
-#else
         varG.push_back(matA[i]  * diagW1[i]);
-#endif
-
     }
 
     return varG;
 }
 
+/**
+ * @brief composante_to_curve, used for fitPlot()
+ * @param spline_compo
+ * @param tmin
+ * @param tmax
+ * @param step
+ * @return
+ */
 std::vector<QMap<double, double>> composante_to_curve(MCMCSplineComposante spline_compo, double tmin, double tmax, double step)
 {
     QMap<double, double> curve;
@@ -1295,7 +1288,7 @@ std::vector<QMap<double, double>> composante_to_curve(MCMCSplineComposante splin
     double varG = 0.;
     double gp = 0.;
     double gs = 0.;
-    int nb_pts = (tmax-tmin)/step + 1 +1;
+    int nb_pts = (tmax-tmin)/step + 1;
     unsigned i0 = 0;
     for (int i= 0; i < nb_pts ; ++i) {
         const double t = (double)i * step + tmin ;
@@ -1382,7 +1375,7 @@ SplineResults do_spline(const std::vector<double> &vec_Y, const SplineMatrices &
 }
 
 
-std::pair<MCMCSpline, std::pair<double, double>> do_spline_composante(const std::vector<double> &vec_t, const std::vector<double> &vec_X, const std::vector<double> &vec_X_err, double tmin, double tmax, const CurveSettings &cs, const std::vector<double> &vec_Y, const std::vector<double> &vec_Y_err, const std::vector<double> &vec_Z, const std::vector<double> &vec_Z_err)
+std::pair<MCMCSpline, std::pair<double, double>> do_spline_composante(const std::vector<double> &vec_t, const std::vector<double> &vec_X, const std::vector<double> &vec_X_err, double tmin, double tmax, SilvermanParam &sv, const std::vector<double> &vec_Y, const std::vector<double> &vec_Y_err, const std::vector<double> &vec_Z, const std::vector<double> &vec_Z_err)
 {
 
     bool doY (!vec_Y.empty() && vec_Z.empty());
@@ -1441,48 +1434,58 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_composante(const std:
 
     double lambda_cv, Vg;
     std::pair<double, double> lambda_Vg;
-    if (cs.mLambdaSplineType == CurveSettings::eModeBayesian) {
-        lambda_Vg = initLambdaSplineBySilverman(cs.mProcessType == CurveSettings::eProcess_Depth, vec_tmp_x, vec_tmp_x_err, vecH , vec_tmp_y, vec_tmp_y_err, vec_tmp_z, vec_tmp_z_err);
+    if (sv.lambda_fixed == false) {
+        lambda_Vg = initLambdaSplineBySilverman(sv, vec_tmp_x, vec_tmp_x_err, vecH,  vec_tmp_y, vec_tmp_y_err, vec_tmp_z, vec_tmp_z_err);
         lambda_cv = lambda_Vg.first;
 
-        if (cs.mVarianceType == CurveSettings::eModeFixed) {
-            Vg = cs.mVarianceFixed;
-        } else {
-            Vg = lambda_Vg.second;
-        }
+        Vg = lambda_Vg.second;
+
 
     } else {
-        lambda_cv = cs.mLambdaSpline;
+        lambda_cv = pow(10., sv.log_lambda_value);
 
-        if (cs.mVarianceType == CurveSettings::eModeFixed) {
-            Vg = cs.mVarianceFixed;
-
-        } else {
-            std::vector<double> W_1;
-            for (auto X_err : vec_tmp_x_err) {
-                W_1.push_back(pow(X_err, 2.));
-            }
-            const SplineMatrices &spline_matrices = prepare_calcul_spline(vecH, W_1);
-            Vg = var_residual(vec_tmp_x, spline_matrices, vecH, lambda_cv);
-
-            if (doY) {
-                Vg += var_residual(vec_tmp_y, spline_matrices, vecH, lambda_cv);
-                Vg /= 2.;
-            } else if (doYZ) {
-                Vg += var_residual(vec_tmp_y, spline_matrices, vecH, lambda_cv) + var_residual(vec_tmp_z, spline_matrices, vecH, lambda_cv);
-                Vg /= 3.;
-            }
+        std::vector<double> W_1;
+        for (auto X_err : vec_tmp_x_err) {
+            W_1.push_back(pow(X_err, 2.));
         }
+        const SplineMatrices &spline_matrices = prepare_calcul_spline(vecH, W_1);
+        Vg = var_residual(vec_tmp_x, spline_matrices, vecH, lambda_cv);
+
+        if (doY) {
+            Vg += var_residual(vec_tmp_y, spline_matrices, vecH, lambda_cv);
+            Vg /= 2.;
+        } else if (doYZ) {
+            Vg += var_residual(vec_tmp_y, spline_matrices, vecH, lambda_cv) + var_residual(vec_tmp_z, spline_matrices, vecH, lambda_cv);
+            Vg /= 3.;
+        }
+
 
     }
     lambda_Vg = std::make_pair(lambda_cv, Vg);
     qDebug()<<" end of cross_validation lambda : "<<lambda_cv<<" = 10E"<<log10(lambda_cv)<< " Vg="<< Vg <<"sqrt(Vg)"<<sqrt(Vg);
 
     std::vector<double> W_1;
-    if (cs.mUseErrMesure) {
-        for (auto value : vec_tmp_x_err) {
-            W_1.push_back(pow(value, 2.));
+    if (sv.use_error_measure) {
+        if (doY) {
+            auto Y_err = vec_tmp_y_err.begin();
+            for (auto X_err : vec_tmp_x_err) {
+                const double Sy = pow(X_err, -2.) + pow(*Y_err++, -2.) ;
+                W_1.push_back(2./Sy);
+            }
+        } else if (doYZ) {
+            auto Y_err = vec_tmp_y_err.begin();
+            auto Z_err = vec_tmp_z_err.begin();
+            for (auto X_err : vec_tmp_x_err) {
+                const double Sy = pow(X_err, -2.) + pow(*Y_err++, -2.) + pow(*Z_err++, -2.) ;
+                W_1.push_back(3./Sy);
+            }
+        } else {
+
+            for (auto X_err : vec_tmp_x_err) {
+                W_1.push_back(pow(X_err, 2.));
+            }
         }
+
     } else {
         W_1 = std::vector<double>(vec_tmp_x_err.size(), 1.);
     }
@@ -1935,7 +1938,7 @@ std::pair<double, double> initLambdaSplineByCV(const bool depth, const std::vect
 
 }
 
-std::pair<double, double> initLambdaSplineBySilverman(const bool depth, const std::vector<double> &vec_X, const std::vector<double> &vec_X_err, const std::vector<double> &vecH,const std::vector<double> &vec_Y, const std::vector<double> &vec_Y_err, const std::vector<double> &vec_Z, const std::vector<double> &vec_Z_err)
+std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const std::vector<double> &vec_X, const std::vector<double> &vec_X_err, const std::vector<double> &vecH, const std::vector<double> &vec_Y, const std::vector<double> &vec_Y_err, const std::vector<double> &vec_Z, const std::vector<double> &vec_Z_err)
 {
     std::vector<double> GCV, CV, lambda_GCV, lambda_CV;
 
@@ -1957,9 +1960,25 @@ std::pair<double, double> initLambdaSplineBySilverman(const bool depth, const st
 
     std::vector<double> W_1;
 
-    for (auto X_err : vec_X_err) {
-        W_1.push_back(pow(X_err, 2.));
+    if (doY) {
+        auto Y_err = vec_Y_err.begin();
+        for (auto X_err : vec_X_err) {
+            const double Sy = pow(X_err, -2.) + pow(*Y_err++, -2.) ;
+            W_1.push_back(2./Sy);
+        }
+    } else if (doYZ) {
+        auto Y_err = vec_Y_err.begin();
+        auto Z_err = vec_Z_err.begin();
+        for (auto X_err : vec_X_err) {
+            const double Sy = pow(X_err, -2.) + pow(*Y_err++, -2.) + pow(*Z_err++, -2.) ;
+            W_1.push_back(3./Sy);
+        }
+    } else {
+        for (auto X_err : vec_X_err) {
+            W_1.push_back(pow(X_err, 2.));
+        }
     }
+
 
     const SplineMatrices &test_matrices = prepare_calcul_spline(vecH, W_1);
 
@@ -1967,8 +1986,25 @@ std::pair<double, double> initLambdaSplineBySilverman(const bool depth, const st
     for (int lambda_loop_exp = -200; lambda_loop_exp < 101; ++lambda_loop_exp ) {
         const double lambda_loop = pow(10., (double)lambda_loop_exp/10.);
 
-        const double cv = cross_validation(vec_X, test_matrices, vecH, lambda_loop);
-        const double gcv = general_cross_validation(vec_X, test_matrices, vecH, lambda_loop);
+        double cv = cross_validation(vec_X, test_matrices, vecH, lambda_loop);
+        if (doY) {
+            cv += cross_validation(vec_Y, test_matrices, vecH, lambda_loop);
+            cv /= 2.;
+        }  else if (doYZ) {
+            cv += cross_validation(vec_Y, test_matrices, vecH, lambda_loop);
+            cv += cross_validation(vec_Z, test_matrices, vecH, lambda_loop);
+            cv /= 3.;
+        }
+
+        double gcv = general_cross_validation(vec_X, test_matrices, vecH, lambda_loop);
+        if (doY) {
+            gcv += general_cross_validation(vec_Y, test_matrices, vecH, lambda_loop);
+            gcv /= 2.;
+        }  else if (doYZ) {
+            gcv += general_cross_validation(vec_Y, test_matrices, vecH, lambda_loop);
+            gcv += general_cross_validation(vec_Z, test_matrices, vecH, lambda_loop);
+            gcv /= 3.;
+        }
         //const double rss = RSS(vec_X, test_matrices, vecH, lambda_loop);
 
 
@@ -1983,7 +2019,7 @@ std::pair<double, double> initLambdaSplineBySilverman(const bool depth, const st
             }
             GCV.push_back(gcv);
             lambda_GCV.push_back(lambda_loop);
-
+            sv.tab_GCV[lambda_loop] = gcv;
         }
 
         if (!std::isnan(cv) && !std::isinf(cv)) {
@@ -1997,7 +2033,7 @@ std::pair<double, double> initLambdaSplineBySilverman(const bool depth, const st
             }
             CV.push_back(cv);
             lambda_CV.push_back(lambda_loop);
-            //qDebug()<<" cv="<<lambda_loop_exp<<CV.back();//<< has_positif;
+            sv.tab_CV[lambda_loop] = cv;
         }
 
         /*if (!std::isnan(rss) && !std::isinf(rss)) {
@@ -2014,6 +2050,7 @@ std::pair<double, double> initLambdaSplineBySilverman(const bool depth, const st
             //qDebug()<<" cv="<<lambda_loop_exp<<CV.back();//<< has_positif;
         }*/
     }
+
 
 
     // If the mini is at one of the bounds, there is no solution in the interval for GCV
@@ -2045,7 +2082,7 @@ std::pair<double, double> initLambdaSplineBySilverman(const bool depth, const st
                 lambda_mini = lambda_GCV.at(idx_vect);
                 qDebug()<<"[initLambdaSplineBySilverman] No solution with CV, mini_cv_idx ="<<mini_cv_idx<< ", On prend un minimum local first_mini_gcv_idx = 10E"<<log10(lambda_GCV.at(idx_vect));
             } else {
-                idx_vect = 0;
+               // idx_vect = 0;
                 lambda_mini = lambda_GCV.at(0);
                 qDebug()<<"[initLambdaSplineBySilverman] No solution with first_mini_gcv_idx ="<<first_mini_gcv_idx<< " On prend lambda_GCV[0] = 10E"<<log10(lambda_GCV.at(0));
             }
@@ -2054,21 +2091,21 @@ std::pair<double, double> initLambdaSplineBySilverman(const bool depth, const st
         } else {
             qDebug()<<"[initLambdaSplineBySilverman] With CV lambda_CV.at("<<mini_cv_idx<<")= 10E"<<log10(lambda_CV.at(mini_cv_idx));
             lambda_mini = lambda_CV.at(mini_cv_idx);
-            idx_vect = mini_cv_idx;
+           // idx_vect = mini_cv_idx;
 
         }
 
     } else {
         qDebug()<<"[initLambdaSplineBySilverman] Direct Solution With GCV, lambda_GCV.at("<<mini_gcv_idx<<") = 10E"<<log10(lambda_GCV.at(mini_gcv_idx)) << " min GCV =" <<GCV.at(mini_gcv_idx) <<  "; Pour info min CV =" <<CV.at(mini_cv_idx) << lambda_CV.at(mini_cv_idx) <<" = 10E"<<log10(lambda_CV.at(mini_cv_idx));
         lambda_mini = lambda_GCV.at(mini_gcv_idx);
-        idx_vect = mini_gcv_idx;
+        //idx_vect = mini_gcv_idx;
 
     }
 
 
     // test positif
-
-    if (depth) {
+/*
+    if (sv.positive_curve) {
 
         bool has_positif = false;
 
@@ -2095,7 +2132,8 @@ std::pair<double, double> initLambdaSplineBySilverman(const bool depth, const st
 
             const std::vector<double> &vecVarG = calcul_spline_variance(spline_matrices, decomp, lambda_depth);
 
-            // recomposition de vec_theta_red
+            // Recomposition de vec_theta_red
+            // Attention nous avons perdu la position du premier temps, il est considèré égale à Zéro pour le test
             std::vector<double> vec_theta_red;
             double som = 0;
             vec_theta_red.push_back(som);
@@ -2112,10 +2150,6 @@ std::pair<double, double> initLambdaSplineBySilverman(const bool depth, const st
 
             splineX.vecVarG = vecVarG;
 
-            /*for (int i = 0; i < events.size(); i++) {
-            events[i]->mGx = splineX.vecG[i];
-            }*/
-
             MCMCSpline spline;
             spline.splineX = std::move(splineX);
 
@@ -2125,6 +2159,7 @@ std::pair<double, double> initLambdaSplineBySilverman(const bool depth, const st
             }
 
         } while (!has_positif && lambda_depth<1E10);
+
 
         Vg_depth = var_residual(vec_X, test_matrices, vecH, lambda_depth);
 
@@ -2144,7 +2179,7 @@ std::pair<double, double> initLambdaSplineBySilverman(const bool depth, const st
         return std::make_pair(lambda_depth, Vg_depth);
 
     } else {
-
+*/
         double Vg = var_residual(vec_X, test_matrices, vecH, lambda_mini);
 
         if (doY) {
@@ -2156,12 +2191,10 @@ std::pair<double, double> initLambdaSplineBySilverman(const bool depth, const st
             Vg /= 3.;
         }
         return std::make_pair(lambda_mini, Vg);
-    }
-
-
+ //   }
 
     // ----- RETURN
-    return std::make_pair(1., 0.);
+ //   return std::make_pair(1., 0.);
 
 }
 

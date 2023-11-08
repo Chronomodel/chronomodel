@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -41,7 +41,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define APPSETTINGSDIALOG_H
 
 #include <QDialog>
-#include "AppSettings.h"
 
 
 class QCheckBox;

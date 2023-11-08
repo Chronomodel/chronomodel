@@ -266,7 +266,6 @@ QList<Event*> ModelUtilities::unsortEvents(const QList<Event*> &events)
 QString ModelUtilities::getMCMCSettingsLog(const Model* model)
 {
     QString log;
-
     log += QObject::tr("Number of chain %1").arg(QString::number(model->mMCMCSettings.mNumChains)) + "<br>";
     log += QObject::tr("Number of burn-in iterations : %1").arg(QString::number(model->mMCMCSettings.mIterPerBurn)) + "<br>";
     log += QObject::tr("Number of Max batches : %1").arg(QString::number(model->mMCMCSettings.mMaxBatches)) + "<br>";
@@ -430,18 +429,15 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
         }
 
         if (model->mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
-            log += line(textGreen( QObject::tr(" - Std gi : Bayesian")));
+            log += line(textGreen( QObject::tr(" - Std gi : Individual Bayesian")));
+
+        } else if (model->mCurveSettings.mVarianceType == CurveSettings::eModeGlobal) {
+            log += line(textGreen( QObject::tr(" - Std gi : Global Bayesian")));
 
         } else {
             log += line(textGreen( QObject::tr(" - Std gi : Fixed = %1").arg(QString::number(sqrt(model->mCurveSettings.mVarianceFixed)))));
         }
 
-        if (model->mCurveSettings.mUseVarianceIndividual) {
-            log += line(textGreen( QObject::tr(" - Use Std gi : Individual")));
-
-        }  else {
-            log += line(textGreen( QObject::tr(" - Use Global Std g")));
-        }
 
         if (model->mCurveSettings.mLambdaSplineType == CurveSettings::eModeBayesian) {
             log += line(textGreen( QObject::tr(" - Smoothing : Bayesian")));
@@ -489,19 +485,19 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
                 HTMLText += line(textBlue(QObject::tr(" - Sigma_MH on Theta : %1").arg(stringForLocal(event->mTheta.mSigmaMH))));
             }
 #ifdef S02_BAYESIAN
-            HTMLText += line(textBold(textBlue(QObject::tr(" - Event Shrinkage : %1").arg(DateUtils::convertToAppSettingsFormatStr(event->mS02.mX)))));
-            if (event->mS02.mLastAccepts.size()>2 && event->mS02.mSamplerProposal!= MHVariable::eFixe) {
-                const auto acceptRate = event->mS02.getCurrentAcceptRate();
-                const auto samplerType = event->mS02.mSamplerProposal;
+            HTMLText += line(textBold(textBlue(QObject::tr(" - Event Shrinkage : %1").arg(DateUtils::convertToAppSettingsFormatStr(event->mS02Theta.mX)))));
+            if (event->mS02Theta.mLastAccepts.size()>2 && event->mS02Theta.mSamplerProposal!= MHVariable::eFixe) {
+                const auto acceptRate = event->mS02Theta.getCurrentAcceptRate();
+                const auto samplerType = event->mS02Theta.mSamplerProposal;
                 if (samplerType == MHVariable::eMHAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
                     HTMLText += line(textBlue(QObject::tr("     Current Acceptance Rate : ") + textBold(textRed(stringForLocal(acceptRate*100.) + " %"))  + " (" + MHVariable::getSamplerProposalText(samplerType)) + ")");
                 else
                     HTMLText += line(textBlue(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(acceptRate*100.), MHVariable::getSamplerProposalText(samplerType))));
 
-                HTMLText += line(textBlue(QObject::tr(" - Sigma_MH on S02 : %1").arg(stringForLocal(event->mS02.mSigmaMH))));
+                HTMLText += line(textBlue(QObject::tr(" - Sigma_MH on S02 : %1").arg(stringForLocal(event->mS02Theta.mSigmaMH))));
             }
 #else
-            HTMLText += line(textBlue(QObject::tr(" - Event Shrinkage : %1").arg(stringForLocal(event->mS02.mX))));
+            HTMLText += line(textBlue(QObject::tr(" - Event Shrinkage : %1").arg(stringForLocal(event->mS02Theta.mX))));
 #endif
         }
 
@@ -522,7 +518,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
             int thetaIdx;
             const MCMCSpline& spline =  model->mSpline;
             for (thetaIdx = 0; thetaIdx < model->mEvents.size(); thetaIdx++) {
-                if ( spline.splineX.vecThetaReduced.at(thetaIdx) == event->mThetaReduced) //model->reduceTime(event->mTheta.mX))
+                if ( spline.splineX.vecThetaReduced.at(thetaIdx) == event->mThetaReduced)
                     break;
             }
 
@@ -613,7 +609,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
         HTMLText += textBold(textGreen(QObject::tr("Curve"))) ;
         HTMLText += "<hr>";
         if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe) {
-            HTMLText +=  line(textGreen(QObject::tr("Fixed Smoothing : %1").arg(QLocale().toString(model->mLambdaSpline.mX, 'G', 2))));
+            HTMLText +=  line(textGreen(QObject::tr("Fixed Smoothing : 10E%1").arg(QLocale().toString(log10(model->mLambdaSpline.mX), 'G', 2))));
 
         } else {
             HTMLText +=  line(textGreen(QObject::tr("Log10 Smoothing : %1").arg(QLocale().toString(log10(model->mLambdaSpline.mX), 'G', 2))));
@@ -717,12 +713,12 @@ QString ModelUtilities::EventS02ResultsHTML(const Event* e)
     Q_ASSERT(e);
     QString text;
 
-    if (e->mS02.mSamplerProposal == MHVariable::eFixe) {
+    if (e->mS02Theta.mSamplerProposal == MHVariable::eFixe) {
         text = line(textBold(textGreen(QObject::tr("S02 non Bayesian"))));
 
     } else {
         text += line(textBold(textGreen(QObject::tr("Posterior Event Shrinkage"))));
-        text += line(textGreen(e->mS02.resultsString("", nullptr, nullptr)));
+        text += line(textGreen(e->mS02Theta.resultsString("", nullptr, nullptr)));
     }
     return text;
 }
@@ -911,7 +907,7 @@ QString ModelUtilities::curveResultsHTML(const ModelCurve* model)
     text += line(textGreen(QObject::tr(" - Number of Ref. points = %1").arg(model->mEvents.size())));
 
     if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe  && model->mCurveSettings.mLambdaSplineType != CurveSettings::eInterpolation) {
-        text += line(textGreen(QObject::tr("Lambda Spline; Fixed value = %1").arg(QString::number(pow(10, model->mLambdaSpline.mRawTrace->at(0))))));
+        text += line(textGreen(QObject::tr("Lambda Spline; Fixed value = 10E%1").arg(QString::number(model->mLambdaSpline.mRawTrace->at(0)))));
 
     } else if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe && model->mCurveSettings.mLambdaSplineType == CurveSettings::eInterpolation) {
         text += line(textGreen(QObject::tr("- Lambda Spline; Interpolation Fixed value = %1").arg(QString::number(0))));
@@ -960,7 +956,7 @@ QString ModelUtilities::lambdaResultsHTML(const ModelCurve* model)
     QString text;
     if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe  && model->mCurveSettings.mLambdaSplineType != CurveSettings::eInterpolation) {
         text = line(textBold(textGreen(QObject::tr("Lambda Spline"))));
-        text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(pow(10, model->mLambdaSpline.mRawTrace->at(0))))));
+        text += line(textGreen(QObject::tr("Fixed value : 10E%1").arg(QString::number( model->mLambdaSpline.mRawTrace->at(0)))));
 
     } else if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe && model->mCurveSettings.mLambdaSplineType == CurveSettings::eInterpolation) {
         text = line(textBold(textGreen(QObject::tr("Lambda Spline"))));
@@ -999,7 +995,7 @@ short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double> &hpd, cons
     short answer = 0;
     const double tmin = model->mSettings.getTminFormated();
     const double tmax = model->mSettings.getTmaxFormated();
-    // we suppose QMap is sort <
+    // We suppose QMap is sort <
     while (iter != hpd.constEnd()) {
         const double v = iter.value();
         if (v > 0) {
@@ -1076,7 +1072,6 @@ void sampleInCumulatedRepartition (Event* event, const StudyPeriodSettings &sett
         while (tWhile<= unionTmax) {
             sumWhile= 0.;
             for (auto&& d : event->mDates) {
-                //sumWhile += interpolate_value_from_curve(tWhile, d.mCalibration->mRepartition, d.mCalibration->mTmin, d.mCalibration->mTmax);
                sumWhile += d.mCalibration->repartition_interpolate(tWhile);
             }
             unionRepartition.push_back(sumWhile);
@@ -1089,7 +1084,6 @@ void sampleInCumulatedRepartition (Event* event, const StudyPeriodSettings &sett
          * and the minimum can be different from 0.
          */
 
-
         const double maxRepartition = unionRepartition.back();
         const double minRepartition = unionRepartition.front();
         if ( (minRepartition != 0. || maxRepartition != 0.) &&
@@ -1097,14 +1091,15 @@ void sampleInCumulatedRepartition (Event* event, const StudyPeriodSettings &sett
              (unionRepartition.size() > 1) ) {
             const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(minRepartition, maxRepartition), unionRepartition);
 
-#ifdef DEBUG
-            if (event->mTheta.mX == min || event->mTheta.mX == max)
-               qDebug() << "[sampleInCumulatedRepartition] event->mTheta.mX == min || event->mTheta.mX == max";
-            else if (event->mTheta.mX == unionTmin || event->mTheta.mX == unionTmax)
-               qDebug() << "[sampleInCumulatedRepartition] event->mTheta.mX == unionTmin || event->mTheta.mX == unionTmax";
-#endif
             if (idx > 0) {
                event->mTheta.mX = unionTmin + idx * unionStep;
+
+#ifdef DEBUG
+               if (event->mTheta.mX == min || event->mTheta.mX == max)
+                    qDebug() << "[sampleInCumulatedRepartition] event->mTheta.mX == min || event->mTheta.mX == max";
+               else if (event->mTheta.mX == unionTmin || event->mTheta.mX == unionTmax)
+                    qDebug() << "[sampleInCumulatedRepartition] event->mTheta.mX == unionTmin || event->mTheta.mX == unionTmax";
+#endif
 
             } else {
 #ifdef DEBUG
@@ -1151,7 +1146,6 @@ void sampleInCumulatedRepartition_thetaFixe (Event *event, const StudyPeriodSett
         while (tWhile<= unionTmax) {
             sumWhile= 0.;
             for (auto&& d : event->mDates) {
-                //sumWhile += interpolate_value_from_curve(tWhile, d.mCalibration->mRepartition, d.mCalibration->mTmin, d.mCalibration->mTmax);
                 sumWhile += d.mCalibration->repartition_interpolate(tWhile);
             }
             unionRepartition.append(sumWhile);
@@ -1163,7 +1157,6 @@ void sampleInCumulatedRepartition_thetaFixe (Event *event, const StudyPeriodSett
          * The maximum of the distribution curve can be different from the number of dates
          * and the minimum can be different from 0.
          */
-
 
         const double maxRepartition (unionRepartition.last());
         const double minRepartition (unionRepartition.first());
@@ -1182,11 +1175,11 @@ void sampleInCumulatedRepartition_thetaFixe (Event *event, const StudyPeriodSett
 QString HTML_to_text(const QString &HTML)
 {
         QString result;
-        // recherche-remplacement retour chariot
+        // Search and replace carriage return
         QString HTML2 (HTML);
         HTML2.replace("<br>","\r");
 
-        //supression balise HTLM
+        //HTLM tag suppression
         bool balise_open = false;
         for (auto c : HTML2) {
             if (c == '<')
@@ -1195,7 +1188,6 @@ QString HTML_to_text(const QString &HTML)
                 balise_open = false;
             else if (balise_open)
                 result.append(c);
-
         }
         return result;
 }

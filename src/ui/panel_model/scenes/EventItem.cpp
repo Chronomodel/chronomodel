@@ -206,8 +206,7 @@ bool EventItem::isCurveNode() const
     const QJsonObject &state = mScene->getProject()->mState;
     const CurveSettings curveSettings (state.value(STATE_CURVE).toObject());
     const bool withNode = (curveSettings.mLambdaSplineType != CurveSettings::eInterpolation)
-                         && (curveSettings.mVarianceType == CurveSettings::eModeBayesian)
-                         && (curveSettings.mUseVarianceIndividual);
+                          && (curveSettings.mVarianceType == CurveSettings::eModeBayesian);
 
     return (Event::PointType (mData.value(STATE_EVENT_POINT_TYPE).toInt()) == Event::eNode) && withNode ;
 }

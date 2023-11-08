@@ -937,6 +937,11 @@ QPair<double,double> PluginMag::getTminTmaxRefsCurve(const QJsonObject& data) co
     return QPair<double,double>(tmin, tmax);
 }
 
+double PluginMag::getMinStepRefsCurve(const QJsonObject &data) const
+{
+  return 1.;
+
+}
 
 //Settings / Input Form / RefView
 GraphViewRefAbstract* PluginMag::getGraphViewRef()

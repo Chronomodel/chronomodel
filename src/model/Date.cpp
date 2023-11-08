@@ -590,7 +590,6 @@ void Date::calibrate(const StudyPeriodSettings priod_settings, Project *project,
     if (mTmaxRefCurve <= mTminRefCurve)
         return;
 
-
     double tminCal;
     double tmaxCal;
 
@@ -598,10 +597,9 @@ void Date::calibrate(const StudyPeriodSettings priod_settings, Project *project,
      *  Calibrate on the whole calibration period (= ref curve definition domain)
      * -------------------------------------------------- */
 
-
     int nb_step_frac = 0;
 
-    while (mCalibration->mVector.size() < 6 && nb_step_frac < 20) {
+    while (mCalibration->mVector.size() < 12 && nb_step_frac < 20) {
         ++nb_step_frac;
         mCalibration->mStep = refMinStep / (double)nb_step_frac;
         const int nbStep = floor((mTmaxRefCurve - mTminRefCurve) / mCalibration->mStep);
@@ -612,18 +610,17 @@ void Date::calibrate(const StudyPeriodSettings priod_settings, Project *project,
 
         const long double v0 = getLikelihood(mTminRefCurve);
         calibrationTemp.append(v0);
-        repartitionTemp.append(v0); //ici
+        repartitionTemp.append(v0);
         long double lastRepVal = v0;
 
         /* We use long double type because
          * after several sums, the repartition can be in the double type range
         */
-        //double t;
+
         long double lastV = v0;
         long double rep;
 
         for (int i = 1; i <= nbStep; ++i) {
-
             const double t = mTminRefCurve + i * mCalibration->mStep;
             const long double v = getLikelihood(t);
 
@@ -1538,7 +1535,7 @@ void Date::updateSigmaShrinkage(Event* &event)
     double rapport  = -1.;
     if (logV2 >= logVMin && logV2 <= logVMax) {
         const double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
-        const double x2 = pow((event->mS02.mX + V1) / (event->mS02.mX + V2), event->mAShrinkage + 1.);
+        const double x2 = pow((event->mS02Theta.mX + V1) / (event->mS02Theta.mX + V2), event->mAShrinkage + 1.);
         rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1 ; // (V2 / V1) est le jacobien!
 
     }
@@ -1588,7 +1585,7 @@ void Date::updateSigmaReParam(Event* event)
     double rapport (0.);
     if (V2 > VMin ) {
         const double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
-        const double x2 = pow((event->mS02.mX + V1) / (event->mS02.mX + V2), event->mAShrinkage + 1.);
+        const double x2 = pow((event->mS02Theta.mX + V1) / (event->mS02Theta.mX + V2), event->mAShrinkage + 1.);
         
         rapport = x1 * sqrt(V1/V2) * x2 * pow(V2 / V1, 2.); // (V2 / V1) est le jacobien!
 

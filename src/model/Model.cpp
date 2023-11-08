@@ -68,7 +68,7 @@ Model::Model(QObject *parent):
     mNumberOfEvents(0),
     mNumberOfDates(0),
     mThreshold(-1.),
-    mBandwidth(1.06),
+    mBandwidth(0.9),
     mFFTLength(1024),
     mHActivity(1)
 {
@@ -82,7 +82,7 @@ Model::Model(const QJsonObject& json, QObject * parent):
     mNumberOfEvents(0),
     mNumberOfDates(0),
     mThreshold(-1.),
-    mBandwidth(1.06),
+    mBandwidth(0.9),
     mFFTLength(1024),
     mHActivity(1)
 {
@@ -271,7 +271,7 @@ void Model::updateFormatSettings()
 
     for (const auto& event : mEvents) {
         event->mTheta.setFormat(appSetFormat);
-        event->mS02.setFormat(DateUtils::eNumeric);
+        event->mS02Theta.setFormat(DateUtils::eNumeric);
 
         for (auto&& date : event->mDates) {
             date.mTi.setFormat(appSetFormat);
@@ -1107,8 +1107,8 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 #else
         event->mTheta.generateCorrelations(chains);
 #endif
-        if (event->mS02.mSamplerProposal != MHVariable::eFixe)
-            event->mS02.generateCorrelations(chains);
+        if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+            event->mS02Theta.generateCorrelations(chains);
 
 
         for (auto&& date : event->mDates ) {
@@ -1237,22 +1237,19 @@ void Model::memo_accept(const unsigned i_chain)
 {
     for (const auto& event : mEvents) {
        //--------------------- Memo Events -----------------------------------------
-       if (event->mTheta.mSamplerProposal != MHVariable::eFixe)
+       if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
             event->mTheta.memo_accept(i_chain);
 
+            event->mS02Theta.memo_accept(i_chain);
 
-       if (event->mS02.mSamplerProposal != MHVariable::eFixe)
-            event->mS02.memo_accept(i_chain);
+            //--------------------- Memo Dates -----------------------------------------
+            for (auto&& date : event->mDates )   {
+                date.mTi.memo_accept(i_chain);
+                date.mSigmaTi.memo_accept(i_chain);
+                date.mWiggle.memo_accept(i_chain);
 
-
-       //--------------------- Memo Dates -----------------------------------------
-       for (auto&& date : event->mDates )   {
-            date.mTi.memo_accept(i_chain);
-            date.mSigmaTi.memo_accept(i_chain);
-            date.mWiggle.memo_accept(i_chain);
-
+            }
        }
-
     }
 }
 
@@ -1272,11 +1269,11 @@ void Model::initVariablesForChain()
        event->mTheta.mLastAccepts.reserve(acceptBufferLen);
        event->mTheta.mLastAcceptsLength = acceptBufferLen;
 
-       event->mS02.reset();
-       event->mS02.reserve(initReserve);
-       event->mS02.mAllAccepts.resize(mChains.size());
-       event->mS02.mLastAccepts.reserve(acceptBufferLen);
-       event->mS02.mLastAcceptsLength = acceptBufferLen;
+       event->mS02Theta.reset();
+       event->mS02Theta.reserve(initReserve);
+       event->mS02Theta.mAllAccepts.resize(mChains.size());
+       event->mS02Theta.mLastAccepts.reserve(acceptBufferLen);
+       event->mS02Theta.mLastAcceptsLength = acceptBufferLen;
 
        // event->mTheta.mAllAccepts.clear(); //don't clean, avalable for cumulate chain
 
@@ -1395,8 +1392,8 @@ void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftL
     for (const auto& event : mEvents) {
         event->mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 
-        if (event->mS02.mSamplerProposal != MHVariable::eFixe)
-            event->mS02.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+        if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+            event->mS02Theta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 
         if (event->mTheta.mSamplerProposal != MHVariable::eFixe)
             for (auto&& d : event->mDates)
@@ -1426,8 +1423,8 @@ void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
             if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
                 event->mTheta.generateNumericalResults(chains);
 
-                if (event->mS02.mSamplerProposal != MHVariable::eFixe)
-                    event->mS02.generateNumericalResults(chains);
+                if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+                    event->mS02Theta.generateNumericalResults(chains);
 
                 for (auto&& date : event->mDates) {
                     date.mTi.generateNumericalResults(chains);
@@ -1455,8 +1452,8 @@ void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
          if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
             event->mTheta.generateNumericalResults(chains);
 
-            if (event->mS02.mSamplerProposal != MHVariable::eFixe)
-                event->mS02.generateNumericalResults(chains);
+            if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+                event->mS02Theta.generateNumericalResults(chains);
 
             for (auto&& date : event->mDates) {
                 date.mTi.generateNumericalResults(chains);
@@ -1487,7 +1484,7 @@ void Model::clearThreshold()
 {
     for (const auto& event : mEvents) {
          event->mTheta.mThresholdUsed = -1.;
-         event->mS02.mThresholdUsed = -1.;
+         event->mS02Theta.mThresholdUsed = -1.;
 
          for (auto&& date : event->mDates) {
             date.mTi.mThresholdUsed = -1.;
@@ -1568,8 +1565,8 @@ void Model::generateCredibility(const double thresh)
     for (const auto& ev : mEvents) {
         ev->mTheta.generateCredibility(mChains, thresh);
 
-        if (ev->mS02.mSamplerProposal != MHVariable::eFixe)
-            ev->mS02.generateCredibility(mChains, thresh);
+        if (ev->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+            ev->mS02Theta.generateCredibility(mChains, thresh);
 
         if (ev->type() != Event::eBound) {
             for (auto&& date : ev->mDates )  {
@@ -1625,8 +1622,8 @@ void Model::generateHPD(const double thresh)
 
         if (event->type() != Event::eBound || (event->mTheta.mSamplerProposal != MHVariable::eFixe)) {     
 
-            if (event->mS02.mSamplerProposal != MHVariable::eFixe)
-                event->mS02.generateHPD(thresh);
+            if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+                event->mS02Theta.generateHPD(thresh);
 
             for (int j = 0; j<event->mDates.size(); ++j) {
                 Date& date = event->mDates[j];
@@ -1796,8 +1793,8 @@ void Model::clearPosteriorDensities()
         (*iterEvent)->mTheta.mFormatedHisto.clear();
         (*iterEvent)->mTheta.mChainsHistos.clear();
 
-        (*iterEvent)->mS02.mFormatedHisto.clear();
-        (*iterEvent)->mS02.mChainsHistos.clear();
+        (*iterEvent)->mS02Theta.mFormatedHisto.clear();
+        (*iterEvent)->mS02Theta.mChainsHistos.clear();
 
         ++iterEvent;
     }
@@ -2096,7 +2093,7 @@ void Model::saveToFile(QDataStream *out)
     // -----------------------------------------------------
     for (Event*& event : mEvents){
         *out << event->mTheta;
-        *out << event->mS02;
+        *out << event->mS02Theta;
     }
     // -----------------------------------------------------
     //  Writing date data
@@ -2211,8 +2208,8 @@ void Model::restoreFromFile_v323(QDataStream *in)
 
     for (Event* &e : mEvents) {
         *in >> e->mTheta;
-        e->mS02.mSamplerProposal = MHVariable::eFixe;
-        *in >> e->mS02; // since 2023-06-01 v3.2.3
+        e->mS02Theta.mSamplerProposal = MHVariable::eFixe;
+        *in >> e->mS02Theta; // since 2023-06-01 v3.2.3
     }
     // -----------------------------------------------------
     //  Read dates data
@@ -2346,7 +2343,7 @@ void Model::restoreFromFile_v324(QDataStream *in)
 
     for (Event* &e : mEvents) {
         *in >> e->mTheta;
-        *in >> e->mS02; // since 2023-06-01 v3.2.3
+        *in >> e->mS02Theta; // since 2023-06-01 v3.2.3
     }
     // -----------------------------------------------------
     //  Read dates data

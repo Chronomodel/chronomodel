@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2021
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -47,6 +47,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QDataStream>
 
 
+struct SilvermanParam
+{
+    bool use_error_measure = true;
+    bool lambda_fixed = false;
+    double log_lambda_value = -6;
+//    bool positive_curve = false;
+
+    std::map<double, double> tab_CV;
+    std::map<double, double> tab_GCV;
+};
 
 typedef struct SplineMatrices
 {
@@ -181,14 +191,14 @@ std::vector<QMap<double, double>> composante_to_curve(MCMCSplineComposante splin
 
 SplineResults do_spline(const std::vector<double> &vec_Y, const SplineMatrices &matrices,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline);
 
-std::pair<MCMCSpline, std::pair<double, double> > do_spline_composante(const std::vector<double> &vec_t, const std::vector<double> &vec_X, const std::vector<double> &vec_X_err, double tmin, double tmax, const CurveSettings &cs, const std::vector<double> &vec_Y = std::vector<double>(), const std::vector<double> &vec_Y_err = std::vector<double>(), const std::vector<double> &vec_Z = std::vector<double>(), const std::vector<double> &vec_Z_err = std::vector<double>()) ;
+std::pair<MCMCSpline, std::pair<double, double> > do_spline_composante(const std::vector<double> &vec_t, const std::vector<double> &vec_X, const std::vector<double> &vec_X_err, double tmin, double tmax, SilvermanParam &sv, const std::vector<double> &vec_Y = std::vector<double>(), const std::vector<double> &vec_Y_err = std::vector<double>(), const std::vector<double> &vec_Z = std::vector<double>(), const std::vector<double> &vec_Z_err = std::vector<double>()) ;
 
 double cross_validation (const std::vector< double>& vec_Y, const SplineMatrices& matrices, const std::vector< double>& vecH, const double lambda);
 double general_cross_validation (const std::vector< double>& vec_Y,  const SplineMatrices& matrices, const std::vector<double>& vecH, const double lambda);
 double RSS(const std::vector<double> &vec_Y, const SplineMatrices &matrices, const std::vector<t_reduceTime> &vecH, const double lambda);
 
 std::pair<double, double> initLambdaSplineByCV(const bool depth, const std::vector< double> &vec_X, const std::vector< double> &vec_X_err, const SplineMatrices &matrices, const std::vector< double> &vecH, const std::vector<double> &vec_Y = std::vector< double>(), const std::vector<double> &vec_Y_err = std::vector< double>(), const std::vector<double> &vec_Z = std::vector< double>(), const std::vector<double> &vec_Z_err = std::vector< double>());
-std::pair<double, double> initLambdaSplineBySilverman(const bool depth, const std::vector< double> &vec_X, const std::vector< double> &vec_X_err, const std::vector< double> &vecH, const std::vector<double> &vec_Y = std::vector< double>(), const std::vector<double> &vec_Y_err = std::vector< double>(), const std::vector<double> &vec_Z = std::vector< double>(), const std::vector<double> &vec_Z_err = std::vector< double>());
+std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const std::vector< double> &vec_X, const std::vector< double> &vec_X_err, const std::vector< double> &vecH, const std::vector<double> &vec_Y = std::vector< double>(), const std::vector<double> &vec_Y_err = std::vector< double>(), const std::vector<double> &vec_Z = std::vector< double>(), const std::vector<double> &vec_Z_err = std::vector< double>());
 
 
 double initLambdaSplineByCV_VgFixed_old(const std::vector< double> &vec_Y, const std::vector< double> &vec_Y_err, const std::vector< double> &vecH, const double Vg);

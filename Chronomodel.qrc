@@ -86,5 +86,6 @@
         <file alias="curve_data_graph_w.png">resources/curve_data_graph_w.png</file>
         <file alias="density_w.png">resources/Density_w.png</file>
         <file alias="calib.png">resources/calib_w.png</file>
+        <file alias="curve_silver_graph_w.png">resources/curve_silver_graph_w.png</file>
     </qresource>
 </RCC>

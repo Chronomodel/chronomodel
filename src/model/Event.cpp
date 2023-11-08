@@ -72,13 +72,13 @@ Event::Event(const Model *model):
     mTheta.mFormat = DateUtils::eUnknown;
     mTheta.mSamplerProposal = MHVariable::eDoubleExp;
 
-    mS02.mSupport = MetropolisVariable::eRpStar;
-    mS02.mFormat = DateUtils::eNumeric;
+    mS02Theta.mSupport = MetropolisVariable::eRpStar;
+    mS02Theta.mFormat = DateUtils::eNumeric;
 
 #ifdef S02_BAYESIAN
-    mS02.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
 #else
-    mS02.mSamplerProposal = MHVariable::eFixe;
+    mS02Theta.mSamplerProposal = MHVariable::eFixe;
 #endif
 
     // Item initial position :
@@ -144,9 +144,9 @@ Event::Event (const QJsonObject& json, const Model *model):
     mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
 #ifdef S02_BAYESIAN
-    mS02.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
 #else
-    mS02.mSamplerProposal = MHVariable::eFixe;
+    mS02Theta.mSamplerProposal = MHVariable::eFixe;
 #endif
 
     mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
@@ -207,11 +207,11 @@ void Event::copyFrom(const Event& event)
     mTheta.mSamplerProposal = event.mTheta.mSamplerProposal;
     mTheta.mSigmaMH = event.mTheta.mSigmaMH;
 
-    mS02.mX = event.mS02.mX;
-    mS02.mSupport = event.mS02.mSupport;
-    mS02.mFormat = event.mS02.mFormat;
-    mS02.mSamplerProposal = event.mS02.mSamplerProposal;
-    mS02.mSigmaMH = event.mS02.mSigmaMH;
+    mS02Theta.mX = event.mS02Theta.mX;
+    mS02Theta.mSupport = event.mS02Theta.mSupport;
+    mS02Theta.mFormat = event.mS02Theta.mFormat;
+    mS02Theta.mSamplerProposal = event.mS02Theta.mSamplerProposal;
+    mS02Theta.mSigmaMH = event.mS02Theta.mSigmaMH;
 
     mAShrinkage = event.mAShrinkage;
     mBetaS02 = event.mBetaS02;
@@ -305,12 +305,12 @@ Event Event::fromJson(const QJsonObject& json)
     event.mTheta.mSamplerProposal = MHVariable::SamplerProposal (json.value(STATE_EVENT_SAMPLER).toInt());
     event.mTheta.setName("Theta of Event : "+ event.mName);
 
-    event.mS02.setName("S02 of Event : "+ event.mName);
-    event.mS02.mSupport = MHVariable::eRpStar;
+    event.mS02Theta.setName("S02 of Event : "+ event.mName);
+    event.mS02Theta.mSupport = MHVariable::eRpStar;
 #ifdef S02_BAYESIAN
-    event.mS02.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    event.mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
 #else
-    event.mS02.mSamplerProposal = MHVariable::eFixe;
+    event.mS02Theta.mSamplerProposal = MHVariable::eFixe;
 #endif
 
 
@@ -1192,17 +1192,17 @@ void Event::updateS02()
         const double logVMin = -100.;
         const double logVMax = 100.;
 
-        const double logV2 = Generator::gaussByBoxMuller(log10(mS02.mX) , mS02.mSigmaMH);
+        const double logV2 = Generator::gaussByBoxMuller(log10(mS02Theta.mX) , mS02Theta.mSigmaMH);
         const double V2 = pow(10, logV2);
 
         double rapport  = 0.;
         if (logV2 >= logVMin && logV2 <= logVMax) {
 
-            const double current_h = h_S02(mS02.mX);
+            const double current_h = h_S02(mS02Theta.mX);
 
             const double try_h = h_S02(V2);
 
-            rapport = (try_h / current_h) ; // (V2 / mS02.mX) ; // (V2 / V1) est le jacobien!
+            rapport = (try_h / current_h) ; // (V2 / mS02Theta.mX) ; // (V2 / V1) est le jacobien!
 
         }
 #ifdef DEBUG
@@ -1211,8 +1211,8 @@ void Event::updateS02()
         }
 #endif
 
-        mS02.tryUpdate(V2, rapport);
-        //qDebug()<<"SO2 ="<< mS02.mX<<" rapport = "<<rapport;
+        mS02Theta.tryUpdate(V2, rapport);
+        //qDebug()<<"SO2 ="<< mS02Theta.mX<<" rapport = "<<rapport;
     }  catch (...) {
         qWarning() <<"[Event::updateS02] mW = 0";
     }

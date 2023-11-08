@@ -50,7 +50,6 @@ StudyPeriodDialog::StudyPeriodDialog(QWidget* parent, Qt::WindowFlags flags):QDi
     mButH(25)
 {
    setWindowTitle(tr("Study Period Settings"));
-   //setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
 
     // -----------
    mMinLab = new QLabel(tr("Start (BC/AD)"), this);
@@ -131,7 +130,7 @@ void StudyPeriodDialog::setSettings(const StudyPeriodSettings &s)
     mMinEdit->setText(locale().toString(s.mTmin));
     mMaxEdit->setText(locale().toString(s.mTmax));
     const double suggested = s.getStep(s.mTmin, s.mTmax);
-    mForcedCheck -> setText(tr("(suggested/default value = %1 )").arg(QString::number(suggested) ) );
+    // mForcedCheck -> setText(tr("(suggested/default value = %1 )").arg(QString::number(suggested) ) );
     mForcedCheck -> setChecked(s.mStepForced);
     mStepSpin    -> setEnabled(s.mStepForced);
     mStepSpin    -> setValue(s.mStep);

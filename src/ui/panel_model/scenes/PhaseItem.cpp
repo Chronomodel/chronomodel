@@ -409,7 +409,7 @@ QString PhaseItem::getTauString() const
         tauStr += tr("Duration ≤ %1").arg(QString::number(mData.value(STATE_PHASE_TAU_FIXED).toDouble()));
 
     else if (type == Phase::eZOnly)
-        tauStr += tr("Span Uniform");
+        tauStr += tr("Uniform Span (Unconstr.)");
 
     return tauStr;
 }

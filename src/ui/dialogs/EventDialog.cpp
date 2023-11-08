@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -41,13 +41,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ColorPicker.h"
 #include "LineEdit.h"
-#include "Label.h"
-#include "ModelUtilities.h"
 #include "QtUtilities.h"
 
 #include <QtWidgets>
 
-EventDialog::EventDialog(QWidget* parent, const QString& title, Qt::WindowFlags flags):QDialog(parent, flags)
+EventDialog::EventDialog(QWidget* parent, const QString &title, Qt::WindowFlags flags):QDialog(parent, flags)
 {
     setWindowTitle(title);
 

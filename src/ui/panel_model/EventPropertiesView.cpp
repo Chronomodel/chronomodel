@@ -479,9 +479,11 @@ const QJsonObject& EventPropertiesView::getEvent() const
 
 void EventPropertiesView::updateEventName()
 {
-    QJsonObject event = *mEvent;
-    event[STATE_NAME] = mNameEdit->text();
-    MainWindow::getInstance()->updateEvent(event, tr("Event name updated"));
+    if (mEvent) {
+        QJsonObject event = *mEvent;
+        event[STATE_NAME] = mNameEdit->text();
+        MainWindow::getInstance()->updateEvent(event, tr("Event name updated"));
+    }
 }
 
 void EventPropertiesView::updateEventColor(const QColor &color)

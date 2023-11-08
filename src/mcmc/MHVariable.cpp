@@ -141,7 +141,7 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
 
     if (accepted) {
         mX = x;
-        //++mAllAccepts;
+
     }
     mLastAccepts.append(accepted);
 

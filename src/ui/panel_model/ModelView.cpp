@@ -949,22 +949,34 @@ void ModelView::showMultiCalib()
             mButImport->setChecked(false);
 
         }
-        mMultiCalibrationView->updateGraphList();
-        mMultiCalibrationView->setVisible(true);
-        if (showAnim) {
-            mAnimationShow->setStartValue(mRightHiddenRect);
-            mAnimationShow->setEndValue(mRightRect);
 
-            // mMultiCalibrationView->raise();
+        auto events = mProject->mState.value(STATE_EVENTS).toArray();
+        bool with_selected_event =false;
+        for (const auto&& ev : events) {
+            const QJsonObject jsonEv = ev.toObject();
+            if (jsonEv.value(STATE_IS_SELECTED).toBool()) {
+                with_selected_event = true;
+                break;
+            }
+        }
 
-            mAnimationShow->setTargetObject(mMultiCalibrationView);
-            mAnimationShow->start();
+        if (with_selected_event) {
+            mMultiCalibrationView->updateGraphList();
+            mMultiCalibrationView->setVisible(true);
+            if (showAnim) {
+                mAnimationShow->setStartValue(mRightHiddenRect);
+                mAnimationShow->setEndValue(mRightRect);
+
+                mAnimationShow->setTargetObject(mMultiCalibrationView);
+                mAnimationShow->start();
+            }
         }
      } else {
         if (showAnim) {
             mAnimationHide->setTargetObject(mMultiCalibrationView);
             mAnimationHide->start();
         }
+
         if (mButPhasesGlobaliew->isChecked())
             mPhasesGlobalView->show();
     }

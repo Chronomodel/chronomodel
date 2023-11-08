@@ -377,7 +377,7 @@ QString Phase::getTauTypeText() const
                     return QObject::tr("Max Duration Unknown");
                 break;
             case eZOnly:
-                    return QObject::tr("Span Uniform");
+                    return QObject::tr("Uniform Span");
                 break;
          /*   case eTauRange: // no longer used ->OBSOLETE
                 return QObject::tr("Tau Range") + QString(" [ %1 ; %2 ]").arg(QString::number(mTauMin), QString::number(mTauMax));

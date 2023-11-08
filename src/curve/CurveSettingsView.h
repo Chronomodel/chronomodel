@@ -94,8 +94,8 @@ private:
     QLabel* mVarianceTypeLabel;
     QComboBox* mVarianceTypeInput;
     
-    QLabel* mUseVarianceIndividualLabel;
-    QCheckBox* mUseVarianceIndividualCB;
+    //QLabel* mUseVarianceIndividualLabel;
+    //QCheckBox* mUseVarianceIndividualCB;
     
     QLabel* mVarianceValueLabel;
     QLineEdit* mVarianceValueInput;

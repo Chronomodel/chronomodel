@@ -128,6 +128,7 @@ public:
     double getRefErrorAt(const QJsonObject& data, const double t);
 
     QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
+    double getMinStepRefsCurve(const QJsonObject &data) const;
 
 private:
     bool measureIsValidForCurve(const double m, const QString &ref, const QJsonObject &data, const StudyPeriodSettings &settings);
