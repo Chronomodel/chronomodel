@@ -69,6 +69,5 @@ deploy/windows/Chronomodel_Bash_installer_v321_minGW_64bit.iss
 Chronomodel_bash.pro.user.86f4acf
 Chronomodel_bash.pro.user
 *.user
-*.user
 Chronomodel_bash.pro.user
-Chronomodel_bash.pro.user
+/Users/dufresne/ChronoModel-SoftWare/chronomodel/QtInstaller_ChronoModel/installer-packages/chronomodel_QtIFW.composant1/data/chronomodel.app
