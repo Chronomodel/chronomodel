@@ -106,18 +106,12 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     mLambdaSplineInput = new QLineEdit(this);
     mLambdaSplineInput->setText("-6");
 
-    mVarianceTypeLabel = new QLabel(tr("Std gi"), this);
+    mVarianceTypeLabel = new QLabel(tr("Curve variance (Std gi)"), this);
     mVarianceTypeInput = new QComboBox(this);
-    //mVarianceTypeInput->addItem(tr("Fixed"));
-   // mVarianceTypeInput->addItem(tr("Bayesian"));
 
     mVarianceTypeInput->addItem(tr("Ind. Bayesian"));
     mVarianceTypeInput->addItem(tr("Global Bayesian"));
     mVarianceTypeInput->addItem(tr("Global Fixed"));
-
-    
-    //mUseVarianceIndividualLabel = new QLabel(tr("Individual Std gi"), this);
-    //mUseVarianceIndividualCB = new QCheckBox(this);
     
     mVarianceValueLabel = new QLabel(tr("Std gi = Global Value"), this);
     mVarianceValueInput = new QLineEdit(this);
@@ -149,9 +143,6 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
 
     grid->addWidget(mVarianceTypeLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mVarianceTypeInput, row, 1);
-    
-    //grid->addWidget(mUseVarianceIndividualLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    //grid->addWidget(mUseVarianceIndividualCB, row, 1);
     
     grid->addWidget(mVarianceValueLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mVarianceValueInput, row, 1);
