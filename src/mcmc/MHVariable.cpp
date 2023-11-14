@@ -297,37 +297,16 @@ QList<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains, i
 
 void MHVariable::generateGlobalRunAcceptation(const QList<ChainSpecs> &chains)
 {
-    auto iterAquisition = 0;//std::accumulate(chains.begin(), chains.end(), 0, [](ChainSpecs chain){return  chain.mIterPerAquisition;});
+    int aquisition = 0.;//std::accumulate(chains.begin(), chains.end(), 0, [](ChainSpecs chain){return  chain.mIterPerAquisition;});
 
     mGlobalAcceptationPerCent = 0;
     for (qsizetype i = 0 ; i<chains.size(); i++) {
-        iterAquisition += chains.at(i).mIterPerAquisition;
+        aquisition += chains.at(i).mAquisitionIterIndex/chains.at(i).mThinningInterval;
         mGlobalAcceptationPerCent += mAllAccepts.at(i);
     }
 
-    mGlobalAcceptationPerCent = mGlobalAcceptationPerCent / (double) iterAquisition * 100.;
-  /*  double accepted = 0.;
-    double acceptsLength = 0.;
-    int shift = 0;
-    if (mAllAccepts->isEmpty()) {
-        mGlobalAcceptation = 0.;
+    mGlobalAcceptationPerCent = mGlobalAcceptationPerCent / aquisition * 100.;
 
-    } else {
-        for (auto&& chain : chains) {
-            const int burnAdaptSize = 1 + chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
-            const int runSize = chain.mIterPerAquisition;
-            shift += burnAdaptSize;
-            for (int j=shift; (j<shift + runSize) && (j<mAllAccepts->size()); ++j) {
-                if (mAllAccepts->at(j))
-                    ++accepted;
-            }
-            shift += runSize;
-            acceptsLength += runSize;
-        }
-
-        mGlobalAcceptation = accepted / acceptsLength;
-
-    }*/
 }
 
 
@@ -339,7 +318,6 @@ void MHVariable::generateNumericalResults(const QList<ChainSpecs> &chains)
 
 QString MHVariable::resultsString(const QString &noResultMessage, const QString &unit, DateConversion formatFunc) const
 {
-
     if (mSamplerProposal != MHVariable::eFixe) {
         const QString result = MetropolisVariable::resultsString(noResultMessage, unit, formatFunc);
         const QString globalTxt = stringForLocal(mGlobalAcceptationPerCent);
