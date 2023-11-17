@@ -4524,7 +4524,7 @@ void ResultsView::exportResults()
                 // first Map
                 const auto list_names = mModel->getCurvesName();
 
-                file.setFileName(dirPath + "/"+list_names.at(0) + "_Curve_Map.csv");
+                file.setFileName(dirPath + "/Curve_" +list_names.at(0) + "_Map.csv");
 
                 if (file.open(QFile::WriteOnly | QFile::Truncate)) {
                     modelCurve()->saveMapToFile(&file, csvSep, modelCurve()->mPosteriorMeanG.gx.mapG);
@@ -4532,7 +4532,7 @@ void ResultsView::exportResults()
                 }
 
                 if (mModel->displayY()) {
-                    file.setFileName(dirPath + "/"+list_names.at(1) + "_Curve_Map.csv");
+                    file.setFileName(dirPath + "/Curve"+list_names.at(1) + "_Map.csv");
 
                     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
                         modelCurve()->saveMapToFile(&file, csvSep, modelCurve()->mPosteriorMeanG.gy.mapG);
@@ -4540,7 +4540,7 @@ void ResultsView::exportResults()
                     }
 
                     if (mModel->displayZ()) {
-                        file.setFileName(dirPath + "/"+list_names.at(2) + "_Curve_Map.csv");
+                        file.setFileName(dirPath + "/Curve"+list_names.at(2) + "_Map.csv");
 
                         if (file.open(QFile::WriteOnly | QFile::Truncate)) {
                             modelCurve()->saveMapToFile(&file, csvSep, modelCurve()->mPosteriorMeanG.gz.mapG);
@@ -4553,7 +4553,7 @@ void ResultsView::exportResults()
                 // --------------   Saving Curve Ref
                 int i = 0;
                 for (auto&& graph : mByCurveGraphs) {
-                    graph->getGraph()->exportReferenceCurves ("", QLocale::English, ",",  mModel->mSettings.mStep, dirPath + "/"+list_names.at(i) + "_ref.csv" );
+                    graph->getGraph()->exportReferenceCurves ("", QLocale::English, ",",  mModel->mSettings.mStep, dirPath + "/Curve_"+list_names.at(i) + "_ref.csv" );
                     i++;
                 }
 
