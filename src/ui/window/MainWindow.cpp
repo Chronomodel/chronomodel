@@ -987,12 +987,12 @@ void MainWindow::rebuildExportCurve()
 
             int totalIterAccepted = 1;
             if (!curveModel->compute_Y) {
-                for (auto &splineXYZ : runTrace) {
+                for (auto &splineXYZ : runTraceByChain) {
                     modelCurve->memo_PosteriorG(meanGByChain.gx, splineXYZ.splineX,  totalIterAccepted++ );
                 }
 
             } else {
-                for (auto &splineXYZ : runTrace) {
+                for (auto &splineXYZ : runTraceByChain) {
                     modelCurve->memo_PosteriorG_3D(meanGByChain, splineXYZ, modelCurve->mCurveSettings.mProcessType,  totalIterAccepted++ );
                 }
             }
