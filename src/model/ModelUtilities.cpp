@@ -913,7 +913,7 @@ QString ModelUtilities::curveResultsHTML(const ModelCurve* model)
         text += line(textGreen(QObject::tr("- Lambda Spline; Interpolation Fixed value = %1").arg(QString::number(0))));
 
     }else {
-        text += line(textGreen(QObject::tr("- Mean of the log10 of Lambda Spline = %1").arg(stringForLocal(model->mLambdaSpline.mResults.funcAnalysis.mean))));
+        text += line(textGreen(QObject::tr("- Mean of the log10 of Smoothing = %1").arg(stringForLocal(model->mLambdaSpline.mResults.funcAnalysis.mean))));
     }
 
     if (model->mS02Vg.mSamplerProposal == MHVariable::eFixe) {
@@ -955,15 +955,15 @@ QString ModelUtilities::lambdaResultsHTML(const ModelCurve* model)
 {
     QString text;
     if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe  && model->mCurveSettings.mLambdaSplineType != CurveSettings::eInterpolation) {
-        text = line(textBold(textGreen(QObject::tr("Lambda Spline"))));
+        text = line(textBold(textGreen(QObject::tr("Smoothing"))));
         text += line(textGreen(QObject::tr("Fixed value : 10E%1").arg(QString::number( model->mLambdaSpline.mRawTrace->at(0)))));
 
     } else if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe && model->mCurveSettings.mLambdaSplineType == CurveSettings::eInterpolation) {
-        text = line(textBold(textGreen(QObject::tr("Lambda Spline"))));
+        text = line(textBold(textGreen(QObject::tr("Smoothing"))));
         text += line(textGreen(QObject::tr("Interpolation Fixed value : %1").arg(QString::number(0))));
 
     }else {
-        text = line(textBold(textGreen(QObject::tr("Stat. on the log10 of Lambda Spline"))));
+        text = line(textBold(textGreen(QObject::tr("Stat. on the log10 of Smoothing"))));
         text += line(textGreen(model->mLambdaSpline.resultsString("", nullptr, nullptr)));
     }
     return text;

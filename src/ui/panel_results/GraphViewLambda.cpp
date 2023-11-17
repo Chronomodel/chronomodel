@@ -154,7 +154,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QVector<vari
     // -------------------------------------------------
     else if (typeGraph == eTrace) {
         mGraph->mLegendX = "Iterations";
-        mGraph->setTipYLab("Lambda");
+        mGraph->setTipYLab("Smoothing");
         mGraph->setFormatFunctX(nullptr);
         mTitle = tr("Smoothing Trace");
         if (mModel->mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
@@ -209,12 +209,11 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
         mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
         mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
 
-
         for (unsigned i = 0; i<mShowChainList.size(); ++i) {
             mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList.at(i));
         }
         
-        mGraph->setTipXLab("Log10 Lambda");
+        mGraph->setTipXLab(tr("Log10 Smoothing"));
         mGraph->setYAxisMode(GraphView::eHidden);
         mGraph->showInfos(false);
         mGraph->clearInfos();
@@ -236,7 +235,7 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
         }
 
         mGraph->setTipXLab(tr("Iteration"));
-        mGraph->setTipYLab("Log10 Lambda");
+        mGraph->setTipYLab(tr("Log10 Smoothing"));
 
         mGraph->setYAxisMode(GraphView::eMinMaxHidden);
         mGraph->showInfos(false);

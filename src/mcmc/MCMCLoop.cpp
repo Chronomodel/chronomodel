@@ -345,8 +345,8 @@ QString MCMCLoop::initialize_time(Model* model)
                     uEvent->mS02Theta.mX = uEvent->mDates.size() / s02_sum; //apres ici au bout de 3
                     uEvent->mS02Theta.mSigmaMH = 1.;
 
-                    const double S02_harmonique = sqrt(uEvent->mDates.size() / s02_sum);
-                    uEvent->mBetaS02 = 1.004680139*(1 - exp(- 0.0000847244 * pow(S02_harmonique, 2.373548593)));
+                    const double sqrt_S02_harmonique = sqrt(uEvent->mDates.size() / s02_sum);
+                    uEvent->mBetaS02 = 1.004680139*(1 - exp(- 0.0000847244 * pow(sqrt_S02_harmonique, 2.373548593)));
 
                     uEvent->mS02Theta.mLastAccepts.clear();
                     uEvent->mS02Theta.tryUpdate(uEvent->mS02Theta.mX, 2.);
@@ -636,7 +636,7 @@ void MCMCLoop::run()
 
         //----------------------- Adaptation --------------------------------------
 
-        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()))  + " : " + + "Adapting ; Total Estimated time left " + DHMS(interTime), 0, chain.mMaxBatchs * chain.mIterPerBatch);
+        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()))  + " : "  + "Adapting ; Total Estimated time left " + DHMS(interTime), 0, chain.mMaxBatchs * chain.mIterPerBatch);
         emit stepProgressed(0);
         mState = eAdapting;
 
