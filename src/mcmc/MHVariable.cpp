@@ -115,33 +115,32 @@ MHVariable::~MHVariable()
 }
 
 /**
- * @brief MHVariable::tryUpdate It's a push function where mLastAcceptsLength = mChains[0].mNumBatchIter;
- * @param x
- * @param rapport
+ * @brief MHVariable::tryUpdate
+ * @param x : Value proposed and, if applicable, accepted
+ * @param rate : Force reject with rate  = -1.
  * @return
  */
-bool MHVariable::tryUpdate(const double x, const double rapport)
+bool MHVariable::tryUpdate(const double x, const double rate)
 {
     if (mLastAccepts.size() >= mLastAcceptsLength)
         mLastAccepts.removeAt(0);
 
     bool accepted (false);
 
-    if (rapport >= 1.)
+    if (rate >= 1.)
         accepted = true;
 
-    else if (rapport >= 0){
+    else if (rate >= 0){
         const double uniform = Generator::randomUniform();
-        accepted = (uniform <= rapport);
+        accepted = (uniform <= rate);
 #ifdef DEBUG
         if (uniform == 0)
-            qDebug()<< "MHVariable::tryUpdate() uniform == 0";
+            qDebug()<< "[MHVariable::tryUpdate] uniform == 0";
 #endif
     }
 
     if (accepted) {
         mX = x;
-
     }
     mLastAccepts.append(accepted);
 

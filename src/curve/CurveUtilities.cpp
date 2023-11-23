@@ -2104,13 +2104,22 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const 
 
 
     // test positif
-/*
-    if (sv.positive_curve) {
+
+    if (sv.force_positive_curve) {
 
         bool has_positif = false;
 
         int idx_depth = 0;
         double lambda_depth, Vg_depth;
+        // Recomposition de vec_theta_red
+        // Attention nous avons perdu la position du premier temps, il est considèré égale à Zéro pour le test
+        std::vector<double> vec_theta_red;
+        double som = 0;
+        vec_theta_red.push_back(som);
+        for (auto& h : vecH) {
+            som += h;
+            vec_theta_red.push_back(som);
+        }
 
         do {
             lambda_depth =  lambda_mini * pow(10, (double)idx_depth/10.);
@@ -2132,16 +2141,6 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const 
 
             const std::vector<double> &vecVarG = calcul_spline_variance(spline_matrices, decomp, lambda_depth);
 
-            // Recomposition de vec_theta_red
-            // Attention nous avons perdu la position du premier temps, il est considèré égale à Zéro pour le test
-            std::vector<double> vec_theta_red;
-            double som = 0;
-            vec_theta_red.push_back(som);
-            for (auto& h : vecH) {
-                som += h;
-                vec_theta_red.push_back(som);
-            }
-
 
             MCMCSplineComposante splineX;
             splineX.vecThetaReduced = vec_theta_red;
@@ -2153,7 +2152,7 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const 
             MCMCSpline spline;
             spline.splineX = std::move(splineX);
 
-            has_positif = hasPositiveGPrimeByDet(spline.splineX);
+            has_positif =  hasPositiveGPrimeByDet(spline.splineX);//hasPositiveGPrimePlusConst ((spline.splineX, 0.);// hasPositiveGPrimeByDet(spline.splineX);
             if (!has_positif) {
                 idx_depth++;
             }
@@ -2179,7 +2178,7 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const 
         return std::make_pair(lambda_depth, Vg_depth);
 
     } else {
-*/
+
         double Vg = var_residual(vec_X, test_matrices, vecH, lambda_mini);
 
         if (doY) {
@@ -2191,7 +2190,7 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const 
             Vg /= 3.;
         }
         return std::make_pair(lambda_mini, Vg);
- //   }
+    }
 
     // ----- RETURN
  //   return std::make_pair(1., 0.);

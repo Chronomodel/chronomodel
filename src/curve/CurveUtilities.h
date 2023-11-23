@@ -52,7 +52,7 @@ struct SilvermanParam
     bool use_error_measure = true;
     bool lambda_fixed = false;
     double log_lambda_value = -6;
-//    bool positive_curve = false;
+    bool force_positive_curve = false;
 
     std::map<double, double> tab_CV;
     std::map<double, double> tab_GCV;

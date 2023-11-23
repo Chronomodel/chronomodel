@@ -289,7 +289,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
 
     mCurveEventsPointsCheck = new CheckBox(tr("Event Dates (HPD)"), mCurvesGroup);
     mCurveEventsPointsCheck->setFixedHeight(h);
-    mCurveEventsPointsCheck->setChecked(true);
+    mCurveEventsPointsCheck->setChecked(false);
 
     mCurveDataPointsCheck = new CheckBox(tr("Ind. Calib. Dates"), mCurvesGroup);
     mCurveDataPointsCheck->setFixedHeight(h);
@@ -1168,7 +1168,7 @@ void ResultsView::initModel(Model* model)
         XScale.findOptimal(modelCurve->mPosteriorMeanG.gx.vecG.front(), modelCurve->mPosteriorMeanG.gx.vecG.back(), 7);
         mResultCurrentMinX = XScale.min;
         mResultCurrentMaxX = XScale.max;
-        applyXRange();
+        setXRange();
 
         mXOptionTitle->setText(mModel->getCurvesLongName().at(0) + " " + tr("Scale"));
         mXOptionLab->setText(mModel->getCurvesName().at(0));
@@ -1178,7 +1178,7 @@ void ResultsView::initModel(Model* model)
             XScale.findOptimal(modelCurve->mPosteriorMeanG.gy.vecG.front(), modelCurve->mPosteriorMeanG.gy.vecG.back(), 7);
             mResultCurrentMinY = XScale.min;
             mResultCurrentMaxY = XScale.max;
-            applyYRange();
+            setYRange();
             mYOptionTitle->setText(mModel->getCurvesLongName().at(1) + " " + tr("Scale"));
             mYOptionLab->setText(mModel->getCurvesName().at(1));
             mYOptionBut->setText(tr("Optimal") + " " + mModel->getCurvesName().at(1) + " " + tr("Display"));
@@ -1187,7 +1187,7 @@ void ResultsView::initModel(Model* model)
                 XScale.findOptimal(modelCurve->mPosteriorMeanG.gz.vecG.front(), modelCurve->mPosteriorMeanG.gz.vecG.back(), 7);
                 mResultCurrentMinZ = XScale.min;
                 mResultCurrentMaxZ = XScale.max;
-                applyZRange();
+                setZRange();
                 mZOptionTitle->setText(mModel->getCurvesLongName().at(2) + " " + tr("Scale"));
                 mZOptionLab->setText(mModel->getCurvesName().at(2));
                 mZOptionBut->setText(tr("Optimal") + " " + mModel->getCurvesName().at(2) + " " + tr("Display"));
@@ -2460,14 +2460,13 @@ void ResultsView::updateGraphsMinMax()
             mMainVariable == GraphViewResults::eS02Vg
             ) {
             mResultMinT = 0.;
-            mResultMaxT = getGraphsMax(listGraphs, "Post Distrib", 100.);
+            mResultMaxT = getGraphsMax(listGraphs, "Post Distrib", 1.);
 
         } else if (mMainVariable == GraphViewResults::eLambda) {
             mResultMinT = getGraphsMin(listGraphs, "Lambda", -20.);
             mResultMaxT = getGraphsMax(listGraphs, "Lambda", 10.);
 
         } else {
-            //auto span = (mModel->mSettings.getTmaxFormated() - mModel->mSettings.getTminFormated())/2. * mTimeSpin->minimum();
             mResultMinT = mModel->mSettings.getTminFormated();
             mResultMaxT = mModel->mSettings.getTmaxFormated();
         }
@@ -2491,23 +2490,23 @@ void ResultsView::updateGraphsMinMax()
     }
 }
 
-double ResultsView::getGraphsMax(const QList<GraphViewResults*>& graphs, const QString& title, double maxFloor)
+double ResultsView::getGraphsMax(const QList<GraphViewResults*> &graphs, const QString &title, const double maxFloor)
 {
     double max = 0.;
 
     for (const auto& graphWrapper : graphs) {
-        const QList<GraphCurve> curves = graphWrapper->getGraph()->getCurves();
+        const QList<GraphCurve> &curves = graphWrapper->getGraph()->getCurves();
         for (const auto& curve : curves) {
               if (!curve.mData.isEmpty() && curve.mName.contains(title) && (curve.mVisible == true)) {
-                max = ceil(std::max(max, curve.mData.lastKey()));
+                max = std::max(max, curve.mData.lastKey());
             }
         }
     }
 
-    return std::max(maxFloor, max);
+    return std::max(maxFloor, ceil(max));
 }
 
-double ResultsView::getGraphsMin(const QList<GraphViewResults*>& graphs, const QString& title, double minFloor)
+double ResultsView::getGraphsMin(const QList<GraphViewResults*> &graphs, const QString &title, const double minFloor)
 {
     double min = 0.;
 
@@ -2515,12 +2514,12 @@ double ResultsView::getGraphsMin(const QList<GraphViewResults*>& graphs, const Q
         const QList<GraphCurve> curves = graphWrapper->getGraph()->getCurves();
         for (const auto& curve : curves) {
             if (!curve.mData.isEmpty() && curve.mName.contains(title) && (curve.mVisible == true)) {
-                min = floor(std::min(min, curve.mData.firstKey()));
+                min = std::min(min, curve.mData.firstKey());
             }
         }
     }
 
-    return std::min(minFloor, min);
+    return std::min(minFloor, floor(min));
 }
 
 /**

@@ -115,6 +115,7 @@ protected:
     bool update_400();
     bool update_interpolate();
 
+    bool update_Komlan0();
     bool update_Komlan();
 
 
@@ -255,8 +256,10 @@ private:
 
     SplineMatrices prepareCalculSpline_W_Vg0(const QList<Event *> &sortedEvents, std::vector<double> &vecH);
     //MCMCSpline samplingSpline_multi(QList<Event *> &lEvents, const Matrix2D &RR_1, const Matrix2D &Q, std::vector<double> &vecfx, SplineMatrices matrices);
-    MCMCSpline samplingSpline_multi(QList<Event *> &events, std::vector<Event *> &lEventsinit, std::vector<double> vecYx, std::vector<double> vecYstd, const Matrix2D &RR, const Matrix2D &RR_1, const Matrix2D &Q, const Matrix2D &QT, const Matrix2D &matK);
-    std::vector<double> multinormal_sampling (std::vector<double> &mu, const Matrix2D &a);
+    //MCMCSpline samplingSpline_multi(QList<Event *> &events, std::vector<Event *> &lEventsinit, std::vector<double> vecYx, std::vector<double> vecYstd, const Matrix2D &RR, const Matrix2D &RR_1, const Matrix2D &Q, const Matrix2D &QT, const Matrix2D &matK);
+    MCMCSpline samplingSpline_multi(QList<Event *> &lEvents, std::vector<Event *> &lEventsinit, std::vector<double> vecYx, std::vector<double> vecYstd, const Matrix2D &RR, const Matrix2D &R_1QT, const Matrix2D &Q, const Matrix2D &QT, const Matrix2D &matK,  bool doSortAndSpreadTheta, SplineMatrices matrices);
+
+    std::vector<double> multinormal_sampling (const std::vector<double> &mu, const Matrix2D &a);
 
     std::vector<double> splines_prior(const Matrix2D &KK, std::vector<double> &g, std::vector<double> &g_new);
     inline double Signe_Number(const double &a);
@@ -267,7 +270,7 @@ private:
 
     double h_exp_fX_theta (Event* e, const MCMCSpline &s, unsigned idx);
     std::vector<double> sampling_spline (QList<Event *> &lEvents, SplineMatrices matrices);
-    t_prob h_S02_Vg_K(const std::vector<Event *> initListEvents, const QList<Event *> events, const double S02_Vg, const double try_Vg);
+    t_prob h_S02_Vg_K(const std::vector<Event *> &initListEvents, const QList<Event *> events, const double S02_Vg, const double try_Vg);
 
     std::pair<Matrix2D, std::vector<double>> decompositionCholeskyKK(const Matrix2D &matrix, const int nbBandes, const int shift);
 
@@ -275,7 +278,7 @@ private:
 
 #pragma mark usefull math function
 
-inline double log_p(const double x, const int n) {
+inline double log_p(const double x, const double n) {
     return log(x) / log(n) ;
 }
 

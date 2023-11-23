@@ -2160,6 +2160,7 @@ void Model::restoreFromFile_v323(QDataStream *in)
     if (appliVersion != qApp->applicationVersion())
         qDebug()<<" Different Model version ="<<appliVersion<<" actual ="<<qApp->applicationVersion();
 
+
 #endif
     // -----------------------------------------------------
     //  Read info
@@ -2280,6 +2281,8 @@ void Model::restoreFromFile_v323(QDataStream *in)
 
 void Model::restoreFromFile_v324(QDataStream *in)
 {
+    QList<QString> compatible_version;
+    compatible_version<<"3.2.4"<<"3.2.6";
     int QDataStreamVersion;
     *in >> QDataStreamVersion;
     in->setVersion(QDataStreamVersion);
@@ -2294,7 +2297,8 @@ void Model::restoreFromFile_v324(QDataStream *in)
 #ifdef DEBUG
     if (appliVersion != qApp->applicationVersion())
         qDebug()<<" Different Model version ="<<appliVersion<<" actual ="<<qApp->applicationVersion();
-
+    if (compatible_version.contains(appliVersion))
+        qDebug()<<" Version compatible ";
 #endif
     // -----------------------------------------------------
     //  Read info

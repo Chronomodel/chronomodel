@@ -55,8 +55,6 @@ class EventConstraint;
 #define S02_BAYESIAN
 
 
-
-
 class Event
 {
 public:
@@ -97,7 +95,6 @@ public:
     MHVariable mS02Theta;
 
     double mAShrinkage;
-    //double mS02harmonique;
     double mBetaS02;
     bool mInitialized;
 
@@ -135,7 +132,7 @@ public:
     double mSy;
     double mW;
 
-    MHVariable mVg; // sigma G de l'event (par rapport à G(t) qu'on cherche à estimer)
+    MHVariable mVg; // sigma G of the event (relative to G(t) that we are trying to estimate)
 
 #pragma mark Functions
 
@@ -187,6 +184,7 @@ public:
 inline double get_Yx(Event* e) {return e->mYx;};
 inline double get_Yy(Event* e) {return e->mYy;};
 inline double get_Yz(Event* e) {return e->mYz;};
+inline double get_Sy(Event* e) {return e->mSy;};
 
 inline double get_Gx(Event* e) {return e->mGx;};
 inline double get_Gy(Event* e) {return e->mGy;};

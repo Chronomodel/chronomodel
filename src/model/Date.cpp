@@ -1529,8 +1529,10 @@ void Date::updateSigmaShrinkage(Event* &event)
     const int logVMax = 100;
 
     const double V1 = mSigmaTi.mX * mSigmaTi.mX;
-    const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigmaTi.mSigmaMH);
-    double V2 = pow(10, logV2);
+    //const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigmaTi.mSigmaMH);
+    //double V2 = pow(10, logV2);
+    const double logV2 = Generator::gaussByBoxMuller(log(V1), mSigmaTi.mSigmaMH); // pour test
+    const double V2 = exp(logV2);
 
     double rapport  = -1.;
     if (logV2 >= logVMin && logV2 <= logVMax) {
@@ -1541,30 +1543,12 @@ void Date::updateSigmaShrinkage(Event* &event)
     }
   #ifdef DEBUG
     else {
- //       qDebug()<<"TDate::updateSigma x1 x2 rapport rejet";
+ //       qDebug()<<"[TDate::updateSigma] x1 x2 rapport rejet";
     }
  #endif
 
     mSigmaTi.tryUpdate(sqrt(V2), rapport);
 
-/*
-    const double V1 = mSigmaTi.mX * mSigmaTi.mX;
-    //double z = distribution(generator);
-    //std::normal_distribution<double> distribution(0.0, 1.0);
-    const double z1 = Generator::gaussByBoxMuller(0., 1.);
-    const double z2 = Generator::gaussByBoxMuller(0., 1.);
-    double variance = event->mS02;
-        double shrinkage = 0.5;
-        double x = std::sqrt(shrinkage) * z1 + std::sqrt(1 - shrinkage) * z2;
-
-     double   V2 = pow(x * std::sqrt(variance), 2.);
-
-        const double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
-        const double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1.);
-     double   rapport = x1 * sqrt(V1/V2) * x2;// * V2 / V1 ; // (V2 / V1) est le jacobien!
-
-    mSigmaTi.tryUpdate(sqrt(V2), rapport);
-*/
 }
 
 void Date::updateSigmaReParam(Event* event)

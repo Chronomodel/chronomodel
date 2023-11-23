@@ -254,10 +254,7 @@ QString MCMCLoop::initialize_time(Model* model)
 
                     model->initNodeEvents();
                     const double max = uEvent->getThetaMaxRecursive(tmaxPeriod);
-#ifdef DEBUG
-                    if (min >= max)
-                        qDebug() << tr("-----Error Init for event : %1 : min = %2 : max = %3-------").arg(uEvent->mName, QString::number(min, 'f', 30), QString::number(max, 'f', 30));
-#endif
+
                     if (min >= max) {
                         mAbortedReason = QString(tr("Error Init for event : %1 : min = %2 : max = %3-------").arg(uEvent->mName, QString::number(min, 'f', 30), QString::number(max, 'f', 30)));
                         return mAbortedReason;
@@ -272,6 +269,7 @@ QString MCMCLoop::initialize_time(Model* model)
                     uEvent->mThetaReduced = model->reduceTime(uEvent->mTheta.mX);
                     uEvent->mInitialized = true;
 
+                    qDebug() << tr("----- Init for event : %1 : min = %2 : max = %3 ->theta = %4 thetaRed = %5-------").arg(uEvent->mName, QString::number(min, 'f', 30), QString::number(max, 'f', 30), QString::number(uEvent->mTheta.mX, 'f', 30), QString::number(uEvent->mThetaReduced, 'f', 30));
                     // ----------------------------------------------------------------
 
                     double s02_sum = 0.;

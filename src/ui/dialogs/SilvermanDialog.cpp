@@ -132,6 +132,7 @@ void SilvermanDialog::memo()
     mParam->lambda_fixed = mLambdaTypeInput->currentIndex() == 1;
     mParam->log_lambda_value = locale().toDouble(mLambdaInput->text());
     mParam->use_error_measure = mUseErrMesureInput->isChecked();
+    mParam->force_positive_curve = false;
     close();
 }
 

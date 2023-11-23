@@ -106,7 +106,9 @@ double Generator::randomUniform(const double min, const double max)
 
 int Generator::randomUniformInt(const int min, const int max)
 {
-   return (int) round(randomUniform(min, max));
+    std::uniform_int_distribution<int> distribution(min, max);
+    return distribution(sEngine);
+   //return (int) round(randomUniform(min, max));
 }
 
 double Generator::gaussByDoubleExp(const double mean, const double sigma, const double min, const double max)

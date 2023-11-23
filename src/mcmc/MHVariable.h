@@ -70,7 +70,7 @@ public:
     double getCurrentAcceptRate() const;
     void saveCurrentAcceptRate();
 
-    bool tryUpdate(const double x, const double rapportToTry);
+    bool tryUpdate(const double x, const double rate);
     bool adapt (const double coef_min = 0.42, const double coef_max = 0.46, const double delta = 0.01);
     inline void memo_accept(const unsigned i_chain) {if (mLastAccepts.last()) ++mAllAccepts[i_chain];}
 

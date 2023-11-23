@@ -1165,23 +1165,23 @@ void Event::updateW()
     try {
 #ifdef DEBUG
         if ((mVg.mX + mSy * mSy) < 1e-20) {
-            qDebug()<< "[Event] updateW() mVg.mX + mSy * mSy < 1e-20";
+            qDebug()<< "[Event::updateW] mVg.mX + mSy * mSy < 1e-20";
         }
 #endif
         mW = 1. / (mVg.mX + mSy * mSy);
 
 #ifdef DEBUG
         if (mW < 1e-20) {
-            qDebug()<< "[Event] updateW() mW < 1e-20"<< mW;
+            qDebug()<< "[Event::updateW] mW < 1e-20"<< mW;
 
         } else if (mW > 1e+20) {
-            qDebug()<< "[Event] updateW() mW > 1e+20"<< mW;
+            qDebug()<< "[Event::updateW] mW > 1e+20"<< mW;
         }
  #endif
 
 
     }  catch (...) {
-        qWarning() <<"[Event] updateW() mW = 0";
+        qWarning() <<"[Event::updateW] mW = 0";
     }
 
 }
@@ -1193,9 +1193,9 @@ void Event::updateS02()
         const double logVMax = 100.;
 
         const double logV2 = Generator::gaussByBoxMuller(log10(mS02Theta.mX) , mS02Theta.mSigmaMH);
-        const double V2 = pow(10, logV2);
+        const double V2 = pow(10., logV2);
 
-        double rapport  = 0.;
+        double rapport  = -1.; // Force reject
         if (logV2 >= logVMin && logV2 <= logVMax) {
 
             const double current_h = h_S02(mS02Theta.mX);
@@ -1225,7 +1225,7 @@ double Event::h_S02(const double S02)
      /* schoolbook algo*/
  /*   const double alpha = 1. ;
 
-    const double beta = 1.004680139*(1 - exp(- 0.0000847244 * pow(mS02harmonique, 2.373548593)));
+    const double beta = 1.004680139*(1 - exp(- 0.0000847244 * pow(sqrt_S02_harmonique, 2.373548593)));
 
     const double prior = pow(1. / S02, alpha) * expl(- beta / S02);
 
@@ -1245,9 +1245,10 @@ double Event::h_S02(const double S02)
 
 // Code optimization
 
-    //const double beta = 1.004680139*(1 - exp(- 0.0000847244 * pow(mS02harmonique, 2.373548593)));
+    //const double beta = 1.004680139*(1 - exp(- 0.0000847244 * pow(sqrt_S02_harmonique, 2.373548593)));
 
-    double h = expl(- mBetaS02 / S02) / S02;
+    double h = exp(- mBetaS02 / S02) / S02;
+    //qDebug()<<"mBetaS02="<<mName<< mBetaS02<<S02;
 
     for (auto& d : mDates) {
         h *= pow((S02/(S02 + pow(d.mSigmaTi.mX, 2))), 2.);
