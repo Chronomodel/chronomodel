@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -38,17 +38,20 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "HelpWidget.h"
-#include "Painting.h"
 
-HelpWidget::HelpWidget(QWidget* parent):QWidget(parent)
+#include <QLabel>
+#include <QPainter>
+
+HelpWidget::HelpWidget(QWidget* parent):QWidget(parent),
+    mText(QString())
 {
     construct();
 }
 
-HelpWidget::HelpWidget(const QString& text, QWidget* parent):QWidget(parent)
+HelpWidget::HelpWidget(const QString &text, QWidget* parent):QWidget(parent),
+    mText(text)
 {
     construct();
-    setText(text);
 }
 
 void HelpWidget::construct()
@@ -78,30 +81,29 @@ HelpWidget::~HelpWidget()
 
 }
 
-void HelpWidget::setText(const QString& text)
+void HelpWidget::setText(const QString &text)
 {
     mText = text;
     update();
 }
-void HelpWidget::setLink(const QString& url)
+
+void HelpWidget::setLink(const QString &url)
 {
     mHyperLink->setText("<a href=\"" + url + "\">More...</a>");
 }
 
-int HelpWidget::heightForWidth(int w) const
+int HelpWidget::heightForWidth(const int w) const
 {
-    QFontMetrics metrics(mFont);
-    QRect rect = metrics.boundingRect(QRect(0, 0, w - 10, 1000),
+    const QFontMetrics metrics(mFont);
+    const QRect rect = metrics.boundingRect(QRect(0, 0, w - 10, 1000),
                                       Qt::TextWordWrap | Qt::AlignVCenter | Qt::AlignLeft,
                                       mText);
     return rect.height() + 10 + 5 + mFont.pointSize(); // 15 is the height of the link, and 5 its margin
 }
 
-void HelpWidget::paintEvent(QPaintEvent* e)
+void HelpWidget::paintEvent(QPaintEvent* )
 {
-    Q_UNUSED(e);
-
-    QRectF r = rect().adjusted(1, 1, -1, -1);
+    const QRectF r = rect().adjusted(1, 1, -1, -1);
 
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
@@ -119,7 +121,7 @@ void HelpWidget::paintEvent(QPaintEvent* e)
 
 void HelpWidget::resizeEvent(QResizeEvent*)
 {
-    QFontMetrics metrics(mFont);
+    const QFontMetrics metrics(mFont);
     mHyperLink->setFont(mFont);
     mHyperLink->setGeometry(5, height() - 2*mFont.pointSize() -5, width() - metrics.horizontalAdvance("More..") -5, 2*mFont.pointSize());
 }

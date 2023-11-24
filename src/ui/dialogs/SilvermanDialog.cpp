@@ -38,8 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 #include "SilvermanDialog.h"
 
-#include "QtWidgets/qboxlayout.h"
-
+#include <QBoxLayout>
 #include <QtWidgets>
 
 
@@ -57,12 +56,10 @@ SilvermanDialog::SilvermanDialog(SilvermanParam *param, QWidget* parent, Qt::Win
         mUseErrMesureInput->setCheckState(Qt::Checked);
     connect(mUseErrMesureInput, &QCheckBox::clicked, this, &SilvermanDialog::updateLayout);
 
-
     mLambdaTypeLabel = new QLabel(tr("Smoothing"), this);
     mLambdaTypeInput = new QComboBox(this);
     mLambdaTypeInput->addItem(tr("Cross-Validation"));
     mLambdaTypeInput->addItem(tr("Fixed"));
-    //mLambdaSplineTypeInput->addItem(tr("Interpolation curve (λ=0)"));
 
     if (param->lambda_fixed)
         mLambdaTypeInput->setCurrentIndex(1);
@@ -109,7 +106,6 @@ SilvermanDialog::SilvermanDialog(SilvermanParam *param, QWidget* parent, Qt::Win
     vlayout->addStretch();
 
     QWidget* vlayoutWidget = new QWidget();
-   // vlayoutWidget->setFixedWidth(400);
     vlayoutWidget->setLayout(vlayout);
 
     QHBoxLayout* hlayout = new QHBoxLayout();

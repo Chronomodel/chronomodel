@@ -48,7 +48,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QCheckBox>
 #include <QDialog>
 
-
 class SilvermanDialog:public QDialog
 {
     Q_OBJECT
@@ -67,7 +66,6 @@ public:
     QLineEdit* mLambdaInput;
 
     QCheckBox* mUseErrMesureInput;
-
 
     SilvermanParam *mParam;
 };

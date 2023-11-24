@@ -815,6 +815,7 @@ void MainWindow::showHelp(bool show)
         QWhatsThis::leaveWhatsThisMode();*/
     AppSettings::mShowHelp = show;
     mProjectView->showHelp(show);
+
 }
 
 void MainWindow::openWebsite()

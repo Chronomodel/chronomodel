@@ -121,7 +121,7 @@ public:
     bool saveProjectToFile();
 
     bool recenterProject();
-    bool insert(const QString& path, QJsonObject &return_state);
+    bool insert(const QString &path, QJsonObject &return_state);
 
     /**
      * @brief setNoResults : set to disable the saving the file *.res

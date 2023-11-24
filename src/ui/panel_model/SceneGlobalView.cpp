@@ -39,8 +39,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "SceneGlobalView.h"
 #include "Painting.h"
-#include <QtWidgets>
 
+#include <QtWidgets>
 
 SceneGlobalView::SceneGlobalView(QGraphicsScene* scene, QGraphicsView* view, QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
     mScene(scene),
@@ -116,15 +116,6 @@ void SceneGlobalView::paintEvent(QPaintEvent* e)
         p.setBrush(Qt::NoBrush);
         p.drawRect(targetVisibleRect);
 
-
-        //qDebug() << "-----";
-        //qDebug() << targetRect;
-        //qDebug() << visibleTargetRect;
-
-        //qDebug() << sceneRect;
-        //qDebug() << visibleRect;
-        //qDebug() << propX << ", " << propY << ", " << propW << ", " << propH;
-        //qDebug() << "-----------";
     }
 
     p.setPen(Painting::borderDark);
@@ -142,7 +133,7 @@ QRectF SceneGlobalView::getTargetRect()
     sceneRect.setWidth(sceneRect.width() * matrix.m11());
     sceneRect.setHeight(sceneRect.height() * matrix.m22());
 
-    double sceneProp = sceneRect.width() / sceneRect.height();
+    const double sceneProp = sceneRect.width() / sceneRect.height();
     QSizeF targetSize;
 
     if (sceneProp > w / h) {
@@ -169,7 +160,7 @@ void SceneGlobalView::mousePressEvent(QMouseEvent* e)
 
 void SceneGlobalView::mouseReleaseEvent(QMouseEvent* e)
 {
-    Q_UNUSED(e);
+    (void)e;
     mIsDragging = false;
 }
 
@@ -181,13 +172,13 @@ void SceneGlobalView::mouseMoveEvent(QMouseEvent* e)
 
 void SceneGlobalView::setPosition(const QPoint& pos)
 {
-    const QRectF targetRect = getTargetRect();
+    const QRectF &targetRect = getTargetRect();
 
     if (targetRect.contains(pos)) {
         const double propX = double (pos.x() - targetRect.x()) / targetRect.width();
         const double propY = double (pos.y() - targetRect.y()) / targetRect.height();
 
-        const QRectF sceneRect = mScene->sceneRect();
+        const QRectF &sceneRect = mScene->sceneRect();
         const QPointF scenePos(sceneRect.x() + sceneRect.width() * propX,
                          sceneRect.y() + sceneRect.height() * propY);
 

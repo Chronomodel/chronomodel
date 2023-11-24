@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -39,28 +39,27 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "MCMCSettingsDialog.h"
 #include "Button.h"
-#include "Label.h"
 #include "LineEdit.h"
 #include "Painting.h"
 #include "QtUtilities.h"
 #include "HelpWidget.h"
+
 #include <QtWidgets>
 
-
-MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent):QDialog(parent),
-mTop ( int(3.5 * fontMetrics().height())), // y position of the colored box
-mColoredBoxHeigth ( 10 * fontMetrics().height()), // size of the colored box 3.5
-mBurnBoxWidth (fontMetrics().horizontalAdvance("0000000000")),
-mAdaptBoxWidth ( fontMetrics().horizontalAdvance("0000000000")),
-mAcquireBoxWidth (int (3.5 * fontMetrics().horizontalAdvance("0000000000"))),
-mBottom (3 * fontMetrics().height()),
-mLineH (int (1.1* fontMetrics().height())), // heigth of the edit box
-mEditW (fontMetrics().horizontalAdvance("0000000000")),
-mButW (fontMetrics().horizontalAdvance("0000000000")),
-mButH ( int (1.2 * fontMetrics().height())),
-mMarginW ( int( 0.5 * fontMetrics().height() )),  // marge width
-mMarginH ( (mColoredBoxHeigth - 5*mLineH)/8 ),  // marge Heigth
-mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
+MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, const bool show_help):QDialog(parent),
+    mTop ( int(3.5 * fontMetrics().height())), // y position of the colored box
+    mColoredBoxHeigth ( 10 * fontMetrics().height()), // size of the colored box 3.5
+    mBurnBoxWidth (fontMetrics().horizontalAdvance("0000000000")),
+    mAdaptBoxWidth ( fontMetrics().horizontalAdvance("0000000000")),
+    mAcquireBoxWidth (int (3.5 * fontMetrics().horizontalAdvance("0000000000"))),
+    mBottom (3 * fontMetrics().height()),
+    mLineH (int (1.1* fontMetrics().height())), // heigth of the edit box
+    mEditW (fontMetrics().horizontalAdvance("0000000000")),
+    mButW (fontMetrics().horizontalAdvance("0000000000")),
+    mButH ( int (1.2 * fontMetrics().height())),
+    mMarginW ( int( 0.5 * fontMetrics().height() )),  // marge width
+    mMarginH ( (mColoredBoxHeigth - 5*mLineH)/8 ),  // marge Heigth
+    mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
 {
     setWindowTitle(tr("MCMC Settings"));
 
@@ -125,8 +124,15 @@ mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
     mDownSamplingEdit->setAlignment(Qt::AlignCenter);
 
     // On the bottom part
-    mHelp = new HelpWidget(tr("About seeds : Each MCMC chain is different from the others because it uses a different seed. By default, seeds are picked randomly. However, you can force the chains to use specific seeds by entering them below. By doing so, you can replicate exactly the same results using the same seeds."), this);
-    mHelp->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=52"); // chapter 4.2 MCMC settings
+    if (show_help) {
+        mHelp = new HelpWidget(tr("About seeds : Each MCMC chain is different from the others because it uses a different seed. By default, seeds are picked randomly. However, you can force the chains to use specific seeds by entering them below. By doing so, you can replicate exactly the same results using the same seeds."), this);
+        mHelp->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=52"); // chapter 4.2 MCMC settings
+        mHelp->setVisible(show_help);
+    } else {
+        mHelp = new HelpWidget(this);
+        mHelp->setVisible(show_help);
+    }
+
 
     mSeedsLabel = new QLabel(tr("Seeds (separated by \";\")"),this);
     mSeedsLabel->setFixedSize(fontMetrics().horizontalAdvance(mSeedsLabel->text()), mButH);
@@ -174,7 +180,7 @@ mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
     connect(mResetBut, &Button::clicked, this, &MCMCSettingsDialog::reset);
     connect(mTestBut, &Button::clicked, this, &MCMCSettingsDialog::setQuickTest);
 
-    const int fixedHeight =  mTop  + mColoredBoxHeigth + mHelp->heightForWidth(mTotalWidth - 2 * mMarginW)  + 6 * mMarginH +  mButH + 2*mLineH;
+    const int fixedHeight =   mTop  + mColoredBoxHeigth + (show_help? mHelp->heightForWidth(mTotalWidth - 2 * mMarginW) : 0.)  + 6 * mMarginH +  mButH + 2*mLineH ;
     setFixedSize(mTotalWidth, fixedHeight);
 
 }
@@ -220,9 +226,10 @@ MCMCSettings MCMCSettingsDialog::getSettings()
     return settings;
 }
 
+
 void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
 {
-    Q_UNUSED(e);
+    (void)e;
 
     QPainter p(this);
     p.fillRect(rect(), QColor(220, 220, 220));
@@ -271,7 +278,7 @@ void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
 
 void MCMCSettingsDialog::resizeEvent(QResizeEvent* e)
 {
-    Q_UNUSED(e);
+    (void)e;
     updateLayout();
 }
 
@@ -300,10 +307,14 @@ void MCMCSettingsDialog::updateLayout()
     mDownSamplingEdit->move(int (mAquireRect.x() + (mAcquireBoxWidth - mEditW)/2), int (mAquireRect.y() + 4 * mLineH + 5 * mMarginH));
 
     // Help box
-    mHelp->setGeometry(mMarginW,
-                       mTop + mColoredBoxHeigth + mMarginH,
-                       width() - 2 * mMarginW,
-                       mHelp->heightForWidth(width() - 2 * mMarginW ) );
+    if (mHelp->text().isEmpty())
+        mHelp->setGeometry(0, 0, 0, 0);
+    else
+        mHelp->setGeometry(mMarginW,
+                           mTop + mColoredBoxHeigth + mMarginH,
+                           width() - 2 * mMarginW,
+                           mHelp->heightForWidth(width() - 2 * mMarginW ) );
+
 
    // Bottom Info
     const int margingLeft = (width()/2 - mSeedsLabel->width() - mSeedsEdit->width() - mMarginW)/2;

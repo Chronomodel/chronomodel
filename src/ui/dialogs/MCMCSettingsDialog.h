@@ -56,10 +56,10 @@ class MCMCSettingsDialog: public QDialog
 {
     Q_OBJECT
 public:
-    MCMCSettingsDialog(QWidget* parent = nullptr);
+    MCMCSettingsDialog(QWidget* parent = nullptr, const bool show_help = true);
     virtual ~MCMCSettingsDialog();
 
-    void setSettings(const MCMCSettings& settings);
+    void setSettings(const MCMCSettings &settings);
     MCMCSettings getSettings();
 
 protected slots:

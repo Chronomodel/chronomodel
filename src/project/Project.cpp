@@ -1403,7 +1403,7 @@ void Project::restoreMCMCSettings()
 
 void Project::mcmcSettings()
 {
-    MCMCSettingsDialog dialog(qApp->activeWindow());
+    MCMCSettingsDialog dialog(qApp->activeWindow(), AppSettings::mShowHelp);
     MCMCSettings settings = MCMCSettings::fromJson(mState.value(STATE_MCMC).toObject());
 
     dialog.setSettings(settings);

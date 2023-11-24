@@ -51,14 +51,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 
 
-ImportDataView::ImportDataView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
+ImportDataView::ImportDataView(QWidget* parent, const bool show_help, Qt::WindowFlags flags):QWidget(parent, flags)
 {
     mBrowseBut = new Button(tr("Load CSV file..."), this);
     mExportBut = new Button(tr("Export all project data as CSV"), this);
-    mHelp = new HelpWidget(this);
-    mHelp->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=31"); //chapter 3.4.2.1 Radiocarbon dating (14C)
 
-    mHelp->setText(tr("Your CSV file must contain 1 data per row. Each row must start with an Event name, the second row is the datation method to use. Allowed datation methods are : 14C, AM, Gauss, Unif, TL/OSL.\nComments are allowed in your CSV. They must start with  # or // and can be placed at the end of a data row. When placed at the begining of a row, the whole row is ignored.\r Be careful, cell separator and decimal separator of the CSV file should be those defined in the Application Settings, otherwise the CSV file will not be opened"));
+    mHelp = new HelpWidget(this);
+    setHelpVisible(show_help);
 
     mTable = new ImportDataTable(this, this);
     mTable->setAlternatingRowColors(true);
@@ -68,12 +67,24 @@ ImportDataView::ImportDataView(QWidget* parent, Qt::WindowFlags flags):QWidget(p
     mTable->setDragDropMode(QAbstractItemView::DragOnly);
 
     connect(mBrowseBut, &Button::pressed, this, &ImportDataView::browse);
-    connect(mExportBut, &Button::pressed, this,  &ImportDataView::exportDates);
+    connect(mExportBut, &Button::pressed, this, &ImportDataView::exportDates);
 }
 
 ImportDataView::~ImportDataView()
 {
 
+}
+
+void ImportDataView::setHelpVisible(const bool visible)
+{
+    if (visible) {
+        mHelp->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=31"); //chapter 3.4.2.1 Radiocarbon dating (14C)
+        mHelp->setText(tr("Your CSV file must contain 1 data per row. Each row must start with an Event name, the second row is the datation method to use. Allowed datation methods are : 14C, AM, Gauss, Unif, TL/OSL.\nComments are allowed in your CSV. They must start with  # or // and can be placed at the end of a data row. When placed at the begining of a row, the whole row is ignored.\r Be careful, cell separator and decimal separator of the CSV file should be those defined in the Application Settings, otherwise the CSV file will not be opened"));
+        mHelp->setVisible(visible);
+    } else {
+        mHelp->setText("");
+        mHelp->setVisible(visible);
+    }
 }
 
 /**
@@ -428,26 +439,29 @@ void ImportDataView::errorCsvRows(QList<int> rows)
     }
 }
 
-void ImportDataView::paintEvent(QPaintEvent* e)
+void ImportDataView::paintEvent(QPaintEvent* )
 {
-    Q_UNUSED(e);
     QPainter p(this);
     p.fillRect(rect(), QColor(200, 200, 200));
 }
 
-void ImportDataView::resizeEvent(QResizeEvent* e)
+void ImportDataView::resizeEvent(QResizeEvent*)
 {
-    Q_UNUSED(e);
-
-    const int m (5);
-    const int butH (25);
-    const int helpH = mHelp->heightForWidth(width() - 2*m);
+    const int m = 5;
+    const int butH = 25;
+    int helpH = 0;
 
     mBrowseBut->setGeometry(m, m, (width() - 3*m)/2, butH);
     mExportBut->setGeometry(2*m + (width() - 3*m)/2, m, (width() - 3*m)/2, butH);
 
+    if (mHelp->text().isEmpty()) {
+        mHelp->setGeometry(0, 0, 0 ,0);
+    } else {
+        helpH = mHelp->heightForWidth(width() - 2*m);
+        mHelp->setGeometry(m, height() - helpH - m, width() - 2*m, helpH);
+    }
+
     mTable->setGeometry(0, 2*m + butH, width(), height() - 4*m - butH - helpH);
-    mHelp->setGeometry(m, height() - helpH - m, width() - 2*m, helpH);
 }
 
 // ------------------------------------------------------------------------------------

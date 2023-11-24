@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -73,20 +73,21 @@ class ImportDataView: public QWidget
 {
     Q_OBJECT
 public:
-    ImportDataView(QWidget* parent = nullptr, Qt::WindowFlags flags =  Qt::Widget);
+    ImportDataView(QWidget* parent = nullptr, const bool show_help = false, Qt::WindowFlags flags =  Qt::Widget);
     ~ImportDataView();
 
 public slots:
     void removeCsvRows(QList<int> rows);
     void errorCsvRows(QList<int> rows);
+    void setHelpVisible(const bool visible);
 
 private slots:
     void browse();
     void exportDates();
 
 protected:
-    void paintEvent(QPaintEvent* e);
-    void resizeEvent(QResizeEvent* e);
+    void paintEvent(QPaintEvent*);
+    void resizeEvent(QResizeEvent*);
 
 private:
     Button* mBrowseBut;

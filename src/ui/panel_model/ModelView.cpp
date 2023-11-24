@@ -1003,6 +1003,7 @@ void ModelView::showImport()
 
             mAnimationShow->setStartValue(mRightHiddenRect);
             mAnimationShow->setEndValue(mRightRect);
+            mImportDataView->setHelpVisible(AppSettings::mShowHelp);
             mImportDataView->raise();
             mAnimationShow->setTargetObject(mImportDataView);
             mAnimationShow->start();

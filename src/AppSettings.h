@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,7 +40,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef APPSETTINGS_H
 #define APPSETTINGS_H
 
-#include "Singleton.h"
 #include "DateUtils.h"
 
 #include <qsystemdetection.h>
@@ -84,9 +83,6 @@ class AppSettings
 {
 public:
     AppSettings();
-   // AppSettings(const AppSettings& s);
-   // AppSettings& operator=(const AppSettings& s);
-   // void copyFrom(const AppSettings& s);
     virtual ~AppSettings();
 
     static void readSettings();
@@ -98,7 +94,6 @@ public:
     static void setWidthUnit(int &width) {mWidthUnit = width;}
     static void setHeigthUnit(int &heigth) {mHeigthUnit = heigth;}
 
-public:
     static QLocale::Language mLanguage;
     static QLocale::Country mCountry;
 
