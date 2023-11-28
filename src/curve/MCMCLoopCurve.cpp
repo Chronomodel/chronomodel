@@ -67,7 +67,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <iostream>
 #include <random>
 #include <time.h>
-#include <chrono>
 
 
 #ifdef _WIN32
@@ -462,6 +461,11 @@ QString MCMCLoopCurve::initialize_321()
         clearCompo.mapG.min_value = +INFINITY;
         clearCompo.mapG.max_value = 0;
 
+        clearCompo.mapGP = CurveMap (nbPoint, nbPoint);// (row, column)
+        clearCompo.mapGP.setRangeX(mModel->mSettings.mTmin, mModel->mSettings.mTmax);
+        clearCompo.mapGP.min_value = +INFINITY;
+        clearCompo.mapGP.max_value = 0;
+
         clearCompo.vecG = std::vector<double> (nbPoint); // column
         clearCompo.vecGP = std::vector<double> (nbPoint);
         clearCompo.vecGS = std::vector<double> (nbPoint);
@@ -854,13 +858,18 @@ QString MCMCLoopCurve::initialize_400()
         }
 #endif
         // init Posterior MeanG and map
-        const int nbPoint = 300;// Density curve size and curve size
+        const int nbPoint = 300;// Density curve size and curve size default = 300
 
         PosteriorMeanGComposante clearCompo;
         clearCompo.mapG = CurveMap (nbPoint, nbPoint);// (row, column)
         clearCompo.mapG.setRangeX(mModel->mSettings.mTmin, mModel->mSettings.mTmax);
         clearCompo.mapG.min_value = +INFINITY;
         clearCompo.mapG.max_value = 0;
+
+        clearCompo.mapGP = CurveMap (nbPoint, nbPoint);// (row, column)
+        clearCompo.mapGP.setRangeX(mModel->mSettings.mTmin, mModel->mSettings.mTmax);
+        clearCompo.mapGP.min_value = +INFINITY;
+        clearCompo.mapGP.max_value = 0;
 
         clearCompo.vecG = std::vector<double> (nbPoint); // column
         clearCompo.vecGP = std::vector<double> (nbPoint);
@@ -884,8 +893,20 @@ QString MCMCLoopCurve::initialize_400()
             maxY = std::max(maxY, g + e);
             i++;
         }
-
         clearMeanG.gx.mapG.setRangeY(minY, maxY);
+
+        /* double minYGP = +INFINITY;
+        double maxYGP = -INFINITY;
+        i=0;
+        unsigned int i0;
+        for (auto t_red : mModel->mSpline.splineX.vecThetaReduced) {
+            const auto gp = valeurGPrime(mModel->yearTime(t_red), mModel->mSpline.splineX, i0, *mModel );
+            minYGP = std::min(minYGP, gp);
+            maxYGP = std::max(maxYGP, gp);
+        } */
+        clearMeanG.gx.mapGP.setRangeY(+INFINITY, -INFINITY);
+        //clearMeanG.gx.mapGP.setRangeY(minYGP, maxYGP);
+
 
         if (mModel->compute_Y) {
             clearMeanG.gy = clearCompo;
@@ -907,6 +928,18 @@ QString MCMCLoopCurve::initialize_400()
 
             clearMeanG.gy.mapG.setRangeY(minY, maxY);
 
+            /*minYGP = +INFINITY;
+            maxYGP = -INFINITY;
+            i0 = 0;
+            for (auto t_red : mModel->mSpline.splineY.vecThetaReduced) {
+                const auto gp = valeurGPrime(mModel->yearTime(t_red), mModel->mSpline.splineY, i0, *mModel );
+                minYGP = std::min(minYGP, gp);
+                maxYGP = std::max(maxYGP, gp);
+            }
+
+            clearMeanG.gy.mapGP.setRangeY(minYGP, maxYGP);*/
+            clearMeanG.gy.mapGP.setRangeY(+INFINITY, -INFINITY);
+
             if (mModel->compute_Z) {
                 clearMeanG.gz = clearCompo;
 
@@ -925,6 +958,19 @@ QString MCMCLoopCurve::initialize_400()
                 }
 
                 clearMeanG.gz.mapG.setRangeY(minY, maxY);
+
+                /* minYGP = +INFINITY;
+                maxYGP = -INFINITY;
+                i0 = 0;
+                for (auto t_red : mModel->mSpline.splineZ.vecThetaReduced) {
+                    const auto gp = valeurGPrime(mModel->yearTime(t_red), mModel->mSpline.splineZ, i0, *mModel );
+                    minYGP = std::min(minYGP, gp);
+                    maxYGP = std::max(maxYGP, gp);
+                }
+
+                clearMeanG.gz.mapGP.setRangeY(minYGP, maxYGP);
+                */
+                clearMeanG.gz.mapGP.setRangeY(+INFINITY, -INFINITY);
             }
 
         }
@@ -945,6 +991,10 @@ QString MCMCLoopCurve::initialize_400()
             clearMeanG.gx.mapG.setRangeY(gxIncMin, gxIncMax);
             clearMeanG.gy.mapG.setRangeY(gyDecMin, gyDecMax);
             clearMeanG.gz.mapG.setRangeY(gzFmin, gzFmax);
+
+            clearMeanG.gx.mapGP.setRangeY(+INFINITY, -INFINITY);
+            clearMeanG.gy.mapGP.setRangeY(+INFINITY, -INFINITY);
+            clearMeanG.gz.mapGP.setRangeY(+INFINITY, -INFINITY);
 
         }
 
@@ -4308,16 +4358,28 @@ void MCMCLoopCurve::memo()
         double minY_X, minY_Y, minY_Z;
         double maxY_X, maxY_Y, maxY_Z;
 
+        double minY_GP_X, minY_GP_Y, minY_GP_Z;
+        double maxY_GP_X, maxY_GP_Y, maxY_GP_Z;
+
         minY_X = meanG->gx.mapG.minY();
         maxY_X = meanG->gx.mapG.maxY();
+
+        minY_GP_X = meanG->gx.mapGP.minY();
+        maxY_GP_X = meanG->gx.mapGP.maxY();
 
         if (mModel->compute_Y) {
             minY_Y = meanG->gy.mapG.minY();
             maxY_Y = meanG->gy.mapG.maxY();
 
+            minY_GP_Y = meanG->gy.mapGP.minY();
+            maxY_GP_Y = meanG->gy.mapGP.maxY();
+
             if (mModel->compute_Z) {
                 minY_Z = meanG->gz.mapG.minY();
                 maxY_Z = meanG->gz.mapG.maxY();
+
+                minY_GP_Z = meanG->gz.mapGP.minY();
+                maxY_GP_Z = meanG->gz.mapGP.maxY();
             }
         }
 
@@ -4328,7 +4390,7 @@ void MCMCLoopCurve::memo()
         const double stepT = (mModel->mSettings.mTmax - mModel->mSettings.mTmin) / (nbPtsX - 1);
 
         double t;
-        double gx_the, gy_the, gz_the, varGx, varGy, varGz, gp, gs;
+        double gx_the, gy_the, gz_the, varGx, varGy, varGz, gpx, gpy, gpz, gs;
         unsigned i0 = 0;
 
         // Convertion IDF
@@ -4338,9 +4400,9 @@ void MCMCLoopCurve::memo()
             for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
                 t = (double)idxT * stepT + mModel->mSettings.mTmin ;
                 // Le premier calcul avec splineX évalue i0, qui est retoiurné, à la bonne position pour les deux autres splines
-                valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineX, gx_the, varGx, gp, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-                valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineY, gy_the, varGy, gp, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-                valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineZ, gz_the, varGz, gp, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
+                valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineX, gx_the, varGx, gpx, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
+                valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineY, gy_the, varGy, gpy, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
+                valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineZ, gz_the, varGz, gpz, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
 
                 const double zF = sqrt(pow(gx_the, 2.) + pow(gy_the, 2.) + pow(gz_the, 2.));
                 const double xInc = asin(gz_the/ zF) * deg ;
@@ -4359,24 +4421,41 @@ void MCMCLoopCurve::memo()
                 maxY_Y = std::max(yDec + 1.96 * errD, maxY_Y);
                 maxY_Z = std::max(zF + 1.96 * errF, maxY_Z);
 
+                minY_GP_X = std::min(gpx, minY_GP_X);
+                maxY_GP_X = std::max(gpx, maxY_GP_X);
+
+                minY_GP_Y = std::min(gpy, minY_GP_Y);
+                maxY_GP_Y = std::max(gpy, maxY_GP_Y);
+
+                minY_GP_Z = std::min(gpz, minY_GP_Z);
+                maxY_GP_Z = std::max(gpz, maxY_GP_Z);
             }
 
         }  else {
             for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
                 t = (double)idxT * stepT + mModel->mSettings.mTmin ;
-                valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineX, gx_the, varGx, gp, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
+                valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineX, gx_the, varGx, gpx, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
                 minY_X = std::min(gx_the - 1.96 * sqrt(varGx), minY_X);
                 maxY_X = std::max(gx_the + 1.96 * sqrt(varGx), maxY_X);
 
+                minY_GP_X = std::min(gpx, minY_GP_X);
+                maxY_GP_X = std::max(gpx, maxY_GP_X);
+
                 if (mModel->compute_Y) {
-                    valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineY, gy_the, varGy, gp, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
+                    valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineY, gy_the, varGy, gpy, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
                     minY_Y = std::min(gy_the - 1.96 * sqrt(varGy), minY_Y);
                     maxY_Y = std::max(gy_the + 1.96 * sqrt(varGy), maxY_Y);
 
+                    minY_GP_Y = std::min(gpy, minY_GP_Y);
+                    maxY_GP_Y = std::max(gpy, maxY_GP_Y);
+
                     if (mModel->compute_Z) {
-                        valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineZ, gz_the, varGz, gp, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
+                        valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineZ, gz_the, varGz, gpz, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
                         minY_Z = std::min(gz_the - 1.96 * sqrt(varGy), minY_Z);
                         maxY_Z = std::max(gz_the + 1.96 * sqrt(varGz), maxY_Z);
+
+                        minY_GP_Z = std::min(gpz, minY_GP_Z);
+                        maxY_GP_Z = std::max(gpz, maxY_GP_Z);
                     }
                 }
 
@@ -4390,12 +4469,20 @@ void MCMCLoopCurve::memo()
             maxY_X = std::max(maxY_X, meanG->gx.mapG.maxY());
             meanG->gx.mapG.setRangeY(minY_X, maxY_X);
 
+            minY_GP_X = std::min(minY_GP_X, meanG->gx.mapGP.minY());
+            maxY_GP_X = std::max(maxY_GP_X, meanG->gx.mapGP.maxY());
+            meanG->gx.mapGP.setRangeY(minY_GP_X, maxY_GP_X);
+
         } else {
             minY_X = std::min(minY_X, chainG->gx.mapG.minY());
             maxY_X = std::max(maxY_X, chainG->gx.mapG.maxY());
-        }
+
+            minY_GP_X = std::min(minY_GP_X, chainG->gx.mapGP.minY());
+            maxY_GP_X = std::max(maxY_GP_X, chainG->gx.mapGP.maxY());
+         }
 
         chainG->gx.mapG.setRangeY(minY_X, maxY_X);
+        chainG->gx.mapGP.setRangeY(minY_GP_X, maxY_GP_X);
 
         if (mModel->compute_Y) {
             if (mChainIndex == 0 ) {// do not change the Y range between several chain
@@ -4403,11 +4490,19 @@ void MCMCLoopCurve::memo()
                 maxY_Y = std::max(maxY_Y, meanG->gy.mapG.maxY());
                 meanG->gy.mapG.setRangeY(minY_Y, maxY_Y);
 
+                minY_GP_Y = std::min(minY_GP_Y, meanG->gy.mapGP.minY());
+                maxY_GP_Y = std::max(maxY_GP_Y, meanG->gy.mapGP.maxY());
+                meanG->gy.mapGP.setRangeY(minY_GP_Y, maxY_GP_Y);
+
             } else {
                 minY_Y = std::min(minY_Y, chainG->gy.mapG.minY());
                 maxY_Y = std::max(maxY_Y, chainG->gy.mapG.maxY());
+
+                minY_GP_Y = std::min(minY_GP_Y, meanG->gy.mapGP.minY());
+                maxY_GP_Y = std::max(maxY_GP_Y, meanG->gy.mapGP.maxY());
             }
             chainG->gy.mapG.setRangeY(minY_Y, maxY_Y);
+            chainG->gy.mapGP.setRangeY(minY_GP_Y, maxY_GP_Y);
 
             if (mModel->compute_Z) {
                 if (mChainIndex == 0 ) {// do not change the Y range between several chain
@@ -4415,11 +4510,19 @@ void MCMCLoopCurve::memo()
                     maxY_Z = std::max(maxY_Z, meanG->gz.mapG.maxY());
                     meanG->gz.mapG.setRangeY(minY_Z, maxY_Z);
 
+                    minY_GP_Z = std::min(minY_GP_Z, meanG->gz.mapGP.minY());
+                    maxY_GP_Z = std::max(maxY_GP_Z, meanG->gz.mapGP.maxY());
+                    meanG->gz.mapGP.setRangeY(minY_GP_Z, maxY_GP_Z);
+
                 } else {
                     minY_Z = std::min(minY_Z, chainG->gz.mapG.minY());
                     maxY_Z = std::max(maxY_Z, chainG->gz.mapG.maxY());
+
+                    minY_GP_Z = std::min(minY_GP_Z, meanG->gz.mapGP.minY());
+                    maxY_GP_Z = std::max(maxY_GP_Z, meanG->gz.mapGP.maxY());
                 }
-                mModel->mPosteriorMeanGByChain[mChainIndex].gz.mapG.setRangeY(minY_Z, maxY_Z);
+                chainG->gz.mapG.setRangeY(minY_Z, maxY_Z);
+                chainG->gz.mapGP.setRangeY(minY_GP_Z, maxY_GP_Z);
             }
         }
 
@@ -4443,16 +4546,16 @@ void MCMCLoopCurve::memo()
         totalIterAccepted += c.mRealyAccepted;
 
     if (mModel->compute_X_only) {
-        memo_PosteriorG( mModel->mPosteriorMeanGByChain[mChainIndex].gx, mModel->mSpline.splineX, iterAccepted );
+        mModel->memo_PosteriorG(mModel->mPosteriorMeanGByChain[mChainIndex].gx, mModel->mSpline.splineX, iterAccepted );
         if (mLoopChains.size() > 1)
-            memo_PosteriorG( mModel->mPosteriorMeanG.gx, mModel->mSpline.splineX, totalIterAccepted);
+            mModel->memo_PosteriorG( mModel->mPosteriorMeanG.gx, mModel->mSpline.splineX, totalIterAccepted);
 
     } else if (!mModel->compute_Z) {
-        memo_PosteriorG( mModel->mPosteriorMeanGByChain[mChainIndex].gx, mModel->mSpline.splineX, iterAccepted );
-        memo_PosteriorG( mModel->mPosteriorMeanGByChain[mChainIndex].gy, mModel->mSpline.splineY, iterAccepted );
+        mModel->memo_PosteriorG( mModel->mPosteriorMeanGByChain[mChainIndex].gx, mModel->mSpline.splineX, iterAccepted );
+        mModel->memo_PosteriorG( mModel->mPosteriorMeanGByChain[mChainIndex].gy, mModel->mSpline.splineY, iterAccepted );
         if (mLoopChains.size() > 1) {
-            memo_PosteriorG( mModel->mPosteriorMeanG.gx, mModel->mSpline.splineX, totalIterAccepted);
-            memo_PosteriorG( mModel->mPosteriorMeanG.gy, mModel->mSpline.splineY, totalIterAccepted);
+            mModel->memo_PosteriorG( mModel->mPosteriorMeanG.gx, mModel->mSpline.splineX, totalIterAccepted);
+            mModel->memo_PosteriorG( mModel->mPosteriorMeanG.gy, mModel->mSpline.splineY, totalIterAccepted);
         }
 
     }
@@ -4462,10 +4565,10 @@ void MCMCLoopCurve::memo()
 
         mTh_memoCurve = std::thread ([this](int iter){memo_PosteriorG_3D( mModel->mPosteriorMeanGByChain[mChainIndex], mModel->mSpline, mCurveSettings.mProcessType, iter, *mModel );}, iterAccepted);
 */
-        memo_PosteriorG_3D( mModel->mPosteriorMeanGByChain[mChainIndex], mModel->mSpline, mCurveSettings.mProcessType, iterAccepted, *mModel );
+        mModel->memo_PosteriorG_3D( mModel->mPosteriorMeanGByChain[mChainIndex], mModel->mSpline, mCurveSettings.mProcessType, iterAccepted);
 
         if (mLoopChains.size() > 1)
-            memo_PosteriorG_3D( mModel->mPosteriorMeanG, mModel->mSpline, mCurveSettings.mProcessType, totalIterAccepted, *mModel);
+            mModel->memo_PosteriorG_3D( mModel->mPosteriorMeanG, mModel->mSpline, mCurveSettings.mProcessType, totalIterAccepted);
     }
 
 }
@@ -4484,6 +4587,11 @@ void MCMCLoopCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSp
 
     const double stepT = (mModel->mSettings.mTmax - mModel->mSettings.mTmin) / (nbPtsX - 1);
     const double stepY = (ymax - ymin) / (nbPtsY - 1);
+
+    CurveMap& curveMapGP = postGCompo.mapGP;
+    const double yminGP = curveMapGP.minY();
+    const double ymaxGP = curveMapGP.maxY();
+    const double stepYGP = (ymaxGP - yminGP) / (curveMapGP.row() - 1);
 
     // 2 - Variables temporaires
     // référence sur variables globales
@@ -4509,7 +4617,7 @@ void MCMCLoopCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSp
     double n = realyAccepted;
 
     // 3 - calcul pour la composante
-    unsigned i0 = 0; // tIdx étant croissant, i0 permet de faire la recherche à l'indice du temps précedent
+    unsigned i0 = 0; // tIdx étant croissant, i0 permet de faire la recherche à l'indice du temps précèdent
     for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
         double gp, gs;
         double gx, varGx;
@@ -4586,6 +4694,13 @@ void MCMCLoopCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSp
             }
         }
 
+
+        // Memo mapGP
+
+        const int idxYGP = std::clamp( int((gp - yminGP) / stepYGP), 0, nbPtsY-1);
+        curveMapGP(idxT, idxYGP) = curveMapGP.at(idxT, idxYGP) + 1.;
+
+        curveMapGP.max_value = std::max(curveMapGP.max_value, curveMapGP.at(idxT, idxYGP));
 
     }
     int tIdx = 0;
@@ -5051,13 +5166,15 @@ void MCMCLoopCurve::finalize()
 
     for (auto& pmc : mModel->mPosteriorMeanGByChain) {
         pmc.gx.mapG.min_value = *std::min_element(begin(pmc.gx.mapG.data), end(pmc.gx.mapG.data));
+        pmc.gx.mapGP.min_value = *std::min_element(begin(pmc.gx.mapGP.data), end(pmc.gx.mapGP.data));
 
         if (mModel->compute_Y) {
             pmc.gy.mapG.min_value = *std::min_element(begin(pmc.gy.mapG.data), end(pmc.gy.mapG.data));
+            pmc.gy.mapGP.min_value = *std::min_element(begin(pmc.gy.mapGP.data), end(pmc.gy.mapGP.data));
 
             if (mModel->compute_Z) {
                 pmc.gz.mapG.min_value = *std::min_element(begin(pmc.gz.mapG.data), end(pmc.gz.mapG.data));
-
+                pmc.gz.mapGP.min_value = *std::min_element(begin(pmc.gz.mapGP.data), end(pmc.gz.mapGP.data));
             }
         }
 
@@ -5071,13 +5188,16 @@ void MCMCLoopCurve::finalize()
 
     } else {
         mModel->mPosteriorMeanG.gx.mapG.min_value = *std::min_element(begin(mModel->mPosteriorMeanG.gx.mapG.data), end(mModel->mPosteriorMeanG.gx.mapG.data));
+        mModel->mPosteriorMeanG.gx.mapGP.min_value = *std::min_element(begin(mModel->mPosteriorMeanG.gx.mapGP.data), end(mModel->mPosteriorMeanG.gx.mapGP.data));
 
 
         if (mModel->compute_Y) {
             mModel->mPosteriorMeanG.gy.mapG.min_value = *std::min_element(begin(mModel->mPosteriorMeanG.gy.mapG.data), end(mModel->mPosteriorMeanG.gy.mapG.data));
+            mModel->mPosteriorMeanG.gy.mapGP.min_value = *std::min_element(begin(mModel->mPosteriorMeanG.gy.mapGP.data), end(mModel->mPosteriorMeanG.gy.mapGP.data));
 
             if (mModel->compute_Z) {
                 mModel->mPosteriorMeanG.gz.mapG.min_value = *std::min_element(begin(mModel->mPosteriorMeanG.gz.mapG.data), end(mModel->mPosteriorMeanG.gz.mapG.data));
+                mModel->mPosteriorMeanG.gz.mapGP.min_value = *std::min_element(begin(mModel->mPosteriorMeanG.gz.mapGP.data), end(mModel->mPosteriorMeanG.gz.mapGP.data));
 
             }
         }

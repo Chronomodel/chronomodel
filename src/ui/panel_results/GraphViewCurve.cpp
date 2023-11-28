@@ -286,6 +286,79 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
 
     else if (mCurrentVariableList.contains(eGP)) {
 
+        GraphCurve curveMap;
+        curveMap.mName = "Map";
+        curveMap.mPen = QPen(Qt::black, 1, Qt::SolidLine);
+        curveMap.mBrush = Qt::NoBrush;
+        curveMap.mIsRectFromZero = false;
+
+        curveMap.mType = GraphCurve::eMapData;
+        curveMap.mMap = mComposanteG.mapGP;
+        const double tminFormated = DateUtils::convertToAppSettingsFormat(mComposanteG.mapGP.minX());
+        const double tmaxFormated = DateUtils::convertToAppSettingsFormat(mComposanteG.mapGP.maxX());
+
+        if (tmaxFormated > tminFormated) {
+            curveMap.mMap.setRangeX(tminFormated, tmaxFormated);
+
+        } else {
+            curveMap.mMap.setRangeX(tmaxFormated, tminFormated);
+            // we must reflect the map
+
+            CurveMap displayMap (curveMap.mMap._row, curveMap.mMap._column);
+
+            int c  = curveMap.mMap._column-1;
+
+            unsigned i = 0 ;
+            while ( c >= 0) {
+                for (unsigned r = 0; r < curveMap.mMap._row ; r++) {
+                    displayMap.data[i++] = mComposanteG.mapGP.at(c, r);
+
+                }
+                c--;
+            }
+
+            curveMap.mMap.data = std::move(displayMap.data);
+        }
+
+        QList<GraphCurve> curveMapChains;
+
+        for (unsigned i = 0; i < mComposanteGChains.size(); ++i) {
+
+            GraphCurve curveMapChain;
+            curveMapChain.mName = "Map Chain " + QString::number(i);
+            curveMapChain.mPen = QPen(Painting::chainColors[i], 1, Qt::SolidLine);
+            curveMapChain.mBrush = Qt::NoBrush;
+            curveMapChain.mIsRectFromZero = false;
+
+            curveMapChain.mType = GraphCurve::eMapData;
+            curveMapChain.mMap = mComposanteGChains.at(i).mapGP;
+
+            if (tmaxFormated > tminFormated) {
+                curveMapChain.mMap.setRangeX(tminFormated, tmaxFormated);
+
+            } else {
+                curveMapChain.mMap.setRangeX(tmaxFormated, tminFormated);
+                // we must reflect the map
+                CurveMap displayMap (curveMapChain.mMap._row, curveMapChain.mMap._column);
+
+                int c  = curveMap.mMap._column-1;
+                unsigned i = 0;
+                while ( c >= 0) {
+                    for (unsigned r = 0; r < curveMapChain.mMap._row ; r++) {
+                        displayMap.data[i++] = curveMapChain.mMap.at(c, r);
+                    }
+                    c--;
+                }
+                curveMapChain.mMap.data = std::move(displayMap.data);
+            }
+
+            curveMapChains.append(curveMapChain);
+        }
+
+        for (auto&& c: curveMapChains) {
+            mGraph->add_curve(c);
+        }
+
         GraphCurve curveGPZero = horizontalLine(0., "G Prime Zero", QColor(219, 01, 01));
         mGraph->add_curve(curveGPZero);
 
@@ -295,6 +368,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
         }
         const GraphCurve &curveGP = FunctionCurve(GP_Data, "G Prime", QColor(119, 95, 49));
 
+        mGraph->add_curve(curveMap); // to be draw in first
         mGraph->add_curve(curveGP);
 
         std::vector<QMap<type_data, type_data>> GP_Data_i (mComposanteGChains.size()) ;
@@ -371,7 +445,7 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
         qDebug()<<"[GraphViewCurve::updateCurvesToShowForG] scale.mark="<< scale.mark;
     }
 
-    mGraph->setCurveVisible("Map", mShowAllChains && showMap);
+    mGraph->setCurveVisible("Map", mShowAllChains && (showG||showGP) && showMap);
 
     mGraph->setCurveVisible("G", mShowAllChains && showG); 
     mGraph->setCurveVisible("G Env", mShowAllChains && showGError && showG);

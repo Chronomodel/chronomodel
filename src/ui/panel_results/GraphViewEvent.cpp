@@ -403,7 +403,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
          *  - Post Distrib Chain i
          * ------------------------------------------------
          */
-        if (mShowVariableList.contains(eThetaEvent)) {
+        if (mCurrentVariableList.contains(eThetaEvent)) {
             mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
             mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
             mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
@@ -425,7 +425,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
          *  - Post Distrib Date i Chain j
          * ------------------------------------------------
          */
-        else if (mShowVariableList.contains(eSigma)) {
+        else if (mCurrentVariableList.contains(eSigma)) {
             for (int i = 0; i < mEvent->mDates.size(); ++i) {
                 mGraph->setCurveVisible("Post Distrib Date " + QString::number(i) + " All Chains", mShowAllChains);
                 mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
@@ -438,7 +438,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
         }
         
-        else if (mShowVariableList.contains(eS02Vg)) {
+        /*else if (mShowVariableList.contains(eS02Vg)) {
             mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
             mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
             mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
@@ -449,8 +449,8 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setTipXLab(tr("Std S02 Vg"));
             mGraph->setYAxisMode(GraphView::eHidden);
 
-        }
-        else if (mShowVariableList.contains(eS02) ) {
+        }*/
+        else if (mCurrentVariableList.contains(eS02) ) {
             mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
             mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
             mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
@@ -462,7 +462,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setYAxisMode(GraphView::eHidden);
 
         }
-        else if (mShowVariableList.contains(eVg)) {
+        else if (mCurrentVariableList.contains(eVg)) {
             mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
             mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
             mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
@@ -484,9 +484,9 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      *  - Q3 i
      * ------------------------------------------------  */
     else if ( (mCurrentTypeGraph == eTrace) &&
-              ( (mShowVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe ) ||
-              (mShowVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe ) ||
-                ( mShowVariableList.contains(eThetaEvent) && mEvent->mTheta.mSamplerProposal != MHVariable::eFixe)
+              ( (mCurrentVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe ) ||
+              (mCurrentVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe ) ||
+                ( mCurrentVariableList.contains(eThetaEvent) && mEvent->mTheta.mSamplerProposal != MHVariable::eFixe)
               )
              ) {
              // We visualize only one chain (radio button)
@@ -513,9 +513,9 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      *  - Accept Target
      * ------------------------------------------------  */
     else if ( (mCurrentTypeGraph == eAccept) &&
-              ( (mShowVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe ) ||
-              (mShowVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe ) ||
-              ( mShowVariableList.contains(eThetaEvent) && mEvent->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss)
+              ( (mCurrentVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe ) ||
+              (mCurrentVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe ) ||
+              ( mCurrentVariableList.contains(eThetaEvent) && mEvent->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss)
               )
              ) {
             mGraph->setCurveVisible("Accept Target", true);
@@ -538,9 +538,9 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      *  - Correl Limit Upper i
      * ------------------------------------------------   */
     else if ( (mCurrentTypeGraph == eCorrel) &&
-              ( (mShowVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe ) ||
-                (mShowVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe ) ||
-                ( mShowVariableList.contains(eThetaEvent) && mEvent->mTheta.mSamplerProposal != MHVariable::eFixe)
+              ( (mCurrentVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe ) ||
+                (mCurrentVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe ) ||
+                ( mCurrentVariableList.contains(eThetaEvent) && mEvent->mTheta.mSamplerProposal != MHVariable::eFixe)
               )
             ) {
                 for (int i = 0; i < mShowChainList.size(); ++i) {

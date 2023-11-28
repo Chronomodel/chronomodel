@@ -897,6 +897,13 @@ void MainWindow::rebuildExportCurve()
     if (curveModel->compute_Z)
         tabMinMax.push_back(curveModel->mPosteriorMeanG.gz.mapG.rangeY);
 
+    std::vector<std::pair<double, double>> tabMinMaxGP;
+    tabMinMaxGP.push_back(curveModel->mPosteriorMeanG.gx.mapGP.rangeY);
+    if (curveModel->compute_Y)
+        tabMinMaxGP.push_back(curveModel->mPosteriorMeanG.gy.mapGP.rangeY);
+    if (curveModel->compute_Z)
+        tabMinMaxGP.push_back(curveModel->mPosteriorMeanG.gz.mapGP.rangeY);
+
     std::pair<unsigned, unsigned> mapSizeXY = std::pair<unsigned, unsigned> {curveModel->mPosteriorMeanG.gx.mapG._column, curveModel->mPosteriorMeanG.gx.mapG._row};
     RebuildCurveDialog qDialog = RebuildCurveDialog(curveModel->getCurvesName(), &tabMinMax, mapSizeXY);
 
@@ -919,9 +926,13 @@ void MainWindow::rebuildExportCurve()
         PosteriorMeanGComposante clearCompo;
         clearCompo.mapG = CurveMap (YGrid, XGrid); // Attention invesion ->explicit CurveMap(unsigned row, unsigned col)
         clearCompo.mapG.setRangeX(curveModel->mSettings.mTmin, curveModel->mSettings.mTmax);
-
         clearCompo.mapG.min_value = +INFINITY;
         clearCompo.mapG.max_value = 0;
+
+        clearCompo.mapGP = CurveMap (YGrid, XGrid); // Attention invesion ->explicit CurveMap(unsigned row, unsigned col)
+        clearCompo.mapGP.setRangeX(curveModel->mSettings.mTmin, curveModel->mSettings.mTmax);
+        clearCompo.mapGP.min_value = +INFINITY;
+        clearCompo.mapGP.max_value = 0;
 
         clearCompo.vecG = std::vector<double> (XGrid);
         clearCompo.vecGP = std::vector<double> (XGrid);
@@ -933,16 +944,18 @@ void MainWindow::rebuildExportCurve()
         PosteriorMeanG meanG;
         meanG.gx = clearCompo;
         meanG.gx.mapG.setRangeY(tabMinMax[0].first, tabMinMax[0].second);
+        meanG.gx.mapGP.setRangeY(tabMinMaxGP[0].first, tabMinMaxGP[0].second);
 
         if (curveModel->compute_Y) {
             meanG.gy = clearCompo;
             meanG.gy.mapG.setRangeY(tabMinMax[1].first, tabMinMax[1].second);
+            meanG.gy.mapGP.setRangeY(tabMinMaxGP[1].first, tabMinMaxGP[1].second);
             if (curveModel->compute_Z) {
                 meanG.gz = clearCompo;
                 meanG.gz.mapG.setRangeY(tabMinMax[2].first, tabMinMax[2].second);
+                meanG.gz.mapGP.setRangeY(tabMinMaxGP[2].first, tabMinMaxGP[2].second);
             }
         }
-
 
 
         int totalIterAccepted = 1;
@@ -958,12 +971,15 @@ void MainWindow::rebuildExportCurve()
         }
 
         meanG.gx.mapG.min_value =  *std::min_element(begin(meanG.gx.mapG.data), end(meanG.gx.mapG.data));
+        meanG.gx.mapGP.min_value =  *std::min_element(begin(meanG.gx.mapGP.data), end(meanG.gx.mapGP.data));
 
         if (curveModel->compute_Y) {
             meanG.gy.mapG.min_value = *std::min_element(begin(meanG.gy.mapG.data), end(meanG.gy.mapG.data));
+            meanG.gy.mapGP.min_value = *std::min_element(begin(meanG.gy.mapGP.data), end(meanG.gy.mapGP.data));
 
             if (curveModel->compute_Z) {
                 meanG.gz.mapG.min_value = *std::min_element(begin(meanG.gz.mapG.data), end(meanG.gz.mapG.data));
+                meanG.gz.mapGP.min_value = *std::min_element(begin(meanG.gz.mapGP.data), end(meanG.gz.mapGP.data));
             }
         }
         modelCurve->mPosteriorMeanG = std::move(meanG);
@@ -974,13 +990,16 @@ void MainWindow::rebuildExportCurve()
             PosteriorMeanG meanGByChain;
             meanGByChain.gx = clearCompo;
             meanGByChain.gx.mapG.setRangeY(tabMinMax[0].first, tabMinMax[0].second);
+            meanGByChain.gx.mapGP.setRangeY(tabMinMaxGP[0].first, tabMinMaxGP[0].second);
 
             if (curveModel->compute_Y) {
                 meanGByChain.gy = clearCompo;
                 meanGByChain.gy.mapG.setRangeY(tabMinMax[1].first, tabMinMax[1].second);
+                meanGByChain.gy.mapGP.setRangeY(tabMinMaxGP[1].first, tabMinMaxGP[1].second);
                 if (curveModel->compute_Z) {
                     meanGByChain.gz = clearCompo;
                     meanGByChain.gz.mapG.setRangeY(tabMinMax[2].first, tabMinMax[2].second);
+                    meanGByChain.gz.mapGP.setRangeY(tabMinMaxGP[2].first, tabMinMaxGP[2].second);
                 }
             }
 
@@ -999,12 +1018,15 @@ void MainWindow::rebuildExportCurve()
             }
 
             meanGByChain.gx.mapG.min_value =  *std::min_element(begin(meanGByChain.gx.mapG.data), end(meanGByChain.gx.mapG.data));
+            meanGByChain.gx.mapGP.min_value =  *std::min_element(begin(meanGByChain.gx.mapGP.data), end(meanGByChain.gx.mapGP.data));
 
             if (curveModel->compute_Y) {
                 meanGByChain.gy.mapG.min_value = *std::min_element(begin(meanGByChain.gy.mapG.data), end(meanGByChain.gy.mapG.data));
+                meanGByChain.gy.mapGP.min_value = *std::min_element(begin(meanGByChain.gy.mapGP.data), end(meanGByChain.gy.mapGP.data));
 
                 if (curveModel->compute_Z) {
                     meanGByChain.gz.mapG.min_value = *std::min_element(begin(meanGByChain.gz.mapG.data), end(meanGByChain.gz.mapG.data));
+                    meanGByChain.gz.mapGP.min_value = *std::min_element(begin(meanGByChain.gz.mapGP.data), end(meanGByChain.gz.mapGP.data));
                 }
             }
 

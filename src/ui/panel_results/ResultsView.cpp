@@ -61,6 +61,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "LineEdit.h"
 #include "CheckBox.h"
 #include "RadioButton.h"
+#include "DoubleValidator.h"
 
 #include "MainWindow.h"
 #include "Project.h"
@@ -68,13 +69,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "StdUtilities.h"
 #include "ModelUtilities.h"
-#include "DoubleValidator.h"
+
 
 #include "AppSettings.h"
 
 #include "ModelCurve.h"
-
-#include <iostream>
 
 #include <QtWidgets>
 #include <QtSvg>
@@ -1505,8 +1504,9 @@ void ResultsView::updateMainVariable()
 
         } else if (mCurveGPRadio->isChecked()) {
             mMainVariable = GraphViewResults::eGP;
-            if (mCurveErrorCheck->isChecked())
-                mCurrentVariableList.append(GraphViewResults::eGError);
+
+            if (mCurveMapCheck->isChecked())
+                mCurrentVariableList.append(GraphViewResults::eMap);
 
             mCurrentTypeGraph = GraphViewResults::ePostDistrib;
             mGraphTypeTabs->setTab(0, false);
@@ -2561,10 +2561,11 @@ void ResultsView::updateCurvesToShow()
     if ((mGraphListTab->currentName() == tr("Curves")) && !mLambdaRadio->isChecked() && !mS02VgRadio->isChecked()) {
 
        if (mCurveGRadio->isChecked()) showVariableList.append(GraphViewResults::eG);
-       if (mCurveErrorCheck->isChecked()) showVariableList.append(GraphViewResults::eGError);
-       if (mCurveMapCheck->isChecked()) showVariableList.append(GraphViewResults::eMap);
-       if (mCurveEventsPointsCheck->isChecked()) showVariableList.append(GraphViewResults::eGEventsPts);
-       if (mCurveDataPointsCheck->isChecked()) showVariableList.append(GraphViewResults::eGDatesPts);
+
+       if (mCurveErrorCheck->isVisible() && mCurveErrorCheck->isChecked()) showVariableList.append(GraphViewResults::eGError);
+       if (mCurveMapCheck->isVisible() && mCurveMapCheck->isChecked()) showVariableList.append(GraphViewResults::eMap);
+       if (mCurveEventsPointsCheck->isVisible() && mCurveEventsPointsCheck->isChecked()) showVariableList.append(GraphViewResults::eGEventsPts);
+       if (mCurveDataPointsCheck->isVisible() && mCurveDataPointsCheck->isChecked()) showVariableList.append(GraphViewResults::eGDatesPts);
 
        if (mCurveGPRadio->isChecked()) showVariableList.append(GraphViewResults::eGP);
        if (mCurveGSRadio->isChecked()) showVariableList.append(GraphViewResults::eGS);
@@ -2640,6 +2641,7 @@ void ResultsView::updateCurvesToShow()
     } else if (mGraphListTab->currentName() == tr("Events")) {
         if (mCredibilityCheck->isChecked())
             showVariableList.append(GraphViewResults::eCredibility);
+
         if (mEventThetaRadio->isChecked()) {
             showVariableList.append(GraphViewResults::eThetaEvent);
             if (mEventsDatesUnfoldCheck->isChecked()) {
@@ -2654,11 +2656,18 @@ void ResultsView::updateCurvesToShow()
             showVariableList.append(GraphViewResults::eSigma);
 
         } else if (mEventVGRadio->isChecked()) {
+
             if (mCredibilityCheck->isChecked())
                 showVariableList.append(GraphViewResults::eCredibility);
             showVariableList.append(GraphViewResults::eVg);
         }
-
+#ifdef S02_BAYESIAN
+        else if (mEventVGRadio->isChecked()) {
+            if (mCredibilityCheck->isChecked())
+                showVariableList.append(GraphViewResults::eCredibility);
+            showVariableList.append(GraphViewResults::eS02);
+        }
+#endif
     }
     else if (mGraphListTab->currentName() == tr("Phases")) {
         if (mBeginEndRadio->isChecked()) {
@@ -2814,9 +2823,9 @@ void ResultsView::updateScales()
         }
         // All other cases (default behavior)
         else {
-            Scale xScale;
-            xScale.findOptimalMark(mResultCurrentMinT, mResultCurrentMaxT, 10);
-            mMajorScale = xScale.mark;
+            Scale t_scale;
+            t_scale.findOptimalMark(mResultCurrentMinT, mResultCurrentMaxT, 10);
+            mMajorScale = t_scale.mark;
             mMinorCountScale = 10;
         }
     }
@@ -3215,6 +3224,11 @@ void ResultsView::updateOptionsWidget()
         curveGroupLayout->addWidget(mCurveGRadio);
         qreal totalH =  h;
 
+        mCurveErrorCheck->hide();
+        mCurveMapCheck->hide();
+        mCurveEventsPointsCheck->hide();
+        mCurveDataPointsCheck->hide();
+
         if (mCurveGRadio->isChecked()) {
             mCurveErrorCheck->show();
             mCurveMapCheck->show();
@@ -3231,13 +3245,20 @@ void ResultsView::updateOptionsWidget()
 
             curveGroupLayout->addLayout(curveOptionGroupLayout);
 
-        } else {
-            mCurveErrorCheck->hide();
-            mCurveMapCheck->hide();
-            mCurveEventsPointsCheck->hide();
-            mCurveDataPointsCheck->hide();
         }
         curveGroupLayout->addWidget(mCurveGPRadio);
+        if (mCurveGPRadio->isChecked()) {
+            mCurveMapCheck->show();
+            totalH += mCurveMapCheck->height()*1.3 ;
+
+            QVBoxLayout* curveOptionGroupLayout = new QVBoxLayout();
+            curveOptionGroupLayout->setContentsMargins(15, 0, 0, 0);
+            curveOptionGroupLayout->addWidget(mCurveMapCheck, Qt:: AlignLeft);
+
+            curveGroupLayout->addLayout(curveOptionGroupLayout);
+        }
+
+
         curveGroupLayout->addWidget(mCurveGSRadio);
         curveGroupLayout->addWidget(mLambdaRadio);
         curveGroupLayout->addWidget(mS02VgRadio);
@@ -3864,14 +3885,18 @@ void ResultsView::findOptimalX()
         XScale.findOptimal(minY, maxY, 7);
 
     } else {
-        if (mCurveGPRadio->isChecked())
+        if (mCurveGPRadio->isChecked()) {
+            const auto minmax_Y = modelCurve->mPosteriorMeanG.gx.mapGP.rangeY;
             vec = &modelCurve->mPosteriorMeanG.gx.vecGP;
-        else
+            const auto minMax = std::minmax_element(vec->begin(), vec->end());
+            XScale.findOptimal(std::min(minmax_Y.first, *minMax.first), std::max(minmax_Y.second, *minMax.second), 7);
+
+        } else {
             vec = &modelCurve->mPosteriorMeanG.gx.vecGS;
+            const auto minMax = std::minmax_element(vec->begin(), vec->end());
+            XScale.findOptimal(*minMax.first, *minMax.second, 7);
+        }
 
-        const auto minMax = std::minmax_element(vec->begin(), vec->end());
-
-        XScale.findOptimal(*minMax.first, *minMax.second, 7);
     }
 
 
@@ -3909,14 +3934,17 @@ void ResultsView::findOptimalY()
         XScale.findOptimal(minY, maxY, 7);
 
     } else {
-        if (mCurveGPRadio->isChecked())
+        if (mCurveGPRadio->isChecked()) {
+            const auto minmax_Y = modelCurve->mPosteriorMeanG.gy.mapGP.rangeY;
             vec = &modelCurve->mPosteriorMeanG.gy.vecGP;
-        else
+            const auto minMax = std::minmax_element(vec->begin(), vec->end());
+            XScale.findOptimal(std::min(minmax_Y.first, *minMax.first), std::max(minmax_Y.second, *minMax.second), 7);
+
+        } else {
             vec = &modelCurve->mPosteriorMeanG.gy.vecGS;
-
-        const auto minMax = std::minmax_element(vec->begin(), vec->end());
-
-        XScale.findOptimal(*minMax.first, *minMax.second, 7);
+            const auto minMax = std::minmax_element(vec->begin(), vec->end());
+            XScale.findOptimal(*minMax.first, *minMax.second, 7);
+        }
     }
 
 
@@ -3952,14 +3980,18 @@ void ResultsView::findOptimalZ()
         XScale.findOptimal(minY, maxY, 7);
 
     } else {
-        if (mCurveGPRadio->isChecked())
+        if (mCurveGPRadio->isChecked()) {
+            const auto minmax_Y = modelCurve->mPosteriorMeanG.gz.mapGP.rangeY;
             vec = &modelCurve->mPosteriorMeanG.gz.vecGP;
-        else
+            const auto minMax = std::minmax_element(vec->begin(), vec->end());
+            XScale.findOptimal(std::min(minmax_Y.first, *minMax.first), std::max(minmax_Y.second, *minMax.second), 7);
+
+        } else {
             vec = &modelCurve->mPosteriorMeanG.gz.vecGS;
+            const auto minMax = std::minmax_element(vec->begin(), vec->end());
+            XScale.findOptimal(*minMax.first, *minMax.second, 7);
+        }
 
-        const auto minMax = std::minmax_element(vec->begin(), vec->end());
-
-        XScale.findOptimal(*minMax.first, *minMax.second, 7);
     }
 
     mResultCurrentMinZ = XScale.min;

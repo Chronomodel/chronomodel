@@ -41,7 +41,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphView.h"
 #include "ModelCurve.h"
 #include "Painting.h"
-#include "DateUtils.h"
 #include "ModelUtilities.h"
 
 #include <QtWidgets>

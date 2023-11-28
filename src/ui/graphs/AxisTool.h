@@ -56,9 +56,9 @@ struct Scale
     int tip ; // Minor Interval count
 
     Scale():min(0), max(1000), mark(100), tip(4){}
-    explicit Scale(double a, double b, double m, int t=4 ) : min(a), max(b), mark(m), tip (t) {}
+    explicit Scale(double a, double b, double m, int t = 4 ) : min(a), max(b), mark(m), tip (t) {}
 
-    void findOptimal(const double a, const double b, const int nOptimal);
+    void findOptimal(double a, double b, const int nOptimal);
     void findOptimalMark(const double a, const double b, const int nOptimal);
 };
 

@@ -378,15 +378,18 @@ void AxisWidget::paintEvent(QPaintEvent*)
  */
 void Scale::findOptimal(const double a, const double b, const int nOptimal)
 {
-    if ( a == b) {
-        min = a - 1;
-        max = b + 1;
+    min = std::min(a, b);
+    max = std::max(a, b);
+
+    if ( min == max) {
+        min = min - 1;
+        max = max + 1;
         mark = .2;
         return;
     }
 
     // Mark
-    const double e (b - a);
+    const double e = (max - min);
     double u = floor(log10(e));
     u = std::pow(10., u);
 
@@ -422,33 +425,32 @@ void Scale::findOptimal(const double a, const double b, const int nOptimal)
     }
 
 
-    if (a == 0.)
+    if (min == 0.)
         min = 0.;
-    else if ( std::floor(a/ mark) * mark > a)
-        min = std::floor(a/ mark) * mark - mark;
+    else if ( std::floor(min/ mark) * mark > min)
+        min = std::floor(min/ mark) * mark - mark;
     else
-        min = std::floor(a/ mark) * mark;
+        min = std::floor(min/ mark) * mark;
 
-    if (b == 0.)
+    if (max == 0.)
         max = 0.;
-    else if (min + std::ceil( (b - min) / mark ) * mark < b)
-        max = min + std::ceil( (b - min) / mark ) * mark + mark;
+    else if (min + std::ceil( (max - min) / mark ) * mark < max)
+        max = min + std::ceil( (max - min) / mark ) * mark + mark;
     else
-        max = min + std::ceil( (b - min) / mark ) * mark;
-
+        max = min + std::ceil( (max - min) / mark ) * mark;
 }
 
 void Scale::findOptimalMark(const double a, const double b, const int nOptimal)
 {
-    min = a;
-    max = b;
+    min = std::min(a, b);
+    max = std::max(a, b);
 
     if ( a == b) {
         mark = .2;
         return;
     }
 
-    const double e (b - a);
+    const double e (max - min);
     double u = floor(log10(e));
     u = std::pow(10., u);
 

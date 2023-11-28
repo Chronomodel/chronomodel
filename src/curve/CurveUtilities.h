@@ -113,6 +113,7 @@ typedef struct PosteriorMeanGComposante
 
     // spline density
     CurveMap mapG;
+    CurveMap mapGP;
     
 } PosteriorMeanGComposante;
 

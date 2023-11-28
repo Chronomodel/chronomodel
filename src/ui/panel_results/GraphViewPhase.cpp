@@ -46,8 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "DateUtils.h"
 #include "ModelUtilities.h"
-//#include "MainWindow.h"
-//#include "Button.h"
+
 #include <QtWidgets>
 
 // Constructor / Destructor
@@ -446,7 +445,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      */
     if (mCurrentTypeGraph == ePostDistrib) {
 
-        if (mShowVariableList.contains(eBeginEnd)) {
+        if (mCurrentVariableList.contains(eBeginEnd)) {
             const bool showCredibility = mShowVariableList.contains(eCredibility);
 
 
@@ -471,7 +470,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
         }
 
-        else if (mShowVariableList.contains(eDuration)) {
+        else if (mCurrentVariableList.contains(eDuration)) {
             const GraphCurve* duration = mGraph->getCurve("Post Distrib All Chains");
 
             if ( duration && !duration->mData.isEmpty()) {
@@ -489,7 +488,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             }
 
         }
-        else if (mShowVariableList.contains(eTempo)) {
+        else if (mCurrentVariableList.contains(eTempo)) {
             // With variable eTempo there is no choice of "chain", it must be "all chains"
             const GraphCurve* tempo = mGraph->getCurve("Post Distrib All Chains");
 
@@ -501,7 +500,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             }
 
         }
-        else if (mShowVariableList.contains(eActivity)) {
+        else if (mCurrentVariableList.contains(eActivity)) {
             // With variable eActivity there is no choice of "chain", it must be "all chains"
             const GraphCurve* Activity = mGraph->getCurve("Post Distrib All Chains");
 
@@ -538,7 +537,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      *  - Duration Q3 i
      * ------------------------------------------------ */
     else if (mCurrentTypeGraph == eTrace) {
-        if (mShowVariableList.contains(eBeginEnd)) {
+        if (mCurrentVariableList.contains(eBeginEnd)) {
 
             for (int i = 0; i<mShowChainList.size(); ++i) {
                 mGraph->setCurveVisible("Begin Trace " + QString::number(i), mShowChainList.at(i));
@@ -558,7 +557,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->showInfos(false);
             mGraph->autoAdjustYScale(true);
 
-        } else if (mShowVariableList.contains(eDuration)) {
+        } else if (mCurrentVariableList.contains(eDuration)) {
 
             for (int i = 0; i<mShowChainList.size(); ++i) {
                 mGraph->setCurveVisible("Duration Trace " + QString::number(i), mShowChainList.at(i));
