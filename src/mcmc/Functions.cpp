@@ -1742,7 +1742,7 @@ Matrix2D multiMatParMat0(const Matrix2D& matrix1, const Matrix2D& matrix2)
 
 Matrix2D multiConstParMat0(const Matrix2D &matrix, const double c)
 {
-    const auto n = matrix.size() ;
+    const int n = matrix.size() ;
     Matrix2D result = initMatrix2D(n, n)  ;//matrix;
     for (auto i = 0; i < n; i++) {
         for (auto j = 0; j < n; j++) {

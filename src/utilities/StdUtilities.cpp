@@ -863,7 +863,7 @@ double MSE(const QMap<double, double> &data,  const std::valarray<double> polyno
     double mse = 0;
     for (auto [key, value] : data.asKeyValueRange()) {
         double f = 0;
-        for (int i = 0 ; i< polynom_coef.size() ; i++)
+        for (int i = 0 ; i< (int)polynom_coef.size() ; i++)
             f += polynom_coef[i] * pow(key, i);
         mse += pow(value - f, 2.);
     }

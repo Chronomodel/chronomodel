@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <algorithm>
 #include <iostream>
 
+extern QString res_file_version;
 
 inline decltype(Event::mThetaReduced) diffX (Event* e0, Event*e1) {return (e1->mThetaReduced - e0->mThetaReduced);}
 
@@ -463,10 +464,6 @@ QDataStream &operator<<( QDataStream& stream, const PosteriorMeanGComposante& pM
     for (auto& v : pMGComposante.vecGP)
         stream << (double)v;
 
-/*    stream << (quint32) pMGComposante.vecVarGP.size();
-    for (auto& v : pMGComposante.vecVarGP)
-        stream << (double)v;
-*/
     stream << (quint32) pMGComposante.vecGS.size();
     for (auto& v : pMGComposante.vecGS)
         stream << (double)v;
@@ -476,6 +473,8 @@ QDataStream &operator<<( QDataStream& stream, const PosteriorMeanGComposante& pM
         stream << (double)v;
 
     stream << pMGComposante.mapG;
+
+    stream << pMGComposante.mapGP; // since v3.2.7
     return stream;
 }
 
@@ -505,6 +504,8 @@ QDataStream &operator>>( QDataStream& stream, PosteriorMeanGComposante& pMGCompo
     std::generate_n(pMGComposante.vecVarG.begin(), siz, [&stream, &v]{stream >> v; return v;});
 
     stream >> pMGComposante.mapG;
+    if (res_file_version>"3.2.6")
+        stream >> pMGComposante.mapGP;
     return stream;
 }
 
@@ -1916,7 +1917,7 @@ std::pair<double, double> initLambdaSplineByCV(const bool depth, const std::vect
             has_positif = hasPositiveGPrimeByDet(spline.splineX);
             if (!has_positif) {
                 idx_test++;
-                if (idx_test > Vg_vect->size()-1) {
+                if (idx_test > (int)Vg_vect->size()-1) {
                    has_positif = true;
                 }
             }
@@ -2260,8 +2261,8 @@ double initLambdaSplineByCV_VgFixed(const double Vg, const bool depth, const std
 {
      std::vector<double> GCV, CV, lambda_GCV, lambda_CV, lambda_GCV_Vg, lambda_CV_Vg;
 
-     bool doY = !vec_Y.empty() && vec_Z.empty();
-     bool doYZ = !vec_Y.empty() && !vec_Z.empty();
+     // bool doY = !vec_Y.empty() && vec_Z.empty();
+     // bool doYZ = !vec_Y.empty() && !vec_Z.empty();
 
      for (int idxLambda = -200; idxLambda < 101; ++idxLambda ) {
         const double lambda_loop = pow(10., ( double)idxLambda/10.);
@@ -2396,7 +2397,7 @@ double initLambdaSplineByCV_VgFixed(const double Vg, const bool depth, const std
             has_positif = hasPositiveGPrimeByDet(spline.splineX);
             if (!has_positif) {
                 idx_test++;
-                if (idx_test > lambda_vect->size()-1) {
+                if (idx_test > (int)lambda_vect->size()-1) {
                    has_positif = true;
                 }
             }

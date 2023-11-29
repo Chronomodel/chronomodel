@@ -42,14 +42,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 #include <QtWidgets>
-#include <cstdio>
 #include <iostream>
 #include <cmath>
-#include <errno.h>
 #include <fenv.h>
 #include <stdlib.h>
-#include <stdio.h>
-#include <vector>
 
 // STDC FENV_ACCESS ON // not supported with Clang
 
