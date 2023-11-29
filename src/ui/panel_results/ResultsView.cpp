@@ -47,6 +47,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphViewCurve.h"
 #include "GraphViewS02.h"
 
+//#include "QtCore/qnamespace.h"
 #include "Tabs.h"
 #include "Ruler.h"
 #include "Marker.h"
@@ -69,10 +70,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "StdUtilities.h"
 #include "ModelUtilities.h"
-
-
 #include "AppSettings.h"
-
 #include "ModelCurve.h"
 
 #include <QtWidgets>
@@ -1163,8 +1161,24 @@ void ResultsView::initModel(Model* model)
         mCurveGRadio->setChecked(true);
         mGraphListTab->setTab(2, false);
 
+        const auto &gx = modelCurve->mPosteriorMeanG.gx;
+        const auto minmax_Y = gx.mapG.rangeY;
+
+        double minY = +INFINITY;
+        double maxY = -INFINITY;
+        minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mXIncDepth, x);});
+        maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mXIncDepth, x);});
+        int i = 0;
+        for (const auto &g : gx.vecG) {
+            const auto e = 1.96*sqrt(gx.vecVarG.at(i));
+            minY = std::min(minY, g - e);
+            maxY = std::max(maxY, g + e);
+            i++;
+        }
+
         Scale XScale;
-        XScale.findOptimal(modelCurve->mPosteriorMeanG.gx.vecG.front(), modelCurve->mPosteriorMeanG.gx.vecG.back(), 7);
+        XScale.findOptimal(std::min(minmax_Y.first, minY), std::max(minmax_Y.second, maxY), 7);
+
         mResultCurrentMinX = XScale.min;
         mResultCurrentMaxX = XScale.max;
         setXRange();
@@ -1174,7 +1188,23 @@ void ResultsView::initModel(Model* model)
         mXOptionBut->setText(tr("Optimal") + " " + mModel->getCurvesName().at(0) + " " + tr("Display"));
 
         if (mModel->displayY() && !modelCurve->mPosteriorMeanG.gy.vecG.empty() ) {
-            XScale.findOptimal(modelCurve->mPosteriorMeanG.gy.vecG.front(), modelCurve->mPosteriorMeanG.gy.vecG.back(), 7);
+            const auto &gy = modelCurve->mPosteriorMeanG.gy;
+            const auto minmax_Y = gy.mapG.rangeY;
+
+            minY = +INFINITY;
+            maxY = -INFINITY;
+            minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mYDec, x);});
+            maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mYDec, x);});
+            int i = 0;
+            for (const auto &g : gy.vecG) {
+                const auto e = 1.96*sqrt(gy.vecVarG.at(i));
+                minY = std::min(minY, g - e);
+                maxY = std::max(maxY, g + e);
+                i++;
+            }
+
+            XScale.findOptimal(std::min(minmax_Y.first, minY), std::max(minmax_Y.second, maxY), 7);
+
             mResultCurrentMinY = XScale.min;
             mResultCurrentMaxY = XScale.max;
             setYRange();
@@ -1183,7 +1213,24 @@ void ResultsView::initModel(Model* model)
             mYOptionBut->setText(tr("Optimal") + " " + mModel->getCurvesName().at(1) + " " + tr("Display"));
 
             if (mModel->displayZ() && !modelCurve->mPosteriorMeanG.gz.vecG.empty() ) {
-                XScale.findOptimal(modelCurve->mPosteriorMeanG.gz.vecG.front(), modelCurve->mPosteriorMeanG.gz.vecG.back(), 7);
+                const auto &gz = modelCurve->mPosteriorMeanG.gz;
+                const auto minmax_Y = gz.mapG.rangeY;
+
+                minY = +INFINITY;
+                maxY = -INFINITY;
+                minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mZField, x);});
+                maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mZField, x);});
+                int i = 0;
+                for (const auto &g : gz.vecG) {
+                    const auto e = 1.96*sqrt(gz.vecVarG.at(i));
+                    minY = std::min(minY, g - e);
+                    maxY = std::max(maxY, g + e);
+                    i++;
+                }
+
+
+                XScale.findOptimal(std::min(minmax_Y.first, minY), std::max(minmax_Y.second, maxY), 7);
+
                 mResultCurrentMinZ = XScale.min;
                 mResultCurrentMaxZ = XScale.max;
                 setZRange();
@@ -1428,11 +1475,6 @@ void ResultsView::updateMainVariable()
                 if (mPhasesDatesUnfoldCheck->isChecked()) {
                     mCurrentVariableList.append(GraphViewResults::eDataTi);
 
-                  /*  if (mDataCalibCheck->isChecked())
-                        mCurrentVariableList.append(GraphViewResults::eDataCalibrate);
-
-                    if (mWiggleCheck->isChecked())
-                        mCurrentVariableList.append(GraphViewResults::eDataWiggle);*/
                 }
             }
 
@@ -1446,11 +1488,6 @@ void ResultsView::updateMainVariable()
                 if (mPhasesDatesUnfoldCheck->isChecked()) {
                     mCurrentVariableList.append(GraphViewResults::eDataTi);
 
-                  /*  if (mDataCalibCheck->isChecked())
-                        mCurrentVariableList.append(GraphViewResults::eDataCalibrate);
-
-                    if (mWiggleCheck->isChecked())
-                        mCurrentVariableList.append(GraphViewResults::eDataWiggle);*/
                 }
               }
 
@@ -1464,11 +1501,6 @@ void ResultsView::updateMainVariable()
                 if (mPhasesDatesUnfoldCheck->isChecked()) {
                     mCurrentVariableList.append(GraphViewResults::eDataTi);
 
-                  /*  if (mDataCalibCheck->isChecked())
-                        mCurrentVariableList.append(GraphViewResults::eDataCalibrate);
-
-                    if (mWiggleCheck->isChecked())
-                        mCurrentVariableList.append(GraphViewResults::eDataWiggle);*/
                 }
             }
 
@@ -1647,18 +1679,14 @@ void ResultsView::toggleDisplayDistrib()
                 && mMainVariable != GraphViewResults::eGP
                 && mMainVariable != GraphViewResults::eGS);
 
-
         mDensityOptsTitle->setVisible(showDensityOptions);
         mDensityOptsGroup->setVisible(showDensityOptions);
         if (showDensityOptions) {
-
             mDensityOptsGroup->setFixedHeight( mCredibilityCheck->height() + mThresholdEdit->height() + mFFTLenCombo->height()
                                               + mBandwidthSpin->height() + mHActivityEdit->height() + mRangeThresholdEdit->height()
                                                + 12* internSpan);
 
             widHeigth += mDensityOptsTitle->height() + mDensityOptsGroup->height();
-
-
 
         }
         widHeigth += 4*internSpan;
@@ -2442,8 +2470,6 @@ void ResultsView::generateCurves()
         graph->generateCurves(GraphViewResults::graph_t(mCurrentTypeGraph), mCurrentVariableList, mModel);
     }
 
-   // std::for_each(PAR listGraphs.begin(), listGraphs.end(), [this] (GraphViewResults* g) {g->generateCurves(GraphViewResults::graph_t(mCurrentTypeGraph), mCurrentVariableList, mModel);} );
-
     updateCurvesToShow();
     updateGraphsMinMax();
     updateScales();
@@ -2554,20 +2580,25 @@ void ResultsView::updateCurvesToShow()
     //  Find the currently selected list of graphs
     // --------------------------------------------------------
     QList<GraphViewResults*> listGraphs = currentGraphs(false);
-    QVector<GraphViewResults::variable_t> showVariableList;
+    QList<GraphViewResults::variable_t> showVariableList;
     // --------------------------------------------------------
     //  Options for "Curves"
     // --------------------------------------------------------
     if ((mGraphListTab->currentName() == tr("Curves")) && !mLambdaRadio->isChecked() && !mS02VgRadio->isChecked()) {
 
-       if (mCurveGRadio->isChecked()) showVariableList.append(GraphViewResults::eG);
+        if (mCurveGRadio->isChecked()) {
+            showVariableList.append(GraphViewResults::eG);
+            if (mCurveErrorCheck->isChecked()) showVariableList.append(GraphViewResults::eGError);
+            if (mCurveMapCheck->isChecked()) showVariableList.append(GraphViewResults::eMap);
+            if (mCurveEventsPointsCheck->isChecked()) showVariableList.append(GraphViewResults::eGEventsPts);
+            if (mCurveDataPointsCheck->isChecked()) showVariableList.append(GraphViewResults::eGDatesPts);
+        }
+        if (mCurveGPRadio->isChecked()) {
+            showVariableList.append(GraphViewResults::eGP);
+            if (mCurveMapCheck->isChecked()) showVariableList.append(GraphViewResults::eMap);
 
-       if (mCurveErrorCheck->isVisible() && mCurveErrorCheck->isChecked()) showVariableList.append(GraphViewResults::eGError);
-       if (mCurveMapCheck->isVisible() && mCurveMapCheck->isChecked()) showVariableList.append(GraphViewResults::eMap);
-       if (mCurveEventsPointsCheck->isVisible() && mCurveEventsPointsCheck->isChecked()) showVariableList.append(GraphViewResults::eGEventsPts);
-       if (mCurveDataPointsCheck->isVisible() && mCurveDataPointsCheck->isChecked()) showVariableList.append(GraphViewResults::eGDatesPts);
+        }
 
-       if (mCurveGPRadio->isChecked()) showVariableList.append(GraphViewResults::eGP);
        if (mCurveGSRadio->isChecked()) showVariableList.append(GraphViewResults::eGS);
 
        const bool showStat = mCurveStatCheck->isChecked();
@@ -3234,7 +3265,7 @@ void ResultsView::updateOptionsWidget()
             mCurveMapCheck->show();
             mCurveEventsPointsCheck->show();
             mCurveDataPointsCheck->show();
-            totalH += 4 * mCurveErrorCheck->height()*1.3 ;
+            totalH += 4 * mCurveErrorCheck->height()*1.3 + 5. ;
 
             QVBoxLayout* curveOptionGroupLayout = new QVBoxLayout();
             curveOptionGroupLayout->setContentsMargins(15, 0, 0, 0);
@@ -3249,7 +3280,7 @@ void ResultsView::updateOptionsWidget()
         curveGroupLayout->addWidget(mCurveGPRadio);
         if (mCurveGPRadio->isChecked()) {
             mCurveMapCheck->show();
-            totalH += mCurveMapCheck->height()*1.3 ;
+            totalH += mCurveMapCheck->height()*1.3 + 5.;
 
             QVBoxLayout* curveOptionGroupLayout = new QVBoxLayout();
             curveOptionGroupLayout->setContentsMargins(15, 0, 0, 0);
@@ -3257,7 +3288,6 @@ void ResultsView::updateOptionsWidget()
 
             curveGroupLayout->addLayout(curveOptionGroupLayout);
         }
-
 
         curveGroupLayout->addWidget(mCurveGSRadio);
         curveGroupLayout->addWidget(mLambdaRadio);
@@ -3296,8 +3326,8 @@ void ResultsView::updateOptionsWidget()
 
         widHeigth = 11*h + 13*internSpan;
         /* 11*h = spanOptionTitle + studyPeriodButton + span + slider + majorInterval + minorCount
-         *        + GraphicOptionsTitle + ZoomSlider + Font + Thickness + Opacity
-         */
+        *        + GraphicOptionsTitle + ZoomSlider + Font + Thickness + Opacity
+        */
 
 
         mDisplayStudyBut->setText(xScaleRepresentsTime() ? tr("Study Period Display") : tr("Fit Display"));
@@ -3313,15 +3343,15 @@ void ResultsView::updateOptionsWidget()
                            mMainVariable == GraphViewResults::eGS)) {
             mXOptionTitle->setVisible(displayX);
             mXOptionGroup->setVisible(displayX);
-            widHeigth += displayX ? 2*h + 2*internSpan : 0.;// mXOptionGroup->height() + mXOptionTitle->height() + internSpan: 0.;
+            widHeigth += displayX ? 2*h + 2*internSpan : 0.;
 
             mYOptionTitle->setVisible(displayY);
             mYOptionGroup->setVisible(displayY);
-            widHeigth += displayY ? 2*h + 2*internSpan : 0.;//mYOptionGroup->height() + mYOptionTitle->height() + internSpan: 0.;
+            widHeigth += displayY ? 2*h + 2*internSpan : 0.;
 
             mZOptionTitle->setVisible(displayZ);
             mZOptionGroup->setVisible(displayZ);
-            widHeigth += displayZ ? 2*h + 3*internSpan : 0.;//mZOptionGroup->height() + mZOptionTitle->height() + internSpan: 0.;
+            widHeigth += displayZ ? 2*h + 3*internSpan : 0.;
             mDisplayWidget->setFixedHeight(widHeigth);
 
         } else {
@@ -3336,7 +3366,7 @@ void ResultsView::updateOptionsWidget()
             mDisplayWidget-> setFixedHeight(widHeigth);
         }
 
-        optionWidgetHeigth += widHeigth; //mDisplayWidget->height();
+        optionWidgetHeigth += widHeigth;
 
     } else {
         mDisplayWidget->hide();
@@ -3429,8 +3459,6 @@ void ResultsView::updateOptionsWidget()
             mHActivityEdit->hide();
             mHActivityEdit->setFixedHeight(0);
 
-            //nbObject += 0;
-
         } else {
             mRangeThreshLab->hide();
             mRangeThreshLab->setFixedHeight(0);
@@ -3506,7 +3534,6 @@ void ResultsView::updateOptionsWidget()
         mSaveSelectWidget->hide();
         mSaveAllWidget->hide();
 
-
         mOptionsLayout->addWidget(mPageWidget);
         optionWidgetHeigth += mPageWidget->height();
 
@@ -3531,8 +3558,6 @@ void ResultsView::updateOptionsWidget()
 }
 
 #pragma mark Utilities
-
-
 
 bool ResultsView::xScaleRepresentsTime()
 {
@@ -3867,6 +3892,7 @@ void ResultsView::findOptimalX()
 
     Scale XScale;
     if (mCurveGRadio->isChecked()) {
+        const auto minmax_Y = modelCurve->mPosteriorMeanG.gx.mapG.rangeY;
         vec = &modelCurve->mPosteriorMeanG.gx.vecG;
         const std::vector<double>* vecVar = &modelCurve->mPosteriorMeanG.gx.vecVarG;
 
@@ -3882,7 +3908,7 @@ void ResultsView::findOptimalX()
             i++;
         }
 
-        XScale.findOptimal(minY, maxY, 7);
+        XScale.findOptimal(std::min(minmax_Y.first, minY), std::max(minmax_Y.second, maxY), 7);
 
     } else {
         if (mCurveGPRadio->isChecked()) {
@@ -4197,55 +4223,6 @@ void ResultsView::showStats(bool show)
 }
 
 #pragma mark Graph selection and export
-// Obsolete
-void ResultsView::togglePageSave()
-{
-
-        // Exchange with the widget corresponding to the requested tab
-        if (mPageSaveTab->currentName() == tr("Page") ) { // Tab = Page
-            // -------------------------------------------------------------------------------------
-            //  - Update the total number of graphs for all pages
-            //  - Check if the current page is still lower than the number of pages
-            //  - Update the pagination display
-            //  => All this must be done BEFORE calling createGraphs, which uses theses params to build the graphs
-            // -------------------------------------------------------------------------------------
-            updateTotalGraphs();
-
-            const int numPages = ceil((double)mMaximunNumberOfVisibleGraph / (double)mGraphsPerPage);
-            if (mCurrentPage >= numPages) {
-                mCurrentPage = 0;
-            }
-
-            mPageEdit->setText(locale().toString(mCurrentPage + 1) + "/" + locale().toString(numPages));
-
-            mPageWidget->setVisible(true);
-            mSaveSelectWidget->hide();
-            mSaveAllWidget->hide();
-
-         //   if (widFrom != mPageWidget)
-             //   mOptionsLayout->replaceWidget(widFrom, mPageWidget);
-
-        } else if (mPageSaveTab->currentName() == tr("Save") ) { // {  Tab = Saving
-            mPageWidget->hide();
-
-            const bool hasSelection = (currentGraphs(true).size() > 0);
-
-            if (hasSelection) {// && widFrom != mSaveSelectWidget) {
-               // mOptionsLayout->replaceWidget(widFrom, mSaveSelectWidget);
-                mSaveAllWidget->hide();
-                mSaveSelectWidget->show();
-
-            } else { //if (!hasSelection && widFrom != mSaveAllWidget) {
-              //  mOptionsLayout->replaceWidget(widFrom, mSaveAllWidget);
-                mSaveSelectWidget->hide();
-                mSaveAllWidget->show();
-
-            }
-
-        }
-  //  }
-
-}
 
 void ResultsView::saveGraphData()
 {

@@ -240,7 +240,6 @@ private slots:
     // ------------------------------------
     //  Page / Save
     // ------------------------------------
-    void togglePageSave();
 
     // Pagination tools
     void applyGraphsPerPage(int i);
