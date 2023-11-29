@@ -51,7 +51,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 #include <math.h>
-#include <thread>
 
 
 ModelCurve::ModelCurve(QObject *parent):
@@ -258,7 +257,7 @@ void ModelCurve::restoreFromFile_v324(QDataStream* in)
 
 /* C' était le même algorithme que MCMCCurve::memo_PosteriorG()
  */
-/** @TODO
+/** @obsolete
  *  memo_Posterior à changer, elle inclue la conversion IDF
  */
 PosteriorMeanGComposante ModelCurve::buildCurveAndMap(const int nbPtsX, const int nbPtsY, const char charComp, const bool doMap, const double mapYMin, double mapYMax)
@@ -1039,11 +1038,9 @@ void ModelCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spl
 {
     const double deg = 180. / M_PI ;
 
-    auto* curveMap_XInc = &postG.gx.mapG;
-    auto* curveMap_YDec = &postG.gy.mapG;
-    auto* curveMap_ZF = &postG.gz.mapG;
-
-
+    CurveMap* curveMap_XInc = &postG.gx.mapG;
+    CurveMap* curveMap_YDec = &postG.gy.mapG;
+    CurveMap* curveMap_ZF = &postG.gz.mapG;
 
     const int nbPtsX = curveMap_ZF->column(); // identique à toutes les maps
 
@@ -1071,7 +1068,7 @@ void ModelCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spl
     auto* curveMap_GP_YDec = &postG.gy.mapGP;
     auto* curveMap_GP_ZF = &postG.gz.mapGP;
 
-    const int nbPts_GP_X = curveMap_GP_ZF->column(); // identique à toutes les maps
+    // const int nbPts_GP_X = curveMap_GP_ZF->column(); // identique à toutes les maps
 
     const int nbPtsY_GP_XInc = curveMap_GP_XInc->row();
     const int nbPtsY_GP_YDec = curveMap_GP_YDec->row();
@@ -1086,7 +1083,7 @@ void ModelCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spl
     const double ymin_GP_ZF = curveMap_GP_ZF->minY();
     const double ymax_GP_ZF = curveMap_GP_ZF->maxY();
 
-    const double step_GP_T = (mSettings.mTmax - mSettings.mTmin) / (nbPts_GP_X - 1);
+    //const double step_GP_T = (mSettings.mTmax - mSettings.mTmin) / (nbPts_GP_X - 1);
 
     const double step_GP_XInc = (ymax_GP_XInc - ymin_GP_XInc) / (nbPtsY_GP_XInc - 1);
     const double step_GP_YDec = (ymax_GP_YDec - ymin_GP_YDec) / (nbPtsY_GP_YDec - 1);
@@ -1569,10 +1566,12 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCM
 
         // Memo mapGP
 
-        const int idxYGP = std::clamp( int((gp - yminGP) / stepYGP), 0, nbPtsY-1);
-        curveMapGP(idxT, idxYGP) = curveMapGP.at(idxT, idxYGP) + 1.;
 
-        curveMapGP.max_value = std::max(curveMapGP.max_value, curveMapGP.at(idxT, idxYGP));
+        if (yminGP <= gp && gp <= ymaxGP) {
+            const int idxYGP = std::clamp( int((gp - yminGP) / stepYGP), 0, nbPtsY-1);
+            curveMapGP(idxT, idxYGP) = curveMapGP.at(idxT, idxYGP) + 1.;
+            curveMapGP.max_value = std::max(curveMapGP.max_value, curveMapGP.at(idxT, idxYGP));
+        }
 
     }
     int tIdx = 0;

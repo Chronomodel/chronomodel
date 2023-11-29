@@ -1045,7 +1045,7 @@ QPainterPath GraphView::makePath (const QMap<double, double> &map, const bool sh
 
     // *****
 
-    decltype(iFirst) lastGoodIter; // repere le dernier point visible
+    decltype(iFirst) lastGoodIter = map.end(); // repere le dernier point visible
     bool movePoint = false;
 
 
@@ -1108,7 +1108,7 @@ QPainterPath GraphView::makePath (const QMap<double, double> &map, const bool sh
     // The Last point does not exist, mCurrentMaxX does not exist in the table, it must be interpolated
 
 
-    if (lastGoodIter != iFirst) {
+    if (lastGoodIter != iFirst && lastGoodIter != map.end()) {
           // ******* 7 cas
         auto iNext = std::next(lastGoodIter);
         qreal xNext, yNext;

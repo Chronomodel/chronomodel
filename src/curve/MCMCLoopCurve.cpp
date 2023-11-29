@@ -64,8 +64,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <exception>
 #include <vector>
 #include <cmath>
-#include <iostream>
-#include <random>
 #include <time.h>
 
 
@@ -4576,6 +4574,7 @@ void MCMCLoopCurve::memo()
 
 /* C'est le même algorithme que ModelCurve::buildCurveAndMap()
  */
+// obsolete
 void MCMCLoopCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSplineComposante& splineComposante, const int realyAccepted)
 {
     CurveMap& curveMap = postGCompo.mapG;
@@ -6983,7 +6982,7 @@ double MCMCLoopCurve::rapport_Theta(const std::function <double (Event*)> &fun, 
     for (int i = 0; i < n; ++i) {
         som += fKx[i] * vectfx[i];
     }
-    double dx = -0.5 * lambdaSpline * som;
+    //double dx = -0.5 * lambdaSpline * som;
     return exp(-0.5 * lambdaSpline * som);
 
 }

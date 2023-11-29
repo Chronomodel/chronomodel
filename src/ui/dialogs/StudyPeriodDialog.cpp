@@ -129,7 +129,7 @@ void StudyPeriodDialog::setSettings(const StudyPeriodSettings &s)
 {
     mMinEdit->setText(locale().toString(s.mTmin));
     mMaxEdit->setText(locale().toString(s.mTmax));
-    const double suggested = s.getStep(s.mTmin, s.mTmax);
+    //const double suggested = s.getStep(s.mTmin, s.mTmax);
     // mForcedCheck -> setText(tr("(suggested/default value = %1 )").arg(QString::number(suggested) ) );
     mForcedCheck -> setChecked(s.mStepForced);
     mStepSpin    -> setEnabled(s.mStepForced);

@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "StudyPeriodSettings.h"
 
 #include "DateUtils.h"
+//#include "QtCore/qjsonobject.h"
 #include "StateKeys.h"
 
 #include <QObject>
