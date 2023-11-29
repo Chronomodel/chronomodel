@@ -387,6 +387,12 @@ void Scale::findOptimal(const double a, const double b, const int nOptimal)
         mark = .2;
         return;
     }
+    double coef = 1.;
+    if (log10(abs(min))<0 && log10(abs(max))<0) {
+        coef = pow(10., -std::floor(std::max(log10(abs(min)), log10(abs(max)))) +1.);
+        min *= coef;
+        max *= coef;
+    }
 
     // Mark
     const double e = (max - min);
@@ -438,6 +444,13 @@ void Scale::findOptimal(const double a, const double b, const int nOptimal)
         max = min + std::ceil( (max - min) / mark ) * mark + mark;
     else
         max = min + std::ceil( (max - min) / mark ) * mark;
+
+    if (coef != 1.) {
+        min /= coef;
+        max /= coef;
+        mark /= coef;
+        tip /= coef;
+    }
 }
 
 void Scale::findOptimalMark(const double a, const double b, const int nOptimal)
