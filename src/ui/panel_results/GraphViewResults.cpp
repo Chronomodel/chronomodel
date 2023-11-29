@@ -318,10 +318,6 @@ void GraphViewResults::saveGraphData() const
     else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eActivity))
         mGraph->exportCurrentCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep, mTitle);
 
-    // All visible curves are saved in the same file, the credibility bar is not save
-    else if (mCurrentTypeGraph == ePostDistrib && !mShowVariableList.contains(eG))
-        mGraph->exportCurrentDensities (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
-
     else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eG)) {
         QMessageBox messageBox;
         messageBox.setWindowTitle(tr("Save curve"));
@@ -337,7 +333,14 @@ void GraphViewResults::saveGraphData() const
             mGraph->exportCurrentCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, 0, mTitle);
         }
         else return;
-    }
+
+    } else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eGP)) {
+        mGraph->exportCurrentCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep, mTitle);
+
+    }    // All visible curves are saved in the same file, the credibility bar is not save
+    else if (mCurrentTypeGraph == ePostDistrib && !mShowVariableList.contains(eG))
+        mGraph->exportCurrentDensities (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
+
 }
 
 void GraphViewResults::setNumericalResults (const QString &resultsHTML)

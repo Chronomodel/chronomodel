@@ -494,7 +494,7 @@ void ModelCurve::saveMapToFile(QFile *file, const QString csvSep, const CurveMap
 
             output << stringForCSV(map.minY() + r * stepY)  << csvSep;
             for (unsigned c = 0; c < map._column; ++c)  {
-                output << stringForCSV(std::remove_const<const CurveMap>::type (map).at(c, r)) << csvSep;
+                output << stringForCSV(map(c, r), true) << csvSep;
             }
             output << "\r";
         }
@@ -509,7 +509,7 @@ void ModelCurve::saveMapToFile(QFile *file, const QString csvSep, const CurveMap
 
             output << stringForCSV(map.minY() + r * stepY)  << csvSep;
             for (int c = map._column-1; c >-1; --c)   {
-                output << stringForCSV(std::remove_const<const CurveMap>::type (map).at(c, r)) << csvSep;
+                output << stringForCSV(map(c, r), true) << csvSep;
             }
             output << "\r";
         }

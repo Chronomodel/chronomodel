@@ -2238,7 +2238,7 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
         double xMax = -INFINITY;
 
         for (auto& curve : mCurves) {
-            if (curve.isDensityCurve() && curve.mVisible) {
+            if ((curve.isDensityCurve()||curve.isFunction()) && curve.mVisible) {
                 // 2 - Find x Min and x Max period, on all curve, we suppose Qmap is order
                 if ( std::isinf(xMin) ) {// firstCurveVisible) {
                     xMin = curve.mData.firstKey();

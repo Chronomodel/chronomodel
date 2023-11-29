@@ -4529,7 +4529,7 @@ void ResultsView::exportResults()
 
             // --------------   Saving Curve Map
             if (mModel->mProject->isCurve()) {
-                // first Map
+                // first Map G
                 const auto list_names = mModel->getCurvesName();
 
                 file.setFileName(dirPath + "/Curve_" +list_names.at(0) + "_Map.csv");
@@ -4565,6 +4565,40 @@ void ResultsView::exportResults()
                     i++;
                 }
 
+                // Second Map GP
+
+                file.setFileName(dirPath + "/Curve_" +list_names.at(0) + "_MapGP.csv");
+
+                if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+                    modelCurve()->saveMapToFile(&file, csvSep, modelCurve()->mPosteriorMeanG.gx.mapGP);
+
+                }
+
+                if (mModel->displayY()) {
+                    file.setFileName(dirPath + "/Curve"+list_names.at(1) + "_MapGP.csv");
+
+                    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+                        modelCurve()->saveMapToFile(&file, csvSep, modelCurve()->mPosteriorMeanG.gy.mapGP);
+                        file.close();
+                    }
+
+                    if (mModel->displayZ()) {
+                        file.setFileName(dirPath + "/Curve"+list_names.at(2) + "_MapGP.csv");
+
+                        if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+                            modelCurve()->saveMapToFile(&file, csvSep, modelCurve()->mPosteriorMeanG.gz.mapGP);
+                            file.close();
+                        }
+                    }
+
+                }
+
+                // --------------   Saving Curve Ref
+                i = 0;
+                for (auto&& graph : mByCurveGraphs) {
+                    graph->getGraph()->exportReferenceCurves ("", QLocale::English, ",",  mModel->mSettings.mStep, dirPath + "/Curve_"+list_names.at(i) + "_ref.csv" );
+                    i++;
+                }
 
             }
         }
