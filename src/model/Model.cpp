@@ -60,6 +60,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <thread>
 #endif
 
+extern QString res_file_version;
 
 Model::Model(QObject *parent):
     QObject(parent),
@@ -2290,14 +2291,15 @@ void Model::restoreFromFile_v324(QDataStream *in)
     if (in->version()!= QDataStream::Qt_6_4)
         return;
 
-    QString appliVersion;
-    *in >> appliVersion;
+    //QString appliVersion;
+    //res_file_version
+    *in >> res_file_version;
     // prepare the future
     //QStringList projectVersionList = appliVersion.split(".");
 #ifdef DEBUG
-    if (appliVersion != qApp->applicationVersion())
-        qDebug()<<" Different Model version ="<<appliVersion<<" actual ="<<qApp->applicationVersion();
-    if (compatible_version.contains(appliVersion))
+    if (res_file_version != qApp->applicationVersion())
+        qDebug()<<" Different Model version ="<<res_file_version<<" actual ="<<qApp->applicationVersion();
+    if (compatible_version.contains(res_file_version))
         qDebug()<<" Version compatible ";
 #endif
     // -----------------------------------------------------

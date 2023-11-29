@@ -76,7 +76,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QFile>
 #include <QTimer>
 
-#include <iostream>
+QString res_file_version; // used when loading
 
 Project::Project():
     mName ("ChronoModel Project"),
