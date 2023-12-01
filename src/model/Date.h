@@ -183,6 +183,8 @@ public:
 
     void updateDelta(Event *&event);
     void updateSigmaShrinkage(Event *&event);
+    void updateSigmaShrinkage_K(Event* &event);
+
     void updateSigmaJeffreys(Event* event);
     void updateSigmaReParam(Event* event);
     inline void updateWiggle() { mWiggle.mX = mTi.mX + mDelta;};

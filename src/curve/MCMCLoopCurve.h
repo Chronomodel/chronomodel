@@ -110,12 +110,10 @@ protected:
     QString initialize_interpolate();
     QString initialize_Komlan();
 
-
     bool update_321();
     bool update_400();
     bool update_interpolate();
 
-    bool update_Komlan0();
     bool update_Komlan();
 
 
@@ -215,8 +213,6 @@ private:
      double S02_Vg_Yy(QList<Event *> &events, SplineMatrices &matricesWI, std::vector<t_reduceTime> &vecH, const double lambdaSpline);
      double S02_Vg_Yz(QList<Event *> &events, SplineMatrices &matricesWI, std::vector<t_reduceTime> &vecH, const double lambdaSpline);
 
-
-
      static double S02_lambda_WI(const SplineMatrices &matrices, const int nb_noeuds);
 
      double Calcul_Variance_Rice (const QList<Event *> &events) const;
@@ -247,7 +243,8 @@ private:
 
 #pragma mark import_Komlan
 
-    double rate_h_lambda_K(const MCMCSpline &s, const double current_lambda, const double try_lambda, const Matrix2D &K);
+    // obsolete double rate_h_lambda_K(const MCMCSpline &s, const double current_lambda, const double try_lambda, const Matrix2D &K);
+    double rate_h_lambda_K(const double current_lambda, const double try_lambda, const double schrinkageLambda, const int n);
     double S02_lambda_WIK (const Matrix2D &K, const int nb_noeuds);
     double h_lambda_Komlan(const Matrix2D &K, const Matrix2D &K_new, const int nb_noeuds, const double &lambdaSpline);
     double rapport_Theta(const std::function<double (Event *)> &fun, const QList<Event*> &lEvents, const Matrix2D &K, const Matrix2D &K_new, const double lambdaSpline);
@@ -255,8 +252,6 @@ private:
     MatrixDiag createDiagWInv_Vg0(const QList<Event*>& lEvents);
 
     SplineMatrices prepareCalculSpline_W_Vg0(const QList<Event *> &sortedEvents, std::vector<double> &vecH);
-    //MCMCSpline samplingSpline_multi(QList<Event *> &lEvents, const Matrix2D &RR_1, const Matrix2D &Q, std::vector<double> &vecfx, SplineMatrices matrices);
-    //MCMCSpline samplingSpline_multi(QList<Event *> &events, std::vector<Event *> &lEventsinit, std::vector<double> vecYx, std::vector<double> vecYstd, const Matrix2D &RR, const Matrix2D &RR_1, const Matrix2D &Q, const Matrix2D &QT, const Matrix2D &matK);
     MCMCSpline samplingSpline_multi(QList<Event *> &lEvents, std::vector<Event *> &lEventsinit, std::vector<double> vecYx, std::vector<double> vecYstd, const Matrix2D &RR, const Matrix2D &R_1QT, const Matrix2D &Q, const Matrix2D &QT, const Matrix2D &matK,  bool doSortAndSpreadTheta, SplineMatrices matrices);
 
     std::vector<double> multinormal_sampling (const std::vector<double> &mu, const Matrix2D &a);

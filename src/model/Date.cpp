@@ -1529,10 +1529,8 @@ void Date::updateSigmaShrinkage(Event* &event)
     const int logVMax = 100;
 
     const double V1 = mSigmaTi.mX * mSigmaTi.mX;
-    //const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigmaTi.mSigmaMH);
-    //double V2 = pow(10, logV2);
-    const double logV2 = Generator::gaussByBoxMuller(log(V1), mSigmaTi.mSigmaMH); // pour test
-    const double V2 = exp(logV2);
+    const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigmaTi.mSigmaMH);
+    double V2 = pow(10, logV2);
 
     double rapport  = -1.;
     if (logV2 >= logVMin && logV2 <= logVMax) {
@@ -1551,6 +1549,45 @@ void Date::updateSigmaShrinkage(Event* &event)
 
 }
 
+void Date::updateSigmaShrinkage_K(Event* &event)
+{
+    const double lambda = pow(mTi.mX - (event->mTheta.mX - mDelta), 2.) / 2.;
+    const double V1 = mSigmaTi.mX * mSigmaTi.mX;
+
+    double rapport = -1, V2;
+    if (mTi.mSamplerProposal != MHVariable::eMHSymGaussAdapt) {
+        const double VMin = 0.;
+        const double VMax = 1.E+10;
+
+        V2 = Generator::shrinkageUniforme(event->mS02Theta.mX);
+
+        if (VMin<V2 && V2<VMax) {
+            const double dexp =exp(-lambda * (V1 -V2)/(V1*V2));
+            rapport = dexp * sqrt(V1/V2);
+        }
+
+    } else {
+        const int logVMin = -6;
+        const int logVMax = 100;
+
+
+        const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigmaTi.mSigmaMH);
+        V2 = pow(10, logV2);
+
+        if (logV2 >= logVMin && logV2 <= logVMax) {
+            const double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
+            const double x2 = pow((event->mS02Theta.mX + V1) / (event->mS02Theta.mX + V2), event->mAShrinkage + 1.);
+            rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1 ; // (V2 / V1) est le jacobien!
+
+        }
+
+    }
+
+
+
+    mSigmaTi.tryUpdate(sqrt(V2), rapport);
+
+}
 void Date::updateSigmaReParam(Event* event)
 {
     // ------------------------------------------------------------------------------------------

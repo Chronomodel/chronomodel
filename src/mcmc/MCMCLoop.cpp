@@ -340,11 +340,18 @@ QString MCMCLoop::initialize_time(Model* model)
                     }
 
                     // 4 - Init S02 of each Event
-                    uEvent->mS02Theta.mX = uEvent->mDates.size() / s02_sum; //apres ici au bout de 3
-                    uEvent->mS02Theta.mSigmaMH = 1.;
 
                     const double sqrt_S02_harmonique = sqrt(uEvent->mDates.size() / s02_sum);
                     uEvent->mBetaS02 = 1.004680139*(1 - exp(- 0.0000847244 * pow(sqrt_S02_harmonique, 2.373548593)));
+#ifdef CODE_KOMLAN
+                    // new code
+                    uEvent->mS02Theta.mX = 1. / Generator::gammaDistribution(1., uEvent->mBetaS02);
+                    uEvent->mS02Theta.mSigmaMH = 1.;
+#else
+                    uEvent->mS02Theta.mX = uEvent->mDates.size() / s02_sum;
+                    uEvent->mS02Theta.mSigmaMH = 1.;
+
+#endif
 
                     uEvent->mS02Theta.mLastAccepts.clear();
                     uEvent->mS02Theta.tryUpdate(uEvent->mS02Theta.mX, 2.);

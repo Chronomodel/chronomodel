@@ -43,12 +43,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <errno.h>
 #include <fenv.h>
 #include <ctgmath>
-#include <cstdlib>
-#include <iostream>
 
-#include <algorithm>
 #include <chrono>
-#include <iostream>
 #include <QDebug>
 #include <QObject>
 
@@ -249,12 +245,14 @@ double Generator::gaussByBoxMuller(const double mean, const double sigma)
     return mean + boxMuller() * sigma;
 }
 
-double Generator::shrinkage(const double variance, const double shrinkage)// à controler
+// obsolete
+/*
+  double Generator::shrinkage(const double variance, const double shrinkage)// à controler
 {
    double x = std::sqrt(shrinkage) * boxMuller() + std::sqrt(1 - shrinkage) * boxMuller();
-
-    return x * std::sqrt(variance);
+   return x * std::sqrt(variance);
 }
+*/
 
 /** https://en.wikipedia.org/wiki/Xorshift
  *
@@ -273,5 +271,23 @@ double Generator::xorshift64star(void) {
        return to_double(Generator::xorshift64starSeed * UINT64_C(2685821657736338717));
 }
 
+double Generator::shrinkageUniforme(const double shrinkage)
+{
+    const double u = Generator::randomUniform();
+    const double x = shrinkage * ((1 - u) / u);
+    return x;
+}
 
+
+double Generator::gammaDistribution(const double alpha, const double beta)
+{
+    std::gamma_distribution<double>  gamma(alpha, beta);
+    return gamma(sEngine);
+}
+
+double Generator::exponentialeDistribution(const double meanexp)
+{
+    std::exponential_distribution<double>  exponential(meanexp);
+    return exponential(sEngine);
+}
 

@@ -133,31 +133,32 @@ public:
     Generator();
     virtual ~Generator();
     static unsigned createSeed();
-    static void initGenerator(const unsigned seed);
+    static void initGenerator (const unsigned seed);
 
     static double randomUniform(const double min = 0., const double max = 1.) ;
     static int randomUniformInt(const int min = 0, const int max = 1);
 
-    static double gaussByDoubleExp (const double mean, const double sigma, const double min, const double max) ;
-    static double gaussByBoxMuller (const double mean, const double sigma);
-    static double shrinkage (const double variance, const double shrinkage); // à controler
+    static double gaussByDoubleExp(const double mean, const double sigma, const double min, const double max) ;
+    static double gaussByBoxMuller(const double mean, const double sigma);
+    //static double shrinkage (const double variance, const double shrinkage); // obsolete; à controler
 
     static double xorshift64star(void);
     static uint64_t xorshift64starSeed;
     static inline double to_double(uint64_t x) {
        // const union { uint64_t i; double d; } u = { .i = UINT64_C(0x3FF) << 52 | x >> 12 }; // don't work with MSVC2015
        // return u.d - 1.0;
-        return static_cast<double>(x);
+        return static_cast<double> (x);
     }
 
     static c_UUID UUID;
-    
-    
-private:
 
+    static double shrinkageUniforme(const double shrinkage);
+    static double gammaDistribution(const double alpha, const double beta);
+    static double exponentialeDistribution(const double meanexp);
+
+private:
     
     static double boxMuller() ;
-
     static std::mt19937 sEngine;
     static std::uniform_real_distribution<double> sDoubleDistribution;
 
