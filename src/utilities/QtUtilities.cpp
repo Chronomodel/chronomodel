@@ -203,13 +203,45 @@ bool isComment(const QString& str)
 
 QColor getContrastedColor(const QColor& color)
 {
-    QColor frontColor = Qt::white;
-    qreal s = color.saturationF();
-    if (s < 0.4)  {
-        qreal l = color.lightnessF();
-        if (l >= 0.5)
-            frontColor = Qt::black;
+     //complementary color
+   /* int r = color.red();
+    int g = color.green();
+    int b = color.blue();
+// (255-r, 255-g, 255-b);
+ */
+     QColor frontColor;
+// https://en.wikipedia.org/wiki/HSL_and_HSV#/media/File:Hsl-hsv_models.svg
+     /*
+     // mode hsl, correspond à la roue et lightness corresopnd à la barre
+    const float hslHue = color.hslHueF()*360.;
+    const float hslSaturation = color.hslSaturationF();
+    const float lightness = color.lightnessF();
+//qDebug()<<hslHue<<hslSaturation<<lightness;
+    */
+
+//mode TSL
+    const float hsvHue = color.hsvHueF()*360.;
+    const float hsvSaturation = color.hsvSaturationF();
+    //float saturation = color.saturationF(); //==hsvSaturation
+    const float value = color.valueF(); // Correspond à la luminosité en TSL
+    //qDebug()<<hsvHue<<hsvSaturation<<saturation<< value;
+
+    if (value < 0.55) {
+        frontColor = Qt::white;
     }
+    else if (hsvSaturation < 0.25) {
+        frontColor = Qt::black;
+    }
+    else if (190<hsvHue && hsvHue<360) { // du bleu au rouge final
+        frontColor = Qt::white;
+    }
+    else if ( hsvHue<7) { // Le debut rouge
+        frontColor = Qt::white;
+
+    } else {
+        frontColor = Qt::black;
+    }
+
     return frontColor;
 }
 
@@ -229,7 +261,8 @@ QList<int> stringListToIntList(const QString& listStr, const QString& separator)
     }
     return result;
 }
-QList<unsigned> stringListToUnsignedList(const QString& listStr, const QString& separator)
+
+QList<unsigned> stringListToUnsignedList(const QString &listStr, const QString &separator)
 {
     QList<unsigned> result;
     if (!listStr.isEmpty()) {
@@ -241,7 +274,7 @@ QList<unsigned> stringListToUnsignedList(const QString& listStr, const QString& 
     return result;
 }
 
-QStringList intListToStringList(const QList<int>& intList)
+QStringList intListToStringList(const QList<int> &intList)
 {
     QStringList list;
     for (auto& i : intList)
