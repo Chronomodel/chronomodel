@@ -53,7 +53,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 #include <QLocale>
 #include <QFont>
-#include <iostream>
 
 
 // Constructor / Destructor
@@ -82,7 +81,7 @@ MainWindow::MainWindow(QWidget* aParent):
     mProject = nullptr;
 
     /* Creation of ResultsView and ModelView */
-    mProjectView = new ProjectView();
+    mProjectView = new ProjectView(mProject);
     setCentralWidget(mProjectView);
 
     mUndoStack = new QUndoStack();
@@ -138,7 +137,7 @@ MainWindow::~MainWindow()
 }
 
 // Accessors
-Project* MainWindow::getProject()
+const std::shared_ptr<Project> &MainWindow::getProject()
 {
     return mProject;
 }
@@ -486,14 +485,15 @@ void MainWindow::newProject()
         yesCreate= true;
 
     if (yesCreate) {
-        Project* newProject = new Project();
+        mProject.reset(new Project());
+        //Project* newProject = new Project();
          // just update mAutoSaveTimer to avoid open the save() dialog box
-        newProject-> mAutoSaveTimer->stop();
+        mProject-> mAutoSaveTimer->stop();
 
         /* Ask to save the new project.
          * Returns true only if a new file is created.
          * Note : at this point, the project state is still the previous project state.*/
-        if (newProject->saveAs(tr("Save new project as..."))) {
+        if (mProject->saveAs(tr("Save new project as..."))) {
             //mUndoStack->clear();
 
             // resetInterface Disconnect also the scene
@@ -504,11 +504,11 @@ void MainWindow::newProject()
             /* Reset the project state and the MCMC Setting to the default value
              * and then send a notification to update the views : send desabled */
 
-            newProject->initState(NEW_PROJECT_REASON);// emit showStudyPeriodWarning();
+            mProject->initState(NEW_PROJECT_REASON);// emit showStudyPeriodWarning();
 
-            delete mProject;
+            //delete mProject;
 
-            mProject = newProject;
+            //mProject = newProject;
 
             activateInterface(true); // mProject doit exister
 
@@ -534,9 +534,10 @@ void MainWindow::newProject()
 
             mUndoStack->clear();
 
-        } else {
+        }/* else {
             delete newProject;
-        }
+            newProject = nullptr;
+        }*/
     }
 }
 
@@ -550,7 +551,7 @@ void MainWindow::openProject()
 
     if (!path.isEmpty()) {
 
-        if (mProject) {
+        if (mProject != nullptr) {
             mProject->askToSave(tr("Save current project as..."));
 
             disconnectProject();
@@ -558,11 +559,12 @@ void MainWindow::openProject()
             //resetInterface(): clear mEventsScene and mPhasesScene, set mProject = nullptr
             resetInterface();
 
-            delete mProject;
+            //delete mProject;
+           // mProject.reset();// = nullptr;
         }
         statusBar()->showMessage(tr("Loading project : %1").arg(path));
         // assign new project
-        mProject = new Project();
+        mProject.reset(new Project());
         connectProject();
 
         //setAppSettingsAutoSave(): just update mAutoSaveTimer
@@ -576,8 +578,8 @@ void MainWindow::openProject()
             activateInterface(true);
             updateWindowTitle();
             // Create mEventsScene and mPhasesScenes
-            if ( !mProject->mModel->mChains.isEmpty())
-                    mcmcFinished(mProject->mModel); //do initDensities()
+            if ( mProject->mModel!=nullptr && !mProject->mModel->mChains.isEmpty())
+                    mcmcFinished(); //do initDensities()
 
             mProjectView->setProject(mProject);
 
@@ -623,29 +625,27 @@ void MainWindow::insertProject()
 
 void MainWindow::connectProject()
 {
-    connect(mProject, &Project::noResult, this, &MainWindow::noResult);
-    connect(mProject, &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
-    connect(mProject, &Project::projectStateChanged, this, &MainWindow::updateProject);
+    connect(mProject.get(), &Project::noResult, this, &MainWindow::noResult);
+    connect(mProject.get(), &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
+    connect(mProject.get(), &Project::projectStateChanged, this, &MainWindow::updateProject);
 
+    connect(mMCMCSettingsAction, &QAction::triggered, mProject.get(), &Project::mcmcSettings);
+    connect(mResetMCMCAction, &QAction::triggered, mProject.get(), &Project::resetMCMC);
 
-  //  connect(mCurveAction, &QAction::toggled, this, &MainWindow::toggleCurve);
-    connect(mMCMCSettingsAction, &QAction::triggered, mProject, &Project::mcmcSettings);
-    connect(mResetMCMCAction, &QAction::triggered, mProject, &Project::resetMCMC);
-    //connect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
-    connect(mRunAction, &QAction::triggered, mProject, &Project::run);
+    connect(mRunAction, &QAction::triggered, mProject.get(), &Project::run);
 }
 
 void MainWindow::disconnectProject()
 {
-    disconnect(mProject, &Project::noResult, this, &MainWindow::noResult);
-    disconnect(mProject, &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
-    disconnect(mProject, &Project::projectStateChanged, this, &MainWindow::updateProject);
+    disconnect(mProject.get(), &Project::noResult, this, &MainWindow::noResult);
+    disconnect(mProject.get(), &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
+    disconnect(mProject.get(), &Project::projectStateChanged, this, &MainWindow::updateProject);
 
+    disconnect(mMCMCSettingsAction, &QAction::triggered, mProject.get(), &Project::mcmcSettings);
+    disconnect(mResetMCMCAction, &QAction::triggered, mProject.get(), &Project::resetMCMC);
 
-    disconnect(mMCMCSettingsAction, &QAction::triggered, mProject, &Project::mcmcSettings);
-    disconnect(mResetMCMCAction, &QAction::triggered, mProject, &Project::resetMCMC);
-  //  disconnect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
-    disconnect(mRunAction, &QAction::triggered, mProject, &Project::run);
+    disconnect(mRunAction, &QAction::triggered, mProject.get(), &Project::run);
+
 
 }
 
@@ -672,8 +672,8 @@ void MainWindow::closeProject()
         mViewResultsAction->setEnabled(false);
 
         updateWindowTitle();
-        delete mProject;
-        mProject = nullptr;
+        //delete mProject;
+        mProject.reset();// = nullptr;
 
    } else // if there is no project, we suppose it means to close the programm
        QApplication::exit(0);
@@ -886,7 +886,7 @@ void MainWindow::rebuildExportCurve()
     /*ComputeY is different from displayY,
      * for example for the vector case, you have to compute on the 3 components, but display only 2*/
 
-    ModelCurve* curveModel = dynamic_cast<ModelCurve*>(mProject->mModel);
+    std::shared_ptr<ModelCurve> curveModel = std::shared_ptr<ModelCurve>(dynamic_cast<ModelCurve*>(mProject->mModel.get()));//  dynamic_cast<ModelCurve*>(mProject->mModel.get());
 
 
     // Setting actual minmax value
@@ -905,7 +905,7 @@ void MainWindow::rebuildExportCurve()
         tabMinMaxGP.push_back(curveModel->mPosteriorMeanG.gz.mapGP.rangeY);
 
     std::pair<unsigned, unsigned> mapSizeXY = std::pair<unsigned, unsigned> {curveModel->mPosteriorMeanG.gx.mapG._column, curveModel->mPosteriorMeanG.gx.mapG._row};
-    RebuildCurveDialog qDialog = RebuildCurveDialog(curveModel->getCurvesName(), &tabMinMax, mapSizeXY);
+    RebuildCurveDialog qDialog = RebuildCurveDialog(curveModel->getCurvesName(), &tabMinMax, &tabMinMaxGP, mapSizeXY);
 
 
     if (qDialog.exec() && (qDialog.doCurve() || qDialog.doMap())) {
@@ -914,12 +914,13 @@ void MainWindow::rebuildExportCurve()
         const int XGrid = newMapSizeXY.first;
         const int YGrid = newMapSizeXY.second;
         tabMinMax = qDialog.getYTabMinMax();
+        tabMinMaxGP = qDialog.getYpTabMinMax();
 
-        ModelCurve* modelCurve = static_cast<ModelCurve*>(mProject->mModel);
+        //ModelCurve* modelCurve = static_cast<ModelCurve*>(mProject->mModel);
 
         // ____
 
-        const auto &runTrace = modelCurve->fullRunSplineTrace(modelCurve->mChains);
+        const auto &runTrace = curveModel->fullRunSplineTrace(curveModel->mChains);
 
         // init Posterior MeanG and map
 
@@ -961,12 +962,12 @@ void MainWindow::rebuildExportCurve()
         int totalIterAccepted = 1;
         if (!curveModel->compute_Y) {
             for (auto &splineXYZ : runTrace) {
-                modelCurve->memo_PosteriorG(meanG.gx, splineXYZ.splineX,  totalIterAccepted++ );
+                curveModel->memo_PosteriorG(meanG.gx, splineXYZ.splineX,  totalIterAccepted++ );
             }
 
         } else {
             for (auto &splineXYZ : runTrace) {
-                modelCurve->memo_PosteriorG_3D(meanG, splineXYZ, modelCurve->mCurveSettings.mProcessType,  totalIterAccepted++ );
+                curveModel->memo_PosteriorG_3D(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted++ );
             }
         }
 
@@ -982,11 +983,11 @@ void MainWindow::rebuildExportCurve()
                 meanG.gz.mapGP.min_value = *std::min_element(begin(meanG.gz.mapGP.data), end(meanG.gz.mapGP.data));
             }
         }
-        modelCurve->mPosteriorMeanG = std::move(meanG);
+        curveModel->mPosteriorMeanG = std::move(meanG);
 
         // update mPosteriorMeanGByChain
-        for (auto i = 0; i<modelCurve->mChains.size(); i++) {
-            const auto &runTraceByChain = modelCurve->runSplineTraceForChain(modelCurve->mChains, i);
+        for (auto i = 0; i<curveModel->mChains.size(); i++) {
+            const auto &runTraceByChain = curveModel->runSplineTraceForChain(curveModel->mChains, i);
             PosteriorMeanG meanGByChain;
             meanGByChain.gx = clearCompo;
             meanGByChain.gx.mapG.setRangeY(tabMinMax[0].first, tabMinMax[0].second);
@@ -1008,12 +1009,12 @@ void MainWindow::rebuildExportCurve()
             int totalIterAccepted = 1;
             if (!curveModel->compute_Y) {
                 for (auto &splineXYZ : runTraceByChain) {
-                    modelCurve->memo_PosteriorG(meanGByChain.gx, splineXYZ.splineX,  totalIterAccepted++ );
+                    curveModel->memo_PosteriorG(meanGByChain.gx, splineXYZ.splineX,  totalIterAccepted++ );
                 }
 
             } else {
                 for (auto &splineXYZ : runTraceByChain) {
-                    modelCurve->memo_PosteriorG_3D(meanGByChain, splineXYZ, modelCurve->mCurveSettings.mProcessType,  totalIterAccepted++ );
+                    curveModel->memo_PosteriorG_3D(meanGByChain, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted++ );
                 }
             }
 
@@ -1030,7 +1031,7 @@ void MainWindow::rebuildExportCurve()
                 }
             }
 
-            modelCurve->mPosteriorMeanGByChain[i] = std::move(meanGByChain);
+            curveModel->mPosteriorMeanGByChain[i] = std::move(meanGByChain);
         }
 
         // update ResultView
@@ -1216,7 +1217,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
         QFileInfo fileInfo(defaultFilePath);
         if (fileInfo.isFile()) {
             if (!mProject)
-                mProject = new Project();
+                mProject.reset(new Project());
 
             else if (mProject->mModel) {
                 mProject->mModel->clear();
@@ -1227,7 +1228,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
                 updateWindowTitle();
                 connectProject();
                 if (mProject->withResults())
-                    mcmcFinished(mProject->mModel); //do initDensities()
+                    mcmcFinished(); //do initDensities()
 
                 mProject->setAppSettingsAutoSave();
 
@@ -1334,10 +1335,8 @@ void MainWindow::setLogEnabled(bool enabled)
     mViewLogAction->setEnabled(enabled);
 }
 
-void MainWindow::mcmcFinished(Model* model)
+void MainWindow::mcmcFinished()
 {
-    Q_ASSERT(model);
-
     // Set Results and Log tabs enabled
     mViewLogAction->setEnabled(true);
     mViewResultsAction->setEnabled(true);
@@ -1352,17 +1351,17 @@ void MainWindow::mcmcFinished(Model* model)
     mExportCurveAction->setEnabled(mProject->isCurve());
 
     // Tell the views to update
-    mProjectView->initResults(model);
+    mProjectView->initResults(mProject->mModel);
 
 
 }
 
 void MainWindow::noResult()
 {
-     mViewLogAction -> setEnabled(false);
-     mViewResultsAction -> setEnabled(false);
-     mViewResultsAction -> setChecked(false);
+    mViewLogAction -> setEnabled(false);
+    mViewResultsAction -> setEnabled(false);
+    mViewResultsAction -> setChecked(false);
 
-     mViewModelAction->trigger();
-     mProject->setNoResults(true); // set to disable the saving the file *.res
+    mViewModelAction->trigger();
+    mProject->setNoResults(true); // set to disable the saving the file *.res
 }

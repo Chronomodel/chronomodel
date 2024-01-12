@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -48,7 +48,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QDebug>
 #include <algorithm>
-#include <assert.h>
 
 /** Default constructor */
 MetropolisVariable::MetropolisVariable():
@@ -65,8 +64,8 @@ MetropolisVariable::MetropolisVariable():
     mtmaxUsed (0.)
 {
     // will not throw exception,(std::nothrow) in C++ Programmin Language B. Stroustrup Section 19.4.5
-    mRawTrace = new QVector<double>();
-    mFormatedTrace = new QVector<double>();
+    mRawTrace = new QList<double>();
+    mFormatedTrace = new QList<double>();
 
     mRawCredibility = std::pair<double, double>(1, -1);
     mFormatedCredibility = std::pair<double, double>(1, -1);
@@ -120,10 +119,10 @@ MetropolisVariable::MetropolisVariable(const MetropolisVariable &origin):
 MetropolisVariable::~MetropolisVariable()
 {
     mRawTrace->clear();
+    mRawTrace = nullptr;
     mFormatedTrace->clear();
+    mFormatedTrace = nullptr;
     mFormatedHPD.clear();
-  //  QObject::disconnect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
-
 }
 
 /** Copy assignment operator */
@@ -160,19 +159,19 @@ MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable & ori
     mtminUsed = origin.mtminUsed;
     mtmaxUsed = origin.mtmaxUsed;
 
-  //  QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
-
     return *this;
 }
 
 /** Move assignment operator */
 
+void MetropolisVariable::memo()
+{
+   mRawTrace->push_back(mX);
+}
+
 void MetropolisVariable::memo(double* valueToSave)
 {
-    if (valueToSave == nullptr)
-        mRawTrace->push_back(mX);
-    else
-        mRawTrace->push_back(*valueToSave);
+    mRawTrace->push_back(*valueToSave);
 }
 
 void MetropolisVariable::reset()
@@ -211,10 +210,11 @@ void MetropolisVariable::setFormat(const DateUtils::FormatDate fm)
     if (fm != mFormat || mFormatedTrace->size() != mRawTrace->size()) {
         updateFormatedTrace(fm);
     }
-    //if (fm != mFormat || mFormatedCredibility == std::pair<double, double>(1, -1)) {
-        updateFormatedCredibility(fm);
-    //}
-    mFormat = fm;
+
+    updateFormatedCredibility(fm);
+
+    if (mFormat != DateUtils::eNumeric)
+        mFormat = fm;
 }
 
 /**
@@ -229,7 +229,7 @@ void MetropolisVariable::updateFormatedTrace(const DateUtils::FormatDate fm)
     if (mRawTrace->size() == 0)
        return;
 
-    if (fm == DateUtils::eNumeric) {
+    if (fm == DateUtils::eNumeric || mFormat == DateUtils::eNumeric) {
         mFormatedTrace->resize(mRawTrace->size());
         std::copy(mRawTrace->cbegin(), mRawTrace->cend(), mFormatedTrace->begin());
 
@@ -245,13 +245,16 @@ void MetropolisVariable::updateFormatedTrace(const DateUtils::FormatDate fm)
 
 void MetropolisVariable::updateFormatedCredibility(const DateUtils::FormatDate fm)
 {
-   if (fm != DateUtils::eNumeric) {
-        double t1 = DateUtils::convertToAppSettingsFormat(mRawCredibility.first);
-        double t2 = DateUtils::convertToAppSettingsFormat(mRawCredibility.second);
-        if (t1>t2)
-            std::swap(t1, t2);
-        mFormatedCredibility.first = t1;
-        mFormatedCredibility.second = t2;
+   if (fm != DateUtils::eNumeric && mFormat != DateUtils::eNumeric) {
+        const double t1 = DateUtils::convertToAppSettingsFormat(mRawCredibility.first);
+        const double t2 = DateUtils::convertToAppSettingsFormat(mRawCredibility.second);
+        if (t1<t2) {
+            mFormatedCredibility.first = t1;
+            mFormatedCredibility.second = t2;
+        } else {
+            mFormatedCredibility.first = t2;
+            mFormatedCredibility.second = t1;
+        }
 
     } else {
         mFormatedCredibility.first = mRawCredibility.first;
@@ -274,7 +277,7 @@ void MetropolisVariable::generateBufferForHisto(double *input, const QList<doubl
     for (int i=0; i<numPts; ++i)
         input[i]= 0.;
 
-    QVector<double>::const_iterator iter = dataSrc.cbegin();
+    QList<double>::const_iterator iter = dataSrc.cbegin();
     for (; iter != dataSrc.cend(); ++iter) {
         const double t = *iter;
 
@@ -479,34 +482,43 @@ void MetropolisVariable::generateHPD(const double threshold)
         if (thresh == 100.) {
             mFormatedHPD = mFormatedHisto;
             return;
-        }
-
-        if (thresh == 0.) {
+        } else if (thresh == 0.) {
             mFormatedHPD.clear();
             return;
-        }
-        mFormatedHPD = QMap<double, double>(create_HPD2(mFormatedHisto, thresh));
+        } else {
+            QList<QPair<double, QPair<double, double> > > formated_intervals;
+            mFormatedHPD = QMap<double, double>(create_HPD_by_dichotomy(mFormatedHisto, formated_intervals, thresh));
+            mRawHPDintervals.clear();
 
-        mRawHPDintervals.clear();
-        const QList<QPair<double, QPair<double, double> > > &intervals = intervalsForHpd(mFormatedHPD, thresh);
-        for (const auto& h : intervals) {
-            double tmin = DateUtils::convertFromAppSettingsFormat(h.second.first);
-            double tmax = DateUtils::convertFromAppSettingsFormat(h.second.second);
-            if (tmin>tmax)
-                std::swap(tmin, tmax);
-            if (!mRawHPDintervals.isEmpty() && mRawHPDintervals.at(0).second.second < tmin)
-                mRawHPDintervals.push_back(std::make_pair(h.first, std::make_pair(tmin, tmax)));
-            else
-                mRawHPDintervals.push_front(std::make_pair(h.first, std::make_pair(tmin, tmax)));
+            for (const auto& h : formated_intervals) {
+                double tmin ,tmax ;
+                if (mFormat == DateUtils::eNumeric || mFormat == DateUtils::eUnknown) {
+                    tmin = h.second.first;
+                    tmax = h.second.second;
 
+                } else {
+                    tmin = DateUtils::convertFromAppSettingsFormat(h.second.first);
+                    tmax = DateUtils::convertFromAppSettingsFormat(h.second.second);
+                }
+
+                if (tmin>tmax)
+                    std::swap(tmin, tmax);
+
+                if (!mRawHPDintervals.isEmpty() && mRawHPDintervals.at(0).second.second < tmin)
+                    mRawHPDintervals.push_back(std::make_pair(h.first, std::make_pair(tmin, tmax)));
+                else
+                    mRawHPDintervals.push_front(std::make_pair(h.first, std::make_pair(tmin, tmax)));
+
+            }
         }
-    }
-    else {
+
+
+    } else {
         // This can happen on phase duration, if only one event inside.
         // alpha = beta => duration is always null !
         // We don't display the phase duration but we print the numerical HPD result.
         mFormatedHPD = QMap<double, double>();
-
+        mRawHPDintervals.clear();
         qDebug() << "[MetropolisVariable::generateHPD] WARNING : Cannot generate HPD on empty histo with " << mName;
     }
 }
@@ -519,6 +531,7 @@ void MetropolisVariable::generateCredibility(const QList<ChainSpecs> &chains, do
     } else if (mThresholdUsed != threshold) {
         mRawCredibility = credibilityForTrace(fullRunRawTrace(chains), threshold, mExactCredibilityThreshold);//, "Compute credibility for "+getName());
     }
+    updateFormatedCredibility(mFormat);
 
 }
 
@@ -620,11 +633,11 @@ QList<double> MetropolisVariable::correlationForChain(const int index)
     if (index < mCorrelations.size())
         return mCorrelations.at(index);
 
-    return QVector<double>();
+    return QList<double>();
 }
 
 
-QString MetropolisVariable::resultsString(const QString &noResultMessage, const QString &unit, DateConversion conversionFunc) const
+QString MetropolisVariable::resultsString(const QString &noResultMessage, const QString &unit) const
 {
     if (mFormatedHisto.isEmpty())
         return noResultMessage;
@@ -640,9 +653,41 @@ QString MetropolisVariable::resultsString(const QString &noResultMessage, const 
                                                                                                  stringForLocal(mFormatedCredibility.first),
                                                                                                  stringForLocal(mFormatedCredibility.second),
                                                                                                  unit) + "<br>";
-    if (!mFormatedHPD.isEmpty())
-        result += QObject::tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForLocal(mThresholdUsed), getHPDText(mFormatedHPD, mThresholdUsed, unit, conversionFunc, false)) + "<br>";
+    if (!mRawHPDintervals.isEmpty()) {
+        const QList<QPair<double, QPair<double, double> > > &intervals = mRawHPDintervals;
 
+        const double total_thresh = std::accumulate(intervals.begin(), intervals.end(), 0., [](double sum, auto i) {return sum + i.first;});
+
+
+        result += QObject::tr("HPD Region ( %1 %) :").arg(stringForLocal(total_thresh * 100.));
+        if (mFormat == DateUtils::eNumeric) {
+
+            for (auto&& interval : intervals) {
+                const QString str_rate = stringForLocal(interval.first*100.);
+                const QString str_tmin = stringForLocal(interval.second.first);
+                const QString str_tmax = stringForLocal(interval.second.second);
+                result +=  QString(" [ %2 ; %3 ] (%4 %) ").arg(str_tmin, str_tmax, str_rate);
+            }
+
+        } else if (DateUtils::is_date(mFormat)) {
+            for (auto&& interval : intervals) {
+                const QString str_rate = stringForLocal(interval.first*100.);
+                const QString str_tmin = stringForLocal(DateUtils::convertToAppSettingsFormat(interval.second.first));
+                const QString str_tmax = stringForLocal(DateUtils::convertToAppSettingsFormat(interval.second.second));
+                result +=  QString(" [ %2 ; %3 ] (%4 %) ").arg(str_tmin, str_tmax, str_rate);
+            }
+
+        } else {
+            for (auto interval = intervals.crbegin(); interval != intervals.crend(); interval++) {
+                const QString str_rate = stringForLocal(interval->first*100.);
+                const QString str_tmin = DateUtils::convertToAppSettingsFormatStr(interval->second.second);
+                const QString str_tmax = DateUtils::convertToAppSettingsFormatStr(interval->second.first);
+                result +=  QString(" [ %2 ; %3 ] (%4 %) ").arg(str_tmin, str_tmax, str_rate);
+            }
+        }
+        result += unit + "<br>";
+        result += QObject::tr("Density Step : %1").arg(stringForLocal(std::abs(mFormatedHisto.lastKey() - mFormatedHisto.firstKey()) / mFormatedHisto.size())) + "<br>";
+    }
 
    return result;
 }
@@ -672,13 +717,30 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
         list << locale.toString(mFormatedCredibility.first, 'f', precision);
         list << locale.toString(mFormatedCredibility.second, 'f', precision);
 
-        const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mFormatedHPD, mThresholdUsed);
+        const QList<QPair<double, QPair<double, double> > > &intervals = mRawHPDintervals;
+        double min_inter = DateUtils::convertToAppSettingsFormat(intervals.at(0).second.first);
+        double max_inter = DateUtils::convertToAppSettingsFormat(intervals.at(0).second.second);
 
-        for (auto&& interval : intervals) {
-            list << locale.toString(interval.first, 'f', 2);
-            list << locale.toString(interval.second.first, 'f', precision);
-            list << locale.toString(interval.second.second, 'f', precision);
+        if (min_inter < max_inter) {
+            for (auto&& interval : intervals) {
+                list << locale.toString(interval.first * 100., 'f', 2);
+                list << locale.toString(DateUtils::convertToAppSettingsFormat(interval.second.first), 'f', precision);
+                list << locale.toString(DateUtils::convertToAppSettingsFormat(interval.second.second), 'f', precision);
+            }
+
+        } else {
+            for (auto interval = intervals.crbegin(); interval != intervals.crend(); interval++) {
+                list << locale.toString(interval->first * 100., 'f', 2);
+                min_inter = DateUtils::convertToAppSettingsFormat(interval->second.second);
+                max_inter = DateUtils::convertToAppSettingsFormat(interval->second.first);
+                list << locale.toString(min_inter, 'f', precision);
+                list << locale.toString(max_inter, 'f', precision);
+            }
         }
+
+
+
+
 
     } else {
           // Statistic Results on Trace
@@ -696,12 +758,24 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.funcAnalysis.mode), 'f', precision);
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.funcAnalysis.mean), 'f', precision);
         list << locale.toString(mResults.funcAnalysis.std, 'f', precision);
-        const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mFormatedHPD, mThresholdUsed);
 
-        for (auto&& interval : intervals) {
-            list << locale.toString(interval.first, 'f', 2);
-            list << locale.toString(DateUtils::convertFromAppSettingsFormat(interval.second.first), 'f', precision);
-            list << locale.toString(DateUtils::convertFromAppSettingsFormat(interval.second.second), 'f', precision);
+        const QList<QPair<double, QPair<double, double> > > &intervals = mRawHPDintervals;
+
+        if (DateUtils::is_date(mFormat)) {
+            for (auto&& interval : intervals) {
+                list << locale.toString(interval.first * 100., 'f', 2);
+                list << locale.toString(DateUtils::convertToAppSettingsFormat(interval.second.first), 'f', precision);
+                list << locale.toString(DateUtils::convertToAppSettingsFormat(interval.second.second), 'f', precision);
+            }
+
+        } else {
+            for (auto interval = intervals.crbegin(); interval != intervals.crend(); interval++) {
+                list << locale.toString(interval->first * 100., 'f', 2);
+                const double min_inter = DateUtils::convertToAppSettingsFormat(interval->second.second);
+                const double max_inter = DateUtils::convertToAppSettingsFormat(interval->second.first);
+                list << locale.toString(min_inter, 'f', precision);
+                list << locale.toString(max_inter, 'f', precision);
+            }
         }
     }
 

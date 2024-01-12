@@ -114,10 +114,10 @@ QDataStream &operator>>( QDataStream &stream, CalibrationCurve &data )
 
     stream >> data.mPluginId;
 
-    data.mMap =vector_to_map(data.mVector, data.mTmin, data.mTmax, data.mStep);
+    data.mMap = vector_to_map(data.mVector, data.mTmin, data.mTmax, data.mStep);
 
     data.mPlugin = PluginManager::getPluginFromId(data.mPluginId);
-    if (data.mPlugin == nullptr)
+    if (data.mPlugin == nullptr && data.mDescription.isEmpty())
         throw QObject::tr("Calibration plugin could not be loaded : invalid plugin : %1").arg(data.mPluginId);
 
     return stream;

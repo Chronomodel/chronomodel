@@ -54,12 +54,14 @@ public:
     void setComposanteG(const PosteriorMeanGComposante& composante);
     void setComposanteGChains(const QList<PosteriorMeanGComposante>& composanteChains);
 
-    void setEvents(const QList<Event*>& events);
-    inline void setEventsPoints(const QVector<CurveRefPts>& rfPts) { mEventsPoints = rfPts;};
-    inline void setDataPoints(const QVector<CurveRefPts>& rfPts) { mDataPoints = rfPts;};
+    //void setEvents(const QList<Event*>& events);
+
+    void setModel(const std::shared_ptr<ModelCurve> model);
+    inline void setEventsPoints(const QList<CurveRefPts>& rfPts) { mEventsPoints = rfPts;};
+    inline void setDataPoints(const QList<CurveRefPts>& rfPts) { mDataPoints = rfPts;};
     
-    void generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList, const Model *model = nullptr);
-    void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, const QVector<variable_t>& showVariableList, const Scale scale);
+    virtual void generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList);
+    void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, const QList<variable_t>& showVariableList, const Scale scale);
 
 protected:
     void paintEvent(QPaintEvent* e);
@@ -69,9 +71,10 @@ private:
     PosteriorMeanGComposante mComposanteG;
     QList<PosteriorMeanGComposante> mComposanteGChains;
 
-    QList<Event*> mEvents;
-    QVector<CurveRefPts> mEventsPoints;
-    QVector<CurveRefPts> mDataPoints;
+    //QList<Event*> mEvents;
+    std::shared_ptr<ModelCurve> mModel;
+    QList<CurveRefPts> mEventsPoints;
+    QList<CurveRefPts> mDataPoints;
 
 };
 

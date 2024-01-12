@@ -54,14 +54,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <map>
 #include <QTime>
 #include <QElapsedTimer>
-#include <chrono>
 #include <experimental/algorithm>
 
 
 #include <errno.h>      /* errno, EDOM */
-#include <fenv.h>
-#include <exception>
-#include <thread>
 
 // -----------------------------------------------------------------
 //  sumP = Sum (pi)
@@ -1089,29 +1085,44 @@ std::pair<double, double> gapRangeFromTraces(const QList<double> &traceEnd, cons
     return range;
 }
 
-QString intervalText(const QPair<double, QPair<double, double> > &interval,  DateConversion conversionFunc, const bool forCSV)
+const QString interval_to_text(const QPair<double, QPair<double, double> > &interval,  DateConversion conversionFunc, const bool forCSV)
 {
     const double perCent = interval.first;
-    const double inter1 = (conversionFunc ? conversionFunc(interval.second.first) : interval.second.first );
-    const double inter2 = (conversionFunc ? conversionFunc(interval.second.second) : interval.second.second );
+    double inter1 = (conversionFunc ? conversionFunc(interval.second.first) : interval.second.first );
+    double inter2 = (conversionFunc ? conversionFunc(interval.second.second) : interval.second.second );
+    if (inter1>inter2)
+        std::swap(inter1, inter2);
+
     if (forCSV)
          return stringForCSV(inter1) + AppSettings::mCSVCellSeparator + stringForCSV(inter2) + AppSettings::mCSVCellSeparator + stringForCSV(perCent);
     else
-         return "[ " + stringForLocal(interval.second.first) + " ; " + stringForLocal(interval.second.second) + " ] (" + stringForLocal(interval.first) + "%)";
+         return "[ " + stringForLocal(inter1) + " ; " + stringForLocal(inter2) + " ] (" + stringForLocal(interval.first*100.) + "%)";
 
 }
 
-QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString& unit,  DateConversion conversionFunc, const bool forCSV)
+const QString get_HPD_text_from_mapping(const std::map<double, double> &mapping, const QString &unit, DateConversion conversionFunc, const bool forCSV)
 {
-    if (hpd.isEmpty() )
+    if (mapping.size() == 0)
         return "";
 
-    QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(hpd, thresh);
+    double th = 0;
+    QList<QPair<double, QPair<double, double> > > intervals = intervals_hpd_from_mapping(mapping, th);
     QStringList results;
 
-    for (auto&& interval : intervals)
-        results << intervalText(interval, conversionFunc, forCSV);
+    double min_inter = (conversionFunc ? conversionFunc(intervals.at(0).second.first) : intervals.at(0).second.first );
+    double max_inter = (conversionFunc ? conversionFunc(intervals.at(0).second.second) : intervals.at(0).second.second );
 
+    if (min_inter <= max_inter) {
+        for (auto&& interval : intervals) {
+            results << interval_to_text(interval, conversionFunc, forCSV);
+        }
+
+    } else {
+        for (auto&& interval = intervals.crbegin(); interval != intervals.crend(); interval++) {
+            results << interval_to_text(*interval, conversionFunc, forCSV);
+        }
+    }
+    //----
     QString result;
     if (forCSV) {
         result = results.join(AppSettings::mCSVCellSeparator);
@@ -1119,164 +1130,124 @@ QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString
     } else {
         result = results.join(", ");
         if (!unit.isEmpty())
-                result += " " + unit;
+            result += " " + unit;
+    }
+
+    return result;
+}
+
+const QString get_HPD_text(const QList<QPair<double, QPair<double, double> >> &intervals, const QString &unit,  DateConversion conversionFunc, const bool forCSV)
+{
+    if (intervals.size() == 0)
+        return "";
+
+    QStringList results;
+
+    double min_inter = (conversionFunc ? conversionFunc(intervals.at(0).second.first) : intervals.at(0).second.first );
+    double max_inter = (conversionFunc ? conversionFunc(intervals.at(0).second.second) : intervals.at(0).second.second );
+
+    if (min_inter <= max_inter) {
+        for (auto&& interval : intervals) {
+            results << interval_to_text(interval, conversionFunc, forCSV);
+        }
+
+    } else {
+        for (auto&& interval = intervals.crbegin(); interval != intervals.crend(); interval++) {
+            results << interval_to_text(*interval, conversionFunc, forCSV);
+        }
+    }
+    //----
+    QString result;
+    if (forCSV) {
+        result = results.join(AppSettings::mCSVCellSeparator);
+
+    } else {
+        result = results.join(", ");
+        if (!unit.isEmpty())
+            result += " " + unit;
     }
 
     return result;
 }
 
 /**
- * @brief Extract intervals (QPair of date) and calcul the area corresponding, from a HPD QMap maded before
+ * @brief intervals_hpd_from_mapping
+ * @param area_mapping must be normalize 100% = 1
+ * @param real_thresh return the remaining real surface between [0, 1]
+ * @return a list of interval
  */
-QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double, double>& hpd, double thresh)
+QList<QPair<double, QPair<double, double> > > intervals_hpd_from_mapping(const std::map<double, double> &area_mapping, double &real_thresh)
 {
     QList<QPair<double, QPair<double, double> >> intervals;
 
-    if (hpd.isEmpty())
-        return intervals;
-
-    if (hpd.size() == 1) {
-        QPair<double, QPair<double, double> > inter;
-        inter.first = 100.;
-        inter.second = QPair<double, double> (hpd.firstKey(), hpd.lastKey());
-        intervals.append(inter);
+    if (area_mapping.size() == 0) {
+        real_thresh = 0.;
         return intervals;
     }
 
-    QMapIterator<double, double> it(hpd);
+    if (area_mapping.size() == 1) {
+        QPair<double, QPair<double, double> > inter;
+        inter.first = 100.;
+        inter.second = QPair<double, double> (area_mapping.begin()->first, area_mapping.begin()->second);
+        intervals.append(inter);
+        real_thresh = 1.;
+        return intervals;
+    }
+
+    std::map<double, double>::const_iterator it (area_mapping.cbegin());
     bool inInterval = false;
-    double lastKeyInInter (0.);
     QPair<double, double> curInterval;
 
-    double areaTot= map_area(hpd);
-    double lastValueInInter (0.);
+    real_thresh = std::accumulate(area_mapping.begin(), area_mapping.end(), 0., [](double sum, std::pair<double, double> p) {return sum + p.second;});
+    double areaCur = 0.;
 
-    double areaCur (0.);
-    it.toFront();
-    while (it.hasNext()) {
-        it.next();
+    while (it != area_mapping.end()) {
 
-        if (it.value() != 0. && !inInterval) {
+        if (it->second != 0. && !inInterval) {
             inInterval = true;
-            curInterval.first = it.key();
-            lastKeyInInter = it.key();
-            lastValueInInter = it.value();
-            areaCur = 0.; // start, not inside
+            curInterval.first = it->first;
+
+            areaCur = it->second;// egal area
 
         } else if (inInterval) {
-            if ((it.value() == 0.) ) {
+
+
+            if (it->second == 0. ) {
                 inInterval = false;
-                curInterval.second = lastKeyInInter;
-                 QPair<double, QPair<double, double> > inter;
-                if (curInterval.second != curInterval.first) {
+                curInterval.second = std::prev(it)->first;
 
-                    inter.first = thresh * areaCur / areaTot;
-
-                 } else {
-                    inter.first = thresh * lastValueInInter / areaTot;
-
-                 }
+                QPair<double, QPair<double, double> > inter;
+                inter.first = areaCur;
                 inter.second = curInterval;
-                  intervals.append(inter);
-                  areaCur = 0.;
-//std::cout<<"Function::intervalsForHpd"<<inter.first<< inter.second.first<<inter.second.second;
+                intervals.append(inter);
+                areaCur = 0.;
+                //std::cout<<"Function::intervalsForHpd"<<inter.first<< inter.second.first<<inter.second.second;
 
             } else {
-                 areaCur += (lastValueInInter + it.value())/2 * (it.key() - lastKeyInInter);
-
-                lastKeyInInter = it.key();
-                lastValueInInter = it.value();
+                curInterval.second = it->first;
+                areaCur += it->second;// egal area
 
             }
         }
-
+        it++;
     }
 
     if (inInterval) { // Correction to close unclosed interval
-
-        curInterval.second = lastKeyInInter;
-        //areaCur += (lastValueInInter+it.value())/2 * (it.key()-lastKeyInInter);
+        curInterval.second = std::prev(it)->first;
         QPair<double, QPair<double, double> > inter;
-        inter.first = thresh * areaCur / areaTot;
+        inter.first = real_thresh;
         inter.second = curInterval;
-
         intervals.append(inter);
     }
 
     return intervals;
 }
 
-
-/**
- * @brief intervalMonomodalHpd
- * Détermine le mode et un seul intervalle HPD pour une densité mono-modale
- * @param density
- * @param thresh
- * @return
- */
-std::pair<int, std::pair<int, int> > intervalMonomodalHpd(const std::map<int, double>& density, double thresh)
+QList<QPair<double, QPair<double, double> > > intervals_hpd_from_mapping(const std::map<double, double> &area_mapping)
 {
-    if (density.size() < 2)  // in case of only one value (e.g. a bound fixed) or no value
-        return qMakePair(0, qMakePair(0, 0));
-    // On considère ici une fonction histogramme, la surface est considèrée constante et chaque fréquence a une la même surface
-    double areaTot = std::accumulate(density.cbegin(), density.cend(), 0., [](double sum, const std::pair<int, double> m){return sum + m.second;  });
-
-    // Inversion de la map
-
-    std::multimap<double, int> inverted;
-
-    for (const auto& d : density) {
-       inverted.insert(std::pair<double, int>(d.second, d.first));
-    }
-
-    // Par définition les maps sont triées, donc la dernière valeur est le mode, rbegin() pointe sur la derniere valeur
-
-    int mode = inverted.rbegin()->second;
-
-
-    // On fait la somme en remontant la map inversée, jusqu'à avoir la somme seuil
-
-    typedef std::multimap<double, int>::iterator iter_type;
-    std::reverse_iterator<iter_type> iterInverted (inverted.rbegin());
-
-    double area = 0.;
-    double areaSearched = areaTot * thresh / 100.;
-    int imin = mode;
-    int imax = mode;
-
-    int lastIMin, lastIMax;
-    if (areaTot == areaSearched) {
-        return qMakePair(mode, qMakePair(density.cbegin()->first, density.rbegin()->first));;
-
-    } else {
-
-        try {
-
-            while (iterInverted != inverted.rend() && area<=areaSearched) {
-
-                int t = iterInverted->second;
-                const double v = iterInverted->first;
-
-                area += v;
-
-                imin = std::min(imin, t);
-                imax = std::max(imax, t);
-                iterInverted++;
-                lastIMax = imax;
-                lastIMin = imin;
-            }
-            // on prend les indices avant que areaSearched soit dépassé
-            return qMakePair(mode, qMakePair(lastIMin, lastIMax));
-       }
-       catch (std::exception const & e) {
-            qDebug()<< "in Function::intervalMonomodalHpd int Error"<<e.what();
-            return qMakePair(0, qMakePair(0, 0));;
-       }
-    }
-
+    double thresh;
+    return intervals_hpd_from_mapping(area_mapping, thresh);
 }
-
-
 
 #pragma mark Calcul Matriciel
 
@@ -1938,20 +1909,27 @@ Matrix2D multiplyMatrix_Winograd(const Matrix2D& a, const Matrix2D& b)
  */
 Matrix2D inverseMatSym0(const Matrix2D& matrix, const int shift)
 {
-    if (matrix.size() != matrix[0].size()) {
-           throw std::runtime_error("Matrix is not quadratic");
-       }
-    Matrix2D matInv = initMatrix2D(matrix.size(), matrix[0].size());
+    if (matrix.size() != matrix[0].size())
+        throw std::runtime_error("Matrix is not quadratic");
+
 
     Matrix2D matrix2 = seedMatrix(matrix, shift);
 
-    int n = matrix.size();
+    const int n = matrix.size();
+    Matrix2D matInv = initMatrix2D(matrix.size(), matrix[0].size());
+
+    if (n == 1) {
+        matInv[0][0] = 1/ matrix[0][0];
+        return matInv;
+    }
+
+
     Matrix2D matInv2 = comatrice0(matrix2);
 
     const auto det = determinant(matrix2);
     if (det == 0) {
            throw std::runtime_error("inverseMatSym0 det == 0");
-       }
+    }
     for (int i = shift; i < n-shift; i++)
         for (int j = shift; j< n-shift; j++)
              matInv[i][j] = matInv2[i-shift][j-shift] / det;

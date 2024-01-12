@@ -51,13 +51,15 @@ class RebuildCurveDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit RebuildCurveDialog (QStringList list = {"X"}, std::vector< std::pair<double, double>> *minMax = nullptr, std::pair<unsigned, unsigned> mapSize = std::pair<unsigned, unsigned>{300, 300}, QWidget *parent = nullptr);
+    explicit RebuildCurveDialog (QStringList list = {"X"}, std::vector< std::pair<double, double>> *minMax = nullptr, std::vector< std::pair<double, double>> *minMaxP = nullptr, std::pair<unsigned, unsigned> mapSize = std::pair<unsigned, unsigned>{300, 300}, QWidget *parent = nullptr);
 
     std::vector< std::pair<double, double>> getYTabMinMax() const {return mYTabMinMax;}
+    std::vector< std::pair<double, double>> getYpTabMinMax() const {return mYpTabMinMax;}
     std::pair<unsigned, unsigned> getMapSize() const;
     int getResult() const;
     int getXSpinResult() const;
     int getYSpinResult() const;
+    int getYpSpinResult() const;
 
 
     bool doCurve() const {return curveCB->isChecked();}
@@ -75,6 +77,15 @@ protected slots:
 
     void Y3MinIsValid(QString str);
     void Y3MaxIsValid(QString str);
+
+    void Y1pMinIsValid (QString str);
+    void Y1pMaxIsValid(QString str);
+
+    void Y2pMinIsValid(QString str);
+    void Y2pMaxIsValid(QString str);
+
+    void Y3pMinIsValid(QString str);
+    void Y3pMaxIsValid(QString str);
 
     void setOkEnabled();
 
@@ -105,7 +116,25 @@ private:
     bool Y3MinOK = true;
     bool Y3MaxOK = true;
     QLineEdit *Y3maxEdit;
+
+    // 3 derrivées possibles
+    QLineEdit *Y1pminEdit;
+    bool Y1pMinOK = true;
+    bool Y1pMaxOK = true;
+    QLineEdit *Y1pmaxEdit;
+
+    QLineEdit *Y2pminEdit;
+    bool Y2pMinOK = true;
+    bool Y2pMaxOK = true;
+    QLineEdit *Y2pmaxEdit;
+
+    QLineEdit *Y3pminEdit;
+    bool Y3pMinOK = true;
+    bool Y3pMaxOK = true;
+    QLineEdit *Y3pmaxEdit;
+
     std::vector< std::pair<double, double>> mYTabMinMax;
+    std::vector< std::pair<double, double>> mYpTabMinMax;
 
 signals:
     void OkEnabled(bool enabled = true) ;

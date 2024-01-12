@@ -158,7 +158,8 @@ private:
     QRect mRightRect;
     QRect mRightHiddenRect;
 
-    Project* mProject;
+    //Project* mProject;
+    std::shared_ptr<Project> mProject;
 
     int mMargin;
     int mToolbarH;
@@ -171,11 +172,11 @@ private:
     bool mCurveSettingsVisible;
 
 public:
-    ModelView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
+    ModelView(std::shared_ptr<Project> &project, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~ModelView();
 
-    void setProject(Project* project);
-    Project* getProject() const;
+    void setProject(std::shared_ptr<Project> &project);
+    std::shared_ptr<Project>& getProject();
 
     void calibrateAll(StudyPeriodSettings newS);
     bool findCalibrateMissing();

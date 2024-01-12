@@ -329,7 +329,7 @@ void ImportDataView::exportDates()
         if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
             QTextStream stream(&file);
 
-            Project* project = MainWindow::getInstance()->getProject();
+            const auto &project = MainWindow::getInstance()->getProject();
             QJsonArray events = project->mState.value(STATE_EVENTS).toArray();
 
             stream << "Title" << sep << AppSettings::mLastFile << Qt::endl;

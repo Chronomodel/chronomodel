@@ -42,23 +42,79 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 
 
-Button::Button(QWidget* parent):QPushButton(parent),
-  mIconOnly(true),
-  mFont(QPushButton::font())
-
-{
-    init();
-
-}
-
-Button::Button(const QString& text, QWidget* parent):QPushButton(text, parent),
+Button::Button(QWidget* parent):
+    QPushButton(parent),
+    mFlatVertical(false),
+    mFlatHorizontal(false),
+    mIsClose (false),
     mIconOnly(true),
-    mFont(QPushButton::font())
+    mMouseOver(false),
+    mColorState(eDefault),
+    mFont(QPushButton::font()),
+    mUseMargin (false)
 {
-    init();
+    setAutoRepeat(false);
+    setCursor(Qt::PointingHandCursor);
+
+    QPushButton::setFlat(false);
+
 }
 
-void Button::init()
+Button::Button(const QString &text, QWidget* parent):QPushButton(text, parent),
+    mFlatVertical(false),
+    mFlatHorizontal(false),
+    mIsClose (false),
+    mIconOnly(true),
+    mMouseOver(false),
+    mColorState(eDefault),
+    mFont(QPushButton::font()),
+    mUseMargin (false)
+{
+    setAutoRepeat(false);
+    setCursor(Qt::PointingHandCursor);
+
+    QPushButton::setFlat(false);
+
+    QIcon ic = icon();
+    bool textOnly = !mIconOnly && !text.isEmpty() && ic.isNull();
+
+    if (!mIconOnly) {
+        mFont = QPushButton::font();
+        if (textOnly)
+            mFont.setBold(true);
+
+        QFontMetricsF fm (mFont);
+        qreal textSize = fm.horizontalAdvance(text);
+
+        while (textSize > (rect().width() - 30. )) {
+            mFont.setPointSizeF(mFont.pointSizeF() - 1);
+            fm = QFontMetricsF(mFont);
+            textSize = fm.horizontalAdvance(text);
+        }
+    }
+
+
+}
+
+Button::Button(const Button &button, QWidget* parent):
+    QPushButton(button.text(), parent),
+    mFlatVertical (button.mFlatVertical),
+    mFlatHorizontal (button.mFlatHorizontal),
+    mIsClose (button.mIsClose),
+    mIconOnly(true),
+    mMouseOver (button.mMouseOver),
+    mColorState(button.mColorState),
+    mFont(button.mFont),
+    mUseMargin(button.mUseMargin)
+{
+    QPushButton::setFlat(button.isFlat());
+    setIcon(button.icon());
+    setToolTip(button.toolTip() );
+    setAutoRepeat(button.autoRepeat());
+    setCursor(button.cursor());
+}
+
+/* void Button::init()
 {
     setAutoRepeat(false);
     setCursor(Qt::PointingHandCursor);
@@ -94,15 +150,14 @@ void Button::init()
 
   
 }
+*/
 
 Button::~Button()
 {
-
 }
 void Button::keyPressEvent(QKeyEvent* event)
 {
     QPushButton::keyPressEvent(event);
-   // emit click();
 }
 
 void Button::setFlatVertical()

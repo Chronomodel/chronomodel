@@ -46,21 +46,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 
 GraphViewLambda::GraphViewLambda(QWidget *parent):GraphViewResults(parent),
-mModel(nullptr)
+    mModel(nullptr)
 {
     setMainColor(Painting::borderDark);
     mGraph->setBackgroundColor(QColor(210, 210, 210));
-
 }
 
 GraphViewLambda::~GraphViewLambda()
 {
-    mModel = nullptr;
 }
 
-void GraphViewLambda::setModel(ModelCurve* model)
+void GraphViewLambda::setModel(const std::shared_ptr<ModelCurve> model)
 {
-    Q_ASSERT(model);
     mModel = model;
 }
 
@@ -75,9 +72,9 @@ void GraphViewLambda::resizeEvent(QResizeEvent* )
     updateLayout();
 }
 
-void GraphViewLambda::generateCurves(const graph_t typeGraph, const QVector<variable_t> &variableList, const Model* model)
+void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList)
 {
-    GraphViewResults::generateCurves(typeGraph, variableList, model);
+    GraphViewResults::generateCurves(typeGraph, variableList);
     
     mGraph->removeAllCurves();
     mGraph->remove_all_zones();
@@ -92,8 +89,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QVector<vari
 
     QColor color = Qt::blue;
 
-    //QString resultsText = ModelUtilities::lambdaResultsText(mModel);
-    QString resultsHTML = ModelUtilities::lambdaResultsHTML(mModel);
+    const QString resultsHTML = ModelUtilities::lambdaResultsHTML(mModel);
     setNumericalResults(resultsHTML);
 
     // ------------------------------------------------
@@ -195,7 +191,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QVector<vari
     }
 }
 
-void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QVector<variable_t>& variableList)
+void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t> &variableList)
 {
     Q_ASSERT(mModel);
 

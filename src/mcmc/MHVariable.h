@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -42,7 +42,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "MetropolisVariable.h"
 
-
 class MHVariable: public MetropolisVariable
 {
 public:
@@ -79,8 +78,7 @@ public:
 
     void generateNumericalResults(const QList<ChainSpecs>& chains);
     QString resultsString(const QString &noResultMessage = QObject::tr("No result to display"),
-                          const QString &unit = QString(),
-                          DateConversion formatFunc = nullptr) const;
+                          const QString &unit = QString()) const;
 
     static QString getSamplerProposalText(const MHVariable::SamplerProposal sp);
     static MHVariable::SamplerProposal getSamplerProposalFromText(const QString &text);
@@ -99,7 +97,6 @@ public:
     // sur les parties acquisition uniquement.
     // A stocker dans le fichier résultats .res !
 
-    // QVector<bool>* mAllAccepts;
     QList<long long> mAllAccepts;
     // Computed at the end as numerical result :
     double mGlobalAcceptationPerCent;

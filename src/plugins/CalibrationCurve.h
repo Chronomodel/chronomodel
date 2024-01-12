@@ -54,8 +54,8 @@ public:
     QString mPluginId;
     PluginAbstract* mPlugin;
 
-    QVector<double> mRepartition;
-    QVector<double> mVector;
+    QList<double> mRepartition;
+    QList<double> mVector;
     QMap<double, double> mMap; // c'est la même chose que mVector, mais dans une QMap. Pour faciliter l'accés
 
     double mTmin;
@@ -141,10 +141,12 @@ public:
     double interpolate(double t) const {
         // We need at least two points to interpolate
         if (mVector.size() < 2 || t <= mTmin) {
-            return mVector.first();
+            //return mVector.first();
+            return 0.;
 
         } else if (t >= mTmax) {
-            return mVector.last();
+            //return mVector.last();
+            return 0.;
         }
 
         const double prop = (t - mTmin) / (mTmax - mTmin);
@@ -159,7 +161,7 @@ public:
             // Important for gate: no interpolation around gates
 
             return std::lerp(mVector[idxUnder], mVector[idxUpper], (idx - idxUnder) / (idxUpper - idxUnder));
-            //return interpolate( idx, (double)idxUnder, (double)idxUpper, mVector[idxUnder], mVector[idxUpper]);
+
 
         } else {
             return 0.;
@@ -189,7 +191,7 @@ public:
                 qDebug()<<"[repartition_interpolate] idxUnder<= 0 || idxUpper>=mRepartition.size()";
 #endif
             return std::lerp(mRepartition[idxUnder], mRepartition[idxUpper], (idx - idxUnder) / (idxUpper - idxUnder));
-            //return interpolate( idx, (double)idxUnder, (double)idxUpper, mVector[idxUnder], mVector[idxUpper]);
+
 
         } else {
             return 0.;

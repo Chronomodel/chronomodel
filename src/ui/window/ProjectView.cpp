@@ -43,13 +43,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ResultsView.h"
 #include "AppSettings.h"
 
-ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
+ProjectView::ProjectView(std::shared_ptr<Project> &project, QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
 {
     setMouseTracking(true);
     setScreenDefinition();
 
-    mModelView = new ModelView();
-    mResultsView = new ResultsView();
+    mModelView = new ModelView(project);
+    mResultsView = new ResultsView(project);
 
     QPalette palette;
     palette.setColor(QPalette::Base, Qt::transparent);
@@ -171,7 +171,7 @@ void ProjectView::resizeEvent(QResizeEvent* e)
 
 }
 
-void ProjectView::setProject(Project* project)
+void ProjectView::setProject(std::shared_ptr<Project> &project)
 {
     mModelView->setProject(project);
     if (project->withResults())
@@ -225,20 +225,20 @@ void ProjectView::newPeriod()
     mModelView->modifyPeriod();
 }
 
-void ProjectView::applyFilesSettings(Model* model)
+void ProjectView::applyFilesSettings(std::shared_ptr<ModelCurve> &model)
 {
     // Rebuild all calibration curve
 
     const QJsonObject &state = mModelView->getProject()->state();
     const StudyPeriodSettings &s = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
-    bool calibrate = mModelView->findCalibrateMissing();
+    const bool calibrate = mModelView->findCalibrateMissing();
     if (calibrate)
         mModelView->calibrateAll(s);
 
     applySettings(model);
 }
 
-void ProjectView::applySettings(Model* model)
+void ProjectView::applySettings(std::shared_ptr<ModelCurve> &model)
 {
     mModelView->applyAppSettings();
 
@@ -272,7 +272,7 @@ void ProjectView::updateMultiCalibrationAndEventProperties()
  *  - The Model densities have to be computed
  *  - The Model Logs have to be generated
  */
-void ProjectView::initResults(Model* model)
+void ProjectView::initResults(std::shared_ptr<ModelCurve> model)
 {
     model->updateDesignFromJson();
     model->initDensities();
@@ -294,7 +294,7 @@ void ProjectView::initResults(Model* model)
 
 void ProjectView::updateResults()
 {
-    Project* project = MainWindow::getInstance()->getProject();
+    std::shared_ptr<Project> project = MainWindow::getInstance()->getProject();
 
     if (project->mModel) {
         project->mModel->updateDesignFromJson();

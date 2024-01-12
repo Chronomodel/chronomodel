@@ -43,8 +43,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AppSettings.h"
 
 #include <QLocale>
-#include <cmath>
-
 
 double DateUtils::convertToFormat(const double valueToFormat, const FormatDate format)
 {
@@ -213,4 +211,46 @@ QMap<double, double> DateUtils::convertMapToAppSettingsFormat(const QMap<double,
     }
 
    return mapResult;
+}
+
+bool DateUtils::is_date(const FormatDate format)
+{
+    switch (format) {
+        case eCalBP:
+        case eCalB2K:
+        case eKa:
+        case eMa:
+            return false;
+            break;
+
+        case eDatBP:
+        case eDatB2K:
+        case eBCAD:
+        case eBCECE:
+        case eNumeric:
+        default:
+            return true;
+            break;
+    }
+}
+
+bool DateUtils::is_age(const FormatDate format)
+{
+    switch (format) {
+        case eCalBP:
+        case eCalB2K:
+        case eKa:
+        case eMa:
+            return true;
+            break;
+
+        case eDatBP:
+        case eDatB2K:
+        case eBCAD:
+        case eBCECE:
+        case eNumeric:
+        default:
+            return false;
+            break;
+    }
 }

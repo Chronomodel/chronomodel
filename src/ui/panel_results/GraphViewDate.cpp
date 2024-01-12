@@ -79,10 +79,8 @@ void GraphViewDate::paintEvent(QPaintEvent* e)
     GraphViewResults::paintEvent(e);
 }
 
-
-void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList, const Model* model)
+void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList)
 {
-    (void) model;
     GraphViewResults::generateCurves(typeGraph, variableList);
 
     /* ------------------------------------------------
@@ -336,7 +334,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QVector<variab
 
 }
 
-void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QVector<variable_t>& variableList)
+void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t> &variableList)
 {
     GraphViewResults::updateCurvesToShow(showAllChains, showChainList, variableList);
 
@@ -402,12 +400,6 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
      * ------------------------------------------------
      */
     else if (mCurrentTypeGraph == eTrace) {
-        for (int i=0; i<mShowChainList.size(); ++i) {
-            mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList.at(i));
-        }
 
         mGraph->setTipXLab(tr("Iteration"));
         mGraph->setTipYLab("t");
@@ -415,6 +407,14 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
         mGraph->setYAxisMode(GraphView::eMinMaxHidden);
         mGraph->showInfos(false);
         mGraph->autoAdjustYScale(true);
+
+        for (int i=0; i<mShowChainList.size(); ++i) {
+            mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList.at(i));
+            mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList.at(i));
+            mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList.at(i));
+            mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList.at(i));
+        }
+
     }
     /* -----------------------Third tab : Acceptance rate.-------------------------
      *  Possible curves (could be for theta or sigma):

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -39,19 +39,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "GraphCurve.h"
 
-#include <cmath>
 
 CurveRefPts::CurveRefPts():
     type(CurveRefPts::eCross),
     pen(Qt::black, 1),
     brush(Qt::NoBrush)
 {
-
 }
 
 CurveRefPts::~CurveRefPts()
 {
-
 }
 
 GraphCurve::GraphCurve():
@@ -61,9 +58,8 @@ GraphCurve::GraphCurve():
     mIsRectFromZero(false),
     mHorizontalValue(type_data(0)),
     mVerticalValue(type_data(0)),
-    mVisible(true)
+    mVisible(false)
 {
-
 }
 
 GraphCurve::~GraphCurve()
@@ -84,10 +80,10 @@ void GraphCurve::setPen(QPen pen)
 /** Generate Typical curves for Chronomodel
  * */
 GraphCurve densityCurve( const QMap<double, double> data,
-                         const QString& name,
-                         const QColor& lineColor,
+                         const QString &name,
+                         const QColor &lineColor,
                          const Qt::PenStyle penStyle,
-                         const QBrush& brush)
+                         const QBrush &brush)
 {
     GraphCurve curve;
     curve.mName = name;
@@ -104,10 +100,11 @@ GraphCurve densityCurve( const QMap<double, double> data,
 }
 
 GraphCurve FunctionCurve(const QMap<double, double> data,
-                   const QString& name,
-                   const QColor& lineColor,
+                   const QString &name,
+                   const QColor &lineColor,
                    const Qt::PenStyle penStyle,
-                   const QBrush& brush)
+                   const QBrush &brush,
+                   const bool is_visible)
 {
     GraphCurve curve;
     curve.mName = name; // This is the name of the columns when exporting the graphs
@@ -120,11 +117,12 @@ GraphCurve FunctionCurve(const QMap<double, double> data,
             curve.mPen.setDashPattern(QList<qreal>{5, 5});
         curve.mBrush = brush;
         curve.mIsRectFromZero = false;
+        curve.mVisible = is_visible;
     }
     return curve;
 }
 
-GraphCurve HPDCurve(QMap<double, double> data, const QString &name, const QColor &color)
+GraphCurve HPDCurve(QMap<double, double> data, const QString &name, const QColor &color, const bool is_visible)
 {
     GraphCurve curve;
     curve.mName = name;
@@ -132,7 +130,7 @@ GraphCurve HPDCurve(QMap<double, double> data, const QString &name, const QColor
     curve.mPen = Qt::NoPen;
     curve.mBrush = QBrush(color);
     curve.mIsRectFromZero = true;
-
+    curve.mVisible = is_visible;
     return curve;
 }
 
@@ -180,7 +178,8 @@ GraphCurve shapeCurve(const QMap<double, double> &dataInf, const QMap<double, do
                                                   const QString &name,
                                                   const QColor &lineColor,
                                                   const Qt::PenStyle penStyle,
-                                                  const QBrush &brush)
+                                                  const QBrush &brush,
+                                                  const bool is_visible)
 {
     GraphCurve curve;
     curve.mName = name;
@@ -199,6 +198,6 @@ GraphCurve shapeCurve(const QMap<double, double> &dataInf, const QMap<double, do
 
     curve.mBrush = brush;
     curve.mIsRectFromZero = false; // for Unif-typo. calibs., invisible for others!
-
+    curve.mVisible = is_visible;
     return curve;
 }

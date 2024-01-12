@@ -375,6 +375,7 @@ void EventsScene::createSceneFromState()
     mUpdatingItems = false;
 
     delete progress;
+    progress = nullptr;
 
     adjustSceneRect();
     update();
@@ -417,12 +418,14 @@ void EventsScene::updateSceneFromState()
                         for (auto j = dateItemsSize; j >= 0; --j) {
                             removeItem(dateItems.at(j));
                             delete dateItems[j];
+                            dateItems[j] = nullptr;
                         }
                         delete eventItem;
+                        eventItem = nullptr;
             } else if (type == Event::eBound) {
                         EventKnownItem* eventItem = (EventKnownItem*)mItems[i];
-
                         delete eventItem;
+                        eventItem = nullptr;
             }
             //qDebug() << "[EventsScene::updateScene] Event deleted : " << event.value(STATE_ID).toInt();
 
@@ -438,7 +441,7 @@ void EventsScene::updateSceneFromState()
             removeItem(constraintItem);
             mConstraintItems.removeOne(constraintItem);
             delete constraintItem;
-
+            constraintItem = nullptr;
         }
         return;
     }
@@ -702,8 +705,10 @@ void EventsScene::updateSceneFromState()
 
     EventItem* lastCurItem = currentEvent();
     QJsonObject currentEventLast = QJsonObject() ;
-    if (lastCurItem)
+    if (lastCurItem) {
         currentEventLast = lastCurItem->getData();
+        lastCurItem = nullptr;
+    }
 
     // Deleting an item that was selected involves changing the selection (and updating properties view)
     // Nothing has been triggered so far because of the mUpdatingItems flag, so we need to trigger it now!
@@ -717,8 +722,10 @@ void EventsScene::updateSceneFromState()
 
     //adaptItemsForZoom(mZoom);
 
-   if (displayProgress)
+    if (displayProgress) {
        delete progress;
+       progress = nullptr;
+    }
 
 
  #ifdef DEBUG
@@ -761,6 +768,7 @@ void EventsScene::clean()
         removeItem(constraintItem);
         mConstraintItems.removeOne(constraintItem);
         delete constraintItem;
+        constraintItem = nullptr;
     }
 
     mProject = nullptr;
@@ -1343,7 +1351,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
     QList<QPair<QString, Date>> listEvent_Data = droppedData.first;
     QList<QMap<QString, double>> listCurveData = droppedData.second;
 
-    Project* project = MainWindow::getInstance()->getProject();
+    std::shared_ptr<Project> project = MainWindow::getInstance()->getProject();
 
     // Create one event per data
     int deltaX = 0;

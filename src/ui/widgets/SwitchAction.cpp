@@ -104,7 +104,7 @@ void SwitchWidget::paintEvent(QPaintEvent* e)
     f1.setPointSizeF(8);
     painter.setFont(f1);
     //QFontMetrics fm1(f1);
-    QString text1 = tr("Curve Building");
+    QString text1 = tr("ChronoCurve");
     //int text1W = fm1.horizontalAdvance(text1);
     
     QFont f2(font());

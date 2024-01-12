@@ -52,7 +52,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 // Constructor / Destructor
 
 GraphViewPhase::GraphViewPhase(QWidget *parent):GraphViewResults(parent),
-mPhase(nullptr)
+    mPhase(nullptr)
 {
     setMainColor(Painting::borderDark);
     mGraph->setBackgroundColor(QColor(210, 210, 210));
@@ -81,10 +81,8 @@ void GraphViewPhase::resizeEvent(QResizeEvent* )
     updateLayout();
 }
 
-void GraphViewPhase::generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList, const Model* model)
+void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList)
 {
-    Q_ASSERT(mPhase);
-    (void) model;
     GraphViewResults::generateCurves(typeGraph, variableList);
 
     mGraph->removeAllCurves();

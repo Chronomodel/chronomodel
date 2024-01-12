@@ -40,7 +40,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef MODELUTILITIES_H
 #define MODELUTILITIES_H
 
-#include "Model.h"
 #include "ModelCurve.h"
 #include "Date.h"
 #include "Event.h"
@@ -54,25 +53,27 @@ class ModelUtilities
 {
 public:
 
-    static QVector<QVector<Event*> > getNextBranches(const QVector<Event*>& curBranch, Event* lastNode);
-    static QVector<QVector<Event*> > getBranchesFromEvent(Event* start);
-    static QVector<QVector<Event*> > getAllEventsBranches(const QList<Event*>& events);
+    static QList<QList<Event*> > getNextBranches(const QList<Event*>& curBranch, Event* lastNode);
+    static QList<QList<Event*> > getBranchesFromEvent(Event* start);
+    static QList<QList<Event*> > getAllEventsBranches(const QList<Event*>& events);
 
-    static QVector<QVector<Phase*> > getNextBranches(const QVector<Phase*>& curBranch, Phase* lastNode, const double gammaSum, const double maxLength);
-    static QVector<QVector<Phase*> > getBranchesFromPhase(Phase* start, const double maxLength);
-    static QVector<QVector<Phase*> > getAllPhasesBranches(const QList<Phase*>& events, const double maxLength);
+    static QList<QList<Phase*> > getNextBranches(const QList<Phase*>& curBranch, Phase* lastNode, const double gammaSum, const double maxLength);
+    static QList<QList<Phase*> > getBranchesFromPhase(Phase* start, const double maxLength);
+    static QList<QList<Phase*> > getAllPhasesBranches(const QList<Phase*>& events, const double maxLength);
 
     static QList<Event*> unsortEvents(const QList<Event*> &events);
-    static QString modelDescriptionHTML(const ModelCurve* model);
-    static QString getMCMCSettingsLog(const Model* model = nullptr);
-    static QString modelStateDescriptionHTML(const ModelCurve *model = nullptr, QString stateDescript = "");
-    static QString modelStateDescriptionText(const ModelCurve *model = nullptr, QString stateDescript = "");
+    static QString modelDescriptionHTML(const std::shared_ptr<ModelCurve> model);
+    static QString getMCMCSettingsLog(const std::shared_ptr<ModelCurve> model = nullptr);
+    static QString modelStateDescriptionHTML(const std::shared_ptr<ModelCurve> model = nullptr, QString stateDescript = "");
+    static QString modelStateDescriptionText(const std::shared_ptr<ModelCurve> model = nullptr, QString stateDescript = "");
 
 #pragma mark Results in HTML format
-    static QString dateResultsHTML(const Date* d, const Model* model = nullptr);
+    static QString dateResultsHTML(const Date* d, const std::shared_ptr<ModelCurve> &model = nullptr);
+    static QString dateResultsHTML(const Date* d, const double tmin_formated, const double tmax_formated);
     static QString sigmaTiResultsHTML(const Date* d);
 
-    static QString eventResultsHTML(const Event* e, const bool withDates, const Model* model = nullptr);
+    static QString eventResultsHTML(const Event* e, const bool withDates, const std::shared_ptr<ModelCurve> model = nullptr);
+    static QString eventResultsHTML(const Event* e, const bool withDates, const double tmin_formated, const double tmax_formated);
     static QString EventS02ResultsHTML(const Event* e);
     static QString VgResultsHTML(const Event* e);
 
@@ -83,17 +84,21 @@ public:
     static QString durationResultsHTML(const Phase* p);
     static QString constraintResultsHTML(const PhaseConstraint* p);
 
-    static QString curveResultsHTML(const ModelCurve* model = nullptr);
-    static QString lambdaResultsHTML(const ModelCurve* model = nullptr);
-    static QString S02ResultsHTML(const ModelCurve* model = nullptr);
+    static QString curveResultsHTML(const std::shared_ptr<ModelCurve> model = nullptr);
+    static QString lambdaResultsHTML(const std::shared_ptr<ModelCurve> model = nullptr);
+    static QString S02ResultsHTML(const std::shared_ptr<ModelCurve> model = nullptr);
 
-    static short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const Model* model);
+    static short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const std::shared_ptr<ModelCurve> model);
+    static short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const double tmin_formated, const double tmax_formated);
 
 
 };
 QString HTML_to_text(const QString &HTML);
 
-void sampleInCumulatedRepartition (Event *event, const StudyPeriodSettings &settings, const double min, const double max);
+//void sampleInCumulatedRepartition (Event *event, const StudyPeriodSettings &settings, const double min, const double max); Obsolete
+
+double sample_in_repartition(const CalibrationCurve *calibrateCurve, const double min, const double max);
+
 void sampleInCumulatedRepartition_thetaFixe (Event *event, const StudyPeriodSettings &settings);
 
 // These 2 global functions are used to sort events and phases lists in result view

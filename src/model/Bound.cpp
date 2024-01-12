@@ -44,7 +44,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QObject>
 
-Bound::Bound(const Model *model):
+//Bound::Bound(const Model *model):
+Bound::Bound(std::shared_ptr<Model> model):
     Event (model),
     mFixed (0.)
 {
@@ -55,7 +56,8 @@ Bound::Bound(const Model *model):
     mS02Theta.mSamplerProposal = MHVariable::eFixe;
 }
 
-Bound::Bound(const QJsonObject &json, const Model* model):
+//Bound::Bound(const QJsonObject &json, const Model* model):
+Bound::Bound(const QJsonObject &json, std::shared_ptr<Model> model):
     Event (model)
 {
     mType = Type (json[STATE_EVENT_TYPE].toInt());

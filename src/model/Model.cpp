@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -76,7 +76,7 @@ Model::Model(QObject *parent):
     
 }
 
-Model::Model(const QJsonObject& json, QObject * parent):
+Model::Model(const QJsonObject &json, QObject* parent):
     QObject(parent),
     mProject(nullptr),
     mNumberOfPhases(0),
@@ -119,7 +119,7 @@ Model::Model(const QJsonObject& json, QObject * parent):
 
             if (JSONevent.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
                 try {
-                    mEvents.append(new Event(JSONevent, this));
+                    mEvents.append(new Event(JSONevent, std::shared_ptr<Model>(this)));
                     mNumberOfDates += JSONevent.value(STATE_EVENT_DATES).toArray().size();
 
                 }
@@ -132,7 +132,7 @@ Model::Model(const QJsonObject& json, QObject * parent):
                     message.exec();
                 }
             } else {
-                Bound* ek = new Bound(JSONevent, this);
+                Bound* ek = new Bound(JSONevent, std::shared_ptr<Model>(this));
                 //*ek = Bound::fromJson(JSONevent);
                 ek->updateValues(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
                 mEvents.append(ek);
@@ -210,7 +210,7 @@ Model::Model(const QJsonObject& json, QObject * parent):
 
 Model::~Model()
 {
-
+    mProject = nullptr;
 }
 
 void Model::clear()
@@ -221,39 +221,44 @@ void Model::clear()
     // - The Event MH variables are reset (freeing trace memory)
     // - The Dates MH variables are reset (freeing trace memory)
     // - The Dates are cleared
-    for (Event* &ev: mEvents) {
+    //for (Event* &ev: mEvents) {
+  /*  for (auto ev = mEvents.rbegin(); ev != mEvents.rend(); ev++) {
         // Event can be an Event or an EventCurve.
         // => do not delete it using ~Event(), because the appropriate destructor could be ~EventCurve().
-        delete ev;
-        ev = nullptr;
+        //delete ev;
+        delete *ev;
     }
     
     for (EventConstraint* &ec : mEventConstraints) {
         delete ec;
         ec = nullptr;
     }
-    
+ */
     mEvents.clear();
     mEventConstraints.clear();
 
-    if (!mPhases.isEmpty()) {
+    mPhases.clear();
+    mPhaseConstraints.clear();
+
+    /*if (!mPhases.isEmpty()) {
         for (Phase* &ph: mPhases) {
-            if (ph) {
+           // if (ph) {
                 delete ph;
                 ph = nullptr;
-            }
+           // }
         }
         mPhases.clear();
     }
 
     if (!mPhaseConstraints.isEmpty()) {
         for (PhaseConstraint* &pc : mPhaseConstraints) {
-            if (pc)
-                pc->~PhaseConstraint();
-
+           // if (pc) {
+                delete pc; //->~PhaseConstraint();
+                pc = nullptr;
+           // }
         }
         mPhaseConstraints.clear();
-    }
+    }*/
 
     mChains.clear();
     mLogModel.clear();
@@ -337,7 +342,7 @@ void Model::fromJson(const QJsonObject& json)
 
             if (JSONevent.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
                 try {
-                    mEvents.append(new Event(JSONevent, this));
+                    mEvents.append(new Event(JSONevent, std::shared_ptr<Model>(this)));
                     mNumberOfDates += JSONevent.value(STATE_EVENT_DATES).toArray().size();
 
                 }
@@ -350,7 +355,7 @@ void Model::fromJson(const QJsonObject& json)
                     message.exec();
                 }
             } else {
-                Bound* ek = new Bound(JSONevent, this);
+                Bound* ek = new Bound(JSONevent, std::shared_ptr<Model>(this));
                 //*ek = Bound::fromJson(JSONevent);
                 ek->updateValues(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
                 mEvents.append(ek);
@@ -437,7 +442,8 @@ void Model::setProject( Project* project)
         return;
     }
 
-    ModelCurve* curveModel = dynamic_cast<ModelCurve*>(mProject->mModel);
+    //ModelCurve* curveModel = dynamic_cast<ModelCurve*>(mProject->mModel.get());
+    const auto &curveModel = mProject->mModel;
 
     const QString xLabel = curveModel->mCurveSettings.XLabel();
     const QString yLabel = curveModel->mCurveSettings.YLabel();
@@ -591,11 +597,13 @@ QJsonObject Model::toJson() const
 
 // Logs
 
-QString Model::getModelLog() const{
+QString Model::getModelLog() const
+{
     return mLogModel;
 }
 
-QString Model::getInitLog() const{
+QString Model::getInitLog() const
+{
     QString log;
     int i = 1;
     for (const auto& chain : mChains) {
@@ -605,7 +613,8 @@ QString Model::getInitLog() const{
     return log + mLogInit;
 }
 
-QString Model::getAdaptLog() const{
+QString Model::getAdaptLog() const
+{
     QString log;
     int i = 1;
     for (const auto& chain : mChains) {
@@ -615,16 +624,8 @@ QString Model::getAdaptLog() const{
     return log + mLogAdapt;
 }
 
-/**
- * @brief Model::generateModelLog
- * @return Return a QString with the recall of the Model with the data MCMC Methode, and constraint
- */
-void Model::generateModelLog()
+QString Model::getResultsLog() const
 {
-    mLogModel = ModelUtilities::modelDescriptionHTML(static_cast<ModelCurve*>(this));
-}
-
-QString Model::getResultsLog() const{
     return mLogResults;
 }
 
@@ -637,21 +638,22 @@ void Model::generateResultsLog()
         ++i;
     }
     log += "<hr>";
-    for (const auto& pPhase : mPhases) {
-        log += ModelUtilities::phaseResultsHTML(pPhase);
+    std::ranges::for_each(mPhases, [&log](Phase* phase) {
+        log += ModelUtilities::phaseResultsHTML(phase);
         log += "<br>";
         log += line(textBold(textOrange(QObject::tr("Duration (posterior distrib.)"))));
-        log += line(textOrange(pPhase->mDuration.resultsString(QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr)));
-         log += "<hr>";
-    }
-
-    for (const auto& pPhaseConstraint : mPhaseConstraints) {
-        log += ModelUtilities::constraintResultsHTML(pPhaseConstraint);
+        log += line(textOrange(phase->mDuration.resultsString(QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"))));
         log += "<hr>";
-    }
-    for (const auto& pEvent : mEvents) {
-        log += ModelUtilities::eventResultsHTML(pEvent, true, this);
-        log += "<hr>";        
+    });
+
+    std::ranges::for_each(mPhaseConstraints, [&log](PhaseConstraint* phase_constraint) {
+        log += ModelUtilities::constraintResultsHTML(phase_constraint);
+        log += "<hr>";
+    });
+
+    for (const auto& ev : mEvents) {
+        log += ModelUtilities::eventResultsHTML(ev, true, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+        log += "<hr>";
     }
 
     mLogResults = log;
@@ -667,15 +669,15 @@ QList<QStringList> Model::getStats(const QLocale locale, const int precision, co
 
     // Phases
 
-    for (const auto& pPhase : mPhases) {
-        QStringList l = pPhase->mAlpha.getResultsList(locale, precision);
+    for (const auto& phase : mPhases) {
+        QStringList l = phase->mAlpha.getResultsList(locale, precision);
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
-        l.prepend(pPhase->mName + " Begin");
+        l.prepend(phase->mName + " Begin");
         rows << l;
 
-        l = pPhase->mBeta.getResultsList(locale, precision);
+        l = phase->mBeta.getResultsList(locale, precision);
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
-        l.prepend(pPhase->mName + " End");
+        l.prepend(phase->mName + " End");
         rows << l;
 
         /*
@@ -833,6 +835,7 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
         }
         shift += burnAdaptSize + runSize;
     }
+
     return rows;
 }
 
@@ -913,7 +916,7 @@ bool Model::isValid()
     }
 
     // 4 - Pas de circularité sur les contraintes des Event
-    QVector<QVector<Event*> > eventBranches;
+    QList<QList<Event*> > eventBranches;
     try {
         eventBranches = ModelUtilities::getAllEventsBranches(mEvents);
     } catch(QString &error){
@@ -922,7 +925,7 @@ bool Model::isValid()
 
     // 5 - Pas de circularité sur les contraintes de phases
     // 6 - Gammas : sur toutes les branches, la somme des gamma min < plage d'étude :
-    QVector<QVector<Phase*> > phaseBranches;
+    QList<QList<Phase*> > phaseBranches;
     try {
         phaseBranches = ModelUtilities::getAllPhasesBranches(mPhases, mSettings.mTmax - mSettings.mTmin);
     } catch(QString &error){
@@ -931,7 +934,7 @@ bool Model::isValid()
 
     // 7 - Un Event ne peut pas appartenir à 2 phases en contrainte
     for (const auto &branche_i :  phaseBranches) {
-        QVector<Event*> branchEvents;
+        QList<Event*> branchEvents;
         for (auto phase : branche_i ) {
              for (const auto& ev : phase->mEvents) {
                 if (!branchEvents.contains(ev)) {
@@ -1013,7 +1016,7 @@ bool Model::isValid()
             if (bound)
                 upper = qMin(upper, bound->mFixed);
 
-            bound = nullptr;
+            //bound = nullptr;
         }
         if (gammaMin >= (upper - lower))
             throw QString(QObject::tr("The constraint between phases \" %1 \" and \" %2 \" is not consistent with the bounds they contain!").arg(phaseFrom->mName, phaseTo->mName));
@@ -1044,7 +1047,7 @@ bool Model::isValid()
                         max = std::min(max, bound->mFixed);
 
                     }
-                    bound = nullptr;
+                    //bound = nullptr;
                 }
             }
             if (boundFound){
@@ -1312,11 +1315,13 @@ void Model::initVariablesForChain()
     }
 }
 
+
+
 #pragma mark Densities
 
 void Model::initNodeEvents()
 {
-    std::for_each( mEvents.begin(), mEvents.end(), [](Event* ev) {
+    std::ranges::for_each( mEvents, [](Event* ev) {
         ev->mNodeInitialized = false;
         ev->mThetaNode = HUGE_VAL;
     });
@@ -1449,7 +1454,7 @@ void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
     thPhases.join();
 #else
 
-    for (const auto& event : mEvents) {
+    std::ranges::for_each( mEvents, [chains](Event* event) {
          if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
             event->mTheta.generateNumericalResults(chains);
 
@@ -1463,15 +1468,15 @@ void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
          } else {
             event->mTheta.MetropolisVariable::generateNumericalResults(chains);
          }
-    }
+    });
 
 
-    for (const auto& phase : mPhases) {
+    std::ranges::for_each( mPhases, [chains](Phase* phase) {
          phase->mAlpha.generateNumericalResults(chains);
          phase->mBeta.generateNumericalResults(chains);
          // phase->mTau.generateNumericalResults(chains);
          phase->mDuration.generateNumericalResults(chains);
-    }
+    });
 
 
 #endif
@@ -1483,22 +1488,22 @@ void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
 
 void Model::clearThreshold()
 {
-    for (const auto& event : mEvents) {
-         event->mTheta.mThresholdUsed = -1.;
-         event->mS02Theta.mThresholdUsed = -1.;
+    std::ranges::for_each( mEvents, [](Event* ev) {
+         ev->mTheta.mThresholdUsed = -1.;
+         ev->mS02Theta.mThresholdUsed = -1.;
 
-         for (auto&& date : event->mDates) {
+         for (auto&& date : ev->mDates) {
             date.mTi.mThresholdUsed = -1.;
             date.mSigmaTi.mThresholdUsed = -1.;
          }
-    }
+    });
 
-    for (const auto& phase : mPhases) {
+    std::ranges::for_each( mPhases, [](Phase* phase) {
          phase->mAlpha.mThresholdUsed = -1.;
          phase->mBeta.mThresholdUsed = -1.;
          phase->mTau.mThresholdUsed = -1.;
          phase->mDuration.mThresholdUsed = -1.;
-    }
+    });
 }
 
 void Model::generateCredibility(const double thresh)
@@ -1588,20 +1593,20 @@ void Model::generateCredibility(const double thresh)
                                                   phase->mBeta.fullRunRawTrace(mChains), thresh, "Time Range for Phase : " + phase->mName);
     }
 
+
     for (const auto& phaseConstraint : mPhaseConstraints) {
+        const QString str = phaseConstraint->mPhaseFrom->mName + " to " + phaseConstraint->mPhaseTo->mName;
 
-        Phase* phaseFrom = phaseConstraint->mPhaseFrom;
-        Phase* phaseTo  = phaseConstraint->mPhaseTo;
+        phaseConstraint->mGapRange = gapRangeFromTraces(phaseConstraint->mPhaseFrom->mBeta.fullRunRawTrace(mChains),
+                                                        phaseConstraint->mPhaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Gap Range : "+ str);
 
-        phaseConstraint->mGapRange = gapRangeFromTraces(phaseFrom->mBeta.fullRunRawTrace(mChains),
-                                                        phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Gap Range : "+ phaseFrom->mName+ " to "+ phaseTo->mName);
+        qDebug()<<"Gap Range "<<str;
 
-        qDebug()<<"Gap Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
-
-        phaseConstraint->mTransitionRange = transitionRangeFromTraces(phaseFrom->mBeta.fullRunRawTrace(mChains),
-                                                                      phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Transition Range : "+ phaseFrom->mName+ " to "+ phaseTo->mName);
+        phaseConstraint->mTransitionRange = transitionRangeFromTraces(phaseConstraint->mPhaseFrom->mBeta.fullRunRawTrace(mChains),
+                                                                      phaseConstraint->mPhaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Transition Range : " + str);
 
     }
+
 #endif
 
 #ifdef DEBUG

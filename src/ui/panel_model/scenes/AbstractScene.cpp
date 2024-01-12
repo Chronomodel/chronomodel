@@ -63,12 +63,12 @@ AbstractScene::AbstractScene(QGraphicsView* view, QObject* parent):QGraphicsScen
 }
 
 // Setter & Getter
-void AbstractScene::setProject(Project* project)
+void AbstractScene::setProject(std::shared_ptr<Project> project)
 {
     mProject = project;
 }
 
-Project* AbstractScene::getProject() const
+std::shared_ptr<Project> AbstractScene::getProject() const
 {
    return  mProject;
 }

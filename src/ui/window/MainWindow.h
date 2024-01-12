@@ -67,7 +67,7 @@ public:
     MainWindow(QWidget* aParent = nullptr);
     ~MainWindow();
 
-    Project* getProject();
+    const std::shared_ptr<Project>& getProject();
     QJsonObject &getState() const;
 
     inline void updateEvent(const QJsonObject &event, const QString &reason) {mProject->updateEvent(event, reason);};
@@ -124,7 +124,7 @@ public slots:
     void openWebsite();
     void showHelp(bool);
     void setLanguage(QAction* action);
-    void mcmcFinished(Model*);
+    void mcmcFinished();
     void noResult();
     void updateProject();
     void toggleCurve(bool checked);
@@ -144,7 +144,7 @@ private:
 
     QStackedWidget* mCentralStack;
     ProjectView* mProjectView;
-    Project* mProject;
+    std::shared_ptr<Project> mProject;
     QUndoStack* mUndoStack;
     QUndoView* mUndoView;
     QDockWidget* mUndoDock;

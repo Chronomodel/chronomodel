@@ -147,18 +147,7 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
                 mGraph->add_zone(zone);
             }
 
-            /*double t0 = DateUtils::convertFromAppSettingsFormat(std::max(tminDisplay_formated_effective, tminRef_formated));
-            double t1 = DateUtils::convertFromAppSettingsFormat(std::min(tmaxDisplay_formated_effective, tmaxRef_formated));
 
-            if (t1 < t0)
-                 std::swap(t1, t0);
-
-            double yMin = plugin->getRefValueAt(date.mData, t0);
-            double yMax = plugin->getRefValueAt(date.mData, t1);
-
-            if (yMax<yMin)
-                 std::swap(yMax, yMin);
-            */
             QMap<double, double> curveG;
             QMap<double, double> curveG95Sup;
             QMap<double, double> curveG95Inf;
@@ -177,23 +166,18 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
                  curveG95Sup[tDisplay] = iPt.value() + error;
                  curveG95Inf[tDisplay] = iPt.value() - error;
 
-                 /*if (tDisplay > tminDisplay_formated_effective && tDisplay < tmaxDisplay_formated_effective) {
-                     yMin = qMin(yMin, curveG95Inf.value(tDisplay));
-                     yMax = qMax(yMax, curveG95Sup.value(tDisplay));
-                 }*/
              }
              mGraph->setRangeX(tminDisplay_formated_effective, tmaxDisplay_formated_effective);
              mGraph->setCurrentX(tminDisplay_formated_effective, tmaxDisplay_formated_effective);
 
-             const GraphCurve &graphCurveG = FunctionCurve(curveG, "G", Painting::mainColorDark );
+             GraphCurve graphCurveG = FunctionCurve(curveG, "G", Painting::mainColorDark );
+             graphCurveG.mVisible = true;
              mGraph->add_curve(graphCurveG);
 
 
              const GraphCurve &curveGEnv = shapeCurve(curveG95Inf, curveG95Sup, "G Env",
-                                              QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30));
+                                              QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30), true);
              mGraph->add_curve(curveGEnv);
-             // Display reference curve name
-             // mGraph->addInfo(tr("Ref")+" : " + ref_curve);
 
              /* ----------------------------------------------
               *  Measure curve
@@ -202,6 +186,7 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
             double yMin = age - error * 3.;
             double yMax = age + error * 3.;
             GraphCurve curveMeasure;
+            curveMeasure.mVisible = true;
             curveMeasure.mName = "Measurement";
 
             QColor penColor(mMeasureColor);
@@ -255,6 +240,7 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
                  yMax = qMax(yMax, age + error * 3.);
 
                  GraphCurve curveDeltaR;
+                 curveDeltaR.mVisible = true;
                  curveDeltaR.mName = "Delta R";
 
                  penColor = mMeasureColor;
@@ -294,6 +280,7 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
                  QJsonObject d = subDate.toObject();
 
                  GraphCurve curveSubMeasure;
+                 curveSubMeasure.mVisible = true;
                  curveSubMeasure.mName = "Sub-Measurement : " + d.value(STATE_NAME).toString();// QString::number(i);
 
                  double sub_age = d.value(STATE_DATE_DATA).toObject().value(DATE_14C_AGE_STR).toDouble();
@@ -340,18 +327,21 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
               * ---------------------------------------------- */
 
              GraphCurve curveMeasureAvg;
+             curveMeasureAvg.mVisible = true;
              curveMeasureAvg.mName = "MeasureAvg";
              curveMeasureAvg.mPen.setColor(mMeasureColor);
              curveMeasureAvg.mPen.setStyle(Qt::SolidLine);
              curveMeasureAvg.mType = GraphCurve::CurveType::eHorizontalLine;
 
              GraphCurve curveMeasureSup;
+             curveMeasureSup.mVisible = true;
              curveMeasureSup.mName = "MeasureSup";
              curveMeasureSup.mPen.setColor(mMeasureColor);
              curveMeasureSup.mPen.setStyle(Qt::DashLine);
              curveMeasureSup.mType = GraphCurve::CurveType::eHorizontalLine;
 
              GraphCurve curveMeasureInf;
+             curveMeasureInf.mVisible = true;
              curveMeasureInf.mName = "MeasureInf";
              curveMeasureInf.mPen.setColor(mMeasureColor);
              curveMeasureInf.mPen.setStyle(Qt::DashLine);
@@ -370,7 +360,6 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
          }
 
      } else {
-
 
            double tminDisplay(mTminDisplay);
            double tmaxDisplay(mTmaxDisplay);

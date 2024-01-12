@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -51,17 +51,17 @@ public:
     explicit GraphViewS02(QWidget *parent = nullptr);
     virtual ~GraphViewS02();
 
-    void setModel(ModelCurve* model);
+    void setModel(std::shared_ptr<ModelCurve> model);
 
-    void generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList, const Model* model = nullptr);
-    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QVector<variable_t>& showVariableList);
+    void generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList);
+    void updateCurvesToShow(bool showAllChains, const QList<bool> &showChainList, const QList<variable_t> &showVariableList);
 
 protected:
     void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent* );
 
 private:
-    ModelCurve* mModel;
+    std::shared_ptr<ModelCurve> mModel;
 
 };
 

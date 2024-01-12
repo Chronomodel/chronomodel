@@ -52,7 +52,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class Project;
 
 
-class Model :public QObject
+class Model: public QObject
 {
     Q_OBJECT
 public:
@@ -94,7 +94,7 @@ public:
     explicit Model(const QJsonObject& json, QObject* parent = nullptr);
     virtual ~Model();
 
-    void generateModelLog();
+    //void generateModelLog();
     QString getModelLog() const;
 
     virtual void generateResultsLog();
@@ -124,6 +124,8 @@ public:
 
     bool isValid();
     void clear();
+
+   // QString initialize_time();
 
     void initNodeEvents(); // use in MCMCLoopChrono::initialize()
     QString initializeTheta();

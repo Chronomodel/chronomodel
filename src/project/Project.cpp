@@ -99,8 +99,8 @@ Project::Project():
         mAutoSaveTimer->stop();
 
     //
-    mModel = new Model();
-    mModel->setProject(this);
+   // mModel = nullptr;//std::make_unique<Model>(new Model());
+    //mModel->setProject(this);
 
     mReasonChangeStructure << PROJECT_LOADED_REASON << PROJECT_SETTINGS_UPDATED_REASON << INSERT_PROJECT_REASON;
     mReasonChangeStructure << NEW_EVEN_BY_CSV_DRAG_REASON;
@@ -139,8 +139,11 @@ Project::~Project()
     MainWindow::getInstance()->getUndoStack()->clear();
     mState = QJsonObject();
     mLastSavedState = QJsonObject();
-    delete mModel;
-    mModel = nullptr;
+    //delete mModel;
+    //mModel = nullptr;
+   // if (mModel)
+   //     mModel.reset(nullptr);
+    mLoop = nullptr;
 }
 
 void Project::initState(const QString& reason)
@@ -195,6 +198,7 @@ bool Project::pushProjectState(const QJsonObject &state, const QString &reason, 
        // SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
         SetProjectState* command = new SetProjectState(this, QJsonObject(), state, reason, notify);
         MainWindow::getInstance()->getUndoStack()->push(command);
+        command = nullptr;
         // Pushes cmd on the stack or merges it with the most recently executed command.
         //In either case, executes cmd by calling its redo() function
 
@@ -216,31 +220,10 @@ bool Project::pushProjectState(const QJsonObject &state, const QString &reason, 
         else
             checkStateModification(state, mState);
 
-      /*  if (!MainWindow::getInstance()->undo_action && !MainWindow::getInstance()->redo_action ) {
-            SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
 
-            MainWindow::getInstance()->getUndoStack()->push(command);
-            //MainWindow::getInstance()->undo_redo_action = false;
-
-        } else if (MainWindow::getInstance()->undo_action) {
-
-            MainWindow::getInstance()->getUndoStack()->undo();
-            MainWindow::getInstance()->undo_action = false;
-            MainWindow::getInstance()->redo_action = false;
-            emit noResult();
-
-        } else if (MainWindow::getInstance()->redo_action) {
-
-            MainWindow::getInstance()->getUndoStack()->redo();
-            MainWindow::getInstance()->redo_action = false;
-            MainWindow::getInstance()->undo_action = false;
-            emit noResult();
-
-        }
- */
         SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
         MainWindow::getInstance()->getUndoStack()->push(command);
-
+        command = nullptr;
 
         if (mStructureIsChanged && (reason != PROJECT_LOADED_REASON) ) {
             mState = state;
@@ -638,7 +621,7 @@ bool Project::load(const QString &path, bool force)
                     if (olderProject && force == false) {
                         QMessageBox message(QMessageBox::Warning,
                                             tr("Project version doesn't match"),
-                                            "This project has been saved with a older version of ChronoModel :\r\r- Project version : " + projectVersionStr + "\r- Current version : " + appVersionStr + "\r\rSome incompatible data may be missing and you may encounter problems running the model.\r\rLoading the project will update and overwrite the existing file. Do you really want to continue ?",
+                                            "This project has been saved with an older version of ChronoModel :\r\r- Project version : " + projectVersionStr + "\r- Current version : " + appVersionStr + "\r\rSome incompatible data may be missing and you may encounter problems running the model.\r\rLoading the project will update and overwrite the existing file. Do you really want to continue ?",
                                             QMessageBox::Yes | QMessageBox::No,
                                             qApp->activeWindow());
                         if (message.exec() == QMessageBox::No)
@@ -775,16 +758,16 @@ bool Project::load(const QString &path, bool force)
                     qDebug() << "[Project::load] Loading model file.res : " << dataPath << " size=" << dataFile.size();
 
                     try {
-                        delete mModel;
+                        //delete mModel;
 
-                        if (isCurve()) {
-                            mModel = new ModelCurve ();
+                      //  if (isCurve()) {
+                            mModel = std::shared_ptr<ModelCurve>(new ModelCurve (mState));
                             qDebug() << "[Project::load] Create a ModelCurve";
 
-                        } else
-                            mModel = new Model ();
+                      //  } else
+                        //    mModelChrono = std::shared_ptr<Model>(new Model (mState));
 
-                        mModel->fromJson(mState);
+                       // mModel->fromJson(mState);
                      }
                     catch (const std::exception & e) {
                         QMessageBox message(QMessageBox::Warning,
@@ -796,6 +779,7 @@ bool Project::load(const QString &path, bool force)
                         message.exec();
 
                         clearModel();
+                        return false;
                     }
 
 
@@ -853,7 +837,7 @@ bool Project::save()
 }
 
 
-bool Project::insert(const QString& path, QJsonObject &return_state)
+bool Project::insert(const QString &path, QJsonObject &return_state)
 {
     bool newerProject = false;
     bool olderProject = false;
@@ -938,7 +922,7 @@ bool Project::insert(const QString& path, QJsonObject &return_state)
                     if (olderProject) {
                         QMessageBox message(QMessageBox::Warning,
                                             tr("Project version doesn't match"),
-                                            "This project has been saved with a older version of ChronoModel :\r\r- Project version : " + projectVersionStr + "\r- Current version : " + appVersionStr + "\r\rSome incompatible data may be missing and you may encounter problems running the model.\r\rLoading the project will update and overwrite the existing file. Do you really want to continue ?",
+                                            "This project has been saved with an older version of ChronoModel :\r\r- Project version : " + projectVersionStr + "\r- Current version : " + appVersionStr + "\r\rSome incompatible data may be missing and you may encounter problems running the model.\r\rLoading the project will update and overwrite the existing file. Do you really want to continue ?",
                                             QMessageBox::Yes | QMessageBox::No,
                                             qApp->activeWindow());
                         if (message.exec() == QMessageBox::No)
@@ -975,19 +959,19 @@ bool Project::insert(const QString& path, QJsonObject &return_state)
            } else {
                for (auto&& phaseJSON : phases) {
                    QJsonObject phase = phaseJSON.toObject();
-                   minXPhase =std::min(minXPhase, phase[STATE_ITEM_X].toDouble());
-                   maxXPhase =std::max(maxXPhase, phase[STATE_ITEM_X].toDouble());
+                   minXPhase = std::min(minXPhase, phase[STATE_ITEM_X].toDouble());
+                   maxXPhase = std::max(maxXPhase, phase[STATE_ITEM_X].toDouble());
 
-                   minYPhase =std::min(minYPhase, phase[STATE_ITEM_Y].toDouble());
-                   maxYPhase =std::max(maxYPhase, phase[STATE_ITEM_Y].toDouble());
-                   maxIDPhase =std::max(maxIDPhase, phase[STATE_ID].toInt());
+                   minYPhase = std::min(minYPhase, phase[STATE_ITEM_Y].toDouble());
+                   maxYPhase = std::max(maxYPhase, phase[STATE_ITEM_Y].toDouble());
+                   maxIDPhase = std::max(maxIDPhase, phase[STATE_ID].toInt());
                }
                maxIDPhase += 1;
 
                const QJsonArray phaseConstraints = mState.value(STATE_PHASES_CONSTRAINTS).toArray();
                for (auto&& phaseConsJSON : phaseConstraints) {
                    QJsonObject phaseCons = phaseConsJSON.toObject();
-                   maxIDPhaseConstraint =std::max(maxIDPhaseConstraint, phaseCons[STATE_ID].toInt());
+                   maxIDPhaseConstraint = std::max(maxIDPhaseConstraint, phaseCons[STATE_ID].toInt());
                }
                maxIDPhaseConstraint += 1;
 
@@ -1015,7 +999,7 @@ bool Project::insert(const QString& path, QJsonObject &return_state)
                const QJsonArray &eventConstraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
                for (auto&& eventConsJSON : eventConstraints) {
                    const QJsonObject &eventCons = eventConsJSON.toObject();
-                   maxIDEventConstraint =std::max(maxIDEventConstraint, eventCons.value(STATE_ID).toInt());
+                   maxIDEventConstraint = std::max(maxIDEventConstraint, eventCons.value(STATE_ID).toInt());
                }
                maxIDEventConstraint += 1;
             }
@@ -1033,10 +1017,10 @@ bool Project::insert(const QString& path, QJsonObject &return_state)
            } else {
                for (auto&& eventJSON : eventsNew) {
                    const QJsonObject &event = eventJSON.toObject();
-                   minXEventNew =std::min(minXEventNew, event.value(STATE_ITEM_X).toDouble());
+                   minXEventNew = std::min(minXEventNew, event.value(STATE_ITEM_X).toDouble());
 
-                   minYEventNew =std::min(minYEventNew, event.value(STATE_ITEM_Y).toDouble());
-                   maxYEventNew =std::max(maxYEventNew, event.value(STATE_ITEM_Y).toDouble());
+                   minYEventNew = std::min(minYEventNew, event.value(STATE_ITEM_Y).toDouble());
+                   maxYEventNew = std::max(maxYEventNew, event.value(STATE_ITEM_Y).toDouble());
                }
           }
 
@@ -1052,10 +1036,10 @@ bool Project::insert(const QString& path, QJsonObject &return_state)
            } else {
                for (auto&& phaseJSON : phasesNew) {
                    const QJsonObject &phase = phaseJSON.toObject();
-                   minXPhaseNew =std::min(minXPhaseNew, phase.value(STATE_ITEM_X).toDouble());
+                   minXPhaseNew = std::min(minXPhaseNew, phase.value(STATE_ITEM_X).toDouble());
 
-                   minYPhaseNew =std::min(minYPhaseNew, phase.value(STATE_ITEM_Y).toDouble());
-                   maxYPhaseNew =std::max(maxYPhaseNew, phase.value(STATE_ITEM_Y).toDouble());
+                   minYPhaseNew = std::min(minYPhaseNew, phase.value(STATE_ITEM_Y).toDouble());
+                   maxYPhaseNew = std::max(maxYPhaseNew, phase.value(STATE_ITEM_Y).toDouble());
 
                }
             }
@@ -1309,8 +1293,8 @@ bool Project::recenterProject()
     double minXPhase(HUGE_VAL), maxXPhase(- HUGE_VAL), minYPhase(HUGE_VAL), maxYPhase(- HUGE_VAL);
 
     const QJsonArray phases = mState.value(STATE_PHASES).toArray();
-    for (auto&& phaseJSON : phases) {
-        QJsonObject phase = phaseJSON.toObject();
+    for (auto& phaseJSON : phases) {
+        const QJsonObject &phase = phaseJSON.toObject();
         minXPhase =std::min(minXPhase, phase[STATE_ITEM_X].toDouble());
         maxXPhase =std::max(maxXPhase, phase[STATE_ITEM_X].toDouble());
 
@@ -1319,8 +1303,8 @@ bool Project::recenterProject()
     }
 
     const QJsonArray events = mState.value(STATE_EVENTS).toArray();
-    for (auto&& eventJSON : events) {
-        QJsonObject event = eventJSON.toObject();
+    for (auto& eventJSON : events) {
+        const QJsonObject &event = eventJSON.toObject();
         minXEvent =std::min(minXEvent, event[STATE_ITEM_X].toDouble());
         maxXEvent =std::max(maxXEvent, event[STATE_ITEM_X].toDouble());
 
@@ -1817,7 +1801,7 @@ bool Project::selectedEventsWithString(const QString str)
         QJsonObject evt = e.toObject();
         evt[STATE_IS_SELECTED] = e.toObject().value(STATE_NAME).toString().contains(str);
         if (e.toObject().value(STATE_NAME).toString().contains(str))
-            res =true;
+            res = true;
         newEvents.append(evt);
      }
     // create new state to push
@@ -1826,6 +1810,7 @@ bool Project::selectedEventsWithString(const QString str)
     pushProjectState(stateNext, "Select events with string", true);
     return res;
 }
+
 void Project::updateSelectedEventsColor(const QColor& color)
 {
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
@@ -1894,9 +1879,10 @@ int Project::getUnusedDateId(const QJsonArray& dates) const
     while (!idIsFree) {
         ++id;
         idIsFree = true;
-        for (int i = 0; i < dates.size(); ++i) {
-            QJsonObject date = dates.at(i).toObject();
-            if (date.value(STATE_ID).toInt() == id) {
+        //for (int i = 0; i < dates.size(); ++i) {
+        //    QJsonObject date = dates.at(i).toObject();
+        for (auto &date : dates) {
+            if (date.toObject().value(STATE_ID).toInt() == id) {
                 idIsFree = false;
                 break;
             }
@@ -1913,7 +1899,6 @@ Date Project::createDateFromPlugin(PluginAbstract* plugin)
         PluginFormAbstract* form = plugin->getForm();
         dialog.setForm(form);
         dialog.setDataMethod(plugin->getDataMethod());
-
 
         if (dialog.exec() == QDialog::Accepted) {
             if (form->isValid()) {
@@ -1938,6 +1923,7 @@ Date Project::createDateFromPlugin(PluginAbstract* plugin)
                 message.exec();
             }
         }
+        form = nullptr;
     }
     return date;
 }
@@ -2241,6 +2227,8 @@ void Project::updateDate(int eventId, int dateIndex)
                         message.exec();
                     }
                 }
+                plugin = nullptr;
+                form = nullptr;
             }
             break;
         }
@@ -2685,7 +2673,7 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
 
     // Delete constraints around the disappearing phase
     for (int j=phases_constraints.size()-1; j>=0; --j) {
-        QJsonObject constraint = phases_constraints.at(j).toObject();
+        const QJsonObject &constraint = phases_constraints.at(j).toObject();
         const int bwd_id = constraint.value(STATE_CONSTRAINT_BWD_ID).toInt();
         const int fwd_id = constraint.value(STATE_CONSTRAINT_FWD_ID).toInt();
         if ( (bwd_id == phaseFromId) || (fwd_id == phaseFromId))
@@ -2695,7 +2683,7 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
 
     // Change phase id in events
     for (int j=0; j<events.size(); ++j) {
-        QJsonObject event = events.at(j).toObject();
+        const QJsonObject &event = events.at(j).toObject();
         QString idsStr = event.value(STATE_EVENT_PHASE_IDS).toString();
         QStringList ids = idsStr.split(",");
         if (ids.contains(QString::number(phaseFromId))) {
@@ -2710,7 +2698,7 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
 
     // remove disappearing phase
     for (int i=phases.size()-1; i>=0; --i) {
-        const QJsonObject p = phases.at(i).toObject();
+        const QJsonObject &p = phases.at(i).toObject();
         const int id = p.value(STATE_ID).toInt();
         if (id == phaseFromId) {
             phases.removeAt(i);
@@ -2753,7 +2741,7 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
 
 QJsonObject Project::getPhasesWithId(const int id)
 {
-    const QJsonArray phases = mState.value(STATE_PHASES).toArray();
+    const QJsonArray &phases = mState.value(STATE_PHASES).toArray();
     for (const QJsonValue& pha : phases) {
         if (pha.toObject().value(STATE_ID) == id)
             return pha.toObject();
@@ -2764,7 +2752,7 @@ QJsonObject Project::getPhasesWithId(const int id)
 // Events constraints
 bool Project::isEventConstraintAllowed(const QJsonObject& eventFrom, const QJsonObject& eventTo)
 {
-    const QJsonArray constraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
+    const QJsonArray &constraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
 
     const int eventFromId = eventFrom.value(STATE_ID).toInt();
     const int eventToId = eventTo.value(STATE_ID).toInt();
@@ -2826,7 +2814,7 @@ void Project::deleteEventConstraint(int constraintId)
     QJsonArray constraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
 
     for (int i=0; i<constraints.size(); ++i) {
-        QJsonObject c = constraints.at(i).toObject();
+        const QJsonObject &c = constraints.at(i).toObject();
         if (c.value(STATE_ID).toInt() == constraintId) {
             constraints.removeAt(i);
             break;
@@ -2843,7 +2831,7 @@ void Project::updateEventConstraint(int constraintId)
     QJsonObject constraint;
     int index = -1;
     for (int i=0; i<constraints.size(); ++i) {
-        QJsonObject c = constraints.at(i).toObject();
+        const QJsonObject &c = constraints.at(i).toObject();
 
         if (c.value(STATE_ID).toInt() == constraintId) {
             constraint = c;
@@ -2874,9 +2862,11 @@ int Project::getUnusedEventConstraintId(const QJsonArray& constraints)
     while (!idIsFree) {
         ++id;
         idIsFree = true;
-        for (int i = 0; i<constraints.size(); ++i) {
-            QJsonObject constraint = constraints.at(i).toObject();
-            if (constraint.value(STATE_ID).toInt() == id) {
+        //for (int i = 0; i<constraints.size(); ++i) {
+          //  QJsonObject constraint = constraints.at(i).toObject();
+        //if (constraint.value(STATE_ID).toInt() == id) {
+        for (const auto &constraint : constraints) {
+            if (constraint.toObject().value(STATE_ID).toInt() == id) {
                 idIsFree = false;
                 break;
             }
@@ -2996,16 +2986,17 @@ void Project::updatePhaseConstraint(const int constraintId)
     }
 }
 
-int Project::getUnusedPhaseConstraintId(const QJsonArray& constraints)
+int Project::getUnusedPhaseConstraintId(const QJsonArray &constraints)
 {
     int id = -1;
     bool idIsFree = false;
     while (!idIsFree) {
         ++id;
         idIsFree = true;
-        for (int i = 0; i<constraints.size(); ++i) {
-            QJsonObject constraint = constraints.at(i).toObject();
-            if (constraint.value(STATE_ID).toInt() == id) {
+        //for (int i = 0; i<constraints.size(); ++i) {
+        //    QJsonObject constraint = constraints.at(i).toObject();
+        for (auto &constraint : constraints) {
+            if (constraint.toObject().value(STATE_ID).toInt() == id) {
                 idIsFree = false;
                 break;
             }
@@ -3065,9 +3056,9 @@ void Project::runChronomodel()
     emit mcmcStarted();
 
     clearModel();
-    mModel = new Model(mState);
+    mModel = std::shared_ptr<ModelCurve>(new ModelCurve(mState));
     mModel->setProject(this);
-    //mModel->fromJson(mState);
+
     bool modelOk = false;
     try {
         // Check if model structure is valid
@@ -3081,7 +3072,8 @@ void Project::runChronomodel()
         message.exec();
     }
     if (modelOk) {
-        MCMCLoopChrono loop(mModel, this);
+        MCMCLoopChrono loop(*this);
+        //MCMCLoopChrono loop(this);
         MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint);
 
         /* --------------------------------------------------------------------
@@ -3104,7 +3096,7 @@ void Project::runChronomodel()
             if (loop.mAbortedReason.isEmpty()) {
                 //Memo of the init variable state to show in Log view
                 //mModel->mLogInit = loop.getChainsLog() + loop.getInitLog();
-                emit mcmcFinished(mModel);
+                emit mcmcFinished();
 
 
             } else {
@@ -3182,8 +3174,9 @@ void Project::runCurve()
     //  using the project state
     // ------------------------------------------------------------------------------------------
     clearModel();
-    mModel = new ModelCurve(mState);
-    mModel->setProject (this);
+    mModel = std::shared_ptr<ModelCurve>(new ModelCurve(mState));
+
+    mModel->setProject(this);
     
     // ------------------------------------------------------------------------------------------
     //  Check if the model is valid
@@ -3206,7 +3199,8 @@ void Project::runCurve()
     // ------------------------------------------------------------------------------------------
     //  Start MCMC for Curve
     // ------------------------------------------------------------------------------------------
-    MCMCLoopCurve loop ((ModelCurve*)mModel, this);
+    //MCMCLoopCurve loop ((ModelCurve*)mModel, this);
+    MCMCLoopCurve loop (*this);
     MCMCProgressDialog dialog (&loop, qApp->activeWindow(), Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint);
 
     /* --------------------------------------------------------------------
@@ -3228,8 +3222,7 @@ void Project::runCurve()
             //Memo of the init variable state to show in Log view
             //mModel->mLogInit = loop.getChainsLog() + loop.getInitLog();
             dialog.setFinishedState();
-            emit mcmcFinished(mModel);
-            //mcmcFinished(mModel);
+            emit mcmcFinished();
 
         } else {
             if (loop.mAbortedReason != ABORTED_BY_USER) {

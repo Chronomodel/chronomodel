@@ -113,14 +113,15 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
 
         //---------------------
 
-        const GraphCurve curve = horizontalSection(qMakePair(bound.mFixed, bound.mFixed),"Bound", Painting::mainColorLight, QBrush(Painting::mainColorLight));
-
+        GraphCurve curve = horizontalSection(qMakePair(bound.mFixed, bound.mFixed),"Bound", Painting::mainColorLight, QBrush(Painting::mainColorLight));
+        curve.mVisible = true;
         graph->add_curve(curve);
 
 
         mThumb = QImage(graph->size(),QImage::Format_ARGB32_Premultiplied);
         graph->render(&mThumb);
         delete graph;
+        graph = nullptr;
 
     } else
         mThumb = QImage();

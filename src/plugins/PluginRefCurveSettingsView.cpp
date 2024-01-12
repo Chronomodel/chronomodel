@@ -60,12 +60,10 @@ mPlugin(plugin)
 
     mAddRefCurveBut = new QPushButton(tr("Add"), this);
     mDeleteRefCurveBut = new QPushButton(tr("Delete"), this);
-//    mOpenBut = new QPushButton(tr("Open"), this);
- //   mOpenBut->setVisible(false);
+
 
     connect(mAddRefCurveBut, &QPushButton::clicked, this, &PluginRefCurveSettingsView::addRefCurve);
     connect(mDeleteRefCurveBut, &QPushButton::clicked, this, &PluginRefCurveSettingsView::deleteRefCurve);
-  //  connect(mOpenBut, &QPushButton::clicked, this, &PluginRefCurveSettingsView::openSelectedFile);
     connect(mRefCurvesList, &QListWidget::itemSelectionChanged, this, &PluginRefCurveSettingsView::updateSelection);
 
     QGridLayout* layout = new QGridLayout();
@@ -221,5 +219,4 @@ void PluginRefCurveSettingsView::updateSelection()
 {
     QList<QListWidgetItem*> selectedItems = mRefCurvesList->selectedItems();
     mDeleteRefCurveBut->setEnabled(selectedItems.size() > 0);
-   // mOpenBut->setEnabled(selectedItems.size() > 0);
 }

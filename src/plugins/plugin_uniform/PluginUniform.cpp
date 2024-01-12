@@ -91,7 +91,7 @@ bool PluginUniform::wiggleAllowed() const
 
 MHVariable::SamplerProposal PluginUniform::getDataMethod() const
 {
-    return MHVariable::eInversion;
+    return MHVariable::eMHSymetric;
 }
 
 QList<MHVariable::SamplerProposal> PluginUniform::allowedDataMethods() const
@@ -244,7 +244,7 @@ QJsonObject PluginUniform::mergeDates(const QJsonArray& dates)
         double Wmin (+INFINITY);
         double Wmax (-INFINITY);
 
-        Project* project = MainWindow::getInstance()->getProject();
+        const auto & project = MainWindow::getInstance()->getProject();
 
         for (auto&& d : dates ) {
             names.append(d.toObject().value(STATE_NAME).toString());

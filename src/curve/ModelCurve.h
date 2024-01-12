@@ -47,7 +47,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QFile>
 
-class ModelCurve: public Model
+class ModelCurve: public std::enable_shared_from_this<ModelCurve>, public Model
 {
 public:
     CurveSettings mCurveSettings;
@@ -62,12 +62,13 @@ public:
     std::vector<PosteriorMeanG> mPosteriorMeanGByChain; // valeurs en tout t par chaine
 
     bool compute_Y, compute_Z, compute_X_only;
+    bool is_curve;
 
 public:
     ModelCurve(QObject *parent = nullptr);
     explicit ModelCurve(const QJsonObject &json, QObject *parent = nullptr);
     virtual ~ModelCurve();
-    
+
     virtual void saveToFile(QDataStream *out);
     virtual void restoreFromFile(QDataStream *in) {return restoreFromFile_v324(in);};
     void restoreFromFile_v323(QDataStream* in);
@@ -75,7 +76,8 @@ public:
 
     virtual QJsonObject toJson() const;
     virtual void fromJson( const QJsonObject &json);
-    
+
+    virtual void generateModelLog();
     virtual void generateResultsLog();
 
     void generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth);

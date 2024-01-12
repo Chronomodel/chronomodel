@@ -39,6 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "Event.h"
 
+#include "CalibrationCurve.h"
 #include "Model.h"
 #include "Date.h"
 #include "Phase.h"
@@ -56,18 +57,21 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QJsonObject>
 
 
-Event::Event(const Model *model):
+//Event::Event(const Model *model):
+Event::Event(std::shared_ptr<Model> model):
     mType (eDefault),
     mId (0),
-    mModel (model),
+    //mModel (model),
     mName ("no Event Name"),
     mIsCurrent (false),
     mIsSelected (false),
     mBetaS02(0.),
     mInitialized (false),
     mLevel (0),
-    mPointType (ePoint)
+    mPointType (ePoint),
+    mMixingCalibrations (nullptr)
 {
+    mModel = model;
     mTheta.mSupport = MetropolisVariable::eBounded;
     mTheta.mFormat = DateUtils::eUnknown;
     mTheta.mSamplerProposal = MHVariable::eDoubleExp;
@@ -111,15 +115,18 @@ Event::Event(const Model *model):
     mW = 0.;
 
    // MHVariable mVg;
-    mVg.mSupport = MetropolisVariable::eRp;
+    mVg.mSupport = MetropolisVariable::eRpStar;
     mVg.mFormat = DateUtils::eNumeric;
     mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
 }
 
-Event::Event (const QJsonObject& json, const Model *model):
-    mModel (model)
+//Event::Event (const QJsonObject& json, const Model *model):
+Event::Event (const QJsonObject& json, std::shared_ptr<Model> model):
+   // mModel (model),
+    mMixingCalibrations (nullptr)
 {
+    mModel = model;
     mType = Type (json.value(STATE_EVENT_TYPE).toInt());
     mId = json.value(STATE_ID).toInt();
     mName = json.value(STATE_NAME).toString();
@@ -139,10 +146,13 @@ Event::Event (const QJsonObject& json, const Model *model):
     mTheta.mSigmaMH = 1.;
 
     mVg.setName("VG of Event : " + mName);
-    mVg.mSupport = MetropolisVariable::eRp;
+    mVg.mSupport = MetropolisVariable::eRpStar;
     mVg.mFormat = DateUtils::eNumeric;
     mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
+    mS02Theta.setName("SO2Theta of Event : " + mName);
+    mS02Theta.mSupport = MetropolisVariable::eRpStar;
+    mS02Theta.mFormat = DateUtils::eNumeric;
 #ifdef S02_BAYESIAN
     mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
 #else
@@ -173,17 +183,6 @@ Event::Event (const QJsonObject& json, const Model *model):
 
 }
 
-/*Event::Event(const Event &event)
-{
-    Event::copyFrom(event);
-}
-*/
-/*Event& Event::operator=(const Event& event)
-{
-    copyFrom(event);
-    return *this;
-}
-*/
 /**
  * @todo Check the copy of the color if mJson is not set
  */
@@ -1067,8 +1066,12 @@ double Event::getThetaMax(double defaultValue)
     return max;
 }
 
-void Event::updateTheta(const double tmin, const double tmax)
+void Event::updateTheta_v3(const double tmin, const double tmax)
 {
+    for (auto&& date : mDates )   {
+        date.updateDate(this);
+    }
+
     const double min = getThetaMin(tmin);
     const double max = getThetaMax(tmax);
     //qDebug() << "----------->      in Event::updateTheta(): Event update : " << this->mName << " : " << this->mTheta.mX << " between" << "[" << min << " ; " << max << "]";
@@ -1142,21 +1145,353 @@ void Event::updateTheta(const double tmin, const double tmax)
 
 }
 
-void Event::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+
+void Event::updateTheta_v4(const double tmin, const double tmax, const double rate_theta)
+{
+    double rapport;
+
+   for (auto&& date : mDates )   {
+       date.updateDate(this);
+   }
+
+    const double min = getThetaMin(tmin);
+    const double max = getThetaMax(tmax);
+    //qDebug() << "----------->      in Event::updateTheta(): Event update : " << this->mName << " : " << this->mTheta.mX << " between" << "[" << min << " ; " << max << "]";
+
+    if (min >= max)
+        throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(mName, QString::number(min), QString::number(max));
+
+    // -------------------------------------------------------------------------------------------------
+    //  Evaluer theta.
+    //  Le cas Wiggle est inclus ici car on utilise une formule générale.
+    //  On est en "wiggle" si au moins une des mesures a un delta > 0.
+    // -------------------------------------------------------------------------------------------------
+    // tirage de theta
+    const double mu = 1;
+    const double u = Generator::randomUniform();
+    double sum_p = 0.;
+    double sum_t = 0.;
+
+    for (auto&& date: mDates) {
+        const double variance  = pow(date.mSigmaTi.mX, 2.);
+        sum_t += (date.mTi.mX + date.mDelta) / variance;
+        sum_p += 1. / variance;
+    }
+    const double ti_avg = sum_t / sum_p;
+    const double sigma = 1. / sqrt(sum_p);
+
+    double theta_try ;
+    if (u > mu) { // Q1
+
+        const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), mMixingCalibrations->mRepartition);
+        theta_try  = mMixingCalibrations->mTmin + idx * mMixingCalibrations->mStep;
+//qDebug()<<"Mixing theta_try= "<< theta_try;
+
+    } else { //Q2
+        // -- gaussian
+
+        theta_try = Generator::gaussByDoubleExp(ti_avg, sigma, min, max);
+    }
+
+    //qDebug()<<"theta_try="<< theta_try;
+
+    // Calcul rapport MH
+
+
+    if (theta_try >= min && theta_try <= max) {
+
+        const double q2_old = mMixingCalibrations->interpolate(mTheta.mX);
+        const double q2_new = mMixingCalibrations->interpolate(theta_try);
+
+        const double q1_new = dnorm(theta_try, ti_avg, sigma);
+        const double q1_old = dnorm(mTheta.mX, ti_avg, sigma);
+
+        const double rapport_Q = (mu * q1_old + (1 - mu) * q2_old) / (mu * q1_new + (1 - mu) * q2_new);
+        const double rapport_P = q1_new / q1_old;
+        rapport = rapport_P * rapport_Q;
+        //qDebug()<<"theta_try="<< theta_try<<"rate="<< rapport;
+
+    } else {
+        rapport = -1.;
+    }
+//qDebug()<<"theta_try="<< theta_try<<"rate="<< rapport;
+    mTheta.tryUpdate(theta_try, rapport*rate_theta);
+
+
+}
+
+
+/*
+void Event::updateTheta_v41(const double tmin, const double tmax, const double rate_theta)
+{
+
+    double rapport;
+
+    for (auto&& date : mDates )   {
+        date.updateDelta(this); // à faire avec xi
+        date.updateWiggle();
+    }
+
+    // màj sigma
+    for (auto&& date : mDates )   {
+        date.updateSigma_v4(this);
+    }
+
+
+    const double min = getThetaMin(tmin);
+    const double max = getThetaMax(tmax);
+    //qDebug() << "----------->      in Event::updateTheta(): Event update : " << this->mName << " : " << this->mTheta.mX << " between" << "[" << min << " ; " << max << "]";
+
+    if (min >= max)
+        throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(mName, QString::number(min), QString::number(max));
+
+    // -------------------------------------------------------------------------------------------------
+    //  Evaluer theta.
+    //  Le cas Wiggle est inclus ici car on utilise une formule générale.
+    //  On est en "wiggle" si au moins une des mesures a un delta > 0.
+    // -------------------------------------------------------------------------------------------------
+    // tirage de theta
+    const double mu = 0.999;
+    const double u1 = Generator::randomUniform();
+    const double t_mid = (mMixingCalibrations->mTmax + mMixingCalibrations->mTmin)/ 2.;
+    const double s_p = (mMixingCalibrations->mTmax - mMixingCalibrations->mTmin)/ 2.;
+
+    double theta_try ;
+    if (u1 < mu) { // tiNew always in the study period
+        theta_try  = sample_in_repartition(mMixingCalibrations, min, max);
+
+    } else {
+        // -- gaussian
+        theta_try = Generator::gaussByBoxMuller(t_mid, s_p);
+    }
+
+
+    //const double theta_try  = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
+
+    qDebug()<<"theta_try="<< theta_try;
+    double rapport_G = 1.;
+
+    if (theta_try >= min && theta_try <= max) {
+        for (auto&& date : mDates )   {
+            auto ti1 = date.xi_current + theta_try;
+            auto ti2 = date.xi_current + mTheta.mX;
+            auto ri1 = date.mCalibration->interpolate(date.xi_current + theta_try);
+            auto ri2 = date.mCalibration->interpolate(date.xi_current + mTheta.mX);
+            //qDebug()<<"ti1="<< ti1<<" ri1="<<ri1<<"ti2="<<ti2<<"ri2="<< ri2;
+
+            rapport_G *= date.mCalibration->interpolate(date.xi_current + theta_try) / date.mCalibration->interpolate(date.xi_current + mTheta.mX);
+            //rapport *= date.getLikelihood(date.xi_current*date.mSigmaTi.mX + theta_try) / date.getLikelihood(date.xi_current*date.mSigmaTi.mX + mTheta.mX);
+        }
+        // si sample répartition
+        auto i1 = mMixingCalibrations->interpolate(mTheta.mX);
+        auto i2 = mMixingCalibrations->interpolate(theta_try);
+
+        double q1_old = mMixingCalibrations->interpolate(mTheta.mX);
+        double q1_new = mMixingCalibrations->interpolate(theta_try);
+
+        const double q2_new =  dnorm(theta_try, t_mid, s_p);// exp(-0.5* pow((theta_try - t_mid)/ s_p, 2)) / (s_p*sqrt(2*M_PI));
+        const double q2_old = dnorm(mTheta.mX, t_mid, s_p);//exp(-0.5* pow((mTheta.mX - t_mid)/ s_p, 2)) / (s_p*sqrt(2*M_PI));
+
+        const double rapport_Q = (mu * q1_old + (1. - mu) * q2_old) / (mu * q1_new + (1. - mu) * q2_new);
+
+        rapport = rapport_G * rapport_Q;
+        qDebug()<<"theta_try="<< theta_try<<"rate="<< rapport;
+
+    } else {
+        rapport = -1.;
+    }
+
+    mTheta.tryUpdate(theta_try, rapport*rate_theta);
+
+    for (auto&& date : mDates )   {
+        //date.updateSigma_v4(this);
+        date.updateDelta(this);
+        date.updateWiggle();
+
+        //date.updateTi_v4(this);
+    }
+
+
+    for (auto&& date : mDates )   {
+        const double xi_try  = Generator::gaussByBoxMuller(0., 1.);
+        const double ti_try = xi_try  + mTheta.mX - date.mDelta;
+
+        const auto ti_revalued = date.xi_current  + mTheta.mX - date.mDelta;
+
+        const double rapport_exp = dnorm(date.xi_current, 0., date.mSigmaTi.mX) / dnorm(xi_try, 0., date.mSigmaTi.mX);
+
+        const double rapport = rapport_exp * date.mCalibration->interpolate(ti_try) / date.mCalibration->interpolate(ti_revalued);
+
+        if (rapport < 1.) {
+            const double uniform = Generator::randomUniform();
+            date.xi_current = (uniform <= rapport)? xi_try : date.xi_current;
+        }
+
+        date.mTi.mX =  date.xi_current  + mTheta.mX - date.mDelta; //((date.mTi.mX + date.mDelta) - mTheta.mX ) / date.mSigmaTi.mX = xi;
+        date.mTi.mLastAccepts.append(true);
+        // date.updateTi_v4(this);
+    }
+
+}
+
+void Event::updateTheta_v42(const double tmin, const double tmax, const double rate_theta)
+{
+
+    double rapport;
+
+
+    double sum_p = 0.;
+    double sum_t = 0.;
+
+    for (auto&& date: mDates) {
+        const double variance  = pow(date.mSigmaTi.mX, 2.);
+        sum_t += (date.mTi.mX + date.mDelta) / variance;
+        sum_p += 1. / variance;
+    }
+    const double theta_avg = sum_t / sum_p;
+    const double sigma_avg = 1. / sqrt(sum_p);
+
+    //const double x_event_current = (mTheta.mX - theta_avg)/sigma_avg;
+
+    for (auto&& date : mDates )   {
+        date.updateDelta(this); // à faire avec xi
+        date.updateWiggle();
+    }
+
+
+
+    // -------------------------------------------------------------------------------------------------
+    //  Evaluer theta.
+    //  Le cas Wiggle est inclus ici car on utilise une formule générale.
+    //  On est en "wiggle" si au moins une des mesures a un delta > 0.
+    // -------------------------------------------------------------------------------------------------
+    // tirage de theta
+
+    const double min = getThetaMin(tmin);
+    const double max = getThetaMax(tmax);
+    //qDebug() << "----------->      in Event::updateTheta(): Event update : " << this->mName << " : " << this->mTheta.mX << " between" << "[" << min << " ; " << max << "]";
+
+    if (min >= max)
+        throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(mName, QString::number(min), QString::number(max));
+
+    const double x_try  = Generator::gaussByBoxMuller(0., 1.);
+    const double theta_try = x_try*sigma_avg + theta_avg;
+
+    if (min <= theta_try && theta_try<= max) {
+        rapport = 1.;
+
+    } else {
+        rapport =-1.;
+    }
+
+
+    mTheta.tryUpdate(theta_try, rapport*rate_theta);
+
+    for (auto&& date : mDates )   {
+        date.updateSigma_v4(this);
+        date.updateDelta(this);
+        date.updateWiggle();
+
+
+        //double ti = sample_in_repartition(date.mCalibration, date.mCalibration->mTmin, date.mCalibration->mTmax);
+
+
+        const double tiNew = Generator::gaussByBoxMuller(mTheta.mX - date.mDelta, date.mSigmaTi.mX);
+        rapport = date.getLikelihood(tiNew) / date.getLikelihood(date.mTi.mX);
+        rapport *= exp(-0.5 *(pow(tiNew - mTheta.mX, 2.) - pow(date.mTi.mX - mTheta.mX, 2.))/pow(date.mSigmaTi.mX, 2.));
+
+        date.mTi.tryUpdate(tiNew, rapport);
+        //date.mTi.mLastAccepts.append(true);
+        //date.updateTi(this);
+
+    }
+
+
+}
+*/
+
+/**
+ * @brief Event::generate_mixingCalibration  Creation of the cumulative date distribution
+ */
+/*
+void Event::generate_mixingCalibration()
+{
+    if (mMixingCalibrations != nullptr) {
+        mMixingCalibrations->~CalibrationCurve();
+    }
+
+    if (mDates.size() == 1) {
+        mMixingCalibrations = new CalibrationCurve(*mDates.at(0).mCalibration);
+        mMixingCalibrations->mDescription = QString("Mixing Calibrations of Event %1").arg(mName);
+        mMixingCalibrations->mPlugin = nullptr;
+        mMixingCalibrations->mPluginId = "";
+
+    } else {
+
+        mMixingCalibrations = new CalibrationCurve();
+        mMixingCalibrations->mName = QString("Mixing Calibrations of Event %1").arg(mName);
+        mMixingCalibrations->mDescription = QString("Mixing Calibrations of Event %1").arg(mName);
+        mMixingCalibrations->mPlugin = nullptr;
+        mMixingCalibrations->mPluginId = "";
+
+        // 1 - Search for tmin and tmax, distribution curves, identical to the calibration.
+        double unionTmin = +INFINITY;
+        double unionTmax = -INFINITY;
+        double unionStep = INFINITY;
+
+        for (auto&& d : mDates) {
+            if (d.mCalibration != nullptr && !d.mCalibration->mVector.isEmpty() ) {
+                unionTmin = std::min(unionTmin, d.mCalibration->mTmin);
+                unionTmax = std::max(unionTmax, d.mCalibration->mTmax);
+                unionStep = std::min(unionStep, d.mCalibration->mStep);
+
+            }
+
+        }
+        // 2 - Creation of the cumulative distribution curves in the interval
+
+        mMixingCalibrations->mTmin = unionTmin;
+        mMixingCalibrations->mTmax = unionTmax;
+        mMixingCalibrations->mStep = unionStep;
+
+        double t = unionTmin;
+        long double sum = 0.;
+        long double sum_old = 0.;
+        const double n = mDates.size();
+        while (t <= unionTmax) {
+            sum= 0.;
+            for (auto&& d : mDates) {
+                sum += d.mCalibration->repartition_interpolate(t);
+            }
+            mMixingCalibrations->mVector.push_back((sum - sum_old)/(unionStep*n));
+            mMixingCalibrations->mRepartition.push_back(sum/n);
+            t += unionStep;
+            sum_old = sum;
+        }
+
+        mMixingCalibrations->mMap = vector_to_map(mMixingCalibrations->mVector, unionTmin, unionTmax, unionStep);
+    }
+
+}
+*/
+
+
+
+void Event::generateHistos(const QList<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
     if (type() != Event::eBound)
         mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 
     else {
         Bound* ek = dynamic_cast<Bound*>(this);
-            // Nothing todo : this is just a Dirac !
-            ek->mTheta.mFormatedHisto.clear();
-            ek->mTheta.mChainsHistos.clear();
+        // Nothing todo : this is just a Dirac !
+        ek->mTheta.mFormatedHisto.clear();
+        ek->mTheta.mChainsHistos.clear();
 
-            ek->mTheta.mFormatedHisto.insert(ek->mFixed,1);
-            //generate fictifious chains
-            for (int i =0 ;i<chains.size(); ++i)
-                ek->mTheta.mChainsHistos.append(ek->mTheta.mFormatedHisto);
+        ek->mTheta.mFormatedHisto.insert(ek->mFixed,1);
+        //generate fictifious chains
+        for (int i =0 ;i<chains.size(); ++i)
+            ek->mTheta.mChainsHistos.append(ek->mTheta.mFormatedHisto);
     }
 }
 
@@ -1258,7 +1593,7 @@ double Event::h_S02(const double S02)
 
 }
 
-std::vector<double> get_vector(const std::function <double (Event*)> &fun, const QList<Event *> &events)
+std::vector<double> get_vector(const std::function<double (Event*)> &fun, const QList<Event*> &events)
 {
     std::vector<double> vec (events.size());
     std::transform(events.begin(), events.end(), vec.begin(), fun);

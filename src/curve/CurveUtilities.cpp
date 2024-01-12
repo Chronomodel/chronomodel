@@ -1963,19 +1963,19 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const 
 
     if (doY) {
         auto Y_err = vec_Y_err.begin();
-        for (auto X_err : vec_X_err) {
+        for (auto& X_err : vec_X_err) {
             const double Sy = pow(X_err, -2.) + pow(*Y_err++, -2.) ;
             W_1.push_back(2./Sy);
         }
     } else if (doYZ) {
         auto Y_err = vec_Y_err.begin();
         auto Z_err = vec_Z_err.begin();
-        for (auto X_err : vec_X_err) {
+        for (auto& X_err : vec_X_err) {
             const double Sy = pow(X_err, -2.) + pow(*Y_err++, -2.) + pow(*Z_err++, -2.) ;
             W_1.push_back(3./Sy);
         }
     } else {
-        for (auto X_err : vec_X_err) {
+        for (auto& X_err : vec_X_err) {
             W_1.push_back(pow(X_err, 2.));
         }
     }
@@ -2460,7 +2460,7 @@ double var_residual(const std::vector<double> &vec_Y, const SplineMatrices &matr
 
 }
 
-std::vector<double> general_residual(const std::vector<double>& vec_Y,  const SplineMatrices& matrices, const std::vector<double>& vecH, const double lambda)
+std::vector<double> general_residual(const std::vector<double> &vec_Y,  const SplineMatrices &matrices, const std::vector<double> &vecH, const double lambda)
 {
     const double N = matrices.diagWInv.size();
 
@@ -2478,28 +2478,27 @@ std::vector<double> general_residual(const std::vector<double>& vec_Y,  const Sp
     const std::vector<double> &matA = calculMatInfluence_origin(matrices, 1, decomp, lambda);
 
     // Nombre de degré de liberté
-    auto DLEc = 1 - std::accumulate(matA.begin(), matA.end(), 0.) /N;
+    const auto DLEc = 1 - std::accumulate(matA.begin(), matA.end(), 0.) /N;
     // 1 - calcul de sigma2 star
-    double sum_w = 0.;
+    /*double sum_w = 0.;
     for (auto& w_1 : matrices.diagWInv) {
         sum_w += 1./w_1;
     }
     sum_w /= (double)matrices.diagWInv.size() ;
-
-    double sig2 = var_residual(vec_Y, matrices, vecH, lambda)*sum_w;
+    */
+   /* double sig2 = var_residual(vec_Y, matrices, vecH, lambda)*sum_w;
     for (int i = 0 ; i < N; i++) {
         sig2 +=  pow( vec_Y[i] - s.vecG.at(i), 2) /matrices.diagWInv.at(i);
     }
+   */
 
     // 2- calcul des ri star
-
 
     double sigma = 1;//sqrt(var);
     std::vector<double> g_res;
     for (int i = 0 ; i < N; i++) {
         g_res.push_back(  ( vec_Y[i] - s.vecG.at(i))/ (sigma*sqrt(matrices.diagWInv.at(i))*sqrt(DLEc)) );
     }
-
 
     return g_res;
 }

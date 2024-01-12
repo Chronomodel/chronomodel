@@ -70,7 +70,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <assert.h>
 
-ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):
+ModelView::ModelView(std::shared_ptr<Project> &project, QWidget* parent, Qt::WindowFlags flags):
     QWidget(parent, flags),
     mEventsScene(nullptr),
     mCurSearchIdx(0),
@@ -78,7 +78,7 @@ ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):
     mCurrentRightWidget(nullptr),
     mTmin(0.),
     mTmax(2000.),
-    mProject(nullptr),
+    mProject(project),
     mSplitProp(0.6),
     mHandlerW ( int (0.25 *AppSettings::widthUnit())),
     mIsSplitting(false),
@@ -114,7 +114,7 @@ ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):
 
   // mButModifyPeriod->setStyleSheet("QPushButton:active {background-color: rgb(230, 230, 230); border: none;}  "); // bug QT 5.15
     //ButCurve = new SwitchWidget(this);
-    mButCurve = new Button(tr("Curve Building :"), mTopWrapper);
+    mButCurve = new Button(tr("ChronoCurve :"), mTopWrapper);
     mButCurve->setToolTip(tr("Define curve parameters"));
     mButCurve->setFlatHorizontal();
     mButCurve->setCheckable(true);
@@ -330,11 +330,15 @@ ModelView::~ModelView()
 
 }
 
-void ModelView::setProject(Project* project)
+void ModelView::setProject(std::shared_ptr<Project> &project)
 {
     assert(project != nullptr);
 
-    const bool projectExist = (mProject ? true : false);
+    const bool projectExist = (mProject!=nullptr ? true : false);
+
+    if (projectExist) {
+        disconnectScenes();
+    }
     mProject = project;
 
     mPhasesScene->setProject(mProject);
@@ -342,13 +346,14 @@ void ModelView::setProject(Project* project)
 
     mCurveSettingsView->setProject(mProject);
     updateCurveButton();
+    connectScenes();
 
-    if (mProject && !projectExist) {
+    /*if (mProject!=nullptr && !projectExist) {
         connectScenes();
 
     } else if (projectExist && !mProject) {
         disconnectScenes();
-    }
+    }*/
 
     // if there is no phase, we must show all events
     //const QJsonArray phases = mProject->state().value(STATE_PHASES).toArray();
@@ -375,7 +380,6 @@ void ModelView::setProject(Project* project)
 
     mEventPropertiesView->initEvent();
 
-    //mMultiCalibrationView->updateGraphList();
     applyAppSettings(); // do phase->update()
 }
 
@@ -416,7 +420,7 @@ void ModelView::connectScenes()
    // connect(mButDeleteEvent, &Button::clicked, mProject, &Project::deleteSelectedEvents);
     connect(mButDeleteEvent, static_cast<void (Button::*)(bool)> (&Button::clicked), mEventsScene, &EventsScene::deleteSelectedItems);
 
-    connect(mButRecycleEvent, static_cast<void (Button::*)(bool)> (&Button::clicked), mProject, &Project::recycleEvents);
+    connect(mButRecycleEvent, static_cast<void (Button::*)(bool)> (&Button::clicked), mProject.get(), &Project::recycleEvents);
     connect(mButEventsGlobalView, &Button::toggled, mEventsGlobalView, &SceneGlobalView::setVisible);
     connect(mButEventsGlobalView, &Button::toggled, mEventsSearchEdit, &QLineEdit::setVisible);
     connect(mEventsSearchEdit, &QLineEdit::returnPressed, this, &ModelView::searchEvent);
@@ -440,17 +444,17 @@ void ModelView::connectScenes()
     connect(mPhasesScene, &PhasesScene::phasesAreSelected, mEventsScene, &EventsScene::phasesSelected);
 
     // Project::currentEventChanged come from Project::deleteSelectedEvents() and EventsScene::updateSceneFromState()
-    connect(mProject, &Project::currentEventChanged, mEventPropertiesView, &EventPropertiesView::setEvent);
+    connect(mProject.get(), &Project::currentEventChanged, mEventPropertiesView, &EventPropertiesView::setEvent);
 
     // Properties View
-    connect(mEventPropertiesView, &EventPropertiesView::combineDatesRequested, mProject, &Project::combineDates);
-    connect(mEventPropertiesView, &EventPropertiesView::splitDateRequested, mProject, &Project::splitDate);
+    connect(mEventPropertiesView, &EventPropertiesView::combineDatesRequested, mProject.get(), &Project::combineDates);
+    connect(mEventPropertiesView, &EventPropertiesView::splitDateRequested, mProject.get(), &Project::splitDate);
     connect(mEventPropertiesView, &EventPropertiesView::updateCalibRequested, this, &ModelView::updateCalibration);
     connect(mEventPropertiesView, &EventPropertiesView::showCalibRequested, this, &ModelView::showCalibration);
 
     connect(mButMultiCalib,   static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ModelView::showMultiCalib);
     mMultiCalibrationView->setProject(mProject);
-    connect(mProject, &Project::projectStateChanged, this, &ModelView::updateMultiCalibrationAndEventProperties);
+    connect(mProject.get(), &Project::projectStateChanged, this, &ModelView::updateMultiCalibrationAndEventProperties);
 
     connect(mButCurve, &Button::toggled, MainWindow::getInstance(), &MainWindow::toggleCurve);
 }
@@ -461,7 +465,7 @@ void ModelView::disconnectScenes()
     disconnect(mButNewEventKnown, &Button::clicked, this, &ModelView::createEventKnownInPlace);
     disconnect(mButDeleteEvent,  static_cast<void (Button::*)(bool)> (&Button::clicked), mEventsScene, &EventsScene::deleteSelectedItems);
 
-    disconnect(mButRecycleEvent, &Button::clicked, mProject, &Project::recycleEvents);
+    disconnect(mButRecycleEvent, &Button::clicked, mProject.get(), &Project::recycleEvents);
     disconnect(mButEventsGlobalView, &Button::toggled, mEventsGlobalView, &SceneGlobalView::setVisible);
     disconnect(mButEventsGlobalView, &Button::toggled, mEventsSearchEdit, &QLineEdit::setVisible);
     disconnect(mEventsSearchEdit, &QLineEdit::returnPressed, this, &ModelView::searchEvent);
@@ -485,10 +489,10 @@ void ModelView::disconnectScenes()
     disconnect(mPhasesScene, &PhasesScene::noSelection, mEventsScene, &EventsScene::noHide);
     disconnect(mPhasesScene, &PhasesScene::phasesAreSelected, mEventsScene, &EventsScene::phasesSelected);
 
-    disconnect(mProject, &Project::currentEventChanged, mEventPropertiesView, &EventPropertiesView::setEvent);
+    disconnect(mProject.get(), &Project::currentEventChanged, mEventPropertiesView, &EventPropertiesView::setEvent);
     // Properties View
-    disconnect(mEventPropertiesView, &EventPropertiesView::combineDatesRequested, mProject, &Project::combineDates);
-    disconnect(mEventPropertiesView, &EventPropertiesView::splitDateRequested, mProject, &Project::splitDate);
+    disconnect(mEventPropertiesView, &EventPropertiesView::combineDatesRequested, mProject.get(), &Project::combineDates);
+    disconnect(mEventPropertiesView, &EventPropertiesView::splitDateRequested, mProject.get(), &Project::splitDate);
     disconnect(mEventPropertiesView, &EventPropertiesView::updateCalibRequested, this, &ModelView::updateCalibration);
     disconnect(mEventPropertiesView, &EventPropertiesView::showCalibRequested, this, &ModelView::showCalibration);
 
@@ -496,7 +500,7 @@ void ModelView::disconnectScenes()
 
 }
 
-Project* ModelView::getProject() const
+std::shared_ptr<Project> &ModelView::getProject()
 {
    return  mProject;
 }
@@ -518,11 +522,12 @@ void ModelView::resetInterface()
 
   //  noEventSelected();
     disconnectScenes();
-    mProject = nullptr;
+   // mProject = nullptr;
     mEventsScene->clean();
     mPhasesScene->clean();
     mCalibrationView->setDate(QJsonObject());
 
+    mMultiCalibrationView->setVisible(false);
     mMultiCalibrationView->setProject(mProject);
 
     mEventPropertiesView->initEvent();
@@ -651,7 +656,7 @@ void ModelView::calibrateAll(StudyPeriodSettings newS)
                 for (auto&& date : listDates) {
                     Date d (date.toObject());
                     d.autoSetTiSampler(true);
-                    d.calibrate(newS, mProject, true);
+                    d.calibrate(newS, *mProject, true);
 
                     ++position;
                     progress->setValue(position);
@@ -696,7 +701,7 @@ void ModelView::updateCurveButton()
     QJsonObject state = mProject->state();
 
     const CurveSettings cs (state.value(STATE_CURVE).toObject());
-    mButCurve->setText(tr("Curve Building : ") + cs.processText());
+    mButCurve->setText(tr("ChronoCurve : ") + cs.processText());
 }
 
 /**
@@ -1389,7 +1394,7 @@ void ModelView::updateCalibration(const QJsonObject &date)
     if (!date.isEmpty() ) {
         Date d (date);
         if (d.mCalibration == nullptr)
-            d.calibrate(StudyPeriodSettings::fromJson(mProject->state().value(STATE_SETTINGS).toObject()), mProject, true);
+            d.calibrate(StudyPeriodSettings::fromJson(mProject->state().value(STATE_SETTINGS).toObject()), *mProject, true);
 
         // A date has been double-clicked => update CalibrationView only if the date is not null
         if (mEventPropertiesView->isVisible() && mEventPropertiesView->isCalibChecked())

@@ -231,12 +231,12 @@ public:
 
     // This method is used to recreate all curves in mGraph.
     // It is vitual because we want a different behavior in sub-classes (GraphViewDate, GraphViewEvent and GraphViewPhase)
-    virtual void generateCurves(const graph_t typeGraph, const QVector<variable_t> &variableList, const Model* model = nullptr);
+    virtual void generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList);
 
     // This method is used to update visible existing curves in mGraph.
     // It is vitual because we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
     //virtual void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
-    virtual void updateCurvesToShow(bool showAllChains, const QList<bool> &showChainList, const QVector<variable_t> &showVariableList);
+    virtual void updateCurvesToShow(bool showAllChains, const QList<bool> &showChainList, const QList<variable_t> &showVariableList);
 
 
     inline void changeYScaleDivision(const Scale &sc) const {mGraph->setYScaleDivision(sc);};

@@ -58,19 +58,19 @@ class ProjectView: public QWidget
 {
     Q_OBJECT
 public:
-    ProjectView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
+    ProjectView(std::shared_ptr<Project> &project, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~ProjectView();
 
     void setScreenDefinition();
     void resizeEvent(QResizeEvent* e);
 
-    void setProject(Project* project);
+    void setProject(std::shared_ptr<Project> &project);
     
     void resetInterface();
 
     void readSettings();
     void writeSettings();
-   // void setFont(const QFont &font);
+
     void newPeriod();
 
     void updateMultiCalibrationAndEventProperties();
@@ -79,7 +79,7 @@ public:
     void setShowAllThumbs(bool show) {mModelView->setShowAllThumbs(show);}
 
 public slots:
-    void initResults(Model*);
+    void initResults(std::shared_ptr<ModelCurve> model);
     void updateResults();
     void updateProject();
     void showModel();
@@ -89,8 +89,8 @@ public slots:
     void showLog();
     void showHelp(bool show);
 
-    void applySettings(Model* model);
-    void applyFilesSettings(Model* model);
+    void applySettings(std::shared_ptr<ModelCurve> &model);
+    void applyFilesSettings(std::shared_ptr<ModelCurve> &model);
     void updateResultsLog(const QString& log);
     
     void toggleCurve(bool toggle);

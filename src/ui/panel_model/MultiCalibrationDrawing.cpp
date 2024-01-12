@@ -91,8 +91,10 @@ MultiCalibrationDrawing::~MultiCalibrationDrawing()
 void MultiCalibrationDrawing::setGraphList(QList<GraphViewAbstract*> &list)
 {
     if (!mListCalibGraph.isEmpty()) {
-        for(auto&& graph : mListCalibGraph)
+        for(auto&& graph : mListCalibGraph) {
             delete graph;
+            graph = nullptr;
+        }
     }
     mListCalibGraph.clear();
 
@@ -109,8 +111,10 @@ void MultiCalibrationDrawing::setGraphList(QList<GraphViewAbstract*> &list)
 void MultiCalibrationDrawing::setEventsColorList(QList<QColor> &colorList)
 {
     mListEventsColor = colorList;
-    for (auto&& panel : mListBar)
+    for (auto&& panel : mListBar) {
         delete panel;
+        panel = nullptr;
+    }
 
     mListBar.clear();
     for (auto&& color : mListEventsColor) {

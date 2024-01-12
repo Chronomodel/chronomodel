@@ -108,6 +108,7 @@ void PluginTLRefView::setDate(const Date& date, const StudyPeriodSettings& setti
                  *  Reference curve
                  * ---------------------------------------------- */
                 GraphCurve curve;
+                curve.mVisible = true;
                 curve.mName = "Reference";
                 curve.mPen.setColor(Painting::mainColorDark);
                 //curve.mIsHisto = false;
@@ -135,6 +136,7 @@ void PluginTLRefView::setDate(const Date& date, const StudyPeriodSettings& setti
                  * ---------------------------------------------- */
 
                 GraphCurve curveMeasure;
+                curveMeasure.mVisible = true;
                 curveMeasure.mName = "Measurement";
 
                 curveMeasure.mPen.setColor(mMeasureColor);
@@ -142,8 +144,7 @@ void PluginTLRefView::setDate(const Date& date, const StudyPeriodSettings& setti
                 curveColor.setAlpha(50);
                 curveMeasure.mBrush = curveColor;
                 curveMeasure.mType = GraphCurve::CurveType::eVerticalQMap;
-                //curveMeasure.mIsVertical = true;
-                //curveMeasure.mIsHisto = false;
+
 
                 /* 5000 pts are used on vertical measurement
                  * because the y scale auto adjusts depending on x zoom.
@@ -169,18 +170,21 @@ void PluginTLRefView::setDate(const Date& date, const StudyPeriodSettings& setti
                  * ---------------------------------------------- */
 
                 GraphCurve curveMeasureAvg;
+                curveMeasureAvg.mVisible = true;
                 curveMeasureAvg.mName = "MeasureAvg";
                 curveMeasureAvg.mPen.setColor(mMeasureColor);
                 curveMeasureAvg.mPen.setStyle(Qt::SolidLine);
                 curveMeasure.mType = GraphCurve::CurveType::eHorizontalLine;
 
                 GraphCurve curveMeasureSup;
+                curveMeasureSup.mVisible = true;
                 curveMeasureSup.mName = "MeasureSup";
                 curveMeasureSup.mPen.setColor(mMeasureColor);
                 curveMeasureSup.mPen.setStyle(Qt::DashLine);
                 curveMeasureSup.mType = GraphCurve::CurveType::eHorizontalLine;      
 
                 GraphCurve curveMeasureInf;
+                curveMeasureInf.mVisible = true;
                 curveMeasureInf.mName = "MeasureInf";
                 curveMeasureInf.mPen.setColor(mMeasureColor);
                 curveMeasureInf.mPen.setStyle(Qt::DashLine);

@@ -152,6 +152,7 @@ private:
 
     DatesList* mDatesList;
     QList<Button*> mPluginButs;
+    //QList<std::unique_ptr<Button>> mPluginButs;
 
     Button* mDeleteBut;
     Button* mRecycleBut;

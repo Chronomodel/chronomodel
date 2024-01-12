@@ -163,6 +163,7 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     //qDebug() <<"DoubleExp : exp_x_min = "<<exp_x_min;
     //qDebug() << "exp(10 000=="<<exp((long double)(1000));
     //qDebug() << "DOUBLE EXP DoubleExp : errno apres = "<<strerror(errno);
+#ifdef DEBUG
     if (errno != 0) {
         qDebug() << "DOUBLE EXP : errno apres exp_minus_x_max = "<<strerror(errno);
         qDebug() <<"DoubleExp : mean = "<< mean<<" min="<<min<<" max="<<max<<" sigma"<<sigma;
@@ -170,6 +171,7 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
 
         errno=0;
     }
+#endif
     double ur = 1.0;
     long double rap = 0.0;
 

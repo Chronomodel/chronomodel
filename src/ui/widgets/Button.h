@@ -55,8 +55,9 @@ public:
 
     Button(QWidget* parent = nullptr);
     Button(const QString& text, QWidget* parent = nullptr);
+    Button(const Button &button, QWidget* parent = nullptr);
     ~Button();
-    void init();
+    //void init();
 
     void setFlatVertical();
     void setFlatHorizontal();

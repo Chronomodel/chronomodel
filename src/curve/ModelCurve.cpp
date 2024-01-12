@@ -157,6 +157,9 @@ void ModelCurve::settings_from_Json(const QJsonObject &json)
                      mCurveSettings.mProcessType == CurveSettings::eProcess_Inclination ||
                      mCurveSettings.mProcessType == CurveSettings::eProcess_Declination ||
                      mCurveSettings.mProcessType == CurveSettings::eProcess_Field;
+
+    is_curve = mCurveSettings.mProcessType != CurveSettings::eProcess_None;
+
 }
 
 // Date files read / write
@@ -521,35 +524,49 @@ void ModelCurve::updateFormatSettings()
 {
     Model::updateFormatSettings();
 
-    for (Event* &event : mEvents)
-        event->mVg.setFormat(DateUtils::eNumeric);
+    if (is_curve) {
+        for (Event* &event : mEvents)
+            event->mVg.setFormat(DateUtils::eNumeric);
 
-    mLambdaSpline.setFormat(DateUtils::eNumeric);
-    mS02Vg.setFormat(DateUtils::eNumeric);
+        mLambdaSpline.setFormat(DateUtils::eNumeric);
+        mS02Vg.setFormat(DateUtils::eNumeric);
+    }
+}
+
+/**
+ * @brief Model::generateModelLog
+ * @return Return a QString with the recall of the Model with the data MCMC Methode, and constraint
+ */
+void ModelCurve::generateModelLog()
+{
+    mLogModel = ModelUtilities::modelDescriptionHTML(shared_from_this());
 }
 
 void ModelCurve::generateResultsLog()
 {
     Model::generateResultsLog();
+    if (is_curve) {
+        QString log;
+        log += ModelUtilities::curveResultsHTML(shared_from_this());
+        log += "<hr>";
 
-    QString log;
-    log += ModelUtilities::curveResultsHTML(this);
-    log += "<hr>";
-
-    mLogResults += log;
+        mLogResults += log;
+    }
 }
 
 void ModelCurve::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth)
 {
     Model::generatePosteriorDensities(chains, fftLen, bandwidth);
+    if (is_curve) {
+        for (Event* &event : mEvents) {
+            event->mVg.generateHistos(chains, fftLen, bandwidth);
+        }
 
-    for (Event* &event : mEvents) {
-        event->mVg.generateHistos(chains, fftLen, bandwidth);
+        mLambdaSpline.generateHistos(chains, fftLen, bandwidth);
+
+        mS02Vg.generateHistos(chains, fftLen, bandwidth);
     }
 
-    mLambdaSpline.generateHistos(chains, fftLen, bandwidth);
-
-    mS02Vg.generateHistos(chains, fftLen, bandwidth);
 }
 
 void ModelCurve::generateCorrelations(const QList<ChainSpecs> &chains)
@@ -560,16 +577,17 @@ void ModelCurve::generateCorrelations(const QList<ChainSpecs> &chains)
     t.start();
 #endif
     Model::generateCorrelations(chains);
-    for (auto&& event : mEvents )
-        if (event->mVg.mSamplerProposal != MHVariable::eFixe)
-            event->mVg.generateCorrelations(chains);
+    if (is_curve) {
+        for (auto&& event : mEvents )
+            if (event->mVg.mSamplerProposal != MHVariable::eFixe)
+                event->mVg.generateCorrelations(chains);
 
-    if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
-        mLambdaSpline.generateCorrelations(chains);
+        if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
+            mLambdaSpline.generateCorrelations(chains);
 
-    if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
-        mS02Vg.generateCorrelations(chains);
-
+        if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
+            mS02Vg.generateCorrelations(chains);
+    }
 #ifdef DEBUG
     qDebug() <<  "=> [ModelCurve::generateCorrelations] done in " + DHMS(t.elapsed());
 #endif
@@ -578,23 +596,28 @@ void ModelCurve::generateCorrelations(const QList<ChainSpecs> &chains)
 void ModelCurve::generateNumericalResults(const QList<ChainSpecs> &chains)
 {
     Model::generateNumericalResults(chains);
-    for (Event*& event : mEvents) {
-        event->mVg.generateNumericalResults(chains);
-    }
-    mLambdaSpline.generateNumericalResults(chains);
 
-    mS02Vg.generateNumericalResults(chains);
+    if (is_curve) {
+        for (Event*& event : mEvents) {
+            event->mVg.generateNumericalResults(chains);
+        }
+        mLambdaSpline.generateNumericalResults(chains);
+
+        mS02Vg.generateNumericalResults(chains);
+    }
 }
 
 void ModelCurve::clearThreshold()
 {
     Model::clearThreshold();
 
-    for (Event*& event : mEvents)
-        event->mVg.mThresholdUsed = -1.;
+    if (mProject->isCurve()) {
+        for (Event*& event : mEvents)
+            event->mVg.mThresholdUsed = -1.;
 
-    mLambdaSpline.mThresholdUsed = -1.;
-    mS02Vg.mThresholdUsed = -1.;
+        mLambdaSpline.mThresholdUsed = -1.;
+        mS02Vg.mThresholdUsed = -1.;
+    }
 }
 
 void ModelCurve::generateCredibility(const double thresh)
@@ -606,13 +629,14 @@ void ModelCurve::generateCredibility(const double thresh)
 #endif
     Model::generateCredibility(thresh);
 
-    for (Event*& event : mEvents) {
-        event->mVg.generateCredibility(mChains, thresh);
+    if (mProject->isCurve()) {
+        for (Event*& event : mEvents) {
+            event->mVg.generateCredibility(mChains, thresh);
+        }
+        mLambdaSpline.generateCredibility(mChains, thresh);
+
+        mS02Vg.generateCredibility(mChains, thresh);
     }
-    mLambdaSpline.generateCredibility(mChains, thresh);
-
-    mS02Vg.generateCredibility(mChains, thresh);
-
 #ifdef DEBUG
     qDebug() <<  "[ModelCurve::generateCredibility] done in " + DHMS(t.elapsed()) ;
 #endif
@@ -622,55 +646,58 @@ void ModelCurve::generateHPD(const double thresh)
 {
     Model::generateHPD(thresh);
 
-    for (Event*& event : mEvents) {
-        if (event->type() != Event::eBound) {
-            if (event->mVg.mSamplerProposal != MHVariable::eFixe)
-                event->mVg.generateHPD(thresh);
-        }
-    };
+    if (mProject->isCurve()) {
+        for (Event*& event : mEvents) {
+            if (event->type() != Event::eBound) {
+                if (event->mVg.mSamplerProposal != MHVariable::eFixe)
+                    event->mVg.generateHPD(thresh);
+            }
+        };
 
-    if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
-        mLambdaSpline.generateHPD(thresh);
+        if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
+            mLambdaSpline.generateHPD(thresh);
 
-    if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
-        mS02Vg.generateHPD(thresh);
-
+        if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
+            mS02Vg.generateHPD(thresh);
+    }
 }
 
 void ModelCurve::clearPosteriorDensities()
 {
     Model::clearPosteriorDensities();
-    
-    for (Event*& event : mEvents) {
-        if (event->type() != Event::eBound) {
-            event->mVg.mFormatedHisto.clear();
-            event->mVg.mChainsHistos.clear();
+    if (mProject->isCurve()) {
+        for (Event*& event : mEvents) {
+            if (event->type() != Event::eBound) {
+                event->mVg.mFormatedHisto.clear();
+                event->mVg.mChainsHistos.clear();
+            }
         }
-    }
-    
-    mLambdaSpline.mFormatedHisto.clear();
-    mLambdaSpline.mChainsHistos.clear();
 
-    mS02Vg.mFormatedHisto.clear();
-    mS02Vg.mChainsHistos.clear();
+        mLambdaSpline.mFormatedHisto.clear();
+        mLambdaSpline.mChainsHistos.clear();
+
+        mS02Vg.mFormatedHisto.clear();
+        mS02Vg.mChainsHistos.clear();
+    }
 }
 
 void ModelCurve::clearCredibilityAndHPD()
 {
     Model::clearCredibilityAndHPD();
-    
-    for (Event*& event : mEvents) {
-        if (event->type() != Event::eBound) {
-            event->mVg.mFormatedHPD.clear();
-            event->mVg.mFormatedCredibility = std::pair<double, double>(1, -1);
+    if (mProject->isCurve()) {
+        for (Event*& event : mEvents) {
+            if (event->type() != Event::eBound) {
+                event->mVg.mFormatedHPD.clear();
+                event->mVg.mFormatedCredibility = std::pair<double, double>(1, -1);
+            }
         }
-    }
-    
-    mLambdaSpline.mFormatedHPD.clear();
-    mLambdaSpline.mFormatedCredibility = std::pair<double, double>(1, -1);
 
-    mS02Vg.mFormatedHPD.clear();
-    mS02Vg.mFormatedCredibility = std::pair<double, double>(1, -1);
+        mLambdaSpline.mFormatedHPD.clear();
+        mLambdaSpline.mFormatedCredibility = std::pair<double, double>(1, -1);
+
+        mS02Vg.mFormatedHPD.clear();
+        mS02Vg.mFormatedCredibility = std::pair<double, double>(1, -1);
+    }
 }
 
 void ModelCurve::clearTraces()
@@ -679,20 +706,23 @@ void ModelCurve::clearTraces()
   /*  for (Event*& event : mEvents)
         event->mVg.reset();
 */
-    mLambdaSpline.reset();
-    mS02Vg.reset();
+    if (mProject->isCurve()) {
+        mLambdaSpline.reset();
+
+    }mS02Vg.reset();
 }
 
 
 void ModelCurve::setThresholdToAllModel(const double threshold)
 {
     Model::setThresholdToAllModel(threshold);
-    
-    for (Event*& event : mEvents)
-        event->mVg.mThresholdUsed = mThreshold;
+    if (mProject->isCurve()) {
+        for (Event*& event : mEvents)
+            event->mVg.mThresholdUsed = mThreshold;
 
-    mLambdaSpline.mThresholdUsed = mThreshold;
-    mS02Vg.mThresholdUsed = mThreshold;
+        mLambdaSpline.mThresholdUsed = mThreshold;
+        mS02Vg.mThresholdUsed = mThreshold;
+    }
 }
 
 #pragma mark Loop
@@ -700,6 +730,7 @@ void ModelCurve::memo_accept(const unsigned i_chain)
 {
     Model::memo_accept(i_chain);
 
+    if (mProject->isCurve()) {
     /* --------------------------------------------------------------
      *  D -  Memo S02 Vg
      * -------------------------------------------------------------- */
@@ -724,7 +755,7 @@ void ModelCurve::memo_accept(const unsigned i_chain)
         mLambdaSpline.memo_accept(i_chain);
     }
 
-
+    }
 }
 
 /**
@@ -734,6 +765,8 @@ void ModelCurve::memo_accept(const unsigned i_chain)
 void ModelCurve::initVariablesForChain()
 {
     Model::initVariablesForChain();
+
+    if (mProject->isCurve()) {
     // today we have the same acceptBufferLen for every chain
     const int acceptBufferLen =  mChains.at(0).mIterPerBatch;
     int initReserve = 0;
@@ -767,7 +800,7 @@ void ModelCurve::initVariablesForChain()
 
     // Ré-initialisation des résultats
     mPosteriorMeanGByChain.clear();
-
+    }
 }
 
 QList<PosteriorMeanGComposante> ModelCurve::getChainsMeanGComposanteX()

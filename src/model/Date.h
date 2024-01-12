@@ -109,6 +109,7 @@ public:
     QJsonArray mSubDates;
     double mMixingLevel;
 
+   // double xi_current; // experimental
 
 public:
 
@@ -138,11 +139,11 @@ public:
 
     void reset();
 
-    void calibrate(const StudyPeriodSettings priod_settings, Project *project, bool truncate); // used for item
-    inline void calibrate(Project *project, bool truncate = true) {calibrate(mSettings, project, truncate);};
+    void calibrate(const StudyPeriodSettings priod_settings, Project &project, bool truncate); // used for item
+    inline void calibrate(Project &project, bool truncate = true) {calibrate(mSettings, project, truncate);};
 
-    void calibrateWiggle(const StudyPeriodSettings settings, Project *project);
-    inline void calibrateWiggle(Project *project) {calibrateWiggle(mSettings, project);};
+    void calibrateWiggle(const StudyPeriodSettings settings, Project &project);
+    inline void calibrateWiggle(Project &project) {calibrateWiggle(mSettings, project);};
 
     double getLikelihoodFromCalib(const double &t) const;
     double getLikelihoodFromWiggleCalib(const double &t) const;
@@ -179,11 +180,14 @@ public:
     void updateDate(Event *event);
 
     void updateTi(Event* event);
+   // void updateTi_v4(Event* event);
+
     void autoSetTiSampler(const bool bSet);
 
-    void updateDelta(Event *&event);
-    void updateSigmaShrinkage(Event *&event);
-    void updateSigmaShrinkage_K(Event* &event);
+    void updateDelta(Event *event);
+    void updateSigmaShrinkage(Event *event);
+    void updateSigmaShrinkage_K(Event* event);
+   // void updateSigma_v4(Event* event);
 
     void updateSigmaJeffreys(Event* event);
     void updateSigmaReParam(Event* event);
@@ -209,10 +213,11 @@ protected:
 
     samplingFunction updateti;
 
+
 };
 
 
-
+CalibrationCurve generate_mixingCalibration(const QList<Date> &dates, const QString description = "Mixing Calibrations");
 
 
 #endif

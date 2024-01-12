@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -45,13 +45,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 
-#define MHAdaptGaussStr QObject::tr("MH : proposal = adapt. Gaussian random walk")
-#define BoxMullerStr QObject::tr("AR : proposal = Gaussian")
-#define DoubleExpStr QObject::tr("AR : proposal = Double-Exponential")
+#define MHAdaptGaussStr QObject::tr("Adapt. Gaussian random walk")
+#define BoxMullerStr QObject::tr("Event Prior")
+#define DoubleExpStr QObject::tr("Double-Exponential")
 
-#define MHIndependantStr QObject::tr("MH : proposal = prior distribution")
-#define InversionStr QObject::tr("MH : proposal = distribution of calibrated date")
-#define MHSymGaussAdaptStr QObject::tr("MH : proposal = adapt. Gaussian random walk")
+#define MHIndependantStr QObject::tr("Date Prior")
+#define InversionStr QObject::tr("Distribution of Calibrated Date")
+#define MHSymGaussAdaptStr QObject::tr("Adapt. Gaussian random walk")
 
 /** Default constructor */
 MHVariable::MHVariable():
@@ -60,7 +60,7 @@ MHVariable::MHVariable():
     mHistoryAcceptRateMH(nullptr)
 {
   mAllAccepts.clear();
-  mHistoryAcceptRateMH = new QVector<double>();
+  mHistoryAcceptRateMH = new QList<double>();
 
 }
 
@@ -106,12 +106,8 @@ MHVariable::MHVariable( const MHVariable& origin):
 
 MHVariable::~MHVariable()
 {
-    //delete mAllAccepts;
     delete mHistoryAcceptRateMH;
-
-    // mRawTrace and mFormatedTrace are destroye by the MetropolisVariable destructor
-   // mRawTrace->~QVector();// = nullptr;;
-   // mFormatedTrace->~QVector();// = nullptr;;
+    mHistoryAcceptRateMH = nullptr;
 }
 
 /**
@@ -261,8 +257,7 @@ double MHVariable::getCurrentAcceptRate() const
 
 void MHVariable::saveCurrentAcceptRate()
 {
-    const double rate = 100. * getCurrentAcceptRate();
-    mHistoryAcceptRateMH->push_back(rate);
+    mHistoryAcceptRateMH->push_back(100. * getCurrentAcceptRate());
 }
 
 QList<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains, int index)
@@ -315,10 +310,10 @@ void MHVariable::generateNumericalResults(const QList<ChainSpecs> &chains)
     generateGlobalRunAcceptation(chains);
 }
 
-QString MHVariable::resultsString(const QString &noResultMessage, const QString &unit, DateConversion formatFunc) const
+QString MHVariable::resultsString(const QString &noResultMessage, const QString &unit) const
 {
     if (mSamplerProposal != MHVariable::eFixe) {
-        const QString result = MetropolisVariable::resultsString(noResultMessage, unit, formatFunc);
+        const QString result = MetropolisVariable::resultsString(noResultMessage, unit);
         const QString globalTxt = stringForLocal(mGlobalAcceptationPerCent);
 
         return result + "<br>" + QObject::tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(globalTxt, getSamplerProposalText(mSamplerProposal));

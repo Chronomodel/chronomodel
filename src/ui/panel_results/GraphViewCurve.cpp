@@ -71,10 +71,11 @@ void GraphViewCurve::setComposanteGChains(const QList<PosteriorMeanGComposante>&
     mComposanteGChains = composanteChains;
 }
 
-void GraphViewCurve::setEvents(const QList<Event*>& events)
+void GraphViewCurve::setModel(const std::shared_ptr<ModelCurve> model)
 {
-    mEvents = events;
+    mModel = model;
 }
+
 
 void GraphViewCurve::paintEvent(QPaintEvent* e)
 {
@@ -86,10 +87,9 @@ void GraphViewCurve::resizeEvent(QResizeEvent* )
     updateLayout();
 }
 
-void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<variable_t> &variableList, const Model* model)
+void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList)
 {
     GraphViewResults::generateCurves(typeGraph, variableList);
-    const ModelCurve* modelCurve = static_cast<const ModelCurve*> (model);
     mGraph->removeAllCurves();
     mGraph->remove_all_zones();
     mGraph->clearInfos();
@@ -102,7 +102,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
     mGraph->setFormatFunctX(nullptr);
     mGraph->setBackgroundColor(QColor(230, 230, 230));
     
-    const QString &resultsHTML = ModelUtilities::curveResultsHTML(modelCurve);
+    const QString &resultsHTML = ModelUtilities::curveResultsHTML(mModel);
     setNumericalResults(resultsHTML);
 
     // We use the parameter saved with the map
@@ -424,7 +424,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QVector<varia
 
 }
 
-void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, const QVector<variable_t>& showVariableList, const Scale scale)
+void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, const QList<variable_t> &showVariableList, const Scale scale)
 {
     // From GraphViewResults::updateCurvesToShow
     mShowAllChains = showAllChains;

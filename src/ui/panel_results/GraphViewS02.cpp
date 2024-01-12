@@ -47,24 +47,21 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 
 GraphViewS02::GraphViewS02(QWidget *parent):GraphViewResults(parent),
-mModel(nullptr)
+    mModel(nullptr)
 {
     setMainColor(Painting::borderDark);
     mGraph->setBackgroundColor(QColor(210, 210, 210));
-
 }
 
 GraphViewS02::~GraphViewS02()
 {
-    mModel = nullptr;
+    //mModel = nullptr;
 }
 
-
-void GraphViewS02::setModel(ModelCurve* model)
+void GraphViewS02::setModel(std::shared_ptr<ModelCurve> model)
 {
     mModel = model;
 }
-
 
 void GraphViewS02::paintEvent(QPaintEvent* e)
 {
@@ -76,9 +73,9 @@ void GraphViewS02::resizeEvent(QResizeEvent* )
     updateLayout();
 }
 
-void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variable_t> &variableList, const Model* model)
+void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variable_t> &variableList)
 {
-    GraphViewResults::generateCurves(typeGraph, variableList, model);
+    GraphViewResults::generateCurves(typeGraph, variableList);
     
     mGraph->removeAllCurves();
     mGraph->remove_all_zones();
@@ -196,7 +193,7 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variabl
     }
 }
 
-void GraphViewS02::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QVector<variable_t>& variableList)
+void GraphViewS02::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& variableList)
 {
 	GraphViewResults::updateCurvesToShow(showAllChains, showChainList, variableList);
 

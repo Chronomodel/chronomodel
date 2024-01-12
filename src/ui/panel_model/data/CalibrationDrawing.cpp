@@ -65,8 +65,10 @@ CalibrationDrawing::CalibrationDrawing(QWidget *parent) : QWidget(parent),
 
 CalibrationDrawing::~CalibrationDrawing()
 {
-    if (mCalibGraph)
+    if (mCalibGraph) {
         delete mCalibGraph;
+        mCalibGraph = nullptr;
+    }
 }
 
 void CalibrationDrawing::hideMarker()

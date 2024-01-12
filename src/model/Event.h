@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Date.h"
 #include "CurveSettings.h"
 
+
 #include <QMap>
 #include <QColor>
 #include <QJsonObject>
@@ -51,9 +52,7 @@ class Model;
 class Phase;
 class EventConstraint;
 
-
 #define S02_BAYESIAN
-
 
 class Event
 {
@@ -70,7 +69,8 @@ public:
 
     Type mType;
     int mId;
-    const Model *mModel;
+    //const Model *mModel;
+    std::shared_ptr<Model> mModel;
 
     QString mName; //must be public, to be defined by dialogbox
     QColor mColor;
@@ -134,14 +134,18 @@ public:
 
     MHVariable mVg; // sigma G of the event (relative to G(t) that we are trying to estimate)
 
+    CalibrationCurve* mMixingCalibrations; // prepare the future
+
 #pragma mark Functions
 
-    Event (const Model * model = nullptr);
-   // Event (const Event& event); // Deprecated
-    explicit Event (const QJsonObject& json, const Model *model);
+   // Event (const Model * model = nullptr);
+
+    //explicit Event (const QJsonObject& json, const Model *model);
+    Event (std::shared_ptr<Model> model = nullptr);
+
+    explicit Event (const QJsonObject& json, std::shared_ptr<Model> model);
     virtual ~Event();
 
-  //  Event& operator=(const Event& event);
     virtual void copyFrom(const Event& event);
 
     static Event fromJson(const QJsonObject& json);
@@ -155,11 +159,10 @@ public:
     static QString curveDescriptionFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType = CurveSettings::eProcess_None);
     static QList<double> curveParametersFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType = CurveSettings::eProcess_None);
 
- #pragma mark Functions used within the MCMC process ( not in the init part!)
+#pragma mark Functions used within the MCMC process ( not in the init part!)
 
     double getThetaMin(double defaultValue);
     double getThetaMax(double defaultValue);
-
 
 #pragma mark  Functions used within the init MCMC process
 
@@ -169,7 +172,16 @@ public:
     double getThetaMinRecursive(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
     double getThetaMaxRecursive(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
 
-    virtual void updateTheta(const double tmin, const double tmax);
+    virtual void updateTheta(const double tmin, const double tmax) {updateTheta_v3(tmin, tmax);};
+
+    void updateTheta_v3(const double tmin, const double tmax);
+
+    void updateTheta_v4(const double tmin, const double tmax, const double rate_theta = 1.);
+    /*obsolete
+    void updateTheta_v41(const double tmin, const double tmax, const double rate_theta = 1.);
+    void updateTheta_v42(const double tmin, const double tmax, const double rate_theta = 1.);
+    */
+    void generate_mixingCalibration();
 
     void updateS02();
     double h_S02(const double S02);
@@ -179,7 +191,6 @@ public:
     void updateW();
 
 };
-
 
 inline double get_Yx(Event* e) {return e->mYx;};
 inline double get_Yy(Event* e) {return e->mYy;};
@@ -192,9 +203,6 @@ inline double get_Gz(Event* e) {return e->mGz;};
 
 inline double get_Theta(Event* e) {return e->mTheta.mX;};
 inline double get_ThetaReduced(Event* e) {return e->mThetaReduced;};
-
-//std::vector<double> get_ThetaVector(const QList<Event *> &events);
-//std::vector<double> get_ThetaReducedVector(const QList<Event *> &events);
 
 std::vector<double> get_vector(const std::function <double (Event*)> &fun, const QList<Event *> &events);
 

@@ -50,7 +50,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QObject>
 
-#include <string>
 #include <utility>
 
 
@@ -59,9 +58,9 @@ bool sortPhases(Phase* p1, Phase* p2) {return (p1->mItemY < p2->mItemY);}
 
 
 // Events Branches
-QVector<QVector<Event*> > ModelUtilities::getNextBranches(const QVector<Event*> &curBranch, Event* lastNode)
+QList<QList<Event*> > ModelUtilities::getNextBranches(const QList<Event*> &curBranch, Event* lastNode)
 {
-    QVector<QVector<Event*> > branches;
+    QList<QList<Event*> > branches;
     QList<EventConstraint*> &cts = lastNode->mConstraintsFwd;
     if (cts.size() > 0) {
         for (auto& ct : cts) {
@@ -96,9 +95,9 @@ QVector<QVector<Event*> > ModelUtilities::getNextBranches(const QVector<Event*> 
     return branches;
 }
 
-QVector<QVector<Event*> > ModelUtilities::getBranchesFromEvent(Event* start)
+QList<QList<Event*> > ModelUtilities::getBranchesFromEvent(Event* start)
 {
-    QVector<Event*> startBranch;
+    QList<Event*> startBranch;
     start->mLevel = 0;
     startBranch.append(start);
 
@@ -113,15 +112,15 @@ QVector<QVector<Event*> > ModelUtilities::getBranchesFromEvent(Event* start)
 }
 
 
-QVector<QVector<Event*> > ModelUtilities::getAllEventsBranches(const QList<Event*>& events)
+QList<QList<Event*> > ModelUtilities::getAllEventsBranches(const QList<Event*>& events)
 {
-    QVector<QVector<Event*> > branches;
+    QList<QList<Event*> > branches;
 
     // ----------------------------------------
     //  Put all events level to 0 and
     //  store events at start of branches (= not having constraint backward)
     // ----------------------------------------
-    QVector<Event*> starts;
+    QList<Event*> starts;
     for (auto&& event : events) {
         event->mLevel = 0;
         if (event->mConstraintsBwd.size() == 0)
@@ -133,7 +132,7 @@ QVector<QVector<Event*> > ModelUtilities::getAllEventsBranches(const QList<Event
 
     else {
         for (auto& s : starts) {
-            QVector<QVector<Event*> > eventBranches;
+            QList<QList<Event*> > eventBranches;
             try {
                 eventBranches = getBranchesFromEvent(s);
             } catch(QString error) {
@@ -150,9 +149,9 @@ QVector<QVector<Event*> > ModelUtilities::getAllEventsBranches(const QList<Event
 
 
 // Phases Branches
-QVector<QVector<Phase*> > ModelUtilities::getNextBranches(const QVector<Phase*> &curBranch, Phase* lastNode, const double gammaSum, const double maxLength)
+QList<QList<Phase*> > ModelUtilities::getNextBranches(const QList<Phase*> &curBranch, Phase* lastNode, const double gammaSum, const double maxLength)
 {
-    QVector<QVector<Phase*> > branches;
+    QList<QList<Phase*> > branches;
     QList<PhaseConstraint*> &cts = lastNode->mConstraintsFwd;
     if (cts.size() > 0) {
         for (auto& ct : cts) {
@@ -201,14 +200,14 @@ QVector<QVector<Phase*> > ModelUtilities::getNextBranches(const QVector<Phase*> 
     return branches;
 }
 
-QVector<QVector<Phase*> > ModelUtilities::getBranchesFromPhase(Phase* start, const double maxLength)
+QList<QList<Phase*> > ModelUtilities::getBranchesFromPhase(Phase* start, const double maxLength)
 {
     Q_ASSERT(start);
-    QVector<Phase*> startBranch;
+    QList<Phase*> startBranch;
     start->mLevel = 0;
     startBranch.append(start);
 
-    QVector<QVector<Phase*> > nextBranches;
+    QList<QList<Phase*> > nextBranches;
     try {
         nextBranches = getNextBranches(startBranch, start, 0, maxLength);
     } catch(QString error) {
@@ -219,11 +218,11 @@ QVector<QVector<Phase*> > ModelUtilities::getBranchesFromPhase(Phase* start, con
 }
 
 
-QVector<QVector<Phase*> > ModelUtilities::getAllPhasesBranches(const QList<Phase*>& phases, const double maxLength)
+QList<QList<Phase*> > ModelUtilities::getAllPhasesBranches(const QList<Phase*>& phases, const double maxLength)
 {
-    QVector<QVector<Phase*> > branches;
+    QList<QList<Phase*> > branches;
 
-    QVector<Phase*> starts;
+    QList<Phase*> starts;
     for (auto& p : phases) {
         p->mLevel = 0;
         if (p->mConstraintsBwd.size() == 0)
@@ -263,7 +262,7 @@ QList<Event*> ModelUtilities::unsortEvents(const QList<Event*> &events)
 }
 
 
-QString ModelUtilities::getMCMCSettingsLog(const Model* model)
+QString ModelUtilities::getMCMCSettingsLog(const std::shared_ptr<ModelCurve> model)
 {
     QString log;
     log += QObject::tr("Number of chain %1").arg(QString::number(model->mMCMCSettings.mNumChains)) + "<br>";
@@ -278,10 +277,8 @@ QString ModelUtilities::getMCMCSettingsLog(const Model* model)
 }
 
 #pragma mark Results in HTML format
-QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
+QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> model)
 {
-    const bool curveModel = model->mProject->isCurve();
-
     QString log;
     // Study period
     QLocale locale = QLocale();
@@ -291,63 +288,63 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
     log += "<hr>";
 
     int i = 0;
-    for (auto&& pEvent : model->mEvents) {
-        if (pEvent->type() == Event::eBound) {
-            auto bound = dynamic_cast<Bound*>(pEvent);
+    for (auto&& event : model->mEvents) {
+        if (event->type() == Event::eBound) {
+            auto bound = dynamic_cast<Bound*>(event);
             log += line(textRed(QObject::tr("Bound ( %1 / %2 ) : %3 ( %4  phases,  %5 const. back.,  %6 const.fwd.)").arg(QString::number(i+1), QString::number(model->mEvents.size()), bound->mName,
                                                                                                                QString::number(bound->mPhases.size()),
                                                                                                                QString::number(bound->mConstraintsBwd.size()),
                                                                                                                QString::number(bound->mConstraintsFwd.size()))));
             log += line(textRed(QObject::tr("- Fixed Value : %1 ").arg(stringForLocal(bound->mFixed))));
         } else {
-            log += line(textBlue(QObject::tr("Event ( %1 / %2 ) : %3 ( %4 data, %5 phases,  %6 const. back.,  %7 const. fwd.)").arg(QString::number(i+1), QString::number(model->mEvents.size()), pEvent->mName,
-                                                                                                                         QString::number(pEvent->mDates.size()),
-                                                                                                                         QString::number(pEvent->mPhases.size()),
-                                                                                                                         QString::number(pEvent->mConstraintsBwd.size()),
-                                                                                                                         QString::number(pEvent->mConstraintsFwd.size()))
-                                 + "<br>" + QObject::tr("- Method : %1").arg(MHVariable::getSamplerProposalText(pEvent->mTheta.mSamplerProposal))));
+            log += line(textBlue(QObject::tr("Event ( %1 / %2 ) : %3 ( %4 data, %5 phases,  %6 const. back.,  %7 const. fwd.)").arg(QString::number(i+1), QString::number(model->mEvents.size()), event->mName,
+                                                                                                                         QString::number(event->mDates.size()),
+                                                                                                                         QString::number(event->mPhases.size()),
+                                                                                                                         QString::number(event->mConstraintsBwd.size()),
+                                                                                                                         QString::number(event->mConstraintsFwd.size()))
+                                 + "<br>" + QObject::tr("- Method : %1").arg(MHVariable::getSamplerProposalText(event->mTheta.mSamplerProposal))));
         }
 
-        if (curveModel) {
+        if (model->is_curve) {
             switch (model->mCurveSettings.mProcessType) {
             case CurveSettings::eProcess_Univariate:
-                log += line(textGreen(QObject::tr("- Measure : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Measure : %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
                     break;
             case CurveSettings::eProcess_Depth:
-                log += line(textGreen(QObject::tr("- Depth : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Depth : %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
                 break;
             case CurveSettings::eProcess_Field:
-                log += line(textGreen(QObject::tr("- Field : %1 ±  %2").arg(stringForLocal(pEvent->mZField), stringForLocal(pEvent->mS_ZField))));
+                log += line(textGreen(QObject::tr("- Field : %1 ±  %2").arg(stringForLocal(event->mZField), stringForLocal(event->mS_ZField))));
                 break;
             case CurveSettings::eProcess_Inclination:
-                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
                 break;
             case CurveSettings::eProcess_Declination:
-                log += line(textGreen(QObject::tr("- Declination : %1 ; Inclination %2 ±  %3").arg(stringForLocal(pEvent->mYDec), stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Declination : %1 ; Inclination %2 ±  %3").arg(stringForLocal(event->mYDec), stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
                 break;
 
             case CurveSettings::eProcess_2D:
-                log += line(textGreen(QObject::tr("- X : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
-                log += line(textGreen(QObject::tr("- Y : %1 ±  %2").arg(stringForLocal(pEvent->mYDec), stringForLocal(pEvent->mS_Y))));
+                log += line(textGreen(QObject::tr("- X : %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Y : %1 ±  %2").arg(stringForLocal(event->mYDec), stringForLocal(event->mS_Y))));
                 break;
             case CurveSettings::eProcess_3D:
-                log += line(textGreen(QObject::tr("- X : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
-                log += line(textGreen(QObject::tr("- Y : %1 ±  %2")).arg(stringForLocal(pEvent->mYDec), stringForLocal(pEvent->mS_Y)));
-                log += line(textGreen(QObject::tr("- Z : %1 ±  %2").arg(stringForLocal(pEvent->mZField), stringForLocal(pEvent->mS_ZField))));
+                log += line(textGreen(QObject::tr("- X : %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Y : %1 ±  %2")).arg(stringForLocal(event->mYDec), stringForLocal(event->mS_Y)));
+                log += line(textGreen(QObject::tr("- Z : %1 ±  %2").arg(stringForLocal(event->mZField), stringForLocal(event->mS_ZField))));
                 break;
 
             case CurveSettings::eProcess_Spherical:
-                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
-                log += line(textGreen(QObject::tr("- Declination : %1").arg(stringForLocal(pEvent->mYDec))));
+                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Declination : %1").arg(stringForLocal(event->mYDec))));
                 break;
             case CurveSettings::eProcess_Unknwon_Dec:
-                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
-                    log += line(textGreen(QObject::tr("- Field : %1").arg(stringForLocal(pEvent->mYDec))));
+                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
+                    log += line(textGreen(QObject::tr("- Field : %1").arg(stringForLocal(event->mYDec))));
                 break;
             case CurveSettings::eProcess_Vector:
-                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(pEvent->mXIncDepth), stringForLocal(pEvent->mS_XA95Depth))));
-                log += line(textGreen(QObject::tr("- Declination : %1").arg(stringForLocal(pEvent->mYDec))));
-                log += line(textGreen(QObject::tr("- Field : %1 ±  %2").arg(stringForLocal(pEvent->mZField), stringForLocal(pEvent->mS_ZField))));
+                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Declination : %1").arg(stringForLocal(event->mYDec))));
+                log += line(textGreen(QObject::tr("- Field : %1 ±  %2").arg(stringForLocal(event->mZField), stringForLocal(event->mS_ZField))));
                 break;
             default:
                 break;
@@ -355,9 +352,9 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
 
         }
         int j = 0;
-        for (auto&& date : pEvent->mDates) {
+        for (auto&& date : event->mDates) {
             log += "<br>";
-            log += line(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j+1), QString::number(pEvent->mDates.size()), date.mName)
+            log += line(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j+1), QString::number(event->mDates.size()), date.mName)
                                   + "<br>" + QObject::tr("- Type : %1").arg(date.mPlugin->getName())
                                   + "<br>" + QObject::tr("- Method : %1").arg(MHVariable::getSamplerProposalText(date.mTi.mSamplerProposal))
                                   + "<br>" + QObject::tr("- Params : %1").arg(date.getDesc())));
@@ -369,17 +366,17 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
     }
 
     i = 0;
-    for (auto &&pPhase : model->mPhases) {
-        log += line(textOrange(QObject::tr("Phase ( %1 / %2 ) : %3 ( %4 events, %5 const. back., %6 const. fwd.)").arg(QString::number(i+1), QString::number(model->mPhases.size()), pPhase->mName,
-                                                                                                              QString::number(pPhase->mEvents.size()),
-                                                                                                              QString::number(pPhase->mConstraintsBwd.size()),
-                                                                                                              QString::number(pPhase->mConstraintsFwd.size()))
-                               + "<br>" + QObject::tr("- Type : %1").arg(pPhase->getTauTypeText())));
+    for (auto &&phase : model->mPhases) {
+        log += line(textOrange(QObject::tr("Phase ( %1 / %2 ) : %3 ( %4 events, %5 const. back., %6 const. fwd.)").arg(QString::number(i+1), QString::number(model->mPhases.size()), phase->mName,
+                                                                                                              QString::number(phase->mEvents.size()),
+                                                                                                              QString::number(phase->mConstraintsBwd.size()),
+                                                                                                              QString::number(phase->mConstraintsFwd.size()))
+                               + "<br>" + QObject::tr("- Type : %1").arg(phase->getTauTypeText())));
         log += "<br>";
 
         log += textBlue(QObject::tr("Events")) + " : ";
-        for (auto &&pEvent : pPhase->mEvents)
-            log += textBlue(pEvent->mName) + " - ";
+        for (auto &&event : phase->mEvents)
+            log += textBlue(event->mName) + " - ";
 
         log += "<hr>";
         log += "<br>";
@@ -387,19 +384,19 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
     }
 
 
-    for (auto&& pPhaseConst : model->mPhaseConstraints) {
+    for (auto&& phaseConst : model->mPhaseConstraints) {
         log += "<hr>";
-        log += line(textBold(textGreen( QObject::tr("Succession from %1 to %2").arg(pPhaseConst->mPhaseFrom->mName, pPhaseConst->mPhaseTo->mName))));
+        log += line(textBold(textGreen( QObject::tr("Succession from %1 to %2").arg(phaseConst->mPhaseFrom->mName, phaseConst->mPhaseTo->mName))));
 
-        switch(pPhaseConst->mGammaType) {
+        switch(phaseConst->mGammaType) {
             case PhaseConstraint::eGammaFixed :
-                log += line(textBold(textGreen( QObject::tr("Min Hiatus fixed = %1").arg(pPhaseConst->mGammaFixed))));
+                log += line(textBold(textGreen( QObject::tr("Min Hiatus fixed = %1").arg(phaseConst->mGammaFixed))));
                 break;
             case PhaseConstraint::eGammaUnknown :
                 log += line(textBold(textGreen( QObject::tr("Min Hiatus unknown") )));
                 break;
             case PhaseConstraint::eGammaRange : //no longer used
-                 log += line(textBold(textGreen( QObject::tr("Min Hiatus between %1 and %2").arg(pPhaseConst->mGammaMin, pPhaseConst->mGammaMax))));
+                 log += line(textBold(textGreen( QObject::tr("Min Hiatus between %1 and %2").arg(phaseConst->mGammaMin, phaseConst->mGammaMax))));
                 break;
             default:
                 log += "Hiatus undefined -> ERROR";
@@ -410,7 +407,7 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
 
     }
 
-    if (curveModel) {
+    if (model->is_curve) {
         log += line(textBold(textGreen( QObject::tr("Curve Parameters"))));
         log += line(textGreen( QObject::tr(" - Process : %1").arg(model->mCurveSettings.processText())));
         if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Depth )
@@ -452,9 +449,9 @@ QString ModelUtilities::modelDescriptionHTML(const ModelCurve* model)
 
 }
 
-QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QString stateDescript)
+QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCurve> model, QString stateDescript)
 {
-    bool curveModel = model->mProject->isCurve();
+    bool curveModel = model->is_curve;//->mProject->isCurve();
 
     int i = 0;
     QString HTMLText = stateDescript;
@@ -643,13 +640,13 @@ QString ModelUtilities::modelStateDescriptionHTML(const ModelCurve* model, QStri
 
 
 
-QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
+QString ModelUtilities::dateResultsHTML(const Date* d, const std::shared_ptr<ModelCurve> &model)
 {
     Q_ASSERT(d);
     QString text = line(textBold(textBlack(QObject::tr("Data : %1").arg(d->mName)))) + "<br>";
     text += line(textBold(textBlack(QObject::tr("Posterior calib. date"))));
 
-    if (d->mTi.mSamplerProposal != MHVariable::eFixe && model) {
+    if (d->mTi.mSamplerProposal != MHVariable::eFixe && model != nullptr) {
 
         short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTi.mFormatedHPD, model);
         switch (position) {
@@ -667,10 +664,40 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
         }
 
      }
-    text += line(textBlack(d->mTi.resultsString("",DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat))) ;
+    text += line(textBlack(d->mTi.resultsString("", DateUtils::getAppSettingsFormatStr()))) ;
 
     return text;
 }
+
+QString ModelUtilities::dateResultsHTML(const Date* d, const double tmin_formated, const double tmax_formated)
+{
+    Q_ASSERT(d);
+    QString text = line(textBold(textBlack(QObject::tr("Data : %1").arg(d->mName)))) + "<br>";
+    text += line(textBold(textBlack(QObject::tr("Posterior calib. date"))));
+
+    if (d->mTi.mSamplerProposal != MHVariable::eFixe) {
+
+        short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTi.mFormatedHPD, tmin_formated, tmax_formated);
+        switch (position) {
+        case -1:
+            text += line( textBold(textRed(QObject::tr("Solutions exist before study period") )) );
+            break;
+        case +1:
+            text += line( textBold(textRed(QObject::tr("Solutions exist after study period"))) );
+            break;
+        case +2:
+            text += line( textBold(textRed(QObject::tr("Solutions exist outside study period"))) );
+            break;
+        default:
+            break;
+        }
+
+    }
+    text += line(textBlack(d->mTi.resultsString("", DateUtils::getAppSettingsFormatStr()))) ;
+
+    return text;
+}
+
 
 QString ModelUtilities::sigmaTiResultsHTML(const Date* d)
 {
@@ -683,26 +710,51 @@ QString ModelUtilities::sigmaTiResultsHTML(const Date* d)
     return text;
 }
 
-QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, const Model* model)
+QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, const std::shared_ptr<ModelCurve> model)
 {
     Q_ASSERT(e);
     QString text;
     if (e->mType == Event::eBound) {
         text += line(textBold(textRed(QObject::tr("Bound : %1").arg(e->mName)))) + "<br>";
         text += line(textBold(textRed(QObject::tr("Posterior Bound Date"))));
-        text += line(textRed(e->mTheta.resultsString("", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat)));
+        text += line(textRed(e->mTheta.resultsString("", DateUtils::getAppSettingsFormatStr())));
 
     }
     else {
         text += line(textBold(textBlue(QObject::tr("Event : %1").arg(e->mName)))) + "<br>";
         text += line(textBold(textBlue(QObject::tr("Posterior Event Date"))));
-        text += line(textBlue(e->mTheta.resultsString("", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat)));
+        text += line(textBlue(e->mTheta.resultsString("", DateUtils::getAppSettingsFormatStr())));
 
 
         if (withDates) {
             text += "<br>" +EventS02ResultsHTML(e);
             for (auto&& date : e->mDates)
                 text += "<br><br>" + dateResultsHTML(&(date), model);
+        }
+    }
+    return text;
+}
+
+QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, const double tmin_formated, const double tmax_formated)
+{
+    Q_ASSERT(e);
+    QString text;
+    if (e->mType == Event::eBound) {
+        text += line(textBold(textRed(QObject::tr("Bound : %1").arg(e->mName)))) + "<br>";
+        text += line(textBold(textRed(QObject::tr("Posterior Bound Date"))));
+        text += line(textRed(e->mTheta.resultsString("", DateUtils::getAppSettingsFormatStr())));
+
+    }
+    else {
+        text += line(textBold(textBlue(QObject::tr("Event : %1").arg(e->mName)))) + "<br>";
+        text += line(textBold(textBlue(QObject::tr("Posterior Event Date"))));
+        text += line(textBlue(e->mTheta.resultsString("", DateUtils::getAppSettingsFormatStr())));
+
+
+        if (withDates) {
+            text += "<br>" +EventS02ResultsHTML(e);
+            for (auto&& date : e->mDates)
+                text += "<br><br>" + dateResultsHTML(&(date), tmin_formated, tmax_formated);
         }
     }
     return text;
@@ -718,7 +770,7 @@ QString ModelUtilities::EventS02ResultsHTML(const Event* e)
 
     } else {
         text += line(textBold(textGreen(QObject::tr("Posterior Event Shrinkage"))));
-        text += line(textGreen(e->mS02Theta.resultsString("", nullptr, nullptr)));
+        text += line(textGreen(e->mS02Theta.resultsString("", nullptr)));
     }
     return text;
 }
@@ -736,12 +788,12 @@ QString ModelUtilities::VgResultsHTML(const Event* e)
     }
 
     if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
-            text = line(textBold(textGreen(QObject::tr("Std gi"))));
-            text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mRawTrace->at(0)))));
+        text = line(textBold(textGreen(QObject::tr("Std gi"))));
+        text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mRawTrace->at(0)))));
 
     } else {
         text += line(textBold(textGreen(QObject::tr("Posterior Std gi"))));
-        text += line(textGreen(e->mVg.resultsString("", nullptr, nullptr)));
+        text += line(textGreen(e->mVg.resultsString("", nullptr)));
     }
     return text;
 }
@@ -753,19 +805,18 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
 
     text += "<br>";
     text += line(textBold(textOrange(QObject::tr("Begin (posterior distrib.)"))));
-    text += line(textOrange(p->mAlpha.resultsString("", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat)));
+    text += line(textOrange(p->mAlpha.resultsString("", DateUtils::getAppSettingsFormatStr())));
 
     text += "<br>";
     text += line(textBold(textOrange(QObject::tr("End (posterior distrib.)"))));
-    text += line(textOrange(p->mBeta.resultsString("", DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat)));
+    text += line(textOrange(p->mBeta.resultsString("", DateUtils::getAppSettingsFormatStr())));
 
     if (p->mTimeRange != std::pair<double, double>(- INFINITY, +INFINITY)) {
         text += "<br>";
         // we suppose it's the same mThreshohdUsed than alpha
         const QString result = QObject::tr("Phase Time Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(p->mAlpha.mThresholdUsed),
                                                                                             stringForLocal(p->getFormatedTimeRange().first),
-                                                                                            stringForLocal(p->getFormatedTimeRange().second),
-                                                                                            DateUtils::getAppSettingsFormatStr());
+                                                                                            stringForLocal(p->getFormatedTimeRange().second));
         text += line(textBold(textOrange(result)));
     }
 
@@ -779,7 +830,7 @@ QString ModelUtilities::durationResultsHTML(const Phase* p)
 
    text += "<br>";
    text += line(textBold(textOrange(QObject::tr("Duration (posterior distrib.)"))));
-   text += line(textOrange(p->mDuration.resultsString(QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr)));
+   text += line(textOrange(p->mDuration.resultsString(QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"))));
 
    return text;
 }
@@ -898,7 +949,7 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
     return text;
 }
 
-QString ModelUtilities::curveResultsHTML(const ModelCurve* model)
+QString ModelUtilities::curveResultsHTML(const std::shared_ptr<ModelCurve> model)
 {
     QString text;
 
@@ -924,7 +975,7 @@ QString ModelUtilities::curveResultsHTML(const ModelCurve* model)
     }
 
     if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Depth) {
-         text += "<br>" + line( textBold(textGreen(QObject::tr("Positive curves accepted with Threshold : %1").arg(stringForLocal(model->mCurveSettings.mThreshold)))));
+        text += "<br>" + line( textBold(textGreen(QObject::tr("Positive curves accepted with Threshold : %1").arg(stringForLocal(model->mCurveSettings.mThreshold)))));
         const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
         unsigned totalPositvIter = 0;
         unsigned totalPequiredCurve = 0;
@@ -951,7 +1002,7 @@ QString ModelUtilities::curveResultsHTML(const ModelCurve* model)
     return text;
 }
 
-QString ModelUtilities::lambdaResultsHTML(const ModelCurve* model)
+QString ModelUtilities::lambdaResultsHTML(const std::shared_ptr<ModelCurve> model)
 {
     QString text;
     if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe  && model->mCurveSettings.mLambdaSplineType != CurveSettings::eInterpolation) {
@@ -964,12 +1015,12 @@ QString ModelUtilities::lambdaResultsHTML(const ModelCurve* model)
 
     }else {
         text = line(textBold(textGreen(QObject::tr("Stat. on the log10 of Smoothing"))));
-        text += line(textGreen(model->mLambdaSpline.resultsString("", nullptr, nullptr)));
+        text += line(textGreen(model->mLambdaSpline.resultsString("", nullptr)));
     }
     return text;
 }
 
-QString ModelUtilities::S02ResultsHTML(const ModelCurve* model)
+QString ModelUtilities::S02ResultsHTML(const std::shared_ptr<ModelCurve> model)
 {
     QString text;
     if (model->mS02Vg.mSamplerProposal == MHVariable::eFixe) {
@@ -978,7 +1029,7 @@ QString ModelUtilities::S02ResultsHTML(const ModelCurve* model)
 
     } else {
         text = line(textBold(textGreen(QObject::tr("Stat. on the sqrt S02 Vg"))));
-        text += line(textGreen(model->mS02Vg.resultsString("", nullptr, nullptr)));
+        text += line(textGreen(model->mS02Vg.resultsString("", nullptr)));
     }
     return text;
 }
@@ -989,7 +1040,7 @@ QString ModelUtilities::S02ResultsHTML(const ModelCurve* model)
  * @return -1 if there is solution under Study Period; 0 if all solution is inside Study Period;
  *  +1 if there is solution over Study Period; +2 if there is both solution under and over the Study Period
  */
-short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const Model* model)
+short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const std::shared_ptr<ModelCurve> model)
 {
     QMap<double, double>::const_iterator iter(hpd.constBegin());
     short answer = 0;
@@ -1016,106 +1067,79 @@ short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double> &hpd, cons
     return answer;
 }
 
-void sampleInCumulatedRepartition (Event* event, const StudyPeriodSettings &settings, const double min, const double max)
+short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const double tmin_formated, const double tmax_formated)
 {
+    QMap<double, double>::const_iterator iter(hpd.constBegin());
+    short answer = 0;
+    // We suppose QMap is sort <
+    while (iter != hpd.constEnd()) {
+        const double v = iter.value();
+        if (v > 0) {
+            const double t = iter.key();
+            if (t<tmin_formated)
+                answer = -1;
 
-    // Creation of the cumulative date distribution
-    // 1 - Search for tmin and tmax, distribution curves, identical to the calibration.
-    double unionTmin (+INFINITY);
-    double unionTmax (-INFINITY);
-    double unionStep (settings.mStep);
-    for (auto&& d : event->mDates) {
-        if (d.mCalibration != nullptr && !d.mCalibration->mVector.isEmpty() ) {
-            unionTmin = std::min(unionTmin, d.mCalibration->mTmin);
-            unionTmax = std::max(unionTmax, d.mCalibration->mTmax);
-            unionStep = std::min(unionStep, d.mCalibration->mStep);
+            else if (t>tmax_formated && answer == -1)
+                return 2;
 
-        } else {
-            unionTmin = settings.mTmin;
-            unionTmax = settings.mTmax;
+            else if (t>tmax_formated)
+                return 1;
+
         }
 
+        ++iter;
     }
-    // 2- Search for the common interval between constraints and calibrations
+    return answer;
+}
 
-    /* In ChronoModel 2.0, we initialize the theta uniformly between tmin and tmax possible.
-     *  unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
-     * Now, we use the cumulative date density distribution function.
-     */
-
-    // Calibrated outside the constraints
-    // This case must be dissociated in two, the density is on the right or the density is on the left, thus favouring one of the sides.
-    // std::max(unionStep, (unionTmax - unionTmin)/3.) prevent (unionTmax - unionTmin) = 0 with DoubleExp
+double sample_in_repartition (const CalibrationCurve* calibrateCurve, const double min, const double max)
+{
+    double unionTmin = calibrateCurve->mTmin;
+    double unionTmax = calibrateCurve->mTmax;
+    double unionStep = calibrateCurve->mStep;
 
     if (unionTmax < min) {
-        event->mTheta.mX = Generator::gaussByDoubleExp((unionTmax + unionTmin)/2., std::max(unionStep, (unionTmax - unionTmin)/3.), min, max);
-#ifdef DEBUG
-        if (event->mTheta.mX == min)
-            qDebug() << "sampleInCumulatedRepartition unionTmax< min and (event->mTheta.mX == min)";
-#endif
+        return Generator::gaussByDoubleExp((unionTmax + unionTmin)/2., std::max(unionStep, (unionTmax - unionTmin)/2.), min, max);
+
     } else if (max < unionTmin) {
-        event->mTheta.mX = Generator::gaussByDoubleExp((unionTmax + unionTmin)/2., std::max(unionStep, (unionTmax - unionTmin)/3.), min, max);
+        return Generator::gaussByDoubleExp((unionTmax + unionTmin)/2., std::max(unionStep, (unionTmax - unionTmin)/2.), min, max);
 
-#ifdef DEBUG
-        if (event->mTheta.mX == max)
-            qDebug() << "[sampleInCumulatedRepartition] max<unionTmin and (event->mTheta.mX == max)";
-#endif
     } else {
-        unionTmin = std::max(unionTmin, min);
-        unionTmax = std::min(unionTmax, max);
-
-        // 3 - Creation of the cumulative distribution curves in the interval
-        QList<double> unionRepartition (0);
-        double tWhile = unionTmin;
-        double sumWhile = 0.;
-
-        while (tWhile<= unionTmax) {
-            sumWhile= 0.;
-            for (auto&& d : event->mDates) {
-               sumWhile += d.mCalibration->repartition_interpolate(tWhile);
-            }
-            unionRepartition.push_back(sumWhile);
-            tWhile += unionStep;
-
+        double minRepartition = calibrateCurve->repartition_interpolate(std::max(unionTmin, min));
+        double maxRepartition = calibrateCurve->repartition_interpolate(std::min(unionTmax, max));
+        if (minRepartition >= maxRepartition) {
+            // We are between two peaks, the density is zero.
+           // qDebug() <<" [sample_in_repartition] minRepartition >= maxRepartition"<<minRepartition<<maxRepartition<< std::max(unionTmin, min)<<std::min(unionTmax, max);
+            return Generator::randomUniform(min, max);
         }
+        const double value = Generator::randomUniform(minRepartition, maxRepartition);
+        const double idx = vector_interpolate_idx_for_value(value, calibrateCurve->mRepartition);
+        //const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(minRepartition, maxRepartition), calibrateCurve->mRepartition);
+        // -- debug
+        /*auto t = unionTmin + idx * unionStep;
+        if (t > max) {
+            qDebug() <<" [sample_in_repartition] t>max"<<t<<max;
+        } else if (t<min) {
+            qDebug() <<" [sample_in_repartition] t<min"<<t<<min;
+        }
+*/
+        // ---
+        if (idx > 0) {
+            return unionTmin + idx * unionStep;
 
-        /* Given the stratigraphic constraints and the possibility of having dates outside the study period.
-         * The maximum of the distribution curve can be different from the number of dates
-         * and the minimum can be different from 0.
-         */
-
-        const double maxRepartition = unionRepartition.back();
-        const double minRepartition = unionRepartition.front();
-        if ( (minRepartition != 0. || maxRepartition != 0.) &&
-             (minRepartition != maxRepartition) &&
-             (unionRepartition.size() > 1) ) {
-            const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(minRepartition, maxRepartition), unionRepartition);
-
-            if (idx > 0) {
-               event->mTheta.mX = unionTmin + idx * unionStep;
-
-#ifdef DEBUG
-               if (event->mTheta.mX == min || event->mTheta.mX == max)
-                    qDebug() << "[sampleInCumulatedRepartition] event->mTheta.mX == min || event->mTheta.mX == max";
-               else if (event->mTheta.mX == unionTmin || event->mTheta.mX == unionTmax)
-                    qDebug() << "[sampleInCumulatedRepartition] event->mTheta.mX == unionTmin || event->mTheta.mX == unionTmax";
-#endif
-
-            } else {
-#ifdef DEBUG
-               qDebug() << "[sampleInCumulatedRepartition] Generator::randomUniform(min, max)";
-#endif
-               event->mTheta.mX = Generator::randomUniform(min, max);
-            }
         } else {
 #ifdef DEBUG
-               qDebug() << "[sampleInCumulatedRepartition] Generator::randomUniform(min, max)";
+                qDebug() << "[sample_in_repartition] Generator::randomUniform(min, max)";
 #endif
-            event->mTheta.mX = Generator::randomUniform(min, max);
+                return Generator::randomUniform(min, max);
         }
+
+
+
 
     }
 }
+
 
 void sampleInCumulatedRepartition_thetaFixe (Event *event, const StudyPeriodSettings& settings)
 {

@@ -58,14 +58,12 @@ class MCMCLoopCurve: public MCMCLoop
     Q_OBJECT
 
 public:
-    ModelCurve* mModel;
-
-    MCMCLoopCurve(ModelCurve* model, Project* project);
+    MCMCLoopCurve(Project &project);
     ~MCMCLoopCurve();
 
 protected:
     // Variable for update function
-
+    std::shared_ptr<ModelCurve> mModel;
 
     t_prob current_ln_h_YWI_2, current_ln_h_YWI_3, current_ln_h_YWI_1_2, current_h_theta, current_h_lambda, current_h_VG;
 
@@ -107,11 +105,13 @@ protected:
 
     QString initialize_321();
     QString initialize_400();
+    QString initialize_401();
     QString initialize_interpolate();
     QString initialize_Komlan();
 
     bool update_321();
     bool update_400();
+    bool update_401();
     bool update_interpolate();
 
     bool update_Komlan();
@@ -209,9 +209,9 @@ private:
      t_prob rate_h_S02_Vg_test(const QList<Event *> &events, double S02_Vg, double try_S02) const;
      t_prob rate_h_S02_Vg(const QList<Event *> &pointEvents, double S02_Vg, double try_S02) const;
 
-     double S02_Vg_Yx(QList<Event *> &events, SplineMatrices &matricesWI, std::vector<t_reduceTime> &vecH, const double lambdaSpline);
-     double S02_Vg_Yy(QList<Event *> &events, SplineMatrices &matricesWI, std::vector<t_reduceTime> &vecH, const double lambdaSpline);
-     double S02_Vg_Yz(QList<Event *> &events, SplineMatrices &matricesWI, std::vector<t_reduceTime> &vecH, const double lambdaSpline);
+     double S02_Vg_Yx(QList<Event *> &events, const SplineMatrices &matricesWI, std::vector<t_reduceTime> &vecH, const double lambdaSpline);
+     double S02_Vg_Yy(QList<Event *> &events, const SplineMatrices &matricesWI, std::vector<t_reduceTime> &vecH, const double lambdaSpline);
+     double S02_Vg_Yz(QList<Event *> &events, const SplineMatrices &matricesWI, std::vector<t_reduceTime> &vecH, const double lambdaSpline);
 
      static double S02_lambda_WI(const SplineMatrices &matrices, const int nb_noeuds);
 
@@ -252,7 +252,7 @@ private:
     MatrixDiag createDiagWInv_Vg0(const QList<Event*>& lEvents);
 
     SplineMatrices prepareCalculSpline_W_Vg0(const QList<Event *> &sortedEvents, std::vector<double> &vecH);
-    MCMCSpline samplingSpline_multi(QList<Event *> &lEvents, std::vector<Event *> &lEventsinit, std::vector<double> vecYx, std::vector<double> vecYstd, const Matrix2D &RR, const Matrix2D &R_1QT, const Matrix2D &Q, const Matrix2D &QT, const Matrix2D &matK,  bool doSortAndSpreadTheta, SplineMatrices matrices);
+    MCMCSpline samplingSpline_multi(QList<Event *> &lEvents, std::vector<Event *> &lEventsinit, std::vector<double> vecYx, std::vector<double> vecYstd, const Matrix2D &RR, const Matrix2D &R_1QT, const Matrix2D &Q, const Matrix2D &QT, const Matrix2D &matK);
 
     std::vector<double> multinormal_sampling (const std::vector<double> &mu, const Matrix2D &a);
 

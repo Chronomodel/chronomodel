@@ -107,7 +107,7 @@ bool PluginDensity::wiggleAllowed() const
 
 MHVariable::SamplerProposal PluginDensity::getDataMethod() const
 {
-    return MHVariable::eMHSymGaussAdapt;
+    return MHVariable::eInversion;
 }
 
 QList<MHVariable::SamplerProposal> PluginDensity::allowedDataMethods() const

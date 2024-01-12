@@ -168,10 +168,10 @@ void PluginF14CRefView::setDate(const Date& date, const StudyPeriodSettings& set
 
              /*
             * We need to skim the real map to fit with the real value of the calibration curve
-         * The graphView function does the interpolation between the real point
-         */
-             for ( QMap<double, double>::const_iterator &&iPt = curve.mDataMean.cbegin();  iPt!=curve.mDataMean.cend(); ++iPt) {
-                 const double t (iPt.key());
+            * The graphView function does the interpolation between the real point
+            */
+            for ( QMap<double, double>::const_iterator &&iPt = curve.mDataMean.cbegin();  iPt!=curve.mDataMean.cend(); ++iPt) {
+                 const double t = iPt.key();
                  const double tDisplay = DateUtils::convertToAppSettingsFormat(t);
 
                  const double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
@@ -180,19 +180,16 @@ void PluginF14CRefView::setDate(const Date& date, const StudyPeriodSettings& set
                  curveG95Sup[tDisplay] = iPt.value() + error;
                  curveG95Inf[tDisplay] = iPt.value() - error;
 
-                 /*if (tDisplay > tminDisplay && tDisplay < tmaxDisplay) {
-                     yMin = qMin(yMin, curveG95Inf.value(tDisplay));
-                     yMax = qMax(yMax, curveG95Sup.value(tDisplay));
-                 }*/
-             }
-             mGraph->setRangeX(tminDisplay,tmaxDisplay);
-             mGraph->setCurrentX(tminDisplay, tmaxDisplay);
+            }
+            mGraph->setRangeX(tminDisplay,tmaxDisplay);
+            mGraph->setCurrentX(tminDisplay, tmaxDisplay);
 
-             const GraphCurve &graphCurveG = FunctionCurve(curveG, "G", Painting::mainColorDark );
-             mGraph->add_curve(graphCurveG);
+            GraphCurve graphCurveG = FunctionCurve(curveG, "G", Painting::mainColorDark );
+            graphCurveG.mVisible = true;
+            mGraph->add_curve(graphCurveG);
 
              const GraphCurve &curveGEnv = shapeCurve(curveG95Inf, curveG95Sup, "G Env",
-                                              QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30));
+                                              QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30), true);
              mGraph->add_curve(curveGEnv);
              /* ----------------------------------------------
               *  Measure curve
@@ -200,26 +197,27 @@ void PluginF14CRefView::setDate(const Date& date, const StudyPeriodSettings& set
             double yMin = age - error * 4.;
             double yMax = age + error * 4.;
 
-             GraphCurve curveMeasure;
-             curveMeasure.mName = "Measurement";
+            GraphCurve curveMeasure;
+            curveMeasure.mVisible = true;
+            curveMeasure.mName = "Measurement";
 
-             QColor penColor(mMeasureColor);
-             QColor brushColor(mMeasureColor);
+            QColor penColor(mMeasureColor);
+            QColor brushColor(mMeasureColor);
 
-             penColor.setAlpha(255);
-             brushColor.setAlpha(50);
-             //       }
-             curveMeasure.mPen = penColor;
-             curveMeasure.mBrush = brushColor;
-             curveMeasure.mType = GraphCurve::CurveType::eVerticalQMap;
+            penColor.setAlpha(255);
+            brushColor.setAlpha(50);
+            //       }
+            curveMeasure.mPen = penColor;
+            curveMeasure.mBrush = brushColor;
+            curveMeasure.mType = GraphCurve::CurveType::eVerticalQMap;
 
-             /* 5000 pts are used on vertical measurement
+            /* 5000 pts are used on vertical measurement
               * because the y scale auto adjusts depending on x zoom.
               * => the visible part of the measurement may be very reduced ! */
-             const double step = (yMax - yMin) / 4999.;
-             QMap<double, double> measureCurve;
+            const double step = (yMax - yMin) / 4999.;
+            QMap<double, double> measureCurve;
 
-             measureCurve[yMin] = 0.;
+            measureCurve[yMin] = 0.;
              for (int i = 1; i<4999; i++) {
                  const double y = yMin + i*step;
                  measureCurve[y] = exp(-0.5 * pow((y - age) / error, 2.));
@@ -238,6 +236,7 @@ void PluginF14CRefView::setDate(const Date& date, const StudyPeriodSettings& set
              for (auto &&subDate: date.mSubDates) {
                  QJsonObject d = subDate.toObject();
                  GraphCurve curveSubMeasure;
+                 curveSubMeasure.mVisible = true;
                  curveSubMeasure.mName = "Sub-Measurement : " + d.value(STATE_NAME).toString();// QString::number(i);
 
                  const double sub_age = d.value(STATE_DATE_DATA).toObject().value(DATE_F14C_FRACTION_STR).toDouble();
@@ -280,18 +279,21 @@ void PluginF14CRefView::setDate(const Date& date, const StudyPeriodSettings& set
               * ---------------------------------------------- */
 
              GraphCurve curveMeasureAvg;
+             curveMeasureAvg.mVisible = true;
              curveMeasureAvg.mName = "MeasureAvg";
              curveMeasureAvg.mPen.setColor(mMeasureColor);
              curveMeasureAvg.mPen.setStyle(Qt::SolidLine);
              curveMeasureAvg.mType = GraphCurve::CurveType::eHorizontalLine;
 
              GraphCurve curveMeasureSup;
+             curveMeasureSup.mVisible = true;
              curveMeasureSup.mName = "MeasureSup";
              curveMeasureSup.mPen.setColor(mMeasureColor);
              curveMeasureSup.mPen.setStyle(Qt::DashLine);
              curveMeasureSup.mType = GraphCurve::CurveType::eHorizontalLine;
 
              GraphCurve curveMeasureInf;
+             curveMeasureInf.mVisible = true;
              curveMeasureInf.mName = "MeasureInf";
              curveMeasureInf.mPen.setColor(mMeasureColor);
              curveMeasureInf.mPen.setStyle(Qt::DashLine);

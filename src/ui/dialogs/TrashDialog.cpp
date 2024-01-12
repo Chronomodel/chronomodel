@@ -195,7 +195,7 @@ void TrashDialog::updateFromSelection()
 void TrashDialog::deleteItems(bool checked)
 {
     (void) checked;
-    Project* project = MainWindow::getInstance()->getProject();
+    const auto &project = MainWindow::getInstance()->getProject();
     QList<QListWidgetItem*> items = mList->selectedItems();
     QList<int> ids;
 

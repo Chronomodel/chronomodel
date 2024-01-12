@@ -49,22 +49,23 @@ class MCMCLoopChrono: public MCMCLoop
 {
     Q_OBJECT
 public:
-    MCMCLoopChrono(Model* model, Project* project);
+    MCMCLoopChrono(Project &project);
     ~MCMCLoopChrono();
-    Model* mModel;
 
 protected:
+    std::shared_ptr<Model> mModelChrono;
 
     virtual QString calibrate();
 
     virtual QString initialize();
 
-    virtual bool update();
+    virtual bool update() {return update_v3();};
     virtual bool adapt(const int batchIndex);
     virtual void memo();
     virtual void finalize();
 
-
+    bool update_v3();
+    bool update_v4();
 };
 
 #endif

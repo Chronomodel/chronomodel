@@ -83,7 +83,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
         else {
 
             // Date::calibrate() Controls the validity of the calibration and wiggle curves
-            d.calibrate(s, EventsScene->getProject(), true);
+            d.calibrate(s, *EventsScene->getProject(), true);
 
             if (d.mCalibration->mVector.size() < 6) {
                 date[STATE_DATE_VALID] = false;

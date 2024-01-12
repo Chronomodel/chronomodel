@@ -114,11 +114,10 @@ void PluginGaussRefView::setDate(const Date& date, const StudyPeriodSettings& se
             const double tmaxRef = date.getFormatedTmaxRefCurve();
 
             GraphCurve curve;
+            curve.mVisible = true;
             curve.mName = "Reference";
             curve.mPen.setColor(Painting::mainColorDark);
 
-            //double yMin = tminDisplay;
-            //double yMax = tmaxDisplay;
 
             if (mode == DATE_GAUSS_MODE_NONE) {
               // nothing to do
@@ -280,18 +279,21 @@ void PluginGaussRefView::setDate(const Date& date, const StudyPeriodSettings& se
                  * ---------------------------------------------- */
 
                 GraphCurve curveMeasureAvg;
+                curveMeasureAvg.mVisible = true;
                 curveMeasureAvg.mName = "MeasureAvg";
                 curveMeasureAvg.mPen.setColor(mMeasureColor);
                 curveMeasureAvg.mPen.setStyle(Qt::SolidLine);
                 curveMeasureAvg.mType = GraphCurve::CurveType::eHorizontalLine;
 
                 GraphCurve curveMeasureSup;
+                curveMeasureSup.mVisible = true;
                 curveMeasureSup.mName = "MeasureSup";
                 curveMeasureSup.mPen.setColor(mMeasureColor);
                 curveMeasureSup.mPen.setStyle(Qt::DashLine);
                 curveMeasureSup.mType = GraphCurve::CurveType::eHorizontalLine;
 
                 GraphCurve curveMeasureInf;
+                curveMeasureInf.mVisible = true;
                 curveMeasureInf.mName = "MeasureInf";
                 curveMeasureInf.mPen.setColor(mMeasureColor);
                 curveMeasureInf.mPen.setStyle(Qt::DashLine);

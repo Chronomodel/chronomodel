@@ -60,7 +60,7 @@ public:
     void setSettings(const CurveSettings& settings);
     CurveSettings getSettings() const;
     
-    void setProject(Project *project);
+    void setProject(std::shared_ptr<Project> project);
     void setConnections(const bool doConnections);
 
 signals:
@@ -72,7 +72,7 @@ protected slots:
     void save();
 
 private:
-    Project* mProject;
+    std::shared_ptr<Project> mProject;
     
     bool mEnabled;
     

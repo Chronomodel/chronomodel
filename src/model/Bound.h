@@ -46,8 +46,8 @@ class Bound: public Event
 {
 public:
 
-    Bound(const Model *model = nullptr);
-    explicit Bound(const QJsonObject& json, const Model *model = nullptr);
+    Bound(std::shared_ptr<Model> model = nullptr);
+    explicit Bound(const QJsonObject& json, std::shared_ptr<Model> model = nullptr);
 
     static Bound fromJson(const QJsonObject& json);
     virtual QJsonObject toJson() const;

@@ -80,9 +80,9 @@ void GraphViewEvent::resizeEvent(QResizeEvent* )
     updateLayout();
 }
 
-void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variable_t> &variableList, const Model* model)
+void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variable_t> &variableList)
 {
-    GraphViewResults::generateCurves(typeGraph, variableList, model);
+    GraphViewResults::generateCurves(typeGraph, variableList);
 
     /* ------------------------------------------------
      *  Reset the graph object settings
@@ -248,10 +248,10 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
 
             int i = 0;
             for (auto&& date : mEvent->mDates) {
-                const GraphCurve &curve = densityCurve(date.mSigmaTi.fullHisto(),
+                GraphCurve curve = densityCurve(date.mSigmaTi.fullHisto(),
                                                         "Post Distrib Date " + QString::number(i) + " All Chains",
                                                         color);
-
+                curve.mVisible = true;
                 mGraph->add_curve(curve);
                 if (!date.mSigmaTi.mChainsHistos.isEmpty())
                     for (int j=0; j<mChains.size(); ++j) {
@@ -270,8 +270,8 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
             mGraph->mLegendX = "";
             mGraph->setBackgroundColor(QColor(230, 230, 230));
 
-            const GraphCurve &curve = densityCurve(mEvent->mS02Theta.fullHisto(), "Post Distrib All Chains", color);
-
+            GraphCurve curve = densityCurve(mEvent->mS02Theta.fullHisto(), "Post Distrib All Chains", color);
+            curve.mVisible = true;
             mGraph->add_curve(curve);
 
             if (!mEvent->mS02Theta.mChainsHistos.isEmpty()) {
@@ -300,8 +300,8 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
             mGraph->mLegendX = "";
             mGraph->setBackgroundColor(QColor(230, 230, 230));
 
-            const GraphCurve &curve = densityCurve(mEvent->mVg.fullHisto(), "Post Distrib All Chains", color);
-
+            GraphCurve curve = densityCurve(mEvent->mVg.fullHisto(), "Post Distrib All Chains", color);
+            curve.mVisible = true;
             mGraph->add_curve(curve);
             
             if (!mEvent->mVg.mChainsHistos.isEmpty()) {
@@ -438,18 +438,6 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
         }
         
-        /*else if (mShowVariableList.contains(eS02Vg)) {
-            mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
-            mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
-            mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
-            for (int j = 0; j < mShowChainList.size(); ++j) {
-                mGraph->setCurveVisible("Post Distrib Chain " + QString::number(j), mShowChainList.at(j));
-            }
-
-            mGraph->setTipXLab(tr("Std S02 Vg"));
-            mGraph->setYAxisMode(GraphView::eHidden);
-
-        }*/
         else if (mCurrentVariableList.contains(eS02) ) {
             mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
             mGraph->setCurveVisible("HPD All Chains", mShowAllChains);

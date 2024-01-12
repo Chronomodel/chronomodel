@@ -50,7 +50,7 @@ class AbstractScene: public QGraphicsScene
 {
     Q_OBJECT
 protected:
-    Project* mProject;
+    std::shared_ptr<Project> mProject;
     QGraphicsView* mView;
     QList<AbstractItem*> mItems;
     QList<ArrowItem*> mConstraintItems;
@@ -77,8 +77,8 @@ public:
     QRectF specialItemsBoundingRect(QRectF r = QRectF()) const;
     void adjustSceneRect();
 
-    void setProject(Project *project);
-    Project* getProject() const;
+    void setProject(std::shared_ptr<Project> project);
+    std::shared_ptr<Project> getProject() const;
 
     QList<AbstractItem*> getItemsList() const  {return mItems;}
     bool showAllThumbs() const { return mShowAllThumbs;}

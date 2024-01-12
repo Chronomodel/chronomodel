@@ -116,6 +116,8 @@ const std::pair<double, double> linear_regression(const std::vector<double>& dat
 
 double shrinkageUniform(const double s02);
 
+inline double dnorm (const double x, const double mu = 0., const double std = 1.) {return exp(-0.5*pow((x - mu)/ std, 2.))/ (sqrt(2.*M_PI)*std);}
+
 Quartiles quartilesForTrace(const QList<type_data> &trace);
 TraceStat traceStatistic(const QList<type_data> &trace);
 
@@ -130,13 +132,13 @@ std::pair<double, double> gapRangeFromTraces(const QList<double> &trace1, const 
 
 std::pair<double, double> transitionRangeFromTraces(const QList<double> &trace1, const QList<double> &trace2, const double thresh, const QString description ="Gap Range Computation");
 
-QString intervalText(const QPair<double, QPair<double, double> >& interval, DateConversion conversionFunc = nullptr, const bool forCSV = false);
-QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString& unit = QString(), DateConversion conversionFunc = nullptr, const bool forCSV =false);
+const QString interval_to_text(const QPair<double, QPair<double, double> > &interval, DateConversion conversionFunc = nullptr, const bool forCSV = false);
 
-QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double, double> &hpd, double thresh);
+const QString get_HPD_text_from_mapping(const std::map<double, double> &mapping, const QString &unit = QString(),  DateConversion conversionFunc = nullptr, const bool forCSV = false);
+const QString get_HPD_text(const QList<QPair<double, QPair<double, double> >> &intervals, const QString &unit = QString(),  DateConversion conversionFunc = nullptr, const bool forCSV = false);
 
-std::pair<int,std::pair<int, int> > intervalMonomodalHpd(const std::map<int, double> &density, double thresh = 95);
-
+QList<QPair<double, QPair<double, double> > > intervals_hpd_from_mapping(const std::map<double, double> &area_mapping, double &real_thresh);
+QList<QPair<double, QPair<double, double> > > intervals_hpd_from_mapping(const std::map<double, double> &area_mapping);
 //-------- Matrix
 std::vector<double> initVector(size_t n);
 

@@ -119,14 +119,13 @@ GraphViewResults::~GraphViewResults()
 
 }
 
-void GraphViewResults::generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList, const Model* model)
+void GraphViewResults::generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList)
 {
-    (void) model;
     mCurrentTypeGraph = typeGraph;
     mCurrentVariableList = variableList;
 }
 
-void GraphViewResults::updateCurvesToShow(bool showAllChains, const QVector<bool>& showChainList, const QVector<variable_t>& showVariableList)
+void GraphViewResults::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showVariableList)
 {
     mShowAllChains = showAllChains;
     mShowChainList = showChainList;
@@ -139,7 +138,7 @@ void GraphViewResults::setSettings(const StudyPeriodSettings& settings)
     mSettings = settings;
 }
 
-void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc, const QVector<ChainSpecs>& chains)
+void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc, const QList<ChainSpecs>& chains)
 {
     mMCMCSettings = mcmc;
     mChains = chains;

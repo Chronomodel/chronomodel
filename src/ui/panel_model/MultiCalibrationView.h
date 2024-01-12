@@ -52,9 +52,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ColorPicker.h"
 #include "Project.h"
 #include "ScrollCompressor.h"
+#include "CurveUtilities.h"
 
-
-#include "SilvermanDialog.h"
 #include "StudyPeriodSettings.h"
 
 class MultiCalibrationView: public QWidget
@@ -65,7 +64,7 @@ public:
 
     ~MultiCalibrationView();
 
-    void setProject(Project *project) {mProject = project;}
+    void setProject(std::shared_ptr<Project> project) {mProject = project;}
 
     void updateGraphList();
     void initScale (const double majorScale, const int minorScale) { mMajorScale = majorScale; mMinorScale = minorScale;}
@@ -111,7 +110,7 @@ signals:
 
 public:
     StudyPeriodSettings mSettings;
-    Project *mProject;
+    std::shared_ptr<Project> mProject;
 
 private:
 

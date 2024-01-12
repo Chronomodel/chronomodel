@@ -418,7 +418,7 @@ CurveSettings CurveSettingsView::getSettings() const
     return settings;
 }
 
-void CurveSettingsView::setProject(Project *project)
+void CurveSettingsView::setProject(std::shared_ptr<Project> project)
 {
     if (mProject != nullptr)
         setConnections(false);

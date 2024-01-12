@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -54,6 +54,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QPainter>
 #include <QJsonArray>
 #include <QLocale>
+
 
 MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
     mDrawing(nullptr),
@@ -243,7 +244,6 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
 
 MultiCalibrationView::~MultiCalibrationView()
 {
-
 }
 
 void MultiCalibrationView::resizeEvent(QResizeEvent* )
@@ -262,7 +262,6 @@ void MultiCalibrationView::paintEvent(QPaintEvent* e)
 
     // Bottom Tools Bar
     p.fillRect(0, mStartLab->y() - 2,  width(), height() - mDrawing->height() + 2, Painting::borderDark);
-
 
 }
 
@@ -307,6 +306,7 @@ void MultiCalibrationView::updateLayout()
     //Position of Widget
     int y  = 0;
 
+    const bool curveModel = mProject ? mProject->isCurve(): false;
     mImageSaveBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
     y += mImageSaveBut->height();
     mImageClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
@@ -315,8 +315,16 @@ void MultiCalibrationView::updateLayout()
     y += mStatClipBut->height() + 5;
     mScatterClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
     y += mStatClipBut->height() + 5;
-    mFitClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
-    y += mFitClipBut->height() + 5;
+
+    if (curveModel) {
+        mFitClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
+        y += mFitClipBut->height() + 5;
+
+    } else {
+        mFitClipBut->setGeometry(x0, y, 0, 0);
+        y += 0;
+    }
+    mFitClipBut->setVisible(curveModel);
 
     mExportResults->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
     y += mExportResults->height() + 5;
@@ -349,6 +357,11 @@ void MultiCalibrationView::updateLayout()
     mEndLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
     mEndEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
 
+    Scale scale(mTminDisplay, mTmaxDisplay);
+
+    mMajorScale = scale.mark;
+    mMinorScale = scale.tip;
+
     xShift = 2*labelWidth + 3*marginBottomBar;
     mMajorScaleLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
     mMajorScaleEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
@@ -373,7 +386,7 @@ void MultiCalibrationView::updateLayout()
         mScatterClipBut->setEnabled(false);
         mFitClipBut->setEnabled(false);
 
-    } else if (mFitClipBut->isChecked()) {
+    } else if (mFitClipBut->isChecked() && curveModel) {
         mStatArea->hide();
 
         mDrawing->setGeometry(0, 0, graphWidth, yPosBottomBar0);
@@ -426,8 +439,10 @@ void MultiCalibrationView::updateGraphList()
     mDrawing->setVisible(true);
     mStatArea->setVisible(false);
 
-    if (mDrawing)
-        mDrawing->~MultiCalibrationDrawing();
+    if (mDrawing) {
+        delete mDrawing;
+        mDrawing = nullptr;
+    }
 
     if (mScatterClipBut->isChecked())
         mDrawing = scatterPlot(mThreshold);
@@ -498,11 +513,11 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
             graphList.append(new GraphTitle(tr("Bound : %1").arg(boundName),  curveDescription, QString("Fixed value : %1 ").arg(valueStr), this));
             colorList.append(color);
 
-
             GraphView* calibGraph = new GraphView(this);
             calibGraph->setRangeY(0., 1.);
 
-            const GraphCurve &calibCurve = horizontalSection( qMakePair(tFixedFormated, tFixedFormated), "Bound", penColor, QBrush(brushColor));
+            GraphCurve calibCurve = horizontalSection( qMakePair(tFixedFormated, tFixedFormated), "Bound", penColor, QBrush(brushColor));
+            calibCurve.mVisible = true;
             calibGraph->add_curve(calibCurve);
 
             calibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
@@ -538,15 +553,15 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
 
                  if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.isEmpty()) {
                     calibCurve = densityCurve(d.getFormatedCalibToShow(), "Calibration", penColor);
-
+                    calibCurve.mVisible = true;
                     calibGraph->add_curve(calibCurve);
 
                     // Drawing the wiggle
                     if (d.mDeltaType !=  Date::eDeltaNone) {
 
                         const QMap<double, double> &calibWiggle = normalize_map(d.getFormatedWiggleCalibToShow(), map_max(calibCurve.mData).value());
-                        const GraphCurve &curveWiggle = densityCurve(calibWiggle, "Wiggle", Qt::red);
-
+                        GraphCurve curveWiggle = densityCurve(calibWiggle, "Wiggle", Qt::red);
+                        curveWiggle.mVisible = true;
                         calibGraph->add_curve(curveWiggle);
                     }
 
@@ -574,7 +589,8 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                     // hpd is calculate only on the study Period
                     const QMap<type_data, type_data> &subData = getMapDataInRange(calibCurve.mData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
-                    QMap<type_data, type_data> hpd (create_HPD2(subData, thres));
+                    QList<QPair<double, QPair<double, double> > > intervals;
+                    QMap<type_data, type_data> hpd (create_HPD_by_dichotomy(subData, intervals, thres));
 
                     GraphCurve hpdCurve;
                     hpdCurve.mName = "Calibration HPD";
@@ -584,6 +600,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
 
                     hpdCurve.mIsRectFromZero = true;
                     hpdCurve.mData = hpd;
+                    hpdCurve.mVisible = true;
                     calibGraph->add_curve(hpdCurve);
 
                     // update max inside the display period , it's done with updateGraphZoom()
@@ -605,7 +622,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                 }
 
                 graphList.append(calibGraph);
-
+                calibGraph = nullptr;
                 colorList.append(color);
 
             }
@@ -613,6 +630,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
         }
    }
 
+   preEvent = nullptr;
    MultiCalibrationDrawing* multiDraw = new MultiCalibrationDrawing(this);
 
    multiDraw->showMarker();
@@ -951,10 +969,10 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                     if (!subData.isEmpty()) {
 
                         // hpd results
+                        std::map<double, double> mapping;
+                        create_HPD_mapping(subData, mapping, thres);
 
-                        const QMap<type_data, type_data> hpd (create_HPD2(subData, thres));
-
-                        const QList<QPair<double, QPair<double, double> > > &intervals = intervalsForHpd(hpd, 100);
+                        const QList<QPair<double, QPair<double, double> > > &intervals = intervals_hpd_from_mapping(mapping);
 
                         CurveRefPts::PointType typePts;
                         tmin = intervals.first().second.first;
@@ -1008,9 +1026,6 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             ptsX.name = "Ref Points";
                             ptsX.setVisible(true);
                             curveDataPointsX.push_back(ptsX);
-
-
-
 
                             ptsY = ptsX;
                             ptsY.Ymin = Y - errY;
@@ -1086,7 +1101,6 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
     }
 
 
-
     switch (processType) {
         case CurveSettings::eProcess_Vector:
         case CurveSettings::eProcess_3D:
@@ -1153,8 +1167,6 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             break;
         }
 
-
-
     MultiCalibrationDrawing* scatterPlot = new MultiCalibrationDrawing(this);
 
     // must be put at the end to print the points above
@@ -1166,6 +1178,9 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
     scatterPlot->setGraphList(graphList); // must be after setEventsColorList() and setListAxisVisible()
 
     scatterPlot->setGraphHeight(3*mGraphHeight);
+    graph1 = nullptr;
+    graph2 = nullptr;
+    graph3 = nullptr;
 
     return std::move(scatterPlot);
 
@@ -1491,10 +1506,8 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                     if (!subData.isEmpty()) {
 
                         // hpd results
-
-                        const QMap<type_data, type_data> hpd (create_HPD2(subData, thres));
-
-                        const QList<QPair<double, QPair<double, double> > > &intervals = intervalsForHpd(hpd, 100);
+                        QList<QPair<double, QPair<double, double> > > intervals ;
+                        create_HPD_by_dichotomy(subData, intervals, thres);
 
                         CurveRefPts::PointType typePts;
                         tmin = intervals.first().second.first;
@@ -1584,12 +1597,13 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
     }
 
 
-    const double tmin_poly = mSettings.mTmin ;
-    const double tmax_poly = mSettings.mTmax;
+    const double tmin_poly = mSettings.getTminFormated();
+    const double tmax_poly = mSettings .getTmaxFormated();
     const double step_poly = (tmax_poly-tmin_poly)/1000.;
 
     MultiCalibrationDrawing* fitPlot = new MultiCalibrationDrawing(this);
-    // transfere des info de la boite SilvermanDialog via cs
+
+    // transfere des infos de la boite SilvermanDialog via cs
 
     const double rad = M_PI/180.;
     if (!mSilverParam.use_error_measure) {
@@ -1685,10 +1699,11 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             const auto &curves = composante_to_curve(spline.splineX, tmin_poly, tmax_poly, step_poly);
 
             if (!isnan(curves[0][0]) && !isnan(curves[1][0]) && !isnan(curves[2][0])) {
-                const GraphCurve &curve_G = FunctionCurve(curves[0], "G", QColor(119, 95, 200) );
-                const GraphCurve &curve_GEnv = shapeCurve(curves[2], curves[1], "G Env",
+                GraphCurve curve_G = FunctionCurve(curves[0], "G", QColor(119, 95, 200) );
+                GraphCurve curve_GEnv = shapeCurve(curves[2], curves[1], "G Env",
                                                          QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30));
-
+                curve_G.mVisible = true;
+                curve_GEnv.mVisible = true;
                 graph1->add_curve(curve_G);
                 graph1->add_curve(curve_GEnv);
 
@@ -1703,9 +1718,10 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 
             if (!isnan(curves[0][0]) && !isnan(curves[1][0]) && !isnan(curves[2][0])) {
                 const GraphCurve &curve_G = FunctionCurve(curves[0], "G", QColor(119, 95, 200) );
-                const GraphCurve &curve_GEnv = shapeCurve(curves[2], curves[1], "G Env",
+                GraphCurve curve_GEnv = shapeCurve(curves[2], curves[1], "G Env",
                                                           QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30));
-
+                //curve_G.mVisible = true;
+                curve_GEnv.mVisible = true;
                 graph2->add_curve(curve_G);
                 graph2->add_curve(curve_GEnv);
             }
@@ -1717,10 +1733,11 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 
             if (!isnan(curves[0][0]) && !isnan(curves[1][0]) && !isnan(curves[2][0])) {
 
-                const GraphCurve &curve_G = FunctionCurve(curves[0], "G", QColor(119, 95, 200) );
-                const GraphCurve &curve_GEnv = shapeCurve(curves[2], curves[1], "G Env",
+                GraphCurve curve_G = FunctionCurve(curves[0], "G", QColor(119, 95, 200) );
+                GraphCurve curve_GEnv = shapeCurve(curves[2], curves[1], "G Env",
                                                           QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30));
-
+                curve_G.mVisible = true;
+                curve_GEnv.mVisible = true;
                 graph3->add_curve(curve_G);
                 graph3->add_curve(curve_GEnv);
             }
@@ -1793,6 +1810,9 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
     fitPlot->setGraphList(graphList); // must be after setEventsColorList() and setListAxisVisible()
 
     fitPlot->setGraphHeight(3*mGraphHeight);
+    graph1 = nullptr;
+    graph2 = nullptr;
+    graph3 = nullptr;
 
     return std::move(fitPlot);
 
@@ -1816,35 +1836,40 @@ void MultiCalibrationView::updateHPDGraphs(const QString &thres)
         showStat();
 
     } else if (mScatterClipBut->isChecked()) {
-        mDrawing->~MultiCalibrationDrawing();
+        delete mDrawing;
         mDrawing = scatterPlot(mThreshold);
         updateGraphsZoom(); // update Y scale
         updateLayout();
 
     } else if (mFitClipBut->isChecked()) {
-        mDrawing->~MultiCalibrationDrawing();
+        delete mDrawing;
         mDrawing = fitPlot(mThreshold);
         updateGraphsZoom(); // update Y scale
         updateLayout();
 
     } else {
         QList<GraphView*> graphList = mDrawing->getGraphViewList();
-
+        GraphCurve* calibCurve (nullptr);
+        GraphCurve* hpdCurve (nullptr);
         for (GraphView* gr : graphList) {
-            GraphCurve* calibCurve = gr->getCurve("Calibration");
+            calibCurve = gr->getCurve("Calibration");
             // there is curve named "Calibration" in a Bound
             if (calibCurve) {
                 // hpd is calculate only on the study Period
                 QMap<type_data, type_data> subData = calibCurve->mData;
                 subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
-                QMap<type_data, type_data> hpd (create_HPD2(subData, mThreshold));
+                QList<QPair<double, QPair<double, double> > > formated_intervals;
+                const QMap<double, double> &hpd = QMap<double, double>(create_HPD_by_dichotomy(subData, formated_intervals, mThreshold));
 
-                GraphCurve* hpdCurve = gr->getCurve("Calibration HPD");
+                hpdCurve = gr->getCurve("Calibration HPD");
                 hpdCurve->mData = hpd;
+
                 gr->forceRefresh();
             }
         }
+        calibCurve = nullptr;
+        hpdCurve = nullptr;
     }
 
 
@@ -2017,10 +2042,9 @@ void MultiCalibrationView::updateGraphsZoom()
             // update max inside the display period (mTminDisplay, mTmaxDisplay)
             // Bound doesn't have curve named "Calibration", this curve name is "Bound"
 
-            GraphCurve* calibCurve = gr->getCurve("Calibration");
+            const GraphCurve* calibCurve = gr->getCurve("Calibration");
           //  if (!calibCurve)
             //    calibCurve = gr->getCurve("Bound");
-
 
           //  else {
            if (calibCurve) {
@@ -2046,7 +2070,7 @@ void MultiCalibrationView::updateGraphsZoom()
                 gr->setRangeY(0., yMax);
             }
 
-            if (gr->has_points()) {
+           if (gr->has_points()) {
 
                 double yMin = gr->refPoints.at(0).Ymin;
                 double yMax = gr->refPoints.at(0).Ymax;
@@ -2096,7 +2120,7 @@ void MultiCalibrationView::updateGraphsZoom()
                 gr->add_zone(zone);
             }
 
-
+           calibCurve = nullptr;
         }
     }
 
@@ -2121,7 +2145,10 @@ void MultiCalibrationView::updateGraphsZoom()
             gt->setMarginLeft(mMarginLeft);
             gt->repaintGraph(true);
         }
+        gv = nullptr;
+        gt = nullptr;
     }
+
 }
 
 void MultiCalibrationView::exportImage()
@@ -2204,17 +2231,18 @@ void MultiCalibrationView::exportFullImage()
         if (axisWidget) {
             axisWidget->setParent(nullptr);
             delete axisWidget;
+            axisWidget = nullptr;
         }
         if (axisLegend) {
             axisLegend->setParent(nullptr);
             delete axisLegend;
+            axisLegend = nullptr;
         }
         widgetExport->resize(widgetExport->width() ,widgetExport->height() - axeHeight - legendHeight);
     } else
         widgetExport->resize(widgetExport->width() ,widgetExport->height() - legendHeight);
 
-
-    //delete (widgetExport);
+    widgetExport = nullptr;
     // Revert to default display :
 
     if (fileInfo.isFile())
@@ -2238,31 +2266,34 @@ void MultiCalibrationView::copyImage()
 
 void MultiCalibrationView::changeCurveColor()
 {
-    QColor color = QColorDialog::getColor(mCurveColor, qApp->activeWindow(), tr("Select Colour"));
+    const QColor color = QColorDialog::getColor(mCurveColor, qApp->activeWindow(), tr("Select Colour"));
     if (color.isValid()) {
         mCurveColor = color;
         QList<GraphView*> graphList = mDrawing->getGraphViewList();
-
+        GraphCurve* calibCurve (nullptr);
         for (GraphView* gr : graphList) {
             if (gr->has_curves()) {
-                GraphCurve* calibCurve = gr->getCurve("Calibration");
+                calibCurve = gr->getCurve("Calibration");
+
                 if (!calibCurve)
                     calibCurve = gr->getCurve("Bound");
 
                 if (calibCurve) {
                     calibCurve->mPen.setColor(mCurveColor);
+                    GraphCurve* hpdCurve (gr->getCurve("Calibration HPD"));
 
-                    GraphCurve* hpdCurve = gr->getCurve("Calibration HPD");
                     if (hpdCurve) {
                         hpdCurve->mPen.setColor(mCurveColor);
                         const QColor brushColor (mCurveColor.red(),mCurveColor.green(), mCurveColor.blue(), 100);
                         hpdCurve->mBrush = QBrush(brushColor);
                     }
-
+                    hpdCurve = nullptr;
                     gr->forceRefresh();
                 }
+
             }
         }
+        calibCurve = nullptr;
     }
 }
 
@@ -2303,7 +2334,7 @@ void MultiCalibrationView::exportResults()
         const CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
 
         const QJsonArray events = state.value(STATE_EVENTS).toArray();
-        QVector<QJsonObject> selectedEvents;
+        QList<QJsonObject> selectedEvents;
 
         for (auto &&ev : events) {
             QJsonObject jsonEv = ev.toObject();
@@ -2427,26 +2458,33 @@ void MultiCalibrationView::exportResults()
                         const QMap<double, double> &calibMap = d.getFormatedCalibMap();
 
                         // hpd is calculate only on the study Period
-                        //QMap<double, double>  subData = calibMap;
-                        QMap<double, double> subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
-
+                        QMap<double, double> periodCalib = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+                        periodCalib = equal_areas(periodCalib, 1.);
                         DensityAnalysis results;
-                        results.funcAnalysis = analyseFunction(subData);
+                        results.funcAnalysis = analyseFunction(periodCalib);
 
-                        if (!subData.isEmpty()) {
+                        if (!periodCalib.isEmpty()) {
 
                             statLine<< csvLocal.toString(results.funcAnalysis.mode) << csvLocal.toString(results.funcAnalysis.mean) << csvLocal.toString(results.funcAnalysis.std);
                             statLine<< csvLocal.toString(results.funcAnalysis.quartiles.Q1) << csvLocal.toString(results.funcAnalysis.quartiles.Q2) << csvLocal.toString(results.funcAnalysis.quartiles.Q3);
+
                             // hpd results
+                            //std::map<double, double> mapping;
+                            //create_HPD_mapping(periodCalib, mapping, mThreshold);
+                            //const QString hpdStr = get_HPD_text_from_mapping(mapping, DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, true);
 
-                            QMap<type_data, type_data> hpd (create_HPD2(subData, mThreshold));
 
-                            const double realThresh = map_area(hpd) / map_area(subData);
+                            QList<QPair<double, QPair<double, double> > > formated_intervals;
+                            create_HPD_by_dichotomy(periodCalib, formated_intervals, mThreshold);
+                            const QString hpdStr = get_HPD_text(formated_intervals, DateUtils::getAppSettingsFormatStr(), DateUtils::convertFromAppSettingsFormat, true);
 
-                            QString hpdStr = getHPDText(hpd, realThresh * 100., DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, true);
+
                             int nh = int(hpdStr.count(AppSettings::mCSVCellSeparator));
                             maxHpd = std::max(maxHpd, nh);
-                            statLine<< csvLocal.toString(100. *realThresh, 'f', 1) << hpdStr;
+                            //const double realThresh = std::accumulate(mapping.begin(), mapping.end(), 0., [](double sum, std::pair<double, double> p) {return sum + p.second;});
+                            const double real_thresh = std::accumulate(formated_intervals.begin(), formated_intervals.end(), 0., [](double sum, QPair<double, QPair<double, double> > p) {return sum + p.first;});
+
+                            statLine<< csvLocal.toString(100. *real_thresh, 'f', 1) << hpdStr;
 
                         }
 
@@ -2479,110 +2517,101 @@ void MultiCalibrationView::exportResults()
 void MultiCalibrationView::showStat()
 {
     if (mStatClipBut ->isChecked()) {
-       mDrawing->setVisible(false);
-       mStatArea->setVisible(true);
-       mStatArea->setFont(font());
+        mDrawing->setVisible(false);
+        mStatArea->setVisible(true);
+        mStatArea->setFont(font());
 
-       // update Results from selected Event in JSON
-       QJsonObject state = mProject->state();
-       const QJsonArray events = state.value(STATE_EVENTS).toArray();
-       QVector<QJsonObject> selectedEvents;
+        // update Results from selected Event in JSON
+        const QJsonObject &state = mProject->state();
+        const QJsonArray events = state.value(STATE_EVENTS).toArray();
+        QList<QJsonObject> selectedEvents;
 
+        const bool curveModel = mProject->isCurve();
+        const CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
 
-       bool curveModel = mProject->isCurve();
-       CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
+        for (auto&& ev : events) {
+            QJsonObject jsonEv = ev.toObject();
+            if (jsonEv.value(STATE_IS_SELECTED).toBool())
+                selectedEvents.append(jsonEv);
+        }
 
-       for (auto&& ev : events) {
-          QJsonObject jsonEv = ev.toObject();
-           if (jsonEv.value(STATE_IS_SELECTED).toBool())
-               selectedEvents.append(jsonEv);
-       }
+        // Sort Event by Position
+        std::sort(selectedEvents.begin(), selectedEvents.end(), [] (QJsonObject ev1, QJsonObject ev2) {return (ev1.value(STATE_ITEM_Y).toDouble() < ev2.value(STATE_ITEM_Y).toDouble());});
 
-       // Sort Event by Position
-       std::sort(selectedEvents.begin(), selectedEvents.end(), [] (QJsonObject ev1, QJsonObject ev2) {return (ev1.value(STATE_ITEM_Y).toDouble() < ev2.value(STATE_ITEM_Y).toDouble());});
+        mResultText = "";
+        for (auto& ev : selectedEvents) {
 
-       mResultText = "";
-       for (auto& ev : selectedEvents) {
+            const QString curveDescription = curveModel ? Event::curveDescriptionFromJsonEvent(ev, processType): "";
 
-           const QString curveDescription = curveModel ? Event::curveDescriptionFromJsonEvent(ev, processType): "";
+            // Insert the Event's Name only if different to the previous Event's name
+            QString eventName (ev.value(STATE_NAME).toString() + " " + curveDescription);
+            const QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
+                                        ev.value(STATE_COLOR_GREEN).toInt(),
+                                        ev.value(STATE_COLOR_BLUE).toInt());
+            const QColor nameColor = getContrastedColor(color);
+            QString resultsStr = textBackgroundColor("<big>" + textColor(eventName, nameColor) + "</big> ", color);
 
-           // Insert the Event's Name only if different to the previous Event's name
-           QString eventName (ev.value(STATE_NAME).toString() + " " + curveDescription);
-           QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
-                                 ev.value(STATE_COLOR_GREEN).toInt(),
-                                 ev.value(STATE_COLOR_BLUE).toInt());
-           const QColor nameColor = getContrastedColor(color);
-           QString resultsStr = textBackgroundColor("<big>" + textColor(eventName, nameColor) + "</big> ", color);
+            if ( Event::Type (ev.value(STATE_EVENT_TYPE).toInt()) == Event::eBound) {
+                const double bound = ev.value(STATE_EVENT_KNOWN_FIXED).toDouble();
+                resultsStr += " <br><strong>"+ tr("Bound : %1").arg(locale().toString(bound)) +" BC/AD </strong><br>";
 
-
-
-           if ( Event::Type (ev.value(STATE_EVENT_TYPE).toInt()) == Event::eBound) {
-               const double bound = ev.value(STATE_EVENT_KNOWN_FIXED).toDouble();
-               resultsStr += " <br><strong>"+ tr("Bound : %1").arg(locale().toString(bound)) +" BC/AD </strong><br>";
-
-           } else {
-               const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
-               bool firstDate = true;
+            } else {
+                const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
+                bool firstDate = true;
 
                 for (auto&& date : dates) {
-                   const QJsonObject jdate = date.toObject();
+                    const QJsonObject jdate = date.toObject();
 
-                   Date d (jdate);
-                   // Adding a line between date result
-                   if (firstDate) {
-                       firstDate = false;
-                   } else {
-                       resultsStr += "<hr>";
-                   }
+                    Date d (jdate);
+                    // Adding a line between date result
+                    if (firstDate) {
+                        firstDate = false;
+                    } else {
+                        resultsStr += "<hr>";
+                    }
 
-                   resultsStr += "<br><strong>"+ d.mName + "</strong> (" + d.mPlugin->getName() + ")" +"<br> <i>" + d.getDesc() + "</i><br> ";
+                    resultsStr += "<br><strong>"+ d.mName + "</strong> (" + d.mPlugin->getName() + ")" +"<br> <i>" + d.getDesc() + "</i><br> ";
 
-                 if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.isEmpty()) {
+                    if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.isEmpty()) {
 
+                        const bool isUnif = false; //(d.mPlugin->getName() == "Unif");
 
-                       const bool isUnif (d.mPlugin->getName() == "Unif");
+                        if (!isUnif) {
+                            d.autoSetTiSampler(true); // needed if calibration is not done
 
+                            const QMap<double, double> &calibMap = d.getFormatedCalibMap();
+                            // hpd is calculate only on the study Period
 
-                       if (!isUnif) {
-                           d.autoSetTiSampler(true); // needed if calibration is not done
+                            QMap<double, double> subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+                            subData = equal_areas(subData, 1.);
+                            DensityAnalysis results;
+                            results.funcAnalysis = analyseFunction(subData);
 
-                           const QMap<double, double> &calibMap = d.getFormatedCalibMap();
-                           // hpd is calculate only on the study Period
+                            if (!subData.isEmpty()) {
 
-                           //QMap<double, double>  subData = calibMap;
-                           //subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
-                           QMap<double, double> subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+                                resultsStr += "<br>" + FunctionStatToString(results.funcAnalysis);
 
-                           DensityAnalysis results;
-                           results.funcAnalysis = analyseFunction(subData);
+                                // hpd results
+                                QList<QPair<double, QPair<double, double> > > formated_intervals;
+                                create_HPD_by_dichotomy(subData, formated_intervals, mThreshold);
+                                const double real_thresh = std::accumulate(formated_intervals.begin(), formated_intervals.end(), 0., [](double sum, QPair<double, QPair<double, double> > p) {return sum + p.first;});
 
-                           if (!subData.isEmpty()) {
+                                resultsStr += + "<br> HPD (" + locale().toString(100. * real_thresh, 'f', 1) + "%) : " + get_HPD_text(formated_intervals, DateUtils::getAppSettingsFormatStr(), nullptr) + "<br>";
 
-                               resultsStr += "<br>" + FunctionStatToString(results.funcAnalysis);
+                            } else
+                                resultsStr += "<br>" + textBold(textRed(QObject::tr("Solutions exist outside study period") ))  + "<br>";
 
-                               // hpd results
+                        }
 
-                               QMap<type_data, type_data> hpd (create_HPD2(subData, mThreshold));
+                    } else
+                        resultsStr += + "<br> HPD  : " + tr("Not  computable")+ "<br>";
 
-                               const double realThresh = map_area(hpd) / map_area(subData);
-
-                               resultsStr += + "<br> HPD (" + locale().toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat) + "<br>";
-
-                           } else
-                               resultsStr += "<br>" + textBold(textRed(QObject::tr("Solutions exist outside study period") ))  + "<br>";
-
-                      }
-
-                 } else
-                     resultsStr += + "<br> HPD  : " + tr("Not  computable")+ "<br>";
-
-               }
+                }
             }
             mResultText += resultsStr ;
-      }
+        }
 
     mStatArea->setHtml(mResultText);
-
 
     } else {
        mDrawing->setVisible(true);

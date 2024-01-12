@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -104,35 +104,35 @@ GraphView::GraphView(QWidget *parent):
 }
 
 GraphView::GraphView(const GraphView& graph, QWidget *parent):
-mStepMinWidth(graph.mStepMinWidth), // define minorCount scale on axis
-mXAxisLine(graph.mXAxisLine),
-mXAxisArrow(graph.mXAxisArrow),
-mXAxisTicks(graph.mXAxisTicks),
-mXAxisSubTicks(graph.mXAxisSubTicks),
-mXAxisValues(graph.mXAxisValues),
-mYAxisLine(graph.mYAxisLine),
-mYAxisArrow(graph.mYAxisArrow),
-mYAxisTicks(graph.mYAxisTicks),
-mYAxisSubTicks(graph.mYAxisSubTicks),
-mYAxisValues(graph.mYAxisValues),
-mXAxisMode(graph.mXAxisMode),
-mYAxisMode(graph.mYAxisMode),
-mOverflowArrowMode(graph.mOverflowArrowMode),
-//mRendering(graph.mRendering),
-mAutoAdjustYScale(graph.mAutoAdjustYScale),
-mShowInfos(graph.mShowInfos),
-mBackgroundColor(graph.mBackgroundColor),
-mThickness(graph.mThickness),
-mOpacity(graph.mOpacity),
-mCanControlOpacity(graph.mCanControlOpacity),
-mTipX(graph.mTipX),
-mTipY(graph.mTipY),
-mTipWidth(graph.mTipWidth),
-mTipHeight(graph.mTipHeight),
-mTipVisible(graph.mTipVisible),
-mUseTip(graph.mUseTip),
-mUnitFunctionX(nullptr),
-mUnitFunctionY(nullptr)
+    mStepMinWidth(graph.mStepMinWidth), // define minorCount scale on axis
+    mXAxisLine(graph.mXAxisLine),
+    mXAxisArrow(graph.mXAxisArrow),
+    mXAxisTicks(graph.mXAxisTicks),
+    mXAxisSubTicks(graph.mXAxisSubTicks),
+    mXAxisValues(graph.mXAxisValues),
+    mYAxisLine(graph.mYAxisLine),
+    mYAxisArrow(graph.mYAxisArrow),
+    mYAxisTicks(graph.mYAxisTicks),
+    mYAxisSubTicks(graph.mYAxisSubTicks),
+    mYAxisValues(graph.mYAxisValues),
+    mXAxisMode(graph.mXAxisMode),
+    mYAxisMode(graph.mYAxisMode),
+    mOverflowArrowMode(graph.mOverflowArrowMode),
+    //mRendering(graph.mRendering),
+    mAutoAdjustYScale(graph.mAutoAdjustYScale),
+    mShowInfos(graph.mShowInfos),
+    mBackgroundColor(graph.mBackgroundColor),
+    mThickness(graph.mThickness),
+    mOpacity(graph.mOpacity),
+    mCanControlOpacity(graph.mCanControlOpacity),
+    mTipX(graph.mTipX),
+    mTipY(graph.mTipY),
+    mTipWidth(graph.mTipWidth),
+    mTipHeight(graph.mTipHeight),
+    mTipVisible(graph.mTipVisible),
+    mUseTip(graph.mUseTip),
+    mUnitFunctionX(nullptr),
+    mUnitFunctionY(nullptr)
 {
     GraphViewAbstract::setParent(parent);
     mCurrentMinX = graph.mCurrentMinX;
@@ -157,14 +157,13 @@ mUnitFunctionY(nullptr)
 
     connect(this, &GraphView::signalCurvesThickness, this, &GraphView::updateCurvesThickness);
 
-
     mCurves = graph.mCurves;
     mZones = graph.mZones;
 
    //mBufferBack = QPixmap();
 }
 
-void GraphView::copyFrom(const GraphView& graph)
+void GraphView::copyFrom(const GraphView &graph)
 {
     mStepMinWidth = graph.mStepMinWidth; // define minorCount scale on axis
     mXAxisLine = graph.mXAxisLine;
@@ -222,8 +221,10 @@ void GraphView::copyFrom(const GraphView& graph)
 
 GraphView::~GraphView()
 {
-   mCurves.clear();
-   mZones.clear();
+    mUnitFunctionX = nullptr;
+    mUnitFunctionY = nullptr;
+    mCurves.clear();
+    mZones.clear();
 }
 
 void GraphView::adjustYScale()
@@ -231,47 +232,46 @@ void GraphView::adjustYScale()
     if (mAutoAdjustYScale) {
         qreal yMax = -HUGE_VAL;
         qreal yMin =  HUGE_VAL;
-        
-        for (int curveIndex=0; curveIndex<mCurves.size(); ++curveIndex) {
-            const GraphCurve &curve = mCurves.at(curveIndex);
-            
-            if (curve.mVisible && curve.isVertical()) { // used for the measurement in the calibration process
-                yMin = std::min(yMin, curve.mData.firstKey());
-                yMax = std::max(yMax, curve.mData.lastKey());
-            }
 
-            if (curve.mVisible && !curve.isVertical() && !curve.isVerticalLine() && !curve.isHorizontalSections()) {
+        for (const auto &curve : mCurves) {
+            if (curve.mVisible) {
+                if (curve.isVertical()) { // used for the measurement in the calibration process
+                    yMin = std::min(yMin, curve.mData.firstKey());
+                    yMax = std::max(yMax, curve.mData.lastKey());
+                } else if (!curve.isVerticalLine() && !curve.isHorizontalSections()) {
 
-                if (curve.isVectorData()) {
-                    const QList<qreal> &subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, qreal (0.), qreal (curve.mDataVector.size()));
-                    if (!subData.empty()) {
-                        yMin = std::min(yMin, range_min_value(subData));
-                        yMax = std::max(yMax, range_max_value(subData));
+                    if (curve.isVectorData()) {
+                        const QList<qreal> &subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, qreal (0.), qreal (curve.mDataVector.size()));
+                        if (!subData.empty()) {
+                            yMin = std::min(yMin, range_min_value(subData));
+                            yMax = std::max(yMax, range_max_value(subData));
+                        }
+
+                    } else if (curve.isShape()) {
+                        const auto &curveInf = curve.mShape.first;
+                        const auto &curveSup = curve.mShape.second;
+                        const QMap<qreal, qreal> &subDataInf = getMapDataInRange(curveInf, mCurrentMinX, mCurrentMaxX);
+                        if (!subDataInf.empty())
+                            yMin = std::min(yMin, map_min(subDataInf).value());
+
+                        const QMap<qreal, qreal> &subDataSup = getMapDataInRange(curveSup, mCurrentMinX, mCurrentMaxX);
+                        if (!subDataSup.empty())
+                            yMax = std::max(yMax, map_max(subDataSup).value());
+
+                    } else if (!curve.mData.empty()) {
+                        yMax = std::max(yMax, map_max(curve.mData, mCurrentMinX, mCurrentMaxX).value());
+                        yMin = std::min(yMax, map_min(curve.mData, mCurrentMinX, mCurrentMaxX).value());
+
+                    } else if (curve.mMap.data.size() > 0) {// map
+                        yMin = std::min(yMin, curve.mMap.rangeY.first);
+                        yMax = std::max(yMax, curve.mMap.rangeY.second);
+
+                    }  else if (curve.isHorizontalLine()) {
+                        yMin = std::min(yMin, curve.mHorizontalValue);
+                        yMax = std::max(yMax, curve.mHorizontalValue);
                     }
-
-                } else if (curve.isShape()) {
-                    const auto &curveInf = curve.mShape.first;
-                    const auto &curveSup = curve.mShape.second;
-                    const QMap<qreal, qreal> &subDataInf = getMapDataInRange(curveInf, mCurrentMinX, mCurrentMaxX);
-                    if (!subDataInf.empty())
-                        yMin = std::min(yMin, map_min(subDataInf).value());
-
-                    const QMap<qreal, qreal> &subDataSup = getMapDataInRange(curveSup, mCurrentMinX, mCurrentMaxX);
-                    if (!subDataSup.empty())
-                        yMax = std::max(yMax, map_max(subDataSup).value());
-
-                } else if (!curve.mData.empty()) {
-                    yMax = std::max(yMax, map_max(curve.mData, mCurrentMinX, mCurrentMaxX).value());
-                    yMin = std::min(yMax, map_min(curve.mData, mCurrentMinX, mCurrentMaxX).value());
-
-                } else if (curve.mMap.data.size() > 0) {// map
-                    yMin = std::min(yMin, curve.mMap.rangeY.first);
-                    yMax = std::max(yMax, curve.mMap.rangeY.second);
-
-                }  else if (curve.isHorizontalLine()) {
-                    yMin = std::min(yMin, curve.mHorizontalValue);
-                    yMax = std::max(yMax, curve.mHorizontalValue);
                 }
+
             }
         }
 
@@ -511,28 +511,17 @@ void GraphView::reserveCurves(const int size)
 
 void GraphView::setCurveVisible(const QString &name, const bool visible)
 {
-   // bool modified = false;
-    for (auto && curve : mCurves) {
-        if (curve.mName == name && curve.mVisible != visible) {
-            curve.mVisible = visible;
-   //         modified = true;
-            break;
-        }
-    }
-  /*  if (modified) {
-        adjustYScale();
-        repaintGraph(false);
-    }
-    */
+    std::ranges::for_each(mCurves, [name, visible](auto& c) {
+        if (c.mName == name && c.mVisible != visible) {
+            c.mVisible = visible;
+        } });
+
 }
 
 GraphCurve* GraphView::getCurve(const QString &name)
 {
-    for (auto&& curve : mCurves)
-        if (curve.mName == name)
-            return &curve;
-
-    return nullptr;
+    QList<GraphCurve>::Iterator result = std::ranges::find_if(mCurves.begin(), mCurves.end(), [name](auto c) {return c.mName == name;});
+    return (result!= mCurves.end()) ? &(*result) : nullptr;
 }
 
 const QList<GraphCurve>& GraphView::getCurves() const

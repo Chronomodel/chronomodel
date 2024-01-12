@@ -54,8 +54,8 @@ public:
     void setDate(Date *date);
     void setColor(const QColor& color);
 
-    void generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList, const Model* model = nullptr);
-    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QVector<variable_t>& variableList);
+    void generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList);
+    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& variableList);
 
 protected:
     void paintEvent(QPaintEvent* e);

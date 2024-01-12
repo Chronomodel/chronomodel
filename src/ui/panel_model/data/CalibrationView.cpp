@@ -40,7 +40,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CalibrationView.h"
 
 #include "Date.h"
-#include "Event.h"
 #include "PluginAbstract.h"
 #include "GraphViewRefAbstract.h"
 #include "MainWindow.h"
@@ -328,9 +327,10 @@ void CalibrationView::updateGraphs()
 
         if (mDate.mIsValid) {
             const QMap<double, double> &calibToShow = mDate.getFormatedCalibToShow();
-            const GraphCurve &calibCurve = densityCurve(calibToShow, "Calibration", penColor);
-
+            GraphCurve calibCurve = densityCurve(calibToShow, "Calibration", penColor);
+            calibCurve.mVisible = true;
             QFontMetrics fm (mCalibGraph->font());
+
             mCalibGraph->add_curve(calibCurve);
             mCalibGraph->setMarginBottom(fm.ascent() * 2.2);
 
@@ -340,7 +340,7 @@ void CalibrationView::updateGraphs()
                 const QMap<double, double> &wiggleCalibMap =  mDate.getFormatedWiggleCalibToShow();
                 const QMap<double, double> &calibWiggle = normalize_map(wiggleCalibMap, map_max(calibCurve.mData).value());
                 calibWiggleCurve = densityCurve(calibWiggle, "Wiggle", Qt::red);
-
+                calibWiggleCurve.mVisible = true;
                 mCalibGraph->add_curve(calibWiggleCurve);
             }
 
@@ -351,10 +351,17 @@ void CalibrationView::updateGraphs()
             // hpd results
             const double thresh = std::clamp(locale().toDouble(input), 0., 100.);
             // do QMap<type_data, type_data> mData; to calcul HPD on study Period
-            const QMap<type_data, type_data> &periodCalib = getMapDataInRange(mDate.getFormatedCalibMap(), mSettings.getTminFormated(), mSettings.getTmaxFormated());
+            QMap<type_data, type_data> periodCalib = getMapDataInRange(mDate.getFormatedCalibMap(), mSettings.getTminFormated(), mSettings.getTmaxFormated());
+            periodCalib = equal_areas(periodCalib, 1.);
+            //std::map<double, double> mapping;
+            //const QMap<double, double> hpd (create_HPD_mapping(periodCalib, mapping, thresh));
 
 
-            const QMap<double, double> hpd (create_HPD2(periodCalib, thresh));
+
+            QList<QPair<double, QPair<double, double> > > formated_intervals;
+            const QMap<double, double> hpd = QMap<double, double>(create_HPD_by_dichotomy(periodCalib, formated_intervals, thresh));
+
+
 
             if (!hpd.isEmpty()) {
                 GraphCurve hpdCurve;
@@ -362,9 +369,6 @@ void CalibrationView::updateGraphs()
                 hpdCurve.mPen = brushColor;
                 hpdCurve.mBrush = brushColor;
                 hpdCurve.mIsRectFromZero = true;
-
-                //hpdCurve.mData = normalize_map(hpd, map_max_value(calibMap).value());
-               // mCalibGraph->add_curve(hpdCurve);
 
                 // update max inside the display period
                 type_data yMax = 0;
@@ -374,16 +378,16 @@ void CalibrationView::updateGraphs()
                     yMax = map_max(displayCalib).value();
 
                     if (mDate.mDeltaType != Date::eDeltaNone) {
-                        //QMap<type_data, type_data> displayWiggle = getMapDataInRange(calibWiggleCurve.mData, mTminDisplay, mTmaxDisplay);
                         yMax = std::max( yMax, map_max(calibWiggleCurve.mData, mTminDisplay, mTmaxDisplay).value());
                     }
 
                     mCalibGraph->setRangeY(0., yMax);
                 }
 
-                QMap<type_data, type_data> displayHpd = getMapDataInRange(hpd, mTminDisplay, mTmaxDisplay);
+                const QMap<type_data, type_data> &displayHpd = getMapDataInRange(hpd, mTminDisplay, mTmaxDisplay);
 
                 hpdCurve.mData = normalize_map(displayHpd, yMax);
+                hpdCurve.mVisible = true;
                 mCalibGraph->add_curve(hpdCurve);
 
 
@@ -396,25 +400,16 @@ void CalibrationView::updateGraphs()
             // ------------------------------------------------------------
             QString resultsStr;
 
-            DensityAnalysis results;
-
             if (!periodCalib.isEmpty()) {
+                DensityAnalysis results;
                 results.funcAnalysis = analyseFunction(periodCalib);
                 resultsStr += FunctionStatToString(results.funcAnalysis);
 
-                /* with the calibration we don't need the statistic on the trace*/
-                /*
-                 * QVector<double> subRepart = calculRepartition(subData);
-                 * results.quartiles = quartilesForRepartition(subRepart, subData.firstKey(), mSettings.mStep);
-                 *  results.xmin = subData.firstKey(); // useless
-                 *  results.xmax = subData.lastKey();
-                 *  resultsStr += densityAnalysisToString(results,"<br>", false);
-               */
+                const double real_thresh = std::accumulate(formated_intervals.begin(), formated_intervals.end(), 0., [](double sum, QPair<double, QPair<double, double> > p) {return sum + p.first;});
 
-                const double realThresh = map_area(hpd) / map_area(periodCalib);
-
-                resultsStr +=  "<br> HPD (" + stringForLocal(100. * realThresh) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false) ;
-
+                // formated_intervals is already in the right date format
+                resultsStr += "<br> HPD (" + stringForLocal(real_thresh * 100.) + "%) : " + get_HPD_text(formated_intervals, DateUtils::getAppSettingsFormatStr(), nullptr, false) ;
+                resultsStr += "<br> Calibrated date step : " + stringForLocal(std::abs(hpd.lastKey() - hpd.firstKey())/hpd.size());
                 mResultsText->setHtml(resultsStr);
             }
 

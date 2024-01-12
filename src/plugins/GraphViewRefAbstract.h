@@ -136,6 +136,7 @@ public:
             Date sd (subDate);
 
             GraphCurve gCurve;
+            gCurve.mVisible = true;
             gCurve.mName = sd.mName;
 
             QColor curveColor( i<210 ? Painting::chainColors[i] : randomColor());
@@ -149,7 +150,7 @@ public:
             //gCurve.mIsHisto = false;
             gCurve.mIsRectFromZero = true;
             
-            Project* project = MainWindow::getInstance()->getProject();
+            const auto &project = MainWindow::getInstance()->getProject();
 
             QString toFind;
             if (sd.mDeltaType == Date::eDeltaNone) {

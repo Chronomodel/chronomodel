@@ -69,11 +69,11 @@ public:
         eAquisition = 3
     };
     
-    MCMCLoop();
-    MCMCLoop (Project *project);
+    //MCMCLoop(const std::shared_ptr<ModelCurve>& model);
+    explicit MCMCLoop (Project &project);
     virtual ~MCMCLoop();
 
-    void setMCMCSettings(const MCMCSettings& settings);
+    void setMCMCSettings(const MCMCSettings &settings);
     const QList<ChainSpecs>& chains() const;
     void run();
 
@@ -83,6 +83,7 @@ signals:
     void setMessage(QString message);
 
 protected:
+
     // Variable for update function
     double tminPeriod;
     double tmaxPeriod;
@@ -92,7 +93,7 @@ protected:
     //virtual void initVariablesForChain() = 0;
     virtual QString initialize() = 0;
 
-    QString initialize_time(Model* model);
+    QString initialize_time();
     virtual bool update() = 0;
     virtual void memo() = 0;
     //virtual void memo_accept(const unsigned int i_chain) = 0;
@@ -105,7 +106,7 @@ protected:
 
 public:
     QString mAbortedReason;
-    Project *mProject;
+    Project &mProject;
 };
 
 #endif

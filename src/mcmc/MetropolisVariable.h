@@ -95,7 +95,7 @@ public:
 
     // List of correlations for each chain.
     // They are calculated once, when the MCMC is ready, from the run part of the trace.
-    QList<QVector<double> > mCorrelations;
+    QList<QList<double> > mCorrelations;
 
     QMap<double, double> mFormatedHPD;
     QList<QPair<double, QPair<double, double> > > mRawHPDintervals;
@@ -125,8 +125,8 @@ public:
     virtual ~MetropolisVariable();
     MetropolisVariable& operator=(const MetropolisVariable &origin);
 
-
-    void memo(double *valueToSave = nullptr);
+    void memo();
+    void memo(double *valueToSave);
     virtual void reset();
     virtual void reserve( const int reserve);
 
@@ -197,8 +197,8 @@ public:
         return result;
     }
 
-    inline QVector<double> fullRunFormatedTrace(const QList<ChainSpecs> &chains) {return full_run_trace(mFormatedTrace, chains);}
-    inline QVector<double> fullRunRawTrace(const QList<ChainSpecs> &chains) {return full_run_trace(mRawTrace, chains);}
+    inline QList<double> fullRunFormatedTrace(const QList<ChainSpecs> &chains) {return full_run_trace(mFormatedTrace, chains);}
+    inline QList<double> fullRunRawTrace(const QList<ChainSpecs> &chains) {return full_run_trace(mRawTrace, chains);}
 
     QList<double>::Iterator findIter_element(const long unsigned iter, const QList<ChainSpecs> &chains, const int chainIndex ) const;
 
@@ -238,8 +238,7 @@ public:
     QList<double> correlationForChain(const int index);
 
     virtual QString resultsString(const QString &noResultMessage = QObject::tr("No result to display"),
-                                  const QString &unit = QString(),
-                                  DateConversion formatFunc = nullptr) const;
+                                  const QString &unit = QString()) const;
 
     QStringList getResultsList(const QLocale locale, const int precision = 0, const bool withDateFormat = true);
 

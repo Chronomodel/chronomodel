@@ -47,7 +47,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphViewCurve.h"
 #include "GraphViewS02.h"
 
-//#include "QtCore/qnamespace.h"
+#include "QtCore/qobjectdefs.h"
 #include "Tabs.h"
 #include "Ruler.h"
 #include "Marker.h"
@@ -78,8 +78,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QFontDialog>
 
 
-ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-    mModel(nullptr),
+ResultsView::ResultsView(std::shared_ptr<Project> project, QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
+    mModel(project ? project->mModel : nullptr),
 
     mMargin(5),
     mOptionsW(250),
@@ -1099,7 +1099,7 @@ ResultsView::~ResultsView()
 
 #pragma mark Project & Model
 
-void ResultsView::setProject(Project* project)
+void ResultsView::setProject(const std::shared_ptr<Project> project)
 {
     /* Starting MCMC calculation does a mModel.clear() at first, and recreate it.
      * Then, it fills its elements (events, ...) with calculated data (trace, ...)
@@ -1108,7 +1108,7 @@ void ResultsView::setProject(Project* project)
 
     clearResults();
     initModel(project->mModel);
-    connect(project, &Project::mcmcStarted, this, &ResultsView::clearResults);
+    connect(project.get(), &Project::mcmcStarted, this, &ResultsView::clearResults);
 }
 
 void ResultsView::clearResults()
@@ -1119,7 +1119,7 @@ void ResultsView::clearResults()
     deleteAllGraphsInList(mByCurveGraphs);
 }
 
-void ResultsView::updateModel(Model* model)
+void ResultsView::updateModel(std::shared_ptr<ModelCurve> model)
 {
     (void) model;
     createGraphs();
@@ -1127,10 +1127,12 @@ void ResultsView::updateModel(Model* model)
 
 }
 
-void ResultsView::initModel(Model* model)
+void ResultsView::initModel(const std::shared_ptr<ModelCurve> model)
 {
     mModel = model;
-    connect(mModel, &Model::newCalculus, this, &ResultsView::generateCurves);
+    disconnect(mModel.get(), nullptr, nullptr, nullptr);
+
+    connect(mModel.get(), &Model::newCalculus, this, &ResultsView::generateCurves);
 
     Scale timeScale;
     timeScale.findOptimalMark(mModel->mSettings.getTminFormated(), mModel->mSettings.getTmaxFormated(), 7);
@@ -1156,7 +1158,7 @@ void ResultsView::initModel(Model* model)
     mCurrentTypeGraph = GraphViewResults::ePostDistrib;
     mCurrentVariableList.clear();
     if (isCurve()) {
-        const ModelCurve* modelCurve = static_cast<const ModelCurve*> (model);
+        const auto modelCurve = mModel;//static_cast<const ModelCurve*> (model);
         mMainVariable = GraphViewResults::eG;
         mCurveGRadio->setChecked(true);
         mGraphListTab->setTab(2, false);
@@ -1729,12 +1731,14 @@ void ResultsView::deleteChainsControls()
     for (CheckBox*& check : mChainChecks) {
         disconnect(check, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
         delete check;
+        check = nullptr;
     }
     mChainChecks.clear();
 
     for (RadioButton*& radio : mChainRadios) {
         disconnect(radio, &RadioButton::clicked, this, &ResultsView::updateCurvesToShow);
         delete radio;
+        radio = nullptr;
     }
     mChainRadios.clear();
 }
@@ -1973,7 +1977,7 @@ void ResultsView::createByCurveGraph()
    if (!isCurve())
         return;
 
-    ModelCurve* model = modelCurve();
+    auto model = modelCurve();
     // ----------------------------------------------------------------------
     // Show all events unless at least one is selected
     // ----------------------------------------------------------------------
@@ -2024,8 +2028,8 @@ void ResultsView::createByCurveGraph()
 
         // insert refpoints for X
       //  const double thresh = 68.4; //80;
-        QVector<CurveRefPts> eventsPts;
-        QVector<CurveRefPts> dataPts;
+        QList<CurveRefPts> eventsPts;
+        QList<CurveRefPts> dataPts;
         // Stock the numbre of ref points per Event and Data
         std::vector<int> dataPerEvent;
         std::vector<int> hpdPerEvent;
@@ -2096,22 +2100,16 @@ void ResultsView::createByCurveGraph()
                         for (const auto& date: event->mDates) {
                             // --- Calibration Date
 
-                            QMap<double, double> calibMap = date.getRawCalibMap();
+                            const QMap<double, double> &calibMap = date.getRawCalibMap();
                             // hpd is calculate only on the study Period
 
-                            //const QMap<double, double> &subData = getMapDataInRange(calibMap, mModel->mSettings.getTminFormated(), mModel->mSettings.getTmaxFormated());
+                            // hpd results
+                            std::map<double, double> mapping;
+                            create_HPD_mapping(calibMap, mapping, date.mTi.mThresholdUsed);
+                            double real_thresh;
+                            const QList<QPair<double, QPair<double, double> > > &intervals = intervals_hpd_from_mapping(mapping, real_thresh);
 
-                            //if (!subData.isEmpty()) {
-
-                                // hpd results
-
-                            const QMap<double, double> hpd (create_HPD2(calibMap, date.mTi.mThresholdUsed));
-
-                            const QList<QPair<double, QPair<double, double> > > &intervals = intervalsForHpd(hpd, 100);
-
-                            // ---
-                          // -- Post Distrib of Ti
-                           // const QList<QPair<double, QPair<double, double> > > &intervals = date.mTi.mRawHPDintervals;
+                             // -- Post Distrib of Ti
 
                             if (intervals.size() > 1) {
                                // dataPerEvent.push_back(intervals.size() + 1);
@@ -2138,7 +2136,7 @@ void ResultsView::createByCurveGraph()
 
 
                             } else if (intervals.size() == 1) {
-                                //dataPerEvent.push_back(1);
+
                                 dPts.Xmin = intervals.first().second.first;
                                 dPts.Xmax = intervals.last().second.second;
                                 dPts.Ymin = evPts.Ymin;
@@ -2239,9 +2237,9 @@ void ResultsView::createByCurveGraph()
             graphX->setTitle(curveTitleX);
         }
 
-        graphX->setComposanteG(modelCurve()->mPosteriorMeanG.gx);
-        graphX->setComposanteGChains(modelCurve()->getChainsMeanGComposanteX());
-        graphX->setEvents(modelCurve()->mEvents);
+        graphX->setComposanteG(mModel->mPosteriorMeanG.gx);
+        graphX->setComposanteGChains(mModel->getChainsMeanGComposanteX());
+        graphX->setModel(mModel);
 
 
         if (mMainVariable == GraphViewResults::eG) {
@@ -2280,7 +2278,7 @@ void ResultsView::createByCurveGraph()
             graphY->setComposanteG(modelCurve()->mPosteriorMeanG.gy);
             graphY->setComposanteGChains(modelCurve()->getChainsMeanGComposanteY());
 
-            graphY->setEvents(modelCurve()->mEvents);
+            graphY->setModel(mModel);
 
             if (mMainVariable == GraphViewResults::eG) {
                 // change the values of the Y and the error, with the values of the declination and the error, we keep tmean
@@ -2350,24 +2348,22 @@ void ResultsView::createByCurveGraph()
                 graphZ->setTitle(curveTitleZ);
             }
 
-
             graphZ->setComposanteG(modelCurve()->mPosteriorMeanG.gz);
             graphZ->setComposanteGChains(modelCurve()->getChainsMeanGComposanteZ());
 
-            graphZ->setEvents(modelCurve()->mEvents);
+            graphZ->setModel(mModel);
             if (mMainVariable == GraphViewResults::eG) {
                 int i = 0;
                 int iDataPts = 0;
                 int iEventPts = -1;
                 for (const auto& event : modelCurve()->mEvents) {
                     if (event->mIsSelected || showAllEvents) {
-                        //if (hpdPerEvent.size() > 1) {
-                            for (int j = 0 ; j< hpdPerEvent[i]; j++) {
+                        for (int j = 0 ; j< hpdPerEvent[i]; j++) {
                                 iEventPts++;
                                 eventsPts[iEventPts].Ymin = event->mZField - 1.96*event->mS_ZField;
                                 eventsPts[iEventPts].Ymax = event->mZField + 1.96*event->mS_ZField;
                             }
-                       // }
+
                         for (int j = 0 ; j< dataPerEvent[i]; j++) {
                             dataPts[iDataPts].Ymin = eventsPts.at(iEventPts).Ymin;
                             dataPts[iDataPts].Ymax = eventsPts.at(iEventPts).Ymax;
@@ -2391,6 +2387,7 @@ void ResultsView::deleteAllGraphsInList(QList<GraphViewResults*>& list)
     for (auto&& graph : list) {
         disconnect(graph, nullptr, nullptr, nullptr); //Disconnect everything connected to
         delete graph;
+        graph = nullptr;
     }
     list.clear();
 }
@@ -2467,12 +2464,14 @@ void ResultsView::generateCurves()
     QList<GraphViewResults*> listGraphs = currentGraphs(false);
 
     for (GraphViewResults*& graph : listGraphs) {
-        graph->generateCurves(GraphViewResults::graph_t(mCurrentTypeGraph), mCurrentVariableList, mModel);
+        graph->generateCurves(GraphViewResults::graph_t(mCurrentTypeGraph), mCurrentVariableList);
     }
 
-    updateCurvesToShow();
     updateGraphsMinMax();
-    updateScales();
+    updateScales(); // contient updateCurvesToShow pour les courbes
+
+    updateCurvesToShow();
+
 }
 
 void ResultsView::updateGraphsMinMax()
@@ -2523,7 +2522,7 @@ double ResultsView::getGraphsMax(const QList<GraphViewResults*> &graphs, const Q
     for (const auto& graphWrapper : graphs) {
         const QList<GraphCurve> &curves = graphWrapper->getGraph()->getCurves();
         for (const auto& curve : curves) {
-              if (!curve.mData.isEmpty() && curve.mName.contains(title) && (curve.mVisible == true)) {
+              if (!curve.mData.isEmpty() && curve.mName.contains(title)) {// && (curve.mVisible == true)) {
                 max = std::max(max, curve.mData.lastKey());
             }
         }
@@ -3887,7 +3886,7 @@ void ResultsView::applyZRange()
 
 void ResultsView::findOptimalX()
 {
-    const ModelCurve* modelCurve = static_cast<const ModelCurve*> (mModel);
+    const auto modelCurve = mModel;//static_cast<const ModelCurve*> (mModel);
     const std::vector<double>* vec = nullptr;
 
     Scale XScale;
@@ -3937,7 +3936,7 @@ void ResultsView::findOptimalX()
 
 void ResultsView::findOptimalY()
 {
-    const ModelCurve* modelCurve = static_cast<const ModelCurve*> (mModel);
+    const auto modelCurve = mModel;//static_cast<const ModelCurve*> (mModel);
     const std::vector<double>* vec = nullptr;
 
     Scale XScale;
@@ -3983,7 +3982,7 @@ void ResultsView::findOptimalY()
 
 void ResultsView::findOptimalZ()
 {
-    const ModelCurve* modelCurve = static_cast<const ModelCurve*> (mModel);
+    const auto modelCurve = mModel;//static_cast<const ModelCurve*> (mModel);
 
     const std::vector<double>* vec = nullptr;
     Scale XScale;
@@ -4705,10 +4704,12 @@ void ResultsView::exportFullImage()
         if (axisWidget) {
             axisWidget->setParent(nullptr);
             delete axisWidget;
+            axisWidget = nullptr;
         }
         if (axisLegend) {
             axisLegend->setParent(nullptr);
             delete axisLegend;
+            axisLegend = nullptr;
         }
         curWid->setFixedHeight(curWid->height() - axeHeight - legendHeight);
     }
@@ -4728,7 +4729,7 @@ void ResultsView::exportFullImage()
 
 bool ResultsView::isCurve() const
 {
-    if (mModel)
+    if (mModel != nullptr)
         return mModel->mProject->isCurve();
     else
         return false;
@@ -4737,9 +4738,9 @@ bool ResultsView::isCurve() const
 /* dynamic_cast can only be used with pointers and references.
  *  On failure to cast, a null pointer is returned.
  */
-ModelCurve* ResultsView::modelCurve() const
+std::shared_ptr<ModelCurve> ResultsView::modelCurve() const
 {
-    return dynamic_cast<ModelCurve*>(mModel);
+    return mModel;//dynamic_cast<ModelCurve*>(mModel);
 }
 
 GraphViewResults::variable_t ResultsView::getMainVariable() const

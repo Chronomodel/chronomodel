@@ -301,7 +301,7 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
     e->acceptProposedAction();
     QJsonObject event = mData;
     EventsScene* scene = dynamic_cast<EventsScene*>(mScene);
-    Project* project = scene->getProject();
+    std::shared_ptr<Project> project = scene->getProject();
     QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
     
     QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> droppedData = scene->decodeDataDrop(e);

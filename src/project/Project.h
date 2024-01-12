@@ -41,6 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define PROJECT_H
 
 #include "MCMCLoop.h"
+#include "ModelCurve.h"
 #include "StudyPeriodSettings.h"
 #include "Model.h"
 #include "QtCore/qtmetamacros.h"
@@ -128,7 +129,7 @@ public:
      * @param noResults
      */
     void setNoResults( const bool noResults) { mNoResults = noResults;}
-    bool withResults() {return (!mNoResults) && mModel;}
+    bool withResults() {return (!mNoResults && mModel != nullptr);}
 
     bool setSettings(const StudyPeriodSettings &settings);
 
@@ -207,7 +208,6 @@ public slots:
     void deleteSelectedEvents();
     void recycleEvents();
 
-
     void deleteSelectedPhases();
 
     void combineDates(const int eventId, const QList<int> &dateIds);
@@ -221,7 +221,7 @@ signals:
     void eyedPhasesModified(const QMap<int, bool> &eyedPhases);
 
     void mcmcStarted();
-    void mcmcFinished(Model* model);
+    void mcmcFinished();
 
     void projectItemsIsMoved(bool itemsIsMoved);
 
@@ -231,7 +231,9 @@ public:
 
     QString mName;
 
-    Model* mModel;
+    //Model* mModel;
+    //std::shared_ptr<Model> mModelChrono;
+    std::shared_ptr<ModelCurve> mModel;
     MCMCLoop* mLoop; //public QThread
 
     QMap<QString, CalibrationCurve> mCalibCurves;

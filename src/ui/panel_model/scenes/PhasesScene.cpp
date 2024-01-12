@@ -480,6 +480,7 @@ void PhasesScene::clean()
         removeItem(constraintItem);
         mConstraintItems.removeOne(constraintItem);
         delete constraintItem;
+        constraintItem = nullptr;
     }
 
     mProject = nullptr;

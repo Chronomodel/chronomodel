@@ -212,11 +212,12 @@ void PluginMagRefView::setDate(const Date &date, const StudyPeriodSettings &sett
             mGraph->setRangeX(tminDisplay,tmaxDisplay);
             mGraph->setCurrentX(tminDisplay, tmaxDisplay);
 
-            const GraphCurve &graphCurveG = FunctionCurve(curveG, "G", Painting::mainColorDark );
+            GraphCurve graphCurveG = FunctionCurve(curveG, "G", Painting::mainColorDark );
+            graphCurveG.mVisible = true;
             mGraph->add_curve(graphCurveG);
 
             const GraphCurve &curveGEnv = shapeCurve(curveG95Inf, curveG95Sup, "G Env",
-                                             QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30));
+                                             QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30), true);
             mGraph->add_curve(curveGEnv);
 
 
@@ -288,6 +289,7 @@ void PluginMagRefView::setDate(const Date &date, const StudyPeriodSettings &sett
 
                 measureCurve = normalize_map(measureCurve);
                 curveMeasure.mData = measureCurve;
+                curveMeasure.mVisible = true;
                 mGraph->add_curve(curveMeasure);
             }
 
@@ -297,18 +299,21 @@ void PluginMagRefView::setDate(const Date &date, const StudyPeriodSettings &sett
             // ----------------------------------------------
 
             GraphCurve curveMeasureAvg;
+            curveMeasureAvg.mVisible = true;
             curveMeasureAvg.mName = "MeasureAvg";
             curveMeasureAvg.mPen.setColor(mMeasureColor);
             curveMeasureAvg.mPen.setStyle(Qt::SolidLine);
             curveMeasureAvg.mType = GraphCurve::CurveType::eHorizontalLine;
 
             GraphCurve curveMeasureSup;
+            curveMeasureSup.mVisible = true;
             curveMeasureSup.mName = "MeasureSup";
             curveMeasureSup.mPen.setColor(mMeasureColor);
             curveMeasureSup.mPen.setStyle(Qt::DashLine);
             curveMeasureSup.mType = GraphCurve::CurveType::eHorizontalLine;
 
             GraphCurve curveMeasureInf;
+            curveMeasureInf.mVisible = true;
             curveMeasureInf.mName = "MeasureInf";
             curveMeasureInf.mPen.setColor(mMeasureColor);
             curveMeasureInf.mPen.setStyle(Qt::DashLine);

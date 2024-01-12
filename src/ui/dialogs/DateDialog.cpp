@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,24 +40,22 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "DateDialog.h"
 
 #include "PluginFormAbstract.h"
-#include "Label.h"
 #include "HelpWidget.h"
-#include "ModelUtilities.h"
 #include "PluginAbstract.h"
 
 #include <QtWidgets>
 
 
 DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags),
-mWiggleIsValid(false),
-mPluginDataAreValid(false),
-mForm(nullptr),
-mWidth(600),
-mMargin(5),
-mLineH(20),
-mButW(80),
-mButH(25),
-mWiggleEnabled(false)
+    mWiggleIsValid(false),
+    mPluginDataAreValid(false),
+    mForm(nullptr),
+    mWidth(600),
+    mMargin(5),
+    mLineH(20),
+    mButW(80),
+    mButH(25),
+    mWiggleEnabled(false)
 {
     setWindowTitle(tr("Create / Modify Data"));
     setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));

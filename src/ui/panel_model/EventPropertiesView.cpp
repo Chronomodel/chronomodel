@@ -157,8 +157,8 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     const QList<PluginAbstract*> &plugins = PluginManager::getPlugins();
 
     for (auto p : plugins) {
-
         Button* button = new Button(p->getName(), mEventView);
+
         button->setIcon(p->getIcon());
         button->setFlatVertical();
         button->setIconOnly(false);
@@ -169,6 +169,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
         minimumHeight += button->height();
 
         mPluginButs.append(button);
+
 
     }
 
@@ -245,7 +246,6 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mFixedGroup = new QGroupBox();
     mFixedGroup->setLayout(fixedLayout);
 
-
     QVBoxLayout* boundLayout = new QVBoxLayout();
     boundLayout->setContentsMargins(10, 6, 15, 6);
     boundLayout->setSpacing(10);
@@ -265,6 +265,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 
 EventPropertiesView::~EventPropertiesView()
 {
+    mPluginButs.clear();
 }
 
 # pragma mark Event Managment
@@ -532,9 +533,6 @@ void EventPropertiesView::updateCurveNode(bool isNode)
 {
     QJsonObject event = *mEvent;
 
-   // const QJsonObject &state = MainWindow::getInstance()->getState();
-   // const CurveSettings &settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
-
     event[STATE_EVENT_POINT_TYPE] = isNode ? Event::PointType::eNode : Event::PointType::ePoint;
 
     MainWindow::getInstance()->updateEvent(event, tr("Event Node updated"));
@@ -628,6 +626,7 @@ void EventPropertiesView::updateKnownGraph()
     //---------------------
 
     GraphCurve curve;
+    curve.mVisible = true;
     curve.mName = "Bound";
     curve.mBrush = Painting::mainColorLight;
 
@@ -655,7 +654,7 @@ void EventPropertiesView::createDate()
     if (!mEvent->isEmpty()) {
         Button* but = dynamic_cast<Button*>(sender());
         if (but) {
-            Project* project = MainWindow::getInstance()->getProject();
+            const auto &project = MainWindow::getInstance()->getProject();
             const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
 
             for (int i=0; i<plugins.size(); ++i) {
@@ -828,7 +827,7 @@ void EventPropertiesView::applyAppSettings()
     minimumHeight += mEventView->height();
 
     minimumHeight = 0;
-    for (auto &&but : mPluginButs) {
+    for (auto &but : mPluginButs) {
         but->resize(mButtonWidth, mButtonHeigth);
         minimumHeight += but->height();
     }
@@ -1001,7 +1000,8 @@ void EventPropertiesView::updateLayout()
         int x = listRect.width();
         int y = 0;
 
-         for (auto&& plugBut : mPluginButs) {
+        // for (auto&& plugBut : mPluginButs) {
+        for (auto& plugBut : mPluginButs) {
             plugBut->setGeometry(x, y, mButtonWidth, butPluginHeigth);
             y += butPluginHeigth;
         }

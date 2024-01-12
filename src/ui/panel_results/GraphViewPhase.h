@@ -52,9 +52,8 @@ public:
     virtual ~GraphViewPhase();
 
     void setPhase(Phase* phase);
- //   void setGraphFont(const QFont& font);
 
-    void generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList, const Model *model);
+    void generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList);
     void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QVector<variable_t>& showVariableList);
 
 
