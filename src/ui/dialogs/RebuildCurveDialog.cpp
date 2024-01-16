@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
     Philippe LANOS
@@ -48,7 +48,7 @@ RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<
     mYTabMinMax(*minMax),
     mYpTabMinMax(*minMaxP)
 {
-    setWindowTitle(tr("export custom curve and map"));
+    setWindowTitle(tr("Rebuild Custom Curve and Map"));
 
     curveCB = new QCheckBox("curve") ;
     curveCB->setChecked(true);
@@ -244,7 +244,7 @@ void RebuildCurveDialog::Y1MinIsValid(QString str)
 {
     bool ok;
     QLocale locale;
-    double tmp =locale.toDouble(str, &ok);
+    double tmp = locale.toDouble(str, &ok);
     Y1MinOK  = ok && tmp < mYTabMinMax[0].second;
     if (Y1MinOK)
         mYTabMinMax[0].first = tmp;

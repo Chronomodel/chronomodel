@@ -4730,7 +4730,7 @@ void ResultsView::exportFullImage()
 bool ResultsView::isCurve() const
 {
     if (mModel != nullptr)
-        return mModel->mProject->isCurve();
+        return mModel->is_curve;
     else
         return false;
 }

@@ -886,7 +886,7 @@ void MainWindow::rebuildExportCurve()
     /*ComputeY is different from displayY,
      * for example for the vector case, you have to compute on the 3 components, but display only 2*/
 
-    std::shared_ptr<ModelCurve> curveModel = std::shared_ptr<ModelCurve>(dynamic_cast<ModelCurve*>(mProject->mModel.get()));//  dynamic_cast<ModelCurve*>(mProject->mModel.get());
+    std::shared_ptr<ModelCurve> curveModel = mProject->mModel;
 
 
     // Setting actual minmax value
@@ -915,8 +915,6 @@ void MainWindow::rebuildExportCurve()
         const int YGrid = newMapSizeXY.second;
         tabMinMax = qDialog.getYTabMinMax();
         tabMinMaxGP = qDialog.getYpTabMinMax();
-
-        //ModelCurve* modelCurve = static_cast<ModelCurve*>(mProject->mModel);
 
         // ____
 
@@ -1003,8 +1001,6 @@ void MainWindow::rebuildExportCurve()
                     meanGByChain.gz.mapGP.setRangeY(tabMinMaxGP[2].first, tabMinMaxGP[2].second);
                 }
             }
-
-            //modelCurve->mPosteriorMeanG = clearMeanG;
 
             int totalIterAccepted = 1;
             if (!curveModel->compute_Y) {

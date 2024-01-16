@@ -52,7 +52,7 @@ class Model;
 class Phase;
 class EventConstraint;
 
-#define S02_BAYESIAN
+#define NotS02_BAYESIAN
 
 class Event
 {
