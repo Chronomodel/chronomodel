@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -193,9 +193,8 @@ QJsonObject Project::emptyState()
  */
 bool Project::pushProjectState(const QJsonObject &state, const QString &reason, bool notify)
 {
-
     if (reason == NEW_PROJECT_REASON || reason == PROJECT_LOADED_REASON ) {
-       // SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
+
         SetProjectState* command = new SetProjectState(this, QJsonObject(), state, reason, notify);
         MainWindow::getInstance()->getUndoStack()->push(command);
         command = nullptr;
@@ -2167,14 +2166,12 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
  */
 void Project::updateDate(int eventId, int dateIndex)
 {
-    QJsonObject state = mState;
 
-    QJsonObject settingsJson = state.value(STATE_SETTINGS).toObject();
+    const QJsonObject &settingsJson = mState.value(STATE_SETTINGS).toObject();
     StudyPeriodSettings settings = StudyPeriodSettings::fromJson(settingsJson);
-
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
 
-    for (int i (0); i < events.size(); ++i) {
+    for (int i = 0; i < events.size(); ++i) {
         QJsonObject event = events.at(i).toObject();
         if (event.value(STATE_ID).toInt() == eventId) {
             QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
@@ -2211,12 +2208,16 @@ void Project::updateDate(int eventId, int dateIndex)
                         const bool valid = plugin->isDateValid(date.value(STATE_DATE_DATA).toObject(), settings);
                         date[STATE_DATE_VALID] = valid;
 
-                        dates[dateIndex] = date;
-                        event[STATE_EVENT_DATES] = dates;
-                        events[i] = event;
-                        state[STATE_EVENTS] = events;
+                        if (dates[dateIndex].toObject() != date) {
+                            QJsonObject state = mState;
 
-                        pushProjectState(state, "Date from dialog", true);
+                            dates[dateIndex] = date;
+                            event[STATE_EVENT_DATES] = dates;
+                            events[i] = event;
+                            state[STATE_EVENTS] = events;
+
+                            pushProjectState(state, "Date from dialog", true);
+                        }
 
                     } else {
                         QMessageBox message(QMessageBox::Critical,
@@ -2237,13 +2238,12 @@ void Project::updateDate(int eventId, int dateIndex)
 
 void Project::deleteDates(int eventId, const QList<int>& dateIndexes)
 {
-    QJsonObject state = mState;
+    QJsonArray events = mState.value(STATE_EVENTS).toArray();
 
-    QJsonArray events = state.value(STATE_EVENTS).toArray();
     for (int i = 0; i < events.size(); ++i) {
         QJsonObject event = events.at(i).toObject();
         if (event.value(STATE_ID).toInt() == eventId) {
-            QJsonArray dates_trash = state.value(STATE_DATES_TRASH).toArray();
+            QJsonArray dates_trash = mState.value(STATE_DATES_TRASH).toArray();
             QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
 
             for (int j = dates.size()-1; j >= 0; --j) {
@@ -2254,6 +2254,8 @@ void Project::deleteDates(int eventId, const QList<int>& dateIndexes)
             }
             event[STATE_EVENT_DATES] = dates;
             events[i] = event;
+
+            QJsonObject state = mState;
             state[STATE_EVENTS] = events;
             state[STATE_DATES_TRASH] = dates_trash;
 
@@ -2267,7 +2269,7 @@ void Project::deleteDates(int eventId, const QList<int>& dateIndexes)
     MainWindow::getInstance() -> setLogEnabled(false);
 }
 
-void Project::deleteSelectedTrashedDates(const QList<int>& ids)
+void Project::deleteSelectedTrashedDates(const QList<int> &ids)
 {
     QJsonObject stateNext = mState;
 
