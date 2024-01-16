@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -45,10 +45,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QPainter>
 #include <QPainterPath>
 
-ColorPicker::ColorPicker(const QColor& color, QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
+Q_PROPERTY(QColor mColor READ getColor WRITE setColor)
+
+ColorPicker::ColorPicker(const QColor &color, QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mColor(color)
 {
-    setMinimumHeight(20);
+    setFixedHeight(20);
 }
 
 ColorPicker::~ColorPicker()

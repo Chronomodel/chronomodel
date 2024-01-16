@@ -93,7 +93,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     
     connect(mNameEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventName);
     connect(mColorPicker, &ColorPicker::colorChanged, this, &EventPropertiesView::updateEventColor);
-    connect(mMethodCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &EventPropertiesView::updateEventMethod);
+    connect(mMethodCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &EventPropertiesView::updateEventSampler);
     
     // field curve parameter
 
@@ -496,8 +496,11 @@ void EventPropertiesView::updateEventColor(const QColor &color)
     MainWindow::getInstance()->updateEvent(event, tr("Event color updated"));
 }
 
-void EventPropertiesView::updateEventMethod(int index)
+void EventPropertiesView::updateEventSampler(int index)
 {
+    if (mEvent->value(STATE_EVENT_SAMPLER).toInt() == index)
+        return;
+
     MHVariable::SamplerProposal sp = MHVariable::eDoubleExp;
     switch (index) {
     case 0 :
@@ -517,7 +520,7 @@ void EventPropertiesView::updateEventMethod(int index)
 
 // Event Known Properties
 
-void EventPropertiesView::updateKnownFixed(const QString& text)
+void EventPropertiesView::updateKnownFixed(const QString &text)
 {
     bool ok;
     double fixedValue = locale().toDouble(text, &ok);

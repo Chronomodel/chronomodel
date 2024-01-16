@@ -97,7 +97,7 @@ private slots:
 
     void updateEventName();
     void updateEventColor(const QColor& color);
-    void updateEventMethod(int index);
+    void updateEventSampler(int index);
     void updateIndex(int index);
 
     // Curve

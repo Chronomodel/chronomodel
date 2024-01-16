@@ -47,7 +47,7 @@ SilvermanDialog::SilvermanDialog(SilvermanParam *param, QWidget* parent, Qt::Win
 {
     setWindowTitle(tr("Cubic Spline Regression"));
     setModal(true);
-    mDescriptionLabel = new QLabel(tr("Non-parametric regression curve following the method described by Green & Silverman (1994), /r Time knots are fixed (no event model). /r Smoothing parameter, if not fixed, is estimated by cross-validation. \r Time constraints are not taken into account. \r Error envelop is estimated by unbiaised residual variance."), this);
+    mDescriptionLabel = new QLabel(tr("Non-parametric regression curve following the method described by Green & Silverman (1994), Time knots are fixed (no event model). Smoothing parameter, if not fixed, is estimated by cross-validation. Time constraints are not taken into account. Error envelop is estimated by unbiaised residual variance."), this);
     mDescriptionLabel->setAlignment(Qt::AlignCenter);
     mDescriptionLabel->setWordWrap(true);
 

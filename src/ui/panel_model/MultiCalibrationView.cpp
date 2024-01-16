@@ -128,7 +128,7 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mExportResults->setToolTip(tr("Export stats to a CSV file"));
 
 
-    mGraphHeightLab = new Label(tr("Y Zoom"), this);
+    mGraphHeightLab = new Label(tr("Zoom"), this);
     mGraphHeightLab->setAdjustText();
     mGraphHeightLab->setAlignment(Qt::AlignHCenter);
     mGraphHeightLab->setLight();
@@ -151,10 +151,6 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mColorClipBut->setFlatVertical();
     mColorClipBut->setToolTip(tr("Set Personal Densities Color"));
     mColorClipBut->setIconOnly(true);
-
-   // frameSeparator = new QFrame(this);
-    //frameSeparator->setFrameStyle(QFrame::Panel);
-    //frameSeparator->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
 
     mStartLab = new Label(tr("Start"), this);
     mStartLab->setAdjustText();
