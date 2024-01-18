@@ -372,7 +372,11 @@ QJsonObject Date::toJson() const
     date[STATE_NAME] = mName;
     date[STATE_DATE_DATA] = mData;
     date[STATE_DATE_ORIGIN] = mOrigin;
-    date[STATE_DATE_PLUGIN_ID] = mPlugin->getId();
+    if (mPlugin)
+        date[STATE_DATE_PLUGIN_ID] = mPlugin->getId();
+    else
+        date[STATE_DATE_PLUGIN_ID] = -1;
+
     date[STATE_DATE_SAMPLER] = mTi.mSamplerProposal;
     date[STATE_DATE_VALID] = mIsValid;
 

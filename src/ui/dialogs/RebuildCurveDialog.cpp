@@ -48,7 +48,7 @@ RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<
     mYTabMinMax(*minMax),
     mYpTabMinMax(*minMaxP)
 {
-    setWindowTitle(tr("Rebuild Custom Curve and Map"));
+    setWindowTitle(tr("Rescale Curve and its Density"));
 
     curveCB = new QCheckBox("curve") ;
     curveCB->setChecked(true);

@@ -309,6 +309,8 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
 
     for (int i = 0; i < datesDragged.size(); ++i) {
         QJsonObject date = datesDragged.at(i).second.toJson();
+        if (date.value(STATE_DATE_PLUGIN_ID)  == -1) // it's invalid or a bound
+            continue;
         date[STATE_ID] = project->getUnusedDateId(dates);
         if (date[STATE_NAME].toString() == "")
             date[STATE_NAME] = "No Name " + QString::number(date[STATE_ID].toInt());
