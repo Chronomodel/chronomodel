@@ -50,7 +50,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 
 #include <cstdlib>
-#include <iostream>
 #include <stdio.h>
 
 PluginDensity::PluginDensity()

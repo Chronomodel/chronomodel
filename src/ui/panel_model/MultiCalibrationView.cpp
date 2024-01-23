@@ -253,11 +253,15 @@ void MultiCalibrationView::paintEvent(QPaintEvent* e)
     (void) e;
 
     QPainter p(this);
+
+    const int textHeight = int (1.2 * (fontMetrics().descent() + fontMetrics().ascent()) );
+    const qreal yPosBottomBar0 = height() - 2*textHeight - 12;
+
     // drawing a background under button
-    p.fillRect(width() - mButtonWidth, 0, mButtonWidth, mDrawing->height(), Painting::borderDark);
+    p.fillRect(width() - mButtonWidth, 0, mButtonWidth, yPosBottomBar0, Painting::borderDark);
 
     // Bottom Tools Bar
-    p.fillRect(0, mStartLab->y() - 2,  width(), height() - mDrawing->height() + 2, Painting::borderDark);
+    p.fillRect(0, mStartLab->y() - 2,  width(), yPosBottomBar0 + 2, Painting::borderDark);
 
 }
 
@@ -814,7 +818,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                 break;
             case CurveSettings::eProcess_Inclination:
                 X = xIncDepth;
-                errX = s_XA95Depth;
+                errX = 1.96*s_XA95Depth/2.448;//ici diviser par 2,448
                 Y = 0.;
                 errY = 0.;
                 Z = 0.;
@@ -822,7 +826,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                 break;
             case CurveSettings::eProcess_Declination:
                 X = yDec;
-                errX = s_XA95Depth/ cos(xIncDepth/180*3.14 );
+                errX = 1.96*(s_XA95Depth/2.448)/ cos(xIncDepth/180*3.14 );
                 Y = 0.;
                 errY = 0.;
                 Z = 0.;
@@ -831,7 +835,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
             case CurveSettings::eProcess_Unknwon_Dec:
                 X = xIncDepth;
-                errX = s_XA95Depth;
+                errX = 1.96*s_XA95Depth/2.448;
                 Y = zField;
                 errY = s_ZField;
                 Z = 0.;
@@ -848,18 +852,18 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                 break;
             case CurveSettings::eProcess_Spherical:
                 X = xIncDepth;
-                errX = s_XA95Depth;
+                errX = 1.96*s_XA95Depth/2.448;//ici diviser par 2,448
                 Y = yDec;
-                errY = s_XA95Depth/ cos(xIncDepth/180.*M_PI );
+                errY = errX/ cos(xIncDepth/180.*M_PI );
                 Z = 0.;
                 errZ = 0.;
                 break;
 
             case CurveSettings::eProcess_Vector:
                 X = xIncDepth;
-                errX = s_XA95Depth;
+                errX = 1.96*s_XA95Depth/2.448;//ici diviser par 2,448
                 Y = yDec;
-                errY = s_XA95Depth/ cos(xIncDepth/180.*M_PI );
+                errY = errX/ cos(xIncDepth/180.*M_PI );
                 Z = zField;
                 errZ = s_ZField;
                 break;
@@ -887,8 +891,6 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             ptsX.Xmin = DateUtils::convertToAppSettingsFormat(bound);
             ptsX.Xmax = ptsX.Xmin;
 
-            //if (ptsX.Xmin > ptsX.Xmax)
-              //  std::swap(ptsX.Xmin, ptsX.Xmax);
             ptsX.Ymin = X - errX;
             ptsX.Ymax = X + errX;
             ptsX.color = color;
@@ -927,9 +929,9 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                 case CurveSettings::eProcess_Unknwon_Dec:
                 case CurveSettings::eProcess_Spherical:
                 case CurveSettings::eProcess_Vector:
-                    poly_data_X_err[bound] = errX ;
-                    poly_data_Y_err[bound] = errY ;
-                    poly_data_Z_err[bound] = errZ ;
+                    poly_data_X_err[bound] = errX/1.96 ;
+                    poly_data_Y_err[bound] = errY/1.96 ;
+                    poly_data_Z_err[bound] = errZ/1.96 ;
                     break;
 
                 case CurveSettings::eProcess_Univariate:
@@ -983,9 +985,9 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             case CurveSettings::eProcess_Unknwon_Dec:
                             case CurveSettings::eProcess_Spherical:
                             case CurveSettings::eProcess_Vector:
-                                poly_data_X_err[(tmin+tmax)/2.] = errX ;
-                                poly_data_Y_err[(tmin+tmax)/2.] = errY ;
-                                poly_data_Z_err[(tmin+tmax)/2.] = errZ ;
+                                poly_data_X_err[(tmin+tmax)/2.] = errX/1.96 ;
+                                poly_data_Y_err[(tmin+tmax)/2.] = errY/1.96 ;
+                                poly_data_Z_err[(tmin+tmax)/2.] = errZ/1.96 ;
                                 break;
 
                             case CurveSettings::eProcess_Univariate:
@@ -1104,8 +1106,6 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
             graph3->set_points(curveDataPointsZ);
             graph3->setTipYLab(cs.Z_short_name());
-            //graphList.append(graph3);
-            //listAxisVisible.push_back(true);
 
         case CurveSettings::eProcess_Spherical:
         case CurveSettings::eProcess_Unknwon_Dec:
@@ -1113,8 +1113,6 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             //graphList.append(new GraphTitle(cs.YLabel(), this));
             graph2->set_points(curveDataPointsY);
             graph2->setTipYLab(cs.Y_short_name());
-            //graphList.append(graph2);
-            //listAxisVisible.push_back(true);
 
         default:
             //graphList.append(new GraphTitle(cs.XLabel(), this));
@@ -1123,9 +1121,6 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
             graph1->setYAxisMode( processType == CurveSettings::eProcess_None ? GraphView::eMinMaxHidden: GraphView::eAllTicks);
             graph1->showYAxisSubTicks(processType != CurveSettings::eProcess_None);
-            //graphList.append(graph1);
-
-            //listAxisVisible.push_back(true);
             break;
     }
 
@@ -1145,6 +1140,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graphList.append(graph3);
             listAxisVisible.push_back(true);
             break;
+
         case CurveSettings::eProcess_Spherical:
         case CurveSettings::eProcess_Unknwon_Dec:
         case CurveSettings::eProcess_2D:
@@ -1333,6 +1329,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                 Z = 0.;
                 errZ = 0.;
                 break;
+
             case CurveSettings::eProcess_Depth:
                 X = xIncDepth;
                 errX = 1.96*s_XA95Depth;
@@ -1341,6 +1338,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                 Z = 0.;
                 errZ = 0.;
                 break;
+
             case CurveSettings::eProcess_Field:
                 X = zField;
                 errX = 1.96*s_ZField;
@@ -1349,17 +1347,19 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                 Z = 0.;
                 errZ = 0.;
                 break;
+
             case CurveSettings::eProcess_Inclination:
                 X = xIncDepth;
-                errX = s_XA95Depth;
+                errX = 1.96*s_XA95Depth/2.448;
                 Y = 0.;
                 errY = 0.;
                 Z = 0.;
                 errZ = 0.;
                 break;
+
             case CurveSettings::eProcess_Declination:
                 X = yDec;
-                errX = s_XA95Depth/ cos(xIncDepth/180*3.14 );
+                errX = 1.96*(s_XA95Depth/2.448)/ cos(xIncDepth/180*M_PI );
                 Y = 0.;
                 errY = 0.;
                 Z = 0.;
@@ -1368,7 +1368,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 
             case CurveSettings::eProcess_Unknwon_Dec:
                 X = xIncDepth;
-                errX = s_XA95Depth;
+                errX = 1.96*s_XA95Depth/2.448;
                 Y = zField;
                 errY = s_ZField;
                 Z = 0.;
@@ -1383,23 +1383,25 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                 Z = 0.;
                 errZ = 0.;
                 break;
+
             case CurveSettings::eProcess_Spherical:
                 X = xIncDepth;
-                errX = s_XA95Depth;
+                errX = 1.96*s_XA95Depth/2.448;
                 Y = yDec;
-                errY = s_XA95Depth/ cos(xIncDepth/180.*M_PI );
+                errY = errX/ cos(xIncDepth/180.*M_PI );
                 Z = 0.;
                 errZ = 0.;
                 break;
 
             case CurveSettings::eProcess_Vector:
                 X = xIncDepth;
-                errX = s_XA95Depth;
+                errX = 1.96*s_XA95Depth/2.448;
                 Y = yDec;
-                errY = s_XA95Depth/ cos(xIncDepth/180.*M_PI );
+                errY = errX/ cos(xIncDepth/180.*M_PI );
                 Z = zField;
                 errZ = s_ZField;
                 break;
+
             case CurveSettings::eProcess_3D:
                 X = xIncDepth;
                 errX = 1.96*s_XA95Depth;
@@ -1408,6 +1410,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                 Z = zField;
                 errZ = 1.96*s_ZField;
                 break;
+
             default:
                 X = - sEvent.value(STATE_ITEM_Y).toDouble();
                 errX = 0.;
@@ -1464,9 +1467,9 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                     case CurveSettings::eProcess_Unknwon_Dec:
                     case CurveSettings::eProcess_Spherical:
                     case CurveSettings::eProcess_Vector:
-                        vec_X_err.push_back(errX);
-                        vec_Y_err.push_back(errY);
-                        vec_Z_err.push_back(errZ);
+                        vec_X_err.push_back(errX/1.96);
+                        vec_Y_err.push_back(errY/1.96);
+                        vec_Z_err.push_back(errZ/1.96);
                         break;
 
                     case CurveSettings::eProcess_Univariate:
@@ -1519,9 +1522,9 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                             case CurveSettings::eProcess_Unknwon_Dec:
                             case CurveSettings::eProcess_Spherical:
                             case CurveSettings::eProcess_Vector:
-                            vec_X_err.push_back(errX);
-                            vec_Y_err.push_back(errY);
-                            vec_Z_err.push_back(errZ);
+                            vec_X_err.push_back(errX/1.96);
+                            vec_Y_err.push_back(errY/1.96);
+                            vec_Z_err.push_back(errZ/1.96);
                                 break;
 
                             case CurveSettings::eProcess_Univariate:
@@ -1543,6 +1546,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                         if (mSilverParam.use_error_measure) {
                             ptsX.Ymin = X - errX;
                             ptsX.Ymax = X + errX;
+
                         } else {
                             ptsX.Ymin = X;
                             ptsX.Ymax = X;
@@ -1559,6 +1563,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                         if (mSilverParam.use_error_measure) {
                             ptsY.Ymin = Y - errY;
                             ptsY.Ymax = Y + errY;
+
                         } else {
                             ptsY.Ymin = Y;
                             ptsY.Ymax = Y ;
@@ -1573,6 +1578,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                         if (mSilverParam.use_error_measure) {
                             ptsZ.Ymin = Z - errZ;
                             ptsZ.Ymax = Z + errZ;
+
                         } else {
                             ptsZ.Ymin = Z;
                             ptsZ.Ymax = Z;
@@ -1613,42 +1619,48 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
         std::vector<double>::iterator it;
         bool nullValue = false;
         switch (processType) {
-        case CurveSettings::eProcess_3D:
-            it = std::find_if (vec_Z_err.begin(), vec_Z_err.end(), [](double i){return i == 0.;} );
-            if( it != vec_Z_err.end()) {
-                nullValue = true;
-                break;
-            }
-        case CurveSettings::eProcess_2D:
-        case CurveSettings::eProcess_Spherical:
-            it = std::find_if (vec_Y_err.begin(), vec_Y_err.end(), [](double i){return i == 0.;} );
-            if( it != vec_Y_err.end()) {
-                nullValue = true;
-                break;
-            }
-        case CurveSettings::eProcess_Univariate:
-        case CurveSettings::eProcess_Depth:
-            it = std::find_if (vec_X_err.begin(), vec_X_err.end(), [](double i){return i == 0.;} );
-            if( it != vec_X_err.end()) {
-                nullValue = true;
-                break;
-            }
+            case CurveSettings::eProcess_3D:
+                it = std::find_if (vec_Z_err.begin(), vec_Z_err.end(), [](double i){return i == 0.;} );
+                if (it != vec_Z_err.end()) {
+                    nullValue = true;
+                    break;
+                }
+            case CurveSettings::eProcess_2D:
+            case CurveSettings::eProcess_Unknwon_Dec:
+            case CurveSettings::eProcess_Spherical:
+                it = std::find_if (vec_Y_err.begin(), vec_Y_err.end(), [](double i){return i == 0.;} );
+                if (it != vec_Y_err.end()) {
+                    nullValue = true;
+                    break;
+                }
+            case CurveSettings::eProcess_Univariate:
+            case CurveSettings::eProcess_Inclination:
+            case CurveSettings::eProcess_Declination:
+            case CurveSettings::eProcess_Field:
+            case CurveSettings::eProcess_Depth:
+                it = std::find_if (vec_X_err.begin(), vec_X_err.end(), [](double i){return i == 0.;} );
+                if (it != vec_X_err.end()) {
+                    nullValue = true;
+                    break;
+                }
             break;
 
-        default:
+            default:
             break;
         }
         if (nullValue) {
             QMessageBox message(QMessageBox::Warning,
                                 tr("Some errors are zero"),
                                 "The calculation cannot be performed with zero-measurement errors, weights cannot be zero !",
-                                QMessageBox::Ok,
-                                qApp->activeWindow());
+                                QMessageBox::Ok);//,
+                                //qApp->activeWindow());
+
+            message.setWindowModality(Qt::WindowModal);
             message.exec();
             return fitPlot;
         }
 
-        if (processType == CurveSettings::eProcess_Spherical) {
+        /*if (processType == CurveSettings::eProcess_Spherical) {
             auto e_d = begin(vec_Y_err);
             for (auto e_i : vec_X_err) {
                 e_i = e_i *rad /2.448;
@@ -1656,18 +1668,28 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                 e_d++;
             }
         }
+        if (processType == CurveSettings::eProcess_Inclination || processType == CurveSettings::eProcess_Declination) {
+            for (auto e_i : vec_X_err) {
+                e_i = e_i *rad /2.448;
+            }
+        }*/
     }
 
     std::pair<MCMCSpline, std::pair<double, double>> do_spline_res;
     switch (processType) {
         case CurveSettings::eProcess_Univariate:
+        case CurveSettings::eProcess_Inclination:
+        case CurveSettings::eProcess_Declination:
+        case CurveSettings::eProcess_Field:
         case CurveSettings::eProcess_Depth:
                 do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam);
                 break;
+        case CurveSettings::eProcess_Unknwon_Dec:
         case CurveSettings::eProcess_2D:
         case CurveSettings::eProcess_Spherical:
                 do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam, vec_Y, vec_Y_err);
                 break;
+        case CurveSettings::eProcess_Vector:
         case CurveSettings::eProcess_3D:
                 do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam, vec_Y, vec_Y_err, vec_Z, vec_Z_err);
                 break;
@@ -1687,9 +1709,14 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
     spline_info +=  tr(" Estimated std g = %1").arg( QString::number(sqrt(lambda_Vg.second)));
 
     if (processType == CurveSettings::eProcess_Univariate ||
+        processType == CurveSettings::eProcess_Inclination ||
+        processType == CurveSettings::eProcess_Declination ||
+        processType == CurveSettings::eProcess_Field ||
         processType == CurveSettings::eProcess_Depth ||
         processType == CurveSettings::eProcess_2D ||
+        processType == CurveSettings::eProcess_Unknwon_Dec ||
         processType == CurveSettings::eProcess_Spherical ||
+        processType == CurveSettings::eProcess_Vector ||
         processType == CurveSettings::eProcess_3D) {
 
             const auto &curves = composante_to_curve(spline.splineX, tmin_poly, tmax_poly, step_poly);
@@ -1707,23 +1734,25 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
     }
 
     if (processType == CurveSettings::eProcess_2D ||
+        processType == CurveSettings::eProcess_Unknwon_Dec ||
         processType == CurveSettings::eProcess_Spherical ||
+        processType == CurveSettings::eProcess_Vector ||
         processType == CurveSettings::eProcess_3D)  {
 
             const auto &curves = composante_to_curve(spline.splineY, tmin_poly, tmax_poly, step_poly);
 
             if (!isnan(curves[0][0]) && !isnan(curves[1][0]) && !isnan(curves[2][0])) {
-                const GraphCurve &curve_G = FunctionCurve(curves[0], "G", QColor(119, 95, 200) );
+                GraphCurve curve_G = FunctionCurve(curves[0], "G", QColor(119, 95, 200) );
                 GraphCurve curve_GEnv = shapeCurve(curves[2], curves[1], "G Env",
                                                           QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30));
-                //curve_G.mVisible = true;
+                curve_G.mVisible = true;
                 curve_GEnv.mVisible = true;
                 graph2->add_curve(curve_G);
                 graph2->add_curve(curve_GEnv);
             }
     }
 
-    if (processType == CurveSettings::eProcess_3D) {
+    if (processType == CurveSettings::eProcess_3D || processType == CurveSettings::eProcess_Vector) {
 
             const auto &curves = composante_to_curve(spline.splineZ, tmin_poly, tmax_poly, step_poly);
 

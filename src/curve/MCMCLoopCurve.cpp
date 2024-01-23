@@ -5185,9 +5185,9 @@ void MCMCLoopCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline spline,
     unsigned i0 = 0; // tIdx étant croissant, i0 permet de faire la recherche à l'indice du temps précedent
     for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
 
-        double gx, gpx, gsx, varGx = 0;
-        double gy, gpy, gsy, varGy = 0;
-        double gz, gpz, gsz, varGz = 0;
+        double gx = 0, gpx = 0, gsx = 0, varGx = 0;
+        double gy = 0, gpy = 0, gsy = 0, varGy = 0;
+        double gz = 0, gpz = 0, gsz = 0, varGz = 0;
 
         const double t = (double)idxT * stepT + model.mSettings.mTmin ;
         valeurs_G_VarG_GP_GS(t, spline.splineX, gx, varGx, gpx, gsx, i0, model.mSettings.mTmin, model.mSettings.mTmax);
@@ -5629,9 +5629,15 @@ void MCMCLoopCurve::prepareEventY(Event* const event  )
     const double rad = M_PI / 180.;
 
     switch (mCurveSettings.mProcessType) {
+        case CurveSettings:: eProcess_Inclination:
+             event->mYx = event->mXIncDepth;
+             event->mSy = event->mS_XA95Depth/2.448;
+
+             event->mYy = 0;
+             event->mYz = 0;
+        break;
         case CurveSettings::eProcess_Univariate:
         case CurveSettings::eProcess_Depth:
-        case CurveSettings:: eProcess_Inclination:
             event->mYx = event->mXIncDepth;
             event->mSy = event->mS_XA95Depth;
 
@@ -5660,7 +5666,7 @@ void MCMCLoopCurve::prepareEventY(Event* const event  )
 
         case CurveSettings::eProcess_Declination:
             event->mYx = event->mYDec;
-            event->mSy = event->mS_XA95Depth / cos(event->mXIncDepth * rad); //ligne 364 : EctYij:=(1/(sqrt(Kij)*cos(Iij*rad)))*Deg;
+            event->mSy = (event->mS_XA95Depth / cos(event->mXIncDepth * rad))/2.448; //ligne 364 : EctYij:=(1/(sqrt(Kij)*cos(Iij*rad)))*Deg;
             event->mYy = 0;
             event->mYz = 0;
             break;

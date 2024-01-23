@@ -85,7 +85,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mMethodLab = new QLabel(tr("Method"), mTopView);
     mMethodLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mMethodCombo = new QComboBox(mTopView);
-    mMethodInfo = new QLabel(tr("MH : proposal = adapt. Gaussian random walk"), mTopView);
+    mMethodInfo = new QLabel(tr("Adapt. Gaussian random walk"), mTopView);
 
     mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eDoubleExp));
     mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eBoxMuller));
