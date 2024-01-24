@@ -1213,6 +1213,18 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             selectedEvents.append(jsonEv);
     }
 
+    MultiCalibrationDrawing* fitPlot = new MultiCalibrationDrawing(this);
+
+    if (selectedEvents.size()<3) {
+        QMessageBox message(QMessageBox::Warning,
+                            tr("Not enough points"),
+                            tr("The calculation requires at least 3 points !"),
+                            QMessageBox::Ok);
+
+        message.setWindowModality(Qt::WindowModal);
+        message.exec();
+        return fitPlot;
+    }
 
     GraphView* graph1 = nullptr;
     GraphView* graph2 = nullptr;
@@ -1603,7 +1615,6 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
     const double tmax_poly = mSettings .getTmaxFormated();
     const double step_poly = (tmax_poly-tmin_poly)/1000.;
 
-    MultiCalibrationDrawing* fitPlot = new MultiCalibrationDrawing(this);
 
     // transfere des infos de la boite SilvermanDialog via cs
 
@@ -1651,28 +1662,14 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
         if (nullValue) {
             QMessageBox message(QMessageBox::Warning,
                                 tr("Some errors are zero"),
-                                "The calculation cannot be performed with zero-measurement errors, weights cannot be zero !",
-                                QMessageBox::Ok);//,
-                                //qApp->activeWindow());
+                                tr("The calculation cannot be performed with zero-measurement errors, weights cannot be zero !"),
+                                QMessageBox::Ok);
 
             message.setWindowModality(Qt::WindowModal);
             message.exec();
             return fitPlot;
         }
 
-        /*if (processType == CurveSettings::eProcess_Spherical) {
-            auto e_d = begin(vec_Y_err);
-            for (auto e_i : vec_X_err) {
-                e_i = e_i *rad /2.448;
-                *e_d = e_i;
-                e_d++;
-            }
-        }
-        if (processType == CurveSettings::eProcess_Inclination || processType == CurveSettings::eProcess_Declination) {
-            for (auto e_i : vec_X_err) {
-                e_i = e_i *rad /2.448;
-            }
-        }*/
     }
 
     std::pair<MCMCSpline, std::pair<double, double>> do_spline_res;
@@ -1682,19 +1679,22 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
         case CurveSettings::eProcess_Declination:
         case CurveSettings::eProcess_Field:
         case CurveSettings::eProcess_Depth:
-                do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam);
-                break;
+            do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam);
+        break;
+
         case CurveSettings::eProcess_Unknwon_Dec:
         case CurveSettings::eProcess_2D:
         case CurveSettings::eProcess_Spherical:
-                do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam, vec_Y, vec_Y_err);
-                break;
+            do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam, vec_Y, vec_Y_err);
+        break;
+
         case CurveSettings::eProcess_Vector:
         case CurveSettings::eProcess_3D:
-                do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam, vec_Y, vec_Y_err, vec_Z, vec_Z_err);
-                break;
+            do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam, vec_Y, vec_Y_err, vec_Z, vec_Z_err);
+        break;
+
         default:
-                break;
+        break;
     }
     MCMCSpline spline = do_spline_res.first;
     std::pair<double, double> lambda_Vg = do_spline_res.second;
@@ -1789,7 +1789,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 
             graph1->setYAxisMode( processType == CurveSettings::eProcess_None ? GraphView::eMinMaxHidden: GraphView::eAllTicks);
             graph1->showYAxisSubTicks(processType != CurveSettings::eProcess_None);
-            break;
+        break;
     }
     // Print graphics in the right order
     switch (processType) {
@@ -1806,7 +1806,8 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             graphList.append(new GraphTitle(cs.ZLabel(), this));
             graphList.append(graph3);
             listAxisVisible.push_back(true);
-            break;
+        break;
+
         case CurveSettings::eProcess_Spherical:
         case CurveSettings::eProcess_Unknwon_Dec:
         case CurveSettings::eProcess_2D:
@@ -1817,12 +1818,13 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             graphList.append(new GraphTitle(cs.YLabel(), this));
             graphList.append(graph2);
             listAxisVisible.push_back(true);
-            break;
+        break;
+
         default:
             graphList.append(new GraphTitle(cs.XLabel(), this));
             graphList.append(graph1);
             listAxisVisible.push_back(true);
-            break;
+        break;
         }
 
 
@@ -1914,13 +1916,14 @@ void MultiCalibrationView::updateGraphsSize(const QString &sizeStr)
     } else
         return;
 
-    if (mScatterClipBut->isChecked() || mFitClipBut->isChecked())
-        mDrawing->setGraphHeight(3*mGraphHeight);
-    else
-        mDrawing->setGraphHeight(mGraphHeight);
+    if (mDrawing) {
+        if (mScatterClipBut->isChecked() || mFitClipBut->isChecked())
+            mDrawing->setGraphHeight(3*mGraphHeight);
+        else
+            mDrawing->setGraphHeight(mGraphHeight);
 
-    if (mDrawing)
         mDrawing->updateLayout();
+    }
 
 }
 
@@ -1930,17 +1933,20 @@ void MultiCalibrationView::updateYZoom(const double prop)
 
     mGraphHeight = int ( prop * origin * 2);
 
-    if (mScatterClipBut->isChecked() || mFitClipBut->isChecked())
-        mDrawing->setGraphHeight(3*mGraphHeight);
-    else
-        mDrawing->setGraphHeight(mGraphHeight);
-
     const QString sizeText = QLocale().toString(mGraphHeight / origin * 100, 'f', 0);
     mGraphHeightEdit->blockSignals(true);
     mGraphHeightEdit->setText(sizeText);
     mGraphHeightEdit->blockSignals(false);
-    if (mDrawing)
+
+    if(mDrawing) {
+        if (mScatterClipBut->isChecked() || mFitClipBut->isChecked())
+            mDrawing->setGraphHeight(3*mGraphHeight);
+        else
+            mDrawing->setGraphHeight(mGraphHeight);
+
         mDrawing->updateLayout();
+    }
+
 }
 
 void MultiCalibrationView::updateScroll()
