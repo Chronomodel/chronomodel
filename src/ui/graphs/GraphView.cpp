@@ -74,6 +74,7 @@ GraphView::GraphView(QWidget *parent):
     mCanControlOpacity(false),
     mTipX(0.),
     mTipY(0.),
+    mTipComment(""),
     mTipWidth(110.),
     mTipHeight(40.),
     mTipVisible(false),
@@ -127,6 +128,7 @@ GraphView::GraphView(const GraphView& graph, QWidget *parent):
     mCanControlOpacity(graph.mCanControlOpacity),
     mTipX(graph.mTipX),
     mTipY(graph.mTipY),
+    mTipComment(graph.mTipComment),
     mTipWidth(graph.mTipWidth),
     mTipHeight(graph.mTipHeight),
     mTipVisible(graph.mTipVisible),
@@ -188,6 +190,7 @@ void GraphView::copyFrom(const GraphView &graph)
     mCanControlOpacity =graph.mCanControlOpacity;
     mTipX = graph.mTipX;
     mTipY = graph.mTipY;
+    mTipComment = graph.mTipComment;
     mTipWidth = graph.mTipWidth;
     mTipHeight = graph.mTipHeight;
     mTipVisible = graph.mTipVisible;
@@ -547,18 +550,12 @@ void GraphView::remove_all_zones()
 
 void GraphView::set_points_visible(const QString &name, const bool visible)
 {
-  //  bool modified = false;
     for (auto&& ref : refPoints) {
         if (ref.name == name) {
-            ref.setVisible(visible);// .mVisible = visible;
-  //          modified = true;
-      //      break;
+            ref.setVisible(visible);
         }
     }
-  /*  if (modified) {
-        adjustYScale();
-        repaintGraph(false);
-    }*/
+
 }
 
 //  Mouse events & Tool Tip
@@ -605,14 +602,26 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
         mTipRect.setHeight(mTipHeight);
 
         mTipX = getValueForX(e->position().x() );
-
         mTipY = getValueForY(e->position().y());
+
+        qreal errXp = getValueForX(e->position().x() +3);
+        qreal errXm = getValueForX(e->position().x() -3);
+        qreal errYp = getValueForY(e->position().y() -3);
+        qreal errYm = getValueForY(e->position().y() +3);
+
+        mTipComment = "";
+        for (auto&& ref : refPoints) {
+            if (ref.Xmin<=errXp && errXm<=ref.Xmax && ref.Ymin<=errYp && errYm<=ref.Ymax) {
+                    mTipComment = ref.comment;
+            }
+        }
 
         update(old_rect.adjusted(-20, -20, 20, 20).toRect());
 
 
     } else
         mTipVisible = false;
+
 
     update(mTipRect.adjusted(-20, -20, 20, 20).toRect());
 
@@ -749,14 +758,30 @@ void GraphView::paintEvent(QPaintEvent* )
         p.setPen(Qt::white);
 
         if (!mTipXLab.isEmpty() && !mTipYLab.isEmpty()) {
-            if (mUnitFunctionX)
-                 p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + stringForLocal(mUnitFunctionX(mTipX)));
-            else
-                 p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + stringForLocal(mTipX));
-            if (mUnitFunctionY)
-                 p.drawText(mTipRect.adjusted(0, mTipRect.height()/2., 0, 0), Qt::AlignCenter, mTipYLab + stringForLocal(mUnitFunctionY(mTipY)));
-            else
-                p.drawText(mTipRect.adjusted(0, mTipRect.height()/2., 0, 0), Qt::AlignCenter, mTipYLab + stringForLocal(mTipY));
+            if (mTipComment.isEmpty()) {
+                if (mUnitFunctionX)
+                    p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + stringForLocal(mUnitFunctionX(mTipX)));
+                else
+                    p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + stringForLocal(mTipX));
+                if (mUnitFunctionY)
+                    p.drawText(mTipRect.adjusted(0, mTipRect.height()/2., 0, 0), Qt::AlignCenter, mTipYLab + stringForLocal(mUnitFunctionY(mTipY)));
+                else
+                    p.drawText(mTipRect.adjusted(0, mTipRect.height()/2., 0, 0), Qt::AlignCenter, mTipYLab + stringForLocal(mTipY));
+
+            } else {
+                if (mUnitFunctionX)
+                    p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()*2./3.), Qt::AlignCenter, mTipXLab + stringForLocal(mUnitFunctionX(mTipX)));
+                else
+                    p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()*2./3.), Qt::AlignCenter, mTipXLab + stringForLocal(mTipX));
+
+                if (mUnitFunctionY)
+                    p.drawText(mTipRect.adjusted(0, mTipRect.height()*1./3., 0, -mTipRect.height()*1./3.), Qt::AlignCenter, mTipYLab + stringForLocal(mUnitFunctionY(mTipY)));
+                else
+                    p.drawText(mTipRect.adjusted(0, mTipRect.height()*1./3., 0, -mTipRect.height()*1./3.), Qt::AlignCenter, mTipYLab + stringForLocal(mTipY));
+
+                p.drawText(mTipRect.adjusted(0, mTipRect.height()*2./3., 0, 0), Qt::AlignCenter, mTipComment);
+
+            }
 
         } else if (!mTipXLab.isEmpty()) {
             if (mUnitFunctionX)

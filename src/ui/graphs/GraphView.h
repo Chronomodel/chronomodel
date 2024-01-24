@@ -252,6 +252,7 @@ protected:
     qreal  mTipY;
     QString  mTipXLab;
     QString  mTipYLab;
+    QString  mTipComment;
     qreal  mTipWidth;
     qreal  mTipHeight;
     bool  mTipVisible;

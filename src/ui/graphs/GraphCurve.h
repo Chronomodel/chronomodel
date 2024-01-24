@@ -70,6 +70,7 @@ public:
     QPen pen;
     QBrush brush;
     QString name;
+    QString comment;
 
 protected:
     bool mVisible;

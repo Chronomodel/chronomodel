@@ -128,6 +128,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
             ref.pen = QPen(Qt::black, 1, Qt::SolidLine);
             ref.brush = Qt::black;
             ref.name = "Events Points";
+            ref.comment = ePts.comment;
             curveEventsPoints.push_back(ref);
         }
 
@@ -145,6 +146,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
             ref.type = dPts.type;
             ref.color = dPts.color;
             ref.name = "Data Points";
+            ref.comment = dPts.comment;
             curveDataPoints.push_back(ref);
 
         }
@@ -439,10 +441,9 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
     const bool showGP = showVariableList.contains(eGP);
     const bool showGS = showVariableList.contains(eGS);
 
-     if (!mGraph->autoAdjustY()) {
+    if (!mGraph->autoAdjustY()) {
         mGraph->setRangeY(scale.min, scale.max);
         mGraph->setYScaleDivision(scale);
-        qDebug()<<"[GraphViewCurve::updateCurvesToShowForG] scale.mark="<< scale.mark;
     }
 
     mGraph->setCurveVisible("Map", mShowAllChains && (showG||showGP) && showMap);

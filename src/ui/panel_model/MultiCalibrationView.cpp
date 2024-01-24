@@ -899,6 +899,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             ptsX.pen = QPen(Qt::black, 1, Qt::SolidLine);
             ptsX.brush = Qt::black;
             ptsX.name = "Ref Points";
+            ptsX.comment = sEvent.value(STATE_NAME).toString();
             ptsX.setVisible(true);
 
             curveDataPointsX.push_back(ptsX);
@@ -1022,6 +1023,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             ptsX.pen = QPen(Qt::black, 1, Qt::SolidLine);
                             ptsX.brush = Qt::black;
                             ptsX.name = "Ref Points";
+                            ptsX.comment = sEvent.value(STATE_NAME).toString();
                             ptsX.setVisible(true);
                             curveDataPointsX.push_back(ptsX);
 
@@ -1065,6 +1067,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             ptsX.pen = QPen(Qt::black, 1, Qt::SolidLine);
                             ptsX.brush = Qt::black;
                             ptsX.name = "Ref Points";
+                            ptsX.comment = sEvent.value(STATE_NAME).toString();
                             ptsX.setVisible(true);
                             curveDataPointsX.push_back(ptsX);
 
@@ -1076,7 +1079,6 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             ptsY.name = "Ref Points";
                             ptsY.setVisible(true);
                             curveDataPointsY.push_back(ptsY);
-
 
                             ptsZ = ptsX;
                             ptsZ.Ymin = Z - errZ;
@@ -1447,6 +1449,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                 ptsX.pen = QPen(Qt::black, 1, Qt::SolidLine);
                 ptsX.brush = Qt::black;
                 ptsX.name = "Ref Points";
+                ptsX.comment = sEvent.value(STATE_NAME).toString();
                 ptsX.setVisible(true);
 
                 curveDataPointsX.push_back(ptsX);
@@ -1568,6 +1571,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                         ptsX.pen = QPen(Qt::black, 1, Qt::SolidLine);
                         ptsX.brush = Qt::black;
                         ptsX.name = "Ref Points";
+                        ptsX.comment = sEvent.value(STATE_NAME).toString();
                         ptsX.setVisible(true);
                         curveDataPointsX.push_back(ptsX);
 

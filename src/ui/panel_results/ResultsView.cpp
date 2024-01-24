@@ -2123,6 +2123,7 @@ void ResultsView::createByCurveGraph()
                                 dPts.Ymax = evPts.Ymax;
                                 dPts.color = event->mColor;
                                 dPts.type = CurveRefPts::eDotLineCross;
+                                dPts.comment = event->mName;
                                 // memo Data Points
                                 nb_dataPts++;
                                 dataPts.append(dPts);
@@ -2136,6 +2137,7 @@ void ResultsView::createByCurveGraph()
                                 dPts.Ymax = evPts.Ymax;
                                 dPts.color = event->mColor;
                                 dPts.type = CurveRefPts::eCross;
+                                dPts.comment = event->mName;
                                 // memo Data Points
                                 nb_dataPts++;
                                 dataPts.append(dPts);
@@ -2153,6 +2155,7 @@ void ResultsView::createByCurveGraph()
                             evPts.Ymax = evPts.Ymax;
                             evPts.color = event->mColor;
                             evPts.type = CurveRefPts::eLine;
+                            evPts.comment = event->mName;
                             // memo Data Points
                             eventsPts.append(evPts);
                         }
@@ -2164,6 +2167,7 @@ void ResultsView::createByCurveGraph()
                             evPts.Ymax = evPts.Ymax;
                             evPts.color = event->mColor;
                             evPts.type = CurveRefPts::eDotLine;
+                            evPts.comment = event->mName;
                             // memo Data Points
                             eventsPts.append(evPts);
 
@@ -2180,6 +2184,7 @@ void ResultsView::createByCurveGraph()
                         evPts.Xmax = static_cast<Bound*>(event)->mFixed;
                         evPts.type = CurveRefPts::ePoint;
                         evPts.color = event->mColor;
+                        evPts.comment = event->mName;
 
                         dPts.Xmin = evPts.Xmin;//event->mTheta.mX; // always the same value
                         dPts.Xmax = evPts.Xmax;
@@ -2188,6 +2193,7 @@ void ResultsView::createByCurveGraph()
                         dPts.Ymax = evPts.Ymax;
                         dPts.color = event->mColor;
                         dPts.type = CurveRefPts::eRoundLine;
+                        dPts.comment = event->mName;
 
                         // memo Data Points
                         dataPts.append(dPts);
