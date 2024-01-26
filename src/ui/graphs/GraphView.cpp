@@ -779,14 +779,14 @@ void GraphView::paintEvent(QPaintEvent* )
                 else
                     p.drawText(mTipRect.adjusted(0, mTipRect.height()*1./3., 0, -mTipRect.height()*1./3.), Qt::AlignCenter, mTipYLab + stringForLocal(mTipY));
 
-                p.drawText(mTipRect.adjusted(0, mTipRect.height()*2./3., 0, 0), Qt::AlignCenter, mTipComment);
+                p.drawText(mTipRect.adjusted(0, mTipRect.height()*2./3., 0, 0), Qt::AlignCenter,tr("Event") + ": " + mTipComment);
 
             }
 
         } else if (!mTipXLab.isEmpty()) {
             if (mUnitFunctionX)
                 p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + stringForLocal(mUnitFunctionX(mTipX)));
-           else
+            else
                 p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + stringForLocal(mTipX));
 
         } else if (!mTipYLab.isEmpty()) {

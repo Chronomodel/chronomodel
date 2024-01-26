@@ -1614,15 +1614,13 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 
     }
 
-
     const double tmin_poly = mSettings.getTminFormated();
     const double tmax_poly = mSettings .getTmaxFormated();
     const double step_poly = (tmax_poly-tmin_poly)/1000.;
 
+    // transfer of information from the SilvermanDialog database via cs
 
-    // transfere des infos de la boite SilvermanDialog via cs
-
-    const double rad = M_PI/180.;
+    //const double rad = M_PI/180.;
     if (!mSilverParam.use_error_measure) {
         const double w_I = 1.;
         vec_X_err = std::vector<double>(vec_X_err.size(), w_I);

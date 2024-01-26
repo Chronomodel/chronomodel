@@ -1201,9 +1201,9 @@ void ModelCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spl
             gy = Dec * deg;
             gz = F;
 
-            varGx = ErrI * deg;
-            varGy = ErrD * deg;
-            varGz = ErrF;
+            varGx = pow(ErrI * deg, 2.);
+            varGy = pow(ErrD * deg, 2.);
+            varGz = pow(ErrF, 2.);
         }
 
 

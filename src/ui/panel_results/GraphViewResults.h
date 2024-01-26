@@ -189,6 +189,7 @@ public:
     void setMainColor(const QColor &color);
    // void toggle(const QRect& geometry); //useless
     void setTitle(const QString &title);
+    inline void setTipYLab (const QString &label) {mGraph->setTipYLab(label);};
     inline QString title() const {return mTitle;};
 
     void setMarginLeft (qreal &m);
@@ -200,22 +201,22 @@ public:
     void setGraphsOpacity(int value);
 
     void setItemColor(const QColor &itemColor);
-  //  void setItemTitle(const QString& itemTitle);
 
-    bool isSelected() const  { return mIsSelected;}
-    void setSelected( const bool selected) {
-            mIsSelected = selected;
+    inline bool isSelected() const  {return mIsSelected;}
+
+    inline void setSelected( const bool selected) {
+        mIsSelected = selected;
     }
 
-    void showSelectedRect(const bool show) {
+    inline void showSelectedRect(const bool show) {
         mShowSelectedRect = show;
     }
 
     void setShowNumericalResults(const bool show);
 
-    GraphView* getGraph() const { return mGraph; }
-    QVector<variable_t> getCurrentVariables() const { return mCurrentVariableList; }
-    graph_t getCurrentType() const { return mCurrentTypeGraph; }
+    inline GraphView* getGraph() const {return mGraph; }
+    inline QList<variable_t> getCurrentVariables() const {return mCurrentVariableList;}
+    inline graph_t getCurrentType() const { return mCurrentTypeGraph; }
     
    // GraphView::Rendering getRendering() const  { return mGraph->getRendering(); }
     QString getResultsText() const {return HTML_to_text(mStatArea->toHtml());}

@@ -282,8 +282,6 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
         // must be put at the end to print the points above
         mGraph->set_points(curveEventsPoints);
         mGraph->insert_points(curveDataPoints);
-
-        mGraph->setTipYLab("G");
     }
 
     else if (mCurrentVariableList.contains(eGP)) {

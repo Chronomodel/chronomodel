@@ -2067,18 +2067,18 @@ void ResultsView::createByCurveGraph()
                             case CurveSettings::eProcess_3D:
                             case CurveSettings::eProcess_2D:
                             case CurveSettings::eProcess_Univariate :
-                            //case CurveSettings::eProcess_Inclination :
-                            //case CurveSettings::eProcess_Spherical:
-                            //case CurveSettings::eProcess_Vector:
                             case CurveSettings::eProcess_Unknwon_Dec:
-                                evPts.Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth; // ici faire chaque cas AM
+                                evPts.Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
                                 evPts.Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
                                 break;
+
                             case CurveSettings::eProcess_Spherical:
                             case CurveSettings::eProcess_Vector:
                                 verr = event->mS_XA95Depth / 2.448;
                                 evPts.Ymin = event->mXIncDepth - 1.96*verr;
                                 evPts.Ymax = event->mXIncDepth + 1.96*verr;
+                            break;
+
                             case CurveSettings::eProcess_None:
                             default:
                                 break;
@@ -2243,7 +2243,7 @@ void ResultsView::createByCurveGraph()
 
         if (mMainVariable == GraphViewResults::eG) {
             graphX->setEventsPoints(eventsPts);
-            graphX->setDataPoints(dataPts);
+            graphX->setDataPoints(dataPts);            
         }
 
         mByCurveGraphs.append(graphX);
@@ -2461,9 +2461,12 @@ bool ResultsView::graphIndexIsInCurrentPage(int graphIndex)
 void ResultsView::generateCurves()
 {
     QList<GraphViewResults*> listGraphs = currentGraphs(false);
-
-    for (GraphViewResults*& graph : listGraphs) {
-        graph->generateCurves(GraphViewResults::graph_t(mCurrentTypeGraph), mCurrentVariableList);
+    const auto str_tip = mModel->getCurvesName();
+    int i = 0;
+    for (GraphViewResults*& graphView : listGraphs) {
+        graphView->generateCurves(GraphViewResults::graph_t(mCurrentTypeGraph), mCurrentVariableList);
+        if (mCurrentVariableList.contains(GraphViewResults::eG))
+            graphView->setTipYLab(str_tip.at(i++));
     }
 
     updateGraphsMinMax();
