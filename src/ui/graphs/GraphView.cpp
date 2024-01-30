@@ -2372,7 +2372,7 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
  * @param csvSep
  * @param step
  */
-void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step, QString filename) const
+void GraphView::exportReferenceCurves(const QString &defaultPath, const QLocale locale, const QString &csvSep, double step, QString filename) const
 {
     if (step <= 0)
         step = 1;
@@ -2423,25 +2423,46 @@ void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale 
 
         // 3 - Create Row, with each curve
         //  Create data in row
-        type_data x;
+
         int nbData = (xMax - xMin)/ step;
         QLocale csvLocal (locale);
         csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
-        for (int i = 0; i <= nbData; ++i) {
-            x = (type_data)(i)*step + xMin;
-            list.clear();
+        auto xMax_BCAD = DateUtils::convertFromAppSettingsFormat(xMax);
+        auto xMin_BCAD = DateUtils::convertFromAppSettingsFormat(xMin);
 
-            list << csvLocal.toString(x);
-            // Il doit y avoir au moins trois courbes G, GSup, Ginf et nous exportons G et ErrG
-            const type_data xi = interpolateValueInQMap(x, G); // G
-            const type_data err_xi = interpolateValueInQMap(x, G_Sup); // GSup
-            list<<csvLocal.toString(xi, 'g', 15);
-            list<<csvLocal.toString((err_xi-xi)/1.96, 'g', 15);
+        if (xMin_BCAD<xMax_BCAD) {
+            for (int i = 0; i <= nbData; ++i) {
+                const auto x = (type_data)(i)*step + xMin;
+                const auto t = DateUtils::convertFromAppSettingsFormat(x);
+                list.clear();
 
-      //      }
-            rows<<list;
+                list << csvLocal.toString(t);
+                // Il doit y avoir au moins trois courbes G, GSup, Ginf et nous exportons G et ErrG
+                const type_data xi = interpolateValueInQMap(x, G); // G
+                const type_data err_xi = interpolateValueInQMap(x, G_Sup); // GSup
+                list<<csvLocal.toString(xi, 'g', 15);
+                list<<csvLocal.toString((err_xi-xi)/1.96, 'g', 15);
+
+                //      }
+                rows<<list;
+            }
+        } else {
+            for (int i = nbData; i >= 0; --i) {
+                const auto x = (type_data)(i)*step + xMin;
+                const auto t = DateUtils::convertFromAppSettingsFormat(x);
+                list.clear();
+
+                list << csvLocal.toString(t);
+                // Il doit y avoir au moins trois courbes G, GSup, Ginf et nous exportons G et ErrG
+                const type_data xi = interpolateValueInQMap(x, G); // G
+                const type_data err_xi = interpolateValueInQMap(x, G_Sup); // GSup
+                list<<csvLocal.toString(xi, 'g', 15);
+                list<<csvLocal.toString((err_xi-xi)/1.96, 'g', 15);
+
+                //      }
+                rows<<list;
+            }
         }
-
         // 4 - Save Qlist
 
         QTextStream output(&file);
@@ -2450,7 +2471,7 @@ void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale 
 
         output << "# "+ version + "\r";
         output << "# "+ projectName + "\r";
-        output << "# "+ DateUtils::getAppSettingsFormatStr() + "\r";
+        output << "# BC/AD \r";//DateUtils::getAppSettingsFormatStr() + "\r";
 
         for (auto& row : rows) {
             output << row.join(csvSep);
