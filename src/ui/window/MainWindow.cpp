@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -394,14 +394,6 @@ void MainWindow::createMenus()
     mViewMenu->addAction(mViewLogAction);
 
     //-----------------------------------------------------------------
-    // Help/About Menu this menu depend of the system. On MacOs it's in Chronomodel menu
-    //-----------------------------------------------------------------
-    mHelpMenu = menuBar()->addMenu(tr("About"));
-    mHelpMenu->menuAction()->setShortcut(Qt::Key_Question);
-    mHelpMenu->addAction(mAboutAct);
-    mHelpMenu->addAction(mAboutQtAct);
-
-    //-----------------------------------------------------------------
     // Grouped Actions Menu
     //-----------------------------------------------------------------
     mActionsMenu = menuBar()->addMenu(tr("Actions"));
@@ -418,6 +410,15 @@ void MainWindow::createMenus()
 
     mActionsMenu->addSeparator();
     mActionsMenu->addAction(mExportCurveAction);
+
+    //-----------------------------------------------------------------
+    // Help/About Menu this menu depend of the system. On MacOs it's in Chronomodel menu
+    //-----------------------------------------------------------------
+    mHelpMenu = menuBar()->addMenu(tr("About"));
+    mHelpMenu->menuAction()->setShortcut(Qt::Key_Question);
+    mHelpMenu->addAction(mAboutAct);
+    mHelpMenu->addAction(mAboutQtAct);
+
 }
 /**
  * @brief MainWindow::createToolBars
@@ -831,7 +832,7 @@ void MainWindow::setFont(const QFont &font)
     mUndoDock->setFont(font);
 }
 
-// Language
+#pragma mark Language
 void MainWindow::setLanguage(QAction* action)
 {
     QString lang = action->data().toString();
@@ -850,9 +851,9 @@ void MainWindow::setLanguage(QAction* action)
 */
 }
 
-// Grouped Actions
+#pragma mark Grouped Actions
 void MainWindow::selectAllEvents() {
-    if (mProject) {
+    if (mProject && !mProject->mState.value(STATE_EVENTS).toArray().isEmpty()) {
         mProject->selectAllEvents();
         mProjectView->eventsAreSelected();
     }
@@ -1187,7 +1188,7 @@ void MainWindow::changeEvent(QEvent* event)
 
 }
 
-// Settings
+#pragma mark Settings
 void MainWindow::writeSettings()
 {
     mProjectView->writeSettings();
