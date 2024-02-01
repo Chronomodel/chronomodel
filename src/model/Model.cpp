@@ -1142,7 +1142,7 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
         phase->mAlpha.generateCorrelations(chains);
         phase->mBeta.generateCorrelations(chains);
 #endif
-        //phase->mTau.generateCorrelations(chains); // ??? à voir avec PhL, est-ce utile ?
+        //phase->mTau.generateCorrelations(chains); // ??? is it useful?
     }
 
 #ifdef DEBUG
@@ -1174,11 +1174,11 @@ void Model::setFFTLength(size_t FFTLength)
 void Model::setHActivity(const double h, const double rangePercent)
 {
    if (!mPhases.isEmpty()) {
-            generateActivity(mFFTLength, h, mThreshold, rangePercent);
-            mHActivity = h;
+        generateActivity(mFFTLength, h, mThreshold, rangePercent);
+        mHActivity = h;
 
-            emit newCalculus();
-        }
+        emit newCalculus();
+    }
 
 }
 /**

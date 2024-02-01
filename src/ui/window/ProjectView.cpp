@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -52,7 +52,7 @@ ProjectView::ProjectView(std::shared_ptr<Project> &project, QWidget* parent, Qt:
     mResultsView = new ResultsView(project);
 
     QPalette palette;
-    palette.setColor(QPalette::Base, Qt::transparent);
+    palette.setColor(QPalette::Base, Qt::white);
     palette.setColor(QPalette::Text, Qt::black);
 
     mLogModelEdit = new QTextEdit();

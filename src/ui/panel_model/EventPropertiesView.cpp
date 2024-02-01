@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -71,12 +71,16 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 {
     minimumHeight = 0;
 
+    QPalette palette;
+    palette.setColor(QPalette::Base, Qt::white);
+    palette.setColor(QPalette::Text, Qt::black);
     // ------------- commun with defautlt Event and Bound ----------
     mTopView = new QWidget(this);
 
     mNameLab = new QLabel(tr("Name"), mTopView);
     mNameLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mNameEdit = new LineEdit(mTopView);
+    mNameEdit->setPalette(palette);
 
     mColorLab = new QLabel(tr("Color"), mTopView);
     mColorLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -114,6 +118,10 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mY_DecEdit = new LineEdit(mCurveWidget);
     mZ_IntEdit = new LineEdit(mCurveWidget);
 
+    mX_IncEdit->setPalette(palette);
+    mY_DecEdit->setPalette(palette);
+    mZ_IntEdit->setPalette(palette);
+
     connect(mX_IncEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventXInc);
     connect(mY_DecEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYDec);
     connect(mZ_IntEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventZF);
@@ -138,6 +146,10 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mS_Z_IntEdit = new LineEdit(mCurveWidget);
     mS_Z_IntEdit->setValidator(positiveValidator);
     
+    mS_X_IncEdit->setPalette(palette);
+    mS_Y_Edit->setPalette(palette);
+    mS_Z_IntEdit->setPalette(palette);
+
     connect(mS_X_IncEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSXInc);
     connect(mS_Y_Edit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSYDec);
     connect(mS_Z_IntEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSZF);
@@ -149,6 +161,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     minimumHeight += mEventView->height();
     // -------------
     mDatesList = new DatesList(mEventView);
+    mDatesList->setPalette(palette);
     connect(mDatesList, &DatesList::indexChange, this, &EventPropertiesView::updateIndex);
     connect(mDatesList, &DatesList::calibRequested, this, &EventPropertiesView::updateCalibRequested);
 
@@ -218,9 +231,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mBoundView = new QWidget(this);
 
     mKnownFixedEdit = new LineEdit(mBoundView);
-
-    //QDoubleValidator* doubleValidator = new QDoubleValidator(this);
-    //doubleValidator->setDecimals(2);
+    mKnownFixedEdit->setPalette(palette);
 
     mKnownGraph = new GraphView(mBoundView);
     mKnownGraph->setMinimumHeight(250);
@@ -255,7 +266,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     boundLayout->addStretch();
     mBoundView->setLayout(boundLayout);
 
-    mEvent = nullptr;//QJsonObject();
+    mEvent = nullptr;
     mTopView->setVisible(false);
     mEventView->setVisible(false);
     mBoundView->setVisible(false);

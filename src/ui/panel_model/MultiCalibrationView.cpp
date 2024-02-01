@@ -67,6 +67,10 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mCurveColor(Painting::mainColorDark)
 
 {
+    QPalette palette;
+    palette.setColor(QPalette::Base, Qt::white);
+    palette.setColor(QPalette::Text, Qt::black);
+
     mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     setMouseTracking(true);
@@ -75,9 +79,6 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
 
     mStatArea = new QTextEdit(this);
     mStatArea->setFrameStyle(QFrame::HLine);
-    QPalette palette = mStatArea->palette();
-    palette.setColor(QPalette::Base, Qt::white);
-    palette.setColor(QPalette::Text, Qt::black);
     mStatArea->setPalette(palette);
 
     mStatArea->setText(tr("Nothing to display"));
@@ -136,6 +137,7 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
 
     mGraphHeightEdit = new LineEdit(this);
     mGraphHeightEdit->setText(locale().toString(100));
+    mGraphHeightEdit->setPalette(palette);
 
     QIntValidator* heightValidator = new QIntValidator();
     heightValidator->setRange(50, 500);
@@ -161,6 +163,7 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mStartEdit = new LineEdit(this);
     mStartEdit->setAdjustText();
     mStartEdit->setText("-1000");
+    mStartEdit->setPalette(palette);
 
     mEndLab = new Label(tr("End"), this);
     mEndLab->setAdjustText();
@@ -171,6 +174,7 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mEndEdit = new LineEdit(this);
     mEndEdit->setAdjustText();
     mEndEdit->setText("1000");
+    mEndEdit->setPalette(palette);
 
     mMajorScaleLab = new Label(tr("Maj. Int"), this);
     mMajorScaleLab->setAdjustText();
@@ -182,6 +186,7 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mMajorScaleEdit->setAdjustText();
     mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves"));
     mMajorScaleEdit->setText(locale().toString(mMajorScale));
+    mMajorScaleEdit->setPalette(palette);
 
     mMinorScaleLab = new Label(tr("Min. Cnt"), this);
     mMinorScaleLab->setAdjustText();
@@ -193,6 +198,7 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mMinorScaleEdit->setAdjustText();
     mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves"));
     mMinorScaleEdit->setText(locale().toString(mMinorScale));
+    mMinorScaleEdit->setPalette(palette);
 
     mHPDLab = new Label(tr("HPD (%)"), this);
     mHPDLab->setAdjustText();
@@ -203,6 +209,7 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mHPDEdit = new LineEdit(this);
     mHPDEdit->setAdjustText();
     mHPDEdit->setText("95");
+    mHPDEdit->setPalette(palette);
     DoubleValidator* percentValidator = new DoubleValidator();
     percentValidator->setBottom(0.);
     percentValidator->setTop(100.);

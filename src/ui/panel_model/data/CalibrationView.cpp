@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -65,6 +65,10 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mMajorScale (100),
     mMinorScale (4)
 {
+    QPalette palette;
+    palette.setColor(QPalette::Base, Qt::white);
+    palette.setColor(QPalette::Text, Qt::black);
+
     mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
 
@@ -99,6 +103,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mHPDEdit = new LineEdit(this);
     mHPDEdit->setAdjustText();
     mHPDEdit->setText("95");
+    mHPDEdit->setPalette(palette);
 
     DoubleValidator* percentValidator = new DoubleValidator();
     percentValidator->setBottom(0.);
@@ -115,6 +120,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mStartEdit = new LineEdit(this);
     mStartEdit->setAdjustText();
     mStartEdit->setText("-1000");
+    mStartEdit->setPalette(palette);
 
     mEndLab = new Label(tr("End"), this);
     mEndLab->setAdjustText();
@@ -125,6 +131,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mEndEdit = new LineEdit(this);
     mEndEdit->setAdjustText();
     mEndEdit->setText("1000");
+    mEndEdit->setPalette(palette);
 
     mDisplayStudyBut = new Button(tr("Study Period Display"), this);
     mDisplayStudyBut->setToolTip(tr("Restore view with the study period span"));
@@ -141,6 +148,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mMajorScaleEdit->setAdjustText();
     mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves, upper than 1"));
     mMajorScaleEdit->setText(locale().toString(mMajorScale));
+    mMajorScaleEdit->setPalette(palette);
 
     mMinorScaleLab = new Label(tr("Min. Cnt"), this);
     mMinorScaleLab->setAdjustText();
@@ -152,6 +160,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mMinorScaleEdit->setAdjustText();
     mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves, upper than 1"));
     mMinorScaleEdit->setText(locale().toString(mMinorScale));
+    mMinorScaleEdit->setPalette(palette);
 
     mHPDLab->raise();
     mHPDEdit->raise();
@@ -167,9 +176,6 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
 
     mResultsText = new QTextEdit(this);
     mResultsText->setFrameStyle(QFrame::NoFrame);
-    QPalette palette = this->palette();
-    palette.setColor(QPalette::Base, Qt::white);
-    palette.setColor(QPalette::Text, Qt::black);
 
     mResultsText->setPalette(palette);
     mResultsText->setText(tr("No Result to display"));
@@ -409,7 +415,7 @@ void CalibrationView::updateGraphs()
 
                 // formated_intervals is already in the right date format
                 resultsStr += "<br> HPD (" + stringForLocal(real_thresh * 100.) + "%) : " + get_HPD_text(formated_intervals, DateUtils::getAppSettingsFormatStr(), nullptr, false) ;
-                resultsStr += "<br> Calibrated date step : " + stringForLocal(std::abs(hpd.lastKey() - hpd.firstKey())/hpd.size());
+                //resultsStr += "<br> Calibrated date step : " + stringForLocal(std::abs(hpd.lastKey() - hpd.firstKey())/hpd.size());
                 mResultsText->setHtml(resultsStr);
             }
 
@@ -638,9 +644,8 @@ void CalibrationView::setVisible(bool visible)
     QWidget::setVisible(visible);
 }
 
-void CalibrationView::resizeEvent(QResizeEvent* e)
+void CalibrationView::resizeEvent(QResizeEvent*)
 {
-    Q_UNUSED(e);
     if (!mDate.mPlugin || width()<0 || height()<0) {
         setVisible(false);
         return;
@@ -651,22 +656,22 @@ void CalibrationView::resizeEvent(QResizeEvent* e)
     update();
 
 }
-void CalibrationView::paintEvent(QPaintEvent* e)
+void CalibrationView::paintEvent(QPaintEvent* )
 {
-    Q_UNUSED(e);
-
-    const int graphLeft = mButtonWidth;
-    const int graphWidth = width() - graphLeft;
+    const int graphWidth = width() - mButtonWidth;
 
     QPainter p(this);
-    // drawing a background under button
-    p.fillRect(0, 0, graphLeft, height(), Painting::borderDark);
-    // behind toolBar
-    p.fillRect(graphLeft, mDrawing->y()+mDrawing->height(), graphWidth, height() - mDrawing->height() - mResultsText->height(), Painting::borderDark);
-    // drawing a background under curve
-    p.fillRect(graphLeft, 0, graphWidth, mDrawing->height(),  Qt::white);
-    // behind mResultText
-    p.fillRect(graphLeft, mResultsText->y(), graphWidth, height() - mResultsText->y() , Qt::white);
+    // 1 - Drawing a background under button to hide buttonn of Even Scene
+    p.fillRect(0, 0, mButtonWidth, height(), Painting::borderDark);
+
+    //  2 - Behind toolBar
+    p.fillRect(mButtonWidth, mDrawing->y() + mDrawing->height(), graphWidth, mResultsText->y() - mDrawing->height() , Painting::borderDark);
+
+    // 3 - Drawing a background under curve
+    p.fillRect(mButtonWidth, 0, graphWidth, mDrawing->height(),  Qt::white);
+
+    // 4 - Behind mResultText, mResultsText is less wide than the remaining space to put a visible space to the left of the text
+    p.fillRect(mButtonWidth, mResultsText->y(), graphWidth, height() - mResultsText->y() , Qt::white);
     updateLayout();
 
 }
@@ -682,7 +687,7 @@ void CalibrationView::updateLayout()
 
     // same variable in MultiCalibrationView::updateLayout()
     const int textHeight (int (1.2 * (fm.descent() + fm.ascent()) ));
-
+    const qreal toolBarHeigth = 2*textHeight + 12;
     //Position of Widget
     int y = 0;
 
@@ -694,7 +699,8 @@ void CalibrationView::updateLayout()
     const int graphWidth = width() - graphLeft;
 
     const int resTextH = 5 * fm.height();
-    const qreal toolBarHeigth = 2*textHeight + 12;
+
+    //mDrawing->setGeometry(graphLeft, 0, graphWidth, 10);
     mDrawing->setGeometry(graphLeft, 0, graphWidth, height() - resTextH - toolBarHeigth);
 
     // Bottom toolBar
@@ -724,12 +730,10 @@ void CalibrationView::updateLayout()
     xShift += mDisplayStudyBut->width() + marginBottomBar;
     mMajorScaleLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
     mMajorScaleEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
-   // mMajorScaleEdit->setText(locale().toString(mMajorScale));
 
     xShift += mMajorScaleLab->width() + marginBottomBar;
     mMinorScaleLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
     mMinorScaleEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
-  //  mMinorScaleEdit->setText(locale().toString(mMinorScale));
 
     xShift += mMinorScaleLab->width() + marginBottomBar;
     mHPDLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
@@ -737,7 +741,7 @@ void CalibrationView::updateLayout()
 
     // ResultBox
     mResultsClipBut->setGeometry(0, mDrawing->y() + mDrawing->height() + toolBarHeigth, mButtonWidth, mButtonHeigth);
-   // y += mResultsClipBut->height();
+
     mResultsText->setGeometry(graphLeft + 20, mDrawing->y() + mDrawing->height() + toolBarHeigth, graphWidth - 40 , resTextH);
     mResultsText->setAutoFillBackground (true);
 

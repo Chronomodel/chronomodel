@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -77,8 +77,8 @@ public:
     void initScale (const Scale &s) { mMajorScale = s.mark; mMinorScale = s.tip;}
 
 protected:
-    void paintEvent(QPaintEvent* e);
-    void resizeEvent(QResizeEvent* e);
+    void paintEvent(QPaintEvent*);
+    void resizeEvent(QResizeEvent*);
     void updateLayout();
 
 public slots:

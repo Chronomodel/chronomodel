@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -51,6 +51,10 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     // -----------------------------
     //  General View
     // -----------------------------
+    QPalette palette;
+    palette.setColor(QPalette::Base, Qt::white);
+    palette.setColor(QPalette::Text, Qt::black);
+
     mGeneralView = new QWidget();
 
     mLangHelpLab = new QLabel(tr("Language is used to define how number input should be typed (using comma or dot as decimal separator). This is not related to the application translation which is not available yet!"), this);
@@ -131,7 +135,6 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     mPrecision = new QSpinBox(this);
     mPrecision->setRange(0, 6);
     mPrecision->setSingleStep(1);
-
 
     connect(mAutoSaveCheck, &QCheckBox::toggled, mAutoSaveDelayEdit, &QLineEdit::setEnabled);
 
@@ -225,6 +228,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     AppSettingsDialogItemDelegate* delegate = new AppSettingsDialogItemDelegate();
     mList->setItemDelegate(delegate);
     mList->setFixedWidth(180);
+    mList->setPalette(palette);
 
     mStack = new QStackedWidget();
 
@@ -237,7 +241,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     mStack->addWidget(mGeneralView);
 
     // Plugins specific settings
-    const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
+    const QList<PluginAbstract*> &plugins = PluginManager::getPlugins();
     for (auto && plug : plugins) {
         PluginSettingsViewAbstract* view = plug->getSettingsView();
         if (view){
