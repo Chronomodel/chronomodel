@@ -2206,7 +2206,8 @@ bool MCMCLoopCurve::update_321()
                         const double max = event->getThetaMax(tmaxPeriod);
 
                         if (min >= max) {
-                            throw QObject::tr("Error for event theta : %1 : min = %2 : max = %3").arg(event->mName, QString::number(min), QString::number(max));
+                            const auto seed = mLoopChains.at(mChainIndex).mSeed;
+                            throw QObject::tr("Error for event theta : %1 :\n min = %2 : max = %3 \n seed = %4").arg(event->mName, QString::number(min), QString::number(max), QString::number(seed));
                         }
 
                         // On stocke l'ancienne valeur
@@ -2776,7 +2777,8 @@ bool MCMCLoopCurve::update_400()
                         const double max = event->getThetaMax(tmaxPeriod);
 
                         if (min >= max) {
-                            throw QObject::tr("Error for event theta : %1 : min = %2 : max = %3").arg(event->mName, QString::number(min), QString::number(max));
+                            const auto seed = mLoopChains.at(mChainIndex).mSeed;
+                            throw QObject::tr("Error for event theta : %1 :\n min = %2 : max = %3 \n seed = %4").arg(event->mName, QString::number(min), QString::number(max), QString::number(seed));
                         }
 
                         // On stocke l'ancienne valeur
@@ -3922,7 +3924,8 @@ bool MCMCLoopCurve::update_Komlan()
                         const double max = event->getThetaMax(tmaxPeriod);
 
                         if (min >= max) {
-                            throw QObject::tr("Error for event theta : %1 : min = %2 : max = %3").arg(event->mName, QString::number(min), QString::number(max));
+                            const auto seed = mLoopChains.at(mChainIndex).mSeed;
+                            throw QObject::tr("Error for event theta : %1 :\n min = %2 : max = %3 \n seed = %4").arg(event->mName, QString::number(min), QString::number(max), QString::number(seed));
                         }
 
                         // On stocke l'ancienne valeur :
@@ -4487,7 +4490,8 @@ bool MCMCLoopCurve::update_interpolate()
                         const double max = event->getThetaMax(tmaxPeriod);
 
                         if (min >= max) {
-                            mAbortedReason = QObject::tr("Error for event theta : %1 : min = %2 : max = %3").arg(event->mName, QString::number(min), QString::number(max));
+                            const auto seed = mLoopChains.at(mChainIndex).mSeed;
+                            mAbortedReason = QObject::tr("Error for event theta : %1 :\n min = %2 : max = %3 \n seed = %4").arg(event->mName, QString::number(min), QString::number(max), QString::number(seed));
                             return false;
                         }
 

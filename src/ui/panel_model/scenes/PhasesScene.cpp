@@ -1,6 +1,5 @@
 /* ---------------------------------------------------------------------
-
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -255,27 +254,30 @@ qDebug()<<"[PhasesScene::updateSceneFromState] Start";
              return;
 
     if (mProject->mState.value(STATE_PHASES).toArray().isEmpty() && mItems.isEmpty()) {
-             // ------------------------------------------------------
-             //  Delete items not in current state
-             // ------------------------------------------------------
-             for (int i = mItems.size()-1; i >= 0; --i) {
-                 PhaseItem* item = (PhaseItem*)mItems[i];
-                 mItems.removeAt(i);
-                 // This is a QObject : call deleteLater instead of delete
-                 item->deleteLater();
-             }
+        // ------------------------------------------------------
+        //  Delete items not in current state
+        // ------------------------------------------------------
+        blockSignals(true);
+        for (int i = mItems.size()-1; i >= 0; --i) {
+            PhaseItem* item = (PhaseItem*)mItems[i];
+            mItems.removeAt(i);
+            // This is a QObject : call deleteLater instead of delete
+            item->deleteLater();
+        }
 
-             // ------------------------------------------------------
-             //  Delete constraints not in current state
-             // ------------------------------------------------------
-             for (int i = mConstraintItems.size()-1; i >= 0; --i) {
-                 ArrowItem* constraintItem = mConstraintItems[i];
-                 removeItem(constraintItem);
-                 mConstraintItems.removeOne(constraintItem);
-                 delete constraintItem;
-             }
-
-             return;
+        // ------------------------------------------------------
+        //  Delete constraints not in current state
+        // ------------------------------------------------------
+        for (int i = mConstraintItems.size()-1; i >= 0; --i) {
+            ArrowItem* constraintItem = mConstraintItems[i];
+            removeItem(constraintItem);
+            mConstraintItems.removeOne(constraintItem);
+            delete constraintItem;
+        }
+        blockSignals(false);
+        mItems.squeeze();
+        mConstraintItems.squeeze();
+        return;
     }
     const QJsonObject &state = mProject->state();
     const QJsonArray &phases = state.value(STATE_PHASES).toArray();
@@ -295,6 +297,7 @@ qDebug()<<"[PhasesScene::updateSceneFromState] Start";
     //  Delete items not in current state
     // ------------------------------------------------------
     bool hasDeleted = false;
+    blockSignals(true);
     for (int i = mItems.size()-1; i >=0 ; --i) {
         PhaseItem* item = (PhaseItem*)mItems[i];
         QJsonObject& phase = item->getPhase();
@@ -313,7 +316,7 @@ qDebug()<<"[PhasesScene::updateSceneFromState] Start";
             item->deleteLater();
         }
     }
-
+    blockSignals(false);
     // ------------------------------------------------------
     //  Create / Update phase items
     // ------------------------------------------------------
@@ -387,9 +390,10 @@ qDebug()<<"[PhasesScene::updateSceneFromState] Start";
     // ------------------------------------------------------
     //  Delete constraints not in current state
     // ------------------------------------------------------
+    blockSignals(true);
     for (int i = mConstraintItems.size()-1; i>=0; --i) {
         ArrowItem* constraintItem = mConstraintItems[i];
-        QJsonObject& constraint = constraintItem->data();
+        QJsonObject &constraint = constraintItem->data();
 
         if (!constraints_ids.contains(constraint.value(STATE_ID).toInt())) {
 #ifdef DEBUG
@@ -400,7 +404,7 @@ qDebug()<<"[PhasesScene::updateSceneFromState] Start";
             delete constraintItem;
         }
     }
-
+     blockSignals(false);
     // ------------------------------------------------------
     //  Create / Update constraint items
     // ------------------------------------------------------
@@ -503,7 +507,7 @@ void PhasesScene::updateStateSelectionFromItem()
 
         for (int i=0; i<mItems.size(); ++i) {
             PhaseItem* item = static_cast<PhaseItem*>(mItems.at(i));
-//qDebug()<< " select"<< item->isSelected() <<mItems.at(i)->mData.value("is_selected").toBool();
+
             // without selected update
             const QJsonObject prevPhase = item->getPhase();
 
@@ -605,25 +609,17 @@ bool PhasesScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
             if (mDrawingArrow && constraintAllowed(current, phaseClicked)) {
                     createConstraint(current, phaseClicked);
                     mTempArrow->setVisible(false);
-                    mDrawingArrow=false;
-                  //  updateStateSelectionFromItem();
-                    sendUpdateProject("Phase constraint created", true, true);
+                    mDrawingArrow = false;
+                   sendUpdateProject("Phase constraint created", true, true);
 
               }
-        } /* else {
-            //phaseClicked->setSelected(true);
-          //  updateStateSelectionFromItem();
-          //  sendUpdateProject("Item selected", true, false);//  bool notify = true, bool storeUndoCommand = false
-        } */
-
+        }
 
     } else {
         clearSelection();
         updateStateSelectionFromItem();
         sendUpdateProject("No Item selected", true, false);//  bool notify = true, bool storeUndoCommand = false
     }
-
-    //updateStateSelectionFromItem();
 
     return true;
 }
@@ -640,13 +636,12 @@ void PhasesScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
     qDebug() << "PhasesScene::itemEntered";
     AbstractItem* current = currentItem();
 
-    //mTempArrow->setTo(item->pos().x(), item->pos().y());
-
     if (mDrawingArrow && current && item && (item != current)) {
         mTempArrow->setTo(item->pos().x(), item->pos().y());
         if (constraintAllowed(current, item)) {
             mTempArrow->setState(ArrowTmpItem::eAllowed);
             mTempArrow->setLocked(true);
+
          } else {
             mTempArrow->setState(ArrowTmpItem::eForbidden);
             mTempArrow->setLocked(false);
@@ -670,52 +665,8 @@ void PhasesScene::constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEv
 
 void PhasesScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e)
 {
-    mProject->updatePhaseConstraint(item->data().value(STATE_ID).toInt());
     Q_UNUSED(e);
+    mProject->updatePhaseConstraint(item->data().value(STATE_ID).toInt());
 }
 
 
-// Check state
-/*void PhasesScene::updateCheckedPhases()
-{
-    QJsonObject state = mProject->state();
-    QJsonArray events = state.value(STATE_EVENTS).toArray();
-
-    // tableau contenant les id des phases associés à leur nombre d'apparition dans les events
-    QHash<int, int> phases;
-    // nombre d'évènements sélectionnés
-    int selectedEventsCount = 0;
-    for (int i=0; i<events.size(); ++i) {
-        QJsonObject event = events.at(i).toObject();
-
-        if (event.value(STATE_IS_SELECTED).toBool()) {
-            QString phaseIdsStr = event.value(STATE_EVENT_PHASE_IDS).toString();
-            if (!phaseIdsStr.isEmpty()) {
-                QStringList phaseIds = phaseIdsStr.split(",");
-                for (int j=0; j<phaseIds.size(); ++j) {
-                    const int phaseId = phaseIds.at(j).toInt();
-                    if (phases.find(phaseId) == phases.end())
-                        phases[phaseId] = 1;
-                    else
-                        phases[phaseId] += 1;
-                }
-            }
-            ++selectedEventsCount;
-        }
-    }
-
-    for (int i=0; i<mItems.size(); ++i) {
-        PhaseItem* item = static_cast<PhaseItem*>(mItems.at(i));
-        QJsonObject phase = item->getPhase();
-        int id = phase.value(STATE_ID).toInt();
-
-        if (phases.find(id) == phases.end())
-            //item->setState(Qt::Unchecked);
-            item->matLeastOneEventSelected = false;
-        else
-            item->matLeastOneEventSelected = true;
-            //item->setState((phases[id] == selectedEventsCount) ? Qt::Checked : Qt::PartiallyChecked);
-
-    }
-}
-*/

@@ -198,10 +198,10 @@ Model::Model(const QJsonObject &json, QObject* parent):
         for (int j=0; j<mPhaseConstraints.size(); ++j) {
             if (mPhaseConstraints.at(j)->mFromId == phaseId) {
                 mPhaseConstraints[j]->mPhaseFrom = mPhases[i];
-                mPhases[i]->mConstraintsFwd.append(mPhaseConstraints[j]);
+                mPhases[i]->mConstraintsNextPhases.append(mPhaseConstraints[j]);
             } else if (mPhaseConstraints.at(j)->mToId == phaseId) {
                 mPhaseConstraints[j]->mPhaseTo = mPhases[i];
-                mPhases[i]->mConstraintsBwd.append(mPhaseConstraints[j]);
+                mPhases[i]->mConstraintsPrevPhases.append(mPhaseConstraints[j]);
             }
         }
 
@@ -421,10 +421,10 @@ void Model::fromJson(const QJsonObject& json)
         for (int j=0; j<mPhaseConstraints.size(); ++j) {
             if (mPhaseConstraints.at(j)->mFromId == phaseId) {
                 mPhaseConstraints[j]->mPhaseFrom = mPhases[i];
-                mPhases[i]->mConstraintsFwd.append(mPhaseConstraints[j]);
+                mPhases[i]->mConstraintsNextPhases.append(mPhaseConstraints[j]);
             } else if (mPhaseConstraints.at(j)->mToId == phaseId) {
                 mPhaseConstraints[j]->mPhaseTo = mPhases[i];
-                mPhases[i]->mConstraintsBwd.append(mPhaseConstraints[j]);
+                mPhases[i]->mConstraintsPrevPhases.append(mPhaseConstraints[j]);
             }
         }
 
@@ -1322,7 +1322,7 @@ void Model::initVariablesForChain()
 void Model::initNodeEvents()
 {
     std::ranges::for_each( mEvents, [](Event* ev) {
-        ev->mNodeInitialized = false;
+        ev->mIsNode = false;
         ev->mThetaNode = HUGE_VAL;
     });
 }
@@ -1965,18 +1965,18 @@ void generateBufferForHisto(double *input, const std::vector<double> &dataSrc, c
         const double t = *iter;
 
         const double idx = (t - a) / delta;
-        const double idx_under = floor(idx);
-        const double idx_upper = idx_under + 1.;
+        const double idx_under = std::clamp(floor(idx), 0., numPts-1.);
+        const double idx_upper = std::clamp(idx_under + 1., 0., numPts-1.);
 
         const double contrib_under = (idx_upper - idx) / denum;
         const double contrib_upper = (idx - idx_under) / denum;
-
+#ifdef DEBUG
         if (std::isinf(contrib_under) || std::isinf(contrib_upper))
             qDebug() << "FFT input : infinity contrib!";
 
         if (idx_under < 0 || idx_under >= numPts || idx_upper < 0 || idx_upper > numPts)
             qDebug() << "FFT input : Wrong index";
-
+#endif
         if (idx_under < numPts)
             input[(int)idx_under] += contrib_under;
 

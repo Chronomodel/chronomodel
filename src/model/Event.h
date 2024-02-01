@@ -98,8 +98,10 @@ public:
     double mBetaS02;
     bool mInitialized;
 
-    bool mNodeInitialized;
+    // Used with Event::getThetaMinRecursive_v2 and Event::getThetaMaxRecursive_v2 and Event::getThetaMaxPossible
+    bool mIsNode; // Used with getThetaMinRecursive_v3 and getThetaMaxRecursive_v3
     double mThetaNode;
+
     int mLevel; // Used to init mcmc
 
     // --------------------------------------------------------
@@ -166,8 +168,14 @@ public:
 
 #pragma mark  Functions used within the init MCMC process
 
-    bool getThetaMinPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents, QString &linkStr);
+    // bool getThetaMinPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents, QString &linkStr);
     bool getThetaMaxPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents);
+
+    double getThetaMinRecursive_v2(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
+    double getThetaMaxRecursive_v2(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
+
+    double getThetaMinRecursive_v3(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
+    double getThetaMaxRecursive_v3(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
 
     double getThetaMinRecursive(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
     double getThetaMaxRecursive(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());

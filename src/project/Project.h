@@ -128,8 +128,8 @@ public:
      * @brief setNoResults : set to disable the saving the file *.res
      * @param noResults
      */
-    void setNoResults( const bool noResults) { mNoResults = noResults;}
-    bool withResults() {return (!mNoResults && mModel != nullptr);}
+    void setNoResults(const bool noResults) { mNoResults = noResults;}
+    bool withResults() const {return (!mNoResults && mModel != nullptr);}
 
     bool setSettings(const StudyPeriodSettings &settings);
 
@@ -154,9 +154,9 @@ public:
     void updateDate(int eventId, int dateId);
     void deleteDates(int eventId, const QList<int> &dateIndexes);
     void recycleDates(int eventId);
-    void deleteSelectedTrashedDates(const QList<int>& ids);
+    void deleteSelectedTrashedDates(const QList<int> &ids);
     QJsonObject checkDatesCompatibility(QJsonObject state, bool &isCorrected);
-    QJsonObject checkValidDates(const QJsonObject& state);
+    QJsonObject checkValidDates(const QJsonObject &state);
 
     void unselectedAllInState(QJsonObject &state);
     void updateSelectedEventsColor(const QColor &color);

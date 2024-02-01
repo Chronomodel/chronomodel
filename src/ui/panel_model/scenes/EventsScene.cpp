@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -241,7 +241,7 @@ void EventsScene::noHide()
 void EventsScene::phasesSelected()
 {
     qDebug()<<"[EventsScene::phasesSelected]";
-   setShowAllThumbs(false);
+    setShowAllThumbs(false);
 }
 
 void EventsScene::setShowAllThumbs(const bool show)
@@ -249,36 +249,36 @@ void EventsScene::setShowAllThumbs(const bool show)
     mShowAllThumbs = show ;
 
     // update EventItem GreyedOut according to the phase selection
-    for (QList<AbstractItem*>::iterator cIter = mItems.begin(); cIter != mItems.end(); ++cIter) {
+    for (auto item : mItems) {
         bool selectedPhase = false;
-        QJsonArray phases = dynamic_cast<EventItem*>(*cIter)->getPhases();
+        QJsonArray phases = dynamic_cast<EventItem*>(item)->getPhases();
         for (const QJsonValue& phase : phases) {
-                if ((selectedPhase == false) && (phase.toObject().value(STATE_IS_SELECTED).toBool() == true)) {
-                        selectedPhase = true;
-                      //  qDebug()<<"EventsScene::setShowAllThumbs Phase Selected: "<<phase.toObject().value(STATE_NAME).toString();
-                }
-         }
-        dynamic_cast<EventItem*>(*cIter)->setWithSelectedPhase(selectedPhase);
+            if ((selectedPhase == false) && (phase.toObject().value(STATE_IS_SELECTED).toBool() == true)) {
+                selectedPhase = true;
+                //  qDebug()<<"EventsScene::setShowAllThumbs Phase Selected: "<<phase.toObject().value(STATE_NAME).toString();
+            }
+        }
+        dynamic_cast<EventItem*>(item)->setWithSelectedPhase(selectedPhase);
         if (selectedPhase || show)
-            dynamic_cast<EventItem*>(*cIter)->setGreyedOut(false);
+            dynamic_cast<EventItem*>(item)->setGreyedOut(false);
         else
-            dynamic_cast<EventItem*>(*cIter)->setGreyedOut(true);
+            dynamic_cast<EventItem*>(item)->setGreyedOut(true);
 
     }
 
-     // update constraintItems GreyedOut according to the EventItem GreyedOut
-    for (QList<ArrowItem*>::iterator cIter = mConstraintItems.begin(); cIter != mConstraintItems.end(); ++cIter) {
+    // update constraintItems GreyedOut according to the EventItem GreyedOut
+    for (auto cIter : mConstraintItems) {
 
-             const int eventFromId = (*cIter)->mData.value(STATE_CONSTRAINT_BWD_ID).toInt();
-             const int eventToId = (*cIter)->mData.value(STATE_CONSTRAINT_FWD_ID).toInt();
+        const int eventFromId = cIter->mData.value(STATE_CONSTRAINT_BWD_ID).toInt();
+        const int eventToId = cIter->mData.value(STATE_CONSTRAINT_FWD_ID).toInt();
 
-             EventItem* evFrom = findEventItemWithJsonId(eventFromId);
-             EventItem* evTo = findEventItemWithJsonId(eventToId);
+        const EventItem* evFrom = findEventItemWithJsonId(eventFromId);
+        const EventItem* evTo = findEventItemWithJsonId(eventToId);
 
-             if ( (evTo && evFrom && (!evFrom->mGreyedOut || !evTo->mGreyedOut)) || show)
-                 (*cIter)->setGreyedOut(false);
-             else
-                  (*cIter)->setGreyedOut(true);
+        if ( (evTo && evFrom && (!evFrom->mGreyedOut || !evTo->mGreyedOut)) || show)
+            cIter->setGreyedOut(false);
+        else
+            cIter->setGreyedOut(true);
 
     }
 }
@@ -405,22 +405,27 @@ void EventsScene::updateSceneFromState()
         // ------------------------------------------------------
         //  Delete EventItems
         // ------------------------------------------------------
-
+        blockSignals(true); // removeItem is connected to deselection which is connected to updateState
         for (auto i = mItems.size()-1; i >= 0; --i) {
             QJsonObject& event = mItems[i]->mData;
             Event::Type type = Event::Type (event.value(STATE_EVENT_TYPE).toInt());
 
             if (type == Event::eDefault) {
                         EventItem* eventItem = (EventItem*)mItems[i];
-                        QList<QGraphicsItem*> dateItems = eventItem->childItems();
+                       /* QList<QGraphicsItem*> dateItems = eventItem->childItems();
 
                         const auto dateItemsSize = dateItems.size() -1;
                         for (auto j = dateItemsSize; j >= 0; --j) {
                             removeItem(dateItems.at(j));
                             delete dateItems[j];
                             dateItems[j] = nullptr;
-                        }
-                        delete eventItem;
+                            //dateItems.removeFirst();
+                        }*/
+                        //delete dateItems.first(); // delete the object
+                        //dateItems.removeFirst(); // remove the pointer
+                        //delete eventItem;
+
+                        removeItem(eventItem);
                         eventItem = nullptr;
             } else if (type == Event::eBound) {
                         EventKnownItem* eventItem = (EventKnownItem*)mItems[i];
@@ -433,6 +438,7 @@ void EventsScene::updateSceneFromState()
 
 
         }
+        mItems.squeeze();
         // ------------------------------------------------------
         //  Delete constraints
         // ------------------------------------------------------
@@ -443,6 +449,8 @@ void EventsScene::updateSceneFromState()
             delete constraintItem;
             constraintItem = nullptr;
         }
+        mConstraintItems.squeeze();
+        blockSignals(false);
         return;
     }
 
@@ -506,7 +514,7 @@ void EventsScene::updateSceneFromState()
     QList<int> indexItemToRemove;
 
     for (int i = 0; i < mItems.size(); ++i) {
-        QJsonObject& event = mItems[i]->mData;
+        QJsonObject &event = mItems[i]->mData;
 
         if (!events_ids_inNewState.contains(event.value(STATE_ID).toInt())) {
                 indexItemToRemove.append(i);        
@@ -516,7 +524,7 @@ void EventsScene::updateSceneFromState()
     // ------------------------------------------------------
     //  Delete EventItems not in current state
     // ------------------------------------------------------
-  //  bool hasDeleted = false;
+    blockSignals(true);
     for (auto i = indexItemToRemove.size()-1; i >= 0; --i) {
         QJsonObject& event = mItems[indexItemToRemove.at(i)]->mData;
         Event::Type type = Event::Type (event.value(STATE_EVENT_TYPE).toInt());
@@ -534,24 +542,19 @@ void EventsScene::updateSceneFromState()
                 }
                 delete eventItem;
             } else if (type == Event::eBound) {
-                EventKnownItem* eventItem = (EventKnownItem*)mItems[indexItemToRemove.at(i)];
-
-               delete eventItem;
+                EventKnownItem* boundItem = (EventKnownItem*)mItems[indexItemToRemove.at(i)];
+                removeItem(boundItem);
+                delete boundItem;
            }
             //qDebug() << "EventsScene::updateScene Event deleted : " << event.value(STATE_ID).toInt();
 
             mItems.removeAt(indexItemToRemove.at(i));
-          //  hasDeleted = true;
 
-            // This does not break the code but is commented to match PhasesScene implementation
-            //removeItem(eventItem);
-
-           // eventItem->deleteLater();
 
         }
     }
-
-  //  bool hasCreated = false;
+    blockSignals(false);
+    mItems.squeeze();
 
     // ------------------------------------------------------
     //  Create / Update event items
@@ -637,6 +640,7 @@ void EventsScene::updateSceneFromState()
     // ------------------------------------------------------
     //  Delete constraints not in current state
     // ------------------------------------------------------
+    blockSignals(true);
     for (auto i = mConstraintItems.size()-1; i >= 0; --i) {
         ArrowItem* constraintItem = mConstraintItems[i];
         QJsonObject& constraint = constraintItem->data();
@@ -651,7 +655,8 @@ void EventsScene::updateSceneFromState()
             constraintItem = nullptr;
         }
     }
-
+    blockSignals(false);
+    mConstraintItems.squeeze();
     // ------------------------------------------------------
     //  Create / Update constraint items
     // ------------------------------------------------------
@@ -713,11 +718,11 @@ void EventsScene::updateSceneFromState()
     // Deleting an item that was selected involves changing the selection (and updating properties view)
     // Nothing has been triggered so far because of the mUpdatingItems flag, so we need to trigger it now!
     // As well, creating an item changes the selection because we want the newly created item to be selected.
-   // if (hasDeleted || hasCreated)
-  //      updateStateSelectionFromItem(); // modify mState and emit pushState
+    // if (hasDeleted || hasCreated)
+    //      updateStateSelectionFromItem(); // modify mState and emit pushState
 
             //       setSceneRect(specialItemsBoundingRect().adjusted(-30, -30, 30, 30));
-   // setSceneRect(itemsBoundingRect());
+    // setSceneRect(itemsBoundingRect());
     adjustSceneRect();
 
     //adaptItemsForZoom(mZoom);

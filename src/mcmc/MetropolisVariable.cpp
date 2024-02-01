@@ -282,8 +282,8 @@ void MetropolisVariable::generateBufferForHisto(double *input, const QList<doubl
         const double t = *iter;
 
         const double idx = (t - a) / delta;
-        const double idx_under = floor(idx);
-        const double idx_upper = idx_under + 1.;
+        const double idx_under = std::clamp(floor(idx), 0., numPts-1.);
+        const double idx_upper = std::clamp(idx_under + 1., 0., numPts-1.);
 
         const double contrib_under = (idx_upper - idx) / denum;
         const double contrib_upper = (idx - idx_under) / denum;

@@ -2380,7 +2380,7 @@ void GraphView::exportReferenceCurves(const QString &defaultPath, const QLocale 
     if (filename == "") {
         const QString fiName = MainWindow::getInstance()->getNameProject();
 
-        const QString defaultFilename = defaultPath + "/"+ fiName.mid(0, fiName.size()-4) + "_ref.csv";    //defaultPath + "/"+ info.baseName() + "_ref.csv";
+        const QString defaultFilename = defaultPath + "/"+ fiName.mid(0, fiName.size()-4) + "_ref.csv";
         qDebug()<<"GraphView::exportReferenceCurves : "<<defaultFilename;
         filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                 tr("Save Reference Curve as..."),

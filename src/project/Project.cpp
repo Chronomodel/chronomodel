@@ -1554,7 +1554,7 @@ void Project::deleteSelectedEvents()
     QJsonArray events_constraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
     QJsonArray events_trash = mState.value(STATE_EVENTS_TRASH).toArray();
 
-    // Create new Events liost
+    // Create new Events list
     for (int i = 0 ; i < events.size(); ++i) {
         if (!events.at(i).toObject().value(STATE_IS_SELECTED).toBool()) {
             new_events_list.append(events.at(i).toObject());

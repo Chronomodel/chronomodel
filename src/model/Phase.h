@@ -1,6 +1,5 @@
 /* ---------------------------------------------------------------------
-
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -40,7 +39,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef PHASE_H
 #define PHASE_H
 
-#include "StateKeys.h"
 #include "PhaseConstraint.h"
 #include "MetropolisVariable.h"
 
@@ -73,11 +71,20 @@ public:
     static Phase fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
 
+    double sum_gamma_prev_phases();
+    double sum_gamma_next_phases();
+    void init_alpha_beta_phase(QList<Phase*> &phases);
+    void init_update_alpha_phase(double theta_max_phase_prev, double tau_inf);
+    void init_update_beta_phase(double beta_sup, double tau_sup);
+
     double getMaxThetaEvents(double tmax);
     double getMinThetaEvents(double tmin);
 
     double getMinThetaNextPhases(const double tmax);
     double getMaxThetaPrevPhases(const double tmin);
+
+    double init_max_theta(const double max_default);
+    double init_min_theta(const double min_default);
 
     std::pair<double, double> getFormatedTimeRange() const;
 
@@ -100,8 +107,8 @@ public:
     QColor mColor;
 
     QList<Event*> mEvents;
-    QList<PhaseConstraint*> mConstraintsFwd;
-    QList<PhaseConstraint*> mConstraintsBwd;
+    QList<PhaseConstraint*> mConstraintsNextPhases;
+    QList<PhaseConstraint*> mConstraintsPrevPhases;
 
     MetropolisVariable mAlpha;
     MetropolisVariable mBeta;

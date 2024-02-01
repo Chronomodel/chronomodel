@@ -90,8 +90,6 @@ EventItem::~EventItem()
         dateItems.removeFirst();
     }
 
-
-
 }
 
 /**
@@ -664,8 +662,10 @@ void EventItem::paintBoxPhases (QPainter *painter, const QRectF &rectBox)
     const auto numPhases = phases.size();
 
     if (numPhases == 0) {
-        painter->setPen(QColor(200, 200, 200));
-
+        const QColor eventColor = QColor(mData.value(STATE_COLOR_RED).toInt(),
+                                   mData.value(STATE_COLOR_GREEN).toInt(),
+                                   mData.value(STATE_COLOR_BLUE).toInt());
+        painter->setPen(getContrastedColor(eventColor));
         painter->drawText(rectBox, Qt::AlignCenter, tr("No Phase"));
 
     } else {

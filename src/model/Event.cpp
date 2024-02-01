@@ -67,6 +67,7 @@ Event::Event(std::shared_ptr<Model> model):
     mIsSelected (false),
     mBetaS02(0.),
     mInitialized (false),
+    mIsNode( false),
     mLevel (0),
     mPointType (ePoint),
     mMixingCalibrations (nullptr)
@@ -121,9 +122,8 @@ Event::Event(std::shared_ptr<Model> model):
 
 }
 
-//Event::Event (const QJsonObject& json, const Model *model):
-Event::Event (const QJsonObject& json, std::shared_ptr<Model> model):
-   // mModel (model),
+Event::Event (const QJsonObject &json, std::shared_ptr<Model> model):
+    mIsNode( false),
     mMixingCalibrations (nullptr)
 {
     mModel = model;
@@ -193,6 +193,9 @@ void Event::copyFrom(const Event& event)
     mName = event.mName;
     //mMethod = event.mMethod;
     mColor = event.mColor;
+
+    mIsNode = event.mIsNode;
+
     mLevel = event.mLevel;
 
     mDates = event.mDates;
@@ -201,6 +204,7 @@ void Event::copyFrom(const Event& event)
     mConstraintsBwd = event.mConstraintsBwd;
 
     mTheta = event.mTheta;
+    mTheta.mX = event.mTheta.mX;
     mTheta.mSupport = event.mTheta.mSupport;
     mTheta.mFormat = event.mTheta.mFormat;
     mTheta.mSamplerProposal = event.mTheta.mSamplerProposal;
@@ -380,7 +384,6 @@ QJsonObject Event::toJson() const
 
     QJsonArray dates;
     for (auto & d : mDates) {
-        //QJsonObject date = d.toJson();
         dates.append(d.toJson());
     }
     event[STATE_EVENT_DATES] = dates;
@@ -539,10 +542,11 @@ void Event::reset()
     mTheta.reset();
     mVg.reset();
     mInitialized = false;
-    mNodeInitialized = false;
+    mIsNode = false;
     mThetaNode = HUGE_VAL;//__builtin_inf();//INFINITY;
 }
 
+/*
 bool Event::getThetaMinPossible(const Event* originEvent, QString& circularEventName, const QList<Event*> &startEvents, QString& linkStr)
 {
     QList<Event*> newStartEvents = startEvents;
@@ -567,7 +571,7 @@ bool Event::getThetaMinPossible(const Event* originEvent, QString& circularEvent
     bool noPhaseBwd (true);
     if (!mPhases.isEmpty())
         for (const Phase* phase : mPhases)
-            noPhaseBwd = noPhaseBwd && (phase->mConstraintsBwd.isEmpty());
+            noPhaseBwd = noPhaseBwd && (phase->mConstraintsPrevPhases.isEmpty());
 
     //--
     // L'Event appartient à une ou plusieurs phases.
@@ -605,8 +609,8 @@ bool Event::getThetaMinPossible(const Event* originEvent, QString& circularEvent
         if (!noPhaseBwd) {
             // Check constraints in Phases Scene
             for (auto&& phase : mPhases) {
-                if (!phase->mConstraintsBwd.isEmpty()) {
-                    for (auto&& phaseBwd : phase->mConstraintsBwd) {
+                if (!phase->mConstraintsPrevPhases.isEmpty()) {
+                    for (auto&& phaseBwd : phase->mConstraintsPrevPhases) {
                         for (auto&& eventPhaseBwd : phaseBwd->mPhaseFrom->mEvents) {
                             if (eventPhaseBwd != originEvent ) {
                                 const bool tMinRecOk = eventPhaseBwd->getThetaMinPossible ( originEvent, circularEventName, newStartEvents, serieStr);
@@ -650,16 +654,20 @@ bool Event::getThetaMinPossible(const Event* originEvent, QString& circularEvent
 
 
 }
+*/
+
 
 /**
  * @brief Event::getThetaMaxPossible
- * Vérifie si l'initialisation est possible, controle la circularité
+ * Vérifie si l'initialisation est possible, controle la circularité,
+ * Utilisé lors de l'initialisation pour controler la circularité, Ne controle pas les durées (tau), ni les hiatus (gamma)
  * @param originEvent
  * @param circularEventName
  * @param startEvents
  * @return
  */
-bool Event::getThetaMaxPossible(const Event* originEvent, QString &circularEventName,  const QList<Event *> &startEvents)
+
+bool Event::getThetaMaxPossible(const Event* originEvent, QString& circularEventName,  const QList<Event*> &startEvents)
 {
 #ifdef DEBUG
     QString startList;
@@ -673,14 +681,14 @@ bool Event::getThetaMaxPossible(const Event* originEvent, QString &circularEvent
    // const QString parallelStr  (" | ");
     const QString serieStr  (" ➡︎ ");
 
-    if (mNodeInitialized)
+    if (mIsNode)
         return true;
 
     // list of phase under
     bool noPhaseFwd (true);
     if (!mPhases.isEmpty())
         for (const auto& phase : mPhases)
-            noPhaseFwd = noPhaseFwd && (phase->mConstraintsFwd.isEmpty());
+            noPhaseFwd = noPhaseFwd && (phase->mConstraintsNextPhases.isEmpty());
 
     //--
     // Le fait appartient à une ou plusieurs phases.
@@ -692,7 +700,7 @@ bool Event::getThetaMaxPossible(const Event* originEvent, QString &circularEvent
 
 
     if (noPhaseFwd && mConstraintsFwd.isEmpty()) {
-        mNodeInitialized = true;
+        mIsNode = true;
         return true;
     }
 
@@ -720,8 +728,8 @@ bool Event::getThetaMaxPossible(const Event* originEvent, QString &circularEvent
         if (!noPhaseFwd) {
             // Check constraints in Phases Scene
             for (const auto& phase : mPhases) {
-                if (!phase->mConstraintsFwd.isEmpty()) {
-                    for (const auto& phaseFwd : phase->mConstraintsFwd) {
+                if (!phase->mConstraintsNextPhases.isEmpty()) {
+                    for (const auto& phaseFwd : phase->mConstraintsNextPhases) {
 
                         for (const auto& eventPhaseFwd : phaseFwd->mPhaseTo->mEvents) {
                             if (!newStartEvents.contains (eventPhaseFwd)) {
@@ -744,39 +752,20 @@ bool Event::getThetaMaxPossible(const Event* originEvent, QString &circularEvent
             }
         }
 
-        // Check parallel constraints with the Events in the same phases -> useless
-        //Il ne faut pas regarder à travers les autres Events de la même phase
-/*
-        for (auto &&phase : mPhases) {
-                for (auto &&event : phase->mEvents) {
-                    if (!newStartEvents.contains (event)) {
-
-                           const bool _ok = event->getThetaMaxPossible (originEvent, circularEventName, newStartEvents);
-                           if ( !_ok) {
-                               circularEventName = " (" + phase->mName + ")" + parallelStr + event->mName +  " (" + phase->mName + ")" + circularEventName ;
-                               return false;
-                           }
-
-                    }
-
-
-                }
-        }
-*/
-        mNodeInitialized = true;
+        mIsNode = true;
         return true;
     }
 }
 
 
-double Event::getThetaMinRecursive(const double defaultValue, const QList<Event*> &startEvents)
+double Event::getThetaMinRecursive_v2(const double defaultValue, const QList<Event*> &startEvents)
 {
      //qDebug()<<"rentre dans getThetaMinRecursive()"<< mName;
     // if the Event is initiated, constraints was controled previously
     if (mInitialized) {
             return mTheta.mX;
 
-    } else if (mNodeInitialized) {
+    } else if (mIsNode) {
         return mThetaNode;
 
     }
@@ -788,7 +777,7 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event*
     bool noPhaseBwd = true;
     if (!mPhases.isEmpty())
         for (const auto& phase : mPhases) {
-            noPhaseBwd = noPhaseBwd && (phase->mConstraintsBwd.isEmpty());
+            noPhaseBwd = noPhaseBwd && (phase->mConstraintsPrevPhases.isEmpty());
         }
 
     //--
@@ -811,12 +800,10 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event*
                    if (event->mInitialized) {
                        thetaMax = std::max(thetaMax, event-> mTheta.mX);
 
-                   } else if (event->mNodeInitialized) {
+                   } else if (event->mIsNode) {
                        thetaMax = std::max(thetaMax, event-> mThetaNode);
 
-                   } /*else {
-                       thetaMax = std::max(thetaMax, event->getThetaMinRecursive(defaultValue, newStartEvents));
-                   }*/
+                   }
                 }
             }
             // Si aucune date initialisé maxPhase n'est pas évaluable donc égale à defaultValue
@@ -829,7 +816,7 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event*
 
 
     if (noPhaseBwd && mConstraintsBwd.isEmpty()) {
-        mNodeInitialized = true;
+        mIsNode = true;
         mThetaNode = maxPhases;
         return mThetaNode;
     }
@@ -839,7 +826,7 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event*
         if (!mConstraintsBwd.isEmpty())
             for (auto&& constBwd : mConstraintsBwd) {
                 if (!startEvents.contains(constBwd->mEventFrom)) {
-                     maxTheta = std::max(maxTheta, (constBwd->mEventFrom)->getThetaMinRecursive(defaultValue, newStartEvents));
+                     maxTheta = std::max(maxTheta, (constBwd->mEventFrom)->getThetaMinRecursive_v2(defaultValue, newStartEvents));
                     //qDebug()<<" thetaMin "<< mName <<"in constBwd"<<constBwd->mEventFrom->mName << maxTheta;
                 }
             }
@@ -848,13 +835,13 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event*
         if (!noPhaseBwd) {
 
             for (auto&& phase : mPhases) {
-                if (!phase->mConstraintsBwd.isEmpty()) {
+                if (!phase->mConstraintsPrevPhases.isEmpty()) {
                     double maxThetaBwd = defaultValue;
-                    for (auto&& phaseBwd : phase->mConstraintsBwd) {
+                    for (auto&& phaseBwd : phase->mConstraintsPrevPhases) {
 
                         for (auto&& eventPhaseBwd : phaseBwd->mPhaseFrom->mEvents) {
                             if (!startEvents.contains(eventPhaseBwd)) {
-                                maxThetaBwd = std::max(maxThetaBwd, eventPhaseBwd->getThetaMinRecursive(defaultValue, newStartEvents));
+                                maxThetaBwd = std::max(maxThetaBwd, eventPhaseBwd->getThetaMinRecursive_v2(defaultValue, newStartEvents));
                             }
                         }
                         if (phaseBwd->mGammaType != PhaseConstraint::eGammaUnknown)
@@ -865,8 +852,7 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event*
                  }
             }
         }
-        mNodeInitialized = true;
-       // mThetaNode = std::max(maxTheta, maxPhases);
+        mIsNode = true;
         mThetaNode = std::max({maxTheta, maxPhases,  maxPhasesBwd});
         return mThetaNode;
     }
@@ -874,13 +860,14 @@ double Event::getThetaMinRecursive(const double defaultValue, const QList<Event*
 
 }
 
-double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event *> &startEvents)
+// utiliser que dans initialize_time
+double Event::getThetaMaxRecursive_v2(const double defaultValue, const QList<Event *> &startEvents)
 {
     // if the Event is initialized, constraints was controled previously
     if (mInitialized) {
         return mTheta.mX;
 
-    } else if (mNodeInitialized) {
+    } else if (mIsNode) {
         return mThetaNode;
 
     }
@@ -891,10 +878,17 @@ double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event 
 
 
     // list of phase under
-    bool noPhaseFwd = true;
+    bool noPhaseNext = true;
     if (!mPhases.isEmpty()) {
         for (const auto& phase : mPhases) {
-            noPhaseFwd = noPhaseFwd && (phase->mConstraintsFwd.isEmpty());
+            noPhaseNext = noPhaseNext && (phase->mConstraintsNextPhases.isEmpty());
+        }
+    }
+    // list of phase upper
+    bool noPhaseBwd = true;
+    if (!mPhases.isEmpty()) {
+        for (const auto& phase : mPhases) {
+            noPhaseBwd = noPhaseBwd && (phase->mConstraintsPrevPhases.isEmpty());
         }
     }
 
@@ -909,35 +903,39 @@ double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event 
     double minPhases = defaultValue;
     for (const auto& phase :mPhases) {
         if (phase->mTauType != Phase::eTauUnknown) {
-            double thetaMin = defaultValue;
+            double thetaMin = defaultValue - phase->mTau.mX;
             for (const auto& event : phase->mEvents) {
                 //if (!startEvents.contains(event)) {
                     //thetaMin = std::min(thetaMin, event->getThetaMaxRecursive(defaultValue, newStartEvents));
-               // if (event != this) {
-                if (!startEvents.contains(event)) {
+                if (event != this) {
+                //if (!startEvents.contains(event)) {
                     if (event->mInitialized) {
-                        thetaMin = std::min(thetaMin, event-> mTheta.mX);
+                        thetaMin = std::min(thetaMin, event-> mTheta.mX- phase->mTau.mX);
 
-                    } else if (event->mNodeInitialized) {
+                    } else if (event->mIsNode) {
                         thetaMin = std::min(thetaMin, event-> mThetaNode);
 
-                    } /* else {
-                        thetaMin = std::min(thetaMin, event->getThetaMaxRecursive(defaultValue, newStartEvents));
+                    }/*  else {
+                        thetaMax = std::max(thetaMax, event->getThetaMaxRecursive(defaultValue, newStartEvents));
                     } */
 
                 }
             }
             // Si aucune date initialisé minPhase n'est pas évaluable donc égale à defaultValue
-            if (thetaMin != defaultValue)
-                minPhases = std::min(minPhases, thetaMin + phase->mTau.mX);
+            //if (thetaMin != defaultValue)
+                //minPhases = std::min(minPhases, thetaMin + phase->mTau.mX);
+            minPhases = thetaMin;
+
         }
      }
 
-    if (noPhaseFwd && mConstraintsFwd.isEmpty()) {
-            mNodeInitialized = true;
+    // Pas de contrainte au dessus, ni de phase au dessus
+     // Le Node comprends décallage en Tau
+    if (noPhaseBwd && mConstraintsBwd.isEmpty()) {
+            mIsNode = true;
             mThetaNode = minPhases;
             return mThetaNode;
-        }
+    }
 
 
     else {
@@ -945,40 +943,368 @@ double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event 
         if (!mConstraintsFwd.isEmpty())
             for (const auto& constFwd : mConstraintsFwd) {
                 if (!startEvents.contains(constFwd->mEventTo)) {
-                    minTheta = std::min(minTheta, (constFwd->mEventTo)->getThetaMaxRecursive(defaultValue, newStartEvents));
+                    minTheta = std::min(minTheta, constFwd->mEventTo->getThetaMaxRecursive_v2(defaultValue, newStartEvents));
                 }
             }
 
 
-        double minPhasesFwd = defaultValue;
-        if (!noPhaseFwd) {
+        double minPhasesNext = defaultValue;
+        if (!noPhaseNext) {
 
             for (const auto& phase : mPhases) {
-                 if (!phase->mConstraintsFwd.isEmpty()) {
+                if (!phase->mConstraintsNextPhases.isEmpty()) {
                     double minThetaFwd = defaultValue;
-                    for (const auto& phaseFwd : phase->mConstraintsFwd) {
+                    for (const auto& phase_next : phase->mConstraintsNextPhases) {
 
-                        for (const auto& eventPhaseFwd : phaseFwd->mPhaseTo->mEvents) {
+                        for (const auto& eventPhaseFwd : phase_next->mPhaseTo->mEvents) {
                             if (!newStartEvents.contains(eventPhaseFwd))
-                                minThetaFwd = std::min(minThetaFwd, eventPhaseFwd->getThetaMaxRecursive(defaultValue, newStartEvents));
+                                minThetaFwd = std::min(minThetaFwd, eventPhaseFwd->getThetaMaxRecursive_v2(defaultValue, newStartEvents));
                         }
 
-                        if (phaseFwd->mGammaType != PhaseConstraint::eGammaUnknown)
-                            minPhasesFwd = std::min(minPhasesFwd, minThetaFwd - phaseFwd->mGamma);
+                        if (phase_next->mGammaType != PhaseConstraint::eGammaUnknown)
+                            minPhasesNext = std::min(minPhasesNext, minThetaFwd - phase_next->mGamma);
                         else
-                            minPhasesFwd = std::min(minPhasesFwd, minThetaFwd);
+                            minPhasesNext = std::min(minPhasesNext, minThetaFwd);
                     }
-                  }
+                }
+                if (phase->mTauType != Phase::eTauUnknown) {
+                    double thetaMin = minPhasesNext;// - phase->mTau.mX;
+                    for (const auto& event : phase->mEvents) {
+
+                        if (event != this) {
+                            if (event->mInitialized) {
+                                thetaMin = std::min(thetaMin, event-> mTheta.mX - phase->mTau.mX);
+
+                            } else if (event->mIsNode) {
+                                thetaMin = std::min(thetaMin, event-> mThetaNode);
+
+                            }
+
+                        }
+                    }
+                   // minPhasesNext = std::min(minPhasesNext, thetaMin);
+                }
+
             }
         }
-        mNodeInitialized = true;
+        mIsNode = true;
         mThetaNode = std::min(minTheta, minPhases);
-        mThetaNode = std::min(minPhasesFwd, mThetaNode);
+        mThetaNode = std::min(minPhasesNext, mThetaNode);
         return mThetaNode;
     }
 
 
 }
+
+// obsolete ??
+/*
+double Event::getThetaMinRecursive(const double defaultValue, const QList<Event*> &startEvents)
+{
+    //qDebug()<<"rentre dans getThetaMinRecursive()"<< mName;
+    // if the Event is initiated, constraints was controled previously
+    if (mInitialized) {
+        return mTheta.mX ;
+
+    } else if (mIsNode) {
+        return mThetaNode;
+
+    }
+
+    double max_alpha = defaultValue;
+    for (const auto& phase : mPhases) {
+        max_alpha = std::max(max_alpha, phase->mAlpha.mX);
+    }
+    // list of phase under
+    bool noPhaseBwd = true;
+    if (!mPhases.isEmpty())
+        for (const auto& phase : mPhases) {
+            noPhaseBwd = noPhaseBwd && (phase->mConstraintsPrevPhases.isEmpty());
+        }
+
+    //--
+    // Le fait appartient à une ou plusieurs phases.
+    // Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
+    // Il faut s'assurer d'être au-dessus du plus grand theta de la phase moins la durée
+    // (on utilise la valeur courante de la durée pour cela puisqu'elle est échantillonnée)
+    QList<Event*> newStartEvents = startEvents;
+    newStartEvents.append(this);
+
+
+    if (noPhaseBwd && mConstraintsBwd.isEmpty()) {
+        //mNodeInitialized = true;
+        mThetaNode = max_alpha;
+        return mThetaNode;
+    }
+
+    else {
+        double maxTheta = defaultValue;
+        if (!mConstraintsBwd.isEmpty())
+            for (auto&& constBwd : mConstraintsBwd) {
+                if (!startEvents.contains(constBwd->mEventFrom)) {
+                    maxTheta = std::max(maxTheta, constBwd->mEventFrom->getThetaMinRecursive(defaultValue, newStartEvents));
+                    //qDebug()<<" thetaMin "<< mName <<"in constBwd"<<constBwd->mEventFrom->mName << maxTheta;
+                }
+            }
+
+        double maxThetaBwd = defaultValue;
+        if (!noPhaseBwd) {
+
+            for (auto&& phase : mPhases) {
+                if (!phase->mConstraintsPrevPhases.isEmpty()) {
+
+                    for (auto&& phaseBwd : phase->mConstraintsPrevPhases) {
+
+                        for (auto&& eventPhaseBwd : phaseBwd->mPhaseFrom->mEvents) {
+                            if (!startEvents.contains(eventPhaseBwd) ) { // && eventPhaseBwd->mInitialized==true) {
+                                if (phaseBwd->mGammaType != PhaseConstraint::eGammaUnknown)
+                                    maxThetaBwd = std::max(maxThetaBwd, eventPhaseBwd->getThetaMinRecursive(defaultValue, newStartEvents) + phaseBwd->mGamma);
+                                else
+                                     maxThetaBwd = std::max(maxThetaBwd, eventPhaseBwd->getThetaMinRecursive(defaultValue, newStartEvents));
+                               // maxThetaBwd = std::max(maxThetaBwd, eventPhaseBwd->getThetaMinRecursive(defaultValue, newStartEvents));
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+        mIsNode = true;
+        mThetaNode = std::max({maxTheta, max_alpha,  maxThetaBwd});
+        return mThetaNode;
+    }
+
+
+}
+*/
+
+/*
+double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event *> &startEvents)
+{
+    if (mInitialized) {
+        return mTheta.mX;
+
+    } else if (mIsNode) {
+        return mThetaNode;
+
+    }
+
+    // list of phase upper
+    bool noPhaseNext = true;
+    if (!mPhases.isEmpty()) {
+        for (const auto& phase : mPhases) {
+            noPhaseNext = noPhaseNext && (phase->mConstraintsNextPhases.isEmpty());
+        }
+    }
+
+
+    QList<Event*> newStartEvents = startEvents;
+    newStartEvents.append(this);
+
+    double beta_min = defaultValue;
+    for (const auto& phase :mPhases) {
+        beta_min = std::min(beta_min, phase->mBeta.mX);
+    }
+
+    // Pas de contrainte au dessus, ni de phase au dessus
+    // Le Node comprends décallage en Tau
+    if (noPhaseNext && mConstraintsFwd.isEmpty()) {
+       // mNodeInitialized = true;
+        mThetaNode = beta_min;
+        return mThetaNode;
+    }
+
+
+    else {
+        double minThetaConstraint = defaultValue;
+        if (!mConstraintsFwd.isEmpty())
+            for (const auto& constFwd : mConstraintsFwd) {
+                if (!startEvents.contains(constFwd->mEventTo)) {
+                    minThetaConstraint = std::min(minThetaConstraint, constFwd->mEventTo->getThetaMaxRecursive(defaultValue, newStartEvents));
+                }
+            }
+
+
+        //double minPhasesNext = defaultValue;
+        double minThetaFwd = defaultValue;
+        if (!noPhaseNext) {
+
+            for (const auto& phase : mPhases) {
+                if (!phase->mConstraintsNextPhases.isEmpty()) {
+
+                    for (const auto& phase_next : phase->mConstraintsNextPhases) {
+
+                        for (const auto& eventPhaseFwd : phase_next->mPhaseTo->mEvents) {
+                            if (!newStartEvents.contains(eventPhaseFwd) ) { //&& eventPhaseFwd->mInitialized==true) {
+                                if (phase_next->mGammaType != PhaseConstraint::eGammaUnknown) {
+                                    minThetaFwd = std::min(minThetaFwd, eventPhaseFwd->getThetaMaxRecursive(defaultValue, newStartEvents) - phase_next->mGamma);
+                                } else {
+                                    minThetaFwd = std::min(minThetaFwd, eventPhaseFwd->getThetaMaxRecursive(defaultValue, newStartEvents));
+                                }
+                            }   //minThetaFwd = std::min(minThetaFwd, eventPhaseFwd->getThetaMaxRecursive(defaultValue, newStartEvents));
+                        }
+
+                       // if (phase_next->mGammaType != PhaseConstraint::eGammaUnknown)
+                       //     minPhasesNext = std::min(minPhasesNext, minThetaFwd - phase_next->mGamma);
+                       // else
+                       //     minPhasesNext = std::min(minPhasesNext, minThetaFwd);
+                    }
+                }
+                //if (phase->mTauType != Phase::eTauUnknown) {
+                   // minPhasesNext = std::min(minPhasesNext, thetaMin);
+                //}
+
+            }
+        }
+       // mNodeInitialized = true;
+        mThetaNode = std::min({minThetaConstraint, beta_min, minThetaFwd});
+        //mThetaNode = std::min(minPhasesNext, mThetaNode);
+        return mThetaNode;
+    }
+
+}
+*/
+
+// Utiliser que dans initialize_time
+// defaultValue = min period
+double Event::getThetaMinRecursive_v3(const double defaultValue, const QList<Event*> &startEvents)
+{
+    if (mInitialized) {
+        return mTheta.mX;
+
+    } else  if (mIsNode) {
+        return mTheta.mX;
+
+    } else   {
+        // 1 - Descendre les contraintes pour retrouver la valeur la plus grande
+        QList<Event*> newStartEvents = startEvents;
+        newStartEvents.append(this);
+        double max_theta_strati = defaultValue;
+        if (!mConstraintsBwd.isEmpty()) {
+            for (auto&& constBwd : mConstraintsBwd) {
+                max_theta_strati = std::max(max_theta_strati, constBwd->mEventFrom->getThetaMinRecursive_v3(defaultValue, newStartEvents));
+            }
+        }
+        // 2 - Si l'Event appartient à une phase, descendre les contraintes de phase en ajoutant les gamma
+        double max_theta_phase_strati = defaultValue;
+        if (!mPhases.isEmpty()) {
+            for (const auto& phase : mPhases) {
+                for (auto bwd_phase : phase->mConstraintsPrevPhases) {
+                    max_theta_phase_strati = std::max(max_theta_phase_strati, bwd_phase->mPhaseFrom->init_max_theta(defaultValue) + bwd_phase->mGamma);
+                }
+            }
+        }
+
+        // 3 - Si dans la phase, il y a des Events non initialisés. Il faut considèrer qu'ils sont identiques et descendre aussi leurs contraintes
+        double max_theta_friend_strati = defaultValue;
+        if (!mPhases.isEmpty()) {
+            for (const auto& phase : mPhases) {
+                for (auto th_friend : phase->mEvents) {
+                    if (th_friend->mInitialized == false && th_friend != this) {
+                        for (auto&& constBwd : th_friend->mConstraintsBwd) {
+                            if (!startEvents.contains(constBwd->mEventFrom)) {
+                                max_theta_friend_strati = std::max(max_theta_friend_strati, constBwd->mEventFrom->getThetaMinRecursive_v3(defaultValue, newStartEvents));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 4 - Si dans la phase, il y a des Events initialisés. voir la contrainte de durée
+        double max_tau_phases = defaultValue;
+        if (!mPhases.isEmpty()) {
+            for (const auto& phase : mPhases) {
+                double th_max_phase = defaultValue;
+                if (phase->mTauType != Phase::eTauUnknown) {
+                    for (auto th_friend : phase->mEvents) {
+                        if (th_friend->mInitialized == true && th_friend != this ) {
+                            th_max_phase = std::max(th_max_phase, th_friend->mTheta.mX);
+                        }
+                    }
+                    max_tau_phases = std::max(max_tau_phases, th_max_phase - phase->mTau.mX);
+                }
+            }
+        }
+
+        mIsNode = true;
+        mTheta.mX = std::max({max_theta_strati, max_theta_phase_strati, max_theta_friend_strati, max_tau_phases});
+
+        return mTheta.mX;
+    }
+
+}
+
+// Utilisé que dans initialize_time
+// defaultValue = max period
+double Event::getThetaMaxRecursive_v3(const double defaultValue, const QList<Event*> &startEvents)
+{
+    if (mInitialized) {
+        return mTheta.mX;
+
+    } else  if (mIsNode) {
+        return mTheta.mX;
+
+    } else  {
+        // 1 - remonter les contraintes pour retrouver la valeur la plus grande
+        QList<Event*> newStartEvents = startEvents;
+        newStartEvents.append(this);
+        double min_theta_strati = defaultValue;
+        if (!mConstraintsFwd.isEmpty()) {
+            for (auto&& constFwd : mConstraintsFwd) {
+                min_theta_strati = std::min(min_theta_strati, constFwd->mEventTo->getThetaMaxRecursive_v3(defaultValue, newStartEvents));
+            }
+        }
+        // 2 - Si l'Event appartient à une phase, remonter les contraintes de phase en soustrayant les gamma
+        double min_theta_phase_strati = defaultValue;
+        if (!mPhases.isEmpty()) {
+            for (const auto& phase : mPhases) {
+                for (auto fwd_phase : phase->mConstraintsNextPhases) {
+                    min_theta_phase_strati = std::min(min_theta_phase_strati, fwd_phase->mPhaseTo->init_min_theta(defaultValue) - fwd_phase->mGamma);
+                }
+            }
+        }
+
+        // 3 - Si dans la phase, il y a des Events non initialisés. Il faut considèrer qu'ils sont identiques et remonter aussi leurs contraintes
+        double min_theta_friend_strati = defaultValue;
+        if (!mPhases.isEmpty()) {
+            for (const auto& phase : mPhases) {
+                for (auto th_friend : phase->mEvents) {
+                    if (th_friend->mInitialized == false && th_friend != this) {
+                        for (auto&& constFwd : th_friend->mConstraintsFwd) {
+                            if (!startEvents.contains(constFwd->mEventTo)) {
+                                min_theta_friend_strati = std::min(min_theta_friend_strati, constFwd->mEventTo->getThetaMaxRecursive_v3(defaultValue, newStartEvents));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 4 - Si dans la phase, il y a des Events initialisés. voir la contrainte de durée
+        double min_tau_phases = defaultValue;
+        if (!mPhases.isEmpty()) {
+            for (const auto& phase : mPhases) {
+                double th_min_phase = defaultValue;
+                if (phase->mTauType != Phase::eTauUnknown) {
+                    for (auto th_friend : phase->mEvents) {
+                        if (th_friend->mInitialized == true && th_friend != this ) {
+                            th_min_phase = std::min(th_min_phase, th_friend->mTheta.mX);
+                        }
+                    }
+                    min_tau_phases = std::min(min_tau_phases, th_min_phase + phase->mTau.mX);
+                }
+            }
+        }
+
+        mIsNode = true;
+        mTheta.mX = std::min({min_theta_strati, min_theta_phase_strati, min_theta_friend_strati, min_tau_phases});
+
+        return mTheta.mX;
+    }
+
+}
+
+
 
 double Event::getThetaMin(double defaultValue)
 {
@@ -1076,9 +1402,12 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
     const double max = getThetaMax(tmax);
     //qDebug() << "----------->      in Event::updateTheta(): Event update : " << this->mName << " : " << this->mTheta.mX << " between" << "[" << min << " ; " << max << "]";
 
-    if (min >= max)
+    if (min > max)
         throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(mName, QString::number(min), QString::number(max));
-
+    else if (min == max) {
+        const double theta = min;
+        mTheta.tryUpdate(theta, 1.);
+    }
     // -------------------------------------------------------------------------------------------------
     //  Evaluer theta.
     //  Le cas Wiggle est inclus ici car on utilise une formule générale.
@@ -1182,10 +1511,9 @@ void Event::updateTheta_v4(const double tmin, const double tmax, const double ra
 
     double theta_try ;
     if (u > mu) { // Q1
-
         const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), mMixingCalibrations->mRepartition);
         theta_try  = mMixingCalibrations->mTmin + idx * mMixingCalibrations->mStep;
-//qDebug()<<"Mixing theta_try= "<< theta_try;
+
 
     } else { //Q2
         // -- gaussian
@@ -1216,7 +1544,6 @@ void Event::updateTheta_v4(const double tmin, const double tmax, const double ra
     }
 //qDebug()<<"theta_try="<< theta_try<<"rate="<< rapport;
     mTheta.tryUpdate(theta_try, rapport*rate_theta);
-
 
 }
 

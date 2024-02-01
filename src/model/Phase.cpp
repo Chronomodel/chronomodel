@@ -157,8 +157,8 @@ void Phase::copyFrom(const Phase& phase)
     mIsCurrent = phase.mIsCurrent;
 
     mEvents = phase.mEvents;
-    mConstraintsFwd = phase.mConstraintsFwd;
-    mConstraintsBwd = phase.mConstraintsBwd;
+    mConstraintsNextPhases = phase.mConstraintsNextPhases;
+    mConstraintsPrevPhases = phase.mConstraintsPrevPhases;
 }
 
 Phase::~Phase()
@@ -168,17 +168,17 @@ Phase::~Phase()
 
    mEvents.clear();
 
-    if (!mConstraintsFwd.isEmpty()) {
-        for (auto && pc : mConstraintsFwd)
+    if (!mConstraintsNextPhases.isEmpty()) {
+        for (auto && pc : mConstraintsNextPhases)
             pc = nullptr;
 
-        mConstraintsFwd.clear();
+        mConstraintsNextPhases.clear();
     }
-    if (!mConstraintsBwd.isEmpty()) {
-        for (auto && pc : mConstraintsBwd)
+    if (!mConstraintsPrevPhases.isEmpty()) {
+        for (auto && pc : mConstraintsPrevPhases)
             pc = nullptr;
 
-        mConstraintsBwd.clear();
+        mConstraintsPrevPhases.clear();
     }
 }
 
@@ -251,6 +251,117 @@ std::pair<double,double> Phase::getFormatedTimeRange() const
 
 }
 
+#pragma mark INIT
+double Phase::sum_gamma_prev_phases()
+{
+    double max_prev = 0.;
+    if (mConstraintsPrevPhases.isEmpty())
+        return 0.;
+    else {
+        for(auto prev_c : mConstraintsPrevPhases) {
+            max_prev = std::max(max_prev, prev_c->mGamma + prev_c->mPhaseFrom->sum_gamma_prev_phases());
+        }
+        return max_prev;
+    }
+
+}
+
+double Phase::sum_gamma_next_phases()
+{
+    double max_next = 0.;
+    if (mConstraintsNextPhases.isEmpty())
+        return 0.;
+    else {
+        for(auto prev_c : mConstraintsNextPhases) {
+            max_next = std::max(max_next, prev_c->mGamma + prev_c->mPhaseTo->sum_gamma_next_phases());
+        }
+        return max_next;
+    }
+}
+
+
+void Phase::init_alpha_beta_phase(QList<Phase*> &phases)
+{
+    for (auto phase : phases) {
+        phase->mAlpha.mX = mModel->mSettings.mTmin + phase->sum_gamma_prev_phases();
+        phase->mBeta.mX = mModel->mSettings.mTmax - phase->sum_gamma_next_phases();
+    }
+}
+
+void Phase::init_update_alpha_phase(double theta_max_phase_prev, double tau_inf)
+{
+    if (mConstraintsNextPhases.isEmpty())
+        return;
+    else {
+        for (auto prev_c : mConstraintsNextPhases) {
+            if (mTauType != Phase::TauType::eTauUnknown) {
+
+                prev_c->mPhaseTo->mAlpha.mX = std::max(prev_c->mPhaseTo->mAlpha.mX, theta_max_phase_prev  + prev_c->mGamma);
+                qDebug()<<"[Phase::init_update_alpha_phase] mise à jour alpha des phases Sup " <<prev_c->mPhaseTo->mName<<" init alpha ="<<prev_c->mPhaseTo->mAlpha.mX;
+            }
+           // prev_c->mPhaseTo->init_update_alpha_phase(prev_c->mPhaseTo->mAlpha.mX, prev_c->mPhaseTo->mTau.mX);
+        }
+        return;
+    }
+}
+
+void Phase::init_update_beta_phase(double beta_sup, double tau_sup)
+{
+    if (mConstraintsPrevPhases.isEmpty())
+        return;
+    else {
+        for(auto prev_c : mConstraintsPrevPhases) {
+            if (mTauType != Phase::TauType::eTauUnknown) {
+                prev_c->mPhaseFrom->mBeta.mX = std::max(prev_c->mPhaseFrom->mBeta.mX, beta_sup - prev_c->mGamma);
+                qDebug()<<"[Phase::init_update_beta_phase] mise à jour beta des phases Inf " <<prev_c->mPhaseFrom->mName<<" init beta ="<<prev_c->mPhaseFrom->mBeta.mX;
+            }
+           // prev_c->mPhaseFrom->init_update_beta_phase(prev_c->mPhaseFrom->mBeta.mX, prev_c->mPhaseFrom->mTau.mX);
+        }
+        return;
+    }
+}
+
+/**
+ * @brief Phase::init_max_theta, permet de retrouver la valeur la plus grande.
+ * La plus grande valeur peut venir des Events inf dans la strati
+ * @param max_default : C'est la valeur la plus petite
+ * @return
+ */
+double Phase::init_max_theta(const double max_default)
+{
+    double theta = max_default;
+    for (auto ev : mEvents) {
+        if (ev->mInitialized)  {
+            theta = std::max(theta, ev->mTheta.mX);
+        } else {
+            theta = std::max(theta, ev->getThetaMinRecursive_v3(max_default));
+        }
+    }
+
+    return theta;
+}
+
+/**
+ * @brief Phase::init_min_theta, utilisé dans Event::getThetaMaxRecursive_v3
+ * @param min_default
+ * @return
+ */
+double Phase::init_min_theta(const double min_default)
+{
+    double theta = min_default;
+    for (auto ev : mEvents) {
+        if (ev->mInitialized)  {
+            theta = std::min(theta, ev->mTheta.mX);
+        } else {
+            theta = std::min(theta, ev->getThetaMaxRecursive_v3(min_default));
+        }
+    }
+
+    return theta;
+}
+
+
+#pragma mark RUN
 double Phase::getMaxThetaEvents(double tmax)
 {
     Q_ASSERT_X(!mEvents.isEmpty(), "Phase::getMaxThetaEvents", QString("No Event in Phase :" + this->mName).toStdString().c_str());
@@ -321,7 +432,7 @@ double Phase::getMinThetaEvents(double tmin)
 double Phase::getMinThetaNextPhases(const double tmax)
 {
     double minTheta = tmax;
-    for (auto &&constFwd : mConstraintsFwd) {
+    for (auto &&constFwd : mConstraintsNextPhases) {
         // we can juste look alpha and beta set in member mAlpha and mBeta
         //double theta= mConstraintsFwd[i]->mPhaseTo->getMinThetaEvents(tmax);
         double theta (constFwd->mPhaseTo->mAlpha.mX);
@@ -338,7 +449,7 @@ double Phase::getMaxThetaPrevPhases(const double tmin)
 {
     double maxTheta (tmin);
 
-    for (auto &&constBwd : mConstraintsBwd) {
+    for (auto &&constBwd : mConstraintsPrevPhases) {
         const double theta (constBwd->mPhaseFrom->mBeta.mX);
 
         if (constBwd->mGammaType != PhaseConstraint::eGammaUnknown)
@@ -403,6 +514,7 @@ void Phase::initTau(const double tminPeriod, const double tmaxPeriod)
             // nothing to do
         }
     else if (mTauType == eTauUnknown) {
+        mTau.mX = 0.;
         // nothing to do
     }
 }

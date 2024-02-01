@@ -152,7 +152,7 @@ QList<QList<Event*> > ModelUtilities::getAllEventsBranches(const QList<Event*>& 
 QList<QList<Phase*> > ModelUtilities::getNextBranches(const QList<Phase*> &curBranch, Phase* lastNode, const double gammaSum, const double maxLength)
 {
     QList<QList<Phase*> > branches;
-    QList<PhaseConstraint*> &cts = lastNode->mConstraintsFwd;
+    QList<PhaseConstraint*> &cts = lastNode->mConstraintsNextPhases;
     if (cts.size() > 0) {
         for (auto& ct : cts) {
             QVector<Phase*> branch = curBranch;
@@ -225,7 +225,7 @@ QList<QList<Phase*> > ModelUtilities::getAllPhasesBranches(const QList<Phase*>& 
     QList<Phase*> starts;
     for (auto& p : phases) {
         p->mLevel = 0;
-        if (p->mConstraintsBwd.size() == 0)
+        if (p->mConstraintsPrevPhases.size() == 0)
             starts.append(p);
     }
     if (starts.size() == 0 && phases.size() != 0)
@@ -369,8 +369,8 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
     for (auto &&phase : model->mPhases) {
         log += line(textOrange(QObject::tr("Phase ( %1 / %2 ) : %3 ( %4 events, %5 const. back., %6 const. fwd.)").arg(QString::number(i+1), QString::number(model->mPhases.size()), phase->mName,
                                                                                                               QString::number(phase->mEvents.size()),
-                                                                                                              QString::number(phase->mConstraintsBwd.size()),
-                                                                                                              QString::number(phase->mConstraintsFwd.size()))
+                                                                                                              QString::number(phase->mConstraintsPrevPhases.size()),
+                                                                                                              QString::number(phase->mConstraintsNextPhases.size()))
                                + "<br>" + QObject::tr("- Type : %1").arg(phase->getTauTypeText())));
         log += "<br>";
 
