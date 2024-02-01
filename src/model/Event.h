@@ -140,9 +140,6 @@ public:
 
 #pragma mark Functions
 
-   // Event (const Model * model = nullptr);
-
-    //explicit Event (const QJsonObject& json, const Model *model);
     Event (std::shared_ptr<Model> model = nullptr);
 
     explicit Event (const QJsonObject& json, std::shared_ptr<Model> model);
@@ -168,7 +165,7 @@ public:
 
 #pragma mark  Functions used within the init MCMC process
 
-    // bool getThetaMinPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents, QString &linkStr);
+    // bool getThetaMinPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents, QString &linkStr); // useless
     bool getThetaMaxPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents);
 
     double getThetaMinRecursive_v2(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
@@ -176,9 +173,6 @@ public:
 
     double getThetaMinRecursive_v3(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
     double getThetaMaxRecursive_v3(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
-
-    double getThetaMinRecursive(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
-    double getThetaMaxRecursive(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
 
     virtual void updateTheta(const double tmin, const double tmax) {updateTheta_v3(tmin, tmax);};
 
