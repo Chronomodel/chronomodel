@@ -1259,7 +1259,7 @@ void Model::memo_accept(const unsigned i_chain)
 
 void Model::initVariablesForChain()
 {
-    // today we have the same acceptBufferLen for every chain
+    // Today we have the same acceptBufferLen for every chain
     const int acceptBufferLen =  mChains[0].mIterPerBatch;
     int initReserve = 0;
 
@@ -1584,7 +1584,7 @@ void Model::generateCredibility(const double thresh)
     }
 
     for (const auto& phase :mPhases) {
-        // if there is only one Event in the phase, there is no Duration
+        // If there is only one Event in the phase, there is no Duration
         phase->mAlpha.generateCredibility(mChains, thresh);
         phase->mBeta.generateCredibility(mChains, thresh);
         //  pPhase->mTau.generateCredibility(mChains, thresh);
@@ -1600,7 +1600,7 @@ void Model::generateCredibility(const double thresh)
         phaseConstraint->mGapRange = gapRangeFromTraces(phaseConstraint->mPhaseFrom->mBeta.fullRunRawTrace(mChains),
                                                         phaseConstraint->mPhaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Gap Range : "+ str);
 
-        qDebug()<<"Gap Range "<<str;
+        qDebug()<<"[Model::generateCredibility] Gap Range "<<str;
 
         phaseConstraint->mTransitionRange = transitionRangeFromTraces(phaseConstraint->mPhaseFrom->mBeta.fullRunRawTrace(mChains),
                                                                       phaseConstraint->mPhaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Transition Range : " + str);
@@ -1836,8 +1836,6 @@ void Model::generateActivityBinomialeCurve(const int n, std::vector<double>& C1x
     /* Calcul de la courbe p=f(x) */
     std::vector<double> C1;
     std::vector<double> C2;
-
-
 
     for (int i = 0; i< (p_frac-1); ++i) {
            p = i/p_frac;

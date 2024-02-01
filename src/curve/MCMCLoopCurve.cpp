@@ -208,6 +208,9 @@ QString MCMCLoopCurve::initialize_321()
 
     if (mCurveSettings.mUseVarianceIndividual && mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
         for (Event* ev : allEvents) {
+            if (mModel->is_curve) {
+                ev->mTheta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+            }
             if (ev->mPointType == Event::eNode)
                 mNodeEvent.push_back(ev);
             else
@@ -594,6 +597,9 @@ QString MCMCLoopCurve::initialize_400()
 
     if (mCurveSettings.mUseVarianceIndividual && mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
         for (Event* ev : allEvents) {
+            if (mModel->is_curve) {
+                ev->mTheta.mSamplerProposal = MHVariable::eDoubleExp;
+            }
             if (ev->mPointType == Event::eNode)
                 mNodeEvent.push_back(ev);
 
@@ -1005,6 +1011,9 @@ QString MCMCLoopCurve::initialize_401()
 
     if (mCurveSettings.mUseVarianceIndividual && mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
         for (Event* ev : allEvents) {
+            if (mModel->is_curve) {
+                ev->mTheta.mSamplerProposal = MHVariable::eDoubleExp;
+            }
             if (ev->mPointType == Event::eNode)
                 mNodeEvent.push_back(ev);
 

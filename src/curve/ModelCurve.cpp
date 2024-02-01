@@ -106,6 +106,8 @@ void ModelCurve::settings_from_Json(const QJsonObject &json)
         mCurveSettings = CurveSettings::fromJson(settings);
     }
 
+    is_curve = mCurveSettings.mProcessType != CurveSettings::eProcess_None;
+
     for (Event* &event: mEvents) {
         if (event->type() ==  Event::eBound)
                event->mTheta.mSamplerProposal = MHVariable::eFixe;
@@ -117,8 +119,9 @@ void ModelCurve::settings_from_Json(const QJsonObject &json)
                         d.mTi.mSamplerProposal = MHVariable::eFixe;
                         d.mSigmaTi.mSamplerProposal = MHVariable::eFixe;
                     }
-                } else
+                } /*else if (is_curve) {
                     event->mTheta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+                }*/
 
         }
 
@@ -158,7 +161,7 @@ void ModelCurve::settings_from_Json(const QJsonObject &json)
                      mCurveSettings.mProcessType == CurveSettings::eProcess_Declination ||
                      mCurveSettings.mProcessType == CurveSettings::eProcess_Field;
 
-    is_curve = mCurveSettings.mProcessType != CurveSettings::eProcess_None;
+
 
 }
 
