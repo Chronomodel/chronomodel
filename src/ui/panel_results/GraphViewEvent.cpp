@@ -325,7 +325,6 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
             mGraph->add_curve(curveCred);
         }
 
-        //
 
     }
     // ----------------------------------------------------------------------
@@ -340,9 +339,8 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
         } else if (mCurrentVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
             generateTraceCurves(mChains, &(mEvent->mS02Theta));
 
-        }else if (mCurrentVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe) {
+        } else if (mCurrentVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe) {
             generateTraceCurves(mChains, &(mEvent->mVg));
-
         }
     }
     // ----------------------------------------------------------------------
@@ -351,15 +349,18 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
     else if (typeGraph == eAccept)  {
         mGraph->mLegendX = "Iterations";
         
-        if (mCurrentVariableList.contains(eThetaEvent) && (mEvent->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss)) {
-            generateAcceptCurves(mChains, &(mEvent->mTheta));
+        if (mCurrentVariableList.contains(eThetaEvent) ) {
+            if (mEvent->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss) {
+                generateAcceptCurves(mChains, &(mEvent->mTheta));
+            } else {
+                mGraph->setNothingMessage(tr("100 %"));
+            }
 
         } else if (mCurrentVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
             generateAcceptCurves(mChains, &(mEvent->mS02Theta));
 
-        }else if (mCurrentVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe) {
+        } else if (mCurrentVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe) {
             generateAcceptCurves(mChains, &(mEvent->mVg));
-
         }
 
     }
