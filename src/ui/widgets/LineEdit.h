@@ -55,7 +55,7 @@ public:
     explicit LineEdit(QWidget* parent = nullptr);
     void setFont(const QFont &font);
     virtual ~LineEdit();
-     void setAdjustText(bool ad = true);
+    void setAdjustText(bool ad = true);
 
 private:
     void adjustFont();

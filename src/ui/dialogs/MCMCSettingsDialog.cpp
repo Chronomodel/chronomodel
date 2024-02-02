@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -62,6 +62,9 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, const bool show_help):QD
     mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
 {
     setWindowTitle(tr("MCMC Settings"));
+    QPalette palette;
+    palette.setColor(QPalette::Base, Qt::white);
+    palette.setColor(QPalette::Text, Qt::black);
 
     mBurnBoxWidth = int(1.5 * mEditW);
     mAdaptBoxWidth = int(3.5 * mEditW);
@@ -89,6 +92,7 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, const bool show_help):QD
     mNumProcEdit->setFixedSize(mEditW, mButH);
     mNumProcEdit->setValidator(chainsValidator);
     mNumProcEdit->setPlaceholderText(tr("From 1 to 5"));
+    mNumProcEdit->setPalette(palette);
 
     // Inside colored boxes
     // 1 - BURN-IN

@@ -43,11 +43,17 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 
 LineEdit::LineEdit(QWidget* parent):QLineEdit(parent),
-  mAdjustText(true)
+    mAdjustText(true)
 {
     setParent(parent);
+    QPalette palette;
+    palette.setColor(QPalette::Base, Qt::white);
+    palette.setColor(QPalette::Text, Qt::black);
+
+    setPalette(palette);
     setAlignment(Qt::AlignHCenter);
-    if(parentWidget()){
+
+    if(parentWidget()) {
         setFont(parentWidget()->font());
     }
 }
@@ -64,8 +70,7 @@ void LineEdit::setAdjustText(bool ad)
 
 void LineEdit::adjustFont()
 {
-    if (!text().isEmpty() && mAdjustText)
-    {
+    if (!text().isEmpty() && mAdjustText) {
         const QFontMetrics fm (qApp->font());
         const QRect textRect = fm.boundingRect(text());
         const qreal wR = width() - 10;

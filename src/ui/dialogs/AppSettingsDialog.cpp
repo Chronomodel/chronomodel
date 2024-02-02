@@ -78,6 +78,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     mAutoSaveCheck = new QCheckBox(this);
     mAutoSaveDelayLab = new QLabel(tr("Auto Save Interval (in minutes)"), this);
     mAutoSaveDelayEdit = new QLineEdit(this);
+    mAutoSaveDelayEdit->setPalette(palette);
 
     QIntValidator* positiveValidator = new QIntValidator();
     positiveValidator->setBottom(1);
@@ -85,6 +86,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
     mCSVCellSepLab = new QLabel(tr("CSV Cell Separator"), this);
     mCSVCellSepEdit = new QLineEdit(this);
+    mCSVCellSepEdit->setPalette(palette);
 
     mCSVDecSepLab = new QLabel(tr("CSV Decimal Separator"), this);
     mCSVDecSepCombo = new QComboBox(this);
