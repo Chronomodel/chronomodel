@@ -131,7 +131,7 @@ private:
     LineEdit* mEndEdit;
 
     // Adjust the zoom on the study period
-    Button* mDisplayStudyBut;
+    QPushButton* mDisplayStudyBut;
 
     Label* mMajorScaleLab;
     LineEdit* mMajorScaleEdit;

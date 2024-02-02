@@ -38,7 +38,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "MCMCSettingsDialog.h"
-#include "Button.h"
 #include "LineEdit.h"
 #include "Painting.h"
 #include "QtUtilities.h"
@@ -62,10 +61,6 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, const bool show_help):QD
     mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
 {
     setWindowTitle(tr("MCMC Settings"));
-    QPalette palette;
-    palette.setColor(QPalette::Base, Qt::white);
-    palette.setColor(QPalette::Text, Qt::black);
-
     mBurnBoxWidth = int(1.5 * mEditW);
     mAdaptBoxWidth = int(3.5 * mEditW);
     mAcquireBoxWidth = int(1.5 * mEditW);
@@ -92,7 +87,7 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, const bool show_help):QD
     mNumProcEdit->setFixedSize(mEditW, mButH);
     mNumProcEdit->setValidator(chainsValidator);
     mNumProcEdit->setPlaceholderText(tr("From 1 to 5"));
-    mNumProcEdit->setPalette(palette);
+   // mNumProcEdit->setPalette(palette);
 
     // Inside colored boxes
     // 1 - BURN-IN
@@ -157,34 +152,34 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, const bool show_help):QD
     mLevelEdit->setVisible(false);
 #endif
 
-    mOkBut = new Button(tr("OK"), this);
-    mOkBut->setFixedSize(mButW, mButH);
+    mOkBut = new QPushButton(tr("OK"), this);
+   // mOkBut->setFixedSize(mButW, mButH);
 
-    mCancelBut = new Button(tr("Cancel"), this);
-    mCancelBut->setFixedSize(fontMetrics().horizontalAdvance(mCancelBut->text()) + 2 * mMarginW, mButH);
+    mCancelBut = new QPushButton(tr("Cancel"), this);
+   // mCancelBut->setFixedSize(fontMetrics().horizontalAdvance(mCancelBut->text()) + 2 * mMarginW, mButH);
 
-    mTestBut = new Button(tr("Quick Test"), this);
-    mTestBut->setFixedSize(fontMetrics().horizontalAdvance(mTestBut->text()) + 2 * mMarginW, mButH);
+    mTestBut = new QPushButton(tr("Quick Test"), this);
+   // mTestBut->setFixedSize(fontMetrics().horizontalAdvance(mTestBut->text()) + 2 * mMarginW, mButH);
 
 #ifdef DEBUG
-    mTestBut->setFixedSize(fontMetrics().horizontalAdvance(mTestBut->text()) + 2 * mMarginW, mButH);
+   // mTestBut->setFixedSize(fontMetrics().horizontalAdvance(mTestBut->text()) + 2 * mMarginW, mButH);
     mTestBut->setVisible(true);
 #else
     mTestBut->setVisible(false);
 #endif
 
-    mResetBut = new Button(tr("Restore Defaults"), this);
-    mResetBut->setFixedSize(fontMetrics().horizontalAdvance(mResetBut->text()) + 2 * mMarginW, mButH);
+    mResetBut = new QPushButton(tr("Restore Defaults"), this);
+ //   mResetBut->setFixedSize(fontMetrics().horizontalAdvance(mResetBut->text()) + 2 * mMarginW, mButH);
 
-    connect(mOkBut, &Button::clicked, this, &MCMCSettingsDialog::inputControl);
+    connect(mOkBut, &QPushButton::clicked, this, &MCMCSettingsDialog::inputControl);
     connect(this, &MCMCSettingsDialog::inputValided, this, &MCMCSettingsDialog::accept);
 
-    connect(mCancelBut, &Button::clicked, this, &MCMCSettingsDialog::reject);
+    connect(mCancelBut, &QPushButton::clicked, this, &MCMCSettingsDialog::reject);
 
-    connect(mResetBut, &Button::clicked, this, &MCMCSettingsDialog::reset);
-    connect(mTestBut, &Button::clicked, this, &MCMCSettingsDialog::setQuickTest);
+    connect(mResetBut, &QPushButton::clicked, this, &MCMCSettingsDialog::reset);
+    connect(mTestBut, &QPushButton::clicked, this, &MCMCSettingsDialog::setQuickTest);
 
-    const int fixedHeight =   mTop  + mColoredBoxHeigth + (show_help? mHelp->heightForWidth(mTotalWidth - 2 * mMarginW) : 0.)  + 6 * mMarginH +  mButH + 2*mLineH ;
+    const int fixedHeight =   mTop  + mColoredBoxHeigth + (show_help? mHelp->heightForWidth(mTotalWidth - 2 * mMarginW) : 0.)  + 5 * mMarginH + 2*mLineH + mOkBut->height() ;
     setFixedSize(mTotalWidth, fixedHeight);
 
 }
@@ -231,12 +226,10 @@ MCMCSettings MCMCSettingsDialog::getSettings()
 }
 
 
-void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
+void MCMCSettingsDialog::paintEvent(QPaintEvent*)
 {
-    (void)e;
-
     QPainter p(this);
-    p.fillRect(rect(), QColor(220, 220, 220));
+    p.fillRect(rect(), palette().window().color());// QColor(220, 220, 220));
 
     p.setPen(Painting::borderDark);
 
@@ -322,7 +315,7 @@ void MCMCSettingsDialog::updateLayout()
 
    // Bottom Info
     const int margingLeft = (width()/2 - mSeedsLabel->width() - mSeedsEdit->width() - mMarginW)/2;
-    mSeedsLabel->move(margingLeft, height() - 4 * mMarginH - mButH - mLineH);
+    mSeedsLabel->move(margingLeft, height() - 5 * mMarginH - mButH - mLineH);
     mSeedsEdit->move(mSeedsLabel->x() + mSeedsLabel->width() + mMarginW, mSeedsLabel->y());
     const int margingRight = (width()/2 -mLevelLabel->width() - mLevelEdit->width() - mMarginW)/2;
     mLevelLabel->move(width()/2 + margingRight, mSeedsLabel->y());

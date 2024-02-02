@@ -85,7 +85,25 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
             // Date::calibrate() Controls the validity of the calibration and wiggle curves
             d.calibrate(s, *EventsScene->getProject(), true);
 
-            if (d.mCalibration->mVector.size() < 6) {
+            if (d.mCalibration == nullptr) {
+                date[STATE_DATE_VALID] = false;
+                mCalibThumb = QPixmap();
+                QString mes = tr("Calibration curve not find for the Event %1").arg(d.mName);
+                //throw mes;
+                QMessageBox message(QMessageBox::Critical,
+                                    qApp->applicationName() + " " + qApp->applicationVersion(),
+                                    mes,
+                                    QMessageBox::Ok,
+                                    qApp->activeWindow());
+                message.exec();
+
+                if (d.mWiggleCalibration != nullptr) {
+                    d.mWiggleCalibration->mVector.clear();
+                    d.mWiggleCalibration->mMap.clear();
+                    d.mWiggleCalibration->mRepartition.clear();
+                    d.mWiggleCalibration = nullptr;
+                }
+            } else if (d.mCalibration->mVector.size() < 6) {
                 date[STATE_DATE_VALID] = false;
                 mCalibThumb = QPixmap();
                 const double newStep = d.mCalibration->mStep/5.;
@@ -113,7 +131,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
             if (d.mPlugin->getName() == "Unif" && d.mOrigin == Date::eSingleDate)
                 mCalibThumb = d.generateUnifThumb(s);
 
-             /* Can happen when there is trouble with the ref curve, for example with un Undo after
+             /* Can happen when there is trouble with the ref curve, for example with an Undo after
               * removing a refCurve
               */
 

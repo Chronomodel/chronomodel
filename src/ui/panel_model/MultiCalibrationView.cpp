@@ -67,9 +67,9 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mCurveColor(Painting::mainColorDark)
 
 {
-    QPalette palette;
-    palette.setColor(QPalette::Base, Qt::white);
-    palette.setColor(QPalette::Text, Qt::black);
+    QPalette palette_BW;
+    palette_BW.setColor(QPalette::Base, Qt::white);
+    palette_BW.setColor(QPalette::Text, Qt::black);
 
     mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
@@ -79,7 +79,7 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
 
     mStatArea = new QTextEdit(this);
     mStatArea->setFrameStyle(QFrame::HLine);
-    mStatArea->setPalette(palette);
+    mStatArea->setPalette(palette_BW);
 
     mStatArea->setText(tr("Nothing to display"));
     mStatArea->setVisible(false);
@@ -137,7 +137,6 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
 
     mGraphHeightEdit = new LineEdit(this);
     mGraphHeightEdit->setText(locale().toString(100));
-    mGraphHeightEdit->setPalette(palette);
 
     QIntValidator* heightValidator = new QIntValidator();
     heightValidator->setRange(50, 500);
@@ -163,7 +162,6 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mStartEdit = new LineEdit(this);
     mStartEdit->setAdjustText();
     mStartEdit->setText("-1000");
-    mStartEdit->setPalette(palette);
 
     mEndLab = new Label(tr("End"), this);
     mEndLab->setAdjustText();
@@ -174,7 +172,6 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mEndEdit = new LineEdit(this);
     mEndEdit->setAdjustText();
     mEndEdit->setText("1000");
-    mEndEdit->setPalette(palette);
 
     mMajorScaleLab = new Label(tr("Maj. Int"), this);
     mMajorScaleLab->setAdjustText();
@@ -186,7 +183,6 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mMajorScaleEdit->setAdjustText();
     mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves"));
     mMajorScaleEdit->setText(locale().toString(mMajorScale));
-    mMajorScaleEdit->setPalette(palette);
 
     mMinorScaleLab = new Label(tr("Min. Cnt"), this);
     mMinorScaleLab->setAdjustText();
@@ -198,7 +194,6 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mMinorScaleEdit->setAdjustText();
     mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves"));
     mMinorScaleEdit->setText(locale().toString(mMinorScale));
-    mMinorScaleEdit->setPalette(palette);
 
     mHPDLab = new Label(tr("HPD (%)"), this);
     mHPDLab->setAdjustText();
@@ -209,7 +204,7 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mHPDEdit = new LineEdit(this);
     mHPDEdit->setAdjustText();
     mHPDEdit->setText("95");
-    mHPDEdit->setPalette(palette);
+
     DoubleValidator* percentValidator = new DoubleValidator();
     percentValidator->setBottom(0.);
     percentValidator->setTop(100.);
@@ -1619,6 +1614,50 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             }
             }
 
+    }
+
+    // test enought 3 valid points
+    bool not_enought = false;
+    switch (processType) {
+        case CurveSettings::eProcess_Univariate:
+        case CurveSettings::eProcess_Inclination:
+        case CurveSettings::eProcess_Declination:
+        case CurveSettings::eProcess_Field:
+        case CurveSettings::eProcess_Depth:
+            if (vec_X.size()<3) {
+                not_enought = true;
+                break;
+            }
+            break;
+        case CurveSettings::eProcess_2D:
+        case CurveSettings::eProcess_Unknwon_Dec:
+        case CurveSettings::eProcess_Spherical:
+            if (vec_Y.size()<3) {
+                not_enought = true;
+                break;
+            }
+            break;
+
+        case CurveSettings::eProcess_3D:
+            if (vec_Z.size()<3) {
+                not_enought = true;
+                break;
+            }
+
+        default:
+            break;
+    }
+
+
+    if (not_enought) {
+        QMessageBox message(QMessageBox::Warning,
+                            tr("Not enough valid dat"),
+                            tr("The calculation requires at least 3 points !"),
+                            QMessageBox::Ok);
+
+        message.setWindowModality(Qt::WindowModal);
+        message.exec();
+        return fitPlot;
     }
 
     const double tmin_poly = mSettings.getTminFormated();

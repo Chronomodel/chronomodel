@@ -71,16 +71,19 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 {
     minimumHeight = 0;
 
-    QPalette palette;
-    palette.setColor(QPalette::Base, Qt::white);
-    palette.setColor(QPalette::Text, Qt::black);
+    QPalette palette_BW;
+    palette_BW.setColor(QPalette::Base, Qt::white);
+    palette_BW.setColor(QPalette::Window, Qt::white);
+    palette_BW.setColor(QPalette::Text, Qt::black);
+    palette_BW.setColor(QPalette::WindowText, Qt::black);
+
     // ------------- commun with defautlt Event and Bound ----------
     mTopView = new QWidget(this);
 
     mNameLab = new QLabel(tr("Name"), mTopView);
     mNameLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mNameEdit = new LineEdit(mTopView);
-    mNameEdit->setPalette(palette);
+
 
     mColorLab = new QLabel(tr("Color"), mTopView);
     mColorLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -101,26 +104,32 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     
     // field curve parameter
 
+    QPalette palette_lab;
+    palette_lab.setColor(QPalette::WindowText, Qt::black);
+   // palette_lab.setColor(QPalette::Base, Qt::transparent);
+
     mCurveWidget = new CurveWidget(mTopView);
 
     mCurveNodeCB = new QCheckBox(tr("Node"), mCurveWidget);
+    mCurveNodeCB->setPalette(palette_lab);
     mCurveNodeCB->setFixedWidth(15);
     connect(mCurveNodeCB, &QCheckBox::toggled, this, &EventPropertiesView::updateCurveNode);
     
     mX_IncLab = new QLabel(tr("Inclination"), mCurveWidget);
     mX_IncLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    mX_IncLab->setPalette(palette_lab);
+
     mY_DecLab = new QLabel(tr("Declination"), mCurveWidget);
     mY_DecLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    mY_DecLab->setPalette(palette_lab);
+
     mZ_IntLab = new QLabel(tr("Field"), mCurveWidget);
     mZ_IntLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    mZ_IntLab->setPalette(palette_lab);
     
     mX_IncEdit = new LineEdit(mCurveWidget);
     mY_DecEdit = new LineEdit(mCurveWidget);
     mZ_IntEdit = new LineEdit(mCurveWidget);
-
-    mX_IncEdit->setPalette(palette);
-    mY_DecEdit->setPalette(palette);
-    mZ_IntEdit->setPalette(palette);
 
     connect(mX_IncEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventXInc);
     connect(mY_DecEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYDec);
@@ -128,14 +137,18 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     
     QDoubleValidator* positiveValidator = new QDoubleValidator(this);
     positiveValidator->setBottom(0.);
-    //
 
     mS_X_IncLab = new QLabel("Error", mCurveWidget);
     mS_X_IncLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    mS_X_IncLab->setPalette(palette_lab);
+
     mS_Y_Lab = new QLabel(tr("Error"), mCurveWidget);
     mS_Y_Lab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    mS_Y_Lab->setPalette(palette_lab);
+
     mS_Z_IntLab = new QLabel(tr("Error"), mCurveWidget);
     mS_Z_IntLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    mS_Z_IntLab->setPalette(palette_lab);
     
     mS_X_IncEdit = new LineEdit(mCurveWidget);
     mS_X_IncEdit->setValidator(positiveValidator);
@@ -145,10 +158,6 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 
     mS_Z_IntEdit = new LineEdit(mCurveWidget);
     mS_Z_IntEdit->setValidator(positiveValidator);
-    
-    mS_X_IncEdit->setPalette(palette);
-    mS_Y_Edit->setPalette(palette);
-    mS_Z_IntEdit->setPalette(palette);
 
     connect(mS_X_IncEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSXInc);
     connect(mS_Y_Edit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventSYDec);
@@ -161,7 +170,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     minimumHeight += mEventView->height();
     // -------------
     mDatesList = new DatesList(mEventView);
-    mDatesList->setPalette(palette);
+    mDatesList->setPalette(palette_BW);
     connect(mDatesList, &DatesList::indexChange, this, &EventPropertiesView::updateIndex);
     connect(mDatesList, &DatesList::calibRequested, this, &EventPropertiesView::updateCalibRequested);
 
@@ -182,7 +191,6 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
         minimumHeight += button->height();
 
         mPluginButs.append(button);
-
 
     }
 
@@ -231,7 +239,6 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mBoundView = new QWidget(this);
 
     mKnownFixedEdit = new LineEdit(mBoundView);
-    mKnownFixedEdit->setPalette(palette);
 
     mKnownGraph = new GraphView(mBoundView);
     mKnownGraph->setMinimumHeight(250);

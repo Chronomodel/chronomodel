@@ -65,7 +65,7 @@ PluginUniformForm::PluginUniformForm(PluginUniform* plugin, QWidget* parent, Qt:
     connect(mMaxEdit, &QLineEdit::textChanged, this, &PluginUniformForm::valuesAreValid);
 
     QGridLayout* grid = new QGridLayout();
-    grid->setContentsMargins(0, 5, 0, 0);
+    grid->setContentsMargins(0, 0, 0, 0);
 
     grid->addWidget(mMinLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mMinEdit, 0, 1);
@@ -74,6 +74,7 @@ PluginUniformForm::PluginUniformForm(PluginUniform* plugin, QWidget* parent, Qt:
     grid->addWidget(mMaxEdit, 1, 1);
 
     setLayout(grid);
+
 }
 
 PluginUniformForm::~PluginUniformForm()

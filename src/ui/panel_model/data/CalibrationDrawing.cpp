@@ -51,13 +51,25 @@ CalibrationDrawing::CalibrationDrawing(QWidget *parent) : QWidget(parent),
     mFont (parent->font())
 {
     setMouseTracking(true);
+
+    QPalette palette_BW;
+    palette_BW.setColor(QPalette::Base, Qt::white);
+    palette_BW.setColor(QPalette::Text, Qt::black);
+    palette_BW.setColor(QPalette::Window, Qt::white);
+    palette_BW.setColor(QPalette::WindowText, Qt::black);
+
     mTitle = new QLabel(this);
+    mTitle->setPalette(palette_BW);
 
     mRefTitle = new QLabel(this);
+    mRefTitle->setPalette(palette_BW);
     mRefComment = new QLabel(this);
+    mRefComment->setPalette(palette_BW);
 
     mCalibTitle = new QLabel(this);
+    mCalibTitle->setPalette(palette_BW);
     mCalibComment = new QLabel(this);
+    mCalibComment->setPalette(palette_BW);
 
     mMarkerX = new Marker(this);
     mMarkerY = new Marker(this);

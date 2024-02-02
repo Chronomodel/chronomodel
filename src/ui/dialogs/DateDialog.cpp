@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -79,9 +79,12 @@ DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, f
 
     mAdvancedCheck = new QCheckBox(tr("Advanced"));
     mAdvancedWidget = new QGroupBox();
+    //mAdvancedWidget->setStyleSheet("QGroupBox {     font: bold;     font-size: 23px;     border: 1px solid silver;     border-radius: 6px;     margin-top: 15px; }");
+    mAdvancedWidget->setStyleSheet("QGroupBox {border: 0px}");
+
     mAdvancedWidget->setCheckable(false);
     mAdvancedWidget->setVisible(false);
-    mAdvancedWidget->setFlat(true);
+    mAdvancedWidget->setFlat(false);
     connect(mAdvancedCheck, &QCheckBox::toggled, this, &DateDialog::setAdvancedVisible);
 
     mMethodLab = new QLabel(tr("Method"), mAdvancedWidget);
@@ -141,7 +144,7 @@ DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, f
     connect(mDeltaErrorEdit, &QLineEdit::textChanged, this, &DateDialog::checkWiggle);
 
     QGridLayout* advGrid = new QGridLayout();
-    advGrid->setContentsMargins(0, 0, 0, 0);
+
     advGrid->addWidget(mMethodLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
     advGrid->addWidget(mMethodCombo, 0, 1);
     advGrid->addWidget(mWiggleLab, 1, 0, Qt::AlignRight | Qt::AlignVCenter);
@@ -165,6 +168,7 @@ DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, f
     advGrid->addWidget(mDeltaErrorEdit, 7, 1);
 
     mAdvancedWidget->setLayout(advGrid);
+    mAdvancedWidget->layout()->setContentsMargins(20, 20, 20, 20);
 
     // ----------
 
@@ -173,6 +177,9 @@ DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, f
     connect(mButtonBox, &QDialogButtonBox::rejected, this, &DateDialog::reject);
 
     mLayout = new QVBoxLayout();
+    mLayout->setContentsMargins(5, 5, 5, 5);
+    mLayout->setSpacing(5);
+
     mLayout->addLayout(grid);
 
     QFrame* line1 = new QFrame();
@@ -190,7 +197,8 @@ DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, f
     mLayout->addWidget(mAdvancedCheck);
     mLayout->addWidget(mAdvancedWidget);
     mLayout->addWidget(mButtonBox);
-    mLayout->addStretch();
+    mLayout->addStretch(); 
+
     setLayout(mLayout);
 
     updateVisibleControls();
@@ -198,10 +206,10 @@ DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, f
 
 DateDialog::~DateDialog()
 {
-   if (mForm) {
-       disconnect(mForm, &PluginFormAbstract::OkEnabled, this, &DateDialog::setOkEnabled);
-       disconnect(mForm, &PluginFormAbstract::sizeChanged , this, &DateDialog::updateVisibleControls);
-   }
+    if (mForm) {
+        disconnect(mForm, &PluginFormAbstract::OkEnabled, this, &DateDialog::setOkEnabled);
+        disconnect(mForm, &PluginFormAbstract::sizeChanged , this, &DateDialog::updateVisibleControls);
+    }
 }
 
 void DateDialog::setForm(PluginFormAbstract* form)
@@ -215,8 +223,11 @@ void DateDialog::setForm(PluginFormAbstract* form)
         mForm = form;
         connect(mForm, &PluginFormAbstract::OkEnabled, this, &DateDialog::setPluginDataValid);
         connect(mForm, &PluginFormAbstract::sizeChanged , this, &DateDialog::updateVisibleControls);
-
+        mForm->layout()->setContentsMargins(10, 10, 10, 10);
+        mForm->setFlat(true);
+        mForm->setStyleSheet("QGroupBox {border: 0px}");
         mLayout->insertWidget(2, mForm);
+
         PluginAbstract* plugin = form->mPlugin;
 
         setWindowTitle(tr("Create %1 Data").arg(plugin->getName()));

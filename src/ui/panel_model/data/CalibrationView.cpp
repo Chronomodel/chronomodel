@@ -65,9 +65,10 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mMajorScale (100),
     mMinorScale (4)
 {
-    QPalette palette;
-    palette.setColor(QPalette::Base, Qt::white);
-    palette.setColor(QPalette::Text, Qt::black);
+    setParent(parent);
+    QPalette palette( parent->palette());
+    ////palette.setColor(QPalette::Base, Qt::white);
+    //palette.setColor(QPalette::Text, Qt::black);
 
     mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
@@ -103,7 +104,6 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mHPDEdit = new LineEdit(this);
     mHPDEdit->setAdjustText();
     mHPDEdit->setText("95");
-    mHPDEdit->setPalette(palette);
 
     DoubleValidator* percentValidator = new DoubleValidator();
     percentValidator->setBottom(0.);
@@ -120,7 +120,6 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mStartEdit = new LineEdit(this);
     mStartEdit->setAdjustText();
     mStartEdit->setText("-1000");
-    mStartEdit->setPalette(palette);
 
     mEndLab = new Label(tr("End"), this);
     mEndLab->setAdjustText();
@@ -131,9 +130,8 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mEndEdit = new LineEdit(this);
     mEndEdit->setAdjustText();
     mEndEdit->setText("1000");
-    mEndEdit->setPalette(palette);
 
-    mDisplayStudyBut = new Button(tr("Study Period Display"), this);
+    mDisplayStudyBut = new QPushButton(tr("Study Period Display"), this);
     mDisplayStudyBut->setToolTip(tr("Restore view with the study period span"));
     mDisplayStudyBut->setMinimumWidth(fontMetrics().horizontalAdvance(mDisplayStudyBut->text()) + 10);
 
@@ -148,7 +146,6 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mMajorScaleEdit->setAdjustText();
     mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves, upper than 1"));
     mMajorScaleEdit->setText(locale().toString(mMajorScale));
-    mMajorScaleEdit->setPalette(palette);
 
     mMinorScaleLab = new Label(tr("Min. Cnt"), this);
     mMinorScaleLab->setAdjustText();
@@ -160,7 +157,6 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mMinorScaleEdit->setAdjustText();
     mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves, upper than 1"));
     mMinorScaleEdit->setText(locale().toString(mMinorScale));
-    mMinorScaleEdit->setPalette(palette);
 
     mHPDLab->raise();
     mHPDEdit->raise();
@@ -181,15 +177,13 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mResultsText->setText(tr("No Result to display"));
     mResultsText->setReadOnly(true);
 
-
     // Connection
     // setText doesn't emit signal textEdited, when the text is changed programmatically
 
     connect(mStartEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &CalibrationView::updateScroll);
     connect(mEndEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &CalibrationView::updateScroll);
 
-
-    connect(mDisplayStudyBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &CalibrationView::applyStudyPeriod);
+    connect(mDisplayStudyBut, &QPushButton::clicked, this, &CalibrationView::applyStudyPeriod);
 
     connect(mMajorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &CalibrationView::updateScaleX);
     connect(mMinorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &CalibrationView::updateScaleX);
@@ -671,7 +665,8 @@ void CalibrationView::paintEvent(QPaintEvent* )
     p.fillRect(mButtonWidth, 0, graphWidth, mDrawing->height(),  Qt::white);
 
     // 4 - Behind mResultText, mResultsText is less wide than the remaining space to put a visible space to the left of the text
-    p.fillRect(mButtonWidth, mResultsText->y(), graphWidth, height() - mResultsText->y() , Qt::white);
+    //p.fillRect(mButtonWidth, mResultsText->y(), graphWidth, height() - mResultsText->y() , Qt::white);
+    p.fillRect(mButtonWidth, mResultsText->y(), graphWidth, height() - mResultsText->y() , mResultsText->palette().base().color());
     updateLayout();
 
 }

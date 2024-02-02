@@ -57,6 +57,7 @@ Button::Button(QWidget* parent):
     setCursor(Qt::PointingHandCursor);
 
     QPushButton::setFlat(false);
+    //setPalette(parent->palette());
 
 }
 

@@ -59,8 +59,6 @@ public:
     {
         (void) title;
         (void) flags;
-        setFlat(true);
-
     }
 
     virtual ~PluginFormAbstract(){}

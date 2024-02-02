@@ -46,14 +46,11 @@ LineEdit::LineEdit(QWidget* parent):QLineEdit(parent),
     mAdjustText(true)
 {
     setParent(parent);
-    QPalette palette;
-    palette.setColor(QPalette::Base, Qt::white);
-    palette.setColor(QPalette::Text, Qt::black);
+    setPalette(parent->palette());
 
-    setPalette(palette);
     setAlignment(Qt::AlignHCenter);
 
-    if(parentWidget()) {
+    if (parentWidget()) {
         setFont(parentWidget()->font());
     }
 }
