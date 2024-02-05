@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Installer>
 	<Name>ChronoModel</Name>
-        <Version>3.2.4</Version>
-	<Title>Installer</Title>
+        <Version>3.2.7</Version>
+	<Title>ChronoModel</Title>
 	<Publisher>ChronoModel Team</Publisher>
 	<ProductUrl>http://chronomodel.com</ProductUrl>
         <TargetDir>@ApplicationsDir@/Chronomodel</TargetDir>
@@ -14,13 +14,31 @@
        <RunProgram>@TargetDir@/Chronomodel.exe</RunProgram>
        } -->
         <!--@TargetDir@/-->
-        <InstallerApplicationIcon>installericon</InstallerApplicationIcon>
+        <!--  <WizardStyle>Modern</WizardStyle> --> <!--  Aero; Classic -->
+
+        <InstallerWindowIcon>installer_icon</InstallerWindowIcon> <!-- for windows and linux-->
+        <InstallerApplicationIcon>Chronomodel_Installer</InstallerApplicationIcon>
+         <!-- The actual file is looked up by attaching a '.icns' (OS X), '.ico' (Windows). No functionality on Unix.-->
             <Logo>Chronomodel.png</Logo>
         <MaintenanceToolName>Chronomodel_uninstaller</MaintenanceToolName>
-
-        <Background>Chronomodel.png</Background>
+        
+        <!-- Le fond d'écran fonction avec les options suivantes
+        <WizardStyle>Mac</WizardStyle>
+        <WizardShowPageList>true</WizardShowPageList>
+		<Background>fond_ecran.png</Background>
+		-->
+		
         <StartMenuDir>ChronoModel</StartMenuDir> <!--Only available on Windows.-->
         if (installer.value("os") === "win") {
             component.addOperation("CreateShortcut", "@TargetDir@/Chronomodel.exe", "@StartMenuDir@/Chronomodel.lnk");
         }
+        <ProductImages>
+        <ProductImage>
+            <Image>Bzh_curve.png</Image>
+        </ProductImage>
+        <ProductImage>
+            <Image>MCMC_Box.png</Image>
+        </ProductImage>
+    </ProductImages>
+        
 </Installer>
