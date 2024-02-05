@@ -127,13 +127,12 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
     connect(mNoneRadio, &QRadioButton::toggled, this, &PluginGaussForm::updateVisibleElements);
     connect(mCurveRadio, &QRadioButton::toggled, this, &PluginGaussForm::updateVisibleElements);
 
-
     connect(mEquationRadio, &QRadioButton::toggled, this, &PluginGaussForm::validOK);
     connect(mNoneRadio, &QRadioButton::toggled, this, &PluginGaussForm::validOK);
     connect(mCurveRadio, &QRadioButton::toggled, this, &PluginGaussForm::validOK);
 
     QGridLayout* grid = new QGridLayout();
-    grid->setContentsMargins(0, 5, 0, 0);
+    grid->setContentsMargins(0, 3, 0, 0);
     grid->addWidget(mAverageLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mAverageEdit, 0, 1);
 

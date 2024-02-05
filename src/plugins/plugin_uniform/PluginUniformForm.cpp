@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -65,7 +65,7 @@ PluginUniformForm::PluginUniformForm(PluginUniform* plugin, QWidget* parent, Qt:
     connect(mMaxEdit, &QLineEdit::textChanged, this, &PluginUniformForm::valuesAreValid);
 
     QGridLayout* grid = new QGridLayout();
-    grid->setContentsMargins(0, 0, 0, 0);
+    grid->setContentsMargins(0, 3, 0, 0);
 
     grid->addWidget(mMinLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mMinEdit, 0, 1);
@@ -74,7 +74,6 @@ PluginUniformForm::PluginUniformForm(PluginUniform* plugin, QWidget* parent, Qt:
     grid->addWidget(mMaxEdit, 1, 1);
 
     setLayout(grid);
-
 }
 
 PluginUniformForm::~PluginUniformForm()
@@ -91,7 +90,6 @@ void PluginUniformForm::setData(const QJsonObject& data, bool isCombined)
 
     mMinEdit->setText(locale.toString(min));
     mMaxEdit->setText(locale.toString(max));
-
 }
 
 QJsonObject PluginUniformForm::getData()
@@ -126,6 +124,7 @@ bool PluginUniformForm::isValid()
     const double max = locale.toDouble(mMaxEdit->text());
     if (min >= max)
         mError = tr("Forbidden : lower date must be < upper date");
+
     return min < max;
 }
 

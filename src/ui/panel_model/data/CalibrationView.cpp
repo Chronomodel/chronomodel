@@ -67,8 +67,12 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
 {
     setParent(parent);
     QPalette palette( parent->palette());
-    ////palette.setColor(QPalette::Base, Qt::white);
-    //palette.setColor(QPalette::Text, Qt::black);
+
+    QPalette palette_BW;
+    palette_BW.setColor(QPalette::Base, Qt::white);
+    palette_BW.setColor(QPalette::Text, Qt::black);
+    palette_BW.setColor(QPalette::Window, Qt::white);
+    palette_BW.setColor(QPalette::WindowText, Qt::black);
 
     mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
@@ -132,9 +136,10 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mEndEdit->setText("1000");
 
     mDisplayStudyBut = new QPushButton(tr("Study Period Display"), this);
+    mDisplayStudyBut->setPalette(palette_BW);
+    //mDisplayStudyBut->setStyleSheet("QPushButton { border : 2px; border-radius: 4px; color: black; background-color: white;};//border-radius: 3px; }");
     mDisplayStudyBut->setToolTip(tr("Restore view with the study period span"));
     mDisplayStudyBut->setMinimumWidth(fontMetrics().horizontalAdvance(mDisplayStudyBut->text()) + 10);
-
 
     mMajorScaleLab = new Label(tr("Maj. Int"), this);
     mMajorScaleLab->setAdjustText();
@@ -217,9 +222,10 @@ void CalibrationView::applyStudyPeriod()
     mEndEdit->setText(QString::number(mSettings.getTmaxFormated()));
     updateScroll();
 }
+
 void CalibrationView::setDate(const QJsonObject& date)
 {
-     if (date.isEmpty())
+    if (date.isEmpty())
         return;
 
     Date d (date);
@@ -353,15 +359,9 @@ void CalibrationView::updateGraphs()
             // do QMap<type_data, type_data> mData; to calcul HPD on study Period
             QMap<type_data, type_data> periodCalib = getMapDataInRange(mDate.getFormatedCalibMap(), mSettings.getTminFormated(), mSettings.getTmaxFormated());
             periodCalib = equal_areas(periodCalib, 1.);
-            //std::map<double, double> mapping;
-            //const QMap<double, double> hpd (create_HPD_mapping(periodCalib, mapping, thresh));
-
-
 
             QList<QPair<double, QPair<double, double> > > formated_intervals;
             const QMap<double, double> hpd = QMap<double, double>(create_HPD_by_dichotomy(periodCalib, formated_intervals, thresh));
-
-
 
             if (!hpd.isEmpty()) {
                 GraphCurve hpdCurve;
@@ -427,7 +427,6 @@ void CalibrationView::updateGraphs()
         // ------------------------------------------------------------
         //  Reference curve from plugin
         // ------------------------------------------------------------
-
 
         // Get the ref graph for this plugin and this date
         if (!mRefGraphView)
@@ -604,19 +603,19 @@ void CalibrationView::exportImage()
     mDrawing->showMarker();
 
 }
+
 void CalibrationView::copyImage()
 {
     mDrawing->hideMarker();
     repaint();
     QApplication::clipboard()->setPixmap(mDrawing->grab());
     mDrawing->showMarker();
-
 }
+
 void CalibrationView::copyText()
 {
     QString text = mDate.mName + " (" + mDate.mPlugin->getName() + ")" +"<br>" + mDate.getDesc() + "<br>" + mResultsText->toPlainText();
     QApplication::clipboard()->setText(text.replace("<br>", "\r"));
-
 }
 
 void CalibrationView::setVisible(bool visible)
@@ -650,6 +649,7 @@ void CalibrationView::resizeEvent(QResizeEvent*)
     update();
 
 }
+
 void CalibrationView::paintEvent(QPaintEvent* )
 {
     const int graphWidth = width() - mButtonWidth;
@@ -665,7 +665,6 @@ void CalibrationView::paintEvent(QPaintEvent* )
     p.fillRect(mButtonWidth, 0, graphWidth, mDrawing->height(),  Qt::white);
 
     // 4 - Behind mResultText, mResultsText is less wide than the remaining space to put a visible space to the left of the text
-    //p.fillRect(mButtonWidth, mResultsText->y(), graphWidth, height() - mResultsText->y() , Qt::white);
     p.fillRect(mButtonWidth, mResultsText->y(), graphWidth, height() - mResultsText->y() , mResultsText->palette().base().color());
     updateLayout();
 
@@ -680,7 +679,7 @@ void CalibrationView::updateLayout()
 
     QFontMetrics fm (font());
 
-    // same variable in MultiCalibrationView::updateLayout()
+    // Same variable in MultiCalibrationView::updateLayout()
     const int textHeight (int (1.2 * (fm.descent() + fm.ascent()) ));
     const qreal toolBarHeigth = 2*textHeight + 12;
     //Position of Widget
@@ -695,7 +694,6 @@ void CalibrationView::updateLayout()
 
     const int resTextH = 5 * fm.height();
 
-    //mDrawing->setGeometry(graphLeft, 0, graphWidth, 10);
     mDrawing->setGeometry(graphLeft, 0, graphWidth, height() - resTextH - toolBarHeigth);
 
     // Bottom toolBar
@@ -718,8 +716,7 @@ void CalibrationView::updateLayout()
     mEndEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
 
     xShift += mEndLab->width() + marginBottomBar;
-    //mDisplayStudyBut->move(xShift, mDrawing->y()+mDrawing->height() + (toolBarHeigth - mDisplayStudyBut->height())/2); y middle
-    mDisplayStudyBut->setGeometry(xShift, yPosBottomBar1-1, mDisplayStudyBut->width(), textHeight + 2);
+    mDisplayStudyBut->setGeometry(xShift, yPosBottomBar1 - 5, mDisplayStudyBut->width(), textHeight + 10);
 
 
     xShift += mDisplayStudyBut->width() + marginBottomBar;

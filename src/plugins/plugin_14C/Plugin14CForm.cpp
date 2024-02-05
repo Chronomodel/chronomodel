@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -91,7 +91,7 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
 
 
     QGridLayout* grid = new QGridLayout();
-    grid->setContentsMargins(0, 5, 0, 0);
+    grid->setContentsMargins(0, 3, 0, 0);
 
     grid->addWidget(mAverageLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mAverageEdit, 0, 1);

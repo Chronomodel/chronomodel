@@ -109,101 +109,94 @@ void PluginDensityRefView::setDate(const Date& date, const StudyPeriodSettings& 
             const double tminRef = date.getFormatedTminRefCurve();
             const double tmaxRef = date.getFormatedTmaxRefCurve();
 
-            //GraphCurve curve;
-            //curve.mName = "Reference";
-            //curve.mPen.setColor(Painting::mainColorDark);
+            PluginDensity* plugin = static_cast<PluginDensity*> (date.mPlugin);
 
-            double yMin = tminDisplay;
-            double yMax = tmaxDisplay;
+            const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
 
-                PluginDensity* plugin = static_cast<PluginDensity*> (date.mPlugin);
+            if (curve.mDataMean.isEmpty()) {
+                GraphZone zone;
+                zone.mColor = Qt::gray;
+                zone.mColor.setAlpha(75);
+                zone.mXStart = tminDisplay;
+                zone.mXEnd = tmaxDisplay;
+                zone.mText = tr("No reference data");
+                mGraph->add_zone(zone);
+                return;
+            }
 
-                const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
+            if (tminDisplay < tminRef) {
+                GraphZone zone;
+                zone.mColor = QColor(217, 163, 69);
+                zone.mColor.setAlpha(75);
+                zone.mXStart = tminDisplay;
+                zone.mXEnd = tminRef;
+                zone.mText = tr("Outside reference area");
+                mGraph->add_zone(zone);
+            }
 
-                if (curve.mDataMean.isEmpty()) {
-                    GraphZone zone;
-                    zone.mColor = Qt::gray;
-                    zone.mColor.setAlpha(75);
-                    zone.mXStart = tminDisplay;
-                    zone.mXEnd = tmaxDisplay;
-                    zone.mText = tr("No reference data");
-                    mGraph->add_zone(zone);
-                    return;
-                }
+            if (tmaxRef < tmaxDisplay) {
+                GraphZone zone;
+                zone.mColor = QColor(217, 163, 69);
+                zone.mColor.setAlpha(75);
+                zone.mXStart = tmaxRef;
+                zone.mXEnd = tmaxDisplay;
+                zone.mText = tr("Outside reference area");
+                mGraph->add_zone(zone);
+            }
 
-                if (tminDisplay < tminRef) {
-                    GraphZone zone;
-                    zone.mColor = QColor(217, 163, 69);
-                    zone.mColor.setAlpha(75);
-                    zone.mXStart = tminDisplay;
-                    zone.mXEnd = tminRef;
-                    zone.mText = tr("Outside reference area");
-                    mGraph->add_zone(zone);
-                }
+            const double t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
+            double yMin = plugin->getRefValueAt(date.mData, t0);
+            double yMax = yMin;
 
-                if (tmaxRef < tmaxDisplay) {
-                    GraphZone zone;
-                    zone.mColor = QColor(217, 163, 69);
-                    zone.mColor.setAlpha(75);
-                    zone.mXStart = tmaxRef;
-                    zone.mXEnd = tmaxDisplay;
-                    zone.mText = tr("Outside reference area");
-                    mGraph->add_zone(zone);
-                }
-
-                const double t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
-                yMin = plugin->getRefValueAt(date.mData, t0);
-                yMax = yMin;
-
-                QMap<double, double> curveG;
+            QMap<double, double> curveG;
 
 
-                /*
+            /*
                  *  Define the first point, which is often not the first point of the ref curve
                  */
 
-                if (tminDisplay>curve.mDataMean.firstKey() && tminDisplay<curve.mDataMean.lastKey()) {
-                    // This actually return the iterator with the nearest greater key !!!
-                    QMap<double, double>::const_iterator iter = curve.mDataMean.lowerBound(tminDisplay);
-                    // the higher value must be mTmax.
-                    double v;
-                    if (iter != curve.mDataError.constBegin()) {
-                        const double t_upper = iter.key();
-                        const double v_upper = iter.value();
-                        --iter;
-                        const double t_under = iter.key();
-                        const double v_under = iter.value();
+            if (tminDisplay>curve.mDataMean.firstKey() && tminDisplay<curve.mDataMean.lastKey()) {
+                // This actually return the iterator with the nearest greater key !!!
+                QMap<double, double>::const_iterator iter = curve.mDataMean.lowerBound(tminDisplay);
+                // the higher value must be mTmax.
+                double v;
+                if (iter != curve.mDataError.constBegin()) {
+                    const double t_upper = iter.key();
+                    const double v_upper = iter.value();
+                    --iter;
+                    const double t_under = iter.key();
+                    const double v_under = iter.value();
 
-                        v = interpolate(tminDisplay, t_under, t_upper, v_under, v_upper);
-                    } else
-                        v = iter.value();
-
-
-                    curveG[tminDisplay] = v;
+                    v = interpolate(tminDisplay, t_under, t_upper, v_under, v_upper);
+                } else
+                    v = iter.value();
 
 
-                    yMin = qMin(yMin, v);
-                    yMax = qMax(yMax, v);
-                }
-
-                double t, tDisplay;
-                for ( QMap<double, double>::const_iterator &&iPt = curve.mDataMean.cbegin();  iPt!=curve.mDataMean.cend(); ++iPt) {
-                    t = iPt.key();
-                    tDisplay = DateUtils::convertToAppSettingsFormat(t);
-
-                    curveG[tDisplay] = iPt.value();
-
-                    if (tDisplay>=tminDisplay && tDisplay<=tmaxDisplay) {
-                        yMin = qMin(yMin, iPt.value());
-                        yMax = qMax(yMax, iPt.value());
-                    }
-
-                }
+                curveG[tminDisplay] = v;
 
 
-                const GraphCurve &graphCurveG = FunctionCurve(curveG, "G", Painting::mainColorDark );
-                mGraph->add_curve(graphCurveG);
+                yMin = qMin(yMin, v);
+                yMax = qMax(yMax, v);
             }
+
+            double t, tDisplay;
+            for ( QMap<double, double>::const_iterator &&iPt = curve.mDataMean.cbegin();  iPt!=curve.mDataMean.cend(); ++iPt) {
+                t = iPt.key();
+                tDisplay = DateUtils::convertToAppSettingsFormat(t);
+
+                curveG[tDisplay] = iPt.value();
+
+                if (tDisplay>=tminDisplay && tDisplay<=tmaxDisplay) {
+                    yMin = qMin(yMin, iPt.value());
+                    yMax = qMax(yMax, iPt.value());
+                }
+
+            }
+
+
+            const GraphCurve &graphCurveG = FunctionCurve(curveG, "G", Painting::mainColorDark );
+            mGraph->add_curve(graphCurveG);
+        }
 
 
 

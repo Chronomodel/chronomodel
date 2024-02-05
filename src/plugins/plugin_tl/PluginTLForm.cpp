@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -71,7 +71,7 @@ PluginTLForm::PluginTLForm(PluginTL* plugin, QWidget* parent, Qt::WindowFlags fl
     mYearEdit->setText(QString::number(QDate::currentDate().year()));
 
     QGridLayout* grid = new QGridLayout();
-    grid->setContentsMargins(0, 5, 0, 0);
+    grid->setContentsMargins(0, 3, 0, 0);
 
     grid->addWidget(mAverageLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mAverageEdit, 0, 1);

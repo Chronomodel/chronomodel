@@ -87,7 +87,7 @@ PluginF14CForm::PluginF14CForm(PluginF14C* plugin, QWidget* parent, Qt::WindowFl
 
 
     QGridLayout* grid = new QGridLayout();
-    grid->setContentsMargins(0, 5, 0, 0);
+    grid->setContentsMargins(0, 3, 0, 0);
 
     grid->addWidget(mAverageLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mAverageEdit, 0, 1);

@@ -66,7 +66,7 @@ DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, f
     mNameEdit = new QLineEdit(this);
     mNameEdit->setAlignment(Qt::AlignHCenter);
     mNameEdit->setText("New Data");
-   //mNameEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+    //mNameEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mNameEdit->selectAll();
     mNameEdit->setFocus();
 
@@ -114,21 +114,21 @@ DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, f
     mDeltaHelp->setFixedHeight(50);
     mDeltaHelp->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=22");
 
-    mDeltaFixedLab   = new QLabel(tr("Value"), mAdvancedWidget);
-    mDeltaMinLab     = new QLabel(tr("Min"), mAdvancedWidget);
-    mDeltaMaxLab     = new QLabel(tr("Max"), mAdvancedWidget);
+    mDeltaFixedLab = new QLabel(tr("Value"), mAdvancedWidget);
+    mDeltaMinLab = new QLabel(tr("Min"), mAdvancedWidget);
+    mDeltaMaxLab = new QLabel(tr("Max"), mAdvancedWidget);
     mDeltaAverageLab = new QLabel(tr("Mean"), mAdvancedWidget);
-    mDeltaErrorLab   = new QLabel(tr("Error (sd)"), mAdvancedWidget);
+    mDeltaErrorLab = new QLabel(tr("Error (sd)"), mAdvancedWidget);
 
-    mDeltaFixedEdit   = new QLineEdit(mAdvancedWidget);
+    mDeltaFixedEdit = new QLineEdit(mAdvancedWidget);
     mDeltaFixedEdit->setAlignment(Qt::AlignHCenter);
-    mDeltaMinEdit     = new QLineEdit(mAdvancedWidget);
+    mDeltaMinEdit = new QLineEdit(mAdvancedWidget);
     mDeltaMinEdit->setAlignment(Qt::AlignHCenter);
-    mDeltaMaxEdit     = new QLineEdit(mAdvancedWidget);
+    mDeltaMaxEdit = new QLineEdit(mAdvancedWidget);
     mDeltaMaxEdit->setAlignment(Qt::AlignHCenter);
     mDeltaAverageEdit = new QLineEdit(mAdvancedWidget);
     mDeltaAverageEdit->setAlignment(Qt::AlignHCenter);
-    mDeltaErrorEdit   = new QLineEdit(mAdvancedWidget);
+    mDeltaErrorEdit = new QLineEdit(mAdvancedWidget);
     mDeltaErrorEdit->setAlignment(Qt::AlignHCenter);
 
     mDeltaFixedEdit->setText(QString::number(0));

@@ -41,14 +41,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Painting.h"
 
 Label::Label(QWidget* parent):QLabel(parent),
-mIsTitle(false),
+    mIsTitle(false),
 mAdjustText(true)
 {
     init();
 }
 
 Label::Label(const QString& text, QWidget* parent):QLabel(text, parent),
-mIsTitle(false)
+    mIsTitle(false)
 {
     init();
 }
@@ -75,7 +75,7 @@ void Label::adjustFont()
 void Label::init()
 {
     setAlignment(Qt::AlignVCenter | Qt::AlignRight);
-    mPalette = qApp->palette();//parentWidget()->palette();
+    mPalette = qApp->palette();
     setFont(qApp->font());
 }
 

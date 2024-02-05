@@ -827,7 +827,6 @@ const std::map<double, double> create_HPD_by_dichotomy(const QMap<double, double
             }
             if (inter_open == true) {
                 inter.second = t_prev;
-                inter_open = false;
                 intervals_hpd.append({area_inter, inter});
             }
             if (area_loop > area_target) {

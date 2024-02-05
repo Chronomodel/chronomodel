@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -51,7 +51,7 @@ PluginDensityForm::PluginDensityForm(PluginDensity* plugin, QWidget* parent, Qt:
     mCurveCombo = new QComboBox(this);
     const QStringList &refCurves = plugin->getRefsNames();
     for (auto & curve : refCurves)
-         mCurveCombo->addItem(curve);
+        mCurveCombo->addItem(curve);
 
     QGridLayout* grid = new QGridLayout();
     grid->addWidget(mCurveCombo, 1, 1);
@@ -63,12 +63,10 @@ PluginDensityForm::PluginDensityForm(PluginDensity* plugin, QWidget* parent, Qt:
 
 PluginDensityForm::~PluginDensityForm()
 {
-
 }
 
 void PluginDensityForm::setData(const QJsonObject& data, bool isCombined)
 {
-
     if ( isCombined) {
         emit PluginFormAbstract::OkEnabled(true );
         
@@ -76,9 +74,6 @@ void PluginDensityForm::setData(const QJsonObject& data, bool isCombined)
         const QString curve = data.value(DATE_DENSITY_CURVE_STR).toString();
         mCurveCombo->setCurrentText(curve);
     }
-
-
-
     updateVisibleElements();
 }
 

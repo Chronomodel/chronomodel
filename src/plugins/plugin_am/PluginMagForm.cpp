@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -165,7 +165,7 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     mIDRadio->setChecked(true);
 
     QGridLayout* grid = new QGridLayout();
-    grid->setContentsMargins(0, 5, 0, 0);
+    grid->setContentsMargins(0, 3, 0, 0);
 
     grid->addWidget(mIncRadio, 0, 1);
     grid->addWidget(mDecRadio, 1, 1);
