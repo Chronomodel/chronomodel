@@ -30,7 +30,7 @@ QT_BIN_PATH=/Users/dufresne/Qt/Tools/QtInstallerFramework/4.5/bin
 VERSION=3.2.7
 
 echo " 3 - Execution de binarycreator"
-${QT_BIN_PATH}/binarycreator --offline-only -c installer-config/config.xml -p installer-packages ChronoModel_v${VERSION}_Installer
+${QT_BIN_PATH}/binarycreator --offline-only -c installer-config/config.xml -p installer-packages-macOS ChronoModel_v${VERSION}_Installer
 
 # _________________________
 echo " 4 - view the BUNDLE : /Users/dufresne/ChronoModel-SoftWare/chronomodel/QtInstaller_ChronoModel"

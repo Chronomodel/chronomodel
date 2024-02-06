@@ -51,22 +51,21 @@ AboutDialog::AboutDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
     QString path  =  qApp->applicationDirPath();
     QDir dir(path);
     dir.cdUp();
-    path = dir.absolutePath() + "/Resources";
+    path = dir.absolutePath() + "/Resources/";
 #else
     //http://doc.qt.io/qt-5/qstandardpaths.html#details
-    QStringList dataPath = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
-    QString path  =  dataPath[0];
+    //QStringList dataPath = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
+    //QString path  =  dataPath[0];
+    QString path  = "";
 #endif
 
-
-
-    QFile htmlFile(path+ "/ABOUT.html");
+    QFile htmlFile(path+ "ABOUT.html");
     htmlFile.open(QIODevice::ReadOnly);
 
     mText = new QTextEdit();
     mText->setTextInteractionFlags(Qt::TextBrowserInteraction);
     mText->setHtml(htmlFile.readAll());
-    mText->setTextBackgroundColor(qApp->palette().window().color());
+    mText->setTextBackgroundColor(Qt::white);
 
     QVBoxLayout* layout = new QVBoxLayout();
     layout->addWidget(mText);
