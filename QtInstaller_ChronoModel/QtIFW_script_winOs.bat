@@ -1,7 +1,7 @@
 @echo off
-# penser à faire Ch_copy_library.sh avant
-# cd \Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel
-#  QtIFW_script_winOS.bat
+
+rem cd \Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel
+rem  QtIFW_script_winOS.bat
 
 cls
 echo This batch file copy files and Build windows installer

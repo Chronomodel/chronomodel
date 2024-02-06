@@ -16,7 +16,7 @@
         <!--@TargetDir@/-->
         <!--  <WizardStyle>Modern</WizardStyle> --> <!--  Aero; Classic -->
 
-        <InstallerWindowIcon>installer_icon</InstallerWindowIcon> <!-- for windows and linux-->
+        <InstallerWindowIcon>Chronomodel_Installer</InstallerWindowIcon> <!-- for windows and linux-->
         <InstallerApplicationIcon>Chronomodel_Installer</InstallerApplicationIcon>
          <!-- The actual file is looked up by attaching a '.icns' (OS X), '.ico' (Windows). No functionality on Unix.-->
             <Logo>Chronomodel.png</Logo>

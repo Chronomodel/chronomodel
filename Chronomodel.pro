@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------
 
-#Copyright or © or Copr. CNRS	2014 - 2023
+#Copyright or © or Copr. CNRS	2014 - 2024
 
 #Authors :
 #	Philippe LANOS
@@ -137,8 +137,9 @@ win32{
 	# Resource file (Windows only)
         message("WIN specific settings")
         QMAKESPEC = win32-g++ #win32-msvc  # for 32-bit and 64-bit
+        #RC_ICONS = Chronomodel.ico
+        RC_ICONS = $$PRO_PATH/icon/Chronomodel.ico
         RC_FILE += Chronomodel.rc
-        RC_ICONS += $$PRO_PATH/icon/Chronomodel.ico
         QT_FATAL_WARNING = 1
 }
 
