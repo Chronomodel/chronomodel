@@ -1,5 +1,7 @@
 #!/bin/bash
 # ne pas mettre de blanc autour de =
+# cd /Users/dufresne/ChronoModel-SoftWare/chronomodel/QtInstaller_InstallCurves/
+# sh QtIFW_InstallCurves_script.sh
 #_____________________________________
 
 clear
@@ -21,7 +23,7 @@ DEPLOY_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/deploy/
 
 cp -R $DEPLOY_PATH installer-packages/curves.composant1/data
 
-VERSION=3.2.2
+VERSION=3.2.7
 
 echo "$  2 Execution de binarycreator"
 ${QT_BIN_PATH}/binarycreator --offline-only -c installer-config/config.xml -p installer-packages --compression 9 Curves_Installer_v${VERSION} 
