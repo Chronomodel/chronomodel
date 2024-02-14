@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -95,10 +95,18 @@ QString FunctionStatToString(const FunctionStat& analysis);
 QString densityAnalysisToString(const DensityAnalysis& analysis);
 
 // Standard Deviation of a vector of data
+
+double variance_Knuth(const QList<double> &data);
+double variance_Knuth(const std::vector<double> &data);
+double variance_Knuth(const std::vector<int> &data);
+
 type_data std_Koening(const QList<type_data> &data);
-double std_Knuth(const QList<double> &data);
-double std_Knuth(const std::vector<double> &data);
-double std_Knuth(const std::vector<int> &data);
+inline double std_Knuth(const QList<double> &data) {return sqrt(variance_Knuth(data));};
+inline double std_Knuth(const std::vector<double> &data) {return sqrt(variance_Knuth(data));};
+inline double std_Knuth(const std::vector<int> &data) {return sqrt(variance_Knuth(data));};
+
+
+
 void mean_variance_Knuth(const std::vector<double> &data, double &mean, double &variance);
 void mean_variance_Knuth(const QList<double> &data, double &mean, double &variance);
 

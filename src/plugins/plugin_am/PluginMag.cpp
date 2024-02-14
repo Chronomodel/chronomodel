@@ -52,7 +52,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QVector>
 
 #include <cstdlib>
-#include <iostream>
 
 PluginMag::PluginMag()
 {

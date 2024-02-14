@@ -144,16 +144,16 @@ inline V interpolate(const T& x, const T& x0, const T& x1, const V& y0, const V&
  * @return interpolated index for a given value. If the value is smaller than all vector values, 0 is returned. If the value is greater than all vector values, (vector.size() - 1) is returned.
  */
 template <template<typename...> class Container, class T >
-T vector_interpolate_idx_for_value(const T value, const Container<T> &vector)
+T vector_interpolate_idx_for_value(const T value, const Container<T> &vector, int idxInf = 0, int idxSup = 0)
 {
-    int idxInf = 0;
-    int idxSup = vector.size() - 1;
+    if (idxSup == 0)
+        idxSup = vector.size() - 1;
 
     if (value < vector.front())
-        return T (idxInf);
+        return T (0);
 
     if  (value > vector.back())
-        return  T (idxSup);
+        return  T (vector.size() - 1);
 
     // Dichotomie, we can't use indexOf because we don't know the step between each value in the QList
 

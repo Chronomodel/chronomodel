@@ -686,7 +686,7 @@ QString MetropolisVariable::resultsString(const QString &noResultMessage, const 
             }
         }
         result += unit + "<br>";
-        result += QObject::tr("Density Step : %1").arg(stringForLocal(std::abs(mFormatedHisto.lastKey() - mFormatedHisto.firstKey()) / mFormatedHisto.size())) + "<br>";
+        //result += QObject::tr("Density Step : %1").arg(stringForLocal(std::abs(mFormatedHisto.lastKey() - mFormatedHisto.firstKey()) / mFormatedHisto.size())) + "<br>";
     }
 
    return result;

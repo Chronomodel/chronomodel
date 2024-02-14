@@ -85,8 +85,8 @@ protected:
     std::vector<Event*> initListEvents;
 
 private:
-    QList<Event *> mPointEvent;
-    QList<Event *> mNodeEvent;
+    QList<Event*> mPointEvent;
+    QList<Event*> mNodeEvent;
     qsizetype mFirstEventIndex; // Utile pour VG global, correspond au premier Event qui n'est pas un Bound
     double Var_residual_spline;
     double var_Y;
@@ -94,8 +94,8 @@ private:
 #pragma mark function
 protected:
 
-    void orderEventsByThetaReduced(QList<Event *> &event);
-    void spreadEventsThetaReduced0(QList<Event *> &sortedEvents, t_reduceTime spreadSpan = 0.);
+    void orderEventsByThetaReduced(QList<Event*> &event);
+    void spreadEventsThetaReduced0(QList<Event*> &sortedEvents, t_reduceTime spreadSpan = 0.);
     //std::thread::id mTh_id_memoCurve;
     //std::thread mTh_memoCurve;
 
@@ -265,7 +265,7 @@ private:
 
     double h_exp_fX_theta (Event* e, const MCMCSpline &s, unsigned idx);
     std::vector<double> sampling_spline (QList<Event *> &lEvents, SplineMatrices matrices);
-    t_prob h_S02_Vg_K(const std::vector<Event *> &initListEvents, const QList<Event *> events, const double S02_Vg, const double try_Vg);
+    t_prob h_S02_Vg_K(const QList<Event *> events, const double S02_Vg, const double try_Vg);
 
     std::pair<Matrix2D, std::vector<double>> decompositionCholeskyKK(const Matrix2D &matrix, const int nbBandes, const int shift);
 

@@ -54,6 +54,7 @@ public:
 
     MHVariable mLambdaSpline;
     MHVariable mS02Vg;
+    double mSO2_beta; // used for updated
     MCMCSpline mSpline; // valeurs courrantes de la spline
 
     std::vector<MCMCSpline> mSplinesTrace; // memo des valeurs aux noeuds

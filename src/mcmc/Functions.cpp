@@ -197,7 +197,7 @@ type_data std_Koening(const QList<type_data> &data)
  * @param data
  * @return
  */
-double std_Knuth(const QList<double> &data)
+double variance_Knuth(const QList<double> &data)
 {
     unsigned n = 0;
     long double mean = 0.;
@@ -213,11 +213,11 @@ double std_Knuth(const QList<double> &data)
         variance = previousVariance + (x - previousMean)*(x - mean);
     }
 
-    return sqrt(variance/(long double)n);
+    return variance/(long double)n;
 
 }
 
-double std_Knuth(const std::vector<double> &data)
+double variance_Knuth(const std::vector<double> &data)
 {
     unsigned n = 0;
     long double mean = 0.;
@@ -233,11 +233,11 @@ double std_Knuth(const std::vector<double> &data)
         variance = previousVariance + (x - previousMean)*(x - mean);
     }
 
-    return sqrt(variance/(long double)n);
+    return variance/(long double)n;
 
 }
 
-double std_Knuth(const std::vector<int> &data)
+double variance_Knuth(const std::vector<int> &data)
 {
     int n = 0;
     double mean = 0.;
@@ -253,7 +253,7 @@ double std_Knuth(const std::vector<int> &data)
         variance = previousVariance + ( (double)x - previousMean)*( (double)x - mean);
     }
 
-    return sqrt(variance/n);
+    return variance/n;
 
 }
 
@@ -274,6 +274,7 @@ void mean_variance_Knuth(const std::vector<double> &data, double &mean, double &
     }
     variance /= n;
 }
+
 void mean_variance_Knuth(const QList<double> &data, double& mean, double& variance)
 {
     int n = 0;
@@ -419,6 +420,7 @@ QList<double> autocorrelation_schoolbook(const QList<double> &trace, const int h
     return results;
 
 }
+
 QList<double> autocorrelation_by_convol(const QList<double> &trace, const int hmax)
 {
 
@@ -545,7 +547,7 @@ const std::pair<double, double> linear_regression(const std::vector<double> &dat
     return std::pair<double, double>(std::move(a), std::move(b));
 }
 
-
+#pragma mark TRACE STAT
 /**
  * @brief traceStatistic : This function uses the Knuth-Welford algorithm to calculate the standard deviation.
  * @param trace

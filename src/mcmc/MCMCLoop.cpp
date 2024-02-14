@@ -274,7 +274,12 @@ QString MCMCLoop::initialize_time()
                         uEvent->mTheta.mX = sample_in_repartition(uEvent->mMixingCalibrations, min, max);
 
                     }
-
+                    if (uEvent->mTheta.mX > max || uEvent->mTheta.mX < min) {
+                        const int seed = mLoopChains.at(mChainIndex).mSeed;
+                        qDebug()<<QString("[MCMCLoop::initialize_time] Error Init for eventuEvent->mTheta.mX > max || uEvent->mTheta.mX < min : %1 : min = %2 : max = %3-------Seed = %4").arg(uEvent->mName, QString::number(min, 'f', 30), QString::number(max, 'f', 30), QString::number(seed));
+                        mAbortedReason = QString(tr("uEvent->mTheta.mX > max || uEvent->mTheta.mX < min Error Init for event : %1 \n min = %2 \n max = %3 \n Seed = %4").arg(uEvent->mName, QString::number(min, 'f', 6), QString::number(max, 'f', 6), QString::number(seed)));
+                        return mAbortedReason;
+                    }
                     uEvent->mThetaReduced = mModel->reduceTime(uEvent->mTheta.mX);
                     uEvent->mInitialized = true;
 
@@ -571,7 +576,7 @@ void MCMCLoop::run()
         }
         mState = eInit;
 
-        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()))  + " : " + tr("Initialising MCMC"), 0, 0);
+        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()))  + " : " + tr("Initializing MCMC"), 0, 0);
 
         QElapsedTimer initTime;
         initTime.start();

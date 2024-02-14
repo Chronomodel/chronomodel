@@ -49,13 +49,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Project.h"
 #include "Matrix.h"
 #include "MainWindow.h"
+#include <cfenv>
 
 
 #ifdef DEBUG
 #include "QtUtilities.h"
 #endif
 
-#include <cfenv>
 #include <QDebug>
 #include <QMessageBox>
 #include <QApplication>
@@ -78,7 +78,6 @@ MCMCLoopCurve::MCMCLoopCurve(Project &project):
     MCMCLoop(project),
     mModel(project.mModel)
 {
-    //mModel = model;
     if (mModel) {
         setMCMCSettings(mModel->mMCMCSettings);
     }
@@ -219,8 +218,13 @@ QString MCMCLoopCurve::initialize_321()
             ev->mS02Theta.mSamplerProposal = MHVariable::eFixe; // not yet integrate within update_321
         }
     } else {
-        for (Event* ev : allEvents)
+        for (Event* ev : allEvents) {
+            if (mModel->is_curve) {
+                ev->mTheta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+            }
             mPointEvent.push_back(ev);
+
+        }
     }
 
 
@@ -351,7 +355,7 @@ QString MCMCLoopCurve::initialize_321()
        } else {
             // No global zero variance if no measurement error
             if (! mCurveSettings.mUseErrMesure && mCurveSettings.mVarianceType == CurveSettings::eModeFixed && mCurveSettings.mVarianceFixed == 0.) {
-                mAbortedReason = QString("Error: If you don't have Use measurement error, you can't have zero with the Global Value of Std gi. ");
+                mAbortedReason = QString("Warning: If no measurement error, global error std gi cannot be zero");
                 return mAbortedReason;
             }
             // Pas de Noeud dans le cas de Vg Global
@@ -398,7 +402,7 @@ QString MCMCLoopCurve::initialize_321()
     // ----------------------------------------------------------------
     // Curve init S02 Vg
     // ----------------------------------------------------------------
-    mModel->mS02Vg.mX = Var_residual_spline;
+    /*mModel->mS02Vg.mX = Var_residual_spline;
     mModel->mS02Vg.mLastAccepts.clear();
     if (mCurveSettings.mVarianceType == CurveSettings::eModeFixed) {
         mModel->mS02Vg.mSamplerProposal = MHVariable::eFixe;
@@ -410,33 +414,62 @@ QString MCMCLoopCurve::initialize_321()
     }
 
     mModel->mS02Vg.mSigmaMH = 1.;
+    */
+    // ----------------------------------------------------------------
+    // Curve init S02 Vg -- loi gamma
+    // ----------------------------------------------------------------
+    //mModel->mS02Vg.mX = Var_residual_spline;
+    mModel->mS02Vg.mLastAccepts.clear();
+    if (mCurveSettings.mVarianceType == CurveSettings::eModeFixed) {
+        mModel->mS02Vg.mSamplerProposal = MHVariable::eFixe;
+        double memoS02 = sqrt(mModel->mS02Vg.mX);
+        mModel->mS02Vg.memo(&memoS02);
 
+    } else {
+        const double s_harmonique = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), 0., [](double s0, auto e) { return s0 + 1./pow(e->mSy, 2.);});
+        const double mean_harmonique = sqrt((double)mModel->mEvents.size()/ s_harmonique);
+        const double beta = 1.004680139*(1 - exp(- 0.0000847244 * pow(mean_harmonique, 2.373548593)));
+
+        mModel->mSO2_beta = std::max(1E-10, beta);
+        const double S02Vg = 1. / Generator::gammaDistribution(1., mModel->mSO2_beta);
+#ifdef DEBUG
+        if (S02Vg == INFINITY)
+            qDebug()<<"[MCMCLoopCurve::initialize_321]  S02Vg == INFINITY";
+#endif
+        mModel->mS02Vg.tryUpdate(S02Vg, 2.);
+    }
+
+    mModel->mS02Vg.mSigmaMH = 1.;
+
+
+
+    // ___________________________
     if (mModel->compute_X_only) {
         std::vector<double> vecY (mModel->mEvents.size());
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
 
-        var_Y = pow(std_Knuth( vecY), 2);
+        var_Y = variance_Knuth( vecY);
 
     } else if (mCurveSettings.mProcessType == CurveSettings::eProcess_Unknwon_Dec) { // à controler
         std::vector< double> vecY (mModel->mEvents.size());
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
-        var_Y = pow(std_Knuth( vecY), 2);
+        var_Y = variance_Knuth( vecY);
 
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYy;});
-        var_Y += pow(std_Knuth( vecY), 2);
+        var_Y += variance_Knuth( vecY);
 
         var_Y /= 2.;
 
     } else {
         std::vector< double> vecY (mModel->mEvents.size());
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
-        var_Y = pow(std_Knuth( vecY), 2);
+        var_Y = variance_Knuth( vecY);
 
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYy;});
-        var_Y += pow(std_Knuth( vecY), 2);
+        var_Y += variance_Knuth( vecY);
 
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYz;});
-        var_Y += pow(std_Knuth( vecY), 2);
+        var_Y += variance_Knuth( vecY);
 
         var_Y /= 3.;
     }
@@ -452,10 +485,8 @@ QString MCMCLoopCurve::initialize_321()
          *  Calcul de la spline g, g" pour chaque composante x y z
          *-------------------------------------------------------------- */
 
-
         current_splineMatrices = prepareCalculSpline(mModel->mEvents, current_vecH);
         mModel->mSpline = currentSpline(mModel->mEvents, current_vecH, current_splineMatrices, mModel->mLambdaSpline.mX, mModel->compute_Y, mModel->compute_Z);
-        //mModel->mSpline = currentSpline(mModel->mEvents, true);
 
         // init Posterior MeanG and map
         const int nbPoint = 300;// Density curve size and curve size
@@ -755,7 +786,7 @@ QString MCMCLoopCurve::initialize_400()
         } else {
             // No global zero variance if no measurement error
             if (! mCurveSettings.mUseErrMesure && mCurveSettings.mVarianceType == CurveSettings::eModeFixed && mCurveSettings.mVarianceFixed == 0.) {
-                mAbortedReason = QString("Error: If you don't have Use measurement error, you can't have zero with the Global Value of Std gi. ");
+                mAbortedReason = QString("Warning: If no measurement error, global error std gi cannot be zero ");
                 return mAbortedReason;
             }
             // No node in the case of Vg Global
@@ -802,7 +833,7 @@ QString MCMCLoopCurve::initialize_400()
     // ----------------------------------------------------------------
     // Curve init S02 Vg
     // ----------------------------------------------------------------
-    mModel->mS02Vg.mX = Var_residual_spline;
+   /* mModel->mS02Vg.mX = Var_residual_spline;
     mModel->mS02Vg.mLastAccepts.clear();
     if (mCurveSettings.mVarianceType == CurveSettings::eModeFixed) {
         mModel->mS02Vg.mSamplerProposal = MHVariable::eFixe;
@@ -811,36 +842,58 @@ QString MCMCLoopCurve::initialize_400()
 
     } else {
         mModel->mS02Vg.tryUpdate(Var_residual_spline, 2.);
-    }
+    }*/
+    // -----------------------
+    // ----------------------------------------------------------------
+    // Curve init S02 Vg -- loi gamma
+    // ----------------------------------------------------------------
+    mModel->mS02Vg.mX = Var_residual_spline;
+    mModel->mS02Vg.mLastAccepts.clear();
+    if (mCurveSettings.mVarianceType == CurveSettings::eModeFixed) {
+        mModel->mS02Vg.mSamplerProposal = MHVariable::eFixe;
+        double memoS02 = sqrt(mModel->mS02Vg.mX);
+        mModel->mS02Vg.memo(&memoS02);
 
+    } else {
+        const double s_harmonique = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), 0., [](double s0, auto e) { return s0 + 1./pow(e->mSy, 2.);});
+        const double mean_harmonique = sqrt((double)mModel->mEvents.size()/ s_harmonique);
+        const double beta = 1.004680139*(1 - exp(- 0.0000847244 * pow(mean_harmonique, 2.373548593)));
+        mModel->mSO2_beta = beta;
+        const double S02Vg = 1. / Generator::gammaDistribution(1., beta);
+#ifdef DEBUG
+        if (S02Vg == INFINITY)
+            qDebug()<<"in memo initialize_400  S02Vg == INFINITY";
+#endif
+        mModel->mS02Vg.tryUpdate(S02Vg, 2.);
+    }
     mModel->mS02Vg.mSigmaMH = 1.;
 
     if (mModel->compute_X_only) {
         std::vector<double> vecY (mModel->mEvents.size());
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
 
-        var_Y = pow(std_Knuth( vecY), 2);
+        var_Y = variance_Knuth( vecY);
 
     } else if (mCurveSettings.mProcessType == CurveSettings::eProcess_Unknwon_Dec) { // à controler
         std::vector< double> vecY (mModel->mEvents.size());
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
-        var_Y = pow(std_Knuth( vecY), 2);
+        var_Y = variance_Knuth( vecY);
 
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYy;});
-        var_Y += pow(std_Knuth( vecY), 2);
+        var_Y += variance_Knuth( vecY);
 
         var_Y /= 2.;
 
     } else {
         std::vector< double> vecY (mModel->mEvents.size());
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
-        var_Y = pow(std_Knuth( vecY), 2);
+        var_Y = variance_Knuth( vecY);
 
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYy;});
-        var_Y += pow(std_Knuth( vecY), 2);
+        var_Y += variance_Knuth( vecY);
 
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYz;});
-        var_Y += pow(std_Knuth( vecY), 2);
+        var_Y += variance_Knuth( vecY);
 
         var_Y /= 3.;
     }
@@ -1164,7 +1217,7 @@ QString MCMCLoopCurve::initialize_401()
         } else {
             // No global zero variance if no measurement error
             if (! mCurveSettings.mUseErrMesure && mCurveSettings.mVarianceType == CurveSettings::eModeFixed && mCurveSettings.mVarianceFixed == 0.) {
-                mAbortedReason = QString("Error: If you don't have Use measurement error, you can't have zero with the Global Value of Std gi. ");
+                mAbortedReason = QString("Warning: If no measurement error, global error std gi cannot be zero");
                 return mAbortedReason;
             }
             // No node in the case of Vg Global
@@ -1228,28 +1281,28 @@ QString MCMCLoopCurve::initialize_401()
         std::vector<double> vecY (mModel->mEvents.size());
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
 
-        var_Y = pow(std_Knuth( vecY), 2);
+        var_Y = variance_Knuth( vecY);
 
     } else if (mCurveSettings.mProcessType == CurveSettings::eProcess_Unknwon_Dec) { // à controler
         std::vector< double> vecY (mModel->mEvents.size());
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
-        var_Y = pow(std_Knuth( vecY), 2);
+        var_Y = variance_Knuth( vecY);
 
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYy;});
-        var_Y += pow(std_Knuth( vecY), 2);
+        var_Y += variance_Knuth( vecY);
 
         var_Y /= 2.;
 
     } else {
         std::vector< double> vecY (mModel->mEvents.size());
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
-        var_Y = pow(std_Knuth( vecY), 2);
+        var_Y = variance_Knuth( vecY);
 
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYy;});
-        var_Y += pow(std_Knuth( vecY), 2);
+        var_Y += variance_Knuth( vecY);
 
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYz;});
-        var_Y += pow(std_Knuth( vecY), 2);
+        var_Y += variance_Knuth( vecY);
 
         var_Y /= 3.;
     }
@@ -1616,7 +1669,7 @@ QString MCMCLoopCurve::initialize_Komlan()
         } else {
             // No global zero variance if no measurement error
             if (! mCurveSettings.mUseErrMesure && mCurveSettings.mVarianceType == CurveSettings::eModeFixed && mCurveSettings.mVarianceFixed == 0.) {
-                mAbortedReason = QString("Error: If you don't have Use measurement error, you can't have zero with the Global Value of Std gi. ");
+                mAbortedReason = QString("Warning: If no measurement error, global error std gi cannot be zero");
                 return mAbortedReason;
             }
             // Pas de Noeud dans le cas de Vg Global
@@ -1674,7 +1727,7 @@ QString MCMCLoopCurve::initialize_Komlan()
         const double s_harmonique = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), 0., [](double s0, auto e) { return s0 + 1./pow(e->mSy, 2.);});
         const double mean_harmonique = sqrt((double)mModel->mEvents.size()/ s_harmonique);
         const double beta = 1.004680139*(1 - exp(- 0.0000847244 * pow(mean_harmonique, 2.373548593)));
-
+        mModel->mSO2_beta = beta;
         const double S02Vg = 1. / Generator::gammaDistribution(1., beta);
 
         mModel->mS02Vg.tryUpdate(S02Vg, 2.);
@@ -1685,28 +1738,28 @@ QString MCMCLoopCurve::initialize_Komlan()
     if (mModel->compute_X_only) {
         std::vector<double> vecY (mModel->mEvents.size());
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
-        var_Y = pow(std_Knuth( vecY), 2);
+        var_Y = variance_Knuth( vecY);
 
     } else if (!mModel->compute_Z) {
         std::vector<double> vecY (mModel->mEvents.size());
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
-        var_Y = pow(std_Knuth( vecY), 2);
+        var_Y = variance_Knuth( vecY);
 
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYy;});
-        var_Y += pow(std_Knuth( vecY), 2);
+        var_Y += variance_Knuth( vecY);
 
         var_Y /= 2.;
 
     } else {
         std::vector< double> vecY (mModel->mEvents.size());
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
-        var_Y = pow(std_Knuth( vecY), 2);
+        var_Y = variance_Knuth( vecY);
 
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYy;});
-        var_Y += pow(std_Knuth( vecY), 2);
+        var_Y += variance_Knuth( vecY);
 
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYz;});
-        var_Y += pow(std_Knuth( vecY), 2);
+        var_Y += variance_Knuth( vecY);
 
         var_Y /= 3.;
     }
@@ -1964,28 +2017,28 @@ QString MCMCLoopCurve::initialize_interpolate()
         std::vector<double> vecY (mModel->mEvents.size());
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
 
-        var_Y = pow(std_Knuth( vecY), 2);
+        var_Y = variance_Knuth( vecY);
 
     } else if (!mModel->compute_Z) {
         std::vector< double> vecY (mModel->mEvents.size());
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
-        var_Y = pow(std_Knuth( vecY), 2);
+        var_Y = variance_Knuth( vecY);
 
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYy;});
-        var_Y += pow(std_Knuth( vecY), 2);
+        var_Y += variance_Knuth( vecY);
 
         var_Y /= 2.;
 
     } else {
         std::vector< double> vecY (mModel->mEvents.size());
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYx;});
-        var_Y = pow(std_Knuth( vecY), 2);
+        var_Y = variance_Knuth( vecY);
 
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYy;});
-        var_Y += pow(std_Knuth( vecY), 2);
+        var_Y += variance_Knuth( vecY);
 
         std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vecY.begin(), [](Event* ev) {return ev->mYz;});
-        var_Y += pow(std_Knuth( vecY), 2);
+        var_Y += variance_Knuth( vecY);
 
         var_Y /= 3.;
     }
@@ -2336,7 +2389,7 @@ bool MCMCLoopCurve::update_321()
             /* --------------------------------------------------------------
             *  D - Update S02 Vg, à évaluer dans les deux cas: variance individuelle et globale
             * -------------------------------------------------------------- */
-            try {
+            /*try {
                 if (mCurveSettings.mVarianceType != CurveSettings::eModeFixed ) {
                     const double try_value_log = Generator::gaussByBoxMuller(log10(mModel->mS02Vg.mX), mModel->mS02Vg.mSigmaMH);
                     const double try_value = pow(10, try_value_log);
@@ -2354,10 +2407,45 @@ bool MCMCLoopCurve::update_321()
                 }
 
             } catch (std::exception& e) {
-                qWarning()<< "[MCMCLoopCurve::update] S02 Vg : exception caught: " << e.what() << '\n';
+                qWarning()<< "[MCMCLoopCurve::update_321] S02 Vg : exception caught: " << e.what() << '\n';
+
+            }
+            */
+            // --------------------------------------------------------------
+            //  D-1 - Update S02 Vg, loi gamma
+            // --------------------------------------------------------------
+            try {
+                // On stocke l'ancienne valeur :
+                const double current_value = mModel->mS02Vg.mX;
+
+                // On tire une nouvelle valeur :
+
+                const double try_value_log = Generator::gaussByBoxMuller(log10(current_value), mModel->mS02Vg.mSigmaMH);
+
+                const double try_value = pow(10., try_value_log);
+
+                //long double rapport = -1.;
+
+                if (try_value_log >= logMin && try_value_log <= logMax) {
+
+                    const double rapport1 = h_S02_Vg_K(mModel->mEvents, current_value, try_value);
+
+                    rate = rapport1 * (try_value / current_value) ;
+                } else {
+                    rate = -1.;
+                }
+
+                mModel->mS02Vg.mX = current_value;
+                mModel->mS02Vg.tryUpdate(try_value, rate);
+
+            } catch (std::exception& e) {
+                qWarning()<< "[MCMCLoopCurve::update_321] S02 Vg : exception caught: " << e.what() << '\n';
 
             }
 
+            // Fin maj SO2 Vg
+
+            // ____________________
 
             if (mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
 
@@ -2961,10 +3049,7 @@ bool MCMCLoopCurve::update_400()
                     const double try_value = pow(10., try_value_log);
 
                     if (try_value_log >= logMin && try_value_log <= logMax) {
-                        /*std::vector<double> sy (initListEvents.size());
-                        std::transform(initListEvents.begin(), initListEvents.end(), sy.begin(), [](Event* ev) {return ev->mSy;});
-*/
-                        rate = h_S02_Vg_K(initListEvents, mModel->mEvents, current_value, try_value);//, sy);
+                        rate = h_S02_Vg_K(mModel->mEvents, current_value, try_value);//, sy);
 
                         rate *=  (try_value / current_value) ;
                     } else {
@@ -4138,7 +4223,7 @@ bool MCMCLoopCurve::update_Komlan()
 
                         if (try_value_log >= logMin && try_value_log <= logMax) {
 
-                            const double  rapport1 = h_S02_Vg_K(initListEvents, mModel->mEvents, current_value, try_value);
+                            const double  rapport1 = h_S02_Vg_K(mModel->mEvents, current_value, try_value);
 
                             rapport = rapport1 * (try_value / current_value) ;
                         } else {
@@ -4717,6 +4802,10 @@ void MCMCLoopCurve::memo()
      * -------------------------------------------------------------- */
     if (mModel->mS02Vg.mSamplerProposal != MHVariable::eFixe) {
         double memoS02 = sqrt(mModel->mS02Vg.mX);
+#ifdef DEBUG
+        if (memoS02 == INFINITY)
+            qDebug()<<"in memo memoS02 == INFINITY";
+#endif
         mModel->mS02Vg.memo(&memoS02);
         mModel->mS02Vg.saveCurrentAcceptRate();
     }
@@ -5490,43 +5579,48 @@ void MCMCLoopCurve::finalize()
             mModel->mPosteriorMeanGByChain.erase(mModel->mPosteriorMeanGByChain.begin() + i);
 
            //mModel->mSplinesTrace.erase(mModel->mSplinesTrace.begin() + position, mModel->mSplinesTrace.end()); //il y a seulement les courbes acceptées
+            if (mModel->mLambdaSpline.mSamplerProposal != MHVariable::eFixe ) {
+                mModel->mLambdaSpline.mRawTrace->erase(mModel->mLambdaSpline.mRawTrace->cbegin() + front_position, mModel->mLambdaSpline.mRawTrace->cbegin() + back_position);
+                mModel->mLambdaSpline.mHistoryAcceptRateMH->erase(mModel->mLambdaSpline.mHistoryAcceptRateMH->cbegin() + front_position, mModel->mLambdaSpline.mHistoryAcceptRateMH->cbegin() + back_position);
+                mModel->mLambdaSpline.mAllAccepts.remove(i);
+            }
 
-            mModel->mLambdaSpline.mRawTrace->erase(mModel->mLambdaSpline.mRawTrace->cbegin() + front_position, mModel->mLambdaSpline.mRawTrace->cbegin() + back_position);
-            mModel->mLambdaSpline.mHistoryAcceptRateMH->erase(mModel->mLambdaSpline.mHistoryAcceptRateMH->cbegin() + front_position, mModel->mLambdaSpline.mHistoryAcceptRateMH->cbegin() + back_position);
-            mModel->mLambdaSpline.mAllAccepts.remove(i);
-
-            mModel->mS02Vg.mRawTrace->erase(mModel->mS02Vg.mRawTrace->cbegin() + front_position, mModel->mS02Vg.mRawTrace->cbegin() + back_position);
-            mModel->mS02Vg.mHistoryAcceptRateMH->erase(mModel->mS02Vg.mHistoryAcceptRateMH->cbegin() + front_position, mModel->mS02Vg.mHistoryAcceptRateMH->cbegin() + back_position);
-            mModel->mS02Vg.mAllAccepts.remove(i);
+            if (mModel->mS02Vg.mSamplerProposal != MHVariable::eFixe ) {
+                mModel->mS02Vg.mRawTrace->erase(mModel->mS02Vg.mRawTrace->cbegin() + front_position, mModel->mS02Vg.mRawTrace->cbegin() + back_position);
+                mModel->mS02Vg.mHistoryAcceptRateMH->erase(mModel->mS02Vg.mHistoryAcceptRateMH->cbegin() + front_position, mModel->mS02Vg.mHistoryAcceptRateMH->cbegin() + back_position);
+                mModel->mS02Vg.mAllAccepts.remove(i);
+            }
 
             for (auto ev : mModel->mEvents) {
-                ev->mTheta.mRawTrace->erase(ev->mTheta.mRawTrace->cbegin() + front_position, ev->mTheta.mRawTrace->cbegin() + back_position);
-                ev->mTheta.mHistoryAcceptRateMH->erase(ev->mTheta.mHistoryAcceptRateMH->cbegin() + front_position, ev->mTheta.mHistoryAcceptRateMH->cbegin() + back_position);
-                ev->mTheta.mAllAccepts.remove(i);
+                if (ev->mTheta.mSamplerProposal != MHVariable::eFixe) {
+                    ev->mTheta.mRawTrace->erase(ev->mTheta.mRawTrace->cbegin() + front_position, ev->mTheta.mRawTrace->cbegin() + back_position);
+                    ev->mTheta.mHistoryAcceptRateMH->erase(ev->mTheta.mHistoryAcceptRateMH->cbegin() + front_position, ev->mTheta.mHistoryAcceptRateMH->cbegin() + back_position);
+                    ev->mTheta.mAllAccepts.remove(i);
 
-                if (!ev->mVg.mRawTrace->empty()) {
-                    ev->mVg.mRawTrace->erase(ev->mVg.mRawTrace->cbegin() + front_position, ev->mVg.mRawTrace->cbegin() + back_position);
-                    ev->mVg.mHistoryAcceptRateMH->erase(ev->mVg.mHistoryAcceptRateMH->cbegin() + front_position, ev->mVg.mHistoryAcceptRateMH->cbegin() + back_position);
-                    ev->mVg.mAllAccepts.remove(i);
-                }
+                    if (!ev->mVg.mRawTrace->empty() && ev->mVg.mSamplerProposal != MHVariable::eFixe ) {
+                        ev->mVg.mRawTrace->erase(ev->mVg.mRawTrace->cbegin() + front_position, ev->mVg.mRawTrace->cbegin() + back_position);
+                        ev->mVg.mHistoryAcceptRateMH->erase(ev->mVg.mHistoryAcceptRateMH->cbegin() + front_position, ev->mVg.mHistoryAcceptRateMH->cbegin() + back_position);
+                        ev->mVg.mAllAccepts.remove(i);
+                    }
 
-                if (!ev->mS02Theta.mRawTrace->empty()) {
-                    ev->mS02Theta.mRawTrace->erase(ev->mS02Theta.mRawTrace->cbegin() + front_position, ev->mS02Theta.mRawTrace->cbegin() + back_position);
-                    ev->mS02Theta.mHistoryAcceptRateMH->erase(ev->mS02Theta.mHistoryAcceptRateMH->cbegin() + front_position, ev->mS02Theta.mHistoryAcceptRateMH->cbegin() + back_position);
-                    ev->mS02Theta.mAllAccepts.remove(i);
-                }
+                    if (!ev->mS02Theta.mRawTrace->empty() && ev->mVg.mSamplerProposal != MHVariable::eFixe) {
+                        ev->mS02Theta.mRawTrace->erase(ev->mS02Theta.mRawTrace->cbegin() + front_position, ev->mS02Theta.mRawTrace->cbegin() + back_position);
+                        ev->mS02Theta.mHistoryAcceptRateMH->erase(ev->mS02Theta.mHistoryAcceptRateMH->cbegin() + front_position, ev->mS02Theta.mHistoryAcceptRateMH->cbegin() + back_position);
+                        ev->mS02Theta.mAllAccepts.remove(i);
+                    }
 
-                for (auto &d : ev->mDates) {
-                    d.mTi.mRawTrace->erase(d.mTi.mRawTrace->cbegin() + front_position, d.mTi.mRawTrace->cbegin() + back_position);
-                    d.mTi.mHistoryAcceptRateMH->erase(d.mTi.mHistoryAcceptRateMH->cbegin() + front_position, d.mTi.mHistoryAcceptRateMH->cbegin() + back_position);
-                    d.mTi.mAllAccepts.remove(i);
+                    for (auto &d : ev->mDates) {
+                        d.mTi.mRawTrace->erase(d.mTi.mRawTrace->cbegin() + front_position, d.mTi.mRawTrace->cbegin() + back_position);
+                        d.mTi.mHistoryAcceptRateMH->erase(d.mTi.mHistoryAcceptRateMH->cbegin() + front_position, d.mTi.mHistoryAcceptRateMH->cbegin() + back_position);
+                        d.mTi.mAllAccepts.remove(i);
 
-                    d.mSigmaTi.mRawTrace->erase(d.mSigmaTi.mRawTrace->cbegin() + front_position, d.mSigmaTi.mRawTrace->cbegin() + back_position);
-                    d.mSigmaTi.mHistoryAcceptRateMH->erase(d.mSigmaTi.mHistoryAcceptRateMH->cbegin() + front_position, d.mSigmaTi.mHistoryAcceptRateMH->cbegin() + back_position);
-                    d.mSigmaTi.mAllAccepts.remove(i);
+                        d.mSigmaTi.mRawTrace->erase(d.mSigmaTi.mRawTrace->cbegin() + front_position, d.mSigmaTi.mRawTrace->cbegin() + back_position);
+                        d.mSigmaTi.mHistoryAcceptRateMH->erase(d.mSigmaTi.mHistoryAcceptRateMH->cbegin() + front_position, d.mSigmaTi.mHistoryAcceptRateMH->cbegin() + back_position);
+                        d.mSigmaTi.mAllAccepts.remove(i);
 
-                    d.mWiggle.mRawTrace->erase(d.mWiggle.mRawTrace->cbegin() + front_position, d.mWiggle.mRawTrace->cbegin() + back_position);
-                    d.mWiggle.mAllAccepts.remove(i);
+                        d.mWiggle.mRawTrace->erase(d.mWiggle.mRawTrace->cbegin() + front_position, d.mWiggle.mRawTrace->cbegin() + back_position);
+                        d.mWiggle.mAllAccepts.remove(i);
+                    }
                 }
             }
         }
@@ -6149,13 +6243,17 @@ t_prob MCMCLoopCurve::h_S02_Vg(const QList<Event *> &events, double S02_Vg) cons
 }
 
 
-t_prob MCMCLoopCurve::h_S02_Vg_K(const std::vector<Event *> &initListEvents, const QList<Event *> events, const double S02_Vg, const double try_Vg)
+t_prob MCMCLoopCurve::h_S02_Vg_K(const QList<Event *> events, const double S02_Vg, const double try_Vg)
 {
-    const int n = events.size();
+
+    const int alpha = 1;
+    /* const int n = events.size();
+       const double s_harmonique = std::accumulate(initListEvents.begin(), initListEvents.end(), 0., [] (double s0, auto e){return s0 + 1. / pow(e->mSy, 2.);});
+       const double ecart = sqrt(n / s_harmonique) ;
+       const double beta = 1.004680139*(1 - exp(- 0.0000847244 * pow(ecart, 2.373548593)));
+    */
+    const double beta = mModel->mSO2_beta;
     const int a = 1;
-
-    const double s_harmonique = std::accumulate(initListEvents.begin(), initListEvents.end(), 0., [] (double s0, auto e){return s0 + 1. / pow(e->mSy, 2.);});
-
     double prod_h_Vg = 1.;
     if (mCurveSettings.mUseVarianceIndividual) {     
         for (auto& e : events) {
@@ -6165,12 +6263,6 @@ t_prob MCMCLoopCurve::h_S02_Vg_K(const std::vector<Event *> &initListEvents, con
     } else {
         prod_h_Vg = (exp((a + 1)*log((S02_Vg + events[0]->mVg.mX) / (try_Vg + events[0]->mVg.mX))) * (try_Vg / S02_Vg));
     }
-
-    const double ecart = sqrt(n / s_harmonique) ;
-
-    const int alpha = 1;
-
-    const double beta = 1.004680139*(1 - exp(- 0.0000847244 * pow(ecart, 2.373548593)));
 
     const double prior = exp((alpha + 1)*log(S02_Vg / try_Vg)) * exp(-beta * ((S02_Vg - try_Vg) / (try_Vg * S02_Vg)))   ;
 

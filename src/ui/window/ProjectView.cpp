@@ -83,7 +83,7 @@ ProjectView::ProjectView(std::shared_ptr<Project> &project, QWidget* parent, Qt:
     mLogTabs->setFixedHeight(mLogTabs->tabHeight());
 
     mLogTabs->addTab(tr("Model Description"));
-    mLogTabs->addTab(tr("MCMC Initialisation"));
+    mLogTabs->addTab(tr("MCMC Initialization"));
     mLogTabs->addTab(tr("MCMC Adaptation"));
     mLogTabs->addTab(tr("Posterior Distrib. Stats"));
 
@@ -343,7 +343,7 @@ void ProjectView::showLogTab(const int &i)
 
         mLogLayout->replaceWidget(widFrom, mLogModelEdit);
 
-     } else if (mLogTabs->currentName() == tr("MCMC Initialisation") ) {
+     } else if (mLogTabs->currentName() == tr("MCMC Initialization") ) {
         mLogModelEdit->setVisible(false);
         mLogInitEdit->setVisible(true);
         mLogAdaptEdit->setVisible(false);

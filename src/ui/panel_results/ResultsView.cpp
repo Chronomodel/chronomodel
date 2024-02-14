@@ -3662,8 +3662,8 @@ void ResultsView::setTimeRange()
     mCurrentTMinEdit->blockSignals(true);
     mCurrentTMaxEdit->blockSignals(true);
 
-    mCurrentTMinEdit->setText(locale.toString(mResultCurrentMinT, 'f', 0));
-    mCurrentTMaxEdit->setText(locale.toString(mResultCurrentMaxT, 'f', 0));
+    mCurrentTMinEdit->setText(locale.toString(mResultCurrentMinT));
+    mCurrentTMaxEdit->setText(locale.toString(mResultCurrentMaxT));
 
     mCurrentTMinEdit->blockSignals(false);
     mCurrentTMaxEdit->blockSignals(false);

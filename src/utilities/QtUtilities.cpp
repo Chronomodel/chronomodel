@@ -172,7 +172,7 @@ int defaultDpiX()
     if (const QScreen* screen = QGuiApplication::primaryScreen())
         return qRound(screen->logicalDotsPerInchX());
 
-    //PI has not been initialised, or it is being initialised. Give a default dpi
+    //PI has not been initialized, or it is being initialized. Give a default dpi
     return 100;
 }
 

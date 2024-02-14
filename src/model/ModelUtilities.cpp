@@ -296,6 +296,7 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
                                                                                                                QString::number(bound->mConstraintsBwd.size()),
                                                                                                                QString::number(bound->mConstraintsFwd.size()))));
             log += line(textRed(QObject::tr("- Fixed Value : %1 ").arg(stringForLocal(bound->mFixed))));
+
         } else {
             log += line(textBlue(QObject::tr("Event ( %1 / %2 ) : %3 ( %4 data, %5 phases,  %6 const. back.,  %7 const. fwd.)").arg(QString::number(i+1), QString::number(model->mEvents.size()), event->mName,
                                                                                                                          QString::number(event->mDates.size()),
@@ -1028,7 +1029,7 @@ QString ModelUtilities::S02ResultsHTML(const std::shared_ptr<ModelCurve> model)
         text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(pow( model->mS02Vg.mRawTrace->at(0), 2.)))));
 
     } else {
-        text = line(textBold(textGreen(QObject::tr("Stat. on the sqrt S02 Vg"))));
+        text = line(textBold(textGreen(QObject::tr("Stat. on the sqrt(S02 Vg)"))));
         text += line(textGreen(model->mS02Vg.resultsString("", nullptr)));
     }
     return text;
@@ -1094,9 +1095,9 @@ short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double> &hpd, cons
 
 double sample_in_repartition (const CalibrationCurve* calibrateCurve, const double min, const double max)
 {
-    double unionTmin = calibrateCurve->mTmin;
-    double unionTmax = calibrateCurve->mTmax;
-    double unionStep = calibrateCurve->mStep;
+    const double unionTmin = calibrateCurve->mTmin;
+    const double unionTmax = calibrateCurve->mTmax;
+    const double unionStep = (unionTmax-unionTmin)/ (calibrateCurve->mRepartition.size()-1);
 
     if (unionTmax < min) {
         return Generator::gaussByDoubleExp((unionTmax + unionTmin)/2., std::max(unionStep, (unionTmax - unionTmin)/2.), min, max);
@@ -1113,16 +1114,29 @@ double sample_in_repartition (const CalibrationCurve* calibrateCurve, const doub
             return Generator::randomUniform(min, max);
         }
         const double value = Generator::randomUniform(minRepartition, maxRepartition);
-        const double idx = vector_interpolate_idx_for_value(value, calibrateCurve->mRepartition);
+
+
+        double prop = (min - calibrateCurve->mTmin) / (calibrateCurve->mTmax - calibrateCurve->mTmin);
+        const int rep_idx_max = calibrateCurve->mRepartition.size() - 1;
+        const double ixN = prop * rep_idx_max;
+        const int idxUnder = std::clamp((int)floor(prop * rep_idx_max), 0, rep_idx_max);
+
+        prop = (max - calibrateCurve->mTmin) / (calibrateCurve->mTmax - calibrateCurve->mTmin);
+        const double ixP = prop * rep_idx_max;
+        const int idxUpper = std::clamp( (int)ceil(prop * rep_idx_max), 0, rep_idx_max);
+
+
+        const double idx = vector_interpolate_idx_for_value(value, calibrateCurve->mRepartition, idxUnder, idxUpper);
         //const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(minRepartition, maxRepartition), calibrateCurve->mRepartition);
         // -- debug
-        /*auto t = unionTmin + idx * unionStep;
+#ifdef DEBUG
+        auto t = unionTmin + idx * unionStep;
         if (t > max) {
             qDebug() <<" [sample_in_repartition] t>max"<<t<<max;
         } else if (t<min) {
             qDebug() <<" [sample_in_repartition] t<min"<<t<<min;
         }
-*/
+#endif
         // ---
         if (idx > 0) {
             return unionTmin + idx * unionStep;
