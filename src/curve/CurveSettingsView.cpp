@@ -389,6 +389,7 @@ CurveSettings CurveSettingsView::getSettings() const
         settings.mVarianceType = CurveSettings::eModeBayesian;
         break;
     }
+    settings.mThreshold = locale().toDouble(mThresholdInput->text());
 
     //settings.mUseVarianceIndividual = mUseVarianceIndividualCB->isChecked() && (mVarianceTypeInput->currentIndex() == 1) ;
     settings.mVarianceFixed = pow(locale().toDouble(mVarianceValueInput->text()), 2.);
