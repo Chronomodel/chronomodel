@@ -2046,32 +2046,34 @@ CalibrationCurve generate_mixingCalibration(const QList<Date> &dates, const QStr
                 unionTmin = std::min(unionTmin, d.mCalibration->mTmin);
                 unionTmax = std::max(unionTmax, d.mCalibration->mTmax);
                 unionStep = std::min(unionStep, d.mCalibration->mStep);
-
-            } /*else {
-                unionTmin = settings.mTmin;
-                unionTmax = settings.mTmax;
-            }*/
-
+            }
         }
-        // 2 - Creation of the cumulative distribution curves in the interval
 
         mixing_calib.mTmin = unionTmin;
         mixing_calib.mTmax = unionTmax;
+        // Adjust Step
+        // We take the smallest step, but it does not necessarily correspond to the same curve with unionTmin and unionTmax.
+        int union_N = std::ceil((unionTmax-unionTmin)/unionStep);
+        unionStep = (unionTmax-unionTmin)/union_N;
         mixing_calib.mStep = unionStep;
+
+        // 2 - Creation of the cumulative distribution curves in the interval
 
         double t = unionTmin;
         long double sum = 0.;
         long double sum_old = 0.;
         const double n = dates.size();
-        while (t <= unionTmax) {
-            sum= 0.;
+        int i = 0;
+        while (t < unionTmax) {
+            t = unionTmin + i*unionStep;
+            sum = 0.;
             for (auto&& d : dates) {
                 sum += d.mCalibration->repartition_interpolate(t);
             }
             mixing_calib.mVector.push_back((sum - sum_old)/(unionStep*n));
             mixing_calib.mRepartition.push_back(sum/n);
-            t += unionStep;
             sum_old = sum;
+            i++;
         }
 
         mixing_calib.mMap = vector_to_map(mixing_calib.mVector, unionTmin, unionTmax, unionStep);
