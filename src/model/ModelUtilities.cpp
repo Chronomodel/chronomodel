@@ -1118,37 +1118,29 @@ double sample_in_repartition (const CalibrationCurve* calibrateCurve, const doub
 
         double prop = (min - calibrateCurve->mTmin) / (calibrateCurve->mTmax - calibrateCurve->mTmin);
         const int rep_idx_max = calibrateCurve->mRepartition.size() - 1;
-        const double ixN = prop * rep_idx_max;
+        //const double ixN = prop * rep_idx_max;
         const int idxUnder = std::clamp((int)floor(prop * rep_idx_max), 0, rep_idx_max);
 
         prop = (max - calibrateCurve->mTmin) / (calibrateCurve->mTmax - calibrateCurve->mTmin);
-        const double ixP = prop * rep_idx_max;
+        //const double ixP = prop * rep_idx_max;
         const int idxUpper = std::clamp( (int)ceil(prop * rep_idx_max), 0, rep_idx_max);
 
-
         const double idx = vector_interpolate_idx_for_value(value, calibrateCurve->mRepartition, idxUnder, idxUpper);
-        //const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(minRepartition, maxRepartition), calibrateCurve->mRepartition);
-        // -- debug
-#ifdef DEBUG
-        auto t = unionTmin + idx * unionStep;
+
+        const double t = unionTmin + idx * unionStep;
+        // Du fait de l'arrondi de idxUnder et idxUpper, la dichotomie peut donner une valeur de t en dehors de l'intervale.
+        // Cela arrive souvent quant l'espace entre les deux index est faible
         if (t > max) {
-            qDebug() <<" [sample_in_repartition] t>max"<<t<<max;
+            qDebug() <<" [sample_in_repartition] t>max"<<t<<max<<"[sample_in_repartition] Generator::randomUniform(min, max)";
+            return Generator::randomUniform(min, max);
+
         } else if (t<min) {
-            qDebug() <<" [sample_in_repartition] t<min"<<t<<min;
-        }
-#endif
-        // ---
-        if (idx > 0) {
-            return unionTmin + idx * unionStep;
+            qDebug() <<" [sample_in_repartition] t<min"<<t<<min<<"[sample_in_repartition] Generator::randomUniform(min, max)";
+            return Generator::randomUniform(min, max);
 
         } else {
-#ifdef DEBUG
-                qDebug() << "[sample_in_repartition] Generator::randomUniform(min, max)";
-#endif
-                return Generator::randomUniform(min, max);
+            return t;
         }
-
-
 
 
     }

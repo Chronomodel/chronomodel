@@ -757,6 +757,80 @@ bool Event::getThetaMaxPossible(const Event* originEvent, QString& circularEvent
     }
 }
 
+// vrai si origin est aprés this
+bool Event::is_direct_older(const Event &origin)
+{
+    bool is_direct_link = false;
+    if (!mConstraintsFwd.isEmpty()) {
+        for (const auto& constFwd : mConstraintsFwd) {
+            if (constFwd->mEventTo != &origin ) {
+                is_direct_link = (constFwd->mEventTo)->is_direct_older(origin);
+
+            } else {
+                is_direct_link = true;
+            }
+
+            if ( is_direct_link) {
+                return true;
+            }
+        }
+    }
+    // Liaison par les phases
+    bool is_phase_link = false;
+    if (!mPhases.isEmpty()) {
+        for (const auto& phase : mPhases) {
+            if (!phase->mConstraintsNextPhases.isEmpty()) {
+                for (const auto& next_phase : phase->mConstraintsNextPhases) {
+                    for (const auto& n_event : next_phase->mPhaseTo->mEvents) {
+                        is_phase_link = n_event->is_direct_older(origin);
+                        if ( is_phase_link) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+
+// is_direct_younger ::vrai si origin est avant Event
+bool Event::is_direct_younger(const Event &origin)
+{
+    bool is_direct_link = false;
+    if (!mConstraintsBwd.isEmpty()) {
+        for (const auto& constBwd : mConstraintsBwd) {
+            if (constBwd->mEventFrom != &origin ) {
+                is_direct_link = (constBwd->mEventFrom)->is_direct_younger(origin);
+
+            } else {
+                is_direct_link = true;
+            }
+
+            if ( is_direct_link) {
+                return true;
+            }
+        }
+    }
+    // Liaison par les phases
+    bool is_phase_link = false;
+    if (!mPhases.isEmpty()) {
+        for (const auto& phase : mPhases) {
+            if (!phase->mConstraintsPrevPhases.isEmpty()) {
+                for (const auto& prev_phase : phase->mConstraintsPrevPhases) {
+                    for (const auto& p_event : prev_phase->mPhaseFrom->mEvents) {
+                        is_phase_link = p_event->is_direct_younger(origin);
+                        if ( is_phase_link) {
+                            return true;;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
 
 double Event::getThetaMinRecursive_v2(const double defaultValue, const QList<Event*> &startEvents)
 {
@@ -1028,24 +1102,34 @@ double Event::getThetaMinRecursive_v3(const double defaultValue, const QList<Eve
         }
 
         // 3 - Si dans la phase, il y a des Events non initialisés. Il faut considèrer qu'ils sont identiques et descendre aussi leurs contraintes
-        double max_theta_friend_strati = defaultValue;
+    /*    double max_theta_friend_strati = defaultValue;
         if (!mPhases.isEmpty()) {
             for (const auto& phase : mPhases) {
                 for (auto th_friend : phase->mEvents) {
+                    // teste si l'event n'est pas au dessus !
+
                     if (th_friend->mInitialized == false && th_friend != this) {
-                        for (auto&& constBwd : th_friend->mConstraintsBwd) {
-                            if (!startEvents.contains(constBwd->mEventFrom)) {
-                                max_theta_friend_strati = std::max(max_theta_friend_strati, constBwd->mEventFrom->getThetaMinRecursive_v3(defaultValue, newStartEvents));
+                        //bool friend_is_under = this->is_direct_older(*th_friend);
+                        // Je regarde les contraintes en dessous des freres, il ne faut pas que le frere soit au dessus
+                        //bool friend_is_under = th_friend->is_direct_younger(*this); // is_direct_younger ::vrai si origin est avant Event
+                        bool friend_is_under = !this->is_direct_older(*th_friend);
+                        //qDebug()<<"min recursive fiend="<<th_friend->mName<<" this="<<this->mName<<" je fais"<<friend_is_under;
+                        if (friend_is_under) {
+                            for (auto&& constBwd : th_friend->mConstraintsBwd) {
+                                if (!startEvents.contains(constBwd->mEventFrom)) {
+                                    max_theta_friend_strati = std::max(max_theta_friend_strati, constBwd->mEventFrom->getThetaMinRecursive_v3(defaultValue, newStartEvents));
+                                }
                             }
                         }
                     }
                 }
             }
         }
-
+*/
         // 4 - Si dans la phase, il y a des Events initialisés. voir la contrainte de durée
         double max_tau_phases = defaultValue;
         if (!mPhases.isEmpty()) {
+            // C'est la date max-tau
             for (const auto& phase : mPhases) {
                 double th_max_phase = defaultValue;
                 if (phase->mTauType != Phase::eTauUnknown) {
@@ -1053,6 +1137,20 @@ double Event::getThetaMinRecursive_v3(const double defaultValue, const QList<Eve
                         if (th_friend->mInitialized == true && th_friend != this ) {
                             th_max_phase = std::max(th_max_phase, th_friend->mTheta.mX);
                         }
+                        // ---
+                        else if (th_friend->mInitialized == false && th_friend != this) {
+                            bool friend_is_under = !this->is_direct_older(*th_friend);
+
+                            //qDebug()<<"min recursive fiend="<<th_friend->mName<<" this="<<this->mName<<" je fais"<<friend_is_under;
+                            if (friend_is_under) {
+                                for (auto&& constBwd : th_friend->mConstraintsBwd) {
+                                    if (!startEvents.contains(constBwd->mEventFrom)) {
+                                        th_max_phase = std::max(th_max_phase, constBwd->mEventFrom->getThetaMinRecursive_v3(defaultValue, newStartEvents));
+                                    }
+                                }
+                            }
+                        }
+                        // ---
                     }
                     max_tau_phases = std::max(max_tau_phases, th_max_phase - phase->mTau.mX);
                 }
@@ -1060,7 +1158,8 @@ double Event::getThetaMinRecursive_v3(const double defaultValue, const QList<Eve
         }
 
         mIsNode = true;
-        mTheta.mX = std::max({max_theta_strati, max_theta_phase_strati, max_theta_friend_strati, max_tau_phases});
+        //mTheta.mX = std::max({max_theta_strati, max_theta_phase_strati, max_theta_friend_strati, max_tau_phases});
+        mTheta.mX = std::max({max_theta_strati, max_theta_phase_strati, max_tau_phases});
 
         return mTheta.mX;
     }
@@ -1097,25 +1196,34 @@ double Event::getThetaMaxRecursive_v3(const double defaultValue, const QList<Eve
             }
         }
 
-        // 3 - Si dans la phase, il y a des Events non initialisés. Il faut considèrer qu'ils sont identiques et remonter aussi leurs contraintes
-        double min_theta_friend_strati = defaultValue;
+        // 3 - Si dans la phase avec durée, il y a des Events non initialisés. Il faut considèrer qu'ils sont identiques et remonter aussi leurs contraintes
+   /*     double min_theta_friend_strati = defaultValue;
         if (!mPhases.isEmpty()) {
             for (const auto& phase : mPhases) {
-                for (auto th_friend : phase->mEvents) {
-                    if (th_friend->mInitialized == false && th_friend != this) {
-                        for (auto&& constFwd : th_friend->mConstraintsFwd) {
-                            if (!startEvents.contains(constFwd->mEventTo)) {
-                                min_theta_friend_strati = std::min(min_theta_friend_strati, constFwd->mEventTo->getThetaMaxRecursive_v3(defaultValue, newStartEvents));
+                if (phase->mTauType != Phase::eTauUnknown) {
+                    for (auto th_friend : phase->mEvents) {
+                        if (th_friend->mInitialized == false && th_friend != this) {
+                            bool friend_is_upper = !this->is_direct_younger(*th_friend);
+                            //bool friend_is_upper = !this->is_direct_older(*th_friend);
+
+                            //qDebug()<<"max recursive friend="<<th_friend->mName<<" this="<<this->mName<<" je fais"<<friend_is_upper;
+                            if (friend_is_upper) {
+                                for (auto&& constFwd : th_friend->mConstraintsFwd) {
+                                    if (!startEvents.contains(constFwd->mEventTo)) {
+                                        min_theta_friend_strati = std::min(min_theta_friend_strati, constFwd->mEventTo->getThetaMaxRecursive_v3(defaultValue, newStartEvents));
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
         }
-
+*/
         // 4 - Si dans la phase, il y a des Events initialisés. voir la contrainte de durée
         double min_tau_phases = defaultValue;
         if (!mPhases.isEmpty()) {
+            // C'est la date min+tau
             for (const auto& phase : mPhases) {
                 double th_min_phase = defaultValue;
                 if (phase->mTauType != Phase::eTauUnknown) {
@@ -1123,14 +1231,30 @@ double Event::getThetaMaxRecursive_v3(const double defaultValue, const QList<Eve
                         if (th_friend->mInitialized == true && th_friend != this ) {
                             th_min_phase = std::min(th_min_phase, th_friend->mTheta.mX);
                         }
+                        // ----
+                        else if (th_friend->mInitialized == false && th_friend != this) {
+                            bool friend_is_upper = !this->is_direct_younger(*th_friend);
+
+                            //qDebug()<<"max recursive friend="<<th_friend->mName<<" this="<<this->mName<<" je fais"<<friend_is_upper;
+                            if (friend_is_upper) {
+                                for (auto&& constFwd : th_friend->mConstraintsFwd) {
+                                    if (!startEvents.contains(constFwd->mEventTo)) {
+                                        th_min_phase = std::min(th_min_phase, constFwd->mEventTo->getThetaMaxRecursive_v3(defaultValue, newStartEvents));
+                                    }
+                                }
+                            }
+                        }
+                        // ---
                     }
                     min_tau_phases = std::min(min_tau_phases, th_min_phase + phase->mTau.mX);
                 }
             }
         }
 
+
         mIsNode = true;
-        mTheta.mX = std::min({min_theta_strati, min_theta_phase_strati, min_theta_friend_strati, min_tau_phases});
+        //mTheta.mX = std::min({min_theta_strati, min_theta_phase_strati, min_theta_friend_strati, min_tau_phases});
+        mTheta.mX = std::min({min_theta_strati, min_theta_phase_strati, min_tau_phases});
 
         return mTheta.mX;
     }

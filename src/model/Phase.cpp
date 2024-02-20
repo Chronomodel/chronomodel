@@ -944,9 +944,10 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
         //const double addUnif = exp(-0.5*pow((dUnif - eA)/(QSup-QInf), 2.)); // /(gridLength));
        // UnifScore +=  exp(-0.5*pow((dUnif - eA)/(QSup-QInf), 2.))/(gridLength); //N(dUnif, eA, QSup-QInf)/gridLength;//
         const double addUnif = std::max(dUnif, QInf) - std::min(dUnif, QSup);
+#ifdef DEBUG
         if (addUnif>0)
-            qDebug()<<" t= "<<t<<" add="<< addUnif;
-
+            qDebug()<<"[Model::generateActivity] t= "<<t<<" add="<< addUnif;
+#endif
         UnifScore += std::max(dUnif, QInf) - std::min(dUnif, QSup);
 
         nbIt++;

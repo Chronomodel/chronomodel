@@ -168,6 +168,8 @@ public:
     // bool getThetaMinPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents, QString &linkStr); // useless
     bool getThetaMaxPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents);
 
+    bool is_direct_older(const Event &origin);
+    bool is_direct_younger(const Event &origin);
     double getThetaMinRecursive_v2(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
     double getThetaMaxRecursive_v2(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
 

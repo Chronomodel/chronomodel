@@ -268,7 +268,7 @@ QString MCMCLoop::initialize_time()
 
                     if (max == min) {
                         uEvent->mTheta.mX = min;
-                        qDebug()<<QString("[MCMCLoop::initialize_time] Egality  Init for event : %1 : min = %2 : max = %3-------Seed = %4").arg(uEvent->mName, QString::number(min, 'f', 30), QString::number(max, 'f', 30), QString::number(mLoopChains.at(mChainIndex).mSeed));
+                        qDebug()<<QString("[MCMCLoop::initialize_time] Egality Init for event : %1 : min = %2 : max = %3-------Seed = %4").arg(uEvent->mName, QString::number(min, 'f', 30), QString::number(max, 'f', 30), QString::number(mLoopChains.at(mChainIndex).mSeed));
 
                     } else {
                         uEvent->mTheta.mX = sample_in_repartition(uEvent->mMixingCalibrations, min, max);
@@ -276,8 +276,12 @@ QString MCMCLoop::initialize_time()
                     }
                     if (uEvent->mTheta.mX > max || uEvent->mTheta.mX < min) {
                         const int seed = mLoopChains.at(mChainIndex).mSeed;
+#ifdef DEBUG
                         qDebug()<<QString("[MCMCLoop::initialize_time] Error Init for eventuEvent->mTheta.mX > max || uEvent->mTheta.mX < min : %1 : min = %2 : max = %3-------Seed = %4").arg(uEvent->mName, QString::number(min, 'f', 30), QString::number(max, 'f', 30), QString::number(seed));
                         mAbortedReason = QString(tr("uEvent->mTheta.mX > max || uEvent->mTheta.mX < min Error Init for event : %1 \n min = %2 \n max = %3 \n Seed = %4").arg(uEvent->mName, QString::number(min, 'f', 6), QString::number(max, 'f', 6), QString::number(seed)));
+#else
+                        mAbortedReason = QString(tr("Error Init for event : %1 \n min = %2 \n max = %3 \n Seed = %4").arg(uEvent->mName, QString::number(min, 'f', 6), QString::number(max, 'f', 6), QString::number(seed)));
+#endif
                         return mAbortedReason;
                     }
                     uEvent->mThetaReduced = mModel->reduceTime(uEvent->mTheta.mX);

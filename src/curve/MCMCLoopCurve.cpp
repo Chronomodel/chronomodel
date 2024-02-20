@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
     Philippe LANOS
@@ -2361,7 +2361,7 @@ bool MCMCLoopCurve::update_321()
                 std::for_each(PAR mModel->mPhaseConstraints.begin(), mModel->mPhaseConstraints.end(), [] (PhaseConstraint* pc) {pc->updateGamma();});
 
             } catch(std::exception& exc) {
-                qWarning() << "[MCMCLoopCurve::update] Theta : Caught Exception!\n"<<exc.what();
+                qWarning() << "[MCMCLoopCurve::update_321] Theta : Caught Exception!\n"<<exc.what();
             }
 
         } else { // Pas bayésien : Tous les temps sont fixes
@@ -2579,10 +2579,10 @@ bool MCMCLoopCurve::update_321()
             } else { // nothing to do : mCurveSettings.mVarianceType == CurveSettings::eFixed                   
             }
         } catch (std::exception& e) {
-            qWarning()<< "[MCMCLoopCurve::update] VG : exception caught: " << e.what() << '\n';
+            qWarning()<< "[MCMCLoopCurve::update_321] VG : exception caught: " << e.what() << '\n';
 
         } catch(...) {
-            qWarning() << "[MCMCLoopCurve::update] VG Event Caught Exception!\n";
+            qWarning() << "[MCMCLoopCurve::update_321] VG Event Caught Exception!\n";
 
         }
 
@@ -2736,7 +2736,7 @@ bool MCMCLoopCurve::update_321()
 
 
         } catch(...) {
-            qDebug() << "[MCMCLoopCurve::update_321] update Lambda  Caught Exception!\n";
+            qDebug() << "[MCMCLoopCurve::update_321] Update Lambda  Caught Exception!\n";
         }
 
         return ok;
@@ -2760,16 +2760,16 @@ bool MCMCLoopCurve::update_321()
         qWarning() << "[MCMCLoopCurve::update] char "<< e;
 
     } catch (const std::length_error& e) {
-        qWarning() << "[MCMCLoopCurve::update] length_error"<< e.what();
+        qWarning() << "[MCMCLoopCurve::update] Length_error"<< e.what();
 
     } catch (const std::out_of_range& e) {
-        qWarning() << "[MCMCLoopCurve::update] out of range" <<e.what();
+        qWarning() << "[MCMCLoopCurve::update] Out of range" <<e.what();
 
     } catch (const std::exception& e) {
-        qWarning() << "[MCMCLoopCurve::update]  "<< e.what();
+        qWarning() << "[MCMCLoopCurve_321::update]  "<< e.what();
 
     } catch(...) {
-        qWarning() << "[MCMCLoopCurve::update] Caught Exception!\n";
+        qWarning() << "[MCMCLoopCurve::update_321] Caught Exception!\n";
         return false;
     }
 
@@ -5553,15 +5553,6 @@ void MCMCLoopCurve::finalize()
 */
 #pragma omp parallel for
 
- /*   for (int i = 0; i < mChains.size(); ++i) {
-        ChainSpecs &chain = mChains[i];
-        if (chain.mRealyAccepted == 0) {
-            mAbortedReason = QString(tr("Warning : NO POSITIVE curve available with chain n° %1, current seed to change %2").arg (QString::number(i+1), QString::number(chain.mSeed)));
-            throw mAbortedReason;
-        }
-    }
-*/
-
     // Suppression des traces des chaines sans courbes acceptées
 
     int back_position = mModel->mLambdaSpline.mRawTrace->size();
@@ -5578,7 +5569,6 @@ void MCMCLoopCurve::finalize()
 
             mModel->mPosteriorMeanGByChain.erase(mModel->mPosteriorMeanGByChain.begin() + i);
 
-           //mModel->mSplinesTrace.erase(mModel->mSplinesTrace.begin() + position, mModel->mSplinesTrace.end()); //il y a seulement les courbes acceptées
             if (mModel->mLambdaSpline.mSamplerProposal != MHVariable::eFixe ) {
                 mModel->mLambdaSpline.mRawTrace->erase(mModel->mLambdaSpline.mRawTrace->cbegin() + front_position, mModel->mLambdaSpline.mRawTrace->cbegin() + back_position);
                 mModel->mLambdaSpline.mHistoryAcceptRateMH->erase(mModel->mLambdaSpline.mHistoryAcceptRateMH->cbegin() + front_position, mModel->mLambdaSpline.mHistoryAcceptRateMH->cbegin() + back_position);
@@ -5682,7 +5672,6 @@ void MCMCLoopCurve::finalize()
         mModel->mPosteriorMeanG.gx.mapG.min_value = *std::min_element(begin(mModel->mPosteriorMeanG.gx.mapG.data), end(mModel->mPosteriorMeanG.gx.mapG.data));
         mModel->mPosteriorMeanG.gx.mapGP.min_value = *std::min_element(begin(mModel->mPosteriorMeanG.gx.mapGP.data), end(mModel->mPosteriorMeanG.gx.mapGP.data));
 
-
         if (mModel->compute_Y) {
             mModel->mPosteriorMeanG.gy.mapG.min_value = *std::min_element(begin(mModel->mPosteriorMeanG.gy.mapG.data), end(mModel->mPosteriorMeanG.gy.mapG.data));
             mModel->mPosteriorMeanG.gy.mapGP.min_value = *std::min_element(begin(mModel->mPosteriorMeanG.gy.mapGP.data), end(mModel->mPosteriorMeanG.gy.mapGP.data));
@@ -5690,7 +5679,6 @@ void MCMCLoopCurve::finalize()
             if (mModel->compute_Z) {
                 mModel->mPosteriorMeanG.gz.mapG.min_value = *std::min_element(begin(mModel->mPosteriorMeanG.gz.mapG.data), end(mModel->mPosteriorMeanG.gz.mapG.data));
                 mModel->mPosteriorMeanG.gz.mapGP.min_value = *std::min_element(begin(mModel->mPosteriorMeanG.gz.mapGP.data), end(mModel->mPosteriorMeanG.gz.mapGP.data));
-
             }
         }
     }
@@ -5823,7 +5811,6 @@ void MCMCLoopCurve::prepareEventY(Event* const event  )
             break;
     }
 
-
     if (!mCurveSettings.mUseErrMesure) {
         event->mSy = 0.;
     }
@@ -5889,7 +5876,7 @@ t_prob MCMCLoopCurve::h_YWI_AY_composanteX(const SplineMatrices &matrices, const
     const SplineResults &spline = doSplineX(matrices, events, vecH, decomp_matB, lambdaSpline);
     const std::vector< double> &vecG = spline.vecG;
     const MatrixDiag &matD = decomp_matB.second;
-   // const std::vector< double> &matD = spline.matD;
+
    // -------------------------------------------
     // Calcul de l'exposant
     // -------------------------------------------
