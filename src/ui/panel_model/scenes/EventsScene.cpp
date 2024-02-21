@@ -77,6 +77,8 @@ EventsScene::~EventsScene()
 
 }
 
+
+
 EventItem* EventsScene::findEventItemWithJsonId(const int id)
 {
     for (AbstractItem* it: mItems) {

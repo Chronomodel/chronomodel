@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -38,37 +38,33 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "Ruler.h"
-#include "Painting.h"
 #include "AxisTool.h"
-#include "StdUtilities.h"
-#include "QtUtilities.h"
 #include "DateUtils.h"
 #include <QtWidgets>
-#include <iostream>
 
 
 int Ruler::sHeight = 50;
 
 Ruler::Ruler(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-mCurrentMin(0.),
-mCurrentMax(1000.),
-mMin(0.),
-mMax(1000.),
-mZoomProp(1.),
-mStepMinWidth(3.),//define when minor scale can appear
-mStepWidth(100),
-mMarginLeft(0),
-mMarginRight(0),
-mMarginTop(5),
-mMarginBottom(3)
+    mCurrentMin(0.),
+    mCurrentMax(1000.),
+    mMin(0.),
+    mMax(1000.),
+    mZoomProp(1.),
+    mStepMinWidth(3.),//define when minor scale can appear
+    mStepWidth(100),
+    mMarginLeft(0),
+    mMarginRight(0),
+    mMarginTop(5),
+    mMarginBottom(3)
 {
     mScrollBar = new QScrollBar(Qt::Horizontal, this);
     mScrollBar->setRange(0, 0);
     mScrollBar->setSingleStep(1);
     mScrollBar->setPageStep(10000);
-    //mScrollBar->setTracking(true);
 
     connect(mScrollBar, static_cast<void (QScrollBar::*)(int)>(&QScrollBar::sliderMoved), this, &Ruler::updateScroll);
+    connect(mScrollBar, static_cast<void (QScrollBar::*)(int)>(&QScrollBar::valueChanged), this, &Ruler::updateScroll);
 
     mAxisTool.mIsHorizontal = true;
     mAxisTool.mShowArrow = false;
@@ -147,10 +143,12 @@ double Ruler::getRealValue()
     return realPosition;
 }
 
+/*
 void Ruler::scrollValueChanged(double value)
 {
     emit valueChanged(value);
 }
+*/
 
 void Ruler::setScaleDivision (const Scale &sc)
 {
@@ -285,6 +283,16 @@ void Ruler::updateScroll()
     update();
 
  }
+
+ bool Ruler::event(QEvent *event)
+{
+    if (event->type() == QEvent::Wheel) {
+        //QScrollBar::event(event);//::slider
+        //updateScroll();
+        mScrollBar->event(event);
+    }
+    return QWidget::event(event);
+}
 
 // Layout & Paint
 

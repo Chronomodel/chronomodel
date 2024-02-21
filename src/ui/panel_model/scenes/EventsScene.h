@@ -46,7 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "StudyPeriodSettings.h"
 #include "CurveSettings.h"
 
-#include <QWheelEvent>
+//#include <QWheelEvent>
 
 class QGraphicsItemAnimation;
 class QTimeLine;

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -91,6 +91,7 @@ protected:
     // ------------------------------------------------
     //  Events & Layout
     // ------------------------------------------------
+    virtual bool event(QEvent *e);
     void mouseMoveEvent(QMouseEvent* e);
     void resizeEvent(QResizeEvent* e);
 
@@ -104,7 +105,7 @@ protected:
 
     void createByEventsGraphs();
     void createByPhasesGraphs();
-    //void createByTempoGraphs();
+
     void createByCurveGraph();
     void createByAlphaGraph();
     
@@ -255,7 +256,7 @@ private slots:
     void saveGraphData();
 
 signals:
-
+    void wheelMove(QEvent *e);
     void resultsLogUpdated(const QString &log);
 
     void xSpinUpdate(const int value);

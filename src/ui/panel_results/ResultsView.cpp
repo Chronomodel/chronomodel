@@ -148,6 +148,9 @@ ResultsView::ResultsView(std::shared_ptr<Project> project, QWidget* parent, Qt::
     connect(mRuler, &Ruler::positionChanged, this, &ResultsView::applyRuler);
 
 
+
+    connect(this, &ResultsView::wheelMove, mRuler, &Ruler::wheelScene);
+
     // -----------------------------------------------------------------
     //  Right Part
     // -----------------------------------------------------------------
@@ -1097,6 +1100,7 @@ ResultsView::~ResultsView()
     mModel = nullptr;
 }
 
+
 #pragma mark Project & Model
 
 void ResultsView::setProject(const std::shared_ptr<Project> project)
@@ -1268,6 +1272,15 @@ void ResultsView::initModel(const std::shared_ptr<ModelCurve> model)
 }
 
 #pragma mark Layout
+bool ResultsView::event(QEvent *e)
+{
+    if (e->type() == QEvent::Wheel &&
+        (mCurveScrollArea->underMouse() || mEventsScrollArea->underMouse() || mPhasesScrollArea->underMouse() )) {
+            emit wheelMove(e);
+    }
+    return QWidget::event(e);
+}
+
 
 void ResultsView::mouseMoveEvent(QMouseEvent* e)
 {
