@@ -604,16 +604,26 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
         mTipX = getValueForX(e->position().x() );
         mTipY = getValueForY(e->position().y());
 
-        qreal errXp = getValueForX(e->position().x() +3);
-        qreal errXm = getValueForX(e->position().x() -3);
-        qreal errYp = getValueForY(e->position().y() -3);
-        qreal errYm = getValueForY(e->position().y() +3);
+        const qreal Xpos = getValueForX(e->position().x());
+        const qreal Ypos = getValueForY(e->position().y());
+
+        const qreal errXp = getValueForX(e->position().x() + 3);
+        const qreal errXm = getValueForX(e->position().x() - 3);
+
+        const qreal errYp = getValueForY(e->position().y() - 3);
+        const qreal errYm = getValueForY(e->position().y() + 3);
 
         mTipComment = "";
         for (auto&& ref : refPoints) {
-            if (ref.Xmin<=errXp && errXm<=ref.Xmax && ref.Ymin<=errYp && errYm<=ref.Ymax) {
+            if (ref.isVisible()) {
+                const qreal Xmid = (ref.Xmin + ref.Xmax) / 2.;
+                const qreal Ymid = (ref.Ymin + ref.Ymax) / 2.;
+
+                if ((ref.Xmin<=Xpos && Xpos<=ref.Xmax && Ymid<=errYp && errYm<=Ymid) || (ref.Ymin<=Ypos && Ypos<=ref.Ymax && Xmid<=errXp && errXm<=Xmid) )  {
                     mTipComment = ref.comment;
+                }
             }
+
         }
 
         update(old_rect.adjusted(-20, -20, 20, 20).toRect());
@@ -622,9 +632,7 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
     } else
         mTipVisible = false;
 
-
     update(mTipRect.adjusted(-20, -20, 20, 20).toRect());
-
 
     // forward to parent to move a marker for example
     e->ignore();
