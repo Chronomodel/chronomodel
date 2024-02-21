@@ -1406,18 +1406,27 @@ void GraphView::drawCurves(QPainter& painter)
 
                 const qreal rayPlot = 2.*penWidth;
 
+                QColor bg (getBackgroundColor());
+                bg.setAlpha(100);
+                const QRectF border_h (xMinPlot - 1, yPlot - (penWidth + 1)/2., xMaxPlot - xMinPlot + 1, penWidth + 1 );
+                const QRectF border_v (xPlot -(penWidth + 1)/2., getYForValue(ymin, true) - (1+penWidth)/2., penWidth + 1, (getYForValue(ymax, true) - getYForValue(ymin, true)) + penWidth +2 );
+
                 switch (refPoint.type) {
                 case CurveRefPts::eCross:
                     refPointsPen.setWidthF(penWidth);
 
-                    pathPoint.moveTo( xMinPlot, yPlot );
+                    /*pathPoint.moveTo( xMinPlot, yPlot );
                     pathPoint.lineTo( xMaxPlot, yPlot );
 
                     pathPoint.moveTo( xPlot, getYForValue(ymin, true) );
                     pathPoint.lineTo( xPlot, getYForValue(ymax, true) );
-                    painter.strokePath(pathPoint, refPointsPen);
+                    painter.strokePath(pathPoint, refPointsPen);*/
 
                     painter.setBrush(refPointsPen.brush());
+                    painter.setPen(QPen(bg, 1));
+                    painter.drawRect(border_v);
+                    painter.drawRect(border_h);
+
                     painter.setPen(refPointsPen);
                     painter.drawEllipse(QRectF( xPlot - penWidth, yPlot - penWidth,  penWidth*2., penWidth*2.));
                     break;
@@ -1427,11 +1436,10 @@ void GraphView::drawCurves(QPainter& painter)
 
                     // Draw a line with a border color background
                     painter.setBrush(refPointsPen.brush());
-                    painter.setPen(QPen(getBackgroundColor(), 1));
-                    {
-                      const QRectF border (xMinPlot - 1, yPlot - (1+penWidth)/2., xMaxPlot - xMinPlot + 1, penWidth +1 );
-                      painter.drawRect(border);
-                    }
+
+                    painter.setPen(QPen(bg, 1));
+                    painter.drawRect(border_h);
+
                     break;
 
                 case CurveRefPts::eDotLine:
@@ -1460,12 +1468,17 @@ void GraphView::drawCurves(QPainter& painter)
                     painter.setPen(refPointsPen);
                     painter.strokePath(pathPoint, refPointsPen);
 
-                    pathPoint.clear();
+                    //pathPoint.clear();
                     refPointsPen.setStyle(Qt::SolidLine);
                     refPointsPen.setWidthF(penWidth);
-                    pathPoint.moveTo( xPlot, getYForValue(ymin, true));
-                    pathPoint.lineTo( xPlot, getYForValue(ymax, true));
-                    painter.strokePath(pathPoint, refPointsPen);
+                    //pathPoint.moveTo( xPlot, getYForValue(ymin, true));
+                    //pathPoint.lineTo( xPlot, getYForValue(ymax, true));
+                    //painter.strokePath(pathPoint, refPointsPen);
+
+                    painter.setPen(QPen(bg, 1));
+                    painter.drawRect(border_v);
+                    //painter.drawRect(border_h);
+
                     break;
 
                 case CurveRefPts::eCustomDashLineCross:
@@ -1485,6 +1498,10 @@ void GraphView::drawCurves(QPainter& painter)
                     pathPoint.moveTo( xPlot, getYForValue(ymin, true));
                     pathPoint.lineTo( xPlot, getYForValue(ymax, true));
                     painter.strokePath(pathPoint, refPointsPen);
+
+                    //painter.setPen(QPen(bg, 1));
+                    //painter.drawRect(border_v);
+                    //painter.drawRect(border_h);
                     break;
 
                 case CurveRefPts::eRoundLine:
@@ -1513,100 +1530,8 @@ void GraphView::drawCurves(QPainter& painter)
                     break;
                 }
 
-                // ---
-                /*
-                if (refPoint.type == CurveRefPts::eCross) {
-                    refPointsPen.setWidthF(std::max(2., pen.widthF()));
-                    qreal yPlot = getYForValue(ymoy, true);
-
-                    qreal xPlot = getXForValue(xmoy);
-                    qreal xMinPlot = getXForValue(xmin);
-                    qreal xMaxPlot = getXForValue(xmax);
-
-                    pathPoint.moveTo( xMinPlot, yPlot );
-                    pathPoint.lineTo( xMaxPlot, yPlot );
-
-                    pathPoint.moveTo( xPlot, getYForValue(ymin, true) );
-                    pathPoint.lineTo( xPlot, getYForValue(ymax, true) );
-                    painter.strokePath(pathPoint, refPointsPen);
-
-                    painter.setBrush(refPointsPen.brush());
-                    painter.setPen(refPointsPen);
-                    painter.drawEllipse(QRectF( xPlot - refPointsPen.widthF(), yPlot - refPointsPen.widthF(),
-                                                refPointsPen.widthF()*2., refPointsPen.widthF()*2.));
-                }
-                else if (refPoint.type == CurveRefPts::eLine) {
-                    const qreal penWidth = std::max(2., pen.widthF());
-                    refPointsPen.setWidthF(penWidth);
-
-                    const qreal yPlot = getYForValue(ymoy, true);
-                    qreal xMinPlot = getXForValue(xmin);
-                    qreal xMaxPlot = getXForValue(xmax);
-                    if (xMaxPlot - xMinPlot < 2*penWidth) {
-                        const qreal xMean = (xMaxPlot+xMinPlot)/2.;
-                        xMinPlot = xMean - penWidth;
-                        xMaxPlot = xMean + penWidth;
-                    }
-
-                    // Draw a line with a border color background
-                    const QRectF border (xMinPlot - 1, yPlot - (1+penWidth)/2., xMaxPlot - xMinPlot + 1, penWidth +1 );
-                    painter.setBrush(refPointsPen.brush());
-                    painter.setPen(QPen(getBackgroundColor(), 1));
-                    painter.drawRect(border);
-
-
-                }
-                else if (refPoint.type == CurveRefPts::eDotLine) {
-
-                    pathPoint.moveTo( getXForValue(xmin), getYForValue(ymoy, true) );
-                    pathPoint.lineTo( getXForValue(xmax), getYForValue(ymoy, true) );
-
-                    refPointsPen.setWidthF(std::max(2., pen.widthF()));
-                    refPointsPen.setStyle(Qt::DotLine);
-                    painter.setBrush(refPointsPen.brush());
-                    painter.setPen(refPointsPen);
-                    painter.strokePath(pathPoint, refPointsPen);
-
-                }
-                else if (refPoint.type == CurveRefPts::eDotLineCross) {
-                    const qreal xPlot = getXForValue(xmoy);
-
-                    pathPoint.moveTo( getXForValue(xmin), getYForValue(ymoy, true) );
-                    pathPoint.lineTo( getXForValue(xmax), getYForValue(ymoy, true) );
-
-
-                    refPointsPen.setWidthF(pen.widthF());
-                    refPointsPen.setStyle(Qt::DotLine);
-                    painter.setBrush(refPointsPen.brush());
-                    painter.setPen(refPointsPen);
-                    painter.strokePath(pathPoint, refPointsPen);
-
-                    pathPoint.clear();
-                    refPointsPen.setStyle(Qt::SolidLine);
-                    pathPoint.moveTo( xPlot, getYForValue(ymin, true) );
-                    pathPoint.lineTo( xPlot, getYForValue(ymax, true) );
-                    painter.strokePath(pathPoint, refPointsPen);
-
-                } else if (refPoint.type == CurveRefPts::eRoundLine) {
-                    const qreal xPlot = getXForValue(xmoy);
-                    const qreal yPlot = getYForValue(ymoy, true) ;
-                    const qreal rayPlot = 3.*pen.widthF();
-                    pathPoint.addEllipse(xPlot - rayPlot, yPlot - rayPlot, rayPlot*2., rayPlot*2.);
-
-                    pathPoint.moveTo( xPlot, getYForValue(ymin, true) );
-                    pathPoint.lineTo( xPlot, getYForValue(ymax, true) );
-
-                    refPointsPen.setWidthF( pen.widthF());
-                    refPointsPen.setStyle(Qt::SolidLine);
-                    painter.setBrush(refPointsPen.brush());
-                    painter.setPen(refPointsPen);
-                    painter.strokePath(pathPoint, refPointsPen);
-
-                }
-                */
             }
 
-               // ++iterRefPts;
         }
 
     }
