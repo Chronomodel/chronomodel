@@ -2058,52 +2058,52 @@ void ResultsView::createByCurveGraph()
                     double verr;
                     // Set Y for graph X
 
-                        switch (model->mCurveSettings.mProcessType) {
-                            case CurveSettings::eProcess_Inclination :
-                                verr = event->mS_XA95Depth / 2.448;
-                                pt_Y = event->mXIncDepth;
-                                pt_Ymin = event->mXIncDepth - 1.96*verr;
-                                pt_Ymax = event->mXIncDepth + 1.96*verr;
-                            break;
-                            case CurveSettings::eProcess_Declination :
-                                verr = (event->mS_XA95Depth/2.448) / cos(event->mXIncDepth * M_PI /180.);
-                                pt_Y = event->mYDec;
-                                pt_Ymin = event->mYDec - 1.96*verr;
-                                pt_Ymax = event->mYDec + 1.96*verr;
-                                break;
-                            case CurveSettings::eProcess_Field :
-                                pt_Y = event->mZField;
-                                pt_Ymin = event->mZField - 1.96*event->mS_ZField;
-                                pt_Ymax = event->mZField + 1.96*event->mS_ZField;
-                                break;
-                            case CurveSettings::eProcess_Depth :
-                                pt_Y = event->mXIncDepth;
-                                pt_Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
-                                pt_Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
-                                break;
+                    switch (model->mCurveSettings.mProcessType) {
+                    case CurveSettings::eProcess_Inclination :
+                        verr = event->mS_XA95Depth / 2.448;
+                        pt_Y = event->mXIncDepth;
+                        pt_Ymin = event->mXIncDepth - 1.96*verr;
+                        pt_Ymax = event->mXIncDepth + 1.96*verr;
+                        break;
+                    case CurveSettings::eProcess_Declination :
+                        verr = (event->mS_XA95Depth/2.448) / cos(event->mXIncDepth * M_PI /180.);
+                        pt_Y = event->mYDec;
+                        pt_Ymin = event->mYDec - 1.96*verr;
+                        pt_Ymax = event->mYDec + 1.96*verr;
+                        break;
+                    case CurveSettings::eProcess_Field :
+                        pt_Y = event->mZField;
+                        pt_Ymin = event->mZField - 1.96*event->mS_ZField;
+                        pt_Ymax = event->mZField + 1.96*event->mS_ZField;
+                        break;
+                    case CurveSettings::eProcess_Depth :
+                        pt_Y = event->mXIncDepth;
+                        pt_Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
+                        pt_Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
+                        break;
 
-                            case CurveSettings::eProcess_3D:
-                            case CurveSettings::eProcess_2D:
-                            case CurveSettings::eProcess_Univariate :
-                            case CurveSettings::eProcess_Unknwon_Dec:
-                                pt_Y = event->mXIncDepth;
-                                pt_Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
-                                pt_Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
-                                break;
+                    case CurveSettings::eProcess_3D:
+                    case CurveSettings::eProcess_2D:
+                    case CurveSettings::eProcess_Univariate :
+                    case CurveSettings::eProcess_Unknwon_Dec:
+                        pt_Y = event->mXIncDepth;
+                        pt_Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
+                        pt_Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
+                        break;
 
-                            case CurveSettings::eProcess_Spherical:
-                            case CurveSettings::eProcess_Vector:
-                                verr = event->mS_XA95Depth / 2.448;
-                                pt_Y = event->mXIncDepth;
-                                pt_Ymin = event->mXIncDepth - 1.96*verr;
-                                pt_Ymax = event->mXIncDepth + 1.96*verr;
-                            break;
+                    case CurveSettings::eProcess_Spherical:
+                    case CurveSettings::eProcess_Vector:
+                        verr = event->mS_XA95Depth / 2.448;
+                        pt_Y = event->mXIncDepth;
+                        pt_Ymin = event->mXIncDepth - 1.96*verr;
+                        pt_Ymax = event->mXIncDepth + 1.96*verr;
+                        break;
 
-                            case CurveSettings::eProcess_None:
-                            default:
-                                break;
+                    case CurveSettings::eProcess_None:
+                    default:
+                        break;
 
-                    }
+                }
                     evPts.color = event->mColor;
 
                     // Set X = time
@@ -2201,6 +2201,8 @@ void ResultsView::createByCurveGraph()
 
                         evPts.Xmin = static_cast<Bound*>(event)->mFixed;
                         evPts.Xmax = static_cast<Bound*>(event)->mFixed;
+                        evPts.Ymin = pt_Y;
+                        evPts.Ymax = pt_Y;
                         evPts.type = CurveRefPts::ePoint;
                         evPts.color = event->mColor;
                         evPts.comment = event->mName;
@@ -2251,7 +2253,7 @@ void ResultsView::createByCurveGraph()
         } else if (mMainVariable == GraphViewResults::eGS) {
             graphX->setTitle(curveTitleX + " " + accelarationText);
 
-         } else {
+        } else {
             graphX->setTitle(curveTitleX);
         }
 

@@ -153,6 +153,14 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
                                                                             Qt::SolidLine,
                                                                             Qt::NoBrush);
                     mGraph->add_curve(curvePostDistribChain);
+
+                    const GraphCurve &curveWiggle = densityCurve(mDate->mWiggle.histoForChain(i),
+                                                                 "Wiggle Post Distrib Chain " + QString::number(i),
+                                                                 Painting::chainColors.at(i),
+                                                                 Qt::DashLine,
+                                                                 Qt::NoBrush);
+                    mGraph->add_curve(curveWiggle);
+
                 }
 
             // HPD All Chains
@@ -171,13 +179,26 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
                                                          Qt::NoBrush);
             mGraph->add_curve(curveCalib);
 
-            // Wiggle
-            const GraphCurve &curveWiggle = densityCurve(mDate->mWiggle.fullHisto(),
-                                                          "Wiggle",
+            // ---- Wiggle
+
+            //  Post Distrib All Chains
+            const GraphCurve &curveWiggle = densityCurve( mDate->mWiggle.fullHisto(),
+                                                          "Wiggle Post Distrib All Chains",
                                                           mColor,
                                                           Qt::DashLine,
                                                           Qt::NoBrush);
             mGraph->add_curve(curveWiggle);
+
+            // Calibration
+            const QMap<double,double> &formatedWiggle = mDate->getFormatedWiggleCalibToShow();
+
+            const GraphCurve &curveWiggleCal = densityCurve(formatedWiggle,
+                                                        "Wiggle Calibration",
+                                                        QColor(150, 150, 150),
+                                                        Qt::DashLine,
+                                                        Qt::NoBrush);
+            mGraph->add_curve(curveWiggleCal);
+
 
             // Credibility (must be the last created curve because uses yMax!
             GraphCurve curveCred = topLineSection(mDate->mTi.mFormatedCredibility,
@@ -354,16 +375,18 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
          */
         if (variableList.contains(eDataTi)) {
 
-            //const bool showCredibility = true;
             const bool showCalib = variableList.contains(eDataCalibrate);
             const bool showWiggle = variableList.contains(eDataWiggle);
             mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
+            mGraph->setCurveVisible("Wiggle Post Distrib All Chains", mShowAllChains && showWiggle);
             mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
             mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
             mGraph->setCurveVisible("Calibration", showCalib);
-            mGraph->setCurveVisible("Wiggle", showWiggle);
-            for (int i=0; i<mShowChainList.size(); ++i)
+            mGraph->setCurveVisible("Wiggle Calibration", showWiggle && showCalib);
+            for (int i=0; i<mShowChainList.size(); ++i) {
                 mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
+                mGraph->setCurveVisible("Wiggle Post Distrib Chain " + QString::number(i), mShowChainList[i] && showWiggle);
+            }
 
             mGraph->setTipXLab("t");
             mGraph->setYAxisMode(GraphView::eHidden);
@@ -380,8 +403,10 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
          */
         else if (variableList.contains(eSigma)) {
             mGraph->setCurveVisible("Post Distrib all Chains", mShowAllChains);
-            for (int i=0; i<mShowChainList.size(); ++i)
+            for (int i=0; i<mShowChainList.size(); ++i) {
                 mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
+                mGraph->setCurveVisible("Wiggle Post Distrib Chain " + QString::number(i), mShowChainList[i]);
+            }
 
             mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
             mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));

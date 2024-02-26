@@ -109,11 +109,11 @@ void AxisTool::setScaleDivision (const double &major, const int &minorCount)
  * @brief Draw axis on a QPainter, if there is no valueFormatFunc, all number is converted in QString with precision 0, it's meanning only integer
  * @param graduationSize size of the main graduation; if -1 indiquate automatique size according to the font; default = -1
  */
-QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSize, DateConversion valueFormatFunc)
+QList<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSize, DateConversion valueFormatFunc)
 {
     QPen memoPen(p.pen());
     QBrush memoBrush(p.brush());
-    QVector<qreal> linesPos;
+    QList<qreal> linesPos;
 
     QPen pen(p.pen());//Qt::SolidLine);
     mAxisColor = p.pen().color();

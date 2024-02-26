@@ -54,7 +54,7 @@ public:
     void setPhase(Phase* phase);
 
     void generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList);
-    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QVector<variable_t>& showVariableList);
+    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showVariableList);
 
 
 protected:

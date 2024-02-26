@@ -123,15 +123,15 @@ bool PluginGauss::wiggleAllowed() const
 
 MHVariable::SamplerProposal PluginGauss::getDataMethod() const
 {
-    return MHVariable::eMHSymetric;
+    return MHVariable::eMHPrior;
 }
 
 QList<MHVariable::SamplerProposal> PluginGauss::allowedDataMethods() const
 {
     QList<MHVariable::SamplerProposal> methods;
-    methods.append(MHVariable::eMHSymetric);
+    methods.append(MHVariable::eMHPrior);
     methods.append(MHVariable::eInversion);
-    methods.append(MHVariable::eMHSymGaussAdapt);
+    methods.append(MHVariable::eMHAdaptGauss);
     return methods;
 }
 

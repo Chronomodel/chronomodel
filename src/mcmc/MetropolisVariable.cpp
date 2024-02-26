@@ -826,7 +826,7 @@ QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
     }
 
     stream << (quint32) data.mRawTrace->size();
-    for (QVector<double>::const_iterator v = data.mRawTrace->cbegin(); v != data.mRawTrace->cend(); ++v)
+    for (QList<double>::const_iterator v = data.mRawTrace->cbegin(); v != data.mRawTrace->cend(); ++v)
         stream << *v;
 
 

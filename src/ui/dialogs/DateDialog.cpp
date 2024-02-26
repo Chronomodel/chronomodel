@@ -89,9 +89,9 @@ DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, f
 
     mMethodLab = new QLabel(tr("Method"), mAdvancedWidget);
     mMethodCombo = new QComboBox(mAdvancedWidget);
-    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eMHSymetric));
+    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eMHPrior));
     mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eInversion));
-    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eMHSymGaussAdapt));
+    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eMHAdaptGauss));
 
     mWiggleLab = new QLabel(tr("Wiggle Matching"), mAdvancedWidget);
 
@@ -252,13 +252,13 @@ void DateDialog::setForm(PluginFormAbstract* form)
 
             switch (i) {
             case 0 :
-                spTest = MHVariable::eMHSymetric;
+                spTest = MHVariable::eMHPrior;
                 break;
             case 1 :
                 spTest = MHVariable::eInversion;
                 break;
             case 2 :
-                spTest = MHVariable::eMHSymGaussAdapt;
+                spTest = MHVariable::eMHAdaptGauss;
                 break;
             default :
                 spTest = MHVariable::eInversion;
@@ -375,20 +375,20 @@ void DateDialog::setDataMethod(MHVariable::SamplerProposal sp)
 {
     int index;
     switch (sp) {
-    case MHVariable::eMHSymetric :
+    case MHVariable::eMHPrior :
         index = 0;
         break;
     case MHVariable::eInversion:
         index = 1;
         break;
-    case MHVariable::eMHSymGaussAdapt:
+    case MHVariable::eMHAdaptGauss:
         index = 2;
         break;
     // The following cases are not for data Method
     case MHVariable::eFixe:
     case MHVariable::eDoubleExp:
     case MHVariable::eBoxMuller:
-    case MHVariable::eMHAdaptGauss:
+    //case MHVariable::eMHAdaptGauss:
     default:
         index = -1;
         break;
@@ -452,12 +452,12 @@ double DateDialog::getDeltaError() const {return mDeltaErrorEdit->text().toDoubl
 
 MHVariable::SamplerProposal DateDialog::getMethod() const
 {
-    MHVariable::SamplerProposal sampler = MHVariable::eMHSymetric;
+    MHVariable::SamplerProposal sampler = MHVariable::eMHPrior;
     if (mMethodCombo->currentIndex() == 1)
         sampler = MHVariable::eInversion;
 
     else if (mMethodCombo->currentIndex() == 2)
-        sampler = MHVariable::eMHSymGaussAdapt;
+        sampler = MHVariable::eMHAdaptGauss;
 
     return sampler;
 }

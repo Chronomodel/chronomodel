@@ -504,7 +504,7 @@ private:
     //  Useful Variables
     // ----------------------------------------
     GraphViewResults::graph_t mCurrentTypeGraph;
-    QVector<GraphViewResults::variable_t> mCurrentVariableList;
+    QList<GraphViewResults::variable_t> mCurrentVariableList;
     GraphViewResults::variable_t mMainVariable;
     bool mHasPhases;
 

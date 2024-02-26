@@ -1726,10 +1726,10 @@ void Model::generateTempo(size_t gridLength)
        ///# Calculation of the mean and variance
 
         // Variable for Tempo
-        QVector<double> infT;
-        QVector<double> supT;
+        QList<double> infT;
+        QList<double> supT;
 
-        QVector<double> espT;
+        QList<double> espT;
         double pT, eT, vT, infpT;
 
         for (const auto& niT : niTempo) {

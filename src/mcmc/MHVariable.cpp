@@ -43,13 +43,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QDebug>
 
-
+#define FixeStr QObject::tr("Fixed value")
 
 #define MHAdaptGaussStr QObject::tr("Adapt. Gaussian random walk")
 #define BoxMullerStr QObject::tr("Event Prior")
 #define DoubleExpStr QObject::tr("Double-Exponential")
 
-#define MHIndependantStr QObject::tr("Date Prior")
+#define MHDatePriorStr QObject::tr("Date Prior")
 #define InversionStr QObject::tr("Distribution of Calibrated Date")
 #define MHSymGaussAdaptStr QObject::tr("Adapt. Gaussian random walk")
 
@@ -101,7 +101,7 @@ MHVariable::MHVariable( const MHVariable& origin):
     mtmaxUsed = origin.mtmaxUsed;
 
     mAllAccepts.clear();
-    mHistoryAcceptRateMH = new QVector<double>(origin.mHistoryAcceptRateMH->size());
+    mHistoryAcceptRateMH = new QList<double>(origin.mHistoryAcceptRateMH->size());
 }
 
 MHVariable::~MHVariable()
@@ -328,6 +328,9 @@ QString MHVariable::resultsString(const QString &noResultMessage, const QString 
 QString MHVariable::getSamplerProposalText(const MHVariable::SamplerProposal sp)
 {
     switch (sp) {
+    case MHVariable::eFixe:
+        return FixeStr;
+        break;
     // Event
     case MHVariable::eMHAdaptGauss:
         return MHAdaptGaussStr;
@@ -340,16 +343,15 @@ QString MHVariable::getSamplerProposalText(const MHVariable::SamplerProposal sp)
     case MHVariable::eDoubleExp:
         return DoubleExpStr;
         break;
+
     // Data
-    case MHVariable::eMHSymetric:
-        return MHIndependantStr;
-        break;
     case MHVariable::eInversion:
         return InversionStr;
         break;
-    case MHVariable::eMHSymGaussAdapt:
-        return MHSymGaussAdaptStr;
+    case MHVariable::eMHPrior:
+        return MHDatePriorStr;
         break;
+
     default:
         return QObject::tr("Unknown");
         break;
@@ -368,18 +370,17 @@ MHVariable::SamplerProposal MHVariable::getSamplerProposalFromText(const QString
     else if (text == DoubleExpStr)
         return MHVariable::eDoubleExp;
 
-    else  if (text == MHIndependantStr)
-        return MHVariable::eMHSymetric;
-
     else if (text == InversionStr)
         return MHVariable::eInversion;
 
-    else if (text == MHSymGaussAdaptStr)
-        return MHVariable::eMHSymGaussAdapt;
+    else if (text == MHDatePriorStr)
+        return MHVariable::eMHPrior;
 
+    else if (text == FixeStr)
+        return MHVariable::eFixe;
     else {
         // ouch... what to do ???
-        return MHVariable::eMHSymGaussAdapt;
+        return MHVariable::eMHAdaptGauss;
     }
 }
 
@@ -410,7 +411,7 @@ QDataStream &operator>>( QDataStream &stream, MHVariable &data )
     if (data.mHistoryAcceptRateMH)
         data.mHistoryAcceptRateMH->clear();
     else
-        data.mHistoryAcceptRateMH = new QVector<double>();
+        data.mHistoryAcceptRateMH = new QList<double>();
     stream >> *(data.mHistoryAcceptRateMH);
 
     if (!data.mLastAccepts.isEmpty())

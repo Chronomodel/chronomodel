@@ -55,7 +55,7 @@ int GraphViewResults::mHeightForVisibleAxis = int (4 * AppSettings::heigthUnit()
 
 GraphViewResults::GraphViewResults(QWidget *parent):QWidget(parent),
     mCurrentTypeGraph(ePostDistrib),
-    mCurrentVariableList(QVector<variable_t>(eThetaEvent)),
+    mCurrentVariableList(QList<variable_t>(eThetaEvent)),
     mShowAllChains(true),
     mShowVariableList(eThetaEvent),
     mShowNumResults(false),
@@ -270,8 +270,9 @@ void GraphViewResults::resultsToClipboard()
     QClipboard* clipboard = QApplication::clipboard();
     clipboard->setText( mStatArea->toPlainText());
 }
+
 /**
- * @brief Export data from the visible curves, there is two kinds of data in a graphView: mData, QMap type and mDataVector, QVector type
+ * @brief Export data from the visible curves, there is two kinds of data in a graphView: mData, QMap type and mDataVector, QList type
  * @brief So there is two export functon exportCurrentVectorCurves and exportCurrentDensityCurves.
  * @brief In the Posterior Density tab, the Credibility bar is not save
  */

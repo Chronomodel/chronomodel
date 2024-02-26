@@ -760,9 +760,8 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graph1->setOverArrow(GraphView::eNone);
             graph1->setTipXLab("t");
 
-            graph1->autoAdjustYScale(true);
 
-            graph1->setYAxisMode( processType == CurveSettings::eProcess_None ? GraphView::eMinMaxHidden: GraphView::eAllTicks);
+            //graph1->setYAxisMode( GraphView::eAllTicks); // dans ce cas, c'est fait plus bas, car besoin des données
             graph1->showYAxisSubTicks(processType != CurveSettings::eProcess_None);
 
             graph1->setTipYLab(cs.X_short_name());
@@ -970,10 +969,9 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                     if (!subData.isEmpty()) {
 
                         // hpd results
-                        std::map<double, double> mapping;
-                        create_HPD_mapping(subData, mapping, thres);
+                        QList<QPair<double, QPair<double, double> > > intervals;
+                        create_HPD_by_dichotomy(subData, intervals, thres);
 
-                        const QList<QPair<double, QPair<double, double> > > &intervals = intervals_hpd_from_mapping(mapping);
 
                         CurveRefPts::PointType typePts;
                         tmin = intervals.first().second.first;
@@ -1106,24 +1104,37 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
     switch (processType) {
         case CurveSettings::eProcess_Vector:
         case CurveSettings::eProcess_3D:
-            //graphList.append(new GraphTitle(cs.ZLabel(), this));
-
             graph3->set_points(curveDataPointsZ);
             graph3->setTipYLab(cs.Z_short_name());
 
         case CurveSettings::eProcess_Spherical:
         case CurveSettings::eProcess_Unknwon_Dec:
         case CurveSettings::eProcess_2D:
-            //graphList.append(new GraphTitle(cs.YLabel(), this));
             graph2->set_points(curveDataPointsY);
             graph2->setTipYLab(cs.Y_short_name());
 
         default:
-            //graphList.append(new GraphTitle(cs.XLabel(), this));
             graph1->setTipYLab(cs.X_short_name());
             graph1->set_points(curveDataPointsX);
 
-            graph1->setYAxisMode( processType == CurveSettings::eProcess_None ? GraphView::eMinMaxHidden: GraphView::eAllTicks);
+            if (processType == CurveSettings::eProcess_None) {
+                graph1->autoAdjustYScale(false);
+                double Ymin = +INFINITY;
+                double Ymax = -INFINITY;
+                for (const auto &ptX : curveDataPointsX) {
+                    Ymin = std::min(Ymin, ptX.Ymin);
+                    Ymax = std::max(Ymax, ptX.Ymax);
+                }
+                const double min_plot = Ymin - 0.05*(Ymax-Ymin);
+                const double max_plot = Ymax + 0.05*(Ymax-Ymin);
+                graph1->setRangeY(min_plot, max_plot);
+                graph1->setYAxisMode(GraphView::eMinMaxHidden);
+
+            } else {
+                graph1->autoAdjustYScale(true);
+                graph1->setYAxisMode(GraphView::eAllTicks);
+
+            }
             graph1->showYAxisSubTicks(processType != CurveSettings::eProcess_None);
             break;
     }
@@ -2150,28 +2161,29 @@ void MultiCalibrationView::updateGraphsZoom()
             }
 
            if (gr->has_points()) {
+                if (gr->autoAdjustY()) {
+                    double yMin = gr->refPoints.at(0).Ymin;
+                    double yMax = gr->refPoints.at(0).Ymax;
 
-                double yMin = gr->refPoints.at(0).Ymin;
-                double yMax = gr->refPoints.at(0).Ymax;
+                    for (const auto& refP : gr->refPoints) {
+                       yMin = std::min(yMin, refP.Ymin);
+                       yMax = std::max(yMax, refP.Ymax);
+                    }
 
-                for (const auto& refP : gr->refPoints) {
-                    yMin = std::min(yMin, refP.Ymin);
-                    yMax = std::max(yMax, refP.Ymax);
+
+                    Scale yScale;
+                    yScale.findOptimal(yMin, yMax, 7);
+
+                    if (mProject->isCurve()) {
+                        maxYLength = std::max({fm.horizontalAdvance(stringForGraph(yScale.max)),
+                                               fm.horizontalAdvance(stringForGraph(yScale.min)),
+                                               fm.horizontalAdvance(stringForGraph(yScale.min - yScale.mark)),
+                                               fm.horizontalAdvance(stringForGraph(yScale.max + yScale.mark))
+                                              });
+                    }
+
+                    gr->setRangeY(yMin, yMax);
                 }
-
-                Scale yScale;
-                yScale.findOptimal(yMin, yMax, 7);
-
-                if (mProject->isCurve()) {
-                    maxYLength = std::max(fm.horizontalAdvance(stringForGraph(yScale.max)),
-                                          fm.horizontalAdvance(stringForGraph(yScale.min)));
-                    maxYLength = std::max(maxYLength,
-                                          fm.horizontalAdvance(stringForGraph(yScale.min - yScale.mark)));
-                    maxYLength = std::max(maxYLength,
-                                          fm.horizontalAdvance(stringForGraph(yScale.max + yScale.mark)));
-                }
-
-                gr->setRangeY(yMin, yMax);
             }
 
 
@@ -2179,8 +2191,8 @@ void MultiCalibrationView::updateGraphsZoom()
             // ------------------------------------------------------------
             //  Show zones if calibrated data are outside study period
             // ------------------------------------------------------------
-           gr->remove_all_zones();
-           if (mTminDisplay < mSettings.getTminFormated()) {
+            gr->remove_all_zones();
+            if (mTminDisplay < mSettings.getTminFormated()) {
                 GraphZone zone;
                 zone.mXStart = mTminDisplay;
                 zone.mXEnd = mSettings.getTminFormated();
@@ -2189,7 +2201,7 @@ void MultiCalibrationView::updateGraphsZoom()
                 zone.mText = tr("Outside study period");
                 gr->add_zone(zone);
             }
-           if (mTmaxDisplay > mSettings.getTmaxFormated()) {
+            if (mTmaxDisplay > mSettings.getTmaxFormated()) {
                 GraphZone zone;
                 zone.mXStart = mSettings.getTmaxFormated();
                 zone.mXEnd = mTmaxDisplay;
@@ -2199,7 +2211,7 @@ void MultiCalibrationView::updateGraphsZoom()
                 gr->add_zone(zone);
             }
 
-           calibCurve = nullptr;
+            calibCurve = nullptr;
         }
     }
 
@@ -2548,19 +2560,12 @@ void MultiCalibrationView::exportResults()
                             statLine<< csvLocal.toString(results.funcAnalysis.quartiles.Q1) << csvLocal.toString(results.funcAnalysis.quartiles.Q2) << csvLocal.toString(results.funcAnalysis.quartiles.Q3);
 
                             // hpd results
-                            //std::map<double, double> mapping;
-                            //create_HPD_mapping(periodCalib, mapping, mThreshold);
-                            //const QString hpdStr = get_HPD_text_from_mapping(mapping, DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, true);
-
-
                             QList<QPair<double, QPair<double, double> > > formated_intervals;
                             create_HPD_by_dichotomy(periodCalib, formated_intervals, mThreshold);
                             const QString hpdStr = get_HPD_text(formated_intervals, DateUtils::getAppSettingsFormatStr(), DateUtils::convertFromAppSettingsFormat, true);
 
-
-                            int nh = int(hpdStr.count(AppSettings::mCSVCellSeparator));
+                            const int nh = int(hpdStr.count(AppSettings::mCSVCellSeparator));
                             maxHpd = std::max(maxHpd, nh);
-                            //const double realThresh = std::accumulate(mapping.begin(), mapping.end(), 0., [](double sum, std::pair<double, double> p) {return sum + p.second;});
                             const double real_thresh = std::accumulate(formated_intervals.begin(), formated_intervals.end(), 0., [](double sum, QPair<double, QPair<double, double> > p) {return sum + p.first;});
 
                             statLine<< csvLocal.toString(100. *real_thresh, 'f', 1) << hpdStr;
@@ -2587,7 +2592,6 @@ void MultiCalibrationView::exportResults()
         // _____________
 
         saveCsvTo(stats, filePath, csvSep, true);
-
 
     }
 
@@ -2673,6 +2677,7 @@ void MultiCalibrationView::showStat()
                                 // hpd results
                                 QList<QPair<double, QPair<double, double> > > formated_intervals;
                                 create_HPD_by_dichotomy(subData, formated_intervals, mThreshold);
+
                                 const double real_thresh = std::accumulate(formated_intervals.begin(), formated_intervals.end(), 0., [](double sum, QPair<double, QPair<double, double> > p) {return sum + p.first;});
 
                                 resultsStr += + "<br> HPD (" + locale().toString(100. * real_thresh, 'f', 1) + "%) : " + get_HPD_text(formated_intervals, DateUtils::getAppSettingsFormatStr(), nullptr) + "<br>";

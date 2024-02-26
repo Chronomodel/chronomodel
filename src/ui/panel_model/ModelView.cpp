@@ -562,7 +562,7 @@ bool ModelView::findCalibrateMissing()
     * There is no date to calibrate
     */
     if (!Qevents.isEmpty()) {
-        QVector<Event> events;
+        QList<Event> events;
         for (auto&& Qev: Qevents)
             events.append(Event::fromJson(Qev.toObject()));
 
@@ -630,7 +630,7 @@ void ModelView::calibrateAll(StudyPeriodSettings newS)
     */
     if (!Qevents.isEmpty()) {
         mProject->mCalibCurves.clear();
-        QVector<Event> events;
+        QList<Event> events;
         for (auto&& Qev: Qevents)
             events.append(Event::fromJson(Qev.toObject()));
 

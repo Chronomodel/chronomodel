@@ -680,7 +680,7 @@ QList<double> calculRepartition(const QList<double> &calib)
 
 QList<double> calculRepartition(const QMap<double, double>  &calib)
 {
-    QVector<double> repartitionTemp;
+    QList<double> repartitionTemp;
 
     // we use long double type because
     // after several sums, the repartion can be in the double type range
@@ -797,7 +797,7 @@ std::pair<double, double> credibilityForTrace(const QList<int> &trace, double th
 
     if (thresh > 0 && n > 0) {
         double threshold = std::clamp(thresh, 0.0, 100.0);
-        QVector<int> sorted (trace);
+        QList<int> sorted (trace);
         std::sort(sorted.begin(),sorted.end());
 
         size_t numToRemove = (size_t)floor(n * (1. - threshold / 100.));
@@ -959,8 +959,8 @@ std::pair<double, double> transitionRangeFromTraces(const QList<double> &trace1,
 
 /**
  * @brief gapRangeFromTraces find the gap between two traces, if there is no solution corresponding to the threshold, we return a QPair=(-INFINITY,+INFINITY)
- * @param traceBeta QVector of double corresponding to the first trace
- * @param traceAlpha QVector of double corresponding to the second trace
+ * @param traceBeta QList of double corresponding to the first trace
+ * @param traceAlpha QList of double corresponding to the second trace
  * @param thresh Threshold to obtain
  * @param description a simple text
  * @return

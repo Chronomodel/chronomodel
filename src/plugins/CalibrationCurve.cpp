@@ -41,17 +41,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginManager.h"
 
 CalibrationCurve::CalibrationCurve():
-mName(QString("unkown")),
-mDescription(QString("undefined"))
+    mName(QString("unkown")),
+    mDescription(QString("undefined"))
 {
     mPluginId = "";
     mPlugin = nullptr;
-    mRepartition = QVector< double>();
-    mVector = QVector< double>();
+    mRepartition = QList< double>();
+    mVector = QList< double>();
     mMap = QMap<double, double>();
     mTmin = -INFINITY;
     mTmax = +INFINITY;
     mStep = 1.;
+
 }
 
 CalibrationCurve::CalibrationCurve(const CalibrationCurve& other)
@@ -73,8 +74,8 @@ CalibrationCurve::CalibrationCurve(const CalibrationCurve& other)
     mTmin = other.mTmin;
     mTmax = other.mTmax;
     mStep = other.mStep;
-
 }
+
 CalibrationCurve::~CalibrationCurve() noexcept
 {
     mRepartition.clear();
@@ -83,7 +84,6 @@ CalibrationCurve::~CalibrationCurve() noexcept
     mPluginId.clear();
     mPlugin = nullptr;
 }
-
 
 QDataStream &operator<<( QDataStream &stream, const CalibrationCurve &data )
 {
@@ -98,7 +98,6 @@ QDataStream &operator<<( QDataStream &stream, const CalibrationCurve &data )
     stream << data.mPluginId;
 
     return stream;
-
 }
 
 QDataStream &operator>>( QDataStream &stream, CalibrationCurve &data )
@@ -121,5 +120,4 @@ QDataStream &operator>>( QDataStream &stream, CalibrationCurve &data )
         throw QObject::tr("Calibration plugin could not be loaded : invalid plugin : %1").arg(data.mPluginId);
 
     return stream;
-
 }

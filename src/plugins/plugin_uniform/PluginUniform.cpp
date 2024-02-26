@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -47,8 +47,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QJsonObject>
 #include <QtWidgets>
 
-#include <cstdlib>
-#include <iostream>
 
 
 PluginUniform::PluginUniform()
@@ -91,15 +89,15 @@ bool PluginUniform::wiggleAllowed() const
 
 MHVariable::SamplerProposal PluginUniform::getDataMethod() const
 {
-    return MHVariable::eMHSymetric;
+    return MHVariable::eMHPrior;
 }
 
 QList<MHVariable::SamplerProposal> PluginUniform::allowedDataMethods() const
 {
     QList<MHVariable::SamplerProposal> methods;
-    methods.append(MHVariable::eMHSymetric);
+    methods.append(MHVariable::eMHPrior);
     methods.append(MHVariable::eInversion); // since version v3.2.4
-    methods.append(MHVariable::eMHSymGaussAdapt);
+    methods.append(MHVariable::eMHAdaptGauss);
     return methods;
 }
 
@@ -109,7 +107,6 @@ QStringList PluginUniform::csvColumns() const
     cols << "Name" << "Lower date" << "Upper date" <<"";
     return cols;
 }
-
 
 PluginFormAbstract* PluginUniform::getForm()
 {

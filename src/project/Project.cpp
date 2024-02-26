@@ -2078,13 +2078,13 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
             if (date.find(STATE_DATE_METHOD) != date.end()) { // since version 3.0
                 switch (date.value(STATE_DATE_METHOD).toInt()) {
                 case 0 :
-                    date[STATE_DATE_SAMPLER] = MHVariable::eMHSymetric;
+                    date[STATE_DATE_SAMPLER] = MHVariable::eMHPrior;
                     break;
                 case 1 :
                     date[STATE_DATE_SAMPLER] = MHVariable::eInversion;
                     break;
                 case 2:
-                    date[STATE_DATE_SAMPLER] = MHVariable::eMHSymGaussAdapt;
+                    date[STATE_DATE_SAMPLER] = MHVariable::eMHAdaptGauss;
                     break;
 
                 }
@@ -2115,13 +2115,13 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
                 if (subdate.find(STATE_DATE_METHOD) == date.end()) { // since version 3.0
                     switch (subdate.value(STATE_DATE_METHOD).toInt()) {
                     case 0 :
-                        subdate[STATE_DATE_SAMPLER] = MHVariable::eMHSymetric;
+                        subdate[STATE_DATE_SAMPLER] = MHVariable::eMHPrior;
                         break;
                     case 1 :
                         subdate[STATE_DATE_SAMPLER] = MHVariable::eInversion;
                         break;
                     case 2:
-                        subdate[STATE_DATE_SAMPLER] = MHVariable::eMHSymGaussAdapt;
+                        subdate[STATE_DATE_SAMPLER] = MHVariable::eMHAdaptGauss;
                         break;
                     }
 

@@ -73,7 +73,7 @@ void GraphViewS02::resizeEvent(QResizeEvent* )
     updateLayout();
 }
 
-void GraphViewS02::generateCurves(const graph_t typeGraph, const QVector<variable_t> &variableList)
+void GraphViewS02::generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList)
 {
     GraphViewResults::generateCurves(typeGraph, variableList);
     

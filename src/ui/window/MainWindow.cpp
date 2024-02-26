@@ -1089,9 +1089,9 @@ void MainWindow::changeDatesMethod()
                                              opts, 0, false, &ok);
     if (ok) {
         opts.clear();
-        opts.append(MHVariable::getSamplerProposalText(MHVariable::eMHSymetric));
+        opts.append(MHVariable::getSamplerProposalText(MHVariable::eMHPrior));
         opts.append(MHVariable::getSamplerProposalText(MHVariable::eInversion));
-        opts.append(MHVariable::getSamplerProposalText(MHVariable::eMHSymGaussAdapt));
+        opts.append(MHVariable::getSamplerProposalText(MHVariable::eMHAdaptGauss));
 
         QString methodStr = QInputDialog::getItem(qApp->activeWindow(),
                                                   tr("Change Data Method"),

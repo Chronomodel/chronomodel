@@ -147,7 +147,7 @@ protected:
 
     GraphView* mGraph;
     graph_t mCurrentTypeGraph;
-    QVector<variable_t> mCurrentVariableList;
+    QList<variable_t> mCurrentVariableList;
 
     QString mTitle;
 
@@ -155,7 +155,7 @@ protected:
 
     bool mShowAllChains;
     QList<bool> mShowChainList;
-    QVector<variable_t> mShowVariableList;
+    QList<variable_t> mShowVariableList;
 
     bool mShowNumResults;
     bool mIsSelected;

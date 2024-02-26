@@ -182,6 +182,7 @@ QString MCMCLoop::initialize_time()
                     bound->mTheta.mLastAccepts.clear();
                     bound->mTheta.memo(); // non sauvegarder dans Loop.memo()
                     bound->mInitialized = true;
+                    bound->mTheta.mSamplerProposal = MHVariable::eFixe;
 
                 }
                 bound = nullptr;
@@ -297,6 +298,8 @@ QString MCMCLoop::initialize_time()
                     for (Date& date : uEvent->mDates) {
 
                         // 1 - Init ti
+                        bool is_wiggle = date.mWiggleCalibration != nullptr;
+
 
                         const FunctionStat &data = analyseFunction(date.mCalibration->mMap);
                         double sigma = double (data.std);
@@ -304,8 +307,12 @@ QString MCMCLoop::initialize_time()
                         if (sigma == 0.)
                             return "sigma == 0";
 #endif
+                        if (is_wiggle) {
+                            const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mWiggleCalibration->mRepartition);
+                            date.mTi.mX = date.mWiggleCalibration->mTmin + idx * date.mWiggleCalibration->mStep;
+                            // modif du 2021-06-16 pHd
 
-                        if (!date.mCalibration->mRepartition.isEmpty()) {
+                        } else if (!date.mCalibration->mRepartition.isEmpty()) {
                             const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mCalibration->mRepartition);
                             date.mTi.mX = date.mCalibration->mTmin + idx * date.mCalibration->mStep;
                             // modif du 2021-06-16 pHd
@@ -321,8 +328,8 @@ QString MCMCLoop::initialize_time()
                                 date.mTi.mX = tmaxPeriod + u;
 
                             if (date.mTi.mSamplerProposal == MHVariable::eInversion) {
-                                qDebug()<<"Automatic sampling method exchange eInversion to eMHSymetric for"<< date.mName;
-                                date.mTi.mSamplerProposal = MHVariable::eMHSymetric;
+                                qDebug()<<"Automatic sampling method exchange eInversion to eMHPrior for"<< date.mName;
+                                date.mTi.mSamplerProposal = MHVariable::eMHPrior;
                                 date.autoSetTiSampler(true);
                             }
 

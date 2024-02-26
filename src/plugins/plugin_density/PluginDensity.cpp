@@ -112,9 +112,9 @@ MHVariable::SamplerProposal PluginDensity::getDataMethod() const
 QList<MHVariable::SamplerProposal> PluginDensity::allowedDataMethods() const
 {
     QList<MHVariable::SamplerProposal> methods;
-    methods.append(MHVariable::eMHSymetric);
+    methods.append(MHVariable::eMHPrior);
     methods.append(MHVariable::eInversion);
-    methods.append(MHVariable::eMHSymGaussAdapt);
+    methods.append(MHVariable::eMHAdaptGauss);
     return methods;
 }
 

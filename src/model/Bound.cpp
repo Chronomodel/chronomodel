@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -51,7 +51,7 @@ Bound::Bound(std::shared_ptr<Model> model):
 {
     mType = eBound;
     mPointType = ePoint;
-    mTheta.mSamplerProposal= MHVariable::eFixe;
+    mTheta.mSamplerProposal = MHVariable::eFixe;
     mTheta.mSigmaMH = 1.;
     mS02Theta.mSamplerProposal = MHVariable::eFixe;
 }

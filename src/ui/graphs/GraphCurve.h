@@ -119,7 +119,7 @@ public:
 
     bool mIsRectFromZero; // draw a vertical line when graph value leaves 0 : usefull for HPD and Unif, Typo!
 
-    QVector<type_data> mDataVector;
+    QList<type_data> mDataVector;
     type_data mHorizontalValue;
     type_data mVerticalValue;
 

@@ -355,13 +355,27 @@ void CalibrationView::updateGraphs()
             mHPDEdit->setText(input);
 
             // hpd results
-            const double thresh = std::clamp(locale().toDouble(input), 0., 100.);
-            // do QMap<type_data, type_data> mData; to calcul HPD on study Period
             QMap<type_data, type_data> periodCalib = getMapDataInRange(mDate.getFormatedCalibMap(), mSettings.getTminFormated(), mSettings.getTmaxFormated());
             periodCalib = equal_areas(periodCalib, 1.);
-
+            QMap<double, double> hpd;
             QList<QPair<double, QPair<double, double> > > formated_intervals;
-            const QMap<double, double> hpd = QMap<double, double>(create_HPD_by_dichotomy(periodCalib, formated_intervals, thresh));
+            const double thresh = std::clamp(locale().toDouble(input), 0., 100.);
+
+            if (thresh>(100. - 2*mDate.threshold_limit)) {
+                // Dans le cas des unif, ou des calibrations d'une longueur de moins de 10, il n'y a pas de réduction de support pour la calibré (voir Date::calibrate)
+                hpd = getMapDataInRange(mDate.getFormatedCalibMap(), mSettings.getTminFormated(), mSettings.getTmaxFormated());
+
+                if (periodCalib.size()<10)
+                    formated_intervals.append(qMakePair(1., qMakePair(periodCalib.firstKey(), periodCalib.lastKey() ) ));
+                else
+                    formated_intervals.append(qMakePair(1.- 2*mDate.threshold_limit, qMakePair(periodCalib.firstKey(), periodCalib.lastKey() ) ));
+
+            } else {
+                // do QMap<type_data, type_data> mData; to calcul HPD on study Period
+                hpd = QMap<double, double>(create_HPD_by_dichotomy(periodCalib, formated_intervals, thresh));
+
+            }
+
 
             if (!hpd.isEmpty()) {
                 GraphCurve hpdCurve;
@@ -462,7 +476,7 @@ void CalibrationView::updateGraphs()
 
             } else {
                 mDrawing->setRefTitle(tr("Overlay densities"));
-                QVector<QString> subDatesName;
+                QList<QString> subDatesName;
                 for (auto&& d : mDate.mSubDates) {
                     if (d.toObject().value(STATE_DATE_DELTA_TYPE).toInt() == Date::eDeltaNone)
                         subDatesName.append(d.toObject().value(STATE_NAME).toString());

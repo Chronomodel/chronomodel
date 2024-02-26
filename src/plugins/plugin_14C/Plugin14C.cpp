@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -41,20 +41,17 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #if USE_PLUGIN_14C
 
 #include "QtUtilities.h"
-#include "StdUtilities.h"
 #include "Plugin14CForm.h"
 #include "Plugin14CRefView.h"
 #include "Plugin14CSettingsView.h"
 #include "Generator.h"
 
 #include <cstdlib>
-#include <iostream>
 #include <QJsonObject>
 #include <QtWidgets>
 
 
 Plugin14C::Plugin14C()
-
 {
     mColor = QColor(47, 46, 68);
     mRefGraph = nullptr;
@@ -123,9 +120,9 @@ MHVariable::SamplerProposal Plugin14C::getDataMethod() const
 QList<MHVariable::SamplerProposal> Plugin14C::allowedDataMethods() const
 {
     QList<MHVariable::SamplerProposal> methods;
-    methods.append(MHVariable::eMHSymetric);
+    methods.append(MHVariable::eMHPrior);
     methods.append(MHVariable::eInversion);
-    methods.append(MHVariable::eMHSymGaussAdapt);
+    methods.append(MHVariable::eMHAdaptGauss);
     return methods;
 }
 

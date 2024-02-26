@@ -410,7 +410,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
 
 }
 
-void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QVector<variable_t>& showVariableList)
+void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showVariableList)
 {
     Q_ASSERT(mPhase);
     GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showVariableList);

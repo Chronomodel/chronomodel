@@ -266,7 +266,7 @@ bool MCMCLoopChrono::adapt(const int batchIndex) //original code
        for (auto& date : event->mDates) {
 
             //--------------------- Adapt Sigma MH de t_i -----------------------------------------
-            if (date.mTi.mSamplerProposal == MHVariable::eMHSymGaussAdapt)
+            if (date.mTi.mSamplerProposal == MHVariable::eMHAdaptGauss)
                 noAdapt = date.mTi.adapt(taux_min, taux_max, delta) && noAdapt;
 
             //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------

@@ -108,7 +108,7 @@ signals:
 private:
     QScrollBar* mScrollBar;
     AxisTool mAxisTool;
-    QVector<RulerArea> mAreas;
+    QList<RulerArea> mAreas;
     
     QFont mAxisFont;
     QRectF mAxisRect;

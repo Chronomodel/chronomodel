@@ -64,7 +64,7 @@ QList<QList<Event*> > ModelUtilities::getNextBranches(const QList<Event*> &curBr
     QList<EventConstraint*> &cts = lastNode->mConstraintsFwd;
     if (cts.size() > 0) {
         for (auto& ct : cts) {
-            QVector<Event*> branch = curBranch;
+            QList<Event*> branch = curBranch;
             Event* newNode = ct->mEventTo;
 
             if (newNode->mLevel <= lastNode->mLevel)
@@ -72,7 +72,7 @@ QList<QList<Event*> > ModelUtilities::getNextBranches(const QList<Event*> &curBr
 
             if (!branch.contains(newNode)) {
                 branch.append(newNode);
-                QVector<QVector<Event*> > nextBranches = getNextBranches(branch, ct->mEventTo);
+                QList<QList<Event*> > nextBranches = getNextBranches(branch, ct->mEventTo);
 
                 for (auto& nb : nextBranches)
                     branches.append(nb);
@@ -101,7 +101,7 @@ QList<QList<Event*> > ModelUtilities::getBranchesFromEvent(Event* start)
     start->mLevel = 0;
     startBranch.append(start);
 
-    QVector<QVector<Event*> > nextBranches;
+    QList<QList<Event*> > nextBranches;
     try {
         nextBranches = getNextBranches(startBranch, start);
     } catch(QString error){
@@ -155,7 +155,7 @@ QList<QList<Phase*> > ModelUtilities::getNextBranches(const QList<Phase*> &curBr
     QList<PhaseConstraint*> &cts = lastNode->mConstraintsNextPhases;
     if (cts.size() > 0) {
         for (auto& ct : cts) {
-            QVector<Phase*> branch = curBranch;
+            QList<Phase*> branch = curBranch;
             Phase* newNode = ct->mPhaseTo;
 
             double gamma = gammaSum;
@@ -171,7 +171,7 @@ QList<QList<Phase*> > ModelUtilities::getNextBranches(const QList<Phase*> &curBr
 
                 if (!branch.contains(newNode)) {
                     branch.append(newNode);
-                    QVector<QVector<Phase*> > nextBranches = getNextBranches(branch, ct->mPhaseTo, gamma, maxLength);
+                    QList<QList<Phase*> > nextBranches = getNextBranches(branch, ct->mPhaseTo, gamma, maxLength);
                     for (auto& nb : nextBranches)
                         branches.append(nb);
                 }
@@ -233,7 +233,7 @@ QList<QList<Phase*> > ModelUtilities::getAllPhasesBranches(const QList<Phase*>& 
 
     try {
             for (auto& s : starts) {
-                const QVector<QVector<Phase*> > &phaseBranches = getBranchesFromPhase(s, maxLength);
+                const QList<QList<Phase*> > &phaseBranches = getBranchesFromPhase(s, maxLength);
                 for (auto& pb : phaseBranches) {
                     branches.append(pb);
                 }
@@ -542,7 +542,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
 
             HTMLText += line(textBold(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j), QString::number(event->mDates.size()), date.mName))));
             HTMLText += line(textBlack(QObject::tr(" - ti : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(date.mTi.mX), DateUtils::getAppSettingsFormatStr())));
-            if (date.mTi.mSamplerProposal == MHVariable::eMHSymGaussAdapt) {
+            if (date.mTi.mSamplerProposal == MHVariable::eMHPrior) {
                 if (date.mTi.mLastAccepts.size()>2) {
                     const auto acceptRate = date.mTi.getCurrentAcceptRate();
                     const auto samplerType = date.mTi.mSamplerProposal;

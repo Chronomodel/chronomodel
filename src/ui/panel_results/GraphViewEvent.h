@@ -53,7 +53,7 @@ public:
 
     void setEvent(Event *event);
 
-    void generateCurves(const graph_t typeGraph, const QVector<variable_t>& variableList);
+    void generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList);
     void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showVariableList);
 
 protected:

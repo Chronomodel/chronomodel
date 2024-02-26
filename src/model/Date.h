@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -109,7 +109,7 @@ public:
     QJsonArray mSubDates;
     double mMixingLevel;
 
-   // double xi_current; // experimental
+    constexpr static const double threshold_limit = 0.00001;
 
 public:
 
@@ -157,7 +157,7 @@ public:
     const QMap<double, double> &getRawCalibMap() const ;
     inline const QMap<double, double> &getRawWiggleCalibMap() const;
 
-    QVector<double> getFormatedRepartition() const;
+    QList<double> getFormatedRepartition() const;
 
     QPixmap generateCalibThumb(StudyPeriodSettings settings);
     QPixmap generateUnifThumb(StudyPeriodSettings settings);
@@ -197,13 +197,15 @@ public:
 
     double fProposalDensity(const double t, const double t0);
 
-    void fMHSymetric(Event* event);
-    void fInversion(Event* event);
-    void fMHSymGaussAdapt(Event *event);
+    // List of samplingFunction
+    void Prior(Event* event);//fMHSymetric(Event* event);
+    void Inversion(Event* event);
 
-    void fMHSymetricWithArg(Event *event);
-    void fMHSymGaussAdaptWithArg(Event* event);
-    void fInversionWithArg(Event* event);
+    void MHAdaptGauss(Event* event);//void fMHSymGaussAdapt(Event *event);
+
+    void PriorWithArg(Event* event);//fMHSymetricWithArg(Event *event);
+    void MHAdaptGaussWithArg(Event* event);//void fMHSymGaussAdaptWithArg(Event* event);
+    void InversionWithArg(Event* event);
 
     typedef void (Date::*samplingFunction)(Event* event);
 
@@ -212,7 +214,6 @@ protected:
     double mTmaxRefCurve;
 
     samplingFunction updateti;
-
 
 };
 

@@ -52,9 +52,9 @@ public:
         eBoxMuller = 1,
         eMHAdaptGauss = 2,
         // Data
-        eMHSymetric = 3,
+        eMHPrior = 3,
         eInversion = 4,
-        eMHSymGaussAdapt = 5
+        //eMHSymGaussAdapt = 5
     };
 
     MHVariable();

@@ -207,7 +207,7 @@ QString MCMCLoopCurve::initialize_321()
 
     if (mCurveSettings.mUseVarianceIndividual && mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
         for (Event* ev : allEvents) {
-            if (mModel->is_curve) {
+            if (mModel->is_curve && ev->mTheta.mSamplerProposal!= MHVariable::eFixe) {
                 ev->mTheta.mSamplerProposal = MHVariable::eMHAdaptGauss;
             }
             if (ev->mPointType == Event::eNode)
@@ -219,7 +219,7 @@ QString MCMCLoopCurve::initialize_321()
         }
     } else {
         for (Event* ev : allEvents) {
-            if (mModel->is_curve) {
+            if (mModel->is_curve && ev->mTheta.mSamplerProposal!= MHVariable::eFixe) {
                 ev->mTheta.mSamplerProposal = MHVariable::eMHAdaptGauss;
             }
             mPointEvent.push_back(ev);
@@ -628,7 +628,7 @@ QString MCMCLoopCurve::initialize_400()
 
     if (mCurveSettings.mUseVarianceIndividual && mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
         for (Event* ev : allEvents) {
-            if (mModel->is_curve) {
+            if (mModel->is_curve && ev->mTheta.mSamplerProposal!= MHVariable::eFixe) {
                 ev->mTheta.mSamplerProposal = MHVariable::eDoubleExp;
             }
             if (ev->mPointType == Event::eNode)
@@ -1064,7 +1064,7 @@ QString MCMCLoopCurve::initialize_401()
 
     if (mCurveSettings.mUseVarianceIndividual && mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
         for (Event* ev : allEvents) {
-            if (mModel->is_curve) {
+            if (mModel->is_curve && ev->mTheta.mSamplerProposal!= MHVariable::eFixe) {
                 ev->mTheta.mSamplerProposal = MHVariable::eDoubleExp;
             }
             if (ev->mPointType == Event::eNode)
@@ -4731,7 +4731,7 @@ bool MCMCLoopCurve::adapt(const int batchIndex)
     for (auto& event : mModel->mEvents) {
         for (auto& date : event->mDates) {
             //--------------------- Adapt Sigma MH de t_i -----------------------------------------
-            if (date.mTi.mSamplerProposal == MHVariable::eMHSymGaussAdapt)
+            if (date.mTi.mSamplerProposal == MHVariable::eMHAdaptGauss)
                 noAdapt &= date.mTi.adapt(taux_min, taux_max, delta);
 
             //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------

@@ -80,7 +80,7 @@ void GraphViewEvent::resizeEvent(QResizeEvent* )
     updateLayout();
 }
 
-void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variable_t> &variableList)
+void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable_t> &variableList)
 {
     GraphViewResults::generateCurves(typeGraph, variableList);
 
@@ -386,7 +386,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QVector<variab
 
 }
 
-void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QVector<variable_t>& showVariableList)
+void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showVariableList)
 {
     Q_ASSERT(mEvent);
     GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showVariableList);

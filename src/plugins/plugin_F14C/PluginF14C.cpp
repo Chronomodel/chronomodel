@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -50,8 +50,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 
 #include <cstdlib>
-#include <iostream>
-
 
 
 PluginF14C::PluginF14C()
@@ -118,9 +116,9 @@ MHVariable::SamplerProposal PluginF14C::getDataMethod() const
 QList<MHVariable::SamplerProposal> PluginF14C::allowedDataMethods() const
 {
     QList<MHVariable::SamplerProposal> methods;
-    methods.append(MHVariable::eMHSymetric);
+    methods.append(MHVariable::eMHPrior);
     methods.append(MHVariable::eInversion);
-    methods.append(MHVariable::eMHSymGaussAdapt);
+    methods.append(MHVariable::eMHAdaptGauss);
     return methods;
 }
 

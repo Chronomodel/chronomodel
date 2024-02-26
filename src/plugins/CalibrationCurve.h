@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -61,6 +61,7 @@ public:
     double mTmin;
     double mTmax;
     double mStep;
+
 public:
     /** Default constructor */
     CalibrationCurve();

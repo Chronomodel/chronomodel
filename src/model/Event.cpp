@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -57,11 +57,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QJsonObject>
 
 
-//Event::Event(const Model *model):
 Event::Event(std::shared_ptr<Model> model):
     mType (eDefault),
     mId (0),
-    //mModel (model),
     mName ("no Event Name"),
     mIsCurrent (false),
     mIsSelected (false),
@@ -133,7 +131,7 @@ Event::Event (const QJsonObject &json, std::shared_ptr<Model> model):
     mColor = QColor(json.value(STATE_COLOR_RED).toInt(),
                           json.value(STATE_COLOR_GREEN).toInt(),
                           json.value(STATE_COLOR_BLUE).toInt());
-    //event.mMethod = Method (json.value(STATE_EVENT_METHOD).toInt());
+
     mItemX = json.value(STATE_ITEM_X).toDouble();
     mItemY = json.value(STATE_ITEM_Y).toDouble();
     mIsSelected = json.value(STATE_IS_SELECTED).toBool();
@@ -191,7 +189,7 @@ void Event::copyFrom(const Event& event)
     mType = event.mType;
     mId = event.mId;
     mName = event.mName;
-    //mMethod = event.mMethod;
+
     mColor = event.mColor;
 
     mIsNode = event.mIsNode;
@@ -235,8 +233,6 @@ void Event::copyFrom(const Event& event)
     mConstraintsFwd = event.mConstraintsFwd;
     mConstraintsBwd = event.mConstraintsBwd;
 
-    //mMixingLevel = event.mMixingLevel;
-    
     // Valeurs entrées par l'utilisateur
     mXIncDepth = event.mXIncDepth;
     mYDec = event.mYDec;
@@ -299,7 +295,7 @@ Event Event::fromJson(const QJsonObject& json)
     event.mColor = QColor(json.value(STATE_COLOR_RED).toInt(),
                           json.value(STATE_COLOR_GREEN).toInt(),
                           json.value(STATE_COLOR_BLUE).toInt());
-    //event.mMethod = Method (json.value(STATE_EVENT_METHOD).toInt());
+
     event.mItemX = json.value(STATE_ITEM_X).toDouble();
     event.mItemY = json.value(STATE_ITEM_Y).toDouble();
     event.mIsSelected = json.value(STATE_IS_SELECTED).toBool();
@@ -329,12 +325,10 @@ Event Event::fromJson(const QJsonObject& json)
     event.mS_ZField = json.value(STATE_EVENT_SZ_SF).toDouble();
 
     const QJsonArray dates = json.value(STATE_EVENT_DATES).toArray();
-    //Date dat;
+
     for (auto&& date : dates) {
-        Date dat;
-        dat.fromJson(date.toObject());
+        Date dat (date.toObject(), &event);
         dat.autoSetTiSampler(true); // must be after fromJson()
-        //dat.mMixingLevel = event.mMixingLevel;
 
         if (!dat.isNull())
             event.mDates.append(dat);
@@ -349,49 +343,49 @@ Event Event::fromJson(const QJsonObject& json)
 
 QJsonObject Event::toJson() const
 {
-    QJsonObject event;
+    QJsonObject json;
 
-    event[STATE_EVENT_TYPE] = mType;
-    event[STATE_ID] = mId;
-    event[STATE_NAME] = mName;
-    event[STATE_COLOR_RED] = mColor.red();
-    event[STATE_COLOR_GREEN] = mColor.green();
-    event[STATE_COLOR_BLUE] = mColor.blue();
-    event[STATE_EVENT_SAMPLER] = mTheta.mSamplerProposal;
-    event[STATE_EVENT_SAMPLER] = mTheta.mSamplerProposal;
+    json[STATE_EVENT_TYPE] = mType;
+    json[STATE_ID] = mId;
+    json[STATE_NAME] = mName;
+    json[STATE_COLOR_RED] = mColor.red();
+    json[STATE_COLOR_GREEN] = mColor.green();
+    json[STATE_COLOR_BLUE] = mColor.blue();
+    json[STATE_EVENT_SAMPLER] = mTheta.mSamplerProposal;
+    json[STATE_EVENT_SAMPLER] = mTheta.mSamplerProposal;
 
-    event[STATE_ITEM_X] = mItemX;
-    event[STATE_ITEM_Y] = mItemY;
-    event[STATE_IS_SELECTED] = mIsSelected;
-    event[STATE_IS_CURRENT] = mIsCurrent;
+    json[STATE_ITEM_X] = mItemX;
+    json[STATE_ITEM_Y] = mItemY;
+    json[STATE_IS_SELECTED] = mIsSelected;
+    json[STATE_IS_CURRENT] = mIsCurrent;
 
-    event[STATE_EVENT_POINT_TYPE] = mPointType;
-    event[STATE_EVENT_X_INC_DEPTH] = mXIncDepth;
-    event[STATE_EVENT_Y_DEC] = mYDec;
-    event[STATE_EVENT_Z_F] = mZField;
-    event[STATE_EVENT_SX_ALPHA95_SDEPTH] = mS_XA95Depth;
-    event[STATE_EVENT_SY] = mS_Y;
-    event[STATE_EVENT_SZ_SF] = mS_ZField;
+    json[STATE_EVENT_POINT_TYPE] = mPointType;
+    json[STATE_EVENT_X_INC_DEPTH] = mXIncDepth;
+    json[STATE_EVENT_Y_DEC] = mYDec;
+    json[STATE_EVENT_Z_F] = mZField;
+    json[STATE_EVENT_SX_ALPHA95_SDEPTH] = mS_XA95Depth;
+    json[STATE_EVENT_SY] = mS_Y;
+    json[STATE_EVENT_SZ_SF] = mS_ZField;
 
     QString eventIdsStr;
     if (mPhasesIds.size() > 0) {
-        QVector<QString> eventIds;
+        QList<QString> eventIds;
         for (auto &pId : mPhasesIds)
             eventIds.append(QString::number(pId));
         eventIdsStr = eventIds.join(",");
     }
-    event[STATE_EVENT_PHASE_IDS] = eventIdsStr;
+    json[STATE_EVENT_PHASE_IDS] = eventIdsStr;
 
     QJsonArray dates;
     for (auto & d : mDates) {
         dates.append(d.toJson());
     }
-    event[STATE_EVENT_DATES] = dates;
+    json[STATE_EVENT_DATES] = dates;
 
-    return event;
+    return json;
 }
 
-void Event::setCurveCsvDataToJsonEvent(QJsonObject& event, const QMap<QString, double>& CurveData)
+void Event::setCurveCsvDataToJsonEvent(QJsonObject &event, const QMap<QString, double>& CurveData)
 {
     QMap<QString, double>::const_iterator i;
     
@@ -426,12 +420,12 @@ void Event::setCurveCsvDataToJsonEvent(QJsonObject& event, const QMap<QString, d
 QString Event::curveDescriptionFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType)
 {
     QString curveDescription = "";
-    double xIncDepth = event.value(STATE_EVENT_X_INC_DEPTH).toDouble();
-    double s_XA95Depth = event.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble();
-    double yDec = event.value(STATE_EVENT_Y_DEC).toDouble();
-    double s_Y = event.value(STATE_EVENT_SY).toDouble();
-    double zField = event.value(STATE_EVENT_Z_F).toDouble();
-    double s_ZField = event.value(STATE_EVENT_SZ_SF).toDouble();
+    const double xIncDepth = event.value(STATE_EVENT_X_INC_DEPTH).toDouble();
+    const double s_XA95Depth = event.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble();
+    const double yDec = event.value(STATE_EVENT_Y_DEC).toDouble();
+    const double s_Y = event.value(STATE_EVENT_SY).toDouble();
+    const double zField = event.value(STATE_EVENT_Z_F).toDouble();
+    const double s_ZField = event.value(STATE_EVENT_SZ_SF).toDouble();
 
     switch (processType) {
         case CurveSettings::eProcess_Univariate:
@@ -546,123 +540,13 @@ void Event::reset()
     mThetaNode = HUGE_VAL;//__builtin_inf();//INFINITY;
 }
 
-/*
-bool Event::getThetaMinPossible(const Event* originEvent, QString& circularEventName, const QList<Event*> &startEvents, QString& linkStr)
-{
-    QList<Event*> newStartEvents = startEvents;
-    newStartEvents.append(this);
-
-    if (linkStr.isEmpty())
-        linkStr = " ➡︎ ";
-
-    QString parallelStr  (" | ");
-    QString serieStr  (" ➡︎ ");
-
-    QString startList;
-    for (const Event* e : newStartEvents)
-        startList += e->mName + linkStr;
-
-    //qDebug() << mName << "startList" << startList;
-
-    if (mNodeInitialized)
-        return true;
-
-    // list of phase under
-    bool noPhaseBwd (true);
-    if (!mPhases.isEmpty())
-        for (const Phase* phase : mPhases)
-            noPhaseBwd = noPhaseBwd && (phase->mConstraintsPrevPhases.isEmpty());
-
-    //--
-    // L'Event appartient à une ou plusieurs phases.
-    // Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
-    // Il faut s'assurer d'être au-dessus du plus grand theta de la phase moins la durée
-    // (on utilise la valeur courante de la durée pour cela, puisqu'elle est échantillonnée ou fixée)
-
-
-
-
-    if (noPhaseBwd && mConstraintsBwd.isEmpty()) {
-        mNodeInitialized = true;
-        return true;
-    }
-
-    else {
-        // Check constraints in Events Scene
-        if (!mConstraintsBwd.isEmpty())
-            for (auto&& constBwd : mConstraintsBwd) {
-                if (constBwd->mEventFrom != originEvent ) {
-                     const bool maxThetaOk = (constBwd->mEventFrom)->getThetaMinPossible (originEvent, circularEventName, newStartEvents, serieStr);
-                     if ( !maxThetaOk) {
-                         circularEventName =  serieStr + constBwd->mEventFrom->mName +  circularEventName ;
-                         return false;
-                    }
-
-                } else {
-                    circularEventName = serieStr + constBwd->mEventFrom->mName + " ?";
-                    return false;
-                }
-            }
-
-
-
-        if (!noPhaseBwd) {
-            // Check constraints in Phases Scene
-            for (auto&& phase : mPhases) {
-                if (!phase->mConstraintsPrevPhases.isEmpty()) {
-                    for (auto&& phaseBwd : phase->mConstraintsPrevPhases) {
-                        for (auto&& eventPhaseBwd : phaseBwd->mPhaseFrom->mEvents) {
-                            if (eventPhaseBwd != originEvent ) {
-                                const bool tMinRecOk = eventPhaseBwd->getThetaMinPossible ( originEvent, circularEventName, newStartEvents, serieStr);
-                                if (!tMinRecOk) {
-                                    circularEventName = serieStr + eventPhaseBwd->mName +  circularEventName ;
-                                    return false;
-                                }
-
-
-                            } else {
-                                circularEventName = serieStr + eventPhaseBwd->mName + " !";
-                                //circularEventName = startList + eventPhaseBwd->mName + " ?";
-                                return false;
-                            }
-                        }
-
-                    }
-                 }
-            }
-        }
-
-        // Check parallel constraints with the Events in the same phases
-
-        for (auto&& phase : mPhases) {
-                for (auto&& event : phase->mEvents) {
-                    if (!newStartEvents.contains (event)) {
-                           const bool thetaOk = event->getThetaMinPossible (originEvent, circularEventName, newStartEvents, parallelStr);
-                           if ( !thetaOk) {
-                               circularEventName = parallelStr + event->mName +  circularEventName ;
-                               return false;
-                           }
-
-                    }
-
-                }
-        }
-
-        mNodeInitialized = true;
-        return true;
-    }
-
-
-}
-*/
-
 
 /**
  * @brief Event::getThetaMaxPossible
  * Vérifie si l'initialisation est possible, controle la circularité,
  * Utilisé lors de l'initialisation pour controler la circularité, Ne controle pas les durées (tau), ni les hiatus (gamma)
  * @param originEvent
- * @param circularEventName
+ * @param circularEventName indique le chemin en cas de circularité
  * @param startEvents
  * @return
  */
@@ -1101,32 +985,8 @@ double Event::getThetaMinRecursive_v3(const double defaultValue, const QList<Eve
             }
         }
 
-        // 3 - Si dans la phase, il y a des Events non initialisés. Il faut considèrer qu'ils sont identiques et descendre aussi leurs contraintes
-    /*    double max_theta_friend_strati = defaultValue;
-        if (!mPhases.isEmpty()) {
-            for (const auto& phase : mPhases) {
-                for (auto th_friend : phase->mEvents) {
-                    // teste si l'event n'est pas au dessus !
 
-                    if (th_friend->mInitialized == false && th_friend != this) {
-                        //bool friend_is_under = this->is_direct_older(*th_friend);
-                        // Je regarde les contraintes en dessous des freres, il ne faut pas que le frere soit au dessus
-                        //bool friend_is_under = th_friend->is_direct_younger(*this); // is_direct_younger ::vrai si origin est avant Event
-                        bool friend_is_under = !this->is_direct_older(*th_friend);
-                        //qDebug()<<"min recursive fiend="<<th_friend->mName<<" this="<<this->mName<<" je fais"<<friend_is_under;
-                        if (friend_is_under) {
-                            for (auto&& constBwd : th_friend->mConstraintsBwd) {
-                                if (!startEvents.contains(constBwd->mEventFrom)) {
-                                    max_theta_friend_strati = std::max(max_theta_friend_strati, constBwd->mEventFrom->getThetaMinRecursive_v3(defaultValue, newStartEvents));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-*/
-        // 4 - Si dans la phase, il y a des Events initialisés. voir la contrainte de durée
+        // 3 - Si dans une phase avec durée, il y a des Events initialisés. voir la contrainte de durée
         double max_tau_phases = defaultValue;
         if (!mPhases.isEmpty()) {
             // C'est la date max-tau
@@ -1158,7 +1018,6 @@ double Event::getThetaMinRecursive_v3(const double defaultValue, const QList<Eve
         }
 
         mIsNode = true;
-        //mTheta.mX = std::max({max_theta_strati, max_theta_phase_strati, max_theta_friend_strati, max_tau_phases});
         mTheta.mX = std::max({max_theta_strati, max_theta_phase_strati, max_tau_phases});
 
         return mTheta.mX;
@@ -1196,31 +1055,7 @@ double Event::getThetaMaxRecursive_v3(const double defaultValue, const QList<Eve
             }
         }
 
-        // 3 - Si dans la phase avec durée, il y a des Events non initialisés. Il faut considèrer qu'ils sont identiques et remonter aussi leurs contraintes
-   /*     double min_theta_friend_strati = defaultValue;
-        if (!mPhases.isEmpty()) {
-            for (const auto& phase : mPhases) {
-                if (phase->mTauType != Phase::eTauUnknown) {
-                    for (auto th_friend : phase->mEvents) {
-                        if (th_friend->mInitialized == false && th_friend != this) {
-                            bool friend_is_upper = !this->is_direct_younger(*th_friend);
-                            //bool friend_is_upper = !this->is_direct_older(*th_friend);
-
-                            //qDebug()<<"max recursive friend="<<th_friend->mName<<" this="<<this->mName<<" je fais"<<friend_is_upper;
-                            if (friend_is_upper) {
-                                for (auto&& constFwd : th_friend->mConstraintsFwd) {
-                                    if (!startEvents.contains(constFwd->mEventTo)) {
-                                        min_theta_friend_strati = std::min(min_theta_friend_strati, constFwd->mEventTo->getThetaMaxRecursive_v3(defaultValue, newStartEvents));
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-*/
-        // 4 - Si dans la phase, il y a des Events initialisés. voir la contrainte de durée
+        // 3 - Si dans une phase avec durée, voir la contrainte de durée
         double min_tau_phases = defaultValue;
         if (!mPhases.isEmpty()) {
             // C'est la date min+tau
@@ -1272,8 +1107,7 @@ double Event::getThetaMin(double defaultValue)
     // Max des thetas des faits en contrainte directe antérieure, ils sont déjà initialiés
     double maxThetaBwd = defaultValue;
     for (const auto& constBwd : mConstraintsBwd) {
-            double thetaf (constBwd->mEventFrom->mTheta.mX);
-            maxThetaBwd = std::max(maxThetaBwd, thetaf);
+        maxThetaBwd = std::max(maxThetaBwd, constBwd->mEventFrom->mTheta.mX);
     }
 
     /* Le fait appartient à une ou plusieurs phases.
@@ -1301,11 +1135,8 @@ double Event::getThetaMin(double defaultValue)
         maxPhasePrev = std::max(maxPhasePrev, thetaMax);
     }
 
-    double min_tmp1 = std::max(defaultValue, maxThetaBwd);
-    double min_tmp2 = std::max(min3, maxPhasePrev);
-    double min = std::max(min_tmp1, min_tmp2);
+    return std::max({defaultValue, maxThetaBwd, min3, maxPhasePrev});
 
-    return min;
 }
 
 double Event::getThetaMax(double defaultValue)
@@ -1315,9 +1146,9 @@ double Event::getThetaMax(double defaultValue)
     // ------------------------------------------------------------------
 
     // Min des thetas des faits en contrainte directe et qui nous suivent
-    double maxThetaFwd = defaultValue;
+    double minThetaFwd = defaultValue;
     for (const auto& cFwd : mConstraintsFwd) {
-            maxThetaFwd = std::min(maxThetaFwd, cFwd->mEventTo->mTheta.mX);
+        minThetaFwd = std::min(minThetaFwd, cFwd->mEventTo->mTheta.mX);
     }
 
     /* Le fait appartient à une ou plusieurs phases.
@@ -1343,10 +1174,8 @@ double Event::getThetaMax(double defaultValue)
         maxPhaseNext = std::min(maxPhaseNext, phase->getMinThetaNextPhases(defaultValue));
     }
 
-    const double max_tmp2 = std::min(max3, maxPhaseNext);
-    const double max = std::min(maxThetaFwd, max_tmp2);
+    return std::min({minThetaFwd, max3, maxPhaseNext});
 
-    return max;
 }
 
 void Event::updateTheta_v3(const double tmin, const double tmax)
@@ -1386,17 +1215,18 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
     {
         case MHVariable::eDoubleExp:
         {
-            try{
+            try {
                 const double theta = Generator::gaussByDoubleExp(theta_avg, sigma, min, max);
                 mTheta.tryUpdate(theta, 1.);
 
             }
-            catch(QString error){
+            catch(QString error) {
                 throw QObject::tr("Error for event : %1 : %2").arg(mName, error);
             }
             break;
         }
 
+        // Event Prior
         case MHVariable::eBoxMuller:
         {
             double theta;
@@ -1415,7 +1245,7 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
 
         case MHVariable::eMHAdaptGauss:
         {
-            // MH : Seul cas où le taux d'acceptation a du sens car on utilise sigma MH :
+            // MH: The only case where the acceptance rate makes sense, since we use sigma MH :
             const double theta = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
             double rapport = 0.;
             if (theta >= min && theta <= max)
@@ -1436,9 +1266,9 @@ void Event::updateTheta_v4(const double tmin, const double tmax, const double ra
 {
     double rapport;
 
-   for (auto&& date : mDates )   {
+    for (auto&& date : mDates )   {
        date.updateDate(this);
-   }
+    }
 
     const double min = getThetaMin(tmin);
     const double max = getThetaMax(tmax);
@@ -1473,8 +1303,6 @@ void Event::updateTheta_v4(const double tmin, const double tmax, const double ra
 
 
     } else { //Q2
-        // -- gaussian
-
         theta_try = Generator::gaussByDoubleExp(ti_avg, sigma, min, max);
     }
 
@@ -1494,92 +1322,6 @@ void Event::updateTheta_v4(const double tmin, const double tmax, const double ra
         const double rapport_Q = (mu * q1_old + (1 - mu) * q2_old) / (mu * q1_new + (1 - mu) * q2_new);
         const double rapport_P = q1_new / q1_old;
         rapport = rapport_P * rapport_Q;
-        //qDebug()<<"theta_try="<< theta_try<<"rate="<< rapport;
-
-    } else {
-        rapport = -1.;
-    }
-//qDebug()<<"theta_try="<< theta_try<<"rate="<< rapport;
-    mTheta.tryUpdate(theta_try, rapport*rate_theta);
-
-}
-
-
-/*
-void Event::updateTheta_v41(const double tmin, const double tmax, const double rate_theta)
-{
-
-    double rapport;
-
-    for (auto&& date : mDates )   {
-        date.updateDelta(this); // à faire avec xi
-        date.updateWiggle();
-    }
-
-    // màj sigma
-    for (auto&& date : mDates )   {
-        date.updateSigma_v4(this);
-    }
-
-
-    const double min = getThetaMin(tmin);
-    const double max = getThetaMax(tmax);
-    //qDebug() << "----------->      in Event::updateTheta(): Event update : " << this->mName << " : " << this->mTheta.mX << " between" << "[" << min << " ; " << max << "]";
-
-    if (min >= max)
-        throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(mName, QString::number(min), QString::number(max));
-
-    // -------------------------------------------------------------------------------------------------
-    //  Evaluer theta.
-    //  Le cas Wiggle est inclus ici car on utilise une formule générale.
-    //  On est en "wiggle" si au moins une des mesures a un delta > 0.
-    // -------------------------------------------------------------------------------------------------
-    // tirage de theta
-    const double mu = 0.999;
-    const double u1 = Generator::randomUniform();
-    const double t_mid = (mMixingCalibrations->mTmax + mMixingCalibrations->mTmin)/ 2.;
-    const double s_p = (mMixingCalibrations->mTmax - mMixingCalibrations->mTmin)/ 2.;
-
-    double theta_try ;
-    if (u1 < mu) { // tiNew always in the study period
-        theta_try  = sample_in_repartition(mMixingCalibrations, min, max);
-
-    } else {
-        // -- gaussian
-        theta_try = Generator::gaussByBoxMuller(t_mid, s_p);
-    }
-
-
-    //const double theta_try  = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
-
-    qDebug()<<"theta_try="<< theta_try;
-    double rapport_G = 1.;
-
-    if (theta_try >= min && theta_try <= max) {
-        for (auto&& date : mDates )   {
-            auto ti1 = date.xi_current + theta_try;
-            auto ti2 = date.xi_current + mTheta.mX;
-            auto ri1 = date.mCalibration->interpolate(date.xi_current + theta_try);
-            auto ri2 = date.mCalibration->interpolate(date.xi_current + mTheta.mX);
-            //qDebug()<<"ti1="<< ti1<<" ri1="<<ri1<<"ti2="<<ti2<<"ri2="<< ri2;
-
-            rapport_G *= date.mCalibration->interpolate(date.xi_current + theta_try) / date.mCalibration->interpolate(date.xi_current + mTheta.mX);
-            //rapport *= date.getLikelihood(date.xi_current*date.mSigmaTi.mX + theta_try) / date.getLikelihood(date.xi_current*date.mSigmaTi.mX + mTheta.mX);
-        }
-        // si sample répartition
-        auto i1 = mMixingCalibrations->interpolate(mTheta.mX);
-        auto i2 = mMixingCalibrations->interpolate(theta_try);
-
-        double q1_old = mMixingCalibrations->interpolate(mTheta.mX);
-        double q1_new = mMixingCalibrations->interpolate(theta_try);
-
-        const double q2_new =  dnorm(theta_try, t_mid, s_p);// exp(-0.5* pow((theta_try - t_mid)/ s_p, 2)) / (s_p*sqrt(2*M_PI));
-        const double q2_old = dnorm(mTheta.mX, t_mid, s_p);//exp(-0.5* pow((mTheta.mX - t_mid)/ s_p, 2)) / (s_p*sqrt(2*M_PI));
-
-        const double rapport_Q = (mu * q1_old + (1. - mu) * q2_old) / (mu * q1_new + (1. - mu) * q2_new);
-
-        rapport = rapport_G * rapport_Q;
-        qDebug()<<"theta_try="<< theta_try<<"rate="<< rapport;
 
     } else {
         rapport = -1.;
@@ -1587,179 +1329,7 @@ void Event::updateTheta_v41(const double tmin, const double tmax, const double r
 
     mTheta.tryUpdate(theta_try, rapport*rate_theta);
 
-    for (auto&& date : mDates )   {
-        //date.updateSigma_v4(this);
-        date.updateDelta(this);
-        date.updateWiggle();
-
-        //date.updateTi_v4(this);
-    }
-
-
-    for (auto&& date : mDates )   {
-        const double xi_try  = Generator::gaussByBoxMuller(0., 1.);
-        const double ti_try = xi_try  + mTheta.mX - date.mDelta;
-
-        const auto ti_revalued = date.xi_current  + mTheta.mX - date.mDelta;
-
-        const double rapport_exp = dnorm(date.xi_current, 0., date.mSigmaTi.mX) / dnorm(xi_try, 0., date.mSigmaTi.mX);
-
-        const double rapport = rapport_exp * date.mCalibration->interpolate(ti_try) / date.mCalibration->interpolate(ti_revalued);
-
-        if (rapport < 1.) {
-            const double uniform = Generator::randomUniform();
-            date.xi_current = (uniform <= rapport)? xi_try : date.xi_current;
-        }
-
-        date.mTi.mX =  date.xi_current  + mTheta.mX - date.mDelta; //((date.mTi.mX + date.mDelta) - mTheta.mX ) / date.mSigmaTi.mX = xi;
-        date.mTi.mLastAccepts.append(true);
-        // date.updateTi_v4(this);
-    }
-
 }
-
-void Event::updateTheta_v42(const double tmin, const double tmax, const double rate_theta)
-{
-
-    double rapport;
-
-
-    double sum_p = 0.;
-    double sum_t = 0.;
-
-    for (auto&& date: mDates) {
-        const double variance  = pow(date.mSigmaTi.mX, 2.);
-        sum_t += (date.mTi.mX + date.mDelta) / variance;
-        sum_p += 1. / variance;
-    }
-    const double theta_avg = sum_t / sum_p;
-    const double sigma_avg = 1. / sqrt(sum_p);
-
-    //const double x_event_current = (mTheta.mX - theta_avg)/sigma_avg;
-
-    for (auto&& date : mDates )   {
-        date.updateDelta(this); // à faire avec xi
-        date.updateWiggle();
-    }
-
-
-
-    // -------------------------------------------------------------------------------------------------
-    //  Evaluer theta.
-    //  Le cas Wiggle est inclus ici car on utilise une formule générale.
-    //  On est en "wiggle" si au moins une des mesures a un delta > 0.
-    // -------------------------------------------------------------------------------------------------
-    // tirage de theta
-
-    const double min = getThetaMin(tmin);
-    const double max = getThetaMax(tmax);
-    //qDebug() << "----------->      in Event::updateTheta(): Event update : " << this->mName << " : " << this->mTheta.mX << " between" << "[" << min << " ; " << max << "]";
-
-    if (min >= max)
-        throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(mName, QString::number(min), QString::number(max));
-
-    const double x_try  = Generator::gaussByBoxMuller(0., 1.);
-    const double theta_try = x_try*sigma_avg + theta_avg;
-
-    if (min <= theta_try && theta_try<= max) {
-        rapport = 1.;
-
-    } else {
-        rapport =-1.;
-    }
-
-
-    mTheta.tryUpdate(theta_try, rapport*rate_theta);
-
-    for (auto&& date : mDates )   {
-        date.updateSigma_v4(this);
-        date.updateDelta(this);
-        date.updateWiggle();
-
-
-        //double ti = sample_in_repartition(date.mCalibration, date.mCalibration->mTmin, date.mCalibration->mTmax);
-
-
-        const double tiNew = Generator::gaussByBoxMuller(mTheta.mX - date.mDelta, date.mSigmaTi.mX);
-        rapport = date.getLikelihood(tiNew) / date.getLikelihood(date.mTi.mX);
-        rapport *= exp(-0.5 *(pow(tiNew - mTheta.mX, 2.) - pow(date.mTi.mX - mTheta.mX, 2.))/pow(date.mSigmaTi.mX, 2.));
-
-        date.mTi.tryUpdate(tiNew, rapport);
-        //date.mTi.mLastAccepts.append(true);
-        //date.updateTi(this);
-
-    }
-
-
-}
-*/
-
-/**
- * @brief Event::generate_mixingCalibration  Creation of the cumulative date distribution
- */
-/*
-void Event::generate_mixingCalibration()
-{
-    if (mMixingCalibrations != nullptr) {
-        mMixingCalibrations->~CalibrationCurve();
-    }
-
-    if (mDates.size() == 1) {
-        mMixingCalibrations = new CalibrationCurve(*mDates.at(0).mCalibration);
-        mMixingCalibrations->mDescription = QString("Mixing Calibrations of Event %1").arg(mName);
-        mMixingCalibrations->mPlugin = nullptr;
-        mMixingCalibrations->mPluginId = "";
-
-    } else {
-
-        mMixingCalibrations = new CalibrationCurve();
-        mMixingCalibrations->mName = QString("Mixing Calibrations of Event %1").arg(mName);
-        mMixingCalibrations->mDescription = QString("Mixing Calibrations of Event %1").arg(mName);
-        mMixingCalibrations->mPlugin = nullptr;
-        mMixingCalibrations->mPluginId = "";
-
-        // 1 - Search for tmin and tmax, distribution curves, identical to the calibration.
-        double unionTmin = +INFINITY;
-        double unionTmax = -INFINITY;
-        double unionStep = INFINITY;
-
-        for (auto&& d : mDates) {
-            if (d.mCalibration != nullptr && !d.mCalibration->mVector.isEmpty() ) {
-                unionTmin = std::min(unionTmin, d.mCalibration->mTmin);
-                unionTmax = std::max(unionTmax, d.mCalibration->mTmax);
-                unionStep = std::min(unionStep, d.mCalibration->mStep);
-
-            }
-
-        }
-        // 2 - Creation of the cumulative distribution curves in the interval
-
-        mMixingCalibrations->mTmin = unionTmin;
-        mMixingCalibrations->mTmax = unionTmax;
-        mMixingCalibrations->mStep = unionStep;
-
-        double t = unionTmin;
-        long double sum = 0.;
-        long double sum_old = 0.;
-        const double n = mDates.size();
-        while (t <= unionTmax) {
-            sum= 0.;
-            for (auto&& d : mDates) {
-                sum += d.mCalibration->repartition_interpolate(t);
-            }
-            mMixingCalibrations->mVector.push_back((sum - sum_old)/(unionStep*n));
-            mMixingCalibrations->mRepartition.push_back(sum/n);
-            t += unionStep;
-            sum_old = sum;
-        }
-
-        mMixingCalibrations->mMap = vector_to_map(mMixingCalibrations->mVector, unionTmin, unionTmax, unionStep);
-    }
-
-}
-*/
-
-
 
 void Event::generateHistos(const QList<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
@@ -1773,7 +1343,7 @@ void Event::generateHistos(const QList<ChainSpecs> &chains, const int fftLen, co
         ek->mTheta.mChainsHistos.clear();
 
         ek->mTheta.mFormatedHisto.insert(ek->mFixed,1);
-        //generate fictifious chains
+        // Generate fictifious chains
         for (int i =0 ;i<chains.size(); ++i)
             ek->mTheta.mChainsHistos.append(ek->mTheta.mFormatedHisto);
     }
@@ -1781,8 +1351,9 @@ void Event::generateHistos(const QList<ChainSpecs> &chains, const int fftLen, co
 
 void Event::updateW()
 {
-    try {
 #ifdef DEBUG
+    try {
+
         if ((mVg.mX + mSy * mSy) < 1e-20) {
             qDebug()<< "[Event::updateW] mVg.mX + mSy * mSy < 1e-20";
         }
@@ -1796,12 +1367,12 @@ void Event::updateW()
         } else if (mW > 1e+20) {
             qDebug()<< "[Event::updateW] mW > 1e+20"<< mW;
         }
- #endif
 
 
     }  catch (...) {
         qWarning() <<"[Event::updateW] mW = 0";
     }
+#endif
 
 }
 

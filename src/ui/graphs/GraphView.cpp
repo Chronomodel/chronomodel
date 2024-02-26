@@ -792,11 +792,20 @@ void GraphView::paintEvent(QPaintEvent* )
             }
 
         } else if (!mTipXLab.isEmpty()) {
-            if (mUnitFunctionX)
-                p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + stringForLocal(mUnitFunctionX(mTipX)));
-            else
-                p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + stringForLocal(mTipX));
+            if (mTipComment.isEmpty()) {
+                if (mUnitFunctionX)
+                    p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + stringForLocal(mUnitFunctionX(mTipX)));
+                else
+                    p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + stringForLocal(mTipX));
 
+            } else {
+                if (mUnitFunctionX)
+                    p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + stringForLocal(mUnitFunctionX(mTipX)));
+                else
+                    p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + stringForLocal(mTipX));
+
+                p.drawText(mTipRect.adjusted(0, mTipRect.height()/2., 0, 0), Qt::AlignCenter,tr("Event") + ": " + mTipComment);
+            }
         } else if (!mTipYLab.isEmpty()) {
             if (mUnitFunctionY)
                 p.drawText(mTipRect, Qt::AlignCenter, mTipYLab + stringForLocal(mUnitFunctionY(mTipY)));
@@ -1326,9 +1335,9 @@ void GraphView::drawCurves(QPainter& painter)
                     if (curve.mDataVector.isEmpty())
                         return;
 
-                    QVector<type_data> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
+                    QList<type_data> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
 
-                    QVector<type_data> lightData;
+                    QList<type_data> lightData;
                     const type_data dataStep = type_data(subData.size()) / type_data(mGraphWidth);
                     if (dataStep > 1) {
                         for (int i = 0; i < mGraphWidth; ++i) {
@@ -2094,7 +2103,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
         QList<QStringList> rows;
 
         rows.append(QStringList("# X Axis"));
-        QMap<type_data, QVector<type_data> > rowsData;
+        QMap<type_data, QList<type_data> > rowsData;
 
         int rowsCount = rows.count();
         QStringList emptyColumn;
@@ -2105,7 +2114,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
             if ( !c.mVisible || c.mDataVector.empty() )
                 continue;
 
-            const QVector<type_data>& data = c.mDataVector;
+            const QList<type_data>& data = c.mDataVector;
             // the new DataVector is longer than the last, we need to expand the size of rows
             if (data.size()>rowsCount-2) {
                 abscissesWritten = false;
@@ -2133,7 +2142,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
 
         }
 
-        QMapIterator<type_data, QVector<type_data> > iter2(rowsData);
+        QMapIterator<type_data, QList<type_data> > iter2(rowsData);
         while(iter2.hasNext()) {
             iter2.next();
             QStringList list;

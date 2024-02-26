@@ -74,7 +74,7 @@ public:
     void updateValues(const int &totalPix, const int &minDeltaPix, const qreal &minVal, const qreal &maxVal);
     qreal getXForValue(const qreal &value);
     qreal getYForValue(const qreal &value);
-    QVector<qreal> paint(QPainter &p, const QRectF &r, qreal graduationSize = -1, DateConversion valueFormatFunc = nullptr);
+    QList<qreal> paint(QPainter &p, const QRectF &r, qreal graduationSize = -1, DateConversion valueFormatFunc = nullptr);
 
     double getMajorScale() const {return mMajorScale;}
     int getMinorScaleCount() const {return mMinorScaleCount;} // Tip

@@ -884,9 +884,9 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
 
     ///# Calculation of the mean and variance
-    QVector<double> inf;
-    QVector<double> sup;
-    QVector<double> esp;
+    QList<double> inf;
+    QList<double> sup;
+    QList<double> esp;
     double maxActivity = 0;
     double modeActivity = t_min_grid;
 
