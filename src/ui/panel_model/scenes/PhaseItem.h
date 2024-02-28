@@ -55,7 +55,7 @@ public:
     bool mControlsEnabled;
     bool matLeastOneEventSelected;
     bool mOneEventSelectedOnScene;
-    QSize mSize;
+    QSizeF mSize;
  void redrawPhase();
 
 //functions
@@ -83,7 +83,6 @@ public:
     PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsItem* parent = nullptr);
     virtual ~PhaseItem();
 
-    QJsonObject& getPhase();
     void setPhase(const QJsonObject& phase);
 
     virtual void updateItemPosition(const QPointF& pos);

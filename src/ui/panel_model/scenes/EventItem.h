@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -69,7 +69,6 @@ public:
     void setWithSelectedPhase(const bool selected) {mWithSelectedPhase = selected;}
     inline bool withSelectedPhase() { return mWithSelectedPhase;}
 
-    const QJsonObject &getData();
     virtual void setEvent(const QJsonObject& event, const QJsonObject& StudyPeriodSettings);
 
     virtual QRectF boundingRect() const;
@@ -93,8 +92,6 @@ protected:
     virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
     virtual void dropEvent(QGraphicsSceneDragDropEvent* e);
 
-
-
     int getNumberCurveLines(const CurveSettings &cs) const;
     void paintBoxCurveParameter (QPainter *painter, const QRectF &rectBox, const CurveSettings &cs);
 
@@ -103,9 +100,6 @@ protected:
     void resizeEventItem();
     void repositionDateItems();
     
-
-
-
 };
 
 #endif

@@ -691,22 +691,32 @@ QList<QStringList> Model::getStats(const QLocale locale, const int precision, co
     // Events
     rows << QStringList();
      for (Event*& event : mEvents) {
-        QStringList l = event->mTheta.getResultsList(locale, precision);
-        maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
-        l.prepend(event->mName);
-        rows << l;
+        if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+             QStringList l = event->mTheta.getResultsList(locale, precision);
+             maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
+             l.prepend(event->mName);
+             rows << l;
+
+        } else {
+            QStringList l ;
+            l << locale.toString(event->mTheta.mFormatedTrace->at(0), 'f', precision);
+            l.prepend(event->mName);
+            rows << l;
+        }
     }
 
     // Dates
     rows << QStringList();
     for (Event*& event : mEvents) {
-        for (int j = 0; j < event->mDates.size(); ++j) {
-            Date& date = event->mDates[j];
+        if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+            for (int j = 0; j < event->mDates.size(); ++j) {
+                Date& date = event->mDates[j];
 
-            QStringList l = date.mTi.getResultsList(locale, precision);
-            maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
-            l.prepend(date.mName);
-            rows << l;
+                QStringList l = date.mTi.getResultsList(locale, precision);
+                maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
+                l.prepend(date.mName);
+                rows << l;
+            }
         }
     }
 

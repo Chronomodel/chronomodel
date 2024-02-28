@@ -67,10 +67,7 @@ PhaseItem::~PhaseItem()
 
 }
 
-QJsonObject& PhaseItem::getPhase()
-{
-    return mData;
-}
+
 
 void PhaseItem::setPhase(const QJsonObject& phase)
 {
@@ -78,14 +75,13 @@ void PhaseItem::setPhase(const QJsonObject& phase)
     mData = phase;
 
     setSelected(mData.value(STATE_IS_SELECTED).toBool() || mData.value(STATE_IS_CURRENT).toBool() );
-    setPos(mData.value(STATE_ITEM_X).toDouble(),
-           mData.value(STATE_ITEM_Y).toDouble());
+    setPos(mData.value(STATE_ITEM_X).toDouble(), mData.value(STATE_ITEM_Y).toDouble());
 
     // ----------------------------------------------------
     //  Calculate item size
     // ----------------------------------------------------
-    const int w = mItemWidth;
-    int h = mTitleHeight + 2*mBorderWidth + 2*mEltsMargin;
+    const qreal w = mItemWidth;
+    qreal h = mTitleHeight + 2*mBorderWidth + 2*mEltsMargin;
 
     const QJsonArray events = getEvents();
     if (events.size() > 0)
@@ -96,7 +92,7 @@ void PhaseItem::setPhase(const QJsonObject& phase)
     if (!tauStr.isEmpty())
         h += mEltsMargin + mEltsHeight;
 
-    mSize = QSize(w, h);
+    mSize = QSizeF(w, h);
 
     update();
 }

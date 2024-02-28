@@ -72,8 +72,8 @@ bool PhasesScene::constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo
 {
     const QJsonArray &constraints = mProject->mState.value(STATE_PHASES_CONSTRAINTS).toArray();
 
-    const QJsonObject &phaseFrom = ((PhaseItem*)itemFrom)->getPhase();
-    const QJsonObject &phaseTo   = ((PhaseItem*)itemTo)->getPhase();
+    const QJsonObject &phaseFrom = ((PhaseItem*)itemFrom)->getData();
+    const QJsonObject &phaseTo   = ((PhaseItem*)itemTo)->getData();
 
     const int phaseFromId = phaseFrom.value(STATE_ID).toInt();
     const int phaseToId   = phaseTo.value(STATE_ID).toInt();
@@ -111,8 +111,8 @@ bool PhasesScene::constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo
 
 void PhasesScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
 {
-    const QJsonObject phaseFrom = dynamic_cast<PhaseItem*>(itemFrom)->getPhase();
-    const QJsonObject phaseTo = dynamic_cast<PhaseItem*>(itemTo)->getPhase();
+    const QJsonObject phaseFrom = dynamic_cast<PhaseItem*>(itemFrom)->getData();
+    const QJsonObject phaseTo = dynamic_cast<PhaseItem*>(itemTo)->getData();
 
     mProject->createPhaseConstraint(phaseFrom.value(STATE_ID).toInt(),
                                                         phaseTo.value(STATE_ID).toInt());
@@ -120,8 +120,8 @@ void PhasesScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
 
 void PhasesScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
 {
-    QJsonObject phaseFrom = ((PhaseItem*)itemFrom)->getPhase();
-    QJsonObject phaseTo = ((PhaseItem*)itemTo)->getPhase();
+    QJsonObject phaseFrom = ((PhaseItem*)itemFrom)->getData();
+    QJsonObject phaseTo = ((PhaseItem*)itemTo)->getData();
 
     mProject->mergePhases(phaseFrom.value(STATE_ID).toInt(),
                                               phaseTo.value(STATE_ID).toInt());
@@ -161,7 +161,7 @@ void PhasesScene::sendUpdateProject(const QString& reason, bool notify, bool sto
 
     QJsonArray phases = QJsonArray();
     for (int i=0; i<mItems.size(); ++i)
-        phases.append(((PhaseItem*)mItems.at(i))->getPhase());
+        phases.append(((PhaseItem*)mItems.at(i))->getData());
 
     stateNext[STATE_PHASES] = phases;
 
@@ -300,7 +300,7 @@ qDebug()<<"[PhasesScene::updateSceneFromState] Start";
     blockSignals(true);
     for (int i = mItems.size()-1; i >=0 ; --i) {
         PhaseItem* item = (PhaseItem*)mItems[i];
-        QJsonObject& phase = item->getPhase();
+        QJsonObject& phase = item->getData();
 
         if (!phases_ids.contains(phase.value(STATE_ID).toInt())) {
 #ifdef DEBUG
@@ -327,7 +327,7 @@ qDebug()<<"[PhasesScene::updateSceneFromState] Start";
         bool itemExists = false;
         for (int j = 0; j<mItems.size(); ++j) {
             PhaseItem* item = (PhaseItem*)mItems[j];
-            const QJsonObject itemPhase = item->getPhase();
+            const QJsonObject itemPhase = item->getData();
             if (itemPhase.value(STATE_ID).toInt() == phase.value(STATE_ID).toInt()) {
                 itemExists = true;
 
@@ -509,7 +509,7 @@ void PhasesScene::updateStateSelectionFromItem()
             PhaseItem* item = static_cast<PhaseItem*>(mItems.at(i));
 
             // without selected update
-            const QJsonObject prevPhase = item->getPhase();
+            const QJsonObject prevPhase = item->getData();
 
             const bool selected = item->isSelected();
             const bool isCurrent = (curItem == item);
@@ -521,7 +521,7 @@ void PhasesScene::updateStateSelectionFromItem()
             // and item.mData.value(STATE_IS_CURRENT)
             item->setSelectedInData(selected);
             item->setCurrentInData(isCurrent);
-            const QJsonObject nextPhase = item->getPhase();
+            const QJsonObject nextPhase = item->getData();
 
             if (nextPhase != prevPhase)
                 modified = true;
@@ -654,7 +654,7 @@ void PhasesScene::itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent
 {
     AbstractScene::itemDoubleClicked(item, e);
     if (!mDrawingArrow)
-        mProject->updatePhase(static_cast<PhaseItem*>(item)->getPhase());
+        mProject->updatePhase(static_cast<PhaseItem*>(item)->getData());
 }
 
 void PhasesScene::constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e)

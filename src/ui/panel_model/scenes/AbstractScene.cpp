@@ -94,8 +94,8 @@ void AbstractScene::updateConstraintsPos(AbstractItem* movedItem, const QPointF&
 
     if (movedItem) {
         const int itemId = movedItem->mData[STATE_ID].toInt();
-        const double itemX = movedItem->mData[STATE_ITEM_X].toDouble();
-        const double itemY = movedItem->mData[STATE_ITEM_Y].toDouble();
+        //const double itemX = movedItem->mData[STATE_ITEM_X].toDouble();
+        //const double itemY = movedItem->mData[STATE_ITEM_Y].toDouble();
 
         //qDebug() << "---------";
         //qDebug() << "Moving event id : " << itemId;
@@ -106,14 +106,15 @@ void AbstractScene::updateConstraintsPos(AbstractItem* movedItem, const QPointF&
             int bwdId = cData[STATE_CONSTRAINT_BWD_ID].toInt();
             int fwdId = cData[STATE_CONSTRAINT_FWD_ID].toInt();
 
-            if (bwdId == itemId) {
+            if (bwdId == itemId || fwdId == itemId) {
                 //qDebug() << "Backward const. id : " << cId << " (link: "<<bwdId<<" -> "<< fwdId <<", setFrom: " << itemX << ", " << itemY << ")";
-                ci->setFrom(itemX, itemY);
+                //ci->setFrom(itemX, itemY);
+                ci->updatePosition();
             }
-            else if (fwdId == itemId) {
+            /*else if (fwdId == itemId) {
                 //qDebug() << "Forward const. id : " << cId << " (link: "<<bwdId<<" -> "<< fwdId <<", setTo: " << itemX << ", " << itemY << ")";
                 ci->setTo(itemX, itemY);
-            }
+            }*/
 
         }
     }

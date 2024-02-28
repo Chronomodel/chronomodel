@@ -47,11 +47,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class AbstractScene;
 class AbstractItem;
 class EventItem;
+class PhaseItem;
 
 class ArrowItem: public QGraphicsItem
 {
+
+    Q_PROPERTY(QJsonObject mData READ data WRITE setData)
 public:
-    enum Type{
+    enum Type {
         eEvent = 0,
         ePhase = 1
     };
@@ -68,6 +71,8 @@ public:
     QRectF boundingRect() const;
     QPainterPath shape() const;
 
+    QPointF contactPos(const double theta, AbstractItem *e);
+
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e);
     void mousePressEvent(QGraphicsSceneMouseEvent* e);
@@ -75,23 +80,25 @@ public:
     void hoverLeaveEvent(QGraphicsSceneHoverEvent* e);
 
     QRectF getBubbleRect(const QString& text = QString()) const;
-    QSize getBubbleSize(const QString& text = QString()) const;
+    QSizeF getBubbleSize(const QString& text = QString()) const;
     QString getBubbleText() const;
 
     void setData(const QJsonObject& c);
     QJsonObject& data();
 
     EventItem* findEventItemWithJsonId(const int id);
+    PhaseItem* findPhaseItemWithJsonId(const int id);
 
 public:
     Type mType;
     QJsonObject mData;
     AbstractScene* mScene;
 
-    qreal mXStart;
-    qreal mYStart;
-    qreal mXEnd;
-    qreal mYEnd;
+    QPointF mStart;
+    QPointF mEnd;
+
+    QPointF mStartContact;
+    QPointF mEndContact;
 
     qreal mBubbleWidth;
     qreal mBubbleHeight;

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -57,9 +57,9 @@ public:
     virtual void updateItemPosition(const QPointF& pos) = 0;
     void setSelectedInData(const bool selected);
     void setCurrentInData(const bool current);
+    QJsonObject& getData() {return mData;};
 
     static QFont adjustFont(const QFont &ft, const QString &str, const QRectF &r);
-
 
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent* e);
@@ -71,7 +71,6 @@ protected:
     virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent* e);
     virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 
-
 public:
     static int mBorderWidth;
     static int mEltsMargin;
@@ -81,15 +80,11 @@ public:
     QJsonObject mData;
     AbstractScene* mScene;
 
-
     int mEltsHeight;
 
     bool mMoving; // used in AbstractScene::itemReleased() to merge item like eventItem and phaseItem
     bool mMergeable;
     bool mGreyedOut;
-
-
-
 
 };
 

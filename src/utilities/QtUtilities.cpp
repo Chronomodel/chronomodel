@@ -629,7 +629,7 @@ QString stringForCSV(const double valueToFormat, const bool forcePrecision)
 {
     char fmt = 'f';
     QLocale locale = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
-
+    locale.setNumberOptions(QLocale::OmitGroupSeparator);
     if (forcePrecision)
         return locale.toString(valueToFormat, fmt, 9);
 
@@ -638,7 +638,6 @@ QString stringForCSV(const double valueToFormat, const bool forcePrecision)
 
     const int precision = AppSettings::mPrecision;
 
-    locale.setNumberOptions(QLocale::OmitGroupSeparator);
     return locale.toString(valueToFormat, fmt, precision);
 
 }

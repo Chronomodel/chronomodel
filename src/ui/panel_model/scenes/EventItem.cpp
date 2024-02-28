@@ -115,10 +115,6 @@ void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 }
 
 //Event Managment
-const QJsonObject& EventItem::getData()
-{
-    return mData;
-}
 
 void EventItem::setEvent(const QJsonObject &event, const QJsonObject &StudyPeriodSettings)
 {
