@@ -1090,7 +1090,7 @@ bool Model::isValid()
                             } else {
                                 for (const auto &evFwd : e->mConstraintsFwd) {
                                     if (evFwd->mEventTo == event)
-                                        throw QObject::tr("The event %1 ( in phase %2 ) is after the event %3  ( in phase %4 ), BUT the phase %4 is before the phase .\r=> Contradiction !").arg(event->mName, phase->mName, e->mName, p->mName, phase->mName, p->mName);
+                                        throw QObject::tr("The event %1 (in phase %2) is after the event %3  (in phase %4), BUT the phase %5 is before the phase %6 .\r=> Contradiction !").arg(event->mName, phase->mName, e->mName, p->mName, phase->mName, p->mName);
                                 }
                             }
                         }

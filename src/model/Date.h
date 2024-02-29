@@ -52,9 +52,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 class Event;
 class PluginAbstract;
-
 class CalibrationCurve;
-
 class Project;
 
 class Date
