@@ -1637,7 +1637,7 @@ void Model::generateHPD(const double thresh)
     for (const auto& event : mEvents) {
         event->mTheta.generateHPD(thresh);
 
-        if (event->type() != Event::eBound) {// || (event->mTheta.mSamplerProposal != MHVariable::eFixe)) {
+        if (event->type() != Event::eBound) {
 
             if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
                 event->mS02Theta.generateHPD(thresh);

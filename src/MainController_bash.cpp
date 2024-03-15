@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "MainController_bash.h"
+
 #include "PluginManager.h"
 #include "MainWindow.h"
 #include "Painting.h"
@@ -45,11 +46,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 MainController::MainController(const QString& filePath)
 {
+    QVersionNumber version (VERSION_NUMBER);
     Painting::init();
     PluginManager::loadPlugins();
     QCoreApplication::setApplicationName("ChronoModel_bash");
-    QCoreApplication::setApplicationVersion("3.2.2"); // must match value in Chronomodel.pro
-   // QCoreApplication::setOrganizationDomain("http://www.chronomodel.com");
+    QCoreApplication::setApplicationVersion(version.toString());
+    QCoreApplication::setOrganizationDomain("https://www.chronomodel.com");
     QCoreApplication::setOrganizationName("CNRS");
 
     mMainWindow = MainWindow::getInstance();
