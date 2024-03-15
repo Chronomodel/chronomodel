@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -38,17 +38,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "ProjectView_bash.h"
+
 #include <QDir>
 #include <QFileDialog>
 
-
-// Constructor / Destructor / Init
-ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
+ProjectView::ProjectView(std::shared_ptr<Project>&, QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
 {
-    setScreenDefinition();
-
     mTable = new QTableWidget(this);
     mTable->setColumnCount(1);
+    mTable->setHorizontalHeaderLabels({"Project Files"});
+    mTable->setTextElideMode(Qt::ElideNone);
 
     mAddButton = new QPushButton ("Add File", this);
     mRemoveButton = new QPushButton ("Remove File", this);
@@ -59,12 +58,11 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     mTable->setFixedWidth(width()/2);
     mTable->setGeometry(QRect(width()/4, 50, width()/2, height()));
 
-  //  auto x1 = mTable->pos().x();
-  //  x1 = x1 /2 - 75;
     mAddButton->setGeometry(QRect(0, 0, 150, 0));
-    mRemoveButton->setGeometry(QRect(10, mAddButton->pos().y()+mAddButton->height() + 10, 150, 0));
+    mRemoveButton->setGeometry(QRect(10, mAddButton->pos().y() + mAddButton->height() + 10, 150, 0));
 
     mLog = new QTextEdit(this);
+    setMinimumSize(500, 200);
 }
 
 ProjectView::~ProjectView()
@@ -74,26 +72,11 @@ ProjectView::~ProjectView()
 
 void ProjectView::setScreenDefinition()
 {
-    /* find screen definition */
-  /*  QScreen *screen;
 
-    screen =  QGuiApplication::primaryScreen();
-    //qreal mm_per_cm = 10;
-
-    qreal cm_per_in = 2.54;
-
-    int unitX = int(screen->logicalDotsPerInch() / cm_per_in);
-    AppSettings::setWidthUnit( unitX);
-
-    int unitY = int(screen->logicalDotsPerInch() / cm_per_in);
-    AppSettings::setHeigthUnit( unitY);
-
-    AppSettings::setHeigthUnit(unitY);*/
 }
 
-void ProjectView::resizeEvent(QResizeEvent* e)
+void ProjectView::resizeEvent(QResizeEvent*)
 {
-    (void)e;
     mTable->setFixedWidth(width()/3);
     mTable->setColumnWidth(0, width()/3);
     mTable->setGeometry(QRect(width()/3, 20, width()/3, height() - 20));
@@ -123,18 +106,18 @@ void ProjectView::tableAdd()
 
         QTableWidgetItem *newItem = new QTableWidgetItem(path);
         mTable->setItem(mTable->rowCount()-1 , 0, newItem );
+        mTable->item(mTable->rowCount()-1 , 0)->setToolTip(path);
     }
 }
 
 void ProjectView::tableRemove()
 {
-    auto selecI = mTable->selectedItems();
-    for (auto i=selecI.rbegin() ; i != selecI.rend(); i++)
-        mTable->removeRow((*i)->row());
-
+    for (const auto i : mTable->selectedItems())
+        mTable->removeRow(i->row());
 }
-void ProjectView::applyFilesSettings(Model* model)
+
+void ProjectView::applyFilesSettings(Model*)
 {
-    (void) model;
+
 }
 

@@ -693,22 +693,36 @@ bool saveAsCsv(const QList<QStringList>& data, const QString& title)
     return false;
 }
 
-bool save_map_as_csv(const std::map<double, double> &map, const std::pair<QString, QString> &header, const QString title)
+bool save_map_as_csv(const std::map<double, double> &map, const std::pair<QString, QString> &header, const QString title, const QString prefix)
 {
     const QString csvSep = AppSettings::mCSVCellSeparator;
     QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
     csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
 
     const QString currentPath = MainWindow::getInstance()->getCurrentPath();
-    const QString filter = "CSV (*.csv)";
-    const QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
-                                                    title,
-                                                    currentPath,
-                                                    filter);
+    QString filename;
+
+    if (!prefix.isEmpty()) {
+
+        const QString fiName = MainWindow::getInstance()->getNameProject();
+        const QString defaultFilename = currentPath + "/"+ fiName.mid(0, fiName.size()-4) + "_" + prefix;
+
+        filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                              title,
+                                                              defaultFilename, "CSV (*.csv)");
+
+    } else {
+        filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                              title,
+                                                              currentPath,
+                                                              "CSV (*.csv)");
+    }
+
+
     QFile file(filename);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
         QTextStream output(&file);
-        output << header.first + csvSep + header.second;
+        output << header.first + csvSep + header.second<< "\r";
         for (auto m : map)  {
             output << csvLocal.toString(m.first) + csvSep + csvLocal.toString(m.second);
             output << "\r";

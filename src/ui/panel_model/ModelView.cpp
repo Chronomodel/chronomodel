@@ -385,7 +385,8 @@ void ModelView::setProject(std::shared_ptr<Project> &project)
 
 void ModelView::updateProject()
 {
-    if (!mProject)// || mProject->mState.size() == 0)
+    qDebug()<<"[ModelView::updateProject]";
+    if (!mProject)
         return;
 
     const QJsonObject &state = mProject->state();

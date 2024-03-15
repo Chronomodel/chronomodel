@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -39,20 +39,25 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "MainWindow_bash.h"
 
-#include "Project.h"
 #include "ProjectView_bash.h"
+
+#include "ModelCurve.h"
+#include "Project.h"
+
 #include "AboutDialog.h"
 #include "AppSettingsDialog.h"
+#include "AppSettings.h"
 #include "QtUtilities.h"
 #include "CalibrationCurve.h"
 
 #include <QtWidgets>
 #include <QLocale>
 #include <QFont>
-#include <iostream>
+
 
 // Constructor / Destructor
-MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
+MainWindow::MainWindow(QWidget* aParent):
+        QMainWindow(aParent)
 {
 #ifdef DEBUG
     setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + " DEBUG Mode ");
@@ -75,7 +80,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     mProject = nullptr;
 
     /* Creation of ResultsView and ModelView */
-    mProjectView = new ProjectView(this);
+    mProjectView = new ProjectView(mProject);
     setCentralWidget(mProjectView);
 
     mUndoStack = new QUndoStack();
@@ -130,7 +135,8 @@ MainWindow::~MainWindow()
 }
 
 // Accessors
-Project* MainWindow::getProject()
+
+const std::shared_ptr<Project> &MainWindow::getProject()
 {
     return mProject;
 }
@@ -171,29 +177,12 @@ void MainWindow::createActions()
     //-----------------------------------------------------------------
     // Project Actions
     //-----------------------------------------------------------------
-/*
-    mNewProjectAction = new QAction(QIcon(":new_p.png"), tr("&New"), this);
-    mNewProjectAction->setShortcuts(QKeySequence::New);
-    mNewProjectAction->setStatusTip(tr("Create a new project"));
-    mNewProjectAction->setToolTip(tr("New project"));
-    mNewProjectAction->setWhatsThis(tr("What's This? :Create a new project"));
 
-    connect(mNewProjectAction, &QAction::triggered, this, &MainWindow::newProject);
-*/
     mOpenProjectAction = new QAction(QIcon(":open_p.png"), tr("Open"), this);
     mOpenProjectAction->setShortcuts(QKeySequence::Open);
     mOpenProjectAction->setStatusTip(tr("Open an existing project"));
     connect(mOpenProjectAction, &QAction::triggered, this, &MainWindow::openProject);
-/*
-    mInsertProjectAction = new QAction(QIcon(":open_p.png"), tr("Insert"), this);
-    mInsertProjectAction->setStatusTip(tr("Insert an existing project"));
-    connect(mInsertProjectAction, &QAction::triggered, this, &MainWindow::insertProject);
 
-    mCloseProjectAction = new QAction(tr("Close"), this);
-    mCloseProjectAction->setShortcuts(QKeySequence::Close);
-    mCloseProjectAction->setStatusTip(tr("Open an existing project"));
-    connect(mCloseProjectAction, &QAction::triggered, this, &MainWindow::closeProject);
-*/
     mProjectSaveAction = new QAction(QIcon(":save_p.png"), tr("&Save"), this);
     mProjectSaveAction->setShortcuts(QKeySequence::Save);
     mProjectSaveAction->setStatusTip(tr("Save the current project in the same place with the same name"));
@@ -209,8 +198,16 @@ void MainWindow::createActions()
     mRunAction->setIconVisibleInMenu(true);
     mRunAction->setToolTip(tr("Run Model"));
 
+    //-----------------------------------------------------------------
+    // Help/About Menu
+    //-----------------------------------------------------------------
+    /*mAboutAct = new QAction(QIcon(":light.png"), tr("About"), this);
+    connect(mAboutAct, &QAction::triggered, this, &MainWindow::about);*/
 
-    mHelpAction = new QAction(QIcon(":help_p.png"), tr("Help"), this);
+    mAboutQtAct = new QAction(QIcon(":qt.png"), tr("About Qt"), this);
+    connect(mAboutQtAct, &QAction::triggered, qApp, QApplication::aboutQt);
+
+  /*  mHelpAction = new QAction(QIcon(":help_p.png"), tr("Help"), this);
     mHelpAction->setCheckable(true);
     connect(mHelpAction, &QAction::triggered, this, &MainWindow::showHelp);
 
@@ -219,24 +216,8 @@ void MainWindow::createActions()
 
     mWebsiteAction = new QAction(QIcon(":web_p.png"), tr("Website"), this);
     connect(mWebsiteAction, &QAction::triggered, this, &MainWindow::openWebsite);
-/*
-    //-----------------------------------------------------------------
-    // Translation Menu
-    //-----------------------------------------------------------------
-    mTranslateEnglishAct = new QAction(tr("English"), this);
-    mTranslateEnglishAct->setCheckable(true);
-    mTranslateEnglishAct->setData("en");
-
-    mTranslateFrenchAct = new QAction(tr("French"), this);
-    mTranslateFrenchAct->setCheckable(true);
-    mTranslateFrenchAct->setData("fr");
-
-    mLangGroup = new QActionGroup(this);
-    mLangGroup->addAction(mTranslateEnglishAct);
-    mLangGroup->addAction(mTranslateFrenchAct);
-    mTranslateEnglishAct->setChecked(true);
-    connect(mLangGroup, &QActionGroup::triggered, this, &MainWindow::setLanguage);
 */
+
 }
 
 void MainWindow::createMenus()
@@ -356,11 +337,11 @@ void MainWindow::createToolBars()
     separator4->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     mToolBar->addWidget(separator4);
 
-    mToolBar->addAction(mHelpAction);
-    mToolBar->addAction(mManualAction);
-    mToolBar->addAction(mWebsiteAction);
-    /* toolBar->addAction(mAboutAct);
-    toolBar->addAction(mAboutQtAct); */
+   // mToolBar->addAction(mHelpAction);
+   // mToolBar->addAction(mManualAction);
+   // mToolBar->addAction(mWebsiteAction);
+    /* toolBar->addAction(mAboutAct);*/
+    mToolBar->addAction(mAboutQtAct);
     mToolBar->setFont(qApp->font()); // must be after all addAction
 
 }
@@ -477,8 +458,10 @@ void MainWindow::openProject()
 
             mProjectView->mTable->clear();
             mProjectView->mTable->setRowCount(0);
-            QJsonObject loadingState = jsonDoc.object();
+            mProjectView->mTable->setHorizontalHeaderLabels({"Project Files"});
+            mProjectView->mTable->setTextElideMode(Qt::ElideNone);
 
+            QJsonObject loadingState = jsonDoc.object();
             QJsonArray list = loadingState.value("project_list").toArray();
 
             for (int i = 0; i <list.count(); ++i) {
@@ -486,12 +469,12 @@ void MainWindow::openProject()
                 mProjectView->mTable->setRowCount(mProjectView->mTable->rowCount()+1);
 
                 QTableWidgetItem *newItem = new QTableWidgetItem(iPath);
-                mProjectView->mTable->setItem(mProjectView->mTable->rowCount()-1 , 0, newItem );
 
+                mProjectView->mTable->setItem(mProjectView->mTable->rowCount()-1 , 0, newItem );
+                mProjectView->mTable->item(mProjectView->mTable->rowCount()-1 , 0)->setToolTip(iPath);
             }
 
-
-            statusBar()->showMessage(tr("Loading Bash Project : %1").arg(path));
+            statusBar()->showMessage(tr("Loading the project list Bash file : %1").arg(path));
             //activateInterface(true); // do several connection
         }
     }
@@ -502,22 +485,15 @@ void MainWindow::openProject()
 
 void MainWindow::connectProject()
 {
-    //connect(mProject, &Project::noResult, this, &MainWindow::noResult);
-    connect(mProject, &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
-   // connect(mProject, &Project::projectStateChanged, this, &MainWindow::updateProject);
-   // connect(mProject, &Project::projectStructureChanged, this, &MainWindow::noResult);
+    connect(mProject.get(), &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
 
-  //  connect(mCurveAction, &QAction::toggled, this, &MainWindow::toggleCurve);
-   // connect(mMCMCSettingsAction, &QAction::triggered, mProject, &Project::mcmcSettings);
-  //  connect(mResetMCMCAction, &QAction::triggered, mProject, &Project::resetMCMC);
-  //  connect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
-    connect(mRunAction, &QAction::triggered, mProject, &Project::run);
+    connect(mRunAction, &QAction::triggered, mProject.get(), &Project::run);
 }
 
 void MainWindow::disconnectProject()
 {
-    disconnect(mProject, &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
-    disconnect(mRunAction, &QAction::triggered, mProject, &Project::run);
+    disconnect(mProject.get(), &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
+    disconnect(mRunAction, &QAction::triggered, mProject.get(), &Project::run);
 }
 
 void MainWindow::closeProject()
@@ -543,8 +519,8 @@ void MainWindow::closeProject()
         mViewResultsAction->setEnabled(false);
 
         updateWindowTitle();
-        delete mProject;
-        mProject = nullptr;
+
+        mProject.reset();
 
    } else // if there is no project, we suppose it means to close the programm
        QApplication::exit(0);
@@ -581,7 +557,7 @@ void MainWindow::saveProject()
 
         if (file_chb.open(QIODevice::ReadWrite | QIODevice::Text)) {
 #ifdef DEBUG
-            qDebug() << "[Mainwindows::saveProject] Project Bash saved to : " << path;
+            qDebug() << "[Mainwindows_bash::saveProject] Project Bash saved to : " << path;
 #endif
             file_chb.write (textDoc);
 
@@ -605,10 +581,9 @@ void MainWindow::updateWindowTitle()
 
 
 
-void MainWindow::toggleCurve(bool checked)
+void MainWindow::toggleCurve(bool )
 {
-    (void) checked;
-    //mProjectView->toggleCurve(checked);
+
 }
 
 // Settings & About
@@ -798,7 +773,7 @@ void MainWindow::calibrateAll()
     */
     if (!Qevents.isEmpty()) {
         mProject->mCalibCurves.clear();
-        QVector<Event> events;
+        QList<Event> events;
         for (auto&& Qev: Qevents)
             events.append(Event::fromJson(Qev.toObject()));
 
@@ -826,7 +801,7 @@ void MainWindow::calibrateAll()
                     Date d (date.toObject());
                     d.autoSetTiSampler(true);
 
-                    d.calibrate(s, mProject, true);
+                    d.calibrate(s, *mProject, true);
 
                     ++position;
                     progress->setValue(position);
@@ -848,16 +823,16 @@ void MainWindow::runModel()
     mProjectView->mLog->append(textBold( textRed("Start Bash Project at ")) + QTime::currentTime().toString("hh:mm:ss.zzz") );
 
     for (auto i = 0 ; i < mProjectView->mTable->rowCount(); i++) {
-        QString path = mProjectView->mTable->item(i, 0)->text();
+        const QString path = mProjectView->mTable->item(i, 0)->text();
         QFileInfo chrFile (path);
 
         AppSettings::mLastDir = chrFile.path(); // usefull for project.save()
         AppSettings::mLastFile = chrFile.baseName();
-        QString fileRun = AppSettings::mLastDir + "/" + AppSettings::mLastFile;
-        qDebug()<<"Run file"<< fileRun;
+        //QString fileRun = AppSettings::mLastDir + "/" + AppSettings::mLastFile;
+        qDebug()<<"Run file"<< AppSettings::mLastDir + "/" + AppSettings::mLastFile;
         mProjectView->mLog->append("Run File : " + textBold(chrFile.baseName()));
         if (!mProject)
-            mProject = new Project();
+            mProject.reset(new Project());
 
         else if (mProject->mModel) {
             mProject->mModel->clear();
@@ -866,12 +841,15 @@ void MainWindow::runModel()
         try {
             mProject->load(path, true);
             AppSettings::mAutoSave = true; // usefull to disable savebox in run()
+
             mProjectView->mLog->append("    Calibration");
             mProjectView->repaint();
             calibrateAll();
             mProjectView->mLog->append("    Start Run");
             startTime.start();
             mProject->run();
+            if (mProject->mModel->mEvents.at(0)->mTheta.mRawTrace->isEmpty())
+                throw QObject::tr("Error in RUN");
             mProjectView->mLog->append("    End Run, time elapsed "+ DHMS(startTime.elapsed()));
             mProject->setNoResults(false);
             mProjectView->repaint();
@@ -879,6 +857,7 @@ void MainWindow::runModel()
             mProject->save();
             mProjectView->mLog->append(textGreen("    End Saving") );
             mProjectView->mLog->append(textGreen("") );
+
         } catch (...) {
             mProjectView->mLog->append(textRed("Error with file : "+ path));
 

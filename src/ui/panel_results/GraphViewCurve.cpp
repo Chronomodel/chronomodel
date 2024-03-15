@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -112,7 +112,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
     if (mCurrentVariableList.contains(eG)) {
         std::vector<CurveRefPts> curveEventsPoints;
 
-        // intallation des points de ref
+        // installation des points de ref
 
         for (auto& ePts : mEventsPoints) {
             CurveRefPts ref;

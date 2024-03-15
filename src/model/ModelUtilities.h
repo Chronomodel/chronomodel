@@ -73,7 +73,7 @@ public:
     static QString sigmaTiResultsHTML(const Date* d);
 
     static QString eventResultsHTML(const Event* e, const bool withDates, const std::shared_ptr<ModelCurve> model = nullptr);
-    static QString eventResultsHTML(const Event* e, const bool withDates, const double tmin_formated, const double tmax_formated);
+    static QString eventResultsHTML(const Event* e, const bool withDates, const double tmin_formated, const double tmax_formated, bool with_curve = false);
     static QString EventS02ResultsHTML(const Event* e);
     static QString VgResultsHTML(const Event* e);
 

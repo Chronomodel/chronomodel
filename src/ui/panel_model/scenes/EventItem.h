@@ -49,7 +49,7 @@ class EventItem : public AbstractItem
 {
     Q_OBJECT
 protected:
-    QSize mSize;
+    //QSize mSize;
     QJsonObject mStudyPeriodSettings;
     bool mWithSelectedPhase;
     bool mThumbVisible;
@@ -71,12 +71,9 @@ public:
 
     virtual void setEvent(const QJsonObject& event, const QJsonObject& StudyPeriodSettings);
 
-    virtual QRectF boundingRect() const;
     void handleDrop(QGraphicsSceneDragDropEvent* e);
     QJsonArray getPhases() const;
     inline const QJsonObject &getSettings() const {return mStudyPeriodSettings;}
-
-    virtual void updateItemPosition(const QPointF &pos);
 
     virtual void setDatesVisible(bool visible);
     void redrawEvent();
@@ -86,7 +83,7 @@ public:
 
     void mousePressEvent(QGraphicsSceneMouseEvent* e);
 
-     void updateGreyedOut();
+    void updateGreyedOut();
 
 protected:
     virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);

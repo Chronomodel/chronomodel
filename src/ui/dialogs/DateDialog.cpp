@@ -110,8 +110,8 @@ DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, f
     connect(mDeltaRangeRadio, &QRadioButton::toggled, this,  &DateDialog::checkWiggle);
     connect(mDeltaGaussRadio, &QRadioButton::toggled, this,  &DateDialog::checkWiggle);
 
-    mDeltaHelp = new HelpWidget(tr("Wiggle Sign : \"+\" if data ≤ event, \"-\" if data ≥ event"), mAdvancedWidget);
-    mDeltaHelp->setFixedHeight(50);
+    mDeltaHelp = new HelpWidget(tr("Wiggle Sign : \n \"+\" if data ≤ event,\n \"-\" if data ≥ event"), mAdvancedWidget);
+    mDeltaHelp->setFixedHeight(70);
     mDeltaHelp->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=22");
 
     mDeltaFixedLab = new QLabel(tr("Value"), mAdvancedWidget);

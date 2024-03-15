@@ -74,8 +74,8 @@ public:
     double sum_gamma_prev_phases();
     double sum_gamma_next_phases();
     void init_alpha_beta_phase(QList<Phase*> &phases);
-    void init_update_alpha_phase(double theta_max_phase_prev, double tau_inf);
-    void init_update_beta_phase(double beta_sup, double tau_sup);
+    void init_update_alpha_phase(double theta_max_phase_prev);
+    void init_update_beta_phase(double beta_sup);
 
     double getMaxThetaEvents(double tmax);
     double getMinThetaEvents(double tmin);

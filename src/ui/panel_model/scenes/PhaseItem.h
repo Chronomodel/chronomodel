@@ -49,20 +49,18 @@ class PhaseItem : public AbstractItem
     Q_OBJECT
 // members
 public:
-    //Qt::CheckState mState;
-    //bool mEyeActivated;
+
     bool mControlsVisible;
     bool mControlsEnabled;
     bool matLeastOneEventSelected;
     bool mOneEventSelectedOnScene;
-    QSizeF mSize;
+
  void redrawPhase();
 
 //functions
 protected:
-    QRectF boundingRect() const;
 
-    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
+    void paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*);
     void mousePressEvent(QGraphicsSceneMouseEvent* e);
 
     void hoverEnterEvent(QGraphicsSceneHoverEvent* e);
@@ -84,8 +82,6 @@ public:
     virtual ~PhaseItem();
 
     void setPhase(const QJsonObject& phase);
-
-    virtual void updateItemPosition(const QPointF& pos);
 
     void setControlsVisible(const bool visible);
     void setControlsEnabled(const bool enabled);

@@ -67,7 +67,8 @@ public:
     MainWindow(QWidget* aParent = nullptr);
     ~MainWindow();
 
-    Project* getProject();
+    //Project* getProject();
+    const std::shared_ptr<Project>& getProject();
     QJsonObject getState() const;
 
     QUndoStack* getUndoStack();
@@ -114,10 +115,12 @@ public slots:
     void openWebsite();
     void showHelp(bool);
     void setLanguage(QAction* action);
-    void mcmcFinished(Model* model) { mProject->mModel = model; };
+
+    //void mcmcFinished(Model* model) { mProject->mModel = model; };
+    void mcmcFinished() {};//
     void noResult() {};
  //   void updateProject();
-    void toggleCurve(bool checked);
+    void toggleCurve(bool);
 /*
     void changeEventsColor();
     void changeEventsMethod();
@@ -136,7 +139,8 @@ private:
 
     QStackedWidget* mCentralStack;
     ProjectView* mProjectView;
-    Project* mProject;
+    //Project* mProject;
+    std::shared_ptr<Project> mProject;
     QUndoStack* mUndoStack;
     QUndoView* mUndoView;
     QDockWidget* mUndoDock;
@@ -145,12 +149,7 @@ private:
 
     QMenu* mProjectMenu;
     QMenu* mEditMenu;
- /*   QMenu* mMCMCMenu;
-    QMenu* mViewMenu;
-    QMenu* mHelpMenu;
-    QMenu* mActionsMenu;
-    QMenu* mLanguageMenu;
-*/
+
     QAction* mAppSettingsAction;
     QAction* mAboutAct;
     QAction* mAboutQtAct;
@@ -159,17 +158,10 @@ private:
     QAction* mTranslateEnglishAct;
     QAction* mTranslateFrenchAct;
 
-    //QAction* mNewProjectAction;
     QAction* mOpenProjectAction;
- /*   QAction* mInsertProjectAction;
-    QAction* mCloseProjectAction;
 
-  */
     QAction* mProjectSaveAction;
- /*   QAction* mProjectSaveAsAction;
-    QAction* mProjectExportAction;
-*/
-    //QAction* mMCMCSettingsAction;
+
     QAction* mRunAction;
     QAction* mResetMCMCAction;
     
@@ -180,21 +172,10 @@ private:
     QAction* mViewResultsAction;
     QAction* mViewLogAction;
 
-//    QAction* mUndoAction;
-//    QAction* mRedoAction;
-//    QAction* mUndoViewAction;
-//    QAction* mSelectAllAction;
-/*
-    QAction* mSelectEventsAction;
-    QAction* mSelectEventsNameAction;
-    QAction* mEventsColorAction;
-    QAction* mEventsMethodAction;
-    QAction* mDatesMethodAction;
-    QList<QAction*> mDatesActions;
-*/
-    QAction* mHelpAction;
+    /*QAction* mHelpAction;
     QAction* mManualAction;
     QAction* mWebsiteAction;
+   */
 
 private:
     Q_DISABLE_COPY(MainWindow)

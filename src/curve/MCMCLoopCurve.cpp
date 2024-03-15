@@ -2248,10 +2248,10 @@ bool MCMCLoopCurve::update_321()
                 }
 
             } catch(std::exception& exc) {
-                qWarning() << "[MCMCLoopCurve::update] Ti : Caught Exception!\n"<<exc.what();
+                qWarning() << "[MCMCLoopCurve::update_321] Ti : Caught Exception!\n"<<exc.what();
 
             }  catch (...) {
-                qWarning() << "[MCMCLoopCurve::update] Ti : Caught Exception!";
+                qWarning() << "[MCMCLoopCurve::update_321] Ti : Caught Exception!";
             }
 
 
@@ -2269,7 +2269,7 @@ bool MCMCLoopCurve::update_321()
 
                         if (min >= max) {
                             const auto seed = mLoopChains.at(mChainIndex).mSeed;
-                            throw QObject::tr("Error for event theta : %1 :\n min = %2 : max = %3 \n seed = %4").arg(event->mName, QString::number(min), QString::number(max), QString::number(seed));
+                            throw QObject::tr("[MCMCLoopCurve::update_321] Error for event theta : %1 :\n min = %2 : max = %3 \n seed = %4").arg(event->mName, QString::number(min), QString::number(max), QString::number(seed));
                         }
 
                         // On stocke l'ancienne valeur

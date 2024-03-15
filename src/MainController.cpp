@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "MainController.h"
+
 #include "PluginManager.h"
 #include "MainWindow.h"
 #include "Painting.h"
@@ -49,7 +50,7 @@ MainController::MainController(const QString& filePath)
     PluginManager::loadPlugins();
     QCoreApplication::setApplicationName("ChronoModel");
     QCoreApplication::setApplicationVersion (version.toString());
-    QCoreApplication::setOrganizationDomain("http://www.chronomodel.com");
+    QCoreApplication::setOrganizationDomain("https://www.chronomodel.com");
     QCoreApplication::setOrganizationName("CNRS");
 
     mMainWindow = MainWindow::getInstance();

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -72,11 +72,11 @@ public slots:
 
 public:
     void itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);
-    void constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e);
-    void constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e);
-    bool itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);
+    void constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent*);
+    void constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent*);
+    bool itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent*);
 
-    void itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e);
+    void itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent*);
     //void updateEyedPhases();
 
     void adaptItemsForZoom(const double prop);

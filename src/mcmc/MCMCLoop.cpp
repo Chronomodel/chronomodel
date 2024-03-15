@@ -61,7 +61,6 @@ MCMCLoop::MCMCLoop(Project &project):
     mState (eBurning),
     mProject(project)
 {
-    //mProject->mLoop = this;
     mAbortedReason = QString();
 #ifdef _WIN32
     DWORD process_id =GetCurrentProcessId();
@@ -243,12 +242,6 @@ QString MCMCLoop::initialize_time()
             for (Event* uEvent : unsortedEvents) {
                 if (uEvent->mType == Event::eDefault) {
 
-                    /*  mModel->initNodeEvents(); // Doit être réinitialisé pour toute recherche getThetaMinRecursive et getThetaMaxRecursive
-                    const double min = uEvent->getThetaMinRecursive_v2(tminPeriod);
-
-                    mModel->initNodeEvents();
-                    const double max = uEvent->getThetaMaxRecursive_v2(tmaxPeriod);
-                    */
                     mModel->initNodeEvents();
                     const double min = uEvent->getThetaMinRecursive_v3(tminPeriod);
                     mModel->initNodeEvents();
@@ -305,7 +298,7 @@ QString MCMCLoop::initialize_time()
                         double sigma = double (data.std);
 #ifdef DEBUG
                         if (sigma == 0.)
-                            return "sigma == 0";
+                            return "[MCMCLoop::initialize_time] sigma == 0";
 #endif
                         if (is_wiggle) {
                             const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mWiggleCalibration->mRepartition);
@@ -320,7 +313,7 @@ QString MCMCLoop::initialize_time()
                         } else { // in the case of mRepartion curve is null, we must init ti outside the study period
                             // For instance we use a gaussian random sampling
                             sigma = tmaxPeriod - tminPeriod;
-                            qDebug()<<"mRepartion curve is null for"<< date.mName;
+                            qDebug()<<"[MCMCLoop::initialize_time] mRepartion curve is null for"<< date.mName;
                             const double u = Generator::gaussByBoxMuller(0., sigma);
                             if (u<0)
                                 date.mTi.mX = tminPeriod + u;
@@ -328,7 +321,7 @@ QString MCMCLoop::initialize_time()
                                 date.mTi.mX = tmaxPeriod + u;
 
                             if (date.mTi.mSamplerProposal == MHVariable::eInversion) {
-                                qDebug()<<"Automatic sampling method exchange eInversion to eMHPrior for"<< date.mName;
+                                qDebug()<<"[MCMCLoop::initialize_time] Automatic sampling method exchange eInversion to eMHPrior for"<< date.mName;
                                 date.mTi.mSamplerProposal = MHVariable::eMHPrior;
                                 date.autoSetTiSampler(true);
                             }
@@ -470,21 +463,24 @@ QString MCMCLoop::initialize_time()
                 emit stepProgressed(i++);
 
             }
-            // Check strati constraints .
-            for (Event* ev : mModel->mEvents) {
-                const double min = ev->getThetaMin(tminPeriod);
+            // Check strati constraints , need alpha and beta Phase
+            /*for (Event* ev : mModel->mEvents) {
+                const double min = ev->getThetaMin(tminPeriod); // need alpha and beta Phase
                 const double max = ev->getThetaMax(tmaxPeriod);
-                if (min >= max) {
-                    throw QObject::tr("Error for event theta fixed: %1 : min = %2 : max = %3").arg(ev->mName, QString::number(min), QString::number(max));
+
+
+                qDebug() << QString("[MCMCLoop::initialize_time] Init for event theta fixed : %1 : min = %2 : max = %3  ->theta = %4 thetaRed = %5-------").arg(ev->mName, QString::number(min, 'f', 3), QString::number(max, 'f', 3), QString::number(ev->mTheta.mX, 'f', 3), QString::number(ev->mThetaReduced, 'f', 3));
+
+                if (min > max) {
+                    throw QObject::tr("Error for event theta fixed : %1 : min = %2 : max = %3").arg(ev->mName, QString::number(min), QString::number(max));
                 }
-            }
+            }*/
 
 
         }
 
     }  catch (const QString e) {
         qWarning() <<"Init theta event, ti,  ???"<<e;
-        //mAbortedReason = QString("Error in Init theta event, ti,  ???");
         mAbortedReason = e;
         return mAbortedReason;
     }
@@ -495,10 +491,10 @@ QString MCMCLoop::initialize_time()
     try {
         i = 0;
         for (auto&& phase : phases ) {
-
+            phase->update_All(tminPeriod, tmaxPeriod);
             // tau is still initalize
 
-            double tmp = phase->mEvents[0]->mTheta.mX;
+            /*double tmp = phase->mEvents[0]->mTheta.mX;
             // All Event must be Initialized
             std::for_each(PAR phase->mEvents.begin(), phase->mEvents.end(), [&tmp] (Event* ev){tmp = std::min(ev->mTheta.mX, tmp);});
             phase->mAlpha.mX = tmp;
@@ -508,7 +504,8 @@ QString MCMCLoop::initialize_time()
             phase->mBeta.mX = tmp;
 
             phase->mDuration.mX = phase->mBeta.mX - phase->mAlpha.mX;
-phase->mTau.mX = phase->mBeta.mX - phase->mAlpha.mX;
+            phase->mTau.mX = phase->mBeta.mX - phase->mAlpha.mX;
+*/
             if (isInterruptionRequested())
                 return ABORTED_BY_USER;
 
@@ -519,6 +516,27 @@ phase->mTau.mX = phase->mBeta.mX - phase->mAlpha.mX;
         mAbortedReason = QString("Init alpha and beta phases  ???");
         return mAbortedReason;
     }
+
+    // --------------------------- Check Event FIXED strati constraints----------------------
+    if (mCurveSettings.mTimeType != CurveSettings::eModeBayesian) { // Theta fixed
+        try {
+            for (Event* ev : mModel->mEvents) {
+                const double min = ev->getThetaMin(tminPeriod); // need alpha and beta Phase
+                const double max = ev->getThetaMax(tmaxPeriod);
+
+                qDebug() << QString("[MCMCLoop::initialize_time] Init for event theta fixed : %1 : min = %2 : max = %3  ->theta = %4 thetaRed = %5-------").arg(ev->mName, QString::number(min, 'f', 3), QString::number(max, 'f', 3), QString::number(ev->mTheta.mX, 'f', 3), QString::number(ev->mThetaReduced, 'f', 3));
+
+                if (ev->mTheta.mX<min || ev->mTheta.mX> max) {
+                    throw QObject::tr("Error for event theta fixed : %1 : min = %2 : max = %3 but Theta = %4" ).arg(ev->mName, QString::number(min), QString::number(max), QString::number(ev->mThetaReduced, 'f', 3));
+                }
+            }
+        }  catch (const QString e) {
+            mAbortedReason = e;
+            return mAbortedReason;
+        }
+    }
+
+
     return QString();
 }
 
@@ -528,15 +546,13 @@ phase->mTau.mX = phase->mBeta.mX - phase->mAlpha.mX;
 void MCMCLoop::run()
 {
 #if DEBUG
-    qDebug()<<"[MCMCLoop] run()";
+    qDebug()<<"[MCMCLoop::run] run()";
 #endif
 
     QElapsedTimer startTime;
     startTime.start();
 
-    QString mDate = QDateTime::currentDateTime().toString("dddd dd MMMM yyyy");
-
-
+    const QString mDate = QDateTime::currentDateTime().toString("dddd dd MMMM yyyy");
     QString log = "Start " + mDate + " -> " + QTime::currentTime().toString("hh:mm:ss.zzz");
 
 

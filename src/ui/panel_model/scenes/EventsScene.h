@@ -46,8 +46,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "StudyPeriodSettings.h"
 #include "CurveSettings.h"
 
-//#include <QWheelEvent>
-
 class QGraphicsItemAnimation;
 class QTimeLine;
 
@@ -80,7 +78,7 @@ public slots:
     void updateStateSelectionFromItem();
     void updateHelp();
 
-   virtual  void deleteSelectedItems();
+   virtual void deleteSelectedItems();
 
 public:
     void itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);

@@ -208,9 +208,9 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     const QRectF rName = QRectF(-r.width()/2., 0, r.width(), mTitleHeight);
 
     painter->fillRect(rName, Qt::white);
-    QFont font (qApp->font());
+    const QFont font (qApp->font().family(), 12.);
     //font.setPointSizeF(10.);
-    font.setPixelSize(12.);
+    //font.setPixelSize(12.);
 
     QString name = mDate.value(STATE_NAME).toString();
    // QFont ftAdapt = AbstractItem::adjustFont(font, name, rName);
@@ -222,7 +222,7 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     QFontMetrics metrics (font);
     name = metrics.elidedText(name, Qt::ElideRight, int (r.width() - 5));
 
-  painter->setFont(font);
+    painter->setFont(font);
     painter->drawText(rName, Qt::AlignCenter, name);
     // thumbnail
     const QRectF rct = QRectF(-r.width()/2., mTitleHeight, r.width(), mEltsHeight);

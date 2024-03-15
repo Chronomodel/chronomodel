@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -696,6 +696,9 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const double tmin_formate
     }
     text += line(textBlack(d->mTi.resultsString("", DateUtils::getAppSettingsFormatStr()))) ;
 
+    text +=  "<br>" + line(textBold(textBlack(QObject::tr("Posterior Std ti"))));
+    text += line(textBlack(d->mSigmaTi.resultsString()));
+
     return text;
 }
 
@@ -733,10 +736,21 @@ QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, c
                 text += "<br><br>" + dateResultsHTML(&(date), model);
         }
     }
+
+    if (model && model->is_curve) {
+        if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
+            text = "<br>" + line(textBold(textGreen(QObject::tr("Curve : Std gi"))));
+            text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mRawTrace->at(0)))));
+
+        } else {
+            text += "<br>" + line(textBold(textGreen(QObject::tr("Curve : Posterior Std gi"))));
+            text += line(textGreen(e->mVg.resultsString("", nullptr)));
+        }
+    }
     return text;
 }
 
-QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, const double tmin_formated, const double tmax_formated)
+QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, const double tmin_formated, const double tmax_formated, bool with_curve)
 {
     Q_ASSERT(e);
     QString text;
@@ -758,6 +772,17 @@ QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, c
                 text += "<br><br>" + dateResultsHTML(&(date), tmin_formated, tmax_formated);
         }
     }
+
+    if (with_curve) {
+        if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
+            text = "<br>" + line(textBold(textGreen(QObject::tr("Curve : Std gi"))));
+            text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mRawTrace->at(0)))));
+
+        } else {
+            text += "<br>" + line(textBold(textGreen(QObject::tr("Curve : Posterior Std gi"))));
+            text += line(textGreen(e->mVg.resultsString("", nullptr)));
+        }
+    }
     return text;
 }
 
@@ -767,11 +792,11 @@ QString ModelUtilities::EventS02ResultsHTML(const Event* e)
     QString text;
 
     if (e->mS02Theta.mSamplerProposal == MHVariable::eFixe) {
-        text = line(textBold(textGreen(QObject::tr("S02 non Bayesian"))));
+        text = line(textBold(textBlue(QObject::tr("Event Shrinkage = harmonic mean"))));
 
     } else {
-        text += line(textBold(textGreen(QObject::tr("Posterior Event Shrinkage"))));
-        text += line(textGreen(e->mS02Theta.resultsString("", nullptr)));
+        text += line(textBold(textBlue(QObject::tr("Posterior Event Shrinkage"))));
+        text += line(textBlue(e->mS02Theta.resultsString("", nullptr)));
     }
     return text;
 }
@@ -789,11 +814,11 @@ QString ModelUtilities::VgResultsHTML(const Event* e)
     }
 
     if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
-        text = line(textBold(textGreen(QObject::tr("Std gi"))));
+        text = line(textBold(textGreen(QObject::tr("Curve : Std gi"))));
         text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mRawTrace->at(0)))));
 
     } else {
-        text += line(textBold(textGreen(QObject::tr("Posterior Std gi"))));
+        text += line(textBold(textGreen(QObject::tr("Curve : Posterior Std gi"))));
         text += line(textGreen(e->mVg.resultsString("", nullptr)));
     }
     return text;
@@ -815,7 +840,7 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
     if (p->mTimeRange != std::pair<double, double>(- INFINITY, +INFINITY)) {
         text += "<br>";
         // we suppose it's the same mThreshohdUsed than alpha
-        const QString result = QObject::tr("Phase Time Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(p->mAlpha.mThresholdUsed),
+        const QString result = QObject::tr("Phase Time Range") + QString(" ( %1 %) : [ %2 ; %3 ]").arg(stringForLocal(p->mAlpha.mThresholdUsed),
                                                                                             stringForLocal(p->getFormatedTimeRange().first),
                                                                                             stringForLocal(p->getFormatedTimeRange().second));
         text += line(textBold(textOrange(result)));
@@ -898,24 +923,24 @@ QString ModelUtilities::activityResultsHTML(const Phase* p)
 
     const double hUnif = (3.686*p->mValueStack.at("Activity_std95").mValue)/pow(p->mEvents.size(), 1./5.);
     text += "<br>";
-    text += line(textOrange("Optimal h Unif = " + stringForLocal(hUnif)));
+    text += line(textOrange("Optimal h (Uniform kernel) = " + stringForLocal(hUnif)));
 
     return text;
 }
 
 QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
 {
-    QString text = line(textBold(textGreen(QObject::tr("Succession : from %1 to %2").arg(p->mPhaseFrom->mName, p->mPhaseTo->mName))));
+    QString text = line(textBold(textOrange(QObject::tr("Succession : from %1 to %2").arg(p->mPhaseFrom->mName, p->mPhaseTo->mName))));
 
     switch(p->mGammaType) {
     case PhaseConstraint::eGammaFixed :
-        text += textGreen(QObject::tr("Min Hiatus fixed = %1").arg(p->mGammaFixed));
+        text += textOrange(QObject::tr("Min Hiatus fixed = %1").arg(p->mGammaFixed));
         break;
     case PhaseConstraint::eGammaUnknown :
-        text += textGreen(QObject::tr("Min Hiatus unknown")) ;
+        text += textOrange(QObject::tr("Min Hiatus unknown")) ;
         break;
     case PhaseConstraint::eGammaRange : // no longer used
-        text += textGreen(QObject::tr("Min Hiatus between %1 and %2").arg(p->mGammaMin, p->mGammaMax));
+        text += textOrange(QObject::tr("Min Hiatus between %1 and %2").arg(p->mGammaMin, p->mGammaMax));
         break;
     default:
 
@@ -925,26 +950,26 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
     if (p->mTransitionRange != QPair<double,double>()) {
         text += "<br>";
         // we suppose it's the same mThreshohdUsed than alpha
-        const QString result = textGreen(QObject::tr("Transition Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(p->mPhaseFrom->mAlpha.mThresholdUsed),
+        const QString result = textOrange(QObject::tr("Transition Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(p->mPhaseFrom->mAlpha.mThresholdUsed),
                                                                                             stringForLocal(p->getFormatedTransitionRange().first),
                                                                                             stringForLocal(p->getFormatedTransitionRange().second),
                                                                                             DateUtils::getAppSettingsFormatStr()));
 
-        text += line(textGreen(result));
+        text += line(textOrange(result));
     }
 
     if (p->mGapRange != QPair<double, double>()) {
         QString result;
         if (std::isinf(p->getFormatedGapRange().first) || std::isinf(p->getFormatedGapRange().second))
-           result = textGreen(QObject::tr("No Gap") );
+           result = textOrange(QObject::tr("No Gap") );
 
         else
-            result = textGreen(QObject::tr("Gap Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(p->mPhaseFrom->mAlpha.mThresholdUsed),
+            result = textOrange(QObject::tr("Gap Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(p->mPhaseFrom->mAlpha.mThresholdUsed),
                                                                            stringForLocal(p->getFormatedGapRange().first),
                                                                            stringForLocal(p->getFormatedGapRange().second),
                                                                            DateUtils::getAppSettingsFormatStr()));
 
-        text += line(textGreen(result + "<br>"));
+        text += line(textOrange(result + "<br>"));
     }
 
     return text;
@@ -965,14 +990,18 @@ QString ModelUtilities::curveResultsHTML(const std::shared_ptr<ModelCurve> model
         text += line(textGreen(QObject::tr("- Lambda Spline; Interpolation Fixed value = %1").arg(QString::number(0))));
 
     }else {
-        text += line(textGreen(QObject::tr("- Mean of the log10 of Smoothing = %1").arg(stringForLocal(model->mLambdaSpline.mResults.funcAnalysis.mean))));
+        //text += line(textGreen(QObject::tr("- Mean of the log10 of Smoothing = %1").arg(stringForLocal(model->mLambdaSpline.mResults.funcAnalysis.mean))));
+        text += "<br>";
+        text += lambdaResultsHTML(model);
     }
 
     if (model->mS02Vg.mSamplerProposal == MHVariable::eFixe) {
         text += line(textGreen(QObject::tr("- Curve Shrinkage ; Fixed value = %1").arg(QString::number(pow( model->mS02Vg.mRawTrace->at(0), 2.)))));
 
     } else {
-        text += line(textGreen(QObject::tr("- Mean of the sqrt of Curve Shrinkage = %1").arg(stringForLocal(model->mS02Vg.mResults.funcAnalysis.mean))));
+        //text += line(textGreen(QObject::tr("- Mean of the sqrt of Curve Shrinkage = %1").arg(stringForLocal(model->mS02Vg.mResults.funcAnalysis.mean))));
+        text += "<br>";
+        text += S02ResultsHTML(model);
     }
 
     if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Depth) {
@@ -1151,53 +1180,17 @@ void sampleInCumulatedRepartition_thetaFixe (Event *event, const StudyPeriodSett
 {
 
     // Creation of the cumulative date distribution
-    // 1 - Search for tmin and tmax, distribution curves, identical to the calibration.
-    double unionTmin (+INFINITY);
-    double unionTmax (-INFINITY);
-    double unionStep (settings.mStep);
-    for (auto&& d : event->mDates) {
-        if (d.mCalibration != nullptr && !d.mCalibration->mVector.isEmpty() ) {
-            unionTmin = std::min(unionTmin, d.mCalibration->mTmin);
-            unionTmax = std::max(unionTmax, d.mCalibration->mTmax);
-            unionStep = std::min(unionStep, d.mCalibration->mStep);
+    const CalibrationCurve &calib =  generate_mixingCalibration(event->mDates, "Mixing Theta Fixed");
 
-        } else {
-            unionTmin = settings.mTmin;
-            unionTmax = settings.mTmax;
-        }
+    const double maxRepartition = calib.mRepartition.last();
+    const double minRepartition = calib.mRepartition.first();
+    if ( (minRepartition != 0. || maxRepartition != 0.) &&  (calib.mRepartition.size() > 1)) {
+        const double idx = vector_interpolate_idx_for_value(0.5*(maxRepartition - minRepartition) + minRepartition, calib.mRepartition);
+        event->mTheta.mX = calib.mTmin + idx * calib.mStep;
 
+    } else {
+        event->mTheta.mX = Generator::randomUniform(settings.mTmin, settings.mTmax);
     }
-
-    // 2 - Creation of the cumulative distribution curves in the interval
-        QList<double> unionRepartition (0);
-        double tWhile (unionTmin);
-        double sumWhile (0.);
-
-        while (tWhile<= unionTmax) {
-            sumWhile= 0.;
-            for (auto&& d : event->mDates) {
-                sumWhile += d.mCalibration->repartition_interpolate(tWhile);
-            }
-            unionRepartition.append(sumWhile);
-            tWhile += unionStep;
-
-        }
-
-        /* Given the stratigraphic constraints and the possibility of having dates outside the study period.
-         * The maximum of the distribution curve can be different from the number of dates
-         * and the minimum can be different from 0.
-         */
-
-        const double maxRepartition (unionRepartition.last());
-        const double minRepartition (unionRepartition.first());
-        if ( (minRepartition != 0. || maxRepartition != 0.) &&
-             (unionRepartition.size() > 1)) {
-            const double idx = vector_interpolate_idx_for_value(0.5*(maxRepartition-minRepartition) + minRepartition, unionRepartition);
-            event->mTheta.mX = unionTmin + idx * unionStep;
-
-        } else {
-            event->mTheta.mX = Generator::randomUniform(settings.mTmin, settings.mTmax);
-        }
 
 
 }

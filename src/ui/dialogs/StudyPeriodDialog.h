@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -40,9 +40,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef STUDYPERIODDIALOG_H
 #define STUDYPERIODDIALOG_H
 
+#include "StudyPeriodSettings.h"
+
 #include <QDialog>
 #include <QJsonObject>
-#include "Date.h"
 
 class QLineEdit;
 class QComboBox;
@@ -76,6 +77,7 @@ protected slots:
     void setAdvancedVisible(bool visible);
     void updateVisibleControls();
     void setOkEnabled(const QString& text);
+    void showMessageStepForced(bool forced);
 
 signals:
     void wiggleChange();

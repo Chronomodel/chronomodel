@@ -212,7 +212,7 @@ void EventsScene::showHelp(bool show)
 
 void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool storeUndoCommand)
 {
-    //qDebug()<<"[EventsScene::sendUpdateProject] start";
+    qDebug()<<"[EventsScene::sendUpdateProject] start";
 
     QJsonObject statePrev = mProject->state();
     QJsonObject stateNext = statePrev;
@@ -221,17 +221,16 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
     // State with correct value of the selection
     QJsonArray events = QJsonArray();
 
-    for (int i = 0; i < mItems.size(); ++i) {
-         events.append(((EventItem*)mItems.at(i))->getData());
+    for (auto item : mItems) {
+        events.append(static_cast<EventItem*>(item)->getData());
     }
 
     stateNext[STATE_EVENTS] = events;
 
-    //qDebug()<<"[EventsScene::sendUpdateProject] stateChange";
     if (storeUndoCommand)
-         mProject->pushProjectState(stateNext, reason, notify);
+        mProject->pushProjectState(stateNext, reason, notify);
     else
-         mProject->sendUpdateState(stateNext, reason, notify);
+        mProject->sendUpdateState(stateNext, reason, notify);
 
 }
 void EventsScene::noHide()
@@ -269,18 +268,19 @@ void EventsScene::setShowAllThumbs(const bool show)
     }
 
     // update constraintItems GreyedOut according to the EventItem GreyedOut
-    for (auto cIter : mConstraintItems) {
 
-        const int eventFromId = cIter->mData.value(STATE_CONSTRAINT_BWD_ID).toInt();
-        const int eventToId = cIter->mData.value(STATE_CONSTRAINT_FWD_ID).toInt();
+    for (auto arrow : mConstraintItems) {
+
+        const int eventFromId = arrow->mData.value(STATE_CONSTRAINT_BWD_ID).toInt();
+        const int eventToId = arrow->mData.value(STATE_CONSTRAINT_FWD_ID).toInt();
 
         const EventItem* evFrom = findEventItemWithJsonId(eventFromId);
         const EventItem* evTo = findEventItemWithJsonId(eventToId);
 
         if ( (evTo && evFrom && (!evFrom->mGreyedOut || !evTo->mGreyedOut)) || show)
-            cIter->setGreyedOut(false);
+            arrow->setGreyedOut(false);
         else
-            cIter->setGreyedOut(true);
+            arrow->setGreyedOut(true);
 
     }
 }
@@ -393,7 +393,7 @@ void EventsScene::createSceneFromState()
 void EventsScene::updateSceneFromState()
 {
 #ifdef DEBUG
-   // qDebug()<<"[EventsScene::updateSceneFromState] Start";
+    qDebug()<<"[EventsScene::updateSceneFromState] Start";
     QElapsedTimer startTime;
     startTime.start();
     //Chronometer ch ("EventsScene::updateSceneFromState");
@@ -414,18 +414,6 @@ void EventsScene::updateSceneFromState()
 
             if (type == Event::eDefault) {
                         EventItem* eventItem = (EventItem*)mItems[i];
-                       /* QList<QGraphicsItem*> dateItems = eventItem->childItems();
-
-                        const auto dateItemsSize = dateItems.size() -1;
-                        for (auto j = dateItemsSize; j >= 0; --j) {
-                            removeItem(dateItems.at(j));
-                            delete dateItems[j];
-                            dateItems[j] = nullptr;
-                            //dateItems.removeFirst();
-                        }*/
-                        //delete dateItems.first(); // delete the object
-                        //dateItems.removeFirst(); // remove the pointer
-                        //delete eventItem;
 
                         removeItem(eventItem);
                         eventItem = nullptr;
@@ -516,7 +504,7 @@ void EventsScene::updateSceneFromState()
     QList<int> indexItemToRemove;
 
     for (int i = 0; i < mItems.size(); ++i) {
-        QJsonObject &event = mItems[i]->mData;
+        const QJsonObject &event = mItems[i]->mData;
 
         if (!events_ids_inNewState.contains(event.value(STATE_ID).toInt())) {
                 indexItemToRemove.append(i);        
@@ -528,7 +516,7 @@ void EventsScene::updateSceneFromState()
     // ------------------------------------------------------
     blockSignals(true);
     for (auto i = indexItemToRemove.size()-1; i >= 0; --i) {
-        QJsonObject& event = mItems[indexItemToRemove.at(i)]->mData;
+        const QJsonObject& event = mItems[indexItemToRemove.at(i)]->mData;
         Event::Type type = Event::Type (event.value(STATE_EVENT_TYPE).toInt());
 
         if (!events_ids_inNewState.contains(event.value(STATE_ID).toInt())) {
@@ -566,6 +554,17 @@ void EventsScene::updateSceneFromState()
         progress->setLabelText(tr("Create / Update event items"));
     }
 
+    //---- Find selected phases, to update Event greyedOut
+    QStringList selectedPhasesIds;
+    const QJsonArray &phases = getState().value(STATE_PHASES).toArray();
+    for (const auto &&p : phases) {
+        QJsonObject phase = p.toObject();
+        const bool isSelected = phase.value(STATE_IS_SELECTED).toBool();
+        if (isSelected)
+            selectedPhasesIds.append(QString::number(phase.value(STATE_ID).toInt()));
+    }
+
+    //----
     for (auto&& citer : eventsInNewState) {
         const QJsonObject &event = citer.toObject();
 
@@ -574,15 +573,32 @@ void EventsScene::updateSceneFromState()
             progress->setValue(i);
 
         bool itemUnkown = true;
+blockSignals(true);
+        for (auto&& absItem : mItems) {
+            EventItem* oldItem = dynamic_cast<EventItem*> (absItem);
+            const QJsonObject oldItem_data = oldItem->getData();
 
-        for (auto&& cIterOld : mItems) {
-            EventItem* oldItem = dynamic_cast<EventItem*> (cIterOld);
-            const QJsonObject OldItemEvent = oldItem->getData();
-            oldItem->updateGreyedOut();
+            //oldItem->updateGreyedOut(); // very long
+            // -------
+            const QString eventPhasesIdsStr = oldItem_data.value(STATE_EVENT_PHASE_IDS).toString();
+            const QStringList eventPhasesIds = eventPhasesIdsStr.split(",");
+            bool greyOut = true;
+            if (selectedPhasesIds.isEmpty()) {
+                greyOut = false;
 
-            if ( OldItemEvent.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
+            } else {
+                for (auto && ids : selectedPhasesIds) {
+                    if (eventPhasesIds.contains(ids)) {
+                        greyOut = false;
+                        break;
+                    }
+                }
+            }
+            oldItem ->setGreyedOut(greyOut);
+            // -------
+            if ( oldItem_data.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
                itemUnkown = false;
-               if ((event != OldItemEvent) || settingsChanged) {
+               if ((event != oldItem_data) || settingsChanged) {
                     // UPDATE ITEM
                     //   qDebug() << "[EventsScene::updateSceneFromState] Event changed : id = " << event.value(STATE_ID).toInt() << event.value(STATE_NAME).toString();
 
@@ -593,6 +609,7 @@ void EventsScene::updateSceneFromState()
 
             oldItem = nullptr;
         }
+blockSignals(false);
         if (itemUnkown) {
             // CREATE ITEM
                 Event::Type type = Event::Type (event.value(STATE_EVENT_TYPE).toInt());
@@ -621,7 +638,7 @@ void EventsScene::updateSceneFromState()
 
                     }
 
-                } catch(QString error){
+                } catch (QString error){
                     QMessageBox message(QMessageBox::Critical,
                                         qApp->applicationName() + " " + qApp->applicationVersion(),
                                         QObject::tr("Error : %1").arg(error),
@@ -666,15 +683,16 @@ void EventsScene::updateSceneFromState()
     if (displayProgress)
         progress->setLabelText(tr("Create / Update constraint items"));
 
-    for (int i = 0; i < constraints.size(); ++i) {
-        QJsonObject constraint = constraints.at(i).toObject();
+    //for (int i = 0; i < constraints.size(); ++i) {
+    for (const auto &c : constraints) {
+        const QJsonObject &constraint = c.toObject();
         if (displayProgress)
             progress->setValue(i);
 
         bool itemExists = false;
 
         for (auto &mConstItem : mConstraintItems) {
-            QJsonObject constraintItem = mConstItem->data();
+            const QJsonObject &constraintItem = mConstItem->data();
 
             if (constraintItem.value(STATE_ID).toInt() == constraint.value(STATE_ID).toInt()) {
 
@@ -717,17 +735,7 @@ void EventsScene::updateSceneFromState()
         lastCurItem = nullptr;
     }
 
-    // Deleting an item that was selected involves changing the selection (and updating properties view)
-    // Nothing has been triggered so far because of the mUpdatingItems flag, so we need to trigger it now!
-    // As well, creating an item changes the selection because we want the newly created item to be selected.
-    // if (hasDeleted || hasCreated)
-    //      updateStateSelectionFromItem(); // modify mState and emit pushState
-
-            //       setSceneRect(specialItemsBoundingRect().adjusted(-30, -30, 30, 30));
-    // setSceneRect(itemsBoundingRect());
     adjustSceneRect();
-
-    //adaptItemsForZoom(mZoom);
 
     if (displayProgress) {
        delete progress;
@@ -737,19 +745,18 @@ void EventsScene::updateSceneFromState()
 
  #ifdef DEBUG
   // ch.display();
-  //  qDebug()<<"[EventsScene::updateSceneFromState] finish in " << DHMS(startTime.elapsed());
+   qDebug()<<"[EventsScene::updateSceneFromState] finish in " << DHMS(startTime.elapsed());
  #endif
 }
 
 void EventsScene::clean()
 {
-
     // ------------------------------------------------------
     //  Delete all items
     // ------------------------------------------------------
     const auto itemsSize = mItems.size() - 1;
     for (auto i = itemsSize; i >= 0; --i) {
-        EventItem* eventItem = (EventItem*)mItems[i];
+        EventItem* eventItem = static_cast<EventItem*>(mItems[i]);
 
             QList<QGraphicsItem*> dateItems = eventItem->childItems();
             const auto dateItemsSize = dateItems.size() -1;
@@ -837,9 +844,12 @@ void EventsScene::updateStateSelectionFromItem()
             mProject->mState[STATE_EVENTS] = updatedEvents;
 
             if (movedItem) {
-                sendUpdateProject(tr("item moved"), false, true);
-        }
-        else   sendUpdateProject(tr("events selection"), false, false);//  bool notify = true, bool storeUndoCommand = false
+                qDebug()<<"[EventsScene::updateStateSelectionFromItem] sendUpdateProject(Item moved)";
+                // sendUpdateProject(tr("item moved"), false, true);
+
+            } else
+                sendUpdateProject(tr("events selection"), false, false);//  bool notify = true, bool storeUndoCommand = false
+
             // refresh the show and hide Event in the phases Scenes
            if (nbOfSelectedEvent == 0)
                 emit noSelection();
@@ -849,62 +859,6 @@ void EventsScene::updateStateSelectionFromItem()
         }
     }
 }
-
-/* keep in mind
-void EventsScene::updateSelectedEventsFromPhases()
-{
-    // Do not send "selection updated" each time an item is selected in this function!
-    // Do it all at once at the end.
-    mUpdatingItems = true;
-
-    QJsonObject state = mProject->state();
-    QJsonArray phases = state.value(STATE_PHASES).toArray();
-
-    for (int i=0; i<mItems.size(); ++i) {
-        EventItem* item = static_cast<EventItem*>(mItems.at(i));
-        bool mustBeSelected = false;
-        QList<int> eventPhasesIds = stringListToIntList(item->mData.value(STATE_EVENT_PHASE_IDS).toString());
-
-        for (int i=0; i<phases.size(); ++i) {
-            const QJsonObject phase = phases.at(i).toObject();
-            const int phaseId = phase.value(STATE_ID).toInt();
-
-            if (eventPhasesIds.contains(phaseId) && phase.value(STATE_IS_CURRENT).toBool())
-               mustBeSelected = true;
-
-        }
-        item->setSelected(mustBeSelected);
-
-        QList<QGraphicsItem*> dateList = item->childItems();
-        for (int i=0; i<dateList.size(); ++i)
-            dateList.at(i)->setSelected(mustBeSelected);
-
-
-    }
-    mUpdatingItems = false;
-
-    // update scene without call updateSelection,
-    for (int i=0; i<mItems.size(); ++i) {
-        EventItem* item = static_cast<EventItem*>(mItems.at(i));
-
-        bool selected = item->isSelected() ;
-
-        QJsonObject& event = item->getEvent();
-
-        if (event.value(STATE_IS_SELECTED).toBool() != selected ) {
-            event[STATE_IS_SELECTED] = selected;
-           // modified = true;
-        }
-
-
-     }
-    sendUpdateProject(tr("events selection : no undo, no view update!"), false, false);
-
-
-    //updateSelection();
-    //updateScene();
-}
-*/
 
 void EventsScene::adaptItemsForZoom(const double prop)
 {
@@ -1049,7 +1003,7 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
                 if (event.value(STATE_ID).toInt() == prevEvent.value(STATE_ID).toInt()) {
                     QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
                     for (int j = 0; j<dates.size(); ++j) {
-                        qDebug()<<"dates j"<<dates.at(j)<<" "<<dateToRemove;
+                        //qDebug()<<"dates j"<<dates.at(j)<<" "<<dateToRemove;
                         if (dates.at(j).toObject() == dateToRemove) {
                             dates.removeAt(j);
                             isRemove=true;

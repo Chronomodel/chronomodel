@@ -80,6 +80,7 @@ Date::Date(const Event *event):
     mUUID = QString("NONE");
 
     mTi.mSamplerProposal = MHVariable::eMHPrior;
+    updateti = &Date::Prior;
     mSigmaTi.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
     mIsValid = false;
@@ -1762,7 +1763,7 @@ void Date::autoSetTiSampler(const bool bSet)
     // define sampling function
     // select if using getLikelyhooArg is possible, it's a faster way
 
-    if (bSet && mPlugin!= 0 && mPlugin->withLikelihoodArg() && mOrigin==eSingleDate) {
+    if (bSet && mPlugin!= nullptr && mPlugin->withLikelihoodArg() && mOrigin == eSingleDate) {
          //   if (false) {
         switch (mTi.mSamplerProposal) {
             case MHVariable::eMHPrior:
@@ -1774,7 +1775,7 @@ void Date::autoSetTiSampler(const bool bSet)
                 break;
             
                 // only case with acceptation rate, because we use sigmaMH :
-            case MHVariable::eMHAdaptGauss:
+            case MHVariable::eMHAdaptGauss: //old version is eMHSymGaussAdapt = 5
                 updateti = &Date::MHAdaptGaussWithArg;
                 break;
 
@@ -1847,6 +1848,10 @@ CalibrationCurve generate_mixingCalibration(const QList<Date> &dates, const QStr
         unionStep = (unionTmax-unionTmin)/union_N;
         mixing_calib.mStep = unionStep;
 
+
+for (auto&& d : dates) {
+            qDebug()<< "generate_mixing"<<d.mName <<d.mCalibration->mRepartition.last();
+        }
         // 2 - Creation of the cumulative distribution curves in the interval
 
         double t = unionTmin;

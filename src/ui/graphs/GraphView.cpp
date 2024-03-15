@@ -262,8 +262,8 @@ void GraphView::adjustYScale()
                             yMax = std::max(yMax, map_max(subDataSup).value());
 
                     } else if (!curve.mData.empty()) {
+                        yMin = std::min(yMin, map_min(curve.mData, mCurrentMinX, mCurrentMaxX).value());
                         yMax = std::max(yMax, map_max(curve.mData, mCurrentMinX, mCurrentMaxX).value());
-                        yMin = std::min(yMax, map_min(curve.mData, mCurrentMinX, mCurrentMaxX).value());
 
                     } else if (curve.mMap.data.size() > 0) {// map
                         yMin = std::min(yMin, curve.mMap.rangeY.first);

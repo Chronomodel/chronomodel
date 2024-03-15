@@ -288,24 +288,22 @@ void Phase::init_alpha_beta_phase(QList<Phase*> &phases)
     }
 }
 
-void Phase::init_update_alpha_phase(double theta_max_phase_prev, double tau_inf)
+void Phase::init_update_alpha_phase(double theta_max_phase_prev)
 {
     if (mConstraintsNextPhases.isEmpty())
         return;
     else {
         for (auto prev_c : mConstraintsNextPhases) {
             if (mTauType != Phase::TauType::eTauUnknown) {
-
                 prev_c->mPhaseTo->mAlpha.mX = std::max(prev_c->mPhaseTo->mAlpha.mX, theta_max_phase_prev  + prev_c->mGamma);
                 qDebug()<<"[Phase::init_update_alpha_phase] mise à jour alpha des phases Sup " <<prev_c->mPhaseTo->mName<<" init alpha ="<<prev_c->mPhaseTo->mAlpha.mX;
             }
-           // prev_c->mPhaseTo->init_update_alpha_phase(prev_c->mPhaseTo->mAlpha.mX, prev_c->mPhaseTo->mTau.mX);
         }
         return;
     }
 }
 
-void Phase::init_update_beta_phase(double beta_sup, double tau_sup)
+void Phase::init_update_beta_phase(double beta_sup)
 {
     if (mConstraintsPrevPhases.isEmpty())
         return;
@@ -315,7 +313,6 @@ void Phase::init_update_beta_phase(double beta_sup, double tau_sup)
                 prev_c->mPhaseFrom->mBeta.mX = std::max(prev_c->mPhaseFrom->mBeta.mX, beta_sup - prev_c->mGamma);
                 qDebug()<<"[Phase::init_update_beta_phase] mise à jour beta des phases Inf " <<prev_c->mPhaseFrom->mName<<" init beta ="<<prev_c->mPhaseFrom->mBeta.mX;
             }
-           // prev_c->mPhaseFrom->init_update_beta_phase(prev_c->mPhaseFrom->mBeta.mX, prev_c->mPhaseFrom->mTau.mX);
         }
         return;
     }
@@ -364,7 +361,7 @@ double Phase::init_min_theta(const double min_default)
 #pragma mark RUN
 double Phase::getMaxThetaEvents(double tmax)
 {
-    Q_ASSERT_X(!mEvents.isEmpty(), "Phase::getMaxThetaEvents", QString("No Event in Phase :" + this->mName).toStdString().c_str());
+    Q_ASSERT_X(!mEvents.isEmpty(), "[Phase::getMaxThetaEvents]", QString("No Event in Phase :" + this->mName).toStdString().c_str());
     (void) tmax;
     double theta (mEvents[0]->mTheta.mX);
 
@@ -372,27 +369,6 @@ double Phase::getMaxThetaEvents(double tmax)
     std::for_each(mEvents.begin(), mEvents.end(), [&theta] (Event* ev) {theta= std::max(ev->mTheta.mX, theta);});
     return theta;
 
-    // if we need to use this function with event not initalized we have to use the next code
- /*
-
-    double theta;
-    bool found = false;
-    QList<Event*>::const_iterator iterEvent = mEvents.constBegin();
-    while (iterEvent != mEvents.constEnd()) {
-        if ((*iterEvent)->mInitialized)  {
-            if (!found) {
-                theta = (*iterEvent)->mTheta.mX;
-                found = true;
-            }
-            else
-                theta = qMax(theta, (*iterEvent)->mTheta.mX);
-
-        }
-        ++iterEvent;
-    }
-
-    return found ? theta : tmax;
-*/
 }
 /**
  * @brief Phase::getMinThetaEvents
@@ -401,31 +377,13 @@ double Phase::getMaxThetaEvents(double tmax)
  */
 double Phase::getMinThetaEvents(double tmin)
 {
-    Q_ASSERT_X(!mEvents.isEmpty(), "Phase::getMinThetaEvents", QString("No Event in Phase :" + mName).toStdString().c_str());
+    Q_ASSERT_X(!mEvents.isEmpty(), "[Phase::getMinThetaEvents]", QString("No Event in Phase :" + mName).toStdString().c_str());
     (void) tmin;
     double theta (mEvents[0]->mTheta.mX);
 
     // All Event must be Initialized
     std::for_each(mEvents.begin(), mEvents.end(), [&theta] (Event* ev){theta= std::min(ev->mTheta.mX, theta);});
     return theta;
-
-    // if we need to use this function with event not initalized we have to use the next code
- /*
-    bool found = false;
-    QList<Event*>::const_iterator iterEvent = mEvents.constBegin();
-    while(iterEvent != mEvents.constEnd()) {
-        if ((*iterEvent)->mInitialized)  {
-            if (!found) {
-                theta = (*iterEvent)->mTheta.mX;
-                found = true;
-            } else
-                theta = qMin(theta, (*iterEvent)->mTheta.mX);
-
-        }
-        ++iterEvent;
-    }
-    return found ? theta : tmin;
-*/
 }
 
 
@@ -490,9 +448,6 @@ QString Phase::getTauTypeText() const
             case eZOnly:
                     return QObject::tr("Uniform Span");
                 break;
-         /*   case eTauRange: // no longer used ->OBSOLETE
-                return QObject::tr("Tau Range") + QString(" [ %1 ; %2 ]").arg(QString::number(mTauMin), QString::number(mTauMax));
-            break;  */
             default:
                     return QObject::tr("Tau Undefined -> Error");
                 break;
@@ -505,9 +460,6 @@ void Phase::initTau(const double tminPeriod, const double tmaxPeriod)
     if (mTauType == eTauFixed && mTauFixed != 0.)
         mTau.mX = mTauFixed;
 
-   /* else if (mTauType == eTauRange && mTauMax > mTauMin) // no longer used
-        mTau.mX = mTauMax;
-*/
     else if (mTauType == eZOnly) {
             // Modif PhD ; initialisation arbitraire
             mTau.mX = tmaxPeriod - tminPeriod;
@@ -523,28 +475,28 @@ void Phase::initTau(const double tminPeriod, const double tmaxPeriod)
 
 double somKn (double x, int n, double Rp, double s)
 {
-  double som  = 0.;
+    double som  = 0.;
 
-  if (n >= 3) {
-      for (int np1 = 1.; np1 <= (n-2); ++np1 ) { // memory np1 = n - p - 1.;
-          som +=  (pow(Rp/x, np1) - pow(Rp/s, np1) )/np1;
-      }
-  }
-  return(std::move(som));
+    if (n >= 3) {
+        for (int np1 = 1.; np1 <= (n-2); ++np1 ) { // memory np1 = n - p - 1.;
+            som +=  (pow(Rp/x, np1) - pow(Rp/s, np1) )/np1;
+        }
+    }
+    return(std::move(som));
 }
 
 double intFx (double x, int n, double Rp, double s)
 {
 
-  if (n < 2) {
-    return(0.);
+    if (n < 2) {
+        return(0.);
 
-  } else if (n < 3) {
-    return( log( x/(Rp-x) * (Rp-s)/s ) );
+    } else if (n < 3) {
+        return( log( x/(Rp-x) * (Rp-s)/s ) );
 
-  } else {
-      return( log( x/(Rp-x) * (Rp-s)/s )- somKn(x, n, Rp, s) );
-  }
+    } else {
+        return( log( x/(Rp-x) * (Rp-s)/s )- somKn(x, n, Rp, s) );
+    }
 
 }
 
@@ -557,9 +509,11 @@ double Px(double x, int n, double Rp)
       //som +=  (pow(Rp, n - p -1) / pow(x, n-p) );
       som += pow(Rp/x, n-p)/Rp;
     }
-if (isnan(P2+som)) {
-    qDebug()<<"Px is Nan "<<x<<" "<<n<<" "<<Rp;
-}
+#ifdef DEBUG
+    if (isnan(P2+som)) {
+        qDebug()<<"Px is Nan "<<x<<" "<<n<<" "<<Rp;
+    }
+#endif
     return(std::move(P2+som) );
 
 }
@@ -568,7 +522,7 @@ void Phase::update_Tau(const double tminPeriod, const double tmaxPeriod)
     if (mTauType == eTauFixed && mTauFixed != 0.) {
         mTau.mX = mTauFixed;
 
-   } else if (mTauType == eZOnly) {
+    } else if (mTauType == eZOnly) {
             // Modif PhD 2022
             // model definition
 
@@ -630,14 +584,12 @@ void Phase::memoAll()
 }
 
 void Phase::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
-{
-  //  if (mAlpha.HistoWithParameter(fftLen, bandwidth, tmin, tmax) == false) {
-        mAlpha.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
-        mBeta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
-       // if (mTauType == eZOnly)
-         //   mTau.generateHistos(chains, fftLen, bandwidth);
-        mDuration.generateHistos(chains, fftLen, bandwidth);
-  //  }
+{   
+    mAlpha.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+    mBeta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+    // if (mTauType == eZOnly)
+    //   mTau.generateHistos(chains, fftLen, bandwidth);
+    mDuration.generateHistos(chains, fftLen, bandwidth);
 }
 
 void Phase::generateActivity(size_t gridLength, double h, const double threshold, const double timeRangeLevel)
@@ -943,8 +895,9 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
         //std::cout<<"N(dUnif)"<<nd;
         //const double addUnif = exp(-0.5*pow((dUnif - eA)/(QSup-QInf), 2.)); // /(gridLength));
        // UnifScore +=  exp(-0.5*pow((dUnif - eA)/(QSup-QInf), 2.))/(gridLength); //N(dUnif, eA, QSup-QInf)/gridLength;//
-        const double addUnif = std::max(dUnif, QInf) - std::min(dUnif, QSup);
 #ifdef DEBUG
+        const double addUnif = std::max(dUnif, QInf) - std::min(dUnif, QSup);
+
         if (addUnif>0)
             qDebug()<<"[Model::generateActivity] t= "<<t<<" add="<< addUnif;
 #endif

@@ -287,13 +287,14 @@ ResultsView::ResultsView(std::shared_ptr<Project> project, QWidget* parent, Qt::
     mCurveMapCheck->setFixedHeight(h);
     mCurveMapCheck->setChecked(true);
 
+    mCurveDataPointsCheck = new CheckBox(tr("References Points (HPD)"), mCurvesGroup);
+    mCurveDataPointsCheck->setFixedHeight(h);
+    mCurveDataPointsCheck->setChecked(true);
+
     mCurveEventsPointsCheck = new CheckBox(tr("Event Dates (HPD)"), mCurvesGroup);
     mCurveEventsPointsCheck->setFixedHeight(h);
     mCurveEventsPointsCheck->setChecked(false);
 
-    mCurveDataPointsCheck = new CheckBox(tr("Ind. Calib. Dates"), mCurvesGroup);
-    mCurveDataPointsCheck->setFixedHeight(h);
-    mCurveDataPointsCheck->setChecked(true);
 
     mCurveGPRadio = new RadioButton(tr("Curve Var. Rate"), mCurvesGroup);
     mCurveGPRadio->setFixedHeight(h);
@@ -301,7 +302,7 @@ ResultsView::ResultsView(std::shared_ptr<Project> project, QWidget* parent, Qt::
     mCurveGSRadio = new RadioButton(tr("Curve Acceleration"), mCurvesGroup);
     mCurveGSRadio->setFixedHeight(h);
     
-    mLambdaRadio = new RadioButton(tr("Smoothing"), mCurvesGroup);
+    mLambdaRadio = new RadioButton(tr("Curve Smoothing"), mCurvesGroup);
     mLambdaRadio->setFixedHeight(h);
     
     mS02VgRadio = new RadioButton(tr("Curve Shrinkage"), mCurvesGroup);
@@ -317,9 +318,8 @@ ResultsView::ResultsView(std::shared_ptr<Project> project, QWidget* parent, Qt::
     curveOptionGroupLayout->setContentsMargins(15, 0, 0, 0);
     curveOptionGroupLayout->addWidget(mCurveErrorCheck, Qt::AlignLeft);
     curveOptionGroupLayout->addWidget(mCurveMapCheck, Qt::AlignLeft);
-    curveOptionGroupLayout->addWidget(mCurveEventsPointsCheck, Qt::AlignLeft);
     curveOptionGroupLayout->addWidget(mCurveDataPointsCheck, Qt::AlignLeft);
-
+    curveOptionGroupLayout->addWidget(mCurveEventsPointsCheck, Qt::AlignLeft);
 
     curveGroupLayout->setContentsMargins(10, 10, 10, 10);
     curveGroupLayout->addWidget(mCurveGRadio);
@@ -2117,11 +2117,14 @@ void ResultsView::createByCurveGraph()
                             // hpd is calculate only on the study Period
 
                             // hpd results
-                            std::map<double, double> mapping;
+                           /* std::map<double, double> mapping;
                             create_HPD_mapping(calibMap, mapping, date.mTi.mThresholdUsed);
                             double real_thresh;
                             const QList<QPair<double, QPair<double, double> > > &intervals = intervals_hpd_from_mapping(mapping, real_thresh);
-
+                           */
+                            // hpd results
+                            QList<QPair<double, QPair<double, double> > > intervals ;
+                            create_HPD_by_dichotomy(calibMap, intervals, date.mTi.mThresholdUsed);
                              // -- Post Distrib of Ti
 
                             if (intervals.size() > 1) {
@@ -2165,44 +2168,58 @@ void ResultsView::createByCurveGraph()
                         }
                         dataPerEvent.push_back(nb_dataPts);
 
-                        const QList<QPair<double, QPair<double, double> > > &intervals = event->mTheta.mRawHPDintervals;
-
-                        for (const auto& h : intervals) {
-                            evPts.Xmin =  h.second.first;
-                            evPts.Xmax =  h.second.second;
-                            evPts.Ymin = pt_Y;
-                            evPts.Ymax = pt_Y;
+                        if (event->mTheta.mSamplerProposal == MHVariable::eFixe) {
+                            evPts.Xmin =  event->mTheta.mRawTrace->at(0);
+                            evPts.Xmax =  event->mTheta.mRawTrace->at(0);
+                            evPts.Ymin = pt_Ymin;
+                            evPts.Ymax = pt_Ymax;
                             evPts.color = event->mColor;
-                            evPts.type = CurveRefPts::eLine;
+                            evPts.type = CurveRefPts::eRoundLine;;
                             evPts.comment = event->mName;
                             // memo Data Points
                             eventsPts.append(evPts);
-                        }
-
-                        if (intervals.size() > 1) {
-                            evPts.Xmin = intervals.first().second.first;
-                            evPts.Xmax = intervals.last().second.second;
-                            evPts.Ymin = pt_Y;
-                            evPts.Ymax = pt_Y;
-                            evPts.color = event->mColor;
-                            evPts.type = CurveRefPts::eDotLine;
-                            evPts.comment = event->mName;
-                            // memo Data Points
-                            eventsPts.append(evPts);
-
-                            hpdPerEvent.push_back(intervals.size() + 1);
-
-                        } else if (intervals.size() == 1) {
                             hpdPerEvent.push_back(1);
-                        }
 
+                        } else {
+
+                            const QList<QPair<double, QPair<double, double> > > &intervals = event->mTheta.mRawHPDintervals;
+
+                            for (const auto& h : intervals) {
+                                evPts.Xmin =  h.second.first;
+                                evPts.Xmax =  h.second.second;
+                                evPts.Ymin = pt_Ymin;
+                                evPts.Ymax = pt_Ymax;
+                                evPts.color = event->mColor;
+                                evPts.type = CurveRefPts::eLine;
+                                evPts.comment = event->mName;
+                                // memo Data Points
+                                eventsPts.append(evPts);
+                            }
+
+                            if (intervals.size() > 1) {
+                                evPts.Xmin = intervals.first().second.first;
+                                evPts.Xmax = intervals.last().second.second;
+                                evPts.Ymin = pt_Ymin;
+                                evPts.Ymax = pt_Ymax;
+                                evPts.color = event->mColor;
+                                evPts.type = CurveRefPts::eDotLine;
+                                evPts.comment = event->mName;
+                                // memo Data Points
+                                eventsPts.append(evPts);
+
+                                hpdPerEvent.push_back(intervals.size() + 1);
+
+                            } else if (intervals.size() == 1) {
+                                hpdPerEvent.push_back(1);
+                            }
+                        }
 
                     } else {
 
                         evPts.Xmin = static_cast<Bound*>(event)->mFixed;
                         evPts.Xmax = static_cast<Bound*>(event)->mFixed;
-                        evPts.Ymin = pt_Y;
-                        evPts.Ymax = pt_Y;
+                        evPts.Ymin = pt_Ymin;
+                        evPts.Ymax = pt_Ymax;
                         evPts.type = CurveRefPts::ePoint;
                         evPts.color = event->mColor;
                         evPts.comment = event->mName;
@@ -3305,8 +3322,8 @@ void ResultsView::updateOptionsWidget()
             curveOptionGroupLayout->setContentsMargins(15, 0, 0, 0);
             curveOptionGroupLayout->addWidget(mCurveErrorCheck, Qt::AlignLeft);
             curveOptionGroupLayout->addWidget(mCurveMapCheck, Qt:: AlignLeft);
-            curveOptionGroupLayout->addWidget(mCurveEventsPointsCheck, Qt::AlignLeft);
             curveOptionGroupLayout->addWidget(mCurveDataPointsCheck, Qt::AlignLeft);
+            curveOptionGroupLayout->addWidget(mCurveEventsPointsCheck, Qt::AlignLeft);
 
             curveGroupLayout->addLayout(curveOptionGroupLayout);
 

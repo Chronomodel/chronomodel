@@ -652,7 +652,8 @@ void Model::generateResultsLog()
     });
 
     for (const auto& ev : mEvents) {
-        log += ModelUtilities::eventResultsHTML(ev, true, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+        log += ModelUtilities::eventResultsHTML(ev, true, mSettings.getTminFormated(), mSettings.getTmaxFormated(), !getCurvesName().isEmpty());
+        //log += ModelUtilities::eventResultsHTML(ev, true, this);
         log += "<hr>";
     }
 
@@ -690,7 +691,7 @@ QList<QStringList> Model::getStats(const QLocale locale, const int precision, co
 
     // Events
     rows << QStringList();
-     for (Event*& event : mEvents) {
+    for (Event*& event : mEvents) {
         if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
              QStringList l = event->mTheta.getResultsList(locale, precision);
              maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
@@ -1411,7 +1412,7 @@ void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftL
         if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
             event->mS02Theta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 
-        if (event->mTheta.mSamplerProposal != MHVariable::eFixe)
+        //if (event->mTheta.mSamplerProposal != MHVariable::eFixe)
             for (auto&& d : event->mDates)
                 d.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
     }
@@ -1636,7 +1637,7 @@ void Model::generateHPD(const double thresh)
     for (const auto& event : mEvents) {
         event->mTheta.generateHPD(thresh);
 
-        if (event->type() != Event::eBound || (event->mTheta.mSamplerProposal != MHVariable::eFixe)) {     
+        if (event->type() != Event::eBound) {// || (event->mTheta.mSamplerProposal != MHVariable::eFixe)) {
 
             if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
                 event->mS02Theta.generateHPD(thresh);
@@ -1693,7 +1694,7 @@ void Model::generateTempo(size_t gridLength)
         double t_max_data = *minmaxAll.second;
         // cas d'une borne seule dans la phase
         if (t_min_data >= t_max_data) {
-            t_min_data = mSettings.mTmin;
+           // t_min_data = mSettings.mTmin;
             t_max_data = mSettings.mTmax;
         }
         phase->mValueStack["t_min"] = TValueStack("t_min", t_min_data);

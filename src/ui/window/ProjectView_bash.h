@@ -40,9 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef PROJECTVIEW_BASH_H
 #define PROJECTVIEW_BASH_H
 
-#include "AppSettings.h"
 #include "Project.h"
-
 
 #include <QWidget>
 #include <QTableWidget>
@@ -59,7 +57,7 @@ class ProjectView: public QWidget
 {
     Q_OBJECT
 public:
-    ProjectView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
+    ProjectView(std::shared_ptr<Project> &, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~ProjectView();
 
     QTableWidget* mTable;
@@ -67,9 +65,9 @@ public:
 
     void setScreenDefinition();
 
-    void resizeEvent(QResizeEvent* e);
+    void resizeEvent(QResizeEvent*);
 
-    void applyFilesSettings(Model* model);
+    void applyFilesSettings(Model*);
 
 public slots:
     void tableAdd();

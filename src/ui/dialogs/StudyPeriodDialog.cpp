@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -93,6 +93,7 @@ StudyPeriodDialog::StudyPeriodDialog(QWidget* parent, Qt::WindowFlags flags):QDi
     advGrid->addWidget(mStepSpin, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
 
     connect(mForcedCheck, &QCheckBox::toggled, mStepSpin, &QDoubleSpinBox::setEnabled);
+    //connect(mForcedCheck, &QCheckBox::toggled, this, &StudyPeriodDialog::showMessageStepForced);
 
     mAdvancedWidget->setLayout(advGrid);
 
@@ -123,6 +124,7 @@ StudyPeriodDialog::StudyPeriodDialog(QWidget* parent, Qt::WindowFlags flags):QDi
 
 StudyPeriodDialog::~StudyPeriodDialog()
 {
+    disconnect(mForcedCheck, &QCheckBox::toggled, this, &StudyPeriodDialog::showMessageStepForced);
 }
 
 void StudyPeriodDialog::setSettings(const StudyPeriodSettings &s)
@@ -136,6 +138,7 @@ void StudyPeriodDialog::setSettings(const StudyPeriodSettings &s)
     mStepSpin    -> setValue(s.mStep);
 
     mAdvancedCheck->setChecked(s.mStepForced);
+    connect(mForcedCheck, &QCheckBox::toggled, this, &StudyPeriodDialog::showMessageStepForced);
 }
 
 void StudyPeriodDialog::setStep(double step, bool forced, double suggested)
@@ -197,4 +200,59 @@ void StudyPeriodDialog::setAdvancedVisible(bool visible)
         updateVisibleControls();
     else
         adjustSize();
+}
+void StudyPeriodDialog::showMessageStepForced(bool forced)
+{
+    if (forced) {
+        /*QMessageBox message(QMessageBox::Information,
+                        tr("Study Period Step Forced"),
+                        tr("Forcing the step affects all calibrations.\rCalculation time and results are also affected."),
+                            QMessageBox::Ok,
+                        this);*/
+        QMessageBox message;
+        message.setText("Study Period Step Forced");
+        //message.setInformativeText("Do you want to save your changes?");
+        message.setStandardButtons(QMessageBox::Ok );
+        message.setDefaultButton(QMessageBox::Ok);
+
+        const QString text_show = tr("Details ...");
+        const QString text_hide = tr("Hide Details");
+
+        QString detail = "All calibrations will be recalculated with this same step.";
+        detail += "And in cases where reference curves are defined over large time ranges and you choose a very fine step size, all calculations will be that much longer.";
+        detail +=" \rConversely, if your step size is too large in relation to the definition of the reference curve,";
+        detail += " the calculation of calibration curves will be coarse and may miss solutions...";
+        detail += "\rBy default, the algorithm defines a different step for each calibration curve, looking for the optimum step.";
+
+        QPushButton* bt_details = message.addButton( text_show, QMessageBox::ActionRole );
+
+
+        //message.setDetailedText(detail);
+        //auto result = message.exec();
+        //auto res_but = message.clickedButton();
+        while (message.exec() != QMessageBox::Ok) {
+            if (message.clickedButton() == bt_details) {
+                if (message.informativeText().isEmpty()) {
+                    message.setInformativeText(detail);
+
+                    //message.setAccessibleDescription("titi");
+                    //message.removeButton(bt_details);
+
+                   // bt_details = message.addButton( text_hide, QMessageBox::ActionRole );
+
+                } else {
+                    message.setInformativeText("");
+                    //bt_details->setText(text_show);
+                    //bt_details->click();
+                    //message.removeButton(bt_details);
+
+                    //bt_details = message.addButton(text_show, QMessageBox::ActionRole );
+                }
+            }
+
+            message.update();
+           // result = message.exec();
+        } ;
+
+    }
 }

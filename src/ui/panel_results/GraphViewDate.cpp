@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Date.h"
 #include "Painting.h"
 #include "ModelUtilities.h"
+#include "StdUtilities.h"
 
 #include <QtWidgets>
 
@@ -135,54 +136,59 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
             mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
             mGraph->setFormatFunctY(nullptr);
 
+            // Calibration
+            const QMap<double,double> &formatedCalib = mDate->getFormatedCalibToShow();
+
+            const GraphCurve &curveCalib = densityCurve(formatedCalib,
+                                                        "Calibration",
+                                                        QColor(150, 150, 150),
+                                                        Qt::SolidLine,
+                                                        Qt::NoBrush);
+            mGraph->add_curve(curveCalib);
+
+            // HPD All Chains
+            //usefull for fixed value and display calibration
+            const QMap<double, double> &norm = mDate->mTi.mFormatedHPD.size() == 1 ? QMap<double, double> {{mDate->mTi.mFormatedHPD.firstKey(), map_max(formatedCalib).value()}} : mDate->mTi.mFormatedHPD;
+            const GraphCurve &curveHPD = HPDCurve(norm,
+                                                  "HPD All Chains",
+                                                  color);
+            mGraph->add_curve(curveHPD);
+
             //  Post Distrib All Chains
-            const GraphCurve &curvePostDistrib = densityCurve(mDate->mTi.fullHisto(),
-                                                         "Post Distrib All Chains",
-                                                         color,
-                                                         Qt::SolidLine,
-                                                         Qt::NoBrush);
+            const QMap<double, double> &normPostDistrib = mDate->mTi.mFormatedHisto.size() == 1 ? QMap<double, double> {{mDate->mTi.mFormatedHisto.firstKey(), map_max(formatedCalib).value()}} : mDate->mTi.mFormatedHisto;
+            const GraphCurve &curvePostDistrib = densityCurve(normPostDistrib,
+                                                              "Post Distrib All Chains",
+                                                              color,
+                                                              Qt::SolidLine,
+                                                              Qt::NoBrush);
 
             mGraph->add_curve(curvePostDistrib);
 
             // Post Distrib Chain i
             if (!mDate->mTi.mChainsHistos.isEmpty())
                 for (int i=0; i<mChains.size(); ++i) {
-                    const GraphCurve &curvePostDistribChain = densityCurve(mDate->mTi.histoForChain(i),
-                                                                            "Post Distrib Chain " + QString::number(i),
-                                                                            Painting::chainColors.at(i),
-                                                                            Qt::SolidLine,
-                                                                            Qt::NoBrush);
+                    const QMap<double, double> &normPostDistribChain = mDate->mTi.mChainsHistos.at(i).size() == 1 ? QMap<double, double> {{mDate->mTi.mChainsHistos.at(i).firstKey(), map_max(formatedCalib).value()}} : mDate->mTi.mChainsHistos.at(i);
+                    const GraphCurve &curvePostDistribChain = densityCurve(normPostDistribChain,
+                                                                           "Post Distrib Chain " + QString::number(i),
+                                                                           Painting::chainColors.at(i),
+                                                                           Qt::SolidLine,
+                                                                           Qt::NoBrush);
                     mGraph->add_curve(curvePostDistribChain);
-
-                    const GraphCurve &curveWiggle = densityCurve(mDate->mWiggle.histoForChain(i),
-                                                                 "Wiggle Post Distrib Chain " + QString::number(i),
-                                                                 Painting::chainColors.at(i),
-                                                                 Qt::DashLine,
-                                                                 Qt::NoBrush);
-                    mGraph->add_curve(curveWiggle);
+                    if (!mDate->mWiggle.mChainsHistos.isEmpty()) {
+                        const GraphCurve &curveWiggle = densityCurve(mDate->mWiggle.mChainsHistos.at(i),
+                                                                     "Wiggle Post Distrib Chain " + QString::number(i),
+                                                                     Painting::chainColors.at(i),
+                                                                     Qt::DashLine,
+                                                                     Qt::NoBrush);
+                        mGraph->add_curve(curveWiggle);
+                    }
 
                 }
-
-            // HPD All Chains
-            const GraphCurve &curveHPD = HPDCurve(mDate->mTi.mFormatedHPD,
-                                                   "HPD All Chains",
-                                                    color);
-            mGraph->add_curve(curveHPD);
-
-            // Calibration
-            const QMap<double,double> &formatedCalib = mDate->getFormatedCalibToShow();//getFormatedCalibMap();
-
-            const GraphCurve &curveCalib = densityCurve(formatedCalib,
-                                                         "Calibration",
-                                                         QColor(150, 150, 150),
-                                                         Qt::SolidLine,
-                                                         Qt::NoBrush);
-            mGraph->add_curve(curveCalib);
 
             // ---- Wiggle
 
             //  Post Distrib All Chains
-            const GraphCurve &curveWiggle = densityCurve( mDate->mWiggle.fullHisto(),
+            const GraphCurve &curveWiggle = densityCurve( mDate->mWiggle.mFormatedHisto,
                                                           "Wiggle Post Distrib All Chains",
                                                           mColor,
                                                           Qt::DashLine,
@@ -209,8 +215,13 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
             // ------------------------------------------------------------
             //  Add zones outside study period
             // ------------------------------------------------------------
+            const GraphZone zoneMin (-INFINITY, mSettings.getTminFormated());
+            mGraph->add_zone(zoneMin);
 
-            GraphZone zoneMin;
+            const GraphZone zoneMax (mSettings.getTmaxFormated(), INFINITY);
+            mGraph->add_zone(zoneMax);
+
+            /*GraphZone zoneMin;
             zoneMin.mXStart = -INFINITY;
             zoneMin.mXEnd = mSettings.getTminFormated();
             zoneMin.mColor = QColor(217, 163, 69);
@@ -224,9 +235,9 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
             zoneMax.mColor = QColor(217, 163, 69);
             zoneMax.mColor.setAlpha(35);
             zoneMax.mText = tr("Outside study period");
-            mGraph->add_zone(zoneMax);
+            mGraph->add_zone(zoneMax);*/
 
-            mGraph->setYAxisMode(GraphView::eHidden);
+            //mGraph->setYAxisMode(GraphView::eHidden);
         }
 
         /* ------------------------------------------------
@@ -462,7 +473,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
         mGraph->setRangeY(0, 100); // do repaintGraph() !!
     }
 
-    /* -------------------- fourth tab : Autocorrelation----------------------------
+    /* -------------------- Fourth tab : Autocorrelation----------------------------
      *  Possible curves (could be for theta or sigma):
      *  - Correl i
      *  - Correl Limit Lower i

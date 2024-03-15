@@ -54,7 +54,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <map>
 #include <QTime>
 #include <QElapsedTimer>
-#include <experimental/algorithm>
+//#include <experimental/algorithm>
 
 
 #include <errno.h>      /* errno, EDOM */

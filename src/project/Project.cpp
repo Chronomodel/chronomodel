@@ -219,7 +219,6 @@ bool Project::pushProjectState(const QJsonObject &state, const QString &reason, 
         else
             checkStateModification(state, mState);
 
-
         SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
         MainWindow::getInstance()->getUndoStack()->push(command);
         command = nullptr;
@@ -228,7 +227,6 @@ bool Project::pushProjectState(const QJsonObject &state, const QString &reason, 
             mState = state;
             emit noResult(); // connected to MainWindows::noResults
             return true;
-
         }
 
     }
@@ -241,7 +239,7 @@ bool Project::pushProjectState(const QJsonObject &state, const QString &reason, 
 
 void Project::sendUpdateState(const QJsonObject &state, const QString &reason, bool notify)
 {
-    qDebug()<<"[Project::sendUpdateState QGuiApplication::postEvent] "<< reason << notify;
+    //qDebug()<<"[Project::sendUpdateState QGuiApplication::postEvent] "<< reason << notify;
 
     /* The event must be allocated on the heap since the post event queue will take ownership of the event
      * and delete it once it has been posted.
@@ -572,7 +570,7 @@ bool Project::load(const QString &path, bool force)
                     settings[STATE_SETTINGS_TMIN] = loadingState.value(STATE_SETTINGS_TMIN);
                     settings[STATE_SETTINGS_TMAX] = loadingState.value(STATE_SETTINGS_TMAX);
                     settings[STATE_SETTINGS_STEP] = loadingState.value(STATE_SETTINGS_STEP);
-                    settings[STATE_SETTINGS_STEP_FORCED] = loadingState.value(STATE_SETTINGS_STEP);
+                    settings[STATE_SETTINGS_STEP_FORCED] = loadingState.value(STATE_SETTINGS_STEP_FORCED);
                     loadingState[STATE_SETTINGS] = settings;
                 }
                 if ( !loadingState.value(STATE_SETTINGS_TMIN).isNull()) {
@@ -583,7 +581,15 @@ bool Project::load(const QString &path, bool force)
                     loadingState.remove(STATE_SETTINGS_STEP_FORCED);
 
                 }
-
+                // warning box if step_forced
+                if (loadingState.value(STATE_SETTINGS).toObject().value(STATE_SETTINGS_STEP_FORCED).toBool() == true) {
+                    QMessageBox message(QMessageBox::Information,
+                                        tr("Study Period Step Forced"),
+                                        tr("The project you are loading contains a forced step.\r\rThis may affect calculation time"),
+                                        QMessageBox::Ok,
+                                        qApp->activeWindow());
+                    message.exec();
+                }
                 if (projectVersionList.size() == 3 && appVersionList.size() == 3) {
 
                     if (projectVersionList[0].toInt() > appVersionList[0].toInt())
@@ -2086,10 +2092,16 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
                 case 2:
                     date[STATE_DATE_SAMPLER] = MHVariable::eMHAdaptGauss;
                     break;
+                default: // old version is eMHSymGaussAdapt = 5
+                    date[STATE_DATE_SAMPLER] = MHVariable::eMHAdaptGauss;
+                    break;
 
                 }
                 date.remove(STATE_DATE_METHOD);
             }
+
+            if (date.value(STATE_DATE_SAMPLER).toInt()>2)
+                date[STATE_DATE_SAMPLER] = MHVariable::eMHAdaptGauss;
             // etc...
 
             // -----------------------------------------------------------
@@ -2122,6 +2134,9 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
                         break;
                     case 2:
                         subdate[STATE_DATE_SAMPLER] = MHVariable::eMHAdaptGauss;
+                        break;
+                    default: // old version is eMHSymGaussAdapt = 5
+                        date[STATE_DATE_SAMPLER] = MHVariable::eMHAdaptGauss;
                         break;
                     }
 

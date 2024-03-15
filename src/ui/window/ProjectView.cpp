@@ -123,7 +123,7 @@ void ProjectView::setScreenDefinition()
     /* find screen definition */
     QScreen *screen;
 
-  /*  int numScreen = QApplication::desktop()->screenNumber(this));
+   /*  int numScreen = QApplication::desktop()->screenNumber(this));
 
     if (numScreen>0) {
         screen = QApplication::screens().at(numScreen);
@@ -137,17 +137,17 @@ void ProjectView::setScreenDefinition()
     //qreal mm_per_cm = 10;
 
     qreal cm_per_in = 2.54;
- // look for screen definition
-//        qDebug()<<"ProjectView::resizeEvent()"<< screen->name() <<" number="<<numScreen <<"logical Dots="<<screen->logicalDotsPerInch()<<"devicePixelRatio="<<screen->devicePixelRatio()<<"availableVirtualGeometry()="<<screen->availableVirtualGeometry()<<" unitX ="<<screen->logicalDotsPerInch() / cm_per_in;
-//        qDebug()<<"ProjectView::resizeEvent()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< QApplication::desktop()->width();
-//        qDebug()<<"ProjectView::resizeEvent() screen setWidthUnit"<< screen->physicalDotsPerInchX() / cm_per_in;
-//        qDebug()<<"ProjectView::resizeEvent() screen setHeigthUnit"<< screen->physicalDotsPerInchY() / cm_per_in;
+    // look for screen definition
+    //        qDebug()<<"ProjectView::resizeEvent()"<< screen->name() <<" number="<<numScreen <<"logical Dots="<<screen->logicalDotsPerInch()<<"devicePixelRatio="<<screen->devicePixelRatio()<<"availableVirtualGeometry()="<<screen->availableVirtualGeometry()<<" unitX ="<<screen->logicalDotsPerInch() / cm_per_in;
+    //        qDebug()<<"ProjectView::resizeEvent()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< QApplication::desktop()->width();
+    //        qDebug()<<"ProjectView::resizeEvent() screen setWidthUnit"<< screen->physicalDotsPerInchX() / cm_per_in;
+    //        qDebug()<<"ProjectView::resizeEvent() screen setHeigthUnit"<< screen->physicalDotsPerInchY() / cm_per_in;
 
-            int unitX = int(screen->logicalDotsPerInch() / cm_per_in);
-            AppSettings::setWidthUnit( unitX);
+    int unitX = int(screen->logicalDotsPerInch() / cm_per_in);
+    AppSettings::setWidthUnit( unitX);
 
-            int unitY = int(screen->logicalDotsPerInch() / cm_per_in);
-            AppSettings::setHeigthUnit( unitY);
+    int unitY = int(screen->logicalDotsPerInch() / cm_per_in);
+    AppSettings::setHeigthUnit( unitY);
 
 
 
@@ -157,9 +157,11 @@ void ProjectView::setScreenDefinition()
     mLogMCMCEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
     mLogResultsEdit->resize( width() - AppSettings::widthUnit() , logTabHusefull );
 
-*/
+    */
 
     //int unitY = int(screen->physicalDotsPerInchY() / cm_per_in);
+
+
     AppSettings::setHeigthUnit(unitY);
 }
 

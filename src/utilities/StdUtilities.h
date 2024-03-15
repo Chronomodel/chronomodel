@@ -169,16 +169,53 @@ T vector_interpolate_idx_for_value(const T value, const Container<T> &vector, in
 
         } while (idxSup - idxInf > 1);
 
-        const T valueInf = vector.at(idxInf);
-        const T valueSup = vector.at(idxSup);
+        T valueInf = vector.at(idxInf);
+        T valueSup = vector.at(idxSup);
 
-        T prop = 0.;
-        // prevent valueSup=valueInf because in this case prop = NaN
-        if (valueSup > valueInf)
-            prop = (value - valueInf) / (valueSup - valueInf);
+        // test si on a atteind la valeur
+        if (valueInf == value) {
+            valueSup = value;
+            idxSup = idxInf;
 
-        const T idx = T (idxInf) + prop;
+        } else  if (valueSup == value) {
+            valueInf = value;
+            idxInf = valueSup;
+        }
 
+        T idx;
+        if (valueSup == valueInf) { // on recherche la taille du plateau, on élargie pour determiner le centre
+            while (idxInf>0 && valueInf == vector.at(idxInf-1)) {
+                idxInf -= 1;
+                valueInf = vector.at(idxInf);
+            };
+            while (idxSup<vector.size()-1 && valueSup == vector.at(idxSup+1)) {
+                idxSup += 1;
+                valueSup = vector.at(idxSup);
+            };
+
+            idx = (idxSup+idxInf)/2.;
+
+        } else {
+            // On ressert l'intervale, une des bornes est sur le plateau
+            while (idxInf>0 && valueInf == vector.at(idxInf+1)) {
+                idxInf += 1;
+                valueInf = vector.at(idxInf);
+            };
+            while (idxSup<vector.size()-1 && valueSup == vector.at(idxSup-1)) {
+                idxSup -= 1;
+                valueSup = vector.at(idxSup);
+            };
+
+
+            T prop = 0.;
+            // prevent valueSup=valueInf because in this case prop = NaN
+            if (valueSup > valueInf)
+                prop = (value - valueInf) / (valueSup - valueInf);
+
+            idx =  prop * (idxSup-idxInf);
+            idx += T (idxInf);
+            //auto idx2 = interpolate(value, valueInf, valueSup, T(idxInf), T (idxSup));
+        }
         return idx;
     }
 

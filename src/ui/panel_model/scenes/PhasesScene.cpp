@@ -40,8 +40,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PhaseItem.h"
 #include "ArrowItem.h"
 #include "ArrowTmpItem.h"
-#include "Project.h"
 #include "QtUtilities.h"
+#include "StateKeys.h"
 
 #include <QtWidgets>
 
@@ -155,22 +155,21 @@ void PhasesScene::setShowAllEvents(const bool show)
  */
 void PhasesScene::sendUpdateProject(const QString& reason, bool notify, bool storeUndoCommand)
 {
-    qDebug()<<"PhasesScene::sendUpdateProject "<<reason<<notify<<storeUndoCommand;
-    QJsonObject statePrev = mProject->state();
-    QJsonObject stateNext = statePrev;
+    qDebug()<<"[PhasesScene::sendUpdateProject] "<<reason<<notify<<storeUndoCommand;
+    //QJsonObject statePrev = mProject->state();
+    QJsonObject stateNext = mProject->state();
 
     QJsonArray phases = QJsonArray();
-    for (int i=0; i<mItems.size(); ++i)
-        phases.append(((PhaseItem*)mItems.at(i))->getData());
+    for (const auto &item : mItems)
+        phases.append(item->getData());
 
     stateNext[STATE_PHASES] = phases;
 
-    if (statePrev != stateNext) {
-        if (storeUndoCommand)
-            mProject->pushProjectState(stateNext, reason, notify);
-       // else
-       mProject->sendUpdateState(stateNext, reason, notify);
-    }
+    if (storeUndoCommand)
+        mProject->pushProjectState(stateNext, reason, notify);
+    else
+        mProject->sendUpdateState(stateNext, reason, notify);
+
 }
 
 void PhasesScene::createSceneFromState()
@@ -194,47 +193,41 @@ void PhasesScene::createSceneFromState()
          clear();
          mItems.clear();
       }
-    //clear();
+
     // this item is delete with clear, but we need it. this is herited from AbstracScene
     mTempArrow = new ArrowTmpItem();
     addItem(mTempArrow);
     mTempArrow->setVisible(false);
     mTempArrow->setZValue(0);
 
-   // clearSelection();
      // ------------------------------------------------------
      //  Create phase items
      // ------------------------------------------------------
 
     for (QJsonArray::const_iterator iPhase= phases.constBegin(); iPhase != phases.constEnd(); ++iPhase) {
              // CREATE ITEM
-         PhaseItem* phaseItem = new PhaseItem(this, iPhase->toObject());
-         phaseItem->setPhase(iPhase->toObject());
-         mItems.append(phaseItem);
-         addItem(phaseItem);
+        PhaseItem* phaseItem = new PhaseItem(this, iPhase->toObject());
+        phaseItem->setPhase(iPhase->toObject());
+        mItems.append(phaseItem);
+        addItem(phaseItem);
+    }
 
+
+    // ------------------------------------------------------
+    //  Create  constraint items
+    // ------------------------------------------------------
+    for (const auto& c : constraints) {
+        const QJsonObject constraint = c.toObject();
+
+        // CREATE ITEM
+        ArrowItem* constraintItem = new ArrowItem(this, ArrowItem::ePhase, constraint);
+        mConstraintItems.append(constraintItem);
+        addItem(constraintItem);
  #ifdef DEBUG
-             //qDebug() << "Phase item created : id = " << phase[STATE_ID].toInt();
+        //qDebug() << "Constraint created : id = " << constraint[STATE_ID].toInt();
  #endif
 
-     }
-
-
-   // ------------------------------------------------------
-     //  Create  constraint items
-     // ------------------------------------------------------
-     for (const auto& c : constraints) {
-         const QJsonObject constraint = c.toObject();
-
-             // CREATE ITEM
-             ArrowItem* constraintItem = new ArrowItem(this, ArrowItem::ePhase, constraint);
-             mConstraintItems.append(constraintItem);
-             addItem(constraintItem);
- #ifdef DEBUG
-             //qDebug() << "Constraint created : id = " << constraint[STATE_ID].toInt();
- #endif
-
-     }
+    }
 
      mUpdatingItems = false;
 
@@ -245,13 +238,13 @@ void PhasesScene::createSceneFromState()
 void PhasesScene::updateSceneFromState()
 {
 #ifdef DEBUG
-qDebug()<<"[PhasesScene::updateSceneFromState] Start";
+    qDebug()<<"[PhasesScene::updateSceneFromState] Start";
     QElapsedTimer startTime;
     startTime.start();
 #endif
 
     if (mProject->mState.value(STATE_EVENTS).toArray().isEmpty() && mProject->mState.value(STATE_PHASES).toArray().isEmpty() && mItems.isEmpty())
-             return;
+        return;
 
     if (mProject->mState.value(STATE_PHASES).toArray().isEmpty() && mItems.isEmpty()) {
         // ------------------------------------------------------
@@ -381,7 +374,7 @@ qDebug()<<"[PhasesScene::updateSceneFromState] Start";
 
 
 #ifdef DEBUG
-            qDebug() << "Phase item created : id = " << phase[STATE_ID].toInt();
+            qDebug() << "[PhasesScene::updateScene] Phase item created : id = " << phase[STATE_ID].toInt();
 #endif
 
         }
@@ -397,14 +390,15 @@ qDebug()<<"[PhasesScene::updateSceneFromState] Start";
 
         if (!constraints_ids.contains(constraint.value(STATE_ID).toInt())) {
 #ifdef DEBUG
-            //qDebug() << "Phase Constraint deleted : " << constraint[STATE_ID].toInt();
+            //qDebug() << "[PhasesScene::updateScene] Phase Constraint deleted : " << constraint[STATE_ID].toInt();
 #endif
             removeItem(constraintItem);
             mConstraintItems.removeOne(constraintItem);
             delete constraintItem;
         }
     }
-     blockSignals(false);
+    blockSignals(false);
+    mConstraintItems.squeeze();
     // ------------------------------------------------------
     //  Create / Update constraint items
     // ------------------------------------------------------
@@ -413,7 +407,8 @@ qDebug()<<"[PhasesScene::updateSceneFromState] Start";
 
         bool itemExists = false;
         for (const auto &ci : mConstraintItems) {
-            QJsonObject constraintItem = ci->data();
+            ci->updatePosition();
+            const QJsonObject &constraintItem = ci->data();
             if (constraintItem.value(STATE_ID).toInt() == constraint.value(STATE_ID).toInt()) {
                 itemExists = true;
                 if (constraint != constraintItem) {
@@ -423,6 +418,7 @@ qDebug()<<"[PhasesScene::updateSceneFromState] Start";
 #endif
                     ci->setData(constraint);
                 }
+
             }
         }
         if (!itemExists) {
@@ -431,7 +427,7 @@ qDebug()<<"[PhasesScene::updateSceneFromState] Start";
             mConstraintItems.append(constraintItem);
             addItem(constraintItem);
 #ifdef DEBUG
-            //qDebug() << "Constraint created : id = " << constraint[STATE_ID].toInt();
+            //qDebug() << "[PhasesScene::updateScene] Constraint created : id = " << constraint[STATE_ID].toInt();
 #endif
         }
     }
@@ -504,12 +500,12 @@ void PhasesScene::updateStateSelectionFromItem()
         bool modified = false;
         bool oneSelection = false;
         PhaseItem* curItem = dynamic_cast<PhaseItem*>(currentItem());
-
+        blockSignals(true);
         for (int i=0; i<mItems.size(); ++i) {
-            PhaseItem* item = static_cast<PhaseItem*>(mItems.at(i));
+            PhaseItem* item = dynamic_cast<PhaseItem*>(mItems.at(i));
 
             // without selected update
-            const QJsonObject prevPhase = item->getData();
+            const QJsonObject prevPhase = item->getData(); // Must be a copy
 
             const bool selected = item->isSelected();
             const bool isCurrent = (curItem == item);
@@ -521,7 +517,7 @@ void PhasesScene::updateStateSelectionFromItem()
             // and item.mData.value(STATE_IS_CURRENT)
             item->setSelectedInData(selected);
             item->setCurrentInData(isCurrent);
-            const QJsonObject nextPhase = item->getData();
+            const QJsonObject& nextPhase = item->getData();
 
             if (nextPhase != prevPhase)
                 modified = true;
@@ -533,9 +529,10 @@ void PhasesScene::updateStateSelectionFromItem()
 
 
         }
+        blockSignals(false);
 
-        if (modified) {
-           sendUpdateProject(tr("Phases selection"), true, true);
+        if (modified ) {
+           sendUpdateProject(tr("Phases selection"), true, false);//true);
 
             // refresh the thumbs in the Events scene
             if (!oneSelection) {// selectedItems().size() == 0) {
@@ -550,14 +547,13 @@ void PhasesScene::updateStateSelectionFromItem()
 void PhasesScene::adaptItemsForZoom(const double prop)
 {
     mZoom = prop;
-    for (int i=0; i<mItems.size(); ++i) {
-        PhaseItem* item = static_cast<PhaseItem*>(mItems.at(i));
+    for (auto &&abstract_item : mItems) {
+        PhaseItem* item = static_cast<PhaseItem*>(abstract_item);
         item->setControlsVisible(mZoom > 0.6);
     }
 }
 
 /* Utilities
- *
  */
 PhaseItem* PhasesScene::currentPhase() const
 {
@@ -583,22 +579,20 @@ AbstractItem* PhasesScene::currentItem()
 
 AbstractItem* PhasesScene::collidingItem(const QGraphicsItem* item)
 {
-    for (int i=0; i<mItems.size(); ++i) {
-        bool isPhase = (dynamic_cast<PhaseItem*>(mItems.at(i)) != 0);
-        if (item != mItems.at(i) && isPhase && item->collidesWithItem(mItems[i]))
-            return mItems[i];
+    for (auto &&abstract_item : mItems) {
+        bool isPhase = (dynamic_cast<PhaseItem*>(abstract_item) != nullptr);
+        if (isPhase && item != abstract_item &&  item->collidesWithItem(abstract_item))
+            return abstract_item;
     }
     return nullptr;
 }
 
 
 /* Phase Items Events
- *
  */
-bool PhasesScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
+bool PhasesScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent*)
 {
-    Q_UNUSED(e);
-    qDebug() << "PhasesScene::itemClicked";
+    qDebug() << "[PhasesScene::itemClicked]";
 
     PhaseItem* phaseClicked = dynamic_cast< PhaseItem*>(item);
     PhaseItem* current = dynamic_cast< PhaseItem*>(currentItem());
@@ -630,10 +624,9 @@ bool PhasesScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
  * @param item
  * @param e
  */
-void PhasesScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
+void PhasesScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent*)
 {
-    Q_UNUSED(e);
-    qDebug() << "PhasesScene::itemEntered";
+    qDebug() << "[PhasesScene::itemEntered]";
     AbstractItem* current = currentItem();
 
     if (mDrawingArrow && current && item && (item != current)) {
@@ -657,15 +650,13 @@ void PhasesScene::itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent
         mProject->updatePhase(static_cast<PhaseItem*>(item)->getData());
 }
 
-void PhasesScene::constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e)
+void PhasesScene::constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent*)
 {
-    Q_UNUSED(e);
     mProject->updatePhaseConstraint(item->data().value(STATE_ID).toInt());
 }
 
-void PhasesScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e)
+void PhasesScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent*)
 {
-    Q_UNUSED(e);
     mProject->updatePhaseConstraint(item->data().value(STATE_ID).toInt());
 }
 

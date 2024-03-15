@@ -143,24 +143,16 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     update();
 }
 
-QRectF EventKnownItem::boundingRect() const
-{
-    return QRectF(-mSize.width()/2 - 10, -mSize.height()/2 - 10, mSize.width() + 20, mSize.height() + 20);
-}
-
 void EventKnownItem::setDatesVisible(const bool visible)
 {
     mThumbVisible = visible;
 }
 
-void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
+void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* , QWidget* )
 {
-    (void) option;
-    (void) widget;
-
     painter->setRenderHint(QPainter::Antialiasing);
 
-    const QRectF rectTotal = QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
+    const QRectF rectTotal = rectF();//QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
     const QRectF rect = isCurveNode() ? rectTotal.adjusted(mNodeSkin + 1., mNodeSkin + 1., -mNodeSkin - 1., -mNodeSkin - 1.) : rectTotal;
 
     const QColor eventColor = QColor(mData.value(STATE_COLOR_RED).toInt(),

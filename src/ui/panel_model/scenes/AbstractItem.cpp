@@ -80,6 +80,22 @@ AbstractItem::~AbstractItem()
     mScene = nullptr;
 }
 
+QRectF AbstractItem::rectF() const
+{
+    return QRectF(-mSize.width()/2., -mSize.height()/2., mSize.width(), mSize.height());
+}
+
+QRectF AbstractItem::boundingRect() const
+{
+    return QRectF(-mSize.width()/2 - 10, -mSize.height()/2 - 10, mSize.width() + 20, mSize.height() + 20);
+}
+
+void AbstractItem::updateItemPosition(const QPointF& pos)
+{
+    mData[STATE_ITEM_X] = pos.x();
+    mData[STATE_ITEM_Y] = pos.y();
+}
+
 void AbstractItem::setMergeable(bool mergeable, bool shouldRepaint)
 {
     mMergeable = mergeable;
@@ -105,7 +121,7 @@ void AbstractItem::setCurrentInData(const bool current)
 // Events
 void AbstractItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-    //qDebug()<<"AbstractItem::mousePressEvent__________??";
+    //qDebug()<<"[AbstractItem::mousePressEvent]__________??";
 
     if (!mScene->itemClicked(this, e)) {
         setZValue(2.);
@@ -123,9 +139,10 @@ void AbstractItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
         qreal delta (mScene->deltaGrid());
         QPointF ptBefore = scenePos();
         ptBefore = QPointF(round(ptBefore.rx()/delta) * delta, round(ptBefore.ry()/delta) * delta);
+
+        updateItemPosition(ptBefore);
         setPos(ptBefore);
-        mData["item_x"] = ptBefore.x();
-        mData["item_y"] = ptBefore.y();
+        qDebug()<<" AbstractItem"<<ptBefore;
         e->setPos(ptBefore);
     }
     if (mMoving) {
@@ -144,12 +161,12 @@ void AbstractItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
 
 void AbstractItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 {
-    if (mScene->mShowGrid) {
+   /* if (mScene->mShowGrid) {
         QPointF ptBefore = pos();
         qreal delta (mScene->deltaGrid());
         ptBefore = QPointF(round(ptBefore.rx()/delta) * delta, floor(ptBefore.ry()/ delta) * delta);
         e->setPos(ptBefore);
-    }
+    }*/
     mMoving = true;
     QGraphicsItem::mouseMoveEvent(e); // move the graphic item, and change this position
 

@@ -1984,7 +1984,7 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const 
     const SplineMatrices &test_matrices = prepare_calcul_spline(vecH, W_1);
 
 
-    for (int lambda_loop_exp = -200; lambda_loop_exp < 101; ++lambda_loop_exp ) {
+    for (int lambda_loop_exp = -100; lambda_loop_exp < 101; ++lambda_loop_exp ) {
         const double lambda_loop = pow(10., (double)lambda_loop_exp/10.);
 
         double cv = cross_validation(vec_X, test_matrices, vecH, lambda_loop);
@@ -2052,7 +2052,23 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const 
         }*/
     }
 
+    // Recherche du dernier minimum, on parcours les tablea à l'envers de lambda grand vers lambda petit
 
+    int last_min_gcv_idx = GCV.size()-1;
+    qDebug()<<" ici"<<(GCV.at(last_min_gcv_idx - 1) - GCV.at(last_min_gcv_idx) <= 1E-10) << GCV.at(last_min_gcv_idx - 1) - GCV.at(last_min_gcv_idx);
+    while (last_min_gcv_idx> 0 &&   GCV.at(last_min_gcv_idx - 1) - GCV.at(last_min_gcv_idx) <= 1E-10) {
+        last_min_gcv_idx -= 1;
+    }
+    //double last_min_gcv_lambda = lambda_GCV.at(last_min_gcv_idx);
+
+    int last_min_cv_idx = CV.size()-1;
+    while (last_min_cv_idx> 0 && CV.at(last_min_cv_idx - 1) - CV.at(last_min_cv_idx) <= 1E-10 ) {
+        last_min_cv_idx -= 1;
+    }
+    //double last_min_cv_lambda = lambda_CV.at(last_min_cv_idx);
+
+    mini_gcv_idx = last_min_gcv_idx;
+    mini_cv_idx = last_min_cv_idx;
 
     // If the mini is at one of the bounds, there is no solution in the interval for GCV
     // See if there is a solution in CV
@@ -2075,29 +2091,29 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const 
     int idx_vect;
     double lambda_mini;
     if (mini_gcv_idx == 0 || mini_gcv_idx == (GCV.size()-1)) {
-        qDebug()<<" 2d chance\t Pas de solution avec GCV, mini_gcv_idx sur une borne "<<mini_gcv_idx;
+        qDebug()<<"[CurveUtilities::initLambdaSplineBySilverman] 2d chance\t Pas de solution avec GCV, mini_gcv_idx sur une borne "<<mini_gcv_idx;
 
         if (mini_cv_idx == 0 || mini_cv_idx == (CV.size()-1)) {
             if (first_mini_gcv_idx < mini_gcv_idx) {
                 idx_vect = first_mini_gcv_idx;
                 lambda_mini = lambda_GCV.at(idx_vect);
-                qDebug()<<"[initLambdaSplineBySilverman] No solution with CV, mini_cv_idx ="<<mini_cv_idx<< ", On prend un minimum local first_mini_gcv_idx = 10E"<<log10(lambda_GCV.at(idx_vect));
+                qDebug()<<"[CurveUtilities::initLambdaSplineBySilverman] No solution with CV, mini_cv_idx ="<<mini_cv_idx<< ", On prend un minimum local first_mini_gcv_idx = 10E"<<log10(lambda_GCV.at(idx_vect));
             } else {
                // idx_vect = 0;
                 lambda_mini = lambda_GCV.at(0);
-                qDebug()<<"[initLambdaSplineBySilverman] No solution with first_mini_gcv_idx ="<<first_mini_gcv_idx<< " On prend lambda_GCV[0] = 10E"<<log10(lambda_GCV.at(0));
+                qDebug()<<"[CurveUtilities::initLambdaSplineBySilverman] No solution with first_mini_gcv_idx ="<<first_mini_gcv_idx<< " On prend lambda_GCV[0] = 10E"<<log10(lambda_GCV.at(0));
             }
 
 
         } else {
-            qDebug()<<"[initLambdaSplineBySilverman] With CV lambda_CV.at("<<mini_cv_idx<<")= 10E"<<log10(lambda_CV.at(mini_cv_idx));
+            qDebug()<<"[CurveUtilities::initLambdaSplineBySilverman] With CV lambda_CV.at("<<mini_cv_idx<<")= 10E"<<log10(lambda_CV.at(mini_cv_idx));
             lambda_mini = lambda_CV.at(mini_cv_idx);
            // idx_vect = mini_cv_idx;
 
         }
 
     } else {
-        qDebug()<<"[initLambdaSplineBySilverman] Direct Solution With GCV, lambda_GCV.at("<<mini_gcv_idx<<") = 10E"<<log10(lambda_GCV.at(mini_gcv_idx)) << " min GCV =" <<GCV.at(mini_gcv_idx) <<  "; Pour info min CV =" <<CV.at(mini_cv_idx) << lambda_CV.at(mini_cv_idx) <<" = 10E"<<log10(lambda_CV.at(mini_cv_idx));
+        qDebug()<<"[CurveUtilities::initLambdaSplineBySilverman] Direct Solution With GCV, lambda_GCV.at("<<mini_gcv_idx<<") = 10E"<<log10(lambda_GCV.at(mini_gcv_idx)) << " min GCV =" <<GCV.at(mini_gcv_idx) <<  "; Pour info min CV =" <<CV.at(mini_cv_idx) << lambda_CV.at(mini_cv_idx) <<" = 10E"<<log10(lambda_CV.at(mini_cv_idx));
         lambda_mini = lambda_GCV.at(mini_gcv_idx);
         //idx_vect = mini_gcv_idx;
 

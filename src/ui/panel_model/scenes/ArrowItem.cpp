@@ -39,6 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ArrowItem.h"
 #include "EventItem.h"
+#include "EventKnownItem.h"
 #include "MainWindow.h"
 #include "PhaseItem.h"
 
@@ -94,7 +95,6 @@ void ArrowItem::setFrom(const double x, const double y)
 {
     prepareGeometryChange();
     mStart = QPointF(x, y);
-
 }
 
 void ArrowItem::setTo(const double x, const double y)
@@ -150,10 +150,9 @@ void ArrowItem::updatePosition()
 
         const double angle_rad = atan2( double(ev_from->y()  - ev_to->y() ) , double(ev_from->x()-ev_to->x()) );
         //const double angle_deg = angle_rad * 180. / M_PI;
-        //qDebug()<<" theta contactpos from = "<<angle_deg;
+        //qDebug()<<"[ArrowItem::updatePosition] theta from = "<<angle_deg;
 
         mStartContact = contactPos(angle_rad, ev_from);
-
 
         const double angle_rad2 = atan2( double(ev_to->y()  - ev_from->y() ) , double(ev_to->x()-ev_from->x()) );
         //const double angle_deg2 = angle_rad2 * 180. / M_PI;
@@ -167,12 +166,12 @@ void ArrowItem::updatePosition()
         PhaseItem* ph_to = findPhaseItemWithJsonId(toId);
         mEnd = ph_to->pos();
 
-const double angle_rad = atan2( double(ph_from->y()  - ph_to->y() ) , double(ph_from->x()-ph_to->x()) );
-       // const double angle_deg = angle_rad * 180. / M_PI;
-
+        const double angle_rad = atan2( double(ph_from->y()  - ph_to->y() ) , double(ph_from->x()-ph_to->x()) );
+        // const double angle_deg = angle_rad * 180. / M_PI;
+        // qDebug()<<" theta contactpos from = "<<angle_deg;
         mStartContact = contactPos(angle_rad, ph_from);
 
-       // qDebug()<<" theta contactpos from = "<<angle_deg;
+
 
         const double angle_rad2 = atan2( double(ph_to->y()  - ph_from->y() ) , double(ph_to->x()-ph_from->x()) );
         //const double angle_deg2 = angle_rad2 * 180. / M_PI;
@@ -184,14 +183,33 @@ const double angle_rad = atan2( double(ph_from->y()  - ph_to->y() ) , double(ph_
 
 QPointF ArrowItem::contactPos(const double theta, AbstractItem* e)
 {
-    const double item_height = e->boundingRect().height() - 20.; // Il faut enlever l'espace suplémentaire, servant à effacer la trace
-    const double item_width = e->boundingRect().width() - 20.;
-    double a1 = atan2( item_height , item_width );
-    double a2 = atan2(-item_height , item_width );
-    double a3 = atan2( -item_height , -item_width );
-    double a4 = atan2( item_height ,- item_width );
+    double xp, yp;
+
+    auto bound = dynamic_cast<EventKnownItem*> (e);
+    if (bound) {
+        // Polar form relative to center, ellipse's equation is
+        const double a2 = pow(e->sizeF().width()/2., 2.);
+        const double b2 = pow(e->sizeF().height()/2., 2.);
+
+        const double c2 = pow(cos(theta), 2.);
+        const double s2 = pow(sin(theta), 2.);
+        const double r = sqrt((a2*b2)/(a2*s2 + b2*c2));
+
+        xp = e->x() - cos(theta) * r;
+        yp = e->y() - sin(theta) * r;
+
+        return QPointF(xp, yp);
+
+    } else {
+        const double item_height = e->sizeF().height();
+        const double item_width = e->sizeF().width();
+
+        const double a1 = atan2( item_height , item_width );
+        const double a2 = atan2(-item_height , item_width );
+        const double a3 = atan2( -item_height , -item_width );
+        const double a4 = atan2( item_height ,- item_width );
 #ifdef DEBUG
-   /* auto a11 = a1* 180. / M_PI;
+        /* auto a11 = a1* 180. / M_PI;
     auto a22 = a2* 180. / M_PI;
     auto a33 = a3* 180. / M_PI;
     auto a44 = a4* 180. / M_PI;
@@ -199,25 +217,26 @@ QPointF ArrowItem::contactPos(const double theta, AbstractItem* e)
     qDebug()<<"[ArrowItem::contactPos] theta "<<theta* 180. / M_PI;;
 */
 #endif
-    double xp, yp;
-    if (a3<=theta && theta<a2) {
-        xp = e->x() + item_height/tan(theta) /2.; // tan(theta) < 0
-        yp = e->y() + item_height /2.;
 
-    } else if (a2<=theta && theta<a1) {
-        xp = e->x() - item_width /2.;
-        yp = e->y() - tan(theta)* item_width /2.;
+        if (a3 <= theta && theta < a2) {
+            xp = e->x() + item_height/tan(theta) /2.; // tan(theta) < 0
+            yp = e->y() + item_height /2.;
+
+        } else if (a2 <= theta && theta < a1) {
+            xp = e->x() - item_width /2.;
+            yp = e->y() - tan(theta)* item_width /2.;
 
 
-    } else if (a1<=theta && theta<a4) {
-        xp = e->x() - item_height/tan(theta) /2.;
-        yp = e->y() - item_height /2.;
+        } else if (a1 <= theta && theta < a4) {
+            xp = e->x() - item_height/tan(theta) /2.;
+            yp = e->y() - item_height /2.;
 
-    } else {  // if (a3<theta && theta<a4) {
-        xp = e->x() +  item_width /2.;
-        yp = e->y() + tan(theta)* item_width /2.;
+        } else {  // if (a3<theta && theta<a4) {
+            xp = e->x() +  item_width /2.;
+            yp = e->y() + tan(theta)* item_width /2.;
+        }
+        return QPointF(xp, yp);
     }
-    return QPointF(xp, yp);
 }
 
 
@@ -356,7 +375,8 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         color.setAlphaF(0.05);
 
     painter->setPen(QPen(color, penWidth, mEditing ? Qt::DashLine : Qt::SolidLine));
-    painter->drawLine(mStart, mEnd);
+    // painter->drawLine(mStart, mEnd); // Line from the center to the center
+    painter->drawLine(mStartContact, mEndContact);
 
     // Arrows
 
@@ -367,7 +387,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     const double angle_rad = atan( double(qAbs(mStart.x() - mEnd.x())) / double(qAbs(mStart.y() - mEnd.y())) );
     const double angle_deg = angle_rad * 180. / M_PI;
 
-    ;
+
     const qreal arrow_w = 15.;
     const qreal arrow_l = 25.;
     QPainterPath arrow_path(QPointF(-arrow_w/2., arrow_l/2.));
@@ -564,10 +584,10 @@ QString ArrowItem::getBubbleText() const
 
 EventItem* ArrowItem::findEventItemWithJsonId(const int id)
 {
-     QList<AbstractItem*> listItems = mScene->getItemsList();
-     foreach (AbstractItem* it, listItems) {
+    QList<AbstractItem*> listItems = mScene->getItemsList();
+    for (AbstractItem* it: listItems) {
         EventItem* ev = static_cast<EventItem*>(it);
-        const QJsonObject evJson = ev->getData();
+        const QJsonObject &evJson = ev->getData();
         if (evJson.value(STATE_ID) == id)
             return ev;
     }
@@ -577,9 +597,9 @@ EventItem* ArrowItem::findEventItemWithJsonId(const int id)
 PhaseItem* ArrowItem::findPhaseItemWithJsonId(const int id)
 {
     QList<AbstractItem*> listItems = mScene->getItemsList();
-    foreach (AbstractItem* it, listItems) {
+    for (AbstractItem* it: listItems) {
         PhaseItem* ph = static_cast<PhaseItem*>(it);
-        const QJsonObject phJson = ph->getData();
+        const QJsonObject &phJson = ph->getData();
         if (phJson.value(STATE_ID) == id)
             return ph;
     }

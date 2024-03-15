@@ -46,7 +46,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QtWidgets>
 
-PhaseItem::PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsItem* parent):AbstractItem(scene, parent),
+PhaseItem::PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsItem* parent):
+    AbstractItem(scene, parent),
     mControlsVisible(false),
     mControlsEnabled(false),
     matLeastOneEventSelected(false),
@@ -80,12 +81,12 @@ void PhaseItem::setPhase(const QJsonObject& phase)
     // ----------------------------------------------------
     //  Calculate item size
     // ----------------------------------------------------
-    const qreal w = mItemWidth;
-    qreal h = mTitleHeight + 2*mBorderWidth + 2*mEltsMargin;
+    const qreal w = AbstractItem::mItemWidth;
+    qreal h = mTitleHeight + 2*mBorderWidth + 2*AbstractItem::mEltsMargin;
 
     const QJsonArray events = getEvents();
     if (events.size() > 0)
-        h += events.size() * (mEltsHeight + mEltsMargin);
+        h += events.size() * (mEltsHeight + AbstractItem::mEltsMargin);
 
 
     const QString tauStr = getTauString();
@@ -124,7 +125,7 @@ void PhaseItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* e)
 
 void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-  if (mControlsVisible) {
+    if (mControlsVisible) {
 
         if (insertRect().contains(e->pos())) {
             //qDebug() << "[PhaseItem::mousePressEvent]-> insertRect clicked";
@@ -158,39 +159,23 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 
 }
 
-void PhaseItem::updateItemPosition(const QPointF& pos)
-{
-    mData[STATE_ITEM_X] = double (pos.x());
-    mData[STATE_ITEM_Y] = double (pos.y());
-}
-
-QRectF PhaseItem::boundingRect() const
-{
-    return QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
-}
-
 void PhaseItem::redrawPhase()
 {
     update();
 }
-
-
 
 bool sortEvents(QPair<int, int> e1, QPair<int, int> e2)
 {
     return (e1.second < e2.second);
 }
 
-
-void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
+void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* , QWidget* )
 {
-    Q_UNUSED(option);
-    Q_UNUSED(widget);
     // QPainter::Antialiasing is effective on native shape = circle, square, line
 
     painter->setRenderHints(painter->renderHints() | QPainter::SmoothPixmapTransform | QPainter::Antialiasing );
 
-    QRectF rect = boundingRect();
+    const QRectF rect = rectF();//boundingRect();
     int rounded = 10;
 
     const QColor phaseColor = QColor(mData.value(STATE_COLOR_RED).toInt(),
@@ -198,8 +183,8 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
                                mData.value(STATE_COLOR_BLUE).toInt());
     const QColor fontColor = getContrastedColor(phaseColor);
 
-    QFont font (qApp->font());
-    font.setPixelSize(14);
+    QFont font (qApp->font().family(), 14);
+    //font.setPixelSize(14);
 
     // Draw then container
     painter->setPen(Qt::NoPen);
@@ -208,13 +193,13 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
     //
     // Events
-    QRectF r(rect.x() + mBorderWidth + mEltsMargin,
-             rect.y() + mBorderWidth + mEltsMargin + mTitleHeight + mEltsMargin,
-             rect.width() - 2 * (mEltsMargin + mBorderWidth),
+    QRectF r(rect.x() + mBorderWidth + AbstractItem::mEltsMargin,
+             rect.y() + mBorderWidth + AbstractItem::mEltsMargin + mTitleHeight + AbstractItem::mEltsMargin,
+             rect.width() - 2 * (AbstractItem::mEltsMargin + mBorderWidth),
              mEltsHeight);
 
     const QJsonArray events = getEvents();
-    double dy = mEltsMargin + mEltsHeight;
+    double dy = AbstractItem::mEltsMargin + mEltsHeight;
 
     const bool showAlldata = mScene->showAllThumbs();
     matLeastOneEventSelected = false;
@@ -382,13 +367,13 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
 QJsonArray PhaseItem::getEvents() const
 {
-    QString phaseId = QString::number(mData.value(STATE_ID).toInt());
-    const QJsonObject &state = MainWindow::getInstance()->getProject()->state();
+    const QString phaseId = QString::number(mData.value(STATE_ID).toInt());
+    const QJsonObject &state = MainWindow::getInstance()->getState();
     const QJsonArray &allEvents = state.value(STATE_EVENTS).toArray();
     QJsonArray events;
     for (const auto &ev : allEvents) {
-        QJsonObject event = ev.toObject();
-        QString phasesIdsStr = event.value(STATE_EVENT_PHASE_IDS).toString();
+        const QJsonObject &event = ev.toObject();
+        const QString phasesIdsStr = event.value(STATE_EVENT_PHASE_IDS).toString();
         QStringList phasesIds = phasesIdsStr.split(",");
         if (phasesIds.contains(phaseId))
             events.append(event);
@@ -411,30 +396,27 @@ QString PhaseItem::getTauString() const
 
 QRectF PhaseItem::checkRect() const
 {
-    const QRectF rect = boundingRect();
-    return QRectF (rect.x() + mBorderWidth + mEltsMargin,
-             rect.y() + mBorderWidth + mEltsMargin,
-             mTitleHeight,
-             mTitleHeight);
+   return QRectF (rectF().x() + mBorderWidth + mEltsMargin,
+                 rectF().y() + mBorderWidth + mEltsMargin,
+                 mTitleHeight,
+                 mTitleHeight);
 
 }
 
 QRectF PhaseItem::extractRect() const
 {
-    const QRectF rect = boundingRect();
-    return QRectF (rect.x() + mBorderWidth + mEltsMargin + mEltsMargin + mTitleHeight,
-             rect.y() + mBorderWidth + mEltsMargin,
-             mTitleHeight,
-             mTitleHeight);
+    return QRectF (rectF().x() + mBorderWidth + mEltsMargin + mEltsMargin + mTitleHeight,
+                  rectF().y() + mBorderWidth + mEltsMargin,
+                  mTitleHeight,
+                  mTitleHeight);
 
 }
 
 QRectF PhaseItem::insertRect() const
 {
-    const QRectF rect = boundingRect();
-    return QRectF (rect.x() + mBorderWidth + mEltsMargin,
-             rect.y() + mBorderWidth + mEltsMargin,
-             mTitleHeight,
-             mTitleHeight);
+    return QRectF (rectF().x() + mBorderWidth + mEltsMargin,
+                  rectF().y() + mBorderWidth + mEltsMargin,
+                  mTitleHeight,
+                  mTitleHeight);
 
 }

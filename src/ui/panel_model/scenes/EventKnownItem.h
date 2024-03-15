@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -49,13 +49,11 @@ public:
     EventKnownItem(EventsScene* eventsScene, const QJsonObject &event, const QJsonObject &settings, QGraphicsItem* parent = 0);
     virtual ~EventKnownItem();
 
-    virtual QRectF boundingRect() const;
-
     void setEvent(const QJsonObject &event, const QJsonObject &settings);
     void setDatesVisible(const bool visible);
 
 protected:
-    virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
+    virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*);
     virtual void dropEvent(QGraphicsSceneDragDropEvent* e);
 
     virtual QRectF toggleRect() const;

@@ -129,6 +129,7 @@ MainWindow::MainWindow(QWidget* aParent):
     }
 
     activateInterface(false);
+    setMinimumSize(1000, 700);
 }
 
 MainWindow::~MainWindow()

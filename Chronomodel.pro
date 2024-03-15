@@ -39,8 +39,8 @@
 
 DEFINES += VERSION_NUMBER="3,2,7"
 VERSION = 3.2.7
- #VERSION_NUMBER # must match value in src/main.cpp and mainControler and Chronomodel.rc (for windows)
-#PRO_PATH=$$PWD
+#VERSION_NUMBER # must match value in src/main.cpp and mainControler and Chronomodel.rc (for windows)
+
 PRO_PATH=$$_PRO_FILE_PWD_
 
 message("-------------------------------------------")

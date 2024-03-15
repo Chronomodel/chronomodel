@@ -352,7 +352,6 @@ QJsonObject Event::toJson() const
     json[STATE_COLOR_GREEN] = mColor.green();
     json[STATE_COLOR_BLUE] = mColor.blue();
     json[STATE_EVENT_SAMPLER] = mTheta.mSamplerProposal;
-    json[STATE_EVENT_SAMPLER] = mTheta.mSamplerProposal;
 
     json[STATE_ITEM_X] = mItemX;
     json[STATE_ITEM_Y] = mItemY;

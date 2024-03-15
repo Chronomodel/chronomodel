@@ -45,12 +45,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class MHVariable: public MetropolisVariable
 {
 public:
-    enum SamplerProposal{
+    enum SamplerProposal {
         // Event
         eFixe = -1,  //<  use with Type==eBound
         eDoubleExp = 0, //<  The default method for Event->theta
         eBoxMuller = 1,
-        eMHAdaptGauss = 2,
+        eMHAdaptGauss = 2, // also for data
         // Data
         eMHPrior = 3,
         eInversion = 4,

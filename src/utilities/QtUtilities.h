@@ -93,7 +93,7 @@ QString stringForCSV(const double valueToFormat, const bool forcePrecision = fal
 
 bool saveCsvTo(const QList<QStringList> &data, const QString &filePath, const QString &csvSep, const bool withDateFormat = false);
 bool saveAsCsv(const QList<QStringList> &data, const QString &title = QObject::tr("Save as..."));
-bool save_map_as_csv(const std::map<double, double>& map, const std::pair<QString, QString> &header, const QString title = QObject::tr("Save as..."));
+bool save_map_as_csv(const std::map<double, double>& map, const std::pair<QString, QString> &header, const QString title = QObject::tr("Save as..."), const QString prefix = "");
 
 /**
  * @brief getMapDataInRange

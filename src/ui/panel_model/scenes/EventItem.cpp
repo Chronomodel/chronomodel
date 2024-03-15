@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -114,7 +114,7 @@ void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
     QGraphicsObject::mousePressEvent(e);
 }
 
-//Event Managment
+#pragma mark Event Managment
 
 void EventItem::setEvent(const QJsonObject &event, const QJsonObject &StudyPeriodSettings)
 {
@@ -230,9 +230,9 @@ void EventItem::setGreyedOut(const bool greyedOut)
 
 void EventItem::updateGreyedOut()
 {
+    const QJsonArray &phases = mScene->getState().value(STATE_PHASES).toArray();
     mGreyedOut = true;
-    const QJsonObject state = mScene->getProject()->state();
-    const QJsonArray phases = state.value(STATE_PHASES).toArray();
+
     QStringList selectedPhasesIds;
 
     for (const auto &&p : phases) {
@@ -272,13 +272,7 @@ void EventItem::setDatesVisible(bool visible)
 
 }
 
-// Events
-void EventItem::updateItemPosition(const QPointF& pos)
-{
-    mData[STATE_ITEM_X] = pos.x();
-    mData[STATE_ITEM_Y] = pos.y();
-   // mScene->sendUpdateProject("item moved", true, true); //storeUndoCommand = true
-}
+#pragma mark Events
 
 void EventItem::dropEvent(QGraphicsSceneDragDropEvent* e)
 {
@@ -352,7 +346,7 @@ void EventItem::repositionDateItems()
     const QList<QGraphicsItem*> datesItemsList = childItems();
     
     int i = 0;
-    const QRectF rectTotal = QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
+    const QRectF rectTotal = rectF();//QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
     const QRectF rect = isCurveNode() ? rectTotal.adjusted(mNodeSkin + 1., mNodeSkin + 1., -mNodeSkin -1., -mNodeSkin - 1.) : rectTotal;
 
     qreal y = rect.y() + mTitleHeight + AbstractItem::mEltsMargin;
@@ -391,8 +385,8 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->setBrush(QBrush(eventColor));
     painter->drawRect(rect);
 
-    QFont font (qApp->font());
-    font.setPixelSize(12);
+    QFont font (qApp->font().family(), 12.);
+    //font.setPixelSize(12);
 
     font.setStyle(QFont::StyleNormal);
     font.setBold(false);
@@ -462,15 +456,14 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
 QJsonArray EventItem::getPhases() const
 {
-    QJsonObject state = mScene->getProject()->state();
-    const QJsonArray allPhases = state.value(STATE_PHASES).toArray();
+    const QJsonArray allPhases = mScene->getState().value(STATE_PHASES).toArray();
 
     const QString eventPhaseIdsStr = mData.value(STATE_EVENT_PHASE_IDS).toString();
     const QStringList eventPhaseIds = eventPhaseIdsStr.split(",");
 
     QJsonArray phases = QJsonArray();
     for (const auto &&p : allPhases) {
-        QJsonObject phase = p.toObject();
+        const QJsonObject &phase = p.toObject();
         QString phaseId = QString::number(phase.value(STATE_ID).toInt());
         if (eventPhaseIds.contains(phaseId))
             phases.append(phase);
@@ -478,11 +471,7 @@ QJsonArray EventItem::getPhases() const
     return phases;
 }
 
-// Geometry
-QRectF EventItem::boundingRect() const
-{
-  return QRectF(-mSize.width()/2 - 10, -mSize.height()/2 - 10, mSize.width() + 20, mSize.height() + 20);
-}
+#pragma mark Geometry
 
 int EventItem::getNumberCurveLines(const CurveSettings &cs) const
 {

@@ -54,12 +54,16 @@ public:
     void setMergeable(bool mergeable, bool shouldRepaint = true);
     virtual void setGreyedOut(const bool greyedOut);
 
-    virtual void updateItemPosition(const QPointF& pos) = 0;
+    virtual void updateItemPosition(const QPointF& pos);
     void setSelectedInData(const bool selected);
     void setCurrentInData(const bool current);
     QJsonObject& getData() {return mData;};
 
     static QFont adjustFont(const QFont &ft, const QString &str, const QRectF &r);
+
+    virtual QSizeF sizeF() {return mSize;};
+    virtual QRectF rectF() const;
+    virtual QRectF boundingRect() const;
 
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent* e);
@@ -76,6 +80,7 @@ public:
     static int mEltsMargin;
     static int mItemWidth;
     static int mTitleHeight;
+    QSizeF mSize;
 
     QJsonObject mData;
     AbstractScene* mScene;

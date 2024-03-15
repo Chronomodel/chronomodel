@@ -1739,7 +1739,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
         case CurveSettings::eProcess_Field:
         case CurveSettings::eProcess_Depth:
             do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam);
-        break;
+         break;
 
         case CurveSettings::eProcess_Unknwon_Dec:
         case CurveSettings::eProcess_2D:
@@ -2401,8 +2401,8 @@ void MultiCalibrationView::exportResults()
     csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
 
     if (mFitClipBut->isChecked()) {
-        save_map_as_csv(mSilverParam.tab_GCV, std::make_pair("lambda", "GCV"), "Save GCV ...");
-        save_map_as_csv(mSilverParam.tab_CV, std::make_pair("lambda", "CV"), "Save CV ...");
+        save_map_as_csv(mSilverParam.tab_GCV, std::make_pair("lambda", "GCV"), "Save GCV ...", "GCV");
+        save_map_as_csv(mSilverParam.tab_CV, std::make_pair("lambda", "CV"), "Save CV ...", "CV");
         // Export curves
         const QList<GraphView*> graphList = mDrawing->getGraphViewList();
         int i = 1;
