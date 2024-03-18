@@ -8,10 +8,11 @@ echo This batch file copy files and Build windows installer
 echo Project ChronoModel Team
 echo https://chronomodel.com/
 echo author email:philippe.dufresne@univ-rennes.fr 
-echo date 2024-02-06
+echo date 2024-03-18
 
 echo " 1 - Copy icon"
 copy C:\Users\Lanos\Documents\github\chronomodel\icon\Chronomodel.ico C:\Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel\installer-packages-winOS\chronomodel_QtIFW.composant1\data
+copy C:\Users\Lanos\Documents\github\chronomodel\icon\chronomodel_bash.ico C:\Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel\installer-packages-winOS\chronomodel_QtIFW.composant2\data
 
 echo " 2 - Copy additionnal files"
 robocopy /s C:\Users\Lanos\Documents\github\chronomodel\deploy\windows\additionnal_files\Qt_6_5_3 C:\Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel\installer-packages-winOS\chronomodel_QtIFW.composant1\data
@@ -19,11 +20,18 @@ robocopy /s C:\Users\Lanos\Documents\github\chronomodel\deploy\windows\additionn
 echo " 3 - Copy ABOUT.html files" 
 copy C:\Users\Lanos\Documents\github\chronomodel\deploy\ABOUT.html C:\Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel\installer-packages-winOS\chronomodel_QtIFW.composant1\data
 
-echo " 4 - Copy file chronomodel.exe in the installer-packages-winOS"
+echo " 4 - Copy file chronomodel.exe in the installer-packages-winOS\chronomodel_QtIFW.composant1"
 copy C:\Users\Lanos\Documents\github\build-Chronomodel-Desktop_Qt_6_5_3_MinGW_64_bit-Release\build\release\chronomodel.exe C:\Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel\installer-packages-winOS\chronomodel_QtIFW.composant1\data
 
-echo " 5 - Execution de binarycreator"
-C:\Qt\Tools\QtInstallerFramework\4.6\bin\binarycreator --offline-only -c installer-config/config.xml -p installer-packages-winOS ChronoModel_Installer_WinOS
+echo " 5 - Copy file chronomodel_bash.exe in the installer-packages-winOS\chronomodel_QtIFW.composant2"
+copy C:\Users\Lanos\Documents\github\build-chronomodel_bash-Desktop_Qt_6_5_3_MinGW_64_bit-Release\build\release\chronomodel_bash.exe C:\Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel\installer-packages-winOS\chronomodel_QtIFW.composant2\data
 
-echo " 6 - Valide to finish"
+
+set VERSION=3.2.7
+set DATE_STR = %date:~6,4%%date:~3,2%%date:~0,2%
+
+echo " 6 - Execution de binarycreator"
+C:\Qt\Tools\QtInstallerFramework\4.6\bin\binarycreator --offline-only -c installer-config/config.xml -p installer-packages-winOS ChronoModel_v%VERSION%_Qt6.5.3_win64_%date:~6,4%%date:~3,2%%date:~0,2%_Installer
+
+echo " 7 - Valide to finish"
 pause

@@ -106,7 +106,7 @@ QMAKE_CXXFLAGS += -std=c++2a
 macx{
     message("MacOSX specific settings")
 	# Icon file
-        ICON = $$PRO_PATH/icon/Chronomodel.icns
+        macx:ICON = $$PRO_PATH/icon/Chronomodel.icns
 
 	# This is the SDK used to compile : change it to whatever latest version of mac you are using.
 	# to determine which version of the macOS SDK is installed with xcode? type on a terminal
@@ -137,9 +137,7 @@ win32{
 	# Resource file (Windows only)
         message("WIN specific settings")
         QMAKESPEC = win32-g++ #win32-msvc  # for 32-bit and 64-bit
-        #RC_ICONS = Chronomodel.ico
         RC_ICONS = $$PRO_PATH/icon/Chronomodel.ico
-        RC_FILE += Chronomodel.rc
         QT_FATAL_WARNING = 1
 }
 
@@ -608,6 +606,6 @@ SOURCES += src/utilities/QtUtilities.cpp
 SOURCES += src/utilities/DoubleValidator.cpp
 SOURCES += src/utilities/DateUtils.cpp
 
-DISTFILES += \
-    Chronomodel.rc \
-    icon/Chronomodel.ico
+DISTFILES += icon/Chronomodel.ico
+#\ # Chronomodel.rc \
+
