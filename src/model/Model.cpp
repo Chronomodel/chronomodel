@@ -1413,8 +1413,8 @@ void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftL
             event->mS02Theta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 
         //if (event->mTheta.mSamplerProposal != MHVariable::eFixe)
-            for (auto&& d : event->mDates)
-                d.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+        for (auto&& d : event->mDates)
+            d.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
     }
 
     for (const auto& phase : mPhases)
