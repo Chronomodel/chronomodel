@@ -50,6 +50,12 @@ macx{
      RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel_Bash.png
 }
 
+# TRANSLATIONS
+#########################################
+TRANSLATIONS = translations_bash/Chronomodel_fr.ts \
+               translations_bash/Chronomodel_en.ts
+
+
 SOURCES -= src/main.cpp
 SOURCES += src/main_bash.cpp
 

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Installer>
 	<Name>ChronoModel</Name>
-        <Version>3.2.7</Version>
+    <Version>3.2.7</Version>
 	<Title>ChronoModel</Title>
 	<Publisher>ChronoModel Team</Publisher>
-	<ProductUrl>http://chronomodel.com</ProductUrl>
-        <TargetDir>@ApplicationsDir@/Chronomodel</TargetDir>
+	<ProductUrl>https://chronomodel.com</ProductUrl>
+    <TargetDir>@ApplicationsDir@/Chronomodel</TargetDir>
         <!--  if (installer.value("os") == "X11") {
         <RunProgram>@TargetDir@/Chronomodel.app</RunProgram>
         }
@@ -16,11 +16,11 @@
         <!--@TargetDir@/-->
         <!--  <WizardStyle>Modern</WizardStyle> --> <!--  Aero; Classic -->
 
-        <InstallerWindowIcon>Chronomodel_Installer</InstallerWindowIcon> <!-- for windows and linux-->
-        <InstallerApplicationIcon>Chronomodel_Installer</InstallerApplicationIcon>
+    <InstallerWindowIcon>Chronomodel_Installer</InstallerWindowIcon> <!-- for windows and linux-->
+    <InstallerApplicationIcon>Chronomodel_Installer</InstallerApplicationIcon>
          <!-- The actual file is looked up by attaching a '.icns' (OS X), '.ico' (Windows). No functionality on Unix.-->
-            <Logo>Chronomodel.png</Logo>
-        <MaintenanceToolName>Chronomodel_uninstaller</MaintenanceToolName>
+    <Logo>Chronomodel.png</Logo>
+    <MaintenanceToolName>Chronomodel_uninstaller</MaintenanceToolName>
         
         <!-- Le fond d'écran fonction avec les options suivantes
         <WizardStyle>Mac</WizardStyle>
@@ -28,15 +28,15 @@
 		<Background>fond_ecran.png</Background>
 		-->
 		
-        <StartMenuDir>ChronoModel</StartMenuDir> <!--Only available on Windows.-->
+     <StartMenuDir>ChronoModel</StartMenuDir> <!--Only available on Windows.-->
         if (installer.value("os") === "win") {
             component.addOperation("CreateShortcut", "@TargetDir@/Chronomodel.exe", "@StartMenuDir@/Chronomodel.lnk");
         }
-        <ProductImages>
+    <ProductImages>
         <ProductImage>
             <Image>Bzh_curve.png</Image>
         </ProductImage>
-        <ProductImage>
+         <ProductImage>
             <Image>MCMC_Box.png</Image>
         </ProductImage>
     </ProductImages>
