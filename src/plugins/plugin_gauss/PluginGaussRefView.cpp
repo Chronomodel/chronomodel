@@ -138,10 +138,7 @@ void PluginGaussRefView::setDate(const Date& date, const StudyPeriodSettings& se
                 curve.mData = refCurve;
                 mGraph->add_curve(curve);
 
-              /* yMin = qMin( refCurve.first(), refCurve.last());
-              yMax = qMax( refCurve.first(), refCurve.last());
-              */
-                // Y scale and RangeY are define in graphView::zommX()
+               // Y scale and RangeY are define in graphView::zommX()
 
 
 
@@ -181,10 +178,6 @@ void PluginGaussRefView::setDate(const Date& date, const StudyPeriodSettings& se
                     mGraph->add_zone(zone);
                 }
 
-                /*const double t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
-                yMin = plugin->getRefValueAt(date.mData, t0);
-                yMax = yMin;
-                */
                 QMap<double, double> curveG;
                 QMap<double, double> curveG95Sup;
                 QMap<double, double> curveG95Inf;
@@ -194,22 +187,7 @@ void PluginGaussRefView::setDate(const Date& date, const StudyPeriodSettings& se
                  */
 
                 if (tminDisplay>curve.mDataMean.firstKey() && tminDisplay<curve.mDataMean.lastKey()) {
-                    // This actually return the iterator with the nearest greater key !!!
-                    /* QMap<double, double>::const_iterator iter = curve.mDataMean.lowerBound(tminDisplay);
-                     // the higher value must be mTmax.
-                     double v;
-                     if (iter != curve.mDataError.constBegin()) {
-                         const double t_upper = iter.key();
-                         const double v_upper = iter.value();
-                         --iter;
-                         const double t_under = iter.key();
-                         const double v_under = iter.value();
-
-                         v = interpolate(tminDisplay, t_under, t_upper, v_under, v_upper);
-                     } else
-                         v = iter.value();
-                     */
-                     double v = curve.interpolate_mean(tminDisplay);
+                     const double v = curve.interpolate_mean(tminDisplay);
                      const double error = plugin->getRefErrorAt(date.mData, tminDisplay, mode) * 1.96;
 
                      curveG[tminDisplay] = v;
@@ -232,10 +210,11 @@ void PluginGaussRefView::setDate(const Date& date, const StudyPeriodSettings& se
                 }
 
                 const GraphCurve &curveGEnv = shapeCurve(curveG95Inf, curveG95Sup, "G Env",
-                                                 QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30));
+                                                 QColor(180, 180, 180), Qt::DashLine, QColor(180, 180, 180, 30), true);
                 mGraph->add_curve(curveGEnv);
 
-                const GraphCurve &graphCurveG = FunctionCurve(curveG, "G", Painting::mainColorDark );
+                GraphCurve graphCurveG = FunctionCurve(curveG, "G", Painting::mainColorDark );
+                graphCurveG.mVisible = true;
                 mGraph->add_curve(graphCurveG);
             }
 
