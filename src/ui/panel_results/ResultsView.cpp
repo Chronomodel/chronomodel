@@ -147,9 +147,7 @@ ResultsView::ResultsView(std::shared_ptr<Project> project, QWidget* parent, Qt::
     connect(mGraphTypeTabs, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::applyGraphTypeTab);
     connect(mRuler, &Ruler::positionChanged, this, &ResultsView::applyRuler);
 
-
-
-    connect(this, &ResultsView::wheelMove, mRuler, &Ruler::wheelScene);
+   // connect(this, &ResultsView::wheelMove, mRuler, &Ruler::wheelScene);// Allows horizontal scrolling on the results window, without having to use the ruler
 
     // -----------------------------------------------------------------
     //  Right Part
