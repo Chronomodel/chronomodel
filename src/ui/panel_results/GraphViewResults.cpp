@@ -130,6 +130,7 @@ void GraphViewResults::updateCurvesToShow(bool showAllChains, const QList<bool>&
     mShowAllChains = showAllChains;
     mShowChainList = showChainList;
     mShowVariableList = showVariableList;
+
 }
 
 
