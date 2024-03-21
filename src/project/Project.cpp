@@ -2100,7 +2100,7 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
                 date.remove(STATE_DATE_METHOD);
             }
 
-            if (date.value(STATE_DATE_SAMPLER).toInt()>2)
+            if (date.value(STATE_DATE_SAMPLER).toInt()>4)
                 date[STATE_DATE_SAMPLER] = MHVariable::eMHAdaptGauss;
             // etc...
 
