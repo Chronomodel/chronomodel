@@ -53,6 +53,9 @@ constexpr T M_PI = T(3.14159265358979323846264338327950288419716939937510582L); 
 #include <chrono>
 #endif
 
+#ifdef __linux
+#include <chrono>
+#endif
 
 struct randomChar {
     int _a, _b;
