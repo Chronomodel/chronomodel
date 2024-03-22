@@ -5629,13 +5629,11 @@ void MCMCLoopCurve::finalize()
     // This is called here because it is calculated only once and will never change afterwards
     // This is very slow : it is for this reason that the results display may be long to appear at the end of MCMC calculation.
 
-    emit setMessage(tr("Computing posterior distributions and numerical results - Correlations"));
+    emit setMessage(tr("Computing posterior distributions and numerical results"));
     mModel->generateCorrelations(mLoopChains);
 
     // This should not be done here because it uses resultsView parameters
     // ResultView will trigger it again when loading the model
-
-    emit setMessage(tr("Computing posterior distributions and numerical results - Densities and curves"));
     mModel->initDensities();
 
     // ----------------------------------------

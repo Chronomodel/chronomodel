@@ -585,7 +585,7 @@ bool Project::load(const QString &path, bool force)
                 if (loadingState.value(STATE_SETTINGS).toObject().value(STATE_SETTINGS_STEP_FORCED).toBool() == true) {
                     QMessageBox message(QMessageBox::Information,
                                         tr("Study Period Step Forced"),
-                                        tr("The project you are loading contains a forced step.\r\rThis may affect calculation time"),
+                                        tr("This project contains a forced time step.\r\rThis change calculation time"),
                                         QMessageBox::Ok,
                                         qApp->activeWindow());
                     message.exec();

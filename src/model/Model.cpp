@@ -1355,19 +1355,12 @@ void Model::updateDensities(int fftLen, double bandwidth, double threshold)
     clearPosteriorDensities();
 
     if (mProject->mLoop)
-        emit mProject->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results - Credibility "));
+        emit mProject->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results"));
     generateCredibility(threshold);
 
     updateFormatSettings(); // update formatedCredibility and formatedTrace
 
-    if (mProject->mLoop)
-        emit mProject->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results - Posterior Densities"));
-
     generatePosteriorDensities(mChains, fftLen, bandwidth);
-
-
-    if (mProject->mLoop)
-        emit mProject->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results - HPD "));
 
     generateHPD(threshold);
 
@@ -1375,21 +1368,11 @@ void Model::updateDensities(int fftLen, double bandwidth, double threshold)
     setThresholdToAllModel(threshold);
 
     if (!mPhases.isEmpty()) {
-        if (mProject->mLoop)
-            emit mProject->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results - Tempo"));
-         generateTempo(fftLen);
+        generateTempo(fftLen);
+        generateActivity(fftLen, mHActivity, threshold);
     }
 
-    if (!mPhases.isEmpty()) {
-        if (mProject->mLoop)
-            emit mProject->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results - Activity"));
-         generateActivity(fftLen, mHActivity, threshold);
-    }
-
-    if (mProject->mLoop)
-        emit mProject->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results - Numerical Results"));
     generateNumericalResults(mChains);
-
 
     mBandwidth = bandwidth;
     mFFTLength = fftLen;

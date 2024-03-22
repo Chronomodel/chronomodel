@@ -215,21 +215,23 @@ void StudyPeriodDialog::showMessageStepForced(bool forced)
         message.setStandardButtons(QMessageBox::Ok );
         message.setDefaultButton(QMessageBox::Ok);
 
-        const QString text_show = tr("Details ...");
-        const QString text_hide = tr("Hide Details");
+        //const QString text_show = tr("Details ...");
+        //const QString text_hide = tr("Hide Details");
 
-        QString detail = "All calibrations will be recalculated with this same step.";
-        detail += "And in cases where reference curves are defined over large time ranges and you choose a very fine step size, all calculations will be that much longer.";
+        QString detail = "All the calibrations will be recalculated with this same step.\r";
+        detail += "In cases where reference curves are defined over large time ranges and when you choose a very fine step size, all the calculations will be much longer.";
         detail +=" \rConversely, if your step size is too large in relation to the definition of the reference curve,";
-        detail += " the calculation of calibration curves will be coarse and may miss solutions...";
-        detail += "\rBy default, the algorithm defines a different step for each calibration curve, looking for the optimum step.";
+        detail += " the calculation of the calibration curves will be coarse and may miss time solutions...";
+        //detail += "\rBy default, the algorithm defines a different step for each calibration curve, looking for the optimum step.";
 
-        QPushButton* bt_details = message.addButton( text_show, QMessageBox::ActionRole );
-
+        //QPushButton* bt_details = message.addButton( text_show, QMessageBox::ActionRole );
+        message.setInformativeText(detail);
+        message.exec();
 
         //message.setDetailedText(detail);
         //auto result = message.exec();
         //auto res_but = message.clickedButton();
+        /*
         while (message.exec() != QMessageBox::Ok) {
             if (message.clickedButton() == bt_details) {
                 if (message.informativeText().isEmpty()) {
@@ -253,6 +255,6 @@ void StudyPeriodDialog::showMessageStepForced(bool forced)
             message.update();
            // result = message.exec();
         } ;
-
+        */
     }
 }

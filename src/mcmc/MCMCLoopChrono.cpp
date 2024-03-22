@@ -340,10 +340,9 @@ void MCMCLoopChrono::finalize()
     /** @todo Find a way to make it faster !
      */
 
-    emit setMessage(tr("Computing posterior distributions and numerical results - Correlations"));
+    emit setMessage(tr("Computing posterior distributions and numerical results"));
     mModelChrono->generateCorrelations(mModelChrono->mChains);
 
-    emit setMessage(tr("Computing posterior distributions and numerical results - Densities"));
     mModelChrono->initDensities();
 
     // This should not be done here because it uses resultsView parameters
