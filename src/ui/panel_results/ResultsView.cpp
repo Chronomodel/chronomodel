@@ -219,11 +219,11 @@ ResultsView::ResultsView(std::shared_ptr<Project> project, QWidget* parent, Qt::
 
     mPhasesEventsUnfoldCheck = new CheckBox(tr("Unfold Events"), mPhasesGroup);
     mPhasesEventsUnfoldCheck->setFixedHeight(h);
-    mPhasesEventsUnfoldCheck->setToolTip(tr("Display Phases' Pvents"));
+    mPhasesEventsUnfoldCheck->setToolTip(tr("Display Phases' Events"));
 
     mPhasesDatesUnfoldCheck = new CheckBox(tr("Unfold Data"), mPhasesGroup);
     mPhasesDatesUnfoldCheck->setFixedHeight(h);
-    mPhasesDatesUnfoldCheck->setToolTip(tr("Display Events' Pata"));
+    mPhasesDatesUnfoldCheck->setToolTip(tr("Display Events' Data"));
 
     mTempoRadio = new RadioButton(tr("Tempo"), mPhasesGroup);
     mTempoRadio->setFixedHeight(h);
