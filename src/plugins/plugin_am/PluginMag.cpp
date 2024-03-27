@@ -356,7 +356,7 @@ QString PluginMag::getDateDesc(const Date* date) const
             break;
 
         case eDec:
-            result += tr("Declination : %1; Inclination : %2; α 95 : %3").arg(locale.toString(decl), locale.toString(incl)), locale.toString(alpha95);
+            result += tr("Declination : %1; Inclination : %2; α 95 : %3").arg(locale.toString(decl), locale.toString(incl), locale.toString(alpha95));
             result += " : " + ref_curve_d;
             break;
 
