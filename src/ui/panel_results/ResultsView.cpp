@@ -124,6 +124,7 @@ ResultsView::ResultsView(std::shared_ptr<Project> project, QWidget* parent, Qt::
 
     mEventsScrollArea = new QScrollArea(this);
     mEventsScrollArea->QScrollArea::setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    mEventsScrollArea->horizontalScrollBar()->setEnabled(false);
     mEventsScrollArea->setMouseTracking(true);
     QWidget* eventsWidget = new QWidget();
     eventsWidget->setMouseTracking(true);
@@ -131,6 +132,7 @@ ResultsView::ResultsView(std::shared_ptr<Project> project, QWidget* parent, Qt::
 
     mPhasesScrollArea = new QScrollArea(this);
     mPhasesScrollArea->QScrollArea::setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    mPhasesScrollArea->horizontalScrollBar()->setEnabled(false);
     mPhasesScrollArea->setMouseTracking(true);
     QWidget* phasesWidget = new QWidget();
     phasesWidget->setMouseTracking(true);
@@ -138,6 +140,7 @@ ResultsView::ResultsView(std::shared_ptr<Project> project, QWidget* parent, Qt::
 
     mCurveScrollArea = new QScrollArea(this);
     mCurveScrollArea->QScrollArea::setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    mCurveScrollArea->horizontalScrollBar()->setEnabled(false);
 
     mCurveScrollArea->setMouseTracking(true);
     QWidget* curveWidget = new QWidget();
