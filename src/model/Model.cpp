@@ -1117,14 +1117,17 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 
     for (const auto& event : mEvents ) {
 
+        if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
 #ifdef USE_THREAD
-        std::thread thTheta ([event] (QList<ChainSpecs> ch) {event->mTheta.generateCorrelations(ch);}, chains);
+            std::thread thTheta ([event] (QList<ChainSpecs> ch) {event->mTheta.generateCorrelations(ch);}, chains);
 #else
-        event->mTheta.generateCorrelations(chains);
+            event->mTheta.generateCorrelations(chains);
 #endif
-        if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
-            event->mS02Theta.generateCorrelations(chains);
+        }
 
+        if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
+            event->mS02Theta.generateCorrelations(chains);
+        }
 
         for (auto&& date : event->mDates ) {
 #ifdef USE_THREAD
@@ -1563,7 +1566,8 @@ void Model::generateCredibility(const double thresh)
     thPhasesConst.join();
 #else
     for (const auto& ev : mEvents) {
-        ev->mTheta.generateCredibility(mChains, thresh);
+        if (ev->mTheta.mSamplerProposal != MHVariable::eFixe)
+            ev->mTheta.generateCredibility(mChains, thresh);
 
         if (ev->mS02Theta.mSamplerProposal != MHVariable::eFixe)
             ev->mS02Theta.generateCredibility(mChains, thresh);
