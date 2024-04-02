@@ -1,0 +1,219 @@
+<!DOCTYPE QPH>
+<QPH sourcelanguage="en_US" language="fr_FR">
+<phrase>
+    <source>Select Colour</source>
+    <target>Sélect. couleur</target>
+</phrase>
+<phrase>
+    <source>Name</source>
+    <target>Nom</target>
+</phrase>
+<phrase>
+    <source>Color</source>
+    <target>Couleur</target>
+</phrase>
+<phrase>
+    <source>No name</source>
+    <target>Sans Nom</target>
+</phrase>
+<phrase>
+    <source>OK</source>
+    <target>OK</target>
+</phrase>
+<phrase>
+    <source>Cancel</source>
+    <target>Echap</target>
+</phrase>
+<phrase>
+    <source>No Phase</source>
+    <target>Aucune phase</target>
+</phrase>
+<phrase>
+    <source>Iterations</source>
+    <target>Itérations</target>
+</phrase>
+<phrase>
+    <source>Value</source>
+    <target>Valeur</target>
+</phrase>
+<phrase>
+    <source>Rate</source>
+    <target>Taux</target>
+</phrase>
+<phrase>
+    <source>sigma</source>
+    <target>sigma</target>
+</phrase>
+<phrase>
+    <source>Iteration</source>
+    <target>Itération</target>
+</phrase>
+<phrase>
+    <source>Outside study period</source>
+    <target>Hors période d&apos;étude</target>
+</phrase>
+<phrase>
+    <source>Nothing to Display</source>
+    <target>Rien à afficher</target>
+</phrase>
+<phrase>
+    <source>Automatic Link</source>
+    <target>Liaisons automatiques</target>
+</phrase>
+<phrase>
+    <source>Smoothing</source>
+    <target>Lissage</target>
+</phrase>
+<phrase>
+    <source>Error : %1</source>
+    <target>Erreur : %1</target>
+</phrase>
+<phrase>
+    <source>Inclination</source>
+    <target>Inclinaison</target>
+</phrase>
+<phrase>
+    <source>Declination</source>
+    <target>Déclinaison</target>
+</phrase>
+<phrase>
+    <source>Field</source>
+    <target>Champ</target>
+</phrase>
+<phrase>
+    <source>Split Combined Data</source>
+    <target>Eclatter données combinées</target>
+</phrase>
+<phrase>
+    <source>t</source>
+    <target>t</target>
+</phrase>
+<phrase>
+    <source>Years</source>
+    <target>Années</target>
+</phrase>
+<phrase>
+    <source>Nothing to Display</source>
+    <target>Rien à afficher</target>
+</phrase>
+<phrase>
+    <source>More...</source>
+    <target>plus...</target>
+</phrase>
+<phrase>
+    <source>Save as CSV</source>
+    <target>Enregistrer sous CSV</target>
+</phrase>
+<phrase>
+    <source>Data : %1</source>
+    <target>Donnée : %1</target>
+</phrase>
+<phrase>
+    <source>Reference Curve</source>
+    <target>Courbe de référence</target>
+</phrase>
+<phrase>
+    <source>Save</source>
+    <target>Enregistrer</target>
+</phrase>
+<phrase>
+    <source>Save image as file</source>
+    <target>Enregistrement de l&apos;image sous ...</target>
+</phrase>
+<phrase>
+    <source>Copy</source>
+    <target>Copier</target>
+</phrase>
+<phrase>
+    <source>Copy image to clipboard</source>
+    <target>Copier l&apos;image dans le presse-papier</target>
+</phrase>
+<phrase>
+    <source>CSV</source>
+    <target>CSV</target>
+</phrase>
+<phrase>
+    <source>Zoom</source>
+    <target>Zoom</target>
+</phrase>
+<phrase>
+    <source>Start</source>
+    <target>Début</target>
+</phrase>
+<phrase>
+    <source>End</source>
+    <target>Fin</target>
+</phrase>
+<phrase>
+    <source>HPD (%)</source>
+    <target>HPD (%)</target>
+</phrase>
+<phrase>
+    <source>Invalid value</source>
+    <target>Valeur incorrecte</target>
+</phrase>
+<phrase>
+    <source>Duration</source>
+    <target>Durée</target>
+</phrase>
+<phrase>
+    <source>Curves</source>
+    <target>Courbes</target>
+</phrase>
+<phrase>
+    <source>X</source>
+    <target>X</target>
+</phrase>
+<phrase>
+    <source>Y</source>
+    <target>Y</target>
+</phrase>
+<phrase>
+    <source>time</source>
+    <target>temps</target>
+</phrase>
+<phrase>
+    <source>Next</source>
+    <target>Suivant</target>
+</phrase>
+<phrase>
+    <source>Prev.</source>
+    <target>Préc.</target>
+</phrase>
+<phrase>
+    <source>Results</source>
+    <target>Résultats</target>
+</phrase>
+<phrase>
+    <source>Page</source>
+    <target>Page</target>
+</phrase>
+<phrase>
+    <source>Saving</source>
+    <target>Enregist.</target>
+</phrase>
+<phrase>
+    <source>Scale</source>
+    <target>Echelle</target>
+</phrase>
+<phrase>
+    <source>Z</source>
+    <target>Z</target>
+</phrase>
+<phrase>
+    <source>Directory</source>
+    <target>Dossier</target>
+</phrase>
+<phrase>
+    <source>X Scale</source>
+    <target>Echelle sur X</target>
+</phrase>
+<phrase>
+    <source>Y Scale</source>
+    <target>Echelle sur Y</target>
+</phrase>
+<phrase>
+    <source>Data</source>
+    <target>Donnée</target>
+</phrase>
+</QPH>
